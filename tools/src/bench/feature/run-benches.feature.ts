@@ -1,7 +1,6 @@
+import { NS_PER_MS } from '../common/bench.const.ts';
 import type { BenchResult } from '../common/bench.type.ts';
 import { runBenches } from '../domain-logic/bench-run.ts';
-
-const NS_PER_MS = 1_000_000;
 
 const formatResult = (result: BenchResult): string => {
   const medianMsValue = result.medianNs / NS_PER_MS;

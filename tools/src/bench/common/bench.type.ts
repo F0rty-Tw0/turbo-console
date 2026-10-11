@@ -17,3 +17,21 @@ export type BenchResult = {
   readonly samples: number;
   readonly gate: boolean;
 };
+
+/** One bench present on both sides; `ratio` is `headNs / baseNs`, `failed` means gated and slower than the threshold allows. */
+export type ComparisonRow = {
+  readonly name: string;
+  readonly baseNs: number;
+  readonly headNs: number;
+  readonly ratio: number;
+  readonly gate: boolean;
+  readonly failed: boolean;
+};
+
+/** Head against base: shared benches as rows, plus names only head has (`added`) or only base has (`removed`). */
+export type BenchComparison = {
+  readonly rows: ComparisonRow[];
+  readonly added: string[];
+  readonly removed: string[];
+  readonly failed: boolean;
+};
