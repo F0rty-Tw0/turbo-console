@@ -13,8 +13,6 @@ catalogs:
   dev:
     '@playwright/test': '1.64.0'
     '@types/node': '24.19.2'
-    # No 1.139.x exists; 1.138.0 is the newest release not above engines.vscode ^1.139.0.
-    '@types/vscode': '1.138.0'
     '@vscode/test-electron': '3.1.0'
     '@vscode/vsce': '4.0.0'
     esbuild: '0.28.2'
