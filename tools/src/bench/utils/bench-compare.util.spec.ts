@@ -94,9 +94,69 @@ describe('FEATURE: bench comparison', () => {
     });
   });
 
-  describe('GIVEN a gated bench only on head and another only on base', () => {
-    const base = [result('core/old', 100, true)];
-    const head = [result('core/new', 100, true)];
+  describe('GIVEN a gated bench exactly at the threshold on head', () => {
+    it('WHEN base is 100 ns and head 115 ns THEN the comparison passes', () => {
+      const base = [result('core/parse', 100, true)];
+      const head = [result('core/parse', 115, true)];
+
+      const comparison = compareBenches(base, head, THRESHOLD);
+
+      expect(comparison.failed).toBe(false);
+    });
+
+    it('WHEN base is 11565000 ns and head 13299750 ns THEN the comparison passes', () => {
+      const base = [result('core/parse', 11_565_000, true)];
+      const head = [result('core/parse', 13_299_750, true)];
+
+      const comparison = compareBenches(base, head, THRESHOLD);
+
+      expect(comparison.failed).toBe(false);
+    });
+  });
+
+  describe('GIVEN a gated bench one ns past the threshold on head', () => {
+    it('WHEN base is 100 ns and head 116 ns THEN the comparison fails', () => {
+      const base = [result('core/parse', 100, true)];
+      const head = [result('core/parse', 116, true)];
+
+      const comparison = compareBenches(base, head, THRESHOLD);
+
+      expect(comparison.failed).toBe(true);
+    });
+
+    it('WHEN base is 11565000 ns and head 13299751 ns THEN the comparison fails', () => {
+      const base = [result('core/parse', 11_565_000, true)];
+      const head = [result('core/parse', 13_299_751, true)];
+
+      const comparison = compareBenches(base, head, THRESHOLD);
+
+      expect(comparison.failed).toBe(true);
+    });
+  });
+
+  describe('GIVEN a bench gated on base but ungated on head, 20% slower on head', () => {
+    const base = [result('core/parse', 100, true)];
+    const head = [result('core/parse', 120, false)];
+
+    describe('WHEN the sides are compared', () => {
+      it('THEN the comparison fails', () => {
+        const comparison = compareBenches(base, head, THRESHOLD);
+
+        expect(comparison.failed).toBe(true);
+      });
+
+      it('THEN the row is gated', () => {
+        const comparison = compareBenches(base, head, THRESHOLD);
+        const gates = comparison.rows.map((row) => row.gate);
+
+        expect(gates).toStrictEqual([true]);
+      });
+    });
+  });
+
+  describe('GIVEN a gated bench only on head and another only on base, beside a shared gated bench', () => {
+    const base = [result('core/old', 100, true), result('core/parse', 100, true)];
+    const head = [result('core/new', 100, true), result('core/parse', 100, true)];
 
     describe('WHEN the sides are compared', () => {
       it('THEN the head-only bench is added and the base-only bench removed', () => {
@@ -106,12 +166,47 @@ describe('FEATURE: bench comparison', () => {
         expect(names).toStrictEqual([['core/new'], ['core/old']]);
       });
 
-      it('THEN neither fails and no row is compared', () => {
+      it('THEN the comparison passes with no gated bench missing', () => {
         const comparison = compareBenches(base, head, THRESHOLD);
-        const outcome = [comparison.failed, comparison.rows];
+        const outcome = [comparison.failed, comparison.missingGated];
 
         expect(outcome).toStrictEqual([false, []]);
       });
+    });
+  });
+
+  describe('GIVEN base gated benches none of which are on head', () => {
+    const base = [result('core/a', 100, true), result('core/b', 100, true), result('repo-gen/generate', 100, false)];
+    const head = [result('repo-gen/generate', 100, false)];
+
+    describe('WHEN the sides are compared', () => {
+      it('THEN the comparison fails', () => {
+        const comparison = compareBenches(base, head, THRESHOLD);
+
+        expect(comparison.failed).toBe(true);
+      });
+
+      it('THEN the missing gated benches are named', () => {
+        const comparison = compareBenches(base, head, THRESHOLD);
+
+        expect(comparison.missingGated).toStrictEqual(['core/a', 'core/b']);
+      });
+    });
+
+    it('WHEN head has no results THEN the comparison fails', () => {
+      const comparison = compareBenches(base, [], THRESHOLD);
+
+      expect(comparison.failed).toBe(true);
+    });
+  });
+
+  describe('GIVEN base with only ungated benches, none of which are on head', () => {
+    it('WHEN the sides are compared THEN the comparison passes', () => {
+      const base = [result('repo-gen/generate', 100, false)];
+
+      const comparison = compareBenches(base, [], THRESHOLD);
+
+      expect(comparison.failed).toBe(false);
     });
   });
 
@@ -126,7 +221,7 @@ describe('FEATURE: bench comparison', () => {
       failed: false
     };
     const rows = [failing, passing];
-    const comparison: BenchComparison = { rows, added: ['core/new'], removed: ['core/old'], failed: true };
+    const comparison: BenchComparison = { rows, added: ['core/new'], removed: ['core/old'], missingGated: [], failed: true };
 
     describe('WHEN it is formatted', () => {
       it('THEN each row shows its medians in ms, its ratio, its gate and its status', () => {
@@ -158,7 +253,7 @@ describe('FEATURE: bench comparison', () => {
   describe('GIVEN a passing comparison with nothing added or removed', () => {
     const row: ComparisonRow = { name: 'core/parse', baseNs: 1_000_000, headNs: 1_000_000, ratio: 1, gate: true, failed: false };
     const rows = [row];
-    const comparison: BenchComparison = { rows, added: [], removed: [], failed: false };
+    const comparison: BenchComparison = { rows, added: [], removed: [], missingGated: [], failed: false };
 
     describe('WHEN it is formatted', () => {
       it('THEN the last line says no gated bench regressed', () => {
@@ -172,6 +267,22 @@ describe('FEATURE: bench comparison', () => {
 
         expect(text).not.toMatch(/^(added|removed):/m);
       });
+    });
+  });
+
+  describe('GIVEN a comparison whose gated benches are all missing from head', () => {
+    const comparison: BenchComparison = {
+      rows: [],
+      added: [],
+      removed: ['core/a', 'core/b'],
+      missingGated: ['core/a', 'core/b'],
+      failed: true
+    };
+
+    it('WHEN it is formatted THEN the last line names the missing gated benches', () => {
+      const text = formatComparison(comparison);
+
+      expect(text).toMatch(/\nFAILED: gated benches missing from head: core\/a, core\/b\n$/);
     });
   });
 });

@@ -35,21 +35,37 @@ export const reduceRuns = (runs: BenchResult[][]): BenchResult[] => {
 };
 
 const compareResult = (base: BenchResult, head: BenchResult, threshold: number): ComparisonRow => {
-  const limitNs = base.medianNs * (1 + threshold);
-  const failed = head.gate && head.medianNs > limitNs;
+  const gate = base.gate || head.gate;
+  const slowdownNs = head.medianNs - base.medianNs;
+  const allowedNs = base.medianNs * threshold;
+  const failed = gate && slowdownNs > allowedNs;
   const row: ComparisonRow = {
     name: head.name,
     baseNs: base.medianNs,
     headNs: head.medianNs,
     ratio: head.medianNs / base.medianNs,
-    gate: head.gate,
+    gate,
     failed
   };
 
   return row;
 };
 
-/** Pairs benches by name; a pair fails when head is gated and its median exceeds `base * (1 + threshold)`. Unpaired names never fail. */
+const findMissingGated = (base: BenchResult[], headNames: Set<string>): string[] => {
+  const gated = base.filter((result) => result.gate);
+  const gatedNames = gated.map((result) => result.name);
+  const anyOnHead = gatedNames.some((name) => headNames.has(name));
+
+  if (anyOnHead) return [];
+
+  return gatedNames;
+};
+
+/**
+ * Pairs benches by name; a pair fails when either side gates it and head is slower than base by more than
+ * `base * threshold`. A single unpaired name never fails, but the comparison fails when none of base's gated benches is
+ * on head.
+ */
 export const compareBenches = (base: BenchResult[], head: BenchResult[], threshold: number): BenchComparison => {
   const baseByName = new Map(base.map((result) => [result.name, result]));
   const headNames = new Set(head.map((result) => result.name));
@@ -69,8 +85,10 @@ export const compareBenches = (base: BenchResult[], head: BenchResult[], thresho
 
   const removedResults = base.filter((result) => !headNames.has(result.name));
   const removed = removedResults.map((result) => result.name);
-  const failed = rows.some((row) => row.failed);
-  const comparison: BenchComparison = { rows, added, removed, failed };
+  const missingGated = findMissingGated(base, headNames);
+  const anyRowFailed = rows.some((row) => row.failed);
+  const failed = anyRowFailed || missingGated.length > 0;
+  const comparison: BenchComparison = { rows, added, removed, missingGated, failed };
 
   return comparison;
 };
@@ -102,8 +120,14 @@ const formatVerdict = (comparison: BenchComparison): string => {
 
   const failedRows = comparison.rows.filter((row) => row.failed);
   const names = failedRows.map((row) => row.name).join(', ');
+  const missingNames = comparison.missingGated.join(', ');
+  const lines: string[] = [];
 
-  return `FAILED: ${names} regressed past the threshold\n`;
+  if (names !== '') lines.push(`FAILED: ${names} regressed past the threshold\n`);
+
+  if (missingNames !== '') lines.push(`FAILED: gated benches missing from head: ${missingNames}\n`);
+
+  return lines.join('');
 };
 
 /** A fixed-width table (medians in ms), then `added:` / `removed:` lines when non-empty, then a one-line verdict. */
