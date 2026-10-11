@@ -259,7 +259,11 @@ importers:
         specifier: workspace:*
         version: link:../../tools
 
-  packages/graph-ui: {}
+  packages/graph-ui:
+    devDependencies:
+      '@playwright/test':
+        specifier: catalog:dev
+        version: 1.64.0
 
   packages/repo-gen:
     devDependencies:

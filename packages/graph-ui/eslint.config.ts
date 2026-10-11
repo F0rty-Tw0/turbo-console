@@ -1,5 +1,5 @@
 import { playwright, recommended, vitest } from 'lint-suite/eslint';
-import type { ConfigArray } from 'typescript-eslint';
+import type { ConfigArray, FlatConfig } from 'typescript-eslint';
 
 import { workspaceConfig } from '../../eslint.config.base.ts';
 
@@ -15,6 +15,14 @@ const typescriptFiles = {
   languageOptions
 };
 
-const config: ConfigArray = [...recommended, ...vitest, ...playwright, ...workspaceConfig, typescriptFiles];
+const pageObjectAssertions: FlatConfig.Config = {
+  name: 'graph-ui/page-object-assertions',
+  files: ['**/*.e2e.ts'],
+  rules: {
+    'playwright/expect-expect': ['warn', { assertFunctionPatterns: ['^expect'] }]
+  }
+};
+
+const config: ConfigArray = [...recommended, ...vitest, ...playwright, ...workspaceConfig, typescriptFiles, pageObjectAssertions];
 
 export default config;
