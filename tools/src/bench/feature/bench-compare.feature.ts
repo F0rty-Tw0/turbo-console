@@ -1,7 +1,7 @@
 import { compareRunsDirs } from '../domain-logic/bench-comparison.ts';
 import { formatComparison } from '../utils/bench-compare.util.ts';
 
-/** Compares two runs dirs and prints the table: 0 when no gated bench regressed or base has no results, 1 on a regression or error. */
+/** Compares two runs dirs and prints the table: 0 when no gated bench regressed or base has no results, 1 on a regression, missing gated benches, or error. */
 export const runBenchCompare = async (baseDir: string, headDir: string): Promise<number> => {
   try {
     const comparison = await compareRunsDirs(baseDir, headDir);

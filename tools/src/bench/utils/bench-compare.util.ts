@@ -130,7 +130,7 @@ const formatVerdict = (comparison: BenchComparison): string => {
   return lines.join('');
 };
 
-/** A fixed-width table (medians in ms), then `added:` / `removed:` lines when non-empty, then a one-line verdict. */
+/** A fixed-width table (medians in ms), then `added:` / `removed:` lines when non-empty, then a verdict: one line per failure reason, or one `ok:` line. */
 export const formatComparison = (comparison: BenchComparison): string => {
   const nameLengths = comparison.rows.map((row) => row.name.length);
   const nameWidth = Math.max(NAME_HEADER.length, ...nameLengths);
