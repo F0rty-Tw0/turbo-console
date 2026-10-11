@@ -7,9 +7,13 @@
   "author": "Artiom Tofan artiomtofancv@gmail.com",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=browser --format=iife --outdir=dist",
+    "build": "esbuild src/main.ts --bundle --platform=browser --format=iife --target=es2024 --outfile=dist/main.js && node -e \"require('node:fs').cpSync('src/index.html','dist/index.html')\"",
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:dev"
   }
 }

@@ -8,3 +8,4 @@ Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 
 - `engines.vscode`: `^1.139.0` (VS Code stable 1.141.0 minus two minors, checked 2026-10-11)
 - `@types/vscode`: `1.138.0` (no 1.139.x release exists; 1.138.0 is the newest that does not exceed `engines.vscode`)
+- `@types/vscode` is pinned literally (not via the catalog) because vsce 4.0.0 cannot parse `catalog:` and fails with "Failed to parse semver of @types/vscode".
