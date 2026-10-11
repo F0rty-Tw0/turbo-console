@@ -64,6 +64,10 @@ jobs:
   bench:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: bench-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     permissions:
       contents: read
 
@@ -76,11 +80,12 @@ jobs:
           path: base
           persist-credentials: false
 
+      # The PR merge commit, so head is benched as it would merge rather than against a stale base tip.
       # SHA = actions/checkout@v7.0.1
       - name: Checkout head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.sha }}
           path: head
           persist-credentials: false
 
@@ -110,22 +115,39 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm turbo run build
 
-      # Interleaved so drift on the runner hits both sides alike; one task at a time so benches do not share CPUs.
+      # Order alternates B,H / H,B / B,H so steady runner drift hits both sides alike; one task at a time so benches do
+      # not share CPUs. A failed base run only warns: its iteration is skipped and the compare runs without it. Results
+      # are cleared before each run and copied only after a successful one, so no stale file is counted.
       - name: Bench base and head
         shell: bash
         run: |
-          for i in 1 2 3; do
-            for side in base head; do
-              if node -e "const turbo = require('./$side/turbo.json'); process.exit(turbo.tasks?.bench ? 0 : 1)"; then
-                (cd "$side" && pnpm turbo run bench --concurrency=1)
-                find "$side" -path '*/node_modules' -prune -o -path '*/.bench/results.json' -print |
-                  while read -r file; do
-                    package="${file#"$side"/}"
-                    package="${package%/.bench/results.json}"
-                    mkdir -p "runs/$side/$i/$package"
-                    cp "$file" "runs/$side/$i/$package/results.json"
-                  done
+          results() {
+            find "$1" -path '*/node_modules' -prune -o -type f -path '*/.bench/results.json' "${@:2}"
+          }
+
+          bench_side() {
+            local side="$1" i="$2" file package
+            results "$side" -exec rm -f {} +
+            if [ "$side" = base ]; then
+              if ! (cd base && pnpm turbo run bench --concurrency=1); then
+                echo "::warning::base bench run failed; comparing without it"
+                return 0
               fi
+            else
+              (cd head && pnpm turbo run bench --concurrency=1)
+            fi
+            results "$side" -print | while read -r file; do
+              package="${file#"$side"/}"
+              package="${package%/.bench/results.json}"
+              mkdir -p "runs/$side/$i/$package"
+              cp -P "$file" "runs/$side/$i/$package/results.json"
+            done
+          }
+
+          for i in 1 2 3; do
+            if [ "$i" = 2 ]; then order='head base'; else order='base head'; fi
+            for side in $order; do
+              bench_side "$side" "$i"
             done
           done
 
