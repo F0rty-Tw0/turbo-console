@@ -1,0 +1,23 @@
+{
+  "name": "turbo-console",
+  "displayName": "Turbo Console (unofficial)",
+  "version": "0.0.0",
+  "description": "Unofficial VS Code extension for Turborepo",
+  "private": true,
+  "license": "MIT",
+  "author": "Artiom Tofan artiomtofancv@gmail.com",
+  "publisher": "turbo-console-dev",
+  "type": "module",
+  "engines": {
+    "vscode": "^1.139.0"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --format=cjs --external:vscode --outdir=dist",
+    "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@turbo-console/core": "workspace:*"
+  }
+}

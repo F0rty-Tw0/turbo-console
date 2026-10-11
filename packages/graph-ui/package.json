@@ -1,0 +1,15 @@
+{
+  "name": "@turbo-console/graph-ui",
+  "version": "0.0.0",
+  "description": "Webview shell for the Turbo Console graph",
+  "private": true,
+  "license": "MIT",
+  "author": "Artiom Tofan artiomtofancv@gmail.com",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=browser --format=iife --outdir=dist",
+    "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,7 @@
+# Add files here to ignore them from prettier formatting
+/dist
+/coverage
+# Written by pnpm
+pnpm-lock.yaml
+# Fixture JSON must stay byte-exact JSON.stringify output
+**/test/fixtures/

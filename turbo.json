@@ -1,0 +1,37 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "agentGuidance": false,
+  "globalDependencies": ["tsconfig.base.json", "eslint.config.base.ts", ".nvmrc"],
+  "globalPassThroughEnv": ["TMPDIR", "PLAYWRIGHT_BROWSERS_PATH"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "contract": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "e2e": {
+      "dependsOn": ["build"]
+    },
+    "integration": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "bench": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "outputs": [".bench/**"]
+    }
+  }
+}

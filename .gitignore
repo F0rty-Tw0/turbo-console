@@ -1,0 +1,63 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+dist-test
+tmp
+out-tsc
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Local env files
+.env
+.env.*
+
+# Turbo, bench, VS Code test and Playwright output
+.turbo
+.bench
+.vscode-test
+.vsix
+*.vsix
+test-results
+playwright-report
+
+# Local-only: agent files, specs, plans and spike reports
+.claude
+.omc
+/docs
+/CLAUDE.md
+/AGENTS.md
+.claude.json
+# TypeScript build info
+*.tsbuildinfo

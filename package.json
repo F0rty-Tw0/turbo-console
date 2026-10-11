@@ -1,0 +1,25 @@
+{
+  "name": "turbo-console-workspace",
+  "private": true,
+  "license": "MIT",
+  "author": "Artiom Tofan artiomtofancv@gmail.com",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:dev",
+    "@types/node": "catalog:dev",
+    "esbuild": "catalog:dev",
+    "eslint": "catalog:dev",
+    "jiti": "catalog:dev",
+    "lint-suite": "catalog:dev",
+    "prettier": "catalog:dev",
+    "turbo": "catalog:dev",
+    "typescript": "catalog:dev",
+    "typescript-eslint": "catalog:dev",
+    "typescript7": "catalog:dev",
+    "vitest": "catalog:dev"
+  },
+  "packageManager": "pnpm@12.11.2"
+}
