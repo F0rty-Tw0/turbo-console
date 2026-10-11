@@ -1,0 +1,34 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "contract": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "e2e": {
+      "dependsOn": ["build"]
+    },
+    "integration": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "bench": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "outputs": [".bench/**"]
+    }
+  }
+}
