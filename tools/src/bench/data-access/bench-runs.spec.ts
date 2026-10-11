@@ -113,6 +113,29 @@ describe('FEATURE: bench runs dir', () => {
     });
   });
 
+  describe('GIVEN two packages in one run whose results share a bench name', () => {
+    it('WHEN the dir is read THEN it rejects naming both files and the bench', async () => {
+      await writeJson(root, '1/a/core/results.json', [result('core/x', 1)]);
+      await writeJson(root, '1/b/core/results.json', [result('core/x', 2)]);
+
+      const read = readRunsDir(root);
+
+      await expect(read).rejects.toThrow(
+        /a[/\\]core[/\\]results\.json and .*b[/\\]core[/\\]results\.json: duplicate bench name "core\/x"$/
+      );
+    });
+  });
+
+  describe('GIVEN one results file that repeats a bench name', () => {
+    it('WHEN the dir is read THEN it rejects naming the file and the bench', async () => {
+      await writeJson(root, '1/results.json', [result('core/x', 1), result('core/x', 2)]);
+
+      const read = readRunsDir(root);
+
+      await expect(read).rejects.toThrow(/results\.json and .*results\.json: duplicate bench name "core\/x"$/);
+    });
+  });
+
   describe('GIVEN a results file outside the bench JSON contract', () => {
     it('WHEN the dir is read THEN it rejects naming the file', async () => {
       const invalid = [{ name: 'core/parse' }];
