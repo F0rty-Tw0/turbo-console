@@ -33,7 +33,7 @@ describe('FEATURE: cached fixture handles', () => {
   afterEach(async () => {
     await Promise.all(handles.map(disposeOf));
     vi.unstubAllEnvs();
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 5 });
   });
 
   describe('GIVEN an empty fixture cache', () => {

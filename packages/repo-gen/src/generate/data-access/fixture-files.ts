@@ -65,8 +65,9 @@ export const renameDir = async (from: string, to: string): Promise<void> => {
   await rename(from, to);
 };
 
+/** Retries `EBUSY`/`EPERM`/`ENOTEMPTY`: on Windows, git and virus scanners hold fresh files open briefly. */
 export const removeDir = async (dir: string): Promise<void> => {
-  await rm(dir, { recursive: true, force: true });
+  await rm(dir, { recursive: true, force: true, maxRetries: 5 });
 };
 
 export const pathExists = async (path: string): Promise<boolean> => {
