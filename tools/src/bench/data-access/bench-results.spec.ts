@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -41,6 +42,23 @@ describe('FEATURE: bench results file', () => {
       const written: unknown = JSON.parse(text);
 
       expect(written).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN a result named from a package dir that holds a +', () => {
+    const invalid: BenchResult = { ...RESULT, name: 'c++/parse' };
+
+    it('WHEN results are written THEN it rejects naming the dir', async () => {
+      const write = writeBenchResults(dir, [invalid]);
+
+      await expect(write).rejects.toThrow(`${dir}: results outside the bench JSON contract`);
+    });
+
+    it('WHEN results are written THEN no results file is written', async () => {
+      await writeBenchResults(dir, [invalid]).catch(() => undefined);
+      const written = existsSync(join(dir, '.bench', 'results.json'));
+
+      expect(written).toBe(false);
     });
   });
 });
