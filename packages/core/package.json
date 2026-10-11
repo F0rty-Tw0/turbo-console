@@ -1,0 +1,31 @@
+{
+  "name": "@turbo-console/core",
+  "version": "0.0.0",
+  "description": "Turbo CLI schemas, process spawning and contract tests",
+  "private": true,
+  "license": "MIT",
+  "author": "Artiom Tofan artiomtofancv@gmail.com",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node24 --packages=external --outdir=dist && node ../../node_modules/typescript7/bin/tsc -p tsconfig.lib.json",
+    "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "catalog:runtime"
+  },
+  "devDependencies": {
+    "@turbo-console/repo-gen": "workspace:*",
+    "@turbo-console/tools": "workspace:*"
+  }
+}

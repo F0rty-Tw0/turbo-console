@@ -200,6 +200,10 @@ catalogs:
     vitest:
       specifier: 5.0.3
       version: 5.0.3
+  runtime:
+    zod:
+      specifier: ^4.6.5
+      version: 4.6.5
 
 importers:
 
@@ -241,6 +245,39 @@ importers:
       vitest:
         specifier: catalog:dev
         version: 5.0.3(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+
+  packages/core:
+    dependencies:
+      zod:
+        specifier: catalog:runtime
+        version: 4.6.5
+    devDependencies:
+      '@turbo-console/repo-gen':
+        specifier: workspace:*
+        version: link:../repo-gen
+      '@turbo-console/tools':
+        specifier: workspace:*
+        version: link:../../tools
+
+  packages/graph-ui: {}
+
+  packages/repo-gen:
+    devDependencies:
+      '@turbo-console/tools':
+        specifier: workspace:*
+        version: link:../../tools
+
+  packages/vscode:
+    dependencies:
+      '@turbo-console/core':
+        specifier: workspace:*
+        version: link:../core
+
+  tools:
+    dependencies:
+      zod:
+        specifier: catalog:runtime
+        version: 4.6.5
 
 packages:
 
@@ -3745,6 +3782,9 @@ packages:
   yoctocolors@2.2.0:
     resolution: {integrity: sha512-xYqdZFUK/VYazNl/oCDYN+3WloWQwMfZxBoiNt6qNyk+xfOdi598muWE42rNZFp1kNOiqW936q5RhUdnpqElSg==}
     engines: {node: '>=18'}
+
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
 snapshots:
 
@@ -7479,3 +7519,5 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yoctocolors@2.2.0: {}
+
+  zod@4.6.5: {}
