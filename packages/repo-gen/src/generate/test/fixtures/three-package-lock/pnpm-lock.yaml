@@ -1,0 +1,19 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  packages/lib: {}
+
+  packages/web-e2e:
+    dependencies:
+      '@fx/lib':
+        specifier: workspace:*
+        version: link:../lib
+
+  packages/web-e2e-atoms: {}
