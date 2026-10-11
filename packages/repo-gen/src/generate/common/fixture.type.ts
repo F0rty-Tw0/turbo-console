@@ -50,6 +50,13 @@ export type Manifest = {
   readonly tasks: ManifestTask[];
 };
 
+/** A private copy of a cached fixture repo; `dispose` deletes the copy, never the cache. */
+export type FixtureHandle = {
+  readonly dir: string;
+  readonly manifest: Manifest;
+  readonly dispose: () => Promise<void>;
+};
+
 export type PackagePlan = {
   readonly name: string;
   readonly path: string;
