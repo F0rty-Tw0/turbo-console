@@ -13,6 +13,13 @@ export type DryRun = z.infer<typeof dryRunSchema>;
 
 export type RunSummary = z.infer<typeof runSummarySchema>;
 
+/** One finished turbo process; `exitCode` is turbo's own, non-zero included. */
+export type TurboResult = {
+  readonly stdout: string;
+  readonly stderr: string;
+  readonly exitCode: number;
+};
+
 /** Plain `major.minor.patch` bounds: `min` is included, `maxExclusive` is not. */
 export type TurboVersionRange = {
   readonly min: string;
