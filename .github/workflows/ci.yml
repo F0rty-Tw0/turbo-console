@@ -45,3 +45,18 @@ jobs:
 
       - name: Check
         run: pnpm turbo run lint typecheck test build contract e2e
+
+      # SHA = actions/cache@v6.1.0
+      - name: Cache VS Code test build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: packages/vscode/.vscode-test
+          key: vscode-${{ runner.os }}-1.141.0
+
+      - name: Integration (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a pnpm turbo run integration
+
+      - name: Integration
+        if: runner.os != 'Linux'
+        run: pnpm turbo run integration
