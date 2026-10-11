@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 
 import type { FixtureFile, PackagePlan } from '../common/fixture.type.ts';
+import { PNPM_ENV_LOCKFILE } from '../common/pnpm-env-lockfile.const.ts';
 
 type LockfilePackage = Pick<PackagePlan, 'dependencies' | 'name' | 'path'>;
 
@@ -36,14 +37,14 @@ const importerBlock = (importer: LockfilePackage, pathByName: Map<string, string
 };
 
 /**
- * `pnpm-lock.yaml` in the single-document shape pnpm 12.11.2 writes: one importer per package, sorted by path,
- * with a `link:` entry per workspace dependency. Takes every workspace package, so atom packages can be added.
+ * `pnpm-lock.yaml` in the shape pnpm 12.11.2 leaves after a run: its env-lockfile document, then one importer per
+ * package, sorted by path, with a `link:` entry per workspace dependency. Takes every workspace package, so atom packages can be added.
  */
 export const renderLockfile = (packages: LockfilePackage[]): FixtureFile => {
   const pathByName = new Map(packages.map((pkg) => [pkg.name, pkg.path]));
   const importers = packages.toSorted(comparePaths).map((pkg) => importerBlock(pkg, pathByName));
   const blocks = [LOCKFILE_HEADER, ROOT_IMPORTER, ...importers];
-  const file: FixtureFile = { path: 'pnpm-lock.yaml', content: `${blocks.join('\n\n')}\n` };
+  const file: FixtureFile = { path: 'pnpm-lock.yaml', content: `${PNPM_ENV_LOCKFILE}${blocks.join('\n\n')}\n` };
 
   return file;
 };
