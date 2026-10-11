@@ -60,3 +60,74 @@ jobs:
       - name: Integration
         if: runner.os != 'Linux'
         run: pnpm turbo run integration
+
+  bench:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      # SHA = actions/checkout@v7.0.1
+      - name: Checkout base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+
+      # SHA = actions/checkout@v7.0.1
+      - name: Checkout head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          persist-credentials: false
+
+      # SHA = pnpm/action-setup@v6.1.0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+        with:
+          package_json_file: head/package.json
+
+      # SHA = actions/setup-node@v7.1.0
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: head/.nvmrc
+          cache: pnpm
+          cache-dependency-path: head/pnpm-lock.yaml
+
+      - name: Install and build base
+        working-directory: base
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm turbo run build
+
+      - name: Install and build head
+        working-directory: head
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm turbo run build
+
+      # Interleaved so drift on the runner hits both sides alike; one task at a time so benches do not share CPUs.
+      - name: Bench base and head
+        shell: bash
+        run: |
+          for i in 1 2 3; do
+            for side in base head; do
+              if node -e "const turbo = require('./$side/turbo.json'); process.exit(turbo.tasks?.bench ? 0 : 1)"; then
+                (cd "$side" && pnpm turbo run bench --concurrency=1)
+                find "$side" -path '*/node_modules' -prune -o -path '*/.bench/results.json' -print |
+                  while read -r file; do
+                    package="${file#"$side"/}"
+                    package="${package%/.bench/results.json}"
+                    mkdir -p "runs/$side/$i/$package"
+                    cp "$file" "runs/$side/$i/$package/results.json"
+                  done
+              fi
+            done
+          done
+
+      - name: Compare
+        run: node head/tools/dist/bench-compare.js runs/base runs/head
