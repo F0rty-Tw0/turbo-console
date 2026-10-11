@@ -19,7 +19,7 @@ describe('FEATURE: generate CLI', () => {
 
   afterEach(async () => {
     vi.restoreAllMocks();
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 5 });
   });
 
   describe('GIVEN a known preset, a seed and an out dir', () => {

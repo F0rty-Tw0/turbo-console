@@ -20,7 +20,7 @@ describe('FEATURE: git runner', () => {
 
   afterEach(async () => {
     vi.unstubAllEnvs();
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 5 });
   });
 
   describe('GIVEN an empty dir', () => {

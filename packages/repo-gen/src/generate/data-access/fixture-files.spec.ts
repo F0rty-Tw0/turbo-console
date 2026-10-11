@@ -39,7 +39,7 @@ describe('FEATURE: fixture files on disk', () => {
   });
 
   afterEach(async () => {
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 5 });
   });
 
   describe('GIVEN a target dir that does not exist yet', () => {
