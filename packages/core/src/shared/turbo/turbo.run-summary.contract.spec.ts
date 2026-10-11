@@ -2,7 +2,7 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { PRESETS } from '@turbo-console/repo-gen';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { runSummarySchema } from './common/run-summary.schema.ts';
 import type { RunSummary, TurboResult } from './common/turbo.type.ts';
@@ -17,6 +17,24 @@ const PASSING_BUILD = '"build": "node -e 0"';
 
 const FAILING_BUILD = `"build": ${JSON.stringify('node -e "process.exit(3)"')}`;
 
+const HANG_PID_FILE = 'hang.pid';
+
+/** Writes its pid to `HANG_PID_FILE` in the package dir, then never exits on its own within the test. */
+const HANGING_BUILD = `"build": ${JSON.stringify(`node -e "require('node:fs').writeFileSync('${HANG_PID_FILE}', String(process.pid)); setTimeout(() => {}, 60000)"`)}`;
+
+const TIMEOUT_MS = 2000;
+
+/** Signal 0 only probes whether `pid` still exists. */
+const isAlive = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 /** The JSON of the one run summary in `dir`; throws unless exactly one exists, so a stale summary cannot be read. */
 const readOnlyRunSummary = async (dir: string): Promise<unknown> => {
   const runsDir = join(dir, '.turbo', 'runs');
@@ -30,8 +48,8 @@ const readOnlyRunSummary = async (dir: string): Promise<unknown> => {
   return json;
 };
 
-/** Rewrites the package's `build` script so it exits 3. */
-const failBuild = async (packageDir: string): Promise<void> => {
+/** Rewrites the package's passing `build` script entry to `buildEntry`. */
+const replaceBuild = async (packageDir: string, buildEntry: string): Promise<void> => {
   const manifestFile = join(packageDir, 'package.json');
   const text = await readFile(manifestFile, 'utf8');
 
@@ -39,7 +57,7 @@ const failBuild = async (packageDir: string): Promise<void> => {
 
   if (!hasPassingBuild) throw new Error(`no ${PASSING_BUILD} in ${manifestFile}`);
 
-  await writeFile(manifestFile, text.replace(PASSING_BUILD, FAILING_BUILD));
+  await writeFile(manifestFile, text.replace(PASSING_BUILD, buildEntry));
 };
 
 describe('FEATURE: turbo run summary contract on generated fixtures', () => {
@@ -79,7 +97,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
     beforeAll(async () => {
       const leaf = leafPackage(fixture().manifest);
 
-      await failBuild(join(fixture().dir, leaf.path));
+      await replaceBuild(join(fixture().dir, leaf.path), FAILING_BUILD);
       result = await runTurbo(['run', 'build', '--summarize'], fixture().dir);
       summary = runSummarySchema.parse(await readOnlyRunSummary(fixture().dir));
     });
@@ -99,6 +117,30 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
 
       expect(exitCodes).toHaveLength(1);
       expect(exitCodes).not.toContain(0);
+    });
+  });
+
+  describe('GIVEN a target-like fixture whose leaf build hangs', () => {
+    const fixture = fixtureHook(TARGET_LIKE);
+
+    it('WHEN the leaf builds with a 2 s timeout THEN runTurbo rejects with an AbortError within a few seconds', async () => {
+      const leaf = leafPackage(fixture().manifest);
+      const leafDir = join(fixture().dir, leaf.path);
+
+      await replaceBuild(leafDir, HANGING_BUILD);
+
+      const startedAt = performance.now();
+      const run = runTurbo(['run', 'build', `--filter=${leaf.name}`], fixture().dir, TIMEOUT_MS);
+
+      await expect(run).rejects.toMatchObject({ name: 'AbortError' });
+
+      const elapsedMs = performance.now() - startedAt;
+      const hangPid = Number(await readFile(join(leafDir, HANG_PID_FILE), 'utf8'));
+      // runTurbo rejects as the abort fires, while turbo is still stopping the build; later tests must not race it.
+      const hasHangExited = (): boolean => !isAlive(hangPid);
+
+      await vi.waitUntil(hasHangExited, { timeout: 10_000, interval: 50 });
+      expect(elapsedMs).toBeLessThan(10_000);
     });
   });
 });
