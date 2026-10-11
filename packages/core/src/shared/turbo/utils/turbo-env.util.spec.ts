@@ -4,6 +4,9 @@ import { turboEnv } from './turbo-env.util.ts';
 
 const FORCED_ENTRIES: [string, string][] = [
   ['TURBO_CACHE', 'local:rw'],
+  ['TURBO_TOKEN', 'turbo-console-no-token'],
+  ['TURBO_API', 'http://127.0.0.1:1'],
+  ['TURBO_TELEMETRY_MESSAGE_DISABLED', '1'],
   ['GIT_CONFIG_COUNT', '1'],
   ['GIT_CONFIG_KEY_0', 'core.fsmonitor'],
   ['GIT_CONFIG_VALUE_0', 'false']
@@ -43,7 +46,7 @@ describe('FEATURE: turbo process env', () => {
   });
 
   describe('GIVEN an env with turbo credential and redirect variables', () => {
-    it('WHEN it is hardened THEN each is dropped, whatever its case, and TURBO_CACHE is forced to local:rw', () => {
+    it('WHEN it is hardened THEN each is dropped, whatever its case, and the forced TURBO_CACHE, TURBO_TOKEN and TURBO_API replace them', () => {
       const turboEntries: [string, string][] = [
         ['TURBO_API', 'http://cache.invalid'],
         ['TURBO_BINARY_PATH', '/bin/other-turbo'],
@@ -54,6 +57,21 @@ describe('FEATURE: turbo process env', () => {
         ['TURBO_TOKEN', 'token']
       ];
       const env = envOf([...KEPT_ENTRIES, ...turboEntries]);
+
+      const hardened = turboEnv(env);
+
+      expect(hardened).toStrictEqual(envOf([...KEPT_ENTRIES, ...FORCED_ENTRIES]));
+    });
+  });
+
+  describe('GIVEN an env with the cache-mode variables turbo rejects next to TURBO_CACHE', () => {
+    it('WHEN it is hardened THEN each is dropped, whatever its case', () => {
+      const cacheModeEntries: [string, string][] = [
+        ['TURBO_FORCE', 'true'],
+        ['turbo_remote_cache_read_only', 'true'],
+        ['TURBO_REMOTE_ONLY', 'true']
+      ];
+      const env = envOf([...KEPT_ENTRIES, ...cacheModeEntries]);
 
       const hardened = turboEnv(env);
 
