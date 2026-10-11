@@ -264,6 +264,9 @@ importers:
       '@turbo-console/tools':
         specifier: workspace:*
         version: link:../../tools
+      turbo:
+        specifier: catalog:dev
+        version: 2.11.7
 
   packages/graph-ui:
     devDependencies:

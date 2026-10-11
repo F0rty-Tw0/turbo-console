@@ -1,11 +1,11 @@
 import { toJsonFile } from './json-file.util.ts';
 import { taskNamesFor } from './plan-tasks.util.ts';
-import { NARROW_INPUTS } from '../common/fixture.const.ts';
-import type { FixtureFile, FixturePlan } from '../common/fixture.type.ts';
+import { NARROW_INPUTS, NULL_HASH_INPUTS } from '../common/fixture.const.ts';
+import type { FixtureFile, FixturePlan, FixtureSpec, TaskInput } from '../common/fixture.type.ts';
 
 type TurboTask = {
   readonly dependsOn: string[] | undefined;
-  readonly inputs: string[] | undefined;
+  readonly inputs: TaskInput[] | undefined;
 };
 
 type FutureFlags = {
@@ -34,6 +34,14 @@ export const dependsOnFor = (task: string): string[] | undefined => {
   }
 };
 
+const inputsFor = (spec: FixtureSpec, task: string): TaskInput[] | undefined => {
+  if (task === spec.nullHashTask) return NULL_HASH_INPUTS;
+
+  if (task === spec.narrowInputsTask) return NARROW_INPUTS;
+
+  return undefined;
+};
+
 /**
  * Root `turbo.json`. `undefined` keys are dropped by `JSON.stringify`, so `lint` renders as `{}` and
  * `experimentalTaskCommand` appears only when atom groups exist. `agentGuidance: false` stops turbo writing `AGENTS.md`.
@@ -43,7 +51,7 @@ export const renderTurboJson = (plan: FixturePlan): FixtureFile => {
 
   const taskEntry = (task: string): [string, TurboTask] => {
     const dependsOn = dependsOnFor(task);
-    const inputs = task === spec.narrowInputsTask ? NARROW_INPUTS : undefined;
+    const inputs = inputsFor(spec, task);
     const config: TurboTask = { dependsOn, inputs };
 
     return [task, config];

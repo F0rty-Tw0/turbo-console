@@ -54,4 +54,24 @@ describe('FEATURE: root turbo.json rendering', () => {
       expect(turbo).toHaveProperty(['tasks', 'test'], { dependsOn: ['^build'] });
     });
   });
+
+  describe('GIVEN lint as the null-hash task', () => {
+    const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, nullHashTask: 'lint' };
+    const plan: FixturePlan = { spec, packages: [], atomGroups: [] };
+
+    it('WHEN rendered THEN lint gets src/** plus a JIT README.md input', () => {
+      const jitInput = { mode: 'jit', globs: ['README.md'] };
+      const inputs = ['src/**', jitInput];
+
+      const turbo: unknown = JSON.parse(renderTurboJson(plan).content);
+
+      expect(turbo).toHaveProperty(['tasks', 'lint'], { inputs });
+    });
+
+    it('WHEN rendered THEN the narrow-inputs task keeps src/** only', () => {
+      const turbo: unknown = JSON.parse(renderTurboJson(plan).content);
+
+      expect(turbo).toHaveProperty(['tasks', 'test'], { dependsOn: ['^build'], inputs: ['src/**'] });
+    });
+  });
 });

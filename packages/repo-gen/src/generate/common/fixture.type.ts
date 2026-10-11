@@ -15,7 +15,17 @@ export type FixtureSpec = {
   readonly narrowInputsTask: string;
   readonly atomGroups: AtomGroupsSpec;
   readonly affectedUsingTaskInputs: boolean;
+  /** Root task whose inputs add a JIT glob, so turbo 2.11.7 dry-runs report it with `hash: null`. */
+  readonly nullHashTask?: string;
 };
+
+type JitInput = {
+  readonly mode: 'jit';
+  readonly globs: string[];
+};
+
+/** One root `turbo.json` `inputs` entry: a glob, or a glob set hashed just in time. */
+export type TaskInput = JitInput | string;
 
 export type PresetName = 'stress' | 'stretch-300' | 'target-like';
 

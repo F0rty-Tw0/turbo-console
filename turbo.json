@@ -19,7 +19,8 @@
     },
     "contract": {
       "dependsOn": ["^build"],
-      "cache": false
+      "cache": false,
+      "passThroughEnv": ["TURBO_CONSOLE_REAL_REPO"]
     },
     "e2e": {
       "dependsOn": ["build"]

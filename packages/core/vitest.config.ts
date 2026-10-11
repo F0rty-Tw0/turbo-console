@@ -6,6 +6,6 @@ export default defineConfig({
     root: import.meta.dirname,
     watch: false,
     include: ['src/**/*.spec.ts'],
-    exclude: ['**/fixtures/**', '**/tmp/**', '**/node_modules/**']
+    exclude: ['**/*.contract.spec.ts', '**/fixtures/**', '**/tmp/**', '**/node_modules/**']
   }
 });

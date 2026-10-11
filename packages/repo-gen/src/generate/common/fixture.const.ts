@@ -1,4 +1,4 @@
-import type { FixtureSpec, PresetName } from './fixture.type.ts';
+import type { FixtureSpec, PresetName, TaskInput } from './fixture.type.ts';
 
 /** The first four tasks of every package, in this order; task 5 onward is `task-<n>`. */
 export const BASE_TASKS = ['build', 'lint', 'test', 'typecheck'];
@@ -29,6 +29,11 @@ export const FIXTURE_CACHE_VERSION = 1;
 export const NOOP_SCRIPT = 'node -e 0';
 
 export const NARROW_INPUTS = ['src/**'];
+
+const jitReadme: TaskInput = { mode: 'jit', globs: ['README.md'] };
+
+/** Verify-first V4: any JIT entry makes turbo 2.11.7 defer the hash, so dry-runs report `hash: null`. */
+export const NULL_HASH_INPUTS: TaskInput[] = ['src/**', jitReadme];
 
 const targetLikeAtomGroups = { count: 1, filesPerGroup: 10, liveRatio: 0.1 };
 
