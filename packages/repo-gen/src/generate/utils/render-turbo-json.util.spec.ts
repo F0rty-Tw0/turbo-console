@@ -6,7 +6,7 @@ import { FIXTURE_SPEC_STUB } from '../test/stubs/fixture.stub.ts';
 
 describe('FEATURE: root turbo.json rendering', () => {
   describe('GIVEN the stub spec with six tasks, no atom groups and affectedUsingTaskInputs on', () => {
-    const plan: FixturePlan = { spec: FIXTURE_SPEC_STUB, packages: [] };
+    const plan: FixturePlan = { spec: FIXTURE_SPEC_STUB, packages: [], atomGroups: [] };
 
     it('WHEN rendered THEN the file is turbo.json at the fixture root', () => {
       const file = renderTurboJson(plan);
@@ -35,7 +35,7 @@ describe('FEATURE: root turbo.json rendering', () => {
     it('WHEN rendered THEN futureFlags enables experimentalTaskCommand and turns affectedUsingTaskInputs off', () => {
       const atomGroups = { ...FIXTURE_SPEC_STUB.atomGroups, count: 1 };
       const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, atomGroups, affectedUsingTaskInputs: false };
-      const plan: FixturePlan = { spec, packages: [] };
+      const plan: FixturePlan = { spec, packages: [], atomGroups: [] };
 
       const turbo: unknown = JSON.parse(renderTurboJson(plan).content);
 
@@ -46,7 +46,7 @@ describe('FEATURE: root turbo.json rendering', () => {
   describe('GIVEN lint as the narrow-inputs task', () => {
     it('WHEN rendered THEN lint gets src/** inputs and test gets none', () => {
       const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, narrowInputsTask: 'lint' };
-      const plan: FixturePlan = { spec, packages: [] };
+      const plan: FixturePlan = { spec, packages: [], atomGroups: [] };
 
       const turbo: unknown = JSON.parse(renderTurboJson(plan).content);
 

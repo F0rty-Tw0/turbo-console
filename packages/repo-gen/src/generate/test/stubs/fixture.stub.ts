@@ -1,4 +1,4 @@
-import type { FixtureSpec, PackagePlan } from '../../common/fixture.type.ts';
+import type { AtomGroupPlan, FixtureSpec, PackagePlan } from '../../common/fixture.type.ts';
 
 const atomGroups = { count: 0, filesPerGroup: 0, liveRatio: 0.1 };
 
@@ -23,4 +23,16 @@ export const PACKAGE_PLAN_STUB: PackagePlan = {
   tasks: ['build', 'lint', 'test', 'typecheck'],
   phantoms: [],
   role: 'regular'
+};
+
+const specFile = { path: 'tests/spec-001.spec.ts', live: false };
+
+const liveSpecFile = { path: 'tests/spec-002.live.spec.ts', live: true };
+
+export const ATOM_GROUP_PLAN_STUB: AtomGroupPlan = {
+  index: 1,
+  testPackage: '@fx/e2e-1',
+  definitionsPackage: '@fx/e2e-1-atoms',
+  dependencies: ['@fx/pkg-001'],
+  specFiles: [specFile, liveSpecFile]
 };

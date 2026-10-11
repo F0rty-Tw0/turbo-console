@@ -5,6 +5,19 @@ export const BASE_TASKS = ['build', 'lint', 'test', 'typecheck'];
 
 export const HUB_TAG = 'fx:hub';
 
+/** Atomizer umbrella task; its file tasks are `e2e-ci--<path>`, carriers `e2e-ci-src--<path>`. */
+export const ATOM_TASK = 'e2e-ci';
+
+export const ATOM_AGGREGATE_TASK = `${ATOM_TASK}--all`;
+
+export const ATOM_TASK_TAG = `atomizer:${ATOM_TASK}`;
+
+export const CARRIER_TAG = 'atomizer:carrier';
+
+export const DEFINITIONS_TAG = 'atomizer:definitions';
+
+export const LIVE_TAG = 'atomizer:live';
+
 export const FIXTURE_PACKAGE_MANAGER = 'pnpm@12.11.2';
 
 export const NOOP_SCRIPT = 'node -e 0';

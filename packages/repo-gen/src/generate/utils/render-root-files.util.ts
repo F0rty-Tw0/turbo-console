@@ -1,4 +1,5 @@
 import { toJsonFile } from './json-file.util.ts';
+import { atomPackages } from './plan-atom-groups.util.ts';
 import { renderLockfile } from './render-lockfile.util.ts';
 import { renderTurboJson } from './render-turbo-json.util.ts';
 import { FIXTURE_PACKAGE_MANAGER } from '../common/fixture.const.ts';
@@ -25,6 +26,8 @@ const workspaceFile = (plan: FixturePlan): FixtureFile => {
 export const renderRootFiles = (plan: FixturePlan): FixtureFile[] => {
   const manifest: RootPackageJson = { name: 'fx-root', private: true, packageManager: FIXTURE_PACKAGE_MANAGER };
   const gitignore: FixtureFile = { path: '.gitignore', content: 'node_modules/\n.turbo/\n' };
+  const atomImporters = plan.atomGroups.flatMap(atomPackages);
+  const lockfile = renderLockfile([...plan.packages, ...atomImporters]);
 
-  return [toJsonFile('package.json', manifest), workspaceFile(plan), gitignore, renderTurboJson(plan), renderLockfile(plan.packages)];
+  return [toJsonFile('package.json', manifest), workspaceFile(plan), gitignore, renderTurboJson(plan), lockfile];
 };

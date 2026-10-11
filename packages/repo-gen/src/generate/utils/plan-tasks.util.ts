@@ -14,8 +14,9 @@ const eligibleTaskIds = (pkg: PackagePlan, tasks: string[]): string[] => {
   return eligible.map((task) => taskId(pkg.name, task));
 };
 
-const phantomCount = (ratio: number, pairs: number): number => {
-  const exact = Math.round(ratio * pairs * 1e6) / 1e6;
+/** `ceil(ratio × total)` after rounding to 6 decimals, so float noise (0.1 × 30 = 3.0000000000000004) never adds one. */
+export const ratioCount = (ratio: number, total: number): number => {
+  const exact = Math.round(ratio * total * 1e6) / 1e6;
 
   return Math.ceil(exact);
 };
@@ -36,7 +37,7 @@ export const taskNamesFor = (count: number): string[] => {
 export const planTasks = (spec: FixtureSpec, packages: PackagePlan[], random: () => number): PackagePlan[] => {
   const tasks = taskNamesFor(spec.tasksPerPackage);
   const pairs = packages.filter(isPlannedRole).flatMap((pkg) => eligibleTaskIds(pkg, tasks));
-  const count = phantomCount(spec.phantomRatio, pairs.length);
+  const count = ratioCount(spec.phantomRatio, pairs.length);
   const phantomIds = new Set(pickRandom(pairs, count, random));
 
   const withTasks = (pkg: PackagePlan): PackagePlan => {

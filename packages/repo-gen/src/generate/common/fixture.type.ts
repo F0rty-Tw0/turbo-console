@@ -61,7 +61,25 @@ export type PackagePlan = {
   readonly role: PackageRole;
 };
 
+export type SpecFile = {
+  readonly path: string;
+  readonly live: boolean;
+};
+
+/**
+ * One test package (`apps/e2e-<index>`) and its definitions package (`tools/e2e-<index>-atoms`); `index` starts at 1.
+ * `dependencies` are the test package's workspace dependencies (the app it tests); the definitions package has none.
+ */
+export type AtomGroupPlan = {
+  readonly index: number;
+  readonly testPackage: string;
+  readonly definitionsPackage: string;
+  readonly dependencies: string[];
+  readonly specFiles: SpecFile[];
+};
+
 export type FixturePlan = {
   readonly spec: FixtureSpec;
   readonly packages: PackagePlan[];
+  readonly atomGroups: AtomGroupPlan[];
 };

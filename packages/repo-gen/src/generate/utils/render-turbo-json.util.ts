@@ -20,7 +20,8 @@ type RootTurboJson = {
   readonly futureFlags: FutureFlags;
 };
 
-const dependsOnFor = (task: string): string[] | undefined => {
+/** Root `dependsOn` of a root task; `undefined` when it has none. */
+export const dependsOnFor = (task: string): string[] | undefined => {
   switch (task) {
     case 'lint':
       return undefined;
