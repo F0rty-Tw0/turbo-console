@@ -1,6 +1,8 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "agentGuidance": false,
+  "globalDependencies": ["tsconfig.base.json", "eslint.config.base.ts", ".nvmrc"],
+  "globalPassThroughEnv": ["TMPDIR", "PLAYWRIGHT_BROWSERS_PATH"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
