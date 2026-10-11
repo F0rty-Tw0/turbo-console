@@ -50,8 +50,8 @@ jobs:
       - name: Cache VS Code test build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: packages/vscode/.vscode-test
-          key: vscode-${{ runner.os }}-1.141.0
+          path: packages/vscode/.vscode-test/vscode-*
+          key: vscode-${{ runner.os }}-${{ hashFiles('packages/vscode/test/integration.const.ts') }}
 
       - name: Integration (Linux)
         if: runner.os == 'Linux'

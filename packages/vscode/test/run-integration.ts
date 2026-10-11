@@ -8,8 +8,9 @@ const packageRoot = resolve(import.meta.dirname, '..');
 const vsixPath = resolve(packageRoot, '.vsix/turbo-console.vsix');
 const extensionDevelopmentPath = resolve(import.meta.dirname, 'harness');
 const extensionTestsPath = resolve(packageRoot, 'dist-test/suite.cjs');
-const installOptions = { version: VSCODE_TEST_VERSION };
-const testOptions = { version: VSCODE_TEST_VERSION, extensionDevelopmentPath, extensionTestsPath };
+const cachePath = resolve(packageRoot, '.vscode-test');
+const installOptions = { cachePath, version: VSCODE_TEST_VERSION };
+const testOptions = { cachePath, version: VSCODE_TEST_VERSION, extensionDevelopmentPath, extensionTestsPath };
 
 await runVSCodeCommand(['--install-extension', vsixPath], installOptions);
 await runTests(testOptions);
