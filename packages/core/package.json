@@ -20,6 +20,7 @@
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
+    "bench": "node ../../tools/dist/run-benches.js",
     "contract": "vitest run --config vitest.contract.config.ts"
   },
   "dependencies": {
