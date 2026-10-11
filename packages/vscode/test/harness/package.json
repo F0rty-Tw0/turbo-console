@@ -1,0 +1,8 @@
+{
+  "name": "harness",
+  "publisher": "turbo-console-dev",
+  "version": "0.0.0",
+  "engines": {
+    "vscode": "*"
+  }
+}

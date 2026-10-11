@@ -7,6 +7,6 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "*.config.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "*.config.ts"],
   "exclude": ["**/fixtures/**", "**/tmp/**"]
 }
