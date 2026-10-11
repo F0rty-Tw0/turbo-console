@@ -17,6 +17,16 @@ const loadDescriptors = async (file: string): Promise<BenchDescriptor[]> => {
   return parsed.data.default;
 };
 
+const claimNames = (fileByName: Map<string, string>, file: string, descriptors: BenchDescriptor[]): void => {
+  for (const descriptor of descriptors) {
+    const firstFile = fileByName.get(descriptor.name);
+
+    if (firstFile !== undefined) throw new Error(`${firstFile} and ${file}: duplicate bench name "${descriptor.name}"`);
+
+    fileByName.set(descriptor.name, file);
+  }
+};
+
 const measure = async (packageName: string, descriptor: BenchDescriptor): Promise<BenchResult> => {
   const durations = await sampleBench(descriptor, WARMUP, SAMPLES);
   const medianNs = median(durations);
@@ -31,19 +41,21 @@ const measure = async (packageName: string, descriptor: BenchDescriptor): Promis
 };
 
 /**
- * Loads every bench file under `packageDir` before timing anything, so a malformed file fails fast and leaves no
- * results file. Then samples each bench in file order, names it `<basename(packageDir)>/<bench>`, and writes
+ * Loads every bench file under `packageDir` before timing anything, so a malformed file or a bench name declared twice
+ * fails fast and leaves no results file. Then samples each bench in file order, names it `<basename(packageDir)>/<bench>`, and writes
  * `.bench/results.json`.
  */
 export const runBenches = async (packageDir: string): Promise<BenchResult[]> => {
   const files = await findBenchFiles(packageDir);
   const packageName = basename(packageDir);
+  const fileByName = new Map<string, string>();
   const descriptors: BenchDescriptor[] = [];
   const results: BenchResult[] = [];
 
   for (const file of files) {
     const fileDescriptors = await loadDescriptors(file);
 
+    claimNames(fileByName, file, fileDescriptors);
     descriptors.push(...fileDescriptors);
   }
 

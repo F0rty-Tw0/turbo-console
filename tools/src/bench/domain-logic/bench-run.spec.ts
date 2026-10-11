@@ -81,6 +81,53 @@ describe('FEATURE: bench run', () => {
     });
   });
 
+  describe('GIVEN a package whose bench name holds a newline', () => {
+    it('WHEN the benches run THEN it rejects naming the file', async () => {
+      await writeSource(
+        packageDir,
+        'src/a/test/nl.bench.ts',
+        "export default [{ name: 'a\\n::error::x', fn: () => 1, gate: true }];\n"
+      );
+
+      const run = runBenches(packageDir);
+
+      await expect(run).rejects.toThrow(/nl\.bench\.ts/);
+    });
+  });
+
+  describe('GIVEN two bench files that declare the same bench name, with benches that throw when timed', () => {
+    beforeEach(async () => {
+      await writeSource(
+        packageDir,
+        'src/a/test/a.bench.ts',
+        "export default [{ name: 'parse', fn: () => { throw new Error('timed'); }, gate: true }];\n"
+      );
+      await writeSource(
+        packageDir,
+        'src/b/test/b.bench.ts',
+        "export default [{ name: 'parse', fn: () => { throw new Error('timed'); }, gate: false }];\n"
+      );
+    });
+
+    it('WHEN the benches run THEN it rejects naming both files and the bench, before timing any', async () => {
+      const run = runBenches(packageDir);
+
+      await expect(run).rejects.toThrow(/a\.bench\.ts and .*b\.bench\.ts: duplicate bench name "parse"$/);
+    });
+  });
+
+  describe('GIVEN one bench file that declares the same bench name twice', () => {
+    it('WHEN the benches run THEN it rejects naming the file and the bench', async () => {
+      const source = "export default [{ name: 'parse', fn: () => 1, gate: true }, { name: 'parse', fn: () => 2, gate: true }];\n";
+
+      await writeSource(packageDir, 'src/a/test/a.bench.ts', source);
+
+      const run = runBenches(packageDir);
+
+      await expect(run).rejects.toThrow(/a\.bench\.ts and .*a\.bench\.ts: duplicate bench name "parse"$/);
+    });
+  });
+
   describe('GIVEN a package without bench files', () => {
     it('WHEN the benches run THEN it writes an empty results list', async () => {
       await mkdir(packageDir);

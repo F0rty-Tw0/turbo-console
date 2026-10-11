@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { readRunsDir } from './bench-runs.ts';
 import type { BenchResult } from '../common/bench.type.ts';
+
+const IS_WINDOWS = process.platform === 'win32';
 
 const result = (name: string, medianNs: number): BenchResult => {
   const benchResult: BenchResult = { name, medianNs, samples: 25, gate: true };
@@ -98,6 +100,36 @@ describe('FEATURE: bench runs dir', () => {
       const read = readRunsDir(root);
 
       await expect(read).rejects.toThrow(/packages[/\\]core[/\\]results\.json/);
+    });
+
+    it('WHEN a name holds a newline THEN reading rejects', async () => {
+      const injected = [result('core/parse\n::error::forged', 1)];
+
+      await writeJson(root, '1/results.json', injected);
+
+      const read = readRunsDir(root);
+
+      await expect(read).rejects.toThrow(/not a bench results file/);
+    });
+
+    it('WHEN a median is 0 THEN reading rejects', async () => {
+      await writeJson(root, '1/results.json', [result('core/parse', 0)]);
+
+      const read = readRunsDir(root);
+
+      await expect(read).rejects.toThrow(/not a bench results file/);
+    });
+  });
+
+  describe.skipIf(IS_WINDOWS)('GIVEN a results.json that is a symlink to another file', () => {
+    it('WHEN the dir is read THEN it rejects as not a regular file without reading the target', async () => {
+      await writeFile(join(root, 'secret.txt'), 'root:x:0:0:secret\n');
+      await mkdir(join(root, '1'));
+      await symlink(join(root, 'secret.txt'), join(root, '1', 'results.json'));
+
+      const read = readRunsDir(root);
+
+      await expect(read).rejects.toThrow(/results\.json: not a regular file$/);
     });
   });
 });
