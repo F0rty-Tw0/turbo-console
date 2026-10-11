@@ -91,6 +91,28 @@ describe('FEATURE: bench runs dir', () => {
     });
   });
 
+  describe('GIVEN a results file whose names use every allowed character class', () => {
+    it('WHEN a name holds @, . and a space THEN reading keeps it', async () => {
+      const results = [result('core/@scope pkg.v2', 1)];
+
+      await writeJson(root, '1/results.json', results);
+
+      const runs = await readRunsDir(root);
+
+      expect(runs).toStrictEqual([results]);
+    });
+
+    it('WHEN a name is 200 characters THEN reading keeps it', async () => {
+      const results = [result('a'.repeat(200), 1)];
+
+      await writeJson(root, '1/results.json', results);
+
+      const runs = await readRunsDir(root);
+
+      expect(runs).toStrictEqual([results]);
+    });
+  });
+
   describe('GIVEN a results file outside the bench JSON contract', () => {
     it('WHEN the dir is read THEN it rejects naming the file', async () => {
       const invalid = [{ name: 'core/parse' }];
@@ -103,9 +125,33 @@ describe('FEATURE: bench runs dir', () => {
     });
 
     it('WHEN a name holds a newline THEN reading rejects', async () => {
-      const injected = [result('core/parse\n::error::forged', 1)];
+      const injected = [result('core/parse\nforged', 1)];
 
       await writeJson(root, '1/results.json', injected);
+
+      const read = readRunsDir(root);
+
+      await expect(read).rejects.toThrow(/not a bench results file/);
+    });
+
+    it('WHEN a name holds a : THEN reading rejects', async () => {
+      await writeJson(root, '1/results.json', [result('core/a:b', 1)]);
+
+      const read = readRunsDir(root);
+
+      await expect(read).rejects.toThrow(/not a bench results file/);
+    });
+
+    it('WHEN a name is empty THEN reading rejects', async () => {
+      await writeJson(root, '1/results.json', [result('', 1)]);
+
+      const read = readRunsDir(root);
+
+      await expect(read).rejects.toThrow(/not a bench results file/);
+    });
+
+    it('WHEN a name is 201 characters THEN reading rejects', async () => {
+      await writeJson(root, '1/results.json', [result('a'.repeat(201), 1)]);
 
       const read = readRunsDir(root);
 
