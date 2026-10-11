@@ -20,6 +20,12 @@ export const LIVE_TAG = 'atomizer:live';
 
 export const FIXTURE_PACKAGE_MANAGER = 'pnpm@12.11.2';
 
+/**
+ * Folded into the fixture cache key next to the rendered files. Bump it whenever the git step changes (branch, commit
+ * message, `git -c` flags, hooks handling), since those change the cached repo without changing any rendered file.
+ */
+export const FIXTURE_CACHE_VERSION = 1;
+
 export const NOOP_SCRIPT = 'node -e 0';
 
 export const NARROW_INPUTS = ['src/**'];

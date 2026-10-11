@@ -3,7 +3,7 @@ import { parseArgs } from 'node:util';
 
 import { PRESETS } from '../common/fixture.const.ts';
 import type { FixtureSpec, PresetName } from '../common/fixture.type.ts';
-import { writeFixture } from '../domain-logic/fixture-generation.ts';
+import { isUsableOutDir, writeFixture } from '../domain-logic/fixture-generation.ts';
 
 type CliValues = {
   readonly preset?: string | undefined;
@@ -11,13 +11,16 @@ type CliValues = {
   readonly out?: string | undefined;
 };
 
-const USAGE = 'usage: repo-gen --preset <name> [--seed <n>] --out <dir>\n';
+const USAGE = 'usage: repo-gen --preset=<name> [--seed=<n>] --out=<dir>\n';
+
+/** mulberry32 keeps 32 bits of state, so larger seeds would alias smaller ones. */
+const SEED_LIMIT = 2 ** 32;
 
 const STRING_OPTION = { type: 'string' } as const;
 
 const OPTIONS = { preset: STRING_OPTION, seed: STRING_OPTION, out: STRING_OPTION };
 
-const SEED_PATTERN = /^-?\d+$/;
+const SEED_PATTERN = /^\d+$/;
 
 const isPresetName = (name: string): name is PresetName => Object.hasOwn(PRESETS, name);
 
@@ -55,7 +58,7 @@ const generate = async (spec: FixtureSpec, out: string): Promise<number> => {
   }
 };
 
-/** `repo-gen --preset <name> [--seed <n>] --out <dir>`: 0 on success, 1 when generation fails, 2 on bad arguments. */
+/** `repo-gen --preset=<name> [--seed=<n>] --out=<dir>`: 0 on success, 1 when generation fails, 2 on bad arguments or a non-empty out dir. */
 export const runGenerateCli = async (args: string[]): Promise<number> => {
   const values = parse(args);
 
@@ -73,12 +76,17 @@ export const runGenerateCli = async (args: string[]): Promise<number> => {
 
   const presetSpec = PRESETS[preset];
   const seedText = values.seed ?? String(presetSpec.seed);
-  const isIntegerSeed = SEED_PATTERN.test(seedText);
+  const isDigits = SEED_PATTERN.test(seedText);
+  const seed = Number(seedText);
+  const isSeedInRange = isDigits && seed < SEED_LIMIT;
 
-  if (!isIntegerSeed) return fail(`repo-gen: --seed must be an integer, got "${seedText}"\n${USAGE}`);
+  if (!isSeedInRange) return fail(`repo-gen: --seed must be an integer with 0 <= seed < ${SEED_LIMIT}, got "${seedText}"\n${USAGE}`);
 
-  const spec: FixtureSpec = { ...presetSpec, seed: Number(seedText) };
+  const spec: FixtureSpec = { ...presetSpec, seed };
   const out = resolve(values.out);
+  const isUsable = await isUsableOutDir(out);
+
+  if (!isUsable) return fail(`repo-gen: ${out} is not empty; pass a new or empty --out dir\n`);
 
   return generate(spec, out);
 };

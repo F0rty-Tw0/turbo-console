@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -94,11 +94,34 @@ describe('FEATURE: fixture generation', () => {
         expect(changed.trim().split('\n').toSorted()).toStrictEqual(paths.toSorted());
       });
 
+      it('THEN editing a missing path rejects, changes no file and adds no commit', async () => {
+        const before = await fileTree(dir);
+
+        const edit = applyEdit(dir, ['packages/hub/README.md', 'packages/hub/missing.ts']);
+
+        await expect(edit).rejects.toThrow('missing.ts');
+        expect(await fileTree(dir)).toStrictEqual(before);
+        expect(await git(dir, ['log', '--format=%s'])).toBe('head\nbase\n');
+      });
+
       it('THEN each edited file ends with the edit line', async () => {
         const content = await readFile(join(dir, 'packages/hub/README.md'), 'utf8');
 
         expect(content).toBe('# @fx/hub\n\n// edit\n');
       });
+    });
+  });
+
+  describe('GIVEN the target-like preset and a dir that already has an entry', () => {
+    it('WHEN generated THEN it rejects and the dir keeps only that entry', async () => {
+      const dir = join(root, 'taken');
+
+      await mkdir(dir);
+      await writeFile(join(dir, 'keep.txt'), 'keep\n');
+      const generation = generateFixture(TARGET_LIKE, dir);
+
+      await expect(generation).rejects.toThrow(`${dir} is not empty`);
+      expect(await readdir(dir)).toStrictEqual(['keep.txt']);
     });
   });
 

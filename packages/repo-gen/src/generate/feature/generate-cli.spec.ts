@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -102,6 +102,25 @@ describe('FEATURE: generate CLI', () => {
       expect(code).toBe(2);
     });
 
+    it('WHEN the seed is 2^32 THEN it resolves to 2 and names the seed range', async () => {
+      const code = await runGenerateCli(['--preset=target-like', '--seed=4294967296', `--out=${join(root, 'repo')}`]);
+
+      expect(code).toBe(2);
+      expect(process.stderr.write).toHaveBeenCalledWith(expect.stringContaining('0 <= seed < 4294967296'));
+    });
+
+    it('WHEN the seed is negative THEN it resolves to 2', async () => {
+      const code = await runGenerateCli(['--preset=target-like', '--seed=-1', `--out=${join(root, 'repo')}`]);
+
+      expect(code).toBe(2);
+    });
+
+    it('WHEN the usage is printed THEN it shows the --seed=<n> form', async () => {
+      await runGenerateCli([]);
+
+      expect(process.stderr.write).toHaveBeenCalledWith(expect.stringContaining('[--seed=<n>]'));
+    });
+
     it('WHEN an unknown flag is passed THEN it resolves to 2 and prints the usage', async () => {
       const code = await runGenerateCli(['--bogus']);
 
@@ -110,16 +129,30 @@ describe('FEATURE: generate CLI', () => {
     });
   });
 
-  describe('GIVEN an out dir that already holds a repo', () => {
-    it('WHEN run THEN it resolves to 1 and prints the error', async () => {
+  describe('GIVEN an out dir that already has an entry', () => {
+    it('WHEN run THEN it resolves to 2, says the dir is not empty and writes nothing', async () => {
       const out = join(root, 'repo');
 
-      await runGenerateCli(['--preset', 'target-like', '--out', out]);
+      await mkdir(out);
+      await writeFile(join(out, 'keep.txt'), 'keep\n');
+      const code = await runGenerateCli(['--preset', 'target-like', '--out', out]);
+      const entries = await readdir(out);
 
+      expect(code).toBe(2);
+      expect(process.stderr.write).toHaveBeenCalledWith(expect.stringContaining(`${out} is not empty`));
+      expect(entries).toStrictEqual(['keep.txt']);
+      expect(existsSync(`${out}.manifest.json`)).toBe(false);
+    });
+  });
+
+  describe('GIVEN an out dir that exists and is empty', () => {
+    it('WHEN run THEN it resolves to 0', async () => {
+      const out = join(root, 'repo');
+
+      await mkdir(out);
       const code = await runGenerateCli(['--preset', 'target-like', '--out', out]);
 
-      expect(code).toBe(1);
-      expect(process.stderr.write).toHaveBeenCalledWith(expect.stringContaining('repo-gen:'));
+      expect(code).toBe(0);
     });
   });
 });

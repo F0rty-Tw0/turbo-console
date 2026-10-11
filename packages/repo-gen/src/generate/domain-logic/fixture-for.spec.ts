@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readdir, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -10,8 +10,13 @@ import type { FixtureHandle, FixtureSpec } from '../common/fixture.type.ts';
 import { pathExists } from '../data-access/fixture-files.ts';
 import { git } from '../data-access/git.ts';
 import { fileTree } from '../test/utils/file-tree.spec.util.ts';
+import { stubTempDir } from '../test/utils/temp-env.spec.util.ts';
 
 const TARGET_LIKE = PRESETS['target-like'];
+
+const CACHE_ROOT_NAME = `turbo-console-fixtures-${process.getuid?.() ?? 'user'}`;
+
+const IS_WINDOWS = process.platform === 'win32';
 
 const disposeOf = async (handle: FixtureHandle): Promise<void> => handle.dispose();
 
@@ -21,7 +26,7 @@ describe('FEATURE: cached fixture handles', () => {
 
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), 'repo-gen-cache-'));
-    vi.stubEnv('TMPDIR', root);
+    stubTempDir(root);
     handles = [];
   });
 
@@ -63,7 +68,7 @@ describe('FEATURE: cached fixture handles', () => {
       });
 
       it('THEN exactly one cache entry is left and no temp generation dir remains', async () => {
-        const entries = await readdir(join(root, 'turbo-console-fixtures'));
+        const entries = await readdir(join(root, CACHE_ROOT_NAME));
 
         expect(entries).toHaveLength(1);
         expect(entries[0]).toMatch(/^[0-9a-f]{64}$/);
@@ -77,7 +82,7 @@ describe('FEATURE: cached fixture handles', () => {
       const reordered: FixtureSpec = { affectedUsingTaskInputs, ...rest };
 
       handles = [await fixtureFor(TARGET_LIKE), await fixtureFor(reordered)];
-      const entries = await readdir(join(root, 'turbo-console-fixtures'));
+      const entries = await readdir(join(root, CACHE_ROOT_NAME));
 
       expect(entries).toHaveLength(1);
     });
@@ -90,7 +95,27 @@ describe('FEATURE: cached fixture handles', () => {
       const request = fixtureFor(TARGET_LIKE);
 
       await expect(request).rejects.toThrow();
-      expect(await readdir(join(root, 'turbo-console-fixtures'))).toStrictEqual([]);
+      expect(await readdir(join(root, CACHE_ROOT_NAME))).toStrictEqual([]);
+    });
+  });
+
+  describe.skipIf(IS_WINDOWS)('GIVEN a pre-existing cache root that is not private', () => {
+    it('WHEN it has group and other permission bits THEN the request rejects naming the root', async () => {
+      await mkdir(join(root, CACHE_ROOT_NAME), { mode: 0o700 });
+      await chmod(join(root, CACHE_ROOT_NAME), 0o755);
+
+      const request = fixtureFor(TARGET_LIKE);
+
+      await expect(request).rejects.toThrow(`${CACHE_ROOT_NAME} is not private`);
+    });
+
+    it('WHEN it is a symlink to a private dir THEN the request rejects', async () => {
+      await mkdir(join(root, 'elsewhere'), { mode: 0o700 });
+      await symlink(join(root, 'elsewhere'), join(root, CACHE_ROOT_NAME));
+
+      const request = fixtureFor(TARGET_LIKE);
+
+      await expect(request).rejects.toThrow(`${CACHE_ROOT_NAME} is not private`);
     });
   });
 
