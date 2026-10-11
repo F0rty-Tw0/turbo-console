@@ -31,3 +31,10 @@ export const commandlessTaskNames = (graph: PackageGraph): string[] => {
 
   return names.toSorted();
 };
+
+/** Sorted `source->target` pairs of the package edges turbo reports. */
+export const graphEdgePairs = (graph: PackageGraph): string[] => {
+  const pairs = graph.data.packageGraph.edges.items.map((edge) => `${edge.source}->${edge.target}`);
+
+  return pairs.toSorted();
+};

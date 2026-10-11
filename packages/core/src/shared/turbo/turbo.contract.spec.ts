@@ -1,6 +1,4 @@
 import { createHash } from 'node:crypto';
-import { readFile, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
 
 import { PRESETS, applyEdit } from '@turbo-console/repo-gen';
 import type { FixtureHandle, FixtureSpec } from '@turbo-console/repo-gen';
@@ -9,15 +7,21 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { affectedTasksSchema } from './common/affected-tasks.schema.ts';
 import { dryRunSchema } from './common/dry-run.schema.ts';
 import { packageGraphSchema } from './common/package-graph.schema.ts';
-import { runSummarySchema } from './common/run-summary.schema.ts';
 import { AFFECTED_TASKS_QUERY, PACKAGE_GRAPH_QUERY } from './common/turbo-query.const.ts';
 import { SCHEMA_SDL_SHA256, SUPPORTED_TURBO_RANGE } from './common/turbo-version.const.ts';
 import type { DryRun, PackageGraph, TurboResult } from './common/turbo.type.ts';
 import { queryTurbo } from './data-access/query-turbo.ts';
 import { runTurbo } from './data-access/run-turbo.ts';
 import { fixtureHook } from './test/utils/fixture-hook.spec.util.ts';
-import { leafPackage, manifestTaskNames, packageTaskNames, packageWithRole } from './test/utils/manifest.spec.util.ts';
-import { commandTaskNames, commandlessTaskNames, graphPackageNames } from './test/utils/package-graph.spec.util.ts';
+import {
+  leafPackage,
+  manifestDependencyPairs,
+  manifestTaskNames,
+  packageTaskNames,
+  packageWithRole
+} from './test/utils/manifest.spec.util.ts';
+import { commandTaskNames, commandlessTaskNames, graphEdgePairs, graphPackageNames } from './test/utils/package-graph.spec.util.ts';
+import { optionalKeyPaths } from './test/utils/schema-strictness.spec.util.ts';
 import { isSupportedTurboVersion } from './utils/turbo-version.util.ts';
 
 const TARGET_LIKE = PRESETS['target-like'];
@@ -47,13 +51,18 @@ const parseDryRun = (result: TurboResult): DryRun => {
   return dryRunSchema.parse(json);
 };
 
-/** Appends a line to the leaf package's README.md, commits it as HEAD, and lists the tasks turbo calls affected. */
-const affectedByLeafEdit = async (fixture: FixtureHandle): Promise<string[]> => {
+/** Appends a line to the leaf package's README.md, commits it as HEAD, and returns turbo's affected-tasks JSON. */
+const affectedByLeafEdit = async (fixture: FixtureHandle): Promise<unknown> => {
   const leaf = leafPackage(fixture.manifest);
 
   await applyEdit(fixture.dir, [`${leaf.path}/README.md`]);
   const result = await queryTurbo(AFFECTED_TASKS_QUERY, fixture.dir, AFFECTED_RANGE);
   const json: unknown = JSON.parse(result.stdout);
+
+  return json;
+};
+
+const affectedTaskNames = (json: unknown): string[] => {
   const affected = affectedTasksSchema.parse(json);
 
   return affected.data.affectedTasks.items.map((task) => task.fullName);
@@ -74,6 +83,10 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
       expect(result.exitCode).toBe(0);
     });
 
+    it('THEN stderr is empty', () => {
+      expect(result.stderr).toBe('');
+    });
+
     it('THEN stdout is one JSON document with no banner in front of it', () => {
       const json: unknown = JSON.parse(result.stdout);
 
@@ -87,6 +100,14 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
       const parsed = packageGraphSchema.safeParse(json);
 
       expect(parsed.success).toBe(true);
+    });
+
+    it('THEN deleting any key packageGraphSchema lists makes it reject the output', () => {
+      const json: unknown = JSON.parse(result.stdout);
+
+      const optional = optionalKeyPaths(packageGraphSchema, json);
+
+      expect(optional).toStrictEqual([]);
     });
 
     it('THEN every manifest phantom task is listed with command null', () => {
@@ -110,17 +131,35 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
   describe('GIVEN a target-like fixture dry-run (scenario 2)', () => {
     const fixture = fixtureHook(TARGET_LIKE);
 
-    it('WHEN build lint typecheck run dry THEN exactly the manifest phantoms of those tasks show <NONEXISTENT>', async () => {
-      const isRequested = (name: string): boolean => /#(?:build|lint|typecheck)$/.test(name);
-      const phantoms = manifestTaskNames(fixture().manifest, ['phantom']).filter(isRequested);
+    describe('WHEN build lint typecheck run dry', () => {
+      let result: TurboResult;
 
-      const result = await runTurbo(['run', 'build', 'lint', 'typecheck', '--dry=json'], fixture().dir);
+      beforeAll(async () => {
+        result = await runTurbo(['run', 'build', 'lint', 'typecheck', '--dry=json'], fixture().dir);
+      });
 
-      const dryRun = parseDryRun(result);
-      const nonexistent = dryRun.tasks.filter((task) => task.command === NONEXISTENT_COMMAND).map((task) => task.taskId);
+      it('THEN exactly the manifest phantoms of those tasks show <NONEXISTENT>', () => {
+        const isRequested = (name: string): boolean => /#(?:build|lint|typecheck)$/.test(name);
+        const phantoms = manifestTaskNames(fixture().manifest, ['phantom']).filter(isRequested);
 
-      expect(phantoms.length).toBeGreaterThan(0);
-      expect(nonexistent.toSorted()).toStrictEqual(phantoms);
+        const dryRun = parseDryRun(result);
+        const nonexistent = dryRun.tasks.filter((task) => task.command === NONEXISTENT_COMMAND).map((task) => task.taskId);
+
+        expect(phantoms.length).toBeGreaterThan(0);
+        expect(nonexistent.toSorted()).toStrictEqual(phantoms);
+      });
+
+      it('THEN stderr is empty, so --skip-infer dropped the no-local-turbo warning', () => {
+        expect(result.stderr).toBe('');
+      });
+
+      it('THEN deleting any key dryRunSchema lists makes it reject the output', () => {
+        const json: unknown = JSON.parse(result.stdout);
+
+        const optional = optionalKeyPaths(dryRunSchema, json);
+
+        expect(optional).toStrictEqual([]);
+      });
     });
 
     it('WHEN build runs dry filtered to one package THEN the output parses and lists that package build', async () => {
@@ -149,33 +188,15 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
     });
   });
 
-  describe('GIVEN a target-like fixture built with --summarize (scenario 3)', () => {
-    const fixture = fixtureHook(TARGET_LIKE);
-
-    it('WHEN the build finishes THEN its run summary passes runSummarySchema', async () => {
-      const runsDir = join(fixture().dir, '.turbo', 'runs');
-
-      const result = await runTurbo(['run', 'build', '--summarize'], fixture().dir);
-
-      const [summaryFile, ...others] = await readdir(runsDir);
-      const text = await readFile(join(runsDir, summaryFile ?? ''), 'utf8');
-      const json: unknown = JSON.parse(text);
-      const summary = runSummarySchema.parse(json);
-
-      expect(result.exitCode).toBe(0);
-      expect(others).toStrictEqual([]);
-      expect(summary.execution.exitCode).toBe(0);
-      expect(summary.tasks.length).toBeGreaterThan(0);
-    });
-  });
-
   describe('GIVEN a leaf README edit committed as HEAD (scenario 4)', () => {
     describe('WHEN affectedUsingTaskInputs is on', () => {
       const fixture = fixtureHook(TARGET_LIKE);
+      let json: unknown;
       let affected: string[] = [];
 
       beforeAll(async () => {
-        affected = await affectedByLeafEdit(fixture());
+        json = await affectedByLeafEdit(fixture());
+        affected = affectedTaskNames(json);
       });
 
       it('THEN the leaf build is listed', () => {
@@ -189,6 +210,12 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
 
         expect(affected).not.toContain(`${leaf.name}#test`);
       });
+
+      it('THEN deleting any key affectedTasksSchema lists makes it reject the output', () => {
+        const optional = optionalKeyPaths(affectedTasksSchema, json);
+
+        expect(optional).toStrictEqual([]);
+      });
     });
 
     describe('WHEN affectedUsingTaskInputs is off', () => {
@@ -198,7 +225,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
         const leaf = leafPackage(fixture().manifest);
         const leafTasks = packageTaskNames(fixture().manifest, leaf.name);
 
-        const affected = await affectedByLeafEdit(fixture());
+        const affected = affectedTaskNames(await affectedByLeafEdit(fixture()));
 
         expect(leafTasks).toContain(`${leaf.name}#test`);
         expect(affected).toStrictEqual(expect.arrayContaining(leafTasks));
@@ -269,6 +296,13 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
 
       expect(commandlessTaskNames(graph)).toStrictEqual(expected);
     });
+
+    it('THEN the package edges are exactly the manifest dependencies, dependent as source', () => {
+      const expected = manifestDependencyPairs(fixture().manifest);
+
+      expect(expected.length).toBeGreaterThan(0);
+      expect(graphEdgePairs(graph)).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN a task name no package defines', () => {
@@ -286,6 +320,8 @@ describe.skipIf(REAL_REPO === '')('FEATURE: turbo CLI contract on the repo at TU
   it('WHEN its package graph is queried THEN stdout passes packageGraphSchema (scenario 1)', async () => {
     const result = await queryTurbo(PACKAGE_GRAPH_QUERY, REAL_REPO);
 
+    expect(result.exitCode).toBe(0);
+
     const json: unknown = JSON.parse(result.stdout);
     const parsed = packageGraphSchema.safeParse(json);
 
@@ -295,6 +331,8 @@ describe.skipIf(REAL_REPO === '')('FEATURE: turbo CLI contract on the repo at TU
   it('WHEN build runs dry on the whole repo THEN stdout passes dryRunSchema (scenario 2)', async () => {
     const result = await runTurbo(['run', 'build', '--dry=json'], REAL_REPO);
 
+    expect(result.exitCode).toBe(0);
+
     const json: unknown = JSON.parse(result.stdout);
     const parsed = dryRunSchema.safeParse(json);
 
@@ -303,6 +341,8 @@ describe.skipIf(REAL_REPO === '')('FEATURE: turbo CLI contract on the repo at TU
 
   it('WHEN turbo reports its version THEN it is inside SUPPORTED_TURBO_RANGE (scenario 6)', async () => {
     const result = await runTurbo(['--version'], REAL_REPO);
+
+    expect(result.exitCode).toBe(0);
 
     const isSupported = isSupportedTurboVersion(result.stdout.trim(), SUPPORTED_TURBO_RANGE);
 

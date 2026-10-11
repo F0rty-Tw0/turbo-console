@@ -3,6 +3,7 @@ import type { ExecFileException } from 'node:child_process';
 import { createRequire } from 'node:module';
 
 import type { TurboResult } from '../common/turbo.type.ts';
+import { turboEnv } from '../utils/turbo-env.util.ts';
 
 /** `stretch-300` `packageGraph` stdout alone is ~10 MB, far past execFile's 1 MB default. */
 const MAX_BUFFER = 256 * 1024 * 1024;
@@ -11,14 +12,23 @@ const MAX_BUFFER = 256 * 1024 * 1024;
 const SKIP_INFER = '--skip-infer';
 
 /**
- * Runs the turbo binary this package resolves (`node <turbo/bin/turbo> --skip-infer ...args`) in `cwd`, with no shell.
- * Resolves with turbo's exit code, non-zero included; rejects only when no exit code exists (spawn failure, a kill
- * signal, or output past the 256 MB buffer).
+ * A hung turbo would otherwise block its caller forever. Applied as an abort signal, not execFile's `timeout`: turbo
+ * exits 0 on the SIGTERM that `timeout` sends, so a timed-out run would resolve as a success.
+ */
+const TIMEOUT_MS = 60_000;
+
+/**
+ * Runs the turbo binary this package resolves (`node <turbo/bin/turbo> --skip-infer ...args`) in `cwd`, with no shell,
+ * under the hardened env from `turboEnv`: no inherited `GIT_*` or turbo credential variables, local cache only, git
+ * fsmonitor off. Resolves with turbo's exit code, non-zero included; rejects only when no exit code exists (spawn
+ * failure, a kill signal, the 60 s timeout, or output past the 256 MB buffer).
  */
 export const runTurbo = async (args: string[], cwd: string): Promise<TurboResult> => {
   const { promise, resolve, reject } = Promise.withResolvers<TurboResult>();
   const turboBin = createRequire(import.meta.url).resolve('turbo/bin/turbo');
-  const options = { cwd, maxBuffer: MAX_BUFFER, windowsHide: true };
+  const env = turboEnv(process.env);
+  const signal = AbortSignal.timeout(TIMEOUT_MS);
+  const options = { cwd, env, maxBuffer: MAX_BUFFER, signal, windowsHide: true };
 
   const onExit = (error: ExecFileException | null, stdout: string, stderr: string): void => {
     const exitCode = error === null ? 0 : error.code;

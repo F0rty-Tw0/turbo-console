@@ -35,3 +35,11 @@ export const leafPackage = (manifest: Manifest): ManifestPackage => {
 
   return found;
 };
+
+/** Sorted `dependent->dependency` pairs of every package dependency in the manifest. */
+export const manifestDependencyPairs = (manifest: Manifest): string[] => {
+  const pairsOf = (pkg: ManifestPackage): string[] => pkg.dependencies.map((dependency) => `${pkg.name}->${dependency}`);
+  const pairs = manifest.packages.flatMap(pairsOf);
+
+  return pairs.toSorted();
+};
