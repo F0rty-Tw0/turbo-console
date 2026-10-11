@@ -13,6 +13,16 @@ test.describe('FEATURE: graph-ui shell', () => {
     await test.step('AND no console or page error is logged', (): void => shellPage.expectNoErrors());
   });
 
+  test('GIVEN a VS Code host, the shell posts ready to it under the webview CSP', async ({ shellPage }): Promise<void> => {
+    await test.step('WHEN the shell is opened inside the host', async (): Promise<void> => shellPage.goto({ host: true }));
+
+    await test.step('THEN the ready marker is visible', async (): Promise<void> => shellPage.expectReady());
+
+    await test.step('AND the host received exactly one ready message', async (): Promise<void> => shellPage.expectReadyPosted());
+
+    await test.step('AND no CSP violation is recorded', async (): Promise<void> => shellPage.expectNoViolations());
+  });
+
   test('GIVEN an inline script without the nonce, the CSP blocks it', { annotation: AC7 }, async ({ shellPage }): Promise<void> => {
     await test.step('WHEN the shell is opened', async (): Promise<void> => shellPage.goto({ inlineScript: true }));
 

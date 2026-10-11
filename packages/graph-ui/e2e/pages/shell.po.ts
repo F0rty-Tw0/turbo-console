@@ -1,7 +1,7 @@
 import type { ConsoleMessage, Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { SHELL_ORIGIN, SHELL_URL, VIOLATION_RECORDER } from '../common/shell.const.ts';
+import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL, VIOLATION_RECORDER } from '../common/shell.const.ts';
 import type { ShellOptions } from '../common/shell.type.ts';
 import { distMock } from '../test/mocks/dist.mock.ts';
 
@@ -21,12 +21,24 @@ export class ShellPage {
     this.page.on('console', (message: ConsoleMessage): void => this.recordConsoleError(message));
     this.page.on('pageerror', (error: Error): void => this.recordPageError(error));
     await this.page.addInitScript({ content: VIOLATION_RECORDER });
+
+    if (options.host === true) {
+      await this.page.addInitScript({ content: HOST_API_STUB });
+    }
+
     await this.page.route(`${SHELL_ORIGIN}/**`, distMock(options));
     await this.page.goto(SHELL_URL);
   }
 
   public async expectReady(): Promise<void> {
     await expect(this.readyMarker).toBeVisible();
+  }
+
+  public async expectReadyPosted(): Promise<void> {
+    const posted = await this.page.evaluate<unknown[]>('window.__posted');
+    const readyOnly = [{ type: 'ready' }];
+
+    expect(posted).toEqual(readyOnly);
   }
 
   public async expectNoViolations(): Promise<void> {

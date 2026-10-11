@@ -15,7 +15,10 @@ const createStubBridge = (): Bridge => {
   return bridge;
 };
 
-/** Bridge to the VS Code host when running in a webview; a logging stub in a plain browser. */
+/**
+ * Bridge to the VS Code host when running in a webview; a logging stub in a plain browser.
+ * Call once per webview: VS Code throws if `acquireVsCodeApi()` is called a second time.
+ */
 export const createBridge = (): Bridge => {
   const hasHost = typeof acquireVsCodeApi === 'function';
 
