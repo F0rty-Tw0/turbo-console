@@ -1,10 +1,15 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { pathExists } from './fixture-files.ts';
 import { git } from './git.ts';
+
+const HOOK_NAMES = ['pre-commit', 'commit-msg', 'post-commit'];
+
+const posixPath = (path: string): string => path.replaceAll('\\', '/');
 
 describe('FEATURE: git runner', () => {
   let dir = '';
@@ -14,6 +19,7 @@ describe('FEATURE: git runner', () => {
   });
 
   afterEach(async () => {
+    vi.unstubAllEnvs();
     await rm(dir, { recursive: true, force: true });
   });
 
@@ -37,6 +43,59 @@ describe('FEATURE: git runner', () => {
       const log = git(dir, ['log']);
 
       await expect(log).rejects.toThrow();
+    });
+  });
+
+  describe('GIVEN GIT_DIR in the environment points at another repo', () => {
+    it('WHEN init runs in a dir THEN that dir gets its own .git', async () => {
+      const other = join(dir, 'other');
+      const target = join(dir, 'target');
+
+      await mkdir(other);
+      await mkdir(target);
+      await git(other, ['init', '--quiet', '-b', 'main']);
+      vi.stubEnv('GIT_DIR', join(other, '.git'));
+      await git(target, ['init', '--quiet', '-b', 'main']);
+      const gitDir = await git(target, ['rev-parse', '--absolute-git-dir']);
+      const realTarget = await realpath(target);
+
+      expect(resolve(gitDir.trim())).toBe(join(realTarget, '.git'));
+    });
+  });
+
+  describe('GIVEN a global git config whose hooksPath holds commit hooks', () => {
+    const marker = (): string => join(dir, 'hook-ran');
+
+    beforeEach(async () => {
+      const home = join(dir, 'home');
+      const hooks = join(dir, 'hooks');
+      const script = `#!/bin/sh\necho ran >> "${posixPath(marker())}"\n`;
+
+      await mkdir(home);
+      await mkdir(hooks);
+      await writeFile(join(home, '.gitconfig'), `[core]\n\thooksPath = ${posixPath(hooks)}\n`);
+
+      for (const name of HOOK_NAMES) await writeFile(join(hooks, name), script, { mode: 0o755 });
+
+      vi.stubEnv('HOME', home);
+      vi.stubEnv('XDG_CONFIG_HOME', join(home, '.config'));
+    });
+
+    it('WHEN the global config is read THEN it names the hooks dir', async () => {
+      const hooksPath = await git(dir, ['config', '--global', 'core.hooksPath']);
+
+      expect(hooksPath).toBe(`${posixPath(join(dir, 'hooks'))}\n`);
+    });
+
+    it('WHEN a commit runs THEN no hook runs', async () => {
+      await git(dir, ['init', '--quiet', '-b', 'main']);
+      await writeFile(join(dir, 'file.txt'), 'content\n');
+      await git(dir, ['add', 'file.txt']);
+      await git(dir, ['commit', '--quiet', '-m', 'commit']);
+
+      const hookRan = await pathExists(marker());
+
+      expect(hookRan).toBe(false);
     });
   });
 });
