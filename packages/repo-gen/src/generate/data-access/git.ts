@@ -9,9 +9,14 @@ const NO_HOOKS_DIR = join('.git', 'repo-gen-no-hooks');
 
 /**
  * Fixed identity and settings, so fresh CI runners, signing setups, Windows line-ending rewrites, fsmonitor daemons
- * and the caller's hooks never change or slow a commit.
+ * and the caller's hooks never change or slow a commit. Auto gc and maintenance are off: git 2.55 detaches them after
+ * a large commit, and they repacked a fresh fixture while `fixtureFor` was copying it (ENOENT on `.git/objects/xx`).
  */
 const GIT_CONFIG = [
+  '-c',
+  'gc.auto=0',
+  '-c',
+  'maintenance.auto=false',
   '-c',
   'user.name=fixture',
   '-c',

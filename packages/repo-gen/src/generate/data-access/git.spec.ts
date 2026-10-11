@@ -39,6 +39,13 @@ describe('FEATURE: git runner', () => {
       expect([name, email]).toStrictEqual(['fixture\n', 'fixture@invalid\n']);
     });
 
+    it('WHEN auto gc and maintenance settings are read THEN both are off', async () => {
+      const gcAuto = await git(dir, ['config', 'gc.auto']);
+      const maintenanceAuto = await git(dir, ['config', 'maintenance.auto']);
+
+      expect([gcAuto, maintenanceAuto]).toStrictEqual(['0\n', 'false\n']);
+    });
+
     it('WHEN git fails THEN the promise rejects', async () => {
       const log = git(dir, ['log']);
 
