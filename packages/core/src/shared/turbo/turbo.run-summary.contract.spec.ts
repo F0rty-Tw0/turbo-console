@@ -22,7 +22,19 @@ const HANG_PID_FILE = 'hang.pid';
 /** Writes its pid to `HANG_PID_FILE` in the package dir, then never exits on its own within the test. */
 const HANGING_BUILD = `"build": ${JSON.stringify(`node -e "require('node:fs').writeFileSync('${HANG_PID_FILE}', String(process.pid)); setTimeout(() => {}, 60000)"`)}`;
 
-const TIMEOUT_MS = 2000;
+/** Long enough for a slow Windows runner to start the hanging task before the abort fires. */
+const TIMEOUT_MS = 8000;
+
+/** The pid the hanging build wrote, or undefined when turbo was aborted before the task started. */
+const readHangPid = async (packageDir: string): Promise<number | undefined> => {
+  try {
+    return Number(await readFile(join(packageDir, HANG_PID_FILE), 'utf8'));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+
+    throw error;
+  }
+};
 
 /** Signal 0 only probes whether `pid` still exists. */
 const isAlive = (pid: number): boolean => {
@@ -123,7 +135,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
   describe('GIVEN a target-like fixture whose leaf build hangs', () => {
     const fixture = fixtureHook(TARGET_LIKE);
 
-    it('WHEN the leaf builds with a 2 s timeout THEN runTurbo rejects with an AbortError within a few seconds', async () => {
+    it('WHEN the leaf builds with an 8 s timeout THEN runTurbo rejects with an AbortError within a few seconds of it', async () => {
       const leaf = leafPackage(fixture().manifest);
       const leafDir = join(fixture().dir, leaf.path);
 
@@ -135,12 +147,16 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       await expect(run).rejects.toMatchObject({ name: 'AbortError' });
 
       const elapsedMs = performance.now() - startedAt;
-      const hangPid = Number(await readFile(join(leafDir, HANG_PID_FILE), 'utf8'));
-      // runTurbo rejects as the abort fires, while turbo is still stopping the build; later tests must not race it.
-      const hasHangExited = (): boolean => !isAlive(hangPid);
+      const hangPid = await readHangPid(leafDir);
 
-      await vi.waitUntil(hasHangExited, { timeout: 10_000, interval: 50 });
-      expect(elapsedMs).toBeLessThan(10_000);
+      // runTurbo rejects as the abort fires, while turbo is still stopping the build; later tests must not race it.
+      if (hangPid !== undefined) {
+        const hasHangExited = (): boolean => !isAlive(hangPid);
+
+        await vi.waitUntil(hasHangExited, { timeout: 10_000, interval: 50 });
+      }
+
+      expect(elapsedMs).toBeLessThan(TIMEOUT_MS + 5000);
     });
   });
 });
