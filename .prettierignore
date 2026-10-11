@@ -3,3 +3,5 @@
 /coverage
 # Written by pnpm
 pnpm-lock.yaml
+# Fixture JSON must stay byte-exact JSON.stringify output
+**/test/fixtures/

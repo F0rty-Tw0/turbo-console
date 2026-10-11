@@ -37,5 +37,5 @@ allowBuilds:
   # nx still arrives through lint-suite -> @nx/eslint-plugin; removing this entry fails install with ERR_PNPM_IGNORED_BUILDS.
   nx: false
   unrs-resolver: true
-minimumReleaseAgeExclude:
-  - prettier@3.9.10
+  # @vscode/vsce 4.0.0 packages without its postinstall; without this entry adding @vscode/vsce fails with ERR_PNPM_IGNORED_BUILDS.
+  '@vscode/vsce-sign': false
