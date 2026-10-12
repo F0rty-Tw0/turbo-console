@@ -54,5 +54,17 @@ describe('FEATURE: stderr tail', () => {
 
       expect(tail).toBe('last');
     });
+
+    it('WHEN the 8 Ki cut lands exactly on a line start THEN that first line is kept', () => {
+      const body = 'z'.repeat(8192 - 'keep\n'.length - 1);
+
+      const tail = stderrTail(`first\nkeep\n${body}\n`, 20);
+
+      expect(tail).toBe(`keep\n${body}`);
+    });
+
+    it.each([0, -1])('WHEN %i lines are asked for THEN it returns an empty string', (lines) => {
+      expect(stderrTail('a\nb\nc\n', lines)).toBe('');
+    });
   });
 });
