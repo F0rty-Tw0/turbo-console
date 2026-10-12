@@ -6,10 +6,11 @@ import { setTimeout } from 'node:timers/promises';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { runTurbo } from './run-turbo.ts';
+import { toTurboException } from '../../errors/utils/turbo-error.util.ts';
 import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
 import { isAlive } from '../test/utils/process.spec.util.ts';
 
-type StubName = 'slow-term' | 'ignore-term' | 'quick-term' | 'exit-3';
+type StubName = 'slow-term' | 'ignore-term' | 'quick-term' | 'stderr-term' | 'exit-3';
 
 type AbortOutcome = {
   readonly error: unknown;
@@ -22,6 +23,7 @@ const STUB_TRAPS: Record<StubName, string> = {
   'slow-term': "trap 'sleep 1.5; exit 0' TERM",
   'ignore-term': "trap '' TERM",
   'quick-term': "trap 'exit 0' TERM",
+  'stderr-term': "trap 'exit 0' TERM",
   'exit-3': ':'
 };
 
@@ -30,10 +32,11 @@ const STUB_BODIES: Record<StubName, string> = {
   'slow-term': 'while :; do sleep 0.1; done',
   'ignore-term': 'while :; do sleep 0.1; done',
   'quick-term': 'while :; do sleep 0.1; done',
+  'stderr-term': "head -c 70000 /dev/zero | tr '\\0' x >&2; echo partial >&2; while :; do sleep 0.1; done",
   'exit-3': 'echo out; echo err >&2; exit 3'
 };
 
-const STUB_NAMES: StubName[] = ['slow-term', 'ignore-term', 'quick-term', 'exit-3'];
+const STUB_NAMES: StubName[] = ['slow-term', 'ignore-term', 'quick-term', 'stderr-term', 'exit-3'];
 
 /** The one timer-driven case: long enough that a loaded macOS runner's shell writes its pid (and trap) before it fires. */
 const TIMEOUT_MS = 1000;
@@ -228,8 +231,27 @@ describe('FEATURE: runTurbo process lifecycle', () => {
     });
   });
 
+  describe.skipIf(IS_WINDOWS)('GIVEN a binary that writes 70 000 x and a line to stderr, then hangs', () => {
+    describe('WHEN a 1000 ms timeout fires', () => {
+      let outcome: AbortOutcome;
+
+      beforeAll(async () => {
+        outcome = await runUntilAborted('stderr-term', { timeoutMs: 1000 });
+      });
+
+      it('THEN the AbortError carries the stderr line written before the abort', () => {
+        expect(outcome.error).toMatchObject({ name: 'AbortError' });
+        expect(outcome.error).toHaveProperty('stderr', expect.stringContaining('xpartial\n'));
+      });
+
+      it('THEN the carried stderr is cut to its last 64 KiB', () => {
+        expect(outcome.error).toHaveProperty('stderr.length', 64 * 1024);
+      });
+    });
+  });
+
   describe('GIVEN a binary path that does not exist', () => {
-    it('WHEN the caller aborts right after the call THEN runTurbo rejects with an AbortError', async () => {
+    it('WHEN the caller aborts during the cwd check THEN runTurbo rejects with an AbortError, not a spawn ENOENT', async () => {
       const controller = new AbortController();
 
       const run = runTurbo(join(stubDir, 'missing-turbo'), [], stubDir, { signal: controller.signal });
@@ -240,9 +262,33 @@ describe('FEATURE: runTurbo process lifecycle', () => {
     }, 1000);
   });
 
+  describe('GIVEN a cwd that does not exist', () => {
+    let error: unknown;
+
+    beforeAll(async () => {
+      error = await runTurbo(stubFile('exit-3', 'sh'), [], join(stubDir, 'missing-cwd')).catch((rejection: unknown) => rejection);
+    });
+
+    it('WHEN runTurbo is called THEN it rejects with an ENOENT naming the cwd, not the binary', () => {
+      expect(error).toMatchObject({ code: 'ENOENT', path: join(stubDir, 'missing-cwd') });
+    });
+
+    it('WHEN the rejection is converted THEN it is io, not not-found', () => {
+      const exception = toTurboException(error, 'query');
+
+      expect(exception.kind).toBe('io');
+    });
+  });
+
   describe('GIVEN a signal that is already aborted', () => {
     it('WHEN runTurbo is called on a missing binary THEN it rejects with an AbortError, not a spawn ENOENT', async () => {
       const run = runTurbo(join(stubDir, 'missing-turbo'), [], stubDir, { signal: AbortSignal.abort() });
+
+      await expect(run).rejects.toMatchObject({ name: 'AbortError' });
+    });
+
+    it("WHEN runTurbo is called with a missing cwd THEN it rejects with an AbortError, not the cwd's ENOENT", async () => {
+      const run = runTurbo(stubFile('exit-3', 'sh'), [], join(stubDir, 'missing-cwd'), { signal: AbortSignal.abort() });
 
       await expect(run).rejects.toMatchObject({ name: 'AbortError' });
     });
