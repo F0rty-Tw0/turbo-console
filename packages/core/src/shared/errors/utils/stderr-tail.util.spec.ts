@@ -63,6 +63,22 @@ describe('FEATURE: stderr tail', () => {
       expect(tail).toBe(`keep\n${body}`);
     });
 
+    it('WHEN the 8 Ki cut splits a CRLF THEN the tail does not start with an empty line', () => {
+      const body = 'z'.repeat(8192 - 2);
+
+      const tail = stderrTail(`first\r\n${body}\n`, 20);
+
+      expect(tail).toBe(body);
+    });
+
+    it('WHEN the 8 Ki cut lands right after a lone CR THEN the line after it is kept', () => {
+      const body = 'z'.repeat(8192 - 'keep\n'.length - 1);
+
+      const tail = stderrTail(`first\rkeep\n${body}\n`, 20);
+
+      expect(tail).toBe(`keep\n${body}`);
+    });
+
     it.each([0, -1])('WHEN %i lines are asked for THEN it returns an empty string', (lines) => {
       expect(stderrTail('a\nb\nc\n', lines)).toBe('');
     });

@@ -3,12 +3,17 @@ import { plainLines } from './plain-text.util.ts';
 /** Caps the scan and the message: a single huge line, or a 256 MB stderr on the exit path, never lands whole. */
 const MAX_TAIL_LENGTH = 8192;
 
-/** True when the 8 Ki cut split a line: something was cut off and the character before the cut is no line break. */
+/**
+ * True when the 8 Ki cut split a line: something was cut off and no line starts at the cut. A line starts after LF,
+ * or after a lone CR; a CR whose LF is past the cut split a CRLF, so the tail starts with an empty partial line.
+ */
 const isCutMidLine = (stderr: string): boolean => {
   const cutAt = stderr.length - MAX_TAIL_LENGTH;
   const beforeCut = stderr[cutAt - 1];
+  const isLoneCr = beforeCut === '\r' && stderr[cutAt] !== '\n';
+  const startsLine = beforeCut === '\n' || isLoneCr;
 
-  return cutAt > 0 && beforeCut !== '\n' && beforeCut !== '\r';
+  return cutAt > 0 && !startsLine;
 };
 
 /**
