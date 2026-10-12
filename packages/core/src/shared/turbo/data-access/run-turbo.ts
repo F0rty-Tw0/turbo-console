@@ -124,7 +124,14 @@ export const runTurbo = async (binaryPath: string, args: string[], cwd: string, 
   const onAbort = (): void => {
     isAborting = true;
 
-    // A failed spawn has no pid and never emits `exit`: its `error` rejects `once(child, 'exit')`, so this settles too.
+    // Required, not defensive: a failed spawn has no pid until its `error` tick, and on macOS (posix_spawn) libuv's
+    // pid is 0 then, so any `child.kill` here would be `kill(0)` and signal our own process group.
+    if (child.pid === undefined) {
+      rejectAborted();
+
+      return;
+    }
+
     const stopped = stopChild(child, options.graceMs ?? GRACE_MS);
 
     void stopped.then(rejectAborted, rejectAborted);
