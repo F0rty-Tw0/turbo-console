@@ -1,8 +1,8 @@
 import { execFile } from 'node:child_process';
 import type { ChildProcess, ExecFileException } from 'node:child_process';
 import { once } from 'node:events';
-import { access, constants } from 'node:fs/promises';
 
+import { checkCwd } from './check-cwd.ts';
 import { collectStderr } from './collect-stderr.ts';
 import { killTree } from './kill-tree.ts';
 import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
@@ -106,8 +106,7 @@ const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileExc
 export const runTurbo = async (binaryPath: string, args: string[], cwd: string, options: RunTurboOptions = {}): Promise<TurboResult> => {
   const signal = abortSignalOf(options);
 
-  // Checked before the spawn, which would report a missing or unsearchable cwd as ENOENT/EACCES on the binary path.
-  if (!signal.aborted) await access(cwd, constants.X_OK);
+  await checkCwd(cwd, signal);
 
   if (signal.aborted) throw abortError(signal, '');
 
