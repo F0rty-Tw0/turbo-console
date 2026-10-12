@@ -92,16 +92,16 @@ const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileExc
 };
 
 /**
- * Runs the native turbo binary at `binaryPath` (`<binaryPath> --skip-infer ...args`) in `cwd`, with no shell, under
- * the hardened env from `turboEnv`: no inherited `GIT_*` or turbo credential variables, local cache only, no request
- * to a remote cache, git fsmonitor off. The target repo's `.git/config` is otherwise trusted. Resolves with turbo's
- * exit code, non-zero included. Rejects with execFile's error plus `stderr` (all turbo wrote) when no exit code exists
- * (spawn failure, kill signal, output past the 256 MB buffer), and with an `AbortError` (`cause`: the signal's reason;
- * `stderr`: turbo's last 64 Ki characters) when `timeoutMs` (60 s by default) or `signal` aborts first. Abort: SIGTERM
- * to turbo on POSIX (turbo stops its tasks), `taskkill /T /F` on Windows; the rejection waits for turbo's exit and
- * taskkill. After `graceMs` turbo is killed outright; on POSIX that reaches turbo's pid only, so a task ignoring
- * SIGTERM can outlive it (follow-up). Known limit: once turbo has exited, a leftover process still holding its stdout
- * delays the result and can no longer be timed out: the abort is detached at turbo's exit and turbo's pid is gone.
+ * Runs the native turbo binary at `binaryPath` (`<binaryPath> --skip-infer ...args`) in `cwd`, with no shell, under the hardened env
+ * from `turboEnv`: no inherited `GIT_*` or turbo credential variables, local cache only, no remote cache, git fsmonitor off. The
+ * target repo's `.git/config` is otherwise trusted. Resolves with turbo's exit code, non-zero included. Rejects before spawning with
+ * `checkCwd`'s errno error (`path`: `cwd`) when `cwd` is missing, not a directory or not searchable (ENOENT/ENOTDIR/EACCES), unless
+ * `signal` already aborted; with execFile's error plus `stderr` (all turbo wrote) when no exit code exists (spawn failure, kill
+ * signal, output past the 256 MB buffer); and with an `AbortError` (`cause`: the signal's reason; `stderr`: turbo's last 64 Ki
+ * characters) when `timeoutMs` (60 s by default) or `signal` aborts first. Abort: SIGTERM to turbo on POSIX (turbo stops its tasks),
+ * `taskkill /T /F` on Windows; the rejection waits for turbo's exit and taskkill. After `graceMs` turbo is killed outright; on POSIX
+ * that reaches turbo's pid only, so a task ignoring SIGTERM can outlive it (follow-up). Known limit: after turbo exits, a leftover
+ * process holding its stdout delays the result past any timeout: the abort is detached at turbo's exit and turbo's pid is gone.
  */
 export const runTurbo = async (binaryPath: string, args: string[], cwd: string, options: RunTurboOptions = {}): Promise<TurboResult> => {
   const signal = abortSignalOf(options);
