@@ -14,8 +14,31 @@ const INVISIBLE: [string, string][] = [
   ['the Mongolian vowel separator', '\u180E'],
   ['word joiners, invisible operators and deprecated format characters', '\u2060\u2064\u206A\u206F'],
   ['interlinear annotation characters', '\uFFF9\uFFFA\uFFFB'],
-  ['tag characters', '\u{E0000}\u{E0041}\u{E007F}']
+  ['tag characters', '\u{E0000}\u{E0041}\u{E007F}'],
+  ['other default-ignorable characters (grapheme joiner, Hangul fillers, variation selectors)', '\u034F\u115F\u3164\uFE0F\u180B\uFFA0']
 ];
+
+const FIRST_SURROGATE = 0xd800;
+
+const LAST_SURROGATE = 0xdfff;
+
+const LAST_CODE_POINT = 0x10ffff;
+
+const toChar = (code: number): string => String.fromCodePoint(code);
+
+const charsBetween = (from: number, to: number): string => {
+  const codes = Array.from({ length: to - from + 1 }, (_, index) => from + index);
+
+  return codes.map(toChar).join('');
+};
+
+/** Every code point but the surrogates, which would pair up when joined. */
+const everyCodePoint = (): string => {
+  const belowSurrogates = charsBetween(0, FIRST_SURROGATE - 1);
+  const aboveSurrogates = charsBetween(LAST_SURROGATE + 1, LAST_CODE_POINT);
+
+  return `${belowSurrogates}${aboveSurrogates}`;
+};
 
 describe('FEATURE: plain text for messages', () => {
   describe('GIVEN text with ANSI escapes, controls, a newline and a tab', () => {
@@ -36,6 +59,16 @@ describe('FEATURE: plain text for messages', () => {
 
       expect(plainLines(text)).toBe('ab\nc');
       expect(plainLine(text)).toBe('abc');
+    });
+  });
+
+  describe('GIVEN text holding every code point', () => {
+    it('WHEN made one plain line THEN no control or default-ignorable character is left', () => {
+      const line = plainLine(everyCodePoint());
+
+      const leftovers = line.match(/[\p{Cc}\p{Default_Ignorable_Code_Point}]/gu);
+
+      expect(leftovers).toBeNull();
     });
   });
 
