@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { failedMessage, invalidOutputMessage, ioMessage, turboCommand } from './turbo-message.util.ts';
+import { failedMessage, invalidOutputMessage, ioMessage, turboCommand, withStderrTail } from './turbo-message.util.ts';
 import type { AbortOutcome } from '../common/turbo-error.type.ts';
 import { TurboException } from '../common/turbo.exception.ts';
 
@@ -12,8 +12,8 @@ const abortOutcome = (error: Error): AbortOutcome => {
   return isTimeout ? 'timeout' : 'aborted';
 };
 
-/** `runTurbo` attaches the stderr turbo wrote before the abort; any other `AbortError` has none. */
-const abortStderr = (error: Error): string => {
+/** `runTurbo` attaches the stderr turbo wrote to its `AbortError` and to a rejection without an exit code; any other error has none. */
+const attachedStderr = (error: Error): string => {
   const stderr: unknown = Reflect.get(error, 'stderr');
 
   return typeof stderr === 'string' ? stderr : '';
@@ -21,21 +21,22 @@ const abortStderr = (error: Error): string => {
 
 const fromAbort = (error: Error, command: string): TurboException => {
   const outcome = abortOutcome(error);
-  const stderr = abortStderr(error);
+  const stderr = attachedStderr(error);
   const message = failedMessage(command, outcome, stderr);
 
   return new TurboException('failed', message, { cause: error });
 };
 
-/** `turbo <command> failed: <signal ?? code>`; never the error's message, which can embed all of stderr. */
+/** `turbo <command> failed: <signal ?? code>`, then the attached stderr's tail; never the error's message, which can embed all of stderr. */
 const errnoFailedMessage = (command: string, error: NodeJS.ErrnoException): string => {
   const signal: unknown = Reflect.get(error, 'signal');
   const reason = typeof signal === 'string' ? signal : error.code;
-  const turbo = turboCommand(command);
+  const failed = `${turboCommand(command)} failed`;
+  const stderr = attachedStderr(error);
 
-  if (typeof reason !== 'string') return `${turbo} failed`;
+  if (typeof reason !== 'string') return withStderrTail(failed, stderr);
 
-  return `${turbo} failed: ${reason}`;
+  return withStderrTail(`${failed}: ${reason}`, stderr);
 };
 
 /** A failed spawn is never `io`: the binary is not runnable, or the spawn failed for a reason named by its code. */

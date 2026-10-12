@@ -134,5 +134,14 @@ describe('FEATURE: turbo error messages', () => {
 
       expect(message).toBe(`turbo 2.12.0 is not supported; need >=${min} <${maxExclusive}`);
     });
+
+    it('WHEN the version holds an escape sequence, a newline and 5000 characters THEN its first 200 are printed plain', () => {
+      const { min, maxExclusive } = SUPPORTED_TURBO_RANGE;
+      const version = `2.12.0\u001B[2J\n${'x'.repeat(5000)}`;
+
+      const message = versionUnsupportedMessage(version, SUPPORTED_TURBO_RANGE);
+
+      expect(message).toBe(`turbo 2.12.0${'x'.repeat(189)} is not supported; need >=${min} <${maxExclusive}`);
+    });
   });
 });

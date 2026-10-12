@@ -57,10 +57,9 @@ const settlesWithin = async (exited: Promise<unknown>, ms: number): Promise<bool
 };
 
 /**
- * `killTree`, then a hard kill of `child` alone when it has not exited, or the tree kill not finished, after
- * `graceMs`; settles once `child` has exited. One `exit` listener serves both waits, so none is left behind when the
- * grace period runs out. Waiting for the tree kill too keeps a Windows rejection from landing before taskkill has
- * killed turbo's tree.
+ * `killTree`, then a hard kill of `child` alone when it has not exited, or the tree kill not finished, after `graceMs`;
+ * settles once `child` has exited. One `exit` listener serves both waits, so none is left behind at the grace timeout.
+ * Waiting for the tree kill too keeps a Windows rejection from landing before taskkill has killed turbo's tree.
  */
 const stopChild = async (child: ChildProcess, graceMs: number): Promise<void> => {
   const exited = once(child, 'exit');
@@ -76,8 +75,9 @@ const stopChild = async (child: ChildProcess, graceMs: number): Promise<void> =>
   await exited;
 };
 
-/** M0's mapping: turbo's exit code, non-zero included, resolves; no exit code (spawn failure, a signal, maxBuffer) rejects. */
+/** M0's mapping: an exit code, non-zero included, resolves; none (spawn failure, a signal, maxBuffer) rejects, with `stderr`. */
 const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileException | null, stdout: string, stderr: string): void => {
+  if (error !== null) Object.assign(error, { stderr });
   const exitCode = error === null ? 0 : error.code;
 
   if (typeof exitCode !== 'number') {
@@ -95,13 +95,13 @@ const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileExc
  * Runs the native turbo binary at `binaryPath` (`<binaryPath> --skip-infer ...args`) in `cwd`, with no shell, under
  * the hardened env from `turboEnv`: no inherited `GIT_*` or turbo credential variables, local cache only, no request
  * to a remote cache, git fsmonitor off. The target repo's `.git/config` is otherwise trusted. Resolves with turbo's
- * exit code, non-zero included; rejects when no exit code exists (spawn failure, a kill signal, output past the 256 MB
- * buffer), and with an `AbortError` (`cause`: the signal's reason; `stderr`: the last 64 Ki characters turbo wrote)
- * when `timeoutMs` (60 s by default) or `signal` aborts first. Abort: SIGTERM to turbo on POSIX (turbo stops its
- * tasks), `taskkill /T /F` on Windows; the rejection waits for turbo's exit and taskkill. After `graceMs` turbo is
- * killed outright; on POSIX that reaches turbo's pid only, so a task ignoring SIGTERM can outlive it (follow-up).
- * Known limit: once turbo has exited, a leftover process still holding its stdout delays the result and can no
- * longer be timed out, since the abort is detached at turbo's exit and turbo's pid is gone.
+ * exit code, non-zero included. Rejects with execFile's error plus `stderr` (all turbo wrote) when no exit code exists
+ * (spawn failure, kill signal, output past the 256 MB buffer), and with an `AbortError` (`cause`: the signal's reason;
+ * `stderr`: turbo's last 64 Ki characters) when `timeoutMs` (60 s by default) or `signal` aborts first. Abort: SIGTERM
+ * to turbo on POSIX (turbo stops its tasks), `taskkill /T /F` on Windows; the rejection waits for turbo's exit and
+ * taskkill. After `graceMs` turbo is killed outright; on POSIX that reaches turbo's pid only, so a task ignoring
+ * SIGTERM can outlive it (follow-up). Known limit: once turbo has exited, a leftover process still holding its stdout
+ * delays the result and can no longer be timed out: the abort is detached at turbo's exit and turbo's pid is gone.
  */
 export const runTurbo = async (binaryPath: string, args: string[], cwd: string, options: RunTurboOptions = {}): Promise<TurboResult> => {
   const signal = abortSignalOf(options);

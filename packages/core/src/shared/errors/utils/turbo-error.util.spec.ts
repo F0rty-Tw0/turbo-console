@@ -96,6 +96,12 @@ describe('FEATURE: turbo errors as TurboException', () => {
       expect(exception).toMatchObject({ kind: 'failed', message: 'turbo query failed: SIGSEGV', cause: error });
     });
 
+    it('WHEN turbo was killed by a signal after writing stderr THEN the message adds the plain stderr tail', () => {
+      const error = Object.assign(new Error('Command failed: turbo'), { code: null, signal: 'SIGKILL', stderr: 'FATAL: \u001B[31mgone\u001B[39m\n' });
+
+      expect(toTurboException(error, 'query').message).toBe('turbo query failed: SIGKILL\nFATAL: gone');
+    });
+
     it('WHEN the output passed maxBuffer THEN it is failed naming the code', () => {
       const error = Object.assign(new RangeError('stdout maxBuffer length exceeded'), { code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' });
 

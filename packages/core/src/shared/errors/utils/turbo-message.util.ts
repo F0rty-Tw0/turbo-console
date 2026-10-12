@@ -24,15 +24,21 @@ export const turboCommand = (command: string): string => {
   return `turbo ${plainLine(head)}`;
 };
 
-/** `turbo <command> exited <n>` / `timed out` / `was aborted`, then the last 20 lines of stderr when there are any. */
-export const failedMessage = (command: string, outcome: number | AbortOutcome, stderr: string): string => {
-  const what = typeof outcome === 'number' ? `exited ${outcome}` : OUTCOME_TEXT[outcome];
-  const head = `${turboCommand(command)} ${what}`;
+/** `head`, then the last 20 lines of stderr on their own lines when there are any. */
+export const withStderrTail = (head: string, stderr: string): string => {
   const tail = stderrTail(stderr, STDERR_LINES);
 
   if (tail === '') return head;
 
   return `${head}\n${tail}`;
+};
+
+/** `turbo <command> exited <n>` / `timed out` / `was aborted`, then the last 20 lines of stderr when there are any. */
+export const failedMessage = (command: string, outcome: number | AbortOutcome, stderr: string): string => {
+  const what = typeof outcome === 'number' ? `exited ${outcome}` : OUTCOME_TEXT[outcome];
+  const head = `${turboCommand(command)} ${what}`;
+
+  return withStderrTail(head, stderr);
 };
 
 const pathSegment = (key: PropertyKey): string => {
@@ -73,6 +79,9 @@ export const ioMessage = (path: string, code = 'EIO'): string => {
   return `${plainLine(pathEnd)}: ${plainLine(code)}`;
 };
 
+/** `version` is turbo's `--version` stdout: cut to 200 characters and made plain. */
 export const versionUnsupportedMessage = (version: string, range: TurboVersionRange): string => {
-  return `turbo ${version} is not supported; need >=${range.min} <${range.maxExclusive}`;
+  const head = version.slice(0, MAX_TEXT_LENGTH);
+
+  return `turbo ${plainLine(head)} is not supported; need >=${range.min} <${range.maxExclusive}`;
 };
