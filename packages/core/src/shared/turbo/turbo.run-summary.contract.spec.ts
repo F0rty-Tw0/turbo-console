@@ -177,7 +177,9 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
 
       // runTurbo rejects as the abort fires, while turbo is still stopping the build; later tests must not race it.
       if (hangPid === undefined) {
-        console.warn(`hang test: no pid in ${HANG_PID_FILE} after ${HANG_PID_WAIT_MS} ms; the build never started`);
+        console.warn(
+          `hang test: no pid in ${HANG_PID_FILE} after ${HANG_PID_WAIT_MS} ms; the build never started or was stopped first`
+        );
       } else {
         const hasHangExited = (): boolean => !isAlive(hangPid);
 
