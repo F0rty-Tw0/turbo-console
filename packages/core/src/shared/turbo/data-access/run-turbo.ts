@@ -1,6 +1,8 @@
 import { execFile } from 'node:child_process';
-import type { ExecFileException } from 'node:child_process';
+import type { ChildProcess, ExecFileException } from 'node:child_process';
+import { once } from 'node:events';
 
+import { killTree } from './kill-tree.ts';
 import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
 import { turboEnv } from '../utils/turbo-env.util.ts';
 
@@ -16,34 +18,125 @@ const SKIP_INFER = '--skip-infer';
  */
 const TIMEOUT_MS = 60_000;
 
+/** How long turbo gets to stop its task processes after the abort kill before it is killed outright. */
+const GRACE_MS = 5000;
+
+const abortSignalOf = (options: RunTurboOptions): AbortSignal => {
+  const timeout = AbortSignal.timeout(options.timeoutMs ?? TIMEOUT_MS);
+  const signals = [timeout];
+
+  if (options.signal !== undefined) signals.push(options.signal);
+
+  return AbortSignal.any(signals);
+};
+
+/** M0's rejection shape: an `AbortError` whose `cause` tells a `TimeoutError` from the caller's own reason. */
+const abortError = (signal: AbortSignal): Error => {
+  const cause: unknown = signal.reason;
+
+  return Object.assign(new Error('turbo aborted'), { name: 'AbortError', cause });
+};
+
+/** True when `exited` settles first, false when `ms` pass first; the timer is cleared either way. */
+const settlesWithin = async (exited: Promise<unknown>, ms: number): Promise<boolean> => {
+  const { promise, resolve } = Promise.withResolvers<boolean>();
+
+  const onTimeout = (): void => resolve(false);
+  const timer = setTimeout(onTimeout, ms);
+
+  const onSettled = (): void => {
+    clearTimeout(timer);
+    resolve(true);
+  };
+
+  void exited.then(onSettled, onSettled);
+
+  return promise;
+};
+
+/**
+ * `killTree`, then a hard kill when `child` has not exited, or the tree kill not finished, after `graceMs`; settles
+ * once `child` has exited. One `exit` listener serves both waits, so none is left behind when the grace period runs
+ * out. Waiting for the tree kill too keeps a Windows rejection from landing before taskkill has stopped turbo's tasks.
+ */
+const stopChild = async (child: ChildProcess, graceMs: number): Promise<void> => {
+  const exited = once(child, 'exit');
+  const treeKilled = killTree(child);
+  const stopped = Promise.all([exited, treeKilled]);
+
+  const hasStopped = await settlesWithin(stopped, graceMs);
+
+  if (hasStopped) return;
+
+  const hardSignal = process.platform === 'win32' ? undefined : 'SIGKILL';
+
+  child.kill(hardSignal);
+  await exited;
+};
+
+/** M0's mapping: turbo's exit code, non-zero included, resolves; no exit code (spawn failure, a signal, maxBuffer) rejects. */
+const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileException | null, stdout: string, stderr: string): void => {
+  const exitCode = error === null ? 0 : error.code;
+
+  if (typeof exitCode !== 'number') {
+    resolvers.reject(error);
+
+    return;
+  }
+
+  const result: TurboResult = { stdout, stderr, exitCode };
+
+  resolvers.resolve(result);
+};
+
 /**
  * Runs the native turbo binary at `binaryPath` (`<binaryPath> --skip-infer ...args`) in `cwd`, with no shell, under
  * the hardened env from `turboEnv`: no inherited `GIT_*` or turbo credential variables, local cache only, no request
  * to a remote cache, git fsmonitor off. The target repo's `.git/config` is otherwise trusted. Resolves with turbo's
- * exit code, non-zero included; rejects only when no exit code exists (spawn failure, a kill signal, the `timeoutMs`
- * abort, 60 s by default, or output past the 256 MB buffer).
+ * exit code, non-zero included; rejects when no exit code exists (spawn failure, a kill signal, output past the 256 MB
+ * buffer), and with an `AbortError` (`cause`: the signal's reason) when `timeoutMs` (60 s by default) or `signal`
+ * aborts first: turbo's tree is killed and the rejection waits for turbo to exit, killing it outright after `graceMs`.
+ * Known limit: once turbo has exited, a leftover process still holding its stdout delays the result and can no
+ * longer be timed out, since the abort is detached at turbo's exit and turbo's pid is gone.
  */
 export const runTurbo = async (binaryPath: string, args: string[], cwd: string, options: RunTurboOptions = {}): Promise<TurboResult> => {
-  const { promise, resolve, reject } = Promise.withResolvers<TurboResult>();
+  const signal = abortSignalOf(options);
+
+  if (signal.aborted) throw abortError(signal);
+
+  const resolvers = Promise.withResolvers<TurboResult>();
   const env = turboEnv(process.env);
-  const signal = AbortSignal.timeout(options.timeoutMs ?? TIMEOUT_MS);
-  const execOptions = { cwd, env, maxBuffer: MAX_BUFFER, signal, windowsHide: true };
+  const execOptions = { cwd, env, maxBuffer: MAX_BUFFER, windowsHide: true };
+  let isAborting = false;
 
-  const onExit = (error: ExecFileException | null, stdout: string, stderr: string): void => {
-    const exitCode = error === null ? 0 : error.code;
+  const onDone = (error: ExecFileException | null, stdout: string, stderr: string): void => {
+    if (!isAborting) settle(resolvers, error, stdout, stderr);
+  };
 
-    if (typeof exitCode !== 'number') {
-      reject(error);
+  const child = execFile(binaryPath, [SKIP_INFER, ...args], execOptions, onDone);
+
+  const rejectAborted = (): void => resolvers.reject(abortError(signal));
+
+  const onAbort = (): void => {
+    isAborting = true;
+
+    // A failed spawn has no pid and never emits `exit`; its `error` may still be a tick away.
+    if (child.pid === undefined) {
+      rejectAborted();
 
       return;
     }
 
-    const result: TurboResult = { stdout, stderr, exitCode };
+    const stopped = stopChild(child, options.graceMs ?? GRACE_MS);
 
-    resolve(result);
+    void stopped.then(rejectAborted, rejectAborted);
   };
 
-  execFile(binaryPath, [SKIP_INFER, ...args], execOptions, onExit);
+  const detach = (): void => signal.removeEventListener('abort', onAbort);
 
-  return promise;
+  signal.addEventListener('abort', onAbort, { once: true });
+  child.once('exit', detach);
+  child.once('error', detach);
+
+  return resolvers.promise;
 };
