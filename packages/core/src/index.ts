@@ -1,6 +1,8 @@
 /** npm name of this package. */
 export const PACKAGE_NAME = '@turbo-console/core';
 
+export { TurboException } from './shared/errors/common/turbo.exception.ts';
+
 export { affectedTasksSchema } from './shared/turbo/common/affected-tasks.schema.ts';
 
 export { dryRunSchema } from './shared/turbo/common/dry-run.schema.ts';
