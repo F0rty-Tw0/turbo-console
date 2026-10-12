@@ -16,6 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     permissions:
       contents: read
 
@@ -117,11 +118,17 @@ jobs:
 
       # Order alternates B,H / H,B / B,H so steady runner drift hits both sides alike; one task at a time so benches do
       # not share CPUs. A failed base run only warns: its iteration is skipped and the compare runs without it. When every
-      # base run fails, the step fails if base's turbo.json defines a bench task (a broken baseline would otherwise
-      # disable the gate); without one, base has no benches and the compare reports no baseline. Results are cleared
-      # before each run and copied only after a successful one, so no stale file is counted.
+      # base run fails, a turbo dry run (which reads turbo.jsonc and package turbo.json files too) counts base's bench
+      # tasks that have a script; if there are any the step fails, since a broken baseline would otherwise disable the
+      # gate. Without any, base has no benches and the compare reports no baseline. A dry run that fails for any other
+      # reason than a missing bench task fails the step. A PR whose own change breaks base benches (e.g. a .nvmrc or
+      # packageManager bump) can carry the bench-baseline-broken label to compare without a baseline instead; labels come
+      # from the triggering event, so push after adding it. Results are cleared before each run and copied only after a
+      # successful one, so no stale file is counted.
       - name: Bench base and head
         shell: bash
+        env:
+          BASELINE_BROKEN: ${{ contains(github.event.pull_request.labels.*.name, 'bench-baseline-broken') }}
         run: |
           base_runs=0
 
@@ -157,13 +164,19 @@ jobs:
           done
 
           if [ "$base_runs" = 0 ]; then
-            base_bench_task=$(node -e '
-              const fs = require("node:fs");
-              const file = process.argv[1];
-              const turbo = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
-              console.log(turbo.tasks?.bench === undefined ? "no" : "yes");
-            ' base/turbo.json)
-            if [ "$base_bench_task" = yes ]; then
+            dry_run_err=$(mktemp)
+            if base_dry_run=$(cd base && pnpm turbo run bench --dry=json 2>"$dry_run_err"); then
+              base_benches=$(jq '[.tasks[] | select(.task == "bench" and .command != "<NONEXISTENT>")] | length' <<<"$base_dry_run")
+            elif grep -q 'Could not find task `bench`' "$dry_run_err"; then
+              base_benches=0
+            else
+              cat "$dry_run_err" >&2
+              echo "::error::turbo could not dry-run base's bench task"
+              exit 1
+            fi
+            if [ "$base_benches" != 0 ] && [ "$BASELINE_BROKEN" = true ]; then
+              echo "::warning::no base bench run succeeded; bench-baseline-broken label set, comparing without a baseline"
+            elif [ "$base_benches" != 0 ]; then
               echo "::error::no base bench run succeeded"
               exit 1
             fi

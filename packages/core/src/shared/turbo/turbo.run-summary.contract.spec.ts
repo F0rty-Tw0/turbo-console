@@ -1,8 +1,10 @@
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 
 import { PRESETS } from '@turbo-console/repo-gen';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runSummarySchema } from './common/run-summary.schema.ts';
 import type { RunSummary, TurboResult } from './common/turbo.type.ts';
@@ -25,15 +27,39 @@ const HANGING_BUILD = `"build": ${JSON.stringify(`node -e "require('node:fs').wr
 /** Long enough for a slow Windows runner to start the hanging task before the abort fires. */
 const TIMEOUT_MS = 8000;
 
-/** The pid the hanging build wrote, or undefined when turbo was aborted before the task started. */
+/** How long to wait for a pid file the hanging build may still be writing after runTurbo rejects. */
+const HANG_PID_WAIT_MS = 2000;
+
+/** A positive integer pid; an empty file is undefined, never pid 0, which `process.kill` takes as the caller's own process group. */
+const parsePid = (text: string): number | undefined => {
+  const pid = Number(text);
+  const isPid = Number.isInteger(pid) && pid > 0;
+
+  return isPid ? pid : undefined;
+};
+
+/** The pid the hanging build wrote, or undefined when turbo was aborted before the task started or before it wrote its pid. */
 const readHangPid = async (packageDir: string): Promise<number | undefined> => {
   try {
-    return Number(await readFile(join(packageDir, HANG_PID_FILE), 'utf8'));
+    return parsePid(await readFile(join(packageDir, HANG_PID_FILE), 'utf8'));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
 
     throw error;
   }
+};
+
+/** `readHangPid`, polled for up to `HANG_PID_WAIT_MS`, since turbo may start the build as the abort fires. */
+const waitForHangPid = async (packageDir: string): Promise<number | undefined> => {
+  const deadline = performance.now() + HANG_PID_WAIT_MS;
+  let pid = await readHangPid(packageDir);
+
+  while (pid === undefined && performance.now() < deadline) {
+    await setTimeout(50);
+    pid = await readHangPid(packageDir);
+  }
+
+  return pid;
 };
 
 /** Signal 0 only probes whether `pid` still exists. */
@@ -147,16 +173,49 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       await expect(run).rejects.toMatchObject({ name: 'AbortError' });
 
       const elapsedMs = performance.now() - startedAt;
-      const hangPid = await readHangPid(leafDir);
+      const hangPid = await waitForHangPid(leafDir);
 
       // runTurbo rejects as the abort fires, while turbo is still stopping the build; later tests must not race it.
-      if (hangPid !== undefined) {
+      if (hangPid === undefined) {
+        console.warn(
+          `hang test: no pid in ${HANG_PID_FILE} after ${HANG_PID_WAIT_MS} ms; the build never started or was stopped first`
+        );
+      } else {
         const hasHangExited = (): boolean => !isAlive(hangPid);
 
         await vi.waitUntil(hasHangExited, { timeout: 10_000, interval: 50 });
       }
 
       expect(elapsedMs).toBeLessThan(TIMEOUT_MS + 5000);
+    });
+  });
+
+  describe('GIVEN a package dir whose hang pid file is empty', () => {
+    let packageDir = '';
+
+    beforeEach(async () => {
+      packageDir = await mkdtemp(join(tmpdir(), 'hang-pid-'));
+      await writeFile(join(packageDir, HANG_PID_FILE), '');
+    });
+
+    afterEach(async () => {
+      await rm(packageDir, { recursive: true, force: true, maxRetries: 5 });
+    });
+
+    it('WHEN the pid is awaited and the build never writes it THEN there is no pid, not pid 0', async () => {
+      const pid = await waitForHangPid(packageDir);
+
+      expect(pid).toBeUndefined();
+    });
+
+    it('WHEN the build writes its pid while the pid is awaited THEN that pid comes back', async () => {
+      const pending = waitForHangPid(packageDir);
+
+      await setTimeout(500);
+      await writeFile(join(packageDir, HANG_PID_FILE), '4242');
+      const pid = await pending;
+
+      expect(pid).toBe(4242);
     });
   });
 });
