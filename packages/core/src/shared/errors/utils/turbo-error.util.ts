@@ -1,67 +1,8 @@
 import { z } from 'zod';
 
-import { plainLine } from './plain-text.util.ts';
-import { stderrTail } from './stderr-tail.util.ts';
-import type { TurboVersionRange } from '../../turbo/common/turbo.type.ts';
+import { failedMessage, invalidOutputMessage, ioMessage, turboCommand } from './turbo-message.util.ts';
+import type { AbortOutcome } from '../common/turbo-error.type.ts';
 import { TurboException } from '../common/turbo.exception.ts';
-
-type AbortOutcome = 'timeout' | 'aborted';
-
-const STDERR_LINES = 20;
-
-const MAX_ISSUE_PATHS = 10;
-
-/** Record keys can come from repo text: one cannot flood the message. */
-const MAX_SEGMENT_LENGTH = 200;
-
-const OUTCOME_TEXT: Record<AbortOutcome, string> = { timeout: 'timed out', aborted: 'was aborted' };
-
-/** `turbo <command> exited <n>` / `timed out` / `was aborted`, then the last 20 lines of stderr when there are any. */
-export const failedMessage = (command: string, outcome: number | AbortOutcome, stderr: string): string => {
-  const what = typeof outcome === 'number' ? `exited ${outcome}` : OUTCOME_TEXT[outcome];
-  const head = `turbo ${command} ${what}`;
-  const tail = stderrTail(stderr, STDERR_LINES);
-
-  if (tail === '') return head;
-
-  return `${head}\n${tail}`;
-};
-
-const pathSegment = (key: PropertyKey): string => {
-  const text = plainLine(String(key));
-
-  return text.slice(0, MAX_SEGMENT_LENGTH);
-};
-
-const issuePath = (issue: z.core.$ZodIssue): string => {
-  if (issue.path.length === 0) return '(root)';
-
-  const segments = issue.path.map(pathSegment);
-
-  return segments.join('.');
-};
-
-/**
- * `printed non-JSON output` for a `SyntaxError`; for a `ZodError`, where the output broke its schema (at most 10 issue
- * paths, each made plain and cut to 200 characters), never the output itself; `could not be read` otherwise.
- */
-export const invalidOutputMessage = (command: string, error: unknown): string => {
-  if (error instanceof SyntaxError) return `turbo ${command} printed non-JSON output`;
-
-  if (!(error instanceof z.ZodError)) return `turbo ${command} output could not be read`;
-
-  const issues = error.issues.slice(0, MAX_ISSUE_PATHS);
-  const paths = issues.map(issuePath);
-
-  return `turbo ${command} output failed its schema at ${paths.join(', ')}`;
-};
-
-/** `code` is `ErrnoException.code` as is: a missing one reads `EIO`. */
-export const ioMessage = (path: string, code = 'EIO'): string => `${path}: ${code}`;
-
-export const versionUnsupportedMessage = (version: string, range: TurboVersionRange): string => {
-  return `turbo ${version} is not supported; need >=${range.min} <${range.maxExclusive}`;
-};
 
 const isErrno = (error: unknown): error is NodeJS.ErrnoException => error instanceof Error && 'code' in error;
 
@@ -90,10 +31,11 @@ const fromAbort = (error: Error, command: string): TurboException => {
 const errnoFailedMessage = (command: string, error: NodeJS.ErrnoException): string => {
   const signal: unknown = Reflect.get(error, 'signal');
   const reason = typeof signal === 'string' ? signal : error.code;
+  const turbo = turboCommand(command);
 
-  if (typeof reason !== 'string') return `turbo ${command} failed`;
+  if (typeof reason !== 'string') return `${turbo} failed`;
 
-  return `turbo ${command} failed: ${reason}`;
+  return `${turbo} failed: ${reason}`;
 };
 
 /** A failed spawn is never `io`: the binary is not runnable, or the spawn failed for a reason named by its code. */
@@ -126,7 +68,11 @@ export const toTurboException = (error: unknown, command: string): TurboExceptio
 
   if (isAbort) return fromAbort(error, command);
 
+  const isInvalidOutput = error instanceof SyntaxError || error instanceof z.ZodError;
+
+  if (isInvalidOutput) return new TurboException('invalid-output', invalidOutputMessage(command, error), { cause: error });
+
   if (isErrno(error)) return fromErrno(error, command);
 
-  return new TurboException('failed', `turbo ${command} failed`, { cause: error });
+  return new TurboException('failed', `${turboCommand(command)} failed`, { cause: error });
 };
