@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 
 import { SAMPLES, WARMUP } from '../common/bench.const.ts';
-import { benchModuleSchema } from '../common/bench.schema.ts';
+import { benchModuleSchema, benchNameSchema } from '../common/bench.schema.ts';
 import type { BenchDescriptor, BenchResult } from '../common/bench.type.ts';
 import { findBenchFiles, importBenchFile } from '../data-access/bench-files.ts';
 import { writeBenchResults } from '../data-access/bench-results.ts';
@@ -29,6 +29,16 @@ const claimNames = (fileByName: Map<string, string>, file: string, descriptors: 
   }
 };
 
+/** Checks each `<packageName>/<bench>` result name before any timing; `writeBenchResults` checks them again on write. */
+const checkResultNames = (packageName: string, file: string, descriptors: BenchDescriptor[]): void => {
+  for (const descriptor of descriptors) {
+    const name = `${packageName}/${descriptor.name}`;
+    const parsed = benchNameSchema.safeParse(name);
+
+    if (!parsed.success) throw new Error(`${file}: bench name ${JSON.stringify(name)} is invalid: ${parsed.error.message}`);
+  }
+};
+
 const measure = async (packageName: string, descriptor: BenchDescriptor): Promise<BenchResult> => {
   const durations = await sampleBench(descriptor, WARMUP, SAMPLES);
   const medianNs = median(durations);
@@ -43,8 +53,8 @@ const measure = async (packageName: string, descriptor: BenchDescriptor): Promis
 };
 
 /**
- * Loads every bench file under `packageDir` before timing anything, so a malformed file or a bench name declared twice
- * fails fast and leaves no results file. Then samples each bench in file order, names it `<basename(packageDir)>/<bench>`, and writes
+ * Loads every bench file under `packageDir` before timing anything, so a malformed file, a bench name declared twice or
+ * a result name outside the bench JSON contract fails fast and leaves no results file. Then samples each bench in file order, names it `<basename(packageDir)>/<bench>`, and writes
  * `.bench/results.json`.
  */
 export const runBenches = async (packageDir: string): Promise<BenchResult[]> => {
@@ -58,6 +68,7 @@ export const runBenches = async (packageDir: string): Promise<BenchResult[]> => 
     const fileDescriptors = await loadDescriptors(file);
 
     claimNames(fileByName, file, fileDescriptors);
+    checkResultNames(packageName, file, fileDescriptors);
     descriptors.push(...fileDescriptors);
   }
 

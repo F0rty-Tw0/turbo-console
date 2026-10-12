@@ -128,6 +128,20 @@ describe('FEATURE: bench run', () => {
     });
   });
 
+  describe('GIVEN a package dir whose name holds a +, with a bench that throws when timed', () => {
+    it('WHEN the benches run THEN it rejects naming the file and the result name, before timing any', async () => {
+      const source = "export default [{ name: 'parse', fn: () => { throw new Error('timed'); }, gate: true }];\n";
+
+      const plusDir = join(dirname(packageDir), 'p+kg');
+
+      await writeSource(plusDir, 'src/a/test/a.bench.ts', source);
+
+      const run = runBenches(plusDir);
+
+      await expect(run).rejects.toThrow(/a\.bench\.ts: bench name "p\+kg\/parse" is invalid/);
+    });
+  });
+
   describe('GIVEN a package without bench files', () => {
     it('WHEN the benches run THEN it writes an empty results list', async () => {
       await mkdir(packageDir);

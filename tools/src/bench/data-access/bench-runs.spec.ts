@@ -92,8 +92,8 @@ describe('FEATURE: bench runs dir', () => {
   });
 
   describe('GIVEN a results file whose names use every allowed character class', () => {
-    it('WHEN a name holds @, . and a space THEN reading keeps it', async () => {
-      const results = [result('core/@scope pkg.v2', 1)];
+    it('WHEN a name holds @, ., _ and a space THEN reading keeps it', async () => {
+      const results = [result('core/@scope pkg_v2.x', 1)];
 
       await writeJson(root, '1/results.json', results);
 

@@ -6,7 +6,7 @@ const BENCH_NAME_PATTERN = /^[\w@./ -]+$/u;
 const BENCH_NAME_RULE = 'bench names may hold only letters, digits, spaces and _ @ . / -';
 
 /** Letters, digits, `_ @ . / -` and spaces only: names reach CI logs, where a newline could forge a workflow command. */
-const benchNameSchema = z.string().min(1).max(200).regex(BENCH_NAME_PATTERN, BENCH_NAME_RULE);
+export const benchNameSchema = z.string().max(200).regex(BENCH_NAME_PATTERN, BENCH_NAME_RULE);
 
 const benchResultSchema = z.object({
   name: benchNameSchema,
