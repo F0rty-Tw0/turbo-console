@@ -124,13 +124,7 @@ export const runTurbo = async (binaryPath: string, args: string[], cwd: string, 
   const onAbort = (): void => {
     isAborting = true;
 
-    // A failed spawn has no pid and never emits `exit`; its `error` may still be a tick away.
-    if (child.pid === undefined) {
-      rejectAborted();
-
-      return;
-    }
-
+    // A failed spawn has no pid and never emits `exit`: its `error` rejects `once(child, 'exit')`, so this settles too.
     const stopped = stopChild(child, options.graceMs ?? GRACE_MS);
 
     void stopped.then(rejectAborted, rejectAborted);
