@@ -4,14 +4,18 @@ import { join } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 
 import { PRESETS } from '@turbo-console/repo-gen';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { runSummarySchema } from './common/run-summary.schema.ts';
 import type { RunSummary, TurboResult } from './common/turbo.type.ts';
 import { runTurbo } from './data-access/run-turbo.ts';
+import { devTurboPath } from './test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from './test/utils/fixture-hook.spec.util.ts';
 import { leafPackage } from './test/utils/manifest.spec.util.ts';
+import { isAlive } from './test/utils/process.spec.util.ts';
 import { optionalKeyPaths } from './test/utils/schema-strictness.spec.util.ts';
+
+const TURBO = devTurboPath();
 
 const TARGET_LIKE = PRESETS['target-like'];
 
@@ -62,17 +66,6 @@ const waitForHangPid = async (packageDir: string): Promise<number | undefined> =
   return pid;
 };
 
-/** Signal 0 only probes whether `pid` still exists. */
-const isAlive = (pid: number): boolean => {
-  try {
-    process.kill(pid, 0);
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 /** The JSON of the one run summary in `dir`; throws unless exactly one exists, so a stale summary cannot be read. */
 const readOnlyRunSummary = async (dir: string): Promise<unknown> => {
   const runsDir = join(dir, '.turbo', 'runs');
@@ -107,7 +100,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       let json: unknown;
 
       beforeAll(async () => {
-        result = await runTurbo(['run', 'build', '--summarize'], fixture().dir);
+        result = await runTurbo(TURBO, ['run', 'build', '--summarize'], fixture().dir);
         json = await readOnlyRunSummary(fixture().dir);
       });
 
@@ -136,7 +129,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       const leaf = leafPackage(fixture().manifest);
 
       await replaceBuild(join(fixture().dir, leaf.path), FAILING_BUILD);
-      result = await runTurbo(['run', 'build', '--summarize'], fixture().dir);
+      result = await runTurbo(TURBO, ['run', 'build', '--summarize'], fixture().dir);
       summary = runSummarySchema.parse(await readOnlyRunSummary(fixture().dir));
     });
 
@@ -168,24 +161,22 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       await replaceBuild(leafDir, HANGING_BUILD);
 
       const startedAt = performance.now();
-      const run = runTurbo(['run', 'build', `--filter=${leaf.name}`], fixture().dir, TIMEOUT_MS);
+      const run = runTurbo(TURBO, ['run', 'build', `--filter=${leaf.name}`], fixture().dir, { timeoutMs: TIMEOUT_MS });
 
       await expect(run).rejects.toMatchObject({ name: 'AbortError' });
 
       const elapsedMs = performance.now() - startedAt;
       const hangPid = await waitForHangPid(leafDir);
+      // runTurbo rejects only after turbo has exited, and turbo stops the build before it exits (W2).
+      const isHangAlive = hangPid !== undefined && isAlive(hangPid);
 
-      // runTurbo rejects as the abort fires, while turbo is still stopping the build; later tests must not race it.
       if (hangPid === undefined) {
         console.warn(
           `hang test: no pid in ${HANG_PID_FILE} after ${HANG_PID_WAIT_MS} ms; the build never started or was stopped first`
         );
-      } else {
-        const hasHangExited = (): boolean => !isAlive(hangPid);
-
-        await vi.waitUntil(hasHangExited, { timeout: 10_000, interval: 50 });
       }
 
+      expect(isHangAlive).toBe(false);
       expect(elapsedMs).toBeLessThan(TIMEOUT_MS + 5000);
     });
   });

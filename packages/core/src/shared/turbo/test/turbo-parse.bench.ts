@@ -10,6 +10,9 @@ import { PACKAGE_GRAPH_QUERY } from '../common/turbo-query.const.ts';
 import type { TurboResult } from '../common/turbo.type.ts';
 import { queryTurbo } from '../data-access/query-turbo.ts';
 import { runTurbo } from '../data-access/run-turbo.ts';
+import { devTurboPath } from './utils/dev-turbo.spec.util.ts';
+
+const TURBO = devTurboPath();
 
 type CapturedOutput = {
   readonly packageGraph: string;
@@ -28,8 +31,8 @@ const captureOutput = async (preset: PresetName): Promise<CapturedOutput> => {
   const fixture = await fixtureFor(PRESETS[preset]);
 
   try {
-    const graphResult = await queryTurbo(PACKAGE_GRAPH_QUERY, fixture.dir);
-    const dryRunResult = await runTurbo(DRY_RUN_ARGS, fixture.dir);
+    const graphResult = await queryTurbo(TURBO, PACKAGE_GRAPH_QUERY, fixture.dir);
+    const dryRunResult = await runTurbo(TURBO, DRY_RUN_ARGS, fixture.dir);
     const output: CapturedOutput = { packageGraph: stdoutOf(graphResult, 'query'), dryRun: stdoutOf(dryRunResult, 'run --dry=json') };
 
     return output;

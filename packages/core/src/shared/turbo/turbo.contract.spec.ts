@@ -12,6 +12,7 @@ import { SCHEMA_SDL_SHA256, SUPPORTED_TURBO_RANGE } from './common/turbo-version
 import type { DryRun, PackageGraph, TurboResult } from './common/turbo.type.ts';
 import { queryTurbo } from './data-access/query-turbo.ts';
 import { runTurbo } from './data-access/run-turbo.ts';
+import { devTurboPath } from './test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from './test/utils/fixture-hook.spec.util.ts';
 import {
   leafPackage,
@@ -23,6 +24,8 @@ import {
 import { commandTaskNames, commandlessTaskNames, graphEdgePairs, graphPackageNames } from './test/utils/package-graph.spec.util.ts';
 import { optionalKeyPaths } from './test/utils/schema-strictness.spec.util.ts';
 import { isSupportedTurboVersion } from './utils/turbo-version.util.ts';
+
+const TURBO = devTurboPath();
 
 const TARGET_LIKE = PRESETS['target-like'];
 
@@ -56,7 +59,7 @@ const affectedByLeafEdit = async (fixture: FixtureHandle): Promise<unknown> => {
   const leaf = leafPackage(fixture.manifest);
 
   await applyEdit(fixture.dir, [`${leaf.path}/README.md`]);
-  const result = await queryTurbo(AFFECTED_TASKS_QUERY, fixture.dir, AFFECTED_RANGE);
+  const result = await queryTurbo(TURBO, AFFECTED_TASKS_QUERY, fixture.dir, { variables: AFFECTED_RANGE });
   const json: unknown = JSON.parse(result.stdout);
 
   return json;
@@ -76,7 +79,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
     let result: TurboResult;
 
     beforeAll(async () => {
-      result = await queryTurbo(PACKAGE_GRAPH_QUERY, fixture().dir);
+      result = await queryTurbo(TURBO, PACKAGE_GRAPH_QUERY, fixture().dir);
     });
 
     it('THEN turbo exits 0', () => {
@@ -135,7 +138,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
       let result: TurboResult;
 
       beforeAll(async () => {
-        result = await runTurbo(['run', 'build', 'lint', 'typecheck', '--dry=json'], fixture().dir);
+        result = await runTurbo(TURBO, ['run', 'build', 'lint', 'typecheck', '--dry=json'], fixture().dir);
       });
 
       it('THEN exactly the manifest phantoms of those tasks show <NONEXISTENT>', () => {
@@ -165,7 +168,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
     it('WHEN build runs dry filtered to one package THEN the output parses and lists that package build', async () => {
       const leaf = leafPackage(fixture().manifest);
 
-      const result = await runTurbo(['run', 'build', `--filter=${leaf.name}`, '--dry=json'], fixture().dir);
+      const result = await runTurbo(TURBO, ['run', 'build', `--filter=${leaf.name}`, '--dry=json'], fixture().dir);
 
       const taskIds = parseDryRun(result).tasks.map((task) => task.taskId);
 
@@ -176,7 +179,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
       const atomTest = packageWithRole(fixture().manifest, 'atom-test');
       const carriers = manifestTaskNames(fixture().manifest, ['carrier']).filter((name) => name.startsWith(`${atomTest.name}#`));
 
-      const result = await runTurbo(['run', 'e2e-ci', `--filter=${atomTest.name}`, '--dry=json'], fixture().dir);
+      const result = await runTurbo(TURBO, ['run', 'e2e-ci', `--filter=${atomTest.name}`, '--dry=json'], fixture().dir);
 
       const listed = parseDryRun(result).tasks.filter((task) => carriers.includes(task.taskId));
       const listedIds = listed.map((task) => task.taskId);
@@ -237,7 +240,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
     const fixture = fixtureHook(TARGET_LIKE);
 
     it('WHEN asked for its version THEN it is inside SUPPORTED_TURBO_RANGE', async () => {
-      const result = await runTurbo(['--version'], fixture().dir);
+      const result = await runTurbo(TURBO, ['--version'], fixture().dir);
 
       const isSupported = isSupportedTurboVersion(result.stdout.trim(), SUPPORTED_TURBO_RANGE);
 
@@ -245,7 +248,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
     });
 
     it('WHEN asked for its query schema THEN the LF-normalised sha256 equals SCHEMA_SDL_SHA256', async () => {
-      const result = await runTurbo(['query', '--schema'], fixture().dir);
+      const result = await runTurbo(TURBO, ['query', '--schema'], fixture().dir);
 
       const hash = sha256(result.stdout.replaceAll('\r\n', '\n'));
 
@@ -257,7 +260,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
     const fixture = fixtureHook({ ...TARGET_LIKE, nullHashTask: NULL_HASH_TASK });
 
     it(`WHEN ${NULL_HASH_TASK} and build run dry THEN every ${NULL_HASH_TASK} hash is null and every build hash is a string`, async () => {
-      const result = await runTurbo(['run', NULL_HASH_TASK, 'build', '--dry=json'], fixture().dir);
+      const result = await runTurbo(TURBO, ['run', NULL_HASH_TASK, 'build', '--dry=json'], fixture().dir);
 
       const dryRun = parseDryRun(result);
       const jitHashes = dryRun.tasks.filter((task) => task.task === NULL_HASH_TASK).map((task) => task.hash);
@@ -274,7 +277,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
     let graph: PackageGraph;
 
     beforeAll(async () => {
-      const result = await queryTurbo(PACKAGE_GRAPH_QUERY, fixture().dir);
+      const result = await queryTurbo(TURBO, PACKAGE_GRAPH_QUERY, fixture().dir);
 
       graph = parseGraph(result);
     });
@@ -309,7 +312,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
     const fixture = fixtureHook(TARGET_LIKE);
 
     it('WHEN it is run THEN runTurbo resolves with a non-zero exit code', async () => {
-      const result = await runTurbo(['run', 'no-such-task'], fixture().dir);
+      const result = await runTurbo(TURBO, ['run', 'no-such-task'], fixture().dir);
 
       expect(result.exitCode).not.toBe(0);
     });
@@ -318,7 +321,7 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
 
 describe.skipIf(REAL_REPO === '')('FEATURE: turbo CLI contract on the repo at TURBO_CONSOLE_REAL_REPO', () => {
   it('WHEN its package graph is queried THEN stdout passes packageGraphSchema (scenario 1)', async () => {
-    const result = await queryTurbo(PACKAGE_GRAPH_QUERY, REAL_REPO);
+    const result = await queryTurbo(TURBO, PACKAGE_GRAPH_QUERY, REAL_REPO);
 
     expect(result.exitCode).toBe(0);
 
@@ -329,7 +332,7 @@ describe.skipIf(REAL_REPO === '')('FEATURE: turbo CLI contract on the repo at TU
   });
 
   it('WHEN build runs dry on the whole repo THEN stdout passes dryRunSchema (scenario 2)', async () => {
-    const result = await runTurbo(['run', 'build', '--dry=json'], REAL_REPO);
+    const result = await runTurbo(TURBO, ['run', 'build', '--dry=json'], REAL_REPO);
 
     expect(result.exitCode).toBe(0);
 
@@ -340,7 +343,7 @@ describe.skipIf(REAL_REPO === '')('FEATURE: turbo CLI contract on the repo at TU
   });
 
   it('WHEN turbo reports its version THEN it is inside SUPPORTED_TURBO_RANGE (scenario 6)', async () => {
-    const result = await runTurbo(['--version'], REAL_REPO);
+    const result = await runTurbo(TURBO, ['--version'], REAL_REPO);
 
     expect(result.exitCode).toBe(0);
 

@@ -51,6 +51,7 @@ Thumbs.db
 *.vsix
 test-results
 playwright-report
+.playwright-mcp
 
 # Local-only: agent files, specs, plans and spike reports
 .claude
