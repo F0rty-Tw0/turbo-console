@@ -18,7 +18,7 @@ const SKIP_INFER = '--skip-infer';
  */
 const TIMEOUT_MS = 60_000;
 
-/** How long turbo gets to stop its task processes after the abort kill before it is killed outright. */
+/** How long turbo gets to exit after the abort kill before it is killed outright. */
 const GRACE_MS = 5000;
 
 const abortSignalOf = (options: RunTurboOptions): AbortSignal => {
@@ -55,9 +55,10 @@ const settlesWithin = async (exited: Promise<unknown>, ms: number): Promise<bool
 };
 
 /**
- * `killTree`, then a hard kill when `child` has not exited, or the tree kill not finished, after `graceMs`; settles
- * once `child` has exited. One `exit` listener serves both waits, so none is left behind when the grace period runs
- * out. Waiting for the tree kill too keeps a Windows rejection from landing before taskkill has stopped turbo's tasks.
+ * `killTree`, then a hard kill of `child` alone when it has not exited, or the tree kill not finished, after
+ * `graceMs`; settles once `child` has exited. One `exit` listener serves both waits, so none is left behind when the
+ * grace period runs out. Waiting for the tree kill too keeps a Windows rejection from landing before taskkill has
+ * killed turbo's tree.
  */
 const stopChild = async (child: ChildProcess, graceMs: number): Promise<void> => {
   const exited = once(child, 'exit');
@@ -95,7 +96,10 @@ const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileExc
  * to a remote cache, git fsmonitor off. The target repo's `.git/config` is otherwise trusted. Resolves with turbo's
  * exit code, non-zero included; rejects when no exit code exists (spawn failure, a kill signal, output past the 256 MB
  * buffer), and with an `AbortError` (`cause`: the signal's reason) when `timeoutMs` (60 s by default) or `signal`
- * aborts first: turbo's tree is killed and the rejection waits for turbo to exit, killing it outright after `graceMs`.
+ * aborts first. On abort, POSIX sends SIGTERM to turbo, which stops its own task processes; Windows runs `taskkill /T
+ * /F`, which kills turbo's tree. The rejection waits for turbo to exit (on Windows, for taskkill to finish too). After
+ * `graceMs` turbo is killed outright; on POSIX that hard kill reaches turbo's pid only, so a task that ignores SIGTERM
+ * can outlive it (tracked follow-up).
  * Known limit: once turbo has exited, a leftover process still holding its stdout delays the result and can no
  * longer be timed out, since the abort is detached at turbo's exit and turbo's pid is gone.
  */

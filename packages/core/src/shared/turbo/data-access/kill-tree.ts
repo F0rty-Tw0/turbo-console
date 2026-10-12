@@ -12,9 +12,10 @@ const taskkillPath = (): string => {
 };
 
 /**
- * Asks `child` and its descendants to stop: SIGTERM on POSIX (turbo stops its own task processes on it), settled at
- * once; on Windows, where a plain kill would leave turbo's task processes running, `taskkill /T /F`, settled once
- * taskkill has finished (after a plain kill when it fails). Never rejects.
+ * Stops `child`'s tree. POSIX: SIGTERM to `child` alone, settled at once; turbo stops its own task processes on it,
+ * a task that ignores SIGTERM keeps running. Windows: `taskkill /T /F`, which kills the whole tree (a plain kill would
+ * leave turbo's task processes running), settled once taskkill has finished, after a plain kill of `child` when it
+ * fails. Never rejects.
  */
 export const killTree = async (child: ChildProcess): Promise<void> => {
   const { promise, resolve } = Promise.withResolvers<undefined>();
