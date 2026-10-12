@@ -1,7 +1,9 @@
 import { execFile } from 'node:child_process';
 import type { ChildProcess, ExecFileException } from 'node:child_process';
 import { once } from 'node:events';
+import { access, constants } from 'node:fs/promises';
 
+import { collectStderr } from './collect-stderr.ts';
 import { killTree } from './kill-tree.ts';
 import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
 import { turboEnv } from '../utils/turbo-env.util.ts';
@@ -30,11 +32,11 @@ const abortSignalOf = (options: RunTurboOptions): AbortSignal => {
   return AbortSignal.any(signals);
 };
 
-/** M0's rejection shape: an `AbortError` whose `cause` tells a `TimeoutError` from the caller's own reason. */
-const abortError = (signal: AbortSignal): Error => {
+/** M0's `AbortError` (`cause` tells a `TimeoutError` from the caller's reason), plus the stderr execFile drops once aborting. */
+const abortError = (signal: AbortSignal, stderr: string): Error => {
   const cause: unknown = signal.reason;
 
-  return Object.assign(new Error('turbo aborted'), { name: 'AbortError', cause });
+  return Object.assign(new Error('turbo aborted'), { name: 'AbortError', cause, stderr });
 };
 
 /** True when `exited` settles first, false when `ms` pass first; the timer is cleared either way. */
@@ -64,7 +66,6 @@ const stopChild = async (child: ChildProcess, graceMs: number): Promise<void> =>
   const exited = once(child, 'exit');
   const treeKilled = killTree(child);
   const stopped = Promise.all([exited, treeKilled]);
-
   const hasStopped = await settlesWithin(stopped, graceMs);
 
   if (hasStopped) return;
@@ -95,18 +96,20 @@ const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileExc
  * the hardened env from `turboEnv`: no inherited `GIT_*` or turbo credential variables, local cache only, no request
  * to a remote cache, git fsmonitor off. The target repo's `.git/config` is otherwise trusted. Resolves with turbo's
  * exit code, non-zero included; rejects when no exit code exists (spawn failure, a kill signal, output past the 256 MB
- * buffer), and with an `AbortError` (`cause`: the signal's reason) when `timeoutMs` (60 s by default) or `signal`
- * aborts first. On abort, POSIX sends SIGTERM to turbo, which stops its own task processes; Windows runs `taskkill /T
- * /F`, which kills turbo's tree. The rejection waits for turbo to exit (on Windows, for taskkill to finish too). After
- * `graceMs` turbo is killed outright; on POSIX that hard kill reaches turbo's pid only, so a task that ignores SIGTERM
- * can outlive it (tracked follow-up).
+ * buffer), and with an `AbortError` (`cause`: the signal's reason; `stderr`: the last 64 Ki characters turbo wrote)
+ * when `timeoutMs` (60 s by default) or `signal` aborts first. Abort: SIGTERM to turbo on POSIX (turbo stops its
+ * tasks), `taskkill /T /F` on Windows; the rejection waits for turbo's exit and taskkill. After `graceMs` turbo is
+ * killed outright; on POSIX that reaches turbo's pid only, so a task ignoring SIGTERM can outlive it (follow-up).
  * Known limit: once turbo has exited, a leftover process still holding its stdout delays the result and can no
  * longer be timed out, since the abort is detached at turbo's exit and turbo's pid is gone.
  */
 export const runTurbo = async (binaryPath: string, args: string[], cwd: string, options: RunTurboOptions = {}): Promise<TurboResult> => {
   const signal = abortSignalOf(options);
 
-  if (signal.aborted) throw abortError(signal);
+  // Checked before the spawn, which would report a missing or unsearchable cwd as ENOENT/EACCES on the binary path.
+  if (!signal.aborted) await access(cwd, constants.X_OK);
+
+  if (signal.aborted) throw abortError(signal, '');
 
   const resolvers = Promise.withResolvers<TurboResult>();
   const env = turboEnv(process.env);
@@ -118,13 +121,14 @@ export const runTurbo = async (binaryPath: string, args: string[], cwd: string, 
   };
 
   const child = execFile(binaryPath, [SKIP_INFER, ...args], execOptions, onDone);
+  const readStderr = collectStderr(child);
 
-  const rejectAborted = (): void => resolvers.reject(abortError(signal));
+  const rejectAborted = (): void => resolvers.reject(abortError(signal, readStderr()));
 
   const onAbort = (): void => {
     isAborting = true;
 
-    // A failed spawn has no pid and never emits `exit`; its `error` may still be a tick away.
+    // Defensive: an abort between execFile and its spawn `error` tick finds no pid, and no `exit` follows.
     if (child.pid === undefined) {
       rejectAborted();
 
