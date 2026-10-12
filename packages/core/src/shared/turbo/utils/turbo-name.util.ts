@@ -1,4 +1,5 @@
 import { TurboException } from '../../errors/common/turbo.exception.ts';
+import { plainLine } from '../../errors/utils/plain-text.util.ts';
 
 const FIRST_PRINTABLE = 0x20;
 
@@ -14,7 +15,8 @@ const isControl = (char: string): boolean => {
 const MAX_ECHOED_LENGTH = 200;
 
 const invalidName = (name: string, reason: string): TurboException => {
-  const echoed = JSON.stringify(name.slice(0, MAX_ECHOED_LENGTH));
+  const quoted = JSON.stringify(name.slice(0, MAX_ECHOED_LENGTH));
+  const echoed = plainLine(quoted);
 
   return new TurboException('invalid-argument', `invalid turbo name ${echoed}: ${reason}`);
 };

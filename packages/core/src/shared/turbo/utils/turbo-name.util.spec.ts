@@ -2,21 +2,22 @@ import { describe, expect, it } from 'vitest';
 
 import { assertTurboName } from './turbo-name.util.ts';
 
-const REJECTED: [string, string][] = [
-  ['', 'empty'],
-  ['-x', 'starts with -'],
-  ['--filter', 'starts with -'],
-  ['a\u0000b', 'contains a control character'],
-  ['a\tb', 'contains a control character'],
-  ['a\nb', 'contains a control character'],
-  ['a\u001Fb', 'contains a control character'],
-  ['a\u007Fb', 'contains a control character']
+/** Name, the echo in the message (JSON-quoted, then made plain: DEL is dropped), reason. */
+const REJECTED: [string, string, string][] = [
+  ['', '""', 'empty'],
+  ['-x', '"-x"', 'starts with -'],
+  ['--filter', '"--filter"', 'starts with -'],
+  ['a\u0000b', '"a\\u0000b"', 'contains a control character'],
+  ['a\tb', '"a\\tb"', 'contains a control character'],
+  ['a\nb', '"a\\nb"', 'contains a control character'],
+  ['a\u001Fb', '"a\\u001fb"', 'contains a control character'],
+  ['a\u007Fb', '"ab"', 'contains a control character']
 ];
 
 describe('FEATURE: turbo name check', () => {
   describe('GIVEN a name turbo could misread', () => {
-    it.each(REJECTED)('WHEN %j is checked THEN it throws invalid-argument: %s', (name, reason) => {
-      const expected = { kind: 'invalid-argument', message: `invalid turbo name ${JSON.stringify(name)}: ${reason}` };
+    it.each(REJECTED)('WHEN %j is checked THEN it throws invalid-argument echoing %s: %s', (name, echoed, reason) => {
+      const expected = { kind: 'invalid-argument', message: `invalid turbo name ${echoed}: ${reason}` };
 
       expect(() => assertTurboName(name)).toThrow(expect.objectContaining(expected));
     });
@@ -24,6 +25,15 @@ describe('FEATURE: turbo name check', () => {
     it('WHEN a 5000-character name is rejected THEN the message echoes only its first 200 characters', () => {
       const name = `-${'x'.repeat(4999)}`;
       const expected = { message: `invalid turbo name "-${'x'.repeat(199)}": starts with -` };
+
+      expect(() => assertTurboName(name)).toThrow(expect.objectContaining(expected));
+    });
+
+    it.each([
+      ['-\u202Ex', '"-x"'],
+      ['-\u009B31m', '"-"']
+    ])('WHEN %j, holding a bidi override or a C1 CSI sequence, is rejected THEN the message echoes %s', (name, echoed) => {
+      const expected = { message: `invalid turbo name ${echoed}: starts with -` };
 
       expect(() => assertTurboName(name)).toThrow(expect.objectContaining(expected));
     });
