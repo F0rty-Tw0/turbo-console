@@ -6,8 +6,16 @@ import { TurboException } from '../common/turbo.exception.ts';
 
 const isErrno = (error: unknown): error is NodeJS.ErrnoException => error instanceof Error && 'code' in error;
 
+/** `runTurbo`'s `AbortError`, or a bare `TimeoutError` that never reached it. */
+const ABORT_NAMES = ['AbortError', 'TimeoutError'];
+
+const isAbortError = (error: unknown): error is Error => error instanceof Error && ABORT_NAMES.includes(error.name);
+
+const isTimeoutError = (error: unknown): boolean => error instanceof Error && error.name === 'TimeoutError';
+
+/** A bare `TimeoutError` (`AbortSignal.timeout` + `throwIfAborted`) or an `AbortError` caused by one is a timeout. */
 const abortOutcome = (error: Error): AbortOutcome => {
-  const isTimeout = error.cause instanceof Error && error.cause.name === 'TimeoutError';
+  const isTimeout = isTimeoutError(error) || isTimeoutError(error.cause);
 
   return isTimeout ? 'timeout' : 'aborted';
 };
@@ -65,7 +73,7 @@ const fromErrno = (error: NodeJS.ErrnoException, command: string): TurboExceptio
 export const toTurboException = (error: unknown, command: string): TurboException => {
   if (error instanceof TurboException) return error;
 
-  const isAbort = error instanceof Error && error.name === 'AbortError';
+  const isAbort = isAbortError(error);
 
   if (isAbort) return fromAbort(error, command);
 

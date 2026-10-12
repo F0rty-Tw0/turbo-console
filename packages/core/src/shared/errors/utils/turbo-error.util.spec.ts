@@ -38,6 +38,14 @@ describe('FEATURE: turbo errors as TurboException', () => {
       expect(exception).toMatchObject({ kind: 'failed', message: 'turbo query was aborted\npartial' });
     });
 
+    it('WHEN given a bare TimeoutError DOMException THEN it is failed, timed out, with no tail', () => {
+      const error = new DOMException('The operation was aborted due to timeout', 'TimeoutError');
+
+      const exception = toTurboException(error, 'query');
+
+      expect(exception).toMatchObject({ kind: 'failed', message: 'turbo query timed out', cause: error });
+    });
+
     it('WHEN given an AbortError without stderr THEN the message has no tail', () => {
       const error = Object.assign(new Error('The operation was aborted'), { name: 'AbortError' });
 
