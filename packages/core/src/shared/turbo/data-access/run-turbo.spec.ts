@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -141,6 +142,10 @@ describe('FEATURE: runTurbo process lifecycle', () => {
         expect(outcome.elapsedMs).toBeGreaterThanOrEqual(1500);
       });
 
+      it('THEN SIGTERM stops the binary, well before the hard kill after the 5 s grace period', () => {
+        expect(outcome.elapsedMs).toBeLessThan(300 + 1500 + 1000);
+      });
+
       it('THEN the binary is gone when runTurbo rejects', () => {
         expect(outcome.isStubAlive).toBe(false);
       });
@@ -163,6 +168,27 @@ describe('FEATURE: runTurbo process lifecycle', () => {
 
       it('THEN the binary is gone when runTurbo rejects', () => {
         expect(outcome.isStubAlive).toBe(false);
+      });
+    });
+
+    describe('WHEN the signal is already aborted', () => {
+      let error: unknown;
+
+      beforeAll(async () => {
+        await clearPid('slow-term');
+        const run = startStub('slow-term', { signal: AbortSignal.abort() });
+
+        error = await run.catch((caught: unknown) => caught);
+        // Long enough for a spawned stub to write its pid.
+        await setTimeout(300);
+      });
+
+      it('THEN runTurbo rejects with an AbortError', () => {
+        expect(error).toMatchObject({ name: 'AbortError' });
+      });
+
+      it('THEN the binary never starts', async () => {
+        await expect(readFile(stubFile('slow-term', 'pid'))).rejects.toMatchObject({ code: 'ENOENT' });
       });
     });
   });
