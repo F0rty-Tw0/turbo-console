@@ -10,8 +10,13 @@ const isControl = (char: string): boolean => {
   return code < FIRST_PRINTABLE || code === DELETE;
 };
 
+/** A workspace-derived name can be any length: the message echoes only its start. */
+const MAX_ECHOED_LENGTH = 200;
+
 const invalidName = (name: string, reason: string): TurboException => {
-  return new TurboException('invalid-argument', `invalid turbo name ${JSON.stringify(name)}: ${reason}`);
+  const echoed = JSON.stringify(name.slice(0, MAX_ECHOED_LENGTH));
+
+  return new TurboException('invalid-argument', `invalid turbo name ${echoed}: ${reason}`);
 };
 
 /** Rejects a workspace-derived name that turbo could read as a flag, or that carries a control character (U+0000–U+001F, U+007F). */

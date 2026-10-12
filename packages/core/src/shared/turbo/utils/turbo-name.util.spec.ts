@@ -20,6 +20,13 @@ describe('FEATURE: turbo name check', () => {
 
       expect(() => assertTurboName(name)).toThrow(expect.objectContaining(expected));
     });
+
+    it('WHEN a 5000-character name is rejected THEN the message echoes only its first 200 characters', () => {
+      const name = `-${'x'.repeat(4999)}`;
+      const expected = { message: `invalid turbo name "-${'x'.repeat(199)}": starts with -` };
+
+      expect(() => assertTurboName(name)).toThrow(expect.objectContaining(expected));
+    });
   });
 
   describe('GIVEN a workspace-derived name turbo reads as a name', () => {
