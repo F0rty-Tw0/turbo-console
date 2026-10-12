@@ -41,8 +41,12 @@ describe('FEATURE: stderr tail', () => {
       expect(stderrTail('\u001B[31merror\u001B[39m: boom\n', 20)).toBe('error: boom');
     });
 
-    it('WHEN a line carries BEL and a lone CR THEN they are removed, while tabs stay', () => {
-      expect(stderrTail('a\u0007b\rc\td\n', 20)).toBe('abc\td');
+    it('WHEN a line carries BEL THEN it is removed, while tabs stay', () => {
+      expect(stderrTail('a\u0007b\td\n', 20)).toBe('ab\td');
+    });
+
+    it('WHEN progress lines are split by a lone CR THEN each becomes its own line', () => {
+      expect(stderrTail('progress 50%\rprogress 100%\n', 20)).toBe('progress 50%\nprogress 100%');
     });
 
     it('WHEN the 8 Ki cut lands mid-line THEN that partial line is dropped', () => {
