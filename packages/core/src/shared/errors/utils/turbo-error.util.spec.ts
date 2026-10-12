@@ -38,6 +38,16 @@ describe('FEATURE: turbo error messages', () => {
       expect(failedMessage('query', 'aborted', 'stopped\n')).toBe('turbo query was aborted\nstopped');
     });
 
+    it('WHEN stderr has 25 lines THEN the message holds the head and lines 6 to 25', () => {
+      const lines = numberedLines(25);
+      const lastTwenty = lines.slice(5);
+      const expected = `turbo query exited 1\n${lastTwenty.join('\n')}`;
+
+      const message = failedMessage('query', 1, `${lines.join('\n')}\n`);
+
+      expect(message).toBe(expected);
+    });
+
     it('WHEN stderr is empty THEN the message has no trailing newline', () => {
       expect(failedMessage('query', 3, '')).toBe('turbo query exited 3');
     });
@@ -48,6 +58,20 @@ describe('FEATURE: turbo error messages', () => {
       const error = parseError('x');
 
       expect(invalidOutputMessage('query', error)).toBe('turbo query printed non-JSON output');
+    });
+
+    it('WHEN reading the output failed otherwise THEN it says the output could not be read', () => {
+      expect(invalidOutputMessage('query', new Error('read failed'))).toBe('turbo query output could not be read');
+    });
+
+    it('WHEN an issue path holds repo text THEN each segment is plain and at most 200 characters', () => {
+      const longKey = 'k'.repeat(300);
+      const output = { 'evil\n\u001B[2Jkey': 'x', [longKey]: 'y' };
+      const expected = `turbo query output failed its schema at evilkey, ${'k'.repeat(200)}`;
+
+      const result = z.record(z.string(), z.number()).safeParse(output);
+
+      expect(invalidOutputMessage('query', result.error)).toBe(expected);
     });
 
     it('WHEN the package graph schema failed THEN it names the issue path, not the input', () => {

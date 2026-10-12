@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { plainLine } from './plain-text.util.ts';
 import { stderrTail } from './stderr-tail.util.ts';
 import type { TurboVersionRange } from '../../turbo/common/turbo.type.ts';
 import { TurboException } from '../common/turbo.exception.ts';
@@ -9,6 +10,9 @@ type AbortOutcome = 'timeout' | 'aborted';
 const STDERR_LINES = 20;
 
 const MAX_ISSUE_PATHS = 10;
+
+/** Record keys can come from repo text: one cannot flood the message. */
+const MAX_SEGMENT_LENGTH = 200;
 
 const OUTCOME_TEXT: Record<AbortOutcome, string> = { timeout: 'timed out', aborted: 'was aborted' };
 
@@ -23,15 +27,28 @@ export const failedMessage = (command: string, outcome: number | AbortOutcome, s
   return `${head}\n${tail}`;
 };
 
+const pathSegment = (key: PropertyKey): string => {
+  const text = plainLine(String(key));
+
+  return text.slice(0, MAX_SEGMENT_LENGTH);
+};
+
 const issuePath = (issue: z.core.$ZodIssue): string => {
   if (issue.path.length === 0) return '(root)';
 
-  return issue.path.join('.');
+  const segments = issue.path.map(pathSegment);
+
+  return segments.join('.');
 };
 
-/** Names where turbo's output broke its schema (at most 10 issue paths), never the output itself. */
+/**
+ * `printed non-JSON output` for a `SyntaxError`; for a `ZodError`, where the output broke its schema (at most 10 issue
+ * paths, each made plain and cut to 200 characters), never the output itself; `could not be read` otherwise.
+ */
 export const invalidOutputMessage = (command: string, error: unknown): string => {
-  if (!(error instanceof z.ZodError)) return `turbo ${command} printed non-JSON output`;
+  if (error instanceof SyntaxError) return `turbo ${command} printed non-JSON output`;
+
+  if (!(error instanceof z.ZodError)) return `turbo ${command} output could not be read`;
 
   const issues = error.issues.slice(0, MAX_ISSUE_PATHS);
   const paths = issues.map(issuePath);
