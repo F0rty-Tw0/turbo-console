@@ -35,6 +35,9 @@ const STUB_BODIES: Record<StubName, string> = {
 
 const STUB_NAMES: StubName[] = ['slow-term', 'ignore-term', 'quick-term', 'exit-3'];
 
+/** The one timer-driven case: long enough that a loaded macOS runner's shell writes its pid (and trap) before it fires. */
+const TIMEOUT_MS = 1000;
+
 const noop = (): void => undefined;
 
 /** The stubs are POSIX shell scripts; the Windows taskkill path is proven by the contract hang test. */
@@ -125,11 +128,11 @@ describe('FEATURE: runTurbo process lifecycle', () => {
   });
 
   describe.skipIf(IS_WINDOWS)('GIVEN a binary that takes 1.5 s to exit on SIGTERM', () => {
-    describe('WHEN a 300 ms timeout fires', () => {
+    describe('WHEN a 1 s timeout fires', () => {
       let outcome: AbortOutcome;
 
       beforeAll(async () => {
-        outcome = await runUntilAborted('slow-term', { timeoutMs: 300 });
+        outcome = await runUntilAborted('slow-term', { timeoutMs: TIMEOUT_MS });
       });
 
       it('THEN runTurbo rejects with an AbortError caused by a TimeoutError', () => {
@@ -143,7 +146,7 @@ describe('FEATURE: runTurbo process lifecycle', () => {
       });
 
       it('THEN SIGTERM stops the binary, well before the hard kill after the 5 s grace period', () => {
-        expect(outcome.elapsedMs).toBeLessThan(300 + 1500 + 1000);
+        expect(outcome.elapsedMs).toBeLessThan(TIMEOUT_MS + 1500 + 1000);
       });
 
       it('THEN the binary is gone when runTurbo rejects', () => {
@@ -194,16 +197,19 @@ describe('FEATURE: runTurbo process lifecycle', () => {
   });
 
   describe.skipIf(IS_WINDOWS)('GIVEN a binary that ignores SIGTERM', () => {
-    describe('WHEN a 300 ms timeout fires with a 300 ms grace period', () => {
+    describe('WHEN the caller aborts once it has started, with a 300 ms grace period', () => {
       let outcome: AbortOutcome;
 
       beforeAll(async () => {
-        outcome = await runUntilAborted('ignore-term', { timeoutMs: 300, graceMs: 300 });
+        const controller = new AbortController();
+        const abort = (): void => controller.abort();
+
+        outcome = await runUntilAborted('ignore-term', { signal: controller.signal, graceMs: 300 }, abort);
       });
 
-      it('THEN runTurbo rejects with an AbortError after the timeout and the grace period', () => {
+      it('THEN runTurbo rejects with an AbortError after the grace period', () => {
         expect(outcome.error).toMatchObject({ name: 'AbortError' });
-        expect(outcome.elapsedMs).toBeGreaterThanOrEqual(600);
+        expect(outcome.elapsedMs).toBeGreaterThanOrEqual(300);
       });
 
       it('THEN the binary is gone when runTurbo rejects', () => {
@@ -213,8 +219,10 @@ describe('FEATURE: runTurbo process lifecycle', () => {
   });
 
   describe.skipIf(IS_WINDOWS)('GIVEN a binary that exits 0 at once on SIGTERM', () => {
-    it('WHEN a 300 ms timeout fires THEN runTurbo still rejects with an AbortError', async () => {
-      const outcome = await runUntilAborted('quick-term', { timeoutMs: 300 });
+    it('WHEN the caller aborts once it has started THEN runTurbo still rejects with an AbortError', async () => {
+      const controller = new AbortController();
+      const abort = (): void => controller.abort();
+      const outcome = await runUntilAborted('quick-term', { signal: controller.signal }, abort);
 
       expect(outcome.error).toMatchObject({ name: 'AbortError' });
     });
