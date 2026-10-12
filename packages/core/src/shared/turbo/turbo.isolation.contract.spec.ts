@@ -98,8 +98,8 @@ describe('FEATURE: turbo isolation from a remote cache the repo configures', () 
         expect(requests).toStrictEqual([]);
       });
 
-      // DIAG: 8 samples per store per CI run.
-      it.each([1, 2, 3, 4, 5, 6, 7, 8])('WHEN build really runs (sample %i) THEN the server receives no request', async () => {
+      // DIAG: 16 cold (--force) samples per store per CI run.
+      it.each(Array.from({ length: 16 }, (_, i) => i + 1))('WHEN build really runs (sample %i) THEN the server receives no request', async () => {
         // DIAG: snapshot the process tree if the build is still running after 25 s; turbo logs at -vv to stderr.
         const snapshot = (): void => {
           const ps = 'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Csv -NoTypeInformation';
@@ -108,7 +108,7 @@ describe('FEATURE: turbo isolation from a remote cache the repo configures', () 
         };
         const timer = setTimeout(snapshot, 25_000);
         const started = performance.now();
-        const result = await runTurbo(TURBO, ['run', 'build', '-vv'], fixture().dir).catch((error: unknown) => {
+        const result = await runTurbo(TURBO, ['run', 'build', '--force', '-vv'], fixture().dir).catch((error: unknown) => {
           console.warn(`DIAG ${store.name} stderr tail:\n${String((error as { stderr?: string }).stderr).slice(-30_000)}`);
           throw error;
         }).finally(() => clearTimeout(timer));
