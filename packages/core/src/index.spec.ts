@@ -4,11 +4,22 @@ import { describe, expect, it } from 'vitest';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 import { PACKAGE_NAME } from './index.ts';
+// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
+import type { TurboErrorKind } from './index.ts';
 
 describe('FEATURE: core package entry', () => {
   describe('GIVEN the package entry point', () => {
     it('WHEN PACKAGE_NAME is read THEN it equals the package name', () => {
       expect(PACKAGE_NAME).toBe('@turbo-console/core');
+    });
+
+    it('WHEN TurboErrorKind is imported THEN it is the exact kind union', () => {
+      const kind: TurboErrorKind = 'invalid-output';
+      // @ts-expect-error -- 'timeout' is not a kind; an `any` or missing export would compile here.
+      const unknownKind: TurboErrorKind = 'timeout';
+
+      expect(kind).toBe('invalid-output');
+      expect(unknownKind).toBe('timeout');
     });
   });
 
