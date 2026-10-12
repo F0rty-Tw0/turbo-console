@@ -9,6 +9,9 @@ import { git } from './git.ts';
 
 const HOOK_NAMES = ['pre-commit', 'commit-msg', 'post-commit'];
 
+/** The loose-objects task packs once 100 objects are loose, and runs under `gc.auto=0` too. */
+const MAINTENANCE_CONFIG = '[maintenance]\n\tautoDetach = false\n[maintenance "loose-objects"]\n\tenabled = true\n';
+
 const posixPath = (path: string): string => path.replaceAll('\\', '/');
 
 describe('FEATURE: git runner', () => {
@@ -67,6 +70,32 @@ describe('FEATURE: git runner', () => {
       const realTarget = await realpath(target);
 
       expect(resolve(gitDir.trim())).toBe(join(realTarget, '.git'));
+    });
+  });
+
+  describe('GIVEN a global git config whose auto maintenance packs loose objects in the foreground', () => {
+    beforeEach(async () => {
+      const home = join(dir, 'home');
+
+      await mkdir(home);
+      await writeFile(join(home, '.gitconfig'), MAINTENANCE_CONFIG);
+      vi.stubEnv('HOME', home);
+      vi.stubEnv('XDG_CONFIG_HOME', join(home, '.config'));
+    });
+
+    it('WHEN 150 files are committed THEN every object stays loose', async () => {
+      const repo = join(dir, 'repo');
+
+      await mkdir(repo);
+      await git(repo, ['init', '--quiet', '-b', 'main']);
+
+      for (let index = 0; index < 150; index += 1) await writeFile(join(repo, `file-${index}.txt`), `${index}\n`);
+
+      await git(repo, ['add', '-A']);
+      await git(repo, ['commit', '--quiet', '-m', 'commit']);
+      const counts = await git(repo, ['count-objects', '-v']);
+
+      expect(counts).toContain('in-pack: 0\n');
     });
   });
 
