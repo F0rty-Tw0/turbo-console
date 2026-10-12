@@ -25,3 +25,17 @@ export type TurboVersionRange = {
   readonly min: string;
   readonly maxExclusive: string;
 };
+
+/** Per-call spawn limits; `graceMs` bounds the wait for exit after the abort kill. */
+export type RunTurboOptions = {
+  readonly timeoutMs?: number | undefined;
+  readonly signal?: AbortSignal | undefined;
+  readonly graceMs?: number | undefined;
+};
+
+type QueryVariables = {
+  readonly variables?: Record<string, string> | undefined;
+};
+
+/** `variables` go to a `-V` JSON file; the rest is passed to `runTurbo`. */
+export type QueryTurboOptions = RunTurboOptions & QueryVariables;

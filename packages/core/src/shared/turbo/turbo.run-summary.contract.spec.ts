@@ -9,9 +9,12 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { runSummarySchema } from './common/run-summary.schema.ts';
 import type { RunSummary, TurboResult } from './common/turbo.type.ts';
 import { runTurbo } from './data-access/run-turbo.ts';
+import { devTurboPath } from './test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from './test/utils/fixture-hook.spec.util.ts';
 import { leafPackage } from './test/utils/manifest.spec.util.ts';
 import { optionalKeyPaths } from './test/utils/schema-strictness.spec.util.ts';
+
+const TURBO = devTurboPath();
 
 const TARGET_LIKE = PRESETS['target-like'];
 
@@ -107,7 +110,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       let json: unknown;
 
       beforeAll(async () => {
-        result = await runTurbo(['run', 'build', '--summarize'], fixture().dir);
+        result = await runTurbo(TURBO, ['run', 'build', '--summarize'], fixture().dir);
         json = await readOnlyRunSummary(fixture().dir);
       });
 
@@ -136,7 +139,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       const leaf = leafPackage(fixture().manifest);
 
       await replaceBuild(join(fixture().dir, leaf.path), FAILING_BUILD);
-      result = await runTurbo(['run', 'build', '--summarize'], fixture().dir);
+      result = await runTurbo(TURBO, ['run', 'build', '--summarize'], fixture().dir);
       summary = runSummarySchema.parse(await readOnlyRunSummary(fixture().dir));
     });
 
@@ -168,7 +171,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       await replaceBuild(leafDir, HANGING_BUILD);
 
       const startedAt = performance.now();
-      const run = runTurbo(['run', 'build', `--filter=${leaf.name}`], fixture().dir, TIMEOUT_MS);
+      const run = runTurbo(TURBO, ['run', 'build', `--filter=${leaf.name}`], fixture().dir, { timeoutMs: TIMEOUT_MS });
 
       await expect(run).rejects.toMatchObject({ name: 'AbortError' });
 

@@ -11,6 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { PACKAGE_GRAPH_QUERY } from './common/turbo-query.const.ts';
 import { queryTurbo } from './data-access/query-turbo.ts';
 import { runTurbo } from './data-access/run-turbo.ts';
+import { devTurboPath } from './test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from './test/utils/fixture-hook.spec.util.ts';
 
 type LoginStore = {
@@ -18,6 +19,8 @@ type LoginStore = {
   readonly variable: string;
   readonly segments: string[];
 };
+
+const TURBO = devTurboPath();
 
 const TARGET_LIKE = PRESETS['target-like'];
 
@@ -80,21 +83,21 @@ describe('FEATURE: turbo isolation from a remote cache the repo configures', () 
       });
 
       it('WHEN its package graph is queried THEN the server receives no request', async () => {
-        const result = await queryTurbo(PACKAGE_GRAPH_QUERY, fixture().dir);
+        const result = await queryTurbo(TURBO, PACKAGE_GRAPH_QUERY, fixture().dir);
 
         expect(result.exitCode).toBe(0);
         expect(requests).toStrictEqual([]);
       });
 
       it('WHEN build runs dry THEN the server receives no request', async () => {
-        const result = await runTurbo(['run', 'build', '--dry=json'], fixture().dir);
+        const result = await runTurbo(TURBO, ['run', 'build', '--dry=json'], fixture().dir);
 
         expect(result.exitCode).toBe(0);
         expect(requests).toStrictEqual([]);
       });
 
       it('WHEN build really runs THEN the server receives no request', async () => {
-        const result = await runTurbo(['run', 'build'], fixture().dir);
+        const result = await runTurbo(TURBO, ['run', 'build'], fixture().dir);
 
         expect(result.exitCode).toBe(0);
         expect(requests).toStrictEqual([]);
