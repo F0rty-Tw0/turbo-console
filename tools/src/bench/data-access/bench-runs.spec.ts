@@ -127,12 +127,12 @@ describe('FEATURE: bench runs dir', () => {
   });
 
   describe('GIVEN one results file that repeats a bench name', () => {
-    it('WHEN the dir is read THEN it rejects naming the file and the bench', async () => {
+    it('WHEN the dir is read THEN it rejects naming the file once and the bench', async () => {
       await writeJson(root, '1/results.json', [result('core/x', 1), result('core/x', 2)]);
 
       const read = readRunsDir(root);
 
-      await expect(read).rejects.toThrow(/results\.json and .*results\.json: duplicate bench name "core\/x"$/);
+      await expect(read).rejects.toThrow(/[/\\]1[/\\]results\.json: repeats bench name "core\/x"$/);
     });
   });
 

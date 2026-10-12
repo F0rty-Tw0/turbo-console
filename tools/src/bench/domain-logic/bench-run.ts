@@ -21,6 +21,8 @@ const claimNames = (fileByName: Map<string, string>, file: string, descriptors: 
   for (const descriptor of descriptors) {
     const firstFile = fileByName.get(descriptor.name);
 
+    if (firstFile === file) throw new Error(`${file}: repeats bench name "${descriptor.name}"`);
+
     if (firstFile !== undefined) throw new Error(`${firstFile} and ${file}: duplicate bench name "${descriptor.name}"`);
 
     fileByName.set(descriptor.name, file);

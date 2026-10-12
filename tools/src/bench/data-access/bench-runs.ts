@@ -25,6 +25,8 @@ const claimNames = (fileByName: Map<string, string>, file: string, results: Benc
   for (const result of results) {
     const firstFile = fileByName.get(result.name);
 
+    if (firstFile === file) throw new Error(`${file}: repeats bench name "${result.name}"`);
+
     if (firstFile !== undefined) throw new Error(`${firstFile} and ${file}: duplicate bench name "${result.name}"`);
 
     fileByName.set(result.name, file);

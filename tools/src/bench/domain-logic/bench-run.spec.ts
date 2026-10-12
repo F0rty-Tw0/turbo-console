@@ -117,14 +117,14 @@ describe('FEATURE: bench run', () => {
   });
 
   describe('GIVEN one bench file that declares the same bench name twice', () => {
-    it('WHEN the benches run THEN it rejects naming the file and the bench', async () => {
+    it('WHEN the benches run THEN it rejects naming the file once and the bench', async () => {
       const source = "export default [{ name: 'parse', fn: () => 1, gate: true }, { name: 'parse', fn: () => 2, gate: true }];\n";
 
       await writeSource(packageDir, 'src/a/test/a.bench.ts', source);
 
       const run = runBenches(packageDir);
 
-      await expect(run).rejects.toThrow(/a\.bench\.ts and .*a\.bench\.ts: duplicate bench name "parse"$/);
+      await expect(run).rejects.toThrow(/[/\\]a\.bench\.ts: repeats bench name "parse"$/);
     });
   });
 
