@@ -60,3 +60,114 @@ jobs:
       - name: Integration
         if: runner.os != 'Linux'
         run: pnpm turbo run integration
+
+  bench:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: bench-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+
+    steps:
+      # SHA = actions/checkout@v7.0.1
+      - name: Checkout base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+
+      # The PR merge commit, so head is benched as it would merge rather than against a stale base tip.
+      # SHA = actions/checkout@v7.0.1
+      - name: Checkout head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          path: head
+          persist-credentials: false
+
+      # SHA = pnpm/action-setup@v6.1.0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+        with:
+          package_json_file: head/package.json
+
+      # SHA = actions/setup-node@v7.1.0
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: head/.nvmrc
+          cache: pnpm
+          cache-dependency-path: head/pnpm-lock.yaml
+
+      - name: Install and build base
+        working-directory: base
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm turbo run build
+
+      - name: Install and build head
+        working-directory: head
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm turbo run build
+
+      # Order alternates B,H / H,B / B,H so steady runner drift hits both sides alike; one task at a time so benches do
+      # not share CPUs. A failed base run only warns: its iteration is skipped and the compare runs without it. When every
+      # base run fails, the step fails if base's turbo.json defines a bench task (a broken baseline would otherwise
+      # disable the gate); without one, base has no benches and the compare reports no baseline. Results are cleared
+      # before each run and copied only after a successful one, so no stale file is counted.
+      - name: Bench base and head
+        shell: bash
+        run: |
+          base_runs=0
+
+          results() {
+            find "$1" -path '*/node_modules' -prune -o -type f -path '*/.bench/results.json' "${@:2}"
+          }
+
+          bench_side() {
+            local side="$1" i="$2" file package
+            results "$side" -exec rm -f {} +
+            if [ "$side" = base ]; then
+              if ! (cd base && pnpm turbo run bench --concurrency=1); then
+                echo "::warning::base bench run failed; comparing without it"
+                return 0
+              fi
+              base_runs=$((base_runs + 1))
+            else
+              (cd head && pnpm turbo run bench --concurrency=1)
+            fi
+            results "$side" -print | while read -r file; do
+              package="${file#"$side"/}"
+              package="${package%/.bench/results.json}"
+              mkdir -p "runs/$side/$i/$package"
+              cp -P "$file" "runs/$side/$i/$package/results.json"
+            done
+          }
+
+          for i in 1 2 3; do
+            if [ "$i" = 2 ]; then order='head base'; else order='base head'; fi
+            for side in $order; do
+              bench_side "$side" "$i"
+            done
+          done
+
+          if [ "$base_runs" = 0 ]; then
+            base_bench_task=$(node -e '
+              const fs = require("node:fs");
+              const file = process.argv[1];
+              const turbo = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
+              console.log(turbo.tasks?.bench === undefined ? "no" : "yes");
+            ' base/turbo.json)
+            if [ "$base_bench_task" = yes ]; then
+              echo "::error::no base bench run succeeded"
+              exit 1
+            fi
+          fi
+
+      - name: Compare
+        run: node head/tools/dist/bench-compare.js runs/base runs/head
