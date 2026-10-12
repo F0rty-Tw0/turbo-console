@@ -132,6 +132,18 @@ describe('FEATURE: turbo errors as TurboException', () => {
       expect(exception).toMatchObject({ kind: 'failed', message: 'turbo query failed: EPIPE', cause: error });
     });
 
+    it.each([
+      [{ code: 5, path: '/p' }, 'io', '/p: EIO'],
+      [{ code: 'EACCES', path: 123 }, 'failed', 'turbo query failed: EACCES'],
+      [{ code: 'E', syscall: 7 }, 'failed', 'turbo query failed: E'],
+      [{ code: 'E', path: null }, 'failed', 'turbo query failed: E']
+    ])('WHEN an errno error has a non-string field (%j) THEN it is still a TurboException, %s', (fields, kind, message) => {
+      const exception = toTurboException(Object.assign(new Error('x'), fields), 'query');
+
+      expect(exception).toBeInstanceOf(TurboException);
+      expect(exception).toMatchObject({ kind, message });
+    });
+
     it('WHEN given anything else THEN it is failed with the original as cause', () => {
       const error = new RangeError('maxBuffer length exceeded');
 

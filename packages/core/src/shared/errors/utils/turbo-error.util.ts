@@ -4,7 +4,15 @@ import { failedMessage, invalidOutputMessage, ioMessage, turboCommand, withStder
 import type { AbortOutcome } from '../common/turbo-error.type.ts';
 import { TurboException } from '../common/turbo.exception.ts';
 
-const isErrno = (error: unknown): error is NodeJS.ErrnoException => error instanceof Error && 'code' in error;
+/** Has a `code` key; its fields are read through `stringField`, never trusted to be strings. */
+const isErrno = (error: unknown): error is Error => error instanceof Error && 'code' in error;
+
+/** An error's field (`code`, `path`, `syscall`, `signal`, `stderr`) when it is a string; anything else counts as missing. */
+const stringField = (error: Error, name: string): string | undefined => {
+  const value: unknown = Reflect.get(error, name);
+
+  return typeof value === 'string' ? value : undefined;
+};
 
 /** `runTurbo`'s `AbortError`, or a bare `TimeoutError` that never reached it. */
 const ABORT_NAMES = ['AbortError', 'TimeoutError'];
@@ -22,9 +30,9 @@ const abortOutcome = (error: Error): AbortOutcome => {
 
 /** `runTurbo` attaches the stderr turbo wrote to its `AbortError` and to a rejection without an exit code; any other error has none. */
 const attachedStderr = (error: Error): string => {
-  const stderr: unknown = Reflect.get(error, 'stderr');
+  const stderr = stringField(error, 'stderr');
 
-  return typeof stderr === 'string' ? stderr : '';
+  return stderr ?? '';
 };
 
 const fromAbort = (error: Error, command: string): TurboException => {
@@ -36,35 +44,41 @@ const fromAbort = (error: Error, command: string): TurboException => {
 };
 
 /** `turbo <command> failed: <signal ?? code>`, then the attached stderr's tail; never the error's message, which can embed all of stderr. */
-const errnoFailedMessage = (command: string, error: NodeJS.ErrnoException): string => {
-  const signal: unknown = Reflect.get(error, 'signal');
-  const reason = typeof signal === 'string' ? signal : error.code;
+const errnoFailedMessage = (command: string, error: Error): string => {
+  const signal = stringField(error, 'signal');
+  const code = stringField(error, 'code');
+  const reason = signal ?? code;
   const failed = `${turboCommand(command)} failed`;
   const stderr = attachedStderr(error);
 
-  if (typeof reason !== 'string') return withStderrTail(failed, stderr);
+  if (reason === undefined) return withStderrTail(failed, stderr);
 
   return withStderrTail(`${failed}: ${reason}`, stderr);
 };
 
 /** A failed spawn is never `io`: the binary is not runnable, or the spawn failed for a reason named by its code. */
-const fromSpawn = (error: NodeJS.ErrnoException, command: string): TurboException => {
-  const code = String(error.code);
+const fromSpawn = (error: Error, command: string): TurboException => {
+  const code = stringField(error, 'code');
   const isNotRunnable = code === 'ENOENT' || code === 'EACCES' || code === 'ENOTDIR';
 
   if (!isNotRunnable) return new TurboException('failed', errnoFailedMessage(command, error), { cause: error });
 
-  const binary = error.path ?? 'turbo';
+  const path = stringField(error, 'path');
+  const binary = path ?? 'turbo';
 
   return new TurboException('not-found', `turbo binary not runnable: ${ioMessage(binary, code)}`, { cause: error });
 };
 
-const fromErrno = (error: NodeJS.ErrnoException, command: string): TurboException => {
-  const isSpawn = error.syscall?.startsWith('spawn') === true;
+const fromErrno = (error: Error, command: string): TurboException => {
+  const syscall = stringField(error, 'syscall');
+  const isSpawn = syscall?.startsWith('spawn') === true;
 
   if (isSpawn) return fromSpawn(error, command);
 
-  if (error.path !== undefined) return new TurboException('io', ioMessage(error.path, error.code), { cause: error });
+  const path = stringField(error, 'path');
+  const code = stringField(error, 'code');
+
+  if (path !== undefined) return new TurboException('io', ioMessage(path, code), { cause: error });
 
   return new TurboException('failed', errnoFailedMessage(command, error), { cause: error });
 };
