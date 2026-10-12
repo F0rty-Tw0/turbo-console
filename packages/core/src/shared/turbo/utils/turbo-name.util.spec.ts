@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { assertTurboName } from './turbo-name.util.ts';
 
-/** Name, the echo in the message (JSON-quoted, then made plain: DEL is dropped), reason. */
+/** Name, the echo in the message (JSON-quoted, then any character a plain line drops written as `\u{hex}`), reason. */
 const REJECTED: [string, string, string][] = [
   ['', '""', 'empty'],
   ['-x', '"-x"', 'starts with -'],
@@ -11,7 +11,7 @@ const REJECTED: [string, string, string][] = [
   ['a\tb', '"a\\tb"', 'contains a control character'],
   ['a\nb', '"a\\nb"', 'contains a control character'],
   ['a\u001Fb', '"a\\u001fb"', 'contains a control character'],
-  ['a\u007Fb', '"ab"', 'contains a control character']
+  ['a\u007Fb', '"a\\u{7f}b"', 'contains a control character']
 ];
 
 describe('FEATURE: turbo name check', () => {
@@ -30,9 +30,10 @@ describe('FEATURE: turbo name check', () => {
     });
 
     it.each([
-      ['-\u202Ex', '"-x"'],
-      ['-\u009B31m', '"-"']
-    ])('WHEN %j, holding a bidi override or a C1 CSI sequence, is rejected THEN the message echoes %s', (name, echoed) => {
+      ['-\u202Ex', '"-\\u{202e}x"'],
+      ['-\u009B31m', '"-\\u{9b}31m"'],
+      ['-\u{E0041}x', '"-\\u{e0041}x"']
+    ])('WHEN %j, holding a bidi override, a C1 CSI sequence or a tag character, is rejected THEN the message echoes %s', (name, echoed) => {
       const expected = { message: `invalid turbo name ${echoed}: starts with -` };
 
       expect(() => assertTurboName(name)).toThrow(expect.objectContaining(expected));

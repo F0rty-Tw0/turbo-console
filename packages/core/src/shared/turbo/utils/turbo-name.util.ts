@@ -14,9 +14,23 @@ const isControl = (char: string): boolean => {
 /** A workspace-derived name can be any length: the message echoes only its start. */
 const MAX_ECHOED_LENGTH = 200;
 
+/** A character a plain line would drop is written as `\u{hex}` instead, so the echo shows where it was. */
+const escapedIfDropped = (char: string): string => {
+  const plain = plainLine(char);
+
+  if (plain !== '') return char;
+
+  const code = char.codePointAt(0) ?? 0;
+  const hex = code.toString(16);
+
+  return `\\u{${hex}}`;
+};
+
+/** The name's first 200 characters, JSON-quoted, then on one plain line with every dropped character escaped. */
 const invalidName = (name: string, reason: string): TurboException => {
   const quoted = JSON.stringify(name.slice(0, MAX_ECHOED_LENGTH));
-  const echoed = plainLine(quoted);
+  const chars = [...quoted];
+  const echoed = chars.map(escapedIfDropped).join('');
 
   return new TurboException('invalid-argument', `invalid turbo name ${echoed}: ${reason}`);
 };
