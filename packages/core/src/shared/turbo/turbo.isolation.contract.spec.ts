@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -96,8 +97,21 @@ describe('FEATURE: turbo isolation from a remote cache the repo configures', () 
         expect(requests).toStrictEqual([]);
       });
 
-      it('WHEN build really runs THEN the server receives no request', async () => {
-        const result = await runTurbo(TURBO, ['run', 'build'], fixture().dir);
+      // DIAG: 8 samples per store per CI run.
+      it.each([1, 2, 3, 4, 5, 6, 7, 8])('WHEN build really runs (sample %i) THEN the server receives no request', async () => {
+        // DIAG: snapshot the process tree if the build is still running after 25 s; turbo logs at -vv to stderr.
+        const snapshot = (): void => {
+          const ps = 'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Csv -NoTypeInformation';
+          const out = process.platform === 'win32' ? execFileSync('powershell', ['-NoProfile', '-Command', ps]).toString() : execFileSync('ps', ['-ef']).toString();
+          console.warn(`DIAG ${store.name} process tree at 25 s:\n${out}`);
+        };
+        const timer = setTimeout(snapshot, 25_000);
+        const started = performance.now();
+        const result = await runTurbo(TURBO, ['run', 'build', '-vv'], fixture().dir).catch((error: unknown) => {
+          console.warn(`DIAG ${store.name} stderr tail:\n${String((error as { stderr?: string }).stderr).slice(-30_000)}`);
+          throw error;
+        }).finally(() => clearTimeout(timer));
+        console.warn(`DIAG ${store.name} real build ${Math.round(performance.now() - started)} ms`);
 
         expect(result.exitCode).toBe(0);
         expect(requests).toStrictEqual([]);
