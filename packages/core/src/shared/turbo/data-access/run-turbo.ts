@@ -5,14 +5,12 @@ import { once } from 'node:events';
 import { checkCwd } from './check-cwd.ts';
 import { collectStderr } from './collect-stderr.ts';
 import { killTree } from './kill-tree.ts';
+import { SKIP_INFER } from '../common/turbo-args.const.ts';
 import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
 import { turboEnv } from '../utils/turbo-env.util.ts';
 
 /** `stretch-300` `packageGraph` stdout alone is ~10 MB, far past execFile's 1 MB default. */
 const MAX_BUFFER = 256 * 1024 * 1024;
-
-/** Verify-first V2: pins this binary instead of a repo-local turbo, and drops the "no local turbo" warning. */
-const SKIP_INFER = '--skip-infer';
 
 /**
  * A hung turbo would otherwise block its caller forever. Applied as an abort signal, not execFile's `timeout`: turbo
