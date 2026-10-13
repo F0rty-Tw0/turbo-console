@@ -9,12 +9,9 @@ const MAX_FILE_BYTES = 1024 * 1024;
 /** A close that fails after another failure, or after a refused file, must not replace that outcome. */
 const ignoreCloseError = (): undefined => undefined;
 
-/** One byte past the cap, so a file over it is told apart from one exactly at it. */
-const READ_LIMIT = MAX_FILE_BYTES + 1;
-
-/** `buffer` doubled, at most `READ_LIMIT` bytes, holding its bytes so far. */
-const grown = (buffer: Buffer): Buffer => {
-  const length = Math.min(buffer.length * 2, READ_LIMIT);
+/** `buffer` doubled, at most `readLimit` bytes, holding its bytes so far. */
+const grown = (buffer: Buffer, readLimit: number): Buffer => {
+  const length = Math.min(buffer.length * 2, readLimit);
   const larger = Buffer.alloc(length);
 
   buffer.copy(larger);
@@ -23,17 +20,19 @@ const grown = (buffer: Buffer): Buffer => {
 };
 
 /**
- * At most `READ_LIMIT` bytes, whatever size the file reports. The first buffer fits the reported size plus one byte, so
- * many concurrent reads hold only what they need; a full buffer grows, since procfs files report 0 and read on.
+ * At most `maxBytes + 1` bytes (one past the cap, so a file over it is told apart from one exactly at it), whatever
+ * size the file reports. The first buffer fits the reported size plus one byte, so many concurrent reads hold only what
+ * they need; a full buffer grows, since procfs files report 0 and read on.
  */
-const readBounded = async (handle: FileHandle, size: number): Promise<Buffer> => {
-  const firstLength = Math.min(size, MAX_FILE_BYTES) + 1;
+const readBounded = async (handle: FileHandle, size: number, maxBytes: number): Promise<Buffer> => {
+  const readLimit = maxBytes + 1;
+  const firstLength = Math.min(size, maxBytes) + 1;
   let buffer: Buffer = Buffer.alloc(firstLength);
   let filled = 0;
   let isEnd = false;
 
-  while (!isEnd && filled < READ_LIMIT) {
-    if (filled === buffer.length) buffer = grown(buffer);
+  while (!isEnd && filled < readLimit) {
+    if (filled === buffer.length) buffer = grown(buffer, readLimit);
 
     const { bytesRead } = await handle.read(buffer, filled, buffer.length - filled, null);
 
@@ -44,14 +43,14 @@ const readBounded = async (handle: FileHandle, size: number): Promise<Buffer> =>
   return buffer.subarray(0, filled);
 };
 
-const textOf = async (handle: FileHandle): Promise<string | null> => {
+const textOf = async (handle: FileHandle, maxBytes: number): Promise<string | null> => {
   const stats = await handle.stat();
   const isFile = stats.isFile();
 
   if (!isFile) return null;
 
-  const bytes = await readBounded(handle, stats.size);
-  const isTooBig = bytes.length > MAX_FILE_BYTES;
+  const bytes = await readBounded(handle, stats.size, maxBytes);
+  const isTooBig = bytes.length > maxBytes;
 
   if (isTooBig) return null;
 
@@ -59,15 +58,16 @@ const textOf = async (handle: FileHandle): Promise<string | null> => {
 };
 
 /**
- * The UTF-8 text of `path` when it is a regular file of at most 1 MiB, else `null`; a FIFO never blocks the read.
- * Other failures reject with the raw error: `open`'s carries the path, a `FileHandle` error (a failed close among
- * them) does not, so the caller names the path. A close failing after a `null` or a failed read is ignored.
+ * The UTF-8 text of `path` when it is a regular file of at most `maxBytes` (1 MiB by default), else `null`; a FIFO
+ * never blocks the read. Other failures reject with the raw error: `open`'s carries the path, a `FileHandle` error (a
+ * failed close among them) does not, so the caller names the path. A close failing after a `null` or a failed read is
+ * ignored.
  */
-export const readSmallFile = async (path: string): Promise<string | null> => {
+export const readSmallFile = async (path: string, maxBytes = MAX_FILE_BYTES): Promise<string | null> => {
   const handle = await open(path, READ_NON_BLOCKING);
 
   try {
-    const text = await textOf(handle);
+    const text = await textOf(handle, maxBytes);
 
     if (text === null) {
       await handle.close().catch(ignoreCloseError);
