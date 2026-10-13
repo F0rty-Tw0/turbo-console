@@ -72,12 +72,15 @@ export const invalidOutputMessage = (command: string, error: unknown): string =>
   return `${turbo} output failed its schema at ${paths.join(', ')}`;
 };
 
-/** `<path>: <code>` on one plain line, the path cut to its last 1024 characters; a missing `code` reads `EIO`. */
-export const ioMessage = (path: string, code = 'EIO'): string => {
+/** `path` cut to its last 1024 characters, then made one plain line. */
+export const plainPath = (path: string): string => {
   const pathEnd = path.slice(-MAX_PATH_LENGTH);
 
-  return `${plainLine(pathEnd)}: ${plainLine(code)}`;
+  return plainLine(pathEnd);
 };
+
+/** `<path>: <code>` on one plain line, the path as `plainPath`; a missing `code` reads `EIO`. */
+export const ioMessage = (path: string, code = 'EIO'): string => `${plainPath(path)}: ${plainLine(code)}`;
 
 /** `version` is turbo's `--version` stdout: cut to 200 characters and made plain. */
 export const versionUnsupportedMessage = (version: string, range: TurboVersionRange): string => {
