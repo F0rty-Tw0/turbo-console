@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { isWithin } from '../../binary/utils/path-within.util.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
-import { errnoCode } from '../../shared/errors/utils/errno.util.ts';
+import { errnoCode, isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { ioMessage } from '../../shared/errors/utils/turbo-message.util.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
 import { runSummarySchema } from '../../shared/turbo/common/run-summary.schema.ts';
@@ -21,20 +21,26 @@ const isListed = (file: RunSummaryFile | null): file is RunSummaryFile => file !
 
 const ioError = (path: string, error: unknown): TurboException => new TurboException('io', ioMessage(path, errnoCode(error)), { cause: error });
 
-/** `path`'s real path; `null` when it does not exist. Any other failure is `io` naming `path`. */
+/**
+ * `path`'s real path; `null` when it or a parent does not exist or is not a directory (ENOENT, ENOTDIR). Any other
+ * failure is `io` naming `path`.
+ */
 const realPathOf = async (path: string): Promise<string | null> => {
   try {
     return await realpath(path);
   } catch (error) {
-    const code = errnoCode(error);
+    const isGone = isMissing(error);
 
-    if (code === 'ENOENT') return null;
+    if (isGone) return null;
 
     throw ioError(path, error);
   }
 };
 
-/** `<root>/.turbo/runs`; `null` when it does not exist, or when it resolves outside `root` through a symlink. */
+/**
+ * `<root>/.turbo/runs`; `null` when it does not exist, a path part is not a directory, or it resolves outside `root`
+ * through a symlink.
+ */
 const ownRunsDir = async (root: string): Promise<string | null> => {
   const dir = runsDirOf(root);
   const realDir = await realPathOf(dir);
@@ -50,14 +56,17 @@ const ownRunsDir = async (root: string): Promise<string | null> => {
   return isInside ? dir : null;
 };
 
-/** The entries of `dir`; `null` when it is gone (ENOENT). Any other failure is `io` naming `dir`. */
+/**
+ * The entries of `dir`; `null` when it is gone or not a directory (ENOENT, ENOTDIR). Any other failure is `io` naming
+ * `dir`.
+ */
 const readEntries = async (dir: string): Promise<Dirent[] | null> => {
   try {
     return await readdir(dir, { withFileTypes: true });
   } catch (error) {
-    const code = errnoCode(error);
+    const isGone = isMissing(error);
 
-    if (code === 'ENOENT') return null;
+    if (isGone) return null;
 
     throw ioError(dir, error);
   }
@@ -83,8 +92,8 @@ const statFile = async (dir: string, name: string): Promise<RunSummaryFile | nul
 
 /**
  * The regular `*.json` files of `<root>/.turbo/runs` with their mtimes, in no order; symlinks are left out. `null` when
- * the directory does not exist or resolves outside `root`. A realpath, readdir or stat failure other than ENOENT is
- * `io`.
+ * the directory does not exist, a path part is not a directory, or it resolves outside `root`. Any other realpath or
+ * readdir failure, and a stat failure other than ENOENT, is `io`.
  */
 export const listRunSummaryFiles = async (root: string): Promise<RunSummaryFile[] | null> => {
   const dir = await ownRunsDir(root);

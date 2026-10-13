@@ -25,10 +25,19 @@ vi.mock('../common/run-summary.const.ts', async (importOriginal) => {
 /** Seconds since the epoch, one apart per file. */
 const OLDEST = 1_760_000_000;
 
-/** One more than `MAX_SUMMARY_TRIES` (20), which this spec does not mock. */
-const BROKEN_COUNT = 21;
-
 let tempDir = '';
+
+/** A root whose only valid summary is the oldest, under `brokenCount` newer broken ones. */
+const rootWithBrokenNewer = async (brokenCount: number): Promise<string> => {
+  const root = await newRunsRoot(tempDir, `${brokenCount} broken`);
+  const brokenTimes = Array.from({ length: brokenCount }, (_, index) => OLDEST + index + 1);
+
+  await writeRun(root, 'valid.json', summaryText('oldest'), OLDEST);
+
+  for (const seconds of brokenTimes) await writeRun(root, `broken-${seconds}.json`, '{', seconds);
+
+  return root;
+};
 
 describe('FEATURE: newest run summary limits', () => {
   beforeAll(async () => {
@@ -51,16 +60,19 @@ describe('FEATURE: newest run summary limits', () => {
     });
   });
 
-  describe('GIVEN 21 broken summaries newer than the only valid one', () => {
-    it('WHEN read THEN only the newest 20 are tried, so it is null', async () => {
-      const root = await newRunsRoot(tempDir, 'over tries');
-      const brokenTimes = Array.from({ length: BROKEN_COUNT }, (_, index) => OLDEST + index + 1);
-
-      await writeRun(root, 'valid.json', summaryText('oldest'), OLDEST);
-
-      for (const seconds of brokenTimes) await writeRun(root, `broken-${seconds}.json`, '{', seconds);
+  describe('GIVEN 20 broken summaries, MAX_SUMMARY_TRIES, newer than the only valid one', () => {
+    it('WHEN read THEN the valid 21st is never tried, so it is null', async () => {
+      const root = await rootWithBrokenNewer(20);
 
       await expect(readNewestRunSummary(root)).resolves.toBeNull();
+    });
+  });
+
+  describe('GIVEN 19 broken summaries newer than the only valid one', () => {
+    it('WHEN read THEN the valid 20th is tried and returned', async () => {
+      const root = await rootWithBrokenNewer(19);
+
+      await expect(readNewestRunSummary(root)).resolves.toMatchObject({ id: 'oldest' });
     });
   });
 });

@@ -61,6 +61,28 @@ describe('FEATURE: newest run summary', () => {
     });
   });
 
+  describe('GIVEN a root whose .turbo is a file', () => {
+    it('WHEN read THEN there is no runs directory, so it is null', async () => {
+      const root = join(tempDir, 'turbo file');
+
+      await mkdir(root);
+      await writeFile(join(root, '.turbo'), '');
+
+      await expect(readNewestRunSummary(root)).resolves.toBeNull();
+    });
+  });
+
+  describe('GIVEN a root whose .turbo/runs is a file', () => {
+    it('WHEN read THEN there is no runs directory, so it is null', async () => {
+      const root = join(tempDir, 'runs file');
+
+      await mkdir(join(root, '.turbo'), { recursive: true });
+      await writeFile(runsDirOf(root), '');
+
+      await expect(readNewestRunSummary(root)).resolves.toBeNull();
+    });
+  });
+
   describe('GIVEN two valid summaries written 10 s apart', () => {
     it('WHEN read THEN it is the newer one', async () => {
       const root = await newRoot();
@@ -150,6 +172,25 @@ describe('FEATURE: newest run summary', () => {
       await symlink(join(outside, '..'), runsDirOf(root));
 
       await expect(readNewestRunSummary(root)).resolves.toBeNull();
+    });
+  });
+
+  describe.skipIf(!CAN_DENY_READ)('GIVEN a .turbo that cannot be searched', () => {
+    it('WHEN read THEN the realpath fails, and it rejects io naming the runs directory and EACCES', async () => {
+      const root = await newRoot();
+      const dotTurbo = join(root, '.turbo');
+      const expected = { kind: 'io', message: `${runsDirOf(root)}: EACCES` };
+
+      await chmod(dotTurbo, 0o000);
+
+      try {
+        const reading = readNewestRunSummary(root);
+
+        await expect(reading).rejects.toBeInstanceOf(TurboException);
+        await expect(reading).rejects.toMatchObject(expected);
+      } finally {
+        await chmod(dotTurbo, 0o700);
+      }
     });
   });
 
