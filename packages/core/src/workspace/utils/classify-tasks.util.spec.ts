@@ -87,7 +87,28 @@ describe('FEATURE: Atomizer task classification', () => {
     });
   });
 
-  describe.each(['atomizer:live', 'atomizer:definitions', 'atomizer:'])('GIVEN a task with a command tagged only %s', (tag) => {
+  describe('GIVEN a file task whose spec path holds a #', () => {
+    it('WHEN classified THEN its name is the text after the first #', () => {
+      const task = graphTask('a#e2e-ci--tests/a#b.spec.ts', COMMAND, [GROUP_TAG], []);
+
+      const result = classifyTasks([task]);
+
+      expect(result.packages[0]?.tasks[0]?.name).toBe('e2e-ci--tests/a#b.spec.ts');
+    });
+  });
+
+  describe('GIVEN a tagged package', () => {
+    it('WHEN classified THEN it keeps its name, path and tags', () => {
+      const pkg = graphPackage('a', 'packages/a', ['team:web'], [BUILD]);
+      const build: ClassifiedTask = { id: 'a#build', name: 'build', command: COMMAND, tags: [], rawDependencies: [], kind: 'task', atom: null };
+
+      const result = classifyPackages([pkg]);
+
+      expect(result.packages).toStrictEqual([{ name: 'a', path: 'packages/a', tags: ['team:web'], tasks: [build] }]);
+    });
+  });
+
+  describe.each(['atomizer:live', 'atomizer:definitions', 'atomizer:', 'boundary:frontend'])('GIVEN a task with a command tagged only %s', (tag) => {
     it('WHEN classified THEN the tag names no group: it is a plain task with no warning', () => {
       const task = graphTask('a#check', COMMAND, [tag], []);
 
@@ -145,7 +166,7 @@ describe('FEATURE: Atomizer task classification', () => {
     });
 
     it('WHEN it is tagged with a second group THEN its name sets the group and no warning is made', () => {
-      const aggregate = graphTask('a#e2e-ci--all', COMMAND, [GROUP_TAG, 'atomizer:other'], []);
+      const aggregate = graphTask('a#e2e-ci--all', COMMAND, [GROUP_TAG, 'atomizer:aaa'], []);
 
       const result = classifyTasks([FILE_TASK, aggregate]);
 
@@ -181,6 +202,16 @@ describe('FEATURE: Atomizer task classification', () => {
       const result = classifyTasks([task]);
 
       expect(rowsOf(result)).toStrictEqual([['a#e2e--foo', 'task', null]]);
+    });
+  });
+
+  describe('GIVEN a tagless e2e-ci-fast with a command next to a file task of group e2e-ci', () => {
+    it('WHEN classified THEN a name that only starts with the group is a plain task, not the aggregate', () => {
+      const fast = graphTask('a#e2e-ci-fast', COMMAND, [], []);
+
+      const result = classifyTasks([FILE_TASK, fast]);
+
+      expect(rowsOf(result)).toContainEqual(['a#e2e-ci-fast', 'task', null]);
     });
   });
 
