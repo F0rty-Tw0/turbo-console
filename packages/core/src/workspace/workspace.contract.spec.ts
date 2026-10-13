@@ -55,11 +55,19 @@ const FILE_TASK_KEY = '"e2e-ci--tests/spec-001.spec.ts"';
 
 const RENAMED_TASK = '@fx/e2e-1#renamed-spec';
 
+const E2E_CONFIG = 'apps/e2e-1/turbo.json';
+
+const DESCRIBED_TASK = '@fx/e2e-1#e2e-ci';
+
+const E2E_CI_DESCRIPTION = 'Runs every e2e-ci spec';
+
 const E2E_CI_ATOM = { group: 'e2e-ci' };
 
 const E2E_CI_FILE_TASK = { kind: 'atom-file', atom: E2E_CI_ATOM };
 
 const TRUSTED = { trusted: true } as const;
+
+type PackageTurboJson = { tasks: Record<string, object> };
 
 const allTasks = (model: WorkspaceModel): TaskNode[] => model.packages.flatMap((pkg) => pkg.tasks);
 
@@ -82,6 +90,16 @@ const renameFileTask = async (dir: string): Promise<void> => {
   const text = await readFile(path, 'utf8');
 
   await writeFile(path, text.replaceAll(FILE_TASK_KEY, '"renamed-spec"'));
+};
+
+/** Gives `e2e-ci` a description in its own package `turbo.json`, where only the package config can supply it. */
+const describeE2eCi = async (dir: string): Promise<void> => {
+  const path = join(dir, E2E_CONFIG);
+  const config = JSON.parse(await readFile(path, 'utf8')) as PackageTurboJson;
+  const described = { ...config.tasks['e2e-ci'], description: E2E_CI_DESCRIPTION };
+  const tasks = { ...config.tasks, 'e2e-ci': described };
+
+  await writeFile(path, JSON.stringify({ ...config, tasks }));
 };
 
 describe('FEATURE: workspace model from a real turbo', () => {
@@ -187,6 +205,24 @@ describe('FEATURE: workspace model from a real turbo', () => {
       const renamed = allTasks(model).find((task) => task.id === RENAMED_TASK);
 
       expect(renamed).toMatchObject(E2E_CI_FILE_TASK);
+    });
+  });
+
+  describe('GIVEN a target-like copy with a description in a package turbo.json', () => {
+    const fixture = fixtureHook(targetLike);
+    let model: WorkspaceModel;
+
+    beforeAll(async () => {
+      await describeE2eCi(fixture().dir);
+      const binary = await binaryFor(fixture());
+
+      model = await loadWorkspace(binary);
+    });
+
+    it('WHEN loaded THEN the task carries the package config description', () => {
+      const described = allTasks(model).find((task) => task.id === DESCRIBED_TASK);
+
+      expect(described).toMatchObject({ description: E2E_CI_DESCRIPTION });
     });
   });
 
