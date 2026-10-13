@@ -2,9 +2,18 @@ import { createHash } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { cacheFileName, cacheKeyOf, hasChangedRootFile, hasVanishedManifest, isEditedSince, isKeyedPath, keyedPathsOf } from './cache-key.util.ts';
+import {
+  cacheFileName,
+  cacheKeyOf,
+  hasChangedRootFile,
+  hasVanishedManifest,
+  hostileRootFile,
+  isEditedSince,
+  isKeyedPath,
+  keyedPathsOf
+} from './cache-key.util.ts';
 import { graphPackage } from '../../workspace/test/utils/graph.spec.util.ts';
-import { MISSING_DIGEST, ROOT_KEYED_FILES } from '../common/cache.const.ts';
+import { MISSING_DIGEST, NOT_REGULAR_DIGEST, OVER_CAP_READ_DIGEST, ROOT_KEYED_FILES, UNREADABLE_DIGEST } from '../common/cache.const.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
 
 const VERSION = '2.11.7';
@@ -269,6 +278,49 @@ describe('FEATURE: workspace cache key', () => {
       const hasChanged = hasChangedRootFile(before, FILES);
 
       expect(hasChanged).toBe(true);
+    });
+  });
+
+  describe('GIVEN root keyed files before a spawn', () => {
+    it('WHEN each is hashed, missing or unreadable THEN none is hostile', () => {
+      const files = [...FILES, keyedFile('.npmrc', UNREADABLE_DIGEST, null), keyedFile('yarn.lock', MISSING_DIGEST, null)];
+
+      const hostile = hostileRootFile(files);
+
+      expect(hostile).toBeUndefined();
+    });
+
+    it('WHEN one is not a regular file THEN it is the hostile one', () => {
+      const fifo = keyedFile('turbo.json', NOT_REGULAR_DIGEST, null);
+
+      const hostile = hostileRootFile([...FILES, fifo]);
+
+      expect(hostile).toBe(fifo);
+    });
+
+    it('WHEN one is a regular file over the cap THEN it is the hostile one', () => {
+      const large = keyedFile('pnpm-lock.yaml', 'over-cap:268435457:1000', 1000);
+
+      const hostile = hostileRootFile([...FILES, large]);
+
+      expect(hostile).toBe(large);
+    });
+
+    it('WHEN one read past the cap after a smaller stat size THEN it is the hostile one', () => {
+      const procfs = keyedFile('pnpm-lock.yaml', OVER_CAP_READ_DIGEST, null);
+
+      const hostile = hostileRootFile([...FILES, procfs]);
+
+      expect(hostile).toBe(procfs);
+    });
+
+    it('WHEN two are hostile THEN the first is returned', () => {
+      const first = keyedFile('.npmrc', NOT_REGULAR_DIGEST, null);
+      const second = keyedFile('turbo.json', OVER_CAP_READ_DIGEST, null);
+
+      const hostile = hostileRootFile([first, ...FILES, second]);
+
+      expect(hostile).toBe(first);
     });
   });
 
