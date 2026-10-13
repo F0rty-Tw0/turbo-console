@@ -20,6 +20,10 @@ export { readDryRun } from './dry-run/domain-logic/read-dry-run.ts';
 
 export { readNewestRunSummary } from './run-summary/domain-logic/read-newest-run-summary.ts';
 
+export type { RunAllOptions } from './run-args/common/run-args.type.ts';
+
+export { turboRunAllArgs, turboRunArgs } from './run-args/utils/run-args.util.ts';
+
 export { TurboException } from './shared/errors/common/turbo.exception.ts';
 
 export type { TurboErrorKind } from './shared/errors/common/turbo-error.type.ts';

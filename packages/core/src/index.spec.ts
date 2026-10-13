@@ -42,7 +42,9 @@ const RUNTIME_EXPORTS = [
   'readDryRun',
   'readNewestRunSummary',
   'resolveTurbo',
-  'runSummarySchema'
+  'runSummarySchema',
+  'turboRunAllArgs',
+  'turboRunArgs'
 ];
 
 describe('FEATURE: core package entry', () => {
