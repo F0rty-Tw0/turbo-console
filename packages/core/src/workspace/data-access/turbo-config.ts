@@ -6,16 +6,18 @@ import { errnoCode, isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { ioMessage } from '../../shared/errors/utils/turbo-message.util.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
 import type { TurboConfigError, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
+import { packageConfigDirs } from '../utils/config-dir.util.ts';
 import { parseTurboConfig } from '../utils/turbo-config.util.ts';
 
 const BOTH_WARNING = 'both turbo.json and turbo.jsonc found; read turbo.json';
 
 const NOT_SMALL_FILE = 'not a regular file of at most 1 MiB';
 
+/** Each read holds a file open, so a graph of thousands of packages cannot run out of descriptors (EMFILE). */
+const MAX_CONCURRENT_READS = 16;
+
 const comparePaths = (left: TurboConfigFile, right: TurboConfigFile): number =>
   Number(left.path > right.path) - Number(left.path < right.path);
-
-const isFound = (config: TurboConfigFile | null): config is TurboConfigFile => config !== null;
 
 /** `text` is `null` for a FIFO, a directory or a file over 1 MiB: an error entry, never a throw. */
 const configOf = (path: string, text: string | null): TurboConfigFile => {
@@ -91,18 +93,57 @@ export const readTurboConfig = async (root: string, dir: string): Promise<TurboC
   return withWarning;
 };
 
-/** `''` and `'.'` name the root, which is read once on its own. */
-const isPackageDir = (dir: string): boolean => dir !== '' && dir !== '.';
+/** Aborts with `stop` or `signal`. Unread between two aborts, it keeps the first in array order, so read it before `stop`. */
+const haltSignalOf = (stop: AbortController, signal: AbortSignal | undefined): AbortSignal => {
+  const signals = [stop.signal];
+
+  if (signal !== undefined) signals.push(signal);
+
+  return AbortSignal.any(signals);
+};
 
 /**
- * The root's config and each of `dirs`' (posix, relative to `root`), sorted by path; directories with none are left
- * out, and the root is read once.
+ * The configs of `dirs`, at most `MAX_CONCURRENT_READS` read at a time, in no order; dirs with none left out. The first
+ * read failure or `signal` abort stops each worker before its next dir and is the rejection; nothing later replaces it.
  */
-export const readTurboConfigs = async (root: string, dirs: string[]): Promise<TurboConfigFile[]> => {
-  const packageDirs = dirs.filter(isPackageDir);
-  const allDirs = ['', ...packageDirs];
-  const readDir = async (dir: string): Promise<TurboConfigFile | null> => readTurboConfig(root, dir);
-  const read = await Promise.all(allDirs.map(readDir));
+const readEach = async (root: string, dirs: string[], signal: AbortSignal | undefined): Promise<TurboConfigFile[]> => {
+  const stop = new AbortController();
+  const halt = haltSignalOf(stop, signal);
+  const cursor = dirs.values();
+  const found: TurboConfigFile[] = [];
 
-  return read.filter(isFound).toSorted(comparePaths);
+  const worker = async (): Promise<void> => {
+    for (const dir of cursor) {
+      try {
+        halt.throwIfAborted();
+        const config = await readTurboConfig(root, dir);
+
+        if (config !== null) found.push(config);
+      } catch (error) {
+        if (!halt.aborted) stop.abort(error);
+
+        return;
+      }
+    }
+  };
+
+  const workers = Array.from({ length: MAX_CONCURRENT_READS }, worker);
+
+  await Promise.all(workers);
+  halt.throwIfAborted();
+
+  return found;
+};
+
+/**
+ * The root's config and each of `dirs`' (posix, relative to `root`, as `packageConfigDirs` keeps them), sorted by path;
+ * directories with none are left out, and the root is read once. Rejects with the first read failure, or with
+ * `signal`'s reason when it aborts first.
+ */
+export const readTurboConfigs = async (root: string, dirs: string[], signal?: AbortSignal | undefined): Promise<TurboConfigFile[]> => {
+  const packageDirs = packageConfigDirs(dirs);
+  const allDirs = ['', ...packageDirs];
+  const found = await readEach(root, allDirs, signal);
+
+  return found.toSorted(comparePaths);
 };

@@ -24,6 +24,17 @@ const BUILD_DESCRIPTIONS = { build: 'x' };
 
 const DESCRIBED = '{"tasks":{"build":{"description":"x"}}}';
 
+/** `C:` cannot start a file name on Windows, where the drive case reuses the root's own file as its decoy. */
+const DRIVE_DECOY = IS_POSIX ? 'root/C:/x/turbo.json' : 'root/turbo.json';
+
+/** Each dir, a workspace name, and the file (relative to the workspace's parent) the dir would reach from `root`. */
+const ESCAPING_DIRS: [string, string, string][] = [
+  ['../x', 'parent', 'x/turbo.json'],
+  ['/abs', 'absolute', 'root/abs/turbo.json'],
+  ['a/../../b', 'inner-parent', 'b/turbo.json'],
+  ['C:/x', 'drive', DRIVE_DECOY]
+];
+
 let tempDir = '';
 
 /** A new workspace root holding `files` (relative path → text). */
@@ -169,6 +180,16 @@ describe('FEATURE: turbo.json(c) reading', () => {
       const root = await workspaceWith('root-dirs', { 'turbo.json': DESCRIBED });
 
       const configs = await readTurboConfigs(root, ['', '.']);
+
+      expect(configs).toStrictEqual([okConfig('turbo.json')]);
+    });
+  });
+
+  describe('GIVEN a dir that leaves the root or is absolute, beside a turbo.json it would reach', () => {
+    it.each(ESCAPING_DIRS)('WHEN %s is listed THEN only the root config is read', async (dir, name, decoy) => {
+      const base = await workspaceWith(`escape-${name}`, { 'root/turbo.json': DESCRIBED, [decoy]: DESCRIBED });
+
+      const configs = await readTurboConfigs(join(base, 'root'), [dir]);
 
       expect(configs).toStrictEqual([okConfig('turbo.json')]);
     });

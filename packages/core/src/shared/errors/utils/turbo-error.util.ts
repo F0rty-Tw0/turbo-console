@@ -43,13 +43,22 @@ const fromAbort = (error: Error, command: string): TurboException => {
   return new TurboException('failed', message, { cause: error });
 };
 
-/** `turbo <command> failed: <signal ?? code>`, then the attached stderr's tail; never the error's message, which can embed all of stderr. */
+/** execFile's code once stdout or stderr passes `maxBuffer`; the cap itself is not on the error. */
+const MAX_BUFFER_CODE = 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER';
+
+/**
+ * `turbo <command> failed: <signal ?? code>` (`printed too much output` past `maxBuffer`), then the attached stderr's
+ * tail; never the error's message, which can embed all of stderr.
+ */
 const errnoFailedMessage = (command: string, error: Error): string => {
   const signal = stringField(error, 'signal');
   const code = stringField(error, 'code');
   const reason = signal ?? code;
-  const failed = `${turboCommand(command)} failed`;
+  const turbo = turboCommand(command);
+  const failed = `${turbo} failed`;
   const stderr = attachedStderr(error);
+
+  if (code === MAX_BUFFER_CODE) return withStderrTail(`${turbo} printed too much output (over the output cap)`, stderr);
 
   if (reason === undefined) return withStderrTail(failed, stderr);
 

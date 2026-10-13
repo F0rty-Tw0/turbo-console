@@ -54,6 +54,14 @@ describe('FEATURE: task descriptions (rule 5)', () => {
     });
   });
 
+  describe('GIVEN a package config and a package path turbo reports unnormalized', () => {
+    it('WHEN the package task is described THEN the package config is still found', () => {
+      const description = describeTask([HUB, ROOT], './packages/hub/', '@fx/hub#build');
+
+      expect(description).toBe('from the package');
+    });
+  });
+
   describe('GIVEN root keys pkg#task and task only', () => {
     it('WHEN the task is described THEN root pkg#task wins over root task', () => {
       const description = describeTask([ROOT], 'packages/hub', '@fx/hub#build');

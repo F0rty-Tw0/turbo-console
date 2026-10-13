@@ -110,10 +110,16 @@ describe('FEATURE: turbo errors as TurboException', () => {
       expect(toTurboException(error, 'query').message).toBe('turbo query failed: SIGKILL\nFATAL: gone');
     });
 
-    it('WHEN the output passed maxBuffer THEN it is failed naming the code', () => {
+    it('WHEN the output passed maxBuffer THEN it is failed saying too much output was printed', () => {
       const error = Object.assign(new RangeError('stdout maxBuffer length exceeded'), { code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' });
 
-      expect(toTurboException(error, 'query').message).toBe('turbo query failed: ERR_CHILD_PROCESS_STDIO_MAXBUFFER');
+      expect(toTurboException(error, 'query')).toMatchObject({ kind: 'failed', message: 'turbo query printed too much output (over the output cap)' });
+    });
+
+    it('WHEN the output passed maxBuffer after turbo wrote stderr THEN the message adds the stderr tail', () => {
+      const error = Object.assign(new RangeError('stdout maxBuffer length exceeded'), { code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER', stderr: 'WARN: slow\n' });
+
+      expect(toTurboException(error, 'query').message).toBe('turbo query printed too much output (over the output cap)\nWARN: slow');
     });
 
     it('WHEN a file read failed with a path THEN it is io with the path and code', () => {

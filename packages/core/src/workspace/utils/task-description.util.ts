@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 
+import { normalDir } from '../../shared/turbo/utils/posix-path.util.ts';
 import type { TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 import type { AffectedMode } from '../common/workspace-model.type.ts';
 
@@ -27,12 +28,16 @@ export const okConfigsByDir = (configs: TurboConfigFile[]): Map<string, TurboCon
   return new Map(entries);
 };
 
-/** Rule 5: the package config's `<task>`, then the root's `<pkg>#<task>`, then the root's `<task>`; `null` when none. */
+/**
+ * Rule 5: the package config's `<task>`, then the root's `<pkg>#<task>`, then the root's `<task>`; `null` when none.
+ * `packagePath` is looked up as `normalDir` gives it, the form the configs are keyed by (`./a/` finds `a`).
+ */
 export const descriptionOf = (configs: Map<string, TurboConfigOk>, packagePath: string, id: string): string | null => {
   const hashAt = id.indexOf('#');
   const taskName = id.slice(hashAt + 1);
   const root = configs.get('.');
-  const own = ownDescription(configs.get(packagePath), taskName);
+  const packageDir = normalDir(packagePath);
+  const own = ownDescription(configs.get(packageDir), taskName);
   const qualified = ownDescription(root, id);
   const bare = ownDescription(root, taskName);
 

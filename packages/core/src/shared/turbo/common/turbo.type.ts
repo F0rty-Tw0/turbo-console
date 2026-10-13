@@ -32,11 +32,12 @@ export type TurboVersionRange = {
   readonly maxExclusive: string;
 };
 
-/** Per-call spawn limits; `graceMs` bounds the wait for exit after the abort kill. */
+/** Per-call spawn limits; `graceMs` bounds the wait for exit after the abort kill, `maxBuffer` each of stdout and stderr (bytes). */
 export type RunTurboOptions = {
   readonly timeoutMs?: number | undefined;
   readonly signal?: AbortSignal | undefined;
   readonly graceMs?: number | undefined;
+  readonly maxBuffer?: number | undefined;
 };
 
 type QueryVariables = {
