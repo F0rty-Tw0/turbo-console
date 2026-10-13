@@ -81,6 +81,13 @@ describe('FEATURE: workspace turbo lookup, root only', () => {
       expect(error).toBeInstanceOf(TurboException);
       expect(error).toMatchObject({ kind: 'invalid-argument', message: `turbo root must be absolute: ${root}` });
     });
+
+    it('WHEN the overridePath is relative too THEN it rejects naming the root, checked first', async () => {
+      const options = { trusted: true, overridePath: 'bin/turbo' } as const;
+      const error = await resolveTurbo('repo', options).catch((caught: unknown) => caught);
+
+      expect(error).toMatchObject({ kind: 'invalid-argument', message: 'turbo root must be absolute: repo' });
+    });
   });
 
   describe('GIVEN temp workspaces', () => {
