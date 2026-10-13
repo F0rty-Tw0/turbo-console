@@ -8,7 +8,7 @@ export type DryRunState = {
 /**
  * `tasks`: bare task names or `pkg#task` ids, at least one. `packages`: names each passed as `--filter=<name>`. A model
  * id of a task the package only inherits through `extends` (atom file tasks) is not runnable as `pkg#task`: pass its
- * task name with the package in `packages`.
+ * task name with the package in `packages`. A `pkg#task` id runs whatever `packages` holds: turbo does not filter it.
  */
 export type DryRunRequest = {
   readonly tasks: string[];

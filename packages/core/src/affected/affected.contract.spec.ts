@@ -12,7 +12,7 @@ import { TurboException, readAffected, resolveTurbo } from '../index.ts';
 import type { AffectedResult, TurboBinary } from '../index.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
-import { leafPackage } from '../shared/turbo/test/utils/manifest.spec.util.ts';
+import { leafPackage, packageTaskNames } from '../shared/turbo/test/utils/manifest.spec.util.ts';
 
 const spawns = vi.hoisted(() => {
   const files: string[] = [];
@@ -38,6 +38,9 @@ const AFFECTED_RANGE = { base: 'HEAD~1', head: 'HEAD' };
 const TRUSTED = { trusted: true } as const;
 
 const taskIds = (result: AffectedResult): string[] => result.tasks.map((task) => task.id);
+
+/** The leaf package's `#test` id. */
+const leafTestId = (fixture: FixtureHandle): string => `${leafPackage(fixture.manifest).name}#test`;
 
 const turboSpawns = (binary: TurboBinary): number => spawns.files.filter((file) => file === binary.path).length;
 
@@ -81,8 +84,10 @@ describe('FEATURE: affected tasks from a real turbo', () => {
 
     it('WHEN read THEN the leaf test, whose inputs are src/** only, is not affected', () => {
       const leaf = leafPackage(fixture().manifest);
+      const leafTest = leafTestId(fixture());
 
-      expect(taskIds(result)).not.toContain(`${leaf.name}#test`);
+      expect(packageTaskNames(fixture().manifest, leaf.name)).toContain(leafTest);
+      expect(taskIds(result)).not.toContain(leafTest);
     });
 
     it('WHEN read THEN the tasks are sorted by id', () => {
@@ -110,13 +115,14 @@ describe('FEATURE: affected tasks from a real turbo', () => {
   describe('GIVEN a target-like copy with affectedUsingTaskInputs off and a leaf README edit', () => {
     const fixture = fixtureHook(FLAG_OFF);
 
-    it('WHEN read THEN the mode is package', async () => {
+    it('WHEN read THEN the mode is package, and the leaf test is affected too', async () => {
       await editLeafReadme(fixture());
       const binary = await binaryFor(fixture());
 
       const result = await readAffected(binary, AFFECTED_RANGE);
 
       expect(result.mode).toBe('package');
+      expect(taskIds(result)).toContain(leafTestId(fixture()));
     });
   });
 
