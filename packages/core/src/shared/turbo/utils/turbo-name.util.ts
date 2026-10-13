@@ -48,3 +48,34 @@ export const assertTurboName = (name: string): void => {
 
   if (hasControl) throw invalidName(name, 'contains a control character');
 };
+
+const FILTER_LEADING_CHARS = ['!', '^', '.'];
+
+const FILTER_SYNTAX_CHARS = ['{', '}', '[', ']', '*'];
+
+/** Also rejects a package name turbo's `--filter` would read as syntax (negation, path, `...`, `^` beside `...`, glob, braces). */
+export const assertFilterName = (name: string): void => {
+  assertTurboName(name);
+
+  const first = name.charAt(0);
+  const leading = FILTER_LEADING_CHARS.find((char) => char === first);
+
+  if (leading !== undefined) throw invalidName(name, `starts with ${leading}`);
+
+  const hasEllipsis = name.includes('...');
+
+  if (hasEllipsis) throw invalidName(name, 'contains ...');
+
+  const syntax = FILTER_SYNTAX_CHARS.find((char) => name.includes(char));
+
+  if (syntax !== undefined) throw invalidName(name, `contains ${syntax}`);
+};
+
+/** Rejects a task name that holds `#`: turbo reads `pkg#task` as a package and a task, so a `#` in the name changes which task runs. */
+export const assertTaskName = (name: string): void => {
+  assertTurboName(name);
+
+  const hasHash = name.includes('#');
+
+  if (hasHash) throw invalidName(name, 'contains #');
+};
