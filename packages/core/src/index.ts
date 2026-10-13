@@ -1,6 +1,10 @@
 /** npm name of this package. */
 export const PACKAGE_NAME = '@turbo-console/core';
 
+export type { AffectedResult } from './affected/common/affected.type.ts';
+
+export { readAffected } from './affected/domain-logic/read-affected.ts';
+
 export { resolveTurbo } from './binary/domain-logic/resolve-turbo.ts';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
