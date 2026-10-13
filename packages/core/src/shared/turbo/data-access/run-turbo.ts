@@ -97,7 +97,7 @@ const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileExc
  * target repo's `.git/config` is otherwise trusted. Resolves with turbo's exit code, non-zero included. Rejects before spawning with
  * `checkCwd`'s errno error (`path`: `cwd`) when `cwd` is missing, not a directory or not searchable (ENOENT/ENOTDIR/EACCES), unless
  * `signal` already aborted; with execFile's error plus `stderr` (all turbo wrote) when no exit code exists (spawn failure, kill
- * signal, output past the 256 MB buffer); and with an `AbortError` (`cause`: the signal's reason; `stderr`: turbo's last 64 Ki
+ * signal, output past `maxBuffer`, 256 MiB by default); and with an `AbortError` (`cause`: the signal's reason; `stderr`: turbo's last 64 Ki
  * characters) when `timeoutMs` (60 s by default) or `signal` aborts first. Abort: SIGTERM to turbo on POSIX (turbo stops its tasks),
  * `taskkill /T /F` on Windows; the rejection waits for turbo's exit and taskkill. After `graceMs` turbo is killed outright; on POSIX
  * that reaches turbo's pid only, so a task ignoring SIGTERM can outlive it (follow-up). Known limit: after turbo exits, a leftover
@@ -112,7 +112,7 @@ export const runTurbo = async (binaryPath: string, args: string[], cwd: string, 
 
   const resolvers = Promise.withResolvers<TurboResult>();
   const env = turboEnv(process.env);
-  const execOptions = { cwd, env, maxBuffer: MAX_BUFFER, windowsHide: true };
+  const execOptions = { cwd, env, maxBuffer: options.maxBuffer ?? MAX_BUFFER, windowsHide: true };
   let isAborting = false;
 
   const onDone = (error: ExecFileException | null, stdout: string, stderr: string): void => {
