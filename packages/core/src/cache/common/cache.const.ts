@@ -23,3 +23,6 @@ export const MTIME_SLACK_MS = 2000;
 
 /** The digest of a keyed file that does not exist. */
 export const MISSING_DIGEST = 'missing';
+
+/** The digest of a keyed file that exists but cannot be read as a regular file. */
+export const UNREADABLE_DIGEST = 'unreadable';
