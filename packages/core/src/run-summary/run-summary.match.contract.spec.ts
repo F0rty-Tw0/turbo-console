@@ -93,9 +93,26 @@ const runFirstAtom = async (dir: string, tasks: ManifestTask[], kind: AtomKind):
   return runAndMatch(dir, task, manifestTask.packageName);
 };
 
-describe('FEATURE: run summary match contract on generated fixtures', () => {
-  describe('GIVEN a target-like fixture whose leaf package builds twice with turboRunArgs', () => {
-    const fixture = fixtureHook(TARGET_LIKE);
+describe('FEATURE: run summary match contract on one generated target-like fixture', () => {
+  // One fixture copy for the whole file: private copies per case starved the windows contract hooks. Cases share its
+  // turbo cache, so the atom file case runs before the aggregate and umbrella cases, which run every file task.
+  const fixture = fixtureHook(TARGET_LIKE);
+
+  beforeAll(async () => {
+    const { dir, manifest } = fixture();
+    const leaf = leafPackage(manifest);
+    const turboJson = join(dir, 'turbo.json');
+    const packageJson = join(dir, leaf.path, 'package.json');
+
+    await insertMember(turboJson, TASKS_ANCHOR, `    "${SPACED_NAME}": {}`);
+    await insertMember(turboJson, TASKS_ANCHOR, `    "${FAILING_NAME}": {}`);
+    await insertMember(turboJson, TASKS_ANCHOR, `    "${DEPENDENT_NAME}": { "dependsOn": ["${FAILING_NAME}"] }`);
+    await insertMember(packageJson, SCRIPTS_ANCHOR, `    "${SPACED_NAME}": "node -e 0"`);
+    await insertMember(packageJson, SCRIPTS_ANCHOR, `    "${FAILING_NAME}": "node -e \\"process.exit(3)\\""`);
+    await insertMember(packageJson, SCRIPTS_ANCHOR, `    "${DEPENDENT_NAME}": "node -e 0"`);
+  });
+
+  describe('GIVEN the leaf package builds twice with turboRunArgs', () => {
     let first: RunMatch | null = null;
     let second: RunMatch | null = null;
 
@@ -118,58 +135,11 @@ describe('FEATURE: run summary match contract on generated fixtures', () => {
     });
   });
 
-  describe('GIVEN a target-like fixture whose first umbrella task runs for its package', () => {
-    const fixture = fixtureHook(TARGET_LIKE);
-    let match: RunMatch | null = null;
-
-    beforeAll(async () => {
-      match = await runFirstAtom(fixture().dir, fixture().manifest.tasks, 'umbrella');
-    });
-
-    it('THEN the match has no cache status, since turbo records no entry of its own for it', () => {
-      expect(match).toMatchObject({ cache: null });
-      expect(match?.durationMs).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  describe('GIVEN a target-like fixture whose first aggregate task runs for its package', () => {
-    const fixture = fixtureHook(TARGET_LIKE);
-    let match: RunMatch | null = null;
-
-    beforeAll(async () => {
-      match = await runFirstAtom(fixture().dir, fixture().manifest.tasks, 'aggregate');
-    });
-
-    it('THEN the match has no cache status, since turbo records no entry of its own for it', () => {
-      expect(match).toMatchObject({ cache: null });
-      expect(match?.durationMs).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  describe('GIVEN a target-like fixture whose first atom file task runs for its package', () => {
-    const fixture = fixtureHook(TARGET_LIKE);
-    let match: RunMatch | null = null;
-
-    beforeAll(async () => {
-      match = await runFirstAtom(fixture().dir, fixture().manifest.tasks, 'atom-file');
-    });
-
-    it('THEN its own entry gives the match a cache status', () => {
-      expect(match).toMatchObject({ cache: 'MISS' });
-      expect(match?.durationMs).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  describe('GIVEN a target-like fixture with a task whose name has a space', () => {
-    const fixture = fixtureHook(TARGET_LIKE);
+  describe('GIVEN the leaf runs a task whose name has a space', () => {
     let match: RunMatch | null = null;
 
     beforeAll(async () => {
       const leaf = leafPackage(fixture().manifest);
-
-      await insertMember(join(fixture().dir, 'turbo.json'), TASKS_ANCHOR, `    "${SPACED_NAME}": {}`);
-      await insertMember(join(fixture().dir, leaf.path, 'package.json'), SCRIPTS_ANCHOR, `    "${SPACED_NAME}": "node -e 0"`);
-
       const task: TaskNode = { ...TASK_BASE, id: `${leaf.name}#${SPACED_NAME}`, name: SPACED_NAME };
 
       match = await runAndMatch(fixture().dir, task, leaf.name);
@@ -180,8 +150,7 @@ describe('FEATURE: run summary match contract on generated fixtures', () => {
     });
   });
 
-  describe(`GIVEN a target-like fixture whose leaf runs ${FAILING_NAME}, which exits 3, and ${DEPENDENT_NAME}, which depends on it`, () => {
-    const fixture = fixtureHook(TARGET_LIKE);
+  describe(`GIVEN the leaf runs ${FAILING_NAME}, which exits 3, and ${DEPENDENT_NAME}, which depends on it`, () => {
     let failingExit = 0;
     let failingMatch: RunMatch | null = null;
     let dependentExit = 0;
@@ -195,13 +164,6 @@ describe('FEATURE: run summary match contract on generated fixtures', () => {
       const leaf = leafPackage(manifest);
       const failingTask: TaskNode = { ...TASK_BASE, id: `${leaf.name}#${FAILING_NAME}`, name: FAILING_NAME };
       const dependentTask: TaskNode = { ...TASK_BASE, id: `${leaf.name}#${DEPENDENT_NAME}`, name: DEPENDENT_NAME };
-      const turboJson = join(dir, 'turbo.json');
-      const packageJson = join(dir, leaf.path, 'package.json');
-
-      await insertMember(turboJson, TASKS_ANCHOR, `    "${FAILING_NAME}": {}`);
-      await insertMember(turboJson, TASKS_ANCHOR, `    "${DEPENDENT_NAME}": { "dependsOn": ["${FAILING_NAME}"] }`);
-      await insertMember(packageJson, SCRIPTS_ANCHOR, `    "${FAILING_NAME}": "node -e \\"process.exit(3)\\""`);
-      await insertMember(packageJson, SCRIPTS_ANCHOR, `    "${DEPENDENT_NAME}": "node -e 0"`);
 
       const failing = await runOf(dir, failingTask, leaf.name);
 
@@ -229,6 +191,45 @@ describe('FEATURE: run summary match contract on generated fixtures', () => {
       expect(dependentSummary?.execution.command).toBe(dependentCommand);
       expect(taskIds).not.toContain(dependentId);
       expect(dependentMatch).toBeNull();
+    });
+  });
+
+  describe('GIVEN the first atom file task runs for its package', () => {
+    let match: RunMatch | null = null;
+
+    beforeAll(async () => {
+      match = await runFirstAtom(fixture().dir, fixture().manifest.tasks, 'atom-file');
+    });
+
+    it('THEN its own entry gives the match a cache status', () => {
+      expect(match).toMatchObject({ cache: 'MISS' });
+      expect(match?.durationMs).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('GIVEN the first aggregate task runs for its package', () => {
+    let match: RunMatch | null = null;
+
+    beforeAll(async () => {
+      match = await runFirstAtom(fixture().dir, fixture().manifest.tasks, 'aggregate');
+    });
+
+    it('THEN the match has no cache status, since turbo records no entry of its own for it', () => {
+      expect(match).toMatchObject({ cache: null });
+      expect(match?.durationMs).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('GIVEN the first umbrella task runs for its package', () => {
+    let match: RunMatch | null = null;
+
+    beforeAll(async () => {
+      match = await runFirstAtom(fixture().dir, fixture().manifest.tasks, 'umbrella');
+    });
+
+    it('THEN the match has no cache status, since turbo records no entry of its own for it', () => {
+      expect(match).toMatchObject({ cache: null });
+      expect(match?.durationMs).toBeGreaterThanOrEqual(0);
     });
   });
 });
