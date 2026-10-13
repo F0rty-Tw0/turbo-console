@@ -185,6 +185,18 @@ describe('FEATURE: match a run to its summary', () => {
     });
   });
 
+  describe('GIVEN a matching summary next to a fitting one whose task entry ends before it starts', () => {
+    it('WHEN matched THEN the bad one is no candidate, so the good one matches', async () => {
+      const root = await newRoot();
+      const backwards = taskEntry('web#build', { startTime: WINDOW.endTime, endTime: WINDOW.startTime }, 'HIT');
+
+      await writeRun(root, 'a.json', MATCHING, OLDEST);
+      await writeRun(root, 'b.json', summaryJson(COMMAND, WINDOW, 0, [backwards]), OLDEST + 1);
+
+      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual(EXPECTED);
+    });
+  });
+
   describe('GIVEN a newer file that is not JSON', () => {
     it('WHEN matched THEN it is dropped and the older matching summary is used', async () => {
       const root = await newRoot();
@@ -197,7 +209,7 @@ describe('FEATURE: match a run to its summary', () => {
   });
 
   describe.skipIf(!IS_POSIX)('GIVEN a matching summary that is a symlink to a file outside the root', () => {
-    it('WHEN matched THEN the symlink is ignored, so it is null', async () => {
+    it('WHEN matched THEN the listing drops the symlink, so it is null', async () => {
       const root = await newRoot();
       const outside = join(tempDir, 'outside.json');
 
