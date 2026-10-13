@@ -267,4 +267,15 @@ describe('FEATURE: Atomizer task classification', () => {
       expect(rowsOf(result)).toStrictEqual([['a#build', 'task', null]]);
     });
   });
+
+  describe('GIVEN a package whose name holds a #', () => {
+    it('WHEN its task is classified THEN the task name is whatever follows the last #', () => {
+      const pkg = graphPackage('p#b', 'packages/pb', [], [graphTask('p#b#build', COMMAND, [], [])]);
+
+      const result = classifyPackages([pkg]);
+      const names = result.packages.flatMap((classified) => classified.tasks.map((task) => task.name));
+
+      expect(names).toStrictEqual(['build']);
+    });
+  });
 });

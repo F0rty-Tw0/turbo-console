@@ -57,7 +57,7 @@ const toPackageNode = (pkg: ClassifiedPackage, visibleIds: Set<string>, configs:
   const path = toPosixPath(pkg.path);
 
   const toNode = (task: ClassifiedTask): TaskNode => {
-    const description = descriptionOf(configs, path, task.id);
+    const description = descriptionOf(configs, path, task.id, task.name);
 
     return toTaskNode(task, visibleIds, description);
   };

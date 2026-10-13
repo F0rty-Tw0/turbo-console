@@ -9,7 +9,8 @@ import {
 } from '../common/atomizer.const.ts';
 import type { ClassifiedPackage, ClassifiedTask, ClassifyResult, TaskAtom, TaskNodeKind } from '../common/workspace-model.type.ts';
 
-const nameOf = (fullName: string): string => fullName.slice(fullName.indexOf('#') + 1);
+/** The task name after `<package>#`; a `#` inside the package name or the task's file path is kept, so the split is by length, not by a `#`. */
+const nameOf = (packageName: string, fullName: string): string => fullName.slice(packageName.length + 1);
 
 const groupOfTag = (tag: string): string => tag.slice(ATOMIZER_TAG_PREFIX.length);
 
@@ -35,8 +36,8 @@ const isCarrier = (task: GraphTask): boolean => task.tags.includes(CARRIER_TAG);
 const isShown = (pkg: GraphPackage): boolean => !pkg.tags.includes(DEFINITIONS_TAG);
 
 /** Groups a task is tagged with, except the ones its own name makes it the umbrella or aggregate of (rule 2.3). */
-const fileGroupsOf = (task: GraphTask): string[] => {
-  const name = nameOf(task.fullName);
+const fileGroupsOf = (task: GraphTask, packageName: string): string[] => {
+  const name = nameOf(packageName, task.fullName);
   const isFileTaskOf = (group: string): boolean => name !== group && name !== `${group}${AGGREGATE_SUFFIX}`;
 
   return groupsOf(task).filter(isFileTaskOf);
@@ -74,8 +75,8 @@ const groupOf = (name: string, kind: TaskNodeKind, groups: string[]): string => 
 };
 
 /** Rules 2.2–2.4 and 3 for one non-carrier task; `null` drops it. A file task with two group tags adds a warning. */
-const classifyTask = (task: GraphTask, packageGroups: Set<string>, warnings: string[]): ClassifiedTask | null => {
-  const name = nameOf(task.fullName);
+const classifyTask = (task: GraphTask, packageName: string, packageGroups: Set<string>, warnings: string[]): ClassifiedTask | null => {
+  const name = nameOf(packageName, task.fullName);
   const groups = groupsOf(task);
   const fileKind: TaskNodeKind = groups.length > 0 ? 'atom-file' : 'task';
   const kind = roleOf(name, packageGroups) ?? fileKind;
@@ -99,8 +100,8 @@ const classifyTask = (task: GraphTask, packageGroups: Set<string>, warnings: str
 const classifyPackage = (pkg: GraphPackage, warnings: string[]): ClassifiedPackage => {
   const isNotCarrier = (task: GraphTask): boolean => !isCarrier(task);
   const remaining = pkg.tasks.items.filter(isNotCarrier);
-  const packageGroups = new Set(remaining.flatMap(fileGroupsOf));
-  const classify = (task: GraphTask): ClassifiedTask | null => classifyTask(task, packageGroups, warnings);
+  const packageGroups = new Set(remaining.flatMap((task) => fileGroupsOf(task, pkg.name)));
+  const classify = (task: GraphTask): ClassifiedTask | null => classifyTask(task, pkg.name, packageGroups, warnings);
   const tasks = remaining.map(classify).filter((task) => task !== null);
   const classified: ClassifiedPackage = { name: pkg.name, path: pkg.path, tags: pkg.tags, tasks };
 

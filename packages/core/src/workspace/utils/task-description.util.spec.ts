@@ -33,10 +33,10 @@ const ROOT_ERROR: TurboConfigError = { path: 'turbo.json', error: 'InvalidSymbol
 
 const HUB_ERROR: TurboConfigError = { path: 'packages/hub/turbo.json', error: 'InvalidSymbol at 3' };
 
-const describeTask = (configs: TurboConfigFile[], packagePath: string, id: string): string | null => {
+const describeTask = (configs: TurboConfigFile[], packagePath: string, id: string, taskName = id.slice(id.lastIndexOf('#') + 1)): string | null => {
   const byDir = okConfigsByDir(configs);
 
-  return descriptionOf(byDir, packagePath, id);
+  return descriptionOf(byDir, packagePath, id, taskName);
 };
 
 describe('FEATURE: task descriptions (rule 5)', () => {
@@ -113,6 +113,14 @@ describe('FEATURE: task descriptions (rule 5)', () => {
       const description = describeTask([EMPTY_HUB], 'packages/hub', '@fx/hub#toString');
 
       expect(description).toBeNull();
+    });
+  });
+
+  describe('GIVEN a package whose name holds a #', () => {
+    it('WHEN its task is described THEN the package config is looked up by the name after the last #', () => {
+      const description = describeTask([HUB, ROOT], 'packages/hub', 'p#hub#build');
+
+      expect(description).toBe('from the package');
     });
   });
 });
