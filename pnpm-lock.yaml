@@ -207,6 +207,9 @@ catalogs:
       specifier: 5.0.3
       version: 5.0.3
   runtime:
+    jsonc-parser:
+      specifier: ^3.3.1
+      version: 3.3.1
     zod:
       specifier: ^4.6.5
       version: 4.6.5
@@ -254,6 +257,9 @@ importers:
 
   packages/core:
     dependencies:
+      jsonc-parser:
+        specifier: catalog:runtime
+        version: 3.3.1
       zod:
         specifier: catalog:runtime
         version: 4.6.5
