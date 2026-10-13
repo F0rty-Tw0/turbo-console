@@ -77,6 +77,17 @@ describe.skipIf(process.platform === 'win32')('FEATURE: override turbo resolutio
       expect(turboSpawns(stub)).toBe(1);
     });
 
+    it('WHEN five callers resolve it at once THEN they share one --version spawn', async () => {
+      const stub = await writeStub('concurrent.sh', 'echo 2.11.7');
+      const callers = Array.from({ length: 5 }, async () => resolveStub(stub));
+
+      const resolved = await Promise.all(callers);
+      const versions = resolved.map((binary) => binary.version);
+
+      expect(versions).toStrictEqual(['2.11.7', '2.11.7', '2.11.7', '2.11.7', '2.11.7']);
+      expect(turboSpawns(stub)).toBe(1);
+    });
+
     it('WHEN its mtime changes between resolutions THEN --version is spawned again', async () => {
       const stub = await writeStub('touched.sh', 'echo 2.11.7');
       const later = new Date(Date.now() + 5000);
