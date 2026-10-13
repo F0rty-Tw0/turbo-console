@@ -4,6 +4,7 @@ import { buildWorkspaceModel } from './workspace-model.util.ts';
 import type { GraphPackage, PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
 import type { TurboConfigError, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 import type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from '../common/workspace-model.type.ts';
+import { configError, manyErrors } from '../test/utils/config-error.spec.util.ts';
 import { graphEdge, graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
 
 type GraphEdge = PackageGraph['data']['packageGraph']['edges']['items'][number];
@@ -30,19 +31,6 @@ const taskOf = (model: WorkspaceModel, id: string): TaskNode | undefined => {
   const tasks = model.packages.flatMap((pkg) => pkg.tasks);
 
   return tasks.find((task) => task.id === id);
-};
-
-const configError = (path: string): TurboConfigError => {
-  const config: TurboConfigError = { path, error: 'InvalidSymbol at 3' };
-
-  return config;
-};
-
-/** `count` parse errors under `packages/p000` … in reverse path order, so the builder must sort before it cuts. */
-const manyErrors = (count: number): TurboConfigError[] => {
-  const paths = Array.from({ length: count }, (_, index) => `packages/p${String(index).padStart(3, '0')}/turbo.json`);
-
-  return paths.toReversed().map(configError);
 };
 
 const edgeText = (edge: PackageEdge): string => `${edge.source}>${edge.target}:${edge.kind}`;
