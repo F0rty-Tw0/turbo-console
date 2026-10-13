@@ -6,7 +6,14 @@ import { join } from 'node:path';
 
 import { isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { READ_NON_BLOCKING } from '../../shared/fs/common/open-flags.const.ts';
-import { MAX_KEYED_FILE_BYTES, MISSING_DIGEST, UNREADABLE_DIGEST } from '../common/cache.const.ts';
+import {
+  MAX_KEYED_FILE_BYTES,
+  MISSING_DIGEST,
+  NOT_REGULAR_DIGEST,
+  OVER_CAP_PREFIX,
+  OVER_CAP_READ_DIGEST,
+  UNREADABLE_DIGEST
+} from '../common/cache.const.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
 
 /** Each read holds a file open, so a graph of thousands of packages cannot run out of descriptors (EMFILE). */
@@ -25,11 +32,11 @@ const markerFile = (path: string, digest: string): KeyedFile => {
 };
 
 /**
- * The sha256 hex of everything `handle` reads from its start to the end of the file, `CHUNK_BYTES` at a time. Rejects
- * once more than `MAX_KEYED_FILE_BYTES` were read: a file whose stat size lies, such as procfs `/proc/self/pagemap` (size 0,
- * yet it reads on for hundreds of GiB), is never hashed in part.
+ * The sha256 hex of everything `handle` reads from its start to the end of the file, `CHUNK_BYTES` at a time, or
+ * `null` once more than `MAX_KEYED_FILE_BYTES` were read: a file whose stat size lies, such as procfs
+ * `/proc/self/pagemap` (size 0, yet it reads on for hundreds of GiB), is never hashed in part.
  */
-const digestOf = async (handle: FileHandle): Promise<string> => {
+const digestOf = async (handle: FileHandle): Promise<string | null> => {
   const hash = createHash('sha256');
   const chunk = Buffer.alloc(CHUNK_BYTES);
   let total = 0;
@@ -41,7 +48,7 @@ const digestOf = async (handle: FileHandle): Promise<string> => {
 
     total += bytesRead;
 
-    if (total > MAX_KEYED_FILE_BYTES) throw new RangeError(`keyed file over ${MAX_KEYED_FILE_BYTES} bytes`);
+    if (total > MAX_KEYED_FILE_BYTES) return null;
 
     hash.update(bytes);
     isEnd = bytesRead === 0;
@@ -55,17 +62,17 @@ const digestOf = async (handle: FileHandle): Promise<string> => {
  * content: an edit still changes the key and still shows to the mtime check, without reading the file.
  */
 const overCapFile = (path: string, stats: Stats): KeyedFile => {
-  const digest = `over-cap:${stats.size}:${stats.mtimeMs}`;
+  const digest = `${OVER_CAP_PREFIX}${stats.size}:${stats.mtimeMs}`;
   const file: KeyedFile = { path, digest, mtimeMs: stats.mtimeMs };
 
   return file;
 };
 
 /**
- * The content digest and mtime of the regular file at `path`; any other kind of file is `unreadable`, and one whose
- * stat size is over `MAX_KEYED_FILE_BYTES` is `over-cap:<size>:<mtimeMs>`, unread. The mtime comes from a stat after
- * the read, so an edit landing during the read shows in it. Rejects on a failed open or read, or on reading more than
- * `MAX_KEYED_FILE_BYTES` from a file whose stat size said less.
+ * The content digest and mtime of the regular file at `path`; any other kind of file is `not-regular`, one whose stat
+ * size is over `MAX_KEYED_FILE_BYTES` is `over-cap:<size>:<mtimeMs>`, unread, and one that reads past the cap after a
+ * smaller stat size is `over-cap:read`. The mtime comes from a stat after the read, so an edit landing during the read
+ * shows in it. Rejects on a failed open or read.
  */
 const hashFile = async (root: string, path: string): Promise<KeyedFile> => {
   const handle = await open(join(root, path), READ_NON_BLOCKING);
@@ -74,13 +81,16 @@ const hashFile = async (root: string, path: string): Promise<KeyedFile> => {
     const opened = await handle.stat();
     const isFile = opened.isFile();
 
-    if (!isFile) return markerFile(path, UNREADABLE_DIGEST);
+    if (!isFile) return markerFile(path, NOT_REGULAR_DIGEST);
 
     const isOverCap = opened.size > MAX_KEYED_FILE_BYTES;
 
     if (isOverCap) return overCapFile(path, opened);
 
     const digest = await digestOf(handle);
+
+    if (digest === null) return markerFile(path, OVER_CAP_READ_DIGEST);
+
     const read = await handle.stat();
     const file: KeyedFile = { path, digest, mtimeMs: read.mtimeMs };
 
@@ -90,10 +100,7 @@ const hashFile = async (root: string, path: string): Promise<KeyedFile> => {
   }
 };
 
-/**
- * Never rejects: a path that does not exist (or whose parent is not a directory) is `missing`, any other failure
- * `unreadable`, a read past `MAX_KEYED_FILE_BYTES` included.
- */
+/** Never rejects: a path that does not exist (or whose parent is not a directory) is `missing`, any other failure `unreadable`. */
 const hashKeyedFile = async (root: string, path: string): Promise<KeyedFile> => {
   try {
     return await hashFile(root, path);
@@ -108,9 +115,10 @@ const hashKeyedFile = async (root: string, path: string): Promise<KeyedFile> => 
 /**
  * Each of `paths` (posix, relative to `root`) as a `KeyedFile`, in input order, at most `MAX_CONCURRENT_READS` read at
  * a time. Never rejects, so a keyed file that cannot be read changes the key instead of failing the load or the read.
- * A regular file whose stat size is over `MAX_KEYED_FILE_BYTES` is keyed by size and mtime, unread. One whose stat size
- * lies (a procfs symlink reports size 0 and reads on) is `unreadable` once a read passes the cap and is never hashed
- * in part, so one hash reads at most that many bytes per path.
+ * A path that is no regular file is `not-regular`, unread. A regular file whose stat size is over
+ * `MAX_KEYED_FILE_BYTES` is keyed by size and mtime, unread. One whose stat size lies (a procfs symlink reports size 0
+ * and reads on) is `over-cap:read` once a read passes the cap and is never hashed in part, so one hash reads at most
+ * that many bytes per path.
  */
 export const hashKeyedFiles = async (root: string, paths: string[]): Promise<KeyedFile[]> => {
   const files: KeyedFile[] = [];

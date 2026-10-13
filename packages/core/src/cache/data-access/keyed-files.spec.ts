@@ -196,10 +196,10 @@ describe('FEATURE: keyed file hashing', () => {
   });
 
   describe('GIVEN a path that is not a readable regular file', () => {
-    it('WHEN it is a directory THEN it is marked unreadable', async () => {
+    it.skipIf(!IS_POSIX)('WHEN it is a directory THEN it is marked not-regular', async () => {
       const files = await hashKeyedFiles(root, ['dir']);
 
-      expect(files).toStrictEqual([markerFile('dir', 'unreadable')]);
+      expect(files).toStrictEqual([markerFile('dir', 'not-regular')]);
     });
 
     it('WHEN the path cannot be opened for a reason other than absence THEN it is marked unreadable', async () => {
@@ -208,12 +208,12 @@ describe('FEATURE: keyed file hashing', () => {
       expect(files).toStrictEqual([markerFile('nul\0byte', 'unreadable')]);
     });
 
-    it.skipIf(!IS_POSIX)('WHEN it is a FIFO THEN it is marked unreadable instead of blocking on the read', async () => {
+    it.skipIf(!IS_POSIX)('WHEN it is a FIFO THEN it is marked not-regular instead of blocking on the read', async () => {
       execFileSync('mkfifo', [join(root, 'fifo')]);
 
       const files = await hashKeyedFiles(root, ['fifo']);
 
-      expect(files).toStrictEqual([markerFile('fifo', 'unreadable')]);
+      expect(files).toStrictEqual([markerFile('fifo', 'not-regular')]);
     });
 
     it.skipIf(!CAN_DENY_READ)('WHEN it denies reading THEN it is marked unreadable and the call resolves', async () => {
@@ -226,13 +226,13 @@ describe('FEATURE: keyed file hashing', () => {
     });
 
     it.skipIf(!IS_LINUX)(
-      'WHEN it links to a procfs file that never ends THEN it is marked unreadable once over the byte cap',
+      'WHEN it links to a procfs file that never ends THEN it is marked over-cap:read once over the byte cap',
       async () => {
         await symlink(PAGEMAP, join(root, 'pagemap.json'));
 
         const files = await hashKeyedFiles(root, ['pagemap.json']);
 
-        expect(files).toStrictEqual([markerFile('pagemap.json', 'unreadable')]);
+        expect(files).toStrictEqual([markerFile('pagemap.json', 'over-cap:read')]);
       },
       PAGEMAP_TIMEOUT_MS
     );

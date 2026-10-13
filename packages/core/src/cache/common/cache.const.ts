@@ -27,12 +27,21 @@ export const MTIME_SLACK_MS = 2000;
 /** The digest of a keyed file that does not exist. */
 export const MISSING_DIGEST = 'missing';
 
-/** The digest of a keyed file that exists but cannot be read as a regular file. */
+/** The digest of a keyed file whose open or read failed (`EACCES`, `EBUSY`, ...). */
 export const UNREADABLE_DIGEST = 'unreadable';
 
+/** The digest of a keyed path that exists but is no regular file: a directory, FIFO, socket or device. */
+export const NOT_REGULAR_DIGEST = 'not-regular';
+
+/** Starts the digest of a keyed file too large to hash: `over-cap:<size>:<mtimeMs>`, or `OVER_CAP_READ_DIGEST`. */
+export const OVER_CAP_PREFIX = 'over-cap:';
+
+/** The digest of a keyed file that read past `MAX_KEYED_FILE_BYTES` after a smaller stat size (procfs reports 0). */
+export const OVER_CAP_READ_DIGEST = `${OVER_CAP_PREFIX}read`;
+
 /**
- * The most bytes hashed from one keyed file, above any real lockfile: a larger one is keyed by size and mtime, and one
- * that reads past it after a smaller stat size is `unreadable`.
+ * The most bytes hashed from one keyed file, above any real lockfile: a larger regular file is keyed by size and mtime,
+ * and one that reads past it after a smaller stat size is `OVER_CAP_READ_DIGEST`.
  */
 export const MAX_KEYED_FILE_BYTES = 256 * 1024 * 1024;
 
