@@ -34,6 +34,10 @@ describe('FEATURE: caller path checks', () => {
       expect(absolutePath('/opt/tools/../turbo', OVERRIDE, posix)).toBe('/opt/turbo');
     });
 
+    it('WHEN it ends in a separator THEN it is returned without it, naming the file', () => {
+      expect(absolutePath('/opt/turbo/', OVERRIDE, posix)).toBe('/opt/turbo');
+    });
+
     it('WHEN it holds a control character THEN the message does not carry it raw', () => {
       const message = messageOf(() => absolutePath('turbo\u001B[2J', OVERRIDE, posix));
 

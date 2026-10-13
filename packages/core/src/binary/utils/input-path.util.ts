@@ -26,7 +26,8 @@ const isFullyQualified = (path: string, platformPath: PlatformPath): boolean => 
 };
 
 /**
- * `value`, resolved with `platformPath` (normalized, no trailing separator). `name` is the caller's word for it in the
+ * `value`, resolved with `platformPath`: normalized, with no trailing separator except on a bare root (`/`, `C:\`,
+ * `\\server\share\`), so an override written as `/opt/turbo/` names the file. `name` is the caller's word for it in the
  * message (`turbo root`, `turbo overridePath`). A NUL byte, an empty or relative path or (on Windows) a driveless one
  * throws `invalid-argument`: it would resolve against whatever cwd the host process happens to have, so the disk
  * access and the spawn could name a different path than the caller meant.
