@@ -1,16 +1,76 @@
 import { PACKAGE_NAME as REPO_GEN } from '@turbo-console/repo-gen';
 import { PACKAGE_NAME as TOOLS } from '@turbo-console/tools';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 import { PACKAGE_NAME } from './index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
-import type { TurboErrorKind } from './index.ts';
+import type {
+  AffectedResult,
+  AffectedTasks,
+  CachedWorkspace,
+  DryRun,
+  DryRunState,
+  PackageEdge,
+  PackageGraph,
+  PackageNode,
+  RunSummary,
+  TaskNode,
+  TurboBinary,
+  TurboErrorKind,
+  TurboVersionRange,
+  WorkspaceModel
+  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
+} from './index.ts';
+
+/**
+ * Spec §4.8: M0's runtime exports plus M1's readers and `TurboException`. Spawning, model building and the name check
+ * (`runTurbo`, `queryTurbo`, `buildWorkspaceModel`, `assertTurboName`) stay internal; `TurboBinary` is a type-only export.
+ */
+const RUNTIME_EXPORTS = [
+  'AFFECTED_TASKS_QUERY',
+  'PACKAGE_GRAPH_QUERY',
+  'PACKAGE_NAME',
+  'SCHEMA_SDL_SHA256',
+  'SUPPORTED_TURBO_RANGE',
+  'TurboException',
+  'affectedTasksSchema',
+  'dryRunSchema',
+  'loadWorkspace',
+  'packageGraphSchema',
+  'readAffected',
+  'readCachedWorkspace',
+  'readDryRun',
+  'readNewestRunSummary',
+  'resolveTurbo',
+  'runSummarySchema'
+];
 
 describe('FEATURE: core package entry', () => {
   describe('GIVEN the package entry point', () => {
     it('WHEN PACKAGE_NAME is read THEN it equals the package name', () => {
       expect(PACKAGE_NAME).toBe('@turbo-console/core');
+    });
+
+    it('WHEN its exports are listed THEN they are exactly the public API, and every public type is exported', async () => {
+      // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
+      const entry = await import('./index.ts');
+
+      const names = Object.keys(entry).toSorted();
+
+      expect(names).toStrictEqual(RUNTIME_EXPORTS);
+      expectTypeOf<TurboBinary>().toHaveProperty('path');
+      expectTypeOf<WorkspaceModel>().toHaveProperty('affectedMode');
+      expectTypeOf<PackageNode>().toHaveProperty('tasks');
+      expectTypeOf<PackageEdge>().toHaveProperty('target');
+      expectTypeOf<TaskNode>().toHaveProperty('kind');
+      expectTypeOf<AffectedResult['mode']>().toEqualTypeOf<'package' | 'task'>();
+      expectTypeOf<DryRunState['cache']>().toEqualTypeOf<'HIT' | 'MISS' | 'deferred'>();
+      expectTypeOf<CachedWorkspace['isFresh']>().toEqualTypeOf<boolean>();
+      expectTypeOf<AffectedTasks>().toHaveProperty('data');
+      expectTypeOf<DryRun>().toHaveProperty('tasks');
+      expectTypeOf<PackageGraph>().toHaveProperty('data');
+      expectTypeOf<RunSummary>().toHaveProperty('execution');
+      expectTypeOf<TurboVersionRange>().toHaveProperty('maxExclusive');
     });
 
     it('WHEN TurboErrorKind is imported THEN it is the exact kind union', () => {
