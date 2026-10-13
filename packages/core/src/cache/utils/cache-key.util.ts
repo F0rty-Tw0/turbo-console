@@ -90,6 +90,20 @@ const isVanishedManifest = (file: KeyedFile): boolean => {
  */
 export const hasVanishedManifest = (files: KeyedFile[]): boolean => files.some(isVanishedManifest);
 
+const keyDigest = (file: KeyedFile): [string, string] => [file.path, file.digest];
+
+/**
+ * Whether a file in `before` has another digest in `after` (`missing` is a digest too). A path absent from `after`
+ * counts as a change, so the check fails closed. Catches a root keyed file edited or deleted during the spawn even when
+ * its mtime was put back, which `isEditedSince` cannot see.
+ */
+export const hasChangedRootFile = (before: KeyedFile[], after: KeyedFile[]): boolean => {
+  const digestAfter = new Map(after.map(keyDigest));
+  const isChanged = (file: KeyedFile): boolean => digestAfter.get(file.path) !== file.digest;
+
+  return before.some(isChanged);
+};
+
 /** `workspace-<first 16 hex of sha256(root)>.json`: one cache file per workspace root. */
 export const cacheFileName = (root: string): string => {
   const rootHash = sha256Hex(root);

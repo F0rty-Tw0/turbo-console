@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { cacheFileName, cacheKeyOf, hasVanishedManifest, isEditedSince, isKeyedPath, keyedPathsOf } from './cache-key.util.ts';
+import { cacheFileName, cacheKeyOf, hasChangedRootFile, hasVanishedManifest, isEditedSince, isKeyedPath, keyedPathsOf } from './cache-key.util.ts';
 import { graphPackage } from '../../workspace/test/utils/graph.spec.util.ts';
 import { MISSING_DIGEST, ROOT_KEYED_FILES } from '../common/cache.const.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
@@ -37,6 +37,12 @@ const keyedFile = (path: string, digest: string, mtimeMs: number | null): KeyedF
 const FILES = [keyedFile('package.json', 'aaa', null), keyedFile('turbo.json', 'bbb', null), keyedFile('apps/web/package.json', 'ccc', null)];
 
 const FILE_INDEXES = [0, 1, 2];
+
+const toMissingTurboJson = (file: KeyedFile): KeyedFile => {
+  if (file.path !== 'turbo.json') return file;
+
+  return keyedFile(file.path, MISSING_DIGEST, null);
+};
 
 /** `FILES` with the digest at `index` replaced. */
 const withDigestChanged = (index: number): KeyedFile[] => {
@@ -225,6 +231,44 @@ describe('FEATURE: workspace cache key', () => {
       const hasVanished = hasVanishedManifest(files);
 
       expect(hasVanished).toBe(false);
+    });
+  });
+
+  describe('GIVEN root keyed files hashed before and after a spawn', () => {
+    it('WHEN no digest differs THEN no root file changed', () => {
+      const hasChanged = hasChangedRootFile(FILES, FILES);
+
+      expect(hasChanged).toBe(false);
+    });
+
+    it('WHEN a digest changed THEN a root file changed', () => {
+      const after = withDigestChanged(0);
+
+      const hasChanged = hasChangedRootFile(FILES, after);
+
+      expect(hasChanged).toBe(true);
+    });
+
+    it('WHEN turbo.json went missing THEN a root file changed', () => {
+      const after = FILES.map(toMissingTurboJson);
+
+      const hasChanged = hasChangedRootFile(FILES, after);
+
+      expect(hasChanged).toBe(true);
+    });
+
+    it('WHEN a path is absent from the after files THEN a root file changed', () => {
+      const hasChanged = hasChangedRootFile(FILES, []);
+
+      expect(hasChanged).toBe(true);
+    });
+
+    it('WHEN a missing turbo.json became present THEN a root file changed', () => {
+      const before = FILES.map(toMissingTurboJson);
+
+      const hasChanged = hasChangedRootFile(before, FILES);
+
+      expect(hasChanged).toBe(true);
     });
   });
 
