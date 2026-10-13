@@ -137,6 +137,19 @@ describe('FEATURE: workspace turbo lookup, root only', () => {
       expect(resolved).toMatchObject({ path: legacy, source: 'workspace' });
     });
 
+    it('WHEN a legacy binary sits in a nearer lookup dir and the scoped one in the root node_modules THEN the scoped binary is resolved', async () => {
+      const root = await workspaceAt(join(tempDir, 'scoped-first'), TURBO_MANIFEST);
+      const nodeModules = join(root, 'node_modules');
+      const nearerLegacy = join(nodeModules, 'turbo', 'node_modules', LEGACY_BINARY);
+
+      await writeFileIn(nearerLegacy, '');
+      const scoped = await installPlatformBinary(nodeModules);
+
+      const resolved = await resolveTurbo(root, TRUSTED);
+
+      expect(resolved).toMatchObject({ path: scoped, source: 'workspace' });
+    });
+
     it('WHEN turbo has no platform package THEN it rejects not-found naming the root node_modules and overridePath', async () => {
       const root = await workspaceAt(join(tempDir, 'no-platform'), TURBO_MANIFEST);
 
