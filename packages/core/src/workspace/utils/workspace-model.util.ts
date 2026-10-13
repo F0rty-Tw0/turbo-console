@@ -99,6 +99,13 @@ const shownWarnings = (warnings: string[]): string[] => {
   return [...shown, `warnings: ${hidden} more not shown`];
 };
 
+/** The two-group warnings of rule 2.2 and the config warnings, before the cut, sort and cap. */
+const listedWarnings = (classifiedWarnings: string[], configs: TurboConfigFile[]): string[] => {
+  const fileWarnings = configs.map(configWarning).filter(isText);
+
+  return [...classifiedWarnings, ...fileWarnings];
+};
+
 /** Spec §4.4 rules 1–6: one deterministic model from one `packageGraph` and the configs read for it. */
 export const buildWorkspaceModel = (
   graph: PackageGraph,
@@ -115,11 +122,24 @@ export const buildWorkspaceModel = (
   const packages = classified.packages.map(toNode).toSorted(byName);
   const isVisibleEdge = (edge: GraphEdge): boolean => visibleNames.has(edge.source) && visibleNames.has(edge.target);
   const edges = graphEdges.items.filter(isVisibleEdge).map(toEdge).toSorted(byEdge);
-  const fileWarnings = configs.map(configWarning).filter(isText);
-  const warnings = shownWarnings([...classified.warnings, ...fileWarnings]);
+  const listed = listedWarnings(classified.warnings, configs);
+  const warnings = shownWarnings(listed);
   const rootConfig = configs.find(isRootConfig) ?? null;
   const affectedMode = affectedModeOf(rootConfig);
   const model: WorkspaceModel = { root, turboVersion, affectedMode, packages, edges, warnings };
 
   return model;
+};
+
+/**
+ * `model`, as built from `graph` and `configs`, with `warning` (the `cache:` one) added under the same cut, sort and
+ * cap. Its own list may already be capped, so the warnings are listed again from `graph` and `configs`.
+ */
+export const withWarning = (model: WorkspaceModel, graph: PackageGraph, configs: TurboConfigFile[], warning: string): WorkspaceModel => {
+  const classified = classifyPackages(graph.data.packageGraph.nodes.items);
+  const listed = listedWarnings(classified.warnings, configs);
+  const warnings = shownWarnings([...listed, warning]);
+  const warned: WorkspaceModel = { ...model, warnings };
+
+  return warned;
 };
