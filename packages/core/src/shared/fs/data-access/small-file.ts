@@ -1,15 +1,10 @@
-import { constants } from 'node:fs';
 import { open } from 'node:fs/promises';
 import type { FileHandle } from 'node:fs/promises';
 
+import { READ_NON_BLOCKING } from '../common/open-flags.const.ts';
+
 /** Manifests and configs are a few KB; a bigger file is not read. */
 const MAX_FILE_BYTES = 1024 * 1024;
-
-/**
- * A FIFO opened non-blocking returns at once instead of waiting for a writer, and is then rejected as not a regular
- * file. Windows defines no `O_NONBLOCK` (and has no FIFOs): `| undefined` is `| 0` there.
- */
-const READ_NON_BLOCKING = constants.O_RDONLY | constants.O_NONBLOCK;
 
 /** A close that fails after another failure, or after a refused file, must not replace that outcome. */
 const ignoreCloseError = (): undefined => undefined;

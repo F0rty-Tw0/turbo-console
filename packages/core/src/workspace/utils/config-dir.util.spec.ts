@@ -1,14 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { packageConfigDirs } from './config-dir.util.ts';
+import { isInsideRoot, packageConfigDirs } from './config-dir.util.ts';
 
 const DROPPED_DIRS = ['', '.', './', '..', '../x', 'a/../../b', '/abs', 'C:/x', 'c:x', './C:/x'];
+
+const OUTSIDE_PATHS = ['..', '../x', 'a/../../x', '/etc/x', 'C:/x', 'c:x', '..\\x', 'a\\..\\..\\x', '\\\\server\\share\\x'];
+
+const INSIDE_PATHS = ['package.json', 'apps/web/turbo.json', '..foo/package.json', 'a/../b/package.json', 'apps\\web\\package.json'];
 
 const KEPT_DIRS: [string, string][] = [
   ['..foo', '..foo'],
   ['pkgs/a:b', 'pkgs/a:b'],
   ['a/../b', 'b'],
-  ['./a/', 'a']
+  ['./a/', 'a'],
+  ['a\\b', 'a/b']
 ];
 
 describe('FEATURE: package config dirs', () => {
@@ -33,6 +38,22 @@ describe('FEATURE: package config dirs', () => {
       const dirs = packageConfigDirs(['./a', 'a', 'a/./b', 'a/b/']);
 
       expect(dirs).toStrictEqual(['a', 'a/b']);
+    });
+  });
+
+  describe('GIVEN a path that leaves the root once normalized', () => {
+    it.each(OUTSIDE_PATHS)('WHEN %j is checked THEN it is outside the root', (path) => {
+      const isInside = isInsideRoot(path);
+
+      expect(isInside).toBe(false);
+    });
+  });
+
+  describe('GIVEN a path that stays inside the root once normalized', () => {
+    it.each(INSIDE_PATHS)('WHEN %j is checked THEN it is inside the root', (path) => {
+      const isInside = isInsideRoot(path);
+
+      expect(isInside).toBe(true);
     });
   });
 });

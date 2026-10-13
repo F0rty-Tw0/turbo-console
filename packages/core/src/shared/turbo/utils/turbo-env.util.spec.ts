@@ -79,6 +79,20 @@ describe('FEATURE: turbo process env', () => {
     });
   });
 
+  describe('GIVEN an env pointing turbo at another root turbo.json', () => {
+    it('WHEN it is hardened THEN TURBO_ROOT_TURBO_JSON is dropped, whatever its case', () => {
+      const rootConfigEntries: [string, string][] = [
+        ['TURBO_ROOT_TURBO_JSON', '/elsewhere/turbo.json'],
+        ['turbo_root_turbo_json', '/elsewhere/turbo.json']
+      ];
+      const env = envOf([...KEPT_ENTRIES, ...rootConfigEntries]);
+
+      const hardened = turboEnv(env);
+
+      expect(hardened).toStrictEqual(envOf([...KEPT_ENTRIES, ...FORCED_ENTRIES]));
+    });
+  });
+
   describe('GIVEN any env', () => {
     it('WHEN it is hardened THEN the input is not mutated', () => {
       const entries: [string, string][] = [
