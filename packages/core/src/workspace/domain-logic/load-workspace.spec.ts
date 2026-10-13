@@ -1,6 +1,6 @@
 import { getEventListeners } from 'node:events';
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { loadWorkspace } from './load-workspace.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
@@ -8,9 +8,11 @@ import { TurboBinary } from '../../binary/common/index.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
 import { PACKAGE_GRAPH_QUERY } from '../../shared/turbo/common/turbo-query.const.ts';
-import type { TurboResult } from '../../shared/turbo/common/turbo.type.ts';
-import type { TurboConfigFile } from '../common/turbo-config.type.ts';
+import type { PackageGraph, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import type { TurboConfigError, TurboConfigFile } from '../common/turbo-config.type.ts';
+import type { WorkspaceModel } from '../common/workspace-model.type.ts';
 import { graphPackage, packageGraph } from '../test/utils/graph.spec.util.ts';
+import type * as workspaceModelUtil from '../utils/workspace-model.util.ts';
 
 const turbo = vi.hoisted(() => {
   const queryArgs: unknown[][] = [];
@@ -18,7 +20,15 @@ const turbo = vi.hoisted(() => {
   const readSignals: (AbortSignal | undefined)[] = [];
   const noConfigs = async (): Promise<TurboConfigFile[]> => Promise.resolve([]);
   const proceed = (): void => undefined;
-  const state = { stdout: '', queryArgs, readDirs, readSignals, onQuery: proceed, proceed, read: noConfigs, noConfigs };
+  const state = { stdout: '', queryArgs, readDirs, readSignals, onQuery: proceed, onBuild: proceed, proceed, read: noConfigs, noConfigs };
+
+  return state;
+});
+
+const store = vi.hoisted(() => {
+  const args: unknown[][] = [];
+  const writeErrors: string[] = [];
+  const state = { args, writeErrors };
 
   return state;
 });
@@ -51,6 +61,34 @@ vi.mock('../data-access/turbo-config.ts', () => {
   return mocked;
 });
 
+vi.mock('../utils/workspace-model.util.ts', async (importOriginal) => {
+  const real = await importOriginal<typeof workspaceModelUtil>();
+
+  const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFile[], turboVersion: string, root: string): WorkspaceModel => {
+    turbo.onBuild();
+
+    return real.buildWorkspaceModel(graph, configs, turboVersion, root);
+  };
+
+  const mocked = { ...real, buildWorkspaceModel };
+
+  return mocked;
+});
+
+vi.mock('../../cache/data-access/store-workspace.ts', () => {
+  const storeWorkspace = async (...args: unknown[]): Promise<string | null> => {
+    store.args.push(args);
+
+    const writeError = store.writeErrors[0] ?? null;
+
+    return Promise.resolve(writeError);
+  };
+
+  const mocked = { storeWorkspace };
+
+  return mocked;
+});
+
 const BINARY = new TurboBinary('/workspace', '/workspace/turbo', '2.11.7', 'override');
 
 const QUERY_MAX_BUFFER = 128 * 1024 * 1024;
@@ -61,7 +99,31 @@ const GRAPH = packageGraph([WINDOWS_PACKAGE], []);
 
 const ABORTED = 'turbo query packageGraph was aborted';
 
+const CACHE_DIR = '/cache';
+
+const WRITE_ERROR = '/cache: workspace model too large to cache';
+
+const PACKAGE_ERROR: TurboConfigError = { path: 'packages/a/turbo.json', error: 'x' };
+
+const SPAWN_STARTED_AT = 1000;
+
+const QUERIED_AT = 5000;
+
 const timeoutReason = (): DOMException => new DOMException('timed out', 'TimeoutError');
+
+const packageError = async (): Promise<TurboConfigFile[]> => Promise.resolve([PACKAGE_ERROR]);
+
+const configError = (_: unknown, index: number): TurboConfigError => {
+  const config: TurboConfigError = { path: `packages/p${String(index).padStart(3, '0')}/turbo.json`, error: 'x' };
+
+  return config;
+};
+
+/** One more parse error than the builder's 100-warning cap. */
+const overCapErrors = async (): Promise<TurboConfigFile[]> => Promise.resolve(Array.from({ length: 101 }, configError));
+
+/** The model `loadWorkspace` passed to the store. */
+const storedModel = (): unknown => store.args[0]?.[0];
 
 const neverSettles = async (): Promise<TurboConfigFile[]> => new Promise(() => undefined);
 
@@ -84,7 +146,63 @@ describe('FEATURE: workspace loading', () => {
     turbo.readDirs.length = 0;
     turbo.readSignals.length = 0;
     turbo.onQuery = turbo.proceed;
+    turbo.onBuild = turbo.proceed;
     turbo.read = turbo.noConfigs;
+    store.args.length = 0;
+    store.writeErrors.length = 0;
+  });
+
+  describe('GIVEN a cache dir the store writes', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('WHEN loaded THEN the model, the graph packages, the time before the query and the cache dir are stored', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(SPAWN_STARTED_AT);
+      turbo.onQuery = (): void => {
+        vi.setSystemTime(QUERIED_AT);
+      };
+
+      const model = await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
+
+      expect(store.args).toStrictEqual([[model, [WINDOWS_PACKAGE], SPAWN_STARTED_AT, CACHE_DIR]]);
+    });
+
+    it('WHEN loaded THEN the model carries no cache warning', async () => {
+      turbo.read = packageError;
+
+      const model = await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
+
+      expect(model.warnings).toStrictEqual(['packages/a/turbo.json: x']);
+    });
+  });
+
+  describe('GIVEN a cache dir the store fails to write', () => {
+    beforeEach(() => {
+      store.writeErrors.push(WRITE_ERROR);
+      turbo.read = packageError;
+    });
+
+    it('WHEN loaded THEN the returned model carries the cache warning among its sorted warnings', async () => {
+      const model = await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
+
+      expect(model.warnings).toStrictEqual([`cache: ${WRITE_ERROR}`, 'packages/a/turbo.json: x']);
+    });
+
+    it('WHEN loaded THEN the stored model carries no cache warning', async () => {
+      await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
+
+      expect(storedModel()).toMatchObject({ warnings: ['packages/a/turbo.json: x'] });
+    });
+
+    it('WHEN the config warnings pass the cap THEN 100 are shown, then the overflow line counting the rest', async () => {
+      turbo.read = overCapErrors;
+
+      const model = await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
+
+      expect(model.warnings.slice(100)).toStrictEqual(['warnings: 2 more not shown']);
+    });
   });
 
   describe('GIVEN turbo lists a package under a Windows path', () => {
@@ -160,6 +278,25 @@ describe('FEATURE: workspace loading', () => {
       const loading = loadWorkspace(BINARY, { signal: controller.signal });
 
       await expect(loading).rejects.toMatchObject({ kind: 'failed', message: 'turbo query packageGraph timed out' });
+    });
+  });
+
+  describe('GIVEN the caller aborts after the configs are read, before the model is stored', () => {
+    beforeEach(() => {
+      turbo.onBuild = (): void => controller.abort();
+    });
+
+    it('WHEN loaded THEN it rejects failed, aborted', async () => {
+      const loading = loadWorkspace(BINARY, { cacheDir: CACHE_DIR, signal: controller.signal });
+
+      await expect(loading).rejects.toMatchObject({ kind: 'failed', message: ABORTED });
+    });
+
+    it('WHEN loaded THEN nothing is stored', async () => {
+      const loading = loadWorkspace(BINARY, { cacheDir: CACHE_DIR, signal: controller.signal });
+
+      await expect(loading).rejects.toBeInstanceOf(TurboException);
+      expect(store.args).toStrictEqual([]);
     });
   });
 });
