@@ -31,6 +31,12 @@ export const MISSING_DIGEST = 'missing';
 export const UNREADABLE_DIGEST = 'unreadable';
 
 /**
+ * The most bytes hashed from one keyed file, above any real lockfile: a larger one is keyed by size and mtime, and one
+ * that reads past it after a smaller stat size is `unreadable`.
+ */
+export const MAX_KEYED_FILE_BYTES = 256 * 1024 * 1024;
+
+/**
  * The largest cache file written or read, in bytes. The `stretch-300` model's file is ~1.42 MiB (280 visible
  * packages, 5342 tasks); 16 MiB leaves about 11 times that.
  */

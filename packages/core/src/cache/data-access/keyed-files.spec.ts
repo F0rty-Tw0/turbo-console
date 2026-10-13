@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmod, mkdir, mkdtemp, rm, stat, utimes, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
 import type * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
@@ -47,6 +47,15 @@ const CAN_DENY_READ = process.platform !== 'win32' && process.getuid?.() !== 0;
 
 /** mkfifo is POSIX only. */
 const IS_POSIX = process.platform !== 'win32';
+
+/** `/proc/self/pagemap` is Linux only. */
+const IS_LINUX = process.platform === 'linux';
+
+/** Stats as a regular file of size 0, yet reads on for hundreds of GiB: only the byte cap stops its hash. */
+const PAGEMAP = '/proc/self/pagemap';
+
+/** Reading the 256 MiB cap from procfs takes well under a second; reading on uncapped takes minutes. */
+const PAGEMAP_TIMEOUT_MS = 10_000;
 
 /** More than the 16 reads kept in flight, so every worker takes several paths. */
 const MANY_FILES = 40;
@@ -215,6 +224,18 @@ describe('FEATURE: keyed file hashing', () => {
 
       expect(files).toStrictEqual([markerFile('denied.json', 'unreadable')]);
     });
+
+    it.skipIf(!IS_LINUX)(
+      'WHEN it links to a procfs file that never ends THEN it is marked unreadable once over the byte cap',
+      async () => {
+        await symlink(PAGEMAP, join(root, 'pagemap.json'));
+
+        const files = await hashKeyedFiles(root, ['pagemap.json']);
+
+        expect(files).toStrictEqual([markerFile('pagemap.json', 'unreadable')]);
+      },
+      PAGEMAP_TIMEOUT_MS
+    );
   });
 
   describe('GIVEN more paths than reads kept in flight', () => {

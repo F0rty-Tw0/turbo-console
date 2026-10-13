@@ -1,8 +1,9 @@
 import type { WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
 
 /**
- * One keyed file: `path` posix, relative to the root; `digest` the sha256 hex of its content, `missing` or
- * `unreadable`; `mtimeMs` `null` unless it was read.
+ * One keyed file: `path` posix, relative to the root; `digest` the sha256 hex of its content, `missing`,
+ * `unreadable` or `over-cap:<size>:<mtimeMs>` (a regular file too large to hash); `mtimeMs` `null` for `missing` and
+ * `unreadable`.
  */
 export type KeyedFile = {
   readonly path: string;
