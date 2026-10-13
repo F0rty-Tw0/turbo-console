@@ -182,6 +182,35 @@ describe('FEATURE: workspace store', () => {
     });
   });
 
+  describe('GIVEN a root with an older cache file on disk and a newer entry stored while the file is read', () => {
+    /** Writes an `older` cache file for `root`, starts `findEntry`, then stores a `newer` entry before the read resolves. */
+    const findDuringStore = async (root: string): Promise<CacheEntry | null> => {
+      const older: CacheEntry = { key: 'older', keyedPaths: KEYED_PATHS, model: modelAt(root) };
+      const newer: CacheEntry = { key: 'newer', keyedPaths: KEYED_PATHS, model: modelAt(root) };
+      const cacheDir = join(newCaseDir(), 'cache dir');
+
+      await writeCacheFile(cacheDir, older);
+
+      const finding = findEntry(root, cacheDir);
+
+      setMemoryEntry(newer);
+
+      return finding;
+    };
+
+    it('WHEN found THEN it is the newer entry', async () => {
+      const found = await findDuringStore('/find/race-1');
+
+      expect(found?.key).toBe('newer');
+    });
+
+    it('WHEN found THEN memory still holds the newer entry', async () => {
+      await findDuringStore('/find/race-2');
+
+      expect(getMemoryEntry('/find/race-2')?.key).toBe('newer');
+    });
+  });
+
   describe('GIVEN a root with no entry in memory or on disk', () => {
     it('WHEN found THEN it is null', async () => {
       const found = await findEntry('/find/none', join(newCaseDir(), 'cache dir'));

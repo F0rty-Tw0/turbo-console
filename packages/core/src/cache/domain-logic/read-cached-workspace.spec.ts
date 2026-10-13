@@ -151,6 +151,20 @@ describe('FEATURE: cached workspace read', () => {
     });
   });
 
+  describe('GIVEN a workspace stored under turbo 2.11.7', () => {
+    it('WHEN read with turbo 2.11.8 THEN it is stale', async () => {
+      const root = await newRoot();
+      const model = modelAt(root);
+      const upgraded = new TurboBinary(root, join(root, 'turbo'), '2.11.8', 'override');
+
+      await storeWorkspace(model, PACKAGES, Date.now(), undefined);
+
+      const read = await readCachedWorkspace(upgraded, join(newCaseDir(), 'cache dir'));
+
+      expect(read).toStrictEqual(cached(model, false));
+    });
+  });
+
   describe('GIVEN a root with no entry in memory or on disk', () => {
     it('WHEN read THEN it is null', async () => {
       const root = await newRoot();

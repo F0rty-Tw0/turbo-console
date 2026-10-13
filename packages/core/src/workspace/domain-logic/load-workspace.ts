@@ -50,11 +50,12 @@ const untilAborted = async (start: () => Promise<TurboConfigFile[]>, signal: Abo
  * graph package (hidden ones included), the pure model build, then the model keyed and kept in memory, and written to
  * `cacheDir` when one is given. A failed write does not fail the load: the returned model, and only it, gains a
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
- * changes nothing the cache holds. The caller's `signal` reaches the spawn and the reads, and an abort that lands after
- * the reads stores nothing. Rejects with `TurboException` only: `failed` (turbo exits non-zero, times out, overflows the
- * stdout cap, or the caller aborts), `invalid-output` (stdout is not JSON or breaks `packageGraphSchema`), `io` (the
- * root is missing, not a directory or not searchable, so `checkCwd` refuses the spawn, or a config cannot be read), or
- * `not-found` (the binary is no longer runnable).
+ * changes nothing the cache holds. The caller's `signal` reaches the spawn and the reads, and is checked once more
+ * before the store: an abort by then stores nothing, one during the store does not stop it. Rejects with
+ * `TurboException` only: `failed` (turbo exits non-zero, times out, overflows the stdout cap, or the caller aborts),
+ * `invalid-output` (stdout is not JSON or breaks `packageGraphSchema`), `io` (the root is missing, not a directory or
+ * not searchable, so `checkCwd` refuses the spawn, or a config cannot be read), or `not-found` (the binary is no longer
+ * runnable).
  */
 export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceOptions = {}): Promise<WorkspaceModel> => {
   const { cacheDir, signal } = options;

@@ -253,9 +253,11 @@ describe('FEATURE: workspace cache from a real turbo', () => {
     it('WHEN the cache is then read THEN it is stale', async () => {
       const cacheDir = newCacheDir();
       const binary = await binaryFor(fixture());
-      const now = new Date();
 
       await backdateTree(fixture().dir, AGE_MS);
+
+      const now = new Date();
+
       await utimes(join(fixture().dir, 'package.json'), now, now);
       await loadWorkspace(binary, { cacheDir });
 

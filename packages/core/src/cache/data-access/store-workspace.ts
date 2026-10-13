@@ -35,13 +35,19 @@ export const storeWorkspace = async (
   return writeCacheFile(cacheDir, entry);
 };
 
-/** The memory entry of `root`, else its cache file in `cacheDir` (a hit fills memory), else `null`. Never rejects. */
+/**
+ * The memory entry of `root`, else its cache file in `cacheDir` (a hit fills memory), else `null`. An entry stored
+ * while the file is read wins over the older file. Never rejects.
+ */
 export const findEntry = async (root: string, cacheDir: string): Promise<CacheEntry | null> => {
   const remembered = getMemoryEntry(root);
 
   if (remembered !== undefined) return remembered;
 
   const entry = await readCacheFile(cacheDir, root);
+  const storedMeanwhile = getMemoryEntry(root);
+
+  if (storedMeanwhile !== undefined) return storedMeanwhile;
 
   if (entry !== null) setMemoryEntry(entry);
 
