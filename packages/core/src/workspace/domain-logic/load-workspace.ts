@@ -2,11 +2,14 @@ import * as nodePath from 'node:path';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../../binary/common/index.ts';
-import { ROOT_KEYED_FILES } from '../../cache/common/cache.const.ts';
-import type { SpawnMark } from '../../cache/common/cache.type.ts';
+import { MAX_KEYED_FILE_BYTES, ROOT_KEYED_FILES } from '../../cache/common/cache.const.ts';
+import type { KeyedFile, SpawnMark } from '../../cache/common/cache.type.ts';
 import { hashKeyedFiles } from '../../cache/data-access/keyed-files.ts';
 import { storeWorkspace } from '../../cache/data-access/store-workspace.ts';
+import { hostileRootFile } from '../../cache/utils/cache-key.util.ts';
+import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts';
+import { plainPath } from '../../shared/errors/utils/turbo-message.util.ts';
 import { absolutePath } from '../../shared/fs/utils/input-path.util.ts';
 import { packageGraphSchema } from '../../shared/turbo/common/package-graph.schema.ts';
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
@@ -27,6 +30,8 @@ const COMMAND = 'query packageGraph';
 /** `stretch-300` prints ~10 MB; `runTurbo`'s 256 MiB default can cost gigabytes of heap once parsed. */
 const QUERY_MAX_BUFFER = 128 * 1024 * 1024;
 
+const MAX_KEYED_MIB = MAX_KEYED_FILE_BYTES / (1024 * 1024);
+
 const configDirOf = (pkg: GraphPackage): string => toPosixPath(pkg.path);
 
 /** `cacheDir` resolved, or `undefined` when none is given; an empty, relative or driveless one throws `invalid-argument`. */
@@ -34,6 +39,15 @@ const cacheDirOf = (cacheDir: string | undefined): string | undefined => {
   if (cacheDir === undefined) return undefined;
 
   return absolutePath(cacheDir, 'cacheDir', nodePath);
+};
+
+/** Throws `io` when a root keyed file is no regular file or is over the byte cap: turbo would read it with no cap. */
+const refuseHostile = (rootFiles: KeyedFile[]): void => {
+  const hostile = hostileRootFile(rootFiles);
+
+  if (hostile === undefined) return;
+
+  throw new TurboException('io', `root keyed file ${plainPath(hostile.path)} is not a regular file of at most ${MAX_KEYED_MIB} MiB; turbo is not run`);
 };
 
 /**
@@ -69,8 +83,9 @@ const untilAborted = async (start: () => Promise<TurboConfigFile[]>, signal: Abo
  * caches the model under a `null` key, never fresh. Rejects with `TurboException` only: `invalid-argument` (a
  * `cacheDir` that is empty, relative or, on Windows, driveless, checked before the spawn), `failed` (turbo exits
  * non-zero, times out, overflows the stdout cap, or the caller aborts), `invalid-output` (stdout is not JSON or breaks
- * `packageGraphSchema`), `io` (the root is missing, not a directory or not searchable, so `checkCwd` refuses the
- * spawn, or a config cannot be read), or `not-found` (the binary is no longer runnable).
+ * `packageGraphSchema`), `io` (a root keyed file is no regular file or is over 256 MiB, checked before the spawn, which
+ * then never runs; the root is missing, not a directory or not searchable, so `checkCwd` refuses the spawn; or a config
+ * cannot be read), or `not-found` (the binary is no longer runnable).
  */
 export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceOptions = {}): Promise<WorkspaceModel> => {
   const { cacheDir, signal } = options;
@@ -81,6 +96,9 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
   try {
     const dir = cacheDirOf(cacheDir);
     const rootFiles = await hashKeyedFiles(binary.root, ROOT_KEYED_FILES);
+
+    refuseHostile(rootFiles);
+
     const mark: SpawnMark = { startedAt: spawnStartedAt, rootFiles };
     const graph = await runTurboJson(run, COMMAND, packageGraphSchema);
     const packages = graph.data.packageGraph.nodes.items;
