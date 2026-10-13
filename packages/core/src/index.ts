@@ -1,6 +1,11 @@
 /** npm name of this package. */
 export const PACKAGE_NAME = '@turbo-console/core';
 
+export { resolveTurbo } from './binary/domain-logic/resolve-turbo.ts';
+
+// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
+export type { TurboBinary } from './binary/common/index.ts';
+
 export { TurboException } from './shared/errors/common/turbo.exception.ts';
 
 export type { TurboErrorKind } from './shared/errors/common/turbo-error.type.ts';
