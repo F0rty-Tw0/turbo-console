@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { failedMessage, invalidOutputMessage, ioMessage, versionUnsupportedMessage } from './turbo-message.util.ts';
+import { failedMessage, invalidOutputMessage, ioMessage, plainPath, versionUnsupportedMessage } from './turbo-message.util.ts';
 import { packageGraphSchema } from '../../turbo/common/package-graph.schema.ts';
 import { SUPPORTED_TURBO_RANGE } from '../../turbo/common/turbo-version.const.ts';
 
@@ -142,6 +142,14 @@ describe('FEATURE: turbo error messages', () => {
       const message = versionUnsupportedMessage(version, SUPPORTED_TURBO_RANGE);
 
       expect(message).toBe(`turbo 2.12.0${'x'.repeat(189)} is not supported; need >=${min} <${maxExclusive}`);
+    });
+  });
+
+  describe('GIVEN plainPath', () => {
+    it('WHEN the path runs past 1024 characters and holds an escape sequence THEN its last 1024 are kept, then made plain', () => {
+      const path = `/${'d'.repeat(2000)}\u001B[2J/turbo`;
+
+      expect(plainPath(path)).toBe(`${'d'.repeat(1024 - '\u001B[2J/turbo'.length)}/turbo`);
     });
   });
 });
