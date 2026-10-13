@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { readNewestRunSummary } from './read-newest-run-summary.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
+import { MAX_SUMMARY_TRIES } from '../common/run-summary.const.ts';
 import { newRunsRoot, runsDirOf, summaryText, writeRun } from '../test/utils/run-summary.spec.util.ts';
 
 /** chmod has no effect on Windows, and root reads any directory. */
@@ -19,6 +20,9 @@ const IS_POSIX = process.platform !== 'win32';
 const OLDER = 1_760_000_000;
 
 const NEWER = OLDER + 10;
+
+/** 2100-01-01 in seconds since the epoch: far past now. */
+const FUTURE = 4_102_444_800;
 
 let tempDir = '';
 
@@ -91,6 +95,19 @@ describe('FEATURE: newest run summary', () => {
       await writeRun(root, 'a.json', summaryText('newer'), NEWER);
 
       await expect(readNewestRunSummary(root)).resolves.toMatchObject({ id: 'newer' });
+    });
+  });
+
+  describe(`GIVEN ${MAX_SUMMARY_TRIES} valid summaries dated 2100 and one real summary`, () => {
+    it('WHEN read THEN the future-dated files are left out, so it is the real one', async () => {
+      const root = await newRoot();
+      const futureTimes = Array.from({ length: MAX_SUMMARY_TRIES }, (_, index) => FUTURE + index);
+
+      await writeRun(root, 'real.json', summaryText('real'), OLDER);
+
+      for (const seconds of futureTimes) await writeRun(root, `future-${seconds}.json`, summaryText('future'), seconds);
+
+      await expect(readNewestRunSummary(root)).resolves.toMatchObject({ id: 'real' });
     });
   });
 
