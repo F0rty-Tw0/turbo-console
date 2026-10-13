@@ -3,8 +3,8 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
 import { isMissing } from '../../shared/errors/utils/errno.util.ts';
+import { isWithin } from '../../shared/fs/utils/path-within.util.ts';
 import { turboBinaryCandidates } from '../../shared/turbo/utils/turbo-platform.util.ts';
-import { isWithin } from '../utils/path-within.util.ts';
 
 /** The `node_modules` dirs Node would search from `realManifest`, kept only inside `boundary`; reads nothing from disk. */
 const lookupDirs = (realManifest: string, boundary: string): string[] => {

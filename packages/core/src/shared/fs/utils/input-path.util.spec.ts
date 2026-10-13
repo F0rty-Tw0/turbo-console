@@ -3,7 +3,7 @@ import * as nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { absolutePath, assertNoNulByte } from './input-path.util.ts';
-import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
+import { TurboException } from '../../errors/common/turbo.exception.ts';
 
 const { posix, win32 } = nodePath;
 

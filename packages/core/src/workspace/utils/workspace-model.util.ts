@@ -1,6 +1,7 @@
 import { classifyPackages } from './classify-tasks.util.ts';
 import { affectedModeOf, descriptionOf, okConfigsByDir } from './task-description.util.ts';
 import { plainLine } from '../../shared/errors/utils/plain-text.util.ts';
+import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
 import { toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
 import type { TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
@@ -22,8 +23,6 @@ const MAX_WARNINGS = 100;
 const MAX_WARNING_LENGTH = 1024;
 
 const ROOT_CONFIG_PATHS = ['turbo.json', 'turbo.jsonc'];
-
-const compareText = (left: string, right: string): number => Number(left > right) - Number(left < right);
 
 const byId = (left: TaskNode, right: TaskNode): number => compareText(left.id, right.id);
 

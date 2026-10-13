@@ -1,3 +1,4 @@
+import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { AffectedTasks } from '../../shared/turbo/common/turbo.type.ts';
 import { assertTurboName } from '../../shared/turbo/utils/turbo-name.util.ts';
 import type { AffectedMode } from '../../workspace/common/workspace-model.type.ts';
@@ -5,7 +6,7 @@ import type { AffectedResult, AffectedTask, ReadAffectedOptions } from '../commo
 
 type ChangedTask = AffectedTasks['data']['affectedTasks']['items'][number];
 
-const compareIds = (left: AffectedTask, right: AffectedTask): number => Number(left.id > right.id) - Number(left.id < right.id);
+const compareIds = (left: AffectedTask, right: AffectedTask): number => compareText(left.id, right.id);
 
 const toAffectedTask = (item: ChangedTask): AffectedTask => {
   // eslint-disable-next-line no-underscore-dangle -- GraphQL's own __typename key, copied from turbo's output.

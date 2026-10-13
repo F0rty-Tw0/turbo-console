@@ -3,6 +3,7 @@ import * as nodePath from 'node:path';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts';
 import { plainPath, versionUnsupportedMessage } from '../../shared/errors/utils/turbo-message.util.ts';
+import { absolutePath } from '../../shared/fs/utils/input-path.util.ts';
 import { SUPPORTED_TURBO_RANGE } from '../../shared/turbo/common/turbo-version.const.ts';
 import { checkCwd } from '../../shared/turbo/data-access/check-cwd.ts';
 import { isSupportedTurboVersion } from '../../shared/turbo/utils/turbo-version.util.ts';
@@ -11,7 +12,6 @@ import { TurboBinary } from '../common/index.ts';
 import type { ResolveTurboOptions } from '../common/turbo-binary.type.ts';
 import { overrideVersion } from '../data-access/override-turbo.ts';
 import { findWorkspaceTurbo } from '../data-access/workspace-turbo.ts';
-import { absolutePath } from '../utils/input-path.util.ts';
 
 const overrideBinary = async (root: string, overridePath: string, signal: AbortSignal | undefined): Promise<TurboBinary> => {
   const version = await overrideVersion(overridePath, root, signal);

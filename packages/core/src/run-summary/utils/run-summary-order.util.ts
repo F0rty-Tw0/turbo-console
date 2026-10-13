@@ -1,3 +1,4 @@
+import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
 
 /** Newer first; on equal mtimes the larger name first, in default string order. */
@@ -6,7 +7,7 @@ const compareNewest = (left: RunSummaryFile, right: RunSummaryFile): number => {
 
   if (byTime !== 0) return byTime;
 
-  return Number(left.name < right.name) - Number(left.name > right.name);
+  return compareText(right.name, left.name);
 };
 
 /** File names by mtime descending, then name descending. */

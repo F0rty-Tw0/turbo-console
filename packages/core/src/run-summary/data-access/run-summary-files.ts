@@ -2,11 +2,11 @@ import type { Dirent } from 'node:fs';
 import { readdir, realpath, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { isWithin } from '../../binary/utils/path-within.util.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { errnoCode, isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { ioMessage } from '../../shared/errors/utils/turbo-message.util.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
+import { isWithin } from '../../shared/fs/utils/path-within.util.ts';
 import { runSummarySchema } from '../../shared/turbo/common/run-summary.schema.ts';
 import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
 import type { RunSummaryFile } from '../common/run-summary-file.type.ts';

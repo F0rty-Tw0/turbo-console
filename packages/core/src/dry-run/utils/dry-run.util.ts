@@ -1,4 +1,5 @@
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
+import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { DryRun } from '../../shared/turbo/common/turbo.type.ts';
 import { assertTurboName } from '../../shared/turbo/utils/turbo-name.util.ts';
 import type { DryRunRequest, DryRunState } from '../common/dry-run-state.type.ts';
@@ -8,7 +9,7 @@ type DryRunTask = DryRun['tasks'][number];
 /** turbo's `command` for a task with no script: phantom, umbrella and aggregate tasks. */
 const NONEXISTENT = '<NONEXISTENT>';
 
-const compareIds = (left: DryRunState, right: DryRunState): number => Number(left.id > right.id) - Number(left.id < right.id);
+const compareIds = (left: DryRunState, right: DryRunState): number => compareText(left.id, right.id);
 
 const hasCommand = (task: DryRunTask): boolean => task.command !== NONEXISTENT;
 
