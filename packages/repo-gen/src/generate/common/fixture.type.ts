@@ -46,6 +46,12 @@ export type ManifestPackage = {
   readonly dependencies: string[];
 };
 
+/** Atom group of an `atom-file`, `aggregate` or `umbrella` task; only a file task of a live spec file is live. */
+export type ManifestAtom = {
+  readonly group: string;
+  readonly isLive: boolean;
+};
+
 export type ManifestTask = {
   readonly fullName: string;
   readonly packageName: string;
@@ -53,6 +59,7 @@ export type ManifestTask = {
   readonly kind: TaskKind;
   readonly dependencies: string[];
   readonly visible: boolean;
+  readonly atom: ManifestAtom | null;
 };
 
 export type Manifest = {

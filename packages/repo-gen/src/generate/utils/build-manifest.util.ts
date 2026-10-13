@@ -6,9 +6,11 @@ import type {
   AtomGroupPlan,
   FixturePlan,
   Manifest,
+  ManifestAtom,
   ManifestPackage,
   ManifestTask,
   PackagePlan,
+  SpecFile,
   TaskKind
 } from '../common/fixture.type.ts';
 
@@ -16,9 +18,12 @@ type TaskDraft = {
   readonly taskName: string;
   readonly kind: TaskKind;
   readonly dependsOn: string[];
+  readonly atom: ManifestAtom | null;
 };
 
 const CONFIGURED_DEPENDS_ON = ['^build'];
+
+const NOT_LIVE_ATOM: ManifestAtom = { group: ATOM_TASK, isLive: false };
 
 const resolveEntry = (pkg: ManifestPackage, entry: string): string[] => {
   const isDependencyEntry = entry.startsWith('^');
@@ -40,42 +45,52 @@ const toTask = (pkg: ManifestPackage, draft: TaskDraft): ManifestTask => {
     taskName: draft.taskName,
     kind: draft.kind,
     dependencies,
-    visible: !hidden
+    visible: !hidden,
+    atom: draft.atom
   };
 
   return task;
 };
+
+const byPath = (left: SpecFile, right: SpecFile): number => Number(left.path > right.path) - Number(left.path < right.path);
 
 const rootTasks = (pkg: ManifestPackage, taskNames: string[], phantoms: string[]): ManifestTask[] => {
   const rootTask = (taskName: string): ManifestTask => {
     const kind = phantoms.includes(taskName) ? 'phantom' : 'task';
     const dependsOn = dependsOnFor(taskName) ?? [];
 
-    return toTask(pkg, { taskName, kind, dependsOn });
+    return toTask(pkg, { taskName, kind, dependsOn, atom: null });
   };
 
   return taskNames.map(rootTask);
 };
 
 const atomTasks = (pkg: ManifestPackage, group: AtomGroupPlan): ManifestTask[] => {
-  const paths = group.specFiles.map((file) => file.path).toSorted();
+  const files = group.specFiles.toSorted(byPath);
+  const paths = files.map((file) => file.path);
   const fileTaskNames = paths.map(fileTaskName);
 
-  const fileTask = (path: string): TaskDraft => {
-    const dependsOn = [...CONFIGURED_DEPENDS_ON, carrierTaskName(path)];
-    const draft: TaskDraft = { taskName: fileTaskName(path), kind: 'atom-file', dependsOn };
+  const fileTask = (file: SpecFile): TaskDraft => {
+    const dependsOn = [...CONFIGURED_DEPENDS_ON, carrierTaskName(file.path)];
+    const atom: ManifestAtom = { group: ATOM_TASK, isLive: file.live };
+    const draft: TaskDraft = { taskName: fileTaskName(file.path), kind: 'atom-file', dependsOn, atom };
 
     return draft;
   };
 
   const carrier = (path: string): TaskDraft => {
-    const draft: TaskDraft = { taskName: carrierTaskName(path), kind: 'carrier', dependsOn: [] };
+    const draft: TaskDraft = { taskName: carrierTaskName(path), kind: 'carrier', dependsOn: [], atom: null };
 
     return draft;
   };
 
-  const aggregate: TaskDraft = { taskName: ATOM_AGGREGATE_TASK, kind: 'aggregate', dependsOn: fileTaskNames };
-  const fileTasks = paths.map(fileTask);
+  const aggregate: TaskDraft = {
+    taskName: ATOM_AGGREGATE_TASK,
+    kind: 'aggregate',
+    dependsOn: fileTaskNames,
+    atom: NOT_LIVE_ATOM
+  };
+  const fileTasks = files.map(fileTask);
   const carriers = paths.map(carrier);
   const drafts = [...fileTasks, ...carriers, aggregate];
 
@@ -109,7 +124,13 @@ export const buildManifest = (plan: FixturePlan, groups: AtomGroupPlan[]): Manif
     const [test, definitions] = atomPackages(group);
     const testRootTasks = rootTasks(test, rootTaskNames, testPhantoms);
     const testAtomTasks = atomTasks(test, group);
-    const umbrella = toTask(test, { taskName: ATOM_TASK, kind: 'umbrella', dependsOn: [ATOM_AGGREGATE_TASK] });
+    const umbrellaDraft: TaskDraft = {
+      taskName: ATOM_TASK,
+      kind: 'umbrella',
+      dependsOn: [ATOM_AGGREGATE_TASK],
+      atom: NOT_LIVE_ATOM
+    };
+    const umbrella = toTask(test, umbrellaDraft);
     const definitionsRootTasks = rootTasks(definitions, rootTaskNames, rootTaskNames);
     const definitionsAtomTasks = atomTasks(definitions, group);
 
