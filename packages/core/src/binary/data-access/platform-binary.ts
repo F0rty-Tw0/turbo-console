@@ -2,8 +2,8 @@ import { realpath, stat } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
+import { isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { turboBinaryCandidates } from '../../shared/turbo/utils/turbo-platform.util.ts';
-import { isMissing } from '../utils/errno.util.ts';
 import { isWithin } from '../utils/path-within.util.ts';
 
 /** The `node_modules` dirs Node would search from `realManifest`, kept only inside `boundary`; reads nothing from disk. */
