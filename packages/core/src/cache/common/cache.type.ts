@@ -23,3 +23,9 @@ export type CachedWorkspace = {
   readonly model: WorkspaceModel;
   readonly isFresh: boolean;
 };
+
+/** What a store needs from before the spawn: when it started and the root keyed files as hashed then. */
+export type SpawnMark = {
+  readonly startedAt: number;
+  readonly rootFiles: KeyedFile[];
+};

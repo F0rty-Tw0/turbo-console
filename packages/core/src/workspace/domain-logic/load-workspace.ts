@@ -2,6 +2,9 @@ import * as nodePath from 'node:path';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../../binary/common/index.ts';
+import { ROOT_KEYED_FILES } from '../../cache/common/cache.const.ts';
+import type { SpawnMark } from '../../cache/common/cache.type.ts';
+import { hashKeyedFiles } from '../../cache/data-access/keyed-files.ts';
 import { storeWorkspace } from '../../cache/data-access/store-workspace.ts';
 import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts';
 import { absolutePath } from '../../shared/fs/utils/input-path.util.ts';
@@ -61,12 +64,13 @@ const untilAborted = async (start: () => Promise<TurboConfigFile[]>, signal: Abo
  * `cacheDir` when one is given. A failed write does not fail the load: the returned model, and only it, gains a
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
  * changes nothing the cache holds. The caller's `signal` reaches the spawn and the reads, and is checked once more
- * before the store: an abort by then stores nothing, one during the store does not stop it. Rejects with
- * `TurboException` only: `invalid-argument` (a `cacheDir` that is empty, relative or, on Windows, driveless, checked
- * before the spawn), `failed` (turbo exits non-zero, times out, overflows the stdout cap, or the caller aborts),
- * `invalid-output` (stdout is not JSON or breaks `packageGraphSchema`), `io` (the root is missing, not a directory or
- * not searchable, so `checkCwd` refuses the spawn, or a config cannot be read), or `not-found` (the binary is no longer
- * runnable).
+ * before the store: an abort by then stores nothing, one during the store does not stop it. The root keyed files are
+ * hashed before the spawn and again at the store, so a root keyed file (`ROOT_KEYED_FILES`) edited or deleted meanwhile
+ * caches the model under a `null` key, never fresh. Rejects with `TurboException` only: `invalid-argument` (a
+ * `cacheDir` that is empty, relative or, on Windows, driveless, checked before the spawn), `failed` (turbo exits
+ * non-zero, times out, overflows the stdout cap, or the caller aborts), `invalid-output` (stdout is not JSON or breaks
+ * `packageGraphSchema`), `io` (the root is missing, not a directory or not searchable, so `checkCwd` refuses the
+ * spawn, or a config cannot be read), or `not-found` (the binary is no longer runnable).
  */
 export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceOptions = {}): Promise<WorkspaceModel> => {
   const { cacheDir, signal } = options;
@@ -76,6 +80,8 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
 
   try {
     const dir = cacheDirOf(cacheDir);
+    const rootFiles = await hashKeyedFiles(binary.root, ROOT_KEYED_FILES);
+    const mark: SpawnMark = { startedAt: spawnStartedAt, rootFiles };
     const graph = await runTurboJson(run, COMMAND, packageGraphSchema);
     const packages = graph.data.packageGraph.nodes.items;
     const dirs = packages.map(configDirOf);
@@ -85,7 +91,7 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
 
     if (signal?.aborted === true) throw abortError(signal, '');
 
-    const writeError = await storeWorkspace(model, packages, spawnStartedAt, dir);
+    const writeError = await storeWorkspace(model, packages, mark, dir);
     const ownModel = structuredClone(model);
 
     if (writeError === null) return ownModel;
