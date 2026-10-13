@@ -1,3 +1,6 @@
+/** A cache file of any other `formatVersion` is a miss. */
+export const CACHE_FORMAT_VERSION = 1;
+
 /**
  * Root files that change turbo's package graph: workspace globs, configs, the lockfiles turbo supports, and `.npmrc`,
  * whose `link-workspace-packages` changes turbo's package edges.
@@ -26,3 +29,9 @@ export const MISSING_DIGEST = 'missing';
 
 /** The digest of a keyed file that exists but cannot be read as a regular file. */
 export const UNREADABLE_DIGEST = 'unreadable';
+
+/**
+ * The largest cache file written or read, in bytes. The `stretch-300` model's file is ~1.42 MiB (280 visible
+ * packages, 5342 tasks); 16 MiB leaves about 11 times that.
+ */
+export const MAX_CACHE_BYTES = 16 * 1024 * 1024;
