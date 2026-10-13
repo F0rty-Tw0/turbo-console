@@ -24,6 +24,7 @@
     "contract": "vitest run --config vitest.contract.config.ts"
   },
   "dependencies": {
+    "jsonc-parser": "catalog:runtime",
     "zod": "catalog:runtime"
   },
   "devDependencies": {
