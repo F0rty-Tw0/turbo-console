@@ -74,6 +74,15 @@ describe('FEATURE: workspace turbo lookup, root only', () => {
     });
   });
 
+  describe('GIVEN a root that is not absolute', () => {
+    it.each(['', 'packages/core'])('WHEN %j is resolved THEN it rejects invalid-argument instead of using the process cwd', async (root) => {
+      const error = await rejectionOf(root);
+
+      expect(error).toBeInstanceOf(TurboException);
+      expect(error).toMatchObject({ kind: 'invalid-argument', message: `turbo root must be absolute: ${root}` });
+    });
+  });
+
   describe('GIVEN temp workspaces', () => {
     let tempDir = '';
 

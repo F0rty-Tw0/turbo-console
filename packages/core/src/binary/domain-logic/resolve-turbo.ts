@@ -11,7 +11,7 @@ import { TurboBinary } from '../common/index.ts';
 import type { ResolveTurboOptions } from '../common/turbo-binary.type.ts';
 import { overrideVersion } from '../data-access/override-turbo.ts';
 import { findWorkspaceTurbo } from '../data-access/workspace-turbo.ts';
-import { absoluteOverridePath, assertNoNulByte } from '../utils/input-path.util.ts';
+import { absolutePath } from '../utils/input-path.util.ts';
 
 const overrideBinary = async (root: string, overridePath: string, signal: AbortSignal | undefined): Promise<TurboBinary> => {
   const version = await overrideVersion(overridePath, root, signal);
@@ -39,8 +39,8 @@ const withAbsoluteOverride = (options: ResolveTurboOptions): ResolveTurboOptions
 
   if (overridePath === undefined) return options;
 
-  const absolutePath = absoluteOverridePath(overridePath, nodePath);
-  const checked: ResolveTurboOptions = { ...options, overridePath: absolutePath };
+  const absoluteOverride = absolutePath(overridePath, 'turbo overridePath', nodePath);
+  const checked: ResolveTurboOptions = { ...options, overridePath: absoluteOverride };
 
   return checked;
 };
@@ -52,22 +52,22 @@ const withAbsoluteOverride = (options: ResolveTurboOptions): ResolveTurboOptions
 const NEVER_ABORTED = new AbortController().signal;
 
 /**
- * The turbo binary for the workspace at `root` (made absolute). A NUL byte in `root` or `overridePath`, or an
- * `overridePath` that is relative (or driveless on Windows), is rejected first, with no disk access. `root` is then
- * checked on both paths, whatever the caller's signal, so a missing, non-directory or unsearchable root is `io`
- * naming it, even on an override memo hit. Then `overridePath` when given, after one `--version` spawn per file state;
- * otherwise the platform binary of `<root>/node_modules/turbo`, read without a spawn: only a binary whose real path
- * lies inside the root's own real `node_modules` counts, never an ancestor's, `NODE_PATH` or a global folder. Never a
- * shell, `PATH` or `node_modules/.bin`. Rejects with `TurboException` only: `invalid-argument` (see above),
- * `not-found` (no turbo package, no platform binary, override missing or not runnable), `failed` (`--version` exits
- * non-zero, times out or is aborted), `version-unsupported` (outside `SUPPORTED_TURBO_RANGE` or unparsable), `io` (the
- * root, or a `turbo/package.json` or platform binary that cannot be read), `invalid-output` (a `turbo/package.json`
- * that is not a regular file of at most 1 MiB holding JSON with a string `version`).
+ * The turbo binary for the workspace at `root` (normalized). A `root` or `overridePath` that holds a NUL byte, or is
+ * empty, relative or (on Windows) driveless, is rejected first, `root` before `overridePath`, with no disk access.
+ * `root` is then checked on both paths, whatever the caller's signal, so a missing, non-directory or unsearchable root
+ * is `io` naming it, even on an override memo hit. Then `overridePath` when given, after one `--version` spawn per file
+ * state; otherwise the platform binary of `<root>/node_modules/turbo`, read without a spawn: only a binary whose real
+ * path lies inside the root's own real `node_modules` counts, never an ancestor's, `NODE_PATH` or a global folder.
+ * Never a shell, `PATH` or `node_modules/.bin`. Rejects with `TurboException` only: `invalid-argument` (a bad `root` or
+ * `overridePath`, see above, named in the message as `turbo root` or `turbo overridePath`), `not-found` (no turbo
+ * package, no platform binary, override missing or not runnable), `failed` (`--version` exits non-zero, times out or is
+ * aborted), `version-unsupported` (outside `SUPPORTED_TURBO_RANGE` or unparsable), `io` (the root, or a
+ * `turbo/package.json` or platform binary that cannot be read), `invalid-output` (a `turbo/package.json` that is not a
+ * regular file of at most 1 MiB holding JSON with a string `version`).
  */
 export const resolveTurbo = async (root: string, options: ResolveTurboOptions): Promise<TurboBinary> => {
   try {
-    assertNoNulByte(root, 'turbo root');
-    const absoluteRoot = nodePath.resolve(root);
+    const absoluteRoot = absolutePath(root, 'turbo root', nodePath);
     const checked = withAbsoluteOverride(options);
 
     await checkCwd(absoluteRoot, NEVER_ABORTED);

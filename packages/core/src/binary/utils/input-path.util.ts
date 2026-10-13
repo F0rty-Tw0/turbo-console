@@ -26,15 +26,16 @@ const isFullyQualified = (path: string, platformPath: PlatformPath): boolean => 
 };
 
 /**
- * `overridePath`, normalized with `platformPath`. A NUL byte, a relative path or (on Windows) a driveless one throws
- * `invalid-argument`: it would resolve against whatever cwd the host process happens to have, so `stat` and the spawn
- * could name a different file than the caller meant.
+ * `value`, resolved with `platformPath` (normalized, no trailing separator). `name` is the caller's word for it in the
+ * message (`turbo root`, `turbo overridePath`). A NUL byte, an empty or relative path or (on Windows) a driveless one
+ * throws `invalid-argument`: it would resolve against whatever cwd the host process happens to have, so the disk
+ * access and the spawn could name a different path than the caller meant.
  */
-export const absoluteOverridePath = (overridePath: string, platformPath: PlatformPath): string => {
-  assertNoNulByte(overridePath, 'turbo overridePath');
-  const isQualified = isFullyQualified(overridePath, platformPath);
+export const absolutePath = (value: string, name: string, platformPath: PlatformPath): string => {
+  assertNoNulByte(value, name);
+  const isQualified = isFullyQualified(value, platformPath);
 
-  if (!isQualified) throw new TurboException('invalid-argument', `turbo overridePath must be absolute: ${plainPath(overridePath)}`);
+  if (!isQualified) throw new TurboException('invalid-argument', `${name} must be absolute: ${plainPath(value)}`);
 
-  return platformPath.normalize(overridePath);
+  return platformPath.resolve(value);
 };
