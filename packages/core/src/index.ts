@@ -1,6 +1,10 @@
 /** npm name of this package. */
 export const PACKAGE_NAME = '@turbo-console/core';
 
+export type { AffectedResult } from './affected/common/affected.type.ts';
+
+export { readAffected } from './affected/domain-logic/read-affected.ts';
+
 export { resolveTurbo } from './binary/domain-logic/resolve-turbo.ts';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
@@ -9,6 +13,10 @@ export type { TurboBinary } from './binary/common/index.ts';
 export type { CachedWorkspace } from './cache/common/cache.type.ts';
 
 export { readCachedWorkspace } from './cache/domain-logic/read-cached-workspace.ts';
+
+export type { DryRunState } from './dry-run/common/dry-run-state.type.ts';
+
+export { readDryRun } from './dry-run/domain-logic/read-dry-run.ts';
 
 export { TurboException } from './shared/errors/common/turbo.exception.ts';
 
