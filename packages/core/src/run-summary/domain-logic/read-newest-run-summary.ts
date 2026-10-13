@@ -1,7 +1,6 @@
+import { newestRunNames } from './newest-run-names.ts';
 import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
-import { MAX_SUMMARY_TRIES } from '../common/run-summary.const.ts';
-import { listRunSummaryFiles, readRunSummaryFile } from '../data-access/run-summary-files.ts';
-import { newestFirst } from '../utils/run-summary-order.util.ts';
+import { readRunSummaryFile } from '../data-access/run-summary-files.ts';
 
 /**
  * Spec §4.7: the newest regular `<root>/.turbo/runs/*.json` (mtime descending, then name descending) that parses with
@@ -12,14 +11,11 @@ import { newestFirst } from '../utils/run-summary-order.util.ts';
  * when the directory or a file in it exists but cannot be resolved, listed or stat'ed.
  */
 export const readNewestRunSummary = async (root: string): Promise<RunSummary | null> => {
-  const files = await listRunSummaryFiles(root);
+  const names = await newestRunNames(root);
 
-  if (files === null) return null;
+  if (names === null) return null;
 
-  const names = newestFirst(files);
-  const tried = names.slice(0, MAX_SUMMARY_TRIES);
-
-  for (const name of tried) {
+  for (const name of names) {
     const summary = await readRunSummaryFile(root, name);
 
     if (summary !== null) return summary;
