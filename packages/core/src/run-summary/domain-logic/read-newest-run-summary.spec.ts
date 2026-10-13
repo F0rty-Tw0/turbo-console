@@ -3,11 +3,11 @@ import { chmod, mkdir, mkdtemp, rm, symlink, utimes, writeFile } from 'node:fs/p
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { readNewestRunSummary } from './read-newest-run-summary.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
-import { MAX_SUMMARY_TRIES } from '../common/run-summary.const.ts';
+import { MAX_SUMMARY_TRIES, SUMMARY_MTIME_SLACK_MS } from '../common/run-summary.const.ts';
 import { newRunsRoot, runsDirOf, summaryText, writeRun } from '../test/utils/run-summary.spec.util.ts';
 
 /** chmod has no effect on Windows, and root reads any directory. */
@@ -108,6 +108,24 @@ describe('FEATURE: newest run summary', () => {
       for (const seconds of futureTimes) await writeRun(root, `future-${seconds}.json`, summaryText('future'), seconds);
 
       await expect(readNewestRunSummary(root)).resolves.toMatchObject({ id: 'real' });
+    });
+  });
+
+  describe('GIVEN a summary dated exactly the mtime slack ahead of now', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('WHEN read THEN a filesystem clock running ahead is allowed for, so it is that summary', async () => {
+      const root = await newRoot();
+      const edgeSeconds = NEWER + SUMMARY_MTIME_SLACK_MS / 1000;
+
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(NEWER * 1000);
+      await writeRun(root, 'older.json', summaryText('older'), NEWER);
+      await writeRun(root, 'ahead.json', summaryText('ahead'), edgeSeconds);
+
+      await expect(readNewestRunSummary(root)).resolves.toMatchObject({ id: 'ahead' });
     });
   });
 
