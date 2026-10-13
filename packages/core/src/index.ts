@@ -23,3 +23,7 @@ export { AFFECTED_TASKS_QUERY, PACKAGE_GRAPH_QUERY } from './shared/turbo/common
 export { SCHEMA_SDL_SHA256, SUPPORTED_TURBO_RANGE } from './shared/turbo/common/turbo-version.const.ts';
 
 export type { AffectedTasks, DryRun, PackageGraph, RunSummary, TurboVersionRange } from './shared/turbo/common/turbo.type.ts';
+
+export type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from './workspace/common/workspace-model.type.ts';
+
+export { loadWorkspace } from './workspace/domain-logic/load-workspace.ts';

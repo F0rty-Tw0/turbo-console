@@ -20,7 +20,7 @@
     "contract": {
       "dependsOn": ["^build"],
       "cache": false,
-      "passThroughEnv": ["TURBO_CONSOLE_REAL_REPO"]
+      "passThroughEnv": ["TURBO_CONSOLE_REAL_REPO", "TURBO_CONSOLE_STRESS"]
     },
     "e2e": {
       "dependsOn": ["build"]

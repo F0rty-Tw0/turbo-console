@@ -33,7 +33,7 @@ const abortSignalOf = (options: RunTurboOptions): AbortSignal => {
 };
 
 /** M0's `AbortError` (`cause` tells a `TimeoutError` from the caller's reason), plus the stderr execFile drops once aborting. */
-const abortError = (signal: AbortSignal, stderr: string): Error => {
+export const abortError = (signal: AbortSignal, stderr: string): Error => {
   const cause: unknown = signal.reason;
 
   return Object.assign(new Error('turbo aborted'), { name: 'AbortError', cause, stderr });
