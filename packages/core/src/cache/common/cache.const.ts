@@ -1,5 +1,5 @@
 /** A cache file of any other `formatVersion` is a miss. */
-export const CACHE_FORMAT_VERSION = 1;
+export const CACHE_FORMAT_VERSION = 2;
 
 /**
  * Root files that change turbo's package graph: workspace globs, configs, the lockfiles turbo supports, and `.npmrc`,
