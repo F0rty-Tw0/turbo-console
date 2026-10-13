@@ -14,6 +14,8 @@ import { fixtureHook } from './test/utils/fixture-hook.spec.util.ts';
 import { leafPackage } from './test/utils/manifest.spec.util.ts';
 import { isAlive } from './test/utils/process.spec.util.ts';
 import { optionalKeyPaths } from './test/utils/schema-strictness.spec.util.ts';
+import { turboRunArgs } from '../../run-args/utils/run-args.util.ts';
+import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
 
 const TURBO = devTurboPath();
 
@@ -22,6 +24,17 @@ const TARGET_LIKE = PRESETS['target-like'];
 const PASSING_BUILD = '"build": "node -e 0"';
 
 const FAILING_BUILD = `"build": ${JSON.stringify('node -e "process.exit(3)"')}`;
+
+const BUILD_TASK: TaskNode = {
+  id: 'leaf#build',
+  name: 'build',
+  command: 'node -e 0',
+  description: null,
+  tags: [],
+  dependencies: [],
+  kind: 'task',
+  atom: null
+};
 
 const HANG_PID_FILE = 'hang.pid';
 
@@ -148,6 +161,35 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
 
       expect(exitCodes).toHaveLength(1);
       expect(exitCodes).not.toContain(0);
+    });
+  });
+
+  describe('GIVEN a scoped leaf package built with turboRunArgs (M2 §4.1.3)', () => {
+    const fixture = fixtureHook(TARGET_LIKE);
+    let args: string[] = [];
+    let leafName = '';
+    let result: TurboResult;
+    let summary: RunSummary;
+
+    beforeAll(async () => {
+      leafName = leafPackage(fixture().manifest).name;
+      args = turboRunArgs(BUILD_TASK, leafName);
+      // runTurbo prepends --skip-infer itself.
+      result = await runTurbo(TURBO, args.slice(1), fixture().dir);
+      summary = runSummarySchema.parse(await readOnlyRunSummary(fixture().dir));
+    });
+
+    it('THEN the package stays scoped and the args lead with --skip-infer', () => {
+      expect(args[0]).toBe('--skip-infer');
+      expect(leafName.startsWith('@')).toBe(true);
+    });
+
+    it('THEN turbo exits 0', () => {
+      expect(result.exitCode).toBe(0);
+    });
+
+    it('THEN the summary execution.command is the turbo run line without the --skip-infer and --summarize flags', () => {
+      expect(summary.execution.command).toBe(`turbo run build --filter=${leafName}`);
     });
   });
 

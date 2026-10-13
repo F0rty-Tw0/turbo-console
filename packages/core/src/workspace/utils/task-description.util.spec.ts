@@ -33,22 +33,22 @@ const ROOT_ERROR: TurboConfigError = { path: 'turbo.json', error: 'InvalidSymbol
 
 const HUB_ERROR: TurboConfigError = { path: 'packages/hub/turbo.json', error: 'InvalidSymbol at 3' };
 
-const describeTask = (configs: TurboConfigFile[], packagePath: string, id: string): string | null => {
+const describeTask = (configs: TurboConfigFile[], packagePath: string, id: string, taskName: string): string | null => {
   const byDir = okConfigsByDir(configs);
 
-  return descriptionOf(byDir, packagePath, id);
+  return descriptionOf(byDir, packagePath, id, taskName);
 };
 
 describe('FEATURE: task descriptions (rule 5)', () => {
   describe('GIVEN a package config and root keys that all describe build', () => {
     it('WHEN the package task is described THEN the package config wins', () => {
-      const description = describeTask([HUB, ROOT], 'packages/hub', '@fx/hub#build');
+      const description = describeTask([HUB, ROOT], 'packages/hub', '@fx/hub#build', 'build');
 
       expect(description).toBe('from the package');
     });
 
     it('WHEN another package runs build THEN it gets the root bare key, not the hub package config', () => {
-      const description = describeTask([HUB, ROOT], 'packages/other', '@fx/other#build');
+      const description = describeTask([HUB, ROOT], 'packages/other', '@fx/other#build', 'build');
 
       expect(description).toBe('from root task');
     });
@@ -56,7 +56,7 @@ describe('FEATURE: task descriptions (rule 5)', () => {
 
   describe('GIVEN a package config and a package path turbo reports unnormalized', () => {
     it('WHEN the package task is described THEN the package config is still found', () => {
-      const description = describeTask([HUB, ROOT], './packages/hub/', '@fx/hub#build');
+      const description = describeTask([HUB, ROOT], './packages/hub/', '@fx/hub#build', 'build');
 
       expect(description).toBe('from the package');
     });
@@ -64,7 +64,7 @@ describe('FEATURE: task descriptions (rule 5)', () => {
 
   describe('GIVEN root keys pkg#task and task only', () => {
     it('WHEN the task is described THEN root pkg#task wins over root task', () => {
-      const description = describeTask([ROOT], 'packages/hub', '@fx/hub#build');
+      const description = describeTask([ROOT], 'packages/hub', '@fx/hub#build', 'build');
 
       expect(description).toBe('from root pkg#task');
     });
@@ -72,7 +72,7 @@ describe('FEATURE: task descriptions (rule 5)', () => {
 
   describe('GIVEN only a root bare task key', () => {
     it('WHEN the task is described THEN the bare key is used', () => {
-      const description = describeTask([BARE_ROOT], 'packages/hub', '@fx/hub#build');
+      const description = describeTask([BARE_ROOT], 'packages/hub', '@fx/hub#build', 'build');
 
       expect(description).toBe('from root task');
     });
@@ -80,7 +80,7 @@ describe('FEATURE: task descriptions (rule 5)', () => {
 
   describe('GIVEN no config describes the task', () => {
     it('WHEN the task is described THEN the description is null', () => {
-      const description = describeTask([HUB, ROOT], 'packages/hub', '@fx/hub#test');
+      const description = describeTask([HUB, ROOT], 'packages/hub', '@fx/hub#test', 'test');
 
       expect(description).toBeNull();
     });
@@ -88,7 +88,7 @@ describe('FEATURE: task descriptions (rule 5)', () => {
 
   describe('GIVEN a package config that failed to parse', () => {
     it('WHEN its task is described THEN it contributes nothing and the root key is used', () => {
-      const description = describeTask([HUB_ERROR, BARE_ROOT], 'packages/hub', '@fx/hub#build');
+      const description = describeTask([HUB_ERROR, BARE_ROOT], 'packages/hub', '@fx/hub#build', 'build');
 
       expect(description).toBe('from root task');
     });
@@ -96,7 +96,7 @@ describe('FEATURE: task descriptions (rule 5)', () => {
 
   describe('GIVEN @fx/e2e-1 whose config is reached only through a non-root extends', () => {
     it('WHEN its task is described THEN the extended config contributes nothing', () => {
-      const description = describeTask([ATOMS], 'apps/e2e-1', '@fx/e2e-1#e2e-ci');
+      const description = describeTask([ATOMS], 'apps/e2e-1', '@fx/e2e-1#e2e-ci', 'e2e-ci');
 
       expect(description).toBeNull();
     });
@@ -104,15 +104,23 @@ describe('FEATURE: task descriptions (rule 5)', () => {
 
   describe('GIVEN empty configs and tasks named after Object.prototype members', () => {
     it('WHEN constructor is described through the root config THEN the description is null', () => {
-      const description = describeTask([EMPTY_ROOT], 'packages/hub', '@fx/hub#constructor');
+      const description = describeTask([EMPTY_ROOT], 'packages/hub', '@fx/hub#constructor', 'constructor');
 
       expect(description).toBeNull();
     });
 
     it('WHEN toString is described through the package config THEN the description is null', () => {
-      const description = describeTask([EMPTY_HUB], 'packages/hub', '@fx/hub#toString');
+      const description = describeTask([EMPTY_HUB], 'packages/hub', '@fx/hub#toString', 'toString');
 
       expect(description).toBeNull();
+    });
+  });
+
+  describe('GIVEN a package whose name holds a #', () => {
+    it('WHEN its task is described THEN the package config is looked up by the name after `<package>#`', () => {
+      const description = describeTask([HUB, ROOT], 'packages/hub', 'p#hub#build', 'build');
+
+      expect(description).toBe('from the package');
     });
   });
 });

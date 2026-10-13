@@ -170,10 +170,10 @@ describe('FEATURE: workspace cache file', () => {
       expect(read).toBeNull();
     });
 
-    it('WHEN its formatVersion is 2 THEN the read is null', async () => {
+    it('WHEN its formatVersion is 1, the version before the task-name fix THEN the read is null', async () => {
       const cacheDir = await writtenEntry();
 
-      await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'formatVersion', 2));
+      await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'formatVersion', 1));
 
       const read = await readCacheFile(cacheDir, ROOT);
 
