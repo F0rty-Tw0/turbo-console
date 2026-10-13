@@ -6,6 +6,10 @@ export { resolveTurbo } from './binary/domain-logic/resolve-turbo.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 export type { TurboBinary } from './binary/common/index.ts';
 
+export type { CachedWorkspace } from './cache/common/cache.type.ts';
+
+export { readCachedWorkspace } from './cache/domain-logic/read-cached-workspace.ts';
+
 export { TurboException } from './shared/errors/common/turbo.exception.ts';
 
 export type { TurboErrorKind } from './shared/errors/common/turbo-error.type.ts';

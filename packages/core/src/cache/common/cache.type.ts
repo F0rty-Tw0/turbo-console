@@ -16,3 +16,9 @@ export type CacheEntry = {
   readonly keyedPaths: string[];
   readonly model: WorkspaceModel;
 };
+
+/** A cached model, and whether its keyed files still hash to the key it was stored with. */
+export type CachedWorkspace = {
+  readonly model: WorkspaceModel;
+  readonly isFresh: boolean;
+};
