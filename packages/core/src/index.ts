@@ -14,6 +14,10 @@ export type { CachedWorkspace } from './cache/common/cache.type.ts';
 
 export { readCachedWorkspace } from './cache/domain-logic/read-cached-workspace.ts';
 
+export type { DryRunState } from './dry-run/common/dry-run-state.type.ts';
+
+export { readDryRun } from './dry-run/domain-logic/read-dry-run.ts';
+
 export { TurboException } from './shared/errors/common/turbo.exception.ts';
 
 export type { TurboErrorKind } from './shared/errors/common/turbo-error.type.ts';
