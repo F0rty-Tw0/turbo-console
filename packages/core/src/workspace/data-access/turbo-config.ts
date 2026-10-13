@@ -5,6 +5,7 @@ import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { errnoCode, isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { ioMessage } from '../../shared/errors/utils/turbo-message.util.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
+import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { TurboConfigError, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 import { packageConfigDirs } from '../utils/config-dir.util.ts';
 import { parseTurboConfig } from '../utils/turbo-config.util.ts';
@@ -16,8 +17,7 @@ const NOT_SMALL_FILE = 'not a regular file of at most 1 MiB';
 /** Each read holds a file open, so a graph of thousands of packages cannot run out of descriptors (EMFILE). */
 const MAX_CONCURRENT_READS = 16;
 
-const comparePaths = (left: TurboConfigFile, right: TurboConfigFile): number =>
-  Number(left.path > right.path) - Number(left.path < right.path);
+const comparePaths = (left: TurboConfigFile, right: TurboConfigFile): number => compareText(left.path, right.path);
 
 /** `text` is `null` for a FIFO, a directory or a file over 1 MiB: an error entry, never a throw. */
 const configOf = (path: string, text: string | null): TurboConfigFile => {

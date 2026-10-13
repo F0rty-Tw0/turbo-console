@@ -1,5 +1,6 @@
 import type { Manifest, ManifestPackage, ManifestTask, TaskKind } from '@turbo-console/repo-gen';
 
+import { compareText } from '../../../shared/text/utils/compare-text.util.ts';
 import { manifestDependencyPairs } from '../../../shared/turbo/test/utils/manifest.spec.util.ts';
 import type { PackageEdge, PackageNode, TaskNode, TaskNodeKind, WorkspaceModel } from '../../common/workspace-model.type.ts';
 import type { ModelProjection, ProjectedPackage, ProjectedTask } from '../common/manifest-model.type.ts';
@@ -11,8 +12,6 @@ const MODEL_KINDS: Partial<Record<TaskKind, TaskNodeKind>> = {
   aggregate: 'atom-aggregate',
   umbrella: 'atom-umbrella'
 };
-
-const compareText = (left: string, right: string): number => Number(left > right) - Number(left < right);
 
 const byId = (left: ProjectedTask, right: ProjectedTask): number => compareText(left.id, right.id);
 
