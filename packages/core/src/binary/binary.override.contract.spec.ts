@@ -88,6 +88,14 @@ describe.skipIf(process.platform === 'win32')('FEATURE: override turbo resolutio
       expect(turboSpawns(stub)).toBe(1);
     });
 
+    it('WHEN its path is given with a trailing separator THEN the file is resolved, without the separator', async () => {
+      const stub = await writeStub('trailing.sh', 'echo 2.11.7');
+
+      const resolved = await resolveStub(`${stub}/`);
+
+      expect(resolved).toMatchObject({ path: stub, version: '2.11.7', source: 'override' });
+    });
+
     it('WHEN its mtime changes between resolutions THEN --version is spawned again', async () => {
       const stub = await writeStub('touched.sh', 'echo 2.11.7');
       const later = new Date(Date.now() + 5000);
