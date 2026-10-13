@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { chmod, mkdir, mkdtemp, rm, stat, utimes, writeFile } from 'node:fs/promises';
 import type * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -51,13 +51,27 @@ const IS_POSIX = process.platform !== 'win32';
 /** More than the 16 reads kept in flight, so every worker takes several paths. */
 const MANY_FILES = 40;
 
+/** Writing and hashing `MANY_FILES` new files took longer than vitest's 5 s default on a Windows runner once. */
+const MANY_FILES_TIMEOUT_MS = 30_000;
+
+/**
+ * The in-flight case hashes its own files in this folder and counts only their reads. A timed-out earlier case keeps
+ * reading in the background through the shared `reads.beforeRead` hook, and once made the count 27 > 16.
+ */
+const BURST_DIR = 'burst';
+
 /** `MAX_CONCURRENT_READS` in keyed-files.ts: more open files at once risks EMFILE. */
 const MAX_READS_IN_FLIGHT = 16;
 
 const inFlight = { active: 0, peak: 0 };
 
-/** Holds each read for a timer tick and records how many reads are held at once. */
-const countInFlight = async (): Promise<void> => {
+/** Holds each read of a `BURST_DIR` file for a timer tick and records how many such reads are held at once. */
+const countInFlight = async (path: string): Promise<void> => {
+  const folder = basename(dirname(path));
+  const isBurst = folder === BURST_DIR;
+
+  if (!isBurst) return;
+
   inFlight.active += 1;
   inFlight.peak = Math.max(inFlight.peak, inFlight.active);
   await delay(1);
@@ -88,6 +102,8 @@ const markerFile = (path: string, digest: string): KeyedFile => {
 
 const manyName = (_: unknown, index: number): string => `many/file-${String(index).padStart(2, '0')}.txt`;
 
+const burstName = (_: unknown, index: number): string => `${BURST_DIR}/file-${String(index).padStart(2, '0')}.txt`;
+
 const writeMany = async (path: string): Promise<void> => writeFile(join(root, path), path);
 
 /** Sets `path`'s mtime to `EDITED_AT_S`, as an edit landing during the read would. */
@@ -105,6 +121,7 @@ describe('FEATURE: keyed file hashing', () => {
   beforeAll(async () => {
     root = await mkdtemp(join(tmpdir(), 'keyed-files-'));
     await mkdir(join(root, 'many'));
+    await mkdir(join(root, BURST_DIR));
     await mkdir(join(root, 'dir'));
     await writeFile(join(root, 'package.json'), '{"name":"root"}');
     await writeFile(join(root, 'empty.txt'), '');
@@ -201,7 +218,7 @@ describe('FEATURE: keyed file hashing', () => {
   });
 
   describe('GIVEN more paths than reads kept in flight', () => {
-    it('WHEN they are hashed THEN each is hashed and listed in input order', async () => {
+    it('WHEN they are hashed THEN each is hashed and listed in input order', { timeout: MANY_FILES_TIMEOUT_MS }, async () => {
       const names = Array.from({ length: MANY_FILES }, manyName);
       const paths = names.toReversed();
       const expected = paths.map(hashedAs);
@@ -213,8 +230,8 @@ describe('FEATURE: keyed file hashing', () => {
       expect(files).toMatchObject(expected);
     });
 
-    it('WHEN they are hashed THEN at most 16 reads are in flight at once', async () => {
-      const names = Array.from({ length: MANY_FILES }, manyName);
+    it('WHEN they are hashed THEN at most 16 reads are in flight at once', { timeout: MANY_FILES_TIMEOUT_MS }, async () => {
+      const names = Array.from({ length: MANY_FILES }, burstName);
 
       await Promise.all(names.map(writeMany));
       reads.beforeRead = countInFlight;
