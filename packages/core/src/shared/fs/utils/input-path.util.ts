@@ -1,7 +1,7 @@
 import type { PlatformPath } from 'node:path';
 
-import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
-import { plainPath } from '../../shared/errors/utils/turbo-message.util.ts';
+import { TurboException } from '../../errors/common/turbo.exception.ts';
+import { plainPath } from '../../errors/utils/turbo-message.util.ts';
 
 /** A drive (`C:\`) or UNC (`\\server\share\`) root; a bare `\` is one character. */
 const MIN_WINDOWS_ROOT_LENGTH = 2;
