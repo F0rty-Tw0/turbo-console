@@ -13,7 +13,9 @@ import type {
   PackageEdge,
   PackageGraph,
   PackageNode,
+  RunMatch,
   RunSummary,
+  RunToMatch,
   TaskNode,
   TurboBinary,
   TurboErrorKind,
@@ -36,6 +38,7 @@ const RUNTIME_EXPORTS = [
   'affectedTasksSchema',
   'dryRunSchema',
   'loadWorkspace',
+  'matchRunSummary',
   'packageGraphSchema',
   'readAffected',
   'readCachedWorkspace',
@@ -72,6 +75,8 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<DryRun>().toHaveProperty('tasks');
       expectTypeOf<PackageGraph>().toHaveProperty('data');
       expectTypeOf<RunSummary>().toHaveProperty('execution');
+      expectTypeOf<RunToMatch>().toHaveProperty('launchedAt');
+      expectTypeOf<RunMatch['cache']>().toEqualTypeOf<'HIT' | 'MISS' | null>();
       expectTypeOf<TurboVersionRange>().toHaveProperty('maxExclusive');
     });
 

@@ -18,6 +18,10 @@ export type { DryRunState } from './dry-run/common/dry-run-state.type.ts';
 
 export { readDryRun } from './dry-run/domain-logic/read-dry-run.ts';
 
+export type { RunMatch, RunToMatch } from './run-summary/common/run-match.type.ts';
+
+export { matchRunSummary } from './run-summary/domain-logic/match-run-summary.ts';
+
 export { readNewestRunSummary } from './run-summary/domain-logic/read-newest-run-summary.ts';
 
 export type { RunAllOptions } from './run-args/common/run-args.type.ts';
