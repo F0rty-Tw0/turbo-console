@@ -10,7 +10,7 @@ export type KeyedFile = {
   readonly mtimeMs: number | null;
 };
 
-/** A model with the key of the files it was built from (`null`: one changed during the build, never fresh). */
+/** A model with the key of the files it was built from (`null`: one changed or a manifest vanished during the build, never fresh). */
 export type CacheEntry = {
   readonly key: string | null;
   readonly keyedPaths: string[];
