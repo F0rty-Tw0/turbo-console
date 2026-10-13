@@ -274,4 +274,16 @@ describe('FEATURE: workspace model build', () => {
       expect(graph).toStrictEqual(before);
     });
   });
+
+  describe('GIVEN a package whose name holds a # and a package config describing build', () => {
+    it('WHEN built THEN the task gets the description', () => {
+      const descriptions = { build: 'Builds p#b' };
+      const config: TurboConfigOk = { path: 'packages/pb/turbo.json', descriptions, affectedUsingTaskInputs: false };
+      const pkg = graphPackage('p#b', 'packages/pb', [], [graphTask('p#b#build', COMMAND, [], [])]);
+
+      const model = build([pkg], [], [config]);
+
+      expect(taskOf(model, 'p#b#build')?.description).toBe('Builds p#b');
+    });
+  });
 });
