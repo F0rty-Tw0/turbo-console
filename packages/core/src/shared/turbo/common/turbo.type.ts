@@ -7,6 +7,12 @@ import type { runSummarySchema } from './run-summary.schema.ts';
 
 export type PackageGraph = z.infer<typeof packageGraphSchema>;
 
+/** One package as `packageGraph.nodes` lists it. */
+export type GraphPackage = PackageGraph['data']['packageGraph']['nodes']['items'][number];
+
+/** One task as `packageGraph` lists it under its package. */
+export type GraphTask = GraphPackage['tasks']['items'][number];
+
 export type AffectedTasks = z.infer<typeof affectedTasksSchema>;
 
 export type DryRun = z.infer<typeof dryRunSchema>;

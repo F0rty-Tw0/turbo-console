@@ -6,7 +6,7 @@ import { planPackages } from './plan-packages.util.ts';
 import { planTasks } from './plan-tasks.util.ts';
 import { createPrng } from './prng.util.ts';
 import { PRESETS } from '../common/fixture.const.ts';
-import type { FixturePlan, ManifestTask, PackagePlan, TaskKind } from '../common/fixture.type.ts';
+import type { FixturePlan, ManifestAtom, ManifestTask, PackagePlan, TaskKind } from '../common/fixture.type.ts';
 import { ATOM_GROUP_PLAN_STUB, FIXTURE_SPEC_STUB, PACKAGE_PLAN_STUB } from '../test/stubs/fixture.stub.ts';
 
 const kindCounts = (tasks: ManifestTask[]): Partial<Record<TaskKind, number>> => {
@@ -45,6 +45,7 @@ describe('FEATURE: manifest building', () => {
       const taskOf = (fullName: string): ManifestTask | undefined => manifest.tasks.find((task) => task.fullName === fullName);
       const rowOf = (task: ManifestTask): [string, TaskKind, boolean] => [task.taskName, task.kind, task.visible];
       const dependenciesOf = (fullName: string): string[] | undefined => taskOf(fullName)?.dependencies;
+      const atomOf = (fullName: string): ManifestAtom | null | undefined => taskOf(fullName)?.atom;
       const tasksOf = (packageName: string): ManifestTask[] => manifest.tasks.filter((task) => task.packageName === packageName);
 
       it('THEN the packages are the planned ones, then the test and definitions packages', () => {
@@ -65,7 +66,8 @@ describe('FEATURE: manifest building', () => {
           taskName: 'lint',
           kind: 'phantom',
           dependencies: [],
-          visible: false
+          visible: false,
+          atom: null
         };
 
         expect(taskOf('@fx/pkg-001#lint')).toStrictEqual(lint);
@@ -143,6 +145,40 @@ describe('FEATURE: manifest building', () => {
           ['@fx/e2e-1-atoms#e2e-ci--tests/spec-001.spec.ts', '@fx/e2e-1-atoms#e2e-ci--tests/spec-002.live.spec.ts'],
           ['@fx/e2e-1#e2e-ci--all']
         ]);
+      });
+
+      it('THEN a file task carries its group and whether its spec file is live', () => {
+        const atoms = [
+          atomOf('@fx/e2e-1#e2e-ci--tests/spec-002.live.spec.ts'),
+          atomOf('@fx/e2e-1#e2e-ci--tests/spec-001.spec.ts'),
+          atomOf('@fx/e2e-1-atoms#e2e-ci--tests/spec-002.live.spec.ts')
+        ];
+
+        expect(atoms).toStrictEqual([
+          { group: 'e2e-ci', isLive: true },
+          { group: 'e2e-ci', isLive: false },
+          { group: 'e2e-ci', isLive: true }
+        ]);
+      });
+
+      it('THEN the aggregate and the umbrella carry the group and are never live', () => {
+        const atoms = [atomOf('@fx/e2e-1#e2e-ci--all'), atomOf('@fx/e2e-1#e2e-ci'), atomOf('@fx/e2e-1-atoms#e2e-ci--all')];
+
+        expect(atoms).toStrictEqual([
+          { group: 'e2e-ci', isLive: false },
+          { group: 'e2e-ci', isLive: false },
+          { group: 'e2e-ci', isLive: false }
+        ]);
+      });
+
+      it('THEN carriers and root tasks carry no atom', () => {
+        const atoms = [
+          atomOf('@fx/e2e-1#e2e-ci-src--tests/spec-002.live.spec.ts'),
+          atomOf('@fx/e2e-1-atoms#e2e-ci-src--tests/spec-001.spec.ts'),
+          atomOf('@fx/pkg-001#build')
+        ];
+
+        expect(atoms).toStrictEqual([null, null, null]);
       });
     });
   });

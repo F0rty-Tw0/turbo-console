@@ -12,6 +12,7 @@ export type {
   FixtureHandle,
   FixtureSpec,
   Manifest,
+  ManifestAtom,
   ManifestPackage,
   ManifestTask,
   PackageRole,
