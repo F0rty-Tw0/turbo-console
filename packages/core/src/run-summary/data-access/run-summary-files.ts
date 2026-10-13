@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { errnoCode, isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { ioMessage } from '../../shared/errors/utils/turbo-message.util.ts';
+import { READ_NO_FOLLOW } from '../../shared/fs/common/open-flags.const.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
 import { isWithin } from '../../shared/fs/utils/path-within.util.ts';
 import { runSummarySchema } from '../../shared/turbo/common/run-summary.schema.ts';
@@ -112,12 +113,12 @@ export const listRunSummaryFiles = async (root: string): Promise<RunSummaryFile[
 };
 
 /**
- * `<root>/.turbo/runs/<name>` parsed with `runSummarySchema`; `null` when it cannot be read, is not a regular file of at
- * most `MAX_SUMMARY_BYTES`, is not JSON or breaks the schema.
+ * `<root>/.turbo/runs/<name>` parsed with `runSummarySchema`; `null` when it cannot be read, is a symlink (where the
+ * platform has `O_NOFOLLOW`), is not a regular file of at most `MAX_SUMMARY_BYTES`, is not JSON or breaks the schema.
  */
 export const readRunSummaryFile = async (root: string, name: string): Promise<RunSummary | null> => {
   try {
-    const text = await readSmallFile(join(runsDirOf(root), name), MAX_SUMMARY_BYTES);
+    const text = await readSmallFile(join(runsDirOf(root), name), MAX_SUMMARY_BYTES, READ_NO_FOLLOW);
 
     if (text === null) return null;
 

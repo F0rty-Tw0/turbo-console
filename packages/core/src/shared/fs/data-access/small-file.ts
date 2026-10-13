@@ -59,12 +59,12 @@ const textOf = async (handle: FileHandle, maxBytes: number): Promise<string | nu
 
 /**
  * The UTF-8 text of `path` when it is a regular file of at most `maxBytes` (1 MiB by default), else `null`; a FIFO
- * never blocks the read. Other failures reject with the raw error: `open`'s carries the path, a `FileHandle` error (a
- * failed close among them) does not, so the caller names the path. A close failing after a `null` or a failed read is
- * ignored.
+ * never blocks the read. It is opened with `flags`, `READ_NON_BLOCKING` by default. Other failures reject with the raw
+ * error: `open`'s carries the path, a `FileHandle` error (a failed close among them) does not, so the caller names the
+ * path. A close failing after a `null` or a failed read is ignored.
  */
-export const readSmallFile = async (path: string, maxBytes = MAX_FILE_BYTES): Promise<string | null> => {
-  const handle = await open(path, READ_NON_BLOCKING);
+export const readSmallFile = async (path: string, maxBytes = MAX_FILE_BYTES, flags = READ_NON_BLOCKING): Promise<string | null> => {
+  const handle = await open(path, flags);
 
   try {
     const text = await textOf(handle, maxBytes);
