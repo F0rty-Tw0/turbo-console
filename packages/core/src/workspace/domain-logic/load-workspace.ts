@@ -1,5 +1,8 @@
+import * as nodePath from 'node:path';
+
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../../binary/common/index.ts';
+import { absolutePath } from '../../binary/utils/input-path.util.ts';
 import { storeWorkspace } from '../../cache/data-access/store-workspace.ts';
 import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts';
 import { packageGraphSchema } from '../../shared/turbo/common/package-graph.schema.ts';
@@ -22,6 +25,13 @@ const COMMAND = 'query packageGraph';
 const QUERY_MAX_BUFFER = 128 * 1024 * 1024;
 
 const configDirOf = (pkg: GraphPackage): string => toPosixPath(pkg.path);
+
+/** `cacheDir` resolved, or `undefined` when none is given; an empty, relative or driveless one throws `invalid-argument`. */
+const cacheDirOf = (cacheDir: string | undefined): string | undefined => {
+  if (cacheDir === undefined) return undefined;
+
+  return absolutePath(cacheDir, 'cacheDir', nodePath);
+};
 
 /**
  * `start()`'s result, unless `signal` aborts first: then `runTurbo`'s `AbortError`. Not started when `signal` already
@@ -52,7 +62,8 @@ const untilAborted = async (start: () => Promise<TurboConfigFile[]>, signal: Abo
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
  * changes nothing the cache holds. The caller's `signal` reaches the spawn and the reads, and is checked once more
  * before the store: an abort by then stores nothing, one during the store does not stop it. Rejects with
- * `TurboException` only: `failed` (turbo exits non-zero, times out, overflows the stdout cap, or the caller aborts),
+ * `TurboException` only: `invalid-argument` (a `cacheDir` that is empty, relative or, on Windows, driveless, checked
+ * before the spawn), `failed` (turbo exits non-zero, times out, overflows the stdout cap, or the caller aborts),
  * `invalid-output` (stdout is not JSON or breaks `packageGraphSchema`), `io` (the root is missing, not a directory or
  * not searchable, so `checkCwd` refuses the spawn, or a config cannot be read), or `not-found` (the binary is no longer
  * runnable).
@@ -64,6 +75,7 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
   const spawnStartedAt = Date.now();
 
   try {
+    const dir = cacheDirOf(cacheDir);
     const graph = await runTurboJson(run, COMMAND, packageGraphSchema);
     const packages = graph.data.packageGraph.nodes.items;
     const dirs = packages.map(configDirOf);
@@ -73,7 +85,7 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
 
     if (signal?.aborted === true) throw abortError(signal, '');
 
-    const writeError = await storeWorkspace(model, packages, spawnStartedAt, cacheDir);
+    const writeError = await storeWorkspace(model, packages, spawnStartedAt, dir);
     const ownModel = structuredClone(model);
 
     if (writeError === null) return ownModel;

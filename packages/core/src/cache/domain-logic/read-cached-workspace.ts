@@ -1,5 +1,8 @@
+import * as nodePath from 'node:path';
+
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../../binary/common/index.ts';
+import { absolutePath } from '../../binary/utils/input-path.util.ts';
 import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts';
 import type { CachedWorkspace } from '../common/cache.type.ts';
 import { hashKeyedFiles } from '../data-access/keyed-files.ts';
@@ -14,11 +17,13 @@ const COMMAND = 'cache read';
  * stale model is still returned, for the caller to show while it reloads. The caller gets its own copy of the model:
  * changing it changes nothing the cache holds. `cacheDir` must be the editor's own storage, never inside the workspace:
  * a cloned repo could ship a pre-keyed cache file that reads as fresh, and turbo would never run. Rejects with
- * `TurboException` only.
+ * `TurboException` only: `invalid-argument`, before memory or disk is read, when `cacheDir` is empty, relative or (on
+ * Windows) driveless, so it cannot resolve against the host's cwd.
  */
 export const readCachedWorkspace = async (binary: TurboBinary, cacheDir: string): Promise<CachedWorkspace | null> => {
   try {
-    const entry = await findEntry(binary.root, cacheDir);
+    const dir = absolutePath(cacheDir, 'cacheDir', nodePath);
+    const entry = await findEntry(binary.root, dir);
 
     if (entry === null) return null;
 

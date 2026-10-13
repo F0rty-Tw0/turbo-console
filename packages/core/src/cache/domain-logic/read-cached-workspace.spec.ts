@@ -165,6 +165,18 @@ describe('FEATURE: cached workspace read', () => {
     });
   });
 
+  describe('GIVEN a workspace stored in memory and a cache dir that is not absolute', () => {
+    it.each(['', 'cache dir'])('WHEN read with %j THEN it rejects invalid-argument instead of returning the entry', async (cacheDir) => {
+      const root = await newRoot();
+
+      await storeWorkspace(modelAt(root), PACKAGES, Date.now(), undefined);
+
+      const reading = readCachedWorkspace(binaryAt(root), cacheDir);
+
+      await expect(reading).rejects.toMatchObject({ kind: 'invalid-argument', message: `cacheDir must be absolute: ${cacheDir}` });
+    });
+  });
+
   describe('GIVEN a root with no entry in memory or on disk', () => {
     it('WHEN read THEN it is null', async () => {
       const root = await newRoot();

@@ -1,4 +1,5 @@
 import { getEventListeners } from 'node:events';
+import { resolve } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -99,7 +100,8 @@ const GRAPH = packageGraph([WINDOWS_PACKAGE], []);
 
 const ABORTED = 'turbo query packageGraph was aborted';
 
-const CACHE_DIR = '/cache';
+/** Absolute on every OS: a driveless `/cache` is `invalid-argument` on Windows. */
+const CACHE_DIR = resolve('/cache');
 
 const WRITE_ERROR = '/cache: workspace model too large to cache';
 
@@ -175,6 +177,21 @@ describe('FEATURE: workspace loading', () => {
       const model = await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
 
       expect(model.warnings).toStrictEqual(['packages/a/turbo.json: x']);
+    });
+  });
+
+  describe('GIVEN a cache dir that is not absolute', () => {
+    it.each(['', 'cache dir'])('WHEN loaded with %j THEN it rejects invalid-argument', async (cacheDir) => {
+      const loading = loadWorkspace(BINARY, { cacheDir });
+
+      await expect(loading).rejects.toMatchObject({ kind: 'invalid-argument', message: `cacheDir must be absolute: ${cacheDir}` });
+    });
+
+    it.each(['', 'cache dir'])('WHEN loaded with %j THEN turbo is not spawned', async (cacheDir) => {
+      const loading = loadWorkspace(BINARY, { cacheDir });
+
+      await expect(loading).rejects.toBeInstanceOf(TurboException);
+      expect(turbo.queryArgs).toStrictEqual([]);
     });
   });
 
