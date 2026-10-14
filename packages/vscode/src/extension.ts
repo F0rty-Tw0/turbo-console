@@ -4,14 +4,17 @@ import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/roo
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
-import { editorRunPorts } from './run/data-access/run-ports.ts';
-import { forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
+import { editorRunAllPorts, editorRunPorts } from './run/data-access/run-ports.ts';
+import { forwardRunAllEvents, forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
 import { RunSession } from './run/domain-logic/run-session.ts';
 import { registerPickers } from './run/feature/register-pickers.ts';
+import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
 import type { Timings, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
+import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
+import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
 import { currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
 import { watchRoot } from './watch/data-access/root-watchers.ts';
@@ -38,7 +41,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
   const tree = new PackagesTreeProvider(session.store, runSession.runs.get, currentTreeMode(), timings.treeVisible);
   const whenIdle = async (root: string): Promise<void> => session.whenIdle(root);
-  const api: TurboConsoleApi = { tree, runs: runSession.runs, timings, loads: session.loads, whenIdle };
+  const commands = new FixedViewProvider(COMMAND_ITEMS);
+  const help = new FixedViewProvider(HELP_ITEMS);
+  const api: TurboConsoleApi = { tree, commands, help, runs: runSession.runs, timings, loads: session.loads, whenIdle };
   const disposeSession = (): void => {
     session.dispose();
   };
@@ -58,7 +63,14 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
 
     const pickers = registerPickers(runSession, session.store, vscode.commands.registerCommand);
 
-    context.subscriptions.push(watchers, runs, pickers, forwardTaskEvents(runSession));
+    const runAll = registerRunAll(
+      session.store,
+      editorRunAllPorts(session.store, output),
+      forwardRunAllEvents,
+      vscode.commands.registerCommand
+    );
+
+    context.subscriptions.push(watchers, runs, pickers, runAll, registerFixedViews(commands, help), forwardTaskEvents(runSession));
 
     await registerRoots(context, session, onRoots, output.error);
   }
