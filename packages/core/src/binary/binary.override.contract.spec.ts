@@ -88,6 +88,26 @@ describe.skipIf(process.platform === 'win32')('FEATURE: override turbo resolutio
       expect(turboSpawns(stub)).toBe(1);
     });
 
+    it('WHEN the first of two callers aborts mid-spawn THEN the other still gets the version from that one spawn', async () => {
+      const stub = await writeStub('superseded.sh', 'sleep 0.5\necho 2.11.7');
+      const first = new AbortController();
+      const firstOptions = { trusted: true, overridePath: stub, signal: first.signal } as const;
+      const secondOptions = { trusted: true, overridePath: stub, signal: new AbortController().signal } as const;
+      const firstResolving = rejectionOf(resolveTurbo(tempDir, firstOptions));
+      const secondResolving = resolveTurbo(tempDir, secondOptions);
+
+      await vi.waitFor(() => {
+        expect(turboSpawns(stub)).toBe(1);
+      });
+      first.abort();
+
+      const [firstError, second] = await Promise.all([firstResolving, secondResolving]);
+
+      expect(firstError).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
+      expect(second.version).toBe('2.11.7');
+      expect(turboSpawns(stub)).toBe(1);
+    });
+
     it('WHEN its path is given with a trailing separator THEN the file is resolved, without the separator', async () => {
       const stub = await writeStub('trailing.sh', 'echo 2.11.7');
 
@@ -132,6 +152,26 @@ describe.skipIf(process.platform === 'win32')('FEATURE: override turbo resolutio
       const error = await rejectionOf(resolveTurbo(tempDir, options));
 
       expect(error).toBeInstanceOf(TurboException);
+      expect(error).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
+    });
+
+    it('WHEN its version is cached and the caller has aborted THEN it rejects aborted with no new spawn', async () => {
+      const stub = await writeStub('cached-aborted.sh', 'echo 2.11.7');
+      const options = { trusted: true, overridePath: stub, signal: AbortSignal.abort() } as const;
+
+      await resolveStub(stub);
+
+      const error = await rejectionOf(resolveTurbo(tempDir, options));
+
+      expect(error).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
+      expect(turboSpawns(stub)).toBe(1);
+    });
+
+    it('WHEN it is missing and the caller has aborted THEN the abort wins over not-found', async () => {
+      const options = { trusted: true, overridePath: join(tempDir, 'absent.sh'), signal: AbortSignal.abort() } as const;
+
+      const error = await rejectionOf(resolveTurbo(tempDir, options));
+
       expect(error).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
     });
 
