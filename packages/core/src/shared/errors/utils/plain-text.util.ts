@@ -16,22 +16,32 @@ const isPrintable = (char: string): boolean => !DROPPED.test(char);
 const isLineText = (char: string): boolean => isPrintable(char) || char === '\n' || char === '\t';
 
 const OSC_START = '\u001B]';
-const OSC_ENDS = ['\u0007', '\u001B\\'];
 
-/** Index just past the first `end` in `text`; `Infinity` when there is none. */
-const pastFirst = (text: string, end: string): number => {
-  const at = text.indexOf(end);
-  const past = at + end.length;
+/**
+ * What ends an OSC, as a terminal ends it, and how many of its UTF-16 units belong to the OSC: ST (`ESC \`, or 8-bit
+ * U+009C) and BEL end it; CAN and SUB abort it; another ESC aborts it and starts its own sequence; a newline is kept, so
+ * a stray `ESC ]` hides at most the rest of its line.
+ */
+const OSC_ENDS = [
+  { end: '\u001B\\', length: 2 },
+  { end: '\u009C', length: 1 },
+  { end: '\u0007', length: 1 },
+  { end: '\u0018', length: 1 },
+  { end: '\u001A', length: 1 },
+  { end: '\u001B', length: 0 },
+  { end: '\n', length: 0 },
+];
 
-  return at < 0 ? Infinity : past;
-};
-
-/** The rest of `part`, which follows an OSC start, after the first OSC terminator; `''` when none ends it. */
+/** The rest of `part`, which follows an OSC start, after the OSC's end; `''` when nothing ends it. */
 const afterOsc = (part: string): string => {
-  const ends = OSC_ENDS.map((end) => pastFirst(part, end));
-  const endsAt = Math.min(...ends);
+  const ats = OSC_ENDS.map(({ end }) => part.indexOf(end));
+  const found = ats.filter((at) => at >= 0);
+  const firstAt = Math.min(...found);
+  const endsThere = OSC_ENDS.filter((_, i) => ats[i] === firstAt);
+  const lengths = endsThere.map(({ length }) => length);
+  const length = Math.max(0, ...lengths);
 
-  return part.slice(endsAt);
+  return part.slice(firstAt + length);
 };
 
 /**
@@ -41,7 +51,6 @@ const afterOsc = (part: string): string => {
 const withoutOsc = (text: string): string => {
   const [head, ...oscs] = text.split(OSC_START);
   const rests = oscs.map(afterOsc);
-
   const parts = [head, ...rests];
 
   return parts.join('');
