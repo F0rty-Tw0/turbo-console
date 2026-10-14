@@ -76,15 +76,33 @@ const clearPid = async (stub: StubName): Promise<void> => {
 
 const startStub = async (stub: StubName, options: RunTurboOptions): Promise<TurboResult> => runTurbo(stubFile(stub, 'sh'), [], stubDir, options);
 
+/** `options` with a signal that also aborts on `stop`. */
+const stoppable = (options: RunTurboOptions, stop: AbortSignal): RunTurboOptions => {
+  const signals = [stop];
+
+  if (options.signal !== undefined) signals.push(options.signal);
+
+  const stoppableOptions: RunTurboOptions = { ...options, signal: AbortSignal.any(signals) };
+
+  return stoppableOptions;
+};
+
 /**
  * Runs the stub until runTurbo rejects, calling `onStarted` once the stub's pid (and so its trap) is in place; whether
- * the stub's shell still exists is probed as the rejection lands.
+ * the stub's shell still exists is probed as the rejection lands. A stub that never writes its pid is aborted before
+ * the wait's error is rethrown, so it can't outlive the test.
  */
 const runUntilAborted = async (stub: StubName, options: RunTurboOptions, onStarted: () => void = noop): Promise<AbortOutcome> => {
   await clearPid(stub);
+  const stop = new AbortController();
   const startedAt = performance.now();
-  const run = startStub(stub, options);
-  const pid = await vi.waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 });
+  const run = startStub(stub, stoppable(options, stop.signal));
+  const pid = await vi.waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 }).catch(async (error: unknown) => {
+    stop.abort();
+    await run.catch(noop);
+
+    throw error;
+  });
 
   onStarted();
 
