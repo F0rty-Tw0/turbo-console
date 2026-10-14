@@ -54,6 +54,12 @@ describe('FEATURE: run to match of an entry', () => {
 
       expect(runToMatchOf(ENDED)).toStrictEqual(expected);
     });
+
+    it('WHEN its process started after the launch THEN the window still starts at the launch', () => {
+      const entry: RunEntry = { ...ENDED, processStartedAt: 1200 };
+
+      expect(runToMatchOf(entry)?.launchedAt).toBe(1000);
+    });
   });
 
   describe('GIVEN an entry missing part of its end', () => {
