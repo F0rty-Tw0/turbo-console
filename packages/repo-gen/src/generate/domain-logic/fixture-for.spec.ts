@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fixtureFor } from './fixture-for.ts';
+import { fixtureFor, warmFixtureCache } from './fixture-for.ts';
 import { PRESETS } from '../common/fixture.const.ts';
 import type { FixtureHandle, FixtureSpec } from '../common/fixture.type.ts';
 import { pathExists } from '../data-access/fixture-files.ts';
@@ -73,6 +73,27 @@ describe('FEATURE: cached fixture handles', () => {
         expect(entries).toHaveLength(1);
         expect(entries[0]).toMatch(/^[0-9a-f]{64}$/);
       });
+    });
+  });
+
+  describe('GIVEN an empty fixture cache warmed for a spec', () => {
+    beforeEach(async () => {
+      await warmFixtureCache(TARGET_LIKE);
+    });
+
+    it('WHEN the warm-up resolves THEN the temp root holds only the cache, with one entry', async () => {
+      const rootEntries = await readdir(root);
+      const cacheEntries = await readdir(join(root, CACHE_ROOT_NAME));
+
+      expect(rootEntries).toStrictEqual([CACHE_ROOT_NAME]);
+      expect(cacheEntries).toHaveLength(1);
+    });
+
+    it('WHEN the spec is then requested THEN it is served from that entry', async () => {
+      handles = [await fixtureFor(TARGET_LIKE)];
+      const entries = await readdir(join(root, CACHE_ROOT_NAME));
+
+      expect(entries).toHaveLength(1);
     });
   });
 
