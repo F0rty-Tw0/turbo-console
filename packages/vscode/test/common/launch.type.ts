@@ -75,6 +75,7 @@ export type ShownTask = {
   readonly fullName: string;
   readonly packageName: string;
   readonly kind: TaskKind;
+  readonly dependencies: string[];
   readonly visible: boolean;
 };
 
