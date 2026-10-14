@@ -13,11 +13,12 @@ const definitionOf = (request: RunRequest): RunDefinition => {
 };
 
 /**
- * Ends a run whose process never started and tells the user; nothing for a run no longer running. Also the
- * `onDidEndTask` handler: a run still running when its task ends never saw its process end (spec §4.5 step 5).
+ * Ends a run whose process never started and tells the user; nothing for a run no longer running, or, with
+ * `launchedAt`, for another run of the task. Also the `onDidEndTask` handler (no `launchedAt`, the current run): a
+ * run still running when its task ends never saw its process end (spec §4.5 step 5).
  */
-export const failStart = (store: Runs, ports: RunPorts, definition: RunDefinition): void => {
-  const failed = store.failStart(definition, ports.now());
+export const failStart = (store: Runs, ports: RunPorts, definition: RunDefinition, launchedAt?: number): void => {
+  const failed = store.failStart(definition, ports.now(), launchedAt);
 
   if (failed !== null) ports.notifyFailedToStart();
 };
@@ -51,7 +52,7 @@ const onStartTimeout = (store: Runs, ports: RunPorts, definition: RunDefinition,
   const entry = store.get(definition.root, definition.id);
   const isWaiting = entry?.state === 'running' && entry.processStartedAt === null && entry.launchedAt === launchedAt;
 
-  if (isWaiting) failStart(store, ports, definition);
+  if (isWaiting) failStart(store, ports, definition, launchedAt);
 };
 
 /**
@@ -72,7 +73,7 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
   const execution = await launch(ports, request);
 
   if (execution === null) {
-    failStart(store, ports, definition);
+    failStart(store, ports, definition, launchedAt);
 
     return;
   }

@@ -95,6 +95,23 @@ describe('FEATURE: run flow, matching a run summary', () => {
     });
   });
 
+  describe('GIVEN run 1 ended, then run 2 started and ended before run 1 match arrived', () => {
+    it('WHEN run 1 match arrives THEN run 2 does not get it', async () => {
+      const match = vi.fn().mockResolvedValue(MATCH);
+      const later = fakeRunPorts(execution, { match, now: () => 5000 });
+
+      await runTask(store, ports, RUN_REQUEST_STUB);
+      const first = endedEntry(store, 0);
+
+      await runTask(store, later, RUN_REQUEST_STUB);
+      store.processEnded(RUN, 1, 6000);
+
+      await finishRun(store, later, first);
+
+      expect(store.get('/ws', 'build')).toMatchObject({ launchedAt: 5000, match: null, matching: true });
+    });
+  });
+
   describe('GIVEN a run whose process ended with no exit code', () => {
     it('WHEN it is finished THEN no summary is asked for', async () => {
       await runTask(store, ports, RUN_REQUEST_STUB);

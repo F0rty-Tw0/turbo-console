@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { runTask } from './run-flow.ts';
+import { failStart, runTask } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
 import type { RunDefinition, RunPorts, RunRequest, Terminable } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
@@ -77,6 +77,63 @@ describe('FEATURE: run flow, starting a run', () => {
       store.requestStop(RUN);
       launch.resolve(execution);
       await running;
+
+      expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN run 1 launch is pending, then run 1 task ends and run 2 starts', () => {
+    let first: RunPorts;
+
+    beforeEach(async () => {
+      const launch = Promise.withResolvers<Terminable>();
+      const execute = vi.fn().mockReturnValueOnce(launch.promise).mockResolvedValue(execution);
+      const second = fakeRunPorts(execution, { execute, now: () => 5000 });
+
+      first = fakeRunPorts(execution, { execute });
+
+      const running = runTask(store, first, RUN_REQUEST_STUB);
+
+      await vi.waitUntil(() => execute.mock.calls.length > 0);
+      failStart(store, first, RUN);
+      await runTask(store, second, RUN_REQUEST_STUB);
+      launch.reject(new Error('late'));
+      await running;
+    });
+
+    it('WHEN run 1 launch rejects late THEN run 2 keeps running', () => {
+      expect(store.get('/ws', 'build')).toMatchObject({ launchedAt: 5000, state: 'running' });
+    });
+
+    it('WHEN run 1 launch rejects late THEN the user is told only of run 1', () => {
+      expect(first.notifyFailedToStart).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN run 1 launch is pending, then run 1 task ends and run 2 starts with its own execution', () => {
+    let late: Terminable;
+
+    beforeEach(async () => {
+      const launch = Promise.withResolvers<Terminable>();
+      const execute = vi.fn().mockReturnValueOnce(launch.promise).mockResolvedValue(execution);
+      const first = fakeRunPorts(execution, { execute });
+      const second = fakeRunPorts(execution, { execute, now: () => 5000 });
+      const running = runTask(store, first, RUN_REQUEST_STUB);
+
+      late = { terminate: vi.fn() };
+      await vi.waitUntil(() => execute.mock.calls.length > 0);
+      failStart(store, first, RUN);
+      await runTask(store, second, RUN_REQUEST_STUB);
+      launch.resolve(late);
+      await running;
+    });
+
+    it('WHEN run 1 execution arrives late THEN it is terminated', () => {
+      expect(late.terminate).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN run 2 is stopped after run 1 execution arrived late THEN run 2 execution is terminated', () => {
+      store.requestStop(RUN);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
