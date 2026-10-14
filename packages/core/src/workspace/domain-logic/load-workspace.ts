@@ -58,10 +58,11 @@ const refuseHostile = (rootFiles: KeyedFile[]): void => {
 
 /**
  * `start()`'s result, unless `signal` aborts first: then `runTurbo`'s `AbortError`. Not started when `signal` already
- * aborted; an abort while it runs rejects at once, so reads hung on a slow filesystem cannot hold it back (they are
- * left to finish). The abort listener is removed either way.
+ * aborted, so the caller's abort wins over any error `start()` or a check of its result would raise; an abort while it
+ * runs rejects at once, so reads hung on a slow filesystem cannot hold it back (they are left to finish). The abort
+ * listener is removed either way.
  */
-const untilAborted = async (start: () => Promise<TurboConfigFile[]>, signal: AbortSignal | undefined): Promise<TurboConfigFile[]> => {
+const untilAborted = async <T>(start: () => Promise<T>, signal: AbortSignal | undefined): Promise<T> => {
   if (signal === undefined) return start();
 
   if (signal.aborted) throw abortError(signal, '');
@@ -83,14 +84,15 @@ const untilAborted = async (start: () => Promise<TurboConfigFile[]>, signal: Abo
  * graph package (hidden ones included), the pure model build, then the model keyed and kept in memory, and written to
  * `cacheDir` when one is given. A failed write does not fail the load: the returned model, and only it, gains a
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
- * changes nothing the cache holds. The caller's `signal` reaches the spawn and the reads, and
+ * changes nothing the cache holds. The caller's `signal` reaches the root keyed file hash, the spawn and the reads, and
  * is checked once more before the store: an abort by then stores nothing, one during the store does not stop it. The
  * root keyed files are hashed before the spawn and again at the store, so a root keyed file (`ROOT_KEYED_FILES`) edited
  * or deleted meanwhile caches the model under a `null` key, never fresh. Rejects with `TurboException` only:
  * `invalid-argument` (a `cacheDir` that is empty, relative or, on Windows, driveless, checked before the spawn),
  * `failed` (turbo exits non-zero, times out, overflows the stdout cap, or the caller aborts), `invalid-output` (stdout
  * is not JSON or breaks `packageGraphSchema`), `io` (a root keyed file is no regular file or is over its byte cap,
- * 64 MiB for a lockfile and 4 MiB for any other, checked before the spawn, which then never runs; the root is missing, not a directory or not searchable, so `checkCwd` refuses the spawn; or a config
+ * 64 MiB for a lockfile and 4 MiB for any other, checked before the spawn, which then never runs, unless the caller
+ * aborted first; the root is missing, not a directory or not searchable, so `checkCwd` refuses the spawn; or a config
  * cannot be read), or `not-found` (the binary is no longer runnable).
  */
 export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceOptions = {}): Promise<WorkspaceModel> => {
@@ -101,7 +103,8 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
 
   try {
     const dir = cacheDirOf(cacheDir);
-    const rootFiles = await hashKeyedFiles(binary.root, ROOT_KEYED_FILES);
+    const hashRootFiles = async (): Promise<KeyedFile[]> => hashKeyedFiles(binary.root, ROOT_KEYED_FILES);
+    const rootFiles = await untilAborted(hashRootFiles, signal);
 
     refuseHostile(rootFiles);
 

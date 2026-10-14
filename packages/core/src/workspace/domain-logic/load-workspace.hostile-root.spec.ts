@@ -48,6 +48,8 @@ const CAN_DENY_READ = process.platform !== 'win32' && process.getuid?.() !== 0;
 /** Stats as a regular file of size 0, yet reads on for hundreds of GiB. */
 const PAGEMAP = '/proc/self/pagemap';
 
+const ABORTED = 'turbo query packageGraph was aborted';
+
 let tempDir = '';
 
 const binaryAt = (root: string): TurboBinary => new TurboBinary(root, join(root, 'turbo'), '2.11.7', 'override');
@@ -95,6 +97,22 @@ describe('FEATURE: workspace loading refuses hostile root files', () => {
       const loading = loadWorkspace(binaryAt(root));
 
       await expect(loading).rejects.toMatchObject(refusal('pnpm-lock.yaml', 64));
+      expect(turbo.calls).toBe(0);
+    });
+  });
+
+  describe('GIVEN a FIFO root turbo.json and a caller signal that already aborted', () => {
+    it.skipIf(!IS_POSIX)('WHEN loaded THEN the abort wins: it rejects failed and turbo is not run', async () => {
+      const root = await newRoot(tempDir);
+      const controller = new AbortController();
+
+      await rm(join(root, 'turbo.json'));
+      execFileSync('mkfifo', [join(root, 'turbo.json')]);
+      controller.abort();
+
+      const loading = loadWorkspace(binaryAt(root), { signal: controller.signal });
+
+      await expect(loading).rejects.toMatchObject({ kind: 'failed', message: ABORTED });
       expect(turbo.calls).toBe(0);
     });
   });
