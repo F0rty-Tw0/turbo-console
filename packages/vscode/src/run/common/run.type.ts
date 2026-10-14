@@ -1,5 +1,7 @@
 import type { RunMatch, RunToMatch, TaskNode } from '@turbo-console/core';
 
+import type { RootChange } from '../../roots/common/coordinator.type.ts';
+
 export type RunState = 'running' | 'passed' | 'failed' | 'stopped' | 'failed-to-start';
 
 /**
@@ -91,6 +93,23 @@ export type RunEvent = {
   readonly definition: RunDefinition;
   readonly launchedAt: number;
 };
+
+/** The task events the editor forwards, already narrowed to runs of this extension. */
+export type TaskEvents = {
+  readonly processStarted: (event: RunEvent) => void;
+  readonly processEnded: (event: RunEvent, exitCode: number | undefined) => void;
+  readonly taskEnded: (event: RunEvent) => void;
+};
+
+type RunCommands = {
+  readonly runs: Runs;
+  readonly run: (request: RunRequest) => Promise<void>;
+  readonly stop: (definition: RunDefinition) => void;
+  readonly rootChanged: (change: RootChange) => void;
+};
+
+/** The public face of `RunSession` that the run commands and the task events drive. */
+export type RunControl = TaskEvents & RunCommands;
 
 /** The task a Run Task or Stop Task command was invoked on. */
 export type TaskTarget = {
