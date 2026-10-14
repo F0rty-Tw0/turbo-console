@@ -20,7 +20,8 @@ export const diffModels = (before: WorkspaceModel | null, after: WorkspaceModel)
 
   const previous = byName(before.packages);
   const next = byName(after.packages);
-  const hasSameCount = previous.size === next.size && next.size === after.packages.length;
+  const hasUniqueNames = previous.size === before.packages.length && next.size === after.packages.length;
+  const hasSameCount = hasUniqueNames && previous.size === next.size;
   const isNewOrMoved = (pkg: PackageNode): boolean => previous.get(pkg.name)?.path !== pkg.path;
   const isDifferent = (pkg: PackageNode): boolean => {
     const old = previous.get(pkg.name);

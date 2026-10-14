@@ -116,14 +116,21 @@ describe('FEATURE: model diff', () => {
     });
   });
 
-  describe('GIVEN a package removed while another name appears twice, so the count is equal', () => {
-    it('WHEN diffed THEN the diff is structural', () => {
-      const webAndA = WORKSPACE_MODEL_STUB.packages.slice(0, 2);
-      const after = withPackages([...webAndA, PACKAGE_NODE_STUB]);
+  describe('GIVEN the same set of names with one name listed twice', () => {
+    it('WHEN the duplicate is in the new model THEN the diff is structural', () => {
+      const after = withPackages([...WORKSPACE_MODEL_STUB.packages, PACKAGE_NODE_STUB]);
 
       const diff = diffModels(WORKSPACE_MODEL_STUB, after);
 
-      expect(diff.structural).toBe(true);
+      expect(diff).toStrictEqual({ structural: true, changed: [] });
+    });
+
+    it('WHEN the duplicate was in the old model THEN the diff is structural', () => {
+      const before = withPackages([...WORKSPACE_MODEL_STUB.packages, PACKAGE_NODE_STUB]);
+
+      const diff = diffModels(before, WORKSPACE_MODEL_STUB);
+
+      expect(diff).toStrictEqual({ structural: true, changed: [] });
     });
   });
 
