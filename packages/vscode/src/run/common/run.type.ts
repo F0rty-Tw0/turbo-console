@@ -22,3 +22,24 @@ export type RunEntry = {
 };
 
 export type RunLookup = (root: string, taskId: string) => RunEntry | undefined;
+
+/** `<root>\0<task id>`: at most one running entry per key. */
+export type RunKey = string;
+
+/** The `root` and `id` of a run's task definition: what every task event is matched by. */
+export type RunDefinition = {
+  readonly root: string;
+  readonly id: string;
+};
+
+/** The part of a `vscode.TaskExecution` the run store keeps, for Stop. */
+export type Terminable = {
+  readonly terminate: () => void;
+};
+
+export type RunRequest = {
+  readonly root: string;
+  readonly packageName: string;
+  readonly task: TaskNode;
+  readonly binaryPath: string;
+};
