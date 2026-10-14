@@ -27,7 +27,8 @@ export type LoadResult = LoadedModel | LoadFailure;
 
 /**
  * Ports of one root: the folder, the editor's storage dir and the progress UI are closed over by whoever builds them.
- * `log` takes one clean line (already through `logTextOf`), so the sink never sees an error object or its `cause`.
+ * `log` takes one clean line (already through `logTextOf`), so the sink never sees an error object or its `cause`; it
+ * must not throw, since `loadRoot` calls it on its failure paths and promises never to throw.
  */
 export type LoadDeps = {
   readonly resolve: (signal: AbortSignal) => Promise<TurboBinary>;

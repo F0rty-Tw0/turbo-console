@@ -64,12 +64,26 @@ const runPort = (port: () => void, deps: LoadDeps): void => {
   }
 };
 
+const ABANDONED_MESSAGE = `load still running ${LOAD_GRACE_MS / 1000} s past its ${LOAD_DEADLINE_MS / 1000} s deadline; abandoned`;
+
+/** Races on the caller's signal plus the backstop; a backstop expiry becomes an error that says the load was abandoned. */
+const raceBackstop = async (work: () => Promise<WorkspaceModel>, signal: AbortSignal): Promise<WorkspaceModel> => {
+  const backstop = AbortSignal.any([signal, AbortSignal.timeout(LOAD_DEADLINE_MS + LOAD_GRACE_MS)]);
+
+  try {
+    return await raceSignal(work, backstop);
+  } catch (error) {
+    if (signal.aborted || error !== backstop.reason) throw error;
+
+    throw new TurboException('failed', ABANDONED_MESSAGE);
+  }
+};
+
 const loadUnderDeadline = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal): Promise<LoadResult> => {
   const deadline = AbortSignal.any([signal, AbortSignal.timeout(LOAD_DEADLINE_MS)]);
-  const backstop = AbortSignal.any([signal, AbortSignal.timeout(LOAD_DEADLINE_MS + LOAD_GRACE_MS)]);
   const work = async (): Promise<WorkspaceModel> => deps.load(binary, deadline);
   const withProgress = async (): Promise<WorkspaceModel> => deps.progress(work);
-  const model = await raceSignal(withProgress, backstop);
+  const model = await raceBackstop(withProgress, signal);
   const loaded: LoadedModel = { kind: 'model', binary, model, fromCache: false, isFresh: true };
 
   return loaded;

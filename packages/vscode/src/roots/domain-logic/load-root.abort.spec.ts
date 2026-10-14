@@ -98,12 +98,16 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       await vi.waitFor(() => {
         expect(deps.load).toHaveBeenCalledOnce();
       });
-      backstop.abort(new Error('backstop expired'));
+      backstop.abort(new DOMException('The operation was aborted due to timeout', 'TimeoutError'));
 
       const result = await pending;
 
-      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: new TurboException('failed', 'backstop expired') });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('backstop expired');
+      const abandoned = new TurboException('failed', 'load still running 15 s past its 60 s deadline; abandoned');
+
+      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: abandoned });
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith(
+        'turbo failed: load still running 15 s past its 60 s deadline; abandoned'
+      );
       expect(release).toHaveBeenCalledOnce();
     });
 
@@ -162,11 +166,13 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       await vi.waitFor(() => {
         expect(deps.progress).toHaveBeenCalledOnce();
       });
-      controller.abort();
+      controller.abort(new Error('superseded'));
 
       const result = await pending;
 
-      expect(result).toMatchObject({ kind: 'error', stage: 'load' });
+      const callerReason = { message: 'superseded' };
+
+      expect(result).toMatchObject({ kind: 'error', stage: 'load', error: callerReason });
       expect(deps.log).not.toHaveBeenCalled();
     });
 
