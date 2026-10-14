@@ -64,9 +64,16 @@ describe('FEATURE: plain text for messages', () => {
       ['a title aborted by CAN', 'a\u001B]0;my title\u0018b', 'ab'],
       ['a title aborted by SUB', 'a\u001B]0;my title\u001Ab', 'ab'],
       ['a title aborted by a color escape', 'a\u001B]0;my title\u001B[31mb', 'ab'],
+      ['a title aborted by an 8-bit color escape', 'a\u001B]0;my title\u009B31mb', 'ab'],
       ['an unterminated title', 'a\u001B]0;my title', 'a'],
     ])('WHEN %s is made plain THEN none of its text is left', (_name, text, plain) => {
       expect(plainLine(text)).toBe(plain);
+    });
+  });
+
+  describe('GIVEN a terminated OSC whose text holds a newline', () => {
+    it('WHEN made plain lines THEN no stray backslash of its terminator shows', () => {
+      expect(plainLines('a\u001B]0;t\nfoo\u001B\\bar')).toBe('a\nfoobar');
     });
   });
 
