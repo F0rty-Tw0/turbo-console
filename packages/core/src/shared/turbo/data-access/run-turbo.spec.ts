@@ -41,6 +41,9 @@ const STUB_NAMES: StubName[] = ['slow-term', 'ignore-term', 'quick-term', 'stder
 /** The one timer-driven case: long enough that a loaded macOS runner's shell writes its pid (and trap) before it fires. */
 const TIMEOUT_MS = 1000;
 
+/** The 2 s pid wait plus runTurbo's 5 s grace for a stub stopped before its pid shows, so a stall fails as ENOENT, not a test timeout. */
+const STALL_TEST_TIMEOUT_MS = 10_000;
+
 const noop = (): void => undefined;
 
 /** The stubs are POSIX shell scripts; the Windows taskkill path is proven by the contract hang test. */
@@ -50,8 +53,9 @@ let stubDir = '';
 
 const stubFile = (stub: StubName, extension: string): string => join(stubDir, `${stub}.${extension}`);
 
+/** Writes the pid with builtins only (`${0%/*}`, not `dirname`), so no fork or exec stands between the shell's start and its pid. */
 const stubScript = (stub: StubName): string =>
-  `#!/bin/sh\n${STUB_TRAPS[stub]}\necho $$ > "$(dirname "$0")/${stub}.pid"\necho "$1" > "$(dirname "$0")/${stub}.argv"\n${STUB_BODIES[stub]}\n`;
+  `#!/bin/sh\n${STUB_TRAPS[stub]}\necho $$ > "\${0%/*}/${stub}.pid"\necho "$1" > "\${0%/*}/${stub}.argv"\n${STUB_BODIES[stub]}\n`;
 
 const writeStub = async (stub: StubName): Promise<void> => {
   await writeFile(stubFile(stub, 'sh'), stubScript(stub), { mode: 0o755 });
@@ -75,15 +79,37 @@ const clearPid = async (stub: StubName): Promise<void> => {
 
 const startStub = async (stub: StubName, options: RunTurboOptions): Promise<TurboResult> => runTurbo(stubFile(stub, 'sh'), [], stubDir, options);
 
+/** `options` with a signal that also aborts on `stop`. */
+const stoppable = (options: RunTurboOptions, stop: AbortSignal): RunTurboOptions => {
+  const signals = [stop];
+
+  if (options.signal !== undefined) signals.push(options.signal);
+
+  const stoppableOptions: RunTurboOptions = { ...options, signal: AbortSignal.any(signals) };
+
+  return stoppableOptions;
+};
+
 /**
  * Runs the stub until runTurbo rejects, calling `onStarted` once the stub's pid (and so its trap) is in place; whether
- * the stub's shell still exists is probed as the rejection lands.
+ * the stub's shell still exists is probed as the rejection lands. A stub that never writes its pid is aborted before
+ * the wait's error is rethrown, so it can't outlive the test.
  */
 const runUntilAborted = async (stub: StubName, options: RunTurboOptions, onStarted: () => void = noop): Promise<AbortOutcome> => {
   await clearPid(stub);
+  const stop = new AbortController();
   const startedAt = performance.now();
-  const run = startStub(stub, options);
-  const pid = await vi.waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 });
+  const run = startStub(stub, stoppable(options, stop.signal));
+
+  // A run that rejects while the pid wait still polls is handled here; `await run` below still sees the rejection.
+  run.catch(noop);
+
+  const pid = await vi.waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 }).catch(async (error: unknown) => {
+    stop.abort();
+    await run.catch(noop);
+
+    throw error;
+  });
 
   onStarted();
 
@@ -228,7 +254,7 @@ describe('FEATURE: runTurbo process lifecycle', () => {
       const outcome = await runUntilAborted('quick-term', { signal: controller.signal }, abort);
 
       expect(outcome.error).toMatchObject({ name: 'AbortError' });
-    });
+    }, STALL_TEST_TIMEOUT_MS);
   });
 
   describe.skipIf(IS_WINDOWS)('GIVEN a binary that writes 70 000 x and a line to stderr, then hangs', () => {
