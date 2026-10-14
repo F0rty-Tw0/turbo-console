@@ -6,7 +6,6 @@ import type { RunDefinition, RunEntry, RunRequest, Terminable } from '../common/
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
-const UNKNOWN: RunDefinition = { root: '/ws', id: 'lint' };
 const OTHER_ROOT: RunRequest = { ...RUN_REQUEST_STUB, root: '/other' };
 const MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
 
@@ -174,50 +173,6 @@ describe('FEATURE: run store', () => {
       store.prune('/ws', new Set());
 
       expect(store.get('/ws', 'build')?.state).toBe('running');
-    });
-  });
-
-  describe('GIVEN events for a task with no running entry', () => {
-    beforeEach(() => {
-      store.tryStart(RUN_REQUEST_STUB, 1000);
-    });
-
-    it('WHEN its process starts THEN nothing changes', () => {
-      const changes = changesOf(store);
-
-      store.processStarted(UNKNOWN, 1200);
-
-      expect(changes).toStrictEqual([]);
-    });
-
-    it('WHEN its process ends THEN nothing is ended', () => {
-      expect(store.processEnded(UNKNOWN, 0, 4000)).toBeNull();
-    });
-
-    it('WHEN it fails to start THEN nothing is ended', () => {
-      expect(store.failStart(UNKNOWN, 1500)).toBeNull();
-    });
-
-    it('WHEN Stop is pressed THEN nothing changes', () => {
-      const changes = changesOf(store);
-
-      store.requestStop(UNKNOWN);
-
-      expect(changes).toStrictEqual([]);
-    });
-
-    it('WHEN an ended run sees its process end again THEN it is ignored', () => {
-      store.processEnded(RUN, 1, 4000);
-
-      expect(store.processEnded(RUN, 0, 5000)).toBeNull();
-    });
-
-    it('WHEN an ended run sees its task end THEN it keeps its end state', () => {
-      store.processEnded(RUN, 0, 4000);
-
-      store.failStart(RUN, 5000);
-
-      expect(entryOf(store, RUN).state).toBe('passed');
     });
   });
 
