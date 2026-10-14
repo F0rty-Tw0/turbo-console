@@ -108,6 +108,16 @@ describe('FEATURE: children rows of a directory', () => {
     });
   });
 
+  describe('GIVEN a top-level package whose path is its name', () => {
+    it('WHEN listed THEN the description is empty, since it would repeat the label', () => {
+      const level = dirOf('', '', ['docs']);
+
+      const rows = dirRows('/ws', level, packageMapOf([packageAt('docs', 'docs')]));
+
+      expect(rows.map((row) => [row.label, row.description])).toStrictEqual([['docs', '']]);
+    });
+  });
+
   describe('GIVEN a directory with nothing in it', () => {
     it('WHEN listed THEN there are no rows', () => {
       const rows = dirRows('/ws', dirOf('p', 'p', []), packageMapOf([]));

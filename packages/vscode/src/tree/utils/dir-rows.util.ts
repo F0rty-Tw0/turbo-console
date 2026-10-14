@@ -26,16 +26,22 @@ const dirRow = (root: string, dir: FolderDir): TreeRow => {
   return row;
 };
 
-/** `key` and `packageName` keep the raw model name; only `label` and `description` are cleaned. */
+/**
+ * `key` and `packageName` keep the raw model name; only `label` and `description` are cleaned. The description is the
+ * package path, or empty when it equals the label (spec §4.7: descriptions never repeat the label).
+ */
 export const packageRow = (root: string, pkg: PackageNode): TreeRow => {
+  const label = cleanText(pkg.name, LABEL_MAX);
+  const path = cleanText(pkg.path, DESCRIPTION_MAX);
+  const description = path === label ? '' : path;
   const row: TreeRow = {
     id: rowIdOf('pkg', root, pkg.name),
     kind: 'pkg',
     root,
     key: pkg.name,
     packageName: pkg.name,
-    label: cleanText(pkg.name, LABEL_MAX),
-    description: cleanText(pkg.path, DESCRIPTION_MAX),
+    label,
+    description,
     icon: PACKAGE_ICON,
     contextValue: 'turboPackage',
     collapsible: 'collapsed',
