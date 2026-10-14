@@ -299,7 +299,7 @@ describe('FEATURE: workspace cache key', () => {
     });
 
     it('WHEN one is a regular file over the cap THEN it is the hostile one', () => {
-      const large = keyedFile('pnpm-lock.yaml', 'over-cap:268435457:1000', 1000);
+      const large = keyedFile('pnpm-lock.yaml', 'over-cap:67108865:1000', 1000);
 
       const hostile = hostileRootFile([...FILES, large]);
 

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -9,13 +9,16 @@ import { hashKeyedFiles } from './keyed-files.ts';
 import type * as cacheConst from '../common/cache.const.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
 
-/** Small enough to cross without writing the real 256 MiB, and over one 64 KiB read chunk so the cap spans reads. */
+/** Small enough to cross without writing the real 4 MiB, and over one 64 KiB read chunk so the cap spans reads. */
 const CAP_BYTES = vi.hoisted(() => 100 * 1024);
+
+/** Stands in for the real 64 MiB lockfile cap: twice `CAP_BYTES`, so a lockfile between the two caps tells them apart. */
+const LOCKFILE_CAP_BYTES = vi.hoisted(() => 200 * 1024);
 
 vi.mock('../common/cache.const.ts', async (importOriginal) => {
   const real = await importOriginal<typeof cacheConst>();
   // eslint-disable-next-line @typescript-eslint/naming-convention -- the mocked module's own constant name.
-  const mocked = { ...real, MAX_KEYED_FILE_BYTES: CAP_BYTES };
+  const mocked = { ...real, MAX_KEYED_FILE_BYTES: CAP_BYTES, MAX_LOCKFILE_BYTES: LOCKFILE_CAP_BYTES };
 
   return mocked;
 });
@@ -44,7 +47,7 @@ describe('FEATURE: keyed file byte cap', () => {
     await rm(root, { recursive: true, force: true, maxRetries: 5 });
   });
 
-  describe('GIVEN a regular file', () => {
+  describe('GIVEN a regular file that is no lockfile', () => {
     it('WHEN it holds exactly the cap THEN its digest is the sha256 of its content', async () => {
       const content = Buffer.alloc(CAP_BYTES, 'a');
 
@@ -82,6 +85,43 @@ describe('FEATURE: keyed file byte cap', () => {
       const [after] = await hashKeyedFiles(root, ['rewritten.json']);
 
       expect(after?.digest).not.toBe(before?.digest);
+    });
+
+    it('WHEN a package.json holds one byte over the cap THEN it is keyed by its size and mtime', async () => {
+      await mkdir(join(root, 'pkg'));
+      await writeFile(join(root, 'pkg', 'package.json'), Buffer.alloc(CAP_BYTES + 1, 'a'));
+
+      const files = await hashKeyedFiles(root, ['pkg/package.json']);
+
+      expect(files[0]?.digest).toContain(`over-cap:${CAP_BYTES + 1}:`);
+    });
+  });
+
+  describe('GIVEN a lockfile', () => {
+    it('WHEN it holds more than the other cap but exactly its own THEN its digest is the sha256 of its content', async () => {
+      const content = Buffer.alloc(LOCKFILE_CAP_BYTES, 'a');
+
+      await mkdir(join(root, 'at-lockfile-cap'));
+      await writeFile(join(root, 'at-lockfile-cap', 'yarn.lock'), content);
+
+      const files = await hashKeyedFiles(root, ['at-lockfile-cap/yarn.lock']);
+
+      expect(files[0]?.digest).toBe(sha256Of(content));
+    });
+
+    it('WHEN it holds one byte over its own cap THEN it is keyed by its size and mtime', async () => {
+      const path = join(root, 'over-lockfile-cap', 'pnpm-lock.yaml');
+
+      await mkdir(join(root, 'over-lockfile-cap'));
+      await writeFile(path, Buffer.alloc(LOCKFILE_CAP_BYTES + 1, 'a'));
+      await utimes(path, FIRST_MTIME_S, FIRST_MTIME_S);
+
+      const files = await hashKeyedFiles(root, ['over-lockfile-cap/pnpm-lock.yaml']);
+      const mtimeMs = FIRST_MTIME_S * 1000;
+      const digest = `over-cap:${LOCKFILE_CAP_BYTES + 1}:${mtimeMs}`;
+      const expected: KeyedFile = { path: 'over-lockfile-cap/pnpm-lock.yaml', digest, mtimeMs };
+
+      expect(files).toStrictEqual([expected]);
     });
   });
 });

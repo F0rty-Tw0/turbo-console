@@ -2,11 +2,12 @@ import * as nodePath from 'node:path';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../../binary/common/index.ts';
-import { MAX_KEYED_FILE_BYTES, ROOT_KEYED_FILES } from '../../cache/common/cache.const.ts';
+import { ROOT_KEYED_FILES } from '../../cache/common/cache.const.ts';
 import type { KeyedFile, SpawnMark } from '../../cache/common/cache.type.ts';
 import { hashKeyedFiles } from '../../cache/data-access/keyed-files.ts';
 import { storeWorkspace } from '../../cache/data-access/store-workspace.ts';
 import { hostileRootFile } from '../../cache/utils/cache-key.util.ts';
+import { keyedFileCapOf } from '../../cache/utils/keyed-file-cap.util.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts';
 import { plainPath } from '../../shared/errors/utils/turbo-message.util.ts';
@@ -30,7 +31,7 @@ const COMMAND = 'query packageGraph';
 /** `stretch-300` prints ~10 MB; `runTurbo`'s 256 MiB default can cost gigabytes of heap once parsed. */
 const QUERY_MAX_BUFFER = 128 * 1024 * 1024;
 
-const MAX_KEYED_MIB = MAX_KEYED_FILE_BYTES / (1024 * 1024);
+const MIB = 1024 * 1024;
 
 const configDirOf = (pkg: GraphPackage): string => toPosixPath(pkg.path);
 
@@ -41,13 +42,18 @@ const cacheDirOf = (cacheDir: string | undefined): string | undefined => {
   return absolutePath(cacheDir, 'cacheDir', nodePath);
 };
 
-/** Throws `io` when a root keyed file is no regular file or is over the byte cap: turbo would read it with no cap. */
+/**
+ * Throws `io` naming the file and its own byte cap when a root keyed file is no regular file or is over that cap: turbo
+ * would read it with no cap.
+ */
 const refuseHostile = (rootFiles: KeyedFile[]): void => {
   const hostile = hostileRootFile(rootFiles);
 
   if (hostile === undefined) return;
 
-  throw new TurboException('io', `root keyed file ${plainPath(hostile.path)} is not a regular file of at most ${MAX_KEYED_MIB} MiB; turbo is not run`);
+  const capMib = keyedFileCapOf(hostile.path) / MIB;
+
+  throw new TurboException('io', `root keyed file ${plainPath(hostile.path)} is not a regular file of at most ${capMib} MiB; turbo is not run`);
 };
 
 /**
@@ -77,14 +83,14 @@ const untilAborted = async (start: () => Promise<TurboConfigFile[]>, signal: Abo
  * graph package (hidden ones included), the pure model build, then the model keyed and kept in memory, and written to
  * `cacheDir` when one is given. A failed write does not fail the load: the returned model, and only it, gains a
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
- * changes nothing the cache holds. The caller's `signal` reaches the spawn and the reads, and is checked once more
- * before the store: an abort by then stores nothing, one during the store does not stop it. The root keyed files are
- * hashed before the spawn and again at the store, so a root keyed file (`ROOT_KEYED_FILES`) edited or deleted meanwhile
- * caches the model under a `null` key, never fresh. Rejects with `TurboException` only: `invalid-argument` (a
- * `cacheDir` that is empty, relative or, on Windows, driveless, checked before the spawn), `failed` (turbo exits
- * non-zero, times out, overflows the stdout cap, or the caller aborts), `invalid-output` (stdout is not JSON or breaks
- * `packageGraphSchema`), `io` (a root keyed file is no regular file or is over 256 MiB, checked before the spawn, which
- * then never runs; the root is missing, not a directory or not searchable, so `checkCwd` refuses the spawn; or a config
+ * changes nothing the cache holds. The caller's `signal` reaches the spawn and the reads, and
+ * is checked once more before the store: an abort by then stores nothing, one during the store does not stop it. The
+ * root keyed files are hashed before the spawn and again at the store, so a root keyed file (`ROOT_KEYED_FILES`) edited
+ * or deleted meanwhile caches the model under a `null` key, never fresh. Rejects with `TurboException` only:
+ * `invalid-argument` (a `cacheDir` that is empty, relative or, on Windows, driveless, checked before the spawn),
+ * `failed` (turbo exits non-zero, times out, overflows the stdout cap, or the caller aborts), `invalid-output` (stdout
+ * is not JSON or breaks `packageGraphSchema`), `io` (a root keyed file is no regular file or is over its byte cap,
+ * 64 MiB for a lockfile and 4 MiB for any other, checked before the spawn, which then never runs; the root is missing, not a directory or not searchable, so `checkCwd` refuses the spawn; or a config
  * cannot be read), or `not-found` (the binary is no longer runnable).
  */
 export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceOptions = {}): Promise<WorkspaceModel> => {

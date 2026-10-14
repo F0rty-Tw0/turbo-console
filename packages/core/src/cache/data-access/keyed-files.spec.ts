@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmod, mkdir, mkdtemp, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
+import { appendFile, chmod, mkdir, mkdtemp, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
 import type * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
@@ -14,7 +14,8 @@ import type { KeyedFile } from '../common/cache.type.ts';
 const reads = vi.hoisted(() => {
   const proceed = async (): Promise<void> => Promise.resolve();
   const beforeRead: (path: string) => Promise<void> = proceed;
-  const state = { beforeRead, proceed };
+  const opened: string[] = [];
+  const state = { beforeRead, proceed, opened };
 
   return state;
 });
@@ -22,8 +23,13 @@ const reads = vi.hoisted(() => {
 vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
-  /** Each handle runs `reads.beforeRead` with its path before every read, so a case can edit the file mid-hash. */
+  /**
+   * Each open path is listed in `reads.opened`, and each handle runs `reads.beforeRead` with its path before every
+   * read, so a case can edit the file mid-hash.
+   */
   const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+    reads.opened.push(String(args[0]));
+
     const handle = await real.open(...args);
     const read = handle.read.bind(handle);
     const hookedRead = async (...readArgs: unknown[]): Promise<unknown> => {
@@ -54,7 +60,7 @@ const IS_LINUX = process.platform === 'linux';
 /** Stats as a regular file of size 0, yet reads on for hundreds of GiB: only the byte cap stops its hash. */
 const PAGEMAP = '/proc/self/pagemap';
 
-/** Reading the 256 MiB cap from procfs takes well under a second; reading on uncapped takes minutes. */
+/** Reading 1 MiB past procfs's size 0 takes well under a second; reading on uncapped takes minutes. */
 const PAGEMAP_TIMEOUT_MS = 10_000;
 
 /** More than the 16 reads kept in flight, so every worker takes several paths. */
@@ -90,6 +96,12 @@ const countInFlight = async (path: string): Promise<void> => {
 /** Three 64 KiB hash chunks and a partial fourth. */
 const LARGE_FILE_BYTES = 3 * 64 * 1024 + 7;
 
+/** Under the 1 MiB a read may run past the stat size from the open. */
+const SMALL_GROWTH_BYTES = 256 * 1024;
+
+/** Over that 1 MiB slack, yet under the 4 MiB cap of a non-lockfile, so only the slack can stop the read. */
+const LARGE_GROWTH_BYTES = 2 * 1024 * 1024;
+
 /** 2001-09-09, in seconds: far from any mtime a fresh temp file gets. */
 const EDITED_AT_S = 1_000_000_000;
 
@@ -118,6 +130,21 @@ const writeMany = async (path: string): Promise<void> => writeFile(join(root, pa
 /** Sets `path`'s mtime to `EDITED_AT_S`, as an edit landing during the read would. */
 const touchEdited = async (path: string): Promise<void> => utimes(path, EDITED_AT_S, EDITED_AT_S);
 
+/** Appends `bytes` to the file named `name` before its first read only, as a writer still appending during the hash would. */
+const growOnce = (name: string, bytes: number): ((path: string) => Promise<void>) => {
+  const growth = { isDone: false };
+
+  return async (path: string): Promise<void> => {
+    const fileName = basename(path);
+    const isTarget = fileName === name;
+
+    if (!isTarget || growth.isDone) return;
+
+    growth.isDone = true;
+    await appendFile(path, Buffer.alloc(bytes, 'g'));
+  };
+};
+
 /** The path and digest `hashKeyedFiles` gives a file written by `writeMany`; its mtime is not compared. */
 const hashedAs = (path: string): Partial<KeyedFile> => {
   const digest = sha256Of(path);
@@ -143,6 +170,7 @@ describe('FEATURE: keyed file hashing', () => {
 
   afterEach(() => {
     reads.beforeRead = reads.proceed;
+    reads.opened.length = 0;
   });
 
   describe('GIVEN a present regular file', () => {
@@ -181,6 +209,28 @@ describe('FEATURE: keyed file hashing', () => {
     });
   });
 
+  describe('GIVEN a regular file that grows while it is read', () => {
+    it('WHEN it grows by less than 1 MiB THEN its digest is the sha256 of its grown content', async () => {
+      const grownContent = Buffer.concat([Buffer.from('x'), Buffer.alloc(SMALL_GROWTH_BYTES, 'g')]);
+
+      await writeFile(join(root, 'grown.json'), 'x');
+      reads.beforeRead = growOnce('grown.json', SMALL_GROWTH_BYTES);
+
+      const files = await hashKeyedFiles(root, ['grown.json']);
+
+      expect(files[0]?.digest).toBe(sha256Of(grownContent));
+    });
+
+    it('WHEN it grows by more than 1 MiB THEN it is marked over-cap:read', async () => {
+      await writeFile(join(root, 'grown-far.json'), 'x');
+      reads.beforeRead = growOnce('grown-far.json', LARGE_GROWTH_BYTES);
+
+      const files = await hashKeyedFiles(root, ['grown-far.json']);
+
+      expect(files).toStrictEqual([markerFile('grown-far.json', 'over-cap:read')]);
+    });
+  });
+
   describe('GIVEN a path that does not exist', () => {
     it('WHEN the file is missing THEN it is marked missing with no mtime', async () => {
       const files = await hashKeyedFiles(root, ['turbo.json']);
@@ -196,10 +246,16 @@ describe('FEATURE: keyed file hashing', () => {
   });
 
   describe('GIVEN a path that is not a readable regular file', () => {
-    it.skipIf(!IS_POSIX)('WHEN it is a directory THEN it is marked not-regular', async () => {
+    it('WHEN it is a directory THEN it is marked not-regular', async () => {
       const files = await hashKeyedFiles(root, ['dir']);
 
       expect(files).toStrictEqual([markerFile('dir', 'not-regular')]);
+    });
+
+    it('WHEN it is a directory THEN it is never opened', async () => {
+      await hashKeyedFiles(root, ['dir']);
+
+      expect(reads.opened).not.toContain(join(root, 'dir'));
     });
 
     it('WHEN the path cannot be opened for a reason other than absence THEN it is marked unreadable', async () => {
@@ -216,6 +272,14 @@ describe('FEATURE: keyed file hashing', () => {
       expect(files).toStrictEqual([markerFile('fifo', 'not-regular')]);
     });
 
+    it.skipIf(!IS_POSIX)('WHEN it is a FIFO THEN it is never opened', async () => {
+      execFileSync('mkfifo', [join(root, 'unopened-fifo')]);
+
+      await hashKeyedFiles(root, ['unopened-fifo']);
+
+      expect(reads.opened).not.toContain(join(root, 'unopened-fifo'));
+    });
+
     it.skipIf(!CAN_DENY_READ)('WHEN it denies reading THEN it is marked unreadable and the call resolves', async () => {
       await writeFile(join(root, 'denied.json'), '{}');
       await chmod(join(root, 'denied.json'), 0o000);
@@ -226,7 +290,7 @@ describe('FEATURE: keyed file hashing', () => {
     });
 
     it.skipIf(!IS_LINUX)(
-      'WHEN it links to a procfs file that never ends THEN it is marked over-cap:read once over the byte cap',
+      'WHEN it links to a procfs file that never ends THEN it is marked over-cap:read once it reads past its stat size',
       async () => {
         await symlink(PAGEMAP, join(root, 'pagemap.json'));
 

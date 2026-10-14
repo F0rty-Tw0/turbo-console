@@ -3,8 +3,9 @@ import type { WorkspaceModel } from '../../workspace/common/workspace-model.type
 /**
  * One keyed file: `path` posix, relative to the root; `digest` the sha256 hex of its content, `missing`,
  * `unreadable` (the open or read failed), `not-regular` (a directory, FIFO, socket or device),
- * `over-cap:<size>:<mtimeMs>` (a regular file too large to hash) or `over-cap:read` (one that read past the cap after a
- * smaller stat size); `mtimeMs` is the file's only for the sha256 and `over-cap:<size>:<mtimeMs>` forms, else `null`.
+ * `over-cap:<size>:<mtimeMs>` (a regular file over its byte cap) or `over-cap:read` (one that read past its cap, or more
+ * than 1 MiB past its stat size); `mtimeMs` is the file's only for the sha256 and `over-cap:<size>:<mtimeMs>` forms,
+ * else `null`.
  */
 export type KeyedFile = {
   readonly path: string;

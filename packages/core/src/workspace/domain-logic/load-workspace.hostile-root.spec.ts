@@ -52,8 +52,9 @@ let tempDir = '';
 
 const binaryAt = (root: string): TurboBinary => new TurboBinary(root, join(root, 'turbo'), '2.11.7', 'override');
 
-const refusal = (path: string): Pick<TurboException, 'kind' | 'message'> => {
-  const message = `root keyed file ${path} is not a regular file of at most 256 MiB; turbo is not run`;
+/** The refusal naming `path` and its own byte cap: 64 MiB for a lockfile, 4 MiB for any other keyed file. */
+const refusal = (path: string, capMib: number): Pick<TurboException, 'kind' | 'message'> => {
+  const message = `root keyed file ${path} is not a regular file of at most ${capMib} MiB; turbo is not run`;
   const expected: Pick<TurboException, 'kind' | 'message'> = { kind: 'io', message };
 
   return expected;
@@ -82,7 +83,7 @@ describe('FEATURE: workspace loading refuses hostile root files', () => {
 
       const loading = loadWorkspace(binaryAt(root));
 
-      await expect(loading).rejects.toMatchObject(refusal('turbo.json'));
+      await expect(loading).rejects.toMatchObject(refusal('turbo.json', 4));
       expect(turbo.calls).toBe(0);
     });
 
@@ -93,7 +94,7 @@ describe('FEATURE: workspace loading refuses hostile root files', () => {
 
       const loading = loadWorkspace(binaryAt(root));
 
-      await expect(loading).rejects.toMatchObject(refusal('pnpm-lock.yaml'));
+      await expect(loading).rejects.toMatchObject(refusal('pnpm-lock.yaml', 64));
       expect(turbo.calls).toBe(0);
     });
   });
