@@ -56,6 +56,16 @@ describe('FEATURE: plain text for messages', () => {
     });
   });
 
+  describe('GIVEN OSC sequences whose text holds a space', () => {
+    it.each([
+      ['a title ended by BEL', 'a\u001B]0;my title\u0007b', 'ab'],
+      ['a hyperlink ended by ST', 'a\u001B]8;;http://x y\u001B\\link\u001B]8;;\u001B\\b', 'alinkb'],
+      ['an unterminated title', 'a\u001B]0;my title', 'a'],
+    ])('WHEN %s is made plain THEN none of its text is left', (_name, text, plain) => {
+      expect(plainLine(text)).toBe(plain);
+    });
+  });
+
   describe('GIVEN text with characters that move or hide what a reader sees', () => {
     it.each(INVISIBLE)('WHEN it holds %s THEN plainLines and plainLine drop them', (_, chars) => {
       const text = `a${chars}b\nc`;

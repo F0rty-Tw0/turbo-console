@@ -15,8 +15,40 @@ const isPrintable = (char: string): boolean => !DROPPED.test(char);
 
 const isLineText = (char: string): boolean => isPrintable(char) || char === '\n' || char === '\t';
 
+const OSC_START = '\u001B]';
+const OSC_ENDS = ['\u0007', '\u001B\\'];
+
+/** Index just past the first `end` in `text`; `Infinity` when there is none. */
+const pastFirst = (text: string, end: string): number => {
+  const at = text.indexOf(end);
+  const past = at + end.length;
+
+  return at < 0 ? Infinity : past;
+};
+
+/** The rest of `part`, which follows an OSC start, after the first OSC terminator; `''` when none ends it. */
+const afterOsc = (part: string): string => {
+  const ends = OSC_ENDS.map((end) => pastFirst(part, end));
+  const endsAt = Math.min(...ends);
+
+  return part.slice(endsAt);
+};
+
+/**
+ * `text` with every OSC sequence (a window title, a hyperlink) cut out: `stripVTControlCharacters` leaves one whose text
+ * holds a space, and its body would show once the escape characters are dropped.
+ */
+const withoutOsc = (text: string): string => {
+  const [head, ...oscs] = text.split(OSC_START);
+  const rests = oscs.map(afterOsc);
+
+  const parts = [head, ...rests];
+
+  return parts.join('');
+};
+
 const keptChars = (text: string, isKept: (char: string) => boolean): string => {
-  const unescaped = stripVTControlCharacters(text);
+  const unescaped = stripVTControlCharacters(withoutOsc(text));
   const chars = [...unescaped];
 
   return chars.filter(isKept).join('');
