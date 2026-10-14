@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { reportCreatedDir } from './report-created-dir.ts';
 import { KEYED_GLOB } from '../common/watch.const.ts';
 import type { WatchPorts } from '../common/watch.type.ts';
 import { isIgnoredPath, isPackageDelete, toRelative } from '../utils/watch-event.util.ts';
@@ -7,8 +8,10 @@ import { isIgnoredPath, isPackageDelete, toRelative } from '../utils/watch-event
 const EVERYTHING_GLOB = '**';
 
 /**
- * Spec §4.3 watchers of one root: keyed files on create, change and delete, outside `node_modules`; and deletes of
- * anything, kept only when the deleted path holds a package dir of the shown model. Returns the function that stops both.
+ * Spec §4.3 watchers of one root: keyed files on create, change and delete, outside `node_modules`; and creates of
+ * anything, kept only when the created folder holds a `package.json` (a folder moved in whole never reports its files);
+ * and deletes of anything, kept only when the deleted path holds a package dir of the shown model. Returns the function
+ * that stops both.
  */
 export const watchRoot = (root: string, ports: WatchPorts): (() => void) => {
   const onKeyed = (uri: vscode.Uri): void => {
@@ -30,15 +33,19 @@ export const watchRoot = (root: string, ports: WatchPorts): (() => void) => {
 
     if (isDelete) ports.changed();
   };
+  const onCreate = (uri: vscode.Uri): void => {
+    void reportCreatedDir(root, uri.fsPath, ports.changed);
+  };
   const keyedPattern = new vscode.RelativePattern(root, KEYED_GLOB);
   const keyed = vscode.workspace.createFileSystemWatcher(keyedPattern);
   const deletePattern = new vscode.RelativePattern(root, EVERYTHING_GLOB);
-  const deletes = vscode.workspace.createFileSystemWatcher(deletePattern, true, true, false);
+  const deletes = vscode.workspace.createFileSystemWatcher(deletePattern, false, true, false);
   const keyedCreate = keyed.onDidCreate(onKeyed);
   const keyedChange = keyed.onDidChange(onKeyed);
   const keyedDelete = keyed.onDidDelete(onKeyed);
+  const anyCreate = deletes.onDidCreate(onCreate);
   const anyDelete = deletes.onDidDelete(onDelete);
-  const watching = vscode.Disposable.from(keyedCreate, keyedChange, keyedDelete, anyDelete, keyed, deletes);
+  const watching = vscode.Disposable.from(keyedCreate, keyedChange, keyedDelete, anyCreate, anyDelete, keyed, deletes);
   const stop = (): void => {
     watching.dispose();
   };
