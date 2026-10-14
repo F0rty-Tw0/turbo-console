@@ -27,6 +27,12 @@ const LAST_SURROGATE = 0xdfff;
 
 const LAST_CODE_POINT = 0x10ffff;
 
+/**
+ * Building and cleaning all 1.1 million code points takes about 0.3 s locally, but it exceeded vitest's 5 s default on
+ * the macOS runner while other packages' tests ran beside it.
+ */
+const EVERY_CODE_POINT_TIMEOUT_MS = 30_000;
+
 const toChar = (code: number): string => String.fromCodePoint(code);
 
 const charsBetween = (from: number, to: number): string => {
@@ -95,13 +101,17 @@ describe('FEATURE: plain text for messages', () => {
   });
 
   describe('GIVEN text holding every code point', () => {
-    it('WHEN made one plain line THEN no control or default-ignorable character is left', () => {
-      const line = plainLine(everyCodePoint());
+    it(
+      'WHEN made one plain line THEN no control or default-ignorable character is left',
+      { timeout: EVERY_CODE_POINT_TIMEOUT_MS },
+      () => {
+        const line = plainLine(everyCodePoint());
 
-      const leftovers = line.match(/[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/gu);
+        const leftovers = line.match(/[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/gu);
 
-      expect(leftovers).toBeNull();
-    });
+        expect(leftovers).toBeNull();
+      }
+    );
   });
 
   describe('GIVEN the two halves of a tag character split by a zero-width space', () => {
