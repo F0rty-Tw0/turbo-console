@@ -91,3 +91,9 @@ export type RunEvent = {
   readonly definition: RunDefinition;
   readonly launchedAt: number;
 };
+
+/** The task a Run Task or Stop Task command was invoked on. */
+export type TaskTarget = {
+  readonly definition: RunDefinition;
+  readonly packageName: string;
+};
