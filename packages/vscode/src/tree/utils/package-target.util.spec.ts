@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { packageDirOf, packageTargetOf } from './package-target.util.ts';
@@ -39,7 +41,7 @@ describe('FEATURE: package targets', () => {
     it('WHEN its root holds it THEN its directory is the root joined with the package path', () => {
       const directory = packageDirOf(TARGET, ROOT_STATE_STUB);
 
-      expect(directory).toBe('/ws/packages/a');
+      expect(directory).toBe(join('/ws', 'packages', 'a'));
     });
 
     it('WHEN its root ends in a separator THEN the directory is joined without a doubled separator', () => {
@@ -47,7 +49,7 @@ describe('FEATURE: package targets', () => {
 
       const directory = packageDirOf(slashed, ROOT_STATE_STUB);
 
-      expect(directory).toBe('/ws/apps/web');
+      expect(directory).toBe(join('/ws', 'apps', 'web'));
     });
 
     it.each<[string, RootState | undefined]>([

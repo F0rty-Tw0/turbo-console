@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -69,19 +71,19 @@ describe('FEATURE: package actions', () => {
     ])('WHEN Open package.json is invoked on %s THEN that package.json opens', async (_name, node) => {
       await invoke('turboConsole.openPackageJson', node);
 
-      expect(open).toHaveBeenCalledExactlyOnceWith('/ws/packages/a/package.json');
+      expect(open).toHaveBeenCalledExactlyOnceWith(join('/ws', 'packages', 'a', 'package.json'));
     });
 
     it('WHEN Reveal in Explorer is invoked on a package row THEN the package directory is revealed', async () => {
       await invoke('turboConsole.revealInExplorer', TREE_NODE_STUB);
 
-      expect(reveal).toHaveBeenCalledExactlyOnceWith('/ws/packages/a');
+      expect(reveal).toHaveBeenCalledExactlyOnceWith(join('/ws', 'packages', 'a'));
     });
 
     it('WHEN Copy Path is invoked on a package row THEN the absolute package directory is copied', async () => {
       await invoke('turboConsole.copyPath', TREE_NODE_STUB);
 
-      expect(copy).toHaveBeenCalledExactlyOnceWith('/ws/packages/a');
+      expect(copy).toHaveBeenCalledExactlyOnceWith(join('/ws', 'packages', 'a'));
     });
 
     it.each<[string, unknown]>([
