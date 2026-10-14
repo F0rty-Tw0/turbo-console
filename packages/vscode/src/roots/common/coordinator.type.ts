@@ -70,6 +70,7 @@ export type Session = {
   readonly setWorkspaceFolders: (folders: RootFolder[]) => Promise<RootFolder[]>;
   readonly setVisible: (visible: boolean) => void;
   readonly request: (reason: ChangeReason) => void;
+  readonly changed: (root: string) => void;
 };
 
 export type RootChange = {

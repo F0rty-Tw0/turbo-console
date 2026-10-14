@@ -9,6 +9,8 @@ import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
 import { currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
+import { watchRoot } from './watch/data-access/root-watchers.ts';
+import { registerWatchers } from './watch/feature/register-watchers.ts';
 
 /**
  * Spec §3 activation: registers the view, commands and listeners, finds the roots and sets the context key. No turbo
@@ -31,17 +33,23 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const tree = new PackagesTreeProvider(session.store, () => undefined, currentTreeMode(), timings.treeVisible);
   const whenIdle = async (root: string): Promise<void> => session.whenIdle(root);
   const api: TurboConsoleApi = { tree, timings, loads: session.loads, whenIdle };
-  const disposeRoots = (): void => {
-    session.setRoots([]);
-  };
-  const onRoots = (): void => {
-    tree.rootsChanged();
+  const disposeSession = (): void => {
+    session.dispose();
   };
 
-  context.subscriptions.push(output, tree, { dispose: disposeRoots });
+  context.subscriptions.push(output, tree, { dispose: disposeSession });
 
   if (vscode.workspace.isTrusted) {
     registerTree(context, session, tree, output);
+
+    const watchers = registerWatchers(session, watchRoot);
+    const onRoots = (): void => {
+      tree.rootsChanged();
+      watchers.prune();
+    };
+
+    context.subscriptions.push(watchers);
+
     await registerRoots(context, session, onRoots, output.error);
   }
 

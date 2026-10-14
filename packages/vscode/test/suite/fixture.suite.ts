@@ -9,10 +9,13 @@ import * as vscode from 'vscode';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { BACKDATE_MS } from '../common/launch.const.ts';
 import { backdateTree } from '../utils/backdate.spec.util.ts';
+import { packageLifecycleCase } from '../utils/package-lifecycle.spec.util.ts';
 import { countTurboSpawns } from '../utils/spawn-counter.spec.util.ts';
 import { budget, loadsOf, log, markDone, revealTree, rootAt, spanMs, step, turboApi, waitFor } from '../utils/suite-env.spec.util.ts';
 import { readManifest, readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 import { busiestPackage, manifestTree, packageNodeNamed, walkTree } from '../utils/tree-walk.spec.util.ts';
+import { watchCases } from '../utils/watch-cases.spec.util.ts';
+import { whenQuiet } from '../utils/watch-wait.spec.util.ts';
 
 const ACTIVATION_BUDGET_MS = 50;
 
@@ -56,7 +59,7 @@ const warmUp = async (api: TurboConsoleApi, root: string): Promise<void> => {
   const records = loadsOf(api, root);
 
   await backdateTree(root, BACKDATE_MS);
-  await api.whenIdle(root);
+  await whenQuiet(api, root);
 
   const before = records.length;
 
@@ -118,6 +121,8 @@ export const run = async (): Promise<void> => {
       budget('expand', expand, EXPAND_BUDGET_MS, env);
       budget('activation', activation, ACTIVATION_BUDGET_MS, env);
     });
+    await watchCases(api, root, counter, manifest);
+    await packageLifecycleCase(api, root);
     // later spec §5.3 cases go here, after case 9 and before the warm-up
     await step('warm-up', async () => warmUp(api, root));
     await markDone(env);

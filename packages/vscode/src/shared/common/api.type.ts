@@ -17,8 +17,9 @@ export type Timings = {
 
 /**
  * What `activate` returns, for the integration tests only. Root keys are each workspace folder's `uri.fsPath` as VS
- * Code gives it. `loads` holds an empty list per root from activation on; `whenIdle` rejects for a key that is not a
- * current root.
+ * Code gives it. `loads` holds an empty list per root from activation on. `whenIdle` waits for a pending debounced
+ * watcher change and any load it starts, then for the root's load in flight; it rejects for a key that is not a current
+ * root.
  */
 export type TurboConsoleApi = {
   readonly tree: PackagesTreeApi;
