@@ -80,3 +80,7 @@ export const taskItemsOf = (root: string, pkg: PackageNode): PickItem[] => {
 
   return sorted.map((task) => itemOf(root, task.name, '', task.name));
 };
+
+/** One item per root, the folder name labelled and the path as description; `value` is the root key. */
+export const rootItems = (states: RootState[]): PickItem[] =>
+  states.map((state) => itemOf(state.folder.root, state.folder.name, state.folder.root, state.folder.root));

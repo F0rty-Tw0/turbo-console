@@ -2,7 +2,7 @@ import { TurboException } from '@turbo-console/core';
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { packageItems, taskItemsOf, taskNameItems } from './picker-items.util.ts';
+import { packageItems, rootItems, taskItemsOf, taskNameItems } from './picker-items.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { LoadFailure, RootFolder } from '../../roots/common/root.type.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -209,6 +209,23 @@ describe('FEATURE: picker items', () => {
       const items = taskItemsOf('/ws', packageOf('a', [taskNamed('$(x)')]));
 
       expect(items[0]).toStrictEqual(itemOf({ label: '\\$(x)', value: '$(x)' }));
+    });
+  });
+
+  describe('rootItems', () => {
+    it('GIVEN two roots WHEN listed THEN each shows its folder name, described by its path, with the root as value', () => {
+      const items = rootItems([stateOf('/one', []), stateOf('/two', [])]);
+
+      expect(items).toStrictEqual([
+        itemOf({ label: 'one', description: '/one', root: '/one', value: '/one' }),
+        itemOf({ label: 'two', description: '/two', root: '/two', value: '/two' })
+      ]);
+    });
+
+    it('GIVEN a folder named like a codicon WHEN listed THEN the label escapes the dollar but the value is raw', () => {
+      const items = rootItems([stateOf('/$(x)', [])]);
+
+      expect(items[0]).toStrictEqual(itemOf({ label: '\\$(x)', description: '/\\$(x)', root: '/$(x)', value: '/$(x)' }));
     });
   });
 });
