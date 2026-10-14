@@ -17,18 +17,21 @@ import type { Timings, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
+import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
+import { registerPackageActions } from './tree/feature/package-actions.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
 import { currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
 import { watchRoot } from './watch/data-access/root-watchers.ts';
 import { registerWatchers } from './watch/feature/register-watchers.ts';
 
-/** The side panel's fixed views and the commands of its rows' inline and context menus (copy). */
+/** The side panel's fixed views and the commands of its rows' inline and context menus (copy, open, reveal). */
 const registerPanel = (roots: Roots, commands: FixedViewProvider, help: FixedViewProvider): vscode.Disposable => {
   const views = registerFixedViews(commands, help);
   const copy = registerCopy(roots, editorCopyPorts(), vscode.commands.registerCommand);
+  const packageActions = registerPackageActions(roots, editorPackageActionPorts(), vscode.commands.registerCommand);
 
-  return vscode.Disposable.from(views, copy);
+  return vscode.Disposable.from(views, copy, packageActions);
 };
 
 /**
