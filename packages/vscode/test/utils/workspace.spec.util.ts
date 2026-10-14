@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { cp, lstat, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -79,4 +79,28 @@ export const userDataDirFor = async (scratch: RunScratch, name: string, turboPat
   await writeFile(join(userDir, 'settings.json'), settingsText);
 
   return userDataDir;
+};
+
+const isFileOrDir = async (source: string): Promise<boolean> => {
+  const info = await lstat(source);
+
+  return info.isFile() || info.isDirectory();
+};
+
+/**
+ * Copies `dir` to `copy` and returns a restore that replaces `dir` with the copy, so a relaunch starts from the state the
+ * first attempt started from. Only files and folders are copied: a socket or lock link a VS Code window left behind
+ * cannot be copied and must not outlive it. The removal retries like `dispose` (EBUSY on Windows).
+ */
+export const snapshotDir = async (dir: string, copy: string): Promise<() => Promise<void>> => {
+  const copyOptions = { recursive: true, filter: isFileOrDir };
+
+  await cp(dir, copy, copyOptions);
+
+  const restore = async (): Promise<void> => {
+    await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    await cp(copy, dir, copyOptions);
+  };
+
+  return restore;
 };

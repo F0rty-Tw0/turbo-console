@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import { PRESETS, fixtureFor } from '@turbo-console/repo-gen';
 
 import { runEach } from './workspace.spec.util.ts';
-import type { LaunchName, PreparedWorkspace, RunScratch } from '../common/launch.type.ts';
+import { devTurboPath } from '../../src/shared/test/utils/dev-turbo.spec.util.ts';
+import type { LaunchName, LaunchTurboPath, LaunchWorkspace, PreparedWorkspace, RunScratch } from '../common/launch.type.ts';
 
 const BAD_TURBO_JSON = '{ "tasks": { oops';
 
@@ -16,10 +17,12 @@ const STUB_TURBO_SCRIPT = '#!/bin/sh\necho 2.12.0\n';
 
 const EXECUTABLE_MODE = 0o755;
 
+const devTurbo = devTurboPath();
+
 const workspaceDirOf = (scratch: RunScratch, name: LaunchName): string => join(scratch.dir, `${name}-workspace`);
 
 /** A single-folder window on `dir`. */
-export const folderWorkspace = (dir: string): PreparedWorkspace => {
+const folderWorkspace = (dir: string): PreparedWorkspace => {
   const prepared: PreparedWorkspace = { open: dir, folders: [dir] };
 
   return prepared;
@@ -34,7 +37,7 @@ const copyFixture = async (dir: string): Promise<void> => {
 };
 
 /** `empty-folder`: an empty dir. */
-export const emptyFolder = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+const emptyFolder = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
   const dir = workspaceDirOf(scratch, name);
 
   await mkdir(dir, { recursive: true });
@@ -43,7 +46,7 @@ export const emptyFolder = async (scratch: RunScratch, name: LaunchName): Promis
 };
 
 /** `fixture`: a `target-like` copy of the launch's own. */
-export const fixtureCopy = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+const fixtureCopy = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
   const dir = workspaceDirOf(scratch, name);
 
   await copyFixture(dir);
@@ -55,7 +58,7 @@ export const fixtureCopy = async (scratch: RunScratch, name: LaunchName): Promis
  * `error-roots`: a `.code-workspace` with two `target-like` copies, `bad` whose `turbo.json` is invalid JSON and `empty`
  * whose `pnpm-workspace.yaml` globs match no package (turbo 2.11.7 lists no packages and exits 0).
  */
-export const errorRoots = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+const errorRoots = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
   const dir = workspaceDirOf(scratch, name);
   const bad = join(dir, 'bad');
   const empty = join(dir, 'empty');
@@ -73,11 +76,26 @@ export const errorRoots = async (scratch: RunScratch, name: LaunchName): Promise
 };
 
 /** A POSIX `turboPath` stub that prints `2.12.0` for any arguments, just outside the supported range. */
-export const stubTurbo = async (scratch: RunScratch): Promise<string> => {
+const stubTurbo = async (scratch: RunScratch): Promise<string> => {
   const path = join(scratch.dir, 'stub-turbo');
 
   await writeFile(path, STUB_TURBO_SCRIPT);
   await chmod(path, EXECUTABLE_MODE);
 
   return path;
+};
+
+/** Each workspace kind's prep; a new `LaunchWorkspace` member fails to compile until it has one. */
+export const WORKSPACES: Record<LaunchWorkspace, (scratch: RunScratch, name: LaunchName) => Promise<PreparedWorkspace>> = {
+  'fixture-l1': async (scratch) => Promise.resolve(folderWorkspace(scratch.fixtureDir)),
+  fixture: fixtureCopy,
+  'empty-folder': emptyFolder,
+  'error-roots': errorRoots
+};
+
+/** Each `turboPath` kind's setting value (`null` = unset); a new `LaunchTurboPath` member fails to compile until it has one. */
+export const TURBO_PATHS: Record<LaunchTurboPath, (scratch: RunScratch) => Promise<string | null>> = {
+  dev: async () => Promise.resolve(devTurbo),
+  stub: stubTurbo,
+  unset: async () => Promise.resolve(null)
 };

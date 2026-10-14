@@ -5,7 +5,7 @@ export default defineConfig({
     name: 'vscode',
     root: import.meta.dirname,
     watch: false,
-    include: ['src/**/*.spec.ts'],
+    include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'],
     exclude: ['**/*.contract.spec.ts', '**/fixtures/**', '**/tmp/**', '**/node_modules/**']
   }
 });

@@ -114,9 +114,9 @@ export const run = async (): Promise<void> => {
       const query = await queryMs(root, turboPath);
 
       log(`timing query: ${query.toFixed(1)} ms`);
-      budget('tree visible cold', visible, query + TREE_VISIBLE_SLACK_MS, env.budgetFactor);
-      budget('expand', expand, EXPAND_BUDGET_MS, env.budgetFactor);
-      budget('activation', activation, ACTIVATION_BUDGET_MS, env.budgetFactor);
+      budget('tree visible cold', visible, query + TREE_VISIBLE_SLACK_MS, env);
+      budget('expand', expand, EXPAND_BUDGET_MS, env);
+      budget('activation', activation, ACTIVATION_BUDGET_MS, env);
     });
     // later spec §5.3 cases go here, after case 9 and before the warm-up
     await step('warm-up', async () => warmUp(api, root));

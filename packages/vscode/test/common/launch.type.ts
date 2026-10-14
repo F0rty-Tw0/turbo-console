@@ -35,13 +35,15 @@ export type Launch = {
 /**
  * What the harness hands a suite, as JSON in `TURBO_CONSOLE_IT`. No root paths: VS Code's can differ from the
  * harness's on Windows, so suites read them from the workspace folders. `doneFile` is the marker a suite writes as its
- * last step, so a launch that exits 0 without running its suite to the end fails.
+ * last step, so a launch that exits 0 without running its suite to the end fails. `missFile` is this attempt's
+ * timing-miss file: `budget` appends to it before it throws, so the harness tells a timing miss from a functional failure.
  */
 export type SuiteEnv = {
   readonly manifestFile: string | null;
   readonly turboPath: string | null;
   readonly budgetFactor: number;
   readonly doneFile: string;
+  readonly missFile: string;
 };
 
 /** What a launch opens (a folder or a `.code-workspace` file) and the folders it holds, whose files get backdated. */
