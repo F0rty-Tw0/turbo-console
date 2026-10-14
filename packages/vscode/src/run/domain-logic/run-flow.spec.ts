@@ -140,12 +140,12 @@ describe('FEATURE: run flow, starting a run', () => {
     });
   });
 
-  describe.each<[string, RunRequest, Partial<RunPorts>]>([
-    ['a binary that cannot be run', RUN_REQUEST_STUB, NOT_EXECUTABLE],
-    ['a binary check that throws', RUN_REQUEST_STUB, CHECK_THROWS],
-    ['a package name holding filter syntax', FILTER_PACKAGE, {}],
-    ['a launch that rejects', RUN_REQUEST_STUB, LAUNCH_REJECTS]
-  ])('GIVEN %s', (_name, request, overrides) => {
+  describe.each<[string, RunRequest, Partial<RunPorts>, RegExp]>([
+    ['a binary that cannot be run', RUN_REQUEST_STUB, NOT_EXECUTABLE, /^turbo binary missing or not executable: \/bin\/turbo$/],
+    ['a binary check that throws', RUN_REQUEST_STUB, CHECK_THROWS, /^EACCES$/],
+    ['a package name holding filter syntax', FILTER_PACKAGE, {}, /^turbo invalid-argument: invalid turbo name "@x\/a\*": /],
+    ['a launch that rejects', RUN_REQUEST_STUB, LAUNCH_REJECTS, /^no task$/]
+  ])('GIVEN %s', (_name, request, overrides, reason) => {
     let failing: RunPorts;
 
     beforeEach(async () => {
@@ -162,7 +162,7 @@ describe('FEATURE: run flow, starting a run', () => {
     });
 
     it('WHEN it is run THEN the reason is logged', () => {
-      expect(failing.log).toHaveBeenCalledOnce();
+      expect(failing.log).toHaveBeenCalledExactlyOnceWith(expect.stringMatching(reason));
     });
 
     it('WHEN the start timeout passes THEN the user is not told again', () => {
@@ -183,14 +183,6 @@ describe('FEATURE: run flow, starting a run', () => {
       await runTask(store, failing, request);
 
       expect(failing.execute).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('GIVEN a package name holding filter syntax', () => {
-    it('WHEN it is run THEN the turbo error is logged', async () => {
-      await runTask(store, ports, FILTER_PACKAGE);
-
-      expect(ports.log).toHaveBeenCalledWith(expect.stringMatching(/^turbo /));
     });
   });
 });
