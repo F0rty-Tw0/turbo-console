@@ -47,13 +47,15 @@ export type RunRequest = {
 };
 
 /**
- * Editor effects of the run flow. `canExecute` answers whether `binaryPath` exists and may be run; `after` calls
+ * Editor effects of the run flow. `canExecute` answers whether `binaryPath` exists and may be run; `isActive` whether
+ * VS Code already runs a task of `definition`, one the store may not know (Rerun Last Task, a reconnect); `after` calls
  * `action` once `delayMs` has passed; `log` takes a finished line (`logTextOf`); `now` is wall-clock milliseconds, as
  * the run summary files' times are.
  */
 export type RunPorts = {
   readonly canExecute: (binaryPath: string) => Promise<boolean>;
-  readonly execute: (request: RunRequest, args: string[]) => Promise<Terminable>;
+  readonly isActive: (definition: RunDefinition) => boolean;
+  readonly execute: (request: RunRequest, args: string[], launchedAt: number) => Promise<Terminable>;
   readonly after: (delayMs: number, action: () => void) => void;
   readonly match: (root: string, run: RunToMatch) => Promise<RunMatch | null>;
   readonly notifyFailedToStart: () => void;
