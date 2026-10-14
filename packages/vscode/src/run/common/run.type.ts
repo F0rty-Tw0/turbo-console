@@ -119,3 +119,10 @@ export type TaskTarget = {
 
 /** `vscode.window.showErrorMessage` with one action: resolves with the action picked, or `undefined` when closed. */
 export type ShowError = (text: string, action: string) => PromiseLike<string | undefined>;
+
+export type Disposed = {
+  readonly dispose: () => void;
+};
+
+/** `vscode.commands.registerCommand`. */
+export type CommandRegistry = (command: string, callback: (arg: unknown) => unknown) => Disposed;
