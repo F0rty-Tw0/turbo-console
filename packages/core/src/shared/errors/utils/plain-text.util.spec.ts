@@ -14,6 +14,9 @@ const INVISIBLE: [string, string][] = [
   ['the Mongolian vowel separator', '\u180E'],
   ['word joiners, invisible operators and deprecated format characters', '\u2060\u2064\u206A\u206F'],
   ['interlinear annotation characters', '\uFFF9\uFFFA\uFFFB'],
+  ['prepended concatenation marks', '\u0600\u0605\u06DD\u070F\u08E2'],
+  ['Egyptian hieroglyph format controls', '\u{13430}\u{1343F}'],
+  ['lone surrogates, a low one before a high one so they cannot pair', '\uDFFF\uD800'],
   ['tag characters', '\u{E0000}\u{E0041}\u{E007F}'],
   ['other default-ignorable characters (grapheme joiner, Hangul fillers, variation selectors)', '\u034F\u115F\u3164\uFE0F\u180B\uFFA0']
 ];
@@ -66,9 +69,18 @@ describe('FEATURE: plain text for messages', () => {
     it('WHEN made one plain line THEN no control or default-ignorable character is left', () => {
       const line = plainLine(everyCodePoint());
 
-      const leftovers = line.match(/[\p{Cc}\p{Default_Ignorable_Code_Point}]/gu);
+      const leftovers = line.match(/[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/gu);
 
       expect(leftovers).toBeNull();
+    });
+  });
+
+  describe('GIVEN the two halves of a tag character split by a zero-width space', () => {
+    it('WHEN made plain THEN neither half is left to join the other', () => {
+      const text = 'ok\uDB40\u200B\uDC69';
+
+      expect(plainLines(text)).toBe('ok');
+      expect(plainLine(text)).toBe('ok');
     });
   });
 

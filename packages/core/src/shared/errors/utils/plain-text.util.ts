@@ -4,9 +4,12 @@ import { stripVTControlCharacters } from 'node:util';
  * Characters that never reach a message: controls (C0, DEL, C1 with U+0085 NEL among them); default-ignorable code
  * points (soft hyphen, zero-width characters and direction marks, bidi embeddings, overrides and isolates, word joiner,
  * invisible operators, variation selectors, Hangul fillers, the byte order mark, tag characters); line and paragraph
- * separators; interlinear annotation characters. Tag characters are astral, so the text is walked by code point.
+ * separators; every other format character (`Cf`: interlinear annotation, prepended concatenation marks, Egyptian
+ * hieroglyph format controls); lone surrogates (`Cs`). Tag characters are astral, so the text is walked by code point,
+ * and a lone surrogate is dropped in that same walk: dropping a character between two halves cannot join them into a
+ * hidden astral character.
  */
-const DROPPED = /[\p{Cc}\p{Default_Ignorable_Code_Point}\u2028\u2029\uFFF9-\uFFFB]/u;
+const DROPPED = /[\p{Cc}\p{Cf}\p{Cs}\p{Default_Ignorable_Code_Point}\u2028\u2029]/u;
 
 const isPrintable = (char: string): boolean => !DROPPED.test(char);
 
