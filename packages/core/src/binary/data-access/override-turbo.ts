@@ -59,12 +59,12 @@ const sharedVersion = async (path: string, root: string, stats: Stats): Promise<
 /**
  * The override binary's `--version` stdout, trimmed. Spawned once (in `root`, within the version budget) per file
  * state (see `versions`), so a replaced or rewritten binary is asked again. Concurrent callers share one spawn; each
- * stops waiting when its own `signal` aborts, and an already-aborted caller starts none. Throws `not-found` when
- * `path` is missing and `failed` when `--version` exits non-zero; any other error is left to the caller to convert.
+ * stops waiting, through the stat too, when its own `signal` aborts. An already-aborted caller stats and starts
+ * nothing and rejects aborted, even on a cached version. Throws `not-found` when `path` is missing and `failed` when
+ * `--version` exits non-zero; any other error is left to the caller to convert.
  */
 export const overrideVersion = async (path: string, root: string, signal?: AbortSignal): Promise<string> => {
-  const stats = await statOverride(path);
-  const shared = async (): Promise<string> => sharedVersion(path, root, stats);
+  const statThenShare = async (): Promise<string> => sharedVersion(path, root, await statOverride(path));
 
-  return untilAborted(shared, signal);
+  return untilAborted(statThenShare, signal);
 };

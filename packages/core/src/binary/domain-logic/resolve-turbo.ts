@@ -47,7 +47,8 @@ const withAbsoluteOverride = (options: ResolveTurboOptions): ResolveTurboOptions
 
 /**
  * `checkCwd` gets a signal that never aborts, not the caller's: an aborted caller signal makes `checkCwd` resolve,
- * which would skip the root check. The caller's signal still reaches the override's `--version` spawn.
+ * which would skip the root check. The caller's signal still ends its wait for the override's `--version` (the shared
+ * spawn runs on its budget alone).
  */
 const NEVER_ABORTED = new AbortController().signal;
 

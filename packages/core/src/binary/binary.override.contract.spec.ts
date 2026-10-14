@@ -153,7 +153,26 @@ describe.skipIf(process.platform === 'win32')('FEATURE: override turbo resolutio
 
       expect(error).toBeInstanceOf(TurboException);
       expect(error).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
-      expect(turboSpawns(stub)).toBe(0);
+    });
+
+    it('WHEN its version is cached and the caller has aborted THEN it rejects aborted with no new spawn', async () => {
+      const stub = await writeStub('cached-aborted.sh', 'echo 2.11.7');
+      const options = { trusted: true, overridePath: stub, signal: AbortSignal.abort() } as const;
+
+      await resolveStub(stub);
+
+      const error = await rejectionOf(resolveTurbo(tempDir, options));
+
+      expect(error).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
+      expect(turboSpawns(stub)).toBe(1);
+    });
+
+    it('WHEN it is missing and the caller has aborted THEN the abort wins over not-found', async () => {
+      const options = { trusted: true, overridePath: join(tempDir, 'absent.sh'), signal: AbortSignal.abort() } as const;
+
+      const error = await rejectionOf(resolveTurbo(tempDir, options));
+
+      expect(error).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
     });
 
     it('WHEN the root does not exist THEN it rejects io naming the root', async () => {
