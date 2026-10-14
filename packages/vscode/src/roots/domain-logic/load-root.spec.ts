@@ -1,13 +1,10 @@
 import { TurboException } from '@turbo-console/core';
-import type { CachedWorkspace } from '@turbo-console/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { loadRoot } from './load-root.ts';
 import type { LoadedModel } from '../common/root.type.ts';
 import { loadDepsMock } from '../test/mocks/load-deps.mock.ts';
-import { CACHED_WORKSPACE_STUB, TURBO_BINARY_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/root.stub.ts';
-
-const STALE_CACHE: CachedWorkspace = { ...CACHED_WORKSPACE_STUB, isFresh: false };
+import { STALE_CACHED_WORKSPACE_STUB, TURBO_BINARY_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/root.stub.ts';
 
 const LOADED: LoadedModel = {
   kind: 'model',
@@ -60,9 +57,22 @@ describe('FEATURE: load a root', () => {
 
       expect(result).toStrictEqual(expected);
       expect(publish).toHaveBeenCalledExactlyOnceWith(expected);
+      expect(result).toBe(publish.mock.calls[0]?.[0]);
       expect(deps.load).not.toHaveBeenCalled();
       expect(deps.progress).not.toHaveBeenCalled();
       expect(deps.acquire).not.toHaveBeenCalled();
+    });
+
+    it('WHEN publish throws THEN the cached model is still returned and the error is logged', async () => {
+      const deps = loadDepsMock();
+      const publish = vi.fn(() => {
+        throw new Error('view gone');
+      });
+
+      const result = await loadRoot('cache-first', deps, new AbortController().signal, publish);
+
+      expect(result).toStrictEqual({ ...LOADED, fromCache: true });
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('view gone');
     });
   });
 
@@ -71,7 +81,7 @@ describe('FEATURE: load a root', () => {
       const deps = loadDepsMock();
       const publish = vi.fn();
 
-      vi.mocked(deps.readCached).mockResolvedValue(STALE_CACHE);
+      vi.mocked(deps.readCached).mockResolvedValue(STALE_CACHED_WORKSPACE_STUB);
 
       const result = await loadRoot('cache-first', deps, new AbortController().signal, publish);
 

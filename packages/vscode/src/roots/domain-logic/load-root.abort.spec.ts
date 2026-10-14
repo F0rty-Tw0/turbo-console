@@ -3,13 +3,11 @@ import type { CachedWorkspace } from '@turbo-console/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { loadRoot } from './load-root.ts';
-import { LOAD_DEADLINE_MS } from '../common/roots.const.ts';
+import { LOAD_DEADLINE_MS, LOAD_GRACE_MS } from '../common/roots.const.ts';
 import { loadDepsMock } from '../test/mocks/load-deps.mock.ts';
-import { CACHED_WORKSPACE_STUB, TURBO_BINARY_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/root.stub.ts';
+import { STALE_CACHED_WORKSPACE_STUB, TURBO_BINARY_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/root.stub.ts';
 import { acquireUntilAborted } from '../test/utils/abortable-acquire.spec.util.ts';
 import { loadUntilAborted } from '../test/utils/abortable-load.spec.util.ts';
-
-const STALE_CACHE: CachedWorkspace = { ...CACHED_WORKSPACE_STUB, isFresh: false };
 
 describe('FEATURE: abort, deadline and load slot of a root load', () => {
   afterEach(() => {
@@ -64,7 +62,7 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
     it('WHEN the timeout fires THEN the error of the load itself is the failure, logged, and the timeout was LOAD_DEADLINE_MS', async () => {
       const deps = loadDepsMock();
       const expiry = new AbortController();
-      const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(expiry.signal);
+      const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValueOnce(expiry.signal);
 
       vi.mocked(deps.load).mockImplementation(loadUntilAborted);
 
@@ -81,7 +79,32 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
 
       expect(result).toMatchObject({ kind: 'error', stage: 'load', error: loadError });
       expect(deps.log).toHaveBeenCalledExactlyOnceWith('aborted');
-      expect(timeout).toHaveBeenCalledExactlyOnceWith(LOAD_DEADLINE_MS);
+      expect(timeout).toHaveBeenNthCalledWith(1, LOAD_DEADLINE_MS);
+      expect(timeout).toHaveBeenNthCalledWith(2, LOAD_DEADLINE_MS + LOAD_GRACE_MS);
+    });
+
+    it('WHEN load ignores the deadline THEN the backstop ends it as a logged load failure and frees the slot', async () => {
+      const deps = loadDepsMock();
+      const release = vi.fn();
+      const backstop = new AbortController();
+      const timeout = vi.spyOn(AbortSignal, 'timeout');
+
+      timeout.mockReturnValueOnce(new AbortController().signal).mockReturnValueOnce(backstop.signal);
+      vi.mocked(deps.acquire).mockResolvedValue(release);
+      vi.mocked(deps.load).mockReturnValue(new Promise(() => undefined));
+
+      const pending = loadRoot('full', deps, new AbortController().signal, vi.fn());
+
+      await vi.waitFor(() => {
+        expect(deps.load).toHaveBeenCalledOnce();
+      });
+      backstop.abort(new Error('backstop expired'));
+
+      const result = await pending;
+
+      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: new TurboException('failed', 'backstop expired') });
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('backstop expired');
+      expect(release).toHaveBeenCalledOnce();
     });
 
     it('WHEN the slot is acquired THEN the timeout is created only after acquire resolves', async () => {
@@ -102,7 +125,7 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       slot.resolve(vi.fn<() => void>());
       await pending;
 
-      expect(timeout).toHaveBeenCalledExactlyOnceWith(LOAD_DEADLINE_MS);
+      expect(timeout).toHaveBeenNthCalledWith(1, LOAD_DEADLINE_MS);
     });
   });
 
@@ -174,6 +197,8 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       const deps = loadDepsMock();
       const controller = new AbortController();
       const publish = vi.fn();
+      // The abort sits in the getter: loadRoot reads isFresh after the cache read settles and before its abort check,
+      // the only point where an abort meets a non-null cache. A queued microtask abort loses to the read's own race.
       const abortsWhenRead: CachedWorkspace = {
         model: WORKSPACE_MODEL_STUB,
         get isFresh(): boolean {
@@ -213,7 +238,7 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       vi.mocked(deps.readCached).mockImplementation(async () => {
         controller.abort();
 
-        return Promise.resolve(STALE_CACHE);
+        return Promise.resolve(STALE_CACHED_WORKSPACE_STUB);
       });
 
       const result = await loadRoot('cache-first', deps, controller.signal, publish);
@@ -323,6 +348,20 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: new TurboException('failed', 'queue broken') });
       expect(deps.log).toHaveBeenCalledExactlyOnceWith('queue broken');
       expect(deps.progress).not.toHaveBeenCalled();
+    });
+
+    it('WHEN release throws THEN the load result still returns and the error is logged', async () => {
+      const deps = loadDepsMock();
+      const release = vi.fn(() => {
+        throw new Error('slot gone');
+      });
+
+      vi.mocked(deps.acquire).mockResolvedValue(release);
+
+      const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
+
+      expect(result).toMatchObject({ kind: 'model', fromCache: false });
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('slot gone');
     });
   });
 });

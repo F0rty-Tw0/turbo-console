@@ -23,3 +23,5 @@ export const CACHED_WORKSPACE_STUB: CachedWorkspace = {
   model: WORKSPACE_MODEL_STUB,
   isFresh: true
 };
+
+export const STALE_CACHED_WORKSPACE_STUB: CachedWorkspace = { ...CACHED_WORKSPACE_STUB, isFresh: false };

@@ -3,7 +3,7 @@ import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '@turbo-consol
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { LoadDeps, LoadFailure, LoadMode, LoadResult, LoadedModel } from '../common/root.type.ts';
-import { LOAD_DEADLINE_MS } from '../common/roots.const.ts';
+import { LOAD_DEADLINE_MS, LOAD_GRACE_MS } from '../common/roots.const.ts';
 import { raceSignal } from '../utils/race-signal.util.ts';
 
 /** Rebuilt rather than passed on, so the `cause` (which can hold turbo's raw stderr) never leaves this module. */
@@ -55,20 +55,30 @@ const cachedModelOf = async (
   return loadedModel(binary, cached);
 };
 
+/** A port that throws must not make `loadRoot` throw: its error is logged and the load goes on. */
+const runPort = (port: () => void, deps: LoadDeps): void => {
+  try {
+    port();
+  } catch (error) {
+    deps.log(logTextOf(error));
+  }
+};
+
 const loadUnderDeadline = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal): Promise<LoadResult> => {
   const deadline = AbortSignal.any([signal, AbortSignal.timeout(LOAD_DEADLINE_MS)]);
+  const backstop = AbortSignal.any([signal, AbortSignal.timeout(LOAD_DEADLINE_MS + LOAD_GRACE_MS)]);
   const work = async (): Promise<WorkspaceModel> => deps.load(binary, deadline);
   const withProgress = async (): Promise<WorkspaceModel> => deps.progress(work);
-  const model = await raceSignal(withProgress, signal);
+  const model = await raceSignal(withProgress, backstop);
   const loaded: LoadedModel = { kind: 'model', binary, model, fromCache: false, isFresh: true };
 
   return loaded;
 };
 
 /**
- * The deadline starts after the slot is won: time queued behind other roots does not count against it. The race is on
- * the caller's signal only: `load` honors the deadline itself, so an expiry arrives as core's own `timed out` error with
- * turbo's stderr tail, not as a bare `TimeoutError`.
+ * The deadline starts after the slot is won: time queued behind other roots does not count against it. `load` honors
+ * the deadline itself, so an expiry arrives as core's own `timed out` error with turbo's stderr tail; the race is on the
+ * caller's signal plus a backstop `LOAD_GRACE_MS` later, which frees the slot only when a step core does not bound hangs.
  */
 const fullLoad = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal): Promise<LoadResult> => {
   let release: () => void;
@@ -84,7 +94,7 @@ const fullLoad = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal
   } catch (error) {
     return failureOf('load', error, deps, signal);
   } finally {
-    release();
+    runPort(release, deps);
   }
 };
 
@@ -94,7 +104,8 @@ const fullLoad = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal
  * the slot is won, and the caller's `signal`. The cache read, the slot wait and the load all settle when the caller
  * aborts, even if a port hangs (a port that hands out the slot must reject on abort, or the slot is lost); nothing is
  * published or loaded after the caller aborted. Never throws: a failure is the result, with `cause` stripped, and is
- * logged as one clean line through `deps.log` unless the caller aborted; a deadline expiry is logged.
+ * logged as one clean line through `deps.log` unless the caller aborted; a deadline expiry is logged, and so is a
+ * `publish` or slot `release` that throws.
  */
 export const loadRoot = async (
   mode: LoadMode,
@@ -116,7 +127,9 @@ export const loadRoot = async (
 
   if (cached === null) return fullLoad(binary, deps, signal);
 
-  publish(cached);
+  runPort(() => {
+    publish(cached);
+  }, deps);
 
   if (cached.isFresh) return cached;
 
