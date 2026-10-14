@@ -67,7 +67,7 @@ describe('FEATURE: cleaning untrusted text', () => {
   });
 
   describe('GIVEN the first and last code point of each dropped range', () => {
-    it.each(['\u0000', '\u001F', '\u007F', '\u009F', '\u202A', '\u202E', '\u2066', '\u2069'])(
+    it.each(['\u0000', '\u001A', '\u007F', '\u009F', '\u202A', '\u202E', '\u2066', '\u2069'])(
       'WHEN %j is cleaned THEN it is dropped',
       (char) => {
         expect(cleanText(`a${char}b`, MAX)).toBe('ab');
@@ -117,6 +117,18 @@ describe('FEATURE: cleaning untrusted text', () => {
     });
   });
 
+  describe('GIVEN words split by separator controls', () => {
+    it('WHEN cleaned THEN each split becomes a space', () => {
+      expect(cleanText('a\u001Cb\u001Dc\u001Ed\u001Fe', MAX)).toBe('a b c d e');
+    });
+  });
+
+  describe('GIVEN padding made of braille blanks', () => {
+    it('WHEN cleaned THEN it folds into one space', () => {
+      expect(cleanText('a \u2800 \u2800 \u2800 b', MAX)).toBe('a b');
+    });
+  });
+
   describe('GIVEN an ANSI color escape', () => {
     it('WHEN cleaned THEN the whole sequence is dropped', () => {
       expect(cleanText('\u001B[31mred\u001B[0m', MAX)).toBe('red');
@@ -148,6 +160,12 @@ describe('FEATURE: cleaning untrusted multi-line text', () => {
   describe('GIVEN lines with tabs and a bidi control', () => {
     it('WHEN cleaned THEN newline and tab are kept and the control is dropped', () => {
       expect(cleanLines('one\n\ttwo\u202E', MAX)).toBe('one\n\ttwo');
+    });
+  });
+
+  describe('GIVEN lines split by CR LF, CR, VT, FF, NEL and the Unicode line separators', () => {
+    it('WHEN cleaned THEN each split is a newline, so no two lines join', () => {
+      expect(cleanLines('a\r\nb\rc\vd\fe\u0085f\u2028g\u2029h', MAX)).toBe('a\nb\nc\nd\ne\nf\ng\nh');
     });
   });
 
