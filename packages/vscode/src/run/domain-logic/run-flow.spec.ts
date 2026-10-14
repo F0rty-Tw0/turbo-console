@@ -181,6 +181,10 @@ describe('FEATURE: run flow, starting a run', () => {
       expect(elsewhere.info).toHaveBeenCalledExactlyOnceWith('Already running.');
     });
 
+    it('WHEN it is run THEN the log names the task VS Code runs', () => {
+      expect(elsewhere.log).toHaveBeenCalledExactlyOnceWith('build in /ws is already running as a VS Code task');
+    });
+
     it('WHEN it is run THEN turbo is not launched', () => {
       expect(elsewhere.execute).not.toHaveBeenCalled();
     });

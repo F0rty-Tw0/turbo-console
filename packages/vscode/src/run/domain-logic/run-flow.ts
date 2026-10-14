@@ -94,6 +94,7 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
 
   if (isActiveElsewhere) {
     ports.info(ALREADY_RUNNING_TEXT);
+    ports.log(logTextOf(`${definition.id} in ${definition.root} is already running as a VS Code task`));
 
     return;
   }
