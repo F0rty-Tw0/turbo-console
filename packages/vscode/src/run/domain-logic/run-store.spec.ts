@@ -129,17 +129,35 @@ describe('FEATURE: run store', () => {
       expect(ended).toMatchObject({ state: 'stopped', exitCode: 1, matching: false });
     });
 
-    it('WHEN it fails to start THEN the entry ends as failed to start', () => {
-      const failed = store.failStart(RUN);
+    it('WHEN it fails to start THEN the entry ends as failed to start at that time', () => {
+      const failed = store.failStart(RUN, 1500);
 
-      expect(failed?.state).toBe('failed-to-start');
+      expect(failed).toMatchObject({ state: 'failed-to-start', endedAt: 1500 });
+    });
+
+    it('WHEN Stop was pressed and it fails to start THEN it ends as stopped', () => {
+      store.requestStop(RUN);
+
+      const failed = store.failStart(RUN, 1500);
+
+      expect(failed).toMatchObject({ state: 'stopped', endedAt: 1500 });
     });
 
     it('WHEN it fails to start after the execution arrived THEN the execution is terminated', () => {
       store.attach(RUN, execution);
 
-      store.failStart(RUN);
+      store.failStart(RUN, 1500);
 
+      expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN Stop is pressed and a listener throws THEN the execution is still terminated', () => {
+      store.attach(RUN, execution);
+      store.onDidChange(() => {
+        throw new Error('listener');
+      });
+
+      expect(() => store.requestStop(RUN)).toThrow('listener');
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
 
@@ -174,7 +192,7 @@ describe('FEATURE: run store', () => {
     });
 
     it('WHEN it fails to start THEN nothing is ended', () => {
-      expect(store.failStart(UNKNOWN)).toBeNull();
+      expect(store.failStart(UNKNOWN, 1500)).toBeNull();
     });
 
     it('WHEN Stop is pressed THEN nothing changes', () => {
@@ -194,7 +212,7 @@ describe('FEATURE: run store', () => {
     it('WHEN an ended run sees its task end THEN it keeps its end state', () => {
       store.processEnded(RUN, 0, 4000);
 
-      store.failStart(RUN);
+      store.failStart(RUN, 5000);
 
       expect(entryOf(store, RUN).state).toBe('passed');
     });

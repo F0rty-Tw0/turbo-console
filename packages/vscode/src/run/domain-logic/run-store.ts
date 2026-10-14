@@ -55,8 +55,8 @@ export class RunStore {
 
     const entry: RunEntry = { ...slot.entry, stopRequested: true };
 
-    this.put({ entry, execution: slot.execution });
     slot.execution?.terminate();
+    this.put({ entry, execution: slot.execution });
   }
 
   public processStarted(definition: RunDefinition, at: number): void {
@@ -84,13 +84,17 @@ export class RunStore {
     return entry;
   }
 
-  /** Ends a run whose process never started as `failed-to-start`, terminating its execution if one was handed over. */
-  public failStart(definition: RunDefinition): RunEntry | null {
+  /**
+   * Ends a run whose process never started at `at`, terminating its execution if one was handed over: `stopped` when
+   * Stop came first, else `failed-to-start`.
+   */
+  public failStart(definition: RunDefinition, at: number): RunEntry | null {
     const slot = this.running(definition);
 
     if (slot === undefined) return null;
 
-    const entry: RunEntry = { ...slot.entry, state: 'failed-to-start' };
+    const state = slot.entry.stopRequested ? 'stopped' : 'failed-to-start';
+    const entry: RunEntry = { ...slot.entry, state, endedAt: at };
 
     this.put({ entry, execution: slot.execution });
     slot.execution?.terminate();
