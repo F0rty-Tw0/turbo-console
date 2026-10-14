@@ -68,5 +68,13 @@ describe('FEATURE: package lookup', () => {
     it('GIVEN the root itself WHEN cut THEN the rest is empty', () => {
       expect(relativePathOf('/ws', '/ws')).toBe('');
     });
+
+    it('GIVEN the filesystem root as the root WHEN cut THEN no character after its separator is lost', () => {
+      expect(relativePathOf('/', '/packages/a/package.json')).toBe('packages/a/package.json');
+    });
+
+    it('GIVEN a drive root as the root WHEN cut THEN no character after its separator is lost', () => {
+      expect(relativePathOf('c:\\', 'c:\\packages\\a\\package.json')).toBe('packages\\a\\package.json');
+    });
   });
 });
