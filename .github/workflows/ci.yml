@@ -44,6 +44,14 @@ jobs:
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps --only-shell chromium
 
+      # Windows temp dirs on runner.temp (D:): file creates under the default C: temp dir cost 15-60 ms each and time out
+      # repo-gen's fixture tests. Windows only, because Node on Linux also falls back to TMP/TEMP when TMPDIR is unset.
+      - name: Move Windows temp dirs to runner.temp
+        if: runner.os == 'Windows'
+        run: |
+          "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+          "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+
       - name: Check
         run: pnpm turbo run lint typecheck test build contract e2e
 
