@@ -43,6 +43,29 @@
         }
       ]
     },
+    "taskDefinitions": [
+      {
+        "type": "turbo-console",
+        "required": [
+          "root",
+          "id"
+        ],
+        "properties": {
+          "root": {
+            "type": "string",
+            "description": "The workspace root turbo runs in."
+          },
+          "id": {
+            "type": "string",
+            "description": "The turbo task id, for example @org/web#build."
+          },
+          "affected": {
+            "type": "boolean",
+            "description": "Run only the packages turbo finds affected."
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "command": "turboConsole.refresh",
@@ -66,6 +89,18 @@
         "command": "turboConsole.showOutput",
         "title": "Show Output",
         "category": "Turbo Console"
+      },
+      {
+        "command": "turboConsole.runTask",
+        "title": "Run Task",
+        "category": "Turbo Console",
+        "icon": "$(play)"
+      },
+      {
+        "command": "turboConsole.stopTask",
+        "title": "Stop Task",
+        "category": "Turbo Console",
+        "icon": "$(debug-stop)"
       }
     ],
     "menus": {
@@ -86,6 +121,28 @@
           "group": "navigation@2"
         }
       ],
+      "view/item/context": [
+        {
+          "command": "turboConsole.runTask",
+          "when": "view == turboConsole.tree && viewItem == turboTask",
+          "group": "inline@0"
+        },
+        {
+          "command": "turboConsole.stopTask",
+          "when": "view == turboConsole.tree && viewItem == turboTask.running",
+          "group": "inline@0"
+        },
+        {
+          "command": "turboConsole.runTask",
+          "when": "view == turboConsole.tree && viewItem == turboTask",
+          "group": "1_run"
+        },
+        {
+          "command": "turboConsole.stopTask",
+          "when": "view == turboConsole.tree && viewItem == turboTask.running",
+          "group": "1_run"
+        }
+      ],
       "commandPalette": [
         {
           "command": "turboConsole.refresh",
@@ -102,6 +159,14 @@
         {
           "command": "turboConsole.showOutput",
           "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.runTask",
+          "when": "false"
+        },
+        {
+          "command": "turboConsole.stopTask",
+          "when": "false"
         }
       ]
     },
