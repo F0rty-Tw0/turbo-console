@@ -119,9 +119,11 @@ const matchOf = async (ports: RunPorts, entry: RunEntry): Promise<RunMatch | nul
 
 /**
  * Spec §4.5 step 6, after `processEnded`: the summary match of exactly this run, or none (no summary, more than one, or
- * a lookup error, logged). `matching` always ends `false`.
+ * a lookup error, logged). `matching` always ends `false`; nothing for an entry not waiting for a match (a stopped run).
  */
 export const finishRun = async (store: Runs, ports: RunPorts, entry: RunEntry): Promise<void> => {
+  if (!entry.matching) return;
+
   const definition: RunDefinition = { root: entry.root, id: entry.taskId };
   const match = await matchOf(ports, entry);
 

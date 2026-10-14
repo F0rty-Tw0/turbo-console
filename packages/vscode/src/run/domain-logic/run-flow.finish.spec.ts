@@ -124,13 +124,22 @@ describe('FEATURE: run flow, matching a run summary', () => {
   });
 
   describe('GIVEN a run the user stopped', () => {
-    it('WHEN its process ends THEN it never waits for a match', async () => {
+    let entry: RunEntry;
+
+    beforeEach(async () => {
       await runTask(store, ports, RUN_REQUEST_STUB);
       store.requestStop(RUN);
+      entry = endedEntry(store, 1);
+    });
 
-      const entry = endedEntry(store, 1);
-
+    it('WHEN its process ends THEN it never waits for a match', () => {
       expect(entry.matching).toBe(false);
+    });
+
+    it('WHEN it is finished THEN no summary is asked for', async () => {
+      await finishRun(store, ports, entry);
+
+      expect(ports.match).not.toHaveBeenCalled();
     });
   });
 });
