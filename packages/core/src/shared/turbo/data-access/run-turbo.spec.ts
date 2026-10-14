@@ -50,8 +50,9 @@ let stubDir = '';
 
 const stubFile = (stub: StubName, extension: string): string => join(stubDir, `${stub}.${extension}`);
 
+/** Writes the pid with builtins only (`${0%/*}`, not `dirname`), so no fork or exec stands between the shell's start and its pid. */
 const stubScript = (stub: StubName): string =>
-  `#!/bin/sh\n${STUB_TRAPS[stub]}\necho $$ > "$(dirname "$0")/${stub}.pid"\necho "$1" > "$(dirname "$0")/${stub}.argv"\n${STUB_BODIES[stub]}\n`;
+  `#!/bin/sh\n${STUB_TRAPS[stub]}\necho $$ > "\${0%/*}/${stub}.pid"\necho "$1" > "\${0%/*}/${stub}.argv"\n${STUB_BODIES[stub]}\n`;
 
 const writeStub = async (stub: StubName): Promise<void> => {
   await writeFile(stubFile(stub, 'sh'), stubScript(stub), { mode: 0o755 });
