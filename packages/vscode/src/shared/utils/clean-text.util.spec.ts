@@ -99,6 +99,24 @@ describe('FEATURE: cleaning untrusted text', () => {
     });
   });
 
+  describe('GIVEN spaces split by dropped characters', () => {
+    it.each([
+      ['a zero-width space', '\u200B'],
+      ['a bell', '\u0007'],
+      ['an ANSI escape', '\u001B[0m'],
+    ])('WHEN the split is %s THEN the spaces still fold into one', (_name, split) => {
+      const splitSpace = ` ${split}`;
+
+      expect(cleanText(`a${splitSpace.repeat(30)}b`, MAX)).toBe('a b');
+    });
+  });
+
+  describe('GIVEN words split by a form feed, vertical tab or next line', () => {
+    it('WHEN cleaned THEN each split becomes a space', () => {
+      expect(cleanText('exit\f0\vok\u0085done', MAX)).toBe('exit 0 ok done');
+    });
+  });
+
   describe('GIVEN an ANSI color escape', () => {
     it('WHEN cleaned THEN the whole sequence is dropped', () => {
       expect(cleanText('\u001B[31mred\u001B[0m', MAX)).toBe('red');

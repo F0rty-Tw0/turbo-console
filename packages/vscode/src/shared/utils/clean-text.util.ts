@@ -5,11 +5,14 @@ const ELLIPSIS = '…';
 /** Input past `max` times this many UTF-16 units is never read: cleaning costs O(max), however long the repo text. */
 const WINDOW_FACTOR = 4;
 
+/** Any space, tab or line break (VT, FF and NEL among them): each becomes a plain space, so `a\nb` does not read as `ab`. */
+const WHITESPACE = /\p{White_Space}/gu;
+
 /**
- * A run of spaces, tabs or line breaks in one-line text becomes one space: `a\nb` does not read as `ab`, and padding
- * cannot push fake text such as a run state into view.
+ * A run of spaces left once dropped characters are gone: folded into one, so padding cannot push fake text such as a run
+ * state into view, even with invisible characters between the spaces.
  */
-const WHITESPACE_RUN = /[\p{Zs}\t\n\r\u2028\u2029]+/gu;
+const SPACE_RUN = / {2,}/g;
 
 const HIGH_SURROGATE_FIRST = 0xd800;
 const HIGH_SURROGATE_LAST = 0xdbff;
@@ -48,7 +51,12 @@ const cleanedWith = (text: string, max: number, plain: (text: string) => string)
   return cutTo(marked, max);
 };
 
-const oneLine = (text: string): string => plainLine(text.replace(WHITESPACE_RUN, ' '));
+const oneLine = (text: string): string => {
+  const spaced = text.replace(WHITESPACE, ' ');
+  const visible = plainLine(spaced);
+
+  return visible.replace(SPACE_RUN, ' ');
+};
 
 /**
  * Text from a repo, a model or a summary is untrusted: one line with ANSI escapes, controls, invisible and bidi
