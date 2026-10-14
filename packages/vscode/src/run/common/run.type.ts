@@ -97,3 +97,6 @@ export type TaskTarget = {
   readonly definition: RunDefinition;
   readonly packageName: string;
 };
+
+/** `vscode.window.showErrorMessage` with one action: resolves with the action picked, or `undefined` when closed. */
+export type ShowError = (text: string, action: string) => PromiseLike<string | undefined>;

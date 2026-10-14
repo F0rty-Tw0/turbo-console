@@ -9,3 +9,7 @@ export const TASK_ENDED_TEXT = 'task ended before its process started';
 
 /** The task definition type of every run, declared in package.json `taskDefinitions`. */
 export const RUN_TASK_TYPE = 'turbo-console';
+
+export const FAILED_TO_START_TEXT = "Couldn't start turbo.";
+
+export const SHOW_OUTPUT_ACTION = 'Show Output';
