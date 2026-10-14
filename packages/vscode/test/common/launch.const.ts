@@ -24,5 +24,24 @@ const L1: Launch = {
 
 const L2: Launch = { ...L1, name: 'L2', suite: 'warm.suite' };
 
-/** Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir. */
-export const LAUNCHES: Launch[] = [L1, L2];
+const L3: Launch = {
+  name: 'L3',
+  suite: 'no-root.suite',
+  workspace: 'empty-folder',
+  turboPath: 'unset',
+  userData: 'own',
+  posixOnly: false,
+  env: NO_ENV
+};
+
+const L4: Launch = { ...L3, name: 'L4', suite: 'no-binary.suite', workspace: 'fixture' };
+
+const L5: Launch = { ...L4, name: 'L5', suite: 'stub-version.suite', turboPath: 'stub', posixOnly: true };
+
+const L6: Launch = { ...L3, name: 'L6', suite: 'error-roots.suite', workspace: 'error-roots', turboPath: 'dev' };
+
+/**
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L6 each get a user-data dir
+ * of their own.
+ */
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6];
