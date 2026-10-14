@@ -1,3 +1,5 @@
+import { getEventListeners } from 'node:events';
+
 import { describe, expect, it } from 'vitest';
 
 import { LoadSlots } from './load-slots.ts';
@@ -108,6 +110,35 @@ describe('FEATURE: load slots', () => {
       const state = await stateOf(slots.acquire(LIVE));
 
       expect(state).toBe('granted');
+    });
+  });
+
+  describe('GIVEN one slot held and a waiter queued on its own signal', () => {
+    it('WHEN the waiter is granted THEN it stops listening for an abort', async () => {
+      const slots = new LoadSlots(1);
+      const release = await slots.acquire(LIVE);
+      const controller = new AbortController();
+      const waiting = slots.acquire(controller.signal);
+
+      release();
+      await waiting;
+
+      expect(getEventListeners(controller.signal, 'abort')).toHaveLength(0);
+    });
+
+    it('WHEN the waiter aborts after its grant THEN its slot stays held', async () => {
+      const slots = new LoadSlots(1);
+      const release = await slots.acquire(LIVE);
+      const controller = new AbortController();
+      const waiting = slots.acquire(controller.signal);
+
+      release();
+      await waiting;
+      controller.abort();
+
+      const next = slots.acquire(LIVE);
+
+      expect(await stateOf(next)).toBe('waiting');
     });
   });
 });
