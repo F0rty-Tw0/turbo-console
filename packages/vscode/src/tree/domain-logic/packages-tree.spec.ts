@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PackagesTree } from './packages-tree.ts';
+import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { Span } from '../../shared/common/span.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
+import type { TreeMode } from '../common/tree-row.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 
@@ -24,14 +26,15 @@ type Fixture = {
   readonly treeVisible: Map<string, Span>;
 };
 
-const fixtureOf = (folders: RootFolder[]): Fixture => {
+/** A tree over a real store holding `folders`, redrawn on every store change like the provider does; `fire` is a spy. */
+const fixtureOf = (folders: RootFolder[], mode: TreeMode, make: (folder: RootFolder) => Coordinator): Fixture => {
   const store = new RootStore();
   const fire = vi.fn();
   const treeVisible = new Map<string, Span>();
   const ports: TreePorts = { runs: () => undefined, fire, treeVisible, now: () => 7 };
-  const tree = new PackagesTree(store, 'list', ports);
+  const tree = new PackagesTree(store, mode, ports);
 
-  store.set(folders, coordinatorMock);
+  store.set(folders, make);
   store.onDidChange((change) => {
     tree.refreshFor(change);
   });
@@ -55,7 +58,7 @@ describe('FEATURE: packages tree', () => {
     let shown: TreeNode[];
 
     beforeEach(async () => {
-      fixture = fixtureOf([ROOT_FOLDER_STUB]);
+      fixture = fixtureOf([ROOT_FOLDER_STUB], 'list', coordinatorMock);
       fixture.store.apply('/ws', loadedWith([A, B]));
       shown = await fixture.tree.children();
       vi.mocked(fixture.fire).mockClear();
@@ -186,7 +189,7 @@ describe('FEATURE: packages tree', () => {
 
   describe('GIVEN a single root whose model lists one name twice', () => {
     it('WHEN the top level is listed THEN the name has one node', async () => {
-      const fixture = fixtureOf([ROOT_FOLDER_STUB]);
+      const fixture = fixtureOf([ROOT_FOLDER_STUB], 'list', coordinatorMock);
 
       fixture.store.apply('/ws', loadedWith([A, A]));
 
@@ -196,9 +199,34 @@ describe('FEATURE: packages tree', () => {
     });
   });
 
+  describe('GIVEN a single root whose first answer lands while the top level waits for it', () => {
+    it('WHEN the top level is listed THEN it holds the packages of that answer', async () => {
+      const store = new RootStore();
+      const ports: TreePorts = { runs: () => undefined, fire: vi.fn(), treeVisible: new Map(), now: () => 7 };
+      const tree = new PackagesTree(store, 'list', ports);
+      const answering = (): Coordinator => {
+        const base = coordinatorMock();
+        const firstChildren = async (): Promise<void> => {
+          store.apply('/ws', loadedWith([A, B]));
+          await Promise.resolve();
+        };
+        const coordinator: Coordinator = { ...base, firstChildren };
+
+        return coordinator;
+      };
+
+      store.set([ROOT_FOLDER_STUB], answering);
+
+      const shown = await tree.children();
+      const keys = shown.map((node) => node.key);
+
+      expect(keys).toStrictEqual(['a', 'b']);
+    });
+  });
+
   describe('GIVEN a single root with nothing loaded yet', () => {
     it('WHEN the top level is listed THEN its visible span stays open', async () => {
-      const fixture = fixtureOf([ROOT_FOLDER_STUB]);
+      const fixture = fixtureOf([ROOT_FOLDER_STUB], 'list', coordinatorMock);
 
       await fixture.tree.children();
 
@@ -211,7 +239,7 @@ describe('FEATURE: packages tree', () => {
     let roots: TreeNode[];
 
     beforeEach(async () => {
-      fixture = fixtureOf([ROOT_FOLDER_STUB, OTHER_FOLDER]);
+      fixture = fixtureOf([ROOT_FOLDER_STUB, OTHER_FOLDER], 'list', coordinatorMock);
       fixture.store.apply('/ws', loadedWith([A]));
       roots = await fixture.tree.children();
       vi.mocked(fixture.fire).mockClear();

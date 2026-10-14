@@ -1,5 +1,5 @@
 import { TurboException } from '@turbo-console/core';
-import type { WorkspaceModel } from '@turbo-console/core';
+import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { allRows } from './all-rows.util.ts';
@@ -18,7 +18,7 @@ import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
-import { WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
 
 const NO_RUNS: RunLookup = () => undefined;
 
@@ -47,6 +47,14 @@ const FOLDER_TREE_OF: FolderTreeOf = (model) => folderTree(model.packages);
 const FOLDERS_VIEW: RowContext = { mode: 'folders', runs: NO_RUNS, folders: FOLDER_TREE_OF };
 
 const RUNNING_VIEW: RowContext = { ...FOLDERS_VIEW, runs: runningBuild };
+
+const TEST_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'test', name: 'test' };
+
+const TWO_TASK_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [TASK_NODE_STUB, TEST_TASK] };
+
+const TWO_TASK_MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [TWO_TASK_PACKAGE] };
+
+const TEST_TASK_NODE: TreeNode = { kind: 'task', id: 'task:/ws\0test', root: '/ws', key: 'test', packageName: 'a' };
 
 const EMPTY_MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [] };
 
@@ -165,6 +173,16 @@ describe('FEATURE: node rows', () => {
       const row = currentRowOf(state, MSG_NODE, FOLDERS_VIEW);
 
       expect(row.label).toBe(MESSAGE_TEXTS['load-no-model']);
+    });
+  });
+
+  describe('GIVEN a package with two tasks', () => {
+    const state: RootState = { ...ROOT_STATE_STUB, model: TWO_TASK_MODEL };
+
+    it("WHEN the second task's current row is built THEN it is that task's row", () => {
+      const row = currentRowOf(state, TEST_TASK_NODE, FOLDERS_VIEW);
+
+      expect(row.label).toBe('test');
     });
   });
 
