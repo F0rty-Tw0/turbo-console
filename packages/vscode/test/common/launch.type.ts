@@ -1,23 +1,33 @@
 import type { PackageRole, TaskKind } from '@turbo-console/repo-gen';
 
-type LaunchName = 'L1' | 'L2';
-
-/** `fixture-l1` is the `target-like` copy L1 opens and L2 reopens, so L2 finds the cache L1 stored. */
-export type LaunchWorkspace = 'fixture-l1';
-
-/** `dev` sets the user setting `turboConsole.turboPath` to the dev turbo binary. */
-export type LaunchTurboPath = 'dev';
+export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6';
 
 /**
- * One VS Code window of the integration run (spec §5.3). `suite` names the bundle `dist-test/<suite>.cjs`, `U1` is the
- * user-data dir L1 and L2 share, and `env` is merged into `extensionTestsEnv`.
+ * `fixture-l1` is the `target-like` copy L1 opens and L2 reopens, so L2 finds the cache L1 stored. `fixture` is a
+ * fresh copy of the launch's own, `empty-folder` an empty dir, and `error-roots` a two-folder `.code-workspace`: `bad`
+ * with an invalid `turbo.json`, `empty` with `pnpm-workspace.yaml` globs that match no package.
+ */
+export type LaunchWorkspace = 'fixture-l1' | 'fixture' | 'empty-folder' | 'error-roots';
+
+/**
+ * The user setting `turboConsole.turboPath`: `dev` is the dev turbo binary, `stub` a POSIX script that prints
+ * `2.12.0` for any arguments, and `unset` leaves the setting out.
+ */
+export type LaunchTurboPath = 'dev' | 'stub' | 'unset';
+
+/** `U1` is the user-data dir L1 and L2 share; `own` is one only this launch uses. */
+type LaunchUserData = 'U1' | 'own';
+
+/**
+ * One VS Code window of the integration run (spec §5.3). `suite` names the bundle `dist-test/<suite>.cjs`, and `env` is
+ * merged into `extensionTestsEnv`.
  */
 export type Launch = {
   readonly name: LaunchName;
   readonly suite: string;
   readonly workspace: LaunchWorkspace;
   readonly turboPath: LaunchTurboPath;
-  readonly userData: 'U1';
+  readonly userData: LaunchUserData;
   readonly posixOnly: boolean;
   readonly env: Readonly<Record<string, string>>;
 };
@@ -32,6 +42,12 @@ export type SuiteEnv = {
   readonly turboPath: string | null;
   readonly budgetFactor: number;
   readonly doneFile: string;
+};
+
+/** What a launch opens (a folder or a `.code-workspace` file) and the folders it holds, whose files get backdated. */
+export type PreparedWorkspace = {
+  readonly open: string;
+  readonly folders: string[];
 };
 
 /** The run's shared state: the fixture copy, its manifest file and the scratch dir that holds U1. */

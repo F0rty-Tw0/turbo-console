@@ -1,11 +1,15 @@
 import { ChildProcess } from 'node:child_process';
 import { subscribe, unsubscribe } from 'node:diagnostics_channel';
+import { basename } from 'node:path';
 
 import type { SpawnCounter } from '../common/launch.type.ts';
 
 const CHANNEL = 'child_process';
 
 const VERSION_ARG = '--version';
+
+/** What a turbo binary is called when no path is known: the npm platform packages ship `turbo` or `turbo.exe`. */
+const TURBO_FILE_NAMES: ReadonlySet<string> = new Set(['turbo', 'turbo.exe']);
 
 type SpawnMessage = {
   readonly process: ChildProcess;
@@ -21,13 +25,19 @@ const isSpawnMessage = (message: unknown): message is SpawnMessage => {
  * Spec §5.1 V1: counts the turbo spawns of this extension host through the `child_process` diagnostics channel. Only
  * spawns of `turboPath` count (VS Code's own git spawns arrive too), and never a `--version` call (the override's
  * once-per-process resolution). Node publishes before it sets `spawnfile` and `spawnargs` (observed on Linux), so each
- * message is read on the next tick.
+ * message is read on the next tick. With `turboPath` `null` (the setting is unset), any binary named `turbo` counts.
  */
-export const countTurboSpawns = (turboPath: string): SpawnCounter => {
+export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
   let count = 0;
 
+  const isTurboFile = (file: string): boolean => {
+    if (turboPath === null) return TURBO_FILE_NAMES.has(basename(file));
+
+    return file === turboPath;
+  };
+
   const read = (child: ChildProcess): void => {
-    const isTurbo = child.spawnfile === turboPath;
+    const isTurbo = isTurboFile(child.spawnfile);
     const isVersion = child.spawnargs.includes(VERSION_ARG);
 
     if (isTurbo && !isVersion) count += 1;

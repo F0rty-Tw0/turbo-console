@@ -12,7 +12,7 @@ const POLL_MS = 10;
 
 const WAIT_LIMIT_MS = 30_000;
 
-const sleep = async (ms: number): Promise<void> => {
+export const sleep = async (ms: number): Promise<void> => {
   await new Promise<void>((resolve) => {
     setTimeout(resolve, ms);
   });
