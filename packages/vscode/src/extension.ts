@@ -1,12 +1,15 @@
 import * as vscode from 'vscode';
 
+import type { Roots } from './roots/common/coordinator.type.ts';
 import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/root.type.ts';
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
+import { editorCopyPorts } from './run/data-access/copy-ports.ts';
 import { editorRunAllPorts, editorRunPorts } from './run/data-access/run-ports.ts';
 import { forwardRunAllEvents, forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
 import { RunSession } from './run/domain-logic/run-session.ts';
+import { registerCopy } from './run/feature/register-copy.ts';
 import { registerPickers } from './run/feature/register-pickers.ts';
 import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
@@ -19,6 +22,14 @@ import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
 import { currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
 import { watchRoot } from './watch/data-access/root-watchers.ts';
 import { registerWatchers } from './watch/feature/register-watchers.ts';
+
+/** The side panel's fixed views and the commands of its rows' inline and context menus (copy). */
+const registerPanel = (roots: Roots, commands: FixedViewProvider, help: FixedViewProvider): vscode.Disposable => {
+  const views = registerFixedViews(commands, help);
+  const copy = registerCopy(roots, editorCopyPorts(), vscode.commands.registerCommand);
+
+  return vscode.Disposable.from(views, copy);
+};
 
 /**
  * Spec §3 activation: registers the view, commands and listeners, finds the roots and sets the context key. No turbo
@@ -70,7 +81,14 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
       vscode.commands.registerCommand
     );
 
-    context.subscriptions.push(watchers, runs, pickers, runAll, registerFixedViews(commands, help), forwardTaskEvents(runSession));
+    context.subscriptions.push(
+      watchers,
+      runs,
+      pickers,
+      runAll,
+      registerPanel(session.store, commands, help),
+      forwardTaskEvents(runSession)
+    );
 
     await registerRoots(context, session, onRoots, output.error);
   }
