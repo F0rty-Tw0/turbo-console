@@ -1,4 +1,7 @@
+import { TurboException } from '@turbo-console/core';
 import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '@turbo-console/core';
+
+import type { LoadFailure, LoadedModel } from '../../common/root.type.ts';
 
 const BINARY_FIELDS = {
   root: '/ws',
@@ -25,3 +28,15 @@ export const CACHED_WORKSPACE_STUB: CachedWorkspace = {
 };
 
 export const STALE_CACHED_WORKSPACE_STUB: CachedWorkspace = { ...CACHED_WORKSPACE_STUB, isFresh: false };
+
+export const LOADED_MODEL_STUB: LoadedModel = {
+  kind: 'model',
+  binary: TURBO_BINARY_STUB,
+  model: WORKSPACE_MODEL_STUB,
+  fromCache: false,
+  isFresh: true
+};
+
+const NOT_FOUND = new TurboException('not-found', 'no turbo');
+
+export const LOAD_FAILURE_STUB: LoadFailure = { kind: 'error', stage: 'binary', error: NOT_FOUND };
