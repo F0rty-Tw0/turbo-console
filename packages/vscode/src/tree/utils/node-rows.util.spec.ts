@@ -17,7 +17,7 @@ import { MESSAGE_TEXTS } from '../common/message.const.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
-import { TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
+import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
 
 const NO_RUNS: RunLookup = () => undefined;
@@ -31,8 +31,6 @@ const ROOT_NODE: TreeNode = { kind: 'root', id: 'root:/ws', root: '/ws', key: '/
 const PACKAGES_DIR_NODE: TreeNode = { kind: 'dir', id: 'dir:/ws\0packages', root: '/ws', key: 'packages', packageName: null };
 
 const LIBS_DIR_NODE: TreeNode = { ...PACKAGES_DIR_NODE, id: 'dir:/ws\0packages/libs', key: 'packages/libs' };
-
-const TASK_NODE: TreeNode = { kind: 'task', id: 'task:/ws\0build', root: '/ws', key: 'build', packageName: 'a' };
 
 const MSG_NODE: TreeNode = { kind: 'msg', id: 'msg:/ws\0load-no-model', root: '/ws', key: 'load-no-model', packageName: null };
 
@@ -114,7 +112,7 @@ describe('FEATURE: node rows', () => {
     });
 
     it('WHEN a task is opened THEN it lists nothing', () => {
-      const rows = childRowsOf(ROOT_STATE_STUB, TASK_NODE, FOLDERS_VIEW);
+      const rows = childRowsOf(ROOT_STATE_STUB, TASK_TREE_NODE_STUB, FOLDERS_VIEW);
 
       expect(rows).toStrictEqual([]);
     });
@@ -138,7 +136,7 @@ describe('FEATURE: node rows', () => {
     });
 
     it("WHEN a task's current row is built THEN it carries its run state", () => {
-      const row = currentRowOf(ROOT_STATE_STUB, TASK_NODE, RUNNING_VIEW);
+      const row = currentRowOf(ROOT_STATE_STUB, TASK_TREE_NODE_STUB, RUNNING_VIEW);
 
       expect(row.description).toBe('running…');
     });

@@ -6,8 +6,7 @@ import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
-import type { TreeNode } from '../../tree/common/tree-node.type.ts';
-import { TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
+import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import type { CommandRegistry, Disposed, RunDefinition, RunEvent, RunPorts, RunRequest, Terminable } from '../common/run.type.ts';
@@ -15,8 +14,6 @@ import { RunSession } from '../domain-logic/run-session.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
 const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
-
-const TASK_TREE_NODE: TreeNode = { kind: 'task', id: 'task:/ws\0build', root: '/ws', key: 'build', packageName: 'a' };
 
 const REQUEST: RunRequest = { root: '/ws', packageName: 'a', task: TASK_NODE_STUB, binaryPath: TURBO_BINARY_STUB.path };
 
@@ -73,7 +70,7 @@ describe('FEATURE: run commands', () => {
     });
 
     it('WHEN Run Task is invoked on the task row THEN turbo runs that task with the root binary', async () => {
-      await command('turboConsole.runTask', TASK_TREE_NODE);
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
 
       expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000);
     });
@@ -90,21 +87,21 @@ describe('FEATURE: run commands', () => {
     it('WHEN Run Task is invoked on a task the model no longer holds THEN nothing runs', async () => {
       roots.apply('/ws', loadedWith([]));
 
-      await command('turboConsole.runTask', TASK_TREE_NODE);
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
 
       expect(ports.execute).not.toHaveBeenCalled();
     });
 
     it('WHEN Stop Task is invoked on the running task row THEN its execution is terminated', async () => {
-      await command('turboConsole.runTask', TASK_TREE_NODE);
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
 
-      await command('turboConsole.stopTask', TASK_TREE_NODE);
+      await command('turboConsole.stopTask', TASK_TREE_NODE_STUB);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
 
     it('WHEN Stop Task is invoked on a package row THEN nothing is terminated', async () => {
-      await command('turboConsole.runTask', TASK_TREE_NODE);
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
 
       await command('turboConsole.stopTask', TREE_NODE_STUB);
 
@@ -112,13 +109,13 @@ describe('FEATURE: run commands', () => {
     });
 
     it('WHEN the task runs THEN its tree row is refreshed', async () => {
-      await command('turboConsole.runTask', TASK_TREE_NODE);
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
 
       expect(refreshTask).toHaveBeenCalledWith('/ws', 'build');
     });
 
     it('WHEN the task ran and the root reloads without it THEN its ended run is dropped', async () => {
-      await command('turboConsole.runTask', TASK_TREE_NODE);
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
       session.processEnded(THIS_RUN, 0);
 
       roots.apply('/ws', loadedWith([]));
@@ -127,7 +124,7 @@ describe('FEATURE: run commands', () => {
     });
 
     it('WHEN the task ran and the root reloads with it THEN its ended run stays', async () => {
-      await command('turboConsole.runTask', TASK_TREE_NODE);
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
       session.processEnded(THIS_RUN, 0);
 
       roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
