@@ -81,20 +81,20 @@ describe('FEATURE: run store', () => {
 
     it('WHEN Stop is pressed before the execution arrives THEN the execution is terminated on arrival', () => {
       store.requestStop(RUN);
-      store.attach(RUN, execution);
+      store.attach(RUN, 1000, execution);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
 
     it('WHEN Stop is pressed after the execution arrived THEN the execution is terminated', () => {
-      store.attach(RUN, execution);
+      store.attach(RUN, 1000, execution);
       store.requestStop(RUN);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
 
     it('WHEN the execution arrives with no Stop THEN it keeps running', () => {
-      store.attach(RUN, execution);
+      store.attach(RUN, 1000, execution);
 
       expect(execution.terminate).not.toHaveBeenCalled();
     });
@@ -144,25 +144,28 @@ describe('FEATURE: run store', () => {
     });
 
     it('WHEN it fails to start after the execution arrived THEN the execution is terminated', () => {
-      store.attach(RUN, execution);
+      store.attach(RUN, 1000, execution);
 
       store.failStart(RUN, 1500);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
 
-    it('WHEN Stop is pressed and a listener throws THEN the execution is still terminated', () => {
-      store.attach(RUN, execution);
+    it.each<[string, (subject: RunStore) => unknown]>([
+      ['Stop is pressed', (subject): void => subject.requestStop(RUN)],
+      ['it fails to start', (subject): RunEntry | null => subject.failStart(RUN, 1500)]
+    ])('WHEN %s and a listener throws THEN the execution is still terminated', (_name, act) => {
+      store.attach(RUN, 1000, execution);
       store.onDidChange(() => {
         throw new Error('listener');
       });
 
-      expect(() => store.requestStop(RUN)).toThrow('listener');
+      expect(() => act(store)).toThrow('listener');
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
 
     it('WHEN a match is set before the process ended THEN it is ignored', () => {
-      store.setMatch(RUN, MATCH);
+      store.setMatch(RUN, 1000, MATCH);
 
       expect(entryOf(store, RUN).match).toBeNull();
     });
@@ -216,16 +219,6 @@ describe('FEATURE: run store', () => {
 
       expect(entryOf(store, RUN).state).toBe('passed');
     });
-
-    it('WHEN an ended run gets an execution THEN it is not terminated', () => {
-      const execution = terminable();
-
-      store.processEnded(RUN, 0, 4000);
-      store.requestStop(RUN);
-      store.attach(RUN, execution);
-
-      expect(execution.terminate).not.toHaveBeenCalled();
-    });
   });
 
   describe('GIVEN an ended entry waiting for its match', () => {
@@ -235,13 +228,13 @@ describe('FEATURE: run store', () => {
     });
 
     it('WHEN the match is set THEN it is stored and matching ends', () => {
-      store.setMatch(RUN, MATCH);
+      store.setMatch(RUN, 1000, MATCH);
 
       expect(entryOf(store, RUN)).toMatchObject({ match: MATCH, matching: false });
     });
 
     it('WHEN no match is found THEN matching ends with no match', () => {
-      store.setMatch(RUN, null);
+      store.setMatch(RUN, 1000, null);
 
       expect(entryOf(store, RUN)).toMatchObject({ match: null, matching: false });
     });
@@ -249,7 +242,7 @@ describe('FEATURE: run store', () => {
     it('WHEN the match is set THEN the change is announced', () => {
       const changes = changesOf(store);
 
-      store.setMatch(RUN, MATCH);
+      store.setMatch(RUN, 1000, MATCH);
 
       expect(changes.map((entry) => entry.match)).toStrictEqual([MATCH]);
     });
@@ -261,7 +254,7 @@ describe('FEATURE: run store', () => {
     it('WHEN a new run started before the match arrived THEN the new run gets no match', () => {
       store.tryStart(RUN_REQUEST_STUB, 5000);
 
-      store.setMatch(RUN, MATCH);
+      store.setMatch(RUN, 1000, MATCH);
 
       expect(entryOf(store, RUN)).toMatchObject({ state: 'running', match: null });
     });

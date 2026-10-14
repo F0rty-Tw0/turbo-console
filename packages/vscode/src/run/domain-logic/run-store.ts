@@ -14,7 +14,8 @@ type RunSlot = {
 
 /**
  * The runs of the window, one entry per (root, task id), kept after they end so the tree shows the result. Every
- * method but `tryStart` and `setMatch` acts only on a running entry; anything else is ignored (spec §4.5 step 5).
+ * method but `tryStart` and `setMatch` acts only on a running entry; anything else is ignored (spec §4.5 step 5). A
+ * run's `launchedAt` is its token: a call carrying another run's token is ignored, so one run never changes another.
  */
 export class RunStore {
   private readonly slots = new Map<RunKey, RunSlot>();
@@ -37,11 +38,15 @@ export class RunStore {
     return true;
   }
 
-  /** Terminates `execution` at once when Stop was pressed before `executeTask` resolved. */
-  public attach(definition: RunDefinition, execution: Terminable): void {
-    const slot = this.running(definition);
+  /** Terminates `execution` at once when Stop came first, or when its run ended or was replaced (a late launch). */
+  public attach(definition: RunDefinition, launchedAt: number, execution: Terminable): void {
+    const slot = this.running(definition, launchedAt);
 
-    if (slot === undefined) return;
+    if (slot === undefined) {
+      execution.terminate();
+
+      return;
+    }
 
     this.slots.set(runKeyOf(definition.root, definition.id), { entry: slot.entry, execution });
 
@@ -51,22 +56,12 @@ export class RunStore {
   public requestStop(definition: RunDefinition): void {
     const slot = this.running(definition);
 
-    if (slot === undefined) return;
-
-    const entry: RunEntry = { ...slot.entry, stopRequested: true };
-
-    slot.execution?.terminate();
-    this.put({ entry, execution: slot.execution });
+    slot?.execution?.terminate();
+    this.update(slot, { stopRequested: true });
   }
 
   public processStarted(definition: RunDefinition, at: number): void {
-    const slot = this.running(definition);
-
-    if (slot === undefined) return;
-
-    const entry: RunEntry = { ...slot.entry, processStartedAt: at };
-
-    this.put({ entry, execution: slot.execution });
+    this.update(this.running(definition), { processStartedAt: at });
   }
 
   /** Ends the run per spec §4.5 step 6; `matching` stays true until `setMatch` when a summary match follows. */
@@ -77,40 +72,32 @@ export class RunStore {
 
     const state = endStateOf(slot.entry.stopRequested, exitCode);
     const matching = isMatchedEnd(state, exitCode);
-    const entry: RunEntry = { ...slot.entry, state, endedAt: at, exitCode: exitCode ?? null, matching };
 
-    this.put({ entry, execution: slot.execution });
-
-    return entry;
+    return this.update(slot, { state, endedAt: at, exitCode: exitCode ?? null, matching });
   }
 
-  /**
-   * Ends a run whose process never started at `at`, terminating its execution if one was handed over: `stopped` when
-   * Stop came first, else `failed-to-start`.
-   */
-  public failStart(definition: RunDefinition, at: number): RunEntry | null {
-    const slot = this.running(definition);
+  /** Ends a run whose process never started at `at` (`stopped` after a Stop), terminating its execution if attached. */
+  public failStart(definition: RunDefinition, at: number, launchedAt?: number): RunEntry | null {
+    const slot = this.running(definition, launchedAt);
 
     if (slot === undefined) return null;
 
     const state = slot.entry.stopRequested ? 'stopped' : 'failed-to-start';
-    const entry: RunEntry = { ...slot.entry, state, endedAt: at };
 
-    this.put({ entry, execution: slot.execution });
     slot.execution?.terminate();
 
-    return entry;
+    return this.update(slot, { state, endedAt: at });
   }
 
-  /** Settles a run waiting for its match; ignored for any other entry, so a newer run never gets an older run's match. */
-  public setMatch(definition: RunDefinition, match: RunMatch | null): void {
+  /** Settles the run launched at `launchedAt` while it waits for its match; ignored for any other entry. */
+  public setMatch(definition: RunDefinition, launchedAt: number, match: RunMatch | null): void {
     const slot = this.slots.get(runKeyOf(definition.root, definition.id));
 
     if (slot?.entry.matching !== true) return;
 
-    const entry: RunEntry = { ...slot.entry, match, matching: false };
+    if (slot.entry.launchedAt !== launchedAt) return;
 
-    this.put({ entry, execution: slot.execution });
+    this.update(slot, { match, matching: false });
   }
 
   /** Drops the ended entries of `root` whose task is gone; a running entry stays until it ends. */
@@ -132,10 +119,26 @@ export class RunStore {
     };
   }
 
-  private running(definition: RunDefinition): RunSlot | undefined {
+  /** The running slot of `definition`; with `launchedAt`, only when it holds that run. */
+  private running(definition: RunDefinition, launchedAt?: number): RunSlot | undefined {
     const slot = this.slots.get(runKeyOf(definition.root, definition.id));
 
-    return slot?.entry.state === 'running' ? slot : undefined;
+    if (slot?.entry.state !== 'running') return undefined;
+
+    const isOtherRun = launchedAt !== undefined && slot.entry.launchedAt !== launchedAt;
+
+    return isOtherRun ? undefined : slot;
+  }
+
+  /** Applies `change` to the entry of `slot` and announces it; `null` when there is no slot. */
+  private update(slot: RunSlot | undefined, change: Partial<RunEntry>): RunEntry | null {
+    if (slot === undefined) return null;
+
+    const entry: RunEntry = { ...slot.entry, ...change };
+
+    this.put({ entry, execution: slot.execution });
+
+    return entry;
   }
 
   private put(slot: RunSlot): void {
