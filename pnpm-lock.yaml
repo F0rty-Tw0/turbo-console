@@ -292,6 +292,12 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@turbo-console/repo-gen':
+        specifier: workspace:*
+        version: link:../repo-gen
+      '@turbo-console/tools':
+        specifier: workspace:*
+        version: link:../../tools
       '@types/vscode':
         specifier: 1.138.0
         version: 1.138.0
@@ -301,6 +307,9 @@ importers:
       '@vscode/vsce':
         specifier: catalog:dev
         version: 4.0.0(supports-color@10.2.2)
+      turbo:
+        specifier: catalog:dev
+        version: 2.11.7
 
   tools:
     dependencies:
