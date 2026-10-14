@@ -43,14 +43,24 @@ describe('FEATURE: run flow, matching a run summary', () => {
       entry = endedEntry(store, 0);
     });
 
-    it('WHEN its summary is still being matched THEN the entry is matching', () => {
-      const lookup = Promise.withResolvers<RunMatch | null>();
-      const match = vi.fn().mockReturnValue(lookup.promise);
-      const slow = fakeRunPorts(execution, { match });
+    describe('WHEN its summary lookup has not settled yet', () => {
+      let slow: RunPorts;
 
-      void finishRun(store, slow, entry);
+      beforeEach(() => {
+        const lookup = Promise.withResolvers<RunMatch | null>();
+        const match = vi.fn().mockReturnValue(lookup.promise);
 
-      expect(store.get(RUN.root, RUN.id)?.matching).toBe(true);
+        slow = fakeRunPorts(execution, { match });
+        void finishRun(store, slow, entry);
+      });
+
+      it('THEN its summary is being looked up', () => {
+        expect(slow.match).toHaveBeenCalledOnce();
+      });
+
+      it('THEN the entry is still matching', () => {
+        expect(store.get(RUN.root, RUN.id)?.matching).toBe(true);
+      });
     });
 
     it('WHEN its summary matches THEN the summary of exactly that run is asked for', async () => {
