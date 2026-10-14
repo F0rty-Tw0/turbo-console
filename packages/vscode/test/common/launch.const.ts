@@ -7,6 +7,9 @@ export const SUITE_ENV_KEY = 'TURBO_CONSOLE_IT';
 /** Keyed files are backdated by this much before each launch (spec §5.3), so no load sees a file written during its spawn. */
 export const BACKDATE_MS = 10_000;
 
+/** On CI a launch that misses a timing budget runs at most this many times in all; locally it runs once. */
+export const MAX_TIMING_ATTEMPTS = 3;
+
 const NO_ENV: Readonly<Record<string, string>> = {};
 
 const L1: Launch = {
