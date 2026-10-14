@@ -6,6 +6,7 @@ import { errnoCode, isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { failedMessage, ioMessage } from '../../shared/errors/utils/turbo-message.util.ts';
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
 import { runTurbo } from '../../shared/turbo/data-access/run-turbo.ts';
+import { untilAborted } from '../../shared/turbo/data-access/until-aborted.ts';
 
 /**
  * `--version` per override file state: path, device, inode, mtime, ctime and size. ctime is in the key because
@@ -27,8 +28,9 @@ const statOverride = async (path: string): Promise<Stats> => {
   }
 };
 
-const spawnVersion = async (path: string, root: string, signal: AbortSignal | undefined): Promise<string> => {
-  const options = { timeoutMs: TURBO_BUDGET_MS.version, signal };
+/** No caller's signal: the spawn is shared, so one caller's abort must not fail the others. The budget still bounds it. */
+const spawnVersion = async (path: string, root: string): Promise<string> => {
+  const options = { timeoutMs: TURBO_BUDGET_MS.version };
   const result = await runTurbo(path, ['--version'], root, options);
 
   if (result.exitCode !== 0) throw new TurboException('failed', failedMessage('--version', result.exitCode, result.stderr));
@@ -36,20 +38,13 @@ const spawnVersion = async (path: string, root: string, signal: AbortSignal | un
   return result.stdout.trim();
 };
 
-/**
- * The override binary's `--version` stdout, trimmed. Spawned once (in `root`, within the version budget) per file
- * state (see `versions`), so a replaced or rewritten binary is asked again. Concurrent callers share one spawn, and
- * with it the first caller's `signal`. Throws `not-found` when `path` is missing and `failed` when `--version` exits
- * non-zero; any other error is left to the caller to convert.
- */
-export const overrideVersion = async (path: string, root: string, signal?: AbortSignal): Promise<string> => {
-  const stats = await statOverride(path);
+const sharedVersion = async (path: string, root: string, stats: Stats): Promise<string> => {
   const key = `${path}\0${stats.dev}\0${stats.ino}\0${stats.mtimeMs}\0${stats.ctimeMs}\0${stats.size}`;
   const cached = versions.get(key);
 
   if (cached !== undefined) return cached;
 
-  const pending = spawnVersion(path, root, signal);
+  const pending = spawnVersion(path, root);
 
   const forget = (): void => {
     versions.delete(key);
@@ -59,4 +54,17 @@ export const overrideVersion = async (path: string, root: string, signal?: Abort
   pending.catch(forget);
 
   return pending;
+};
+
+/**
+ * The override binary's `--version` stdout, trimmed. Spawned once (in `root`, within the version budget) per file
+ * state (see `versions`), so a replaced or rewritten binary is asked again. Concurrent callers share one spawn; each
+ * stops waiting when its own `signal` aborts, and an already-aborted caller starts none. Throws `not-found` when
+ * `path` is missing and `failed` when `--version` exits non-zero; any other error is left to the caller to convert.
+ */
+export const overrideVersion = async (path: string, root: string, signal?: AbortSignal): Promise<string> => {
+  const stats = await statOverride(path);
+  const shared = async (): Promise<string> => sharedVersion(path, root, stats);
+
+  return untilAborted(shared, signal);
 };

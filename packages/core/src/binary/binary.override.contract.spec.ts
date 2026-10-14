@@ -88,6 +88,26 @@ describe.skipIf(process.platform === 'win32')('FEATURE: override turbo resolutio
       expect(turboSpawns(stub)).toBe(1);
     });
 
+    it('WHEN the first of two callers aborts mid-spawn THEN the other still gets the version from that one spawn', async () => {
+      const stub = await writeStub('superseded.sh', 'sleep 0.5\necho 2.11.7');
+      const first = new AbortController();
+      const firstOptions = { trusted: true, overridePath: stub, signal: first.signal } as const;
+      const secondOptions = { trusted: true, overridePath: stub, signal: new AbortController().signal } as const;
+      const firstResolving = rejectionOf(resolveTurbo(tempDir, firstOptions));
+      const secondResolving = resolveTurbo(tempDir, secondOptions);
+
+      await vi.waitFor(() => {
+        expect(turboSpawns(stub)).toBe(1);
+      });
+      first.abort();
+
+      const [firstError, second] = await Promise.all([firstResolving, secondResolving]);
+
+      expect(firstError).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
+      expect(second.version).toBe('2.11.7');
+      expect(turboSpawns(stub)).toBe(1);
+    });
+
     it('WHEN its path is given with a trailing separator THEN the file is resolved, without the separator', async () => {
       const stub = await writeStub('trailing.sh', 'echo 2.11.7');
 
@@ -133,6 +153,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: override turbo resolutio
 
       expect(error).toBeInstanceOf(TurboException);
       expect(error).toMatchObject({ kind: 'failed', message: 'turbo --version was aborted' });
+      expect(turboSpawns(stub)).toBe(0);
     });
 
     it('WHEN the root does not exist THEN it rejects io naming the root', async () => {
