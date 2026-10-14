@@ -1,4 +1,4 @@
-import type { WorkspaceModel } from '@turbo-console/core';
+import type { TaskNode, WorkspaceModel } from '@turbo-console/core';
 
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RunDefinition, RunRequest, TaskTarget } from '../common/run.type.ts';
@@ -25,14 +25,20 @@ export const taskTargetOf = (value: unknown): TaskTarget | null => {
   return target;
 };
 
+/** The task `target` names in the current model of its root; `undefined` while the root has no model or no longer holds it. */
+export const modelTaskOf = (target: TaskTarget, state: RootState | undefined): TaskNode | undefined => {
+  const pkg = state?.model?.packages.find((node) => node.name === target.packageName);
+
+  return pkg?.tasks.find((node) => node.id === target.definition.id);
+};
+
 /** The run of `target` in the current state of its root; `null` while the root has no binary or no longer holds the task. */
 export const runRequestOf = (target: TaskTarget, state: RootState | undefined): RunRequest | null => {
   const binary = state?.binary;
 
   if (binary === null || binary === undefined) return null;
 
-  const pkg = state?.model?.packages.find((node) => node.name === target.packageName);
-  const task = pkg?.tasks.find((node) => node.id === target.definition.id);
+  const task = modelTaskOf(target, state);
 
   if (task === undefined) return null;
 

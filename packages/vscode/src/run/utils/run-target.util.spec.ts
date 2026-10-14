@@ -1,16 +1,13 @@
 import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { runRequestOf, taskIdsOf, taskTargetOf } from './run-target.util.ts';
+import { modelTaskOf, runRequestOf, taskIdsOf, taskTargetOf } from './run-target.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
-import type { TreeNode } from '../../tree/common/tree-node.type.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
-import { TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
+import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { RunDefinition, RunRequest, TaskTarget } from '../common/run.type.ts';
-
-const TASK_TREE_NODE: TreeNode = { kind: 'task', id: 'task:/ws\0build', root: '/ws', key: 'build', packageName: 'a' };
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 
@@ -46,7 +43,7 @@ const NO_TASK: RootState = { ...LOADED, model: NO_TASKS_MODEL };
 describe('FEATURE: run targets', () => {
   describe('GIVEN a command argument', () => {
     it('WHEN it is a task node THEN its target is the task of its package in its root', () => {
-      const target = taskTargetOf(TASK_TREE_NODE);
+      const target = taskTargetOf(TASK_TREE_NODE_STUB);
 
       expect(target).toStrictEqual(TARGET);
     });
@@ -55,13 +52,32 @@ describe('FEATURE: run targets', () => {
       ['a package node', TREE_NODE_STUB],
       ['missing', undefined],
       ['not an object', 'task:/ws\0build'],
-      ['a task node with no package', { ...TASK_TREE_NODE, packageName: null }],
-      ['a task node whose root is not a string', { ...TASK_TREE_NODE, root: 7 }],
-      ['a task node whose key is not a string', { ...TASK_TREE_NODE, key: ['build'] }]
+      ['a task node with no package', { ...TASK_TREE_NODE_STUB, packageName: null }],
+      ['a task node whose root is not a string', { ...TASK_TREE_NODE_STUB, root: 7 }],
+      ['a task node whose key is not a string', { ...TASK_TREE_NODE_STUB, key: ['build'] }]
     ])('WHEN it is %s THEN it targets no task', (_name, value) => {
       const target = taskTargetOf(value);
 
       expect(target).toBeNull();
+    });
+  });
+
+  describe('GIVEN the target task of package a in a model', () => {
+    it('WHEN its root holds the task THEN the model task is found, binary or not', () => {
+      const task = modelTaskOf(TARGET, ROOT_STATE_STUB);
+
+      expect(task).toStrictEqual(TASK_NODE_STUB);
+    });
+
+    it.each<[string, RootState | undefined]>([
+      ['gone', undefined],
+      ['without a model', NO_MODEL],
+      ['without package a', NO_PACKAGE],
+      ['with package a but not the task', NO_TASK]
+    ])('WHEN its root is %s THEN no model task is found', (_name, state) => {
+      const task = modelTaskOf(TARGET, state);
+
+      expect(task).toBeUndefined();
     });
   });
 
