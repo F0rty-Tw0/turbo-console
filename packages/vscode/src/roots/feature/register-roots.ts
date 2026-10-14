@@ -15,6 +15,9 @@ export const registerRoots = async (
   onRoots: () => void,
   log: (line: string) => void
 ): Promise<void> => {
+  const logError = (error: unknown): void => {
+    log(logTextOf(error));
+  };
   const update = async (): Promise<void> => {
     const open = vscode.workspace.workspaceFolders ?? [];
     const listed = Array.from(open);
@@ -22,12 +25,14 @@ export const registerRoots = async (
     const roots = await session.setWorkspaceFolders(folders);
 
     onRoots();
-    await vscode.commands.executeCommand('setContext', 'turboConsole.active', roots.length > 0);
+
+    // Not awaited: the round trip to the main thread took 33–46 ms of activation's 50 ms budget (measured under Xvfb).
+    const setKey = vscode.commands.executeCommand('setContext', 'turboConsole.active', roots.length > 0);
+
+    setKey.then(undefined, logError);
   };
   const folderChanges = vscode.workspace.onDidChangeWorkspaceFolders(() => {
-    update().catch((error: unknown) => {
-      log(logTextOf(error));
-    });
+    update().catch(logError);
   });
 
   context.subscriptions.push(folderChanges);
