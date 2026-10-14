@@ -2,7 +2,7 @@ import { turboRunArgs } from '@turbo-console/core';
 import type { RunMatch } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS } from '../common/run.const.ts';
+import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, START_TIMEOUT_TEXT, TASK_ENDED_TEXT } from '../common/run.const.ts';
 import type { RunDefinition, RunEntry, RunPorts, RunRequest, Runs, Terminable } from '../common/run.type.ts';
 import { runToMatchOf } from '../utils/run-end.util.ts';
 
@@ -12,15 +12,31 @@ const definitionOf = (request: RunRequest): RunDefinition => {
   return definition;
 };
 
-/**
- * Ends a run whose process never started and tells the user; nothing for a run no longer running, or, with
- * `launchedAt`, for another run of the task. Also the `onDidEndTask` handler (no `launchedAt`, the current run): a
- * run still running when its task ends never saw its process end (spec §4.5 step 5).
- */
-export const failStart = (store: Runs, ports: RunPorts, definition: RunDefinition, launchedAt?: number): void => {
-  const failed = store.failStart(definition, ports.now(), launchedAt);
+/** A run whose process never started: its launch token (none for the current run) and the reason, unless already logged. */
+type StartEnd = {
+  readonly definition: RunDefinition;
+  readonly launchedAt?: number;
+  readonly reason?: string;
+};
 
-  if (failed !== null) ports.notifyFailedToStart();
+/**
+ * Ends a run whose process never started; nothing for a run no longer running, or, with `launchedAt`, for another run
+ * of the task. Only a run that ends as failed to start logs its reason and tells the user: one the user stopped first
+ * ends as stopped, quietly.
+ */
+const endStart = (store: Runs, ports: RunPorts, end: StartEnd): void => {
+  const ended = store.failStart(end.definition, ports.now(), end.launchedAt);
+
+  if (ended?.state !== 'failed-to-start') return;
+
+  if (end.reason !== undefined) ports.log(logTextOf(end.reason));
+
+  ports.notifyFailedToStart();
+};
+
+/** The `onDidEndTask` handler: a run still running when its task ends never saw its process end (spec §4.5 step 5). */
+export const taskEnded = (store: Runs, ports: RunPorts, definition: RunDefinition): void => {
+  endStart(store, ports, { definition, reason: TASK_ENDED_TEXT });
 };
 
 /**
@@ -52,7 +68,7 @@ const onStartTimeout = (store: Runs, ports: RunPorts, definition: RunDefinition,
   const entry = store.get(definition.root, definition.id);
   const isWaiting = entry?.state === 'running' && entry.processStartedAt === null && entry.launchedAt === launchedAt;
 
-  if (isWaiting) failStart(store, ports, definition, launchedAt);
+  if (isWaiting) endStart(store, ports, { definition, launchedAt, reason: START_TIMEOUT_TEXT });
 };
 
 /**
@@ -79,7 +95,7 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
   const execution = await launch(ports, request);
 
   if (execution === null) {
-    failStart(store, ports, definition, launchedAt);
+    endStart(store, ports, { definition, launchedAt });
 
     return;
   }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { failStart, runTask } from './run-flow.ts';
+import { runTask, taskEnded } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
 import { START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { RunDefinition, RunPorts, RunRequest, Terminable } from '../common/run.type.ts';
@@ -83,6 +83,29 @@ describe('FEATURE: run flow, starting a run', () => {
     });
   });
 
+  describe('GIVEN Stop is pressed while the launch is pending', () => {
+    beforeEach(async () => {
+      const launch = Promise.withResolvers<Terminable>();
+      const execute = vi.fn().mockReturnValue(launch.promise);
+      const pending = fakeRunPorts(execution, { execute });
+      const running = runTask(store, pending, RUN_REQUEST_STUB);
+
+      ports = pending;
+      await vi.advanceTimersByTimeAsync(0);
+      store.requestStop(RUN);
+      launch.reject(new Error('no task'));
+      await running;
+    });
+
+    it('WHEN the launch then rejects THEN the run is stopped', () => {
+      expect(stateOf(store)).toBe('stopped');
+    });
+
+    it('WHEN the launch then rejects THEN the user is not told turbo could not start', () => {
+      expect(ports.notifyFailedToStart).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN run 1 launch is pending, then run 1 task ends and run 2 starts', () => {
     let first: RunPorts;
 
@@ -96,7 +119,7 @@ describe('FEATURE: run flow, starting a run', () => {
       const running = runTask(store, first, RUN_REQUEST_STUB);
 
       await vi.waitUntil(() => execute.mock.calls.length > 0);
-      failStart(store, first, RUN);
+      taskEnded(store, first, RUN);
       await runTask(store, second, RUN_REQUEST_STUB);
       launch.reject(new Error('late'));
       await running;
@@ -123,7 +146,7 @@ describe('FEATURE: run flow, starting a run', () => {
 
       late = { terminate: vi.fn() };
       await vi.waitUntil(() => execute.mock.calls.length > 0);
-      failStart(store, first, RUN);
+      taskEnded(store, first, RUN);
       await runTask(store, second, RUN_REQUEST_STUB);
       launch.resolve(late);
       await running;

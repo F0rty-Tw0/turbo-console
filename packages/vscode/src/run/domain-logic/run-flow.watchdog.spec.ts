@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { failStart, runTask } from './run-flow.ts';
+import { runTask, taskEnded } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
 import { START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { RunDefinition, RunPorts, Terminable } from '../common/run.type.ts';
@@ -113,6 +113,29 @@ describe('FEATURE: run flow, a start that never happens', () => {
     });
   });
 
+  describe.each<[string, (store: RunStore, ports: RunPorts) => void]>([
+    ['the start timeout passes', (): void => void vi.advanceTimersByTime(START_TIMEOUT_MS)],
+    ['its task ends', (subject, subjectPorts): void => { taskEnded(subject, subjectPorts, RUN); }]
+  ])('GIVEN a launched run the user stopped before its process started, WHEN %s', (_name, end) => {
+    beforeEach(async () => {
+      await runTask(store, ports, RUN_REQUEST_STUB);
+      store.requestStop(RUN);
+      end(store, ports);
+    });
+
+    it('THEN the run is stopped', () => {
+      expect(stateOf(store)).toBe('stopped');
+    });
+
+    it('THEN the user is not told turbo could not start', () => {
+      expect(ports.notifyFailedToStart).not.toHaveBeenCalled();
+    });
+
+    it('THEN no reason is logged', () => {
+      expect(ports.log).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a launched run', () => {
     beforeEach(async () => {
       await runTask(store, ports, RUN_REQUEST_STUB);
@@ -134,6 +157,10 @@ describe('FEATURE: run flow, a start that never happens', () => {
       it('THEN the user is told turbo could not start', () => {
         expect(ports.notifyFailedToStart).toHaveBeenCalledOnce();
       });
+
+      it('THEN the timeout is logged as the reason', () => {
+        expect(ports.log).toHaveBeenCalledExactlyOnceWith('turbo process did not start within 10 s');
+      });
     });
 
     it('WHEN its process starts before the start timeout THEN the timeout does nothing', () => {
@@ -153,7 +180,7 @@ describe('FEATURE: run flow, a start that never happens', () => {
     it('WHEN it ended and a new run started before the first timeout THEN that timeout leaves the new run alone', async () => {
       const later = fakeRunPorts(execution, { now: () => 6000 });
 
-      failStart(store, ports, RUN);
+      taskEnded(store, ports, RUN);
       vi.advanceTimersByTime(5000);
       await runTask(store, later, RUN_REQUEST_STUB);
       vi.advanceTimersByTime(START_TIMEOUT_MS - 5000);
@@ -162,21 +189,27 @@ describe('FEATURE: run flow, a start that never happens', () => {
     });
 
     it('WHEN its task ends with no process end THEN the entry ends as failed to start', () => {
-      failStart(store, ports, RUN);
+      taskEnded(store, ports, RUN);
 
       expect(stateOf(store)).toBe('failed-to-start');
     });
 
     it('WHEN its task ends with no process end THEN the user is told turbo could not start', () => {
-      failStart(store, ports, RUN);
+      taskEnded(store, ports, RUN);
 
       expect(ports.notifyFailedToStart).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN its task ends with no process end THEN the task end is logged as the reason', () => {
+      taskEnded(store, ports, RUN);
+
+      expect(ports.log).toHaveBeenCalledExactlyOnceWith('task ended before its process started');
     });
 
     it('WHEN its task ends after its process ended THEN the user is not told anything', () => {
       store.processEnded(RUN, 0, 4000);
 
-      failStart(store, ports, RUN);
+      taskEnded(store, ports, RUN);
 
       expect(ports.notifyFailedToStart).not.toHaveBeenCalled();
     });
