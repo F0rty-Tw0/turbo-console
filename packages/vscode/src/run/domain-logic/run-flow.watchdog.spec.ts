@@ -27,6 +27,92 @@ describe('FEATURE: run flow, a start that never happens', () => {
     vi.useRealTimers();
   });
 
+  describe('GIVEN a launch that never settles', () => {
+    let running: Promise<void>;
+
+    beforeEach(async () => {
+      const launch = Promise.withResolvers<Terminable>();
+      const execute = vi.fn().mockReturnValue(launch.promise);
+      const pending = fakeRunPorts(execution, { execute });
+
+      running = runTask(store, pending, RUN_REQUEST_STUB);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    it('WHEN the start timeout passes after the launch THEN the run ends as failed to start', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      expect(stateOf(store)).toBe('failed-to-start');
+    });
+
+    it('WHEN the start timeout has not passed THEN the run keeps running', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS - 1);
+
+      expect(stateOf(store)).toBe('running');
+    });
+
+    it('WHEN it is still pending THEN runTask has not settled', async () => {
+      const settled = await Promise.race([running.then(() => true), Promise.resolve(false)]);
+
+      expect(settled).toBe(false);
+    });
+  });
+
+  describe('GIVEN a launch that resolves 4 s after the run launched', () => {
+    let late: PromiseWithResolvers<Terminable>;
+
+    beforeEach(async () => {
+      const execute = vi.fn().mockImplementation(async () => late.promise);
+      const pending = fakeRunPorts(execution, { execute });
+
+      late = Promise.withResolvers<Terminable>();
+
+      const running = runTask(store, pending, RUN_REQUEST_STUB);
+
+      await vi.advanceTimersByTimeAsync(0);
+      vi.advanceTimersByTime(4000);
+      late.resolve(execution);
+      await running;
+    });
+
+    it('WHEN 10 s have passed since the launch THEN the run ends as failed to start', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS - 4000);
+
+      expect(stateOf(store)).toBe('failed-to-start');
+    });
+  });
+
+  describe('GIVEN a launch that resolves only after the start timeout', () => {
+    it('WHEN its execution arrives THEN it is terminated', async () => {
+      const launch = Promise.withResolvers<Terminable>();
+      const execute = vi.fn().mockReturnValue(launch.promise);
+      const pending = fakeRunPorts(execution, { execute });
+      const running = runTask(store, pending, RUN_REQUEST_STUB);
+
+      await vi.advanceTimersByTimeAsync(0);
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+      launch.resolve(execution);
+      await running;
+
+      expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN a change listener that throws when a run starts', () => {
+    beforeEach(() => {
+      store.onDidChange((entry) => {
+        if (entry.state === 'running') throw new Error('listener');
+      });
+    });
+
+    it('WHEN the run throws and the start timeout passes THEN the run is not left running', async () => {
+      await expect(runTask(store, ports, RUN_REQUEST_STUB)).rejects.toThrow('listener');
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      expect(stateOf(store)).toBe('failed-to-start');
+    });
+  });
+
   describe('GIVEN a launched run', () => {
     beforeEach(async () => {
       await runTask(store, ports, RUN_REQUEST_STUB);

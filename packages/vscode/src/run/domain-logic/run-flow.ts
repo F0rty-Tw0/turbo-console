@@ -56,11 +56,18 @@ const onStartTimeout = (store: Runs, ports: RunPorts, definition: RunDefinition,
 };
 
 /**
- * Spec §4.5 run flow: the guard, the launch, then a watchdog that ends the run as failed to start when its process has
- * not started `START_TIMEOUT_MS` after launch. The task events drive the rest through the store.
+ * Spec §4.5 run flow: a watchdog that ends the run as failed to start when its process has not started
+ * `START_TIMEOUT_MS` after launch, the guard, then the launch. The task events drive the rest through the store.
  */
 export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest): Promise<void> => {
   const launchedAt = ports.now();
+  const definition = definitionOf(request);
+
+  // Armed before the run exists, so neither a launch that never settles nor a throwing change listener leaves it running.
+  ports.after(START_TIMEOUT_MS, () => {
+    onStartTimeout(store, ports, definition, launchedAt);
+  });
+
   const isStarted = store.tryStart(request, launchedAt);
 
   if (!isStarted) {
@@ -69,7 +76,6 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
     return;
   }
 
-  const definition = definitionOf(request);
   const execution = await launch(ports, request);
 
   if (execution === null) {
@@ -79,9 +85,6 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
   }
 
   store.attach(definition, launchedAt, execution);
-  ports.after(START_TIMEOUT_MS, () => {
-    onStartTimeout(store, ports, definition, launchedAt);
-  });
 };
 
 const matchOf = async (ports: RunPorts, entry: RunEntry): Promise<RunMatch | null> => {

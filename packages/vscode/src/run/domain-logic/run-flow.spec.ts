@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { failStart, runTask } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
+import { START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { RunDefinition, RunPorts, RunRequest, Terminable } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
@@ -164,8 +165,10 @@ describe('FEATURE: run flow, starting a run', () => {
       expect(failing.log).toHaveBeenCalledOnce();
     });
 
-    it('WHEN it is run THEN the start watchdog is not set', () => {
-      expect(failing.after).not.toHaveBeenCalled();
+    it('WHEN the start timeout passes THEN the user is not told again', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      expect(failing.notifyFailedToStart).toHaveBeenCalledOnce();
     });
   });
 
