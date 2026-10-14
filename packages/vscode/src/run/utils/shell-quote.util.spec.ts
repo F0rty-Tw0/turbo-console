@@ -30,8 +30,8 @@ const PWSH_QUOTED: Quoted[] = [
   ['a b', "'a b'"],
   ['a$b', "'a$b'"],
   ['a`b', "'a`b'"],
-  ['a!b', "'a!b'"],
-  ['a&b', "'a&b'"],
+  ['a!b', null],
+  ['a&b', null],
   ['a#b', "'a#b'"],
   ["a'b", "'a''b'"],
   ['a\u2018b', "'a\u2018\u2018b'"],
@@ -39,10 +39,14 @@ const PWSH_QUOTED: Quoted[] = [
   ['a\u201Ab', "'a\u201A\u201Ab'"],
   ['a\u201Bb', "'a\u201B\u201Bb'"],
   ['x\u2019$(calc)\u2019', "'x\u2019\u2019$(calc)\u2019\u2019'"],
-  ['a%b', "'a%b'"],
   ['a\\b', "'a\\b'"],
   ['a"b', null],
   ['a\\', null],
+  ['a|b', null],
+  ['a<b', null],
+  ['a>b', null],
+  ['a^b', null],
+  ['a%b', null],
   ['', "''"]
 ];
 

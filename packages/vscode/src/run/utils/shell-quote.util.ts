@@ -14,6 +14,8 @@ const POSIX_SPECIAL = /['\\]/gu;
 /** PowerShell's tokenizer reads U+2018 to U+201B as single quotes too. */
 const PWSH_QUOTES = /['\u2018-\u201B]/gu;
 
+const PWSH_CMD_SPECIAL = /["&|<>^%!]/u;
+
 const TRAILING_BACKSLASHES = /\\+$/u;
 
 /** fish reads `\'` and `\\` inside single quotes, other POSIX shells do not: neither character stays inside, each sits between two quoted runs. */
@@ -21,12 +23,15 @@ const escapePosix = (special: string): string => (special === "'" ? "'\\''" : "'
 
 const quotePosix = (arg: string): string => `'${arg.replace(POSIX_SPECIAL, escapePosix)}'`;
 
-/** `null` for `"` and a trailing `\`: Windows PowerShell and pwsh's legacy mode pass arguments on to `.cmd` shims, which re-split them. */
+/**
+ * `null` for `"`, cmd's metacharacters and a trailing `\`: Windows PowerShell and pwsh's legacy mode hand a `.cmd` shim
+ * its arguments unquoted, and `cmd.exe /c` then re-splits them and runs `&`, `|`, `<`, `>`, `^`, `%` and `!`.
+ */
 const quotePwsh = (arg: string): string | null => {
-  const hasQuote = arg.includes('"');
+  const hasCmdSpecial = PWSH_CMD_SPECIAL.test(arg);
   const endsInBackslash = arg.endsWith('\\');
 
-  if (hasQuote || endsInBackslash) return null;
+  if (hasCmdSpecial || endsInBackslash) return null;
 
   return `'${arg.replace(PWSH_QUOTES, '$&$&')}'`;
 };
@@ -63,7 +68,7 @@ export const shellKindOf = (shellPath: string): ShellKind => {
   return base === 'cmd' ? 'cmd' : 'posix';
 };
 
-/** `arg` as one word of `kind`'s command line; `null` when `kind` cannot quote it safely (cmd with `"` or `%`). */
+/** `arg` as one word of `kind`'s command line; `null` when `kind` cannot pass it safely. */
 export const quoteArg = (arg: string, kind: ShellKind): string | null => {
   const isBareChars = BARE.test(arg);
   const startsBlocked = BARE_FIRST_BLOCKED.test(arg);
