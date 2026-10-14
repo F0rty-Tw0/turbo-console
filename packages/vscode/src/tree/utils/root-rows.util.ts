@@ -37,7 +37,7 @@ const messageRows = (root: string, kind: MessageKind): TreeRow[] => {
   return [row];
 };
 
-const binaryMessageOf = (kind: TurboErrorKind): MessageKind => {
+export const binaryMessageOf = (kind: TurboErrorKind): MessageKind => {
   if (kind === 'not-found') return 'binary-not-found';
 
   return kind === 'version-unsupported' ? 'binary-version' : 'binary-other';
