@@ -34,7 +34,7 @@ export const run = async (): Promise<void> => {
     await step('9: warm timings', () => {
       const visible = spanMs('tree visible', api.timings.treeVisible.get(root));
 
-      budget('tree visible warm', visible, TREE_VISIBLE_WARM_BUDGET_MS, env.budgetFactor);
+      budget('tree visible warm', visible, TREE_VISIBLE_WARM_BUDGET_MS, env);
     });
     await markDone(env);
   } finally {

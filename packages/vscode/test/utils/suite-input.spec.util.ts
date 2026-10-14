@@ -30,8 +30,9 @@ const isSuiteEnv = (value: unknown): value is SuiteEnv => {
   if (!isObject(value)) return false;
 
   const hasPaths = isStringOrNull(value['manifestFile']) && isStringOrNull(value['turboPath']);
+  const hasFiles = typeof value['doneFile'] === 'string' && typeof value['missFile'] === 'string';
 
-  return hasPaths && typeof value['budgetFactor'] === 'number' && typeof value['doneFile'] === 'string';
+  return hasPaths && hasFiles && typeof value['budgetFactor'] === 'number';
 };
 
 const isShownPackage = (value: unknown): value is ShownPackage => {

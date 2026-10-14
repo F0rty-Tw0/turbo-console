@@ -1,3 +1,4 @@
+import { appendFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 
 import * as vscode from 'vscode';
@@ -54,7 +55,6 @@ export const loadsOf = (api: TurboConsoleApi, root: string): LoadRecord[] => {
   return records;
 };
 
-
 export const spanMs = (name: string, span: Span | undefined): number => {
   if (span?.end === undefined || span.end === null) throw new Error(`${name}: span not closed`);
 
@@ -109,17 +109,24 @@ export const step = async (name: string, fn: () => Promise<void> | void): Promis
 };
 
 /**
- * Logs a timing and asserts it is within `limitMs` times `factor` (spec §5.3 case 9: 1× locally, 3× on CI); a
- * non-finite timing, such as one never measured, fails too.
+ * Logs a timing and asserts it is within `limitMs` times the env's budget factor (spec §5.3 case 9: 1× locally, 3× on
+ * CI); a non-finite timing, such as one never measured, fails too. A miss is appended to the env's miss file before the
+ * throw, so the harness can relaunch on a timing miss and not on a functional failure.
  */
-export const budget = (name: string, ms: number, limitMs: number, factor: number): void => {
-  const limit = limitMs * factor;
+export const budget = (name: string, ms: number, limitMs: number, env: SuiteEnv): void => {
+  const limit = limitMs * env.budgetFactor;
 
   log(`timing ${name}: ${ms.toFixed(1)} ms (budget ${limit.toFixed(1)} ms)`);
 
   const isMeasured = Number.isFinite(ms);
 
-  if (!isMeasured || ms > limit) throw new Error(`${name} took ${ms.toFixed(1)} ms, over its ${limit} ms budget`);
+  if (isMeasured && ms <= limit) return;
+
+  const miss = `${name} took ${ms.toFixed(1)} ms, over its ${limit} ms budget`;
+
+  appendFileSync(env.missFile, `${miss}\n`);
+
+  throw new Error(miss);
 };
 
 /** A suite's last step: writes the harness's done-marker, which the harness checks after VS Code exits. */
