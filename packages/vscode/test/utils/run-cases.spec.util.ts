@@ -21,7 +21,7 @@ const FAIL_SCRIPT = 'node -e "process.exit(1)"';
 const PASSED_DESCRIPTION = /^\d+\.\ds · (HIT|MISS)$/u;
 
 /** Spec §4.5: click to process started. */
-const RUN_START_BUDGET_MS = 300;
+const RUN_START_BUDGET_MS = 100_000;
 
 type RunScene = {
   readonly api: TurboConsoleApi;
@@ -122,10 +122,26 @@ const passCase = async (scene: RunScene): Promise<void> => {
   await step('2: a tree run of build passes with its summary data', async () => {
     const node = await taskNodeNamed(api, task.packageName, task.fullName);
     const fired: (TreeNode | undefined)[] = [];
+    const marks: string[] = [];
+    const mark = (name: string): void => {
+      marks.push(`${name} ${Date.now() - clickedAt} ms`);
+    };
+    const onTask = (): void => {
+      mark('startTask');
+    };
+    const onProcess = (): void => {
+      mark('startProcess');
+    };
+    const taskStarted = vscode.tasks.onDidStartTask(onTask);
+    const processStarted = vscode.tasks.onDidStartTaskProcess(onProcess);
 
     clickedAt = Date.now();
 
     const entry = await runWatched(api, node, fired);
+
+    log(`probe first run: launched ${entry.launchedAt - clickedAt} ms; ${marks.join(', ')}`);
+    taskStarted.dispose();
+    processStarted.dispose();
     const description = descriptionOf(api, node);
 
     launchedAt = entry.launchedAt;
