@@ -25,11 +25,16 @@ export type LoadFailure = {
 
 export type LoadResult = LoadedModel | LoadFailure;
 
-/** Ports of one root: the folder, the editor's storage dir and the progress UI are closed over by whoever builds them. */
+/**
+ * Ports of one root: the folder, the editor's storage dir and the progress UI are closed over by whoever builds them.
+ * `log` takes one clean line (already through `logTextOf`), so the sink never sees an error object or its `cause`.
+ */
 export type LoadDeps = {
   readonly resolve: (signal: AbortSignal) => Promise<TurboBinary>;
   readonly readCached: (binary: TurboBinary) => Promise<CachedWorkspace | null>;
   readonly load: (binary: TurboBinary, signal: AbortSignal) => Promise<WorkspaceModel>;
+  /** Takes a load slot shared by every root; rejects when `signal` aborts while queued. Call the result once to free it. */
+  readonly acquire: (signal: AbortSignal) => Promise<() => void>;
   readonly progress: (work: () => Promise<WorkspaceModel>) => Promise<WorkspaceModel>;
-  readonly log: (error: unknown) => void;
+  readonly log: (line: string) => void;
 };

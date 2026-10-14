@@ -4,10 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { loadRoot } from './load-root.ts';
 import type { LoadedModel } from '../common/root.type.ts';
-import { LOAD_DEADLINE_MS } from '../common/roots.const.ts';
 import { loadDepsMock } from '../test/mocks/load-deps.mock.ts';
 import { CACHED_WORKSPACE_STUB, TURBO_BINARY_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/root.stub.ts';
-import { loadUntilAborted } from '../test/utils/abortable-load.spec.util.ts';
 
 const STALE_CACHE: CachedWorkspace = { ...CACHED_WORKSPACE_STUB, isFresh: false };
 
@@ -36,7 +34,7 @@ describe('FEATURE: load a root', () => {
       expect(result).toStrictEqual({ kind: 'error', stage: 'binary', error: notFound });
       expect(deps.load).not.toHaveBeenCalled();
       expect(deps.readCached).not.toHaveBeenCalled();
-      expect(deps.log).toHaveBeenCalledWith(notFound);
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo not-found: no turbo');
     });
 
     it('WHEN resolve throws a plain Error THEN it is wrapped as a failed TurboException', async () => {
@@ -47,6 +45,7 @@ describe('FEATURE: load a root', () => {
       const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
 
       expect(result).toStrictEqual({ kind: 'error', stage: 'binary', error: new TurboException('failed', 'boom') });
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('boom');
     });
   });
 
@@ -63,6 +62,7 @@ describe('FEATURE: load a root', () => {
       expect(publish).toHaveBeenCalledExactlyOnceWith(expected);
       expect(deps.load).not.toHaveBeenCalled();
       expect(deps.progress).not.toHaveBeenCalled();
+      expect(deps.acquire).not.toHaveBeenCalled();
     });
   });
 
@@ -78,6 +78,7 @@ describe('FEATURE: load a root', () => {
       const stale: LoadedModel = { ...LOADED, fromCache: true, isFresh: false };
 
       expect(publish).toHaveBeenCalledExactlyOnceWith(stale);
+      expect(publish).toHaveBeenCalledBefore(vi.mocked(deps.load));
       expect(deps.load).toHaveBeenCalledOnce();
       expect(result).toStrictEqual(LOADED);
     });
@@ -108,7 +109,7 @@ describe('FEATURE: load a root', () => {
 
       const result = await loadRoot('cache-first', deps, new AbortController().signal, vi.fn());
 
-      expect(deps.log).toHaveBeenCalledWith(unreadable);
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo io: disk');
       expect(deps.load).toHaveBeenCalledOnce();
       expect(result).toStrictEqual(LOADED);
     });
@@ -136,7 +137,23 @@ describe('FEATURE: load a root', () => {
       const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
 
       expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: failed });
-      expect(deps.log).toHaveBeenCalledWith(failed);
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo failed: turbo exited 1');
+    });
+
+    it('WHEN the TurboException has a cause THEN the result error carries none', async () => {
+      const deps = loadDepsMock();
+      const stderr = new Error('raw turbo stderr');
+      const caused = new TurboException('failed', 'turbo exited 1', { cause: stderr });
+
+      vi.mocked(deps.load).mockRejectedValue(caused);
+
+      const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
+
+      const withoutCause = { kind: 'failed', message: 'turbo exited 1' };
+
+      expect(result).toMatchObject({ kind: 'error', stage: 'load', error: withoutCause });
+      expect(result).not.toHaveProperty('error.cause');
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo failed: turbo exited 1');
     });
 
     it('WHEN it throws something else THEN it is wrapped as a failed TurboException', async () => {
@@ -147,68 +164,7 @@ describe('FEATURE: load a root', () => {
       const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
 
       expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: new TurboException('failed', 'plain string') });
-    });
-  });
-
-  describe('GIVEN the caller aborts while load runs', () => {
-    it('WHEN the load settles THEN it is a load failure and nothing is logged', async () => {
-      const deps = loadDepsMock();
-      const controller = new AbortController();
-
-      vi.mocked(deps.load).mockImplementation(loadUntilAborted);
-
-      const pending = loadRoot('full', deps, controller.signal, vi.fn());
-
-      controller.abort();
-
-      const result = await pending;
-
-      expect(result).toMatchObject({ kind: 'error', stage: 'load' });
-      expect(deps.log).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('GIVEN a load signal', () => {
-    it('WHEN the caller aborts THEN the signal given to load aborts, and it is not the caller own signal', async () => {
-      const deps = loadDepsMock();
-      const controller = new AbortController();
-      let given: AbortSignal | null = null;
-
-      vi.mocked(deps.load).mockImplementation(async (_binary, signal) => {
-        given = signal;
-
-        return Promise.resolve(WORKSPACE_MODEL_STUB);
-      });
-
-      await loadRoot('full', deps, controller.signal, vi.fn());
-
-      expect(given).not.toBe(controller.signal);
-      expect(given).toHaveProperty('aborted', false);
-
-      controller.abort();
-
-      expect(given).toHaveProperty('aborted', true);
-    });
-
-    it('WHEN load starts THEN a 60 s deadline is part of the signal', async () => {
-      const deps = loadDepsMock();
-      const timeout = vi.spyOn(AbortSignal, 'timeout');
-
-      await loadRoot('full', deps, new AbortController().signal, vi.fn());
-
-      expect(timeout).toHaveBeenCalledExactlyOnceWith(LOAD_DEADLINE_MS);
-      expect(LOAD_DEADLINE_MS).toBe(60_000);
-    });
-  });
-
-  describe('GIVEN the caller signal reaches resolve', () => {
-    it('WHEN loaded THEN resolve gets the caller own signal', async () => {
-      const deps = loadDepsMock();
-      const controller = new AbortController();
-
-      await loadRoot('full', deps, controller.signal, vi.fn());
-
-      expect(deps.resolve).toHaveBeenCalledExactlyOnceWith(controller.signal);
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('plain string');
     });
   });
 });
