@@ -6,3 +6,6 @@ export const ALREADY_RUNNING_TEXT = 'Already running.';
 export const START_TIMEOUT_TEXT = `turbo process did not start within ${START_TIMEOUT_MS / 1000} s`;
 
 export const TASK_ENDED_TEXT = 'task ended before its process started';
+
+/** The task definition type of every run, declared in package.json `taskDefinitions`. */
+export const RUN_TASK_TYPE = 'turbo-console';

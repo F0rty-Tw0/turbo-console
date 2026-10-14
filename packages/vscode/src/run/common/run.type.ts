@@ -73,3 +73,21 @@ export type Runs = {
   readonly get: RunLookup;
   readonly onDidChange: (listener: RunListener) => () => void;
 };
+
+/**
+ * The definition of the `vscode.Task` of one run. `launchedAt` is its launch token; it is left out of the declared
+ * task definition schema, since VS Code builds a task's identity from the declared keys and would give every run a new
+ * terminal panel. Events of an execution VS Code started itself (Rerun Last Task) carry no token.
+ */
+export type RunTaskDefinition = {
+  readonly type: string;
+  readonly root: string;
+  readonly id: string;
+  readonly launchedAt: number;
+};
+
+/** A task event of one run: its task and its launch token. */
+export type RunEvent = {
+  readonly definition: RunDefinition;
+  readonly launchedAt: number;
+};
