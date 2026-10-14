@@ -41,6 +41,9 @@ const STUB_NAMES: StubName[] = ['slow-term', 'ignore-term', 'quick-term', 'stder
 /** The one timer-driven case: long enough that a loaded macOS runner's shell writes its pid (and trap) before it fires. */
 const TIMEOUT_MS = 1000;
 
+/** The 2 s pid wait plus runTurbo's 5 s grace for a stub stopped before its pid shows, so a stall fails as ENOENT, not a test timeout. */
+const STALL_TEST_TIMEOUT_MS = 10_000;
+
 const noop = (): void => undefined;
 
 /** The stubs are POSIX shell scripts; the Windows taskkill path is proven by the contract hang test. */
@@ -97,6 +100,10 @@ const runUntilAborted = async (stub: StubName, options: RunTurboOptions, onStart
   const stop = new AbortController();
   const startedAt = performance.now();
   const run = startStub(stub, stoppable(options, stop.signal));
+
+  // A run that rejects while the pid wait still polls is handled here; `await run` below still sees the rejection.
+  run.catch(noop);
+
   const pid = await vi.waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 }).catch(async (error: unknown) => {
     stop.abort();
     await run.catch(noop);
@@ -247,7 +254,7 @@ describe('FEATURE: runTurbo process lifecycle', () => {
       const outcome = await runUntilAborted('quick-term', { signal: controller.signal }, abort);
 
       expect(outcome.error).toMatchObject({ name: 'AbortError' });
-    });
+    }, STALL_TEST_TIMEOUT_MS);
   });
 
   describe.skipIf(IS_WINDOWS)('GIVEN a binary that writes 70 000 x and a line to stderr, then hangs', () => {
