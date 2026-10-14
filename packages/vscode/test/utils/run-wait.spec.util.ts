@@ -93,6 +93,17 @@ export const summaryMatch = async (root: string, before: string[], command: stri
   return match;
 };
 
+/** When the process of the run of `taskId` launched at `launchedAt` started, from `timings.runs`. */
+export const processStartOf = (api: TurboConsoleApi, taskId: string, launchedAt: number): number => {
+  const isThisRun = (timing: RunTiming): boolean => timing.taskId === taskId && timing.clickedAt === launchedAt;
+  const timing = api.timings.runs.find(isThisRun);
+  const started = timing?.processStartedAt ?? null;
+
+  if (started === null) throw new Error(`the run of ${taskId} recorded no process start`);
+
+  return started;
+};
+
 const latencyText = (timing: RunTiming): string => {
   const started = timing.processStartedAt;
 

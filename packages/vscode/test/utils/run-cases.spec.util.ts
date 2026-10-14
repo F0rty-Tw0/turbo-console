@@ -6,11 +6,11 @@ import * as vscode from 'vscode';
 
 import { overlapCase } from './overlap-case.spec.util.ts';
 import { packageDirOf, setScript, writeEdited } from './package-edit.spec.util.ts';
-import { endedRun, logRunStarts, startRun, taskNodeNamed } from './run-wait.spec.util.ts';
+import { endedRun, logRunStarts, processStartOf, startRun, taskNodeNamed } from './run-wait.spec.util.ts';
 import { budget, log, step } from './suite-env.spec.util.ts';
 import { whenQuiet } from './watch-wait.spec.util.ts';
 import type { RunEntry } from '../../src/run/common/run.type.ts';
-import type { RunTiming, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
+import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
 import type { ShownManifest, ShownTask, SuiteEnv } from '../common/launch.type.ts';
 
@@ -135,14 +135,20 @@ const passCase = async (scene: RunScene): Promise<void> => {
     assert.ok(fired.includes(node), 'the run redrew its cached task node');
     assertTerminalKept(task.fullName);
   });
-  await step('9-run: click to process start', () => {
-    const isPassedRun = (record: RunTiming): boolean => record.taskId === task.fullName && record.clickedAt === launchedAt;
-    const timing = api.timings.runs.find(isPassedRun);
-    const started = timing?.processStartedAt ?? null;
+  // The first run in a window waits for VS Code to create its terminal (0.3–2 s on CI, outside the extension), so the
+  // budget gates a second run on the reused terminal and the first run's start is only logged.
+  await step('9-run: click to process start on a reused terminal', async () => {
+    const firstStart = processStartOf(api, task.fullName, launchedAt);
+    const node = await taskNodeNamed(api, task.packageName, task.fullName);
+    const warmClickedAt = Date.now();
+    const warmLaunchedAt = await startRun(api, node);
 
-    if (timing === undefined || started === null) throw new Error('the passed run recorded no process start');
+    await endedRun(api, node, warmLaunchedAt);
 
-    budget('run start', started - clickedAt, RUN_START_BUDGET_MS, scene.env);
+    const warmStart = processStartOf(api, task.fullName, warmLaunchedAt);
+
+    log(`run start, first run (terminal created): ${firstStart - clickedAt} ms`);
+    budget('run start', warmStart - warmClickedAt, RUN_START_BUDGET_MS, scene.env);
   });
 };
 
@@ -169,7 +175,7 @@ const failCase = async (scene: RunScene): Promise<void> => {
 
 /**
  * Spec §5.3 cases 2, 9-run and 3, on X = a shown `build` task depending on another (Y). Puts X's `package.json` back
- * before the overlap case, checks X (4 runs) and Y (2 runs) each kept one terminal, and logs every run's start latency.
+ * before the overlap case, checks X (5 runs) and Y (2 runs) each kept one terminal, and logs every run's start latency.
  */
 export const runCases = async (api: TurboConsoleApi, root: string, manifest: ShownManifest, env: SuiteEnv): Promise<void> => {
   const [x, y] = buildPair(manifest);
