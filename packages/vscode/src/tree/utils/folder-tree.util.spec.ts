@@ -97,14 +97,52 @@ describe('FEATURE: folder grouping of packages', () => {
     });
   });
 
+  describe('GIVEN sibling directories whose labels differ by case', () => {
+    it('WHEN grouped THEN they are ordered by default string order, upper case first', () => {
+      const packages = [packageAt('x', 'b/x'), packageAt('y', 'B/y'), packageAt('z', 'a/z')];
+
+      const tree = folderTree(packages);
+
+      expect(tree.dirs.map((dir) => dir.label)).toStrictEqual(['B', 'a', 'b']);
+    });
+  });
+
+  describe('GIVEN a mix of merged, nested and package directories', () => {
+    it('WHEN grouped THEN every directory path is unique', () => {
+      const packages = [
+        packageAt('tools', 'tools'),
+        packageAt('cli', 'tools/cli'),
+        packageAt('ui', 'shared/ui'),
+        packageAt('kit', 'shared/ui/kit/core'),
+        packageAt('z', 'libs/deep/z'),
+        packageAt('x', 'packages/libs/x'),
+        packageAt('a', 'packages/a')
+      ];
+      const pathsOf = (dir: FolderDir): string[] => {
+        const nested = dir.dirs.flatMap(pathsOf);
+
+        return [dir.path, ...nested];
+      };
+
+      const tree = folderTree(packages);
+      const paths = tree.dirs.flatMap(pathsOf);
+
+      expect(new Set(paths).size).toBe(paths.length);
+      expect(paths.toSorted()).toStrictEqual([
+        'libs/deep',
+        'packages',
+        'packages/libs',
+        'shared',
+        'shared/ui',
+        'shared/ui/kit',
+        'tools'
+      ]);
+    });
+  });
+
   describe('GIVEN a nested level with several child directories', () => {
     it('WHEN grouped THEN the child directories are ordered by label there too', () => {
-      const packages = [
-        packageAt('own', 'p/own'),
-        packageAt('z', 'p/z/q'),
-        packageAt('b', 'p/a/b/q'),
-        packageAt('x', 'p/a-x/q')
-      ];
+      const packages = [packageAt('own', 'p/own'), packageAt('z', 'p/z/q'), packageAt('b', 'p/a/b/q'), packageAt('x', 'p/a-x/q')];
 
       const tree = folderTree(packages);
 

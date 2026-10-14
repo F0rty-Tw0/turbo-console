@@ -15,6 +15,7 @@ const newDirNode = (path: string, label: string): DirNode => {
   return node;
 };
 
+/** `..` stays a plain segment, not resolved: turbo reports package paths inside the root, so none is expected. */
 const isPathSegment = (segment: string): boolean => segment !== '' && segment !== '.';
 
 const segmentsOf = (path: string): string[] => {
