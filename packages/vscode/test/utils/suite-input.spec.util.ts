@@ -20,6 +20,8 @@ const TASK_KINDS: Record<TaskKind, true> = {
 
 const isObject = (value: unknown): value is JsonObject => typeof value === 'object' && value !== null;
 
+const isString = (value: unknown): value is string => typeof value === 'string';
+
 const isStringOrNull = (value: unknown): boolean => typeof value === 'string' || value === null;
 
 const isPackageRole = (value: unknown): value is PackageRole => typeof value === 'string' && Object.hasOwn(PACKAGE_ROLES, value);
@@ -45,8 +47,11 @@ const isShownTask = (value: unknown): value is ShownTask => {
   if (!isObject(value)) return false;
 
   const hasNames = typeof value['fullName'] === 'string' && typeof value['packageName'] === 'string';
+  const dependencies = value['dependencies'];
+  const hasDependencies = Array.isArray(dependencies) && dependencies.every(isString);
+  const hasLists = hasNames && hasDependencies;
 
-  return hasNames && isTaskKind(value['kind']) && typeof value['visible'] === 'boolean';
+  return hasLists && isTaskKind(value['kind']) && typeof value['visible'] === 'boolean';
 };
 
 const isShownManifest = (value: unknown): value is ShownManifest => {

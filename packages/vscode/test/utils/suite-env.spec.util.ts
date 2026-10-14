@@ -61,15 +61,15 @@ export const spanMs = (name: string, span: Span | undefined): number => {
   return span.end - span.start;
 };
 
-/** Polls `isDone` until it holds; throws with `name` after 30 s. */
-export const waitFor = async (name: string, isDone: () => boolean): Promise<void> => {
-  const deadline = performance.now() + WAIT_LIMIT_MS;
+/** Polls `isDone` until it holds; throws with `name` after `limitMs` (30 s by default). */
+export const waitFor = async (name: string, isDone: () => boolean, limitMs = WAIT_LIMIT_MS): Promise<void> => {
+  const deadline = performance.now() + limitMs;
 
   while (!isDone()) {
     const now = performance.now();
     const isLate = now > deadline;
 
-    if (isLate) throw new Error(`${name}: timed out after ${WAIT_LIMIT_MS} ms`);
+    if (isLate) throw new Error(`${name}: timed out after ${limitMs} ms`);
 
     await sleep(POLL_MS);
   }

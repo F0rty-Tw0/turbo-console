@@ -1,10 +1,8 @@
 import type { RunMatch } from '@turbo-console/core';
 
-import type { RunDefinition, RunEntry, RunKey, RunLookup, RunRequest, Terminable } from '../common/run.type.ts';
+import type { RunDefinition, RunEntry, RunKey, RunListener, RunLookup, RunRequest, Terminable } from '../common/run.type.ts';
 import { endStateOf, isMatchedEnd } from '../utils/run-end.util.ts';
 import { runKeyOf, runningEntryOf } from '../utils/run-entry.util.ts';
-
-type ChangeListener = (entry: RunEntry) => void;
 
 /** An entry and the execution Stop terminates, once `executeTask` has handed it over. */
 type RunSlot = {
@@ -19,15 +17,14 @@ type RunSlot = {
  */
 export class RunStore {
   private readonly slots = new Map<RunKey, RunSlot>();
-  private readonly listeners = new Set<ChangeListener>();
+  private readonly listeners = new Set<RunListener>();
 
   public readonly get: RunLookup = (root, taskId) => this.slots.get(runKeyOf(root, taskId))?.entry;
 
   /** Spec §4.5 step 1: decided synchronously, so two entry points or a double click cannot start two runs. */
   public tryStart(request: RunRequest, now: number): boolean {
     const key = runKeyOf(request.root, request.task.id);
-    const existing = this.slots.get(key);
-    const isRunning = existing?.entry.state === 'running';
+    const isRunning = this.slots.get(key)?.entry.state === 'running';
 
     if (isRunning) return false;
 
@@ -38,12 +35,15 @@ export class RunStore {
     return true;
   }
 
-  /** Terminates `execution` at once when Stop came first, or when its run ended or was replaced (a late launch). */
+  /** Terminates `execution` when Stop came first or its run ended (a late launch); not while a newer run of the task
+   * runs, since termination goes by the one VS Code task id all runs of a task share. */
   public attach(definition: RunDefinition, launchedAt: number, execution: Terminable): void {
     const slot = this.running(definition, launchedAt);
 
     if (slot === undefined) {
-      execution.terminate();
+      const newerRun = this.running(definition);
+
+      if (newerRun === undefined) execution.terminate();
 
       return;
     }
@@ -60,13 +60,13 @@ export class RunStore {
     this.update(slot, { stopRequested: true });
   }
 
-  public processStarted(definition: RunDefinition, at: number): void {
-    this.update(this.running(definition), { processStartedAt: at });
+  public processStarted(definition: RunDefinition, at: number, launchedAt?: number): void {
+    this.update(this.running(definition, launchedAt), { processStartedAt: at });
   }
 
   /** Ends the run per spec §4.5 step 6; `matching` stays true until `setMatch` when a summary match follows. */
-  public processEnded(definition: RunDefinition, exitCode: number | undefined, at: number): RunEntry | null {
-    const slot = this.running(definition);
+  public processEnded(definition: RunDefinition, exitCode: number | undefined, at: number, launchedAt?: number): RunEntry | null {
+    const slot = this.running(definition, launchedAt);
 
     if (slot === undefined) return null;
 
@@ -111,7 +111,7 @@ export class RunStore {
   }
 
   /** Fires on every change of an entry; returns the unsubscribe. */
-  public onDidChange(listener: ChangeListener): () => void {
+  public onDidChange(listener: RunListener): () => void {
     this.listeners.add(listener);
 
     return (): void => {

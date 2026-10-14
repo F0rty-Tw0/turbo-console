@@ -33,12 +33,12 @@ describe('FEATURE: run flow, starting a run', () => {
   });
 
   describe('GIVEN a task with no run', () => {
-    it('WHEN it is run THEN turbo runs that task of that package with a summary', async () => {
+    it('WHEN it is run THEN turbo runs that task of that package with a summary, tagged with its launch token', async () => {
       const args = ['--skip-infer', 'run', 'build', '--filter=a', '--summarize'];
 
       await runTask(store, ports, RUN_REQUEST_STUB);
 
-      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, args);
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, args, 1000);
     });
 
     it('WHEN it is run twice without waiting THEN the second run is refused at once', () => {
@@ -152,14 +152,74 @@ describe('FEATURE: run flow, starting a run', () => {
       await running;
     });
 
-    it('WHEN run 1 execution arrives late THEN it is terminated', () => {
-      expect(late.terminate).toHaveBeenCalledOnce();
+    it('WHEN run 1 execution arrives late THEN it is not terminated, as that would stop the task of run 2', () => {
+      expect(late.terminate).not.toHaveBeenCalled();
     });
 
     it('WHEN run 2 is stopped after run 1 execution arrived late THEN run 2 execution is terminated', () => {
       store.requestStop(RUN);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN VS Code already runs the task outside the store (Rerun Last Task, a reconnect)', () => {
+    let elsewhere: RunPorts;
+
+    beforeEach(async () => {
+      const isActive = vi.fn().mockReturnValue(true);
+
+      elsewhere = fakeRunPorts(execution, { isActive });
+      await runTask(store, elsewhere, RUN_REQUEST_STUB);
+    });
+
+    it('WHEN it is run THEN VS Code is asked about exactly that task', () => {
+      expect(elsewhere.isActive).toHaveBeenCalledExactlyOnceWith(RUN);
+    });
+
+    it('WHEN it is run THEN the user is told it is already running', () => {
+      expect(elsewhere.info).toHaveBeenCalledExactlyOnceWith('Already running.');
+    });
+
+    it('WHEN it is run THEN the log names the task VS Code runs', () => {
+      expect(elsewhere.log).toHaveBeenCalledExactlyOnceWith('build in /ws is already running as a VS Code task');
+    });
+
+    it('WHEN it is run THEN turbo is not launched', () => {
+      expect(elsewhere.execute).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it is run THEN the store holds no run of it', () => {
+      expect(store.get(RUN.root, RUN.id)).toBeUndefined();
+    });
+
+    it('WHEN the start timeout passes THEN the running task is left alone and nothing is told', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      expect(elsewhere.notifyFailedToStart).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN run 1 ended, then run 2 launched at 5000', () => {
+    let second: RunPorts;
+
+    beforeEach(async () => {
+      await runTask(store, ports, RUN_REQUEST_STUB);
+      store.processEnded(RUN, 0, 4000, 1000);
+      second = fakeRunPorts(execution, { now: () => 5000 });
+      await runTask(store, second, RUN_REQUEST_STUB);
+    });
+
+    it('WHEN run 1 task end arrives late with its launch token THEN run 2 keeps running', () => {
+      taskEnded(store, second, RUN, 1000);
+
+      expect(store.get('/ws', 'build')).toMatchObject({ launchedAt: 5000, state: 'running' });
+    });
+
+    it('WHEN its own task end arrives with its launch token THEN run 2 failed to start', () => {
+      taskEnded(store, second, RUN, 5000);
+
+      expect(stateOf(store)).toBe('failed-to-start');
     });
   });
 

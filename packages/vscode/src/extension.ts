@@ -4,6 +4,10 @@ import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/roo
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
+import { editorRunPorts } from './run/data-access/run-ports.ts';
+import { forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
+import { RunSession } from './run/domain-logic/run-session.ts';
+import { registerRuns } from './run/feature/register-runs.ts';
 import type { Timings, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
@@ -30,9 +34,10 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   };
   const ports: SessionPorts = { depsFor, now: () => performance.now(), warn: output.warn };
   const session = new RootsSession(ports);
-  const tree = new PackagesTreeProvider(session.store, () => undefined, currentTreeMode(), timings.treeVisible);
+  const runSession = new RunSession(editorRunPorts(output), timings.runs);
+  const tree = new PackagesTreeProvider(session.store, runSession.runs.get, currentTreeMode(), timings.treeVisible);
   const whenIdle = async (root: string): Promise<void> => session.whenIdle(root);
-  const api: TurboConsoleApi = { tree, timings, loads: session.loads, whenIdle };
+  const api: TurboConsoleApi = { tree, runs: runSession.runs, timings, loads: session.loads, whenIdle };
   const disposeSession = (): void => {
     session.dispose();
   };
@@ -48,7 +53,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
       watchers.prune();
     };
 
-    context.subscriptions.push(watchers);
+    const runs = registerRuns(runSession, tree, session.store, vscode.commands.registerCommand);
+
+    context.subscriptions.push(watchers, runs, forwardTaskEvents(runSession));
 
     await registerRoots(context, session, onRoots, output.error);
   }

@@ -1,8 +1,10 @@
 import type { Span } from './span.type.ts';
 import type { LoadRecord } from '../../roots/common/coordinator.type.ts';
+import type { Runs } from '../../run/common/run.type.ts';
 import type { PackagesTreeApi } from '../../tree/common/tree-node.type.ts';
 
-type RunTiming = {
+/** One run as the user saw it: the click (its launch token) and when its process started, both wall-clock. */
+export type RunTiming = {
   readonly taskId: string;
   readonly clickedAt: number;
   readonly processStartedAt: number | null;
@@ -23,6 +25,7 @@ export type Timings = {
  */
 export type TurboConsoleApi = {
   readonly tree: PackagesTreeApi;
+  readonly runs: Runs;
   readonly timings: Timings;
   readonly loads: Map<string, LoadRecord[]>;
   readonly whenIdle: (root: string) => Promise<void>;

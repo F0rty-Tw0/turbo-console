@@ -15,7 +15,7 @@ const definitionOf = (request: RunRequest): RunDefinition => {
 /** A run whose process never started: its launch token (none for the current run) and the reason, unless already logged. */
 type StartEnd = {
   readonly definition: RunDefinition;
-  readonly launchedAt?: number;
+  readonly launchedAt?: number | undefined;
   readonly reason?: string;
 };
 
@@ -34,16 +34,19 @@ const endStart = (store: Runs, ports: RunPorts, end: StartEnd): void => {
   ports.notifyFailedToStart();
 };
 
-/** The `onDidEndTask` handler: a run still running when its task ends never saw its process end (spec §4.5 step 5). */
-export const taskEnded = (store: Runs, ports: RunPorts, definition: RunDefinition): void => {
-  endStart(store, ports, { definition, reason: TASK_ENDED_TEXT });
+/**
+ * The `onDidEndTask` handler: a run still running when its task ends never saw its process end (spec §4.5 step 5).
+ * With `launchedAt`, only the run launched then.
+ */
+export const taskEnded = (store: Runs, ports: RunPorts, definition: RunDefinition, launchedAt?: number): void => {
+  endStart(store, ports, { definition, launchedAt, reason: TASK_ENDED_TEXT });
 };
 
 /**
  * The execution of `request`, or `null` once the reason is logged: a binary that is missing or cannot be run (VS Code
  * fires no task process event for a missing one), a name turbo would read as filter syntax, or a rejected launch.
  */
-const launch = async (ports: RunPorts, request: RunRequest): Promise<Terminable | null> => {
+const launch = async (ports: RunPorts, request: RunRequest, launchedAt: number): Promise<Terminable | null> => {
   try {
     const canExecute = await ports.canExecute(request.binaryPath);
 
@@ -55,7 +58,7 @@ const launch = async (ports: RunPorts, request: RunRequest): Promise<Terminable 
 
     const args = turboRunArgs(request.task, request.packageName);
 
-    return await ports.execute(request, args);
+    return await ports.execute(request, args, launchedAt);
   } catch (error) {
     ports.log(logTextOf(error));
 
@@ -73,7 +76,8 @@ const onStartTimeout = (store: Runs, ports: RunPorts, definition: RunDefinition,
 
 /**
  * Spec §4.5 run flow: a watchdog that ends the run as failed to start when its process has not started
- * `START_TIMEOUT_MS` after launch, the guard, then the launch. The task events drive the rest through the store.
+ * `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), then the launch.
+ * The task events drive the rest through the store.
  */
 export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest): Promise<void> => {
   const launchedAt = ports.now();
@@ -84,6 +88,17 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
     onStartTimeout(store, ports, definition, launchedAt);
   });
 
+  // VS Code would hand back the running execution of the same task, which carries no token of this run: the watchdog
+  // would end the run as failed to start and terminate the task the user started.
+  const isActiveElsewhere = ports.isActive(definition);
+
+  if (isActiveElsewhere) {
+    ports.info(ALREADY_RUNNING_TEXT);
+    ports.log(logTextOf(`${definition.id} in ${definition.root} is already running as a VS Code task`));
+
+    return;
+  }
+
   const isStarted = store.tryStart(request, launchedAt);
 
   if (!isStarted) {
@@ -92,7 +107,7 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
     return;
   }
 
-  const execution = await launch(ports, request);
+  const execution = await launch(ports, request, launchedAt);
 
   if (execution === null) {
     endStart(store, ports, { definition, launchedAt });
