@@ -8,7 +8,7 @@ import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 
-const isVisible = (task: TaskNode): boolean => task.kind !== 'atom-file';
+export const isVisibleTask = (task: TaskNode): boolean => task.kind !== 'atom-file';
 
 const lineOf = (line: string | null): string[] => {
   if (line === null) return [];
@@ -85,7 +85,7 @@ const taskRow = (root: string, pkg: PackageNode, task: TaskNode, runs: RunLookup
  * text: `tooltipOf` cleans them. The description is built from numbers and fixed words, but is cleaned like every label.
  */
 export const taskRows = (root: string, pkg: PackageNode, runs: RunLookup): TreeRow[] => {
-  const visible = pkg.tasks.filter(isVisible);
+  const visible = pkg.tasks.filter(isVisibleTask);
 
   return visible.map((task) => taskRow(root, pkg, task, runs));
 };
