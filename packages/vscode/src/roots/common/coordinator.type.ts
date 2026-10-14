@@ -57,6 +57,21 @@ export type RootEntry = {
 /** `<stage>:<TurboException kind>` of a `LoadFailure`, for example `binary:not-found`; together they pick the §4.4 row. */
 export type ErrorKey = string;
 
+/** The public face of `RootStore` that the tree and the editor wiring read. */
+export type Roots = {
+  readonly get: (root: string) => RootEntry | undefined;
+  readonly all: () => RootEntry[];
+  readonly onDidChange: (listener: (change: RootChange) => void) => () => void;
+};
+
+/** The public face of `RootsSession` that the editor wiring drives. */
+export type Session = {
+  readonly store: Roots;
+  readonly setWorkspaceFolders: (folders: RootFolder[]) => Promise<RootFolder[]>;
+  readonly setVisible: (visible: boolean) => void;
+  readonly request: (reason: ChangeReason) => void;
+};
+
 export type RootChange = {
   readonly root: string;
   readonly before: WorkspaceModel | null;
