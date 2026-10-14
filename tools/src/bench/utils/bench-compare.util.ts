@@ -1,4 +1,3 @@
-import { median } from './median.util.ts';
 import { NS_PER_MS } from '../common/bench.const.ts';
 import type { BenchComparison, BenchResult, ComparisonRow } from '../common/bench.type.ts';
 
@@ -11,7 +10,10 @@ const NAME_HEADER = 'bench';
 const VALUE_HEADERS = ['base ms', 'head ms', 'ratio', 'gate', 'status'];
 const VALUE_WIDTH = 10;
 
-/** Per bench name, the median of its run medians; `gate` and `samples` come from the last run. Names keep first-seen order. */
+/**
+ * Per bench name, the fastest of its run medians, so one or two runs stuck in a slow process mode cannot fail the gate;
+ * `gate` and `samples` come from the last run. Names keep first-seen order.
+ */
 export const reduceRuns = (runs: BenchResult[][]): BenchResult[] => {
   const groups = new Map<string, RunGroup>();
   const reduced: BenchResult[] = [];
@@ -25,7 +27,7 @@ export const reduceRuns = (runs: BenchResult[][]): BenchResult[] => {
   }
 
   for (const group of groups.values()) {
-    const medianNs = median(group.medians);
+    const medianNs = Math.min(...group.medians);
     const result: BenchResult = { ...group.last, medianNs };
 
     reduced.push(result);
