@@ -75,8 +75,26 @@ const runAttempt = async (launch: Launch, workspace: string, userDataDir: string
 };
 
 /**
+ * On CI, snapshots a launch's user-data dir so a relaunch can restore it. Returns null locally, where nothing relaunches,
+ * and after logging why the snapshot failed: a locked or unreadable file there must cost the launch its retries, not
+ * fail it before its first attempt.
+ */
+const snapshotForRelaunch = async (launch: Launch, userDataDir: string, copy: string): Promise<(() => Promise<void>) | null> => {
+  if (!isCi) return null;
+
+  try {
+    return await snapshotDir(userDataDir, copy);
+  } catch (error) {
+    process.stdout.write(`launch ${launch.name}: no user-data snapshot (${String(error)}), so no relaunch\n`);
+
+    return null;
+  }
+};
+
+/**
  * Writes the user settings, then runs the launch. On CI an attempt that failed on a timing miss runs again from the
- * user-data dir the first attempt started from (fresh for L1, L1's end state for L2); see `shouldRelaunch`.
+ * user-data dir the first attempt started from (fresh for L1, L1's end state for L2); see `shouldRelaunch`. Only CI
+ * takes the snapshot, since only CI relaunches.
  */
 const runLaunch = async (launch: Launch, scratch: RunScratch, devTurbo: string): Promise<void> => {
   const workspace = WORKSPACE_DIRS[launch.workspace](scratch);
@@ -84,7 +102,7 @@ const runLaunch = async (launch: Launch, scratch: RunScratch, devTurbo: string):
   const userDataDir = await userDataDirFor(scratch, launch.userData, turboPath);
   const doneFile = join(scratch.dir, `${launch.name}.done`);
   const snapshotCopy = join(scratch.dir, `${launch.name}.user-data`);
-  const restore = await snapshotDir(userDataDir, snapshotCopy);
+  const restore = await snapshotForRelaunch(launch, userDataDir, snapshotCopy);
 
   for (let attempt = 1; ; attempt += 1) {
     const missFile = join(scratch.dir, `${launch.name}-${attempt}.miss`);
@@ -96,15 +114,18 @@ const runLaunch = async (launch: Launch, scratch: RunScratch, devTurbo: string):
       return;
     } catch (error) {
       const hasMiss = existsSync(missFile);
-      const isRelaunch = shouldRelaunch(attempt, isCi, hasMiss);
+      const hasRestore = restore !== null;
+      const isRetryable = shouldRelaunch(attempt, isCi, hasMiss);
+      const isRelaunch = hasRestore && isRetryable;
 
       if (!isRelaunch) throw error;
 
       const missText = await readFile(missFile, 'utf8');
       const misses = missText.trim().replaceAll('\n', '; ');
+      const detail = String(error);
 
       process.stdout.write(
-        `launch ${launch.name}: timing miss on attempt ${attempt}/${MAX_TIMING_ATTEMPTS} (${misses}), relaunching\n`
+        `launch ${launch.name}: timing miss on attempt ${attempt}/${MAX_TIMING_ATTEMPTS} (${misses}; ${detail}), relaunching\n`
       );
       await restore();
     }
