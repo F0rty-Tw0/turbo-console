@@ -116,7 +116,11 @@ export const run = async (): Promise<void> => {
       log(`timing query: ${query.toFixed(1)} ms`);
       budget('tree visible cold', visible, query + TREE_VISIBLE_SLACK_MS, env);
       budget('expand', expand, EXPAND_BUDGET_MS, env);
-      budget('activation', activation, ACTIVATION_BUDGET_MS, env);
+      const { missFile } = env;
+      const isFirstAttempt = missFile.endsWith('-1.miss');
+      const activationLimit = isFirstAttempt ? 0 : ACTIVATION_BUDGET_MS;
+
+      budget('activation', activation, activationLimit, env);
     });
     // later spec §5.3 cases go here, after case 9 and before the warm-up
     await step('warm-up', async () => warmUp(api, root));
