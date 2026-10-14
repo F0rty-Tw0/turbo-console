@@ -21,11 +21,13 @@ const rawLogTextOf = (error: unknown): string => {
 /**
  * One log entry for an error, its lines kept and indented after the first, cut to `LOG_LINE_MAX`; never reads `cause`,
  * which can hold turbo's raw stderr. Never throws: a revoked proxy, a throwing `message` getter or `toString`, or a
- * null-prototype object logs `UNPRINTABLE`.
+ * null-prototype object logs `UNPRINTABLE`. Cleaned before indenting, so a huge message costs O(`LOG_LINE_MAX`); cleaned
+ * again to cut what the indent added.
  */
 export const logTextOf = (error: unknown): string => {
   try {
-    const indented = rawLogTextOf(error).replaceAll('\n', CONTINUATION);
+    const cleaned = cleanLines(rawLogTextOf(error), LOG_LINE_MAX);
+    const indented = cleaned.replaceAll('\n', CONTINUATION);
 
     return cleanLines(indented, LOG_LINE_MAX);
   } catch {

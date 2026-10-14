@@ -86,4 +86,24 @@ describe('FEATURE: log text of an error', () => {
       expect(text).toBe(`${'a'.repeat(LOG_LINE_MAX - 1)}…`);
     });
   });
+
+  describe('GIVEN many short lines that pass the limit once indented', () => {
+    it('WHEN logged THEN the indented text is still cut to the limit', () => {
+      const text = logTextOf(new Error('x\n'.repeat(LOG_LINE_MAX / 4)));
+
+      expect(text).toHaveLength(LOG_LINE_MAX);
+      expect(text.endsWith('…')).toBe(true);
+    });
+  });
+
+  describe('GIVEN a message of millions of lines', () => {
+    it('WHEN logged THEN only the start is read, well under a second', () => {
+      const start = performance.now();
+
+      const text = logTextOf(new Error('x\n'.repeat(20_000_000)));
+
+      expect(text).toHaveLength(LOG_LINE_MAX);
+      expect(performance.now() - start).toBeLessThan(1000);
+    });
+  });
 });
