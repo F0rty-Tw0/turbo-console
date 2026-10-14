@@ -23,6 +23,8 @@ export type RunEntry = {
 
 export type RunLookup = (root: string, taskId: string) => RunEntry | undefined;
 
+export type RunListener = (entry: RunEntry) => void;
+
 /** `<root>\0<task id>`: at most one running entry per key. */
 export type RunKey = string;
 
@@ -67,4 +69,5 @@ export type Runs = {
   readonly failStart: (definition: RunDefinition, at: number, launchedAt?: number) => RunEntry | null;
   readonly setMatch: (definition: RunDefinition, launchedAt: number, match: RunMatch | null) => void;
   readonly get: RunLookup;
+  readonly onDidChange: (listener: RunListener) => () => void;
 };
