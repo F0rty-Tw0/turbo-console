@@ -1,6 +1,7 @@
 import type { Span } from './span.type.ts';
 import type { LoadRecord } from '../../roots/common/coordinator.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
+import type { FixedViewApi } from '../../tree/common/fixed-view.type.ts';
 import type { PackagesTreeApi } from '../../tree/common/tree-node.type.ts';
 
 /** One run as the user saw it: the click (its launch token) and when its process started, both wall-clock. */
@@ -25,6 +26,8 @@ export type Timings = {
  */
 export type TurboConsoleApi = {
   readonly tree: PackagesTreeApi;
+  readonly commands: FixedViewApi;
+  readonly help: FixedViewApi;
   readonly runs: Runs;
   readonly timings: Timings;
   readonly loads: Map<string, LoadRecord[]>;

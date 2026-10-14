@@ -37,8 +37,18 @@
     "views": {
       "turboConsole": [
         {
+          "id": "turboConsole.commands",
+          "name": "Common Commands",
+          "when": "turboConsole.active"
+        },
+        {
           "id": "turboConsole.tree",
           "name": "Packages",
+          "when": "turboConsole.active"
+        },
+        {
+          "id": "turboConsole.help",
+          "name": "Help and Feedback",
           "when": "turboConsole.active"
         }
       ]
@@ -112,6 +122,21 @@
         "title": "Run Turbo Task…",
         "category": "Turbo Console",
         "icon": "$(play)"
+      },
+      {
+        "command": "turboConsole.runEverywhere",
+        "title": "Run Task in All Packages…",
+        "category": "Turbo Console"
+      },
+      {
+        "command": "turboConsole.runAffected",
+        "title": "Run Affected…",
+        "category": "Turbo Console"
+      },
+      {
+        "command": "turboConsole.openLink",
+        "title": "Open Link",
+        "category": "Turbo Console"
       }
     ],
     "menus": {
@@ -186,6 +211,18 @@
         {
           "command": "turboConsole.runTaskPicker",
           "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.runEverywhere",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.runAffected",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.openLink",
+          "when": "false"
         }
       ],
       "editor/title": [

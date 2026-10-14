@@ -16,3 +16,6 @@ export const RUN_TASK_TYPE = 'turbo-console';
 export const FAILED_TO_START_TEXT = "Couldn't start turbo.";
 
 export const SHOW_OUTPUT_ACTION = 'Show Output';
+
+/** The id of a run all task is `*` plus the task name; a run's id always holds `#`, so the two never collide. */
+export const RUN_ALL_PREFIX = '*';
