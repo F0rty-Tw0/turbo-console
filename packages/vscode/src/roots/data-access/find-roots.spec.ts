@@ -31,7 +31,7 @@ describe('FEATURE: find roots', () => {
   });
 
   afterAll(async () => {
-    await rm(parent, { recursive: true, force: true });
+    await rm(parent, { recursive: true, force: true, maxRetries: 5 });
   });
 
   describe('GIVEN a folder holding turbo.json', () => {
