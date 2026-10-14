@@ -1,6 +1,6 @@
 # Turbo Console (unofficial)
 
-Turbo Console is a VS Code extension for Turborepo workspaces. It shows the task graph and runs turbo tasks from the editor. This release is an empty shell that registers nothing yet.
+Turbo Console is a VS Code extension for Turborepo workspaces. It shows the task graph and runs turbo tasks from the editor. This release adds a Packages view that lists each turbo root's packages and tasks.
 
 Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 

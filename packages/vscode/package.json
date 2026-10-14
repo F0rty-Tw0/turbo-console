@@ -12,14 +12,131 @@
     "vscode": "^1.139.0"
   },
   "main": "./dist/extension.cjs",
-  "activationEvents": [],
+  "activationEvents": [
+    "workspaceContains:turbo.json",
+    "workspaceContains:turbo.jsonc"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "turboConsole",
+          "title": "Turbo Console",
+          "icon": "$(package)"
+        }
+      ]
+    },
+    "views": {
+      "turboConsole": [
+        {
+          "id": "turboConsole.tree",
+          "name": "Packages",
+          "when": "turboConsole.active"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "turboConsole.refresh",
+        "title": "Refresh",
+        "category": "Turbo Console",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "turboConsole.showFolders",
+        "title": "Show as Folders",
+        "category": "Turbo Console",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "turboConsole.showList",
+        "title": "Show as List",
+        "category": "Turbo Console",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "turboConsole.showOutput",
+        "title": "Show Output",
+        "category": "Turbo Console"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "turboConsole.showFolders",
+          "when": "view == turboConsole.tree && config.turboConsole.treeMode == list",
+          "group": "navigation@1"
+        },
+        {
+          "command": "turboConsole.showList",
+          "when": "view == turboConsole.tree && config.turboConsole.treeMode != list",
+          "group": "navigation@1"
+        },
+        {
+          "command": "turboConsole.refresh",
+          "when": "view == turboConsole.tree",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "turboConsole.refresh",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.showFolders",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.showList",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.showOutput",
+          "when": "turboConsole.active"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Turbo Console",
+      "properties": {
+        "turboConsole.turboPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "Path to the turbo binary to use instead of the workspace's own `node_modules/turbo`. Empty uses the workspace's turbo."
+        },
+        "turboConsole.treeMode": {
+          "type": "string",
+          "enum": [
+            "folders",
+            "list"
+          ],
+          "enumDescriptions": [
+            "Packages grouped by their folders.",
+            "Packages in one list, sorted by name."
+          ],
+          "default": "folders",
+          "description": "How the Packages view lists packages."
+        }
+      }
+    }
+  },
   "scripts": {
-    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node22 --external:vscode --outfile=dist/extension.cjs",
+    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --minify --external:vscode --outfile=dist/extension.cjs",
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "bench": "node ../../tools/dist/run-benches.js",
-    "integration": "esbuild test/suite/activation.suite.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist-test/suite.cjs && node -e \"require('node:fs').mkdirSync('.vsix',{recursive:true})\" && vsce package --no-dependencies --skip-license --allow-missing-repository --out .vsix/turbo-console.vsix && node test/run-integration.ts"
+    "integration": "esbuild test/suite/activation.suite.ts --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --external:vscode --outfile=dist-test/suite.cjs && node -e \"require('node:fs').mkdirSync('.vsix',{recursive:true})\" && vsce package --no-dependencies --skip-license --allow-missing-repository --out .vsix/turbo-console.vsix && node test/run-integration.ts"
   },
   "dependencies": {
     "@turbo-console/core": "workspace:*"
