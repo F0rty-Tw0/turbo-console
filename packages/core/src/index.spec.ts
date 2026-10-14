@@ -25,8 +25,9 @@ import type {
 } from './index.ts';
 
 /**
- * Spec §4.8: M0's runtime exports plus M1's readers and `TurboException`. Spawning, model building and the name check
- * (`runTurbo`, `queryTurbo`, `buildWorkspaceModel`, `assertTurboName`) stay internal; `TurboBinary` is a type-only export.
+ * Spec §4.8: M0's runtime exports plus M1's readers, `TurboException` and (M2) the text cleaners `plainLine` and
+ * `plainLines`. Spawning, model building and the name check (`runTurbo`, `queryTurbo`, `buildWorkspaceModel`,
+ * `assertTurboName`) stay internal; `TurboBinary` is a type-only export.
  */
 const RUNTIME_EXPORTS = [
   'AFFECTED_TASKS_QUERY',
@@ -40,6 +41,8 @@ const RUNTIME_EXPORTS = [
   'loadWorkspace',
   'matchRunSummary',
   'packageGraphSchema',
+  'plainLine',
+  'plainLines',
   'readAffected',
   'readCachedWorkspace',
   'readDryRun',

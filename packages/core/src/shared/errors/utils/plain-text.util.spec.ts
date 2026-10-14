@@ -14,6 +14,9 @@ const INVISIBLE: [string, string][] = [
   ['the Mongolian vowel separator', '\u180E'],
   ['word joiners, invisible operators and deprecated format characters', '\u2060\u2064\u206A\u206F'],
   ['interlinear annotation characters', '\uFFF9\uFFFA\uFFFB'],
+  ['prepended concatenation marks', '\u0600\u0605\u06DD\u070F\u08E2'],
+  ['Egyptian hieroglyph format controls', '\u{13430}\u{1343F}'],
+  ['lone surrogates, a low one before a high one so they cannot pair', '\uDFFF\uD800'],
   ['tag characters', '\u{E0000}\u{E0041}\u{E007F}'],
   ['other default-ignorable characters (grapheme joiner, Hangul fillers, variation selectors)', '\u034F\u115F\u3164\uFE0F\u180B\uFFA0']
 ];
@@ -53,6 +56,35 @@ describe('FEATURE: plain text for messages', () => {
     });
   });
 
+  describe('GIVEN OSC sequences whose text holds a space', () => {
+    it.each([
+      ['a title ended by BEL', 'a\u001B]0;my title\u0007b', 'ab'],
+      ['a hyperlink ended by ST', 'a\u001B]8;;http://x y\u001B\\link\u001B]8;;\u001B\\b', 'alinkb'],
+      ['a title ended by 8-bit ST', 'a\u001B]0;my title\u009Cb', 'ab'],
+      ['a title aborted by CAN', 'a\u001B]0;my title\u0018b', 'ab'],
+      ['a title aborted by SUB', 'a\u001B]0;my title\u001Ab', 'ab'],
+      ['a title aborted by a color escape', 'a\u001B]0;my title\u001B[31mb', 'ab'],
+      ['a title aborted by an 8-bit color escape', 'a\u001B]0;my title\u009B31mb', 'ab'],
+      ['an unterminated title', 'a\u001B]0;my title', 'a'],
+    ])('WHEN %s is made plain THEN none of its text is left', (_name, text, plain) => {
+      expect(plainLine(text)).toBe(plain);
+    });
+  });
+
+  describe('GIVEN a terminated OSC whose text holds a newline', () => {
+    it('WHEN made plain lines THEN no stray backslash of its terminator shows', () => {
+      expect(plainLines('a\u001B]0;t\nfoo\u001B\\bar')).toBe('a\nfoobar');
+    });
+  });
+
+  describe('GIVEN a stray OSC start followed by more lines', () => {
+    it('WHEN made plain lines THEN only the rest of its own line is lost', () => {
+      expect(plainLines('error: bad \u001B] in input\nturbo: task failed\nexit 1')).toBe(
+        'error: bad \nturbo: task failed\nexit 1'
+      );
+    });
+  });
+
   describe('GIVEN text with characters that move or hide what a reader sees', () => {
     it.each(INVISIBLE)('WHEN it holds %s THEN plainLines and plainLine drop them', (_, chars) => {
       const text = `a${chars}b\nc`;
@@ -66,9 +98,18 @@ describe('FEATURE: plain text for messages', () => {
     it('WHEN made one plain line THEN no control or default-ignorable character is left', () => {
       const line = plainLine(everyCodePoint());
 
-      const leftovers = line.match(/[\p{Cc}\p{Default_Ignorable_Code_Point}]/gu);
+      const leftovers = line.match(/[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/gu);
 
       expect(leftovers).toBeNull();
+    });
+  });
+
+  describe('GIVEN the two halves of a tag character split by a zero-width space', () => {
+    it('WHEN made plain THEN neither half is left to join the other', () => {
+      const text = 'ok\uDB40\u200B\uDC69';
+
+      expect(plainLines(text)).toBe('ok');
+      expect(plainLine(text)).toBe('ok');
     });
   });
 

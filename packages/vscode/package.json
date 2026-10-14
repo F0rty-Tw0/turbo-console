@@ -17,6 +17,7 @@
     "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node22 --external:vscode --outfile=dist/extension.cjs",
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
+    "test": "vitest run",
     "integration": "esbuild test/suite/activation.suite.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist-test/suite.cjs && node -e \"require('node:fs').mkdirSync('.vsix',{recursive:true})\" && vsce package --no-dependencies --skip-license --allow-missing-repository --out .vsix/turbo-console.vsix && node test/run-integration.ts"
   },
   "dependencies": {
