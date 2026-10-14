@@ -1,4 +1,4 @@
-import { plainLine, plainLines } from '@turbo-console/core';
+import { plainLines } from '@turbo-console/core';
 
 const ELLIPSIS = '…';
 
@@ -60,21 +60,22 @@ const cleanedWith = (text: string, max: number, plain: (text: string) => string)
   return cutTo(marked, max);
 };
 
-const oneLine = (text: string): string => {
-  const unseparated = SEPARATORS.reduce((acc, separator) => acc.replaceAll(separator, ' '), text);
-  const spaced = unseparated.replace(WHITESPACE, ' ');
-  const visible = plainLine(spaced);
-
-  return visible.replace(SPACE_RUN, ' ');
-};
-
 const multiLine = (text: string): string => plainLines(text.replace(LINE_BREAK, '\n'));
 
+/** Cleaned as lines first, so a stray OSC start hides at most the rest of its line, then made one line. */
+const oneLine = (text: string): string => {
+  const unseparated = SEPARATORS.reduce((acc, separator) => acc.replaceAll(separator, ' '), text);
+  const visible = multiLine(unseparated);
+  const spaced = visible.replace(WHITESPACE, ' ');
+
+  return spaced.replace(SPACE_RUN, ' ');
+};
+
 /**
- * Text from a repo, a model or a summary is untrusted. Made one line: every whitespace character, the braille blank and
- * the separator controls become a space; then core's rule (`plainLine`) drops ANSI escapes, controls, invisible and bidi
- * characters and lone surrogates; then space runs fold into one. Cut to `max` UTF-16 units with a trailing ellipsis,
- * never leaving half of a surrogate pair.
+ * Text from a repo, a model or a summary is untrusted. Separator controls become spaces; it is cleaned as lines
+ * (`cleanLines`' rule: core's `plainLines` drops ANSI escapes, controls, invisible and bidi characters and lone
+ * surrogates); then every whitespace character and the braille blank become a space and space runs fold into one. Cut
+ * to `max` UTF-16 units with a trailing ellipsis, never leaving half of a surrogate pair.
  */
 export const cleanText = (text: string, max: number): string => cleanedWith(text, max, oneLine);
 

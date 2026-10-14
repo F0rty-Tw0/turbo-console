@@ -129,6 +129,12 @@ describe('FEATURE: cleaning untrusted text', () => {
     });
   });
 
+  describe('GIVEN a stray OSC start on the first of two lines', () => {
+    it('WHEN cleaned THEN the second line still shows', () => {
+      expect(cleanText('a\u001B] x\nb', MAX)).toBe('a b');
+    });
+  });
+
   describe('GIVEN an ANSI color escape', () => {
     it('WHEN cleaned THEN the whole sequence is dropped', () => {
       expect(cleanText('\u001B[31mred\u001B[0m', MAX)).toBe('red');
