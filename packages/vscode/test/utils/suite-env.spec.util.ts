@@ -1,9 +1,12 @@
+import { writeFile } from 'node:fs/promises';
+
 import * as vscode from 'vscode';
 
 import type { LoadRecord } from '../../src/roots/common/coordinator.type.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { Span } from '../../src/shared/common/span.type.ts';
 import { EXTENSION_ID } from '../common/launch.const.ts';
+import type { SuiteEnv } from '../common/launch.type.ts';
 
 const POLL_MS = 10;
 
@@ -105,11 +108,21 @@ export const step = async (name: string, fn: () => Promise<void> | void): Promis
   log(`ok ${name} (${ms.toFixed(1)} ms)`);
 };
 
-/** Logs a timing and asserts it is within `limitMs` times `factor` (spec §5.3 case 9: 1× locally, 3× on CI). */
+/**
+ * Logs a timing and asserts it is within `limitMs` times `factor` (spec §5.3 case 9: 1× locally, 3× on CI); a
+ * non-finite timing, such as one never measured, fails too.
+ */
 export const budget = (name: string, ms: number, limitMs: number, factor: number): void => {
   const limit = limitMs * factor;
 
   log(`timing ${name}: ${ms.toFixed(1)} ms (budget ${limit.toFixed(1)} ms)`);
 
-  if (ms > limit) throw new Error(`${name} took ${ms.toFixed(1)} ms, over its ${limit} ms budget`);
+  const isMeasured = Number.isFinite(ms);
+
+  if (!isMeasured || ms > limit) throw new Error(`${name} took ${ms.toFixed(1)} ms, over its ${limit} ms budget`);
+};
+
+/** A suite's last step: writes the harness's done-marker, which the harness checks after VS Code exits. */
+export const markDone = async (env: SuiteEnv): Promise<void> => {
+  await writeFile(env.doneFile, 'done\n');
 };

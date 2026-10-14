@@ -12,25 +12,43 @@ const shownTasksOf = (manifest: ShownManifest): ShownTask[] => {
   return manifest.tasks.filter(isShown);
 };
 
-const collectFrom = async (api: TurboConsoleApi, parent: TreeNode | undefined, found: TreeNode[]): Promise<void> => {
+/** Adds `value` to the list under `key`, creating the list on first use. */
+const groupUnder = (groups: Record<string, string[]>, key: string, value: string): void => {
+  const group = groups[key] ?? [];
+
+  group.push(value);
+  groups[key] = group;
+};
+
+const sortGroups = (groups: Record<string, string[]>): void => {
+  for (const group of Object.values(groups)) group.sort();
+};
+
+/** The `pkg` node a `task` row sits under; throws when it sits anywhere else. */
+const packageKeyOf = (task: TreeNode, parent: TreeNode | undefined): string => {
+  if (parent?.kind !== 'pkg') throw new Error(`task row ${task.key} sits outside a package`);
+
+  return parent.key;
+};
+
+/** Pushes every node below `parent` to `found`, and files each `task` row's key under the key of the package it sits in. */
+const collectFrom = async (
+  api: TurboConsoleApi,
+  parent: TreeNode | undefined,
+  found: TreeNode[],
+  tasks: Record<string, string[]>
+): Promise<void> => {
   const children = await api.tree.getChildren(parent);
 
   for (const node of children) {
     found.push(node);
 
+    if (node.kind === 'task') groupUnder(tasks, packageKeyOf(node, parent), node.key);
+
     const hasChildren = node.kind !== 'task' && node.kind !== 'msg';
 
-    if (hasChildren) await collectFrom(api, node, found);
+    if (hasChildren) await collectFrom(api, node, found, tasks);
   }
-};
-
-/** Every node reached from the top through root, dir and package nodes, in walk order. */
-const allNodes = async (api: TurboConsoleApi): Promise<TreeNode[]> => {
-  const found: TreeNode[] = [];
-
-  await collectFrom(api, undefined, found);
-
-  return found;
 };
 
 const keysOf = (nodes: TreeNode[], kind: TreeNode['kind']): string[] => {
@@ -40,46 +58,54 @@ const keysOf = (nodes: TreeNode[], kind: TreeNode['kind']): string[] => {
   return keys.sort();
 };
 
-/** The `pkg` and `task` node keys of the whole tree, each sorted. */
+/** Each package's shown task ids, keyed by package name; a package with no shown task has no entry. */
+const tasksByPackage = (manifest: ShownManifest): Record<string, string[]> => {
+  const tasks: Record<string, string[]> = {};
+
+  for (const task of shownTasksOf(manifest)) groupUnder(tasks, task.packageName, task.fullName);
+
+  return tasks;
+};
+
+/** The whole tree walked from the top through root, dir and package nodes. */
 export const walkTree = async (api: TurboConsoleApi): Promise<WalkedTree> => {
-  const nodes = await allNodes(api);
+  const nodes: TreeNode[] = [];
+  const tasks: Record<string, string[]> = {};
+
+  await collectFrom(api, undefined, nodes, tasks);
+  sortGroups(tasks);
+
   const packages = keysOf(nodes, 'pkg');
-  const tasks = keysOf(nodes, 'task');
-  const walked: WalkedTree = { packages, tasks };
+  const messages = keysOf(nodes, 'msg');
+  const walked: WalkedTree = { packages, tasks, messages };
 
   return walked;
 };
 
 /**
- * What spec §5.3 case 1 expects the tree to show for a fixture: every package but the atom definitions packages, and
- * every visible task of kind `task`, `aggregate` or `umbrella` (no `atom-file`), each sorted.
+ * What spec §5.3 case 1 expects the tree to show for a fixture: every package but the atom definitions packages, under
+ * each package every visible task of kind `task`, `aggregate` or `umbrella` (no `atom-file`), and no message row.
  */
 export const manifestTree = (manifest: ShownManifest): WalkedTree => {
   const shownPackages = manifest.packages.filter((pkg) => pkg.role !== 'atom-definitions');
-  const shownTasks = shownTasksOf(manifest);
   const packageNames = shownPackages.map((pkg) => pkg.name);
-  const taskIds = shownTasks.map((task) => task.fullName);
   const packages = packageNames.sort();
-  const tasks = taskIds.sort();
-  const walked: WalkedTree = { packages, tasks };
+  const tasks = tasksByPackage(manifest);
+
+  sortGroups(tasks);
+
+  const walked: WalkedTree = { packages, tasks, messages: [] };
 
   return walked;
 };
 
 /** The package with the most shown tasks, the first by name on a tie; throws when no package has one. */
 export const busiestPackage = (manifest: ShownManifest): string => {
-  const counts = new Map<string, number>();
-
-  for (const task of shownTasksOf(manifest)) {
-    const count = counts.get(task.packageName) ?? 0;
-
-    counts.set(task.packageName, count + 1);
-  }
-
-  const names = Array.from(counts.keys()).sort();
-  const values = Array.from(counts.values());
-  const most = Math.max(...values);
-  const busiest = names.find((name) => counts.get(name) === most);
+  const tasks = tasksByPackage(manifest);
+  const names = Object.keys(tasks).sort();
+  const counts = names.map((name) => tasks[name]?.length ?? 0);
+  const most = Math.max(...counts);
+  const busiest = names.find((name) => tasks[name]?.length === most);
 
   if (busiest === undefined) throw new Error('the manifest has no shown task');
 

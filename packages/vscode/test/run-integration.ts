@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 import { runTests, runVSCodeCommand } from '@vscode/test-electron';
 
@@ -6,7 +7,7 @@ import { BACKDATE_MS, LAUNCHES, SUITE_ENV_KEY } from './common/launch.const.ts';
 import type { Launch, LaunchTurboPath, LaunchWorkspace, RunScratch, SuiteEnv } from './common/launch.type.ts';
 import { VSCODE_TEST_VERSION } from './integration.const.ts';
 import { backdateTree } from './utils/backdate.spec.util.ts';
-import { createRunScratch, userDataDirFor } from './utils/workspace.spec.util.ts';
+import { createRunScratch, runEach, userDataDirFor } from './utils/workspace.spec.util.ts';
 import { devTurboPath } from '../src/shared/test/utils/dev-turbo.spec.util.ts';
 
 const CI_BUDGET_FACTOR = 3;
@@ -44,13 +45,15 @@ const launchesFor = (platform: NodeJS.Platform): Launch[] => {
 
 /**
  * One VS Code window: backdates the workspace's keyed files, writes the user settings, then runs the launch's bundled
- * suite. On Linux `--ozone-platform=x11` keeps Electron on the Xvfb display.
+ * suite and checks it wrote its done-marker, so a launch that exits 0 without running its suite fails. On Linux
+ * `--ozone-platform=x11` keeps Electron on the Xvfb display.
  */
 const runLaunch = async (launch: Launch, scratch: RunScratch, devTurbo: string): Promise<void> => {
   const workspace = WORKSPACE_DIRS[launch.workspace](scratch);
   const turboPath = TURBO_PATHS[launch.turboPath](devTurbo);
   const userDataDir = await userDataDirFor(scratch, launch.userData, turboPath);
-  const suiteEnv: SuiteEnv = { manifestFile: scratch.manifestFile, turboPath, budgetFactor };
+  const doneFile = join(scratch.dir, `${launch.name}.done`);
+  const suiteEnv: SuiteEnv = { manifestFile: scratch.manifestFile, turboPath, budgetFactor, doneFile };
   const suiteEnvText = JSON.stringify(suiteEnv);
   const extensionTestsEnv = { ...launch.env, [SUITE_ENV_KEY]: suiteEnvText };
   const extensionTestsPath = resolve(packageRoot, `dist-test/${launch.suite}.cjs`);
@@ -68,6 +71,10 @@ const runLaunch = async (launch: Launch, scratch: RunScratch, devTurbo: string):
   await backdateTree(workspace, BACKDATE_MS);
   process.stdout.write(`launch ${launch.name} (${launch.suite})\n`);
   await runTests(testOptions);
+
+  const isDone = existsSync(doneFile);
+
+  if (!isDone) throw new Error(`launch ${launch.name} exited 0 but its suite never wrote ${doneFile}`);
 };
 
 // With WAYLAND_DISPLAY set, Electron ignores Xvfb and opens a real window on the user's desktop.
@@ -78,8 +85,8 @@ await runVSCodeCommand(['--install-extension', vsixPath], installOptions);
 const devTurbo = devTurboPath();
 const scratch = await createRunScratch();
 
-try {
+const runLaunches = async (): Promise<void> => {
   for (const launch of launchesFor(process.platform)) await runLaunch(launch, scratch, devTurbo);
-} finally {
-  await scratch.dispose();
-}
+};
+
+await runEach([runLaunches, scratch.dispose]);

@@ -6,13 +6,37 @@ import { PRESETS, fixtureFor } from '@turbo-console/repo-gen';
 
 import type { RunScratch } from '../common/launch.type.ts';
 
+const reportLater = (error: unknown): void => {
+  process.stderr.write(`also failed: ${String(error)}\n`);
+};
+
+/** Runs every step in turn even when one throws, then rethrows the first error; later ones go to stderr. */
+export const runEach = async (steps: (() => Promise<void>)[]): Promise<void> => {
+  const errors: unknown[] = [];
+
+  for (const run of steps) {
+    try {
+      await run();
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+
+  const [first, ...later] = errors;
+
+  for (const error of later) reportLater(error);
+
+  if (errors.length > 0) throw first;
+};
+
 /**
  * The integration run's scratch dir and its `target-like` fixture copy, kept for the whole run; the manifest goes to
- * `<scratch>/manifest.json`. `dispose` deletes both.
+ * `<scratch>/manifest.json`. `dispose` deletes both, retrying a removal that fails while VS Code's child processes
+ * still hold files (EBUSY on Windows).
  */
 export const createRunScratch = async (): Promise<RunScratch> => {
   const dir = await mkdtemp(join(tmpdir(), 'tc-it-'));
-  const removeDir = async (): Promise<void> => rm(dir, { recursive: true, force: true });
+  const removeDir = async (): Promise<void> => rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   let dispose = removeDir;
 
   try {
@@ -20,10 +44,7 @@ export const createRunScratch = async (): Promise<RunScratch> => {
     const manifestFile = join(dir, 'manifest.json');
     const manifestText = JSON.stringify(fixture.manifest);
 
-    dispose = async (): Promise<void> => {
-      await fixture.dispose();
-      await removeDir();
-    };
+    dispose = async (): Promise<void> => runEach([fixture.dispose, removeDir]);
 
     const scratch: RunScratch = { dir, fixtureDir: fixture.dir, manifestFile, dispose };
 
@@ -31,7 +52,10 @@ export const createRunScratch = async (): Promise<RunScratch> => {
 
     return scratch;
   } catch (error) {
-    await dispose();
+    // The setup error stays the one thrown; a failed cleanup only goes to stderr.
+    const disposing = dispose();
+
+    await disposing.catch(reportLater);
 
     throw error;
   }

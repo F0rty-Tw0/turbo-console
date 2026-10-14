@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { countTurboSpawns } from '../utils/spawn-counter.spec.util.ts';
-import { budget, loadsOf, revealTree, rootAt, spanMs, step, turboApi } from '../utils/suite-env.spec.util.ts';
+import { budget, loadsOf, markDone, revealTree, rootAt, spanMs, step, turboApi } from '../utils/suite-env.spec.util.ts';
 import { readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 
 const TREE_VISIBLE_WARM_BUDGET_MS = 300;
@@ -36,6 +36,7 @@ export const run = async (): Promise<void> => {
 
       budget('tree visible warm', visible, TREE_VISIBLE_WARM_BUDGET_MS, env.budgetFactor);
     });
+    await markDone(env);
   } finally {
     counter.dispose();
   }

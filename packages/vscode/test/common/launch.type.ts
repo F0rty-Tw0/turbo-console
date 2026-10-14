@@ -24,12 +24,14 @@ export type Launch = {
 
 /**
  * What the harness hands a suite, as JSON in `TURBO_CONSOLE_IT`. No root paths: VS Code's can differ from the
- * harness's on Windows, so suites read them from the workspace folders.
+ * harness's on Windows, so suites read them from the workspace folders. `doneFile` is the marker a suite writes as its
+ * last step, so a launch that exits 0 without running its suite to the end fails.
  */
 export type SuiteEnv = {
   readonly manifestFile: string | null;
   readonly turboPath: string | null;
   readonly budgetFactor: number;
+  readonly doneFile: string;
 };
 
 /** The run's shared state: the fixture copy, its manifest file and the scratch dir that holds U1. */
@@ -64,8 +66,12 @@ export type ShownManifest = {
   readonly tasks: ShownTask[];
 };
 
-/** The `pkg` and `task` node keys a walk from the top reaches, each list sorted. */
+/**
+ * What a walk from the top reaches: the `pkg` node keys, each package's `task` row keys keyed by package (a package
+ * with no task row has no entry), and the `msg` row keys; every list sorted.
+ */
 export type WalkedTree = {
   readonly packages: string[];
-  readonly tasks: string[];
+  readonly tasks: Record<string, string[]>;
+  readonly messages: string[];
 };

@@ -31,7 +31,7 @@ const isSuiteEnv = (value: unknown): value is SuiteEnv => {
 
   const hasPaths = isStringOrNull(value['manifestFile']) && isStringOrNull(value['turboPath']);
 
-  return hasPaths && typeof value['budgetFactor'] === 'number';
+  return hasPaths && typeof value['budgetFactor'] === 'number' && typeof value['doneFile'] === 'string';
 };
 
 const isShownPackage = (value: unknown): value is ShownPackage => {

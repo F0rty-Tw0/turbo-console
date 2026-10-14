@@ -10,7 +10,7 @@ import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { BACKDATE_MS } from '../common/launch.const.ts';
 import { backdateTree } from '../utils/backdate.spec.util.ts';
 import { countTurboSpawns } from '../utils/spawn-counter.spec.util.ts';
-import { budget, loadsOf, log, revealTree, rootAt, spanMs, step, turboApi, waitFor } from '../utils/suite-env.spec.util.ts';
+import { budget, loadsOf, log, markDone, revealTree, rootAt, spanMs, step, turboApi, waitFor } from '../utils/suite-env.spec.util.ts';
 import { readManifest, readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 import { busiestPackage, manifestTree, packageNodeNamed, walkTree } from '../utils/tree-walk.spec.util.ts';
 
@@ -99,11 +99,13 @@ export const run = async (): Promise<void> => {
     });
     await step('1: the tree lists every package and visible task', async () => {
       const expected = manifestTree(manifest);
-      const hasRows = expected.packages.length > 0 && expected.tasks.length > 0;
+      const expectedTasks = Object.values(expected.tasks);
+      const hasRows = expected.packages.length > 0 && expectedTasks.length > 0;
       const walked = await walkTree(api);
+      const walkedTasks = Object.values(walked.tasks).flat();
 
       assert.ok(hasRows, 'the manifest lists no packages or no tasks');
-      log(`tree: ${walked.packages.length} packages, ${walked.tasks.length} tasks`);
+      log(`tree: ${walked.packages.length} packages, ${walkedTasks.length} tasks, ${walked.messages.length} messages`);
       assert.deepEqual(walked, expected);
     });
     await step('9: cold timings', async () => {
@@ -116,8 +118,9 @@ export const run = async (): Promise<void> => {
       budget('expand', expand, EXPAND_BUDGET_MS, env.budgetFactor);
       budget('activation', activation, ACTIVATION_BUDGET_MS, env.budgetFactor);
     });
-    // later cases (Tasks 14, 16, 20) go here, after case 9 and before the warm-up
+    // later spec §5.3 cases go here, after case 9 and before the warm-up
     await step('warm-up', async () => warmUp(api, root));
+    await markDone(env);
   } finally {
     counter.dispose();
   }
