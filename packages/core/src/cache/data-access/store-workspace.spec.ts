@@ -14,6 +14,7 @@ import { MAX_CACHE_BYTES } from '../common/cache.const.ts';
 import type { CacheEntry } from '../common/cache.type.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
 import { backdateTree } from '../test/utils/backdate.spec.util.ts';
+import { markAt } from '../test/utils/spawn-mark.spec.util.ts';
 import { cacheKeyOf, keyedPathsOf } from '../utils/cache-key.util.ts';
 
 const PACKAGES = [graphPackage('a', 'a', [], [])];
@@ -74,7 +75,7 @@ describe('FEATURE: workspace store', () => {
       const model = modelAt(root);
       const key = await fullKeyOf(root);
 
-      await storeWorkspace(model, PACKAGES, Date.now(), undefined);
+      await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
 
       const expected: CacheEntry = { key, keyedPaths: KEYED_PATHS, model };
 
@@ -84,7 +85,7 @@ describe('FEATURE: workspace store', () => {
     it('WHEN stored without a cache dir THEN it resolves null', async () => {
       const root = await newRoot();
 
-      const writeError = await storeWorkspace(modelAt(root), PACKAGES, Date.now(), undefined);
+      const writeError = await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
 
       expect(writeError).toBeNull();
     });
@@ -93,7 +94,7 @@ describe('FEATURE: workspace store', () => {
       const root = await newRoot();
       const cacheDir = join(newCaseDir(), 'cache dir');
 
-      const writeError = await storeWorkspace(modelAt(root), PACKAGES, Date.now(), cacheDir);
+      const writeError = await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), cacheDir);
 
       expect(writeError).toBeNull();
     });
@@ -102,7 +103,7 @@ describe('FEATURE: workspace store', () => {
       const root = await newRoot();
       const cacheDir = join(newCaseDir(), 'cache dir');
 
-      await storeWorkspace(modelAt(root), PACKAGES, Date.now(), cacheDir);
+      await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), cacheDir);
 
       const read = await readCacheFile(cacheDir, root);
 
@@ -115,7 +116,7 @@ describe('FEATURE: workspace store', () => {
       const root = await newRoot();
 
       await rm(join(root, 'a', 'package.json'));
-      await storeWorkspace(modelAt(root), PACKAGES, Date.now(), undefined);
+      await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
 
       expect(getMemoryEntry(root)?.key).toBeNull();
     });
@@ -127,7 +128,7 @@ describe('FEATURE: workspace store', () => {
       const now = new Date();
 
       await utimes(join(root, 'package.json'), now, now);
-      await storeWorkspace(modelAt(root), PACKAGES, now.getTime(), undefined);
+      await storeWorkspace(modelAt(root), PACKAGES, markAt(now.getTime()), undefined);
 
       expect(getMemoryEntry(root)?.key).toBeNull();
     });
@@ -141,7 +142,7 @@ describe('FEATURE: workspace store', () => {
       const model: WorkspaceModel = { ...small, warnings };
       const cacheDir = join(newCaseDir(), 'cache dir');
 
-      const writeError = await storeWorkspace(model, PACKAGES, Date.now(), cacheDir);
+      const writeError = await storeWorkspace(model, PACKAGES, markAt(Date.now()), cacheDir);
 
       expect(writeError).toBe(`${cacheDir}: ${TOO_LARGE}`);
     });

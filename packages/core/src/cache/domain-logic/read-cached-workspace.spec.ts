@@ -15,6 +15,7 @@ import type * as keyedFiles from '../data-access/keyed-files.ts';
 import { storeWorkspace } from '../data-access/store-workspace.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
 import { backdateTree } from '../test/utils/backdate.spec.util.ts';
+import { markAt } from '../test/utils/spawn-mark.spec.util.ts';
 import { cacheFileName } from '../utils/cache-key.util.ts';
 
 const hashing = vi.hoisted(() => {
@@ -96,7 +97,7 @@ describe('FEATURE: cached workspace read', () => {
       const model = modelAt(root);
       const cacheDir = join(newCaseDir(), 'cache dir');
 
-      await storeWorkspace(model, PACKAGES, Date.now(), cacheDir);
+      await storeWorkspace(model, PACKAGES, markAt(Date.now()), cacheDir);
       await rm(join(cacheDir, cacheFileName(root)));
 
       const read = await readCachedWorkspace(binaryAt(root), cacheDir);
@@ -109,7 +110,7 @@ describe('FEATURE: cached workspace read', () => {
       const model = modelAt(root);
       const cacheDir = join(newCaseDir(), 'cache dir');
 
-      await storeWorkspace(model, PACKAGES, Date.now(), cacheDir);
+      await storeWorkspace(model, PACKAGES, markAt(Date.now()), cacheDir);
       await appendFile(join(root, 'a', 'package.json'), '\n');
 
       const read = await readCachedWorkspace(binaryAt(root), cacheDir);
@@ -124,7 +125,7 @@ describe('FEATURE: cached workspace read', () => {
       const model = modelAt(root);
 
       await rm(join(root, 'a', 'package.json'));
-      await storeWorkspace(model, PACKAGES, Date.now(), undefined);
+      await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
 
       const read = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
 
@@ -138,7 +139,7 @@ describe('FEATURE: cached workspace read', () => {
       const model = modelAt(root);
       const original = structuredClone(model);
 
-      await storeWorkspace(model, PACKAGES, Date.now(), undefined);
+      await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
 
       const first = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
 
@@ -157,7 +158,7 @@ describe('FEATURE: cached workspace read', () => {
       const model = modelAt(root);
       const upgraded = new TurboBinary(root, join(root, 'turbo'), '2.11.8', 'override');
 
-      await storeWorkspace(model, PACKAGES, Date.now(), undefined);
+      await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
 
       const read = await readCachedWorkspace(upgraded, join(newCaseDir(), 'cache dir'));
 
@@ -169,7 +170,7 @@ describe('FEATURE: cached workspace read', () => {
     it.each(['', 'cache dir'])('WHEN read with %j THEN it rejects invalid-argument instead of returning the entry', async (cacheDir) => {
       const root = await newRoot();
 
-      await storeWorkspace(modelAt(root), PACKAGES, Date.now(), undefined);
+      await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
 
       const reading = readCachedWorkspace(binaryAt(root), cacheDir);
 
@@ -191,7 +192,7 @@ describe('FEATURE: cached workspace read', () => {
     it('WHEN read THEN it rejects with a TurboException for the cache read', async () => {
       const root = await newRoot();
 
-      await storeWorkspace(modelAt(root), PACKAGES, Date.now(), undefined);
+      await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
       hashing.isFailing = true;
 
       const reading = readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));

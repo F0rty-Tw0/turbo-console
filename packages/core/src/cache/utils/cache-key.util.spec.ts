@@ -2,9 +2,18 @@ import { createHash } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { cacheFileName, cacheKeyOf, hasVanishedManifest, isEditedSince, isKeyedPath, keyedPathsOf } from './cache-key.util.ts';
+import {
+  cacheFileName,
+  cacheKeyOf,
+  hasChangedRootFile,
+  hasVanishedManifest,
+  hostileRootFile,
+  isEditedSince,
+  isKeyedPath,
+  keyedPathsOf
+} from './cache-key.util.ts';
 import { graphPackage } from '../../workspace/test/utils/graph.spec.util.ts';
-import { MISSING_DIGEST, ROOT_KEYED_FILES } from '../common/cache.const.ts';
+import { MISSING_DIGEST, NOT_REGULAR_DIGEST, OVER_CAP_READ_DIGEST, ROOT_KEYED_FILES, UNREADABLE_DIGEST } from '../common/cache.const.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
 
 const VERSION = '2.11.7';
@@ -37,6 +46,12 @@ const keyedFile = (path: string, digest: string, mtimeMs: number | null): KeyedF
 const FILES = [keyedFile('package.json', 'aaa', null), keyedFile('turbo.json', 'bbb', null), keyedFile('apps/web/package.json', 'ccc', null)];
 
 const FILE_INDEXES = [0, 1, 2];
+
+const toMissingTurboJson = (file: KeyedFile): KeyedFile => {
+  if (file.path !== 'turbo.json') return file;
+
+  return keyedFile(file.path, MISSING_DIGEST, null);
+};
 
 /** `FILES` with the digest at `index` replaced. */
 const withDigestChanged = (index: number): KeyedFile[] => {
@@ -225,6 +240,87 @@ describe('FEATURE: workspace cache key', () => {
       const hasVanished = hasVanishedManifest(files);
 
       expect(hasVanished).toBe(false);
+    });
+  });
+
+  describe('GIVEN root keyed files hashed before and after a spawn', () => {
+    it('WHEN no digest differs THEN no root file changed', () => {
+      const hasChanged = hasChangedRootFile(FILES, FILES);
+
+      expect(hasChanged).toBe(false);
+    });
+
+    it('WHEN a digest changed THEN a root file changed', () => {
+      const after = withDigestChanged(0);
+
+      const hasChanged = hasChangedRootFile(FILES, after);
+
+      expect(hasChanged).toBe(true);
+    });
+
+    it('WHEN turbo.json went missing THEN a root file changed', () => {
+      const after = FILES.map(toMissingTurboJson);
+
+      const hasChanged = hasChangedRootFile(FILES, after);
+
+      expect(hasChanged).toBe(true);
+    });
+
+    it('WHEN a path is absent from the after files THEN a root file changed', () => {
+      const hasChanged = hasChangedRootFile(FILES, []);
+
+      expect(hasChanged).toBe(true);
+    });
+
+    it('WHEN a missing turbo.json became present THEN a root file changed', () => {
+      const before = FILES.map(toMissingTurboJson);
+
+      const hasChanged = hasChangedRootFile(before, FILES);
+
+      expect(hasChanged).toBe(true);
+    });
+  });
+
+  describe('GIVEN root keyed files before a spawn', () => {
+    it('WHEN each is hashed, missing or unreadable THEN none is hostile', () => {
+      const files = [...FILES, keyedFile('.npmrc', UNREADABLE_DIGEST, null), keyedFile('yarn.lock', MISSING_DIGEST, null)];
+
+      const hostile = hostileRootFile(files);
+
+      expect(hostile).toBeUndefined();
+    });
+
+    it('WHEN one is not a regular file THEN it is the hostile one', () => {
+      const fifo = keyedFile('turbo.json', NOT_REGULAR_DIGEST, null);
+
+      const hostile = hostileRootFile([...FILES, fifo]);
+
+      expect(hostile).toBe(fifo);
+    });
+
+    it('WHEN one is a regular file over the cap THEN it is the hostile one', () => {
+      const large = keyedFile('pnpm-lock.yaml', 'over-cap:67108865:1000', 1000);
+
+      const hostile = hostileRootFile([...FILES, large]);
+
+      expect(hostile).toBe(large);
+    });
+
+    it('WHEN one read past the cap after a smaller stat size THEN it is the hostile one', () => {
+      const procfs = keyedFile('pnpm-lock.yaml', OVER_CAP_READ_DIGEST, null);
+
+      const hostile = hostileRootFile([...FILES, procfs]);
+
+      expect(hostile).toBe(procfs);
+    });
+
+    it('WHEN two are hostile THEN the first is returned', () => {
+      const first = keyedFile('.npmrc', NOT_REGULAR_DIGEST, null);
+      const second = keyedFile('turbo.json', OVER_CAP_READ_DIGEST, null);
+
+      const hostile = hostileRootFile([first, ...FILES, second]);
+
+      expect(hostile).toBe(first);
     });
   });
 
