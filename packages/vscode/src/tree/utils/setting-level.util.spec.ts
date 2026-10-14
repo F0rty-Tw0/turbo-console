@@ -4,10 +4,10 @@ import { settingLevelOf } from './setting-level.util.ts';
 
 describe('FEATURE: level a setting toggle writes to', () => {
   describe('GIVEN the levels that set the value now', () => {
-    it('WHEN a workspace folder sets it THEN the folder level is written', () => {
-      const level = settingLevelOf({ workspaceFolderValue: 'list', workspaceValue: 'folders' });
+    it('WHEN both the workspace and the user set it THEN the workspace level is written', () => {
+      const level = settingLevelOf({ globalValue: 'folders', workspaceValue: 'list' });
 
-      expect(level).toBe('workspaceFolder');
+      expect(level).toBe('workspace');
     });
 
     it('WHEN only the workspace sets it THEN the workspace level is written', () => {

@@ -20,8 +20,6 @@ export const currentTreeMode = (): TreeMode => {
 
 const configurationTargetOf = (level: SettingLevel): vscode.ConfigurationTarget => {
   switch (level) {
-    case 'workspaceFolder':
-      return vscode.ConfigurationTarget.WorkspaceFolder;
     case 'workspace':
       return vscode.ConfigurationTarget.Workspace;
     case 'global':
