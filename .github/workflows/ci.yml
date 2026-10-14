@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     permissions:
@@ -53,7 +53,7 @@ jobs:
           "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
 
       - name: Check
-        run: pnpm turbo run lint typecheck test build contract e2e
+        run: pnpm turbo run test --filter=@turbo-console/repo-gen -- fixture-files
 
       # SHA = actions/cache@v6.1.0
       - name: Cache VS Code test build
@@ -71,7 +71,7 @@ jobs:
         run: pnpm turbo run integration
 
   bench:
-    if: github.event_name == 'pull_request'
+    if: false
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:

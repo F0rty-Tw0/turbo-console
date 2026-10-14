@@ -33,7 +33,7 @@ export const copyFixture = async (from: string, to: string): Promise<void> => {
 export const createTempDir = async (prefix: string): Promise<string> => {
   const dir = await mkdtemp(join(tmpdir(), prefix));
 
-  return realpath(dir);
+  return dir; // probe: mutant, realpath removed
 };
 
 /** Throws unless `dir` is a real directory (not a link) owned by `uid` with no group or other permission bits. */
