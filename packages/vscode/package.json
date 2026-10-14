@@ -101,6 +101,17 @@
         "title": "Stop Task",
         "category": "Turbo Console",
         "icon": "$(debug-stop)"
+      },
+      {
+        "command": "turboConsole.runTaskPicker",
+        "title": "Run Task…",
+        "category": "Turbo Console"
+      },
+      {
+        "command": "turboConsole.runPackageTask",
+        "title": "Run Turbo Task…",
+        "category": "Turbo Console",
+        "icon": "$(play)"
       }
     ],
     "menus": {
@@ -167,6 +178,28 @@
         {
           "command": "turboConsole.stopTask",
           "when": "false"
+        },
+        {
+          "command": "turboConsole.runPackageTask",
+          "when": "turboConsole.active && resourceFilename == package.json"
+        },
+        {
+          "command": "turboConsole.runTaskPicker",
+          "when": "turboConsole.active"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "turboConsole.runPackageTask",
+          "when": "turboConsole.active && resourceFilename == package.json",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "turboConsole.runPackageTask",
+          "when": "turboConsole.active && resourceFilename == package.json",
+          "group": "navigation"
         }
       ]
     },

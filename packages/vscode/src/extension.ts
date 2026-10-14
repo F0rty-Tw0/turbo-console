@@ -7,6 +7,7 @@ import { registerRoots } from './roots/feature/register-roots.ts';
 import { editorRunPorts } from './run/data-access/run-ports.ts';
 import { forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
 import { RunSession } from './run/domain-logic/run-session.ts';
+import { registerPickers } from './run/feature/register-pickers.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
 import type { Timings, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Span } from './shared/common/span.type.ts';
@@ -55,7 +56,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
 
     const runs = registerRuns(runSession, tree, session.store, vscode.commands.registerCommand);
 
-    context.subscriptions.push(watchers, runs, forwardTaskEvents(runSession));
+    const pickers = registerPickers(runSession, session.store, vscode.commands.registerCommand);
+
+    context.subscriptions.push(watchers, runs, pickers, forwardTaskEvents(runSession));
 
     await registerRoots(context, session, onRoots, output.error);
   }
