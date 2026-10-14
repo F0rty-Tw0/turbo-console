@@ -67,7 +67,7 @@ describe('FEATURE: cleaning untrusted text', () => {
   });
 
   describe('GIVEN the first and last code point of each dropped range', () => {
-    it.each(['\u0000', '\u001A', '\u007F', '\u009F', '\u202A', '\u202E', '\u2066', '\u2069'])(
+    it.each(['\u0000', '\u001B', '\u007F', '\u009F', '\u202A', '\u202E', '\u2066', '\u2069'])(
       'WHEN %j is cleaned THEN it is dropped',
       (char) => {
         expect(cleanText(`a${char}b`, MAX)).toBe('ab');
