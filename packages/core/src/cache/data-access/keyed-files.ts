@@ -23,8 +23,9 @@ const MAX_CONCURRENT_READS = 16;
 const CHUNK_BYTES = 64 * 1024;
 
 /**
- * How far a read may run past the stat size from the open: a file still being written grows a little during the read,
- * while procfs reports size 0 and reads on, so a refused load stops after about this much instead of the full cap.
+ * How far a read may run past the stat size from the open: a file still being written grows a little during the read
+ * (one that grows more is `unreadable`), while procfs reports size 0 and reads on, so a refused load stops after about
+ * this much instead of the full cap.
  */
 const PAST_SIZE_SLACK_BYTES = 1024 * 1024;
 
@@ -75,12 +76,25 @@ const overCapFile = (path: string, stats: Stats): KeyedFile => {
 };
 
 /**
+ * A regular file that grew past the read limit while it was read, keyed by its size and mtime after the read: it is
+ * still being written, so each further write changes the key and its mtime shows to the edit check.
+ */
+const growingFile = (path: string, stats: Stats): KeyedFile => {
+  const digest = `${UNREADABLE_DIGEST}:${stats.size}:${stats.mtimeMs}`;
+  const file: KeyedFile = { path, digest, mtimeMs: stats.mtimeMs };
+
+  return file;
+};
+
+/**
  * The content digest and mtime of the regular file at `path`; any other kind of file is `not-regular`, by a stat that
  * follows symlinks before the open, so a device or FIFO is never opened, and by a stat of the open handle, so a swap
  * in between is caught too. One whose stat size is over its cap (`keyedFileCapOf`) is `over-cap:<size>:<mtimeMs>`,
- * unread, and one that reads past the cap, or more than `PAST_SIZE_SLACK_BYTES` past its stat size, is
- * `over-cap:read`. The mtime comes from a stat after the read, so an edit landing during the read shows in it. Rejects
- * on a failed stat, open or read.
+ * unread. The read stops once it passes the cap, or runs more than `PAST_SIZE_SLACK_BYTES` past the stat size from the
+ * open, and a stat after it tells why: a file whose stat size grew is still being written and is
+ * `unreadable:<size>:<mtimeMs>`, so the load still runs under a key that changes with each write, while one whose stat size did not grow (procfs reports 0 and stays 0) is
+ * `over-cap:read`. The mtime comes from that stat after the read, so an edit landing during the read shows in it.
+ * Rejects on a failed stat, open or read.
  */
 const hashFile = async (root: string, path: string): Promise<KeyedFile> => {
   const fullPath = join(root, path);
@@ -104,10 +118,13 @@ const hashFile = async (root: string, path: string): Promise<KeyedFile> => {
 
     const readLimit = Math.min(cap, opened.size + PAST_SIZE_SLACK_BYTES);
     const digest = await digestOf(handle, readLimit);
+    const read = await handle.stat();
+    const hasGrown = read.size > opened.size;
+
+    if (digest === null && hasGrown) return growingFile(path, read);
 
     if (digest === null) return markerFile(path, OVER_CAP_READ_DIGEST);
 
-    const read = await handle.stat();
     const file: KeyedFile = { path, digest, mtimeMs: read.mtimeMs };
 
     return file;
@@ -132,9 +149,10 @@ const hashKeyedFile = async (root: string, path: string): Promise<KeyedFile> => 
  * Each of `paths` (posix, relative to `root`) as a `KeyedFile`, in input order, at most `MAX_CONCURRENT_READS` read at
  * a time. Never rejects, so a keyed file that cannot be read changes the key instead of failing the load or the read.
  * A path that is no regular file is `not-regular`, never opened. A regular file whose stat size is over its cap
- * (`keyedFileCapOf`: 64 MiB for a lockfile, 4 MiB for any other) is keyed by size and mtime, unread. One whose stat
- * size lies (a procfs symlink reports size 0 and reads on) is `over-cap:read` once a read passes the cap or runs 1 MiB
- * past its stat size, and is never hashed in part, so one hash reads at most its cap per path.
+ * (`keyedFileCapOf`: 64 MiB for a lockfile, 4 MiB for any other) is keyed by size and mtime, unread. A read stops once
+ * it passes the cap or runs 1 MiB past the stat size, so one hash reads at most that limit plus one 64 KiB chunk per
+ * path, and a file is never hashed in part: one whose stat size grew during the read is `unreadable`, and one whose
+ * stat size lies and stays put (a procfs symlink reports size 0 and reads on) is `over-cap:read`.
  */
 export const hashKeyedFiles = async (root: string, paths: string[]): Promise<KeyedFile[]> => {
   const files: KeyedFile[] = [];

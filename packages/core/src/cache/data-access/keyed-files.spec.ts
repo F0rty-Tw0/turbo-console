@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { appendFile, chmod, mkdir, mkdtemp, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
 import type * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
@@ -10,12 +10,14 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 
 import { hashKeyedFiles } from './keyed-files.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
+import { growOnce } from '../test/utils/file-growth.spec.util.ts';
 
 const reads = vi.hoisted(() => {
   const proceed = async (): Promise<void> => Promise.resolve();
+  const beforeOpen: (path: string) => Promise<void> = proceed;
   const beforeRead: (path: string) => Promise<void> = proceed;
   const opened: string[] = [];
-  const state = { beforeRead, proceed, opened };
+  const state = { beforeOpen, beforeRead, proceed, opened };
 
   return state;
 });
@@ -24,11 +26,13 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
   /**
-   * Each open path is listed in `reads.opened`, and each handle runs `reads.beforeRead` with its path before every
-   * read, so a case can edit the file mid-hash.
+   * Each open path is listed in `reads.opened` and runs `reads.beforeOpen` first, so a case can swap the file after the
+   * pre-open stat, and each handle runs `reads.beforeRead` with its path before every read, so a case can edit the file
+   * mid-hash.
    */
   const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
     reads.opened.push(String(args[0]));
+    await reads.beforeOpen(String(args[0]));
 
     const handle = await real.open(...args);
     const read = handle.read.bind(handle);
@@ -130,18 +134,16 @@ const writeMany = async (path: string): Promise<void> => writeFile(join(root, pa
 /** Sets `path`'s mtime to `EDITED_AT_S`, as an edit landing during the read would. */
 const touchEdited = async (path: string): Promise<void> => utimes(path, EDITED_AT_S, EDITED_AT_S);
 
-/** Appends `bytes` to the file named `name` before its first read only, as a writer still appending during the hash would. */
-const growOnce = (name: string, bytes: number): ((path: string) => Promise<void>) => {
-  const growth = { isDone: false };
-
+/** Replaces the file named `name` by a FIFO just before its open, after the stat that found it regular. */
+const swapForFifo = (name: string): ((path: string) => Promise<void>) => {
   return async (path: string): Promise<void> => {
     const fileName = basename(path);
     const isTarget = fileName === name;
 
-    if (!isTarget || growth.isDone) return;
+    if (!isTarget) return;
 
-    growth.isDone = true;
-    await appendFile(path, Buffer.alloc(bytes, 'g'));
+    await rm(path);
+    execFileSync('mkfifo', [path]);
   };
 };
 
@@ -169,6 +171,7 @@ describe('FEATURE: keyed file hashing', () => {
   });
 
   afterEach(() => {
+    reads.beforeOpen = reads.proceed;
     reads.beforeRead = reads.proceed;
     reads.opened.length = 0;
   });
@@ -221,13 +224,14 @@ describe('FEATURE: keyed file hashing', () => {
       expect(files[0]?.digest).toBe(sha256Of(grownContent));
     });
 
-    it('WHEN it grows by more than 1 MiB THEN it is marked over-cap:read', async () => {
+    it('WHEN it grows by more than 1 MiB THEN it is keyed unreadable by its grown size and mtime, as a file still being written', async () => {
       await writeFile(join(root, 'grown-far.json'), 'x');
       reads.beforeRead = growOnce('grown-far.json', LARGE_GROWTH_BYTES);
 
       const files = await hashKeyedFiles(root, ['grown-far.json']);
+      const grown = await stat(join(root, 'grown-far.json'));
 
-      expect(files).toStrictEqual([markerFile('grown-far.json', 'over-cap:read')]);
+      expect(files).toStrictEqual([{ path: 'grown-far.json', digest: `unreadable:${grown.size}:${grown.mtimeMs}`, mtimeMs: grown.mtimeMs }]);
     });
   });
 
@@ -278,6 +282,15 @@ describe('FEATURE: keyed file hashing', () => {
       await hashKeyedFiles(root, ['unopened-fifo']);
 
       expect(reads.opened).not.toContain(join(root, 'unopened-fifo'));
+    });
+
+    it.skipIf(!IS_POSIX)('WHEN it is swapped for a FIFO between its stat and its open THEN it is marked not-regular', async () => {
+      await writeFile(join(root, 'swapped.json'), '{}');
+      reads.beforeOpen = swapForFifo('swapped.json');
+
+      const files = await hashKeyedFiles(root, ['swapped.json']);
+
+      expect(files).toStrictEqual([markerFile('swapped.json', 'not-regular')]);
     });
 
     it.skipIf(!CAN_DENY_READ)('WHEN it denies reading THEN it is marked unreadable and the call resolves', async () => {

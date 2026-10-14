@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto';
+import type { Stats } from 'node:fs';
 import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
+import type * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { hashKeyedFiles } from './keyed-files.ts';
 import type * as cacheConst from '../common/cache.const.ts';
@@ -22,6 +24,45 @@ vi.mock('../common/cache.const.ts', async (importOriginal) => {
 
   return mocked;
 });
+
+const statLie = vi.hoisted(() => {
+  const state = { path: '', size: 0 };
+
+  return state;
+});
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const real = await importOriginal<typeof fsPromises>();
+
+  /** A handle opened on `statLie.path` reports `statLie.size` from every stat, as a file whose stat size lies would. */
+  const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+    const handle = await real.open(...args);
+    const openedPath = String(args[0]);
+    const isLying = openedPath === statLie.path;
+
+    if (!isLying) return handle;
+
+    const stat = handle.stat.bind(handle);
+    const lyingStat = async (): Promise<Stats> => {
+      const stats = await stat();
+
+      stats.size = statLie.size;
+
+      return stats;
+    };
+
+    Object.defineProperty(handle, 'stat', { value: lyingStat });
+
+    return handle;
+  };
+
+  const mocked = { ...real, open };
+
+  return mocked;
+});
+
+/** The stat size a lying handle reports: far under `CAP_BYTES`, so only the cap, not the 1 MiB slack past it, stops the read. */
+const LYING_SIZE_BYTES = 1;
 
 /** Whole seconds, so the mtime a stat reports back is exact on every filesystem. */
 const FIRST_MTIME_S = 1_000_000_000;
@@ -45,6 +86,10 @@ describe('FEATURE: keyed file byte cap', () => {
 
   afterAll(async () => {
     await rm(root, { recursive: true, force: true, maxRetries: 5 });
+  });
+
+  afterEach(() => {
+    statLie.path = '';
   });
 
   describe('GIVEN a regular file that is no lockfile', () => {
@@ -94,6 +139,21 @@ describe('FEATURE: keyed file byte cap', () => {
       const files = await hashKeyedFiles(root, ['pkg/package.json']);
 
       expect(files[0]?.digest).toContain(`over-cap:${CAP_BYTES + 1}:`);
+    });
+  });
+
+  describe('GIVEN a regular file whose stat size stays under the cap while it reads past it', () => {
+    it('WHEN it is hashed THEN it is marked over-cap:read once the read passes the cap', async () => {
+      const path = join(root, 'lying-size.json');
+
+      await writeFile(path, Buffer.alloc(2 * CAP_BYTES, 'a'));
+      statLie.path = path;
+      statLie.size = LYING_SIZE_BYTES;
+
+      const files = await hashKeyedFiles(root, ['lying-size.json']);
+      const expected: KeyedFile = { path: 'lying-size.json', digest: 'over-cap:read', mtimeMs: null };
+
+      expect(files).toStrictEqual([expected]);
     });
   });
 

@@ -19,7 +19,10 @@ export const MTIME_SLACK_MS = 2000;
 /** The digest of a keyed file that does not exist. */
 export const MISSING_DIGEST = 'missing';
 
-/** The digest of a keyed file whose open or read failed (`EACCES`, `EBUSY`, ...). */
+/**
+ * The digest of a keyed file whose open or read failed (`EACCES`, `EBUSY`, ...). A file whose stat size grew while a
+ * read ran past its limit is still being written and is `unreadable:<size>:<mtimeMs>`.
+ */
 export const UNREADABLE_DIGEST = 'unreadable';
 
 /** The digest of a keyed path that exists but is no regular file: a directory, FIFO, socket or device. */
@@ -29,15 +32,15 @@ export const NOT_REGULAR_DIGEST = 'not-regular';
 export const OVER_CAP_PREFIX = 'over-cap:';
 
 /**
- * The digest of a keyed file that read past its byte cap, or more than 1 MiB past its stat size, after a smaller stat
- * size (procfs reports 0).
+ * The digest of a keyed file that read past its byte cap, or more than 1 MiB past its stat size, while that stat size
+ * did not grow (procfs reports 0 and stays 0).
  */
 export const OVER_CAP_READ_DIGEST = `${OVER_CAP_PREFIX}read`;
 
 /**
  * The most bytes hashed from one keyed file that is no lockfile (`package.json`, `turbo.json(c)`,
  * `pnpm-workspace.yaml`, `.npmrc`), far above any real one: a larger regular file is keyed by size and mtime, and one
- * that reads past it after a smaller stat size is `OVER_CAP_READ_DIGEST`.
+ * that reads past it after a smaller stat size that did not grow is `OVER_CAP_READ_DIGEST`.
  */
 export const MAX_KEYED_FILE_BYTES = 4 * 1024 * 1024;
 
