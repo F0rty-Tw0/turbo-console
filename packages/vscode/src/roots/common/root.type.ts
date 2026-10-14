@@ -5,6 +5,17 @@ export type RootFolder = {
   readonly name: string;
 };
 
+type FolderUri = {
+  readonly scheme: string;
+  readonly fsPath: string;
+};
+
+/** The fields of an editor workspace folder that decide whether it can be a root. */
+export type EditorFolder = {
+  readonly name: string;
+  readonly uri: FolderUri;
+};
+
 export type LoadMode = 'cache-first' | 'full';
 
 export type LoadedModel = {
@@ -38,4 +49,23 @@ export type LoadDeps = {
   readonly acquire: (signal: AbortSignal) => Promise<() => void>;
   readonly progress: (work: () => Promise<WorkspaceModel>) => Promise<WorkspaceModel>;
   readonly log: (line: string) => void;
+};
+
+type Acquire = LoadDeps['acquire'];
+
+/** What every root's `LoadDeps` share: the editor's storage dir, the error log (finished lines, never throws), the slots. */
+export type SharedLoadPorts = {
+  readonly cacheDir: string;
+  readonly log: (line: string) => void;
+  readonly acquire: Acquire;
+};
+
+/**
+ * `depsFor` builds one root's `LoadDeps` around the session's shared `acquire`. `warn` takes one finished line per
+ * model warning and never throws.
+ */
+export type SessionPorts = {
+  readonly depsFor: (root: string, acquire: Acquire) => LoadDeps;
+  readonly now: () => number;
+  readonly warn: (line: string) => void;
 };
