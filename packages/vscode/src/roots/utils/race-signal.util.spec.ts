@@ -38,6 +38,23 @@ describe('FEATURE: race work against a signal', () => {
     });
   });
 
+  describe('GIVEN work that aborts the signal and then hands back a settled value', () => {
+    it('WHEN raced THEN it rejects with the reason, not the value', async () => {
+      const controller = new AbortController();
+      const reason = new Error('stop');
+      const settledValue = Promise.resolve('late');
+
+      // eslint-disable-next-line @typescript-eslint/promise-function-async -- an async wrapper settles a tick later and loses the race even without the check under test.
+      const settled = raceSignal(() => {
+        controller.abort(reason);
+
+        return settledValue;
+      }, controller.signal);
+
+      await expect(settled).rejects.toBe(reason);
+    });
+  });
+
   describe('GIVEN a signal already aborted', () => {
     it('WHEN raced THEN it rejects with the reason and the work never starts', async () => {
       const controller = new AbortController();
