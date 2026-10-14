@@ -4,7 +4,14 @@ import { posix } from 'node:path';
 import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
 import { toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
 import { isInsideRoot, packageConfigDirs } from '../../workspace/utils/config-dir.util.ts';
-import { MISSING_DIGEST, MTIME_SLACK_MS, PACKAGE_KEYED_FILES, ROOT_KEYED_FILES } from '../common/cache.const.ts';
+import {
+  MISSING_DIGEST,
+  MTIME_SLACK_MS,
+  NOT_REGULAR_DIGEST,
+  OVER_CAP_PREFIX,
+  PACKAGE_KEYED_FILES,
+  ROOT_KEYED_FILES
+} from '../common/cache.const.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
 
 const ROOT_HASH_LENGTH = 16;
@@ -89,6 +96,34 @@ const isVanishedManifest = (file: KeyedFile): boolean => {
  * delete: the caller stores such a model with a `null` key, so it is never fresh.
  */
 export const hasVanishedManifest = (files: KeyedFile[]): boolean => files.some(isVanishedManifest);
+
+const keyDigest = (file: KeyedFile): [string, string] => [file.path, file.digest];
+
+/**
+ * Whether a file in `before` has another digest in `after` (`missing` is a digest too). A path absent from `after`
+ * counts as a change, so the check fails closed. Catches a root keyed file edited or deleted during the spawn even when
+ * its mtime was put back, which `isEditedSince` cannot see.
+ */
+export const hasChangedRootFile = (before: KeyedFile[], after: KeyedFile[]): boolean => {
+  const digestAfter = new Map(after.map(keyDigest));
+  const isChanged = (file: KeyedFile): boolean => digestAfter.get(file.path) !== file.digest;
+
+  return before.some(isChanged);
+};
+
+const isHostile = (file: KeyedFile): boolean => {
+  const isNotRegular = file.digest === NOT_REGULAR_DIGEST;
+  const isOverCap = file.digest.startsWith(OVER_CAP_PREFIX);
+
+  return isNotRegular || isOverCap;
+};
+
+/**
+ * The first of `rootFiles` that is no regular file or is over the byte cap, if any. turbo reads root keyed files to
+ * their end with no cap, so one linked to `/proc/self/pagemap` or `/dev/zero` would grow it until the machine runs out
+ * of memory: the caller refuses the spawn instead.
+ */
+export const hostileRootFile = (rootFiles: KeyedFile[]): KeyedFile | undefined => rootFiles.find(isHostile);
 
 /** `workspace-<first 16 hex of sha256(root)>.json`: one cache file per workspace root. */
 export const cacheFileName = (root: string): string => {

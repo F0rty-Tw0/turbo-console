@@ -168,7 +168,7 @@ describe('FEATURE: workspace loading', () => {
 
       const model = await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
 
-      expect(store.args).toStrictEqual([[model, [WINDOWS_PACKAGE], SPAWN_STARTED_AT, CACHE_DIR]]);
+      expect(store.args).toStrictEqual([[model, [WINDOWS_PACKAGE], expect.objectContaining({ startedAt: SPAWN_STARTED_AT }), CACHE_DIR]]);
     });
 
     it('WHEN loaded THEN the model carries no cache warning', async () => {
