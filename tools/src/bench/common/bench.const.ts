@@ -12,7 +12,7 @@ export const BENCH_DIR = '.bench';
 
 export const RESULTS_FILE = 'results.json';
 
-/** A gated bench fails when its head median is more than this fraction above its base median. */
+/** A gated bench fails when its fastest head run median is more than this fraction above its fastest base run median. */
 export const THRESHOLD = 0.15;
 
 export const NS_PER_MS = 1_000_000;

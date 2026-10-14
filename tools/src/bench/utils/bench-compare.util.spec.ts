@@ -13,12 +13,12 @@ const result = (name: string, medianNs: number, gate: boolean): BenchResult => {
 
 describe('FEATURE: bench comparison', () => {
   describe('GIVEN three runs of one bench', () => {
-    const runs = [[result('core/parse', 10, true)], [result('core/parse', 30, true)], [result('core/parse', 20, true)]];
+    const runs = [[result('core/parse', 30, true)], [result('core/parse', 20, true)], [result('core/parse', 10, true)]];
 
-    it('WHEN the runs are reduced THEN the bench keeps the median of its run medians', () => {
+    it('WHEN the runs are reduced THEN the bench keeps the fastest of its run medians', () => {
       const reduced = reduceRuns(runs);
 
-      expect(reduced).toStrictEqual([result('core/parse', 20, true)]);
+      expect(reduced).toStrictEqual([result('core/parse', 10, true)]);
     });
   });
 
@@ -33,13 +33,13 @@ describe('FEATURE: bench comparison', () => {
   });
 
   describe('GIVEN runs with two benches', () => {
-    const first = [result('core/a', 1, true), result('core/b', 5, false)];
-    const second = [result('core/a', 3, true), result('core/b', 7, false)];
+    const first = [result('core/a', 1, true), result('core/b', 7, false)];
+    const second = [result('core/a', 3, true), result('core/b', 5, false)];
 
     it('WHEN the runs are reduced THEN each bench is reduced on its own, in first-seen order', () => {
       const reduced = reduceRuns([first, second]);
 
-      expect(reduced).toStrictEqual([result('core/a', 2, true), result('core/b', 6, false)]);
+      expect(reduced).toStrictEqual([result('core/a', 1, true), result('core/b', 5, false)]);
     });
   });
 

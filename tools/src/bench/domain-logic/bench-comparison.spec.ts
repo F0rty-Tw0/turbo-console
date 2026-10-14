@@ -32,13 +32,13 @@ describe('FEATURE: runs dir comparison', () => {
       await writeRun(join(root, 'base'), '1', 90);
       await writeRun(join(root, 'base'), '2', 100);
       await writeRun(join(root, 'base'), '3', 400);
-      await writeRun(join(root, 'head'), '1', 120);
-      await writeRun(join(root, 'head'), '2', 130);
-      await writeRun(join(root, 'head'), '3', 10);
+      await writeRun(join(root, 'head'), '1', 130);
+      await writeRun(join(root, 'head'), '2', 108);
+      await writeRun(join(root, 'head'), '3', 140);
     });
 
-    it('WHEN the dirs are compared THEN each side is reduced to its median run before the threshold check', async () => {
-      const row: ComparisonRow = { name: 'core/parse', baseNs: 100, headNs: 120, ratio: 1.2, gate: true, failed: true };
+    it('WHEN the dirs are compared THEN each side is reduced to its fastest run before the threshold check', async () => {
+      const row: ComparisonRow = { name: 'core/parse', baseNs: 90, headNs: 108, ratio: 1.2, gate: true, failed: true };
 
       const comparison = await compareRunsDirs(join(root, 'base'), join(root, 'head'));
 
