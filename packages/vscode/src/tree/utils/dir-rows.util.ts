@@ -7,7 +7,7 @@ import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
 import { FOLDER_ICON, PACKAGE_ICON } from '../common/icon.const.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 
-const dirRow = (root: string, dir: FolderDir): TreeRow => {
+export const dirRow = (root: string, dir: FolderDir): TreeRow => {
   const row: TreeRow = {
     id: rowIdOf('dir', root, dir.path),
     kind: 'dir',
