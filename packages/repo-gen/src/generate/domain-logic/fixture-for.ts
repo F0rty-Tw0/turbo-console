@@ -42,6 +42,25 @@ const fillCache = async (files: FixtureFile[], cacheDir: string): Promise<void> 
   }
 };
 
+/** The cache dir for `files`, generated first when absent. */
+const cachedRepo = async (files: FixtureFile[]): Promise<string> => {
+  const cacheRoot = await privateTempDir(CACHE_ROOT_NAME);
+  const cacheDir = join(cacheRoot, fixtureKey(FIXTURE_CACHE_VERSION, files));
+  const isCached = await pathExists(cacheDir);
+
+  if (!isCached) await fillCache(files, cacheDir);
+
+  return cacheDir;
+};
+
+/** Generates the cached repo for `spec` without making a copy, so a run can fill the cache once before its workers. */
+export const warmFixtureCache = async (spec: FixtureSpec): Promise<void> => {
+  const plan = planFixture(spec);
+  const files = renderFixtureFiles(plan);
+
+  await cachedRepo(files);
+};
+
 /**
  * A private copy of the fixture for `spec`. The repo is generated once per rendered output and git step into
  * `<private temp root>/<fixtureKey(FIXTURE_CACHE_VERSION, rendered files)>`, so a generator change never serves a stale cache.
@@ -50,12 +69,7 @@ const fillCache = async (files: FixtureFile[], cacheDir: string): Promise<void> 
 export const fixtureFor = async (spec: FixtureSpec): Promise<FixtureHandle> => {
   const plan = planFixture(spec);
   const files = renderFixtureFiles(plan);
-  const cacheRoot = await privateTempDir(CACHE_ROOT_NAME);
-  const cacheDir = join(cacheRoot, fixtureKey(FIXTURE_CACHE_VERSION, files));
-  const isCached = await pathExists(cacheDir);
-
-  if (!isCached) await fillCache(files, cacheDir);
-
+  const cacheDir = await cachedRepo(files);
   const dir = await createTempDir('turbo-console-fixture-');
 
   await copyFixture(cacheDir, dir);
