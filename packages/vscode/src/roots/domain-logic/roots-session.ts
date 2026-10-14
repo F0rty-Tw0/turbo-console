@@ -5,6 +5,8 @@ import { RootStore } from './root-store.ts';
 import { LOG_LINE_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import { DEBOUNCE_MS } from '../../watch/common/watch.const.ts';
+import { Debouncer } from '../../watch/domain-logic/debouncer.ts';
 import type { ChangeReason, CoordinatorPorts, LoadRecord, Session } from '../common/coordinator.type.ts';
 import type { LoadDeps, LoadResult, RootFolder, SessionPorts } from '../common/root.type.ts';
 import { MAX_CONCURRENT_LOADS } from '../common/roots.const.ts';
@@ -14,17 +16,24 @@ import { findRoots } from '../data-access/find-roots.ts';
  * The roots of the window: the store, one coordinator per root over its own `LoadDeps`, one set of load slots shared
  * by all of them, and the load records the integration tests read. `loads` holds an empty list per root from the moment
  * the root is set. The view's visibility lives here, so a coordinator built before the view exists can read it.
+ * Watcher events reach it through `changed`, debounced per root into one `watch` request.
  */
 export class RootsSession implements Session {
   public readonly store = new RootStore();
   public readonly loads = new Map<string, LoadRecord[]>();
   private readonly ports: SessionPorts;
   private readonly slots = new LoadSlots(MAX_CONCURRENT_LOADS);
+  private readonly debouncer: Debouncer;
   private isVisible = false;
   private foldersGeneration = 0;
 
   public constructor(ports: SessionPorts) {
+    const flush = (root: string): void => {
+      this.store.get(root)?.coordinator.request('watch');
+    };
+
     this.ports = ports;
+    this.debouncer = new Debouncer(DEBOUNCE_MS, flush);
   }
 
   /**
@@ -74,7 +83,17 @@ export class RootsSession implements Session {
     for (const entry of this.store.all()) entry.coordinator.request(reason);
   }
 
-  /** Resolves when the root has no load in flight; rejects for a key that is not a current root. */
+  /** A watcher saw a change under `root` that may change its model. */
+  public changed(root: string): void {
+    this.debouncer.push(root);
+  }
+
+  public dispose(): void {
+    this.debouncer.dispose();
+    this.setRoots([]);
+  }
+
+  /** Resolves when the root has no debounced change pending and no load in flight; rejects for an unknown root key. */
   public async whenIdle(root: string): Promise<void> {
     const entry = this.store.get(root);
 
@@ -84,6 +103,7 @@ export class RootsSession implements Session {
       throw new Error(`unknown root ${root}; known: ${known}`);
     }
 
+    await this.debouncer.whenFlushed(root);
     await entry.coordinator.whenSettled();
   }
 
