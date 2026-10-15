@@ -12,6 +12,13 @@ export const MAX_TIMING_ATTEMPTS = 3;
 
 const NO_ENV: Readonly<Record<string, string>> = {};
 
+const SCM_BASE_KEY = 'TURBO_SCM_BASE';
+
+const SCM_HEAD_KEY = 'TURBO_SCM_HEAD';
+
+/** Pins turbo's affected range to the last commit, as the core contract's `AFFECTED_RANGE` does; case 8 makes that commit. */
+const PINNED_RANGE: Readonly<Record<string, string>> = { [SCM_BASE_KEY]: 'HEAD~1', [SCM_HEAD_KEY]: 'HEAD' };
+
 const L1: Launch = {
   name: 'L1',
   suite: 'fixture.suite',
@@ -19,7 +26,7 @@ const L1: Launch = {
   turboPath: 'dev',
   userData: 'U1',
   posixOnly: false,
-  env: NO_ENV
+  env: PINNED_RANGE
 };
 
 const L2: Launch = { ...L1, name: 'L2', suite: 'warm.suite' };
