@@ -45,8 +45,6 @@ const dryRunTask = (packageName: string, task: string, hash: string | null, cach
     hash,
     command: 'node -e 0',
     cache,
-    dependencies: [],
-    dependents: [],
     resolvedTaskDefinition: DEFINITION
   };
 
