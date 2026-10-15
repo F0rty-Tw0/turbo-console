@@ -92,5 +92,12 @@ describe('FEATURE: roots session panel visibility', () => {
 
       expect(modesOf(session, X_FOLDER.root)).toStrictEqual([]);
     });
+
+    it('WHEN a stale root gets a panel hidden report THEN it loads nothing', () => {
+      session.request('watch');
+      session.setPanelVisible('/a', 'p1', false);
+
+      expect(modesOf(session, '/a')).toStrictEqual([]);
+    });
   });
 });
