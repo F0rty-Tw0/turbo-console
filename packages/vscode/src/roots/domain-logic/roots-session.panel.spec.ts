@@ -12,8 +12,7 @@ const X_FOLDER: RootFolder = { root: '/x', name: 'x' };
 
 const noCache = (): LoadDeps['readCached'] => vi.fn().mockResolvedValue(null);
 
-const modesOf = (session: RootsSession, root: string): string[] | undefined =>
-  session.loads.get(root)?.map((record) => record.mode);
+const modesOf = (session: RootsSession, root: string): string[] | undefined => session.loads.get(root)?.map((record) => record.mode);
 
 describe('FEATURE: roots session panel visibility', () => {
   describe('GIVEN two roots and a hidden tree', () => {
