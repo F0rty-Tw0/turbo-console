@@ -12,20 +12,24 @@ const definitionOf = (request: RunRequest): RunDefinition => {
   return definition;
 };
 
-/** A run whose process never started: its launch token (none for the current run) and the reason, unless already logged. */
+/**
+ * A run whose process never started: its launch token (none for the current run), the reason, unless already logged,
+ * and whether VS Code already ended its task, so its execution is not terminated.
+ */
 type StartEnd = {
   readonly definition: RunDefinition;
   readonly launchedAt?: number | undefined;
   readonly reason?: string;
+  readonly isTaskEnded?: boolean;
 };
 
 /**
- * Ends a run whose process never started; nothing for a run no longer running, or, with `launchedAt`, for another run
- * of the task. Only a run that ends as failed to start logs its reason and tells the user: one the user stopped first
- * ends as stopped, quietly.
+ * Ends a run whose process never started, terminating its execution unless its task already ended; nothing for a run no
+ * longer running, or, with `launchedAt`, for another run of the task. Only a run that ends as failed to start logs its
+ * reason and tells the user: one the user stopped first ends as stopped, quietly.
  */
 const endStart = (store: Runs, ports: RunPorts, end: StartEnd): void => {
-  const ended = store.failStart(end.definition, ports.now(), end.launchedAt);
+  const ended = store.failStart(end.definition, ports.now(), end.launchedAt, end.isTaskEnded);
 
   if (ended?.state !== 'failed-to-start') return;
 
@@ -36,10 +40,10 @@ const endStart = (store: Runs, ports: RunPorts, end: StartEnd): void => {
 
 /**
  * The `onDidEndTask` handler: a run still running when its task ends never saw its process end (spec §4.5 step 5).
- * With `launchedAt`, only the run launched then.
+ * With `launchedAt`, only the run launched then. The task is gone, so its execution is not terminated.
  */
 export const taskEnded = (store: Runs, ports: RunPorts, definition: RunDefinition, launchedAt?: number): void => {
-  endStart(store, ports, { definition, launchedAt, reason: TASK_ENDED_TEXT });
+  endStart(store, ports, { definition, launchedAt, reason: TASK_ENDED_TEXT, isTaskEnded: true });
 };
 
 /**

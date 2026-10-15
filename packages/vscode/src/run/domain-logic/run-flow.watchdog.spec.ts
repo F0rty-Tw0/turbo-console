@@ -206,6 +206,20 @@ describe('FEATURE: run flow, a start that never happens', () => {
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('task ended before its process started');
     });
 
+    it('WHEN its task ends with no process end THEN its execution is not terminated', () => {
+      taskEnded(store, ports, RUN);
+
+      expect(execution.terminate).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the user stopped it and its task ends THEN its execution was terminated once, by the Stop', () => {
+      store.requestStop(RUN);
+
+      taskEnded(store, ports, RUN);
+
+      expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+
     it('WHEN its task ends after its process ended THEN the user is not told anything', () => {
       store.processEnded(RUN, 0, 4000);
 
