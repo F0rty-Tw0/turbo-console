@@ -79,21 +79,24 @@ const onStartTimeout = (store: Runs, ports: RunPorts, definition: RunDefinition,
 };
 
 /**
- * Spec §4.5 run flow: a watchdog that ends the run as failed to start when its process has not started
+ * Spec §4.5 run flow: a watchdog that ends the run as failed to start when its launch has not settled
  * `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), then the launch.
  * The task events drive the rest through the store.
  */
 export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest): Promise<void> => {
   const launchedAt = ports.now();
   const definition = definitionOf(request);
+  let isLaunched = false;
 
   // Armed before the run exists, so neither a launch that never settles nor a throwing change listener leaves it running.
+  // Once VS Code holds the execution, its task events end the run: it may make the task active only after a save
+  // prompt or an input the user takes any time over, and drops a terminate sent before then.
   ports.after(START_TIMEOUT_MS, () => {
-    onStartTimeout(store, ports, definition, launchedAt);
+    if (!isLaunched) onStartTimeout(store, ports, definition, launchedAt);
   });
 
-  // VS Code would hand back the running execution of the same task, which carries no token of this run: the watchdog
-  // would end the run as failed to start and terminate the task the user started.
+  // VS Code would hand back the running execution of the same task, which carries no token of this run: none of its
+  // task events would end the run.
   const isActiveElsewhere = ports.isActive(definition);
 
   if (isActiveElsewhere) {
@@ -112,6 +115,8 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
   }
 
   const execution = await launch(ports, request, launchedAt);
+
+  isLaunched = true;
 
   if (execution === null) {
     endStart(store, ports, { definition, launchedAt });
