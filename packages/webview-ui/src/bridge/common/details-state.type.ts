@@ -8,6 +8,8 @@ export type RunView = {
   readonly isRunning: boolean;
 };
 
+export type CacheStatus = 'HIT' | 'MISS' | 'deferred';
+
 /** `definition` and `cacheStatus` are `null` while loading, after a failed dry run, and for tasks with no command. `taskId` is the model id `<package>#<task>`. */
 export type TaskCard = {
   readonly taskId: string;
@@ -16,7 +18,7 @@ export type TaskCard = {
   readonly description: string | null;
   readonly dependents: string[];
   readonly definition: TaskDefinition | null;
-  readonly cacheStatus: 'HIT' | 'MISS' | 'deferred' | null;
+  readonly cacheStatus: CacheStatus | null;
   readonly run: RunView;
 };
 
