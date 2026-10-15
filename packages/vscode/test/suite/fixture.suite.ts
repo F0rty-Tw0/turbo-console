@@ -10,6 +10,7 @@ import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { BACKDATE_MS } from '../common/launch.const.ts';
 import { backdateTree } from '../utils/backdate.spec.util.ts';
 import { packageLifecycleCase } from '../utils/package-lifecycle.spec.util.ts';
+import { parityCase } from '../utils/parity-case.spec.util.ts';
 import { runCases } from '../utils/run-cases.spec.util.ts';
 import { countTurboSpawns } from '../utils/spawn-counter.spec.util.ts';
 import { budget, loadsOf, log, markDone, revealTree, rootAt, spanMs, step, turboApi, waitFor } from '../utils/suite-env.spec.util.ts';
@@ -125,6 +126,7 @@ export const run = async (): Promise<void> => {
     await watchCases(api, root, counter, manifest);
     await packageLifecycleCase(api, root);
     await runCases(api, root, manifest, env);
+    await parityCase(api, root, manifest, env);
     // later spec §5.3 cases go here, after case 9 and before the warm-up
     await step('warm-up', async () => warmUp(api, root));
     await markDone(env);
