@@ -27,7 +27,7 @@ describe('FEATURE: run view values from the host', () => {
   });
 
   describe('GIVEN a color variable', () => {
-    it.each([['--vscode-testing-iconPassed'], ['--vscode-charts.green'], ['--vscode-errorForeground']])(
+    it.each([['--vscode-testing-iconPassed'], ['--vscode-charts-green'], ['--vscode-errorForeground']])(
       'WHEN it is the theme variable %s THEN it is kept',
       (colorVar) => {
         expect(safeColorVar(colorVar)).toBe(colorVar);
@@ -42,6 +42,7 @@ describe('FEATURE: run view values from the host', () => {
       ['a color name', 'red'],
       ['a space', '--vscode-a b'],
       ['a closing paren', '--vscode-a)'],
+      ['a dot', '--vscode-charts.green'],
       ['a trailing newline', '--vscode-a\n']
     ])('WHEN it is %s THEN it is dropped', (_label, colorVar) => {
       expect(safeColorVar(colorVar)).toBeNull();
