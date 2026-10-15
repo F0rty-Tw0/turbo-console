@@ -72,6 +72,12 @@ jobs:
         if: runner.os != 'Linux'
         run: pnpm turbo run integration
 
+      # Last and !cancelled(), so drift doesn't hide the Linux check and integration results. Linux only: .gitattributes
+      # forces LF, so formatting is the same on every OS and one check is enough.
+      - name: Format
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        run: pnpm exec prettier --check .
+
   bench:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
