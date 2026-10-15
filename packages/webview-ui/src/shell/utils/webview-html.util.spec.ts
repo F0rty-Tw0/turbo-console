@@ -44,6 +44,42 @@ describe('FEATURE: webview html', () => {
     });
   });
 
+  describe('GIVEN a slot value that holds the marker of another slot', () => {
+    const template = '{{csp}} {{nonce}}';
+
+    it('WHEN the earlier slot holds a later marker THEN it throws, the value is not filled', () => {
+      const render = (): string => renderWebviewHtml(template, { csp: 'x {{nonce}}', nonce: 'N' });
+
+      expect(render).toThrow('unfilled webview slot: {{nonce}}');
+    });
+
+    it('WHEN the later slot holds an earlier marker THEN it throws, the value is not filled', () => {
+      const render = (): string => renderWebviewHtml(template, { nonce: '{{csp}}', csp: 'C' });
+
+      expect(render).toThrow('unfilled webview slot: {{csp}}');
+    });
+  });
+
+  describe('GIVEN a slot value with an attribute or tag delimiter', () => {
+    it.each([['"'], ['<'], ['>']])('WHEN a value holds %s THEN it throws naming the slot', (character) => {
+      const render = (): string => renderWebviewHtml('<meta content="{{csp}}">', { csp: `a${character}b` });
+
+      expect(render).toThrow('unsafe webview slot value: {{csp}}');
+    });
+  });
+
+  describe('GIVEN the values the host really passes', () => {
+    it('WHEN a nonce, a cspSource and the csp are rendered THEN none is refused', () => {
+      const nonce = 'a+b/c1==';
+      const cspSource = 'https://*.vscode-cdn.net';
+      const csp = webviewCsp(nonce, cspSource);
+
+      const html = renderWebviewHtml('{{csp}}|{{nonce}}|{{source}}', { csp, nonce, source: cspSource });
+
+      expect(html).toBe(`${csp}|${nonce}|${cspSource}`);
+    });
+  });
+
   describe('GIVEN a nonce and a cspSource', () => {
     it('WHEN the csp is built THEN it is the spec string', () => {
       expect(webviewCsp('n', 'vscode-resource:')).toBe(SPEC_CSP);
