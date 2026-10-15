@@ -25,6 +25,11 @@ const pageObjectAssertions: FlatConfig.Config = {
 
 const TEXT_ONLY_MESSAGE = 'Webview text goes through textContent (spec 1b D3)';
 
+const HTML_SINKS =
+  'innerHTML|outerHTML|insertAdjacentHTML|setHTMLUnsafe|parseHTMLUnsafe|createContextualFragment|parseFromString|srcdoc|cssText';
+
+const UNSAFE_ATTRIBUTES = 'srcdoc|style|on.*|href|src|action|formaction|xlink:href';
+
 const restrictedSyntaxOf = (config: FlatConfig.Config): unknown[] => {
   const rule = config.rules?.['no-restricted-syntax'];
 
@@ -44,25 +49,25 @@ const textOnlyDom: FlatConfig.Config = {
     'no-restricted-syntax': [
       'error',
       ...inheritedRestrictedSyntax,
+      { selector: `MemberExpression[property.name=/^(${HTML_SINKS})$/]`, message: TEXT_ONLY_MESSAGE },
+      { selector: `MemberExpression[computed=true][property.value=/^(${HTML_SINKS})$/]`, message: TEXT_ONLY_MESSAGE },
+      // Object.assign(el, { innerHTML }) and const { innerHTML } = el.
+      { selector: `Property[key.name=/^(${HTML_SINKS})$/]`, message: TEXT_ONLY_MESSAGE },
+      // A sink name as a string: Reflect.set(el, 'innerHTML', x), Object.defineProperty, { 'innerHTML': x }.
+      { selector: `Literal[value=/^(${HTML_SINKS})$/]`, message: TEXT_ONLY_MESSAGE },
+      { selector: `TemplateElement[value.cooked=/(${HTML_SINKS})/]`, message: TEXT_ONLY_MESSAGE },
       {
-        selector:
-          'MemberExpression[property.name=/^(innerHTML|outerHTML|insertAdjacentHTML|setHTMLUnsafe|createContextualFragment|parseFromString|srcdoc)$/]',
+        selector: 'CallExpression[callee.property.name=/^(write|writeln|execCommand|setAttributeNS)$/]',
         message: TEXT_ONLY_MESSAGE
       },
+      { selector: "CallExpression[callee.property.name='setAttribute'][arguments.0.type!='Literal']", message: TEXT_ONLY_MESSAGE },
       {
-        selector: 'MemberExpression[computed=true][property.value=/^(innerHTML|outerHTML|insertAdjacentHTML|setHTMLUnsafe|srcdoc)$/]',
+        selector: `CallExpression[callee.property.name='setAttribute'][arguments.0.value=/^(${UNSAFE_ATTRIBUTES})$/i]`,
         message: TEXT_ONLY_MESSAGE
       },
+      // A literal key (el.dataset['testid']) names no data; a computed one could.
       {
-        selector: "CallExpression[callee.property.name=/^(write|writeln)$/][callee.object.name='document']",
-        message: TEXT_ONLY_MESSAGE
-      },
-      {
-        selector: "CallExpression[callee.property.name=/^(write|writeln)$/][callee.object.property.name='document']",
-        message: TEXT_ONLY_MESSAGE
-      },
-      {
-        selector: "CallExpression[callee.property.name='setAttribute'][arguments.0.value=/^(srcdoc|style|on.*)$/]",
+        selector: "MemberExpression[object.property.name='dataset'][computed=true][property.type!='Literal']",
         message: TEXT_ONLY_MESSAGE
       }
     ]
