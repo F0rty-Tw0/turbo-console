@@ -9,6 +9,7 @@ import type {
   AffectedTasks,
   CachedWorkspace,
   DryRun,
+  DryRunRequest,
   DryRunState,
   PackageEdge,
   PackageGraph,
@@ -16,6 +17,7 @@ import type {
   RunMatch,
   RunSummary,
   RunToMatch,
+  TaskDefinition,
   TaskNode,
   TurboBinary,
   TurboErrorKind,
@@ -73,6 +75,8 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<TaskNode>().toHaveProperty('kind');
       expectTypeOf<AffectedResult['mode']>().toEqualTypeOf<'package' | 'task'>();
       expectTypeOf<DryRunState['cache']>().toEqualTypeOf<'HIT' | 'MISS' | 'deferred'>();
+      expectTypeOf<DryRunState['definition']>().toEqualTypeOf<TaskDefinition>();
+      expectTypeOf<DryRunRequest>().toHaveProperty('tasks');
       expectTypeOf<CachedWorkspace['isFresh']>().toEqualTypeOf<boolean>();
       expectTypeOf<AffectedTasks>().toHaveProperty('data');
       expectTypeOf<DryRun>().toHaveProperty('tasks');

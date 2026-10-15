@@ -1,8 +1,11 @@
 import type * as childProcess from 'node:child_process';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { PRESETS } from '@turbo-console/repo-gen';
 import type { FixtureHandle, FixtureSpec } from '@turbo-console/repo-gen';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, readDryRun, resolveTurbo } from '../index.ts';
@@ -10,7 +13,7 @@ import { TurboException, readDryRun, resolveTurbo } from '../index.ts';
 import type { DryRunState, TurboBinary } from '../index.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
-import { manifestTaskNames } from '../shared/turbo/test/utils/manifest.spec.util.ts';
+import { manifestTaskNames, packageWithRole } from '../shared/turbo/test/utils/manifest.spec.util.ts';
 
 const spawns = vi.hoisted(() => {
   const files: string[] = [];
@@ -42,6 +45,8 @@ const FILE_TASK_ID = `${FILE_TASK_PACKAGE}#${FILE_TASK}`;
 const DEFINITIONS_PACKAGE = '@fx/e2e-1-atoms';
 
 const TRUSTED = { trusted: true } as const;
+
+const rootTurboJsonSchema = z.object({ tasks: z.object({ build: z.object({ dependsOn: z.array(z.string()) }) }) });
 
 const statesOf = (states: DryRunState[], task: string): DryRunState[] => states.filter((state) => state.id.endsWith(`#${task}`));
 
@@ -141,6 +146,32 @@ describe('FEATURE: dry-run states from a real turbo', () => {
 
       it('THEN the definitions package that also holds the task name is filtered out', () => {
         expect(ids.filter((id) => id.startsWith(`${DEFINITIONS_PACKAGE}#`))).toStrictEqual([]);
+      });
+    });
+
+    describe('WHEN one regular package runs build dry filtered to it', () => {
+      let states: DryRunState[] = [];
+      let rootBuildDependsOn: string[] = [];
+
+      beforeAll(async () => {
+        const manifestPackage = packageWithRole(fixture().manifest, 'regular');
+        const turboJson = await readFile(join(fixture().dir, 'turbo.json'), 'utf8');
+
+        rootBuildDependsOn = rootTurboJsonSchema.parse(JSON.parse(turboJson)).tasks.build.dependsOn;
+        states = await readDryRun(binary, { tasks: ['build'], packages: [manifestPackage.name] });
+      });
+
+      it('THEN each state definition dependsOn equals the root turbo.json build dependsOn', () => {
+        const dependsOnOf = (state: DryRunState): string[] => state.definition.dependsOn;
+
+        expect(states.length).toBeGreaterThan(0);
+        expect(states.map(dependsOnOf)).toStrictEqual(states.map(() => rootBuildDependsOn));
+      });
+
+      it('THEN each state definition is cached and not persistent', () => {
+        const isCachedAndFinite = (state: DryRunState): boolean => state.definition.cache && !state.definition.persistent;
+
+        expect(states.filter(isCachedAndFinite)).toStrictEqual(states);
       });
     });
 

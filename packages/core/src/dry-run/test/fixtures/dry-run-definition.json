@@ -1,0 +1,248 @@
+{
+  "id": "3Kk0P0IozQaFMxOJARaaDA1Ekm5",
+  "version": "1",
+  "turboVersion": "2.11.7",
+  "monorepo": true,
+  "globalCacheInputs": {
+    "rootKey": "I can’t see ya, but I know you’re here",
+    "files": {
+      "package.json": "6a3c240eeafbabdaeb4eead4a047fe0a7da66dad"
+    },
+    "hashOfExternalDependencies": "",
+    "hashOfInternalDependencies": "",
+    "environmentVariables": {
+      "specified": {
+        "env": [],
+        "passThroughEnv": null
+      },
+      "configured": [],
+      "inferred": [],
+      "passthrough": null
+    },
+    "engines": null
+  },
+  "packages": [
+    "lib"
+  ],
+  "envMode": "strict",
+  "frameworkInference": true,
+  "tasks": [
+    {
+      "taskId": "lib#build",
+      "task": "build",
+      "package": "lib",
+      "hash": "f6ad97547a0b1afd",
+      "inputs": {
+        "package.json": "e0951640b842a9140439575b8dd6c777b3f1d6fd",
+        "src/a.ts": "587be6b4c3f93f93c489c0111bba5596147a26cb"
+      },
+      "hashOfExternalDependencies": "",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "command": "echo b",
+      "cliArguments": [],
+      "outputs": [
+        "dist/**"
+      ],
+      "excludedOutputs": null,
+      "logFile": "packages/lib/.turbo/turbo-build.log",
+      "directory": "packages/lib",
+      "dependencies": [],
+      "dependents": [],
+      "with": [],
+      "resolvedTaskDefinition": {
+        "outputs": [
+          "dist/**"
+        ],
+        "cache": true,
+        "dependsOn": [
+          "^build"
+        ],
+        "inputs": [],
+        "outputLogs": "full",
+        "persistent": false,
+        "interruptible": false,
+        "env": [
+          "API_URL"
+        ],
+        "passThroughEnv": null,
+        "interactive": false
+      },
+      "expandedOutputs": [],
+      "framework": "",
+      "envMode": "strict",
+      "environmentVariables": {
+        "specified": {
+          "env": [
+            "API_URL"
+          ],
+          "passThroughEnv": null
+        },
+        "configured": [],
+        "inferred": [],
+        "passthrough": null
+      }
+    },
+    {
+      "taskId": "lib#check",
+      "task": "check",
+      "package": "lib",
+      "hash": "a3d08b4b14b29a08",
+      "inputs": {
+        "package.json": "e0951640b842a9140439575b8dd6c777b3f1d6fd",
+        "src/a.ts": "587be6b4c3f93f93c489c0111bba5596147a26cb"
+      },
+      "hashOfExternalDependencies": "",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "command": "<NONEXISTENT>",
+      "cliArguments": [],
+      "outputs": null,
+      "excludedOutputs": null,
+      "logFile": "packages/lib/.turbo/turbo-check.log",
+      "directory": "packages/lib",
+      "dependencies": [],
+      "dependents": [],
+      "with": [],
+      "resolvedTaskDefinition": {
+        "outputs": [],
+        "cache": true,
+        "dependsOn": [],
+        "inputs": [],
+        "outputLogs": "full",
+        "persistent": false,
+        "interruptible": false,
+        "env": [],
+        "passThroughEnv": null,
+        "interactive": false
+      },
+      "expandedOutputs": [],
+      "framework": "",
+      "envMode": "strict",
+      "environmentVariables": {
+        "specified": {
+          "env": [],
+          "passThroughEnv": null
+        },
+        "configured": [],
+        "inferred": [],
+        "passthrough": null
+      }
+    },
+    {
+      "taskId": "lib#dev",
+      "task": "dev",
+      "package": "lib",
+      "hash": "934bea3046a7bef2",
+      "inputs": {
+        "package.json": "e0951640b842a9140439575b8dd6c777b3f1d6fd",
+        "src/a.ts": "587be6b4c3f93f93c489c0111bba5596147a26cb"
+      },
+      "hashOfExternalDependencies": "",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "command": "echo d",
+      "cliArguments": [],
+      "outputs": null,
+      "excludedOutputs": null,
+      "directory": "packages/lib",
+      "dependencies": [],
+      "dependents": [],
+      "with": [],
+      "resolvedTaskDefinition": {
+        "outputs": [],
+        "cache": false,
+        "dependsOn": [],
+        "inputs": [],
+        "outputLogs": "full",
+        "persistent": true,
+        "interruptible": false,
+        "env": [],
+        "passThroughEnv": null,
+        "interactive": false
+      },
+      "expandedOutputs": [],
+      "framework": "",
+      "envMode": "strict",
+      "environmentVariables": {
+        "specified": {
+          "env": [],
+          "passThroughEnv": null
+        },
+        "configured": [],
+        "inferred": [],
+        "passthrough": null
+      }
+    },
+    {
+      "taskId": "lib#lint",
+      "task": "lint",
+      "package": "lib",
+      "hash": "3ec033b3570cbf59",
+      "inputs": {
+        "package.json": "e0951640b842a9140439575b8dd6c777b3f1d6fd",
+        "src/a.ts": "587be6b4c3f93f93c489c0111bba5596147a26cb"
+      },
+      "hashOfExternalDependencies": "",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "command": "echo l",
+      "cliArguments": [],
+      "outputs": null,
+      "excludedOutputs": null,
+      "logFile": "packages/lib/.turbo/turbo-lint.log",
+      "directory": "packages/lib",
+      "dependencies": [],
+      "dependents": [],
+      "with": [],
+      "resolvedTaskDefinition": {
+        "outputs": [],
+        "cache": true,
+        "dependsOn": [],
+        "inputs": [
+          "src/**"
+        ],
+        "outputLogs": "full",
+        "persistent": false,
+        "interruptible": false,
+        "env": [],
+        "passThroughEnv": null,
+        "interactive": false
+      },
+      "expandedOutputs": [],
+      "framework": "",
+      "envMode": "strict",
+      "environmentVariables": {
+        "specified": {
+          "env": [],
+          "passThroughEnv": null
+        },
+        "configured": [],
+        "inferred": [],
+        "passthrough": null
+      }
+    }
+  ],
+  "user": "",
+  "scm": {
+    "type": "git",
+    "sha": null,
+    "branch": "master"
+  }
+}
