@@ -2,7 +2,7 @@ import { test } from './shell.fixture.ts';
 
 const AC7 = { description: 'AC7', type: 'requirement' };
 
-test.describe('FEATURE: graph-ui shell', () => {
+test.describe('FEATURE: graph shell', () => {
   test('GIVEN the webview CSP, the shell renders ready with no violation or error', async ({ shellPage }): Promise<void> => {
     await test.step('WHEN the shell is opened', async (): Promise<void> => shellPage.goto());
 

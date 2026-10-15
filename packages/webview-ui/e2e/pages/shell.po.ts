@@ -14,7 +14,7 @@ export class ShellPage {
   public constructor(page: Page) {
     this.page = page;
     this.errors = [];
-    this.readyMarker = page.getByTestId('graph-ui-ready');
+    this.readyMarker = page.getByTestId('webview-ui-ready');
   }
 
   public async goto(options: ShellOptions = {}): Promise<void> {

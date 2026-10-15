@@ -9,7 +9,7 @@ const createHostBridge = (): Bridge => {
 };
 
 const createStubBridge = (): Bridge => {
-  const ready = (): void => console.warn('graph-ui: ready (no host)');
+  const ready = (): void => console.warn('webview-ui: ready (no host)');
   const bridge: Bridge = { ready };
 
   return bridge;

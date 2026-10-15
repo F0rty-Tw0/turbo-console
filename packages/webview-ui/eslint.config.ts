@@ -10,13 +10,13 @@ const languageOptions = {
 };
 
 const typescriptFiles = {
-  name: 'graph-ui/typescript',
+  name: 'webview-ui/typescript',
   files: ['**/*.ts'],
   languageOptions
 };
 
 const pageObjectAssertions: FlatConfig.Config = {
-  name: 'graph-ui/page-object-assertions',
+  name: 'webview-ui/page-object-assertions',
   files: ['**/*.e2e.ts'],
   rules: {
     'playwright/expect-expect': ['warn', { assertFunctionPatterns: ['^expect'] }]

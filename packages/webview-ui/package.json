@@ -1,13 +1,13 @@
 {
-  "name": "@turbo-console/graph-ui",
+  "name": "@turbo-console/webview-ui",
   "version": "0.0.0",
-  "description": "Webview shell for the Turbo Console graph",
+  "description": "Webview pages for Turbo Console",
   "private": true,
   "license": "MIT",
   "author": "Artiom Tofan artiomtofancv@gmail.com",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --platform=browser --format=iife --target=es2024 --outfile=dist/main.js && node -e \"require('node:fs').cpSync('src/index.html','dist/index.html')\"",
+    "build": "esbuild src/graph/main.ts --bundle --platform=browser --format=iife --target=es2024 --outfile=dist/graph/main.js && node -e \"require('node:fs').cpSync('src/graph/index.html','dist/graph/index.html')\"",
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
