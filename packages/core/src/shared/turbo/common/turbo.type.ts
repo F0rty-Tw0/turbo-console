@@ -68,10 +68,13 @@ export type RssDeps = {
   readonly readFile: (path: string, encoding: 'utf8') => Promise<string>;
 };
 
+/** Reads the resident memory of `pid` in bytes; `null` when it cannot be read. */
+export type RssProbe = (pid: number) => Promise<number | null>;
+
 /** What `watchMemory` polls and when it gives up; `probe` defaults to `rssOf`. */
 export type WatchMemoryOptions = {
   readonly maxRssBytes: number;
   readonly intervalMs: number;
-  readonly probe?: ((pid: number) => Promise<number | null>) | undefined;
+  readonly probe?: RssProbe | undefined;
   readonly onExceeded: (rss: number) => void;
 };

@@ -1,8 +1,8 @@
 import { rssOf } from './rss-probe.ts';
-import type { WatchMemoryOptions } from '../common/turbo.type.ts';
+import type { RssProbe, WatchMemoryOptions } from '../common/turbo.type.ts';
 
 /** `probe`'s sample, with a rejection read as `null`: `rssOf` never rejects, a custom probe might. */
-const sampleOf = async (probe: (pid: number) => Promise<number | null>, pid: number): Promise<number | null> => {
+const sampleOf = async (probe: RssProbe, pid: number): Promise<number | null> => {
   try {
     return await probe(pid);
   } catch {
@@ -24,7 +24,6 @@ export const watchMemory = (pid: number, options: WatchMemoryOptions): (() => vo
 
   const pause = async (): Promise<undefined> => {
     const { promise, resolve } = Promise.withResolvers<undefined>();
-
     const wake = (): void => {
       resolve(undefined);
     };
