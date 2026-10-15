@@ -41,11 +41,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Linux only: .gitattributes forces LF, so formatting is the same on every OS and one check is enough.
-      - name: Format
-        if: runner.os == 'Linux'
-        run: pnpm exec prettier --check .
-
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps --only-shell chromium
 
@@ -76,6 +71,12 @@ jobs:
       - name: Integration
         if: runner.os != 'Linux'
         run: pnpm turbo run integration
+
+      # Last and !cancelled(), so drift doesn't hide the Linux check and integration results. Linux only: .gitattributes
+      # forces LF, so formatting is the same on every OS and one check is enough.
+      - name: Format
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        run: pnpm exec prettier --check .
 
   bench:
     if: github.event_name == 'pull_request'
