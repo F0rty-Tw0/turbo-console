@@ -1,15 +1,7 @@
 import { execFile } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
-import { isAbsolute, join } from 'node:path';
 
-/** By absolute path, so a `taskkill.exe` earlier on `PATH` or in the cwd is never run; a relative `SystemRoot` is ignored. */
-const taskkillPath = (): string => {
-  const root = process.env['SystemRoot'] ?? '';
-  const isRootAbsolute = isAbsolute(root);
-  const base = isRootAbsolute ? root : 'C:\\Windows';
-
-  return join(base, 'System32', 'taskkill.exe');
-};
+import { system32Path } from '../utils/system32-path.util.ts';
 
 /**
  * Stops `child`'s tree. POSIX: SIGTERM to `child` alone, settled at once; turbo stops its own task processes on it,
@@ -33,7 +25,9 @@ export const killTree = async (child: ChildProcess): Promise<void> => {
     resolve(undefined);
   };
 
-  execFile(taskkillPath(), ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, onDone);
+  const taskkill = system32Path('taskkill.exe', process.env['SystemRoot']);
+
+  execFile(taskkill, ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, onDone);
 
   return promise;
 };
