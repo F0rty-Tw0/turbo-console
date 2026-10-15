@@ -62,3 +62,11 @@ export type RssDeps = {
   readonly exec: RssExec;
   readonly readFile: (path: string, encoding: 'utf8') => Promise<string>;
 };
+
+/** What `watchMemory` polls and when it gives up; `probe` defaults to `rssOf`. */
+export type WatchMemoryOptions = {
+  readonly maxRssBytes: number;
+  readonly intervalMs: number;
+  readonly probe?: ((pid: number) => Promise<number | null>) | undefined;
+  readonly onExceeded: (rss: number) => void;
+};
