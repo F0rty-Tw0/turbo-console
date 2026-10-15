@@ -11,10 +11,10 @@ document.addEventListener('securitypolicyviolation', (event) => window.__violati
 
 /**
  * Init script: stands in for the VS Code host, recording every posted message in `window.__posted` and keeping the
- * `setState` value in `window.__state` for `getState`.
+ * `setState` value in `window.__state` for `getState`. It leaves `window.__state` alone, so an earlier init script can
+ * stand in for a state VS Code kept.
  */
 export const HOST_API_STUB = `window.__posted = [];
-window.__state = undefined;
 window.acquireVsCodeApi = () => ({
   postMessage: (message) => window.__posted.push(message),
   getState: () => window.__state,

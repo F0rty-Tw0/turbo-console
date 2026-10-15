@@ -1,9 +1,9 @@
 import type { ConsoleMessage, Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { TaskCardSection } from './task-card.po.ts';
 import type { HostMessage, WebviewMessage } from '../../src/bridge/common/details-message.type.ts';
 import type { DetailsState, RunView } from '../../src/bridge/common/details-state.type.ts';
-import type { FieldRow } from '../../src/details/common/details-page.type.ts';
 import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL, VIOLATION_RECORDER } from '../common/shell.const.ts';
 import { detailsDistMock } from '../test/mocks/details-dist.mock.ts';
 
@@ -57,6 +57,19 @@ export class DetailsPage {
     await this.heading.waitFor();
   }
 
+  /** Before `open`: stands in for the scroll position VS Code kept from an earlier instance of the page. */
+  public async restoreScroll(scrollY: number): Promise<void> {
+    const savedState = JSON.stringify({ scrollY });
+
+    await this.page.addInitScript({ content: `window.__state = ${savedState};` });
+  }
+
+  public card(taskName: string): TaskCardSection {
+    const card = new TaskCardSection(this.page, taskName);
+
+    return card;
+  }
+
   public async sendRunState(taskId: string, run: RunView): Promise<void> {
     const message: HostMessage = { type: 'runState', taskId, run };
 
@@ -86,19 +99,6 @@ export class DetailsPage {
     await this.dryRunBanner.getByRole('button', { name: 'Retry' }).click();
   }
 
-  public async expectCardFields(taskName: string, rows: FieldRow[]): Promise<void> {
-    const card = this.card(taskName);
-    const terms = rows.map(([term]: FieldRow): string => term);
-    const values = rows.map(([, value]: FieldRow): string => value);
-
-    await expect(card.locator('dt')).toHaveText(terms);
-    await expect(card.locator('dd')).toHaveText(values);
-  }
-
-  public async expectBadges(taskName: string, labels: string[]): Promise<void> {
-    await expect(this.card(taskName).locator('.badge')).toHaveText(labels);
-  }
-
   public async expectStopFocused(taskName: string): Promise<void> {
     await expect(this.page.getByRole('button', { name: `Stop ${taskName}`, exact: true })).toBeFocused();
   }
@@ -108,6 +108,12 @@ export class DetailsPage {
 
     expect(this.scrolledY).toBeGreaterThan(0);
     expect(scrollY).toBe(this.scrolledY);
+  }
+
+  public async expectScrollY(scrollY: number): Promise<void> {
+    const readScrollY = async (): Promise<number> => this.page.evaluate<number>('scrollY');
+
+    await expect.poll(readScrollY).toBe(scrollY);
   }
 
   public async expectLastPosted(message: WebviewMessage): Promise<void> {
@@ -136,12 +142,6 @@ export class DetailsPage {
 
   public expectNoErrors(): void {
     expect(this.errors).toEqual([]);
-  }
-
-  private card(taskName: string): Locator {
-    const title = this.page.getByRole('heading', { level: 2, name: taskName, exact: true });
-
-    return this.cards.filter({ has: title });
   }
 
   private recordConsoleError(message: ConsoleMessage): void {

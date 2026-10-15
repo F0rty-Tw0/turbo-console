@@ -12,6 +12,12 @@ const HOSTILE_NAME = '<img src=x onerror=alert(1)>';
 
 const RUNNING: RunView = { ...RUN_VIEW_STUB, iconId: 'sync', text: 'running…', isRunning: true };
 
+const PASSED: RunView = { ...RUN_VIEW_STUB, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: 'passed' };
+
+const HOSTILE_RUN: RunView = { ...RUN_VIEW_STUB, iconId: 'a b', colorVar: '--x) url(https://e/', text: 'hostile' };
+
+const SAVED_SCROLL_Y = 300;
+
 const TASK_NAMES = ['t00', 't01', 't02', 't03', 't04', 't05', 't06', 't07', 't08', 't09', 't10', 't11'];
 
 const FULL_FIELDS: FieldRow[] = [
@@ -36,10 +42,10 @@ test.describe('FEATURE: package details page', () => {
     await test.step('AND every tag renders', async (): Promise<void> =>
       expect(detailsPage.tags).toHaveText(['scope:web', 'type:app']));
 
-    await test.step('AND every card field renders', async (): Promise<void> => detailsPage.expectCardFields('build', FULL_FIELDS));
+    await test.step('AND every card field renders', async (): Promise<void> => detailsPage.card('build').expectFields(FULL_FIELDS));
 
     await test.step('AND both badges render', async (): Promise<void> =>
-      detailsPage.expectBadges('build', ['Cacheable', 'Continuous']));
+      detailsPage.card('build').expectBadges(['Cacheable', 'Continuous']));
 
     await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
 
@@ -62,6 +68,57 @@ test.describe('FEATURE: package details page', () => {
       await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
     }
   );
+
+  test('GIVEN a task with a hostile name, the name renders as text', { annotation: AC5 }, async ({ detailsPage }): Promise<void> => {
+    const card = detailsPage.card(HOSTILE_NAME);
+
+    await test.step('WHEN the page shows the task', async (): Promise<void> => detailsPage.open(packageWithTasks([HOSTILE_NAME])));
+
+    await test.step('THEN the card title text is the name', async (): Promise<void> => expect(card.title).toHaveText(HOSTILE_NAME));
+
+    await test.step('AND the Run button label carries the name as text', async (): Promise<void> =>
+      expect(card.runButton).toHaveAttribute('aria-label', `Run ${HOSTILE_NAME}`));
+
+    await test.step('AND no image element exists', async (): Promise<void> => expect(detailsPage.images).toHaveCount(0));
+
+    await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
+  });
+
+  test('GIVEN a runState with a theme color, the status icon takes it', async ({ detailsPage }): Promise<void> => {
+    await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
+
+    await test.step('AND the task passes', async (): Promise<void> => detailsPage.sendRunState('web#build', PASSED));
+
+    await test.step('THEN the icon is colored by the theme variable', async (): Promise<void> =>
+      detailsPage.card('build').expectStatusIcon('codicon codicon-pass', 'var(--vscode-testing-iconPassed)'));
+
+    await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
+  });
+
+  test('GIVEN a hostile icon id and color, the card renders without them', async ({ detailsPage }): Promise<void> => {
+    const card = detailsPage.card('build');
+    const task: TaskCard = { ...TASK_CARD_STUB, run: HOSTILE_RUN };
+    const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [task] };
+
+    await test.step('WHEN the page shows a card with the hostile run', async (): Promise<void> => detailsPage.open(state));
+
+    await test.step('AND a runState repeats it', async (): Promise<void> => detailsPage.sendRunState('web#build', HOSTILE_RUN));
+
+    await test.step('THEN the card shows the run text', async (): Promise<void> => expect(card.status).toHaveText('hostile'));
+
+    await test.step('AND the icon has no class or color from them', async (): Promise<void> => card.expectStatusIcon('codicon', ''));
+
+    await test.step('AND no console or page error is logged', (): void => detailsPage.expectNoErrors());
+  });
+
+  test('GIVEN a scroll position VS Code kept, the first state restores it', async ({ detailsPage }): Promise<void> => {
+    await test.step('WHEN the host kept a scroll position', async (): Promise<void> => detailsPage.restoreScroll(SAVED_SCROLL_Y));
+
+    await test.step('AND the page shows twelve cards', async (): Promise<void> => detailsPage.open(packageWithTasks(TASK_NAMES)));
+
+    await test.step('THEN the page is scrolled to the kept position', async (): Promise<void> =>
+      detailsPage.expectScrollY(SAVED_SCROLL_Y));
+  });
 
   test('GIVEN a scrolled page, a runState patches only its card', async ({ detailsPage }): Promise<void> => {
     const state = packageWithTasks(TASK_NAMES);
