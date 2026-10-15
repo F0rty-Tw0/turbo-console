@@ -22,12 +22,12 @@ export type RunAllRequest = {
 };
 
 /**
- * What one launch holds of its key. `attach` hands over the execution VS Code started; `expire` frees the key when the
- * process has not started, terminating the execution if there is one, and says whether it did; `release` frees the key.
- * Each acts only while this launch still holds the key, so a newer launch that took it since is left alone.
+ * What one launch holds of its key. `settle` says VS Code holds the task, so only its end frees the key; `expire` frees
+ * the key when the launch has not settled and says whether it did; `release` frees the key. Each acts only while this
+ * launch still holds the key, so a newer launch that took it since is left alone.
  */
 export type RunAllClaim = {
-  readonly attach: (execution: Terminable) => void;
+  readonly settle: () => void;
   readonly expire: () => boolean;
   readonly release: () => void;
 };

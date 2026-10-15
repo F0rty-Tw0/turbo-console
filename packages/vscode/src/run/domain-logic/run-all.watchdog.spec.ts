@@ -6,7 +6,7 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { PACKAGE_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import type { RunAllDefinition, RunAllRequest } from '../common/run-all.type.ts';
-import { START_TIMEOUT_MS, START_TIMEOUT_TEXT } from '../common/run.const.ts';
+import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, START_TIMEOUT_TEXT } from '../common/run.const.ts';
 import type { Terminable } from '../common/run.type.ts';
 import type { RunAllFakes } from '../test/common/run-all-fakes.type.ts';
 import { runAllFakes } from '../test/utils/run-all-ports.spec.util.ts';
@@ -42,30 +42,37 @@ describe('FEATURE: run all, a start that never happens', () => {
       await runAll(roots, guard, fakes.ports, EVERYWHERE);
     });
 
-    it('WHEN the start timeout passes with no process start THEN the key is released and the reason is logged', () => {
-      vi.advanceTimersByTime(START_TIMEOUT_MS);
+    describe('WHEN the start timeout passes before its process starts', () => {
+      beforeEach(() => {
+        vi.advanceTimersByTime(START_TIMEOUT_MS);
+      });
 
-      expect(fakes.log).toHaveBeenCalledExactlyOnceWith(START_TIMEOUT_TEXT);
-      expect(isHeld()).toBe(false);
-    });
+      it('THEN the key is kept', () => {
+        expect(isHeld()).toBe(true);
+      });
 
-    it('WHEN the start timeout has not passed THEN the key is kept', () => {
-      vi.advanceTimersByTime(START_TIMEOUT_MS - 1);
+      it('THEN nothing is logged', () => {
+        expect(fakes.log).not.toHaveBeenCalled();
+      });
 
-      expect(isHeld()).toBe(true);
-      expect(fakes.log).not.toHaveBeenCalled();
-    });
+      it('THEN its execution is not terminated', () => {
+        expect(fakes.execution.terminate).not.toHaveBeenCalled();
+      });
 
-    it('WHEN its process started before the timeout THEN the key is kept until the task ends', () => {
-      guard.markStarted(BUILD);
-      vi.advanceTimersByTime(START_TIMEOUT_MS);
+      it('THEN running it again says already running and launches nothing', async () => {
+        fakes.choose('build');
 
-      expect(isHeld()).toBe(true);
-      expect(fakes.log).not.toHaveBeenCalled();
+        await runAll(roots, guard, fakes.ports, EVERYWHERE);
 
-      guard.releaseOn(BUILD);
+        expect(fakes.execute).toHaveBeenCalledOnce();
+        expect(fakes.info).toHaveBeenCalledExactlyOnceWith(ALREADY_RUNNING_TEXT);
+      });
 
-      expect(isHeld()).toBe(false);
+      it('THEN its task end releases the key', () => {
+        guard.releaseOn(BUILD);
+
+        expect(isHeld()).toBe(false);
+      });
     });
   });
 
@@ -120,21 +127,6 @@ describe('FEATURE: run all, a start that never happens', () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(isHeld()).toBe(true);
-  });
-
-  it('GIVEN a task VS Code registered that never spawns WHEN the start timeout passes THEN its execution is terminated', async () => {
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
-    vi.advanceTimersByTime(START_TIMEOUT_MS);
-
-    expect(fakes.execution.terminate).toHaveBeenCalledOnce();
-  });
-
-  it('GIVEN a task whose process started WHEN the start timeout passes THEN its execution is not terminated', async () => {
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
-    guard.markStarted(BUILD);
-    vi.advanceTimersByTime(START_TIMEOUT_MS);
-
-    expect(fakes.execution.terminate).not.toHaveBeenCalled();
   });
 
   it('GIVEN a launch that failed WHEN the start timeout passes THEN a run started since is not released', async () => {

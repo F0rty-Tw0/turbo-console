@@ -1,8 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { RunAllGuard } from './run-all.ts';
 import type { RunAllClaim, RunAllDefinition } from '../common/run-all.type.ts';
-import type { Terminable } from '../common/run.type.ts';
 import { runAllKey } from '../utils/run-all-task.util.ts';
 
 const KEY = runAllKey('/ws', 'build', false);
@@ -52,10 +51,8 @@ describe('FEATURE: run all guard', () => {
 
   describe('GIVEN a key was added and claimed', () => {
     let claim: RunAllClaim;
-    let execution: Terminable;
 
     beforeEach(() => {
-      execution = { terminate: vi.fn() };
       guard.tryAdd(KEY);
       claim = guard.claim(KEY);
     });
@@ -82,24 +79,13 @@ describe('FEATURE: run all guard', () => {
       expect(claim.expire()).toBe(true);
     });
 
-    it('WHEN an execution was attached and no process started THEN expiring terminates it', () => {
-      claim.attach(execution);
-      claim.expire();
+    it('WHEN the launch settled before it expires THEN the key stays and the claim says nothing was freed', () => {
+      claim.settle();
 
-      expect(execution.terminate).toHaveBeenCalledOnce();
-    });
+      const isFreed = claim.expire();
 
-    it('WHEN an execution was attached and the process started THEN expiring terminates nothing', () => {
-      claim.attach(execution);
-      guard.markStarted(ENDED);
-      claim.expire();
-
-      expect(execution.terminate).not.toHaveBeenCalled();
-    });
-
-    it('WHEN nothing was attached THEN expiring terminates nothing and still frees the key', () => {
-      expect(claim.expire()).toBe(true);
-      expect(execution.terminate).not.toHaveBeenCalled();
+      expect(isFreed).toBe(false);
+      expect(guard.tryAdd(KEY)).toBe(false);
     });
 
     it('WHEN it is released THEN the key is free', () => {
@@ -127,11 +113,12 @@ describe('FEATURE: run all guard', () => {
         expect(guard.tryAdd(KEY)).toBe(false);
       });
 
-      it('WHEN the old claim expires with an execution attached THEN that execution is not terminated', () => {
-        claim.attach(execution);
-        claim.expire();
+      it('WHEN the old claim settles THEN the newer launch can still expire', () => {
+        const newer = guard.claim(KEY);
 
-        expect(execution.terminate).not.toHaveBeenCalled();
+        claim.settle();
+
+        expect(newer.expire()).toBe(true);
       });
     });
   });
