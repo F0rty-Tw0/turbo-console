@@ -25,6 +25,8 @@ const changesOf = (store: RunStore): RunEntry[] => {
   return changes;
 };
 
+const IS_TASK_ENDED = true;
+
 const terminable = (): Terminable => {
   const execution: Terminable = { terminate: vi.fn() };
 
@@ -148,6 +150,22 @@ describe('FEATURE: run store', () => {
       store.failStart(RUN, 1500);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN its task ended and it fails to start THEN the execution is not terminated', () => {
+      store.attach(RUN, 1000, execution);
+
+      store.failStart(RUN, 1500, undefined, IS_TASK_ENDED);
+
+      expect(execution.terminate).not.toHaveBeenCalled();
+    });
+
+    it('WHEN its task ended and it fails to start THEN the entry still ends as failed to start', () => {
+      store.attach(RUN, 1000, execution);
+
+      const failed = store.failStart(RUN, 1500, undefined, IS_TASK_ENDED);
+
+      expect(failed).toMatchObject({ state: 'failed-to-start', endedAt: 1500 });
     });
 
     it.each<[string, (subject: RunStore) => unknown]>([

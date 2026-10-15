@@ -76,15 +76,21 @@ export class RunStore {
     return this.update(slot, { state, endedAt: at, exitCode: exitCode ?? null, matching });
   }
 
-  /** Ends a run whose process never started at `at` (`stopped` after a Stop), terminating its execution if attached. */
-  public failStart(definition: RunDefinition, at: number, launchedAt?: number): RunEntry | null {
+  /**
+   * Ends a run whose process never started at `at` (`stopped` after a Stop), terminating its execution if attached,
+   * unless `isTaskEnded`: VS Code already ended the task, and terminating it again rejects with "Task to terminate not
+   * found" (`$terminateTask`), which nothing handles (`terminate(): void` drops the promise):
+   * https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadTask.ts
+   * https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/common/extHostTask.ts
+   */
+  public failStart(definition: RunDefinition, at: number, launchedAt?: number, isTaskEnded = false): RunEntry | null {
     const slot = this.running(definition, launchedAt);
 
     if (slot === undefined) return null;
 
     const state = slot.entry.stopRequested ? 'stopped' : 'failed-to-start';
 
-    slot.execution?.terminate();
+    if (!isTaskEnded) slot.execution?.terminate();
 
     return this.update(slot, { state, endedAt: at });
   }

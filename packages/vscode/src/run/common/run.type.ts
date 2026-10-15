@@ -70,7 +70,7 @@ export type RunPorts = {
 export type Runs = {
   readonly tryStart: (request: RunRequest, now: number) => boolean;
   readonly attach: (definition: RunDefinition, launchedAt: number, execution: Terminable) => void;
-  readonly failStart: (definition: RunDefinition, at: number, launchedAt?: number) => RunEntry | null;
+  readonly failStart: (definition: RunDefinition, at: number, launchedAt?: number, isTaskEnded?: boolean) => RunEntry | null;
   readonly setMatch: (definition: RunDefinition, launchedAt: number, match: RunMatch | null) => void;
   readonly get: RunLookup;
   readonly onDidChange: (listener: RunListener) => () => void;
