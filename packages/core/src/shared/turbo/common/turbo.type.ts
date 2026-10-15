@@ -1,3 +1,5 @@
+import type { ExecFileException, ExecFileOptionsWithStringEncoding } from 'node:child_process';
+
 import type { z } from 'zod';
 
 import type { affectedTasksSchema } from './affected-tasks.schema.ts';
@@ -46,3 +48,17 @@ type QueryVariables = {
 
 /** `variables` go to a `-V` JSON file; the rest is passed to `runTurbo`. */
 export type QueryTurboOptions = RunTurboOptions & QueryVariables;
+
+type RssExec = (
+  file: string,
+  args: string[],
+  options: ExecFileOptionsWithStringEncoding,
+  callback: (error: ExecFileException | null, stdout: string) => void
+) => void;
+
+/** What `rssOf` reads the OS through; the defaults are the real `process.platform`, `execFile` and `readFile`. */
+export type RssDeps = {
+  readonly platform: NodeJS.Platform;
+  readonly exec: RssExec;
+  readonly readFile: (path: string, encoding: 'utf8') => Promise<string>;
+};
