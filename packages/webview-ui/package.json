@@ -6,14 +6,21 @@
   "license": "MIT",
   "author": "Artiom Tofan artiomtofancv@gmail.com",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/lib/index.d.ts",
+      "default": "./dist/lib/index.js"
+    }
+  },
   "scripts": {
-    "build": "esbuild src/graph/main.ts --bundle --platform=browser --format=iife --target=es2024 --outfile=dist/graph/main.js && node -e \"require('node:fs').cpSync('src/graph/index.html','dist/graph/index.html')\"",
+    "build": "esbuild src/graph/main.ts --bundle --platform=browser --format=iife --target=es2024 --outfile=dist/graph/main.js && node -e \"require('node:fs').cpSync('src/graph/index.html','dist/graph/index.html')\" && esbuild src/index.ts --bundle --platform=neutral --format=esm --outfile=dist/lib/index.js && node ../../node_modules/typescript7/bin/tsc -p tsconfig.lib.json",
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "e2e": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "catalog:dev"
+    "@playwright/test": "catalog:dev",
+    "@turbo-console/core": "workspace:*"
   }
 }

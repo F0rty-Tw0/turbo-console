@@ -310,6 +310,9 @@ importers:
       '@playwright/test':
         specifier: catalog:dev
         version: 1.64.0
+      '@turbo-console/core':
+        specifier: workspace:*
+        version: link:../core
 
   tools:
     dependencies:
