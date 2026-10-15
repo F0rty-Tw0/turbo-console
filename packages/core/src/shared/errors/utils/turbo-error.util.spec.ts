@@ -47,6 +47,28 @@ describe('FEATURE: turbo errors as TurboException', () => {
       expect(exception).toMatchObject({ kind: 'failed', message: 'turbo query timed out', cause: error });
     });
 
+    it('WHEN given an AbortError caused by a memory limit THEN it is failed, used too much memory, with the stderr tail', () => {
+      const cause = Object.assign(new Error('over'), { name: 'MemoryLimitError', maxRssBytes: 2 ** 31 });
+      const error = abortError(cause, 'allocating\n');
+
+      const exception = toTurboException(error, 'query');
+
+      expect(exception).toMatchObject({
+        kind: 'failed',
+        message: 'turbo query used too much memory (over 2048 MiB)\nallocating',
+        cause: error
+      });
+    });
+
+    it('WHEN the memory-limit cause has no numeric maxRssBytes THEN it falls back to was aborted', () => {
+      const cause = Object.assign(new Error('over'), { name: 'MemoryLimitError', maxRssBytes: '2048' });
+      const error = abortError(cause, '');
+
+      const exception = toTurboException(error, 'query');
+
+      expect(exception.message).toBe('turbo query was aborted');
+    });
+
     it('WHEN given an AbortError without stderr THEN the message has no tail', () => {
       const error = Object.assign(new Error('The operation was aborted'), { name: 'AbortError' });
 

@@ -35,9 +35,31 @@ const attachedStderr = (error: Error): string => {
   return stderr ?? '';
 };
 
+const MIB = 2 ** 20;
+
+/**
+ * The bound of the watchdog's `MemoryLimitError` when it is the abort's cause. Read by name and through `Reflect.get`,
+ * since `errors/` never imports from `shared/turbo/data-access`.
+ */
+const memoryLimitOf = (cause: unknown): number | undefined => {
+  if (!(cause instanceof Error) || cause.name !== 'MemoryLimitError') return undefined;
+
+  const maxRssBytes: unknown = Reflect.get(cause, 'maxRssBytes');
+
+  return typeof maxRssBytes === 'number' && Number.isFinite(maxRssBytes) ? maxRssBytes : undefined;
+};
+
 const fromAbort = (error: Error, command: string): TurboException => {
-  const outcome = abortOutcome(error);
   const stderr = attachedStderr(error);
+  const maxRssBytes = memoryLimitOf(error.cause);
+
+  if (maxRssBytes !== undefined) {
+    const head = `${turboCommand(command)} used too much memory (over ${Math.round(maxRssBytes / MIB)} MiB)`;
+
+    return new TurboException('failed', withStderrTail(head, stderr), { cause: error });
+  }
+
+  const outcome = abortOutcome(error);
   const message = failedMessage(command, outcome, stderr);
 
   return new TurboException('failed', message, { cause: error });
