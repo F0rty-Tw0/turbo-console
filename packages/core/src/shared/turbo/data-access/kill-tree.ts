@@ -19,7 +19,7 @@ export const killTree = async (child: ChildProcess): Promise<void> => {
     return promise;
   }
 
-  const onDone = (error: Error | null): void => {
+  const onDone = (error: unknown): void => {
     if (error !== null) child.kill();
 
     resolve(undefined);
@@ -27,7 +27,12 @@ export const killTree = async (child: ChildProcess): Promise<void> => {
 
   const taskkill = system32Path('taskkill.exe', process.env['SystemRoot']);
 
-  execFile(taskkill, ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, onDone);
+  // execFile throws, instead of calling back, for spawn errors other than EACCES, EAGAIN, EMFILE, ENFILE and ENOENT.
+  try {
+    execFile(taskkill, ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, onDone);
+  } catch (error: unknown) {
+    onDone(error);
+  }
 
   return promise;
 };
