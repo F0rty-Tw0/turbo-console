@@ -71,8 +71,16 @@ export class RunStore {
     this.update({ ...slot, isTerminated: slot.execution !== null }, { stopRequested: true });
   }
 
+  /**
+   * Records the start; a Stop pressed before it terminates the execution again. VS Code drops a terminate sent before it
+   * made the task active (a save prompt or an input can come first), and once the process runs, this one lands.
+   */
   public processStarted(definition: RunDefinition, at: number, launchedAt?: number): void {
-    this.update(this.running(definition, launchedAt), { processStartedAt: at });
+    const slot = this.running(definition, launchedAt);
+
+    this.update(slot, { processStartedAt: at });
+
+    if (slot?.entry.stopRequested === true) slot.execution?.terminate();
   }
 
   /** Ends the run per spec §4.5 step 6; `matching` stays true until `setMatch` when a summary match follows. */

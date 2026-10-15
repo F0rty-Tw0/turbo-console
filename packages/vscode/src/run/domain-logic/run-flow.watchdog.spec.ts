@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runTask, taskEnded } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
-import { START_TIMEOUT_MS } from '../common/run.const.ts';
+import { START_TIMEOUT_MS, START_WAIT_TEXT } from '../common/run.const.ts';
 import type { RunDefinition, RunPorts, Terminable } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
@@ -56,6 +56,17 @@ describe('FEATURE: run flow, a start that never happens', () => {
 
       expect(settled).toBe(false);
     });
+
+    it('WHEN its task ended and a new run started before the first timeout THEN that timeout leaves the new run alone', async () => {
+      const later = fakeRunPorts(execution, { now: () => 6000 });
+
+      taskEnded(store, ports, RUN);
+      vi.advanceTimersByTime(5000);
+      await runTask(store, later, RUN_REQUEST_STUB);
+      vi.advanceTimersByTime(START_TIMEOUT_MS - 5000);
+
+      expect(stateOf(store)).toBe('running');
+    });
   });
 
   describe('GIVEN a launch that resolves 4 s after the run launched', () => {
@@ -75,10 +86,10 @@ describe('FEATURE: run flow, a start that never happens', () => {
       await running;
     });
 
-    it('WHEN 10 s have passed since the launch THEN the run ends as failed to start', () => {
+    it('WHEN 10 s have passed since the launch THEN the run keeps running', () => {
       vi.advanceTimersByTime(START_TIMEOUT_MS - 4000);
 
-      expect(stateOf(store)).toBe('failed-to-start');
+      expect(stateOf(store)).toBe('running');
     });
   });
 
@@ -113,31 +124,34 @@ describe('FEATURE: run flow, a start that never happens', () => {
     });
   });
 
-  describe.each<[string, (store: RunStore, ports: RunPorts) => void]>([
-    ['the start timeout passes', (): void => void vi.advanceTimersByTime(START_TIMEOUT_MS)],
-    [
-      'its task ends',
-      (subject, subjectPorts): void => {
-        taskEnded(subject, subjectPorts, RUN);
-      }
-    ]
-  ])('GIVEN a launched run the user stopped before its process started, WHEN %s', (_name, end) => {
+  describe('GIVEN a launched run the user stopped before its process started', () => {
     beforeEach(async () => {
       await runTask(store, ports, RUN_REQUEST_STUB);
       store.requestStop(RUN);
-      end(store, ports);
     });
 
-    it('THEN the run is stopped', () => {
-      expect(stateOf(store)).toBe('stopped');
+    it('WHEN the start timeout passes THEN the run waits for its task to end', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      expect(stateOf(store)).toBe('running');
     });
 
-    it('THEN the user is not told turbo could not start', () => {
-      expect(ports.notifyFailedToStart).not.toHaveBeenCalled();
-    });
+    describe('WHEN its task ends', () => {
+      beforeEach(() => {
+        taskEnded(store, ports, RUN);
+      });
 
-    it('THEN no reason is logged', () => {
-      expect(ports.log).not.toHaveBeenCalled();
+      it('THEN the run is stopped', () => {
+        expect(stateOf(store)).toBe('stopped');
+      });
+
+      it('THEN the user is not told turbo could not start', () => {
+        expect(ports.notifyFailedToStart).not.toHaveBeenCalled();
+      });
+
+      it('THEN no reason is logged', () => {
+        expect(ports.log).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -146,49 +160,66 @@ describe('FEATURE: run flow, a start that never happens', () => {
       await runTask(store, ports, RUN_REQUEST_STUB);
     });
 
-    describe('WHEN its process never starts before the start timeout', () => {
+    describe('WHEN the start timeout passes before its process starts', () => {
       beforeEach(() => {
         vi.advanceTimersByTime(START_TIMEOUT_MS);
       });
 
-      it('THEN its execution is terminated', () => {
-        expect(execution.terminate).toHaveBeenCalledOnce();
+      it('THEN the run keeps running', () => {
+        expect(stateOf(store)).toBe('running');
       });
 
-      it('THEN the entry ends as failed to start', () => {
-        expect(stateOf(store)).toBe('failed-to-start');
+      it('THEN its execution is not terminated', () => {
+        expect(execution.terminate).not.toHaveBeenCalled();
       });
 
-      it('THEN the user is told turbo could not start', () => {
-        expect(ports.notifyFailedToStart).toHaveBeenCalledOnce();
+      it('THEN the user is not told turbo could not start', () => {
+        expect(ports.notifyFailedToStart).not.toHaveBeenCalled();
       });
 
-      it('THEN the timeout is logged as the reason', () => {
-        expect(ports.log).toHaveBeenCalledExactlyOnceWith('turbo process did not start within 10 s');
+      it('THEN the wait is logged once, as a trace', () => {
+        expect(ports.log).toHaveBeenCalledExactlyOnceWith(START_WAIT_TEXT);
       });
+    });
+
+    it('WHEN its process starts before the start timeout THEN the timeout logs nothing', () => {
+      store.processStarted(RUN, 1200);
+
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      expect(ports.log).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the start timeout passes and its process then starts THEN the run runs with that start', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      store.processStarted(RUN, 13_000);
+
+      expect(store.get(RUN.root, RUN.id)).toMatchObject({ state: 'running', processStartedAt: 13_000 });
+    });
+
+    it('WHEN the start timeout passes and its process then ends with exit code 0 THEN the run passed', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+      store.processStarted(RUN, 13_000);
+
+      store.processEnded(RUN, 0, 30_000);
+
+      expect(stateOf(store)).toBe('passed');
+    });
+
+    it('WHEN the start timeout passes and the user then stops it THEN the running run is terminated by that Stop', () => {
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      store.requestStop(RUN);
+
+      expect(store.get(RUN.root, RUN.id)).toMatchObject({ state: 'running', stopRequested: true });
+      expect(execution.terminate).toHaveBeenCalledOnce();
     });
 
     it('WHEN its process starts before the start timeout THEN the timeout does nothing', () => {
       store.processStarted(RUN, 1200);
 
       vi.advanceTimersByTime(START_TIMEOUT_MS);
-
-      expect(stateOf(store)).toBe('running');
-    });
-
-    it('WHEN the start timeout has not passed THEN the run keeps running', () => {
-      vi.advanceTimersByTime(START_TIMEOUT_MS - 1);
-
-      expect(stateOf(store)).toBe('running');
-    });
-
-    it('WHEN it ended and a new run started before the first timeout THEN that timeout leaves the new run alone', async () => {
-      const later = fakeRunPorts(execution, { now: () => 6000 });
-
-      taskEnded(store, ports, RUN);
-      vi.advanceTimersByTime(5000);
-      await runTask(store, later, RUN_REQUEST_STUB);
-      vi.advanceTimersByTime(START_TIMEOUT_MS - 5000);
 
       expect(stateOf(store)).toBe('running');
     });

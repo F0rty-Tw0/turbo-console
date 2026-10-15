@@ -52,7 +52,8 @@ export const executeTurboTask = async (request: RunRequest, args: string[], laun
 
 /**
  * Spec §4.6.5: `turbo run <task>` over all packages as a task named after its id and flag, in a terminal panel of its
- * own. Resolves with the execution once VS Code has started it; rejects when `launch.root` is no workspace folder.
+ * own. Resolves with the execution once VS Code accepted the task, which can be before it makes the task active (a save
+ * prompt or an input may come first); rejects when `launch.root` is no workspace folder.
  */
 export const executeRunAllTask = async (launch: RunAllLaunch, args: string[]): Promise<Terminable> => {
   const definition = runAllTaskDefinitionOf(launch);

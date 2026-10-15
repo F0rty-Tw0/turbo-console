@@ -129,6 +129,23 @@ describe('FEATURE: run store', () => {
       expect(entryOf(store, RUN).processStartedAt).toBe(1200);
     });
 
+    it('WHEN Stop was pressed before its process started THEN the start terminates the execution again', () => {
+      store.attach(RUN, 1000, execution);
+      store.requestStop(RUN);
+
+      store.processStarted(RUN, 1200);
+
+      expect(execution.terminate).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN its process starts with no Stop THEN the execution keeps running', () => {
+      store.attach(RUN, 1000, execution);
+
+      store.processStarted(RUN, 1200);
+
+      expect(execution.terminate).not.toHaveBeenCalled();
+    });
+
     it.each<[number | undefined, Partial<RunEntry>]>([
       [0, { state: 'passed', exitCode: 0, endedAt: 4000, matching: true }],
       [1, { state: 'failed', exitCode: 1, endedAt: 4000, matching: true }],

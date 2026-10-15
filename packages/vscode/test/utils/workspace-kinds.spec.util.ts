@@ -1,10 +1,11 @@
-import { chmod, cp, mkdir, writeFile } from 'node:fs/promises';
+import { chmod, cp, mkdir, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { PRESETS, fixtureFor } from '@turbo-console/repo-gen';
 
 import { runEach } from './workspace.spec.util.ts';
 import { devTurboPath } from '../../src/shared/test/utils/dev-turbo.spec.util.ts';
+import { LATE_TURBO_COMMAND, LATE_TURBO_DIR } from '../common/launch.const.ts';
 import type { LaunchName, LaunchTurboPath, LaunchWorkspace, PreparedWorkspace, RunScratch } from '../common/launch.type.ts';
 
 const BAD_TURBO_JSON = '{ "tasks": { oops';
@@ -85,6 +86,23 @@ const stubTurbo = async (scratch: RunScratch): Promise<string> => {
   return path;
 };
 
+/**
+ * A POSIX `turboPath` whose folder is the literal `${command:…}` segment, so the extension finds the dev turbo binary
+ * there, while VS Code runs the one in `LATE_TURBO_DIR` once the command answers.
+ */
+const lateTurbo = async (scratch: RunScratch): Promise<string> => {
+  const dir = join(scratch.dir, 'late-turbo');
+  const segment = join(dir, `\${command:${LATE_TURBO_COMMAND}}`);
+  const resolved = join(dir, LATE_TURBO_DIR);
+
+  await mkdir(segment, { recursive: true });
+  await mkdir(resolved, { recursive: true });
+  await symlink(devTurbo, join(segment, 'turbo'));
+  await symlink(devTurbo, join(resolved, 'turbo'));
+
+  return join(segment, 'turbo');
+};
+
 /** Each workspace kind's prep; a new `LaunchWorkspace` member fails to compile until it has one. */
 export const WORKSPACES: Record<LaunchWorkspace, (scratch: RunScratch, name: LaunchName) => Promise<PreparedWorkspace>> = {
   'fixture-l1': async (scratch) => Promise.resolve(folderWorkspace(scratch.fixtureDir)),
@@ -97,5 +115,6 @@ export const WORKSPACES: Record<LaunchWorkspace, (scratch: RunScratch, name: Lau
 export const TURBO_PATHS: Record<LaunchTurboPath, (scratch: RunScratch) => Promise<string | null>> = {
   dev: async () => Promise.resolve(devTurbo),
   stub: stubTurbo,
+  late: lateTurbo,
   unset: async () => Promise.resolve(null)
 };

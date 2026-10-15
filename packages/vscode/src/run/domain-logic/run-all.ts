@@ -9,12 +9,10 @@ import type { Terminable } from '../common/run.type.ts';
 import { rootItems, taskNameItems } from '../utils/picker-items.util.ts';
 import { runAllKey, runAllKeyOf } from '../utils/run-all-task.util.ts';
 
-/** One run all in flight: whether its process has started yet, and the execution VS Code gave it once known. */
+/** One run all in flight: whether VS Code holds its task yet, by an execution handed over or a process started. */
 type Slot = {
-  /* eslint-disable local/readonly-type-properties -- set in place as the launch progresses, so a claim sees it */
-  started: boolean;
-  execution: Terminable | null;
-  /* eslint-enable local/readonly-type-properties */
+  // eslint-disable-next-line local/readonly-type-properties -- set in place as the launch progresses, so a claim sees it
+  settled: boolean;
 };
 
 /** The run alls in flight, by key. Not the `RunStore`: they have no tree row and no result. */
@@ -25,7 +23,7 @@ export class RunAllGuard {
   public tryAdd(key: string): boolean {
     const isTaken = this.slots.has(key);
 
-    if (!isTaken) this.slots.set(key, { started: false, execution: null });
+    if (!isTaken) this.slots.set(key, { settled: false });
 
     return !isTaken;
   }
@@ -34,7 +32,7 @@ export class RunAllGuard {
   public markStarted(definition: RunAllDefinition): void {
     const slot = this.slots.get(runAllKeyOf(definition));
 
-    if (slot !== undefined) slot.started = true;
+    if (slot !== undefined) slot.settled = true;
   }
 
   /**
@@ -42,12 +40,10 @@ export class RunAllGuard {
    * key nobody added gives a claim that is never current.
    */
   public claim(key: string): RunAllClaim {
-    const slot: Slot = this.slots.get(key) ?? { started: false, execution: null };
+    const slot: Slot = this.slots.get(key) ?? { settled: false };
     const holds = (): boolean => this.slots.get(key) === slot;
-    const attach = (execution: Terminable): void => {
-      const isHeld = holds();
-
-      if (isHeld) slot.execution = execution;
+    const settle = (): void => {
+      slot.settled = true;
     };
     const release = (): void => {
       const isHeld = holds();
@@ -56,16 +52,13 @@ export class RunAllGuard {
     };
     const expire = (): boolean => {
       const isHeld = holds();
-      const isWaiting = isHeld && !slot.started;
+      const isWaiting = isHeld && !slot.settled;
 
-      if (!isWaiting) return false;
+      if (isWaiting) this.slots.delete(key);
 
-      this.slots.delete(key);
-      slot.execution?.terminate();
-
-      return true;
+      return isWaiting;
     };
-    const claim: RunAllClaim = { attach, expire, release };
+    const claim: RunAllClaim = { settle, expire, release };
 
     return claim;
   }
@@ -140,7 +133,8 @@ const launchAll = async (guard: RunAllGuard, ports: RunAllPorts, launch: RunAllL
     return;
   }
 
-  // Armed before the launch, so a launch that never settles or a task that never starts cannot hold the key for good.
+  // Armed before the launch, so a launch that never settles cannot hold the key for good. A settled one is left to its
+  // task end: VS Code may start the task only after a save prompt or an input, and drops a terminate sent before then.
   ports.after(START_TIMEOUT_MS, () => {
     const isExpired = claim.expire();
 
@@ -150,7 +144,7 @@ const launchAll = async (guard: RunAllGuard, ports: RunAllPorts, launch: RunAllL
   const execution = await start(ports, launch);
 
   if (execution !== null) {
-    claim.attach(execution);
+    claim.settle();
 
     return;
   }
