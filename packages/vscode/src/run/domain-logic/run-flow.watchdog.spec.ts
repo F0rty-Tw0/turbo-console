@@ -115,7 +115,12 @@ describe('FEATURE: run flow, a start that never happens', () => {
 
   describe.each<[string, (store: RunStore, ports: RunPorts) => void]>([
     ['the start timeout passes', (): void => void vi.advanceTimersByTime(START_TIMEOUT_MS)],
-    ['its task ends', (subject, subjectPorts): void => { taskEnded(subject, subjectPorts, RUN); }]
+    [
+      'its task ends',
+      (subject, subjectPorts): void => {
+        taskEnded(subject, subjectPorts, RUN);
+      }
+    ]
   ])('GIVEN a launched run the user stopped before its process started, WHEN %s', (_name, end) => {
     beforeEach(async () => {
       await runTask(store, ports, RUN_REQUEST_STUB);

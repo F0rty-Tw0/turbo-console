@@ -12,7 +12,8 @@ const parseError = (text: string): unknown => {
   }
 };
 
-const abortError = (cause: unknown, stderr: string): Error => Object.assign(new Error('turbo aborted'), { name: 'AbortError', cause, stderr });
+const abortError = (cause: unknown, stderr: string): Error =>
+  Object.assign(new Error('turbo aborted'), { name: 'AbortError', cause, stderr });
 
 describe('FEATURE: turbo errors as TurboException', () => {
   describe('GIVEN toTurboException', () => {
@@ -65,7 +66,11 @@ describe('FEATURE: turbo errors as TurboException', () => {
 
       const exception = toTurboException(error, 'query');
 
-      expect(exception).toMatchObject({ kind: 'invalid-output', message: 'turbo query output failed its schema at data.packageGraph', cause: error });
+      expect(exception).toMatchObject({
+        kind: 'invalid-output',
+        message: 'turbo query output failed its schema at data.packageGraph',
+        cause: error
+      });
     });
 
     it.each(['ENOENT', 'EACCES', 'ENOTDIR'])('WHEN the spawn failed with %s THEN it is not-found, naming the binary path', (code) => {
@@ -83,7 +88,11 @@ describe('FEATURE: turbo errors as TurboException', () => {
     });
 
     it('WHEN the spawn failed with another code THEN it is failed with that code, never io', () => {
-      const error = Object.assign(new Error('spawn /bin/turbo EPERM'), { code: 'EPERM', syscall: 'spawn /bin/turbo', path: '/bin/turbo' });
+      const error = Object.assign(new Error('spawn /bin/turbo EPERM'), {
+        code: 'EPERM',
+        syscall: 'spawn /bin/turbo',
+        path: '/bin/turbo'
+      });
 
       const exception = toTurboException(error, 'query');
 
@@ -105,7 +114,11 @@ describe('FEATURE: turbo errors as TurboException', () => {
     });
 
     it('WHEN turbo was killed by a signal after writing stderr THEN the message adds the plain stderr tail', () => {
-      const error = Object.assign(new Error('Command failed: turbo'), { code: null, signal: 'SIGKILL', stderr: 'FATAL: \u001B[31mgone\u001B[39m\n' });
+      const error = Object.assign(new Error('Command failed: turbo'), {
+        code: null,
+        signal: 'SIGKILL',
+        stderr: 'FATAL: \u001B[31mgone\u001B[39m\n'
+      });
 
       expect(toTurboException(error, 'query').message).toBe('turbo query failed: SIGKILL\nFATAL: gone');
     });
@@ -113,17 +126,27 @@ describe('FEATURE: turbo errors as TurboException', () => {
     it('WHEN the output passed maxBuffer THEN it is failed saying too much output was printed', () => {
       const error = Object.assign(new RangeError('stdout maxBuffer length exceeded'), { code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' });
 
-      expect(toTurboException(error, 'query')).toMatchObject({ kind: 'failed', message: 'turbo query printed too much output (over the output cap)' });
+      expect(toTurboException(error, 'query')).toMatchObject({
+        kind: 'failed',
+        message: 'turbo query printed too much output (over the output cap)'
+      });
     });
 
     it('WHEN the output passed maxBuffer after turbo wrote stderr THEN the message adds the stderr tail', () => {
-      const error = Object.assign(new RangeError('stdout maxBuffer length exceeded'), { code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER', stderr: 'WARN: slow\n' });
+      const error = Object.assign(new RangeError('stdout maxBuffer length exceeded'), {
+        code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER',
+        stderr: 'WARN: slow\n'
+      });
 
       expect(toTurboException(error, 'query').message).toBe('turbo query printed too much output (over the output cap)\nWARN: slow');
     });
 
     it('WHEN a file read failed with a path THEN it is io with the path and code', () => {
-      const error = Object.assign(new Error('EACCES: permission denied'), { code: 'EACCES', syscall: 'open', path: '/repo/turbo.json' });
+      const error = Object.assign(new Error('EACCES: permission denied'), {
+        code: 'EACCES',
+        syscall: 'open',
+        path: '/repo/turbo.json'
+      });
 
       const exception = toTurboException(error, 'query');
 

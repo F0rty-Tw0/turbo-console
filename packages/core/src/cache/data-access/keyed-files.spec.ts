@@ -231,7 +231,9 @@ describe('FEATURE: keyed file hashing', () => {
       const files = await hashKeyedFiles(root, ['grown-far.json']);
       const grown = await stat(join(root, 'grown-far.json'));
 
-      expect(files).toStrictEqual([{ path: 'grown-far.json', digest: `unreadable:${grown.size}:${grown.mtimeMs}`, mtimeMs: grown.mtimeMs }]);
+      expect(files).toStrictEqual([
+        { path: 'grown-far.json', digest: `unreadable:${grown.size}:${grown.mtimeMs}`, mtimeMs: grown.mtimeMs }
+      ]);
     });
   });
 

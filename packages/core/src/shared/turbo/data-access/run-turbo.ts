@@ -74,7 +74,12 @@ const stopChild = async (child: ChildProcess, graceMs: number): Promise<void> =>
 };
 
 /** M0's mapping: an exit code, non-zero included, resolves; none (spawn failure, a signal, maxBuffer) rejects, with `stderr`. */
-const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileException | null, stdout: string, stderr: string): void => {
+const settle = (
+  resolvers: PromiseWithResolvers<TurboResult>,
+  error: ExecFileException | null,
+  stdout: string,
+  stderr: string
+): void => {
   if (error !== null) Object.assign(error, { stderr });
   const exitCode = error === null ? 0 : error.code;
 
@@ -101,7 +106,12 @@ const settle = (resolvers: PromiseWithResolvers<TurboResult>, error: ExecFileExc
  * that reaches turbo's pid only, so a task ignoring SIGTERM can outlive it (follow-up). Known limit: after turbo exits, a leftover
  * process holding its stdout delays the result past any timeout: the abort is detached at turbo's exit and turbo's pid is gone.
  */
-export const runTurbo = async (binaryPath: string, args: string[], cwd: string, options: RunTurboOptions = {}): Promise<TurboResult> => {
+export const runTurbo = async (
+  binaryPath: string,
+  args: string[],
+  cwd: string,
+  options: RunTurboOptions = {}
+): Promise<TurboResult> => {
   const signal = abortSignalOf(options);
 
   await checkCwd(cwd, signal);

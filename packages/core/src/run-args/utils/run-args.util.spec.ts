@@ -33,7 +33,9 @@ describe('FEATURE: turbo run arguments', () => {
     });
 
     it('WHEN the task name holds a # THEN it throws invalid-argument', () => {
-      expect(() => turboRunArgs({ ...TASK_NODE, name: 'b#build' }, 'p#b')).toThrow(expect.objectContaining({ kind: 'invalid-argument' }));
+      expect(() => turboRunArgs({ ...TASK_NODE, name: 'b#build' }, 'p#b')).toThrow(
+        expect.objectContaining({ kind: 'invalid-argument' })
+      );
     });
 
     it('WHEN the package name is a glob THEN it throws invalid-argument', () => {

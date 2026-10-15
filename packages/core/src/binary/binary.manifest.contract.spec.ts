@@ -123,17 +123,20 @@ describe('FEATURE: turbo package.json reading', () => {
     });
 
     // procfs files report size 0 and are read to their end.
-    it.skipIf(process.platform !== 'linux')('WHEN it links to /proc/self/environ THEN it rejects invalid-output with no file text attached', async () => {
-      const root = await installedWorkspace('environ');
+    it.skipIf(process.platform !== 'linux')(
+      'WHEN it links to /proc/self/environ THEN it rejects invalid-output with no file text attached',
+      async () => {
+        const root = await installedWorkspace('environ');
 
-      await mkdir(dirname(manifestPathOf(root)), { recursive: true });
-      await symlink('/proc/self/environ', manifestPathOf(root));
+        await mkdir(dirname(manifestPathOf(root)), { recursive: true });
+        await symlink('/proc/self/environ', manifestPathOf(root));
 
-      const error = await rejectionOf(root);
+        const error = await rejectionOf(root);
 
-      expect(error).toMatchObject({ kind: 'invalid-output', message: invalidMessage(root) });
-      expect(error).not.toHaveProperty('cause');
-    });
+        expect(error).toMatchObject({ kind: 'invalid-output', message: invalidMessage(root) });
+        expect(error).not.toHaveProperty('cause');
+      }
+    );
   });
 
   describe('GIVEN closing the manifest fails', () => {

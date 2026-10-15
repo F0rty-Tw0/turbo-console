@@ -75,12 +75,15 @@ describe('FEATURE: workspace turbo lookup, root only', () => {
   });
 
   describe('GIVEN a root that is not absolute', () => {
-    it.each(['', 'packages/core'])('WHEN %j is resolved THEN it rejects invalid-argument instead of using the process cwd', async (root) => {
-      const error = await rejectionOf(root);
+    it.each(['', 'packages/core'])(
+      'WHEN %j is resolved THEN it rejects invalid-argument instead of using the process cwd',
+      async (root) => {
+        const error = await rejectionOf(root);
 
-      expect(error).toBeInstanceOf(TurboException);
-      expect(error).toMatchObject({ kind: 'invalid-argument', message: `turbo root must be absolute: ${root}` });
-    });
+        expect(error).toBeInstanceOf(TurboException);
+        expect(error).toMatchObject({ kind: 'invalid-argument', message: `turbo root must be absolute: ${root}` });
+      }
+    );
 
     it('WHEN the overridePath is relative too THEN it rejects naming the root, checked first', async () => {
       const options = { trusted: true, overridePath: 'bin/turbo' } as const;
@@ -112,25 +115,28 @@ describe('FEATURE: workspace turbo lookup, root only', () => {
       expect(resolved).toMatchObject({ root, path: binary, version: '2.11.7', source: 'workspace' });
     });
 
-    it.skipIf(!CAN_SYMLINK)('WHEN turbo and its platform package are pnpm store symlinks THEN the real binary is resolved', async () => {
-      const root = await workspaceAt(join(tempDir, 'pnpm'));
-      const store = join(root, 'node_modules', '.pnpm');
-      const turboReal = join(store, 'turbo@2.11.7', 'node_modules', 'turbo');
-      const storeName = SCOPED_PACKAGE.replace('/', '+');
-      const platformReal = join(store, `${storeName}@2.11.7`, 'node_modules', SCOPED_PACKAGE);
-      const binary = join(platformReal, 'bin', basename(SCOPED_BINARY));
-      const platformLink = join(store, 'turbo@2.11.7', 'node_modules', SCOPED_PACKAGE);
+    it.skipIf(!CAN_SYMLINK)(
+      'WHEN turbo and its platform package are pnpm store symlinks THEN the real binary is resolved',
+      async () => {
+        const root = await workspaceAt(join(tempDir, 'pnpm'));
+        const store = join(root, 'node_modules', '.pnpm');
+        const turboReal = join(store, 'turbo@2.11.7', 'node_modules', 'turbo');
+        const storeName = SCOPED_PACKAGE.replace('/', '+');
+        const platformReal = join(store, `${storeName}@2.11.7`, 'node_modules', SCOPED_PACKAGE);
+        const binary = join(platformReal, 'bin', basename(SCOPED_BINARY));
+        const platformLink = join(store, 'turbo@2.11.7', 'node_modules', SCOPED_PACKAGE);
 
-      await writeFileIn(join(turboReal, 'package.json'), TURBO_MANIFEST);
-      await writeFileIn(binary, '');
-      await symlink(turboReal, join(root, 'node_modules', 'turbo'));
-      await mkdir(dirname(platformLink), { recursive: true });
-      await symlink(platformReal, platformLink);
+        await writeFileIn(join(turboReal, 'package.json'), TURBO_MANIFEST);
+        await writeFileIn(binary, '');
+        await symlink(turboReal, join(root, 'node_modules', 'turbo'));
+        await mkdir(dirname(platformLink), { recursive: true });
+        await symlink(platformReal, platformLink);
 
-      const resolved = await resolveTurbo(root, TRUSTED);
+        const resolved = await resolveTurbo(root, TRUSTED);
 
-      expect(resolved).toMatchObject({ root, path: binary, source: 'workspace' });
-    });
+        expect(resolved).toMatchObject({ root, path: binary, source: 'workspace' });
+      }
+    );
 
     it('WHEN the scoped binary path is a directory and the legacy one a file THEN the legacy binary is resolved', async () => {
       const root = await workspaceAt(join(tempDir, 'legacy'), TURBO_MANIFEST);
@@ -176,35 +182,41 @@ describe('FEATURE: workspace turbo lookup, root only', () => {
       expect(error).toMatchObject({ kind: 'not-found', message: noBinaryMessage(root) });
     });
 
-    it.skipIf(!CAN_SYMLINK)('WHEN only a parent folder links the platform package into the root THEN it rejects not-found', async () => {
-      const root = await workspaceAt(join(tempDir, 'linked-parent', 'repo'), TURBO_MANIFEST);
-      const stashed = join(root, 'node_modules', '.stash', 'platform');
-      const parentLink = join(tempDir, 'linked-parent', 'node_modules', SCOPED_PACKAGE);
+    it.skipIf(!CAN_SYMLINK)(
+      'WHEN only a parent folder links the platform package into the root THEN it rejects not-found',
+      async () => {
+        const root = await workspaceAt(join(tempDir, 'linked-parent', 'repo'), TURBO_MANIFEST);
+        const stashed = join(root, 'node_modules', '.stash', 'platform');
+        const parentLink = join(tempDir, 'linked-parent', 'node_modules', SCOPED_PACKAGE);
 
-      await writeFileIn(join(stashed, 'bin', basename(SCOPED_BINARY)), '');
-      await mkdir(dirname(parentLink), { recursive: true });
-      await symlink(stashed, parentLink);
+        await writeFileIn(join(stashed, 'bin', basename(SCOPED_BINARY)), '');
+        await mkdir(dirname(parentLink), { recursive: true });
+        await symlink(stashed, parentLink);
 
-      const error = await rejectionOf(root);
+        const error = await rejectionOf(root);
 
-      expect(error).toBeInstanceOf(TurboException);
-      expect(error).toMatchObject({ kind: 'not-found' });
-    });
+        expect(error).toBeInstanceOf(TurboException);
+        expect(error).toMatchObject({ kind: 'not-found' });
+      }
+    );
 
-    it.skipIf(!CAN_SYMLINK)('WHEN the root platform package links to a folder outside the root THEN it rejects not-found', async () => {
-      const root = await workspaceAt(join(tempDir, 'linked-out', 'repo'), TURBO_MANIFEST);
-      const outside = join(tempDir, 'linked-out', 'elsewhere');
-      const rootLink = join(root, 'node_modules', SCOPED_PACKAGE);
+    it.skipIf(!CAN_SYMLINK)(
+      'WHEN the root platform package links to a folder outside the root THEN it rejects not-found',
+      async () => {
+        const root = await workspaceAt(join(tempDir, 'linked-out', 'repo'), TURBO_MANIFEST);
+        const outside = join(tempDir, 'linked-out', 'elsewhere');
+        const rootLink = join(root, 'node_modules', SCOPED_PACKAGE);
 
-      await writeFileIn(join(outside, 'bin', basename(SCOPED_BINARY)), '');
-      await mkdir(dirname(rootLink), { recursive: true });
-      await symlink(outside, rootLink);
+        await writeFileIn(join(outside, 'bin', basename(SCOPED_BINARY)), '');
+        await mkdir(dirname(rootLink), { recursive: true });
+        await symlink(outside, rootLink);
 
-      const error = await rejectionOf(root);
+        const error = await rejectionOf(root);
 
-      expect(error).toBeInstanceOf(TurboException);
-      expect(error).toMatchObject({ kind: 'not-found' });
-    });
+        expect(error).toBeInstanceOf(TurboException);
+        expect(error).toMatchObject({ kind: 'not-found' });
+      }
+    );
 
     describe('GIVEN NODE_PATH points at a folder holding the platform package', () => {
       const previous = process.env[NODE_PATH];

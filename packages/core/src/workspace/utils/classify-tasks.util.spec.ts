@@ -100,7 +100,15 @@ describe('FEATURE: Atomizer task classification', () => {
   describe('GIVEN a tagged package', () => {
     it('WHEN classified THEN it keeps its name, path and tags', () => {
       const pkg = graphPackage('a', 'packages/a', ['team:web'], [BUILD]);
-      const build: ClassifiedTask = { id: 'a#build', name: 'build', command: COMMAND, tags: [], rawDependencies: [], kind: 'task', atom: null };
+      const build: ClassifiedTask = {
+        id: 'a#build',
+        name: 'build',
+        command: COMMAND,
+        tags: [],
+        rawDependencies: [],
+        kind: 'task',
+        atom: null
+      };
 
       const result = classifyPackages([pkg]);
 
@@ -108,16 +116,19 @@ describe('FEATURE: Atomizer task classification', () => {
     });
   });
 
-  describe.each(['atomizer:live', 'atomizer:definitions', 'atomizer:', 'boundary:frontend'])('GIVEN a task with a command tagged only %s', (tag) => {
-    it('WHEN classified THEN the tag names no group: it is a plain task with no warning', () => {
-      const task = graphTask('a#check', COMMAND, [tag], []);
+  describe.each(['atomizer:live', 'atomizer:definitions', 'atomizer:', 'boundary:frontend'])(
+    'GIVEN a task with a command tagged only %s',
+    (tag) => {
+      it('WHEN classified THEN the tag names no group: it is a plain task with no warning', () => {
+        const task = graphTask('a#check', COMMAND, [tag], []);
 
-      const result = classifyTasks([task]);
+        const result = classifyTasks([task]);
 
-      expect(rowsOf(result)).toStrictEqual([['a#check', 'task', null]]);
-      expect(result.warnings).toStrictEqual([]);
-    });
-  });
+        expect(rowsOf(result)).toStrictEqual([['a#check', 'task', null]]);
+        expect(result.warnings).toStrictEqual([]);
+      });
+    }
+  );
 
   describe('GIVEN a file task tagged with the group and a bare atomizer:', () => {
     it('WHEN classified THEN it is an atom-file of that group with no warning', () => {

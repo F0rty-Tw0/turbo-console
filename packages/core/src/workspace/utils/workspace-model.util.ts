@@ -134,7 +134,12 @@ export const buildWorkspaceModel = (
  * `model`, as built from `graph` and `configs`, with `warning` (the `cache:` one) added under the same cut, sort and
  * cap. Its own list may already be capped, so the warnings are listed again from `graph` and `configs`.
  */
-export const withWarning = (model: WorkspaceModel, graph: PackageGraph, configs: TurboConfigFile[], warning: string): WorkspaceModel => {
+export const withWarning = (
+  model: WorkspaceModel,
+  graph: PackageGraph,
+  configs: TurboConfigFile[],
+  warning: string
+): WorkspaceModel => {
   const classified = classifyPackages(graph.data.packageGraph.nodes.items);
   const listed = listedWarnings(classified.warnings, configs);
   const warnings = shownWarnings([...listed, warning]);

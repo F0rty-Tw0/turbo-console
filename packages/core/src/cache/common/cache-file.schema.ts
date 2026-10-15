@@ -53,7 +53,12 @@ export const workspaceModelSchema = workspaceModelObject.readonly();
 
 const formatVersionSchema = z.literal(CACHE_FORMAT_VERSION);
 
-const cacheFileObject = z.object({ formatVersion: formatVersionSchema, key: nullableString, keyedPaths: stringList, model: workspaceModelSchema });
+const cacheFileObject = z.object({
+  formatVersion: formatVersionSchema,
+  key: nullableString,
+  keyedPaths: stringList,
+  model: workspaceModelSchema
+});
 
 /**
  * `<cacheDir>/workspace-<hash>.json`. `keyedPaths` are hashed again on every read, so `readCacheFile` also refuses one

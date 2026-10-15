@@ -105,9 +105,7 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       const abandoned = new TurboException('failed', 'load still running 15 s past its 60 s deadline; abandoned');
 
       expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: abandoned });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith(
-        'turbo failed: load still running 15 s past its 60 s deadline; abandoned'
-      );
+      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo failed: load still running 15 s past its 60 s deadline; abandoned');
       expect(release).toHaveBeenCalledOnce();
     });
 

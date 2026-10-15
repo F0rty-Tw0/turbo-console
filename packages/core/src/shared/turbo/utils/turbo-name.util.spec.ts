@@ -52,25 +52,34 @@ describe('FEATURE: turbo name check', () => {
       ['-\u202Ex', '"-\\u{202e}x"'],
       ['-\u009B31m', '"-\\u{9b}31m"'],
       ['-\u{E0041}x', '"-\\u{e0041}x"']
-    ])('WHEN %j, holding a bidi override, a C1 CSI sequence or a tag character, is rejected THEN the message echoes %s', (name, echoed) => {
-      const expected = { message: `invalid turbo name ${echoed}: starts with -` };
+    ])(
+      'WHEN %j, holding a bidi override, a C1 CSI sequence or a tag character, is rejected THEN the message echoes %s',
+      (name, echoed) => {
+        const expected = { message: `invalid turbo name ${echoed}: starts with -` };
 
-      expect(() => assertTurboName(name)).toThrow(expect.objectContaining(expected));
-    });
+        expect(() => assertTurboName(name)).toThrow(expect.objectContaining(expected));
+      }
+    );
   });
 
   describe('GIVEN a workspace-derived name turbo reads as a name', () => {
-    it.each(['my task', ' x', 'build[1]', 'täsk-ü', '@scope/pkg#e2e--tests/a b.spec.ts', 'a-'])('WHEN %j is checked THEN it does not throw', (name) => {
-      expect(() => assertTurboName(name)).not.toThrow();
-    });
+    it.each(['my task', ' x', 'build[1]', 'täsk-ü', '@scope/pkg#e2e--tests/a b.spec.ts', 'a-'])(
+      'WHEN %j is checked THEN it does not throw',
+      (name) => {
+        expect(() => assertTurboName(name)).not.toThrow();
+      }
+    );
   });
 
   describe('GIVEN a package name turbo could read as filter syntax', () => {
-    it.each(FILTER_REJECTED)('WHEN %j is checked as a filter THEN it throws invalid-argument echoing %s: %s', (name, echoed, reason) => {
-      const expected = { kind: 'invalid-argument', message: `invalid turbo name ${echoed}: ${reason}` };
+    it.each(FILTER_REJECTED)(
+      'WHEN %j is checked as a filter THEN it throws invalid-argument echoing %s: %s',
+      (name, echoed, reason) => {
+        const expected = { kind: 'invalid-argument', message: `invalid turbo name ${echoed}: ${reason}` };
 
-      expect(() => assertFilterName(name)).toThrow(expect.objectContaining(expected));
-    });
+        expect(() => assertFilterName(name)).toThrow(expect.objectContaining(expected));
+      }
+    );
   });
 
   describe('GIVEN a package name turbo reads as a plain name', () => {

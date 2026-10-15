@@ -27,7 +27,9 @@ describe('FEATURE: caller path checks', () => {
       const check = (): string => absolutePath('node_modules/.bin/turbo', OVERRIDE, posix);
 
       expect(check).toThrow(TurboException);
-      expect(check).toThrow(expect.objectContaining({ kind: 'invalid-argument', message: 'turbo overridePath must be absolute: node_modules/.bin/turbo' }));
+      expect(check).toThrow(
+        expect.objectContaining({ kind: 'invalid-argument', message: 'turbo overridePath must be absolute: node_modules/.bin/turbo' })
+      );
     });
 
     it('WHEN it is absolute with a parent step THEN it is returned normalized', () => {
@@ -56,11 +58,14 @@ describe('FEATURE: caller path checks', () => {
       expect(absolutePath(path, OVERRIDE, win32)).toBe(path);
     });
 
-    it.each(['\\tools\\turbo.exe', '/tools/turbo.exe', 'C:tools\\turbo.exe'])('WHEN it is %s, with no drive THEN it throws invalid-argument', (path) => {
-      const check = (): string => absolutePath(path, OVERRIDE, win32);
+    it.each(['\\tools\\turbo.exe', '/tools/turbo.exe', 'C:tools\\turbo.exe'])(
+      'WHEN it is %s, with no drive THEN it throws invalid-argument',
+      (path) => {
+        const check = (): string => absolutePath(path, OVERRIDE, win32);
 
-      expect(check).toThrow(expect.objectContaining({ kind: 'invalid-argument' }));
-    });
+        expect(check).toThrow(expect.objectContaining({ kind: 'invalid-argument' }));
+      }
+    );
   });
 
   describe('GIVEN a workspace root', () => {
@@ -71,11 +76,14 @@ describe('FEATURE: caller path checks', () => {
       expect(check).toThrow(expect.objectContaining({ kind: 'invalid-argument', message: `turbo root must be absolute: ${root}` }));
     });
 
-    it.each(['', 'repo', '\\repo', 'C:repo'])('WHEN the Windows root is %j THEN it throws invalid-argument naming the root', (root) => {
-      const check = (): string => absolutePath(root, ROOT, win32);
+    it.each(['', 'repo', '\\repo', 'C:repo'])(
+      'WHEN the Windows root is %j THEN it throws invalid-argument naming the root',
+      (root) => {
+        const check = (): string => absolutePath(root, ROOT, win32);
 
-      expect(check).toThrow(expect.objectContaining({ kind: 'invalid-argument', message: `turbo root must be absolute: ${root}` }));
-    });
+        expect(check).toThrow(expect.objectContaining({ kind: 'invalid-argument', message: `turbo root must be absolute: ${root}` }));
+      }
+    );
 
     it('WHEN the POSIX root ends in a separator THEN it is returned without it', () => {
       expect(absolutePath('/work/repo/', ROOT, posix)).toBe('/work/repo');
@@ -93,7 +101,9 @@ describe('FEATURE: caller path checks', () => {
       };
 
       expect(check).toThrow(TurboException);
-      expect(check).toThrow(expect.objectContaining({ kind: 'invalid-argument', message: 'turbo root must not hold a NUL byte: /repox' }));
+      expect(check).toThrow(
+        expect.objectContaining({ kind: 'invalid-argument', message: 'turbo root must not hold a NUL byte: /repox' })
+      );
     });
 
     it('WHEN the value has no NUL byte THEN it does not throw', () => {
@@ -107,7 +117,9 @@ describe('FEATURE: caller path checks', () => {
     it('WHEN an override path holds a NUL byte THEN absolutePath throws invalid-argument', () => {
       const check = (): string => absolutePath('/opt/turbo\0', OVERRIDE, posix);
 
-      expect(check).toThrow(expect.objectContaining({ kind: 'invalid-argument', message: 'turbo overridePath must not hold a NUL byte: /opt/turbo' }));
+      expect(check).toThrow(
+        expect.objectContaining({ kind: 'invalid-argument', message: 'turbo overridePath must not hold a NUL byte: /opt/turbo' })
+      );
     });
   });
 });
