@@ -2,6 +2,7 @@ import { LoadCoordinator } from './load-coordinator.ts';
 import { loadRoot } from './load-root.ts';
 import { LoadSlots } from './load-slots.ts';
 import { RootStore } from './root-store.ts';
+import { VisiblePanels } from './visible-panels.ts';
 import { LOG_LINE_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
@@ -24,6 +25,7 @@ export class RootsSession implements Session {
   private readonly ports: SessionPorts;
   private readonly slots = new LoadSlots(MAX_CONCURRENT_LOADS);
   private readonly debouncer: Debouncer;
+  private readonly panels = new VisiblePanels();
   private isVisible = false;
   private foldersGeneration = 0;
 
@@ -68,6 +70,8 @@ export class RootsSession implements Session {
 
       if (!isListed) this.loads.set(root, []);
     }
+
+    this.panels.keepOnly(kept);
   }
 
   /** A view turning visible shows every root: a never-loaded root starts its cache-first load, a stale one a full load. */
@@ -77,6 +81,20 @@ export class RootsSession implements Session {
     if (!visible) return;
 
     for (const entry of this.store.all()) entry.coordinator.show();
+  }
+
+  /**
+   * A visible package-details panel counts as a visible view for its root: a hidden tree no longer stops its loads. A
+   * folder that is not a root is ignored, so it never counts as visible if it becomes one later.
+   */
+  public setPanelVisible(root: string, panelId: string, visible: boolean): void {
+    const entry = this.store.get(root);
+
+    if (visible && entry === undefined) return;
+
+    this.panels.set(root, panelId, visible);
+
+    if (visible) entry?.coordinator.show();
   }
 
   public request(reason: ChangeReason): void {
@@ -113,7 +131,7 @@ export class RootsSession implements Session {
     const deps = this.ports.depsFor(root, acquire);
     const ports: CoordinatorPorts = {
       run: async (mode, signal, publish) => loadRoot(mode, deps, signal, publish),
-      isVisible: () => this.isVisible,
+      isVisible: () => this.isVisible || this.panels.has(root),
       apply: (result) => {
         this.apply(root, result, deps);
       },
