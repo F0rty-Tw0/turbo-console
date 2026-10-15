@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runTask, taskEnded } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
-import { START_TIMEOUT_MS } from '../common/run.const.ts';
+import { START_TIMEOUT_MS, START_WAIT_TEXT } from '../common/run.const.ts';
 import type { RunDefinition, RunPorts, Terminable } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
@@ -177,9 +177,17 @@ describe('FEATURE: run flow, a start that never happens', () => {
         expect(ports.notifyFailedToStart).not.toHaveBeenCalled();
       });
 
-      it('THEN nothing is logged', () => {
-        expect(ports.log).not.toHaveBeenCalled();
+      it('THEN the wait is logged once, as a trace', () => {
+        expect(ports.log).toHaveBeenCalledExactlyOnceWith(START_WAIT_TEXT);
       });
+    });
+
+    it('WHEN its process starts before the start timeout THEN the timeout logs nothing', () => {
+      store.processStarted(RUN, 1200);
+
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
+
+      expect(ports.log).not.toHaveBeenCalled();
     });
 
     it('WHEN the start timeout passes and its process then starts THEN the run runs with that start', () => {
@@ -199,11 +207,12 @@ describe('FEATURE: run flow, a start that never happens', () => {
       expect(stateOf(store)).toBe('passed');
     });
 
-    it('WHEN the start timeout passes and the user then stops it THEN its execution is terminated', () => {
+    it('WHEN the start timeout passes and the user then stops it THEN the running run is terminated by that Stop', () => {
       vi.advanceTimersByTime(START_TIMEOUT_MS);
 
       store.requestStop(RUN);
 
+      expect(store.get(RUN.root, RUN.id)).toMatchObject({ state: 'running', stopRequested: true });
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
 

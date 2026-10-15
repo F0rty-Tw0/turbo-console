@@ -10,6 +10,8 @@ export const START_TIMEOUT_TEXT = `turbo process did not start within ${START_TI
 
 export const TASK_ENDED_TEXT = 'task ended before its process started';
 
+export const START_WAIT_TEXT = `turbo process has not started after ${START_TIMEOUT_MS / 1000} s; VS Code may be waiting on a save prompt or an input`;
+
 /** The task definition type of every run, declared in package.json `taskDefinitions`. */
 export const RUN_TASK_TYPE = 'turbo-console';
 
