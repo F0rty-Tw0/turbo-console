@@ -16,9 +16,19 @@ const execReturning = (stdout: string): Exec => {
   };
 };
 
-const execFailing = (error: Error): Exec => {
+const PS_STDOUT = ' 100\n';
+const TASKLIST_STDOUT = '"node.exe","42","Console","1","12,345 K"\r\n';
+
+/** Fails with `error` yet still hands over parseable `stdout`, so only the error check can produce null. */
+const execFailing = (error: Error, stdout: string): Exec => {
   return (_file, _args, _options, callback) => {
-    callback(error, '');
+    callback(error, stdout);
+  };
+};
+
+const execThrowing = (error: Error): Exec => {
+  return () => {
+    throw error;
   };
 };
 
@@ -95,7 +105,7 @@ describe('FEATURE: resident memory of a process', () => {
 
   describe('GIVEN darwin', () => {
     it('WHEN ps prints the rss in kB THEN it is returned in bytes', async () => {
-      const exec = vi.fn<Exec>(execReturning(' 100\n'));
+      const exec = vi.fn<Exec>(execReturning(PS_STDOUT));
 
       const rss = await rssOf(42, depsFor('darwin', exec));
 
@@ -117,7 +127,15 @@ describe('FEATURE: resident memory of a process', () => {
     });
 
     it('WHEN ps times out THEN it resolves null', async () => {
-      const exec = execFailing(Object.assign(new Error('timed out'), { killed: true }));
+      const exec = execFailing(Object.assign(new Error('timed out'), { killed: true }), PS_STDOUT);
+
+      const rss = await rssOf(42, depsFor('darwin', exec));
+
+      expect(rss).toBeNull();
+    });
+
+    it('WHEN exec throws synchronously THEN it resolves null', async () => {
+      const exec = execThrowing(new Error('spawn ENOMEM'));
 
       const rss = await rssOf(42, depsFor('darwin', exec));
 
@@ -125,7 +143,7 @@ describe('FEATURE: resident memory of a process', () => {
     });
 
     it('WHEN ps fails for another reason THEN it resolves null', async () => {
-      const exec = execFailing(Object.assign(new Error('exit 1'), { code: 1 }));
+      const exec = execFailing(Object.assign(new Error('exit 1'), { code: 1 }), PS_STDOUT);
 
       const rss = await rssOf(42, depsFor('darwin', exec));
 
@@ -136,7 +154,7 @@ describe('FEATURE: resident memory of a process', () => {
   describe('GIVEN win32 with SystemRoot unset', () => {
     it('WHEN tasklist prints the pid row THEN tasklist runs from the default System32 and the bytes are returned', async () => {
       vi.stubEnv('SystemRoot', undefined);
-      const exec = vi.fn<Exec>(execReturning('"node.exe","42","Console","1","12,345 K"\r\n'));
+      const exec = vi.fn<Exec>(execReturning(TASKLIST_STDOUT));
 
       const rss = await rssOf(42, depsFor('win32', exec));
 
@@ -150,11 +168,35 @@ describe('FEATURE: resident memory of a process', () => {
     });
 
     it('WHEN tasklist fails THEN it resolves null', async () => {
-      const exec = execFailing(Object.assign(new Error('timed out'), { killed: true }));
+      const exec = execFailing(Object.assign(new Error('timed out'), { killed: true }), TASKLIST_STDOUT);
 
       const rss = await rssOf(42, depsFor('win32', exec));
 
       expect(rss).toBeNull();
+    });
+
+    it('WHEN exec throws synchronously THEN it resolves null', async () => {
+      const exec = execThrowing(new Error('spawn ENOMEM'));
+
+      const rss = await rssOf(42, depsFor('win32', exec));
+
+      expect(rss).toBeNull();
+    });
+  });
+
+  describe('GIVEN win32 with an absolute SystemRoot', () => {
+    it('WHEN tasklist runs THEN it is taken from that root System32', async () => {
+      vi.stubEnv('SystemRoot', 'D:\\Win');
+      const exec = vi.fn<Exec>(execReturning(TASKLIST_STDOUT));
+
+      await rssOf(42, depsFor('win32', exec));
+
+      expect(exec).toHaveBeenCalledWith(
+        'D:\\Win\\System32\\tasklist.exe',
+        expect.any(Array),
+        expect.any(Object),
+        expect.any(Function)
+      );
     });
   });
 });

@@ -11,7 +11,7 @@ const TASKLIST_OPTIONS: ExecFileOptionsWithStringEncoding = { ...PS_OPTIONS, win
 
 const DEFAULT_RSS_DEPS: RssDeps = { platform: process.platform, exec: execFile, readFile };
 
-/** Stdout of `file`, or `null` when it failed or timed out (execFile's own `timeout` kills it). */
+/** Stdout of `file`, or `null` when it failed, timed out (execFile's own `timeout` kills it) or could not be spawned. */
 const stdoutOf = async (
   exec: RssDeps['exec'],
   file: string,
@@ -20,7 +20,11 @@ const stdoutOf = async (
 ): Promise<string | null> => {
   const { promise, resolve } = Promise.withResolvers<string | null>();
 
-  exec(file, args, options, (error, stdout) => resolve(error === null ? stdout : null));
+  try {
+    exec(file, args, options, (error, stdout) => resolve(error === null ? stdout : null));
+  } catch {
+    resolve(null);
+  }
 
   return promise;
 };
