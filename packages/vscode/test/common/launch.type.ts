@@ -1,6 +1,6 @@
 import type { PackageRole, TaskKind } from '@turbo-console/repo-gen';
 
-export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6';
+export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7';
 
 /**
  * `fixture-l1` is the `target-like` copy L1 opens and L2 reopens, so L2 finds the cache L1 stored. `fixture` is a
@@ -11,9 +11,10 @@ export type LaunchWorkspace = 'fixture-l1' | 'fixture' | 'empty-folder' | 'error
 
 /**
  * The user setting `turboConsole.turboPath`: `dev` is the dev turbo binary, `stub` a POSIX script that prints
- * `2.12.0` for any arguments, and `unset` leaves the setting out.
+ * `2.12.0` for any arguments, `late` the dev turbo binary behind a `${command:…}` segment that VS Code resolves only
+ * when it runs a task, and `unset` leaves the setting out.
  */
-export type LaunchTurboPath = 'dev' | 'stub' | 'unset';
+export type LaunchTurboPath = 'dev' | 'stub' | 'late' | 'unset';
 
 /** `U1` is the user-data dir L1 and L2 share; `own` is one only this launch uses. */
 type LaunchUserData = 'U1' | 'own';

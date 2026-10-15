@@ -7,6 +7,14 @@ export const SUITE_ENV_KEY = 'TURBO_CONSOLE_IT';
 /** Keyed files are backdated by this much before each launch (spec §5.3), so no load sees a file written during its spawn. */
 export const BACKDATE_MS = 10_000;
 
+/**
+ * The command L7's suite registers and the `${command:…}` segment of its `turboPath` names; it answers with
+ * `LATE_TURBO_DIR`, so VS Code runs the dev turbo binary only once the command answers.
+ */
+export const LATE_TURBO_COMMAND = 'turboConsoleIt.lateTurboDir';
+
+export const LATE_TURBO_DIR = 'now';
+
 /** On CI a launch that misses a timing budget runs at most this many times in all; locally it runs once. */
 export const MAX_TIMING_ATTEMPTS = 3;
 
@@ -47,8 +55,10 @@ const L5: Launch = { ...L4, name: 'L5', suite: 'stub-version.suite', turboPath: 
 
 const L6: Launch = { ...L3, name: 'L6', suite: 'error-roots.suite', workspace: 'error-roots', turboPath: 'dev' };
 
+const L7: Launch = { ...L5, name: 'L7', suite: 'late-start.suite', turboPath: 'late' };
+
 /**
- * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L6 each get a user-data dir
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L7 each get a user-data dir
  * of their own.
  */
-export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6];
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7];
