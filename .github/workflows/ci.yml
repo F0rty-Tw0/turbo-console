@@ -55,6 +55,8 @@ jobs:
       # Windows runs 2 tasks at a time: at turbo's default of 10, the vitest suites oversubscribe the 4-vCPU runner and the
       # first repo-gen fixture test waits behind them (28-40 s against its 60 s timeout, 2-5 s once they drain).
       - name: Check
+        env:
+          TURBO_CONSOLE_MEASURE_RSS: '1'
         run: pnpm turbo run lint typecheck test build contract e2e ${{ runner.os == 'Windows' && '--concurrency=2' || '' }}
 
       # SHA = actions/cache@v6.1.0
