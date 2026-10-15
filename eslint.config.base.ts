@@ -4,7 +4,16 @@ const ACQUIRE_VS_CODE_API_MESSAGE = 'Only src/bridge/ may touch acquireVsCodeApi
 
 export const workspaceConfig = defineConfig([
   globalIgnores(
-    ['**/dist', '**/dist-test', '**/tmp/**', '**/.bench/**', '**/.vscode-test/**', '**/test/fixtures/**'],
+    [
+      '**/dist',
+      '**/dist-test',
+      '**/tmp/**',
+      '**/.bench/**',
+      '**/.vscode-test/**',
+      '**/test/fixtures/**',
+      '**/test-results/**',
+      '**/playwright-report/**'
+    ],
     'workspace/ignores'
   ),
   {
