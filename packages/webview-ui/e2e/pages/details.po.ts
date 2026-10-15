@@ -13,6 +13,9 @@ const postToPage = (message: HostMessage): void => window.postMessage(message, '
 const CODICON_LOADED = `document.fonts.check('16px codicon')
   && [...document.fonts].some((face) => face.family.replaceAll('"', '') === 'codicon' && face.status === 'loaded')`;
 
+/** Resolves after two frames, so the scroll events of the last scroll have fired. */
+const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
+
 export class DetailsPage {
   public readonly heading: Locator;
   public readonly path: Locator;
@@ -23,6 +26,7 @@ export class DetailsPage {
   public readonly missingNotice: Locator;
   public readonly reloadBanner: Locator;
   public readonly dryRunBanner: Locator;
+  public readonly banners: Locator;
 
   private readonly errors: string[];
   private readonly page: Page;
@@ -41,6 +45,7 @@ export class DetailsPage {
     this.missingNotice = page.getByText('Package no longer in the workspace');
     this.reloadBanner = page.locator('.banner-warning');
     this.dryRunBanner = page.locator('.banner-error');
+    this.banners = page.locator('.banner');
   }
 
   /** Loads the page inside the host stub, then posts `state` as the host does after `ready`. */
@@ -70,10 +75,30 @@ export class DetailsPage {
     return card;
   }
 
+  /** Before `open`: the user asked the OS for reduced motion. */
+  public async reduceMotion(): Promise<void> {
+    await this.page.emulateMedia({ reducedMotion: 'reduce' });
+  }
+
+  /** Posts a later state, as the host does after a model change. */
+  public async sendState(state: DetailsState): Promise<void> {
+    const message: HostMessage = { type: 'state', state };
+
+    await this.page.evaluate(postToPage, message);
+  }
+
   public async sendRunState(taskId: string, run: RunView): Promise<void> {
     const message: HostMessage = { type: 'runState', taskId, run };
 
     await this.page.evaluate(postToPage, message);
+  }
+
+  public async pressButton(label: string): Promise<void> {
+    await this.button(label).click();
+  }
+
+  public async focusButton(label: string): Promise<void> {
+    await this.button(label).focus();
   }
 
   public async narrow(width: number): Promise<void> {
@@ -87,10 +112,6 @@ export class DetailsPage {
     this.scrolledY = await this.page.evaluate<number>('scrollY');
   }
 
-  public async focusRun(taskName: string): Promise<void> {
-    await this.page.getByRole('button', { name: `Run ${taskName}`, exact: true }).focus();
-  }
-
   public async retryReload(): Promise<void> {
     await this.reloadBanner.getByRole('button', { name: 'Retry' }).click();
   }
@@ -99,8 +120,8 @@ export class DetailsPage {
     await this.dryRunBanner.getByRole('button', { name: 'Retry' }).click();
   }
 
-  public async expectStopFocused(taskName: string): Promise<void> {
-    await expect(this.page.getByRole('button', { name: `Stop ${taskName}`, exact: true })).toBeFocused();
+  public async expectFocused(label: string): Promise<void> {
+    await expect(this.button(label)).toBeFocused();
   }
 
   public async expectScrollKept(): Promise<void> {
@@ -108,6 +129,15 @@ export class DetailsPage {
 
     expect(this.scrolledY).toBeGreaterThan(0);
     expect(scrollY).toBe(this.scrolledY);
+  }
+
+  /** The scroll position the page last handed to `setState`, read after the next frame's scroll events. */
+  public async expectSavedScrollY(scrollY: number): Promise<void> {
+    await this.page.evaluate(NEXT_FRAME);
+
+    const savedScrollY = await this.page.evaluate<unknown>('window.__state?.scrollY');
+
+    expect(savedScrollY).toBe(scrollY);
   }
 
   public async expectScrollY(scrollY: number): Promise<void> {
@@ -120,6 +150,13 @@ export class DetailsPage {
     const posted = await this.page.evaluate<unknown[]>('window.__posted');
 
     expect(posted.at(-1)).toEqual(message);
+  }
+
+  /** Every message the page posted, in order, starting with `ready`. */
+  public async expectPosted(messages: WebviewMessage[]): Promise<void> {
+    const posted = await this.page.evaluate<unknown[]>('window.__posted');
+
+    expect(posted).toEqual(messages);
   }
 
   public async expectNoHorizontalScroll(width: number): Promise<void> {
@@ -142,6 +179,12 @@ export class DetailsPage {
 
   public expectNoErrors(): void {
     expect(this.errors).toEqual([]);
+  }
+
+  private button(label: string): Locator {
+    const button = this.page.getByRole('button', { name: label, exact: true });
+
+    return button;
   }
 
   private recordConsoleError(message: ConsoleMessage): void {

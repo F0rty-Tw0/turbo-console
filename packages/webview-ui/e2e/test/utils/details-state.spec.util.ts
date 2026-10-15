@@ -7,6 +7,11 @@ const cardNamed = (name: string): TaskCard => {
   return card;
 };
 
+const taskNameAt = (_: unknown, index: number): string => `t${String(index).padStart(2, '0')}`;
+
+/** `count` sortable task names: t00, t01, … */
+export const taskNames = (count: number): string[] => Array.from({ length: count }, taskNameAt);
+
 /** A package with one card per name, in the given order. */
 export const packageWithTasks = (names: string[]): PackageDetails => {
   const tasks = names.map(cardNamed);

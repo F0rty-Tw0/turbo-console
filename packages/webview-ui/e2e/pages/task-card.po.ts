@@ -7,6 +7,7 @@ import type { FieldRow } from '../../src/details/common/details-page.type.ts';
 export class TaskCardSection {
   public readonly title: Locator;
   public readonly runButton: Locator;
+  public readonly copyButton: Locator;
   public readonly status: Locator;
 
   private readonly root: Locator;
@@ -18,6 +19,7 @@ export class TaskCardSection {
     this.root = page.locator('section.card').filter({ has: heading });
     this.title = this.root.locator('.card-title');
     this.runButton = this.root.locator('.run-slot button');
+    this.copyButton = this.root.locator('.card-actions > button');
     this.status = this.root.locator('.run-status');
     this.statusIcon = this.status.locator('.codicon');
   }
@@ -32,6 +34,13 @@ export class TaskCardSection {
 
   public async expectBadges(labels: string[]): Promise<void> {
     await expect(this.root.locator('.badge')).toHaveText(labels);
+  }
+
+  public async expectIconAnimation(animationName: string): Promise<void> {
+    const readAnimation = (icon: HTMLElement | SVGElement): string => getComputedStyle(icon).animationName;
+    const computedAnimation = async (): Promise<string> => this.statusIcon.evaluate(readAnimation);
+
+    await expect.poll(computedAnimation).toBe(animationName);
   }
 
   /** The status icon has exactly `className` and the inline `color` (empty for none). */

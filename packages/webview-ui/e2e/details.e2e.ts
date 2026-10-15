@@ -1,7 +1,8 @@
 import { expect, test } from './details.fixture.ts';
 import { MISSING_PACKAGE_STUB, PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
-import { packageWithTasks } from './test/utils/details-state.spec.util.ts';
-import type { MissingPackage, PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
+import { packageWithTasks, taskNames } from './test/utils/details-state.spec.util.ts';
+import type { WebviewMessage } from '../src/bridge/common/details-message.type.ts';
+import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../src/details/common/details-page.type.ts';
 
 const AC1 = { description: 'AC1', type: 'requirement' };
@@ -18,7 +19,29 @@ const HOSTILE_RUN: RunView = { ...RUN_VIEW_STUB, iconId: 'a b', colorVar: '--x) 
 
 const SAVED_SCROLL_Y = 300;
 
-const TASK_NAMES = ['t00', 't01', 't02', 't03', 't04', 't05', 't06', 't07', 't08', 't09', 't10', 't11'];
+const FAR_SCROLL_Y = 1500;
+
+const TASK_NAMES = taskNames(12);
+
+const MANY_TASK_NAMES = taskNames(30);
+
+const PENDING_CARD: TaskCard = { ...TASK_CARD_STUB, definition: null, cacheStatus: null };
+
+const LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loading', tasks: [PENDING_CARD] };
+
+const SHORT_LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loading', tasks: [] };
+
+const FOCUS_KEPT_LABELS = ['Refresh', 'Copy command for build'];
+
+const ALL_ACTIONS_POSTED: WebviewMessage[] = [
+  { type: 'ready' },
+  { type: 'run', taskId: 'web#build' },
+  { type: 'stop', taskId: 'web#build' },
+  { type: 'copy', taskId: 'web#build' },
+  { type: 'refresh', scope: 'dryRun' },
+  { type: 'openPackageJson' },
+  { type: 'showOutput' }
+];
 
 const FULL_FIELDS: FieldRow[] = [
   ['Command', 'tsc -b'],
@@ -140,11 +163,122 @@ test.describe('FEATURE: package details page', () => {
   test('GIVEN focus on a Run button, focus moves to Stop when the task runs', async ({ detailsPage }): Promise<void> => {
     await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
 
-    await test.step('AND the Run button is focused', async (): Promise<void> => detailsPage.focusRun('build'));
+    await test.step('AND the Run button is focused', async (): Promise<void> => detailsPage.focusButton('Run build'));
 
     await test.step('AND the task starts running', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
 
-    await test.step('THEN the Stop button has focus', async (): Promise<void> => detailsPage.expectStopFocused('build'));
+    await test.step('THEN the Stop button has focus', async (): Promise<void> => detailsPage.expectFocused('Stop build'));
+  });
+
+  for (const label of FOCUS_KEPT_LABELS) {
+    test(`GIVEN focus on ${label}, a new state keeps it there`, async ({ detailsPage }): Promise<void> => {
+      await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
+
+      await test.step(`AND ${label} is focused`, async (): Promise<void> => detailsPage.focusButton(label));
+
+      await test.step('AND the host posts a new state', async (): Promise<void> => detailsPage.sendState(PACKAGE_DETAILS_STUB));
+
+      await test.step(`THEN ${label} still has focus`, async (): Promise<void> => detailsPage.expectFocused(label));
+    });
+  }
+
+  test('GIVEN every button, each click posts its message in order', async ({ detailsPage }): Promise<void> => {
+    const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'failed' };
+
+    await test.step('WHEN the page shows a state with a dry-run banner', async (): Promise<void> => detailsPage.open(state));
+
+    await test.step('AND Run is clicked', async (): Promise<void> => detailsPage.pressButton('Run build'));
+
+    await test.step('AND the task starts running', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
+
+    await test.step('AND Stop is clicked', async (): Promise<void> => detailsPage.pressButton('Stop build'));
+
+    await test.step('AND Copy is clicked', async (): Promise<void> => detailsPage.pressButton('Copy command for build'));
+
+    await test.step('AND Refresh is clicked', async (): Promise<void> => detailsPage.pressButton('Refresh'));
+
+    await test.step('AND Open package.json is clicked', async (): Promise<void> => detailsPage.pressButton('Open package.json'));
+
+    await test.step('AND Show Output is clicked', async (): Promise<void> => detailsPage.pressButton('Show Output'));
+
+    await test.step('THEN the posted messages are exactly those', async (): Promise<void> =>
+      detailsPage.expectPosted(ALL_ACTIONS_POSTED));
+
+    await test.step('AND the Copy button label names the task', async (): Promise<void> =>
+      expect(detailsPage.card('build').copyButton).toHaveAttribute('aria-label', 'Copy command for build'));
+  });
+
+  test('GIVEN a dry run in flight, the card reads loading', async ({ detailsPage }): Promise<void> => {
+    const rows: FieldRow[] = [
+      ['Command', 'tsc -b'],
+      ['Description', 'Builds the web app'],
+      ['Definition', 'loading…'],
+      ['Dependents', 'docs#build']
+    ];
+
+    await test.step('WHEN the page shows a loading state', async (): Promise<void> => detailsPage.open(LOADING_STATE));
+
+    await test.step('THEN no banner shows', async (): Promise<void> => expect(detailsPage.banners).toHaveCount(0));
+
+    await test.step('AND the definition reads loading…', async (): Promise<void> => detailsPage.card('build').expectFields(rows));
+  });
+
+  test('GIVEN a task with no command, the card says it runs its dependencies', async ({ detailsPage }): Promise<void> => {
+    const card: TaskCard = { ...PENDING_CARD, command: null };
+    const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [card] };
+    const rows: FieldRow[] = [
+      ['Command', 'none'],
+      ['Description', 'Builds the web app'],
+      ['Definition', 'No command (runs its dependencies)'],
+      ['Dependents', 'docs#build']
+    ];
+
+    await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
+
+    await test.step('THEN the definition says the task runs its dependencies', async (): Promise<void> =>
+      detailsPage.card('build').expectFields(rows));
+  });
+
+  test('GIVEN a kept scroll position and a short loading state first, the full state restores it', async ({
+    detailsPage
+  }): Promise<void> => {
+    await test.step('WHEN the host kept a far scroll position', async (): Promise<void> => detailsPage.restoreScroll(FAR_SCROLL_Y));
+
+    await test.step('AND the page first shows a short loading state', async (): Promise<void> =>
+      detailsPage.open(SHORT_LOADING_STATE));
+
+    await test.step('AND then thirty cards', async (): Promise<void> => detailsPage.sendState(packageWithTasks(MANY_TASK_NAMES)));
+
+    await test.step('THEN the page is scrolled to the kept position', async (): Promise<void> =>
+      detailsPage.expectScrollY(FAR_SCROLL_Y));
+  });
+
+  test('GIVEN a kept scroll position, a scroll during loading does not replace it', async ({ detailsPage }): Promise<void> => {
+    const tallState = packageWithTasks(MANY_TASK_NAMES);
+    const tallLoadingState: PackageDetails = { ...tallState, dryRun: 'loading' };
+
+    await test.step('WHEN the host kept a far scroll position', async (): Promise<void> => detailsPage.restoreScroll(FAR_SCROLL_Y));
+
+    await test.step('AND the page shows a tall loading state', async (): Promise<void> => detailsPage.open(tallLoadingState));
+
+    await test.step('AND the page is scrolled to the bottom', async (): Promise<void> => detailsPage.scrollToBottom());
+
+    await test.step('THEN the kept position is still saved', async (): Promise<void> => detailsPage.expectSavedScrollY(FAR_SCROLL_Y));
+  });
+
+  test('GIVEN reduced motion, a running task icon does not spin', async ({ detailsPage }): Promise<void> => {
+    const card = detailsPage.card('build');
+
+    await test.step('WHEN the OS asks for reduced motion', async (): Promise<void> => detailsPage.reduceMotion());
+
+    await test.step('AND the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
+
+    await test.step('AND the task starts running', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
+
+    await test.step('THEN the icon has the spin class', async (): Promise<void> =>
+      card.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', ''));
+
+    await test.step('AND it has no animation', async (): Promise<void> => card.expectIconAnimation('none'));
   });
 
   test(
@@ -175,14 +309,22 @@ test.describe('FEATURE: package details page', () => {
     }
   );
 
-  test('GIVEN a missing package, the notice replaces the cards', async ({ detailsPage }): Promise<void> => {
-    const state: MissingPackage = MISSING_PACKAGE_STUB;
+  test('GIVEN a package that goes missing and comes back, the notice replaces the cards and back', async ({
+    detailsPage
+  }): Promise<void> => {
+    await test.step('WHEN the page shows the package', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
 
-    await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
+    await test.step('AND the package goes missing', async (): Promise<void> => detailsPage.sendState(MISSING_PACKAGE_STUB));
 
     await test.step('THEN the missing notice is visible', async (): Promise<void> => expect(detailsPage.missingNotice).toBeVisible());
 
     await test.step('AND no card renders', async (): Promise<void> => expect(detailsPage.cards).toHaveCount(0));
+
+    await test.step('WHEN the package comes back', async (): Promise<void> => detailsPage.sendState(PACKAGE_DETAILS_STUB));
+
+    await test.step('THEN its card renders again', async (): Promise<void> => expect(detailsPage.cards).toHaveCount(1));
+
+    await test.step('AND the notice is gone', async (): Promise<void> => expect(detailsPage.missingNotice).toHaveCount(0));
   });
 
   test('GIVEN a 400-character command at 320 px, the page never scrolls sideways', async ({ detailsPage }): Promise<void> => {
