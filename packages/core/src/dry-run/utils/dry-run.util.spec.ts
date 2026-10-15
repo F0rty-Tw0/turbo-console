@@ -160,8 +160,10 @@ describe('FEATURE: dry-run states', () => {
       expect(definitionOf('lib#build')?.inputs).toStrictEqual([]);
     });
 
-    it('WHEN converted THEN a persistent uncached task reads cache false and persistent true', () => {
-      expect(definitionOf('lib#dev')).toMatchObject({ cache: false, persistent: true });
+    it('WHEN converted THEN a persistent uncached task keeps its own definition', () => {
+      const devDefinition: TaskDefinition = { inputs: [], outputs: [], dependsOn: [], cache: false, persistent: true, env: [] };
+
+      expect(definitionOf('lib#dev')).toStrictEqual(devDefinition);
     });
 
     it('WHEN converted THEN the commandless check task is dropped', () => {
