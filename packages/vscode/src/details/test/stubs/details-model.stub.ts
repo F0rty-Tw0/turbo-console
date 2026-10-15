@@ -1,9 +1,11 @@
 import type { DryRunState, PackageNode, TaskDefinition, TaskNode, WorkspaceModel } from '@turbo-console/core';
 
 import type { RootState } from '../../../roots/common/coordinator.type.ts';
+import type { LoadedModel } from '../../../roots/common/root.type.ts';
+import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
 import { ROOT_STATE_STUB } from '../../../tree/test/stubs/root-state.stub.ts';
 import { TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
-import type { DetailsInput, DryRunResult } from '../../common/details.type.ts';
+import type { DetailsInput, DryRunResult, PanelKey } from '../../common/details.type.ts';
 
 export const BUILD_TASK_STUB: TaskNode = {
   ...TASK_NODE_STUB,
@@ -69,6 +71,10 @@ export const DETAILS_MODEL_STUB: WorkspaceModel = {
 };
 
 export const DETAILS_ROOT_STATE_STUB: RootState = { ...ROOT_STATE_STUB, model: DETAILS_MODEL_STUB };
+
+export const DETAILS_LOADED_STUB: LoadedModel = { ...LOADED_MODEL_STUB, model: DETAILS_MODEL_STUB };
+
+export const PANEL_KEY_STUB: PanelKey = { root: '/ws', packageName: 'a' };
 
 export const TASK_DEFINITION_STUB: TaskDefinition = {
   inputs: ['src/**'],
