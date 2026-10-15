@@ -5,7 +5,7 @@ import { fillRun } from './patch-run.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { DryRunPhase, RunView, TaskCard } from '../../bridge/common/details-state.type.ts';
 import type { CardRefs, FieldRow, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
-import { NONE_TEXT, UNAVAILABLE_TEXT } from '../common/field-text.const.ts';
+import { NONE_TEXT } from '../common/field-text.const.ts';
 import { cacheText, definitionText, listText } from '../utils/field-text.util.ts';
 
 const runButtonFor = (card: TaskCard, bridge: Bridge): RunButtonFactory => {
@@ -24,7 +24,7 @@ const definitionRows = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
   const { definition } = card;
 
   if (definition === null) {
-    const pending = definitionText(card, phase) ?? UNAVAILABLE_TEXT;
+    const pending = definitionText(card.command, phase);
     const pendingRows: FieldRow[] = [['Definition', pending]];
 
     return pendingRows;

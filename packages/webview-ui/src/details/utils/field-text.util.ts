@@ -1,4 +1,4 @@
-import type { CacheStatus, DryRunPhase, TaskCard } from '../../bridge/common/details-state.type.ts';
+import type { CacheStatus, DryRunPhase } from '../../bridge/common/details-state.type.ts';
 import {
   CACHE_TEXTS,
   DEFAULT_INPUTS_TEXT,
@@ -29,11 +29,9 @@ export const cacheText = (status: CacheStatus | null, phase: DryRunPhase): strin
   return pendingText(phase);
 };
 
-/** What a card shows in place of its turbo definition, or `null` when it has one to show. */
-export const definitionText = (card: TaskCard, phase: DryRunPhase): string | null => {
-  if (card.command === null) return NO_COMMAND_TEXT;
-
-  if (card.definition !== null) return null;
+/** What a card without a turbo definition shows in its place. */
+export const definitionText = (command: string | null, phase: DryRunPhase): string => {
+  if (command === null) return NO_COMMAND_TEXT;
 
   return pendingText(phase);
 };

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { cacheText, definitionText, listText } from './field-text.util.ts';
-import type { TaskCard } from '../../bridge/common/details-state.type.ts';
-import { TASK_CARD_STUB } from '../test/stubs/details.stub.ts';
+
+const COMMAND = 'vite build';
 
 describe('FEATURE: field texts', () => {
   describe('GIVEN an empty list', () => {
@@ -49,35 +49,23 @@ describe('FEATURE: field texts', () => {
     });
   });
 
-  describe('GIVEN a card with a definition', () => {
-    it('WHEN its definition text is read THEN there is none', () => {
-      expect(definitionText(TASK_CARD_STUB, 'ready')).toBeNull();
-    });
-  });
-
-  describe('GIVEN a card with no command', () => {
+  describe('GIVEN a task with no command and no definition', () => {
     it('WHEN its definition text is read during a dry run THEN it says the task runs its dependencies', () => {
-      const card: TaskCard = { ...TASK_CARD_STUB, command: null, definition: null, cacheStatus: null };
-
-      const text = definitionText(card, 'loading');
-
-      expect(text).toBe('No command (runs its dependencies)');
+      expect(definitionText(null, 'loading')).toBe('No command (runs its dependencies)');
     });
   });
 
-  describe('GIVEN a card with a command and no definition', () => {
-    const card: TaskCard = { ...TASK_CARD_STUB, definition: null, cacheStatus: null };
-
+  describe('GIVEN a task with a command and no definition', () => {
     it('WHEN the dry run is loading THEN it reads "loading…"', () => {
-      expect(definitionText(card, 'loading')).toBe('loading…');
+      expect(definitionText(COMMAND, 'loading')).toBe('loading…');
     });
 
     it('WHEN the dry run failed THEN it reads "—"', () => {
-      expect(definitionText(card, 'failed')).toBe('—');
+      expect(definitionText(COMMAND, 'failed')).toBe('—');
     });
 
     it('WHEN the dry run is ready THEN it reads "—"', () => {
-      expect(definitionText(card, 'ready')).toBe('—');
+      expect(definitionText(COMMAND, 'ready')).toBe('—');
     });
   });
 });
