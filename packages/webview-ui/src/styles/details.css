@@ -104,6 +104,13 @@ ul {
   background: var(--vscode-button-secondaryHoverBackground);
 }
 
+/* High contrast themes mark hover with a dashed outline; :not(:focus-visible) keeps the focus outline on a hovered button. */
+.icon-button:hover:not(:focus-visible),
+.text-button:hover:not(:focus-visible) {
+  outline: 1px dashed var(--vscode-contrastActiveBorder, transparent);
+  outline-offset: 1px;
+}
+
 :focus-visible {
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: 1px;
