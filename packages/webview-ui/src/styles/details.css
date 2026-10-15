@@ -1,0 +1,210 @@
+/* Package Details page. Colors come only from --vscode-* theme variables, so light, dark and high contrast all follow the theme. */
+
+body {
+  margin: 0;
+  padding: 0 16px 24px;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+p,
+ul,
+dl,
+dd {
+  margin: 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 16px 0 12px;
+}
+
+.page-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+.package-path,
+.tags {
+  flex-basis: 100%;
+}
+
+.package-path {
+  color: var(--vscode-descriptionForeground);
+}
+
+.tags,
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tags:empty,
+.badges:empty {
+  display: none;
+}
+
+.tag,
+.badge {
+  padding: 1px 6px;
+  border-radius: 9px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  font-size: 0.9em;
+}
+
+.page-actions,
+.card-actions {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.icon-button,
+.text-button {
+  border: 1px solid var(--vscode-contrastBorder, transparent);
+  border-radius: 4px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.icon-button {
+  display: inline-flex;
+  padding: 3px;
+}
+
+.icon-button:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.text-button {
+  padding: 2px 8px;
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+}
+
+.text-button:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* High contrast themes mark hover with a dashed outline; :not(:focus-visible) keeps the focus outline on a hovered button. */
+.icon-button:hover:not(:focus-visible),
+.text-button:hover:not(:focus-visible) {
+  outline: 1px dashed var(--vscode-contrastActiveBorder, transparent);
+  outline-offset: 1px;
+}
+
+:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.banners {
+  display: grid;
+  gap: 8px;
+}
+
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid;
+  border-radius: 4px;
+}
+
+.banner-text {
+  flex: 1 1 12em;
+}
+
+.banner-warning {
+  border-color: var(--vscode-inputValidation-warningBorder);
+  background: var(--vscode-inputValidation-warningBackground);
+}
+
+.banner-warning .codicon {
+  color: var(--vscode-editorWarning-foreground);
+}
+
+.banner-error {
+  border-color: var(--vscode-inputValidation-errorBorder);
+  background: var(--vscode-inputValidation-errorBackground);
+}
+
+.banner-error .codicon {
+  color: var(--vscode-errorForeground);
+}
+
+.cards {
+  display: grid;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+  border-radius: 4px;
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.card-title {
+  min-width: 0;
+  font-size: 1.15em;
+  font-weight: 600;
+}
+
+.run-status {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 4px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 2px 12px;
+}
+
+.fields dt {
+  color: var(--vscode-descriptionForeground);
+}
+
+.missing {
+  color: var(--vscode-descriptionForeground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .codicon-modifier-spin {
+    animation: none !important;
+  }
+}
