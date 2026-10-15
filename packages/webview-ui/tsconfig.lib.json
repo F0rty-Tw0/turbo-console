@@ -9,5 +9,5 @@
     "outDir": "dist/lib"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/test/**", "src/**/*.spec.ts", "src/graph/**"]
+  "exclude": ["src/**/test/**", "src/**/*.spec.ts", "src/graph/**", "src/bridge/data-access/**", "src/bridge/common/bridge.type.ts"]
 }
