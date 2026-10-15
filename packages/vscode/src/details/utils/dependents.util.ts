@@ -2,10 +2,17 @@ import type { TaskNode, WorkspaceModel } from '@turbo-console/core';
 
 const isVisible = (task: TaskNode): boolean => task.kind !== 'atom-file';
 
+/** Appends in place: copying the list per dependent made a task with k dependents cost O(k²) on a hostile repo. */
 const addDependent = (dependents: Map<string, string[]>, dependency: string, taskId: string): void => {
-  const known = dependents.get(dependency) ?? [];
+  const known = dependents.get(dependency);
 
-  dependents.set(dependency, [...known, taskId]);
+  if (known === undefined) {
+    dependents.set(dependency, [taskId]);
+
+    return;
+  }
+
+  known.push(taskId);
 };
 
 /**
