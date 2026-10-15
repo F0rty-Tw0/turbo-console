@@ -54,7 +54,10 @@ const refuseHostile = (rootFiles: KeyedFile[]): void => {
 
   const capMib = keyedFileCapOf(hostile.path) / MIB;
 
-  throw new TurboException('io', `root keyed file ${plainPath(hostile.path)} is not a regular file of at most ${capMib} MiB; turbo is not run`);
+  throw new TurboException(
+    'io',
+    `root keyed file ${plainPath(hostile.path)} is not a regular file of at most ${capMib} MiB; turbo is not run`
+  );
 };
 
 /**

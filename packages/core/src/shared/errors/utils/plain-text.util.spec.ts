@@ -71,7 +71,7 @@ describe('FEATURE: plain text for messages', () => {
       ['a title aborted by SUB', 'a\u001B]0;my title\u001Ab', 'ab'],
       ['a title aborted by a color escape', 'a\u001B]0;my title\u001B[31mb', 'ab'],
       ['a title aborted by an 8-bit color escape', 'a\u001B]0;my title\u009B31mb', 'ab'],
-      ['an unterminated title', 'a\u001B]0;my title', 'a'],
+      ['an unterminated title', 'a\u001B]0;my title', 'a']
     ])('WHEN %s is made plain THEN none of its text is left', (_name, text, plain) => {
       expect(plainLine(text)).toBe(plain);
     });
@@ -85,9 +85,7 @@ describe('FEATURE: plain text for messages', () => {
 
   describe('GIVEN a stray OSC start followed by more lines', () => {
     it('WHEN made plain lines THEN only the rest of its own line is lost', () => {
-      expect(plainLines('error: bad \u001B] in input\nturbo: task failed\nexit 1')).toBe(
-        'error: bad \nturbo: task failed\nexit 1'
-      );
+      expect(plainLines('error: bad \u001B] in input\nturbo: task failed\nexit 1')).toBe('error: bad \nturbo: task failed\nexit 1');
     });
   });
 

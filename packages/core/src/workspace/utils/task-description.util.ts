@@ -32,7 +32,12 @@ export const okConfigsByDir = (configs: TurboConfigFile[]): Map<string, TurboCon
  * Rule 5: the package config's `<task>`, then the root's `<pkg>#<task>`, then the root's `<task>`; `null` when none.
  * `taskName` is the id's part after `<package>#`. `packagePath` is looked up as `normalDir` gives it, the form the configs are keyed by (`./a/` finds `a`).
  */
-export const descriptionOf = (configs: Map<string, TurboConfigOk>, packagePath: string, id: string, taskName: string): string | null => {
+export const descriptionOf = (
+  configs: Map<string, TurboConfigOk>,
+  packagePath: string,
+  id: string,
+  taskName: string
+): string | null => {
   const root = configs.get('.');
   const packageDir = normalDir(packagePath);
   const own = ownDescription(configs.get(packageDir), taskName);

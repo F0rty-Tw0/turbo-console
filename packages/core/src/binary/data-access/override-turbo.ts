@@ -22,7 +22,8 @@ const statOverride = async (path: string): Promise<Stats> => {
   } catch (error) {
     const isAbsent = isMissing(error);
 
-    if (isAbsent) throw new TurboException('not-found', `turbo override not found: ${ioMessage(path, errnoCode(error))}`, { cause: error });
+    if (isAbsent)
+      throw new TurboException('not-found', `turbo override not found: ${ioMessage(path, errnoCode(error))}`, { cause: error });
 
     throw error;
   }

@@ -103,7 +103,7 @@ describe('FEATURE: cleaning untrusted text', () => {
     it.each([
       ['a zero-width space', '\u200B'],
       ['a bell', '\u0007'],
-      ['an ANSI escape', '\u001B[0m'],
+      ['an ANSI escape', '\u001B[0m']
     ])('WHEN the split is %s THEN the spaces still fold into one', (_name, split) => {
       const splitSpace = ` ${split}`;
 

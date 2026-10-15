@@ -66,7 +66,10 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo output cap', ()
 
       const exception = toTurboException(error, 'query packageGraph');
 
-      expect(exception).toMatchObject({ kind: 'failed', message: 'turbo query packageGraph printed too much output (over the output cap)' });
+      expect(exception).toMatchObject({
+        kind: 'failed',
+        message: 'turbo query packageGraph printed too much output (over the output cap)'
+      });
     });
 
     it('WHEN no maxBuffer is given THEN the default cap lets all of it through', async () => {

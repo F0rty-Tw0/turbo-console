@@ -46,7 +46,10 @@ const labelsOf = (items: PickItem[]): string[] => items.map((item) => item.label
 describe('FEATURE: picker items', () => {
   describe('taskNameItems', () => {
     it('GIVEN packages sharing task names WHEN listed THEN each name shows once, sorted', () => {
-      const packages = [packageOf('a', [taskNamed('test'), taskNamed('build')]), packageOf('b', [taskNamed('build'), taskNamed('lint')])];
+      const packages = [
+        packageOf('a', [taskNamed('test'), taskNamed('build')]),
+        packageOf('b', [taskNamed('build'), taskNamed('lint')])
+      ];
 
       const items = taskNameItems([stateOf('/ws', packages)]);
 
@@ -73,10 +76,7 @@ describe('FEATURE: picker items', () => {
 
       const items = taskNameItems([first, second]);
 
-      expect(items).toStrictEqual([
-        itemOf({ description: 'one', root: '/one' }),
-        itemOf({ description: 'two', root: '/two' })
-      ]);
+      expect(items).toStrictEqual([itemOf({ description: 'one', root: '/one' }), itemOf({ description: 'two', root: '/two' })]);
     });
 
     it('GIVEN two roots and one without a model WHEN listed THEN it adds none and the other has no description', () => {

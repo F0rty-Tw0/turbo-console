@@ -52,7 +52,8 @@ const newCaseDir = (): string => {
   return join(tempDir, `case ${caseCount}`);
 };
 
-const binaryAt = (root: string): TurboBinary => new TurboBinary(root, join(root, 'turbo'), WORKSPACE_MODEL_STUB.turboVersion, 'override');
+const binaryAt = (root: string): TurboBinary =>
+  new TurboBinary(root, join(root, 'turbo'), WORKSPACE_MODEL_STUB.turboVersion, 'override');
 
 /** A workspace root holding a root and an `a` package manifest, both last written `AGE_MS` ago. */
 const newRoot = async (): Promise<string> => {
@@ -167,15 +168,18 @@ describe('FEATURE: cached workspace read', () => {
   });
 
   describe('GIVEN a workspace stored in memory and a cache dir that is not absolute', () => {
-    it.each(['', 'cache dir'])('WHEN read with %j THEN it rejects invalid-argument instead of returning the entry', async (cacheDir) => {
-      const root = await newRoot();
+    it.each(['', 'cache dir'])(
+      'WHEN read with %j THEN it rejects invalid-argument instead of returning the entry',
+      async (cacheDir) => {
+        const root = await newRoot();
 
-      await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
+        await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
 
-      const reading = readCachedWorkspace(binaryAt(root), cacheDir);
+        const reading = readCachedWorkspace(binaryAt(root), cacheDir);
 
-      await expect(reading).rejects.toMatchObject({ kind: 'invalid-argument', message: `cacheDir must be absolute: ${cacheDir}` });
-    });
+        await expect(reading).rejects.toMatchObject({ kind: 'invalid-argument', message: `cacheDir must be absolute: ${cacheDir}` });
+      }
+    );
   });
 
   describe('GIVEN a root with no entry in memory or on disk', () => {

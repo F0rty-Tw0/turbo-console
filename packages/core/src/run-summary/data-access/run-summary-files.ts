@@ -20,7 +20,8 @@ const isJsonFile = (entry: Dirent): boolean => entry.isFile() && entry.name.ends
 
 const isListed = (file: RunSummaryFile | null): file is RunSummaryFile => file !== null;
 
-const ioError = (path: string, error: unknown): TurboException => new TurboException('io', ioMessage(path, errnoCode(error)), { cause: error });
+const ioError = (path: string, error: unknown): TurboException =>
+  new TurboException('io', ioMessage(path, errnoCode(error)), { cause: error });
 
 /**
  * `path`'s real path; `null` when it or a parent does not exist or is not a directory (ENOENT, ENOTDIR). Any other

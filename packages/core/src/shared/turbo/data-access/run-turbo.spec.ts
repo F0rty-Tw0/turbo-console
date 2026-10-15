@@ -77,7 +77,8 @@ const clearPid = async (stub: StubName): Promise<void> => {
   await rm(stubFile(stub, 'pid'), { force: true });
 };
 
-const startStub = async (stub: StubName, options: RunTurboOptions): Promise<TurboResult> => runTurbo(stubFile(stub, 'sh'), [], stubDir, options);
+const startStub = async (stub: StubName, options: RunTurboOptions): Promise<TurboResult> =>
+  runTurbo(stubFile(stub, 'sh'), [], stubDir, options);
 
 /** `options` with a signal that also aborts on `stop`. */
 const stoppable = (options: RunTurboOptions, stop: AbortSignal): RunTurboOptions => {
@@ -104,12 +105,14 @@ const runUntilAborted = async (stub: StubName, options: RunTurboOptions, onStart
   // A run that rejects while the pid wait still polls is handled here; `await run` below still sees the rejection.
   run.catch(noop);
 
-  const pid = await vi.waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 }).catch(async (error: unknown) => {
-    stop.abort();
-    await run.catch(noop);
+  const pid = await vi
+    .waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 })
+    .catch(async (error: unknown) => {
+      stop.abort();
+      await run.catch(noop);
 
-    throw error;
-  });
+      throw error;
+    });
 
   onStarted();
 
@@ -248,13 +251,17 @@ describe('FEATURE: runTurbo process lifecycle', () => {
   });
 
   describe.skipIf(IS_WINDOWS)('GIVEN a binary that exits 0 at once on SIGTERM', () => {
-    it('WHEN the caller aborts once it has started THEN runTurbo still rejects with an AbortError', async () => {
-      const controller = new AbortController();
-      const abort = (): void => controller.abort();
-      const outcome = await runUntilAborted('quick-term', { signal: controller.signal }, abort);
+    it(
+      'WHEN the caller aborts once it has started THEN runTurbo still rejects with an AbortError',
+      async () => {
+        const controller = new AbortController();
+        const abort = (): void => controller.abort();
+        const outcome = await runUntilAborted('quick-term', { signal: controller.signal }, abort);
 
-      expect(outcome.error).toMatchObject({ name: 'AbortError' });
-    }, STALL_TEST_TIMEOUT_MS);
+        expect(outcome.error).toMatchObject({ name: 'AbortError' });
+      },
+      STALL_TEST_TIMEOUT_MS
+    );
   });
 
   describe.skipIf(IS_WINDOWS)('GIVEN a binary that writes 70 000 x and a line to stderr, then hangs', () => {

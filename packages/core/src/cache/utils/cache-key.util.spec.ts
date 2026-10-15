@@ -13,7 +13,13 @@ import {
   keyedPathsOf
 } from './cache-key.util.ts';
 import { graphPackage } from '../../workspace/test/utils/graph.spec.util.ts';
-import { MISSING_DIGEST, NOT_REGULAR_DIGEST, OVER_CAP_READ_DIGEST, ROOT_KEYED_FILES, UNREADABLE_DIGEST } from '../common/cache.const.ts';
+import {
+  MISSING_DIGEST,
+  NOT_REGULAR_DIGEST,
+  OVER_CAP_READ_DIGEST,
+  ROOT_KEYED_FILES,
+  UNREADABLE_DIGEST
+} from '../common/cache.const.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
 
 const VERSION = '2.11.7';
@@ -43,7 +49,11 @@ const keyedFile = (path: string, digest: string, mtimeMs: number | null): KeyedF
   return file;
 };
 
-const FILES = [keyedFile('package.json', 'aaa', null), keyedFile('turbo.json', 'bbb', null), keyedFile('apps/web/package.json', 'ccc', null)];
+const FILES = [
+  keyedFile('package.json', 'aaa', null),
+  keyedFile('turbo.json', 'bbb', null),
+  keyedFile('apps/web/package.json', 'ccc', null)
+];
 
 const FILE_INDEXES = [0, 1, 2];
 

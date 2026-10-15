@@ -142,7 +142,7 @@ describe('FEATURE: package.json run action', () => {
     expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/one', 'a', TASK_NODE_STUB));
   });
 
-  it('GIVEN a package WHEN the pick opens THEN it offers that package\'s tasks only, named in the placeholder', async () => {
+  it("GIVEN a package WHEN the pick opens THEN it offers that package's tasks only, named in the placeholder", async () => {
     await pickForFileAndRun(roots, fakes.ports, '/one/packages/b/package.json');
 
     const [items, placeholder] = fakes.pick.mock.calls[0] ?? [];

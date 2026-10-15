@@ -179,7 +179,8 @@ describe('FEATURE: match a run to its summary', () => {
 
       await writeRun(root, 'match.json', MATCHING, OLDEST);
 
-      for (const [index, seconds] of newerTimes(MAX_SUMMARY_TRIES).entries()) await writeRun(root, `other-${index}.json`, OTHER, seconds);
+      for (const [index, seconds] of newerTimes(MAX_SUMMARY_TRIES).entries())
+        await writeRun(root, `other-${index}.json`, OTHER, seconds);
 
       await expect(matchRunSummary(root, RUN)).resolves.toBeNull();
     });

@@ -21,7 +21,17 @@ const turbo = vi.hoisted(() => {
   const readSignals: (AbortSignal | undefined)[] = [];
   const noConfigs = async (): Promise<TurboConfigFile[]> => Promise.resolve([]);
   const proceed = (): void => undefined;
-  const state = { stdout: '', queryArgs, readDirs, readSignals, onQuery: proceed, onBuild: proceed, proceed, read: noConfigs, noConfigs };
+  const state = {
+    stdout: '',
+    queryArgs,
+    readDirs,
+    readSignals,
+    onQuery: proceed,
+    onBuild: proceed,
+    proceed,
+    read: noConfigs,
+    noConfigs
+  };
 
   return state;
 });
@@ -65,7 +75,12 @@ vi.mock('../data-access/turbo-config.ts', () => {
 vi.mock('../utils/workspace-model.util.ts', async (importOriginal) => {
   const real = await importOriginal<typeof workspaceModelUtil>();
 
-  const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFile[], turboVersion: string, root: string): WorkspaceModel => {
+  const buildWorkspaceModel = (
+    graph: PackageGraph,
+    configs: TurboConfigFile[],
+    turboVersion: string,
+    root: string
+  ): WorkspaceModel => {
     turbo.onBuild();
 
     return real.buildWorkspaceModel(graph, configs, turboVersion, root);
@@ -168,7 +183,9 @@ describe('FEATURE: workspace loading', () => {
 
       const model = await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
 
-      expect(store.args).toStrictEqual([[model, [WINDOWS_PACKAGE], expect.objectContaining({ startedAt: SPAWN_STARTED_AT }), CACHE_DIR]]);
+      expect(store.args).toStrictEqual([
+        [model, [WINDOWS_PACKAGE], expect.objectContaining({ startedAt: SPAWN_STARTED_AT }), CACHE_DIR]
+      ]);
     });
 
     it('WHEN loaded THEN the model carries no cache warning', async () => {

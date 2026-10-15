@@ -31,7 +31,7 @@ const OSC_ENDS = [
   { end: '\u001A', length: 1 },
   { end: '\u001B', length: 0 },
   { end: '\u009B', length: 0 },
-  { end: '\n', length: 0 },
+  { end: '\n', length: 0 }
 ];
 
 /** The rest of `part`, which follows an OSC start, after the OSC's end; `''` when nothing ends it. */

@@ -76,7 +76,8 @@ export const resolveTurbo = async (root: string, options: ResolveTurboOptions): 
     const binary = await pickBinary(absoluteRoot, checked);
     const isSupported = isSupportedTurboVersion(binary.version, SUPPORTED_TURBO_RANGE);
 
-    if (!isSupported) throw new TurboException('version-unsupported', versionUnsupportedMessage(binary.version, SUPPORTED_TURBO_RANGE));
+    if (!isSupported)
+      throw new TurboException('version-unsupported', versionUnsupportedMessage(binary.version, SUPPORTED_TURBO_RANGE));
 
     return binary;
   } catch (error) {
