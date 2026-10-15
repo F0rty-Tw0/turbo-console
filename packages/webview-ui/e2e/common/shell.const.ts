@@ -9,6 +9,14 @@ export const UNNONCED_SCRIPT = '<script>window.__ran = true</script>';
 export const VIOLATION_RECORDER = `window.__violations = [];
 document.addEventListener('securitypolicyviolation', (event) => window.__violations.push(event.violatedDirective));`;
 
-/** Init script: stands in for the VS Code host, recording every posted message in `window.__posted`. */
+/**
+ * Init script: stands in for the VS Code host, recording every posted message in `window.__posted` and keeping the
+ * `setState` value in `window.__state` for `getState`. It leaves `window.__state` alone, so an earlier init script can
+ * stand in for a state VS Code kept.
+ */
 export const HOST_API_STUB = `window.__posted = [];
-window.acquireVsCodeApi = () => ({ postMessage: (message) => window.__posted.push(message) });`;
+window.acquireVsCodeApi = () => ({
+  postMessage: (message) => window.__posted.push(message),
+  getState: () => window.__state,
+  setState: (state) => { window.__state = state; }
+});`;
