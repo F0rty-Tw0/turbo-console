@@ -1,5 +1,5 @@
 import { playwright, recommended, vitest } from 'lint-suite/eslint';
-import type { ConfigArray } from 'typescript-eslint';
+import type { ConfigArray, FlatConfig } from 'typescript-eslint';
 
 import { workspaceConfig } from '../../eslint.config.base.ts';
 
@@ -15,6 +15,27 @@ const typescriptFiles = {
   languageOptions
 };
 
-const config: ConfigArray = [...recommended, ...vitest, ...playwright, ...workspaceConfig, typescriptFiles];
+/** webview-ui code is for the webview page; the extension bundle may take its types and the two HTML-shell helpers only. */
+const webviewHostImports: FlatConfig.Config = {
+  name: 'vscode/webview-host-imports',
+  files: ['**/*.ts'],
+  rules: {
+    '@typescript-eslint/no-restricted-imports': [
+      'error',
+      {
+        paths: [
+          {
+            name: '@turbo-console/webview-ui',
+            allowTypeImports: true,
+            allowImportNames: ['renderWebviewHtml', 'webviewCsp'],
+            message: 'Types and the HTML-shell helpers only: webview code must not enter the extension bundle.'
+          }
+        ]
+      }
+    ]
+  }
+};
+
+const config: ConfigArray = [...recommended, ...vitest, ...playwright, ...workspaceConfig, typescriptFiles, webviewHostImports];
 
 export default config;
