@@ -34,12 +34,17 @@ export type TurboVersionRange = {
   readonly maxExclusive: string;
 };
 
-/** Per-call spawn limits; `graceMs` bounds the wait for exit after the abort kill, `maxBuffer` each of stdout and stderr (bytes). */
+/**
+ * Per-call spawn limits; `graceMs` bounds the wait for exit after the abort kill, `maxBuffer` each of stdout and stderr (bytes).
+ * `maxRssBytes` (turbo's resident memory bound) and `rssPollMs` (how often it is read) are test seams, not user settings.
+ */
 export type RunTurboOptions = {
   readonly timeoutMs?: number | undefined;
   readonly signal?: AbortSignal | undefined;
   readonly graceMs?: number | undefined;
   readonly maxBuffer?: number | undefined;
+  readonly maxRssBytes?: number | undefined;
+  readonly rssPollMs?: number | undefined;
 };
 
 type QueryVariables = {
