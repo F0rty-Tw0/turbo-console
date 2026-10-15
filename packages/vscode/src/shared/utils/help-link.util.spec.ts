@@ -4,7 +4,7 @@ import { helpUrlOf } from './help-link.util.ts';
 
 describe('FEATURE: help links', () => {
   it.each<[string, string]>([
-    ['readme', 'https://github.com/F0rty-Tw0/turbo-console#readme'],
+    ['readme', 'https://github.com/F0rty-Tw0/turbo-console/tree/master/packages/vscode#readme'],
     ['bug', 'https://github.com/F0rty-Tw0/turbo-console/issues/new'],
     ['docs', 'https://turborepo.com/docs']
   ])('GIVEN the id %s WHEN its url is read THEN it is the fixed url', (id, url) => {
