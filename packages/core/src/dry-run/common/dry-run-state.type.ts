@@ -1,4 +1,4 @@
-/** What turbo resolved for a task from `turbo.json`: `inputs: []` means the task declares none. */
+/** What turbo resolved for a task from `turbo.json`: `inputs: []` means the task declares none, so turbo hashes its default (all files in the package). */
 export type TaskDefinition = {
   readonly inputs: string[];
   readonly outputs: string[];
