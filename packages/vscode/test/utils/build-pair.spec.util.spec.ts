@@ -56,7 +56,7 @@ describe('FEATURE: buildPair', () => {
 
   describe('GIVEN no build that depends on another shown build', () => {
     it('WHEN buildPair runs THEN it throws', () => {
-      const manifest = manifestOf([taskOf('a#build', ['a#lint']), taskOf('b#build', [])]);
+      const manifest = manifestOf([taskOf('a#build', ['a#lint']), taskOf('a#lint', []), taskOf('b#build', [])]);
 
       expect(() => buildPair(manifest)).toThrow('the manifest has no build task that depends on another');
     });
