@@ -4,10 +4,14 @@ import type { RunDefinition, RunEntry, RunKey, RunListener, RunLookup, RunReques
 import { endStateOf, isMatchedEnd } from '../utils/run-end.util.ts';
 import { runKeyOf, runningEntryOf } from '../utils/run-entry.util.ts';
 
-/** An entry and the execution Stop terminates, once `executeTask` has handed it over. */
+/**
+ * An entry and the execution Stop terminates, once `executeTask` has handed it over, and whether Stop already did. A
+ * terminate from `attach` doesn't count: it can reach VS Code before the task is active and be dropped.
+ */
 type RunSlot = {
   readonly entry: RunEntry;
   readonly execution: Terminable | null;
+  readonly isTerminated?: boolean;
 };
 
 /**
@@ -53,14 +57,18 @@ export class RunStore {
     if (slot.entry.stopRequested) execution.terminate();
   }
 
-  /** A second Stop does nothing: terminating a task the first Stop already ended rejects, unhandled (see `failStart`). */
+  /**
+   * A Stop after one that terminated the execution does nothing: terminating again, once VS Code has ended or is ending
+   * the task, rejects unhandled (see `failStart`). A Stop before the execution arrived terminated nothing, so a later
+   * one still does.
+   */
   public requestStop(definition: RunDefinition): void {
     const slot = this.running(definition);
 
-    if (slot?.entry.stopRequested) return;
+    if (slot === undefined || slot.isTerminated === true) return;
 
-    slot?.execution?.terminate();
-    this.update(slot, { stopRequested: true });
+    slot.execution?.terminate();
+    this.update({ ...slot, isTerminated: slot.execution !== null }, { stopRequested: true });
   }
 
   public processStarted(definition: RunDefinition, at: number, launchedAt?: number): void {
@@ -83,8 +91,8 @@ export class RunStore {
    * Ends a run whose process never started at `at` (`stopped` after a Stop), terminating its execution if attached,
    * unless `isTaskEnded`: VS Code already ended the task, and terminating it again rejects with "Task to terminate not
    * found" (`$terminateTask`), which nothing handles (`terminate(): void` drops the promise):
-   * https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadTask.ts
-   * https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/common/extHostTask.ts
+   * https://github.com/microsoft/vscode/blob/2a59476c9bfcb90b3ddc372c36762471b7dfad1c/src/vs/workbench/api/browser/mainThreadTask.ts#L699-L715
+   * https://github.com/microsoft/vscode/blob/2a59476c9bfcb90b3ddc372c36762471b7dfad1c/src/vs/workbench/api/common/extHostTask.ts#L374-L375
    */
   public failStart(definition: RunDefinition, at: number, launchedAt?: number, isTaskEnded = false): RunEntry | null {
     const slot = this.running(definition, launchedAt);
@@ -145,7 +153,7 @@ export class RunStore {
 
     const entry: RunEntry = { ...slot.entry, ...change };
 
-    this.put({ entry, execution: slot.execution });
+    this.put({ ...slot, entry });
 
     return entry;
   }

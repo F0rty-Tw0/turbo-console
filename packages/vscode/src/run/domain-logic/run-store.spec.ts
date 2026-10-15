@@ -88,6 +88,15 @@ describe('FEATURE: run store', () => {
       expect(execution.terminate).toHaveBeenCalledOnce();
     });
 
+    it('WHEN Stop is pressed before the execution arrives and twice after THEN only the first Stop after terminates it again', () => {
+      store.requestStop(RUN);
+      store.attach(RUN, 1000, execution);
+      store.requestStop(RUN);
+      store.requestStop(RUN);
+
+      expect(execution.terminate).toHaveBeenCalledTimes(2);
+    });
+
     it('WHEN Stop is pressed before the execution arrives THEN the execution is terminated on arrival', () => {
       store.requestStop(RUN);
       store.attach(RUN, 1000, execution);
