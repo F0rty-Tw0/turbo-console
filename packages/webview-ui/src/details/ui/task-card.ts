@@ -2,21 +2,28 @@ import type { TaskDefinition } from '@turbo-console/core';
 
 import { iconButton, textElement } from './page-elements.ts';
 import { fillRun } from './patch-run.ts';
-import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { DryRunPhase, RunView, TaskCard } from '../../bridge/common/details-state.type.ts';
-import type { CardRefs, FieldRow, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
+import type { CardRefs, FieldRow, RenderContext, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
 import { NONE_TEXT } from '../common/field-text.const.ts';
 import { cacheText, definitionText, listText } from '../utils/field-text.util.ts';
 
-const runButtonFor = (card: TaskCard, bridge: Bridge): RunButtonFactory => {
+const runButtonFor = (card: TaskCard, context: RenderContext): RunButtonFactory => {
   const { name, taskId } = card;
+  const { bridge, focusTargets } = context;
   const stop = (): void => bridge.post({ type: 'stop', taskId });
   const run = (): void => bridge.post({ type: 'run', taskId });
-
-  return (view: RunView): HTMLButtonElement => {
+  const runOrStop = (view: RunView): HTMLButtonElement => {
     if (view.isRunning) return iconButton('debug-stop', `Stop ${name}`, stop);
 
     return iconButton('play', `Run ${name}`, run);
+  };
+
+  return (view: RunView): HTMLButtonElement => {
+    const button = runOrStop(view);
+
+    focusTargets.set(`run:${taskId}`, button);
+
+    return button;
   };
 };
 
@@ -68,13 +75,14 @@ const badges = (definition: TaskDefinition | null): HTMLUListElement => {
   return list;
 };
 
-const cardHeader = (card: TaskCard, refs: CardRefs, bridge: Bridge): HTMLElement => {
+const cardHeader = (card: TaskCard, refs: CardRefs, context: RenderContext): HTMLElement => {
   const header = document.createElement('header');
-  const copy = (): void => bridge.post({ type: 'copy', taskId: card.taskId });
+  const copy = (): void => context.bridge.post({ type: 'copy', taskId: card.taskId });
   const copyButton = iconButton('copy', `Copy command for ${card.name}`, copy);
   const actions = textElement('span', 'card-actions', '');
   const title = textElement('h2', 'card-title', card.name);
 
+  context.focusTargets.set(`copy:${card.taskId}`, copyButton);
   header.className = 'card-header';
   actions.append(refs.runSlot, copyButton);
   header.append(title, refs.status, actions);
@@ -83,13 +91,13 @@ const cardHeader = (card: TaskCard, refs: CardRefs, bridge: Bridge): HTMLElement
 };
 
 /** One task card; repo text goes in through `textContent` and `aria-label`/`title` only. */
-export const taskCard = (card: TaskCard, phase: DryRunPhase, bridge: Bridge): RenderedCard => {
+export const taskCard = (card: TaskCard, phase: DryRunPhase, context: RenderContext): RenderedCard => {
   const element = textElement('section', 'card', '');
   const status = textElement('span', 'run-status', '');
   const runSlot = textElement('span', 'run-slot', '');
-  const runButton = runButtonFor(card, bridge);
+  const runButton = runButtonFor(card, context);
   const refs: CardRefs = { status, runSlot, runButton };
-  const header = cardHeader(card, refs, bridge);
+  const header = cardHeader(card, refs, context);
   const fields = fieldList(card, phase);
   const badgeList = badges(card.definition);
   const rendered: RenderedCard = { element, refs };
