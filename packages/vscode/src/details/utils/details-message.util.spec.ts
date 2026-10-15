@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { droppedMessageText, parseWebviewMessage } from './details-message.util.ts';
+import { droppedMessageText, parseWebviewMessage, taskIdsOf } from './details-message.util.ts';
+import { toDetailsState } from './details-state.util.ts';
 import { DROPPED_MESSAGE_MAX, UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
+import { DETAILS_INPUT_STUB } from '../test/stubs/details-model.stub.ts';
 
 const TASK_IDS: ReadonlySet<string> = new Set(['a#build', 'a#test']);
+const THROWING_TYPE = {
+  get type(): string {
+    throw new Error('getter trap');
+  }
+};
 
 describe('FEATURE: webview message validation', () => {
   describe('GIVEN a message of every valid type', () => {
@@ -39,7 +46,8 @@ describe('FEATURE: webview message validation', () => {
       ['a refresh with no scope', { type: 'refresh' }],
       ['a refresh with a foreign scope', { type: 'refresh', scope: 'all' }],
       ['an unknown type', { type: 'nope' }],
-      ['a missing type', { taskId: 'a#build' }]
+      ['a missing type', { taskId: 'a#build' }],
+      ['a type getter that throws', THROWING_TYPE]
     ])('WHEN parsed THEN %s is dropped', (_name, value) => {
       expect(parseWebviewMessage(value, TASK_IDS)).toBeNull();
     });
@@ -141,5 +149,21 @@ describe('FEATURE: dropped message log text', () => {
 
       expect(droppedMessageText(hostile)).toBe(UNPRINTABLE_MESSAGE);
     });
+  });
+});
+
+describe('FEATURE: panel task ids', () => {
+  it('GIVEN a package state WHEN asked THEN the ids are those of its cards', () => {
+    const state = toDetailsState(DETAILS_INPUT_STUB);
+
+    expect(taskIdsOf(state)).toStrictEqual(new Set(['a#build', 'a#check', 'a#test']));
+  });
+
+  it('GIVEN a missing package WHEN asked THEN there are none', () => {
+    expect(taskIdsOf({ kind: 'missing', root: '/ws', packageName: 'a' }).size).toBe(0);
+  });
+
+  it('GIVEN no state yet WHEN asked THEN there are none', () => {
+    expect(taskIdsOf(null).size).toBe(0);
   });
 });
