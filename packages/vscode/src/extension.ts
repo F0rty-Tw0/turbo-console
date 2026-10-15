@@ -14,6 +14,7 @@ import { registerPickers } from './run/feature/register-pickers.ts';
 import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
 import type { Timings, TurboConsoleApi } from './shared/common/api.type.ts';
+import type { Output } from './shared/common/output.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
@@ -34,6 +35,18 @@ const registerPanel = (roots: Roots, commands: FixedViewProvider, help: FixedVie
   return vscode.Disposable.from(views, copy, packageActions);
 };
 
+const createSession = (context: vscode.ExtensionContext, output: Output): RootsSession => {
+  const cacheDir = context.globalStorageUri.fsPath;
+  const depsFor = (root: string, acquire: LoadDeps['acquire']): LoadDeps => {
+    const shared: SharedLoadPorts = { cacheDir, log: output.error, acquire };
+
+    return coreLoadDeps(root, shared);
+  };
+  const ports: SessionPorts = { depsFor, now: () => performance.now(), warn: output.warn };
+
+  return new RootsSession(ports);
+};
+
 /**
  * Spec §3 activation: registers the view, commands and listeners, finds the roots and sets the context key. No turbo
  * spawn and no load: the first load starts when the view asks for its children or turns visible. In an untrusted
@@ -42,22 +55,16 @@ const registerPanel = (roots: Roots, commands: FixedViewProvider, help: FixedVie
 export const activate = async (context: vscode.ExtensionContext): Promise<TurboConsoleApi> => {
   const start = performance.now();
   const activation: Span = { start, end: null };
-  const timings: Timings = { activation, treeVisible: new Map(), runs: [] };
+  const timings: Timings = { activation, activationResume: activation, treeVisible: new Map(), runs: [] };
   const output = createOutput();
-  const cacheDir = context.globalStorageUri.fsPath;
-  const depsFor = (root: string, acquire: LoadDeps['acquire']): LoadDeps => {
-    const shared: SharedLoadPorts = { cacheDir, log: output.error, acquire };
-
-    return coreLoadDeps(root, shared);
-  };
-  const ports: SessionPorts = { depsFor, now: () => performance.now(), warn: output.warn };
-  const session = new RootsSession(ports);
+  const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
   const tree = new PackagesTreeProvider(session.store, runSession.runs.get, currentTreeMode(), timings.treeVisible);
   const whenIdle = async (root: string): Promise<void> => session.whenIdle(root);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const api: TurboConsoleApi = { tree, commands, help, runs: runSession.runs, timings, loads: session.loads, whenIdle };
+
   const disposeSession = (): void => {
     session.dispose();
   };
@@ -93,10 +100,19 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
       forwardTaskEvents(runSession)
     );
 
-    await registerRoots(context, session, onRoots, output.error);
+    const rootsFound = registerRoots(context, session, onRoots, output.error);
+
+    // Two spans of this extension's own work, split at the wait for the roots' stat results: with that wait inside,
+    // CI runners logged 10–470 ms for identical code, so the wait is left out of the budget.
+    timings.activation = { start, end: performance.now() };
+    await rootsFound;
+  } else {
+    timings.activation = { start, end: performance.now() };
   }
 
-  timings.activation = { start, end: performance.now() };
+  const end = performance.now();
+
+  timings.activationResume = { start: session.rootsFoundAt ?? end, end };
 
   return api;
 };

@@ -11,9 +11,14 @@ export type RunTiming = {
   readonly processStartedAt: number | null;
 };
 
-/** Mutable records owned by the session: `activate` replaces `activation` when it returns, the rest grow in place. */
+/**
+ * Mutable records owned by the session. `activate` sets `activation` (its start until the roots' stat calls are issued)
+ * and `activationResume` (the stat results back until it returns); the wait between them is not its own work.
+ * `treeVisible` and `runs` grow in place.
+ */
 export type Timings = {
   activation: Span;
+  activationResume: Span;
   readonly treeVisible: Map<string, Span>;
   readonly runs: RunTiming[];
 };

@@ -26,6 +26,8 @@ export class RootsSession implements Session {
   private readonly slots = new LoadSlots(MAX_CONCURRENT_LOADS);
   private readonly debouncer: Debouncer;
   private readonly panels = new VisiblePanels();
+  /** When the last `findRoots` answered (`ports.now`), for activation's timing; `null` before the first answer. */
+  public rootsFoundAt: number | null = null;
   private isVisible = false;
   private foldersGeneration = 0;
 
@@ -47,6 +49,8 @@ export class RootsSession implements Session {
 
     const generation = this.foldersGeneration;
     const roots = await findRoots(folders);
+
+    this.rootsFoundAt = this.ports.now();
 
     if (generation === this.foldersGeneration) this.setRoots(roots);
 

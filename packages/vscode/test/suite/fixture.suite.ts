@@ -6,8 +6,9 @@ import { join } from 'node:path';
 import { loadWorkspace, resolveTurbo } from '@turbo-console/core';
 import * as vscode from 'vscode';
 
-import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
+import type { Timings, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { BACKDATE_MS } from '../common/launch.const.ts';
+import type { SuiteEnv } from '../common/launch.type.ts';
 import { backdateTree } from '../utils/backdate.spec.util.ts';
 import { packageLifecycleCase } from '../utils/package-lifecycle.spec.util.ts';
 import { parityCase } from '../utils/parity-case.spec.util.ts';
@@ -51,6 +52,21 @@ const expandMs = async (api: TurboConsoleApi, name: string): Promise<number> => 
   for (const child of children) api.tree.getTreeItem(child);
 
   return performance.now() - start;
+};
+
+/**
+ * Spec §5.3 case 9 activation: budgets this extension's own work, the span before the roots' stat calls are answered
+ * plus the span after, and logs the wait between them unbudgeted (with the wait counted, CI runners logged 10–470 ms for identical code).
+ */
+const activationBudget = (timings: Timings, env: SuiteEnv): void => {
+  const before = spanMs('activation', timings.activation);
+  const after = spanMs('activation resume', timings.activationResume);
+  const beforeEnd = timings.activation.end ?? Number.NaN;
+  const wait = timings.activationResume.start - beforeEnd;
+
+  log(`timing activation: ${before.toFixed(1)} ms + ${after.toFixed(1)} ms, stat wait ${wait.toFixed(1)} ms (not budgeted)`);
+  assert.ok(wait >= 0, `activation resumed ${-wait} ms before its first part ended`);
+  budget('activation', before + after, ACTIVATION_BUDGET_MS, env);
 };
 
 /**
@@ -114,14 +130,13 @@ export const run = async (): Promise<void> => {
       assert.deepEqual(walked, expected);
     });
     await step('9: cold timings', async () => {
-      const activation = spanMs('activation', api.timings.activation);
       const visible = spanMs('tree visible', api.timings.treeVisible.get(root));
       const query = await queryMs(root, turboPath);
 
       log(`timing query: ${query.toFixed(1)} ms`);
       budget('tree visible cold', visible, query + TREE_VISIBLE_SLACK_MS, env);
       budget('expand', expand, EXPAND_BUDGET_MS, env);
-      budget('activation', activation, ACTIVATION_BUDGET_MS, env);
+      activationBudget(api.timings, env);
     });
     await watchCases(api, root, counter, manifest);
     await packageLifecycleCase(api, root);
