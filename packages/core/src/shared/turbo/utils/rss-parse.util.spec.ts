@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { parseProcStatus, parsePsRss, parseTasklistCsv } from './rss-parse.util.ts';
 
-const TASKLIST_ROW = (memUsage: string): string => `\r\n"turbo.exe","42","Console","1","${memUsage}"\r\n`;
+const tasklistRow = (memUsage: string): string => `\r\n"turbo.exe","42","Console","1","${memUsage}"\r\n`;
 
 const LOCALIZED_MEM_USAGES: string[] = ['123,456 K', '123.456 K', '123 456 K', '123 456 K', '123 456 K', '123�456 K', '123 456 Ko'];
 
@@ -43,7 +43,7 @@ describe('FEATURE: RSS parsers', () => {
 
   describe('GIVEN tasklist CSV output', () => {
     it.each(LOCALIZED_MEM_USAGES)('WHEN the memory is %j THEN the value is in bytes', (memUsage) => {
-      const bytes = parseTasklistCsv(TASKLIST_ROW(memUsage), 42);
+      const bytes = parseTasklistCsv(tasklistRow(memUsage), 42);
 
       expect(bytes).toBe(123456 * 1024);
     });
@@ -55,7 +55,7 @@ describe('FEATURE: RSS parsers', () => {
     });
 
     it('WHEN the row is for another pid THEN it is null', () => {
-      const bytes = parseTasklistCsv(TASKLIST_ROW('123,456 K'), 43);
+      const bytes = parseTasklistCsv(tasklistRow('123,456 K'), 43);
 
       expect(bytes).toBeNull();
     });
@@ -67,13 +67,13 @@ describe('FEATURE: RSS parsers', () => {
     });
 
     it('WHEN the memory is N/A THEN it is null', () => {
-      const bytes = parseTasklistCsv(TASKLIST_ROW('N/A'), 42);
+      const bytes = parseTasklistCsv(tasklistRow('N/A'), 42);
 
       expect(bytes).toBeNull();
     });
 
     it('WHEN a non-matching line precedes the row THEN the row is used', () => {
-      const stdout = `INFO: noise\r\n${TASKLIST_ROW('7 K')}`;
+      const stdout = `INFO: noise\r\n${tasklistRow('7 K')}`;
 
       const bytes = parseTasklistCsv(stdout, 42);
 

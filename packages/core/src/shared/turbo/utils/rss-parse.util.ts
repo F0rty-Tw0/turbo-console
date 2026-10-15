@@ -21,7 +21,6 @@ export const parseProcStatus = (text: string): number | null => {
 /** `ps -o rss= -p <pid>` stdout (KiB) → resident bytes; `null` for empty or non-digit output. */
 export const parsePsRss = (stdout: string): number | null => {
   const kib = stdout.trim();
-
   const isDigits = PS_RSS.test(kib);
 
   if (!isDigits) return null;
