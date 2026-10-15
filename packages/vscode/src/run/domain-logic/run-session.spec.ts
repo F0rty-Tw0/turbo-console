@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunSession } from './run-session.ts';
 import type { RunTiming } from '../../shared/common/api.type.ts';
-import { RUN_TIMINGS_MAX } from '../common/run.const.ts';
+import { ALREADY_RUNNING_TEXT, RUN_TIMINGS_MAX } from '../common/run.const.ts';
 import type { RunDefinition, RunEvent, RunPorts, Terminable } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
@@ -15,6 +15,8 @@ const MATCH: RunMatch = { cache: 'MISS', durationMs: 2000 };
 const THIS_RUN: RunEvent = { definition: RUN, launchedAt: 1000 };
 
 const EARLIER_RUN: RunEvent = { definition: RUN, launchedAt: 500 };
+
+const TURBO_ARGS = ['--skip-infer', 'run', 'build', '--filter=a', '--summarize'];
 
 describe('FEATURE: run session, task events', () => {
   let clock: number;
@@ -48,9 +50,7 @@ describe('FEATURE: run session, task events', () => {
   });
 
   it('GIVEN a binary check that lets the clock move WHEN it runs THEN turbo is launched with the token read at launch', () => {
-    const args = ['--skip-infer', 'run', 'build', '--filter=a', '--summarize'];
-
-    expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, args, 1000);
+    expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, TURBO_ARGS, 1000);
   });
 
   describe('GIVEN a run launched at 1000', () => {
@@ -144,6 +144,55 @@ describe('FEATURE: run session, task events', () => {
       await vi.waitUntil(() => vi.mocked(ports.log).mock.calls.length > 0);
 
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('listener');
+    });
+
+    describe('GIVEN its process started and ended, no task end yet, and VS Code still lists its task', () => {
+      beforeEach(() => {
+        session.processStarted(THIS_RUN);
+        session.processEnded(THIS_RUN, 0);
+        vi.mocked(ports.isActive).mockReturnValue(true);
+        clock = 3000;
+      });
+
+      it('WHEN it is run again at 3000 THEN turbo is launched with the new token', async () => {
+        await session.run(RUN_REQUEST_STUB);
+
+        expect(ports.execute).toHaveBeenNthCalledWith(2, RUN_REQUEST_STUB, TURBO_ARGS, 3000);
+      });
+
+      it('WHEN it is run again THEN the user is not told it is already running', async () => {
+        await session.run(RUN_REQUEST_STUB);
+
+        expect(ports.info).not.toHaveBeenCalledWith(ALREADY_RUNNING_TEXT);
+      });
+
+      it('WHEN it is run again at 3000 THEN the run launched at 3000 is running', async () => {
+        await session.run(RUN_REQUEST_STUB);
+
+        expect(session.runs.get(RUN.root, RUN.id)).toMatchObject({ state: 'running', launchedAt: 3000 });
+      });
+    });
+
+    describe('GIVEN its process and task ended, and VS Code still lists a task of it', () => {
+      beforeEach(() => {
+        session.processStarted(THIS_RUN);
+        session.processEnded(THIS_RUN, 0);
+        session.taskEnded(THIS_RUN);
+        vi.mocked(ports.isActive).mockReturnValue(true);
+        clock = 3000;
+      });
+
+      it('WHEN it is run again THEN the user is told it is already running', async () => {
+        await session.run(RUN_REQUEST_STUB);
+
+        expect(ports.info).toHaveBeenCalledExactlyOnceWith(ALREADY_RUNNING_TEXT);
+      });
+
+      it('WHEN it is run again THEN turbo is not launched again', async () => {
+        await session.run(RUN_REQUEST_STUB);
+
+        expect(ports.execute).toHaveBeenCalledOnce();
+      });
     });
   });
 });
