@@ -171,6 +171,13 @@ describe('FEATURE: run session, task events', () => {
 
         expect(session.runs.get(RUN.root, RUN.id)).toMatchObject({ state: 'running', launchedAt: 3000 });
       });
+
+      it('WHEN an earlier run of the task reports its task end and it is run again at 3000 THEN turbo is launched with the new token', async () => {
+        session.taskEnded(EARLIER_RUN);
+        await session.run(RUN_REQUEST_STUB);
+
+        expect(ports.execute).toHaveBeenNthCalledWith(2, RUN_REQUEST_STUB, TURBO_ARGS, 3000);
+      });
     });
 
     describe('GIVEN its process and task ended, and VS Code still lists a task of it', () => {
@@ -189,6 +196,13 @@ describe('FEATURE: run session, task events', () => {
       });
 
       it('WHEN it is run again THEN turbo is not launched again', async () => {
+        await session.run(RUN_REQUEST_STUB);
+
+        expect(ports.execute).toHaveBeenCalledOnce();
+      });
+
+      it('WHEN an earlier run of the task reports its process end and it is run again THEN turbo is not launched again', async () => {
+        session.processEnded(EARLIER_RUN, 0);
         await session.run(RUN_REQUEST_STUB);
 
         expect(ports.execute).toHaveBeenCalledOnce();

@@ -77,6 +77,8 @@ export class RunSession implements RunControl {
   /**
    * Whether VS Code runs a task of `definition`, except a run of this window whose process ended: VS Code drops it from
    * its active tasks before it fires the process end, but `taskExecutions` lists it until the task end, a later event.
+   * Safe only because VS Code (1.141) sends the task end before it answers the next `executeTask`: every run of a task
+   * shares one execution id, so a new run resolved earlier would get the ended run's execution.
    */
   private isActive(definition: RunDefinition): boolean {
     const key = runKeyOf(definition.root, definition.id);
