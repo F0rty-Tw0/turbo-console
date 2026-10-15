@@ -229,6 +229,17 @@ describe('FEATURE: roots session', () => {
       expect(roots).toStrictEqual([turbo.root]);
     });
 
+    it('WHEN the folders are set THEN rootsFoundAt is stamped once the disk answered, not when the call starts', async () => {
+      const session = new RootsSession(sessionPortsWith({}));
+      const turbo: RootFolder = { root: join(parent, 'turbo'), name: 'turbo' };
+      const setting = session.setWorkspaceFolders([turbo]);
+      const whileReading = session.rootsFoundAt;
+
+      await setting;
+
+      expect([whileReading, session.rootsFoundAt]).toStrictEqual([null, 1]);
+    });
+
     it('WHEN a newer folder set lands before an older one THEN the older one is not applied', async () => {
       const session = new RootsSession(sessionPortsWith({}));
       const turbo: RootFolder = { root: join(parent, 'turbo'), name: 'turbo' };
