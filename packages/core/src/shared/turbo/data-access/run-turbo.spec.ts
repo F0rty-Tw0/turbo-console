@@ -105,14 +105,13 @@ const runUntilAborted = async (stub: StubName, options: RunTurboOptions, onStart
   // A run that rejects while the pid wait still polls is handled here; `await run` below still sees the rejection.
   run.catch(noop);
 
-  const pid = await vi
-    .waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 })
-    .catch(async (error: unknown) => {
-      stop.abort();
-      await run.catch(noop);
+  const pidWait = vi.waitFor(async () => readPid(stub), { timeout: 2000, interval: 20 });
+  const pid = await pidWait.catch(async (error: unknown) => {
+    stop.abort();
+    await run.catch(noop);
 
-      throw error;
-    });
+    throw error;
+  });
 
   onStarted();
 
