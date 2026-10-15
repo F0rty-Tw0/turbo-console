@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { toTurboException } from './turbo-error.util.ts';
+import { MemoryLimitError } from '../../turbo/common/memory-limit.exception.ts';
 import { packageGraphSchema } from '../../turbo/common/package-graph.schema.ts';
 import { TurboException } from '../common/turbo.exception.ts';
 
@@ -48,7 +49,7 @@ describe('FEATURE: turbo errors as TurboException', () => {
     });
 
     it('WHEN given an AbortError caused by a memory limit THEN it is failed, used too much memory, with the stderr tail', () => {
-      const cause = Object.assign(new Error('over'), { name: 'MemoryLimitError', maxRssBytes: 2 ** 31 });
+      const cause = new MemoryLimitError(2 ** 31, 2 ** 32);
       const error = abortError(cause, 'allocating\n');
 
       const exception = toTurboException(error, 'query');
@@ -58,15 +59,6 @@ describe('FEATURE: turbo errors as TurboException', () => {
         message: 'turbo query used too much memory (over 2048 MiB)\nallocating',
         cause: error
       });
-    });
-
-    it('WHEN the memory-limit cause has no numeric maxRssBytes THEN it falls back to was aborted', () => {
-      const cause = Object.assign(new Error('over'), { name: 'MemoryLimitError', maxRssBytes: '2048' });
-      const error = abortError(cause, '');
-
-      const exception = toTurboException(error, 'query');
-
-      expect(exception.message).toBe('turbo query was aborted');
     });
 
     it('WHEN given an AbortError without stderr THEN the message has no tail', () => {

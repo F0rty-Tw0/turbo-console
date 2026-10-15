@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { failedMessage, invalidOutputMessage, ioMessage, turboCommand, withStderrTail } from './turbo-message.util.ts';
+import { MemoryLimitError } from '../../turbo/common/memory-limit.exception.ts';
 import type { AbortOutcome } from '../common/turbo-error.type.ts';
 import { TurboException } from '../common/turbo.exception.ts';
 
@@ -37,26 +38,16 @@ const attachedStderr = (error: Error): string => {
 
 const MIB = 2 ** 20;
 
-/**
- * The bound of the watchdog's `MemoryLimitError` when it is the abort's cause. Read by name and through `Reflect.get`,
- * since `errors/` never imports from `shared/turbo/data-access`.
- */
-const memoryLimitOf = (cause: unknown): number | undefined => {
-  if (!(cause instanceof Error) || cause.name !== 'MemoryLimitError') return undefined;
-
-  const maxRssBytes: unknown = Reflect.get(cause, 'maxRssBytes');
-
-  return typeof maxRssBytes === 'number' && Number.isFinite(maxRssBytes) ? maxRssBytes : undefined;
-};
-
 const fromAbort = (error: Error, command: string): TurboException => {
   const stderr = attachedStderr(error);
-  const maxRssBytes = memoryLimitOf(error.cause);
+  const { cause } = error;
 
-  if (maxRssBytes !== undefined) {
-    const head = `${turboCommand(command)} used too much memory (over ${Math.round(maxRssBytes / MIB)} MiB)`;
+  if (cause instanceof MemoryLimitError) {
+    const mib = Math.round(cause.maxRssBytes / MIB);
+    const head = `${turboCommand(command)} used too much memory (over ${String(mib)} MiB)`;
+    const message = withStderrTail(head, stderr);
 
-    return new TurboException('failed', withStderrTail(head, stderr), { cause: error });
+    return new TurboException('failed', message, { cause: error });
   }
 
   const outcome = abortOutcome(error);
