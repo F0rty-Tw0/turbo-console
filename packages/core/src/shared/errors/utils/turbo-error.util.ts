@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { failedMessage, invalidOutputMessage, ioMessage, turboCommand, withStderrTail } from './turbo-message.util.ts';
+import { MemoryLimitError } from '../../turbo/common/memory-limit.exception.ts';
 import type { AbortOutcome } from '../common/turbo-error.type.ts';
 import { TurboException } from '../common/turbo.exception.ts';
 
@@ -35,9 +36,21 @@ const attachedStderr = (error: Error): string => {
   return stderr ?? '';
 };
 
+const MIB = 2 ** 20;
+
 const fromAbort = (error: Error, command: string): TurboException => {
-  const outcome = abortOutcome(error);
   const stderr = attachedStderr(error);
+  const { cause } = error;
+
+  if (cause instanceof MemoryLimitError) {
+    const mib = Math.round(cause.maxRssBytes / MIB);
+    const head = `${turboCommand(command)} used too much memory (over ${String(mib)} MiB)`;
+    const message = withStderrTail(head, stderr);
+
+    return new TurboException('failed', message, { cause: error });
+  }
+
+  const outcome = abortOutcome(error);
   const message = failedMessage(command, outcome, stderr);
 
   return new TurboException('failed', message, { cause: error });

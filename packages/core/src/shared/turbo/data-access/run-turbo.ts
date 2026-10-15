@@ -5,8 +5,12 @@ import { once } from 'node:events';
 import { checkCwd } from './check-cwd.ts';
 import { collectStderr } from './collect-stderr.ts';
 import { killTree } from './kill-tree.ts';
+import { watchMemory } from './watch-memory.ts';
+import { MemoryLimitError } from '../common/memory-limit.exception.ts';
 import { SKIP_INFER } from '../common/turbo-args.const.ts';
+import { DEFAULT_RSS_POLL_MS, MAX_RSS_BYTES, RSS_POLL_MS } from '../common/turbo-memory.const.ts';
 import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
+import { abortGraceMs } from '../utils/abort-grace.util.ts';
 import { turboEnv } from '../utils/turbo-env.util.ts';
 
 /** `stretch-300` `packageGraph` stdout alone is ~10 MB, far past execFile's 1 MB default. */
@@ -21,9 +25,11 @@ const TIMEOUT_MS = 60_000;
 /** How long turbo gets to exit after the abort kill before it is killed outright. */
 const GRACE_MS = 5000;
 
-const abortSignalOf = (options: RunTurboOptions): AbortSignal => {
+const noop = (): void => undefined;
+
+const abortSignalOf = (options: RunTurboOptions, memory: AbortSignal): AbortSignal => {
   const timeout = AbortSignal.timeout(options.timeoutMs ?? TIMEOUT_MS);
-  const signals = [timeout];
+  const signals = [timeout, memory];
 
   if (options.signal !== undefined) signals.push(options.signal);
 
@@ -73,6 +79,20 @@ const stopChild = async (child: ChildProcess, graceMs: number): Promise<void> =>
   await exited;
 };
 
+/**
+ * Watches `child`'s resident memory and aborts `memory` with a `MemoryLimitError` once it passes the bound; returns the
+ * watch's `stop`. A failed spawn has no pid and gets no watch.
+ */
+const watchChild = (child: ChildProcess, options: RunTurboOptions, memory: AbortController): (() => void) => {
+  if (child.pid === undefined) return noop;
+
+  const maxRssBytes = options.maxRssBytes ?? MAX_RSS_BYTES;
+  const intervalMs = options.rssPollMs ?? RSS_POLL_MS[process.platform] ?? DEFAULT_RSS_POLL_MS;
+  const onExceeded = (rss: number): void => memory.abort(new MemoryLimitError(maxRssBytes, rss));
+
+  return watchMemory(child.pid, { maxRssBytes, intervalMs, onExceeded });
+};
+
 /** M0's mapping: an exit code, non-zero included, resolves; none (spawn failure, a signal, maxBuffer) rejects, with `stderr`. */
 const settle = (
   resolvers: PromiseWithResolvers<TurboResult>,
@@ -100,10 +120,12 @@ const settle = (
  * target repo's `.git/config` is otherwise trusted. Resolves with turbo's exit code, non-zero included. Rejects before spawning with
  * `checkCwd`'s errno error (`path`: `cwd`) when `cwd` is missing, not a directory or not searchable (ENOENT/ENOTDIR/EACCES), unless
  * `signal` already aborted; with execFile's error plus `stderr` (all turbo wrote) when no exit code exists (spawn failure, kill
- * signal, output past `maxBuffer`, 256 MiB by default); and with an `AbortError` (`cause`: the signal's reason; `stderr`: turbo's last 64 Ki
- * characters) when `timeoutMs` (60 s by default) or `signal` aborts first. Abort: SIGTERM to turbo on POSIX (turbo stops its tasks),
- * `taskkill /T /F` on Windows; the rejection waits for turbo's exit and taskkill. After `graceMs` turbo is killed outright; on POSIX
- * that reaches turbo's pid only, so a task ignoring SIGTERM can outlive it (follow-up). Known limit: after turbo exits, a leftover
+ * signal, output past `maxBuffer`, 256 MiB by default); and with an `AbortError` (`cause`: the first abort's reason; `stderr`: turbo's
+ * last 64 Ki characters) when `timeoutMs` (60 s by default), `signal`, or the memory watch aborts first. The watch polls turbo's
+ * resident memory from spawn to exit and aborts with a `MemoryLimitError` once it passes `maxRssBytes` (4 GiB by default); any abort
+ * stops it. Abort: SIGTERM to turbo on POSIX (turbo stops its tasks), `taskkill /T /F` on Windows; the rejection waits for turbo's exit
+ * and taskkill. After `graceMs` turbo is killed outright, at once on POSIX for a memory abort; on POSIX that reaches turbo's pid
+ * only, so a task ignoring SIGTERM can outlive it (follow-up). Known limit: after turbo exits, a leftover
  * process holding its stdout delays the result past any timeout: the abort is detached at turbo's exit and turbo's pid is gone.
  */
 export const runTurbo = async (
@@ -112,7 +134,8 @@ export const runTurbo = async (
   cwd: string,
   options: RunTurboOptions = {}
 ): Promise<TurboResult> => {
-  const signal = abortSignalOf(options);
+  const memory = new AbortController();
+  const signal = abortSignalOf(options, memory.signal);
 
   await checkCwd(cwd, signal);
 
@@ -129,11 +152,13 @@ export const runTurbo = async (
 
   const child = execFile(binaryPath, [SKIP_INFER, ...args], execOptions, onDone);
   const readStderr = collectStderr(child);
+  const stopWatch = watchChild(child, options, memory);
 
   const rejectAborted = (): void => resolvers.reject(abortError(signal, readStderr()));
 
   const onAbort = (): void => {
     isAborting = true;
+    stopWatch();
 
     // Required, not defensive: a failed spawn has no pid until its `error` tick, and on macOS (posix_spawn) libuv's
     // pid is 0 then, so any `child.kill` here would be `kill(0)` and signal our own process group.
@@ -143,12 +168,16 @@ export const runTurbo = async (
       return;
     }
 
-    const stopped = stopChild(child, options.graceMs ?? GRACE_MS);
+    const graceMs = abortGraceMs(signal.reason, process.platform, options.graceMs ?? GRACE_MS);
+    const stopped = stopChild(child, graceMs);
 
     void stopped.then(rejectAborted, rejectAborted);
   };
 
-  const detach = (): void => signal.removeEventListener('abort', onAbort);
+  const detach = (): void => {
+    stopWatch();
+    signal.removeEventListener('abort', onAbort);
+  };
 
   signal.addEventListener('abort', onAbort, { once: true });
   child.once('exit', detach);

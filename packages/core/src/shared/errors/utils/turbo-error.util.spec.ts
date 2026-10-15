@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { toTurboException } from './turbo-error.util.ts';
+import { MemoryLimitError } from '../../turbo/common/memory-limit.exception.ts';
 import { packageGraphSchema } from '../../turbo/common/package-graph.schema.ts';
 import { TurboException } from '../common/turbo.exception.ts';
 
@@ -45,6 +46,19 @@ describe('FEATURE: turbo errors as TurboException', () => {
       const exception = toTurboException(error, 'query');
 
       expect(exception).toMatchObject({ kind: 'failed', message: 'turbo query timed out', cause: error });
+    });
+
+    it('WHEN given an AbortError caused by a memory limit THEN it is failed, used too much memory, with the stderr tail', () => {
+      const cause = new MemoryLimitError(2 ** 31, 2 ** 32);
+      const error = abortError(cause, 'allocating\n');
+
+      const exception = toTurboException(error, 'query');
+
+      expect(exception).toMatchObject({
+        kind: 'failed',
+        message: 'turbo query used too much memory (over 2048 MiB)\nallocating',
+        cause: error
+      });
     });
 
     it('WHEN given an AbortError without stderr THEN the message has no tail', () => {

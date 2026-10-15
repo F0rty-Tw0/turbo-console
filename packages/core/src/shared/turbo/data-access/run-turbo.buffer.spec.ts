@@ -8,19 +8,26 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { runTurbo } from './run-turbo.ts';
 import { toTurboException } from '../../errors/utils/turbo-error.util.ts';
 
+type Spawn = { readonly file: unknown; readonly options: unknown };
+
 const spawns = vi.hoisted(() => {
-  const options: unknown[] = [];
-  const state = { options };
+  const calls: Spawn[] = [];
+  const state = { calls };
 
   return state;
 });
 
-/** Records the options of each `execFile(file, args, options, callback)` call, then spawns for real. */
+/**
+ * Records the file and options of each `execFile(file, args, options, callback)` call, then spawns for real. The memory
+ * watch's probe spawns too (macOS `/bin/ps`), so assertions keep only the stub's calls.
+ */
 vi.mock('node:child_process', async (importOriginal) => {
   const real = await importOriginal<typeof childProcess>();
 
   const execFile = (...args: unknown[]): unknown => {
-    spawns.options.push(args[2]);
+    const call: Spawn = { file: args[0], options: args[2] };
+
+    spawns.calls.push(call);
 
     return Reflect.apply(real.execFile, undefined, args);
   };
@@ -57,7 +64,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo output cap', ()
   });
 
   beforeEach(() => {
-    spawns.options.length = 0;
+    spawns.calls.length = 0;
   });
 
   describe('GIVEN a binary that prints 2 MiB and exits 0', () => {
@@ -81,7 +88,10 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo output cap', ()
     it('WHEN no maxBuffer is given THEN execFile is capped at 256 MiB, not left uncapped', async () => {
       await runTurbo(stub, [], stubDir);
 
-      expect(spawns.options).toMatchObject(DEFAULT_CAP);
+      const stubCalls = spawns.calls.filter((call) => call.file === stub);
+      const stubOptions = stubCalls.map((call) => call.options);
+
+      expect(stubOptions).toMatchObject(DEFAULT_CAP);
     });
   });
 });

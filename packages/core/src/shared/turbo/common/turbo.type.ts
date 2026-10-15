@@ -34,12 +34,17 @@ export type TurboVersionRange = {
   readonly maxExclusive: string;
 };
 
-/** Per-call spawn limits; `graceMs` bounds the wait for exit after the abort kill, `maxBuffer` each of stdout and stderr (bytes). */
+/**
+ * Per-call spawn limits; `graceMs` bounds the wait for exit after the abort kill, `maxBuffer` each of stdout and stderr (bytes).
+ * `maxRssBytes` (turbo's resident memory bound) and `rssPollMs` (how often it is read) are test seams, not user settings.
+ */
 export type RunTurboOptions = {
   readonly timeoutMs?: number | undefined;
   readonly signal?: AbortSignal | undefined;
   readonly graceMs?: number | undefined;
   readonly maxBuffer?: number | undefined;
+  readonly maxRssBytes?: number | undefined;
+  readonly rssPollMs?: number | undefined;
 };
 
 type QueryVariables = {
@@ -61,4 +66,15 @@ export type RssDeps = {
   readonly platform: NodeJS.Platform;
   readonly exec: RssExec;
   readonly readFile: (path: string, encoding: 'utf8') => Promise<string>;
+};
+
+/** Reads the resident memory of `pid` in bytes; `null` when it cannot be read. */
+export type RssProbe = (pid: number) => Promise<number | null>;
+
+/** What `watchMemory` polls and when it gives up; `probe` defaults to `rssOf`. */
+export type WatchMemoryOptions = {
+  readonly maxRssBytes: number;
+  readonly intervalMs: number;
+  readonly probe?: RssProbe | undefined;
+  readonly onExceeded: (rss: number) => void;
 };
