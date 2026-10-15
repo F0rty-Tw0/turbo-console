@@ -1,13 +1,15 @@
 import { codicon, textElement } from './page-elements.ts';
 import type { RunView } from '../../bridge/common/details-state.type.ts';
 import type { CardIndex, CardRefs } from '../common/details-page.type.ts';
+import { safeColorVar } from '../utils/run-view.util.ts';
 
 const statusIcon = (run: RunView): HTMLSpanElement => {
   const icon = codicon(run.iconId);
+  const colorVar = safeColorVar(run.colorVar);
 
   if (run.isRunning) icon.classList.add('codicon-modifier-spin');
 
-  if (run.colorVar !== null) icon.style.setProperty('color', `var(${run.colorVar})`);
+  if (colorVar !== null) icon.style.setProperty('color', `var(${colorVar})`);
 
   return icon;
 };
