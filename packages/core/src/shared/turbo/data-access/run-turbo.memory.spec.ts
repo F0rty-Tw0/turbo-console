@@ -66,16 +66,27 @@ const MIB = 2 ** 20;
 
 /**
  * Allocates and fills a 64 MiB chunk every 20 ms, so its pages are resident. It stops growing at 1 GiB and exits after
- * 10 s, so a broken watchdog cannot leave a hog running. `env` execs node under the same pid, so the watched pid is
- * the allocating one.
+ * 10 s, so a broken watchdog cannot leave a hog running.
  */
-const ALLOCATING_STUB = `#!/usr/bin/env node
-const chunks = [];
+const ALLOCATING_BODY = `const chunks = [];
 const grow = () => {
   if (chunks.length < 16) chunks.push(Buffer.alloc(${String(64 * MIB)}, 1));
 };
 setInterval(grow, 20);
 setTimeout(() => process.exit(0), 10000);
+`;
+
+/** `env` execs node under the same pid, so the watched pid is the allocating one. */
+const ALLOCATING_STUB = `#!/usr/bin/env node
+${ALLOCATING_BODY}`;
+
+/** Only SIGKILL stops it before its own 10 s exit. */
+const SIGTERM_IGNORING_ALLOCATING_STUB = `#!/usr/bin/env node
+process.on('SIGTERM', () => undefined);
+${ALLOCATING_BODY}`;
+
+/** Exits 0 at once, long before the first poll. */
+const EXITING_STUB = `#!/usr/bin/env node
 `;
 
 /** Stays far under the bound and exits after 10 s. */
@@ -92,6 +103,9 @@ setTimeout(() => process.exit(0), 10000);
 
 /** How long the SIGTERM-ignoring stub gets after the abort before the hard kill. */
 const LONG_GRACE_MS = 2000;
+
+/** Past both the 5 s rejection bound and the allocating stub's own 10 s exit, so only a kill at once meets the bound. */
+const GRACE_PAST_SELF_EXIT_MS = 10_000;
 
 /** Well inside `LONG_GRACE_MS`: the abort has run, the stub has not exited. */
 const INSIDE_GRACE_MS = 500;
@@ -143,6 +157,8 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo memory watchdog
   let allocatingStub = '';
   let idleStub = '';
   let sigtermIgnoringStub = '';
+  let sigtermIgnoringAllocatingStub = '';
+  let exitingStub = '';
 
   beforeAll(async () => {
     stubDir = await mkdtemp(join(tmpdir(), 'run-turbo-memory-'));
@@ -152,9 +168,15 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo memory watchdog
     sigtermIgnoringStub = join(stubDir, 'ignore-term.js');
     spawns.stubs.add(idleStub);
     spawns.stubs.add(sigtermIgnoringStub);
+    sigtermIgnoringAllocatingStub = join(stubDir, 'allocate-ignore-term.js');
+    exitingStub = join(stubDir, 'exit.js');
+    spawns.stubs.add(sigtermIgnoringAllocatingStub);
+    spawns.stubs.add(exitingStub);
     await writeFile(allocatingStub, ALLOCATING_STUB, { mode: 0o755 });
     await writeFile(idleStub, IDLE_STUB, { mode: 0o755 });
     await writeFile(sigtermIgnoringStub, SIGTERM_IGNORING_STUB, { mode: 0o755 });
+    await writeFile(sigtermIgnoringAllocatingStub, SIGTERM_IGNORING_ALLOCATING_STUB, { mode: 0o755 });
+    await writeFile(exitingStub, EXITING_STUB, { mode: 0o755 });
   });
 
   afterAll(async () => {
@@ -189,6 +211,30 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo memory watchdog
         const exception = toTurboException(rejection, 'query');
 
         expect(exception.message).toContain('used too much memory');
+      });
+
+      it('THEN the stub process is gone', () => {
+        expect(probeError(pid)).toMatchObject(ESRCH);
+      });
+    });
+  });
+
+  describe('GIVEN a binary that ignores SIGTERM and allocates 64 MiB chunks up to 1 GiB', () => {
+    describe('WHEN runTurbo bounds it at 256 MiB with a 10 s grace', () => {
+      let elapsedMs = 0;
+      let pid: number | undefined;
+
+      beforeAll(async () => {
+        const options = { ...BOUND, graceMs: GRACE_PAST_SELF_EXIT_MS };
+        const startedAt = performance.now();
+
+        await runTurbo(sigtermIgnoringAllocatingStub, [], stubDir, options).then(undefined, rejectionOf);
+        elapsedMs = performance.now() - startedAt;
+        pid = pidOf(spawns.children.at(-1));
+      }, RUN_TIMEOUT_MS);
+
+      it('THEN it rejects within 5 s, since a memory abort skips the grace', () => {
+        expect(elapsedMs).toBeLessThan(5000);
       });
 
       it('THEN the stub process is gone', () => {
@@ -250,9 +296,21 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo memory watchdog
     });
   });
 
+  describe('GIVEN a binary that exits 0 at once', () => {
+    it('WHEN runTurbo runs it with a memory bound THEN the memory watch is stopped at the exit', async () => {
+      await runTurbo(exitingStub, [], stubDir, BOUND);
+
+      const stop = spawns.stops.at(-1);
+      const stopCalls = stop?.mock.calls.length ?? 0;
+
+      expect(stopCalls).toBeGreaterThan(0);
+    });
+  });
+
   describe('GIVEN a missing binary', () => {
     describe('WHEN runTurbo runs it with a memory bound', () => {
       let rejection: unknown;
+      let watchCalls = 0;
 
       beforeAll(async () => {
         const missing = join(stubDir, 'missing-turbo');
@@ -260,6 +318,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo memory watchdog
         vi.mocked(watchMemory).mockClear();
 
         rejection = await runTurbo(missing, [], stubDir, BOUND).then(undefined, rejectionOf);
+        watchCalls = vi.mocked(watchMemory).mock.calls.length;
       });
 
       it('THEN it rejects with the spawn error, as without a bound', () => {
@@ -267,7 +326,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo memory watchdog
       });
 
       it('THEN no memory watch is started', () => {
-        expect(watchMemory).not.toHaveBeenCalled();
+        expect(watchCalls).toBe(0);
       });
     });
   });
