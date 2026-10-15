@@ -53,8 +53,11 @@ export class RunStore {
     if (slot.entry.stopRequested) execution.terminate();
   }
 
+  /** A second Stop does nothing: terminating a task the first Stop already ended rejects, unhandled (see `failStart`). */
   public requestStop(definition: RunDefinition): void {
     const slot = this.running(definition);
+
+    if (slot?.entry.stopRequested) return;
 
     slot?.execution?.terminate();
     this.update(slot, { stopRequested: true });

@@ -80,6 +80,14 @@ describe('FEATURE: run store', () => {
       expect(store.tryStart(OTHER_ROOT, 1100)).toBe(true);
     });
 
+    it('WHEN Stop is pressed twice THEN the execution is terminated once', () => {
+      store.attach(RUN, 1000, execution);
+      store.requestStop(RUN);
+      store.requestStop(RUN);
+
+      expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+
     it('WHEN Stop is pressed before the execution arrives THEN the execution is terminated on arrival', () => {
       store.requestStop(RUN);
       store.attach(RUN, 1000, execution);
