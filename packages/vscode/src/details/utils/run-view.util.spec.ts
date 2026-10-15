@@ -9,7 +9,7 @@ import { IDLE_ICON, RUNNING_ICON } from '../../tree/common/icon.const.ts';
 
 /** The patterns the webview enforces before it uses either field (webview-ui `run-view.const.ts`). */
 const ICON_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const COLOR_VAR_PATTERN = /^--vscode-[A-Za-z0-9.-]+$/;
+const COLOR_VAR_PATTERN = /^--vscode-[A-Za-z0-9-]+$/;
 
 const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
 
