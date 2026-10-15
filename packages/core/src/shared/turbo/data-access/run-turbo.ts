@@ -8,7 +8,7 @@ import { killTree } from './kill-tree.ts';
 import { watchMemory } from './watch-memory.ts';
 import { MemoryLimitError } from '../common/memory-limit.exception.ts';
 import { SKIP_INFER } from '../common/turbo-args.const.ts';
-import { MAX_RSS_BYTES, RSS_POLL_MS } from '../common/turbo-memory.const.ts';
+import { DEFAULT_RSS_POLL_MS, MAX_RSS_BYTES, RSS_POLL_MS } from '../common/turbo-memory.const.ts';
 import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
 import { abortGraceMs } from '../utils/abort-grace.util.ts';
 import { turboEnv } from '../utils/turbo-env.util.ts';
@@ -24,9 +24,6 @@ const TIMEOUT_MS = 60_000;
 
 /** How long turbo gets to exit after the abort kill before it is killed outright. */
 const GRACE_MS = 5000;
-
-/** For a platform `RSS_POLL_MS` has no entry for. */
-const DEFAULT_RSS_POLL_MS = 500;
 
 const noop = (): void => undefined;
 
@@ -91,7 +88,6 @@ const watchChild = (child: ChildProcess, options: RunTurboOptions, memory: Abort
 
   const maxRssBytes = options.maxRssBytes ?? MAX_RSS_BYTES;
   const intervalMs = options.rssPollMs ?? RSS_POLL_MS[process.platform] ?? DEFAULT_RSS_POLL_MS;
-
   const onExceeded = (rss: number): void => memory.abort(new MemoryLimitError(maxRssBytes, rss));
 
   return watchMemory(child.pid, { maxRssBytes, intervalMs, onExceeded });

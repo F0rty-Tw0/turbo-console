@@ -10,3 +10,6 @@ export const RSS_POLL_MS: Readonly<Partial<Record<NodeJS.Platform, number>>> = O
   darwin: 250,
   win32: 500
 });
+
+/** For a platform `RSS_POLL_MS` has no entry for. */
+export const DEFAULT_RSS_POLL_MS = 500;
