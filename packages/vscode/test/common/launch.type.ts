@@ -68,7 +68,9 @@ export type SpawnCounter = {
 
 export type ShownPackage = {
   readonly name: string;
+  readonly path: string;
   readonly role: PackageRole;
+  readonly dependencies: string[];
 };
 
 export type ShownTask = {

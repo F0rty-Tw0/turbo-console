@@ -40,7 +40,11 @@ const isSuiteEnv = (value: unknown): value is SuiteEnv => {
 const isShownPackage = (value: unknown): value is ShownPackage => {
   if (!isObject(value)) return false;
 
-  return typeof value['name'] === 'string' && isPackageRole(value['role']);
+  const dependencies = value['dependencies'];
+  const hasDependencies = Array.isArray(dependencies) && dependencies.every(isString);
+  const hasNames = typeof value['name'] === 'string' && typeof value['path'] === 'string';
+
+  return hasNames && hasDependencies && isPackageRole(value['role']);
 };
 
 const isShownTask = (value: unknown): value is ShownTask => {
