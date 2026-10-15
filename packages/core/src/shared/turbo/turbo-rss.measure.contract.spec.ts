@@ -7,9 +7,10 @@ import { z } from 'zod';
 
 import { SKIP_INFER } from './common/turbo-args.const.ts';
 import { PACKAGE_GRAPH_QUERY } from './common/turbo-query.const.ts';
+import { daemonReport } from './test/utils/daemon-report.spec.util.ts';
 import { devTurboPath } from './test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from './test/utils/fixture-hook.spec.util.ts';
-import { daemonReport, execveChildCount, logMeasurement, peakRssBytes } from './test/utils/peak-rss.spec.util.ts';
+import { execveChildCount, logMeasurement, peakRssBytes } from './test/utils/peak-rss.spec.util.ts';
 import { dryRunArgs } from '../../dry-run/utils/dry-run.util.ts';
 
 type MeasuredCommand = {
