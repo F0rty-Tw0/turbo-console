@@ -285,6 +285,9 @@ importers:
       '@turbo-console/core':
         specifier: workspace:*
         version: link:../core
+      zod:
+        specifier: catalog:runtime
+        version: 4.6.5
     devDependencies:
       '@turbo-console/repo-gen':
         specifier: workspace:*
@@ -292,6 +295,9 @@ importers:
       '@turbo-console/tools':
         specifier: workspace:*
         version: link:../../tools
+      '@turbo-console/webview-ui':
+        specifier: workspace:*
+        version: link:../webview-ui
       '@types/vscode':
         specifier: 1.138.0
         version: 1.138.0

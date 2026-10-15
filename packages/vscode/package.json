@@ -352,11 +352,13 @@
     "integration": "esbuild \"test/suite/*.suite.ts\" --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --external:vscode --outdir=dist-test --out-extension:.js=.cjs && node -e \"require('node:fs').mkdirSync('.vsix',{recursive:true})\" && vsce package --no-dependencies --skip-license --allow-missing-repository --out .vsix/turbo-console.vsix && node test/run-integration.ts"
   },
   "dependencies": {
-    "@turbo-console/core": "workspace:*"
+    "@turbo-console/core": "workspace:*",
+    "zod": "catalog:runtime"
   },
   "devDependencies": {
     "@turbo-console/repo-gen": "workspace:*",
     "@turbo-console/tools": "workspace:*",
+    "@turbo-console/webview-ui": "workspace:*",
     "@types/vscode": "1.138.0",
     "@vscode/test-electron": "catalog:dev",
     "@vscode/vsce": "catalog:dev",
