@@ -274,12 +274,6 @@ importers:
         specifier: catalog:dev
         version: 2.11.7
 
-  packages/graph-ui:
-    devDependencies:
-      '@playwright/test':
-        specifier: catalog:dev
-        version: 1.64.0
-
   packages/repo-gen:
     devDependencies:
       '@turbo-console/tools':
@@ -310,6 +304,12 @@ importers:
       turbo:
         specifier: catalog:dev
         version: 2.11.7
+
+  packages/webview-ui:
+    devDependencies:
+      '@playwright/test':
+        specifier: catalog:dev
+        version: 1.64.0
 
   tools:
     dependencies:

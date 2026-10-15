@@ -6,7 +6,7 @@ export type Bridge = {
 /** Signature of the VS Code webview `postMessage`. */
 export type PostMessage = (message: unknown) => void;
 
-/** The part of the VS Code webview API that graph-ui uses. */
+/** The part of the VS Code webview API that webview-ui uses. */
 export type VsCodeApi = {
   readonly postMessage: PostMessage;
 };

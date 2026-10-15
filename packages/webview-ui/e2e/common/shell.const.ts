@@ -1,4 +1,4 @@
-export const SHELL_ORIGIN = 'https://graph-ui.test';
+export const SHELL_ORIGIN = 'https://webview-ui.test';
 
 export const SHELL_URL = `${SHELL_ORIGIN}/index.html`;
 

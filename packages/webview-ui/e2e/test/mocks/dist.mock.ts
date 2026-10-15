@@ -8,7 +8,7 @@ import type { RouteHandler } from '../../common/playwright.type.ts';
 import type { ShellOptions } from '../../common/shell.type.ts';
 import { renderShellHtml } from '../../utils/shell-html.util.ts';
 
-const DIST_DIR = join(import.meta.dirname, '../../../dist');
+const DIST_DIR = join(import.meta.dirname, '../../../dist/graph');
 
 const fulfillShellHtml = async (route: Route, options: ShellOptions): Promise<void> => {
   const template = await readFile(join(DIST_DIR, 'index.html'), 'utf8');
@@ -18,7 +18,7 @@ const fulfillShellHtml = async (route: Route, options: ShellOptions): Promise<vo
   await route.fulfill({ body, contentType: 'text/html' });
 };
 
-/** Serves the built `dist/` files; `index.html` gets the webview CSP and a fresh nonce per request. */
+/** Serves the built `dist/graph/` files; `index.html` gets the webview CSP and a fresh nonce per request. */
 export const distMock = (options: ShellOptions = {}): RouteHandler => {
   return async (route: Route): Promise<void> => {
     const url = new URL(route.request().url());

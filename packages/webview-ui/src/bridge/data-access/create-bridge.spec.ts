@@ -26,7 +26,7 @@ describe('FEATURE: create bridge', () => {
 
       bridge.ready();
 
-      expect(console.warn).toHaveBeenCalledWith('graph-ui: ready (no host)');
+      expect(console.warn).toHaveBeenCalledWith('webview-ui: ready (no host)');
     });
   });
 
