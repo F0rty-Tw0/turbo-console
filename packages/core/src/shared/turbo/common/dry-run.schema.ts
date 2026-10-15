@@ -2,6 +2,15 @@ import { z } from 'zod';
 
 const cacheSchema = z.object({ status: z.enum(['HIT', 'MISS']) });
 
+const resolvedTaskDefinitionSchema = z.object({
+  inputs: z.array(z.string()),
+  outputs: z.array(z.string()),
+  dependsOn: z.array(z.string()),
+  cache: z.boolean(),
+  persistent: z.boolean(),
+  env: z.array(z.string())
+});
+
 const taskSchema = z.object({
   taskId: z.string(),
   package: z.string(),
@@ -10,7 +19,8 @@ const taskSchema = z.object({
   command: z.string(),
   cache: cacheSchema,
   dependencies: z.array(z.string()),
-  dependents: z.array(z.string())
+  dependents: z.array(z.string()),
+  resolvedTaskDefinition: resolvedTaskDefinitionSchema
 });
 
 /**

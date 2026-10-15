@@ -1,8 +1,8 @@
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { DryRun } from '../../shared/turbo/common/turbo.type.ts';
-import { assertTurboName } from '../../shared/turbo/utils/turbo-name.util.ts';
-import type { DryRunRequest, DryRunState } from '../common/dry-run-state.type.ts';
+import { assertFilterName, assertTaskName } from '../../shared/turbo/utils/turbo-name.util.ts';
+import type { DryRunRequest, DryRunState, TaskDefinition } from '../common/dry-run-state.type.ts';
 
 type DryRunTask = DryRun['tasks'][number];
 
@@ -13,16 +13,25 @@ const compareIds = (left: DryRunState, right: DryRunState): number => compareTex
 
 const hasCommand = (task: DryRunTask): boolean => task.command !== NONEXISTENT;
 
+const toTaskDefinition = (task: DryRunTask): TaskDefinition => {
+  const { inputs, outputs, dependsOn, cache, persistent, env } = task.resolvedTaskDefinition;
+  const definition: TaskDefinition = { inputs, outputs, dependsOn, cache, persistent, env };
+
+  return definition;
+};
+
 const toDryRunState = (task: DryRunTask): DryRunState => {
   const cache = task.hash === null ? 'deferred' : task.cache.status;
-  const state: DryRunState = { id: task.taskId, hash: task.hash, cache };
+  const definition = toTaskDefinition(task);
+  const state: DryRunState = { id: task.taskId, hash: task.hash, cache, definition };
 
   return state;
 };
 
 /**
- * `run <tasks…> [--filter=<pkg>…] --dry=json`. An empty `tasks` throws `invalid-argument`, as does any task or package
- * name `assertTurboName` rejects, so a bad request never reaches a spawn.
+ * `run <tasks…> [--filter=<pkg>…] --dry=json`. An empty `tasks` throws `invalid-argument`, as does a task name
+ * `assertTaskName` rejects (a `pkg#task` id) or a package name `assertFilterName` rejects (filter syntax), so a bad
+ * request never reaches a spawn.
  */
 export const dryRunArgs = (request: DryRunRequest): string[] => {
   const { tasks } = request;
@@ -30,9 +39,10 @@ export const dryRunArgs = (request: DryRunRequest): string[] => {
   if (tasks.length === 0) throw new TurboException('invalid-argument', 'dry run needs at least one task');
 
   const packages = request.packages ?? [];
-  const names = [...tasks, ...packages];
 
-  for (const name of names) assertTurboName(name);
+  for (const task of tasks) assertTaskName(task);
+
+  for (const name of packages) assertFilterName(name);
 
   const filters = packages.map((name) => `--filter=${name}`);
   const args = ['run', ...tasks, ...filters, '--dry=json'];
