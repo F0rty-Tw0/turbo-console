@@ -83,11 +83,18 @@ export class RootsSession implements Session {
     for (const entry of this.store.all()) entry.coordinator.show();
   }
 
-  /** A visible package-details panel counts as a visible view for its root: a hidden tree no longer stops its loads. */
+  /**
+   * A visible package-details panel counts as a visible view for its root: a hidden tree no longer stops its loads. A
+   * folder that is not a root is ignored, so it never counts as visible if it becomes one later.
+   */
   public setPanelVisible(root: string, panelId: string, visible: boolean): void {
+    const entry = this.store.get(root);
+
+    if (visible && entry === undefined) return;
+
     this.panels.set(root, panelId, visible);
 
-    if (visible) this.store.get(root)?.coordinator.show();
+    if (visible) entry?.coordinator.show();
   }
 
   public request(reason: ChangeReason): void {

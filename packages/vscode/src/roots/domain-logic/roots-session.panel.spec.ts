@@ -8,6 +8,8 @@ const A_FOLDER: RootFolder = { root: '/a', name: 'a' };
 
 const B_FOLDER: RootFolder = { root: '/b', name: 'b' };
 
+const X_FOLDER: RootFolder = { root: '/x', name: 'x' };
+
 const noCache = (): LoadDeps['readCached'] => vi.fn().mockResolvedValue(null);
 
 const modesOf = (session: RootsSession, root: string): string[] | undefined =>
@@ -81,6 +83,14 @@ describe('FEATURE: roots session panel visibility', () => {
       session.request('watch');
 
       expect(modesOf(session, '/a')).toStrictEqual([]);
+    });
+
+    it('WHEN a panel turns visible on a folder before it is a root THEN that root does not count as visible once added', () => {
+      session.setPanelVisible(X_FOLDER.root, 'p1', true);
+      session.setRoots([A_FOLDER, B_FOLDER, X_FOLDER]);
+      session.request('watch');
+
+      expect(modesOf(session, X_FOLDER.root)).toStrictEqual([]);
     });
   });
 });
