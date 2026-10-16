@@ -288,6 +288,9 @@ importers:
       '@turbo-console/core':
         specifier: workspace:*
         version: link:../core
+      jsonc-parser:
+        specifier: catalog:runtime
+        version: 3.3.1
       zod:
         specifier: catalog:runtime
         version: 4.6.5
