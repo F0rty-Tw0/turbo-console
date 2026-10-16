@@ -1,5 +1,13 @@
+import type { TaskDefinition } from '@turbo-console/core';
+
 import { expect, test } from './details.fixture.ts';
-import { MISSING_PACKAGE_STUB, PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
+import {
+  MISSING_PACKAGE_STUB,
+  PACKAGE_DETAILS_STUB,
+  RUN_VIEW_STUB,
+  TASK_CARD_STUB,
+  TASK_DEFINITION_STUB
+} from './test/stubs/details-state.stub.ts';
 import { packageWithTasks, taskNames } from './test/utils/details-state.spec.util.ts';
 import type { WebviewMessage } from '../src/bridge/common/details-message.type.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
@@ -32,6 +40,19 @@ const LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loadin
 const SHORT_LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loading', tasks: [] };
 
 const FOCUS_KEPT_LABELS = ['Refresh', 'Copy command for build'];
+
+const CACHE_ONLY: TaskDefinition = { ...TASK_DEFINITION_STUB, persistent: false };
+
+const PERSISTENT_ONLY: TaskDefinition = { ...TASK_DEFINITION_STUB, cache: false };
+
+const NO_FLAGS: TaskDefinition = { ...TASK_DEFINITION_STUB, cache: false, persistent: false };
+
+const BADGE_CASES: [string, TaskDefinition | null, string[]][] = [
+  ['only cache set', CACHE_ONLY, ['Cacheable']],
+  ['only persistent set', PERSISTENT_ONLY, ['Continuous']],
+  ['neither flag set', NO_FLAGS, []],
+  ['no definition yet', null, []]
+];
 
 const ALL_ACTIONS_POSTED: WebviewMessage[] = [
   { type: 'ready' },
@@ -74,6 +95,17 @@ test.describe('FEATURE: package details page', () => {
 
     await test.step('AND no console or page error is logged', (): void => detailsPage.expectNoErrors());
   });
+
+  for (const [given, definition, badges] of BADGE_CASES) {
+    test(`GIVEN a task with ${given}, the card shows badges [${badges.join(', ')}]`, async ({ detailsPage }): Promise<void> => {
+      const task: TaskCard = { ...TASK_CARD_STUB, definition };
+      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [task] };
+
+      await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
+
+      await test.step('THEN exactly those badges render', async (): Promise<void> => detailsPage.card('build').expectBadges(badges));
+    });
+  }
 
   test(
     'GIVEN a package with a hostile name, the name renders as text',
