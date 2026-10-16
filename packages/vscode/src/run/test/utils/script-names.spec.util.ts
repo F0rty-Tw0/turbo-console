@@ -1,6 +1,7 @@
 const ALLOWLIST = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@/._:=+-';
 
-const METACHARACTERS = ' ;&|<>()$`"\'\\!%^*?[~';
+/** The 20 shell metacharacters the seeded names mix into the allowlist. */
+export const METACHARACTERS = ' ;&|<>()$`"\'\\!%^*?[~';
 
 const ALPHABET = ALLOWLIST + METACHARACTERS;
 
