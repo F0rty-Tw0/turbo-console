@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 
+import type { PanelsDeps } from './details/common/panel.type.ts';
+import { editorPanelHost } from './details/data-access/details-ports.ts';
+import { DetailsPanels } from './details/domain-logic/details-panels.ts';
+import { registerDetails } from './details/feature/register-details.ts';
 import type { Roots } from './roots/common/coordinator.type.ts';
 import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/root.type.ts';
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
@@ -10,7 +14,7 @@ import { editorRunAllPorts, editorRunPorts } from './run/data-access/run-ports.t
 import { forwardRunAllEvents, forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
 import { RunSession } from './run/domain-logic/run-session.ts';
 import { registerCopy } from './run/feature/register-copy.ts';
-import { registerPickers } from './run/feature/register-pickers.ts';
+import { manifestFile, registerPickers, rootOf } from './run/feature/register-pickers.ts';
 import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
 import type { Timings, TurboConsoleApi } from './shared/common/api.type.ts';
@@ -19,6 +23,7 @@ import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
+import { TreeVisibility } from './tree/domain-logic/tree-visibility.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
 import { registerPackageActions } from './tree/feature/package-actions.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
@@ -47,6 +52,37 @@ const createSession = (context: vscode.ExtensionContext, output: Output): RootsS
   return new RootsSession(ports);
 };
 
+/** The details panels over the root session; a panel reports its visibility to the session only through this closure. */
+const createPanels = (
+  context: vscode.ExtensionContext,
+  session: RootsSession,
+  runs: PanelsDeps['runs'],
+  output: Output
+): DetailsPanels => {
+  const setPanelVisible: PanelsDeps['setPanelVisible'] = (root, panelId, visible) => {
+    session.setPanelVisible(root, panelId, visible);
+  };
+  const host = editorPanelHost(context.extensionUri, output, rootOf);
+
+  return new DetailsPanels({ roots: session.store, runs, host, setPanelVisible });
+};
+
+/** The run, pick and run-all commands plus the forwarding of turbo task events. */
+const registerRunCommands = (
+  session: RootsSession,
+  runSession: RunSession,
+  tree: PackagesTreeProvider,
+  output: Output
+): vscode.Disposable => {
+  const register = vscode.commands.registerCommand;
+  const runs = registerRuns(runSession, tree, session.store, register);
+  const pickers = registerPickers(runSession, session.store, register);
+  const runAllPorts = editorRunAllPorts(session.store, output);
+  const runAll = registerRunAll(session.store, runAllPorts, forwardRunAllEvents, register);
+
+  return vscode.Disposable.from(runs, pickers, runAll, forwardTaskEvents(runSession));
+};
+
 /**
  * Spec §3 activation: registers the view, commands and listeners, finds the roots and sets the context key. No turbo
  * spawn and no load: the first load starts when the view asks for its children or turns visible. In an untrusted
@@ -63,41 +99,38 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const whenIdle = async (root: string): Promise<void> => session.whenIdle(root);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
-  const api: TurboConsoleApi = { tree, commands, help, runs: runSession.runs, timings, loads: session.loads, whenIdle };
-
-  const disposeSession = (): void => {
-    session.dispose();
+  const panels = createPanels(context, session, runSession.runs, output);
+  const treeVisibility = new TreeVisibility();
+  const api: TurboConsoleApi = {
+    tree,
+    commands,
+    help,
+    runs: runSession.runs,
+    timings,
+    loads: session.loads,
+    whenIdle,
+    details: panels.api(),
+    treeVisible: treeVisibility.read
   };
 
-  context.subscriptions.push(output, tree, { dispose: disposeSession });
+  context.subscriptions.push(output, tree, session);
 
   if (vscode.workspace.isTrusted) {
-    registerTree(context, session, tree, output);
+    treeVisibility.bind(registerTree(context, session, tree, output));
 
     const watchers = registerWatchers(session, watchRoot);
     const onRoots = (): void => {
       tree.rootsChanged();
       watchers.prune();
+      panels.pruneRoots();
     };
-
-    const runs = registerRuns(runSession, tree, session.store, vscode.commands.registerCommand);
-
-    const pickers = registerPickers(runSession, session.store, vscode.commands.registerCommand);
-
-    const runAll = registerRunAll(
-      session.store,
-      editorRunAllPorts(session.store, output),
-      forwardRunAllEvents,
-      vscode.commands.registerCommand
-    );
+    const details = registerDetails(panels, vscode.commands.registerCommand, manifestFile);
 
     context.subscriptions.push(
       watchers,
-      runs,
-      pickers,
-      runAll,
-      registerPanel(session.store, commands, help),
-      forwardTaskEvents(runSession)
+      details,
+      registerRunCommands(session, runSession, tree, output),
+      registerPanel(session.store, commands, help)
     );
 
     const rootsFound = registerRoots(context, session, onRoots, output.error);
