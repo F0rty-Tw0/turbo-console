@@ -16,8 +16,6 @@ import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
 
 type CommandCallback = () => unknown;
 
-const SCRIPTS_KEY = 'turboConsole.scriptsShown';
-
 /** Every value the provider's event emitter fired, in order. */
 const fired = vi.hoisted((): unknown[] => []);
 
@@ -183,7 +181,6 @@ describe('FEATURE: registerTree scripts toggle', () => {
 
       expect(setKey.mock.calls).toStrictEqual([[true]]);
       expect(setKey.mock.invocationCallOrder[0]).toBeLessThan(children.mock.invocationCallOrder[0] ?? 0);
-      expect(SCRIPTS_KEY).toBe('turboConsole.scriptsShown');
     });
   });
 });
