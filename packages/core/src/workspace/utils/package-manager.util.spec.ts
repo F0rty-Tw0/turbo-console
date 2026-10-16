@@ -40,6 +40,9 @@ const NON_DEV_ENGINES = [
   [{ name: 'deno' }, { name: 'pnpm' }]
 ];
 
+/** A root `packageManager` field that names no manager, so it must not shadow `devEngines`. */
+const UNUSABLE_FIELDS = ['deno@2', 42];
+
 const ALL_LOCKFILES: LockfileName[] = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'yarn.lock', 'package-lock.json'];
 
 /** The two manifest values `packageManagerOf` reads; `devEnginesManager` is the value of `devEngines.packageManager`. */
@@ -117,6 +120,12 @@ describe('FEATURE: package manager detection', () => {
       const manager = packageManagerOf(fieldsOf(undefined, [{ name: 'yarn' }, { name: 'pnpm' }]), new Set<LockfileName>());
 
       expect(manager).toStrictEqual(devEnginesOf('yarn'));
+    });
+
+    it.each(UNUSABLE_FIELDS)('WHEN packageManager is %j, no manager, THEN devEngines still wins over the lockfile', (value) => {
+      const manager = packageManagerOf(fieldsOf(value, { name: 'pnpm' }), new Set<LockfileName>(['yarn.lock']));
+
+      expect(manager).toStrictEqual(devEnginesOf('pnpm'));
     });
 
     it('WHEN it names no manager THEN the lockfile decides', () => {

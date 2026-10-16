@@ -62,11 +62,11 @@ const refuseHostile = (rootFiles: KeyedFile[]): void => {
 };
 
 /**
- * Spec §4.4: one `packageGraph` spawn (30 s budget, 128 MiB stdout cap), the `packageManager` field of the root
- * `package.json`, read once after the root hash (a missing, oversized or malformed one never fails the load: the
- * root lockfiles in that hash decide), the `turbo.json(c)` of the root and of every graph package (hidden ones
- * included), the pure model build, then the model keyed and kept in memory, and written to
- * `cacheDir` when one is given. A failed write does not fail the load: the returned model, and only it, gains a
+ * Spec §4.4: one `packageGraph` spawn (30 s budget, 128 MiB stdout cap), the `packageManager` field and
+ * `devEngines.packageManager` of the root `package.json`, read once after the root hash (a missing, oversized or
+ * malformed one never fails the load: the root lockfiles in that hash decide), the `turbo.json(c)` of the root and of
+ * every graph package (hidden ones included), the pure model build, then the model keyed and kept in memory, and
+ * written to `cacheDir` when one is given. A failed write does not fail the load: the returned model, and only it, gains a
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
  * changes nothing the cache holds. The caller's `signal` reaches the root keyed file hash, the spawn and the reads, and
  * is checked once more before the store: an abort by then stores nothing, one during the store does not stop it. The
