@@ -3,6 +3,7 @@ import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 import { folderTree } from './folder-tree.util.ts';
 import { packageMapOf } from './package-map.util.ts';
 import { isVisibleTask } from './task-rows.util.ts';
+import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
 import type { ModelView } from '../common/model-view.type.ts';
 
 const SCOPED_NAME = /^@[^/]+\/(.+)$/u;
@@ -50,12 +51,32 @@ export const shownLabelOf = (view: ModelView, pkg: PackageNode, scopeShown: bool
   return view.bareLabels.get(pkg.name) ?? pkg.name;
 };
 
+/** Records the packages of `dir` and every directory below it under each one's path; returns `dir`'s own count. */
+const countBelow = (dir: FolderDir, counts: Map<string, number>): number => {
+  const nested = dir.dirs.map((child) => countBelow(child, counts));
+  const count = nested.reduce((sum, each) => sum + each, dir.packages.length);
+
+  counts.set(dir.path, count);
+
+  return count;
+};
+
+/** One walk over the folder tree, so a directory tooltip reads its count instead of walking every package. */
+const packagesBelowOf = (folders: FolderTree): Map<string, number> => {
+  const counts = new Map<string, number>();
+
+  for (const dir of folders.dirs) countBelow(dir, counts);
+
+  return counts;
+};
+
 export const modelViewOf = (model: WorkspaceModel): ModelView => {
   const shown = model.packages.filter(isShownPackage);
   const packages = packageMapOf(shown);
   const folders = folderTree(shown);
   const bareLabels = bareLabelsOf(shown);
-  const view: ModelView = { packages, folders, bareLabels };
+  const packagesBelow = packagesBelowOf(folders);
+  const view: ModelView = { packages, folders, bareLabels, packagesBelow };
 
   return view;
 };

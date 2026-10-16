@@ -7,7 +7,7 @@ import { allRows } from '../utils/all-rows.util.ts';
 import { nodesOf, pruneNodes } from '../utils/node-cache.util.ts';
 import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts';
 import { refreshTarget } from '../utils/refresh-target.util.ts';
-import { rootNodeRow, rootRows } from '../utils/root-rows.util.ts';
+import { rootRowOf, rootRows } from '../utils/root-rows.util.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
 import { markAsked, markShown } from '../utils/tree-visible-span.util.ts';
 
@@ -104,7 +104,8 @@ export class PackagesTree {
 
     if (entries.length === 1 && only !== undefined) return this.rootChildren(only.state.folder.root);
 
-    const rows = entries.map((entry) => rootNodeRow(entry.state.folder));
+    const context = this.rowContext();
+    const rows = entries.map((entry) => rootRowOf(entry.state, context));
 
     return nodesOf(this.cache, rows);
   }

@@ -97,8 +97,18 @@ export const rootRows = (state: RootState, context: RowContext): TreeRow[] => {
   return [...warning, ...listed];
 };
 
-/** The folder node of a multi-root window: its key is the root path, so its id is `root:<root>`. */
-export const rootNodeRow = (folder: RootFolder): TreeRow => {
+const countLines = (view: ModelView | null): string[] => {
+  if (view === null) return [];
+
+  return [`Packages: ${view.packages.size}`];
+};
+
+/**
+ * The folder node of a multi-root window: its key is the root path, so its id is `root:<root>`. Spec §4.9: the tooltip
+ * holds the root path and its shown package count; a `null` view (no model yet) leaves the count out.
+ */
+export const rootNodeRow = (folder: RootFolder, view: ModelView | null): TreeRow => {
+  const counted = countLines(view);
   const row: TreeRow = {
     id: rowIdOf('root', folder.root, folder.root),
     kind: 'root',
@@ -110,9 +120,20 @@ export const rootNodeRow = (folder: RootFolder): TreeRow => {
     icon: ROOT_FOLDER_ICON,
     contextValue: 'turboRoot',
     collapsible: 'expanded',
-    tooltip: [],
+    tooltip: [folder.root, ...counted],
     command: null
   };
 
   return row;
+};
+
+/** A root's folder row read from its state: the view of its model, or none while it has no model. */
+export const rootRowOf = (state: RootState, context: RowContext): TreeRow => {
+  const { model } = state;
+
+  if (model === null) return rootNodeRow(state.folder, null);
+
+  const view = context.views(model);
+
+  return rootNodeRow(state.folder, view);
 };

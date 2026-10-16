@@ -1,14 +1,14 @@
 import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { rootRows } from './root-rows.util.ts';
+import { rootNodeRow, rootRowOf, rootRows } from './root-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { LoadFailure } from '../../roots/common/root.type.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import type { IconSpec, RowCommand, TreeMode, TreeRow } from '../common/tree-row.type.ts';
-import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
+import { ROOT_FOLDER_STUB, ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
-import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
+import { modelViewWith, rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const INFO_ICON: IconSpec = { id: 'info', color: 'editorInfo.foreground' };
 const SHOW_OUTPUT: RowCommand = { command: 'turboConsole.showOutput', args: [] };
@@ -121,6 +121,56 @@ describe('FEATURE: shown packages of a root', () => {
       const rows = rootRows(SCOPED, rowContextOf('list', undefined, scopeShown));
 
       expect(rows[0]).toMatchObject({ id: 'pkg:/ws\0@a/z', key: '@a/z', packageName: '@a/z' });
+    });
+  });
+
+  describe('GIVEN shown packages nested two levels below a directory and a hidden one beside them', () => {
+    const state = stateOf([
+      packageAt('@s/a', 'packages/a', [TASK_NODE_STUB, ATOM_TASK]),
+      packageAt('x', 'packages/libs/x'),
+      packageAt('y', 'packages/libs/deep/y'),
+      packageAt('atoms', 'packages/atoms', [ATOM_TASK]),
+      packageAt('web', 'apps/web')
+    ]);
+
+    it('WHEN listed in folders mode THEN each directory tooltip counts the shown packages below it at any depth', () => {
+      const rows = rootRows(state, rowContextOf('folders'));
+      const tooltips = rows.map((row) => row.tooltip);
+
+      expect(tooltips).toStrictEqual([
+        ['Path: apps', 'Packages: 1'],
+        ['Path: packages', 'Packages: 3']
+      ]);
+    });
+
+    it.each([false, true])('WHEN listed with scopes shown %s THEN the package tooltip starts with the full name', (scopeShown) => {
+      const rows = rootRows(state, rowContextOf('list', undefined, scopeShown));
+
+      expect(rows[0]?.tooltip).toStrictEqual(['@s/a', 'Path: packages/a', 'Tasks: 1']);
+    });
+
+    it('WHEN its multi-root row is built THEN the tooltip is the root path and the shown package count', () => {
+      const view = modelViewWith(state.model?.packages ?? []);
+
+      const row = rootNodeRow(ROOT_FOLDER_STUB, view);
+
+      expect(row.tooltip).toStrictEqual(['/ws', 'Packages: 4']);
+    });
+
+    it('WHEN its multi-root row is built through its state THEN the count comes from its model', () => {
+      const row = rootRowOf(state, rowContextOf('folders'));
+
+      expect(row.tooltip).toStrictEqual(['/ws', 'Packages: 4']);
+    });
+  });
+
+  describe('GIVEN a root with no model yet', () => {
+    it('WHEN its multi-root row is built through its state THEN the tooltip is only its path', () => {
+      const loading: RootState = { ...ROOT_STATE_STUB, model: null };
+
+      const row = rootRowOf(loading, rowContextOf('folders'));
+
+      expect(row.tooltip).toStrictEqual(['/ws']);
     });
   });
 

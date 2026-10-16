@@ -231,7 +231,7 @@ describe('FEATURE: rows of a root', () => {
           icon: PACKAGE_ICON,
           contextValue: 'turboPackage',
           collapsible: 'collapsed',
-          tooltip: [],
+          tooltip: ['a', 'Path: packages/a', 'Tasks: 1'],
           command: null
         }
       ]);
@@ -267,8 +267,8 @@ describe('FEATURE: rows of a root', () => {
 
 describe('FEATURE: row of a workspace folder', () => {
   describe('GIVEN a folder of a multi-root window', () => {
-    it('WHEN built THEN it is an expanded root-folder row', () => {
-      const row = rootNodeRow(ROOT_FOLDER_STUB);
+    it('WHEN built with no model THEN it is an expanded root-folder row whose tooltip is its path', () => {
+      const row = rootNodeRow(ROOT_FOLDER_STUB, null);
 
       expect(row).toStrictEqual({
         id: 'root:/ws',
@@ -281,7 +281,7 @@ describe('FEATURE: row of a workspace folder', () => {
         icon: ROOT_FOLDER_ICON,
         contextValue: 'turboRoot',
         collapsible: 'expanded',
-        tooltip: [],
+        tooltip: ['/ws'],
         command: null
       });
     });
@@ -289,7 +289,7 @@ describe('FEATURE: row of a workspace folder', () => {
     it('WHEN the folder name holds a bidi control THEN the label is cleaned and the key keeps the path', () => {
       const root = `/w${BIDI}s`;
 
-      const row = rootNodeRow({ root, name: `w${BIDI}s` });
+      const row = rootNodeRow({ root, name: `w${BIDI}s` }, null);
 
       expect(row).toMatchObject({ id: `root:${root}`, key: root, label: 'ws' });
     });

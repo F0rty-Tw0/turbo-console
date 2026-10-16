@@ -27,8 +27,8 @@ const dirOf = (path: string, label: string, packages: string[], dirs: FolderDir[
 
 describe('FEATURE: children rows of a directory', () => {
   describe('GIVEN a directory holding a child directory and a package', () => {
-    const libs = dirOf('packages/libs', 'libs', []);
-    const view = modelViewWith([packageAt('a', 'packages/a')]);
+    const libs = dirOf('packages/libs', 'libs', ['x']);
+    const view = modelViewWith([packageAt('a', 'packages/a'), packageAt('x', 'packages/libs/x')]);
     const dir = dirOf('packages', 'packages', ['a'], [libs]);
 
     it('WHEN listed THEN the directory row comes before the package row', () => {
@@ -51,7 +51,7 @@ describe('FEATURE: children rows of a directory', () => {
         icon: FOLDER_ICON,
         contextValue: 'turboDir',
         collapsible: 'expanded',
-        tooltip: [],
+        tooltip: ['Path: packages/libs', 'Packages: 1'],
         command: null
       });
     });
@@ -70,7 +70,7 @@ describe('FEATURE: children rows of a directory', () => {
         icon: PACKAGE_ICON,
         contextValue: 'turboPackage',
         collapsible: 'collapsed',
-        tooltip: [],
+        tooltip: ['a', 'Path: packages/a', 'Tasks: 1'],
         command: null
       });
     });

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { allRows } from './all-rows.util.ts';
 import { nodeFor } from './node-cache.util.ts';
 import { childRowsOf, currentRowOf } from './node-rows.util.ts';
-import { rootNodeRow } from './root-rows.util.ts';
+import { rootRowOf } from './root-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { LoadFailure } from '../../roots/common/root.type.ts';
 import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
@@ -210,7 +210,7 @@ describe('FEATURE: node rows', () => {
     });
 
     it('WHEN its node in a multi-root window is rebuilt THEN it equals the listed root row', () => {
-      const listed = rootNodeRow(state.folder);
+      const listed = rootRowOf(state, RUNNING_VIEW);
       const rebuilt = rebuiltOf(state, listed, 'folders');
 
       expect(rebuilt).toStrictEqual(listed);
