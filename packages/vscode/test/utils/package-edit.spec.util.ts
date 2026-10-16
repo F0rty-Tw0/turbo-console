@@ -42,7 +42,7 @@ export const packageDirOf = async (root: string, name: string): Promise<string> 
   throw new Error(`no package.json under ${root} names ${name}`);
 };
 
-/** Writes `original`, the text of the `package.json` at `file`, back to it with `edit` applied. */
+/** Writes `original`, the text of the JSON file at `file`, back to it with `edit` applied. */
 export const writeEdited = async (file: string, original: string, edit: (manifest: JsonObject) => void): Promise<void> => {
   const manifest: unknown = JSON.parse(original);
 
@@ -62,4 +62,14 @@ export const setScript = (manifest: JsonObject, task: string, script: string): v
   if (!isJsonObject(scripts)) throw new Error('the package.json has no scripts');
 
   scripts[task] = script;
+};
+
+/** Sets `outputs` of task `task` in a parsed `turbo.json`; throws when it has no such task. */
+export const setTaskOutputs = (manifest: JsonObject, task: string, outputs: string[]): void => {
+  const tasks = manifest['tasks'];
+  const config = isJsonObject(tasks) ? tasks[task] : undefined;
+
+  if (!isJsonObject(config)) throw new Error(`the turbo.json has no ${task} task`);
+
+  config['outputs'] = outputs;
 };

@@ -14,6 +14,8 @@ const NO_MATCH_WORKSPACE_YAML = 'packages:\n  - nothing/*\n';
 
 const ERROR_ROOTS_WORKSPACE = '{ "folders": [{ "path": "bad" }, { "path": "empty" }] }\n';
 
+const TWO_ROOTS_WORKSPACE = '{ "folders": [{ "path": "a" }, { "path": "b" }] }\n';
+
 const STUB_TURBO_SCRIPT = '#!/bin/sh\necho 2.12.0\n';
 
 const EXECUTABLE_MODE = 0o755;
@@ -76,6 +78,22 @@ const errorRoots = async (scratch: RunScratch, name: LaunchName): Promise<Prepar
   return prepared;
 };
 
+/** `two-roots`: a `.code-workspace` with two clean `target-like` copies, `a` and `b`. */
+const twoRoots = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+  const dir = workspaceDirOf(scratch, name);
+  const a = join(dir, 'a');
+  const b = join(dir, 'b');
+  const file = join(dir, 'two-roots.code-workspace');
+
+  await copyFixture(a);
+  await copyFixture(b);
+  await writeFile(file, TWO_ROOTS_WORKSPACE);
+
+  const prepared: PreparedWorkspace = { open: file, folders: [a, b] };
+
+  return prepared;
+};
+
 /** A POSIX `turboPath` stub that prints `2.12.0` for any arguments, just outside the supported range. */
 const stubTurbo = async (scratch: RunScratch): Promise<string> => {
   const path = join(scratch.dir, 'stub-turbo');
@@ -108,7 +126,8 @@ export const WORKSPACES: Record<LaunchWorkspace, (scratch: RunScratch, name: Lau
   'fixture-l1': async (scratch) => Promise.resolve(folderWorkspace(scratch.fixtureDir)),
   fixture: fixtureCopy,
   'empty-folder': emptyFolder,
-  'error-roots': errorRoots
+  'error-roots': errorRoots,
+  'two-roots': twoRoots
 };
 
 /** Each `turboPath` kind's setting value (`null` = unset); a new `LaunchTurboPath` member fails to compile until it has one. */

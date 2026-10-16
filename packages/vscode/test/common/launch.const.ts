@@ -57,8 +57,10 @@ const L6: Launch = { ...L3, name: 'L6', suite: 'error-roots.suite', workspace: '
 
 const L7: Launch = { ...L5, name: 'L7', suite: 'late-start.suite', turboPath: 'late' };
 
+const L8: Launch = { ...L1, name: 'L8', suite: 'details.suite', workspace: 'two-roots', userData: 'own', env: NO_ENV };
+
 /**
- * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L7 each get a user-data dir
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L8 each get a user-data dir
  * of their own.
  */
-export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7];
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8];
