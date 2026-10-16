@@ -1,4 +1,5 @@
 **
 !dist/extension.cjs
+!dist/webview/**
 !package.json
 !README.md

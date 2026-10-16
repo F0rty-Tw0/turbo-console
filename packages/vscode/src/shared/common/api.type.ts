@@ -1,3 +1,5 @@
+import type { HostMessage } from '@turbo-console/webview-ui';
+
 import type { Span } from './span.type.ts';
 import type { LoadRecord } from '../../roots/common/coordinator.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
@@ -23,11 +25,29 @@ export type Timings = {
   readonly runs: RunTiming[];
 };
 
+export type PanelInfo = {
+  readonly root: string;
+  readonly packageName: string;
+  readonly visible: boolean;
+};
+
+/**
+ * The open Package Details panels, for the integration tests. `posted` holds the last 100 messages sent to the panel
+ * (`[]` for none). `receive` and `whenIdle` reject for a panel that is not open; `whenIdle` waits for the panel's
+ * session to start, then for its dry run.
+ */
+export type DetailsApi = {
+  readonly panels: () => PanelInfo[];
+  readonly posted: (root: string, packageName: string) => HostMessage[];
+  readonly receive: (root: string, packageName: string, message: unknown) => Promise<void>;
+  readonly whenIdle: (root: string, packageName: string) => Promise<void>;
+};
+
 /**
  * What `activate` returns, for the integration tests only. Root keys are each workspace folder's `uri.fsPath` as VS
  * Code gives it. `loads` holds an empty list per root from activation on. `whenIdle` waits for a pending debounced
  * watcher change and any load it starts, then for the root's load in flight; it rejects for a key that is not a current
- * root.
+ * root. `treeVisible` is the Packages view's `visible`, `false` before the workspace is trusted.
  */
 export type TurboConsoleApi = {
   readonly tree: PackagesTreeApi;
@@ -37,4 +57,6 @@ export type TurboConsoleApi = {
   readonly timings: Timings;
   readonly loads: Map<string, LoadRecord[]>;
   readonly whenIdle: (root: string) => Promise<void>;
+  readonly details: DetailsApi;
+  readonly treeVisible: () => boolean;
 };
