@@ -115,6 +115,14 @@ describe('FEATURE: details session', () => {
     expect(ports.post).not.toHaveBeenCalled();
   });
 
+  it('GIVEN a hidden panel whose root has loaded WHEN ready arrives before the show THEN the show posts one state', async () => {
+    await session.start();
+    await session.receive({ type: 'ready' });
+    session.setVisible(true);
+
+    expect(postedPhasesOf(ports)).toStrictEqual(['loading']);
+  });
+
   describe('GIVEN a shown panel whose root has loaded', () => {
     beforeEach(async () => {
       session.setVisible(true);
@@ -158,6 +166,15 @@ describe('FEATURE: details session', () => {
       await flushSettles();
 
       expect(postedPhasesOf(ports)).toStrictEqual(['loading']);
+    });
+
+    it('WHEN hidden and the rebuilt page sends ready before the show THEN the show posts the state', async () => {
+      await session.receive({ type: 'ready' });
+      session.setVisible(false);
+      await session.receive({ type: 'ready' });
+      session.setVisible(true);
+
+      expect(postedPhasesOf(ports)).toStrictEqual(['loading', 'loading']);
     });
 
     it('WHEN shown twice THEN its visibility is reported once', () => {

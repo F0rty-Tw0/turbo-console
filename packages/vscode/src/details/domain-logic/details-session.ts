@@ -89,21 +89,19 @@ export class DetailsSession {
     await this.command(message, state);
   }
 
-  /** Every change resets `ready`: the page is rebuilt on show and sends a new one. */
+  /** Hiding resets `ready`: the page is rebuilt on show, and its new `ready` can arrive before this show does. */
   public setVisible(visible: boolean): void {
     if (this.isDisposed || visible === this.isVisible) return;
 
     this.isVisible = visible;
-    this.isReady = false;
+    this.isReady &&= visible;
     this.ports.setPanelVisible(visible);
 
     const isPendingShow = visible && this.dryRun.isDeferred;
-
-    if (!isPendingShow) return;
-
     const isStale = this.ports.isStale(this.key.root);
 
-    if (!isStale) this.restartDryRun();
+    if (isPendingShow && !isStale) this.restartDryRun();
+    else this.publish();
   }
 
   public async whenIdle(): Promise<void> {
