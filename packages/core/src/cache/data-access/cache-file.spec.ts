@@ -180,6 +180,16 @@ describe('FEATURE: workspace cache file', () => {
       expect(read).toBeNull();
     });
 
+    it('WHEN its formatVersion is 2, the version before isTurboTask THEN the read is null', async () => {
+      const cacheDir = await writtenEntry();
+
+      await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'formatVersion', 2));
+
+      const read = await readCacheFile(cacheDir, ROOT);
+
+      expect(read).toBeNull();
+    });
+
     it('WHEN its model breaks the schema THEN the read is null', async () => {
       const cacheDir = await writtenEntry();
 

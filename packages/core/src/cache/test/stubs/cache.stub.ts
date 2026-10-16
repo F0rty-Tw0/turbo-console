@@ -10,7 +10,8 @@ const BUILD_TASK: TaskNode = {
   tags: [],
   dependencies: [],
   kind: 'task',
-  atom: null
+  atom: null,
+  isTurboTask: true
 };
 
 const FILE_TASK: TaskNode = {
@@ -21,7 +22,8 @@ const FILE_TASK: TaskNode = {
   tags: ['atomizer:e2e', 'atomizer:live'],
   dependencies: ['web#build'],
   kind: 'atom-file',
-  atom: LIVE_ATOM
+  atom: LIVE_ATOM,
+  isTurboTask: true
 };
 
 const WEB_TASKS = [BUILD_TASK, FILE_TASK];

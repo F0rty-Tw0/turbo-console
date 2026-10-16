@@ -2,18 +2,18 @@ import { getNodeValue, parseTree, printParseErrorCode } from 'jsonc-parser';
 import type { ParseError } from 'jsonc-parser';
 import { z } from 'zod';
 
-import type { TurboConfigError, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
+import type { TaskPresence, TurboConfigError, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 
 /** zod 4 rejects a missing `z.unknown()` key; `.optional()` lets a task or the flags block omit it. */
 const optionalUnknown = z.unknown().optional();
 
-const taskSchema = z.looseObject({ description: optionalUnknown });
+const taskSchema = z.looseObject({ description: optionalUnknown, extends: optionalUnknown });
 
 const tasksSchema = z.record(z.string(), taskSchema).optional();
 
 const futureFlagsSchema = z.looseObject({ affectedUsingTaskInputs: optionalUnknown }).optional();
 
-const configSchema = z.looseObject({ tasks: tasksSchema, futureFlags: futureFlagsSchema });
+const configSchema = z.looseObject({ extends: optionalUnknown, tasks: tasksSchema, futureFlags: futureFlagsSchema });
 
 const PARSE_OPTIONS = { allowTrailingComma: true };
 
@@ -36,6 +36,34 @@ const descriptionsOf = (tasks: Record<string, TaskConfig>): Record<string, strin
   }
 
   return Object.fromEntries(entries);
+};
+
+const isSetValue = (value: unknown): boolean => value !== undefined;
+
+/** Turbo drops an inherited task whose entry is exactly `{ "extends": false }`; `extends: false` beside other keys redefines it. */
+const presenceOf = (task: TaskConfig): TaskPresence => {
+  const setValues = Object.values(task).filter(isSetValue);
+  const isExcluded = task.extends === false && setValues.length === 1;
+
+  return isExcluded ? 'excluded' : 'defined';
+};
+
+const presenceEntry = ([name, task]: [string, TaskConfig]): [string, TaskPresence] => [name, presenceOf(task)];
+
+/** `Object.fromEntries` defines own keys, so a task named `__proto__` stays a key, as in `descriptionsOf`. */
+const presencesOf = (tasks: Record<string, TaskConfig>): Record<string, TaskPresence> => {
+  const entries = Object.entries(tasks).map(presenceEntry);
+
+  return Object.fromEntries(entries);
+};
+
+const isText = (value: unknown): value is string => typeof value === 'string';
+
+/** The config's top-level `extends` names (`//` for the root, else package names); not an array reads as none. */
+const extendsOf = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter(isText);
 };
 
 /**
@@ -64,14 +92,16 @@ const parsedConfig = (path: string, text: string): TurboConfigFile => {
 
   const tasks = parsed.data.tasks ?? {};
   const descriptions = descriptionsOf(tasks);
+  const presences = presencesOf(tasks);
+  const extendsNames = extendsOf(parsed.data.extends);
   const affectedUsingTaskInputs = parsed.data.futureFlags?.affectedUsingTaskInputs === true;
-  const config: TurboConfigOk = { path, descriptions, affectedUsingTaskInputs };
+  const config: TurboConfigOk = { path, descriptions, tasks: presences, extends: extendsNames, affectedUsingTaskInputs };
 
   return config;
 };
 
 /**
- * One `turbo.json(c)` text: comments and trailing commas allowed; only task descriptions and
+ * One `turbo.json(c)` text: comments and trailing commas allowed; only `extends`, the task keys, task descriptions and
  * `futureFlags.affectedUsingTaskInputs` are read. The parser recurses once per nesting level, so a text nested deep
  * enough to overflow the stack is an error entry, never a throw.
  */

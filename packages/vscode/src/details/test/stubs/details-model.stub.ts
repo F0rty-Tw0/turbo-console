@@ -43,6 +43,15 @@ export const FILE_TASK_STUB: TaskNode = {
   kind: 'atom-file'
 };
 
+/** A package script no turbo config defines: `turbo query` lists it, `turbo run` exits 1 on it. */
+export const ADHOC_TASK_STUB: TaskNode = {
+  ...TASK_NODE_STUB,
+  id: 'a#adhoc',
+  name: 'adhoc',
+  command: 'echo adhoc',
+  isTurboTask: false
+};
+
 export const WEB_BUILD_TASK_STUB: TaskNode = {
   ...TASK_NODE_STUB,
   id: 'web#build',

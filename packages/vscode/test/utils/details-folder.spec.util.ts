@@ -13,7 +13,7 @@ import type { DetailsScene } from '../common/details.type.ts';
 export const prunedCase = async (scene: DetailsScene): Promise<void> => {
   const { api, root, packageName } = scene;
 
-  await step('L8-5: removing a workspace folder closes its panel and keeps the other', async () => {
+  await step('L8-6: removing a workspace folder closes its panel and keeps the other', async () => {
     const other = rootAt(1);
     const folders = vscode.workspace.workspaceFolders ?? [];
     const index = folders.findIndex((folder) => folder.uri.fsPath === other);

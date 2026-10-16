@@ -1,12 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseTurboConfig } from './turbo-config.util.ts';
-import type { TurboConfigError, TurboConfigOk } from '../common/turbo-config.type.ts';
+import type { TaskPresence, TurboConfigError, TurboConfigOk } from '../common/turbo-config.type.ts';
 
 const PATH = 'packages/a/turbo.jsonc';
 
-const okConfig = (descriptions: Record<string, string>, affectedUsingTaskInputs: boolean): TurboConfigOk => {
-  const config: TurboConfigOk = { path: PATH, descriptions, affectedUsingTaskInputs };
+const BUILD_DEFINED: Record<string, TaskPresence> = { build: 'defined' };
+
+const BUILD_LINT_DEFINED: Record<string, TaskPresence> = { build: 'defined', lint: 'defined' };
+
+const okConfig = (
+  descriptions: Record<string, string>,
+  affectedUsingTaskInputs: boolean,
+  tasks: Record<string, TaskPresence> = {},
+  extendsNames: string[] = []
+): TurboConfigOk => {
+  const config: TurboConfigOk = { path: PATH, descriptions, tasks, extends: extendsNames, affectedUsingTaskInputs };
 
   return config;
 };
@@ -24,7 +33,7 @@ describe('FEATURE: turbo.json(c) parsing', () => {
 
       const config = parseTurboConfig(PATH, text);
 
-      expect(config).toStrictEqual(okConfig({ build: 'x' }, false));
+      expect(config).toStrictEqual(okConfig({ build: 'x' }, false, BUILD_DEFINED));
     });
   });
 
@@ -32,7 +41,7 @@ describe('FEATURE: turbo.json(c) parsing', () => {
     it('WHEN parsed THEN descriptions map the task name to it', () => {
       const config = parseTurboConfig(PATH, '{"tasks":{"build":{"description":"x"}}}');
 
-      expect(config).toStrictEqual(okConfig({ build: 'x' }, false));
+      expect(config).toStrictEqual(okConfig({ build: 'x' }, false, BUILD_DEFINED));
     });
   });
 
@@ -42,7 +51,7 @@ describe('FEATURE: turbo.json(c) parsing', () => {
 
       const config = parseTurboConfig(PATH, text);
 
-      expect(config).toStrictEqual(okConfig({}, false));
+      expect(config).toStrictEqual(okConfig({}, false, BUILD_LINT_DEFINED));
     });
   });
 
@@ -50,7 +59,7 @@ describe('FEATURE: turbo.json(c) parsing', () => {
     it('WHEN parsed THEN it is ignored', () => {
       const config = parseTurboConfig(PATH, '{"tasks":{"build":{"description":1},"lint":{"description":"l"}}}');
 
-      expect(config).toStrictEqual(okConfig({ lint: 'l' }, false));
+      expect(config).toStrictEqual(okConfig({ lint: 'l' }, false, BUILD_LINT_DEFINED));
     });
   });
 
@@ -109,17 +118,61 @@ describe('FEATURE: turbo.json(c) parsing', () => {
     });
   });
 
+  describe('GIVEN a root config with qualified and root task keys', () => {
+    it('WHEN parsed THEN every key is a defined task, verbatim', () => {
+      const text = '{\n  // root\n  "tasks": { "build": {}, "web#special": {}, /* root */ "//#fmt": {} },\n}';
+
+      const tasks: Record<string, TaskPresence> = { build: 'defined', 'web#special': 'defined', '//#fmt': 'defined' };
+
+      const config = parseTurboConfig(PATH, text);
+
+      expect(config).toStrictEqual(okConfig({}, false, tasks));
+    });
+  });
+
+  describe('GIVEN a package config extending the root and a package', () => {
+    const text = '{"extends":["//","shared"],"tasks":{"own":{},"lint":{"extends":false},"build":{"extends":false,"outputs":[]}}}';
+
+    it('WHEN parsed THEN extends lists both names', () => {
+      const config = parseTurboConfig(PATH, text);
+
+      expect(config).toMatchObject({ extends: ['//', 'shared'] });
+    });
+
+    it('WHEN parsed THEN only the entry of exactly extends false is excluded', () => {
+      const tasks: Record<string, TaskPresence> = { own: 'defined', lint: 'excluded', build: 'defined' };
+
+      const config = parseTurboConfig(PATH, text);
+
+      expect(config).toMatchObject({ tasks });
+    });
+  });
+
+  describe('GIVEN an extends that is not a list of names', () => {
+    it('WHEN it is a string THEN extends is empty', () => {
+      const config = parseTurboConfig(PATH, '{"extends":"//"}');
+
+      expect(config).toStrictEqual(okConfig({}, false));
+    });
+
+    it('WHEN it holds a number THEN only the names are kept', () => {
+      const config = parseTurboConfig(PATH, '{"extends":["//",1]}');
+
+      expect(config).toStrictEqual(okConfig({}, false, {}, ['//']));
+    });
+  });
+
   describe('GIVEN __proto__ keys', () => {
     it('WHEN a task named __proto__ sits beside build THEN that task gets no description', () => {
       const config = parseTurboConfig(PATH, '{"tasks":{"__proto__":{"description":"x"},"build":{"description":"b"}}}');
 
-      expect(config).toStrictEqual(okConfig({ build: 'b' }, false));
+      expect(config).toStrictEqual(okConfig({ build: 'b' }, false, BUILD_DEFINED));
     });
 
     it('WHEN a task holds a __proto__ object with a description THEN build inherits no description', () => {
       const config = parseTurboConfig(PATH, '{"tasks":{"build":{"__proto__":{"description":"x"}}}}');
 
-      expect(config).toStrictEqual(okConfig({}, false));
+      expect(config).toStrictEqual(okConfig({}, false, BUILD_DEFINED));
     });
 
     it('WHEN the root holds a __proto__ object with futureFlags THEN the flag stays off', () => {

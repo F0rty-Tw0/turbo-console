@@ -20,7 +20,8 @@ const taskObject = z.object({
   tags: stringList,
   dependencies: stringList,
   kind: taskKindSchema,
-  atom: nullableAtom
+  atom: nullableAtom,
+  isTurboTask: z.boolean()
 });
 
 const taskSchema = taskObject.readonly();

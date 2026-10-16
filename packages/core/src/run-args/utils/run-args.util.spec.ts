@@ -11,7 +11,8 @@ const TASK_NODE: TaskNode = {
   tags: [],
   dependencies: [],
   kind: 'task',
-  atom: null
+  atom: null,
+  isTurboTask: true
 };
 
 describe('FEATURE: turbo run arguments', () => {

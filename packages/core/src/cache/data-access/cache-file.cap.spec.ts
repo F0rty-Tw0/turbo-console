@@ -55,7 +55,7 @@ const newCacheDir = (): string => {
 /** `ENTRY`'s cache file text padded with trailing spaces (still valid JSON) to exactly `bytes`, written to a new cache dir. */
 const paddedEntry = async (bytes: number): Promise<string> => {
   const cacheDir = newCacheDir();
-  const file = { formatVersion: 2, ...ENTRY };
+  const file = { formatVersion: 3, ...ENTRY };
   const json = JSON.stringify(file);
 
   await mkdir(cacheDir, { recursive: true });

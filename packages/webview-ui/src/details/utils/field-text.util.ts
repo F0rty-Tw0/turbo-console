@@ -1,12 +1,15 @@
-import type { CacheStatus, DryRunPhase } from '../../bridge/common/details-state.type.ts';
+import type { CacheStatus, DryRunPhase, TaskCard } from '../../bridge/common/details-state.type.ts';
 import {
   CACHE_TEXTS,
   DEFAULT_INPUTS_TEXT,
   LOADING_TEXT,
   NONE_TEXT,
+  NOT_TURBO_TASK_TEXT,
   NO_COMMAND_TEXT,
   UNAVAILABLE_TEXT
 } from '../common/field-text.const.ts';
+
+type DefinitionSource = Pick<TaskCard, 'command' | 'isTurboTask'>;
 
 const pendingText = (phase: DryRunPhase): string => {
   if (phase === 'loading') return LOADING_TEXT;
@@ -29,9 +32,11 @@ export const cacheText = (status: CacheStatus | null, phase: DryRunPhase): strin
   return pendingText(phase);
 };
 
-/** What a card without a turbo definition shows in its place. */
-export const definitionText = (command: string | null, phase: DryRunPhase): string => {
-  if (command === null) return NO_COMMAND_TEXT;
+/** What a card without a turbo definition shows in its place; the dry run never asks for a task turbo does not define. */
+export const definitionText = (card: DefinitionSource, phase: DryRunPhase): string => {
+  if (!card.isTurboTask) return NOT_TURBO_TASK_TEXT;
+
+  if (card.command === null) return NO_COMMAND_TEXT;
 
   return pendingText(phase);
 };

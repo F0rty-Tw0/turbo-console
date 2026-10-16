@@ -8,7 +8,8 @@ export const TASK_NODE_STUB: TaskNode = {
   tags: [],
   dependencies: [],
   kind: 'task',
-  atom: null
+  atom: null,
+  isTurboTask: true
 };
 
 const WEB_PACKAGE_STUB: PackageNode = { name: 'web', path: 'apps/web', tags: [], tasks: [TASK_NODE_STUB] };

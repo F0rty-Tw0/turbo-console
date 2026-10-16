@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { readTurboConfig, readTurboConfigs } from './turbo-config.ts';
-import type { TurboConfigError, TurboConfigOk } from '../common/turbo-config.type.ts';
+import type { TaskPresence, TurboConfigError, TurboConfigOk } from '../common/turbo-config.type.ts';
 
 /** chmod has no effect on Windows, and root reads any file. */
 const CAN_DENY_READ = process.platform !== 'win32' && process.getuid?.() !== 0;
@@ -21,6 +21,8 @@ const MAX_CONFIG_BYTES = 1024 * 1024;
 const NOT_SMALL_FILE: TurboConfigError = { path: 'turbo.json', error: 'not a regular file of at most 1 MiB' };
 
 const BUILD_DESCRIPTIONS = { build: 'x' };
+
+const BUILD_TASKS: Record<string, TaskPresence> = { build: 'defined' };
 
 const DESCRIBED = '{"tasks":{"build":{"description":"x"}}}';
 
@@ -55,7 +57,13 @@ const workspaceWith = async (name: string, files: Record<string, string>): Promi
 const padded = (bytes: number): string => `${DESCRIBED}${' '.repeat(bytes - DESCRIBED.length)}`;
 
 const okConfig = (path: string): TurboConfigOk => {
-  const config: TurboConfigOk = { path, descriptions: BUILD_DESCRIPTIONS, affectedUsingTaskInputs: false };
+  const config: TurboConfigOk = {
+    path,
+    descriptions: BUILD_DESCRIPTIONS,
+    tasks: BUILD_TASKS,
+    extends: [],
+    affectedUsingTaskInputs: false
+  };
 
   return config;
 };

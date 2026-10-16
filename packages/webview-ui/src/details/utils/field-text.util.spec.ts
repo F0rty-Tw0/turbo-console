@@ -4,6 +4,12 @@ import { cacheText, definitionText, listText } from './field-text.util.ts';
 
 const COMMAND = 'vite build';
 
+const COMMAND_TASK = { command: COMMAND, isTurboTask: true };
+
+const NO_COMMAND_TASK = { command: null, isTurboTask: true };
+
+const NOT_TURBO_TASK = { command: COMMAND, isTurboTask: false };
+
 describe('FEATURE: field texts', () => {
   describe('GIVEN an empty list', () => {
     it('WHEN it is the inputs field THEN it reads as turbo default inputs', () => {
@@ -51,21 +57,31 @@ describe('FEATURE: field texts', () => {
 
   describe('GIVEN a task with no command and no definition', () => {
     it('WHEN its definition text is read during a dry run THEN it says the task runs its dependencies', () => {
-      expect(definitionText(null, 'loading')).toBe('No command (runs its dependencies)');
+      expect(definitionText(NO_COMMAND_TASK, 'loading')).toBe('No command (runs its dependencies)');
     });
   });
 
   describe('GIVEN a task with a command and no definition', () => {
     it('WHEN the dry run is loading THEN it reads "loading…"', () => {
-      expect(definitionText(COMMAND, 'loading')).toBe('loading…');
+      expect(definitionText(COMMAND_TASK, 'loading')).toBe('loading…');
     });
 
     it('WHEN the dry run failed THEN it reads "—"', () => {
-      expect(definitionText(COMMAND, 'failed')).toBe('—');
+      expect(definitionText(COMMAND_TASK, 'failed')).toBe('—');
     });
 
     it('WHEN the dry run is ready THEN it reads "—"', () => {
-      expect(definitionText(COMMAND, 'ready')).toBe('—');
+      expect(definitionText(COMMAND_TASK, 'ready')).toBe('—');
+    });
+  });
+
+  describe('GIVEN a task no turbo config defines', () => {
+    it('WHEN the dry run is loading THEN it says it is not a turbo task', () => {
+      expect(definitionText(NOT_TURBO_TASK, 'loading')).toBe('Not a turbo task (no turbo.json entry)');
+    });
+
+    it('WHEN the dry run is ready THEN it says it is not a turbo task', () => {
+      expect(definitionText(NOT_TURBO_TASK, 'ready')).toBe('Not a turbo task (no turbo.json entry)');
     });
   });
 });
