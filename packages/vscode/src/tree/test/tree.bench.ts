@@ -9,6 +9,7 @@ import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { devTurboPath } from '../../shared/test/utils/dev-turbo.spec.util.ts';
+import { LOADING_ICON } from '../common/icon.const.ts';
 import type { ModelView } from '../common/model-view.type.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
@@ -17,7 +18,7 @@ import { allRows } from '../utils/all-rows.util.ts';
 import { diffModels } from '../utils/model-diff.util.ts';
 import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
-import { isVisibleTask, taskRows } from '../utils/task-rows.util.ts';
+import { isRunnableTask, taskRows } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
@@ -102,14 +103,17 @@ const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntr
   return entry;
 };
 
-/** The first `TICKED_TASKS` visible tasks of the shown packages in model order (packages, then `tasks` order), running. */
+/**
+ * The first `TICKED_TASKS` runnable tasks of the shown packages in model order (packages, then `tasks` order), running.
+ * Runnable, not just visible: a script no turbo.json defines is refused, so it never runs.
+ */
 const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
   const entries: RunEntry[] = [];
 
   for (const pkg of view.packages.values()) {
-    const visible = pkg.tasks.filter(isVisibleTask);
+    const runnable = pkg.tasks.filter(isRunnableTask);
 
-    for (const task of visible) entries.push(runningEntryOf(model.root, pkg, task));
+    for (const task of runnable) entries.push(runningEntryOf(model.root, pkg, task));
 
     if (entries.length >= TICKED_TASKS) break;
   }
@@ -131,6 +135,9 @@ const taskRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext):
   return row;
 };
 
+/** A running task's row, not the loading stand-in of a node the tree no longer has. */
+const isRunningRow = (row: TreeRow): boolean => row.icon.id !== LOADING_ICON.id && row.description.startsWith('running');
+
 /**
  * Spec §4.6 tick cost, warm: the model's view is built and the running tasks' nodes are cached, as after the first draw.
  * The timed function rebuilds only the rows one tick redraws, the first `TICKED_TASKS` running ones.
@@ -140,7 +147,7 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const views = new ModelViews();
   const entries = firstRunning(model, views.of(model));
 
-  if (entries.length < TICKED_TASKS) throw new Error(`bench model has ${entries.length} visible tasks`);
+  if (entries.length < TICKED_TASKS) throw new Error(`bench model has ${entries.length} runnable tasks`);
 
   const pairs = entries.map((entry): [string, RunEntry] => [entry.taskId, entry]);
   const byId = new Map(pairs);
@@ -148,7 +155,11 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const context: RowContext = { mode: 'folders', runs, views: (loaded) => views.of(loaded), scopeShown: false, now: TICK_NOW };
   const cache = new Map<string, TreeNode>();
   const nodes = entries.map((entry) => nodeFor(cache, taskRowOf(model, entry, context)));
-  const tick = (): unknown => nodes.map((node) => currentRowOf(state, node, context));
+  const tick = (): TreeRow[] => nodes.map((node) => currentRowOf(state, node, context));
+  const firstRows = tick();
+  const isAllRunning = firstRows.every(isRunningRow);
+
+  if (!isAllRunning) throw new Error('bench tick rebuilds a row that is not a running task');
 
   return bench(name, tick, { gate: true });
 };
