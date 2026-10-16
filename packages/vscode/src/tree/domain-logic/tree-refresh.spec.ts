@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { TreeRefresher } from './tree-refresh.ts';
 import type { RefresherFixture } from '../test/common/refresher-fixture.type.ts';
-import { refresherFixtureOf, scriptRunOf, taskRunOf } from '../test/utils/tree-refresher.spec.util.ts';
+import { ATOM_FILE_TASK, refresherFixtureOf, scriptRunOf, taskRunOf } from '../test/utils/tree-refresher.spec.util.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
 
 const SCRIPT_ID = rowIdOf('task', '/ws', 's#lint');
@@ -202,7 +202,7 @@ describe('FEATURE: tree refresh on a run change', () => {
 
   describe('GIVEN scripts hidden and the atom-file task s#gen, which is never a row', () => {
     it('WHEN its run starts THEN nothing is redrawn', () => {
-      refresher.runChanged(scriptRunOf('/ws', { taskId: 's#gen' }));
+      refresher.runChanged(scriptRunOf('/ws', { taskId: ATOM_FILE_TASK.id, task: ATOM_FILE_TASK }));
 
       expect(fixture.fire).not.toHaveBeenCalled();
     });

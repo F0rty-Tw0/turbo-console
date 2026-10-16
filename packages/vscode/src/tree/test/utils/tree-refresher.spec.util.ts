@@ -23,7 +23,9 @@ const NOBODY: ReadonlySet<string> = new Set();
 export const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, id: 's#lint', name: 'lint', isTurboTask: false };
 
 /** `s#gen`, an `atom-file` task: never a row, so never a script that moves the root. */
-const ATOM_FILE_TASK: TaskNode = { ...SCRIPT_TASK, id: 's#gen', name: 'gen', kind: 'atom-file' };
+const GEN_ATOM: NonNullable<TaskNode['atom']> = { group: 'gen', isLive: false };
+
+export const ATOM_FILE_TASK: TaskNode = { ...SCRIPT_TASK, id: 's#gen', name: 'gen', kind: 'atom-file', atom: GEN_ATOM };
 
 export const SCRIPT_PACKAGE: PackageNode = {
   name: 's',
@@ -56,7 +58,7 @@ const rootsOf = (entries: RootEntry[]): Roots => {
 
 /**
  * Roots `/ws` and, with `multi`, `/other`; each holds package `a` (turbo task `a#build`, script `a#lint`) and package `s`
- * with only a script. `entries` is the window's root list: a spec removes or re-adds a root by changing it.
+ * with the script `s#lint` and the atom-file task `s#gen`. `entries` is the window's root list: a spec removes or re-adds a root by changing it.
  */
 export const refresherFixtureOf = (multi = false): RefresherFixture => {
   const folders: RootFolder[] = [{ root: '/ws', name: 'ws' }];

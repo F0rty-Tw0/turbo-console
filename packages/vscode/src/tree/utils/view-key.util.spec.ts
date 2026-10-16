@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { viewKeyOf } from './view-key.util.ts';
+import { qualifyingIdsOf, viewKeyOf } from './view-key.util.ts';
+import { WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { SCRIPT_PACKAGE } from '../test/utils/tree-refresher.spec.util.ts';
 
 const live = (...ids: string[]): ReadonlySet<string> => new Set(ids);
 
@@ -38,6 +40,14 @@ describe('FEATURE: view key', () => {
 
     it('WHEN no live id qualifies THEN the key is hidden', () => {
       expect(viewKeyOf(() => KNOWN, false, live('x#lint'))).toBe('hidden');
+    });
+  });
+
+  describe('GIVEN a scripts-only package that also holds an atom-file task', () => {
+    it('WHEN its qualifying ids are read THEN only the script qualifies', () => {
+      const model = { ...WORKSPACE_MODEL_STUB, packages: [SCRIPT_PACKAGE] };
+
+      expect(qualifyingIdsOf(model)).toStrictEqual(live('s#lint'));
     });
   });
 });
