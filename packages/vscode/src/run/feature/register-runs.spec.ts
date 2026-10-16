@@ -21,11 +21,12 @@ import type {
   Terminable
 } from '../common/run.type.ts';
 import { RunSession } from '../domain-logic/run-session.ts';
+import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
 const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
 
-const REQUEST: RunRequest = { root: '/ws', packageName: 'a', task: TASK_NODE_STUB, binaryPath: TURBO_BINARY_STUB.path, force: false };
+const REQUEST: RunRequest = { ...RUN_REQUEST_STUB, binaryPath: TURBO_BINARY_STUB.path };
 
 const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
@@ -143,16 +144,6 @@ describe('FEATURE: run commands', () => {
       await command('turboConsole.stopTask', TASK_TREE_NODE_STUB);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
-    });
-
-    it('WHEN the task is a script THEN Run Task and Run Task Without Cache refuse it and launch nothing', async () => {
-      roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
-
-      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
-      await command('turboConsole.runTaskWithoutCache', TASK_TREE_NODE_STUB);
-
-      expect(ports.execute).not.toHaveBeenCalled();
-      expect(ports.info).toHaveBeenCalledTimes(2);
     });
 
     it('WHEN Stop Task is invoked on a package row THEN nothing is terminated', async () => {

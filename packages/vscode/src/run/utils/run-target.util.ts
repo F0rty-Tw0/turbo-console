@@ -1,4 +1,6 @@
-import type { TaskNode, WorkspaceModel } from '@turbo-console/core';
+import { join } from 'node:path';
+
+import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RunDefinition, RunRequest, TaskTarget } from '../common/run.type.ts';
@@ -25,29 +27,43 @@ export const taskTargetOf = (value: unknown): TaskTarget | null => {
   return target;
 };
 
+const packageOf = (target: TaskTarget, model: WorkspaceModel | null | undefined): PackageNode | undefined =>
+  model?.packages.find((node) => node.name === target.packageName);
+
+const taskIn = (target: TaskTarget, pkg: PackageNode | undefined): TaskNode | undefined =>
+  pkg?.tasks.find((node) => node.id === target.definition.id);
+
 /** The task `target` names in the current model of its root; `undefined` while the root has no model or no longer holds it. */
 export const modelTaskOf = (target: TaskTarget, state: RootState | undefined): TaskNode | undefined => {
-  const pkg = state?.model?.packages.find((node) => node.name === target.packageName);
+  const pkg = packageOf(target, state?.model);
 
-  return pkg?.tasks.find((node) => node.id === target.definition.id);
+  return taskIn(target, pkg);
 };
 
 /**
  * The run of `target` in the current state of its root, with `force` for Run Without Cache; `null` while the root has no
- * binary or no longer holds the task.
+ * binary or no longer holds the task. `packageDir` joins the package path to the root as it is: a path that leaves the
+ * root gives a dir outside it, which the run flow refuses.
  */
 export const runRequestOf = (target: TaskTarget, state: RootState | undefined, force: boolean): RunRequest | null => {
   const binary = state?.binary;
 
   if (binary === null || binary === undefined) return null;
 
-  const task = modelTaskOf(target, state);
+  const model = state?.model;
 
-  if (task === undefined) return null;
+  if (model === null || model === undefined) return null;
+
+  const pkg = packageOf(target, model);
+  const task = taskIn(target, pkg);
+
+  if (pkg === undefined || task === undefined) return null;
 
   const request: RunRequest = {
     root: target.definition.root,
     packageName: target.packageName,
+    packageDir: join(target.definition.root, pkg.path),
+    packageManager: model.packageManager,
     task,
     binaryPath: binary.path,
     force

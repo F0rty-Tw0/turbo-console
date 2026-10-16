@@ -108,7 +108,7 @@ describe('FEATURE: run session, task events', () => {
     it('WHEN its task ends with no process end THEN the user is told turbo could not start', () => {
       session.taskEnded(THIS_RUN);
 
-      expect(ports.notifyFailedToStart).toHaveBeenCalledOnce();
+      expect(ports.notifyFailedToStart).toHaveBeenCalledExactlyOnceWith('turbo');
     });
 
     it('WHEN an earlier run of the task reports its task end THEN this run keeps running', () => {

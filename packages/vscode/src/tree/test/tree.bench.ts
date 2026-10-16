@@ -113,7 +113,8 @@ const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntr
     stopRequested: false,
     match: null,
     matching: false,
-    force: false
+    force: false,
+    packageManager: null
   };
 
   return entry;
@@ -166,8 +167,7 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
 
   if (entries.length < TICKED_TASKS) throw new Error(`bench model has ${entries.length} runnable tasks`);
 
-  const pairs = entries.map((entry): [string, RunEntry] => [entry.taskId, entry]);
-  const byId = new Map(pairs);
+  const byId = new Map(entries.map((entry): [string, RunEntry] => [entry.taskId, entry]));
   const runs: RunLookup = (_root, taskId) => byId.get(taskId);
   const viewOf: ModelViewsOf = (loaded, scriptsShown, live) => views.of(loaded, scriptsShown, live);
   const running: ReadonlySet<string> = new Set(byId.keys());

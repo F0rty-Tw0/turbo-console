@@ -8,6 +8,7 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { RunDefinition, RunRequest } from '../../run/common/run.type.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { RUN_REQUEST_STUB } from '../../run/test/stubs/run.stub.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { DetailsPorts } from '../common/details.type.ts';
 import { detailsPortsMock } from '../test/mocks/details-ports.mock.ts';
@@ -24,7 +25,7 @@ const NOW = 1_000_000;
 
 const LAUNCHED_AT = NOW - 12_345;
 
-const RUN_A_BUILD: RunRequest = { root: '/ws', packageName: 'a', task: BUILD_TASK_STUB, binaryPath: '/bin/turbo', force: false };
+const RUN_A_BUILD: RunRequest = { ...RUN_REQUEST_STUB, task: BUILD_TASK_STUB };
 
 const A_BUILD: RunDefinition = { root: '/ws', id: 'a#build' };
 

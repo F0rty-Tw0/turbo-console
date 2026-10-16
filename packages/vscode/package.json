@@ -67,7 +67,7 @@
           },
           "id": {
             "type": "string",
-            "description": "The turbo task id, for example @org/web#build."
+            "description": "The task id, for example @org/web#build."
           },
           "affected": {
             "type": "boolean",

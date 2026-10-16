@@ -6,11 +6,12 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { PACKAGE_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import type { RunAllDefinition, RunAllRequest } from '../common/run-all.type.ts';
-import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, START_TIMEOUT_TEXT } from '../common/run.const.ts';
+import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { Terminable } from '../common/run.type.ts';
 import type { RunAllFakes } from '../test/common/run-all-fakes.type.ts';
 import { runAllFakes } from '../test/utils/run-all-ports.spec.util.ts';
 import { runAllKey } from '../utils/run-all-task.util.ts';
+import { startTimeoutText } from '../utils/run-text.util.ts';
 
 const EVERYWHERE: RunAllRequest = { affected: false };
 
@@ -83,7 +84,7 @@ describe('FEATURE: run all, a start that never happens', () => {
     void runAll(roots, guard, fakes.ports, EVERYWHERE);
     await vi.advanceTimersByTimeAsync(START_TIMEOUT_MS);
 
-    expect(fakes.log).toHaveBeenCalledExactlyOnceWith(START_TIMEOUT_TEXT);
+    expect(fakes.log).toHaveBeenCalledExactlyOnceWith(startTimeoutText('turbo'));
     expect(isHeld()).toBe(false);
   });
 

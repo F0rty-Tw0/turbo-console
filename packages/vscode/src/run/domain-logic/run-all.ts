@@ -4,10 +4,11 @@ import type { RootState, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { NO_TASKS_TEXT, ROOT_PLACEHOLDER, TASK_PLACEHOLDER } from '../common/picker.const.ts';
 import type { RunAllClaim, RunAllDefinition, RunAllLaunch, RunAllPorts, RunAllRequest } from '../common/run-all.type.ts';
-import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, START_TIMEOUT_TEXT } from '../common/run.const.ts';
+import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { Terminable } from '../common/run.type.ts';
 import { rootItems, taskNameItems } from '../utils/picker-items.util.ts';
 import { runAllKey, runAllKeyOf } from '../utils/run-all-task.util.ts';
+import { startTimeoutText } from '../utils/run-text.util.ts';
 
 /** One run all in flight: whether VS Code holds its task yet, by an execution handed over or a process started. */
 type Slot = {
@@ -138,7 +139,7 @@ const launchAll = async (guard: RunAllGuard, ports: RunAllPorts, launch: RunAllL
   ports.after(START_TIMEOUT_MS, () => {
     const isExpired = claim.expire();
 
-    if (isExpired) ports.log(logTextOf(START_TIMEOUT_TEXT));
+    if (isExpired) ports.log(logTextOf(startTimeoutText('turbo')));
   });
 
   const execution = await start(ports, launch);

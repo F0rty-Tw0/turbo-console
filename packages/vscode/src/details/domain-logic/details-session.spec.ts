@@ -5,7 +5,9 @@ import { DetailsSession } from './details-session.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { flushSettles } from '../../roots/test/utils/deferred-ports.spec.util.ts';
+import type { RunRequest } from '../../run/common/run.type.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { RUN_REQUEST_STUB } from '../../run/test/stubs/run.stub.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { DetailsPorts } from '../common/details.type.ts';
 import type { DeferredDryRun } from '../test/common/details.type.ts';
@@ -32,8 +34,8 @@ const RELOADED_WITHOUT_BUILD = { ...DETAILS_LOADED_STUB, model: MODEL_WITHOUT_BU
 const OTHER_MODEL = { ...DETAILS_MODEL_STUB };
 const OTHER_LOADED = { ...DETAILS_LOADED_STUB, model: OTHER_MODEL };
 const RUNNING = { isRunning: true };
-const RUN_A_BUILD = { root: '/ws', packageName: 'a', task: BUILD_TASK_STUB, binaryPath: '/bin/turbo', force: false };
-const RUN_WEB_BUILD = { root: '/ws', packageName: 'web', task: WEB_BUILD_TASK_STUB, binaryPath: '/bin/turbo', force: false };
+const RUN_A_BUILD: RunRequest = { ...RUN_REQUEST_STUB, task: BUILD_TASK_STUB };
+const RUN_WEB_BUILD: RunRequest = { ...RUN_REQUEST_STUB, packageName: 'web', task: WEB_BUILD_TASK_STUB };
 const RUN_OTHER_ROOT_A_BUILD = { ...RUN_A_BUILD, root: '/other' };
 
 describe('FEATURE: details session', () => {

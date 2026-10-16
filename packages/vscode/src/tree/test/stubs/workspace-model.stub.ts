@@ -23,7 +23,7 @@ const X_PACKAGE_STUB: PackageNode = { name: '@org/x', path: 'packages/libs/x', t
 
 const FIELD_SOURCE_STUB: PackageManagerSource = { kind: 'field' };
 
-const PACKAGE_MANAGER_STUB: PackageManager = { name: 'pnpm', source: FIELD_SOURCE_STUB };
+export const PACKAGE_MANAGER_STUB: PackageManager = { name: 'pnpm', source: FIELD_SOURCE_STUB };
 
 export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   root: '/ws',
