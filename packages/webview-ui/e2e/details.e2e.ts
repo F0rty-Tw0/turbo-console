@@ -19,7 +19,7 @@ const AC5 = { description: 'AC5', type: 'requirement' };
 
 const HOSTILE_NAME = '<img src=x onerror=alert(1)>';
 
-const RUNNING: RunView = { ...RUN_VIEW_STUB, iconId: 'sync', text: 'running…', isRunning: true };
+const RUNNING: RunView = { ...RUN_VIEW_STUB, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
 
 const PASSED: RunView = { ...RUN_VIEW_STUB, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: 'passed' };
 
@@ -178,7 +178,7 @@ test.describe('FEATURE: package details page', () => {
   test('GIVEN a scrolled page, a runState patches only its card', async ({ detailsPage }): Promise<void> => {
     const state = packageWithTasks(TASK_NAMES);
     const idleStatuses = new Array<string>(TASK_NAMES.length - 1).fill('');
-    const statuses = [...idleStatuses, 'running…'];
+    const statuses = [...idleStatuses, /^running · \d+s$/u];
 
     await test.step('WHEN the page shows twelve cards', async (): Promise<void> => detailsPage.open(state));
 

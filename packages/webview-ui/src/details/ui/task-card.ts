@@ -96,13 +96,14 @@ export const taskCard = (card: TaskCard, phase: DryRunPhase, context: RenderCont
   const status = textElement('span', 'run-status', '');
   const runSlot = textElement('span', 'run-slot', '');
   const runButton = runButtonFor(card, context);
-  const refs: CardRefs = { status, runSlot, runButton };
+  const { taskId } = card;
+  const refs: CardRefs = { taskId, status, runSlot, runButton };
   const header = cardHeader(card, refs, context);
   const fields = fieldList(card, phase);
   const badgeList = badges(card.definition);
   const rendered: RenderedCard = { element, refs };
 
-  fillRun(refs, card.run);
+  fillRun(refs, card.run, context.runTexts);
   element.append(header, badgeList, fields);
 
   return rendered;

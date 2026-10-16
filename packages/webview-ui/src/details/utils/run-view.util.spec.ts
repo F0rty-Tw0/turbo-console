@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { safeColorVar, safeIconId } from './run-view.util.ts';
+import { runText, safeColorVar, safeIconId } from './run-view.util.ts';
+import type { RunView } from '../../bridge/common/details-state.type.ts';
+import { RUN_VIEW_STUB } from '../test/stubs/details.stub.ts';
+
+const RUNNING_VIEW: RunView = { ...RUN_VIEW_STUB, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
+
+const PASSED_VIEW: RunView = { ...RUN_VIEW_STUB, iconId: 'pass', text: '3.2s · cached' };
 
 describe('FEATURE: run view values from the host', () => {
   describe('GIVEN an icon id', () => {
@@ -46,6 +52,23 @@ describe('FEATURE: run view values from the host', () => {
       ['a trailing newline', '--vscode-a\n']
     ])('WHEN it is %s THEN it is dropped', (_label, colorVar) => {
       expect(safeColorVar(colorVar)).toBeNull();
+    });
+  });
+
+  describe('GIVEN a run view and the page time since it arrived', () => {
+    it('WHEN the run has ended THEN the text is the host text alone', () => {
+      expect(runText(PASSED_VIEW, 5000)).toBe('3.2s · cached');
+    });
+
+    it.each([
+      [0, 0, 'running · 0s'],
+      [0, 1999, 'running · 1s'],
+      [12_345, 0, 'running · 12s'],
+      [59_000, 1000, 'running · 1m 0s']
+    ])('WHEN it ran %d ms at the host and %d ms since THEN the text is %s', (elapsedMs, sinceReceivedMs, text) => {
+      const run: RunView = { ...RUNNING_VIEW, elapsedMs };
+
+      expect(runText(run, sinceReceivedMs)).toBe(text);
     });
   });
 });

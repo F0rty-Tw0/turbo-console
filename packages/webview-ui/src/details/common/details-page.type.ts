@@ -3,8 +3,19 @@ import type { RunView } from '../../bridge/common/details-state.type.ts';
 
 export type RunButtonFactory = (run: RunView) => HTMLButtonElement;
 
+/**
+ * Where a card's run text goes; a running view's text keeps its clock current until the next `show` or `drop` for the
+ * task, or a `reset` for a new page.
+ */
+export type RunTexts = {
+  readonly show: (taskId: string, element: HTMLElement, run: RunView) => void;
+  readonly drop: (taskId: string) => void;
+  readonly reset: () => void;
+};
+
 /** The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. */
 export type CardRefs = {
+  readonly taskId: string;
   readonly status: HTMLElement;
   readonly runSlot: HTMLElement;
   readonly runButton: RunButtonFactory;
@@ -24,10 +35,11 @@ export type RenderedCard = {
  */
 export type FocusTargets = Map<string, HTMLElement>;
 
-/** What every part of the page is built with: the bridge it posts through and the focus targets it registers in. */
+/** What every part of the page is built with: the bridge it posts through, the focus targets it registers in, its run texts. */
 export type RenderContext = {
   readonly bridge: Bridge;
   readonly focusTargets: FocusTargets;
+  readonly runTexts: RunTexts;
 };
 
 export type RenderedPage = {
