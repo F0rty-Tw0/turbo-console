@@ -20,6 +20,15 @@ type TreeViewFake = {
 
 const SCOPE_KEY = 'turboConsole.scopeShown';
 
+/** One macrotask: every spy reached before it has run to its first await. */
+const flush = async (): Promise<void> => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+};
+
+const firstOrderOf = (spy: Mock): number => spy.mock.invocationCallOrder.at(0) ?? Number.POSITIVE_INFINITY;
+
 const disposableFake = (): Disposable => {
   const disposable: Disposable = { dispose: vi.fn() };
 
@@ -49,6 +58,7 @@ vi.mock('vscode', () => {
 
 describe('FEATURE: registerTree scope toggle', () => {
   let calls: string[];
+  let disposed: string[];
   let stored: Map<string, unknown>;
   let commands: Map<string, CommandCallback>;
   let tree: PackagesTreeApi;
@@ -66,6 +76,7 @@ describe('FEATURE: registerTree scope toggle', () => {
 
   beforeEach(() => {
     calls = [];
+    disposed = [];
     stored = new Map();
     commands = new Map();
     tree = packagesTreeApiMock();
@@ -76,10 +87,9 @@ describe('FEATURE: registerTree scope toggle', () => {
     const workspaceState: ScopeStore = {
       get: (key) => stored.get(key),
       update: async (key, value) => {
+        await flush();
         calls.push(`update:${String(value)}`);
         stored.set(key, value);
-
-        return Promise.resolve();
       }
     };
 
@@ -109,37 +119,56 @@ describe('FEATURE: registerTree scope toggle', () => {
     editor.registerCommand.mockImplementation((name, callback) => {
       commands.set(name, callback);
 
-      return disposableFake();
+      const registration: Disposable = {
+        dispose: () => {
+          disposed.push(name);
+        }
+      };
+
+      return registration;
     });
     editor.executeCommand.mockImplementation(async (command, key, value) => {
+      await Promise.resolve();
       calls.push(`${command}:${key}:${String(value)}`);
-
-      return Promise.resolve();
     });
     editor.onDidChangeConfiguration.mockImplementation(disposableFake);
   });
 
-  describe('GIVEN an empty workspaceState', () => {
-    it('WHEN the tree registers THEN scopes are set hidden, and the key false, before the view is created', () => {
-      registerWith();
+  describe.each([
+    { given: 'an empty workspaceState', stored: undefined, expected: false },
+    { given: 'a stored scopeShown of false', stored: false, expected: false },
+    { given: 'a stored scopeShown of true', stored: true, expected: true }
+  ])('GIVEN $given', ({ stored: value, expected }) => {
+    beforeEach(() => {
+      if (value !== undefined) stored.set(SCOPE_KEY, value);
 
-      expect(calls).toStrictEqual(['setScopeShown:false', `setContext:${SCOPE_KEY}:false`, 'createTreeView']);
+      registerWith();
+    });
+
+    it('WHEN the tree registers THEN the tree gets the choice before the view is created', () => {
+      expect(calls.slice(0, 2)).toStrictEqual([`setScopeShown:${String(expected)}`, 'createTreeView']);
+    });
+
+    it('WHEN the tree registers THEN the key is sent before the view is created', () => {
+      expect(editor.executeCommand).toHaveBeenCalledWith('setContext', SCOPE_KEY, expected);
+      expect(firstOrderOf(editor.executeCommand)).toBeLessThan(firstOrderOf(editor.createTreeView));
     });
   });
 
-  describe('GIVEN a stored scopeShown of true', () => {
-    it('WHEN the tree registers THEN scopes are set shown, and the key true, before the view is created', () => {
-      stored.set(SCOPE_KEY, true);
-
+  describe('GIVEN a registered tree', () => {
+    it('WHEN the subscriptions are disposed THEN both scope commands are unregistered', () => {
       registerWith();
 
-      expect(calls).toStrictEqual(['setScopeShown:true', `setContext:${SCOPE_KEY}:true`, 'createTreeView']);
+      for (const subscription of context.subscriptions) subscription.dispose();
+
+      expect(disposed).toStrictEqual(expect.arrayContaining(['turboConsole.showScope', 'turboConsole.hideScope']));
     });
   });
 
   describe('GIVEN a registered tree with scopes hidden', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       registerWith();
+      await flush();
       calls.length = 0;
     });
 
