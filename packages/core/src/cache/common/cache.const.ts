@@ -4,7 +4,13 @@ import type { LockfileName } from '../../workspace/common/workspace-model.type.t
 export const CACHE_FORMAT_VERSION = 5;
 
 /** The lockfiles turbo supports: each is hashed up to `MAX_LOCKFILE_BYTES`, wherever it sits. */
-export const LOCKFILE_NAMES = ['pnpm-lock.yaml', 'package-lock.json', 'yarn.lock', 'bun.lock', 'bun.lockb'] satisfies LockfileName[];
+export const LOCKFILE_NAMES = Object.freeze<LockfileName[]>([
+  'pnpm-lock.yaml',
+  'package-lock.json',
+  'yarn.lock',
+  'bun.lock',
+  'bun.lockb'
+]);
 
 /**
  * Root files that change turbo's package graph: workspace globs, configs, the lockfiles turbo supports, and `.npmrc`,
