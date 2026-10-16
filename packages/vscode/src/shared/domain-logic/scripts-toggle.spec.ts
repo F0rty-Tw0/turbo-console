@@ -187,6 +187,24 @@ describe('FEATURE: ScriptsToggle', () => {
       expect(calls).toStrictEqual(['update:true']);
     });
 
+    it('WHEN the first of two listeners throws THEN the second still runs, set resolves and the failure is logged once', async () => {
+      const failing = (): void => {
+        throw new Error('listener broke');
+      };
+
+      unsubscribe();
+      toggle.onDidChange(failing);
+      toggle.onDidChange(() => {
+        calls.push('second');
+      });
+
+      await expect(toggle.set(true)).resolves.toBeUndefined();
+
+      expect(calls).toStrictEqual(['update:true', 'setKey:true', 'second']);
+      expect(log.mock.calls).toStrictEqual([[expect.stringContaining('listener broke')]]);
+      expect(toggle.isShown()).toBe(true);
+    });
+
     it('WHEN the listener is unsubscribed THEN set no longer fires it', async () => {
       unsubscribe();
       await toggle.set(true);

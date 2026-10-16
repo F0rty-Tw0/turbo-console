@@ -52,7 +52,15 @@ export class ScriptsToggle implements ScriptsToggleApi {
     await this.ports.setKey(value);
     this.shown = value;
 
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners) this.notify(listener);
+  }
+
+  private notify(listener: () => void): void {
+    try {
+      listener();
+    } catch (error: unknown) {
+      this.ports.log(logTextOf(error));
+    }
   }
 
   private logAndRethrow(error: unknown): never {
