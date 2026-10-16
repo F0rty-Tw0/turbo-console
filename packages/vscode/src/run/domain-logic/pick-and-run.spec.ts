@@ -19,7 +19,7 @@ const ONE: RootFolder = { root: '/one', name: 'one' };
 const TWO: RootFolder = { root: '/two', name: 'two' };
 
 const requestOf = (root: string, packageName: string, task: TaskNode): RunRequest => {
-  const request: RunRequest = { root, packageName, task, binaryPath: TURBO_BINARY_STUB.path };
+  const request: RunRequest = { root, packageName, task, binaryPath: TURBO_BINARY_STUB.path, force: false };
 
   return request;
 };

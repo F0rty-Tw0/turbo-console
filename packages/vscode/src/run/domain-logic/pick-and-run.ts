@@ -26,7 +26,7 @@ const requestByName = (roots: Roots, target: NamedTask): RunRequest | null => {
   const definition: RunDefinition = { root: target.root, id: task.id };
   const runTarget: TaskTarget = { definition, packageName: target.packageName };
 
-  return runRequestOf(runTarget, state);
+  return runRequestOf(runTarget, state, false);
 };
 
 export const runNamed = async (roots: Roots, ports: PickerPorts, target: NamedTask): Promise<void> => {

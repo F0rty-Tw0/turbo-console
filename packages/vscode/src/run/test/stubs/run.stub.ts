@@ -13,12 +13,14 @@ export const RUN_ENTRY_STUB: RunEntry = {
   exitCode: null,
   stopRequested: false,
   match: null,
-  matching: false
+  matching: false,
+  force: false
 };
 
 export const RUN_REQUEST_STUB: RunRequest = {
   root: '/ws',
   packageName: 'a',
   task: TASK_NODE_STUB,
-  binaryPath: '/bin/turbo'
+  binaryPath: '/bin/turbo',
+  force: false
 };

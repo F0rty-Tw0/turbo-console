@@ -32,8 +32,8 @@ const RELOADED_WITHOUT_BUILD = { ...DETAILS_LOADED_STUB, model: MODEL_WITHOUT_BU
 const OTHER_MODEL = { ...DETAILS_MODEL_STUB };
 const OTHER_LOADED = { ...DETAILS_LOADED_STUB, model: OTHER_MODEL };
 const RUNNING = { isRunning: true };
-const RUN_A_BUILD = { root: '/ws', packageName: 'a', task: BUILD_TASK_STUB, binaryPath: '/bin/turbo' };
-const RUN_WEB_BUILD = { root: '/ws', packageName: 'web', task: WEB_BUILD_TASK_STUB, binaryPath: '/bin/turbo' };
+const RUN_A_BUILD = { root: '/ws', packageName: 'a', task: BUILD_TASK_STUB, binaryPath: '/bin/turbo', force: false };
+const RUN_WEB_BUILD = { root: '/ws', packageName: 'web', task: WEB_BUILD_TASK_STUB, binaryPath: '/bin/turbo', force: false };
 const RUN_OTHER_ROOT_A_BUILD = { ...RUN_A_BUILD, root: '/other' };
 
 describe('FEATURE: details session', () => {

@@ -29,7 +29,7 @@ const LINT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'b', path: 'pack
 const FILE = '/one/packages/a/package.json';
 
 const requestOf = (root: string, packageName: string, task: TaskNode): RunRequest => {
-  const request: RunRequest = { root, packageName, task, binaryPath: TURBO_BINARY_STUB.path };
+  const request: RunRequest = { root, packageName, task, binaryPath: TURBO_BINARY_STUB.path, force: false };
 
   return request;
 };

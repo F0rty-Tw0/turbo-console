@@ -28,9 +28,16 @@ describe('FEATURE: running entry of a request', () => {
       exitCode: null,
       stopRequested: false,
       match: null,
-      matching: false
+      matching: false,
+      force: false
     };
 
     expect(runningEntryOf(RUN_REQUEST_STUB, 1000)).toStrictEqual(expected);
+  });
+
+  it('GIVEN a forced request WHEN its entry is made THEN the entry is forced too', () => {
+    const entry = runningEntryOf({ ...RUN_REQUEST_STUB, force: true }, 1000);
+
+    expect(entry.force).toBe(true);
   });
 });

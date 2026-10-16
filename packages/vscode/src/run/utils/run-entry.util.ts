@@ -16,7 +16,8 @@ export const runningEntryOf = (request: RunRequest, now: number): RunEntry => {
     exitCode: null,
     stopRequested: false,
     match: null,
-    matching: false
+    matching: false,
+    force: request.force
   };
 
   return entry;

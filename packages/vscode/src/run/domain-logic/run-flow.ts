@@ -60,7 +60,7 @@ const launch = async (ports: RunPorts, request: RunRequest, launchedAt: number):
       return null;
     }
 
-    const args = turboRunArgs(request.task, request.packageName);
+    const args = turboRunArgs(request.task, request.packageName, { force: request.force });
 
     return await ports.execute(request, args, launchedAt);
   } catch (error) {
