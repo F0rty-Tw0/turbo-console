@@ -4,6 +4,7 @@ import { buildWorkspaceModel } from './workspace-model.util.ts';
 import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
 import type { TaskPresence, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 import type { TaskNode, WorkspaceModel } from '../common/workspace-model.type.ts';
+import { MODEL_SOURCE_STUB } from '../test/stubs/model-source.stub.ts';
 import { configError } from '../test/utils/config-error.spec.util.ts';
 import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
 
@@ -47,7 +48,7 @@ const PKG_X = graphPackage('x', 'packages/x', [], [graphTask('x#gen', COMMAND, [
 const build = (packages: GraphPackage[], configs: TurboConfigFile[]): WorkspaceModel => {
   const graph = packageGraph(packages, []);
 
-  return buildWorkspaceModel(graph, configs, '2.11.7', '/repo');
+  return buildWorkspaceModel(graph, configs, MODEL_SOURCE_STUB);
 };
 
 const taskOf = (model: WorkspaceModel, id: string): TaskNode | undefined => {

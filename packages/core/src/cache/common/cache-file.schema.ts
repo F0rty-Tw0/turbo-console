@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { CACHE_FORMAT_VERSION } from './cache.const.ts';
+import { CACHE_FORMAT_VERSION, LOCKFILE_NAMES } from './cache.const.ts';
+import { PACKAGE_MANAGER_NAMES } from '../../workspace/common/package-manager.const.ts';
 
 const nullableString = z.string().nullable();
 
@@ -41,9 +42,24 @@ const packageList = z.array(packageSchema);
 
 const edgeList = z.array(edgeSchema);
 
+const packageManagerNameSchema = z.enum(PACKAGE_MANAGER_NAMES);
+
+const lockfileNameSchema = z.enum(LOCKFILE_NAMES);
+
+const fieldSource = z.object({ kind: z.literal('field') });
+
+const lockfileSource = z.object({ kind: z.literal('lockfile'), file: lockfileNameSchema });
+
+const defaultSource = z.object({ kind: z.literal('default') });
+
+const sourceSchema = z.discriminatedUnion('kind', [fieldSource, lockfileSource, defaultSource]).readonly();
+
+const packageManagerSchema = z.object({ name: packageManagerNameSchema, source: sourceSchema }).readonly();
+
 const workspaceModelObject = z.object({
   root: z.string(),
   turboVersion: z.string(),
+  packageManager: packageManagerSchema,
   affectedMode: affectedModeSchema,
   packages: packageList,
   edges: edgeList,

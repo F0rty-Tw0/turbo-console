@@ -11,8 +11,12 @@ import type {
   DryRun,
   DryRunRequest,
   DryRunState,
+  LockfileName,
   PackageEdge,
   PackageGraph,
+  PackageManager,
+  PackageManagerName,
+  PackageManagerSource,
   PackageNode,
   RunMatch,
   RunSummary,
@@ -28,7 +32,8 @@ import type {
 
 /**
  * Spec §4.8: M0's runtime exports plus M1's readers, `TurboException` and (M2) the text cleaners `plainLine` and
- * `plainLines`. Spawning, model building and the name check (`runTurbo`, `queryTurbo`, `buildWorkspaceModel`,
+ * `plainLines`. The task-name check `assertTaskName` and the boundary check `isWithin` are public: the vscode run flow
+ * uses them. Spawning, model building and the turbo-name check (`runTurbo`, `queryTurbo`, `buildWorkspaceModel`,
  * `assertTurboName`) stay internal; `TurboBinary` is a type-only export.
  */
 const RUNTIME_EXPORTS = [
@@ -39,7 +44,9 @@ const RUNTIME_EXPORTS = [
   'SUPPORTED_TURBO_RANGE',
   'TurboException',
   'affectedTasksSchema',
+  'assertTaskName',
   'dryRunSchema',
+  'isWithin',
   'loadWorkspace',
   'matchRunSummary',
   'packageGraphSchema',
@@ -70,6 +77,11 @@ describe('FEATURE: core package entry', () => {
       expect(names).toStrictEqual(RUNTIME_EXPORTS);
       expectTypeOf<TurboBinary>().toHaveProperty('path');
       expectTypeOf<WorkspaceModel>().toHaveProperty('affectedMode');
+      expectTypeOf<WorkspaceModel>().toHaveProperty('packageManager');
+      expectTypeOf<PackageManager>().toHaveProperty('source');
+      expectTypeOf<PackageManagerSource['kind']>().toEqualTypeOf<'field' | 'lockfile' | 'default'>();
+      expectTypeOf<PackageManagerName>().toEqualTypeOf<'npm' | 'pnpm' | 'yarn' | 'bun'>();
+      expectTypeOf<LockfileName>().toEqualTypeOf<'pnpm-lock.yaml' | 'bun.lock' | 'bun.lockb' | 'yarn.lock' | 'package-lock.json'>();
       expectTypeOf<PackageNode>().toHaveProperty('tasks');
       expectTypeOf<PackageEdge>().toHaveProperty('target');
       expectTypeOf<TaskNode>().toHaveProperty('kind');

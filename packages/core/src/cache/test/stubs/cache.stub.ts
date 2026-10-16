@@ -1,4 +1,5 @@
 import type { PackageEdge, PackageNode, TaskAtom, TaskNode, WorkspaceModel } from '../../../workspace/common/workspace-model.type.ts';
+import { PNPM_BY_LOCKFILE_STUB } from '../../../workspace/test/stubs/package-manager.stub.ts';
 
 const LIVE_ATOM: TaskAtom = { group: 'e2e', isLive: true };
 
@@ -44,6 +45,7 @@ const EDGES = [WEB_TO_UI];
 export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   root: '/repo',
   turboVersion: '2.11.7',
+  packageManager: PNPM_BY_LOCKFILE_STUB,
   affectedMode: 'task',
   packages: PACKAGES,
   edges: EDGES,

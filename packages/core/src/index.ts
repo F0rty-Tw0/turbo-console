@@ -34,6 +34,8 @@ export type { TurboErrorKind } from './shared/errors/common/turbo-error.type.ts'
 
 export { plainLine, plainLines } from './shared/errors/utils/plain-text.util.ts';
 
+export { isWithin } from './shared/fs/utils/path-within.util.ts';
+
 export { affectedTasksSchema } from './shared/turbo/common/affected-tasks.schema.ts';
 
 export { dryRunSchema } from './shared/turbo/common/dry-run.schema.ts';
@@ -48,6 +50,17 @@ export { SCHEMA_SDL_SHA256, SUPPORTED_TURBO_RANGE } from './shared/turbo/common/
 
 export type { AffectedTasks, DryRun, PackageGraph, RunSummary, TurboVersionRange } from './shared/turbo/common/turbo.type.ts';
 
-export type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from './workspace/common/workspace-model.type.ts';
+export { assertTaskName } from './shared/turbo/utils/turbo-name.util.ts';
+
+export type {
+  LockfileName,
+  PackageEdge,
+  PackageManager,
+  PackageManagerName,
+  PackageManagerSource,
+  PackageNode,
+  TaskNode,
+  WorkspaceModel
+} from './workspace/common/workspace-model.type.ts';
 
 export { loadWorkspace } from './workspace/domain-logic/load-workspace.ts';

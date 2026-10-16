@@ -88,8 +88,16 @@ export type PackageManager = {
 export type WorkspaceModel = {
   readonly root: string;
   readonly turboVersion: string;
+  readonly packageManager: PackageManager;
   readonly affectedMode: AffectedMode;
   readonly packages: PackageNode[];
   readonly edges: PackageEdge[];
   readonly warnings: string[];
+};
+
+/** What `buildWorkspaceModel` takes besides the graph and the configs: facts of the load, not of the graph. */
+export type ModelSource = {
+  readonly turboVersion: string;
+  readonly root: string;
+  readonly packageManager: PackageManager;
 };

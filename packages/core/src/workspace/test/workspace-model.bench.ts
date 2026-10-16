@@ -10,8 +10,10 @@ import { queryTurbo } from '../../shared/turbo/data-access/query-turbo.ts';
 import { devTurboPath } from '../../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
 import type { TurboConfigFile } from '../common/turbo-config.type.ts';
+import type { ModelSource } from '../common/workspace-model.type.ts';
 import { readTurboConfigs } from '../data-access/turbo-config.ts';
 import { buildWorkspaceModel } from '../utils/workspace-model.util.ts';
+import { MODEL_SOURCE_STUB } from './stubs/model-source.stub.ts';
 
 type CapturedInput = {
   readonly graph: PackageGraph;
@@ -19,6 +21,8 @@ type CapturedInput = {
 };
 
 const TURBO = devTurboPath();
+
+const BENCH_SOURCE: ModelSource = { ...MODEL_SOURCE_STUB, root: '/bench' };
 
 const configDirOf = (pkg: GraphPackage): string => toPosixPath(pkg.path);
 
@@ -44,7 +48,7 @@ const captureInput = async (preset: PresetName): Promise<CapturedInput> => {
 };
 
 const modelBench = (name: string, input: CapturedInput): BenchDescriptor => {
-  const build = (): unknown => buildWorkspaceModel(input.graph, input.configs, '2.11.7', '/bench');
+  const build = (): unknown => buildWorkspaceModel(input.graph, input.configs, BENCH_SOURCE);
 
   return bench(name, build, { gate: true });
 };

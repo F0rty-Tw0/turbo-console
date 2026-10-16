@@ -7,7 +7,8 @@ import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from 'vitest'
 import type { z } from 'zod';
 
 import { readCacheFile, writeCacheFile } from './cache-file.ts';
-import type { TaskNode, WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
+import type { PackageManager, TaskNode, WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
+import { BUN_BY_LOCKFILE_STUB, NPM_BY_DEFAULT_STUB, YARN_BY_FIELD_STUB } from '../../workspace/test/stubs/package-manager.stub.ts';
 import { workspaceModelSchema } from '../common/cache-file.schema.ts';
 import type { CacheEntry } from '../common/cache.type.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
@@ -48,8 +49,20 @@ const ROUND_TRIPS: [string, CacheEntry][] = [
   ['a continuous task', CONTINUOUS_ENTRY]
 ];
 
-/** Every format before `persistent` (v4): 1 before the task-name fix, 2 before `isTurboTask`, 3 before `persistent`. */
-const OLD_VERSIONS = [1, 2, 3];
+/** Every format before `packageManager` (v5): 1 before the task-name fix, 2 before `isTurboTask`, 3 before `persistent`, 4 before `packageManager`. */
+const OLD_VERSIONS = [1, 2, 3, 4];
+
+/** One package manager per source kind a cache file can hold. */
+const PACKAGE_MANAGERS: [string, PackageManager][] = [
+  ['a field source', YARN_BY_FIELD_STUB],
+  ['a lockfile source', BUN_BY_LOCKFILE_STUB],
+  ['a default source', NPM_BY_DEFAULT_STUB]
+];
+
+/** A lockfile source naming a file that is no lockfile, and the manager that holds it. */
+const NOT_A_LOCKFILE = { kind: 'lockfile', file: 'x.lock' };
+
+const BAD_MANAGER = { name: 'npm', source: NOT_A_LOCKFILE };
 
 /** Named like a keyed file, but each would reach a file outside the root once joined to it. */
 const TAMPERED_PATHS = ['../package.json', '/etc/package.json', 'C:/package.json', '..\\package.json', 'a\\b/../../package.json'];
@@ -103,6 +116,14 @@ const modelWithoutTurboFlag = (): WorkspaceModel => {
   return model;
 };
 
+/** `ENTRY` whose model holds `packageManager`. */
+const entryWith = (packageManager: PackageManager): CacheEntry => {
+  const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packageManager };
+  const entry: CacheEntry = { ...ENTRY, model };
+
+  return entry;
+};
+
 describe('FEATURE: workspace cache file', () => {
   beforeAll(async () => {
     tempDir = await mkdtemp(join(tmpdir(), 'cache-file-'));
@@ -131,6 +152,17 @@ describe('FEATURE: workspace cache file', () => {
 
       expect(writeError).toBeNull();
       expect(read).toStrictEqual(entry);
+    });
+
+    it.each(PACKAGE_MANAGERS)('WHEN the model holds %s THEN it reads back unchanged', async (_, packageManager) => {
+      const cacheDir = newCacheDir();
+      const entry = entryWith(packageManager);
+
+      await writeCacheFile(cacheDir, entry);
+
+      const read = await readCacheFile(cacheDir, ROOT);
+
+      expect(read?.model.packageManager).toStrictEqual(packageManager);
     });
 
     it.skipIf(!IS_POSIX)('WHEN the cache file is written THEN only its owner can read or write it', async () => {
@@ -218,6 +250,17 @@ describe('FEATURE: workspace cache file', () => {
       const cacheDir = await writtenEntry();
 
       await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'model', modelWithoutTurboFlag()));
+
+      const read = await readCacheFile(cacheDir, ROOT);
+
+      expect(read).toBeNull();
+    });
+
+    it('WHEN a lockfile source names a file that is no lockfile THEN the read is null', async () => {
+      const cacheDir = await writtenEntry();
+      const model = { ...WORKSPACE_MODEL_STUB, packageManager: BAD_MANAGER };
+
+      await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'model', model));
 
       const read = await readCacheFile(cacheDir, ROOT);
 

@@ -4,6 +4,7 @@ import { buildWorkspaceModel } from './workspace-model.util.ts';
 import type { GraphPackage, PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
 import type { TurboConfigError, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 import type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from '../common/workspace-model.type.ts';
+import { MODEL_SOURCE_STUB } from '../test/stubs/model-source.stub.ts';
 import { configError, manyErrors } from '../test/utils/config-error.spec.util.ts';
 import { graphEdge, graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
 
@@ -24,7 +25,7 @@ const DEFS = graphPackage('defs', 'tools/defs', ['atomizer:definitions'], [graph
 const build = (packages: GraphPackage[], edges: GraphEdge[], configs: TurboConfigFile[]): WorkspaceModel => {
   const graph = packageGraph(packages, edges);
 
-  return buildWorkspaceModel(graph, configs, '2.11.7', '/repo');
+  return buildWorkspaceModel(graph, configs, MODEL_SOURCE_STUB);
 };
 
 const taskOf = (model: WorkspaceModel, id: string): TaskNode | undefined => {
@@ -80,6 +81,7 @@ describe('FEATURE: workspace model build', () => {
       const expected: WorkspaceModel = {
         root: '/repo',
         turboVersion: '2.11.7',
+        packageManager: MODEL_SOURCE_STUB.packageManager,
         affectedMode: 'package',
         packages: [pkg],
         edges: [],
@@ -300,7 +302,7 @@ describe('FEATURE: workspace model build', () => {
       const graph = packageGraph([PKG_B, graphPackage('a', 'packages/a', ['n', 'm'], [lint])], [graphEdge('b', 'a', 'k')]);
       const before = structuredClone(graph);
 
-      buildWorkspaceModel(graph, [], '2.11.7', '/repo');
+      buildWorkspaceModel(graph, [], MODEL_SOURCE_STUB);
 
       expect(graph).toStrictEqual(before);
     });
