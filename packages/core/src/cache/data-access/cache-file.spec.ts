@@ -59,10 +59,18 @@ const PACKAGE_MANAGERS: [string, PackageManager][] = [
   ['a default source', NPM_BY_DEFAULT_STUB]
 ];
 
-/** A lockfile source naming a file that is no lockfile, and the manager that holds it. */
+const FIELD_SOURCE = { kind: 'field' };
+
 const NOT_A_LOCKFILE = { kind: 'lockfile', file: 'x.lock' };
 
-const BAD_MANAGER = { name: 'npm', source: NOT_A_LOCKFILE };
+const UNKNOWN_SOURCE = { kind: 'workspace' };
+
+/** Each is a package manager a cache file must not hold: an unknown name, an unknown source kind, a file that is no lockfile. */
+const BAD_MANAGERS: [string, unknown][] = [
+  ['a manager name that is unknown', { name: 'deno', source: FIELD_SOURCE }],
+  ['a source kind that is unknown', { name: 'npm', source: UNKNOWN_SOURCE }],
+  ['a lockfile source naming a file that is no lockfile', { name: 'npm', source: NOT_A_LOCKFILE }]
+];
 
 /** Named like a keyed file, but each would reach a file outside the root once joined to it. */
 const TAMPERED_PATHS = ['../package.json', '/etc/package.json', 'C:/package.json', '..\\package.json', 'a\\b/../../package.json'];
@@ -256,9 +264,9 @@ describe('FEATURE: workspace cache file', () => {
       expect(read).toBeNull();
     });
 
-    it('WHEN a lockfile source names a file that is no lockfile THEN the read is null', async () => {
+    it.each(BAD_MANAGERS)('WHEN the model holds %s THEN the read is null', async (_, packageManager) => {
       const cacheDir = await writtenEntry();
-      const model = { ...WORKSPACE_MODEL_STUB, packageManager: BAD_MANAGER };
+      const model = { ...WORKSPACE_MODEL_STUB, packageManager };
 
       await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'model', model));
 
