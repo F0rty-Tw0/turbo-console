@@ -1,7 +1,7 @@
 import type { PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { isRunnableTask, taskRows } from './task-rows.util.ts';
+import { isRunnableTask, taskRowOf, taskRows } from './task-rows.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -191,5 +191,36 @@ describe('FEATURE: runnable task', () => {
     ['a file atom task', false, taskOf({ kind: 'atom-file' })]
   ])('GIVEN %s WHEN checked THEN runnable is %s', (_label, isRunnable, task) => {
     expect(isRunnableTask(task)).toBe(isRunnable);
+  });
+});
+
+describe('FEATURE: one task row by id', () => {
+  describe('GIVEN a package with a file atom task a#lint:file and tasks a#lint and a#build', () => {
+    const pkg = packageWith([
+      taskOf({ id: 'a#lint', name: 'lint', kind: 'atom-umbrella' }),
+      taskOf({ id: 'a#lint:file', name: 'lint:file', kind: 'atom-file' }),
+      taskOf({ id: 'a#build', name: 'build', kind: 'task' })
+    ]);
+
+    it('WHEN a#build is read THEN its row equals the one the package listing builds', () => {
+      const context = rowContextOf('list');
+      const listed = taskRows('/ws', pkg, context);
+
+      const row = taskRowOf('/ws', pkg, 'a#build', context);
+
+      expect(row).toStrictEqual(listed[1]);
+    });
+
+    it('WHEN the hidden file atom task is read THEN there is no row', () => {
+      const row = taskRowOf('/ws', pkg, 'a#lint:file', rowContextOf('list'));
+
+      expect(row).toBeUndefined();
+    });
+
+    it('WHEN an id the package does not hold is read THEN there is no row', () => {
+      const row = taskRowOf('/ws', pkg, 'b#build', rowContextOf('list'));
+
+      expect(row).toBeUndefined();
+    });
   });
 });

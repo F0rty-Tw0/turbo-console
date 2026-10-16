@@ -2,7 +2,7 @@ import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 
 import { dirRow, dirRows, packageRow } from './dir-rows.util.ts';
 import { rootRowOf, rootRows, shownModelOf } from './root-rows.util.ts';
-import { taskRows } from './task-rows.util.ts';
+import { taskRowOf, taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
@@ -78,7 +78,6 @@ export const goneRowOf = (node: TreeNode): TreeRow => {
 };
 
 const modelRow = (root: string, model: WorkspaceModel, node: TreeNode, context: RowContext): TreeRow | undefined => {
-  const isId = (row: TreeRow): boolean => row.id === node.id;
   const view = context.views(model);
   const dir = dirOf(view, node);
 
@@ -90,9 +89,7 @@ const modelRow = (root: string, model: WorkspaceModel, node: TreeNode, context: 
 
   if (node.kind === 'pkg') return packageRow(root, pkg, view, context.scopeShown);
 
-  const tasks = taskRows(root, pkg, context);
-
-  return tasks.find(isId);
+  return taskRowOf(root, pkg, node.key, context);
 };
 
 const messageRowOf = (state: RootState, node: TreeNode, context: RowContext): TreeRow | undefined => {
