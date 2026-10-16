@@ -146,5 +146,11 @@ describe('FEATURE: model view', () => {
 
       expect(labels).toStrictEqual(['@a/x', 'x']);
     });
+
+    it('WHEN a rest cleans to an unscoped name THEN the scoped one reads its cleaned full name', () => {
+      const labels = labelsOfNames(['@a/x​', 'x']);
+
+      expect(labels).toStrictEqual(['@a/x', 'x']);
+    });
   });
 });
