@@ -11,6 +11,7 @@ import type { TreeMode } from '../common/tree-row.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
+import { taskRunOf } from '../test/utils/tree-refresher.spec.util.ts';
 
 const OTHER_FOLDER: RootFolder = { root: '/other', name: 'other' };
 
@@ -128,14 +129,14 @@ describe('FEATURE: packages tree', () => {
         task = named(tasks, 'a#build');
       });
 
-      it('THEN refreshing that task fires exactly its node', () => {
-        fixture.tree.refreshTask('/ws', 'a#build');
+      it('THEN a run change of that task fires exactly its node', () => {
+        fixture.tree.runChanged(taskRunOf('/ws', 'a#build', 'a'));
 
         expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(task);
       });
 
-      it('THEN refreshing a task never shown fires nothing', () => {
-        fixture.tree.refreshTask('/ws', 'b#build');
+      it('THEN a run change of a task never shown fires nothing', () => {
+        fixture.tree.runChanged(taskRunOf('/ws', 'b#build', 'b'));
 
         expect(fixture.fire).not.toHaveBeenCalled();
       });

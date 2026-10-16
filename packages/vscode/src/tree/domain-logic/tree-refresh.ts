@@ -1,14 +1,18 @@
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
+import type { RunEntry } from '../../run/common/run.type.ts';
 import type { RefreshTarget, RunningTasks, TreeNode } from '../common/tree-node.type.ts';
 import type { RefreshDeps } from '../common/tree-refresh.type.ts';
 import { allRows } from '../utils/all-rows.util.ts';
+import { currentTaskOf } from '../utils/current-task.util.ts';
 import { pruneNodes } from '../utils/node-cache.util.ts';
 import { refreshTarget } from '../utils/refresh-target.util.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
+import { isVisibleScript } from '../utils/script-task.util.ts';
 
 /** What to fire after a change, and which cached nodes outlive it: the refresh half of `PackagesTree`. */
 export class TreeRefresher {
   private readonly deps: RefreshDeps;
+  private readonly stored = new Map<string, Set<string>>();
 
   public constructor(deps: RefreshDeps) {
     this.deps = deps;
@@ -22,12 +26,45 @@ export class TreeRefresher {
     this.prune(change.root);
   }
 
-  /** Fires the cached node of that task; a task never shown (its package collapsed) has none, and nothing fires. */
-  public refreshTask(root: string, taskId: string): void {
-    const id = rowIdOf('task', root, taskId);
-    const node = this.deps.cache.get(id);
+  /**
+   * Spec 1c-b §4.7: with scripts hidden, a script run entering or leaving `running` adds or drops its package row, so the
+   * root redraws (and prunes); every other change fires the task node. `stored` is the `running` ids this class last saw.
+   */
+  public runChanged(entry: RunEntry): void {
+    const { root, taskId } = entry;
+    const isMember = entry.state === 'running';
+    const wasMember = this.stored.get(root)?.has(taskId) === true;
+    const isFlip = isMember !== wasMember;
+    const isHiddenScript = this.isHiddenScript(entry);
+    const isRootFire = isFlip && isHiddenScript;
 
-    if (node !== undefined) this.deps.fire(node);
+    this.remember(root, taskId, isMember);
+
+    if (!isRootFire) {
+      this.refreshTask(root, taskId);
+
+      return;
+    }
+
+    this.fireTarget(root, 'root');
+    this.prune(root);
+  }
+
+  /**
+   * The scripts toggle changed: `stored` becomes the `running` ids now, whatever it last saw, of every root it remembers
+   * or the window holds. A root removed while its script runs stays, so the run's end still redraws once it is back.
+   */
+  public reseed(): void {
+    const { live } = this.deps.rowContext();
+    const windowRoots = this.deps.store.all().map((entry) => entry.state.folder.root);
+    const storedRoots = this.stored.keys();
+    const roots = new Set([...storedRoots, ...windowRoots]);
+
+    this.stored.clear();
+
+    for (const root of roots) {
+      for (const taskId of live(root)) this.remember(root, taskId, true);
+    }
   }
 
   /** One fire with the cached nodes of all `running` tasks (spec §4.6 tick); tasks never shown are skipped. */
@@ -51,6 +88,36 @@ export class TreeRefresher {
     const keep = this.keptIds(root);
 
     pruneNodes(this.deps.cache, root, keep);
+  }
+
+  /** Fires the cached node of that task; a task never shown (its package collapsed) has none, and nothing fires. */
+  private refreshTask(root: string, taskId: string): void {
+    const id = rowIdOf('task', root, taskId);
+    const node = this.deps.cache.get(id);
+
+    if (node !== undefined) this.deps.fire(node);
+  }
+
+  private remember(root: string, taskId: string, isMember: boolean): void {
+    const ids = this.stored.get(root) ?? new Set<string>();
+
+    if (isMember) ids.add(taskId);
+    else ids.delete(taskId);
+
+    if (ids.size === 0) this.stored.delete(root);
+    else this.stored.set(root, ids);
+  }
+
+  /** Scripts hidden and the task's node in the model now is a script; a task gone from the model is not one. */
+  private isHiddenScript(entry: RunEntry): boolean {
+    const { scriptsShown } = this.deps.rowContext();
+    const model = this.deps.store.get(entry.root)?.state.model ?? null;
+
+    if (scriptsShown || model === null) return false;
+
+    const task = currentTaskOf(model, entry.packageName, entry.taskId);
+
+    return task !== undefined && isVisibleScript(task);
   }
 
   private fireTarget(root: string, target: RefreshTarget): void {

@@ -10,7 +10,16 @@ import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
-import type { CommandRegistry, Disposed, RunDefinition, RunEvent, RunPorts, RunRequest, Terminable } from '../common/run.type.ts';
+import type {
+  CommandRegistry,
+  Disposed,
+  RunDefinition,
+  RunEntry,
+  RunEvent,
+  RunPorts,
+  RunRequest,
+  Terminable
+} from '../common/run.type.ts';
 import { RunSession } from '../domain-logic/run-session.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
@@ -33,7 +42,7 @@ describe('FEATURE: run commands', () => {
   let ports: RunPorts;
   let session: RunSession;
   let roots: RootStore;
-  let refreshTask: Mock<(root: string, taskId: string) => void>;
+  let runChanged: Mock<(entry: RunEntry) => void>;
   let commands: Map<string, (arg: unknown) => unknown>;
   let unregister: Mock<() => void>;
   let registered: Disposed;
@@ -48,7 +57,7 @@ describe('FEATURE: run commands', () => {
     session = new RunSession(ports, []);
     roots = new RootStore();
     roots.set([FOLDER], coordinatorMock);
-    refreshTask = vi.fn<(root: string, taskId: string) => void>();
+    runChanged = vi.fn<(entry: RunEntry) => void>();
     commands = new Map();
     unregister = vi.fn<() => void>();
 
@@ -60,7 +69,7 @@ describe('FEATURE: run commands', () => {
       return disposed;
     };
 
-    registered = registerRuns(session, { refreshTask }, roots, register);
+    registered = registerRuns(session, { runChanged }, roots, register);
   });
 
   it('GIVEN the run commands WHEN they are registered THEN Run, Run Without Cache and Stop Task are registered', () => {
@@ -154,10 +163,10 @@ describe('FEATURE: run commands', () => {
       expect(execution.terminate).not.toHaveBeenCalled();
     });
 
-    it('WHEN the task runs THEN its tree row is refreshed', async () => {
+    it('WHEN the task runs THEN the tree is told of its run entry', async () => {
       await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
 
-      expect(refreshTask).toHaveBeenCalledWith('/ws', 'build');
+      expect(runChanged).toHaveBeenCalledWith(expect.objectContaining({ root: '/ws', taskId: 'build', state: 'running' }));
     });
 
     it('WHEN the task ran and the root reloads without it THEN its ended run is dropped', async () => {
@@ -189,10 +198,10 @@ describe('FEATURE: run commands', () => {
       expect(unregister).toHaveBeenCalledTimes(3);
     });
 
-    it('WHEN a task runs THEN no tree row is refreshed', async () => {
+    it('WHEN a task runs THEN the tree is not told', async () => {
       await session.run(REQUEST);
 
-      expect(refreshTask).not.toHaveBeenCalled();
+      expect(runChanged).not.toHaveBeenCalled();
     });
 
     it('WHEN a run ended and the root reloads without its task THEN the run stays', async () => {
