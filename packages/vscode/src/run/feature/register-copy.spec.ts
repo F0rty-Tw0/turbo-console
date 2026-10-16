@@ -10,7 +10,7 @@ import type { TreeNode } from '../../tree/common/tree-node.type.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
-import { NAME_NOT_COPYABLE_TEXT, SHELL_NOT_COPYABLE_TEXT } from '../common/copy.const.ts';
+import { NAME_NOT_COPYABLE_TEXT, NOT_TURBO_COPY_TEXT, SHELL_NOT_COPYABLE_TEXT } from '../common/copy.const.ts';
 import type { CopyPorts } from '../common/copy.type.ts';
 import type { CommandRegistry, Disposed } from '../common/run.type.ts';
 
@@ -80,6 +80,17 @@ describe('FEATURE: copy command', () => {
       await copy(TASK_TREE_NODE_STUB);
 
       expect(write).toHaveBeenCalledExactlyOnceWith('turbo run build --filter=a');
+    });
+
+    it('WHEN the task is no turbo task THEN an info message says there is no command and nothing is copied', async () => {
+      const script = { ...TASK_NODE_STUB, isTurboTask: false };
+
+      roots.apply('/ws', loadedWith([packageHolding('a', script)]));
+
+      await copy(TASK_TREE_NODE_STUB);
+
+      expect(info).toHaveBeenCalledExactlyOnceWith(NOT_TURBO_COPY_TEXT);
+      expect(write).not.toHaveBeenCalled();
     });
 
     it('WHEN the shell is unknown THEN the command is copied for posix', async () => {
