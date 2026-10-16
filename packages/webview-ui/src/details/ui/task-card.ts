@@ -114,12 +114,12 @@ export const taskCard = (card: TaskCard, phase: DryRunPhase, context: RenderCont
   const { taskId, isTurboTask } = card;
   const refs: CardRefs = { taskId, isTurboTask, title, status, runSlot, runButton };
 
-  title.tabIndex = -1;
   const header = cardHeader(card, refs, context);
   const fields = fieldList(card, phase);
   const badgeList = badges(card);
   const rendered: RenderedCard = { element, refs };
 
+  title.tabIndex = -1;
   fillRun(refs, card.run, context.runTexts);
   element.append(header, badgeList, fields);
 
