@@ -64,6 +64,15 @@ export const setScript = (manifest: JsonObject, task: string, script: string): v
   scripts[task] = script;
 };
 
+/** Adds task `task` with `config` to a parsed `turbo.json`; throws when it has no `tasks` object. */
+export const addTask = (manifest: JsonObject, task: string, config: JsonObject): void => {
+  const tasks = manifest['tasks'];
+
+  if (!isJsonObject(tasks)) throw new Error('the turbo.json has no tasks');
+
+  tasks[task] = config;
+};
+
 /** Sets `outputs` of task `task` in a parsed `turbo.json`; throws when it has no such task. */
 export const setTaskOutputs = (manifest: JsonObject, task: string, outputs: string[]): void => {
   const tasks = manifest['tasks'];
