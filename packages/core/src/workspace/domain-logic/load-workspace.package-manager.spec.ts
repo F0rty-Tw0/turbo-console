@@ -1,4 +1,3 @@
-import type { BigIntStats, Stats } from 'node:fs';
 import type * as fsPromises from 'node:fs/promises';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -9,6 +8,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { loadWorkspace } from './load-workspace.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import { TurboBinary } from '../../binary/common/index.ts';
+import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
+import type * as smallFile from '../../shared/fs/data-access/small-file.ts';
 import type { TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import type { PackageManager } from '../common/workspace-model.type.ts';
 import {
@@ -26,9 +27,18 @@ const turbo = vi.hoisted(() => {
   return state;
 });
 
+type Recorded<TArgs extends unknown[], TResult> = (...args: TArgs) => Promise<TResult>;
+
 const spy = vi.hoisted(() => {
-  const statPaths: string[] = [];
-  const state = { statPaths, lstatCalls: 0 };
+  const calls: string[] = [];
+  const state = { calls };
+
+  return state;
+});
+
+const gate = vi.hoisted(() => {
+  const proceed = async (): Promise<void> => Promise.resolve();
+  const state = { path: '', onRead: proceed };
 
   return state;
 });
@@ -48,19 +58,41 @@ vi.mock('../../shared/turbo/data-access/query-turbo.ts', () => {
 vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
-  const stat = async (...args: Parameters<typeof real.stat>): Promise<BigIntStats | Stats> => {
-    spy.statPaths.push(String(args[0]));
+  /** `fn` as it was, after it records `<name>:<first argument>` for the case to read. */
+  const recorded = <TArgs extends unknown[], TResult>(name: string, fn: Recorded<TArgs, TResult>): Recorded<TArgs, TResult> => {
+    const call = async (...args: TArgs): Promise<TResult> => {
+      spy.calls.push(`${name}:${String(args[0])}`);
 
-    return real.stat(...args);
+      return fn(...args);
+    };
+
+    return call;
   };
 
-  const lstat = async (...args: Parameters<typeof real.lstat>): Promise<BigIntStats | Stats> => {
-    spy.lstatCalls += 1;
-
-    return real.lstat(...args);
+  const mocked = {
+    ...real,
+    access: recorded('access', real.access),
+    lstat: recorded('lstat', real.lstat),
+    open: recorded('open', real.open),
+    readFile: recorded('readFile', real.readFile),
+    readdir: recorded('readdir', real.readdir),
+    stat: recorded('stat', real.stat)
   };
 
-  const mocked = { ...real, stat, lstat };
+  return mocked;
+});
+
+/** The root manifest read waits on `gate.onRead` when it is the file the case gated. */
+vi.mock('../../shared/fs/data-access/small-file.ts', async (importOriginal) => {
+  const real = await importOriginal<typeof smallFile>();
+
+  const readSmallFile = async (...args: Parameters<typeof real.readSmallFile>): Promise<string | null> => {
+    if (args[0] === gate.path) await gate.onRead();
+
+    return real.readSmallFile(...args);
+  };
+
+  const mocked = { ...real, readSmallFile };
 
   return mocked;
 });
@@ -96,8 +128,8 @@ describe('FEATURE: workspace loading package manager', () => {
 
   beforeEach(() => {
     turbo.stdout = JSON.stringify(GRAPH);
-    spy.statPaths.length = 0;
-    spy.lstatCalls = 0;
+    spy.calls.length = 0;
+    gate.path = '';
   });
 
   describe('GIVEN a root package.json with a packageManager field', () => {
@@ -145,17 +177,51 @@ describe('FEATURE: workspace loading package manager', () => {
   });
 
   describe('GIVEN a root with a lockfile', () => {
-    it('WHEN loaded THEN stat runs only in the keyed-file hashes and lstat never', async () => {
+    it('WHEN loaded THEN only the two keyed-file hashes touch the lockfile', async () => {
       const files = { 'package.json': '{}', 'pnpm-lock.yaml': '' };
       const root = await rootWithFiles(tempDir, files);
       const lockfile = join(root, 'pnpm-lock.yaml');
 
       await loadWorkspace(binaryAt(root));
 
-      const lockfileStats = spy.statPaths.filter((path) => path === lockfile);
+      const lockfileCalls = spy.calls.filter((call) => call.endsWith(`:${lockfile}`));
 
-      expect(lockfileStats).toHaveLength(2);
-      expect(spy.lstatCalls).toBe(0);
+      expect(lockfileCalls.toSorted()).toStrictEqual([`open:${lockfile}`, `open:${lockfile}`, `stat:${lockfile}`, `stat:${lockfile}`]);
     });
+
+    it('WHEN loaded THEN no directory is listed and nothing is probed with access or lstat', async () => {
+      const files = { 'package.json': '{}', 'pnpm-lock.yaml': '' };
+      const root = await rootWithFiles(tempDir, files);
+
+      await loadWorkspace(binaryAt(root));
+
+      const probes = spy.calls.filter((call) => /^(access|lstat|readdir|readFile):/.test(call));
+
+      expect(probes).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN the caller aborts while the root manifest is being read', () => {
+    it('WHEN the read is still pending THEN the load rejects failed, aborted', async () => {
+      const root = await rootWithFiles(tempDir, { 'package.json': '{}' });
+      const { promise: pending, resolve: release } = Promise.withResolvers<undefined>();
+      const { promise: started, resolve: markStarted } = Promise.withResolvers<undefined>();
+      const controller = new AbortController();
+
+      gate.path = join(root, 'package.json');
+      gate.onRead = async (): Promise<void> => {
+        markStarted(undefined);
+        await pending;
+      };
+
+      const loading = loadWorkspace(binaryAt(root), { signal: controller.signal });
+
+      await started;
+      controller.abort();
+
+      await expect(loading).rejects.toBeInstanceOf(TurboException);
+      await expect(loading).rejects.toThrow('aborted');
+      release(undefined);
+    }, 2000);
   });
 });

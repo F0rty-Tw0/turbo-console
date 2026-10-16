@@ -23,7 +23,7 @@ import { untilAborted } from '../../shared/turbo/data-access/until-aborted.ts';
 import { toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
 import type { LoadWorkspaceOptions } from '../common/load-workspace.type.ts';
 import type { TurboConfigFile } from '../common/turbo-config.type.ts';
-import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
+import type { ModelSource, PackageManager, WorkspaceModel } from '../common/workspace-model.type.ts';
 import { detectPackageManager } from '../data-access/root-manifest.ts';
 import { readTurboConfigs } from '../data-access/turbo-config.ts';
 import { buildWorkspaceModel, withWarning } from '../utils/workspace-model.util.ts';
@@ -62,8 +62,10 @@ const refuseHostile = (rootFiles: KeyedFile[]): void => {
 };
 
 /**
- * Spec §4.4: one `packageGraph` spawn (30 s budget, 128 MiB stdout cap), the `turbo.json(c)` of the root and of every
- * graph package (hidden ones included), the pure model build, then the model keyed and kept in memory, and written to
+ * Spec §4.4: one `packageGraph` spawn (30 s budget, 128 MiB stdout cap), the `packageManager` field of the root
+ * `package.json`, read once after the root hash (a missing, oversized or malformed one never fails the load: the
+ * root lockfiles in that hash decide), the `turbo.json(c)` of the root and of every graph package (hidden ones
+ * included), the pure model build, then the model keyed and kept in memory, and written to
  * `cacheDir` when one is given. A failed write does not fail the load: the returned model, and only it, gains a
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
  * changes nothing the cache holds. The caller's `signal` reaches the root keyed file hash, the spawn and the reads, and
@@ -90,8 +92,8 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
 
     refuseHostile(rootFiles);
 
-    const packageManager = await detectPackageManager(binary.root, rootFiles);
-
+    const detect = async (): Promise<PackageManager> => detectPackageManager(binary.root, rootFiles);
+    const packageManager = await untilAborted(detect, signal);
     const mark: SpawnMark = { startedAt: spawnStartedAt, rootFiles };
     const graph = await runTurboJson(run, COMMAND, packageGraphSchema);
     const packages = graph.data.packageGraph.nodes.items;
