@@ -14,15 +14,17 @@ const statusIcon = (run: RunView): HTMLSpanElement => {
   return icon;
 };
 
-const blankRun = (refs: CardRefs, runTexts: RunTexts): null => {
-  runTexts.drop(refs.taskId);
-  refs.status.replaceChildren();
-  refs.runSlot.replaceChildren();
-
-  return null;
-};
-
+/** A script card's status stays blank until it has a run to show (spec 1c-b §4.5). */
 const fillStatus = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
+  const isIdleScript = !refs.isTurboTask && run.isIdle;
+
+  if (isIdleScript) {
+    runTexts.drop(refs.taskId);
+    refs.status.replaceChildren();
+
+    return;
+  }
+
   const icon = statusIcon(run);
   const text = textElement('span', 'run-text', '');
 
@@ -30,41 +32,20 @@ const fillStatus = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
   refs.status.replaceChildren(icon, text);
 };
 
-/** A card that is no turbo task offers Stop while it runs, never Run (spec 1c-a §4.12). */
-const fillButton = (refs: CardRefs, run: RunView): HTMLButtonElement | null => {
-  const hasButton = refs.isTurboTask || run.isRunning;
-
-  if (!hasButton) {
-    refs.runSlot.replaceChildren();
-
-    return null;
-  }
-
+/**
+ * Writes a run's status and Run/Stop button into a card and returns the new button: Stop while the run is live, else
+ * Run, for turbo and script cards alike (spec 1c-b §4.10).
+ */
+export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLButtonElement => {
   const button = refs.runButton(run);
 
+  fillStatus(refs, run, runTexts);
   refs.runSlot.replaceChildren(button);
 
   return button;
 };
 
-/**
- * Writes a run's status and Run/Stop button into a card; returns the new button, or `null` when the card has none. A
- * card that is no turbo task gets a blank status while idle and keeps an ended run's status (spec 1c-a §4.5).
- */
-export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLButtonElement | null => {
-  const isIdleScript = !refs.isTurboTask && run.isIdle;
-
-  if (isIdleScript) return blankRun(refs, runTexts);
-
-  fillStatus(refs, run, runTexts);
-
-  return fillButton(refs, run);
-};
-
-/**
- * Replaces only `taskId`'s status and Run/Stop button; a focused Run/Stop button hands focus to its replacement, or to
- * the card title when there is none.
- */
+/** Replaces only `taskId`'s status and Run/Stop button; a focused Run/Stop button hands focus to its replacement. */
 export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runTexts: RunTexts): void => {
   const refs = cards.get(taskId);
 
@@ -72,7 +53,6 @@ export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runText
 
   const hadFocus = refs.runSlot.contains(document.activeElement);
   const button = fillRun(refs, run, runTexts);
-  const focusTarget = button ?? refs.title;
 
-  if (hadFocus) focusTarget.focus();
+  if (hadFocus) button.focus();
 };

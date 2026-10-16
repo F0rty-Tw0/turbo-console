@@ -4,7 +4,8 @@ import { taskCard } from './task-card.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { DetailsState, MissingPackage, PackageDetails } from '../../bridge/common/details-state.type.ts';
 import type { CardIndex, CardRefs, FocusTargets, RenderContext, RenderedPage, RunTexts } from '../common/details-page.type.ts';
-import { MISSING_PACKAGE_TEXT, NO_TASK_CARDS_TEXT } from '../common/field-text.const.ts';
+import { MISSING_PACKAGE_TEXT, SCRIPTS_TITLE, TURBO_TASKS_TITLE } from '../common/field-text.const.ts';
+import { noCardsText } from '../utils/field-text.util.ts';
 
 const pageHeader = (state: PackageDetails, context: RenderContext): HTMLElement => {
   const { bridge, focusTargets } = context;
@@ -35,25 +36,55 @@ const missingPage = (root: HTMLElement, state: MissingPackage): void => {
   root.replaceChildren(header, notice);
 };
 
+/** A titled section of one kind's cards with their count; a kind with no card has no section (spec 1c-b §4.10). */
+const cardSection = (title: string, cardElements: HTMLElement[]): HTMLElement[] => {
+  if (cardElements.length === 0) return [];
+
+  const section = textElement('section', 'card-section', '');
+  const heading = textElement('h2', 'section-title', `${title} (${cardElements.length})`);
+  const cardList = textElement('div', 'cards', '');
+  const sections = [section];
+
+  cardList.append(...cardElements);
+  section.append(heading, cardList);
+
+  return sections;
+};
+
+/** Turbo task cards, then script cards, each under its section; a package with no card says why in their place. */
+const cardSections = (state: PackageDetails, context: RenderContext, cards: Map<string, CardRefs>): HTMLElement => {
+  const body = textElement('div', 'card-sections', '');
+  const turboCards: HTMLElement[] = [];
+  const scriptCards: HTMLElement[] = [];
+
+  for (const card of state.tasks) {
+    const { element, refs } = taskCard(card, state.dryRun, context);
+    const kindCards = card.isTurboTask ? turboCards : scriptCards;
+
+    cards.set(card.taskId, refs);
+    kindCards.push(element);
+  }
+
+  const turboSection = cardSection(TURBO_TASKS_TITLE, turboCards);
+  const scriptSection = cardSection(SCRIPTS_TITLE, scriptCards);
+  const emptyText = noCardsText(state);
+
+  if (state.tasks.length === 0) body.append(textElement('p', 'no-tasks', emptyText));
+
+  body.append(...turboSection, ...scriptSection);
+
+  return body;
+};
+
 const packagePage = (root: HTMLElement, state: PackageDetails, context: RenderContext): CardIndex => {
   const cards = new Map<string, CardRefs>();
   const header = pageHeader(state, context);
   const bannerArea = textElement('div', 'banners', '');
-  const cardList = textElement('div', 'cards', '');
   const shownBanners = banners(state, context);
+  const body = cardSections(state, context, cards);
 
   bannerArea.append(...shownBanners);
-
-  if (state.tasks.length === 0) cardList.append(textElement('p', 'no-tasks', NO_TASK_CARDS_TEXT));
-
-  for (const card of state.tasks) {
-    const { element, refs } = taskCard(card, state.dryRun, context);
-
-    cards.set(card.taskId, refs);
-    cardList.append(element);
-  }
-
-  root.replaceChildren(header, bannerArea, cardList);
+  root.replaceChildren(header, bannerArea, body);
 
   return cards;
 };

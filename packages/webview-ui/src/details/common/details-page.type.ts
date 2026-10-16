@@ -14,9 +14,8 @@ export type RunTexts = {
 };
 
 /**
- * The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. A card that is no turbo task
- * shows no status while idle and never a Run button. `title` takes focus when a focused Stop button goes with no
- * replacement.
+ * The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. A script card shows no status
+ * while idle.
  */
 export type CardRefs = {
   readonly taskId: string;

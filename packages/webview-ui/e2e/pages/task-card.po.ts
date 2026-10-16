@@ -14,7 +14,7 @@ export class TaskCardSection {
   private readonly statusIcon: Locator;
 
   public constructor(page: Page, taskName: string) {
-    const heading = page.getByRole('heading', { level: 2, name: taskName, exact: true });
+    const heading = page.getByRole('heading', { level: 3, name: taskName, exact: true });
 
     this.root = page.locator('section.card').filter({ has: heading });
     this.title = this.root.locator('.card-title');

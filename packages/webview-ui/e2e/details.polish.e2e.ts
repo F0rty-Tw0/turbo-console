@@ -21,18 +21,16 @@ const PASSED_HIT: RunView = { ...NOT_IDLE, iconId: 'pass', colorVar: '--vscode-t
 
 const STOPPED: RunView = { ...NOT_IDLE, iconId: 'debug-stop', colorVar: '--vscode-disabledForeground', text: 'stopped · 3.0s' };
 
-const NOT_TURBO_IDLE: RunView = { ...RUN_VIEW_STUB, colorVar: '--vscode-disabledForeground', text: 'not a turbo task' };
-
 const RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING };
 
 const CONTINUOUS_CARD: TaskCard = { ...TASK_CARD_STUB, taskId: 'web#dev', name: 'dev', persistent: true, run: CONTINUOUS };
 
-const NOT_TURBO_CARD: TaskCard = {
+const SCRIPT_CARD: TaskCard = {
   ...TASK_CARD_STUB,
   definition: null,
   cacheStatus: null,
   isTurboTask: false,
-  run: NOT_TURBO_IDLE
+  runCommand: 'pnpm run build'
 };
 
 const RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [RUNNING_CARD] };
@@ -43,22 +41,22 @@ const CONTINUOUS_PENDING_CARD: TaskCard = { ...CONTINUOUS_CARD, definition: null
 
 const CONTINUOUS_LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loading', tasks: [CONTINUOUS_PENDING_CARD] };
 
-const NOT_TURBO_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [NOT_TURBO_CARD] };
+const SCRIPT_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [SCRIPT_CARD] };
 
-const NOT_TURBO_RUNNING_CARD: TaskCard = { ...NOT_TURBO_CARD, run: RUNNING };
+const SCRIPT_RUNNING_CARD: TaskCard = { ...SCRIPT_CARD, run: RUNNING };
 
-const NOT_TURBO_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [NOT_TURBO_RUNNING_CARD] };
+const SCRIPT_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [SCRIPT_RUNNING_CARD] };
 
-const SCRIPT_RUNNING_CARD: TaskCard = { ...NOT_TURBO_RUNNING_CARD, taskId: 'web#format', name: 'format' };
+const FORMAT_RUNNING_CARD: TaskCard = { ...SCRIPT_RUNNING_CARD, taskId: 'web#format', name: 'format' };
 
-const MIXED_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_STUB, SCRIPT_RUNNING_CARD] };
+const MIXED_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_STUB, FORMAT_RUNNING_CARD] };
 
 const EMPTY_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [] };
 
-const NOT_TURBO_ROWS: FieldRow[] = [
-  ['Command', 'tsc -b'],
+const SCRIPT_ROWS: FieldRow[] = [
+  ['Command', 'pnpm run build'],
+  ['Script', 'tsc -b'],
   ['Description', 'Builds the web app'],
-  ['Definition', 'Not a turbo task: no turbo.json defines it'],
   ['Dependents', 'docs#build']
 ];
 
@@ -192,71 +190,76 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
   );
 
   test(
-    'GIVEN a task no turbo config defines, the card offers no Run or Copy and a blank status',
+    'GIVEN an idle script card, it offers Run and Copy, a blank status and its script fields',
     { annotation: AC9 },
     async ({ detailsPage }): Promise<void> => {
       const card = detailsPage.card('build');
 
-      await test.step('WHEN the page shows the idle card', async (): Promise<void> => detailsPage.open(NOT_TURBO_STATE));
+      await test.step('WHEN the page shows the idle card', async (): Promise<void> => detailsPage.open(SCRIPT_STATE));
 
-      await test.step('THEN the card has no Run button', async (): Promise<void> => expect(card.runButton).toHaveCount(0));
+      await test.step('THEN the card offers Run', async (): Promise<void> =>
+        expect(card.runButton).toHaveAttribute('aria-label', 'Run build'));
 
-      await test.step('AND no Copy button', async (): Promise<void> => expect(card.copyButton).toHaveCount(0));
+      await test.step('AND Copy', async (): Promise<void> =>
+        expect(card.copyButton).toHaveAttribute('aria-label', 'Copy command for build'));
 
       await test.step('AND a blank status line', async (): Promise<void> => card.expectBlankStatus());
 
-      await test.step('AND the not-turbo text', async (): Promise<void> => card.expectFields(NOT_TURBO_ROWS));
+      await test.step('AND the Command and Script fields', async (): Promise<void> => card.expectFields(SCRIPT_ROWS));
 
-      await test.step('WHEN a run on it is still live', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
+      await test.step('WHEN its run starts', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
 
       await test.step('THEN the status shows the run', async (): Promise<void> => expect(card.status).toHaveText(/^running · \d+s$/u));
 
       await test.step('AND the card offers Stop', async (): Promise<void> =>
         expect(card.runButton).toHaveAttribute('aria-label', 'Stop build'));
 
-      await test.step('AND still no Copy button', async (): Promise<void> => expect(card.copyButton).toHaveCount(0));
+      await test.step('AND keeps Copy', async (): Promise<void> => expect(card.copyButton).toHaveCount(1));
 
       await test.step('WHEN the run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#build', STOPPED));
 
       await test.step('THEN the status shows the end state', async (): Promise<void> =>
         expect(card.status).toHaveText('stopped · 3.0s'));
 
-      await test.step('AND the card has no Run button', async (): Promise<void> => expect(card.runButton).toHaveCount(0));
+      await test.step('AND the card offers Run again', async (): Promise<void> =>
+        expect(card.runButton).toHaveAttribute('aria-label', 'Run build'));
     }
   );
 
   test(
-    'GIVEN a running card no turbo config defines, an idle view blanks it and stops its clock',
+    'GIVEN a running script card, an idle view blanks its status, stops its clock and offers Run',
     { annotation: AC9 },
     async ({ detailsPage, pageClock }): Promise<void> => {
       const card = detailsPage.card('build');
 
       await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
 
-      await test.step('AND the page shows the running card', async (): Promise<void> => detailsPage.open(NOT_TURBO_RUNNING_STATE));
+      await test.step('AND the page shows the running card', async (): Promise<void> => detailsPage.open(SCRIPT_RUNNING_STATE));
 
       await test.step('AND one interval is armed', async (): Promise<void> => pageClock.expectIntervals(1));
 
-      await test.step('AND an idle view arrives', async (): Promise<void> => detailsPage.sendRunState('web#build', NOT_TURBO_IDLE));
+      await test.step('AND an idle view arrives', async (): Promise<void> => detailsPage.sendRunState('web#build', RUN_VIEW_STUB));
 
       await test.step('THEN the status is blank', async (): Promise<void> => card.expectBlankStatus());
 
       await test.step('AND no interval is left', async (): Promise<void> => pageClock.expectIntervals(0));
+
+      await test.step('AND the card offers Run', async (): Promise<void> =>
+        expect(card.runButton).toHaveAttribute('aria-label', 'Run build'));
     }
   );
 
   test(
-    'GIVEN focus on Stop of a card no turbo config defines, focus moves to the card title when the run ends',
+    'GIVEN focus on Stop of a script card, focus moves to its Run button when the run ends',
     { annotation: AC9 },
     async ({ detailsPage }): Promise<void> => {
-      await test.step('WHEN the page shows the running card', async (): Promise<void> => detailsPage.open(NOT_TURBO_RUNNING_STATE));
+      await test.step('WHEN the page shows the running card', async (): Promise<void> => detailsPage.open(SCRIPT_RUNNING_STATE));
 
       await test.step('AND its Stop button is focused', async (): Promise<void> => detailsPage.focusButton('Stop build'));
 
       await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#build', STOPPED));
 
-      await test.step('THEN the card title has focus', async (): Promise<void> =>
-        expect(detailsPage.card('build').title).toBeFocused());
+      await test.step('THEN the Run button has focus', async (): Promise<void> => detailsPage.expectFocused('Run build'));
     }
   );
 
@@ -299,7 +302,8 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
     async ({ detailsPage }): Promise<void> => {
       await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(EMPTY_STATE));
 
-      await test.step('THEN the no-tasks text shows', async (): Promise<void> => expect(detailsPage.noTasksNotice).toBeVisible());
+      await test.step('THEN the no-tasks text shows', async (): Promise<void> =>
+        expect(detailsPage.noCardsNotice).toHaveText('No tasks in this package.'));
 
       await test.step('AND no card renders', async (): Promise<void> => expect(detailsPage.cards).toHaveCount(0));
     }
