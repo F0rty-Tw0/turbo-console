@@ -1,13 +1,14 @@
 import type { PackageRole, TaskKind } from '@turbo-console/repo-gen';
 
-export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7';
+export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8';
 
 /**
  * `fixture-l1` is the `target-like` copy L1 opens and L2 reopens, so L2 finds the cache L1 stored. `fixture` is a
  * fresh copy of the launch's own, `empty-folder` an empty dir, and `error-roots` a two-folder `.code-workspace`: `bad`
- * with an invalid `turbo.json`, `empty` with `pnpm-workspace.yaml` globs that match no package.
+ * with an invalid `turbo.json`, `empty` with `pnpm-workspace.yaml` globs that match no package. `two-roots` is a
+ * two-folder `.code-workspace` of clean copies, `a` and `b`.
  */
-export type LaunchWorkspace = 'fixture-l1' | 'fixture' | 'empty-folder' | 'error-roots';
+export type LaunchWorkspace = 'fixture-l1' | 'fixture' | 'empty-folder' | 'error-roots' | 'two-roots';
 
 /**
  * The user setting `turboConsole.turboPath`: `dev` is the dev turbo binary, `stub` a POSIX script that prints
