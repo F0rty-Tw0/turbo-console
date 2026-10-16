@@ -9,7 +9,6 @@ import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { devTurboPath } from '../../shared/test/utils/dev-turbo.spec.util.ts';
-import { LOADING_ICON } from '../common/icon.const.ts';
 import type { ModelView } from '../common/model-view.type.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
@@ -136,8 +135,8 @@ const entryRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext)
   return row;
 };
 
-/** A running task's row, not the loading stand-in of a node the tree no longer has. */
-const isRunningRow = (row: TreeRow): boolean => row.icon.id !== LOADING_ICON.id && row.description.startsWith('running');
+/** A running task's row (plain or continuous), not the loading stand-in of a node the tree no longer has. */
+const isRunningRow = (row: TreeRow): boolean => row.contextValue === 'turboTask.running';
 
 /**
  * Spec §4.6 tick cost, warm: the model's view is built and the running tasks' nodes are cached, as after the first draw.
