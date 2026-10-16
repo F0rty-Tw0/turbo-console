@@ -7,31 +7,51 @@ import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
 import { NOT_PACKAGE_TEXT, NO_TASKS_TEXT, TASK_PLACEHOLDER } from '../common/picker.const.ts';
-import type { FileTasks, NamedTask, PickerPorts } from '../common/picker.type.ts';
+import type { FileLookupPorts, FilePackage, FileTasks, NamedTask, PickerPorts } from '../common/picker.type.ts';
 import { packageForManifest, relativePathOf } from '../utils/package-lookup.util.ts';
 import { taskItemsOf } from '../utils/picker-items.util.ts';
 
-const refused = (ports: PickerPorts, text: string): null => {
+const refused = (ports: FileLookupPorts, text: string): null => {
   ports.info(text);
 
   return null;
 };
 
-/** What to say when a root shows no model: the load error's text when its load failed, else that the file is no package. */
+type ManifestInRoot = {
+  readonly root: string;
+  readonly file: string;
+};
+
+/**
+ * What to say when a root shows no model: the load error's text when its load failed, the binary text when the binary
+ * failed (the run pickers refuse earlier), else that the file is no package.
+ */
 const noModelText = (error: RootState['error'] | undefined): string => {
   if (error?.stage === 'load') return MESSAGE_TEXTS['load-no-model'];
+
+  if (error?.stage === 'binary') return MESSAGE_TEXTS[binaryMessageOf(error.error.kind)];
 
   return NOT_PACKAGE_TEXT;
 };
 
-/** The package `file` holds in `root` once the root has loaded, or the text that says why there is none. */
-const packageOrText = async (roots: Roots, ports: PickerPorts, root: string, file: string): Promise<PackageNode | string> => {
+/**
+ * The package `file` holds in `root` once the root has loaded, or the text that says why there is none. A binary-stage
+ * error is a reason only when `isBinaryRefused`: a root that kept its model can still show the package.
+ */
+const packageOrText = async (
+  roots: Roots,
+  ports: FileLookupPorts,
+  manifest: ManifestInRoot,
+  isBinaryRefused: boolean
+): Promise<PackageNode | string> => {
+  const { root, file } = manifest;
+
   await ports.ensureLoaded(root);
 
   const state = roots.get(root)?.state;
   const error = state?.error;
 
-  if (error?.stage === 'binary') return MESSAGE_TEXTS[binaryMessageOf(error.error.kind)];
+  if (error?.stage === 'binary' && isBinaryRefused) return MESSAGE_TEXTS[binaryMessageOf(error.error.kind)];
 
   const model = state?.model;
 
@@ -42,8 +62,18 @@ const packageOrText = async (roots: Roots, ports: PickerPorts, root: string, fil
   return packageForManifest(relative, model) ?? NOT_PACKAGE_TEXT;
 };
 
-/** The tasks to offer for the manifest `file`; `null` after an info message says why there are none. */
-const tasksOfFile = async (roots: Roots, ports: PickerPorts, file: string | null): Promise<FileTasks | null> => {
+/**
+ * The package the manifest `file` holds and the root holding it, once the root has loaded; `null` after an info message
+ * says why there is none (no file, a file in no root, a root with no model or, when `isBinaryRefused`, in a binary
+ * error, a file no package owns). The run pickers and Open Package Details both refuse here; only the pickers refuse a
+ * binary error.
+ */
+export const packageOfFile = async (
+  roots: Roots,
+  ports: FileLookupPorts,
+  file: string | null,
+  isBinaryRefused: boolean
+): Promise<FilePackage | null> => {
   if (file === null) return refused(ports, NOT_PACKAGE_TEXT);
 
   const root = ports.rootOf(file);
@@ -54,18 +84,30 @@ const tasksOfFile = async (roots: Roots, ports: PickerPorts, file: string | null
 
   if (entry === undefined) return refused(ports, NOT_PACKAGE_TEXT);
 
-  const pkg = await packageOrText(roots, ports, root, file);
+  const pkg = await packageOrText(roots, ports, { root, file }, isBinaryRefused);
 
   if (typeof pkg === 'string') return refused(ports, pkg);
 
+  const found: FilePackage = { root, pkg };
+
+  return found;
+};
+
+/** The tasks to offer for the manifest `file`; `null` after an info message says why there are none. */
+const tasksOfFile = async (roots: Roots, ports: PickerPorts, file: string | null): Promise<FileTasks | null> => {
+  const found = await packageOfFile(roots, ports, file, true);
+
+  if (found === null) return null;
+
+  const { root, pkg } = found;
   const items = taskItemsOf(root, pkg);
 
   if (items.length === 0) return refused(ports, NO_TASKS_TEXT);
 
   const placeholder = `${TASK_PLACEHOLDER} in ${cleanText(pkg.name, LABEL_MAX)}`;
-  const found: FileTasks = { packageName: pkg.name, placeholder, items };
+  const tasks: FileTasks = { packageName: pkg.name, placeholder, items };
 
-  return found;
+  return tasks;
 };
 
 /**

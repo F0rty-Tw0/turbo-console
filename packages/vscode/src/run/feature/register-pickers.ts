@@ -19,13 +19,13 @@ const fileOf = (uri: vscode.Uri | undefined): string | null => {
  * The manifest the command was invoked on: the resource the editor title or context menu passes, else the active
  * editor's file. `null` for neither, or a document that is not a file (untitled, a virtual scheme).
  */
-const manifestFile = (arg: unknown): string | null => {
+export const manifestFile = (arg: unknown): string | null => {
   if (arg instanceof vscode.Uri) return fileOf(arg);
 
   return fileOf(vscode.window.activeTextEditor?.document.uri);
 };
 
-const rootOf = (file: string): string | null => {
+export const rootOf = (file: string): string | null => {
   const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(file));
 
   return folder?.uri.fsPath ?? null;
