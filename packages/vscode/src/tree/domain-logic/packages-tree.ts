@@ -1,6 +1,7 @@
 import { ModelViews } from './model-views.ts';
 import { TreeRefresher } from './tree-refresh.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
+import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
@@ -79,14 +80,19 @@ export class PackagesTree {
     return this.scopeShown;
   }
 
-  /** The scripts toggle changed: one redraw; the rows read the new choice. */
+  /** The scripts toggle changed: the live set is read again, then one redraw; the rows read the new choice. */
   public scriptsChanged(): void {
+    this.refresher.reseed();
     this.redraw();
   }
 
   /** After roots were added or removed: redraws the whole tree and forgets the nodes of a removed root. */
   public rootsChanged(): void {
     this.redraw();
+  }
+
+  public runChanged(entry: RunEntry): void {
+    this.refresher.runChanged(entry);
   }
 
   public refreshTask(root: string, taskId: string): void {
