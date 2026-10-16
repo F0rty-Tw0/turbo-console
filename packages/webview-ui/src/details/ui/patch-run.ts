@@ -61,7 +61,10 @@ export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLB
   return fillButton(refs, run);
 };
 
-/** Replaces only `taskId`'s status and Run/Stop button; a focused Run/Stop button hands focus to its replacement. */
+/**
+ * Replaces only `taskId`'s status and Run/Stop button; a focused Run/Stop button hands focus to its replacement, or to
+ * the card title when there is none.
+ */
 export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runTexts: RunTexts): void => {
   const refs = cards.get(taskId);
 
@@ -69,6 +72,7 @@ export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runText
 
   const hadFocus = refs.runSlot.contains(document.activeElement);
   const button = fillRun(refs, run, runTexts);
+  const focusTarget = button ?? refs.title;
 
-  if (hadFocus) button?.focus();
+  if (hadFocus) focusTarget.focus();
 };

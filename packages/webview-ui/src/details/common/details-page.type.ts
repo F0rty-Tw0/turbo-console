@@ -15,11 +15,13 @@ export type RunTexts = {
 
 /**
  * The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. A card that is no turbo task
- * shows no status while idle and never a Run button.
+ * shows no status while idle and never a Run button. `title` takes focus when a focused Stop button goes with no
+ * replacement.
  */
 export type CardRefs = {
   readonly taskId: string;
   readonly isTurboTask: boolean;
+  readonly title: HTMLElement;
   readonly status: HTMLElement;
   readonly runSlot: HTMLElement;
   readonly runButton: RunButtonFactory;

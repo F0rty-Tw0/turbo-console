@@ -97,10 +97,9 @@ const cardActions = (card: TaskCard, refs: CardRefs, context: RenderContext): HT
 const cardHeader = (card: TaskCard, refs: CardRefs, context: RenderContext): HTMLElement => {
   const header = document.createElement('header');
   const actions = cardActions(card, refs, context);
-  const title = textElement('h2', 'card-title', card.name);
 
   header.className = 'card-header';
-  header.append(title, refs.status, actions);
+  header.append(refs.title, refs.status, actions);
 
   return header;
 };
@@ -108,11 +107,14 @@ const cardHeader = (card: TaskCard, refs: CardRefs, context: RenderContext): HTM
 /** One task card; repo text goes in through `textContent` and `aria-label`/`title` only. */
 export const taskCard = (card: TaskCard, phase: DryRunPhase, context: RenderContext): RenderedCard => {
   const element = textElement('section', 'card', '');
+  const title = textElement('h2', 'card-title', card.name);
   const status = textElement('span', 'run-status', '');
   const runSlot = textElement('span', 'run-slot', '');
   const runButton = runButtonFor(card, context);
   const { taskId, isTurboTask } = card;
-  const refs: CardRefs = { taskId, isTurboTask, status, runSlot, runButton };
+  const refs: CardRefs = { taskId, isTurboTask, title, status, runSlot, runButton };
+
+  title.tabIndex = -1;
   const header = cardHeader(card, refs, context);
   const fields = fieldList(card, phase);
   const badgeList = badges(card);

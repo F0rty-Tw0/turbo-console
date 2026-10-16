@@ -241,6 +241,21 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
     }
   );
 
+  test(
+    'GIVEN focus on Stop of a card no turbo config defines, focus moves to the card title when the run ends',
+    { annotation: AC9 },
+    async ({ detailsPage }): Promise<void> => {
+      await test.step('WHEN the page shows the running card', async (): Promise<void> => detailsPage.open(NOT_TURBO_RUNNING_STATE));
+
+      await test.step('AND its Stop button is focused', async (): Promise<void> => detailsPage.focusButton('Stop build'));
+
+      await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#build', STOPPED));
+
+      await test.step('THEN the card title has focus', async (): Promise<void> =>
+        expect(detailsPage.card('build').title).toBeFocused());
+    }
+  );
+
   for (const [cacheStatus, cacheText] of CACHE_CASES) {
     test(
       `GIVEN a dry-run cache status ${cacheStatus}, the Cache field reads ${cacheText}`,
