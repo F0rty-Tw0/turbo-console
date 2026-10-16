@@ -10,6 +10,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TurboException, loadWorkspace, resolveTurbo } from '../index.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { TaskNode, TurboBinary, WorkspaceModel } from '../index.ts';
+import { PNPM_BY_FIELD_STUB } from './test/stubs/package-manager.stub.ts';
 import { expectedModelOf, misplacedTaskIds, projectModel } from './test/utils/manifest-model.spec.util.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
@@ -178,6 +179,10 @@ describe('FEATURE: workspace model from a real turbo', () => {
 
     it('WHEN loaded THEN affected mode is task', () => {
       expect(model.affectedMode).toBe('task');
+    });
+
+    it('WHEN loaded THEN the package manager is pnpm, from the root packageManager field', () => {
+      expect(model.packageManager).toStrictEqual(PNPM_BY_FIELD_STUB);
     });
 
     it('WHEN the caller signal is already aborted THEN it rejects failed, aborted, without spawning turbo', async () => {

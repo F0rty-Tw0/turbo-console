@@ -65,12 +65,44 @@ export type PackageEdge = {
   readonly kind: string;
 };
 
+export type PackageManagerName = 'npm' | 'pnpm' | 'yarn' | 'bun';
+
+/** The root lockfiles that name a package manager; the cache keys the same files. */
+export type LockfileName = 'pnpm-lock.yaml' | 'bun.lock' | 'bun.lockb' | 'yarn.lock' | 'package-lock.json';
+
+type FieldSource = { readonly kind: 'field' };
+
+type DevEnginesSource = { readonly kind: 'devEngines' };
+
+type LockfileSource = { readonly kind: 'lockfile'; readonly file: LockfileName };
+
+type DefaultSource = { readonly kind: 'default' };
+
+/**
+ * Where the package manager came from: the root `packageManager` field, the root `devEngines.packageManager`, a root
+ * lockfile, or the npm fallback, in that order.
+ */
+export type PackageManagerSource = FieldSource | DevEnginesSource | LockfileSource | DefaultSource;
+
+export type PackageManager = {
+  readonly name: PackageManagerName;
+  readonly source: PackageManagerSource;
+};
+
 /** Spec §4.4: everything sorted, so two builds from the same input are deep-equal. */
 export type WorkspaceModel = {
   readonly root: string;
   readonly turboVersion: string;
+  readonly packageManager: PackageManager;
   readonly affectedMode: AffectedMode;
   readonly packages: PackageNode[];
   readonly edges: PackageEdge[];
   readonly warnings: string[];
+};
+
+/** What `buildWorkspaceModel` takes besides the graph and the configs: facts of the load, not of the graph. */
+export type ModelSource = {
+  readonly turboVersion: string;
+  readonly root: string;
+  readonly packageManager: PackageManager;
 };

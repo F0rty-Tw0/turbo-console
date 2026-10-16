@@ -1,5 +1,5 @@
 import { TurboException } from '@turbo-console/core';
-import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '@turbo-console/core';
+import type { CachedWorkspace, PackageManager, PackageManagerSource, TurboBinary, WorkspaceModel } from '@turbo-console/core';
 
 import type { LoadFailure, LoadedModel } from '../../common/root.type.ts';
 import { loadFailureOf } from '../utils/load-failure.spec.util.ts';
@@ -14,9 +14,14 @@ const BINARY_FIELDS = {
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- core exports TurboBinary type-only and its #brand makes a literal unassignable; no production path builds one in a spec.
 export const TURBO_BINARY_STUB: TurboBinary = BINARY_FIELDS as TurboBinary;
 
+const FIELD_SOURCE_STUB: PackageManagerSource = { kind: 'field' };
+
+const PACKAGE_MANAGER_STUB: PackageManager = { name: 'pnpm', source: FIELD_SOURCE_STUB };
+
 export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   root: '/ws',
   turboVersion: '2.11.7',
+  packageManager: PACKAGE_MANAGER_STUB,
   affectedMode: 'package',
   packages: [],
   edges: [],

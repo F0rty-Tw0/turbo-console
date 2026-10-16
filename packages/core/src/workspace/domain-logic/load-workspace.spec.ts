@@ -11,7 +11,7 @@ import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts
 import { PACKAGE_GRAPH_QUERY } from '../../shared/turbo/common/turbo-query.const.ts';
 import type { PackageGraph, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import type { TurboConfigError, TurboConfigFile } from '../common/turbo-config.type.ts';
-import type { WorkspaceModel } from '../common/workspace-model.type.ts';
+import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
 import { graphPackage, packageGraph } from '../test/utils/graph.spec.util.ts';
 import type * as workspaceModelUtil from '../utils/workspace-model.util.ts';
 
@@ -75,15 +75,10 @@ vi.mock('../data-access/turbo-config.ts', () => {
 vi.mock('../utils/workspace-model.util.ts', async (importOriginal) => {
   const real = await importOriginal<typeof workspaceModelUtil>();
 
-  const buildWorkspaceModel = (
-    graph: PackageGraph,
-    configs: TurboConfigFile[],
-    turboVersion: string,
-    root: string
-  ): WorkspaceModel => {
+  const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFile[], source: ModelSource): WorkspaceModel => {
     turbo.onBuild();
 
-    return real.buildWorkspaceModel(graph, configs, turboVersion, root);
+    return real.buildWorkspaceModel(graph, configs, source);
   };
 
   const mocked = { ...real, buildWorkspaceModel };

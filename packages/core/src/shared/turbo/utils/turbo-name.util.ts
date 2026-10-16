@@ -71,7 +71,12 @@ export const assertFilterName = (name: string): void => {
   if (syntax !== undefined) throw invalidName(name, `contains ${syntax}`);
 };
 
-/** Rejects a task name that holds `#`: turbo reads `pkg#task` as a package and a task, so a `#` in the name changes which task runs. */
+/**
+ * Rejects a task name that holds `#`: turbo reads `pkg#task` as a package and a task, so a `#` in the name changes which
+ * task runs. Not a shell-safety check: with `assertTurboName` it rejects only an empty name, a leading `-`, a control
+ * character and `#`, so spaces, quotes, `$`, `;` and `&` pass. A script name that reaches a shell needs its own
+ * allowlist.
+ */
 export const assertTaskName = (name: string): void => {
   assertTurboName(name);
 

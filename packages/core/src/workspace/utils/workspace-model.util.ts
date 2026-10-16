@@ -9,6 +9,7 @@ import type { TurboConfigFile, TurboConfigOk, TurboTaskFacts, TurboTaskLookup } 
 import type {
   ClassifiedPackage,
   ClassifiedTask,
+  ModelSource,
   PackageEdge,
   PackageNode,
   TaskNode,
@@ -133,12 +134,8 @@ const listedWarnings = (classifiedWarnings: string[], configs: TurboConfigFile[]
 };
 
 /** Spec §4.4 rules 1–6: one deterministic model from one `packageGraph` and the configs read for it. */
-export const buildWorkspaceModel = (
-  graph: PackageGraph,
-  configs: TurboConfigFile[],
-  turboVersion: string,
-  root: string
-): WorkspaceModel => {
+export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFile[], source: ModelSource): WorkspaceModel => {
+  const { root, turboVersion, packageManager } = source;
   const { nodes, edges: graphEdges } = graph.data.packageGraph;
   const classified = classifyPackages(nodes.items);
   const visibleIds = new Set(classified.packages.flatMap(taskIdsOf));
@@ -154,7 +151,7 @@ export const buildWorkspaceModel = (
   const warnings = shownWarnings(listed);
   const rootConfig = configs.find(isRootConfig) ?? null;
   const affectedMode = affectedModeOf(rootConfig);
-  const model: WorkspaceModel = { root, turboVersion, affectedMode, packages, edges, warnings };
+  const model: WorkspaceModel = { root, turboVersion, packageManager, affectedMode, packages, edges, warnings };
 
   return model;
 };
