@@ -28,16 +28,23 @@ const lockfileManagerOf = (file: LockfileName): PackageManager => {
   return manager;
 };
 
+/** The manager the root `packageManager` field names, with the field as its source. */
+const fieldManagerNamed = (name: PackageManagerName): PackageManager => {
+  const manager: PackageManager = { name, source: FIELD_SOURCE };
+
+  return manager;
+};
+
 /**
  * The repo's package manager: the root `packageManager` field, else the first root lockfile in
  * `LOCKFILE_DETECTION_ORDER` that is `present`, else npm.
  */
 export const packageManagerOf = (field: unknown, present: ReadonlySet<LockfileName>): PackageManager => {
   const name = fieldManagerOf(field);
-  const file = LOCKFILE_DETECTION_ORDER.find((lockfile) => present.has(lockfile));
-  const fieldManager: PackageManager = { name: name ?? 'npm', source: FIELD_SOURCE };
 
-  if (name !== null) return fieldManager;
+  if (name !== null) return fieldManagerNamed(name);
+
+  const file = LOCKFILE_DETECTION_ORDER.find((lockfile) => present.has(lockfile));
 
   if (file !== undefined) return lockfileManagerOf(file);
 
