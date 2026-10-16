@@ -33,7 +33,7 @@ export const openCase = async (scene: DetailsScene): Promise<void> => {
   counter.reset();
   await step('L8-1: opening from a package row spawns one dry run', async () => {
     await openFromRow(root, packageName);
-    await api.details.receive(root, packageName, { type: 'ready' });
+    await waitFor('page ready', () => packageStates(api, root, packageName).length > 0);
     await api.details.whenIdle(root, packageName);
 
     const state = lastPackageState(api, root, packageName);
