@@ -68,6 +68,27 @@ const diamondPackages = (levels: number): PersistentFixturePackage[] => {
   return packages;
 };
 
+/** The 12-level diamond read its 25 configs 89 times when written: 5 per config leaves headroom, the literal walk does not fit. */
+const READS_PER_CONFIG = 5;
+
+/** Throws past `READS_PER_CONFIG` reads per config, so a walk gone exponential fails at once instead of hanging. */
+const guardReads = (lookup: TurboTaskLookup): void => {
+  const { configsByDir } = lookup;
+  const limit = READS_PER_CONFIG * configsByDir.size;
+  const read = configsByDir.get.bind(configsByDir);
+  let reads = 0;
+
+  const guardedRead = (dir: string): TurboConfigFile | undefined => {
+    reads += 1;
+
+    if (reads > limit) throw new Error(`more than ${limit} config reads`);
+
+    return read(dir);
+  };
+
+  vi.spyOn(configsByDir, 'get').mockImplementation(guardedRead);
+};
+
 const PERSISTENT_FACTS: TurboTaskFacts = { persistent: true };
 
 const NOT_PERSISTENT_FACTS: TurboTaskFacts = { persistent: false };
@@ -226,19 +247,22 @@ describe('FEATURE: persistent of each task turbo defines for a package', () => {
   });
 
   describe('GIVEN a 12-level diamond of extends', () => {
-    it('WHEN the top package is resolved THEN each config is read a linear number of times', () => {
+    it(`WHEN the top package is resolved THEN each config is read under ${READS_PER_CONFIG} times`, () => {
       const lookup = lookupOf('{"tasks":{"dev":{}}}', diamondPackages(12));
       const reads = vi.spyOn(lookup.configsByDir, 'get');
+      const limit = READS_PER_CONFIG * lookup.configsByDir.size;
 
       tasksOf(lookup, 'a11');
 
-      expect(reads.mock.calls.length).toBeLessThan(100);
+      expect(reads.mock.calls.length).toBeLessThan(limit);
     });
   });
 
   describe('GIVEN a 30-level diamond of extends', () => {
-    it('WHEN the top package is resolved THEN it ends in linear time with the bottom value', { timeout: 2000 }, () => {
+    it('WHEN the top package is resolved THEN it ends within the read bound with the bottom value', () => {
       const lookup = lookupOf('{"tasks":{"dev":{}}}', diamondPackages(30));
+
+      guardReads(lookup);
 
       expect(persistentOf(lookup, 'a29#dev')).toBe(true);
     });
