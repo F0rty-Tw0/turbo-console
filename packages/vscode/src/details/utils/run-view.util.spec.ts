@@ -80,6 +80,22 @@ describe('FEATURE: run view of a task', () => {
     });
   });
 
+  describe('GIVEN a script (spec 1c-b §4.5)', () => {
+    it('WHEN it never ran THEN the view is idle with no text', () => {
+      const view = toRunView(NOT_TURBO, undefined, NOW);
+
+      expect([view.iconId, view.text, view.isIdle]).toStrictEqual(['tools', '', true]);
+    });
+
+    it('WHEN its run passed THEN the text is the local duration and the view is not idle', () => {
+      const entry = entryIn({ task: NOT_TURBO, state: 'passed', exitCode: 0, launchedAt: NOW - 2100, endedAt: NOW });
+
+      const view = toRunView(NOT_TURBO, entry, NOW);
+
+      expect([view.iconId, view.text, view.isIdle]).toStrictEqual(['pass', '2.1s', false]);
+    });
+  });
+
   describe('GIVEN a running turbo task', () => {
     it('WHEN viewed THEN the icon is the tree running icon without its spin modifier, it spins and the text is the prefix only', () => {
       const view = toRunView(TASK_NODE_STUB, entryIn({ state: 'running', launchedAt: NOW - 12_345 }), NOW);
