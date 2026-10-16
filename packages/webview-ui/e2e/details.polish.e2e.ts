@@ -148,15 +148,19 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
   test(
     'GIVEN a running continuous card, it reads continuous and its icon does not spin',
     { annotation: AC2 },
-    async ({ detailsPage }): Promise<void> => {
+    async ({ detailsPage, pageClock }): Promise<void> => {
       const continuous = detailsPage.card('dev');
       const plain = detailsPage.card('build');
 
-      await test.step('WHEN the page shows a continuous and a plain running card', async (): Promise<void> =>
+      await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+      await test.step('AND the page shows a continuous and a plain running card', async (): Promise<void> =>
         detailsPage.open(CONTINUOUS_STATE));
 
       await test.step('THEN the continuous status reads continuous with its clock', async (): Promise<void> =>
         expect(continuous.status).toHaveText(/^continuous · \d+s$/u));
+
+      await test.step('AND both clocks share one interval', async (): Promise<void> => pageClock.expectIntervals(1));
 
       await test.step('AND its pulse icon has no spin class', async (): Promise<void> =>
         continuous.expectStatusIcon('codicon codicon-pulse', ''));
