@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { readCacheFile, writeCacheFile } from './cache-file.ts';
+import { CACHE_FORMAT_VERSION } from '../common/cache.const.ts';
 import type * as cacheConst from '../common/cache.const.ts';
 import type { CacheEntry } from '../common/cache.type.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
@@ -55,7 +56,7 @@ const newCacheDir = (): string => {
 /** `ENTRY`'s cache file text padded with trailing spaces (still valid JSON) to exactly `bytes`, written to a new cache dir. */
 const paddedEntry = async (bytes: number): Promise<string> => {
   const cacheDir = newCacheDir();
-  const file = { formatVersion: 3, ...ENTRY };
+  const file = { formatVersion: CACHE_FORMAT_VERSION, ...ENTRY };
   const json = JSON.stringify(file);
 
   await mkdir(cacheDir, { recursive: true });

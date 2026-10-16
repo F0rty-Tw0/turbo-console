@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from 'vitest'
 import type { z } from 'zod';
 
 import { readCacheFile, writeCacheFile } from './cache-file.ts';
-import type { WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
+import type { TaskNode, WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
 import { workspaceModelSchema } from '../common/cache-file.schema.ts';
 import type { CacheEntry } from '../common/cache.type.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
@@ -21,10 +21,35 @@ const ENTRY: CacheEntry = { key: 'abc', keyedPaths: KEYED_PATHS, model: WORKSPAC
 
 const STALE_ENTRY: CacheEntry = { key: null, keyedPaths: KEYED_PATHS, model: WORKSPACE_MODEL_STUB };
 
+const firstTaskOf = (model: WorkspaceModel): TaskNode => {
+  const [task] = model.packages.flatMap((pkg) => pkg.tasks);
+
+  if (task === undefined) throw new Error('the stub model has no task');
+
+  return task;
+};
+
+/** A copy of the stub model whose first task is continuous. */
+const modelWithContinuousTask = (): WorkspaceModel => {
+  const model = structuredClone(WORKSPACE_MODEL_STUB);
+
+  Reflect.set(firstTaskOf(model), 'persistent', true);
+
+  return model;
+};
+
+const CONTINUOUS_MODEL = modelWithContinuousTask();
+
+const CONTINUOUS_ENTRY: CacheEntry = { ...ENTRY, model: CONTINUOUS_MODEL };
+
 const ROUND_TRIPS: [string, CacheEntry][] = [
   ['a key', ENTRY],
-  ['a null key', STALE_ENTRY]
+  ['a null key', STALE_ENTRY],
+  ['a continuous task', CONTINUOUS_ENTRY]
 ];
+
+/** Every format before `persistent` (v4): 1 before the task-name fix, 2 before `isTurboTask`, 3 before `persistent`. */
+const OLD_VERSIONS = [1, 2, 3];
 
 /** Named like a keyed file, but each would reach a file outside the root once joined to it. */
 const TAMPERED_PATHS = ['../package.json', '/etc/package.json', 'C:/package.json', '..\\package.json', 'a\\b/../../package.json'];
@@ -72,11 +97,8 @@ const rewriteEntry = async (cacheDir: string, edit: (json: Record<string, unknow
 /** A copy of the stub model with `isTurboTask` deleted from its first task. */
 const modelWithoutTurboFlag = (): WorkspaceModel => {
   const model = structuredClone(WORKSPACE_MODEL_STUB);
-  const [task] = model.packages.flatMap((pkg) => pkg.tasks);
 
-  if (task === undefined) throw new Error('the stub model has no task');
-
-  Reflect.deleteProperty(task, 'isTurboTask');
+  Reflect.deleteProperty(firstTaskOf(model), 'isTurboTask');
 
   return model;
 };
@@ -182,20 +204,10 @@ describe('FEATURE: workspace cache file', () => {
       expect(read).toBeNull();
     });
 
-    it('WHEN its formatVersion is 1, the version before the task-name fix THEN the read is null', async () => {
+    it.each(OLD_VERSIONS)('WHEN its formatVersion is %i, an earlier format THEN the read is null', async (version) => {
       const cacheDir = await writtenEntry();
 
-      await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'formatVersion', 1));
-
-      const read = await readCacheFile(cacheDir, ROOT);
-
-      expect(read).toBeNull();
-    });
-
-    it('WHEN its formatVersion is 2, the version before isTurboTask THEN the read is null', async () => {
-      const cacheDir = await writtenEntry();
-
-      await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'formatVersion', 2));
+      await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'formatVersion', version));
 
       const read = await readCacheFile(cacheDir, ROOT);
 

@@ -1,11 +1,11 @@
 import { classifyPackages } from './classify-tasks.util.ts';
 import { affectedModeOf, descriptionOf, okConfigsByDir } from './task-description.util.ts';
-import { turboTaskLookupOf, turboTaskNamesOf } from './turbo-task.util.ts';
+import { turboTaskLookupOf, turboTasksOf } from './turbo-task.util.ts';
 import { plainLine } from '../../shared/errors/utils/plain-text.util.ts';
 import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
 import { toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
-import type { TurboConfigFile, TurboConfigOk, TurboTaskLookup } from '../common/turbo-config.type.ts';
+import type { TurboConfigFile, TurboConfigOk, TurboTaskFacts, TurboTaskLookup } from '../common/turbo-config.type.ts';
 import type {
   ClassifiedPackage,
   ClassifiedTask,
@@ -25,6 +25,8 @@ const MAX_WARNING_LENGTH = 1024;
 
 const ROOT_CONFIG_PATHS = ['turbo.json', 'turbo.jsonc'];
 
+const UNKNOWN_FACTS: TurboTaskFacts = { persistent: false };
+
 const byId = (left: TaskNode, right: TaskNode): number => compareText(left.id, right.id);
 
 const byName = (left: PackageNode, right: PackageNode): number => compareText(left.name, right.name);
@@ -40,16 +42,30 @@ const isRootConfig = (config: TurboConfigFile): boolean => ROOT_CONFIG_PATHS.inc
 
 const isText = (warning: string | null): warning is string => warning !== null;
 
+/** `null` tasks mean the configs cannot tell: every task then counts as a turbo task, and none as persistent. */
+const factsOf = (turboTasks: ReadonlyMap<string, TurboTaskFacts> | null, name: string): TurboTaskFacts | undefined => {
+  if (turboTasks === null) return UNKNOWN_FACTS;
+
+  return turboTasks.get(name);
+};
+
 /** Cut before `plainLine` walks it; a cut through a surrogate pair leaves U+FFFD, never half a character. */
 const shortLine = (warning: string): string => plainLine(warning.slice(0, MAX_WARNING_LENGTH).toWellFormed());
 
 /** Rule 4 cuts dependencies on tasks rules 1–3 dropped. `toSorted` only: `task.tags` is the parsed graph's own array. */
-const toTaskNode = (task: ClassifiedTask, visibleIds: Set<string>, description: string | null, isTurboTask: boolean): TaskNode => {
+const toTaskNode = (
+  task: ClassifiedTask,
+  visibleIds: Set<string>,
+  description: string | null,
+  facts: TurboTaskFacts | undefined
+): TaskNode => {
+  const isTurboTask = facts !== undefined;
+  const persistent = facts?.persistent ?? false;
   const isVisible = (id: string): boolean => visibleIds.has(id);
   const dependencies = task.rawDependencies.filter(isVisible).toSorted();
   const tags = task.tags.toSorted();
   const { id, name, command, kind, atom } = task;
-  const node: TaskNode = { id, name, command, description, tags, dependencies, kind, atom, isTurboTask };
+  const node: TaskNode = { id, name, command, description, tags, dependencies, kind, atom, isTurboTask, persistent };
 
   return node;
 };
@@ -64,13 +80,13 @@ type PackageContext = {
 /** When the configs cannot tell which tasks turbo defines, every task counts as one, as before the check existed. */
 const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): PackageNode => {
   const path = toPosixPath(pkg.path);
-  const turboNames = turboTaskNamesOf(context.lookup, pkg);
+  const turboTasks = turboTasksOf(context.lookup, pkg);
 
   const toNode = (task: ClassifiedTask): TaskNode => {
     const description = descriptionOf(context.configs, path, task.id, task.name);
-    const isTurboTask = turboNames?.has(task.name) ?? true;
+    const facts = factsOf(turboTasks, task.name);
 
-    return toTaskNode(task, context.visibleIds, description, isTurboTask);
+    return toTaskNode(task, context.visibleIds, description, facts);
   };
 
   const tasks = pkg.tasks.map(toNode).toSorted(byId);

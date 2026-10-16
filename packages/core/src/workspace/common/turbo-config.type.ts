@@ -25,14 +25,19 @@ export type TurboConfigError = {
   readonly error: string;
 };
 
+/** What core resolves for one task turbo defines for a package; `persistent` is turbo's resolved value. */
+export type TurboTaskFacts = {
+  readonly persistent: boolean;
+};
+
 /**
  * The root config read once for every package: `qualifiedNames` are the package names a `<pkg>#<task>` key names, and
- * `bareNames` the tasks its bare keys define for a package with no such key and no config of its own.
+ * `bareTasks` the tasks its bare keys define for a package with no such key and no config of its own.
  */
 export type RootTaskIndex = {
   readonly config: TurboConfigOk;
   readonly qualifiedNames: ReadonlySet<string>;
-  readonly bareNames: ReadonlySet<string>;
+  readonly bareTasks: ReadonlyMap<string, TurboTaskFacts>;
 };
 
 /**

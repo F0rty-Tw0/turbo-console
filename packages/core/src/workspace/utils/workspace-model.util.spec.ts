@@ -73,7 +73,8 @@ describe('FEATURE: workspace model build', () => {
         dependencies: [],
         kind: 'task',
         atom: null,
-        isTurboTask: true
+        isTurboTask: true,
+        persistent: false
       };
       const pkg: PackageNode = { name: 'a', path: 'packages/a', tags: ['m', 'n'], tasks: [task] };
       const expected: WorkspaceModel = {

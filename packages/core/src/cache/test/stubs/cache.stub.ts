@@ -11,7 +11,8 @@ const BUILD_TASK: TaskNode = {
   dependencies: [],
   kind: 'task',
   atom: null,
-  isTurboTask: true
+  isTurboTask: true,
+  persistent: false
 };
 
 const FILE_TASK: TaskNode = {
@@ -23,7 +24,8 @@ const FILE_TASK: TaskNode = {
   dependencies: ['web#build'],
   kind: 'atom-file',
   atom: LIVE_ATOM,
-  isTurboTask: true
+  isTurboTask: true,
+  persistent: false
 };
 
 const WEB_TASKS = [BUILD_TASK, FILE_TASK];

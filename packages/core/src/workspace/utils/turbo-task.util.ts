@@ -1,19 +1,16 @@
 import { posix } from 'node:path';
 
-import { normalDir, toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
+import { ROOT_DIR, ROOT_NAME, dirOfName, packageDirOf } from './turbo-task-lookup.util.ts';
+import { bareTasksOf, persistentOf } from './turbo-task-persistent.util.ts';
 import type {
   RootTaskIndex,
   TaskPresence,
   TurboConfigFile,
   TurboConfigOk,
+  TurboTaskFacts,
   TurboTaskLookup,
   TurboTaskPackage
 } from '../common/turbo-config.type.ts';
-
-const ROOT_DIR = '.';
-
-/** The root package's name in a task id (`//#fmt`) and the root config's name in `extends`. */
-const ROOT_NAME = '//';
 
 /** Read only, never pushed to: a chain is copied into its child's with a spread. */
 const EMPTY_CHAIN: TurboConfigOk[] = [];
@@ -22,21 +19,7 @@ type DirEntry = [string, TurboConfigFile];
 
 const dirEntry = (config: TurboConfigFile): DirEntry => [posix.dirname(config.path), config];
 
-const packageDirOf = (pkg: TurboTaskPackage): string => normalDir(toPosixPath(pkg.path));
-
 const nameEntry = (pkg: TurboTaskPackage): [string, TurboTaskPackage] => [pkg.name, pkg];
-
-/**
- * The dir of the package an `extends` name names; `undefined` when no graph package has that name. Only a matched
- * parent's dir is normalized: a model build looks up every package, but few configs extend one.
- */
-const dirOfName = (lookup: TurboTaskLookup, name: string): string | undefined => {
-  const pkg = lookup.packagesByName.get(name);
-
-  if (pkg === undefined) return undefined;
-
-  return packageDirOf(pkg);
-};
 
 const applyPresence = (names: Set<string>, name: string, presence: TaskPresence): void => {
   if (presence === 'excluded') {
@@ -61,27 +44,14 @@ const qualifiedNamesOf = (root: TurboConfigOk): Set<string> => {
   return names;
 };
 
-/** What `applyRoot` gives a package that no root key names and that is not the root package: the bare keys, in order. */
-const bareNamesOf = (root: TurboConfigOk): Set<string> => {
-  const names = new Set<string>();
-
-  for (const [key, presence] of Object.entries(root.tasks)) {
-    const isQualified = key.includes('#');
-
-    if (!isQualified) applyPresence(names, key, presence);
-  }
-
-  return names;
-};
-
 const rootIndexOf = (configsByDir: Map<string, TurboConfigFile>): RootTaskIndex | null => {
   const config = configsByDir.get(ROOT_DIR);
 
   if (config === undefined || 'error' in config) return null;
 
   const qualifiedNames = qualifiedNamesOf(config);
-  const bareNames = bareNamesOf(config);
-  const index: RootTaskIndex = { config, qualifiedNames, bareNames };
+  const bareTasks = bareTasksOf(config);
+  const index: RootTaskIndex = { config, qualifiedNames, bareTasks };
 
   return index;
 };
@@ -177,17 +147,18 @@ const applyTasks = (names: Set<string>, config: TurboConfigOk): void => {
 };
 
 /**
- * The task names turbo 2.11.7 defines, and so runs, for `pkg`. The first config with an entry for a name decides, in
- * this order: the package's own config, the root config's bare and `<pkg>#<task>` keys, then the parent chain of
- * `chainOf`; an entry of exactly `{ "extends": false }` drops the task. So a parent's exclusion hides only a task
- * another parent package defines, never a root task. Applied last-wins from the lowest priority up. `turbo query`
- * lists a package script with no such key all the same, and `turbo run` of a name no config defines exits 1. `null`
- * when it cannot tell: no parsed root config, or a chain `chainOf` cannot build.
+ * The tasks turbo 2.11.7 defines, and so runs, for `pkg`, each with its resolved `persistent` (`persistentOf`). The
+ * first config with an entry for a name decides presence, in this order: the package's own config, the root config's
+ * bare and `<pkg>#<task>` keys, then the parent chain of `chainOf`; an entry of exactly `{ "extends": false }` drops
+ * the task. So a parent's exclusion hides only a task another parent package defines, never a root task. Applied
+ * last-wins from the lowest priority up. `turbo query` lists a package script with no such key all the same, and
+ * `turbo run` of a name no config defines exits 1. `null` when it cannot tell: no parsed root config, or a chain
+ * `chainOf` cannot build.
  *
- * Runs once per package, so a package with no config and no `<pkg>#` root key gets the root index's shared `bareNames`,
+ * Runs once per package, so a package with no config and no `<pkg>#` root key gets the root index's shared `bareTasks`,
  * never a copy. The root package never does: its dir `.` always holds the root config.
  */
-export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): ReadonlySet<string> | null => {
+export const turboTasksOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): ReadonlyMap<string, TurboTaskFacts> | null => {
   const { root } = lookup;
 
   if (root === null) return null;
@@ -196,7 +167,7 @@ export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage)
   const hasConfig = lookup.configsByDir.has(dir);
   const isQualified = root.qualifiedNames.has(pkg.name);
 
-  if (!hasConfig && !isQualified) return root.bareNames;
+  if (!hasConfig && !isQualified) return root.bareTasks;
 
   const chain = packageChainOf(lookup, dir);
 
@@ -212,5 +183,5 @@ export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage)
 
   if (own !== undefined) applyTasks(names, own);
 
-  return names;
+  return persistentOf(lookup, root.config, pkg, names);
 };

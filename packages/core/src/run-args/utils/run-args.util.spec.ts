@@ -12,7 +12,8 @@ const TASK_NODE: TaskNode = {
   dependencies: [],
   kind: 'task',
   atom: null,
-  isTurboTask: true
+  isTurboTask: true,
+  persistent: false
 };
 
 describe('FEATURE: turbo run arguments', () => {
