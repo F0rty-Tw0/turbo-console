@@ -49,6 +49,14 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
     this.tree.refreshTask(root, taskId);
   }
 
+  public setScopeShown(value: boolean): void {
+    this.tree.setScopeShown(value);
+  }
+
+  public isScopeShown(): boolean {
+    return this.tree.isScopeShown();
+  }
+
   public rootsChanged(): void {
     this.tree.rootsChanged();
   }

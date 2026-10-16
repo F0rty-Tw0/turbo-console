@@ -10,8 +10,7 @@ import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
-
-const NEVER_RAN: RunLookup = () => undefined;
+import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const packageWithBuild = (name: string, path: string): PackageNode => {
   const task = { ...TASK_NODE_STUB, id: `${name}#build` };
@@ -49,7 +48,7 @@ const runOfA: RunLookup = (root, taskId) => {
 describe('FEATURE: every row of a root', () => {
   describe('GIVEN a model of three packages in nested directories', () => {
     it('WHEN listed in folders mode THEN directories, packages and tasks are all there, once each', () => {
-      const rows = allRows(STATE, 'folders', NEVER_RAN);
+      const rows = allRows(STATE, rowContextOf('folders'));
 
       expect(sortedIds(rows)).toStrictEqual([
         'dir:/ws\0apps',
@@ -65,7 +64,7 @@ describe('FEATURE: every row of a root', () => {
     });
 
     it('WHEN listed in list mode THEN packages and tasks are there and no directory is', () => {
-      const rows = allRows(STATE, 'list', NEVER_RAN);
+      const rows = allRows(STATE, rowContextOf('list'));
 
       expect(sortedIds(rows)).toStrictEqual([
         'pkg:/ws\0@org/x',
@@ -78,7 +77,7 @@ describe('FEATURE: every row of a root', () => {
     });
 
     it('WHEN a run is recorded for a task THEN its row shows the run state', () => {
-      const rows = allRows(STATE, 'list', runOfA);
+      const rows = allRows(STATE, rowContextOf('list', runOfA));
       const tasks = rows.filter((row) => row.kind === 'task');
       const descriptions = tasks.map((row) => row.description);
 
@@ -90,7 +89,7 @@ describe('FEATURE: every row of a root', () => {
     it('WHEN listed THEN the warning and every directory, package and task row are there', () => {
       const state: RootState = { ...STATE, error: LOAD_ERROR };
 
-      const rows = allRows(state, 'folders', NEVER_RAN);
+      const rows = allRows(state, rowContextOf('folders'));
 
       expect(sortedIds(rows)).toStrictEqual([
         'dir:/ws\0apps',
@@ -111,7 +110,7 @@ describe('FEATURE: every row of a root', () => {
     it('WHEN listed THEN only the error row is there, though a model is shown', () => {
       const state: RootState = { ...STATE, error: LOAD_FAILURE_STUB };
 
-      const rows = allRows(state, 'folders', NEVER_RAN);
+      const rows = allRows(state, rowContextOf('folders'));
 
       expect(sortedIds(rows)).toStrictEqual(['msg:/ws\0binary-not-found']);
     });
@@ -121,7 +120,7 @@ describe('FEATURE: every row of a root', () => {
     it('WHEN listed THEN only the loading row is there', () => {
       const state: RootState = { ...STATE, model: null };
 
-      const rows = allRows(state, 'folders', NEVER_RAN);
+      const rows = allRows(state, rowContextOf('folders'));
 
       expect(sortedIds(rows)).toStrictEqual(['msg:/ws\0loading']);
     });

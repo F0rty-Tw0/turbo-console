@@ -1,13 +1,17 @@
 import type { PackageNode } from '@turbo-console/core';
 
+import { shownTextOf } from './model-view.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
 import { FOLDER_ICON, PACKAGE_ICON } from '../common/icon.const.ts';
+import type { ModelView } from '../common/model-view.type.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 
-export const dirRow = (root: string, dir: FolderDir): TreeRow => {
+/** Spec §4.9: the tooltip holds the directory's root-relative path and the shown packages below it at any depth. */
+export const dirRow = (root: string, dir: FolderDir, view: ModelView): TreeRow => {
+  const count = view.packagesBelow.get(dir.path) ?? 0;
   const row: TreeRow = {
     id: rowIdOf('dir', root, dir.path),
     kind: 'dir',
@@ -19,7 +23,7 @@ export const dirRow = (root: string, dir: FolderDir): TreeRow => {
     icon: FOLDER_ICON,
     contextValue: 'turboDir',
     collapsible: 'expanded',
-    tooltip: [],
+    tooltip: [`Path: ${dir.path}`, `Packages: ${count}`],
     command: null
   };
 
@@ -27,13 +31,16 @@ export const dirRow = (root: string, dir: FolderDir): TreeRow => {
 };
 
 /**
- * `key` and `packageName` keep the raw model name; only `label` and `description` are cleaned. The description is the
- * package path, or empty when it equals the label (spec §4.7: descriptions never repeat the label).
+ * `key` and `packageName` keep the raw model name; only `label` and `description` are cleaned. The label is the cleaned
+ * text `shownTextOf` returns: the full name or the bare text (spec §4.8). The description is the package path, or empty when it equals the label the row
+ * shows (spec §4.7: descriptions never repeat the label). The tooltip always starts with the full name (spec §4.9) and
+ * counts the visible tasks the view holds for it.
  */
-export const packageRow = (root: string, pkg: PackageNode): TreeRow => {
-  const label = cleanText(pkg.name, LABEL_MAX);
+export const packageRow = (root: string, pkg: PackageNode, view: ModelView, scopeShown: boolean): TreeRow => {
+  const label = shownTextOf(view, pkg, scopeShown);
   const path = cleanText(pkg.path, DESCRIPTION_MAX);
   const description = path === label ? '' : path;
+  const taskCount = view.visibleTaskCounts.get(pkg.name) ?? 0;
   const row: TreeRow = {
     id: rowIdOf('pkg', root, pkg.name),
     kind: 'pkg',
@@ -45,7 +52,7 @@ export const packageRow = (root: string, pkg: PackageNode): TreeRow => {
     icon: PACKAGE_ICON,
     contextValue: 'turboPackage',
     collapsible: 'collapsed',
-    tooltip: [],
+    tooltip: [pkg.name, `Path: ${pkg.path}`, `Tasks: ${taskCount}`],
     command: null
   };
 
@@ -54,13 +61,14 @@ export const packageRow = (root: string, pkg: PackageNode): TreeRow => {
 
 /**
  * The rows of one level of the folders view: the child directory rows first, then the package rows (a `FolderDir` is a
- * level too, so this serves the top level and a directory's children alike). A package name the model lacks is skipped.
+ * level too, so this serves the top level and a directory's children alike). A package the view lacks is skipped.
  */
-export const dirRows = (root: string, level: FolderTree, packages: Map<string, PackageNode>): TreeRow[] => {
-  const dirs = level.dirs.map((dir) => dirRow(root, dir));
-  const found = level.packages.map((name) => packages.get(name));
+export const dirRows = (root: string, level: FolderTree, view: ModelView, scopeShown: boolean): TreeRow[] => {
+  const dirs = level.dirs.map((dir) => dirRow(root, dir, view));
+  const found = level.packages.map((name) => view.packages.get(name));
   const listed = found.filter((pkg) => pkg !== undefined);
-  const leaves = listed.map((pkg) => packageRow(root, pkg));
+  const leafOf = (pkg: PackageNode): TreeRow => packageRow(root, pkg, view, scopeShown);
+  const leaves = listed.map(leafOf);
 
   return [...dirs, ...leaves];
 };

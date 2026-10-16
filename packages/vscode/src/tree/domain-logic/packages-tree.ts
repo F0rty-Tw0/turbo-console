@@ -1,17 +1,15 @@
-import { FolderTrees } from './folder-trees.ts';
+import { ModelViews } from './model-views.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
-import type { Span } from '../../shared/common/span.type.ts';
-import type { FolderTreeOf } from '../common/folder-tree.type.ts';
+import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RefreshTarget, RowContext, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { allRows } from '../utils/all-rows.util.ts';
 import { nodesOf, pruneNodes } from '../utils/node-cache.util.ts';
 import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts';
 import { refreshTarget } from '../utils/refresh-target.util.ts';
-import { rootNodeRow, rootRows } from '../utils/root-rows.util.ts';
+import { rootRowOf, rootRows } from '../utils/root-rows.util.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
-
-const hasPackageRows = (rows: TreeRow[]): boolean => rows.some((row) => row.kind === 'pkg' || row.kind === 'dir');
+import { markAsked, markShown } from '../utils/tree-visible-span.util.ts';
 
 /**
  * The Packages view without the editor: which nodes sit under which, the current row of a node, and which nodes to
@@ -22,9 +20,10 @@ export class PackagesTree {
   private readonly store: Roots;
   private readonly ports: TreePorts;
   private readonly cache = new Map<string, TreeNode>();
-  private readonly folders = new FolderTrees();
-  private readonly folderTreeOf: FolderTreeOf = (model) => this.folders.of(model);
+  private readonly views = new ModelViews();
+  private readonly viewOf: ModelViewsOf = (model) => this.views.of(model);
   private mode: TreeMode;
+  private scopeShown = false;
 
   public constructor(store: Roots, mode: TreeMode, ports: TreePorts) {
     this.store = store;
@@ -70,6 +69,16 @@ export class PackagesTree {
     this.redraw();
   }
 
+  /** Spec §4.8: relabels every package row with one redraw; the views do not depend on it, so none is rebuilt. */
+  public setScopeShown(value: boolean): void {
+    this.scopeShown = value;
+    this.redraw();
+  }
+
+  public isScopeShown(): boolean {
+    return this.scopeShown;
+  }
+
   /** After roots were added or removed: redraws the whole tree and forgets the nodes of a removed root. */
   public rootsChanged(): void {
     this.redraw();
@@ -84,7 +93,7 @@ export class PackagesTree {
   }
 
   private rowContext(): RowContext {
-    const context: RowContext = { mode: this.mode, runs: this.ports.runs, folders: this.folderTreeOf };
+    const context: RowContext = { mode: this.mode, runs: this.ports.runs, views: this.viewOf, scopeShown: this.scopeShown };
 
     return context;
   }
@@ -95,7 +104,8 @@ export class PackagesTree {
 
     if (entries.length === 1 && only !== undefined) return this.rootChildren(only.state.folder.root);
 
-    const rows = entries.map((entry) => rootNodeRow(entry.state.folder));
+    const context = this.rowContext();
+    const rows = entries.map((entry) => rootRowOf(entry.state, context));
 
     return nodesOf(this.cache, rows);
   }
@@ -106,42 +116,19 @@ export class PackagesTree {
 
     if (entry === undefined) return [];
 
-    this.markAsked(root);
+    markAsked(this.ports.treeVisible, root, this.ports.now());
     await entry.coordinator.firstChildren();
 
     const state = this.store.get(root)?.state;
 
     if (state === undefined) return [];
 
-    const rows = rootRows(state, this.mode);
+    const context = this.rowContext();
+    const rows = rootRows(state, context);
 
-    this.markShown(root, rows);
+    markShown(this.ports.treeVisible, root, rows, this.ports.now());
 
     return nodesOf(this.cache, rows);
-  }
-
-  private markAsked(root: string): void {
-    const isAsked = this.ports.treeVisible.has(root);
-
-    if (isAsked) return;
-
-    const span: Span = { start: this.ports.now(), end: null };
-
-    this.ports.treeVisible.set(root, span);
-  }
-
-  private markShown(root: string, rows: TreeRow[]): void {
-    const span = this.ports.treeVisible.get(root);
-
-    if (span?.end !== null) return;
-
-    const isPackagesShown = hasPackageRows(rows);
-
-    if (!isPackagesShown) return;
-
-    const shown: Span = { start: span.start, end: this.ports.now() };
-
-    this.ports.treeVisible.set(root, shown);
   }
 
   private fireTarget(root: string, target: RefreshTarget): void {
@@ -198,7 +185,8 @@ export class PackagesTree {
 
     if (entry === undefined) return new Set();
 
-    const rows = allRows(entry.state, this.mode, this.ports.runs);
+    const context = this.rowContext();
+    const rows = allRows(entry.state, context);
     const keep = new Set(rows.map((row) => row.id));
     const isMultiRoot = this.isMultiRoot();
 

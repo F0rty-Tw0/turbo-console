@@ -9,7 +9,9 @@ import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import type { RunLookup } from '../../run/common/run.type.ts';
 import { devTurboPath } from '../../shared/test/utils/dev-turbo.spec.util.ts';
+import type { RowContext } from '../common/tree-node.type.ts';
 import type { TreeMode } from '../common/tree-row.type.ts';
+import { ModelViews } from '../domain-logic/model-views.ts';
 import { allRows } from '../utils/all-rows.util.ts';
 import { diffModels } from '../utils/model-diff.util.ts';
 
@@ -35,9 +37,15 @@ const stateOf = (model: WorkspaceModel): RootState => {
   return state;
 };
 
+/** A fresh `ModelViews` per call, so the shown filter, folder tree and labels are measured, not a warm cache hit. */
 const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode): BenchDescriptor => {
   const state = stateOf(model);
-  const build = (): unknown => allRows(state, mode, NEVER_RAN);
+  const build = (): unknown => {
+    const views = new ModelViews();
+    const context: RowContext = { mode, runs: NEVER_RAN, views: (loaded) => views.of(loaded), scopeShown: false };
+
+    return allRows(state, context);
+  };
 
   return bench(name, build, { gate: true });
 };
