@@ -1,8 +1,9 @@
 import type { PackageManager, PackageManagerSource, PackageNode, TaskNode } from '@turbo-console/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { scriptRows } from './script-rows.util.ts';
 import { taskRowOf, taskRows } from './task-rows.util.ts';
+import type { LiveIds } from '../../run/common/run.type.ts';
 import type { IconSpec, RowScope, TreeRow } from '../common/tree-row.type.ts';
 import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { liveIdsOf } from '../test/utils/live-ids.spec.util.ts';
@@ -108,6 +109,16 @@ describe('FEATURE: the Scripts group of a package', () => {
       const row = scriptRows(ROW_SCOPE_STUB, MIXED, SHOWN).find((each) => each.key === 'a#bad name');
 
       expect(row?.tooltip).toStrictEqual(['Script: node bad name.js', 'Kind: task']);
+    });
+
+    it('WHEN its rows are listed THEN the run store is not asked and the rows are unchanged', () => {
+      const live = vi.fn<LiveIds>(() => new Set(['a#lint']));
+      const context = rowContextOf('list', undefined, false, { scriptsShown: true, live });
+      const turboRows = taskRows(ROW_SCOPE_STUB, MIXED, context);
+      const heldRows = scriptRows(ROW_SCOPE_STUB, MIXED, context);
+      const rows = [...turboRows, ...heldRows];
+
+      expect([live.mock.calls.length, keysOf(rows)]).toStrictEqual([0, ['a#build', 'a', 'a#a-first', 'a#bad name', 'a#lint']]);
     });
 
     it('WHEN a script is looked up by id THEN taskRowOf still finds it under its unchanged id', () => {

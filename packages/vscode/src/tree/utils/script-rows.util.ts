@@ -1,5 +1,6 @@
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 
+import { liveOf } from './live-of.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import { isLiveScript, isVisibleScript } from './script-task.util.ts';
 import { byName } from './task-filter.util.ts';
@@ -12,7 +13,11 @@ import type { RowScope, TreeRow } from '../common/tree-row.type.ts';
 
 /** Spec 1c-b §4.6: every visible script while scripts are shown; while hidden, only those with a live run under the folder root. */
 const heldScripts = (scope: RowScope, pkg: PackageNode, context: RowContext): TaskNode[] => {
-  const liveOfRoot = context.live(scope.root);
+  const liveOfRoot = liveOf(context, scope.root);
+  const holdsNone = !context.scriptsShown && liveOfRoot.size === 0;
+
+  if (holdsNone) return [];
+
   const isHeld = (task: TaskNode): boolean => {
     const isShown = context.scriptsShown && isVisibleScript(task);
 
