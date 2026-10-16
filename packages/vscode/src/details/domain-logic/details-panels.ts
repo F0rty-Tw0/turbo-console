@@ -22,7 +22,8 @@ const revealed = (panel: OpenPanel | null): OpenPanel | null => {
 /**
  * The open Package Details panels, one per root and package name. A key is registered as pending before the root's load
  * is awaited, so a second open of it waits for the same panel. A panel is made only for a package that is still in the
- * root's model once the load has resolved; a root removed meanwhile ends the open with no panel and no message.
+ * root's model once the load has resolved; a root removed meanwhile, even if added back, ends the open with no panel and
+ * no message.
  */
 export class DetailsPanels {
   private readonly deps: PanelsDeps;
@@ -100,11 +101,14 @@ export class DetailsPanels {
 
   private async create(key: PanelKey, id: string): Promise<OpenPanel | null> {
     try {
-      await ensureLoadedWith(this.deps.roots)(key.root);
+      const before = this.deps.roots.get(key.root);
 
-      const entry = this.deps.roots.get(key.root);
+      await before?.coordinator.ensureLoaded();
 
-      if (this.isDisposed || entry === undefined) return null;
+      const after = this.deps.roots.get(key.root);
+      const isSameRoot = before !== undefined && after?.coordinator === before.coordinator;
+
+      if (this.isDisposed || !isSameRoot) return null;
 
       const isInModel = this.hasPackage(key);
 

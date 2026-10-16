@@ -71,6 +71,19 @@ describe('FEATURE: opening a details panel', () => {
       expect(fakes.info).not.toHaveBeenCalled();
     });
 
+    it('WHEN its root is removed and added back before the load resolves THEN no panel is built and no message shows', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const opening = panels.open(WS_A);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      loaded.resolve(undefined);
+
+      await expect(opening).resolves.toBeNull();
+      expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
     it('WHEN the reload drops the package before the load resolves THEN no panel is built and the refusal text shows', async () => {
       const loaded = deferEnsureLoaded(store, '/ws');
       const opening = panels.open(WS_A);
