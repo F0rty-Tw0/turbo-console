@@ -9,13 +9,17 @@ const AC4 = { description: 'AC4', type: 'requirement' };
 const AC7 = { description: 'AC7', type: 'requirement' };
 const AC9 = { description: 'AC9', type: 'requirement' };
 
-const RUNNING: RunView = { ...RUN_VIEW_STUB, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
+const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
+
+const RUNNING: RunView = { ...NOT_IDLE, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
 
 const RUNNING_FOR_59S: RunView = { ...RUNNING, elapsedMs: 59_000 };
 
 const CONTINUOUS: RunView = { ...RUNNING, iconId: 'pulse', text: 'continuous', elapsedMs: 5000, isSpinning: false };
 
-const PASSED_HIT: RunView = { ...RUN_VIEW_STUB, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: '3.2s · cached' };
+const PASSED_HIT: RunView = { ...NOT_IDLE, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: '3.2s · cached' };
+
+const STOPPED: RunView = { ...NOT_IDLE, iconId: 'debug-stop', colorVar: '--vscode-disabledForeground', text: 'stopped · 3.0s' };
 
 const NOT_TURBO_IDLE: RunView = { ...RUN_VIEW_STUB, colorVar: '--vscode-disabledForeground', text: 'not a turbo task' };
 
@@ -40,6 +44,10 @@ const CONTINUOUS_PENDING_CARD: TaskCard = { ...CONTINUOUS_CARD, definition: null
 const CONTINUOUS_LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loading', tasks: [CONTINUOUS_PENDING_CARD] };
 
 const NOT_TURBO_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [NOT_TURBO_CARD] };
+
+const NOT_TURBO_RUNNING_CARD: TaskCard = { ...NOT_TURBO_CARD, run: RUNNING };
+
+const NOT_TURBO_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [NOT_TURBO_RUNNING_CARD] };
 
 const EMPTY_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [] };
 
@@ -200,11 +208,32 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('AND still no Copy button', async (): Promise<void> => expect(card.copyButton).toHaveCount(0));
 
-      await test.step('WHEN the run ends', async (): Promise<void> => detailsPage.sendRunState('web#build', NOT_TURBO_IDLE));
+      await test.step('WHEN the run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#build', STOPPED));
 
-      await test.step('THEN the status is blank again', async (): Promise<void> => card.expectBlankStatus());
+      await test.step('THEN the status shows the end state', async (): Promise<void> =>
+        expect(card.status).toHaveText('stopped · 3.0s'));
 
       await test.step('AND the card has no Run button', async (): Promise<void> => expect(card.runButton).toHaveCount(0));
+    }
+  );
+
+  test(
+    'GIVEN a running card no turbo config defines, an idle view blanks it and stops its clock',
+    { annotation: AC9 },
+    async ({ detailsPage, pageClock }): Promise<void> => {
+      const card = detailsPage.card('build');
+
+      await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+      await test.step('AND the page shows the running card', async (): Promise<void> => detailsPage.open(NOT_TURBO_RUNNING_STATE));
+
+      await test.step('AND one interval is armed', async (): Promise<void> => pageClock.expectIntervals(1));
+
+      await test.step('AND an idle view arrives', async (): Promise<void> => detailsPage.sendRunState('web#build', NOT_TURBO_IDLE));
+
+      await test.step('THEN the status is blank', async (): Promise<void> => card.expectBlankStatus());
+
+      await test.step('AND no interval is left', async (): Promise<void> => pageClock.expectIntervals(0));
     }
   );
 

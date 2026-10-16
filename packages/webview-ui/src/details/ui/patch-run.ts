@@ -22,24 +22,43 @@ const blankRun = (refs: CardRefs, runTexts: RunTexts): null => {
   return null;
 };
 
-/**
- * Writes a run's status and Run/Stop button into a card; returns the new button. A card that is no turbo task and does
- * not run gets a blank status and no button (spec 1c-a §4.5), so it returns `null`.
- */
-export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLButtonElement | null => {
-  const isIdleScript = !refs.isTurboTask && !run.isRunning;
-
-  if (isIdleScript) return blankRun(refs, runTexts);
-
+const fillStatus = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
   const icon = statusIcon(run);
   const text = textElement('span', 'run-text', '');
-  const button = refs.runButton(run);
 
   runTexts.show(refs.taskId, text, run);
   refs.status.replaceChildren(icon, text);
+};
+
+/** A card that is no turbo task offers Stop while it runs, never Run (spec 1c-a §4.12). */
+const fillButton = (refs: CardRefs, run: RunView): HTMLButtonElement | null => {
+  const hasButton = refs.isTurboTask || run.isRunning;
+
+  if (!hasButton) {
+    refs.runSlot.replaceChildren();
+
+    return null;
+  }
+
+  const button = refs.runButton(run);
+
   refs.runSlot.replaceChildren(button);
 
   return button;
+};
+
+/**
+ * Writes a run's status and Run/Stop button into a card; returns the new button, or `null` when the card has none. A
+ * card that is no turbo task gets a blank status while idle and keeps an ended run's status (spec 1c-a §4.5).
+ */
+export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLButtonElement | null => {
+  const isIdleScript = !refs.isTurboTask && run.isIdle;
+
+  if (isIdleScript) return blankRun(refs, runTexts);
+
+  fillStatus(refs, run, runTexts);
+
+  return fillButton(refs, run);
 };
 
 /** Replaces only `taskId`'s status and Run/Stop button; a focused Run/Stop button hands focus to its replacement. */

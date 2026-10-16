@@ -15,7 +15,7 @@ export type RunTexts = {
 
 /**
  * The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. A card that is no turbo task
- * shows no status and no Run button while it does not run.
+ * shows no status while idle and never a Run button.
  */
 export type CardRefs = {
   readonly taskId: string;
