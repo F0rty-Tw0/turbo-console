@@ -225,6 +225,14 @@ describe('FEATURE: registerTree scope toggle', () => {
       expect(calls).toStrictEqual(['update:true']);
     });
 
+    it('WHEN a toggle fails THEN the failure is logged and the command still rejects', async () => {
+      editor.executeCommand.mockRejectedValueOnce(new Error('refused'));
+
+      await expect(invoke('turboConsole.showScope')).rejects.toThrow('refused');
+
+      expect(output.error).toHaveBeenCalledWith(expect.stringContaining('refused'));
+    });
+
     it('WHEN showScope fails THEN the next command still runs', async () => {
       editor.executeCommand.mockRejectedValueOnce(new Error('refused'));
 

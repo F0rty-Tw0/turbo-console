@@ -74,8 +74,13 @@ const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi, output
   });
 
   let last: Promise<void> = Promise.resolve();
+  const logAndRethrow = (error: unknown): never => {
+    output.error(logTextOf(error));
+
+    throw error;
+  };
   const queueWrite = async (value: boolean): Promise<void> => {
-    const run = last.then(async () => writeScopeShown(context, tree, value));
+    const run = last.then(async () => writeScopeShown(context, tree, value)).catch(logAndRethrow);
 
     last = run.catch(() => undefined);
 
