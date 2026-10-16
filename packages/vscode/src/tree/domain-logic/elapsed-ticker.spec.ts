@@ -4,9 +4,10 @@ import type { Mock } from 'vitest';
 import { ElapsedTicker } from './elapsed-ticker.ts';
 import type { RunEntry, RunState } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
-import type { TickerPorts } from '../common/ticker.type.ts';
+import type { PackagesTreeApi } from '../common/tree-node.type.ts';
+import { tickerPortsOf } from '../data-access/ticker-ports.ts';
 import type { RunChangesFake, VisibleViewFake } from '../test/common/ticker-fakes.type.ts';
-import { intervalEvery, runChangesFake, visibleViewFake } from '../test/utils/ticker-fakes.spec.util.ts';
+import { runChangesFake, visibleViewFake } from '../test/utils/ticker-fakes.spec.util.ts';
 
 const SECOND = 1000;
 
@@ -18,17 +19,14 @@ const entryOf = (taskId: string, state: RunState, root = '/ws'): RunEntry => {
 
 describe('FEATURE: elapsed ticker', () => {
   let changes: RunChangesFake;
-  let fire: Mock<TickerPorts['fire']>;
+  let fire: Mock<PackagesTreeApi['refreshTask']>;
   let ticker: ElapsedTicker;
 
   beforeEach(() => {
     vi.useFakeTimers();
     changes = runChangesFake();
-    fire = vi.fn<TickerPorts['fire']>();
-
-    const ports: TickerPorts = { every: intervalEvery, fire };
-
-    ticker = new ElapsedTicker(changes.runs, ports);
+    fire = vi.fn<PackagesTreeApi['refreshTask']>();
+    ticker = new ElapsedTicker(changes.runs, tickerPortsOf({ refreshTask: fire }));
   });
 
   afterEach(() => {
@@ -48,7 +46,7 @@ describe('FEATURE: elapsed ticker', () => {
 
       vi.advanceTimersByTime(3 * SECOND);
 
-      expect([ticker.ticks(), fire.mock.calls.length]).toStrictEqual([0, 0]);
+      expect([ticker.api().ticks(), fire.mock.calls.length]).toStrictEqual([0, 0]);
     });
   });
 
@@ -92,12 +90,13 @@ describe('FEATURE: elapsed ticker', () => {
       ]);
     });
 
-    it('WHEN a run goes for two seconds THEN ticks() reads 2', () => {
-      changes.emit(entryOf('a#dev', 'running'));
+    it('WHEN a run goes for two seconds THEN the api taken before reads 2 ticks, live', () => {
+      const api = ticker.api();
 
+      changes.emit(entryOf('a#dev', 'running'));
       vi.advanceTimersByTime(2 * SECOND);
 
-      expect(ticker.ticks()).toBe(2);
+      expect(api.ticks()).toBe(2);
     });
 
     it('WHEN a running entry changes again while running (a match lands) THEN its task fires once per tick', () => {
@@ -249,10 +248,37 @@ describe('FEATURE: elapsed ticker', () => {
       expect(vi.getTimerCount()).toBe(1);
     });
 
+    it('WHEN the view shows with a run going THEN the fire on show is not counted as a tick', () => {
+      changes.emit(entryOf('a#dev', 'running'));
+
+      fake.setVisible(true);
+
+      expect(ticker.api().ticks()).toBe(0);
+    });
+
+    it('WHEN a run starts and ends while hidden and the view then shows THEN nothing fires and no interval is armed', () => {
+      changes.emit(entryOf('a#dev', 'running'));
+      changes.emit(entryOf('a#dev', 'passed'));
+
+      fake.setVisible(true);
+
+      expect([fire.mock.calls.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
+    });
+
     it('WHEN the view shows with no run going THEN nothing fires and no interval is armed', () => {
       fake.setVisible(true);
 
       expect([fire.mock.calls.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
+    });
+  });
+
+  describe('GIVEN a run going before any view is bound', () => {
+    it('WHEN a visible view is bound THEN an interval is armed', () => {
+      changes.emit(entryOf('a#dev', 'running'));
+
+      ticker.bind(visibleViewFake(true).view);
+
+      expect(vi.getTimerCount()).toBe(1);
     });
   });
 

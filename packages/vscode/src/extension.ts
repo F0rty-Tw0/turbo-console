@@ -9,7 +9,6 @@ import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/roo
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
-import type { Runs } from './run/common/run.type.ts';
 import { editorCopyPorts } from './run/data-access/copy-ports.ts';
 import { editorRunAllPorts, editorRunPorts } from './run/data-access/run-ports.ts';
 import { forwardRunAllEvents, forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
@@ -23,10 +22,9 @@ import type { Output } from './shared/common/output.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
-import type { TickerPorts } from './tree/common/ticker.type.ts';
-import type { PackagesTreeApi } from './tree/common/tree-node.type.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
+import { tickerPortsOf } from './tree/data-access/ticker-ports.ts';
 import { ElapsedTicker } from './tree/domain-logic/elapsed-ticker.ts';
 import { TreeVisibility } from './tree/domain-logic/tree-visibility.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
@@ -98,23 +96,6 @@ const startTimings = (): TimingsStart => {
   return started;
 };
 
-/** The elapsed ticker on real timers, refreshing task rows of the tree; unbound until the view exists. */
-const createTicker = (runs: Runs, tree: PackagesTreeApi): ElapsedTicker => {
-  const every: TickerPorts['every'] = (ms, tick) => {
-    const interval = setInterval(tick, ms);
-
-    return (): void => {
-      clearInterval(interval);
-    };
-  };
-  const fire: TickerPorts['fire'] = (root, taskId) => {
-    tree.refreshTask(root, taskId);
-  };
-  const ports: TickerPorts = { every, fire };
-
-  return new ElapsedTicker(runs, ports);
-};
-
 /** Hands the Packages view to the visibility reader and the ticker; the returned binding stops the ticker following it. */
 const bindViews = (view: VisibleView, visibility: TreeVisibility, ticker: ElapsedTicker): vscode.Disposable => {
   visibility.bind(view);
@@ -137,7 +118,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, runSession.runs, output);
   const treeVisibility = new TreeVisibility();
-  const ticker = createTicker(runSession.runs, tree);
+  const ticker = new ElapsedTicker(runSession.runs, tickerPortsOf(tree));
   const api: TurboConsoleApi = {
     tree,
     commands,
@@ -148,7 +129,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     whenIdle: async (root: string): Promise<void> => session.whenIdle(root),
     details: panels.api(),
     treeVisible: treeVisibility.read,
-    ticker
+    ticker: ticker.api()
   };
 
   context.subscriptions.push(output, tree, session, ticker);

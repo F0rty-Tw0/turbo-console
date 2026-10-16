@@ -32,7 +32,7 @@ export type TimingsStart = {
 };
 
 /** The elapsed ticker, for the integration tests: `ticks` counts its interval ticks since activation. */
-type TickerApi = {
+export type TickerApi = {
   readonly ticks: () => number;
 };
 

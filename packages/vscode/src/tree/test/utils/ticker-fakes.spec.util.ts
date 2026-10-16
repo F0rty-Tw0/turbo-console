@@ -1,7 +1,7 @@
 import type { Disposable, TreeViewVisibilityChangeEvent } from 'vscode';
 
 import type { RunEntry, RunListener } from '../../../run/common/run.type.ts';
-import type { RunChanges, TickerPorts } from '../../common/ticker.type.ts';
+import type { RunChanges } from '../../common/ticker.type.ts';
 import type { VisibleView } from '../../common/visible-view.type.ts';
 import type { RunChangesFake, VisibleViewFake } from '../common/ticker-fakes.type.ts';
 
@@ -57,13 +57,4 @@ export const runChangesFake = (): RunChangesFake => {
   const fake: RunChangesFake = { runs, emit };
 
   return fake;
-};
-
-/** `TickerPorts.every` over `setInterval`, so a spec drives it with `vi.useFakeTimers()` and counts it with `vi.getTimerCount()`. */
-export const intervalEvery: TickerPorts['every'] = (ms, tick) => {
-  const interval = setInterval(tick, ms);
-
-  return (): void => {
-    clearInterval(interval);
-  };
 };

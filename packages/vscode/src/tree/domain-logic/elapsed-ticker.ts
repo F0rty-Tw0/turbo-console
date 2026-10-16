@@ -1,6 +1,7 @@
 import type { Disposable, TreeViewVisibilityChangeEvent } from 'vscode';
 
 import type { RunEntry } from '../../run/common/run.type.ts';
+import type { TickerApi } from '../../shared/common/api.type.ts';
 import type { RunChanges, TickerPorts } from '../common/ticker.type.ts';
 import type { VisibleView } from '../common/visible-view.type.ts';
 
@@ -44,9 +45,11 @@ export class ElapsedTicker {
     return binding;
   }
 
-  /** Ticks since activation, for `TurboConsoleApi.ticker`. */
-  public ticks(): number {
-    return this.count;
+  /** `TurboConsoleApi.ticker`: `ticks` reads, live, the interval ticks since activation (not the fire on show). */
+  public api(): TickerApi {
+    const api: TickerApi = { ticks: () => this.count };
+
+    return api;
   }
 
   public dispose(): void {
