@@ -7,6 +7,7 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { RootsSession } from '../../roots/domain-logic/roots-session.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { flushSettles } from '../../roots/test/utils/deferred-ports.spec.util.ts';
 import { sessionPortsWith } from '../../roots/test/utils/session-ports.spec.util.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
@@ -129,6 +130,25 @@ describe('FEATURE: opening a details panel', () => {
 
       await expect(opening).resolves.toBeNull();
       expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a row open of its key still waits on the replaced root THEN the manifest open builds the panel', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const rowOpen = panels.open(WS_A);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply('/ws', DETAILS_LOADED_STUB);
+
+      const fileOpen = panels.openFile(A_MANIFEST);
+
+      await flushSettles();
+      loaded.resolve(undefined);
+
+      await expect(fileOpen).resolves.not.toBeNull();
+      await expect(rowOpen).resolves.toBeNull();
+      expect(fakes.open).toHaveBeenCalledOnce();
       expect(fakes.info).not.toHaveBeenCalled();
     });
 

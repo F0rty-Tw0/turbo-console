@@ -59,6 +59,12 @@ export type FileLookup = {
   readonly loaded: () => Coordinator | null;
 };
 
+/** An open still being created, with the coordinator whose load it waits for or was handed. */
+export type PendingOpen = {
+  readonly coordinator: Coordinator | undefined;
+  readonly panel: Promise<OpenPanel | null>;
+};
+
 /** What `registerDetails` asks of the registry. */
 export type PanelOpener = {
   readonly open: (key: PanelKey) => Promise<OpenPanel | null>;

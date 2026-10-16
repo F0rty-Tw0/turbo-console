@@ -10,7 +10,7 @@ import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { OPEN_FAILED_TEXT } from '../common/details.const.ts';
 import type { PanelKey } from '../common/details.type.ts';
-import type { OpenPanel, PanelParts, PanelsDeps } from '../common/panel.type.ts';
+import type { OpenPanel, PanelParts, PanelsDeps, PendingOpen } from '../common/panel.type.ts';
 import { panelIdOf } from '../utils/panel-id.util.ts';
 
 const revealed = (panel: OpenPanel | null): OpenPanel | null => {
@@ -22,13 +22,14 @@ const revealed = (panel: OpenPanel | null): OpenPanel | null => {
 /**
  * The open Package Details panels, one per root and package name. A key opened by row is registered as pending before
  * the root's load is awaited, so a second open of it waits for the same panel; an open from a manifest registers its key
- * only once the load has resolved. A panel is made only for a package that is still in the root's model once the load
- * has resolved; a root removed meanwhile, even if added back, ends the open with no panel and no message.
+ * only once the load has resolved, and waits for a pending open only when that one waits on the same coordinator. A
+ * panel is made only for a package that is still in the root's model once the load has resolved; a root removed
+ * meanwhile, even if added back, ends the open with no panel and no message.
  */
 export class DetailsPanels {
   private readonly deps: PanelsDeps;
   private readonly panels = new Map<string, OpenPanel>();
-  private readonly pending = new Map<string, Promise<OpenPanel | null>>();
+  private readonly pending = new Map<string, PendingOpen>();
   private isDisposed = false;
 
   public constructor(deps: PanelsDeps) {
@@ -46,17 +47,19 @@ export class DetailsPanels {
 
     if (existing !== undefined) return revealed(existing);
 
+    const coordinator = loaded ?? this.deps.roots.get(key.root)?.coordinator;
     const waiting = this.pending.get(id);
+    const isOtherLoad = loaded !== null && waiting?.coordinator !== loaded;
 
-    if (waiting !== undefined) return revealed(await waiting);
+    if (waiting !== undefined && !isOtherLoad) return revealed(await waiting.panel);
 
-    const creating = this.create(key, id, loaded).finally(() => {
-      this.pending.delete(id);
+    const panel = this.create(key, id, coordinator, loaded).finally(() => {
+      this.forget(id, panel);
     });
 
-    this.pending.set(id, creating);
+    this.pending.set(id, { coordinator, panel });
 
-    return creating;
+    return panel;
   }
 
   /**
@@ -97,10 +100,15 @@ export class DetailsPanels {
     for (const id of ids) this.close(id);
   }
 
-  /** Whether `root` still has the coordinator that answered its load, waited for here unless the caller did (`loaded`). */
-  private async isStillLoaded(root: string, loaded: Coordinator | null): Promise<boolean> {
-    const before = loaded ?? this.deps.roots.get(root)?.coordinator;
+  /** Drops the pending entry of `id` unless a later open has replaced it. */
+  private forget(id: string, panel: PendingOpen['panel']): void {
+    const isOwn = this.pending.get(id)?.panel === panel;
 
+    if (isOwn) this.pending.delete(id);
+  }
+
+  /** Whether `root` still has `before`, the coordinator whose load is waited for here unless the caller did (`loaded`). */
+  private async isStillLoaded(root: string, before: Coordinator | undefined, loaded: Coordinator | null): Promise<boolean> {
     if (loaded === null) await before?.ensureLoaded();
 
     const after = this.deps.roots.get(root)?.coordinator;
@@ -108,9 +116,14 @@ export class DetailsPanels {
     return before !== undefined && after === before;
   }
 
-  private async create(key: PanelKey, id: string, loaded: Coordinator | null): Promise<OpenPanel | null> {
+  private async create(
+    key: PanelKey,
+    id: string,
+    before: Coordinator | undefined,
+    loaded: Coordinator | null
+  ): Promise<OpenPanel | null> {
     try {
-      const isSameRoot = await this.isStillLoaded(key.root, loaded);
+      const isSameRoot = await this.isStillLoaded(key.root, before, loaded);
 
       if (this.isDisposed || !isSameRoot) return null;
 
