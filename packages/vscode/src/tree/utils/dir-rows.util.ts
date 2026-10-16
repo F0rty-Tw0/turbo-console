@@ -1,6 +1,6 @@
 import type { PackageNode } from '@turbo-console/core';
 
-import { shownLabelOf } from './model-view.util.ts';
+import { shownTextOf } from './model-view.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
@@ -37,8 +37,7 @@ export const dirRow = (root: string, dir: FolderDir, view: ModelView): TreeRow =
  * counts the visible tasks the view holds for it.
  */
 export const packageRow = (root: string, pkg: PackageNode, view: ModelView, scopeShown: boolean): TreeRow => {
-  const shownLabel = shownLabelOf(view, pkg, scopeShown);
-  const label = cleanText(shownLabel, LABEL_MAX);
+  const label = shownTextOf(view, pkg, scopeShown);
   const path = cleanText(pkg.path, DESCRIPTION_MAX);
   const description = path === label ? '' : path;
   const taskCount = view.visibleTaskCounts.get(pkg.name) ?? 0;

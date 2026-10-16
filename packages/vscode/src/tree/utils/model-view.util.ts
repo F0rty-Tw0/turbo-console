@@ -25,18 +25,19 @@ const countOf = (counts: Map<string, number>, key: string): void => {
   counts.set(key, count + 1);
 };
 
-/** The text a package row reads for `label`: `packageRow` cleans it the same way. */
+/** The text a package row reads for `label`, cleaned once here so `packageRow` does not clean it again. */
 const rowTextOf = (label: string): string => cleanText(label, LABEL_MAX);
 
-/** The rest of a scoped name, unless its row would read blank (`@a/` + a zero-width space); then the full name. */
-const bareOf = (pkg: PackageNode): string => {
-  const rest = restOf(pkg.name) ?? '';
-  const text = rowTextOf(rest).trim();
-  const isBlank = text === '';
+/** The row text of a scoped name's rest; `null` with no scope, or when the rest would read blank (`@a/` + a zero-width space). */
+const restTextOf = (pkg: PackageNode): string | null => {
+  const rest = restOf(pkg.name);
 
-  if (isBlank) return pkg.name;
+  if (rest === null) return null;
 
-  return rest;
+  const text = rowTextOf(rest);
+  const isBlank = text.trim() === '';
+
+  return isBlank ? null : text;
 };
 
 const textCountsOf = (texts: string[]): Map<string, number> => {
@@ -48,7 +49,7 @@ const textCountsOf = (texts: string[]): Map<string, number> => {
 };
 
 /** Every package still reading its rest whose row text another row shares falls back to its full name; true when one did. */
-const fellBack = (shown: PackageNode[], labels: string[], texts: string[]): boolean => {
+const fellBack = (shown: PackageNode[], bare: boolean[], texts: string[]): boolean => {
   const counts = textCountsOf(texts);
   let isAnyFallen = false;
 
@@ -56,11 +57,11 @@ const fellBack = (shown: PackageNode[], labels: string[], texts: string[]): bool
     const text = texts[index] ?? '';
     const count = counts.get(text) ?? 0;
     const isShared = count > 1;
-    const isBare = labels[index] !== pkg.name;
+    const isBare = bare[index] === true;
 
     if (!isShared || !isBare) continue;
 
-    labels[index] = pkg.name;
+    bare[index] = false;
     texts[index] = rowTextOf(pkg.name);
     isAnyFallen = true;
   }
@@ -72,25 +73,28 @@ const fellBack = (shown: PackageNode[], labels: string[], texts: string[]): bool
  * Spec §4.8: a scoped name reads its rest, unless the text its row reads (cleaned) is the text of another shown
  * package's row; then it keeps its full name. A fallback can make a new pair (`@a/x` back to full meets `@b/@a/x`
  * reading `@a/x`), so passes repeat until none falls back: no two rows of a root read the same text, unless their full
- * names already do once cleaned.
+ * names already do once cleaned. Maps each full name to the cleaned text its row reads.
  */
-const bareLabelsOf = (shown: PackageNode[]): Map<string, string> => {
-  const labels = shown.map(bareOf);
-  const texts = labels.map(rowTextOf);
+const bareTextsOf = (shown: PackageNode[]): Map<string, string> => {
+  const restTexts = shown.map(restTextOf);
+  const bare = restTexts.map((text) => text !== null);
+  const texts = shown.map((pkg, index) => restTexts[index] ?? rowTextOf(pkg.name));
   let isFalling = true;
 
-  while (isFalling) isFalling = fellBack(shown, labels, texts);
+  while (isFalling) isFalling = fellBack(shown, bare, texts);
 
-  const pairs = shown.map((pkg, index): [string, string] => [pkg.name, labels[index] ?? pkg.name]);
+  const pairs = shown.map((pkg, index): [string, string] => [pkg.name, texts[index] ?? rowTextOf(pkg.name)]);
 
   return new Map(pairs);
 };
 
-/** The label a package row reads: its full name while scopes are shown, else its bare label. */
-export const shownLabelOf = (view: ModelView, pkg: PackageNode, scopeShown: boolean): string => {
-  if (scopeShown) return pkg.name;
+/** The cleaned label a package row reads: its full name while scopes are shown, else its bare text. */
+export const shownTextOf = (view: ModelView, pkg: PackageNode, scopeShown: boolean): string => {
+  const bareText = view.bareTexts.get(pkg.name);
 
-  return view.bareLabels.get(pkg.name) ?? pkg.name;
+  if (scopeShown || bareText === undefined) return rowTextOf(pkg.name);
+
+  return bareText;
 };
 
 /** Records the packages of `dir` and every directory below it under each one's path; returns `dir`'s own count. */
@@ -128,11 +132,11 @@ export const modelViewOf = (model: WorkspaceModel): ModelView => {
   const shown = model.packages.filter(isShownPackage);
   const packages = packageMapOf(shown);
   const folders = folderTree(shown);
-  const bareLabels = bareLabelsOf(shown);
+  const bareTexts = bareTextsOf(shown);
   const packagesBelow = packagesBelowOf(folders);
   const counts = shown.map(visibleCountOf);
   const visibleTaskCounts = new Map(counts);
-  const view: ModelView = { packages, folders, bareLabels, packagesBelow, visibleTaskCounts };
+  const view: ModelView = { packages, folders, bareTexts, packagesBelow, visibleTaskCounts };
 
   return view;
 };
