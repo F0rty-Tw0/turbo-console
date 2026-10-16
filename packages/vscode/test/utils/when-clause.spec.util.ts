@@ -12,15 +12,13 @@ type ContextKeys = Readonly<Record<string, string | boolean>>;
 
 const isSet = (value: string | boolean | undefined): boolean => value !== undefined && value !== false && value !== '';
 
+/** VS Code runs `regexp.test(value)` with no type check, so a boolean (or a missing key) is matched as its text. */
 const regexMatches = (match: RegExpExecArray, keys: ContextKeys): boolean => {
   const [, key = '', body = '', flags = ''] = match;
-  const value = keys[key];
-
-  if (typeof value !== 'string') return false;
-
+  const text = String(keys[key]);
   const pattern = new RegExp(body, flags);
 
-  return pattern.test(value);
+  return pattern.test(text);
 };
 
 /** A key that is not set equals nothing, so `!=` holds for it. */
@@ -60,7 +58,7 @@ const termMatches = (term: string, keys: ContextKeys): boolean => {
 
 /**
  * Whether a manifest `when` clause holds for `keys`, as VS Code reads it: `||` binds looser than `&&`; terms are
- * `key`, `!key`, `key == value`, `key != value`, `key =~ /regex/flags` (a JS `RegExp`) and the constants `true` and
+ * `key`, `!key`, `key == value`, `key != value`, `key =~ /regex/flags` (a JS `RegExp` on the value's text) and the constants `true` and
  * `false`. Any other form throws, so a clause this cannot read never passes by accident.
  */
 export const whenMatches = (clause: string, keys: ContextKeys): boolean => {

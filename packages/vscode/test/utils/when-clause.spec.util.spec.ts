@@ -21,7 +21,7 @@ describe('FEATURE: when clause evaluation', () => {
       ['an inequality on a key that is not set', true, 'missing != list'],
       ['a regex that matches', true, 'viewItem =~ /^turboTask\\.running/'],
       ['a regex whose negative lookahead rejects', false, 'viewItem =~ /^turboTask(?!\\.running)/'],
-      ['a regex on a key that is not a string', false, 'turboConsole.scopeShown =~ /true/'],
+      ['a regex on a boolean key, which VS Code reads as its text', true, 'turboConsole.scopeShown =~ /true/'],
       ['an and whose both sides hold', true, 'view == turboConsole.tree && turboConsole.scopeShown'],
       ['an and with one side false', false, 'view == turboConsole.tree && !turboConsole.scopeShown'],
       ['an or with one side true', true, 'off || view == turboConsole.tree'],
