@@ -105,6 +105,18 @@ describe('FEATURE: model view', () => {
       expect(labels).toStrictEqual(['@a/']);
     });
 
+    it('WHEN a scoped name has a rest that cleans to nothing THEN it keeps its full name', () => {
+      const labels = labelsOfNames(['@a/​']);
+
+      expect(labels).toStrictEqual(['@a/​']);
+    });
+
+    it('WHEN a scoped name has a rest that cleans to a space THEN it keeps its full name', () => {
+      const labels = labelsOfNames(['@a/ ']);
+
+      expect(labels).toStrictEqual(['@a/ ']);
+    });
+
     it('WHEN a name starts with @ and has no slash THEN it keeps its full name', () => {
       const labels = labelsOfNames(['@x']);
 

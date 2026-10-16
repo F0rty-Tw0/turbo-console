@@ -25,10 +25,19 @@ const countOf = (counts: Map<string, number>, key: string): void => {
   counts.set(key, count + 1);
 };
 
-const bareOf = (pkg: PackageNode): string => restOf(pkg.name) ?? pkg.name;
-
 /** The text a package row reads for `label`: `packageRow` cleans it the same way. */
 const rowTextOf = (label: string): string => cleanText(label, LABEL_MAX);
+
+/** The rest of a scoped name, unless its row would read blank (`@a/` + a zero-width space); then the full name. */
+const bareOf = (pkg: PackageNode): string => {
+  const rest = restOf(pkg.name) ?? '';
+  const text = rowTextOf(rest).trim();
+  const isBlank = text === '';
+
+  if (isBlank) return pkg.name;
+
+  return rest;
+};
 
 const textCountsOf = (texts: string[]): Map<string, number> => {
   const counts = new Map<string, number>();
