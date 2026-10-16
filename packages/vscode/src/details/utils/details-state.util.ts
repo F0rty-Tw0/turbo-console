@@ -6,9 +6,8 @@ import { toRunView } from './run-view.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
+import { isVisibleTask } from '../../tree/utils/task-rows.util.ts';
 import type { DetailsInput } from '../common/details.type.ts';
-
-const isShown = (task: TaskNode): boolean => task.kind !== 'atom-file';
 
 const byName = (left: TaskNode, right: TaskNode): number => Number(left.name > right.name) - Number(left.name < right.name);
 
@@ -54,7 +53,7 @@ const toTaskCard = (
 const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: DetailsInput): PackageDetails => {
   const dependents = dependentsOf(model);
   const dryRunStates = dryRunStatesById(input.dryRun.states);
-  const shown = pkg.tasks.filter(isShown).toSorted(byName);
+  const shown = pkg.tasks.filter(isVisibleTask).toSorted(byName);
   const tasks = shown.map((task) => toTaskCard(task, input, dependents, dryRunStates));
   const details: PackageDetails = {
     kind: 'package',

@@ -1,6 +1,6 @@
-import type { TaskNode, WorkspaceModel } from '@turbo-console/core';
+import type { WorkspaceModel } from '@turbo-console/core';
 
-const isVisible = (task: TaskNode): boolean => task.kind !== 'atom-file';
+import { isVisibleTask } from '../../tree/utils/task-rows.util.ts';
 
 /** Appends in place: copying the list per dependent made a task with k dependents cost O(k²) on a hostile repo. */
 const addDependent = (dependents: Map<string, string[]>, dependency: string, taskId: string): void => {
@@ -21,7 +21,7 @@ const addDependent = (dependents: Map<string, string[]>, dependency: string, tas
  */
 export const dependentsOf = (model: WorkspaceModel): ReadonlyMap<string, string[]> => {
   const dependents = new Map<string, string[]>();
-  const tasks = model.packages.flatMap((pkg) => pkg.tasks).filter(isVisible);
+  const tasks = model.packages.flatMap((pkg) => pkg.tasks).filter(isVisibleTask);
 
   for (const task of tasks) {
     for (const dependency of task.dependencies) addDependent(dependents, dependency, task.id);
