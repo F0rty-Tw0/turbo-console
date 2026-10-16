@@ -57,7 +57,8 @@ export class ModelViews {
 
   public of(model: WorkspaceModel, scriptsShown: boolean, liveOfRoot: ReadonlySet<string>): ModelView {
     const slot = this.slots.get(model) ?? NO_VIEWS;
-    const key = viewKeyOf(this.qualifyingOf(model), scriptsShown, liveOfRoot);
+    const qualifying = (): ReadonlySet<string> => this.qualifyingOf(model);
+    const key = viewKeyOf(qualifying, scriptsShown, liveOfRoot);
     const cached = cachedOf(slot, key);
 
     if (cached !== undefined) return cached;

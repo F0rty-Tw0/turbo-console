@@ -21,16 +21,18 @@ export const qualifyingIdsOf = (model: WorkspaceModel): ReadonlySet<string> => {
 };
 
 /**
- * Spec 1c-b §4.7: `'shown'` while scripts are shown; else `'hidden'`, then the live ids that are in `qualifying`, sorted
- * and joined by NUL. The sort is load-bearing: a set iterates in insertion order, and a new `Set` of the same ids must
- * give the same key. `liveOfRoot` is the set of the folder root. A call walks the live ids, not the packages.
+ * Spec 1c-b §4.7: `'shown'` while scripts are shown; else `'hidden'`, then the live ids that are in the `qualifying` set
+ * (asked only when a live id exists), sorted and joined by NUL. The sort is load-bearing: a set iterates in insertion
+ * order, and a new `Set` of the same ids must give the same key. `liveOfRoot` is the set of the folder root. A call
+ * walks the live ids, not the packages.
  */
-export const viewKeyOf = (qualifying: ReadonlySet<string>, scriptsShown: boolean, liveOfRoot: ReadonlySet<string>): string => {
+export const viewKeyOf = (qualifying: () => ReadonlySet<string>, scriptsShown: boolean, liveOfRoot: ReadonlySet<string>): string => {
   if (scriptsShown) return SHOWN_KEY;
 
   if (liveOfRoot.size === 0) return HIDDEN_KEY;
 
-  const ids = Array.from(liveOfRoot).filter((id) => qualifying.has(id));
+  const known = qualifying();
+  const ids = Array.from(liveOfRoot).filter((id) => known.has(id));
 
   if (ids.length === 0) return HIDDEN_KEY;
 
