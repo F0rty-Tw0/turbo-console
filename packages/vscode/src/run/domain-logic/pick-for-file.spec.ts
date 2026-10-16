@@ -11,7 +11,7 @@ import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts'
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
-import { NOT_PACKAGE_TEXT, NO_TASKS_TEXT } from '../common/picker.const.ts';
+import { NOT_PACKAGE_TEXT, NO_PACKAGE_TASKS_TEXT } from '../common/picker.const.ts';
 import type { RunRequest } from '../common/run.type.ts';
 import type { PickerFakes } from '../test/common/picker-fakes.type.ts';
 import { pickerFakes } from '../test/utils/picker-ports.spec.util.ts';
@@ -119,12 +119,23 @@ describe('FEATURE: package.json run action', () => {
     expect(fakes.info).toHaveBeenCalledExactlyOnceWith(text);
   });
 
-  it('GIVEN a package with no visible task WHEN it runs THEN it says no tasks are available', async () => {
+  it('GIVEN a package with no visible task WHEN it runs THEN it says there are no tasks to run in it', async () => {
     roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [] }]));
 
     await pickForFileAndRun(roots, fakes.ports, FILE);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
+  });
+
+  it('GIVEN a package whose only tasks are no turbo task WHEN it runs THEN it says there are no tasks to run in it', async () => {
+    const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
+
+    await pickForFileAndRun(roots, fakes.ports, FILE);
+
+    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
+    expect(fakes.pick).not.toHaveBeenCalled();
   });
 
   it('GIVEN a file whose path differs from the root in case WHEN a task is picked THEN that package and task run', async () => {
