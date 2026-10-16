@@ -18,13 +18,15 @@ import { allRows } from '../utils/all-rows.util.ts';
 import { diffModels } from '../utils/model-diff.util.ts';
 import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
-import { isRunnableTask, taskRows } from '../utils/task-rows.util.ts';
+import { isRunnableTask, taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
 const TICKED_TASKS = 20;
 
 const TICK_NOW = 1_000_000_000;
+
+const WARM_TICKS = 200;
 
 /** The model `loadWorkspace` builds for a fresh `preset` fixture, kept after the fixture is disposed. */
 const captureModel = async (preset: PresetName): Promise<WorkspaceModel> => {
@@ -122,13 +124,12 @@ const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
 };
 
 /** The tree row of `entry`'s task: the row the tree caches a node for. */
-const taskRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext): TreeRow => {
+const entryRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext): TreeRow => {
   const pkg = context.views(model).packages.get(entry.packageName);
 
   if (pkg === undefined) throw new Error(`bench package ${entry.packageName} is not shown`);
 
-  const rows = taskRows(model.root, pkg, context);
-  const row = rows.find((candidate) => candidate.key === entry.taskId);
+  const row = taskRowOf(model.root, pkg, entry.taskId, context);
 
   if (row === undefined) throw new Error(`bench task ${entry.taskId} has no row`);
 
@@ -140,7 +141,9 @@ const isRunningRow = (row: TreeRow): boolean => row.icon.id !== LOADING_ICON.id 
 
 /**
  * Spec §4.6 tick cost, warm: the model's view is built and the running tasks' nodes are cached, as after the first draw.
- * The timed function rebuilds only the rows one tick redraws, the first `TICKED_TASKS` running ones.
+ * The timed function rebuilds only the rows one tick redraws, the first `TICKED_TASKS` running ones. It times only the
+ * extension host's row rebuild, not VS Code's redraw. The setup runs `WARM_TICKS` ticks first, so the samples sit past
+ * the JIT tier-up instead of on its knee.
  */
 const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const state = stateOf(model);
@@ -154,12 +157,14 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const runs: RunLookup = (_root, taskId) => byId.get(taskId);
   const context: RowContext = { mode: 'folders', runs, views: (loaded) => views.of(loaded), scopeShown: false, now: TICK_NOW };
   const cache = new Map<string, TreeNode>();
-  const nodes = entries.map((entry) => nodeFor(cache, taskRowOf(model, entry, context)));
+  const nodes = entries.map((entry) => nodeFor(cache, entryRowOf(model, entry, context)));
   const tick = (): TreeRow[] => nodes.map((node) => currentRowOf(state, node, context));
   const firstRows = tick();
   const isAllRunning = firstRows.every(isRunningRow);
 
   if (!isAllRunning) throw new Error('bench tick rebuilds a row that is not a running task');
+
+  for (let round = 1; round < WARM_TICKS; round += 1) tick();
 
   return bench(name, tick, { gate: true });
 };
