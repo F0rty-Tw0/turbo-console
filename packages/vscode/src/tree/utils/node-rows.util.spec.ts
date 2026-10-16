@@ -18,9 +18,9 @@ import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
-import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
+import { ROW_NOW, rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
-const RUNNING: RunEntry = { ...RUN_ENTRY_STUB, taskId: 'build' };
+const RUNNING: RunEntry = { ...RUN_ENTRY_STUB, taskId: 'build', launchedAt: ROW_NOW - 12_345 };
 
 const runningBuild: RunLookup = (_root, taskId) => (taskId === 'build' ? RUNNING : undefined);
 
@@ -134,7 +134,7 @@ describe('FEATURE: node rows', () => {
     it("WHEN a task's current row is built THEN it carries its run state", () => {
       const row = currentRowOf(ROOT_STATE_STUB, TASK_TREE_NODE_STUB, RUNNING_VIEW);
 
-      expect(row.description).toBe('running…');
+      expect(row.description).toBe('running · 12s');
     });
 
     it('WHEN a gone package row is built THEN a loading row stands in under its id', () => {

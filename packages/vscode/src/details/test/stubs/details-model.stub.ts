@@ -108,5 +108,6 @@ export const DETAILS_INPUT_STUB: DetailsInput = {
   packageName: 'a',
   state: DETAILS_ROOT_STATE_STUB,
   dryRun: DRY_RUN_RESULT_STUB,
-  runs: () => undefined
+  runs: () => undefined,
+  now: 0
 };

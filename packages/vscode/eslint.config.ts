@@ -15,7 +15,7 @@ const typescriptFiles = {
   languageOptions
 };
 
-/** webview-ui code is for the webview page; the extension bundle may take its types and the two HTML-shell helpers only. */
+/** webview-ui code is for the webview page; the extension bundle may take its types, the two HTML-shell helpers and the two pure duration formatters only. */
 const webviewHostImports: FlatConfig.Config = {
   name: 'vscode/webview-host-imports',
   files: ['**/*.ts'],
@@ -27,8 +27,8 @@ const webviewHostImports: FlatConfig.Config = {
           {
             name: '@turbo-console/webview-ui',
             allowTypeImports: true,
-            allowImportNames: ['renderWebviewHtml', 'webviewCsp'],
-            message: 'Types and the HTML-shell helpers only: webview code must not enter the extension bundle.'
+            allowImportNames: ['durationText', 'elapsedText', 'renderWebviewHtml', 'webviewCsp'],
+            message: 'Types, HTML-shell helpers and duration formatters only: webview code must not enter the extension bundle.'
           }
         ]
       }

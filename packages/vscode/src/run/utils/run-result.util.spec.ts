@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { secondsText, settledMatchOf } from './run-result.util.ts';
+import { settledMatchOf } from './run-result.util.ts';
 import type { RunEntry } from '../common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../test/stubs/run.stub.ts';
 
@@ -25,16 +25,5 @@ describe('FEATURE: settled match of a run', () => {
     it('WHEN matching has finished THEN there is no match', () => {
       expect(settledMatchOf(RUN_ENTRY_STUB)).toBeNull();
     });
-  });
-});
-
-describe('FEATURE: seconds text', () => {
-  it.each([
-    [3200, '3.2s'],
-    [400, '0.4s'],
-    [0, '0.0s'],
-    [12_340, '12.3s']
-  ])('GIVEN %d ms WHEN written THEN it reads %s', (durationMs, text) => {
-    expect(secondsText(durationMs)).toBe(text);
   });
 });

@@ -1,3 +1,5 @@
+import type { RunState } from '../../run/common/run.type.ts';
+
 export type IconSpec = {
   readonly id: string;
   readonly color: string | null;
@@ -44,7 +46,16 @@ export type TreeRow = {
   readonly command: RowCommand | null;
 };
 
-export type TaskContextValue = 'turboTask' | 'turboTask.running';
+/** A kind token (`turboTask`, `turboScript`), then at most one state token; menus match them by prefix (spec 1c-a §4.12). */
+export type TaskContextValue = 'turboTask' | 'turboTask.running' | 'turboTask.cached' | 'turboScript';
+
+export type EndedState = Exclude<RunState, 'running'>;
+
+/** The icon and the description prefix of a running task: `running` or `continuous`. */
+export type RunningKind = {
+  readonly icon: IconSpec;
+  readonly prefix: string;
+};
 
 export type TaskDisplay = {
   readonly icon: IconSpec;

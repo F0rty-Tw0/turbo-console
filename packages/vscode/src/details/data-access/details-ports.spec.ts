@@ -54,7 +54,7 @@ vi.mock('vscode', () => {
 });
 
 const SCRIPT_NONCE = /<script nonce="([^"]+)"/;
-const RUN_VIEW_STUB: RunView = { iconId: 'tools', colorVar: null, text: '', isRunning: false };
+const RUN_VIEW_STUB: RunView = { iconId: 'tools', colorVar: null, text: '', isRunning: false, elapsedMs: null, isSpinning: false };
 const MESSAGE: RunStateMessage = { type: 'runState', taskId: 'a#build', run: RUN_VIEW_STUB };
 
 const rootOf = (file: string): string | null => {

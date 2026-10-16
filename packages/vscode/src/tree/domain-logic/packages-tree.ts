@@ -93,7 +93,8 @@ export class PackagesTree {
   }
 
   private rowContext(): RowContext {
-    const context: RowContext = { mode: this.mode, runs: this.ports.runs, views: this.viewOf, scopeShown: this.scopeShown };
+    const { runs, wallNow } = this.ports;
+    const context: RowContext = { mode: this.mode, runs, views: this.viewOf, scopeShown: this.scopeShown, now: wallNow() };
 
     return context;
   }

@@ -13,7 +13,8 @@ export const detailsPortsMock = (): DetailsPorts => {
     execute,
     setPanelVisible: vi.fn(),
     info: vi.fn(),
-    log: vi.fn()
+    log: vi.fn(),
+    now: () => 0
   };
 
   return ports;

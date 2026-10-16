@@ -8,23 +8,37 @@ import { RUN_ENTRY_STUB } from '../test/stubs/run.stub.ts';
 const ENDED: RunEntry = { ...RUN_ENTRY_STUB, state: 'failed', endedAt: 4000, exitCode: 1 };
 
 describe('FEATURE: end state of a run', () => {
-  describe('GIVEN the user pressed Stop', () => {
+  describe.each([false, true])('GIVEN the user pressed Stop on a task whose persistent flag is %s', (persistent) => {
     it.each([1, 0, 129, undefined])('WHEN the process ends with exit code %s THEN the run is stopped', (exitCode) => {
-      expect(endStateOf(true, exitCode)).toBe('stopped');
+      expect(endStateOf(true, exitCode, persistent)).toBe('stopped');
     });
   });
 
-  describe('GIVEN no Stop', () => {
+  describe('GIVEN no Stop on a task that is not continuous', () => {
     it('WHEN the process ends with exit code 0 THEN the run passed', () => {
-      expect(endStateOf(false, 0)).toBe('passed');
+      expect(endStateOf(false, 0, false)).toBe('passed');
     });
 
     it.each([1, 2, -1])('WHEN the process ends with exit code %d THEN the run failed', (exitCode) => {
-      expect(endStateOf(false, exitCode)).toBe('failed');
+      expect(endStateOf(false, exitCode, false)).toBe('failed');
     });
 
     it('WHEN the process ends with no exit code THEN the run failed', () => {
-      expect(endStateOf(false, undefined)).toBe('failed');
+      expect(endStateOf(false, undefined, false)).toBe('failed');
+    });
+  });
+
+  describe('GIVEN no Stop on a continuous task', () => {
+    it('WHEN the process ends with exit code 0 (Ctrl+C in its terminal) THEN the run is stopped', () => {
+      expect(endStateOf(false, 0, true)).toBe('stopped');
+    });
+
+    it('WHEN the process ends with no exit code (its terminal killed) THEN the run is stopped', () => {
+      expect(endStateOf(false, undefined, true)).toBe('stopped');
+    });
+
+    it.each([1, 2, -1])('WHEN the process ends with exit code %d (it crashed) THEN the run failed', (exitCode) => {
+      expect(endStateOf(false, exitCode, true)).toBe('failed');
     });
   });
 });

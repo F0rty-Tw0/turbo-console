@@ -4,11 +4,11 @@ import { PanelDryRun } from './panel-dry-run.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry, Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { CommandMessage, DetailsInput, DetailsPorts, PanelKey } from '../common/details.type.ts';
+import type { CommandMessage, DetailsPorts, PanelKey } from '../common/details.type.ts';
 import { commandOf } from '../utils/details-command.util.ts';
 import { cardTaskIdsOf, droppedMessageText, parseWebviewMessage } from '../utils/details-message.util.ts';
-import { toDetailsState } from '../utils/details-state.util.ts';
-import { toRunView } from '../utils/run-view.util.ts';
+import { detailsInputOf, toDetailsState } from '../utils/details-state.util.ts';
+import { liveRunViewOf } from '../utils/run-view.util.ts';
 
 /**
  * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
@@ -139,7 +139,7 @@ export class DetailsSession {
 
     if (!isOwn || !this.canPost()) return;
 
-    const run = toRunView(entry);
+    const run = liveRunViewOf(this.roots.get(entry.root)?.state.model ?? null, entry, this.ports.now());
     const message: HostMessage = { type: 'runState', taskId: entry.taskId, run };
 
     this.ports.post(message);
@@ -211,8 +211,8 @@ export class DetailsSession {
 
     if (!this.isStarted || entry === undefined) return null;
 
-    const input: DetailsInput = { ...this.key, state: entry.state, dryRun: this.dryRun.result, runs: this.runs.get };
+    const base = { ...this.key, state: entry.state, dryRun: this.dryRun.result, runs: this.runs.get };
 
-    return toDetailsState(input);
+    return toDetailsState(detailsInputOf(base, this.ports.now()));
   }
 }

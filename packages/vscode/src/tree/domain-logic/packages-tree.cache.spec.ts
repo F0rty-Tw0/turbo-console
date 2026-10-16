@@ -29,7 +29,7 @@ const fixtureOf = (folders: RootFolder[], mode: TreeMode, make: (folder: RootFol
   const store = new RootStore();
   const fire = vi.fn();
   const treeVisible = new Map<string, Span>();
-  const ports: TreePorts = { runs: () => undefined, fire, treeVisible, now: () => 7 };
+  const ports: TreePorts = { runs: () => undefined, fire, treeVisible, now: () => 7, wallNow: () => 7 };
   const tree = new PackagesTree(store, mode, ports);
 
   store.set(folders, make);

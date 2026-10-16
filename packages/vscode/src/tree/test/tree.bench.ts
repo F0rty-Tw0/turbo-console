@@ -42,7 +42,7 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode): BenchDe
   const state = stateOf(model);
   const build = (): unknown => {
     const views = new ModelViews();
-    const context: RowContext = { mode, runs: NEVER_RAN, views: (loaded) => views.of(loaded), scopeShown: false };
+    const context: RowContext = { mode, runs: NEVER_RAN, views: (loaded) => views.of(loaded), scopeShown: false, now: 0 };
 
     return allRows(state, context);
   };

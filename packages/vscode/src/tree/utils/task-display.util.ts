@@ -1,14 +1,31 @@
-import type { RunMatch } from '@turbo-console/core';
+import type { TaskNode } from '@turbo-console/core';
+import { durationText, elapsedText } from '@turbo-console/webview-ui';
 
-import type { RunEntry, RunState } from '../../run/common/run.type.ts';
-import { secondsText, settledMatchOf } from '../../run/utils/run-result.util.ts';
-import { FAILED_ICON, IDLE_ICON, PASSED_ICON, RUNNING_ICON, STOPPED_ICON } from '../common/icon.const.ts';
-import type { IconSpec, TaskContextValue, TaskDisplay } from '../common/tree-row.type.ts';
+import type { RunEntry } from '../../run/common/run.type.ts';
+import { settledMatchOf } from '../../run/utils/run-result.util.ts';
+import {
+  CONTINUOUS_IDLE_ICON,
+  CONTINUOUS_RUNNING_ICON,
+  FAILED_ICON,
+  IDLE_ICON,
+  NOT_TURBO_ICON,
+  PASSED_ICON,
+  RUNNING_ICON,
+  STOPPED_ICON
+} from '../common/icon.const.ts';
+import type { EndedState, IconSpec, RunningKind, TaskContextValue, TaskDisplay } from '../common/tree-row.type.ts';
 
 const IDLE: TaskDisplay = { icon: IDLE_ICON, description: '', contextValue: 'turboTask' };
 
-const ICONS: Readonly<Record<RunState, IconSpec>> = {
-  running: RUNNING_ICON,
+const CONTINUOUS_IDLE: TaskDisplay = { icon: CONTINUOUS_IDLE_ICON, description: 'continuous', contextValue: 'turboTask' };
+
+const NOT_TURBO_IDLE: TaskDisplay = { icon: NOT_TURBO_ICON, description: 'not a turbo task', contextValue: 'turboScript' };
+
+const TURBO_RUNNING: RunningKind = { icon: RUNNING_ICON, prefix: 'running' };
+
+const CONTINUOUS_RUNNING: RunningKind = { icon: CONTINUOUS_RUNNING_ICON, prefix: 'continuous' };
+
+const ENDED_ICONS: Readonly<Record<EndedState, IconSpec>> = {
   passed: PASSED_ICON,
   failed: FAILED_ICON,
   stopped: STOPPED_ICON,
@@ -17,43 +34,85 @@ const ICONS: Readonly<Record<RunState, IconSpec>> = {
 
 const exitText = (exitCode: number | null): string => (exitCode === null ? 'no exit code' : `exit ${exitCode}`);
 
-const passedText = (match: RunMatch | null): string => {
-  if (match === null) return 'exit 0';
-
-  const seconds = secondsText(match.durationMs);
-
-  return match.cache === null ? seconds : `${seconds} · ${match.cache}`;
-};
-
-const failedText = (exitCode: number | null, match: RunMatch | null): string => {
-  const exit = exitText(exitCode);
-
-  return match === null ? exit : `${exit} · ${secondsText(match.durationMs)}`;
-};
-
-const descriptionOf = (entry: RunEntry): string => {
+const passedText = (entry: RunEntry): string => {
   const match = settledMatchOf(entry);
 
-  switch (entry.state) {
-    case 'running':
-      return 'running…';
-    case 'passed':
-      return passedText(match);
-    case 'failed':
-      return failedText(entry.exitCode, match);
-    case 'stopped':
-      return 'stopped';
-    case 'failed-to-start':
-      return 'failed to start';
-  }
+  if (match === null) return 'exit 0';
+
+  const duration = durationText(match.durationMs);
+
+  return match.cache === 'HIT' ? `${duration} · cached` : duration;
 };
 
-/** Spec §4.5 step 7: icon, description and the context value (`turboTask.running` offers Stop) of a task item. */
-export const taskDisplay = (entry: RunEntry | undefined): TaskDisplay => {
-  if (entry === undefined) return IDLE;
+const failedText = (entry: RunEntry): string => {
+  const exit = exitText(entry.exitCode);
+  const match = settledMatchOf(entry);
 
-  const contextValue: TaskContextValue = entry.state === 'running' ? 'turboTask.running' : 'turboTask';
-  const display: TaskDisplay = { icon: ICONS[entry.state], description: descriptionOf(entry), contextValue };
+  return match === null ? exit : `${exit} · ${durationText(match.durationMs)}`;
+};
+
+/** A stopped run is never matched: its length is click to end. */
+const stoppedText = (entry: RunEntry): string => {
+  const { endedAt } = entry;
+
+  if (endedAt === null) return 'stopped';
+
+  return `stopped · ${durationText(endedAt - entry.launchedAt)}`;
+};
+
+const failedToStartText = (): string => 'failed to start';
+
+const ENDED_TEXTS: Readonly<Record<EndedState, (entry: RunEntry) => string>> = {
+  passed: passedText,
+  failed: failedText,
+  stopped: stoppedText,
+  'failed-to-start': failedToStartText
+};
+
+const idleDisplayOf = (task: TaskNode): TaskDisplay => {
+  if (!task.isTurboTask) return NOT_TURBO_IDLE;
+
+  return task.persistent ? CONTINUOUS_IDLE : IDLE;
+};
+
+/** The current kind decides; a node that turned non-turbo mid-run has no running kind, so the launch node decides. */
+export const runningKindOf = (task: TaskNode, entry: RunEntry): RunningKind => {
+  const isContinuous = task.isTurboTask ? task.persistent : entry.task.persistent;
+
+  return isContinuous ? CONTINUOUS_RUNNING : TURBO_RUNNING;
+};
+
+/** A task that is non-turbo now loses Run and Copy once its run ended; only a matched cache hit offers the cached actions. */
+const endedContextOf = (task: TaskNode, entry: RunEntry): TaskContextValue => {
+  if (!task.isTurboTask) return 'turboScript';
+
+  const isCached = entry.state === 'passed' && settledMatchOf(entry)?.cache === 'HIT';
+
+  return isCached ? 'turboTask.cached' : 'turboTask';
+};
+
+const runningDisplayOf = (task: TaskNode, entry: RunEntry, now: number): TaskDisplay => {
+  const { icon, prefix } = runningKindOf(task, entry);
+  const description = `${prefix} · ${elapsedText(now - entry.launchedAt)}`;
+  const display: TaskDisplay = { icon, description, contextValue: 'turboTask.running' };
+
+  return display;
+};
+
+/**
+ * Spec 1c-a §4.5: icon, description and context value of a task item. The kind comes from `task`, the current model
+ * node; a live run always shows its clock (`now − launchedAt`, wall clock) and offers Stop, whatever the kind says now.
+ */
+export const taskDisplay = (task: TaskNode, entry: RunEntry | undefined, now: number): TaskDisplay => {
+  if (entry === undefined) return idleDisplayOf(task);
+
+  const { state } = entry;
+
+  if (state === 'running') return runningDisplayOf(task, entry, now);
+
+  const description = ENDED_TEXTS[state](entry);
+  const contextValue = endedContextOf(task, entry);
+  const display: TaskDisplay = { icon: ENDED_ICONS[state], description, contextValue };
 
   return display;
 };

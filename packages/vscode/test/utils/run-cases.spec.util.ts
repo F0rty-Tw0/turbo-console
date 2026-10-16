@@ -18,7 +18,7 @@ const BUILD_TASK = 'build';
 
 const FAIL_SCRIPT = 'node -e "process.exit(1)"';
 
-const PASSED_DESCRIPTION = /^\d+\.\ds · (HIT|MISS)$/u;
+const PASSED_DESCRIPTION = /^\d+\.\ds( · cached)?$/u;
 
 /** Spec §4.5: click to process started. */
 const RUN_START_BUDGET_MS = 300;

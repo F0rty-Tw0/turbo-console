@@ -2,9 +2,17 @@ import type { RunToMatch } from '@turbo-console/core';
 
 import type { RunEntry, RunState } from '../common/run.type.ts';
 
-/** Spec §4.5 step 6: Stop wins whatever the code (turbo may exit non-zero on the hang-up); no exit code is a failure. */
-export const endStateOf = (stopRequested: boolean, exitCode: number | undefined): RunState => {
+/**
+ * Spec 1c-a §4.3: Stop wins whatever the code (turbo may exit non-zero on the hang-up). A continuous task (`persistent`,
+ * read from the node the run was launched with) ended by Ctrl+C (exit 0) or a killed terminal (no exit code) was
+ * stopped by the user, never failed; any other task with no exit code failed.
+ */
+export const endStateOf = (stopRequested: boolean, exitCode: number | undefined, persistent: boolean): RunState => {
   if (stopRequested) return 'stopped';
+
+  const isUserEnd = exitCode === 0 || exitCode === undefined;
+
+  if (persistent && isUserEnd) return 'stopped';
 
   return exitCode === 0 ? 'passed' : 'failed';
 };
