@@ -1,8 +1,8 @@
-import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
+import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 
 import { folderTree } from './folder-tree.util.ts';
 import { packageMapOf } from './package-map.util.ts';
-import { isVisibleTask } from './task-rows.util.ts';
+import { isLiveScript, isOfferedTask } from './script-task.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
@@ -10,7 +10,12 @@ import type { ModelView } from '../common/model-view.type.ts';
 
 const SCOPED_NAME = /^@[^/]+\/(.+)$/u;
 
-export const isShownPackage = (pkg: PackageNode): boolean => pkg.tasks.some(isVisibleTask);
+/** Spec 1c-b §4.1: an offered task, or (scripts hidden) a script whose id is live under the package's folder root. */
+export const isShownPackage = (pkg: PackageNode, scriptsShown: boolean, liveOfRoot: ReadonlySet<string>): boolean => {
+  const isShownTask = (task: TaskNode): boolean => isOfferedTask(task, scriptsShown) || isLiveScript(task, liveOfRoot);
+
+  return pkg.tasks.some(isShownTask);
+};
 
 /** The name after `@scope/`, or `null` for a name with no scope (`@a/` and `@x` have none). */
 const restOf = (name: string): string | null => {
@@ -116,25 +121,26 @@ const packagesBelowOf = (folders: FolderTree): Map<string, number> => {
   return counts;
 };
 
-const visibleCountOf = (pkg: PackageNode): [string, number] => {
+const offeredCountOf = (pkg: PackageNode, scriptsShown: boolean): [string, number] => {
   let count = 0;
 
   for (const task of pkg.tasks) {
-    const isVisible = isVisibleTask(task);
+    const isOffered = isOfferedTask(task, scriptsShown);
 
-    if (isVisible) count += 1;
+    if (isOffered) count += 1;
   }
 
   return [pkg.name, count];
 };
 
-export const modelViewOf = (model: WorkspaceModel): ModelView => {
-  const shown = model.packages.filter(isShownPackage);
+export const modelViewOf = (model: WorkspaceModel, scriptsShown: boolean, liveOfRoot: ReadonlySet<string>): ModelView => {
+  const isShown = (pkg: PackageNode): boolean => isShownPackage(pkg, scriptsShown, liveOfRoot);
+  const shown = model.packages.filter(isShown);
   const packages = packageMapOf(shown);
   const folders = folderTree(shown);
   const bareTexts = bareTextsOf(shown);
   const packagesBelow = packagesBelowOf(folders);
-  const counts = shown.map(visibleCountOf);
+  const counts = shown.map((pkg) => offeredCountOf(pkg, scriptsShown));
   const visibleTaskCounts = new Map(counts);
   const view: ModelView = { packages, folders, bareTexts, packagesBelow, visibleTaskCounts };
 

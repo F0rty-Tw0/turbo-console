@@ -24,7 +24,16 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
       this.emitter.fire(refresh);
     };
     const { runs, treeVisible, scripts } = deps;
-    const ports: TreePorts = { runs: runs.get, fire, treeVisible, now: () => performance.now(), wallNow: () => Date.now() };
+    const scriptsShown = (): boolean => scripts.isShown();
+    const ports: TreePorts = {
+      runs: runs.get,
+      scriptsShown,
+      runningIds: runs.runningIds,
+      fire,
+      treeVisible,
+      now: () => performance.now(),
+      wallNow: () => Date.now()
+    };
 
     this.onDidChangeTreeData = this.emitter.event;
     this.tree = new PackagesTree(store, mode, ports);

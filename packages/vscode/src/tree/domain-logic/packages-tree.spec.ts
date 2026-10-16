@@ -10,6 +10,7 @@ import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode } from '../common/tree-row.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
+import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 
 const OTHER_FOLDER: RootFolder = { root: '/other', name: 'other' };
 
@@ -31,7 +32,7 @@ const fixtureOf = (folders: RootFolder[], mode: TreeMode, make: (folder: RootFol
   const store = new RootStore();
   const fire = vi.fn();
   const treeVisible = new Map<string, Span>();
-  const ports: TreePorts = { runs: () => undefined, fire, treeVisible, now: () => 7, wallNow: () => 7 };
+  const ports: TreePorts = { runs: () => undefined, ...SCRIPTS_HIDDEN_PORTS, fire, treeVisible, now: () => 7, wallNow: () => 7 };
   const tree = new PackagesTree(store, mode, ports);
 
   store.set(folders, make);
@@ -202,7 +203,14 @@ describe('FEATURE: packages tree', () => {
   describe('GIVEN a single root whose first answer lands while the top level waits for it', () => {
     it('WHEN the top level is listed THEN it holds the packages of that answer', async () => {
       const store = new RootStore();
-      const ports: TreePorts = { runs: () => undefined, fire: vi.fn(), treeVisible: new Map(), now: () => 7, wallNow: () => 7 };
+      const ports: TreePorts = {
+        runs: () => undefined,
+        ...SCRIPTS_HIDDEN_PORTS,
+        fire: vi.fn(),
+        treeVisible: new Map(),
+        now: () => 7,
+        wallNow: () => 7
+      };
       const tree = new PackagesTree(store, 'list', ports);
       const answering = (): Coordinator => {
         const base = coordinatorMock();

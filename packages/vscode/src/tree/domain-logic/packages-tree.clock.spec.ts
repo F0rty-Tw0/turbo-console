@@ -8,6 +8,7 @@ import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
+import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 
 const WALL_NOW = 1_000_000;
 
@@ -31,7 +32,14 @@ describe('FEATURE: packages tree clock', () => {
   describe('GIVEN a running task, a span clock reading 5 and a wall clock 12 345 ms after its launch', () => {
     it('WHEN its row is read THEN the elapsed time counts on the wall clock, the base of the launch time', async () => {
       const store = new RootStore();
-      const ports: TreePorts = { runs: () => RUNNING, fire: vi.fn(), treeVisible: new Map(), now: () => 5, wallNow: () => WALL_NOW };
+      const ports: TreePorts = {
+        runs: () => RUNNING,
+        ...SCRIPTS_HIDDEN_PORTS,
+        fire: vi.fn(),
+        treeVisible: new Map(),
+        now: () => 5,
+        wallNow: () => WALL_NOW
+      };
       const tree = new PackagesTree(store, 'list', ports);
 
       store.set([ROOT_FOLDER_STUB], coordinatorMock);

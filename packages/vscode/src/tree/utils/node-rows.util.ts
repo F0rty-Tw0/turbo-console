@@ -38,7 +38,7 @@ const dirOf = (view: ModelView, node: TreeNode): FolderDir | undefined => {
 };
 
 const modelChildren = (root: string, model: WorkspaceModel, node: TreeNode, context: RowContext): TreeRow[] => {
-  const view = context.views(model);
+  const view = context.views(model, context.scriptsShown, context.live(root));
   const pkg = packageOf(view, node.packageName);
 
   if (node.kind === 'pkg' && pkg !== undefined) return taskRows(root, pkg, context);
@@ -78,7 +78,7 @@ export const goneRowOf = (node: TreeNode): TreeRow => {
 };
 
 const modelRow = (root: string, model: WorkspaceModel, node: TreeNode, context: RowContext): TreeRow | undefined => {
-  const view = context.views(model);
+  const view = context.views(model, context.scriptsShown, context.live(root));
   const dir = dirOf(view, node);
 
   if (dir !== undefined) return dirRow(root, dir, view);

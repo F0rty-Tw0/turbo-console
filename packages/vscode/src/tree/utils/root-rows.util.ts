@@ -61,7 +61,7 @@ const listRowsOf = (root: string, view: ModelView, scopeShown: boolean): TreeRow
 const packageRowsOf = (root: string, model: WorkspaceModel, context: RowContext): TreeRow[] => {
   if (model.packages.length === 0) return messageRows(root, 'no-packages');
 
-  const view = context.views(model);
+  const view = context.views(model, context.scriptsShown, context.live(root));
 
   if (view.packages.size === 0) return messageRows(root, 'no-shown-packages');
 
@@ -135,7 +135,7 @@ export const rootRowOf = (state: RootState, context: RowContext): TreeRow => {
 
   if (model === null) return rootNodeRow(state.folder, null);
 
-  const view = context.views(model);
+  const view = context.views(model, context.scriptsShown, context.live(state.folder.root));
 
   return rootNodeRow(state.folder, view);
 };

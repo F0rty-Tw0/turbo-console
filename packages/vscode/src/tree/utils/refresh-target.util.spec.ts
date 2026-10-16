@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest';
 
 import { refreshTarget } from './refresh-target.util.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
+import type { LiveIds } from '../../run/common/run.type.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
+
+const NOTHING_LIVE: LiveIds = () => new Set();
 
 const SHOWN: RootChange = {
   root: '/ws',
@@ -62,7 +65,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN the hidden package gains its first visible task THEN the root is redrawn', () => {
       const change = changeOf([HIDDEN_UI], [packageOf('ui', [TASK_NODE_STUB])]);
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -70,7 +73,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN an unscoped package sharing a shown scoped name becomes shown THEN the root is redrawn', () => {
       const change = changeOf([SCOPED_UI, HIDDEN_UI], [SCOPED_UI, packageOf('ui', [ATOM_TASK, TASK_NODE_STUB])]);
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -78,7 +81,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN an unscoped package sharing a shown scoped name is added THEN the root is redrawn', () => {
       const change = changeOf([SCOPED_UI], [SCOPED_UI, packageOf('ui', [TASK_NODE_STUB])]);
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -87,7 +90,7 @@ describe('FEATURE: refresh target', () => {
       const edited: TaskNode = { ...ATOM_TASK, command: 'edited' };
       const change = changeOf([SCOPED_UI, HIDDEN_UI], [SCOPED_UI, packageOf('ui', [edited])]);
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toStrictEqual(['ui']);
     });
@@ -96,7 +99,7 @@ describe('FEATURE: refresh target', () => {
       const edited: TaskNode = { ...TASK_NODE_STUB, command: 'edited' };
       const change = changeOf([SCOPED_UI, HIDDEN_UI], [packageOf('@a/ui', [edited]), HIDDEN_UI]);
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toStrictEqual(['@a/ui']);
     });
@@ -106,7 +109,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN a binary error comes in with the same model kept THEN the root is redrawn', () => {
       const change: RootChange = { ...SHOWN, errorAfter: 'binary:not-found' };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -114,7 +117,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN a load error comes in with the model kept THEN the root is redrawn', () => {
       const change: RootChange = { ...SHOWN, errorAfter: 'load:failed' };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -122,7 +125,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN the model goes away THEN the root is redrawn', () => {
       const change: RootChange = { ...SHOWN, after: null };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -130,7 +133,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN a package is added THEN the root is redrawn', () => {
       const change: RootChange = { ...SHOWN, after: withAddedPackage() };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -138,7 +141,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN a shown package loses its last visible task THEN the root is redrawn', () => {
       const change = changeOf([SCOPED_UI, packageOf('ui', [TASK_NODE_STUB])], [SCOPED_UI, HIDDEN_UI]);
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -146,7 +149,7 @@ describe('FEATURE: refresh target', () => {
     it("WHEN one package's script changes with no errors THEN only that package is redrawn", () => {
       const change: RootChange = { ...SHOWN, after: withChangedScript() };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toStrictEqual(['a']);
     });
@@ -154,7 +157,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN an identical model comes in with no errors THEN nothing is redrawn', () => {
       const change: RootChange = { ...SHOWN, after: copyOf(WORKSPACE_MODEL_STUB) };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toStrictEqual([]);
     });
@@ -164,7 +167,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN a model identical to the shown one clears the error THEN the root is redrawn', () => {
       const change: RootChange = { ...SHOWN, after: copyOf(WORKSPACE_MODEL_STUB), errorBefore: 'load:failed' };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -178,7 +181,7 @@ describe('FEATURE: refresh target', () => {
         errorAfter: 'binary:version-unsupported'
       };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });
@@ -188,7 +191,7 @@ describe('FEATURE: refresh target', () => {
     it('WHEN its first model comes in THEN the root is redrawn', () => {
       const change: RootChange = { ...SHOWN, before: null };
 
-      const target = refreshTarget(change);
+      const target = refreshTarget(change, false, NOTHING_LIVE);
 
       expect(target).toBe('root');
     });

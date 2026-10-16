@@ -32,7 +32,7 @@ export const allRows = (state: RootState, context: RowContext): TreeRow[] => {
   if (!hasPackages) return top;
 
   const { root } = state.folder;
-  const view = context.views(model);
+  const view = context.views(model, context.scriptsShown, context.live(root));
   const dirs = dirsBelow(view.folders, context.mode);
   const dirChildren = dirs.flatMap((dir) => dirRows(root, dir, view, context.scopeShown));
   const shown = Array.from(view.packages.values());

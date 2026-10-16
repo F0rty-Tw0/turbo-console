@@ -15,7 +15,8 @@ export class TreeRefresher {
   }
 
   public refreshFor(change: RootChange): void {
-    const target = refreshTarget(change);
+    const { scriptsShown, live } = this.deps.rowContext();
+    const target = refreshTarget(change, scriptsShown, live);
 
     this.fireTarget(change.root, target);
     this.prune(change.root);

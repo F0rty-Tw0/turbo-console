@@ -19,7 +19,7 @@ export class PackagesTree {
   private readonly ports: TreePorts;
   private readonly cache = new Map<string, TreeNode>();
   private readonly views = new ModelViews();
-  private readonly viewOf: ModelViewsOf = (model) => this.views.of(model);
+  private readonly viewOf: ModelViewsOf = (model, scriptsShown, live) => this.views.of(model, scriptsShown, live);
   private readonly refresher: TreeRefresher;
   private mode: TreeMode;
   private scopeShown = false;
@@ -98,8 +98,16 @@ export class PackagesTree {
   }
 
   private rowContext(): RowContext {
-    const { runs, wallNow } = this.ports;
-    const context: RowContext = { mode: this.mode, runs, views: this.viewOf, scopeShown: this.scopeShown, now: wallNow() };
+    const { runs, runningIds, scriptsShown, wallNow } = this.ports;
+    const context: RowContext = {
+      mode: this.mode,
+      runs,
+      views: this.viewOf,
+      scopeShown: this.scopeShown,
+      scriptsShown: scriptsShown(),
+      live: runningIds,
+      now: wallNow()
+    };
 
     return context;
   }
