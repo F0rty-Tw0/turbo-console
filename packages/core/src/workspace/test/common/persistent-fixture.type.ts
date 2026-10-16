@@ -5,3 +5,6 @@ export type PersistentFixturePackage = {
   readonly scripts: string[];
   readonly turbo: string | null;
 };
+
+/** `p1`: the P1, P1b and P1c root config (spec §5.2); `p1d`: the same plus a root `@p/b#dev` key. */
+export type PersistentVariant = 'p1' | 'p1d';
