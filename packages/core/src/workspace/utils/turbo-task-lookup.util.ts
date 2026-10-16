@@ -19,3 +19,20 @@ export const dirOfName = (lookup: TurboTaskLookup, name: string): string | undef
 
   return packageDirOf(pkg);
 };
+
+/**
+ * A root key names a task of one package (`web#build`) or of every package but the root (`build`): turbo 2.11.7 runs
+ * the root package's `build` script only for a `//#build` key.
+ */
+export const rootKeyTaskOf = (key: string, packageName: string): string | null => {
+  const prefix = `${packageName}#`;
+  const isOwn = key.startsWith(prefix);
+
+  if (isOwn) return key.slice(prefix.length);
+
+  const isQualified = key.includes('#');
+
+  if (isQualified || packageName === ROOT_NAME) return null;
+
+  return key;
+};

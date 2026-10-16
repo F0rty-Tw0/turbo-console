@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 
-import { ROOT_DIR, ROOT_NAME, dirOfName, packageDirOf } from './turbo-task-lookup.util.ts';
-import { bareTasksOf, persistentOf } from './turbo-task-persistent.util.ts';
+import { ROOT_DIR, ROOT_NAME, dirOfName, packageDirOf, rootKeyTaskOf } from './turbo-task-lookup.util.ts';
+import { applyPersistent, bareTasksOf } from './turbo-task-persistent.util.ts';
 import type {
   RootTaskIndex,
   TaskPresence,
@@ -11,6 +11,7 @@ import type {
   TurboTaskLookup,
   TurboTaskPackage
 } from '../common/turbo-config.type.ts';
+import { NOT_PERSISTENT_FACTS } from '../common/turbo-task.const.ts';
 
 /** Read only, never pushed to: a chain is copied into its child's with a spread. */
 const EMPTY_CHAIN: TurboConfigOk[] = [];
@@ -21,14 +22,15 @@ const dirEntry = (config: TurboConfigFile): DirEntry => [posix.dirname(config.pa
 
 const nameEntry = (pkg: TurboTaskPackage): [string, TurboTaskPackage] => [pkg.name, pkg];
 
-const applyPresence = (names: Set<string>, name: string, presence: TaskPresence): void => {
+/** A kept task starts as not persistent; `applyPersistent` resolves the few tasks a config sets it for. */
+const applyPresence = (tasks: Map<string, TurboTaskFacts>, name: string, presence: TaskPresence): void => {
   if (presence === 'excluded') {
-    names.delete(name);
+    tasks.delete(name);
 
     return;
   }
 
-  names.add(name);
+  tasks.set(name, NOT_PERSISTENT_FACTS);
 };
 
 /** The package names a `<pkg>#<task>` root key names: npm names hold no `#`, so the name ends at the first one. */
@@ -66,28 +68,11 @@ export const turboTaskLookupOf = (configs: TurboConfigFile[], packages: TurboTas
   return lookup;
 };
 
-/**
- * A root key names a task of one package (`web#build`) or of every package but the root (`build`): turbo 2.11.7 runs
- * the root package's `build` script only for a `//#build` key.
- */
-const rootKeyTaskOf = (key: string, packageName: string): string | null => {
-  const prefix = `${packageName}#`;
-  const isOwn = key.startsWith(prefix);
-
-  if (isOwn) return key.slice(prefix.length);
-
-  const isQualified = key.includes('#');
-
-  if (isQualified || packageName === ROOT_NAME) return null;
-
-  return key;
-};
-
-const applyRoot = (names: Set<string>, root: TurboConfigOk, packageName: string): void => {
+const applyRoot = (tasks: Map<string, TurboTaskFacts>, root: TurboConfigOk, packageName: string): void => {
   for (const [key, presence] of Object.entries(root.tasks)) {
     const task = rootKeyTaskOf(key, packageName);
 
-    if (task !== null) applyPresence(names, task, presence);
+    if (task !== null) applyPresence(tasks, task, presence);
   }
 };
 
@@ -142,12 +127,12 @@ const packageChainOf = (lookup: TurboTaskLookup, dir: string): TurboConfigOk[] |
   return chainOf(lookup, dir, seen);
 };
 
-const applyTasks = (names: Set<string>, config: TurboConfigOk): void => {
-  for (const [name, presence] of Object.entries(config.tasks)) applyPresence(names, name, presence);
+const applyTasks = (tasks: Map<string, TurboTaskFacts>, config: TurboConfigOk): void => {
+  for (const [name, presence] of Object.entries(config.tasks)) applyPresence(tasks, name, presence);
 };
 
 /**
- * The tasks turbo 2.11.7 defines, and so runs, for `pkg`, each with its resolved `persistent` (`persistentOf`). The
+ * The tasks turbo 2.11.7 defines, and so runs, for `pkg`, each with its resolved `persistent` (`applyPersistent`). The
  * first config with an entry for a name decides presence, in this order: the package's own config, the root config's
  * bare and `<pkg>#<task>` keys, then the parent chain of `chainOf`; an entry of exactly `{ "extends": false }` drops
  * the task. So a parent's exclusion hides only a task another parent package defines, never a root task. Applied
@@ -173,15 +158,17 @@ export const turboTasksOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): Re
 
   if (chain === null) return null;
 
-  const names = new Set<string>();
+  const tasks = new Map<string, TurboTaskFacts>();
   const [own, ...parents] = chain;
   const lowestFirst = parents.toReversed();
 
-  for (const config of lowestFirst) applyTasks(names, config);
+  for (const config of lowestFirst) applyTasks(tasks, config);
 
-  applyRoot(names, root.config, pkg.name);
+  applyRoot(tasks, root.config, pkg.name);
 
-  if (own !== undefined) applyTasks(names, own);
+  if (own !== undefined) applyTasks(tasks, own);
 
-  return persistentOf(lookup, root.config, pkg, names);
+  applyPersistent(tasks, lookup, root.config, pkg);
+
+  return tasks;
 };
