@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { SettingLevel } from '../common/setting.type.ts';
 import type { TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
@@ -57,13 +58,18 @@ const writeScopeShown = async (context: TreeContext, tree: PackagesTreeApi, valu
 
 /**
  * The scope toggle (spec §4.8): restores the stored choice into the tree and the context key, then registers the two
- * view-title commands. The key is set at registration, so the title icon never shows the wrong state.
+ * view-title commands. The key is sent before `turboConsole.active` makes the view visible, so the view first draws with it
+ * set and the title icon never shows the wrong state. A rejected send goes to the output channel.
  */
-const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi): vscode.Disposable => {
+const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi, output: Output): vscode.Disposable => {
   const stored = context.workspaceState.get(SCOPE_KEY) === true;
 
   tree.setScopeShown(stored);
-  void vscode.commands.executeCommand('setContext', SCOPE_KEY, stored);
+  const setKey = vscode.commands.executeCommand('setContext', SCOPE_KEY, stored);
+
+  setKey.then(undefined, (error: unknown) => {
+    output.error(logTextOf(error));
+  });
 
   const showScope = vscode.commands.registerCommand('turboConsole.showScope', async () => writeScopeShown(context, tree, true));
   const hideScope = vscode.commands.registerCommand('turboConsole.hideScope', async () => writeScopeShown(context, tree, false));
@@ -83,7 +89,7 @@ const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi): vscod
  * `TreeVisibility`.
  */
 export const registerTree = (context: TreeContext, session: Session, tree: PackagesTreeApi, output: Output): VisibleView => {
-  const scope = registerScopeToggle(context, tree);
+  const scope = registerScopeToggle(context, tree, output);
   const view = vscode.window.createTreeView('turboConsole.tree', { treeDataProvider: tree, showCollapseAll: true });
   const unsubscribe = session.store.onDidChange((change) => {
     tree.refreshFor(change);

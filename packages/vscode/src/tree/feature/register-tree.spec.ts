@@ -155,6 +155,18 @@ describe('FEATURE: registerTree scope toggle', () => {
     });
   });
 
+  describe('GIVEN the editor rejects the startup key', () => {
+    it('WHEN the tree registers THEN the failure is logged', async () => {
+      editor.executeCommand.mockRejectedValueOnce(new Error('boom'));
+
+      registerWith();
+
+      await vi.waitFor(() => {
+        expect(output.error).toHaveBeenCalledWith(expect.stringContaining('boom'));
+      });
+    });
+  });
+
   describe('GIVEN a registered tree', () => {
     it('WHEN the subscriptions are disposed THEN both scope commands are unregistered', () => {
       registerWith();
