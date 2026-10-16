@@ -13,7 +13,7 @@ const exceptionOf = (error: unknown): TurboException => {
   return new TurboException('failed', logTextOf(error));
 };
 
-/** Not logged here: the session logs a root's failure once per error key (`newFailureLineOf`). */
+/** Not logged here: the session logs a root's failure once per error key and text (`newFailureLineOf`). */
 const failureOf = (stage: LoadFailure['stage'], error: unknown): LoadFailure => {
   const failure: LoadFailure = { kind: 'error', stage, error: exceptionOf(error), logText: logTextOf(error) };
 

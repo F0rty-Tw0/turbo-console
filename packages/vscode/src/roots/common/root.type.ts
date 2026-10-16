@@ -32,7 +32,7 @@ export type LoadFailure = {
   readonly kind: 'error';
   readonly stage: LoadStage;
   readonly error: TurboException;
-  /** The failure's one log line, taken from the error as thrown, before `error` rebuilt it; the session logs it once per error key. */
+  /** The failure's one log line, taken from the error as thrown, before `error` rebuilt it; the session logs it once per error key and text. */
   readonly logText: string;
 };
 

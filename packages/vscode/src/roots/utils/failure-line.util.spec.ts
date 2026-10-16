@@ -8,6 +8,8 @@ import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const UNSUPPORTED: LoadFailure = loadFailureOf('binary', new TurboException('version-unsupported', 'turbo 2.10.4'));
 
+const SAME_MESSAGE: LoadFailure = loadFailureOf('binary', new TurboException('not-found', 'no turbo'));
+
 const OTHER_MESSAGE: LoadFailure = loadFailureOf('binary', new TurboException('not-found', 'still no turbo'));
 
 describe('FEATURE: log line of a new load failure', () => {
@@ -32,10 +34,16 @@ describe('FEATURE: log line of a new load failure', () => {
       expect(line).toBeNull();
     });
 
-    it('WHEN a failure with the same key and another message arrives THEN there is no line', () => {
-      const line = newFailureLineOf(LOAD_FAILURE_STUB, OTHER_MESSAGE);
+    it('WHEN a new failure with the same key and the same message arrives THEN there is no line', () => {
+      const line = newFailureLineOf(LOAD_FAILURE_STUB, SAME_MESSAGE);
 
       expect(line).toBeNull();
+    });
+
+    it('WHEN a failure with the same key and another message arrives THEN its line is logged', () => {
+      const line = newFailureLineOf(LOAD_FAILURE_STUB, OTHER_MESSAGE);
+
+      expect(line).toBe('turbo not-found: still no turbo');
     });
 
     it('WHEN a failure with another key arrives THEN its line is logged', () => {

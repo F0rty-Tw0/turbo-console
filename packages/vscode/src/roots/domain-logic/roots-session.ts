@@ -152,8 +152,8 @@ export class RootsSession implements Session {
 
   /**
    * Every model that reaches the store logs its warnings, one clean line each (spec §4.3), whether a cache read or a
-   * full load produced it. A failure is logged only when its error key differs from the root's error before it, so a
-   * retried failure is logged once until its key changes or a model clears it; an aborted load never gets here.
+   * full load produced it. A failure is logged only when its error key or log text differs from the root's error before
+   * it, so a retried failure is logged once until it changes or a model clears it; an aborted load never gets here.
    * `CoordinatorPorts.apply` must not throw: a store listener that throws is logged instead.
    */
   private apply(root: string, result: LoadResult, deps: LoadDeps): void {
