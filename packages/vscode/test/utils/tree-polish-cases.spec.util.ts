@@ -9,7 +9,7 @@ import { packageNodes, packageRows } from './tree-polish-tree.spec.util.ts';
 import { packageNodeNamed } from './tree-walk.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { TreeMode } from '../../src/tree/common/tree-row.type.ts';
-import { ADHOC_TASK_ID, DUP_PACKAGE, EMPTY_PACKAGE, POLISH_PACKAGE } from '../common/tree-polish.const.ts';
+import { ADHOC_TASK_ID, DEV_TASK_ID, DUP_PACKAGE, EMPTY_PACKAGE, POLISH_PACKAGE } from '../common/tree-polish.const.ts';
 import type { PackageRowFacts } from '../common/tree-polish.type.ts';
 
 const SCOPE_PREFIX = /^@[^/]+\//u;
@@ -110,6 +110,7 @@ export const scriptRowCase = async (api: TurboConsoleApi): Promise<void> => {
     const keys = children.map((child) => child.key);
 
     assert.equal(api.tree.isScriptsShown(), false);
+    assert.ok(keys.includes(DEV_TASK_ID), `${POLISH_PACKAGE} lists its turbo task ${DEV_TASK_ID}`);
     assert.ok(!kinds.includes('scripts'), `${POLISH_PACKAGE} shows a scripts group`);
     assert.ok(!keys.includes(ADHOC_TASK_ID), `${POLISH_PACKAGE} shows ${ADHOC_TASK_ID}`);
   });
