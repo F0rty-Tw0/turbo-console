@@ -27,7 +27,8 @@ export const taskTargetOf = (value: unknown): TaskTarget | null => {
   return target;
 };
 
-const packageOf = (target: TaskTarget, model: WorkspaceModel | null | undefined): PackageNode | undefined =>
+/** The package `target` names in `model`; `undefined` while there is no model or the package is gone. */
+export const packageOf = (target: TaskTarget, model: WorkspaceModel | null | undefined): PackageNode | undefined =>
   model?.packages.find((node) => node.name === target.packageName);
 
 const taskIn = (target: TaskTarget, pkg: PackageNode | undefined): TaskNode | undefined =>

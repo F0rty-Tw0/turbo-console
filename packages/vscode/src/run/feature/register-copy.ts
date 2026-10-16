@@ -1,12 +1,15 @@
 import { TurboException } from '@turbo-console/core';
-import type { TaskNode } from '@turbo-console/core';
+import type { TaskNode, WorkspaceModel } from '@turbo-console/core';
 
 import type { Roots } from '../../roots/common/coordinator.type.ts';
-import { NAME_NOT_COPYABLE_TEXT, NOT_TURBO_COPY_TEXT, SHELL_NOT_COPYABLE_TEXT } from '../common/copy.const.ts';
+import { NAME_NOT_COPYABLE_TEXT, SHELL_NOT_COPYABLE_TEXT } from '../common/copy.const.ts';
 import type { CopyPorts } from '../common/copy.type.ts';
 import type { CommandRegistry, Disposed } from '../common/run.type.ts';
 import type { ShellKind } from '../common/shell.type.ts';
-import { modelTaskOf, taskTargetOf } from '../utils/run-target.util.ts';
+import { scriptCopiedText } from '../utils/copy-text.util.ts';
+import { modelTaskOf, packageOf, taskTargetOf } from '../utils/run-target.util.ts';
+import { unsafeScriptText } from '../utils/run-text.util.ts';
+import { scriptCommandOf } from '../utils/script-name.util.ts';
 import { copyText, shellKindOf } from '../utils/shell-quote.util.ts';
 
 /** The text to copy; `null` after an info message says why a task, in this shell, has none. Other errors propagate. */
@@ -26,6 +29,27 @@ const textOf = (ports: CopyPorts, task: TaskNode, packageName: string, kind: She
   }
 };
 
+/** Spec 1c-b §4.6: a script copies `<manager> run <name>` and the info says where to run it; a refused name copies nothing. */
+const copyScript = async (ports: CopyPorts, task: TaskNode, model: WorkspaceModel, packagePath: string): Promise<void> => {
+  const text = scriptCommandOf(model.packageManager.name, task.name);
+
+  if (text === null) {
+    ports.info(unsafeScriptText(task.name));
+
+    return;
+  }
+
+  await ports.write(text);
+  ports.info(scriptCopiedText(packagePath));
+};
+
+const copyTurbo = async (ports: CopyPorts, task: TaskNode, packageName: string): Promise<void> => {
+  const kind = shellKindOf(ports.shell());
+  const text = textOf(ports, task, packageName, kind);
+
+  if (text !== null) await ports.write(text);
+};
+
 /** Spec §4.6.6: the command a user would type for the task row `arg`, quoted for their shell; any other argument is ignored. */
 const copyCommand = async (roots: Roots, ports: CopyPorts, arg: unknown): Promise<void> => {
   const target = taskTargetOf(arg);
@@ -34,19 +58,12 @@ const copyCommand = async (roots: Roots, ports: CopyPorts, arg: unknown): Promis
 
   const state = roots.get(target.definition.root)?.state;
   const task = modelTaskOf(target, state);
+  const model = state?.model;
 
-  if (task === undefined) return;
+  if (task === undefined || model === null || model === undefined) return;
 
-  if (!task.isTurboTask) {
-    ports.info(NOT_TURBO_COPY_TEXT);
-
-    return;
-  }
-
-  const kind = shellKindOf(ports.shell());
-  const text = textOf(ports, task, target.packageName, kind);
-
-  if (text !== null) await ports.write(text);
+  if (task.isTurboTask) await copyTurbo(ports, task, target.packageName);
+  else await copyScript(ports, task, model, packageOf(target, model)?.path ?? '');
 };
 
 /** Registers Copy Command for the task rows; `dispose` undoes it. */
