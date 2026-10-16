@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 
 import * as vscode from 'vscode';
 
-import { endedRun, startRun, taskNodeNamed } from './run-wait.spec.util.ts';
+import { taskNodeNamed } from './run-wait.spec.util.ts';
 import { sleep, step, waitFor } from './suite-env.spec.util.ts';
+import { stopRun, withLiveRun } from './tree-polish-live.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { SpawnCounter } from '../common/launch.type.ts';
 import { DEV_TASK_ID, POLISH_PACKAGE } from '../common/tree-polish.const.ts';
@@ -15,39 +16,43 @@ const HIDDEN_WINDOW_MS = 3000;
 /** Long enough for two ticks to show, were the ticker still armed. */
 const IDLE_WINDOW_MS = 2500;
 
+/** The ticks the spawn window covers: the host spawns nothing for any of them. */
+const SPAWN_WINDOW_TICKS = 3;
+
 /**
  * Case 6: the ticker ticks while a run goes and the tree shows, stays flat for 3 s once the tree is hidden, and stays flat
- * with no run once it shows again. Returns the turbo spawns the ticking cost.
+ * with no run once it shows again. Returns the turbo spawns the host made over three ticks.
  */
 export const tickerCase = async (api: TurboConsoleApi, counter: SpawnCounter): Promise<number> => {
   let spawns = Number.NaN;
 
   await step('L9-6: the ticker ticks only while a run goes and the tree shows', async () => {
     const node = await taskNodeNamed(api, POLISH_PACKAGE, DEV_TASK_ID);
-    const launchedAt = await startRun(api, node);
-    const ticks = api.ticker.ticks();
 
-    counter.reset();
-    await waitFor('the ticker grows', () => api.ticker.ticks() > ticks);
-    spawns = counter.count();
+    await withLiveRun(api, node, async ({ launchedAt }) => {
+      const ticks = api.ticker.ticks();
 
-    await vscode.commands.executeCommand('workbench.view.explorer');
-    await waitFor('tree hidden', () => !api.treeVisible());
+      counter.reset();
+      await waitFor('three ticker ticks', () => api.ticker.ticks() >= ticks + SPAWN_WINDOW_TICKS);
+      spawns = counter.count();
 
-    const hiddenTicks = api.ticker.ticks();
+      await vscode.commands.executeCommand('workbench.view.explorer');
+      await waitFor('tree hidden', () => !api.treeVisible());
 
-    await sleep(HIDDEN_WINDOW_MS);
-    assert.equal(api.ticker.ticks(), hiddenTicks);
+      const hiddenTicks = api.ticker.ticks();
 
-    await vscode.commands.executeCommand('turboConsole.stopTask', node);
-    await endedRun(api, node, launchedAt);
-    await vscode.commands.executeCommand('workbench.view.extension.turboConsole');
-    await waitFor('tree visible', () => api.treeVisible());
+      await sleep(HIDDEN_WINDOW_MS);
+      assert.equal(api.ticker.ticks(), hiddenTicks);
 
-    const idleTicks = api.ticker.ticks();
+      await stopRun(api, node, launchedAt);
+      await vscode.commands.executeCommand('workbench.view.extension.turboConsole');
+      await waitFor('tree visible', () => api.treeVisible());
 
-    await sleep(IDLE_WINDOW_MS);
-    assert.equal(api.ticker.ticks(), idleTicks);
+      const idleTicks = api.ticker.ticks();
+
+      await sleep(IDLE_WINDOW_MS);
+      assert.equal(api.ticker.ticks(), idleTicks);
+    });
   });
 
   return spawns;

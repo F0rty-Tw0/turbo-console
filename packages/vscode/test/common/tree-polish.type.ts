@@ -30,8 +30,9 @@ export type RunCost = {
   readonly spawns: number;
 };
 
-/** A continuous run whose process has started, and the terminal that shows it. */
+/** A continuous run whose script has written its pid, and the one terminal that shows it. */
 export type LiveRun = {
   readonly launchedAt: number;
+  readonly pid: number;
   readonly terminal: vscode.Terminal;
 };

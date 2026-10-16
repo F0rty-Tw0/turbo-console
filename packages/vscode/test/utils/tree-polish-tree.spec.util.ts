@@ -36,7 +36,7 @@ export const packageNodes = async (api: TurboConsoleApi): Promise<TreeNode[]> =>
   return packages;
 };
 
-export const labelOf = (item: vscode.TreeItem): string => {
+const labelOf = (item: vscode.TreeItem): string => {
   const { label } = item;
 
   if (typeof label === 'string') return label;

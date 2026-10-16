@@ -8,6 +8,7 @@ import { packageDirOf, setScript, writeEdited } from './package-edit.spec.util.t
 import { assertOneTerminal, assertTerminalKept } from './run-terminal.spec.util.ts';
 import { endedRun, logRunStarts, processStartOf, startRun, taskNodeNamed } from './run-wait.spec.util.ts';
 import { budget, log, step } from './suite-env.spec.util.ts';
+import { descriptionOf } from './tree-polish-tree.spec.util.ts';
 import { whenQuiet } from './watch-wait.spec.util.ts';
 import type { RunEntry } from '../../src/run/common/run.type.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
@@ -30,14 +31,6 @@ type RunScene = {
   readonly task: ShownTask;
   readonly manifest: string;
   readonly manifestText: string;
-};
-
-const descriptionOf = (api: TurboConsoleApi, node: TreeNode): string => {
-  const { description } = api.tree.getTreeItem(node);
-
-  if (typeof description !== 'string') throw new Error(`${node.key} has no description`);
-
-  return description;
 };
 
 /** Runs `node` from the tree and waits for its end, recording the tree events the run fired. */
