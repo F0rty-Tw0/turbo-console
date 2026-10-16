@@ -77,11 +77,11 @@ describe('FEATURE: field texts', () => {
 
   describe('GIVEN a task no turbo config defines', () => {
     it('WHEN the dry run is loading THEN it says it is not a turbo task', () => {
-      expect(definitionText(NOT_TURBO_TASK, 'loading')).toBe('Not a turbo task (no turbo.json entry)');
+      expect(definitionText(NOT_TURBO_TASK, 'loading')).toBe('Not a turbo task: no turbo.json defines it');
     });
 
     it('WHEN the dry run is ready THEN it says it is not a turbo task', () => {
-      expect(definitionText(NOT_TURBO_TASK, 'ready')).toBe('Not a turbo task (no turbo.json entry)');
+      expect(definitionText(NOT_TURBO_TASK, 'ready')).toBe('Not a turbo task: no turbo.json defines it');
     });
   });
 });

@@ -12,7 +12,7 @@ const LOADING_STATE: PackageDetails = { ...READY_STATE, dryRun: 'loading' };
 const ROWS: FieldRow[] = [
   ['Command', 'tsc -b'],
   ['Description', 'Builds the web app'],
-  ['Definition', 'Not a turbo task (no turbo.json entry)'],
+  ['Definition', 'Not a turbo task: no turbo.json defines it'],
   ['Dependents', 'docs#build']
 ];
 
