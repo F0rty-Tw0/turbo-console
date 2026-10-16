@@ -59,10 +59,65 @@ describe('FEATURE: run store running ids', () => {
       expect(store.runningIds('/ws')).toStrictEqual(new Set(['b#lint']));
     });
 
-    it('WHEN the ids are asked twice THEN each answer is its own set', () => {
+    it('WHEN the ids are asked twice with no change THEN the answer is the same set', () => {
       const first = store.runningIds('/ws');
 
-      expect(store.runningIds('/ws')).not.toBe(first);
+      expect(store.runningIds('/ws')).toBe(first);
+    });
+
+    it('WHEN a task starts THEN the answer is a new set holding its id', () => {
+      const before = store.runningIds('/ws');
+
+      store.tryStart(requestOf('/ws', 'd#lint'), 2000);
+
+      expect(store.runningIds('/ws')).not.toBe(before);
+      expect(store.runningIds('/ws')).toStrictEqual(new Set(['a#lint', 'b#lint', 'd#lint']));
+    });
+
+    it('WHEN a run ends THEN the answer is a new set without its id', () => {
+      const before = store.runningIds('/ws');
+
+      store.processEnded(definitionOf('/ws', 'a#lint'), 0, 2000);
+
+      expect(store.runningIds('/ws')).not.toBe(before);
+    });
+
+    it('WHEN a start fails THEN the answer is a new set without its id', () => {
+      const before = store.runningIds('/ws');
+
+      store.failStart(definitionOf('/ws', 'a#lint'), 2000);
+
+      expect(store.runningIds('/ws')).not.toBe(before);
+      expect(store.runningIds('/ws')).toStrictEqual(new Set(['b#lint']));
+    });
+
+    it('WHEN a stop is requested THEN the id stays and the answer is read again', () => {
+      const before = store.runningIds('/ws');
+
+      store.requestStop(definitionOf('/ws', 'a#lint'));
+
+      expect(store.runningIds('/ws')).not.toBe(before);
+      expect(store.runningIds('/ws')).toStrictEqual(new Set(['a#lint', 'b#lint']));
+    });
+
+    it('WHEN a run of /ws changes THEN the answer of /other is the same set', () => {
+      const other = store.runningIds('/other');
+
+      store.processEnded(definitionOf('/ws', 'a#lint'), 0, 2000);
+
+      expect(store.runningIds('/other')).toBe(other);
+    });
+
+    it('WHEN a listener asks during a change THEN it already sees the new ids', () => {
+      const seen: ReadonlySet<string>[] = [];
+
+      store.runningIds('/ws');
+      store.onDidChange(() => {
+        seen.push(store.runningIds('/ws'));
+      });
+      store.processEnded(definitionOf('/ws', 'a#lint'), 0, 2000);
+
+      expect(seen).toStrictEqual([new Set(['b#lint'])]);
     });
 
     it('WHEN an ended task starts again THEN its id is back', () => {

@@ -22,17 +22,19 @@ type RunSlot = {
 export class RunStore {
   private readonly slots = new Map<RunKey, RunSlot>();
   private readonly listeners = new Set<RunListener>();
+  private readonly idsByRoot = new Map<string, ReadonlySet<string>>();
 
   public readonly get: RunLookup = (root, taskId) => this.slots.get(runKeyOf(root, taskId))?.entry;
 
+  /** The same set until a run of `root` changes: the tree asks once per row, so it is built once per change, not per row. */
   public readonly runningIds: LiveIds = (root) => {
-    const ids = new Set<string>();
+    const cached = this.idsByRoot.get(root);
 
-    for (const { entry } of this.slots.values()) {
-      const isLive = entry.root === root && entry.state === 'running';
+    if (cached !== undefined) return cached;
 
-      if (isLive) ids.add(entry.taskId);
-    }
+    const ids = this.runningIdsOf(root);
+
+    this.idsByRoot.set(root, ids);
 
     return ids;
   };
@@ -156,6 +158,18 @@ export class RunStore {
     };
   }
 
+  private runningIdsOf(root: string): ReadonlySet<string> {
+    const ids = new Set<string>();
+
+    for (const { entry } of this.slots.values()) {
+      const isLive = entry.root === root && entry.state === 'running';
+
+      if (isLive) ids.add(entry.taskId);
+    }
+
+    return ids;
+  }
+
   /** The running slot of `definition`; with `launchedAt`, only when it holds that run. */
   private running(definition: RunDefinition, launchedAt?: number): RunSlot | undefined {
     const slot = this.slots.get(runKeyOf(definition.root, definition.id));
@@ -178,8 +192,13 @@ export class RunStore {
     return entry;
   }
 
+  /**
+   * Every change of an entry goes through here, so the running ids of its root are dropped before a listener can ask for
+   * them. `attach` replaces a slot with the same entry and `prune` drops ended ones only: neither changes them.
+   */
   private put(slot: RunSlot): void {
     this.slots.set(runKeyOf(slot.entry.root, slot.entry.taskId), slot);
+    this.idsByRoot.delete(slot.entry.root);
 
     for (const listener of this.listeners) listener(slot.entry);
   }

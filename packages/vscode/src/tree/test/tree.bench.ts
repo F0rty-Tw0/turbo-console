@@ -167,7 +167,8 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const byId = new Map(pairs);
   const runs: RunLookup = (_root, taskId) => byId.get(taskId);
   const viewOf: ModelViewsOf = (loaded, scriptsShown, live) => views.of(loaded, scriptsShown, live);
-  const runningIds: LiveIds = () => new Set(byId.keys());
+  const running: ReadonlySet<string> = new Set(byId.keys());
+  const runningIds: LiveIds = () => running;
   const context: RowContext = {
     mode: 'folders',
     runs,

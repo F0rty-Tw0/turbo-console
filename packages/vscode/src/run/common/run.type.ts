@@ -27,7 +27,7 @@ export type RunEntry = {
 
 export type RunLookup = (root: string, taskId: string) => RunEntry | undefined;
 
-/** The task ids of `root` whose run is running, a fresh set per call. `root` is the folder root every run is keyed by. */
+/** The task ids of `root` whose run is running; a caller must not change the set, the store may hand the same one again. `root` is the folder root every run is keyed by. */
 export type LiveIds = (root: string) => ReadonlySet<string>;
 
 export type RunListener = (entry: RunEntry) => void;
