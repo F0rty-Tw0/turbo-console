@@ -25,11 +25,11 @@ export const taskNodeNamed = async (api: TurboConsoleApi, name: string, taskId: 
   return node;
 };
 
-/** Runs the task of `node` as its inline Run button does; returns the run's launch token once VS Code holds it. */
-export const startRun = async (api: TurboConsoleApi, node: TreeNode): Promise<number> => {
+/** Runs the task of `node` with the row command `command`; returns the run's launch token once VS Code holds it. */
+export const startRunWith = async (api: TurboConsoleApi, node: TreeNode, command: string): Promise<number> => {
   const clickedAt = Date.now();
 
-  await vscode.commands.executeCommand('turboConsole.runTask', node);
+  await vscode.commands.executeCommand(command, node);
 
   const entry = api.runs.get(node.root, node.key);
   const isThisRun = entry !== undefined && entry.launchedAt >= clickedAt;
@@ -38,6 +38,10 @@ export const startRun = async (api: TurboConsoleApi, node: TreeNode): Promise<nu
 
   return entry.launchedAt;
 };
+
+/** Runs the task of `node` as its inline Run button does; returns the run's launch token once VS Code holds it. */
+export const startRun = async (api: TurboConsoleApi, node: TreeNode): Promise<number> =>
+  startRunWith(api, node, 'turboConsole.runTask');
 
 /** The run of `node` launched at `launchedAt`, once it ended and its summary lookup settled. */
 export const endedRun = async (api: TurboConsoleApi, node: TreeNode, launchedAt: number): Promise<RunEntry> => {
