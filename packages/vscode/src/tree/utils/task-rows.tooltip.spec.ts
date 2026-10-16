@@ -104,6 +104,29 @@ describe('FEATURE: task row tooltip', () => {
       expect(lines).toStrictEqual(['Kind: task', 'Exit code: 1', 'Duration: 3.2s', 'Cache: not cached, ran', STARTED, ENDED]);
     });
 
+    it('WHEN the cache missed on a run without cache THEN the cache line says it was skipped', () => {
+      const entry = entryIn({ state: 'passed', exitCode: 0, match: MISS_MATCH, force: true });
+
+      const lines = tooltipLinesOf(taskOf({}), entry);
+
+      expect(lines).toStrictEqual([
+        'Kind: task',
+        'Exit code: 0',
+        'Duration: 3.2s',
+        'Cache: skipped (Run Without Cache)',
+        STARTED,
+        ENDED
+      ]);
+    });
+
+    it('WHEN a forced run reports a hit THEN the cache line still says replayed', () => {
+      const entry = entryIn({ state: 'passed', exitCode: 0, match: HIT_MATCH, force: true });
+
+      const lines = tooltipLinesOf(taskOf({}), entry);
+
+      expect(lines).toContain('Cache: replayed from cache');
+    });
+
     it('WHEN the summary has no cache status THEN the cache line is left out', () => {
       const entry = entryIn({ state: 'passed', exitCode: 0, match: NO_CACHE_MATCH });
 

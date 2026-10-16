@@ -2,7 +2,14 @@ import { turboRunArgs } from '@turbo-console/core';
 import type { RunMatch } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, START_TIMEOUT_TEXT, START_WAIT_TEXT, TASK_ENDED_TEXT } from '../common/run.const.ts';
+import {
+  ALREADY_RUNNING_TEXT,
+  NOT_TURBO_RUN_TEXT,
+  START_TIMEOUT_MS,
+  START_TIMEOUT_TEXT,
+  START_WAIT_TEXT,
+  TASK_ENDED_TEXT
+} from '../common/run.const.ts';
 import type { RunDefinition, RunEntry, RunPorts, RunRequest, Runs, Terminable } from '../common/run.type.ts';
 import { runToMatchOf } from '../utils/run-end.util.ts';
 
@@ -60,7 +67,7 @@ const launch = async (ports: RunPorts, request: RunRequest, launchedAt: number):
       return null;
     }
 
-    const args = turboRunArgs(request.task, request.packageName);
+    const args = turboRunArgs(request.task, request.packageName, { force: request.force });
 
     return await ports.execute(request, args, launchedAt);
   } catch (error) {
@@ -86,11 +93,17 @@ const onStartTimeout = (store: Runs, ports: RunPorts, start: StartEnd, isLaunche
 };
 
 /**
- * Spec §4.5 run flow: a watchdog that ends the run as failed to start when its launch has not settled
+ * Spec §4.5 run flow: a task no turbo config defines is refused first (spec 1c-a §4.12), before the watchdog. Then a watchdog that ends the run as failed to start when its launch has not settled
  * `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), then the launch.
  * The task events drive the rest through the store.
  */
 export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest): Promise<void> => {
+  if (!request.task.isTurboTask) {
+    ports.info(NOT_TURBO_RUN_TEXT);
+
+    return;
+  }
+
   const launchedAt = ports.now();
   const definition = definitionOf(request);
   let isLaunched = false;

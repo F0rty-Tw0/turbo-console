@@ -6,7 +6,7 @@ import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
-import { NOT_PACKAGE_TEXT, NO_TASKS_TEXT, TASK_PLACEHOLDER } from '../common/picker.const.ts';
+import { NOT_PACKAGE_TEXT, NO_PACKAGE_TASKS_TEXT, TASK_PLACEHOLDER } from '../common/picker.const.ts';
 import type { FileLookupPorts, FilePackage, FileTasks, NamedTask, PickerPorts } from '../common/picker.type.ts';
 import { packageForManifest, relativePathOf } from '../utils/package-lookup.util.ts';
 import { taskItemsOf } from '../utils/picker-items.util.ts';
@@ -102,7 +102,7 @@ const tasksOfFile = async (roots: Roots, ports: PickerPorts, file: string | null
   const { root, pkg } = found;
   const items = taskItemsOf(root, pkg);
 
-  if (items.length === 0) return refused(ports, NO_TASKS_TEXT);
+  if (items.length === 0) return refused(ports, NO_PACKAGE_TASKS_TEXT);
 
   const placeholder = `${TASK_PLACEHOLDER} in ${cleanText(pkg.name, LABEL_MAX)}`;
   const tasks: FileTasks = { packageName: pkg.name, placeholder, items };
@@ -112,7 +112,7 @@ const tasksOfFile = async (roots: Roots, ports: PickerPorts, file: string | null
 
 /**
  * Spec §4.6.4: finds the root holding `file` (the active editor's file, if any), loads it, matches the file's directory
- * to a package, picks one of its visible tasks and runs it. The root manifest, a file in no root or in no package, and a
+ * to a package, picks one of its runnable tasks and runs it. The root manifest, a file in no root or in no package, and a
  * root in a binary error end in an info message.
  */
 export const pickForFileAndRun = async (roots: Roots, ports: PickerPorts, file: string | null): Promise<void> => {

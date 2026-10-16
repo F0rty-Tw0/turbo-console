@@ -4,7 +4,7 @@ import type { CommandRegistry, Disposed, RunControl } from '../common/run.type.t
 import { runRequestOf, taskTargetOf } from '../utils/run-target.util.ts';
 
 /**
- * Spec §4.5 entry points: Run Task and Stop Task on a task row (any other argument is ignored), a tree row refresh on
+ * Spec §4.5 entry points: Run Task, Run Task Without Cache and Stop Task on a task row (any other argument is ignored), a tree row refresh on
  * every change of a run, and the pruning of ended runs when a root reloads. `dispose` undoes all of it.
  */
 export const registerRuns = (
@@ -13,22 +13,28 @@ export const registerRuns = (
   roots: Roots,
   register: CommandRegistry
 ): Disposed => {
-  const runTask = async (arg: unknown): Promise<void> => {
+  const runOn = async (arg: unknown, force: boolean): Promise<void> => {
     const target = taskTargetOf(arg);
 
     if (target === null) return;
 
     const state = roots.get(target.definition.root)?.state;
-    const request = runRequestOf(target, state);
+    const request = runRequestOf(target, state, force);
 
     if (request !== null) await control.run(request);
   };
+  const runTask = async (arg: unknown): Promise<void> => runOn(arg, false);
+  const runTaskWithoutCache = async (arg: unknown): Promise<void> => runOn(arg, true);
   const stopTask = (arg: unknown): void => {
     const target = taskTargetOf(arg);
 
     if (target !== null) control.stop(target.definition);
   };
-  const commands = [register('turboConsole.runTask', runTask), register('turboConsole.stopTask', stopTask)];
+  const commands = [
+    register('turboConsole.runTask', runTask),
+    register('turboConsole.runTaskWithoutCache', runTaskWithoutCache),
+    register('turboConsole.stopTask', stopTask)
+  ];
   const unsubscribeRuns = control.runs.onDidChange((entry) => {
     tree.refreshTask(entry.root, entry.taskId);
   });

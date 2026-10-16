@@ -98,7 +98,8 @@ const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntr
     exitCode: null,
     stopRequested: false,
     match: null,
-    matching: false
+    matching: false,
+    force: false
   };
 
   return entry;

@@ -27,6 +27,12 @@ export type DetailsPorts = {
   readonly now: () => number;
 };
 
+/** The task ids of a panel's cards: `all` of them, and `notTurbo` the ids of cards whose task no turbo config defines. */
+export type CardTaskIds = {
+  readonly all: ReadonlySet<string>;
+  readonly notTurbo: ReadonlySet<string>;
+};
+
 /** A webview message that runs an editor command; `ready` and `refresh` the session handles itself. */
 export type CommandMessage = Exclude<WebviewMessage, ReadyMessage | RefreshMessage>;
 

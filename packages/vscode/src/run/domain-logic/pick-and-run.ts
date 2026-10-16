@@ -1,5 +1,5 @@
 import type { RootState, Roots } from '../../roots/common/coordinator.type.ts';
-import { isVisibleTask } from '../../tree/utils/task-rows.util.ts';
+import { isRunnableTask } from '../../tree/utils/task-rows.util.ts';
 import { NO_TASKS_TEXT, PACKAGE_PLACEHOLDER, TASK_PLACEHOLDER } from '../common/picker.const.ts';
 import type { NamedTask, PickItem, PickerPorts } from '../common/picker.type.ts';
 import type { RunDefinition, RunRequest, TaskTarget } from '../common/run.type.ts';
@@ -18,15 +18,15 @@ const loadAll = async (roots: Roots, ports: PickerPorts): Promise<void> => {
 const requestByName = (roots: Roots, target: NamedTask): RunRequest | null => {
   const state = roots.get(target.root)?.state;
   const pkg = state?.model?.packages.find((node) => node.name === target.packageName);
-  const visible = pkg?.tasks.filter(isVisibleTask);
-  const task = visible?.find((node) => node.name === target.taskName);
+  const runnable = pkg?.tasks.filter(isRunnableTask);
+  const task = runnable?.find((node) => node.name === target.taskName);
 
   if (task === undefined) return null;
 
   const definition: RunDefinition = { root: target.root, id: task.id };
   const runTarget: TaskTarget = { definition, packageName: target.packageName };
 
-  return runRequestOf(runTarget, state);
+  return runRequestOf(runTarget, state, false);
 };
 
 export const runNamed = async (roots: Roots, ports: PickerPorts, target: NamedTask): Promise<void> => {

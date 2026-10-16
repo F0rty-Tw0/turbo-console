@@ -10,7 +10,11 @@ const optionalGroupSchema = z.string().optional();
 
 const menuEntrySchema = z.object({ command: z.string(), when: z.string(), group: optionalGroupSchema });
 
-const menusSchema = z.object({ 'view/title': z.array(menuEntrySchema), 'view/item/context': z.array(menuEntrySchema) });
+const menusSchema = z.object({
+  'view/title': z.array(menuEntrySchema),
+  'view/item/context': z.array(menuEntrySchema),
+  commandPalette: z.array(menuEntrySchema.omit({ group: true }))
+});
 
 const manifestSchema = z.object({ contributes: z.object({ menus: menusSchema }) });
 
@@ -24,6 +28,8 @@ const TREE_VIEW = 'turboConsole.tree';
 
 const RUN = ['turboConsole.runTask inline@0', 'turboConsole.runTask 1_run@0'];
 const STOP = ['turboConsole.stopTask inline@0', 'turboConsole.stopTask 1_run@0'];
+const FORCE = ['turboConsole.runTaskWithoutCache 1_run@1'];
+const FORCE_INLINE = ['turboConsole.runTaskWithoutCache inline@3'];
 const COPY = ['turboConsole.copyCommand inline@1', 'turboConsole.copyCommand 3_copy'];
 const OPEN_JSON = ['turboConsole.openPackageJson inline@2', 'turboConsole.openPackageJson 2_open@1'];
 
@@ -47,12 +53,12 @@ const shownIn = (entries: MenuEntry[], keys: Readonly<Record<string, string | bo
 
 describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
   it.each([
-    ['turboTask', [...RUN, ...COPY, ...OPEN_JSON]],
-    ['turboTask.cached', [...RUN, ...COPY, ...OPEN_JSON]],
+    ['turboTask', [...RUN, ...FORCE, ...COPY, ...OPEN_JSON]],
+    ['turboTask.cached', [...RUN, ...FORCE, ...FORCE_INLINE, ...COPY, ...OPEN_JSON]],
     ['turboTask.running', [...STOP, ...COPY, ...OPEN_JSON]],
     ['turboScript', OPEN_JSON],
     ['turboTask.running.x', [...STOP, ...COPY, ...OPEN_JSON]],
-    ['turboTask.cached.x', [...RUN, ...COPY, ...OPEN_JSON]],
+    ['turboTask.cached.x', [...RUN, ...FORCE, ...FORCE_INLINE, ...COPY, ...OPEN_JSON]],
     ['xturboTask', []],
     ['turboPackage', PACKAGE_ITEMS],
     ['turboDir', []],
@@ -75,4 +81,13 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
 
     expect(items).toStrictEqual(expected.toSorted());
   });
+
+  it.each(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask', 'turboConsole.copyCommand'])(
+    'GIVEN the row command %s WHEN the command palette is read THEN it is hidden there',
+    (command) => {
+      const entries = MENUS.commandPalette.filter((entry) => entry.command === command);
+
+      expect(entries).toStrictEqual([{ command, when: 'false' }]);
+    }
+  );
 });

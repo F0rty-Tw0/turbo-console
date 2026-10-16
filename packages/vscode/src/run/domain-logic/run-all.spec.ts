@@ -185,6 +185,18 @@ describe('FEATURE: run a task in all packages', () => {
     expect(fakes.execute).toHaveBeenCalledExactlyOnceWith(launchOf('/one', false), ['--skip-infer', 'run', 'build']);
   });
 
+  it('GIVEN a root whose only tasks are scripts no turbo config defines WHEN it starts THEN it picks nothing', async () => {
+    const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+    roots.set([ONE], coordinatorMock);
+    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
+
+    await runAll(roots, guard, fakes.ports, EVERYWHERE);
+
+    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+    expect(fakes.pick).not.toHaveBeenCalled();
+  });
+
   it('GIVEN no root WHEN it starts THEN it says no tasks are available', async () => {
     await runAll(roots, guard, fakes.ports, EVERYWHERE);
 

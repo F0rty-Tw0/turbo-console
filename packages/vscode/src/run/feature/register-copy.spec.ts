@@ -82,6 +82,17 @@ describe('FEATURE: copy command', () => {
       expect(write).toHaveBeenCalledExactlyOnceWith('turbo run build --filter=a');
     });
 
+    it('WHEN the task is no turbo task THEN an info message says there is no command and nothing is copied', async () => {
+      const script = { ...TASK_NODE_STUB, isTurboTask: false };
+
+      roots.apply('/ws', loadedWith([packageHolding('a', script)]));
+
+      await copy(TASK_TREE_NODE_STUB);
+
+      expect(info).toHaveBeenCalledExactlyOnceWith("This script isn't a turbo task, so there is no turbo command to copy.");
+      expect(write).not.toHaveBeenCalled();
+    });
+
     it('WHEN the shell is unknown THEN the command is copied for posix', async () => {
       shell = '';
       const spaced = { ...TASK_NODE_STUB, id: 'a#x y', name: 'x y' };
