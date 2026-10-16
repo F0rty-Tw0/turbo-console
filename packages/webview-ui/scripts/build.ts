@@ -11,12 +11,14 @@ const TSC = join(PACKAGE_ROOT, '../../node_modules/typescript7/bin/tsc');
 
 const CODICONS = 'node_modules/@vscode/codicons';
 
-const BROWSER_BUNDLE: BuildOptions = { bundle: true, platform: 'browser', format: 'iife', target: 'es2024' };
+const BUNDLE: BuildOptions = { bundle: true, logLevel: 'info' };
+
+const BROWSER_BUNDLE: BuildOptions = { ...BUNDLE, platform: 'browser', format: 'iife', target: 'es2024' };
 
 const BUNDLES: BuildOptions[] = [
   { ...BROWSER_BUNDLE, entryPoints: ['src/graph/main.ts'], outfile: 'dist/graph/main.js' },
   { ...BROWSER_BUNDLE, entryPoints: ['src/details/main.ts'], outfile: 'dist/details/main.js' },
-  { bundle: true, platform: 'neutral', format: 'esm', entryPoints: ['src/index.ts'], outfile: 'dist/lib/index.js' }
+  { ...BUNDLE, platform: 'neutral', format: 'esm', entryPoints: ['src/index.ts'], outfile: 'dist/lib/index.js' }
 ];
 
 /** [source, destination] pairs, relative to the package root, copied unchanged beside the bundles. */
