@@ -96,6 +96,18 @@
         "icon": "$(list-flat)"
       },
       {
+        "command": "turboConsole.showScope",
+        "title": "Show Package Scopes",
+        "category": "Turbo Console",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "turboConsole.hideScope",
+        "title": "Hide Package Scopes",
+        "category": "Turbo Console",
+        "icon": "$(eye-closed)"
+      },
+      {
         "command": "turboConsole.showOutput",
         "title": "Show Output",
         "category": "Turbo Console"
@@ -169,6 +181,16 @@
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "turboConsole.showScope",
+          "when": "view == turboConsole.tree && !turboConsole.scopeShown",
+          "group": "navigation@0"
+        },
+        {
+          "command": "turboConsole.hideScope",
+          "when": "view == turboConsole.tree && turboConsole.scopeShown",
+          "group": "navigation@0"
+        },
         {
           "command": "turboConsole.showFolders",
           "when": "view == turboConsole.tree && config.turboConsole.treeMode == list",
@@ -269,6 +291,14 @@
         {
           "command": "turboConsole.showList",
           "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.showScope",
+          "when": "turboConsole.active && !turboConsole.scopeShown"
+        },
+        {
+          "command": "turboConsole.hideScope",
+          "when": "turboConsole.active && turboConsole.scopeShown"
         },
         {
           "command": "turboConsole.showOutput",
