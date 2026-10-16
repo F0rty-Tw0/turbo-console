@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "esbuild src/graph/main.ts --bundle --platform=browser --format=iife --target=es2024 --outfile=dist/graph/main.js && node -e \"require('node:fs').cpSync('src/graph/index.html','dist/graph/index.html')\" && esbuild src/details/main.ts --bundle --platform=browser --format=iife --target=es2024 --outfile=dist/details/main.js && node -e \"const c='node_modules/@vscode/codicons/';for(const [from,to] of [['src/details/index.html','index.html'],['src/styles/details.css','details.css'],[c+'dist/codicon.css','codicon.css'],[c+'dist/codicon.ttf','codicon.ttf'],[c+'LICENSE','LICENSE'],[c+'LICENSE-CODE','LICENSE-CODE']])require('node:fs').cpSync(from,'dist/details/'+to)\" && esbuild src/index.ts --bundle --platform=neutral --format=esm --outfile=dist/lib/index.js && node ../../node_modules/typescript7/bin/tsc -p tsconfig.lib.json",
+    "build": "node scripts/build.ts",
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
