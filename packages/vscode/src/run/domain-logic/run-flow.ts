@@ -93,7 +93,7 @@ const onStartTimeout = (store: Runs, ports: RunPorts, start: StartEnd, isLaunche
 };
 
 /**
- * Spec §4.5 run flow: a watchdog that ends the run as failed to start when its launch has not settled
+ * Spec §4.5 run flow: a task no turbo config defines is refused first (spec 1c-a §4.12), before the watchdog. Then a watchdog that ends the run as failed to start when its launch has not settled
  * `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), then the launch.
  * The task events drive the rest through the store.
  */
