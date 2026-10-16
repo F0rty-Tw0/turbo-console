@@ -105,14 +105,14 @@ describe('FEATURE: the Scripts group in the packages tree', () => {
       expect([after.group === before.group, after.script === before.script]).toStrictEqual([false, false]);
     });
 
-    it('WHEN the run ends THEN the script node no longer refreshes by task id', async () => {
+    it('WHEN the run ends THEN the same run reported again redraws nothing', async () => {
       await open();
       live = NOBODY;
       run = scriptRunOf('/ws', { state: 'stopped', endedAt: 2000 });
       tree.runChanged(run);
       fire.mockClear();
 
-      tree.refreshTask('/ws', SCRIPT_TASK.id);
+      tree.runChanged(run);
 
       expect(fire).not.toHaveBeenCalled();
     });
