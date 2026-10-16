@@ -6,7 +6,7 @@ import type { RunEntry, Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { CommandMessage, DetailsInput, DetailsPorts, PanelKey } from '../common/details.type.ts';
 import { commandOf } from '../utils/details-command.util.ts';
-import { droppedMessageText, parseWebviewMessage, taskIdsOf } from '../utils/details-message.util.ts';
+import { cardTaskIdsOf, droppedMessageText, parseWebviewMessage } from '../utils/details-message.util.ts';
 import { toDetailsState } from '../utils/details-state.util.ts';
 import { toRunView } from '../utils/run-view.util.ts';
 
@@ -62,7 +62,7 @@ export class DetailsSession {
     if (this.isDisposed) return;
 
     const state = this.state();
-    const taskIds = taskIdsOf(state);
+    const taskIds = cardTaskIdsOf(state);
     const message = parseWebviewMessage(value, taskIds);
 
     if (message === null) {
