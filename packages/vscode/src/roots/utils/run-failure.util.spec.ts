@@ -7,7 +7,7 @@ describe('FEATURE: failure of a broken run port', () => {
   it('GIVEN a plain Error WHEN converted THEN it is a failed load carrying the message', () => {
     const failure = runFailureOf(new Error('boom'));
 
-    expect(failure).toStrictEqual({ kind: 'error', stage: 'load', error: new TurboException('failed', 'boom') });
+    expect(failure).toStrictEqual({ kind: 'error', stage: 'load', error: new TurboException('failed', 'boom'), logText: 'boom' });
   });
 
   it('GIVEN a TurboException with a cause WHEN converted THEN the message is its log line and the cause is dropped', () => {

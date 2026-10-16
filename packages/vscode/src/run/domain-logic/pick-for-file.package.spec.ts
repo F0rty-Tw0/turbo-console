@@ -6,6 +6,7 @@ import { packageOfFile } from './pick-for-file.ts';
 import type { LoadFailure, RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { PACKAGE_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
@@ -21,7 +22,7 @@ const NOT_A_ROOT: RootFolder = { root: '/plain', name: 'plain' };
 const FILE = '/one/packages/a/package.json';
 
 const failureOf = (kind: TurboErrorKind): LoadFailure => {
-  const failure: LoadFailure = { kind: 'error', stage: 'binary', error: new TurboException(kind, 'detail') };
+  const failure: LoadFailure = loadFailureOf('binary', new TurboException(kind, 'detail'));
 
   return failure;
 };

@@ -49,7 +49,9 @@ export const webviewCsp = (nonce: string, cspSource: string): string => {
     `font-src ${cspSource}`,
     `img-src ${cspSource} data:`,
     "base-uri 'none'",
-    "form-action 'none'"
+    "form-action 'none'",
+    "require-trusted-types-for 'script'",
+    "trusted-types 'none'"
   ];
 
   return directives.join('; ');

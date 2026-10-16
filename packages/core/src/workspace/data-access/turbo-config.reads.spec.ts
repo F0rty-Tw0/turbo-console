@@ -7,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import { readTurboConfigs } from './turbo-config.ts';
 import type * as smallFile from '../../shared/fs/data-access/small-file.ts';
-import type { TurboConfigOk } from '../common/turbo-config.type.ts';
+import type { TaskPresence, TurboConfigOk } from '../common/turbo-config.type.ts';
 
 const reads = vi.hoisted(() => {
   const paths: string[] = [];
@@ -50,6 +50,8 @@ const DESCRIBED = '{"tasks":{"build":{"description":"x"}}}';
 
 const BUILD_DESCRIPTIONS = { build: 'x' };
 
+const BUILD_TASKS: Record<string, TaskPresence> = { build: 'defined' };
+
 const CALLER_REASON = new Error('caller stopped');
 
 const packageDir = (index: number): string => `packages/p${String(index).padStart(2, '0')}`;
@@ -57,7 +59,13 @@ const packageDir = (index: number): string => `packages/p${String(index).padStar
 const PACKAGE_DIRS = Array.from({ length: PACKAGE_COUNT }, (_, index) => packageDir(index));
 
 const okConfig = (path: string): TurboConfigOk => {
-  const config: TurboConfigOk = { path, descriptions: BUILD_DESCRIPTIONS, affectedUsingTaskInputs: false };
+  const config: TurboConfigOk = {
+    path,
+    descriptions: BUILD_DESCRIPTIONS,
+    tasks: BUILD_TASKS,
+    extends: [],
+    affectedUsingTaskInputs: false
+  };
 
   return config;
 };

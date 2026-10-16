@@ -31,7 +31,7 @@ const definitionRows = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
   const { definition } = card;
 
   if (definition === null) {
-    const pending = definitionText(card.command, phase);
+    const pending = definitionText(card, phase);
     const pendingRows: FieldRow[] = [['Definition', pending]];
 
     return pendingRows;

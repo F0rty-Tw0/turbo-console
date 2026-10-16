@@ -10,7 +10,11 @@ export type RunView = {
 
 export type CacheStatus = 'HIT' | 'MISS' | 'deferred';
 
-/** `definition` and `cacheStatus` are `null` while loading, after a failed dry run, and for tasks with no command. `taskId` is the model id `<package>#<task>`. */
+/**
+ * `definition` and `cacheStatus` are `null` while loading, after a failed dry run, for tasks with no command, and for
+ * tasks that are no turbo task (`isTurboTask` false: a package script no turbo config defines, left out of the dry
+ * run). `taskId` is the model id `<package>#<task>`.
+ */
 export type TaskCard = {
   readonly taskId: string;
   readonly name: string;
@@ -19,6 +23,7 @@ export type TaskCard = {
   readonly dependents: string[];
   readonly definition: TaskDefinition | null;
   readonly cacheStatus: CacheStatus | null;
+  readonly isTurboTask: boolean;
   readonly run: RunView;
 };
 

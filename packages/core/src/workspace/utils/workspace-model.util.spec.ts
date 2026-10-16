@@ -56,7 +56,13 @@ describe('FEATURE: workspace model build', () => {
     it('WHEN built THEN the model holds the root, version, sorted tags and the description', () => {
       const lint = graphTask('a#lint', COMMAND, ['z', 'y'], []);
       const descriptions = { lint: 'Lints a' };
-      const config: TurboConfigOk = { path: 'packages/a/turbo.json', descriptions, affectedUsingTaskInputs: false };
+      const config: TurboConfigOk = {
+        path: 'packages/a/turbo.json',
+        descriptions,
+        tasks: {},
+        extends: [],
+        affectedUsingTaskInputs: false
+      };
       const task: TaskNode = {
         id: 'a#lint',
         name: 'lint',
@@ -65,7 +71,8 @@ describe('FEATURE: workspace model build', () => {
         tags: ['y', 'z'],
         dependencies: [],
         kind: 'task',
-        atom: null
+        atom: null,
+        isTurboTask: true
       };
       const pkg: PackageNode = { name: 'a', path: 'packages/a', tags: ['m', 'n'], tasks: [task] };
       const expected: WorkspaceModel = {
@@ -157,7 +164,14 @@ describe('FEATURE: workspace model build', () => {
   describe('GIVEN a parsed config carrying a warning', () => {
     it('WHEN built THEN the warning is prefixed with the file path', () => {
       const warning = 'both turbo.json and turbo.jsonc found; read turbo.json';
-      const config: TurboConfigOk = { path: 'turbo.json', descriptions: {}, affectedUsingTaskInputs: false, warning };
+      const config: TurboConfigOk = {
+        path: 'turbo.json',
+        descriptions: {},
+        tasks: {},
+        extends: [],
+        affectedUsingTaskInputs: false,
+        warning
+      };
 
       const model = build([PKG_B], [], [config]);
 
@@ -167,7 +181,7 @@ describe('FEATURE: workspace model build', () => {
 
   describe('GIVEN configs that set affectedUsingTaskInputs', () => {
     it.each(['turbo.json', 'turbo.jsonc'])('WHEN the root %s sets it THEN the mode is task', (path) => {
-      const root: TurboConfigOk = { path, descriptions: {}, affectedUsingTaskInputs: true };
+      const root: TurboConfigOk = { path, descriptions: {}, tasks: {}, extends: [], affectedUsingTaskInputs: true };
 
       const model = build([PKG_B], [], [root]);
 
@@ -175,7 +189,13 @@ describe('FEATURE: workspace model build', () => {
     });
 
     it('WHEN only a package config sets it THEN the mode is package', () => {
-      const config: TurboConfigOk = { path: 'packages/b/turbo.json', descriptions: {}, affectedUsingTaskInputs: true };
+      const config: TurboConfigOk = {
+        path: 'packages/b/turbo.json',
+        descriptions: {},
+        tasks: {},
+        extends: [],
+        affectedUsingTaskInputs: true
+      };
 
       const model = build([PKG_B], [], [config]);
 
@@ -186,7 +206,13 @@ describe('FEATURE: workspace model build', () => {
   describe('GIVEN a package path with backslashes', () => {
     const e2e = graphPackage('@fx/e2e-1', 'apps\\e2e-1', [], [graphTask('@fx/e2e-1#test', COMMAND, [], [])]);
     const descriptions = { test: 'Runs e2e-1' };
-    const config: TurboConfigOk = { path: 'apps/e2e-1/turbo.json', descriptions, affectedUsingTaskInputs: false };
+    const config: TurboConfigOk = {
+      path: 'apps/e2e-1/turbo.json',
+      descriptions,
+      tasks: {},
+      extends: [],
+      affectedUsingTaskInputs: false
+    };
 
     it('WHEN built THEN the package path is posix', () => {
       const model = build([e2e], [], [config]);
@@ -278,7 +304,13 @@ describe('FEATURE: workspace model build', () => {
   describe('GIVEN a package whose name holds a # and a package config describing build', () => {
     it('WHEN built THEN the task gets the description', () => {
       const descriptions = { build: 'Builds p#b' };
-      const config: TurboConfigOk = { path: 'packages/pb/turbo.json', descriptions, affectedUsingTaskInputs: false };
+      const config: TurboConfigOk = {
+        path: 'packages/pb/turbo.json',
+        descriptions,
+        tasks: {},
+        extends: [],
+        affectedUsingTaskInputs: false
+      };
       const pkg = graphPackage('p#b', 'packages/pb', [], [graphTask('p#b#build', COMMAND, [], [])]);
 
       const model = build([pkg], [], [config]);

@@ -41,7 +41,8 @@ const TASK_BASE: TaskNode = {
   tags: [],
   dependencies: [],
   kind: 'task',
-  atom: null
+  atom: null,
+  isTurboTask: true
 };
 
 /** Inserts `entry` as the first member of the object that opens with `anchor` in `file`; throws when `anchor` is absent. */

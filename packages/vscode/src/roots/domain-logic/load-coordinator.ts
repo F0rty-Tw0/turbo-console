@@ -164,6 +164,10 @@ export class LoadCoordinator implements Coordinator {
     void running().catch(runFailureOf).then(settle);
   }
 
+  /**
+   * A superseded flight is always aborted (`request` aborts `current` before it starts; every other start needs
+   * `current === null`), so `ports.apply`, which logs failures, gets every failure that was not aborted.
+   */
   private isLive(flight: Flight): boolean {
     const isLatest = flight.generation === this.counter;
 

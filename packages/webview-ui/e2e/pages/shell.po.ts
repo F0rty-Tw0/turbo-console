@@ -1,7 +1,7 @@
 import type { ConsoleMessage, Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL, VIOLATION_RECORDER } from '../common/shell.const.ts';
+import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL, STRING_SINK_PROBE, VIOLATION_RECORDER } from '../common/shell.const.ts';
 import type { ShellOptions } from '../common/shell.type.ts';
 import { distMock } from '../test/mocks/dist.mock.ts';
 
@@ -55,6 +55,13 @@ export class ShellPage {
     const ran = await this.page.evaluate<unknown>('window.__ran');
 
     expect(ran).toBeUndefined();
+  }
+
+  /** Trusted Types: under `require-trusted-types-for 'script'` a plain string written to `innerHTML` throws a TypeError. */
+  public async expectStringSinkRefused(): Promise<void> {
+    const outcome = await this.page.evaluate<string>(STRING_SINK_PROBE);
+
+    expect(outcome).toBe('TypeError');
   }
 
   public expectNoErrors(): void {

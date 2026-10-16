@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { packageItems, rootItems, taskItemsOf, taskNameItems } from './picker-items.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { LoadFailure, RootFolder } from '../../roots/common/root.type.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
@@ -33,7 +34,7 @@ const stateOf = (root: string, packages: PackageNode[], overrides: Partial<RootS
   return state;
 };
 
-const binaryFailure: LoadFailure = { kind: 'error', stage: 'binary', error: new TurboException('not-found', 'no turbo') };
+const binaryFailure: LoadFailure = loadFailureOf('binary', new TurboException('not-found', 'no turbo'));
 
 const itemOf = (overrides: Partial<PickItem>): PickItem => {
   const item: PickItem = { label: 'build', description: '', root: '/ws', value: 'build', ...overrides };

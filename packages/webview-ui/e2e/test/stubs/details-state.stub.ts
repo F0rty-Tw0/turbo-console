@@ -21,6 +21,7 @@ export const TASK_CARD_STUB: TaskCard = {
   dependents: ['docs#build'],
   definition: TASK_DEFINITION_STUB,
   cacheStatus: 'HIT',
+  isTurboTask: true,
   run: RUN_VIEW_STUB
 };
 

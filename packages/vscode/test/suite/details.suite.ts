@@ -1,5 +1,6 @@
 import type { DetailsScene } from '../common/details.type.ts';
 import { buildPair } from '../utils/build-pair.spec.util.ts';
+import { adhocCase } from '../utils/details-adhoc.spec.util.ts';
 import { openCase, runCase, titleCase, watchedCase } from '../utils/details-cases.spec.util.ts';
 import { prunedCase } from '../utils/details-folder.spec.util.ts';
 import { revealLoads } from '../utils/message-tree.spec.util.ts';
@@ -9,9 +10,9 @@ import { readManifest, readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 import { whenQuiet } from '../utils/watch-wait.spec.util.ts';
 
 /**
- * L8: Package Details on `two-roots`, two clean `target-like` copies; cases 1 to 4 use root `a`, case 5 removes root
+ * L8: Package Details on `two-roots`, two clean `target-like` copies; cases 1 to 5 use root `a`, case 6 removes root
  * `b`. The real page posts `ready` itself; the cases send one more where they need a state posted at a known point.
- * The cases run in order and share state; case 5 changes the workspace folders, so it must stay last. Spawn counts are taken inside the windows of cases 1 and 4 only, after both roots have loaded and gone quiet.
+ * The cases run in order and share state; case 6 changes the workspace folders, so it must stay last. Spawn counts are taken inside the windows of cases 1 and 4 only, after both roots have loaded and gone quiet.
  */
 export const run = async (): Promise<void> => {
   const env = readSuiteEnv();
@@ -37,6 +38,7 @@ export const run = async (): Promise<void> => {
     await titleCase(scene);
     await runCase(scene);
     await watchedCase(scene);
+    await adhocCase(scene);
     await prunedCase(scene);
     await markDone(env);
   } finally {

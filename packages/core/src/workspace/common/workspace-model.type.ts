@@ -32,7 +32,10 @@ export type ClassifyResult = {
 /** `'task'` when the root config sets `futureFlags.affectedUsingTaskInputs: true`. */
 export type AffectedMode = 'package' | 'task';
 
-/** A visible task; `dependencies` hold only visible task ids, sorted. */
+/**
+ * A visible task; `dependencies` hold only visible task ids, sorted. `isTurboTask` is false for a package script no
+ * turbo config defines for its package: `turbo query` lists it, but `turbo run` does not run it.
+ */
 export type TaskNode = {
   readonly id: string;
   readonly name: string;
@@ -42,6 +45,7 @@ export type TaskNode = {
   readonly dependencies: string[];
   readonly kind: TaskNodeKind;
   readonly atom: TaskAtom | null;
+  readonly isTurboTask: boolean;
 };
 
 /** A visible package; `path` is posix, relative to the workspace root. */

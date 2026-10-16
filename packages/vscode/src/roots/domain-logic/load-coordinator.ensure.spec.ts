@@ -6,12 +6,13 @@ import type { LoadFailure, LoadResult, LoadedModel } from '../common/root.type.t
 import type { DeferredPorts } from '../test/common/coordinator.type.ts';
 import { LOADED_MODEL_STUB, LOAD_FAILURE_STUB } from '../test/stubs/root.stub.ts';
 import { deferredPorts, flushSettles, runAt, settledFlag } from '../test/utils/deferred-ports.spec.util.ts';
+import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
 const LOAD_ERROR = new TurboException('failed', 'turbo exited 1');
-const LOAD_FAILED: LoadFailure = { kind: 'error', stage: 'load', error: LOAD_ERROR };
+const LOAD_FAILED: LoadFailure = loadFailureOf('load', LOAD_ERROR);
 const ABORT_ERROR = new TurboException('failed', 'This operation was aborted');
-const ABORTED: LoadFailure = { kind: 'error', stage: 'load', error: ABORT_ERROR };
+const ABORTED: LoadFailure = loadFailureOf('load', ABORT_ERROR);
 
 describe('FEATURE: ensure a root is loaded', () => {
   let deferred: DeferredPorts;

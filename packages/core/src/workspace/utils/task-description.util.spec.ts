@@ -11,23 +11,49 @@ const BARE_ONLY_DESCRIPTIONS = { build: 'from root task' };
 
 const ATOMS_DESCRIPTIONS = { 'e2e-ci': 'from the extended config' };
 
-const HUB: TurboConfigOk = { path: 'packages/hub/turbo.json', descriptions: PACKAGE_DESCRIPTIONS, affectedUsingTaskInputs: false };
+const HUB: TurboConfigOk = {
+  path: 'packages/hub/turbo.json',
+  descriptions: PACKAGE_DESCRIPTIONS,
+  tasks: {},
+  extends: [],
+  affectedUsingTaskInputs: false
+};
 
-const ROOT: TurboConfigOk = { path: 'turbo.json', descriptions: ROOT_DESCRIPTIONS, affectedUsingTaskInputs: false };
+const ROOT: TurboConfigOk = {
+  path: 'turbo.json',
+  descriptions: ROOT_DESCRIPTIONS,
+  tasks: {},
+  extends: [],
+  affectedUsingTaskInputs: false
+};
 
-const BARE_ROOT: TurboConfigOk = { path: 'turbo.json', descriptions: BARE_ONLY_DESCRIPTIONS, affectedUsingTaskInputs: false };
+const BARE_ROOT: TurboConfigOk = {
+  path: 'turbo.json',
+  descriptions: BARE_ONLY_DESCRIPTIONS,
+  tasks: {},
+  extends: [],
+  affectedUsingTaskInputs: false
+};
 
-const EMPTY_ROOT: TurboConfigOk = { path: 'turbo.jsonc', descriptions: {}, affectedUsingTaskInputs: false };
+const EMPTY_ROOT: TurboConfigOk = { path: 'turbo.jsonc', descriptions: {}, tasks: {}, extends: [], affectedUsingTaskInputs: false };
 
-const EMPTY_HUB: TurboConfigOk = { path: 'packages/hub/turbo.jsonc', descriptions: {}, affectedUsingTaskInputs: false };
+const EMPTY_HUB: TurboConfigOk = {
+  path: 'packages/hub/turbo.jsonc',
+  descriptions: {},
+  tasks: {},
+  extends: [],
+  affectedUsingTaskInputs: false
+};
 
 const ATOMS: TurboConfigOk = {
   path: 'tools/e2e-1-atoms/turbo.json',
   descriptions: ATOMS_DESCRIPTIONS,
+  tasks: {},
+  extends: [],
   affectedUsingTaskInputs: false
 };
 
-const TASK_MODE_ROOT: TurboConfigOk = { path: 'turbo.json', descriptions: {}, affectedUsingTaskInputs: true };
+const TASK_MODE_ROOT: TurboConfigOk = { path: 'turbo.json', descriptions: {}, tasks: {}, extends: [], affectedUsingTaskInputs: true };
 
 const ROOT_ERROR: TurboConfigError = { path: 'turbo.json', error: 'InvalidSymbol at 3' };
 

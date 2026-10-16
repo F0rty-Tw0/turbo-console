@@ -21,8 +21,8 @@ const overridePath = (): string | undefined => {
 
 /**
  * One root's load ports over core (spec §4.3): resolve with the current `turboPath`, the disk cache in the editor's own
- * storage and the view's progress bar around a full load. Nothing is logged here: `loadRoot` logs errors through
- * `shared.log`, and the session logs the warnings of every model it applies.
+ * storage and the view's progress bar around a full load. Nothing is logged here: the session logs a failed load
+ * once per error key and text, and the warnings of every model it applies, `loadRoot` the port errors, all through `shared.log`.
  */
 export const coreLoadDeps = (root: string, shared: SharedLoadPorts): LoadDeps => {
   const resolve = async (signal: AbortSignal): Promise<TurboBinary> => {

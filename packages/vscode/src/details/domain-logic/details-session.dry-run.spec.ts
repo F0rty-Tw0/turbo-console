@@ -6,6 +6,7 @@ import type { LoadFailure } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { flushSettles, settledFlag } from '../../roots/test/utils/deferred-ports.spec.util.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
@@ -25,7 +26,7 @@ import { deferDryRuns, dryRunAt, postedPhasesOf, postedStatesOf } from '../test/
 
 const ABORTED = new TurboException('failed', 'This operation was aborted');
 const FAILED = new TurboException('failed', 'turbo exited 1');
-const LOAD_FAILED: LoadFailure = { kind: 'error', stage: 'load', error: FAILED };
+const LOAD_FAILED: LoadFailure = loadFailureOf('load', FAILED);
 const MODEL_WITHOUT_A = { ...DETAILS_MODEL_STUB, packages: [WEB_PACKAGE_STUB] };
 const WITHOUT_A = { ...DETAILS_LOADED_STUB, model: MODEL_WITHOUT_A };
 const UMBRELLA_ONLY = { ...A_PACKAGE_STUB, tasks: [CHECK_TASK_STUB] };

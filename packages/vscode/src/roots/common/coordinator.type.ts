@@ -20,8 +20,8 @@ export type LoadRecord = {
 };
 
 /**
- * Editor effects of one root's coordinator. `run` mirrors `loadRoot` (never throws, logs its own failures), so `apply`
- * never logs a failure; `apply` must not throw.
+ * Editor effects of one root's coordinator. `run` mirrors `loadRoot` (never throws, never logs its failure), so `apply`
+ * logs each failure it gets, once per error key and text; `apply` must not throw.
  */
 export type CoordinatorPorts = {
   readonly run: (mode: LoadMode, signal: AbortSignal, publish: (result: LoadedModel) => void) => Promise<LoadResult>;

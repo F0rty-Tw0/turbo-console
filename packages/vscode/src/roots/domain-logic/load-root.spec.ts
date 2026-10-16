@@ -20,7 +20,7 @@ describe('FEATURE: load a root', () => {
   });
 
   describe('GIVEN the binary cannot be resolved', () => {
-    it('WHEN loaded THEN it is a binary failure, load never runs and the error is logged', async () => {
+    it('WHEN loaded THEN it is a binary failure, load never runs and nothing is logged', async () => {
       const deps = loadDepsMock();
       const notFound = new TurboException('not-found', 'no turbo');
 
@@ -28,21 +28,21 @@ describe('FEATURE: load a root', () => {
 
       const result = await loadRoot('cache-first', deps, new AbortController().signal, vi.fn());
 
-      expect(result).toStrictEqual({ kind: 'error', stage: 'binary', error: notFound });
+      expect(result).toStrictEqual({ kind: 'error', stage: 'binary', error: notFound, logText: 'turbo not-found: no turbo' });
       expect(deps.load).not.toHaveBeenCalled();
       expect(deps.readCached).not.toHaveBeenCalled();
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo not-found: no turbo');
+      expect(deps.log).not.toHaveBeenCalled();
     });
 
-    it('WHEN resolve throws a plain Error THEN it is wrapped as a failed TurboException', async () => {
+    it('WHEN resolve throws a plain Error THEN it is wrapped as a failed TurboException and its line is the bare message', async () => {
       const deps = loadDepsMock();
 
       vi.mocked(deps.resolve).mockRejectedValue(new Error('boom'));
 
       const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
 
-      expect(result).toStrictEqual({ kind: 'error', stage: 'binary', error: new TurboException('failed', 'boom') });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('boom');
+      expect(result).toStrictEqual({ kind: 'error', stage: 'binary', error: new TurboException('failed', 'boom'), logText: 'boom' });
+      expect(deps.log).not.toHaveBeenCalled();
     });
   });
 
@@ -138,7 +138,7 @@ describe('FEATURE: load a root', () => {
   });
 
   describe('GIVEN load throws', () => {
-    it('WHEN it throws a TurboException THEN it is a load failure with that error, logged', async () => {
+    it('WHEN it throws a TurboException THEN it is a load failure with that error, not logged', async () => {
       const deps = loadDepsMock();
       const failed = new TurboException('failed', 'turbo exited 1');
 
@@ -146,8 +146,8 @@ describe('FEATURE: load a root', () => {
 
       const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
 
-      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: failed });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo failed: turbo exited 1');
+      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: failed, logText: 'turbo failed: turbo exited 1' });
+      expect(deps.log).not.toHaveBeenCalled();
     });
 
     it('WHEN the TurboException has a cause THEN the result error carries none', async () => {
@@ -163,7 +163,6 @@ describe('FEATURE: load a root', () => {
 
       expect(result).toMatchObject({ kind: 'error', stage: 'load', error: withoutCause });
       expect(result).not.toHaveProperty('error.cause');
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo failed: turbo exited 1');
     });
 
     it('WHEN it throws something else THEN it is wrapped as a failed TurboException', async () => {
@@ -173,8 +172,13 @@ describe('FEATURE: load a root', () => {
 
       const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
 
-      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: new TurboException('failed', 'plain string') });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('plain string');
+      expect(result).toStrictEqual({
+        kind: 'error',
+        stage: 'load',
+        error: new TurboException('failed', 'plain string'),
+        logText: 'plain string'
+      });
+      expect(deps.log).not.toHaveBeenCalled();
     });
   });
 });

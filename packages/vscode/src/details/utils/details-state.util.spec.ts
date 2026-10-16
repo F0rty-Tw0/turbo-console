@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { toDetailsState } from './details-state.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { LoadFailure } from '../../roots/common/root.type.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
@@ -54,7 +55,7 @@ const cardOf = (state: DetailsState, taskId: string): TaskCard => {
 };
 
 const failureOf = (stage: LoadFailure['stage'], error: TurboException): LoadFailure => {
-  const failure: LoadFailure = { kind: 'error', stage, error };
+  const failure: LoadFailure = loadFailureOf(stage, error);
 
   return failure;
 };

@@ -13,11 +13,9 @@ const exceptionOf = (error: unknown): TurboException => {
   return new TurboException('failed', logTextOf(error));
 };
 
-/** A superseded load (the caller aborted it) is not an error worth logging: the coordinator drops its result. */
-const failureOf = (stage: LoadFailure['stage'], error: unknown, deps: LoadDeps, signal: AbortSignal): LoadFailure => {
-  if (!signal.aborted) deps.log(logTextOf(error));
-
-  const failure: LoadFailure = { kind: 'error', stage, error: exceptionOf(error) };
+/** Not logged here: the session logs a root's failure once per error key and text (`newFailureLineOf`). */
+const failureOf = (stage: LoadFailure['stage'], error: unknown): LoadFailure => {
+  const failure: LoadFailure = { kind: 'error', stage, error: exceptionOf(error), logText: logTextOf(error) };
 
   return failure;
 };
@@ -100,13 +98,13 @@ const fullLoad = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal
   try {
     release = await deps.acquire(signal);
   } catch (error) {
-    return failureOf('load', error, deps, signal);
+    return failureOf('load', error);
   }
 
   try {
     return await loadUnderDeadline(binary, deps, signal);
   } catch (error) {
-    return failureOf('load', error, deps, signal);
+    return failureOf('load', error);
   } finally {
     runPort(release, deps);
   }
@@ -118,8 +116,8 @@ const fullLoad = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal
  * the slot is won, and the caller's `signal`. The cache read, the slot wait and the load all settle when the caller
  * aborts, even if a port hangs (a port that hands out the slot must reject on abort, or the slot is lost); nothing is
  * published or loaded after the caller aborted. Never throws: a failure is the result, with `cause` stripped, and is
- * logged as one clean line through `deps.log` unless the caller aborted; a deadline expiry is logged, and so is a
- * `publish` or slot `release` that throws.
+ * not logged here (the session logs it). A `publish` or slot `release` that throws is logged through `deps.log`, and
+ * so is a cache read that throws unless the caller aborted.
  */
 export const loadRoot = async (
   mode: LoadMode,
@@ -132,12 +130,12 @@ export const loadRoot = async (
   try {
     binary = await deps.resolve(signal);
   } catch (error) {
-    return failureOf('binary', error, deps, signal);
+    return failureOf('binary', error);
   }
 
   const cached = await cachedModelOf(mode, binary, deps, signal);
 
-  if (signal.aborted) return failureOf('load', signal.reason, deps, signal);
+  if (signal.aborted) return failureOf('load', signal.reason);
 
   if (cached === null) return fullLoad(binary, deps, signal);
 

@@ -44,6 +44,7 @@ const toTaskCard = (
     dependents: dependents.get(task.id) ?? [],
     definition: dryRunState?.definition ?? null,
     cacheStatus: dryRunState?.cache ?? null,
+    isTurboTask: task.isTurboTask,
     run
   };
 

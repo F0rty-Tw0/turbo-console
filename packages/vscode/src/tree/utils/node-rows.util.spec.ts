@@ -9,6 +9,7 @@ import { childRowsOf, currentRowOf } from './node-rows.util.ts';
 import { rootNodeRow } from './root-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { LoadFailure } from '../../roots/common/root.type.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { FolderTreeOf } from '../common/folder-tree.type.ts';
@@ -36,9 +37,9 @@ const MSG_NODE: TreeNode = { kind: 'msg', id: 'msg:/ws\0load-no-model', root: '/
 
 const GONE_NODE: TreeNode = { ...TREE_NODE_STUB, id: 'pkg:/ws\0gone', key: 'gone', packageName: 'gone' };
 
-const BINARY_FAILURE: LoadFailure = { kind: 'error', stage: 'binary', error: new TurboException('not-found', 'x') };
+const BINARY_FAILURE: LoadFailure = loadFailureOf('binary', new TurboException('not-found', 'x'));
 
-const LOAD_FAILURE: LoadFailure = { kind: 'error', stage: 'load', error: new TurboException('failed', 'x') };
+const LOAD_FAILURE: LoadFailure = loadFailureOf('load', new TurboException('failed', 'x'));
 
 const FOLDER_TREE_OF: FolderTreeOf = (model) => folderTree(model.packages);
 

@@ -11,6 +11,8 @@ export const UNAVAILABLE_TEXT = '—';
 
 export const NO_COMMAND_TEXT = 'No command (runs its dependencies)';
 
+export const NOT_TURBO_TASK_TEXT = 'Not a turbo task: no turbo.json defines it';
+
 export const MISSING_PACKAGE_TEXT = 'Package no longer in the workspace';
 
 export const CACHE_TEXTS: Readonly<Record<CacheStatus, string>> = {

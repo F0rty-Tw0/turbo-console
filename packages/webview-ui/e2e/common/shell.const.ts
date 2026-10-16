@@ -5,6 +5,17 @@ export const SHELL_URL = `${SHELL_ORIGIN}/index.html`;
 /** Inline script with no nonce; the webview CSP must block it. */
 export const UNNONCED_SCRIPT = '<script>window.__ran = true</script>';
 
+/** Writes an HTML string to a fresh element's `innerHTML`; evaluates to the thrown error's name, else `'none'`. */
+export const STRING_SINK_PROBE = `(() => {
+  try {
+    document.createElement('div').innerHTML = '<b>x</b>';
+
+    return 'none';
+  } catch (error) {
+    return error.name;
+  }
+})()`;
+
 /** Init script: records every CSP violation in `window.__violations` before the page parses. */
 export const VIOLATION_RECORDER = `window.__violations = [];
 document.addEventListener('securitypolicyviolation', (event) => window.__violations.push(event.violatedDirective));`;

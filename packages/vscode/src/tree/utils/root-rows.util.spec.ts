@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { rootNodeRow, rootRows } from './root-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { LoadFailure } from '../../roots/common/root.type.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import type { IconSpec, RowCommand, TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_FOLDER_STUB, ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
@@ -24,7 +25,7 @@ const VERSION_TEXT = 'This turbo version is not supported (needs >=2.11.7 <2.12.
 
 const failureOf = (stage: LoadFailure['stage'], kind: TurboErrorKind): LoadFailure => {
   const error = new TurboException(kind, 'secret detail');
-  const failure: LoadFailure = { kind: 'error', stage, error };
+  const failure: LoadFailure = loadFailureOf(stage, error);
 
   return failure;
 };
