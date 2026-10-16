@@ -9,6 +9,7 @@ import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/roo
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
+import type { Runs } from './run/common/run.type.ts';
 import { editorCopyPorts } from './run/data-access/copy-ports.ts';
 import { editorRunAllPorts, editorRunPorts } from './run/data-access/run-ports.ts';
 import { forwardRunAllEvents, forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
@@ -17,12 +18,16 @@ import { registerCopy } from './run/feature/register-copy.ts';
 import { manifestFile, registerPickers, rootOf } from './run/feature/register-pickers.ts';
 import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
-import type { Timings, TurboConsoleApi } from './shared/common/api.type.ts';
+import type { Timings, TimingsStart, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Output } from './shared/common/output.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
+import type { TickerPorts } from './tree/common/ticker.type.ts';
+import type { PackagesTreeApi } from './tree/common/tree-node.type.ts';
+import type { VisibleView } from './tree/common/visible-view.type.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
+import { ElapsedTicker } from './tree/domain-logic/elapsed-ticker.ts';
 import { TreeVisibility } from './tree/domain-logic/tree-visibility.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
 import { registerPackageActions } from './tree/feature/package-actions.ts';
@@ -83,24 +88,56 @@ const registerRunCommands = (
   return vscode.Disposable.from(runs, pickers, runAll, forwardTaskEvents(runSession));
 };
 
+/** The activation start and the timing records `activate` fills in. */
+const startTimings = (): TimingsStart => {
+  const start = performance.now();
+  const activation: Span = { start, end: null };
+  const timings: Timings = { activation, activationResume: activation, treeVisible: new Map(), runs: [] };
+  const started: TimingsStart = { start, timings };
+
+  return started;
+};
+
+/** The elapsed ticker on real timers, refreshing task rows of the tree; unbound until the view exists. */
+const createTicker = (runs: Runs, tree: PackagesTreeApi): ElapsedTicker => {
+  const every: TickerPorts['every'] = (ms, tick) => {
+    const interval = setInterval(tick, ms);
+
+    return (): void => {
+      clearInterval(interval);
+    };
+  };
+  const fire: TickerPorts['fire'] = (root, taskId) => {
+    tree.refreshTask(root, taskId);
+  };
+  const ports: TickerPorts = { every, fire };
+
+  return new ElapsedTicker(runs, ports);
+};
+
+/** Hands the Packages view to the visibility reader and the ticker; the returned binding stops the ticker following it. */
+const bindViews = (view: VisibleView, visibility: TreeVisibility, ticker: ElapsedTicker): vscode.Disposable => {
+  visibility.bind(view);
+
+  return ticker.bind(view);
+};
+
 /**
  * Spec §3 activation: registers the view, commands and listeners, finds the roots and sets the context key. No turbo
  * spawn and no load: the first load starts when the view asks for its children or turns visible. In an untrusted
  * workspace it returns the API with no roots.
  */
 export const activate = async (context: vscode.ExtensionContext): Promise<TurboConsoleApi> => {
-  const start = performance.now();
-  const activation: Span = { start, end: null };
-  const timings: Timings = { activation, activationResume: activation, treeVisible: new Map(), runs: [] };
+  const { start, timings } = startTimings();
   const output = createOutput();
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
   const tree = new PackagesTreeProvider(session.store, runSession.runs.get, currentTreeMode(), timings.treeVisible);
-  const whenIdle = async (root: string): Promise<void> => session.whenIdle(root);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, runSession.runs, output);
   const treeVisibility = new TreeVisibility();
+  const ticker = createTicker(runSession.runs, tree);
   const api: TurboConsoleApi = {
     tree,
     commands,
@@ -108,15 +145,16 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     runs: runSession.runs,
     timings,
     loads: session.loads,
-    whenIdle,
+    whenIdle: async (root: string): Promise<void> => session.whenIdle(root),
     details: panels.api(),
-    treeVisible: treeVisibility.read
+    treeVisible: treeVisibility.read,
+    ticker
   };
 
-  context.subscriptions.push(output, tree, session);
+  context.subscriptions.push(output, tree, session, ticker);
 
   if (vscode.workspace.isTrusted) {
-    treeVisibility.bind(registerTree(context, session, tree, output));
+    context.subscriptions.push(bindViews(registerTree(context, session, tree, output), treeVisibility, ticker));
 
     const watchers = registerWatchers(session, watchRoot);
     const onRoots = (): void => {

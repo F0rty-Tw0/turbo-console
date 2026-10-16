@@ -25,6 +25,17 @@ export type Timings = {
   readonly runs: RunTiming[];
 };
 
+/** What `startTimings` gives `activate`: the activation start and the timing records it opens. */
+export type TimingsStart = {
+  readonly start: number;
+  readonly timings: Timings;
+};
+
+/** The elapsed ticker, for the integration tests: `ticks` counts its interval ticks since activation. */
+type TickerApi = {
+  readonly ticks: () => number;
+};
+
 export type PanelInfo = {
   readonly root: string;
   readonly packageName: string;
@@ -59,4 +70,5 @@ export type TurboConsoleApi = {
   readonly whenIdle: (root: string) => Promise<void>;
   readonly details: DetailsApi;
   readonly treeVisible: () => boolean;
+  readonly ticker: TickerApi;
 };
