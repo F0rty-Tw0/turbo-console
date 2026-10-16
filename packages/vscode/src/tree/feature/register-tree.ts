@@ -5,6 +5,7 @@ import type { Output } from '../../shared/common/output.type.ts';
 import type { SettingLevel } from '../common/setting.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import type { TreeMode } from '../common/tree-row.type.ts';
+import type { VisibleView } from '../common/visible-view.type.ts';
 import { settingLevelOf } from '../utils/setting-level.util.ts';
 import { treeModeOf } from '../utils/tree-mode.util.ts';
 
@@ -48,9 +49,15 @@ const onSettings = (event: vscode.ConfigurationChangeEvent, tree: PackagesTreeAp
 
 /**
  * The Packages view (spec §4.3, §4.7): the tree view with native Collapse All, store changes into tree refreshes,
- * visibility into the roots' `show`, the title commands and the settings listener. Starts no load itself.
+ * visibility into the roots' `show`, the title commands and the settings listener. Starts no load itself. Returns the view, for
+ * `TreeVisibility`.
  */
-export const registerTree = (context: vscode.ExtensionContext, session: Session, tree: PackagesTreeApi, output: Output): void => {
+export const registerTree = (
+  context: vscode.ExtensionContext,
+  session: Session,
+  tree: PackagesTreeApi,
+  output: Output
+): VisibleView => {
   const view = vscode.window.createTreeView('turboConsole.tree', { treeDataProvider: tree, showCollapseAll: true });
   const unsubscribe = session.store.onDidChange((change) => {
     tree.refreshFor(change);
@@ -72,4 +79,6 @@ export const registerTree = (context: vscode.ExtensionContext, session: Session,
 
   session.setVisible(view.visible);
   context.subscriptions.push(view, { dispose: unsubscribe }, visibility, refresh, showFolders, showList, showOutput, settings);
+
+  return view;
 };
