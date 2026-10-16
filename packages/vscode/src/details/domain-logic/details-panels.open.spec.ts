@@ -1,6 +1,6 @@
 import { TurboException } from '@turbo-console/core';
 import type { CachedWorkspace } from '@turbo-console/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DetailsPanels } from './details-panels.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
@@ -15,10 +15,11 @@ import type { PanelKey } from '../common/details.type.ts';
 import type { HostFakes } from '../test/common/panel-fakes.type.ts';
 import { hostMock } from '../test/mocks/panel-host.mock.ts';
 import { A_PACKAGE_STUB, DETAILS_LOADED_STUB, DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
-import { deferEnsureLoaded } from '../test/utils/panels-setup.spec.util.ts';
+import { A_MANIFEST, deferEnsureLoaded } from '../test/utils/panels-setup.spec.util.ts';
 
 const WS_A: PanelKey = { root: '/ws', packageName: 'a' };
 const GONE: PanelKey = { root: '/ws', packageName: 'gone' };
+const NO_ROOT: PanelKey = { root: '/nope', packageName: 'a' };
 const NO_PACKAGES = { ...DETAILS_MODEL_STUB, packages: [] };
 const EMPTY_LOADED = { ...DETAILS_LOADED_STUB, model: NO_PACKAGES };
 const ODD_NAME = 'a\nb‮c';
@@ -153,6 +154,10 @@ describe('FEATURE: opening a details panel', () => {
       panels = new DetailsPanels({ roots: roots.store, runs: new RunStore(), host: fakes.host, setPanelVisible: vi.fn() });
     });
 
+    afterEach(() => {
+      roots.dispose();
+    });
+
     it('WHEN a package panel opens THEN exactly one more full load runs', async () => {
       await panels.open(WS_A);
       await panels.api().whenIdle('/ws', 'a');
@@ -161,6 +166,23 @@ describe('FEATURE: opening a details panel', () => {
 
       expect(modes).toStrictEqual(['cache-first', 'full', 'full']);
     });
+
+    it('WHEN its manifest opens a panel THEN exactly one more full load runs', async () => {
+      await panels.openFile(A_MANIFEST);
+      await panels.api().whenIdle('/ws', 'a');
+
+      const modes = roots.loads.get('/ws')?.map((record) => record.mode);
+
+      expect(modes).toStrictEqual(['cache-first', 'full', 'full']);
+    });
+  });
+
+  it('GIVEN a key whose root is not in the store WHEN it opens THEN no panel is built and no message shows', async () => {
+    const opened = await panels.open(NO_ROOT);
+
+    expect(opened).toBeNull();
+    expect(fakes.open).not.toHaveBeenCalled();
+    expect(fakes.info).not.toHaveBeenCalled();
   });
 
   describe('GIVEN a package name with a line break and a bidi control', () => {
