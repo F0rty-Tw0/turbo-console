@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import { toTreeItem } from './tree-item.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
+import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { PackagesTreeApi, RunningTasks, TreeNode, TreePorts, TreeProviderDeps, TreeRefresh } from '../common/tree-node.type.ts';
 import type { TreeMode } from '../common/tree-row.type.ts';
@@ -63,6 +64,10 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
 
   public refreshTask(root: string, taskId: string): void {
     this.tree.refreshTask(root, taskId);
+  }
+
+  public runChanged(entry: RunEntry): void {
+    this.tree.runChanged(entry);
   }
 
   public refreshTasks(running: RunningTasks): void {

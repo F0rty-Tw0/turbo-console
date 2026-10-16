@@ -9,7 +9,7 @@ import { runRequestOf, taskTargetOf } from '../utils/run-target.util.ts';
  */
 export const registerRuns = (
   control: RunControl,
-  tree: Pick<PackagesTreeApi, 'refreshTask'>,
+  tree: Pick<PackagesTreeApi, 'runChanged'>,
   roots: Roots,
   register: CommandRegistry
 ): Disposed => {
@@ -36,7 +36,7 @@ export const registerRuns = (
     register('turboConsole.stopTask', stopTask)
   ];
   const unsubscribeRuns = control.runs.onDidChange((entry) => {
-    tree.refreshTask(entry.root, entry.taskId);
+    tree.runChanged(entry);
   });
   const unsubscribeRoots = roots.onDidChange((change) => {
     control.rootChanged(change);
