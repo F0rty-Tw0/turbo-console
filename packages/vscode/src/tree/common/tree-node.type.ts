@@ -69,7 +69,6 @@ export type PackagesTreeApi = {
   readonly getTreeItem: (node: TreeNode) => TreeItem;
   readonly refreshFor: (change: RootChange) => void;
   readonly setMode: (mode: TreeMode) => void;
-  readonly refreshTask: (root: string, taskId: string) => void;
   readonly runChanged: (entry: RunEntry) => void;
   readonly refreshTasks: (running: RunningTasks) => void;
   readonly setScopeShown: (value: boolean) => void;

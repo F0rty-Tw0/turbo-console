@@ -67,6 +67,13 @@ export const refresherFixtureOf = (multi = false): RefresherFixture => {
   return fixture;
 };
 
+/** A `running` change of task `taskId` of package `packageName` in `root`, as the run store emits it. */
+export const taskRunOf = (root: string, taskId: string, packageName: string): RunEntry => {
+  const entry: RunEntry = { ...RUN_ENTRY_STUB, root, taskId, packageName };
+
+  return entry;
+};
+
 /** A change of the script's run in `root`, as the run store emits it; `patch` sets what the case changes. */
 export const scriptRunOf = (root: string, patch: Partial<RunEntry> = {}): RunEntry => {
   const entry: RunEntry = { ...RUN_ENTRY_STUB, root, taskId: SCRIPT_TASK.id, packageName: 's', task: SCRIPT_TASK, ...patch };

@@ -11,12 +11,15 @@ import type { TreeMode } from '../common/tree-row.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
+import { taskRunOf } from '../test/utils/tree-refresher.spec.util.ts';
 
 const A = packageNamed('a');
 
 const B = packageNamed('b');
 
 const A_CHANGED = packageNamed('a', 'tsc -b');
+
+const B_BUILD_RUN = taskRunOf('/ws', 'b#build', 'b');
 
 type Fixture = {
   readonly store: RootStore;
@@ -68,8 +71,8 @@ describe('FEATURE: packages tree node cache', () => {
       vi.mocked(fixture.fire).mockClear();
     });
 
-    it('WHEN only package a changed THEN refreshing a task of b fires the node shown before', () => {
-      fixture.tree.refreshTask('/ws', 'b#build');
+    it('WHEN only package a changed THEN a run change of a task of b fires the node shown before', () => {
+      fixture.tree.runChanged(B_BUILD_RUN);
 
       expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(task);
     });
@@ -100,8 +103,8 @@ describe('FEATURE: packages tree node cache', () => {
       vi.mocked(fixture.fire).mockClear();
     });
 
-    it('WHEN only package a changed THEN refreshing a task of b fires the node shown before', () => {
-      fixture.tree.refreshTask('/ws', 'b#build');
+    it('WHEN only package a changed THEN a run change of a task of b fires the node shown before', () => {
+      fixture.tree.runChanged(B_BUILD_RUN);
 
       expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(task);
     });

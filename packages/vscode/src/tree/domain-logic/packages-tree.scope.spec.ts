@@ -9,6 +9,7 @@ import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
+import { taskRunOf } from '../test/utils/tree-refresher.spec.util.ts';
 
 const SCOPED = packageNamed('@s/a');
 
@@ -116,8 +117,8 @@ describe('FEATURE: package scopes in the packages tree', () => {
       expect(fixture.fire).not.toHaveBeenCalled();
     });
 
-    it('WHEN b is hidden and the task of the shown package is refreshed THEN its kept node fires', () => {
-      fixture.tree.refreshTask('/ws', '@s/a#build');
+    it('WHEN b is hidden and the task of the shown package runs THEN its kept node fires', () => {
+      fixture.tree.runChanged(taskRunOf('/ws', '@s/a#build', '@s/a'));
 
       expect(fixture.fire).toHaveBeenCalledOnce();
     });

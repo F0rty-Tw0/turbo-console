@@ -63,14 +63,6 @@ export class TreeRefresher {
     }
   }
 
-  /** Fires the cached node of that task; a task never shown (its package collapsed) has none, and nothing fires. */
-  public refreshTask(root: string, taskId: string): void {
-    const id = rowIdOf('task', root, taskId);
-    const node = this.deps.cache.get(id);
-
-    if (node !== undefined) this.deps.fire(node);
-  }
-
   /** One fire with the cached nodes of all `running` tasks (spec §4.6 tick); tasks never shown are skipped. */
   public refreshTasks(running: RunningTasks): void {
     const nodes: TreeNode[] = [];
@@ -92,6 +84,14 @@ export class TreeRefresher {
     const keep = this.keptIds(root);
 
     pruneNodes(this.deps.cache, root, keep);
+  }
+
+  /** Fires the cached node of that task; a task never shown (its package collapsed) has none, and nothing fires. */
+  private refreshTask(root: string, taskId: string): void {
+    const id = rowIdOf('task', root, taskId);
+    const node = this.deps.cache.get(id);
+
+    if (node !== undefined) this.deps.fire(node);
   }
 
   private remember(root: string, taskId: string, isMember: boolean): void {

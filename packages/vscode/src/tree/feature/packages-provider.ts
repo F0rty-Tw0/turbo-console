@@ -62,10 +62,6 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
     this.tree.setMode(mode);
   }
 
-  public refreshTask(root: string, taskId: string): void {
-    this.tree.refreshTask(root, taskId);
-  }
-
   public runChanged(entry: RunEntry): void {
     this.tree.runChanged(entry);
   }

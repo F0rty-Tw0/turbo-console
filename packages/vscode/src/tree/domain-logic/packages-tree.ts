@@ -95,10 +95,6 @@ export class PackagesTree {
     this.refresher.runChanged(entry);
   }
 
-  public refreshTask(root: string, taskId: string): void {
-    this.refresher.refreshTask(root, taskId);
-  }
-
   public refreshTasks(running: RunningTasks): void {
     this.refresher.refreshTasks(running);
   }
