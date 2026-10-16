@@ -11,7 +11,9 @@ import { whenQuiet } from '../utils/watch-wait.spec.util.ts';
 
 /**
  * L8: Package Details on `two-roots`, two clean `target-like` copies; cases 1 to 5 use root `a`, case 6 removes root
- * `b`. The real page posts `ready` itself; the cases send one more where they need a state posted at a known point.
+ * `b`. Only the real page posts `ready`: case 1 waits for its first state, because hiding a first-ever webview before
+ * its page has loaded can leave the rebuilt page uncontrolled by its service worker, so its loader waits forever and it
+ * never posts `ready` (L8-2).
  * The cases run in order and share state; case 6 changes the workspace folders, so it must stay last. Spawn counts are taken inside the windows of cases 1 and 4 only, after both roots have loaded and gone quiet.
  */
 export const run = async (): Promise<void> => {
