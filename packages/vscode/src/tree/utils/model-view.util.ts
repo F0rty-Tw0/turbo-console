@@ -3,6 +3,8 @@ import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 import { folderTree } from './folder-tree.util.ts';
 import { packageMapOf } from './package-map.util.ts';
 import { isVisibleTask } from './task-rows.util.ts';
+import { LABEL_MAX } from '../../shared/common/text.const.ts';
+import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
 import type { ModelView } from '../common/model-view.type.ts';
 
@@ -23,25 +25,56 @@ const countOf = (counts: Map<string, number>, key: string): void => {
   counts.set(key, count + 1);
 };
 
-/**
- * Spec §4.8: a scoped name reads its rest, unless that rest is the rest of another shown scoped package or the name of
- * a shown unscoped one; then it keeps its full name, so no two rows of a root read the same text.
- */
-const bareLabelsOf = (shown: PackageNode[]): Map<string, string> => {
-  const rests = shown.map((pkg) => restOf(pkg.name));
+const bareOf = (pkg: PackageNode): string => restOf(pkg.name) ?? pkg.name;
+
+/** The text a package row reads for `label`: `packageRow` cleans it the same way. */
+const rowTextOf = (label: string): string => cleanText(label, LABEL_MAX);
+
+const textCountsOf = (texts: string[]): Map<string, number> => {
   const counts = new Map<string, number>();
 
-  for (const [index, pkg] of shown.entries()) countOf(counts, rests[index] ?? pkg.name);
+  for (const text of texts) countOf(counts, text);
 
-  const labelOf = (pkg: PackageNode, index: number): [string, string] => {
-    const rest = rests[index] ?? null;
-    const isUnique = rest !== null && counts.get(rest) === 1;
+  return counts;
+};
 
-    return [pkg.name, isUnique ? rest : pkg.name];
-  };
-  const labels = shown.map(labelOf);
+/** Every package still reading its rest whose row text another row shares falls back to its full name; true when one did. */
+const fellBack = (shown: PackageNode[], labels: string[], texts: string[]): boolean => {
+  const counts = textCountsOf(texts);
+  let isAnyFallen = false;
 
-  return new Map(labels);
+  for (const [index, pkg] of shown.entries()) {
+    const text = texts[index] ?? '';
+    const count = counts.get(text) ?? 0;
+    const isShared = count > 1;
+    const isBare = labels[index] !== pkg.name;
+
+    if (!isShared || !isBare) continue;
+
+    labels[index] = pkg.name;
+    texts[index] = rowTextOf(pkg.name);
+    isAnyFallen = true;
+  }
+
+  return isAnyFallen;
+};
+
+/**
+ * Spec §4.8: a scoped name reads its rest, unless the text its row reads (cleaned) is the text of another shown
+ * package's row; then it keeps its full name. A fallback can make a new pair (`@a/x` back to full meets `@b/@a/x`
+ * reading `@a/x`), so passes repeat until none falls back: no two rows of a root read the same text, unless their full
+ * names already do once cleaned.
+ */
+const bareLabelsOf = (shown: PackageNode[]): Map<string, string> => {
+  const labels = shown.map(bareOf);
+  const texts = labels.map(rowTextOf);
+  let isFalling = true;
+
+  while (isFalling) isFalling = fellBack(shown, labels, texts);
+
+  const pairs = shown.map((pkg, index): [string, string] => [pkg.name, labels[index] ?? pkg.name]);
+
+  return new Map(pairs);
 };
 
 /** The label a package row reads: its full name while scopes are shown, else its bare label. */

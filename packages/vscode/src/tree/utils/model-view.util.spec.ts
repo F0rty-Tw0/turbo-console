@@ -110,5 +110,23 @@ describe('FEATURE: model view', () => {
 
       expect(labels).toStrictEqual(['b/c']);
     });
+
+    it('WHEN a rest equals the full name a collision leaves another package THEN it keeps its full name', () => {
+      const labels = labelsOfNames(['@a/ui', '@b/ui', '@c/@a/ui']);
+
+      expect(labels).toStrictEqual(['@a/ui', '@b/ui', '@c/@a/ui']);
+    });
+
+    it('WHEN each fallback leaves a new pair along a chain of nested scopes THEN every scoped one keeps its full name', () => {
+      const labels = labelsOfNames(['@a/x', 'x', '@b/@a/x', '@c/@b/@a/x']);
+
+      expect(labels).toStrictEqual(['@a/x', 'x', '@b/@a/x', '@c/@b/@a/x']);
+    });
+
+    it('WHEN a rest and an unscoped name read the same once cleaned THEN the scoped one keeps its full name', () => {
+      const labels = labelsOfNames(['@a/x', 'x​']);
+
+      expect(labels).toStrictEqual(['@a/x', 'x​']);
+    });
   });
 });
