@@ -68,8 +68,8 @@ const diamondPackages = (levels: number): PersistentFixturePackage[] => {
   return packages;
 };
 
-/** The 12-level diamond read its 25 configs 89 times when written: 5 per config leaves headroom, the literal walk does not fit. */
-const READS_PER_CONFIG = 5;
+/** The 12-level diamond read its 25 configs 46 times when written: 3 per config leaves headroom, the literal walk does not fit. */
+const READS_PER_CONFIG = 3;
 
 /** Throws past `READS_PER_CONFIG` reads per config, so a walk gone exponential fails at once instead of hanging. */
 const guardReads = (lookup: TurboTaskLookup): void => {

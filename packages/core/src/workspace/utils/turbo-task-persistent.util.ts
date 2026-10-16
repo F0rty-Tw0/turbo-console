@@ -1,5 +1,5 @@
-import { ROOT_DIR, ROOT_NAME, dirOfName, packageDirOf, rootKeyTaskOf } from './turbo-task-lookup.util.ts';
-import type { TurboConfigOk, TurboTaskFacts, TurboTaskLookup, TurboTaskPackage } from '../common/turbo-config.type.ts';
+import { ROOT_DIR, ROOT_NAME, dirOfName, rootKeyTaskOf } from './turbo-task-lookup.util.ts';
+import type { TurboConfigOk, TurboTaskFacts, TurboTaskLookup, TurboTaskTarget } from '../common/turbo-config.type.ts';
 import { NOT_PERSISTENT_FACTS, PERSISTENT_FACTS } from '../common/turbo-task.const.ts';
 
 /** What one entry, or a whole sequence of entries, does to the `persistent` value so far: `unset` means no value. */
@@ -118,45 +118,24 @@ const addRootSettable = (settable: Set<string>, root: TurboConfigOk, packageName
   }
 };
 
-/** Every config of `dir`'s `extends` closure, each once, adds the tasks it sets `persistent` for. */
-const addChainSettable = (settable: Set<string>, lookup: TurboTaskLookup, dir: string): void => {
-  const pending = [dir];
-  const seen = new Set<string>();
-
-  for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
-    const config = lookup.configsByDir.get(next);
-    const isSeen = seen.has(next);
-
-    if (config === undefined || 'error' in config || isSeen) continue;
-
-    seen.add(next);
-
-    for (const task of Object.keys(config.persistent)) settable.add(task);
-
-    for (const name of config.extends) {
-      const parentDir = dirOfName(lookup, name);
-
-      if (parentDir !== undefined) pending.push(parentDir);
-    }
-  }
-};
-
 /**
  * The tasks some entry of the target's sequence sets `persistent` for: any other task ends with no value, so `false`,
  * without a walk. Most repos set it for a few tasks only, so most tasks skip the walk.
  */
-const settableTasksOf = (lookup: TurboTaskLookup, root: TurboConfigOk, pkg: TurboTaskPackage, dir: string): Set<string> => {
+const settableTasksOf = (root: TurboConfigOk, target: TurboTaskTarget): Set<string> => {
   const settable = new Set<string>();
 
-  addRootSettable(settable, root, pkg.name);
+  addRootSettable(settable, root, target.name);
 
-  if (dir !== ROOT_DIR) addChainSettable(settable, lookup, dir);
+  for (const config of target.chain) {
+    for (const task of Object.keys(config.persistent)) settable.add(task);
+  }
 
   return settable;
 };
 
 /**
- * Sets turbo 2.11.7's resolved `persistent` on `tasks` (the tasks the presence rule keeps for `pkg`, each still
+ * Sets turbo 2.11.7's resolved `persistent` on `tasks` (the tasks the presence rule keeps for `target`, each still
  * `NOT_PERSISTENT_FACTS`): the last value an entry of the target's sequence sets, `false` when none sets one (spec
  * §4.2 steps 1–4). Only a task some entry sets a value for is walked; the map keeps its order.
  */
@@ -164,10 +143,9 @@ export const applyPersistent = (
   tasks: Map<string, TurboTaskFacts>,
   lookup: TurboTaskLookup,
   root: TurboConfigOk,
-  pkg: TurboTaskPackage
+  target: TurboTaskTarget
 ): void => {
-  const dir = packageDirOf(pkg);
-  const settable = settableTasksOf(lookup, root, pkg, dir);
+  const settable = settableTasksOf(root, target);
   const path = new Set<string>();
   const memo = new Map<string, FieldEffect>();
 
@@ -176,11 +154,11 @@ export const applyPersistent = (
 
     if (!isKept) continue;
 
-    const rootEffect = rootEffectOf(root, pkg.name, task);
+    const rootEffect = rootEffectOf(root, target.name, task);
     const walk: FieldWalk = { lookup, task, rootEffect, path, memo };
 
     memo.clear();
-    tasks.set(task, factsOf(targetEffectOf(walk, dir)));
+    tasks.set(task, factsOf(targetEffectOf(walk, target.dir)));
   }
 };
 

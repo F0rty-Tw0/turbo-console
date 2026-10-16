@@ -9,7 +9,8 @@ import type {
   TurboConfigOk,
   TurboTaskFacts,
   TurboTaskLookup,
-  TurboTaskPackage
+  TurboTaskPackage,
+  TurboTaskTarget
 } from '../common/turbo-config.type.ts';
 import { NOT_PERSISTENT_FACTS } from '../common/turbo-task.const.ts';
 
@@ -168,7 +169,9 @@ export const turboTasksOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): Re
 
   if (own !== undefined) applyTasks(tasks, own);
 
-  applyPersistent(tasks, lookup, root.config, pkg);
+  const target: TurboTaskTarget = { name: pkg.name, dir, chain };
+
+  applyPersistent(tasks, lookup, root.config, target);
 
   return tasks;
 };

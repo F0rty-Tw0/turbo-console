@@ -56,5 +56,12 @@ export type TurboTaskPackage = {
   readonly path: string;
 };
 
+/** The package a task map is resolved for: its `dir` (`.` = root) and its `extends` chain, own config first. */
+export type TurboTaskTarget = {
+  readonly name: string;
+  readonly dir: string;
+  readonly chain: TurboConfigOk[];
+};
+
 /** One config file read; `path` is the file's posix path relative to the workspace root (`turbo.json` = root). */
 export type TurboConfigFile = TurboConfigError | TurboConfigOk;
