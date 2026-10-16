@@ -131,10 +131,6 @@ export class DetailsPanels {
 
       if (this.isDisposed || !isSameRoot) return null;
 
-      const built = this.panels.get(id);
-
-      if (built !== undefined) return revealed(built);
-
       const isInModel = this.hasPackage(key);
 
       if (!isInModel) return this.refused();
