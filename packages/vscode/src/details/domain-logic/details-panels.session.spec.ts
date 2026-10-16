@@ -69,7 +69,7 @@ describe('FEATURE: the editor effects of a details panel session', () => {
     });
   });
 
-  describe('GIVEN a shown panel opened by row while its root still loads', () => {
+  describe('GIVEN a row open still waiting for its root to load', () => {
     let loaded: PromiseWithResolvers<undefined>;
     let opening: Promise<OpenPanel | null>;
 
