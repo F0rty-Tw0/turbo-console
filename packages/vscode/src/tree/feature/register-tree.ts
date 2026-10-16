@@ -59,7 +59,8 @@ const writeScopeShown = async (context: TreeContext, tree: PackagesTreeApi, valu
 /**
  * The scope toggle (spec §4.8): restores the stored choice into the tree and the context key, then registers the two
  * view-title commands. The key is sent before `turboConsole.active` makes the view visible, so the view first draws with it
- * set and the title icon never shows the wrong state. A rejected send goes to the output channel.
+ * set and the title icon never shows the wrong state. A rejected send goes to the output channel. The commands write one
+ * after another, so two clicks in flight cannot leave `workspaceState` and the tree on different choices.
  */
 const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi, output: Output): vscode.Disposable => {
   const stored = context.workspaceState.get(SCOPE_KEY) === true;
@@ -71,8 +72,16 @@ const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi, output
     output.error(logTextOf(error));
   });
 
-  const showScope = vscode.commands.registerCommand('turboConsole.showScope', async () => writeScopeShown(context, tree, true));
-  const hideScope = vscode.commands.registerCommand('turboConsole.hideScope', async () => writeScopeShown(context, tree, false));
+  let last: Promise<void> = Promise.resolve();
+  const queueWrite = async (value: boolean): Promise<void> => {
+    const run = last.then(async () => writeScopeShown(context, tree, value));
+
+    last = run.catch(() => undefined);
+
+    return run;
+  };
+  const showScope = vscode.commands.registerCommand('turboConsole.showScope', async () => queueWrite(true));
+  const hideScope = vscode.commands.registerCommand('turboConsole.hideScope', async () => queueWrite(false));
   const toggle: vscode.Disposable = {
     dispose: () => {
       showScope.dispose();

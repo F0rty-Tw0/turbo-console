@@ -27,6 +27,21 @@ const flush = async (): Promise<void> => {
   });
 };
 
+type Gate = {
+  readonly promise: Promise<void>;
+  readonly open: () => void;
+};
+
+const gateOf = (): Gate => {
+  let open: () => void = () => undefined;
+  const promise = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  const gate: Gate = { promise, open };
+
+  return gate;
+};
+
 const firstOrderOf = (spy: Mock): number => spy.mock.invocationCallOrder.at(0) ?? Number.POSITIVE_INFINITY;
 
 const disposableFake = (): Disposable => {
@@ -59,6 +74,7 @@ vi.mock('vscode', () => {
 describe('FEATURE: registerTree scope toggle', () => {
   let calls: string[];
   let disposed: string[];
+  let updateGates: Promise<void>[];
   let stored: Map<string, unknown>;
   let commands: Map<string, CommandCallback>;
   let tree: PackagesTreeApi;
@@ -77,6 +93,7 @@ describe('FEATURE: registerTree scope toggle', () => {
   beforeEach(() => {
     calls = [];
     disposed = [];
+    updateGates = [];
     stored = new Map();
     commands = new Map();
     tree = packagesTreeApiMock();
@@ -87,6 +104,7 @@ describe('FEATURE: registerTree scope toggle', () => {
     const workspaceState: ScopeStore = {
       get: (key) => stored.get(key),
       update: async (key, value) => {
+        await updateGates.shift();
         await flush();
         calls.push(`update:${String(value)}`);
         stored.set(key, value);
@@ -196,6 +214,25 @@ describe('FEATURE: registerTree scope toggle', () => {
 
       expect(calls).toStrictEqual(['update:false', `setContext:${SCOPE_KEY}:false`, 'setScopeShown:false']);
       expect(stored.get(SCOPE_KEY)).toBe(false);
+    });
+
+    it('WHEN showScope is still storing and hideScope is invoked THEN the last command decides the final state', async () => {
+      const firstStore = gateOf();
+      const settledKeys = (): string[] => calls.filter((call) => call.startsWith('setContext'));
+
+      updateGates.push(firstStore.promise);
+
+      const showing = invoke('turboConsole.showScope');
+      const hiding = invoke('turboConsole.hideScope');
+
+      await flush();
+      await flush();
+      firstStore.open();
+      await Promise.all([showing, hiding]);
+
+      expect(stored.get(SCOPE_KEY)).toBe(false);
+      expect(settledKeys().at(-1)).toBe(`setContext:${SCOPE_KEY}:false`);
+      expect(calls.at(-1)).toBe('setScopeShown:false');
     });
   });
 });
