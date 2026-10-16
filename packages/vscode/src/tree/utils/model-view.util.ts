@@ -7,7 +7,7 @@ import type { ModelView } from '../common/model-view.type.ts';
 
 const SCOPED_NAME = /^@[^/]+\/(.+)$/u;
 
-const isShownPackage = (pkg: PackageNode): boolean => pkg.tasks.some(isVisibleTask);
+export const isShownPackage = (pkg: PackageNode): boolean => pkg.tasks.some(isVisibleTask);
 
 /** The name after `@scope/`, or `null` for a name with no scope (`@a/` and `@x` have none). */
 const restOf = (name: string): string | null => {

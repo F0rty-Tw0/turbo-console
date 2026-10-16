@@ -33,7 +33,75 @@ const withAddedPackage = (): WorkspaceModel => {
   return model;
 };
 
+const ATOM_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'atom', name: 'atom', kind: 'atom-file' };
+
+const modelOf = (packages: PackageNode[]): WorkspaceModel => {
+  const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages };
+
+  return model;
+};
+
+const packageOf = (name: string, tasks: TaskNode[]): PackageNode => {
+  const pkg: PackageNode = { ...PACKAGE_NODE_STUB, name, path: `packages/${name}`, tasks };
+
+  return pkg;
+};
+
+const SCOPED_UI = packageOf('@a/ui', [TASK_NODE_STUB]);
+
+const HIDDEN_UI = packageOf('ui', [ATOM_TASK]);
+
+const changeOf = (before: PackageNode[], after: PackageNode[]): RootChange => {
+  const change: RootChange = { ...SHOWN, before: modelOf(before), after: modelOf(after) };
+
+  return change;
+};
+
 describe('FEATURE: refresh target', () => {
+  describe('GIVEN a root showing a model with a hidden package', () => {
+    it('WHEN the hidden package gains its first visible task THEN the root is redrawn', () => {
+      const change = changeOf([HIDDEN_UI], [packageOf('ui', [TASK_NODE_STUB])]);
+
+      const target = refreshTarget(change);
+
+      expect(target).toBe('root');
+    });
+
+    it('WHEN an unscoped package sharing a shown scoped name becomes shown THEN the root is redrawn', () => {
+      const change = changeOf([SCOPED_UI, HIDDEN_UI], [SCOPED_UI, packageOf('ui', [ATOM_TASK, TASK_NODE_STUB])]);
+
+      const target = refreshTarget(change);
+
+      expect(target).toBe('root');
+    });
+
+    it('WHEN an unscoped package sharing a shown scoped name is added THEN the root is redrawn', () => {
+      const change = changeOf([SCOPED_UI], [SCOPED_UI, packageOf('ui', [TASK_NODE_STUB])]);
+
+      const target = refreshTarget(change);
+
+      expect(target).toBe('root');
+    });
+
+    it('WHEN the hidden package changes and stays hidden THEN only that package is redrawn', () => {
+      const edited: TaskNode = { ...ATOM_TASK, command: 'edited' };
+      const change = changeOf([SCOPED_UI, HIDDEN_UI], [SCOPED_UI, packageOf('ui', [edited])]);
+
+      const target = refreshTarget(change);
+
+      expect(target).toStrictEqual(['ui']);
+    });
+
+    it('WHEN the visible task of the shown package changes THEN only that package is redrawn', () => {
+      const edited: TaskNode = { ...TASK_NODE_STUB, command: 'edited' };
+      const change = changeOf([SCOPED_UI, HIDDEN_UI], [packageOf('@a/ui', [edited]), HIDDEN_UI]);
+
+      const target = refreshTarget(change);
+
+      expect(target).toStrictEqual(['@a/ui']);
+    });
+  });
+
   describe('GIVEN a root showing a model', () => {
     it('WHEN a binary error comes in with the same model kept THEN the root is redrawn', () => {
       const change: RootChange = { ...SHOWN, errorAfter: 'binary:not-found' };
