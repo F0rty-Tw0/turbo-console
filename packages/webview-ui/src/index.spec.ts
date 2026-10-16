@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
-import { renderWebviewHtml, webviewCsp } from './index.ts';
+import { durationText, elapsedText, renderWebviewHtml, webviewCsp } from './index.ts';
 import type {
   DetailsState,
   DryRunPhase,
@@ -22,8 +22,8 @@ import type {
   // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 } from './index.ts';
 
-/** The host-facing API: the HTML renderer and CSP; everything else is wire-contract types. The webview-only bridge stays internal. */
-const RUNTIME_EXPORTS = ['renderWebviewHtml', 'webviewCsp'];
+/** The host-facing API: the HTML renderer, CSP and duration formatters; everything else is wire-contract types. The webview-only bridge stays internal. */
+const RUNTIME_EXPORTS = ['durationText', 'elapsedText', 'renderWebviewHtml', 'webviewCsp'];
 
 describe('FEATURE: webview-ui package entry', () => {
   describe('GIVEN the package entry point', () => {
@@ -34,6 +34,8 @@ describe('FEATURE: webview-ui package entry', () => {
       const names = Object.keys(entry).toSorted();
 
       expect(names).toStrictEqual(RUNTIME_EXPORTS);
+      expect(entry.durationText).toBe(durationText);
+      expect(entry.elapsedText).toBe(elapsedText);
       expect(entry.renderWebviewHtml).toBe(renderWebviewHtml);
       expect(entry.webviewCsp).toBe(webviewCsp);
       expectTypeOf<WebviewSlots>().toEqualTypeOf<Readonly<Record<string, string>>>();
