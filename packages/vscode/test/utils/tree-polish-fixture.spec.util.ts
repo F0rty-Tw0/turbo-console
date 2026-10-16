@@ -12,13 +12,13 @@ type JsonObject = Record<string, unknown>;
 
 const NOOP_SCRIPT = 'node -e 0';
 
-const editJson = async (file: string, edit: (manifest: JsonObject) => void): Promise<void> => {
+export const editJson = async (file: string, edit: (manifest: JsonObject) => void): Promise<void> => {
   const original = await readFile(file, 'utf8');
 
   await writeEdited(file, original, edit);
 };
 
-const writePackage = async (root: string, folder: string, name: string, scripts: Record<string, string>): Promise<void> => {
+export const writePackage = async (root: string, folder: string, name: string, scripts: Record<string, string>): Promise<void> => {
   const dir = join(root, 'packages', folder);
   const manifest = { name, private: true, version: '0.0.0', scripts };
 

@@ -23,7 +23,7 @@ const secondsOf = (description: string): number => Number(/(\d+)s$/u.exec(descri
 
 const devNode = async (api: TurboConsoleApi): Promise<TreeNode> => taskNodeNamed(api, POLISH_PACKAGE, DEV_TASK_ID);
 
-const logExit = (label: string, entry: RunEntry): void => {
+export const logExit = (label: string, entry: RunEntry): void => {
   log(`V1 ${label}: state ${entry.state}, exit code ${String(entry.exitCode)}, platform ${process.platform}`);
 };
 

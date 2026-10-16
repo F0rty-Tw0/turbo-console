@@ -15,7 +15,7 @@ import { DEV_PID_PATH, DEV_TASK_ID, POLISH_PACKAGE } from '../common/tree-polish
 import type { LiveRun } from '../common/tree-polish.type.ts';
 
 /** The pid `DEV_SCRIPT` wrote, or `null` while the file is missing or half written. */
-const pidIn = (file: string): number | null => {
+export const pidIn = (file: string): number | null => {
   const hasFile = existsSync(file);
 
   if (!hasFile) return null;
