@@ -60,7 +60,8 @@ const writeScopeShown = async (context: TreeContext, tree: PackagesTreeApi, valu
  * The scope toggle (spec §4.8): restores the stored choice into the tree and the context key, then registers the two
  * view-title commands. The key is sent before `turboConsole.active` makes the view visible, so the view first draws with it
  * set and the title icon never shows the wrong state. A rejected send goes to the output channel. The commands write one
- * after another, so two clicks in flight cannot leave `workspaceState` and the tree on different choices.
+ * after another, so two clicks in flight cannot leave `workspaceState` and the tree on different choices. A write that
+ * fails midway can: `workspaceState` keeps the value while the tree and the key keep the old one until the next toggle.
  */
 const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi, output: Output): vscode.Disposable => {
   const stored = context.workspaceState.get(SCOPE_KEY) === true;

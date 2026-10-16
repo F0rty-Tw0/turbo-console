@@ -216,6 +216,15 @@ describe('FEATURE: registerTree scope toggle', () => {
       expect(stored.get(SCOPE_KEY)).toBe(false);
     });
 
+    it('WHEN the key cannot be set THEN the value stays stored, the tree is unchanged and the command rejects', async () => {
+      editor.executeCommand.mockRejectedValueOnce(new Error('refused'));
+
+      await expect(invoke('turboConsole.showScope')).rejects.toThrow('refused');
+
+      expect(stored.get(SCOPE_KEY)).toBe(true);
+      expect(calls).toStrictEqual(['update:true']);
+    });
+
     it('WHEN showScope fails THEN the next command still runs', async () => {
       editor.executeCommand.mockRejectedValueOnce(new Error('refused'));
 
