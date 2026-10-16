@@ -2,7 +2,8 @@ import type { DryRunRequest, DryRunState, TurboBinary } from '@turbo-console/cor
 import type { HostMessage } from '@turbo-console/webview-ui';
 
 import type { PanelKey } from './details.type.ts';
-import type { Roots } from '../../roots/common/coordinator.type.ts';
+import type { Coordinator, Roots } from '../../roots/common/coordinator.type.ts';
+import type { FileLookupPorts } from '../../run/common/picker.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
 
 /** One webview panel as the registry drives it. Listeners live as long as the panel; `dispose` is safe to repeat. */
@@ -52,6 +53,12 @@ export type PanelParts = {
   readonly posted: HostMessage[];
 };
 
+/** The lookup ports of one open from a manifest, and the coordinator whose load they awaited (`null` before any). */
+export type FileLookup = {
+  readonly ports: FileLookupPorts;
+  readonly loaded: () => Coordinator | null;
+};
+
 /** What `registerDetails` asks of the registry. */
 export type PanelOpener = {
   readonly open: (key: PanelKey) => Promise<OpenPanel | null>;
@@ -59,11 +66,10 @@ export type PanelOpener = {
   readonly dispose: () => void;
 };
 
-/** An open panel. `posted` holds the last `POSTED_MAX` messages sent to it; `started` is its session's `start()`. */
+/** An open panel. `posted` holds the last `POSTED_MAX` messages sent to it. */
 export type OpenPanel = {
   readonly key: PanelKey;
   readonly view: PanelView;
   readonly session: PanelSession;
-  readonly started: Promise<void>;
   readonly posted: HostMessage[];
 };

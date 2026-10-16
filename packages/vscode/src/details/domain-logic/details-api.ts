@@ -33,10 +33,7 @@ export const detailsApiOf = (panels: ReadonlyMap<string, OpenPanel>): DetailsApi
     await panelOf(root, packageName).session.receive(message);
   };
   const whenIdle = async (root: string, packageName: string): Promise<void> => {
-    const panel = panelOf(root, packageName);
-
-    await panel.started;
-    await panel.session.whenIdle();
+    await panelOf(root, packageName).session.whenIdle();
   };
   const api: DetailsApi = { panels: list, posted, receive, whenIdle };
 

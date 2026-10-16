@@ -23,7 +23,7 @@ export class DetailsSession {
   private readonly ports: DetailsPorts;
   private readonly dryRun: PanelDryRun;
   private readonly unsubscribes: (() => void)[] = [];
-  /** `false` until `start` has seen the root loaded: the panel has no state, so every task message is dropped. */
+  /** `false` until `start`: the panel has no state, so every task message is dropped. */
   private isStarted = false;
   private isVisible = false;
   private isReady = false;
@@ -39,10 +39,8 @@ export class DetailsSession {
     });
   }
 
-  /** Subscribes after the root's load (unless the caller just awaited it), so the cache-first publish starts no dry run. */
-  public async start(isLoaded = false): Promise<void> {
-    if (!isLoaded) await this.ports.ensureLoaded(this.key.root);
-
+  /** Subscribes and builds the first state. The caller awaits the root's load first, so the cache-first publish starts no dry run. */
+  public start(): void {
     if (this.isDisposed) return;
 
     const offRoots = this.roots.onDidChange((change) => {

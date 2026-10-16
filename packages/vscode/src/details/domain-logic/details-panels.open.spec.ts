@@ -105,6 +105,47 @@ describe('FEATURE: opening a details panel', () => {
     });
   });
 
+  describe('GIVEN an open from a manifest still waiting for the root to load', () => {
+    it('WHEN its root is removed before the load resolves THEN no panel is built and no message shows', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const opening = panels.openFile(A_MANIFEST);
+
+      store.set([], coordinatorMock);
+      loaded.resolve(undefined);
+
+      await expect(opening).resolves.toBeNull();
+      expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN its root is replaced by one that has loaded THEN no panel is built and no message shows', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const opening = panels.openFile(A_MANIFEST);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply('/ws', DETAILS_LOADED_STUB);
+      loaded.resolve(undefined);
+
+      await expect(opening).resolves.toBeNull();
+      expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN its root is replaced by one that has not loaded THEN no panel is built and no message shows', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const opening = panels.openFile(A_MANIFEST);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      loaded.resolve(undefined);
+
+      await expect(opening).resolves.toBeNull();
+      expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a key that was opened before', () => {
     it('WHEN its panel was closed and it opens again THEN a second view is created', async () => {
       await panels.open(WS_A);

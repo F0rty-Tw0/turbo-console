@@ -53,48 +53,39 @@ describe('FEATURE: details session', () => {
     session = new DetailsSession(PANEL_KEY_STUB, store, runStore, ports);
   });
 
-  describe('GIVEN a shown panel whose root is still loading', () => {
-    let loaded: PromiseWithResolvers<undefined>;
-    let started: Promise<void>;
-
+  describe('GIVEN a shown panel not started yet, as while its opener awaits the root load', () => {
     beforeEach(() => {
-      loaded = Promise.withResolvers<undefined>();
-      vi.mocked(ports.ensureLoaded).mockReturnValue(loaded.promise);
       session.setVisible(true);
-      started = session.start();
     });
 
-    it('WHEN the cache-first model is published before the load resolves THEN no dry run starts', async () => {
+    it('WHEN the cache-first model is published THEN no dry run starts', async () => {
       store.apply('/ws', CACHE_FIRST);
       await flushSettles();
 
       expect(ports.dryRun).not.toHaveBeenCalled();
     });
 
-    it('WHEN the load resolves after a cache-first publish THEN exactly one dry run starts', async () => {
+    it('WHEN it starts after a cache-first publish THEN exactly one dry run starts', () => {
       store.apply('/ws', CACHE_FIRST);
-      loaded.resolve(undefined);
-      await started;
+      session.start();
 
       expect(ports.dryRun).toHaveBeenCalledOnce();
     });
 
-    it('WHEN disposed before the load resolves THEN no dry run starts, then or on a later model', async () => {
+    it('WHEN disposed before it starts THEN no dry run starts, then or on a later model', () => {
       session.dispose();
-      loaded.resolve(undefined);
-      await started;
+      session.start();
       store.apply('/ws', RELOADED_WITHOUT_BUILD);
 
       expect(ports.dryRun).not.toHaveBeenCalled();
     });
 
-    it('WHEN disposed before the load resolves THEN it never subscribes to the roots or the runs', async () => {
+    it('WHEN disposed before it starts THEN it never subscribes to the roots or the runs', () => {
       const onRoots = vi.spyOn(store, 'onDidChange');
       const onRuns = vi.spyOn(runStore, 'onDidChange');
 
       session.dispose();
-      loaded.resolve(undefined);
-      await started;
+      session.start();
 
       expect(onRoots).not.toHaveBeenCalled();
       expect(onRuns).not.toHaveBeenCalled();
@@ -109,14 +100,14 @@ describe('FEATURE: details session', () => {
   });
 
   it('GIVEN a hidden panel whose root has loaded WHEN ready arrives THEN nothing is posted', async () => {
-    await session.start();
+    session.start();
     await session.receive({ type: 'ready' });
 
     expect(ports.post).not.toHaveBeenCalled();
   });
 
   it('GIVEN a hidden panel whose root has loaded WHEN ready arrives before the show THEN the show posts one state', async () => {
-    await session.start();
+    session.start();
     await session.receive({ type: 'ready' });
     session.setVisible(true);
 
@@ -124,9 +115,9 @@ describe('FEATURE: details session', () => {
   });
 
   describe('GIVEN a shown panel whose root has loaded', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       session.setVisible(true);
-      await session.start();
+      session.start();
     });
 
     it('WHEN its dry run lists states before ready THEN nothing is posted', async () => {

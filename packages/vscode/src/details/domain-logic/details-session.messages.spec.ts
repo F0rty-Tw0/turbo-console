@@ -71,7 +71,7 @@ describe('FEATURE: details session messages', () => {
   describe('GIVEN a shown, ready panel whose root has loaded', () => {
     beforeEach(async () => {
       session.setVisible(true);
-      await session.start();
+      session.start();
       await session.receive({ type: 'ready' });
     });
 

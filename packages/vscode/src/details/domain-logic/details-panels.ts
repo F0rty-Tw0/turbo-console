@@ -1,8 +1,8 @@
 import { detailsApiOf } from './details-api.ts';
 import { DetailsSession } from './details-session.ts';
-import { ensureLoadedWith, panelPortsOf } from './panel-ports.ts';
+import { fileLookupOf, panelPortsOf } from './panel-ports.ts';
+import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
-import type { FileLookupPorts } from '../../run/common/picker.type.ts';
 import { packageOfFile } from '../../run/domain-logic/pick-for-file.ts';
 import type { DetailsApi } from '../../shared/common/api.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -20,10 +20,10 @@ const revealed = (panel: OpenPanel | null): OpenPanel | null => {
 };
 
 /**
- * The open Package Details panels, one per root and package name. A key is registered as pending before the root's load
- * is awaited, so a second open of it waits for the same panel. A panel is made only for a package that is still in the
- * root's model once the load has resolved; a root removed meanwhile, even if added back, ends the open with no panel and
- * no message.
+ * The open Package Details panels, one per root and package name. A key opened by row is registered as pending before
+ * the root's load is awaited, so a second open of it waits for the same panel; an open from a manifest registers its key
+ * only once the load has resolved. A panel is made only for a package that is still in the root's model once the load
+ * has resolved; a root removed meanwhile, even if added back, ends the open with no panel and no message.
  */
 export class DetailsPanels {
   private readonly deps: PanelsDeps;
@@ -37,9 +37,10 @@ export class DetailsPanels {
 
   /**
    * Opens or reveals the panel of `key`; `null` when none was made (a gone package in a live root shows the refusal text).
-   * `isLoaded` skips the wait for a root the caller has just loaded: a second wait reloads a root whose binary failed.
+   * `loaded` is the coordinator whose load the caller has just awaited, so the open skips the wait (a second wait reloads
+   * a root whose binary failed) and ends silently once that coordinator is no longer the root's.
    */
-  public async open(key: PanelKey, isLoaded = false): Promise<OpenPanel | null> {
+  public async open(key: PanelKey, loaded: Coordinator | null = null): Promise<OpenPanel | null> {
     const id = panelIdOf(key);
     const existing = this.panels.get(id);
 
@@ -49,7 +50,7 @@ export class DetailsPanels {
 
     if (waiting !== undefined) return revealed(await waiting);
 
-    const creating = this.create(key, id, isLoaded).finally(() => {
+    const creating = this.create(key, id, loaded).finally(() => {
       this.pending.delete(id);
     });
 
@@ -63,11 +64,13 @@ export class DetailsPanels {
    * a root that kept its model opens, and its panel shows the error.
    */
   public async openFile(file: string | null): Promise<OpenPanel | null> {
-    const found = await packageOfFile(this.deps.roots, this.lookupPorts(), file, false);
+    const lookup = fileLookupOf(this.deps.roots, this.deps.host);
+    const found = await packageOfFile(this.deps.roots, lookup.ports, file, false);
+    const loaded = lookup.loaded();
 
-    if (found === null) return null;
+    if (found === null || loaded === null) return null;
 
-    return this.open({ root: found.root, packageName: found.pkg.name }, true);
+    return this.open({ root: found.root, packageName: found.pkg.name }, loaded);
   }
 
   /** Closes the panels of roots that are no longer in the store. */
@@ -94,22 +97,20 @@ export class DetailsPanels {
     for (const id of ids) this.close(id);
   }
 
-  private lookupPorts(): FileLookupPorts {
-    const { roots, host } = this.deps;
-    const ensureLoaded = ensureLoadedWith(roots);
-    const ports: FileLookupPorts = { ensureLoaded, rootOf: host.rootOf, info: host.info };
+  /** Whether `root` still has the coordinator that answered its load, waited for here unless the caller did (`loaded`). */
+  private async isStillLoaded(root: string, loaded: Coordinator | null): Promise<boolean> {
+    const before = loaded ?? this.deps.roots.get(root)?.coordinator;
 
-    return ports;
+    if (loaded === null) await before?.ensureLoaded();
+
+    const after = this.deps.roots.get(root)?.coordinator;
+
+    return before !== undefined && after === before;
   }
 
-  private async create(key: PanelKey, id: string, isLoaded: boolean): Promise<OpenPanel | null> {
+  private async create(key: PanelKey, id: string, loaded: Coordinator | null): Promise<OpenPanel | null> {
     try {
-      const before = this.deps.roots.get(key.root);
-
-      if (!isLoaded) await before?.coordinator.ensureLoaded();
-
-      const after = this.deps.roots.get(key.root);
-      const isSameRoot = before !== undefined && after?.coordinator === before.coordinator;
+      const isSameRoot = await this.isStillLoaded(key.root, loaded);
 
       if (this.isDisposed || !isSameRoot) return null;
 
@@ -176,8 +177,13 @@ export class DetailsPanels {
       session.setVisible(view.isVisible());
     });
 
-    const started = session.start(true).catch(report);
-    const panel: OpenPanel = { key, view, session, started, posted };
+    try {
+      session.start();
+    } catch (error: unknown) {
+      report(error);
+    }
+
+    const panel: OpenPanel = { key, view, session, posted };
 
     return panel;
   }
