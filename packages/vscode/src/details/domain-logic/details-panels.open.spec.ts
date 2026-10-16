@@ -17,7 +17,7 @@ import type { OpenPanel } from '../common/panel.type.ts';
 import type { HostFakes } from '../test/common/panel-fakes.type.ts';
 import { hostMock } from '../test/mocks/panel-host.mock.ts';
 import { A_PACKAGE_STUB, DETAILS_LOADED_STUB, DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
-import { A_MANIFEST, deferEnsureLoaded } from '../test/utils/panels-setup.spec.util.ts';
+import { A_MANIFEST, deferEnsureLoaded, ensureLoadedOf } from '../test/utils/panels-setup.spec.util.ts';
 
 const WS_A: PanelKey = { root: '/ws', packageName: 'a' };
 const GONE: PanelKey = { root: '/ws', packageName: 'gone' };
@@ -146,6 +146,44 @@ describe('FEATURE: opening a details panel', () => {
 
       expect(third).toBe(built);
       expect(fakes.open).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN a stale manifest open that ends while a row open on the new root waits, then a third open', () => {
+    let rowPanel: OpenPanel | null;
+    let thirdPanel: OpenPanel | null;
+
+    beforeEach(async () => {
+      const staleLoad = deferEnsureLoaded(store, '/ws');
+      const fileOpen = panels.openFile(A_MANIFEST);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply('/ws', DETAILS_LOADED_STUB);
+
+      const liveLoad = deferEnsureLoaded(store, '/ws');
+      const rowOpen = panels.open(WS_A);
+
+      staleLoad.resolve(undefined);
+      await fileOpen;
+      await flushSettles();
+
+      const thirdOpen = panels.open(WS_A);
+
+      liveLoad.resolve(undefined);
+      [rowPanel, thirdPanel] = await Promise.all([rowOpen, thirdOpen]);
+    });
+
+    it('WHEN both row opens end THEN one view is built', () => {
+      expect(fakes.open).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN both row opens end THEN the new root load is awaited once', () => {
+      expect(ensureLoadedOf(store, '/ws')).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN both row opens end THEN the third open gets the row open panel', () => {
+      expect(thirdPanel).toBe(rowPanel);
     });
   });
 

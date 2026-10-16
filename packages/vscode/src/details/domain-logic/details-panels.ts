@@ -22,9 +22,9 @@ const revealed = (panel: OpenPanel | null): OpenPanel | null => {
 /**
  * The open Package Details panels, one per root and package name. A key opened by row is registered as pending before
  * the root's load is awaited, so a second open of it waits for the same panel; an open from a manifest registers its key
- * only once the load has resolved. An open waits for a pending open only when both wait on the same coordinator. A
- * panel is made only for a package that is still in the root's model once the load has resolved; a root removed
- * meanwhile, even if added back, ends the open with no panel and no message.
+ * only once the load has resolved, and ends silently when the root was replaced meanwhile. An open waits for a pending
+ * open only when both wait on the same coordinator. A panel is made only for a package that is still in the root's model
+ * once the load has resolved; a root removed meanwhile, even if added back, ends the open with no panel and no message.
  */
 export class DetailsPanels {
   private readonly deps: PanelsDeps;
@@ -39,7 +39,7 @@ export class DetailsPanels {
   /**
    * Opens or reveals the panel of `key`; `null` when none was made (a gone package in a live root shows the refusal text).
    * `loaded` is the coordinator whose load the caller has just awaited, so the open skips the wait (a second wait reloads
-   * a root whose binary failed) and ends silently once that coordinator is no longer the root's.
+   * a root whose binary failed); when it is no longer the root's, the open ends silently and leaves pending opens alone.
    */
   public async open(key: PanelKey, loaded: Coordinator | null = null): Promise<OpenPanel | null> {
     const id = panelIdOf(key);
@@ -47,7 +47,11 @@ export class DetailsPanels {
 
     if (existing !== undefined) return revealed(existing);
 
-    const coordinator = loaded ?? this.deps.roots.get(key.root)?.coordinator;
+    const coordinator = this.deps.roots.get(key.root)?.coordinator;
+    const isStale = loaded !== null && loaded !== coordinator;
+
+    if (isStale) return null;
+
     const waiting = this.pending.get(id);
     const isOtherLoad = waiting !== undefined && waiting.coordinator !== coordinator;
 
@@ -126,6 +130,10 @@ export class DetailsPanels {
       const isSameRoot = await this.isStillLoaded(key.root, before, loaded);
 
       if (this.isDisposed || !isSameRoot) return null;
+
+      const built = this.panels.get(id);
+
+      if (built !== undefined) return revealed(built);
 
       const isInModel = this.hasPackage(key);
 
