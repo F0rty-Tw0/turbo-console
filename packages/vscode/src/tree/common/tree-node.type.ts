@@ -3,7 +3,8 @@ import type { Event, TreeItem } from 'vscode';
 import type { ModelViewsOf } from './model-view.type.ts';
 import type { TreeMode, TreeRow } from './tree-row.type.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
-import type { RunLookup } from '../../run/common/run.type.ts';
+import type { RunLookup, Runs } from '../../run/common/run.type.ts';
+import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { Span } from '../../shared/common/span.type.ts';
 
 /**
@@ -67,4 +68,15 @@ export type PackagesTreeApi = {
   readonly refreshTasks: (running: RunningTasks) => void;
   readonly setScopeShown: (value: boolean) => void;
   readonly isScopeShown: () => boolean;
+  readonly isScriptsShown: () => boolean;
+};
+
+/** The part of `Runs` the tree reads: the one run lookup every row uses. */
+type TreeRuns = Pick<Runs, 'get'>;
+
+/** What `PackagesTreeProvider` is built from beside the roots and the mode: the runs, the first-children spans and the scripts toggle. */
+export type TreeProviderDeps = {
+  readonly runs: TreeRuns;
+  readonly treeVisible: Map<string, Span>;
+  readonly scripts: ScriptsToggleApi;
 };

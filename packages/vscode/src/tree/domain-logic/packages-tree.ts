@@ -79,6 +79,11 @@ export class PackagesTree {
     return this.scopeShown;
   }
 
+  /** The scripts toggle changed: one redraw; the rows read the new choice. */
+  public scriptsChanged(): void {
+    this.redraw();
+  }
+
   /** After roots were added or removed: redraws the whole tree and forgets the nodes of a removed root. */
   public rootsChanged(): void {
     this.redraw();

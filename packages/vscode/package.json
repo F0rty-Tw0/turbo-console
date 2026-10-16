@@ -108,6 +108,18 @@
         "icon": "$(eye-closed)"
       },
       {
+        "command": "turboConsole.showScripts",
+        "title": "Show Scripts",
+        "category": "Turbo Console",
+        "icon": "$(list-filter)"
+      },
+      {
+        "command": "turboConsole.hideScripts",
+        "title": "Hide Scripts",
+        "category": "Turbo Console",
+        "icon": "$(filter-filled)"
+      },
+      {
         "command": "turboConsole.showOutput",
         "title": "Show Output",
         "category": "Turbo Console"
@@ -198,19 +210,29 @@
           "group": "navigation@0"
         },
         {
+          "command": "turboConsole.showScripts",
+          "when": "view == turboConsole.tree && !turboConsole.scriptsShown",
+          "group": "navigation@1"
+        },
+        {
+          "command": "turboConsole.hideScripts",
+          "when": "view == turboConsole.tree && turboConsole.scriptsShown",
+          "group": "navigation@1"
+        },
+        {
           "command": "turboConsole.showFolders",
           "when": "view == turboConsole.tree && config.turboConsole.treeMode == list",
-          "group": "navigation@1"
+          "group": "navigation@2"
         },
         {
           "command": "turboConsole.showList",
           "when": "view == turboConsole.tree && config.turboConsole.treeMode != list",
-          "group": "navigation@1"
+          "group": "navigation@2"
         },
         {
           "command": "turboConsole.refresh",
           "when": "view == turboConsole.tree",
-          "group": "navigation@2"
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -315,6 +337,14 @@
         {
           "command": "turboConsole.hideScope",
           "when": "turboConsole.active && turboConsole.scopeShown"
+        },
+        {
+          "command": "turboConsole.showScripts",
+          "when": "turboConsole.active && !turboConsole.scriptsShown"
+        },
+        {
+          "command": "turboConsole.hideScripts",
+          "when": "turboConsole.active && turboConsole.scriptsShown"
         },
         {
           "command": "turboConsole.showOutput",

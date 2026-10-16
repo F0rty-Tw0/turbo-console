@@ -7,6 +7,7 @@ import type { RunEntry } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeNode } from '../common/tree-node.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
+import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 
 /** Every value the provider's event emitters fired, in order. */
@@ -83,7 +84,7 @@ describe('FEATURE: packages provider', () => {
   describe('GIVEN a shown task a#build', () => {
     it('WHEN the running tasks are refreshed THEN the tree event fires once with that node', async () => {
       const store = new RootStore();
-      const provider = new PackagesTreeProvider(store, () => undefined, 'list', new Map());
+      const provider = new PackagesTreeProvider(store, 'list', providerDepsOf());
       const running = new Map([[ROOT_FOLDER_STUB.root, new Set(['a#build'])]]);
 
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
@@ -110,7 +111,11 @@ describe('FEATURE: packages provider', () => {
 
     it('WHEN its item is built THEN the elapsed time counts on the system wall clock', async () => {
       const store = new RootStore();
-      const provider = new PackagesTreeProvider(store, () => RUNNING, 'list', new Map());
+      const provider = new PackagesTreeProvider(
+        store,
+        'list',
+        providerDepsOf(() => RUNNING)
+      );
 
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
       store.apply(ROOT_FOLDER_STUB.root, loadedWith([packageNamed('a')]));

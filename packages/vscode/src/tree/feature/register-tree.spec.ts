@@ -6,6 +6,7 @@ import { registerTree } from './register-tree.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
@@ -111,7 +112,7 @@ describe('FEATURE: registerTree scope toggle', () => {
       }
     };
 
-    context = { subscriptions: [], workspaceState };
+    context = { subscriptions: [], workspaceState, scripts: scriptsToggleMock() };
     session = {
       store: new RootStore(),
       setWorkspaceFolders: vi.fn(async () => Promise.resolve([])),
