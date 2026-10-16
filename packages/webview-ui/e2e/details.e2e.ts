@@ -45,9 +45,13 @@ const CACHE_ONLY: TaskDefinition = { ...TASK_DEFINITION_STUB, persistent: false 
 
 const PERSISTENT_ONLY: TaskDefinition = { ...TASK_DEFINITION_STUB, cache: false };
 
-const SINGLE_BADGES: [string, TaskDefinition, string][] = [
-  ['cache', CACHE_ONLY, 'Cacheable'],
-  ['persistent', PERSISTENT_ONLY, 'Continuous']
+const NO_FLAGS: TaskDefinition = { ...TASK_DEFINITION_STUB, cache: false, persistent: false };
+
+const BADGE_CASES: [string, TaskDefinition | null, string[]][] = [
+  ['only cache set', CACHE_ONLY, ['Cacheable']],
+  ['only persistent set', PERSISTENT_ONLY, ['Continuous']],
+  ['neither flag set', NO_FLAGS, []],
+  ['no definition yet', null, []]
 ];
 
 const ALL_ACTIONS_POSTED: WebviewMessage[] = [
@@ -92,14 +96,14 @@ test.describe('FEATURE: package details page', () => {
     await test.step('AND no console or page error is logged', (): void => detailsPage.expectNoErrors());
   });
 
-  for (const [flag, definition, badge] of SINGLE_BADGES) {
-    test(`GIVEN a task with only ${flag} set, the card shows only ${badge}`, async ({ detailsPage }): Promise<void> => {
+  for (const [given, definition, badges] of BADGE_CASES) {
+    test(`GIVEN a task with ${given}, the card shows badges [${badges.join(', ')}]`, async ({ detailsPage }): Promise<void> => {
       const task: TaskCard = { ...TASK_CARD_STUB, definition };
       const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [task] };
 
       await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
 
-      await test.step(`THEN ${badge} is the only badge`, async (): Promise<void> => detailsPage.card('build').expectBadges([badge]));
+      await test.step('THEN exactly those badges render', async (): Promise<void> => detailsPage.card('build').expectBadges(badges));
     });
   }
 
