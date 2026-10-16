@@ -7,6 +7,7 @@ import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import type { IconSpec } from '../common/tree-row.type.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const BIDI = String.fromCodePoint(0x202e);
 
@@ -39,8 +40,6 @@ const entryIn = (overrides: Partial<RunEntry>): RunEntry => {
   return entry;
 };
 
-const NEVER_RAN: RunLookup = () => undefined;
-
 const lookupOf = (entry: RunEntry): RunLookup => {
   const lookup: RunLookup = (root, taskId) => {
     const isHeld = root === entry.root && taskId === entry.taskId;
@@ -53,13 +52,13 @@ const lookupOf = (entry: RunEntry): RunLookup => {
 
 const tooltipLinesOf = (task: TaskNode, entry: RunEntry): string[] => {
   const runs = lookupOf(entry);
-  const rows = taskRows('/ws', packageWith([task]), runs);
+  const rows = taskRows('/ws', packageWith([task]), rowContextOf('list', runs));
 
   return rows.flatMap((row) => row.tooltip);
 };
 
 const factsTooltipOf = (task: TaskNode): string[] => {
-  const rows = taskRows('/ws', packageWith([task]), NEVER_RAN);
+  const rows = taskRows('/ws', packageWith([task]), rowContextOf('list'));
 
   return rows.flatMap((row) => row.tooltip);
 };
@@ -67,7 +66,7 @@ const factsTooltipOf = (task: TaskNode): string[] => {
 describe('FEATURE: task rows of a package', () => {
   describe('GIVEN a package with a plain task that never ran', () => {
     it('WHEN listed THEN the row is an idle leaf with the raw task id as key and the package name', () => {
-      const rows = taskRows('/ws', packageWith([taskOf({})]), NEVER_RAN);
+      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list'));
 
       expect(rows).toStrictEqual([
         {
@@ -97,7 +96,7 @@ describe('FEATURE: task rows of a package', () => {
         taskOf({ id: 'a#build', name: 'build', kind: 'task' })
       ];
 
-      const rows = taskRows('/ws', packageWith(tasks), NEVER_RAN);
+      const rows = taskRows('/ws', packageWith(tasks), rowContextOf('list'));
 
       expect(rows.map((row) => row.label)).toStrictEqual(['lint', 'lint:all', 'build']);
     });
@@ -105,7 +104,7 @@ describe('FEATURE: task rows of a package', () => {
 
   describe('GIVEN a package with no tasks', () => {
     it('WHEN listed THEN there are no rows', () => {
-      const rows = taskRows('/ws', packageWith([]), NEVER_RAN);
+      const rows = taskRows('/ws', packageWith([]), rowContextOf('list'));
 
       expect(rows).toStrictEqual([]);
     });
@@ -115,7 +114,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN listed THEN the label is cleaned and the key and id keep the raw id', () => {
       const task = taskOf({ id: `a#b${BIDI}c`, name: `b${BIDI}c` });
 
-      const rows = taskRows('/ws', packageWith([task]), NEVER_RAN);
+      const rows = taskRows('/ws', packageWith([task]), rowContextOf('list'));
 
       expect(rows).toMatchObject([{ id: `task:/ws\0a#b${BIDI}c`, key: `a#b${BIDI}c`, label: 'bc' }]);
     });
@@ -125,7 +124,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN listed THEN the label is cut', () => {
       const task = taskOf({ name: 'n'.repeat(LABEL_MAX + 30) });
 
-      const rows = taskRows('/ws', packageWith([task]), NEVER_RAN);
+      const rows = taskRows('/ws', packageWith([task]), rowContextOf('list'));
 
       expect(rows[0]?.label).toBe(`${'n'.repeat(LABEL_MAX - 1)}…`);
     });
@@ -135,7 +134,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN the run is going THEN the row spins and offers Stop through its context value', () => {
       const runs = lookupOf(entryIn({ state: 'running' }));
 
-      const rows = taskRows('/ws', packageWith([taskOf({})]), runs);
+      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
 
       expect(rows).toMatchObject([{ description: 'running…', icon: RUNNING_ICON, contextValue: 'turboTask.running' }]);
     });
@@ -143,7 +142,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN the run passed with a match THEN the row shows the duration and cache status', () => {
       const runs = lookupOf(entryIn({ state: 'passed', exitCode: 0, endedAt: ENDED_AT, match: HIT_MATCH }));
 
-      const rows = taskRows('/ws', packageWith([taskOf({})]), runs);
+      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
 
       expect(rows).toMatchObject([{ description: '3.2s · HIT', icon: PASSED_ICON }]);
     });
@@ -151,7 +150,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN the run belongs to another root THEN the row stays idle', () => {
       const runs = lookupOf(entryIn({ root: '/other', state: 'running' }));
 
-      const rows = taskRows('/ws', packageWith([taskOf({})]), runs);
+      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
 
       expect(rows).toMatchObject([{ description: '', contextValue: 'turboTask' }]);
     });
@@ -159,7 +158,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN the run belongs to another task THEN the row stays idle', () => {
       const runs = lookupOf(entryIn({ taskId: 'a#test', state: 'running' }));
 
-      const rows = taskRows('/ws', packageWith([taskOf({})]), runs);
+      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
 
       expect(rows).toMatchObject([{ description: '', contextValue: 'turboTask' }]);
     });

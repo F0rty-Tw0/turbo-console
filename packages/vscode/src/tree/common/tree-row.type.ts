@@ -15,7 +15,14 @@ export type RowKind = 'root' | 'dir' | 'pkg' | 'task' | 'msg';
 type Collapsible = 'none' | 'collapsed' | 'expanded';
 
 export type MessageKind =
-  'binary-not-found' | 'binary-version' | 'binary-other' | 'load-no-model' | 'load-with-model' | 'no-packages' | 'loading';
+  | 'binary-not-found'
+  | 'binary-version'
+  | 'binary-other'
+  | 'load-no-model'
+  | 'load-with-model'
+  | 'no-packages'
+  | 'no-shown-packages'
+  | 'loading';
 
 /**
  * One tree item as plain data. `key` and `packageName` hold raw model names, never cleaned: cleaning folds whitespace,

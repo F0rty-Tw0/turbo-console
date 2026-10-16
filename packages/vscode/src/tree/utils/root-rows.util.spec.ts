@@ -9,6 +9,7 @@ import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts'
 import type { IconSpec, RowCommand, TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_FOLDER_STUB, ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const BIDI = String.fromCodePoint(0x202e);
 
@@ -57,7 +58,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN the kind is not-found THEN one error row with the install text replaces everything', () => {
       const state = stateWith({ error: failureOf('binary', 'not-found') });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(rows).toStrictEqual([
         {
@@ -80,7 +81,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN the kind is version-unsupported THEN the row names the supported range and not the found version', () => {
       const state = stateWith({ error: failureOf('binary', 'version-unsupported') });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(labelsOf(rows)).toStrictEqual([VERSION_TEXT]);
     });
@@ -88,7 +89,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN the kind is version-unsupported THEN the row is an error with the show-output command', () => {
       const state = stateWith({ error: failureOf('binary', 'version-unsupported') });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(rows).toMatchObject([{ id: 'msg:/ws\0binary-version', icon: ERROR_ICON, command: SHOW_OUTPUT }]);
     });
@@ -98,7 +99,7 @@ describe('FEATURE: rows of a root', () => {
       (kind) => {
         const state = stateWith({ error: failureOf('binary', kind) });
 
-        const rows = rootRows(state, 'folders');
+        const rows = rootRows(state, rowContextOf('folders'));
 
         expect(labelsOf(rows)).toStrictEqual(["Couldn't find a usable turbo. See Output."]);
       }
@@ -107,7 +108,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN the kind is io THEN the generic row is an error with the show-output command', () => {
       const state = stateWith({ error: failureOf('binary', 'io') });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(rows).toMatchObject([{ id: 'msg:/ws\0binary-other', icon: ERROR_ICON, command: SHOW_OUTPUT }]);
     });
@@ -115,7 +116,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN a model is shown too THEN the model rows are not listed', () => {
       const state = stateWith({ error: failureOf('binary', 'not-found'), model: WORKSPACE_MODEL_STUB });
 
-      const rows = rootRows(state, 'list');
+      const rows = rootRows(state, rowContextOf('list'));
 
       expect(idsOf(rows)).toStrictEqual(['msg:/ws\0binary-not-found']);
     });
@@ -123,7 +124,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN the exception message is secret THEN no label shows it', () => {
       const state = stateWith({ error: failureOf('binary', 'failed') });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(labelsOf(rows).join()).not.toContain('secret detail');
     });
@@ -133,7 +134,7 @@ describe('FEATURE: rows of a root', () => {
     it.each<TurboErrorKind>(['failed', 'not-found', 'io'])('WHEN the kind is %s THEN one load-error row', (kind) => {
       const state = stateWith({ error: failureOf('load', kind), model: null });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(labelsOf(rows)).toStrictEqual(["Couldn't load the workspace. See Output."]);
     });
@@ -141,7 +142,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN listed THEN the row is an error icon with the show-output command', () => {
       const state = stateWith({ error: failureOf('load', 'failed'), model: null });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(rows).toMatchObject([{ id: 'msg:/ws\0load-no-model', icon: ERROR_ICON, command: SHOW_OUTPUT }]);
     });
@@ -151,7 +152,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN listed in list mode THEN the warning row comes first, then the packages', () => {
       const state = stateWith({ error: failureOf('load', 'failed') });
 
-      const rows = rootRows(state, 'list');
+      const rows = rootRows(state, rowContextOf('list'));
 
       expect(idsOf(rows)).toStrictEqual(['msg:/ws\0load-with-model', 'pkg:/ws\0@org/x', 'pkg:/ws\0a', 'pkg:/ws\0web']);
     });
@@ -159,7 +160,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN listed THEN the warning has its text, icon and command', () => {
       const state = stateWith({ error: failureOf('load', 'failed') });
 
-      const rows = rootRows(state, 'list');
+      const rows = rootRows(state, rowContextOf('list'));
 
       expect(rows[0]).toMatchObject({
         kind: 'msg',
@@ -172,7 +173,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN the model has no packages THEN the warning comes first, then the no-packages row', () => {
       const state = stateWith({ error: failureOf('load', 'failed'), model: modelOf([]) });
 
-      const rows = rootRows(state, 'list');
+      const rows = rootRows(state, rowContextOf('list'));
 
       expect(idsOf(rows)).toStrictEqual(['msg:/ws\0load-with-model', 'msg:/ws\0no-packages']);
     });
@@ -182,7 +183,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN listed THEN one info row says no packages were found', () => {
       const state = stateWith({ model: modelOf([]) });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(rows).toMatchObject([{ id: 'msg:/ws\0no-packages', label: 'No packages found.', icon: INFO_ICON, command: SHOW_OUTPUT }]);
     });
@@ -192,7 +193,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN listed THEN one spinning loading row', () => {
       const state = stateWith({ model: null });
 
-      const rows = rootRows(state, 'folders');
+      const rows = rootRows(state, rowContextOf('folders'));
 
       expect(rows).toMatchObject([
         {
@@ -210,13 +211,13 @@ describe('FEATURE: rows of a root', () => {
 
   describe('GIVEN a model and no error', () => {
     it('WHEN listed in list mode THEN the package rows are flat and sorted by name', () => {
-      const rows = rootRows(ROOT_STATE_STUB, 'list');
+      const rows = rootRows(ROOT_STATE_STUB, rowContextOf('list'));
 
       expect(idsOf(rows)).toStrictEqual(['pkg:/ws\0@org/x', 'pkg:/ws\0a', 'pkg:/ws\0web']);
     });
 
     it('WHEN listed in list mode THEN package rows carry the raw name, the path and a collapsed state', () => {
-      const rows = rootRows(stateWith({ model: modelOf([PACKAGE_NODE_STUB]) }), 'list');
+      const rows = rootRows(stateWith({ model: modelOf([PACKAGE_NODE_STUB]) }), rowContextOf('list'));
 
       expect(rows).toStrictEqual([
         {
@@ -237,7 +238,7 @@ describe('FEATURE: rows of a root', () => {
     });
 
     it('WHEN listed in folders mode THEN the top level holds directory rows, expanded', () => {
-      const rows = rootRows(ROOT_STATE_STUB, 'folders');
+      const rows = rootRows(ROOT_STATE_STUB, rowContextOf('folders'));
 
       expect(rows).toMatchObject([
         { id: 'dir:/ws\0apps', kind: 'dir', key: 'apps', packageName: null, label: 'apps', collapsible: 'expanded' },
@@ -248,7 +249,7 @@ describe('FEATURE: rows of a root', () => {
     it('WHEN listed in folders mode THEN the top level lists directory rows before package rows', () => {
       const packages = [packageAt('aaa', 'aaa'), packageAt('a', 'packages/a')];
 
-      const rows = rootRows(stateWith({ model: modelOf(packages) }), 'folders');
+      const rows = rootRows(stateWith({ model: modelOf(packages) }), rowContextOf('folders'));
 
       expect(idsOf(rows)).toStrictEqual(['dir:/ws\0packages', 'pkg:/ws\0aaa']);
     });
@@ -257,7 +258,7 @@ describe('FEATURE: rows of a root', () => {
       const name = `a${BIDI}b`;
       const packages = [packageAt(name, 'p/a')];
 
-      const rows = rootRows(stateWith({ model: modelOf(packages) }), 'list');
+      const rows = rootRows(stateWith({ model: modelOf(packages) }), rowContextOf('list'));
 
       expect(rows).toMatchObject([{ id: `pkg:/ws\0${name}`, key: name, packageName: name, label: 'ab' }]);
     });

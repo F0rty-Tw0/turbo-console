@@ -2,11 +2,11 @@ import type { PackageNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { dirRows } from './dir-rows.util.ts';
-import { packageMapOf } from './package-map.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import type { FolderDir } from '../common/folder-tree.type.ts';
 import type { IconSpec } from '../common/tree-row.type.ts';
 import { PACKAGE_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { modelViewWith } from '../test/utils/row-context.spec.util.ts';
 
 const BIDI = String.fromCodePoint(0x202e);
 
@@ -28,17 +28,17 @@ const dirOf = (path: string, label: string, packages: string[], dirs: FolderDir[
 describe('FEATURE: children rows of a directory', () => {
   describe('GIVEN a directory holding a child directory and a package', () => {
     const libs = dirOf('packages/libs', 'libs', []);
-    const packages = packageMapOf([packageAt('a', 'packages/a')]);
+    const view = modelViewWith([packageAt('a', 'packages/a')]);
     const dir = dirOf('packages', 'packages', ['a'], [libs]);
 
     it('WHEN listed THEN the directory row comes before the package row', () => {
-      const rows = dirRows('/ws', dir, packages);
+      const rows = dirRows('/ws', dir, view, false);
 
       expect(rows.map((row) => row.id)).toStrictEqual(['dir:/ws\0packages/libs', 'pkg:/ws\0a']);
     });
 
     it('WHEN listed THEN the directory row is an expanded folder keyed by its path', () => {
-      const rows = dirRows('/ws', dir, packages);
+      const rows = dirRows('/ws', dir, view, false);
 
       expect(rows[0]).toStrictEqual({
         id: 'dir:/ws\0packages/libs',
@@ -57,7 +57,7 @@ describe('FEATURE: children rows of a directory', () => {
     });
 
     it('WHEN listed THEN the package row is collapsed with the package path as description', () => {
-      const rows = dirRows('/ws', dir, packages);
+      const rows = dirRows('/ws', dir, view, false);
 
       expect(rows[1]).toStrictEqual({
         id: 'pkg:/ws\0a',
@@ -80,9 +80,9 @@ describe('FEATURE: children rows of a directory', () => {
     it('WHEN listed THEN every directory row precedes every package row and each group keeps its order', () => {
       const dirs = [dirOf('p/b', 'b', []), dirOf('p/c', 'c', [])];
       const dir = dirOf('p', 'p', ['x', 'y'], dirs);
-      const packages = packageMapOf([packageAt('x', 'p/x'), packageAt('y', 'p/y')]);
+      const view = modelViewWith([packageAt('x', 'p/x'), packageAt('y', 'p/y')]);
 
-      const rows = dirRows('/ws', dir, packages);
+      const rows = dirRows('/ws', dir, view, false);
 
       expect(rows.map((row) => row.key)).toStrictEqual(['p/b', 'p/c', 'x', 'y']);
     });
@@ -92,7 +92,7 @@ describe('FEATURE: children rows of a directory', () => {
     it('WHEN listed THEN directories come before packages there too', () => {
       const level = { dirs: [dirOf('z', 'z', [])], packages: ['a'] };
 
-      const rows = dirRows('/ws', level, packageMapOf([packageAt('a', 'a')]));
+      const rows = dirRows('/ws', level, modelViewWith([packageAt('a', 'a')]), false);
 
       expect(rows.map((row) => row.kind)).toStrictEqual(['dir', 'pkg']);
     });
@@ -102,7 +102,7 @@ describe('FEATURE: children rows of a directory', () => {
     it('WHEN listed THEN no row is made for it', () => {
       const dir = dirOf('p', 'p', ['ghost', 'x']);
 
-      const rows = dirRows('/ws', dir, packageMapOf([packageAt('x', 'p/x')]));
+      const rows = dirRows('/ws', dir, modelViewWith([packageAt('x', 'p/x')]), false);
 
       expect(rows.map((row) => row.key)).toStrictEqual(['x']);
     });
@@ -112,7 +112,7 @@ describe('FEATURE: children rows of a directory', () => {
     it('WHEN listed THEN the description is empty, since it would repeat the label', () => {
       const level = dirOf('', '', ['docs']);
 
-      const rows = dirRows('/ws', level, packageMapOf([packageAt('docs', 'docs')]));
+      const rows = dirRows('/ws', level, modelViewWith([packageAt('docs', 'docs')]), false);
 
       expect(rows.map((row) => [row.label, row.description])).toStrictEqual([['docs', '']]);
     });
@@ -120,7 +120,7 @@ describe('FEATURE: children rows of a directory', () => {
 
   describe('GIVEN a directory with nothing in it', () => {
     it('WHEN listed THEN there are no rows', () => {
-      const rows = dirRows('/ws', dirOf('p', 'p', []), packageMapOf([]));
+      const rows = dirRows('/ws', dirOf('p', 'p', []), modelViewWith([]), false);
 
       expect(rows).toStrictEqual([]);
     });
@@ -131,7 +131,7 @@ describe('FEATURE: children rows of a directory', () => {
       const raw = `a${BIDI}b`;
       const dir = dirOf('p', 'p', [], [dirOf(`p/${raw}`, raw, [])]);
 
-      const rows = dirRows('/ws', dir, packageMapOf([]));
+      const rows = dirRows('/ws', dir, modelViewWith([]), false);
 
       expect(rows[0]).toMatchObject({ id: `dir:/ws\0p/${raw}`, key: `p/${raw}`, label: 'ab' });
     });
@@ -139,7 +139,7 @@ describe('FEATURE: children rows of a directory', () => {
     it('WHEN a package path holds a bidi control THEN the description is cleaned', () => {
       const dir = dirOf('p', 'p', ['x']);
 
-      const rows = dirRows('/ws', dir, packageMapOf([packageAt('x', `p/${BIDI}x`)]));
+      const rows = dirRows('/ws', dir, modelViewWith([packageAt('x', `p/${BIDI}x`)]), false);
 
       expect(rows[0]?.description).toBe('p/x');
     });
@@ -148,7 +148,7 @@ describe('FEATURE: children rows of a directory', () => {
       const name = 'n'.repeat(LABEL_MAX + 30);
       const dir = dirOf('p', 'p', [name]);
 
-      const rows = dirRows('/ws', dir, packageMapOf([packageAt(name, 'p/x')]));
+      const rows = dirRows('/ws', dir, modelViewWith([packageAt(name, 'p/x')]), false);
 
       expect(rows[0]).toMatchObject({ key: name, packageName: name, label: `${'n'.repeat(LABEL_MAX - 1)}…` });
     });
@@ -157,7 +157,7 @@ describe('FEATURE: children rows of a directory', () => {
       const label = 'd'.repeat(LABEL_MAX + 30);
       const dir = dirOf('p', 'p', [], [dirOf('p/d', label, [])]);
 
-      const rows = dirRows('/ws', dir, packageMapOf([]));
+      const rows = dirRows('/ws', dir, modelViewWith([]), false);
 
       expect(rows[0]?.label).toBe(`${'d'.repeat(LABEL_MAX - 1)}…`);
     });
@@ -166,7 +166,7 @@ describe('FEATURE: children rows of a directory', () => {
       const path = `p/${'d'.repeat(DESCRIPTION_MAX + 30)}`;
       const dir = dirOf('p', 'p', ['x']);
 
-      const rows = dirRows('/ws', dir, packageMapOf([packageAt('x', path)]));
+      const rows = dirRows('/ws', dir, modelViewWith([packageAt('x', path)]), false);
 
       expect(rows[0]?.description).toBe(`${path.slice(0, DESCRIPTION_MAX - 1)}…`);
     });

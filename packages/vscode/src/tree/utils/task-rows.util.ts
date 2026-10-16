@@ -6,6 +6,7 @@ import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { secondsText, settledMatchOf } from '../../run/utils/run-result.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
+import type { RowContext } from '../common/tree-node.type.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 
 export const isVisibleTask = (task: TaskNode): boolean => task.kind !== 'atom-file';
@@ -84,8 +85,8 @@ const taskRow = (root: string, pkg: PackageNode, task: TaskNode, runs: RunLookup
  * The visible tasks of a package (`atom-file` tasks stay hidden), each with its last run's state. Tooltip lines are raw
  * text: `tooltipOf` cleans them. The description is built from numbers and fixed words, but is cleaned like every label.
  */
-export const taskRows = (root: string, pkg: PackageNode, runs: RunLookup): TreeRow[] => {
+export const taskRows = (root: string, pkg: PackageNode, context: RowContext): TreeRow[] => {
   const visible = pkg.tasks.filter(isVisibleTask);
 
-  return visible.map((task) => taskRow(root, pkg, task, runs));
+  return visible.map((task) => taskRow(root, pkg, task, context.runs));
 };

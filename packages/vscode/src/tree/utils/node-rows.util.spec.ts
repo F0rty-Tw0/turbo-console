@@ -3,7 +3,6 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import { describe, expect, it } from 'vitest';
 
 import { allRows } from './all-rows.util.ts';
-import { folderTree } from './folder-tree.util.ts';
 import { nodeFor } from './node-cache.util.ts';
 import { childRowsOf, currentRowOf } from './node-rows.util.ts';
 import { rootNodeRow } from './root-rows.util.ts';
@@ -12,7 +11,6 @@ import type { LoadFailure } from '../../roots/common/root.type.ts';
 import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
-import type { FolderTreeOf } from '../common/folder-tree.type.ts';
 import { LOADING_ICON } from '../common/icon.const.ts';
 import { MESSAGE_TEXTS } from '../common/message.const.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
@@ -20,8 +18,7 @@ import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
-
-const NO_RUNS: RunLookup = () => undefined;
+import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const RUNNING: RunEntry = { ...RUN_ENTRY_STUB, taskId: 'build' };
 
@@ -41,11 +38,9 @@ const BINARY_FAILURE: LoadFailure = loadFailureOf('binary', new TurboException('
 
 const LOAD_FAILURE: LoadFailure = loadFailureOf('load', new TurboException('failed', 'x'));
 
-const FOLDER_TREE_OF: FolderTreeOf = (model) => folderTree(model.packages);
+const FOLDERS_VIEW: RowContext = rowContextOf('folders');
 
-const FOLDERS_VIEW: RowContext = { mode: 'folders', runs: NO_RUNS, folders: FOLDER_TREE_OF };
-
-const RUNNING_VIEW: RowContext = { ...FOLDERS_VIEW, runs: runningBuild };
+const RUNNING_VIEW: RowContext = rowContextOf('folders', runningBuild);
 
 const TEST_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'test', name: 'test' };
 
@@ -185,9 +180,30 @@ describe('FEATURE: node rows', () => {
     });
   });
 
+  describe('GIVEN a root whose package a has only atom-file tasks', () => {
+    const atom: TaskNode = { ...TASK_NODE_STUB, id: 'atom', name: 'atom', kind: 'atom-file' };
+    const hiddenA: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [atom] };
+    const others = WORKSPACE_MODEL_STUB.packages.filter((pkg) => pkg.name !== 'a');
+    const shownB: PackageNode = { ...PACKAGE_NODE_STUB, name: 'b', path: 'packages/b' };
+    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [...others, hiddenA, shownB] };
+    const state: RootState = { ...ROOT_STATE_STUB, model };
+
+    it("WHEN package a's current row is built THEN a loading row stands in under its id", () => {
+      const row = currentRowOf(state, TREE_NODE_STUB, FOLDERS_VIEW);
+
+      expect([row.id, row.icon, row.contextValue]).toStrictEqual(['pkg:/ws\0a', LOADING_ICON, '']);
+    });
+
+    it('WHEN the folder holding package a is opened THEN it lists only its shown entries', () => {
+      const rows = childRowsOf(state, PACKAGES_DIR_NODE, FOLDERS_VIEW);
+
+      expect(idsOf(rows)).toStrictEqual(['dir:/ws\0packages/libs', 'pkg:/ws\0b']);
+    });
+  });
+
   describe.each(PARITY_STATES)('GIVEN a root showing %s', (_name, state) => {
     it.each(MODES)('WHEN every listed row is rebuilt from its node in %s mode THEN each equals the listed row', (mode) => {
-      const listed = allRows(state, mode, runningBuild);
+      const listed = allRows(state, rowContextOf(mode, runningBuild));
       const rebuilt = listed.map((row) => rebuiltOf(state, row, mode));
 
       expect(rebuilt).toStrictEqual(listed);

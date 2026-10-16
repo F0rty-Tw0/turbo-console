@@ -1,6 +1,6 @@
 import type { Event, TreeItem } from 'vscode';
 
-import type { FolderTreeOf } from './folder-tree.type.ts';
+import type { ModelViewsOf } from './model-view.type.ts';
 import type { TreeMode, TreeRow } from './tree-row.type.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { RunLookup } from '../../run/common/run.type.ts';
@@ -19,11 +19,15 @@ export type TreeNode = {
   readonly packageName: string | null;
 };
 
-/** What a node's rows are read with: the view mode, the runs and the model's folder tree (built once per model). */
+/**
+ * What a node's rows are read with: the view mode, the runs, the model's view (built once per model) and whether
+ * package rows read their full names (`scopeShown`) or their bare labels.
+ */
 export type RowContext = {
   readonly mode: TreeMode;
   readonly runs: RunLookup;
-  readonly folders: FolderTreeOf;
+  readonly views: ModelViewsOf;
+  readonly scopeShown: boolean;
 };
 
 /** `'root'` redraws the root (the whole tree in a single-root window); a list names the packages to redraw. */
@@ -45,4 +49,6 @@ export type PackagesTreeApi = {
   readonly refreshFor: (change: RootChange) => void;
   readonly setMode: (mode: TreeMode) => void;
   readonly refreshTask: (root: string, taskId: string) => void;
+  readonly setScopeShown: (value: boolean) => void;
+  readonly isScopeShown: () => boolean;
 };
