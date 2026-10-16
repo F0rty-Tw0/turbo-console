@@ -39,9 +39,9 @@ export class DetailsSession {
     });
   }
 
-  /** Subscribes only once the root has loaded, so the cache-first publish and that load start no dry run of their own. */
-  public async start(): Promise<void> {
-    await this.ports.ensureLoaded(this.key.root);
+  /** Subscribes after the root's load (unless the caller just awaited it), so the cache-first publish starts no dry run. */
+  public async start(isLoaded = false): Promise<void> {
+    if (!isLoaded) await this.ports.ensureLoaded(this.key.root);
 
     if (this.isDisposed) return;
 

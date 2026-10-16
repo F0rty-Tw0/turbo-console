@@ -173,7 +173,7 @@ export class DetailsPanels {
       session.setVisible(view.isVisible());
     });
 
-    const started = session.start().catch(report);
+    const started = session.start(true).catch(report);
     const panel: OpenPanel = { key, view, session, started, posted };
 
     return panel;

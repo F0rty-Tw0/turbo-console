@@ -1,8 +1,13 @@
+import { TurboException } from '@turbo-console/core';
+import type { CachedWorkspace } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DetailsPanels } from './details-panels.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
+import { RootsSession } from '../../roots/domain-logic/roots-session.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { sessionPortsWith } from '../../roots/test/utils/session-ports.spec.util.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
@@ -21,6 +26,8 @@ const ODD_KEY: PanelKey = { root: '/ws', packageName: ODD_NAME };
 const ODD_PACKAGE = { ...A_PACKAGE_STUB, name: ODD_NAME };
 const ODD_MODEL = { ...DETAILS_MODEL_STUB, packages: [ODD_PACKAGE] };
 const ODD_LOADED = { ...DETAILS_LOADED_STUB, model: ODD_MODEL };
+const BINARY_GONE = new TurboException('not-found', 'no turbo');
+const DETAILS_CACHE: CachedWorkspace = { model: DETAILS_MODEL_STUB, isFresh: true };
 
 describe('FEATURE: opening a details panel', () => {
   let store: RootStore;
@@ -126,6 +133,33 @@ describe('FEATURE: opening a details panel', () => {
 
       expect(opened).toBeNull();
       expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+    });
+  });
+
+  describe('GIVEN a root whose reload failed to find the binary and kept its model', () => {
+    let roots: RootsSession;
+
+    beforeEach(async () => {
+      const resolve = vi.fn().mockResolvedValueOnce(TURBO_BINARY_STUB).mockRejectedValue(BINARY_GONE);
+      const readCached = vi.fn().mockResolvedValue(DETAILS_CACHE);
+
+      roots = new RootsSession(sessionPortsWith({ resolve, readCached }));
+      roots.setRoots([ROOT_FOLDER_STUB]);
+      roots.setVisible(true);
+      await roots.whenIdle('/ws');
+      roots.setVisible(false);
+      roots.request('refresh');
+      await roots.whenIdle('/ws');
+      panels = new DetailsPanels({ roots: roots.store, runs: new RunStore(), host: fakes.host, setPanelVisible: vi.fn() });
+    });
+
+    it('WHEN a package panel opens THEN exactly one more full load runs', async () => {
+      await panels.open(WS_A);
+      await panels.api().whenIdle('/ws', 'a');
+
+      const modes = roots.loads.get('/ws')?.map((record) => record.mode);
+
+      expect(modes).toStrictEqual(['cache-first', 'full', 'full']);
     });
   });
 
