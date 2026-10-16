@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 
 import { allRows } from './all-rows.util.ts';
 import { childRowsOf, currentRowOf } from './node-rows.util.ts';
-import { rootRowOf } from './root-rows.util.ts';
+import { rootRowOf, rootRows } from './root-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import { LOADING_ICON } from '../common/icon.const.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
-import type { TreeRow } from '../common/tree-row.type.ts';
+import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { liveIdsOf } from '../test/utils/live-ids.spec.util.ts';
@@ -33,9 +33,9 @@ const SCRIPTS_PACKAGE: TreeNode = { kind: 'pkg', id: 'pkg:/other\0s', root: '/ot
 
 const PACKAGES_DIR: TreeNode = { kind: 'dir', id: 'dir:/other\0packages', root: '/other', key: 'packages', packageName: null };
 
-const contextOf = (liveRoot: string): RowContext => {
+const contextOf = (liveRoot: string, mode: TreeMode = 'folders'): RowContext => {
   const live = liveIdsOf(liveRoot, 's#lint');
-  const context = rowContextOf('folders', undefined, false, { scriptsShown: false, live });
+  const context = rowContextOf(mode, undefined, false, { scriptsShown: false, live });
 
   return context;
 };
@@ -78,6 +78,18 @@ describe('FEATURE: rows keyed by the folder root', () => {
       const ids = idsOf(childRowsOf(STATE, PACKAGES_DIR, contextOf('/ws')));
 
       expect(ids).not.toContain('pkg:/other\0s');
+    });
+
+    it('WHEN the script is live under the folder root THEN the list rows include the scripts-only package', () => {
+      const ids = idsOf(rootRows(STATE, contextOf('/other', 'list')));
+
+      expect(ids).toStrictEqual(['pkg:/other\0a', 'pkg:/other\0s']);
+    });
+
+    it('WHEN the script is live only under the model root THEN the list rows lack it', () => {
+      const ids = idsOf(rootRows(STATE, contextOf('/ws', 'list')));
+
+      expect(ids).toStrictEqual(['pkg:/other\0a']);
     });
 
     it('WHEN the script is live under the folder root THEN the folder row counts both packages', () => {

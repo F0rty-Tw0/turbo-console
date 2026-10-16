@@ -7,9 +7,16 @@ const NEVER_RAN: RunLookup = () => undefined;
 
 const NOTHING_LIVE: LiveIds = () => new Set();
 
-/** The provider's deps with every run lookup answering `get`, an empty span map and the scripts toggle (hidden unless given). */
-export const providerDepsOf = (get: RunLookup = NEVER_RAN, scripts: ScriptsToggleApi = scriptsToggleMock()): TreeProviderDeps => {
-  const runs: TreeProviderDeps['runs'] = { get, runningIds: NOTHING_LIVE };
+/**
+ * The provider's deps with every run lookup answering `get`, the running ids `runningIds` answers (none unless given), an
+ * empty span map and the scripts toggle (hidden unless given).
+ */
+export const providerDepsOf = (
+  get: RunLookup = NEVER_RAN,
+  scripts: ScriptsToggleApi = scriptsToggleMock(),
+  runningIds: LiveIds = NOTHING_LIVE
+): TreeProviderDeps => {
+  const runs: TreeProviderDeps['runs'] = { get, runningIds };
   const deps: TreeProviderDeps = { runs, treeVisible: new Map(), scripts };
 
   return deps;
