@@ -1,3 +1,4 @@
+import type { PackageNode } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PackagesTreeProvider } from './packages-provider.ts';
@@ -83,6 +84,14 @@ const onlyOf = (nodes: TreeNode[]): TreeNode => {
   return only;
 };
 
+const S_PACKAGE = scriptPackageNamed('s');
+
+const A_AND_S = [packageNamed('a'), S_PACKAGE];
+
+const S_ONLY = [S_PACKAGE];
+
+const S_WITHOUT_TASKS = [{ ...S_PACKAGE, tasks: [] }];
+
 type ScriptsFixture = {
   readonly store: RootStore;
   readonly provider: PackagesTreeProvider;
@@ -90,7 +99,7 @@ type ScriptsFixture = {
 };
 
 /** A provider over a root holding a turbo package `a` and a scripts-only package `s`, redrawn on store changes like `registerTree` does. */
-const scriptsFixtureOf = (live?: LiveIds): ScriptsFixture => {
+const scriptsFixtureOf = (live?: LiveIds, packages: PackageNode[] = A_AND_S): ScriptsFixture => {
   const store = new RootStore();
   const toggle = scriptsToggleMock();
   const provider = new PackagesTreeProvider(store, 'list', providerDepsOf(undefined, toggle, live));
@@ -99,7 +108,7 @@ const scriptsFixtureOf = (live?: LiveIds): ScriptsFixture => {
   store.onDidChange((change) => {
     provider.refreshFor(change);
   });
-  store.apply(ROOT_FOLDER_STUB.root, loadedWith([packageNamed('a'), scriptPackageNamed('s')]));
+  store.apply(ROOT_FOLDER_STUB.root, loadedWith(packages));
 
   const fixture: ScriptsFixture = { store, provider, toggle };
 
@@ -212,6 +221,32 @@ describe('FEATURE: packages provider', () => {
       store.apply(ROOT_FOLDER_STUB.root, loadedWith([scriptPackageNamed('a'), scriptPackageNamed('s')]));
 
       expect(fired).toStrictEqual([nodeA]);
+    });
+  });
+
+  describe('GIVEN scripts hidden and no turbo package', () => {
+    it('WHEN a reload leaves the package with no task THEN the tree is fired and the message reads no tasks', async () => {
+      const { store, provider } = scriptsFixtureOf(undefined, S_ONLY);
+
+      expect(await keysOf(provider)).toStrictEqual(['no-turbo-packages']);
+
+      fired.length = 0;
+      store.apply(ROOT_FOLDER_STUB.root, loadedWith(S_WITHOUT_TASKS));
+
+      expect(fired).toStrictEqual([undefined]);
+      expect(await keysOf(provider)).toStrictEqual(['no-shown-packages']);
+    });
+
+    it('WHEN a reload gives the package a script THEN the tree is fired and the message reads no turbo tasks', async () => {
+      const { store, provider } = scriptsFixtureOf(undefined, S_WITHOUT_TASKS);
+
+      expect(await keysOf(provider)).toStrictEqual(['no-shown-packages']);
+
+      fired.length = 0;
+      store.apply(ROOT_FOLDER_STUB.root, loadedWith(S_ONLY));
+
+      expect(fired).toStrictEqual([undefined]);
+      expect(await keysOf(provider)).toStrictEqual(['no-turbo-packages']);
     });
   });
 });

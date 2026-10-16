@@ -14,7 +14,11 @@ const shownNamesOf = (model: WorkspaceModel, scriptsShown: boolean, liveOfRoot: 
   return model.packages.filter(isShown).map((pkg) => pkg.name);
 };
 
-/** Package names are unique once the diff is not structural, so equal sizes and one-way inclusion mean equal sets. */
+/**
+ * Package names are unique once the diff is not structural, so equal sizes and one-way inclusion mean equal sets. With
+ * scripts hidden, an empty set before and after also counts as changed: the root then holds one message row whose kind
+ * (`no-turbo-packages` or `no-shown-packages`) can change with the reload, and no package node exists to fire.
+ */
 const isShownSetChanged = (
   before: WorkspaceModel,
   after: WorkspaceModel,
@@ -25,8 +29,9 @@ const isShownSetChanged = (
   const previous = new Set(previousNames);
   const next = shownNamesOf(after, scriptsShown, live);
   const isSameSize = previous.size === next.length;
+  const isMessageOnly = !scriptsShown && next.length === 0 && isSameSize;
 
-  return !isSameSize || next.some((name) => !previous.has(name));
+  return isMessageOnly || !isSameSize || next.some((name) => !previous.has(name));
 };
 
 /**
