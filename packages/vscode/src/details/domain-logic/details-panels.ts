@@ -22,7 +22,7 @@ const revealed = (panel: OpenPanel | null): OpenPanel | null => {
 /**
  * The open Package Details panels, one per root and package name. A key opened by row is registered as pending before
  * the root's load is awaited, so a second open of it waits for the same panel; an open from a manifest registers its key
- * only once the load has resolved, and waits for a pending open only when that one waits on the same coordinator. A
+ * only once the load has resolved. An open waits for a pending open only when both wait on the same coordinator. A
  * panel is made only for a package that is still in the root's model once the load has resolved; a root removed
  * meanwhile, even if added back, ends the open with no panel and no message.
  */
@@ -49,7 +49,7 @@ export class DetailsPanels {
 
     const coordinator = loaded ?? this.deps.roots.get(key.root)?.coordinator;
     const waiting = this.pending.get(id);
-    const isOtherLoad = loaded !== null && waiting?.coordinator !== loaded;
+    const isOtherLoad = waiting !== undefined && waiting.coordinator !== coordinator;
 
     if (waiting !== undefined && !isOtherLoad) return revealed(await waiting.panel);
 

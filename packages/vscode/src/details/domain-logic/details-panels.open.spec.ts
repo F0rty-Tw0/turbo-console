@@ -13,6 +13,7 @@ import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
+import type { OpenPanel } from '../common/panel.type.ts';
 import type { HostFakes } from '../test/common/panel-fakes.type.ts';
 import { hostMock } from '../test/mocks/panel-host.mock.ts';
 import { A_PACKAGE_STUB, DETAILS_LOADED_STUB, DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
@@ -103,6 +104,48 @@ describe('FEATURE: opening a details panel', () => {
       await expect(opening).resolves.toBeNull();
       expect(fakes.open).not.toHaveBeenCalled();
       expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+    });
+  });
+
+  describe('GIVEN a row open still waiting on a root that was then replaced', () => {
+    let oldLoad: PromiseWithResolvers<undefined>;
+    let newLoad: PromiseWithResolvers<undefined>;
+    let oldOpen: Promise<OpenPanel | null>;
+
+    beforeEach(() => {
+      oldLoad = deferEnsureLoaded(store, '/ws');
+      oldOpen = panels.open(WS_A);
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply('/ws', DETAILS_LOADED_STUB);
+      newLoad = deferEnsureLoaded(store, '/ws');
+    });
+
+    it('WHEN a second row open of its key waits on the new root THEN the second open builds the panel', async () => {
+      const newOpen = panels.open(WS_A);
+
+      newLoad.resolve(undefined);
+      oldLoad.resolve(undefined);
+      await oldOpen;
+
+      await expect(newOpen).resolves.not.toBeNull();
+      expect(fakes.open).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the old open ends before the new one and a third open arrives THEN the third gets the new panel', async () => {
+      const newOpen = panels.open(WS_A);
+
+      oldLoad.resolve(undefined);
+      await oldOpen;
+      await flushSettles();
+
+      const thirdOpen = panels.open(WS_A);
+
+      newLoad.resolve(undefined);
+      const [built, third] = await Promise.all([newOpen, thirdOpen]);
+
+      expect(third).toBe(built);
+      expect(fakes.open).toHaveBeenCalledOnce();
     });
   });
 
