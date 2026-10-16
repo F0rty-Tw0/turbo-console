@@ -135,6 +135,14 @@ describe('FEATURE: refresh target', () => {
       expect(target).toBe('root');
     });
 
+    it('WHEN a shown package loses its last visible task THEN the root is redrawn', () => {
+      const change = changeOf([SCOPED_UI, packageOf('ui', [TASK_NODE_STUB])], [SCOPED_UI, HIDDEN_UI]);
+
+      const target = refreshTarget(change);
+
+      expect(target).toBe('root');
+    });
+
     it("WHEN one package's script changes with no errors THEN only that package is redrawn", () => {
       const change: RootChange = { ...SHOWN, after: withChangedScript() };
 
