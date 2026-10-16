@@ -5,6 +5,7 @@ import type { PresetName } from '@turbo-console/repo-gen';
 import { bench } from '@turbo-console/tools';
 import type { BenchDescriptor } from '@turbo-console/tools';
 
+import { withScripts } from './utils/scripts-model.spec.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import type { LiveIds, RunEntry, RunLookup } from '../../run/common/run.type.ts';
@@ -52,17 +53,17 @@ const stateOf = (model: WorkspaceModel): RootState => {
 };
 
 /** A fresh `ModelViews` per call, so the shown filter, folder tree and labels are measured, not a warm cache hit. */
-const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode): BenchDescriptor => {
+const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsShown = false): BenchDescriptor => {
   const state = stateOf(model);
   const build = (): unknown => {
     const views = new ModelViews();
-    const viewOf: ModelViewsOf = (loaded, scriptsShown, live) => views.of(loaded, scriptsShown, live);
+    const viewOf: ModelViewsOf = (loaded, shown, live) => views.of(loaded, shown, live);
     const context: RowContext = {
       mode,
       runs: NEVER_RAN,
       views: viewOf,
       scopeShown: false,
-      scriptsShown: false,
+      scriptsShown,
       live: NOTHING_LIVE,
       now: 0
     };
@@ -201,6 +202,7 @@ const benches: BenchDescriptor[] = [
   rowsBench('tree-rows-list-target-like', targetLike, 'list'),
   rowsBench('tree-rows-folders-stretch-300', stretch300, 'folders'),
   rowsBench('tree-rows-list-stretch-300', stretch300, 'list'),
+  rowsBench('tree-rows-scripts-stretch-300', withScripts(stretch300), 'folders', true),
   diffBench('model-diff-stretch-300', stretch300),
   tickBench('tree-tick-stretch-300', stretch300)
 ];
