@@ -1,5 +1,6 @@
 import type { HostMessage } from '@turbo-console/webview-ui';
 
+import type { ScriptsToggleApi } from './scripts-toggle.type.ts';
 import type { Span } from './span.type.ts';
 import type { LoadRecord } from '../../roots/common/coordinator.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
@@ -52,6 +53,12 @@ export type DetailsApi = {
   readonly posted: (root: string, packageName: string) => HostMessage[];
   readonly receive: (root: string, packageName: string, message: unknown) => Promise<void>;
   readonly whenIdle: (root: string, packageName: string) => Promise<void>;
+};
+
+/** What the run commands and the CodeLens read of the UI: the tree's run redraw and the scripts toggle, typed by their APIs. */
+export type RunCommandsUi = {
+  readonly tree: Pick<PackagesTreeApi, 'runChanged'>;
+  readonly scripts: ScriptsToggleApi;
 };
 
 /**

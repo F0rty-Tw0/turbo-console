@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { registerCodeLens } from './codelens/feature/register-codelens.ts';
 import type { PanelsDeps } from './details/common/panel.type.ts';
 import { editorPanelHost } from './details/data-access/details-ports.ts';
 import { DetailsPanels } from './details/domain-logic/details-panels.ts';
@@ -17,7 +18,7 @@ import { registerCopy } from './run/feature/register-copy.ts';
 import { manifestFile, registerPickers, rootOf } from './run/feature/register-pickers.ts';
 import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
-import type { Timings, TimingsStart, TurboConsoleApi } from './shared/common/api.type.ts';
+import type { RunCommandsUi, Timings, TimingsStart, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Output } from './shared/common/output.type.ts';
 import type { ScriptsToggleApi } from './shared/common/scripts-toggle.type.ts';
 import type { Span } from './shared/common/span.type.ts';
@@ -75,20 +76,15 @@ const createPanels = (
   return new DetailsPanels({ roots: session.store, runs, host, setPanelVisible });
 };
 
-/** The run, pick and run-all commands plus the forwarding of turbo task events. */
-const registerRunCommands = (
-  session: RootsSession,
-  runSession: RunSession,
-  tree: PackagesTreeProvider,
-  output: Output
-): vscode.Disposable => {
+/** The run, pick and run-all commands, the forwarding of turbo task events and the package.json CodeLens. */
+const registerRunCommands = (session: RootsSession, runSession: RunSession, ui: RunCommandsUi, output: Output): vscode.Disposable => {
   const register = vscode.commands.registerCommand;
-  const runs = registerRuns(runSession, tree, session.store, register);
-  const pickers = registerPickers(runSession, session.store, register, () => tree.isScriptsShown());
+  const runs = registerRuns(runSession, ui.tree, session.store, register);
+  const pickers = registerPickers(runSession, session.store, register, () => ui.scripts.isShown());
   const runAllPorts = editorRunAllPorts(session.store, output);
   const runAll = registerRunAll(session.store, runAllPorts, forwardRunAllEvents, register);
 
-  return vscode.Disposable.from(runs, pickers, runAll, forwardTaskEvents(runSession));
+  return vscode.Disposable.from(runs, pickers, runAll, forwardTaskEvents(runSession), registerCodeLens(session.store, ui.scripts));
 };
 
 /** The activation start and the timing records `activate` fills in. */
@@ -169,7 +165,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     context.subscriptions.push(
       watchers,
       details,
-      registerRunCommands(session, runSession, tree, output),
+      registerRunCommands(session, runSession, { tree, scripts }, output),
       registerPanel(session.store, commands, help)
     );
 
