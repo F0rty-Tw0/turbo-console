@@ -134,7 +134,7 @@ describe('FEATURE: package.json run action', () => {
 
     await pickForFileAndRun(roots, fakes.ports, FILE);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
+    expect(fakes.info).toHaveBeenCalledExactlyOnceWith('No turbo tasks to run in this package.');
     expect(fakes.pick).not.toHaveBeenCalled();
   });
 

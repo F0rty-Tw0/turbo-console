@@ -54,6 +54,6 @@ describe('FEATURE: run flow, a task no turbo config defines (spec 1c-a §4.12)',
 
     await runTask(store, ports, SCRIPT);
 
-    expect(ports.info).toHaveBeenCalledExactlyOnceWith(NOT_TURBO_RUN_TEXT);
+    expect(ports.info).toHaveBeenCalledExactlyOnceWith("This script isn't a turbo task, so Turbo Console can't run it yet.");
   });
 });
