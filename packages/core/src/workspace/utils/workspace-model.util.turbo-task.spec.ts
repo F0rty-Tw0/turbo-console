@@ -10,7 +10,14 @@ import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.
 const COMMAND = 'node -e 0';
 
 const configOf = (path: string, tasks: Record<string, TaskPresence>, extendsNames: string[]): TurboConfigOk => {
-  const config: TurboConfigOk = { path, descriptions: {}, tasks, extends: extendsNames, affectedUsingTaskInputs: false };
+  const config: TurboConfigOk = {
+    path,
+    descriptions: {},
+    tasks,
+    persistent: {},
+    extends: extendsNames,
+    affectedUsingTaskInputs: false
+  };
 
   return config;
 };

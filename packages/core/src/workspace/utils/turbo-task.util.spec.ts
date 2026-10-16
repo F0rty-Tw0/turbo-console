@@ -11,7 +11,14 @@ import type {
 } from '../common/turbo-config.type.ts';
 
 const configOf = (path: string, tasks: Record<string, TaskPresence>, extendsNames: string[]): TurboConfigOk => {
-  const config: TurboConfigOk = { path, descriptions: {}, tasks, extends: extendsNames, affectedUsingTaskInputs: false };
+  const config: TurboConfigOk = {
+    path,
+    descriptions: {},
+    tasks,
+    persistent: {},
+    extends: extendsNames,
+    affectedUsingTaskInputs: false
+  };
 
   return config;
 };

@@ -60,6 +60,7 @@ describe('FEATURE: workspace model build', () => {
         path: 'packages/a/turbo.json',
         descriptions,
         tasks: {},
+        persistent: {},
         extends: [],
         affectedUsingTaskInputs: false
       };
@@ -168,6 +169,7 @@ describe('FEATURE: workspace model build', () => {
         path: 'turbo.json',
         descriptions: {},
         tasks: {},
+        persistent: {},
         extends: [],
         affectedUsingTaskInputs: false,
         warning
@@ -181,7 +183,7 @@ describe('FEATURE: workspace model build', () => {
 
   describe('GIVEN configs that set affectedUsingTaskInputs', () => {
     it.each(['turbo.json', 'turbo.jsonc'])('WHEN the root %s sets it THEN the mode is task', (path) => {
-      const root: TurboConfigOk = { path, descriptions: {}, tasks: {}, extends: [], affectedUsingTaskInputs: true };
+      const root: TurboConfigOk = { path, descriptions: {}, tasks: {}, persistent: {}, extends: [], affectedUsingTaskInputs: true };
 
       const model = build([PKG_B], [], [root]);
 
@@ -193,6 +195,7 @@ describe('FEATURE: workspace model build', () => {
         path: 'packages/b/turbo.json',
         descriptions: {},
         tasks: {},
+        persistent: {},
         extends: [],
         affectedUsingTaskInputs: true
       };
@@ -210,6 +213,7 @@ describe('FEATURE: workspace model build', () => {
       path: 'apps/e2e-1/turbo.json',
       descriptions,
       tasks: {},
+      persistent: {},
       extends: [],
       affectedUsingTaskInputs: false
     };
@@ -308,6 +312,7 @@ describe('FEATURE: workspace model build', () => {
         path: 'packages/pb/turbo.json',
         descriptions,
         tasks: {},
+        persistent: {},
         extends: [],
         affectedUsingTaskInputs: false
       };
