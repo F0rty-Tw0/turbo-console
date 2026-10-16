@@ -1,10 +1,12 @@
 import type { DryRunRequest, TaskNode, WorkspaceModel } from '@turbo-console/core';
 
+import { isVisibleTask } from '../../tree/utils/task-rows.util.ts';
+
 /** A file task has no card, and a task with no command has nothing for turbo to resolve. */
-const hasDryRun = (task: TaskNode): boolean => task.kind !== 'atom-file' && task.command !== null;
+const hasDryRun = (task: TaskNode): boolean => isVisibleTask(task) && task.command !== null;
 
 /**
- * Spec §4.4 step 3: the names of the package's shown tasks that have a command, filtered to the package. `null` when the
+ * The names of the package's shown tasks that have a command, filtered to the package. `null` when the
  * model lacks the package or no task qualifies: no dry run starts.
  */
 export const dryRunRequestOf = (model: WorkspaceModel | null, packageName: string): DryRunRequest | null => {

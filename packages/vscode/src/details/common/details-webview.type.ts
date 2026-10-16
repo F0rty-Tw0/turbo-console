@@ -8,9 +8,9 @@ export type HtmlAssets = {
 };
 
 /** `WebviewPanelOptions` and `WebviewOptions` of a panel, over the URI type of the editor (`vscode.Uri`). */
-export type PanelOptions<Root> = {
+export type PanelOptions<TRoot> = {
   readonly enableScripts: true;
   readonly enableForms: false;
-  readonly localResourceRoots: Root[];
+  readonly localResourceRoots: TRoot[];
   readonly retainContextWhenHidden: false;
 };

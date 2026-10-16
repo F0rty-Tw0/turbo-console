@@ -1,6 +1,6 @@
 import type { PackageDetails, RunView } from '@turbo-console/webview-ui';
 
-import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
+import type { PanelInfo, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 
 /** The package states among what was posted to the panel of `packageName`, oldest first. */
 export const packageStates = (api: TurboConsoleApi, root: string, packageName: string): PackageDetails[] => {
@@ -47,7 +47,8 @@ export const lastRunView = (api: TurboConsoleApi, root: string, packageName: str
 /** Whether the panel of `packageName` is open and shown. */
 export const isPanelShown = (api: TurboConsoleApi, root: string, packageName: string): boolean => {
   const panels = api.details.panels();
-  const panel = panels.find((candidate) => candidate.root === root && candidate.packageName === packageName);
+  const isPanelOfPackage = (candidate: PanelInfo): boolean => candidate.root === root && candidate.packageName === packageName;
+  const panel = panels.find(isPanelOfPackage);
 
   return panel?.visible === true;
 };

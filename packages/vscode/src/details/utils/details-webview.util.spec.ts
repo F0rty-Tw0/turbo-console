@@ -1,7 +1,7 @@
 import { webviewCsp } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
-import { detailsHtml, freshNonce, panelOptionsOf } from './details-webview.util.ts';
+import { detailsHtml, panelOptionsOf } from './details-webview.util.ts';
 import type { HtmlAssets } from '../common/details-webview.type.ts';
 
 const TEMPLATE_LINES = [
@@ -21,22 +21,6 @@ const assetsMock = (): HtmlAssets => {
 };
 
 describe('FEATURE: the details page html and panel options', () => {
-  describe('GIVEN a nonce request', () => {
-    it('WHEN two are made THEN they differ', () => {
-      const first = freshNonce();
-      const second = freshNonce();
-
-      expect(first).not.toBe(second);
-    });
-
-    it('WHEN one is made THEN it is 16 random bytes in base64', () => {
-      const nonce = freshNonce();
-
-      expect(Buffer.from(nonce, 'base64')).toHaveLength(16);
-      expect(nonce).toMatch(/^[A-Za-z0-9+/]{22}==$/);
-    });
-  });
-
   describe('GIVEN the page template', () => {
     it('WHEN it is rendered THEN the nonce goes into the csp and the script tag and the csp names the webview source', () => {
       const html = detailsHtml(TEMPLATE, assetsMock(), 'N0nce+/==');

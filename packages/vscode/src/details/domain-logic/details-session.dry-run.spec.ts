@@ -58,7 +58,7 @@ describe('FEATURE: details session dry runs', () => {
   describe('GIVEN a shown, ready panel with its first dry run in flight', () => {
     beforeEach(async () => {
       session.setVisible(true);
-      await session.start();
+      session.start();
       await session.receive({ type: 'ready' });
     });
 
@@ -169,7 +169,7 @@ describe('FEATURE: details session dry runs', () => {
   describe('GIVEN a ready panel hidden while its dry run is in flight', () => {
     beforeEach(async () => {
       session.setVisible(true);
-      await session.start();
+      session.start();
       await session.receive({ type: 'ready' });
       session.setVisible(false);
     });
@@ -255,8 +255,8 @@ describe('FEATURE: details session dry runs', () => {
   });
 
   describe('GIVEN a panel started while hidden', () => {
-    beforeEach(async () => {
-      await session.start();
+    beforeEach(() => {
+      session.start();
     });
 
     it('THEN no dry run starts', () => {
@@ -272,7 +272,7 @@ describe('FEATURE: details session dry runs', () => {
 
   it('GIVEN a dry run in flight WHEN it settles THEN whenIdle resolves only after it', async () => {
     session.setVisible(true);
-    await session.start();
+    session.start();
 
     const isIdle = settledFlag(session.whenIdle());
 

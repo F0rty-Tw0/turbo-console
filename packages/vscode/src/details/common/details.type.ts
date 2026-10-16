@@ -19,7 +19,6 @@ export type PanelKey = {
 export type DetailsPorts = {
   readonly post: (message: HostMessage) => void;
   readonly dryRun: (request: DryRunRequest, signal: AbortSignal) => Promise<DryRunState[]>;
-  readonly ensureLoaded: (root: string) => Promise<void>;
   readonly isStale: (root: string) => boolean;
   readonly execute: (command: string, arg: unknown) => Promise<void>;
   readonly setPanelVisible: (visible: boolean) => void;

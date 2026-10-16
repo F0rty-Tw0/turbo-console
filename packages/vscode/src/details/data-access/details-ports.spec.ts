@@ -166,6 +166,15 @@ describe('FEATURE: the editor effects of Package Details', () => {
       expect(first).not.toBe(second);
     });
 
+    it('WHEN it opens THEN the nonce is 16 random bytes in base64', () => {
+      host.open('t');
+
+      const nonce = nonceOf(panelAt(made, 0));
+
+      expect(Buffer.from(nonce, 'base64')).toHaveLength(16);
+      expect(nonce).toMatch(/^[A-Za-z0-9+/]{22}==$/);
+    });
+
     it('WHEN the page template cannot be read THEN the panel is disposed, given no html, and the error is thrown', () => {
       const missing = editorPanelHost(vscode.Uri.file('/no/such/extension'), output, rootOf);
 

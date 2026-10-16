@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import type { TaskCard } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
 import { isPanelShown, lastPackageState, lastRunView, packageStates } from './details-posted.spec.util.ts';
@@ -16,6 +17,8 @@ const OPEN_COMMAND = 'turboConsole.openPackageDetails';
 
 const OUTPUTS_GLOB = 'zz-details-out/**';
 
+const isUndefinedCard = (card: TaskCard): boolean => card.command !== null && card.definition === null;
+
 /** Opens the panel as a package row's click does. */
 export const openFromRow = async (root: string, packageName: string): Promise<void> => {
   const row = { kind: 'pkg', root, packageName };
@@ -23,7 +26,7 @@ export const openFromRow = async (root: string, packageName: string): Promise<vo
   await vscode.commands.executeCommand(OPEN_COMMAND, row);
 };
 
-/** Spec §4.6 "open, model loaded": one dry run and no load; a second open of the same package reuses its panel. */
+/** Opening with the model loaded: one dry run and no load; a second open of the same package reuses its panel. */
 export const openCase = async (scene: DetailsScene): Promise<void> => {
   const { api, root, packageName, counter } = scene;
 
@@ -70,7 +73,7 @@ export const titleCase = async (scene: DetailsScene): Promise<void> => {
     const state = lastPackageState(api, root, packageName);
     const shownIds = manifestTree(manifest).tasks[packageName] ?? [];
     const cardIds = state.tasks.map((card) => card.taskId).sort();
-    const undefinedCards = state.tasks.filter((card) => card.command !== null && card.definition === null);
+    const undefinedCards = state.tasks.filter(isUndefinedCard);
     const undefinedIds = undefinedCards.map((card) => card.taskId);
 
     assert.equal(api.details.panels().length, 1);

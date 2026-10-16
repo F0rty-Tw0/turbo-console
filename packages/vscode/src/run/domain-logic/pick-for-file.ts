@@ -66,7 +66,7 @@ const packageOrText = async (
  * The package the manifest `file` holds and the root holding it, once the root has loaded; `null` after an info message
  * says why there is none (no file, a file in no root, a root with no model or, when `isBinaryRefused`, in a binary
  * error, a file no package owns). The run pickers and Open Package Details both refuse here; only the pickers refuse a
- * binary error.
+ * binary error. The message goes through `ports.info`, which may show nothing (see `FileLookupPorts`).
  */
 export const packageOfFile = async (
   roots: Roots,

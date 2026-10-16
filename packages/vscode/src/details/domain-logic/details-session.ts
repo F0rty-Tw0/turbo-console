@@ -6,12 +6,12 @@ import type { RunEntry, Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { CommandMessage, DetailsInput, DetailsPorts, PanelKey } from '../common/details.type.ts';
 import { commandOf } from '../utils/details-command.util.ts';
-import { droppedMessageText, parseWebviewMessage, taskIdsOf } from '../utils/details-message.util.ts';
+import { cardTaskIdsOf, droppedMessageText, parseWebviewMessage } from '../utils/details-message.util.ts';
 import { toDetailsState } from '../utils/details-state.util.ts';
 import { toRunView } from '../utils/run-view.util.ts';
 
 /**
- * Spec §4.4, the host side of one Package Details panel. Every state is built from the store, the runs and the dry run
+ * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
  * when it is sent or a message is checked. Nothing is posted before the page's `ready` or while hidden. A model change
  * while hidden aborts the dry run and defers the next one to the next show, which waits for the root's next store event
  * while the root has a skipped reload pending.
@@ -23,7 +23,7 @@ export class DetailsSession {
   private readonly ports: DetailsPorts;
   private readonly dryRun: PanelDryRun;
   private readonly unsubscribes: (() => void)[] = [];
-  /** `false` until `start` has seen the root loaded: the panel has no state, so every task message is dropped. */
+  /** `false` until `start`: the panel has no state, so every task message is dropped. */
   private isStarted = false;
   private isVisible = false;
   private isReady = false;
@@ -39,10 +39,8 @@ export class DetailsSession {
     });
   }
 
-  /** Subscribes after the root's load (unless the caller just awaited it), so the cache-first publish starts no dry run. */
-  public async start(isLoaded = false): Promise<void> {
-    if (!isLoaded) await this.ports.ensureLoaded(this.key.root);
-
+  /** Subscribes and builds the first state. The caller awaits the root's load first, so the cache-first publish starts no dry run. */
+  public start(): void {
     if (this.isDisposed) return;
 
     const offRoots = this.roots.onDidChange((change) => {
@@ -62,7 +60,7 @@ export class DetailsSession {
     if (this.isDisposed) return;
 
     const state = this.state();
-    const taskIds = taskIdsOf(state);
+    const taskIds = cardTaskIdsOf(state);
     const message = parseWebviewMessage(value, taskIds);
 
     if (message === null) {
@@ -174,7 +172,7 @@ export class DetailsSession {
     if (this.isStarted) this.modelChanged();
   }
 
-  /** Spec §4.1: while the root's binary failed, Run shows the banner's binary text and launches nothing. */
+  /** While the root's binary failed, Run shows the banner's binary text and launches nothing. */
   private async command(message: CommandMessage, state: DetailsState | null): Promise<void> {
     const stage = this.roots.get(this.key.root)?.state.error?.stage;
     const isBlockedRun = message.type === 'run' && stage === 'binary' && state?.kind === 'package';

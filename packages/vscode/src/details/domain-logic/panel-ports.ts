@@ -1,20 +1,36 @@
 import type { DryRunRequest, DryRunState } from '@turbo-console/core';
 import type { HostMessage } from '@turbo-console/webview-ui';
 
-import type { Roots } from '../../roots/common/coordinator.type.ts';
+import { recordPosted } from './posted-cap.ts';
+import { safePost } from './safe-post.ts';
+import type { Coordinator, RootEntry, Roots } from '../../roots/common/coordinator.type.ts';
+import type { FileLookupPorts } from '../../run/common/picker.type.ts';
 import { NO_BINARY_TEXT } from '../common/details.const.ts';
 import type { DetailsPorts } from '../common/details.type.ts';
-import type { PanelParts, PanelView, PanelsDeps } from '../common/panel.type.ts';
-import { recordPosted } from '../utils/posted-cap.util.ts';
-import { safePost } from '../utils/safe-post.util.ts';
+import type { FileLookup, PanelHost, PanelParts, PanelView, PanelsDeps } from '../common/panel.type.ts';
 
-/** Waits for the first answer of `root`'s load; a root that is not in the store has nothing to wait for. */
-export const ensureLoadedWith = (roots: Roots): ((root: string) => Promise<void>) => {
+/**
+ * The file lookup of one open from a manifest. `ensureLoaded` waits for the first answer of the root's current
+ * coordinator and keeps it as `loaded`; once that coordinator has left the store (its root removed or replaced), `info`
+ * shows nothing, so such an open ends with no message.
+ */
+export const fileLookupOf = (roots: Roots, host: PanelHost): FileLookup => {
+  let loaded: Coordinator | null = null;
+  const isLoadedEntry = (entry: RootEntry): boolean => entry.coordinator === loaded;
   const ensureLoaded = async (root: string): Promise<void> => {
-    await roots.get(root)?.coordinator.ensureLoaded();
+    loaded = roots.get(root)?.coordinator ?? null;
+    await loaded?.ensureLoaded();
   };
+  const info = (text: string): void => {
+    const isInStore = roots.all().some(isLoadedEntry);
+    const isGone = loaded !== null && !isInStore;
 
-  return ensureLoaded;
+    if (!isGone) host.info(text);
+  };
+  const ports: FileLookupPorts = { ensureLoaded, rootOf: host.rootOf, info };
+  const lookup: FileLookup = { ports, loaded: () => loaded };
+
+  return lookup;
 };
 
 /**
@@ -37,7 +53,6 @@ export const panelPortsOf = (deps: PanelsDeps, parts: PanelParts, view: PanelVie
 
     return host.dryRun(binary, request, signal);
   };
-  const ensureLoaded = ensureLoadedWith(roots);
   const isStale = (root: string): boolean => roots.get(root)?.coordinator.isStale() ?? false;
   const setPanelVisible = (visible: boolean): void => {
     deps.setPanelVisible(key.root, id, visible);
@@ -45,7 +60,6 @@ export const panelPortsOf = (deps: PanelsDeps, parts: PanelParts, view: PanelVie
   const ports: DetailsPorts = {
     post,
     dryRun,
-    ensureLoaded,
     isStale,
     execute: host.execute,
     setPanelVisible,

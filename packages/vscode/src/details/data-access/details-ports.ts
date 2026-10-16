@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -7,7 +8,12 @@ import * as vscode from 'vscode';
 import type { Output } from '../../shared/common/output.type.ts';
 import { DETAILS_ASSET_DIR, DETAILS_VIEW_TYPE } from '../common/details.const.ts';
 import type { PanelHost, PanelView } from '../common/panel.type.ts';
-import { detailsHtml, freshNonce, panelOptionsOf } from '../utils/details-webview.util.ts';
+import { detailsHtml, panelOptionsOf } from '../utils/details-webview.util.ts';
+
+const NONCE_BYTES = 16;
+
+/** A new nonce for one html assignment. */
+const freshNonce = (): string => randomBytes(NONCE_BYTES).toString('base64');
 
 const viewOf = (panel: vscode.WebviewPanel): PanelView => {
   const view: PanelView = {

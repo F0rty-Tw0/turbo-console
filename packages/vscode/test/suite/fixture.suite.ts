@@ -55,7 +55,7 @@ const expandMs = async (api: TurboConsoleApi, name: string): Promise<number> => 
 };
 
 /**
- * Spec §5.3 case 9 activation: budgets this extension's own work, the span before the roots' stat calls are answered
+ * The activation budget: budgets this extension's own work, the span before the roots' stat calls are answered
  * plus the span after, and logs the wait between them unbudgeted (with the wait counted, CI runners logged 10–470 ms for identical code).
  */
 const activationBudget = (timings: Timings, env: SuiteEnv): void => {

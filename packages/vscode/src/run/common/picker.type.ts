@@ -23,7 +23,10 @@ export type PickerPorts = {
   readonly run: (request: RunRequest) => Promise<void>;
 };
 
-/** The part of `PickerPorts` that finds the package a manifest file holds; the run pickers and Package Details share it. */
+/**
+ * The part of `PickerPorts` that finds the package a manifest file holds; the run pickers and Package Details share it.
+ * A lookup's `info` may show nothing: Package Details' stays silent once the root it loaded was removed or replaced.
+ */
 export type FileLookupPorts = Pick<PickerPorts, 'ensureLoaded' | 'rootOf' | 'info'>;
 
 /** The package a manifest file holds, with the root that holds the file. */

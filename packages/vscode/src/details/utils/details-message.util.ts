@@ -4,7 +4,7 @@ import { webviewMessageSchema } from '../common/details-message.schema.ts';
 import { DROPPED_MESSAGE_MAX, UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
 
 /** The task ids a message may name: the cards of `state`; none while the panel has no state or the package is missing. */
-export const taskIdsOf = (state: DetailsState | null): ReadonlySet<string> => {
+export const cardTaskIdsOf = (state: DetailsState | null): ReadonlySet<string> => {
   if (state?.kind !== 'package') return new Set();
 
   const ids = state.tasks.map((card) => card.taskId);

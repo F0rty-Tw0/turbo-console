@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { droppedMessageText, parseWebviewMessage, taskIdsOf } from './details-message.util.ts';
+import { cardTaskIdsOf, droppedMessageText, parseWebviewMessage } from './details-message.util.ts';
 import { toDetailsState } from './details-state.util.ts';
 import { DROPPED_MESSAGE_MAX, UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
 import { DETAILS_INPUT_STUB } from '../test/stubs/details-model.stub.ts';
@@ -156,14 +156,14 @@ describe('FEATURE: panel task ids', () => {
   it('GIVEN a package state WHEN asked THEN the ids are those of its cards', () => {
     const state = toDetailsState(DETAILS_INPUT_STUB);
 
-    expect(taskIdsOf(state)).toStrictEqual(new Set(['a#build', 'a#check', 'a#test']));
+    expect(cardTaskIdsOf(state)).toStrictEqual(new Set(['a#build', 'a#check', 'a#test']));
   });
 
   it('GIVEN a missing package WHEN asked THEN there are none', () => {
-    expect(taskIdsOf({ kind: 'missing', root: '/ws', packageName: 'a' }).size).toBe(0);
+    expect(cardTaskIdsOf({ kind: 'missing', root: '/ws', packageName: 'a' }).size).toBe(0);
   });
 
   it('GIVEN no state yet WHEN asked THEN there are none', () => {
-    expect(taskIdsOf(null).size).toBe(0);
+    expect(cardTaskIdsOf(null).size).toBe(0);
   });
 });

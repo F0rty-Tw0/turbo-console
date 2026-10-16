@@ -7,15 +7,17 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { RootsSession } from '../../roots/domain-logic/roots-session.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { flushSettles } from '../../roots/test/utils/deferred-ports.spec.util.ts';
 import { sessionPortsWith } from '../../roots/test/utils/session-ports.spec.util.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
+import type { OpenPanel } from '../common/panel.type.ts';
 import type { HostFakes } from '../test/common/panel-fakes.type.ts';
 import { hostMock } from '../test/mocks/panel-host.mock.ts';
 import { A_PACKAGE_STUB, DETAILS_LOADED_STUB, DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
-import { A_MANIFEST, deferEnsureLoaded } from '../test/utils/panels-setup.spec.util.ts';
+import { A_MANIFEST, deferEnsureLoaded, ensureLoadedOf } from '../test/utils/panels-setup.spec.util.ts';
 
 const WS_A: PanelKey = { root: '/ws', packageName: 'a' };
 const GONE: PanelKey = { root: '/ws', packageName: 'gone' };
@@ -102,6 +104,146 @@ describe('FEATURE: opening a details panel', () => {
       await expect(opening).resolves.toBeNull();
       expect(fakes.open).not.toHaveBeenCalled();
       expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+    });
+  });
+
+  describe('GIVEN a row open still waiting on a root that was then replaced', () => {
+    let oldLoad: PromiseWithResolvers<undefined>;
+    let newLoad: PromiseWithResolvers<undefined>;
+    let oldOpen: Promise<OpenPanel | null>;
+
+    beforeEach(() => {
+      oldLoad = deferEnsureLoaded(store, '/ws');
+      oldOpen = panels.open(WS_A);
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply('/ws', DETAILS_LOADED_STUB);
+      newLoad = deferEnsureLoaded(store, '/ws');
+    });
+
+    it('WHEN a second row open of its key waits on the new root THEN the second open builds the panel', async () => {
+      const newOpen = panels.open(WS_A);
+
+      newLoad.resolve(undefined);
+      oldLoad.resolve(undefined);
+      await oldOpen;
+
+      await expect(newOpen).resolves.not.toBeNull();
+      expect(fakes.open).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the old open ends before the new one and a third open arrives THEN the third gets the new panel', async () => {
+      const newOpen = panels.open(WS_A);
+
+      oldLoad.resolve(undefined);
+      await oldOpen;
+      await flushSettles();
+
+      const thirdOpen = panels.open(WS_A);
+
+      newLoad.resolve(undefined);
+      const [built, third] = await Promise.all([newOpen, thirdOpen]);
+
+      expect(third).toBe(built);
+      expect(fakes.open).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN a stale manifest open that ends while a row open on the new root waits, then a third open', () => {
+    let rowPanel: OpenPanel | null;
+    let thirdPanel: OpenPanel | null;
+
+    beforeEach(async () => {
+      const staleLoad = deferEnsureLoaded(store, '/ws');
+      const fileOpen = panels.openFile(A_MANIFEST);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply('/ws', DETAILS_LOADED_STUB);
+
+      const liveLoad = deferEnsureLoaded(store, '/ws');
+      const rowOpen = panels.open(WS_A);
+
+      staleLoad.resolve(undefined);
+      await fileOpen;
+      await flushSettles();
+
+      const thirdOpen = panels.open(WS_A);
+
+      liveLoad.resolve(undefined);
+      [rowPanel, thirdPanel] = await Promise.all([rowOpen, thirdOpen]);
+    });
+
+    it('WHEN both row opens end THEN one view is built', () => {
+      expect(fakes.open).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN both row opens end THEN the new root load is awaited once', () => {
+      expect(ensureLoadedOf(store, '/ws')).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN both row opens end THEN the third open gets the row open panel', () => {
+      expect(thirdPanel).toBe(rowPanel);
+    });
+  });
+
+  describe('GIVEN an open from a manifest still waiting for the root to load', () => {
+    it('WHEN its root is removed before the load resolves THEN no panel is built and no message shows', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const opening = panels.openFile(A_MANIFEST);
+
+      store.set([], coordinatorMock);
+      loaded.resolve(undefined);
+
+      await expect(opening).resolves.toBeNull();
+      expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN its root is replaced by one that has loaded THEN no panel is built and no message shows', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const opening = panels.openFile(A_MANIFEST);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply('/ws', DETAILS_LOADED_STUB);
+      loaded.resolve(undefined);
+
+      await expect(opening).resolves.toBeNull();
+      expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a row open of its key still waits on the replaced root THEN the manifest open builds the panel', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const rowOpen = panels.open(WS_A);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply('/ws', DETAILS_LOADED_STUB);
+
+      const fileOpen = panels.openFile(A_MANIFEST);
+
+      await flushSettles();
+      loaded.resolve(undefined);
+
+      await expect(fileOpen).resolves.not.toBeNull();
+      await expect(rowOpen).resolves.toBeNull();
+      expect(fakes.open).toHaveBeenCalledOnce();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN its root is replaced by one that has not loaded THEN no panel is built and no message shows', async () => {
+      const loaded = deferEnsureLoaded(store, '/ws');
+      const opening = panels.openFile(A_MANIFEST);
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      loaded.resolve(undefined);
+
+      await expect(opening).resolves.toBeNull();
+      expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
     });
   });
 
