@@ -24,7 +24,19 @@ const dirEntry = (config: TurboConfigFile): DirEntry => [posix.dirname(config.pa
 
 const packageDirOf = (pkg: TurboTaskPackage): string => normalDir(toPosixPath(pkg.path));
 
-const nameEntry = (pkg: TurboTaskPackage): [string, string] => [pkg.name, packageDirOf(pkg)];
+const nameEntry = (pkg: TurboTaskPackage): [string, TurboTaskPackage] => [pkg.name, pkg];
+
+/**
+ * The dir of the package an `extends` name names; `undefined` when no graph package has that name. Only a matched
+ * parent's dir is normalized: a model build looks up every package, but few configs extend one.
+ */
+const dirOfName = (lookup: TurboTaskLookup, name: string): string | undefined => {
+  const pkg = lookup.packagesByName.get(name);
+
+  if (pkg === undefined) return undefined;
+
+  return packageDirOf(pkg);
+};
 
 const applyPresence = (names: Set<string>, name: string, presence: TaskPresence): void => {
   if (presence === 'excluded') {
@@ -77,9 +89,9 @@ const rootIndexOf = (configsByDir: Map<string, TurboConfigFile>): RootTaskIndex 
 /** `packages` are every graph package, hidden ones included: a package config may extend any of them. */
 export const turboTaskLookupOf = (configs: TurboConfigFile[], packages: TurboTaskPackage[]): TurboTaskLookup => {
   const configsByDir = new Map(configs.map(dirEntry));
-  const dirsByName = new Map(packages.map(nameEntry));
+  const packagesByName = new Map(packages.map(nameEntry));
   const root = rootIndexOf(configsByDir);
-  const lookup: TurboTaskLookup = { configsByDir, dirsByName, root };
+  const lookup: TurboTaskLookup = { configsByDir, packagesByName, root };
 
   return lookup;
 };
@@ -133,7 +145,7 @@ const chainOf = (lookup: TurboTaskLookup, dir: string, seen: Set<string>): Turbo
   for (const name of parentNames) {
     if (name === ROOT_NAME) continue;
 
-    const parentDir = lookup.dirsByName.get(name);
+    const parentDir = dirOfName(lookup, name);
 
     if (parentDir === undefined) return null;
 
@@ -180,7 +192,7 @@ export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage)
 
   if (root === null) return null;
 
-  const dir = lookup.dirsByName.get(pkg.name) ?? packageDirOf(pkg);
+  const dir = packageDirOf(pkg);
   const hasConfig = lookup.configsByDir.has(dir);
   const isQualified = root.qualifiedNames.has(pkg.name);
 

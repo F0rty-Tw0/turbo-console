@@ -31,12 +31,12 @@ export type RootTaskIndex = {
 };
 
 /**
- * What the turbo task lookup reads: every config by its directory (`.` = root), error entries kept, package dirs by
- * name, and the root index; `root` is `null` when there is no parsed root config.
+ * What the turbo task lookup reads: every config by its directory (`.` = root), error entries kept, graph packages by
+ * the name an `extends` entry gives, and the root index; `root` is `null` when there is no parsed root config.
  */
 export type TurboTaskLookup = {
   readonly configsByDir: Map<string, TurboConfigFile>;
-  readonly dirsByName: Map<string, string>;
+  readonly packagesByName: Map<string, TurboTaskPackage>;
   readonly root: RootTaskIndex | null;
 };
 
