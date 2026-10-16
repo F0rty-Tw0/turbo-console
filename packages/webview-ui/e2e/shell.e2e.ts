@@ -30,4 +30,13 @@ test.describe('FEATURE: graph shell', () => {
 
     await test.step('AND the inline script did not run', async (): Promise<void> => shellPage.expectInlineScriptBlocked());
   });
+
+  test('GIVEN the webview CSP, an HTML string written to a DOM sink is refused by Trusted Types', async ({
+    shellPage
+  }): Promise<void> => {
+    await test.step('WHEN the shell is opened', async (): Promise<void> => shellPage.goto());
+
+    await test.step('THEN writing a string to innerHTML throws a TypeError', async (): Promise<void> =>
+      shellPage.expectStringSinkRefused());
+  });
 });

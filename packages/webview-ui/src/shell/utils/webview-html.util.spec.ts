@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { renderWebviewHtml, webviewCsp } from './webview-html.util.ts';
 
 const SPEC_CSP =
-  "default-src 'none'; script-src 'nonce-n'; style-src vscode-resource: 'nonce-n'; font-src vscode-resource:; img-src vscode-resource: data:; base-uri 'none'; form-action 'none'";
+  "default-src 'none'; script-src 'nonce-n'; style-src vscode-resource: 'nonce-n'; font-src vscode-resource:; img-src vscode-resource: data:; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'";
 
 describe('FEATURE: webview html', () => {
   describe('GIVEN a template with csp and nonce slots', () => {
