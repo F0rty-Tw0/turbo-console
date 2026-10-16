@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { TreeRefresher } from './tree-refresh.ts';
-import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { RefresherFixture } from '../test/common/refresher-fixture.type.ts';
-import { refresherFixtureOf, scriptRunOf } from '../test/utils/tree-refresher.spec.util.ts';
+import { refresherFixtureOf, scriptRunOf, taskRunOf } from '../test/utils/tree-refresher.spec.util.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
 
 const SCRIPT_ID = rowIdOf('task', '/ws', 's#lint');
@@ -20,13 +19,32 @@ const LIVE: ReadonlySet<string> = new Set(['s#lint']);
 
 const NOBODY: ReadonlySet<string> = new Set();
 
+const OTHER_ROOT_ID = rowIdOf('root', '/other', '/other');
+
+/** A refresher over the fixture that reseeds on every toggle change, as `PackagesTree.scriptsChanged` does. */
+const refresherOf = (fixture: RefresherFixture): TreeRefresher => {
+  const refresher = new TreeRefresher(fixture.deps);
+
+  fixture.toggle.onDidChange(() => {
+    refresher.reseed();
+  });
+
+  return refresher;
+};
+
+/** Shows the scripts, then hides them again: two reseeds, scripts hidden after. */
+const toggleTwice = async (fixture: RefresherFixture): Promise<void> => {
+  await fixture.toggle.set(true);
+  await fixture.toggle.set(false);
+};
+
 describe('FEATURE: tree refresh on a run change', () => {
   let fixture: RefresherFixture;
   let refresher: TreeRefresher;
 
   beforeEach(() => {
     fixture = refresherFixtureOf();
-    refresher = new TreeRefresher(fixture.deps);
+    refresher = refresherOf(fixture);
   });
 
   describe('GIVEN scripts hidden and a script that has not started', () => {
@@ -104,7 +122,7 @@ describe('FEATURE: tree refresh on a run change', () => {
 
   describe('GIVEN scripts hidden and a turbo task a#build in the tree', () => {
     it('WHEN it starts and ends THEN each change redraws only its task node', () => {
-      const turbo = { ...RUN_ENTRY_STUB, root: '/ws', taskId: 'a#build', packageName: 'a' };
+      const turbo = taskRunOf('/ws', 'a#build', 'a');
 
       fixture.show();
 
@@ -114,6 +132,59 @@ describe('FEATURE: tree refresh on a run change', () => {
       refresher.runChanged({ ...turbo, state: 'passed', endedAt: 2000 });
 
       expect(fixture.fire.mock.calls).toStrictEqual([[taskNode], [taskNode]]);
+    });
+  });
+
+  describe('GIVEN scripts hidden and the script a#lint of package a, which has turbo tasks', () => {
+    const scriptRun = taskRunOf('/ws', 'a#lint', 'a');
+
+    beforeEach(() => {
+      fixture.live.set('/ws', new Set(['a#lint']));
+      refresher.runChanged(scriptRun);
+      fixture.show();
+      fixture.live.set('/ws', NOBODY);
+      refresher.runChanged({ ...scriptRun, state: 'passed', endedAt: 2000 });
+    });
+
+    it('WHEN it starts and ends THEN each change redraws the whole tree', () => {
+      expect(fixture.fire.mock.calls).toStrictEqual([[undefined], [undefined]]);
+    });
+
+    it('WHEN it ends THEN package a stays in the node cache', () => {
+      expect(fixture.cache.has(rowIdOf('pkg', '/ws', 'a'))).toBe(true);
+    });
+  });
+
+  describe('GIVEN scripts hidden and a script running in a root the window dropped', () => {
+    it('WHEN the toggle flips twice, the root comes back and the run ends THEN the whole tree is redrawn', async () => {
+      fixture.live.set('/ws', LIVE);
+      refresher.runChanged(RUNNING);
+
+      const removed = fixture.entries.splice(0, 1);
+
+      await toggleTwice(fixture);
+      fixture.entries.push(...removed);
+      fixture.live.set('/ws', NOBODY);
+      fixture.fire.mockClear();
+
+      refresher.runChanged(STOPPED);
+
+      expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(undefined);
+    });
+  });
+
+  describe('GIVEN scripts hidden and a remembered run that left the live set unseen', () => {
+    it('WHEN the toggle flips twice and the script starts again THEN the whole tree is redrawn', async () => {
+      fixture.live.set('/ws', LIVE);
+      refresher.runChanged(RUNNING);
+      fixture.live.set('/ws', NOBODY);
+      await toggleTwice(fixture);
+      fixture.live.set('/ws', LIVE);
+      fixture.fire.mockClear();
+
+      refresher.runChanged(RUNNING);
+
+      expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(undefined);
     });
   });
 
@@ -138,7 +209,21 @@ describe('FEATURE: tree refresh on a run change', () => {
       two.show();
       twoRefresher.runChanged(scriptRunOf('/other'));
 
-      expect(two.fire).toHaveBeenCalledExactlyOnceWith(two.cache.get(rowIdOf('root', '/other', '/other')));
+      expect(two.fire).toHaveBeenCalledExactlyOnceWith(two.cache.get(OTHER_ROOT_ID));
+    });
+
+    it('WHEN a /other script live at a toggle ends THEN the /other root node is redrawn', async () => {
+      const two = refresherFixtureOf(true);
+      const twoRefresher = refresherOf(two);
+
+      two.live.set('/other', LIVE);
+      await toggleTwice(two);
+      two.show();
+      two.live.set('/other', NOBODY);
+
+      twoRefresher.runChanged(scriptRunOf('/other', { state: 'stopped', endedAt: 2000 }));
+
+      expect(two.fire).toHaveBeenCalledExactlyOnceWith(two.cache.get(OTHER_ROOT_ID));
     });
   });
 });

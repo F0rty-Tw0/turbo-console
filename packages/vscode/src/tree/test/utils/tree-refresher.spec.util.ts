@@ -24,8 +24,15 @@ export const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, id: 's#lint', name: 'l
 
 export const SCRIPT_PACKAGE: PackageNode = { name: 's', path: 'packages/s', tags: [], tasks: [SCRIPT_TASK] };
 
+/** The script `a#lint` of package `a`, which also holds the turbo task `a#build`. */
+export const TURBO_PACKAGE_SCRIPT: TaskNode = { ...SCRIPT_TASK, id: 'a#lint' };
+
+const TURBO_PACKAGE = packageNamed('a');
+
+const MIXED_PACKAGE: PackageNode = { ...TURBO_PACKAGE, tasks: [...TURBO_PACKAGE.tasks, TURBO_PACKAGE_SCRIPT] };
+
 const entryOf = (folder: RootFolder): RootEntry => {
-  const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [packageNamed('a'), SCRIPT_PACKAGE] };
+  const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [MIXED_PACKAGE, SCRIPT_PACKAGE] };
   const state: RootState = { folder, binary: null, model, error: null };
   const entry: RootEntry = { state, coordinator: coordinatorMock() };
 
@@ -39,7 +46,10 @@ const rootsOf = (entries: RootEntry[]): Roots => {
   return roots;
 };
 
-/** Roots `/ws` and, with `multi`, `/other`; each holds turbo package `a` and package `s` with the one script. */
+/**
+ * Roots `/ws` and, with `multi`, `/other`; each holds package `a` (turbo task `a#build`, script `a#lint`) and package `s`
+ * with only a script. `entries` is the window's root list: a spec removes or re-adds a root by changing it.
+ */
 export const refresherFixtureOf = (multi = false): RefresherFixture => {
   const folders: RootFolder[] = [{ root: '/ws', name: 'ws' }];
 
@@ -62,7 +72,7 @@ export const refresherFixtureOf = (multi = false): RefresherFixture => {
   };
 
   const deps: RefreshDeps = { store, cache, fire, rowContext };
-  const fixture: RefresherFixture = { deps, fire, cache, live, toggle, show };
+  const fixture: RefresherFixture = { deps, fire, cache, live, toggle, show, entries };
 
   return fixture;
 };

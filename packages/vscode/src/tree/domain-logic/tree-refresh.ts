@@ -50,15 +50,19 @@ export class TreeRefresher {
     this.prune(root);
   }
 
-  /** The scripts toggle changed: `stored` becomes the `running` ids of every root now, whatever it last saw. */
+  /**
+   * The scripts toggle changed: `stored` becomes the `running` ids now, whatever it last saw, of every root it remembers
+   * or the window holds. A root removed while its script runs stays, so the run's end still redraws once it is back.
+   */
   public reseed(): void {
     const { live } = this.deps.rowContext();
+    const windowRoots = this.deps.store.all().map((entry) => entry.state.folder.root);
+    const storedRoots = this.stored.keys();
+    const roots = new Set([...storedRoots, ...windowRoots]);
 
     this.stored.clear();
 
-    for (const entry of this.deps.store.all()) {
-      const { root } = entry.state.folder;
-
+    for (const root of roots) {
       for (const taskId of live(root)) this.remember(root, taskId, true);
     }
   }
