@@ -2,11 +2,13 @@ import type { CardIndex, FocusTargets, RenderedPage } from './common/details-pag
 import { render } from './ui/details-page.ts';
 import { focusedKey, refocus } from './ui/focus-targets.ts';
 import { patchRun } from './ui/patch-run.ts';
+import { RunClock } from './ui/run-clock.ts';
 import { isHostMessage } from './utils/host-message.util.ts';
 import type { DetailsState } from '../bridge/common/details-state.type.ts';
 import { createBridge } from '../bridge/data-access/create-bridge.ts';
 
 const bridge = createBridge();
+const clock = new RunClock();
 const root = document.createElement('main');
 const savedScrollY = bridge.scrollY();
 const noCards: CardIndex = new Map();
@@ -27,7 +29,7 @@ const restoreScroll = (state: DetailsState): void => {
 const showState = (state: DetailsState): void => {
   const focusKey = focusedKey(page.focusTargets);
 
-  page = render(root, state, bridge);
+  page = render(root, state, bridge, clock);
   refocus(page.focusTargets, focusKey);
   restoreScroll(state);
 };
@@ -40,7 +42,7 @@ const receive = (message: unknown): void => {
       showState(message.state);
       break;
     case 'runState':
-      patchRun(page.cards, message.taskId, message.run);
+      patchRun(page.cards, message.taskId, message.run, clock);
       break;
   }
 };

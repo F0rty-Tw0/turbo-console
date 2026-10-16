@@ -36,6 +36,17 @@ export class TaskCardSection {
     await expect(this.root.locator('.badge')).toHaveText(labels);
   }
 
+  /** Every item of the badge row, badges and notes alike, in order. */
+  public async expectBadgeRow(texts: string[]): Promise<void> {
+    await expect(this.root.locator('.badges > li')).toHaveText(texts);
+  }
+
+  /** The status line has no icon and no text. */
+  public async expectBlankStatus(): Promise<void> {
+    await expect(this.status.locator('*')).toHaveCount(0);
+    await expect(this.status).toHaveText('');
+  }
+
   public async expectIconAnimation(animationName: string): Promise<void> {
     const readAnimation = (icon: HTMLElement | SVGElement): string => getComputedStyle(icon).animationName;
     const computedAnimation = async (): Promise<string> => this.statusIcon.evaluate(readAnimation);

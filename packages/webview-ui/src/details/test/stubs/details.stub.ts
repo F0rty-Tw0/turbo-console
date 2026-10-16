@@ -6,5 +6,6 @@ export const RUN_VIEW_STUB: RunView = {
   text: '',
   isRunning: false,
   elapsedMs: null,
-  isSpinning: false
+  isSpinning: false,
+  isIdle: true
 };

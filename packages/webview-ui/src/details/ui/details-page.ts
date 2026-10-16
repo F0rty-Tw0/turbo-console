@@ -3,8 +3,8 @@ import { iconButton, textElement } from './page-elements.ts';
 import { taskCard } from './task-card.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { DetailsState, MissingPackage, PackageDetails } from '../../bridge/common/details-state.type.ts';
-import type { CardIndex, CardRefs, FocusTargets, RenderContext, RenderedPage } from '../common/details-page.type.ts';
-import { MISSING_PACKAGE_TEXT } from '../common/field-text.const.ts';
+import type { CardIndex, CardRefs, FocusTargets, RenderContext, RenderedPage, RunTexts } from '../common/details-page.type.ts';
+import { MISSING_PACKAGE_TEXT, NO_TASK_CARDS_TEXT } from '../common/field-text.const.ts';
 
 const pageHeader = (state: PackageDetails, context: RenderContext): HTMLElement => {
   const { bridge, focusTargets } = context;
@@ -44,6 +44,8 @@ const packagePage = (root: HTMLElement, state: PackageDetails, context: RenderCo
 
   bannerArea.append(...shownBanners);
 
+  if (state.tasks.length === 0) cardList.append(textElement('p', 'no-tasks', NO_TASK_CARDS_TEXT));
+
   for (const card of state.tasks) {
     const { element, refs } = taskCard(card, state.dryRun, context);
 
@@ -56,10 +58,15 @@ const packagePage = (root: HTMLElement, state: PackageDetails, context: RenderCo
   return cards;
 };
 
-/** Replaces `root`'s content with the page for `state`; returns the cards `patchRun` updates and the focus targets. */
-export const render = (root: HTMLElement, state: DetailsState, bridge: Bridge): RenderedPage => {
+/**
+ * Replaces `root`'s content with the page for `state`; returns the cards `patchRun` updates and the focus targets.
+ * `runTexts` forgets the replaced cards and ticks the new running ones.
+ */
+export const render = (root: HTMLElement, state: DetailsState, bridge: Bridge, runTexts: RunTexts): RenderedPage => {
   const focusTargets: FocusTargets = new Map();
-  const context: RenderContext = { bridge, focusTargets };
+  const context: RenderContext = { bridge, focusTargets, runTexts };
+
+  runTexts.reset();
 
   if (state.kind === 'package') {
     const cards = packagePage(root, state, context);

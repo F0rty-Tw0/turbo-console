@@ -4,7 +4,8 @@ import type { TaskDefinition } from '@turbo-console/core';
  * What a task's run button and status line show; built in the host from the tree's `taskDisplay`. `colorVar` is a CSS
  * variable name or `null`; `iconId` has no `~spin` modifier, `isSpinning` stands for it. While running, `text` is the
  * kind prefix only (`running` / `continuous`) and `elapsedMs` the wall-clock time since launch (never negative); else
- * `elapsedMs` is `null`.
+ * `elapsedMs` is `null`. `isIdle` is true when the task has no run to show (it never ran, or its entry was dropped), so
+ * an ended run is never idle.
  */
 export type RunView = {
   readonly iconId: string;
@@ -13,6 +14,7 @@ export type RunView = {
   readonly isRunning: boolean;
   readonly elapsedMs: number | null;
   readonly isSpinning: boolean;
+  readonly isIdle: boolean;
 };
 
 export type CacheStatus = 'HIT' | 'MISS' | 'deferred';

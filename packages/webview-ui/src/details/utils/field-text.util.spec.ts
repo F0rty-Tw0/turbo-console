@@ -35,9 +35,9 @@ describe('FEATURE: field texts', () => {
 
   describe('GIVEN a known cache status', () => {
     it.each([
-      ['HIT', 'hit'],
-      ['MISS', 'miss'],
-      ['deferred', 'decided at run time']
+      ['HIT', 'cached: will replay'],
+      ['MISS', 'not cached: will run'],
+      ['deferred', 'unknown: decided at run time']
     ] as const)('WHEN the status is %s THEN it reads "%s"', (status, text) => {
       expect(cacheText(status, 'ready')).toBe(text);
     });

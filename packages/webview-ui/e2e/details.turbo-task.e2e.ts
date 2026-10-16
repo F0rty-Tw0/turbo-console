@@ -31,8 +31,8 @@ test.describe('FEATURE: package details page, a task turbo does not define', () 
       await test.step('THEN the definition says the task is not a turbo task', async (): Promise<void> =>
         detailsPage.card('build').expectFields(ROWS));
 
-      await test.step('AND the card still offers its Run button', async (): Promise<void> =>
-        expect(detailsPage.card('build').runButton).toBeVisible());
+      await test.step('AND the card offers no Run button', async (): Promise<void> =>
+        expect(detailsPage.card('build').runButton).toHaveCount(0));
     });
   }
 });

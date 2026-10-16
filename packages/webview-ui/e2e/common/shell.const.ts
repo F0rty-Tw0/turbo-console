@@ -20,6 +20,20 @@ export const STRING_SINK_PROBE = `(() => {
 export const VIOLATION_RECORDER = `window.__violations = [];
 document.addEventListener('securitypolicyviolation', (event) => window.__violations.push(event.violatedDirective));`;
 
+/** Init script, after `page.clock.install`: keeps the ids of the page's live `setInterval` timers in `window.__intervals`. */
+export const INTERVAL_RECORDER = `window.__intervals = new Set();
+const setTimer = window.setInterval;
+const clearTimer = window.clearInterval;
+window.setInterval = (...args) => {
+  const id = setTimer(...args);
+  window.__intervals.add(id);
+  return id;
+};
+window.clearInterval = (id) => {
+  window.__intervals.delete(id);
+  clearTimer(id);
+};`;
+
 /**
  * Init script: stands in for the VS Code host, recording every posted message in `window.__posted` and keeping the
  * `setState` value in `window.__state` for `getState`. It leaves `window.__state` alone, so an earlier init script can

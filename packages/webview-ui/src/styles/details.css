@@ -69,6 +69,12 @@ ul {
   font-size: 0.9em;
 }
 
+.badge-note {
+  padding: 1px 0;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+}
+
 .page-actions,
 .card-actions {
   display: inline-flex;
@@ -199,7 +205,8 @@ ul {
   color: var(--vscode-descriptionForeground);
 }
 
-.missing {
+.missing,
+.no-tasks {
   color: var(--vscode-descriptionForeground);
 }
 

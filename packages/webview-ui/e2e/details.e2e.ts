@@ -19,11 +19,13 @@ const AC5 = { description: 'AC5', type: 'requirement' };
 
 const HOSTILE_NAME = '<img src=x onerror=alert(1)>';
 
-const RUNNING: RunView = { ...RUN_VIEW_STUB, iconId: 'sync', text: 'running…', isRunning: true };
+const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
 
-const PASSED: RunView = { ...RUN_VIEW_STUB, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: 'passed' };
+const RUNNING: RunView = { ...NOT_IDLE, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
 
-const HOSTILE_RUN: RunView = { ...RUN_VIEW_STUB, iconId: 'a b', colorVar: '--x) url(https://e/', text: 'hostile' };
+const PASSED: RunView = { ...NOT_IDLE, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: 'passed' };
+
+const HOSTILE_RUN: RunView = { ...NOT_IDLE, iconId: 'a b', colorVar: '--x) url(https://e/', text: 'hostile' };
 
 const SAVED_SCROLL_Y = 300;
 
@@ -67,7 +69,7 @@ const ALL_ACTIONS_POSTED: WebviewMessage[] = [
 const FULL_FIELDS: FieldRow[] = [
   ['Command', 'tsc -b'],
   ['Description', 'Builds the web app'],
-  ['Cache', 'hit'],
+  ['Cache', 'cached: will replay'],
   ['Inputs', 'src/**'],
   ['Outputs', 'dist/**'],
   ['Depends on', '^build'],
@@ -178,7 +180,7 @@ test.describe('FEATURE: package details page', () => {
   test('GIVEN a scrolled page, a runState patches only its card', async ({ detailsPage }): Promise<void> => {
     const state = packageWithTasks(TASK_NAMES);
     const idleStatuses = new Array<string>(TASK_NAMES.length - 1).fill('');
-    const statuses = [...idleStatuses, 'running…'];
+    const statuses = [...idleStatuses, /^running · \d+s$/u];
 
     await test.step('WHEN the page shows twelve cards', async (): Promise<void> => detailsPage.open(state));
 

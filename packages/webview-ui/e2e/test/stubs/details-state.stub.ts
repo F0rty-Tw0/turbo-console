@@ -8,7 +8,8 @@ export const RUN_VIEW_STUB: RunView = {
   text: '',
   isRunning: false,
   elapsedMs: null,
-  isSpinning: false
+  isSpinning: false,
+  isIdle: true
 };
 
 export const TASK_DEFINITION_STUB: TaskDefinition = {

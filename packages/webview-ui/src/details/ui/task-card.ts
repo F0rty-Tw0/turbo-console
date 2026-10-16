@@ -1,10 +1,8 @@
-import type { TaskDefinition } from '@turbo-console/core';
-
 import { iconButton, textElement } from './page-elements.ts';
 import { fillRun } from './patch-run.ts';
 import type { DryRunPhase, RunView, TaskCard } from '../../bridge/common/details-state.type.ts';
 import type { CardRefs, FieldRow, RenderContext, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
-import { NONE_TEXT } from '../common/field-text.const.ts';
+import { NONE_TEXT, RUNS_UNTIL_STOPPED_TEXT } from '../common/field-text.const.ts';
 import { cacheText, definitionText, listText } from '../utils/field-text.util.ts';
 
 const runButtonFor = (card: TaskCard, context: RenderContext): RunButtonFactory => {
@@ -65,27 +63,43 @@ const fieldList = (card: TaskCard, phase: DryRunPhase): HTMLDListElement => {
   return list;
 };
 
-const badges = (definition: TaskDefinition | null): HTMLUListElement => {
+/** The badges come from the dry run; "runs until stopped" from the model, so it shows before and without one. */
+const badges = (card: TaskCard): HTMLUListElement => {
+  const { definition } = card;
   const list = textElement('ul', 'badges', '');
 
   if (definition?.cache === true) list.append(textElement('li', 'badge', 'Cacheable'));
 
   if (definition?.persistent === true) list.append(textElement('li', 'badge', 'Continuous'));
 
+  if (card.persistent) list.append(textElement('li', 'badge-note', RUNS_UNTIL_STOPPED_TEXT));
+
   return list;
+};
+
+/** A task that is no turbo task has no turbo command, so its card has no Copy button. */
+const cardActions = (card: TaskCard, refs: CardRefs, context: RenderContext): HTMLSpanElement => {
+  const actions = textElement('span', 'card-actions', '');
+
+  actions.append(refs.runSlot);
+
+  if (!card.isTurboTask) return actions;
+
+  const copy = (): void => context.bridge.post({ type: 'copy', taskId: card.taskId });
+  const copyButton = iconButton('copy', `Copy command for ${card.name}`, copy);
+
+  context.focusTargets.set(`copy:${card.taskId}`, copyButton);
+  actions.append(copyButton);
+
+  return actions;
 };
 
 const cardHeader = (card: TaskCard, refs: CardRefs, context: RenderContext): HTMLElement => {
   const header = document.createElement('header');
-  const copy = (): void => context.bridge.post({ type: 'copy', taskId: card.taskId });
-  const copyButton = iconButton('copy', `Copy command for ${card.name}`, copy);
-  const actions = textElement('span', 'card-actions', '');
-  const title = textElement('h2', 'card-title', card.name);
+  const actions = cardActions(card, refs, context);
 
-  context.focusTargets.set(`copy:${card.taskId}`, copyButton);
   header.className = 'card-header';
-  actions.append(refs.runSlot, copyButton);
-  header.append(title, refs.status, actions);
+  header.append(refs.title, refs.status, actions);
 
   return header;
 };
@@ -93,16 +107,20 @@ const cardHeader = (card: TaskCard, refs: CardRefs, context: RenderContext): HTM
 /** One task card; repo text goes in through `textContent` and `aria-label`/`title` only. */
 export const taskCard = (card: TaskCard, phase: DryRunPhase, context: RenderContext): RenderedCard => {
   const element = textElement('section', 'card', '');
+  const title = textElement('h2', 'card-title', card.name);
   const status = textElement('span', 'run-status', '');
   const runSlot = textElement('span', 'run-slot', '');
   const runButton = runButtonFor(card, context);
-  const refs: CardRefs = { status, runSlot, runButton };
+  const { taskId, isTurboTask } = card;
+  const refs: CardRefs = { taskId, isTurboTask, title, status, runSlot, runButton };
+
   const header = cardHeader(card, refs, context);
   const fields = fieldList(card, phase);
-  const badgeList = badges(card.definition);
+  const badgeList = badges(card);
   const rendered: RenderedCard = { element, refs };
 
-  fillRun(refs, card.run);
+  title.tabIndex = -1;
+  fillRun(refs, card.run, context.runTexts);
   element.append(header, badgeList, fields);
 
   return rendered;
