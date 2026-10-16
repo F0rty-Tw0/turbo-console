@@ -3,7 +3,7 @@ import { packageTargetOf } from '../../tree/utils/package-target.util.ts';
 import type { PanelOpener } from '../common/panel.type.ts';
 
 /**
- * Spec §4.3: `turboConsole.openPackageDetails` from a package row (its root and package name) or from a
+ * `turboConsole.openPackageDetails` from a package row (its root and package name) or from a
  * `package.json` (the editor title and the palette, which refuse only with no model or a file no package owns: a
  * binary-stage error opens the panel, which shows the binary banner). `fileOf` is the run pickers' `manifestFile`: the
  * resource passed, else the active editor's file. `dispose` closes every panel.

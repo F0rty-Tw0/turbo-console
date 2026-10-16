@@ -11,7 +11,7 @@ import { toDetailsState } from '../utils/details-state.util.ts';
 import { toRunView } from '../utils/run-view.util.ts';
 
 /**
- * Spec §4.4, the host side of one Package Details panel. Every state is built from the store, the runs and the dry run
+ * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
  * when it is sent or a message is checked. Nothing is posted before the page's `ready` or while hidden. A model change
  * while hidden aborts the dry run and defers the next one to the next show, which waits for the root's next store event
  * while the root has a skipped reload pending.
@@ -174,7 +174,7 @@ export class DetailsSession {
     if (this.isStarted) this.modelChanged();
   }
 
-  /** Spec §4.1: while the root's binary failed, Run shows the banner's binary text and launches nothing. */
+  /** While the root's binary failed, Run shows the banner's binary text and launches nothing. */
   private async command(message: CommandMessage, state: DetailsState | null): Promise<void> {
     const stage = this.roots.get(this.key.root)?.state.error?.stage;
     const isBlockedRun = message.type === 'run' && stage === 'binary' && state?.kind === 'package';

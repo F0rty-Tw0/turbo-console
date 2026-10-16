@@ -2,7 +2,7 @@ import type { WorkspaceModel } from '@turbo-console/core';
 
 import { isVisibleTask } from '../../tree/utils/task-rows.util.ts';
 
-/** Appends in place: copying the list per dependent made a task with k dependents cost O(k²) on a hostile repo. */
+/** Appends in place, so a task with k dependents costs O(k) in total, never O(k²). */
 const addDependent = (dependents: Map<string, string[]>, dependency: string, taskId: string): void => {
   const known = dependents.get(dependency);
 

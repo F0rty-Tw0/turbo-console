@@ -35,7 +35,7 @@ const toFailure = (error: unknown): DryRunOutcome => {
 };
 
 /**
- * Spec §4.4 steps 3, 5 and 8: the dry run of one panel's package, at most one live. `restart` aborts the live run; only
+ * The dry run of one panel's package, at most one live. `restart` aborts the live run; only
  * a run still live when it ends sets the result and calls `changed`, so a superseded result is dropped and a host
  * abort, which the port rejects as `failed`, never reads as a failure. Every run's rejection is handled here, and a throw
  * while one settles, `changed` included, is logged.
@@ -117,7 +117,7 @@ export class PanelDryRun {
     this.settled = taken.catch(logged);
   }
 
-  /** Spec §4.5: a failure keeps the model fields and goes to the output channel. */
+  /** A failure keeps the model fields and goes to the output channel. */
   private settle(outcome: DryRunOutcome): void {
     if (outcome.kind === 'failed') {
       this.ports.log(logTextOf(outcome.error));

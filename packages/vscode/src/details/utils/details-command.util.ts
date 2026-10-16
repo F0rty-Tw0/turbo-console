@@ -9,7 +9,7 @@ const TASK_COMMANDS: Readonly<Record<TaskMessage['type'], string>> = {
 };
 
 /**
- * Planning correction 2: the tree's command for a panel button, with the tree-row argument it takes. `root` and
+ * The tree's command for a panel button, with the tree-row argument it takes. `root` and
  * `packageName` come from the panel key only; a task message adds only its `taskId`.
  */
 export const commandOf = (message: CommandMessage, key: PanelKey): DetailsCommand => {

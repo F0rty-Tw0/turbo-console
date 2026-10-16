@@ -26,7 +26,7 @@ export const openFromRow = async (root: string, packageName: string): Promise<vo
   await vscode.commands.executeCommand(OPEN_COMMAND, row);
 };
 
-/** Spec §4.6 "open, model loaded": one dry run and no load; a second open of the same package reuses its panel. */
+/** Opening with the model loaded: one dry run and no load; a second open of the same package reuses its panel. */
 export const openCase = async (scene: DetailsScene): Promise<void> => {
   const { api, root, packageName, counter } = scene;
 

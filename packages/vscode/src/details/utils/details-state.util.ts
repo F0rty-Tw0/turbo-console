@@ -70,7 +70,7 @@ const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: Detail
 };
 
 /**
- * Spec §4.3: the state the page shows. A card takes the dry-run state whose id equals its task id exactly (turbo allows
+ * The state the page shows. A card takes the dry-run state whose id equals its task id exactly (turbo allows
  * `#` in a package name, so a prefix match would pick up another package's states). A package the model lacks, or a
  * root with no model, is `missing`.
  */
