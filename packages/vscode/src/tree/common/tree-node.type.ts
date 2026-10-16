@@ -36,12 +36,21 @@ export type RowContext = {
 export type RefreshTarget = 'root' | string[];
 
 /**
+ * What one `onDidChangeTreeData` event redraws: a node, several nodes at once, or (`undefined`) the whole tree. VS Code
+ * debounces the event (leading edge, 200 ms), so nodes fired one by one in a loop redraw in two passes.
+ */
+export type TreeRefresh = TreeNode | TreeNode[] | undefined;
+
+/** The running task ids per root, as the elapsed ticker holds them. */
+export type RunningTasks = ReadonlyMap<string, ReadonlySet<string>>;
+
+/**
  * `treeVisible` gets one span per root: its first `getChildren`, ended when it first returns package or folder rows.
  * `now` is the span clock (`performance.now()`); `wallNow` is the wall clock (`Date.now()`) the rows count elapsed time on.
  */
 export type TreePorts = {
   readonly runs: RunLookup;
-  readonly fire: (node: TreeNode | undefined) => void;
+  readonly fire: (refresh: TreeRefresh) => void;
   readonly treeVisible: Map<string, Span>;
   readonly now: () => number;
   readonly wallNow: () => number;
@@ -49,12 +58,13 @@ export type TreePorts = {
 
 /** The public face of `PackagesTreeProvider`, so `common/` can name it without importing the feature. */
 export type PackagesTreeApi = {
-  readonly onDidChangeTreeData: Event<TreeNode | undefined>;
+  readonly onDidChangeTreeData: Event<TreeRefresh>;
   readonly getChildren: (node?: TreeNode) => Promise<TreeNode[]>;
   readonly getTreeItem: (node: TreeNode) => TreeItem;
   readonly refreshFor: (change: RootChange) => void;
   readonly setMode: (mode: TreeMode) => void;
   readonly refreshTask: (root: string, taskId: string) => void;
+  readonly refreshTasks: (running: RunningTasks) => void;
   readonly setScopeShown: (value: boolean) => void;
   readonly isScopeShown: () => boolean;
 };
