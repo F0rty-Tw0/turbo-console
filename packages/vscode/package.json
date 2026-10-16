@@ -374,7 +374,7 @@
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "bench": "node ../../tools/dist/run-benches.js",
-    "integration": "esbuild \"test/suite/*.suite.ts\" --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --external:vscode --outdir=dist-test --out-extension:.js=.cjs && node -e \"require('node:fs').mkdirSync('.vsix',{recursive:true})\" && vsce package --no-dependencies --skip-license --allow-missing-repository --out .vsix/turbo-console.vsix && node test/run-integration.ts"
+    "integration": "esbuild \"test/suite/*.suite.ts\" --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --external:vscode --outdir=dist-test --out-extension:.js=.cjs && node -e \"require('node:fs').mkdirSync('.vsix',{recursive:true})\" && vsce package --no-dependencies --skip-license --allow-missing-repository --out .vsix/turbo-console.vsix && vsce ls --no-dependencies > .vsix/files.txt && node test/check-vsix.ts && node test/run-integration.ts"
   },
   "dependencies": {
     "@turbo-console/core": "workspace:*",
