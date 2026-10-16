@@ -9,6 +9,8 @@ import { sessionPortsWith } from '../test/utils/session-ports.spec.util.ts';
 
 const A_FOLDER: RootFolder = { root: '/a', name: 'a' };
 
+const B_FOLDER: RootFolder = { root: '/b', name: 'b' };
+
 const NOT_FOUND = new TurboException('not-found', 'no turbo');
 
 const UNSUPPORTED = new TurboException('version-unsupported', 'turbo 2.10.4');
@@ -59,6 +61,21 @@ describe('FEATURE: roots session failure log', () => {
 
       expect(resolve).toHaveBeenCalledTimes(3);
       expect(log.mock.calls).toStrictEqual([[NOT_FOUND_LINE]]);
+    });
+  });
+
+  describe('GIVEN two roots whose binary is never found', () => {
+    it('WHEN each is ensured THEN the error is logged once per root', async () => {
+      const log = vi.fn();
+      const resolve = vi.fn<LoadDeps['resolve']>().mockRejectedValue(NOT_FOUND);
+      const ports = sessionPortsWith({ resolve, log });
+      const session = new RootsSession(ports);
+
+      session.setRoots([A_FOLDER, B_FOLDER]);
+      await session.store.get(A_FOLDER.root)?.coordinator.ensureLoaded();
+      await session.store.get(B_FOLDER.root)?.coordinator.ensureLoaded();
+
+      expect(log.mock.calls).toStrictEqual([[NOT_FOUND_LINE], [NOT_FOUND_LINE]]);
     });
   });
 
