@@ -192,13 +192,13 @@ describe('FEATURE: load coordinator', () => {
       expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['full']);
     });
 
-    it('WHEN the full load after a request fails THEN no follow-up load starts and the root stays stale', async () => {
+    it('WHEN the full load after a request fails THEN no follow-up load starts and the failure answers the stale flag', async () => {
       coordinator.request('watch');
       runAt(deferred, 0).settle(LOAD_FAILURE_STUB);
       await flushSettles();
 
       expect(deferred.runs).toHaveLength(1);
-      expect(coordinator.isStale()).toBe(true);
+      expect(coordinator.isStale()).toBe(false);
     });
 
     it('WHEN a stale cache is published and the full model returns THEN both are applied in order', async () => {

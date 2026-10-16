@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoadCoordinator } from './load-coordinator.ts';
 import type { LoadFailure, LoadedModel } from '../common/root.type.ts';
 import type { DeferredPorts } from '../test/common/coordinator.type.ts';
-import { LOADED_MODEL_STUB } from '../test/stubs/root.stub.ts';
+import { LOADED_MODEL_STUB, LOAD_FAILURE_STUB } from '../test/stubs/root.stub.ts';
 import { deferredPorts, flushSettles, runAt } from '../test/utils/deferred-ports.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
@@ -113,6 +113,78 @@ describe('FEATURE: settling a root load', () => {
     await flushSettles();
 
     expect(record).toMatchObject({ outcome: 'model', cacheFresh: false });
+  });
+
+  describe('GIVEN a loaded root whose reload after a hidden change failed', () => {
+    beforeEach(async () => {
+      coordinator.show();
+      runAt(deferred, 0).settle(LOADED_MODEL_STUB);
+      await flushSettles();
+      coordinator.request('watch');
+      coordinator.show();
+      runAt(deferred, 1).settle(RUN_FAILED);
+      await flushSettles();
+    });
+
+    it('WHEN shown three more times THEN no load starts', () => {
+      coordinator.show();
+      coordinator.show();
+      coordinator.show();
+
+      expect(deferred.runs).toHaveLength(2);
+    });
+
+    it('WHEN ensured THEN it returns with no new load', async () => {
+      await coordinator.ensureLoaded();
+
+      expect(deferred.runs).toHaveLength(2);
+    });
+
+    it('WHEN a new hidden change comes in and it is shown twice THEN exactly one full load starts', () => {
+      coordinator.request('watch');
+      coordinator.show();
+      coordinator.show();
+
+      expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full', 'full']);
+    });
+
+    it('WHEN a refresh comes in THEN one full load starts', () => {
+      coordinator.request('refresh');
+
+      expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full', 'full']);
+    });
+  });
+
+  describe('GIVEN a loaded root whose reload after a hidden change failed to find the binary', () => {
+    beforeEach(async () => {
+      coordinator.show();
+      runAt(deferred, 0).settle(LOADED_MODEL_STUB);
+      await flushSettles();
+      coordinator.request('watch');
+      coordinator.show();
+      runAt(deferred, 1).settle(LOAD_FAILURE_STUB);
+      await flushSettles();
+    });
+
+    it('WHEN shown again THEN no load starts', () => {
+      coordinator.show();
+
+      expect(deferred.runs).toHaveLength(2);
+    });
+
+    it('WHEN ensured twice in a row THEN each call runs one full load', async () => {
+      const first = coordinator.ensureLoaded();
+
+      runAt(deferred, 2).settle(LOAD_FAILURE_STUB);
+      await first;
+
+      const second = coordinator.ensureLoaded();
+
+      runAt(deferred, 3).settle(LOAD_FAILURE_STUB);
+      await second;
+
+      expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full', 'full', 'full']);
+    });
   });
 
   it('GIVEN a loaded root and a hidden view WHEN a setting request comes in THEN it is stale and no load starts', async () => {
