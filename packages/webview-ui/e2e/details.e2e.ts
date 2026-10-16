@@ -67,7 +67,7 @@ const ALL_ACTIONS_POSTED: WebviewMessage[] = [
 const FULL_FIELDS: FieldRow[] = [
   ['Command', 'tsc -b'],
   ['Description', 'Builds the web app'],
-  ['Cache', 'hit'],
+  ['Cache', 'cached: will replay'],
   ['Inputs', 'src/**'],
   ['Outputs', 'dist/**'],
   ['Depends on', '^build'],

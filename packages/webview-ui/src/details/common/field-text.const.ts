@@ -16,7 +16,7 @@ export const NOT_TURBO_TASK_TEXT = 'Not a turbo task: no turbo.json defines it';
 export const MISSING_PACKAGE_TEXT = 'Package no longer in the workspace';
 
 export const CACHE_TEXTS: Readonly<Record<CacheStatus, string>> = {
-  HIT: 'hit',
-  MISS: 'miss',
-  deferred: 'decided at run time'
+  HIT: 'cached: will replay',
+  MISS: 'not cached: will run',
+  deferred: 'unknown: decided at run time'
 };
