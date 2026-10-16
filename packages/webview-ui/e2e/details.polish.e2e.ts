@@ -49,6 +49,10 @@ const NOT_TURBO_RUNNING_CARD: TaskCard = { ...NOT_TURBO_CARD, run: RUNNING };
 
 const NOT_TURBO_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [NOT_TURBO_RUNNING_CARD] };
 
+const SCRIPT_RUNNING_CARD: TaskCard = { ...NOT_TURBO_RUNNING_CARD, taskId: 'web#format', name: 'format' };
+
+const MIXED_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_STUB, SCRIPT_RUNNING_CARD] };
+
 const EMPTY_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [] };
 
 const NOT_TURBO_ROWS: FieldRow[] = [
@@ -253,6 +257,23 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('THEN the card title has focus', async (): Promise<void> =>
         expect(detailsPage.card('build').title).toBeFocused());
+    }
+  );
+
+  test(
+    'GIVEN focus elsewhere on the page, a script card whose run ends leaves the focus where it is',
+    { annotation: AC9 },
+    async ({ detailsPage }): Promise<void> => {
+      const copyButton = detailsPage.card('build').copyButton;
+
+      await test.step('WHEN the page shows a turbo card and a running script card', async (): Promise<void> =>
+        detailsPage.open(MIXED_RUNNING_STATE));
+
+      await test.step('AND the turbo card Copy button is focused', async (): Promise<void> => copyButton.focus());
+
+      await test.step('AND the script run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#format', STOPPED));
+
+      await test.step('THEN Copy keeps the focus', async (): Promise<void> => expect(copyButton).toBeFocused());
     }
   );
 
