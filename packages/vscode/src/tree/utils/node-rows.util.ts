@@ -1,7 +1,6 @@
 import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 
 import { dirRow, dirRows, packageRow } from './dir-rows.util.ts';
-import { shownLabelOf } from './model-view.util.ts';
 import { rootRowOf, rootRows, shownModelOf } from './root-rows.util.ts';
 import { taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
@@ -89,9 +88,7 @@ const modelRow = (root: string, model: WorkspaceModel, node: TreeNode, context: 
 
   if (pkg === undefined) return undefined;
 
-  const label = shownLabelOf(view, pkg, context.scopeShown);
-
-  if (node.kind === 'pkg') return packageRow(root, pkg, label);
+  if (node.kind === 'pkg') return packageRow(root, pkg, view, context.scopeShown);
 
   const tasks = taskRows(root, pkg, context);
 

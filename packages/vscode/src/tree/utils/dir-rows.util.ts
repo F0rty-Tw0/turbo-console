@@ -2,7 +2,6 @@ import type { PackageNode } from '@turbo-console/core';
 
 import { shownLabelOf } from './model-view.util.ts';
 import { rowIdOf } from './row-id.util.ts';
-import { isVisibleTask } from './task-rows.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
@@ -32,15 +31,17 @@ export const dirRow = (root: string, dir: FolderDir, view: ModelView): TreeRow =
 };
 
 /**
- * `key` and `packageName` keep the raw model name; only `label` and `description` are cleaned. `shownLabel` is the full
+ * `key` and `packageName` keep the raw model name; only `label` and `description` are cleaned. The label is the full
  * name or the bare label (spec §4.8). The description is the package path, or empty when it equals the label the row
- * shows (spec §4.7: descriptions never repeat the label). The tooltip always starts with the full name (spec §4.9).
+ * shows (spec §4.7: descriptions never repeat the label). The tooltip always starts with the full name (spec §4.9) and
+ * counts the visible tasks the view holds for it.
  */
-export const packageRow = (root: string, pkg: PackageNode, shownLabel: string): TreeRow => {
+export const packageRow = (root: string, pkg: PackageNode, view: ModelView, scopeShown: boolean): TreeRow => {
+  const shownLabel = shownLabelOf(view, pkg, scopeShown);
   const label = cleanText(shownLabel, LABEL_MAX);
   const path = cleanText(pkg.path, DESCRIPTION_MAX);
   const description = path === label ? '' : path;
-  const visible = pkg.tasks.filter(isVisibleTask);
+  const taskCount = view.visibleTaskCounts.get(pkg.name) ?? 0;
   const row: TreeRow = {
     id: rowIdOf('pkg', root, pkg.name),
     kind: 'pkg',
@@ -52,7 +53,7 @@ export const packageRow = (root: string, pkg: PackageNode, shownLabel: string): 
     icon: PACKAGE_ICON,
     contextValue: 'turboPackage',
     collapsible: 'collapsed',
-    tooltip: [pkg.name, `Path: ${pkg.path}`, `Tasks: ${visible.length}`],
+    tooltip: [pkg.name, `Path: ${pkg.path}`, `Tasks: ${taskCount}`],
     command: null
   };
 
@@ -67,11 +68,7 @@ export const dirRows = (root: string, level: FolderTree, view: ModelView, scopeS
   const dirs = level.dirs.map((dir) => dirRow(root, dir, view));
   const found = level.packages.map((name) => view.packages.get(name));
   const listed = found.filter((pkg) => pkg !== undefined);
-  const leafOf = (pkg: PackageNode): TreeRow => {
-    const label = shownLabelOf(view, pkg, scopeShown);
-
-    return packageRow(root, pkg, label);
-  };
+  const leafOf = (pkg: PackageNode): TreeRow => packageRow(root, pkg, view, scopeShown);
   const leaves = listed.map(leafOf);
 
   return [...dirs, ...leaves];

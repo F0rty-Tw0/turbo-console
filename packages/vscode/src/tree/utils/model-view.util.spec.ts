@@ -54,6 +54,12 @@ describe('FEATURE: model view', () => {
       expect(names).toStrictEqual(['scripts']);
     });
 
+    it('WHEN the view is built THEN each shown package counts only its visible tasks', () => {
+      const view = modelViewWith([packageOf('a', [TASK_NODE_STUB, ATOM_TASK, SCRIPT_TASK]), packageOf('atoms', [ATOM_TASK])]);
+
+      expect(view.visibleTaskCounts).toStrictEqual(new Map([['a', 2]]));
+    });
+
     it('WHEN a directory holds only a hidden package THEN it has no folder', () => {
       const view = modelViewWith([packageOf('web', [], 'apps/web'), packageOf('a')]);
       const paths = view.folders.dirs.map((dir) => dir.path);

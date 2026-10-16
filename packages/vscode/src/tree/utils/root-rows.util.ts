@@ -2,7 +2,6 @@ import type { PackageNode, TurboErrorKind, WorkspaceModel } from '@turbo-console
 
 import { dirRows, packageRow } from './dir-rows.util.ts';
 import { packageList } from './folder-tree.util.ts';
-import { shownLabelOf } from './model-view.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
@@ -50,11 +49,7 @@ const listRowsOf = (root: string, view: ModelView, scopeShown: boolean): TreeRow
   const shown = Array.from(view.packages.values());
   const names = packageList(shown);
   const listed = names.map((name) => view.packages.get(name)).filter((pkg) => pkg !== undefined);
-  const rowOf = (pkg: PackageNode): TreeRow => {
-    const label = shownLabelOf(view, pkg, scopeShown);
-
-    return packageRow(root, pkg, label);
-  };
+  const rowOf = (pkg: PackageNode): TreeRow => packageRow(root, pkg, view, scopeShown);
 
   return listed.map(rowOf);
 };

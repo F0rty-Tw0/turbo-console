@@ -103,13 +103,27 @@ const packagesBelowOf = (folders: FolderTree): Map<string, number> => {
   return counts;
 };
 
+const visibleCountOf = (pkg: PackageNode): [string, number] => {
+  let count = 0;
+
+  for (const task of pkg.tasks) {
+    const isVisible = isVisibleTask(task);
+
+    if (isVisible) count += 1;
+  }
+
+  return [pkg.name, count];
+};
+
 export const modelViewOf = (model: WorkspaceModel): ModelView => {
   const shown = model.packages.filter(isShownPackage);
   const packages = packageMapOf(shown);
   const folders = folderTree(shown);
   const bareLabels = bareLabelsOf(shown);
   const packagesBelow = packagesBelowOf(folders);
-  const view: ModelView = { packages, folders, bareLabels, packagesBelow };
+  const counts = shown.map(visibleCountOf);
+  const visibleTaskCounts = new Map(counts);
+  const view: ModelView = { packages, folders, bareLabels, packagesBelow, visibleTaskCounts };
 
   return view;
 };
