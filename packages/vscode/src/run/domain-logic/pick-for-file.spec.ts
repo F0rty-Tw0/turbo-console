@@ -7,6 +7,7 @@ import type { LoadFailure, RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
@@ -34,7 +35,7 @@ const requestOf = (root: string, packageName: string, task: TaskNode): RunReques
 };
 
 const failureOf = (stage: LoadFailure['stage'], kind: TurboErrorKind): LoadFailure => {
-  const failure: LoadFailure = { kind: 'error', stage, error: new TurboException(kind, 'detail') };
+  const failure: LoadFailure = loadFailureOf(stage, new TurboException(kind, 'detail'));
 
   return failure;
 };

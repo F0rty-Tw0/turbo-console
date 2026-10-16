@@ -7,6 +7,7 @@ import type { LoadFailure, RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import { NO_TASKS_TEXT } from '../common/picker.const.ts';
@@ -23,7 +24,7 @@ const requestOf = (root: string, packageName: string, task: TaskNode): RunReques
   return request;
 };
 
-const binaryFailure: LoadFailure = { kind: 'error', stage: 'binary', error: new TurboException('not-found', 'detail') };
+const binaryFailure: LoadFailure = loadFailureOf('binary', new TurboException('not-found', 'detail'));
 
 describe('FEATURE: palette run picker', () => {
   let roots: RootStore;

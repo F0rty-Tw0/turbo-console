@@ -59,7 +59,7 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
   });
 
   describe('GIVEN the deadline expires while load runs', () => {
-    it('WHEN the timeout fires THEN the error of the load itself is the failure, logged, and the timeout was LOAD_DEADLINE_MS', async () => {
+    it('WHEN the timeout fires THEN the error of the load itself is the failure, not logged, and the timeout was LOAD_DEADLINE_MS', async () => {
       const deps = loadDepsMock();
       const expiry = new AbortController();
       const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValueOnce(expiry.signal);
@@ -78,12 +78,12 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       const loadError = { message: 'aborted' };
 
       expect(result).toMatchObject({ kind: 'error', stage: 'load', error: loadError });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('aborted');
+      expect(deps.log).not.toHaveBeenCalled();
       expect(timeout).toHaveBeenNthCalledWith(1, LOAD_DEADLINE_MS);
       expect(timeout).toHaveBeenNthCalledWith(2, LOAD_DEADLINE_MS + LOAD_GRACE_MS);
     });
 
-    it('WHEN load ignores the deadline THEN the backstop ends it as a logged load failure and frees the slot', async () => {
+    it('WHEN load ignores the deadline THEN the backstop ends it as a load failure, not logged, and frees the slot', async () => {
       const deps = loadDepsMock();
       const release = vi.fn();
       const backstop = new AbortController();
@@ -104,8 +104,8 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
 
       const abandoned = new TurboException('failed', 'load still running 15 s past its 60 s deadline; abandoned');
 
-      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: abandoned });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo failed: load still running 15 s past its 60 s deadline; abandoned');
+      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: abandoned, logText: `turbo failed: ${abandoned.message}` });
+      expect(deps.log).not.toHaveBeenCalled();
       expect(release).toHaveBeenCalledOnce();
     });
 
@@ -342,15 +342,20 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       expect(deps.log).not.toHaveBeenCalled();
     });
 
-    it('WHEN acquire rejects without an abort THEN it is a logged load failure and nothing runs', async () => {
+    it('WHEN acquire rejects without an abort THEN it is a load failure, not logged, and nothing runs', async () => {
       const deps = loadDepsMock();
 
       vi.mocked(deps.acquire).mockRejectedValue(new Error('queue broken'));
 
       const result = await loadRoot('full', deps, new AbortController().signal, vi.fn());
 
-      expect(result).toStrictEqual({ kind: 'error', stage: 'load', error: new TurboException('failed', 'queue broken') });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('queue broken');
+      expect(result).toStrictEqual({
+        kind: 'error',
+        stage: 'load',
+        error: new TurboException('failed', 'queue broken'),
+        logText: 'queue broken'
+      });
+      expect(deps.log).not.toHaveBeenCalled();
       expect(deps.progress).not.toHaveBeenCalled();
     });
 

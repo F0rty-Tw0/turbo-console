@@ -7,6 +7,7 @@ import type { LoadFailure } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
@@ -23,7 +24,7 @@ import {
 import { deferDryRuns } from '../test/utils/deferred-dry-runs.spec.util.ts';
 
 const BUILD_ROW = { kind: 'task', root: '/ws', key: 'a#build', packageName: 'a' };
-const LOAD_FAILED: LoadFailure = { kind: 'error', stage: 'load', error: new TurboException('failed', 'turbo exited 1') };
+const LOAD_FAILED: LoadFailure = loadFailureOf('load', new TurboException('failed', 'turbo exited 1'));
 const WITHOUT_BUILD = { ...A_PACKAGE_STUB, tasks: [TEST_TASK_STUB] };
 const MODEL_WITHOUT_BUILD = { ...DETAILS_MODEL_STUB, packages: [WITHOUT_BUILD] };
 const RELOADED_WITHOUT_BUILD = { ...DETAILS_LOADED_STUB, model: MODEL_WITHOUT_BUILD };

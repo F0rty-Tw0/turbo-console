@@ -32,6 +32,8 @@ export type LoadFailure = {
   readonly kind: 'error';
   readonly stage: LoadStage;
   readonly error: TurboException;
+  /** The failure's one log line, taken from the error as thrown, before `error` rebuilt it; the session logs it once per error key. */
+  readonly logText: string;
 };
 
 export type LoadResult = LoadedModel | LoadFailure;
@@ -39,7 +41,7 @@ export type LoadResult = LoadedModel | LoadFailure;
 /**
  * Ports of one root: the folder, the editor's storage dir and the progress UI are closed over by whoever builds them.
  * `log` takes one clean line (already through `logTextOf`), so the sink never sees an error object or its `cause`; it
- * must not throw, since `loadRoot` calls it on its failure paths and promises never to throw.
+ * must not throw, since `loadRoot` and the session call it on failure paths that promise never to throw.
  */
 export type LoadDeps = {
   readonly resolve: (signal: AbortSignal) => Promise<TurboBinary>;
