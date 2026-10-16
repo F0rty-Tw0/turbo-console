@@ -88,10 +88,7 @@ describe('FEATURE: elapsed ticker', () => {
 
       vi.advanceTimersByTime(2 * SECOND);
 
-      expect(fired).toStrictEqual([
-        ['/ws a#dev'],
-        ['/ws a#dev']
-      ]);
+      expect(fired).toStrictEqual([['/ws a#dev'], ['/ws a#dev']]);
     });
 
     it('WHEN a run goes for two seconds THEN the api taken before reads 2 ticks, live', () => {
@@ -131,10 +128,7 @@ describe('FEATURE: elapsed ticker', () => {
       it('THEN each later tick fires only the other', () => {
         vi.advanceTimersByTime(2 * SECOND);
 
-        expect(fired).toStrictEqual([
-          ['/ws b#dev'],
-          ['/ws b#dev']
-        ]);
+        expect(fired).toStrictEqual([['/ws b#dev'], ['/ws b#dev']]);
       });
 
       it('THEN the interval stays armed', () => {
