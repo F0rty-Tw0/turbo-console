@@ -105,6 +105,13 @@ describe('FEATURE: task names turbo defines for a package', () => {
       expect(namesOf(lookup, E)).toStrictEqual(['build', 'dev', 'own']);
     });
 
+    it('WHEN two packages with no config and no qualified root key are looked up THEN they share one set', () => {
+      const other = packageOf('@acme/f', 'packages/f');
+      const sharedLookup = turboTaskLookupOf(PROBE_CONFIGS, [...PROBE_PACKAGES, other]);
+
+      expect(turboTaskNamesOf(sharedLookup, A)).toBe(turboTaskNamesOf(sharedLookup, other));
+    });
+
     it('WHEN the root package is looked up THEN only its //# task is its task', () => {
       const root = packageOf('//', '.');
 

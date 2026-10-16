@@ -1,7 +1,14 @@
 import { posix } from 'node:path';
 
 import { normalDir, toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
-import type { TaskPresence, TurboConfigFile, TurboConfigOk, TurboTaskLookup, TurboTaskPackage } from '../common/turbo-config.type.ts';
+import type {
+  RootTaskIndex,
+  TaskPresence,
+  TurboConfigFile,
+  TurboConfigOk,
+  TurboTaskLookup,
+  TurboTaskPackage
+} from '../common/turbo-config.type.ts';
 
 const ROOT_DIR = '.';
 
@@ -15,16 +22,9 @@ type DirEntry = [string, TurboConfigFile];
 
 const dirEntry = (config: TurboConfigFile): DirEntry => [posix.dirname(config.path), config];
 
-const nameEntry = (pkg: TurboTaskPackage): [string, string] => [pkg.name, normalDir(toPosixPath(pkg.path))];
+const packageDirOf = (pkg: TurboTaskPackage): string => normalDir(toPosixPath(pkg.path));
 
-/** `packages` are every graph package, hidden ones included: a package config may extend any of them. */
-export const turboTaskLookupOf = (configs: TurboConfigFile[], packages: TurboTaskPackage[]): TurboTaskLookup => {
-  const configsByDir = new Map(configs.map(dirEntry));
-  const dirsByName = new Map(packages.map(nameEntry));
-  const lookup: TurboTaskLookup = { configsByDir, dirsByName };
-
-  return lookup;
-};
+const nameEntry = (pkg: TurboTaskPackage): [string, string] => [pkg.name, packageDirOf(pkg)];
 
 const applyPresence = (names: Set<string>, name: string, presence: TaskPresence): void => {
   if (presence === 'excluded') {
@@ -34,6 +34,54 @@ const applyPresence = (names: Set<string>, name: string, presence: TaskPresence)
   }
 
   names.add(name);
+};
+
+/** The package names a `<pkg>#<task>` root key names: npm names hold no `#`, so the name ends at the first one. */
+const qualifiedNamesOf = (root: TurboConfigOk): Set<string> => {
+  const names = new Set<string>();
+
+  for (const key of Object.keys(root.tasks)) {
+    const hashAt = key.indexOf('#');
+
+    if (hashAt !== -1) names.add(key.slice(0, hashAt));
+  }
+
+  return names;
+};
+
+/** What `applyRoot` gives a package that no root key names and that is not the root package: the bare keys, in order. */
+const bareNamesOf = (root: TurboConfigOk): Set<string> => {
+  const names = new Set<string>();
+
+  for (const [key, presence] of Object.entries(root.tasks)) {
+    const isQualified = key.includes('#');
+
+    if (!isQualified) applyPresence(names, key, presence);
+  }
+
+  return names;
+};
+
+const rootIndexOf = (configsByDir: Map<string, TurboConfigFile>): RootTaskIndex | null => {
+  const config = configsByDir.get(ROOT_DIR);
+
+  if (config === undefined || 'error' in config) return null;
+
+  const qualifiedNames = qualifiedNamesOf(config);
+  const bareNames = bareNamesOf(config);
+  const index: RootTaskIndex = { config, qualifiedNames, bareNames };
+
+  return index;
+};
+
+/** `packages` are every graph package, hidden ones included: a package config may extend any of them. */
+export const turboTaskLookupOf = (configs: TurboConfigFile[], packages: TurboTaskPackage[]): TurboTaskLookup => {
+  const configsByDir = new Map(configs.map(dirEntry));
+  const dirsByName = new Map(packages.map(nameEntry));
+  const root = rootIndexOf(configsByDir);
+  const lookup: TurboTaskLookup = { configsByDir, dirsByName, root };
+
+  return lookup;
 };
 
 /**
@@ -123,13 +171,21 @@ const applyTasks = (names: Set<string>, config: TurboConfigOk): void => {
  * another parent package defines, never a root task. Applied last-wins from the lowest priority up. `turbo query`
  * lists a package script with no such key all the same, and `turbo run` of a name no config defines exits 1. `null`
  * when it cannot tell: no parsed root config, or a chain `chainOf` cannot build.
+ *
+ * Runs once per package, so a package with no config and no `<pkg>#` root key gets the root index's shared `bareNames`,
+ * never a copy. The root package never does: its dir `.` always holds the root config.
  */
-export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): Set<string> | null => {
-  const root = lookup.configsByDir.get(ROOT_DIR);
+export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): ReadonlySet<string> | null => {
+  const { root } = lookup;
 
-  if (root === undefined || 'error' in root) return null;
+  if (root === null) return null;
 
-  const dir = normalDir(toPosixPath(pkg.path));
+  const dir = lookup.dirsByName.get(pkg.name) ?? packageDirOf(pkg);
+  const hasConfig = lookup.configsByDir.has(dir);
+  const isQualified = root.qualifiedNames.has(pkg.name);
+
+  if (!hasConfig && !isQualified) return root.bareNames;
+
   const chain = packageChainOf(lookup, dir);
 
   if (chain === null) return null;
@@ -140,7 +196,7 @@ export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage)
 
   for (const config of lowestFirst) applyTasks(names, config);
 
-  applyRoot(names, root, pkg.name);
+  applyRoot(names, root.config, pkg.name);
 
   if (own !== undefined) applyTasks(names, own);
 
