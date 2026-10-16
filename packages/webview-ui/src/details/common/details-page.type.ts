@@ -13,9 +13,13 @@ export type RunTexts = {
   readonly reset: () => void;
 };
 
-/** The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. */
+/**
+ * The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. A card that is no turbo task
+ * shows no status and no Run button while it does not run.
+ */
 export type CardRefs = {
   readonly taskId: string;
+  readonly isTurboTask: boolean;
   readonly status: HTMLElement;
   readonly runSlot: HTMLElement;
   readonly runButton: RunButtonFactory;

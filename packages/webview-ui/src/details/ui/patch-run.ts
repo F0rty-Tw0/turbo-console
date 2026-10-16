@@ -14,8 +14,23 @@ const statusIcon = (run: RunView): HTMLSpanElement => {
   return icon;
 };
 
-/** Writes a run's status and Run/Stop button into a card; returns the new button. */
-export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLButtonElement => {
+const blankRun = (refs: CardRefs, runTexts: RunTexts): null => {
+  runTexts.drop(refs.taskId);
+  refs.status.replaceChildren();
+  refs.runSlot.replaceChildren();
+
+  return null;
+};
+
+/**
+ * Writes a run's status and Run/Stop button into a card; returns the new button. A card that is no turbo task and does
+ * not run gets a blank status and no button (spec 1c-a §4.5), so it returns `null`.
+ */
+export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLButtonElement | null => {
+  const isIdleScript = !refs.isTurboTask && !run.isRunning;
+
+  if (isIdleScript) return blankRun(refs, runTexts);
+
   const icon = statusIcon(run);
   const text = textElement('span', 'run-text', '');
   const button = refs.runButton(run);
@@ -36,5 +51,5 @@ export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runText
   const hadFocus = refs.runSlot.contains(document.activeElement);
   const button = fillRun(refs, run, runTexts);
 
-  if (hadFocus) button.focus();
+  if (hadFocus) button?.focus();
 };
