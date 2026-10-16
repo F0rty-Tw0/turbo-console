@@ -39,9 +39,9 @@ export class DetailsSession {
     });
   }
 
-  /** Subscribes only once the root has loaded, so the cache-first publish and that load start no dry run of their own. */
-  public async start(): Promise<void> {
-    await this.ports.ensureLoaded(this.key.root);
+  /** Subscribes after the root's load (unless the caller just awaited it), so the cache-first publish starts no dry run. */
+  public async start(isLoaded = false): Promise<void> {
+    if (!isLoaded) await this.ports.ensureLoaded(this.key.root);
 
     if (this.isDisposed) return;
 
@@ -89,21 +89,19 @@ export class DetailsSession {
     await this.command(message, state);
   }
 
-  /** Every change resets `ready`: the page is rebuilt on show and sends a new one. */
+  /** Hiding resets `ready`: the page is rebuilt on show, and its new `ready` can arrive before this show does. */
   public setVisible(visible: boolean): void {
     if (this.isDisposed || visible === this.isVisible) return;
 
     this.isVisible = visible;
-    this.isReady = false;
+    this.isReady &&= visible;
     this.ports.setPanelVisible(visible);
 
     const isPendingShow = visible && this.dryRun.isDeferred;
-
-    if (!isPendingShow) return;
-
     const isStale = this.ports.isStale(this.key.root);
 
-    if (!isStale) this.restartDryRun();
+    if (isPendingShow && !isStale) this.restartDryRun();
+    else this.publish();
   }
 
   public async whenIdle(): Promise<void> {

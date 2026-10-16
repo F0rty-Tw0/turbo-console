@@ -22,7 +22,8 @@ const revealed = (panel: OpenPanel | null): OpenPanel | null => {
 /**
  * The open Package Details panels, one per root and package name. A key is registered as pending before the root's load
  * is awaited, so a second open of it waits for the same panel. A panel is made only for a package that is still in the
- * root's model once the load has resolved.
+ * root's model once the load has resolved; a root removed meanwhile, even if added back, ends the open with no panel and
+ * no message.
  */
 export class DetailsPanels {
   private readonly deps: PanelsDeps;
@@ -34,8 +35,11 @@ export class DetailsPanels {
     this.deps = deps;
   }
 
-  /** Opens or reveals the panel of `key`; `null` when none was made (a gone package shows the refusal text). */
-  public async open(key: PanelKey): Promise<OpenPanel | null> {
+  /**
+   * Opens or reveals the panel of `key`; `null` when none was made (a gone package in a live root shows the refusal text).
+   * `isLoaded` skips the wait for a root the caller has just loaded: a second wait reloads a root whose binary failed.
+   */
+  public async open(key: PanelKey, isLoaded = false): Promise<OpenPanel | null> {
     const id = panelIdOf(key);
     const existing = this.panels.get(id);
 
@@ -45,7 +49,7 @@ export class DetailsPanels {
 
     if (waiting !== undefined) return revealed(await waiting);
 
-    const creating = this.create(key, id).finally(() => {
+    const creating = this.create(key, id, isLoaded).finally(() => {
       this.pending.delete(id);
     });
 
@@ -63,7 +67,7 @@ export class DetailsPanels {
 
     if (found === null) return null;
 
-    return this.open({ root: found.root, packageName: found.pkg.name });
+    return this.open({ root: found.root, packageName: found.pkg.name }, true);
   }
 
   /** Closes the panels of roots that are no longer in the store. */
@@ -98,11 +102,16 @@ export class DetailsPanels {
     return ports;
   }
 
-  private async create(key: PanelKey, id: string): Promise<OpenPanel | null> {
+  private async create(key: PanelKey, id: string, isLoaded: boolean): Promise<OpenPanel | null> {
     try {
-      await ensureLoadedWith(this.deps.roots)(key.root);
+      const before = this.deps.roots.get(key.root);
 
-      if (this.isDisposed) return null;
+      if (!isLoaded) await before?.coordinator.ensureLoaded();
+
+      const after = this.deps.roots.get(key.root);
+      const isSameRoot = before !== undefined && after?.coordinator === before.coordinator;
+
+      if (this.isDisposed || !isSameRoot) return null;
 
       const isInModel = this.hasPackage(key);
 
@@ -167,7 +176,7 @@ export class DetailsPanels {
       session.setVisible(view.isVisible());
     });
 
-    const started = session.start().catch(report);
+    const started = session.start(true).catch(report);
     const panel: OpenPanel = { key, view, session, started, posted };
 
     return panel;

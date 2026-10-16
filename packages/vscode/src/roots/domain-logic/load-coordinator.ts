@@ -1,5 +1,5 @@
 import type { ChangeReason, Coordinator, CoordinatorPorts, LoadOutcome, LoadRecord } from '../common/coordinator.type.ts';
-import type { LoadMode, LoadResult, LoadedModel } from '../common/root.type.ts';
+import type { LoadFailure, LoadMode, LoadResult, LoadedModel } from '../common/root.type.ts';
 import { runFailureOf } from '../utils/run-failure.util.ts';
 
 type Flight = {
@@ -22,7 +22,8 @@ const closeRecord = (record: LoadRecord, outcome: LoadOutcome, published: Loaded
  * Spec §4.3 coordinator of one root, with planning correction 4. At most one live load: `request` aborts it, everything
  * else joins it. Every load gets the next generation; its `publish` and result reach `ports.apply` only while it is the
  * latest load and its signal is not aborted. The stale flag holds the generation at which it was set, and only a load
- * of a higher generation that settles with a model clears it.
+ * of a higher generation that settles clears it, with a model or a failure (an aborted load never does). So `show` never
+ * retries a failed reload: only a new change request, a refresh, or `ensureLoaded` (by its own rule) loads again.
  */
 export class LoadCoordinator implements Coordinator {
   private readonly ports: CoordinatorPorts;
@@ -32,7 +33,7 @@ export class LoadCoordinator implements Coordinator {
   private showPending = false;
   private everLoaded = false;
   private hasModel = false;
-  private lastFailed = false;
+  private failedStage: LoadFailure['stage'] | null = null;
   private disposed = false;
 
   public constructor(ports: CoordinatorPorts) {
@@ -72,7 +73,10 @@ export class LoadCoordinator implements Coordinator {
     await flight.firstAnswer.promise;
   }
 
-  /** Never aborts. Starts at most one load of its own; retries an error with no model only when nothing was in flight. */
+  /**
+   * Never aborts. Starts at most one load of its own; retries a binary error, or a load error with no model, only when
+   * nothing was in flight.
+   */
   public async ensureLoaded(): Promise<void> {
     await this.ensure(true, true);
   }
@@ -116,9 +120,10 @@ export class LoadCoordinator implements Coordinator {
 
   private ensureMode(canRetry: boolean): LoadMode | null {
     const wanted = this.wantedMode();
-    const isUnusable = canRetry && this.lastFailed && !this.hasModel;
+    const isModelless = this.failedStage === 'load' && !this.hasModel;
+    const isUnusable = this.failedStage === 'binary' || isModelless;
 
-    if (wanted === null && isUnusable) return 'full';
+    if (wanted === null && canRetry && isUnusable) return 'full';
 
     return wanted;
   }
@@ -171,7 +176,7 @@ export class LoadCoordinator implements Coordinator {
     if (!isLive) return;
 
     this.everLoaded = true;
-    this.lastFailed = result.kind === 'error';
+    this.failedStage = result.kind === 'error' ? result.stage : null;
     this.hasModel ||= result.kind === 'model';
     this.ports.apply(result);
   }
@@ -186,7 +191,7 @@ export class LoadCoordinator implements Coordinator {
 
     if (wasCurrent) this.current = null;
 
-    if (outcome === 'model') this.clearStale(flight.generation);
+    if (outcome !== 'aborted') this.clearStale(flight.generation);
 
     if (wasCurrent) this.followUp(flight.generation);
 

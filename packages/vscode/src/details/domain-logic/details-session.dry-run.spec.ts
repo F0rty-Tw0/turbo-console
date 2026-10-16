@@ -226,6 +226,17 @@ describe('FEATURE: details session dry runs', () => {
       });
     });
 
+    it('WHEN the model changes, the rebuilt page sends ready and the panel shows a root with a reload pending THEN one state is posted and no dry run starts', async () => {
+      store.apply('/ws', RELOADED);
+      vi.mocked(ports.isStale).mockReturnValue(true);
+      await session.receive({ type: 'ready' });
+      vi.mocked(ports.post).mockClear();
+      session.setVisible(true);
+
+      expect(postedPhasesOf(ports)).toStrictEqual(['loading']);
+      expect(ports.dryRun).toHaveBeenCalledOnce();
+    });
+
     describe('WHEN a dry-run refresh arrives', () => {
       beforeEach(async () => {
         await session.receive({ type: 'refresh', scope: 'dryRun' });

@@ -18,6 +18,10 @@ const WS_A: PanelKey = { root: '/ws', packageName: 'a' };
 const READY = { type: 'ready' };
 const DISPOSED = 'webview is disposed';
 
+const throwStart = (): never => {
+  throw new Error('start blew up');
+};
+
 describe('FEATURE: details panel edges', () => {
   let store: RootStore;
   let fakes: HostFakes;
@@ -66,13 +70,20 @@ describe('FEATURE: details panel edges', () => {
   });
 
   describe('GIVEN a panel whose session start or messages fail', () => {
-    it('WHEN the root load rejects in start THEN the rejection is logged and whenIdle still settles', async () => {
-      ensureLoadedOf(store, '/ws').mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('load blew up'));
+    it('WHEN the session start throws THEN the error is logged and whenIdle still settles', async () => {
+      vi.spyOn(store, 'onDidChange').mockImplementationOnce(throwStart);
       await panels.open(WS_A);
 
       await expect(panels.api().whenIdle('/ws', 'a')).resolves.toBeUndefined();
 
-      expect(fakes.log.mock.calls[0]?.[0]).toContain('load blew up');
+      expect(fakes.log.mock.calls[0]?.[0]).toContain('start blew up');
+    });
+
+    it('WHEN it opens THEN the root load is awaited once, by the open alone', async () => {
+      await panels.open(WS_A);
+      await panels.api().whenIdle('/ws', 'a');
+
+      expect(ensureLoadedOf(store, '/ws')).toHaveBeenCalledOnce();
     });
 
     it('WHEN the page posts garbage THEN it is dropped and logged, and nothing throws', async () => {
@@ -98,10 +109,10 @@ describe('FEATURE: details panel edges', () => {
   });
 
   describe('GIVEN the panel API', () => {
-    it('WHEN whenIdle is called right after open THEN it waits for the session start', async () => {
-      const started = Promise.withResolvers<undefined>();
+    it('WHEN whenIdle is called right after open THEN it waits for the session dry run', async () => {
+      const listed = Promise.withResolvers<[]>();
 
-      ensureLoadedOf(store, '/ws').mockResolvedValueOnce(undefined).mockReturnValueOnce(started.promise);
+      fakes.dryRun.mockReturnValueOnce(listed.promise);
       await panels.open(WS_A);
       const settled = vi.fn();
 
@@ -111,7 +122,7 @@ describe('FEATURE: details panel edges', () => {
 
       expect(settled).not.toHaveBeenCalled();
 
-      started.resolve(undefined);
+      listed.resolve([]);
       await idle;
 
       expect(settled).toHaveBeenCalledOnce();

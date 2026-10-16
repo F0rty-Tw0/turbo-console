@@ -12,7 +12,20 @@ const X_FOLDER: RootFolder = { root: '/x', name: 'x' };
 
 const noCache = (): LoadDeps['readCached'] => vi.fn().mockResolvedValue(null);
 
+const failingLoad = (): LoadDeps['load'] => vi.fn().mockRejectedValue(new Error('boom'));
+
 const modesOf = (session: RootsSession, root: string): string[] | undefined => session.loads.get(root)?.map((record) => record.mode);
+
+/** Hides and shows panel `p1` on `/a`, then shows and hides the tree, `count` times, letting `/a` settle after each. */
+const hideAndShowTimes = async (session: RootsSession, count: number): Promise<void> => {
+  for (let cycle = 0; cycle < count; cycle += 1) {
+    session.setPanelVisible('/a', 'p1', false);
+    session.setPanelVisible('/a', 'p1', true);
+    session.setVisible(true);
+    session.setVisible(false);
+    await session.whenIdle('/a');
+  }
+};
 
 describe('FEATURE: roots session panel visibility', () => {
   describe('GIVEN two roots and a hidden tree', () => {
@@ -97,6 +110,43 @@ describe('FEATURE: roots session panel visibility', () => {
       session.setPanelVisible('/a', 'p1', false);
 
       expect(modesOf(session, '/a')).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN a root loaded from its cache whose reload after a hidden change failed', () => {
+    let session: RootsSession;
+
+    beforeEach(async () => {
+      session = new RootsSession(sessionPortsWith({ load: failingLoad() }));
+      session.setRoots([A_FOLDER]);
+      session.setPanelVisible('/a', 'p1', true);
+      await session.whenIdle('/a');
+      session.setPanelVisible('/a', 'p1', false);
+      session.request('watch');
+      session.setPanelVisible('/a', 'p1', true);
+      await session.whenIdle('/a');
+    });
+
+    it('WHEN the panel and the tree are hidden and shown three times THEN no load starts', async () => {
+      await hideAndShowTimes(session, 3);
+
+      expect(modesOf(session, '/a')).toStrictEqual(['cache-first', 'full']);
+    });
+
+    it('WHEN a change comes in while the panel is visible THEN exactly one full load runs', async () => {
+      await hideAndShowTimes(session, 3);
+      session.request('watch');
+      await session.whenIdle('/a');
+      await hideAndShowTimes(session, 1);
+
+      expect(modesOf(session, '/a')).toStrictEqual(['cache-first', 'full', 'full']);
+    });
+
+    it('WHEN Retry asks for a refresh THEN one full load runs', async () => {
+      session.request('refresh');
+      await session.whenIdle('/a');
+
+      expect(modesOf(session, '/a')).toStrictEqual(['cache-first', 'full', 'full']);
     });
   });
 });
