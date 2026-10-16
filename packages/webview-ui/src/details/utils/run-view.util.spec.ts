@@ -4,9 +4,11 @@ import { runText, safeColorVar, safeIconId } from './run-view.util.ts';
 import type { RunView } from '../../bridge/common/details-state.type.ts';
 import { RUN_VIEW_STUB } from '../test/stubs/details.stub.ts';
 
-const RUNNING_VIEW: RunView = { ...RUN_VIEW_STUB, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
+const NOT_IDLE_VIEW: RunView = { ...RUN_VIEW_STUB, isIdle: false };
 
-const PASSED_VIEW: RunView = { ...RUN_VIEW_STUB, iconId: 'pass', text: '3.2s · cached' };
+const RUNNING_VIEW: RunView = { ...NOT_IDLE_VIEW, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
+
+const PASSED_VIEW: RunView = { ...NOT_IDLE_VIEW, iconId: 'pass', text: '3.2s · cached' };
 
 describe('FEATURE: run view values from the host', () => {
   describe('GIVEN an icon id', () => {

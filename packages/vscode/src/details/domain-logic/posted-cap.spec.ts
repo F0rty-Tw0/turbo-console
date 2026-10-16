@@ -4,7 +4,15 @@ import { describe, expect, it } from 'vitest';
 import { recordPosted } from './posted-cap.ts';
 import { POSTED_MAX } from '../common/details.const.ts';
 
-const RUN_VIEW_STUB: RunView = { iconId: 'tools', colorVar: null, text: '', isRunning: false, elapsedMs: null, isSpinning: false };
+const RUN_VIEW_STUB: RunView = {
+  iconId: 'tools',
+  colorVar: null,
+  text: '',
+  isRunning: false,
+  elapsedMs: null,
+  isSpinning: false,
+  isIdle: true
+};
 
 const messageAt = (index: number): RunStateMessage => {
   const message: RunStateMessage = { type: 'runState', taskId: `a#t${index}`, run: RUN_VIEW_STUB };

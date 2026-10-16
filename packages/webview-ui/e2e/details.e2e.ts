@@ -19,11 +19,13 @@ const AC5 = { description: 'AC5', type: 'requirement' };
 
 const HOSTILE_NAME = '<img src=x onerror=alert(1)>';
 
-const RUNNING: RunView = { ...RUN_VIEW_STUB, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
+const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
 
-const PASSED: RunView = { ...RUN_VIEW_STUB, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: 'passed' };
+const RUNNING: RunView = { ...NOT_IDLE, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
 
-const HOSTILE_RUN: RunView = { ...RUN_VIEW_STUB, iconId: 'a b', colorVar: '--x) url(https://e/', text: 'hostile' };
+const PASSED: RunView = { ...NOT_IDLE, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: 'passed' };
+
+const HOSTILE_RUN: RunView = { ...NOT_IDLE, iconId: 'a b', colorVar: '--x) url(https://e/', text: 'hostile' };
 
 const SAVED_SCROLL_Y = 300;
 

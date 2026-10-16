@@ -16,8 +16,8 @@ const colorVarOf = (color: string | null): string | null => {
   return `${VAR_PREFIX}${color.replaceAll('.', '-')}`;
 };
 
-/** A view is running exactly when it has an elapsed time. */
-const viewOf = (icon: IconSpec, text: string, elapsedMs: number | null): RunView => {
+/** A view is running exactly when it has an elapsed time; idle exactly when there is no run entry. */
+const viewOf = (icon: IconSpec, text: string, elapsedMs: number | null, isIdle: boolean): RunView => {
   const isSpinning = icon.id.endsWith(SPIN_MODIFIER);
   const view: RunView = {
     iconId: icon.id.replace(SPIN_MODIFIER, ''),
@@ -25,7 +25,8 @@ const viewOf = (icon: IconSpec, text: string, elapsedMs: number | null): RunView
     text,
     isRunning: elapsedMs !== null,
     elapsedMs,
-    isSpinning
+    isSpinning,
+    isIdle
   };
 
   return view;
@@ -42,12 +43,13 @@ export const toRunView = (task: TaskNode, entry: RunEntry | undefined, now: numb
     const { icon, prefix } = runningKindOf(task, entry);
     const elapsedMs = Math.max(0, now - entry.launchedAt);
 
-    return viewOf(icon, prefix, elapsedMs);
+    return viewOf(icon, prefix, elapsedMs, false);
   }
 
   const { icon, description } = taskDisplay(task, entry, now);
+  const isIdle = entry === undefined;
 
-  return viewOf(icon, description, null);
+  return viewOf(icon, description, null, isIdle);
 };
 
 /** The run view of `entry` against its current model node; the node it was launched with once the model or the task is gone. */

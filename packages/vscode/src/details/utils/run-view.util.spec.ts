@@ -51,10 +51,32 @@ const modelWith = (tasks: TaskNode[]): WorkspaceModel => {
 
 describe('FEATURE: run view of a task', () => {
   describe('GIVEN a task that never ran', () => {
-    it('WHEN viewed THEN it shows the idle icon, no color, no text and is not running', () => {
+    it('WHEN viewed THEN it shows the idle icon, no color, no text, is not running and is idle', () => {
       const view = toRunView(TASK_NODE_STUB, undefined, NOW);
 
-      expect(view).toStrictEqual({ iconId: 'tools', colorVar: null, text: '', isRunning: false, elapsedMs: null, isSpinning: false });
+      expect(view).toStrictEqual({
+        iconId: 'tools',
+        colorVar: null,
+        text: '',
+        isRunning: false,
+        elapsedMs: null,
+        isSpinning: false,
+        isIdle: true
+      });
+    });
+
+    it('WHEN it is no turbo task THEN the view is idle', () => {
+      const view = toRunView(NOT_TURBO, undefined, NOW);
+
+      expect(view.isIdle).toBe(true);
+    });
+  });
+
+  describe('GIVEN a task that is no turbo task now and whose run ended', () => {
+    it('WHEN viewed THEN it shows the end state and is not idle', () => {
+      const view = toRunView(NOT_TURBO, entryIn({ state: 'stopped', launchedAt: NOW - 3000, endedAt: NOW }), NOW);
+
+      expect([view.iconId, view.text, view.isIdle]).toStrictEqual(['debug-stop', 'stopped · 3.0s', false]);
     });
   });
 
@@ -68,7 +90,8 @@ describe('FEATURE: run view of a task', () => {
         text: 'running',
         isRunning: true,
         elapsedMs: 12_345,
-        isSpinning: true
+        isSpinning: true,
+        isIdle: false
       });
     });
 
@@ -89,7 +112,8 @@ describe('FEATURE: run view of a task', () => {
         text: 'continuous',
         isRunning: true,
         elapsedMs: 12_345,
-        isSpinning: false
+        isSpinning: false,
+        isIdle: false
       });
     });
   });
@@ -104,7 +128,8 @@ describe('FEATURE: run view of a task', () => {
         text: '3.2s · cached',
         isRunning: false,
         elapsedMs: null,
-        isSpinning: false
+        isSpinning: false,
+        isIdle: false
       });
     });
   });
@@ -127,7 +152,8 @@ describe('FEATURE: run view of a task', () => {
         text: 'exit 1',
         isRunning: false,
         elapsedMs: null,
-        isSpinning: false
+        isSpinning: false,
+        isIdle: false
       });
     });
   });

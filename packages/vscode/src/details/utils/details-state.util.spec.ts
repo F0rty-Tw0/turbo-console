@@ -234,7 +234,8 @@ describe('FEATURE: package details state', () => {
         text: 'running',
         isRunning: true,
         elapsedMs: 0,
-        isSpinning: true
+        isSpinning: true,
+        isIdle: false
       });
       expect(cardOf(state, 'a#build').run).toStrictEqual({
         iconId: 'tools',
@@ -242,7 +243,8 @@ describe('FEATURE: package details state', () => {
         text: '',
         isRunning: false,
         elapsedMs: null,
-        isSpinning: false
+        isSpinning: false,
+        isIdle: true
       });
       expect(lookedUp).toContain('/ws|a#test');
     });
