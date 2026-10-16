@@ -20,25 +20,31 @@ export type TreeNode = {
 };
 
 /**
- * What a node's rows are read with: the view mode, the runs, the model's view (built once per model) and whether
- * package rows read their full names (`scopeShown`) or their bare labels.
+ * What a node's rows are read with: the view mode, the runs, the model's view (built once per model), whether
+ * package rows read their full names (`scopeShown`) or their bare labels, and the wall-clock time (`now`, the base of
+ * `RunEntry.launchedAt`) a running task's elapsed time is counted to.
  */
 export type RowContext = {
   readonly mode: TreeMode;
   readonly runs: RunLookup;
   readonly views: ModelViewsOf;
   readonly scopeShown: boolean;
+  readonly now: number;
 };
 
 /** `'root'` redraws the root (the whole tree in a single-root window); a list names the packages to redraw. */
 export type RefreshTarget = 'root' | string[];
 
-/** `treeVisible` gets one span per root: its first `getChildren`, ended when it first returns package or folder rows. */
+/**
+ * `treeVisible` gets one span per root: its first `getChildren`, ended when it first returns package or folder rows.
+ * `now` is the span clock (`performance.now()`); `wallNow` is the wall clock (`Date.now()`) the rows count elapsed time on.
+ */
 export type TreePorts = {
   readonly runs: RunLookup;
   readonly fire: (node: TreeNode | undefined) => void;
   readonly treeVisible: Map<string, Span>;
   readonly now: () => number;
+  readonly wallNow: () => number;
 };
 
 /** The public face of `PackagesTreeProvider`, so `common/` can name it without importing the feature. */

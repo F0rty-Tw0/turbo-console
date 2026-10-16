@@ -64,7 +64,8 @@ export const panelPortsOf = (deps: PanelsDeps, parts: PanelParts, view: PanelVie
     execute: host.execute,
     setPanelVisible,
     info: host.info,
-    log: host.log
+    log: host.log,
+    now: () => Date.now()
   };
 
   return ports;

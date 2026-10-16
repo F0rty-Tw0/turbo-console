@@ -35,7 +35,7 @@ const toTaskCard = (
   dryRunStates: ReadonlyMap<string, DryRunState>
 ): TaskCard => {
   const dryRunState = dryRunStates.get(task.id);
-  const run = toRunView(input.runs(input.root, task.id));
+  const run = toRunView(task, input.runs(input.root, task.id), input.now);
   const card: TaskCard = {
     taskId: task.id,
     name: task.name,
@@ -68,6 +68,13 @@ const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: Detail
   };
 
   return details;
+};
+
+/** The input of `toDetailsState`, read at the wall-clock time `now`. */
+export const detailsInputOf = (base: Omit<DetailsInput, 'now'>, now: number): DetailsInput => {
+  const input: DetailsInput = { ...base, now };
+
+  return input;
 };
 
 /**

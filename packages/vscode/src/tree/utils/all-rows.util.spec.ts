@@ -10,7 +10,7 @@ import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
-import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
+import { ROW_NOW, rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const packageWithBuild = (name: string, path: string): PackageNode => {
   const task = { ...TASK_NODE_STUB, id: `${name}#build` };
@@ -40,7 +40,7 @@ const sortedIds = (rows: TreeRow[]): string[] => {
 const runOfA: RunLookup = (root, taskId) => {
   if (taskId !== 'a#build') return undefined;
 
-  const entry: RunEntry = { ...RUN_ENTRY_STUB, root };
+  const entry: RunEntry = { ...RUN_ENTRY_STUB, root, launchedAt: ROW_NOW - 12_345 };
 
   return entry;
 };
@@ -81,7 +81,7 @@ describe('FEATURE: every row of a root', () => {
       const tasks = rows.filter((row) => row.kind === 'task');
       const descriptions = tasks.map((row) => row.description);
 
-      expect(descriptions.sort()).toStrictEqual(['', '', 'running…']);
+      expect(descriptions.sort()).toStrictEqual(['', '', 'running · 12s']);
     });
   });
 

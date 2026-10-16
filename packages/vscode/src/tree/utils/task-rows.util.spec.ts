@@ -1,26 +1,23 @@
 import type { PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { taskRows } from './task-rows.util.ts';
+import { isRunnableTask, taskRows } from './task-rows.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import type { IconSpec } from '../common/tree-row.type.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
-import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
+import { ROW_NOW, rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const BIDI = String.fromCodePoint(0x202e);
 
 const ENDED_AT = 1_700_000_000_000;
-const ENDED_AT_ISO = '2023-11-14T22:13:20.000Z';
 
 const IDLE_ICON: IconSpec = { id: 'tools', color: null };
 const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
 const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 
 const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
-const MISS_MATCH: RunMatch = { cache: 'MISS', durationMs: 3200 };
-const NO_CACHE_MATCH: RunMatch = { cache: null, durationMs: 1200 };
 
 const taskOf = (overrides: Partial<TaskNode>): TaskNode => {
   const task: TaskNode = { ...TASK_NODE_STUB, id: 'a#build', ...overrides };
@@ -48,13 +45,6 @@ const lookupOf = (entry: RunEntry): RunLookup => {
   };
 
   return lookup;
-};
-
-const tooltipLinesOf = (task: TaskNode, entry: RunEntry): string[] => {
-  const runs = lookupOf(entry);
-  const rows = taskRows('/ws', packageWith([task]), rowContextOf('list', runs));
-
-  return rows.flatMap((row) => row.tooltip);
 };
 
 const factsTooltipOf = (task: TaskNode): string[] => {
@@ -131,20 +121,20 @@ describe('FEATURE: task rows of a package', () => {
   });
 
   describe('GIVEN a task with a run recorded for its root and id', () => {
-    it('WHEN the run is going THEN the row spins and offers Stop through its context value', () => {
-      const runs = lookupOf(entryIn({ state: 'running' }));
+    it('WHEN the run is going THEN the row spins, counts from the context clock and offers Stop through its context value', () => {
+      const runs = lookupOf(entryIn({ state: 'running', launchedAt: ROW_NOW - 12_345 }));
 
       const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
 
-      expect(rows).toMatchObject([{ description: 'running…', icon: RUNNING_ICON, contextValue: 'turboTask.running' }]);
+      expect(rows).toMatchObject([{ description: 'running · 12s', icon: RUNNING_ICON, contextValue: 'turboTask.running' }]);
     });
 
-    it('WHEN the run passed with a match THEN the row shows the duration and cache status', () => {
+    it('WHEN the run passed with a cache hit THEN the row shows the duration and cached', () => {
       const runs = lookupOf(entryIn({ state: 'passed', exitCode: 0, endedAt: ENDED_AT, match: HIT_MATCH }));
 
       const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
 
-      expect(rows).toMatchObject([{ description: '3.2s · HIT', icon: PASSED_ICON }]);
+      expect(rows).toMatchObject([{ description: '3.2s · cached', icon: PASSED_ICON, contextValue: 'turboTask.cached' }]);
     });
 
     it('WHEN the run belongs to another root THEN the row stays idle', () => {
@@ -184,66 +174,22 @@ describe('FEATURE: task rows of a package', () => {
     });
   });
 
-  describe('GIVEN a task whose last run ended with a match', () => {
-    it('WHEN the tooltip is built THEN run details follow the task facts: exit code, duration, cache, end time', () => {
-      const entry = entryIn({ state: 'failed', exitCode: 1, endedAt: ENDED_AT, match: MISS_MATCH });
-      const task = taskOf({ description: 'Builds', command: 'tsc' });
+  describe('GIVEN a package script no turbo config defines', () => {
+    it('WHEN listed THEN it keeps its row, which offers no Run', () => {
+      const rows = taskRows('/ws', packageWith([taskOf({ isTurboTask: false })]), rowContextOf('list'));
 
-      const lines = tooltipLinesOf(task, entry);
-
-      expect(lines).toStrictEqual([
-        'Builds',
-        'Command: tsc',
-        'Kind: task',
-        'Exit code: 1',
-        'Duration: 3.2s',
-        'Cache: MISS',
-        `Ended: ${ENDED_AT_ISO}`
-      ]);
-    });
-
-    it('WHEN the summary has no cache status THEN the cache line is left out', () => {
-      const entry = entryIn({ state: 'passed', exitCode: 0, endedAt: ENDED_AT, match: NO_CACHE_MATCH });
-
-      const lines = tooltipLinesOf(taskOf({ command: null }), entry);
-
-      expect(lines).toStrictEqual(['Kind: task', 'Exit code: 0', 'Duration: 1.2s', `Ended: ${ENDED_AT_ISO}`]);
+      expect(rows).toMatchObject([{ label: 'build', description: 'not a turbo task', contextValue: 'turboScript' }]);
     });
   });
+});
 
-  describe('GIVEN a task whose last run ended without a match', () => {
-    it('WHEN the tooltip is built THEN only exit code and end time are added', () => {
-      const entry = entryIn({ state: 'failed', exitCode: 2, endedAt: ENDED_AT, match: null });
-
-      const lines = tooltipLinesOf(taskOf({ command: null }), entry);
-
-      expect(lines).toStrictEqual(['Kind: task', 'Exit code: 2', `Ended: ${ENDED_AT_ISO}`]);
-    });
-
-    it('WHEN the run has no exit code THEN the exit code line is left out', () => {
-      const entry = entryIn({ state: 'failed', exitCode: null, endedAt: ENDED_AT, match: null });
-
-      const lines = tooltipLinesOf(taskOf({ command: null }), entry);
-
-      expect(lines).toStrictEqual(['Kind: task', `Ended: ${ENDED_AT_ISO}`]);
-    });
-
-    it('WHEN matching is still in progress THEN a match already set is not shown', () => {
-      const entry = entryIn({ state: 'passed', exitCode: 0, endedAt: ENDED_AT, matching: true, match: HIT_MATCH });
-
-      const lines = tooltipLinesOf(taskOf({ command: null }), entry);
-
-      expect(lines).toStrictEqual(['Kind: task', 'Exit code: 0', `Ended: ${ENDED_AT_ISO}`]);
-    });
-  });
-
-  describe('GIVEN a task whose run is still going', () => {
-    it('WHEN the tooltip is built THEN it holds no run details', () => {
-      const entry = entryIn({ state: 'running', endedAt: null });
-
-      const lines = tooltipLinesOf(taskOf({ command: null }), entry);
-
-      expect(lines).toStrictEqual(['Kind: task']);
-    });
+describe('FEATURE: runnable task', () => {
+  it.each([
+    ['a visible turbo task', true, taskOf({})],
+    ['a continuous turbo task', true, taskOf({ persistent: true })],
+    ['a script no turbo config defines', false, taskOf({ isTurboTask: false })],
+    ['a file atom task', false, taskOf({ kind: 'atom-file' })]
+  ])('GIVEN %s WHEN checked THEN runnable is %s', (_label, isRunnable, task) => {
+    expect(isRunnableTask(task)).toBe(isRunnable);
   });
 });

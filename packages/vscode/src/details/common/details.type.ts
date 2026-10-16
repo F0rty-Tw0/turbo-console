@@ -14,7 +14,7 @@ export type PanelKey = {
  * Editor effects of one details panel. `post` must not throw. `dryRun` rejects on a failure and on an abort and logs
  * nothing: the session logs the failures it shows. `setPanelVisible` reports the panel's visibility to the root's
  * session (`RootsSession.setPanelVisible`); the session calls it only on a change, and once with `false` on dispose
- * when it last reported `true`.
+ * when it last reported `true`. `now` is the wall clock, the base of every run's `launchedAt`.
  */
 export type DetailsPorts = {
   readonly post: (message: HostMessage) => void;
@@ -24,6 +24,7 @@ export type DetailsPorts = {
   readonly setPanelVisible: (visible: boolean) => void;
   readonly info: (text: string) => void;
   readonly log: (text: string) => void;
+  readonly now: () => number;
 };
 
 /** A webview message that runs an editor command; `ready` and `refresh` the session handles itself. */
@@ -47,4 +48,5 @@ export type DetailsInput = {
   readonly state: RootState;
   readonly dryRun: DryRunResult;
   readonly runs: RunLookup;
+  readonly now: number;
 };

@@ -1,15 +1,27 @@
 import type { PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
+import { durationText } from '@turbo-console/webview-ui';
 
 import { rowIdOf } from './row-id.util.ts';
 import { taskDisplay } from './task-display.util.ts';
-import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
-import { secondsText, settledMatchOf } from '../../run/utils/run-result.util.ts';
+import type { RunEntry } from '../../run/common/run.type.ts';
+import { settledMatchOf } from '../../run/utils/run-result.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
+import { CONTINUOUS_KIND_LINES, NOT_TURBO_KIND_LINES } from '../common/task-text.const.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 
 export const isVisibleTask = (task: TaskNode): boolean => task.kind !== 'atom-file';
+
+/** Spec 1c-a §4.1: only a visible task some turbo config defines is offered to Run, Copy and the pickers. */
+export const isRunnableTask = (task: TaskNode): boolean => isVisibleTask(task) && task.isTurboTask;
+
+const NO_LINES: string[] = [];
+
+const CACHE_LINES: Readonly<Record<NonNullable<RunMatch['cache']>, string>> = {
+  HIT: 'Cache: replayed from cache',
+  MISS: 'Cache: not cached, ran'
+};
 
 const lineOf = (line: string | null): string[] => {
   if (line === null) return [];
@@ -23,6 +35,18 @@ const labelled = (label: string, value: string | number | null): string | null =
   return `${label}: ${value}`;
 };
 
+const timeLine = (label: string, at: number | null): string | null => {
+  if (at === null) return null;
+
+  return labelled(label, new Date(at).toISOString());
+};
+
+const kindLines = (task: TaskNode): string[] => {
+  if (!task.isTurboTask) return NOT_TURBO_KIND_LINES;
+
+  return task.persistent ? CONTINUOUS_KIND_LINES : NO_LINES;
+};
+
 const taskFactLines = (task: TaskNode): string[] => {
   const command = labelled('Command', task.command);
   const kind = labelled('Kind', task.kind);
@@ -34,35 +58,45 @@ const taskFactLines = (task: TaskNode): string[] => {
 const matchLines = (match: RunMatch | null): string[] => {
   if (match === null) return [];
 
-  const duration = labelled('Duration', secondsText(match.durationMs));
-  const cache = labelled('Cache', match.cache);
+  const duration = labelled('Duration', durationText(match.durationMs));
+  const cache = match.cache === null ? null : CACHE_LINES[match.cache];
   const lines = [duration, cache];
 
   return lines.flatMap(lineOf);
 };
 
-/** Exit code, duration, cache and end time of an ended run, each only when known; a running run has none yet. */
+/**
+ * Spec 1c-a §4.5 run lines: the start time always; a stopped run adds its end time; a passed or failed run adds exit
+ * code, duration and cache (each only when known) before both times.
+ */
 const runLines = (entry: RunEntry | undefined): string[] => {
   if (entry === undefined) return [];
 
-  const { endedAt } = entry;
+  const { state } = entry;
+  const started = timeLine('Started', entry.launchedAt);
 
-  if (endedAt === null) return [];
+  if (state === 'running' || state === 'failed-to-start') return lineOf(started);
+
+  const ended = timeLine('Ended', entry.endedAt);
+
+  const times = [started, ended];
+
+  if (state === 'stopped') return times.flatMap(lineOf);
 
   const exit = labelled('Exit code', entry.exitCode);
   const matched = matchLines(settledMatchOf(entry));
-  const ended = labelled('Ended', new Date(endedAt).toISOString());
-  const lines = [exit, ...matched, ended];
+  const lines = [exit, ...matched, ...times];
 
   return lines.flatMap(lineOf);
 };
 
-const taskRow = (root: string, pkg: PackageNode, task: TaskNode, runs: RunLookup): TreeRow => {
-  const entry = runs(root, task.id);
-  const display = taskDisplay(entry);
+const taskRow = (root: string, pkg: PackageNode, task: TaskNode, context: RowContext): TreeRow => {
+  const entry = context.runs(root, task.id);
+  const display = taskDisplay(task, entry, context.now);
+  const kind = kindLines(task);
   const facts = taskFactLines(task);
   const ran = runLines(entry);
-  const tooltip = [...facts, ...ran];
+  const tooltip = [...kind, ...facts, ...ran];
   const row: TreeRow = {
     id: rowIdOf('task', root, task.id),
     kind: 'task',
@@ -82,11 +116,12 @@ const taskRow = (root: string, pkg: PackageNode, task: TaskNode, runs: RunLookup
 };
 
 /**
- * The visible tasks of a package (`atom-file` tasks stay hidden), each with its last run's state. Tooltip lines are raw
- * text: `tooltipOf` cleans them. The description is built from numbers and fixed words, but is cleaned like every label.
+ * The visible tasks of a package (`atom-file` tasks stay hidden), each with its last run's state read at the context's
+ * wall clock. Tooltip lines are raw text: `tooltipMarkdownOf` cleans them. The description is built from numbers and
+ * fixed words, but is cleaned like every label.
  */
 export const taskRows = (root: string, pkg: PackageNode, context: RowContext): TreeRow[] => {
   const visible = pkg.tasks.filter(isVisibleTask);
 
-  return visible.map((task) => taskRow(root, pkg, task, context.runs));
+  return visible.map((task) => taskRow(root, pkg, task, context));
 };

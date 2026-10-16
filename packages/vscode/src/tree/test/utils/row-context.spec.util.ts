@@ -9,9 +9,12 @@ import { WORKSPACE_MODEL_STUB } from '../stubs/workspace-model.stub.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
+/** The wall clock every `rowContextOf` context reads: a run launched at `ROW_NOW - 12_345` has run `12s`. */
+export const ROW_NOW = 1_000_000;
+
 /** A row context whose views are built fresh on every call, so each row reads the model it is given. */
 export const rowContextOf = (mode: TreeMode, runs: RunLookup = NEVER_RAN, scopeShown = false): RowContext => {
-  const context: RowContext = { mode, runs, views: modelViewOf, scopeShown };
+  const context: RowContext = { mode, runs, views: modelViewOf, scopeShown, now: ROW_NOW };
 
   return context;
 };

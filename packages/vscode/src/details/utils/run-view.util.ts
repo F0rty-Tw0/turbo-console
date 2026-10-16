@@ -1,3 +1,4 @@
+import type { TaskNode, WorkspaceModel } from '@turbo-console/core';
 import type { RunView } from '@turbo-console/webview-ui';
 
 import type { RunEntry } from '../../run/common/run.type.ts';
@@ -17,10 +18,10 @@ const colorVarOf = (color: string | null): string | null => {
 /**
  * What the details page shows for a task's run. `iconId` and `colorVar` come only from the tree's fixed icon tables
  * through `taskDisplay`, never from repo text; the spin modifier becomes `isRunning`, which the page turns back into
- * `codicon-modifier-spin`.
+ * `codicon-modifier-spin`. `task` is the current model node (its kind), `now` the wall clock.
  */
-export const toRunView = (entry: RunEntry | undefined): RunView => {
-  const { icon, description } = taskDisplay(entry);
+export const toRunView = (task: TaskNode, entry: RunEntry | undefined, now: number): RunView => {
+  const { icon, description } = taskDisplay(task, entry, now);
   const isRunning = entry?.state === 'running';
   const view: RunView = {
     iconId: icon.id.replace(SPIN_MODIFIER, ''),
@@ -30,4 +31,12 @@ export const toRunView = (entry: RunEntry | undefined): RunView => {
   };
 
   return view;
+};
+
+/** The run view of `entry` against its current model node; the node it was launched with once the model or the task is gone. */
+export const liveRunViewOf = (model: WorkspaceModel | null, entry: RunEntry, now: number): RunView => {
+  const pkg = model?.packages.find((candidate) => candidate.name === entry.packageName);
+  const current = pkg?.tasks.find((candidate) => candidate.id === entry.taskId);
+
+  return toRunView(current ?? entry.task, entry, now);
 };
