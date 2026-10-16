@@ -1,0 +1,75 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+
+import { whenMatches } from './utils/when-clause.spec.util.ts';
+
+const optionalGroupSchema = z.string().optional();
+
+const menuEntrySchema = z.object({ command: z.string(), when: z.string(), group: optionalGroupSchema });
+
+const menusSchema = z.object({ 'view/title': z.array(menuEntrySchema), 'view/item/context': z.array(menuEntrySchema) });
+
+const manifestSchema = z.object({ contributes: z.object({ menus: menusSchema }) });
+
+type MenuEntry = z.infer<typeof menuEntrySchema>;
+
+const MANIFEST_TEXT = readFileSync(join(import.meta.dirname, '..', 'package.json'), 'utf8');
+
+const { menus: MENUS } = manifestSchema.parse(JSON.parse(MANIFEST_TEXT)).contributes;
+
+const TREE_VIEW = 'turboConsole.tree';
+
+const RUN = ['turboConsole.runTask inline@0', 'turboConsole.runTask 1_run@0'];
+const STOP = ['turboConsole.stopTask inline@0', 'turboConsole.stopTask 1_run@0'];
+const COPY = ['turboConsole.copyCommand inline@1', 'turboConsole.copyCommand 3_copy'];
+const OPEN_JSON = ['turboConsole.openPackageJson inline@2', 'turboConsole.openPackageJson 2_open@1'];
+
+const PACKAGE_ITEMS = [
+  'turboConsole.openPackageDetails inline@0',
+  'turboConsole.openPackageDetails 2_open@0',
+  'turboConsole.openPackageJson inline@1',
+  'turboConsole.openPackageJson 2_open@1',
+  'turboConsole.revealInExplorer 2_open@2',
+  'turboConsole.copyPath 3_copy'
+];
+
+const placementOf = (entry: MenuEntry): string => `${entry.command} ${entry.group ?? ''}`;
+
+const shownIn = (entries: MenuEntry[], keys: Readonly<Record<string, string | boolean>>): string[] => {
+  const shown = entries.filter((entry) => whenMatches(entry.when, keys));
+  const placements = shown.map(placementOf);
+
+  return placements.toSorted();
+};
+
+describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
+  it.each([
+    ['turboTask', [...RUN, ...COPY, ...OPEN_JSON]],
+    ['turboTask.cached', [...RUN, ...COPY, ...OPEN_JSON]],
+    ['turboTask.running', [...STOP, ...COPY, ...OPEN_JSON]],
+    ['turboScript', OPEN_JSON],
+    ['turboPackage', PACKAGE_ITEMS],
+    ['turboDir', []],
+    ['turboRoot', []],
+    ['turboMessage', []]
+  ])('GIVEN a %s row WHEN its menus are read THEN they hold exactly its commands and groups', (viewItem, expected) => {
+    const items = shownIn(MENUS['view/item/context'], { view: TREE_VIEW, viewItem });
+
+    expect(items).toStrictEqual(expected.toSorted());
+  });
+
+  it.each([
+    [false, 'turboConsole.showScope navigation@0'],
+    [true, 'turboConsole.hideScope navigation@0']
+  ])('GIVEN scopes shown is %s WHEN the view title is read THEN only the matching scope toggle is there', (scopeShown, toggle) => {
+    const keys = { view: TREE_VIEW, 'turboConsole.scopeShown': scopeShown, 'config.turboConsole.treeMode': 'list' };
+
+    const items = shownIn(MENUS['view/title'], keys);
+    const expected = [toggle, 'turboConsole.refresh navigation@2', 'turboConsole.showFolders navigation@1'];
+
+    expect(items).toStrictEqual(expected.toSorted());
+  });
+});

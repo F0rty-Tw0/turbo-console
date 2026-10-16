@@ -210,23 +210,23 @@
       "view/item/context": [
         {
           "command": "turboConsole.runTask",
-          "when": "view == turboConsole.tree && viewItem == turboTask",
+          "when": "view == turboConsole.tree && viewItem =~ /^turboTask(?!\\.running)/",
           "group": "inline@0"
         },
         {
           "command": "turboConsole.stopTask",
-          "when": "view == turboConsole.tree && viewItem == turboTask.running",
+          "when": "view == turboConsole.tree && viewItem =~ /^turboTask\\.running/",
           "group": "inline@0"
         },
         {
           "command": "turboConsole.runTask",
-          "when": "view == turboConsole.tree && viewItem == turboTask",
-          "group": "1_run"
+          "when": "view == turboConsole.tree && viewItem =~ /^turboTask(?!\\.running)/",
+          "group": "1_run@0"
         },
         {
           "command": "turboConsole.stopTask",
-          "when": "view == turboConsole.tree && viewItem == turboTask.running",
-          "group": "1_run"
+          "when": "view == turboConsole.tree && viewItem =~ /^turboTask\\.running/",
+          "group": "1_run@0"
         },
         {
           "command": "turboConsole.openPackageDetails",
@@ -245,7 +245,7 @@
         },
         {
           "command": "turboConsole.openPackageJson",
-          "when": "view == turboConsole.tree && viewItem =~ /^turboTask/",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)/",
           "group": "inline@2"
         },
         {
@@ -265,7 +265,7 @@
         },
         {
           "command": "turboConsole.openPackageJson",
-          "when": "view == turboConsole.tree && viewItem =~ /^turboTask/",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)/",
           "group": "2_open@1"
         },
         {
