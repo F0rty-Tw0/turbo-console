@@ -1,5 +1,5 @@
 import type { RootState, Roots } from '../../roots/common/coordinator.type.ts';
-import { isRunnableTask } from '../../tree/utils/task-rows.util.ts';
+import { isRunnableTask } from '../../tree/utils/task-filter.util.ts';
 import { NO_TASKS_TEXT, PACKAGE_PLACEHOLDER, TASK_PLACEHOLDER } from '../common/picker.const.ts';
 import type { NamedTask, PickItem, PickerPorts } from '../common/picker.type.ts';
 import type { RunDefinition, RunRequest, TaskTarget } from '../common/run.type.ts';

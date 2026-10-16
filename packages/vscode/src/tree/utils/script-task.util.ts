@@ -1,6 +1,6 @@
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 
-import { isVisibleTask } from './task-rows.util.ts';
+import { isVisibleTask } from './task-filter.util.ts';
 
 /** Spec 1c-b §4.1: a visible task that is not a turbo task, one a `package.json` script defines. */
 export const isVisibleScript = (task: TaskNode): boolean => isVisibleTask(task) && !task.isTurboTask;

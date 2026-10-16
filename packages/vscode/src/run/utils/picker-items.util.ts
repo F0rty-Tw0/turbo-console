@@ -3,7 +3,7 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
-import { isRunnableTask } from '../../tree/utils/task-rows.util.ts';
+import { isRunnableTask } from '../../tree/utils/task-filter.util.ts';
 import type { PickItem } from '../common/picker.type.ts';
 
 /**

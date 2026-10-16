@@ -1,7 +1,7 @@
 import type { PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { taskRows } from './task-rows.util.ts';
+import { taskRowOf } from './task-rows.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
@@ -31,9 +31,9 @@ const entryIn = (overrides: Partial<RunEntry>): RunEntry => {
 const tooltipLinesOf = (task: TaskNode, entry?: RunEntry): string[] => {
   const runs: RunLookup = () => entry;
   const pkg: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [task] };
-  const rows = taskRows(ROW_SCOPE_STUB, pkg, rowContextOf('list', runs));
+  const row = taskRowOf(ROW_SCOPE_STUB, pkg, task.id, rowContextOf('list', runs));
 
-  return rows.flatMap((row) => row.tooltip);
+  return row?.tooltip ?? [];
 };
 
 describe('FEATURE: task row tooltip', () => {

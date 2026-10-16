@@ -6,10 +6,8 @@ import { toRunView } from './run-view.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
-import { isVisibleTask } from '../../tree/utils/task-rows.util.ts';
+import { byName, isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 import type { DetailsInput } from '../common/details.type.ts';
-
-const byName = (left: TaskNode, right: TaskNode): number => Number(left.name > right.name) - Number(left.name < right.name);
 
 const dryRunStatesById = (states: DryRunState[]): Map<string, DryRunState> => {
   const entries = states.map((state): [string, DryRunState] => [state.id, state]);

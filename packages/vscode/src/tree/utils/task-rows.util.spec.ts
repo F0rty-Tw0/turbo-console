@@ -1,7 +1,7 @@
 import type { PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { isRunnableTask, taskRowOf, taskRows } from './task-rows.util.ts';
+import { taskRowOf, taskRows } from './task-rows.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -176,21 +176,10 @@ describe('FEATURE: task rows of a package', () => {
 
   describe('GIVEN a package script no turbo config defines', () => {
     it('WHEN listed THEN it is an idle wrench row with no text that offers Run and Copy', () => {
-      const rows = taskRows(ROW_SCOPE_STUB, packageWith([taskOf({ isTurboTask: false })]), rowContextOf('list'));
+      const row = taskRowOf(ROW_SCOPE_STUB, packageWith([taskOf({ isTurboTask: false })]), 'a#build', rowContextOf('list'));
 
-      expect(rows).toMatchObject([{ label: 'build', description: '', icon: IDLE_ICON, contextValue: 'turboScript' }]);
+      expect(row).toMatchObject({ label: 'build', description: '', icon: IDLE_ICON, contextValue: 'turboScript' });
     });
-  });
-});
-
-describe('FEATURE: runnable task', () => {
-  it.each([
-    ['a visible turbo task', true, taskOf({})],
-    ['a continuous turbo task', true, taskOf({ persistent: true })],
-    ['a script no turbo config defines', false, taskOf({ isTurboTask: false })],
-    ['a file atom task', false, taskOf({ kind: 'atom-file' })]
-  ])('GIVEN %s WHEN checked THEN runnable is %s', (_label, isRunnable, task) => {
-    expect(isRunnableTask(task)).toBe(isRunnable);
   });
 });
 

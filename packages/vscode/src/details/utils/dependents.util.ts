@@ -1,6 +1,6 @@
 import type { WorkspaceModel } from '@turbo-console/core';
 
-import { isVisibleTask } from '../../tree/utils/task-rows.util.ts';
+import { isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 
 /** Appends in place, so a task with k dependents costs O(k) in total, never O(k²). */
 const addDependent = (dependents: Map<string, string[]>, dependency: string, taskId: string): void => {

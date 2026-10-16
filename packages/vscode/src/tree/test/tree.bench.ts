@@ -18,7 +18,8 @@ import { diffModels } from '../utils/model-diff.util.ts';
 import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
 import { rowScopeOf } from '../utils/row-scope.util.ts';
-import { isRunnableTask, taskRowOf } from '../utils/task-rows.util.ts';
+import { isRunnableTask } from '../utils/task-filter.util.ts';
+import { taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
