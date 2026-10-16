@@ -10,11 +10,11 @@ import { TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 const NOW = 1_000_000;
 
 const CONTINUOUS: TaskNode = { ...TASK_NODE_STUB, persistent: true };
-const NOT_TURBO: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+const SCRIPT: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
 const CONTINUOUS_IDLE_ICON: IconSpec = { id: 'server-process', color: null };
 const CONTINUOUS_RUNNING_ICON: IconSpec = { id: 'pulse', color: null };
-const NOT_TURBO_ICON: IconSpec = { id: 'tools', color: 'disabledForeground' };
+const IDLE_ICON: IconSpec = { id: 'tools', color: null };
 const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
 const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 const FAILED_ICON: IconSpec = { id: 'error', color: 'testing.iconFailed' };
@@ -28,7 +28,7 @@ const entryIn = (overrides: Partial<RunEntry>): RunEntry => {
   return entry;
 };
 
-describe('FEATURE: task item display of continuous and non-turbo tasks', () => {
+describe('FEATURE: task item display of continuous tasks and scripts', () => {
   describe('GIVEN a continuous task', () => {
     it('WHEN it never ran THEN it shows the server icon and continuous', () => {
       const display = taskDisplay(CONTINUOUS, undefined, NOW);
@@ -90,16 +90,66 @@ describe('FEATURE: task item display of continuous and non-turbo tasks', () => {
   });
 
   describe('GIVEN a script no turbo config defines', () => {
-    it('WHEN it never ran THEN it shows the dimmed wrench, not a turbo task, and offers no Run', () => {
-      const display = taskDisplay(NOT_TURBO, undefined, NOW);
+    it('WHEN it never ran THEN it shows the plain wrench with no text and offers Run and Copy', () => {
+      const display = taskDisplay(SCRIPT, undefined, NOW);
 
-      expect(display).toStrictEqual({ icon: NOT_TURBO_ICON, description: 'not a turbo task', contextValue: 'turboScript' });
+      expect(display).toStrictEqual({ icon: IDLE_ICON, description: '', contextValue: 'turboScript' });
     });
 
-    it('WHEN a run launched as a continuous task is still live THEN it shows the pulse and still offers Stop', () => {
+    it('WHEN its run is live THEN it spins with the time since the click and offers Stop', () => {
+      const entry = entryIn({ task: SCRIPT, state: 'running', launchedAt: NOW - 12_345 });
+
+      const display = taskDisplay(SCRIPT, entry, NOW);
+
+      expect(display).toStrictEqual({ icon: RUNNING_ICON, description: 'running · 12s', contextValue: 'turboScript.running' });
+    });
+
+    it('WHEN its run passed THEN it shows the local duration, not the exit code', () => {
+      const entry = entryIn({ task: SCRIPT, state: 'passed', launchedAt: 1000, endedAt: 3100, exitCode: 0 });
+
+      const display = taskDisplay(SCRIPT, entry, NOW);
+
+      expect(display).toStrictEqual({ icon: PASSED_ICON, description: '2.1s', contextValue: 'turboScript' });
+    });
+
+    it.each([3, 127])('WHEN its run failed with exit %i THEN it shows the exit code alone', (exitCode) => {
+      const entry = entryIn({ task: SCRIPT, state: 'failed', endedAt: 4000, exitCode });
+
+      const display = taskDisplay(SCRIPT, entry, NOW);
+
+      expect(display).toStrictEqual({ icon: FAILED_ICON, description: `exit ${exitCode}`, contextValue: 'turboScript' });
+    });
+
+    it('WHEN its run was stopped THEN it shows the stop cells with the time from click to end', () => {
+      const entry = entryIn({ task: SCRIPT, state: 'stopped', launchedAt: 1000, endedAt: 4000, exitCode: 130 });
+
+      const display = taskDisplay(SCRIPT, entry, NOW);
+
+      expect(display).toStrictEqual({ icon: STOPPED_ICON, description: 'stopped · 3.0s', contextValue: 'turboScript' });
+    });
+
+    it('WHEN its run failed to start THEN it shows the failed-to-start cells', () => {
+      const entry = entryIn({ task: SCRIPT, state: 'failed-to-start' });
+
+      const display = taskDisplay(SCRIPT, entry, NOW);
+
+      expect(display).toStrictEqual({ icon: FAILED_ICON, description: 'failed to start', contextValue: 'turboScript' });
+    });
+  });
+
+  describe('GIVEN a node whose kind changed since the run launched', () => {
+    it('WHEN a turbo run is live on a node that is a script now THEN it stays turboTask.running', () => {
+      const entry = entryIn({ state: 'running', launchedAt: NOW - 12_345 });
+
+      const display = taskDisplay(SCRIPT, entry, NOW);
+
+      expect(display).toStrictEqual({ icon: RUNNING_ICON, description: 'running · 12s', contextValue: 'turboTask.running' });
+    });
+
+    it('WHEN a continuous run is live on a node that is a script now THEN it keeps the pulse and still offers Stop', () => {
       const entry = entryIn({ task: CONTINUOUS, state: 'running', launchedAt: NOW - 12_345 });
 
-      const display = taskDisplay(NOT_TURBO, entry, NOW);
+      const display = taskDisplay(SCRIPT, entry, NOW);
 
       expect(display).toStrictEqual({
         icon: CONTINUOUS_RUNNING_ICON,
@@ -108,18 +158,26 @@ describe('FEATURE: task item display of continuous and non-turbo tasks', () => {
       });
     });
 
-    it('WHEN a run launched as a turbo task is still live THEN it spins and still offers Stop', () => {
-      const entry = entryIn({ state: 'running', launchedAt: NOW - 12_345 });
+    it('WHEN a script run is live on a node that is turbo now THEN it is turboScript.running', () => {
+      const entry = entryIn({ task: SCRIPT, state: 'running', launchedAt: NOW - 12_345 });
 
-      const display = taskDisplay(NOT_TURBO, entry, NOW);
+      const display = taskDisplay(TASK_NODE_STUB, entry, NOW);
 
-      expect(display).toStrictEqual({ icon: RUNNING_ICON, description: 'running · 12s', contextValue: 'turboTask.running' });
+      expect(display).toStrictEqual({ icon: RUNNING_ICON, description: 'running · 12s', contextValue: 'turboScript.running' });
     });
 
-    it('WHEN its last run ended THEN it shows the end-state cells and offers no Run', () => {
+    it('WHEN a script run is live on a node that is continuous now THEN it still spins', () => {
+      const entry = entryIn({ task: SCRIPT, state: 'running', launchedAt: NOW - 12_345 });
+
+      const display = taskDisplay(CONTINUOUS, entry, NOW);
+
+      expect(display).toStrictEqual({ icon: RUNNING_ICON, description: 'running · 12s', contextValue: 'turboScript.running' });
+    });
+
+    it('WHEN a turbo run ended on a node that is a script now THEN its match shows and the node offers Run and Copy', () => {
       const entry = entryIn({ state: 'passed', endedAt: 4000, exitCode: 0, match: HIT_MATCH });
 
-      const display = taskDisplay(NOT_TURBO, entry, NOW);
+      const display = taskDisplay(SCRIPT, entry, NOW);
 
       expect(display).toStrictEqual({ icon: PASSED_ICON, description: '3.2s · cached', contextValue: 'turboScript' });
     });

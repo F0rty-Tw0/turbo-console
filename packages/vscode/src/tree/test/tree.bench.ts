@@ -17,6 +17,7 @@ import { allRows } from '../utils/all-rows.util.ts';
 import { diffModels } from '../utils/model-diff.util.ts';
 import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
+import { rowScopeOf } from '../utils/row-scope.util.ts';
 import { isRunnableTask, taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
@@ -140,7 +141,7 @@ const entryRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext)
 
   if (pkg === undefined) throw new Error(`bench package ${entry.packageName} is not shown`);
 
-  const row = taskRowOf(model.root, pkg, entry.taskId, context);
+  const row = taskRowOf(rowScopeOf(model.root, model), pkg, entry.taskId, context);
 
   if (row === undefined) throw new Error(`bench task ${entry.taskId} has no row`);
 

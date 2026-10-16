@@ -6,7 +6,7 @@ import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import type { IconSpec } from '../common/tree-row.type.ts';
-import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { ROW_NOW, rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const BIDI = String.fromCodePoint(0x202e);
@@ -48,7 +48,7 @@ const lookupOf = (entry: RunEntry): RunLookup => {
 };
 
 const factsTooltipOf = (task: TaskNode): string[] => {
-  const rows = taskRows('/ws', packageWith([task]), rowContextOf('list'));
+  const rows = taskRows(ROW_SCOPE_STUB, packageWith([task]), rowContextOf('list'));
 
   return rows.flatMap((row) => row.tooltip);
 };
@@ -56,7 +56,7 @@ const factsTooltipOf = (task: TaskNode): string[] => {
 describe('FEATURE: task rows of a package', () => {
   describe('GIVEN a package with a plain task that never ran', () => {
     it('WHEN listed THEN the row is an idle leaf with the raw task id as key and the package name', () => {
-      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list'));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([taskOf({})]), rowContextOf('list'));
 
       expect(rows).toStrictEqual([
         {
@@ -86,7 +86,7 @@ describe('FEATURE: task rows of a package', () => {
         taskOf({ id: 'a#build', name: 'build', kind: 'task' })
       ];
 
-      const rows = taskRows('/ws', packageWith(tasks), rowContextOf('list'));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith(tasks), rowContextOf('list'));
 
       expect(rows.map((row) => row.label)).toStrictEqual(['lint', 'lint:all', 'build']);
     });
@@ -94,7 +94,7 @@ describe('FEATURE: task rows of a package', () => {
 
   describe('GIVEN a package with no tasks', () => {
     it('WHEN listed THEN there are no rows', () => {
-      const rows = taskRows('/ws', packageWith([]), rowContextOf('list'));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([]), rowContextOf('list'));
 
       expect(rows).toStrictEqual([]);
     });
@@ -104,7 +104,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN listed THEN the label is cleaned and the key and id keep the raw id', () => {
       const task = taskOf({ id: `a#b${BIDI}c`, name: `b${BIDI}c` });
 
-      const rows = taskRows('/ws', packageWith([task]), rowContextOf('list'));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([task]), rowContextOf('list'));
 
       expect(rows).toMatchObject([{ id: `task:/ws\0a#b${BIDI}c`, key: `a#b${BIDI}c`, label: 'bc' }]);
     });
@@ -114,7 +114,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN listed THEN the label is cut', () => {
       const task = taskOf({ name: 'n'.repeat(LABEL_MAX + 30) });
 
-      const rows = taskRows('/ws', packageWith([task]), rowContextOf('list'));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([task]), rowContextOf('list'));
 
       expect(rows[0]?.label).toBe(`${'n'.repeat(LABEL_MAX - 1)}…`);
     });
@@ -124,7 +124,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN the run is going THEN the row spins, counts from the context clock and offers Stop through its context value', () => {
       const runs = lookupOf(entryIn({ state: 'running', launchedAt: ROW_NOW - 12_345 }));
 
-      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([taskOf({})]), rowContextOf('list', runs));
 
       expect(rows).toMatchObject([{ description: 'running · 12s', icon: RUNNING_ICON, contextValue: 'turboTask.running' }]);
     });
@@ -132,7 +132,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN the run passed with a cache hit THEN the row shows the duration and cached', () => {
       const runs = lookupOf(entryIn({ state: 'passed', exitCode: 0, endedAt: ENDED_AT, match: HIT_MATCH }));
 
-      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([taskOf({})]), rowContextOf('list', runs));
 
       expect(rows).toMatchObject([{ description: '3.2s · cached', icon: PASSED_ICON, contextValue: 'turboTask.cached' }]);
     });
@@ -140,7 +140,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN the run belongs to another root THEN the row stays idle', () => {
       const runs = lookupOf(entryIn({ root: '/other', state: 'running' }));
 
-      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([taskOf({})]), rowContextOf('list', runs));
 
       expect(rows).toMatchObject([{ description: '', contextValue: 'turboTask' }]);
     });
@@ -148,7 +148,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN the run belongs to another task THEN the row stays idle', () => {
       const runs = lookupOf(entryIn({ taskId: 'a#test', state: 'running' }));
 
-      const rows = taskRows('/ws', packageWith([taskOf({})]), rowContextOf('list', runs));
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([taskOf({})]), rowContextOf('list', runs));
 
       expect(rows).toMatchObject([{ description: '', contextValue: 'turboTask' }]);
     });
@@ -175,10 +175,10 @@ describe('FEATURE: task rows of a package', () => {
   });
 
   describe('GIVEN a package script no turbo config defines', () => {
-    it('WHEN listed THEN it keeps its row, which offers no Run', () => {
-      const rows = taskRows('/ws', packageWith([taskOf({ isTurboTask: false })]), rowContextOf('list'));
+    it('WHEN listed THEN it is an idle wrench row with no text that offers Run and Copy', () => {
+      const rows = taskRows(ROW_SCOPE_STUB, packageWith([taskOf({ isTurboTask: false })]), rowContextOf('list'));
 
-      expect(rows).toMatchObject([{ label: 'build', description: 'not a turbo task', contextValue: 'turboScript' }]);
+      expect(rows).toMatchObject([{ label: 'build', description: '', icon: IDLE_ICON, contextValue: 'turboScript' }]);
     });
   });
 });
@@ -204,21 +204,21 @@ describe('FEATURE: one task row by id', () => {
 
     it('WHEN a#build is read THEN its row equals the one the package listing builds', () => {
       const context = rowContextOf('list');
-      const listed = taskRows('/ws', pkg, context);
+      const listed = taskRows(ROW_SCOPE_STUB, pkg, context);
 
-      const row = taskRowOf('/ws', pkg, 'a#build', context);
+      const row = taskRowOf(ROW_SCOPE_STUB, pkg, 'a#build', context);
 
       expect(row).toStrictEqual(listed[1]);
     });
 
     it('WHEN the hidden file atom task is read THEN there is no row', () => {
-      const row = taskRowOf('/ws', pkg, 'a#lint:file', rowContextOf('list'));
+      const row = taskRowOf(ROW_SCOPE_STUB, pkg, 'a#lint:file', rowContextOf('list'));
 
       expect(row).toBeUndefined();
     });
 
     it('WHEN an id the package does not hold is read THEN there is no row', () => {
-      const row = taskRowOf('/ws', pkg, 'b#build', rowContextOf('list'));
+      const row = taskRowOf(ROW_SCOPE_STUB, pkg, 'b#build', rowContextOf('list'));
 
       expect(row).toBeUndefined();
     });

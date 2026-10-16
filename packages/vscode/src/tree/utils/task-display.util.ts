@@ -8,7 +8,6 @@ import {
   CONTINUOUS_RUNNING_ICON,
   FAILED_ICON,
   IDLE_ICON,
-  NOT_TURBO_ICON,
   PASSED_ICON,
   RUNNING_ICON,
   STOPPED_ICON
@@ -19,7 +18,7 @@ const IDLE: TaskDisplay = { icon: IDLE_ICON, description: '', contextValue: 'tur
 
 const CONTINUOUS_IDLE: TaskDisplay = { icon: CONTINUOUS_IDLE_ICON, description: 'continuous', contextValue: 'turboTask' };
 
-const NOT_TURBO_IDLE: TaskDisplay = { icon: NOT_TURBO_ICON, description: 'not a turbo task', contextValue: 'turboScript' };
+const SCRIPT_IDLE: TaskDisplay = { icon: IDLE_ICON, description: '', contextValue: 'turboScript' };
 
 const TURBO_RUNNING: RunningKind = { icon: RUNNING_ICON, prefix: 'running' };
 
@@ -34,7 +33,18 @@ const ENDED_ICONS: Readonly<Record<EndedState, IconSpec>> = {
 
 const exitText = (exitCode: number | null): string => (exitCode === null ? 'no exit code' : `exit ${exitCode}`);
 
+/** The click-to-end time of a run that has ended; a script has no run summary, so this is its duration. */
+const durationOf = (entry: RunEntry): string | null => {
+  const { endedAt } = entry;
+
+  if (endedAt === null) return null;
+
+  return durationText(endedAt - entry.launchedAt);
+};
+
 const passedText = (entry: RunEntry): string => {
+  if (!entry.task.isTurboTask) return durationOf(entry) ?? 'exit 0';
+
   const match = settledMatchOf(entry);
 
   if (match === null) return 'exit 0';
@@ -53,11 +63,11 @@ const failedText = (entry: RunEntry): string => {
 
 /** A stopped run is never matched: its length is click to end. */
 const stoppedText = (entry: RunEntry): string => {
-  const { endedAt } = entry;
+  const duration = durationOf(entry);
 
-  if (endedAt === null) return 'stopped';
+  if (duration === null) return 'stopped';
 
-  return `stopped · ${durationText(endedAt - entry.launchedAt)}`;
+  return `stopped · ${duration}`;
 };
 
 const failedToStartText = (): string => 'failed to start';
@@ -70,19 +80,24 @@ const ENDED_TEXTS: Readonly<Record<EndedState, (entry: RunEntry) => string>> = {
 };
 
 const idleDisplayOf = (task: TaskNode): TaskDisplay => {
-  if (!task.isTurboTask) return NOT_TURBO_IDLE;
+  if (!task.isTurboTask) return SCRIPT_IDLE;
 
   return task.persistent ? CONTINUOUS_IDLE : IDLE;
 };
 
-/** The current kind decides; a node that turned non-turbo mid-run has no running kind, so the launch node decides. */
+/**
+ * A script run is never continuous. For a turbo run the current kind decides; a node that turned non-turbo mid-run has
+ * no running kind, so the launch node decides.
+ */
 export const runningKindOf = (task: TaskNode, entry: RunEntry): RunningKind => {
+  if (!entry.task.isTurboTask) return TURBO_RUNNING;
+
   const isContinuous = task.isTurboTask ? task.persistent : entry.task.persistent;
 
   return isContinuous ? CONTINUOUS_RUNNING : TURBO_RUNNING;
 };
 
-/** A task that is non-turbo now loses Run and Copy once its run ended; only a matched cache hit offers the cached actions. */
+/** The current kind decides: a script now offers Run and Copy; only a matched cache hit offers the cached actions. */
 const endedContextOf = (task: TaskNode, entry: RunEntry): TaskContextValue => {
   if (!task.isTurboTask) return 'turboScript';
 
@@ -91,16 +106,19 @@ const endedContextOf = (task: TaskNode, entry: RunEntry): TaskContextValue => {
   return isCached ? 'turboTask.cached' : 'turboTask';
 };
 
+/** The kind at launch decides: a mid-run kind change runs the next run the new way. */
+const runningContextOf = (entry: RunEntry): TaskContextValue => (entry.task.isTurboTask ? 'turboTask.running' : 'turboScript.running');
+
 const runningDisplayOf = (task: TaskNode, entry: RunEntry, now: number): TaskDisplay => {
   const { icon, prefix } = runningKindOf(task, entry);
   const description = `${prefix} · ${elapsedText(now - entry.launchedAt)}`;
-  const display: TaskDisplay = { icon, description, contextValue: 'turboTask.running' };
+  const display: TaskDisplay = { icon, description, contextValue: runningContextOf(entry) };
 
   return display;
 };
 
 /**
- * Spec 1c-a §4.5: icon, description and context value of a task item. The kind comes from `task`, the current model
+ * Spec 1c-a §4.5 and 1c-b §4.5: icon, description and context value of a task item. The kind comes from `task`, the current model
  * node; a live run always shows its clock (`now − launchedAt`, wall clock) and offers Stop, whatever the kind says now.
  */
 export const taskDisplay = (task: TaskNode, entry: RunEntry | undefined, now: number): TaskDisplay => {

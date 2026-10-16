@@ -1,5 +1,7 @@
 import type { PackageManager, PackageManagerSource, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 
+import type { RowScope } from '../../common/tree-row.type.ts';
+
 export const TASK_NODE_STUB: TaskNode = {
   id: 'build',
   name: 'build',
@@ -32,3 +34,6 @@ export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   edges: [],
   warnings: []
 };
+
+/** The scope of folder `/ws` over `WORKSPACE_MODEL_STUB`. */
+export const ROW_SCOPE_STUB: RowScope = { root: '/ws', packageManager: PACKAGE_MANAGER_STUB };

@@ -3,6 +3,7 @@ import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 import { dirRow, dirRows, packageRow } from './dir-rows.util.ts';
 import { liveOf } from './live-of.util.ts';
 import { rootRowOf, rootRows, shownModelOf } from './root-rows.util.ts';
+import { rowScopeOf } from './row-scope.util.ts';
 import { taskRowOf, taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -42,7 +43,7 @@ const modelChildren = (root: string, model: WorkspaceModel, node: TreeNode, cont
   const view = context.views(model, context.scriptsShown, liveOf(context, root));
   const pkg = packageOf(view, node.packageName);
 
-  if (node.kind === 'pkg' && pkg !== undefined) return taskRows(root, pkg, context);
+  if (node.kind === 'pkg' && pkg !== undefined) return taskRows(rowScopeOf(root, model), pkg, context);
 
   const dir = dirOf(view, node);
 
@@ -90,7 +91,7 @@ const modelRow = (root: string, model: WorkspaceModel, node: TreeNode, context: 
 
   if (node.kind === 'pkg') return packageRow(root, pkg, view, context.scopeShown);
 
-  return taskRowOf(root, pkg, node.key, context);
+  return taskRowOf(rowScopeOf(root, model), pkg, node.key, context);
 };
 
 const messageRowOf = (state: RootState, node: TreeNode, context: RowContext): TreeRow | undefined => {

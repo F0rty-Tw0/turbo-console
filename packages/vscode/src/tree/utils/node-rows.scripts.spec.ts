@@ -31,6 +31,10 @@ const STATE: RootState = { ...ROOT_STATE_STUB, folder: FOLDER, model: MODEL };
 
 const SCRIPTS_PACKAGE: TreeNode = { kind: 'pkg', id: 'pkg:/other\0s', root: '/other', key: 's', packageName: 's' };
 
+const TURBO_PACKAGE: TreeNode = { kind: 'pkg', id: 'pkg:/other\0a', root: '/other', key: 'a', packageName: 'a' };
+
+const TURBO_TASK: TreeNode = { kind: 'task', id: 'task:/other\0build', root: '/other', key: 'build', packageName: 'a' };
+
 const PACKAGES_DIR: TreeNode = { kind: 'dir', id: 'dir:/other\0packages', root: '/other', key: 'packages', packageName: null };
 
 const contextOf = (liveRoot: string, mode: TreeMode = 'folders'): RowContext => {
@@ -102,6 +106,20 @@ describe('FEATURE: rows keyed by the folder root', () => {
       const row = rootRowOf(STATE, contextOf('/ws'));
 
       expect(row.tooltip).toContain('Packages: 1');
+    });
+  });
+
+  describe('GIVEN a folder /other and a model rooted at /ws', () => {
+    it('WHEN a turbo package is opened THEN its task row ids sit under the folder root', () => {
+      const ids = idsOf(childRowsOf(STATE, TURBO_PACKAGE, contextOf('/other')));
+
+      expect(ids).toStrictEqual(['task:/other\0build']);
+    });
+
+    it('WHEN the task row is rebuilt alone THEN its id sits under the folder root too', () => {
+      const row = currentRowOf(STATE, TURBO_TASK, contextOf('/other'));
+
+      expect(row.id).toBe('task:/other\0build');
     });
   });
 });

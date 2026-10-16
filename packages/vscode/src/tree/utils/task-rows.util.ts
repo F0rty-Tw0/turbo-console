@@ -1,15 +1,16 @@
-import type { PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
+import type { PackageManagerName, PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
 import { durationText } from '@turbo-console/webview-ui';
 
 import { rowIdOf } from './row-id.util.ts';
 import { taskDisplay } from './task-display.util.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { settledMatchOf } from '../../run/utils/run-result.util.ts';
+import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
-import { CONTINUOUS_KIND_LINES, NOT_TURBO_KIND_LINES } from '../common/task-text.const.ts';
+import { CONTINUOUS_KIND_LINES } from '../common/task-text.const.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
-import type { TreeRow } from '../common/tree-row.type.ts';
+import type { RowScope, TreeRow } from '../common/tree-row.type.ts';
 
 export const isVisibleTask = (task: TaskNode): boolean => task.kind !== 'atom-file';
 
@@ -44,15 +45,25 @@ const timeLine = (label: string, at: number | null): string | null => {
 };
 
 const kindLines = (task: TaskNode): string[] => {
-  if (!task.isTurboTask) return NOT_TURBO_KIND_LINES;
+  if (!task.isTurboTask) return NO_LINES;
 
   return task.persistent ? CONTINUOUS_KIND_LINES : NO_LINES;
 };
 
-const taskFactLines = (task: TaskNode): string[] => {
-  const command = labelled('Command', task.command);
+/** A turbo task shows its body as `Command`; a script shows what runs it (left out when refused), then its body as `Script`. */
+const commandLinesOf = (task: TaskNode, manager: PackageManagerName): (string | null)[] => {
+  if (task.isTurboTask) return [labelled('Command', task.command)];
+
+  const command = labelled('Command', scriptCommandOf(manager, task.name));
+  const script = labelled('Script', task.command);
+
+  return [command, script];
+};
+
+const taskFactLines = (task: TaskNode, manager: PackageManagerName): string[] => {
+  const commands = commandLinesOf(task, manager);
   const kind = labelled('Kind', task.kind);
-  const lines = [task.description, command, kind];
+  const lines = [task.description, ...commands, kind];
 
   return lines.flatMap(lineOf);
 };
@@ -100,11 +111,12 @@ const runLines = (entry: RunEntry | undefined): string[] => {
   return lines.flatMap(lineOf);
 };
 
-const taskRow = (root: string, pkg: PackageNode, task: TaskNode, context: RowContext): TreeRow => {
+const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, context: RowContext): TreeRow => {
+  const { root, packageManager } = scope;
   const entry = context.runs(root, task.id);
   const display = taskDisplay(task, entry, context.now);
   const kind = kindLines(task);
-  const facts = taskFactLines(task);
+  const facts = taskFactLines(task, packageManager.name);
   const ran = runLines(entry);
   const tooltip = [...kind, ...facts, ...ran];
   const row: TreeRow = {
@@ -130,18 +142,18 @@ const taskRow = (root: string, pkg: PackageNode, task: TaskNode, context: RowCon
  * wall clock. Tooltip lines are raw text: `tooltipMarkdownOf` cleans them. The description is built from numbers and
  * fixed words, but is cleaned like every label.
  */
-export const taskRows = (root: string, pkg: PackageNode, context: RowContext): TreeRow[] => {
+export const taskRows = (scope: RowScope, pkg: PackageNode, context: RowContext): TreeRow[] => {
   const visible = pkg.tasks.filter(isVisibleTask);
 
-  return visible.map((task) => taskRow(root, pkg, task, context));
+  return visible.map((task) => taskRow(scope, pkg, task, context));
 };
 
 /** The row of the visible task `taskId` of `pkg`, built alone; a hidden or unknown id has none. */
-export const taskRowOf = (root: string, pkg: PackageNode, taskId: string, context: RowContext): TreeRow | undefined => {
+export const taskRowOf = (scope: RowScope, pkg: PackageNode, taskId: string, context: RowContext): TreeRow | undefined => {
   const isShownTask = (task: TaskNode): boolean => task.id === taskId && isVisibleTask(task);
   const task = pkg.tasks.find(isShownTask);
 
   if (task === undefined) return undefined;
 
-  return taskRow(root, pkg, task, context);
+  return taskRow(scope, pkg, task, context);
 };

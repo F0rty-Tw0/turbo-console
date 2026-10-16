@@ -1,3 +1,5 @@
+import type { PackageManager } from '@turbo-console/core';
+
 import type { RunState } from '../../run/common/run.type.ts';
 
 export type IconSpec = {
@@ -48,7 +50,16 @@ export type TreeRow = {
 };
 
 /** A kind token (`turboTask`, `turboScript`), then at most one state token; menus match them by prefix (spec 1c-a §4.12). */
-export type TaskContextValue = 'turboTask' | 'turboTask.running' | 'turboTask.cached' | 'turboScript';
+export type TaskContextValue = 'turboTask' | 'turboTask.running' | 'turboTask.cached' | 'turboScript' | 'turboScript.running';
+
+/**
+ * What the row builders need of a folder: its `root` (row ids and run lookups key on the folder root, which is not
+ * always `model.root`) and the model's package manager.
+ */
+export type RowScope = {
+  readonly root: string;
+  readonly packageManager: PackageManager;
+};
 
 export type EndedState = Exclude<RunState, 'running'>;
 
