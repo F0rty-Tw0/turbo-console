@@ -1,11 +1,8 @@
 import { turboRunArgs } from '@turbo-console/core';
 import type { TaskNode } from '@turbo-console/core';
 
+import { BARE, BARE_FIRST_BLOCKED } from '../common/shell.const.ts';
 import type { ShellKind } from '../common/shell.type.ts';
-
-const BARE = /^[A-Za-z0-9@/._:=+-]+$/u;
-
-const BARE_FIRST_BLOCKED = /^[=@]/u;
 
 const PATH_SEPARATOR = /[\\/]/u;
 
