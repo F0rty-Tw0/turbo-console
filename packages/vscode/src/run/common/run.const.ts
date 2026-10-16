@@ -16,6 +16,9 @@ export const RUN_TASK_TYPE = 'turbo-console';
 /** A script ended by Ctrl+C (130) or the Windows `STATUS_CONTROL_C_EXIT` (0xC000013A) was stopped, not failed. */
 export const STOPPED_SCRIPT_CODES: number[] = [130, 3221225786];
 
+/** POSIX "command not found" and cmd.exe's: the manager, or a command the script runs, is missing. */
+export const NOT_FOUND_CODES: number[] = [127, 9009];
+
 export const SHOW_OUTPUT_ACTION = 'Show Output';
 
 /** The id of a run all task is `*` plus the task name; a run's id always holds `#`, so the two never collide. */

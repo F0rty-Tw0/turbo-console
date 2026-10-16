@@ -1,3 +1,6 @@
+import type { PackageManager } from '@turbo-console/core';
+
+import { sourceText } from './source-text.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { START_TIMEOUT_MS } from '../common/run.const.ts';
@@ -15,3 +18,10 @@ export const startWaitText = (processName: string): string =>
 /** The backticks are literal: `showInformationMessage` renders no markdown, and they keep a name with spaces delimited. */
 export const unsafeScriptText = (name: string): string =>
   `Turbo Console can't run a script named \`${cleanText(name, LABEL_MAX)}\` safely.`;
+
+/** The hedged Output line of a script that ended 127 or 9009: the missing command may be one the script itself runs. */
+export const notFoundText = (packageManager: PackageManager, exitCode: number): string => {
+  const runner = `${packageManager.name} ${sourceText(packageManager.source)}`;
+
+  return `exit ${exitCode}: a command was not found: ${runner} or one the script runs. Install it or check packageManager.`;
+};
