@@ -55,9 +55,16 @@ const listRowsOf = (root: string, view: ModelView, scopeShown: boolean): TreeRow
   return listed.map(rowOf);
 };
 
+/** Spec 1c-b: an empty view is `no-turbo-packages` when showing scripts would list packages (never while they are shown). */
+const emptyKindOf = (model: WorkspaceModel, context: RowContext, live: ReadonlySet<string>): MessageKind => {
+  const withScripts = context.views(model, true, live);
+
+  return withScripts.packages.size > 0 ? 'no-turbo-packages' : 'no-shown-packages';
+};
+
 /**
  * The folder or list rows of a model's shown packages; the `no-packages` row when it has no package, the
- * `no-shown-packages` row when none is shown (spec §4.7).
+ * `no-shown-packages` row when none is shown, the `no-turbo-packages` row when only the scripts toggle hides them (spec §4.7).
  */
 const packageRowsOf = (root: string, model: WorkspaceModel, context: RowContext): TreeRow[] => {
   if (model.packages.length === 0) return messageRows(root, 'no-packages');
@@ -65,7 +72,7 @@ const packageRowsOf = (root: string, model: WorkspaceModel, context: RowContext)
   const live = liveOf(context, root);
   const view = context.views(model, context.scriptsShown, live);
 
-  if (view.packages.size === 0) return messageRows(root, 'no-shown-packages');
+  if (view.packages.size === 0) return messageRows(root, emptyKindOf(model, context, live));
 
   if (context.mode === 'folders') return dirRows(root, view.folders, view, context.scopeShown);
 
