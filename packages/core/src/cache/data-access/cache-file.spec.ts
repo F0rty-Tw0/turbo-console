@@ -69,6 +69,18 @@ const rewriteEntry = async (cacheDir: string, edit: (json: Record<string, unknow
   await writeFile(path, JSON.stringify(json));
 };
 
+/** A copy of the stub model with `isTurboTask` deleted from its first task. */
+const modelWithoutTurboFlag = (): WorkspaceModel => {
+  const model = structuredClone(WORKSPACE_MODEL_STUB);
+  const [task] = model.packages.flatMap((pkg) => pkg.tasks);
+
+  if (task === undefined) throw new Error('the stub model has no task');
+
+  Reflect.deleteProperty(task, 'isTurboTask');
+
+  return model;
+};
+
 describe('FEATURE: workspace cache file', () => {
   beforeAll(async () => {
     tempDir = await mkdtemp(join(tmpdir(), 'cache-file-'));
@@ -184,6 +196,16 @@ describe('FEATURE: workspace cache file', () => {
       const cacheDir = await writtenEntry();
 
       await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'formatVersion', 2));
+
+      const read = await readCacheFile(cacheDir, ROOT);
+
+      expect(read).toBeNull();
+    });
+
+    it('WHEN its formatVersion is current but a task has no isTurboTask THEN the read is null', async () => {
+      const cacheDir = await writtenEntry();
+
+      await rewriteEntry(cacheDir, (json) => Reflect.set(json, 'model', modelWithoutTurboFlag()));
 
       const read = await readCacheFile(cacheDir, ROOT);
 
