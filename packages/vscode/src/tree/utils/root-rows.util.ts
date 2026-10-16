@@ -127,9 +127,16 @@ export const rootNodeRow = (folder: RootFolder, view: ModelView | null): TreeRow
   return row;
 };
 
-/** A root's folder row read from its state: the view of its model, or none while it has no model. */
+/** Behind a binary error no package or folder row is shown (spec §4.4), so none of them has children or a row. */
+export const shownModelOf = (state: RootState): WorkspaceModel | null => {
+  if (state.error?.stage === 'binary') return null;
+
+  return state.model;
+};
+
+/** A root's folder row read from its state: the view of its shown model, or none while it has none. */
 export const rootRowOf = (state: RootState, context: RowContext): TreeRow => {
-  const { model } = state;
+  const model = shownModelOf(state);
 
   if (model === null) return rootNodeRow(state.folder, null);
 

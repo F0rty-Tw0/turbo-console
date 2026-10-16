@@ -162,6 +162,14 @@ describe('FEATURE: shown packages of a root', () => {
 
       expect(row.tooltip).toStrictEqual(['/ws', 'Packages: 4']);
     });
+
+    it('WHEN its multi-root row is built under a binary error THEN the tooltip is only its path', () => {
+      const failed: RootState = { ...state, error: LOAD_FAILURE_STUB };
+
+      const row = rootRowOf(failed, rowContextOf('folders'));
+
+      expect(row.tooltip).toStrictEqual(['/ws']);
+    });
   });
 
   describe('GIVEN a root with no model yet', () => {

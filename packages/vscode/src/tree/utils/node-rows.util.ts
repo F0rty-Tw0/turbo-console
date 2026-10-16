@@ -2,7 +2,7 @@ import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 
 import { dirRow, dirRows, packageRow } from './dir-rows.util.ts';
 import { shownLabelOf } from './model-view.util.ts';
-import { rootRowOf, rootRows } from './root-rows.util.ts';
+import { rootRowOf, rootRows, shownModelOf } from './root-rows.util.ts';
 import { taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -12,13 +12,6 @@ import { LOADING_ICON } from '../common/icon.const.ts';
 import type { ModelView } from '../common/model-view.type.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
-
-/** Behind a binary error no package or folder row is shown (spec §4.4), so none of them has children or a row. */
-const shownModelOf = (state: RootState): WorkspaceModel | null => {
-  if (state.error?.stage === 'binary') return null;
-
-  return state.model;
-};
 
 /** A hidden package has no row (spec §4.7), so its stale node reads as gone. */
 const packageOf = (view: ModelView, name: string | null): PackageNode | undefined => {
