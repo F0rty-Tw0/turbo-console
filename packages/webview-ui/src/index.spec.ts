@@ -52,6 +52,8 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<PackageDetails['tasks']>().toEqualTypeOf<TaskCard[]>();
       expectTypeOf<TaskCard['cacheStatus']>().toEqualTypeOf<'HIT' | 'MISS' | 'deferred' | null>();
       expectTypeOf<RunView['colorVar']>().toEqualTypeOf<string | null>();
+      expectTypeOf<RunView['elapsedMs']>().toEqualTypeOf<number | null>();
+      expectTypeOf<TaskCard['persistent']>().toEqualTypeOf<boolean>();
     });
   });
 });

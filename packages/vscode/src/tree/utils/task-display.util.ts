@@ -76,7 +76,7 @@ const idleDisplayOf = (task: TaskNode): TaskDisplay => {
 };
 
 /** The current kind decides; a node that turned non-turbo mid-run has no running kind, so the launch node decides. */
-const runningKindOf = (task: TaskNode, entry: RunEntry): RunningKind => {
+export const runningKindOf = (task: TaskNode, entry: RunEntry): RunningKind => {
   const isContinuous = task.isTurboTask ? task.persistent : entry.task.persistent;
 
   return isContinuous ? CONTINUOUS_RUNNING : TURBO_RUNNING;

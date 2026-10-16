@@ -54,28 +54,58 @@ describe('FEATURE: run view of a task', () => {
     it('WHEN viewed THEN it shows the idle icon, no color, no text and is not running', () => {
       const view = toRunView(TASK_NODE_STUB, undefined, NOW);
 
-      expect(view).toStrictEqual({ iconId: 'tools', colorVar: null, text: '', isRunning: false });
+      expect(view).toStrictEqual({ iconId: 'tools', colorVar: null, text: '', isRunning: false, elapsedMs: null, isSpinning: false });
     });
   });
 
-  describe('GIVEN a running task', () => {
-    it('WHEN viewed THEN the icon is the tree running icon without its spin modifier and isRunning is set', () => {
+  describe('GIVEN a running turbo task', () => {
+    it('WHEN viewed THEN the icon is the tree running icon without its spin modifier, it spins and the text is the prefix only', () => {
       const view = toRunView(TASK_NODE_STUB, entryIn({ state: 'running', launchedAt: NOW - 12_345 }), NOW);
 
       expect(view).toStrictEqual({
         iconId: RUNNING_ICON.id.replace('~spin', ''),
         colorVar: null,
-        text: 'running · 12s',
-        isRunning: true
+        text: 'running',
+        isRunning: true,
+        elapsedMs: 12_345,
+        isSpinning: true
+      });
+    });
+
+    it('WHEN the wall clock jumped back before the launch THEN the elapsed time is 0', () => {
+      const view = toRunView(TASK_NODE_STUB, entryIn({ state: 'running', launchedAt: NOW + 5000 }), NOW);
+
+      expect(view.elapsedMs).toBe(0);
+    });
+  });
+
+  describe('GIVEN a running continuous task', () => {
+    it('WHEN viewed THEN the icon is the still pulse and the text is continuous', () => {
+      const view = toRunView(CONTINUOUS, entryIn({ state: 'running', launchedAt: NOW - 12_345 }), NOW);
+
+      expect(view).toStrictEqual({
+        iconId: 'pulse',
+        colorVar: null,
+        text: 'continuous',
+        isRunning: true,
+        elapsedMs: 12_345,
+        isSpinning: false
       });
     });
   });
 
   describe('GIVEN a passed task whose summary matched a cache hit', () => {
-    it('WHEN viewed THEN the text is the duration and cached and the color is the passed theme variable', () => {
+    it('WHEN viewed THEN the text is the duration and cached, the color is the passed theme variable and there is no elapsed time', () => {
       const view = toRunView(TASK_NODE_STUB, entryIn({ state: 'passed', exitCode: 0, match: HIT_MATCH }), NOW);
 
-      expect(view).toStrictEqual({ iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: '3.2s · cached', isRunning: false });
+      expect(view).toStrictEqual({
+        iconId: 'pass',
+        colorVar: '--vscode-testing-iconPassed',
+        text: '3.2s · cached',
+        isRunning: false,
+        elapsedMs: null,
+        isSpinning: false
+      });
     });
   });
 
@@ -91,7 +121,14 @@ describe('FEATURE: run view of a task', () => {
     it('WHEN viewed THEN the failed theme variable is used and isRunning is false', () => {
       const view = toRunView(TASK_NODE_STUB, entryIn({ state: 'failed', exitCode: 1 }), NOW);
 
-      expect(view).toStrictEqual({ iconId: 'error', colorVar: '--vscode-testing-iconFailed', text: 'exit 1', isRunning: false });
+      expect(view).toStrictEqual({
+        iconId: 'error',
+        colorVar: '--vscode-testing-iconFailed',
+        text: 'exit 1',
+        isRunning: false,
+        elapsedMs: null,
+        isSpinning: false
+      });
     });
   });
 
@@ -122,19 +159,19 @@ describe('FEATURE: live run view of a run that changed', () => {
     it('WHEN the model holds the task THEN the view reads the current node', () => {
       const view = liveRunViewOf(modelWith([CONTINUOUS_BUILD]), RUNNING_BUILD, NOW);
 
-      expect([view.iconId, view.text]).toStrictEqual(['pulse', 'continuous · 12s']);
+      expect([view.iconId, view.text]).toStrictEqual(['pulse', 'continuous']);
     });
 
     it('WHEN the root has no model THEN the view reads the task the run was launched with', () => {
       const view = liveRunViewOf(null, RUNNING_BUILD, NOW);
 
-      expect([view.iconId, view.text]).toStrictEqual(['sync', 'running · 12s']);
+      expect([view.iconId, view.text]).toStrictEqual(['sync', 'running']);
     });
 
     it('WHEN the package no longer has the task THEN the view reads the task the run was launched with', () => {
       const view = liveRunViewOf(modelWith([]), RUNNING_BUILD, NOW);
 
-      expect([view.iconId, view.text]).toStrictEqual(['sync', 'running · 12s']);
+      expect([view.iconId, view.text]).toStrictEqual(['sync', 'running']);
     });
 
     it('WHEN the model no longer has the package THEN the view reads the task the run was launched with', () => {
@@ -142,7 +179,7 @@ describe('FEATURE: live run view of a run that changed', () => {
 
       const view = liveRunViewOf(model, RUNNING_BUILD, NOW);
 
-      expect([view.iconId, view.text]).toStrictEqual(['sync', 'running · 12s']);
+      expect([view.iconId, view.text]).toStrictEqual(['sync', 'running']);
     });
   });
 });

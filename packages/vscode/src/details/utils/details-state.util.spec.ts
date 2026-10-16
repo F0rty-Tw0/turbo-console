@@ -228,8 +228,22 @@ describe('FEATURE: package details state', () => {
 
       const state = toDetailsState(inputWith({ runs }));
 
-      expect(cardOf(state, 'a#test').run).toStrictEqual({ iconId: 'sync', colorVar: null, text: 'running · 0s', isRunning: true });
-      expect(cardOf(state, 'a#build').run).toStrictEqual({ iconId: 'tools', colorVar: null, text: '', isRunning: false });
+      expect(cardOf(state, 'a#test').run).toStrictEqual({
+        iconId: 'sync',
+        colorVar: null,
+        text: 'running',
+        isRunning: true,
+        elapsedMs: 0,
+        isSpinning: true
+      });
+      expect(cardOf(state, 'a#build').run).toStrictEqual({
+        iconId: 'tools',
+        colorVar: null,
+        text: '',
+        isRunning: false,
+        elapsedMs: null,
+        isSpinning: false
+      });
       expect(lookedUp).toContain('/ws|a#test');
     });
   });

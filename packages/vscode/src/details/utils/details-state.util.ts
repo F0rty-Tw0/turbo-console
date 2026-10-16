@@ -45,6 +45,7 @@ const toTaskCard = (
     definition: dryRunState?.definition ?? null,
     cacheStatus: dryRunState?.cache ?? null,
     isTurboTask: task.isTurboTask,
+    persistent: task.persistent,
     run
   };
 

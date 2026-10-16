@@ -1,11 +1,18 @@
 import type { TaskDefinition } from '@turbo-console/core';
 
-/** What a task's run button and status line show; built in the host from the tree's `taskDisplay`. `colorVar` is a CSS variable name or `null`; `iconId` has no `~spin` modifier, `isRunning` stands for it. */
+/**
+ * What a task's run button and status line show; built in the host from the tree's `taskDisplay`. `colorVar` is a CSS
+ * variable name or `null`; `iconId` has no `~spin` modifier, `isSpinning` stands for it. While running, `text` is the
+ * kind prefix only (`running` / `continuous`) and `elapsedMs` the wall-clock time since launch (never negative); else
+ * `elapsedMs` is `null`.
+ */
 export type RunView = {
   readonly iconId: string;
   readonly colorVar: string | null;
   readonly text: string;
   readonly isRunning: boolean;
+  readonly elapsedMs: number | null;
+  readonly isSpinning: boolean;
 };
 
 export type CacheStatus = 'HIT' | 'MISS' | 'deferred';
@@ -24,6 +31,7 @@ export type TaskCard = {
   readonly definition: TaskDefinition | null;
   readonly cacheStatus: CacheStatus | null;
   readonly isTurboTask: boolean;
+  readonly persistent: boolean;
   readonly run: RunView;
 };
 

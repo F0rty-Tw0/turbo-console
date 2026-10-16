@@ -2,7 +2,14 @@ import type { TaskDefinition } from '@turbo-console/core';
 
 import type { MissingPackage, PackageDetails, RunView, TaskCard } from '../../../src/bridge/common/details-state.type.ts';
 
-export const RUN_VIEW_STUB: RunView = { iconId: 'tools', colorVar: null, text: '', isRunning: false };
+export const RUN_VIEW_STUB: RunView = {
+  iconId: 'tools',
+  colorVar: null,
+  text: '',
+  isRunning: false,
+  elapsedMs: null,
+  isSpinning: false
+};
 
 export const TASK_DEFINITION_STUB: TaskDefinition = {
   inputs: ['src/**'],
@@ -22,6 +29,7 @@ export const TASK_CARD_STUB: TaskCard = {
   definition: TASK_DEFINITION_STUB,
   cacheStatus: 'HIT',
   isTurboTask: true,
+  persistent: false,
   run: RUN_VIEW_STUB
 };
 
