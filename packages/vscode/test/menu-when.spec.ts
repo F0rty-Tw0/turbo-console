@@ -10,7 +10,11 @@ const optionalGroupSchema = z.string().optional();
 
 const menuEntrySchema = z.object({ command: z.string(), when: z.string(), group: optionalGroupSchema });
 
-const menusSchema = z.object({ 'view/title': z.array(menuEntrySchema), 'view/item/context': z.array(menuEntrySchema) });
+const menusSchema = z.object({
+  'view/title': z.array(menuEntrySchema),
+  'view/item/context': z.array(menuEntrySchema),
+  commandPalette: z.array(menuEntrySchema.omit({ group: true }))
+});
 
 const manifestSchema = z.object({ contributes: z.object({ menus: menusSchema }) });
 
@@ -77,4 +81,13 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
 
     expect(items).toStrictEqual(expected.toSorted());
   });
+
+  it.each(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask', 'turboConsole.copyCommand'])(
+    'GIVEN the row command %s WHEN the command palette is read THEN it is hidden there',
+    (command) => {
+      const entries = MENUS.commandPalette.filter((entry) => entry.command === command);
+
+      expect(entries).toStrictEqual([{ command, when: 'false' }]);
+    }
+  );
 });
