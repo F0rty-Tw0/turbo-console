@@ -63,6 +63,24 @@ describe('FEATURE: markdown tooltip text', () => {
     });
   });
 
+  describe('GIVEN a trailing line that is empty', () => {
+    it('WHEN joined THEN it is dropped, so no hard break is left to render as a backslash', () => {
+      expect(tooltipMarkdownOf(['x', ''])).toBe('x');
+    });
+  });
+
+  describe('GIVEN a middle line that is empty once cleaned', () => {
+    it('WHEN joined THEN it is dropped, so the lines around it stay one break apart', () => {
+      expect(tooltipMarkdownOf(['x', '​', 'y'])).toBe('x\\\ny');
+    });
+  });
+
+  describe('GIVEN a trailing line that is only a space', () => {
+    it('WHEN joined THEN it is dropped, so no hard break is left to render as a backslash', () => {
+      expect(tooltipMarkdownOf(['x', ' '])).toBe('x');
+    });
+  });
+
   describe('GIVEN no lines', () => {
     it('WHEN joined THEN the markdown is empty', () => {
       expect(tooltipMarkdownOf([])).toBe('');

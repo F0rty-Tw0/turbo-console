@@ -12,11 +12,9 @@ const MARKDOWN_LINE_BREAK = '\\\n';
 
 const cleanLineOf = (line: string): string => cleanText(line, TOOLTIP_LINE_MAX);
 
-const markdownLineOf = (line: string): string => {
-  const cleaned = cleanLineOf(line);
+const escapedOf = (line: string): string => line.replace(MARKDOWN_PUNCTUATION, '\\$&');
 
-  return cleaned.replace(MARKDOWN_PUNCTUATION, '\\$&');
-};
+const hasText = (line: string): boolean => line.trim() !== '';
 
 /**
  * A plain-string tooltip of `lines`, each cleaned and cut to `TOOLTIP_LINE_MAX`, one per line. A plain string renders
@@ -28,9 +26,15 @@ export const tooltipOf = (lines: string[]): string => {
   return cleaned.join('\n');
 };
 
-/** The markdown source of `tooltipOf(lines)`: the same cleaned lines, every one escaped, so it renders as that text. */
+/**
+ * The markdown source of `tooltipOf(lines)`: the same cleaned lines, every one escaped, so it renders as that text. A
+ * line blank once cleaned is dropped: markdown has no empty line inside a paragraph, and a hard break with nothing after
+ * it renders as a stray backslash.
+ */
 export const tooltipMarkdownOf = (lines: string[]): string => {
-  const escaped = lines.map(markdownLineOf);
+  const cleaned = lines.map(cleanLineOf);
+  const shown = cleaned.filter(hasText);
+  const escaped = shown.map(escapedOf);
 
   return escaped.join(MARKDOWN_LINE_BREAK);
 };
