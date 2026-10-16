@@ -1,10 +1,10 @@
 import type * as childProcess from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { copyFile, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 
 import { PRESETS } from '@turbo-console/repo-gen';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, resolveTurbo } from '../index.ts';
@@ -86,28 +86,34 @@ describe('FEATURE: turbo binary resolution', () => {
 
   describe('GIVEN a target-like fixture copy', () => {
     const fixture = fixtureHook(TARGET_LIKE);
+    const privateTurbo = (): string => join(fixture().dir, BINARY_NAME);
+
+    beforeAll(async () => {
+      // pnpm hard-links the store binary into every checkout; a link change elsewhere moves its ctime, which the override memo keys on.
+      await copyFile(devTurboPath(), privateTurbo());
+    });
 
     it('WHEN resolved twice with the dev turbo as override THEN it spawns --version once', async () => {
       vi.resetModules();
       // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
       const fresh = await import('../index.ts');
-      const options = { trusted: true, overridePath: devTurboPath() } as const;
+      const options = { trusted: true, overridePath: privateTurbo() } as const;
       const manifest = await coreTurboManifest();
 
       const first = await fresh.resolveTurbo(fixture().dir, options);
       const second = await fresh.resolveTurbo(fixture().dir, options);
 
-      expect(first).toMatchObject({ root: fixture().dir, path: devTurboPath(), source: 'override' });
+      expect(first).toMatchObject({ root: fixture().dir, path: privateTurbo(), source: 'override' });
       expect(manifest).toMatchObject({ version: first.version });
       expect(second.version).toBe(first.version);
-      expect(turboSpawns(devTurboPath())).toBe(1);
+      expect(turboSpawns(privateTurbo())).toBe(1);
     });
 
     it('WHEN the same override is resolved again from a missing root THEN the memo hit still rejects io naming the root', async () => {
       vi.resetModules();
       // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
       const fresh = await import('../index.ts');
-      const options = { trusted: true, overridePath: devTurboPath() } as const;
+      const options = { trusted: true, overridePath: privateTurbo() } as const;
       const missingRoot = join(fixture().dir, 'no-such-dir');
 
       await fresh.resolveTurbo(fixture().dir, options);
@@ -115,7 +121,7 @@ describe('FEATURE: turbo binary resolution', () => {
 
       expect(error).toBeInstanceOf(fresh.TurboException);
       expect(error).toMatchObject({ kind: 'io', message: `${missingRoot}: ENOENT` });
-      expect(turboSpawns(devTurboPath())).toBe(1);
+      expect(turboSpawns(privateTurbo())).toBe(1);
     });
 
     it('WHEN resolved without an override THEN it rejects not-found', async () => {
