@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import type { TaskCard } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
 import { isPanelShown, lastPackageState, lastRunView, packageStates } from './details-posted.spec.util.ts';
@@ -15,6 +16,8 @@ import type { DetailsScene } from '../common/details.type.ts';
 const OPEN_COMMAND = 'turboConsole.openPackageDetails';
 
 const OUTPUTS_GLOB = 'zz-details-out/**';
+
+const isUndefinedCard = (card: TaskCard): boolean => card.command !== null && card.definition === null;
 
 /** Opens the panel as a package row's click does. */
 export const openFromRow = async (root: string, packageName: string): Promise<void> => {
@@ -70,7 +73,7 @@ export const titleCase = async (scene: DetailsScene): Promise<void> => {
     const state = lastPackageState(api, root, packageName);
     const shownIds = manifestTree(manifest).tasks[packageName] ?? [];
     const cardIds = state.tasks.map((card) => card.taskId).sort();
-    const undefinedCards = state.tasks.filter((card) => card.command !== null && card.definition === null);
+    const undefinedCards = state.tasks.filter(isUndefinedCard);
     const undefinedIds = undefinedCards.map((card) => card.taskId);
 
     assert.equal(api.details.panels().length, 1);

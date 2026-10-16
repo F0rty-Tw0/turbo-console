@@ -133,9 +133,10 @@ export class RootsSession implements Session {
     const { root } = folder;
     const acquire = async (signal: AbortSignal): Promise<() => void> => this.slots.acquire(signal);
     const deps = this.ports.depsFor(root, acquire);
+    const isVisible = (): boolean => this.isVisible || this.panels.has(root);
     const ports: CoordinatorPorts = {
       run: async (mode, signal, publish) => loadRoot(mode, deps, signal, publish),
-      isVisible: () => this.isVisible || this.panels.has(root),
+      isVisible,
       apply: (result) => {
         this.apply(root, result, deps);
       },
