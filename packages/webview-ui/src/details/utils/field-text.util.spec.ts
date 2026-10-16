@@ -10,6 +10,8 @@ const NO_COMMAND_TASK = { command: null, isTurboTask: true };
 
 const NOT_TURBO_TASK = { command: COMMAND, isTurboTask: false };
 
+const NOT_TURBO_NO_COMMAND_TASK = { command: null, isTurboTask: false };
+
 describe('FEATURE: field texts', () => {
   describe('GIVEN an empty list', () => {
     it('WHEN it is the inputs field THEN it reads as turbo default inputs', () => {
@@ -82,6 +84,10 @@ describe('FEATURE: field texts', () => {
 
     it('WHEN the dry run is ready THEN it says it is not a turbo task', () => {
       expect(definitionText(NOT_TURBO_TASK, 'ready')).toBe('Not a turbo task: no turbo.json defines it');
+    });
+
+    it('WHEN it also has no command THEN it says it is not a turbo task, not that it has no command', () => {
+      expect(definitionText(NOT_TURBO_NO_COMMAND_TASK, 'ready')).toBe('Not a turbo task: no turbo.json defines it');
     });
   });
 });
