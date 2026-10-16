@@ -125,3 +125,13 @@ export const taskRows = (root: string, pkg: PackageNode, context: RowContext): T
 
   return visible.map((task) => taskRow(root, pkg, task, context));
 };
+
+/** The row of the visible task `taskId` of `pkg`, built alone; a hidden or unknown id has none. */
+export const taskRowOf = (root: string, pkg: PackageNode, taskId: string, context: RowContext): TreeRow | undefined => {
+  const isShownTask = (task: TaskNode): boolean => task.id === taskId && isVisibleTask(task);
+  const task = pkg.tasks.find(isShownTask);
+
+  if (task === undefined) return undefined;
+
+  return taskRow(root, pkg, task, context);
+};

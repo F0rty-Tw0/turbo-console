@@ -11,7 +11,7 @@ import { budget, log, step } from './suite-env.spec.util.ts';
 import { whenQuiet } from './watch-wait.spec.util.ts';
 import type { RunEntry } from '../../src/run/common/run.type.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
-import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
+import type { TreeNode, TreeRefresh } from '../../src/tree/common/tree-node.type.ts';
 import type { ShownManifest, ShownTask, SuiteEnv } from '../common/launch.type.ts';
 
 const BUILD_TASK = 'build';
@@ -41,7 +41,7 @@ const descriptionOf = (api: TurboConsoleApi, node: TreeNode): string => {
 };
 
 /** Runs `node` from the tree and waits for its end, recording the tree events the run fired. */
-const runWatched = async (api: TurboConsoleApi, node: TreeNode, fired: (TreeNode | undefined)[]): Promise<RunEntry> => {
+const runWatched = async (api: TurboConsoleApi, node: TreeNode, fired: TreeRefresh[]): Promise<RunEntry> => {
   const listening = api.tree.onDidChangeTreeData((changed) => {
     fired.push(changed);
   });
@@ -63,7 +63,7 @@ const passCase = async (scene: RunScene): Promise<void> => {
 
   await step('2: a tree run of build passes with its summary data', async () => {
     const node = await taskNodeNamed(api, task.packageName, task.fullName);
-    const fired: (TreeNode | undefined)[] = [];
+    const fired: TreeRefresh[] = [];
 
     clickedAt = Date.now();
 

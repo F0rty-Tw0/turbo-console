@@ -180,6 +180,20 @@ describe('FEATURE: node rows', () => {
     });
   });
 
+  describe('GIVEN a shown package holding a task and a hidden file atom task', () => {
+    const atom: TaskNode = { ...TASK_NODE_STUB, id: 'atom', name: 'atom', kind: 'atom-file' };
+    const pkg: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [TASK_NODE_STUB, atom] };
+    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [pkg] };
+    const state: RootState = { ...ROOT_STATE_STUB, model };
+    const atomNode: TreeNode = { kind: 'task', id: 'task:/ws\0atom', root: '/ws', key: 'atom', packageName: 'a' };
+
+    it("WHEN the file atom task's current row is built THEN a loading row stands in under its id", () => {
+      const row = currentRowOf(state, atomNode, FOLDERS_VIEW);
+
+      expect([row.id, row.icon]).toStrictEqual([atomNode.id, LOADING_ICON]);
+    });
+  });
+
   describe('GIVEN a root whose package a has only atom-file tasks', () => {
     const atom: TaskNode = { ...TASK_NODE_STUB, id: 'atom', name: 'atom', kind: 'atom-file' };
     const hiddenA: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [atom] };

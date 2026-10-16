@@ -4,7 +4,7 @@ import { toTreeItem } from './tree-item.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunLookup } from '../../run/common/run.type.ts';
 import type { Span } from '../../shared/common/span.type.ts';
-import type { PackagesTreeApi, TreeNode, TreePorts } from '../common/tree-node.type.ts';
+import type { PackagesTreeApi, RunningTasks, TreeNode, TreePorts, TreeRefresh } from '../common/tree-node.type.ts';
 import type { TreeMode } from '../common/tree-row.type.ts';
 import { PackagesTree } from '../domain-logic/packages-tree.ts';
 
@@ -13,13 +13,13 @@ import { PackagesTree } from '../domain-logic/packages-tree.ts';
  * rows into items and refreshes into `onDidChangeTreeData` events. `runs` is the one run lookup every row reads.
  */
 export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, PackagesTreeApi, vscode.Disposable {
-  public readonly onDidChangeTreeData: vscode.Event<TreeNode | undefined>;
-  private readonly emitter = new vscode.EventEmitter<TreeNode | undefined>();
+  public readonly onDidChangeTreeData: vscode.Event<TreeRefresh>;
+  private readonly emitter = new vscode.EventEmitter<TreeRefresh>();
   private readonly tree: PackagesTree;
 
   public constructor(store: Roots, runs: RunLookup, mode: TreeMode, treeVisible: Map<string, Span>) {
-    const fire = (node: TreeNode | undefined): void => {
-      this.emitter.fire(node);
+    const fire = (refresh: TreeRefresh): void => {
+      this.emitter.fire(refresh);
     };
     const ports: TreePorts = { runs, fire, treeVisible, now: () => performance.now(), wallNow: () => Date.now() };
 
@@ -47,6 +47,10 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
 
   public refreshTask(root: string, taskId: string): void {
     this.tree.refreshTask(root, taskId);
+  }
+
+  public refreshTasks(running: RunningTasks): void {
+    this.tree.refreshTasks(running);
   }
 
   public setScopeShown(value: boolean): void {

@@ -1,7 +1,7 @@
 import { ModelViews } from './model-views.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
-import type { RefreshTarget, RowContext, TreeNode, TreePorts } from '../common/tree-node.type.ts';
+import type { RefreshTarget, RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { allRows } from '../utils/all-rows.util.ts';
 import { nodesOf, pruneNodes } from '../utils/node-cache.util.ts';
@@ -90,6 +90,22 @@ export class PackagesTree {
     const node = this.cache.get(id);
 
     if (node !== undefined) this.ports.fire(node);
+  }
+
+  /** One fire with the cached nodes of all `running` tasks (spec §4.6 tick); tasks never shown are skipped. */
+  public refreshTasks(running: RunningTasks): void {
+    const nodes: TreeNode[] = [];
+
+    for (const [root, ids] of running) {
+      for (const taskId of ids) {
+        const id = rowIdOf('task', root, taskId);
+        const node = this.cache.get(id);
+
+        if (node !== undefined) nodes.push(node);
+      }
+    }
+
+    if (nodes.length > 0) this.ports.fire(nodes);
   }
 
   private rowContext(): RowContext {

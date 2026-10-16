@@ -9,6 +9,9 @@ import type { TreeNode } from '../common/tree-node.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 
+/** Every value the provider's event emitters fired, in order. */
+const fired = vi.hoisted((): unknown[] => []);
+
 /** `vscode` exists only inside the editor, so the module is replaced here by the classes the provider builds. */
 vi.mock('vscode', () => {
   class TreeItem {
@@ -22,7 +25,10 @@ vi.mock('vscode', () => {
 
   class EventEmitter {
     public readonly event = vi.fn();
-    public readonly fire = vi.fn();
+    public readonly fire = vi.fn((value: unknown): void => {
+      fired.push(value);
+    });
+
     public readonly dispose = vi.fn();
   }
 
@@ -73,17 +79,35 @@ const onlyOf = (nodes: TreeNode[]): TreeNode => {
   return only;
 };
 
-describe('FEATURE: packages provider clock', () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(WALL_NOW);
-  });
+describe('FEATURE: packages provider', () => {
+  describe('GIVEN a shown task a#build', () => {
+    it('WHEN the running tasks are refreshed THEN the tree event fires once with that node', async () => {
+      const store = new RootStore();
+      const provider = new PackagesTreeProvider(store, () => undefined, 'list', new Map());
+      const running = new Map([[ROOT_FOLDER_STUB.root, new Set(['a#build'])]]);
 
-  afterEach(() => {
-    vi.useRealTimers();
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply(ROOT_FOLDER_STUB.root, loadedWith([packageNamed('a')]));
+      const pkg = onlyOf(await provider.getChildren());
+      const task = onlyOf(await provider.getChildren(pkg));
+
+      fired.length = 0;
+      provider.refreshTasks(running);
+
+      expect(fired).toStrictEqual([[task]]);
+    });
   });
 
   describe('GIVEN a task launched 12 345 ms before the system clock reading', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(WALL_NOW);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('WHEN its item is built THEN the elapsed time counts on the system wall clock', async () => {
       const store = new RootStore();
       const provider = new PackagesTreeProvider(store, () => RUNNING, 'list', new Map());

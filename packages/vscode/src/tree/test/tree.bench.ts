@@ -7,15 +7,25 @@ import type { BenchDescriptor } from '@turbo-console/tools';
 
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
-import type { RunLookup } from '../../run/common/run.type.ts';
+import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { devTurboPath } from '../../shared/test/utils/dev-turbo.spec.util.ts';
-import type { RowContext } from '../common/tree-node.type.ts';
-import type { TreeMode } from '../common/tree-row.type.ts';
+import type { ModelView } from '../common/model-view.type.ts';
+import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
+import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { ModelViews } from '../domain-logic/model-views.ts';
 import { allRows } from '../utils/all-rows.util.ts';
 import { diffModels } from '../utils/model-diff.util.ts';
+import { nodeFor } from '../utils/node-cache.util.ts';
+import { currentRowOf } from '../utils/node-rows.util.ts';
+import { isRunnableTask, taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
+
+const TICKED_TASKS = 20;
+
+const TICK_NOW = 1_000_000_000;
+
+const WARM_TICKS = 200;
 
 /** The model `loadWorkspace` builds for a fresh `preset` fixture, kept after the fixture is disposed. */
 const captureModel = async (preset: PresetName): Promise<WorkspaceModel> => {
@@ -74,6 +84,90 @@ const diffBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   return bench(name, diff, { gate: true });
 };
 
+/** A run of `task` that started 65 s before `TICK_NOW`, still going. */
+const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntry => {
+  const entry: RunEntry = {
+    root,
+    taskId: task.id,
+    packageName: pkg.name,
+    task,
+    state: 'running',
+    launchedAt: TICK_NOW - 65_000,
+    processStartedAt: TICK_NOW - 64_000,
+    endedAt: null,
+    exitCode: null,
+    stopRequested: false,
+    match: null,
+    matching: false
+  };
+
+  return entry;
+};
+
+/**
+ * The first `TICKED_TASKS` runnable tasks of the shown packages in model order (packages, then `tasks` order), running.
+ * Runnable, not just visible: a script no turbo.json defines is refused, so it never runs.
+ */
+const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
+  const entries: RunEntry[] = [];
+
+  for (const pkg of view.packages.values()) {
+    const runnable = pkg.tasks.filter(isRunnableTask);
+
+    for (const task of runnable) entries.push(runningEntryOf(model.root, pkg, task));
+
+    if (entries.length >= TICKED_TASKS) break;
+  }
+
+  return entries.slice(0, TICKED_TASKS);
+};
+
+/** The tree row of `entry`'s task: the row the tree caches a node for. */
+const entryRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext): TreeRow => {
+  const pkg = context.views(model).packages.get(entry.packageName);
+
+  if (pkg === undefined) throw new Error(`bench package ${entry.packageName} is not shown`);
+
+  const row = taskRowOf(model.root, pkg, entry.taskId, context);
+
+  if (row === undefined) throw new Error(`bench task ${entry.taskId} has no row`);
+
+  return row;
+};
+
+/** A running task's row (plain or continuous), not the loading stand-in of a node the tree no longer has. */
+const isRunningRow = (row: TreeRow): boolean => row.contextValue === 'turboTask.running';
+
+/**
+ * Spec §4.6 tick cost, warm: the model's view is built and the running tasks' nodes are cached, as after the first draw.
+ * The timed function rebuilds only the rows one tick redraws, the first `TICKED_TASKS` running ones. It times only the
+ * extension host's row rebuild, not VS Code's redraw. The setup runs `WARM_TICKS` ticks first, so the samples sit past
+ * the JIT tier-up instead of on its knee.
+ */
+const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
+  const state = stateOf(model);
+  const views = new ModelViews();
+  const entries = firstRunning(model, views.of(model));
+
+  if (entries.length < TICKED_TASKS) throw new Error(`bench model has ${entries.length} runnable tasks`);
+
+  const pairs = entries.map((entry): [string, RunEntry] => [entry.taskId, entry]);
+  const byId = new Map(pairs);
+  const runs: RunLookup = (_root, taskId) => byId.get(taskId);
+  const context: RowContext = { mode: 'folders', runs, views: (loaded) => views.of(loaded), scopeShown: false, now: TICK_NOW };
+  const cache = new Map<string, TreeNode>();
+  const nodes = entries.map((entry) => nodeFor(cache, entryRowOf(model, entry, context)));
+  const tick = (): TreeRow[] => nodes.map((node) => currentRowOf(state, node, context));
+  const firstRows = tick();
+  const isAllRunning = firstRows.every(isRunningRow);
+
+  if (!isAllRunning) throw new Error('bench tick rebuilds a row that is not a running task');
+
+  for (let round = 1; round < WARM_TICKS; round += 1) tick();
+
+  return bench(name, tick, { gate: true });
+};
+
 const targetLike = await captureModel('target-like');
 const stretch300 = await captureModel('stretch-300');
 
@@ -82,7 +176,8 @@ const benches: BenchDescriptor[] = [
   rowsBench('tree-rows-list-target-like', targetLike, 'list'),
   rowsBench('tree-rows-folders-stretch-300', stretch300, 'folders'),
   rowsBench('tree-rows-list-stretch-300', stretch300, 'list'),
-  diffBench('model-diff-stretch-300', stretch300)
+  diffBench('model-diff-stretch-300', stretch300),
+  tickBench('tree-tick-stretch-300', stretch300)
 ];
 
 export default benches;

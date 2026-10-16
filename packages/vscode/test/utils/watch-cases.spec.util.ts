@@ -7,7 +7,7 @@ import { loadsOf, log, step } from './suite-env.spec.util.ts';
 import { packageNodeNamed } from './tree-walk.spec.util.ts';
 import { whenLoadedAfter, whenQuiet } from './watch-wait.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
-import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
+import type { TreeNode, TreeRefresh } from '../../src/tree/common/tree-node.type.ts';
 import type { ShownManifest, SpawnCounter } from '../common/launch.type.ts';
 
 const BUILD_TASK = 'build';
@@ -79,12 +79,21 @@ const savesCase = async (scene: WatchScene, counter: SpawnCounter): Promise<void
   });
 };
 
+/** A tree event as text: the whole tree, one node's id, or the ids of a batch joined by `+`. */
+const refreshIdOf = (changed: TreeRefresh): string => {
+  if (changed === undefined) return 'undefined';
+
+  if (Array.isArray(changed)) return changed.map((node) => node.id).join('+');
+
+  return changed.id;
+};
+
 const scriptCase = async (scene: WatchScene): Promise<void> => {
   await step('4: a build script edit refreshes only its package', async () => {
     const node = await packageNodeNamed(scene.api, scene.name);
     const records = loadsOf(scene.api, scene.root);
     const before = records.length;
-    const fired: (TreeNode | undefined)[] = [];
+    const fired: TreeRefresh[] = [];
     const listening = scene.api.tree.onDidChangeTreeData((changed) => {
       fired.push(changed);
     });
@@ -98,7 +107,7 @@ const scriptCase = async (scene: WatchScene): Promise<void> => {
       listening.dispose();
     }
 
-    const firedIds = fired.map((changed) => changed?.id ?? 'undefined');
+    const firedIds = fired.map(refreshIdOf);
     const lines = await taskTooltipLines(scene.api, node, `${scene.name}#${BUILD_TASK}`);
 
     log(`script edit: ${fired.length} tree events (${firedIds.join(', ')})`);
