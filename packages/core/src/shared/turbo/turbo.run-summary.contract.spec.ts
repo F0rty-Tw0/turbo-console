@@ -34,7 +34,8 @@ const BUILD_TASK: TaskNode = {
   dependencies: [],
   kind: 'task',
   atom: null,
-  isTurboTask: true
+  isTurboTask: true,
+  persistent: false
 };
 
 const HANG_PID_FILE = 'hang.pid';

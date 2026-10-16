@@ -5,7 +5,7 @@ export { PRESETS } from './generate/common/fixture.const.ts';
 
 export { fixtureFor, warmFixtureCache } from './generate/domain-logic/fixture-for.ts';
 
-export { applyEdit, generateFixture } from './generate/domain-logic/fixture-generation.ts';
+export { applyEdit, commitBaseRepo, generateFixture } from './generate/domain-logic/fixture-generation.ts';
 
 export type {
   FixtureFile,

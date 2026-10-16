@@ -9,13 +9,22 @@ const BUILD_DEFINED: Record<string, TaskPresence> = { build: 'defined' };
 
 const BUILD_LINT_DEFINED: Record<string, TaskPresence> = { build: 'defined', lint: 'defined' };
 
+const NO_PERSISTENT: Record<string, boolean> = {};
+
 const okConfig = (
   descriptions: Record<string, string>,
   affectedUsingTaskInputs: boolean,
   tasks: Record<string, TaskPresence> = {},
   extendsNames: string[] = []
 ): TurboConfigOk => {
-  const config: TurboConfigOk = { path: PATH, descriptions, tasks, extends: extendsNames, affectedUsingTaskInputs };
+  const config: TurboConfigOk = {
+    path: PATH,
+    descriptions,
+    tasks,
+    persistent: {},
+    extends: extendsNames,
+    affectedUsingTaskInputs
+  };
 
   return config;
 };
@@ -139,12 +148,56 @@ describe('FEATURE: turbo.json(c) parsing', () => {
       expect(config).toMatchObject({ extends: ['//', 'shared'] });
     });
 
-    it('WHEN parsed THEN only the entry of exactly extends false is excluded', () => {
-      const tasks: Record<string, TaskPresence> = { own: 'defined', lint: 'excluded', build: 'defined' };
+    it('WHEN parsed THEN exactly extends false is excluded and extends false beside a value is fresh', () => {
+      const tasks: Record<string, TaskPresence> = { own: 'defined', lint: 'excluded', build: 'fresh' };
 
       const config = parseTurboConfig(PATH, text);
 
       expect(config).toMatchObject({ tasks });
+    });
+  });
+
+  describe('GIVEN task entries that set extends false', () => {
+    it('WHEN the entry is exactly extends false THEN it is excluded', () => {
+      const config = parseTurboConfig(PATH, '{"tasks":{"dev":{"extends":false}}}');
+
+      expect(config).toHaveProperty('tasks', { dev: 'excluded' });
+    });
+
+    it('WHEN extends false sits beside outputs THEN it is fresh', () => {
+      const config = parseTurboConfig(PATH, '{"tasks":{"dev":{"extends":false,"outputs":[]}}}');
+
+      expect(config).toHaveProperty('tasks', { dev: 'fresh' });
+    });
+
+    it('WHEN extends false sits beside persistent THEN it is fresh', () => {
+      const config = parseTurboConfig(PATH, '{"tasks":{"dev":{"extends":false,"persistent":true}}}');
+
+      expect(config).toHaveProperty('tasks', { dev: 'fresh' });
+    });
+  });
+
+  describe('GIVEN task entries without extends false', () => {
+    it('WHEN the entry is empty THEN it is defined', () => {
+      const config = parseTurboConfig(PATH, '{"tasks":{"dev":{}}}');
+
+      expect(config).toHaveProperty('tasks', { dev: 'defined' });
+    });
+
+    it('WHEN the entry sets outputs THEN it is defined', () => {
+      const config = parseTurboConfig(PATH, '{"tasks":{"dev":{"outputs":[]}}}');
+
+      expect(config).toHaveProperty('tasks', { dev: 'defined' });
+    });
+  });
+
+  describe('GIVEN task entries with and without a boolean persistent', () => {
+    it('WHEN parsed THEN persistent maps only the boolean values by task key', () => {
+      const text = '{"tasks":{"dev":{"persistent":true},"x":{"persistent":"yes"},"y":{},"web#dev":{"persistent":false}}}';
+
+      const config = parseTurboConfig(PATH, text);
+
+      expect(config).toHaveProperty('persistent', { dev: true, 'web#dev': false });
     });
   });
 
@@ -167,6 +220,22 @@ describe('FEATURE: turbo.json(c) parsing', () => {
       const config = parseTurboConfig(PATH, '{"tasks":{"__proto__":{"description":"x"},"build":{"description":"b"}}}');
 
       expect(config).toStrictEqual(okConfig({ build: 'b' }, false, BUILD_DEFINED));
+    });
+
+    it('WHEN a task named __proto__ sets persistent THEN persistent gets no key and keeps its prototype', () => {
+      const config = parseTurboConfig(PATH, '{"tasks":{"__proto__":{"persistent":true},"dev":{"persistent":true}}}');
+
+      const persistent = 'persistent' in config ? config.persistent : NO_PERSISTENT;
+      const keys = Object.keys(persistent);
+      const prototype: unknown = Object.getPrototypeOf(persistent);
+
+      expect({ keys, prototype }).toStrictEqual({ keys: ['dev'], prototype: Object.prototype });
+    });
+
+    it('WHEN a task holds a __proto__ object with persistent THEN dev inherits no persistent', () => {
+      const config = parseTurboConfig(PATH, '{"tasks":{"dev":{"__proto__":{"persistent":true}}}}');
+
+      expect(config).toHaveProperty('persistent', {});
     });
 
     it('WHEN a task holds a __proto__ object with a description THEN build inherits no description', () => {

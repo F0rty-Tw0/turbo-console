@@ -23,7 +23,7 @@ const shownNamesOf = (packages: PackageNode[]): string[] => {
 
 const labelsOf = (packages: PackageNode[]): string[] => {
   const view = modelViewWith(packages);
-  const labels = view.bareLabels.values();
+  const labels = view.bareTexts.values();
 
   return Array.from(labels);
 };
@@ -105,10 +105,10 @@ describe('FEATURE: model view', () => {
       expect(labels).toStrictEqual(['@a/']);
     });
 
-    it('WHEN a scoped name has a rest that cleans to nothing THEN it keeps its full name', () => {
+    it('WHEN a scoped name has a rest that cleans to nothing THEN it reads its cleaned full name', () => {
       const labels = labelsOfNames(['@a/​']);
 
-      expect(labels).toStrictEqual(['@a/​']);
+      expect(labels).toStrictEqual(['@a/']);
     });
 
     it('WHEN a scoped name has a rest that cleans to a space THEN it keeps its full name', () => {
@@ -144,7 +144,13 @@ describe('FEATURE: model view', () => {
     it('WHEN a rest and an unscoped name read the same once cleaned THEN the scoped one keeps its full name', () => {
       const labels = labelsOfNames(['@a/x', 'x​']);
 
-      expect(labels).toStrictEqual(['@a/x', 'x​']);
+      expect(labels).toStrictEqual(['@a/x', 'x']);
+    });
+
+    it('WHEN a rest cleans to an unscoped name THEN the scoped one reads its cleaned full name', () => {
+      const labels = labelsOfNames(['@a/x​', 'x']);
+
+      expect(labels).toStrictEqual(['@a/x', 'x']);
     });
   });
 });

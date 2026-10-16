@@ -144,14 +144,17 @@ describe('FEATURE: children rows of a directory', () => {
       expect(rows[0]?.description).toBe('p/x');
     });
 
-    it('WHEN a package name is longer than the label limit THEN the label is cut and the key is whole', () => {
-      const name = 'n'.repeat(LABEL_MAX + 30);
-      const dir = dirOf('p', 'p', [name]);
+    it.each([false, true])(
+      'WHEN a package name is longer than the label limit (scopes shown: %s) THEN the label is cut and the key is whole',
+      (scopeShown) => {
+        const name = 'n'.repeat(LABEL_MAX + 30);
+        const dir = dirOf('p', 'p', [name]);
 
-      const rows = dirRows('/ws', dir, modelViewWith([packageAt(name, 'p/x')]), false);
+        const rows = dirRows('/ws', dir, modelViewWith([packageAt(name, 'p/x')]), scopeShown);
 
-      expect(rows[0]).toMatchObject({ key: name, packageName: name, label: `${'n'.repeat(LABEL_MAX - 1)}…` });
-    });
+        expect(rows[0]).toMatchObject({ key: name, packageName: name, label: `${'n'.repeat(LABEL_MAX - 1)}…` });
+      }
+    );
 
     it('WHEN a directory label is longer than the label limit THEN the label is cut', () => {
       const label = 'd'.repeat(LABEL_MAX + 30);

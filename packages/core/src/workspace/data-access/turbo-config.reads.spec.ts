@@ -63,6 +63,7 @@ const okConfig = (path: string): TurboConfigOk => {
     path,
     descriptions: BUILD_DESCRIPTIONS,
     tasks: BUILD_TASKS,
+    persistent: {},
     extends: [],
     affectedUsingTaskInputs: false
   };

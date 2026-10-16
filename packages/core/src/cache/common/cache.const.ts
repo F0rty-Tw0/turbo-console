@@ -1,5 +1,5 @@
 /** A cache file of any other `formatVersion` is a miss. */
-export const CACHE_FORMAT_VERSION = 3;
+export const CACHE_FORMAT_VERSION = 4;
 
 /** The lockfiles turbo supports: each is hashed up to `MAX_LOCKFILE_BYTES`, wherever it sits. */
 export const LOCKFILE_NAMES = ['pnpm-lock.yaml', 'package-lock.json', 'yarn.lock', 'bun.lock', 'bun.lockb'];
