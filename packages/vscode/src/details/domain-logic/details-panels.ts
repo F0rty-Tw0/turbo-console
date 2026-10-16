@@ -12,12 +12,7 @@ import { OPEN_FAILED_TEXT } from '../common/details.const.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { OpenPanel, PanelParts, PanelsDeps, PendingOpen } from '../common/panel.type.ts';
 import { panelIdOf } from '../utils/panel-id.util.ts';
-
-const revealed = (panel: OpenPanel | null): OpenPanel | null => {
-  panel?.view.reveal();
-
-  return panel;
-};
+import { hasPackage, revealed } from '../utils/panel-package.util.ts';
 
 /**
  * The open Package Details panels, one per root and package name. A key opened by row is registered as pending before
@@ -30,10 +25,14 @@ export class DetailsPanels {
   private readonly deps: PanelsDeps;
   private readonly panels = new Map<string, OpenPanel>();
   private readonly pending = new Map<string, PendingOpen>();
+  private readonly offScripts: () => void;
   private isDisposed = false;
 
   public constructor(deps: PanelsDeps) {
     this.deps = deps;
+    this.offScripts = deps.scripts.onDidChange(() => {
+      this.refreshAll();
+    });
   }
 
   /**
@@ -92,12 +91,18 @@ export class DetailsPanels {
     }
   }
 
+  /** Asks every open panel to post a fresh state; a hidden or not ready one posts nothing. */
+  public refreshAll(): void {
+    for (const panel of this.panels.values()) panel.session.publish();
+  }
+
   public api(): DetailsApi {
     return detailsApiOf(this.panels);
   }
 
   public dispose(): void {
     this.isDisposed = true;
+    this.offScripts();
 
     const ids = Array.from(this.panels.keys());
 
@@ -131,7 +136,7 @@ export class DetailsPanels {
 
       if (this.isDisposed || !isSameRoot) return null;
 
-      const isInModel = this.hasPackage(key);
+      const isInModel = hasPackage(this.deps.roots.get(key.root)?.state.model, key.packageName);
 
       if (!isInModel) return this.refused();
 
@@ -148,12 +153,6 @@ export class DetailsPanels {
     this.deps.host.info(NOT_PACKAGE_TEXT);
 
     return null;
-  }
-
-  private hasPackage(key: PanelKey): boolean {
-    const model = this.deps.roots.get(key.root)?.state.model;
-
-    return model?.packages.some((pkg) => pkg.name === key.packageName) ?? false;
   }
 
   /** A throw after the session reported the panel shown disposes both, so the root hears `false` once. */
