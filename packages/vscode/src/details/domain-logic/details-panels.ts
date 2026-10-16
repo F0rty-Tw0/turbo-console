@@ -22,7 +22,7 @@ const revealed = (panel: OpenPanel | null): OpenPanel | null => {
 /**
  * The open Package Details panels, one per root and package name. A key is registered as pending before the root's load
  * is awaited, so a second open of it waits for the same panel. A panel is made only for a package that is still in the
- * root's model once the load has resolved.
+ * root's model once the load has resolved; a root removed meanwhile ends the open with no panel and no message.
  */
 export class DetailsPanels {
   private readonly deps: PanelsDeps;
@@ -34,7 +34,7 @@ export class DetailsPanels {
     this.deps = deps;
   }
 
-  /** Opens or reveals the panel of `key`; `null` when none was made (a gone package shows the refusal text). */
+  /** Opens or reveals the panel of `key`; `null` when none was made (a gone package in a live root shows the refusal text). */
   public async open(key: PanelKey): Promise<OpenPanel | null> {
     const id = panelIdOf(key);
     const existing = this.panels.get(id);
@@ -102,7 +102,9 @@ export class DetailsPanels {
     try {
       await ensureLoadedWith(this.deps.roots)(key.root);
 
-      if (this.isDisposed) return null;
+      const entry = this.deps.roots.get(key.root);
+
+      if (this.isDisposed || entry === undefined) return null;
 
       const isInModel = this.hasPackage(key);
 
