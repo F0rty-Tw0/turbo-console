@@ -1,11 +1,11 @@
-import type { PackageNode } from '@turbo-console/core';
+import type { PackageNode, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { dirRows } from './dir-rows.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import type { FolderDir } from '../common/folder-tree.type.ts';
 import type { IconSpec } from '../common/tree-row.type.ts';
-import { PACKAGE_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { modelViewWith } from '../test/utils/row-context.spec.util.ts';
 
 const BIDI = String.fromCodePoint(0x202e);
@@ -73,6 +73,26 @@ describe('FEATURE: children rows of a directory', () => {
         tooltip: ['a', 'Path: packages/a', 'Tasks: 1'],
         command: null
       });
+    });
+  });
+
+  describe('GIVEN a package with one turbo task and two scripts', () => {
+    const script: TaskNode = { ...TASK_NODE_STUB, id: 'a#lint', name: 'lint', isTurboTask: false };
+    const fmt: TaskNode = { ...script, id: 'a#fmt', name: 'fmt' };
+    const tasks = [TASK_NODE_STUB, script, fmt];
+    const pkg: PackageNode = { ...PACKAGE_NODE_STUB, tasks };
+    const tooltipUnder = (scriptsShown: boolean): string[] => {
+      const rows = dirRows('/ws', dirOf('packages', 'packages', ['a']), modelViewWith([pkg], scriptsShown), false);
+
+      return rows[0]?.tooltip ?? [];
+    };
+
+    it('WHEN scripts are hidden THEN the tooltip counts the turbo task alone', () => {
+      expect(tooltipUnder(false)).toContain('Tasks: 1');
+    });
+
+    it('WHEN scripts are shown THEN the tooltip counts the turbo task and both scripts', () => {
+      expect(tooltipUnder(true)).toContain('Tasks: 3');
     });
   });
 

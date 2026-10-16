@@ -9,7 +9,7 @@ import type { Span } from '../../shared/common/span.type.ts';
 
 /**
  * The element VS Code holds for one row. One object per row id for as long as the row exists, so a `fire` with it
- * refreshes that item. `packageName` is set on `pkg` and `task` nodes: task names may hold `#` or `:`, so nothing splits
+ * refreshes that item. `packageName` is set on `pkg`, `scripts` and `task` nodes: task names may hold `#` or `:`, so nothing splits
  * an id to recover the package.
  */
 export type TreeNode = {

@@ -30,3 +30,6 @@ export const WARNING_ICON: IconSpec = { id: 'warning', color: 'editorWarning.for
 export const INFO_ICON: IconSpec = { id: 'info', color: 'editorInfo.foreground' };
 
 export const LOADING_ICON: IconSpec = { id: 'loading~spin', color: null };
+
+/** Spec 1c-b §4.6: the Scripts group of a package. */
+export const SCRIPTS_ICON: IconSpec = { id: 'symbol-namespace', color: null };

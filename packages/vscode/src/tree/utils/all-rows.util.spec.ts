@@ -1,4 +1,4 @@
-import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
+import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { allRows } from './all-rows.util.ts';
@@ -10,6 +10,7 @@ import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { liveIdsOf } from '../test/utils/live-ids.spec.util.ts';
 import { ROW_NOW, rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const packageWithBuild = (name: string, path: string): PackageNode => {
@@ -82,6 +83,34 @@ describe('FEATURE: every row of a root', () => {
       const descriptions = tasks.map((row) => row.description);
 
       expect(descriptions.sort()).toStrictEqual(['', '', 'running · 12s']);
+    });
+  });
+
+  describe('GIVEN a package with a turbo task and two scripts', () => {
+    const build: TaskNode = { ...TASK_NODE_STUB, id: 'a#build' };
+    const lint: TaskNode = { ...TASK_NODE_STUB, id: 'a#lint', name: 'lint', isTurboTask: false };
+    const fmt: TaskNode = { ...lint, id: 'a#fmt', name: 'fmt' };
+    const tasks = [build, lint, fmt];
+    const pkg: PackageNode = { ...PACKAGE_NODE_STUB, tasks };
+    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [pkg] };
+    const state: RootState = { ...ROOT_STATE_STUB, model };
+    const idsWith = (scriptsShown: boolean, ...live: string[]): string[] => {
+      const context = rowContextOf('list', undefined, false, { scriptsShown, live: liveIdsOf('/ws', ...live) });
+      const ids = sortedIds(allRows(state, context));
+
+      return ids.filter((id) => id.startsWith('scripts:') || id.includes('#lint') || id.includes('#fmt'));
+    };
+
+    it('WHEN scripts are shown THEN the group and both script rows are listed', () => {
+      expect(idsWith(true)).toStrictEqual(['scripts:/ws\0a', 'task:/ws\0a#fmt', 'task:/ws\0a#lint']);
+    });
+
+    it('WHEN scripts are hidden and none is live THEN neither the group nor a script is listed', () => {
+      expect(idsWith(false)).toStrictEqual([]);
+    });
+
+    it('WHEN scripts are hidden and one is live THEN the group and the live script alone are listed', () => {
+      expect(idsWith(false, 'a#lint')).toStrictEqual(['scripts:/ws\0a', 'task:/ws\0a#lint']);
     });
   });
 

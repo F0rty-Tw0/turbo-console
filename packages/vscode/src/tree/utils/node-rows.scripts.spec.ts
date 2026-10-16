@@ -31,6 +31,8 @@ const STATE: RootState = { ...ROOT_STATE_STUB, folder: FOLDER, model: MODEL };
 
 const SCRIPTS_PACKAGE: TreeNode = { kind: 'pkg', id: 'pkg:/other\0s', root: '/other', key: 's', packageName: 's' };
 
+const SCRIPTS_GROUP: TreeNode = { kind: 'scripts', id: 'scripts:/other\0s', root: '/other', key: 's', packageName: 's' };
+
 const TURBO_PACKAGE: TreeNode = { kind: 'pkg', id: 'pkg:/other\0a', root: '/other', key: 'a', packageName: 'a' };
 
 const TURBO_TASK: TreeNode = { kind: 'task', id: 'task:/other\0build', root: '/other', key: 'build', packageName: 'a' };
@@ -106,6 +108,39 @@ describe('FEATURE: rows keyed by the folder root', () => {
       const row = rootRowOf(STATE, contextOf('/ws'));
 
       expect(row.tooltip).toContain('Packages: 1');
+    });
+  });
+
+  describe('GIVEN a Scripts group node of a package whose script is live', () => {
+    it('WHEN the package is opened THEN its only child is the group, under the folder root', () => {
+      const ids = idsOf(childRowsOf(STATE, SCRIPTS_PACKAGE, contextOf('/other')));
+
+      expect(ids).toStrictEqual(['scripts:/other\0s']);
+    });
+
+    it('WHEN the group is opened THEN its children are the live script rows', () => {
+      const ids = idsOf(childRowsOf(STATE, SCRIPTS_GROUP, contextOf('/other')));
+
+      expect(ids).toStrictEqual(['task:/other\0s#lint']);
+    });
+
+    it('WHEN the group is rebuilt alone THEN it is the group row of its package', () => {
+      const row = currentRowOf(STATE, SCRIPTS_GROUP, contextOf('/other'));
+
+      expect([row.id, row.kind, row.label, row.description]).toStrictEqual(['scripts:/other\0s', 'scripts', 'Scripts', '1']);
+    });
+
+    it('WHEN the script is live only under the model root THEN the group reads as gone and opens to nothing', () => {
+      const row = currentRowOf(STATE, SCRIPTS_GROUP, contextOf('/ws'));
+
+      expect([row.icon, idsOf(childRowsOf(STATE, SCRIPTS_GROUP, contextOf('/ws')))]).toStrictEqual([LOADING_ICON, []]);
+    });
+
+    it('WHEN the script row is rebuilt alone THEN it keeps the task id under the folder root', () => {
+      const node: TreeNode = { kind: 'task', id: 'task:/other\0s#lint', root: '/other', key: 's#lint', packageName: 's' };
+      const row = currentRowOf(STATE, node, contextOf('/other'));
+
+      expect([row.id, row.contextValue]).toStrictEqual(['task:/other\0s#lint', 'turboScript']);
     });
   });
 

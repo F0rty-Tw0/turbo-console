@@ -14,7 +14,7 @@ export type RowCommand = {
 
 export type TreeMode = 'folders' | 'list';
 
-export type RowKind = 'root' | 'dir' | 'pkg' | 'task' | 'msg';
+export type RowKind = 'root' | 'dir' | 'pkg' | 'scripts' | 'task' | 'msg';
 
 type Collapsible = 'none' | 'collapsed' | 'expanded';
 
@@ -32,7 +32,7 @@ export type MessageKind =
 /**
  * One tree item as plain data. `key` and `packageName` hold raw model names, never cleaned: cleaning folds whitespace,
  * so a cleaned name could filter another package. `label` and `description` are cleaned display text; the `tooltip`
- * lines are raw, and `tooltip.util.ts` cleans them. `packageName` is set on `pkg` and `task` rows only.
+ * lines are raw, and `tooltip.util.ts` cleans them. `packageName` is set on `pkg`, `scripts` and `task` rows only.
  */
 export type TreeRow = {
   readonly id: string;

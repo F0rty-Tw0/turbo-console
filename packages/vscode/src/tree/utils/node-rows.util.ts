@@ -4,6 +4,7 @@ import { dirRow, dirRows, packageRow } from './dir-rows.util.ts';
 import { liveOf } from './live-of.util.ts';
 import { rootRowOf, rootRows, shownModelOf } from './root-rows.util.ts';
 import { rowScopeOf } from './row-scope.util.ts';
+import { groupRowOf, scriptRows } from './script-rows.util.ts';
 import { taskRowOf, taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -42,8 +43,11 @@ const dirOf = (view: ModelView, node: TreeNode): FolderDir | undefined => {
 const modelChildren = (root: string, model: WorkspaceModel, node: TreeNode, context: RowContext): TreeRow[] => {
   const view = context.views(model, context.scriptsShown, liveOf(context, root));
   const pkg = packageOf(view, node.packageName);
+  const scope = rowScopeOf(root, model);
 
-  if (node.kind === 'pkg' && pkg !== undefined) return taskRows(rowScopeOf(root, model), pkg, context);
+  if (node.kind === 'pkg' && pkg !== undefined) return taskRows(scope, pkg, context);
+
+  if (node.kind === 'scripts' && pkg !== undefined) return scriptRows(scope, pkg, context);
 
   const dir = dirOf(view, node);
 
@@ -91,7 +95,11 @@ const modelRow = (root: string, model: WorkspaceModel, node: TreeNode, context: 
 
   if (node.kind === 'pkg') return packageRow(root, pkg, view, context.scopeShown);
 
-  return taskRowOf(rowScopeOf(root, model), pkg, node.key, context);
+  const scope = rowScopeOf(root, model);
+
+  if (node.kind === 'scripts') return groupRowOf(scope, pkg, context) ?? undefined;
+
+  return taskRowOf(scope, pkg, node.key, context);
 };
 
 const messageRowOf = (state: RootState, node: TreeNode, context: RowContext): TreeRow | undefined => {

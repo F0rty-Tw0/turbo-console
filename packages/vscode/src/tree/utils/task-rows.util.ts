@@ -1,19 +1,23 @@
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 
-import { isVisibleTask } from './task-filter.util.ts';
+import { groupRowOf } from './script-rows.util.ts';
+import { isRunnableTask, isVisibleTask } from './task-filter.util.ts';
 import { taskRow } from './task-row.util.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
 import type { RowScope, TreeRow } from '../common/tree-row.type.ts';
 
 /**
- * The visible tasks of a package (`atom-file` tasks stay hidden), each with its last run's state read at the context's
- * wall clock. Tooltip lines are raw text: `tooltipMarkdownOf` cleans them. The description is built from numbers and
- * fixed words, but is cleaned like every label.
+ * The visible turbo tasks of a package (`atom-file` tasks stay hidden), each with its last run's state read at the
+ * context's wall clock, then its Scripts group when it holds any (scripts are rows of the group, not of the package).
  */
 export const taskRows = (scope: RowScope, pkg: PackageNode, context: RowContext): TreeRow[] => {
-  const visible = pkg.tasks.filter(isVisibleTask);
+  const turbo = pkg.tasks.filter(isRunnableTask);
+  const rows = turbo.map((task) => taskRow(scope, pkg, task, context));
+  const group = groupRowOf(scope, pkg, context);
 
-  return visible.map((task) => taskRow(scope, pkg, task, context));
+  if (group === null) return rows;
+
+  return [...rows, group];
 };
 
 /** The row of the visible task `taskId` of `pkg`, built alone; a hidden or unknown id has none. */
