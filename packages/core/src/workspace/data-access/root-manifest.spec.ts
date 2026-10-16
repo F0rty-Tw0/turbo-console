@@ -4,10 +4,12 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { detectPackageManager, readPackageManagerField } from './root-manifest.ts';
+import { detectPackageManager, readManifestFields } from './root-manifest.ts';
 import { MAX_KEYED_FILE_BYTES, MISSING_DIGEST } from '../../cache/common/cache.const.ts';
 import type { KeyedFile } from '../../cache/common/cache.type.ts';
-import { NPM_BY_DEFAULT_STUB, YARN_BY_LOCKFILE_STUB } from '../test/stubs/package-manager.stub.ts';
+import type { ManifestFields } from '../common/manifest-fields.type.ts';
+import { NO_MANIFEST_FIELDS } from '../common/package-manager.const.ts';
+import { NPM_BY_DEFAULT_STUB, PNPM_BY_DEV_ENGINES_STUB, YARN_BY_LOCKFILE_STUB } from '../test/stubs/package-manager.stub.ts';
 import { rootWithFiles } from '../test/utils/root-files.spec.util.ts';
 
 const keyed = (path: string, digest: string): KeyedFile => {
@@ -24,14 +26,28 @@ const NESTED = keyed('packages/a/pnpm-lock.yaml', 'abc');
 
 const OVER_CAP_MANIFEST = JSON.stringify({ packageManager: 'pnpm@9', padding: 'x'.repeat(MAX_KEYED_FILE_BYTES) });
 
-/** Each manifest text a root can hold, and the `packageManager` value read from it. */
-const FIELD_READS: [string, string, unknown][] = [
-  ['a manager string', '{"packageManager":"yarn@4"}', 'yarn@4'],
-  ['a number', '{"packageManager":42}', 42],
-  ['no field', '{}', undefined],
-  ['text that is not JSON', '{not json', undefined],
-  ['a JSON null', 'null', undefined],
-  ['a manifest over the keyed file cap', OVER_CAP_MANIFEST, undefined]
+const fieldsOf = (packageManager: unknown, devEnginesManager: unknown): ManifestFields => {
+  const fields: ManifestFields = { packageManager, devEnginesManager };
+
+  return fields;
+};
+
+const DEV_ENGINES_PNPM = '{"devEngines":{"packageManager":{"name":"pnpm"}}}';
+
+const BOTH_MANIFEST = '{"packageManager":"yarn@4","devEngines":{"packageManager":[{"name":"pnpm"}]},"name":"x"}';
+
+/** Each manifest text a root can hold, and the two values read from it in one parse. */
+const FIELD_READS: [string, string, ManifestFields][] = [
+  ['a manager string', '{"packageManager":"yarn@4"}', fieldsOf('yarn@4', undefined)],
+  ['a number', '{"packageManager":42}', fieldsOf(42, undefined)],
+  ['devEngines.packageManager as an object', DEV_ENGINES_PNPM, fieldsOf(undefined, { name: 'pnpm' })],
+  ['both fields', BOTH_MANIFEST, fieldsOf('yarn@4', [{ name: 'pnpm' }])],
+  ['devEngines that is no object', '{"devEngines":"pnpm"}', fieldsOf(undefined, undefined)],
+  ['devEngines without a packageManager', '{"devEngines":{"runtime":{}}}', fieldsOf(undefined, undefined)],
+  ['no field', '{}', NO_MANIFEST_FIELDS],
+  ['text that is not JSON', '{not json', NO_MANIFEST_FIELDS],
+  ['a JSON null', 'null', NO_MANIFEST_FIELDS],
+  ['a manifest over the keyed file cap', OVER_CAP_MANIFEST, NO_MANIFEST_FIELDS]
 ];
 
 let tempDir = '';
@@ -46,32 +62,32 @@ describe('FEATURE: root manifest package manager', () => {
   });
 
   describe('GIVEN a root package.json', () => {
-    it.each(FIELD_READS)('WHEN it holds %s THEN the field read is the expected value', async (_, text, expected) => {
+    it.each(FIELD_READS)('WHEN it holds %s THEN the read is the expected fields', async (_, text, expected) => {
       const root = await rootWithFiles(tempDir, { 'package.json': text });
 
-      const field = await readPackageManagerField(root);
+      const fields = await readManifestFields(root);
 
-      expect(field).toStrictEqual(expected);
+      expect(fields).toStrictEqual(expected);
     });
   });
 
   describe('GIVEN a root with no readable package.json', () => {
-    it('WHEN the root has none THEN the field read is undefined', async () => {
+    it('WHEN the root has none THEN the read is empty', async () => {
       const root = await rootWithFiles(tempDir, {});
 
-      const field = await readPackageManagerField(root);
+      const fields = await readManifestFields(root);
 
-      expect(field).toBeUndefined();
+      expect(fields).toStrictEqual(NO_MANIFEST_FIELDS);
     });
 
-    it('WHEN package.json is a directory THEN the field read is undefined', async () => {
+    it('WHEN package.json is a directory THEN the read is empty', async () => {
       const root = await rootWithFiles(tempDir, {});
 
       await mkdir(join(root, 'package.json'));
 
-      const field = await readPackageManagerField(root);
+      const fields = await readManifestFields(root);
 
-      expect(field).toBeUndefined();
+      expect(fields).toStrictEqual(NO_MANIFEST_FIELDS);
     });
   });
 
@@ -98,6 +114,14 @@ describe('FEATURE: root manifest package manager', () => {
       const packageManager = await detectPackageManager(root, [NESTED]);
 
       expect(packageManager).toStrictEqual(NPM_BY_DEFAULT_STUB);
+    });
+
+    it('WHEN the manifest names devEngines and a lockfile is present THEN devEngines wins', async () => {
+      const root = await rootWithFiles(tempDir, { 'package.json': DEV_ENGINES_PNPM });
+
+      const packageManager = await detectPackageManager(root, [PRESENT]);
+
+      expect(packageManager).toStrictEqual(PNPM_BY_DEV_ENGINES_STUB);
     });
 
     it('WHEN the manifest is over the cap THEN its field is ignored and the lockfile decides', async () => {

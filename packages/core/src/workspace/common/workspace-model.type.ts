@@ -72,12 +72,17 @@ export type LockfileName = 'pnpm-lock.yaml' | 'bun.lock' | 'bun.lockb' | 'yarn.l
 
 type FieldSource = { readonly kind: 'field' };
 
+type DevEnginesSource = { readonly kind: 'devEngines' };
+
 type LockfileSource = { readonly kind: 'lockfile'; readonly file: LockfileName };
 
 type DefaultSource = { readonly kind: 'default' };
 
-/** Where the package manager came from: the root `packageManager` field, a root lockfile, or the npm fallback. */
-export type PackageManagerSource = FieldSource | LockfileSource | DefaultSource;
+/**
+ * Where the package manager came from: the root `packageManager` field, the root `devEngines.packageManager`, a root
+ * lockfile, or the npm fallback, in that order.
+ */
+export type PackageManagerSource = FieldSource | DevEnginesSource | LockfileSource | DefaultSource;
 
 export type PackageManager = {
   readonly name: PackageManagerName;

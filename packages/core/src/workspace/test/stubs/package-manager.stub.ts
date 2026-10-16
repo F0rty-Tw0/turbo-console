@@ -2,6 +2,8 @@ import type { PackageManager, PackageManagerSource } from '../../common/workspac
 
 const FIELD: PackageManagerSource = { kind: 'field' };
 
+const DEV_ENGINES: PackageManagerSource = { kind: 'devEngines' };
+
 const DEFAULT: PackageManagerSource = { kind: 'default' };
 
 const PNPM_LOCKFILE: PackageManagerSource = { kind: 'lockfile', file: 'pnpm-lock.yaml' };
@@ -19,5 +21,7 @@ export const PNPM_BY_LOCKFILE_STUB: PackageManager = { name: 'pnpm', source: PNP
 export const YARN_BY_LOCKFILE_STUB: PackageManager = { name: 'yarn', source: YARN_LOCKFILE };
 
 export const BUN_BY_LOCKFILE_STUB: PackageManager = { name: 'bun', source: BUN_LOCKFILE };
+
+export const PNPM_BY_DEV_ENGINES_STUB: PackageManager = { name: 'pnpm', source: DEV_ENGINES };
 
 export const NPM_BY_DEFAULT_STUB: PackageManager = { name: 'npm', source: DEFAULT };

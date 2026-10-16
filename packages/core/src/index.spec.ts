@@ -79,7 +79,7 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<WorkspaceModel>().toHaveProperty('affectedMode');
       expectTypeOf<WorkspaceModel>().toHaveProperty('packageManager');
       expectTypeOf<PackageManager>().toHaveProperty('source');
-      expectTypeOf<PackageManagerSource['kind']>().toEqualTypeOf<'field' | 'lockfile' | 'default'>();
+      expectTypeOf<PackageManagerSource['kind']>().toEqualTypeOf<'field' | 'devEngines' | 'lockfile' | 'default'>();
       expectTypeOf<PackageManagerName>().toEqualTypeOf<'npm' | 'pnpm' | 'yarn' | 'bun'>();
       expectTypeOf<LockfileName>().toEqualTypeOf<'pnpm-lock.yaml' | 'bun.lock' | 'bun.lockb' | 'yarn.lock' | 'package-lock.json'>();
       expectTypeOf<PackageNode>().toHaveProperty('tasks');

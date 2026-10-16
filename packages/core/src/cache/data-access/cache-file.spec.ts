@@ -8,7 +8,12 @@ import type { z } from 'zod';
 
 import { readCacheFile, writeCacheFile } from './cache-file.ts';
 import type { PackageManager, TaskNode, WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
-import { BUN_BY_LOCKFILE_STUB, NPM_BY_DEFAULT_STUB, YARN_BY_FIELD_STUB } from '../../workspace/test/stubs/package-manager.stub.ts';
+import {
+  BUN_BY_LOCKFILE_STUB,
+  NPM_BY_DEFAULT_STUB,
+  PNPM_BY_DEV_ENGINES_STUB,
+  YARN_BY_FIELD_STUB
+} from '../../workspace/test/stubs/package-manager.stub.ts';
 import { workspaceModelSchema } from '../common/cache-file.schema.ts';
 import type { CacheEntry } from '../common/cache.type.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
@@ -55,6 +60,7 @@ const OLD_VERSIONS = [1, 2, 3, 4];
 /** One package manager per source kind a cache file can hold. */
 const PACKAGE_MANAGERS: [string, PackageManager][] = [
   ['a field source', YARN_BY_FIELD_STUB],
+  ['a devEngines source', PNPM_BY_DEV_ENGINES_STUB],
   ['a lockfile source', BUN_BY_LOCKFILE_STUB],
   ['a default source', NPM_BY_DEFAULT_STUB]
 ];

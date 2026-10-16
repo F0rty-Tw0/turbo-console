@@ -14,6 +14,7 @@ import type { TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import type { PackageManager } from '../common/workspace-model.type.ts';
 import {
   NPM_BY_DEFAULT_STUB,
+  PNPM_BY_DEV_ENGINES_STUB,
   PNPM_BY_LOCKFILE_STUB,
   YARN_BY_FIELD_STUB,
   YARN_BY_LOCKFILE_STUB
@@ -139,6 +140,16 @@ describe('FEATURE: workspace loading package manager', () => {
       const packageManager = await packageManagerOf(files);
 
       expect(packageManager).toStrictEqual(YARN_BY_FIELD_STUB);
+    });
+  });
+
+  describe('GIVEN a root package.json with only devEngines.packageManager and no lockfile', () => {
+    it('WHEN loaded THEN the manager is named by devEngines', async () => {
+      const files = { 'package.json': '{"devEngines":{"packageManager":{"name":"pnpm"}}}' };
+
+      const packageManager = await packageManagerOf(files);
+
+      expect(packageManager).toStrictEqual(PNPM_BY_DEV_ENGINES_STUB);
     });
   });
 

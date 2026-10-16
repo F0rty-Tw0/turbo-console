@@ -48,11 +48,13 @@ const lockfileNameSchema = z.enum(LOCKFILE_NAMES);
 
 const fieldSource = z.object({ kind: z.literal('field') });
 
+const devEnginesSource = z.object({ kind: z.literal('devEngines') });
+
 const lockfileSource = z.object({ kind: z.literal('lockfile'), file: lockfileNameSchema });
 
 const defaultSource = z.object({ kind: z.literal('default') });
 
-const sourceSchema = z.discriminatedUnion('kind', [fieldSource, lockfileSource, defaultSource]).readonly();
+const sourceSchema = z.discriminatedUnion('kind', [fieldSource, devEnginesSource, lockfileSource, defaultSource]).readonly();
 
 const packageManagerSchema = z.object({ name: packageManagerNameSchema, source: sourceSchema }).readonly();
 

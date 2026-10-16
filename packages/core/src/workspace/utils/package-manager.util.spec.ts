@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { fieldManagerOf, packageManagerOf } from './package-manager.util.ts';
+import { devEnginesManagerOf, fieldManagerOf, packageManagerOf } from './package-manager.util.ts';
+import type { ManifestFields } from '../common/manifest-fields.type.ts';
 import type { LockfileName, PackageManager, PackageManagerName, PackageManagerSource } from '../common/workspace-model.type.ts';
 
 const FIELD_CASES: [unknown, PackageManagerName][] = [
@@ -20,7 +21,41 @@ const LOCKFILE_CASES: [LockfileName[], PackageManagerName, LockfileName][] = [
   [['package-lock.json'], 'npm', 'package-lock.json']
 ];
 
+const DEV_ENGINES_CASES: [unknown, PackageManagerName][] = [
+  [{ name: 'pnpm' }, 'pnpm'],
+  [{ name: 'bun', version: '1.2.0', onFail: 'error' }, 'bun'],
+  [[{ name: 'yarn' }, { name: 'npm' }], 'yarn'],
+  [[{ name: 'npm' }, { name: 'pnpm' }], 'npm']
+];
+
+const NON_DEV_ENGINES = [
+  { name: 'pnpm@9' },
+  { name: 'deno' },
+  [],
+  'pnpm',
+  { name: 42 },
+  {},
+  null,
+  undefined,
+  [{ name: 'deno' }, { name: 'pnpm' }]
+];
+
 const ALL_LOCKFILES: LockfileName[] = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'yarn.lock', 'package-lock.json'];
+
+/** The two manifest values `packageManagerOf` reads; `devEnginesManager` is the value of `devEngines.packageManager`. */
+const fieldsOf = (packageManager: unknown, devEnginesManager?: unknown): ManifestFields => {
+  const fields: ManifestFields = { packageManager, devEnginesManager };
+
+  return fields;
+};
+
+const devEnginesOf = (name: PackageManagerName): PackageManager => {
+  const source: PackageManagerSource = { kind: 'devEngines' };
+
+  const manager: PackageManager = { name, source };
+
+  return manager;
+};
 
 const fieldOf = (name: PackageManagerName): PackageManager => {
   const source: PackageManagerSource = { kind: 'field' };
@@ -57,27 +92,55 @@ describe('FEATURE: package manager detection', () => {
     });
 
     it('WHEN every lockfile is present THEN the field still wins', () => {
-      const manager = packageManagerOf('yarn@4.0.0', new Set(ALL_LOCKFILES));
+      const manager = packageManagerOf(fieldsOf('yarn@4.0.0', { name: 'pnpm' }), new Set(ALL_LOCKFILES));
 
       expect(manager).toStrictEqual(fieldOf('yarn'));
     });
   });
 
+  describe('GIVEN a root devEngines.packageManager', () => {
+    it.each(DEV_ENGINES_CASES)('WHEN it is %j THEN the manager is %s', (value, name) => {
+      expect(devEnginesManagerOf(value)).toBe(name);
+    });
+
+    it.each(NON_DEV_ENGINES)('WHEN it is %j THEN it names no manager', (value) => {
+      expect(devEnginesManagerOf(value)).toBeNull();
+    });
+
+    it('WHEN every lockfile is present THEN devEngines still wins', () => {
+      const manager = packageManagerOf(fieldsOf(undefined, { name: 'bun' }), new Set(ALL_LOCKFILES));
+
+      expect(manager).toStrictEqual(devEnginesOf('bun'));
+    });
+
+    it('WHEN the first array entry is a manager THEN it wins over the entries after it', () => {
+      const manager = packageManagerOf(fieldsOf(undefined, [{ name: 'yarn' }, { name: 'pnpm' }]), new Set<LockfileName>());
+
+      expect(manager).toStrictEqual(devEnginesOf('yarn'));
+    });
+
+    it('WHEN it names no manager THEN the lockfile decides', () => {
+      const manager = packageManagerOf(fieldsOf(undefined, { name: 'deno' }), new Set<LockfileName>(['yarn.lock']));
+
+      expect(manager).toStrictEqual(lockfileOf('yarn', 'yarn.lock'));
+    });
+  });
+
   describe('GIVEN no usable field', () => {
     it.each(LOCKFILE_CASES)('WHEN %j are present THEN the manager is %s from %s', (files, name, file) => {
-      const manager = packageManagerOf(undefined, new Set(files));
+      const manager = packageManagerOf(fieldsOf(undefined), new Set(files));
 
       expect(manager).toStrictEqual(lockfileOf(name, file));
     });
 
     it('WHEN the field is no manager THEN the lockfile decides', () => {
-      const manager = packageManagerOf('deno@2', new Set<LockfileName>(['yarn.lock']));
+      const manager = packageManagerOf(fieldsOf('deno@2'), new Set<LockfileName>(['yarn.lock']));
 
       expect(manager).toStrictEqual(lockfileOf('yarn', 'yarn.lock'));
     });
 
     it('WHEN no lockfile is present THEN the manager is npm by default', () => {
-      const manager = packageManagerOf(undefined, new Set<LockfileName>());
+      const manager = packageManagerOf(fieldsOf(undefined), new Set<LockfileName>());
 
       expect(manager).toStrictEqual(defaultOf());
     });
