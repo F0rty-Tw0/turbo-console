@@ -22,4 +22,6 @@ export type {
 
 export type { WebviewSlots } from './shell/common/webview-html.type.ts';
 
+export { durationText, elapsedText } from './bridge/utils/duration-text.util.ts';
+
 export { renderWebviewHtml, webviewCsp } from './shell/utils/webview-html.util.ts';
