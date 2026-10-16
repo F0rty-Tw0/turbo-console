@@ -1,3 +1,4 @@
+import type { PackageNode, TaskNode } from '@turbo-console/core';
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,6 +17,10 @@ import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
 
 const REQUEST: RunRequest = { root: '/ws', packageName: 'a', task: TASK_NODE_STUB, binaryPath: TURBO_BINARY_STUB.path, force: false };
+
+const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [SCRIPT_TASK] };
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 
@@ -120,6 +125,25 @@ describe('FEATURE: run commands', () => {
       await command('turboConsole.stopTask', TASK_TREE_NODE_STUB);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the running task turned into a script on a reload THEN Stop Task still terminates it', async () => {
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+      roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
+
+      await command('turboConsole.stopTask', TASK_TREE_NODE_STUB);
+
+      expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the task is a script THEN Run Task and Run Task Without Cache refuse it and launch nothing', async () => {
+      roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
+
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+      await command('turboConsole.runTaskWithoutCache', TASK_TREE_NODE_STUB);
+
+      expect(ports.execute).not.toHaveBeenCalled();
+      expect(ports.info).toHaveBeenCalledTimes(2);
     });
 
     it('WHEN Stop Task is invoked on a package row THEN nothing is terminated', async () => {

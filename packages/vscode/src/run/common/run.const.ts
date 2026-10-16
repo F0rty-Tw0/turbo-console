@@ -6,6 +6,8 @@ export const RUN_TIMINGS_MAX = 100;
 
 export const ALREADY_RUNNING_TEXT = 'Already running.';
 
+export const NOT_TURBO_RUN_TEXT = "This script isn't a turbo task, so Turbo Console can't run it yet.";
+
 export const START_TIMEOUT_TEXT = `turbo process did not start within ${START_TIMEOUT_MS / 1000} s`;
 
 export const TASK_ENDED_TEXT = 'task ended before its process started';

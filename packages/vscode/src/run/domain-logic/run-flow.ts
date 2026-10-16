@@ -2,7 +2,14 @@ import { turboRunArgs } from '@turbo-console/core';
 import type { RunMatch } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, START_TIMEOUT_TEXT, START_WAIT_TEXT, TASK_ENDED_TEXT } from '../common/run.const.ts';
+import {
+  ALREADY_RUNNING_TEXT,
+  NOT_TURBO_RUN_TEXT,
+  START_TIMEOUT_MS,
+  START_TIMEOUT_TEXT,
+  START_WAIT_TEXT,
+  TASK_ENDED_TEXT
+} from '../common/run.const.ts';
 import type { RunDefinition, RunEntry, RunPorts, RunRequest, Runs, Terminable } from '../common/run.type.ts';
 import { runToMatchOf } from '../utils/run-end.util.ts';
 
@@ -91,6 +98,12 @@ const onStartTimeout = (store: Runs, ports: RunPorts, start: StartEnd, isLaunche
  * The task events drive the rest through the store.
  */
 export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest): Promise<void> => {
+  if (!request.task.isTurboTask) {
+    ports.info(NOT_TURBO_RUN_TEXT);
+
+    return;
+  }
+
   const launchedAt = ports.now();
   const definition = definitionOf(request);
   let isLaunched = false;
