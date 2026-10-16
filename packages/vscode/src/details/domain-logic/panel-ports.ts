@@ -65,6 +65,7 @@ export const panelPortsOf = (deps: PanelsDeps, parts: PanelParts, view: PanelVie
     setPanelVisible,
     info: host.info,
     log: host.log,
+    scriptsShown: () => deps.scripts.isShown(),
     now: () => Date.now()
   };
 

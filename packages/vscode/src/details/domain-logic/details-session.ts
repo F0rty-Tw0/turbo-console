@@ -1,14 +1,13 @@
-import type { DetailsState, HostMessage, RefreshMessage } from '@turbo-console/webview-ui';
+import type { DetailsState, RefreshMessage } from '@turbo-console/webview-ui';
 
+import { DetailsStatePoster } from './details-state-poster.ts';
 import { PanelDryRun } from './panel-dry-run.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
-import type { RunEntry, Runs } from '../../run/common/run.type.ts';
+import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { CommandMessage, DetailsPorts, PanelKey } from '../common/details.type.ts';
+import type { CommandMessage, DetailsPorts, DryRunResult, PanelKey, PosterGate } from '../common/details.type.ts';
 import { commandOf } from '../utils/details-command.util.ts';
 import { cardTaskIdsOf, droppedMessageText, parseWebviewMessage } from '../utils/details-message.util.ts';
-import { detailsInputOf, toDetailsState } from '../utils/details-state.util.ts';
-import { liveRunViewOf } from '../utils/run-view.util.ts';
 
 /**
  * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
@@ -22,6 +21,7 @@ export class DetailsSession {
   private readonly runs: Runs;
   private readonly ports: DetailsPorts;
   private readonly dryRun: PanelDryRun;
+  private readonly poster: DetailsStatePoster;
   private readonly unsubscribes: (() => void)[] = [];
   /** `false` until `start`: the panel has no state, so every task message is dropped. */
   private isStarted = false;
@@ -37,6 +37,13 @@ export class DetailsSession {
     this.dryRun = new PanelDryRun(key.packageName, ports, () => {
       this.publish();
     });
+
+    const isStarted = (): boolean => this.isStarted;
+    const canPost = (): boolean => this.canPost();
+    const gate: PosterGate = { isStarted, canPost };
+    const dryRunResult = (): DryRunResult => this.dryRun.result;
+
+    this.poster = new DetailsStatePoster({ key, roots, runs, ports, gate, dryRun: dryRunResult });
   }
 
   /** Subscribes and builds the first state. The caller awaits the root's load first, so the cache-first publish starts no dry run. */
@@ -47,10 +54,11 @@ export class DetailsSession {
       this.rootChanged(change);
     });
     const offRuns = this.runs.onDidChange((entry) => {
-      this.runChanged(entry);
+      this.poster.runChanged(entry);
     });
 
     this.unsubscribes.push(offRoots, offRuns);
+    this.poster.seed();
     this.isStarted = true;
     this.modelChanged();
   }
@@ -59,7 +67,7 @@ export class DetailsSession {
   public async receive(value: unknown): Promise<void> {
     if (this.isDisposed) return;
 
-    const state = this.state();
+    const state = this.poster.state();
     const taskIds = cardTaskIdsOf(state);
     const message = parseWebviewMessage(value, taskIds);
 
@@ -106,6 +114,11 @@ export class DetailsSession {
     await this.dryRun.whenIdle();
   }
 
+  /** Posts the current state when the panel is shown and its page is ready. */
+  public publish(): void {
+    this.poster.publish();
+  }
+
   /** Reports the panel hidden once when it last reported it shown; a second call does nothing. */
   public dispose(): void {
     if (this.isDisposed) return;
@@ -132,17 +145,6 @@ export class DetailsSession {
     }
 
     this.publish();
-  }
-
-  private runChanged(entry: RunEntry): void {
-    const isOwn = entry.root === this.key.root && entry.packageName === this.key.packageName;
-
-    if (!isOwn || !this.canPost()) return;
-
-    const run = liveRunViewOf(this.roots.get(entry.root)?.state.model ?? null, entry, this.ports.now());
-    const message: HostMessage = { type: 'runState', taskId: entry.taskId, run };
-
-    this.ports.post(message);
   }
 
   private modelChanged(): void {
@@ -194,25 +196,5 @@ export class DetailsSession {
 
   private canPost(): boolean {
     return this.isVisible && this.isReady;
-  }
-
-  private publish(): void {
-    const state = this.state();
-
-    if (!this.canPost() || state === null) return;
-
-    const message: HostMessage = { type: 'state', state };
-
-    this.ports.post(message);
-  }
-
-  private state(): DetailsState | null {
-    const entry = this.roots.get(this.key.root);
-
-    if (!this.isStarted || entry === undefined) return null;
-
-    const base = { ...this.key, state: entry.state, dryRun: this.dryRun.result, runs: this.runs.get };
-
-    return toDetailsState(detailsInputOf(base, this.ports.now()));
   }
 }

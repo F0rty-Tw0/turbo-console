@@ -14,7 +14,7 @@ import {
   DETAILS_ROOT_STATE_STUB
 } from '../test/stubs/details-model.stub.ts';
 
-const TASK_IDS: CardTaskIds = { all: new Set(['a#build', 'a#test', 'a#adhoc']), notTurbo: new Set(['a#adhoc']) };
+const TASK_IDS: CardTaskIds = { all: new Set(['a#build', 'a#test', 'a#adhoc']) };
 const THROWING_TYPE = {
   get type(): string {
     throw new Error('getter trap');
@@ -80,22 +80,14 @@ describe('FEATURE: webview message validation', () => {
     });
   });
 
-  describe('GIVEN a card of a task no turbo config defines', () => {
-    it.each(['run', 'copy'])('WHEN %s names it THEN it is dropped', (type) => {
-      expect(parseWebviewMessage({ type, taskId: 'a#adhoc' }, TASK_IDS)).toBeNull();
-    });
-
-    it('WHEN stop names it THEN it passes, so a run that turned into a script can end', () => {
-      expect(parseWebviewMessage({ type: 'stop', taskId: 'a#adhoc' }, TASK_IDS)).toStrictEqual({ type: 'stop', taskId: 'a#adhoc' });
-    });
-
-    it.each(['run', 'copy', 'stop'])('WHEN %s names a turbo task of the same panel THEN it still passes', (type) => {
-      expect(parseWebviewMessage({ type, taskId: 'a#build' }, TASK_IDS)).toStrictEqual({ type, taskId: 'a#build' });
+  describe('GIVEN a script card', () => {
+    it.each(['run', 'copy', 'stop'])('WHEN %s names it THEN it passes', (type) => {
+      expect(parseWebviewMessage({ type, taskId: 'a#adhoc' }, TASK_IDS)).toStrictEqual({ type, taskId: 'a#adhoc' });
     });
   });
 
   describe('GIVEN no state, so an empty task set', () => {
-    const noTasks: CardTaskIds = { all: new Set(), notTurbo: new Set() };
+    const noTasks: CardTaskIds = { all: new Set() };
 
     it.each(['run', 'stop', 'copy'])('WHEN %s arrives THEN it is dropped', (type) => {
       expect(parseWebviewMessage({ type, taskId: 'a#build' }, noTasks)).toBeNull();
@@ -176,16 +168,15 @@ describe('FEATURE: dropped message log text', () => {
 });
 
 describe('FEATURE: panel task ids', () => {
-  it('GIVEN a package state WHEN asked THEN the ids are those of its cards and none is a script', () => {
+  it('GIVEN a package state WHEN asked THEN the ids are those of its cards', () => {
     const state = toDetailsState(DETAILS_INPUT_STUB);
 
     const ids = cardTaskIdsOf(state);
 
     expect(ids.all).toStrictEqual(new Set(['a#build', 'a#check', 'a#test']));
-    expect(ids.notTurbo.size).toBe(0);
   });
 
-  it('GIVEN a package with a script WHEN asked THEN the script is in both sets', () => {
+  it('GIVEN a package with a script WHEN asked THEN the script is among the ids', () => {
     const pkg = { ...A_PACKAGE_STUB, tasks: [BUILD_TASK_STUB, ADHOC_TASK_STUB] };
     const model = { ...DETAILS_MODEL_STUB, packages: [pkg] };
     const rootState = { ...DETAILS_ROOT_STATE_STUB, model };
@@ -194,7 +185,6 @@ describe('FEATURE: panel task ids', () => {
     const ids = cardTaskIdsOf(state);
 
     expect(ids.all).toStrictEqual(new Set(['a#adhoc', 'a#build']));
-    expect(ids.notTurbo).toStrictEqual(new Set(['a#adhoc']));
   });
 
   it.each<[string, DetailsState | null]>([
@@ -204,6 +194,5 @@ describe('FEATURE: panel task ids', () => {
     const ids = cardTaskIdsOf(state);
 
     expect(ids.all.size).toBe(0);
-    expect(ids.notTurbo.size).toBe(0);
   });
 });

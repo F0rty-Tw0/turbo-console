@@ -11,6 +11,7 @@ import { flushSettles } from '../../roots/test/utils/deferred-ports.spec.util.ts
 import { sessionPortsWith } from '../../roots/test/utils/session-ports.spec.util.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { OpenPanel } from '../common/panel.type.ts';
@@ -42,7 +43,13 @@ describe('FEATURE: opening a details panel', () => {
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
     store.apply('/ws', DETAILS_LOADED_STUB);
     fakes = hostMock();
-    panels = new DetailsPanels({ roots: store, runs: new RunStore(), host: fakes.host, setPanelVisible: vi.fn() });
+    panels = new DetailsPanels({
+      roots: store,
+      runs: new RunStore(),
+      scripts: scriptsToggleMock(),
+      host: fakes.host,
+      setPanelVisible: vi.fn()
+    });
   });
 
   describe('GIVEN an open still waiting for the root to load', () => {
@@ -293,7 +300,13 @@ describe('FEATURE: opening a details panel', () => {
       roots.setVisible(false);
       roots.request('refresh');
       await roots.whenIdle('/ws');
-      panels = new DetailsPanels({ roots: roots.store, runs: new RunStore(), host: fakes.host, setPanelVisible: vi.fn() });
+      panels = new DetailsPanels({
+        roots: roots.store,
+        runs: new RunStore(),
+        scripts: scriptsToggleMock(),
+        host: fakes.host,
+        setPanelVisible: vi.fn()
+      });
     });
 
     afterEach(() => {

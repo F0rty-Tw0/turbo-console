@@ -141,14 +141,25 @@ describe('FEATURE: details session messages', () => {
       expect(ports.execute).toHaveBeenCalledExactlyOnceWith('turboConsole.stopTask', BUILD_ROW);
     });
 
-    it('WHEN a reload leaves a script card and run or copy names it THEN both are dropped and logged', async () => {
+    it.each([
+      ['run', 'turboConsole.runTask'],
+      ['copy', 'turboConsole.copyCommand']
+    ])('WHEN a reload leaves a script card and %s names it THEN it executes', async (type, command) => {
+      store.apply('/ws', WITH_SCRIPT);
+
+      await session.receive({ type, taskId: 'a#adhoc' });
+
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(command, { ...BUILD_ROW, key: 'a#adhoc' });
+    });
+
+    it('WHEN scripts are hidden and run names a script THEN it is dropped and logged, as it has no card', async () => {
+      vi.mocked(ports.scriptsShown).mockReturnValue(false);
       store.apply('/ws', WITH_SCRIPT);
 
       await session.receive({ type: 'run', taskId: 'a#adhoc' });
-      await session.receive({ type: 'copy', taskId: 'a#adhoc' });
 
       expect(ports.execute).not.toHaveBeenCalled();
-      expect(ports.log).toHaveBeenCalledTimes(2);
+      expect(ports.log).toHaveBeenCalledOnce();
     });
 
     it('WHEN a reload leaves a script card and stop names it THEN it still executes', async () => {

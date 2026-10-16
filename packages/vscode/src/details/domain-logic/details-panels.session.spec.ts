@@ -6,6 +6,7 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { flushSettles } from '../../roots/test/utils/deferred-ports.spec.util.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
@@ -31,7 +32,13 @@ describe('FEATURE: the editor effects of a details panel session', () => {
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
     store.apply('/ws', DETAILS_LOADED_STUB);
     fakes = hostMock();
-    panels = new DetailsPanels({ roots: store, runs: new RunStore(), host: fakes.host, setPanelVisible: vi.fn() });
+    panels = new DetailsPanels({
+      roots: store,
+      runs: new RunStore(),
+      scripts: scriptsToggleMock(),
+      host: fakes.host,
+      setPanelVisible: vi.fn()
+    });
   });
 
   describe('GIVEN a started panel', () => {

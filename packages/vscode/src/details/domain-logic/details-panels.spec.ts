@@ -7,6 +7,7 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
@@ -38,7 +39,13 @@ describe('FEATURE: details panel registry', () => {
     store.apply('/other', DETAILS_LOADED_STUB);
     fakes = hostMock();
     setPanelVisible = vi.fn<PanelsDeps['setPanelVisible']>();
-    panels = new DetailsPanels({ roots: store, runs: new RunStore(), host: fakes.host, setPanelVisible });
+    panels = new DetailsPanels({
+      roots: store,
+      runs: new RunStore(),
+      scripts: scriptsToggleMock(),
+      host: fakes.host,
+      setPanelVisible
+    });
   });
 
   describe('GIVEN a loaded root', () => {

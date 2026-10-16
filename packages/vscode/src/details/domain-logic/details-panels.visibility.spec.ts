@@ -5,6 +5,7 @@ import { DetailsPanels } from './details-panels.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { PanelsDeps } from '../common/panel.type.ts';
@@ -28,7 +29,13 @@ describe('FEATURE: details panel visibility', () => {
     store.apply('/ws', DETAILS_LOADED_STUB);
     fakes = hostMock();
     setPanelVisible = vi.fn<PanelsDeps['setPanelVisible']>();
-    panels = new DetailsPanels({ roots: store, runs: new RunStore(), host: fakes.host, setPanelVisible });
+    panels = new DetailsPanels({
+      roots: store,
+      runs: new RunStore(),
+      scripts: scriptsToggleMock(),
+      host: fakes.host,
+      setPanelVisible
+    });
   });
 
   describe('GIVEN the visibility reported to the root session', () => {
