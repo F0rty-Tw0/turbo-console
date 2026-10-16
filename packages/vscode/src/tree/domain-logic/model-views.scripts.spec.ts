@@ -89,6 +89,27 @@ describe('FEATURE: model views with scripts', () => {
       expect(views.of(MODEL, false, live('s1#lint', 's2#lint'))).toBe(first);
     });
 
+    it('WHEN many live sets are asked THEN the packages of the model are read once for the key', () => {
+      let reads = 0;
+      const counted: WorkspaceModel = {
+        ...MODEL,
+        get packages(): PackageNode[] {
+          reads += 1;
+
+          return MODEL.packages;
+        }
+      };
+
+      views.of(counted, false, live('s1#lint'));
+
+      const afterFirst = reads;
+
+      views.of(counted, false, live('s1#lint', 'gone#lint'));
+      views.of(counted, false, live('s1#lint', 'other#lint'));
+
+      expect(reads).toBe(afterFirst);
+    });
+
     it('WHEN a live id belongs to a package with turbo tasks THEN the view is the hidden one', () => {
       const hidden = views.of(MODEL, false, live());
 
