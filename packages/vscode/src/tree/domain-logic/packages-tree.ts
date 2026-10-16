@@ -1,14 +1,12 @@
 import { ModelViews } from './model-views.ts';
+import { TreeRefresher } from './tree-refresh.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
-import type { RefreshTarget, RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
+import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
-import { allRows } from '../utils/all-rows.util.ts';
-import { nodesOf, pruneNodes } from '../utils/node-cache.util.ts';
+import { nodesOf } from '../utils/node-cache.util.ts';
 import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts';
-import { refreshTarget } from '../utils/refresh-target.util.ts';
 import { rootRowOf, rootRows } from '../utils/root-rows.util.ts';
-import { rowIdOf } from '../utils/row-id.util.ts';
 import { markAsked, markShown } from '../utils/tree-visible-span.util.ts';
 
 /**
@@ -22,6 +20,7 @@ export class PackagesTree {
   private readonly cache = new Map<string, TreeNode>();
   private readonly views = new ModelViews();
   private readonly viewOf: ModelViewsOf = (model) => this.views.of(model);
+  private readonly refresher: TreeRefresher;
   private mode: TreeMode;
   private scopeShown = false;
 
@@ -29,6 +28,10 @@ export class PackagesTree {
     this.store = store;
     this.mode = mode;
     this.ports = ports;
+
+    const rowContext = (): RowContext => this.rowContext();
+
+    this.refresher = new TreeRefresher({ store, cache: this.cache, fire: ports.fire, rowContext });
   }
 
   /** No node: the single root's rows, or one node per root. A root's rows wait for its first answer (spec §4.3). */
@@ -58,10 +61,7 @@ export class PackagesTree {
   }
 
   public refreshFor(change: RootChange): void {
-    const target = refreshTarget(change);
-
-    this.fireTarget(change.root, target);
-    this.prune(change.root);
+    this.refresher.refreshFor(change);
   }
 
   public setMode(mode: TreeMode): void {
@@ -84,28 +84,12 @@ export class PackagesTree {
     this.redraw();
   }
 
-  /** Fires the cached node of that task; a task never shown (its package collapsed) has none, and nothing fires. */
   public refreshTask(root: string, taskId: string): void {
-    const id = rowIdOf('task', root, taskId);
-    const node = this.cache.get(id);
-
-    if (node !== undefined) this.ports.fire(node);
+    this.refresher.refreshTask(root, taskId);
   }
 
-  /** One fire with the cached nodes of all `running` tasks (spec §4.6 tick); tasks never shown are skipped. */
   public refreshTasks(running: RunningTasks): void {
-    const nodes: TreeNode[] = [];
-
-    for (const [root, ids] of running) {
-      for (const taskId of ids) {
-        const id = rowIdOf('task', root, taskId);
-        const node = this.cache.get(id);
-
-        if (node !== undefined) nodes.push(node);
-      }
-    }
-
-    if (nodes.length > 0) this.ports.fire(nodes);
+    this.refresher.refreshTasks(running);
   }
 
   private rowContext(): RowContext {
@@ -148,38 +132,6 @@ export class PackagesTree {
     return nodesOf(this.cache, rows);
   }
 
-  private fireTarget(root: string, target: RefreshTarget): void {
-    if (target !== 'root') {
-      this.firePackages(root, target);
-
-      return;
-    }
-
-    const node = this.rootNodeOf(root);
-
-    this.ports.fire(node);
-  }
-
-  private firePackages(root: string, names: string[]): void {
-    for (const name of names) {
-      const id = rowIdOf('pkg', root, name);
-      const node = this.cache.get(id);
-
-      if (node !== undefined) this.ports.fire(node);
-    }
-  }
-
-  /** The root's own node in a multi-root window; `undefined` (the whole tree) in a single-root one or when not shown. */
-  private rootNodeOf(root: string): TreeNode | undefined {
-    const isMultiRoot = this.isMultiRoot();
-
-    if (!isMultiRoot) return undefined;
-
-    const id = rowIdOf('root', root, root);
-
-    return this.cache.get(id);
-  }
-
   private redraw(): void {
     const cached = Array.from(this.cache.values(), (node) => node.root);
     const current = this.store.all().map((entry) => entry.state.folder.root);
@@ -187,32 +139,6 @@ export class PackagesTree {
 
     this.ports.fire(undefined);
 
-    for (const root of roots) this.prune(root);
-  }
-
-  /** Keeps every row id the root has now (plus its own node in a multi-root window); a removed root keeps none. */
-  private prune(root: string): void {
-    const keep = this.keptIds(root);
-
-    pruneNodes(this.cache, root, keep);
-  }
-
-  private keptIds(root: string): Set<string> {
-    const entry = this.store.get(root);
-
-    if (entry === undefined) return new Set();
-
-    const context = this.rowContext();
-    const rows = allRows(entry.state, context);
-    const keep = new Set(rows.map((row) => row.id));
-    const isMultiRoot = this.isMultiRoot();
-
-    if (isMultiRoot) keep.add(rowIdOf('root', root, root));
-
-    return keep;
-  }
-
-  private isMultiRoot(): boolean {
-    return this.store.all().length > 1;
+    for (const root of roots) this.refresher.prune(root);
   }
 }
