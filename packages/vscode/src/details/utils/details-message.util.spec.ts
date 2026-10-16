@@ -1,11 +1,20 @@
+import type { DetailsState } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { cardTaskIdsOf, droppedMessageText, parseWebviewMessage } from './details-message.util.ts';
 import { toDetailsState } from './details-state.util.ts';
 import { DROPPED_MESSAGE_MAX, UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
-import { DETAILS_INPUT_STUB } from '../test/stubs/details-model.stub.ts';
+import type { CardTaskIds } from '../common/details.type.ts';
+import {
+  ADHOC_TASK_STUB,
+  A_PACKAGE_STUB,
+  BUILD_TASK_STUB,
+  DETAILS_INPUT_STUB,
+  DETAILS_MODEL_STUB,
+  DETAILS_ROOT_STATE_STUB
+} from '../test/stubs/details-model.stub.ts';
 
-const TASK_IDS: ReadonlySet<string> = new Set(['a#build', 'a#test']);
+const TASK_IDS: CardTaskIds = { all: new Set(['a#build', 'a#test', 'a#adhoc']), notTurbo: new Set(['a#adhoc']) };
 const THROWING_TYPE = {
   get type(): string {
     throw new Error('getter trap');
@@ -71,8 +80,22 @@ describe('FEATURE: webview message validation', () => {
     });
   });
 
+  describe('GIVEN a card of a task no turbo config defines', () => {
+    it.each(['run', 'copy'])('WHEN %s names it THEN it is dropped', (type) => {
+      expect(parseWebviewMessage({ type, taskId: 'a#adhoc' }, TASK_IDS)).toBeNull();
+    });
+
+    it('WHEN stop names it THEN it passes, so a run that turned into a script can end', () => {
+      expect(parseWebviewMessage({ type: 'stop', taskId: 'a#adhoc' }, TASK_IDS)).toStrictEqual({ type: 'stop', taskId: 'a#adhoc' });
+    });
+
+    it.each(['run', 'copy', 'stop'])('WHEN %s names a turbo task of the same panel THEN it still passes', (type) => {
+      expect(parseWebviewMessage({ type, taskId: 'a#build' }, TASK_IDS)).toStrictEqual({ type, taskId: 'a#build' });
+    });
+  });
+
   describe('GIVEN no state, so an empty task set', () => {
-    const noTasks: ReadonlySet<string> = new Set();
+    const noTasks: CardTaskIds = { all: new Set(), notTurbo: new Set() };
 
     it.each(['run', 'stop', 'copy'])('WHEN %s arrives THEN it is dropped', (type) => {
       expect(parseWebviewMessage({ type, taskId: 'a#build' }, noTasks)).toBeNull();
@@ -153,17 +176,34 @@ describe('FEATURE: dropped message log text', () => {
 });
 
 describe('FEATURE: panel task ids', () => {
-  it('GIVEN a package state WHEN asked THEN the ids are those of its cards', () => {
+  it('GIVEN a package state WHEN asked THEN the ids are those of its cards and none is a script', () => {
     const state = toDetailsState(DETAILS_INPUT_STUB);
 
-    expect(cardTaskIdsOf(state)).toStrictEqual(new Set(['a#build', 'a#check', 'a#test']));
+    const ids = cardTaskIdsOf(state);
+
+    expect(ids.all).toStrictEqual(new Set(['a#build', 'a#check', 'a#test']));
+    expect(ids.notTurbo.size).toBe(0);
   });
 
-  it('GIVEN a missing package WHEN asked THEN there are none', () => {
-    expect(cardTaskIdsOf({ kind: 'missing', root: '/ws', packageName: 'a' }).size).toBe(0);
+  it('GIVEN a package with a script WHEN asked THEN the script is in both sets', () => {
+    const pkg = { ...A_PACKAGE_STUB, tasks: [BUILD_TASK_STUB, ADHOC_TASK_STUB] };
+    const model = { ...DETAILS_MODEL_STUB, packages: [pkg] };
+    const rootState = { ...DETAILS_ROOT_STATE_STUB, model };
+    const state = toDetailsState({ ...DETAILS_INPUT_STUB, state: rootState });
+
+    const ids = cardTaskIdsOf(state);
+
+    expect(ids.all).toStrictEqual(new Set(['a#adhoc', 'a#build']));
+    expect(ids.notTurbo).toStrictEqual(new Set(['a#adhoc']));
   });
 
-  it('GIVEN no state yet WHEN asked THEN there are none', () => {
-    expect(cardTaskIdsOf(null).size).toBe(0);
+  it.each<[string, DetailsState | null]>([
+    ['a missing package', { kind: 'missing', root: '/ws', packageName: 'a' }],
+    ['no state yet', null]
+  ])('GIVEN %s WHEN asked THEN there are none', (_name, state) => {
+    const ids = cardTaskIdsOf(state);
+
+    expect(ids.all.size).toBe(0);
+    expect(ids.notTurbo.size).toBe(0);
   });
 });

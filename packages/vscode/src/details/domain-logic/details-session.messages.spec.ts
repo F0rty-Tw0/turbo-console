@@ -15,6 +15,7 @@ import { UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
 import type { DetailsPorts } from '../common/details.type.ts';
 import { detailsPortsMock } from '../test/mocks/details-ports.mock.ts';
 import {
+  ADHOC_TASK_STUB,
   A_PACKAGE_STUB,
   DETAILS_LOADED_STUB,
   DETAILS_MODEL_STUB,
@@ -28,6 +29,9 @@ const LOAD_FAILED: LoadFailure = loadFailureOf('load', new TurboException('faile
 const WITHOUT_BUILD = { ...A_PACKAGE_STUB, tasks: [TEST_TASK_STUB] };
 const MODEL_WITHOUT_BUILD = { ...DETAILS_MODEL_STUB, packages: [WITHOUT_BUILD] };
 const RELOADED_WITHOUT_BUILD = { ...DETAILS_LOADED_STUB, model: MODEL_WITHOUT_BUILD };
+const SCRIPT_PACKAGE = { ...A_PACKAGE_STUB, tasks: [ADHOC_TASK_STUB, TEST_TASK_STUB] };
+const SCRIPT_MODEL = { ...DETAILS_MODEL_STUB, packages: [SCRIPT_PACKAGE] };
+const WITH_SCRIPT = { ...DETAILS_LOADED_STUB, model: SCRIPT_MODEL };
 const HIDDEN_CONTROLS = /[\u202E\u009B\u2028\u2029]/u;
 const THROWING_TYPE = {
   get type(): string {
@@ -135,6 +139,24 @@ describe('FEATURE: details session messages', () => {
       await session.receive({ type: 'stop', taskId: 'a#build' });
 
       expect(ports.execute).toHaveBeenCalledExactlyOnceWith('turboConsole.stopTask', BUILD_ROW);
+    });
+
+    it('WHEN a reload leaves a script card and run or copy names it THEN both are dropped and logged', async () => {
+      store.apply('/ws', WITH_SCRIPT);
+
+      await session.receive({ type: 'run', taskId: 'a#adhoc' });
+      await session.receive({ type: 'copy', taskId: 'a#adhoc' });
+
+      expect(ports.execute).not.toHaveBeenCalled();
+      expect(ports.log).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN a reload leaves a script card and stop names it THEN it still executes', async () => {
+      store.apply('/ws', WITH_SCRIPT);
+
+      await session.receive({ type: 'stop', taskId: 'a#adhoc' });
+
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith('turboConsole.stopTask', { ...BUILD_ROW, key: 'a#adhoc' });
     });
 
     it('WHEN a reload fails at the load stage and run arrives THEN it still executes', async () => {

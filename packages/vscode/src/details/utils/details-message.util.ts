@@ -1,18 +1,40 @@
-import type { DetailsState, WebviewMessage } from '@turbo-console/webview-ui';
+import type { DetailsState, TaskCard, WebviewMessage } from '@turbo-console/webview-ui';
 
 import { webviewMessageSchema } from '../common/details-message.schema.ts';
 import { DROPPED_MESSAGE_MAX, UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
+import type { CardTaskIds } from '../common/details.type.ts';
 
-/** The task ids a message may name: the cards of `state`; none while the panel has no state or the package is missing. */
-export const cardTaskIdsOf = (state: DetailsState | null): ReadonlySet<string> => {
-  if (state?.kind !== 'package') return new Set();
+const NO_CARDS: CardTaskIds = { all: new Set(), notTurbo: new Set() };
 
-  const ids = state.tasks.map((card) => card.taskId);
+const idOf = (card: TaskCard): string => card.taskId;
 
-  return new Set(ids);
+const isScript = (card: TaskCard): boolean => !card.isTurboTask;
+
+/**
+ * The task ids a message may name: the cards of `state`, and apart those of tasks no turbo config defines (they take
+ * `stop` only); none while the panel has no state or the package is missing.
+ */
+export const cardTaskIdsOf = (state: DetailsState | null): CardTaskIds => {
+  if (state?.kind !== 'package') return NO_CARDS;
+
+  const all = new Set(state.tasks.map(idOf));
+  const notTurbo = new Set(state.tasks.filter(isScript).map(idOf));
+  const ids: CardTaskIds = { all, notTurbo };
+
+  return ids;
 };
 
-const acceptedMessage = (value: unknown, taskIds: ReadonlySet<string>): WebviewMessage | null => {
+/** Run and Copy have nothing to do on a script; Stop stays, so a run whose task became one can end (spec §4.12). */
+const isAccepted = (type: string, taskId: string, ids: CardTaskIds): boolean => {
+  const isKnown = ids.all.has(taskId);
+  const isOnScript = ids.notTurbo.has(taskId);
+  const isScriptCommand = type === 'run' || type === 'copy';
+  const isRefused = isOnScript && isScriptCommand;
+
+  return isKnown && !isRefused;
+};
+
+const acceptedMessage = (value: unknown, ids: CardTaskIds): WebviewMessage | null => {
   const parsed = webviewMessageSchema.safeParse(value);
 
   if (!parsed.success) return null;
@@ -21,18 +43,18 @@ const acceptedMessage = (value: unknown, taskIds: ReadonlySet<string>): WebviewM
 
   if (!('taskId' in message)) return message;
 
-  return taskIds.has(message.taskId) ? message : null;
+  return isAccepted(message.type, message.taskId, ids) ? message : null;
 };
 
 /**
  * The webview is a trust boundary: a value that fails the schema, or a task message whose `taskId` is not exactly one of
- * the panel's own task ids (`Set.has`, never a prefix match), is `null`. Pass an empty set while the panel has no state,
- * so every task message is dropped. Never throws: `safeParse` rethrows a throwing getter or proxy trap, which is `null`
- * too.
+ * the panel's own task ids (`Set.has`, never a prefix match), is `null`; so is a `run` or `copy` of a non-turbo task.
+ * Pass empty sets while the panel has no state, so every task message is dropped. Never throws: `safeParse` rethrows a
+ * throwing getter or proxy trap, which is `null` too.
  */
-export const parseWebviewMessage = (value: unknown, taskIds: ReadonlySet<string>): WebviewMessage | null => {
+export const parseWebviewMessage = (value: unknown, ids: CardTaskIds): WebviewMessage | null => {
   try {
-    return acceptedMessage(value, taskIds);
+    return acceptedMessage(value, ids);
   } catch {
     return null;
   }
