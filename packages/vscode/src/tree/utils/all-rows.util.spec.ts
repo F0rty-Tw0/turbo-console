@@ -105,6 +105,15 @@ describe('FEATURE: every row of a root', () => {
       expect(idsWith(true)).toStrictEqual(['scripts:/ws\0a', 'task:/ws\0a#fmt', 'task:/ws\0a#lint']);
     });
 
+    it('WHEN scripts are shown THEN each task and script id appears exactly once', () => {
+      const context = rowContextOf('list', undefined, false, { scriptsShown: true, live: liveIdsOf('/ws') });
+      const ids = allRows(state, context).map((row) => row.id);
+      const countOf = (id: string): number => ids.filter((each) => each === id).length;
+      const taskIds = tasks.map((task) => `task:/ws\0${task.id}`);
+
+      expect(taskIds.map(countOf)).toStrictEqual([1, 1, 1]);
+    });
+
     it('WHEN scripts are hidden and none is live THEN neither the group nor a script is listed', () => {
       expect(idsWith(false)).toStrictEqual([]);
     });

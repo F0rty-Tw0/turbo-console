@@ -19,6 +19,7 @@ export const isLiveScript = (task: TaskNode, liveOfRoot: ReadonlySet<string>): b
   return isScript && liveOfRoot.has(task.id);
 };
 
-const isVisibleTurboTask = (task: TaskNode): boolean => isVisibleTask(task) && task.isTurboTask;
+/** A visible task that is a turbo task; unlike `isRunnableTask`, it stays turbo-only when scripts become runnable. */
+export const isVisibleTurboTask = (task: TaskNode): boolean => isVisibleTask(task) && task.isTurboTask;
 
 export const hasVisibleTurboTask = (pkg: PackageNode): boolean => pkg.tasks.some(isVisibleTurboTask);
