@@ -46,7 +46,7 @@ vi.mock('vscode', () => {
 
 const TOOLTIP_LINES = ['Path: packages/libs', 'Packages: 2'];
 const TOOLTIP_MARKDOWN = 'Path\\: packages\\/libs\\\nPackages\\: 2';
-const MARKDOWN_KINDS: RowKind[] = ['root', 'dir', 'pkg'];
+const MARKDOWN_KINDS: RowKind[] = ['root', 'dir', 'pkg', 'task'];
 
 const rowOf = (kind: RowKind, tooltip: string[]): TreeRow => {
   const row: TreeRow = { ...TREE_ROW_STUB, kind, tooltip };
@@ -61,14 +61,6 @@ describe('FEATURE: tree item tooltip', () => {
 
       expect(tooltip).toBeInstanceOf(vscode.MarkdownString);
       expect(tooltip).toHaveProperty('value', TOOLTIP_MARKDOWN);
-    });
-  });
-
-  describe('GIVEN a task row with tooltip lines', () => {
-    it('WHEN built THEN the tooltip stays a plain string', () => {
-      const { tooltip } = toTreeItem(rowOf('task', TOOLTIP_LINES));
-
-      expect(tooltip).toBe('Path: packages/libs\nPackages: 2');
     });
   });
 

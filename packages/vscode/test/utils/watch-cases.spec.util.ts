@@ -28,8 +28,16 @@ type WatchScene = {
   readonly manifestText: string;
 };
 
-/** The plain-string tooltip of task `taskId` under package `node`. */
-const taskTooltip = async (api: TurboConsoleApi, node: TreeNode, taskId: string): Promise<string> => {
+/** A backslash before a newline: the markdown hard break `tooltipMarkdownOf` joins lines with. */
+const MARKDOWN_LINE_BREAK = '\\\n';
+
+/** A backslash before ASCII punctuation: the escape `tooltipMarkdownOf` puts before every such character. */
+const MARKDOWN_ESCAPE = /\\([!-/:-@[-`{-~])/gu;
+
+const unescapedOf = (line: string): string => line.replace(MARKDOWN_ESCAPE, '$1');
+
+/** The lines of the markdown tooltip of task `taskId` under package `node`, unescaped. */
+const taskTooltipLines = async (api: TurboConsoleApi, node: TreeNode, taskId: string): Promise<string[]> => {
   const children = await api.tree.getChildren(node);
   const task = children.find((child) => child.key === taskId);
 
@@ -37,9 +45,11 @@ const taskTooltip = async (api: TurboConsoleApi, node: TreeNode, taskId: string)
 
   const { tooltip } = api.tree.getTreeItem(task);
 
-  if (typeof tooltip !== 'string') throw new Error(`the tooltip of ${taskId} is not a plain string`);
+  if (tooltip === undefined || typeof tooltip === 'string') throw new Error(`the tooltip of ${taskId} is not markdown`);
 
-  return tooltip;
+  const lines = tooltip.value.split(MARKDOWN_LINE_BREAK);
+
+  return lines.map(unescapedOf);
 };
 
 /**
@@ -89,14 +99,13 @@ const scriptCase = async (scene: WatchScene): Promise<void> => {
     }
 
     const firedIds = fired.map((changed) => changed?.id ?? 'undefined');
-    const tooltip = await taskTooltip(scene.api, node, `${scene.name}#${BUILD_TASK}`);
-    const lines = tooltip.split('\n');
+    const lines = await taskTooltipLines(scene.api, node, `${scene.name}#${BUILD_TASK}`);
 
     log(`script edit: ${fired.length} tree events (${firedIds.join(', ')})`);
 
     assert.deepEqual(firedIds, [node.id]);
     assert.equal(fired[0], node, 'the event carries the cached package node');
-    assert.ok(lines.includes(`Command: ${BUILD_SCRIPT}`), `tooltip: ${tooltip}`);
+    assert.ok(lines.includes(`Command: ${BUILD_SCRIPT}`), `tooltip: ${lines.join(' | ')}`);
   });
 };
 

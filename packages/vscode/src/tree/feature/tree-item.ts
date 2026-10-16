@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { tooltipMarkdownOf, tooltipOf } from '../../shared/utils/tooltip.util.ts';
+import { tooltipMarkdownOf } from '../../shared/utils/tooltip.util.ts';
 import type { RowCommand, TreeRow } from '../common/tree-row.type.ts';
 
 const COLLAPSIBLE_STATES: Readonly<Record<TreeRow['collapsible'], vscode.TreeItemCollapsibleState>> = {
@@ -22,13 +22,8 @@ const commandOf = (command: RowCommand, title: string): vscode.Command => {
   return built;
 };
 
-/**
- * VS Code reads a plain-string tooltip as the row's aria label, so root, folder and package rows get markdown and keep
- * label and description as theirs. Task rows keep the plain string they had before.
- */
-const tooltipFor = (row: TreeRow): string | vscode.MarkdownString => {
-  if (row.kind === 'task') return tooltipOf(row.tooltip);
-
+/** VS Code reads a plain-string tooltip as the row's aria label, so every row gets markdown and keeps label and description as theirs. */
+const tooltipFor = (row: TreeRow): vscode.MarkdownString => {
   const markdown = tooltipMarkdownOf(row.tooltip);
 
   return new vscode.MarkdownString(markdown);
