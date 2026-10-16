@@ -103,8 +103,9 @@ export class RunStore {
 
     if (slot === undefined) return null;
 
-    const state = endStateOf(slot.entry.stopRequested, exitCode, slot.entry.task.persistent);
-    const matching = isMatchedEnd(state, exitCode);
+    const { stopRequested, task } = slot.entry;
+    const state = endStateOf(stopRequested, exitCode, task.persistent, task.isTurboTask);
+    const matching = isMatchedEnd(state, exitCode, task.isTurboTask);
 
     return this.update(slot, { state, endedAt: at, exitCode: exitCode ?? null, matching });
   }
