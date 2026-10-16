@@ -1,5 +1,13 @@
+import type { TaskDefinition } from '@turbo-console/core';
+
 import { expect, test } from './details.fixture.ts';
-import { MISSING_PACKAGE_STUB, PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
+import {
+  MISSING_PACKAGE_STUB,
+  PACKAGE_DETAILS_STUB,
+  RUN_VIEW_STUB,
+  TASK_CARD_STUB,
+  TASK_DEFINITION_STUB
+} from './test/stubs/details-state.stub.ts';
 import { packageWithTasks, taskNames } from './test/utils/details-state.spec.util.ts';
 import type { WebviewMessage } from '../src/bridge/common/details-message.type.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
@@ -32,6 +40,15 @@ const LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loadin
 const SHORT_LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loading', tasks: [] };
 
 const FOCUS_KEPT_LABELS = ['Refresh', 'Copy command for build'];
+
+const CACHE_ONLY: TaskDefinition = { ...TASK_DEFINITION_STUB, persistent: false };
+
+const PERSISTENT_ONLY: TaskDefinition = { ...TASK_DEFINITION_STUB, cache: false };
+
+const SINGLE_BADGES: [string, TaskDefinition, string][] = [
+  ['cache', CACHE_ONLY, 'Cacheable'],
+  ['persistent', PERSISTENT_ONLY, 'Continuous']
+];
 
 const ALL_ACTIONS_POSTED: WebviewMessage[] = [
   { type: 'ready' },
@@ -74,6 +91,17 @@ test.describe('FEATURE: package details page', () => {
 
     await test.step('AND no console or page error is logged', (): void => detailsPage.expectNoErrors());
   });
+
+  for (const [flag, definition, badge] of SINGLE_BADGES) {
+    test(`GIVEN a task with only ${flag} set, the card shows only ${badge}`, async ({ detailsPage }): Promise<void> => {
+      const task: TaskCard = { ...TASK_CARD_STUB, definition };
+      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [task] };
+
+      await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
+
+      await test.step(`THEN ${badge} is the only badge`, async (): Promise<void> => detailsPage.card('build').expectBadges([badge]));
+    });
+  }
 
   test(
     'GIVEN a package with a hostile name, the name renders as text',
