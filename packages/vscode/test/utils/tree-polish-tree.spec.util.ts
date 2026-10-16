@@ -45,7 +45,7 @@ const labelOf = (item: vscode.TreeItem): string => {
 };
 
 /** The tooltip's lines as the row text read them: each markdown line unescaped. */
-export const tooltipLinesOf = (item: vscode.TreeItem): string[] => {
+const tooltipLinesOf = (item: vscode.TreeItem): string[] => {
   const { tooltip } = item;
 
   if (tooltip === undefined) return [];

@@ -13,9 +13,6 @@ export const EMPTY_PACKAGE = '@fx/zz-empty';
 /** A second scope with the bare name of `POLISH_PACKAGE`: both keep their scopes while scopes are hidden. */
 export const DUP_PACKAGE = '@fy/pkg-001';
 
-/** The tree tooltip's kind line of a script; spec 1c-a §4.9 (the tree's copy of the Details card's text is compared against this literal). */
-export const NOT_TURBO_LINE = 'Not a turbo task: no turbo.json defines it';
-
 /**
  * Where `DEV_SCRIPT` writes its pid, relative to its package: under `.turbo/`, which the fixture's `.gitignore` holds, so
  * the file is no input of `build` and case 5's second run stays a cache hit.
