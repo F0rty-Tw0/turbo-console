@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { tickerPortsOf } from './ticker-ports.ts';
-import type { PackagesTreeApi } from '../common/tree-node.type.ts';
+import type { PackagesTreeApi, RunningTasks } from '../common/tree-node.type.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
 
 describe('FEATURE: ticker ports', () => {
@@ -16,12 +16,13 @@ describe('FEATURE: ticker ports', () => {
     vi.useRealTimers();
   });
 
-  it('GIVEN a tree WHEN a task fires THEN that task of that root is refreshed', () => {
+  it('GIVEN a tree WHEN the running tasks fire THEN the tree refreshes them all in one call', () => {
     const { fire } = tickerPortsOf(tree);
+    const running: RunningTasks = new Map([['/ws', new Set(['a#dev', 'b#dev'])]]);
 
-    fire('/ws', 'a#dev');
+    fire(running);
 
-    expect(vi.mocked(tree.refreshTask).mock.calls).toStrictEqual([['/ws', 'a#dev']]);
+    expect(vi.mocked(tree.refreshTasks)).toHaveBeenCalledExactlyOnceWith(running);
   });
 
   describe('GIVEN an interval armed with every', () => {

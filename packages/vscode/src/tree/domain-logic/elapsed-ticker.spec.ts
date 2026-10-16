@@ -1,13 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Mock } from 'vitest';
 
 import { ElapsedTicker } from './elapsed-ticker.ts';
 import type { RunEntry, RunState } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
-import type { PackagesTreeApi } from '../common/tree-node.type.ts';
+import type { RunningTasks } from '../common/tree-node.type.ts';
 import { tickerPortsOf } from '../data-access/ticker-ports.ts';
 import type { RunChangesFake, VisibleViewFake } from '../test/common/ticker-fakes.type.ts';
-import { runChangesFake, visibleViewFake } from '../test/utils/ticker-fakes.spec.util.ts';
+import { runChangesFake, taskKeysOf, visibleViewFake } from '../test/utils/ticker-fakes.spec.util.ts';
 
 const SECOND = 1000;
 
@@ -19,14 +18,19 @@ const entryOf = (taskId: string, state: RunState, root = '/ws'): RunEntry => {
 
 describe('FEATURE: elapsed ticker', () => {
   let changes: RunChangesFake;
-  let fire: Mock<PackagesTreeApi['refreshTask']>;
+  let fired: string[][];
   let ticker: ElapsedTicker;
 
   beforeEach(() => {
     vi.useFakeTimers();
     changes = runChangesFake();
-    fire = vi.fn<PackagesTreeApi['refreshTask']>();
-    ticker = new ElapsedTicker(changes.runs, tickerPortsOf({ refreshTask: fire }));
+    fired = [];
+
+    const refreshTasks = (running: RunningTasks): void => {
+      fired.push(taskKeysOf(running));
+    };
+
+    ticker = new ElapsedTicker(changes.runs, tickerPortsOf({ refreshTasks }));
   });
 
   afterEach(() => {
@@ -46,7 +50,7 @@ describe('FEATURE: elapsed ticker', () => {
 
       vi.advanceTimersByTime(3 * SECOND);
 
-      expect([ticker.api().ticks(), fire.mock.calls.length]).toStrictEqual([0, 0]);
+      expect([ticker.api().ticks(), fired.length]).toStrictEqual([0, 0]);
     });
   });
 
@@ -76,7 +80,7 @@ describe('FEATURE: elapsed ticker', () => {
 
       vi.advanceTimersByTime(SECOND - 1);
 
-      expect(fire).not.toHaveBeenCalled();
+      expect(fired).toStrictEqual([]);
     });
 
     it('WHEN a run goes for two seconds THEN each tick fires exactly its task', () => {
@@ -84,9 +88,9 @@ describe('FEATURE: elapsed ticker', () => {
 
       vi.advanceTimersByTime(2 * SECOND);
 
-      expect(fire.mock.calls).toStrictEqual([
-        ['/ws', 'a#dev'],
-        ['/ws', 'a#dev']
+      expect(fired).toStrictEqual([
+        ['/ws a#dev'],
+        ['/ws a#dev']
       ]);
     });
 
@@ -105,7 +109,7 @@ describe('FEATURE: elapsed ticker', () => {
 
       vi.advanceTimersByTime(SECOND);
 
-      expect(fire.mock.calls).toStrictEqual([['/ws', 'a#dev']]);
+      expect(fired).toStrictEqual([['/ws a#dev']]);
     });
 
     it('WHEN an idle task changes state THEN only the running one fires', () => {
@@ -114,7 +118,7 @@ describe('FEATURE: elapsed ticker', () => {
 
       vi.advanceTimersByTime(SECOND);
 
-      expect(fire.mock.calls).toStrictEqual([['/ws', 'a#dev']]);
+      expect(fired).toStrictEqual([['/ws a#dev']]);
     });
 
     describe('WHEN two runs of one root go and one ends', () => {
@@ -127,9 +131,9 @@ describe('FEATURE: elapsed ticker', () => {
       it('THEN each later tick fires only the other', () => {
         vi.advanceTimersByTime(2 * SECOND);
 
-        expect(fire.mock.calls).toStrictEqual([
-          ['/ws', 'b#dev'],
-          ['/ws', 'b#dev']
+        expect(fired).toStrictEqual([
+          ['/ws b#dev'],
+          ['/ws b#dev']
         ]);
       });
 
@@ -153,8 +157,18 @@ describe('FEATURE: elapsed ticker', () => {
       it('THEN nothing fires afterwards', () => {
         vi.advanceTimersByTime(3 * SECOND);
 
-        expect(fire).not.toHaveBeenCalled();
+        expect(fired).toStrictEqual([]);
       });
+    });
+
+    it('WHEN runs of two roots go for one second THEN the tick fires once, carrying both tasks', () => {
+      changes.emit(entryOf('a#dev', 'running', '/one'));
+      changes.emit(entryOf('b#dev', 'running', '/one'));
+      changes.emit(entryOf('a#dev', 'running', '/two'));
+
+      vi.advanceTimersByTime(SECOND);
+
+      expect(fired).toStrictEqual([['/one a#dev', '/one b#dev', '/two a#dev']]);
     });
 
     describe('WHEN runs of two roots go and the first root’s run ends', () => {
@@ -167,7 +181,7 @@ describe('FEATURE: elapsed ticker', () => {
       it('THEN each tick fires only the second root’s task', () => {
         vi.advanceTimersByTime(SECOND);
 
-        expect(fire.mock.calls).toStrictEqual([['/two', 'a#dev']]);
+        expect(fired).toStrictEqual([['/two a#dev']]);
       });
 
       it('WHEN the second root’s run ends too THEN the interval is cleared', () => {
@@ -214,7 +228,7 @@ describe('FEATURE: elapsed ticker', () => {
 
       vi.advanceTimersByTime(3 * SECOND);
 
-      expect(fire).not.toHaveBeenCalled();
+      expect(fired).toStrictEqual([]);
     });
   });
 
@@ -237,7 +251,7 @@ describe('FEATURE: elapsed ticker', () => {
 
       fake.setVisible(true);
 
-      expect(fire.mock.calls).toStrictEqual([['/ws', 'a#dev']]);
+      expect(fired).toStrictEqual([['/ws a#dev']]);
     });
 
     it('WHEN the view shows with a run going THEN an interval is armed', () => {
@@ -262,13 +276,13 @@ describe('FEATURE: elapsed ticker', () => {
 
       fake.setVisible(true);
 
-      expect([fire.mock.calls.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
+      expect([fired.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
     });
 
     it('WHEN the view shows with no run going THEN nothing fires and no interval is armed', () => {
       fake.setVisible(true);
 
-      expect([fire.mock.calls.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
+      expect([fired.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
     });
   });
 
@@ -291,7 +305,7 @@ describe('FEATURE: elapsed ticker', () => {
       changes.emit(entryOf('a#dev', 'running'));
       fake.setVisible(true);
 
-      expect([fire.mock.calls.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
+      expect([fired.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
     });
 
     it('WHEN it was visible with a run going THEN the interval is cleared, as unbound counts as hidden', () => {

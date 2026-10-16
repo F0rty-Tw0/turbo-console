@@ -9,7 +9,8 @@ const TICK_MS = 1000;
 
 /**
  * Spec §4.6: one interval per window, armed only while a run is `running` and the bound Packages view is visible; each
- * tick fires only the running tasks' nodes, so a tick costs O(running tasks). The running set is fed by the run
+ * tick fires only the running tasks' nodes, all in one call, so a tick costs O(running tasks) and VS Code redraws them
+ * in one pass. The running set is fed by the run
  * store's changes alone. Unbound (an untrusted window, or after its binding is disposed) it counts as hidden.
  */
 export class ElapsedTicker {
@@ -72,9 +73,11 @@ export class ElapsedTicker {
 
   /** On show, the running rows are stale by however long the view was hidden, so they fire at once. */
   private visibilityChanged(event: TreeViewVisibilityChangeEvent): void {
+    const hasRuns = this.running.size > 0;
+
     this.isVisible = event.visible;
 
-    if (event.visible) this.fireRunning();
+    if (event.visible && hasRuns) this.ports.fire(this.running);
 
     this.sync();
   }
@@ -93,12 +96,6 @@ export class ElapsedTicker {
 
   private readonly tick = (): void => {
     this.count += 1;
-    this.fireRunning();
+    this.ports.fire(this.running);
   };
-
-  private fireRunning(): void {
-    for (const [root, ids] of this.running) {
-      for (const taskId of ids) this.ports.fire(root, taskId);
-    }
-  }
 }
