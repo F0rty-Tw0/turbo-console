@@ -1,7 +1,7 @@
 import type { HostMessage, MissingPackage } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
-import { safePost } from './safe-post.util.ts';
+import { safePost } from './safe-post.ts';
 
 const MISSING: MissingPackage = { kind: 'missing', root: '/ws', packageName: 'a' };
 const MESSAGE: HostMessage = { type: 'state', state: MISSING };

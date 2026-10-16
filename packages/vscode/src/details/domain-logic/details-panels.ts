@@ -1,3 +1,4 @@
+import { detailsApiOf } from './details-api.ts';
 import { DetailsSession } from './details-session.ts';
 import { ensureLoadedWith, panelPortsOf } from './panel-ports.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
@@ -10,7 +11,6 @@ import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { OPEN_FAILED_TEXT } from '../common/details.const.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { OpenPanel, PanelParts, PanelsDeps } from '../common/panel.type.ts';
-import { detailsApiOf } from '../utils/details-api.util.ts';
 import { panelIdOf } from '../utils/panel-id.util.ts';
 
 const revealed = (panel: OpenPanel | null): OpenPanel | null => {

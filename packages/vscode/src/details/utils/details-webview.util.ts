@@ -1,13 +1,6 @@
-import { randomBytes } from 'node:crypto';
-
 import { renderWebviewHtml, webviewCsp } from '@turbo-console/webview-ui';
 
 import type { HtmlAssets, PanelOptions } from '../common/details-webview.type.ts';
-
-const NONCE_BYTES = 16;
-
-/** A new nonce for one html assignment. */
-export const freshNonce = (): string => randomBytes(NONCE_BYTES).toString('base64');
 
 /**
  * Fills the page template. `nonce` is host-made; the other slots are the webview URIs of three fixed file names and

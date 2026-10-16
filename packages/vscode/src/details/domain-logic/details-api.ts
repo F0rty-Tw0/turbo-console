@@ -1,8 +1,8 @@
 import type { HostMessage } from '@turbo-console/webview-ui';
 
-import { panelIdOf } from './panel-id.util.ts';
 import type { DetailsApi, PanelInfo } from '../../shared/common/api.type.ts';
 import type { OpenPanel } from '../common/panel.type.ts';
+import { panelIdOf } from '../utils/panel-id.util.ts';
 
 /** The test API over the registry's open panels; a call for a panel that is not open rejects. */
 export const detailsApiOf = (panels: ReadonlyMap<string, OpenPanel>): DetailsApi => {

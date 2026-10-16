@@ -1,7 +1,7 @@
 import type { HostMessage, RunStateMessage, RunView } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { recordPosted } from './posted-cap.util.ts';
+import { recordPosted } from './posted-cap.ts';
 import { POSTED_MAX } from '../common/details.const.ts';
 
 const RUN_VIEW_STUB: RunView = { iconId: 'tools', colorVar: null, text: '', isRunning: false };
