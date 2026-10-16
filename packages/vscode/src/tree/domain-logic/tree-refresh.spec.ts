@@ -200,6 +200,14 @@ describe('FEATURE: tree refresh on a run change', () => {
     });
   });
 
+  describe('GIVEN scripts hidden and the atom-file task s#gen, which is never a row', () => {
+    it('WHEN its run starts THEN nothing is redrawn', () => {
+      refresher.runChanged(scriptRunOf('/ws', { taskId: 's#gen' }));
+
+      expect(fixture.fire).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN scripts hidden in a window with two roots', () => {
     it('WHEN a script of /other starts running THEN the /other root node is redrawn, not the tree', () => {
       const two = refresherFixtureOf(true);

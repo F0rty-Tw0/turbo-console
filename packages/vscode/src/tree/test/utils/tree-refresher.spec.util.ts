@@ -22,7 +22,15 @@ const NOBODY: ReadonlySet<string> = new Set();
 /** The script `s#lint`, defined by a `package.json` only: a turbo task never moves the root. */
 export const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, id: 's#lint', name: 'lint', isTurboTask: false };
 
-export const SCRIPT_PACKAGE: PackageNode = { name: 's', path: 'packages/s', tags: [], tasks: [SCRIPT_TASK] };
+/** `s#gen`, an `atom-file` task: never a row, so never a script that moves the root. */
+const ATOM_FILE_TASK: TaskNode = { ...SCRIPT_TASK, id: 's#gen', name: 'gen', kind: 'atom-file' };
+
+export const SCRIPT_PACKAGE: PackageNode = {
+  name: 's',
+  path: 'packages/s',
+  tags: [],
+  tasks: [SCRIPT_TASK, ATOM_FILE_TASK]
+};
 
 /** The script `a#lint` of package `a`, which also holds the turbo task `a#build`. */
 export const TURBO_PACKAGE_SCRIPT: TaskNode = { ...SCRIPT_TASK, id: 'a#lint' };
