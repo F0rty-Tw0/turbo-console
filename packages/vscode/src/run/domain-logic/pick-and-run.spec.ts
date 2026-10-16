@@ -19,7 +19,7 @@ const ONE: RootFolder = { root: '/one', name: 'one' };
 const TWO: RootFolder = { root: '/two', name: 'two' };
 
 const requestOf = (root: string, packageName: string, task: TaskNode): RunRequest => {
-  const request: RunRequest = { root, packageName, task, binaryPath: TURBO_BINARY_STUB.path };
+  const request: RunRequest = { root, packageName, task, binaryPath: TURBO_BINARY_STUB.path, force: false };
 
   return request;
 };
@@ -72,6 +72,17 @@ describe('FEATURE: palette run picker', () => {
     expect(fakes.pick).not.toHaveBeenCalled();
   });
 
+  it('GIVEN a root whose only tasks are scripts no turbo config defines WHEN it starts THEN it lists no task', async () => {
+    const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
+
+    await pickAndRun(roots, fakes.ports);
+
+    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+    expect(fakes.pick).not.toHaveBeenCalled();
+  });
+
   it('GIVEN the only model sits in a root with a binary error WHEN it starts THEN it says no tasks are available', async () => {
     roots.apply('/one', loadedWith([PACKAGE_NODE_STUB]));
     roots.apply('/one', binaryFailure);
@@ -92,6 +103,21 @@ describe('FEATURE: palette run picker', () => {
       await pickAndRun(roots, fakes.ports);
 
       expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/one', 'a', TASK_NODE_STUB));
+    });
+
+    it('WHEN the picked task turns into a script during the package pick THEN nothing runs', async () => {
+      const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+      fakes.pick.mockImplementationOnce(async (items) => Promise.resolve(items[0]));
+      fakes.pick.mockImplementationOnce(async (items) => {
+        roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
+
+        return Promise.resolve(items[0]);
+      });
+
+      await pickAndRun(roots, fakes.ports);
+
+      expect(fakes.run).not.toHaveBeenCalled();
     });
 
     it('WHEN the task pick is closed THEN nothing more is asked or run', async () => {

@@ -32,8 +32,11 @@ export const modelTaskOf = (target: TaskTarget, state: RootState | undefined): T
   return pkg?.tasks.find((node) => node.id === target.definition.id);
 };
 
-/** The run of `target` in the current state of its root; `null` while the root has no binary or no longer holds the task. */
-export const runRequestOf = (target: TaskTarget, state: RootState | undefined): RunRequest | null => {
+/**
+ * The run of `target` in the current state of its root, with `force` for Run Without Cache; `null` while the root has no
+ * binary or no longer holds the task.
+ */
+export const runRequestOf = (target: TaskTarget, state: RootState | undefined, force: boolean): RunRequest | null => {
   const binary = state?.binary;
 
   if (binary === null || binary === undefined) return null;
@@ -42,7 +45,13 @@ export const runRequestOf = (target: TaskTarget, state: RootState | undefined): 
 
   if (task === undefined) return null;
 
-  const request: RunRequest = { root: target.definition.root, packageName: target.packageName, task, binaryPath: binary.path };
+  const request: RunRequest = {
+    root: target.definition.root,
+    packageName: target.packageName,
+    task,
+    binaryPath: binary.path,
+    force
+  };
 
   return request;
 };

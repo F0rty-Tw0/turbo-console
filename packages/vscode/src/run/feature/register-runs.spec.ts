@@ -1,3 +1,4 @@
+import type { PackageNode, TaskNode } from '@turbo-console/core';
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,7 +16,11 @@ import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
 const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
 
-const REQUEST: RunRequest = { root: '/ws', packageName: 'a', task: TASK_NODE_STUB, binaryPath: TURBO_BINARY_STUB.path };
+const REQUEST: RunRequest = { root: '/ws', packageName: 'a', task: TASK_NODE_STUB, binaryPath: TURBO_BINARY_STUB.path, force: false };
+
+const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [SCRIPT_TASK] };
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 
@@ -58,10 +63,10 @@ describe('FEATURE: run commands', () => {
     registered = registerRuns(session, { refreshTask }, roots, register);
   });
 
-  it('GIVEN the run commands WHEN they are registered THEN Run Task and Stop Task are registered', () => {
+  it('GIVEN the run commands WHEN they are registered THEN Run, Run Without Cache and Stop Task are registered', () => {
     const names = commands.keys();
 
-    expect([...names]).toStrictEqual(['turboConsole.runTask', 'turboConsole.stopTask']);
+    expect([...names]).toStrictEqual(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask']);
   });
 
   describe('GIVEN a root loaded with a binary and package a holding the build task', () => {
@@ -75,11 +80,33 @@ describe('FEATURE: run commands', () => {
       expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000);
     });
 
+    it('WHEN Run Task Without Cache is invoked on the task row THEN turbo runs it with --force and the entry is forced', async () => {
+      await command('turboConsole.runTaskWithoutCache', TASK_TREE_NODE_STUB);
+
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith({ ...REQUEST, force: true }, [...ARGS, '--force'], 1000);
+      expect(session.runs.get('/ws', 'build')?.force).toBe(true);
+    });
+
+    it('WHEN Run Task is invoked on the task row THEN the entry is not forced', async () => {
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+
+      expect(session.runs.get('/ws', 'build')?.force).toBe(false);
+    });
+
+    it('WHEN Run Task Without Cache is invoked while the task runs THEN it is refused', async () => {
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+
+      await command('turboConsole.runTaskWithoutCache', TASK_TREE_NODE_STUB);
+
+      expect(ports.info).toHaveBeenCalledExactlyOnceWith('Already running.');
+    });
+
     it.each<[string, unknown]>([
       ['a package row', TREE_NODE_STUB],
       ['no argument (the command palette)', undefined]
-    ])('WHEN Run Task is invoked on %s THEN nothing runs', async (_name, arg) => {
+    ])('WHEN Run Task or Run Task Without Cache is invoked on %s THEN nothing runs', async (_name, arg) => {
       await command('turboConsole.runTask', arg);
+      await command('turboConsole.runTaskWithoutCache', arg);
 
       expect(ports.execute).not.toHaveBeenCalled();
     });
@@ -98,6 +125,25 @@ describe('FEATURE: run commands', () => {
       await command('turboConsole.stopTask', TASK_TREE_NODE_STUB);
 
       expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the running task turned into a script on a reload THEN Stop Task still terminates it', async () => {
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+      roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
+
+      await command('turboConsole.stopTask', TASK_TREE_NODE_STUB);
+
+      expect(execution.terminate).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the task is a script THEN Run Task and Run Task Without Cache refuse it and launch nothing', async () => {
+      roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
+
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+      await command('turboConsole.runTaskWithoutCache', TASK_TREE_NODE_STUB);
+
+      expect(ports.execute).not.toHaveBeenCalled();
+      expect(ports.info).toHaveBeenCalledTimes(2);
     });
 
     it('WHEN Stop Task is invoked on a package row THEN nothing is terminated', async () => {
@@ -139,8 +185,8 @@ describe('FEATURE: run commands', () => {
       registered.dispose();
     });
 
-    it('WHEN they are disposed THEN both commands are unregistered', () => {
-      expect(unregister).toHaveBeenCalledTimes(2);
+    it('WHEN they are disposed THEN every command is unregistered', () => {
+      expect(unregister).toHaveBeenCalledTimes(3);
     });
 
     it('WHEN a task runs THEN no tree row is refreshed', async () => {

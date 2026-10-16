@@ -23,6 +23,8 @@ const CACHE_LINES: Readonly<Record<NonNullable<RunMatch['cache']>, string>> = {
   MISS: 'Cache: not cached, ran'
 };
 
+const FORCED_CACHE_LINE = 'Cache: skipped (Run Without Cache)';
+
 const lineOf = (line: string | null): string[] => {
   if (line === null) return [];
 
@@ -55,11 +57,19 @@ const taskFactLines = (task: TaskNode): string[] => {
   return lines.flatMap(lineOf);
 };
 
-const matchLines = (match: RunMatch | null): string[] => {
+const cacheLineOf = (match: RunMatch, force: boolean): string | null => {
+  if (match.cache === null) return null;
+
+  if (force && match.cache === 'MISS') return FORCED_CACHE_LINE;
+
+  return CACHE_LINES[match.cache];
+};
+
+const matchLines = (match: RunMatch | null, force: boolean): string[] => {
   if (match === null) return [];
 
   const duration = labelled('Duration', durationText(match.durationMs));
-  const cache = match.cache === null ? null : CACHE_LINES[match.cache];
+  const cache = cacheLineOf(match, force);
   const lines = [duration, cache];
 
   return lines.flatMap(lineOf);
@@ -84,7 +94,7 @@ const runLines = (entry: RunEntry | undefined): string[] => {
   if (state === 'stopped') return times.flatMap(lineOf);
 
   const exit = labelled('Exit code', entry.exitCode);
-  const matched = matchLines(settledMatchOf(entry));
+  const matched = matchLines(settledMatchOf(entry), entry.force);
   const lines = [exit, ...matched, ...times];
 
   return lines.flatMap(lineOf);

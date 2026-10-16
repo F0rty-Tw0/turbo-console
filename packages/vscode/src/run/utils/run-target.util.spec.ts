@@ -83,11 +83,23 @@ describe('FEATURE: run targets', () => {
 
   describe('GIVEN the target task of package a', () => {
     it('WHEN its root is loaded with a binary THEN the request runs that task with that binary', () => {
-      const expected: RunRequest = { root: '/ws', packageName: 'a', task: TASK_NODE_STUB, binaryPath: TURBO_BINARY_STUB.path };
+      const expected: RunRequest = {
+        root: '/ws',
+        packageName: 'a',
+        task: TASK_NODE_STUB,
+        binaryPath: TURBO_BINARY_STUB.path,
+        force: false
+      };
 
-      const request = runRequestOf(TARGET, LOADED);
+      const request = runRequestOf(TARGET, LOADED, false);
 
       expect(request).toStrictEqual(expected);
+    });
+
+    it('WHEN it is asked as a forced run THEN the request is marked forced', () => {
+      const request = runRequestOf(TARGET, LOADED, true);
+
+      expect(request?.force).toBe(true);
     });
 
     it.each<[string, RootState | undefined]>([
@@ -97,7 +109,7 @@ describe('FEATURE: run targets', () => {
       ['without package a', NO_PACKAGE],
       ['with package a but not the task', NO_TASK]
     ])('WHEN its root is %s THEN there is nothing to run', (_name, state) => {
-      const request = runRequestOf(TARGET, state);
+      const request = runRequestOf(TARGET, state, false);
 
       expect(request).toBeNull();
     });

@@ -119,6 +119,12 @@
         "icon": "$(play)"
       },
       {
+        "command": "turboConsole.runTaskWithoutCache",
+        "title": "Run Task Without Cache",
+        "category": "Turbo Console",
+        "icon": "$(debug-rerun)"
+      },
+      {
         "command": "turboConsole.stopTask",
         "title": "Stop Task",
         "category": "Turbo Console",
@@ -224,6 +230,11 @@
           "group": "1_run@0"
         },
         {
+          "command": "turboConsole.runTaskWithoutCache",
+          "when": "view == turboConsole.tree && viewItem =~ /^turboTask(?!\\.running)/",
+          "group": "1_run@1"
+        },
+        {
           "command": "turboConsole.stopTask",
           "when": "view == turboConsole.tree && viewItem =~ /^turboTask\\.running/",
           "group": "1_run@0"
@@ -247,6 +258,11 @@
           "command": "turboConsole.openPackageJson",
           "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)/",
           "group": "inline@2"
+        },
+        {
+          "command": "turboConsole.runTaskWithoutCache",
+          "when": "view == turboConsole.tree && viewItem =~ /^turboTask\\.cached/",
+          "group": "inline@3"
         },
         {
           "command": "turboConsole.openPackageDetails",
@@ -306,6 +322,10 @@
         },
         {
           "command": "turboConsole.runTask",
+          "when": "false"
+        },
+        {
+          "command": "turboConsole.runTaskWithoutCache",
           "when": "false"
         },
         {

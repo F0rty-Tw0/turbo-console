@@ -24,7 +24,7 @@ const NOW = 1_000_000;
 
 const LAUNCHED_AT = NOW - 12_345;
 
-const RUN_A_BUILD: RunRequest = { root: '/ws', packageName: 'a', task: BUILD_TASK_STUB, binaryPath: '/bin/turbo' };
+const RUN_A_BUILD: RunRequest = { root: '/ws', packageName: 'a', task: BUILD_TASK_STUB, binaryPath: '/bin/turbo', force: false };
 
 const A_BUILD: RunDefinition = { root: '/ws', id: 'a#build' };
 

@@ -21,6 +21,8 @@ export type RunEntry = {
   readonly stopRequested: boolean;
   readonly match: RunMatch | null;
   readonly matching: boolean;
+  /** Run Without Cache: the run passed `--force`, so its summary records `MISS` whatever the cache held. */
+  readonly force: boolean;
 };
 
 export type RunLookup = (root: string, taskId: string) => RunEntry | undefined;
@@ -46,6 +48,7 @@ export type RunRequest = {
   readonly packageName: string;
   readonly task: TaskNode;
   readonly binaryPath: string;
+  readonly force: boolean;
 };
 
 /**

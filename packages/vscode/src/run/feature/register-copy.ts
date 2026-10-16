@@ -2,7 +2,7 @@ import { TurboException } from '@turbo-console/core';
 import type { TaskNode } from '@turbo-console/core';
 
 import type { Roots } from '../../roots/common/coordinator.type.ts';
-import { NAME_NOT_COPYABLE_TEXT, SHELL_NOT_COPYABLE_TEXT } from '../common/copy.const.ts';
+import { NAME_NOT_COPYABLE_TEXT, NOT_TURBO_COPY_TEXT, SHELL_NOT_COPYABLE_TEXT } from '../common/copy.const.ts';
 import type { CopyPorts } from '../common/copy.type.ts';
 import type { CommandRegistry, Disposed } from '../common/run.type.ts';
 import type { ShellKind } from '../common/shell.type.ts';
@@ -36,6 +36,12 @@ const copyCommand = async (roots: Roots, ports: CopyPorts, arg: unknown): Promis
   const task = modelTaskOf(target, state);
 
   if (task === undefined) return;
+
+  if (!task.isTurboTask) {
+    ports.info(NOT_TURBO_COPY_TEXT);
+
+    return;
+  }
 
   const kind = shellKindOf(ports.shell());
   const text = textOf(ports, task, target.packageName, kind);
