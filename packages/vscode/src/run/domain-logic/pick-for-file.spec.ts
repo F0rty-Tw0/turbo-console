@@ -131,14 +131,55 @@ describe('FEATURE: package.json run action', () => {
     expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
   });
 
-  it('GIVEN a package whose only tasks are no turbo task WHEN it runs THEN it says there are no tasks to run in it', async () => {
-    const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+  describe('GIVEN a package holding two offered scripts and one refused', () => {
+    const scriptNamed = (name: string): TaskNode => {
+      const script: TaskNode = { ...TASK_NODE_STUB, id: name, name, isTurboTask: false };
 
-    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
+      return script;
+    };
+    const scripts = [scriptNamed('lint'), scriptNamed('fmt'), scriptNamed('a b')];
+
+    beforeEach(() => {
+      roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: scripts }]));
+    });
+
+    it('WHEN scripts are hidden THEN it counts the offered scripts in the hint and picks nothing', async () => {
+      await pickForFileAndRun(roots, fakes.ports, FILE);
+
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith('No turbo tasks in this package. Show scripts to see 2.');
+      expect(fakes.pick).not.toHaveBeenCalled();
+    });
+
+    it('WHEN scripts are shown THEN the pick lists the offered scripts with their run description', async () => {
+      fakes.scriptsShown.mockReturnValue(true);
+
+      await pickForFileAndRun(roots, fakes.ports, FILE);
+
+      expect(fakes.pick.mock.calls[0]?.[0].map((item) => [item.value, item.description])).toStrictEqual([
+        ['fmt', 'pnpm run'],
+        ['lint', 'pnpm run']
+      ]);
+    });
+
+    it('WHEN scripts are shown and one is picked THEN the script runs', async () => {
+      fakes.scriptsShown.mockReturnValue(true);
+      fakes.choose('lint');
+
+      await pickForFileAndRun(roots, fakes.ports, FILE);
+
+      expect(fakes.run).toHaveBeenCalledOnce();
+      expect(fakes.run.mock.calls[0]?.[0].task.name).toBe('lint');
+    });
+  });
+
+  it('GIVEN a package whose only script is refused WHEN scripts are hidden THEN the plain text shows, without the hint', async () => {
+    const refused: TaskNode = { ...TASK_NODE_STUB, name: 'a b', isTurboTask: false };
+
+    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [refused] }]));
 
     await pickForFileAndRun(roots, fakes.ports, FILE);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith('No turbo tasks to run in this package.');
+    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
     expect(fakes.pick).not.toHaveBeenCalled();
   });
 

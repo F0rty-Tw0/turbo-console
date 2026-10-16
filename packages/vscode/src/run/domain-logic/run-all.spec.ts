@@ -197,6 +197,17 @@ describe('FEATURE: run a task in all packages', () => {
     expect(fakes.pick).not.toHaveBeenCalled();
   });
 
+  it('GIVEN a root holding a turbo task and a safe script WHEN it starts THEN the pick lists the turbo task only', async () => {
+    const script: TaskNode = { ...TASK_NODE_STUB, id: 'a#lint', name: 'lint', isTurboTask: false };
+
+    roots.set([ONE], coordinatorMock);
+    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [TASK_NODE_STUB, script] }]));
+
+    await runAll(roots, guard, fakes.ports, EVERYWHERE);
+
+    expect(fakes.pick.mock.calls[0]?.[0].map((item) => item.value)).toStrictEqual(['build']);
+  });
+
   it('GIVEN no root WHEN it starts THEN it says no tasks are available', async () => {
     await runAll(roots, guard, fakes.ports, EVERYWHERE);
 

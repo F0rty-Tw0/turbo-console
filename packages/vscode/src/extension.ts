@@ -84,7 +84,7 @@ const registerRunCommands = (
 ): vscode.Disposable => {
   const register = vscode.commands.registerCommand;
   const runs = registerRuns(runSession, tree, session.store, register);
-  const pickers = registerPickers(runSession, session.store, register);
+  const pickers = registerPickers(runSession, session.store, register, () => tree.isScriptsShown());
   const runAllPorts = editorRunAllPorts(session.store, output);
   const runAll = registerRunAll(session.store, runAllPorts, forwardRunAllEvents, register);
 

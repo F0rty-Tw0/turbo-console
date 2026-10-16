@@ -1,5 +1,5 @@
 import type { RootState, Roots } from '../../roots/common/coordinator.type.ts';
-import { isRunnableTask } from '../../tree/utils/task-filter.util.ts';
+import { isOfferedTask } from '../../tree/utils/task-filter.util.ts';
 import { NO_TASKS_TEXT, PACKAGE_PLACEHOLDER, TASK_PLACEHOLDER } from '../common/picker.const.ts';
 import type { NamedTask, PickItem, PickerPorts } from '../common/picker.type.ts';
 import type { RunDefinition, RunRequest, TaskTarget } from '../common/run.type.ts';
@@ -14,12 +14,12 @@ const loadAll = async (roots: Roots, ports: PickerPorts): Promise<void> => {
   await Promise.all(loads);
 };
 
-/** The run of `target` in the current state of its root; `null` when the root or the task has gone. */
-const requestByName = (roots: Roots, target: NamedTask): RunRequest | null => {
+/** The run of `target` in the current state of its root; `null` when the root, the task or the scripts toggle has gone. */
+const requestByName = (roots: Roots, target: NamedTask, scriptsShown: boolean): RunRequest | null => {
   const state = roots.get(target.root)?.state;
   const pkg = state?.model?.packages.find((node) => node.name === target.packageName);
-  const runnable = pkg?.tasks.filter(isRunnableTask);
-  const task = runnable?.find((node) => node.name === target.taskName);
+  const offered = pkg?.tasks.filter((node) => isOfferedTask(node, scriptsShown));
+  const task = offered?.find((node) => node.name === target.taskName);
 
   if (task === undefined) return null;
 
@@ -30,17 +30,17 @@ const requestByName = (roots: Roots, target: NamedTask): RunRequest | null => {
 };
 
 export const runNamed = async (roots: Roots, ports: PickerPorts, target: NamedTask): Promise<void> => {
-  const request = requestByName(roots, target);
+  const request = requestByName(roots, target, ports.scriptsShown());
 
   if (request !== null) await ports.run(request);
 };
 
-const packagesOf = (roots: Roots, task: PickItem): PickItem[] => {
+const packagesOf = (roots: Roots, task: PickItem, scriptsShown: boolean): PickItem[] => {
   const state = roots.get(task.root)?.state;
 
   if (state === undefined) return [];
 
-  return packageItems(state, task.value);
+  return packageItems(state, task.value, scriptsShown);
 };
 
 /**
@@ -50,7 +50,8 @@ const packagesOf = (roots: Roots, task: PickItem): PickItem[] => {
 export const pickAndRun = async (roots: Roots, ports: PickerPorts): Promise<void> => {
   await loadAll(roots, ports);
 
-  const names = taskNameItems(statesOf(roots));
+  const scriptsShown = ports.scriptsShown();
+  const names = taskNameItems(statesOf(roots), scriptsShown);
 
   if (names.length === 0) {
     ports.info(NO_TASKS_TEXT);
@@ -62,7 +63,7 @@ export const pickAndRun = async (roots: Roots, ports: PickerPorts): Promise<void
 
   if (task === undefined) return;
 
-  const packages = packagesOf(roots, task);
+  const packages = packagesOf(roots, task, scriptsShown);
 
   if (packages.length === 0) return;
 

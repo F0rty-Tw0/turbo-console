@@ -76,7 +76,7 @@ describe('FEATURE: palette run picker', () => {
     expect(fakes.pick).not.toHaveBeenCalled();
   });
 
-  it('GIVEN a root whose only tasks are scripts no turbo config defines WHEN it starts THEN it lists no task', async () => {
+  it('GIVEN a root whose only tasks are scripts and they are hidden WHEN it starts THEN it lists no task', async () => {
     const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
     roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
@@ -109,7 +109,7 @@ describe('FEATURE: palette run picker', () => {
       expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/one', 'a', TASK_NODE_STUB));
     });
 
-    it('WHEN the picked task turns into a script during the package pick THEN nothing runs', async () => {
+    it('WHEN the picked task turns into a hidden script during the package pick THEN nothing runs', async () => {
       const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
       fakes.pick.mockImplementationOnce(async (items) => Promise.resolve(items[0]));
