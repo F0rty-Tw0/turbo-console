@@ -1,6 +1,5 @@
 import { FolderTrees } from './folder-trees.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
-import type { Span } from '../../shared/common/span.type.ts';
 import type { FolderTreeOf } from '../common/folder-tree.type.ts';
 import type { RefreshTarget, RowContext, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
@@ -10,8 +9,7 @@ import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts
 import { refreshTarget } from '../utils/refresh-target.util.ts';
 import { rootNodeRow, rootRows } from '../utils/root-rows.util.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
-
-const hasPackageRows = (rows: TreeRow[]): boolean => rows.some((row) => row.kind === 'pkg' || row.kind === 'dir');
+import { markAsked, markShown } from '../utils/tree-visible-span.util.ts';
 
 /**
  * The Packages view without the editor: which nodes sit under which, the current row of a node, and which nodes to
@@ -106,7 +104,7 @@ export class PackagesTree {
 
     if (entry === undefined) return [];
 
-    this.markAsked(root);
+    markAsked(this.ports.treeVisible, root, this.ports.now());
     await entry.coordinator.firstChildren();
 
     const state = this.store.get(root)?.state;
@@ -115,33 +113,9 @@ export class PackagesTree {
 
     const rows = rootRows(state, this.mode);
 
-    this.markShown(root, rows);
+    markShown(this.ports.treeVisible, root, rows, this.ports.now());
 
     return nodesOf(this.cache, rows);
-  }
-
-  private markAsked(root: string): void {
-    const isAsked = this.ports.treeVisible.has(root);
-
-    if (isAsked) return;
-
-    const span: Span = { start: this.ports.now(), end: null };
-
-    this.ports.treeVisible.set(root, span);
-  }
-
-  private markShown(root: string, rows: TreeRow[]): void {
-    const span = this.ports.treeVisible.get(root);
-
-    if (span?.end !== null) return;
-
-    const isPackagesShown = hasPackageRows(rows);
-
-    if (!isPackagesShown) return;
-
-    const shown: Span = { start: span.start, end: this.ports.now() };
-
-    this.ports.treeVisible.set(root, shown);
   }
 
   private fireTarget(root: string, target: RefreshTarget): void {
