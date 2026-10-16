@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 
-import { LOCKFILE_NAMES, MAX_KEYED_FILE_BYTES, MAX_LOCKFILE_BYTES } from '../common/cache.const.ts';
+import { isLockfileName } from './lockfile-name.util.ts';
+import { MAX_KEYED_FILE_BYTES, MAX_LOCKFILE_BYTES } from '../common/cache.const.ts';
 
 /**
  * The most bytes hashed from the keyed file at posix `path`, chosen by its base name: `MAX_LOCKFILE_BYTES` for a
@@ -8,7 +9,7 @@ import { LOCKFILE_NAMES, MAX_KEYED_FILE_BYTES, MAX_LOCKFILE_BYTES } from '../com
  */
 export const keyedFileCapOf = (path: string): number => {
   const name = posix.basename(path);
-  const isLockfile = LOCKFILE_NAMES.includes(name);
+  const isLockfile = isLockfileName(name);
 
   return isLockfile ? MAX_LOCKFILE_BYTES : MAX_KEYED_FILE_BYTES;
 };

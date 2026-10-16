@@ -65,6 +65,25 @@ export type PackageEdge = {
   readonly kind: string;
 };
 
+export type PackageManagerName = 'npm' | 'pnpm' | 'yarn' | 'bun';
+
+/** The root lockfiles that name a package manager; the cache keys the same files. */
+export type LockfileName = 'pnpm-lock.yaml' | 'bun.lock' | 'bun.lockb' | 'yarn.lock' | 'package-lock.json';
+
+type FieldSource = { readonly kind: 'field' };
+
+type LockfileSource = { readonly kind: 'lockfile'; readonly file: LockfileName };
+
+type DefaultSource = { readonly kind: 'default' };
+
+/** Where the package manager came from: the root `packageManager` field, a root lockfile, or the npm fallback. */
+export type PackageManagerSource = FieldSource | LockfileSource | DefaultSource;
+
+export type PackageManager = {
+  readonly name: PackageManagerName;
+  readonly source: PackageManagerSource;
+};
+
 /** Spec §4.4: everything sorted, so two builds from the same input are deep-equal. */
 export type WorkspaceModel = {
   readonly root: string;
