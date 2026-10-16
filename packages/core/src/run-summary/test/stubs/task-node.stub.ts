@@ -10,5 +10,6 @@ export const TASK_NODE_STUB: TaskNode = {
   dependencies: [],
   kind: 'task',
   atom: null,
-  isTurboTask: true
+  isTurboTask: true,
+  persistent: false
 };

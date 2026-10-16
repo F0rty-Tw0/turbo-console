@@ -15,6 +15,7 @@ const HUB: TurboConfigOk = {
   path: 'packages/hub/turbo.json',
   descriptions: PACKAGE_DESCRIPTIONS,
   tasks: {},
+  persistent: {},
   extends: [],
   affectedUsingTaskInputs: false
 };
@@ -23,6 +24,7 @@ const ROOT: TurboConfigOk = {
   path: 'turbo.json',
   descriptions: ROOT_DESCRIPTIONS,
   tasks: {},
+  persistent: {},
   extends: [],
   affectedUsingTaskInputs: false
 };
@@ -31,16 +33,25 @@ const BARE_ROOT: TurboConfigOk = {
   path: 'turbo.json',
   descriptions: BARE_ONLY_DESCRIPTIONS,
   tasks: {},
+  persistent: {},
   extends: [],
   affectedUsingTaskInputs: false
 };
 
-const EMPTY_ROOT: TurboConfigOk = { path: 'turbo.jsonc', descriptions: {}, tasks: {}, extends: [], affectedUsingTaskInputs: false };
+const EMPTY_ROOT: TurboConfigOk = {
+  path: 'turbo.jsonc',
+  descriptions: {},
+  tasks: {},
+  persistent: {},
+  extends: [],
+  affectedUsingTaskInputs: false
+};
 
 const EMPTY_HUB: TurboConfigOk = {
   path: 'packages/hub/turbo.jsonc',
   descriptions: {},
   tasks: {},
+  persistent: {},
   extends: [],
   affectedUsingTaskInputs: false
 };
@@ -49,11 +60,19 @@ const ATOMS: TurboConfigOk = {
   path: 'tools/e2e-1-atoms/turbo.json',
   descriptions: ATOMS_DESCRIPTIONS,
   tasks: {},
+  persistent: {},
   extends: [],
   affectedUsingTaskInputs: false
 };
 
-const TASK_MODE_ROOT: TurboConfigOk = { path: 'turbo.json', descriptions: {}, tasks: {}, extends: [], affectedUsingTaskInputs: true };
+const TASK_MODE_ROOT: TurboConfigOk = {
+  path: 'turbo.json',
+  descriptions: {},
+  tasks: {},
+  persistent: {},
+  extends: [],
+  affectedUsingTaskInputs: true
+};
 
 const ROOT_ERROR: TurboConfigError = { path: 'turbo.json', error: 'InvalidSymbol at 3' };
 

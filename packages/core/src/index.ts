@@ -24,7 +24,7 @@ export { matchRunSummary } from './run-summary/domain-logic/match-run-summary.ts
 
 export { readNewestRunSummary } from './run-summary/domain-logic/read-newest-run-summary.ts';
 
-export type { RunAllOptions } from './run-args/common/run-args.type.ts';
+export type { RunAllOptions, RunTaskOptions } from './run-args/common/run-args.type.ts';
 
 export { turboRunAllArgs, turboRunArgs } from './run-args/utils/run-args.util.ts';
 

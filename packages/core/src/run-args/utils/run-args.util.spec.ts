@@ -12,15 +12,30 @@ const TASK_NODE: TaskNode = {
   dependencies: [],
   kind: 'task',
   atom: null,
-  isTurboTask: true
+  isTurboTask: true,
+  persistent: false
 };
+
+const PLAIN_ARGS = ['--skip-infer', 'run', 'build', '--filter=@fx/pkg-001', '--summarize'];
 
 describe('FEATURE: turbo run arguments', () => {
   describe('GIVEN one task of one package', () => {
     it('WHEN the arguments are built THEN they run the task filtered to the package with a summary', () => {
       const args = turboRunArgs(TASK_NODE, '@fx/pkg-001');
 
-      expect(args).toStrictEqual(['--skip-infer', 'run', 'build', '--filter=@fx/pkg-001', '--summarize']);
+      expect(args).toStrictEqual(PLAIN_ARGS);
+    });
+
+    it('WHEN force is false THEN the arguments are the plain run', () => {
+      const args = turboRunArgs(TASK_NODE, '@fx/pkg-001', { force: false });
+
+      expect(args).toStrictEqual(PLAIN_ARGS);
+    });
+
+    it('WHEN force is true THEN --force is added after --summarize', () => {
+      const args = turboRunArgs(TASK_NODE, '@fx/pkg-001', { force: true });
+
+      expect(args).toStrictEqual([...PLAIN_ARGS, '--force']);
     });
 
     it('WHEN the task name holds spaces and brackets THEN it is accepted', () => {

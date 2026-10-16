@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { turboTaskLookupOf, turboTaskNamesOf } from './turbo-task.util.ts';
+import { turboTaskLookupOf, turboTasksOf } from './turbo-task.util.ts';
 import type {
   TaskPresence,
   TurboConfigError,
@@ -11,7 +11,14 @@ import type {
 } from '../common/turbo-config.type.ts';
 
 const configOf = (path: string, tasks: Record<string, TaskPresence>, extendsNames: string[]): TurboConfigOk => {
-  const config: TurboConfigOk = { path, descriptions: {}, tasks, extends: extendsNames, affectedUsingTaskInputs: false };
+  const config: TurboConfigOk = {
+    path,
+    descriptions: {},
+    tasks,
+    persistent: {},
+    extends: extendsNames,
+    affectedUsingTaskInputs: false
+  };
 
   return config;
 };
@@ -23,11 +30,11 @@ const packageOf = (name: string, path: string): TurboTaskPackage => {
 };
 
 const namesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): string[] | null => {
-  const names = turboTaskNamesOf(lookup, pkg);
+  const names = turboTasksOf(lookup, pkg);
 
   if (names === null) return null;
 
-  return Array.from(names).toSorted();
+  return Array.from(names.keys()).toSorted();
 };
 
 const ROOT_TASKS: Record<string, TaskPresence> = {
@@ -109,7 +116,7 @@ describe('FEATURE: task names turbo defines for a package', () => {
       const other = packageOf('@acme/f', 'packages/f');
       const sharedLookup = turboTaskLookupOf(PROBE_CONFIGS, [...PROBE_PACKAGES, other]);
 
-      expect(turboTaskNamesOf(sharedLookup, A)).toBe(turboTaskNamesOf(sharedLookup, other));
+      expect(turboTasksOf(sharedLookup, A)).toBe(turboTasksOf(sharedLookup, other));
     });
 
     it('WHEN the root package is looked up THEN only its //# task is its task', () => {

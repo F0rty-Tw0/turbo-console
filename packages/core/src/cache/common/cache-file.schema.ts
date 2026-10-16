@@ -21,7 +21,8 @@ const taskObject = z.object({
   dependencies: stringList,
   kind: taskKindSchema,
   atom: nullableAtom,
-  isTurboTask: z.boolean()
+  isTurboTask: z.boolean(),
+  persistent: z.boolean()
 });
 
 const taskSchema = taskObject.readonly();

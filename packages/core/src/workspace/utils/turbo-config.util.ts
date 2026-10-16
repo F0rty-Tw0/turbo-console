@@ -7,7 +7,7 @@ import type { TaskPresence, TurboConfigError, TurboConfigFile, TurboConfigOk } f
 /** zod 4 rejects a missing `z.unknown()` key; `.optional()` lets a task or the flags block omit it. */
 const optionalUnknown = z.unknown().optional();
 
-const taskSchema = z.looseObject({ description: optionalUnknown, extends: optionalUnknown });
+const taskSchema = z.looseObject({ description: optionalUnknown, extends: optionalUnknown, persistent: optionalUnknown });
 
 const tasksSchema = z.record(z.string(), taskSchema).optional();
 
@@ -40,12 +40,16 @@ const descriptionsOf = (tasks: Record<string, TaskConfig>): Record<string, strin
 
 const isSetValue = (value: unknown): boolean => value !== undefined;
 
-/** Turbo drops an inherited task whose entry is exactly `{ "extends": false }`; `extends: false` beside other keys redefines it. */
+/**
+ * Turbo drops an inherited task whose entry is exactly `{ "extends": false }`; `extends: false` beside other keys is a
+ * fresh definition that inherits no field.
+ */
 const presenceOf = (task: TaskConfig): TaskPresence => {
-  const setValues = Object.values(task).filter(isSetValue);
-  const isExcluded = task.extends === false && setValues.length === 1;
+  if (task.extends !== false) return 'defined';
 
-  return isExcluded ? 'excluded' : 'defined';
+  const setValues = Object.values(task).filter(isSetValue);
+
+  return setValues.length === 1 ? 'excluded' : 'fresh';
 };
 
 const presenceEntry = ([name, task]: [string, TaskConfig]): [string, TaskPresence] => [name, presenceOf(task)];
@@ -53,6 +57,17 @@ const presenceEntry = ([name, task]: [string, TaskConfig]): [string, TaskPresenc
 /** `Object.fromEntries` defines own keys, so a task named `__proto__` stays a key, as in `descriptionsOf`. */
 const presencesOf = (tasks: Record<string, TaskConfig>): Record<string, TaskPresence> => {
   const entries = Object.entries(tasks).map(presenceEntry);
+
+  return Object.fromEntries(entries);
+};
+
+/** `Object.fromEntries` defines own keys, so a task named `__proto__` stays a key, as in `descriptionsOf`. */
+const persistentsOf = (tasks: Record<string, TaskConfig>): Record<string, boolean> => {
+  const entries: [string, boolean][] = [];
+
+  for (const [name, task] of Object.entries(tasks)) {
+    if (typeof task.persistent === 'boolean') entries.push([name, task.persistent]);
+  }
 
   return Object.fromEntries(entries);
 };
@@ -93,9 +108,17 @@ const parsedConfig = (path: string, text: string): TurboConfigFile => {
   const tasks = parsed.data.tasks ?? {};
   const descriptions = descriptionsOf(tasks);
   const presences = presencesOf(tasks);
+  const persistent = persistentsOf(tasks);
   const extendsNames = extendsOf(parsed.data.extends);
   const affectedUsingTaskInputs = parsed.data.futureFlags?.affectedUsingTaskInputs === true;
-  const config: TurboConfigOk = { path, descriptions, tasks: presences, extends: extendsNames, affectedUsingTaskInputs };
+  const config: TurboConfigOk = {
+    path,
+    descriptions,
+    tasks: presences,
+    persistent,
+    extends: extendsNames,
+    affectedUsingTaskInputs
+  };
 
   return config;
 };
