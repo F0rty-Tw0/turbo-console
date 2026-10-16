@@ -46,7 +46,7 @@ describe('FEATURE: the empty state while scripts are hidden', () => {
       const rows = rootRows(SCRIPTS_ONLY, hiddenOf(mode));
 
       expect(rows.map((row) => row.key)).toStrictEqual(['no-turbo-packages']);
-      expect(labelsOf(rows)).toStrictEqual(['No packages with turbo tasks. Show Scripts to list the others.']);
+      expect(labelsOf(rows)).toStrictEqual(['No turbo tasks. Try Show Scripts.']);
     });
 
     it.each(MODES)('WHEN scripts are shown in %s mode THEN the packages are listed, no message', (mode) => {

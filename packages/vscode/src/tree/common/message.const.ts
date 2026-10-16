@@ -20,7 +20,7 @@ export const MESSAGE_TEXTS: Readonly<Record<MessageKind, string>> = {
   'load-with-model': 'Showing cached data: reload failed. See Output.',
   'no-packages': 'No packages found.',
   'no-shown-packages': 'No packages with tasks found.',
-  'no-turbo-packages': 'No packages with turbo tasks. Show Scripts to list the others.',
+  'no-turbo-packages': 'No turbo tasks. Try Show Scripts.',
   loading: 'Loading…'
 };
 
