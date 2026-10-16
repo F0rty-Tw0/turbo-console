@@ -61,6 +61,26 @@ const PROBE_PACKAGES = [A, B, C, D, E];
 
 const PARSE_ERROR: TurboConfigError = { path: 'packages/c/turbo.json', error: 'InvalidSymbol at 3' };
 
+const BASE_PATH = 'tools/base/turbo.json';
+
+const WEB_PATH = 'apps/web/turbo.json';
+
+const GRAND_ROOT = configOf('turbo.json', { lint: 'defined' }, []);
+
+const GP_CONFIG = configOf('tools/gp/turbo.json', { gx: 'defined' }, ['//']);
+
+const WEB = packageOf('web', 'apps/web');
+
+const GRAND_PACKAGES = [packageOf('gp', 'tools/gp'), packageOf('base', 'tools/base'), WEB];
+
+/** `web`'s task names when the root defines `lint`, `gp` defines `gx`, and `base` and `web` have the given configs. */
+const webNamesOf = (base: TurboConfigOk, web: TurboConfigOk): string[] | null => {
+  const configs: TurboConfigFile[] = [GRAND_ROOT, GP_CONFIG, base, web];
+  const lookup = turboTaskLookupOf(configs, GRAND_PACKAGES);
+
+  return namesOf(lookup, WEB);
+};
+
 describe('FEATURE: task names turbo defines for a package', () => {
   describe('GIVEN the turbo 2.11.7 probe workspace', () => {
     const lookup = turboTaskLookupOf(PROBE_CONFIGS, PROBE_PACKAGES);
@@ -92,7 +112,7 @@ describe('FEATURE: task names turbo defines for a package', () => {
     });
   });
 
-  describe('GIVEN a chain that excludes, then redefines', () => {
+  describe('GIVEN a parent package config that excludes a root task', () => {
     const base = packageOf('base', 'tools/base');
     const web = packageOf('web', 'apps/web');
     const docs = packageOf('docs', 'apps/docs');
@@ -104,12 +124,69 @@ describe('FEATURE: task names turbo defines for a package', () => {
     ];
     const lookup = turboTaskLookupOf(configs, [base, web, docs]);
 
-    it('WHEN a package extends the excluding config THEN the exclusion propagates', () => {
-      expect(namesOf(lookup, web)).toStrictEqual(['test']);
+    it('WHEN a package extends the excluding config THEN the root task stays', () => {
+      expect(namesOf(lookup, web)).toStrictEqual(['lint', 'test']);
     });
 
-    it('WHEN a package redefines the excluded task THEN it is back', () => {
+    it('WHEN a package redefines the excluded task THEN it keeps it', () => {
       expect(namesOf(lookup, docs)).toStrictEqual(['lint', 'test']);
+    });
+
+    it('WHEN the excluding package is looked up THEN its own exclusion drops the root task', () => {
+      expect(namesOf(lookup, base)).toStrictEqual(['test']);
+    });
+  });
+
+  describe('GIVEN a task only a grandparent package config defines', () => {
+    it('WHEN the parent extends it and has no entry THEN the child inherits the task', () => {
+      const base = configOf(BASE_PATH, {}, ['//', 'gp']);
+      const web = configOf(WEB_PATH, {}, ['//', 'base']);
+
+      expect(webNamesOf(base, web)).toStrictEqual(['gx', 'lint']);
+    });
+
+    it('WHEN the parent extends it and excludes the task THEN the child loses it', () => {
+      const base = configOf(BASE_PATH, { gx: 'excluded' }, ['//', 'gp']);
+      const web = configOf(WEB_PATH, {}, ['//', 'base']);
+
+      expect(webNamesOf(base, web)).toStrictEqual(['lint']);
+    });
+
+    it('WHEN the child lists the defining package before the excluding one THEN it keeps the task', () => {
+      const base = configOf(BASE_PATH, { gx: 'excluded' }, ['//']);
+      const web = configOf(WEB_PATH, {}, ['//', 'gp', 'base']);
+
+      expect(webNamesOf(base, web)).toStrictEqual(['gx', 'lint']);
+    });
+
+    it('WHEN the child lists the excluding package before the defining one THEN it loses the task', () => {
+      const base = configOf(BASE_PATH, { gx: 'excluded' }, ['//']);
+      const web = configOf(WEB_PATH, {}, ['//', 'base', 'gp']);
+
+      expect(webNamesOf(base, web)).toStrictEqual(['lint']);
+    });
+
+    it('WHEN the child defines the task its parent excludes THEN it keeps the task', () => {
+      const base = configOf(BASE_PATH, { gx: 'excluded' }, ['//', 'gp']);
+      const web = configOf(WEB_PATH, { gx: 'defined' }, ['//', 'base']);
+
+      expect(webNamesOf(base, web)).toStrictEqual(['gx', 'lint']);
+    });
+  });
+
+  describe('GIVEN a package config whose extends does not start with //', () => {
+    it('WHEN // comes after a package THEN it cannot tell', () => {
+      const base = configOf(BASE_PATH, {}, ['//']);
+      const web = configOf(WEB_PATH, {}, ['base', '//']);
+
+      expect(webNamesOf(base, web)).toBeNull();
+    });
+
+    it('WHEN extends is empty THEN it cannot tell', () => {
+      const base = configOf(BASE_PATH, {}, ['//']);
+      const web = configOf(WEB_PATH, {}, []);
+
+      expect(webNamesOf(base, web)).toBeNull();
     });
   });
 

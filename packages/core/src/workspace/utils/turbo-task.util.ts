@@ -62,9 +62,10 @@ const applyRoot = (names: Set<string>, root: TurboConfigOk, packageName: string)
 };
 
 /**
- * The package configs whose tasks `dir`'s package merges, in turbo's order: the `extends` names after `//`, each with
- * its own chain first, then the package's own config. `[]` when the package has no config; `null` when a config of the
- * chain did not parse or an `extends` name is no package. `seen` keeps a cycle or a shared parent to one visit.
+ * The package configs of `dir`'s package, highest priority first: its own config, then each `extends` name after `//`
+ * in listed order, each followed by its own chain (depth first). `[]` when the package has no config; `null` when a
+ * config of the chain did not parse, its `extends` does not start with `//` (turbo 2.11.7 rejects it), or an `extends`
+ * name is no package. `seen` keeps a cycle or a shared parent to one visit.
  */
 const chainOf = (lookup: TurboTaskLookup, dir: string, seen: Set<string>): TurboConfigOk[] | null => {
   const config = lookup.configsByDir.get(dir);
@@ -73,11 +74,15 @@ const chainOf = (lookup: TurboTaskLookup, dir: string, seen: Set<string>): Turbo
 
   if ('error' in config) return null;
 
-  const chain: TurboConfigOk[] = [];
+  const [first, ...parentNames] = config.extends;
+
+  if (first !== ROOT_NAME) return null;
+
+  const chain: TurboConfigOk[] = [config];
 
   seen.add(dir);
 
-  for (const name of config.extends) {
+  for (const name of parentNames) {
     if (name === ROOT_NAME) continue;
 
     const parentDir = lookup.dirsByName.get(name);
@@ -95,8 +100,6 @@ const chainOf = (lookup: TurboTaskLookup, dir: string, seen: Set<string>): Turbo
     chain.push(...parentChain);
   }
 
-  chain.push(config);
-
   return chain;
 };
 
@@ -109,11 +112,17 @@ const packageChainOf = (lookup: TurboTaskLookup, dir: string): TurboConfigOk[] |
   return chainOf(lookup, dir, seen);
 };
 
+const applyTasks = (names: Set<string>, config: TurboConfigOk): void => {
+  for (const [name, presence] of Object.entries(config.tasks)) applyPresence(names, name, presence);
+};
+
 /**
- * The task names turbo 2.11 defines, and so runs, for `pkg`: the root config's bare and `<pkg>#<task>` keys, then the
- * package config chain, where an entry of exactly `{ "extends": false }` drops a task. `turbo query` lists a package
- * script with no such key all the same, and `turbo run` of a name no config defines exits 1. `null` when it cannot
- * tell: no parsed root config, or a config of the chain that did not parse.
+ * The task names turbo 2.11.7 defines, and so runs, for `pkg`. The first config with an entry for a name decides, in
+ * this order: the package's own config, the root config's bare and `<pkg>#<task>` keys, then the parent chain of
+ * `chainOf`; an entry of exactly `{ "extends": false }` drops the task. So a parent's exclusion hides only a task
+ * another parent package defines, never a root task. Applied last-wins from the lowest priority up. `turbo query`
+ * lists a package script with no such key all the same, and `turbo run` of a name no config defines exits 1. `null`
+ * when it cannot tell: no parsed root config, or a chain `chainOf` cannot build.
  */
 export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): Set<string> | null => {
   const root = lookup.configsByDir.get(ROOT_DIR);
@@ -126,12 +135,14 @@ export const turboTaskNamesOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage)
   if (chain === null) return null;
 
   const names = new Set<string>();
+  const [own, ...parents] = chain;
+  const lowestFirst = parents.toReversed();
+
+  for (const config of lowestFirst) applyTasks(names, config);
 
   applyRoot(names, root, pkg.name);
 
-  for (const config of chain) {
-    for (const [name, presence] of Object.entries(config.tasks)) applyPresence(names, name, presence);
-  }
+  if (own !== undefined) applyTasks(names, own);
 
   return names;
 };
