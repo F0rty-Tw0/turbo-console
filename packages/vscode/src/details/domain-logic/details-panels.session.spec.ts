@@ -4,16 +4,20 @@ import { DetailsPanels } from './details-panels.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { flushSettles } from '../../roots/test/utils/deferred-ports.spec.util.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
+import type { OpenPanel } from '../common/panel.type.ts';
 import type { HostFakes } from '../test/common/panel-fakes.type.ts';
 import { hostMock, viewMock } from '../test/mocks/panel-host.mock.ts';
-import { DETAILS_LOADED_STUB } from '../test/stubs/details-model.stub.ts';
-import { markStale } from '../test/utils/panels-setup.spec.util.ts';
+import { DETAILS_LOADED_STUB, DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
+import { deferEnsureLoaded, markStale } from '../test/utils/panels-setup.spec.util.ts';
 
 const WS_A: PanelKey = { root: '/ws', packageName: 'a' };
+const CACHED_MODEL = { ...DETAILS_MODEL_STUB };
+const CACHE_FIRST = { ...DETAILS_LOADED_STUB, model: CACHED_MODEL, fromCache: true };
 const RUN_BUILD = { type: 'run', taskId: 'a#build' };
 const BUILD_ROW = { kind: 'task', root: '/ws', key: 'a#build', packageName: 'a' };
 
@@ -62,6 +66,32 @@ describe('FEATURE: the editor effects of a details panel session', () => {
       await vi.waitFor(() => {
         expect(fakes.log.mock.calls[0]?.[0]).toContain('info failed');
       });
+    });
+  });
+
+  describe('GIVEN a shown panel opened by row while its root still loads', () => {
+    let loaded: PromiseWithResolvers<undefined>;
+    let opening: Promise<OpenPanel | null>;
+
+    beforeEach(() => {
+      loaded = deferEnsureLoaded(store, '/ws');
+      opening = panels.open(WS_A);
+    });
+
+    it('WHEN the cache-first model is published before the load resolves THEN no dry run starts', async () => {
+      store.apply('/ws', CACHE_FIRST);
+      await flushSettles();
+
+      expect(fakes.dryRun).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the load resolves after a cache-first publish THEN exactly one dry run starts', async () => {
+      store.apply('/ws', CACHE_FIRST);
+      loaded.resolve(undefined);
+      await opening;
+      await panels.api().whenIdle('/ws', 'a');
+
+      expect(fakes.dryRun).toHaveBeenCalledOnce();
     });
   });
 
