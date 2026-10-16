@@ -10,6 +10,7 @@ import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode } from '../common/tree-row.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
+import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 
 const A = packageNamed('a');
 
@@ -29,7 +30,7 @@ const fixtureOf = (folders: RootFolder[], mode: TreeMode, make: (folder: RootFol
   const store = new RootStore();
   const fire = vi.fn();
   const treeVisible = new Map<string, Span>();
-  const ports: TreePorts = { runs: () => undefined, fire, treeVisible, now: () => 7, wallNow: () => 7 };
+  const ports: TreePorts = { runs: () => undefined, ...SCRIPTS_HIDDEN_PORTS, fire, treeVisible, now: () => 7, wallNow: () => 7 };
   const tree = new PackagesTree(store, mode, ports);
 
   store.set(folders, make);

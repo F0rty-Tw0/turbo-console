@@ -71,15 +71,35 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
   });
 
   it.each([
-    [false, 'turboConsole.showScope navigation@0'],
-    [true, 'turboConsole.hideScope navigation@0']
-  ])('GIVEN scopes shown is %s WHEN the view title is read THEN only the matching scope toggle is there', (scopeShown, toggle) => {
-    const keys = { view: TREE_VIEW, 'turboConsole.scopeShown': scopeShown, 'config.turboConsole.treeMode': 'list' };
+    [false, false, 'turboConsole.showScope navigation@0', 'turboConsole.showScripts navigation@1'],
+    [true, false, 'turboConsole.hideScope navigation@0', 'turboConsole.showScripts navigation@1'],
+    [false, true, 'turboConsole.showScope navigation@0', 'turboConsole.hideScripts navigation@1'],
+    [true, true, 'turboConsole.hideScope navigation@0', 'turboConsole.hideScripts navigation@1']
+  ])(
+    'GIVEN scopes shown is %s and scripts shown is %s WHEN the view title is read THEN only the matching toggles are there',
+    (scopeShown, scriptsShown, scopeToggle, scriptsToggle) => {
+      const keys = {
+        view: TREE_VIEW,
+        'turboConsole.scopeShown': scopeShown,
+        'turboConsole.scriptsShown': scriptsShown,
+        'config.turboConsole.treeMode': 'list'
+      };
 
-    const items = shownIn(MENUS['view/title'], keys);
-    const expected = [toggle, 'turboConsole.refresh navigation@2', 'turboConsole.showFolders navigation@1'];
+      const items = shownIn(MENUS['view/title'], keys);
+      const expected = [scopeToggle, scriptsToggle, 'turboConsole.refresh navigation@3', 'turboConsole.showFolders navigation@2'];
 
-    expect(items).toStrictEqual(expected.toSorted());
+      expect(items).toStrictEqual(expected.toSorted());
+    }
+  );
+
+  it.each([
+    [false, 'turboConsole.showScripts'],
+    [true, 'turboConsole.hideScripts']
+  ])('GIVEN scripts shown is %s WHEN the command palette is read THEN only %s is there of the pair', (scriptsShown, command) => {
+    const keys = { 'turboConsole.active': true, 'turboConsole.scriptsShown': scriptsShown };
+    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('Scripts') && whenMatches(entry.when, keys));
+
+    expect(shown.map((entry) => entry.command)).toStrictEqual([command]);
   });
 
   it.each(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask', 'turboConsole.copyCommand'])(

@@ -24,6 +24,7 @@ export type MessageKind =
   | 'load-with-model'
   | 'no-packages'
   | 'no-shown-packages'
+  | 'no-turbo-packages'
   | 'loading';
 
 /**

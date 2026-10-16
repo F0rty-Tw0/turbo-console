@@ -8,6 +8,7 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
+import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 
 const OTHER_FOLDER: RootFolder = { root: '/other', name: 'other' };
 
@@ -40,7 +41,14 @@ describe('FEATURE: packages tree tick refresh', () => {
 
     beforeEach(async () => {
       const store = new RootStore();
-      const ports: TreePorts = { runs: () => undefined, fire: vi.fn(), treeVisible: new Map(), now: () => 7, wallNow: () => 7 };
+      const ports: TreePorts = {
+        runs: () => undefined,
+        ...SCRIPTS_HIDDEN_PORTS,
+        fire: vi.fn(),
+        treeVisible: new Map(),
+        now: () => 7,
+        wallNow: () => 7
+      };
 
       fire = vi.mocked(ports.fire);
       tree = new PackagesTree(store, 'list', ports);

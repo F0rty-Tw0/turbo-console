@@ -99,12 +99,31 @@ const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi, output
 };
 
 /**
+ * The scripts toggle's two view-title commands (spec 1c-b). `ScriptsToggle` already restored the stored choice and sent the
+ * key when it was built, before the tree was; the commands only write through it, and the tree redraws on its change.
+ */
+const registerScriptsToggle = (context: TreeContext): vscode.Disposable => {
+  const { scripts } = context;
+  const showScripts = vscode.commands.registerCommand('turboConsole.showScripts', async () => scripts.set(true));
+  const hideScripts = vscode.commands.registerCommand('turboConsole.hideScripts', async () => scripts.set(false));
+  const toggle: vscode.Disposable = {
+    dispose: () => {
+      showScripts.dispose();
+      hideScripts.dispose();
+    }
+  };
+
+  return toggle;
+};
+
+/**
  * The Packages view (spec §4.3, §4.7): the tree view with native Collapse All, store changes into tree refreshes,
  * visibility into the roots' `show`, the title commands and the settings listener. Starts no load itself. Returns the view, for
  * `TreeVisibility`.
  */
 export const registerTree = (context: TreeContext, session: Session, tree: PackagesTreeApi, output: Output): VisibleView => {
   const scope = registerScopeToggle(context, tree, output);
+  const scripts = registerScriptsToggle(context);
   const view = vscode.window.createTreeView('turboConsole.tree', { treeDataProvider: tree, showCollapseAll: true });
   const unsubscribe = session.store.onDidChange((change) => {
     tree.refreshFor(change);
@@ -125,7 +144,18 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
   });
 
   session.setVisible(view.visible);
-  context.subscriptions.push(view, { dispose: unsubscribe }, visibility, refresh, showFolders, showList, showOutput, scope, settings);
+  context.subscriptions.push(
+    view,
+    { dispose: unsubscribe },
+    visibility,
+    refresh,
+    showFolders,
+    showList,
+    showOutput,
+    scope,
+    scripts,
+    settings
+  );
 
   return view;
 };

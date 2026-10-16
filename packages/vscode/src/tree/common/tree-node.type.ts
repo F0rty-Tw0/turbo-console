@@ -3,7 +3,8 @@ import type { Event, TreeItem } from 'vscode';
 import type { ModelViewsOf } from './model-view.type.ts';
 import type { TreeMode, TreeRow } from './tree-row.type.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
-import type { RunLookup } from '../../run/common/run.type.ts';
+import type { LiveIds, RunLookup, Runs } from '../../run/common/run.type.ts';
+import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { Span } from '../../shared/common/span.type.ts';
 
 /**
@@ -21,14 +22,17 @@ export type TreeNode = {
 
 /**
  * What a node's rows are read with: the view mode, the runs, the model's view (built once per model), whether
- * package rows read their full names (`scopeShown`) or their bare labels, and the wall-clock time (`now`, the base of
- * `RunEntry.launchedAt`) a running task's elapsed time is counted to.
+ * package rows read their full names (`scopeShown`) or their bare labels, whether scripts are listed (`scriptsShown`),
+ * the running task ids per folder root (`live`), and the wall-clock time (`now`, the base of `RunEntry.launchedAt`) a
+ * running task's elapsed time is counted to.
  */
 export type RowContext = {
   readonly mode: TreeMode;
   readonly runs: RunLookup;
   readonly views: ModelViewsOf;
   readonly scopeShown: boolean;
+  readonly scriptsShown: boolean;
+  readonly live: LiveIds;
   readonly now: number;
 };
 
@@ -50,6 +54,8 @@ export type RunningTasks = ReadonlyMap<string, ReadonlySet<string>>;
  */
 export type TreePorts = {
   readonly runs: RunLookup;
+  readonly scriptsShown: () => boolean;
+  readonly runningIds: LiveIds;
   readonly fire: (refresh: TreeRefresh) => void;
   readonly treeVisible: Map<string, Span>;
   readonly now: () => number;
@@ -67,4 +73,15 @@ export type PackagesTreeApi = {
   readonly refreshTasks: (running: RunningTasks) => void;
   readonly setScopeShown: (value: boolean) => void;
   readonly isScopeShown: () => boolean;
+  readonly isScriptsShown: () => boolean;
+};
+
+/** The part of `Runs` the tree reads: the one run lookup every row uses and the running ids of a root. */
+type TreeRuns = Pick<Runs, 'get' | 'runningIds'>;
+
+/** What `PackagesTreeProvider` is built from beside the roots and the mode: the runs, the first-children spans and the scripts toggle. */
+export type TreeProviderDeps = {
+  readonly runs: TreeRuns;
+  readonly treeVisible: Map<string, Span>;
+  readonly scripts: ScriptsToggleApi;
 };

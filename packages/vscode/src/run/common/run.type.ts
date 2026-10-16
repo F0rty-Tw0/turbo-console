@@ -27,6 +27,9 @@ export type RunEntry = {
 
 export type RunLookup = (root: string, taskId: string) => RunEntry | undefined;
 
+/** The task ids of `root` whose run is running; a caller must not change the set, the store may hand the same one again. `root` is the folder root every run is keyed by. */
+export type LiveIds = (root: string) => ReadonlySet<string>;
+
 export type RunListener = (entry: RunEntry) => void;
 
 /** `<root>\0<task id>`: at most one running entry per key. */
@@ -76,6 +79,7 @@ export type Runs = {
   readonly failStart: (definition: RunDefinition, at: number, launchedAt?: number, isTaskEnded?: boolean) => RunEntry | null;
   readonly setMatch: (definition: RunDefinition, launchedAt: number, match: RunMatch | null) => void;
   readonly get: RunLookup;
+  readonly runningIds: LiveIds;
   readonly onDidChange: (listener: RunListener) => () => void;
 };
 

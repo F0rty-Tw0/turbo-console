@@ -1,6 +1,7 @@
 import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 
 import { dirRow, dirRows, packageRow } from './dir-rows.util.ts';
+import { liveOf } from './live-of.util.ts';
 import { rootRowOf, rootRows, shownModelOf } from './root-rows.util.ts';
 import { taskRowOf, taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
@@ -38,7 +39,7 @@ const dirOf = (view: ModelView, node: TreeNode): FolderDir | undefined => {
 };
 
 const modelChildren = (root: string, model: WorkspaceModel, node: TreeNode, context: RowContext): TreeRow[] => {
-  const view = context.views(model);
+  const view = context.views(model, context.scriptsShown, liveOf(context, root));
   const pkg = packageOf(view, node.packageName);
 
   if (node.kind === 'pkg' && pkg !== undefined) return taskRows(root, pkg, context);
@@ -78,7 +79,7 @@ export const goneRowOf = (node: TreeNode): TreeRow => {
 };
 
 const modelRow = (root: string, model: WorkspaceModel, node: TreeNode, context: RowContext): TreeRow | undefined => {
-  const view = context.views(model);
+  const view = context.views(model, context.scriptsShown, liveOf(context, root));
   const dir = dirOf(view, node);
 
   if (dir !== undefined) return dirRow(root, dir, view);

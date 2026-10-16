@@ -12,6 +12,21 @@ export const packageNamed = (name: string, command = 'tsc'): PackageNode => {
   return pkg;
 };
 
+/** The script `<name>#lint`, which is no turbo task. */
+export const scriptTaskNamed = (name: string): TaskNode => {
+  const task: TaskNode = { ...TASK_NODE_STUB, id: `${name}#lint`, name: 'lint', isTurboTask: false };
+
+  return task;
+};
+
+/** A package under `packages/<name>` with one script `<name>#lint` and no turbo task. */
+export const scriptPackageNamed = (name: string): PackageNode => {
+  const task = scriptTaskNamed(name);
+  const pkg: PackageNode = { ...PACKAGE_NODE_STUB, name, path: `packages/${name}`, tasks: [task] };
+
+  return pkg;
+};
+
 export const loadedWith = (packages: PackageNode[]): LoadedModel => {
   const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages };
   const loaded: LoadedModel = { ...LOADED_MODEL_STUB, model };

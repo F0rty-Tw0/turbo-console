@@ -14,8 +14,10 @@ const packageOf = (name: string, tasks: TaskNode[] = [TASK_NODE_STUB], path = `p
   return pkg;
 };
 
-const shownNamesOf = (packages: PackageNode[]): string[] => {
-  const view = modelViewWith(packages);
+const NO_LIVE: ReadonlySet<string> = new Set();
+
+const shownNamesOf = (packages: PackageNode[], scriptsShown = false, live: ReadonlySet<string> = NO_LIVE): string[] => {
+  const view = modelViewWith(packages, scriptsShown, live);
   const names = view.packages.keys();
 
   return Array.from(names);
@@ -48,16 +50,16 @@ describe('FEATURE: model view', () => {
       expect(names).toStrictEqual(['a']);
     });
 
-    it('WHEN a package has only non-turbo scripts THEN it is shown', () => {
-      const names = shownNamesOf([packageOf('scripts', [SCRIPT_TASK])]);
-
-      expect(names).toStrictEqual(['scripts']);
-    });
-
-    it('WHEN the view is built THEN each shown package counts only its visible tasks', () => {
-      const view = modelViewWith([packageOf('a', [TASK_NODE_STUB, ATOM_TASK, SCRIPT_TASK]), packageOf('atoms', [ATOM_TASK])]);
+    it('WHEN the view is built THEN each shown package counts only its offered tasks', () => {
+      const view = modelViewWith([packageOf('a', [TASK_NODE_STUB, ATOM_TASK, SCRIPT_TASK]), packageOf('atoms', [ATOM_TASK])], true);
 
       expect(view.visibleTaskCounts).toStrictEqual(new Map([['a', 2]]));
+    });
+
+    it('WHEN scripts are hidden THEN a package counts its turbo tasks only', () => {
+      const view = modelViewWith([packageOf('a', [TASK_NODE_STUB, SCRIPT_TASK])]);
+
+      expect(view.visibleTaskCounts).toStrictEqual(new Map([['a', 1]]));
     });
 
     it('WHEN a directory holds only a hidden package THEN it has no folder', () => {
@@ -65,6 +67,47 @@ describe('FEATURE: model view', () => {
       const paths = view.folders.dirs.map((dir) => dir.path);
 
       expect(paths).toStrictEqual(['packages']);
+    });
+  });
+
+  describe('GIVEN a package with scripts', () => {
+    const LIVE_LINT = new Set(['lint']);
+
+    it.each([false, true])('WHEN scripts shown is %s and the package has a turbo task THEN it is shown', (scriptsShown) => {
+      const names = shownNamesOf([packageOf('a', [TASK_NODE_STUB, SCRIPT_TASK])], scriptsShown);
+
+      expect(names).toStrictEqual(['a']);
+    });
+
+    it('WHEN scripts are shown and the package has only scripts THEN it is shown', () => {
+      const names = shownNamesOf([packageOf('s', [SCRIPT_TASK])], true);
+
+      expect(names).toStrictEqual(['s']);
+    });
+
+    it('WHEN scripts are hidden and the package has only scripts THEN it is not shown', () => {
+      const names = shownNamesOf([packageOf('s', [SCRIPT_TASK])]);
+
+      expect(names).toStrictEqual([]);
+    });
+
+    it('WHEN scripts are hidden and a script of the package is live THEN it is shown', () => {
+      const names = shownNamesOf([packageOf('s', [SCRIPT_TASK])], false, LIVE_LINT);
+
+      expect(names).toStrictEqual(['s']);
+    });
+
+    it('WHEN scripts are hidden and the live id belongs to another package THEN it is not shown', () => {
+      const other: TaskNode = { ...SCRIPT_TASK, id: 'other#lint' };
+      const names = shownNamesOf([packageOf('s', [other])], false, LIVE_LINT);
+
+      expect(names).toStrictEqual([]);
+    });
+
+    it('WHEN scripts are hidden and the live id is an atom-file task THEN it is not shown', () => {
+      const names = shownNamesOf([packageOf('s', [ATOM_TASK])], false, new Set(['atom']));
+
+      expect(names).toStrictEqual([]);
     });
   });
 

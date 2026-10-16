@@ -5,6 +5,8 @@ import { ModelViews } from './model-views.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { modelViewOf } from '../utils/model-view.util.ts';
 
+const NO_LIVE: ReadonlySet<string> = new Set();
+
 describe('FEATURE: model views per model', () => {
   describe('GIVEN a model', () => {
     let views: ModelViews;
@@ -14,22 +16,22 @@ describe('FEATURE: model views per model', () => {
     });
 
     it('WHEN its view is asked for THEN it is the view of that model', () => {
-      const view = views.of(WORKSPACE_MODEL_STUB);
+      const view = views.of(WORKSPACE_MODEL_STUB, false, NO_LIVE);
 
-      expect(view).toStrictEqual(modelViewOf(WORKSPACE_MODEL_STUB));
+      expect(view).toStrictEqual(modelViewOf(WORKSPACE_MODEL_STUB, false, NO_LIVE));
     });
 
     it('WHEN its view is asked for twice THEN both answers are the same object', () => {
-      const first = views.of(WORKSPACE_MODEL_STUB);
-      const second = views.of(WORKSPACE_MODEL_STUB);
+      const first = views.of(WORKSPACE_MODEL_STUB, false, NO_LIVE);
+      const second = views.of(WORKSPACE_MODEL_STUB, false, NO_LIVE);
 
       expect(second).toBe(first);
     });
 
     it('WHEN another model object is asked for THEN it gets its own view', () => {
       const other: WorkspaceModel = { ...WORKSPACE_MODEL_STUB };
-      const first = views.of(WORKSPACE_MODEL_STUB);
-      const second = views.of(other);
+      const first = views.of(WORKSPACE_MODEL_STUB, false, NO_LIVE);
+      const second = views.of(other, false, NO_LIVE);
 
       expect(second).not.toBe(first);
     });

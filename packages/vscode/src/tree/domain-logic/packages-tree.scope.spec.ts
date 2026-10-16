@@ -8,6 +8,7 @@ import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
+import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 
 const SCOPED = packageNamed('@s/a');
 
@@ -31,7 +32,14 @@ type Fixture = {
 const fixtureOf = (): Fixture => {
   const store = new RootStore();
   const fire = vi.fn();
-  const ports: TreePorts = { runs: () => undefined, fire, treeVisible: new Map(), now: () => 7, wallNow: () => 7 };
+  const ports: TreePorts = {
+    runs: () => undefined,
+    ...SCRIPTS_HIDDEN_PORTS,
+    fire,
+    treeVisible: new Map(),
+    now: () => 7,
+    wallNow: () => 7
+  };
   const tree = new PackagesTree(store, 'list', ports);
 
   store.set([ROOT_FOLDER_STUB], coordinatorMock);

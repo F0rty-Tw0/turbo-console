@@ -20,6 +20,7 @@ export const MESSAGE_TEXTS: Readonly<Record<MessageKind, string>> = {
   'load-with-model': 'Showing cached data: reload failed. See Output.',
   'no-packages': 'No packages found.',
   'no-shown-packages': 'No packages with tasks found.',
+  'no-turbo-packages': 'No turbo tasks. Try Show Scripts.',
   loading: 'Loading…'
 };
 
@@ -31,5 +32,6 @@ export const MESSAGE_ICONS: Readonly<Record<MessageKind, IconSpec>> = {
   'load-with-model': WARNING_ICON,
   'no-packages': INFO_ICON,
   'no-shown-packages': INFO_ICON,
+  'no-turbo-packages': INFO_ICON,
   loading: LOADING_ICON
 };

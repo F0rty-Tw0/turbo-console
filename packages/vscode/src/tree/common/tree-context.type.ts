@@ -1,5 +1,7 @@
 import type { Disposable } from 'vscode';
 
+import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
+
 /** The part of `vscode.Memento` the scope toggle uses. */
 export type ScopeStore = {
   readonly get: (key: string) => unknown;
@@ -10,4 +12,5 @@ export type ScopeStore = {
 export type TreeContext = {
   readonly subscriptions: Disposable[];
   readonly workspaceState: ScopeStore;
+  readonly scripts: ScriptsToggleApi;
 };

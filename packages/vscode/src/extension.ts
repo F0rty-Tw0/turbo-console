@@ -19,9 +19,14 @@ import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
 import type { Timings, TimingsStart, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Output } from './shared/common/output.type.ts';
+import type { ScriptsToggleApi } from './shared/common/scripts-toggle.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
+import { editorScriptsTogglePorts } from './shared/data-access/scripts-toggle-ports.ts';
+import { ScriptsToggle } from './shared/domain-logic/scripts-toggle.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
+import type { TreeContext } from './tree/common/tree-context.type.ts';
+import type { TreeProviderDeps } from './tree/common/tree-node.type.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
 import { tickerPortsOf } from './tree/data-access/ticker-ports.ts';
@@ -96,6 +101,21 @@ const startTimings = (): TimingsStart => {
   return started;
 };
 
+/** What the tree provider is built from: the run lookup, the first-children spans and the scripts toggle. */
+const treeDepsOf = (runSession: RunSession, timings: Timings, scripts: ScriptsToggleApi): TreeProviderDeps => {
+  const deps: TreeProviderDeps = { runs: runSession.runs, treeVisible: timings.treeVisible, scripts };
+
+  return deps;
+};
+
+/** What `registerTree` reads of the extension context, with the scripts toggle beside it. */
+const contextOf = (context: vscode.ExtensionContext, scripts: ScriptsToggleApi): TreeContext => {
+  const { subscriptions, workspaceState } = context;
+  const treeContext: TreeContext = { subscriptions, workspaceState, scripts };
+
+  return treeContext;
+};
+
 /** Hands the Packages view to the visibility reader and the ticker; the returned binding stops the ticker following it. */
 const bindViews = (view: VisibleView, visibility: TreeVisibility, ticker: ElapsedTicker): vscode.Disposable => {
   visibility.bind(view);
@@ -113,7 +133,8 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const output = createOutput();
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
-  const tree = new PackagesTreeProvider(session.store, runSession.runs.get, currentTreeMode(), timings.treeVisible);
+  const scripts = new ScriptsToggle(editorScriptsTogglePorts(context.workspaceState, output));
+  const tree = new PackagesTreeProvider(session.store, currentTreeMode(), treeDepsOf(runSession, timings, scripts));
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, runSession.runs, output);
@@ -132,10 +153,10 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     ticker: ticker.api()
   };
 
-  context.subscriptions.push(output, tree, session, ticker);
+  context.subscriptions.push(output, tree, session, ticker, scripts);
 
   if (vscode.workspace.isTrusted) {
-    context.subscriptions.push(bindViews(registerTree(context, session, tree, output), treeVisibility, ticker));
+    context.subscriptions.push(bindViews(registerTree(contextOf(context, scripts), session, tree, output), treeVisibility, ticker));
 
     const watchers = registerWatchers(session, watchRoot);
     const onRoots = (): void => {
