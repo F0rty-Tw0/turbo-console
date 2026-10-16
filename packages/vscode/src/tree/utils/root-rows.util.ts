@@ -2,6 +2,7 @@ import type { PackageNode, TurboErrorKind, WorkspaceModel } from '@turbo-console
 
 import { dirRows, packageRow } from './dir-rows.util.ts';
 import { packageList } from './folder-tree.util.ts';
+import { liveOf } from './live-of.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
@@ -61,7 +62,8 @@ const listRowsOf = (root: string, view: ModelView, scopeShown: boolean): TreeRow
 const packageRowsOf = (root: string, model: WorkspaceModel, context: RowContext): TreeRow[] => {
   if (model.packages.length === 0) return messageRows(root, 'no-packages');
 
-  const view = context.views(model, context.scriptsShown, context.live(root));
+  const live = liveOf(context, root);
+  const view = context.views(model, context.scriptsShown, live);
 
   if (view.packages.size === 0) return messageRows(root, 'no-shown-packages');
 
@@ -135,7 +137,7 @@ export const rootRowOf = (state: RootState, context: RowContext): TreeRow => {
 
   if (model === null) return rootNodeRow(state.folder, null);
 
-  const view = context.views(model, context.scriptsShown, context.live(state.folder.root));
+  const view = context.views(model, context.scriptsShown, liveOf(context, state.folder.root));
 
   return rootNodeRow(state.folder, view);
 };
