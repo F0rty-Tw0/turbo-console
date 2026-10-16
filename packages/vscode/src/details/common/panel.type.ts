@@ -59,7 +59,11 @@ export type FileLookup = {
   readonly loaded: () => Coordinator | null;
 };
 
-/** An open still being created, with the coordinator whose load it waits for or was handed. */
+/**
+ * An open still being created, with the coordinator whose load it waits for or was handed. Relies on a root store
+ * making a new coordinator for every add: a replaced entry's coordinator never becomes the root's again, so its create
+ * never builds a second view of the key.
+ */
 export type PendingOpen = {
   readonly coordinator: Coordinator | undefined;
   readonly panel: Promise<OpenPanel | null>;
