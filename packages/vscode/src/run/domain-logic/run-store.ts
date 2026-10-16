@@ -1,6 +1,6 @@
 import type { RunMatch } from '@turbo-console/core';
 
-import type { RunDefinition, RunEntry, RunKey, RunListener, RunLookup, RunRequest, Terminable } from '../common/run.type.ts';
+import type { LiveIds, RunDefinition, RunEntry, RunKey, RunListener, RunLookup, RunRequest, Terminable } from '../common/run.type.ts';
 import { endStateOf, isMatchedEnd } from '../utils/run-end.util.ts';
 import { runKeyOf, runningEntryOf } from '../utils/run-entry.util.ts';
 
@@ -24,6 +24,18 @@ export class RunStore {
   private readonly listeners = new Set<RunListener>();
 
   public readonly get: RunLookup = (root, taskId) => this.slots.get(runKeyOf(root, taskId))?.entry;
+
+  public readonly runningIds: LiveIds = (root) => {
+    const ids = new Set<string>();
+
+    for (const { entry } of this.slots.values()) {
+      const isLive = entry.root === root && entry.state === 'running';
+
+      if (isLive) ids.add(entry.taskId);
+    }
+
+    return ids;
+  };
 
   /** Spec §4.5 step 1: decided synchronously, so two entry points or a double click cannot start two runs. */
   public tryStart(request: RunRequest, now: number): boolean {
