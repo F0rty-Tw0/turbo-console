@@ -3,6 +3,7 @@ import type { DetailsState, HostMessage, WebviewMessage } from '@turbo-console/w
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { PosterDeps } from '../common/details.type.ts';
 import { currentTaskOf } from '../utils/current-task.util.ts';
+import { isTaskMessage } from '../utils/details-message.util.ts';
 import { detailsInputOf, toDetailsState } from '../utils/details-state.util.ts';
 import { liveRunViewOf } from '../utils/run-view.util.ts';
 
@@ -47,9 +48,7 @@ export class DetailsStatePoster {
 
   /** The state a webview message is checked against: built only for a task message, `null` for any other. */
   public stateFor(message: WebviewMessage | null): DetailsState | null {
-    const isTaskMessage = message !== null && 'taskId' in message;
-
-    if (!isTaskMessage) return null;
+    if (!isTaskMessage(message)) return null;
 
     return this.state();
   }

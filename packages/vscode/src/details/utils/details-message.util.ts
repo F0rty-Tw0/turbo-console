@@ -1,4 +1,4 @@
-import type { DetailsState, TaskCard, WebviewMessage } from '@turbo-console/webview-ui';
+import type { DetailsState, TaskCard, TaskMessage, WebviewMessage } from '@turbo-console/webview-ui';
 
 import { ALREADY_RUNNING_TEXT } from '../../run/common/run.const.ts';
 import { webviewMessageSchema } from '../common/details-message.schema.ts';
@@ -34,14 +34,15 @@ export const parseWebviewMessage = (value: unknown): WebviewMessage | null => {
   }
 };
 
+/** Whether `message` names a task (Run, Stop or Copy), so it must be checked against the panel's card ids. */
+export const isTaskMessage = (message: WebviewMessage | null): message is TaskMessage => message !== null && 'taskId' in message;
+
 /**
  * `message`, unless it is a task message whose `taskId` is not exactly one of the panel's own task ids (`Set.has`, never
  * a prefix match). Pass an empty set while the panel has no state, so every task message is dropped.
  */
 export const checkedTaskMessage = (message: WebviewMessage | null, ids: CardTaskIds): WebviewMessage | null => {
-  const isTaskMessage = message !== null && 'taskId' in message;
-
-  if (!isTaskMessage) return message;
+  if (!isTaskMessage(message)) return message;
 
   return ids.all.has(message.taskId) ? message : null;
 };
