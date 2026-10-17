@@ -54,6 +54,13 @@ const missingFrom = (notice: string, tool: ToolSpec): string[] => {
   return absent.map((text) => `${tool.id}: ${text}`);
 };
 
+const ruleOf = (tool: ToolSpec): string => {
+  const char = tool.glyph?.char ?? 0;
+  const code = char.toString(16);
+
+  return `.codicon-${TOOL_ICON_PREFIX}${tool.id}:before {\n  font-family: 'turbo-console-tools' !important;\n  content: '\\${code}';\n}`;
+};
+
 const scratchDirs: string[] = [];
 
 const freshDir = async (): Promise<string> => {
@@ -126,9 +133,11 @@ describe('FEATURE: buildToolIcons', () => {
 
       const ids = GLYPHS.map((glyph) => glyphIdOf(view, glyph.char));
       const lengths = ids.map((id) => glyphLengthOf(view, id));
+      const unmapped = GLYPHS.filter((_, index) => ids[index] === 0).map((glyph) => glyph.char);
+      const empty = GLYPHS.filter((_, index) => lengths[index] === 0).map((glyph) => glyph.char);
 
-      expect(ids.every((id) => id !== 0)).toBe(true);
-      expect(lengths.every((length) => length > 0)).toBe(true);
+      expect(unmapped).toStrictEqual([]);
+      expect(empty).toStrictEqual([]);
     });
 
     it('WHEN the 18 code points are looked up THEN they map to 18 distinct glyphs', async () => {
@@ -168,13 +177,11 @@ describe('FEATURE: buildToolIcons', () => {
       const css = await readFile(join(await builtDir(), 'tool-icons.css'), 'utf8');
 
       const faces = css.match(/@font-face/g) ?? [];
-      const rules = GLYPH_TOOLS.map((tool) => `.codicon-${TOOL_ICON_PREFIX}${tool.id}:before {`);
-      const contents = GLYPHS.map((glyph) => `content: '\\${glyph.char.toString(16)}';`);
+      const missing = GLYPH_TOOLS.map(ruleOf).filter((rule) => !css.includes(rule));
 
       expect(faces).toHaveLength(1);
       expect(css).toContain("src: url('tool-icons.ttf') format('truetype');");
-      expect(rules.every((rule) => css.includes(rule))).toBe(true);
-      expect(contents.every((content) => css.includes(content))).toBe(true);
+      expect(missing).toStrictEqual([]);
       expect(css.match(/:before \{/g)).toHaveLength(18);
     });
   });
