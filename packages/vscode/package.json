@@ -449,7 +449,7 @@
     }
   },
   "scripts": {
-    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --minify --external:vscode --outfile=dist/extension.cjs && node -e \"const fs=require('node:fs');fs.rmSync('dist/webview/details',{recursive:true,force:true});fs.cpSync('../webview-ui/dist/details','dist/webview/details',{recursive:true})\"",
+    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --minify --external:vscode --outfile=dist/extension.cjs && node -e \"const fs=require('node:fs');fs.rmSync('dist/webview/details',{recursive:true,force:true});fs.cpSync('../webview-ui/dist/details','dist/webview/details',{recursive:true})\" && node scripts/tool-icons.ts",
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
