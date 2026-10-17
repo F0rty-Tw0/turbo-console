@@ -9,7 +9,8 @@ import { liveRunViewOf } from '../utils/run-view.util.ts';
 /**
  * Builds the states of one panel and posts them. A run change posts a `runState`, except when scripts are hidden and a
  * script of this package starts or ends: its live card appears or goes (spec 1c-b §4.7), so the whole `state` goes. The
- * rule keeps `live`, the ids running as last seen, which `start` seeds; it is kept up to date while nothing can be posted.
+ * rule keeps `live`, the ids of this package's runs that were running as last seen, which `start` seeds; it is kept up to
+ * date whatever the toggle says and while nothing can be posted.
  */
 export class DetailsStatePoster {
   private readonly deps: PosterDeps;
@@ -19,11 +20,17 @@ export class DetailsStatePoster {
     this.deps = deps;
   }
 
-  /** Takes the runs already live; the set `runningIds` returns may be cached, so it is copied, never kept. */
+  /** Takes this package's runs already live; the set `runningIds` returns may be cached, so it is copied, never kept. */
   public seed(): void {
+    const { key, runs } = this.deps;
+
     this.live.clear();
 
-    for (const id of this.deps.runs.runningIds(this.deps.key.root)) this.live.add(id);
+    for (const id of runs.runningIds(key.root)) {
+      const isOwn = runs.get(key.root, id)?.packageName === key.packageName;
+
+      if (isOwn) this.live.add(id);
+    }
   }
 
   public state(): DetailsState | null {
