@@ -1,4 +1,3 @@
-import { TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { toolIconIdOf, toolOf } from './tool-of.util.ts';
@@ -8,6 +7,10 @@ const idOf = (command: string | null): string | null => toolOf(command)?.id ?? n
 
 const BASE_CHARS = Array.from('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789=-/\\.&|; \t\n');
 const ALPHABET = [...BASE_CHARS, '\u202e', 'é'];
+const BIN_NAMES = TOOLS.flatMap((tool) => tool.bins);
+const WRAPPERS = ['npx', 'pnpm exec', 'FOO=1', '-x', 'cross-env', '--'];
+const SEPARATORS = ['&&', '||', '|', ';'];
+const PARTS = [...BIN_NAMES, ...WRAPPERS, ...SEPARATORS];
 const SAMPLE_COUNT = 2000;
 const LCG_MULTIPLIER = 1664525;
 const LCG_INCREMENT = 1013904223;
@@ -18,13 +21,24 @@ const randomCommands = (): string[] => {
   const next = (bound: number): number => {
     seed = (seed * LCG_MULTIPLIER + LCG_INCREMENT) % LCG_MODULUS;
 
-    return seed % bound;
+    return Math.floor((seed / LCG_MODULUS) * bound);
   };
-  const commands = Array.from({ length: SAMPLE_COUNT }, () => {
-    const length = next(40);
-    const chars = Array.from({ length }, () => ALPHABET[next(ALPHABET.length)]);
+  const noiseOf = (): string => {
+    const chars = Array.from({ length: next(8) }, () => ALPHABET[next(ALPHABET.length)]);
 
     return chars.join('');
+  };
+  const partOf = (): string => {
+    const roll = next(4);
+
+    if (roll === 0) return noiseOf();
+
+    return PARTS[next(PARTS.length)] ?? '';
+  };
+  const commands = Array.from({ length: SAMPLE_COUNT }, () => {
+    const parts = Array.from({ length: 1 + next(6) }, partOf);
+
+    return parts.join(' ');
   });
 
   return commands;
@@ -51,7 +65,12 @@ describe('FEATURE: tool detection', () => {
     ['..\\node_modules\\.bin\\TSC.CMD', 'typescript'],
     ['tsc && vite build', 'typescript'],
     ['tsc|tee log', 'typescript'],
-    ['playwright test', 'playwright']
+    ['playwright test', 'playwright'],
+    ['bunx vitest', 'vitest'],
+    ['env vitest', 'vitest'],
+    ['-- vitest', 'vitest'],
+    ['vitest.exe', 'vitest'],
+    ['node_modules/.bin/vitest.js', 'vitest']
   ])('GIVEN the command %j WHEN its tool is read THEN it is %s', (command, id) => {
     const found = idOf(command);
 
@@ -79,14 +98,16 @@ describe('FEATURE: tool detection', () => {
     expect(found).toBeNull();
   });
 
-  describe('GIVEN 2000 seeded random strings', () => {
-    it('WHEN each is read THEN the result is null or a table row and nothing throws', () => {
+  describe('GIVEN 2000 seeded random commands mixing bins, wrappers, separators and noise', () => {
+    it('WHEN each is read THEN the result is null or a table row, some are rows, and nothing throws', () => {
       const commands = randomCommands();
 
       const results = commands.map((command) => toolOf(command));
+      const rows = results.filter((tool) => tool !== null);
 
       expect(results).toHaveLength(SAMPLE_COUNT);
-      expect(results.every((tool) => tool === null || TOOLS.includes(tool))).toBe(true);
+      expect(rows.every((tool) => TOOLS.includes(tool))).toBe(true);
+      expect(rows.length).toBeGreaterThan(500);
     });
   });
 });
@@ -98,7 +119,6 @@ describe('FEATURE: tool icon id', () => {
     const iconIds = rows.map((tool) => toolIconIdOf(tool));
 
     expect(iconIds).toStrictEqual(['turbo-console-vitest']);
-    expect(iconIds).toStrictEqual([`${TOOL_ICON_PREFIX}vitest`]);
   });
 
   it('GIVEN a tool without a glyph WHEN its icon id is read THEN it is null', () => {

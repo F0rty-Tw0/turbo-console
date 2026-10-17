@@ -3,7 +3,7 @@ import { TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 import { TOOL_BY_BIN } from '../common/tool.const.ts';
 import type { ToolSpec } from '../common/tool.type.ts';
 
-const SEGMENT_END = /&&|\|\|?|;/;
+const SEGMENT_END = /&&|\||;/;
 const WHITESPACE = /\s+/;
 const ENV_ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
 const PATH_PREFIX = /^.*[/\\]/;
