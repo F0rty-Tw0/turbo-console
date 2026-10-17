@@ -6,6 +6,9 @@ import type { ShellKind } from '../common/shell.type.ts';
 
 const PATH_SEPARATOR = /[\\/]/u;
 
+/** `pwsh` or `powershell`, alone or followed by `-` or a digit: `pwsh-preview`, `pwsh-lts`, `pwsh7`, `powershell-preview`. */
+const PWSH_NAME = /^(?:pwsh|powershell)(?:$|-|\d)/u;
+
 const POSIX_SPECIAL = /['\\]/gu;
 
 /** PowerShell's tokenizer reads U+2018 to U+201B as single quotes too. */
@@ -58,7 +61,7 @@ export const shellKindOf = (shellPath: string): ShellKind => {
   const name = shellPath.split(PATH_SEPARATOR).pop() ?? '';
   const base = name.toLowerCase().replace(/\.exe$/u, '');
 
-  const isPwsh = base === 'pwsh' || base === 'powershell';
+  const isPwsh = PWSH_NAME.test(base);
 
   if (isPwsh) return 'pwsh';
 
