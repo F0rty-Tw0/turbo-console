@@ -7,7 +7,13 @@ import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { CommandMessage, DetailsPorts, DryRunResult, PanelKey, PosterGate } from '../common/details.type.ts';
 import { commandOf } from '../utils/details-command.util.ts';
-import { cardTaskIdsOf, checkedTaskMessage, droppedMessageText, parseWebviewMessage } from '../utils/details-message.util.ts';
+import {
+  cardTaskIdsOf,
+  checkedTaskMessage,
+  droppedMessageText,
+  parseWebviewMessage,
+  refusedRunTextOf
+} from '../utils/details-message.util.ts';
 
 /**
  * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
@@ -177,13 +183,13 @@ export class DetailsSession {
     if (this.isStarted) this.modelChanged();
   }
 
-  /** While the root's binary failed, Run shows the banner's binary text and launches nothing. */
+  /** A Run the panel refuses (binary failed, or a hidden script's live card) shows its text and launches nothing. */
   private async command(message: CommandMessage, state: DetailsState | null): Promise<void> {
-    const stage = this.roots.get(this.key.root)?.state.error?.stage;
-    const isBlockedRun = message.type === 'run' && stage === 'binary' && state?.kind === 'package';
+    const isBinaryFailed = this.roots.get(this.key.root)?.state.error?.stage === 'binary';
+    const refused = refusedRunTextOf(message, state, isBinaryFailed);
 
-    if (isBlockedRun && state.reloadError !== null) {
-      this.ports.info(state.reloadError);
+    if (refused !== null) {
+      this.ports.info(refused);
 
       return;
     }

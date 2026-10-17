@@ -8,7 +8,10 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
+import { ALREADY_RUNNING_TEXT } from '../../run/common/run.const.ts';
+import type { RunRequest } from '../../run/common/run.type.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { RUN_REQUEST_STUB } from '../../run/test/stubs/run.stub.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
@@ -30,6 +33,7 @@ const WITHOUT_BUILD = { ...A_PACKAGE_STUB, tasks: [TEST_TASK_STUB] };
 const MODEL_WITHOUT_BUILD = { ...DETAILS_MODEL_STUB, packages: [WITHOUT_BUILD] };
 const RELOADED_WITHOUT_BUILD = { ...DETAILS_LOADED_STUB, model: MODEL_WITHOUT_BUILD };
 const SCRIPT_PACKAGE = { ...A_PACKAGE_STUB, tasks: [ADHOC_TASK_STUB, TEST_TASK_STUB] };
+const RUN_SCRIPT: RunRequest = { ...RUN_REQUEST_STUB, task: ADHOC_TASK_STUB };
 const SCRIPT_MODEL = { ...DETAILS_MODEL_STUB, packages: [SCRIPT_PACKAGE] };
 const WITH_SCRIPT = { ...DETAILS_LOADED_STUB, model: SCRIPT_MODEL };
 const HIDDEN_CONTROLS = /[\u202E\u009B\u2028\u2029]/u;
@@ -42,6 +46,7 @@ const THROWING_TYPE = {
 describe('FEATURE: details session messages', () => {
   let store: RootStore;
   let coordinator: Coordinator;
+  let runStore: RunStore;
   let ports: DetailsPorts;
   let session: DetailsSession;
 
@@ -52,7 +57,8 @@ describe('FEATURE: details session messages', () => {
     store.apply('/ws', DETAILS_LOADED_STUB);
     ports = detailsPortsMock();
     deferDryRuns(ports);
-    session = new DetailsSession(PANEL_KEY_STUB, store, new RunStore(), ports);
+    runStore = new RunStore();
+    session = new DetailsSession(PANEL_KEY_STUB, store, runStore, ports);
   });
 
   describe('GIVEN a shown panel that has no state yet', () => {
@@ -160,6 +166,30 @@ describe('FEATURE: details session messages', () => {
 
       expect(ports.execute).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledOnce();
+    });
+
+    describe('WHEN scripts are hidden and a script of the package runs, so it keeps its card', () => {
+      beforeEach(() => {
+        vi.mocked(ports.scriptsShown).mockReturnValue(false);
+        store.apply('/ws', WITH_SCRIPT);
+        runStore.tryStart(RUN_SCRIPT, 1000);
+      });
+
+      it('WHEN run names it THEN the already-running text is shown and nothing executes', async () => {
+        await session.receive({ type: 'run', taskId: 'a#adhoc' });
+
+        expect(ports.info).toHaveBeenCalledExactlyOnceWith(ALREADY_RUNNING_TEXT);
+        expect(ports.execute).not.toHaveBeenCalled();
+      });
+
+      it.each([
+        ['stop', 'turboConsole.stopTask'],
+        ['copy', 'turboConsole.copyCommand']
+      ])('WHEN %s names it THEN it still executes', async (type, command) => {
+        await session.receive({ type, taskId: 'a#adhoc' });
+
+        expect(ports.execute).toHaveBeenCalledExactlyOnceWith(command, { ...BUILD_ROW, key: 'a#adhoc' });
+      });
     });
 
     it('WHEN a reload leaves a script card and stop names it THEN it still executes', async () => {
