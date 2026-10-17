@@ -11,6 +11,7 @@ import type { RootFolder } from '../../roots/common/root.type.ts';
 import type { LiveIds, RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { devTurboPath } from '../../shared/test/utils/dev-turbo.spec.util.ts';
+import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { toolOf } from '../../tool/utils/tool-of.util.ts';
 import type { ModelView, ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
@@ -60,6 +61,7 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsS
   const build = (): unknown => {
     const views = new ModelViews(toolOf);
     const viewOf: ModelViewsOf = (loaded, shown, live) => views.of(loaded, shown, live);
+    const tools: ToolLookup = (command) => views.toolOf(command);
     const context: RowContext = {
       mode,
       runs: NEVER_RAN,
@@ -67,7 +69,8 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsS
       scopeShown: false,
       scriptsShown,
       live: NOTHING_LIVE,
-      now: 0
+      now: 0,
+      tools
     };
 
     return allRows(state, context);
@@ -159,6 +162,7 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const byId = new Map(entries.map((entry): [string, RunEntry] => [entry.taskId, entry]));
   const runs: RunLookup = (_root, taskId) => byId.get(taskId);
   const viewOf: ModelViewsOf = (loaded, scriptsShown, live) => views.of(loaded, scriptsShown, live);
+  const tools: ToolLookup = (command) => views.toolOf(command);
   const running: ReadonlySet<string> = new Set(byId.keys());
   const runningIds: LiveIds = () => running;
   const context: RowContext = {
@@ -168,7 +172,8 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
     scopeShown: false,
     scriptsShown: false,
     live: runningIds,
-    now: TICK_NOW
+    now: TICK_NOW,
+    tools
   };
   const cache = new Map<string, TreeNode>();
   const nodes = entries.map((entry) => nodeFor(cache, entryRowOf(model, entry, context)));

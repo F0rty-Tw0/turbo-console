@@ -6,6 +6,7 @@ import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { LiveIds, RunEntry, RunLookup, Runs } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { Span } from '../../shared/common/span.type.ts';
+import type { ToolLookup } from '../../tool/common/tool.type.ts';
 
 /**
  * The element VS Code holds for one row. One object per row id for as long as the row exists, so a `fire` with it
@@ -23,8 +24,8 @@ export type TreeNode = {
 /**
  * What a node's rows are read with: the view mode, the runs, the model's view (built once per model), whether
  * package rows read their full names (`scopeShown`) or their bare labels, whether scripts are listed (`scriptsShown`),
- * the running task ids per folder root (`live`), and the wall-clock time (`now`, the base of `RunEntry.launchedAt`) a
- * running task's elapsed time is counted to.
+ * the running task ids per folder root (`live`), the wall-clock time (`now`, the base of `RunEntry.launchedAt`) a
+ * running task's elapsed time is counted to, and the tool a task's command runs (`tools`, memoized by `ModelViews`).
  */
 export type RowContext = {
   readonly mode: TreeMode;
@@ -34,6 +35,7 @@ export type RowContext = {
   readonly scriptsShown: boolean;
   readonly live: LiveIds;
   readonly now: number;
+  readonly tools: ToolLookup;
 };
 
 /** `'root'` redraws the root (the whole tree in a single-root window); a list names the packages to redraw. */

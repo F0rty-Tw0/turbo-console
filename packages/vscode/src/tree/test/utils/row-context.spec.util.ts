@@ -1,6 +1,7 @@
 import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 
 import type { LiveIds, RunLookup } from '../../../run/common/run.type.ts';
+import { toolOf } from '../../../tool/utils/tool-of.util.ts';
 import type { ModelView } from '../../common/model-view.type.ts';
 import type { RowContext } from '../../common/tree-node.type.ts';
 import type { TreeMode } from '../../common/tree-row.type.ts';
@@ -27,7 +28,7 @@ export const rowContextOf = (
   scripts: ScriptsContext = SCRIPTS_HIDDEN
 ): RowContext => {
   const { scriptsShown, live } = scripts;
-  const context: RowContext = { mode, runs, views: modelViewOf, scopeShown, scriptsShown, live, now: ROW_NOW };
+  const context: RowContext = { mode, runs, views: modelViewOf, scopeShown, scriptsShown, live, now: ROW_NOW, tools: toolOf };
 
   return context;
 };

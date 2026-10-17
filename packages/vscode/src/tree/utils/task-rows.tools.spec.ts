@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { taskRowOf } from './task-rows.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
+import type { RowContext } from '../common/tree-node.type.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
+import { toolLookupMock } from '../test/mocks/tool-lookup.mock.ts';
 import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
@@ -136,6 +138,20 @@ describe('FEATURE: tool icon and tooltip line on a task row', () => {
       const lines = tooltipOf(taskOf({ command: 'node x.js' }));
 
       expect(lines).toStrictEqual(['Command: node x.js', 'Kind: task']);
+    });
+  });
+
+  describe('GIVEN a row context with its own tool lookup', () => {
+    it('WHEN a task row is built THEN the lookup is asked for the task command', () => {
+      const tools = toolLookupMock();
+      const task = taskOf({ command: 'vitest' });
+      const pkg: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [task] };
+      const listContext = rowContextOf('list');
+      const context: RowContext = { ...listContext, tools };
+
+      taskRowOf(ROW_SCOPE_STUB, pkg, task.id, context);
+
+      expect(tools).toHaveBeenCalledWith('vitest');
     });
   });
 });

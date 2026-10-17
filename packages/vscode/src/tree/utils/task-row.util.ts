@@ -9,7 +9,7 @@ import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { ToolSpec } from '../../tool/common/tool.type.ts';
-import { toolIconIdOf, toolOf } from '../../tool/utils/tool-of.util.ts';
+import { toolIconIdOf } from '../../tool/utils/tool-of.util.ts';
 import { IDLE_ICON } from '../common/icon.const.ts';
 import { CONTINUOUS_KIND_LINES } from '../common/task-text.const.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
@@ -137,7 +137,7 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
   const { root, packageManager } = scope;
   const entry = context.runs(root, task.id);
   const display = taskDisplay(task, entry, context.now);
-  const tool = toolOf(task.command);
+  const tool = context.tools(task.command);
   const kind = kindLines(task);
   const facts = taskFactLines(task, packageManager.name, tool);
   const ran = runLines(entry);
