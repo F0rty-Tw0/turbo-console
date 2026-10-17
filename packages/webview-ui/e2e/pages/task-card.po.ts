@@ -16,6 +16,20 @@ const deliverAndClickFocused = (message: HostMessage): void => {
   if (focused instanceof HTMLElement) focused.click();
 };
 
+const expectTextOnly = async (value: Locator): Promise<void> => {
+  await expect(value.locator('.codicon')).toHaveCount(0);
+  await expect(value).not.toHaveClass(/field-icon-value/);
+};
+
+const expectLogo = async (value: Locator, iconId: string): Promise<void> => {
+  const countNodes = (cell: HTMLElement): number => cell.childNodes.length;
+  const nodeCount = await value.evaluate(countNodes);
+
+  await expect(value).toHaveClass('field-icon-value');
+  expect(nodeCount).toBe(2);
+  await expect(value.locator('> :first-child')).toHaveClass(`codicon codicon-${iconId}`);
+};
+
 /** One task card, found by its exact title text, never by a selector built from the name. */
 export class TaskCardSection {
   public readonly title: Locator;
@@ -72,6 +86,20 @@ export class TaskCardSection {
 
     await expect(this.root.locator('dt')).toHaveText(terms);
     await expect(this.root.locator('dd')).toHaveText(values);
+  }
+
+  /**
+   * The `Tool` value: its text; with an icon id, a `field-icon-value` cell of exactly two nodes (the codicon span, then the text span);
+   * without one, no codicon and no `field-icon-value` class.
+   */
+  public async expectToolField(title: string, iconId: string | null): Promise<void> {
+    const value = this.root.locator('dt', { hasText: /^Tool$/ }).locator('+ dd');
+
+    await expect(value).toHaveText(title);
+
+    if (iconId === null) return expectTextOnly(value);
+
+    await expectLogo(value, iconId);
   }
 
   public async expectBadges(labels: string[]): Promise<void> {

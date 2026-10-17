@@ -228,6 +228,12 @@ ul {
   white-space: pre-wrap;
 }
 
+.fields dd.field-icon-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .missing,
 .no-tasks {
   color: var(--vscode-descriptionForeground);

@@ -1,10 +1,11 @@
-import { iconButton, textElement } from './page-elements.ts';
+import { codicon, iconButton, textElement } from './page-elements.ts';
 import { fillRun } from './patch-run.ts';
 import type { DryRunPhase, RunView, TaskCard } from '../../bridge/common/details-state.type.ts';
 import type { CardRefs, FieldRow, RenderContext, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
 import { NONE_TEXT, RUNS_UNTIL_STOPPED_TEXT } from '../common/field-text.const.ts';
 import { STOP_ICON_ID } from '../common/run-view.const.ts';
 import { cacheText, definitionText, listText } from '../utils/field-text.util.ts';
+import { safeToolIconId } from '../utils/run-view.util.ts';
 
 const runButtonFor = (card: TaskCard, context: RenderContext): RunButtonFactory => {
   const { name, taskId } = card;
@@ -47,11 +48,25 @@ const definitionRows = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
   return rows;
 };
 
+/** The Tool row (spec 1c-c §4.6): the logo only when the host's icon id is one of the tool icon font's, else the name alone. */
+const toolRows = (card: TaskCard): FieldRow[] => {
+  const { tool } = card;
+
+  if (tool === null) return [];
+
+  const iconId = safeToolIconId(tool.iconId);
+
+  if (iconId === null) return [['Tool', tool.title]];
+
+  return [['Tool', tool.title, iconId]];
+};
+
 const turboRows = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
   const command = card.command ?? NONE_TEXT;
   const description = card.description ?? NONE_TEXT;
   const definition = definitionRows(card, phase);
-  const rows: FieldRow[] = [['Command', command], ['Description', description], ...definition];
+  const tool = toolRows(card);
+  const rows: FieldRow[] = [['Command', command], ...tool, ['Description', description], ...definition];
 
   return rows;
 };
@@ -69,7 +84,8 @@ const scriptRows = (card: TaskCard): FieldRow[] => {
   const runCommand = runCommandRows(card.runCommand);
   const script = card.command ?? NONE_TEXT;
   const description = card.description ?? NONE_TEXT;
-  const rows: FieldRow[] = [...runCommand, ['Script', script], ['Description', description]];
+  const tool = toolRows(card);
+  const rows: FieldRow[] = [...runCommand, ['Script', script], ...tool, ['Description', description]];
 
   return rows;
 };
@@ -80,6 +96,17 @@ const kindRows = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
   return scriptRows(card);
 };
 
+/** A plain `dd`, or with an icon id a `field-icon-value` one holding the codicon, then the value in a span (no text node between). */
+const valueCell = (value: string, iconId: string | undefined): HTMLElement => {
+  if (iconId === undefined) return textElement('dd', '', value);
+
+  const cell = textElement('dd', 'field-icon-value', '');
+
+  cell.append(codicon(iconId), textElement('span', '', value));
+
+  return cell;
+};
+
 const fieldList = (card: TaskCard, phase: DryRunPhase): HTMLDListElement => {
   const list = document.createElement('dl');
   const cardRows = kindRows(card, phase);
@@ -88,8 +115,8 @@ const fieldList = (card: TaskCard, phase: DryRunPhase): HTMLDListElement => {
 
   list.className = 'fields';
 
-  for (const [term, value] of rows) {
-    list.append(textElement('dt', '', term), textElement('dd', '', value));
+  for (const [term, value, iconId] of rows) {
+    list.append(textElement('dt', '', term), valueCell(value, iconId));
   }
 
   return list;

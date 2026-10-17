@@ -51,4 +51,5 @@ export type RenderedPage = {
   readonly focusTargets: FocusTargets;
 };
 
-export type FieldRow = readonly [term: string, value: string];
+/** The optional `iconId` puts a tool-icon codicon before the value (spec 1c-c §4.6). */
+export type FieldRow = readonly [term: string, value: string, iconId?: string];
