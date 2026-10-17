@@ -45,6 +45,15 @@ const HIDDEN_EMPTY_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [],
 
 const HIDDEN_NONE_STATE: PackageDetails = { ...HIDDEN_EMPTY_STATE, hiddenScriptCount: 0 };
 
+const KEPT_SCRIPT_CARD: TaskCard = { ...SCRIPT_CARD, run: RUNNING };
+
+const HIDDEN_KEPT_STATE: PackageDetails = {
+  ...PACKAGE_DETAILS_STUB,
+  tasks: [KEPT_SCRIPT_CARD],
+  scriptsShown: false,
+  hiddenScriptCount: 2
+};
+
 const SCRIPT_ROWS: FieldRow[] = [
   ['Command', 'pnpm run lint'],
   ['Script', 'eslint .'],
@@ -159,6 +168,20 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
 
       await test.step('THEN only the turbo section shows', async (): Promise<void> =>
         expect(detailsPage.sectionTitles).toHaveText(['Turbo tasks (2)']));
+
+      await test.step('AND no empty-package text shows', async (): Promise<void> => expect(detailsPage.noCardsNotice).toHaveCount(0));
+    }
+  );
+
+  test(
+    'GIVEN hidden scripts and a running script card kept, no hint shows',
+    { annotation: AC6 },
+    async ({ detailsPage }): Promise<void> => {
+      await test.step('WHEN the page shows only the running script card with scripts hidden', async (): Promise<void> =>
+        detailsPage.open(HIDDEN_KEPT_STATE));
+
+      await test.step('THEN only the scripts section shows', async (): Promise<void> =>
+        expect(detailsPage.sectionTitles).toHaveText(['Scripts (1)']));
 
       await test.step('AND no empty-package text shows', async (): Promise<void> => expect(detailsPage.noCardsNotice).toHaveCount(0));
     }
