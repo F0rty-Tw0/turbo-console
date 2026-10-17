@@ -27,14 +27,30 @@ export class PageViewport {
   /**
    * Resizes the page, as VS Code does when it opens or closes the panel under the editor, and waits for its `resize`
    * event: the page gets it in the next frame, before the user can see the new layout, while a click Playwright sends
-   * right away can beat that frame.
+   * right away can beat that frame. The current size changes nothing and fires no `resize` event, so nothing is awaited.
    */
   public async resize(width: number, height: number): Promise<void> {
     const size = { width, height };
+    const current = this.page.viewportSize();
+    const isSameSize = current?.width === width && current.height === height;
+
+    if (isSameSize) return;
 
     await this.page.evaluate(ARM_RESIZE_WAIT);
     await this.page.setViewportSize(size);
     await this.page.evaluate('window.__resized');
+  }
+
+  /**
+   * Resizes the page and clicks the remembered spot at once, without waiting for the `resize` event: the click usually
+   * lands on the new layout before the next frame fires that event.
+   */
+  public async resizeAndClickSpot(width: number, height: number): Promise<void> {
+    const size = { width, height };
+    const { x, y } = this.rememberedSpot();
+
+    await this.page.setViewportSize(size);
+    await this.page.mouse.click(x, y);
   }
 
   /** Remembers the centre of the button labelled `label` as it sits now. */

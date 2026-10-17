@@ -1,17 +1,16 @@
 import { test } from './details.fixture.ts';
-import { PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
+import {
+  PACKAGE_DETAILS_STUB,
+  RUNNING_RUN_VIEW_STUB,
+  STOPPED_RUN_VIEW_STUB,
+  TASK_CARD_STUB
+} from './test/stubs/details-state.stub.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import { RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC6 = { description: 'AC6', type: 'requirement' };
 
-const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
-
-const RUNNING: RunView = { ...NOT_IDLE, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
-
-const STOPPED: RunView = { ...NOT_IDLE, iconId: 'debug-stop', colorVar: '--vscode-disabledForeground', text: 'stopped · 3.0s' };
-
-const RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING };
+const RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING_RUN_VIEW_STUB };
 
 const IDLE_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_STUB] };
 
@@ -35,7 +34,7 @@ test.describe('FEATURE: a Stop that replaces Run holds clicks', () => {
 
       await test.step('AND shows the idle card', async (): Promise<void> => detailsPage.open(IDLE_STATE));
 
-      await test.step('AND its run starts', async (): Promise<void> => detailsPage.sendRunState(taskId, RUNNING));
+      await test.step('AND its run starts', async (): Promise<void> => detailsPage.sendRunState(taskId, RUNNING_RUN_VIEW_STUB));
 
       await test.step('AND Stop is clicked right away', async (): Promise<void> => card.runButton.click());
 
@@ -56,13 +55,13 @@ test.describe('FEATURE: a Stop that replaces Run holds clicks', () => {
     async ({ detailsPage, pageClock }): Promise<void> => {
       const { name, taskId } = TASK_CARD_STUB;
       const card = detailsPage.card(name);
-      const runningLater: RunView = { ...RUNNING, elapsedMs: SECOND_RUN_STATE_MS };
+      const runningLater: RunView = { ...RUNNING_RUN_VIEW_STUB, elapsedMs: SECOND_RUN_STATE_MS };
 
       await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
 
       await test.step('AND shows the idle card', async (): Promise<void> => detailsPage.open(IDLE_STATE));
 
-      await test.step('AND its run starts', async (): Promise<void> => detailsPage.sendRunState(taskId, RUNNING));
+      await test.step('AND its run starts', async (): Promise<void> => detailsPage.sendRunState(taskId, RUNNING_RUN_VIEW_STUB));
 
       await test.step('AND the host sends running again a moment later', async (): Promise<void> => {
         await pageClock.tick(SECOND_RUN_STATE_MS);
@@ -92,13 +91,13 @@ test.describe('FEATURE: a Stop that replaces Run holds clicks', () => {
     async ({ detailsPage, pageClock }): Promise<void> => {
       const { name, taskId } = TASK_CARD_STUB;
       const card = detailsPage.card(name);
-      const runningLater: RunView = { ...RUNNING, elapsedMs: RUN_SWAP_HOLD_MS + SECOND_CLICK_MS };
+      const runningLater: RunView = { ...RUNNING_RUN_VIEW_STUB, elapsedMs: RUN_SWAP_HOLD_MS + SECOND_CLICK_MS };
 
       await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
 
       await test.step('AND shows the idle card', async (): Promise<void> => detailsPage.open(IDLE_STATE));
 
-      await test.step('AND its run starts', async (): Promise<void> => detailsPage.sendRunState(taskId, RUNNING));
+      await test.step('AND its run starts', async (): Promise<void> => detailsPage.sendRunState(taskId, RUNNING_RUN_VIEW_STUB));
 
       await test.step('AND the hold passes', async (): Promise<void> => pageClock.tick(RUN_SWAP_HOLD_MS + SECOND_CLICK_MS));
 
@@ -126,7 +125,7 @@ test.describe('FEATURE: a Stop that replaces Run holds clicks', () => {
 
       await test.step('AND Enter goes down on it and stays held', async (): Promise<void> => card.holdEnter());
 
-      await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState(taskId, STOPPED));
+      await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState(taskId, STOPPED_RUN_VIEW_STUB));
 
       await test.step('AND Enter repeats after the hold', async (): Promise<void> => {
         await pageClock.tick(RUN_SWAP_HOLD_MS + SECOND_CLICK_MS);

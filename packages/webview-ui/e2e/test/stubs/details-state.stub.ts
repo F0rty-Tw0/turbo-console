@@ -12,6 +12,24 @@ export const RUN_VIEW_STUB: RunView = {
   isIdle: true
 };
 
+const NOT_IDLE_RUN_VIEW: RunView = { ...RUN_VIEW_STUB, isIdle: false };
+
+export const RUNNING_RUN_VIEW_STUB: RunView = {
+  ...NOT_IDLE_RUN_VIEW,
+  iconId: 'sync',
+  text: 'running',
+  isRunning: true,
+  elapsedMs: 0,
+  isSpinning: true
+};
+
+export const STOPPED_RUN_VIEW_STUB: RunView = {
+  ...NOT_IDLE_RUN_VIEW,
+  iconId: 'debug-stop',
+  colorVar: '--vscode-disabledForeground',
+  text: 'stopped · 3.0s'
+};
+
 export const TASK_DEFINITION_STUB: TaskDefinition = {
   inputs: ['src/**'],
   outputs: ['dist/**'],

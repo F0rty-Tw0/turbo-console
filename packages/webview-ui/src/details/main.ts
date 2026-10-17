@@ -30,8 +30,9 @@ const restoreScroll = (state: DetailsState): void => {
 /**
  * A re-render of a page with cards holds pointer clicks: a card can leave (a kept script card that stopped while
  * scripts are hidden) and focus fall back to the title, so the page scrolls and another Run can land under the pointer.
- * The refocused replacement of a focused Run/Stop gets no full hold: a held Enter is the repeated-Enter filter's job,
- * and a fresh key press is aimed at the button that has focus.
+ * A full state inside a swap's hold rebuilds the swapped button without its full hold, so a key press on it is live
+ * again: accepted, since that needs a dry run or a model reload to coincide with a run ending, and the pointer hold
+ * still covers a double-click's second click.
  */
 const showState = (state: DetailsState): void => {
   const focusKey = focusedKey(page.focusTargets);

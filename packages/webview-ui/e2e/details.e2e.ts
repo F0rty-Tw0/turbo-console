@@ -5,6 +5,7 @@ import {
   HOSTILE_NAME_STUB,
   MISSING_PACKAGE_STUB,
   PACKAGE_DETAILS_STUB,
+  RUNNING_RUN_VIEW_STUB,
   RUN_VIEW_STUB,
   TASK_CARD_STUB,
   TASK_DEFINITION_STUB
@@ -20,8 +21,6 @@ const AC4 = { description: 'AC4', type: 'requirement' };
 const AC5 = { description: 'AC5', type: 'requirement' };
 
 const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
-
-const RUNNING: RunView = { ...NOT_IDLE, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
 
 const PASSED: RunView = { ...NOT_IDLE, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: 'passed' };
 
@@ -188,7 +187,8 @@ test.describe('FEATURE: package details page', () => {
 
     await test.step('AND the page is scrolled to the bottom', async (): Promise<void> => detailsPage.scrollToBottom());
 
-    await test.step('AND the last task starts running', async (): Promise<void> => detailsPage.sendRunState('web#t11', RUNNING));
+    await test.step('AND the last task starts running', async (): Promise<void> =>
+      detailsPage.sendRunState('web#t11', RUNNING_RUN_VIEW_STUB));
 
     await test.step('THEN only the last card shows the running status', async (): Promise<void> =>
       expect(detailsPage.statuses).toHaveText(statuses));
@@ -201,7 +201,8 @@ test.describe('FEATURE: package details page', () => {
 
     await test.step('AND the Run button is focused', async (): Promise<void> => detailsPage.focusButton('Run build'));
 
-    await test.step('AND the task starts running', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
+    await test.step('AND the task starts running', async (): Promise<void> =>
+      detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
 
     await test.step('THEN the Stop button has focus', async (): Promise<void> => detailsPage.expectFocused('Stop build'));
   });
@@ -237,7 +238,8 @@ test.describe('FEATURE: package details page', () => {
 
     await test.step('AND Run is clicked', async (): Promise<void> => detailsPage.pressButton('Run build'));
 
-    await test.step('AND the task starts running', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
+    await test.step('AND the task starts running', async (): Promise<void> =>
+      detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
 
     await test.step('AND Stop shows and its click hold passes', async (): Promise<void> => {
       await expect(detailsPage.card('build').runButton).toHaveAttribute('aria-label', 'Stop build');
@@ -326,7 +328,8 @@ test.describe('FEATURE: package details page', () => {
 
     await test.step('AND the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
 
-    await test.step('AND the task starts running', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
+    await test.step('AND the task starts running', async (): Promise<void> =>
+      detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
 
     await test.step('THEN the icon has the spin class', async (): Promise<void> =>
       card.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', ''));

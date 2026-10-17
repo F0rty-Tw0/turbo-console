@@ -1,16 +1,16 @@
 import { expect, test } from './details.fixture.ts';
-import { HOSTILE_NAME_STUB, PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
-import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
+import {
+  HOSTILE_NAME_STUB,
+  PACKAGE_DETAILS_STUB,
+  RUNNING_RUN_VIEW_STUB,
+  STOPPED_RUN_VIEW_STUB,
+  TASK_CARD_STUB
+} from './test/stubs/details-state.stub.ts';
+import type { PackageDetails, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../src/details/common/details-page.type.ts';
 import { RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC6 = { description: 'AC6', type: 'requirement' };
-
-const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
-
-const RUNNING: RunView = { ...NOT_IDLE, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
-
-const STOPPED: RunView = { ...NOT_IDLE, iconId: 'debug-stop', colorVar: '--vscode-disabledForeground', text: 'stopped · 3.0s' };
 
 const TEST_CARD: TaskCard = { ...TASK_CARD_STUB, taskId: 'web#test', name: 'test' };
 
@@ -46,7 +46,7 @@ const HIDDEN_EMPTY_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [],
 
 const HIDDEN_NONE_STATE: PackageDetails = { ...HIDDEN_EMPTY_STATE, hiddenScriptCount: 0 };
 
-const KEPT_SCRIPT_CARD: TaskCard = { ...SCRIPT_CARD, run: RUNNING };
+const KEPT_SCRIPT_CARD: TaskCard = { ...SCRIPT_CARD, run: RUNNING_RUN_VIEW_STUB };
 
 const HIDDEN_KEPT_STATE: PackageDetails = {
   ...PACKAGE_DETAILS_STUB,
@@ -57,7 +57,7 @@ const HIDDEN_KEPT_STATE: PackageDetails = {
 
 const HIDDEN_DROPPED_STATE: PackageDetails = { ...HIDDEN_KEPT_STATE, tasks: [] };
 
-const TURBO_RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING };
+const TURBO_RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING_RUN_VIEW_STUB };
 
 const MULTI_LINE_CARD: TaskCard = { ...SCRIPT_CARD, command: 'eslint .\n--fix' };
 
@@ -151,7 +151,7 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
 
       await test.step('WHEN the page shows the script card', async (): Promise<void> => detailsPage.open(SCRIPTS_ONLY_STATE));
 
-      await test.step('AND its run starts', async (): Promise<void> => detailsPage.sendRunState('web#lint', RUNNING));
+      await test.step('AND its run starts', async (): Promise<void> => detailsPage.sendRunState('web#lint', RUNNING_RUN_VIEW_STUB));
 
       await test.step('THEN the card offers Stop', async (): Promise<void> =>
         expect(card.runButton).toHaveAttribute('aria-label', 'Stop lint'));
@@ -166,7 +166,8 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
       await test.step('THEN the page posts stop with its id', async (): Promise<void> =>
         detailsPage.expectLastPosted({ type: 'stop', taskId: 'web#lint' }));
 
-      await test.step('WHEN the run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#lint', STOPPED));
+      await test.step('WHEN the run ends stopped', async (): Promise<void> =>
+        detailsPage.sendRunState('web#lint', STOPPED_RUN_VIEW_STUB));
 
       await test.step('THEN the status shows the end state', async (): Promise<void> =>
         expect(card.status).toHaveText('stopped · 3.0s'));
@@ -192,7 +193,7 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
         await test.step('AND its Stop button is focused', async (): Promise<void> => detailsPage.focusButton(`Stop ${name}`));
 
         await test.step('AND the run ends and the focused button is clicked in the same frame', async (): Promise<void> =>
-          card.sendRunStateAndClickFocused(taskId, STOPPED));
+          card.sendRunStateAndClickFocused(taskId, STOPPED_RUN_VIEW_STUB));
 
         await test.step('THEN the Run button has focus', async (): Promise<void> => detailsPage.expectFocused(`Run ${name}`));
 
@@ -220,7 +221,7 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
 
       await test.step('AND shows the running card', async (): Promise<void> => detailsPage.open(state));
 
-      await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState(taskId, STOPPED));
+      await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState(taskId, STOPPED_RUN_VIEW_STUB));
 
       await test.step('AND Run is clicked right away', async (): Promise<void> => card.runButton.click());
 

@@ -63,11 +63,10 @@ const swapRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
  * Replaces only `taskId`'s status, and its Run/Stop button only when the run starts or ends. A Run that replaces Stop,
  * or a Stop that replaces Run, ignores every click for `RUN_SWAP_HOLD_MS`, focused or not: VS Code can move focus off
  * the page when a run stops, and a double-click's second click comes long after a frame, so it would relaunch a stopped
- * run or stop a fresh one. Every other Run/Stop button ignores pointer clicks for as long (see `holdSwappedButton`). A
- * focused Run/Stop button hands focus to its replacement. Any other runState, such as the host's second running one
- * for the same Run or a running tick, keeps the button, its hold and its focus, since the button depends only on
- * whether the run is live. A held Enter is the page's repeated-Enter keydown filter's job, since its repeats outlast
- * the hold.
+ * run or stop a fresh one. Every other Run/Stop button stays live (see `holdSwappedButton`). A focused Run/Stop button
+ * hands focus to its replacement. Any other runState, such as the host's second running one for the same Run or a
+ * running tick, keeps the button, its hold and its focus, since the button depends only on whether the run is live. A
+ * held Enter is the page's repeated-Enter keydown filter's job, since its repeats outlast the hold.
  */
 export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runTexts: RunTexts): void => {
   const refs = cards.get(taskId);

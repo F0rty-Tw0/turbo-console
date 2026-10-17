@@ -1,5 +1,12 @@
 import { expect, test } from './details.fixture.ts';
-import { MISSING_PACKAGE_STUB, PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
+import {
+  MISSING_PACKAGE_STUB,
+  PACKAGE_DETAILS_STUB,
+  RUNNING_RUN_VIEW_STUB,
+  RUN_VIEW_STUB,
+  STOPPED_RUN_VIEW_STUB,
+  TASK_CARD_STUB
+} from './test/stubs/details-state.stub.ts';
 import type { CacheStatus, PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../src/details/common/details-page.type.ts';
 
@@ -11,17 +18,13 @@ const AC9 = { description: 'AC9', type: 'requirement' };
 
 const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
 
-const RUNNING: RunView = { ...NOT_IDLE, iconId: 'sync', text: 'running', isRunning: true, elapsedMs: 0, isSpinning: true };
+const RUNNING_FOR_59S: RunView = { ...RUNNING_RUN_VIEW_STUB, elapsedMs: 59_000 };
 
-const RUNNING_FOR_59S: RunView = { ...RUNNING, elapsedMs: 59_000 };
-
-const CONTINUOUS: RunView = { ...RUNNING, iconId: 'pulse', text: 'continuous', elapsedMs: 5000, isSpinning: false };
+const CONTINUOUS: RunView = { ...RUNNING_RUN_VIEW_STUB, iconId: 'pulse', text: 'continuous', elapsedMs: 5000, isSpinning: false };
 
 const PASSED_HIT: RunView = { ...NOT_IDLE, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: '3.2s · cached' };
 
-const STOPPED: RunView = { ...NOT_IDLE, iconId: 'debug-stop', colorVar: '--vscode-disabledForeground', text: 'stopped · 3.0s' };
-
-const RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING };
+const RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING_RUN_VIEW_STUB };
 
 const CONTINUOUS_CARD: TaskCard = { ...TASK_CARD_STUB, taskId: 'web#dev', name: 'dev', persistent: true, run: CONTINUOUS };
 
@@ -43,7 +46,7 @@ const CONTINUOUS_LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryR
 
 const SCRIPT_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [SCRIPT_CARD] };
 
-const SCRIPT_RUNNING_CARD: TaskCard = { ...SCRIPT_CARD, run: RUNNING };
+const SCRIPT_RUNNING_CARD: TaskCard = { ...SCRIPT_CARD, run: RUNNING_RUN_VIEW_STUB };
 
 const SCRIPT_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [SCRIPT_RUNNING_CARD] };
 
@@ -207,7 +210,7 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('AND the Command and Script fields', async (): Promise<void> => card.expectFields(SCRIPT_ROWS));
 
-      await test.step('WHEN its run starts', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
+      await test.step('WHEN its run starts', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
 
       await test.step('THEN the status shows the run', async (): Promise<void> => expect(card.status).toHaveText(/^running · \d+s$/u));
 
@@ -216,7 +219,8 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('AND keeps Copy', async (): Promise<void> => expect(card.copyButton).toHaveCount(1));
 
-      await test.step('WHEN the run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#build', STOPPED));
+      await test.step('WHEN the run ends stopped', async (): Promise<void> =>
+        detailsPage.sendRunState('web#build', STOPPED_RUN_VIEW_STUB));
 
       await test.step('THEN the status shows the end state', async (): Promise<void> =>
         expect(card.status).toHaveText('stopped · 3.0s'));
@@ -257,7 +261,8 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('AND its Stop button is focused', async (): Promise<void> => detailsPage.focusButton('Stop build'));
 
-      await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#build', STOPPED));
+      await test.step('AND the run ends stopped', async (): Promise<void> =>
+        detailsPage.sendRunState('web#build', STOPPED_RUN_VIEW_STUB));
 
       await test.step('THEN the Run button has focus', async (): Promise<void> => detailsPage.expectFocused('Run build'));
     }
@@ -274,7 +279,8 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('AND the turbo card Copy button is focused', async (): Promise<void> => copyButton.focus());
 
-      await test.step('AND the script run ends stopped', async (): Promise<void> => detailsPage.sendRunState('web#format', STOPPED));
+      await test.step('AND the script run ends stopped', async (): Promise<void> =>
+        detailsPage.sendRunState('web#format', STOPPED_RUN_VIEW_STUB));
 
       await test.step('THEN Copy keeps the focus', async (): Promise<void> => expect(copyButton).toBeFocused());
     }

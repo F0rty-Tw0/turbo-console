@@ -83,6 +83,10 @@ export class TaskCardSection {
     await expect(this.root.locator('.badges > li')).toHaveText(texts);
   }
 
+  public async expectRunButtonUnfocused(): Promise<void> {
+    await expect(this.runButton).not.toBeFocused();
+  }
+
   /** The status line has no icon and no text. */
   public async expectBlankStatus(): Promise<void> {
     await expect(this.status.locator('*')).toHaveCount(0);
