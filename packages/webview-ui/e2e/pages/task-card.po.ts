@@ -44,6 +44,13 @@ export class TaskCardSection {
     await this.root.page().evaluate(deliverAndClickFocused, message);
   }
 
+  /** The value of field `term` as rendered, line breaks included, unlike `toHaveText`, which collapses whitespace. */
+  public async expectRenderedField(term: string, renderedText: string): Promise<void> {
+    const value = this.root.getByText(term, { exact: true }).locator('+ dd');
+
+    await expect(value).toHaveJSProperty('innerText', renderedText);
+  }
+
   public async expectFields(rows: FieldRow[]): Promise<void> {
     const terms = rows.map(([term]: FieldRow): string => term);
     const values = rows.map(([, value]: FieldRow): string => value);

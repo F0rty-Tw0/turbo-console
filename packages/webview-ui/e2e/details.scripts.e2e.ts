@@ -58,6 +58,10 @@ const HIDDEN_DROPPED_STATE: PackageDetails = { ...HIDDEN_KEPT_STATE, tasks: [] }
 
 const TURBO_RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING };
 
+const MULTI_LINE_CARD: TaskCard = { ...SCRIPT_CARD, command: 'eslint .\n--fix' };
+
+const MULTI_LINE_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [MULTI_LINE_CARD] };
+
 const RUNNING_CARD_CASES: [string, TaskCard][] = [
   ['turbo', TURBO_RUNNING_CARD],
   ['script', KEPT_SCRIPT_CARD]
@@ -178,6 +182,14 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
       }
     );
   }
+
+  test('GIVEN a multi-line script, its card keeps the line break', { annotation: AC6 }, async ({ detailsPage }): Promise<void> => {
+    await test.step('WHEN the page shows a script whose body spans two lines', async (): Promise<void> =>
+      detailsPage.open(MULTI_LINE_STATE));
+
+    await test.step('THEN the Script field renders both lines', async (): Promise<void> =>
+      detailsPage.card('lint').expectRenderedField('Script', 'eslint .\n--fix'));
+  });
 
   test(
     'GIVEN a script the run flow refuses, its card has no Command field but keeps Run and Copy',

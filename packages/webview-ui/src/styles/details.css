@@ -223,6 +223,12 @@ ul {
   color: var(--vscode-descriptionForeground);
 }
 
+/* Repo text: bidi controls stay inside their field, and a multi-line script shows its real line breaks. */
+.fields dd {
+  unicode-bidi: isolate;
+  white-space: pre-wrap;
+}
+
 .missing,
 .no-tasks {
   color: var(--vscode-descriptionForeground);
