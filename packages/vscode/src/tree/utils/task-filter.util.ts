@@ -9,7 +9,8 @@ const isRunnableScript = (task: TaskNode): boolean => isSafeScriptName(task.name
 
 /**
  * Spec 1c-b §4.1: a visible task that is a turbo task, or a script whose name and body pass the run flow's checks. The
- * package dir's `isWithin` check stays out: turbo/core refuses packages outside the root, so Run keeps it as defence only.
+ * package dir's `isWithin` check stays out and Run keeps it as the gate: a package whose path leaves the root is
+ * offered, then refused with the unsafe-script toast. turbo 2.11.7 refuses only a package dir symlinked outside the root.
  */
 export const isRunnableTask = (task: TaskNode): boolean => {
   const isVisible = isVisibleTask(task);
