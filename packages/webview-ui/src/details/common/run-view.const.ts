@@ -1,6 +1,9 @@
 /** A codicon id: lowercase words joined by `-`, so it is one safe class token. */
 export const ICON_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** The prefix of the extension's tool icon ids; keeps them clear of other extensions'. */
+export const TOOL_ICON_PREFIX = 'turbo-console-';
+
 /** A VS Code theme color variable, so it is one safe `var()` argument. */
 export const COLOR_VAR_PATTERN = /^--vscode-[A-Za-z0-9-]+$/;
 
