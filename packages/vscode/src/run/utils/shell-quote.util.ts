@@ -6,8 +6,8 @@ import type { ShellKind } from '../common/shell.type.ts';
 
 const PATH_SEPARATOR = /[\\/]/u;
 
-/** `pwsh` or `powershell`, alone or followed by `-` or a digit: `pwsh-preview`, `pwsh-lts`, `pwsh7`, `powershell-preview`. */
-const PWSH_NAME = /^(?:pwsh|powershell)(?:$|-|\d)/u;
+/** `pwsh` or `powershell`, alone or as a preview, LTS or versioned build: `pwsh-preview`, `pwsh-lts`, `pwsh7`, `powershell-preview`. */
+const PWSH_NAME = /^(?:pwsh|powershell)(?:-(?:preview|lts)|\d+(?:\.\d+)*)?$/u;
 
 const POSIX_SPECIAL = /['\\]/gu;
 

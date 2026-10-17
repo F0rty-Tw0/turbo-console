@@ -83,6 +83,7 @@ describe('FEATURE: shell quoting', () => {
       ['C:\\Program Files\\PowerShell\\7-preview\\powershell-preview.exe', 'pwsh'],
       ['/usr/bin/pwshell-not', 'posix'],
       ['/usr/bin/powershellx', 'posix'],
+      ['/usr/bin/pwsh-wrapper.sh', 'posix'],
       ['C:\\Windows\\System32\\cmd.exe', 'cmd'],
       ['cmd', 'cmd'],
       ['/opt/weird/shell', 'posix'],
