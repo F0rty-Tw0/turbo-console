@@ -29,6 +29,13 @@ describe('FEATURE: run texts', () => {
       expect(unsafeScriptText('a\u0007\nb')).toBe("Turbo Console can't run a script named `a b` safely.");
     });
 
+    it('WHEN the name is markdown link syntax THEN the text holds no link, as a toast would render it clickable', () => {
+      const text = unsafeScriptText('[x](command:workbench.action.showCommands)');
+
+      expect(text).not.toContain('](');
+      expect(text).toBe("Turbo Console can't run a script named `[x] (command:workbench.action.showCommands)` safely.");
+    });
+
     it('WHEN the name is longer than a label THEN the text cuts it', () => {
       const text = unsafeScriptText('x'.repeat(LABEL_MAX * 2));
 
