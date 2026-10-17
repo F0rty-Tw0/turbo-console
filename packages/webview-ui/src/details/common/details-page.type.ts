@@ -20,7 +20,6 @@ export type RunTexts = {
 export type CardRefs = {
   readonly taskId: string;
   readonly isTurboTask: boolean;
-  readonly title: HTMLElement;
   readonly status: HTMLElement;
   readonly runSlot: HTMLElement;
   readonly runButton: RunButtonFactory;
