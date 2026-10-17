@@ -1,12 +1,15 @@
+import { join } from 'node:path';
+
 import { TurboException } from '@turbo-console/core';
 import type { TaskNode, WorkspaceModel } from '@turbo-console/core';
 
 import type { Roots } from '../../roots/common/coordinator.type.ts';
 import { NAME_NOT_COPYABLE_TEXT, SHELL_NOT_COPYABLE_TEXT } from '../common/copy.const.ts';
 import type { CopyPorts } from '../common/copy.type.ts';
-import type { CommandRegistry, Disposed } from '../common/run.type.ts';
+import type { CommandRegistry, Disposed, TaskTarget } from '../common/run.type.ts';
 import type { ShellKind } from '../common/shell.type.ts';
 import { scriptCopiedText } from '../utils/copy-text.util.ts';
+import { isScriptSourceSafe } from '../utils/run-refusal.util.ts';
 import { modelTaskOf, packageOf, taskTargetOf } from '../utils/run-target.util.ts';
 import { unsafeScriptText } from '../utils/run-text.util.ts';
 import { scriptCommandOf } from '../utils/script-name.util.ts';
@@ -29,11 +32,17 @@ const textOf = (ports: CopyPorts, task: TaskNode, packageName: string, kind: She
   }
 };
 
-/** Spec 1c-b §4.6: a script copies `<manager> run <name>` and the info says where to run it; a refused name copies nothing. */
-const copyScript = async (ports: CopyPorts, task: TaskNode, model: WorkspaceModel, packagePath: string): Promise<void> => {
+/**
+ * Spec 1c-b §4.6: a script copies `<manager> run <name>` and the info says where to run it. What Run refuses copies
+ * nothing: a name that needs quoting, an empty body, or a package dir outside the root.
+ */
+const copyScript = async (ports: CopyPorts, target: TaskTarget, task: TaskNode, model: WorkspaceModel): Promise<void> => {
+  const packagePath = packageOf(target, model)?.path ?? '';
+  const packageDir = join(target.definition.root, packagePath);
+  const isSafeSource = isScriptSourceSafe(task, target.definition.root, packageDir);
   const text = scriptCommandOf(model.packageManager.name, task.name);
 
-  if (text === null) {
+  if (!isSafeSource || text === null) {
     ports.info(unsafeScriptText(task.name));
 
     return;
@@ -63,7 +72,7 @@ const copyCommand = async (roots: Roots, ports: CopyPorts, arg: unknown): Promis
   if (task === undefined || model === null || model === undefined) return;
 
   if (task.isTurboTask) await copyTurbo(ports, task, target.packageName);
-  else await copyScript(ports, task, model, packageOf(target, model)?.path ?? '');
+  else await copyScript(ports, target, task, model);
 };
 
 /** Registers Copy Command for the task rows; `dispose` undoes it. */

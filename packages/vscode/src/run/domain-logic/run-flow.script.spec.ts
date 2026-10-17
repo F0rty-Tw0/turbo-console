@@ -111,6 +111,25 @@ describe('FEATURE: run flow, a script', () => {
     });
   });
 
+  describe('GIVEN an atom-umbrella script row with no command', () => {
+    const task: TaskNode = { ...SCRIPT_TASK, kind: 'atom-umbrella', command: null };
+    const request: RunRequest = { ...SCRIPT, task };
+
+    it('WHEN it is run THEN the unsafe script text shows and nothing launches', async () => {
+      await runTask(store, ports, request);
+
+      expect(ports.info).toHaveBeenCalledExactlyOnceWith(unsafeText('build'));
+      expect(ports.executeScript).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it is run THEN no run is stored and no watchdog is armed', async () => {
+      await runTask(store, ports, request);
+
+      expect(store.get('/ws', 'build')).toBeUndefined();
+      expect(ports.after).not.toHaveBeenCalled();
+    });
+  });
+
   describe.each([
     ['holds a space', 'a b'],
     ['holds a dollar sign', 'a$b'],

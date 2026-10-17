@@ -124,6 +124,30 @@ describe('FEATURE: copy command', () => {
         expect(write).not.toHaveBeenCalled();
         expect(info).toHaveBeenCalledExactlyOnceWith("Turbo Console can't run a script named `x y` safely.");
       });
+
+      it('WHEN it is an atom-umbrella row with no command THEN nothing is copied and the unsafe text shows', async () => {
+        const script = scriptNamed('lint');
+        const umbrella: TaskNode = { ...script, kind: 'atom-umbrella', command: null };
+
+        roots.apply('/ws', loadedWith([packageHolding('a', umbrella)]));
+
+        await copy(taskRowOf('a', 'a#lint'));
+
+        expect(write).not.toHaveBeenCalled();
+        expect(info).toHaveBeenCalledExactlyOnceWith("Turbo Console can't run a script named `lint` safely.");
+      });
+
+      it('WHEN its package path leaves the root THEN nothing is copied and the unsafe text shows, as Run refuses it', async () => {
+        const holder = packageHolding('a', scriptNamed('lint'));
+        const outside: PackageNode = { ...holder, path: '../x' };
+
+        roots.apply('/ws', loadedWith([outside]));
+
+        await copy(taskRowOf('a', 'a#lint'));
+
+        expect(write).not.toHaveBeenCalled();
+        expect(info).toHaveBeenCalledExactlyOnceWith("Turbo Console can't run a script named `lint` safely.");
+      });
     });
 
     it('WHEN the shell is unknown THEN the command is copied for posix', async () => {

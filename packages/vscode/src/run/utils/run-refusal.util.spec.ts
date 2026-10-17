@@ -47,6 +47,15 @@ describe('FEATURE: run refusal', () => {
       expect(refusalOf({ ...SCRIPT, packageDir: '/x' })).toBe(UNSAFE_BUILD);
     });
 
+    it.each<TaskNode['kind']>(['atom-umbrella', 'atom-aggregate', 'task'])(
+      'WHEN its kind is %s and it has no command THEN the unsafe text names it, as bun would run a same-named file',
+      (kind) => {
+        const task: TaskNode = { ...SCRIPT_TASK, kind, command: null };
+
+        expect(refusalOf({ ...SCRIPT, task })).toBe(UNSAFE_BUILD);
+      }
+    );
+
     it('WHEN it is forced THEN the text says Run Without Cache only applies to turbo tasks', () => {
       expect(refusalOf({ ...SCRIPT, force: true })).toBe(NOT_TURBO_FORCE_TEXT);
     });
