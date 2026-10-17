@@ -34,7 +34,7 @@ export const iconsOf = async (): Promise<Map<string, IconData>> => {
 
 const refusal = (tool: ToolSpec, reason: string): Error => new Error(`${tool.id}: ${reason}`);
 
-const shapeReasonOf = (svg: string): string | null => {
+export const shapeReasonOf = (svg: string): string | null => {
   const paths = svg.match(PATH_TAG) ?? [];
   const isOnePath = paths.length === 1;
   const isFullBox = svg.includes(ICON_VIEW_BOX);
