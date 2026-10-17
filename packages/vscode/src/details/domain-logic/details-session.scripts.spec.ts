@@ -34,6 +34,15 @@ const RUN_WEB_SCRIPT: RunRequest = { ...RUN_REQUEST_STUB, packageName: 'web', ta
 const RUN_TURBO: RunRequest = { ...RUN_REQUEST_STUB, task: BUILD_TASK_STUB };
 const SCRIPT: RunDefinition = { root: '/ws', id: 'a#adhoc' };
 
+/** The card ids of the last `package` state posted. */
+const lastCardIdsOf = (ports: DetailsPorts): string[] => {
+  const [last] = postedStatesOf(ports).slice(-1);
+
+  if (last?.kind !== 'package') throw new Error('no package state was posted');
+
+  return last.tasks.map((card) => card.taskId);
+};
+
 describe('FEATURE: details session with scripts hidden', () => {
   let store: RootStore;
   let runStore: RunStore;
@@ -41,14 +50,6 @@ describe('FEATURE: details session with scripts hidden', () => {
   let session: DetailsSession;
 
   const postedTypes = (): string[] => postedOf(ports).map((message) => message.type);
-
-  const lastCardIds = (): string[] => {
-    const [last] = postedStatesOf(ports).slice(-1);
-
-    if (last?.kind !== 'package') throw new Error('no package state was posted');
-
-    return last.tasks.map((card) => card.taskId);
-  };
 
   const showReady = async (): Promise<void> => {
     session.setVisible(true);
@@ -74,7 +75,7 @@ describe('FEATURE: details session with scripts hidden', () => {
       runStore.tryStart(RUN_SCRIPT, 1000);
 
       expect(postedTypes()).toStrictEqual(['state', 'state']);
-      expect(lastCardIds()).toStrictEqual(['a#adhoc', 'a#build']);
+      expect(lastCardIdsOf(ports)).toStrictEqual(['a#adhoc', 'a#build']);
     });
 
     it('WHEN that script ends THEN a full state without its card is posted', () => {
@@ -82,7 +83,7 @@ describe('FEATURE: details session with scripts hidden', () => {
       runStore.processEnded(SCRIPT, 0, 2000);
 
       expect(postedTypes()).toStrictEqual(['state', 'state', 'state']);
-      expect(lastCardIds()).toStrictEqual(['a#build']);
+      expect(lastCardIdsOf(ports)).toStrictEqual(['a#build']);
     });
 
     it('WHEN its process starts THEN only a run state is posted', () => {
@@ -131,14 +132,14 @@ describe('FEATURE: details session with scripts hidden', () => {
     });
 
     it('WHEN shown THEN the state holds the live card', () => {
-      expect(lastCardIds()).toStrictEqual(['a#adhoc', 'a#build']);
+      expect(lastCardIdsOf(ports)).toStrictEqual(['a#adhoc', 'a#build']);
     });
 
     it('WHEN the run then ends THEN a full state without the card is posted', () => {
       runStore.processEnded(SCRIPT, 0, 2000);
 
       expect(postedTypes().slice(-1)).toStrictEqual(['state']);
-      expect(lastCardIds()).toStrictEqual(['a#build']);
+      expect(lastCardIdsOf(ports)).toStrictEqual(['a#build']);
     });
   });
 
@@ -153,28 +154,45 @@ describe('FEATURE: details session with scripts hidden', () => {
       runStore.processEnded(SCRIPT, 0, 2000);
 
       expect(postedTypes().slice(-1)).toStrictEqual(['state']);
-      expect(lastCardIds()).toStrictEqual(['a#build']);
+      expect(lastCardIdsOf(ports)).toStrictEqual(['a#build']);
     });
   });
 });
 
 describe('FEATURE: details session with scripts shown', () => {
-  it('GIVEN a ready panel WHEN a script starts and ends THEN only run states are posted', async () => {
+  let runStore: RunStore;
+  let ports: DetailsPorts;
+  let session: DetailsSession;
+
+  beforeEach(async () => {
     const store = new RootStore();
-    const ports = detailsPortsMock();
-    const runStore = new RunStore();
 
     store.set([ROOT_FOLDER_STUB], () => coordinatorMock());
     store.apply('/ws', WITH_SCRIPT);
+    runStore = new RunStore();
+    ports = detailsPortsMock();
     deferDryRuns(ports);
-    const session = new DetailsSession(PANEL_KEY_STUB, store, runStore, ports);
-
+    session = new DetailsSession(PANEL_KEY_STUB, store, runStore, ports);
     session.start();
     session.setVisible(true);
     await session.receive({ type: 'ready' });
+  });
+
+  it('GIVEN a ready panel WHEN a script starts and ends THEN only run states are posted', () => {
     runStore.tryStart(RUN_SCRIPT, 1000);
     runStore.processEnded(SCRIPT, 0, 2000);
 
     expect(postedOf(ports).map((message) => message.type)).toStrictEqual(['state', 'runState', 'runState']);
+  });
+
+  it('GIVEN a script started while shown WHEN scripts are hidden and its run ends THEN a full state without its card is posted', () => {
+    runStore.tryStart(RUN_SCRIPT, 1000);
+    vi.mocked(ports.scriptsShown).mockReturnValue(false);
+    session.publish();
+    runStore.processEnded(SCRIPT, 0, 2000);
+    const types = postedOf(ports).map((message) => message.type);
+
+    expect(types.slice(-1)).toStrictEqual(['state']);
+    expect(lastCardIdsOf(ports)).toStrictEqual(['a#build']);
   });
 });
