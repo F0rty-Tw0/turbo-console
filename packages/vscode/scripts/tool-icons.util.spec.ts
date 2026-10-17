@@ -39,7 +39,7 @@ const STORYBOOK_ATTRIBUTION = '"Storybook" logo, Copyright (c) 2017 Storybooks (
 const GLYPHS = TOOLS.map((tool) => tool.glyph).filter((glyph): glyph is ToolGlyph => glyph !== null);
 const GLYPH_TOOLS = TOOLS.filter((tool) => tool.glyph !== null);
 const PACKAGE_ROOT = packageRootOf();
-const ICONS = await iconsOf();
+const ICONS = await iconsOf(TOOLS);
 const VITEST_SVG = await readFile(fileURLToPath(import.meta.resolve('simple-icons/icons/vitest.svg')), 'utf8');
 
 const slugOf = (tool: ToolSpec): string => tool.glyph?.slug ?? '';

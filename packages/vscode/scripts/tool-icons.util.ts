@@ -66,7 +66,7 @@ const ttfOf = async (sources: GlyphSource[]): Promise<Uint8Array> => {
  */
 export const buildToolIcons = async (tools: ToolSpec[], outDir: string): Promise<void> => {
   const root = packageRootOf();
-  const icons = await iconsOf();
+  const icons = await iconsOf(tools);
   const sources = await glyphSourcesOf(tools, icons);
   const ttf = await ttfOf(sources);
   const version = await versionOf(root);

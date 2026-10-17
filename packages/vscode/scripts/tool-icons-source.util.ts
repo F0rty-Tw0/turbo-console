@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { ALLOWED_LICENSES, ATTRIBUTION_LICENSES, ICON_VIEW_BOX } from './common/tool-icons.const.ts';
-import { iconsSchema, manifestSchema } from './common/tool-icons.schema.ts';
+import { iconSchema, listedIconsSchema, manifestSchema } from './common/tool-icons.schema.ts';
 import type { GlyphSource, IconData } from './common/tool-icons.type.ts';
 import type { ToolGlyph, ToolSpec } from '../src/tool/common/tool.type.ts';
 
@@ -25,11 +25,25 @@ export const versionOf = async (root: string): Promise<string> => {
   return manifest.version;
 };
 
-export const iconsOf = async (): Promise<Map<string, IconData>> => {
-  const text = await readFile(iconsJsonPathOf(), 'utf8');
-  const entries = iconsSchema.parse(JSON.parse(text));
+/**
+ * The `icons.json` entries for `slugs`, checked strictly (URLs, licence). Every other entry is read for its slug only,
+ * so a malformed entry for an icon the table does not use cannot fail the build.
+ */
+export const usedIconsOf = (entries: unknown, slugs: string[]): Map<string, IconData> => {
+  const wanted = new Set(slugs);
+  const listed = listedIconsSchema.parse(entries);
+  const used = listed.filter((entry) => wanted.has(entry.slug));
+  const icons = used.map((entry) => iconSchema.parse(entry));
 
-  return new Map(entries.map((icon) => [icon.slug, icon]));
+  return new Map(icons.map((icon) => [icon.slug, icon]));
+};
+
+export const iconsOf = async (tools: ToolSpec[]): Promise<Map<string, IconData>> => {
+  const text = await readFile(iconsJsonPathOf(), 'utf8');
+  const glyphs = tools.map((tool) => tool.glyph).filter((glyph): glyph is ToolGlyph => glyph !== null);
+  const slugs = glyphs.map((glyph) => glyph.slug);
+
+  return usedIconsOf(JSON.parse(text), slugs);
 };
 
 const refusal = (tool: ToolSpec, reason: string): Error => new Error(`${tool.id}: ${reason}`);
