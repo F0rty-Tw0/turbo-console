@@ -44,11 +44,11 @@ export const hiddenCase = async (api: TurboConsoleApi, root: string): Promise<nu
 };
 
 /**
- * Case 2: Show Scripts adds a Scripts group of exactly the three added scripts, the scripts-only package, and three more
+ * Case 2: Show Scripts adds a Scripts group of exactly the four added scripts, the scripts-only package, and four more
  * names to the package's lens. The model holds no `//` package (V5), so the root `package.json` has no lens.
  */
 export const shownCase = async (api: TurboConsoleApi, root: string, hiddenCount: number): Promise<void> => {
-  await step('L10-2: Show Scripts adds the Scripts group, the scripts-only package and three lens names', async () => {
+  await step('L10-2: Show Scripts adds the Scripts group, the scripts-only package and four lens names', async () => {
     await vscode.commands.executeCommand('turboConsole.showScripts');
 
     const group = await scriptsGroupOf(api, SCRIPTS_PACKAGE);

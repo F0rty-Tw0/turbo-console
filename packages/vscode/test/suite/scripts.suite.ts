@@ -1,6 +1,7 @@
 import { detailsCase } from '../utils/scripts-details-case.spec.util.ts';
 import { prepareScriptsFixture } from '../utils/scripts-fixture.spec.util.ts';
 import { ctrlCCase, disposeCase, hideWhileRunningCase, stopCase } from '../utils/scripts-live-cases.spec.util.ts';
+import { numberNameCase } from '../utils/scripts-number-case.spec.util.ts';
 import { failedCase, passedCase } from '../utils/scripts-run-cases.spec.util.ts';
 import { hiddenCase, shownCase } from '../utils/scripts-view-cases.spec.util.ts';
 import { countTurboSpawns } from '../utils/spawn-counter.spec.util.ts';
@@ -10,7 +11,8 @@ import { readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 /**
  * L10: spec 1c-b §6.3 on a `target-like` copy of its own. Every fixture edit and its backdating come before the view is
  * revealed, so no case sees a load a late write of a keyed file would cost. The cases run in order and share the window:
- * scripts are shown from case 2 on, case 6 ends with them hidden, case 7 shows and hides them, and every run ends before the next case.
+ * scripts are shown from case 2 on, case 6 ends with them hidden, cases 7 and 8 each show and hide them, and every run ends
+ * before the next case.
  */
 export const run = async (): Promise<void> => {
   const env = readSuiteEnv();
@@ -36,6 +38,7 @@ export const run = async (): Promise<void> => {
     await ctrlCCase(api);
     await hideWhileRunningCase(api);
     await detailsCase(api, root);
+    await numberNameCase(api, root);
     await markDone(env);
   } finally {
     counter.dispose();
