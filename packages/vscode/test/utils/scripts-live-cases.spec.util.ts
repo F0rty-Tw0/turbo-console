@@ -49,7 +49,9 @@ export const disposeCase = async (api: TurboConsoleApi): Promise<void> => {
 /**
  * Case 5c, as L9's 4b: Ctrl+C typed in the terminal ends a script run as `stopped` where `sendText` is proven to deliver
  * SIGINT. A run that outlives it fails there; elsewhere the case logs a skip and presses Stop (cmd asks "Terminate batch job
- * (Y/N)?"). A run that ended elsewhere has its code and state recorded only.
+ * (Y/N)?"). A run that ended elsewhere has its code and state recorded only. An end of `passed` with exit 0 is §4.4's
+ * known limit, logged: pnpm 12's native binary dies of SIGINT and VS Code reports that as exit 0 (corepack's wrapper
+ * gives 130).
  */
 export const ctrlCCase = async (api: TurboConsoleApi): Promise<void> => {
   await step('L10-5c: Ctrl+C in the task terminal ends a running script as stopped', async () => {
@@ -76,7 +78,11 @@ export const ctrlCCase = async (api: TurboConsoleApi): Promise<void> => {
 
       logExit('script Ctrl+C', ended);
 
-      if (isProven) assert.equal(ended.state, 'stopped');
+      const isKnownLimit = ended.state === 'passed' && ended.exitCode === 0;
+
+      if (isKnownLimit) log(`V1: script Ctrl+C read exit 0 on ${process.platform} (§4.4 known limit)`);
+
+      if (isProven && !isKnownLimit) assert.equal(ended.state, 'stopped');
     });
   });
 };
