@@ -44,16 +44,23 @@ export const passedCase = async (api: TurboConsoleApi, root: string, counter: Sp
   });
 };
 
-/** Case 4: a script that exits 3 ends `failed`, and its row reads `exit 3`. */
+/**
+ * Case 4: a script that exits 3 ends `failed`, and its row reads `exit 3`. On Windows the task shell is PowerShell, whose
+ * `-Command` exits 1 when its last native command fails, whatever that command's code: exit 1 there is logged, not failed.
+ */
 export const failedCase = async (api: TurboConsoleApi): Promise<void> => {
   await step('L10-4: a script that exits 3 ends failed and its row reads exit 3', async () => {
     const node = await scriptNodeNamed(api, SCRIPTS_PACKAGE, FAIL_TASK_ID);
     const launchedAt = await startRun(api, node);
     const ended = await endedRun(api, node, launchedAt);
+    const isShellCode = process.platform === 'win32' && ended.exitCode === 1;
 
     logExit('script failed', ended);
+
+    if (isShellCode) log(`V1: script exit ${FAIL_EXIT_CODE} read as PowerShell's exit 1 on ${process.platform}`);
+
     assert.equal(ended.state, 'failed');
-    assert.equal(ended.exitCode, FAIL_EXIT_CODE);
-    assert.equal(descriptionOf(api, node), `exit ${FAIL_EXIT_CODE}`);
+    assert.equal(ended.exitCode, isShellCode ? 1 : FAIL_EXIT_CODE);
+    assert.equal(descriptionOf(api, node), `exit ${ended.exitCode}`);
   });
 };
