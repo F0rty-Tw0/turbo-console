@@ -45,6 +45,7 @@ const assertRan = async (api: TurboConsoleApi, node: TreeNode, sentinel: string)
     log(`ShellExecution ${JSON.stringify(facts)} on ${process.platform}`);
     assert.equal(ended.state, 'passed');
     assert.deepEqual(facts?.args, ['run', NUMBER_SCRIPT]);
+    assert.equal(facts.areArgsPlain, true);
     assert.equal(await readFile(sentinel, 'utf8'), NUMBER_SENTINEL);
   } finally {
     watch.dispose();

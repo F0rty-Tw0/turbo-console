@@ -23,7 +23,8 @@ const shellFactsOf = (task: vscode.Task): ShellFacts | null => {
   if (command === undefined) return null;
 
   const parts = args ?? [];
-  const facts: ShellFacts = { command: textOf(command), args: parts.map(textOf), cwd: cwdOf(execution) };
+  const areArgsPlain = parts.every((part) => typeof part === 'string');
+  const facts: ShellFacts = { command: textOf(command), args: parts.map(textOf), cwd: cwdOf(execution), areArgsPlain };
 
   return facts;
 };
