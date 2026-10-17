@@ -34,7 +34,8 @@ const lensesOf = (roots: Roots, scripts: LensScripts, document: LensDocument): v
 /**
  * Spec 1c-b §4.11: the "▷ Tasks: …" lens above the `"scripts"` key of every owned `package.json`; it opens that package's
  * Run Turbo Task… pick. It refreshes on every root load, every scripts toggle change and every workspace folder change:
- * removing a folder drops its root without a root store event, and its files then belong to no folder.
+ * removing a folder drops its root without a root store event, and its files then belong to no folder or to an
+ * enclosing one.
  */
 export const registerCodeLens = (roots: Roots, scripts: LensScripts): vscode.Disposable => {
   const changes = new vscode.EventEmitter<void>();
