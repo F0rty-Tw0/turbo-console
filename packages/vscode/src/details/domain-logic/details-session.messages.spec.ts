@@ -158,15 +158,18 @@ describe('FEATURE: details session messages', () => {
       expect(ports.execute).toHaveBeenCalledExactlyOnceWith(command, { ...BUILD_ROW, key: 'a#adhoc' });
     });
 
-    it('WHEN scripts are hidden and run names a script THEN it is dropped and logged, as it has no card', async () => {
-      vi.mocked(ports.scriptsShown).mockReturnValue(false);
-      store.apply('/ws', WITH_SCRIPT);
+    it.each(['run', 'stop', 'copy'])(
+      'WHEN scripts are hidden and %s names an idle script THEN it is dropped and logged, as it has no card',
+      async (type) => {
+        vi.mocked(ports.scriptsShown).mockReturnValue(false);
+        store.apply('/ws', WITH_SCRIPT);
 
-      await session.receive({ type: 'run', taskId: 'a#adhoc' });
+        await session.receive({ type, taskId: 'a#adhoc' });
 
-      expect(ports.execute).not.toHaveBeenCalled();
-      expect(ports.log).toHaveBeenCalledOnce();
-    });
+        expect(ports.execute).not.toHaveBeenCalled();
+        expect(ports.log).toHaveBeenCalledOnce();
+      }
+    );
 
     describe('WHEN scripts are hidden and a script of the package runs, so it keeps its card', () => {
       beforeEach(() => {
