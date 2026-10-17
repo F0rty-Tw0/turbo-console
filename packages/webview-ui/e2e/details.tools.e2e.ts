@@ -131,13 +131,19 @@ test.describe('FEATURE: package details page, the Tool row', () => {
       await detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB);
     });
 
-    await test.step('THEN the Tool row still carries the logo', async (): Promise<void> =>
+    await test.step('THEN the status icon spins', async (): Promise<void> =>
+      card.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', ''));
+
+    await test.step('AND the Tool row still carries the logo', async (): Promise<void> =>
       card.expectToolField('Vitest', 'turbo-console-vitest'));
 
     await test.step('WHEN the run ends stopped', async (): Promise<void> =>
       detailsPage.sendRunState('web#build', STOPPED_RUN_VIEW_STUB));
 
-    await test.step('THEN the Tool row still carries the logo', async (): Promise<void> =>
+    await test.step('THEN the status icon is the stop icon', async (): Promise<void> =>
+      card.expectStatusIcon('codicon codicon-debug-stop', 'var(--vscode-disabledForeground)'));
+
+    await test.step('AND the Tool row still carries the logo', async (): Promise<void> =>
       card.expectToolField('Vitest', 'turbo-console-vitest'));
 
     await test.step('AND no violation or console error is recorded', async (): Promise<void> => {
