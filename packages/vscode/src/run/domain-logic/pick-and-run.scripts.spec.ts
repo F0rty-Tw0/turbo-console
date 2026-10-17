@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -27,7 +29,7 @@ const packageA: PackageNode = { ...PACKAGE_NODE_STUB, name: 'a', path: 'packages
 const packageB: PackageNode = { ...PACKAGE_NODE_STUB, name: 'b', path: 'packages/b', tasks: [scriptLint, refusedScript] };
 
 const requestOf = (pkg: PackageNode, task: TaskNode): RunRequest => {
-  const packageDir = `/one/${pkg.path}`;
+  const packageDir = join('/one', pkg.path);
   const request: RunRequest = {
     ...RUN_REQUEST_STUB,
     root: '/one',
