@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import type { PackageManager, PackageManagerSource, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
@@ -91,7 +93,7 @@ describe('FEATURE: run targets', () => {
       const expected: RunRequest = {
         root: '/ws',
         packageName: 'a',
-        packageDir: '/ws/packages/a',
+        packageDir: join(RUN.root, 'packages/a'),
         packageManager: PACKAGE_MANAGER_STUB,
         task: TASK_NODE_STUB,
         binaryPath: TURBO_BINARY_STUB.path,
@@ -119,7 +121,7 @@ describe('FEATURE: run targets', () => {
 
       const request = runRequestOf(TARGET, { ...LOADED, model }, false);
 
-      expect(request?.packageDir).toBe('/ws');
+      expect(request?.packageDir).toBe(join(RUN.root));
     });
 
     it('WHEN the package path steps out of the root THEN its dir lies outside the root, for the run flow to refuse', () => {
@@ -128,7 +130,7 @@ describe('FEATURE: run targets', () => {
 
       const request = runRequestOf(TARGET, { ...LOADED, model }, false);
 
-      expect(request?.packageDir).toBe('/x');
+      expect(request?.packageDir).toBe(join('/x'));
     });
 
     it('WHEN it is asked as a forced run THEN the request is marked forced', () => {

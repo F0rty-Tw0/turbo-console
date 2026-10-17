@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { TurboException } from '@turbo-console/core';
 import type { TaskNode } from '@turbo-console/core';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -20,7 +22,7 @@ const ONE: RootFolder = { root: '/one', name: 'one' };
 const TWO: RootFolder = { root: '/two', name: 'two' };
 
 const requestOf = (root: string, packageName: string, task: TaskNode): RunRequest => {
-  const packageDir = `${root}/${PACKAGE_NODE_STUB.path}`;
+  const packageDir = join(root, PACKAGE_NODE_STUB.path);
   const request: RunRequest = { ...RUN_REQUEST_STUB, root, packageName, packageDir, task, binaryPath: TURBO_BINARY_STUB.path };
 
   return request;

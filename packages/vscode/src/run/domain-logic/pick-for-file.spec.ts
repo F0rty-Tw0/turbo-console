@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { TurboException } from '@turbo-console/core';
 import type { PackageNode, TaskNode, TurboErrorKind } from '@turbo-console/core';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -30,7 +32,7 @@ const LINT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'b', path: 'pack
 const FILE = '/one/packages/a/package.json';
 
 const requestOf = (root: string, packageName: string, task: TaskNode): RunRequest => {
-  const packageDir = `${root}/${PACKAGE_NODE_STUB.path}`;
+  const packageDir = join(root, PACKAGE_NODE_STUB.path);
   const request: RunRequest = { ...RUN_REQUEST_STUB, root, packageName, packageDir, task, binaryPath: TURBO_BINARY_STUB.path };
 
   return request;

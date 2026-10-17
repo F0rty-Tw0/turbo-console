@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { PACKAGE_MANAGER_STUB, TASK_NODE_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
 import type { RunEntry, RunRequest } from '../../common/run.type.ts';
 
@@ -21,7 +23,7 @@ export const RUN_ENTRY_STUB: RunEntry = {
 export const RUN_REQUEST_STUB: RunRequest = {
   root: '/ws',
   packageName: 'a',
-  packageDir: '/ws/packages/a',
+  packageDir: join('/ws', 'packages/a'),
   packageManager: PACKAGE_MANAGER_STUB,
   task: TASK_NODE_STUB,
   binaryPath: '/bin/turbo',
