@@ -1,7 +1,20 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import type { HostMessage } from '../../src/bridge/common/details-message.type.ts';
+import type { RunView } from '../../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../../src/details/common/details-page.type.ts';
+
+/** Dispatches the message event and clicks the focused control in one task, so both land in the same frame. */
+const deliverAndClickFocused = (message: HostMessage): void => {
+  const event = new MessageEvent('message', { data: message });
+
+  dispatchEvent(event);
+
+  const focused = document.activeElement;
+
+  if (focused instanceof HTMLElement) focused.click();
+};
 
 /** One task card, found by its exact title text, never by a selector built from the name. */
 export class TaskCardSection {
@@ -22,6 +35,13 @@ export class TaskCardSection {
     this.copyButton = this.root.locator('.card-actions > button');
     this.status = this.root.locator('.run-status');
     this.statusIcon = this.status.locator('.codicon');
+  }
+
+  /** Delivers this card's runState, then clicks the focused control before the page can paint a frame. */
+  public async sendRunStateAndClickFocused(taskId: string, run: RunView): Promise<void> {
+    const message: HostMessage = { type: 'runState', taskId, run };
+
+    await this.root.page().evaluate(deliverAndClickFocused, message);
   }
 
   public async expectFields(rows: FieldRow[]): Promise<void> {

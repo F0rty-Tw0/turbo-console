@@ -56,6 +56,13 @@ const HIDDEN_KEPT_STATE: PackageDetails = {
 
 const HIDDEN_DROPPED_STATE: PackageDetails = { ...HIDDEN_KEPT_STATE, tasks: [] };
 
+const TURBO_RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING };
+
+const RUNNING_CARD_CASES: [string, TaskCard][] = [
+  ['turbo', TURBO_RUNNING_CARD],
+  ['script', KEPT_SCRIPT_CARD]
+];
+
 const SCRIPT_ROWS: FieldRow[] = [
   ['Command', 'pnpm run lint'],
   ['Script', 'eslint .'],
@@ -142,6 +149,35 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
         expect(card.runButton).toHaveAttribute('aria-label', 'Run lint'));
     }
   );
+
+  for (const [kind, runningCard] of RUNNING_CARD_CASES) {
+    test(
+      `GIVEN focus on Stop of a ${kind} card, a click in the frame its run ends does not relaunch it`,
+      { annotation: AC6 },
+      async ({ detailsPage }): Promise<void> => {
+        const { name, taskId } = runningCard;
+        const card = detailsPage.card(name);
+        const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [runningCard] };
+
+        await test.step('WHEN the page shows the running card', async (): Promise<void> => detailsPage.open(state));
+
+        await test.step('AND its Stop button is focused', async (): Promise<void> => detailsPage.focusButton(`Stop ${name}`));
+
+        await test.step('AND the run ends and the focused button is clicked in the same frame', async (): Promise<void> =>
+          card.sendRunStateAndClickFocused(taskId, STOPPED));
+
+        await test.step('THEN the Run button has focus', async (): Promise<void> => detailsPage.expectFocused(`Run ${name}`));
+
+        await test.step('AND the click posted nothing', async (): Promise<void> => detailsPage.expectPosted([{ type: 'ready' }]));
+
+        await test.step('WHEN Run is clicked once stable, two frames later', async (): Promise<void> =>
+          detailsPage.pressButton(`Run ${name}`));
+
+        await test.step('THEN the page posts run with its id', async (): Promise<void> =>
+          detailsPage.expectLastPosted({ type: 'run', taskId }));
+      }
+    );
+  }
 
   test(
     'GIVEN a script the run flow refuses, its card has no Command field but keeps Run and Copy',

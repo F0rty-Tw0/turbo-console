@@ -45,7 +45,22 @@ export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLB
   return button;
 };
 
-/** Replaces only `taskId`'s status and Run/Stop button; a focused Run/Stop button hands focus to its replacement. */
+/**
+ * Ignores clicks on `button` until the next frame. A click capture listener on the target runs before its own click
+ * listener, and Enter or Space on a button arrives as a click, so a held Enter meant for Stop cannot relaunch the run.
+ */
+const holdActivationOneFrame = (button: HTMLButtonElement): void => {
+  const ignore = (event: Event): void => event.stopImmediatePropagation();
+  const release = (): void => button.removeEventListener('click', ignore, true);
+
+  button.addEventListener('click', ignore, true);
+  requestAnimationFrame(release);
+};
+
+/**
+ * Replaces only `taskId`'s status and Run/Stop button; a focused Run/Stop button hands focus to its replacement, which
+ * ignores activation for one frame.
+ */
 export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runTexts: RunTexts): void => {
   const refs = cards.get(taskId);
 
@@ -54,5 +69,8 @@ export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runText
   const hadFocus = refs.runSlot.contains(document.activeElement);
   const button = fillRun(refs, run, runTexts);
 
-  if (hadFocus) button.focus();
+  if (!hadFocus) return;
+
+  button.focus();
+  holdActivationOneFrame(button);
 };
