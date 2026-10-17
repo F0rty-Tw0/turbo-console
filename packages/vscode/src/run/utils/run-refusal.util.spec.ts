@@ -1,7 +1,7 @@
 import type { TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { refusalOf } from './run-refusal.util.ts';
+import { hasScriptBody, refusalOf } from './run-refusal.util.ts';
 import { TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { NOT_TURBO_FORCE_TEXT } from '../common/run.const.ts';
 import type { RunRequest } from '../common/run.type.ts';
@@ -12,6 +12,19 @@ const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 const SCRIPT: RunRequest = { ...RUN_REQUEST_STUB, task: SCRIPT_TASK };
 
 const UNSAFE_BUILD = "Turbo Console can't run a script named `build` safely.";
+
+describe('FEATURE: script body', () => {
+  it.each([
+    ['a command', 'tsc', true],
+    ['no command', null, false],
+    ['an empty command', '', false],
+    ['a whitespace-only command', ' \t\n', false]
+  ])('GIVEN %s WHEN checked THEN has a body is %s', (_label, command, hasBody) => {
+    const task: TaskNode = { ...SCRIPT_TASK, command };
+
+    expect(hasScriptBody(task)).toBe(hasBody);
+  });
+});
 
 describe('FEATURE: run refusal', () => {
   describe('GIVEN a turbo task', () => {

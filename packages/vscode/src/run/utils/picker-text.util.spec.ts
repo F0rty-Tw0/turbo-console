@@ -5,8 +5,8 @@ import { emptyTasksText, hiddenScriptsText } from './picker-text.util.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { NO_PACKAGE_TASKS_TEXT } from '../common/picker.const.ts';
 
-const scriptNamed = (name: string): TaskNode => {
-  const task: TaskNode = { ...TASK_NODE_STUB, id: `p#${name}`, name, isTurboTask: false };
+const scriptNamed = (name: string, command: string | null = TASK_NODE_STUB.command): TaskNode => {
+  const task: TaskNode = { ...TASK_NODE_STUB, id: `p#${name}`, name, command, isTurboTask: false };
 
   return task;
 };
@@ -28,6 +28,19 @@ describe('FEATURE: text of a package with no task to pick', () => {
 
   it('GIVEN scripts are hidden and 2 are offered, 1 refused WHEN asked THEN the hint counts 2', () => {
     expect(emptyTasksText(packageOf(scripts), false)).toBe(hiddenScriptsText(2));
+  });
+
+  it('GIVEN scripts are hidden and a script has no command, another a blank one WHEN asked THEN neither is counted', () => {
+    const empty = scriptNamed('empty', null);
+    const blank = scriptNamed('blank', '  ');
+
+    expect(emptyTasksText(packageOf([...scripts, empty, blank]), false)).toBe(hiddenScriptsText(2));
+  });
+
+  it('GIVEN scripts are hidden and every script has no body WHEN asked THEN the plain text shows', () => {
+    const empty = scriptNamed('empty', null);
+
+    expect(emptyTasksText(packageOf([empty]), false)).toBe(NO_PACKAGE_TASKS_TEXT);
   });
 
   it('GIVEN scripts are hidden and every script is refused WHEN asked THEN the plain text shows', () => {

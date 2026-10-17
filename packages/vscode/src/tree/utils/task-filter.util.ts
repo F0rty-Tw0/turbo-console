@@ -1,14 +1,21 @@
 import type { TaskNode } from '@turbo-console/core';
 
+import { hasScriptBody } from '../../run/utils/run-refusal.util.ts';
 import { isSafeScriptName } from '../../run/utils/script-name.util.ts';
 
 export const isVisibleTask = (task: TaskNode): boolean => task.kind !== 'atom-file';
 
-/** Spec 1c-b §4.1: a visible task that is a turbo task, or a script whose name passes the run flow's name check. */
+const isRunnableScript = (task: TaskNode): boolean => isSafeScriptName(task.name) && hasScriptBody(task);
+
+/**
+ * Spec 1c-b §4.1: a visible task that is a turbo task, or a script whose name and body pass the run flow's checks. The
+ * package dir's `isWithin` check stays out: turbo/core refuses packages outside the root, so Run keeps it as defence only.
+ */
 export const isRunnableTask = (task: TaskNode): boolean => {
   const isVisible = isVisibleTask(task);
+  const isRunnable = task.isTurboTask || isRunnableScript(task);
 
-  return isVisible && (task.isTurboTask || isSafeScriptName(task.name));
+  return isVisible && isRunnable;
 };
 
 /** Spec 1c-b §4.1: a runnable task the toggle lets through, i.e. any turbo task, or a script while scripts are shown. */

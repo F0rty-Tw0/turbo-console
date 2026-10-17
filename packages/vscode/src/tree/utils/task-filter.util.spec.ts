@@ -27,6 +27,9 @@ describe('FEATURE: runnable task', () => {
     ['a script with a safe name', true, taskOf({ isTurboTask: false })],
     ['a script whose name a shell could misread', false, taskOf({ isTurboTask: false, name: 'a b' })],
     ['a turbo task with an odd name', true, taskOf({ name: 'a b' })],
+    ['a turbo task with no command', true, taskOf({ command: null })],
+    ['a script with no command', false, taskOf({ isTurboTask: false, command: null })],
+    ['a script with a whitespace-only command', false, taskOf({ isTurboTask: false, command: ' \t ' })],
     ['a file atom task', false, taskOf({ kind: 'atom-file' })]
   ])('GIVEN %s WHEN checked THEN runnable is %s', (_label, isRunnable, task) => {
     expect(isRunnableTask(task)).toBe(isRunnable);
@@ -40,6 +43,8 @@ describe('FEATURE: offered task', () => {
     ['a safe script', false, false, taskOf({ isTurboTask: false })],
     ['a safe script', true, true, taskOf({ isTurboTask: false })],
     ['a refused script', true, false, taskOf({ isTurboTask: false, name: 'a;b' })],
+    ['a script with no command', true, false, taskOf({ isTurboTask: false, command: null })],
+    ['a script with a blank command', true, false, taskOf({ isTurboTask: false, command: '  ' })],
     ['a file atom task', true, false, taskOf({ kind: 'atom-file' })]
   ])('GIVEN %s and scripts shown is %s WHEN checked THEN offered is %s', (_label, scriptsShown, isOffered, task) => {
     expect(isOfferedTask(task, scriptsShown)).toBe(isOffered);
