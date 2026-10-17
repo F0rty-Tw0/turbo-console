@@ -130,6 +130,21 @@ describe('FEATURE: ScriptsToggle', () => {
       expect(stored.get(KEY)).toBe(true);
     });
 
+    it('WHEN set(false) runs on a hidden toggle THEN it still stores and sets the key but fires nothing', async () => {
+      await toggle.set(false);
+
+      expect(calls).toStrictEqual(['update:false', 'setKey:false']);
+    });
+
+    it('WHEN the key failed and the same value is set again THEN it fires, since the choice only changes now', async () => {
+      setKey.mockRejectedValueOnce(new Error('refused'));
+
+      await expect(toggle.set(true)).rejects.toThrow('refused');
+      await toggle.set(true);
+
+      expect(calls).toStrictEqual(['update:true', 'update:true', 'setKey:true', 'fire']);
+    });
+
     it('WHEN set(true) runs THEN isShown reads true by the time the listener fires', async () => {
       const seen: boolean[] = [];
 
