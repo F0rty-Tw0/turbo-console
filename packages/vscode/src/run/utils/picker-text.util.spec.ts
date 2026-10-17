@@ -1,7 +1,8 @@
 import type { PackageNode, TaskNode } from '@turbo-console/core';
+import { hiddenScriptsText } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { emptyTasksText, hiddenScriptsText } from './picker-text.util.ts';
+import { emptyTasksText } from './picker-text.util.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { NO_PACKAGE_TASKS_TEXT } from '../common/picker.const.ts';
 

@@ -1,11 +1,12 @@
 import type { PackageManagerName, TaskNode, WorkspaceModel } from '@turbo-console/core';
+import { hiddenScriptsText } from '@turbo-console/webview-ui';
 import type { DetailsState, PackageDetails, TaskCard } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { toDetailsState } from './details-state.util.ts';
 import type { RunEntry, RunLookup, RunState } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
-import { emptyTasksText, hiddenScriptsText } from '../../run/utils/picker-text.util.ts';
+import { emptyTasksText } from '../../run/utils/picker-text.util.ts';
 import { PACKAGE_MANAGER_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { DetailsInput } from '../common/details.type.ts';
 import {

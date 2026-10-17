@@ -40,9 +40,8 @@ export const definitionText = (command: string | null, phase: DryRunPhase): stri
 };
 
 /**
- * Spec 1c-b §4.10: the hint a package with no card shows while scripts are hidden; `count` is its offered scripts. The
- * host keeps its own copy in `vscode/src/run/utils/picker-text.util.ts`; the two must be equal, since the webview cannot
- * import the host's.
+ * Spec 1c-b §4.8 and §4.10: the hint a package with no card shows while scripts are hidden, here and in the host's
+ * pickers; `count` is its offered scripts.
  */
 export const hiddenScriptsText = (count: number): string => `No turbo tasks in this package. Show scripts to see ${count}.`;
 
