@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { TurboException } from '@turbo-console/core';
 import type { TaskNode } from '@turbo-console/core';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -13,13 +15,15 @@ import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import { NO_TASKS_TEXT } from '../common/picker.const.ts';
 import type { RunRequest } from '../common/run.type.ts';
 import type { PickerFakes } from '../test/common/picker-fakes.type.ts';
+import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { pickerFakes } from '../test/utils/picker-ports.spec.util.ts';
 
 const ONE: RootFolder = { root: '/one', name: 'one' };
 const TWO: RootFolder = { root: '/two', name: 'two' };
 
 const requestOf = (root: string, packageName: string, task: TaskNode): RunRequest => {
-  const request: RunRequest = { root, packageName, task, binaryPath: TURBO_BINARY_STUB.path, force: false };
+  const packageDir = join(root, PACKAGE_NODE_STUB.path);
+  const request: RunRequest = { ...RUN_REQUEST_STUB, root, packageName, packageDir, task, binaryPath: TURBO_BINARY_STUB.path };
 
   return request;
 };

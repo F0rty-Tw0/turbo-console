@@ -2,16 +2,12 @@ import { turboRunArgs } from '@turbo-console/core';
 import type { RunMatch } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import {
-  ALREADY_RUNNING_TEXT,
-  NOT_TURBO_RUN_TEXT,
-  START_TIMEOUT_MS,
-  START_TIMEOUT_TEXT,
-  START_WAIT_TEXT,
-  TASK_ENDED_TEXT
-} from '../common/run.const.ts';
+import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, TASK_ENDED_TEXT } from '../common/run.const.ts';
 import type { RunDefinition, RunEntry, RunPorts, RunRequest, Runs, Terminable } from '../common/run.type.ts';
 import { runToMatchOf } from '../utils/run-end.util.ts';
+import { processNameOf } from '../utils/run-entry.util.ts';
+import { refusalOf } from '../utils/run-refusal.util.ts';
+import { startTimeoutText, startWaitText } from '../utils/run-text.util.ts';
 
 const definitionOf = (request: RunRequest): RunDefinition => {
   const definition: RunDefinition = { root: request.root, id: request.task.id };
@@ -33,7 +29,8 @@ type StartEnd = {
 /**
  * Ends a run whose process never started, terminating its execution unless its task already ended; nothing for a run no
  * longer running, or, with `launchedAt`, for another run of the task. Only a run that ends as failed to start logs its
- * reason and tells the user: one the user stopped first ends as stopped, quietly.
+ * reason and tells the user, naming the process the ended run started: one the user stopped first ends as stopped,
+ * quietly.
  */
 const endStart = (store: Runs, ports: RunPorts, end: StartEnd): void => {
   const ended = store.failStart(end.definition, ports.now(), end.launchedAt, end.isTaskEnded);
@@ -42,7 +39,7 @@ const endStart = (store: Runs, ports: RunPorts, end: StartEnd): void => {
 
   if (end.reason !== undefined) ports.log(logTextOf(end.reason));
 
-  ports.notifyFailedToStart();
+  ports.notifyFailedToStart(processNameOf(ended));
 };
 
 /**
@@ -54,22 +51,33 @@ export const taskEnded = (store: Runs, ports: RunPorts, definition: RunDefinitio
 };
 
 /**
- * The execution of `request`, or `null` once the reason is logged: a binary that is missing or cannot be run (VS Code
- * fires no task process event for a missing one), a name turbo would read as filter syntax, or a rejected launch.
+ * The turbo execution of `request`, or `null` once the reason is logged: a binary that is missing or cannot be run (VS
+ * Code fires no task process event for a missing one).
+ */
+const launchTurbo = async (ports: RunPorts, request: RunRequest, launchedAt: number): Promise<Terminable | null> => {
+  const canExecute = await ports.canExecute(request.binaryPath);
+
+  if (!canExecute) {
+    ports.log(logTextOf(`turbo binary missing or not executable: ${request.binaryPath}`));
+
+    return null;
+  }
+
+  const args = turboRunArgs(request.task, request.packageName, { force: request.force });
+
+  return ports.execute(request, args, launchedAt);
+};
+
+/**
+ * The execution of `request`, or `null` once the reason is logged: a turbo launch that cannot start, a name turbo would
+ * read as filter syntax, or a rejected launch. A script skips the binary check: the shell reports a missing package
+ * manager as an exit code (spec 1c-b §4.3 step 3).
  */
 const launch = async (ports: RunPorts, request: RunRequest, launchedAt: number): Promise<Terminable | null> => {
   try {
-    const canExecute = await ports.canExecute(request.binaryPath);
+    if (request.task.isTurboTask) return await launchTurbo(ports, request, launchedAt);
 
-    if (!canExecute) {
-      ports.log(logTextOf(`turbo binary missing or not executable: ${request.binaryPath}`));
-
-      return null;
-    }
-
-    const args = turboRunArgs(request.task, request.packageName, { force: request.force });
-
-    return await ports.execute(request, args, launchedAt);
+    return await ports.executeScript(request, launchedAt);
   } catch (error) {
     ports.log(logTextOf(error));
 
@@ -88,18 +96,23 @@ const onStartTimeout = (store: Runs, ports: RunPorts, start: StartEnd, isLaunche
 
   if (!isWaiting) return;
 
-  if (isLaunched) ports.log(logTextOf(START_WAIT_TEXT));
-  else endStart(store, ports, { ...start, reason: START_TIMEOUT_TEXT });
+  const processName = processNameOf(entry);
+
+  if (isLaunched) ports.log(logTextOf(startWaitText(processName)));
+  else endStart(store, ports, { ...start, reason: startTimeoutText(processName) });
 };
 
 /**
- * Spec §4.5 run flow: a task no turbo config defines is refused first (spec 1c-a §4.12), before the watchdog. Then a watchdog that ends the run as failed to start when its launch has not settled
- * `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), then the launch.
- * The task events drive the rest through the store.
+ * Spec §4.5 run flow: a request `refusalOf` refuses (spec 1c-b §4.3: an unsafe script, Run Without Cache on a script)
+ * shows its text first, before the watchdog. Then a watchdog that ends the run as failed to start when its launch has
+ * not settled `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), then
+ * the launch. The task events drive the rest through the store.
  */
 export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest): Promise<void> => {
-  if (!request.task.isTurboTask) {
-    ports.info(NOT_TURBO_RUN_TEXT);
+  const refusal = refusalOf(request);
+
+  if (refusal !== null) {
+    ports.info(refusal);
 
     return;
   }

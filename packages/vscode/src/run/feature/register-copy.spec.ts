@@ -82,15 +82,72 @@ describe('FEATURE: copy command', () => {
       expect(write).toHaveBeenCalledExactlyOnceWith('turbo run build --filter=a');
     });
 
-    it('WHEN the task is no turbo task THEN an info message says there is no command and nothing is copied', async () => {
-      const script = { ...TASK_NODE_STUB, isTurboTask: false };
-
-      roots.apply('/ws', loadedWith([packageHolding('a', script)]));
-
+    it('WHEN a turbo task is copied THEN no information message shows', async () => {
       await copy(TASK_TREE_NODE_STUB);
 
-      expect(info).toHaveBeenCalledExactlyOnceWith("This script isn't a turbo task, so there is no turbo command to copy.");
-      expect(write).not.toHaveBeenCalled();
+      expect(info).not.toHaveBeenCalled();
+    });
+
+    describe('GIVEN a script of the package', () => {
+      const scriptNamed = (name: string): TaskNode => {
+        const script: TaskNode = { ...TASK_NODE_STUB, id: `a#${name}`, name, isTurboTask: false };
+
+        return script;
+      };
+
+      it('WHEN Copy Command is invoked on its row THEN the package manager command is copied and says where to run it', async () => {
+        roots.apply('/ws', loadedWith([packageHolding('a', scriptNamed('lint'))]));
+
+        await copy(taskRowOf('a', 'a#lint'));
+
+        expect(write).toHaveBeenCalledExactlyOnceWith('pnpm run lint');
+        expect(info).toHaveBeenCalledExactlyOnceWith('Copied. Run it in `packages/a`.');
+      });
+
+      it.each(['.', ''])('WHEN the package is the root package (path %j) THEN it says to run it in the repo root', async (path) => {
+        const holder = packageHolding('a', scriptNamed('lint'));
+        const rootPackage: PackageNode = { ...holder, path };
+
+        roots.apply('/ws', loadedWith([rootPackage]));
+
+        await copy(taskRowOf('a', 'a#lint'));
+
+        expect(write).toHaveBeenCalledExactlyOnceWith('pnpm run lint');
+        expect(info).toHaveBeenCalledExactlyOnceWith('Copied. Run it in the repo root.');
+      });
+
+      it('WHEN its name is refused THEN nothing is copied and the unsafe text shows', async () => {
+        roots.apply('/ws', loadedWith([packageHolding('a', scriptNamed('x y'))]));
+
+        await copy(taskRowOf('a', 'a#x y'));
+
+        expect(write).not.toHaveBeenCalled();
+        expect(info).toHaveBeenCalledExactlyOnceWith("Turbo Console can't run a script named `x y` safely.");
+      });
+
+      it('WHEN it is an atom-umbrella row with no command THEN nothing is copied and the unsafe text shows', async () => {
+        const script = scriptNamed('lint');
+        const umbrella: TaskNode = { ...script, kind: 'atom-umbrella', command: null };
+
+        roots.apply('/ws', loadedWith([packageHolding('a', umbrella)]));
+
+        await copy(taskRowOf('a', 'a#lint'));
+
+        expect(write).not.toHaveBeenCalled();
+        expect(info).toHaveBeenCalledExactlyOnceWith("Turbo Console can't run a script named `lint` safely.");
+      });
+
+      it('WHEN its package path leaves the root THEN nothing is copied and the unsafe text shows, as Run refuses it', async () => {
+        const holder = packageHolding('a', scriptNamed('lint'));
+        const outside: PackageNode = { ...holder, path: '../x' };
+
+        roots.apply('/ws', loadedWith([outside]));
+
+        await copy(taskRowOf('a', 'a#lint'));
+
+        expect(write).not.toHaveBeenCalled();
+        expect(info).toHaveBeenCalledExactlyOnceWith("Turbo Console can't run a script named `lint` safely.");
+      });
     });
 
     it('WHEN the shell is unknown THEN the command is copied for posix', async () => {

@@ -19,14 +19,14 @@ const folderOf = (root: string): vscode.WorkspaceFolder => {
   return folder;
 };
 
-/** A turbo process as a `vscode.Task` in a dedicated terminal panel per task identity, cleared and revealed on each run. */
-const executeProcessTask = async (
+/** `execution` as a `vscode.Task` in a dedicated terminal panel per task identity, cleared and revealed on each run. */
+const executeIn = async (
   definition: vscode.TaskDefinition,
   name: string,
-  process: ProcessLaunch
+  root: string,
+  execution: vscode.ProcessExecution | vscode.ShellExecution
 ): Promise<vscode.TaskExecution> => {
-  const folder = folderOf(process.root);
-  const execution = new vscode.ProcessExecution(process.binaryPath, process.args, { cwd: process.root });
+  const folder = folderOf(root);
   const task = new vscode.Task(definition, folder, name, 'turbo', execution);
   const presentation: vscode.TaskPresentationOptions = {
     reveal: vscode.TaskRevealKind.Always,
@@ -39,6 +39,17 @@ const executeProcessTask = async (
   return vscode.tasks.executeTask(task);
 };
 
+/** A turbo process as a `vscode.Task`, run in the workspace folder `process.root`. */
+const executeProcessTask = async (
+  definition: vscode.TaskDefinition,
+  name: string,
+  process: ProcessLaunch
+): Promise<vscode.TaskExecution> => {
+  const execution = new vscode.ProcessExecution(process.binaryPath, process.args, { cwd: process.root });
+
+  return executeIn(definition, name, process.root, execution);
+};
+
 /**
  * Spec §4.5 step 3: runs turbo as a `vscode.Task` named after the task id. Rejects when `request.root` is no workspace
  * folder.
@@ -48,6 +59,20 @@ export const executeTurboTask = async (request: RunRequest, args: string[], laun
   const process: ProcessLaunch = { root: request.root, binaryPath: request.binaryPath, args };
 
   return executeProcessTask(definition, request.task.id, process);
+};
+
+/**
+ * Spec 1c-b §4.3 step 4: runs `<package manager> run <script>` in the package dir as a `vscode.Task` of the same
+ * definition, name and panel as a turbo run, so its task events are the run's. The args are plain strings: the manager
+ * name is a closed enum and `refusalOf` has already admitted only a script name that needs no quoting in any shell.
+ * Rejects when `request.root` is no workspace folder.
+ */
+export const executeScriptTask = async (request: RunRequest, launchedAt: number): Promise<Terminable> => {
+  const definition = taskDefinitionOf(request, launchedAt);
+  const options: vscode.ShellExecutionOptions = { cwd: request.packageDir };
+  const execution = new vscode.ShellExecution(request.packageManager.name, ['run', request.task.name], options);
+
+  return executeIn(definition, request.task.id, request.root, execution);
 };
 
 /**

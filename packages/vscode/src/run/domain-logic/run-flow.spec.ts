@@ -130,7 +130,7 @@ describe('FEATURE: run flow, starting a run', () => {
     });
 
     it('WHEN run 1 launch rejects late THEN the user is told only of run 1', () => {
-      expect(first.notifyFailedToStart).toHaveBeenCalledOnce();
+      expect(first.notifyFailedToStart).toHaveBeenCalledExactlyOnceWith('turbo');
     });
   });
 
@@ -241,7 +241,7 @@ describe('FEATURE: run flow, starting a run', () => {
     });
 
     it('WHEN it is run THEN the user is told turbo could not start', () => {
-      expect(failing.notifyFailedToStart).toHaveBeenCalledOnce();
+      expect(failing.notifyFailedToStart).toHaveBeenCalledExactlyOnceWith('turbo');
     });
 
     it('WHEN it is run THEN the reason is logged', () => {
@@ -251,7 +251,7 @@ describe('FEATURE: run flow, starting a run', () => {
     it('WHEN the start timeout passes THEN the user is not told again', () => {
       vi.advanceTimersByTime(START_TIMEOUT_MS);
 
-      expect(failing.notifyFailedToStart).toHaveBeenCalledOnce();
+      expect(failing.notifyFailedToStart).toHaveBeenCalledExactlyOnceWith('turbo');
     });
   });
 

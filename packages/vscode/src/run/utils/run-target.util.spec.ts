@@ -1,4 +1,6 @@
-import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
+import { join } from 'node:path';
+
+import type { PackageManager, PackageManagerSource, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { modelTaskOf, runRequestOf, taskIdsOf, taskTargetOf } from './run-target.util.ts';
@@ -6,7 +8,12 @@ import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
-import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import {
+  PACKAGE_MANAGER_STUB,
+  PACKAGE_NODE_STUB,
+  TASK_NODE_STUB,
+  WORKSPACE_MODEL_STUB
+} from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { RunDefinition, RunRequest, TaskTarget } from '../common/run.type.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
@@ -86,6 +93,8 @@ describe('FEATURE: run targets', () => {
       const expected: RunRequest = {
         root: '/ws',
         packageName: 'a',
+        packageDir: join(RUN.root, 'packages/a'),
+        packageManager: PACKAGE_MANAGER_STUB,
         task: TASK_NODE_STUB,
         binaryPath: TURBO_BINARY_STUB.path,
         force: false
@@ -94,6 +103,34 @@ describe('FEATURE: run targets', () => {
       const request = runRequestOf(TARGET, LOADED, false);
 
       expect(request).toStrictEqual(expected);
+    });
+
+    it('WHEN the model detected yarn THEN the request carries that package manager', () => {
+      const source: PackageManagerSource = { kind: 'lockfile', file: 'yarn.lock' };
+      const yarn: PackageManager = { name: 'yarn', source };
+      const model: WorkspaceModel = { ...TWO_PACKAGES, packageManager: yarn };
+
+      const request = runRequestOf(TARGET, { ...LOADED, model }, false);
+
+      expect(request?.packageManager).toStrictEqual(yarn);
+    });
+
+    it.each(['.', ''])('WHEN the package path is %j THEN its dir is the root', (path) => {
+      const rootPackage: PackageNode = { ...PACKAGE_NODE_STUB, path };
+      const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [rootPackage] };
+
+      const request = runRequestOf(TARGET, { ...LOADED, model }, false);
+
+      expect(request?.packageDir).toBe(join(RUN.root));
+    });
+
+    it('WHEN the package path steps out of the root THEN its dir lies outside the root, for the run flow to refuse', () => {
+      const stray: PackageNode = { ...PACKAGE_NODE_STUB, path: '../x' };
+      const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [stray] };
+
+      const request = runRequestOf(TARGET, { ...LOADED, model }, false);
+
+      expect(request?.packageDir).toBe(join('/x'));
     });
 
     it('WHEN it is asked as a forced run THEN the request is marked forced', () => {

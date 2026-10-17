@@ -1,4 +1,4 @@
-import type { RunMatch, RunToMatch, TaskNode } from '@turbo-console/core';
+import type { PackageManager, RunMatch, RunToMatch, TaskNode } from '@turbo-console/core';
 
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 
@@ -23,6 +23,8 @@ export type RunEntry = {
   readonly matching: boolean;
   /** Run Without Cache: the run passed `--force`, so its summary records `MISS` whatever the cache held. */
   readonly force: boolean;
+  /** The package manager a script run was launched with, so its end can name it; `null` for a turbo task. */
+  readonly packageManager: PackageManager | null;
 };
 
 export type RunLookup = (root: string, taskId: string) => RunEntry | undefined;
@@ -46,9 +48,12 @@ export type Terminable = {
   readonly terminate: () => void;
 };
 
+/** `packageDir` is the package's directory, where a script runs; `packageManager` is the one the model detected. */
 export type RunRequest = {
   readonly root: string;
   readonly packageName: string;
+  readonly packageDir: string;
+  readonly packageManager: PackageManager;
   readonly task: TaskNode;
   readonly binaryPath: string;
   readonly force: boolean;
@@ -56,17 +61,19 @@ export type RunRequest = {
 
 /**
  * Editor effects of the run flow. `canExecute` answers whether `binaryPath` exists and may be run; `isActive` whether
- * VS Code already runs a task of `definition`, one the store may not know (Rerun Last Task, a reconnect); `after` calls
- * `action` once `delayMs` has passed; `log` takes a finished line (`logTextOf`); `now` is wall-clock milliseconds, as
- * the run summary files' times are.
+ * VS Code already runs a task of `definition`, one the store may not know (Rerun Last Task, a reconnect); `execute`
+ * runs turbo and `executeScript` the package manager's `run <script>`; `after` calls `action` once `delayMs` has
+ * passed; `notifyFailedToStart` names the process that did not start; `log` takes a finished line (`logTextOf`); `now`
+ * is wall-clock milliseconds, as the run summary files' times are.
  */
 export type RunPorts = {
   readonly canExecute: (binaryPath: string) => Promise<boolean>;
   readonly isActive: (definition: RunDefinition) => boolean;
   readonly execute: (request: RunRequest, args: string[], launchedAt: number) => Promise<Terminable>;
+  readonly executeScript: (request: RunRequest, launchedAt: number) => Promise<Terminable>;
   readonly after: (delayMs: number, action: () => void) => void;
   readonly match: (root: string, run: RunToMatch) => Promise<RunMatch | null>;
-  readonly notifyFailedToStart: () => void;
+  readonly notifyFailedToStart: (processName: string) => void;
   readonly info: (text: string) => void;
   readonly log: (line: string) => void;
   readonly now: () => number;

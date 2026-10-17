@@ -2,10 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runTask, taskEnded } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
-import { START_TIMEOUT_MS, START_WAIT_TEXT } from '../common/run.const.ts';
+import { START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { RunDefinition, RunPorts, Terminable } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
+import { startWaitText } from '../utils/run-text.util.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 
@@ -178,7 +179,7 @@ describe('FEATURE: run flow, a start that never happens', () => {
       });
 
       it('THEN the wait is logged once, as a trace', () => {
-        expect(ports.log).toHaveBeenCalledExactlyOnceWith(START_WAIT_TEXT);
+        expect(ports.log).toHaveBeenCalledExactlyOnceWith(startWaitText('turbo'));
       });
     });
 
@@ -233,7 +234,7 @@ describe('FEATURE: run flow, a start that never happens', () => {
     it('WHEN its task ends with no process end THEN the user is told turbo could not start', () => {
       taskEnded(store, ports, RUN);
 
-      expect(ports.notifyFailedToStart).toHaveBeenCalledOnce();
+      expect(ports.notifyFailedToStart).toHaveBeenCalledExactlyOnceWith('turbo');
     });
 
     it('WHEN its task ends with no process end THEN the task end is logged as the reason', () => {

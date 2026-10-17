@@ -67,7 +67,7 @@
           },
           "id": {
             "type": "string",
-            "description": "The turbo task id, for example @org/web#build."
+            "description": "The task id, for example @org/web#build."
           },
           "affected": {
             "type": "boolean",
@@ -238,17 +238,17 @@
       "view/item/context": [
         {
           "command": "turboConsole.runTask",
-          "when": "view == turboConsole.tree && viewItem =~ /^turboTask(?!\\.running)/",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)(?!\\.running)/",
           "group": "inline@0"
         },
         {
           "command": "turboConsole.stopTask",
-          "when": "view == turboConsole.tree && viewItem =~ /^turboTask\\.running/",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)\\.running/",
           "group": "inline@0"
         },
         {
           "command": "turboConsole.runTask",
-          "when": "view == turboConsole.tree && viewItem =~ /^turboTask(?!\\.running)/",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)(?!\\.running)/",
           "group": "1_run@0"
         },
         {
@@ -258,7 +258,7 @@
         },
         {
           "command": "turboConsole.stopTask",
-          "when": "view == turboConsole.tree && viewItem =~ /^turboTask\\.running/",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)\\.running/",
           "group": "1_run@0"
         },
         {
@@ -273,7 +273,7 @@
         },
         {
           "command": "turboConsole.copyCommand",
-          "when": "view == turboConsole.tree && viewItem =~ /^turboTask/",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)/",
           "group": "inline@1"
         },
         {
@@ -308,7 +308,7 @@
         },
         {
           "command": "turboConsole.copyCommand",
-          "when": "view == turboConsole.tree && viewItem =~ /^turboTask/",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)/",
           "group": "3_copy"
         },
         {

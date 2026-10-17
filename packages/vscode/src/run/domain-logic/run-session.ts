@@ -3,10 +3,11 @@ import { RunStore } from './run-store.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { RunTiming } from '../../shared/common/api.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import { RUN_TIMINGS_MAX } from '../common/run.const.ts';
+import { NOT_FOUND_CODES, RUN_TIMINGS_MAX } from '../common/run.const.ts';
 import type { RunControl, RunDefinition, RunEntry, RunEvent, RunKey, RunPorts, RunRequest } from '../common/run.type.ts';
 import { runKeyOf } from '../utils/run-entry.util.ts';
 import { taskIdsOf } from '../utils/run-target.util.ts';
+import { notFoundText } from '../utils/run-text.util.ts';
 
 /**
  * The runs of the window and what drives them: the run commands and the task events of runs this window launched. Each
@@ -49,12 +50,27 @@ export class RunSession implements RunControl {
 
     if (ended === null) return;
 
+    this.logNotFound(ended);
+
     const key = runKeyOf(ended.root, ended.taskId);
 
     this.endingRuns.set(key, ended.launchedAt);
     finishRun(this.runs, this.ports, ended).catch((error: unknown) => {
       this.ports.log(logTextOf(error));
     });
+  }
+
+  /** Spec 1c-b §4.4: a script ending 127 or 9009 gets one hedged Output line and no notice. */
+  private logNotFound(ended: RunEntry): void {
+    const { packageManager, exitCode } = ended;
+
+    if (packageManager === null || exitCode === null) return;
+
+    const isNotFound = NOT_FOUND_CODES.includes(exitCode);
+
+    if (!isNotFound) return;
+
+    this.ports.log(logTextOf(notFoundText(packageManager, exitCode)));
   }
 
   public taskEnded(event: RunEvent): void {

@@ -2,7 +2,7 @@ import { matchRunSummary } from '@turbo-console/core';
 import * as vscode from 'vscode';
 
 import { canExecute } from './can-execute.ts';
-import { executeRunAllTask, executeTurboTask, isRunAllActive, isTurboTaskActive } from './turbo-tasks.ts';
+import { executeRunAllTask, executeScriptTask, executeTurboTask, isRunAllActive, isTurboTaskActive } from './turbo-tasks.ts';
 import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import type { PickItem } from '../common/picker.type.ts';
@@ -23,6 +23,7 @@ export const editorRunPorts = (output: Output): RunPorts => {
     canExecute,
     isActive: isTurboTaskActive,
     execute: executeTurboTask,
+    executeScript: executeScriptTask,
     after,
     match: matchRunSummary,
     notifyFailedToStart,
@@ -41,7 +42,7 @@ const quickPick = async (items: PickItem[], placeHolder: string): Promise<PickIt
 
 /** The editor effects of run all: the same notice and output channel as a single run, and a quick pick for the picks. */
 export const editorRunAllPorts = (roots: Roots, output: Output): RunAllPorts => {
-  const notifyFailedToStart = failedToStartNotice(showError, output.show);
+  const notice = failedToStartNotice(showError, output.show);
   const ports: RunAllPorts = {
     canExecute,
     isActive: isRunAllActive,
@@ -55,7 +56,9 @@ export const editorRunAllPorts = (roots: Roots, output: Output): RunAllPorts => 
     execute: executeRunAllTask,
     after,
     log: output.error,
-    notifyFailedToStart
+    notifyFailedToStart: () => {
+      notice('turbo');
+    }
   };
 
   return ports;
