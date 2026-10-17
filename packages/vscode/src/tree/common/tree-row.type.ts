@@ -1,3 +1,5 @@
+import type { PackageManager } from '@turbo-console/core';
+
 import type { RunState } from '../../run/common/run.type.ts';
 
 export type IconSpec = {
@@ -12,7 +14,7 @@ export type RowCommand = {
 
 export type TreeMode = 'folders' | 'list';
 
-export type RowKind = 'root' | 'dir' | 'pkg' | 'task' | 'msg';
+export type RowKind = 'root' | 'dir' | 'pkg' | 'scripts' | 'task' | 'msg';
 
 type Collapsible = 'none' | 'collapsed' | 'expanded';
 
@@ -30,7 +32,7 @@ export type MessageKind =
 /**
  * One tree item as plain data. `key` and `packageName` hold raw model names, never cleaned: cleaning folds whitespace,
  * so a cleaned name could filter another package. `label` and `description` are cleaned display text; the `tooltip`
- * lines are raw, and `tooltip.util.ts` cleans them. `packageName` is set on `pkg` and `task` rows only.
+ * lines are raw, and `tooltip.util.ts` cleans them. `packageName` is set on `pkg`, `scripts` and `task` rows only.
  */
 export type TreeRow = {
   readonly id: string;
@@ -48,7 +50,16 @@ export type TreeRow = {
 };
 
 /** A kind token (`turboTask`, `turboScript`), then at most one state token; menus match them by prefix (spec 1c-a §4.12). */
-export type TaskContextValue = 'turboTask' | 'turboTask.running' | 'turboTask.cached' | 'turboScript';
+export type TaskContextValue = 'turboTask' | 'turboTask.running' | 'turboTask.cached' | 'turboScript' | 'turboScript.running';
+
+/**
+ * What the row builders need of a folder: its `root` (row ids and run lookups key on the folder root, which is not
+ * always `model.root`) and the model's package manager.
+ */
+export type RowScope = {
+  readonly root: string;
+  readonly packageManager: PackageManager;
+};
 
 export type EndedState = Exclude<RunState, 'running'>;
 

@@ -1,10 +1,10 @@
 import type { PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { taskRows } from './task-rows.util.ts';
+import { taskRowOf } from './task-rows.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
-import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const LAUNCHED_AT = 1_699_999_990_000;
@@ -31,9 +31,9 @@ const entryIn = (overrides: Partial<RunEntry>): RunEntry => {
 const tooltipLinesOf = (task: TaskNode, entry?: RunEntry): string[] => {
   const runs: RunLookup = () => entry;
   const pkg: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [task] };
-  const rows = taskRows('/ws', pkg, rowContextOf('list', runs));
+  const row = taskRowOf(ROW_SCOPE_STUB, pkg, task.id, rowContextOf('list', runs));
 
-  return rows.flatMap((row) => row.tooltip);
+  return row?.tooltip ?? [];
 };
 
 describe('FEATURE: task row tooltip', () => {
@@ -44,15 +44,28 @@ describe('FEATURE: task row tooltip', () => {
       expect(lines).toStrictEqual(['Continuous task: runs until stopped (persistent)', 'Command: vite', 'Kind: task']);
     });
 
-    it('WHEN no turbo config defines it THEN two kind lines say so and that it cannot run', () => {
-      const lines = tooltipLinesOf(taskOf({ isTurboTask: false, description: 'Formats' }));
+    it('WHEN it is a script THEN the package manager command, the script body and the kind follow the description', () => {
+      const lines = tooltipLinesOf(taskOf({ isTurboTask: false, name: 'lint', description: 'Formats', command: 'eslint .' }));
 
-      expect(lines).toStrictEqual([
-        'Not a turbo task: no turbo.json defines it',
-        "Turbo Console can't run it yet.",
-        'Formats',
-        'Kind: task'
-      ]);
+      expect(lines).toStrictEqual(['Formats', 'Command: pnpm run lint', 'Script: eslint .', 'Kind: task']);
+    });
+
+    it('WHEN it is a script with no body THEN only the command and the kind are listed', () => {
+      const lines = tooltipLinesOf(taskOf({ isTurboTask: false, name: 'lint', command: null }));
+
+      expect(lines).toStrictEqual(['Command: pnpm run lint', 'Kind: task']);
+    });
+
+    it('WHEN the script name is refused THEN there is no Command line but the body and kind stay', () => {
+      const lines = tooltipLinesOf(taskOf({ isTurboTask: false, name: 'a b', command: 'eslint .' }));
+
+      expect(lines).toStrictEqual(['Script: eslint .', 'Kind: task']);
+    });
+
+    it('WHEN it is a turbo task with a body THEN the body is its Command', () => {
+      const lines = tooltipLinesOf(taskOf({ command: 'tsc' }));
+
+      expect(lines).toStrictEqual(['Command: tsc', 'Kind: task']);
     });
 
     it('WHEN it is a plain turbo task THEN there is no kind line', () => {

@@ -27,7 +27,7 @@ export const run = async (): Promise<void> => {
     await step('reveal the view', async () => revealTree(api, root));
     await emptyPackageCase(api, root);
     await scopeToggleCase(api);
-    await scriptRowCase(api, root);
+    await scriptRowCase(api);
     await liveRowCase(api);
     await ctrlCCase(api);
     await killCase(api);

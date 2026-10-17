@@ -4,21 +4,18 @@ import { join } from 'node:path';
 import * as vscode from 'vscode';
 
 import { lastPackageState, packageStates } from './details-posted.spec.util.ts';
-import { taskNodeNamed } from './run-wait.spec.util.ts';
-import { sleep, step, waitFor } from './suite-env.spec.util.ts';
-import { packageNodes, packageRows, tooltipLinesOf } from './tree-polish-tree.spec.util.ts';
+import { step, waitFor } from './suite-env.spec.util.ts';
+import { packageNodes, packageRows } from './tree-polish-tree.spec.util.ts';
+import { packageNodeNamed } from './tree-walk.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { TreeMode } from '../../src/tree/common/tree-row.type.ts';
-import { ADHOC_TASK_ID, DUP_PACKAGE, EMPTY_PACKAGE, NOT_TURBO_LINE, POLISH_PACKAGE } from '../common/tree-polish.const.ts';
+import { ADHOC_TASK_ID, DEV_TASK_ID, DUP_PACKAGE, EMPTY_PACKAGE, POLISH_PACKAGE } from '../common/tree-polish.const.ts';
 import type { PackageRowFacts } from '../common/tree-polish.type.ts';
 
 const SCOPE_PREFIX = /^@[^/]+\//u;
 
 /** The packages whose bare name collides keep their scope while scopes are hidden. */
 const COLLIDING_NAMES: ReadonlySet<string> = new Set([POLISH_PACKAGE, DUP_PACKAGE]);
-
-/** Spec 1c-a §6.4 case 3: no VS Code task starts within this. */
-const NO_TASK_WINDOW_MS = 2000;
 
 const fullNameOf = (name: string): string => name;
 
@@ -104,22 +101,17 @@ export const scopeToggleCase = async (api: TurboConsoleApi): Promise<void> => {
   });
 };
 
-/** Case 3: a script no turbo.json names reads `not a turbo task`, says so in its tooltip, and Run starts nothing. */
-export const scriptRowCase = async (api: TurboConsoleApi, root: string): Promise<void> => {
-  await step('L9-3: a script no turbo.json names is a turboScript row that Run does not start', async () => {
-    const node = await taskNodeNamed(api, POLISH_PACKAGE, ADHOC_TASK_ID);
-    const item = api.tree.getTreeItem(node);
-    const lines = tooltipLinesOf(item);
-    const before = vscode.tasks.taskExecutions.length;
+/** Case 3 (spec 1c-b §6.5): with scripts hidden, a script no turbo.json names has no Scripts group and no row; running one is L10's. */
+export const scriptRowCase = async (api: TurboConsoleApi): Promise<void> => {
+  await step('L9-3: with scripts hidden, a script no turbo.json names has no row', async () => {
+    const pkg = await packageNodeNamed(api, POLISH_PACKAGE);
+    const children = await api.tree.getChildren(pkg);
+    const kinds = children.map((child) => child.kind);
+    const keys = children.map((child) => child.key);
 
-    assert.equal(item.contextValue, 'turboScript');
-    assert.equal(item.description, 'not a turbo task');
-    assert.equal(lines.at(0), NOT_TURBO_LINE);
-
-    await vscode.commands.executeCommand('turboConsole.runTask', node);
-    await sleep(NO_TASK_WINDOW_MS);
-
-    assert.equal(vscode.tasks.taskExecutions.length, before);
-    assert.equal(api.runs.get(root, ADHOC_TASK_ID), undefined);
+    assert.equal(api.tree.isScriptsShown(), false);
+    assert.ok(keys.includes(DEV_TASK_ID), `${POLISH_PACKAGE} lists its turbo task ${DEV_TASK_ID}`);
+    assert.ok(!kinds.includes('scripts'), `${POLISH_PACKAGE} shows a scripts group`);
+    assert.ok(!keys.includes(ADHOC_TASK_ID), `${POLISH_PACKAGE} shows ${ADHOC_TASK_ID}`);
   });
 };

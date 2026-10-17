@@ -22,8 +22,6 @@ export const CONTINUOUS_IDLE_ICON: IconSpec = { id: 'server-process', color: nul
 
 export const CONTINUOUS_RUNNING_ICON: IconSpec = { id: 'pulse', color: null };
 
-export const NOT_TURBO_ICON: IconSpec = { id: 'tools', color: 'disabledForeground' };
-
 /** Spec §4.7 message icons, and the spinner of the §4.3 placeholder. */
 export const ERROR_ICON: IconSpec = { id: 'error', color: 'errorForeground' };
 
@@ -32,3 +30,6 @@ export const WARNING_ICON: IconSpec = { id: 'warning', color: 'editorWarning.for
 export const INFO_ICON: IconSpec = { id: 'info', color: 'editorInfo.foreground' };
 
 export const LOADING_ICON: IconSpec = { id: 'loading~spin', color: null };
+
+/** Spec 1c-b §4.6: the Scripts group of a package. */
+export const SCRIPTS_ICON: IconSpec = { id: 'symbol-namespace', color: null };

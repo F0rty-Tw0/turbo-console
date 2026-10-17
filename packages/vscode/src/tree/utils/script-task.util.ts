@@ -1,6 +1,6 @@
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 
-import { isVisibleTask } from './task-rows.util.ts';
+import { isVisibleTask } from './task-filter.util.ts';
 
 /** Spec 1c-b §4.1: a visible task that is not a turbo task, one a `package.json` script defines. */
 export const isVisibleScript = (task: TaskNode): boolean => isVisibleTask(task) && !task.isTurboTask;
@@ -19,6 +19,7 @@ export const isLiveScript = (task: TaskNode, liveOfRoot: ReadonlySet<string>): b
   return isScript && liveOfRoot.has(task.id);
 };
 
-const isVisibleTurboTask = (task: TaskNode): boolean => isVisibleTask(task) && task.isTurboTask;
+/** A visible task that is a turbo task; unlike `isRunnableTask`, it stays turbo-only when scripts become runnable. */
+export const isVisibleTurboTask = (task: TaskNode): boolean => isVisibleTask(task) && task.isTurboTask;
 
 export const hasVisibleTurboTask = (pkg: PackageNode): boolean => pkg.tasks.some(isVisibleTurboTask);

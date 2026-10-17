@@ -1,6 +1,6 @@
 import type { DryRunRequest, TaskNode, WorkspaceModel } from '@turbo-console/core';
 
-import { isVisibleTask } from '../../tree/utils/task-rows.util.ts';
+import { isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 
 /**
  * A file task has no card, a task with no command has nothing for turbo to resolve, and a script no turbo config

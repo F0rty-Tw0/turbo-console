@@ -5,6 +5,7 @@ import type { PresetName } from '@turbo-console/repo-gen';
 import { bench } from '@turbo-console/tools';
 import type { BenchDescriptor } from '@turbo-console/tools';
 
+import { withScripts } from './utils/scripts-model.spec.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import type { LiveIds, RunEntry, RunLookup } from '../../run/common/run.type.ts';
@@ -17,7 +18,9 @@ import { allRows } from '../utils/all-rows.util.ts';
 import { diffModels } from '../utils/model-diff.util.ts';
 import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
-import { isRunnableTask, taskRowOf } from '../utils/task-rows.util.ts';
+import { rowScopeOf } from '../utils/row-scope.util.ts';
+import { isVisibleTurboTask } from '../utils/script-task.util.ts';
+import { taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
@@ -50,17 +53,17 @@ const stateOf = (model: WorkspaceModel): RootState => {
 };
 
 /** A fresh `ModelViews` per call, so the shown filter, folder tree and labels are measured, not a warm cache hit. */
-const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode): BenchDescriptor => {
+const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsShown = false): BenchDescriptor => {
   const state = stateOf(model);
   const build = (): unknown => {
     const views = new ModelViews();
-    const viewOf: ModelViewsOf = (loaded, scriptsShown, live) => views.of(loaded, scriptsShown, live);
+    const viewOf: ModelViewsOf = (loaded, shown, live) => views.of(loaded, shown, live);
     const context: RowContext = {
       mode,
       runs: NEVER_RAN,
       views: viewOf,
       scopeShown: false,
-      scriptsShown: false,
+      scriptsShown,
       live: NOTHING_LIVE,
       now: 0
     };
@@ -117,14 +120,14 @@ const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntr
 };
 
 /**
- * The first `TICKED_TASKS` runnable tasks of the shown packages in model order (packages, then `tasks` order), running.
- * Runnable, not just visible: a script no turbo.json defines is refused, so it never runs.
+ * The first `TICKED_TASKS` visible turbo tasks of the shown packages in model order (packages, then `tasks` order),
+ * running. Turbo tasks only, so the ticked set stays the same as scripts become runnable in later slices.
  */
 const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
   const entries: RunEntry[] = [];
 
   for (const pkg of view.packages.values()) {
-    const runnable = pkg.tasks.filter(isRunnableTask);
+    const runnable = pkg.tasks.filter(isVisibleTurboTask);
 
     for (const task of runnable) entries.push(runningEntryOf(model.root, pkg, task));
 
@@ -140,7 +143,7 @@ const entryRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext)
 
   if (pkg === undefined) throw new Error(`bench package ${entry.packageName} is not shown`);
 
-  const row = taskRowOf(model.root, pkg, entry.taskId, context);
+  const row = taskRowOf(rowScopeOf(model.root, model), pkg, entry.taskId, context);
 
   if (row === undefined) throw new Error(`bench task ${entry.taskId} has no row`);
 
@@ -199,6 +202,7 @@ const benches: BenchDescriptor[] = [
   rowsBench('tree-rows-list-target-like', targetLike, 'list'),
   rowsBench('tree-rows-folders-stretch-300', stretch300, 'folders'),
   rowsBench('tree-rows-list-stretch-300', stretch300, 'list'),
+  rowsBench('tree-rows-scripts-stretch-300', withScripts(stretch300), 'folders', true),
   diffBench('model-diff-stretch-300', stretch300),
   tickBench('tree-tick-stretch-300', stretch300)
 ];

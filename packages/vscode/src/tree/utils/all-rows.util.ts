@@ -1,6 +1,8 @@
 import { dirRows } from './dir-rows.util.ts';
 import { liveOf } from './live-of.util.ts';
 import { rootRows } from './root-rows.util.ts';
+import { rowScopeOf } from './row-scope.util.ts';
+import { scriptRows } from './script-rows.util.ts';
 import { taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
@@ -33,11 +35,13 @@ export const allRows = (state: RootState, context: RowContext): TreeRow[] => {
   if (!hasPackages) return top;
 
   const { root } = state.folder;
+  const scope = rowScopeOf(root, model);
   const view = context.views(model, context.scriptsShown, liveOf(context, root));
   const dirs = dirsBelow(view.folders, context.mode);
   const dirChildren = dirs.flatMap((dir) => dirRows(root, dir, view, context.scopeShown));
   const shown = Array.from(view.packages.values());
-  const tasks = shown.flatMap((pkg) => taskRows(root, pkg, context));
+  const tasks = shown.flatMap((pkg) => taskRows(scope, pkg, context));
+  const scripts = shown.flatMap((pkg) => scriptRows(scope, pkg, context));
 
-  return [...top, ...dirChildren, ...tasks];
+  return [...top, ...dirChildren, ...tasks, ...scripts];
 };
