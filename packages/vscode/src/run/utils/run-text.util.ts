@@ -2,8 +2,7 @@ import type { PackageManager } from '@turbo-console/core';
 
 import { sourceText } from './source-text.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
-import { cleanText } from '../../shared/utils/clean-text.util.ts';
-import { linkSafe } from '../../shared/utils/link-safe.util.ts';
+import { toastText } from '../../shared/utils/link-safe.util.ts';
 import { START_TIMEOUT_MS } from '../common/run.const.ts';
 
 const SECONDS = START_TIMEOUT_MS / 1000;
@@ -18,10 +17,10 @@ export const startWaitText = (processName: string): string =>
 
 /**
  * The backticks are literal: they keep a name with spaces delimited. A toast still turns link syntax into a clickable
- * link, so the name goes through `linkSafe`.
+ * link, so the name goes through `toastText`.
  */
 export const unsafeScriptText = (name: string): string => {
-  const shown = linkSafe(cleanText(name, LABEL_MAX));
+  const shown = toastText(name, LABEL_MAX);
 
   return `Turbo Console can't run a script named \`${shown}\` safely.`;
 };

@@ -1,6 +1,5 @@
 import { DESCRIPTION_MAX } from '../../shared/common/text.const.ts';
-import { cleanText } from '../../shared/utils/clean-text.util.ts';
-import { linkSafe } from '../../shared/utils/link-safe.util.ts';
+import { toastText } from '../../shared/utils/link-safe.util.ts';
 import { SCRIPT_COPIED_ROOT_TEXT } from '../common/copy.const.ts';
 
 /**
@@ -12,7 +11,7 @@ export const scriptCopiedText = (packagePath: string): string => {
 
   if (isRootPackage) return SCRIPT_COPIED_ROOT_TEXT;
 
-  const shown = linkSafe(cleanText(packagePath, DESCRIPTION_MAX));
+  const shown = toastText(packagePath, DESCRIPTION_MAX);
 
   return `Copied. Run it in \`${shown}\`.`;
 };
