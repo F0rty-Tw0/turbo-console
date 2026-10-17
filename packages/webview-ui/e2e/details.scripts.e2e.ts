@@ -2,6 +2,7 @@ import { expect, test } from './details.fixture.ts';
 import { HOSTILE_NAME_STUB, PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../src/details/common/details-page.type.ts';
+import { STOP_TO_RUN_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC6 = { description: 'AC6', type: 'requirement' };
 
@@ -175,12 +176,14 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
     test(
       `GIVEN focus on Stop of a ${kind} card, a click in the frame its run ends does not relaunch it`,
       { annotation: AC6 },
-      async ({ detailsPage }): Promise<void> => {
+      async ({ detailsPage, pageClock }): Promise<void> => {
         const { name, taskId } = runningCard;
         const card = detailsPage.card(name);
         const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [runningCard] };
 
-        await test.step('WHEN the page shows the running card', async (): Promise<void> => detailsPage.open(state));
+        await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+        await test.step('AND shows the running card', async (): Promise<void> => detailsPage.open(state));
 
         await test.step('AND its Stop button is focused', async (): Promise<void> => detailsPage.focusButton(`Stop ${name}`));
 
@@ -191,14 +194,47 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
 
         await test.step('AND the click posted nothing', async (): Promise<void> => detailsPage.expectPosted([{ type: 'ready' }]));
 
-        await test.step('WHEN Run is clicked once stable, two frames later', async (): Promise<void> =>
-          detailsPage.pressButton(`Run ${name}`));
+        await test.step('WHEN the click hold has passed', async (): Promise<void> => pageClock.tick(STOP_TO_RUN_HOLD_MS));
+
+        await test.step('AND Run is clicked', async (): Promise<void> => detailsPage.pressButton(`Run ${name}`));
 
         await test.step('THEN the page posts run with its id', async (): Promise<void> =>
           detailsPage.expectLastPosted({ type: 'run', taskId }));
       }
     );
   }
+
+  test(
+    'GIVEN no focus on Stop, a click right after its run ends does not relaunch it, one after the hold does',
+    { annotation: AC6 },
+    async ({ detailsPage, pageClock }): Promise<void> => {
+      const { name, taskId } = TURBO_RUNNING_CARD;
+      const card = detailsPage.card(name);
+      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TURBO_RUNNING_CARD] };
+
+      await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+      await test.step('AND shows the running card', async (): Promise<void> => detailsPage.open(state));
+
+      await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState(taskId, STOPPED));
+
+      await test.step('AND Run is clicked right away', async (): Promise<void> => card.runButton.click());
+
+      await test.step('AND again just before the hold ends', async (): Promise<void> => {
+        await pageClock.tick(STOP_TO_RUN_HOLD_MS - 1);
+        await card.runButton.click();
+      });
+
+      await test.step('THEN neither click posted anything', async (): Promise<void> => detailsPage.expectPosted([{ type: 'ready' }]));
+
+      await test.step('WHEN the hold ends', async (): Promise<void> => pageClock.tick(1));
+
+      await test.step('AND Run is clicked', async (): Promise<void> => card.runButton.click());
+
+      await test.step('THEN the page posts run with its id', async (): Promise<void> =>
+        detailsPage.expectLastPosted({ type: 'run', taskId }));
+    }
+  );
 
   test(
     'GIVEN focus on Stop and a held Enter, the key repeat after the run ends does not relaunch it',

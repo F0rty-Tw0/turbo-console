@@ -3,6 +3,7 @@ import { fillRun } from './patch-run.ts';
 import type { DryRunPhase, RunView, TaskCard } from '../../bridge/common/details-state.type.ts';
 import type { CardRefs, FieldRow, RenderContext, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
 import { NONE_TEXT, RUNS_UNTIL_STOPPED_TEXT } from '../common/field-text.const.ts';
+import { STOP_ICON_ID } from '../common/run-view.const.ts';
 import { cacheText, definitionText, listText } from '../utils/field-text.util.ts';
 
 const runButtonFor = (card: TaskCard, context: RenderContext): RunButtonFactory => {
@@ -11,7 +12,7 @@ const runButtonFor = (card: TaskCard, context: RenderContext): RunButtonFactory 
   const stop = (): void => bridge.post({ type: 'stop', taskId });
   const run = (): void => bridge.post({ type: 'run', taskId });
   const runOrStop = (view: RunView): HTMLButtonElement => {
-    if (view.isRunning) return iconButton('debug-stop', `Stop ${name}`, stop);
+    if (view.isRunning) return iconButton(STOP_ICON_ID, `Stop ${name}`, stop);
 
     return iconButton('play', `Run ${name}`, run);
   };
