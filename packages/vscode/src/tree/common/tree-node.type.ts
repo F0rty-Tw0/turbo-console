@@ -25,7 +25,7 @@ export type TreeNode = {
  * What a node's rows are read with: the view mode, the runs, the model's view (built once per model), whether
  * package rows read their full names (`scopeShown`) or their bare labels, whether scripts are listed (`scriptsShown`),
  * the running task ids per folder root (`live`), the wall-clock time (`now`, the base of `RunEntry.launchedAt`) a
- * running task's elapsed time is counted to, and the tool a task's command runs (`tools`, memoized by `ModelViews`).
+ * running task's elapsed time is counted to, and the tool a task's command runs (`tools`).
  */
 export type RowContext = {
   readonly mode: TreeMode;
