@@ -22,6 +22,8 @@ export type {
 
 export type { WebviewSlots } from './shell/common/webview-html.type.ts';
 
+export { ICON_ID_PATTERN, TOOL_ICON_PREFIX } from './details/common/run-view.const.ts';
+
 export { durationText, elapsedText } from './bridge/utils/duration-text.util.ts';
 
 export { hiddenScriptsText } from './details/utils/field-text.util.ts';

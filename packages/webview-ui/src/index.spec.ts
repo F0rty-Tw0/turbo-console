@@ -1,7 +1,15 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
-import { durationText, elapsedText, hiddenScriptsText, renderWebviewHtml, webviewCsp } from './index.ts';
+import {
+  ICON_ID_PATTERN,
+  TOOL_ICON_PREFIX,
+  durationText,
+  elapsedText,
+  hiddenScriptsText,
+  renderWebviewHtml,
+  webviewCsp
+  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
+} from './index.ts';
 import type {
   DetailsState,
   DryRunPhase,
@@ -22,8 +30,16 @@ import type {
   // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 } from './index.ts';
 
-/** The host-facing API: the HTML renderer, CSP, duration formatters and hidden-scripts hint; everything else is wire-contract types. The webview-only bridge stays internal. */
-const RUNTIME_EXPORTS = ['durationText', 'elapsedText', 'hiddenScriptsText', 'renderWebviewHtml', 'webviewCsp'];
+/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern and tool-icon prefix constants; everything else is wire-contract types. The webview-only bridge stays internal. */
+const RUNTIME_EXPORTS = [
+  'ICON_ID_PATTERN',
+  'TOOL_ICON_PREFIX',
+  'durationText',
+  'elapsedText',
+  'hiddenScriptsText',
+  'renderWebviewHtml',
+  'webviewCsp'
+];
 
 describe('FEATURE: webview-ui package entry', () => {
   describe('GIVEN the package entry point', () => {
@@ -34,6 +50,8 @@ describe('FEATURE: webview-ui package entry', () => {
       const names = Object.keys(entry).toSorted();
 
       expect(names).toStrictEqual(RUNTIME_EXPORTS);
+      expect(entry.ICON_ID_PATTERN).toBe(ICON_ID_PATTERN);
+      expect(entry.TOOL_ICON_PREFIX).toBe(TOOL_ICON_PREFIX);
       expect(entry.durationText).toBe(durationText);
       expect(entry.elapsedText).toBe(elapsedText);
       expect(entry.hiddenScriptsText).toBe(hiddenScriptsText);
