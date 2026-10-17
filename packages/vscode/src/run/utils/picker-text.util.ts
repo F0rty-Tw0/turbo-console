@@ -5,8 +5,8 @@ import { NO_PACKAGE_TASKS_TEXT } from '../common/picker.const.ts';
 
 /**
  * Spec 1c-b §4.8: the hint a package with no turbo task shows while scripts are hidden; `count` is its offered scripts.
- * The webview keeps its own copy in `webview-ui/src/details/common/field-text.const.ts`; the two must be equal, since the
- * host cannot import the webview const.
+ * The webview keeps its own copy in `webview-ui/src/details/utils/field-text.util.ts`; the two must be equal, since the
+ * host cannot import the webview copy.
  */
 export const hiddenScriptsText = (count: number): string => `No turbo tasks in this package. Show scripts to see ${count}.`;
 
