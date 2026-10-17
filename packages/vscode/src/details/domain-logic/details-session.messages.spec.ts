@@ -208,6 +208,25 @@ describe('FEATURE: details session messages', () => {
       expect(ports.log).toHaveBeenCalledExactlyOnceWith(`Dropped a webview message: ${UNPRINTABLE_MESSAGE}`);
     });
 
+    it.each([
+      ['a junk', { type: 'nope', taskId: 'a#build' }],
+      ['a showOutput', { type: 'showOutput' }]
+    ])('WHEN %s message arrives THEN no state is built for it', async (_name, value) => {
+      vi.mocked(ports.scriptsShown).mockClear();
+
+      await session.receive(value);
+
+      expect(ports.scriptsShown).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a task message arrives THEN a state is built to check its task id', async () => {
+      vi.mocked(ports.scriptsShown).mockClear();
+
+      await session.receive({ type: 'copy', taskId: 'a#build' });
+
+      expect(ports.scriptsShown).toHaveBeenCalledOnce();
+    });
+
     it('WHEN disposed and a run of a panel task arrives THEN nothing executes', async () => {
       session.dispose();
       await session.receive({ type: 'run', taskId: 'a#build' });

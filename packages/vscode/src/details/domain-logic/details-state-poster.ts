@@ -1,4 +1,4 @@
-import type { DetailsState, HostMessage } from '@turbo-console/webview-ui';
+import type { DetailsState, HostMessage, WebviewMessage } from '@turbo-console/webview-ui';
 
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { PosterDeps } from '../common/details.type.ts';
@@ -33,7 +33,7 @@ export class DetailsStatePoster {
     }
   }
 
-  public state(): DetailsState | null {
+  private state(): DetailsState | null {
     const { key, roots, runs, ports, gate, dryRun } = this.deps;
     const entry = roots.get(key.root);
     const isStarted = gate.isStarted();
@@ -43,6 +43,15 @@ export class DetailsStatePoster {
     const base = { ...key, state: entry.state, dryRun: dryRun(), runs: runs.get, scriptsShown: ports.scriptsShown() };
 
     return toDetailsState(detailsInputOf(base, ports.now()));
+  }
+
+  /** The state a webview message is checked against: built only for a task message, `null` for any other. */
+  public stateFor(message: WebviewMessage | null): DetailsState | null {
+    const isTaskMessage = message !== null && 'taskId' in message;
+
+    if (!isTaskMessage) return null;
+
+    return this.state();
   }
 
   /** Builds the state only when it can be posted, so a hidden panel costs nothing on a repost. */

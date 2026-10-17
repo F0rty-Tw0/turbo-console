@@ -18,30 +18,31 @@ export const cardTaskIdsOf = (state: DetailsState | null): CardTaskIds => {
   return ids;
 };
 
-const acceptedMessage = (value: unknown, ids: CardTaskIds): WebviewMessage | null => {
-  const parsed = webviewMessageSchema.safeParse(value);
-
-  if (!parsed.success) return null;
-
-  const message = parsed.data;
-
-  if (!('taskId' in message)) return message;
-
-  return ids.all.has(message.taskId) ? message : null;
-};
-
 /**
- * The webview is a trust boundary: a value that fails the schema, or a task message whose `taskId` is not exactly one of
- * the panel's own task ids (`Set.has`, never a prefix match), is `null`.
- * Pass an empty set while the panel has no state, so every task message is dropped. Never throws: `safeParse` rethrows a
- * throwing getter or proxy trap, which is `null` too.
+ * The webview is a trust boundary: a value that fails the schema is `null`; only the keys the schema names survive.
+ * Never throws: `safeParse` rethrows a throwing getter or proxy trap, which is `null` too. Task ids are checked apart, by
+ * `checkedTaskMessage`, so a message that names no task never costs a state.
  */
-export const parseWebviewMessage = (value: unknown, ids: CardTaskIds): WebviewMessage | null => {
+export const parseWebviewMessage = (value: unknown): WebviewMessage | null => {
   try {
-    return acceptedMessage(value, ids);
+    const parsed = webviewMessageSchema.safeParse(value);
+
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }
+};
+
+/**
+ * `message`, unless it is a task message whose `taskId` is not exactly one of the panel's own task ids (`Set.has`, never
+ * a prefix match). Pass an empty set while the panel has no state, so every task message is dropped.
+ */
+export const checkedTaskMessage = (message: WebviewMessage | null, ids: CardTaskIds): WebviewMessage | null => {
+  const isTaskMessage = message !== null && 'taskId' in message;
+
+  if (!isTaskMessage) return message;
+
+  return ids.all.has(message.taskId) ? message : null;
 };
 
 /** The log text of a dropped message: its JSON cut to `DROPPED_MESSAGE_MAX`. Never throws, whatever the value holds. */

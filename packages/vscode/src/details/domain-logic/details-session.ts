@@ -7,7 +7,7 @@ import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { CommandMessage, DetailsPorts, DryRunResult, PanelKey, PosterGate } from '../common/details.type.ts';
 import { commandOf } from '../utils/details-command.util.ts';
-import { cardTaskIdsOf, droppedMessageText, parseWebviewMessage } from '../utils/details-message.util.ts';
+import { cardTaskIdsOf, checkedTaskMessage, droppedMessageText, parseWebviewMessage } from '../utils/details-message.util.ts';
 
 /**
  * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
@@ -63,13 +63,14 @@ export class DetailsSession {
     this.modelChanged();
   }
 
-  /** The webview is a trust boundary: a message is checked against the task ids of the state built now. */
+  /** The webview is a trust boundary: a message passes the schema first; a task message is then checked against the task ids of the state built now. */
   public async receive(value: unknown): Promise<void> {
     if (this.isDisposed) return;
 
-    const state = this.poster.state();
+    const parsed = parseWebviewMessage(value);
+    const state = this.poster.stateFor(parsed);
     const taskIds = cardTaskIdsOf(state);
-    const message = parseWebviewMessage(value, taskIds);
+    const message = checkedTaskMessage(parsed, taskIds);
 
     if (message === null) {
       const dropped = droppedMessageText(value);
