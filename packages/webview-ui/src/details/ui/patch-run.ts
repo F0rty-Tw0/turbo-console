@@ -1,7 +1,7 @@
 import { codicon, textElement } from './page-elements.ts';
 import type { RunView } from '../../bridge/common/details-state.type.ts';
 import type { CardIndex, CardRefs, RunTexts } from '../common/details-page.type.ts';
-import { STOP_ICON_ID, STOP_TO_RUN_HOLD_MS } from '../common/run-view.const.ts';
+import { RUN_SWAP_HOLD_MS, STOP_ICON_ID } from '../common/run-view.const.ts';
 import { safeColorVar } from '../utils/run-view.util.ts';
 
 const STOP_ICON = `.codicon-${STOP_ICON_ID}`;
@@ -49,21 +49,21 @@ export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLB
 };
 
 /**
- * Ignores clicks on `button` for `STOP_TO_RUN_HOLD_MS`. A click capture listener on the target runs before its own click
- * listener, and Enter or Space on a button arrives as a click, so a click meant for Stop that lands on Run is dropped.
+ * Ignores clicks on `button` for `RUN_SWAP_HOLD_MS`. A click capture listener on the target runs before its own click
+ * listener, and Enter or Space on a button arrives as a click, so a click meant for the old button is dropped.
  */
 const holdClicks = (button: HTMLButtonElement): void => {
   const ignore = (event: Event): void => event.stopImmediatePropagation();
   const release = (): void => button.removeEventListener('click', ignore, true);
 
   button.addEventListener('click', ignore, true);
-  setTimeout(release, STOP_TO_RUN_HOLD_MS);
+  setTimeout(release, RUN_SWAP_HOLD_MS);
 };
 
 /**
- * Replaces only `taskId`'s status and Run/Stop button. A Run button that replaces Stop ignores clicks for
- * `STOP_TO_RUN_HOLD_MS`, focused or not: VS Code can move focus off the page when a run stops, and a double-click's
- * second click comes long after a frame. A focused Run/Stop button hands focus to its replacement. A held Enter is the
+ * Replaces only `taskId`'s status and Run/Stop button. A Run that replaces Stop, or a Stop that replaces Run, ignores
+ * clicks for `RUN_SWAP_HOLD_MS`, focused or not: VS Code can move focus off the page when a run stops, and a
+ * double-click's second click comes long after a frame, so it would relaunch a stopped run or stop a fresh one. A focused Run/Stop button hands focus to its replacement. A held Enter is the
  * page's repeated-Enter keydown filter's job, since its repeats outlast the hold.
  */
 export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runTexts: RunTexts): void => {
@@ -74,9 +74,9 @@ export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runText
   const hadFocus = refs.runSlot.contains(document.activeElement);
   const hadStop = refs.runSlot.querySelector(STOP_ICON) !== null;
   const button = fillRun(refs, run, runTexts);
-  const isStopToRun = hadStop && !run.isRunning;
+  const isSwap = hadStop !== run.isRunning;
 
-  if (isStopToRun) holdClicks(button);
+  if (isSwap) holdClicks(button);
 
   if (hadFocus) button.focus();
 };

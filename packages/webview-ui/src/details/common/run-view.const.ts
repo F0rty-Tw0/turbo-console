@@ -7,5 +7,5 @@ export const COLOR_VAR_PATTERN = /^--vscode-[A-Za-z0-9-]+$/;
 /** The Stop button's codicon id; `patchRun` looks for it to spot a Stop→Run swap. */
 export const STOP_ICON_ID = 'debug-stop';
 
-/** Past a double-click's gap (about 300–500 ms), so its second click on Stop never lands on the Run swapped in. */
-export const STOP_TO_RUN_HOLD_MS = 500;
+/** Past a double-click's gap (about 300–500 ms), so its second click never lands on the Run or Stop swapped in. */
+export const RUN_SWAP_HOLD_MS = 500;

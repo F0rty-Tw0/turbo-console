@@ -13,6 +13,7 @@ import { packageWithTasks, taskNames } from './test/utils/details-state.spec.uti
 import type { WebviewMessage } from '../src/bridge/common/details-message.type.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../src/details/common/details-page.type.ts';
+import { RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC1 = { description: 'AC1', type: 'requirement' };
 const AC4 = { description: 'AC4', type: 'requirement' };
@@ -227,14 +228,21 @@ test.describe('FEATURE: package details page', () => {
     await test.step('THEN the page title has focus', async (): Promise<void> => expect(detailsPage.heading).toBeFocused());
   });
 
-  test('GIVEN every button, each click posts its message in order', async ({ detailsPage }): Promise<void> => {
+  test('GIVEN every button, each click posts its message in order', async ({ detailsPage, pageClock }): Promise<void> => {
     const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'failed' };
+
+    await pageClock.install();
 
     await test.step('WHEN the page shows a state with a dry-run banner', async (): Promise<void> => detailsPage.open(state));
 
     await test.step('AND Run is clicked', async (): Promise<void> => detailsPage.pressButton('Run build'));
 
     await test.step('AND the task starts running', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING));
+
+    await test.step('AND Stop shows and its click hold passes', async (): Promise<void> => {
+      await expect(detailsPage.card('build').runButton).toHaveAttribute('aria-label', 'Stop build');
+      await pageClock.tick(RUN_SWAP_HOLD_MS);
+    });
 
     await test.step('AND Stop is clicked', async (): Promise<void> => detailsPage.pressButton('Stop build'));
 

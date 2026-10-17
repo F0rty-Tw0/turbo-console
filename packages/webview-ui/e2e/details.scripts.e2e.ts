@@ -2,7 +2,7 @@ import { expect, test } from './details.fixture.ts';
 import { HOSTILE_NAME_STUB, PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../src/details/common/details-page.type.ts';
-import { STOP_TO_RUN_HOLD_MS } from '../src/details/common/run-view.const.ts';
+import { RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC6 = { description: 'AC6', type: 'requirement' };
 
@@ -144,8 +144,10 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
   test(
     'GIVEN a running script, the card offers Stop, then Run once the run ends',
     { annotation: AC6 },
-    async ({ detailsPage }): Promise<void> => {
+    async ({ detailsPage, pageClock }): Promise<void> => {
       const card = detailsPage.card('lint');
+
+      await pageClock.install();
 
       await test.step('WHEN the page shows the script card', async (): Promise<void> => detailsPage.open(SCRIPTS_ONLY_STATE));
 
@@ -157,7 +159,9 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
       await test.step('AND keeps Copy', async (): Promise<void> =>
         expect(card.copyButton).toHaveAttribute('aria-label', 'Copy command for lint'));
 
-      await test.step('WHEN Stop is clicked', async (): Promise<void> => detailsPage.pressButton('Stop lint'));
+      await test.step('WHEN the click hold has passed', async (): Promise<void> => pageClock.tick(RUN_SWAP_HOLD_MS));
+
+      await test.step('AND Stop is clicked', async (): Promise<void> => detailsPage.pressButton('Stop lint'));
 
       await test.step('THEN the page posts stop with its id', async (): Promise<void> =>
         detailsPage.expectLastPosted({ type: 'stop', taskId: 'web#lint' }));
@@ -194,7 +198,7 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
 
         await test.step('AND the click posted nothing', async (): Promise<void> => detailsPage.expectPosted([{ type: 'ready' }]));
 
-        await test.step('WHEN the click hold has passed', async (): Promise<void> => pageClock.tick(STOP_TO_RUN_HOLD_MS));
+        await test.step('WHEN the click hold has passed', async (): Promise<void> => pageClock.tick(RUN_SWAP_HOLD_MS));
 
         await test.step('AND Run is clicked', async (): Promise<void> => detailsPage.pressButton(`Run ${name}`));
 
@@ -221,7 +225,7 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
       await test.step('AND Run is clicked right away', async (): Promise<void> => card.runButton.click());
 
       await test.step('AND again just before the hold ends', async (): Promise<void> => {
-        await pageClock.tick(STOP_TO_RUN_HOLD_MS - 1);
+        await pageClock.tick(RUN_SWAP_HOLD_MS - 1);
         await card.runButton.click();
       });
 
