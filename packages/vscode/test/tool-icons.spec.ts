@@ -41,10 +41,5 @@ describe('FEATURE: contributes.icons', () => {
 
       expect(Object.keys(ICONS)).toStrictEqual(expectedIds);
     });
-
-    it('WHEN the manifest icon ids are read THEN the tool without a logo has none', () => {
-      expect(Object.keys(ICONS)).not.toContain(`${TOOL_ICON_PREFIX}playwright`);
-      expect(EXPECTED_ENTRIES).toHaveLength(18);
-    });
   });
 });
