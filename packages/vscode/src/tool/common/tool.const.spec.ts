@@ -58,10 +58,10 @@ describe('FEATURE: tool table', () => {
       expect(new Set(ids).size).toBe(19);
     });
 
-    it('WHEN the bins are read THEN each is lower-case and none repeats across the table', () => {
+    it('WHEN the bins are read THEN each is lower-case letters, digits and dashes, and none repeats across the table', () => {
       const bins = TOOLS.flatMap((tool) => tool.bins);
 
-      expect(bins.every((bin) => bin === bin.toLowerCase())).toBe(true);
+      expect(bins.every((bin) => /^[a-z0-9-]+$/.test(bin))).toBe(true);
       expect(new Set(bins).size).toBe(bins.length);
     });
 
