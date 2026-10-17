@@ -1,5 +1,5 @@
 import type { DryRunState, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
-import type { DetailsState, PackageDetails, TaskCard } from '@turbo-console/webview-ui';
+import type { DetailsState, PackageDetails, TaskCard, ToolView } from '@turbo-console/webview-ui';
 
 import { cardTasksOf } from './card-tasks.util.ts';
 import { dependentsOf } from './dependents.util.ts';
@@ -9,6 +9,7 @@ import { hasScriptBody } from '../../run/utils/run-refusal.util.ts';
 import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
 import { LOG_LINE_MAX } from '../../shared/common/text.const.ts';
 import { cleanLines } from '../../shared/utils/clean-text.util.ts';
+import { toolIconIdOf, toolOf } from '../../tool/utils/tool-of.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
 import type { CardSources, DetailsInput } from '../common/details.type.ts';
@@ -43,6 +44,17 @@ const cardCommandOf = (command: string | null): string | null => {
   return trimmed === '' ? null : cleaned;
 };
 
+/** Spec 1c-c §4.6: the tool the command runs; the icon id is `null` for a tool without a logo. */
+const toolViewOf = (command: string | null): ToolView | null => {
+  const tool = toolOf(command);
+
+  if (tool === null) return null;
+
+  const view: ToolView = { title: tool.title, iconId: toolIconIdOf(tool) };
+
+  return view;
+};
+
 /**
  * `runCommand` is what a user would type for a script; a turbo task has none, and neither has a script with an unsafe
  * name or no body, which Run and Copy refuse. The package-dir check stays with Run, as in the pickers.
@@ -64,6 +76,7 @@ const toTaskCard = (task: TaskNode, sources: CardSources): TaskCard => {
     isTurboTask: task.isTurboTask,
     persistent: task.persistent,
     runCommand,
+    tool: toolViewOf(task.command),
     run
   };
 

@@ -14,6 +14,7 @@ const BIDI = String.fromCodePoint(0x202e);
 const ENDED_AT = 1_700_000_000_000;
 
 const IDLE_ICON: IconSpec = { id: 'tools', color: null };
+const TYPESCRIPT_ICON: IconSpec = { id: 'turbo-console-typescript', color: null };
 const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
 const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 
@@ -67,10 +68,10 @@ describe('FEATURE: task rows of a package', () => {
           packageName: 'a',
           label: 'build',
           description: '',
-          icon: IDLE_ICON,
+          icon: TYPESCRIPT_ICON,
           contextValue: 'turboTask',
           collapsible: 'none',
-          tooltip: ['Command: tsc', 'Kind: task'],
+          tooltip: ['Command: tsc', 'Tool: TypeScript', 'Kind: task'],
           command: null
         }
       ]);
@@ -160,7 +161,7 @@ describe('FEATURE: task rows of a package', () => {
 
       const lines = factsTooltipOf(task);
 
-      expect(lines).toStrictEqual(['Builds the package', 'Command: tsc -b', 'Kind: atom-umbrella']);
+      expect(lines).toStrictEqual(['Builds the package', 'Command: tsc -b', 'Tool: TypeScript', 'Kind: atom-umbrella']);
     });
   });
 
@@ -176,7 +177,12 @@ describe('FEATURE: task rows of a package', () => {
 
   describe('GIVEN a package script no turbo config defines', () => {
     it('WHEN listed THEN it is an idle wrench row with no text that offers Run and Copy', () => {
-      const row = taskRowOf(ROW_SCOPE_STUB, packageWith([taskOf({ isTurboTask: false })]), 'a#build', rowContextOf('list'));
+      const row = taskRowOf(
+        ROW_SCOPE_STUB,
+        packageWith([taskOf({ isTurboTask: false, command: 'node build.js' })]),
+        'a#build',
+        rowContextOf('list')
+      );
 
       expect(row).toMatchObject({ label: 'build', description: '', icon: IDLE_ICON, contextValue: 'turboScript' });
     });

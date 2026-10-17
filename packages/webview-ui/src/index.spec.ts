@@ -25,6 +25,7 @@ import type {
   StateMessage,
   TaskCard,
   TaskMessage,
+  ToolView,
   WebviewMessage,
   WebviewSlots
   // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
@@ -73,6 +74,8 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<RunView['colorVar']>().toEqualTypeOf<string | null>();
       expectTypeOf<RunView['elapsedMs']>().toEqualTypeOf<number | null>();
       expectTypeOf<TaskCard['persistent']>().toEqualTypeOf<boolean>();
+      expectTypeOf<TaskCard['tool']>().toEqualTypeOf<ToolView | null>();
+      expectTypeOf<ToolView['iconId']>().toEqualTypeOf<string | null>();
     });
   });
 });

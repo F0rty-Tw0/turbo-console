@@ -15,7 +15,14 @@ const fulfillDetailsHtml = async (route: Route): Promise<void> => {
   const template = await readFile(join(DIST_DIR, 'index.html'), 'utf8');
   const nonce = randomBytes(16).toString('base64');
   const csp = webviewCsp(nonce, SHELL_ORIGIN);
-  const slots: WebviewSlots = { csp, nonce, scriptUri: 'main.js', styleUri: 'details.css', codiconUri: 'codicon.css' };
+  const slots: WebviewSlots = {
+    csp,
+    nonce,
+    scriptUri: 'main.js',
+    styleUri: 'details.css',
+    codiconUri: 'codicon.css',
+    toolIconsUri: 'tool-icons.css'
+  };
   const html = renderWebviewHtml(template, slots);
 
   await route.fulfill({ body: html, contentType: 'text/html' });
@@ -28,6 +35,8 @@ export const detailsDistMock = (): RouteHandler => {
     const fileName = url.pathname.slice(1);
 
     if (fileName === 'index.html') return fulfillDetailsHtml(route);
+
+    if (fileName === 'tool-icons.css') return route.fulfill({ status: 200, contentType: 'text/css', body: '' });
 
     await route.fulfill({ path: join(DIST_DIR, fileName) });
   };

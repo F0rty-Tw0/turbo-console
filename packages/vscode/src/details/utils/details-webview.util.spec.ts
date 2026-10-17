@@ -7,6 +7,7 @@ import type { HtmlAssets } from '../common/details-webview.type.ts';
 const TEMPLATE_LINES = [
   '<meta http-equiv="Content-Security-Policy" content="{{csp}}" />',
   '<link rel="stylesheet" href="{{codiconUri}}" />',
+  '<link rel="stylesheet" href="{{toolIconsUri}}" />',
   '<link rel="stylesheet" href="{{styleUri}}" />',
   '<script nonce="{{nonce}}" src="{{scriptUri}}"></script>'
 ];
@@ -35,9 +36,10 @@ describe('FEATURE: the details page html and panel options', () => {
       const html = detailsHtml(TEMPLATE, assets, 'n');
 
       expect(html).toContain('href="https://webview.test/details/codicon.css"');
+      expect(html).toContain('href="https://webview.test/details/tool-icons.css"');
       expect(html).toContain('href="https://webview.test/details/details.css"');
       expect(html).toContain('src="https://webview.test/details/main.js"');
-      expect(assets.uriOf).toHaveBeenCalledTimes(3);
+      expect(assets.uriOf).toHaveBeenCalledTimes(4);
     });
 
     it('WHEN a uri holds a quote THEN rendering throws instead of closing the attribute', () => {

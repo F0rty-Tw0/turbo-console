@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { runText, safeColorVar, safeIconId } from './run-view.util.ts';
+import { runText, safeColorVar, safeIconId, safeToolIconId } from './run-view.util.ts';
 import type { RunView } from '../../bridge/common/details-state.type.ts';
 import { RUN_VIEW_STUB } from '../test/stubs/details.stub.ts';
 
@@ -31,6 +31,21 @@ describe('FEATURE: run view values from the host', () => {
       ['a trailing newline', 'play\n']
     ])('WHEN it has %s THEN it is dropped', (_label, iconId) => {
       expect(safeIconId(iconId)).toBeNull();
+    });
+  });
+
+  describe('GIVEN a tool icon id', () => {
+    it('WHEN it is a codicon id with the tool prefix THEN it is kept', () => {
+      expect(safeToolIconId('turbo-console-vitest')).toBe('turbo-console-vitest');
+    });
+
+    it.each([
+      ['a codicon id without the prefix', 'tools'],
+      ['an invalid id', 'Bad Id!'],
+      ['the prefix alone', 'turbo-console-'],
+      ['null', null]
+    ])('WHEN it is %s THEN it is dropped', (_label, iconId) => {
+      expect(safeToolIconId(iconId)).toBeNull();
     });
   });
 

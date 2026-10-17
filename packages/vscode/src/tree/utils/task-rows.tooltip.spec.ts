@@ -41,13 +41,13 @@ describe('FEATURE: task row tooltip', () => {
     it('WHEN it is continuous THEN a kind line comes first', () => {
       const lines = tooltipLinesOf(taskOf({ persistent: true, command: 'vite' }));
 
-      expect(lines).toStrictEqual(['Continuous task: runs until stopped (persistent)', 'Command: vite', 'Kind: task']);
+      expect(lines).toStrictEqual(['Continuous task: runs until stopped (persistent)', 'Command: vite', 'Tool: Vite', 'Kind: task']);
     });
 
     it('WHEN it is a script THEN the package manager command, the script body and the kind follow the description', () => {
       const lines = tooltipLinesOf(taskOf({ isTurboTask: false, name: 'lint', description: 'Formats', command: 'eslint .' }));
 
-      expect(lines).toStrictEqual(['Formats', 'Command: pnpm run lint', 'Script: eslint .', 'Kind: task']);
+      expect(lines).toStrictEqual(['Formats', 'Command: pnpm run lint', 'Script: eslint .', 'Tool: ESLint', 'Kind: task']);
     });
 
     it('WHEN it is a script with no body THEN only the command and the kind are listed', () => {
@@ -59,13 +59,13 @@ describe('FEATURE: task row tooltip', () => {
     it('WHEN the script name is refused THEN there is no Command line but the body and kind stay', () => {
       const lines = tooltipLinesOf(taskOf({ isTurboTask: false, name: 'a b', command: 'eslint .' }));
 
-      expect(lines).toStrictEqual(['Script: eslint .', 'Kind: task']);
+      expect(lines).toStrictEqual(['Script: eslint .', 'Tool: ESLint', 'Kind: task']);
     });
 
     it('WHEN it is a turbo task with a body THEN the body is its Command', () => {
       const lines = tooltipLinesOf(taskOf({ command: 'tsc' }));
 
-      expect(lines).toStrictEqual(['Command: tsc', 'Kind: task']);
+      expect(lines).toStrictEqual(['Command: tsc', 'Tool: TypeScript', 'Kind: task']);
     });
 
     it('WHEN it is a plain turbo task THEN there is no kind line', () => {
@@ -100,6 +100,7 @@ describe('FEATURE: task row tooltip', () => {
       expect(lines).toStrictEqual([
         'Builds',
         'Command: tsc',
+        'Tool: TypeScript',
         'Kind: task',
         'Exit code: 0',
         'Duration: 3.2s',

@@ -17,7 +17,8 @@ export type {
   MissingPackage,
   PackageDetails,
   RunView,
-  TaskCard
+  TaskCard,
+  ToolView
 } from './bridge/common/details-state.type.ts';
 
 export type { WebviewSlots } from './shell/common/webview-html.type.ts';

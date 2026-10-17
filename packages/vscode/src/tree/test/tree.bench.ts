@@ -9,7 +9,10 @@ import { withScripts } from './utils/scripts-model.spec.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import type { LiveIds, RunEntry, RunLookup } from '../../run/common/run.type.ts';
+import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { devTurboPath } from '../../shared/test/utils/dev-turbo.spec.util.ts';
+import type { ToolLookup } from '../../tool/common/tool.type.ts';
+import { toolOf } from '../../tool/utils/tool-of.util.ts';
 import type { ModelView, ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
@@ -56,8 +59,9 @@ const stateOf = (model: WorkspaceModel): RootState => {
 const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsShown = false): BenchDescriptor => {
   const state = stateOf(model);
   const build = (): unknown => {
-    const views = new ModelViews();
+    const views = new ModelViews(toolOf);
     const viewOf: ModelViewsOf = (loaded, shown, live) => views.of(loaded, shown, live);
+    const tools: ToolLookup = (command) => views.toolOf(command);
     const context: RowContext = {
       mode,
       runs: NEVER_RAN,
@@ -65,7 +69,8 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsS
       scopeShown: false,
       scriptsShown,
       live: NOTHING_LIVE,
-      now: 0
+      now: 0,
+      tools
     };
 
     return allRows(state, context);
@@ -100,22 +105,9 @@ const diffBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
 
 /** A run of `task` that started 65 s before `TICK_NOW`, still going. */
 const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntry => {
-  const entry: RunEntry = {
-    root,
-    taskId: task.id,
-    packageName: pkg.name,
-    task,
-    state: 'running',
-    launchedAt: TICK_NOW - 65_000,
-    processStartedAt: TICK_NOW - 64_000,
-    endedAt: null,
-    exitCode: null,
-    stopRequested: false,
-    match: null,
-    matching: false,
-    force: false,
-    packageManager: null
-  };
+  const launchedAt = TICK_NOW - 65_000;
+  const processStartedAt = TICK_NOW - 64_000;
+  const entry: RunEntry = { ...RUN_ENTRY_STUB, root, taskId: task.id, packageName: pkg.name, task, launchedAt, processStartedAt };
 
   return entry;
 };
@@ -162,7 +154,7 @@ const isRunningRow = (row: TreeRow): boolean => row.contextValue === 'turboTask.
  */
 const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const state = stateOf(model);
-  const views = new ModelViews();
+  const views = new ModelViews(toolOf);
   const entries = firstRunning(model, views.of(model, false, new Set()));
 
   if (entries.length < TICKED_TASKS) throw new Error(`bench model has ${entries.length} runnable tasks`);
@@ -170,6 +162,7 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const byId = new Map(entries.map((entry): [string, RunEntry] => [entry.taskId, entry]));
   const runs: RunLookup = (_root, taskId) => byId.get(taskId);
   const viewOf: ModelViewsOf = (loaded, scriptsShown, live) => views.of(loaded, scriptsShown, live);
+  const tools: ToolLookup = (command) => views.toolOf(command);
   const running: ReadonlySet<string> = new Set(byId.keys());
   const runningIds: LiveIds = () => running;
   const context: RowContext = {
@@ -179,7 +172,8 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
     scopeShown: false,
     scriptsShown: false,
     live: runningIds,
-    now: TICK_NOW
+    now: TICK_NOW,
+    tools
   };
   const cache = new Map<string, TreeNode>();
   const nodes = entries.map((entry) => nodeFor(cache, entryRowOf(model, entry, context)));

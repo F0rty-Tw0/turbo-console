@@ -50,6 +50,7 @@ export const TASK_CARD_STUB: TaskCard = {
   isTurboTask: true,
   persistent: false,
   runCommand: null,
+  tool: null,
   run: RUN_VIEW_STUB
 };
 

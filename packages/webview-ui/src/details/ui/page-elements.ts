@@ -16,7 +16,7 @@ export const textElement = <TTag extends keyof HTMLElementTagNameMap>(
   return element;
 };
 
-/** `iconId` comes from a literal here or the host's fixed run-view table; one that is not a codicon id adds no class. */
+/** `iconId` comes from a literal here, the host's fixed run-view table, or a `ToolView.iconId` that passed `safeToolIconId`; one that is not a codicon id adds no class. */
 export const codicon = (iconId: string): HTMLSpanElement => {
   const icon = document.createElement('span');
   const safeId = safeIconId(iconId);
