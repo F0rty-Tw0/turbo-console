@@ -98,6 +98,20 @@ describe('FEATURE: package details with scripts', () => {
       expect(cardOf(noneDetails, 'a#none').runCommand).toBeNull();
     });
 
+    it('WHEN a script body holds a bidi override and a line break THEN the card command drops the override and keeps the break', () => {
+      const hostile: TaskNode = { ...LINT_SCRIPT, command: 'eslint‮ .\n--fix' };
+      const hostileDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [hostile] }), true)));
+
+      expect(cardOf(hostileDetails, 'a#lint').command).toBe('eslint .\n--fix');
+    });
+
+    it('WHEN a script body is control characters only THEN the card command is null, so its field reads none', () => {
+      const controls: TaskNode = { ...LINT_SCRIPT, command: '‮\u0007' };
+      const controlsDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [controls] }), true)));
+
+      expect(cardOf(controlsDetails, 'a#lint').command).toBeNull();
+    });
+
     it('WHEN the root uses another package manager THEN the run command names it', () => {
       const yarn = packageOf(toDetailsState(inputOf(modelWith(MIXED_PACKAGE, 'yarn'), true)));
 

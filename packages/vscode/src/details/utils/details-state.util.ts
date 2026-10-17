@@ -7,6 +7,8 @@ import { toRunView } from './run-view.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { hasScriptBody } from '../../run/utils/run-refusal.util.ts';
 import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
+import { LOG_LINE_MAX } from '../../shared/common/text.const.ts';
+import { cleanLines } from '../../shared/utils/clean-text.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
 import type { CardSources, DetailsInput } from '../common/details.type.ts';
@@ -28,6 +30,15 @@ const reloadErrorOf = (state: RootState): string | null => {
   return MESSAGE_TEXTS['load-with-model'];
 };
 
+/** Repo text, cleaned as lines for the page; a command with nothing visible left is `null`, so its field reads "none". */
+const cardCommandOf = (command: string | null): string | null => {
+  if (command === null) return null;
+
+  const cleaned = cleanLines(command, LOG_LINE_MAX);
+
+  return cleaned === '' ? null : cleaned;
+};
+
 /**
  * `runCommand` is what a user would type for a script; a turbo task has none, and neither has a script with an unsafe
  * name or no body, which Run and Copy refuse. The package-dir check stays with Run, as in the pickers.
@@ -41,7 +52,7 @@ const toTaskCard = (task: TaskNode, sources: CardSources): TaskCard => {
   const card: TaskCard = {
     taskId: task.id,
     name: task.name,
-    command: task.command,
+    command: cardCommandOf(task.command),
     description: task.description,
     dependents: dependents.get(task.id) ?? [],
     definition: dryRunState?.definition ?? null,
