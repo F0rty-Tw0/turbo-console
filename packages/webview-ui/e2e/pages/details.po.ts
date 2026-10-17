@@ -24,7 +24,9 @@ export class DetailsPage {
   public readonly statuses: Locator;
   public readonly images: Locator;
   public readonly missingNotice: Locator;
-  public readonly noTasksNotice: Locator;
+  public readonly noCardsNotice: Locator;
+  public readonly sectionTitles: Locator;
+  public readonly cardTitles: Locator;
   public readonly reloadBanner: Locator;
   public readonly dryRunBanner: Locator;
   public readonly banners: Locator;
@@ -44,7 +46,9 @@ export class DetailsPage {
     this.statuses = page.locator('.run-status');
     this.images = page.locator('img');
     this.missingNotice = page.getByText('Package no longer in the workspace');
-    this.noTasksNotice = page.getByText('No tasks in this package.', { exact: true });
+    this.noCardsNotice = page.locator('.no-tasks');
+    this.sectionTitles = page.getByRole('heading', { level: 2 });
+    this.cardTitles = page.getByRole('heading', { level: 3 });
     this.reloadBanner = page.locator('.banner-warning');
     this.dryRunBanner = page.locator('.banner-error');
     this.banners = page.locator('.banner');

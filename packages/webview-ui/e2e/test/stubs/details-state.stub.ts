@@ -12,6 +12,24 @@ export const RUN_VIEW_STUB: RunView = {
   isIdle: true
 };
 
+const NOT_IDLE_RUN_VIEW: RunView = { ...RUN_VIEW_STUB, isIdle: false };
+
+export const RUNNING_RUN_VIEW_STUB: RunView = {
+  ...NOT_IDLE_RUN_VIEW,
+  iconId: 'sync',
+  text: 'running',
+  isRunning: true,
+  elapsedMs: 0,
+  isSpinning: true
+};
+
+export const STOPPED_RUN_VIEW_STUB: RunView = {
+  ...NOT_IDLE_RUN_VIEW,
+  iconId: 'debug-stop',
+  colorVar: '--vscode-disabledForeground',
+  text: 'stopped · 3.0s'
+};
+
 export const TASK_DEFINITION_STUB: TaskDefinition = {
   inputs: ['src/**'],
   outputs: ['dist/**'],
@@ -51,3 +69,6 @@ export const PACKAGE_DETAILS_STUB: PackageDetails = {
 };
 
 export const MISSING_PACKAGE_STUB: MissingPackage = { kind: 'missing', root: '/repo', packageName: 'web' };
+
+/** Repo text that would run script if the page ever wrote it as HTML. */
+export const HOSTILE_NAME_STUB: string = '<img src=x onerror=alert(1)>';

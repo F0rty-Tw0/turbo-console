@@ -1,11 +1,12 @@
 import type { PackageManagerName, TaskNode, WorkspaceModel } from '@turbo-console/core';
+import { hiddenScriptsText } from '@turbo-console/webview-ui';
 import type { DetailsState, PackageDetails, TaskCard } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { toDetailsState } from './details-state.util.ts';
 import type { RunEntry, RunLookup, RunState } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
-import { emptyTasksText, hiddenScriptsText } from '../../run/utils/picker-text.util.ts';
+import { emptyTasksText } from '../../run/utils/picker-text.util.ts';
 import { PACKAGE_MANAGER_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { DetailsInput } from '../common/details.type.ts';
 import {
@@ -95,6 +96,27 @@ describe('FEATURE: package details with scripts', () => {
       const noneDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [none] }), true)));
 
       expect(cardOf(noneDetails, 'a#none').runCommand).toBeNull();
+    });
+
+    it('WHEN a script body holds a bidi override and a line break THEN the card command drops the override and keeps the break', () => {
+      const hostile: TaskNode = { ...LINT_SCRIPT, command: 'eslint‮ .\n--fix' };
+      const hostileDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [hostile] }), true)));
+
+      expect(cardOf(hostileDetails, 'a#lint').command).toBe('eslint .\n--fix');
+    });
+
+    it('WHEN a script body is control characters only THEN the card command is null, so its field reads none', () => {
+      const controls: TaskNode = { ...LINT_SCRIPT, command: '‮\u0007' };
+      const controlsDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [controls] }), true)));
+
+      expect(cardOf(controlsDetails, 'a#lint').command).toBeNull();
+    });
+
+    it('WHEN a script body is whitespace and control characters only THEN the card command is null too', () => {
+      const blank: TaskNode = { ...LINT_SCRIPT, command: ' \n\t\u0007 ' };
+      const blankDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [blank] }), true)));
+
+      expect(cardOf(blankDetails, 'a#lint').command).toBeNull();
     });
 
     it('WHEN the root uses another package manager THEN the run command names it', () => {

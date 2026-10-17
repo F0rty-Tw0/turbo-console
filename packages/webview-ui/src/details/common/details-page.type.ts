@@ -14,14 +14,12 @@ export type RunTexts = {
 };
 
 /**
- * The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. A card that is no turbo task
- * shows no status while idle and never a Run button. `title` takes focus when a focused Stop button goes with no
- * replacement.
+ * The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. A script card shows no status
+ * while idle.
  */
 export type CardRefs = {
   readonly taskId: string;
   readonly isTurboTask: boolean;
-  readonly title: HTMLElement;
   readonly status: HTMLElement;
   readonly runSlot: HTMLElement;
   readonly runButton: RunButtonFactory;
@@ -36,8 +34,8 @@ export type RenderedCard = {
 };
 
 /**
- * Focusable controls by focus key (`run:<taskId>`, `copy:<taskId>`, `refresh`, `open`, `retry-<scope>`), built by
- * `render`. A re-render finds the focused control here by identity, never through a selector or a dataset key.
+ * Focusable controls by focus key (`run:<taskId>`, `copy:<taskId>`, `refresh`, `open`, `retry-<scope>`, `title`), built
+ * by `render`. A re-render finds the focused control here by identity, never through a selector or a dataset key.
  */
 export type FocusTargets = Map<string, HTMLElement>;
 

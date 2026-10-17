@@ -1,7 +1,20 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import type { HostMessage } from '../../src/bridge/common/details-message.type.ts';
+import type { RunView } from '../../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../../src/details/common/details-page.type.ts';
+
+/** Dispatches the message event and clicks the focused control in one task, so both land in the same frame. */
+const deliverAndClickFocused = (message: HostMessage): void => {
+  const event = new MessageEvent('message', { data: message });
+
+  dispatchEvent(event);
+
+  const focused = document.activeElement;
+
+  if (focused instanceof HTMLElement) focused.click();
+};
 
 /** One task card, found by its exact title text, never by a selector built from the name. */
 export class TaskCardSection {
@@ -14,7 +27,7 @@ export class TaskCardSection {
   private readonly statusIcon: Locator;
 
   public constructor(page: Page, taskName: string) {
-    const heading = page.getByRole('heading', { level: 2, name: taskName, exact: true });
+    const heading = page.getByRole('heading', { level: 3, name: taskName, exact: true });
 
     this.root = page.locator('section.card').filter({ has: heading });
     this.title = this.root.locator('.card-title');
@@ -22,6 +35,35 @@ export class TaskCardSection {
     this.copyButton = this.root.locator('.card-actions > button');
     this.status = this.root.locator('.run-status');
     this.statusIcon = this.status.locator('.codicon');
+  }
+
+  /** Puts Enter down on the focused control and keeps it held. */
+  public async holdEnter(): Promise<void> {
+    await this.root.page().keyboard.down('Enter');
+  }
+
+  /** Presses and releases Enter on the focused control, which a button turns into a click with `detail` 0. */
+  public async pressEnter(): Promise<void> {
+    await this.root.page().keyboard.press('Enter');
+  }
+
+  /** Puts the held Enter down again, which Playwright sends as a repeat (`event.repeat` true). */
+  public async repeatEnter(): Promise<void> {
+    await this.root.page().keyboard.down('Enter');
+  }
+
+  /** Delivers this card's runState, then clicks the focused control before the page can paint a frame. */
+  public async sendRunStateAndClickFocused(taskId: string, run: RunView): Promise<void> {
+    const message: HostMessage = { type: 'runState', taskId, run };
+
+    await this.root.page().evaluate(deliverAndClickFocused, message);
+  }
+
+  /** The value of field `term` as rendered, line breaks included, unlike `toHaveText`, which collapses whitespace. */
+  public async expectRenderedField(term: string, renderedText: string): Promise<void> {
+    const value = this.root.getByText(term, { exact: true }).locator('+ dd');
+
+    await expect(value).toHaveJSProperty('innerText', renderedText);
   }
 
   public async expectFields(rows: FieldRow[]): Promise<void> {
@@ -39,6 +81,10 @@ export class TaskCardSection {
   /** Every item of the badge row, badges and notes alike, in order. */
   public async expectBadgeRow(texts: string[]): Promise<void> {
     await expect(this.root.locator('.badges > li')).toHaveText(texts);
+  }
+
+  public async expectRunButtonUnfocused(): Promise<void> {
+    await expect(this.runButton).not.toBeFocused();
   }
 
   /** The status line has no icon and no text. */

@@ -2,6 +2,7 @@ import type { CardIndex, FocusTargets, RenderedPage } from './common/details-pag
 import { render } from './ui/details-page.ts';
 import { focusedKey, refocus } from './ui/focus-targets.ts';
 import { patchRun } from './ui/patch-run.ts';
+import { holdPointerClicks, installRunClickHold } from './ui/run-click-hold.ts';
 import { RunClock } from './ui/run-clock.ts';
 import { isHostMessage } from './utils/host-message.util.ts';
 import type { DetailsState } from '../bridge/common/details-state.type.ts';
@@ -26,8 +27,18 @@ const restoreScroll = (state: DetailsState): void => {
   scrollTo(0, savedScrollY);
 };
 
+/**
+ * A re-render of a page with cards holds pointer clicks: a card can leave (a kept script card that stopped while
+ * scripts are hidden) and focus fall back to the title, so the page scrolls and another Run can land under the pointer.
+ * A full state inside a swap's hold rebuilds the swapped button without its full hold, so a key press on it is live
+ * again: accepted, since that needs a dry run or a model reload to coincide with a run ending, and the pointer hold
+ * still covers a double-click's second click.
+ */
 const showState = (state: DetailsState): void => {
   const focusKey = focusedKey(page.focusTargets);
+  const hadCards = page.cards.size > 0;
+
+  if (hadCards) holdPointerClicks();
 
   page = render(root, state, bridge, clock);
   refocus(page.focusTargets, focusKey);
@@ -54,7 +65,14 @@ const saveScroll = (): void => {
   bridge.saveScroll(scrollY);
 };
 
+// A held Enter repeats its click; a repeat must never hit a Run/Stop button swapped in under it.
+const ignoreRepeatedEnter = (event: KeyboardEvent): void => {
+  if (event.repeat && event.key === 'Enter') event.preventDefault();
+};
+
 document.body.append(root);
+addEventListener('keydown', ignoreRepeatedEnter, true);
+installRunClickHold();
 addEventListener('scroll', saveScroll, { passive: true });
 bridge.onMessage(receive);
 bridge.ready();

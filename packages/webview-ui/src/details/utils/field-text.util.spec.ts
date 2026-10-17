@@ -1,16 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { cacheText, definitionText, listText } from './field-text.util.ts';
+import { cacheText, definitionText, hiddenScriptsText, listText, noCardsText } from './field-text.util.ts';
 
 const COMMAND = 'vite build';
 
-const COMMAND_TASK = { command: COMMAND, isTurboTask: true };
+const HIDDEN_SCRIPTS = { scriptsShown: false, hiddenScriptCount: 3 };
 
-const NO_COMMAND_TASK = { command: null, isTurboTask: true };
+const HIDDEN_NONE = { scriptsShown: false, hiddenScriptCount: 0 };
 
-const NOT_TURBO_TASK = { command: COMMAND, isTurboTask: false };
-
-const NOT_TURBO_NO_COMMAND_TASK = { command: null, isTurboTask: false };
+const SHOWN_WITH_COUNT = { scriptsShown: true, hiddenScriptCount: 3 };
 
 describe('FEATURE: field texts', () => {
   describe('GIVEN an empty list', () => {
@@ -59,35 +57,41 @@ describe('FEATURE: field texts', () => {
 
   describe('GIVEN a task with no command and no definition', () => {
     it('WHEN its definition text is read during a dry run THEN it says the task runs its dependencies', () => {
-      expect(definitionText(NO_COMMAND_TASK, 'loading')).toBe('No command (runs its dependencies)');
+      expect(definitionText(null, 'loading')).toBe('No command (runs its dependencies)');
     });
   });
 
   describe('GIVEN a task with a command and no definition', () => {
     it('WHEN the dry run is loading THEN it reads "loading…"', () => {
-      expect(definitionText(COMMAND_TASK, 'loading')).toBe('loading…');
+      expect(definitionText(COMMAND, 'loading')).toBe('loading…');
     });
 
     it('WHEN the dry run failed THEN it reads "—"', () => {
-      expect(definitionText(COMMAND_TASK, 'failed')).toBe('—');
+      expect(definitionText(COMMAND, 'failed')).toBe('—');
     });
 
     it('WHEN the dry run is ready THEN it reads "—"', () => {
-      expect(definitionText(COMMAND_TASK, 'ready')).toBe('—');
+      expect(definitionText(COMMAND, 'ready')).toBe('—');
     });
   });
 
-  describe('GIVEN a task no turbo config defines', () => {
-    it('WHEN the dry run is loading THEN it says it is not a turbo task', () => {
-      expect(definitionText(NOT_TURBO_TASK, 'loading')).toBe('Not a turbo task: no turbo.json defines it');
+  describe('GIVEN a hidden-scripts count', () => {
+    it('WHEN the hint is read THEN it names the count in the spec words', () => {
+      expect(hiddenScriptsText(3)).toBe('No turbo tasks in this package. Show scripts to see 3.');
+    });
+  });
+
+  describe('GIVEN a package with no card', () => {
+    it('WHEN scripts are hidden and some are offered THEN it reads the hidden-scripts hint with their count', () => {
+      expect(noCardsText(HIDDEN_SCRIPTS)).toBe('No turbo tasks in this package. Show scripts to see 3.');
     });
 
-    it('WHEN the dry run is ready THEN it says it is not a turbo task', () => {
-      expect(definitionText(NOT_TURBO_TASK, 'ready')).toBe('Not a turbo task: no turbo.json defines it');
+    it('WHEN scripts are hidden and none is offered THEN it says the package has no tasks', () => {
+      expect(noCardsText(HIDDEN_NONE)).toBe('No tasks in this package.');
     });
 
-    it('WHEN it also has no command THEN it says it is not a turbo task, not that it has no command', () => {
-      expect(definitionText(NOT_TURBO_NO_COMMAND_TASK, 'ready')).toBe('Not a turbo task: no turbo.json defines it');
+    it('WHEN scripts are shown THEN it says the package has no tasks, whatever the count', () => {
+      expect(noCardsText(SHOWN_WITH_COUNT)).toBe('No tasks in this package.');
     });
   });
 });

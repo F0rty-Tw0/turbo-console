@@ -12,6 +12,7 @@ body {
 
 h1,
 h2,
+h3,
 p,
 ul,
 dl,
@@ -159,10 +160,27 @@ ul {
   color: var(--vscode-errorForeground);
 }
 
+.card-sections {
+  display: grid;
+  gap: 16px;
+  padding-top: 12px;
+}
+
+.card-section {
+  display: grid;
+  gap: 8px;
+}
+
+.section-title {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+  font-size: 1em;
+  font-weight: 600;
+}
+
 .cards {
   display: grid;
   gap: 12px;
-  padding-top: 12px;
 }
 
 .card {
@@ -203,6 +221,11 @@ ul {
 
 .fields dt {
   color: var(--vscode-descriptionForeground);
+}
+
+/* A multi-line script shows its real line breaks. */
+.fields dd {
+  white-space: pre-wrap;
 }
 
 .missing,

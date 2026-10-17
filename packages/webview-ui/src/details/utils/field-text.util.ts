@@ -1,15 +1,15 @@
-import type { CacheStatus, DryRunPhase, TaskCard } from '../../bridge/common/details-state.type.ts';
+import type { CacheStatus, DryRunPhase, PackageDetails } from '../../bridge/common/details-state.type.ts';
 import {
   CACHE_TEXTS,
   DEFAULT_INPUTS_TEXT,
   LOADING_TEXT,
   NONE_TEXT,
-  NOT_TURBO_TASK_TEXT,
   NO_COMMAND_TEXT,
+  NO_TASK_CARDS_TEXT,
   UNAVAILABLE_TEXT
 } from '../common/field-text.const.ts';
 
-type DefinitionSource = Pick<TaskCard, 'command' | 'isTurboTask'>;
+type NoCardsSource = Pick<PackageDetails, 'scriptsShown' | 'hiddenScriptCount'>;
 
 const pendingText = (phase: DryRunPhase): string => {
   if (phase === 'loading') return LOADING_TEXT;
@@ -32,11 +32,24 @@ export const cacheText = (status: CacheStatus | null, phase: DryRunPhase): strin
   return pendingText(phase);
 };
 
-/** What a card without a turbo definition shows in its place; the dry run never asks for a task turbo does not define. */
-export const definitionText = (card: DefinitionSource, phase: DryRunPhase): string => {
-  if (!card.isTurboTask) return NOT_TURBO_TASK_TEXT;
-
-  if (card.command === null) return NO_COMMAND_TEXT;
+/** What a turbo card without a definition shows in its place; a script card has no definition rows. */
+export const definitionText = (command: string | null, phase: DryRunPhase): string => {
+  if (command === null) return NO_COMMAND_TEXT;
 
   return pendingText(phase);
+};
+
+/**
+ * Spec 1c-b §4.8 and §4.10: the hint a package with no card shows while scripts are hidden, here and in the host's
+ * pickers; `count` is its offered scripts.
+ */
+export const hiddenScriptsText = (count: number): string => `No turbo tasks in this package. Show scripts to see ${count}.`;
+
+/** What a package with no card shows: how many scripts the toggle hides, when it hides any, else that it has no task. */
+export const noCardsText = (state: NoCardsSource): string => {
+  const hidesScripts = !state.scriptsShown && state.hiddenScriptCount > 0;
+
+  if (hidesScripts) return hiddenScriptsText(state.hiddenScriptCount);
+
+  return NO_TASK_CARDS_TEXT;
 };

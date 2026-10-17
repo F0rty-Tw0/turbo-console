@@ -1,7 +1,8 @@
 import type { PackageNode, TaskNode } from '@turbo-console/core';
+import { hiddenScriptsText } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { emptyTasksText, hiddenScriptsText } from './picker-text.util.ts';
+import { emptyTasksText } from './picker-text.util.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { NO_PACKAGE_TASKS_TEXT } from '../common/picker.const.ts';
 
@@ -16,12 +17,6 @@ const packageOf = (tasks: TaskNode[]): PackageNode => {
 
   return pkg;
 };
-
-describe('FEATURE: hidden scripts text', () => {
-  it('WHEN the count is 2 THEN the hint names it', () => {
-    expect(hiddenScriptsText(2)).toBe('No turbo tasks in this package. Show scripts to see 2.');
-  });
-});
 
 describe('FEATURE: text of a package with no task to pick', () => {
   const scripts = [scriptNamed('lint'), scriptNamed('fmt'), scriptNamed('a b')];
