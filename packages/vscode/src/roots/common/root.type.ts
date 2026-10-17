@@ -23,6 +23,7 @@ export type LoadedModel = {
   readonly binary: TurboBinary;
   readonly model: WorkspaceModel;
   readonly fromCache: boolean;
+  /** `false` on a cached model published before its freshness check; `true` once that check passed, and on a full load. */
   readonly isFresh: boolean;
 };
 

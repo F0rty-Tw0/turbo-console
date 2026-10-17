@@ -9,6 +9,9 @@ import { deferredPorts, flushSettles, runAt } from '../test/utils/deferred-ports
 import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
+/** What `loadRoot` publishes before the freshness check, and what it returns once the check passed. */
+const UNCHECKED_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
+const FRESH_CACHED: LoadedModel = { ...UNCHECKED_CACHED, isFresh: true };
 const ABORT_ERROR = new TurboException('failed', 'This operation was aborted');
 const ABORTED: LoadFailure = loadFailureOf('load', ABORT_ERROR);
 const RUN_ERROR = new TurboException('failed', 'boom');
@@ -115,6 +118,29 @@ describe('FEATURE: settling a root load', () => {
     await flushSettles();
 
     expect(record).toMatchObject({ outcome: 'model', cacheFresh: false });
+  });
+
+  describe('GIVEN a cache-first load that publishes a cache before its freshness check', () => {
+    beforeEach(() => {
+      coordinator.show();
+      runAt(deferred, 0).publish(UNCHECKED_CACHED);
+    });
+
+    it('WHEN the load returns it checked fresh as a new object THEN it is applied once', async () => {
+      runAt(deferred, 0).settle(FRESH_CACHED);
+      await flushSettles();
+
+      expect(deferred.ports.apply).toHaveBeenCalledExactlyOnceWith(UNCHECKED_CACHED);
+    });
+
+    it('WHEN the load returns it checked fresh THEN its record reads a fresh cache', async () => {
+      const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
+
+      runAt(deferred, 0).settle(FRESH_CACHED);
+      await flushSettles();
+
+      expect(record).toStrictEqual({ mode: 'cache-first', startedAt: 1_000, outcome: 'model', cacheFresh: true });
+    });
   });
 
   describe('GIVEN a loaded root whose reload after a hidden change failed', () => {

@@ -9,7 +9,6 @@ import { deferredPorts, flushSettles, runAt, settledFlag } from '../test/utils/d
 import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
-const FRESH_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true };
 const ABORT_ERROR = new TurboException('failed', 'This operation was aborted');
 const ABORTED: LoadFailure = loadFailureOf('load', ABORT_ERROR);
 
@@ -211,15 +210,6 @@ describe('FEATURE: load coordinator', () => {
       expect(deferred.ports.apply).toHaveBeenNthCalledWith(1, STALE_CACHED);
       expect(deferred.ports.apply).toHaveBeenNthCalledWith(2, LOADED_MODEL_STUB);
     });
-
-    it('WHEN a fresh cache is published and returned as the same object THEN it is applied once', async () => {
-      coordinator.show();
-      runAt(deferred, 0).publish(FRESH_CACHED);
-      runAt(deferred, 0).settle(FRESH_CACHED);
-      await flushSettles();
-
-      expect(deferred.ports.apply).toHaveBeenCalledExactlyOnceWith(FRESH_CACHED);
-    });
   });
 
   describe('GIVEN a cache-first load that starts', () => {
@@ -234,16 +224,6 @@ describe('FEATURE: load coordinator', () => {
         outcome: null,
         cacheFresh: null
       });
-    });
-
-    it('WHEN a fresh cache answers THEN that same record reads a model from a fresh cache', async () => {
-      const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
-
-      runAt(deferred, 0).publish(FRESH_CACHED);
-      runAt(deferred, 0).settle(FRESH_CACHED);
-      await flushSettles();
-
-      expect(record).toStrictEqual({ mode: 'cache-first', startedAt: 1_000, outcome: 'model', cacheFresh: true });
     });
 
     it('WHEN no cache answers and the load fails THEN the record reads an error with no fresh cache', async () => {

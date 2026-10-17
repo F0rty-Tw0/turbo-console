@@ -20,10 +20,13 @@ export type CacheEntry = {
   readonly model: WorkspaceModel;
 };
 
-/** A cached model, and whether its keyed files still hash to the key it was stored with. */
+/**
+ * A cached model, read without hashing, and `isFresh`, which hashes its keyed files now and resolves whether they still
+ * give the key it was stored with.
+ */
 export type CachedWorkspace = {
   readonly model: WorkspaceModel;
-  readonly isFresh: boolean;
+  readonly isFresh: () => Promise<boolean>;
 };
 
 /** What a store needs from before the spawn: when it started and the root keyed files as hashed then. */
