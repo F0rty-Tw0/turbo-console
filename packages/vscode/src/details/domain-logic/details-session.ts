@@ -114,8 +114,10 @@ export class DetailsSession {
     await this.dryRun.whenIdle();
   }
 
-  /** Posts the current state when the panel is shown and its page is ready. */
+  /** Posts the current state when the panel is shown and its page is ready; a disposed panel posts nothing. */
   public publish(): void {
+    if (this.isDisposed) return;
+
     this.poster.publish();
   }
 
