@@ -1,7 +1,8 @@
 import type { HostMessage, StateMessage } from '@turbo-console/webview-ui';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DetailsPanels } from './details-panels.ts';
+import { DetailsSession } from './details-session.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
@@ -82,6 +83,25 @@ describe('FEATURE: details panels follow the scripts toggle', () => {
 
       expect(statesOf('a')).toHaveLength(2);
       expect(statesOf('web')).toHaveLength(2);
+    });
+  });
+
+  describe('GIVEN a panel whose publish throws', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('WHEN refreshAll is called THEN the next panel still posts and the failure is logged', () => {
+      const broken = (): void => {
+        throw new Error('publish broke');
+      };
+
+      vi.spyOn(DetailsSession.prototype, 'publish').mockImplementationOnce(broken);
+      panels.refreshAll();
+
+      expect(statesOf('a')).toHaveLength(1);
+      expect(statesOf('web')).toHaveLength(2);
+      expect(fakes.log).toHaveBeenCalledWith(expect.stringContaining('publish broke'));
     });
   });
 

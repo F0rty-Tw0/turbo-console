@@ -1,6 +1,7 @@
 import { detailsApiOf } from './details-api.ts';
 import { DetailsSession } from './details-session.ts';
 import { fileLookupOf, panelPortsOf } from './panel-ports.ts';
+import { publishEach } from './publish-each.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { packageOfFile } from '../../run/domain-logic/pick-for-file.ts';
@@ -91,9 +92,9 @@ export class DetailsPanels {
     }
   }
 
-  /** Asks every open panel to post a fresh state; a hidden or not ready one posts nothing. */
+  /** Asks every open panel to post a fresh state; a hidden or not ready one posts nothing, one that throws is logged. */
   public refreshAll(): void {
-    for (const panel of this.panels.values()) panel.session.publish();
+    publishEach(this.panels.values(), this.deps.host.log);
   }
 
   public api(): DetailsApi {
