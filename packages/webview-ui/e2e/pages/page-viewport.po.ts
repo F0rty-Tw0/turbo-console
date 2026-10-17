@@ -14,6 +14,21 @@ const buttonLabelAt = ({ x, y }: ViewportPoint): string | null => {
 const ARM_RESIZE_WAIT = `window.__resized = new Promise((resolve) =>
   addEventListener('resize', resolve, { once: true })); undefined`;
 
+/**
+ * Registered before the page's scripts, so it runs before their `resize` listeners: once `window.__catchResize` is
+ * set, it keeps every `resize` event from them and resolves `window.__resizeCaught`.
+ */
+const RESIZE_CATCHER = `addEventListener('resize', (event) => {
+  if (window.__catchResize === undefined) return;
+  event.stopImmediatePropagation();
+  window.__catchResize();
+}, true);`;
+
+/** Arms the catcher and stores a promise of the next caught `resize` event as `window.__resizeCaught`. */
+const ARM_RESIZE_CATCH = `window.__resizeCaught = new Promise((resolve) => {
+  window.__catchResize = resolve;
+}); undefined`;
+
 /** The page's viewport, and a spot in it that a later click lands on whatever moved there. */
 export class PageViewport {
   private readonly page: Page;
@@ -41,15 +56,23 @@ export class PageViewport {
     await this.page.evaluate('window.__resized');
   }
 
+  /** Before the page loads: lets `resizeUnseenAndClickSpot` keep a `resize` event from the page's own listeners. */
+  public async installResizeCatcher(): Promise<void> {
+    await this.page.addInitScript({ content: RESIZE_CATCHER });
+  }
+
   /**
-   * Resizes the page and clicks the remembered spot at once, without waiting for the `resize` event: the click usually
-   * lands on the new layout before the next frame fires that event.
+   * Resizes the page, keeps its `resize` event from the page's own listeners, then clicks the remembered spot: the
+   * click lands on the new layout before the page has seen a `resize` event, as one that beats the next frame does.
+   * Needs `installResizeCatcher` before the page loads.
    */
-  public async resizeAndClickSpot(width: number, height: number): Promise<void> {
+  public async resizeUnseenAndClickSpot(width: number, height: number): Promise<void> {
     const size = { width, height };
     const { x, y } = this.rememberedSpot();
 
+    await this.page.evaluate(ARM_RESIZE_CATCH);
     await this.page.setViewportSize(size);
+    await this.page.evaluate('window.__resizeCaught');
     await this.page.mouse.click(x, y);
   }
 

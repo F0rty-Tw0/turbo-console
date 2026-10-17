@@ -1,4 +1,4 @@
-import { test } from './details.fixture.ts';
+import { expect, test } from './details.fixture.ts';
 import {
   PACKAGE_DETAILS_STUB,
   RUNNING_RUN_VIEW_STUB,
@@ -7,6 +7,7 @@ import {
   TASK_CARD_STUB
 } from './test/stubs/details-state.stub.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
+import { RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC6 = { description: 'AC6', type: 'requirement' };
 
@@ -70,6 +71,9 @@ const HIDDEN_SCRIPTS_PAGE_HEIGHT = 545;
 /** The terminal panel's height in the repro: VS Code closes it with the run's last terminal, and the page grows by it. */
 const PANEL_HEIGHT = 296;
 
+/** A click this long after a hold ends lands well clear of it. */
+const AFTER_HOLD_MS = 100;
+
 test.describe('FEATURE: a layout shift holds pointer clicks on every Run/Stop button', () => {
   test(
     'GIVEN the page scrolled to the bottom, a click where Stop was does not run the card that slides there when the page grows',
@@ -131,6 +135,9 @@ test.describe('FEATURE: a layout shift holds pointer clicks on every Run/Stop bu
     async ({ detailsPage, pageClock, pageViewport }): Promise<void> => {
       await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
 
+      await test.step('AND can keep a resize event from its listeners', async (): Promise<void> =>
+        pageViewport.installResizeCatcher());
+
       await test.step('AND is short enough to scroll', async (): Promise<void> => pageViewport.resize(PAGE_WIDTH, PAGE_HEIGHT));
 
       await test.step('AND shows package b with long running', async (): Promise<void> => detailsPage.open(SCROLLING_STATE));
@@ -139,13 +146,33 @@ test.describe('FEATURE: a layout shift holds pointer clicks on every Run/Stop bu
 
       await test.step('AND the spot of Stop long is noted', async (): Promise<void> => pageViewport.rememberSpotOf('Stop long'));
 
-      await test.step('AND the page grows as the terminal panel closes and that spot is clicked at once', async (): Promise<void> =>
-        pageViewport.resizeAndClickSpot(PAGE_WIDTH, PAGE_HEIGHT + PANEL_HEIGHT));
+      await test.step('AND the page grows as the terminal panel closes and that spot is clicked before the page sees the resize', async (): Promise<void> =>
+        pageViewport.resizeUnseenAndClickSpot(PAGE_WIDTH, PAGE_HEIGHT + PANEL_HEIGHT));
 
       await test.step('THEN Run check sits where Stop long was', async (): Promise<void> =>
         pageViewport.expectButtonAtSpot('Run check'));
 
       await test.step('AND the page posted nothing', async (): Promise<void> => detailsPage.expectPosted([{ type: 'ready' }]));
+    }
+  );
+
+  test(
+    'GIVEN a resize long past, a pointer click on a Run runs its card',
+    { annotation: AC6 },
+    async ({ detailsPage, pageClock, pageViewport }): Promise<void> => {
+      await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+      await test.step('AND shows the cards one and two', async (): Promise<void> => detailsPage.open(TWO_CARDS_STATE));
+
+      await test.step('AND the page grows as the terminal panel closes', async (): Promise<void> =>
+        pageViewport.resize(PAGE_WIDTH, PAGE_HEIGHT + PANEL_HEIGHT));
+
+      await test.step('AND the hold passes', async (): Promise<void> => pageClock.tick(RUN_SWAP_HOLD_MS + AFTER_HOLD_MS));
+
+      await test.step('AND Run one is clicked', async (): Promise<void> => detailsPage.card('one').runButton.click());
+
+      await test.step('THEN the page posts run for one', async (): Promise<void> =>
+        detailsPage.expectPosted([{ type: 'ready' }, { type: 'run', taskId: 'b#one' }]));
     }
   );
 
@@ -228,6 +255,26 @@ test.describe('FEATURE: a layout shift holds pointer clicks on every Run/Stop bu
       await test.step('AND one starts running', async (): Promise<void> => detailsPage.sendRunState('b#one', RUNNING_RUN_VIEW_STUB));
 
       await test.step('AND Enter is pressed right away', async (): Promise<void> => detailsPage.card('two').pressEnter());
+
+      await test.step('THEN the page posts run for two', async (): Promise<void> =>
+        detailsPage.expectPosted([{ type: 'ready' }, { type: 'run', taskId: 'b#two' }]));
+    }
+  );
+
+  test(
+    'GIVEN the cards one and two, a pointer click on Run two right after one starts running still runs two',
+    { annotation: AC6 },
+    async ({ detailsPage, pageClock }): Promise<void> => {
+      await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+      await test.step('AND shows the cards one and two', async (): Promise<void> => detailsPage.open(TWO_CARDS_STATE));
+
+      await test.step('AND one starts running', async (): Promise<void> => detailsPage.sendRunState('b#one', RUNNING_RUN_VIEW_STUB));
+
+      await test.step('THEN one shows Stop', async (): Promise<void> =>
+        expect(detailsPage.card('one').runButton).toHaveAttribute('aria-label', 'Stop one'));
+
+      await test.step('WHEN Run two is clicked right away', async (): Promise<void> => detailsPage.card('two').runButton.click());
 
       await test.step('THEN the page posts run for two', async (): Promise<void> =>
         detailsPage.expectPosted([{ type: 'ready' }, { type: 'run', taskId: 'b#two' }]));
