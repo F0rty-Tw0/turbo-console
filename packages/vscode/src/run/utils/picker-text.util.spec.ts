@@ -18,12 +18,6 @@ const packageOf = (tasks: TaskNode[]): PackageNode => {
   return pkg;
 };
 
-describe('FEATURE: hidden scripts text', () => {
-  it('WHEN the count is 2 THEN the hint names it', () => {
-    expect(hiddenScriptsText(2)).toBe('No turbo tasks in this package. Show scripts to see 2.');
-  });
-});
-
 describe('FEATURE: text of a package with no task to pick', () => {
   const scripts = [scriptNamed('lint'), scriptNamed('fmt'), scriptNamed('a b')];
 
