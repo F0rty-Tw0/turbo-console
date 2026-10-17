@@ -47,7 +47,8 @@ export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLB
 
 /**
  * Ignores clicks on `button` until the next frame. A click capture listener on the target runs before its own click
- * listener, and Enter or Space on a button arrives as a click, so a held Enter meant for Stop cannot relaunch the run.
+ * listener, and Enter or Space on a button arrives as a click, so a click landing in the frame of the swap is dropped.
+ * Key auto-repeat outlasts a frame, so a held Enter is stopped by the page's repeated-Enter keydown filter instead.
  */
 const holdActivationOneFrame = (button: HTMLButtonElement): void => {
   const ignore = (event: Event): void => event.stopImmediatePropagation();

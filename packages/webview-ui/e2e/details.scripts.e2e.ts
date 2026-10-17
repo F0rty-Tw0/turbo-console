@@ -201,6 +201,31 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
   }
 
   test(
+    'GIVEN focus on Stop and a held Enter, the key repeat after the run ends does not relaunch it',
+    { annotation: AC6 },
+    async ({ detailsPage }): Promise<void> => {
+      const { name, taskId } = TURBO_RUNNING_CARD;
+      const card = detailsPage.card(name);
+      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TURBO_RUNNING_CARD] };
+
+      await test.step('WHEN the page shows the running card', async (): Promise<void> => detailsPage.open(state));
+
+      await test.step('AND its Stop button is focused', async (): Promise<void> => detailsPage.focusButton(`Stop ${name}`));
+
+      await test.step('AND Enter goes down on it and stays held', async (): Promise<void> => card.holdEnter());
+
+      await test.step('AND the run ends stopped', async (): Promise<void> => detailsPage.sendRunState(taskId, STOPPED));
+
+      await test.step('AND Enter repeats two frames later', async (): Promise<void> => card.repeatEnterTwoFramesLater());
+
+      await test.step('THEN the Run button has focus', async (): Promise<void> => detailsPage.expectFocused(`Run ${name}`));
+
+      await test.step('AND the page posted stop only', async (): Promise<void> =>
+        detailsPage.expectPosted([{ type: 'ready' }, { type: 'stop', taskId }]));
+    }
+  );
+
+  test(
     'GIVEN a script with a hostile name and body, both render as text',
     { annotation: AC6 },
     async ({ detailsPage }): Promise<void> => {

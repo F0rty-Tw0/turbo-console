@@ -54,7 +54,13 @@ const saveScroll = (): void => {
   bridge.saveScroll(scrollY);
 };
 
+// A held Enter repeats its click; a repeat must never hit a Run/Stop button swapped in under it.
+const ignoreRepeatedEnter = (event: KeyboardEvent): void => {
+  if (event.repeat && event.key === 'Enter') event.preventDefault();
+};
+
 document.body.append(root);
+addEventListener('keydown', ignoreRepeatedEnter, true);
 addEventListener('scroll', saveScroll, { passive: true });
 bridge.onMessage(receive);
 bridge.ready();
