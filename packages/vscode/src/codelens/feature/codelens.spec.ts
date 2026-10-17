@@ -29,6 +29,7 @@ const editor = vi.hoisted(() => {
   const spies = {
     registerCodeLensProvider: vi.fn<(selector: unknown, provider: LensProvider) => Disposable>(),
     getWorkspaceFolder: vi.fn<(uri: unknown) => unknown>(),
+    onDidChangeWorkspaceFolders: vi.fn<(listener: () => void) => Disposable>(),
     emitterDispose: vi.fn()
   };
 
@@ -81,7 +82,10 @@ vi.mock('vscode', () => {
   }
 
   const languages = { registerCodeLensProvider: editor.registerCodeLensProvider };
-  const workspace = { getWorkspaceFolder: editor.getWorkspaceFolder };
+  const workspace = {
+    getWorkspaceFolder: editor.getWorkspaceFolder,
+    onDidChangeWorkspaceFolders: editor.onDidChangeWorkspaceFolders
+  };
   const module = { EventEmitter, Uri: FakeUri, Range, CodeLens, languages, workspace };
 
   return module;
@@ -133,6 +137,11 @@ describe('FEATURE: package.json CodeLens (spec 1c-b §4.11)', () => {
   let registration: Disposable;
   let toggle: ScriptsToggleFake;
   let lens: Disposable;
+  let folderListeners: Set<() => void>;
+
+  const changeFolders = (): void => {
+    for (const listener of folderListeners) listener();
+  };
 
   beforeEach(() => {
     fired.length = 0;
@@ -146,6 +155,14 @@ describe('FEATURE: package.json CodeLens (spec 1c-b §4.11)', () => {
       return registration;
     });
     editor.getWorkspaceFolder.mockReturnValue({ uri: Uri.file('/ws') });
+    folderListeners = new Set();
+    editor.onDidChangeWorkspaceFolders.mockImplementation((listener) => {
+      const subscription: Disposable = { dispose: (): boolean => folderListeners.delete(listener) };
+
+      folderListeners.add(listener);
+
+      return subscription;
+    });
     roots.set([ONE], () => coordinator);
     roots.apply('/ws', loadedModel());
     lens = registerCodeLens(roots, toggle);
@@ -239,6 +256,12 @@ describe('FEATURE: package.json CodeLens (spec 1c-b §4.11)', () => {
       expect(fired).toStrictEqual([undefined]);
     });
 
+    it('WHEN a workspace folder is added or removed THEN the lenses refresh', () => {
+      changeFolders();
+
+      expect(fired).toStrictEqual([undefined]);
+    });
+
     it('WHEN the lens is disposed THEN the provider registration goes', () => {
       lens.dispose();
 
@@ -251,10 +274,11 @@ describe('FEATURE: package.json CodeLens (spec 1c-b §4.11)', () => {
       expect(editor.emitterDispose).toHaveBeenCalledOnce();
     });
 
-    it('WHEN the lens is disposed THEN a root load and a toggle refresh nothing', async () => {
+    it('WHEN the lens is disposed THEN a root load, a toggle and a folder change refresh nothing', async () => {
       lens.dispose();
       roots.apply('/ws', loadedModel());
       await toggle.set(true);
+      changeFolders();
 
       expect(fired).toStrictEqual([]);
     });
