@@ -4,7 +4,7 @@ import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { TaskOffer } from '../../run/common/picker.type.ts';
 import { packageForManifest, relativePathOf } from '../../run/utils/package-lookup.util.ts';
 import { taskItemsOf } from '../../run/utils/picker-items.util.ts';
-import { LENS_NAMES_MAX } from '../common/codelens.const.ts';
+import { LENS_NAMES_MAX, LENS_TEXT_MAX } from '../common/codelens.const.ts';
 import type { LensSpec } from '../common/codelens.type.ts';
 
 /** The editor counts CR LF, a lone CR and a lone LF as one line break each. */
@@ -34,10 +34,14 @@ const parsedScriptsLineOf = (text: string): number => {
 };
 
 /**
- * The line of the top-level `"scripts"` key, 0 without one. The parser recurses once per nesting level, so a text nested
- * deep enough to overflow the stack puts the lens on line 0 instead of throwing.
+ * The line of the top-level `"scripts"` key, 0 without one. A text over `LENS_TEXT_MAX` is not parsed and gives 0. The
+ * parser recurses once per nesting level, so a text nested deep enough to overflow the stack gives 0 instead of throwing.
  */
 const scriptsLineOf = (text: string): number => {
+  const isTooLarge = text.length > LENS_TEXT_MAX;
+
+  if (isTooLarge) return 0;
+
   try {
     return parsedScriptsLineOf(text);
   } catch (error) {

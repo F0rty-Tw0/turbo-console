@@ -7,6 +7,7 @@ import type { LoadFailure } from '../../roots/common/root.type.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import { LENS_TEXT_MAX } from '../common/codelens.const.ts';
 import type { LensSpec } from '../common/codelens.type.ts';
 
 const FILE = '/ws/packages/a/package.json';
@@ -30,6 +31,9 @@ const stateOf = (tasks: TaskNode[]): RootState => {
 const titleOf = (spec: LensSpec | null): string | undefined => spec?.title;
 
 const lineOf = (text: string): number | undefined => lensSpecOf(text, FILE, stateOf([taskNamed('build')]), false)?.line;
+
+/** A manifest with `"scripts"` on line 1, padded with trailing spaces to `length` UTF-16 units. */
+const paddedTo = (length: number): string => '{\n  "scripts": {}\n}'.padEnd(length, ' ');
 
 describe('FEATURE: lens spec of a package.json (spec 1c-b §4.11)', () => {
   describe('GIVEN a package with turbo tasks', () => {
@@ -180,6 +184,14 @@ describe('FEATURE: lens spec of a package.json (spec 1c-b §4.11)', () => {
       const text = `{\n  "scripts": {},\n  "x": ${'['.repeat(10_000)}`;
 
       expect(lineOf(text)).toBe(0);
+    });
+
+    it('WHEN the text is exactly at the size cap THEN the lens still sits on the key line', () => {
+      expect(lineOf(paddedTo(LENS_TEXT_MAX))).toBe(1);
+    });
+
+    it('WHEN the text is one unit over the size cap THEN it is not parsed and the lens sits on line 0', () => {
+      expect(lineOf(paddedTo(LENS_TEXT_MAX + 1))).toBe(0);
     });
   });
 });
