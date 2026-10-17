@@ -70,10 +70,15 @@ describe('FEATURE: model views per model', () => {
       expect(lookup).toHaveBeenCalledTimes(2);
     });
 
-    it('WHEN no command is asked for THEN there is no tool and the lookup never runs', () => {
+    it('WHEN no command is asked for THEN there is no tool', () => {
       const tool = views.toolOf(null);
 
       expect(tool).toBeNull();
+    });
+
+    it('WHEN no command is asked for THEN the lookup never runs', () => {
+      views.toolOf(null);
+
       expect(lookup).not.toHaveBeenCalled();
     });
   });
