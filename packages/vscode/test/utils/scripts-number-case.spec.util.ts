@@ -52,8 +52,8 @@ const assertRan = async (api: TurboConsoleApi, node: TreeNode, sentinel: string)
 };
 
 /**
- * Case 8: a script whose name starts with a digit, `1kb`, copies bare and its Run runs it bare, on every OS: the terminal
- * shell is Windows PowerShell 5.1 on Windows CI and posix elsewhere. Scripts are hidden again at the end.
+ * Case 8: a script whose name starts with a digit, `1kb`, copies bare and its Run runs it bare, on every OS: on Windows CI
+ * the terminal shell is the runner's default PowerShell, which the case logs. Scripts are hidden again at the end.
  */
 export const numberNameCase = async (api: TurboConsoleApi, root: string): Promise<void> => {
   await step('L10-8: the digit-led script 1kb copies bare, and its Run runs 1kb', async () => {
