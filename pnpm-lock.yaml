@@ -170,6 +170,9 @@ catalogs:
     '@types/node':
       specifier: 24.19.2
       version: 24.19.2
+    '@types/svg2ttf':
+      specifier: 5.0.3
+      version: 5.0.3
     '@vscode/codicons':
       specifier: 0.0.45
       version: 0.0.45
@@ -194,6 +197,15 @@ catalogs:
     prettier:
       specifier: 3.9.10
       version: 3.9.10
+    simple-icons:
+      specifier: 16.35.0
+      version: 16.35.0
+    svg2ttf:
+      specifier: 6.1.0
+      version: 6.1.0
+    svgicons2svgfont:
+      specifier: 16.0.0
+      version: 16.0.0
     turbo:
       specifier: 2.11.7
       version: 2.11.7
@@ -304,6 +316,9 @@ importers:
       '@turbo-console/webview-ui':
         specifier: workspace:*
         version: link:../webview-ui
+      '@types/svg2ttf':
+        specifier: catalog:dev
+        version: 5.0.3
       '@types/vscode':
         specifier: 1.138.0
         version: 1.138.0
@@ -313,6 +328,15 @@ importers:
       '@vscode/vsce':
         specifier: catalog:dev
         version: 4.0.0(supports-color@10.2.2)
+      simple-icons:
+        specifier: catalog:dev
+        version: 16.35.0
+      svg2ttf:
+        specifier: catalog:dev
+        version: 6.1.0
+      svgicons2svgfont:
+        specifier: catalog:dev
+        version: 16.0.0(supports-color@10.2.2)
       turbo:
         specifier: catalog:dev
         version: 2.11.7
@@ -1329,120 +1353,140 @@ packages:
 
   '@lint-suite/eslint-plugin-arrow-body-fits-line@1.0.0':
     resolution: {integrity: sha512-dYSm7v7T6O5SnOC18/MQZ0NVvTThIVrR4FQbpvl621LT9I3yl1nFFOcKfrNBmkUQM7j/IT7SDx+FA9q2F16/kg==}
+    deprecated: Renamed to @lint-suite/eslint-arrow-fits-line. Install that package instead; rule key arrow-body-fits-line is now arrow-fits-line.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-chain-fits-line@1.0.0':
     resolution: {integrity: sha512-80IgZx+zB7izC6u90jyESA9ltmDSNJjkdZU5n6YpHlQJnnkNavGAtOj9w7Q6arambSBz/8IGTUb0+iVAHQO+9w==}
+    deprecated: Renamed to @lint-suite/eslint-chain-fits-line. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-chain-receiver-is-name@1.0.0':
     resolution: {integrity: sha512-uVKPBs/gTO6C7qBUIwI5ODfZG3cRh8n6z5ObcN68mt9JTA/W9IQDVRi+ypRwxHm9UkeUvxPhGR+5aMj98PNegQ==}
+    deprecated: Renamed to @lint-suite/eslint-chain-receiver-name. Install that package instead; rule key chain-receiver-is-name is now chain-receiver-name.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-explicit-accessibility@1.0.0':
     resolution: {integrity: sha512-qnUXca6ex+tjAW+gzZY8C9LPb01oQh7koj68Jfxxb4+tQvZ/m1zmCqvFcyTmfpXDdfWQsa9l6yP53vYA0gNbOg==}
+    deprecated: Renamed to @lint-suite/eslint-explicit-accessibility. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-max-condition-operands@1.0.0':
     resolution: {integrity: sha512-3RrdzMnoMbyWoumuC63wqiU8SWNfIDghbXq82RHOnSXoDvorKfvqMrMNcNM2Zn1jCfkTNRtk9D8YAsI5hqEWMw==}
+    deprecated: Renamed to @lint-suite/eslint-max-condition-operands. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-call-in-condition@1.0.0':
     resolution: {integrity: sha512-AvUiqc7FqnHXnPZbE4DTv+39LLkcqNgYsL3GO+IEHlq+lAJ973fYDX0Mqp8UpyOVsJCyXN0zq//4afVKs622fw==}
+    deprecated: Renamed to @lint-suite/eslint-no-call-in-condition. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-grouped-condition@1.0.0':
     resolution: {integrity: sha512-SQg0ld2dLgq5lvb1CfnOLGaU0vVFsgBA8RAvIVOkyZpTxaRgjioFOmXDmeev3jPDGLBNvrTdy5dQjXjTrCeHxA==}
+    deprecated: Renamed to @lint-suite/eslint-no-grouped-condition. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-inline-object-types@1.0.0':
     resolution: {integrity: sha512-nQ9BGMROPFvTMc7d/v8eb4Dqg5+H8D8Yp0j2tgJmBEYiaN/9pUE8GBTJtfT5bQAjHzzU24c4CLF+36Lm1ihDrA==}
+    deprecated: Renamed to @lint-suite/eslint-no-inline-object-types. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-inline-return-object@1.0.0':
     resolution: {integrity: sha512-aWuPJtZ3B4/EHfBBHQXcorrkrSwGEY0l+xmNd030rHdWCmLdDsVXKl1jam4KSIgtkVxTGkHeE0Br4dqtvFdcig==}
+    deprecated: Renamed to @lint-suite/eslint-no-inline-return-object. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-nested-object-value@1.0.0':
     resolution: {integrity: sha512-VorqCMM+AohqYymDDoQy/4T8QBZL2A+Q+jALK49Hv3HpdlakvzBJrPyZshqacC+ckZ+1ML6GXCH36v9oWqb9jA==}
+    deprecated: Renamed to @lint-suite/eslint-no-nested-object-value. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-spread-expression@1.0.0':
     resolution: {integrity: sha512-acCFiNhVem9YfTfVEgWuKcTWE4IvzIVaNVT3ldcC46sLiSdJhDEWN/Ga2SWEGyPMgBuN4/ONJRzlR97FeLbIQg==}
+    deprecated: Renamed to @lint-suite/eslint-no-spread-expression. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-unstyled-classes@1.0.0':
     resolution: {integrity: sha512-IYJvG88DmADQvuQnFHx0RSvpilMOAHjdte8DvKgEy+Tb2V3X4rjZMjV5CtN3SGO92DoiFdvm+6I3Yr2wEsZ5Fw==}
+    deprecated: Renamed to @lint-suite/eslint-no-unstyled-classes. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-unused-angular-instance-fields@1.1.0':
     resolution: {integrity: sha512-nZqpnYM/VHt2p/N1ULwb9U/0cUEaTURnr6FCTEK+/Q5LEgQKfNLrSn4XDl8/rbgCdM7iTZYvzCiMhntwwy+U/g==}
+    deprecated: Renamed to @lint-suite/eslint-no-unused-angular-fields. Install that package instead; rule key no-unused-instance-fields is now no-unused-angular-fields.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-no-unused-exports@1.0.0':
     resolution: {integrity: sha512-un9L6UdWD/2rhs1sWEXqVGLZyAy51P6BbGfW7WuCAowVt5Ildrx5rXLkol+cVAfOmy7xvHPPdC5uce3aYQANQg==}
+    deprecated: Renamed to @lint-suite/eslint-no-unused-exports. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-one-line-guard@1.0.0':
     resolution: {integrity: sha512-WO+t4L0QmCG65WdNnmy2MEZmThHU3gu07Dp6+pHZFcn2rwP1fnXCyITszvQa+12/EoN2R/f9TKQdAIZpLb4tMA==}
+    deprecated: Renamed to @lint-suite/eslint-one-line-guard. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-readonly-type-properties@1.0.0':
     resolution: {integrity: sha512-NrLEwio3E9fdz4K4GFjlwoBD5U6L8IOzvUnaBximf/RPqRazpAqTeAUwMg7eAGHf/4HsJE4SFKAKJGS4gdNxbw==}
+    deprecated: Renamed to @lint-suite/eslint-readonly-type-properties. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-ternary-branch-shape@1.0.0':
     resolution: {integrity: sha512-2RWwyL2PyMQSByPrWopJbUHAdr6otU127F2DPBYEs859WdE/VstpJoPtpOUFWiyfLgv6H/EXo87/a2Q8qCuXJA==}
+    deprecated: Renamed to @lint-suite/eslint-ternary-branch-shape. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-test-file-shape@1.0.0':
     resolution: {integrity: sha512-SYWfbMph+oqsiFcKpsyTJ71+6cJ19pYBB/GxeY0UxNfkUmc/V10Xuf35JeEC10+/dNcMhQKfijTvS1PNK8rmdQ==}
+    deprecated: Renamed to @lint-suite/eslint-test-file-shape. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-type-placement@1.0.0':
     resolution: {integrity: sha512-GkQ0LxmvyQhYN94txBrS8Zqjn+wkRZDJWgzongyy0z2cepflfJ5OYbW5XrgixrF8GzkippXH7cb4A/EQJ3eppQ==}
+    deprecated: Renamed to @lint-suite/eslint-type-placement. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
 
   '@lint-suite/eslint-plugin-util-purity@1.0.0':
     resolution: {integrity: sha512-YnVGPyBM/QJPpS8mZlneDa6NiEJ1Dad83Xg2P2yyylhpHHlZRaACIE/VVZVz5ciQCfVz5iisP86HggfFTeIuEQ==}
+    deprecated: Renamed to @lint-suite/eslint-util-purity. Install that package instead.
     peerDependencies:
       eslint: ^10.9.1
       typescript: '>=6.0.3'
@@ -1849,6 +1893,12 @@ packages:
 
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
+
+  '@types/sax@1.2.7':
+    resolution: {integrity: sha512-rO73L89PJxeYM3s3pPPjiPgVVcymqU490g0YO5n5By0k2Erzj6tay/4lr1CHAAU4JyOWd1rpQ8bCf6cZfHU96A==}
+
+  '@types/svg2ttf@5.0.3':
+    resolution: {integrity: sha512-hL+/A4qMISvDbDTtdY73R0zuvsdc7YRYnV5FyAfKVGk8OsluXu/tCFxop7IB5Sgr+ZCS0hHtFxylD0REmm+abA==}
 
   '@types/vscode@1.138.0':
     resolution: {integrity: sha512-DhlvrucJa8n6EHst7qQcXOcjLKs/VRTQy55plLO+RN74jonYsr/t9dd66zBnAyz1tpDig0okQAxuoPHpVNje2g==}
@@ -2290,6 +2340,10 @@ packages:
     engines: {node: '>= 22'}
     hasBin: true
 
+  '@xmldom/xmldom@0.9.12':
+    resolution: {integrity: sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A==}
+    engines: {node: '>=14.6'}
+
   '@yarnpkg/lockfile@1.1.0':
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
 
@@ -2562,6 +2616,10 @@ packages:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
     engines: {node: '>=18'}
 
+  commander@14.0.3:
+    resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
+    engines: {node: '>=20'}
+
   comment-parser@1.4.9:
     resolution: {integrity: sha512-+2AvZKjJaNq9GQljm3tr0utwrig5BL+jgJGvz5rDpGKNIp+ojcRXWUwBbh/sGIi1QCprR6PsKFakub+w1v+4hQ==}
     engines: {node: '>= 12.0.0'}
@@ -2611,6 +2669,9 @@ packages:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
     engines: {node: '>=4'}
     hasBin: true
+
+  cubic2quad@1.2.1:
+    resolution: {integrity: sha512-wT5Y7mO8abrV16gnssKdmIhIbA9wSkeMzhh27jAguKrV82i24wER0vL5TGhUJ9dbJNDcigoRZ0IAHFEEEI4THQ==}
 
   debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
@@ -3007,6 +3068,10 @@ packages:
     resolution: {integrity: sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A==}
     engines: {node: '>=10.13.0'}
 
+  glob@13.0.6:
+    resolution: {integrity: sha512-Wjlyrolmm8uDpm/ogGyXZXb1Z+Ca2B8NbJwqBVg0axK9GbBeoS7yGV6vjXnYdGm6X53iehEuxxbyiKp8QmN4Vw==}
+    engines: {node: 18 || 20 || >=22}
+
   global-modules@2.0.0:
     resolution: {integrity: sha512-NGbfmJBp9x8IxyJSd1P+otYK8vonoJactOogrVfFRIAEY1ukil8RSKDz2Yo7wh1oihl51l/r6W4epkeKJHqL8A==}
     engines: {node: '>=6'}
@@ -3397,6 +3462,9 @@ packages:
   lodash.truncate@4.4.2:
     resolution: {integrity: sha512-jttmRe7bRse52OsWIMDLaXxWqRAmtIUccAQ3garviCqJjafXOfNMO0yMfNpdD6zbGaTU0P5Nz7e7gAT6cKmJRw==}
 
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
+
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
     engines: {node: '>=10'}
@@ -3408,6 +3476,10 @@ packages:
   log-symbols@7.0.1:
     resolution: {integrity: sha512-ja1E3yCr9i/0hmBVaM0bfwDjnGy8I/s6PP4DFp+yP+a+mrHO4Rm7DtmnqROTUkHIkqffC84YY7AeqX6oFk0WFg==}
     engines: {node: '>=18'}
+
+  lru-cache@11.5.3:
+    resolution: {integrity: sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg==}
+    engines: {node: 20 || >=22}
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
@@ -3444,6 +3516,9 @@ packages:
   merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
+
+  microbuffer@1.0.0:
+    resolution: {integrity: sha512-O/SUXauVN4x6RaEJFqSPcXNtLFL+QzJHKZlyDVYFwcDDRVca3Fa/37QXXC+4zAGGa4YhHrHxKXuuHvLDIQECtA==}
 
   micromatch@4.0.8:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
@@ -3483,6 +3558,10 @@ packages:
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+
+  minipass@7.1.3:
+    resolution: {integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==}
+    engines: {node: '>=16 || 14 >=14.17'}
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
@@ -3601,6 +3680,10 @@ packages:
 
   path-parse@1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
+
+  path-scurry@2.0.2:
+    resolution: {integrity: sha512-3O/iVVsJAPsOnpwWIeD+d6z/7PmqApyQePUtCndjatj/9I5LylHvt5qluFaBT3I5h3r1ejfR056c+FCv+NnNXg==}
+    engines: {node: 18 || 20 || >=22}
 
   path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
@@ -3853,6 +3936,10 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  simple-icons@16.35.0:
+    resolution: {integrity: sha512-TCfl/2+GTrx0nCo4pEWGvxhOb8c6NsqOU1OpwjtF4lwJAthB8IYVD0fuIMjLMg6JFuG1YBO0t1iETQqJLqkoJA==}
+    engines: {node: '>=0.12.18'}
+
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
 
@@ -4012,8 +4099,24 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  svg-pathdata@9.0.0:
+    resolution: {integrity: sha512-h9FuqmNsgDKq2hQBqTMOWjZwqdZOnWijZmcg6FL4iSmH6VvRnobhHrBQSdOiP0W9nwgv0qiW5vQ3//Arrmp19g==}
+    engines: {node: '>=24.14.0'}
+
   svg-tags@1.0.0:
     resolution: {integrity: sha512-ovssysQTa+luh7A5Weu3Rta6FJlFBBbInjOh722LIt6klpU2/HtdUbszju/G4devcvk8PGt7FCLv5wftu3THUA==}
+
+  svg2ttf@6.1.0:
+    resolution: {integrity: sha512-EjxgcmhKcBpx/3fR1hPwVtJAbUc/ZsDpwOTF74SI3PbzCg4pDHnxVmoSuqgEqxVJGqqkSCI6+82cucpn2D5aOw==}
+    hasBin: true
+
+  svgicons2svgfont@16.0.0:
+    resolution: {integrity: sha512-3y4fcCuu9/XYgkoDfnNAR1RUEjmbX6lX2oTTu8NVLHYbf2xmYyZB0NZzK7WNthn8oSY68thfyEARRgWyAveZOw==}
+    engines: {node: '>=24.14.0'}
+    hasBin: true
+
+  svgpath@2.6.0:
+    resolution: {integrity: sha512-OIWR6bKzXvdXYyO4DK/UWa1VA1JeKq8E+0ug2DG98Y/vOmMpfZNj+TIG988HjfYSqtcy/hFOtZq/n/j5GSESNg==}
 
   table@6.9.0:
     resolution: {integrity: sha512-9kY+CygyYM6j02t5YFHbNz2FN5QmYGv9zAjVp4lCDjlCw7amdckXlEt/bjMhUIfj4ThGRE4gCUH5+yGnNuPo5A==}
@@ -4046,6 +4149,9 @@ packages:
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
+
+  transformation-matrix@3.1.0:
+    resolution: {integrity: sha512-oYubRWTi2tYFHAL2J8DLvPIqIYcYZ0fSOi2vmSy042Ho4jBW2ce6VP7QfD44t65WQz6bw5w1Pk22J7lcUpaTKA==}
 
   ts-api-utils@2.5.0:
     resolution: {integrity: sha512-OJ/ibxhPlqrMM0UiNHJ/0CKQkoKF243/AEmplt3qpRgkW8VG7IfOS41h7V8TjITqdByHzrjcS/2si+y4lIh8NA==}
@@ -4310,6 +4416,10 @@ packages:
 
   yazl@2.5.1:
     resolution: {integrity: sha512-phENi2PLiHnHb6QBVot+dJnaAZ0xosj7p3fWl+znIjBDlnMI2PsZCJZ306BPTFOaHf5qdDEI8x5qFrSOBN5vrw==}
+
+  yerror@9.1.1:
+    resolution: {integrity: sha512-6XGifXCr19Zy0O3YuoWs7287A/9Ush4C/xN9buokIBVUVGrblN3FTrumLmIZFSsSdDlKdJhjXV2GLpba3qoljA==}
+    engines: {node: '>=24.14.0'}
 
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
@@ -6007,6 +6117,12 @@ snapshots:
 
   '@types/parse-json@4.0.2': {}
 
+  '@types/sax@1.2.7':
+    dependencies:
+      '@types/node': 24.19.2
+
+  '@types/svg2ttf@5.0.3': {}
+
   '@types/vscode@1.138.0': {}
 
   '@typescript-eslint/eslint-plugin@8.69.0(@typescript-eslint/parser@8.69.0(eslint@10.12.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.12.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)':
@@ -6406,6 +6522,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@xmldom/xmldom@0.9.12': {}
+
   '@yarnpkg/lockfile@1.1.0': {}
 
   '@zkochan/js-yaml@0.0.7':
@@ -6689,6 +6807,8 @@ snapshots:
 
   commander@12.1.0: {}
 
+  commander@14.0.3: {}
+
   comment-parser@1.4.9: {}
 
   concat-map@0.0.1: {}
@@ -6734,6 +6854,8 @@ snapshots:
       source-map-js: 1.2.2
 
   cssesc@3.0.0: {}
+
+  cubic2quad@1.2.1: {}
 
   debug@3.2.7(supports-color@7.2.0):
     dependencies:
@@ -7164,6 +7286,12 @@ snapshots:
     dependencies:
       is-glob: 4.0.3
 
+  glob@13.0.6:
+    dependencies:
+      minimatch: 10.2.6
+      minipass: 7.1.3
+      path-scurry: 2.0.2
+
   global-modules@2.0.0:
     dependencies:
       global-prefix: 3.0.0
@@ -7552,6 +7680,8 @@ snapshots:
 
   lodash.truncate@4.4.2: {}
 
+  lodash@4.18.1: {}
+
   log-symbols@4.1.0:
     dependencies:
       chalk: 4.1.2
@@ -7566,6 +7696,8 @@ snapshots:
     dependencies:
       is-unicode-supported: 2.1.0
       yoctocolors: 2.2.0
+
+  lru-cache@11.5.3: {}
 
   lru-cache@5.1.1:
     dependencies:
@@ -7594,6 +7726,8 @@ snapshots:
   meow@14.1.0: {}
 
   merge2@1.4.1: {}
+
+  microbuffer@1.0.0: {}
 
   micromatch@4.0.8:
     dependencies:
@@ -7625,6 +7759,8 @@ snapshots:
       brace-expansion: 1.1.21
 
   minimist@1.2.8: {}
+
+  minipass@7.1.3: {}
 
   ms@2.1.3: {}
 
@@ -7882,6 +8018,11 @@ snapshots:
 
   path-parse@1.0.7: {}
 
+  path-scurry@2.0.2:
+    dependencies:
+      lru-cache: 11.5.3
+      minipass: 7.1.3
+
   path-type@4.0.0: {}
 
   pend@1.2.0: {}
@@ -8127,6 +8268,8 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
+  simple-icons@16.35.0: {}
+
   sisteransi@1.0.5: {}
 
   slash@5.1.0: {}
@@ -8311,7 +8454,33 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
+  svg-pathdata@9.0.0: {}
+
   svg-tags@1.0.0: {}
+
+  svg2ttf@6.1.0:
+    dependencies:
+      '@xmldom/xmldom': 0.9.12
+      argparse: 2.0.1
+      cubic2quad: 1.2.1
+      lodash: 4.18.1
+      microbuffer: 1.0.0
+      svgpath: 2.6.0
+
+  svgicons2svgfont@16.0.0(supports-color@10.2.2):
+    dependencies:
+      '@types/sax': 1.2.7
+      commander: 14.0.3
+      debug: 4.4.3(supports-color@10.2.2)
+      glob: 13.0.6
+      sax: 1.6.1
+      svg-pathdata: 9.0.0
+      transformation-matrix: 3.1.0
+      yerror: 9.1.1
+    transitivePeerDependencies:
+      - supports-color
+
+  svgpath@2.6.0: {}
 
   table@6.9.0:
     dependencies:
@@ -8347,6 +8516,8 @@ snapshots:
   to-regex-range@5.0.1:
     dependencies:
       is-number: 7.0.0
+
+  transformation-matrix@3.1.0: {}
 
   ts-api-utils@2.5.0(typescript@6.0.3):
     dependencies:
@@ -8585,6 +8756,8 @@ snapshots:
   yazl@2.5.1:
     dependencies:
       buffer-crc32: 0.2.13
+
+  yerror@9.1.1: {}
 
   yocto-queue@0.1.0: {}
 

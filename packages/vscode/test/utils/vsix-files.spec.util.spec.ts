@@ -11,7 +11,12 @@ const FULL_LIST = [
   'dist/webview/details/codicon.css',
   'dist/webview/details/codicon.ttf',
   'dist/webview/details/LICENSE',
-  'dist/webview/details/LICENSE-CODE'
+  'dist/webview/details/LICENSE-CODE',
+  'dist/webview/details/tool-icons.ttf',
+  'dist/webview/details/tool-icons.css',
+  'dist/webview/details/TOOL-ICONS-NOTICE.md',
+  'dist/webview/details/SIMPLE-ICONS-LICENSE.md',
+  'dist/webview/details/SIMPLE-ICONS-DISCLAIMER.md'
 ];
 
 describe('FEATURE: vsixProblems', () => {
@@ -41,6 +46,50 @@ describe('FEATURE: vsixProblems', () => {
 
       expect(problems).toHaveLength(1);
       expect(problems[0]).toContain('dist/webview/details/codicon.ttf');
+    });
+  });
+
+  describe('GIVEN a list without tool-icons.ttf', () => {
+    it('WHEN it is checked THEN one problem names the missing file', () => {
+      const files = FULL_LIST.filter((file) => !file.endsWith('tool-icons.ttf'));
+
+      const problems = vsixProblems(files);
+
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toContain('dist/webview/details/tool-icons.ttf');
+    });
+  });
+
+  describe('GIVEN a list without tool-icons.css', () => {
+    it('WHEN it is checked THEN one problem names the missing file', () => {
+      const files = FULL_LIST.filter((file) => !file.endsWith('tool-icons.css'));
+
+      const problems = vsixProblems(files);
+
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toContain('dist/webview/details/tool-icons.css');
+    });
+  });
+
+  describe('GIVEN a list without TOOL-ICONS-NOTICE.md', () => {
+    it('WHEN it is checked THEN one problem names the missing file', () => {
+      const files = FULL_LIST.filter((file) => !file.endsWith('TOOL-ICONS-NOTICE.md'));
+
+      const problems = vsixProblems(files);
+
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toContain('dist/webview/details/TOOL-ICONS-NOTICE.md');
+    });
+  });
+
+  describe('GIVEN a list with an unknown dist/webview/details/x.md', () => {
+    it('WHEN it is checked THEN one problem names it', () => {
+      const files = [...FULL_LIST, 'dist/webview/details/x.md'];
+
+      const problems = vsixProblems(files);
+
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toContain('dist/webview/details/x.md');
     });
   });
 

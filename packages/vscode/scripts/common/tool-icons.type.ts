@@ -1,0 +1,30 @@
+import type { ToolGlyph, ToolSpec } from '../../src/tool/common/tool.type.ts';
+
+type IconLicense = {
+  readonly type: string;
+};
+
+/** One entry of `simple-icons/icons.json`. */
+export type IconData = {
+  readonly title: string;
+  readonly slug: string;
+  readonly source: string;
+  readonly guidelines?: string | undefined;
+  readonly license?: IconLicense | undefined;
+};
+
+/** An `icons.json` entry read loosely: only its slug is known. */
+export type ListedIcon = {
+  readonly slug: string;
+};
+
+/** A glyph tool with its checked Simple Icons data and svg text. */
+export type GlyphSource = {
+  readonly tool: ToolSpec;
+  readonly glyph: ToolGlyph;
+  readonly icon: IconData;
+  readonly svg: string;
+};
+
+/** The five files the build writes: name and content. */
+export type OutputFile = readonly [string, string | Uint8Array];
