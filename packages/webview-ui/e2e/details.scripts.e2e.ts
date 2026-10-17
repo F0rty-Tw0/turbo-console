@@ -54,6 +54,8 @@ const HIDDEN_KEPT_STATE: PackageDetails = {
   hiddenScriptCount: 2
 };
 
+const HIDDEN_DROPPED_STATE: PackageDetails = { ...HIDDEN_KEPT_STATE, tasks: [] };
+
 const SCRIPT_ROWS: FieldRow[] = [
   ['Command', 'pnpm run lint'],
   ['Script', 'eslint .'],
@@ -190,6 +192,26 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
         expect(detailsPage.sectionTitles).toHaveText(['Scripts (1)']));
 
       await test.step('AND no empty-package text shows', async (): Promise<void> => expect(detailsPage.noCardsNotice).toHaveCount(0));
+    }
+  );
+
+  test(
+    'GIVEN a kept script card stopped from the keyboard, focus moves to the page title when the card goes',
+    { annotation: AC6 },
+    async ({ detailsPage }): Promise<void> => {
+      const card = detailsPage.card('lint');
+
+      await test.step('WHEN the page shows only the running script card with scripts hidden', async (): Promise<void> =>
+        detailsPage.open(HIDDEN_KEPT_STATE));
+
+      await test.step('AND Enter is pressed on its Stop button', async (): Promise<void> => card.runButton.press('Enter'));
+
+      await test.step('THEN the page posts stop with its id', async (): Promise<void> =>
+        detailsPage.expectLastPosted({ type: 'stop', taskId: 'web#lint' }));
+
+      await test.step('WHEN the host drops the stopped card', async (): Promise<void> => detailsPage.sendState(HIDDEN_DROPPED_STATE));
+
+      await test.step('THEN the page title has focus', async (): Promise<void> => expect(detailsPage.heading).toBeFocused());
     }
   );
 

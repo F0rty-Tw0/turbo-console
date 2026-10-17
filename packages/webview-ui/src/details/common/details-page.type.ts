@@ -35,8 +35,8 @@ export type RenderedCard = {
 };
 
 /**
- * Focusable controls by focus key (`run:<taskId>`, `copy:<taskId>`, `refresh`, `open`, `retry-<scope>`), built by
- * `render`. A re-render finds the focused control here by identity, never through a selector or a dataset key.
+ * Focusable controls by focus key (`run:<taskId>`, `copy:<taskId>`, `refresh`, `open`, `retry-<scope>`, `title`), built
+ * by `render`. A re-render finds the focused control here by identity, never through a selector or a dataset key.
  */
 export type FocusTargets = Map<string, HTMLElement>;
 
