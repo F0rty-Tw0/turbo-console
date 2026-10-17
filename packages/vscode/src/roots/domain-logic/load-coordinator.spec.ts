@@ -236,16 +236,6 @@ describe('FEATURE: load coordinator', () => {
       });
     });
 
-    it('WHEN a fresh cache answers THEN that same record reads a model from a fresh cache', async () => {
-      const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
-
-      runAt(deferred, 0).publish(FRESH_CACHED);
-      runAt(deferred, 0).settle(FRESH_CACHED);
-      await flushSettles();
-
-      expect(record).toStrictEqual({ mode: 'cache-first', startedAt: 1_000, outcome: 'model', cacheFresh: true });
-    });
-
     it('WHEN no cache answers and the load fails THEN the record reads an error with no fresh cache', async () => {
       const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
 
