@@ -2,9 +2,11 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { z } from 'zod';
+
 import { ALLOWED_LICENSES, ATTRIBUTION_LICENSES, ICON_VIEW_BOX } from './common/tool-icons.const.ts';
 import { iconSchema, listedIconsSchema, manifestSchema } from './common/tool-icons.schema.ts';
-import type { GlyphSource, IconData } from './common/tool-icons.type.ts';
+import type { GlyphSource, IconData, ListedIcon } from './common/tool-icons.type.ts';
 import type { ToolGlyph, ToolSpec } from '../src/tool/common/tool.type.ts';
 
 const PATH_TAG = /<path/g;
@@ -25,6 +27,15 @@ export const versionOf = async (root: string): Promise<string> => {
   return manifest.version;
 };
 
+/** The strict check of one used entry; a failure names the icon, like `refusal`. */
+const strictIconOf = (entry: ListedIcon): IconData => {
+  const result = iconSchema.safeParse(entry);
+
+  if (!result.success) throw new Error(`${entry.slug}: ${z.prettifyError(result.error)}`);
+
+  return result.data;
+};
+
 /**
  * The `icons.json` entries for `slugs`, checked strictly (URLs, licence). Every other entry is read for its slug only,
  * so a malformed entry for an icon the table does not use cannot fail the build.
@@ -33,7 +44,7 @@ export const usedIconsOf = (entries: unknown, slugs: string[]): Map<string, Icon
   const wanted = new Set(slugs);
   const listed = listedIconsSchema.parse(entries);
   const used = listed.filter((entry) => wanted.has(entry.slug));
-  const icons = used.map((entry) => iconSchema.parse(entry));
+  const icons = used.map(strictIconOf);
 
   return new Map(icons.map((icon) => [icon.slug, icon]));
 };

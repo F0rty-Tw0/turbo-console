@@ -13,6 +13,11 @@ export type IconData = {
   readonly license?: IconLicense | undefined;
 };
 
+/** An `icons.json` entry read loosely: only its slug is known. */
+export type ListedIcon = {
+  readonly slug: string;
+};
+
 /** A glyph tool with its checked Simple Icons data and svg text. */
 export type GlyphSource = {
   readonly tool: ToolSpec;

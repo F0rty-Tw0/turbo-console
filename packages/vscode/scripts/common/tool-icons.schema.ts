@@ -1,12 +1,14 @@
 import { z } from 'zod';
 
+const httpsUrl = z.url({ protocol: /^https$/ });
+
 const licenseSchema = z.object({ type: z.string() });
 
 export const iconSchema = z.object({
   title: z.string(),
   slug: z.string(),
-  source: z.url(),
-  guidelines: z.url().optional(),
+  source: httpsUrl,
+  guidelines: httpsUrl.optional(),
   license: licenseSchema.optional()
 });
 

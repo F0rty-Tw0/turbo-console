@@ -61,16 +61,32 @@ describe('FEATURE: usedIconsOf', () => {
   });
 
   describe('GIVEN the same malformed source on a used slug', () => {
-    it('WHEN the used icons are read THEN it throws', () => {
-      expect(() => usedIconsOf([VALID, BAD_SOURCE], ['vitest', 'other'])).toThrow();
+    it('WHEN the used icons are read THEN it throws naming the icon and the field', () => {
+      expect(() => usedIconsOf([VALID, BAD_SOURCE], ['vitest', 'other'])).toThrow(/^other: [\s\S]*source/);
     });
   });
 
   describe('GIVEN a malformed guidelines url on a used slug', () => {
-    it('WHEN the used icons are read THEN it throws', () => {
+    it('WHEN the used icons are read THEN it throws naming the icon and the field', () => {
       const entry = { ...VALID, guidelines: 'nope' };
 
-      expect(() => usedIconsOf([entry], ['vitest'])).toThrow();
+      expect(() => usedIconsOf([entry], ['vitest'])).toThrow(/^vitest: [\s\S]*guidelines/);
+    });
+  });
+
+  describe('GIVEN a javascript: source on a used slug', () => {
+    it('WHEN the used icons are read THEN it throws because only https is allowed', () => {
+      const entry = { ...VALID, source: 'javascript:alert(1)' };
+
+      expect(() => usedIconsOf([entry], ['vitest'])).toThrow(/^vitest: [\s\S]*source/);
+    });
+  });
+
+  describe('GIVEN an http source on a used slug', () => {
+    it('WHEN the used icons are read THEN it throws because only https is allowed', () => {
+      const entry = { ...VALID, source: 'http://vitest.dev' };
+
+      expect(() => usedIconsOf([entry], ['vitest'])).toThrow(/^vitest: [\s\S]*source/);
     });
   });
 });
