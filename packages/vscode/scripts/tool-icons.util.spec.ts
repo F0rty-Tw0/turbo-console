@@ -46,6 +46,14 @@ const slugOf = (tool: ToolSpec): string => tool.glyph?.slug ?? '';
 
 const sourceOf = (slug: string): string => ICONS.get(slug)?.source ?? '';
 
+const guidelineLineOf = (tool: ToolSpec): string[] => {
+  const guidelines = ICONS.get(slugOf(tool))?.guidelines;
+
+  if (guidelines === undefined) return [];
+
+  return [`- Guidelines: ${guidelines}`];
+};
+
 const missingFrom = (notice: string, tool: ToolSpec): string[] => {
   const slug = slugOf(tool);
   const texts = [tool.title, slug, sourceOf(slug)];
@@ -191,7 +199,8 @@ describe('FEATURE: buildToolIcons', () => {
       const notice = await readFile(join(await builtDir(), 'TOOL-ICONS-NOTICE.md'), 'utf8');
       const version = await versionOf(PACKAGE_ROOT);
 
-      expect(notice).toContain(`built from Simple Icons ${version} (CC0-1.0`);
+      expect(notice).toContain(`built from Simple Icons ${version}. The Simple Icons package is CC0-1.0`);
+      expect(notice).toContain('that does not cover the logos themselves');
       expect(notice).toContain('Licence: CC-BY-4.0');
       expect(notice).toContain('Licence: MIT');
     });
@@ -201,6 +210,16 @@ describe('FEATURE: buildToolIcons', () => {
 
       const missing = GLYPH_TOOLS.flatMap((tool) => missingFrom(notice, tool));
 
+      expect(missing).toStrictEqual([]);
+    });
+
+    it('WHEN it is read THEN a tool whose icon records guidelines gets a Guidelines line', async () => {
+      const notice = await readFile(join(await builtDir(), 'TOOL-ICONS-NOTICE.md'), 'utf8');
+
+      const lines = GLYPH_TOOLS.flatMap(guidelineLineOf);
+      const missing = lines.filter((line) => !notice.includes(line));
+
+      expect(lines).toHaveLength(4);
       expect(missing).toStrictEqual([]);
     });
 

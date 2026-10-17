@@ -28,6 +28,8 @@ const sectionOf = ({ tool, glyph, icon }: GlyphSource): string => {
   const type = icon.license?.type;
   const lines = [`## ${tool.title}`, '', `- Simple Icons slug: ${glyph.slug}`, `- Source: ${icon.source}`];
 
+  if (icon.guidelines !== undefined) lines.push(`- Guidelines: ${icon.guidelines}`);
+
   if (type !== undefined) lines.push(`- Licence: ${type}`);
 
   if (glyph.attribution !== null) lines.push('', glyph.attribution);
@@ -42,7 +44,7 @@ const headerOf = (version: string): string => {
   const license = '`SIMPLE-ICONS-LICENSE.md`';
   const disclaimer = '`SIMPLE-ICONS-DISCLAIMER.md`';
 
-  return `# Tool icons notice\n\nThe font ${font} is built from Simple Icons ${version} (CC0-1.0, see ${license}; trademark disclaimer in ${disclaimer}).`;
+  return `# Tool icons notice\n\nThe font ${font} is built from Simple Icons ${version}. The Simple Icons package is CC0-1.0 (see ${license}); that does not cover the logos themselves. A logo's licence is listed below where Simple Icons records one. Trademark disclaimer: ${disclaimer}.`;
 };
 
 export const noticeOf = (sources: GlyphSource[], version: string): string => {

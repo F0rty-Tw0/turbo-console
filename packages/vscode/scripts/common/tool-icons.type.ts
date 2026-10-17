@@ -9,6 +9,7 @@ export type IconData = {
   readonly title: string;
   readonly slug: string;
   readonly source: string;
+  readonly guidelines?: string | undefined;
   readonly license?: IconLicense | undefined;
 };
 
