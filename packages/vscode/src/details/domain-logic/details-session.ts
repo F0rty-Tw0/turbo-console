@@ -17,7 +17,7 @@ import {
 
 /**
  * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
- * when it is sent or a message is checked. Nothing is posted before the page's `ready` or while hidden. A model change
+ * when it can be posted or a task message is checked. Nothing is posted before the page's `ready` or while hidden. A model change
  * while hidden aborts the dry run and defers the next one to the next show, which waits for the root's next store event
  * while the root has a skipped reload pending.
  */
