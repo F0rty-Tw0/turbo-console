@@ -1,7 +1,8 @@
 import { codicon, textElement } from './page-elements.ts';
+import { holdSwappedButton } from './run-click-hold.ts';
 import type { RunView } from '../../bridge/common/details-state.type.ts';
 import type { CardIndex, CardRefs, RunTexts } from '../common/details-page.type.ts';
-import { RUN_SWAP_HOLD_MS, STOP_ICON_ID } from '../common/run-view.const.ts';
+import { STOP_ICON_ID } from '../common/run-view.const.ts';
 import { safeColorVar } from '../utils/run-view.util.ts';
 
 const STOP_ICON = `.codicon-${STOP_ICON_ID}`;
@@ -48,48 +49,25 @@ export const fillRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): HTMLB
   return button;
 };
 
-/**
- * Ignores clicks on `button` for `RUN_SWAP_HOLD_MS`. A click capture listener on the target runs before its own click
- * listener, and Enter or Space on a button arrives as a click, so a click meant for the old button is dropped.
- */
-const holdClicks = (button: HTMLButtonElement): void => {
-  const ignore = (event: Event): void => event.stopImmediatePropagation();
-  const release = (): void => button.removeEventListener('click', ignore, true);
-
-  button.addEventListener('click', ignore, true);
-  setTimeout(release, RUN_SWAP_HOLD_MS);
-};
-
-/**
- * Holds every card's Run/Stop button, not just the swapped one: when a run ends VS Code can close the terminal panel,
- * the page grows and its scroll clamps, so another card's Run can slide under the pointer.
- */
-const holdRunButtons = (cards: CardIndex): void => {
-  for (const refs of cards.values()) {
-    const button = refs.runSlot.querySelector('button');
-
-    if (button !== null) holdClicks(button);
-  }
-};
-
-/** Writes the run and its new button, holds every Run/Stop button, and hands focus over when the old button had it. */
-const swapRun = (cards: CardIndex, refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
+/** Writes the run and its new button, holds its clicks, and hands focus over when the old button had it. */
+const swapRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
   const hadFocus = refs.runSlot.contains(document.activeElement);
   const button = fillRun(refs, run, runTexts);
 
-  holdRunButtons(cards);
+  holdSwappedButton(button);
 
   if (hadFocus) button.focus();
 };
 
 /**
  * Replaces only `taskId`'s status, and its Run/Stop button only when the run starts or ends. A Run that replaces Stop,
- * or a Stop that replaces Run, ignores clicks for `RUN_SWAP_HOLD_MS`, focused or not: VS Code can move focus off the
- * page when a run stops, and a double-click's second click comes long after a frame, so it would relaunch a stopped run
- * or stop a fresh one. Every other card's Run/Stop is held too (see `holdRunButtons`). A focused Run/Stop button hands focus to its replacement. Any other runState, such as the host's
- * second running one for the same Run or a running tick, keeps the button, its hold and its focus, since the button
- * depends only on whether the run is live. A held Enter is the page's repeated-Enter keydown filter's job, since its
- * repeats outlast the hold.
+ * or a Stop that replaces Run, ignores every click for `RUN_SWAP_HOLD_MS`, focused or not: VS Code can move focus off
+ * the page when a run stops, and a double-click's second click comes long after a frame, so it would relaunch a stopped
+ * run or stop a fresh one. Every other Run/Stop button ignores pointer clicks for as long (see `holdSwappedButton`). A
+ * focused Run/Stop button hands focus to its replacement. Any other runState, such as the host's second running one
+ * for the same Run or a running tick, keeps the button, its hold and its focus, since the button depends only on
+ * whether the run is live. A held Enter is the page's repeated-Enter keydown filter's job, since its repeats outlast
+ * the hold.
  */
 export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runTexts: RunTexts): void => {
   const refs = cards.get(taskId);
@@ -99,6 +77,6 @@ export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runText
   const hadStop = refs.runSlot.querySelector(STOP_ICON) !== null;
   const isSwap = hadStop !== run.isRunning;
 
-  if (isSwap) swapRun(cards, refs, run, runTexts);
+  if (isSwap) swapRun(refs, run, runTexts);
   else fillStatus(refs, run, runTexts);
 };

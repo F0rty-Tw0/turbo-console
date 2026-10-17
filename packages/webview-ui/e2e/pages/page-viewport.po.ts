@@ -10,6 +10,10 @@ const buttonLabelAt = ({ x, y }: ViewportPoint): string | null => {
   return button?.getAttribute('aria-label') ?? null;
 };
 
+/** Stores a promise of the page's next `resize` event as `window.__resized`. */
+const ARM_RESIZE_WAIT = `window.__resized = new Promise((resolve) =>
+  addEventListener('resize', resolve, { once: true })); undefined`;
+
 /** The page's viewport, and a spot in it that a later click lands on whatever moved there. */
 export class PageViewport {
   private readonly page: Page;
@@ -20,11 +24,17 @@ export class PageViewport {
     this.spot = null;
   }
 
-  /** Resizes the page, as VS Code does when it opens or closes the panel under the editor. */
+  /**
+   * Resizes the page, as VS Code does when it opens or closes the panel under the editor, and waits for its `resize`
+   * event: the page gets it in the next frame, before the user can see the new layout, while a click Playwright sends
+   * right away can beat that frame.
+   */
   public async resize(width: number, height: number): Promise<void> {
     const size = { width, height };
 
+    await this.page.evaluate(ARM_RESIZE_WAIT);
     await this.page.setViewportSize(size);
+    await this.page.evaluate('window.__resized');
   }
 
   /** Remembers the centre of the button labelled `label` as it sits now. */
@@ -42,10 +52,12 @@ export class PageViewport {
     await this.page.mouse.click(x, y);
   }
 
+  /** Polls, since a posted host message renders in a later task than the post. */
   public async expectButtonAtSpot(label: string): Promise<void> {
-    const labelAt = await this.page.evaluate(buttonLabelAt, this.rememberedSpot());
+    const spot = this.rememberedSpot();
+    const readLabelAt = async (): Promise<string | null> => this.page.evaluate(buttonLabelAt, spot);
 
-    expect(labelAt).toBe(label);
+    await expect.poll(readLabelAt).toBe(label);
   }
 
   private rememberedSpot(): ViewportPoint {

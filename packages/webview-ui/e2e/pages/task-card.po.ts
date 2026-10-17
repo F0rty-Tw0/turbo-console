@@ -42,6 +42,11 @@ export class TaskCardSection {
     await this.root.page().keyboard.down('Enter');
   }
 
+  /** Presses and releases Enter on the focused control, which a button turns into a click with `detail` 0. */
+  public async pressEnter(): Promise<void> {
+    await this.root.page().keyboard.press('Enter');
+  }
+
   /** Puts the held Enter down again, which Playwright sends as a repeat (`event.repeat` true). */
   public async repeatEnter(): Promise<void> {
     await this.root.page().keyboard.down('Enter');

@@ -2,6 +2,7 @@ import type { CardIndex, FocusTargets, RenderedPage } from './common/details-pag
 import { render } from './ui/details-page.ts';
 import { focusedKey, refocus } from './ui/focus-targets.ts';
 import { patchRun } from './ui/patch-run.ts';
+import { holdPointerClicks, installRunClickHold } from './ui/run-click-hold.ts';
 import { RunClock } from './ui/run-clock.ts';
 import { isHostMessage } from './utils/host-message.util.ts';
 import type { DetailsState } from '../bridge/common/details-state.type.ts';
@@ -26,8 +27,17 @@ const restoreScroll = (state: DetailsState): void => {
   scrollTo(0, savedScrollY);
 };
 
+/**
+ * A re-render of a page with cards holds pointer clicks: a card can leave (a kept script card that stopped while
+ * scripts are hidden) and focus fall back to the title, so the page scrolls and another Run can land under the pointer.
+ * The refocused replacement of a focused Run/Stop gets no full hold: a held Enter is the repeated-Enter filter's job,
+ * and a fresh key press is aimed at the button that has focus.
+ */
 const showState = (state: DetailsState): void => {
   const focusKey = focusedKey(page.focusTargets);
+  const hadCards = page.cards.size > 0;
+
+  if (hadCards) holdPointerClicks();
 
   page = render(root, state, bridge, clock);
   refocus(page.focusTargets, focusKey);
@@ -61,6 +71,7 @@ const ignoreRepeatedEnter = (event: KeyboardEvent): void => {
 
 document.body.append(root);
 addEventListener('keydown', ignoreRepeatedEnter, true);
+installRunClickHold();
 addEventListener('scroll', saveScroll, { passive: true });
 bridge.onMessage(receive);
 bridge.ready();
