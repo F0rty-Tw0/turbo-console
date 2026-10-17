@@ -11,7 +11,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { loadWorkspace, readCachedWorkspace, resolveTurbo } from '../index.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '../index.ts';
+import type { SettledRead } from './test/common/cache.type.ts';
 import { backdateTree } from './test/utils/backdate.spec.util.ts';
+import { settledRead } from './test/utils/settled-read.spec.util.ts';
 import { cacheFileName } from './utils/cache-key.util.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
@@ -116,16 +118,17 @@ describe('FEATURE: workspace cache from a real turbo', () => {
     });
 
     describe('WHEN a restarted process reads the cache', () => {
-      let read: CachedWorkspace | null;
+      let read: SettledRead | null;
 
       beforeAll(async () => {
         const reader = await freshReader();
+        const cached = await reader(binary, cacheDir);
 
-        read = await reader(binary, cacheDir);
+        read = await settledRead(cached);
       });
 
       it('THEN it is fresh with the loaded model', () => {
-        const expected: CachedWorkspace = { model: loaded, isFresh: true };
+        const expected: SettledRead = { model: loaded, isFresh: true };
 
         expect(read).toStrictEqual(expected);
       });
@@ -161,13 +164,15 @@ describe('FEATURE: workspace cache from a real turbo', () => {
       await backdateTree(fixture().dir, AGE_MS);
 
       const model = await loadWorkspace(binary, { cacheDir });
-      const before = await readCachedWorkspace(binary, cacheDir);
-      const fresh: CachedWorkspace = { model, isFresh: true };
-      const stale: CachedWorkspace = { model, isFresh: false };
+      const cachedBefore = await readCachedWorkspace(binary, cacheDir);
+      const before = await settledRead(cachedBefore);
+      const fresh: SettledRead = { model, isFresh: true };
+      const stale: SettledRead = { model, isFresh: false };
 
       await appendFile(path, '\n');
 
-      const after = await readCachedWorkspace(binary, cacheDir);
+      const cachedAfter = await readCachedWorkspace(binary, cacheDir);
+      const after = await settledRead(cachedAfter);
 
       expect(before).toStrictEqual(fresh);
       expect(after).toStrictEqual(stale);
@@ -185,8 +190,9 @@ describe('FEATURE: workspace cache from a real turbo', () => {
 
       const model = await loadWorkspace(binary, { cacheDir });
       const readerBefore = await freshReader();
-      const before = await readerBefore(binary, cacheDir);
-      const fresh: CachedWorkspace = { model, isFresh: true };
+      const cachedBefore = await readerBefore(binary, cacheDir);
+      const before = await settledRead(cachedBefore);
+      const fresh: SettledRead = { model, isFresh: true };
 
       await writeFile(join(cacheDir, cacheFileName(binary.root)), '{');
 
@@ -210,12 +216,13 @@ describe('FEATURE: workspace cache from a real turbo', () => {
 
       const loaded = await loadWorkspace(binary, { cacheDir });
       const original = structuredClone(loaded);
-      const fresh: CachedWorkspace = { model: original, isFresh: true };
+      const fresh: SettledRead = { model: original, isFresh: true };
 
       loaded.warnings.push('changed');
       loaded.packages.reverse();
 
-      const read = await readCachedWorkspace(binary, cacheDir);
+      const cached = await readCachedWorkspace(binary, cacheDir);
+      const read = await settledRead(cached);
 
       expect(read).toStrictEqual(fresh);
     });
@@ -262,8 +269,9 @@ describe('FEATURE: workspace cache from a real turbo', () => {
       await loadWorkspace(binary, { cacheDir });
 
       const read = await readCachedWorkspace(binary, cacheDir);
+      const isFresh = await read?.isFresh();
 
-      expect(read?.isFresh).toBe(false);
+      expect(isFresh).toBe(false);
     });
   });
 

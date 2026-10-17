@@ -1,5 +1,5 @@
 import { TurboException } from '@turbo-console/core';
-import type { CachedWorkspace } from '@turbo-console/core';
+import type { CachedWorkspace, WorkspaceModel } from '@turbo-console/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { loadRoot } from './load-root.ts';
@@ -201,15 +201,15 @@ describe('FEATURE: abort, deadline and load slot of a root load', () => {
       const deps = loadDepsMock();
       const controller = new AbortController();
       const publish = vi.fn();
-      // The abort sits in the getter: loadRoot reads isFresh after the cache read settles and before its abort check,
+      // The abort sits in the getter: loadRoot reads the model after the cache read settles and before its abort check,
       // the only point where an abort meets a non-null cache. A queued microtask abort loses to the read's own race.
       const abortsWhenRead: CachedWorkspace = {
-        model: WORKSPACE_MODEL_STUB,
-        get isFresh(): boolean {
+        get model(): WorkspaceModel {
           controller.abort();
 
-          return true;
-        }
+          return WORKSPACE_MODEL_STUB;
+        },
+        isFresh: async (): Promise<boolean> => Promise.resolve(true)
       };
 
       vi.mocked(deps.readCached).mockResolvedValue(abortsWhenRead);

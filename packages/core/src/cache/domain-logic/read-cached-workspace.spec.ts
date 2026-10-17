@@ -10,16 +10,18 @@ import { TurboBinary } from '../../binary/common/index.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import type { WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
 import { graphPackage } from '../../workspace/test/utils/graph.spec.util.ts';
-import type { CachedWorkspace, KeyedFile } from '../common/cache.type.ts';
+import type { KeyedFile } from '../common/cache.type.ts';
 import type * as keyedFiles from '../data-access/keyed-files.ts';
 import { storeWorkspace } from '../data-access/store-workspace.ts';
+import type { SettledRead } from '../test/common/cache.type.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
 import { backdateTree } from '../test/utils/backdate.spec.util.ts';
+import { settledRead } from '../test/utils/settled-read.spec.util.ts';
 import { markAt } from '../test/utils/spawn-mark.spec.util.ts';
 import { cacheFileName } from '../utils/cache-key.util.ts';
 
 const hashing = vi.hoisted(() => {
-  const state = { isFailing: false };
+  const state = { isFailing: false, calls: 0 };
 
   return state;
 });
@@ -28,6 +30,8 @@ vi.mock('../data-access/keyed-files.ts', async (importOriginal) => {
   const real = await importOriginal<typeof keyedFiles>();
 
   const hashKeyedFiles = async (root: string, paths: string[]): Promise<KeyedFile[]> => {
+    hashing.calls += 1;
+
     if (hashing.isFailing) throw new Error('hash failed');
 
     return real.hashKeyedFiles(root, paths);
@@ -73,8 +77,8 @@ const modelAt = (root: string): WorkspaceModel => {
   return model;
 };
 
-const cached = (model: WorkspaceModel, isFresh: boolean): CachedWorkspace => {
-  const workspace: CachedWorkspace = { model, isFresh };
+const cached = (model: WorkspaceModel, isFresh: boolean): SettledRead => {
+  const workspace: SettledRead = { model, isFresh };
 
   return workspace;
 };
@@ -90,6 +94,7 @@ describe('FEATURE: cached workspace read', () => {
 
   afterEach(() => {
     hashing.isFailing = false;
+    hashing.calls = 0;
   });
 
   describe('GIVEN a workspace stored with a cache dir', () => {
@@ -102,8 +107,9 @@ describe('FEATURE: cached workspace read', () => {
       await rm(join(cacheDir, cacheFileName(root)));
 
       const read = await readCachedWorkspace(binaryAt(root), cacheDir);
+      const settled = await settledRead(read);
 
-      expect(read).toStrictEqual(cached(model, true));
+      expect(settled).toStrictEqual(cached(model, true));
     });
 
     it('WHEN a keyed file is edited, then read THEN it is stale with its model', async () => {
@@ -115,8 +121,9 @@ describe('FEATURE: cached workspace read', () => {
       await appendFile(join(root, 'a', 'package.json'), '\n');
 
       const read = await readCachedWorkspace(binaryAt(root), cacheDir);
+      const settled = await settledRead(read);
 
-      expect(read).toStrictEqual(cached(model, false));
+      expect(settled).toStrictEqual(cached(model, false));
     });
   });
 
@@ -129,8 +136,9 @@ describe('FEATURE: cached workspace read', () => {
       await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
 
       const read = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
+      const settled = await settledRead(read);
 
-      expect(read).toStrictEqual(cached(model, false));
+      expect(settled).toStrictEqual(cached(model, false));
     });
   });
 
@@ -148,8 +156,9 @@ describe('FEATURE: cached workspace read', () => {
       first?.model.packages.reverse();
 
       const read = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
+      const settled = await settledRead(read);
 
-      expect(read).toStrictEqual(cached(original, true));
+      expect(settled).toStrictEqual(cached(original, true));
     });
   });
 
@@ -162,8 +171,9 @@ describe('FEATURE: cached workspace read', () => {
       await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
 
       const read = await readCachedWorkspace(upgraded, join(newCaseDir(), 'cache dir'));
+      const settled = await settledRead(read);
 
-      expect(read).toStrictEqual(cached(model, false));
+      expect(settled).toStrictEqual(cached(model, false));
     });
   });
 
@@ -193,15 +203,70 @@ describe('FEATURE: cached workspace read', () => {
   });
 
   describe('GIVEN a stored workspace whose keyed files then fail to hash', () => {
-    it('WHEN read THEN it rejects with a TurboException for the cache read', async () => {
+    it('WHEN read THEN its model is still returned', async () => {
+      const root = await newRoot();
+      const model = modelAt(root);
+
+      await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
+      hashing.isFailing = true;
+
+      const read = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
+
+      expect(read?.model).toStrictEqual(model);
+    });
+
+    it('WHEN its freshness is checked THEN it rejects with a TurboException for the cache read', async () => {
       const root = await newRoot();
 
       await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
       hashing.isFailing = true;
 
-      const reading = readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
+      const read = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
+      const checking = read?.isFresh();
 
-      await expect(reading).rejects.toBeInstanceOf(TurboException);
+      await expect(checking).rejects.toBeInstanceOf(TurboException);
+    });
+  });
+
+  describe('GIVEN a stored workspace', () => {
+    it('WHEN read THEN its model is returned before any keyed file is hashed', async () => {
+      const root = await newRoot();
+      const model = modelAt(root);
+
+      await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
+      hashing.calls = 0;
+
+      const read = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
+
+      expect(read?.model).toStrictEqual(model);
+      expect(hashing.calls).toBe(0);
+    });
+
+    it('WHEN its freshness is checked THEN its keyed files are hashed once', async () => {
+      const root = await newRoot();
+
+      await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
+
+      const read = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
+
+      hashing.calls = 0;
+      await read?.isFresh();
+
+      expect(hashing.calls).toBe(1);
+    });
+  });
+
+  describe('GIVEN a workspace stored with a null key, a keyed file written after its spawn started', () => {
+    it('WHEN read THEN it is stale with its model', async () => {
+      const root = await newRoot();
+      const model = modelAt(root);
+
+      await storeWorkspace(model, PACKAGES, markAt(Date.now() - 2 * AGE_MS), undefined);
+
+      const read = await readCachedWorkspace(binaryAt(root), join(newCaseDir(), 'cache dir'));
+      const settled = await settledRead(read);
+
+      expect(settled).toStrictEqual(cached(model, false));
     });
   });
 });

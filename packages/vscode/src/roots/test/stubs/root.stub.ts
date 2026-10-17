@@ -30,10 +30,13 @@ export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
 
 export const CACHED_WORKSPACE_STUB: CachedWorkspace = {
   model: WORKSPACE_MODEL_STUB,
-  isFresh: true
+  isFresh: async (): Promise<boolean> => Promise.resolve(true)
 };
 
-export const STALE_CACHED_WORKSPACE_STUB: CachedWorkspace = { ...CACHED_WORKSPACE_STUB, isFresh: false };
+export const STALE_CACHED_WORKSPACE_STUB: CachedWorkspace = {
+  ...CACHED_WORKSPACE_STUB,
+  isFresh: async (): Promise<boolean> => Promise.resolve(false)
+};
 
 export const LOADED_MODEL_STUB: LoadedModel = {
   kind: 'model',

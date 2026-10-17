@@ -20,37 +20,46 @@ const failureOf = (stage: LoadFailure['stage'], error: unknown): LoadFailure => 
   return failure;
 };
 
-const loadedModel = (binary: TurboBinary, cached: CachedWorkspace): LoadedModel => {
-  const loaded: LoadedModel = { kind: 'model', binary, model: cached.model, fromCache: true, isFresh: cached.isFresh };
-
-  return loaded;
+type CachedLoad = {
+  readonly published: LoadedModel;
+  readonly isFresh: () => Promise<boolean>;
 };
 
-const readCachedOrNull = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal): Promise<CachedWorkspace | null> => {
-  const read = async (): Promise<CachedWorkspace | null> => deps.readCached(binary);
-
+/** Settles when the caller aborts; a `work` that throws is logged unless the caller aborted, and gives `fallback`. */
+const raceLogged = async <TValue>(
+  work: () => Promise<TValue>,
+  fallback: TValue,
+  deps: LoadDeps,
+  signal: AbortSignal
+): Promise<TValue> => {
   try {
-    return await raceSignal(read, signal);
+    return await raceSignal(work, signal);
   } catch (error) {
     if (!signal.aborted) deps.log(logTextOf(error));
 
-    return null;
+    return fallback;
   }
 };
 
-const cachedModelOf = async (
-  mode: LoadMode,
-  binary: TurboBinary,
-  deps: LoadDeps,
-  signal: AbortSignal
-): Promise<LoadedModel | null> => {
+/** Its freshness is not known yet when it is published, so `published.isFresh` is `false` until `isFresh` resolves. */
+const cachedLoadOf = async (mode: LoadMode, binary: TurboBinary, deps: LoadDeps, signal: AbortSignal): Promise<CachedLoad | null> => {
   if (mode === 'full') return null;
 
-  const cached = await readCachedOrNull(binary, deps, signal);
+  const read = async (): Promise<CachedWorkspace | null> => deps.readCached(binary);
+  const cached = await raceLogged(read, null, deps, signal);
 
   if (cached === null) return null;
 
-  return loadedModel(binary, cached);
+  const published: LoadedModel = { kind: 'model', binary, model: cached.model, fromCache: true, isFresh: false };
+  const load: CachedLoad = { published, isFresh: cached.isFresh };
+
+  return load;
+};
+
+const freshModelOf = (published: LoadedModel): LoadedModel => {
+  const fresh: LoadedModel = { ...published, isFresh: true };
+
+  return fresh;
 };
 
 /** A port that throws must not make `loadRoot` throw: its error is logged and the load goes on. */
@@ -110,14 +119,26 @@ const fullLoad = async (binary: TurboBinary, deps: LoadDeps, signal: AbortSignal
   }
 };
 
+/** After the publish: the cached model when its freshness check passes, else a full load. */
+const checkedLoad = async (binary: TurboBinary, cached: CachedLoad, deps: LoadDeps, signal: AbortSignal): Promise<LoadResult> => {
+  const isFresh = await raceLogged(cached.isFresh, false, deps, signal);
+
+  if (signal.aborted) return failureOf('load', signal.reason);
+
+  if (isFresh) return freshModelOf(cached.published);
+
+  return fullLoad(binary, deps, signal);
+};
+
 /**
- * Spec §4.3: one load of one root. `cache-first` publishes the cached model at once and returns it when fresh, else
- * (and always in `full` mode) takes a load slot (`deps.acquire`) and loads under `LOAD_DEADLINE_MS`, counted from when
- * the slot is won, and the caller's `signal`. The cache read, the slot wait and the load all settle when the caller
- * aborts, even if a port hangs (a port that hands out the slot must reject on abort, or the slot is lost); nothing is
- * published or loaded after the caller aborted. Never throws: a failure is the result, with `cause` stripped, and is
- * not logged here (the session logs it). A `publish` or slot `release` that throws is logged through `deps.log`, and
- * so is a cache read that throws unless the caller aborted.
+ * Spec §4.3: one load of one root. `cache-first` publishes the cached model as soon as it is read, then checks its
+ * freshness and returns it with `isFresh` set when fresh, else (and always in `full` mode) takes a load slot
+ * (`deps.acquire`) and loads under `LOAD_DEADLINE_MS`, counted from when the slot is won, and the caller's `signal`. The
+ * cache read, the freshness check, the slot wait and the load all settle when the caller aborts, even if a port hangs (a
+ * port that hands out the slot must reject on abort, or the slot is lost); nothing is published or loaded after the
+ * caller aborted. Never throws: a failure is the result, with `cause` stripped, and is not logged here (the session
+ * logs it). A `publish` or slot `release` that throws is logged through `deps.log`, and so is a cache read or freshness
+ * check that throws unless the caller aborted; a freshness check that throws counts as stale.
  */
 export const loadRoot = async (
   mode: LoadMode,
@@ -133,17 +154,15 @@ export const loadRoot = async (
     return failureOf('binary', error);
   }
 
-  const cached = await cachedModelOf(mode, binary, deps, signal);
+  const cached = await cachedLoadOf(mode, binary, deps, signal);
 
   if (signal.aborted) return failureOf('load', signal.reason);
 
   if (cached === null) return fullLoad(binary, deps, signal);
 
   runPort(() => {
-    publish(cached);
+    publish(cached.published);
   }, deps);
 
-  if (cached.isFresh) return cached;
-
-  return fullLoad(binary, deps, signal);
+  return checkedLoad(binary, cached, deps, signal);
 };

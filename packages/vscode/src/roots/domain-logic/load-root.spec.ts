@@ -14,6 +14,10 @@ const LOADED: LoadedModel = {
   isFresh: true
 };
 
+const PUBLISHED: LoadedModel = { ...LOADED, fromCache: true, isFresh: false };
+
+const FRESH_CACHED: LoadedModel = { ...LOADED, fromCache: true };
+
 describe('FEATURE: load a root', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -47,17 +51,14 @@ describe('FEATURE: load a root', () => {
   });
 
   describe('GIVEN cache-first mode and a fresh cache', () => {
-    it('WHEN loaded THEN the cached model is published and returned, and load never runs', async () => {
+    it('WHEN loaded THEN the cached model is published unchecked, returned fresh, and load never runs', async () => {
       const deps = loadDepsMock();
       const publish = vi.fn();
 
       const result = await loadRoot('cache-first', deps, new AbortController().signal, publish);
 
-      const expected: LoadedModel = { ...LOADED, fromCache: true };
-
-      expect(result).toStrictEqual(expected);
-      expect(publish).toHaveBeenCalledExactlyOnceWith(expected);
-      expect(result).toBe(publish.mock.calls[0]?.[0]);
+      expect(result).toStrictEqual(FRESH_CACHED);
+      expect(publish).toHaveBeenCalledExactlyOnceWith(PUBLISHED);
       expect(deps.load).not.toHaveBeenCalled();
       expect(deps.progress).not.toHaveBeenCalled();
       expect(deps.acquire).not.toHaveBeenCalled();
@@ -85,9 +86,7 @@ describe('FEATURE: load a root', () => {
 
       const result = await loadRoot('cache-first', deps, new AbortController().signal, publish);
 
-      const stale: LoadedModel = { ...LOADED, fromCache: true, isFresh: false };
-
-      expect(publish).toHaveBeenCalledExactlyOnceWith(stale);
+      expect(publish).toHaveBeenCalledExactlyOnceWith(PUBLISHED);
       expect(publish).toHaveBeenCalledBefore(vi.mocked(deps.load));
       expect(deps.load).toHaveBeenCalledOnce();
       expect(result).toStrictEqual(LOADED);

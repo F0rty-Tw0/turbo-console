@@ -31,7 +31,7 @@ const ODD_PACKAGE = { ...A_PACKAGE_STUB, name: ODD_NAME };
 const ODD_MODEL = { ...DETAILS_MODEL_STUB, packages: [ODD_PACKAGE] };
 const ODD_LOADED = { ...DETAILS_LOADED_STUB, model: ODD_MODEL };
 const BINARY_GONE = new TurboException('not-found', 'no turbo');
-const DETAILS_CACHE: CachedWorkspace = { model: DETAILS_MODEL_STUB, isFresh: true };
+const DETAILS_CACHE: CachedWorkspace = { model: DETAILS_MODEL_STUB, isFresh: async (): Promise<boolean> => Promise.resolve(true) };
 
 describe('FEATURE: opening a details panel', () => {
   let store: RootStore;
