@@ -17,10 +17,10 @@ const lineAt = (text: string, offset: number): number => {
 };
 
 /**
- * The line of the top-level `"scripts"` key, 0 without one. `findNodeAtLocation` returns the key's value, so the key is
- * the first child of that value's property node. A parse error still leaves a tree, so it never throws.
+ * `findNodeAtLocation` returns the key's value, so the key is the first child of that value's property node. A parse
+ * error still leaves a tree.
  */
-const scriptsLineOf = (text: string): number => {
+const parsedScriptsLineOf = (text: string): number => {
   const tree = parseTree(text);
 
   if (tree === undefined) return 0;
@@ -31,6 +31,20 @@ const scriptsLineOf = (text: string): number => {
   if (key === undefined) return 0;
 
   return lineAt(text, key.offset);
+};
+
+/**
+ * The line of the top-level `"scripts"` key, 0 without one. The parser recurses once per nesting level, so a text nested
+ * deep enough to overflow the stack puts the lens on line 0 instead of throwing.
+ */
+const scriptsLineOf = (text: string): number => {
+  try {
+    return parsedScriptsLineOf(text);
+  } catch (error) {
+    if (error instanceof RangeError) return 0;
+
+    throw error;
+  }
 };
 
 const titleOf = (labels: string[]): string => {

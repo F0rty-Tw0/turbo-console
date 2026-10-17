@@ -175,5 +175,11 @@ describe('FEATURE: lens spec of a package.json (spec 1c-b §4.11)', () => {
     it('WHEN the text uses lone CR THEN the lens sits on the key line', () => {
       expect(lineOf('{\r  "name": "a",\r  "scripts": {}\r}\r')).toBe(2);
     });
+
+    it('WHEN the text nests deep enough to overflow the parser stack THEN the lens sits on line 0', () => {
+      const text = `{\n  "scripts": {},\n  "x": ${'['.repeat(10_000)}`;
+
+      expect(lineOf(text)).toBe(0);
+    });
   });
 });
