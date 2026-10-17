@@ -56,6 +56,12 @@ describe('FEATURE: run refusal', () => {
       }
     );
 
+    it('WHEN its body is only whitespace THEN the unsafe text names it, as turbo keeps such a body', () => {
+      const task: TaskNode = { ...SCRIPT_TASK, command: '   ' };
+
+      expect(refusalOf({ ...SCRIPT, task })).toBe(UNSAFE_BUILD);
+    });
+
     it('WHEN it is forced THEN the text says Run Without Cache only applies to turbo tasks', () => {
       expect(refusalOf({ ...SCRIPT, force: true })).toBe(NOT_TURBO_FORCE_TEXT);
     });
