@@ -10,9 +10,10 @@ type Flight = {
   readonly settled: PromiseWithResolvers<undefined>;
 };
 
-const closeRecord = (record: LoadRecord, outcome: LoadOutcome, published: LoadedModel | null): void => {
+/** `loadRoot` returns a cached model only once its freshness check passed, so the result alone says whether it was fresh. */
+const closeRecord = (record: LoadRecord, outcome: LoadOutcome, result: LoadResult): void => {
   const isCacheFirst = record.mode === 'cache-first';
-  const isFreshCache = published?.isFresh ?? false;
+  const isFreshCache = result.kind === 'model' && result.fromCache && result.isFresh;
 
   record.outcome = outcome;
   record.cacheFresh = isCacheFirst ? isFreshCache : null;
@@ -185,13 +186,17 @@ export class LoadCoordinator implements Coordinator {
     this.ports.apply(result);
   }
 
-  /** Bookkeeping first, `apply` last: the follow-up and the settle waiters never depend on the port returning. */
+  /**
+   * Bookkeeping first, `apply` last: the follow-up and the settle waiters never depend on the port returning. A cached
+   * result after a publish is that published model, now checked fresh, so it is not applied again.
+   */
   private settle(flight: Flight, result: LoadResult, published: LoadedModel | null): void {
     const isLive = this.isLive(flight);
     const outcome = isLive ? result.kind : 'aborted';
     const wasCurrent = this.current === flight;
+    const isPublishedAgain = result.kind === 'model' && result.fromCache && published !== null;
 
-    closeRecord(flight.record, outcome, published);
+    closeRecord(flight.record, outcome, result);
 
     if (wasCurrent) this.current = null;
 
@@ -202,7 +207,7 @@ export class LoadCoordinator implements Coordinator {
     flight.firstAnswer.resolve(undefined);
     flight.settled.resolve(undefined);
 
-    if (result !== published) this.take(flight, result);
+    if (!isPublishedAgain) this.take(flight, result);
   }
 
   private clearStale(generation: number): void {
