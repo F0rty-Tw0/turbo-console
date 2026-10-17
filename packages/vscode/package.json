@@ -446,6 +446,134 @@
           "description": "How the Packages view lists packages."
         }
       }
+    },
+    "icons": {
+      "turbo-console-angular": {
+        "description": "Angular",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E001"
+        }
+      },
+      "turbo-console-astro": {
+        "description": "Astro",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E002"
+        }
+      },
+      "turbo-console-biome": {
+        "description": "Biome",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E003"
+        }
+      },
+      "turbo-console-cypress": {
+        "description": "Cypress",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E004"
+        }
+      },
+      "turbo-console-docker": {
+        "description": "Docker",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E005"
+        }
+      },
+      "turbo-console-esbuild": {
+        "description": "esbuild",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E006"
+        }
+      },
+      "turbo-console-eslint": {
+        "description": "ESLint",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E007"
+        }
+      },
+      "turbo-console-jest": {
+        "description": "Jest",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E008"
+        }
+      },
+      "turbo-console-mocha": {
+        "description": "Mocha",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E009"
+        }
+      },
+      "turbo-console-next": {
+        "description": "Next.js",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E00A"
+        }
+      },
+      "turbo-console-nuxt": {
+        "description": "Nuxt",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E00B"
+        }
+      },
+      "turbo-console-prettier": {
+        "description": "Prettier",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E00C"
+        }
+      },
+      "turbo-console-rollup": {
+        "description": "Rollup",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E00D"
+        }
+      },
+      "turbo-console-storybook": {
+        "description": "Storybook",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E00E"
+        }
+      },
+      "turbo-console-svelte": {
+        "description": "Svelte",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E00F"
+        }
+      },
+      "turbo-console-typescript": {
+        "description": "TypeScript",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E010"
+        }
+      },
+      "turbo-console-vite": {
+        "description": "Vite",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E011"
+        }
+      },
+      "turbo-console-vitest": {
+        "description": "Vitest",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E012"
+        }
+      }
     }
   },
   "scripts": {
