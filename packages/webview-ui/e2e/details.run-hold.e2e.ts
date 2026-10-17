@@ -17,6 +17,48 @@ const IDLE_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_
 
 const RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [RUNNING_CARD] };
 
+const turboCard = (name: string): TaskCard => {
+  const card: TaskCard = { ...TASK_CARD_STUB, taskId: `b#${name}`, name };
+
+  return card;
+};
+
+const scriptCard = (name: string, run: RunView = RUN_VIEW_STUB): TaskCard => {
+  const card: TaskCard = {
+    ...TASK_CARD_STUB,
+    taskId: `b#${name}`,
+    name,
+    definition: null,
+    cacheStatus: null,
+    isTurboTask: false,
+    runCommand: `pnpm run ${name}`,
+    run
+  };
+
+  return card;
+};
+
+/** Package `b` of the real-VS Code repro, its last card running; at `PAGE_WIDTH` × `PAGE_HEIGHT` the page scrolls. */
+const SCROLLING_STATE: PackageDetails = {
+  ...PACKAGE_DETAILS_STUB,
+  packageName: 'b',
+  tasks: [
+    turboCard('build'),
+    turboCard('lint'),
+    scriptCard('a b'),
+    scriptCard('check'),
+    scriptCard('fmt'),
+    scriptCard('long', RUNNING)
+  ]
+};
+
+const PAGE_WIDTH = 1080;
+
+const PAGE_HEIGHT = 500;
+
+/** The terminal panel's height in the repro: VS Code closes it with the run's last terminal, and the page grows by it. */
+const PANEL_HEIGHT = 296;
+
 /** The host's second runState for one Run (`processStarted`) lands this long after the first (`tryStart`). */
 const SECOND_RUN_STATE_MS = 40;
 
@@ -108,6 +150,34 @@ test.describe('FEATURE: a Stop that replaces Run holds clicks', () => {
 
       await test.step('THEN the page posts stop with its id', async (): Promise<void> =>
         detailsPage.expectLastPosted({ type: 'stop', taskId }));
+    }
+  );
+
+  test(
+    'GIVEN the page scrolled to the bottom, a click where Stop was does not run the card that slides there when the page grows',
+    { annotation: AC6 },
+    async ({ detailsPage, pageClock, pageViewport }): Promise<void> => {
+      await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+      await test.step('AND is short enough to scroll', async (): Promise<void> => pageViewport.resize(PAGE_WIDTH, PAGE_HEIGHT));
+
+      await test.step('AND shows package b with long running', async (): Promise<void> => detailsPage.open(SCROLLING_STATE));
+
+      await test.step('AND is scrolled to the bottom', async (): Promise<void> => detailsPage.scrollToBottom());
+
+      await test.step('AND the spot of Stop long is noted', async (): Promise<void> => pageViewport.rememberSpotOf('Stop long'));
+
+      await test.step('AND the page grows as the terminal panel closes', async (): Promise<void> =>
+        pageViewport.resize(PAGE_WIDTH, PAGE_HEIGHT + PANEL_HEIGHT));
+
+      await test.step('AND long ends stopped', async (): Promise<void> => detailsPage.sendRunState('b#long', STOPPED));
+
+      await test.step('THEN Run check sits where Stop long was', async (): Promise<void> =>
+        pageViewport.expectButtonAtSpot('Run check'));
+
+      await test.step('WHEN that spot is clicked', async (): Promise<void> => pageViewport.clickSpot());
+
+      await test.step('THEN the page posted nothing', async (): Promise<void> => detailsPage.expectPosted([{ type: 'ready' }]));
     }
   );
 

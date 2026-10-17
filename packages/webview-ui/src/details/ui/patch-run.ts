@@ -60,12 +60,24 @@ const holdClicks = (button: HTMLButtonElement): void => {
   setTimeout(release, RUN_SWAP_HOLD_MS);
 };
 
-/** Writes the run and its new button, holds the button's clicks, and hands it focus when the old button had it. */
-const swapRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
+/**
+ * Holds every card's Run/Stop button, not just the swapped one: when a run ends VS Code can close the terminal panel,
+ * the page grows and its scroll clamps, so another card's Run can slide under the pointer.
+ */
+const holdRunButtons = (cards: CardIndex): void => {
+  for (const refs of cards.values()) {
+    const button = refs.runSlot.querySelector('button');
+
+    if (button !== null) holdClicks(button);
+  }
+};
+
+/** Writes the run and its new button, holds every Run/Stop button, and hands focus over when the old button had it. */
+const swapRun = (cards: CardIndex, refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
   const hadFocus = refs.runSlot.contains(document.activeElement);
   const button = fillRun(refs, run, runTexts);
 
-  holdClicks(button);
+  holdRunButtons(cards);
 
   if (hadFocus) button.focus();
 };
@@ -74,7 +86,7 @@ const swapRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
  * Replaces only `taskId`'s status, and its Run/Stop button only when the run starts or ends. A Run that replaces Stop,
  * or a Stop that replaces Run, ignores clicks for `RUN_SWAP_HOLD_MS`, focused or not: VS Code can move focus off the
  * page when a run stops, and a double-click's second click comes long after a frame, so it would relaunch a stopped run
- * or stop a fresh one. A focused Run/Stop button hands focus to its replacement. Any other runState, such as the host's
+ * or stop a fresh one. Every other card's Run/Stop is held too (see `holdRunButtons`). A focused Run/Stop button hands focus to its replacement. Any other runState, such as the host's
  * second running one for the same Run or a running tick, keeps the button, its hold and its focus, since the button
  * depends only on whether the run is live. A held Enter is the page's repeated-Enter keydown filter's job, since its
  * repeats outlast the hold.
@@ -87,6 +99,6 @@ export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runText
   const hadStop = refs.runSlot.querySelector(STOP_ICON) !== null;
   const isSwap = hadStop !== run.isRunning;
 
-  if (isSwap) swapRun(refs, run, runTexts);
+  if (isSwap) swapRun(cards, refs, run, runTexts);
   else fillStatus(refs, run, runTexts);
 };
