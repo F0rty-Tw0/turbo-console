@@ -159,7 +159,12 @@ describe('FEATURE: the editor effects of Package Details', () => {
       const asked = asWebviewUri.mock.calls.map((call) => call[0].fsPath);
       const html = panelAt(made, 0).fake.assigned[0];
 
-      expect(asked).toStrictEqual([`${assetDir}/main.js`, `${assetDir}/details.css`, `${assetDir}/codicon.css`]);
+      expect(asked).toStrictEqual([
+        `${assetDir}/main.js`,
+        `${assetDir}/details.css`,
+        `${assetDir}/codicon.css`,
+        `${assetDir}/tool-icons.css`
+      ]);
       expect(html).toContain(`src="webview:${assetDir}/main.js"`);
     });
 
