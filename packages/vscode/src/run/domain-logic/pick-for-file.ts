@@ -6,10 +6,11 @@ import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
-import { NOT_PACKAGE_TEXT, NO_PACKAGE_TASKS_TEXT, TASK_PLACEHOLDER } from '../common/picker.const.ts';
-import type { FileLookupPorts, FilePackage, FileTasks, NamedTask, PickerPorts } from '../common/picker.type.ts';
+import { NOT_PACKAGE_TEXT, TASK_PLACEHOLDER } from '../common/picker.const.ts';
+import type { FileLookupPorts, FilePackage, FileTasks, NamedTask, PickerPorts, TaskOffer } from '../common/picker.type.ts';
 import { packageForManifest, relativePathOf } from '../utils/package-lookup.util.ts';
 import { taskItemsOf } from '../utils/picker-items.util.ts';
+import { emptyTasksText } from '../utils/picker-text.util.ts';
 
 const refused = (ports: FileLookupPorts, text: string): null => {
   ports.info(text);
@@ -93,16 +94,21 @@ export const packageOfFile = async (
   return found;
 };
 
-/** The tasks to offer for the manifest `file`; `null` after an info message says why there are none. */
-const tasksOfFile = async (roots: Roots, ports: PickerPorts, file: string | null): Promise<FileTasks | null> => {
-  const found = await packageOfFile(roots, ports, file, true);
-
-  if (found === null) return null;
-
+/**
+ * The tasks to offer for the package `found`: turbo tasks, then scripts while they are shown. `null` after an info message
+ * says why there are none: that the package has no task, or (scripts hidden) how many offered scripts it holds.
+ */
+const tasksOfPackage = (roots: Roots, ports: PickerPorts, found: FilePackage): FileTasks | null => {
   const { root, pkg } = found;
-  const items = taskItemsOf(root, pkg);
+  const packageManager = roots.get(root)?.state.model?.packageManager.name;
 
-  if (items.length === 0) return refused(ports, NO_PACKAGE_TASKS_TEXT);
+  if (packageManager === undefined) return refused(ports, NOT_PACKAGE_TEXT);
+
+  const scriptsShown = ports.scriptsShown();
+  const offer: TaskOffer = { scriptsShown, packageManager };
+  const items = taskItemsOf(root, pkg, offer);
+
+  if (items.length === 0) return refused(ports, emptyTasksText(pkg, scriptsShown));
 
   const placeholder = `${TASK_PLACEHOLDER} in ${cleanText(pkg.name, LABEL_MAX)}`;
   const tasks: FileTasks = { packageName: pkg.name, placeholder, items };
@@ -110,21 +116,29 @@ const tasksOfFile = async (roots: Roots, ports: PickerPorts, file: string | null
   return tasks;
 };
 
-/**
- * Spec §4.6.4: finds the root holding `file` (the active editor's file, if any), loads it, matches the file's directory
- * to a package, picks one of its runnable tasks and runs it. The root manifest, a file in no root or in no package, and a
- * root in a binary error end in an info message.
- */
-export const pickForFileAndRun = async (roots: Roots, ports: PickerPorts, file: string | null): Promise<void> => {
-  const found = await tasksOfFile(roots, ports, file);
+const pickTaskAndRun = async (roots: Roots, ports: PickerPorts, found: FilePackage): Promise<void> => {
+  const tasks = tasksOfPackage(roots, ports, found);
 
-  if (found === null) return;
+  if (tasks === null) return;
 
-  const task = await ports.pick(found.items, found.placeholder);
+  const task = await ports.pick(tasks.items, tasks.placeholder);
 
   if (task === undefined) return;
 
-  const target: NamedTask = { root: task.root, packageName: found.packageName, taskName: task.value };
+  const target: NamedTask = { root: task.root, packageName: tasks.packageName, taskName: task.value };
 
   await runNamed(roots, ports, target);
+};
+
+/**
+ * Spec §4.6.4: finds the root holding `file` (the active editor's file, if any), loads it, matches the file's directory
+ * to a package, picks one of its offered tasks and runs it. The root manifest, a file in no root or in no package, and a
+ * root in a binary error end in an info message.
+ */
+export const pickForFileAndRun = async (roots: Roots, ports: PickerPorts, file: string | null): Promise<void> => {
+  const found = await packageOfFile(roots, ports, file, true);
+
+  if (found === null) return;
+
+  await pickTaskAndRun(roots, ports, found);
 };

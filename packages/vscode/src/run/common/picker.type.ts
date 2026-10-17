@@ -1,4 +1,4 @@
-import type { PackageNode } from '@turbo-console/core';
+import type { PackageManagerName, PackageNode } from '@turbo-console/core';
 
 import type { RunRequest } from './run.type.ts';
 
@@ -13,7 +13,8 @@ export type PickItem = {
 /**
  * Editor effects of the pickers. `ensureLoaded` settles when a root has its first answer; `rootOf` is the path of the
  * workspace folder that holds `file` (the editor's case rules apply), `null` when none does; `pick` resolves with the item
- * chosen, or `undefined` when the pick is closed; `info` shows a message; `run` is the run flow of a request.
+ * chosen, or `undefined` when the pick is closed; `info` shows a message; `run` is the run flow of a request;
+ * `scriptsShown` reads the scripts toggle, which decides whether scripts are offered.
  */
 export type PickerPorts = {
   readonly ensureLoaded: (root: string) => Promise<void>;
@@ -21,6 +22,13 @@ export type PickerPorts = {
   readonly pick: (items: PickItem[], placeholder: string) => Promise<PickItem | undefined>;
   readonly info: (text: string) => void;
   readonly run: (request: RunRequest) => Promise<void>;
+  readonly scriptsShown: () => boolean;
+};
+
+/** What a task list offers beyond turbo tasks: the scripts while shown, each described by its package manager's run. */
+export type TaskOffer = {
+  readonly scriptsShown: boolean;
+  readonly packageManager: PackageManagerName;
 };
 
 /**

@@ -35,7 +35,12 @@ export const rootOf = (file: string): string | null => {
  * Spec §4.6.1 and §4.6.4 entry points: Run Task… from the palette and Run Turbo Task… on an open `package.json`. Both
  * end in the run flow of `control`, so the "Already running." guard and the watchdog apply unchanged.
  */
-export const registerPickers = (control: RunControl, roots: Roots, register: CommandRegistry): Disposed => {
+export const registerPickers = (
+  control: RunControl,
+  roots: Roots,
+  register: CommandRegistry,
+  scriptsShown: () => boolean
+): Disposed => {
   const ports: PickerPorts = {
     rootOf,
     ensureLoaded: async (root) => {
@@ -45,7 +50,8 @@ export const registerPickers = (control: RunControl, roots: Roots, register: Com
     info: (text) => {
       void vscode.window.showInformationMessage(text);
     },
-    run: async (request) => control.run(request)
+    run: async (request) => control.run(request),
+    scriptsShown
   };
   const runTaskPicker = async (): Promise<void> => pickAndRun(roots, ports);
   const runPackageTask = async (arg: unknown): Promise<void> => pickForFileAndRun(roots, ports, manifestFile(arg));

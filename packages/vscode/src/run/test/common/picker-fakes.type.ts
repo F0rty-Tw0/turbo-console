@@ -9,6 +9,8 @@ export type PickerFakes = {
   readonly pick: Mock<(items: PickItem[], placeholder: string) => Promise<PickItem | undefined>>;
   readonly info: Mock<(text: string) => void>;
   readonly run: Mock<(request: RunRequest) => Promise<void>>;
+  /** The scripts toggle as the pickers read it; hidden until a case answers `true`. */
+  readonly scriptsShown: Mock<() => boolean>;
   /** The values the next picks choose, in order; a pick whose value is not offered (or none left) is closed. */
   readonly choose: (...values: string[]) => void;
 };

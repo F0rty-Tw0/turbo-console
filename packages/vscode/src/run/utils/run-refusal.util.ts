@@ -7,12 +7,14 @@ import { NOT_TURBO_FORCE_TEXT } from '../common/run.const.ts';
 import type { RunRequest } from '../common/run.type.ts';
 
 /**
- * Where a script comes from, for Run and Copy alike: it has a non-blank body (bun runs a same-named file for an empty
- * one; umbrella and aggregate rows keep a `null` command, and turbo passes a whitespace-only body through), and its
- * package dir is inside `root`.
+ * Whether a script has a non-blank body: bun runs a same-named file for an empty one; umbrella and aggregate rows keep a
+ * `null` command, and turbo passes a whitespace-only body through. The pickers offer only scripts that have one.
  */
+export const hasScriptBody = (task: TaskNode): boolean => task.command !== null && task.command.trim() !== '';
+
+/** Where a script comes from, for Run and Copy alike: it has a body (`hasScriptBody`) and its package dir is inside `root`. */
 export const isScriptSourceSafe = (task: TaskNode, root: string, packageDir: string): boolean => {
-  const hasBody = task.command !== null && task.command.trim() !== '';
+  const hasBody = hasScriptBody(task);
   const isInRoot = isWithin(root, packageDir);
 
   return hasBody && isInRoot;

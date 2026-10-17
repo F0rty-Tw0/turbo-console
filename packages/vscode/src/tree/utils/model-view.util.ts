@@ -2,7 +2,7 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 
 import { folderTree } from './folder-tree.util.ts';
 import { packageMapOf } from './package-map.util.ts';
-import { isLiveScript, isOfferedTask } from './script-task.util.ts';
+import { isListedTask, isLiveScript } from './script-task.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
@@ -12,7 +12,7 @@ const SCOPED_NAME = /^@[^/]+\/(.+)$/u;
 
 /** Spec 1c-b §4.1: an offered task, or (scripts hidden) a script whose id is live under the package's folder root. */
 export const isShownPackage = (pkg: PackageNode, scriptsShown: boolean, liveOfRoot: ReadonlySet<string>): boolean => {
-  const isShownTask = (task: TaskNode): boolean => isOfferedTask(task, scriptsShown) || isLiveScript(task, liveOfRoot);
+  const isShownTask = (task: TaskNode): boolean => isListedTask(task, scriptsShown) || isLiveScript(task, liveOfRoot);
 
   return pkg.tasks.some(isShownTask);
 };
@@ -125,9 +125,9 @@ const offeredCountOf = (pkg: PackageNode, scriptsShown: boolean): [string, numbe
   let count = 0;
 
   for (const task of pkg.tasks) {
-    const isOffered = isOfferedTask(task, scriptsShown);
+    const isListed = isListedTask(task, scriptsShown);
 
-    if (isOffered) count += 1;
+    if (isListed) count += 1;
   }
 
   return [pkg.name, count];

@@ -175,7 +175,7 @@ export const runAll = async (roots: Roots, guard: RunAllGuard, ports: RunAllPort
 
   const state = roots.get(root)?.state;
   const loaded = loadedStates(state);
-  const names = taskNameItems(loaded);
+  const names = taskNameItems(loaded, false);
   const binary = state?.binary;
 
   if (names.length === 0 || binary === null || binary === undefined) {

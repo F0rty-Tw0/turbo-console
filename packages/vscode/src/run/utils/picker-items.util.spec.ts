@@ -9,7 +9,9 @@ import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts'
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
-import type { PickItem } from '../common/picker.type.ts';
+import type { PickItem, TaskOffer } from '../common/picker.type.ts';
+
+const HIDDEN: TaskOffer = { scriptsShown: false, packageManager: 'pnpm' };
 
 const BIDI = String.fromCodePoint(0x202e);
 
@@ -52,7 +54,7 @@ describe('FEATURE: picker items', () => {
         packageOf('b', [taskNamed('build'), taskNamed('lint')])
       ];
 
-      const items = taskNameItems([stateOf('/ws', packages)]);
+      const items = taskNameItems([stateOf('/ws', packages)], false);
 
       expect(labelsOf(items)).toStrictEqual(['build', 'lint', 'test']);
     });
@@ -60,13 +62,13 @@ describe('FEATURE: picker items', () => {
     it('GIVEN an atom-file task WHEN listed THEN it is hidden', () => {
       const atom = taskNamed('atom', { kind: 'atom-file' });
 
-      const items = taskNameItems([stateOf('/ws', [packageOf('a', [atom, taskNamed('build')])])]);
+      const items = taskNameItems([stateOf('/ws', [packageOf('a', [atom, taskNamed('build')])])], false);
 
       expect(labelsOf(items)).toStrictEqual(['build']);
     });
 
     it('GIVEN one root WHEN listed THEN the description is empty and value and root are set', () => {
-      const items = taskNameItems([stateOf('/ws', [packageOf('a', [taskNamed('build')])])]);
+      const items = taskNameItems([stateOf('/ws', [packageOf('a', [taskNamed('build')])])], false);
 
       expect(items).toStrictEqual([itemOf({})]);
     });
@@ -75,7 +77,7 @@ describe('FEATURE: picker items', () => {
       const first = stateOf('/one', [packageOf('a', [taskNamed('build')])]);
       const second = stateOf('/two', [packageOf('b', [taskNamed('build')])]);
 
-      const items = taskNameItems([first, second]);
+      const items = taskNameItems([first, second], false);
 
       expect(items).toStrictEqual([itemOf({ description: 'one', root: '/one' }), itemOf({ description: 'two', root: '/two' })]);
     });
@@ -84,7 +86,7 @@ describe('FEATURE: picker items', () => {
       const loaded = stateOf('/one', [packageOf('a', [taskNamed('build')])]);
       const loading = stateOf('/two', [], { model: null });
 
-      const items = taskNameItems([loaded, loading]);
+      const items = taskNameItems([loaded, loading], false);
 
       expect(items).toStrictEqual([itemOf({ root: '/one' })]);
     });
@@ -93,7 +95,7 @@ describe('FEATURE: picker items', () => {
       const broken = stateOf('/one', [packageOf('a', [taskNamed('build')])], { error: binaryFailure });
       const healthy = stateOf('/two', [packageOf('b', [taskNamed('lint')])]);
 
-      const items = taskNameItems([broken, healthy]);
+      const items = taskNameItems([broken, healthy], false);
 
       expect(items).toStrictEqual([itemOf({ label: 'lint', description: 'two', root: '/two', value: 'lint' })]);
     });
@@ -101,13 +103,13 @@ describe('FEATURE: picker items', () => {
     it('GIVEN a long task name with a bidi mark WHEN listed THEN the label is cleaned and cut but the value is raw', () => {
       const name = `${BIDI}${'n'.repeat(LABEL_MAX + 30)}`;
 
-      const items = taskNameItems([stateOf('/ws', [packageOf('a', [taskNamed(name)])])]);
+      const items = taskNameItems([stateOf('/ws', [packageOf('a', [taskNamed(name)])])], false);
 
       expect(items[0]).toStrictEqual(itemOf({ label: `${'n'.repeat(LABEL_MAX - 1)}…`, value: name }));
     });
 
     it('GIVEN a task named like a codicon WHEN listed THEN the label escapes the dollar so no icon renders', () => {
-      const items = taskNameItems([stateOf('/ws', [packageOf('a', [taskNamed('$(pass) build')])])]);
+      const items = taskNameItems([stateOf('/ws', [packageOf('a', [taskNamed('$(pass) build')])])], false);
 
       expect(items[0]).toStrictEqual(itemOf({ label: '\\$(pass) build', value: '$(pass) build' }));
     });
@@ -116,13 +118,13 @@ describe('FEATURE: picker items', () => {
       const named = stateOf('/$(one)', [packageOf('a', [taskNamed('build')])]);
       const other = stateOf('/two', []);
 
-      const items = taskNameItems([named, other]);
+      const items = taskNameItems([named, other], false);
 
       expect(items[0]?.description).toBe('\\$(one)');
     });
 
     it('GIVEN a task name whose bidi mark hides a codicon WHEN listed THEN the cleaned label is escaped', () => {
-      const items = taskNameItems([stateOf('/ws', [packageOf('a', [taskNamed(`$${BIDI}(pass) build`)])])]);
+      const items = taskNameItems([stateOf('/ws', [packageOf('a', [taskNamed(`$${BIDI}(pass) build`)])])], false);
 
       expect(items[0]?.label).toBe('\\$(pass) build');
     });
@@ -132,7 +134,7 @@ describe('FEATURE: picker items', () => {
       const long = stateOf(root, [packageOf('a', [taskNamed('build')])]);
       const other = stateOf('/two', []);
 
-      const items = taskNameItems([long, other]);
+      const items = taskNameItems([long, other], false);
 
       expect(items[0]?.description).toBe(`${'f'.repeat(DESCRIPTION_MAX - 1)}…`);
     });
@@ -146,7 +148,7 @@ describe('FEATURE: picker items', () => {
         packageOf('a', [taskNamed('build')])
       ];
 
-      const items = packageItems(stateOf('/ws', packages), 'build');
+      const items = packageItems(stateOf('/ws', packages), 'build', false);
 
       expect(labelsOf(items)).toStrictEqual(['a', 'b']);
     });
@@ -154,7 +156,7 @@ describe('FEATURE: picker items', () => {
     it('GIVEN a package WHEN listed THEN the description is its path and value its raw name', () => {
       const pkg = packageOf(`${BIDI}x`, [taskNamed('build')], 'libs/x');
 
-      const items = packageItems(stateOf('/ws', [pkg]), 'build');
+      const items = packageItems(stateOf('/ws', [pkg]), 'build', false);
 
       expect(items).toStrictEqual([{ label: 'x', description: 'libs/x', root: '/ws', value: `${BIDI}x` }]);
     });
@@ -162,13 +164,13 @@ describe('FEATURE: picker items', () => {
     it('GIVEN only an atom-file task of that name WHEN listed THEN the package is left out', () => {
       const atom = taskNamed('build', { kind: 'atom-file' });
 
-      const items = packageItems(stateOf('/ws', [packageOf('a', [atom])]), 'build');
+      const items = packageItems(stateOf('/ws', [packageOf('a', [atom])]), 'build', false);
 
       expect(items).toStrictEqual([]);
     });
 
     it('GIVEN a state with no model WHEN listed THEN there are none', () => {
-      const items = packageItems(stateOf('/ws', [], { model: null }), 'build');
+      const items = packageItems(stateOf('/ws', [], { model: null }), 'build', false);
 
       expect(items).toStrictEqual([]);
     });
@@ -176,7 +178,7 @@ describe('FEATURE: picker items', () => {
     it('GIVEN a package path with a codicon WHEN listed THEN the description escapes the dollar', () => {
       const pkg = packageOf('a', [taskNamed('build')], 'libs/$(x)');
 
-      const items = packageItems(stateOf('/ws', [pkg]), 'build');
+      const items = packageItems(stateOf('/ws', [pkg]), 'build', false);
 
       expect(items[0]?.description).toBe('libs/\\$(x)');
     });
@@ -184,13 +186,13 @@ describe('FEATURE: picker items', () => {
     it('GIVEN a path whose bidi mark hides a codicon WHEN listed THEN the cleaned text is escaped', () => {
       const pkg = packageOf('a', [taskNamed('build')], `libs/$${BIDI}(x)`);
 
-      const items = packageItems(stateOf('/ws', [pkg]), 'build');
+      const items = packageItems(stateOf('/ws', [pkg]), 'build', false);
 
       expect(items[0]?.description).toBe('libs/\\$(x)');
     });
 
     it('GIVEN a package name like a codicon WHEN listed THEN the label escapes the dollar', () => {
-      const items = packageItems(stateOf('/ws', [packageOf('$(bug)', [taskNamed('build')])]), 'build');
+      const items = packageItems(stateOf('/ws', [packageOf('$(bug)', [taskNamed('build')])]), 'build', false);
 
       expect(items[0]?.label).toBe('\\$(bug)');
     });
@@ -201,13 +203,13 @@ describe('FEATURE: picker items', () => {
       const atom = taskNamed('atom', { kind: 'atom-file' });
       const pkg = packageOf('a', [taskNamed('test'), atom, taskNamed('build')]);
 
-      const items = taskItemsOf('/ws', pkg);
+      const items = taskItemsOf('/ws', pkg, HIDDEN);
 
       expect(items).toStrictEqual([itemOf({}), itemOf({ label: 'test', value: 'test' })]);
     });
 
     it('GIVEN a task named like a codicon WHEN listed THEN the label escapes the dollar', () => {
-      const items = taskItemsOf('/ws', packageOf('a', [taskNamed('$(x)')]));
+      const items = taskItemsOf('/ws', packageOf('a', [taskNamed('$(x)')]), HIDDEN);
 
       expect(items[0]).toStrictEqual(itemOf({ label: '\\$(x)', value: '$(x)' }));
     });
