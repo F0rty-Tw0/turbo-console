@@ -60,23 +60,33 @@ const holdClicks = (button: HTMLButtonElement): void => {
   setTimeout(release, RUN_SWAP_HOLD_MS);
 };
 
+/** Writes the run and its new button, holds the button's clicks, and hands it focus when the old button had it. */
+const swapRun = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
+  const hadFocus = refs.runSlot.contains(document.activeElement);
+  const button = fillRun(refs, run, runTexts);
+
+  holdClicks(button);
+
+  if (hadFocus) button.focus();
+};
+
 /**
- * Replaces only `taskId`'s status and Run/Stop button. A Run that replaces Stop, or a Stop that replaces Run, ignores
- * clicks for `RUN_SWAP_HOLD_MS`, focused or not: VS Code can move focus off the page when a run stops, and a
- * double-click's second click comes long after a frame, so it would relaunch a stopped run or stop a fresh one. A focused Run/Stop button hands focus to its replacement. A held Enter is the
- * page's repeated-Enter keydown filter's job, since its repeats outlast the hold.
+ * Replaces only `taskId`'s status, and its Run/Stop button only when the run starts or ends. A Run that replaces Stop,
+ * or a Stop that replaces Run, ignores clicks for `RUN_SWAP_HOLD_MS`, focused or not: VS Code can move focus off the
+ * page when a run stops, and a double-click's second click comes long after a frame, so it would relaunch a stopped run
+ * or stop a fresh one. A focused Run/Stop button hands focus to its replacement. Any other runState, such as the host's
+ * second running one for the same Run or a running tick, keeps the button, its hold and its focus, since the button
+ * depends only on whether the run is live. A held Enter is the page's repeated-Enter keydown filter's job, since its
+ * repeats outlast the hold.
  */
 export const patchRun = (cards: CardIndex, taskId: string, run: RunView, runTexts: RunTexts): void => {
   const refs = cards.get(taskId);
 
   if (refs === undefined) return;
 
-  const hadFocus = refs.runSlot.contains(document.activeElement);
   const hadStop = refs.runSlot.querySelector(STOP_ICON) !== null;
-  const button = fillRun(refs, run, runTexts);
   const isSwap = hadStop !== run.isRunning;
 
-  if (isSwap) holdClicks(button);
-
-  if (hadFocus) button.focus();
+  if (isSwap) swapRun(refs, run, runTexts);
+  else fillStatus(refs, run, runTexts);
 };

@@ -16,8 +16,6 @@ const deliverAndClickFocused = (message: HostMessage): void => {
   if (focused instanceof HTMLElement) focused.click();
 };
 
-const TWO_FRAMES = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
-
 /** One task card, found by its exact title text, never by a selector built from the name. */
 export class TaskCardSection {
   public readonly title: Locator;
@@ -44,15 +42,9 @@ export class TaskCardSection {
     await this.root.page().keyboard.down('Enter');
   }
 
-  /**
-   * Waits two frames, about one key auto-repeat (33 ms) and past the frame a swapped-in Run/Stop button ignores clicks,
-   * then puts the held Enter down again, which Playwright sends as a repeat (`event.repeat` true).
-   */
-  public async repeatEnterTwoFramesLater(): Promise<void> {
-    const page = this.root.page();
-
-    await page.evaluate(TWO_FRAMES);
-    await page.keyboard.down('Enter');
+  /** Puts the held Enter down again, which Playwright sends as a repeat (`event.repeat` true). */
+  public async repeatEnter(): Promise<void> {
+    await this.root.page().keyboard.down('Enter');
   }
 
   /** Delivers this card's runState, then clicks the focused control before the page can paint a frame. */
