@@ -79,6 +79,15 @@ describe('FEATURE: tool table', () => {
       expect(slugs).toStrictEqual(GLYPH_SLUGS);
     });
 
+    it('WHEN the glyph slugs are read THEN each is lower-case letters and digits only, so it is safe in a package path', () => {
+      const glyphTools = TOOLS.filter((tool) => tool.glyph !== null);
+      const slugs = glyphTools.map((tool) => tool.glyph?.slug ?? '');
+      const unsafe = slugs.filter((slug) => !/^[a-z0-9]+$/.test(slug));
+
+      expect(slugs).toHaveLength(18);
+      expect(unsafe).toStrictEqual([]);
+    });
+
     it('WHEN playwright is read THEN it has no glyph', () => {
       const playwright = TOOLS.find((tool) => tool.id === 'playwright');
 
