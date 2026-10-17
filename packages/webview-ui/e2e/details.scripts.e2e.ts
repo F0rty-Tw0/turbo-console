@@ -142,13 +142,19 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
   );
 
   test(
-    'GIVEN a script the run flow refuses, its card has no Command field',
+    'GIVEN a script the run flow refuses, its card has no Command field but keeps Run and Copy',
     { annotation: AC6 },
     async ({ detailsPage }): Promise<void> => {
+      const card = detailsPage.card('a b');
+
       await test.step('WHEN the page shows the refused script card', async (): Promise<void> => detailsPage.open(REFUSED_STATE));
 
-      await test.step('THEN its fields start at Script', async (): Promise<void> =>
-        detailsPage.card('a b').expectFields(REFUSED_ROWS));
+      await test.step('THEN its fields start at Script', async (): Promise<void> => card.expectFields(REFUSED_ROWS));
+
+      await test.step('AND it offers Run', async (): Promise<void> => expect(card.runButton).toHaveAttribute('aria-label', 'Run a b'));
+
+      await test.step('AND Copy', async (): Promise<void> =>
+        expect(card.copyButton).toHaveAttribute('aria-label', 'Copy command for a b'));
     }
   );
 
