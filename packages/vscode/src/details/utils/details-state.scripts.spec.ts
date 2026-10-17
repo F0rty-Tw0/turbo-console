@@ -83,6 +83,13 @@ describe('FEATURE: package details with scripts', () => {
       expect(cardOf(details, 'a#bad name').runCommand).toBeNull();
     });
 
+    it('WHEN built THEN a script with a blank body has no run command, as Run and Copy refuse it', () => {
+      const blank: TaskNode = { ...LINT_SCRIPT, id: 'a#blank', name: 'blank', command: ' ' };
+      const blankDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [blank] }), true)));
+
+      expect(cardOf(blankDetails, 'a#blank').runCommand).toBeNull();
+    });
+
     it('WHEN the root uses another package manager THEN the run command names it', () => {
       const yarn = packageOf(toDetailsState(inputOf(modelWith(MIXED_PACKAGE, 'yarn'), true)));
 

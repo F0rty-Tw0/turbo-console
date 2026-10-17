@@ -5,6 +5,7 @@ import { cardTasksOf } from './card-tasks.util.ts';
 import { dependentsOf } from './dependents.util.ts';
 import { toRunView } from './run-view.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
+import { hasScriptBody } from '../../run/utils/run-refusal.util.ts';
 import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
@@ -27,13 +28,16 @@ const reloadErrorOf = (state: RootState): string | null => {
   return MESSAGE_TEXTS['load-with-model'];
 };
 
-/** `runCommand` is what a user would type for a script; a turbo task has none, and a refused script name has none either. */
+/**
+ * `runCommand` is what a user would type for a script; a turbo task has none, and neither has a script Run and Copy refuse:
+ * an unsafe name or a blank body.
+ */
 const toTaskCard = (task: TaskNode, sources: CardSources): TaskCard => {
   const { input, dependents, dryRunStates, model } = sources;
   const dryRunState = dryRunStates.get(task.id);
   const run = toRunView(task, input.runs(input.root, task.id), input.now);
   const scriptCommand = scriptCommandOf(model.packageManager.name, task.name);
-  const runCommand = task.isTurboTask ? null : scriptCommand;
+  const runCommand = task.isTurboTask || !hasScriptBody(task) ? null : scriptCommand;
   const card: TaskCard = {
     taskId: task.id,
     name: task.name,
