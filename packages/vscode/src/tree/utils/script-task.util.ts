@@ -5,8 +5,8 @@ import { isVisibleTask } from './task-filter.util.ts';
 /** Spec 1c-b §4.1: a visible task that is not a turbo task, one a `package.json` script defines. */
 export const isVisibleScript = (task: TaskNode): boolean => isVisibleTask(task) && !task.isTurboTask;
 
-/** Spec 1c-b §4.1: a turbo task, or a script while scripts are shown. Until the pickers move, this is the count a package shows. */
-export const isOfferedTask = (task: TaskNode, scriptsShown: boolean): boolean => {
+/** A visible turbo task, or a visible script while scripts are shown: the tasks the tree lists, a refused script name included. */
+export const isListedTask = (task: TaskNode, scriptsShown: boolean): boolean => {
   const isVisible = isVisibleTask(task);
 
   return isVisible && (task.isTurboTask || scriptsShown);
