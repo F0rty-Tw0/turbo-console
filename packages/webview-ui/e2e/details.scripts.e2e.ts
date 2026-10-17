@@ -325,6 +325,9 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
       await test.step('WHEN the host drops the stopped card', async (): Promise<void> => detailsPage.sendState(HIDDEN_DROPPED_STATE));
 
       await test.step('THEN the page title has focus', async (): Promise<void> => expect(detailsPage.heading).toBeFocused());
+
+      await test.step('AND the title takes focus from script only, not from Tab', async (): Promise<void> =>
+        expect(detailsPage.heading).toHaveAttribute('tabindex', '-1'));
     }
   );
 

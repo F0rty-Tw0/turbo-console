@@ -217,6 +217,16 @@ test.describe('FEATURE: package details page', () => {
     });
   }
 
+  test('GIVEN focus on Refresh, the package going missing moves focus to the page title', async ({ detailsPage }): Promise<void> => {
+    await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
+
+    await test.step('AND Refresh is focused', async (): Promise<void> => detailsPage.focusButton('Refresh'));
+
+    await test.step('AND the package goes missing', async (): Promise<void> => detailsPage.sendState(MISSING_PACKAGE_STUB));
+
+    await test.step('THEN the page title has focus', async (): Promise<void> => expect(detailsPage.heading).toBeFocused());
+  });
+
   test('GIVEN every button, each click posts its message in order', async ({ detailsPage }): Promise<void> => {
     const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'failed' };
 
