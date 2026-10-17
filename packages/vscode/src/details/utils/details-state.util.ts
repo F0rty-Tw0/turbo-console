@@ -29,8 +29,8 @@ const reloadErrorOf = (state: RootState): string | null => {
 };
 
 /**
- * `runCommand` is what a user would type for a script; a turbo task has none, and neither has a script Run and Copy refuse:
- * an unsafe name or a blank body.
+ * `runCommand` is what a user would type for a script; a turbo task has none, and neither has a script with an unsafe
+ * name or no body, which Run and Copy refuse. The package-dir check stays with Run, as in the pickers.
  */
 const toTaskCard = (task: TaskNode, sources: CardSources): TaskCard => {
   const { input, dependents, dryRunStates, model } = sources;

@@ -90,6 +90,13 @@ describe('FEATURE: package details with scripts', () => {
       expect(cardOf(blankDetails, 'a#blank').runCommand).toBeNull();
     });
 
+    it('WHEN built THEN a script with no command at all has no run command either', () => {
+      const none: TaskNode = { ...LINT_SCRIPT, id: 'a#none', name: 'none', command: null };
+      const noneDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [none] }), true)));
+
+      expect(cardOf(noneDetails, 'a#none').runCommand).toBeNull();
+    });
+
     it('WHEN the root uses another package manager THEN the run command names it', () => {
       const yarn = packageOf(toDetailsState(inputOf(modelWith(MIXED_PACKAGE, 'yarn'), true)));
 

@@ -23,7 +23,7 @@ export type CacheStatus = 'HIT' | 'MISS' | 'deferred';
  * `definition` and `cacheStatus` are `null` while loading, after a failed dry run, for tasks with no command, and for
  * tasks that are no turbo task (`isTurboTask` false: a package script no turbo config defines, left out of the dry
  * run). `taskId` is the model id `<package>#<task>`. `runCommand` is `<package manager> run <name>` for a script, `null`
- * for a turbo task and for a script the run flow refuses (an unsafe name or a blank body).
+ * for a turbo task and for a script with an unsafe name or no body; the package-dir check stays with the host's Run.
  */
 export type TaskCard = {
   readonly taskId: string;
