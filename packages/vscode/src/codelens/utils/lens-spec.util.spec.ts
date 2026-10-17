@@ -59,6 +59,12 @@ describe('FEATURE: lens spec of a package.json (spec 1c-b §4.11)', () => {
       expect(titleOf(lensSpecOf(TEXT, FILE, state, false))).toBe('▷ Tasks: \\$(x) (1)');
     });
 
+    it('WHEN a name holds a line break THEN the title shows it cleaned to a space', () => {
+      const state = stateOf([taskNamed('a\nb')]);
+
+      expect(titleOf(lensSpecOf(TEXT, FILE, state, false))).toBe('▷ Tasks: a b (1)');
+    });
+
     it('WHEN the root has a load error but kept its model THEN the lens stays', () => {
       const loaded = stateOf([taskNamed('build')]);
       const error: LoadFailure = { ...LOAD_FAILURE_STUB, stage: 'load' };
@@ -77,6 +83,14 @@ describe('FEATURE: lens spec of a package.json (spec 1c-b §4.11)', () => {
 
     it('WHEN scripts are shown THEN the safe script counts after the turbo task, the refused one never', () => {
       expect(titleOf(lensSpecOf(TEXT, FILE, state, true))).toBe('▷ Tasks: lint, zap (2)');
+    });
+  });
+
+  describe('GIVEN a package whose script sorts before its turbo task', () => {
+    it('WHEN scripts are shown THEN the turbo task still comes first, in picker order', () => {
+      const state = stateOf([taskNamed('zeta'), taskNamed('alpha', false)]);
+
+      expect(titleOf(lensSpecOf(TEXT, FILE, state, true))).toBe('▷ Tasks: zeta, alpha (2)');
     });
   });
 
