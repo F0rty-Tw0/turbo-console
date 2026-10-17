@@ -2,6 +2,7 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ModelViews } from './model-views.ts';
+import { toolOf } from '../../tool/utils/tool-of.util.ts';
 import type { ModelView } from '../common/model-view.type.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
 
@@ -35,7 +36,7 @@ describe('FEATURE: model views with scripts', () => {
   let views: ModelViews;
 
   beforeEach(() => {
-    views = new ModelViews();
+    views = new ModelViews(toolOf);
   });
 
   describe('GIVEN a model with scripts-only packages', () => {

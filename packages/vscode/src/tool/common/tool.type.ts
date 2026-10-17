@@ -19,3 +19,6 @@ export type ToolSpec = {
   /** `null`: detected and named in text, but no logo. */
   readonly glyph: ToolGlyph | null;
 };
+
+/** The tool a task's command runs, or `null`; `toolOf` answers it. */
+export type ToolLookup = (command: string | null) => ToolSpec | null;

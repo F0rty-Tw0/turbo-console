@@ -2,6 +2,7 @@ import { ModelViews } from './model-views.ts';
 import { TreeRefresher } from './tree-refresh.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
+import { toolOf } from '../../tool/utils/tool-of.util.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
@@ -19,7 +20,7 @@ export class PackagesTree {
   private readonly store: Roots;
   private readonly ports: TreePorts;
   private readonly cache = new Map<string, TreeNode>();
-  private readonly views = new ModelViews();
+  private readonly views = new ModelViews(toolOf);
   private readonly viewOf: ModelViewsOf = (model, scriptsShown, live) => this.views.of(model, scriptsShown, live);
   private readonly refresher: TreeRefresher;
   private mode: TreeMode;
