@@ -21,13 +21,14 @@ const expectTextOnly = async (value: Locator): Promise<void> => {
   await expect(value).not.toHaveClass(/field-icon-value/);
 };
 
-const expectLogo = async (value: Locator, iconId: string): Promise<void> => {
+const expectLogo = async (value: Locator, iconId: string, title: string): Promise<void> => {
   const countNodes = (cell: HTMLElement): number => cell.childNodes.length;
   const nodeCount = await value.evaluate(countNodes);
 
   await expect(value).toHaveClass('field-icon-value');
   expect(nodeCount).toBe(2);
   await expect(value.locator('> :first-child')).toHaveClass(`codicon codicon-${iconId}`);
+  await expect(value.locator('> span:not(.codicon)')).toHaveText(title);
 };
 
 /** One task card, found by its exact title text, never by a selector built from the name. */
@@ -99,7 +100,7 @@ export class TaskCardSection {
 
     if (iconId === null) return expectTextOnly(value);
 
-    await expectLogo(value, iconId);
+    await expectLogo(value, iconId, title);
   }
 
   public async expectBadges(labels: string[]): Promise<void> {
