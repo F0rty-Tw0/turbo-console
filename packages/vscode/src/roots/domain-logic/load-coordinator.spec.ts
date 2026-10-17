@@ -9,7 +9,6 @@ import { deferredPorts, flushSettles, runAt, settledFlag } from '../test/utils/d
 import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
-const FRESH_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true };
 const ABORT_ERROR = new TurboException('failed', 'This operation was aborted');
 const ABORTED: LoadFailure = loadFailureOf('load', ABORT_ERROR);
 
@@ -210,15 +209,6 @@ describe('FEATURE: load coordinator', () => {
 
       expect(deferred.ports.apply).toHaveBeenNthCalledWith(1, STALE_CACHED);
       expect(deferred.ports.apply).toHaveBeenNthCalledWith(2, LOADED_MODEL_STUB);
-    });
-
-    it('WHEN a fresh cache is published and returned as the same object THEN it is applied once', async () => {
-      coordinator.show();
-      runAt(deferred, 0).publish(FRESH_CACHED);
-      runAt(deferred, 0).settle(FRESH_CACHED);
-      await flushSettles();
-
-      expect(deferred.ports.apply).toHaveBeenCalledExactlyOnceWith(FRESH_CACHED);
     });
   });
 

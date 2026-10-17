@@ -139,7 +139,7 @@ describe('FEATURE: settling a root load', () => {
       runAt(deferred, 0).settle(FRESH_CACHED);
       await flushSettles();
 
-      expect(record).toMatchObject({ outcome: 'model', cacheFresh: true });
+      expect(record).toStrictEqual({ mode: 'cache-first', startedAt: 1_000, outcome: 'model', cacheFresh: true });
     });
   });
 
