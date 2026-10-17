@@ -30,13 +30,17 @@ const reloadErrorOf = (state: RootState): string | null => {
   return MESSAGE_TEXTS['load-with-model'];
 };
 
-/** Repo text, cleaned as lines for the page; a command with nothing visible left is `null`, so its field reads "none". */
+/**
+ * Repo text, cleaned as lines for the page; a command with nothing visible left, whitespace aside, is `null`, so its field
+ * reads "none".
+ */
 const cardCommandOf = (command: string | null): string | null => {
   if (command === null) return null;
 
   const cleaned = cleanLines(command, LOG_LINE_MAX);
+  const trimmed = cleaned.trim();
 
-  return cleaned === '' ? null : cleaned;
+  return trimmed === '' ? null : cleaned;
 };
 
 /**

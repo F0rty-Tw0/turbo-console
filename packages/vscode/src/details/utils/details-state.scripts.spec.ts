@@ -112,6 +112,13 @@ describe('FEATURE: package details with scripts', () => {
       expect(cardOf(controlsDetails, 'a#lint').command).toBeNull();
     });
 
+    it('WHEN a script body is whitespace and control characters only THEN the card command is null too', () => {
+      const blank: TaskNode = { ...LINT_SCRIPT, command: ' \n\t\u0007 ' };
+      const blankDetails = packageOf(toDetailsState(inputOf(modelWith({ ...A_PACKAGE_STUB, tasks: [blank] }), true)));
+
+      expect(cardOf(blankDetails, 'a#lint').command).toBeNull();
+    });
+
     it('WHEN the root uses another package manager THEN the run command names it', () => {
       const yarn = packageOf(toDetailsState(inputOf(modelWith(MIXED_PACKAGE, 'yarn'), true)));
 
