@@ -51,3 +51,6 @@ export const PACKAGE_DETAILS_STUB: PackageDetails = {
 };
 
 export const MISSING_PACKAGE_STUB: MissingPackage = { kind: 'missing', root: '/repo', packageName: 'web' };
+
+/** Repo text that would run script if the page ever wrote it as HTML. */
+export const HOSTILE_NAME_STUB: string = '<img src=x onerror=alert(1)>';

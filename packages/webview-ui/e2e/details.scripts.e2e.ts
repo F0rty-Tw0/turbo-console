@@ -1,5 +1,5 @@
 import { expect, test } from './details.fixture.ts';
-import { PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
+import { HOSTILE_NAME_STUB, PACKAGE_DETAILS_STUB, RUN_VIEW_STUB, TASK_CARD_STUB } from './test/stubs/details-state.stub.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../src/details/common/details-page.type.ts';
 
@@ -61,6 +61,23 @@ const TURBO_RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING };
 const MULTI_LINE_CARD: TaskCard = { ...SCRIPT_CARD, command: 'eslint .\n--fix' };
 
 const MULTI_LINE_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [MULTI_LINE_CARD] };
+
+const HOSTILE_SCRIPT_CARD: TaskCard = {
+  ...SCRIPT_CARD,
+  taskId: `web#${HOSTILE_NAME_STUB}`,
+  name: HOSTILE_NAME_STUB,
+  command: HOSTILE_NAME_STUB,
+  isTurboTask: false
+};
+
+const HOSTILE_SCRIPT_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [HOSTILE_SCRIPT_CARD] };
+
+const HOSTILE_SCRIPT_ROWS: FieldRow[] = [
+  ['Command', 'pnpm run lint'],
+  ['Script', HOSTILE_NAME_STUB],
+  ['Description', 'none'],
+  ['Dependents', 'none']
+];
 
 const RUNNING_CARD_CASES: [string, TaskCard][] = [
   ['turbo', TURBO_RUNNING_CARD],
@@ -182,6 +199,29 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
       }
     );
   }
+
+  test(
+    'GIVEN a script with a hostile name and body, both render as text',
+    { annotation: AC6 },
+    async ({ detailsPage }): Promise<void> => {
+      const card = detailsPage.card(HOSTILE_NAME_STUB);
+
+      await test.step('WHEN the page shows the hostile script card', async (): Promise<void> =>
+        detailsPage.open(HOSTILE_SCRIPT_STATE));
+
+      await test.step('THEN the card title text is the name', async (): Promise<void> =>
+        expect(card.title).toHaveText(HOSTILE_NAME_STUB));
+
+      await test.step('AND the Script field is the body as text', async (): Promise<void> => card.expectFields(HOSTILE_SCRIPT_ROWS));
+
+      await test.step('AND the Copy button label carries the name as text', async (): Promise<void> =>
+        expect(card.copyButton).toHaveAttribute('aria-label', `Copy command for ${HOSTILE_NAME_STUB}`));
+
+      await test.step('AND no image element exists', async (): Promise<void> => expect(detailsPage.images).toHaveCount(0));
+
+      await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
+    }
+  );
 
   test('GIVEN a multi-line script, its card keeps the line break', { annotation: AC6 }, async ({ detailsPage }): Promise<void> => {
     await test.step('WHEN the page shows a script whose body spans two lines', async (): Promise<void> =>

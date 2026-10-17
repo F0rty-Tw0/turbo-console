@@ -2,6 +2,7 @@ import type { TaskDefinition } from '@turbo-console/core';
 
 import { expect, test } from './details.fixture.ts';
 import {
+  HOSTILE_NAME_STUB,
   MISSING_PACKAGE_STUB,
   PACKAGE_DETAILS_STUB,
   RUN_VIEW_STUB,
@@ -16,8 +17,6 @@ import type { FieldRow } from '../src/details/common/details-page.type.ts';
 const AC1 = { description: 'AC1', type: 'requirement' };
 const AC4 = { description: 'AC4', type: 'requirement' };
 const AC5 = { description: 'AC5', type: 'requirement' };
-
-const HOSTILE_NAME = '<img src=x onerror=alert(1)>';
 
 const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
 
@@ -113,12 +112,12 @@ test.describe('FEATURE: package details page', () => {
     'GIVEN a package with a hostile name, the name renders as text',
     { annotation: AC5 },
     async ({ detailsPage }): Promise<void> => {
-      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, packageName: HOSTILE_NAME };
+      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, packageName: HOSTILE_NAME_STUB };
 
       await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
 
       await test.step('THEN the heading text is the name', async (): Promise<void> =>
-        expect(detailsPage.heading).toHaveText(HOSTILE_NAME));
+        expect(detailsPage.heading).toHaveText(HOSTILE_NAME_STUB));
 
       await test.step('AND no image element exists', async (): Promise<void> => expect(detailsPage.images).toHaveCount(0));
 
@@ -127,14 +126,16 @@ test.describe('FEATURE: package details page', () => {
   );
 
   test('GIVEN a task with a hostile name, the name renders as text', { annotation: AC5 }, async ({ detailsPage }): Promise<void> => {
-    const card = detailsPage.card(HOSTILE_NAME);
+    const card = detailsPage.card(HOSTILE_NAME_STUB);
 
-    await test.step('WHEN the page shows the task', async (): Promise<void> => detailsPage.open(packageWithTasks([HOSTILE_NAME])));
+    await test.step('WHEN the page shows the task', async (): Promise<void> =>
+      detailsPage.open(packageWithTasks([HOSTILE_NAME_STUB])));
 
-    await test.step('THEN the card title text is the name', async (): Promise<void> => expect(card.title).toHaveText(HOSTILE_NAME));
+    await test.step('THEN the card title text is the name', async (): Promise<void> =>
+      expect(card.title).toHaveText(HOSTILE_NAME_STUB));
 
     await test.step('AND the Run button label carries the name as text', async (): Promise<void> =>
-      expect(card.runButton).toHaveAttribute('aria-label', `Run ${HOSTILE_NAME}`));
+      expect(card.runButton).toHaveAttribute('aria-label', `Run ${HOSTILE_NAME_STUB}`));
 
     await test.step('AND no image element exists', async (): Promise<void> => expect(detailsPage.images).toHaveCount(0));
 
