@@ -45,11 +45,15 @@ export class DetailsStatePoster {
     return toDetailsState(detailsInputOf(base, ports.now()));
   }
 
+  /** Builds the state only when it can be posted, so a hidden panel costs nothing on a repost. */
   public publish(): void {
-    const state = this.state();
     const canPost = this.deps.gate.canPost();
 
-    if (!canPost || state === null) return;
+    if (!canPost) return;
+
+    const state = this.state();
+
+    if (state === null) return;
 
     const message: HostMessage = { type: 'state', state };
 

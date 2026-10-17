@@ -115,6 +115,18 @@ describe('FEATURE: details panels follow the scripts toggle', () => {
     });
   });
 
+  describe('GIVEN every panel hidden', () => {
+    it('WHEN refreshAll is called THEN no state is built, so the toggle is never read', () => {
+      fakes.views[0]?.show(false);
+      fakes.views[1]?.show(false);
+      scripts.isShown.mockClear();
+
+      panels.refreshAll();
+
+      expect(scripts.isShown).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN disposed panels', () => {
     it('WHEN the toggle changes THEN no listener is left', async () => {
       panels.dispose();
