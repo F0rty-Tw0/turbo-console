@@ -254,6 +254,12 @@ describe('FEATURE: details session', () => {
         expect(ports.dryRun).toHaveBeenCalledOnce();
       });
 
+      it('THEN a publish, as the scripts toggle asks for, posts nothing', () => {
+        session.publish();
+
+        expect(postedOf(ports)).toHaveLength(1);
+      });
+
       it('THEN its hidden visibility is reported once, also when disposed again', () => {
         session.dispose();
 

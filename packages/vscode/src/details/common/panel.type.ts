@@ -5,6 +5,7 @@ import type { PanelKey } from './details.type.ts';
 import type { Coordinator, Roots } from '../../roots/common/coordinator.type.ts';
 import type { FileLookupPorts } from '../../run/common/picker.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
+import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 
 /** One webview panel as the registry drives it. Listeners live as long as the panel; `dispose` is safe to repeat. */
 export type PanelView = {
@@ -35,6 +36,7 @@ export type PanelHost = {
 export type PanelsDeps = {
   readonly roots: Roots;
   readonly runs: Runs;
+  readonly scripts: ScriptsToggleApi;
   readonly host: PanelHost;
   readonly setPanelVisible: (root: string, panelId: string, visible: boolean) => void;
 };
@@ -42,6 +44,7 @@ export type PanelsDeps = {
 /** What the registry and the test API ask of a panel's `DetailsSession`. */
 type PanelSession = {
   readonly receive: (value: unknown) => Promise<void>;
+  readonly publish: () => void;
   readonly whenIdle: () => Promise<void>;
   readonly dispose: () => void;
 };

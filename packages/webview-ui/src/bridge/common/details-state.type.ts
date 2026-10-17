@@ -22,7 +22,8 @@ export type CacheStatus = 'HIT' | 'MISS' | 'deferred';
 /**
  * `definition` and `cacheStatus` are `null` while loading, after a failed dry run, for tasks with no command, and for
  * tasks that are no turbo task (`isTurboTask` false: a package script no turbo config defines, left out of the dry
- * run). `taskId` is the model id `<package>#<task>`.
+ * run). `taskId` is the model id `<package>#<task>`. `runCommand` is `<package manager> run <name>` for a script, `null`
+ * for a turbo task and for a script with an unsafe name or no body; the package-dir check stays with the host's Run.
  */
 export type TaskCard = {
   readonly taskId: string;
@@ -34,12 +35,16 @@ export type TaskCard = {
   readonly cacheStatus: CacheStatus | null;
   readonly isTurboTask: boolean;
   readonly persistent: boolean;
+  readonly runCommand: string | null;
   readonly run: RunView;
 };
 
 export type DryRunPhase = 'loading' | 'ready' | 'failed';
 
-/** `reloadError` is the banner text when the root's last reload failed and the store kept the previous model, else `null`. */
+/**
+ * `reloadError` is the banner text when the root's last reload failed and the store kept the previous model, else `null`.
+ * `hiddenScriptCount` is the runnable scripts left out while `scriptsShown` is false (refused names not counted), `0` while shown.
+ */
 export type PackageDetails = {
   readonly kind: 'package';
   readonly root: string;
@@ -49,6 +54,8 @@ export type PackageDetails = {
   readonly tasks: TaskCard[];
   readonly dryRun: DryRunPhase;
   readonly reloadError: string | null;
+  readonly scriptsShown: boolean;
+  readonly hiddenScriptCount: number;
 };
 
 /** The package is not in the current model. */

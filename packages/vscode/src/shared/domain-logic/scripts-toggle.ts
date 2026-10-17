@@ -47,10 +47,16 @@ export class ScriptsToggle implements ScriptsToggleApi {
     this.listeners.clear();
   }
 
+  /** Stores and sends the key even for an unchanged choice, which mends a write that failed midway; fires only on a change. */
   private async write(value: boolean): Promise<void> {
     await this.ports.store.update(SCRIPTS_KEY, value);
     await this.ports.setKey(value);
+
+    const isChange = value !== this.shown;
+
     this.shown = value;
+
+    if (!isChange) return;
 
     for (const listener of this.listeners) this.notify(listener);
   }

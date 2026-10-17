@@ -109,5 +109,6 @@ export const DETAILS_INPUT_STUB: DetailsInput = {
   state: DETAILS_ROOT_STATE_STUB,
   dryRun: DRY_RUN_RESULT_STUB,
   runs: () => undefined,
+  scriptsShown: true,
   now: 0
 };

@@ -2,13 +2,17 @@ import { vi } from 'vitest';
 
 import type { ScriptsToggleFake } from '../common/scripts-toggle-fake.type.ts';
 
-/** The one `ScriptsToggleApi` fake: `set` stores the value and fires the listeners, as the real toggle does. */
+/** The one `ScriptsToggleApi` fake: `set` stores the value and fires the listeners on a change, as the real toggle does. */
 export const scriptsToggleMock = (shown = false): ScriptsToggleFake => {
   const listeners = new Set<() => void>();
   let value = shown;
   const isShown = vi.fn(() => value);
   const set = vi.fn(async (next: boolean): Promise<void> => {
+    const isChange = next !== value;
+
     value = next;
+
+    if (!isChange) return Promise.resolve();
 
     for (const listener of listeners) listener();
 

@@ -1,13 +1,15 @@
 import type { DryRunState, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import type { DetailsState, PackageDetails, TaskCard } from '@turbo-console/webview-ui';
 
+import { cardTasksOf } from './card-tasks.util.ts';
 import { dependentsOf } from './dependents.util.ts';
 import { toRunView } from './run-view.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
+import { hasScriptBody } from '../../run/utils/run-refusal.util.ts';
+import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
-import { byName, isVisibleTask } from '../../tree/utils/task-filter.util.ts';
-import type { DetailsInput } from '../common/details.type.ts';
+import type { CardSources, DetailsInput } from '../common/details.type.ts';
 
 const dryRunStatesById = (states: DryRunState[]): Map<string, DryRunState> => {
   const entries = states.map((state): [string, DryRunState] => [state.id, state]);
@@ -26,14 +28,16 @@ const reloadErrorOf = (state: RootState): string | null => {
   return MESSAGE_TEXTS['load-with-model'];
 };
 
-const toTaskCard = (
-  task: TaskNode,
-  input: DetailsInput,
-  dependents: ReadonlyMap<string, string[]>,
-  dryRunStates: ReadonlyMap<string, DryRunState>
-): TaskCard => {
+/**
+ * `runCommand` is what a user would type for a script; a turbo task has none, and neither has a script with an unsafe
+ * name or no body, which Run and Copy refuse. The package-dir check stays with Run, as in the pickers.
+ */
+const toTaskCard = (task: TaskNode, sources: CardSources): TaskCard => {
+  const { input, dependents, dryRunStates, model } = sources;
   const dryRunState = dryRunStates.get(task.id);
   const run = toRunView(task, input.runs(input.root, task.id), input.now);
+  const scriptCommand = scriptCommandOf(model.packageManager.name, task.name);
+  const runCommand = task.isTurboTask || !hasScriptBody(task) ? null : scriptCommand;
   const card: TaskCard = {
     taskId: task.id,
     name: task.name,
@@ -44,6 +48,7 @@ const toTaskCard = (
     cacheStatus: dryRunState?.cache ?? null,
     isTurboTask: task.isTurboTask,
     persistent: task.persistent,
+    runCommand,
     run
   };
 
@@ -51,10 +56,14 @@ const toTaskCard = (
 };
 
 const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: DetailsInput): PackageDetails => {
-  const dependents = dependentsOf(model);
-  const dryRunStates = dryRunStatesById(input.dryRun.states);
-  const shown = pkg.tasks.filter(isVisibleTask).toSorted(byName);
-  const tasks = shown.map((task) => toTaskCard(task, input, dependents, dryRunStates));
+  const sources: CardSources = {
+    input,
+    dependents: dependentsOf(model),
+    dryRunStates: dryRunStatesById(input.dryRun.states),
+    model
+  };
+  const { shown, hiddenScriptCount } = cardTasksOf(pkg, input);
+  const tasks = shown.map((task) => toTaskCard(task, sources));
   const details: PackageDetails = {
     kind: 'package',
     root: input.root,
@@ -63,7 +72,9 @@ const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: Detail
     tags: pkg.tags,
     tasks,
     dryRun: input.dryRun.phase,
-    reloadError: reloadErrorOf(input.state)
+    reloadError: reloadErrorOf(input.state),
+    scriptsShown: input.scriptsShown,
+    hiddenScriptCount
   };
 
   return details;

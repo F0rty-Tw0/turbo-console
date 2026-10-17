@@ -5,6 +5,7 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { flushSettles } from '../../roots/test/utils/deferred-ports.spec.util.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { NO_BINARY_TEXT, POSTED_MAX } from '../common/details.const.ts';
 import type { PanelKey } from '../common/details.type.ts';
@@ -33,7 +34,7 @@ describe('FEATURE: details panel edges', () => {
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
     store.apply('/ws', DETAILS_LOADED_STUB);
     fakes = hostMock();
-    deps = { roots: store, runs: new RunStore(), host: fakes.host, setPanelVisible: vi.fn() };
+    deps = { roots: store, runs: new RunStore(), scripts: scriptsToggleMock(), host: fakes.host, setPanelVisible: vi.fn() };
     panels = new DetailsPanels(deps);
   });
 

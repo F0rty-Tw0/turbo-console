@@ -1,6 +1,7 @@
 import type { TaskNode, WorkspaceModel } from '@turbo-console/core';
 import type { RunView } from '@turbo-console/webview-ui';
 
+import { currentTaskOf } from './current-task.util.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { IconSpec } from '../../tree/common/tree-row.type.ts';
 import { runningKindOf, taskDisplay } from '../../tree/utils/task-display.util.ts';
@@ -54,8 +55,7 @@ export const toRunView = (task: TaskNode, entry: RunEntry | undefined, now: numb
 
 /** The run view of `entry` against its current model node; the node it was launched with once the model or the task is gone. */
 export const liveRunViewOf = (model: WorkspaceModel | null, entry: RunEntry, now: number): RunView => {
-  const pkg = model?.packages.find((candidate) => candidate.name === entry.packageName);
-  const current = pkg?.tasks.find((candidate) => candidate.id === entry.taskId);
+  const current = currentTaskOf(model, entry.packageName, entry.taskId);
 
   return toRunView(current ?? entry.task, entry, now);
 };

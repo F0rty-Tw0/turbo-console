@@ -65,7 +65,7 @@ const createSession = (context: vscode.ExtensionContext, output: Output): RootsS
 const createPanels = (
   context: vscode.ExtensionContext,
   session: RootsSession,
-  runs: PanelsDeps['runs'],
+  shared: Pick<PanelsDeps, 'runs' | 'scripts'>,
   output: Output
 ): DetailsPanels => {
   const setPanelVisible: PanelsDeps['setPanelVisible'] = (root, panelId, visible) => {
@@ -73,7 +73,7 @@ const createPanels = (
   };
   const host = editorPanelHost(context.extensionUri, output, rootOf);
 
-  return new DetailsPanels({ roots: session.store, runs, host, setPanelVisible });
+  return new DetailsPanels({ roots: session.store, ...shared, host, setPanelVisible });
 };
 
 /** The run, pick and run-all commands, the forwarding of turbo task events and the package.json CodeLens. */
@@ -133,7 +133,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const tree = new PackagesTreeProvider(session.store, currentTreeMode(), treeDepsOf(runSession, timings, scripts));
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
-  const panels = createPanels(context, session, runSession.runs, output);
+  const panels = createPanels(context, session, { runs: runSession.runs, scripts }, output);
   const treeVisibility = new TreeVisibility();
   const ticker = new ElapsedTicker(runSession.runs, tickerPortsOf(tree));
   const api: TurboConsoleApi = {

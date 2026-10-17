@@ -31,6 +31,7 @@ export const TASK_CARD_STUB: TaskCard = {
   cacheStatus: 'HIT',
   isTurboTask: true,
   persistent: false,
+  runCommand: null,
   run: RUN_VIEW_STUB
 };
 
@@ -44,7 +45,9 @@ export const PACKAGE_DETAILS_STUB: PackageDetails = {
   tags: ['scope:web', 'type:app'],
   tasks,
   dryRun: 'ready',
-  reloadError: null
+  reloadError: null,
+  scriptsShown: true,
+  hiddenScriptCount: 0
 };
 
 export const MISSING_PACKAGE_STUB: MissingPackage = { kind: 'missing', root: '/repo', packageName: 'web' };
