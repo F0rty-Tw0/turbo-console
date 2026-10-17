@@ -19,7 +19,7 @@ import { diffModels } from '../utils/model-diff.util.ts';
 import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
 import { rowScopeOf } from '../utils/row-scope.util.ts';
-import { isRunnableTask } from '../utils/task-filter.util.ts';
+import { isVisibleTurboTask } from '../utils/script-task.util.ts';
 import { taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
@@ -120,14 +120,14 @@ const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntr
 };
 
 /**
- * The first `TICKED_TASKS` runnable tasks of the shown packages in model order (packages, then `tasks` order), running.
- * Runnable, not just visible: a script no turbo.json defines is refused, so it never runs.
+ * The first `TICKED_TASKS` visible turbo tasks of the shown packages in model order (packages, then `tasks` order),
+ * running. Turbo tasks only, so the ticked set stays the same as scripts become runnable in later slices.
  */
 const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
   const entries: RunEntry[] = [];
 
   for (const pkg of view.packages.values()) {
-    const runnable = pkg.tasks.filter(isRunnableTask);
+    const runnable = pkg.tasks.filter(isVisibleTurboTask);
 
     for (const task of runnable) entries.push(runningEntryOf(model.root, pkg, task));
 

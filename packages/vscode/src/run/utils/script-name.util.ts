@@ -17,7 +17,7 @@ const isTaskName = (name: string): boolean => {
 /**
  * A script name that needs no quoting in any shell: `assertTaskName` passes (no leading `-`, which a package manager
  * would read as a flag), every character is a bare word character, the first is not `=`, `@`, `/` or `.` (pnpm reads
- * `/regex/` as a selector), and it is at most `LABEL_MAX` long, so a runnable name is never shown truncated. ASCII
+ * `/regex/` as a selector and refuses a hidden `.` script), and it is at most `LABEL_MAX` long, so a runnable name is never shown truncated. ASCII
  * only; widening the set later is additive.
  */
 export const isSafeScriptName = (name: string): boolean => {

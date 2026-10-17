@@ -3,5 +3,8 @@ export const BARE = /^[A-Za-z0-9@/._:=+-]+$/u;
 
 export const BARE_FIRST_BLOCKED = /^[=@]/u;
 
-/** pnpm reads a script name that starts with `/` as a regex selector and `.` is a path or hidden key; `//` is package.json's comment key. */
+/**
+ * A script name's blocked first characters: pnpm reads `/…/` as a regex selector when no script of that exact name has a
+ * body, and refuses a `.` name as hidden (`ERR_PNPM_HIDDEN_SCRIPT`). This also refuses `//`, package.json's comment key.
+ */
 export const SCRIPT_NAME_FIRST_BLOCKED = /^[/.]/u;
