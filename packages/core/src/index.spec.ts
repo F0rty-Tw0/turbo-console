@@ -89,7 +89,7 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<DryRunState['cache']>().toEqualTypeOf<'HIT' | 'MISS' | 'deferred'>();
       expectTypeOf<DryRunState['definition']>().toEqualTypeOf<TaskDefinition>();
       expectTypeOf<DryRunRequest>().toHaveProperty('tasks');
-      expectTypeOf<CachedWorkspace['isFresh']>().toEqualTypeOf<(version: string) => Promise<boolean>>();
+      expectTypeOf<CachedWorkspace['isFresh']>().toEqualTypeOf<(binary: TurboBinary) => Promise<boolean>>();
       expectTypeOf<AffectedTasks>().toHaveProperty('data');
       expectTypeOf<DryRun>().toHaveProperty('tasks');
       expectTypeOf<PackageGraph>().toHaveProperty('data');

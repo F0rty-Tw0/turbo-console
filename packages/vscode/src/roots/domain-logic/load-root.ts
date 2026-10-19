@@ -2,9 +2,10 @@ import { TurboException } from '@turbo-console/core';
 import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { LoadDeps, LoadFailure, LoadMode, LoadResult, LoadedModel } from '../common/root.type.ts';
+import type { LoadDeps, LoadFailure, LoadMode, LoadResult, LoadedModel, Resolved } from '../common/root.type.ts';
 import { LOAD_DEADLINE_MS, LOAD_GRACE_MS } from '../common/roots.const.ts';
 import { raceSignal } from '../utils/race-signal.util.ts';
+import { readUnlessFailed } from '../utils/read-unless-failed.util.ts';
 
 /** Rebuilt rather than passed on, so the `cause` (which can hold turbo's raw stderr) never leaves this module. */
 const exceptionOf = (error: unknown): TurboException => {
@@ -21,16 +22,10 @@ const failureOf = (stage: LoadFailure['stage'], error: unknown): LoadFailure => 
 };
 
 type CachedLoad = {
+  readonly kind: 'cached';
   readonly published: LoadedModel;
-  readonly isFresh: (version: string) => Promise<boolean>;
+  readonly isFresh: CachedWorkspace['isFresh'];
 };
-
-type ResolvedBinary = {
-  readonly kind: 'binary';
-  readonly binary: TurboBinary;
-};
-
-type Resolved = ResolvedBinary | LoadFailure;
 
 /** Never rejects, so it can run unawaited while the cache is read: a resolve that throws becomes the `binary` failure. */
 const resolvedOf = async (deps: LoadDeps, signal: AbortSignal): Promise<Resolved> => {
@@ -73,7 +68,7 @@ const cachedLoadOf = async (mode: LoadMode, deps: LoadDeps, signal: AbortSignal)
   if (cached === null) return null;
 
   const published: LoadedModel = { kind: 'model', binary: null, model: cached.model, fromCache: true, isFresh: false };
-  const load: CachedLoad = { published, isFresh: cached.isFresh };
+  const load: CachedLoad = { kind: 'cached', published, isFresh: cached.isFresh };
 
   return load;
 };
@@ -162,7 +157,7 @@ const publishLive = (result: LoadedModel, deps: LoadDeps, signal: AbortSignal, p
 
 /** After the publishes and the resolve: the cached model when its freshness check passes, else a full load. */
 const checkedLoad = async (binary: TurboBinary, cached: CachedLoad, deps: LoadDeps, signal: AbortSignal): Promise<LoadResult> => {
-  const check = async (): Promise<boolean> => cached.isFresh(binary.version);
+  const check = async (): Promise<boolean> => cached.isFresh(binary);
   const isFresh = await raceLogged(check, false, deps, signal);
 
   if (signal.aborted) return failureOf('load', signal.reason);
@@ -174,16 +169,17 @@ const checkedLoad = async (binary: TurboBinary, cached: CachedLoad, deps: LoadDe
 
 /**
  * Spec §4.3: one load of one root. `resolve` starts first and runs while `cache-first` reads the cache by the root path
- * alone, so the cached model is published as soon as it is read, with `binary` `null`. Once `resolve` settles, a
- * failure is the `binary` failure (published model or not); else the cached model is published again with the binary,
- * and its freshness check runs with the binary's version and returns it with `isFresh` set when fresh. Else (and always in `full` mode, which
- * reads no cache) it takes a load slot (`deps.acquire`) and loads under `LOAD_DEADLINE_MS`, counted from when the slot is
- * won, and the caller's `signal`. The cache read, the freshness check, the slot wait and the load all settle when the
- * caller aborts, even if a port hangs (a port that hands out the slot must reject on abort, or the slot is lost);
- * nothing is published or loaded after the caller aborted. Never throws: a failure is the result, with `cause`
- * stripped, and is not logged here (the session logs it). A `publish` or slot `release` that throws is logged through
- * `deps.log`, and so is a cache read or freshness check that throws unless the caller aborted; a freshness check that
- * throws counts as stale.
+ * alone, so the cached model is published as soon as it is read, with `binary` `null`. A `resolve` that fails before
+ * the read returns is the `binary` failure at once, with nothing published (a missing turbo shows no cached rows the
+ * store would clear); one that fails after the publish is the `binary` failure too. Else the cached model is published
+ * again with the binary, and its freshness check runs with that binary and returns it with `isFresh` set when fresh.
+ * Else (and always in `full` mode, which reads no cache) it takes a load slot (`deps.acquire`) and loads under
+ * `LOAD_DEADLINE_MS`, counted from when the slot is won, and the caller's `signal`. The cache read, the freshness check,
+ * the slot wait and the load all settle when the caller aborts, even if a port hangs (a port that hands out the slot
+ * must reject on abort, or the slot is lost); nothing is published or loaded after the caller aborted. Never throws: a
+ * failure is the result, with `cause` stripped, and is not logged here (the session logs it). A `publish` or slot
+ * `release` that throws is logged through `deps.log`, and so is a cache read or freshness check that throws unless the
+ * caller aborted; a freshness check that throws counts as stale.
  */
 export const loadRoot = async (
   mode: LoadMode,
@@ -192,9 +188,12 @@ export const loadRoot = async (
   publish: (result: LoadedModel) => void
 ): Promise<LoadResult> => {
   const resolving = resolvedOf(deps, signal);
-  const cached = await cachedLoadOf(mode, deps, signal);
+  const reading = cachedLoadOf(mode, deps, signal);
+  const cached = await readUnlessFailed(reading, resolving);
 
   if (signal.aborted) return failureOf('load', signal.reason);
+
+  if (cached?.kind === 'error') return cached;
 
   if (cached !== null) {
     runPort(() => {

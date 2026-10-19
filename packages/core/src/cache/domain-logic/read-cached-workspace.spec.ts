@@ -5,6 +5,8 @@ import { join, sep } from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { readCachedWorkspace } from './read-cached-workspace.ts';
+// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
+import { TurboBinary } from '../../binary/common/index.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import type { WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
 import { graphPackage } from '../../workspace/test/utils/graph.spec.util.ts';
@@ -54,7 +56,9 @@ const newCaseDir = (): string => {
   return join(tempDir, `case ${caseCount}`);
 };
 
-const VERSION = WORKSPACE_MODEL_STUB.turboVersion;
+/** The binary `resolveTurbo` would give for `root`, under turbo `version` (the stored model's by default). */
+const binaryAt = (root: string, version = WORKSPACE_MODEL_STUB.turboVersion): TurboBinary =>
+  new TurboBinary(root, join(root, 'turbo'), version, 'override');
 
 /** A workspace root holding a root and an `a` package manifest, both last written `AGE_MS` ago. */
 const newRoot = async (): Promise<string> => {
@@ -104,7 +108,7 @@ describe('FEATURE: cached workspace read', () => {
       await rm(join(cacheDir, cacheFileName(root)));
 
       const read = await readCachedWorkspace(root, cacheDir);
-      const settled = await settledRead(read, VERSION);
+      const settled = await settledRead(read, binaryAt(root));
 
       expect(settled).toStrictEqual(cached(model, true));
     });
@@ -119,7 +123,7 @@ describe('FEATURE: cached workspace read', () => {
         await storeWorkspace(model, PACKAGES, markAt(Date.now()), cacheDir);
 
         const read = await readCachedWorkspace(`${root}${suffix}`, cacheDir);
-        const settled = await settledRead(read, VERSION);
+        const settled = await settledRead(read, binaryAt(root));
 
         expect(settled).toStrictEqual(cached(model, true));
       }
@@ -145,7 +149,7 @@ describe('FEATURE: cached workspace read', () => {
       await appendFile(join(root, 'a', 'package.json'), '\n');
 
       const read = await readCachedWorkspace(root, cacheDir);
-      const settled = await settledRead(read, VERSION);
+      const settled = await settledRead(read, binaryAt(root));
 
       expect(settled).toStrictEqual(cached(model, false));
     });
@@ -160,7 +164,7 @@ describe('FEATURE: cached workspace read', () => {
       await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
 
       const read = await readCachedWorkspace(root, join(newCaseDir(), 'cache dir'));
-      const settled = await settledRead(read, VERSION);
+      const settled = await settledRead(read, binaryAt(root));
 
       expect(settled).toStrictEqual(cached(model, false));
     });
@@ -180,7 +184,7 @@ describe('FEATURE: cached workspace read', () => {
       first?.model.packages.reverse();
 
       const read = await readCachedWorkspace(root, join(newCaseDir(), 'cache dir'));
-      const settled = await settledRead(read, VERSION);
+      const settled = await settledRead(read, binaryAt(root));
 
       expect(settled).toStrictEqual(cached(original, true));
     });
@@ -194,7 +198,7 @@ describe('FEATURE: cached workspace read', () => {
       await storeWorkspace(model, PACKAGES, markAt(Date.now()), undefined);
 
       const read = await readCachedWorkspace(root, join(newCaseDir(), 'cache dir'));
-      const settled = await settledRead(read, '2.11.8');
+      const settled = await settledRead(read, binaryAt(root, '2.11.8'));
 
       expect(settled).toStrictEqual(cached(model, false));
     });
@@ -245,7 +249,7 @@ describe('FEATURE: cached workspace read', () => {
       hashing.isFailing = true;
 
       const read = await readCachedWorkspace(root, join(newCaseDir(), 'cache dir'));
-      const checking = read?.isFresh(VERSION);
+      const checking = read?.isFresh(binaryAt(root));
 
       await expect(checking).rejects.toBeInstanceOf(TurboException);
     });
@@ -273,9 +277,20 @@ describe('FEATURE: cached workspace read', () => {
       const read = await readCachedWorkspace(root, join(newCaseDir(), 'cache dir'));
 
       hashing.calls = 0;
-      await read?.isFresh(VERSION);
+      await read?.isFresh(binaryAt(root));
 
       expect(hashing.calls).toBe(1);
+    });
+
+    it('WHEN its freshness is checked with a binary resolved for another root THEN it is stale', async () => {
+      const root = await newRoot();
+
+      await storeWorkspace(modelAt(root), PACKAGES, markAt(Date.now()), undefined);
+
+      const read = await readCachedWorkspace(root, join(newCaseDir(), 'cache dir'));
+      const isFresh = await read?.isFresh(binaryAt(join(root, 'a')));
+
+      expect(isFresh).toBe(false);
     });
   });
 
@@ -287,7 +302,7 @@ describe('FEATURE: cached workspace read', () => {
       await storeWorkspace(model, PACKAGES, markAt(Date.now() - 2 * AGE_MS), undefined);
 
       const read = await readCachedWorkspace(root, join(newCaseDir(), 'cache dir'));
-      const settled = await settledRead(read, VERSION);
+      const settled = await settledRead(read, binaryAt(root));
 
       expect(settled).toStrictEqual(cached(model, false));
     });

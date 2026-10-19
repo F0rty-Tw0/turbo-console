@@ -40,6 +40,14 @@ export type LoadFailure = {
 
 export type LoadResult = LoadedModel | LoadFailure;
 
+type ResolvedBinary = {
+  readonly kind: 'binary';
+  readonly binary: TurboBinary;
+};
+
+/** What a load's resolve settles with: the binary, or the `binary` failure. */
+export type Resolved = ResolvedBinary | LoadFailure;
+
 /**
  * Ports of one root: the folder, the editor's storage dir and the progress UI are closed over by whoever builds them.
  * `log` takes one clean line (already through `logTextOf`), so the sink never sees an error object or its `cause`; it

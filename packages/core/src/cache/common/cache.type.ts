@@ -1,3 +1,5 @@
+// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
+import type { TurboBinary } from '../../binary/common/index.ts';
 import type { WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
 
 /**
@@ -22,11 +24,11 @@ export type CacheEntry = {
 
 /**
  * A cached model, read without hashing, and `isFresh`, which hashes its keyed files now and resolves whether they still
- * give the key it was stored with under turbo `version`.
+ * give the key it was stored with under the resolved `binary`'s version; a binary resolved for another root never does.
  */
 export type CachedWorkspace = {
   readonly model: WorkspaceModel;
-  readonly isFresh: (version: string) => Promise<boolean>;
+  readonly isFresh: (binary: TurboBinary) => Promise<boolean>;
 };
 
 /** What a store needs from before the spawn: when it started and the root keyed files as hashed then. */

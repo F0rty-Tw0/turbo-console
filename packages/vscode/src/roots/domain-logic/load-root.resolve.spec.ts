@@ -78,8 +78,44 @@ describe('FEATURE: cached publish of a root load while its binary resolves', () 
     });
   });
 
+  describe('GIVEN cache-first mode and a cache read that has not returned', () => {
+    let reading: PromiseWithResolvers<CachedWorkspace | null>;
+
+    beforeEach(() => {
+      reading = Promise.withResolvers<CachedWorkspace | null>();
+      vi.mocked(deps.readCached).mockReturnValue(reading.promise);
+    });
+
+    it('WHEN resolve rejects and the read never returns THEN it is the binary failure, with nothing published', async () => {
+      resolving.reject(NOT_FOUND);
+
+      const result = await loadRoot('cache-first', deps, new AbortController().signal, publish);
+
+      expect(result).toStrictEqual(loadFailureOf('binary', NOT_FOUND));
+      expect(publish).not.toHaveBeenCalled();
+    });
+
+    it('WHEN resolve rejects and the read returns later THEN it is the binary failure, with nothing published', async () => {
+      const pending = loadRoot('cache-first', deps, new AbortController().signal, publish);
+
+      await vi.waitFor(() => {
+        expect(deps.readCached).toHaveBeenCalledOnce();
+      });
+      resolving.reject(NOT_FOUND);
+      await flushSettles();
+      reading.resolve(CACHED_WORKSPACE_STUB);
+
+      const result = await pending;
+
+      await flushSettles();
+
+      expect(result).toStrictEqual(loadFailureOf('binary', NOT_FOUND));
+      expect(publish).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN cache-first mode and a cache whose freshness check is spied on', () => {
-    it('WHEN loaded THEN the check gets the version of the resolved binary', async () => {
+    it('WHEN loaded THEN the check gets the resolved binary', async () => {
       const isFresh = vi.fn<CachedWorkspace['isFresh']>().mockResolvedValue(true);
       const checked: CachedWorkspace = { ...CACHED_WORKSPACE_STUB, isFresh };
 
@@ -87,7 +123,7 @@ describe('FEATURE: cached publish of a root load while its binary resolves', () 
       resolving.resolve(TURBO_BINARY_STUB);
       await loadRoot('cache-first', deps, new AbortController().signal, publish);
 
-      expect(isFresh).toHaveBeenCalledExactlyOnceWith(TURBO_BINARY_STUB.version);
+      expect(isFresh).toHaveBeenCalledExactlyOnceWith(TURBO_BINARY_STUB);
     });
   });
 
