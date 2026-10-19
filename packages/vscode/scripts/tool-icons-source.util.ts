@@ -26,7 +26,7 @@ export const packageRootOf = (): string => {
 
 export const versionOf = async (root: string): Promise<string> => {
   const text = await readFile(join(root, 'package.json'), 'utf8');
-  const manifest = manifestSchema.parse(JSON.parse(text));
+  const manifest = manifestSchema.parse(JSON.parse(text), ENGLISH_ISSUES);
 
   return manifest.version;
 };
@@ -46,7 +46,7 @@ const strictIconOf = (entry: ListedIcon): IconData => {
  */
 export const usedIconsOf = (entries: unknown, slugs: string[]): Map<string, IconData> => {
   const wanted = new Set(slugs);
-  const listed = listedIconsSchema.parse(entries);
+  const listed = listedIconsSchema.parse(entries, ENGLISH_ISSUES);
   const used = listed.filter((entry) => wanted.has(entry.slug));
   const icons = used.map(strictIconOf);
 

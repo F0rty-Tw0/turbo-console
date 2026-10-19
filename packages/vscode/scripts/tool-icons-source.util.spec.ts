@@ -72,6 +72,14 @@ describe('FEATURE: usedIconsOf', () => {
     });
   });
 
+  describe('GIVEN an entry with no slug, in a run that loads no zod locale', () => {
+    it('WHEN the used icons are read THEN the failure keeps zod English text, not the bare Invalid input', () => {
+      const entry = { title: 'Nameless' };
+
+      expect(() => usedIconsOf([entry], ['vitest'])).toThrow(/expected string, received undefined/);
+    });
+  });
+
   describe('GIVEN a malformed guidelines url on a used slug', () => {
     it('WHEN the used icons are read THEN it throws naming the icon and the field', () => {
       const entry = { ...VALID, guidelines: 'nope' };
