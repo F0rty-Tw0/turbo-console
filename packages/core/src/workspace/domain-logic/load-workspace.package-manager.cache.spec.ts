@@ -56,7 +56,7 @@ describe('FEATURE: package manager across a warm start', () => {
       vi.resetModules();
 
       const { readCachedWorkspace } = await import('../../cache/domain-logic/read-cached-workspace.ts');
-      const cached = await readCachedWorkspace(binary, cacheDir);
+      const cached = await readCachedWorkspace(binary.root, cacheDir);
 
       expect(loaded.packageManager).toStrictEqual(PNPM_BY_DEV_ENGINES_STUB);
       expect(cached?.model.packageManager).toStrictEqual(loaded.packageManager);

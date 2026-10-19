@@ -152,20 +152,23 @@ export class RootsSession implements Session {
 
   /**
    * Every model that reaches the store logs its warnings, one clean line each (spec §4.3), whether a cache read or a
-   * full load produced it. A failure is logged only when its error key or log text differs from the root's error before
+   * full load produced it; the same model object applied again (a cached model published again with its binary) does
+   * not. A failure is logged only when its error key or log text differs from the root's error before
    * it, so a retried failure is logged once until it changes or a model clears it; an aborted load never gets here.
    * `CoordinatorPorts.apply` must not throw: a store listener that throws is logged instead.
    */
   private apply(root: string, result: LoadResult, deps: LoadDeps): void {
     try {
-      const current = this.store.get(root)?.state.error ?? null;
+      const state = this.store.get(root)?.state;
+      const current = state?.error ?? null;
       const failureLine = newFailureLineOf(current, result);
+      const isNewModel = result.kind === 'model' && result.model !== state?.model;
 
       if (failureLine !== null) deps.log(failureLine);
 
       this.store.apply(root, result);
 
-      if (result.kind === 'model') {
+      if (isNewModel) {
         for (const warning of result.model.warnings) this.ports.warn(cleanText(warning, LOG_LINE_MAX));
       }
     } catch (error) {

@@ -21,9 +21,11 @@ const LOADED: LoadedModel = {
   isFresh: true
 };
 
-const PUBLISHED: LoadedModel = { ...LOADED, fromCache: true, isFresh: false };
+const PUBLISHED: LoadedModel = { ...LOADED, binary: null, fromCache: true, isFresh: false };
 
 const FRESH_CACHED: LoadedModel = { ...LOADED, fromCache: true };
+
+const BOUND: LoadedModel = { ...PUBLISHED, binary: TURBO_BINARY_STUB };
 
 describe('FEATURE: freshness check of a cached root load', () => {
   afterEach(() => {
@@ -47,9 +49,9 @@ describe('FEATURE: freshness check of a cached root load', () => {
       pending = loadRoot('cache-first', deps, new AbortController().signal, publish);
     });
 
-    it('WHEN the cache is read THEN the cached model is already published from the cache', async () => {
+    it('WHEN the cache is read THEN the cached model is already published, then again with its binary', async () => {
       await vi.waitFor(() => {
-        expect(publish).toHaveBeenCalledExactlyOnceWith(PUBLISHED);
+        expect(publish.mock.calls).toStrictEqual([[PUBLISHED], [BOUND]]);
       });
       check.resolve(true);
       await pending;
@@ -78,7 +80,7 @@ describe('FEATURE: freshness check of a cached root load', () => {
 
       const result = await pending;
 
-      expect(publish).toHaveBeenCalledExactlyOnceWith(PUBLISHED);
+      expect(publish.mock.calls).toStrictEqual([[PUBLISHED], [BOUND]]);
       expect(deps.log).toHaveBeenCalledExactlyOnceWith('turbo io: hash');
       expect(deps.load).toHaveBeenCalledOnce();
       expect(result).toStrictEqual(LOADED);
@@ -86,7 +88,7 @@ describe('FEATURE: freshness check of a cached root load', () => {
   });
 
   describe('GIVEN a published cached model whose freshness check hangs and the caller aborts', () => {
-    it('WHEN the check never settles THEN it is a load failure, published once, and nothing is logged or loaded', async () => {
+    it('WHEN the check never settles THEN it is a load failure, published twice only, and nothing is logged or loaded', async () => {
       const deps = loadDepsMock();
       const controller = new AbortController();
       const publish = vi.fn();
@@ -100,14 +102,14 @@ describe('FEATURE: freshness check of a cached root load', () => {
       const pending = loadRoot('cache-first', deps, controller.signal, publish);
 
       await vi.waitFor(() => {
-        expect(publish).toHaveBeenCalledOnce();
+        expect(publish).toHaveBeenCalledTimes(2);
       });
       controller.abort();
 
       const result = await pending;
 
       expect(result).toMatchObject({ kind: 'error', stage: 'load' });
-      expect(publish).toHaveBeenCalledOnce();
+      expect(publish).toHaveBeenCalledTimes(2);
       expect(deps.log).not.toHaveBeenCalled();
       expect(deps.acquire).not.toHaveBeenCalled();
       expect(deps.load).not.toHaveBeenCalled();
@@ -125,7 +127,7 @@ describe('FEATURE: freshness check of a cached root load', () => {
       const pending = loadRoot('cache-first', deps, controller.signal, publish);
 
       await vi.waitFor(() => {
-        expect(publish).toHaveBeenCalledOnce();
+        expect(publish).toHaveBeenCalledTimes(2);
       });
       controller.abort();
       check.reject(new Error('io'));

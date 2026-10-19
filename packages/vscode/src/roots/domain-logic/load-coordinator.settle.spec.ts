@@ -1,4 +1,5 @@
 import { TurboException } from '@turbo-console/core';
+import type { WorkspaceModel } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LoadCoordinator } from './load-coordinator.ts';
@@ -10,8 +11,12 @@ import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
 /** What `loadRoot` publishes before the freshness check, and what it returns once the check passed. */
-const UNCHECKED_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
-const FRESH_CACHED: LoadedModel = { ...UNCHECKED_CACHED, isFresh: true };
+const UNCHECKED_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, binary: null, fromCache: true, isFresh: false };
+/** What `loadRoot` publishes again once the binary resolved, before the freshness check. */
+const BOUND_CACHED: LoadedModel = { ...UNCHECKED_CACHED, binary: LOADED_MODEL_STUB.binary };
+const FRESH_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: true };
+const OTHER_MODEL: WorkspaceModel = { ...LOADED_MODEL_STUB.model, warnings: ['other'] };
+const OTHER_CACHED: LoadedModel = { ...FRESH_CACHED, model: OTHER_MODEL };
 const ABORT_ERROR = new TurboException('failed', 'This operation was aborted');
 const ABORTED: LoadFailure = loadFailureOf('load', ABORT_ERROR);
 const RUN_ERROR = new TurboException('failed', 'boom');
@@ -126,11 +131,26 @@ describe('FEATURE: settling a root load', () => {
       runAt(deferred, 0).publish(UNCHECKED_CACHED);
     });
 
-    it('WHEN the load returns it checked fresh as a new object THEN it is applied once', async () => {
+    it('WHEN the load returns it checked fresh with its binary THEN that result is applied after the publish', async () => {
       runAt(deferred, 0).settle(FRESH_CACHED);
       await flushSettles();
 
-      expect(deferred.ports.apply).toHaveBeenCalledExactlyOnceWith(UNCHECKED_CACHED);
+      expect(vi.mocked(deferred.ports.apply).mock.calls).toStrictEqual([[UNCHECKED_CACHED], [FRESH_CACHED]]);
+    });
+
+    it('WHEN the load returns a binary failure THEN the failure is applied after the publish', async () => {
+      runAt(deferred, 0).settle(LOAD_FAILURE_STUB);
+      await flushSettles();
+
+      expect(vi.mocked(deferred.ports.apply).mock.calls).toStrictEqual([[UNCHECKED_CACHED], [LOAD_FAILURE_STUB]]);
+    });
+
+    it('WHEN the load returns a binary failure and the root is ensured THEN one full load retries it', async () => {
+      runAt(deferred, 0).settle(LOAD_FAILURE_STUB);
+      await flushSettles();
+      void coordinator.ensureLoaded();
+
+      expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full']);
     });
 
     it('WHEN the load returns it checked fresh THEN its record reads a fresh cache', async () => {
@@ -140,6 +160,51 @@ describe('FEATURE: settling a root load', () => {
       await flushSettles();
 
       expect(record).toStrictEqual({ mode: 'cache-first', startedAt: 1_000, outcome: 'model', cacheFresh: true });
+    });
+  });
+
+  describe('GIVEN a cache-first load that publishes a cache before and after its binary resolves', () => {
+    beforeEach(() => {
+      coordinator.show();
+      runAt(deferred, 0).publish(UNCHECKED_CACHED);
+      runAt(deferred, 0).publish(BOUND_CACHED);
+    });
+
+    it('WHEN the load returns that model checked fresh THEN it is not applied a third time', async () => {
+      runAt(deferred, 0).settle(FRESH_CACHED);
+      await flushSettles();
+
+      expect(vi.mocked(deferred.ports.apply).mock.calls).toStrictEqual([[UNCHECKED_CACHED], [BOUND_CACHED]]);
+    });
+
+    it('WHEN the load returns that model checked fresh THEN its record reads a fresh cache', async () => {
+      const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
+
+      runAt(deferred, 0).settle(FRESH_CACHED);
+      await flushSettles();
+
+      expect(record).toStrictEqual({ mode: 'cache-first', startedAt: 1_000, outcome: 'model', cacheFresh: true });
+    });
+
+    it('WHEN the load returns another cached model THEN that model is applied', async () => {
+      runAt(deferred, 0).settle(OTHER_CACHED);
+      await flushSettles();
+
+      expect(vi.mocked(deferred.ports.apply).mock.calls).toStrictEqual([[UNCHECKED_CACHED], [BOUND_CACHED], [OTHER_CACHED]]);
+    });
+
+    it('WHEN the cache was stale and the full load returns a model THEN that model is applied', async () => {
+      runAt(deferred, 0).settle(LOADED_MODEL_STUB);
+      await flushSettles();
+
+      expect(vi.mocked(deferred.ports.apply).mock.calls).toStrictEqual([[UNCHECKED_CACHED], [BOUND_CACHED], [LOADED_MODEL_STUB]]);
+    });
+
+    it('WHEN the full load fails THEN the failure is applied', async () => {
+      runAt(deferred, 0).settle(RUN_FAILED);
+      await flushSettles();
+
+      expect(vi.mocked(deferred.ports.apply).mock.calls).toStrictEqual([[UNCHECKED_CACHED], [BOUND_CACHED], [RUN_FAILED]]);
     });
   });
 

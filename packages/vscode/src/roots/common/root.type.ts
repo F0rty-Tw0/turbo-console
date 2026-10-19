@@ -20,7 +20,8 @@ export type LoadMode = 'cache-first' | 'full';
 
 export type LoadedModel = {
   readonly kind: 'model';
-  readonly binary: TurboBinary;
+  /** `null` only on a cached model published before the binary resolved. */
+  readonly binary: TurboBinary | null;
   readonly model: WorkspaceModel;
   readonly fromCache: boolean;
   /** `false` on a cached model published before its freshness check; `true` once that check passed, and on a full load. */
@@ -39,6 +40,14 @@ export type LoadFailure = {
 
 export type LoadResult = LoadedModel | LoadFailure;
 
+type ResolvedBinary = {
+  readonly kind: 'binary';
+  readonly binary: TurboBinary;
+};
+
+/** What a load's resolve settles with: the binary, or the `binary` failure. */
+export type Resolved = ResolvedBinary | LoadFailure;
+
 /**
  * Ports of one root: the folder, the editor's storage dir and the progress UI are closed over by whoever builds them.
  * `log` takes one clean line (already through `logTextOf`), so the sink never sees an error object or its `cause`; it
@@ -46,7 +55,8 @@ export type LoadResult = LoadedModel | LoadFailure;
  */
 export type LoadDeps = {
   readonly resolve: (signal: AbortSignal) => Promise<TurboBinary>;
-  readonly readCached: (binary: TurboBinary) => Promise<CachedWorkspace | null>;
+  /** Reads by the root path alone, so it can run before `resolve` settles. */
+  readonly readCached: () => Promise<CachedWorkspace | null>;
   readonly load: (binary: TurboBinary, signal: AbortSignal) => Promise<WorkspaceModel>;
   /** Takes a load slot shared by every root; rejects when `signal` aborts while queued. Call the result once to free it. */
   readonly acquire: (signal: AbortSignal) => Promise<() => void>;

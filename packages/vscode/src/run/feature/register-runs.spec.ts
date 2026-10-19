@@ -79,6 +79,85 @@ describe('FEATURE: run commands', () => {
     expect([...names]).toStrictEqual(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask']);
   });
 
+  describe('GIVEN a cached model published before the binary resolved', () => {
+    let whenSettled: Mock<() => Promise<void>>;
+    let unsubscribe: Mock<() => void>;
+
+    const spyUnsubscribe = (): Mock<() => void> => {
+      const subscribe = roots.onDidChange.bind(roots);
+      const spy = vi.fn<() => void>();
+
+      vi.spyOn(roots, 'onDidChange').mockImplementation((listener) => {
+        spy.mockImplementation(subscribe(listener));
+
+        return spy;
+      });
+
+      return spy;
+    };
+
+    beforeEach(() => {
+      const loaded = loadedWith([PACKAGE_NODE_STUB]);
+
+      roots.apply('/ws', { ...loaded, binary: null });
+      whenSettled = vi.mocked(roots.get('/ws')?.coordinator.whenSettled ?? vi.fn());
+      unsubscribe = spyUnsubscribe();
+    });
+
+    describe('WHEN Run Task is invoked and the binary is published while the load keeps running', () => {
+      beforeEach(async () => {
+        whenSettled.mockReturnValue(new Promise(() => undefined));
+
+        const running = command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+
+        roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
+        await running;
+      });
+
+      it('THEN turbo runs that task with the binary', () => {
+        expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000);
+      });
+
+      it('THEN its store listener is removed', () => {
+        expect(unsubscribe).toHaveBeenCalledOnce();
+      });
+    });
+
+    describe('WHEN Run Task is invoked and the load then settles with the binary', () => {
+      beforeEach(async () => {
+        whenSettled.mockImplementation(async () => {
+          roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
+          await Promise.resolve();
+        });
+
+        await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+      });
+
+      it('THEN turbo runs that task with it', () => {
+        expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000);
+      });
+
+      it('THEN its store listener is removed', () => {
+        expect(unsubscribe).toHaveBeenCalledOnce();
+      });
+    });
+
+    describe('WHEN Run Task is invoked and the load settles without a binary', () => {
+      beforeEach(async () => {
+        await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+      });
+
+      it('THEN it waited for the settle and nothing runs', () => {
+        expect(whenSettled).toHaveBeenCalledOnce();
+        expect(ports.execute).not.toHaveBeenCalled();
+      });
+
+      it('THEN its store listener is removed', () => {
+        expect(unsubscribe).toHaveBeenCalledOnce();
+      });
+    });
+  });
+
   describe('GIVEN a root loaded with a binary and package a holding the build task', () => {
     beforeEach(() => {
       roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));

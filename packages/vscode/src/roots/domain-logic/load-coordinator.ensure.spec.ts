@@ -9,6 +9,8 @@ import { deferredPorts, flushSettles, runAt, settledFlag } from '../test/utils/d
 import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
+/** What `loadRoot` publishes before the binary resolves: the store drops it again on any failure. */
+const UNCHECKED_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, binary: null, fromCache: true, isFresh: false };
 const LOAD_ERROR = new TurboException('failed', 'turbo exited 1');
 const LOAD_FAILED: LoadFailure = loadFailureOf('load', LOAD_ERROR);
 const ABORT_ERROR = new TurboException('failed', 'This operation was aborted');
@@ -182,6 +184,26 @@ describe('FEATURE: ensure a root is loaded', () => {
       void coordinator.ensureLoaded();
 
       expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full']);
+    });
+  });
+
+  describe('GIVEN a cache published before a binary failure, then a retry whose full load failed', () => {
+    beforeEach(async () => {
+      coordinator.show();
+      runAt(deferred, 0).publish(UNCHECKED_CACHED);
+      runAt(deferred, 0).settle(LOAD_FAILURE_STUB);
+      await flushSettles();
+
+      const retry = coordinator.ensureLoaded();
+
+      runAt(deferred, 1).settle(LOAD_FAILED);
+      await retry;
+    });
+
+    it('WHEN ensured THEN one full load runs, since that publish left no model', () => {
+      void coordinator.ensureLoaded();
+
+      expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full', 'full']);
     });
   });
 

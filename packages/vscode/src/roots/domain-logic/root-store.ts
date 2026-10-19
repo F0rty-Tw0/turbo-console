@@ -28,7 +28,8 @@ const entryFor = (existing: RootEntry | undefined, folder: RootFolder, make: (fo
 
 const stateAfter = (state: RootState, result: LoadResult): RootState => {
   if (result.kind === 'error') {
-    const failed: RootState = { ...state, error: result };
+    const model = state.binary === null ? null : state.model;
+    const failed: RootState = { ...state, model, error: result };
 
     return failed;
   }
@@ -78,7 +79,10 @@ export class RootStore {
     return Array.from(this.entries.values());
   }
 
-  /** A model replaces the model and binary and clears the error; a failure sets the error and keeps the model. */
+  /**
+   * A model replaces the model and binary and clears the error; a failure sets the error and keeps the model, unless
+   * the model has no binary (a cached model published before resolve): none of its tasks could run, so it is cleared.
+   */
   public apply(root: string, result: LoadResult): void {
     const entry = this.entries.get(root);
 
