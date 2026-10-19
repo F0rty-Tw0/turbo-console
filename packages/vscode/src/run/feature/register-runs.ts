@@ -18,6 +18,10 @@ export const registerRuns = (
 
     if (target === null) return;
 
+    const entry = roots.get(target.definition.root);
+
+    if (entry?.state.binary === null) await entry.coordinator.whenSettled();
+
     const state = roots.get(target.definition.root)?.state;
     const request = runRequestOf(target, state, force);
 

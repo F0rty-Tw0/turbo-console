@@ -79,6 +79,33 @@ describe('FEATURE: run commands', () => {
     expect([...names]).toStrictEqual(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask']);
   });
 
+  describe('GIVEN a cached model published before the binary resolved', () => {
+    beforeEach(() => {
+      const loaded = loadedWith([PACKAGE_NODE_STUB]);
+
+      roots.apply('/ws', { ...loaded, binary: null });
+    });
+
+    it('WHEN Run Task is invoked and the load then settles with the binary THEN turbo runs that task with it', async () => {
+      const whenSettled = roots.get('/ws')?.coordinator.whenSettled ?? vi.fn();
+
+      vi.mocked(whenSettled).mockImplementation(async () => {
+        roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
+        await Promise.resolve();
+      });
+
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000);
+    });
+
+    it('WHEN Run Task is invoked and the load settles without a binary THEN nothing runs', async () => {
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+
+      expect(ports.execute).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a root loaded with a binary and package a holding the build task', () => {
     beforeEach(() => {
       roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
