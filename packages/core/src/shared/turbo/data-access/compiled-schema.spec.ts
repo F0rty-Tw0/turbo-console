@@ -168,9 +168,10 @@ describe('FEATURE: lazily compiled schemas', () => {
     });
 
     it('WHEN the getter is called THEN it returns the runtime schema, which still parses turbo output', () => {
-      const refuseCodegen = (): never => {
+      /** A plain function, as `compile` calls `new Function(...)`: the refusal is the host's `EvalError`, not a `TypeError`. */
+      function refuseCodegen(): never {
         throw new EvalError('Code generation from strings disallowed for this context');
-      };
+      }
       const compiledGraph = lazyCompiled(packageGraphSchema);
       const input: unknown = JSON.parse(PACKAGE_GRAPH);
 
