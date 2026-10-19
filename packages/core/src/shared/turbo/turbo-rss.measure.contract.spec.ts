@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { PRESETS } from '@turbo-console/repo-gen';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { object, record, string, unknown } from 'zod/mini';
 
 import { SKIP_INFER } from './common/turbo-args.const.ts';
 import { PACKAGE_GRAPH_QUERY } from './common/turbo-query.const.ts';
@@ -29,7 +29,7 @@ const GIB = 1024 * MIB;
 /** Two turbo runs on Windows (pwsh start-up and `Add-Type` included) outlast the 120 s default of one case. */
 const CASE_TIMEOUT_MS = 240_000;
 
-const turboJsonSchema = z.object({ tasks: z.record(z.string(), z.unknown()) });
+const turboJsonSchema = object({ tasks: record(string(), unknown()) });
 
 const packageGraphArgs = (): string[] => [SKIP_INFER, 'query', PACKAGE_GRAPH_QUERY];
 

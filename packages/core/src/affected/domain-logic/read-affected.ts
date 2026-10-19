@@ -5,6 +5,7 @@ import { affectedTasksSchema } from '../../shared/turbo/common/affected-tasks.sc
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
 import { AFFECTED_TASKS_QUERY } from '../../shared/turbo/common/turbo-query.const.ts';
 import type { QueryTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import { lazyCompiled } from '../../shared/turbo/data-access/compiled-schema.ts';
 import { queryTurbo } from '../../shared/turbo/data-access/query-turbo.ts';
 import { runTurboJson } from '../../shared/turbo/data-access/turbo-json.ts';
 import { readTurboConfig } from '../../workspace/data-access/turbo-config.ts';
@@ -13,6 +14,8 @@ import type { AffectedResult, ReadAffectedOptions } from '../common/affected.typ
 import { affectedVariables, toAffectedResult } from '../utils/affected.util.ts';
 
 const COMMAND = 'query affectedTasks';
+
+const compiledAffectedSchema = lazyCompiled(affectedTasksSchema);
 
 /**
  * Spec §4.7: one `affectedTasks` query spawn (30 s budget), `base` and `head` passed through `-V` only when set, then
@@ -27,7 +30,8 @@ export const readAffected = async (binary: TurboBinary, options: ReadAffectedOpt
     const variables = affectedVariables(options);
     const queryOptions: QueryTurboOptions = { variables, timeoutMs: TURBO_BUDGET_MS.query, signal: options.signal };
     const run = async (): Promise<TurboResult> => queryTurbo(binary.path, AFFECTED_TASKS_QUERY, binary.root, queryOptions);
-    const json = await runTurboJson(run, COMMAND, affectedTasksSchema);
+    const schema = compiledAffectedSchema();
+    const json = await runTurboJson(run, COMMAND, schema);
     const rootConfig = await readTurboConfig(binary.root, '');
     const mode = affectedModeOf(rootConfig);
 

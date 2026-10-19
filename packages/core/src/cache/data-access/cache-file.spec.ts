@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from 'vitest';
-import type { z } from 'zod';
+import type { output } from 'zod/mini';
 
 import { readCacheFile, writeCacheFile } from './cache-file.ts';
 import type { PackageManager, TaskNode, WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';
@@ -149,7 +149,7 @@ describe('FEATURE: workspace cache file', () => {
 
   describe('GIVEN the cache file schema', () => {
     it('WHEN its model type is inferred THEN it equals WorkspaceModel and parses a model unchanged', () => {
-      expectTypeOf<z.infer<typeof workspaceModelSchema>>().toEqualTypeOf<WorkspaceModel>();
+      expectTypeOf<output<typeof workspaceModelSchema>>().toEqualTypeOf<WorkspaceModel>();
 
       const parsed = workspaceModelSchema.parse(WORKSPACE_MODEL_STUB);
 

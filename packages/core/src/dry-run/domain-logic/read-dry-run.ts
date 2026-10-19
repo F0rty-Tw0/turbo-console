@@ -4,12 +4,15 @@ import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts'
 import { dryRunSchema } from '../../shared/turbo/common/dry-run.schema.ts';
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
 import type { RunTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import { lazyCompiled } from '../../shared/turbo/data-access/compiled-schema.ts';
 import { runTurbo } from '../../shared/turbo/data-access/run-turbo.ts';
 import { runTurboJson } from '../../shared/turbo/data-access/turbo-json.ts';
 import type { DryRunRequest, DryRunState, ReadDryRunOptions } from '../common/dry-run-state.type.ts';
 import { dryRunArgs, toDryRunStates } from '../utils/dry-run.util.ts';
 
 const COMMAND = 'run --dry=json';
+
+const compiledDryRunSchema = lazyCompiled(dryRunSchema);
 
 /**
  * Spec §4.7: one `run <tasks…> [--filter=<pkg>…] --dry=json` spawn (60 s budget). Tasks with no command are dropped, a
@@ -28,7 +31,8 @@ export const readDryRun = async (
   try {
     const args = dryRunArgs(request);
     const run = async (): Promise<TurboResult> => runTurbo(binary.path, args, binary.root, runOptions);
-    const json = await runTurboJson(run, COMMAND, dryRunSchema);
+    const schema = compiledDryRunSchema();
+    const json = await runTurboJson(run, COMMAND, schema);
 
     return toDryRunStates(json);
   } catch (error) {

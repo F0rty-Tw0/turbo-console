@@ -1,4 +1,5 @@
-import { z } from 'zod';
+import { $ZodError } from 'zod/v4/core';
+import type { $ZodIssue } from 'zod/v4/core';
 
 import { plainLine } from './plain-text.util.ts';
 import { stderrTail } from './stderr-tail.util.ts';
@@ -47,7 +48,7 @@ const pathSegment = (key: PropertyKey): string => {
   return plainLine(head);
 };
 
-const issuePath = (issue: z.core.$ZodIssue): string => {
+const issuePath = (issue: $ZodIssue): string => {
   if (issue.path.length === 0) return '(root)';
 
   const segments = issue.path.map(pathSegment);
@@ -64,7 +65,7 @@ export const invalidOutputMessage = (command: string, error: unknown): string =>
 
   if (error instanceof SyntaxError) return `${turbo} printed non-JSON output`;
 
-  if (!(error instanceof z.ZodError)) return `${turbo} output could not be read`;
+  if (!(error instanceof $ZodError)) return `${turbo} output could not be read`;
 
   const issues = error.issues.slice(0, MAX_ISSUE_PATHS);
   const paths = issues.map(issuePath);

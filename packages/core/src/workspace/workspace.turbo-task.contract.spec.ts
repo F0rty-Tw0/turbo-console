@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { PRESETS } from '@turbo-console/repo-gen';
 import type { FixtureHandle, Manifest, ManifestPackage } from '@turbo-console/repo-gen';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { looseObject, optional, record, string } from 'zod/mini';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, loadWorkspace, readDryRun, resolveTurbo } from '../index.ts';
@@ -19,9 +19,9 @@ const ADHOC = 'adhoc';
 
 const TRUSTED = { trusted: true } as const;
 
-const scriptsSchema = z.record(z.string(), z.string()).optional();
+const scriptsSchema = optional(record(string(), string()));
 
-const packageJsonSchema = z.looseObject({ scripts: scriptsSchema });
+const packageJsonSchema = looseObject({ scripts: scriptsSchema });
 
 const binaryFor = async (fixture: FixtureHandle): Promise<TurboBinary> => {
   const binary = await resolveTurbo(fixture.dir, { ...TRUSTED, overridePath: devTurboPath() });

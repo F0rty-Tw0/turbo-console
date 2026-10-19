@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, open, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import type { z } from 'zod';
+import { refine } from 'zod/mini';
+import type { output } from 'zod/mini';
 
 import { errnoCode } from '../../shared/errors/utils/errno.util.ts';
 import { ioMessage, plainPath } from '../../shared/errors/utils/turbo-message.util.ts';
@@ -12,7 +13,7 @@ import { CACHE_FORMAT_VERSION, MAX_CACHE_BYTES } from '../common/cache.const.ts'
 import type { CacheEntry } from '../common/cache.type.ts';
 import { cacheFileName, isKeyedPath } from '../utils/cache-key.util.ts';
 
-type CacheFile = z.infer<typeof cacheFileSchema>;
+type CacheFile = output<typeof cacheFileSchema>;
 
 const TOO_LARGE = 'workspace model too large to cache';
 
@@ -25,7 +26,7 @@ const TEMP_WRITE_OPTIONS = { mode: 0o600, flag: 'wx' };
 const hasOnlyKeyedPaths = (file: CacheFile): boolean => file.keyedPaths.every(isKeyedPath);
 
 /** `keyedPaths` are hashed relative to the root on every read: a tampered path outside it, or named like no keyed file, is a miss. */
-const trustedFileSchema = cacheFileSchema.refine(hasOnlyKeyedPaths);
+const trustedFileSchema = cacheFileSchema.check(refine(hasOnlyKeyedPaths));
 
 /**
  * Cleanup changes no outcome: a close after the text is read or the file refused, and the removal of a temp file left

@@ -1,21 +1,21 @@
-import { z } from 'zod';
+import { array, number, object, string, enum as zodEnum } from 'zod/mini';
 
-const executionSchema = z.object({ startTime: z.number(), endTime: z.number(), exitCode: z.number() });
+const executionSchema = object({ startTime: number(), endTime: number(), exitCode: number() });
 
 /** The summary-level execution; unlike a task's, turbo also records the `command` line it ran. */
-const runExecutionSchema = z.object({
-  command: z.string(),
-  startTime: z.number(),
-  endTime: z.number(),
-  exitCode: z.number()
+const runExecutionSchema = object({
+  command: string(),
+  startTime: number(),
+  endTime: number(),
+  exitCode: number()
 });
 
-const cacheSchema = z.object({ status: z.enum(['HIT', 'MISS']) });
+const cacheSchema = object({ status: zodEnum(['HIT', 'MISS']) });
 
-const taskSchema = z.object({ taskId: z.string(), execution: executionSchema, cache: cacheSchema });
+const taskSchema = object({ taskId: string(), execution: executionSchema, cache: cacheSchema });
 
 /**
  * A `.turbo/runs/<id>.json` file written by `turbo run --summarize`. Times are epoch milliseconds. Unknown keys are
  * stripped; every listed key is required.
  */
-export const runSummarySchema = z.object({ id: z.string(), execution: runExecutionSchema, tasks: z.array(taskSchema) });
+export const runSummarySchema = object({ id: string(), execution: runExecutionSchema, tasks: array(taskSchema) });

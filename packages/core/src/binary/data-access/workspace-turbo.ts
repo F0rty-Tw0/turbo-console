@@ -1,7 +1,7 @@
 import { realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { z } from 'zod';
+import { object, string } from 'zod/mini';
 
 import { platformBinary } from './platform-binary.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
@@ -10,7 +10,7 @@ import { ioMessage, plainPath } from '../../shared/errors/utils/turbo-message.ut
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
 import type { WorkspaceTurbo } from '../common/turbo-binary.type.ts';
 
-const turboManifestSchema = z.object({ version: z.string() });
+const turboManifestSchema = object({ version: string() });
 
 /** Carries no `cause`: a parse error quotes the file's text, which may be anything (a linked `/proc/self/environ`). */
 const invalidManifest = (manifestPath: string): TurboException =>
