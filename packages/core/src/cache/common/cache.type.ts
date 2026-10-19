@@ -22,11 +22,11 @@ export type CacheEntry = {
 
 /**
  * A cached model, read without hashing, and `isFresh`, which hashes its keyed files now and resolves whether they still
- * give the key it was stored with.
+ * give the key it was stored with under turbo `version`.
  */
 export type CachedWorkspace = {
   readonly model: WorkspaceModel;
-  readonly isFresh: () => Promise<boolean>;
+  readonly isFresh: (version: string) => Promise<boolean>;
 };
 
 /** What a store needs from before the spawn: when it started and the root keyed files as hashed then. */

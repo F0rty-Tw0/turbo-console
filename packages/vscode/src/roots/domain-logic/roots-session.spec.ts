@@ -7,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import { RootsSession } from './roots-session.ts';
 import type { LoadDeps, RootFolder, SessionPorts } from '../common/root.type.ts';
-import { CACHED_WORKSPACE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/root.stub.ts';
+import { CACHED_WORKSPACE_STUB, LOAD_FAILURE_STUB, TURBO_BINARY_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/root.stub.ts';
 import { sessionPortsWith, tickLoad } from '../test/utils/session-ports.spec.util.ts';
 
 const A_FOLDER: RootFolder = { root: '/a', name: 'a' };
@@ -146,6 +146,31 @@ describe('FEATURE: roots session', () => {
       await ensureAll(session);
 
       expect(log).toHaveBeenCalledExactlyOnceWith('listener broke');
+    });
+  });
+
+  describe('GIVEN a root with a fresh cache', () => {
+    it('WHEN it is ensured THEN the store holds the cached model with the resolved binary', async () => {
+      const session = new RootsSession(sessionPortsWith({}));
+
+      session.setRoots([A_FOLDER]);
+      await ensureAll(session);
+
+      const state = session.store.get('/a')?.state;
+
+      expect(state).toStrictEqual({ folder: A_FOLDER, binary: TURBO_BINARY_STUB, model: WORKSPACE_MODEL_STUB, error: null });
+    });
+
+    it('WHEN its binary is never found THEN the store drops the cached model and holds the binary error', async () => {
+      const resolve = vi.fn<LoadDeps['resolve']>().mockRejectedValue(LOAD_FAILURE_STUB.error);
+      const session = new RootsSession(sessionPortsWith({ resolve }));
+
+      session.setRoots([A_FOLDER]);
+      await ensureAll(session);
+
+      const state = session.store.get('/a')?.state;
+
+      expect(state).toStrictEqual({ folder: A_FOLDER, binary: null, model: null, error: LOAD_FAILURE_STUB });
     });
   });
 

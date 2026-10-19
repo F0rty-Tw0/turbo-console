@@ -148,14 +148,12 @@ export class LoadCoordinator implements Coordinator {
     const firstAnswer = Promise.withResolvers<undefined>();
     const settled = Promise.withResolvers<undefined>();
     const flight: Flight = { generation: this.counter, controller, record, firstAnswer, settled };
-    let published: LoadedModel | null = null;
     const publish = (result: LoadedModel): void => {
-      published = result;
       firstAnswer.resolve(undefined);
       this.take(flight, result);
     };
     const settle = (result: LoadResult): void => {
-      this.settle(flight, result, published);
+      this.settle(flight, result);
     };
 
     const running = async (): Promise<LoadResult> => this.ports.run(mode, controller.signal, publish);
@@ -188,13 +186,12 @@ export class LoadCoordinator implements Coordinator {
 
   /**
    * Bookkeeping first, `apply` last: the follow-up and the settle waiters never depend on the port returning. A cached
-   * result after a publish is that published model, now checked fresh, so it is not applied again.
+   * result after a publish is still applied: the publish came before the binary resolved, and the result carries it.
    */
-  private settle(flight: Flight, result: LoadResult, published: LoadedModel | null): void {
+  private settle(flight: Flight, result: LoadResult): void {
     const isLive = this.isLive(flight);
     const outcome = isLive ? result.kind : 'aborted';
     const wasCurrent = this.current === flight;
-    const isPublishedAgain = result.kind === 'model' && result.fromCache && published !== null;
 
     closeRecord(flight.record, outcome, result);
 
@@ -207,7 +204,7 @@ export class LoadCoordinator implements Coordinator {
     flight.firstAnswer.resolve(undefined);
     flight.settled.resolve(undefined);
 
-    if (!isPublishedAgain) this.take(flight, result);
+    this.take(flight, result);
   }
 
   private clearStale(generation: number): void {

@@ -18,7 +18,7 @@ import { cacheFileName } from './utils/cache-key.util.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
 
-type CacheReader = (binary: TurboBinary, cacheDir: string) => Promise<CachedWorkspace | null>;
+type CacheReader = (root: string, cacheDir: string) => Promise<CachedWorkspace | null>;
 
 const spawns = vi.hoisted(() => {
   const files: string[] = [];
@@ -122,9 +122,9 @@ describe('FEATURE: workspace cache from a real turbo', () => {
 
       beforeAll(async () => {
         const reader = await freshReader();
-        const cached = await reader(binary, cacheDir);
+        const cached = await reader(binary.root, cacheDir);
 
-        read = await settledRead(cached);
+        read = await settledRead(cached, binary.version);
       });
 
       it('THEN it is fresh with the loaded model', () => {
@@ -164,15 +164,15 @@ describe('FEATURE: workspace cache from a real turbo', () => {
       await backdateTree(fixture().dir, AGE_MS);
 
       const model = await loadWorkspace(binary, { cacheDir });
-      const cachedBefore = await readCachedWorkspace(binary, cacheDir);
-      const before = await settledRead(cachedBefore);
+      const cachedBefore = await readCachedWorkspace(binary.root, cacheDir);
+      const before = await settledRead(cachedBefore, binary.version);
       const fresh: SettledRead = { model, isFresh: true };
       const stale: SettledRead = { model, isFresh: false };
 
       await appendFile(path, '\n');
 
-      const cachedAfter = await readCachedWorkspace(binary, cacheDir);
-      const after = await settledRead(cachedAfter);
+      const cachedAfter = await readCachedWorkspace(binary.root, cacheDir);
+      const after = await settledRead(cachedAfter, binary.version);
 
       expect(before).toStrictEqual(fresh);
       expect(after).toStrictEqual(stale);
@@ -190,15 +190,15 @@ describe('FEATURE: workspace cache from a real turbo', () => {
 
       const model = await loadWorkspace(binary, { cacheDir });
       const readerBefore = await freshReader();
-      const cachedBefore = await readerBefore(binary, cacheDir);
-      const before = await settledRead(cachedBefore);
+      const cachedBefore = await readerBefore(binary.root, cacheDir);
+      const before = await settledRead(cachedBefore, binary.version);
       const fresh: SettledRead = { model, isFresh: true };
 
       await writeFile(join(cacheDir, cacheFileName(binary.root)), '{');
 
       const reader = await freshReader();
 
-      const read = await reader(binary, cacheDir);
+      const read = await reader(binary.root, cacheDir);
 
       expect(before).toStrictEqual(fresh);
       expect(read).toBeNull();
@@ -221,8 +221,8 @@ describe('FEATURE: workspace cache from a real turbo', () => {
       loaded.warnings.push('changed');
       loaded.packages.reverse();
 
-      const cached = await readCachedWorkspace(binary, cacheDir);
-      const read = await settledRead(cached);
+      const cached = await readCachedWorkspace(binary.root, cacheDir);
+      const read = await settledRead(cached, binary.version);
 
       expect(read).toStrictEqual(fresh);
     });
@@ -248,7 +248,7 @@ describe('FEATURE: workspace cache from a real turbo', () => {
     });
 
     it('WHEN the cache is then read from memory THEN its model carries no cache warning', async () => {
-      const read = await readCachedWorkspace(binary, cacheDir);
+      const read = await readCachedWorkspace(binary.root, cacheDir);
 
       expect(read?.model.warnings).toStrictEqual([]);
     });
@@ -268,8 +268,8 @@ describe('FEATURE: workspace cache from a real turbo', () => {
       await utimes(join(fixture().dir, 'package.json'), now, now);
       await loadWorkspace(binary, { cacheDir });
 
-      const read = await readCachedWorkspace(binary, cacheDir);
-      const isFresh = await read?.isFresh();
+      const read = await readCachedWorkspace(binary.root, cacheDir);
+      const isFresh = await read?.isFresh(binary.version);
 
       expect(isFresh).toBe(false);
     });
@@ -284,7 +284,7 @@ describe('FEATURE: workspace cache from a real turbo', () => {
 
       await mkdir(cacheDir, { recursive: true });
 
-      const read = await readCachedWorkspace(binary, cacheDir);
+      const read = await readCachedWorkspace(binary.root, cacheDir);
 
       expect(read).toBeNull();
     });

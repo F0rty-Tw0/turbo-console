@@ -10,8 +10,8 @@ import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
 /** What `loadRoot` publishes before the freshness check, and what it returns once the check passed. */
-const UNCHECKED_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
-const FRESH_CACHED: LoadedModel = { ...UNCHECKED_CACHED, isFresh: true };
+const UNCHECKED_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, binary: null, fromCache: true, isFresh: false };
+const FRESH_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: true };
 const ABORT_ERROR = new TurboException('failed', 'This operation was aborted');
 const ABORTED: LoadFailure = loadFailureOf('load', ABORT_ERROR);
 const RUN_ERROR = new TurboException('failed', 'boom');
@@ -126,11 +126,26 @@ describe('FEATURE: settling a root load', () => {
       runAt(deferred, 0).publish(UNCHECKED_CACHED);
     });
 
-    it('WHEN the load returns it checked fresh as a new object THEN it is applied once', async () => {
+    it('WHEN the load returns it checked fresh with its binary THEN that result is applied after the publish', async () => {
       runAt(deferred, 0).settle(FRESH_CACHED);
       await flushSettles();
 
-      expect(deferred.ports.apply).toHaveBeenCalledExactlyOnceWith(UNCHECKED_CACHED);
+      expect(vi.mocked(deferred.ports.apply).mock.calls).toStrictEqual([[UNCHECKED_CACHED], [FRESH_CACHED]]);
+    });
+
+    it('WHEN the load returns a binary failure THEN the failure is applied after the publish', async () => {
+      runAt(deferred, 0).settle(LOAD_FAILURE_STUB);
+      await flushSettles();
+
+      expect(vi.mocked(deferred.ports.apply).mock.calls).toStrictEqual([[UNCHECKED_CACHED], [LOAD_FAILURE_STUB]]);
+    });
+
+    it('WHEN the load returns a binary failure and the root is ensured THEN one full load retries it', async () => {
+      runAt(deferred, 0).settle(LOAD_FAILURE_STUB);
+      await flushSettles();
+      void coordinator.ensureLoaded();
+
+      expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full']);
     });
 
     it('WHEN the load returns it checked fresh THEN its record reads a fresh cache', async () => {

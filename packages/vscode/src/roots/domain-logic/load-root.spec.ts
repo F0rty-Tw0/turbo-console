@@ -14,9 +14,11 @@ const LOADED: LoadedModel = {
   isFresh: true
 };
 
-const PUBLISHED: LoadedModel = { ...LOADED, fromCache: true, isFresh: false };
+const PUBLISHED: LoadedModel = { ...LOADED, binary: null, fromCache: true, isFresh: false };
 
 const FRESH_CACHED: LoadedModel = { ...LOADED, fromCache: true };
+
+const BOUND: LoadedModel = { ...PUBLISHED, binary: TURBO_BINARY_STUB };
 
 describe('FEATURE: load a root', () => {
   afterEach(() => {
@@ -24,17 +26,18 @@ describe('FEATURE: load a root', () => {
   });
 
   describe('GIVEN the binary cannot be resolved', () => {
-    it('WHEN loaded THEN it is a binary failure, load never runs and nothing is logged', async () => {
+    it('WHEN loaded with no cache THEN it is a binary failure, load never runs and nothing is logged', async () => {
       const deps = loadDepsMock();
       const notFound = new TurboException('not-found', 'no turbo');
 
       vi.mocked(deps.resolve).mockRejectedValue(notFound);
+      vi.mocked(deps.readCached).mockResolvedValue(null);
 
       const result = await loadRoot('cache-first', deps, new AbortController().signal, vi.fn());
 
       expect(result).toStrictEqual({ kind: 'error', stage: 'binary', error: notFound, logText: 'turbo not-found: no turbo' });
       expect(deps.load).not.toHaveBeenCalled();
-      expect(deps.readCached).not.toHaveBeenCalled();
+      expect(deps.acquire).not.toHaveBeenCalled();
       expect(deps.log).not.toHaveBeenCalled();
     });
 
@@ -51,20 +54,20 @@ describe('FEATURE: load a root', () => {
   });
 
   describe('GIVEN cache-first mode and a fresh cache', () => {
-    it('WHEN loaded THEN the cached model is published unchecked, returned fresh, and load never runs', async () => {
+    it('WHEN loaded THEN the cached model is published unchecked, again with its binary, returned fresh, and load never runs', async () => {
       const deps = loadDepsMock();
       const publish = vi.fn();
 
       const result = await loadRoot('cache-first', deps, new AbortController().signal, publish);
 
       expect(result).toStrictEqual(FRESH_CACHED);
-      expect(publish).toHaveBeenCalledExactlyOnceWith(PUBLISHED);
+      expect(publish.mock.calls).toStrictEqual([[PUBLISHED], [BOUND]]);
       expect(deps.load).not.toHaveBeenCalled();
       expect(deps.progress).not.toHaveBeenCalled();
       expect(deps.acquire).not.toHaveBeenCalled();
     });
 
-    it('WHEN publish throws THEN the cached model is still returned and the error is logged', async () => {
+    it('WHEN publish throws THEN the cached model is still returned and each throw is logged', async () => {
       const deps = loadDepsMock();
       const publish = vi.fn(() => {
         throw new Error('view gone');
@@ -73,12 +76,12 @@ describe('FEATURE: load a root', () => {
       const result = await loadRoot('cache-first', deps, new AbortController().signal, publish);
 
       expect(result).toStrictEqual({ ...LOADED, fromCache: true });
-      expect(deps.log).toHaveBeenCalledExactlyOnceWith('view gone');
+      expect(vi.mocked(deps.log).mock.calls).toStrictEqual([['view gone'], ['view gone']]);
     });
   });
 
   describe('GIVEN cache-first mode and a stale cache', () => {
-    it('WHEN loaded THEN the stale model is published first, then load runs and its model is returned', async () => {
+    it('WHEN loaded THEN the stale model is published, again with its binary, then load runs and its model is returned', async () => {
       const deps = loadDepsMock();
       const publish = vi.fn();
 
@@ -86,7 +89,7 @@ describe('FEATURE: load a root', () => {
 
       const result = await loadRoot('cache-first', deps, new AbortController().signal, publish);
 
-      expect(publish).toHaveBeenCalledExactlyOnceWith(PUBLISHED);
+      expect(publish.mock.calls).toStrictEqual([[PUBLISHED], [BOUND]]);
       expect(publish).toHaveBeenCalledBefore(vi.mocked(deps.load));
       expect(deps.load).toHaveBeenCalledOnce();
       expect(result).toStrictEqual(LOADED);

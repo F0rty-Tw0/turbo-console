@@ -30,7 +30,7 @@ export const coreLoadDeps = (root: string, shared: SharedLoadPorts): LoadDeps =>
 
     return resolveTurbo(root, { trusted: true, overridePath: path, signal });
   };
-  const readCached = async (binary: TurboBinary): Promise<CachedWorkspace | null> => readCachedWorkspace(binary, shared.cacheDir);
+  const readCached = async (): Promise<CachedWorkspace | null> => readCachedWorkspace(root, shared.cacheDir);
   const load = async (binary: TurboBinary, signal: AbortSignal): Promise<WorkspaceModel> =>
     loadWorkspace(binary, { cacheDir: shared.cacheDir, signal });
   const progress = async (work: () => Promise<WorkspaceModel>): Promise<WorkspaceModel> =>

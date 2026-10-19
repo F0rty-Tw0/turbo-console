@@ -211,6 +211,27 @@ describe('FEATURE: root store', () => {
     });
   });
 
+  describe('GIVEN a root showing a cached model published before its binary resolved', () => {
+    it('WHEN a binary failure is applied THEN the model is cleared, since none of its tasks can run', () => {
+      const store = storeWith([WS]);
+
+      store.apply(WS.root, { ...LOADED_MODEL_STUB, binary: null });
+      store.apply(WS.root, LOAD_FAILURE_STUB);
+
+      expect(store.get(WS.root)?.state).toStrictEqual({ folder: WS, binary: null, model: null, error: LOAD_FAILURE_STUB });
+    });
+
+    it('WHEN a load failure is applied THEN the model stays', () => {
+      const store = storeWith([WS]);
+      const failure: LoadFailure = { ...LOAD_FAILURE_STUB, stage: 'load' };
+
+      store.apply(WS.root, { ...LOADED_MODEL_STUB, binary: null });
+      store.apply(WS.root, failure);
+
+      expect(store.get(WS.root)?.state.model).toBe(WORKSPACE_MODEL_STUB);
+    });
+  });
+
   describe('GIVEN a root in a load error', () => {
     it('WHEN a model is applied THEN the error is cleared and the change reads errorAfter null', () => {
       const store = storeWith([WS]);
