@@ -2,7 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { z } from 'zod';
+import { en } from 'zod/locales';
+import { prettifyError } from 'zod/mini';
 
 import { ALLOWED_LICENSES, ATTRIBUTION_LICENSES, ICON_VIEW_BOX } from './common/tool-icons.const.ts';
 import { iconSchema, listedIconsSchema, manifestSchema } from './common/tool-icons.schema.ts';
@@ -10,6 +11,9 @@ import type { GlyphSource, IconData, ListedIcon } from './common/tool-icons.type
 import type { ToolGlyph, ToolSpec } from '../src/tool/common/tool.type.ts';
 
 const PATH_TAG = /<path/g;
+
+/** `zod/mini` loads no locale, so a strict-check failure would read `Invalid input`; English keeps zod's own messages. */
+const ENGLISH_ISSUES = { error: en().localeError };
 
 const iconsJsonPathOf = (): string => fileURLToPath(import.meta.resolve('simple-icons/icons.json'));
 
@@ -29,9 +33,9 @@ export const versionOf = async (root: string): Promise<string> => {
 
 /** The strict check of one used entry; a failure names the icon, like `refusal`. */
 const strictIconOf = (entry: ListedIcon): IconData => {
-  const result = iconSchema.safeParse(entry);
+  const result = iconSchema.safeParse(entry, ENGLISH_ISSUES);
 
-  if (!result.success) throw new Error(`${entry.slug}: ${z.prettifyError(result.error)}`);
+  if (!result.success) throw new Error(`${entry.slug}: ${prettifyError(result.error)}`);
 
   return result.data;
 };

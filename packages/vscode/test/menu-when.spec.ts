@@ -2,23 +2,24 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, object, omit, optional, string } from 'zod/mini';
+import type { output } from 'zod/mini';
 
 import { whenMatches } from './utils/when-clause.spec.util.ts';
 
-const optionalGroupSchema = z.string().optional();
+const optionalGroupSchema = optional(string());
 
-const menuEntrySchema = z.object({ command: z.string(), when: z.string(), group: optionalGroupSchema });
+const menuEntrySchema = object({ command: string(), when: string(), group: optionalGroupSchema });
 
-const menusSchema = z.object({
-  'view/title': z.array(menuEntrySchema),
-  'view/item/context': z.array(menuEntrySchema),
-  commandPalette: z.array(menuEntrySchema.omit({ group: true }))
+const menusSchema = object({
+  'view/title': array(menuEntrySchema),
+  'view/item/context': array(menuEntrySchema),
+  commandPalette: array(omit(menuEntrySchema, { group: true }))
 });
 
-const manifestSchema = z.object({ contributes: z.object({ menus: menusSchema }) });
+const manifestSchema = object({ contributes: object({ menus: menusSchema }) });
 
-type MenuEntry = z.infer<typeof menuEntrySchema>;
+type MenuEntry = output<typeof menuEntrySchema>;
 
 const MANIFEST_TEXT = readFileSync(join(import.meta.dirname, '..', 'package.json'), 'utf8');
 

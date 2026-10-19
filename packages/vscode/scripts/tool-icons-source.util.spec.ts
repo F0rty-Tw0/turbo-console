@@ -66,6 +66,12 @@ describe('FEATURE: usedIconsOf', () => {
     });
   });
 
+  describe('GIVEN a malformed source on a used slug, in a run that loads no zod locale', () => {
+    it('WHEN the used icons are read THEN the failure keeps zod English text, not the bare Invalid input', () => {
+      expect(() => usedIconsOf([BAD_SOURCE], ['other'])).toThrow('other: ✖ Invalid URL\n  → at source');
+    });
+  });
+
   describe('GIVEN a malformed guidelines url on a used slug', () => {
     it('WHEN the used icons are read THEN it throws naming the icon and the field', () => {
       const entry = { ...VALID, guidelines: 'nope' };
