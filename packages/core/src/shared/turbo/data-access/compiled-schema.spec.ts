@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { number, object, string, xor } from 'zod/mini';
 import type { ZodMiniType } from 'zod/mini';
 import { compileFn } from 'zod/v4/core';
@@ -144,17 +144,44 @@ describe('FEATURE: lazily compiled schemas', () => {
 
   describe('GIVEN a hot schema', () => {
     /**
-     * `compileFn` throws when the root cannot be modeled; a child it cannot model becomes a runtime island instead, and
-     * the parser is then not `definite`. Either way the fast path is lost without `compile` saying so.
+     * `compileFn` throws when the root cannot be modeled. The parser is not `definite` when a child runs as a runtime
+     * island, or when a user callback (`refine`, `transform`) is hoisted into it: a hot schema that gains one fails here
+     * and needs a look at whether it still compiles whole.
      */
-    it.each(VALID)('WHEN %s is compiled THEN the generated parser covers the whole schema, no runtime island', (_, schema) => {
-      expect(compileFn(schema).definite).toBe(true);
-    });
+    it.each(VALID)(
+      'WHEN %s is compiled THEN the generated parser is definite: no runtime island, no hoisted callback',
+      (_, schema) => {
+        expect(compileFn(schema).definite).toBe(true);
+      }
+    );
 
     it('WHEN a schema holds a child compile cannot model THEN the same check sees the island', () => {
       const withIsland = object({ name: string(), value: xor([string(), number()]) });
 
       expect(compileFn(withIsland).definite).toBe(false);
+    });
+  });
+
+  describe('GIVEN a host that refuses generated code', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('WHEN the getter is called THEN it returns the runtime schema, which still parses turbo output', () => {
+      const refuseCodegen = (): never => {
+        throw new EvalError('Code generation from strings disallowed for this context');
+      };
+      const compiledGraph = lazyCompiled(packageGraphSchema);
+      const input: unknown = JSON.parse(PACKAGE_GRAPH);
+
+      vi.stubGlobal('Function', refuseCodegen);
+
+      const schema = compiledGraph();
+
+      vi.unstubAllGlobals();
+
+      expect(schema).toBe(packageGraphSchema);
+      expect(schema.parse(input)).toStrictEqual(packageGraphSchema.parse(input));
     });
   });
 });
