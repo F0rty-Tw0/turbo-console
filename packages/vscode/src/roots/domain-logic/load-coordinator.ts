@@ -191,7 +191,7 @@ export class LoadCoordinator implements Coordinator {
    * Bookkeeping first, `apply` last: the follow-up and the settle waiters never depend on the port returning. A cached
    * result is not applied when the flight already published that model with its binary (`boundModel`, the second
    * publish of `loadRoot`): it would only repeat that publish. A publish with no binary does not count, since the store
-   * drops it on a binary failure; every failure and every full-load model is applied.
+   * drops it on any failure; every failure and every full-load model is applied.
    */
   private settle(flight: Flight, result: LoadResult, boundModel: LoadedModel['model'] | null): void {
     const isLive = this.isLive(flight);

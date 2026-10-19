@@ -6,6 +6,7 @@ import type { CachedWorkspace, WorkspaceModel } from '@turbo-console/core';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RootsSession } from './roots-session.ts';
+import type { Coordinator } from '../common/coordinator.type.ts';
 import type { LoadDeps, RootFolder, SessionPorts } from '../common/root.type.ts';
 import { CACHED_WORKSPACE_STUB, LOAD_FAILURE_STUB, TURBO_BINARY_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/root.stub.ts';
 import { sessionPortsWith, tickLoad } from '../test/utils/session-ports.spec.util.ts';
@@ -21,6 +22,16 @@ const WARNED_MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, warnings: ['firs
 const WARNED_CACHE: CachedWorkspace = { ...CACHED_WORKSPACE_STUB, model: WARNED_MODEL };
 
 const noCache = (): LoadDeps['readCached'] => vi.fn().mockResolvedValue(null);
+
+const LOAD_STAGE_ERROR = { stage: 'load' };
+
+const coordinatorOf = (session: RootsSession, root: string): Coordinator => {
+  const entry = session.store.get(root);
+
+  if (entry === undefined) throw new Error(`no entry for ${root}`);
+
+  return entry.coordinator;
+};
 
 const ensureAll = async (session: RootsSession): Promise<void> => {
   const ensures = session.store.all().map(async (entry) => entry.coordinator.ensureLoaded());
@@ -170,6 +181,35 @@ describe('FEATURE: roots session', () => {
       await ensureAll(session);
 
       expect(listener).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN a refresh lands before its binary resolves and the full load then fails THEN the store drops the cached model', async () => {
+      const first = Promise.withResolvers<typeof TURBO_BINARY_STUB>();
+      const pendingUntilAbort: LoadDeps['resolve'] = async (signal) => {
+        const aborted = new Promise<never>((_resolve, reject) => {
+          signal.addEventListener('abort', () => {
+            reject(signal.reason as Error);
+          });
+        });
+
+        return Promise.race([first.promise, aborted]);
+      };
+      const resolve = vi.fn<LoadDeps['resolve']>().mockImplementationOnce(pendingUntilAbort).mockResolvedValue(TURBO_BINARY_STUB);
+      const load = vi.fn<LoadDeps['load']>().mockRejectedValue(LOAD_FAILURE_STUB.error);
+      const session = new RootsSession(sessionPortsWith({ resolve, load }));
+
+      session.setRoots([A_FOLDER]);
+
+      const coordinator = coordinatorOf(session, '/a');
+
+      void coordinator.ensureLoaded();
+      await vi.waitFor(() => {
+        expect(session.store.get('/a')?.state.model).not.toBeNull();
+      });
+      coordinator.request('refresh');
+      await coordinator.whenSettled();
+
+      expect(session.store.get('/a')?.state).toMatchObject({ binary: null, model: null, error: LOAD_STAGE_ERROR });
     });
 
     it('WHEN its binary is never found THEN the store drops the cached model and holds the binary error', async () => {

@@ -9,7 +9,7 @@ import { deferredPorts, flushSettles, runAt, settledFlag } from '../test/utils/d
 import { loadFailureOf } from '../test/utils/load-failure.spec.util.ts';
 
 const STALE_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, fromCache: true, isFresh: false };
-/** What `loadRoot` publishes before the binary resolves: the store drops it again on a binary failure. */
+/** What `loadRoot` publishes before the binary resolves: the store drops it again on any failure. */
 const UNCHECKED_CACHED: LoadedModel = { ...LOADED_MODEL_STUB, binary: null, fromCache: true, isFresh: false };
 const LOAD_ERROR = new TurboException('failed', 'turbo exited 1');
 const LOAD_FAILED: LoadFailure = loadFailureOf('load', LOAD_ERROR);
