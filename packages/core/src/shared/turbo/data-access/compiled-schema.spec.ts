@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { number, object, string, xor } from 'zod/mini';
 import type { ZodMiniType } from 'zod/mini';
+import { compileFn } from 'zod/v4/core';
 
 import { lazyCompiled } from './compiled-schema.ts';
 import { invalidOutputMessage } from '../../errors/utils/turbo-message.util.ts';
@@ -137,6 +139,22 @@ describe('FEATURE: lazily compiled schemas', () => {
 
       expect(expected).toMatch(/^turbo query output failed its schema at /);
       expect(invalidOutputMessage('query', error)).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a hot schema', () => {
+    /**
+     * `compileFn` throws when the root cannot be modeled; a child it cannot model becomes a runtime island instead, and
+     * the parser is then not `definite`. Either way the fast path is lost without `compile` saying so.
+     */
+    it.each(VALID)('WHEN %s is compiled THEN the generated parser covers the whole schema, no runtime island', (_, schema) => {
+      expect(compileFn(schema).definite).toBe(true);
+    });
+
+    it('WHEN a schema holds a child compile cannot model THEN the same check sees the island', () => {
+      const withIsland = object({ name: string(), value: xor([string(), number()]) });
+
+      expect(compileFn(withIsland).definite).toBe(false);
     });
   });
 });
