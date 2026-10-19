@@ -221,14 +221,14 @@ describe('FEATURE: root store', () => {
       expect(store.get(WS.root)?.state).toStrictEqual({ folder: WS, binary: null, model: null, error: LOAD_FAILURE_STUB });
     });
 
-    it('WHEN a load failure is applied THEN the model stays', () => {
+    it('WHEN a load failure is applied THEN the model is cleared too, since it never got a binary', () => {
       const store = storeWith([WS]);
       const failure: LoadFailure = { ...LOAD_FAILURE_STUB, stage: 'load' };
 
       store.apply(WS.root, { ...LOADED_MODEL_STUB, binary: null });
       store.apply(WS.root, failure);
 
-      expect(store.get(WS.root)?.state.model).toBe(WORKSPACE_MODEL_STUB);
+      expect(store.get(WS.root)?.state).toStrictEqual({ folder: WS, binary: null, model: null, error: failure });
     });
   });
 
