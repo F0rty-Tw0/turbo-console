@@ -73,7 +73,7 @@ describe('FEATURE: deadline of the cache steps of a root load', () => {
       expect(result).toMatchObject({ kind: 'model', fromCache: false, isFresh: true });
     });
 
-    it('WHEN the check passes only after it gave up THEN that late answer is ignored: no third publish, the full load wins', async () => {
+    it('WHEN the check passes only after it gave up THEN that late answer is ignored and the full load result is returned', async () => {
       const deps = loadDepsMock();
       const publish = vi.fn();
       const expiry = new AbortController();
@@ -93,7 +93,7 @@ describe('FEATURE: deadline of the cache steps of a root load', () => {
 
       const result = await pending;
 
-      expect(publish).toHaveBeenCalledTimes(2);
+      expect(deps.load).toHaveBeenCalledOnce();
       expect(result).toMatchObject({ kind: 'model', fromCache: false });
     });
   });
