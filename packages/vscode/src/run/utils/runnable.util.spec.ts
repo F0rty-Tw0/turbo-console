@@ -85,6 +85,20 @@ describe('FEATURE: wait until a root can run a task', () => {
     });
   });
 
+  describe('GIVEN a root that already holds a binary and a load that never settles', () => {
+    it('WHEN waited on THEN it resolves at once without listening', async () => {
+      binary = TURBO_BINARY_STUB;
+      vi.mocked(coordinator.whenSettled).mockReturnValue(new Promise(() => undefined));
+
+      const isRunnable = settledFlag(whenRunnable(roots, '/ws', coordinator));
+
+      await flushSettles();
+
+      expect(isRunnable()).toBe(true);
+      expect(listeners.size).toBe(0);
+    });
+  });
+
   describe('GIVEN a load that settles with no binary', () => {
     describe('WHEN waited on', () => {
       beforeEach(async () => {
