@@ -10,9 +10,11 @@ export const LOAD_GRACE_MS = 15_000;
 
 /**
  * A cache read or freshness check still running after this is given up on, and the load goes on without the cache: a
- * read on a hung mount must not hold the load (and `whenIdle`) forever. Both normally take tens of milliseconds.
+ * read on a hung mount must not hold the load (and `whenIdle`) forever. The bound is for a hang, not slow I/O: a check
+ * hashes every package.json and the lockfile, which on WSL `/mnt/c` or a network home can take seconds, and the cached
+ * rows stay shown while it runs.
  */
-export const CACHE_DEADLINE_MS = 3_000;
+export const CACHE_DEADLINE_MS = 10_000;
 
 /** Loads that may run at once across every root of the window; the rest wait for a slot. */
 export const MAX_CONCURRENT_LOADS = 2;

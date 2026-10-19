@@ -39,30 +39,31 @@ const resolvedOf = async (deps: LoadDeps, signal: AbortSignal): Promise<Resolved
   }
 };
 
-const CACHE_EXPIRED_MESSAGE = `cache check still running after ${CACHE_DEADLINE_MS / 1000} s; loading without the cache`;
+/** One cache step for `raceCacheStep`: `name` heads its expiry log line, `fallback` is its result when it gives up. */
+type CacheStep<TValue> = {
+  readonly name: string;
+  readonly work: () => Promise<TValue>;
+  readonly fallback: TValue;
+};
 
 /**
  * A cache step: settles when the caller aborts or after `CACHE_DEADLINE_MS`; a `work` that throws or runs out of time is
  * logged unless the caller aborted, and gives `fallback`.
  */
-const raceCacheStep = async <TValue>(
-  work: () => Promise<TValue>,
-  fallback: TValue,
-  deps: LoadDeps,
-  signal: AbortSignal
-): Promise<TValue> => {
+const raceCacheStep = async <TValue>(step: CacheStep<TValue>, deps: LoadDeps, signal: AbortSignal): Promise<TValue> => {
   const deadline = AbortSignal.any([signal, AbortSignal.timeout(CACHE_DEADLINE_MS)]);
 
   try {
-    return await raceSignal(work, deadline);
+    return await raceSignal(step.work, deadline);
   } catch (error) {
-    if (signal.aborted) return fallback;
+    if (signal.aborted) return step.fallback;
 
+    const expired = `${step.name} still running after ${CACHE_DEADLINE_MS / 1000} s; loading without the cache`;
     const errorText = logTextOf(error);
 
-    deps.log(error === deadline.reason ? CACHE_EXPIRED_MESSAGE : errorText);
+    deps.log(error === deadline.reason ? expired : errorText);
 
-    return fallback;
+    return step.fallback;
   }
 };
 
@@ -74,7 +75,8 @@ const cachedLoadOf = async (mode: LoadMode, deps: LoadDeps, signal: AbortSignal)
   if (mode === 'full') return null;
 
   const read = async (): Promise<CachedWorkspace | null> => deps.readCached();
-  const cached = await raceCacheStep(read, null, deps, signal);
+  const step: CacheStep<CachedWorkspace | null> = { name: 'cache read', work: read, fallback: null };
+  const cached = await raceCacheStep(step, deps, signal);
 
   if (cached === null) return null;
 
@@ -169,7 +171,8 @@ const publishLive = (result: LoadedModel, deps: LoadDeps, signal: AbortSignal, p
 /** After the publishes and the resolve: the cached model when its freshness check passes, else a full load. */
 const checkedLoad = async (binary: TurboBinary, cached: CachedLoad, deps: LoadDeps, signal: AbortSignal): Promise<LoadResult> => {
   const check = async (): Promise<boolean> => cached.isFresh(binary);
-  const isFresh = await raceCacheStep(check, false, deps, signal);
+  const step: CacheStep<boolean> = { name: 'freshness check', work: check, fallback: false };
+  const isFresh = await raceCacheStep(step, deps, signal);
 
   if (signal.aborted) return failureOf('load', signal.reason);
 
