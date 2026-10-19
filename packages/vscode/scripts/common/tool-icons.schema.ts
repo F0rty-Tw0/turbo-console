@@ -1,18 +1,20 @@
-import { z } from 'zod';
+import { array, looseObject, object, optional, string, url } from 'zod/mini';
 
-const httpsUrl = z.url({ protocol: /^https$/ });
+const httpsUrl = url({ protocol: /^https$/ });
 
-const licenseSchema = z.object({ type: z.string() });
+const licenseSchema = object({ type: string() });
 
-export const iconSchema = z.object({
-  title: z.string(),
-  slug: z.string(),
+export const iconSchema = object({
+  title: string(),
+  slug: string(),
   source: httpsUrl,
-  guidelines: httpsUrl.optional(),
-  license: licenseSchema.optional()
+  guidelines: optional(httpsUrl),
+  license: optional(licenseSchema)
 });
 
-/** Every `icons.json` entry, parsed loosely: only the slug is read, so an unused entry can hold anything else. */
-export const listedIconsSchema = z.array(z.looseObject({ slug: z.string() }));
+const listedIconSchema = looseObject({ slug: string() });
 
-export const manifestSchema = z.object({ version: z.string() });
+/** Every `icons.json` entry, parsed loosely: only the slug is read, so an unused entry can hold anything else. */
+export const listedIconsSchema = array(listedIconSchema);
+
+export const manifestSchema = object({ version: string() });

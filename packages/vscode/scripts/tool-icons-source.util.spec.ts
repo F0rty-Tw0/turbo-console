@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
-import { shapeReasonOf, usedIconsOf } from './tool-icons-source.util.ts';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import { shapeReasonOf, usedIconsOf, versionOf } from './tool-icons-source.util.ts';
 
 const REASON = 'svg must be one path in a viewBox="0 0 24 24"';
 
@@ -38,6 +42,41 @@ describe('FEATURE: shapeReasonOf', () => {
   });
 });
 
+describe('FEATURE: versionOf', () => {
+  const scratchDirs: string[] = [];
+
+  afterEach(async () => {
+    const dirs = scratchDirs.splice(0);
+
+    await Promise.all(dirs.map(async (dir) => rm(dir, { recursive: true, force: true })));
+  });
+
+  const rootWith = async (manifest: object): Promise<string> => {
+    const dir = await mkdtemp(join(tmpdir(), 'tc-icons-source-'));
+
+    scratchDirs.push(dir);
+    await writeFile(join(dir, 'package.json'), JSON.stringify(manifest));
+
+    return dir;
+  };
+
+  describe('GIVEN a package.json with a version', () => {
+    it('WHEN its version is read THEN that version is returned', async () => {
+      const root = await rootWith({ name: 'simple-icons', version: '15.0.0' });
+
+      await expect(versionOf(root)).resolves.toBe('15.0.0');
+    });
+  });
+
+  describe('GIVEN a package.json with no version, in a run that loads no zod locale', () => {
+    it('WHEN its version is read THEN the failure keeps zod English text, not the bare Invalid input', async () => {
+      const root = await rootWith({ name: 'simple-icons' });
+
+      await expect(versionOf(root)).rejects.toThrow(/expected string, received undefined/);
+    });
+  });
+});
+
 const VALID = { title: 'Vitest', slug: 'vitest', source: 'https://vitest.dev' };
 const BAD_SOURCE = { title: 'Other', slug: 'other', source: 'not a url' };
 
@@ -63,6 +102,20 @@ describe('FEATURE: usedIconsOf', () => {
   describe('GIVEN the same malformed source on a used slug', () => {
     it('WHEN the used icons are read THEN it throws naming the icon and the field', () => {
       expect(() => usedIconsOf([VALID, BAD_SOURCE], ['vitest', 'other'])).toThrow(/^other: [\s\S]*source/);
+    });
+  });
+
+  describe('GIVEN a malformed source on a used slug, in a run that loads no zod locale', () => {
+    it('WHEN the used icons are read THEN the failure keeps zod English text, not the bare Invalid input', () => {
+      expect(() => usedIconsOf([BAD_SOURCE], ['other'])).toThrow('other: ✖ Invalid URL\n  → at source');
+    });
+  });
+
+  describe('GIVEN an entry with no slug, in a run that loads no zod locale', () => {
+    it('WHEN the used icons are read THEN the failure keeps zod English text, not the bare Invalid input', () => {
+      const entry = { title: 'Nameless' };
+
+      expect(() => usedIconsOf([entry], ['vitest'])).toThrow(/expected string, received undefined/);
     });
   });
 

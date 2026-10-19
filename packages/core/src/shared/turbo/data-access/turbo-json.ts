@@ -1,10 +1,10 @@
-import type { z } from 'zod';
+import type { ZodMiniType } from 'zod/mini';
 
 import { TurboException } from '../../errors/common/turbo.exception.ts';
 import { failedMessage, invalidOutputMessage } from '../../errors/utils/turbo-message.util.ts';
 import type { TurboResult } from '../common/turbo.type.ts';
 
-const parseOutput = <T>(stdout: string, command: string, schema: z.ZodType<T>): T => {
+const parseOutput = <T>(stdout: string, command: string, schema: ZodMiniType<T>): T => {
   try {
     const json: unknown = JSON.parse(stdout);
 
@@ -15,7 +15,7 @@ const parseOutput = <T>(stdout: string, command: string, schema: z.ZodType<T>): 
 };
 
 /** Runs one turbo command and parses its stdout: a non-zero exit is `failed`, non-JSON or a schema break is `invalid-output`. */
-export const runTurboJson = async <T>(run: () => Promise<TurboResult>, command: string, schema: z.ZodType<T>): Promise<T> => {
+export const runTurboJson = async <T>(run: () => Promise<TurboResult>, command: string, schema: ZodMiniType<T>): Promise<T> => {
   const result = await run();
 
   if (result.exitCode !== 0) throw new TurboException('failed', failedMessage(command, result.exitCode, result.stderr));

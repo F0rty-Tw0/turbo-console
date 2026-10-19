@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { PRESETS } from '@turbo-console/repo-gen';
 import type { FixtureHandle, FixtureSpec } from '@turbo-console/repo-gen';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { array, object, string } from 'zod/mini';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, readDryRun, resolveTurbo } from '../index.ts';
@@ -46,7 +46,7 @@ const DEFINITIONS_PACKAGE = '@fx/e2e-1-atoms';
 
 const TRUSTED = { trusted: true } as const;
 
-const rootTurboJsonSchema = z.object({ tasks: z.object({ build: z.object({ dependsOn: z.array(z.string()) }) }) });
+const rootTurboJsonSchema = object({ tasks: object({ build: object({ dependsOn: array(string()) }) }) });
 
 const statesOf = (states: DryRunState[], task: string): DryRunState[] => states.filter((state) => state.id.endsWith(`#${task}`));
 

@@ -16,6 +16,7 @@ import { packageGraphSchema } from '../../shared/turbo/common/package-graph.sche
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
 import { PACKAGE_GRAPH_QUERY } from '../../shared/turbo/common/turbo-query.const.ts';
 import type { GraphPackage, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import { lazyCompiled } from '../../shared/turbo/data-access/compiled-schema.ts';
 import { queryTurbo } from '../../shared/turbo/data-access/query-turbo.ts';
 import { abortError } from '../../shared/turbo/data-access/run-turbo.ts';
 import { runTurboJson } from '../../shared/turbo/data-access/turbo-json.ts';
@@ -29,6 +30,8 @@ import { readTurboConfigs } from '../data-access/turbo-config.ts';
 import { buildWorkspaceModel, withWarning } from '../utils/workspace-model.util.ts';
 
 const COMMAND = 'query packageGraph';
+
+const compiledGraphSchema = lazyCompiled(packageGraphSchema);
 
 /** `stretch-300` prints ~10 MB; `runTurbo`'s 256 MiB default can cost gigabytes of heap once parsed. */
 const QUERY_MAX_BUFFER = 128 * 1024 * 1024;
@@ -95,7 +98,8 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
     const detect = async (): Promise<PackageManager> => detectPackageManager(binary.root, rootFiles);
     const packageManager = await untilAborted(detect, signal);
     const mark: SpawnMark = { startedAt: spawnStartedAt, rootFiles };
-    const graph = await runTurboJson(run, COMMAND, packageGraphSchema);
+    const graphSchema = compiledGraphSchema();
+    const graph = await runTurboJson(run, COMMAND, graphSchema);
     const packages = graph.data.packageGraph.nodes.items;
     const dirs = packages.map(configDirOf);
     const readConfigs = async (): Promise<TurboConfigFile[]> => readTurboConfigs(binary.root, dirs, signal);

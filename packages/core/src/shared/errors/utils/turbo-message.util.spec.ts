@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, number, record, string } from 'zod/mini';
 
 import { failedMessage, invalidOutputMessage, ioMessage, plainPath, versionUnsupportedMessage } from './turbo-message.util.ts';
 import { packageGraphSchema } from '../../turbo/common/package-graph.schema.ts';
@@ -66,7 +66,7 @@ describe('FEATURE: turbo error messages', () => {
       const output = { 'evil\n\u001B[2Jkey': 'x', [longKey]: 'y' };
       const expected = `turbo query output failed its schema at evilkey, ${'k'.repeat(200)}`;
 
-      const result = z.record(z.string(), z.number()).safeParse(output);
+      const result = record(string(), number()).safeParse(output);
 
       expect(invalidOutputMessage('query', result.error)).toBe(expected);
     });
@@ -74,7 +74,7 @@ describe('FEATURE: turbo error messages', () => {
     it('WHEN a key runs past 200 characters THEN the cap counts its raw characters, before they are made plain', () => {
       const output = { [`${'\u0007'.repeat(10)}${'k'.repeat(300)}`]: 'x' };
 
-      const result = z.record(z.string(), z.number()).safeParse(output);
+      const result = record(string(), number()).safeParse(output);
 
       expect(invalidOutputMessage('query', result.error)).toBe(`turbo query output failed its schema at ${'k'.repeat(190)}`);
     });
@@ -88,13 +88,13 @@ describe('FEATURE: turbo error messages', () => {
     });
 
     it('WHEN the root value failed THEN it names the path (root)', () => {
-      const result = z.string().safeParse(1);
+      const result = string().safeParse(1);
 
       expect(invalidOutputMessage('query', result.error)).toBe('turbo query output failed its schema at (root)');
     });
 
     it('WHEN more than 10 issues exist THEN it names the first 10', () => {
-      const result = z.array(z.string()).safeParse(numberedLines(12).map((_, index) => index));
+      const result = array(string()).safeParse(numberedLines(12).map((_, index) => index));
 
       const message = invalidOutputMessage('query', result.error);
 

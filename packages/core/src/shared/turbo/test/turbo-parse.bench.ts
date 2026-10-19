@@ -2,12 +2,13 @@ import { PRESETS, fixtureFor } from '@turbo-console/repo-gen';
 import type { PresetName } from '@turbo-console/repo-gen';
 import { bench } from '@turbo-console/tools';
 import type { BenchDescriptor } from '@turbo-console/tools';
-import type { z } from 'zod';
+import type { ZodMiniType } from 'zod/mini';
 
 import { dryRunSchema } from '../common/dry-run.schema.ts';
 import { packageGraphSchema } from '../common/package-graph.schema.ts';
 import { PACKAGE_GRAPH_QUERY } from '../common/turbo-query.const.ts';
 import type { TurboResult } from '../common/turbo.type.ts';
+import { lazyCompiled } from '../data-access/compiled-schema.ts';
 import { queryTurbo } from '../data-access/query-turbo.ts';
 import { runTurbo } from '../data-access/run-turbo.ts';
 import { devTurboPath } from './utils/dev-turbo.spec.util.ts';
@@ -41,8 +42,14 @@ const captureOutput = async (preset: PresetName): Promise<CapturedOutput> => {
   }
 };
 
-const parseBench = (name: string, stdout: string, schema: z.ZodType): BenchDescriptor => {
-  const parse = (): unknown => schema.parse(JSON.parse(stdout));
+/** Parses through `lazyCompiled`, as the loaders do; the first call compiles, inside the bench warmup. */
+const parseBench = (name: string, stdout: string, schema: ZodMiniType): BenchDescriptor => {
+  const compiledSchema = lazyCompiled(schema);
+  const parse = (): unknown => {
+    const compiled = compiledSchema();
+
+    return compiled.parse(JSON.parse(stdout));
+  };
 
   return bench(name, parse, { gate: true });
 };

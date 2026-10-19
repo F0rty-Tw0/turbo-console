@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { ZodMiniType } from 'zod/mini';
 
 const isObject = (value: unknown): value is object => typeof value === 'object' && value !== null;
 
@@ -41,7 +41,7 @@ const withoutKey = (value: unknown, path: string[]): unknown => {
  * lists is required. `output` is parsed first, so only schema-listed keys are probed; arrays are probed through their
  * first element.
  */
-export const optionalKeyPaths = (schema: ZodType, output: unknown): string[] => {
+export const optionalKeyPaths = (schema: ZodMiniType, output: unknown): string[] => {
   const parsed: unknown = schema.parse(output);
 
   const isAccepted = (path: string[]): boolean => {

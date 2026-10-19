@@ -1,66 +1,74 @@
-import { z } from 'zod';
+import { array, boolean, discriminatedUnion, literal, nullable, object, readonly, string, enum as zodEnum } from 'zod/mini';
 
 import { CACHE_FORMAT_VERSION, LOCKFILE_NAMES } from './cache.const.ts';
 import { PACKAGE_MANAGER_NAMES } from '../../workspace/common/package-manager.const.ts';
 
-const nullableString = z.string().nullable();
+const nullableString = nullable(string());
 
-const stringList = z.array(z.string());
+const stringList = array(string());
 
-const atomSchema = z.object({ group: z.string(), isLive: z.boolean() }).readonly();
+const atomObject = object({ group: string(), isLive: boolean() });
 
-const nullableAtom = atomSchema.nullable();
+const atomSchema = readonly(atomObject);
 
-const taskKindSchema = z.enum(['atom-aggregate', 'atom-file', 'atom-umbrella', 'task']);
+const nullableAtom = nullable(atomSchema);
 
-const taskObject = z.object({
-  id: z.string(),
-  name: z.string(),
+const taskKindSchema = zodEnum(['atom-aggregate', 'atom-file', 'atom-umbrella', 'task']);
+
+const taskObject = object({
+  id: string(),
+  name: string(),
   command: nullableString,
   description: nullableString,
   tags: stringList,
   dependencies: stringList,
   kind: taskKindSchema,
   atom: nullableAtom,
-  isTurboTask: z.boolean(),
-  persistent: z.boolean()
+  isTurboTask: boolean(),
+  persistent: boolean()
 });
 
-const taskSchema = taskObject.readonly();
+const taskSchema = readonly(taskObject);
 
-const taskList = z.array(taskSchema);
+const taskList = array(taskSchema);
 
-const packageObject = z.object({ name: z.string(), path: z.string(), tags: stringList, tasks: taskList });
+const packageObject = object({ name: string(), path: string(), tags: stringList, tasks: taskList });
 
-const packageSchema = packageObject.readonly();
+const packageSchema = readonly(packageObject);
 
-const edgeSchema = z.object({ source: z.string(), target: z.string(), kind: z.string() }).readonly();
+const edgeObject = object({ source: string(), target: string(), kind: string() });
 
-const affectedModeSchema = z.enum(['package', 'task']);
+const edgeSchema = readonly(edgeObject);
 
-const packageList = z.array(packageSchema);
+const affectedModeSchema = zodEnum(['package', 'task']);
 
-const edgeList = z.array(edgeSchema);
+const packageList = array(packageSchema);
 
-const packageManagerNameSchema = z.enum(PACKAGE_MANAGER_NAMES);
+const edgeList = array(edgeSchema);
 
-const lockfileNameSchema = z.enum(LOCKFILE_NAMES);
+const packageManagerNameSchema = zodEnum(PACKAGE_MANAGER_NAMES);
 
-const fieldSource = z.object({ kind: z.literal('field') });
+const lockfileNameSchema = zodEnum(LOCKFILE_NAMES);
 
-const devEnginesSource = z.object({ kind: z.literal('devEngines') });
+const fieldSource = object({ kind: literal('field') });
 
-const lockfileSource = z.object({ kind: z.literal('lockfile'), file: lockfileNameSchema });
+const devEnginesSource = object({ kind: literal('devEngines') });
 
-const defaultSource = z.object({ kind: z.literal('default') });
+const lockfileSource = object({ kind: literal('lockfile'), file: lockfileNameSchema });
 
-const sourceSchema = z.discriminatedUnion('kind', [fieldSource, devEnginesSource, lockfileSource, defaultSource]).readonly();
+const defaultSource = object({ kind: literal('default') });
 
-const packageManagerSchema = z.object({ name: packageManagerNameSchema, source: sourceSchema }).readonly();
+const sourceUnion = discriminatedUnion('kind', [fieldSource, devEnginesSource, lockfileSource, defaultSource]);
 
-const workspaceModelObject = z.object({
-  root: z.string(),
-  turboVersion: z.string(),
+const sourceSchema = readonly(sourceUnion);
+
+const packageManagerObject = object({ name: packageManagerNameSchema, source: sourceSchema });
+
+const packageManagerSchema = readonly(packageManagerObject);
+
+const workspaceModelObject = object({
+  root: string(),
+  turboVersion: string(),
   packageManager: packageManagerSchema,
   affectedMode: affectedModeSchema,
   packages: packageList,
@@ -69,11 +77,11 @@ const workspaceModelObject = z.object({
 });
 
 /** Spec §4.4's `WorkspaceModel`, field by field. */
-export const workspaceModelSchema = workspaceModelObject.readonly();
+export const workspaceModelSchema = readonly(workspaceModelObject);
 
-const formatVersionSchema = z.literal(CACHE_FORMAT_VERSION);
+const formatVersionSchema = literal(CACHE_FORMAT_VERSION);
 
-const cacheFileObject = z.object({
+const cacheFileObject = object({
   formatVersion: formatVersionSchema,
   key: nullableString,
   keyedPaths: stringList,
@@ -84,4 +92,4 @@ const cacheFileObject = z.object({
  * `<cacheDir>/workspace-<hash>.json`. `keyedPaths` are hashed again on every read, so `readCacheFile` also refuses one
  * outside the root (a check this layer cannot import).
  */
-export const cacheFileSchema = cacheFileObject.readonly();
+export const cacheFileSchema = readonly(cacheFileObject);

@@ -1,25 +1,30 @@
 import { getNodeValue, parseTree, printParseErrorCode } from 'jsonc-parser';
 import type { ParseError } from 'jsonc-parser';
-import { z } from 'zod';
+import { looseObject, optional, record, string, unknown } from 'zod/mini';
+import type { output } from 'zod/mini';
 
 import type { TaskPresence, TurboConfigError, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 
-/** zod 4 rejects a missing `z.unknown()` key; `.optional()` lets a task or the flags block omit it. */
-const optionalUnknown = z.unknown().optional();
+/** zod 4 rejects a missing `unknown()` key; `optional` lets a task or the flags block omit it. */
+const optionalUnknown = optional(unknown());
 
-const taskSchema = z.looseObject({ description: optionalUnknown, extends: optionalUnknown, persistent: optionalUnknown });
+const taskSchema = looseObject({ description: optionalUnknown, extends: optionalUnknown, persistent: optionalUnknown });
 
-const tasksSchema = z.record(z.string(), taskSchema).optional();
+const taskRecord = record(string(), taskSchema);
 
-const futureFlagsSchema = z.looseObject({ affectedUsingTaskInputs: optionalUnknown }).optional();
+const tasksSchema = optional(taskRecord);
 
-const configSchema = z.looseObject({ extends: optionalUnknown, tasks: tasksSchema, futureFlags: futureFlagsSchema });
+const futureFlagsObject = looseObject({ affectedUsingTaskInputs: optionalUnknown });
+
+const futureFlagsSchema = optional(futureFlagsObject);
+
+const configSchema = looseObject({ extends: optionalUnknown, tasks: tasksSchema, futureFlags: futureFlagsSchema });
 
 const PARSE_OPTIONS = { allowTrailingComma: true };
 
 const TOO_DEEP = 'too deeply nested';
 
-type TaskConfig = z.infer<typeof taskSchema>;
+type TaskConfig = output<typeof taskSchema>;
 
 const toError = (path: string, error: string): TurboConfigError => {
   const config: TurboConfigError = { path, error };

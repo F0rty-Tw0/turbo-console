@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { number, object, readonly } from 'zod/mini';
 
 import { runTurboJson } from './turbo-json.ts';
 import { TurboException } from '../../errors/common/turbo.exception.ts';
@@ -7,9 +7,9 @@ import type { TurboResult } from '../common/turbo.type.ts';
 
 const COMMAND = 'query packageGraph';
 
-const countObject = z.object({ count: z.number() });
+const countObject = object({ count: number() });
 
-const countSchema = countObject.readonly();
+const countSchema = readonly(countObject);
 
 const resultOf = (stdout: string, exitCode: number, stderr = ''): (() => Promise<TurboResult>) => {
   const result: TurboResult = { stdout, stderr, exitCode };

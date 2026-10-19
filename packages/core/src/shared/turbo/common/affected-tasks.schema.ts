@@ -1,16 +1,16 @@
-import { z } from 'zod';
+import { array, object, string } from 'zod/mini';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- GraphQL's own `__typename` key, copied from turbo's output.
-const reasonSchema = z.object({ __typename: z.string() });
+const reasonSchema = object({ __typename: string() });
 
-const changedTaskSchema = z.object({ fullName: z.string(), reason: reasonSchema });
+const changedTaskSchema = object({ fullName: string(), reason: reasonSchema });
 
-const changedTasksSchema = z.object({ items: z.array(changedTaskSchema) });
+const changedTasksSchema = object({ items: array(changedTaskSchema) });
 
-const dataSchema = z.object({ affectedTasks: changedTasksSchema });
+const dataSchema = object({ affectedTasks: changedTasksSchema });
 
 /**
  * stdout of `turbo query` with `AFFECTED_TASKS_QUERY`. `reason.__typename` names the change kind, such as
  * `TaskFileChanged` or `TaskAllChanged`. Unknown keys are stripped; every listed key is required.
  */
-export const affectedTasksSchema = z.object({ data: dataSchema });
+export const affectedTasksSchema = object({ data: dataSchema });

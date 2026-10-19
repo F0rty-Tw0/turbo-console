@@ -1,22 +1,22 @@
-import { z } from 'zod';
+import { array, boolean, nullable, object, string, enum as zodEnum } from 'zod/mini';
 
-const cacheSchema = z.object({ status: z.enum(['HIT', 'MISS']) });
+const cacheSchema = object({ status: zodEnum(['HIT', 'MISS']) });
 
-const resolvedTaskDefinitionSchema = z.object({
-  inputs: z.array(z.string()),
-  outputs: z.array(z.string()),
-  dependsOn: z.array(z.string()),
-  cache: z.boolean(),
-  persistent: z.boolean(),
-  env: z.array(z.string())
+const resolvedTaskDefinitionSchema = object({
+  inputs: array(string()),
+  outputs: array(string()),
+  dependsOn: array(string()),
+  cache: boolean(),
+  persistent: boolean(),
+  env: array(string())
 });
 
-const taskSchema = z.object({
-  taskId: z.string(),
-  package: z.string(),
-  task: z.string(),
-  hash: z.string().nullable(),
-  command: z.string(),
+const taskSchema = object({
+  taskId: string(),
+  package: string(),
+  task: string(),
+  hash: nullable(string()),
+  command: string(),
   cache: cacheSchema,
   resolvedTaskDefinition: resolvedTaskDefinitionSchema
 });
@@ -26,4 +26,4 @@ const taskSchema = z.object({
  * tasks report `command: "<NONEXISTENT>"`. Unknown keys are stripped; every listed key is required. `dependencies` and
  * `dependents` are left out: nothing reads them, and checking them costs parse time on every dry run.
  */
-export const dryRunSchema = z.object({ tasks: z.array(taskSchema) });
+export const dryRunSchema = object({ tasks: array(taskSchema) });

@@ -1,13 +1,13 @@
 import type { ExecFileException, ExecFileOptionsWithStringEncoding } from 'node:child_process';
 
-import type { z } from 'zod';
+import type { output } from 'zod/mini';
 
 import type { affectedTasksSchema } from './affected-tasks.schema.ts';
 import type { dryRunSchema } from './dry-run.schema.ts';
 import type { packageGraphSchema } from './package-graph.schema.ts';
 import type { runSummarySchema } from './run-summary.schema.ts';
 
-export type PackageGraph = z.infer<typeof packageGraphSchema>;
+export type PackageGraph = output<typeof packageGraphSchema>;
 
 /** One package as `packageGraph.nodes` lists it. */
 export type GraphPackage = PackageGraph['data']['packageGraph']['nodes']['items'][number];
@@ -15,11 +15,11 @@ export type GraphPackage = PackageGraph['data']['packageGraph']['nodes']['items'
 /** One task as `packageGraph` lists it under its package. */
 export type GraphTask = GraphPackage['tasks']['items'][number];
 
-export type AffectedTasks = z.infer<typeof affectedTasksSchema>;
+export type AffectedTasks = output<typeof affectedTasksSchema>;
 
-export type DryRun = z.infer<typeof dryRunSchema>;
+export type DryRun = output<typeof dryRunSchema>;
 
-export type RunSummary = z.infer<typeof runSummarySchema>;
+export type RunSummary = output<typeof runSummarySchema>;
 
 /** One finished turbo process; `exitCode` is turbo's own, non-zero included. */
 export type TurboResult = {

@@ -3,14 +3,14 @@ import { join } from 'node:path';
 
 import { TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { object, record, string, unknown } from 'zod/mini';
 
 import { TOOLS } from '../src/tool/common/tool.const.ts';
 import type { ToolSpec } from '../src/tool/common/tool.type.ts';
 
 const FONT_PATH = './dist/webview/details/tool-icons.ttf';
 
-const manifestSchema = z.object({ contributes: z.object({ icons: z.record(z.string(), z.unknown()) }) });
+const manifestSchema = object({ contributes: object({ icons: record(string(), unknown()) }) });
 
 const MANIFEST_TEXT = readFileSync(join(import.meta.dirname, '..', 'package.json'), 'utf8');
 

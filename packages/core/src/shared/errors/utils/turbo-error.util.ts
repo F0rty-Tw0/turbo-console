@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { $ZodError } from 'zod/v4/core';
 
 import { failedMessage, invalidOutputMessage, ioMessage, turboCommand, withStderrTail } from './turbo-message.util.ts';
 import { MemoryLimitError } from '../../turbo/common/memory-limit.exception.ts';
@@ -113,7 +113,7 @@ export const toTurboException = (error: unknown, command: string): TurboExceptio
 
   if (isAbort) return fromAbort(error, command);
 
-  const isInvalidOutput = error instanceof SyntaxError || error instanceof z.ZodError;
+  const isInvalidOutput = error instanceof SyntaxError || error instanceof $ZodError;
 
   if (isInvalidOutput) return new TurboException('invalid-output', invalidOutputMessage(command, error), { cause: error });
 
