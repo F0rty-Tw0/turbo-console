@@ -3,7 +3,7 @@ import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '@turbo-consol
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { LoadDeps, LoadFailure, LoadMode, LoadResult, LoadedModel, Resolved } from '../common/root.type.ts';
-import { LOAD_DEADLINE_MS, LOAD_GRACE_MS } from '../common/roots.const.ts';
+import { CACHE_DEADLINE_MS, LOAD_DEADLINE_MS, LOAD_GRACE_MS } from '../common/roots.const.ts';
 import { raceSignal } from '../utils/race-signal.util.ts';
 import { readUnlessFailed } from '../utils/read-unless-failed.util.ts';
 
@@ -39,19 +39,31 @@ const resolvedOf = async (deps: LoadDeps, signal: AbortSignal): Promise<Resolved
   }
 };
 
-/** Settles when the caller aborts; a `work` that throws is logged unless the caller aborted, and gives `fallback`. */
-const raceLogged = async <TValue>(
-  work: () => Promise<TValue>,
-  fallback: TValue,
-  deps: LoadDeps,
-  signal: AbortSignal
-): Promise<TValue> => {
-  try {
-    return await raceSignal(work, signal);
-  } catch (error) {
-    if (!signal.aborted) deps.log(logTextOf(error));
+/** One cache step for `raceCacheStep`: `name` heads its expiry log line, `fallback` is its result when it gives up. */
+type CacheStep<TValue> = {
+  readonly name: string;
+  readonly work: () => Promise<TValue>;
+  readonly fallback: TValue;
+};
 
-    return fallback;
+/**
+ * A cache step: settles when the caller aborts or after `CACHE_DEADLINE_MS`; a `work` that throws or runs out of time is
+ * logged unless the caller aborted, and gives `fallback`.
+ */
+const raceCacheStep = async <TValue>(step: CacheStep<TValue>, deps: LoadDeps, signal: AbortSignal): Promise<TValue> => {
+  const deadline = AbortSignal.any([signal, AbortSignal.timeout(CACHE_DEADLINE_MS)]);
+
+  try {
+    return await raceSignal(step.work, deadline);
+  } catch (error) {
+    if (signal.aborted) return step.fallback;
+
+    const expired = `${step.name} still running after ${CACHE_DEADLINE_MS / 1000} s; loading without the cache`;
+    const errorText = logTextOf(error);
+
+    deps.log(error === deadline.reason ? expired : errorText);
+
+    return step.fallback;
   }
 };
 
@@ -63,7 +75,8 @@ const cachedLoadOf = async (mode: LoadMode, deps: LoadDeps, signal: AbortSignal)
   if (mode === 'full') return null;
 
   const read = async (): Promise<CachedWorkspace | null> => deps.readCached();
-  const cached = await raceLogged(read, null, deps, signal);
+  const step: CacheStep<CachedWorkspace | null> = { name: 'cache read', work: read, fallback: null };
+  const cached = await raceCacheStep(step, deps, signal);
 
   if (cached === null) return null;
 
@@ -158,7 +171,8 @@ const publishLive = (result: LoadedModel, deps: LoadDeps, signal: AbortSignal, p
 /** After the publishes and the resolve: the cached model when its freshness check passes, else a full load. */
 const checkedLoad = async (binary: TurboBinary, cached: CachedLoad, deps: LoadDeps, signal: AbortSignal): Promise<LoadResult> => {
   const check = async (): Promise<boolean> => cached.isFresh(binary);
-  const isFresh = await raceLogged(check, false, deps, signal);
+  const step: CacheStep<boolean> = { name: 'freshness check', work: check, fallback: false };
+  const isFresh = await raceCacheStep(step, deps, signal);
 
   if (signal.aborted) return failureOf('load', signal.reason);
 
@@ -174,7 +188,9 @@ const checkedLoad = async (binary: TurboBinary, cached: CachedLoad, deps: LoadDe
  * store would clear); one that fails after the publish is the `binary` failure too. Else the cached model is published
  * again with the binary, and its freshness check runs with that binary and returns it with `isFresh` set when fresh.
  * Else (and always in `full` mode, which reads no cache) it takes a load slot (`deps.acquire`) and loads under
- * `LOAD_DEADLINE_MS`, counted from when the slot is won, and the caller's `signal`. The cache read, the freshness check,
+ * `LOAD_DEADLINE_MS`, counted from when the slot is won, and the caller's `signal`. The cache read and the freshness
+ * check each give up after `CACHE_DEADLINE_MS` (logged): an expired read counts as no cache, an expired check as stale,
+ * so the full load runs. The cache read, the freshness check,
  * the slot wait and the load all settle when the caller aborts, even if a port hangs (a port that hands out the slot
  * must reject on abort, or the slot is lost); nothing is published or loaded after the caller aborted. Never throws: a
  * failure is the result, with `cause` stripped, and is not logged here (the session logs it). A `publish` or slot
