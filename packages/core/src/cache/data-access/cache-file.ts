@@ -8,6 +8,7 @@ import type { output } from 'zod/mini';
 import { errnoCode } from '../../shared/errors/utils/errno.util.ts';
 import { ioMessage, plainPath } from '../../shared/errors/utils/turbo-message.util.ts';
 import { READ_NON_BLOCKING } from '../../shared/fs/common/open-flags.const.ts';
+import { lazyCompiled } from '../../shared/turbo/data-access/compiled-schema.ts';
 import { cacheFileSchema } from '../common/cache-file.schema.ts';
 import { CACHE_FORMAT_VERSION, MAX_CACHE_BYTES } from '../common/cache.const.ts';
 import type { CacheEntry } from '../common/cache.type.ts';
@@ -25,12 +26,8 @@ const TEMP_WRITE_OPTIONS = { mode: 0o600, flag: 'wx' };
 
 const hasOnlyKeyedPaths = (file: CacheFile): boolean => file.keyedPaths.every(isKeyedPath);
 
-/**
- * `keyedPaths` are hashed relative to the root on every read: a tampered path outside it, or named like no keyed file, is
- * a miss. Not compiled: the file is parsed once per window, and at a repo of ~15 packages compiling costs more than the
- * runtime parse (3.6 ms first parse vs 2.0); compiling pays only from a few hundred packages.
- */
-const trustedFileSchema = cacheFileSchema.check(refine(hasOnlyKeyedPaths));
+/** `keyedPaths` are hashed relative to the root on every read: a tampered path outside it, or named like no keyed file, is a miss. */
+const trustedFileSchema = lazyCompiled(cacheFileSchema.check(refine(hasOnlyKeyedPaths)));
 
 /**
  * Cleanup changes no outcome: a close after the text is read or the file refused, and the removal of a temp file left
@@ -78,7 +75,7 @@ const parsedFile = (text: string): CacheFile | null => {
     return null;
   }
 
-  const parsed = trustedFileSchema.safeParse(json);
+  const parsed = trustedFileSchema().safeParse(json);
 
   return parsed.success ? parsed.data : null;
 };
