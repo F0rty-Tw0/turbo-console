@@ -2,6 +2,7 @@ import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { PackagesTreeApi } from '../../tree/common/tree-node.type.ts';
 import type { CommandRegistry, Disposed, RunControl } from '../common/run.type.ts';
 import { runRequestOf, taskTargetOf } from '../utils/run-target.util.ts';
+import { whenRunnable } from '../utils/runnable.util.ts';
 
 /**
  * Spec §4.5 entry points: Run Task, Run Task Without Cache and Stop Task on a task row (any other argument is ignored), a tree row refresh on
@@ -20,7 +21,7 @@ export const registerRuns = (
 
     const entry = roots.get(target.definition.root);
 
-    if (entry?.state.binary === null) await entry.coordinator.whenSettled();
+    if (entry?.state.binary === null) await whenRunnable(roots, target.definition.root, entry.coordinator);
 
     const state = roots.get(target.definition.root)?.state;
     const request = runRequestOf(target, state, force);
