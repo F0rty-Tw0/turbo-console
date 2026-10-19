@@ -148,12 +148,15 @@ export class LoadCoordinator implements Coordinator {
     const firstAnswer = Promise.withResolvers<undefined>();
     const settled = Promise.withResolvers<undefined>();
     const flight: Flight = { generation: this.counter, controller, record, firstAnswer, settled };
+    let boundModel: LoadedModel['model'] | null = null;
     const publish = (result: LoadedModel): void => {
+      if (result.binary !== null) boundModel = result.model;
+
       firstAnswer.resolve(undefined);
       this.take(flight, result);
     };
     const settle = (result: LoadResult): void => {
-      this.settle(flight, result);
+      this.settle(flight, result, boundModel);
     };
 
     const running = async (): Promise<LoadResult> => this.ports.run(mode, controller.signal, publish);
@@ -180,18 +183,21 @@ export class LoadCoordinator implements Coordinator {
 
     this.everLoaded = true;
     this.failedStage = result.kind === 'error' ? result.stage : null;
-    this.hasModel ||= result.kind === 'model';
+    this.hasModel ||= result.kind === 'model' && result.binary !== null;
     this.ports.apply(result);
   }
 
   /**
    * Bookkeeping first, `apply` last: the follow-up and the settle waiters never depend on the port returning. A cached
-   * result after a publish is still applied: the publish came before the binary resolved, and the result carries it.
+   * result is not applied when the flight already published that model with its binary (`boundModel`, the second
+   * publish of `loadRoot`): it would only repeat that publish. A publish with no binary does not count, since the store
+   * drops it on a binary failure; every failure and every full-load model is applied.
    */
-  private settle(flight: Flight, result: LoadResult): void {
+  private settle(flight: Flight, result: LoadResult, boundModel: LoadedModel['model'] | null): void {
     const isLive = this.isLive(flight);
     const outcome = isLive ? result.kind : 'aborted';
     const wasCurrent = this.current === flight;
+    const isRepeat = result.kind === 'model' && result.fromCache && result.model === boundModel;
 
     closeRecord(flight.record, outcome, result);
 
@@ -204,7 +210,7 @@ export class LoadCoordinator implements Coordinator {
     flight.firstAnswer.resolve(undefined);
     flight.settled.resolve(undefined);
 
-    this.take(flight, result);
+    if (!isRepeat) this.take(flight, result);
   }
 
   private clearStale(generation: number): void {

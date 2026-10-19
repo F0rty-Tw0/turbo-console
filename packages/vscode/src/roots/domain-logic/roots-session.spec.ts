@@ -161,6 +161,17 @@ describe('FEATURE: roots session', () => {
       expect(state).toStrictEqual({ folder: A_FOLDER, binary: TURBO_BINARY_STUB, model: WORKSPACE_MODEL_STUB, error: null });
     });
 
+    it('WHEN it is ensured THEN the store changes twice: before and after the binary resolves, not again once fresh', async () => {
+      const session = new RootsSession(sessionPortsWith({}));
+      const listener = vi.fn();
+
+      session.setRoots([A_FOLDER]);
+      session.store.onDidChange(listener);
+      await ensureAll(session);
+
+      expect(listener).toHaveBeenCalledTimes(2);
+    });
+
     it('WHEN its binary is never found THEN the store drops the cached model and holds the binary error', async () => {
       const resolve = vi.fn<LoadDeps['resolve']>().mockRejectedValue(LOAD_FAILURE_STUB.error);
       const session = new RootsSession(sessionPortsWith({ resolve }));
