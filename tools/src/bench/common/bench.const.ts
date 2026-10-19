@@ -1,5 +1,12 @@
-/** Untimed calls before sampling, so lazy compilation and caches settle first. */
-export const WARMUP = 3;
+import type { Warmup } from './bench.type.ts';
+
+/**
+ * Untimed calls before sampling, so lazy compilation and caches settle first: at least `calls`, and for at least `ms`.
+ * A sub-millisecond bench is still being optimized after 3 calls, so its median then depends on when V8 tiered up in
+ * that process: 3 calls alone spread the median of a 0.2 ms tree bench 1.5-1.6x across fresh processes and failed the
+ * CI gate on unchanged code; 300 ms keeps it within 1.1x (pinned probe, 2026-10-20). A slow bench stops after `calls`.
+ */
+export const WARMUP: Warmup = { calls: 3, ms: 300 };
 
 /** Timed calls per bench; the result is their median. */
 export const SAMPLES = 25;
