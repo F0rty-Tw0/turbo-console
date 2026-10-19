@@ -25,7 +25,11 @@ const TEMP_WRITE_OPTIONS = { mode: 0o600, flag: 'wx' };
 
 const hasOnlyKeyedPaths = (file: CacheFile): boolean => file.keyedPaths.every(isKeyedPath);
 
-/** `keyedPaths` are hashed relative to the root on every read: a tampered path outside it, or named like no keyed file, is a miss. */
+/**
+ * `keyedPaths` are hashed relative to the root on every read: a tampered path outside it, or named like no keyed file, is
+ * a miss. Not compiled: the file is parsed once per window, and at a repo of ~15 packages compiling costs more than the
+ * runtime parse (3.6 ms first parse vs 2.0); compiling pays only from a few hundred packages.
+ */
 const trustedFileSchema = cacheFileSchema.check(refine(hasOnlyKeyedPaths));
 
 /**
