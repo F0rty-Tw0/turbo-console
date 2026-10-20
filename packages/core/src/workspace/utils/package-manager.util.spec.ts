@@ -47,7 +47,7 @@ const ALL_LOCKFILES: LockfileName[] = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb'
 
 /** The two manifest values `packageManagerOf` reads; `devEnginesManager` is the value of `devEngines.packageManager`. */
 const fieldsOf = (packageManager: unknown, devEnginesManager?: unknown): ManifestFields => {
-  const fields: ManifestFields = { packageManager, devEnginesManager };
+  const fields: ManifestFields = { packageManager, devEnginesManager, name: undefined, workspaces: undefined };
 
   return fields;
 };

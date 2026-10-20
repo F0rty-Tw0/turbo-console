@@ -23,8 +23,9 @@ import { runTurboJson } from '../../shared/turbo/data-access/turbo-json.ts';
 import { untilAborted } from '../../shared/turbo/data-access/until-aborted.ts';
 import { toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
 import type { LoadWorkspaceOptions } from '../common/load-workspace.type.ts';
+import type { DetectedRoot } from '../common/manifest-fields.type.ts';
 import type { TurboConfigFile } from '../common/turbo-config.type.ts';
-import type { ModelSource, PackageManager, WorkspaceModel } from '../common/workspace-model.type.ts';
+import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
 import { detectPackageManager } from '../data-access/root-manifest.ts';
 import { readTurboConfigs } from '../data-access/turbo-config.ts';
 import { buildWorkspaceModel, withWarning } from '../utils/workspace-model.util.ts';
@@ -95,8 +96,8 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
 
     refuseHostile(rootFiles);
 
-    const detect = async (): Promise<PackageManager> => detectPackageManager(binary.root, rootFiles);
-    const packageManager = await untilAborted(detect, signal);
+    const detect = async (): Promise<DetectedRoot> => detectPackageManager(binary.root, rootFiles);
+    const { packageManager } = await untilAborted(detect, signal);
     const mark: SpawnMark = { startedAt: spawnStartedAt, rootFiles };
     const graphSchema = compiledGraphSchema();
     const graph = await runTurboJson(run, COMMAND, graphSchema);
@@ -104,7 +105,13 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
     const dirs = packages.map(configDirOf);
     const readConfigs = async (): Promise<TurboConfigFile[]> => readTurboConfigs(binary.root, dirs, signal);
     const configs = await untilAborted(readConfigs, signal);
-    const source: ModelSource = { turboVersion: binary.version, root: binary.root, packageManager };
+    const source: ModelSource = {
+      turboVersion: binary.version,
+      root: binary.root,
+      packageManager,
+      singlePackage: false,
+      rootLabel: null
+    };
     const model = buildWorkspaceModel(graph, configs, source);
 
     if (signal?.aborted === true) throw abortError(signal, '');

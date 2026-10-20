@@ -32,4 +32,9 @@ const DEFAULT_SOURCE: PackageManagerSource = { kind: 'default' };
 export const DEFAULT_PACKAGE_MANAGER: PackageManager = { name: 'npm', source: DEFAULT_SOURCE };
 
 /** What a root `package.json` that is missing, unreadable or not JSON gives: no value either way. */
-export const NO_MANIFEST_FIELDS: ManifestFields = { packageManager: undefined, devEnginesManager: undefined };
+export const NO_MANIFEST_FIELDS: ManifestFields = {
+  packageManager: undefined,
+  devEnginesManager: undefined,
+  name: undefined,
+  workspaces: undefined
+};

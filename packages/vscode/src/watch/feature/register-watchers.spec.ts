@@ -16,7 +16,7 @@ const B_FOLDER: RootFolder = { root: '/b', name: 'b' };
 
 const C_FOLDER: RootFolder = { root: '/c', name: 'c' };
 
-const PACKAGE: PackageNode = { name: '@x/a', path: 'packages/a', tags: [], tasks: [] };
+const PACKAGE: PackageNode = { name: '@x/a', path: 'packages/a', label: null, tags: [], tasks: [] };
 
 const MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [PACKAGE] };
 

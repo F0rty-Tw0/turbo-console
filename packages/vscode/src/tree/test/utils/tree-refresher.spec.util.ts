@@ -30,6 +30,7 @@ export const ATOM_FILE_TASK: TaskNode = { ...SCRIPT_TASK, id: 's#gen', name: 'ge
 export const SCRIPT_PACKAGE: PackageNode = {
   name: 's',
   path: 'packages/s',
+  label: null,
   tags: [],
   tasks: [SCRIPT_TASK, ATOM_FILE_TASK]
 };

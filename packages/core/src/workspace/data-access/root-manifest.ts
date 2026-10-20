@@ -4,25 +4,26 @@ import { MAX_KEYED_FILE_BYTES, MISSING_DIGEST } from '../../cache/common/cache.c
 import type { KeyedFile } from '../../cache/common/cache.type.ts';
 import { isLockfileName } from '../../cache/utils/lockfile-name.util.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
-import type { ManifestFields } from '../common/manifest-fields.type.ts';
+import type { DetectedRoot, ManifestFields } from '../common/manifest-fields.type.ts';
 import { NO_MANIFEST_FIELDS } from '../common/package-manager.const.ts';
-import type { LockfileName, PackageManager } from '../common/workspace-model.type.ts';
+import type { LockfileName } from '../common/workspace-model.type.ts';
 import { packageManagerOf } from '../utils/package-manager.util.ts';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-/** The `packageManager` field and `devEngines.packageManager` of a parsed manifest; a missing one is `undefined`. */
+/** The `packageManager`, `devEngines.packageManager`, `name` and `workspaces` of a parsed manifest; a missing one is `undefined`. */
 const fieldsOf = (manifest: Record<string, unknown>): ManifestFields => {
   const devEngines = manifest['devEngines'];
   const devEnginesManager = isRecord(devEngines) ? devEngines['packageManager'] : undefined;
-  const fields: ManifestFields = { packageManager: manifest['packageManager'], devEnginesManager };
+  const { name, workspaces } = manifest;
+  const fields: ManifestFields = { packageManager: manifest['packageManager'], devEnginesManager, name, workspaces };
 
   return fields;
 };
 
 /**
- * The `packageManager` and `devEngines.packageManager` values of the root `package.json`, from one read and one parse,
- * unchecked. Both are `undefined` (`NO_MANIFEST_FIELDS`) for anything else: no such file, one that cannot be read, is
+ * The `packageManager`, `devEngines.packageManager`, `name` and `workspaces` values of the root `package.json`, from one
+ * read and one parse, unchecked. Both are `undefined` (`NO_MANIFEST_FIELDS`) for anything else: no such file, one that cannot be read, is
  * over `MAX_KEYED_FILE_BYTES` or is no regular file, text that is not JSON, or a JSON value that is no object. A bad
  * manifest never fails a load: the lockfiles decide instead.
  */
@@ -57,11 +58,15 @@ const presentLockfiles = (rootFiles: KeyedFile[]): Set<LockfileName> => {
 
 /**
  * The repo's package manager from the root `packageManager` field, `devEngines.packageManager` and the root lockfiles `rootFiles` hashed: no extra
- * file system call tells which lockfiles exist.
+ * file system call tells which lockfiles exist. The manifest's `name` and `workspaces` come back with it, unchecked,
+ * from the same read.
  */
-export const detectPackageManager = async (root: string, rootFiles: KeyedFile[]): Promise<PackageManager> => {
+export const detectPackageManager = async (root: string, rootFiles: KeyedFile[]): Promise<DetectedRoot> => {
   const fields = await readManifestFields(root);
   const present = presentLockfiles(rootFiles);
+  const packageManager = packageManagerOf(fields, present);
+  const { name, workspaces } = fields;
+  const detected: DetectedRoot = { packageManager, name, workspaces };
 
-  return packageManagerOf(fields, present);
+  return detected;
 };

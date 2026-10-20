@@ -67,7 +67,7 @@ const modelWith = (packages: PackageNode[]): WorkspaceModel => {
 };
 
 const packageNamed = (name: string, tasks: TaskNode[]): PackageNode => {
-  const pkg: PackageNode = { name, path: `packages/${name}`, tags: [], tasks };
+  const pkg: PackageNode = { name, path: `packages/${name}`, label: null, tags: [], tasks };
 
   return pkg;
 };

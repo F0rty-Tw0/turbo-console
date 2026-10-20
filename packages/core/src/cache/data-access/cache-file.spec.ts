@@ -16,7 +16,7 @@ import {
 } from '../../workspace/test/stubs/package-manager.stub.ts';
 import { workspaceModelSchema } from '../common/cache-file.schema.ts';
 import type { CacheEntry } from '../common/cache.type.ts';
-import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
+import { SINGLE_PACKAGE_MODEL_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
 import { cacheFileName } from '../utils/cache-key.util.ts';
 
 const ROOT = WORKSPACE_MODEL_STUB.root;
@@ -48,14 +48,20 @@ const CONTINUOUS_MODEL = modelWithContinuousTask();
 
 const CONTINUOUS_ENTRY: CacheEntry = { ...ENTRY, model: CONTINUOUS_MODEL };
 
+const SINGLE_PACKAGE_ENTRY: CacheEntry = { ...ENTRY, model: SINGLE_PACKAGE_MODEL_STUB };
+
 const ROUND_TRIPS: [string, CacheEntry][] = [
   ['a key', ENTRY],
   ['a null key', STALE_ENTRY],
-  ['a continuous task', CONTINUOUS_ENTRY]
+  ['a continuous task', CONTINUOUS_ENTRY],
+  ['a single-package model', SINGLE_PACKAGE_ENTRY]
 ];
 
-/** Every format before `packageManager` (v5): 1 before the task-name fix, 2 before `isTurboTask`, 3 before `persistent`, 4 before `packageManager`. */
-const OLD_VERSIONS = [1, 2, 3, 4];
+/**
+ * Every format before `singlePackage` and `label` (v6): 1 before the task-name fix, 2 before `isTurboTask`, 3 before
+ * `persistent`, 4 before `packageManager`, 5 before `singlePackage` and `label`.
+ */
+const OLD_VERSIONS = [1, 2, 3, 4, 5];
 
 /** One package manager per source kind a cache file can hold. */
 const PACKAGE_MANAGERS: [string, PackageManager][] = [

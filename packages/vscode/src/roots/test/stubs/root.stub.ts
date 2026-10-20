@@ -23,6 +23,7 @@ export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   turboVersion: '2.11.7',
   packageManager: PACKAGE_MANAGER_STUB,
   affectedMode: 'package',
+  singlePackage: false,
   packages: [],
   edges: [],
   warnings: []
