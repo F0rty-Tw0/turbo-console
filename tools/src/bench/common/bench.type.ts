@@ -3,6 +3,12 @@ export type BenchOptions = {
   readonly gate: boolean;
 };
 
+/** How long `sampleBench` calls a bench untimed: at least `calls` times and at least `ms` milliseconds. */
+export type Warmup = {
+  readonly calls: number;
+  readonly ms: number;
+};
+
 /** One entry of a `*.bench.ts` file's default export; `fn` may return a promise, which the sampler awaits. */
 export type BenchDescriptor = {
   readonly name: string;

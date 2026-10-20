@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { sampleBench } from './bench-sampling.ts';
-import type { BenchDescriptor } from '../common/bench.type.ts';
+import { NS_PER_MS } from '../common/bench.const.ts';
+import type { BenchDescriptor, Warmup } from '../common/bench.type.ts';
+
+const TWO_CALLS: Warmup = { calls: 2, ms: 0 };
 
 describe('FEATURE: bench sampling', () => {
   describe('GIVEN a synchronous bench', () => {
@@ -9,7 +12,7 @@ describe('FEATURE: bench sampling', () => {
       it('THEN it returns 5 non-negative durations', async () => {
         const descriptor: BenchDescriptor = { name: 'sync', fn: vi.fn(), gate: true };
 
-        const samples = await sampleBench(descriptor, 2, 5);
+        const samples = await sampleBench(descriptor, TWO_CALLS, 5);
         const negative = samples.filter((sample) => sample < 0);
 
         expect(samples).toHaveLength(5);
@@ -20,10 +23,36 @@ describe('FEATURE: bench sampling', () => {
         const fn = vi.fn();
         const descriptor: BenchDescriptor = { name: 'sync', fn, gate: true };
 
-        await sampleBench(descriptor, 2, 5);
+        await sampleBench(descriptor, TWO_CALLS, 5);
 
         expect(fn).toHaveBeenCalledTimes(7);
       });
+    });
+  });
+
+  describe('GIVEN a fast bench and a warmup of 1 call or 30 ms', () => {
+    it('WHEN sampled THEN it keeps warming past the 1 call until 30 ms have passed', async () => {
+      const fn = vi.fn();
+      const descriptor: BenchDescriptor = { name: 'fast', fn, gate: true };
+      const start = process.hrtime.bigint();
+
+      await sampleBench(descriptor, { calls: 1, ms: 30 }, 1);
+
+      const elapsedMs = Number(process.hrtime.bigint() - start) / NS_PER_MS;
+
+      expect(elapsedMs).toBeGreaterThanOrEqual(30);
+      expect(fn.mock.calls.length).toBeGreaterThan(2);
+    });
+  });
+
+  describe('GIVEN a bench slower than the warmup time', () => {
+    it('WHEN sampled with 3 calls or 1 ms THEN it warms for exactly the 3 calls', async () => {
+      const fn = vi.fn(async (): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, 5)));
+      const descriptor: BenchDescriptor = { name: 'slow', fn, gate: true };
+
+      await sampleBench(descriptor, { calls: 3, ms: 1 }, 1);
+
+      expect(fn).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -42,7 +71,7 @@ describe('FEATURE: bench sampling', () => {
 
       const descriptor: BenchDescriptor = { name: 'async', fn, gate: false };
 
-      await sampleBench(descriptor, 1, 3);
+      await sampleBench(descriptor, { calls: 1, ms: 0 }, 3);
 
       expect(overlaps).toBe(0);
     });
@@ -51,7 +80,7 @@ describe('FEATURE: bench sampling', () => {
       const fn = async (): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, 20));
       const descriptor: BenchDescriptor = { name: 'async', fn, gate: false };
 
-      const samples = await sampleBench(descriptor, 0, 2);
+      const samples = await sampleBench(descriptor, { calls: 0, ms: 0 }, 2);
       const shortest = Math.min(...samples);
 
       expect(shortest).toBeGreaterThan(10_000_000);
