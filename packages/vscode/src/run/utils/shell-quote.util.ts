@@ -1,7 +1,7 @@
-import { turboRunArgs } from '@turbo-console/core';
+import { SINGLE_PACKAGE, turboRunArgs } from '@turbo-console/core';
 import type { TaskNode } from '@turbo-console/core';
 
-import { BARE, BARE_FIRST_BLOCKED, SINGLE_PACKAGE_FLAG } from '../common/shell.const.ts';
+import { BARE, BARE_FIRST_BLOCKED } from '../common/shell.const.ts';
 import type { ShellKind } from '../common/shell.type.ts';
 
 const PATH_SEPARATOR = /[\\/]/u;
@@ -89,7 +89,7 @@ export const copyText = (task: TaskNode, packageName: string, kind: ShellKind, s
 
   const args = ['turbo', 'run', task.name, `--filter=${packageName}`];
 
-  if (singlePackage) args.push(SINGLE_PACKAGE_FLAG);
+  if (singlePackage) args.push(SINGLE_PACKAGE);
 
   const quoted = args.map((arg) => quoteArg(arg, kind));
   const words = quoted.filter(isQuoted);
