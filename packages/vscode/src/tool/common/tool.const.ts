@@ -1,4 +1,4 @@
-import type { ToolGlyph, ToolSpec } from './tool.type.ts';
+import type { PackageScripts, ToolGlyph, ToolSpec } from './tool.type.ts';
 
 const ANGULAR_ATTRIBUTION =
   '"Angular" logo by Google, from https://angular.dev/press-kit (via Simple Icons), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Modified: single-colour version, converted to a font glyph.';
@@ -53,3 +53,6 @@ const TOOL_BIN_ENTRIES: [string, ToolSpec][] = TOOLS.flatMap((tool) => tool.bins
 
 /** A binary name → its tool row. */
 export const TOOL_BY_BIN: ReadonlyMap<string, ToolSpec> = new Map(TOOL_BIN_ENTRIES);
+
+/** Scripts that offer no delegation: a command resolves only by its own binaries. */
+export const NO_SCRIPTS: PackageScripts = { bodies: new Map(), followTurbo: true };

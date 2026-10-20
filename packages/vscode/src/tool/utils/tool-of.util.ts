@@ -1,8 +1,8 @@
 import { TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 
-import { binOf } from './delegation.util.ts';
-import { TOOL_BY_BIN } from '../common/tool.const.ts';
-import type { ToolSpec } from '../common/tool.type.ts';
+import { binOf, delegationOf } from './delegation.util.ts';
+import { NO_SCRIPTS, TOOL_BY_BIN } from '../common/tool.const.ts';
+import type { PackageScripts, ToolMatch, ToolResolver, ToolSpec } from '../common/tool.type.ts';
 
 const SEGMENT_END = /&&|\||;/;
 const WHITESPACE = /\s+/;
@@ -29,7 +29,10 @@ const skipLengthOf = (token: string, next: string, afterSkip: boolean): number =
   return 0;
 };
 
-const candidateOf = (tokens: string[]): string | null => {
+const NO_CANDIDATE = -1;
+const MAX_DELEGATIONS = 5;
+
+const candidateIndexOf = (tokens: string[]): number => {
   let index = 0;
 
   while (index < tokens.length) {
@@ -37,24 +40,84 @@ const candidateOf = (tokens: string[]): string | null => {
     const next = tokens[index + 1] ?? '';
     const length = skipLengthOf(token, next, index > 0);
 
-    if (length === 0) return token;
+    if (length === 0) return index;
     index += length;
+  }
+
+  return NO_CANDIDATE;
+};
+
+const segmentsOf = (command: string): string[] => {
+  const parts = command.split(SEGMENT_END);
+  const trimmed = parts.map((part) => part.trim());
+
+  return trimmed.filter((part) => part !== '');
+};
+
+/** What a segment runs: a tool directly, the name of a script it delegates to, or nothing. */
+type Step = ToolMatch | string | null;
+
+const stepOf = (segment: string, scripts: PackageScripts): Step => {
+  const tokens = segment.split(WHITESPACE);
+  const index = candidateIndexOf(tokens);
+
+  if (index === NO_CANDIDATE) return null;
+
+  const tool = TOOL_BY_BIN.get(binOf(tokens[index] ?? ''));
+
+  if (tool !== undefined) {
+    const direct: ToolMatch = { tool, via: [] };
+
+    return direct;
+  }
+
+  return delegationOf(tokens, index, scripts);
+};
+
+/** A delegation to `name` may be followed unless `name` repeats on the path or the path already holds 5 names. */
+const canFollow = (name: string, path: string[]): boolean => {
+  const isOnPath = path.includes(name);
+  const isTooDeep = path.length >= MAX_DELEGATIONS;
+
+  return !isOnPath && !isTooDeep;
+};
+
+const resolveIn = (command: string, scripts: PackageScripts, path: string[]): ToolMatch | null => {
+  for (const segment of segmentsOf(command)) {
+    const step = stepOf(segment, scripts);
+
+    if (step === null) continue;
+
+    if (typeof step !== 'string') return step;
+
+    const isFollowable = canFollow(step, path);
+
+    if (!isFollowable) continue;
+
+    const inner = resolveIn(scripts.bodies.get(step) ?? '', scripts, [...path, step]);
+
+    if (inner === null) continue;
+
+    const match: ToolMatch = { tool: inner.tool, via: [step, ...inner.via] };
+
+    return match;
   }
 
   return null;
 };
 
-/** Spec 1c-c §4.2: the well-known tool the first command segment runs, or `null`. Total and pure. */
-export const toolOf = (command: string | null): ToolSpec | null => {
+/**
+ * Spec runner-chains §Behavior: the first command segment that resolves to a well-known tool, directly or through
+ * same-package script delegations (at most 5, no repeats). Total and pure.
+ */
+export const resolveTool: ToolResolver = (command, scripts) => {
   if (command === null) return null;
 
-  const [segment = ''] = command.split(SEGMENT_END);
-  const candidate = candidateOf(segment.trim().split(WHITESPACE));
-
-  if (candidate === null) return null;
-
-  return TOOL_BY_BIN.get(binOf(candidate)) ?? null;
+  return resolveIn(command, scripts, []);
 };
+
+/** The tool of a command that has no scripts to follow; Task 2.2 removes it. */
+export const toolOf = (command: string | null): ToolSpec | null => resolveTool(command, NO_SCRIPTS)?.tool ?? null;
 
 /** The codicon id of the tool's logo, or `null` for a tool without a glyph. */
 export const toolIconIdOf = (tool: ToolSpec): string | null => {
