@@ -1,4 +1,4 @@
-import { array, boolean, nullable, object, string, enum as zodEnum } from 'zod/mini';
+import { array, boolean, nullable, object, optional, string, enum as zodEnum } from 'zod/mini';
 
 const cacheSchema = object({ status: zodEnum(['HIT', 'MISS']) });
 
@@ -13,7 +13,7 @@ const resolvedTaskDefinitionSchema = object({
 
 const taskSchema = object({
   taskId: string(),
-  package: string(),
+  package: optional(nullable(string())),
   task: string(),
   hash: nullable(string()),
   command: string(),
@@ -23,7 +23,8 @@ const taskSchema = object({
 
 /**
  * stdout of `turbo run <tasks> --dry=json`. `hash` is null for a JIT-hashed task; phantom, umbrella and aggregate
- * tasks report `command: "<NONEXISTENT>"`. Unknown keys are stripped; every listed key is required. `dependencies` and
- * `dependents` are left out: nothing reads them, and checking them costs parse time on every dry run.
+ * tasks report `command: "<NONEXISTENT>"`. `monorepo: false` output (single-package) has bare `taskId`s and no task
+ * `package` key; `null` is accepted too. Unknown keys are stripped; every listed key except `package` is required.
+ * `dependencies` and `dependents` are left out: nothing reads them, and checking them costs parse time on every dry run.
  */
-export const dryRunSchema = object({ tasks: array(taskSchema) });
+export const dryRunSchema = object({ monorepo: boolean(), tasks: array(taskSchema) });

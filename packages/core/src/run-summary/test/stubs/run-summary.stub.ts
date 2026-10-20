@@ -11,4 +11,4 @@ const TASK = { taskId: 'web#build', execution: EXECUTION, cache: CACHE };
 const TASKS = [TASK];
 
 /** A finished one-task run, valid under `runSummarySchema`. */
-export const RUN_SUMMARY_STUB: RunSummary = { id: 'run-a', execution: RUN_EXECUTION, tasks: TASKS };
+export const RUN_SUMMARY_STUB: RunSummary = { id: 'run-a', monorepo: true, execution: RUN_EXECUTION, tasks: TASKS };

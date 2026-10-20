@@ -61,8 +61,8 @@ const WEB_TYPECHECK = dryRunTask('web', 'typecheck', 'b3', MISS);
 
 const WEB_PHANTOM: DryRunTask = { ...WEB_TYPECHECK, command: NONEXISTENT };
 
-const dryRunOf = (tasks: DryRunTask[]): DryRun => {
-  const json: DryRun = { tasks };
+const dryRunOf = (tasks: DryRunTask[], monorepo = true): DryRun => {
+  const json: DryRun = { monorepo, tasks };
 
   return json;
 };
@@ -89,6 +89,22 @@ describe('FEATURE: dry-run argv', () => {
       const args = dryRunArgs({ tasks: ['build'], packages: ['web', '@scope/ui'] });
 
       expect(args).toStrictEqual(['run', 'build', '--filter=web', '--filter=@scope/ui', '--dry=json']);
+    });
+  });
+
+  describe('GIVEN singlePackage true', () => {
+    it('WHEN built THEN --single-package follows the filters and --dry=json stays last', () => {
+      const args = dryRunArgs({ tasks: ['build'], packages: ['//'], singlePackage: true });
+
+      expect(args).toStrictEqual(['run', 'build', '--filter=//', '--single-package', '--dry=json']);
+    });
+  });
+
+  describe('GIVEN singlePackage false or absent', () => {
+    it('WHEN built THEN there is no --single-package', () => {
+      const args = dryRunArgs({ tasks: ['build'], singlePackage: false });
+
+      expect(args).toStrictEqual(['run', 'build', '--dry=json']);
     });
   });
 
@@ -167,5 +183,62 @@ describe('FEATURE: dry-run states', () => {
     it('WHEN converted THEN the commandless check task is dropped', () => {
       expect(definitionOf('lib#check')).toBeUndefined();
     });
+  });
+});
+
+/** A single-package task: bare `taskId`, no `package`. */
+const BARE_BUILD: DryRunTask = {
+  taskId: 'build',
+  task: 'build',
+  hash: 'r1',
+  command: 'node -e 0',
+  cache: MISS,
+  resolvedTaskDefinition: DEFINITION
+};
+const BARE_LINT: DryRunTask = { ...BARE_BUILD, taskId: 'lint', task: 'lint', hash: null };
+const BARE_CHECK: DryRunTask = { ...BARE_BUILD, taskId: 'check', task: 'check', command: NONEXISTENT };
+
+describe('GIVEN a single-package dry run (monorepo false, bare ids, no package)', () => {
+  it('WHEN converted THEN ids read //#task, sorted, the null hash is deferred and the commandless task is dropped', () => {
+    const states = toDryRunStates(dryRunOf([BARE_LINT, BARE_CHECK, BARE_BUILD], false));
+
+    expect(states.map((state) => [state.id, state.cache])).toStrictEqual([
+      ['//#build', 'MISS'],
+      ['//#lint', 'deferred']
+    ]);
+  });
+});
+
+describe('GIVEN a single-package dry run whose tasks carry package: null (real output omits the key)', () => {
+  it('WHEN converted THEN null reads like absent and the ids read //#task', () => {
+    const nullPackage: DryRunTask = { ...BARE_BUILD, package: null };
+    const states = toDryRunStates(dryRunOf([nullPackage], false));
+
+    expect(states.map((state) => state.id)).toStrictEqual(['//#build']);
+  });
+
+  it('WHEN the schema parses the raw JSON THEN package: null is accepted', () => {
+    const tasks = [{ ...BARE_BUILD, package: null }];
+    const raw = { monorepo: false, tasks };
+
+    expect(dryRunSchema.safeParse(raw).success).toBe(true);
+  });
+});
+
+describe('GIVEN a monorepo dry run with a task that has no package', () => {
+  it('WHEN converted THEN it throws invalid-output', () => {
+    expect(() => toDryRunStates(dryRunOf([BARE_BUILD], true))).toThrow(expect.objectContaining({ kind: 'invalid-output' }));
+  });
+
+  it('WHEN the package is null THEN it throws invalid-output', () => {
+    const nullPackage: DryRunTask = { ...BARE_BUILD, package: null };
+
+    expect(() => toDryRunStates(dryRunOf([nullPackage], true))).toThrow(expect.objectContaining({ kind: 'invalid-output' }));
+  });
+});
+
+describe('GIVEN a monorepo dry run whose task ids are qualified', () => {
+  it('WHEN converted THEN the ids are not prefixed again', () => {
+    expect(toDryRunStates(dryRunOf([WEB_BUILD])).map((state) => state.id)).toStrictEqual(['web#build']);
   });
 });

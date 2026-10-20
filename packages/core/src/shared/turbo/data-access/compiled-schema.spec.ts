@@ -31,7 +31,7 @@ const DRY_TASK_HEAD = '"taskId":"web#build","package":"web","task":"build","comm
 const DRY_TASK_TAIL = `"resolvedTaskDefinition":${DEFINITION},"dependencies":[],"dependents":[]`;
 
 /** turbo's `--dry=json` stdout, with the `dependencies` and `dependents` keys the schema leaves out. */
-const DRY_RUN = `{"id":"run","tasks":[{${DRY_TASK_HEAD},"hash":null,"cache":{"status":"MISS","local":false},${DRY_TASK_TAIL}}]}`;
+const DRY_RUN = `{"monorepo":true,"id":"run","tasks":[{${DRY_TASK_HEAD},"hash":null,"cache":{"status":"MISS","local":false},${DRY_TASK_TAIL}}]}`;
 
 /** turbo's `affectedTasks` stdout, with keys the schema does not list. */
 const AFFECTED = '{"data":{"affectedTasks":{"items":[{"fullName":"web#build","reason":{"__typename":"TaskFileChanged","extra":1}}]}}}';
@@ -42,9 +42,16 @@ const NUMBER_TAG_PACKAGE = WEB_PACKAGE.replace('"tags":["app"]', '"tags":[1]');
 
 const GRAPH_WITH_NUMBER_TAG = `{"data":{"packageGraph":{"nodes":{"items":[${NUMBER_TAG_PACKAGE}]},"edges":${EDGES}}}}`;
 
-const DRY_RUN_WITHOUT_HASH = `{"tasks":[{${DRY_TASK_HEAD},"cache":{"status":"MISS"},${DRY_TASK_TAIL}}]}`;
+const DRY_RUN_WITHOUT_HASH = `{"monorepo":true,"tasks":[{${DRY_TASK_HEAD},"cache":{"status":"MISS"},${DRY_TASK_TAIL}}]}`;
 
-const DRY_RUN_WITH_BAD_STATUS = `{"tasks":[{${DRY_TASK_HEAD},"hash":"abc","cache":{"status":"STALE"},${DRY_TASK_TAIL}}]}`;
+const DRY_RUN_WITH_BAD_STATUS = `{"monorepo":true,"tasks":[{${DRY_TASK_HEAD},"hash":"abc","cache":{"status":"STALE"},${DRY_TASK_TAIL}}]}`;
+
+const DRY_TASK_HEAD_SINGLE = '"taskId":"build","task":"build","command":"node -e 0"';
+
+/** A single-package dry run: `monorepo: false`, no task `package`, a bare `taskId`. */
+const DRY_RUN_SINGLE = `{"monorepo":false,"tasks":[{${DRY_TASK_HEAD_SINGLE},"hash":"h1","cache":{"status":"HIT","local":true},${DRY_TASK_TAIL}}]}`;
+
+const DRY_RUN_WITHOUT_MONOREPO = `{"tasks":[{${DRY_TASK_HEAD},"hash":"abc","cache":{"status":"MISS"},${DRY_TASK_TAIL}}]}`;
 
 const AFFECTED_WITHOUT_REASON = '{"data":{"affectedTasks":{"items":[{"fullName":"web#build"}]}}}';
 
@@ -57,6 +64,7 @@ type Case = [string, ZodMiniType, string];
 const VALID: Case[] = [
   ['the package graph', packageGraphSchema, PACKAGE_GRAPH],
   ['a dry run', dryRunSchema, DRY_RUN],
+  ['a single-package dry run', dryRunSchema, DRY_RUN_SINGLE],
   ['affected tasks', affectedTasksSchema, AFFECTED]
 ];
 
@@ -67,6 +75,7 @@ const INVALID: Case[] = [
   ['a dry-run task with no hash key', dryRunSchema, DRY_RUN_WITHOUT_HASH],
   ['a dry-run task with an unknown cache status', dryRunSchema, DRY_RUN_WITH_BAD_STATUS],
   ['a dry run that is null', dryRunSchema, 'null'],
+  ['a dry run with no monorepo key', dryRunSchema, DRY_RUN_WITHOUT_MONOREPO],
   ['an affected task with no reason', affectedTasksSchema, AFFECTED_WITHOUT_REASON]
 ];
 

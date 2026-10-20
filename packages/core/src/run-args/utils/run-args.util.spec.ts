@@ -38,6 +38,18 @@ describe('FEATURE: turbo run arguments', () => {
       expect(args).toStrictEqual([...PLAIN_ARGS, '--force']);
     });
 
+    it('WHEN singlePackage is true THEN --single-package follows --summarize', () => {
+      const args = turboRunArgs(TASK_NODE, '@fx/pkg-001', { force: false }, true);
+
+      expect(args).toStrictEqual([...PLAIN_ARGS, '--single-package']);
+    });
+
+    it('WHEN singlePackage and force are both true THEN --force stays last', () => {
+      const args = turboRunArgs(TASK_NODE, '@fx/pkg-001', { force: true }, true);
+
+      expect(args).toStrictEqual([...PLAIN_ARGS, '--single-package', '--force']);
+    });
+
     it('WHEN the task name holds spaces and brackets THEN it is accepted', () => {
       const args = turboRunArgs({ ...TASK_NODE, name: 'my task[1]' }, 'pkg');
 
@@ -66,6 +78,16 @@ describe('FEATURE: turbo run arguments', () => {
 
     it('WHEN affected is true THEN --affected is added', () => {
       expect(turboRunAllArgs('lint', { affected: true })).toStrictEqual(['--skip-infer', 'run', 'lint', '--affected']);
+    });
+
+    it('WHEN singlePackage is true THEN --single-package is added', () => {
+      expect(turboRunAllArgs('lint', { affected: false }, true)).toStrictEqual(['--skip-infer', 'run', 'lint', '--single-package']);
+    });
+
+    it('WHEN singlePackage and affected are both true THEN both flags are added', () => {
+      const args = turboRunAllArgs('lint', { affected: true }, true);
+
+      expect(args).toStrictEqual(['--skip-infer', 'run', 'lint', '--affected', '--single-package']);
     });
 
     it('WHEN the name holds a # THEN it throws invalid-argument', () => {

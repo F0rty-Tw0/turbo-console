@@ -10,6 +10,7 @@ import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
 import { isWithin } from '../../shared/fs/utils/path-within.util.ts';
 import { runSummarySchema } from '../../shared/turbo/common/run-summary.schema.ts';
 import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
+import { ROOT_NAME } from '../../workspace/utils/turbo-task-lookup.util.ts';
 import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
 import { MAX_SUMMARY_BYTES } from '../common/run-summary.const.ts';
 
@@ -113,9 +114,26 @@ export const listRunSummaryFiles = async (root: string): Promise<RunSummaryFile[
   return files.filter(isListed);
 };
 
+const withRootId = (task: RunSummary['tasks'][number]): RunSummary['tasks'][number] => {
+  const rewritten = { ...task, taskId: `${ROOT_NAME}#${task.taskId}` };
+
+  return rewritten;
+};
+
+/** A single-package summary (`monorepo` false) carries bare `taskId`s; they read `//#task` like a monorepo's root. */
+const withRootIds = (summary: RunSummary): RunSummary => {
+  if (summary.monorepo) return summary;
+
+  const tasks = summary.tasks.map((task) => withRootId(task));
+  const rewritten = { ...summary, tasks };
+
+  return rewritten;
+};
+
 /**
  * `<root>/.turbo/runs/<name>` parsed with `runSummarySchema`; `null` when it cannot be read, is a symlink (where the
- * platform has `O_NOFOLLOW`), is not a regular file of at most `MAX_SUMMARY_BYTES`, is not JSON or breaks the schema.
+ * platform has `O_NOFOLLOW`), is not a regular file of at most `MAX_SUMMARY_BYTES`, is not JSON or breaks the schema (a summary without `monorepo` does).
+ * A `monorepo: false` summary comes back with every `taskId` as `//#<taskId>`.
  */
 export const readRunSummaryFile = async (root: string, name: string): Promise<RunSummary | null> => {
   try {
@@ -126,7 +144,9 @@ export const readRunSummaryFile = async (root: string, name: string): Promise<Ru
     const json: unknown = JSON.parse(text);
     const parsed = runSummarySchema.safeParse(json);
 
-    return parsed.success ? parsed.data : null;
+    if (!parsed.success) return null;
+
+    return withRootIds(parsed.data);
   } catch {
     return null;
   }
