@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { safePost } from './safe-post.ts';
 
-const MISSING: MissingPackage = { kind: 'missing', root: '/ws', packageName: 'a' };
+const MISSING: MissingPackage = { kind: 'missing', root: '/ws', packageName: 'a', label: null };
 const MESSAGE: HostMessage = { type: 'state', state: MISSING };
 
 describe('FEATURE: a post that never throws', () => {

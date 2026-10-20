@@ -112,5 +112,6 @@ export const DETAILS_INPUT_STUB: DetailsInput = {
   dryRun: DRY_RUN_RESULT_STUB,
   runs: () => undefined,
   scriptsShown: true,
+  lastLabel: null,
   now: 0
 };

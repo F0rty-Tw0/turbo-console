@@ -145,7 +145,7 @@ describe('FEATURE: details session dry runs', () => {
 
       const [last] = postedStatesOf(ports).slice(-1);
 
-      expect(last).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'a' });
+      expect(last).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'a', label: 'a' });
       expect(ports.dryRun).toHaveBeenCalledOnce();
     });
 

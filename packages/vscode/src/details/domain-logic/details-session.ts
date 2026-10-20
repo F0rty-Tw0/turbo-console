@@ -2,6 +2,7 @@ import type { DetailsState, RefreshMessage } from '@turbo-console/webview-ui';
 
 import { DetailsStatePoster } from './details-state-poster.ts';
 import { PanelDryRun } from './panel-dry-run.ts';
+import { PanelTitle } from './panel-title.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
@@ -14,7 +15,6 @@ import {
   parseWebviewMessage,
   refusedRunTextOf
 } from '../utils/details-message.util.ts';
-import { panelTitleOf } from '../utils/panel-package.util.ts';
 
 /**
  * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
@@ -29,6 +29,7 @@ export class DetailsSession {
   private readonly ports: DetailsPorts;
   private readonly dryRun: PanelDryRun;
   private readonly poster: DetailsStatePoster;
+  private readonly title: PanelTitle;
   private readonly unsubscribes: (() => void)[] = [];
   /** `false` until `start`: the panel has no state, so every task message is dropped. */
   private isStarted = false;
@@ -41,16 +42,16 @@ export class DetailsSession {
     this.roots = roots;
     this.runs = runs;
     this.ports = ports;
+    this.title = new PanelTitle(key.packageName, ports.setTitle);
     this.dryRun = new PanelDryRun(key.packageName, ports, () => {
       this.publish();
     });
 
-    const isStarted = (): boolean => this.isStarted;
-    const canPost = (): boolean => this.canPost();
-    const gate: PosterGate = { isStarted, canPost };
+    const gate: PosterGate = { isStarted: () => this.isStarted, canPost: () => this.canPost() };
     const dryRunResult = (): DryRunResult => this.dryRun.result;
+    const lastLabel = (): string | null => this.title.lastLabel;
 
-    this.poster = new DetailsStatePoster({ key, roots, runs, ports, gate, dryRun: dryRunResult });
+    this.poster = new DetailsStatePoster({ key, roots, runs, ports, gate, dryRun: dryRunResult, lastLabel });
   }
 
   /** Subscribes and builds the first state. The caller awaits the root's load first, so the cache-first publish starts no dry run. */
@@ -158,7 +159,7 @@ export class DetailsSession {
   }
 
   private modelChanged(): void {
-    this.ports.setTitle(panelTitleOf(this.roots.get(this.key.root)?.state.model, this.key.packageName));
+    this.title.sync(this.roots.get(this.key.root)?.state.model);
 
     if (this.isVisible) {
       this.restartDryRun();

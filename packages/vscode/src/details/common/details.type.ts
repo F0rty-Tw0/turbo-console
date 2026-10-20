@@ -57,6 +57,7 @@ export type DetailsInput = {
   readonly dryRun: DryRunResult;
   readonly runs: RunLookup;
   readonly scriptsShown: boolean;
+  readonly lastLabel: string | null;
   readonly now: number;
 };
 
@@ -88,4 +89,5 @@ export type PosterDeps = {
   readonly ports: DetailsPorts;
   readonly gate: PosterGate;
   readonly dryRun: () => DryRunResult;
+  readonly lastLabel: () => string | null;
 };

@@ -69,11 +69,12 @@ export type PackageDetails = {
   readonly hiddenScriptCount: number;
 };
 
-/** The package is not in the current model. */
+/** The package is not in the current model. `label` is the last heading text the panel knew, `null` when it never knew one. */
 export type MissingPackage = {
   readonly kind: 'missing';
   readonly root: string;
   readonly packageName: string;
+  readonly label: string | null;
 };
 
 export type DetailsState = PackageDetails | MissingPackage;

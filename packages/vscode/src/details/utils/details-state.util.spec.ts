@@ -293,7 +293,7 @@ describe('FEATURE: package details state', () => {
 
       const state = toDetailsState(input);
 
-      expect(state).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'gone' });
+      expect(state).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'gone', label: null });
     });
 
     it('WHEN the root has no model THEN the state is missing', () => {
@@ -301,7 +301,7 @@ describe('FEATURE: package details state', () => {
 
       const state = toDetailsState(input);
 
-      expect(state).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'a' });
+      expect(state).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'a', label: null });
     });
   });
 

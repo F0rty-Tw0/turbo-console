@@ -39,7 +39,7 @@ const pageHeader = (state: PackageDetails, context: RenderContext): HTMLElement 
 
 const missingPage = (root: HTMLElement, state: MissingPackage, focusTargets: FocusTargets): void => {
   const header = textElement('header', 'page-header', '');
-  const title = pageTitle(state.packageName, focusTargets);
+  const title = pageTitle(state.label ?? state.packageName, focusTargets);
   const notice = textElement('p', 'missing', MISSING_PACKAGE_TEXT);
 
   header.append(title);

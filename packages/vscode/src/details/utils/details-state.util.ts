@@ -120,14 +120,14 @@ export const detailsInputOf = (base: Omit<DetailsInput, 'now'>, now: number): De
 /**
  * The state the page shows. A card takes the dry-run state whose id equals its task id exactly (turbo allows
  * `#` in a package name, so a prefix match would pick up another package's states). A package the model lacks, or a
- * root with no model, is `missing`.
+ * root with no model, is `missing`, headed by the label the panel last knew.
  */
 export const toDetailsState = (input: DetailsInput): DetailsState => {
   const { model } = input.state;
   const pkg = model?.packages.find((candidate) => candidate.name === input.packageName);
 
   if (model === null || pkg === undefined) {
-    const missing: DetailsState = { kind: 'missing', root: input.root, packageName: input.packageName };
+    const missing: DetailsState = { kind: 'missing', root: input.root, packageName: input.packageName, label: input.lastLabel };
 
     return missing;
   }

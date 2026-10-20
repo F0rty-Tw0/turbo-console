@@ -97,6 +97,23 @@ describe('FEATURE: details panel title from the package label', () => {
 
       expect(viewOf().setTitle).toHaveBeenLastCalledWith('Package Details: renamed-app');
     });
+
+    it('WHEN the // package leaves the model THEN the tab keeps the last label', () => {
+      store.apply('/ws', DETAILS_LOADED_STUB);
+
+      expect(viewOf().setTitle).toHaveBeenLastCalledWith('Package Details: single-app');
+    });
+
+    it('WHEN the // package leaves the model THEN the posted state is missing with the last label', () => {
+      const view = viewOf();
+
+      view.message({ type: 'ready' });
+      store.apply('/ws', DETAILS_LOADED_STUB);
+
+      const missing = { kind: 'missing', root: '/ws', packageName: ROOT_KEY.packageName, label: 'single-app' };
+
+      expect(view.send).toHaveBeenLastCalledWith({ type: 'state', state: missing });
+    });
   });
 
   describe('GIVEN a monorepo package (label null)', () => {

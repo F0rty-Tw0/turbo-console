@@ -35,13 +35,20 @@ export class DetailsStatePoster {
   }
 
   private state(): DetailsState | null {
-    const { key, roots, runs, ports, gate, dryRun } = this.deps;
+    const { key, roots, runs, ports, gate, dryRun, lastLabel } = this.deps;
     const entry = roots.get(key.root);
     const isStarted = gate.isStarted();
 
     if (!isStarted || entry === undefined) return null;
 
-    const base = { ...key, state: entry.state, dryRun: dryRun(), runs: runs.get, scriptsShown: ports.scriptsShown() };
+    const base = {
+      ...key,
+      state: entry.state,
+      dryRun: dryRun(),
+      runs: runs.get,
+      scriptsShown: ports.scriptsShown(),
+      lastLabel: lastLabel()
+    };
 
     return toDetailsState(detailsInputOf(base, ports.now()));
   }
