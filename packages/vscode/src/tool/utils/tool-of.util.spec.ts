@@ -31,7 +31,7 @@ const fanOutOf = (size: number): Record<string, string> => {
   return Object.fromEntries(entries);
 };
 
-/** Above the 165 expansions of the widest realistic root map counted in the slice 1 delta review. */
+/** Above the 165 expansions counted for the widest realistic root map (40 scripts, shared 3-level fan-out). */
 const WIDE_SIZE = 200;
 
 /** `ci` runs `size` scripts that reach no tool, then `t: vitest`: `size + 2` body expansions, one level deep. */
