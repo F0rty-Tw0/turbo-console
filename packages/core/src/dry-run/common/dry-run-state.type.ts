@@ -16,10 +16,14 @@ export type DryRunState = {
   readonly definition: TaskDefinition;
 };
 
-/** `tasks`: bare task names (a `pkg#task` id is rejected), at least one. `packages`: names each passed as `--filter=<name>`. */
+/**
+ * `tasks`: bare task names (a `pkg#task` id is rejected), at least one. `packages`: names each passed as `--filter=<name>`.
+ * `singlePackage`: add `--single-package`, which turbo needs under `--skip-infer` to leave monorepo mode.
+ */
 export type DryRunRequest = {
   readonly tasks: string[];
   readonly packages?: string[] | undefined;
+  readonly singlePackage?: boolean | undefined;
 };
 
 /** `signal`: the caller's abort. */

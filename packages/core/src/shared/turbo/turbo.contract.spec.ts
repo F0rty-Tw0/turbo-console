@@ -156,12 +156,12 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
         expect(result.stderr).toBe('');
       });
 
-      it('THEN deleting any key dryRunSchema lists makes it reject the output', () => {
+      it('THEN deleting any key dryRunSchema lists makes it reject the output, except the optional task package', () => {
         const json: unknown = JSON.parse(result.stdout);
 
         const optional = optionalKeyPaths(dryRunSchema, json);
 
-        expect(optional).toStrictEqual([]);
+        expect(optional).toStrictEqual(['tasks.0.package']);
       });
     });
 
