@@ -133,6 +133,31 @@ describe('FEATURE: tool icon and tooltip line on a task row', () => {
     });
   });
 
+  describe('GIVEN a task whose command delegates to a script of its package', () => {
+    const delegatingRowOf = (): TreeRow => {
+      const test = taskOf({ id: 'a#test', name: 'test', command: 'npm run test:app' });
+      const app = taskOf({ id: 'a#test:app', name: 'test:app', command: 'vitest' });
+      const pkg: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [test, app] };
+      const row = taskRowOf(ROW_SCOPE_STUB, pkg, test.id, rowContextOf('list'));
+
+      if (row === undefined) throw new Error('no row for a#test');
+
+      return row;
+    };
+
+    it('WHEN the row is built THEN its icon is the tool glyph of the script it reaches', () => {
+      const row = delegatingRowOf();
+
+      expect(row.icon.id).toBe('turbo-console-vitest');
+    });
+
+    it('WHEN the row is built THEN the Tool line names the script it went through', () => {
+      const row = delegatingRowOf();
+
+      expect(row.tooltip).toContain('Tool: Vitest (via test:app)');
+    });
+  });
+
   describe('GIVEN no detected tool', () => {
     it('WHEN the command runs a plain script THEN there is no Tool line', () => {
       const lines = tooltipOf(taskOf({ command: 'node x.js' }));
@@ -151,7 +176,7 @@ describe('FEATURE: tool icon and tooltip line on a task row', () => {
 
       taskRowOf(ROW_SCOPE_STUB, pkg, task.id, context);
 
-      expect(tools).toHaveBeenCalledWith('vitest');
+      expect(tools).toHaveBeenCalledWith(pkg, false, 'vitest');
     });
   });
 });

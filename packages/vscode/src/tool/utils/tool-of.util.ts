@@ -1,7 +1,7 @@
 import { TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 
 import { binOf, delegationOf } from './delegation.util.ts';
-import { NO_SCRIPTS, TOOL_BY_BIN } from '../common/tool.const.ts';
+import { TOOL_BY_BIN } from '../common/tool.const.ts';
 import type { PackageScripts, ToolMatch, ToolResolver, ToolSpec } from '../common/tool.type.ts';
 
 const SEGMENT_END = /&&|\||;/;
@@ -134,9 +134,6 @@ export const resolveTool: ToolResolver = (command, scripts) => {
 
   return match;
 };
-
-/** The tool of a command that has no scripts to follow; Task 2.2 removes it. */
-export const toolOf = (command: string | null): ToolSpec | null => resolveTool(command, NO_SCRIPTS)?.tool ?? null;
 
 /** The codicon id of the tool's logo, or `null` for a tool without a glyph. */
 export const toolIconIdOf = (tool: ToolSpec): string | null => {

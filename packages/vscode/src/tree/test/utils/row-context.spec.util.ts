@@ -1,12 +1,12 @@
 import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 
 import type { LiveIds, RunLookup } from '../../../run/common/run.type.ts';
-import { toolOf } from '../../../tool/utils/tool-of.util.ts';
 import type { ModelView } from '../../common/model-view.type.ts';
 import type { RowContext } from '../../common/tree-node.type.ts';
 import type { TreeMode } from '../../common/tree-row.type.ts';
 import { modelViewOf } from '../../utils/model-view.util.ts';
 import type { ScriptsContext } from '../common/scripts-context.type.ts';
+import { resolveLookupMock } from '../mocks/tool-lookup.mock.ts';
 import { WORKSPACE_MODEL_STUB } from '../stubs/workspace-model.stub.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
@@ -28,7 +28,16 @@ export const rowContextOf = (
   scripts: ScriptsContext = SCRIPTS_HIDDEN
 ): RowContext => {
   const { scriptsShown, live } = scripts;
-  const context: RowContext = { mode, runs, views: modelViewOf, scopeShown, scriptsShown, live, now: ROW_NOW, tools: toolOf };
+  const context: RowContext = {
+    mode,
+    runs,
+    views: modelViewOf,
+    scopeShown,
+    scriptsShown,
+    live,
+    now: ROW_NOW,
+    tools: resolveLookupMock()
+  };
 
   return context;
 };

@@ -143,19 +143,21 @@ const restartsAtTurbo = (tokens: string[], index: number, scripts: PackageScript
   const isManager = BUILTINS_BY_MANAGER.has(binOf(tokens[index] ?? ''));
   const word = tokens[optionsEndOf(tokens, index + 1)];
   const isTurboWord = word === TURBO_WORD;
-  const hasTurboScript = scripts.bodies.has(TURBO_WORD);
 
-  return isManager && isTurboWord && !hasTurboScript;
+  if (!isManager || !isTurboWord) return false;
+
+  return !scripts.bodies.has(TURBO_WORD);
 };
 
 const nameAt = (tokens: string[], index: number, scripts: PackageScripts): string | null => {
   const bin = binOf(tokens[index] ?? '');
   const isManager = BUILTINS_BY_MANAGER.has(bin);
-  const restarts = restartsAtTurbo(tokens, index, scripts);
 
   if (bin === TURBO_WORD && scripts.followTurbo) return turboNameOf(tokens, index + 1, scripts);
 
   if (bin === 'npm') return npmNameOf(tokens, index + 1);
+
+  const restarts = restartsAtTurbo(tokens, index, scripts);
 
   if (restarts) return nameAt(tokens, optionsEndOf(tokens, index + 1), scripts);
 
@@ -174,10 +176,12 @@ export const delegationOf = (tokens: string[], start: number, scripts: PackageSc
   if (isCrossPackage) return null;
 
   const name = nameAt(tokens, start, scripts);
-  const hasScript = scripts.bodies.has(name ?? '');
-  const isKnown = name !== null && hasScript;
 
-  if (!isKnown) return null;
+  if (name === null) return null;
+
+  const hasScript = scripts.bodies.has(name);
+
+  if (!hasScript) return null;
 
   return name;
 };

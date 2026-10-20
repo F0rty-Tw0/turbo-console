@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveTool, toolIconIdOf, toolOf } from './tool-of.util.ts';
-import { NO_SCRIPTS, TOOLS } from '../common/tool.const.ts';
+import { resolveTool, toolIconIdOf } from './tool-of.util.ts';
+import { TOOLS } from '../common/tool.const.ts';
 import type { PackageScripts, ToolMatch } from '../common/tool.type.ts';
+import { NO_SCRIPTS_STUB } from '../test/stubs/package-scripts.stub.ts';
+import { seededNext } from '../test/utils/seeded-next.spec.util.ts';
 
-const idOf = (command: string | null): string | null => resolveTool(command, NO_SCRIPTS)?.tool.id ?? null;
+const idOf = (command: string | null): string | null => resolveTool(command, NO_SCRIPTS_STUB)?.tool.id ?? null;
 
 const scriptsOf = (bodies: Record<string, string>, followTurbo = true): PackageScripts => {
   const scripts: PackageScripts = { bodies: new Map(Object.entries(bodies)), followTurbo };
@@ -69,21 +71,6 @@ const DELEGATIONS = ['npm run s', 'pnpm s', 'turbo run s'];
 const SEPARATORS = ['&&', '||', '|', ';'];
 const PARTS = [...BIN_NAMES, ...WRAPPERS, ...SEPARATORS, ...DELEGATIONS];
 const SAMPLE_COUNT = 2000;
-const LCG_MULTIPLIER = 1664525;
-const LCG_INCREMENT = 1013904223;
-const LCG_MODULUS = 2 ** 32;
-
-/** A repeatable generator: each call returns an integer in `[0, bound)`. */
-const seededNext = (start: number): ((bound: number) => number) => {
-  let seed = start;
-
-  return (bound) => {
-    seed = (seed * LCG_MULTIPLIER + LCG_INCREMENT) % LCG_MODULUS;
-
-    return Math.floor((seed / LCG_MODULUS) * bound);
-  };
-};
-
 const randomCommands = (): string[] => {
   const next = seededNext(42);
   const noiseOf = (): string => {
@@ -191,7 +178,7 @@ describe('FEATURE: tool detection', () => {
     [''],
     ['   ']
   ])('GIVEN the command %j WHEN its tool is read THEN there is none', (command) => {
-    const found = resolveTool(command, NO_SCRIPTS);
+    const found = resolveTool(command, NO_SCRIPTS_STUB);
 
     expect(found).toBeNull();
   });
@@ -253,21 +240,11 @@ describe('FEATURE: tool detection', () => {
     });
   });
 
-  describe('GIVEN toolOf, the wrapper without scripts', () => {
-    it('WHEN a command is read THEN it is the resolved tool, or null', () => {
-      const found = toolOf('rm -rf dist && vitest');
-      const none = toolOf('npm run build');
-
-      expect(found?.id).toBe('vitest');
-      expect(none).toBeNull();
-    });
-  });
-
   describe('GIVEN 2000 seeded random commands mixing bins, wrappers, separators and noise', () => {
     it('WHEN each is read THEN the result is null or a table row, some are rows, and nothing throws', () => {
       const commands = randomCommands();
 
-      const results = commands.map((command) => resolveTool(command, NO_SCRIPTS));
+      const results = commands.map((command) => resolveTool(command, NO_SCRIPTS_STUB));
       const rows = results.filter((match) => match !== null);
 
       expect(results).toHaveLength(SAMPLE_COUNT);

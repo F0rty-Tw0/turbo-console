@@ -1,3 +1,5 @@
+import type { PackageNode } from '@turbo-console/core';
+
 /** One tool's logo in the icon font. */
 export type ToolGlyph = {
   /** The Simple Icons slug of its svg. */
@@ -20,8 +22,8 @@ export type ToolSpec = {
   readonly glyph: ToolGlyph | null;
 };
 
-/** The tool a task's command runs, or `null`; `toolOf` answers it. */
-export type ToolLookup = (command: string | null) => ToolSpec | null;
+/** The tool a task's command runs in `pkg`, with the scripts it went through, or `null`; `singlePackage` is the model's mode. */
+export type ToolLookup = (pkg: PackageNode, singlePackage: boolean, command: string | null) => ToolMatch | null;
 
 /** What a package's scripts offer a delegation: the bodies by name, and whether `turbo X` may follow to `X` (spec D2). */
 export type PackageScripts = {

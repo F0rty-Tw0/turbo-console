@@ -59,6 +59,8 @@ export type TaskContextValue = 'turboTask' | 'turboTask.running' | 'turboTask.ca
 export type RowScope = {
   readonly root: string;
   readonly packageManager: PackageManager;
+  /** The model's mode: a single-package `//` lets `turbo X` follow its script `X`. */
+  readonly singlePackage: boolean;
 };
 
 export type EndedState = Exclude<RunState, 'running'>;
