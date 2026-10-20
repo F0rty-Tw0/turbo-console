@@ -9,10 +9,13 @@ export { fixtureFor, warmFixtureCache } from './generate/domain-logic/fixture-fo
 
 export { applyEdit, commitBaseRepo, generateFixture } from './generate/domain-logic/fixture-generation.ts';
 
+export { renderLockfile } from './generate/utils/render-lockfile.util.ts';
+
 export type {
   FixtureFile,
   FixtureHandle,
   FixtureSpec,
+  LockfilePackage,
   Manifest,
   ManifestAtom,
   ManifestPackage,
