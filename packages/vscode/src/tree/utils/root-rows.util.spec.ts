@@ -1,5 +1,3 @@
-import { join } from 'node:path';
-
 import { TurboException } from '@turbo-console/core';
 import type { PackageNode, TurboErrorKind } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
@@ -235,7 +233,7 @@ describe('FEATURE: rows of a root', () => {
           collapsible: 'collapsed',
           tooltip: ['a', 'Path: packages/a', 'Tasks: 1'],
           command: null,
-          folder: join('/ws', 'packages/a')
+          folder: 'packages/a'
         }
       ]);
     });
@@ -266,10 +264,10 @@ describe('FEATURE: rows of a root', () => {
       expect(rows).toMatchObject([{ id: `pkg:/ws\0${name}`, key: name, packageName: name, label: 'ab' }]);
     });
 
-    it('WHEN the root package // is listed THEN its folder is the root, with no trailing separator', () => {
+    it('WHEN the root package // is listed THEN its folder is the root itself, an empty relative path', () => {
       const rows = rootRows(stateWith({ model: modelOf([packageAt('//', '')]) }), rowContextOf('list'));
 
-      expect(rows[0]?.folder).toBe(join('/ws', ''));
+      expect(rows[0]?.folder).toBe('');
     });
   });
 });

@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
 
@@ -80,10 +82,12 @@ describe('FEATURE: tree item tooltip', () => {
   });
 });
 
-const FOLDER_PATH = '/ws/packages/libs';
+const FOLDER = 'packages/libs';
 
-const folderRowOf = (kind: RowKind): TreeRow => {
-  const row: TreeRow = { ...TREE_ROW_STUB, kind, folder: FOLDER_PATH };
+const ROW_KINDS: RowKind[] = ['root', 'dir', 'pkg', 'scripts', 'task', 'msg'];
+
+const folderRowOf = (kind: RowKind, folder = FOLDER): TreeRow => {
+  const row: TreeRow = { ...TREE_ROW_STUB, kind, folder };
 
   return row;
 };
@@ -100,7 +104,23 @@ describe('FEATURE: tree item icons', () => {
       const item = toTreeItem(folderRowOf(kind), 'theme');
 
       expect(item.iconPath).toBe(vscode.ThemeIcon.Folder);
-      expect(item.resourceUri?.fsPath).toBe(FOLDER_PATH);
+      expect(item.resourceUri?.fsPath).toBe(join('/ws', FOLDER));
+    });
+  });
+
+  describe('GIVEN the root package // whose folder is the root itself', () => {
+    it('WHEN built in theme mode THEN the resource uri is the root, with no trailing separator', () => {
+      const item = toTreeItem(folderRowOf('pkg', ''), 'theme');
+
+      expect(item.resourceUri?.fsPath).toBe(join('/ws', ''));
+    });
+  });
+
+  describe.each(ROW_KINDS)('GIVEN a %s row', (kind) => {
+    it('WHEN built in builtin mode THEN a folder changes nothing', () => {
+      const plain: TreeRow = { ...TREE_ROW_STUB, kind };
+
+      expect(toTreeItem(folderRowOf(kind), 'builtin')).toStrictEqual(toTreeItem(plain, 'builtin'));
     });
   });
 

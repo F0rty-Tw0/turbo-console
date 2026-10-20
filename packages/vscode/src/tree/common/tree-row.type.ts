@@ -50,7 +50,10 @@ export type TreeRow = {
   readonly collapsible: Collapsible;
   readonly tooltip: string[];
   readonly command: RowCommand | null;
-  /** The row's absolute directory, for a file icon theme; only dir and package rows have one. */
+  /**
+   * The row's directory relative to `root` (`''` for the root package `//`), for a file icon theme; only dir and package
+   * rows have one. It stays relative so a row costs no path join unless theme icons are on.
+   */
   readonly folder?: string;
 };
 

@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import * as vscode from 'vscode';
 
 import { tooltipMarkdownOf } from '../../shared/utils/tooltip.util.ts';
@@ -33,7 +35,7 @@ const tooltipFor = (row: TreeRow): vscode.MarkdownString => {
 const applyIcon = (item: vscode.TreeItem, row: TreeRow, icons: IconsMode): void => {
   if (icons === 'theme' && row.folder !== undefined) {
     item.iconPath = vscode.ThemeIcon.Folder;
-    item.resourceUri = vscode.Uri.file(row.folder);
+    item.resourceUri = vscode.Uri.file(join(row.root, row.folder));
 
     return;
   }
