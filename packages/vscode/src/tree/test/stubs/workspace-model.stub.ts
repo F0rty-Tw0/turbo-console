@@ -15,11 +15,11 @@ export const TASK_NODE_STUB: TaskNode = {
   persistent: false
 };
 
-const WEB_PACKAGE_STUB: PackageNode = { name: 'web', path: 'apps/web', tags: [], tasks: [TASK_NODE_STUB] };
+const WEB_PACKAGE_STUB: PackageNode = { name: 'web', path: 'apps/web', label: null, tags: [], tasks: [TASK_NODE_STUB] };
 
-export const PACKAGE_NODE_STUB: PackageNode = { name: 'a', path: 'packages/a', tags: [], tasks: [TASK_NODE_STUB] };
+export const PACKAGE_NODE_STUB: PackageNode = { name: 'a', path: 'packages/a', label: null, tags: [], tasks: [TASK_NODE_STUB] };
 
-const X_PACKAGE_STUB: PackageNode = { name: '@org/x', path: 'packages/libs/x', tags: [], tasks: [TASK_NODE_STUB] };
+const X_PACKAGE_STUB: PackageNode = { name: '@org/x', path: 'packages/libs/x', label: null, tags: [], tasks: [TASK_NODE_STUB] };
 
 const FIELD_SOURCE_STUB: PackageManagerSource = { kind: 'field' };
 
@@ -30,6 +30,7 @@ export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   turboVersion: '2.11.7',
   packageManager: PACKAGE_MANAGER_STUB,
   affectedMode: 'package',
+  singlePackage: false,
   packages: [WEB_PACKAGE_STUB, PACKAGE_NODE_STUB, X_PACKAGE_STUB],
   edges: [],
   warnings: []

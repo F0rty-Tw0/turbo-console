@@ -105,6 +105,10 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
       expect(parsed.success).toBe(true);
     });
 
+    it('THEN root is the // package', () => {
+      expect(parseGraph(result).data.root?.name).toBe('//');
+    });
+
     it('THEN deleting any key packageGraphSchema lists makes it reject the output', () => {
       const json: unknown = JSON.parse(result.stdout);
 

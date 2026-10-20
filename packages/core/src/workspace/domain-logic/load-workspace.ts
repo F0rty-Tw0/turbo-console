@@ -15,7 +15,7 @@ import { absolutePath } from '../../shared/fs/utils/input-path.util.ts';
 import { packageGraphSchema } from '../../shared/turbo/common/package-graph.schema.ts';
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
 import { PACKAGE_GRAPH_QUERY } from '../../shared/turbo/common/turbo-query.const.ts';
-import type { GraphPackage, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import type { GraphPackage, PackageGraph, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import { lazyCompiled } from '../../shared/turbo/data-access/compiled-schema.ts';
 import { queryTurbo } from '../../shared/turbo/data-access/query-turbo.ts';
 import { abortError } from '../../shared/turbo/data-access/run-turbo.ts';
@@ -23,10 +23,14 @@ import { runTurboJson } from '../../shared/turbo/data-access/turbo-json.ts';
 import { untilAborted } from '../../shared/turbo/data-access/until-aborted.ts';
 import { toPosixPath } from '../../shared/turbo/utils/posix-path.util.ts';
 import type { LoadWorkspaceOptions } from '../common/load-workspace.type.ts';
+import type { DetectedRoot } from '../common/manifest-fields.type.ts';
 import type { TurboConfigFile } from '../common/turbo-config.type.ts';
-import type { ModelSource, PackageManager, WorkspaceModel } from '../common/workspace-model.type.ts';
+import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
+import { hasPnpmWorkspacePackages } from '../data-access/pnpm-workspace.ts';
 import { detectPackageManager } from '../data-access/root-manifest.ts';
 import { readTurboConfigs } from '../data-access/turbo-config.ts';
+import { rootLabelOf } from '../utils/root-label.util.ts';
+import { declaresWorkspaces, singlePackageGraphOf } from '../utils/single-package.util.ts';
 import { buildWorkspaceModel, withWarning } from '../utils/workspace-model.util.ts';
 
 const COMMAND = 'query packageGraph';
@@ -64,12 +68,47 @@ const refuseHostile = (rootFiles: KeyedFile[]): void => {
   );
 };
 
+/** The facts of the load the model build reads besides the graph; the label only for a single-package repo. */
+const sourceOf = (binary: TurboBinary, detected: DetectedRoot, isSingle: boolean): ModelSource => {
+  const { packageManager, name } = detected;
+  const label = rootLabelOf(name, binary.root);
+  const rootLabel = isSingle ? label : null;
+  const source: ModelSource = {
+    turboVersion: binary.version,
+    root: binary.root,
+    packageManager,
+    singlePackage: isSingle,
+    rootLabel
+  };
+
+  return source;
+};
+
 /**
- * Spec §4.4: one `packageGraph` spawn (30 s budget, 128 MiB stdout cap), the `packageManager` field and
- * `devEngines.packageManager` of the root `package.json`, read once after the root hash (a missing, oversized or
- * malformed one never fails the load: the root lockfiles in that hash decide), the `turbo.json(c)` of the root and of
- * every graph package (hidden ones included), the pure model build, then the model keyed and kept in memory, and
- * written to `cacheDir` when one is given. A failed write does not fail the load: the returned model, and only it, gains a
+ * Whether the repo is single-package (spec §1, §4.1): an empty `nodes`, a `root` package and no declared workspaces.
+ * A file rule, never a spawn: the pnpm workspace file is read only for pnpm and only on an empty graph.
+ */
+const modeOf = async (graph: PackageGraph, detected: DetectedRoot, root: string, signal?: AbortSignal): Promise<boolean> => {
+  const isEmpty = graph.data.packageGraph.nodes.items.length === 0;
+
+  if (!isEmpty || graph.data.root === null) return false;
+
+  const { packageManager, workspaces } = detected;
+  const manager = packageManager.name;
+  const pnpmPackages = manager === 'pnpm' && (await hasPnpmWorkspacePackages(root, signal));
+
+  return !declaresWorkspaces(manager, workspaces, pnpmPackages);
+};
+
+/**
+ * Spec §4.4: one `packageGraph` spawn (30 s budget, 128 MiB stdout cap), the `packageManager` field,
+ * `devEngines.packageManager`, `name` and `workspaces` of the root `package.json`, read once after the root hash (a
+ * missing, oversized or malformed one never fails the load: the root lockfiles in that hash decide), the `turbo.json(c)`
+ * of the root and of every graph package (hidden ones included), the pure model build, then the model keyed and kept in
+ * memory, and written to `cacheDir` when one is given. The mode is a file rule, never a spawn (`modeOf`): an empty
+ * graph, a non-null `root` and no declared workspaces make a single-package model of the `//` package, labelled from
+ * the manifest `name`; `pnpm-workspace.yaml` is read only for pnpm and only on an empty graph, a failed read rejects
+ * `io` and an abort rejects `failed`. A failed write does not fail the load: the returned model, and only it, gains a
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
  * changes nothing the cache holds. The caller's `signal` reaches the root keyed file hash, the spawn and the reads, and
  * is checked once more before the store: an abort by then stores nothing, one during the store does not stop it. The
@@ -95,26 +134,29 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
 
     refuseHostile(rootFiles);
 
-    const detect = async (): Promise<PackageManager> => detectPackageManager(binary.root, rootFiles);
-    const packageManager = await untilAborted(detect, signal);
+    const detect = async (): Promise<DetectedRoot> => detectPackageManager(binary.root, rootFiles);
+    const detected = await untilAborted(detect, signal);
     const mark: SpawnMark = { startedAt: spawnStartedAt, rootFiles };
     const graphSchema = compiledGraphSchema();
     const graph = await runTurboJson(run, COMMAND, graphSchema);
     const packages = graph.data.packageGraph.nodes.items;
+    const isSingle = await modeOf(graph, detected, binary.root, signal);
+    const singleGraph = singlePackageGraphOf(graph);
+    const modelGraph = isSingle ? singleGraph : graph;
     const dirs = packages.map(configDirOf);
     const readConfigs = async (): Promise<TurboConfigFile[]> => readTurboConfigs(binary.root, dirs, signal);
     const configs = await untilAborted(readConfigs, signal);
-    const source: ModelSource = { turboVersion: binary.version, root: binary.root, packageManager };
-    const model = buildWorkspaceModel(graph, configs, source);
+    const source = sourceOf(binary, detected, isSingle);
+    const model = buildWorkspaceModel(modelGraph, configs, source);
 
     if (signal?.aborted === true) throw abortError(signal, '');
 
-    const writeError = await storeWorkspace(model, packages, mark, dir);
+    const writeError = await storeWorkspace(model, modelGraph.data.packageGraph.nodes.items, mark, dir);
     const ownModel = structuredClone(model);
 
     if (writeError === null) return ownModel;
 
-    return withWarning(ownModel, graph, configs, `cache: ${writeError}`);
+    return withWarning(ownModel, modelGraph, configs, `cache: ${writeError}`);
   } catch (error) {
     throw toTurboException(error, COMMAND);
   }

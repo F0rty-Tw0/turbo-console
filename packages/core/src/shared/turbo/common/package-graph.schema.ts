@@ -36,7 +36,10 @@ const edgesSchema = object({ items: array(edgeSchema) });
 
 const graphSchema = object({ nodes: packagesSchema, edges: edgesSchema });
 
-const dataSchema = object({ packageGraph: graphSchema });
+const dataSchema = object({ packageGraph: graphSchema, root: nullable(packageSchema) });
 
-/** stdout of `turbo query` with `PACKAGE_GRAPH_QUERY`. Unknown keys are stripped; every listed key is required. */
+/**
+ * stdout of `turbo query` with `PACKAGE_GRAPH_QUERY`. Unknown keys are stripped; every listed key is required. `root` is
+ * `null` when turbo has no `//` package.
+ */
 export const packageGraphSchema = object({ data: dataSchema });

@@ -48,6 +48,8 @@ export type TurboTaskLookup = {
   readonly configsByDir: Map<string, TurboConfigFile>;
   readonly packagesByName: Map<string, TurboTaskPackage>;
   readonly root: RootTaskIndex | null;
+  /** `true` when the `//` package is the only package: its bare root keys then apply to it. */
+  readonly singlePackage: boolean;
 };
 
 /** A graph package as the lookup reads it; `path` is relative to the workspace root, with either separator. */

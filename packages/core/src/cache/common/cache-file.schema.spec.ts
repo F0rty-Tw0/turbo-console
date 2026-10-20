@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { cacheFileSchema, workspaceModelSchema } from './cache-file.schema.ts';
 import { CACHE_FORMAT_VERSION } from './cache.const.ts';
-import { WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
+import { SINGLE_PACKAGE_MODEL_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
 
 const FILE = { formatVersion: CACHE_FORMAT_VERSION, key: 'abc', keyedPaths: ['package.json'], model: WORKSPACE_MODEL_STUB };
 
@@ -27,6 +27,26 @@ const modelWithoutAtomKey = (): unknown => {
   return model;
 };
 
+/** A copy of the stub model without one key, where the stub holds a value. */
+const modelWithoutKey = (key: string): unknown => {
+  const model = structuredClone(WORKSPACE_MODEL_STUB);
+
+  Reflect.deleteProperty(model, key);
+
+  return model;
+};
+
+const modelWithoutPackageLabel = (): unknown => {
+  const model = structuredClone(WORKSPACE_MODEL_STUB);
+  const [pkg] = model.packages;
+
+  if (pkg === undefined) throw new Error('the stub model has no package');
+
+  Reflect.deleteProperty(pkg, 'label');
+
+  return model;
+};
+
 describe('FEATURE: cache file schema', () => {
   describe('GIVEN a valid workspace model', () => {
     it('WHEN parsed THEN the model is frozen', () => {
@@ -47,6 +67,30 @@ describe('FEATURE: cache file schema', () => {
       const parsed = workspaceModelSchema.parse(EXTRA_KEY_MODEL);
 
       expect(parsed).toStrictEqual(WORKSPACE_MODEL_STUB);
+    });
+  });
+
+  describe('GIVEN a single-package model with a labelled package', () => {
+    it('WHEN parsed THEN it parses unchanged', () => {
+      const parsed = workspaceModelSchema.parse(SINGLE_PACKAGE_MODEL_STUB);
+
+      expect(parsed).toStrictEqual(SINGLE_PACKAGE_MODEL_STUB);
+    });
+  });
+
+  describe('GIVEN a model without singlePackage', () => {
+    it('WHEN parsed THEN it fails', () => {
+      const result = workspaceModelSchema.safeParse(modelWithoutKey('singlePackage'));
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('GIVEN a package with no label key', () => {
+    it('WHEN parsed THEN it fails: label is nullable, never optional', () => {
+      const result = workspaceModelSchema.safeParse(modelWithoutPackageLabel());
+
+      expect(result.success).toBe(false);
     });
   });
 

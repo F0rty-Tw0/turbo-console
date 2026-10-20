@@ -43,14 +43,17 @@ const entryEffectOf = (config: TurboConfigOk, key: string): FieldEffect => {
   }
 };
 
-/** Spec §4.2 step 3: the target's `<pkg>#<task>` root key replaces the bare key as a whole; `//` reads only its own. */
-const rootEffectOf = (root: TurboConfigOk, packageName: string, task: string): FieldEffect => {
+/**
+ * Spec §4.2 step 3: the target's `<pkg>#<task>` root key replaces the bare key as a whole; `//` reads only its own,
+ * unless it is the only package (`singlePackage`), where the bare key applies to it too.
+ */
+const rootEffectOf = (root: TurboConfigOk, packageName: string, task: string, singlePackage: boolean): FieldEffect => {
   const ownKey = `${packageName}#${task}`;
   const hasOwnKey = Object.hasOwn(root.tasks, ownKey);
 
   if (hasOwnKey) return entryEffectOf(root, ownKey);
 
-  if (packageName === ROOT_NAME) return 'keep';
+  if (packageName === ROOT_NAME && !singlePackage) return 'keep';
 
   return entryEffectOf(root, task);
 };
@@ -110,9 +113,9 @@ const targetEffectOf = (walk: FieldWalk, dir: string): FieldEffect => {
   return dirEffectOf(walk, dir);
 };
 
-const addRootSettable = (settable: Set<string>, root: TurboConfigOk, packageName: string): void => {
+const addRootSettable = (settable: Set<string>, root: TurboConfigOk, packageName: string, singlePackage: boolean): void => {
   for (const key of Object.keys(root.persistent)) {
-    const task = rootKeyTaskOf(key, packageName);
+    const task = rootKeyTaskOf(key, packageName, singlePackage);
 
     if (task !== null) settable.add(task);
   }
@@ -122,10 +125,10 @@ const addRootSettable = (settable: Set<string>, root: TurboConfigOk, packageName
  * The tasks some entry of the target's sequence sets `persistent` for: any other task ends with no value, so `false`,
  * without a walk. Most repos set it for a few tasks only, so most tasks skip the walk.
  */
-const settableTasksOf = (root: TurboConfigOk, target: TurboTaskTarget): Set<string> => {
+const settableTasksOf = (root: TurboConfigOk, target: TurboTaskTarget, singlePackage: boolean): Set<string> => {
   const settable = new Set<string>();
 
-  addRootSettable(settable, root, target.name);
+  addRootSettable(settable, root, target.name, singlePackage);
 
   for (const config of target.chain) {
     for (const task of Object.keys(config.persistent)) settable.add(task);
@@ -145,7 +148,7 @@ export const applyPersistent = (
   root: TurboConfigOk,
   target: TurboTaskTarget
 ): void => {
-  const settable = settableTasksOf(root, target);
+  const settable = settableTasksOf(root, target, lookup.singlePackage);
   const path = new Set<string>();
   const memo = new Map<string, FieldEffect>();
 
@@ -154,7 +157,7 @@ export const applyPersistent = (
 
     if (!isKept) continue;
 
-    const rootEffect = rootEffectOf(root, target.name, task);
+    const rootEffect = rootEffectOf(root, target.name, task, lookup.singlePackage);
     const walk: FieldWalk = { lookup, task, rootEffect, path, memo };
 
     memo.clear();

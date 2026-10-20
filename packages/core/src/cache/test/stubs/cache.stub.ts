@@ -31,9 +31,9 @@ const FILE_TASK: TaskNode = {
 
 const WEB_TASKS = [BUILD_TASK, FILE_TASK];
 
-const WEB_PACKAGE: PackageNode = { name: 'web', path: 'apps/web', tags: ['app'], tasks: WEB_TASKS };
+const WEB_PACKAGE: PackageNode = { name: 'web', path: 'apps/web', label: null, tags: ['app'], tasks: WEB_TASKS };
 
-const UI_PACKAGE: PackageNode = { name: 'ui', path: 'packages/ui', tags: [], tasks: [] };
+const UI_PACKAGE: PackageNode = { name: 'ui', path: 'packages/ui', label: null, tags: [], tasks: [] };
 
 const WEB_TO_UI: PackageEdge = { source: 'web', target: 'ui', kind: 'dependency' };
 
@@ -41,13 +41,26 @@ const PACKAGES = [UI_PACKAGE, WEB_PACKAGE];
 
 const EDGES = [WEB_TO_UI];
 
+const ROOT_PACKAGE: PackageNode = { name: '//', path: '', label: 'single-app', tags: [], tasks: [] };
+
+const ROOT_PACKAGES = [ROOT_PACKAGE];
+
 /** A small model holding every field kind: an atom and a plain task, a description and a null one, an edge and a warning. */
 export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   root: '/repo',
   turboVersion: '2.11.7',
   packageManager: PNPM_BY_LOCKFILE_STUB,
   affectedMode: 'task',
+  singlePackage: false,
   packages: PACKAGES,
   edges: EDGES,
   warnings: ['turbo.jsonc: x']
+};
+
+/** A single-package model: one labelled `//` package, no edges. */
+export const SINGLE_PACKAGE_MODEL_STUB: WorkspaceModel = {
+  ...WORKSPACE_MODEL_STUB,
+  singlePackage: true,
+  packages: ROOT_PACKAGES,
+  edges: []
 };

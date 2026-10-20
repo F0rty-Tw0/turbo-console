@@ -83,14 +83,14 @@ const GRAND_PACKAGES = [packageOf('gp', 'tools/gp'), packageOf('base', 'tools/ba
 /** `web`'s task names when the root defines `lint`, `gp` defines `gx`, and `base` and `web` have the given configs. */
 const webNamesOf = (base: TurboConfigOk, web: TurboConfigOk): string[] | null => {
   const configs: TurboConfigFile[] = [GRAND_ROOT, GP_CONFIG, base, web];
-  const lookup = turboTaskLookupOf(configs, GRAND_PACKAGES);
+  const lookup = turboTaskLookupOf(configs, GRAND_PACKAGES, false);
 
   return namesOf(lookup, WEB);
 };
 
 describe('FEATURE: task names turbo defines for a package', () => {
   describe('GIVEN the turbo 2.11.7 probe workspace', () => {
-    const lookup = turboTaskLookupOf(PROBE_CONFIGS, PROBE_PACKAGES);
+    const lookup = turboTaskLookupOf(PROBE_CONFIGS, PROBE_PACKAGES, false);
 
     it('WHEN a package with no config is looked up THEN only the root bare keys are its tasks', () => {
       expect(namesOf(lookup, A)).toStrictEqual(['build', 'dev']);
@@ -114,7 +114,7 @@ describe('FEATURE: task names turbo defines for a package', () => {
 
     it('WHEN two packages with no config and no qualified root key are looked up THEN they share one set', () => {
       const other = packageOf('@acme/f', 'packages/f');
-      const sharedLookup = turboTaskLookupOf(PROBE_CONFIGS, [...PROBE_PACKAGES, other]);
+      const sharedLookup = turboTaskLookupOf(PROBE_CONFIGS, [...PROBE_PACKAGES, other], false);
 
       expect(turboTasksOf(sharedLookup, A)).toBe(turboTasksOf(sharedLookup, other));
     });
@@ -136,7 +136,7 @@ describe('FEATURE: task names turbo defines for a package', () => {
       configOf('apps/web/turbo.json', {}, ['//', 'base']),
       configOf('apps/docs/turbo.json', { lint: 'defined' }, ['//', 'base'])
     ];
-    const lookup = turboTaskLookupOf(configs, [base, web, docs]);
+    const lookup = turboTaskLookupOf(configs, [base, web, docs], false);
 
     it('WHEN a package extends the excluding config THEN the root task stays', () => {
       expect(namesOf(lookup, web)).toStrictEqual(['lint', 'test']);
@@ -213,7 +213,7 @@ describe('FEATURE: task names turbo defines for a package', () => {
         configOf('packages/x/turbo.json', { fromX: 'defined' }, ['//', 'y']),
         configOf('packages/y/turbo.json', { fromY: 'defined' }, ['//', 'x'])
       ];
-      const lookup = turboTaskLookupOf(configs, [x, y]);
+      const lookup = turboTaskLookupOf(configs, [x, y], false);
 
       expect(namesOf(lookup, x)).toStrictEqual(['fromX', 'fromY']);
     });
@@ -222,7 +222,7 @@ describe('FEATURE: task names turbo defines for a package', () => {
   describe('GIVEN a package path with backslashes', () => {
     it('WHEN looked up THEN its config at the posix path is read', () => {
       const pkg = packageOf('@acme/c', 'packages\\c');
-      const lookup = turboTaskLookupOf([ROOT, C_CONFIG], [pkg]);
+      const lookup = turboTaskLookupOf([ROOT, C_CONFIG], [pkg], false);
 
       expect(namesOf(lookup, pkg)).toStrictEqual(['build', 'dev', 'own']);
     });
@@ -230,32 +230,32 @@ describe('FEATURE: task names turbo defines for a package', () => {
 
   describe('GIVEN configs it cannot read', () => {
     it('WHEN there is no root config THEN it cannot tell', () => {
-      const lookup = turboTaskLookupOf([C_CONFIG], [C]);
+      const lookup = turboTaskLookupOf([C_CONFIG], [C], false);
 
       expect(namesOf(lookup, C)).toBeNull();
     });
 
     it('WHEN the root config did not parse THEN it cannot tell', () => {
       const rootError: TurboConfigError = { path: 'turbo.json', error: 'InvalidSymbol at 3' };
-      const lookup = turboTaskLookupOf([rootError], [A]);
+      const lookup = turboTaskLookupOf([rootError], [A], false);
 
       expect(namesOf(lookup, A)).toBeNull();
     });
 
     it('WHEN the package config did not parse THEN it cannot tell', () => {
-      const lookup = turboTaskLookupOf([ROOT, PARSE_ERROR], [C]);
+      const lookup = turboTaskLookupOf([ROOT, PARSE_ERROR], [C], false);
 
       expect(namesOf(lookup, C)).toBeNull();
     });
 
     it('WHEN an extended package config did not parse THEN it cannot tell', () => {
-      const lookup = turboTaskLookupOf([ROOT, PARSE_ERROR, E_CONFIG], [C, E]);
+      const lookup = turboTaskLookupOf([ROOT, PARSE_ERROR, E_CONFIG], [C, E], false);
 
       expect(namesOf(lookup, E)).toBeNull();
     });
 
     it('WHEN an extends name is no package THEN it cannot tell', () => {
-      const lookup = turboTaskLookupOf([ROOT, E_CONFIG], [E]);
+      const lookup = turboTaskLookupOf([ROOT, E_CONFIG], [E], false);
 
       expect(namesOf(lookup, E)).toBeNull();
     });

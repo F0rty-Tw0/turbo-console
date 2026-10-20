@@ -63,6 +63,7 @@ export const WEB_BUILD_TASK_STUB: TaskNode = {
 export const A_PACKAGE_STUB: PackageNode = {
   name: 'a',
   path: 'packages/a',
+  label: null,
   tags: ['lib'],
   tasks: [TEST_TASK_STUB, CHECK_TASK_STUB, FILE_TASK_STUB, BUILD_TASK_STUB]
 };
@@ -70,6 +71,7 @@ export const A_PACKAGE_STUB: PackageNode = {
 export const WEB_PACKAGE_STUB: PackageNode = {
   name: 'web',
   path: 'apps/web',
+  label: null,
   tags: [],
   tasks: [WEB_BUILD_TASK_STUB]
 };

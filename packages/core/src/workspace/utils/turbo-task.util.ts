@@ -60,18 +60,22 @@ const rootIndexOf = (configsByDir: Map<string, TurboConfigFile>): RootTaskIndex 
 };
 
 /** `packages` are every graph package, hidden ones included: a package config may extend any of them. */
-export const turboTaskLookupOf = (configs: TurboConfigFile[], packages: TurboTaskPackage[]): TurboTaskLookup => {
+export const turboTaskLookupOf = (
+  configs: TurboConfigFile[],
+  packages: TurboTaskPackage[],
+  singlePackage: boolean
+): TurboTaskLookup => {
   const configsByDir = new Map(configs.map(dirEntry));
   const packagesByName = new Map(packages.map(nameEntry));
   const root = rootIndexOf(configsByDir);
-  const lookup: TurboTaskLookup = { configsByDir, packagesByName, root };
+  const lookup: TurboTaskLookup = { configsByDir, packagesByName, root, singlePackage };
 
   return lookup;
 };
 
-const applyRoot = (tasks: Map<string, TurboTaskFacts>, root: TurboConfigOk, packageName: string): void => {
+const applyRoot = (tasks: Map<string, TurboTaskFacts>, root: TurboConfigOk, packageName: string, singlePackage: boolean): void => {
   for (const [key, presence] of Object.entries(root.tasks)) {
-    const task = rootKeyTaskOf(key, packageName);
+    const task = rootKeyTaskOf(key, packageName, singlePackage);
 
     if (task !== null) applyPresence(tasks, task, presence);
   }
@@ -165,7 +169,7 @@ export const turboTasksOf = (lookup: TurboTaskLookup, pkg: TurboTaskPackage): Re
 
   for (const config of lowestFirst) applyTasks(tasks, config);
 
-  applyRoot(tasks, root.config, pkg.name);
+  applyRoot(tasks, root.config, pkg.name, lookup.singlePackage);
 
   if (own !== undefined) applyTasks(tasks, own);
 

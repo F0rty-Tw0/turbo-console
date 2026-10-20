@@ -50,10 +50,14 @@ export type TaskNode = {
   readonly persistent: boolean;
 };
 
-/** A visible package; `path` is posix, relative to the workspace root. */
+/**
+ * A visible package; `path` is posix, relative to the workspace root. `label` is what a view shows instead of `name`:
+ * the root `package.json` name of a single-package repo's `//` package, `null` for every other package.
+ */
 export type PackageNode = {
   readonly name: string;
   readonly path: string;
+  readonly label: string | null;
   readonly tags: string[];
   readonly tasks: TaskNode[];
 };
@@ -95,6 +99,8 @@ export type WorkspaceModel = {
   readonly turboVersion: string;
   readonly packageManager: PackageManager;
   readonly affectedMode: AffectedMode;
+  /** `true` when the `//` package is the only package (spec §1): a repo with no declared workspaces. */
+  readonly singlePackage: boolean;
   readonly packages: PackageNode[];
   readonly edges: PackageEdge[];
   readonly warnings: string[];
@@ -105,4 +111,7 @@ export type ModelSource = {
   readonly turboVersion: string;
   readonly root: string;
   readonly packageManager: PackageManager;
+  readonly singlePackage: boolean;
+  /** The label of the `//` package; `null` unless `singlePackage`. */
+  readonly rootLabel: string | null;
 };

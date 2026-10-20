@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildWorkspaceModel } from './workspace-model.util.ts';
 import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
 import type { TaskPresence, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
-import type { TaskNode, WorkspaceModel } from '../common/workspace-model.type.ts';
+import type { ModelSource, TaskNode, WorkspaceModel } from '../common/workspace-model.type.ts';
 import { MODEL_SOURCE_STUB } from '../test/stubs/model-source.stub.ts';
 import { configError } from '../test/utils/config-error.spec.util.ts';
 import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
@@ -50,6 +50,24 @@ const build = (packages: GraphPackage[], configs: TurboConfigFile[]): WorkspaceM
 
   return buildWorkspaceModel(graph, configs, MODEL_SOURCE_STUB);
 };
+
+const SINGLE_SOURCE: ModelSource = { ...MODEL_SOURCE_STUB, singlePackage: true, rootLabel: 'single-app' };
+
+const ROOT_TASKS = [
+  graphTask('//#build', COMMAND, [], []),
+  graphTask('//#dev', COMMAND, [], []),
+  graphTask('//#format', COMMAND, [], [])
+];
+
+const ROOT_PACKAGE = graphPackage('//', '', [], ROOT_TASKS);
+
+const buildSingle = (rootPackage: GraphPackage): WorkspaceModel => {
+  const graph = packageGraph([rootPackage], [], rootPackage);
+
+  return buildWorkspaceModel(graph, [CONTINUOUS_ROOT], SINGLE_SOURCE);
+};
+
+const rowOf = (task: TaskNode): [string, boolean, boolean] => [task.id, task.isTurboTask, task.persistent];
 
 const taskOf = (model: WorkspaceModel, id: string): TaskNode | undefined => {
   const tasks = model.packages.flatMap((pkg) => pkg.tasks);
@@ -113,6 +131,43 @@ describe('FEATURE: workspace model turbo tasks', () => {
 
     it('WHEN built THEN no task is persistent', () => {
       expect(persistentOf(model, 'a#lint')).toBe(false);
+    });
+  });
+
+  describe('GIVEN a single-package source with a // package of build, dev and an unkeyed format', () => {
+    const model = buildSingle(ROOT_PACKAGE);
+
+    it('WHEN built THEN it is single-package with one labelled // package and no edges', () => {
+      expect(model.singlePackage).toBe(true);
+      expect(model.edges).toStrictEqual([]);
+      expect(model.packages).toMatchObject([{ name: '//', path: '', label: 'single-app' }]);
+    });
+
+    it('WHEN built THEN every root task is a turbo task, unkeyed format included, and only dev is persistent', () => {
+      const rows = model.packages.flatMap((pkg) => pkg.tasks).map(rowOf);
+
+      expect(rows).toStrictEqual([
+        ['//#build', true, false],
+        ['//#dev', true, true],
+        ['//#format', true, false]
+      ]);
+    });
+  });
+
+  describe('GIVEN a single-package source whose // package has no tasks', () => {
+    it('WHEN built THEN the model still holds one empty // package (spec §4.1)', () => {
+      const emptyRoot = buildSingle(graphPackage('//', '', [], []));
+
+      expect(emptyRoot.packages).toMatchObject([{ name: '//', path: '', label: 'single-app', tasks: [] }]);
+    });
+  });
+
+  describe('GIVEN a monorepo graph', () => {
+    it('WHEN built THEN singlePackage is false and every label is null', () => {
+      const monorepo = build([PKG_A, PKG_C], [ROOT]);
+
+      expect(monorepo.singlePackage).toBe(false);
+      expect(monorepo.packages.map((pkg) => pkg.label)).toStrictEqual([null, null]);
     });
   });
 });

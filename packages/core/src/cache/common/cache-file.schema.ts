@@ -32,7 +32,7 @@ const taskSchema = readonly(taskObject);
 
 const taskList = array(taskSchema);
 
-const packageObject = object({ name: string(), path: string(), tags: stringList, tasks: taskList });
+const packageObject = object({ name: string(), path: string(), label: nullableString, tags: stringList, tasks: taskList });
 
 const packageSchema = readonly(packageObject);
 
@@ -71,6 +71,7 @@ const workspaceModelObject = object({
   turboVersion: string(),
   packageManager: packageManagerSchema,
   affectedMode: affectedModeSchema,
+  singlePackage: boolean(),
   packages: packageList,
   edges: edgeList,
   warnings: stringList

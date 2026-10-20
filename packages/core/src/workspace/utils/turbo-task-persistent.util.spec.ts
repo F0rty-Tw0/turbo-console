@@ -20,12 +20,12 @@ const graphPackageOf = (pkg: PersistentFixturePackage): TurboTaskPackage => {
   return graphPackage;
 };
 
-const lookupOf = (rootTurbo: string, packages: PersistentFixturePackage[]): TurboTaskLookup => {
+const lookupOf = (rootTurbo: string, packages: PersistentFixturePackage[], singlePackage = false): TurboTaskLookup => {
   const root = parseTurboConfig('turbo.json', rootTurbo);
   const packageConfigs = packages.filter(hasConfig).map(packageConfigOf);
   const graphPackages = packages.map(graphPackageOf);
 
-  return turboTaskLookupOf([root, ...packageConfigs], graphPackages);
+  return turboTaskLookupOf([root, ...packageConfigs], graphPackages, singlePackage);
 };
 
 const tasksOf = (lookup: TurboTaskLookup, name: string): ReadonlyMap<string, TurboTaskFacts> | null => {
@@ -137,6 +137,10 @@ const P1D_ROWS: PersistentRow[] = [
   ['web9#dev', true]
 ];
 
+const SINGLE_ROOT_TURBO = '{"tasks":{"build":{},"dev":{"persistent":true,"cache":false}}}';
+
+const ROOT_FIXTURE: PersistentFixturePackage = { dir: '', name: '//', scripts: [], turbo: null };
+
 describe('FEATURE: persistent of each task turbo defines for a package', () => {
   describe('GIVEN the P1, P1b and P1c probe workspace', () => {
     const lookup = lookupOf(P1_ROOT_TURBO_STUB, PERSISTENT_PACKAGES_STUB);
@@ -243,6 +247,30 @@ describe('FEATURE: persistent of each task turbo defines for a package', () => {
       const lookup = lookupOf(P1_ROOT_TURBO_STUB, [broken]);
 
       expect(tasksOf(lookup, 'x')).toBeNull();
+    });
+  });
+
+  describe('GIVEN a single-package root whose config defines build and a continuous dev', () => {
+    const lookup = lookupOf(SINGLE_ROOT_TURBO, [ROOT_FIXTURE], true);
+
+    it('WHEN the // package is resolved THEN dev is persistent', () => {
+      expect(tasksOf(lookup, '//')?.get('dev')?.persistent).toBe(true);
+    });
+
+    it('WHEN the // package is resolved THEN build is not persistent', () => {
+      expect(tasksOf(lookup, '//')?.get('build')?.persistent).toBe(false);
+    });
+
+    it('WHEN the // package is resolved THEN an unkeyed format is absent', () => {
+      expect(tasksOf(lookup, '//')?.has('format')).toBe(false);
+    });
+  });
+
+  describe('GIVEN the same root config in a monorepo', () => {
+    it('WHEN the // package is resolved THEN it keeps no bare task', () => {
+      const lookup = lookupOf(SINGLE_ROOT_TURBO, [ROOT_FIXTURE]);
+
+      expect(tasksOf(lookup, '//')?.size).toBe(0);
     });
   });
 

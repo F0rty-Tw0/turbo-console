@@ -77,12 +77,13 @@ describe('FEATURE: workspace model build', () => {
         isTurboTask: true,
         persistent: false
       };
-      const pkg: PackageNode = { name: 'a', path: 'packages/a', tags: ['m', 'n'], tasks: [task] };
+      const pkg: PackageNode = { name: 'a', path: 'packages/a', label: null, tags: ['m', 'n'], tasks: [task] };
       const expected: WorkspaceModel = {
         root: '/repo',
         turboVersion: '2.11.7',
         packageManager: MODEL_SOURCE_STUB.packageManager,
         affectedMode: 'package',
+        singlePackage: false,
         packages: [pkg],
         edges: [],
         warnings: []

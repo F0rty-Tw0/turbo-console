@@ -1,5 +1,6 @@
 import { classifyPackages } from './classify-tasks.util.ts';
 import { affectedModeOf, descriptionOf, okConfigsByDir } from './task-description.util.ts';
+import { ROOT_NAME } from './turbo-task-lookup.util.ts';
 import { turboTaskLookupOf, turboTasksOf } from './turbo-task.util.ts';
 import { plainLine } from '../../shared/errors/utils/plain-text.util.ts';
 import { compareText } from '../../shared/text/utils/compare-text.util.ts';
@@ -43,11 +44,23 @@ const isRootConfig = (config: TurboConfigFile): boolean => ROOT_CONFIG_PATHS.inc
 
 const isText = (warning: string | null): warning is string => warning !== null;
 
-/** `null` tasks mean the configs cannot tell: every task then counts as a turbo task, and none as persistent. */
-const factsOf = (turboTasks: ReadonlyMap<string, TurboTaskFacts> | null, name: string): TurboTaskFacts | undefined => {
+/**
+ * `null` tasks mean the configs cannot tell: every task then counts as a turbo task, and none as persistent. In a
+ * single-package repo a script no config keys is a turbo task all the same (`turbo run` of its name runs it), and not
+ * persistent; a monorepo package's own unkeyed script is not one.
+ */
+const factsOf = (
+  turboTasks: ReadonlyMap<string, TurboTaskFacts> | null,
+  name: string,
+  singlePackage: boolean
+): TurboTaskFacts | undefined => {
   if (turboTasks === null) return UNKNOWN_FACTS;
 
-  return turboTasks.get(name);
+  const facts = turboTasks.get(name);
+
+  if (facts === undefined && singlePackage) return UNKNOWN_FACTS;
+
+  return facts;
 };
 
 /** Cut before `plainLine` walks it; a cut through a surrogate pair leaves U+FFFD, never half a character. */
@@ -76,6 +89,7 @@ type PackageContext = {
   readonly visibleIds: Set<string>;
   readonly configs: Map<string, TurboConfigOk>;
   readonly lookup: TurboTaskLookup;
+  readonly rootLabel: string | null;
 };
 
 /** When the configs cannot tell which tasks turbo defines, every task counts as one, as before the check existed. */
@@ -85,14 +99,16 @@ const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): Package
 
   const toNode = (task: ClassifiedTask): TaskNode => {
     const description = descriptionOf(context.configs, path, task.id, task.name);
-    const facts = factsOf(turboTasks, task.name);
+    const facts = factsOf(turboTasks, task.name, context.lookup.singlePackage);
 
     return toTaskNode(task, context.visibleIds, description, facts);
   };
 
   const tasks = pkg.tasks.map(toNode).toSorted(byId);
   const tags = pkg.tags.toSorted();
-  const node: PackageNode = { name: pkg.name, path, tags, tasks };
+  const isLabelled = context.lookup.singlePackage && pkg.name === ROOT_NAME;
+  const label = isLabelled ? context.rootLabel : null;
+  const node: PackageNode = { name: pkg.name, path, label, tags, tasks };
 
   return node;
 };
@@ -135,14 +151,14 @@ const listedWarnings = (classifiedWarnings: string[], configs: TurboConfigFile[]
 
 /** Spec §4.4 rules 1–6: one deterministic model from one `packageGraph` and the configs read for it. */
 export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFile[], source: ModelSource): WorkspaceModel => {
-  const { root, turboVersion, packageManager } = source;
+  const { root, turboVersion, packageManager, singlePackage, rootLabel } = source;
   const { nodes, edges: graphEdges } = graph.data.packageGraph;
   const classified = classifyPackages(nodes.items);
   const visibleIds = new Set(classified.packages.flatMap(taskIdsOf));
   const visibleNames = new Set(classified.packages.map((pkg) => pkg.name));
   const byDir = okConfigsByDir(configs);
-  const lookup = turboTaskLookupOf(configs, nodes.items);
-  const context: PackageContext = { visibleIds, configs: byDir, lookup };
+  const lookup = turboTaskLookupOf(configs, nodes.items, singlePackage);
+  const context: PackageContext = { visibleIds, configs: byDir, lookup, rootLabel };
   const toNode = (pkg: ClassifiedPackage): PackageNode => toPackageNode(pkg, context);
   const packages = classified.packages.map(toNode).toSorted(byName);
   const isVisibleEdge = (edge: GraphEdge): boolean => visibleNames.has(edge.source) && visibleNames.has(edge.target);
@@ -151,7 +167,16 @@ export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFil
   const warnings = shownWarnings(listed);
   const rootConfig = configs.find(isRootConfig) ?? null;
   const affectedMode = affectedModeOf(rootConfig);
-  const model: WorkspaceModel = { root, turboVersion, packageManager, affectedMode, packages, edges, warnings };
+  const model: WorkspaceModel = {
+    root,
+    turboVersion,
+    packageManager,
+    affectedMode,
+    singlePackage,
+    packages,
+    edges,
+    warnings
+  };
 
   return model;
 };
