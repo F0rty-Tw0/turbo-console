@@ -21,6 +21,9 @@ const viewOf = (panel: vscode.WebviewPanel): PanelView => {
     reveal: () => {
       panel.reveal();
     },
+    setTitle: (title) => {
+      panel.title = title;
+    },
     send: (message) => panel.webview.postMessage(message),
     onMessage: (listener) => {
       panel.webview.onDidReceiveMessage(listener);

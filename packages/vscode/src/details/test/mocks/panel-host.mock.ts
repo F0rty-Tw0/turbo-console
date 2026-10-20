@@ -14,6 +14,7 @@ export const viewMock = (visible = true, overrides: Partial<PanelView> = {}): Vi
   const disposeListeners: (() => void)[] = [];
   const send = vi.fn<PanelView['send']>(async () => Promise.resolve(true));
   const reveal = vi.fn<PanelView['reveal']>();
+  const setTitle = vi.fn<PanelView['setTitle']>();
   const dispose = vi.fn<PanelView['dispose']>(() => {
     if (state.isDisposed) return;
 
@@ -24,6 +25,7 @@ export const viewMock = (visible = true, overrides: Partial<PanelView> = {}): Vi
   const view: PanelView = {
     isVisible: () => state.visible,
     reveal,
+    setTitle,
     send,
     onMessage: (listener) => {
       messageListeners.push(listener);
@@ -45,7 +47,7 @@ export const viewMock = (visible = true, overrides: Partial<PanelView> = {}): Vi
   const message = (value: unknown): void => {
     for (const listener of messageListeners) listener(value);
   };
-  const fake: ViewFake = { view, send, reveal, dispose, show, message, close: dispose };
+  const fake: ViewFake = { view, send, reveal, setTitle, dispose, show, message, close: dispose };
 
   return fake;
 };

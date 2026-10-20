@@ -14,6 +14,7 @@ import {
   parseWebviewMessage,
   refusedRunTextOf
 } from '../utils/details-message.util.ts';
+import { panelTitleOf } from '../utils/panel-package.util.ts';
 
 /**
  * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run
@@ -157,6 +158,8 @@ export class DetailsSession {
   }
 
   private modelChanged(): void {
+    this.ports.setTitle(panelTitleOf(this.roots.get(this.key.root)?.state.model, this.key.packageName));
+
     if (this.isVisible) {
       this.restartDryRun();
 

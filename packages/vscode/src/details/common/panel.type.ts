@@ -11,6 +11,7 @@ import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.t
 export type PanelView = {
   readonly isVisible: () => boolean;
   readonly reveal: () => void;
+  readonly setTitle: (title: string) => void;
   readonly send: (message: HostMessage) => PromiseLike<unknown>;
   readonly onMessage: (listener: (value: unknown) => void) => void;
   readonly onViewState: (listener: () => void) => void;

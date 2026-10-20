@@ -12,6 +12,7 @@ export const detailsPortsMock = (): DetailsPorts => {
     isStale: vi.fn(() => false),
     execute,
     setPanelVisible: vi.fn(),
+    setTitle: vi.fn(),
     info: vi.fn(),
     log: vi.fn(),
     scriptsShown: vi.fn(() => true),

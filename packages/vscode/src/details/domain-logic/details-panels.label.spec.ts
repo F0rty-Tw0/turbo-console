@@ -7,7 +7,7 @@ import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
-import type { HostFakes } from '../test/common/panel-fakes.type.ts';
+import type { HostFakes, ViewFake } from '../test/common/panel-fakes.type.ts';
 import { hostMock } from '../test/mocks/panel-host.mock.ts';
 import { A_PACKAGE_STUB, DETAILS_LOADED_STUB, DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
 
@@ -75,6 +75,27 @@ describe('FEATURE: details panel title from the package label', () => {
 
       expect(fakes.open).toHaveBeenCalledExactlyOnceWith('Package Details: single-app');
       expect(panels.api().panels()).toStrictEqual([{ ...ROOT_KEY, visible: true }]);
+    });
+  });
+
+  describe('GIVEN an open // panel whose model changes', () => {
+    const viewOf = (): ViewFake => {
+      const [view] = fakes.views;
+
+      if (view === undefined) throw new Error('no panel was opened');
+
+      return view;
+    };
+
+    beforeEach(async () => {
+      store.apply('/ws', loadedRoot('single-app'));
+      await panels.open(ROOT_KEY);
+    });
+
+    it('WHEN the label is renamed THEN the tab title follows', () => {
+      store.apply('/ws', loadedRoot('renamed-app'));
+
+      expect(viewOf().setTitle).toHaveBeenLastCalledWith('Package Details: renamed-app');
     });
   });
 

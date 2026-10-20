@@ -11,6 +11,7 @@ export type WebviewUriFake = {
 
 /** The parts of a `vscode.WebviewPanel` that `details-ports.ts` uses; `assigned` is every html it was given, in order. */
 export type PanelFake = {
+  readonly title: string;
   readonly visible: boolean;
   readonly assigned: string[];
   readonly webview: WebviewFake;

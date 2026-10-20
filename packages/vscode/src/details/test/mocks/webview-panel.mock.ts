@@ -5,7 +5,7 @@ import { CSP_SOURCE_STUB } from '../stubs/csp-source.stub.ts';
 
 /** A webview panel whose html assignments, messages and listeners the spec reads back; every method a spy. */
 export const webviewPanelMock = (): PanelFakes => {
-  const state = { visible: true };
+  const state = { visible: true, title: '' };
   const assigned: string[] = [];
   const uriText = (uri: UriFake): WebviewUriFake => {
     const text: WebviewUriFake = { toString: () => `webview:${uri.fsPath}` };
@@ -25,6 +25,12 @@ export const webviewPanelMock = (): PanelFakes => {
     onDidReceiveMessage: vi.fn()
   };
   const fake: PanelFake = {
+    get title(): string {
+      return state.title;
+    },
+    set title(value: string) {
+      state.title = value;
+    },
     get visible(): boolean {
       return state.visible;
     },
