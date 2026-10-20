@@ -1,7 +1,9 @@
 /** npm name of this package. */
 export const PACKAGE_NAME = '@turbo-console/repo-gen';
 
-export { PRESETS } from './generate/common/fixture.const.ts';
+export { FIXTURE_PACKAGE_MANAGER, PRESETS } from './generate/common/fixture.const.ts';
+
+export { PNPM_ENV_LOCKFILE } from './generate/common/pnpm-env-lockfile.const.ts';
 
 export { fixtureFor, warmFixtureCache } from './generate/domain-logic/fixture-for.ts';
 

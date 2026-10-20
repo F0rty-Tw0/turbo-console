@@ -1,3 +1,4 @@
+import { FIXTURE_PACKAGE_MANAGER, PNPM_ENV_LOCKFILE } from '@turbo-console/repo-gen';
 import type { FixtureFile } from '@turbo-console/repo-gen';
 
 const fileOf = (path: string, content: string): FixtureFile => {
@@ -11,14 +12,17 @@ const SCRIPTS = { build: 'node -e 0', lint: 'node -e 0' };
 const MANIFEST = {
   name: 'single-app',
   private: true,
-  packageManager: 'pnpm@10.0.0',
+  packageManager: FIXTURE_PACKAGE_MANAGER,
   scripts: SCRIPTS
 };
 
-/** A single-package turbo repo: a root `turbo.json`, no workspaces. */
+/**
+ * A single-package turbo repo: a root `turbo.json`, no workspaces. The pnpm pin and env lockfile match CI's pnpm, so a
+ * real `turbo run` never makes pnpm download another version of itself.
+ */
 export const SINGLE_PACKAGE_FILES_STUB: FixtureFile[] = [
   fileOf('package.json', JSON.stringify(MANIFEST)),
   fileOf('turbo.json', '{"tasks":{"build":{},"lint":{}}}'),
-  fileOf('pnpm-lock.yaml', ''),
+  fileOf('pnpm-lock.yaml', PNPM_ENV_LOCKFILE),
   fileOf('.gitignore', '.turbo\nnode_modules\n')
 ];
