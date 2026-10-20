@@ -3,6 +3,7 @@ import type { DryRunPhase, HostMessage, ReadyMessage, RefreshMessage, WebviewMes
 
 import type { RootState, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunLookup, Runs } from '../../run/common/run.type.ts';
+import type { PackageScripts } from '../../tool/common/tool.type.ts';
 
 /** One panel per key: the package `packageName` of the root `root`. */
 export type PanelKey = {
@@ -61,12 +62,13 @@ export type DetailsInput = {
   readonly now: number;
 };
 
-/** What a card is built from besides its task: the input, the dependents and dry-run states by task id, and the root's model. */
+/** What a card is built from besides its task: the input, the dependents and dry-run states by task id, the root's model, and the package's scripts a tool may be reached through. */
 export type CardSources = {
   readonly input: DetailsInput;
   readonly dependents: ReadonlyMap<string, string[]>;
   readonly dryRunStates: ReadonlyMap<string, DryRunState>;
   readonly model: WorkspaceModel;
+  readonly scripts: PackageScripts;
 };
 
 /** The tasks that get a card, in name order, and how many runnable scripts the toggle left out (refused names are not counted). */

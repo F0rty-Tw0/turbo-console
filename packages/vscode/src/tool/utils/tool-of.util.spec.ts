@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveTool, toolIconIdOf, toolOf } from './tool-of.util.ts';
+import { resolveTool, toolIconIdOf } from './tool-of.util.ts';
 import { NO_SCRIPTS, TOOLS } from '../common/tool.const.ts';
 import type { PackageScripts, ToolMatch } from '../common/tool.type.ts';
 
@@ -250,16 +250,6 @@ describe('FEATURE: tool detection', () => {
       const outcome = outcomeOf('npm run ci', scriptsOf(wideOf(WIDE_SIZE)));
 
       expect(outcome).toStrictEqual(['vitest', ['ci', 't']]);
-    });
-  });
-
-  describe('GIVEN toolOf, the wrapper without scripts', () => {
-    it('WHEN a command is read THEN it is the resolved tool, or null', () => {
-      const found = toolOf('rm -rf dist && vitest');
-      const none = toolOf('npm run build');
-
-      expect(found?.id).toBe('vitest');
-      expect(none).toBeNull();
     });
   });
 

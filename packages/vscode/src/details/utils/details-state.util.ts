@@ -9,7 +9,9 @@ import { hasScriptBody } from '../../run/utils/run-refusal.util.ts';
 import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
 import { LOG_LINE_MAX } from '../../shared/common/text.const.ts';
 import { cleanLines } from '../../shared/utils/clean-text.util.ts';
-import { toolIconIdOf, toolOf } from '../../tool/utils/tool-of.util.ts';
+import type { PackageScripts } from '../../tool/common/tool.type.ts';
+import { packageScriptsOf, toolTitleOf } from '../../tool/utils/package-scripts.util.ts';
+import { resolveTool, toolIconIdOf } from '../../tool/utils/tool-of.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { packagePathTextOf, packageTextOf } from '../../tree/utils/model-view.util.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
@@ -46,12 +48,12 @@ const cardCommandOf = (command: string | null): string | null => {
 };
 
 /** Spec 1c-c §4.6: the tool the command runs; the icon id is `null` for a tool without a logo. */
-const toolViewOf = (command: string | null): ToolView | null => {
-  const tool = toolOf(command);
+const toolViewOf = (command: string | null, scripts: PackageScripts): ToolView | null => {
+  const match = resolveTool(command, scripts);
 
-  if (tool === null) return null;
+  if (match === null) return null;
 
-  const view: ToolView = { title: tool.title, iconId: toolIconIdOf(tool) };
+  const view: ToolView = { title: toolTitleOf(match), iconId: toolIconIdOf(match.tool) };
 
   return view;
 };
@@ -77,7 +79,7 @@ const toTaskCard = (task: TaskNode, sources: CardSources): TaskCard => {
     isTurboTask: task.isTurboTask,
     persistent: task.persistent,
     runCommand,
-    tool: toolViewOf(task.command),
+    tool: toolViewOf(task.command, sources.scripts),
     run
   };
 
@@ -89,7 +91,8 @@ const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: Detail
     input,
     dependents: dependentsOf(model),
     dryRunStates: dryRunStatesById(input.dryRun.states),
-    model
+    model,
+    scripts: packageScriptsOf(pkg, model.singlePackage)
   };
   const { shown, hiddenScriptCount } = cardTasksOf(pkg, input);
   const tasks = shown.map((task) => toTaskCard(task, sources));

@@ -1,4 +1,4 @@
-import type { TaskNode } from '@turbo-console/core';
+import type { PackageNode, TaskNode } from '@turbo-console/core';
 import type { DetailsState, PackageDetails, TaskCard } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
@@ -44,6 +44,26 @@ const cardOf = (task: TaskNode, runs?: RunLookup): TaskCard => {
   if (card === undefined) throw new Error(`no card for ${task.id}`);
 
   return card;
+};
+
+const ROOT_PACKAGE_NAME = '//';
+
+const chainPackageOf = (name: string): PackageNode => {
+  const wrapper = taskWith({ id: `${name}#test`, name: 'test', command: 'npm run test:app' });
+  const inner = taskWith({ id: `${name}#test:app`, name: 'test:app', command: 'vitest' });
+  const turbo = taskWith({ id: `${name}#ci`, name: 'ci', command: 'turbo run test' });
+  const pkg: PackageNode = { ...A_PACKAGE_STUB, name, tasks: [wrapper, inner, turbo] };
+
+  return pkg;
+};
+
+const chainCardsOf = (pkg: PackageNode, singlePackage: boolean): Map<string, TaskCard> => {
+  const model = { ...DETAILS_MODEL_STUB, packages: [pkg], singlePackage };
+  const state = { ...DETAILS_ROOT_STATE_STUB, model };
+  const input: DetailsInput = { ...DETAILS_INPUT_STUB, state, packageName: pkg.name, scriptsShown: true };
+  const cards = packageOf(toDetailsState(input)).tasks.map((card): [string, TaskCard] => [card.name, card]);
+
+  return new Map(cards);
 };
 
 const runsIn = (task: TaskNode, state: RunState): RunLookup => {
@@ -95,6 +115,26 @@ describe('FEATURE: the tool of a task card', () => {
       const card = cardOf(task, runsIn(task, state));
 
       expect(card.tool).toStrictEqual({ title: 'Vitest', iconId: 'turbo-console-vitest' });
+    });
+  });
+
+  describe('GIVEN a script that delegates to another script of its package', () => {
+    it('WHEN test runs npm run test:app and test:app runs vitest THEN the card is titled with its via', () => {
+      const cards = chainCardsOf(chainPackageOf('a'), false);
+
+      expect(cards.get('test')?.tool).toStrictEqual({ title: 'Vitest (via test:app)', iconId: 'turbo-console-vitest' });
+    });
+
+    it('WHEN a monorepo root // runs turbo run test THEN its tool is null', () => {
+      const cards = chainCardsOf(chainPackageOf(ROOT_PACKAGE_NAME), false);
+
+      expect(cards.get('ci')?.tool).toBeNull();
+    });
+
+    it('WHEN a single-package // runs turbo run test THEN it follows test to Vitest via test → test:app', () => {
+      const cards = chainCardsOf(chainPackageOf(ROOT_PACKAGE_NAME), true);
+
+      expect(cards.get('ci')?.tool?.title).toBe('Vitest (via test → test:app)');
     });
   });
 });
