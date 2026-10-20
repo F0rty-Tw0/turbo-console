@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { PRESETS, fixtureFor } from '@turbo-console/repo-gen';
 
+import { initGit, writeEmptyWorkspace, writeSingleApp } from './single-package-fixture.spec.util.ts';
 import { runEach } from './workspace.spec.util.ts';
 import { devTurboPath } from '../../src/shared/test/utils/dev-turbo.spec.util.ts';
 import { LATE_TURBO_COMMAND, LATE_TURBO_DIR } from '../common/launch.const.ts';
@@ -94,6 +95,28 @@ const twoRoots = async (scratch: RunScratch, name: LaunchName): Promise<Prepared
   return prepared;
 };
 
+/** `single-package`: `single-app`, a single-package repo, git-initialised without a commit. */
+const singlePackage = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+  const dir = workspaceDirOf(scratch, name);
+
+  await mkdir(dir, { recursive: true });
+  await writeSingleApp(dir);
+  await initGit(dir);
+
+  return folderWorkspace(dir);
+};
+
+/** `empty-workspace`: `empty-ws`, whose `pnpm-workspace.yaml` declares `packages/*` and finds none, git-initialised without a commit. */
+const emptyWorkspace = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+  const dir = workspaceDirOf(scratch, name);
+
+  await mkdir(dir, { recursive: true });
+  await writeEmptyWorkspace(dir);
+  await initGit(dir);
+
+  return folderWorkspace(dir);
+};
+
 /** A POSIX `turboPath` stub that prints `2.12.0` for any arguments, just outside the supported range. */
 const stubTurbo = async (scratch: RunScratch): Promise<string> => {
   const path = join(scratch.dir, 'stub-turbo');
@@ -127,7 +150,9 @@ export const WORKSPACES: Record<LaunchWorkspace, (scratch: RunScratch, name: Lau
   fixture: fixtureCopy,
   'empty-folder': emptyFolder,
   'error-roots': errorRoots,
-  'two-roots': twoRoots
+  'two-roots': twoRoots,
+  'single-package': singlePackage,
+  'empty-workspace': emptyWorkspace
 };
 
 /** Each `turboPath` kind's setting value (`null` = unset); a new `LaunchTurboPath` member fails to compile until it has one. */

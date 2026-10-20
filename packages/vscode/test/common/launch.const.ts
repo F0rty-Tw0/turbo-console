@@ -63,8 +63,12 @@ const L9: Launch = { ...L1, name: 'L9', suite: 'tree-polish.suite', workspace: '
 
 const L10: Launch = { ...L1, name: 'L10', suite: 'scripts.suite', workspace: 'fixture', userData: 'own', env: NO_ENV };
 
+const L11: Launch = { ...L3, name: 'L11', suite: 'single-package.suite', workspace: 'single-package', turboPath: 'dev' };
+
+const L12: Launch = { ...L11, name: 'L12', suite: 'empty-workspace.suite', workspace: 'empty-workspace' };
+
 /**
- * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L10 each get a user-data dir
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L12 each get a user-data dir
  * of their own.
  */
-export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12];
