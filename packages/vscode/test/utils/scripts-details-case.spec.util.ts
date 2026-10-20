@@ -8,11 +8,18 @@ import { endedRun } from './run-wait.spec.util.ts';
 import { scriptNodeNamed } from './scripts-tree.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
-import { ADDED_TASK_IDS, OK_RUN_COMMAND, OK_TASK_ID, SCRIPTS_PACKAGE } from '../common/scripts.const.ts';
+import {
+  ADDED_TASK_IDS,
+  CHAIN_TASK_ID,
+  CHAIN_TOOL_TITLE,
+  OK_RUN_COMMAND,
+  OK_TASK_ID,
+  SCRIPTS_PACKAGE
+} from '../common/scripts.const.ts';
 
 /**
- * Case 7: with scripts shown, Package Details holds a script card for each added script, `zz-ok` with its run command, and
- * a `run` message for it starts a new run that ends `passed`. Scripts are hidden again at the end.
+ * Case 7: with scripts shown, Package Details holds a script card for each added script, `zz-ok` with its run command,
+ * `zz-chain` with the tool its delegate runs, and a `run` message for it starts a new run that ends `passed`. Scripts are hidden again at the end.
  */
 export const detailsCase = async (api: TurboConsoleApi, root: string): Promise<void> => {
   await step('L10-7: Package Details shows the script cards and a run message for zz-ok ends passed', async () => {
@@ -27,9 +34,11 @@ export const detailsCase = async (api: TurboConsoleApi, root: string): Promise<v
       const scripts = state.tasks.filter((card) => !card.isTurboTask);
       const ids = scripts.map((card) => card.taskId).sort();
       const ok = scripts.find((card) => card.taskId === OK_TASK_ID);
+      const chain = scripts.find((card) => card.taskId === CHAIN_TASK_ID);
 
       assert.deepEqual(ids, ADDED_TASK_IDS);
       assert.equal(ok?.runCommand, OK_RUN_COMMAND);
+      assert.equal(chain?.tool?.title, CHAIN_TOOL_TITLE);
 
       const clickedAt = Date.now();
 
