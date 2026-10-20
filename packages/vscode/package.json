@@ -444,6 +444,19 @@
           ],
           "default": "folders",
           "description": "How the Packages view lists packages."
+        },
+        "turboConsole.icons": {
+          "type": "string",
+          "enum": [
+            "theme",
+            "builtin"
+          ],
+          "enumDescriptions": [
+            "Folder and package rows use your file icon theme.",
+            "Turbo Console's own icons."
+          ],
+          "default": "theme",
+          "description": "Which icons the Packages view shows for folder and package rows."
         }
       }
     },

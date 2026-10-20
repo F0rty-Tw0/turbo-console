@@ -51,7 +51,7 @@ describe('FEATURE: packages tree tick refresh', () => {
       };
 
       fire = vi.mocked(ports.fire);
-      tree = new PackagesTree(store, 'list', ports);
+      tree = new PackagesTree(store, 'list', 'builtin', ports);
       store.set([ROOT_FOLDER_STUB, OTHER_FOLDER], coordinatorMock);
       store.apply('/ws', loadedWith([packageNamed('a'), packageNamed('b')]));
       store.apply('/other', loadedWith([packageNamed('a'), packageNamed('b')]));

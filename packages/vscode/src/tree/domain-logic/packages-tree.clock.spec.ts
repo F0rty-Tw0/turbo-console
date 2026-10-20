@@ -40,7 +40,7 @@ describe('FEATURE: packages tree clock', () => {
         now: () => 5,
         wallNow: () => WALL_NOW
       };
-      const tree = new PackagesTree(store, 'list', ports);
+      const tree = new PackagesTree(store, 'list', 'builtin', ports);
 
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
       store.apply(ROOT_FOLDER_STUB.root, loadedWith([packageNamed('a')]));

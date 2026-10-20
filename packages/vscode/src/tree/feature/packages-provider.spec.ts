@@ -38,6 +38,7 @@ vi.mock('vscode', () => {
   }
 
   class ThemeIcon {
+    public static readonly Folder = new ThemeIcon('folder');
     public readonly id: string;
 
     public constructor(id: string) {
@@ -61,7 +62,23 @@ vi.mock('vscode', () => {
     }
   }
   const collapsibleStates = { None: 0, Collapsed: 1, Expanded: 2 };
-  const module = { TreeItem, EventEmitter, ThemeIcon, ThemeColor, MarkdownString, TreeItemCollapsibleState: collapsibleStates };
+
+  type FileUri = { readonly fsPath: string };
+  const fileUri = (fsPath: string): FileUri => {
+    const uri: FileUri = { fsPath };
+
+    return uri;
+  };
+  const uriModule = { file: fileUri };
+  const module = {
+    TreeItem,
+    EventEmitter,
+    ThemeIcon,
+    ThemeColor,
+    MarkdownString,
+    Uri: uriModule,
+    TreeItemCollapsibleState: collapsibleStates
+  };
 
   return module;
 });
@@ -102,7 +119,7 @@ type ScriptsFixture = {
 const scriptsFixtureOf = (live?: LiveIds, packages: PackageNode[] = A_AND_S): ScriptsFixture => {
   const store = new RootStore();
   const toggle = scriptsToggleMock();
-  const provider = new PackagesTreeProvider(store, 'list', providerDepsOf(undefined, toggle, live));
+  const provider = new PackagesTreeProvider(store, 'list', 'builtin', providerDepsOf(undefined, toggle, live));
 
   store.set([ROOT_FOLDER_STUB], coordinatorMock);
   store.onDidChange((change) => {
@@ -125,7 +142,7 @@ describe('FEATURE: packages provider', () => {
   describe('GIVEN a shown task a#build', () => {
     it('WHEN the running tasks are refreshed THEN the tree event fires once with that node', async () => {
       const store = new RootStore();
-      const provider = new PackagesTreeProvider(store, 'list', providerDepsOf());
+      const provider = new PackagesTreeProvider(store, 'list', 'builtin', providerDepsOf());
       const running = new Map([[ROOT_FOLDER_STUB.root, new Set(['a#build'])]]);
 
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
@@ -155,6 +172,7 @@ describe('FEATURE: packages provider', () => {
       const provider = new PackagesTreeProvider(
         store,
         'list',
+        'builtin',
         providerDepsOf(() => RUNNING)
       );
 
@@ -247,6 +265,23 @@ describe('FEATURE: packages provider', () => {
 
       expect(fired).toStrictEqual([undefined]);
       expect(await keysOf(provider)).toStrictEqual(['no-turbo-packages']);
+    });
+  });
+
+  describe('GIVEN a provider in theme icons mode over a package a', () => {
+    it('WHEN the item of the package row is built THEN it has a resource uri, and after setIcons builtin it has none', async () => {
+      const store = new RootStore();
+      const provider = new PackagesTreeProvider(store, 'list', 'theme', providerDepsOf());
+
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply(ROOT_FOLDER_STUB.root, loadedWith([packageNamed('a')]));
+      const pkg = onlyOf(await provider.getChildren());
+
+      expect(provider.getTreeItem(pkg).resourceUri).toBeDefined();
+
+      provider.setIcons('builtin');
+
+      expect(provider.getTreeItem(pkg).resourceUri).toBeUndefined();
     });
   });
 });

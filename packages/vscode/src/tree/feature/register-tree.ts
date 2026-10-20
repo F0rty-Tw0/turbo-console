@@ -6,8 +6,9 @@ import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { SettingLevel } from '../common/setting.type.ts';
 import type { TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
-import type { TreeMode } from '../common/tree-row.type.ts';
+import type { IconsMode, TreeMode } from '../common/tree-row.type.ts';
 import type { VisibleView } from '../common/visible-view.type.ts';
+import { iconsModeOf } from '../utils/icons-mode.util.ts';
 import { settingLevelOf } from '../utils/setting-level.util.ts';
 import { treeModeOf } from '../utils/tree-mode.util.ts';
 
@@ -20,6 +21,14 @@ export const currentTreeMode = (): TreeMode => {
   const value = settings.get<unknown>('treeMode');
 
   return treeModeOf(value);
+};
+
+/** The `turboConsole.icons` setting now. */
+export const currentIcons = (): IconsMode => {
+  const settings = vscode.workspace.getConfiguration(SECTION);
+  const value = settings.get<unknown>('icons');
+
+  return iconsModeOf(value);
 };
 
 const configurationTargetOf = (level: SettingLevel): vscode.ConfigurationTarget => {
@@ -43,9 +52,12 @@ const writeTreeMode = async (mode: TreeMode): Promise<void> => {
 
 const onSettings = (event: vscode.ConfigurationChangeEvent, tree: PackagesTreeApi, session: Session): void => {
   const isModeChanged = event.affectsConfiguration(`${SECTION}.treeMode`);
+  const isIconsChanged = event.affectsConfiguration(`${SECTION}.icons`);
   const isPathChanged = event.affectsConfiguration(`${SECTION}.turboPath`);
 
   if (isModeChanged) tree.setMode(currentTreeMode());
+
+  if (isIconsChanged) tree.setIcons(currentIcons());
 
   if (isPathChanged) session.request('setting');
 };

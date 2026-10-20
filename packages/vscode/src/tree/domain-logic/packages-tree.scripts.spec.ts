@@ -62,7 +62,7 @@ describe('FEATURE: the Scripts group in the packages tree', () => {
       wallNow: () => 7
     };
 
-    tree = new PackagesTree(store, 'list', ports);
+    tree = new PackagesTree(store, 'list', 'builtin', ports);
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
     store.apply('/ws', loadedWith([packageNamed('a'), SCRIPT_PACKAGE]));
   });

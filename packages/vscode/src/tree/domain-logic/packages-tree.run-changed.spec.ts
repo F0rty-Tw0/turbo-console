@@ -41,7 +41,7 @@ describe('FEATURE: packages tree scripts toggle and run membership', () => {
       wallNow: () => 7
     };
 
-    tree = new PackagesTree(store, 'list', ports);
+    tree = new PackagesTree(store, 'list', 'builtin', ports);
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
     store.apply('/ws', loadedWith([packageNamed('a'), SCRIPT_PACKAGE]));
     toggle.onDidChange(() => {

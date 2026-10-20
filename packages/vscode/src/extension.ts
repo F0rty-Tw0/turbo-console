@@ -36,7 +36,7 @@ import { TreeVisibility } from './tree/domain-logic/tree-visibility.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
 import { registerPackageActions } from './tree/feature/package-actions.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
-import { currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
+import { currentIcons, currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
 import { watchRoot } from './watch/data-access/root-watchers.ts';
 import { registerWatchers } from './watch/feature/register-watchers.ts';
 
@@ -130,7 +130,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
   const scripts = new ScriptsToggle(editorScriptsTogglePorts(context.workspaceState, output));
-  const tree = new PackagesTreeProvider(session.store, currentTreeMode(), treeDepsOf(runSession, timings, scripts));
+  const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDepsOf(runSession, timings, scripts));
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, { runs: runSession.runs, scripts }, output);

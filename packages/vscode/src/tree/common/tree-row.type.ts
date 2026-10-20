@@ -14,6 +14,9 @@ export type RowCommand = {
 
 export type TreeMode = 'folders' | 'list';
 
+/** Whether folder and package rows take the file icon theme's folder icon, or Turbo Console's own codicons. */
+export type IconsMode = 'theme' | 'builtin';
+
 export type RowKind = 'root' | 'dir' | 'pkg' | 'scripts' | 'task' | 'msg';
 
 type Collapsible = 'none' | 'collapsed' | 'expanded';
