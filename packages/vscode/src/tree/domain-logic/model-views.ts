@@ -21,15 +21,35 @@ type ModelSlot = {
 
 const NO_VIEWS: ModelSlot = {};
 
-/** What one package object has answered: its scripts, built once, and the tool of each command asked in it. */
+/**
+ * What one package object has answered: its scripts, built on the first read, how many reads they have had, and the tool
+ * of each command whose resolve read them.
+ */
 type PackageTools = {
   readonly scripts: PackageScripts;
+  readonly reads: () => number;
   readonly byCommand: Map<string, ToolMatch | null>;
 };
 
 const toolsOf = (pkg: PackageNode, singlePackage: boolean): PackageTools => {
-  const scripts = packageScriptsOf(pkg, singlePackage);
-  const tools: PackageTools = { scripts, byCommand: new Map() };
+  let built: PackageScripts | null = null;
+  let count = 0;
+  const read = (): PackageScripts => {
+    count += 1;
+    built ??= packageScriptsOf(pkg, singlePackage);
+
+    return built;
+  };
+  const scripts: PackageScripts = {
+    get bodies(): ReadonlyMap<string, string> {
+      return read().bodies;
+    },
+    get followTurbo(): boolean {
+      return read().followTurbo;
+    }
+  };
+  const reads = (): number => count;
+  const tools: PackageTools = { scripts, reads, byCommand: new Map() };
 
   return tools;
 };
@@ -66,12 +86,14 @@ const withView = (slot: ModelSlot, key: string, view: ModelView): ModelSlot => {
  * the shown packages and their folder tree, so they are built once instead of walking every package each time. A model
  * keeps its shown view, its hidden view and the latest hidden view with live scripts (spec 1c-b §4.7). Every task row
  * asks for its command's tool on each redraw, so `resolve` runs once per package object and distinct command: a command
- * such as `npm run t` means what its own package's script `t` says (runner-chains spec).
+ * such as `npm run t` means what its own package's script `t` says (runner-chains spec). A resolve that read no scripts
+ * gives every package the same tool, so its command is resolved once and served to all of them.
  */
 export class ModelViews {
   private readonly slots = new WeakMap<WorkspaceModel, ModelSlot>();
   private readonly qualifying = new WeakMap<WorkspaceModel, ReadonlySet<string>>();
   private readonly packageTools = new WeakMap<PackageNode, PackageTools>();
+  private readonly sharedTools = new Map<string, ToolMatch | null>();
   private readonly resolve: ToolResolver;
 
   public constructor(resolve: ToolResolver) {
@@ -96,14 +118,21 @@ export class ModelViews {
   public toolOf(pkg: PackageNode, singlePackage: boolean, command: string | null): ToolMatch | null {
     if (command === null) return null;
 
+    const shared = this.sharedTools.get(command);
+
+    if (shared !== undefined) return shared;
+
     const tools = this.toolsOf(pkg, singlePackage);
     const cached = tools.byCommand.get(command);
 
     if (cached !== undefined) return cached;
 
+    const readsBefore = tools.reads();
     const match = this.resolve(command, tools.scripts);
+    const isScriptsFree = tools.reads() === readsBefore;
+    const memo = isScriptsFree ? this.sharedTools : tools.byCommand;
 
-    tools.byCommand.set(command, match);
+    memo.set(command, match);
 
     return match;
   }

@@ -91,11 +91,36 @@ describe('FEATURE: model views per model', () => {
       expect(resolver).toHaveBeenCalledTimes(2);
     });
 
-    it('WHEN the same command is asked for in two package objects THEN the resolver runs once for each', () => {
+    it('WHEN a command that reads no scripts is asked for in three package objects THEN the resolver runs once', () => {
       views.toolOf(PKG, false, VITEST_COMMAND);
       views.toolOf(pkgWith({}), false, VITEST_COMMAND);
+      views.toolOf(rootPkgWith({ t: 'jest' }), true, VITEST_COMMAND);
+
+      expect(resolver).toHaveBeenCalledTimes(1);
+    });
+
+    it('WHEN a command that reads scripts is asked for in two package objects THEN the resolver runs once for each', () => {
+      views.toolOf(pkgWith({ t: 'vitest' }), false, 'npm run t');
+      views.toolOf(pkgWith({ t: 'vitest' }), false, 'npm run t');
 
       expect(resolver).toHaveBeenCalledTimes(2);
+    });
+
+    it('GIVEN a package whose commands read no scripts WHEN their tools are asked for THEN its tasks are never read', () => {
+      let reads = 0;
+      const counted: PackageNode = {
+        ...PKG,
+        get tasks(): TaskNode[] {
+          reads += 1;
+
+          return PKG.tasks;
+        }
+      };
+
+      views.toolOf(counted, false, VITEST_COMMAND);
+      views.toolOf(counted, false, NO_TOOL_COMMAND);
+
+      expect(reads).toBe(0);
     });
 
     it('GIVEN test:app edited from vitest to jest (a new package object) WHEN test is asked for THEN it is Jest', () => {
