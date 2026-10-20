@@ -23,7 +23,7 @@ const fieldsOf = (manifest: Record<string, unknown>): ManifestFields => {
 
 /**
  * The `packageManager`, `devEngines.packageManager`, `name` and `workspaces` values of the root `package.json`, from one
- * read and one parse, unchecked. Both are `undefined` (`NO_MANIFEST_FIELDS`) for anything else: no such file, one that cannot be read, is
+ * read and one parse, unchecked. All four are `undefined` (`NO_MANIFEST_FIELDS`) for anything else: no such file, one that cannot be read, is
  * over `MAX_KEYED_FILE_BYTES` or is no regular file, text that is not JSON, or a JSON value that is no object. A bad
  * manifest never fails a load: the lockfiles decide instead.
  */
