@@ -16,10 +16,10 @@ describe('FEATURE: icons setting', () => {
       expect(mode).toBe('theme');
     });
 
-    it.each([undefined, 'x', 3])('WHEN it is %s THEN the mode is the theme default', (value) => {
+    it.each([undefined, 'x', 3])('WHEN it is %s THEN the mode is the builtin default', (value) => {
       const mode = iconsModeOf(value);
 
-      expect(mode).toBe('theme');
+      expect(mode).toBe('builtin');
     });
   });
 });

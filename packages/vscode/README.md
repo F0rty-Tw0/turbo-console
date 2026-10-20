@@ -6,7 +6,7 @@ Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 
 ## What it does
 
-- **Packages view:** every package with its tasks, shown as folders or as a flat list (`turboConsole.treeMode`). Folder and package rows use your file icon theme (`turboConsole.icons`: `theme` or `builtin`).
+- **Packages view:** every package with its tasks, shown as folders or as a flat list (`turboConsole.treeMode`). Set `turboConsole.icons` to `theme` to draw folder and package rows with your file icon theme (one with folder icons, such as Material Icon Theme or vscode-icons).
 - **Run and Stop:** run a task from its row. The row shows how it ended, plus the cache status and duration once turbo's run summary is found.
 - **Palette:** Run Task… picks a task and then a package. Run Turbo Task… (also the play button on an open `package.json`) runs one of that package's tasks.
 - **Common Commands view:** Run Task in All Packages…, Run Affected… and Refresh.
