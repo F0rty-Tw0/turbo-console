@@ -48,7 +48,10 @@ export type Terminable = {
   readonly terminate: () => void;
 };
 
-/** `packageDir` is the package's directory, where a script runs; `packageManager` is the one the model detected. */
+/**
+ * `packageDir` is the package's directory, where a script runs; `packageManager` is the one the model detected;
+ * `singlePackage` is the model's mode, which adds `--single-package` to the turbo arguments.
+ */
 export type RunRequest = {
   readonly root: string;
   readonly packageName: string;
@@ -57,6 +60,7 @@ export type RunRequest = {
   readonly task: TaskNode;
   readonly binaryPath: string;
   readonly force: boolean;
+  readonly singlePackage: boolean;
 };
 
 /**

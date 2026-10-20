@@ -67,7 +67,8 @@ export const runRequestOf = (target: TaskTarget, state: RootState | undefined, f
     packageManager: model.packageManager,
     task,
     binaryPath: binary.path,
-    force
+    force,
+    singlePackage: model.singlePackage
   };
 
   return request;
