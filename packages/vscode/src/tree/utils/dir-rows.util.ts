@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import type { PackageNode } from '@turbo-console/core';
 
 import { packagePathTextOf, packageTextOf, shownTextOf } from './model-view.util.ts';
@@ -24,7 +26,8 @@ export const dirRow = (root: string, dir: FolderDir, view: ModelView): TreeRow =
     contextValue: 'turboDir',
     collapsible: 'expanded',
     tooltip: [`Path: ${dir.path}`, `Packages: ${count}`],
-    command: null
+    command: null,
+    folder: join(root, dir.path)
   };
 
   return row;
@@ -54,7 +57,8 @@ export const packageRow = (root: string, pkg: PackageNode, view: ModelView, scop
     contextValue: 'turboPackage',
     collapsible: 'collapsed',
     tooltip: [packageTextOf(pkg), `Path: ${pathText}`, `Tasks: ${taskCount}`],
-    command: null
+    command: null,
+    folder: join(root, pkg.path)
   };
 
   return row;

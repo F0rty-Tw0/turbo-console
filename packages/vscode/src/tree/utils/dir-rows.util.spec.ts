@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
@@ -52,7 +54,8 @@ describe('FEATURE: children rows of a directory', () => {
         contextValue: 'turboDir',
         collapsible: 'expanded',
         tooltip: ['Path: packages/libs', 'Packages: 1'],
-        command: null
+        command: null,
+        folder: join('/ws', 'packages/libs')
       });
     });
 
@@ -71,7 +74,8 @@ describe('FEATURE: children rows of a directory', () => {
         contextValue: 'turboPackage',
         collapsible: 'collapsed',
         tooltip: ['a', 'Path: packages/a', 'Tasks: 1'],
-        command: null
+        command: null,
+        folder: join('/ws', 'packages/a')
       });
     });
   });

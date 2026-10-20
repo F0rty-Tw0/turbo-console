@@ -47,6 +47,8 @@ export type TreeRow = {
   readonly collapsible: Collapsible;
   readonly tooltip: string[];
   readonly command: RowCommand | null;
+  /** The row's absolute directory, for a file icon theme; only dir and package rows have one. */
+  readonly folder?: string;
 };
 
 /** A kind token (`turboTask`, `turboScript`), then at most one state token; menus match them by prefix (spec 1c-a §4.12). */
