@@ -80,7 +80,8 @@ describe('FEATURE: turbo error messages', () => {
     });
 
     it('WHEN the package graph schema failed THEN it names the issue path, not the input', () => {
-      const result = packageGraphSchema.safeParse({ data: {} });
+      const data = { root: null };
+      const result = packageGraphSchema.safeParse({ data });
 
       const message = invalidOutputMessage('query', result.error);
 

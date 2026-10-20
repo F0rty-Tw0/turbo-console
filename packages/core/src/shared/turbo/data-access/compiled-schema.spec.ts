@@ -22,7 +22,7 @@ const WEB_PACKAGE =
 const EDGES = '{"items":[{"source":"web","target":"ui","kind":{"kind":"dependency","extra":1}}]}';
 
 /** turbo's `packageGraph` stdout, with keys the schema does not list at every level. */
-const PACKAGE_GRAPH = `{"data":{"packageGraph":{"nodes":{"items":[${WEB_PACKAGE}]},"edges":${EDGES}}},"extensions":{}}`;
+const PACKAGE_GRAPH = `{"data":{"packageGraph":{"nodes":{"items":[${WEB_PACKAGE}]},"edges":${EDGES}},"root":null},"extensions":{}}`;
 
 const DEFINITION = '{"inputs":["src/**"],"outputs":[],"dependsOn":["^build"],"cache":true,"persistent":false,"env":[]}';
 
@@ -36,11 +36,11 @@ const DRY_RUN = `{"monorepo":true,"id":"run","tasks":[{${DRY_TASK_HEAD},"hash":n
 /** turbo's `affectedTasks` stdout, with keys the schema does not list. */
 const AFFECTED = '{"data":{"affectedTasks":{"items":[{"fullName":"web#build","reason":{"__typename":"TaskFileChanged","extra":1}}]}}}';
 
-const GRAPH_WITHOUT_EDGES = `{"data":{"packageGraph":{"nodes":{"items":[${WEB_PACKAGE}]}}}}`;
+const GRAPH_WITHOUT_EDGES = `{"data":{"packageGraph":{"nodes":{"items":[${WEB_PACKAGE}]}},"root":null}}`;
 
 const NUMBER_TAG_PACKAGE = WEB_PACKAGE.replace('"tags":["app"]', '"tags":[1]');
 
-const GRAPH_WITH_NUMBER_TAG = `{"data":{"packageGraph":{"nodes":{"items":[${NUMBER_TAG_PACKAGE}]},"edges":${EDGES}}}}`;
+const GRAPH_WITH_NUMBER_TAG = `{"data":{"packageGraph":{"nodes":{"items":[${NUMBER_TAG_PACKAGE}]},"edges":${EDGES}},"root":null}}`;
 
 const DRY_RUN_WITHOUT_HASH = `{"monorepo":true,"tasks":[{${DRY_TASK_HEAD},"cache":{"status":"MISS"},${DRY_TASK_TAIL}}]}`;
 

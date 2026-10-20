@@ -1,9 +1,4 @@
-/** Every package (root `//` excluded: turbo omits it from `nodes`) with its tasks, plus the package edges. */
-export const PACKAGE_GRAPH_QUERY = `query PackageGraph {
-  packageGraph {
-    nodes {
-      items {
-        name
+const PACKAGE_FIELDS = `name
         path
         tags
         directDependencies { items { name } }
@@ -15,10 +10,23 @@ export const PACKAGE_GRAPH_QUERY = `query PackageGraph {
             tags
             directDependencies { items { fullName } }
           }
-        }
+        }`;
+
+/**
+ * Every package (root `//` excluded: turbo omits it from `nodes`) with its tasks, plus the package edges. `root` is the
+ * `//` package: `null` when turbo has none.
+ */
+export const PACKAGE_GRAPH_QUERY = `query PackageGraph {
+  packageGraph {
+    nodes {
+      items {
+        ${PACKAGE_FIELDS}
       }
     }
     edges { items { source target kind { kind } } }
+  }
+  root: package(name: "//") {
+    ${PACKAGE_FIELDS}
   }
 }
 `;

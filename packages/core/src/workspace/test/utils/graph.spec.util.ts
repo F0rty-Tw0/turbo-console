@@ -36,12 +36,12 @@ export const graphEdge = (source: string, target: string, kind: string): GraphEd
   return edge;
 };
 
-/** The parsed `PACKAGE_GRAPH_QUERY` output holding these nodes and edges. */
-export const packageGraph = (packages: GraphPackage[], edges: GraphEdge[]): PackageGraph => {
+/** The parsed `PACKAGE_GRAPH_QUERY` output holding these nodes and edges, and `root` as the `//` package. */
+export const packageGraph = (packages: GraphPackage[], edges: GraphEdge[], root: GraphPackage | null = null): PackageGraph => {
   const nodes = { items: packages };
   const edgeList = { items: edges };
   const graphData = { nodes, edges: edgeList };
-  const data = { packageGraph: graphData };
+  const data = { packageGraph: graphData, root };
   const graph: PackageGraph = { data };
 
   return graph;

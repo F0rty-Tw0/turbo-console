@@ -76,7 +76,8 @@ describe('FEATURE: turbo errors as TurboException', () => {
     });
 
     it('WHEN a schema threw a ZodError THEN it is invalid-output naming the issue path, with the original as cause', () => {
-      const { error } = packageGraphSchema.safeParse({ data: {} });
+      const data = { root: null };
+      const { error } = packageGraphSchema.safeParse({ data });
 
       const exception = toTurboException(error, 'query');
 
