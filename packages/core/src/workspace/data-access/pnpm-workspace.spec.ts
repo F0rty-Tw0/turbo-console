@@ -62,6 +62,10 @@ describe('FEATURE: pnpm-workspace.yaml declares workspace packages', () => {
       ['inline empty list', 'packages: []\n', false],
       ['inline blank list with a comment', 'packages: [ ] # none\n', false],
       ['inline list with an item', 'packages: ["a"]\n', true],
+      ['inline list with an item and a comment', 'packages: ["a"] # c\n', true],
+      ['a leading byte order mark', '\uFEFFpackages:\n  - a\n', true],
+      ['a flow list over several lines', 'packages: [\n  "a"\n]\n', true],
+      ['an unclosed flow list (read as declaring)', 'packages: [\n', true],
       ['an inline block scalar', 'packages: |\n  - a\n', false],
       ['a bare dash item', 'packages:\n  -\n', true],
       ['a nested packages key', 'x:\n  packages:\n    - a\n', false]

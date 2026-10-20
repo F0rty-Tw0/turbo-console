@@ -45,6 +45,20 @@ const SHAPES: Shape[] = [
   { title: 'pnpm, no pnpm-workspace.yaml', manager: 'pnpm', workspaces: undefined, yaml: null, single: true },
   { title: 'pnpm, yaml packages/*', manager: 'pnpm', workspaces: undefined, yaml: YAML_PACKAGES, single: false },
   { title: 'pnpm, yaml without packages', manager: 'pnpm', workspaces: undefined, yaml: 'onlyBuiltDependencies: []\n', single: true },
+  {
+    title: 'pnpm, yaml with a byte order mark',
+    manager: 'pnpm',
+    workspaces: undefined,
+    yaml: `\uFEFF${YAML_PACKAGES}`,
+    single: false
+  },
+  {
+    title: 'pnpm, yaml flow list over lines',
+    manager: 'pnpm',
+    workspaces: undefined,
+    yaml: 'packages: [\n  "packages/*"\n]\n',
+    single: false
+  },
   { title: 'pnpm, package.json workspaces but no yaml', manager: 'pnpm', workspaces: LIST, yaml: null, single: true },
   { title: 'npm, no workspaces', manager: 'npm', workspaces: undefined, yaml: null, single: true },
   { title: 'npm, workspaces []', manager: 'npm', workspaces: [], yaml: null, single: true },

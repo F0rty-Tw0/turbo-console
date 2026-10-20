@@ -11,6 +11,8 @@ const INLINE_LIST = /^\[(.*)\]$/;
 
 const TRAILING_COMMENT = /\s+#.*$/;
 
+const BYTE_ORDER_MARK = /^\uFEFF/;
+
 /** A filesystem error naming `absolute`, as `io`. */
 const ioError = (absolute: string, error: unknown): TurboException =>
   new TurboException('io', ioMessage(absolute, errnoCode(error)), { cause: error });
@@ -27,8 +29,16 @@ const isItem = (line: string): boolean => {
   return text === '-' || text.startsWith('- ');
 };
 
-/** An inline `[ … ]` list with something inside; `|`, `>`, an anchor and any other inline form are not read. */
+/**
+ * An inline `[ … ]` list with something inside. A `[` left open on the key line is a flow list over several lines, read
+ * as declaring (the monorepo side, as before single-package support). `|`, `>`, an anchor and any other inline form are
+ * not read.
+ */
 const hasInlineItems = (inline: string): boolean => {
+  const isClosed = inline.includes(']');
+
+  if (!isClosed) return inline.startsWith('[');
+
   const inner = INLINE_LIST.exec(inline)?.[1] ?? '';
 
   return inner.trim() !== '';
@@ -36,7 +46,7 @@ const hasInlineItems = (inline: string): boolean => {
 
 /** Whether a top-level `packages` key holds an item: an inline list, or a `-` line next. Line scan, no YAML parser. */
 const declaresPackages = (text: string): boolean => {
-  const lines = text.split(/\r?\n/).filter(isSignificant);
+  const lines = text.replace(BYTE_ORDER_MARK, '').split(/\r?\n/).filter(isSignificant);
   const keyIndex = lines.findIndex((line) => line.startsWith('packages:'));
   const keyLine = lines[keyIndex] ?? '';
   const inline = keyLine.slice('packages:'.length).replace(TRAILING_COMMENT, '').trim();
