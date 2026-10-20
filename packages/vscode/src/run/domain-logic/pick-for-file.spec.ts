@@ -233,4 +233,26 @@ describe('FEATURE: package.json run action', () => {
 
     expect(fakes.run).not.toHaveBeenCalled();
   });
+
+  describe('GIVEN a single-package root', () => {
+    const rootPkg: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [TASK_NODE_STUB] };
+
+    beforeEach(() => {
+      const loaded = loadedWith([rootPkg]);
+      const model = { ...loaded.model, singlePackage: true };
+
+      roots.apply('/one', { ...loaded, model });
+    });
+
+    it('WHEN Run Turbo Task runs on the root manifest THEN the pick names the label and the // package runs', async () => {
+      fakes.choose('build');
+
+      await pickForFileAndRun(roots, fakes.ports, '/one/package.json');
+
+      expect(fakes.pick.mock.calls[0]?.[1]).toBe('Select a task to run in single-app');
+      expect(fakes.run).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ root: '/one', packageName: '//', packageDir: join('/one', '') })
+      );
+    });
+  });
 });

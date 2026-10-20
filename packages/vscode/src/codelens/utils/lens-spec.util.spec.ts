@@ -134,10 +134,18 @@ describe('FEATURE: lens spec of a package.json (spec 1c-b §4.11)', () => {
       expect(lensSpecOf(TEXT, '/ws/packages/other/package.json', state, false)).toBeNull();
     });
 
-    it('WHEN the file is the root manifest THEN there is no lens (V5: the model holds no "//")', () => {
+    it('WHEN the file is the root manifest of a monorepo model THEN there is no lens (V5: the model holds no "//")', () => {
       const state = stateOf([taskNamed('build')]);
 
       expect(lensSpecOf(TEXT, '/ws/package.json', state, true)).toBeNull();
+    });
+
+    it('WHEN the file is the root manifest of a single-package model THEN the lens names its tasks', () => {
+      const root: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [taskNamed('build')] };
+      const model: RootState['model'] = { ...WORKSPACE_MODEL_STUB, singlePackage: true, packages: [root] };
+      const state: RootState = { ...ROOT_STATE_STUB, model };
+
+      expect(titleOf(lensSpecOf(TEXT, '/ws/package.json', state, false))).toBe('▷ Tasks: build (1)');
     });
   });
 

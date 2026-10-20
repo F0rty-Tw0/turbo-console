@@ -67,6 +67,17 @@ describe('FEATURE: details panel title from the package label', () => {
     });
   });
 
+  describe('GIVEN the root manifest of a single-package root', () => {
+    it('WHEN Package Details opens from the editor THEN the // panel opens with the label title', async () => {
+      store.apply('/ws', loadedRoot('single-app'));
+
+      await panels.openFile('/ws/package.json');
+
+      expect(fakes.open).toHaveBeenCalledExactlyOnceWith('Package Details: single-app');
+      expect(panels.api().panels()).toStrictEqual([{ ...ROOT_KEY, visible: true }]);
+    });
+  });
+
   describe('GIVEN a monorepo package (label null)', () => {
     it('WHEN its panel opens THEN the title is unchanged', async () => {
       await panels.open({ root: '/ws', packageName: 'a' });

@@ -5,6 +5,7 @@ import type { RootState, Roots } from '../../roots/common/coordinator.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
+import { packageTextOf } from '../../tree/utils/model-view.util.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
 import { NOT_PACKAGE_TEXT, TASK_PLACEHOLDER } from '../common/picker.const.ts';
 import type { FileLookupPorts, FilePackage, FileTasks, NamedTask, PickerPorts, TaskOffer } from '../common/picker.type.ts';
@@ -110,7 +111,7 @@ const tasksOfPackage = (roots: Roots, ports: PickerPorts, found: FilePackage): F
 
   if (items.length === 0) return refused(ports, emptyTasksText(pkg, scriptsShown));
 
-  const placeholder = `${TASK_PLACEHOLDER} in ${cleanText(pkg.name, LABEL_MAX)}`;
+  const placeholder = `${TASK_PLACEHOLDER} in ${cleanText(packageTextOf(pkg), LABEL_MAX)}`;
   const tasks: FileTasks = { packageName: pkg.name, placeholder, items };
 
   return tasks;
