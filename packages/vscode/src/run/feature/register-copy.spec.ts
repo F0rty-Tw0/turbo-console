@@ -259,6 +259,21 @@ describe('FEATURE: copy command', () => {
     });
   });
 
+  describe('GIVEN a single-package root holding the // package with the build task', () => {
+    beforeEach(() => {
+      const loaded = loadedWith([packageHolding('//', { ...TASK_NODE_STUB, id: '//#build' })]);
+      const model = { ...loaded.model, singlePackage: true };
+
+      roots.apply('/ws', { ...loaded, model });
+    });
+
+    it('WHEN Copy Command is invoked on the // task row THEN the copied command ends with --single-package', async () => {
+      await copy(taskRowOf('//', '//#build'));
+
+      expect(write).toHaveBeenCalledExactlyOnceWith('turbo run build --filter=// --single-package');
+    });
+  });
+
   it('GIVEN the copy command WHEN it is disposed THEN its command is unregistered', () => {
     registered.dispose();
 

@@ -146,6 +146,17 @@ describe('FEATURE: shell quoting', () => {
       expect(text).toBe(expected);
     });
 
+    it.each<ShellKind>(['posix', 'pwsh', 'cmd'])(
+      'GIVEN singlePackage WHEN copied for %s THEN --single-package ends the command',
+      (kind) => {
+        expect(copyText(TASK_NODE_STUB, '//', kind, true)).toBe('turbo run build --filter=// --single-package');
+      }
+    );
+
+    it('GIVEN a monorepo WHEN copied THEN the command is unchanged', () => {
+      expect(copyText(TASK_NODE_STUB, 'a', 'posix')).toBe('turbo run build --filter=a');
+    });
+
     it('GIVEN a plain package WHEN copied THEN every argument stays bare', () => {
       const text = copyText(TASK_NODE_STUB, '@scope/pkg', 'posix');
 

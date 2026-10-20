@@ -1,7 +1,7 @@
 import { turboRunArgs } from '@turbo-console/core';
 import type { TaskNode } from '@turbo-console/core';
 
-import { BARE, BARE_FIRST_BLOCKED } from '../common/shell.const.ts';
+import { BARE, BARE_FIRST_BLOCKED, SINGLE_PACKAGE_FLAG } from '../common/shell.const.ts';
 import type { ShellKind } from '../common/shell.type.ts';
 
 const PATH_SEPARATOR = /[\\/]/u;
@@ -80,13 +80,17 @@ export const quoteArg = (arg: string, kind: ShellKind): string | null => {
 };
 
 /**
- * The command a user would type to run `task` in `packageName`, quoted for `kind`; `null` when an argument cannot be
- * quoted. Throws what `turboRunArgs` throws for a task or package name turbo could misread.
+ * The command a user would type to run `task` in `packageName`, quoted for `kind`; `singlePackage` ends it with
+ * `--single-package`. `null` when an argument cannot be quoted. Throws what `turboRunArgs` throws for a task or package
+ * name turbo could misread.
  */
-export const copyText = (task: TaskNode, packageName: string, kind: ShellKind): string | null => {
+export const copyText = (task: TaskNode, packageName: string, kind: ShellKind, singlePackage = false): string | null => {
   turboRunArgs(task, packageName);
 
   const args = ['turbo', 'run', task.name, `--filter=${packageName}`];
+
+  if (singlePackage) args.push(SINGLE_PACKAGE_FLAG);
+
   const quoted = args.map((arg) => quoteArg(arg, kind));
   const words = quoted.filter(isQuoted);
 

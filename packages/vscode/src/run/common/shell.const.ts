@@ -8,3 +8,6 @@ export const BARE_FIRST_BLOCKED = /^[=@]/u;
  * body, and refuses a `.` name as hidden (`ERR_PNPM_HIDDEN_SCRIPT`). This also refuses `//`, package.json's comment key.
  */
 export const SCRIPT_NAME_FIRST_BLOCKED = /^[/.]/u;
+
+/** The turbo flag Copy Command ends with for a single-package root; core's `SINGLE_PACKAGE` is not in its public API. */
+export const SINGLE_PACKAGE_FLAG = '--single-package';
