@@ -253,7 +253,7 @@ describe('FEATURE: model views per model', () => {
       const fresh = asks.map(([pkg, single, command]) => resolveTool(command, packageScriptsOf(pkg, single)));
 
       expect(answers).toStrictEqual(fresh);
-      expect(fresh.filter((match) => match !== null).length).toBeGreaterThan(QUERY_COUNT / 10);
+      expect(fresh.filter((match) => match !== null).length).toBeGreaterThan(QUERY_COUNT / 2);
     });
   });
 });
