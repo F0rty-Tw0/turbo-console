@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import type { PackageNode } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -269,15 +271,16 @@ describe('FEATURE: packages provider', () => {
   });
 
   describe('GIVEN a provider in theme icons mode over a package a', () => {
-    it('WHEN the item of the package row is built THEN it has a resource uri, and after setIcons builtin it has none', async () => {
+    it('WHEN the item of the package row is built THEN its resource uri is the package dir, and after setIcons builtin it has none', async () => {
       const store = new RootStore();
       const provider = new PackagesTreeProvider(store, 'list', 'theme', providerDepsOf());
+      const a = packageNamed('a');
 
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
-      store.apply(ROOT_FOLDER_STUB.root, loadedWith([packageNamed('a')]));
+      store.apply(ROOT_FOLDER_STUB.root, loadedWith([a]));
       const pkg = onlyOf(await provider.getChildren());
 
-      expect(provider.getTreeItem(pkg).resourceUri).toBeDefined();
+      expect(provider.getTreeItem(pkg).resourceUri?.fsPath).toBe(join(ROOT_FOLDER_STUB.root, a.path));
 
       provider.setIcons('builtin');
 
