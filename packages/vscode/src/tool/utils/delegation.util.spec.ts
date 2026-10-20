@@ -47,6 +47,7 @@ describe('FEATURE: delegation parser', () => {
     ['turbo run --continue test', { test: 'vitest' }, true, null],
     ['turbo run --parallel test build', { build: 'tsc', test: 'vitest' }, true, null],
     ['turbo run --dry test build', { build: 'tsc', test: 'vitest' }, true, null],
+    ['turbo run --dry=json test', { test: 'vitest' }, true, 'test'],
     ['turbo run --concurrency 2 test', { build: 'tsc', test: 'vitest' }, true, 'test'],
     ['turbo --color run test', { test: 'vitest' }, true, 'test'],
     ['turbo --color run prune', { prune: 'docker compose up' }, true, 'prune'],

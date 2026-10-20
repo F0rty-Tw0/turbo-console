@@ -31,6 +31,21 @@ const fanOutOf = (size: number): Record<string, string> => {
   return Object.fromEntries(entries);
 };
 
+/** Above the 165 expansions of the widest realistic root map counted in the slice 1 delta review. */
+const WIDE_SIZE = 200;
+
+/** `ci` runs `size` scripts that reach no tool, then `t: vitest`: `size + 2` body expansions, one level deep. */
+const wideOf = (size: number): Record<string, string> => {
+  const names = Array.from({ length: size }, (_, index) => `w${index}`);
+  const runs = [...names, 't'];
+  const ci = runs.map((name) => `npm run ${name}`).join(' && ');
+  const entries = names.map((name): [string, string] => [name, 'echo ok']);
+  const leaves = Object.fromEntries(entries);
+  const bodies: Record<string, string> = { ...leaves, t: 'vitest', ci };
+
+  return bodies;
+};
+
 const MAX_VIA = 5;
 
 type Outcome = [string | null, string[]];
@@ -221,6 +236,20 @@ describe('FEATURE: tool detection', () => {
 
       expect(found).toBeNull();
       expect(elapsed).toBeLessThan(FAN_OUT_LIMIT_MS);
+    });
+
+    it('WHEN a command runs one of them and then vitest THEN the whole call is null', () => {
+      const found = resolveTool('npm run s0 && vitest', scriptsOf(fanOutOf(FAN_OUT_SIZE)));
+
+      expect(found).toBeNull();
+    });
+  });
+
+  describe(`GIVEN ci running ${WIDE_SIZE} tool-less scripts and then t: vitest`, () => {
+    it('WHEN npm run ci is resolved THEN it is Vitest via ci and t, within the expansion budget', () => {
+      const outcome = outcomeOf('npm run ci', scriptsOf(wideOf(WIDE_SIZE)));
+
+      expect(outcome).toStrictEqual(['vitest', ['ci', 't']]);
     });
   });
 
