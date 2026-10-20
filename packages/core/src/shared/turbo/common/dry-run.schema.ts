@@ -23,8 +23,8 @@ const taskSchema = object({
 
 /**
  * stdout of `turbo run <tasks> --dry=json`. `hash` is null for a JIT-hashed task; phantom, umbrella and aggregate
- * tasks report `command: "<NONEXISTENT>"`. `monorepo: false` output (single-package) has bare `taskId`s and a task
- * `package` that is `null` (with `--single-package`) or absent (turbo's own inference). Unknown keys are stripped; every listed key is required. `dependencies` and
- * `dependents` are left out: nothing reads them, and checking them costs parse time on every dry run.
+ * tasks report `command: "<NONEXISTENT>"`. `monorepo: false` output (single-package) has bare `taskId`s and no task
+ * `package` key; `null` is accepted too. Unknown keys are stripped; every listed key except `package` is required.
+ * `dependencies` and `dependents` are left out: nothing reads them, and checking them costs parse time on every dry run.
  */
 export const dryRunSchema = object({ monorepo: boolean(), tasks: array(taskSchema) });

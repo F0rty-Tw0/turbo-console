@@ -209,7 +209,7 @@ describe('GIVEN a single-package dry run (monorepo false, bare ids, no package)'
   });
 });
 
-describe('GIVEN a single-package dry run whose tasks carry package: null (--single-package output)', () => {
+describe('GIVEN a single-package dry run whose tasks carry package: null (real output omits the key)', () => {
   it('WHEN converted THEN null reads like absent and the ids read //#task', () => {
     const nullPackage: DryRunTask = { ...BARE_BUILD, package: null };
     const states = toDryRunStates(dryRunOf([nullPackage], false));
