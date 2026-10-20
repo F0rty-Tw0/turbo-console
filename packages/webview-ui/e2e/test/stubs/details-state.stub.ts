@@ -60,6 +60,7 @@ export const PACKAGE_DETAILS_STUB: PackageDetails = {
   kind: 'package',
   root: '/repo',
   packageName: 'web',
+  label: 'web',
   path: 'apps/web',
   tags: ['scope:web', 'type:app'],
   tasks,
@@ -69,7 +70,7 @@ export const PACKAGE_DETAILS_STUB: PackageDetails = {
   hiddenScriptCount: 0
 };
 
-export const MISSING_PACKAGE_STUB: MissingPackage = { kind: 'missing', root: '/repo', packageName: 'web' };
+export const MISSING_PACKAGE_STUB: MissingPackage = { kind: 'missing', root: '/repo', packageName: 'web', label: null };
 
 /** Repo text that would run script if the page ever wrote it as HTML. */
 export const HOSTILE_NAME_STUB: string = '<img src=x onerror=alert(1)>';

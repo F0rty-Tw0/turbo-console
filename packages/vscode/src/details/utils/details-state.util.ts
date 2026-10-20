@@ -11,6 +11,7 @@ import { LOG_LINE_MAX } from '../../shared/common/text.const.ts';
 import { cleanLines } from '../../shared/utils/clean-text.util.ts';
 import { toolIconIdOf, toolOf } from '../../tool/utils/tool-of.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
+import { packagePathTextOf, packageTextOf } from '../../tree/utils/model-view.util.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
 import type { CardSources, DetailsInput } from '../common/details.type.ts';
 
@@ -96,7 +97,8 @@ const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: Detail
     kind: 'package',
     root: input.root,
     packageName: input.packageName,
-    path: pkg.path,
+    label: packageTextOf(pkg),
+    path: packagePathTextOf(pkg.path),
     tags: pkg.tags,
     tasks,
     dryRun: input.dryRun.phase,
@@ -118,14 +120,14 @@ export const detailsInputOf = (base: Omit<DetailsInput, 'now'>, now: number): De
 /**
  * The state the page shows. A card takes the dry-run state whose id equals its task id exactly (turbo allows
  * `#` in a package name, so a prefix match would pick up another package's states). A package the model lacks, or a
- * root with no model, is `missing`.
+ * root with no model, is `missing`, headed by the label the panel last knew.
  */
 export const toDetailsState = (input: DetailsInput): DetailsState => {
   const { model } = input.state;
   const pkg = model?.packages.find((candidate) => candidate.name === input.packageName);
 
   if (model === null || pkg === undefined) {
-    const missing: DetailsState = { kind: 'missing', root: input.root, packageName: input.packageName };
+    const missing: DetailsState = { kind: 'missing', root: input.root, packageName: input.packageName, label: input.lastLabel };
 
     return missing;
   }

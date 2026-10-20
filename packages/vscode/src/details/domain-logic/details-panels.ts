@@ -6,14 +6,12 @@ import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { packageOfFile } from '../../run/domain-logic/pick-for-file.ts';
 import type { DetailsApi } from '../../shared/common/api.type.ts';
-import { LABEL_MAX } from '../../shared/common/text.const.ts';
-import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { OPEN_FAILED_TEXT } from '../common/details.const.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { OpenPanel, PanelParts, PanelsDeps, PendingOpen } from '../common/panel.type.ts';
 import { panelIdOf } from '../utils/panel-id.util.ts';
-import { hasPackage, revealed } from '../utils/panel-package.util.ts';
+import { hasPackage, panelTitleOf, revealed } from '../utils/panel-package.util.ts';
 
 /**
  * The open Package Details panels, one per root and package name. A key opened by row is registered as pending before
@@ -159,7 +157,7 @@ export class DetailsPanels {
   /** A throw after the session reported the panel shown disposes both, so the root hears `false` once. */
   private build(parts: PanelParts): OpenPanel {
     const { host, roots, runs } = this.deps;
-    const view = host.open(`Package Details: ${cleanText(parts.key.packageName, LABEL_MAX)}`);
+    const view = host.open(panelTitleOf(roots.get(parts.key.root)?.state.model, parts.key.packageName));
     const ports = panelPortsOf(this.deps, parts, view);
     const session = new DetailsSession(parts.key, roots, runs, ports);
 

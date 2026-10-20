@@ -25,8 +25,8 @@ const FLAG_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'a#-x', name: '-x' };
 
 const FLAG_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [FLAG_TASK] };
 
-const launchOf = (root: string, affected: boolean): RunAllLaunch => {
-  const launch: RunAllLaunch = { root, binaryPath: TURBO_BINARY_STUB.path, taskName: 'build', affected };
+const launchOf = (root: string, affected: boolean, singlePackage = false): RunAllLaunch => {
+  const launch: RunAllLaunch = { root, binaryPath: TURBO_BINARY_STUB.path, taskName: 'build', affected, singlePackage };
 
   return launch;
 };
@@ -247,6 +247,43 @@ describe('FEATURE: run a task in all packages', () => {
       await runAll(roots, guard, fakes.ports, EVERYWHERE);
 
       expect(fakes.execute).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('GIVEN a single-package root', () => {
+    beforeEach(() => {
+      const loaded = loadedWith([PACKAGE_NODE_STUB]);
+      const model = { ...loaded.model, singlePackage: true };
+
+      roots.set([ONE], coordinatorMock);
+      roots.apply('/one', { ...loaded, model });
+    });
+
+    it('WHEN run all picks build THEN the launch and the arguments carry --single-package', async () => {
+      fakes.choose('build');
+
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
+
+      expect(fakes.execute).toHaveBeenCalledExactlyOnceWith(launchOf('/one', false, true), [
+        '--skip-infer',
+        'run',
+        'build',
+        '--single-package'
+      ]);
+    });
+
+    it('WHEN run all affected picks build THEN --single-package follows --affected', async () => {
+      fakes.choose('build');
+
+      await runAll(roots, guard, fakes.ports, AFFECTED);
+
+      expect(fakes.execute).toHaveBeenCalledExactlyOnceWith(launchOf('/one', true, true), [
+        '--skip-infer',
+        'run',
+        'build',
+        '--affected',
+        '--single-package'
+      ]);
     });
   });
 });

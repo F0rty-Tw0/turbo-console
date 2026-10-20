@@ -64,7 +64,7 @@ describe('FEATURE: details session dry runs', () => {
     });
 
     it('THEN the dry run asks for the package tasks that have a command', () => {
-      expect(dryRunAt(dryRuns, 0).request).toStrictEqual({ tasks: ['test', 'build'], packages: ['a'] });
+      expect(dryRunAt(dryRuns, 0).request).toStrictEqual({ tasks: ['test', 'build'], packages: ['a'], singlePackage: false });
     });
 
     describe('WHEN the model changes', () => {
@@ -145,7 +145,7 @@ describe('FEATURE: details session dry runs', () => {
 
       const [last] = postedStatesOf(ports).slice(-1);
 
-      expect(last).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'a' });
+      expect(last).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'a', label: 'a' });
       expect(ports.dryRun).toHaveBeenCalledOnce();
     });
 

@@ -97,12 +97,23 @@ describe('FEATURE: run targets', () => {
         packageManager: PACKAGE_MANAGER_STUB,
         task: TASK_NODE_STUB,
         binaryPath: TURBO_BINARY_STUB.path,
-        force: false
+        force: false,
+        singlePackage: false
       };
 
       const request = runRequestOf(TARGET, LOADED, false);
 
       expect(request).toStrictEqual(expected);
+    });
+
+    it('WHEN the model is single-package THEN the request is marked singlePackage', () => {
+      const model: WorkspaceModel = { ...TWO_PACKAGES, singlePackage: true };
+
+      expect(runRequestOf(TARGET, { ...LOADED, model }, false)?.singlePackage).toBe(true);
+    });
+
+    it('WHEN the model is a monorepo THEN the request is not', () => {
+      expect(runRequestOf(TARGET, LOADED, false)?.singlePackage).toBe(false);
     });
 
     it('WHEN the model detected yarn THEN the request carries that package manager', () => {

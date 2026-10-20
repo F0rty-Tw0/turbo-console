@@ -15,6 +15,10 @@ const MODEL: WorkspaceModel = {
   packages: [packageAt('a', 'packages/a'), packageAt('x', 'packages/libs/x'), packageAt('web', 'apps/web')]
 };
 
+const ROOT_BASE = packageAt('//', '');
+const ROOT_PACKAGE: PackageNode = { ...ROOT_BASE, label: 'single-app' };
+const SINGLE: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, singlePackage: true, packages: [ROOT_PACKAGE] };
+
 describe('FEATURE: package lookup', () => {
   describe('packageForManifest', () => {
     it('GIVEN a package manifest WHEN looked up THEN the package at that directory returns', () => {
@@ -27,6 +31,18 @@ describe('FEATURE: package lookup', () => {
 
     it('GIVEN the root manifest WHEN looked up THEN there is none', () => {
       expect(packageForManifest('package.json', MODEL)).toBeNull();
+    });
+
+    it('GIVEN a single-package model WHEN the root manifest is looked up THEN the // package returns', () => {
+      expect(packageForManifest('package.json', SINGLE)?.name).toBe('//');
+    });
+
+    it('GIVEN a single-package model WHEN a nested manifest is looked up THEN there is none', () => {
+      expect(packageForManifest('sub/package.json', SINGLE)).toBeNull();
+    });
+
+    it('GIVEN a model that is not single-package but holds a path-"" package WHEN the root manifest is looked up THEN there is none', () => {
+      expect(packageForManifest('package.json', { ...SINGLE, singlePackage: false })).toBeNull();
     });
 
     it('GIVEN the root itself WHEN looked up THEN there is none', () => {

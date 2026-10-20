@@ -60,7 +60,7 @@ const titleOf = (labels: string[]): string => {
 
 /**
  * Spec 1c-b §4.11: the lens of the `package.json` at `file`, or `null` when there is nothing to act on: no state, no
- * model, a binary error, no package owning the file (the root manifest included: the model holds no `//`, V5) or no
+ * model, a binary error, no package owning the file (the root manifest of a monorepo: its model holds no `//`, V5) or no
  * offered task. Reads only the loaded state and `text`; the names are the picker's labels, in picker order and
  * `$(`-escaped.
  */

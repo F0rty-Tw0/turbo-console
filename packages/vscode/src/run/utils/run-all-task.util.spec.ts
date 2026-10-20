@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { runAllDefinitionOf, runAllKey, runAllKeyOf, runAllTaskDefinitionOf } from './run-all-task.util.ts';
 import type { RunAllDefinition, RunAllLaunch, RunAllTaskDefinition } from '../common/run-all.type.ts';
 
-const LAUNCH: RunAllLaunch = { root: '/ws', binaryPath: '/bin/turbo', taskName: 'build', affected: true };
+const LAUNCH: RunAllLaunch = { root: '/ws', binaryPath: '/bin/turbo', taskName: 'build', affected: true, singlePackage: false };
 
 const DEFINITION: RunAllDefinition = { root: '/ws', id: '*build', affected: true };
 

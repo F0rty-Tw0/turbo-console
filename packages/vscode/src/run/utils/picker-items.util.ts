@@ -3,6 +3,7 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
+import { packagePathTextOf, packageTextOf } from '../../tree/utils/model-view.util.ts';
 import { byName, isOfferedTask } from '../../tree/utils/task-filter.util.ts';
 import type { PickItem, TaskOffer } from '../common/picker.type.ts';
 
@@ -68,13 +69,13 @@ export const taskNameItems = (states: RootState[], scriptsShown: boolean): PickI
   return runnable.flatMap((state) => namesOfRoot(state, isMultiRoot ? state.folder.name : '', scriptsShown));
 };
 
-/** The packages of `state` that have an offered task named `taskName`, sorted by name; the description is the path. */
+/** The packages of `state` that have an offered task named `taskName`, sorted by name; the item reads the label (else the name), the description is the path (`.` for the root). */
 export const packageItems = (state: RootState, taskName: string, scriptsShown: boolean): PickItem[] => {
   const packages = state.model?.packages ?? [];
   const holding = packages.filter((pkg) => hasTaskNamed(pkg, taskName, scriptsShown));
   const sorted = holding.toSorted((left, right) => compareText(left.name, right.name));
 
-  return sorted.map((pkg) => itemOf(state.folder.root, pkg.name, pkg.path, pkg.name));
+  return sorted.map((pkg) => itemOf(state.folder.root, packageTextOf(pkg), packagePathTextOf(pkg.path), pkg.name));
 };
 
 /**

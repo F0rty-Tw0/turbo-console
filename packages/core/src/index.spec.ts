@@ -41,6 +41,7 @@ const RUNTIME_EXPORTS = [
   'PACKAGE_GRAPH_QUERY',
   'PACKAGE_NAME',
   'SCHEMA_SDL_SHA256',
+  'SINGLE_PACKAGE',
   'SUPPORTED_TURBO_RANGE',
   'TurboException',
   'affectedTasksSchema',

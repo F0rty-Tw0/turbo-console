@@ -53,11 +53,13 @@ export type DryRunPhase = 'loading' | 'ready' | 'failed';
 /**
  * `reloadError` is the banner text when the root's last reload failed and the store kept the previous model, else `null`.
  * `hiddenScriptCount` is the runnable scripts left out while `scriptsShown` is false (refused names not counted), `0` while shown.
+ * `label` is the heading text: `packageName` when the package has no label, full text with no scope rule. `path` is `.` for the repo root.
  */
 export type PackageDetails = {
   readonly kind: 'package';
   readonly root: string;
   readonly packageName: string;
+  readonly label: string;
   readonly path: string;
   readonly tags: string[];
   readonly tasks: TaskCard[];
@@ -67,11 +69,12 @@ export type PackageDetails = {
   readonly hiddenScriptCount: number;
 };
 
-/** The package is not in the current model. */
+/** The package is not in the current model. `label` is the last heading text the panel knew, `null` when it never knew one. */
 export type MissingPackage = {
   readonly kind: 'missing';
   readonly root: string;
   readonly packageName: string;
+  readonly label: string | null;
 };
 
 export type DetailsState = PackageDetails | MissingPackage;

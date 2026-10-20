@@ -14,7 +14,7 @@ export type PanelKey = {
  * Editor effects of one details panel. `post` must not throw. `dryRun` rejects on a failure and on an abort and logs
  * nothing: the session logs the failures it shows. `setPanelVisible` reports the panel's visibility to the root's
  * session (`RootsSession.setPanelVisible`); the session calls it only on a change, and once with `false` on dispose
- * when it last reported `true`. `scriptsShown` is the scripts toggle's value now. `now` is the wall clock, the base of
+ * when it last reported `true`. `setTitle` sets the tab title. `scriptsShown` is the scripts toggle's value now. `now` is the wall clock, the base of
  * every run's `launchedAt`.
  */
 export type DetailsPorts = {
@@ -23,6 +23,7 @@ export type DetailsPorts = {
   readonly isStale: (root: string) => boolean;
   readonly execute: (command: string, arg: unknown) => Promise<void>;
   readonly setPanelVisible: (visible: boolean) => void;
+  readonly setTitle: (title: string) => void;
   readonly info: (text: string) => void;
   readonly log: (text: string) => void;
   readonly scriptsShown: () => boolean;
@@ -56,6 +57,7 @@ export type DetailsInput = {
   readonly dryRun: DryRunResult;
   readonly runs: RunLookup;
   readonly scriptsShown: boolean;
+  readonly lastLabel: string | null;
   readonly now: number;
 };
 
@@ -87,4 +89,5 @@ export type PosterDeps = {
   readonly ports: DetailsPorts;
   readonly gate: PosterGate;
   readonly dryRun: () => DryRunResult;
+  readonly lastLabel: () => string | null;
 };

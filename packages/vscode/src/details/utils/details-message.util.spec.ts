@@ -212,7 +212,7 @@ describe('FEATURE: panel task ids', () => {
   });
 
   it.each<[string, DetailsState | null]>([
-    ['a missing package', { kind: 'missing', root: '/ws', packageName: 'a' }],
+    ['a missing package', { kind: 'missing', root: '/ws', packageName: 'a', label: null }],
     ['no state yet', null]
   ])('GIVEN %s WHEN asked THEN there are none', (_name, state) => {
     const ids = cardTaskIdsOf(state);

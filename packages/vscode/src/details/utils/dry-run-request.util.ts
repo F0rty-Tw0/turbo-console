@@ -13,8 +13,9 @@ const hasDryRun = (task: TaskNode): boolean => {
 };
 
 /**
- * The names of the package's shown turbo tasks that have a command, filtered to the package. `null` when the
- * model lacks the package or no task qualifies: no dry run starts.
+ * The names of the package's shown turbo tasks that have a command, filtered to the package, with `singlePackage` from
+ * the model (turbo runs nothing for `//` under `--skip-infer` without it). `null` when the model lacks the package or no
+ * task qualifies: no dry run starts.
  */
 export const dryRunRequestOf = (model: WorkspaceModel | null, packageName: string): DryRunRequest | null => {
   const pkg = model?.packages.find((candidate) => candidate.name === packageName);
@@ -22,7 +23,8 @@ export const dryRunRequestOf = (model: WorkspaceModel | null, packageName: strin
 
   if (tasks.length === 0) return null;
 
-  const request: DryRunRequest = { tasks, packages: [packageName] };
+  const singlePackage = model?.singlePackage ?? false;
+  const request: DryRunRequest = { tasks, packages: [packageName], singlePackage };
 
   return request;
 };

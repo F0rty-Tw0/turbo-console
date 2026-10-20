@@ -293,7 +293,7 @@ describe('FEATURE: package details state', () => {
 
       const state = toDetailsState(input);
 
-      expect(state).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'gone' });
+      expect(state).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'gone', label: null });
     });
 
     it('WHEN the root has no model THEN the state is missing', () => {
@@ -301,7 +301,7 @@ describe('FEATURE: package details state', () => {
 
       const state = toDetailsState(input);
 
-      expect(state).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'a' });
+      expect(state).toStrictEqual({ kind: 'missing', root: '/ws', packageName: 'a', label: null });
     });
   });
 
@@ -314,6 +314,27 @@ describe('FEATURE: package details state', () => {
       const state = packageOf(toDetailsState(input));
 
       expect(state.tasks).toStrictEqual([]);
+    });
+  });
+});
+
+describe('FEATURE: the package label and path in the details state', () => {
+  describe('GIVEN the single-package // node', () => {
+    const root: PackageNode = { ...A_PACKAGE_STUB, name: '//', path: '', label: 'single-app' };
+    const model: WorkspaceModel = { ...DETAILS_MODEL_STUB, singlePackage: true, packages: [root] };
+
+    it('WHEN the state builds THEN label is the package.json name, path is ".", and the key is still //', () => {
+      const state = toDetailsState(inputWith({ state: stateWith({ model }), packageName: '//' }));
+
+      expect(packageOf(state)).toMatchObject({ packageName: '//', label: 'single-app', path: '.' });
+    });
+  });
+
+  describe('GIVEN a monorepo package', () => {
+    it('WHEN the state builds THEN label equals its name', () => {
+      const state = toDetailsState(inputWith({ packageName: 'a' }));
+
+      expect(packageOf(state)).toMatchObject({ packageName: 'a', label: 'a', path: 'packages/a' });
     });
   });
 });

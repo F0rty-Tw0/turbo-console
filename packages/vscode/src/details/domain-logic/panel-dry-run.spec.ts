@@ -29,7 +29,7 @@ describe('FEATURE: panel dry run', () => {
   });
 
   it('WHEN restarted THEN the port gets the package tasks that have a command', () => {
-    expect(dryRunAt(runs, 0).request).toStrictEqual({ tasks: ['test', 'build'], packages: ['a'] });
+    expect(dryRunAt(runs, 0).request).toStrictEqual({ tasks: ['test', 'build'], packages: ['a'], singlePackage: false });
   });
 
   it('WHEN restarted THEN the result is loading', () => {

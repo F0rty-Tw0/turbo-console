@@ -63,6 +63,7 @@ export const panelPortsOf = (deps: PanelsDeps, parts: PanelParts, view: PanelVie
     isStale,
     execute: host.execute,
     setPanelVisible,
+    setTitle: view.setTitle,
     info: host.info,
     log: host.log,
     scriptsShown: () => deps.scripts.isShown(),

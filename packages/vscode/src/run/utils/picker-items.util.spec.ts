@@ -153,6 +153,22 @@ describe('FEATURE: picker items', () => {
       expect(labelsOf(items)).toStrictEqual(['a', 'b']);
     });
 
+    it('GIVEN the single-package // node WHEN listed THEN the item reads the label and "." while the value stays //', () => {
+      const base = packageOf('//', [taskNamed('build')], '');
+      const root: PackageNode = { ...base, label: 'single-app' };
+
+      expect(packageItems(stateOf('/ws', [root]), 'build', false)).toStrictEqual([
+        { label: 'single-app', description: '.', root: '/ws', value: '//' }
+      ]);
+    });
+
+    it('GIVEN a label with $( WHEN listed THEN the item label escapes it', () => {
+      const base = packageOf('//', [taskNamed('build')], '');
+      const root: PackageNode = { ...base, label: 'x$(pass)' };
+
+      expect(packageItems(stateOf('/ws', [root]), 'build', false)[0]?.label).toBe('x\\$(pass)');
+    });
+
     it('GIVEN a package WHEN listed THEN the description is its path and value its raw name', () => {
       const pkg = packageOf(`${BIDI}x`, [taskNamed('build')], 'libs/x');
 

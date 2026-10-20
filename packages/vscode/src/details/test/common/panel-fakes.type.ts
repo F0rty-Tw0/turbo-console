@@ -8,6 +8,7 @@ export type ViewFake = {
   readonly view: PanelView;
   readonly send: Mock<PanelView['send']>;
   readonly reveal: Mock<PanelView['reveal']>;
+  readonly setTitle: Mock<PanelView['setTitle']>;
   readonly dispose: Mock<PanelView['dispose']>;
   readonly show: (visible: boolean) => void;
   readonly message: (value: unknown) => void;

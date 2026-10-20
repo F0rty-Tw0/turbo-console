@@ -216,6 +216,12 @@ describe('FEATURE: the editor effects of Package Details', () => {
       expect(panelAt(made, 0).fake.reveal).toHaveBeenCalledOnce();
     });
 
+    it('WHEN its title is set THEN the panel title changes', () => {
+      view.setTitle('Package Details: renamed');
+
+      expect(panelAt(made, 0).fake.title).toBe('Package Details: renamed');
+    });
+
     it('WHEN a message is sent THEN the webview gets it and the result comes back', async () => {
       const sent = await view.send(MESSAGE);
 

@@ -27,5 +27,6 @@ export const RUN_REQUEST_STUB: RunRequest = {
   packageManager: PACKAGE_MANAGER_STUB,
   task: TASK_NODE_STUB,
   binaryPath: '/bin/turbo',
-  force: false
+  force: false,
+  singlePackage: false
 };

@@ -13,7 +13,11 @@ import {
 
 describe('FEATURE: details dry-run request', () => {
   it('GIVEN a package with command, umbrella and file tasks WHEN asked THEN only its shown tasks with a command go, filtered to it', () => {
-    expect(dryRunRequestOf(DETAILS_MODEL_STUB, 'a')).toStrictEqual({ tasks: ['test', 'build'], packages: ['a'] });
+    expect(dryRunRequestOf(DETAILS_MODEL_STUB, 'a')).toStrictEqual({
+      tasks: ['test', 'build'],
+      packages: ['a'],
+      singlePackage: false
+    });
   });
 
   it('GIVEN a package whose tasks have no command or are file tasks WHEN asked THEN there is no request', () => {
@@ -27,7 +31,7 @@ describe('FEATURE: details dry-run request', () => {
     const pkg = { ...A_PACKAGE_STUB, tasks: [TEST_TASK_STUB, ADHOC_TASK_STUB, BUILD_TASK_STUB] };
     const model = { ...DETAILS_MODEL_STUB, packages: [pkg] };
 
-    expect(dryRunRequestOf(model, 'a')).toStrictEqual({ tasks: ['test', 'build'], packages: ['a'] });
+    expect(dryRunRequestOf(model, 'a')).toStrictEqual({ tasks: ['test', 'build'], packages: ['a'], singlePackage: false });
   });
 
   it('GIVEN a package whose only task with a command is not a turbo task WHEN asked THEN there is no request', () => {
@@ -43,5 +47,12 @@ describe('FEATURE: details dry-run request', () => {
 
   it('GIVEN no model WHEN asked THEN there is no request', () => {
     expect(dryRunRequestOf(null, 'a')).toBeNull();
+  });
+
+  it('GIVEN a single-package model WHEN asked THEN the request carries singlePackage true and filters to //', () => {
+    const root = { ...A_PACKAGE_STUB, name: '//', path: '', tasks: [TEST_TASK_STUB, BUILD_TASK_STUB] };
+    const model = { ...DETAILS_MODEL_STUB, singlePackage: true, packages: [root] };
+
+    expect(dryRunRequestOf(model, '//')).toStrictEqual({ tasks: ['test', 'build'], packages: ['//'], singlePackage: true });
   });
 });

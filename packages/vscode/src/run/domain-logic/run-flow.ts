@@ -63,7 +63,7 @@ const launchTurbo = async (ports: RunPorts, request: RunRequest, launchedAt: num
     return null;
   }
 
-  const args = turboRunArgs(request.task, request.packageName, { force: request.force });
+  const args = turboRunArgs(request.task, request.packageName, { force: request.force }, request.singlePackage);
 
   return ports.execute(request, args, launchedAt);
 };
