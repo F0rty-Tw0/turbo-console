@@ -14,7 +14,12 @@ import { createRunScratch, runEach, snapshotDir, userDataDirFor } from './utils/
 
 const CI_BUDGET_FACTOR = 3;
 
-const X11_ARGS = ['--ozone-platform=x11'];
+/**
+ * Linux runs under Xvfb, which has no GPU. Without `--disable-gpu` the first window on a fresh runner sometimes blocks its
+ * renderer on GPU-process start (Mesa llvmpipe) past Chromium's 15 s hang timer, and VS Code in extension-test mode then
+ * exits 1 ("CodeWindow: detected unresponsive") before the suite loads: 4 of ~55 ubuntu L1 launches, 2026-10-14 to 20.
+ */
+const X11_ARGS = ['--ozone-platform=x11', '--disable-gpu'];
 
 const NO_ARGS: string[] = [];
 
