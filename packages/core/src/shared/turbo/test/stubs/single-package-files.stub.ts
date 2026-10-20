@@ -1,4 +1,4 @@
-import { FIXTURE_PACKAGE_MANAGER, PNPM_ENV_LOCKFILE } from '@turbo-console/repo-gen';
+import { FIXTURE_PACKAGE_MANAGER, renderLockfile } from '@turbo-console/repo-gen';
 import type { FixtureFile } from '@turbo-console/repo-gen';
 
 const fileOf = (path: string, content: string): FixtureFile => {
@@ -23,6 +23,6 @@ const MANIFEST = {
 export const SINGLE_PACKAGE_FILES_STUB: FixtureFile[] = [
   fileOf('package.json', JSON.stringify(MANIFEST)),
   fileOf('turbo.json', '{"tasks":{"build":{},"lint":{}}}'),
-  fileOf('pnpm-lock.yaml', PNPM_ENV_LOCKFILE),
+  renderLockfile([]),
   fileOf('.gitignore', '.turbo\nnode_modules\n')
 ];

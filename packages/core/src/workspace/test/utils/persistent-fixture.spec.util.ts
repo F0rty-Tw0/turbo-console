@@ -1,14 +1,26 @@
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { FIXTURE_PACKAGE_MANAGER, renderLockfile } from '@turbo-console/repo-gen';
+import type { LockfilePackage } from '@turbo-console/repo-gen';
+
 import { backdateTree } from '../../../cache/test/utils/backdate.spec.util.ts';
 import { AGE_MS } from '../../../cache/test/utils/root-fixture.spec.util.ts';
 import type { PersistentFixturePackage, PersistentVariant } from '../common/persistent-fixture.type.ts';
 import { P1D_ROOT_TURBO_STUB, P1_ROOT_TURBO_STUB, PERSISTENT_PACKAGES_STUB } from '../stubs/persistent-fixture.stub.ts';
 
-const ROOT_MANIFEST = '{"name":"persistent-fixture","packageManager":"pnpm@10.0.0","private":true}';
+const ROOT_MANIFEST = JSON.stringify({ name: 'persistent-fixture', packageManager: FIXTURE_PACKAGE_MANAGER, private: true });
 
 const WORKSPACE_YAML = 'packages: ["pkgs/*"]\n';
+
+const lockfilePackageOf = (pkg: PersistentFixturePackage): LockfilePackage => {
+  const lockfilePackage: LockfilePackage = { name: pkg.name, path: pkg.dir, dependencies: [] };
+
+  return lockfilePackage;
+};
+
+/** pnpm's own pin plus one importer per package, so a real run never makes pnpm fetch another version of itself. */
+const LOCKFILE = renderLockfile(PERSISTENT_PACKAGES_STUB.map(lockfilePackageOf));
 
 const NOOP_SCRIPT = 'node -e 0';
 
@@ -37,6 +49,7 @@ export const writePersistentFixture = async (parent: string, variant: Persistent
 
   await writeFile(join(root, 'package.json'), ROOT_MANIFEST);
   await writeFile(join(root, 'pnpm-workspace.yaml'), WORKSPACE_YAML);
+  await writeFile(join(root, 'pnpm-lock.yaml'), LOCKFILE.content);
   await writeFile(join(root, 'turbo.json'), rootTurboOf(variant));
   await Promise.all(PERSISTENT_PACKAGES_STUB.map(writeOne));
   await backdateTree(root, AGE_MS);

@@ -1,4 +1,4 @@
-import { FIXTURE_PACKAGE_MANAGER, PNPM_ENV_LOCKFILE } from '@turbo-console/repo-gen';
+import { FIXTURE_PACKAGE_MANAGER, renderLockfile } from '@turbo-console/repo-gen';
 import type { FixtureFile } from '@turbo-console/repo-gen';
 
 /** The one package of the force fixture. */
@@ -26,7 +26,7 @@ const ROOT_MANIFEST = JSON.stringify({ name: 'root', private: true, packageManag
  */
 export const FORCE_FIXTURE_FILES_STUB: FixtureFile[] = [
   fileOf('package.json', ROOT_MANIFEST),
-  fileOf('pnpm-lock.yaml', PNPM_ENV_LOCKFILE),
+  renderLockfile([{ name: FORCE_PACKAGE_STUB, path: 'packages/a', dependencies: [] }]),
   fileOf('pnpm-workspace.yaml', 'packages:\n  - packages/*\n'),
   fileOf('turbo.json', '{"tasks":{"build":{"outputs":["dist/**"]}}}'),
   fileOf('.gitignore', 'dist\n.turbo\nnode_modules\n'),
