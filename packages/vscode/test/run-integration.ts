@@ -14,7 +14,13 @@ import { createRunScratch, runEach, snapshotDir, userDataDirFor } from './utils/
 
 const CI_BUDGET_FACTOR = 3;
 
-const X11_ARGS = ['--ozone-platform=x11'];
+/**
+ * Linux runs under Xvfb, which has no GPU. The first window on a fresh runner sometimes stalled its renderer past
+ * Chromium's 15 s hang timer, and VS Code in extension-test mode then exits 1 ("CodeWindow: detected unresponsive") before
+ * the suite loads: 4 of ~220 ubuntu CI attempts, 2026-10-14 to 20. The likely cause (inferred, not observed) is a sync wait
+ * on GPU-process start, so GPU and software GL are both off: `--disable-gpu` alone falls back to SwiftShader.
+ */
+const X11_ARGS = ['--ozone-platform=x11', '--disable-gpu', '--disable-software-rasterizer'];
 
 const NO_ARGS: string[] = [];
 
