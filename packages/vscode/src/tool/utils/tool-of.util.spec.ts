@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { resolveTool, toolIconIdOf, toolOf } from './tool-of.util.ts';
 import { NO_SCRIPTS, TOOLS } from '../common/tool.const.ts';
-import type { PackageScripts } from '../common/tool.type.ts';
+import type { PackageScripts, ToolMatch } from '../common/tool.type.ts';
 
 const idOf = (command: string | null): string | null => resolveTool(command, NO_SCRIPTS)?.tool.id ?? null;
 
@@ -15,6 +15,18 @@ const scriptsOf = (bodies: Record<string, string>, followTurbo = true): PackageS
 const chainOf = (length: number): Record<string, string> => {
   const names = Array.from({ length }, (_, index) => `d${index + 1}`);
   const entries = names.map((name, index): [string, string] => [name, index === length - 1 ? 'vitest' : `npm run d${index + 2}`]);
+
+  return Object.fromEntries(entries);
+};
+
+const FAN_OUT_SIZE = 14;
+const FAN_OUT_LIMIT_MS = 200;
+
+/** `size` scripts whose bodies all run every script: the paths multiply, no tool is ever reached. */
+const fanOutOf = (size: number): Record<string, string> => {
+  const names = Array.from({ length: size }, (_, index) => `s${index}`);
+  const body = names.map((name) => `npm run ${name}`).join(' && ');
+  const entries = names.map((name): [string, string] => [name, body]);
 
   return Object.fromEntries(entries);
 };
@@ -46,13 +58,19 @@ const LCG_MULTIPLIER = 1664525;
 const LCG_INCREMENT = 1013904223;
 const LCG_MODULUS = 2 ** 32;
 
-const randomCommands = (): string[] => {
-  let seed = 42;
-  const next = (bound: number): number => {
+/** A repeatable generator: each call returns an integer in `[0, bound)`. */
+const seededNext = (start: number): ((bound: number) => number) => {
+  let seed = start;
+
+  return (bound) => {
     seed = (seed * LCG_MULTIPLIER + LCG_INCREMENT) % LCG_MODULUS;
 
     return Math.floor((seed / LCG_MODULUS) * bound);
   };
+};
+
+const randomCommands = (): string[] => {
+  const next = seededNext(42);
   const noiseOf = (): string => {
     const chars = Array.from({ length: next(8) }, () => ALPHABET[next(ALPHABET.length)]);
 
@@ -72,6 +90,41 @@ const randomCommands = (): string[] => {
   });
 
   return commands;
+};
+
+const SCRIPT_COUNT = 7;
+const MAP_COUNT = 300;
+const SCRIPT_NAMES = Array.from({ length: SCRIPT_COUNT }, (_, index) => `s${index}`);
+
+/** `MAP_COUNT` seeded maps of `s0..s6` whose bodies mostly run another script, so long chains, cycles and tools all occur. */
+const randomScriptMaps = (): Record<string, string>[] => {
+  const next = seededNext(7);
+  const segmentOf = (): string => {
+    const roll = next(4);
+    const isTool = roll === 0;
+
+    if (isTool) return BIN_NAMES[next(BIN_NAMES.length)] ?? '';
+
+    return `npm run ${SCRIPT_NAMES[next(SCRIPT_COUNT)]}`;
+  };
+  const bodyOf = (): string => {
+    const segments = Array.from({ length: 1 + next(3) }, segmentOf);
+
+    return segments.join(' && ');
+  };
+  const mapOf = (): Record<string, string> => {
+    const entries = SCRIPT_NAMES.map((name): [string, string] => [name, bodyOf()]);
+
+    return Object.fromEntries(entries);
+  };
+
+  return Array.from({ length: MAP_COUNT }, mapOf);
+};
+
+const runAllIn = (bodies: Record<string, string>): (ToolMatch | null)[] => {
+  const scripts = scriptsOf(bodies);
+
+  return SCRIPT_NAMES.map((name) => resolveTool(`npm run ${name}`, scripts));
 };
 
 describe('FEATURE: tool detection', () => {
@@ -156,6 +209,21 @@ describe('FEATURE: tool detection', () => {
     expect(outcome).toStrictEqual(expected);
   });
 
+  describe('GIVEN 14 scripts that each run all the others and none reach a tool', () => {
+    it('WHEN their shared body is resolved THEN the result is null, and it comes back quickly', () => {
+      const bodies = fanOutOf(FAN_OUT_SIZE);
+      const scripts = scriptsOf(bodies);
+      const command = bodies['s0'] ?? '';
+      const startedAt = performance.now();
+
+      const found = resolveTool(command, scripts);
+      const elapsed = performance.now() - startedAt;
+
+      expect(found).toBeNull();
+      expect(elapsed).toBeLessThan(FAN_OUT_LIMIT_MS);
+    });
+  });
+
   describe('GIVEN toolOf, the wrapper without scripts', () => {
     it('WHEN a command is read THEN it is the resolved tool, or null', () => {
       const found = toolOf('rm -rf dist && vitest');
@@ -177,17 +245,20 @@ describe('FEATURE: tool detection', () => {
       expect(rows.every((match) => TOOLS.includes(match.tool))).toBe(true);
       expect(rows.length).toBeGreaterThan(500);
     });
+  });
 
-    it('WHEN each delegates to a random script body THEN every result is null or a table row with at most 5 names, and nothing throws', () => {
-      const commands = randomCommands();
-      const bodies = commands.slice().reverse();
+  describe('GIVEN 300 seeded random script maps of 7 scripts that mostly run each other', () => {
+    it('WHEN each script of a random script map is run THEN every result is null or a table row with at most 5 distinct names, and nothing throws', () => {
+      const scriptMaps = randomScriptMaps();
 
-      const results = commands.map((command, index) => resolveTool(command, scriptsOf({ s: bodies[index] ?? '' })));
+      const results = scriptMaps.flatMap(runAllIn);
       const rows = results.filter((match) => match !== null);
 
-      expect(results).toHaveLength(SAMPLE_COUNT);
+      expect(results).toHaveLength(MAP_COUNT * SCRIPT_COUNT);
       expect(rows.every((match) => TOOLS.includes(match.tool))).toBe(true);
       expect(rows.every((match) => match.via.length <= MAX_VIA)).toBe(true);
+      expect(rows.every((match) => new Set(match.via).size === match.via.length)).toBe(true);
+      expect(rows.some((match) => match.via.length === MAX_VIA)).toBe(true);
     });
   });
 });

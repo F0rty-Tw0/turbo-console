@@ -31,6 +31,15 @@ const skipLengthOf = (token: string, next: string, afterSkip: boolean): number =
 
 const NO_CANDIDATE = -1;
 const MAX_DELEGATIONS = 5;
+/**
+ * Script bodies one `resolveTool` call may expand. The cycle and depth limits bound a path, not the paths: scripts that
+ * each run all the others multiply them without end, so a call past this budget gives up and resolves to null.
+ */
+const MAX_EXPANSIONS = 256;
+
+/** The expansions a call may still spend; one is created per call. */
+// eslint-disable-next-line local/readonly-type-properties -- one counter shared by every recursive call of a resolve
+type Budget = { left: number };
 
 const candidateIndexOf = (tokens: string[]): number => {
   let index = 0;
@@ -82,7 +91,7 @@ const canFollow = (name: string, path: string[]): boolean => {
   return !isOnPath && !isTooDeep;
 };
 
-const resolveIn = (command: string, scripts: PackageScripts, path: string[]): ToolMatch | null => {
+const resolveIn = (command: string, scripts: PackageScripts, path: string[], budget: Budget): ToolMatch | null => {
   for (const segment of segmentsOf(command)) {
     const step = stepOf(segment, scripts);
 
@@ -94,7 +103,11 @@ const resolveIn = (command: string, scripts: PackageScripts, path: string[]): To
 
     if (!isFollowable) continue;
 
-    const inner = resolveIn(scripts.bodies.get(step) ?? '', scripts, [...path, step]);
+    budget.left -= 1;
+
+    if (budget.left < 0) return null;
+
+    const inner = resolveIn(scripts.bodies.get(step) ?? '', scripts, [...path, step], budget);
 
     if (inner === null) continue;
 
@@ -108,12 +121,18 @@ const resolveIn = (command: string, scripts: PackageScripts, path: string[]): To
 
 /**
  * Spec runner-chains §Behavior: the first command segment that resolves to a well-known tool, directly or through
- * same-package script delegations (at most 5, no repeats). Total and pure.
+ * same-package script delegations (at most 5, no repeats, at most 256 body expansions). Total and pure.
  */
 export const resolveTool: ToolResolver = (command, scripts) => {
   if (command === null) return null;
 
-  return resolveIn(command, scripts, []);
+  const budget: Budget = { left: MAX_EXPANSIONS };
+  const match = resolveIn(command, scripts, [], budget);
+  const isOverBudget = budget.left < 0;
+
+  if (isOverBudget) return null;
+
+  return match;
 };
 
 /** The tool of a command that has no scripts to follow; Task 2.2 removes it. */
