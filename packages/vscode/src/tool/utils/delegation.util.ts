@@ -87,7 +87,19 @@ const valueLengthOf = (option: string, next: string | undefined): number => {
   return 1;
 };
 
-const positionalsOf = (args: string[]): string[] => {
+/** How many tokens after `option` it takes as its value, or `null` when that value is a script name turbo may run as a task. */
+const optionValueLengthOf = (option: string, next: string | undefined, scripts: PackageScripts): number | null => {
+  const length = valueLengthOf(option, next);
+  const isScript = scripts.bodies.has(next ?? '');
+  const isScriptValue = length > 0 && isScript;
+
+  if (isScriptValue) return null;
+
+  return length;
+};
+
+/** The non-option words of `args`; `null` when an option would swallow a script name, since turbo may take it as a task. */
+const positionalsOf = (args: string[], scripts: PackageScripts): string[] | null => {
   const words: string[] = [];
   let index = 0;
 
@@ -98,14 +110,22 @@ const positionalsOf = (args: string[]): string[] => {
     if (!isOption) words.push(token);
     index += 1;
 
-    if (isOption) index += valueLengthOf(token, args[index]);
+    if (!isOption) continue;
+
+    const length = optionValueLengthOf(token, args[index], scripts);
+
+    if (length === null) return null;
+    index += length;
   }
 
   return words;
 };
 
-const turboNameOf = (tokens: string[], from: number): string | null => {
-  const words = positionalsOf(tokens.slice(from, argsEndOf(tokens, from)));
+const turboNameOf = (tokens: string[], from: number, scripts: PackageScripts): string | null => {
+  const words = positionalsOf(tokens.slice(from, argsEndOf(tokens, from)), scripts);
+
+  if (words === null) return null;
+
   const [first = '', ...rest] = words;
   const isRun = first === RUN_WORD;
   const isBuiltin = TURBO_BUILTINS.has(first);
@@ -133,7 +153,7 @@ const nameAt = (tokens: string[], index: number, scripts: PackageScripts): strin
   const isManager = BUILTINS_BY_MANAGER.has(bin);
   const restarts = restartsAtTurbo(tokens, index, scripts);
 
-  if (bin === TURBO_WORD && scripts.followTurbo) return turboNameOf(tokens, index + 1);
+  if (bin === TURBO_WORD && scripts.followTurbo) return turboNameOf(tokens, index + 1, scripts);
 
   if (bin === 'npm') return npmNameOf(tokens, index + 1);
 
