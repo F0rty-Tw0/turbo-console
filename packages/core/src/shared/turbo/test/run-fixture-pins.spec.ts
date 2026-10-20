@@ -4,12 +4,14 @@ import { describe, expect, it } from 'vitest';
 
 import { SINGLE_PACKAGE_FILES_STUB } from './stubs/single-package-files.stub.ts';
 import { FORCE_FIXTURE_FILES_STUB } from '../../../run-summary/test/stubs/force-fixture.stub.ts';
+import { PERSISTENT_ROOT_FILES } from '../../../workspace/test/utils/persistent-fixture.spec.util.ts';
 
 const contentOf = (files: FixtureFile[], path: string): string => files.find((file) => file.path === path)?.content ?? '';
 
 const RUN_FIXTURES: [string, FixtureFile[]][] = [
   ['the single-package fixture', SINGLE_PACKAGE_FILES_STUB],
-  ['the force fixture', FORCE_FIXTURE_FILES_STUB]
+  ['the force fixture', FORCE_FIXTURE_FILES_STUB],
+  ['the persistent fixture root', PERSISTENT_ROOT_FILES]
 ];
 
 describe('FEATURE: fixtures that a real turbo run executes in stay offline', () => {

@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { FIXTURE_PACKAGE_MANAGER, renderLockfile } from '@turbo-console/repo-gen';
-import type { LockfilePackage } from '@turbo-console/repo-gen';
+import type { FixtureFile, LockfilePackage } from '@turbo-console/repo-gen';
 
 import { backdateTree } from '../../../cache/test/utils/backdate.spec.util.ts';
 import { AGE_MS } from '../../../cache/test/utils/root-fixture.spec.util.ts';
@@ -21,6 +21,11 @@ const lockfilePackageOf = (pkg: PersistentFixturePackage): LockfilePackage => {
 
 /** pnpm's own pin plus one importer per package, so a real run never makes pnpm fetch another version of itself. */
 const LOCKFILE = renderLockfile(PERSISTENT_PACKAGES_STUB.map(lockfilePackageOf));
+
+const MANIFEST_FILE: FixtureFile = { path: 'package.json', content: ROOT_MANIFEST };
+
+/** The root `package.json` and `pnpm-lock.yaml` every persistent fixture gets, exported for the pin spec. */
+export const PERSISTENT_ROOT_FILES: FixtureFile[] = [MANIFEST_FILE, LOCKFILE];
 
 const NOOP_SCRIPT = 'node -e 0';
 
@@ -46,10 +51,10 @@ const rootTurboOf = (variant: PersistentVariant): string => (variant === 'p1' ? 
 export const writePersistentFixture = async (parent: string, variant: PersistentVariant): Promise<string> => {
   const root = await mkdtemp(join(parent, 'persistent-'));
   const writeOne = async (pkg: PersistentFixturePackage): Promise<void> => writePackage(root, pkg);
+  const writeRootFile = async (file: FixtureFile): Promise<void> => writeFile(join(root, file.path), file.content);
 
-  await writeFile(join(root, 'package.json'), ROOT_MANIFEST);
+  await Promise.all(PERSISTENT_ROOT_FILES.map(writeRootFile));
   await writeFile(join(root, 'pnpm-workspace.yaml'), WORKSPACE_YAML);
-  await writeFile(join(root, 'pnpm-lock.yaml'), LOCKFILE.content);
   await writeFile(join(root, 'turbo.json'), rootTurboOf(variant));
   await Promise.all(PERSISTENT_PACKAGES_STUB.map(writeOne));
   await backdateTree(root, AGE_MS);
