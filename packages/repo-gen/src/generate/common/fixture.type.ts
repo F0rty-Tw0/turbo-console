@@ -85,6 +85,9 @@ export type PackagePlan = {
   readonly role: PackageRole;
 };
 
+/** What `renderLockfile` needs of a package: its importer path and workspace dependencies. */
+export type LockfilePackage = Pick<PackagePlan, 'dependencies' | 'name' | 'path'>;
+
 export type SpecFile = {
   readonly path: string;
   readonly live: boolean;

@@ -1,9 +1,7 @@
 import { posix } from 'node:path';
 
-import type { FixtureFile, PackagePlan } from '../common/fixture.type.ts';
+import type { FixtureFile, LockfilePackage } from '../common/fixture.type.ts';
 import { PNPM_ENV_LOCKFILE } from '../common/pnpm-env-lockfile.const.ts';
-
-type LockfilePackage = Pick<PackagePlan, 'dependencies' | 'name' | 'path'>;
 
 const LOCKFILE_HEADER =
   "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\nimporters:";
