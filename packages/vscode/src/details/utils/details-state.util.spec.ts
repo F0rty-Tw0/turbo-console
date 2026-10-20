@@ -317,3 +317,24 @@ describe('FEATURE: package details state', () => {
     });
   });
 });
+
+describe('FEATURE: the package label and path in the details state', () => {
+  describe('GIVEN the single-package // node', () => {
+    const root: PackageNode = { ...A_PACKAGE_STUB, name: '//', path: '', label: 'single-app' };
+    const model: WorkspaceModel = { ...DETAILS_MODEL_STUB, singlePackage: true, packages: [root] };
+
+    it('WHEN the state builds THEN label is the package.json name, path is ".", and the key is still //', () => {
+      const state = toDetailsState(inputWith({ state: stateWith({ model }), packageName: '//' }));
+
+      expect(packageOf(state)).toMatchObject({ packageName: '//', label: 'single-app', path: '.' });
+    });
+  });
+
+  describe('GIVEN a monorepo package', () => {
+    it('WHEN the state builds THEN label equals its name', () => {
+      const state = toDetailsState(inputWith({ packageName: 'a' }));
+
+      expect(packageOf(state)).toMatchObject({ packageName: 'a', label: 'a', path: 'packages/a' });
+    });
+  });
+});

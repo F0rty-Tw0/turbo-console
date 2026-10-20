@@ -112,7 +112,7 @@ test.describe('FEATURE: package details page', () => {
     'GIVEN a package with a hostile name, the name renders as text',
     { annotation: AC5 },
     async ({ detailsPage }): Promise<void> => {
-      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, packageName: HOSTILE_NAME_STUB };
+      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, packageName: HOSTILE_NAME_STUB, label: HOSTILE_NAME_STUB };
 
       await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
 
@@ -124,6 +124,18 @@ test.describe('FEATURE: package details page', () => {
       await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
     }
   );
+
+  test('GIVEN a label that differs from the key, the heading shows the label and the path reads "."', async ({
+    detailsPage
+  }): Promise<void> => {
+    const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, packageName: '//', label: 'single-app', path: '.' };
+
+    await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
+
+    await test.step('THEN the heading is the label', async (): Promise<void> => expect(detailsPage.heading).toHaveText('single-app'));
+
+    await test.step('AND the path is "."', async (): Promise<void> => expect(detailsPage.path).toHaveText('.'));
+  });
 
   test('GIVEN a task with a hostile name, the name renders as text', { annotation: AC5 }, async ({ detailsPage }): Promise<void> => {
     const card = detailsPage.card(HOSTILE_NAME_STUB);

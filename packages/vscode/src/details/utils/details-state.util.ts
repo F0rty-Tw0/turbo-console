@@ -11,6 +11,7 @@ import { LOG_LINE_MAX } from '../../shared/common/text.const.ts';
 import { cleanLines } from '../../shared/utils/clean-text.util.ts';
 import { toolIconIdOf, toolOf } from '../../tool/utils/tool-of.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
+import { packagePathTextOf, packageTextOf } from '../../tree/utils/model-view.util.ts';
 import { binaryMessageOf } from '../../tree/utils/root-rows.util.ts';
 import type { CardSources, DetailsInput } from '../common/details.type.ts';
 
@@ -96,7 +97,8 @@ const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: Detail
     kind: 'package',
     root: input.root,
     packageName: input.packageName,
-    path: pkg.path,
+    label: packageTextOf(pkg),
+    path: packagePathTextOf(pkg.path),
     tags: pkg.tags,
     tasks,
     dryRun: input.dryRun.phase,

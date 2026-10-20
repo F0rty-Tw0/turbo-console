@@ -60,6 +60,7 @@ export const PACKAGE_DETAILS_STUB: PackageDetails = {
   kind: 'package',
   root: '/repo',
   packageName: 'web',
+  label: 'web',
   path: 'apps/web',
   tags: ['scope:web', 'type:app'],
   tasks,
