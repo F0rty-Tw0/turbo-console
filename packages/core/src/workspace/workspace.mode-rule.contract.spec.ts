@@ -53,6 +53,13 @@ const SHAPES: Shape[] = [
     single: false
   },
   {
+    title: 'pnpm, yaml indented root mapping',
+    manager: 'pnpm',
+    workspaces: undefined,
+    yaml: '  packages:\n  - "packages/*"\n',
+    single: false
+  },
+  {
     title: 'pnpm, yaml flow list over lines',
     manager: 'pnpm',
     workspaces: undefined,

@@ -44,11 +44,18 @@ const hasInlineItems = (inline: string): boolean => {
   return inner.trim() !== '';
 };
 
-/** Whether a top-level `packages` key holds an item: an inline list, or a `-` line next. Line scan, no YAML parser. */
+const indentOf = (line: string): number => line.length - line.trimStart().length;
+
+/**
+ * Whether a top-level `packages` key holds an item: an inline list, or a `-` line next. Top level is the indent of the
+ * first significant line (YAML allows an indented root mapping). Line scan, no YAML parser.
+ */
 const declaresPackages = (text: string): boolean => {
   const lines = text.replace(BYTE_ORDER_MARK, '').split(/\r?\n/).filter(isSignificant);
-  const keyIndex = lines.findIndex((line) => line.startsWith('packages:'));
-  const keyLine = lines[keyIndex] ?? '';
+  const rootIndent = indentOf(lines[0] ?? '');
+  const isRootKey = (line: string): boolean => indentOf(line) === rootIndent && line.trimStart().startsWith('packages:');
+  const keyIndex = lines.findIndex(isRootKey);
+  const keyLine = lines[keyIndex]?.trimStart() ?? '';
   const inline = keyLine.slice('packages:'.length).replace(TRAILING_COMMENT, '').trim();
   const next = lines[keyIndex + 1] ?? '';
 

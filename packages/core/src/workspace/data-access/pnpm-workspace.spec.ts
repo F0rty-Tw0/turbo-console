@@ -68,7 +68,9 @@ describe('FEATURE: pnpm-workspace.yaml declares workspace packages', () => {
       ['an unclosed flow list (read as declaring)', 'packages: [\n', true],
       ['an inline block scalar', 'packages: |\n  - a\n', false],
       ['a bare dash item', 'packages:\n  -\n', true],
-      ['a nested packages key', 'x:\n  packages:\n    - a\n', false]
+      ['a nested packages key', 'x:\n  packages:\n    - a\n', false],
+      ['an indented root mapping (valid YAML)', '  packages:\n  - a\n', true],
+      ['a nested packages key under an indented root', '  x:\n    packages:\n    - a\n', false]
     ])('WHEN the file is %s THEN hasPnpmWorkspacePackages is %j', async (_, text, expected) => {
       const root = await rootWithFiles(tempDir, writtenFiles(text));
 
