@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ModelViews } from './model-views.ts';
 import type { ToolResolver } from '../../tool/common/tool.type.ts';
+import { seededNext } from '../../tool/test/utils/seeded-next.spec.util.ts';
+import { packageScriptsOf } from '../../tool/utils/package-scripts.util.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
 import { toolResolverMock } from '../test/mocks/tool-lookup.mock.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
@@ -36,6 +38,73 @@ const pkgWith = (bodies: Record<string, string>): PackageNode => packageNamed('a
 const rootPkgWith = (bodies: Record<string, string>): PackageNode => packageNamed(ROOT_NAME, bodies);
 
 const PKG = pkgWith({ test: DELEGATING_COMMAND, 'test:app': 'vitest' });
+
+const PACKAGE_COUNT = 40;
+const ROOT_EVERY = 5;
+const QUERY_COUNT = 3000;
+const SCRIPT_NAMES = ['t', 'test', 'build', 'lint'];
+const TOOL_BODIES = ['vitest', 'jest', 'eslint .', 'echo done'];
+const DELEGATION_STARTS = ['npm run', 'pnpm', 'turbo run', 'yarn run -s'];
+const SEGMENT_STARTS = [...TOOL_BODIES, ...DELEGATION_STARTS];
+
+type SeededQueries = {
+  readonly views: ModelViews;
+  readonly asks: [PackageNode, boolean, string][];
+};
+
+/** A body that ends at a tool, or runs another script (or turbo task) by name, so chains and `//` skips occur. */
+const bodyOf = (next: (bound: number) => number): string => {
+  const roll = next(2);
+  const isTool = roll === 0;
+
+  if (isTool) return TOOL_BODIES[next(TOOL_BODIES.length)] ?? '';
+
+  return `${DELEGATION_STARTS[next(DELEGATION_STARTS.length)]} ${SCRIPT_NAMES[next(SCRIPT_NAMES.length)]}`;
+};
+
+const seededPackage = (next: (bound: number) => number, index: number): PackageNode => {
+  const name = index % ROOT_EVERY === 0 ? ROOT_NAME : `p${index}`;
+  const entries = SCRIPT_NAMES.filter(() => next(3) > 0).map((script): [string, string] => [script, bodyOf(next)]);
+  const pkg = packageNamed(name, Object.fromEntries(entries));
+
+  return pkg;
+};
+
+const seededCommandOf = (next: (bound: number) => number): string => {
+  const segments = Array.from({ length: 1 + next(2) }, () => {
+    const start = SEGMENT_STARTS[next(SEGMENT_STARTS.length)] ?? '';
+    const isDelegation = DELEGATION_STARTS.includes(start);
+
+    if (isDelegation) return `${start} ${SCRIPT_NAMES[next(SCRIPT_NAMES.length)]}`;
+
+    return start;
+  });
+
+  return segments.join(' && ');
+};
+
+/** One package keeps one `singlePackage`, as production does: the per-package memo keeps the first one it sees. */
+const seededQueriesOf = (seed: number): SeededQueries => {
+  const next = seededNext(seed);
+  const packages = Array.from({ length: PACKAGE_COUNT }, (_, index) => seededPackage(next, index));
+  const slots = packages.map((pkg): [PackageNode, boolean] => {
+    const roll = next(2);
+
+    return [pkg, roll === 0];
+  });
+  const commands = Array.from({ length: 2 * SCRIPT_NAMES.length * SEGMENT_STARTS.length }, () => seededCommandOf(next));
+  const askOf = (): [PackageNode, boolean, string] => {
+    const [pkg, single] = slots[next(slots.length)] ?? [PKG, false];
+    const command = commands[next(commands.length)] ?? '';
+    const ask: [PackageNode, boolean, string] = [pkg, single, command];
+
+    return ask;
+  };
+  const asks = Array.from({ length: QUERY_COUNT }, askOf);
+  const queries: SeededQueries = { views: new ModelViews(resolveTool), asks };
+
+  return queries;
+};
 
 describe('FEATURE: model views per model', () => {
   describe('GIVEN a model', () => {
@@ -150,6 +219,13 @@ describe('FEATURE: model views per model', () => {
       expect(match).toBeNull();
     });
 
+    it('GIVEN a monorepo // asked for turbo run test first WHEN another package is asked for it THEN it still follows its test script', () => {
+      const root = views.toolOf(rootPkgWith({ test: 'vitest' }), false, 'turbo run test');
+      const web = views.toolOf(pkgWith({ test: 'vitest' }), false, 'turbo run test');
+
+      expect([root, web?.tool.id]).toStrictEqual([null, 'vitest']);
+    });
+
     it('GIVEN a single-package // WHEN turbo run test is asked for THEN it follows the test script', () => {
       const match = views.toolOf(rootPkgWith({ test: 'vitest' }), true, 'turbo run test');
 
@@ -166,6 +242,18 @@ describe('FEATURE: model views per model', () => {
       views.toolOf(PKG, false, null);
 
       expect(resolver).not.toHaveBeenCalled();
+    });
+  });
+
+  describe(`GIVEN one instance asked ${QUERY_COUNT} interleaved questions over ${PACKAGE_COUNT} seeded packages, every ${ROOT_EVERY}th a //`, () => {
+    it.each([1, 2, 3])('WHEN seed %i asks them THEN each answer equals a fresh resolve over that package', (seed) => {
+      const { views, asks } = seededQueriesOf(seed);
+
+      const answers = asks.map(([pkg, single, command]) => views.toolOf(pkg, single, command));
+      const fresh = asks.map(([pkg, single, command]) => resolveTool(command, packageScriptsOf(pkg, single)));
+
+      expect(answers).toStrictEqual(fresh);
+      expect(fresh.filter((match) => match !== null).length).toBeGreaterThan(QUERY_COUNT / 10);
     });
   });
 });
