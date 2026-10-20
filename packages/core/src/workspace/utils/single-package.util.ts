@@ -1,3 +1,4 @@
+import type { PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
 import type { PackageManagerName } from '../common/workspace-model.type.ts';
 
 const isNonEmptyList = (value: unknown): value is unknown[] => Array.isArray(value) && value.length > 0;
@@ -16,4 +17,22 @@ export const declaresWorkspaces = (manager: PackageManagerName, workspaces: unkn
   if (typeof workspaces !== 'object' || workspaces === null) return false;
 
   return isNonEmptyList(Reflect.get(workspaces, 'packages'));
+};
+
+/**
+ * `graph` with its `root` package as the one node and no edges, so the model build, the cache and its keys see one
+ * package list; `graph` itself when `root` is `null`.
+ */
+export const singlePackageGraphOf = (graph: PackageGraph): PackageGraph => {
+  const { root } = graph.data;
+
+  if (root === null) return graph;
+
+  const nodes = { items: [root] };
+  const edges = { items: [] };
+  const packageGraph = { nodes, edges };
+  const data = { packageGraph, root };
+  const derived: PackageGraph = { data };
+
+  return derived;
 };

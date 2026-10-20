@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { declaresWorkspaces } from './single-package.util.ts';
+import { declaresWorkspaces, singlePackageGraphOf } from './single-package.util.ts';
 import type { PackageManagerName } from '../common/workspace-model.type.ts';
+import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
 
 type Row = {
   readonly title: string;
@@ -10,6 +11,8 @@ type Row = {
   readonly pnpmPackages: boolean;
   readonly expected: boolean;
 };
+
+const ROOT_PACKAGE = graphPackage('//', '', [], [graphTask('//#build', 'echo', [], [])]);
 
 const LIST = ['packages/*'];
 
@@ -49,6 +52,24 @@ describe('FEATURE: the repo declares workspaces', () => {
       { title: 'npm with null', manager: 'npm', workspaces: null, pnpmPackages: false, expected: false }
     ])('WHEN $title THEN declaresWorkspaces is $expected', ({ manager, workspaces, pnpmPackages, expected }) => {
       expect(declaresWorkspaces(manager, workspaces, pnpmPackages)).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a graph with an empty node list and a root package', () => {
+    it('WHEN the graph is derived THEN nodes is [root], edges is [], and root is kept', () => {
+      const derived = singlePackageGraphOf(packageGraph([], [], ROOT_PACKAGE));
+
+      expect(derived.data.packageGraph.nodes.items).toStrictEqual([ROOT_PACKAGE]);
+      expect(derived.data.packageGraph.edges.items).toStrictEqual([]);
+      expect(derived.data.root).toStrictEqual(ROOT_PACKAGE);
+    });
+  });
+
+  describe('GIVEN a graph whose root is null', () => {
+    it('WHEN the graph is derived THEN it is returned as is', () => {
+      const graph = packageGraph([], [], null);
+
+      expect(singlePackageGraphOf(graph)).toBe(graph);
     });
   });
 });
