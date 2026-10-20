@@ -1,13 +1,12 @@
 import { TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 
+import { binOf } from './delegation.util.ts';
 import { TOOL_BY_BIN } from '../common/tool.const.ts';
 import type { ToolSpec } from '../common/tool.type.ts';
 
 const SEGMENT_END = /&&|\||;/;
 const WHITESPACE = /\s+/;
 const ENV_ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
-const PATH_PREFIX = /^.*[/\\]/;
-const BIN_SUFFIX = /\.(?:cmd|exe|js)$/;
 const SKIPPED_TOKENS: string[] = ['cross-env', 'env', 'npx', 'bunx', '--'];
 const MANAGERS: string[] = ['pnpm', 'npm', 'yarn', 'bun'];
 const RUNNER_VERBS: string[] = ['exec', 'dlx'];
@@ -44,8 +43,6 @@ const candidateOf = (tokens: string[]): string | null => {
 
   return null;
 };
-
-const binOf = (candidate: string): string => candidate.toLowerCase().replace(PATH_PREFIX, '').replace(BIN_SUFFIX, '');
 
 /** Spec 1c-c §4.2: the well-known tool the first command segment runs, or `null`. Total and pure. */
 export const toolOf = (command: string | null): ToolSpec | null => {

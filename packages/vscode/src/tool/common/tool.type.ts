@@ -22,3 +22,11 @@ export type ToolSpec = {
 
 /** The tool a task's command runs, or `null`; `toolOf` answers it. */
 export type ToolLookup = (command: string | null) => ToolSpec | null;
+
+/** What a package's scripts offer a delegation: the bodies by name, and whether `turbo X` may follow to `X` (spec D2). */
+export type PackageScripts = {
+  /** Every script body of the package by name. */
+  readonly bodies: ReadonlyMap<string, string>;
+  /** `false` in a monorepo's root package `//`, where turbo runs `X` across the workspace. */
+  readonly followTurbo: boolean;
+};
