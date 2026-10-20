@@ -37,4 +37,4 @@ export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
 };
 
 /** The scope of folder `/ws` over `WORKSPACE_MODEL_STUB`. */
-export const ROW_SCOPE_STUB: RowScope = { root: '/ws', packageManager: PACKAGE_MANAGER_STUB };
+export const ROW_SCOPE_STUB: RowScope = { root: '/ws', packageManager: PACKAGE_MANAGER_STUB, singlePackage: false };

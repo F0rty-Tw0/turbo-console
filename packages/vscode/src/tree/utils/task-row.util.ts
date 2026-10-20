@@ -8,7 +8,8 @@ import { settledMatchOf } from '../../run/utils/run-result.util.ts';
 import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
-import type { ToolSpec } from '../../tool/common/tool.type.ts';
+import type { ToolMatch } from '../../tool/common/tool.type.ts';
+import { toolTitleOf } from '../../tool/utils/package-scripts.util.ts';
 import { toolIconIdOf } from '../../tool/utils/tool-of.util.ts';
 import { IDLE_ICON } from '../common/icon.const.ts';
 import { CONTINUOUS_KIND_LINES } from '../common/task-text.const.ts';
@@ -48,12 +49,18 @@ const kindLines = (task: TaskNode): string[] => {
   return task.persistent ? CONTINUOUS_KIND_LINES : NO_LINES;
 };
 
+const toolLineTextOf = (match: ToolMatch | null): string | null => {
+  if (match === null) return null;
+
+  return toolTitleOf(match);
+};
+
 /**
  * A turbo task shows its body as `Command`; a script shows what runs it (left out when refused), then its body as `Script`.
  * The `Tool` line follows the body, so a refused script still has it.
  */
-const commandLinesOf = (task: TaskNode, manager: PackageManagerName, tool: ToolSpec | null): (string | null)[] => {
-  const toolLine = labelled('Tool', tool?.title ?? null);
+const commandLinesOf = (task: TaskNode, manager: PackageManagerName, match: ToolMatch | null): (string | null)[] => {
+  const toolLine = labelled('Tool', toolLineTextOf(match));
 
   if (task.isTurboTask) return [labelled('Command', task.command), toolLine];
 
@@ -63,8 +70,8 @@ const commandLinesOf = (task: TaskNode, manager: PackageManagerName, tool: ToolS
   return [command, script, toolLine];
 };
 
-const taskFactLines = (task: TaskNode, manager: PackageManagerName, tool: ToolSpec | null): string[] => {
-  const commands = commandLinesOf(task, manager, tool);
+const taskFactLines = (task: TaskNode, manager: PackageManagerName, match: ToolMatch | null): string[] => {
+  const commands = commandLinesOf(task, manager, match);
   const kind = labelled('Kind', task.kind);
   const lines = [task.description, ...commands, kind];
 
@@ -114,15 +121,15 @@ const runLines = (entry: RunEntry | undefined): string[] => {
   return lines.flatMap(lineOf);
 };
 
-const iconIdOfTool = (tool: ToolSpec | null): string | null => {
-  if (tool === null) return null;
+const iconIdOfTool = (match: ToolMatch | null): string | null => {
+  if (match === null) return null;
 
-  return toolIconIdOf(tool);
+  return toolIconIdOf(match.tool);
 };
 
 /** Spec 1c-c §4.6: the lowest rung. Only the idle wrench gives way to the tool's logo; run state and kind icons win. */
-const toolIcon = (display: TaskDisplay, entry: RunEntry | undefined, tool: ToolSpec | null): IconSpec => {
-  const iconId = iconIdOfTool(tool);
+const toolIcon = (display: TaskDisplay, entry: RunEntry | undefined, match: ToolMatch | null): IconSpec => {
+  const iconId = iconIdOfTool(match);
   const isIdleWrench = entry === undefined && display.icon.id === IDLE_ICON.id;
 
   if (!isIdleWrench || iconId === null) return display.icon;
@@ -134,12 +141,12 @@ const toolIcon = (display: TaskDisplay, entry: RunEntry | undefined, tool: ToolS
 
 /** Tooltip lines are raw text: `tooltipMarkdownOf` cleans them. The description is built from numbers and fixed words, but is cleaned like every label. */
 export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, context: RowContext): TreeRow => {
-  const { root, packageManager } = scope;
+  const { root, packageManager, singlePackage } = scope;
   const entry = context.runs(root, task.id);
   const display = taskDisplay(task, entry, context.now);
-  const tool = context.tools(task.command);
+  const match = context.tools(pkg, singlePackage, task.command);
   const kind = kindLines(task);
-  const facts = taskFactLines(task, packageManager.name, tool);
+  const facts = taskFactLines(task, packageManager.name, match);
   const ran = runLines(entry);
   const tooltip = [...kind, ...facts, ...ran];
   const row: TreeRow = {
@@ -150,7 +157,7 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
     packageName: pkg.name,
     label: cleanText(task.name, LABEL_MAX),
     description: cleanText(display.description, DESCRIPTION_MAX),
-    icon: toolIcon(display, entry, tool),
+    icon: toolIcon(display, entry, match),
     contextValue: display.contextValue,
     collapsible: 'none',
     tooltip,
