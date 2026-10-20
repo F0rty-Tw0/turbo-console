@@ -6,7 +6,7 @@ import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
-import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
+import type { IconsMode, TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { nodesOf } from '../utils/node-cache.util.ts';
 import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts';
 import { rootRowOf, rootRows } from '../utils/root-rows.util.ts';
@@ -26,11 +26,13 @@ export class PackagesTree {
   private readonly toolOfCommand: ToolLookup = (pkg, singlePackage, command) => this.views.toolOf(pkg, singlePackage, command);
   private readonly refresher: TreeRefresher;
   private mode: TreeMode;
+  private icons: IconsMode;
   private scopeShown = false;
 
-  public constructor(store: Roots, mode: TreeMode, ports: TreePorts) {
+  public constructor(store: Roots, mode: TreeMode, icons: IconsMode, ports: TreePorts) {
     this.store = store;
     this.mode = mode;
+    this.icons = icons;
     this.ports = ports;
 
     const rowContext = (): RowContext => this.rowContext();
@@ -71,6 +73,15 @@ export class PackagesTree {
   public setMode(mode: TreeMode): void {
     this.mode = mode;
     this.redraw();
+  }
+
+  public setIcons(icons: IconsMode): void {
+    this.icons = icons;
+    this.redraw();
+  }
+
+  public iconsMode(): IconsMode {
+    return this.icons;
   }
 
   /** Spec §4.8: relabels every package row with one redraw; the views do not depend on it, so none is rebuilt. */

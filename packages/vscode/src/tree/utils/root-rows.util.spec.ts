@@ -232,7 +232,8 @@ describe('FEATURE: rows of a root', () => {
           contextValue: 'turboPackage',
           collapsible: 'collapsed',
           tooltip: ['a', 'Path: packages/a', 'Tasks: 1'],
-          command: null
+          command: null,
+          folder: 'packages/a'
         }
       ]);
     });
@@ -261,6 +262,12 @@ describe('FEATURE: rows of a root', () => {
       const rows = rootRows(stateWith({ model: modelOf(packages) }), rowContextOf('list'));
 
       expect(rows).toMatchObject([{ id: `pkg:/ws\0${name}`, key: name, packageName: name, label: 'ab' }]);
+    });
+
+    it('WHEN the root package // is listed THEN its folder is the root itself, an empty relative path', () => {
+      const rows = rootRows(stateWith({ model: modelOf([packageAt('//', '')]) }), rowContextOf('list'));
+
+      expect(rows[0]?.folder).toBe('');
     });
   });
 });
@@ -292,6 +299,12 @@ describe('FEATURE: row of a workspace folder', () => {
       const row = rootNodeRow({ root, name: `w${BIDI}s` }, null);
 
       expect(row).toMatchObject({ id: `root:${root}`, key: root, label: 'ws' });
+    });
+
+    it('WHEN built THEN it has no folder, so it keeps its root-folder icon in every icons mode', () => {
+      const row = rootNodeRow(ROOT_FOLDER_STUB, null);
+
+      expect('folder' in row).toBe(false);
     });
   });
 });

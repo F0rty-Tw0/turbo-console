@@ -10,6 +10,7 @@ import type { Timings, TurboConsoleApi } from '../../src/shared/common/api.type.
 import { BACKDATE_MS } from '../common/launch.const.ts';
 import type { SuiteEnv } from '../common/launch.type.ts';
 import { backdateTree } from '../utils/backdate.spec.util.ts';
+import { iconsCase } from '../utils/icons-case.spec.util.ts';
 import { packageLifecycleCase } from '../utils/package-lifecycle.spec.util.ts';
 import { parityCase } from '../utils/parity-case.spec.util.ts';
 import { runCases } from '../utils/run-cases.spec.util.ts';
@@ -143,6 +144,7 @@ export const run = async (): Promise<void> => {
     await runCases(api, root, manifest, env);
     await parityCase(api, root, manifest, env);
     // later spec §5.3 cases go here, after case 9 and before the warm-up
+    await iconsCase(api, root, manifest);
     await step('warm-up', async () => warmUp(api, root));
     await markDone(env);
   } finally {

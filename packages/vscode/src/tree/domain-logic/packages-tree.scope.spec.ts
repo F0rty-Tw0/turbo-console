@@ -41,7 +41,7 @@ const fixtureOf = (): Fixture => {
     now: () => 7,
     wallNow: () => 7
   };
-  const tree = new PackagesTree(store, 'list', ports);
+  const tree = new PackagesTree(store, 'list', 'builtin', ports);
 
   store.set([ROOT_FOLDER_STUB], coordinatorMock);
   store.onDidChange((change) => {

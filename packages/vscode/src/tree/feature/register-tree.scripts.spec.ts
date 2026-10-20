@@ -76,7 +76,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
     const deps = providerDepsOf(undefined, toggle);
     const workspaceState: ScopeStore = { get: (): unknown => undefined, update: async (): Promise<void> => Promise.resolve() };
 
-    provider = new PackagesTreeProvider(session.store, 'list', deps);
+    provider = new PackagesTreeProvider(session.store, 'list', 'builtin', deps);
     context = { subscriptions: [], workspaceState, scripts: toggle };
   };
 

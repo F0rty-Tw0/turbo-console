@@ -5,7 +5,7 @@ import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { PackagesTreeApi, RunningTasks, TreeNode, TreePorts, TreeProviderDeps, TreeRefresh } from '../common/tree-node.type.ts';
-import type { TreeMode } from '../common/tree-row.type.ts';
+import type { IconsMode, TreeMode } from '../common/tree-row.type.ts';
 import { PackagesTree } from '../domain-logic/packages-tree.ts';
 
 /**
@@ -20,7 +20,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
   private readonly scripts: ScriptsToggleApi;
   private readonly unsubscribe: () => void;
 
-  public constructor(store: Roots, mode: TreeMode, deps: TreeProviderDeps) {
+  public constructor(store: Roots, mode: TreeMode, icons: IconsMode, deps: TreeProviderDeps) {
     const fire = (refresh: TreeRefresh): void => {
       this.emitter.fire(refresh);
     };
@@ -37,7 +37,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
     };
 
     this.onDidChangeTreeData = this.emitter.event;
-    this.tree = new PackagesTree(store, mode, ports);
+    this.tree = new PackagesTree(store, mode, icons, ports);
     this.scripts = scripts;
     this.unsubscribe = scripts.onDidChange(() => {
       this.tree.scriptsChanged();
@@ -51,7 +51,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
   public getTreeItem(node: TreeNode): vscode.TreeItem {
     const row = this.tree.rowOf(node);
 
-    return toTreeItem(row);
+    return toTreeItem(row, this.tree.iconsMode());
   }
 
   public refreshFor(change: RootChange): void {
@@ -60,6 +60,10 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
 
   public setMode(mode: TreeMode): void {
     this.tree.setMode(mode);
+  }
+
+  public setIcons(icons: IconsMode): void {
+    this.tree.setIcons(icons);
   }
 
   public runChanged(entry: RunEntry): void {

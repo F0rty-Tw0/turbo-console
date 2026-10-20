@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 
+import * as vscode from 'vscode';
+
 import { step } from './suite-env.spec.util.ts';
 import { packageNodes, tooltipLinesOf } from './tree-polish-tree.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
@@ -46,5 +48,24 @@ export const rowAndTasksCase = async (api: TurboConsoleApi): Promise<void> => {
     assert.ok(children.every(isTask));
     assert.deepEqual(children.map(keyOf).sort(), SINGLE_TASK_IDS);
     assert.deepEqual(continuous.map(keyOf), [PERSISTENT_ROOT_ID]);
+  });
+};
+
+/**
+ * L11-6 (spec 2026-10-20 theme icons): L11 opens with `turboConsole.icons: theme` already set, so the activation read
+ * alone puts the theme folder on the `//` row, over the root itself.
+ */
+export const themeIconCase = async (api: TurboConsoleApi, root: string): Promise<void> => {
+  await step('L11-6: with theme icons preset, the // row takes the theme folder over the root', async () => {
+    const [pkg] = await packageNodes(api);
+
+    if (pkg === undefined) throw new Error('the tree holds no package row');
+
+    const item = api.tree.getTreeItem(pkg);
+    const icon = item.iconPath;
+
+    assert.ok(icon instanceof vscode.ThemeIcon, 'the // row has no ThemeIcon');
+    assert.equal(icon.id, 'folder');
+    assert.equal(item.resourceUri?.fsPath, root);
   });
 };

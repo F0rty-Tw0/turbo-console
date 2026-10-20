@@ -14,6 +14,9 @@ export type RowCommand = {
 
 export type TreeMode = 'folders' | 'list';
 
+/** Whether folder and package rows take the file icon theme's folder icon, or Turbo Console's own codicons. */
+export type IconsMode = 'theme' | 'builtin';
+
 export type RowKind = 'root' | 'dir' | 'pkg' | 'scripts' | 'task' | 'msg';
 
 type Collapsible = 'none' | 'collapsed' | 'expanded';
@@ -47,6 +50,11 @@ export type TreeRow = {
   readonly collapsible: Collapsible;
   readonly tooltip: string[];
   readonly command: RowCommand | null;
+  /**
+   * The row's directory relative to `root` (`''` for the root package `//`), for a file icon theme; only dir and package
+   * rows have one. It stays relative so a row costs no path join unless theme icons are on.
+   */
+  readonly folder?: string;
 };
 
 /** A kind token (`turboTask`, `turboScript`), then at most one state token; menus match them by prefix (spec 1c-a §4.12). */

@@ -34,7 +34,7 @@ const fixtureOf = (folders: RootFolder[], mode: TreeMode, make: (folder: RootFol
   const fire = vi.fn();
   const treeVisible = new Map<string, Span>();
   const ports: TreePorts = { runs: () => undefined, ...SCRIPTS_HIDDEN_PORTS, fire, treeVisible, now: () => 7, wallNow: () => 7 };
-  const tree = new PackagesTree(store, mode, ports);
+  const tree = new PackagesTree(store, mode, 'builtin', ports);
 
   store.set(folders, make);
   store.onDidChange((change) => {
@@ -148,6 +148,20 @@ describe('FEATURE: packages tree', () => {
       });
     });
 
+    describe('WHEN the icons mode changes to theme', () => {
+      beforeEach(() => {
+        fixture.tree.setIcons('theme');
+      });
+
+      it('THEN the whole tree fires', () => {
+        expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(undefined);
+      });
+
+      it('THEN the icons mode reads theme', () => {
+        expect(fixture.tree.iconsMode()).toBe('theme');
+      });
+    });
+
     describe('WHEN the mode changes to folders', () => {
       beforeEach(() => {
         fixture.tree.setMode('folders');
@@ -212,7 +226,7 @@ describe('FEATURE: packages tree', () => {
         now: () => 7,
         wallNow: () => 7
       };
-      const tree = new PackagesTree(store, 'list', ports);
+      const tree = new PackagesTree(store, 'list', 'builtin', ports);
       const answering = (): Coordinator => {
         const base = coordinatorMock();
         const firstChildren = async (): Promise<void> => {

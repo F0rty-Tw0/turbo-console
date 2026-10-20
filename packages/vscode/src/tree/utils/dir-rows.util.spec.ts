@@ -52,7 +52,8 @@ describe('FEATURE: children rows of a directory', () => {
         contextValue: 'turboDir',
         collapsible: 'expanded',
         tooltip: ['Path: packages/libs', 'Packages: 1'],
-        command: null
+        command: null,
+        folder: 'packages/libs'
       });
     });
 
@@ -71,7 +72,8 @@ describe('FEATURE: children rows of a directory', () => {
         contextValue: 'turboPackage',
         collapsible: 'collapsed',
         tooltip: ['a', 'Path: packages/a', 'Tasks: 1'],
-        command: null
+        command: null,
+        folder: 'packages/a'
       });
     });
   });

@@ -38,7 +38,7 @@ const runStoreFixtureOf = (): RunStoreFixture => {
   const runs = new RunStore();
   const store = new RootStore();
   const deps = providerDepsOf(runs.get, scriptsToggleMock(), runs.runningIds);
-  const provider = new PackagesTreeProvider(store, 'list', deps);
+  const provider = new PackagesTreeProvider(store, 'list', 'builtin', deps);
   const request: RunRequest = { ...RUN_REQUEST_STUB, root: ROOT_FOLDER_STUB.root, task: S_TASK };
   const definition: RunDefinition = { root: ROOT_FOLDER_STUB.root, id: S_TASK.id };
 

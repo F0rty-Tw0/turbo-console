@@ -1,7 +1,9 @@
+import { join } from 'node:path';
+
 import * as vscode from 'vscode';
 
 import { tooltipMarkdownOf } from '../../shared/utils/tooltip.util.ts';
-import type { RowCommand, TreeRow } from '../common/tree-row.type.ts';
+import type { IconsMode, RowCommand, TreeRow } from '../common/tree-row.type.ts';
 
 const COLLAPSIBLE_STATES: Readonly<Record<TreeRow['collapsible'], vscode.TreeItemCollapsibleState>> = {
   none: vscode.TreeItemCollapsibleState.None,
@@ -29,19 +31,33 @@ const tooltipFor = (row: TreeRow): vscode.MarkdownString => {
   return new vscode.MarkdownString(markdown);
 };
 
+/** In theme mode a row with a folder takes the theme's folder icon, drawn from `resourceUri`; every other row keeps its own codicon. */
+const applyIcon = (item: vscode.TreeItem, row: TreeRow, icons: IconsMode): void => {
+  if (icons === 'theme' && row.folder !== undefined) {
+    item.iconPath = vscode.ThemeIcon.Folder;
+    item.resourceUri = vscode.Uri.file(join(row.root, row.folder));
+
+    return;
+  }
+
+  const color = themeColorOf(row.icon.color);
+
+  item.iconPath = new vscode.ThemeIcon(row.icon.id, color);
+};
+
 /**
  * A row as VS Code's item. Without tooltip lines the tooltip stays unset, so VS Code shows the label on hover (an empty
  * string would show nothing, and a cut-off message label could not be read); otherwise one cleaned line per line.
  */
-export const toTreeItem = (row: TreeRow): vscode.TreeItem => {
+export const toTreeItem = (row: TreeRow, icons: IconsMode): vscode.TreeItem => {
   const item = new vscode.TreeItem(row.label, COLLAPSIBLE_STATES[row.collapsible]);
-  const color = themeColorOf(row.icon.color);
   const tooltip = tooltipFor(row);
 
   item.id = row.id;
   item.description = row.description;
-  item.iconPath = new vscode.ThemeIcon(row.icon.id, color);
   item.contextValue = row.contextValue;
+
+  applyIcon(item, row, icons);
 
   if (row.tooltip.length > 0) item.tooltip = tooltip;
 

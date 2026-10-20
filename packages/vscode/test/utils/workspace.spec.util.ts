@@ -62,14 +62,19 @@ export const createRunScratch = async (): Promise<RunScratch> => {
 };
 
 /**
- * A user-data dir under the scratch dir whose user settings set `turboConsole.turboPath` unless it is `null`; it is a
- * `machine`-scoped setting that a workspace's settings cannot set. Writing it again for a launch that reuses the dir
- * keeps its other state.
+ * A user-data dir under the scratch dir whose user settings hold the launch's `preset` settings and set
+ * `turboConsole.turboPath` unless it is `null`; it is a `machine`-scoped setting that a workspace's settings cannot set.
+ * Writing it again for a launch that reuses the dir keeps its other state.
  */
-export const userDataDirFor = async (scratch: RunScratch, name: string, turboPath: string | null): Promise<string> => {
+export const userDataDirFor = async (
+  scratch: RunScratch,
+  name: string,
+  turboPath: string | null,
+  preset: Readonly<Record<string, string>>
+): Promise<string> => {
   const userDataDir = join(scratch.dir, name);
   const userDir = join(userDataDir, 'User');
-  const settings: Record<string, string> = {};
+  const settings: Record<string, string> = { ...preset };
 
   if (turboPath !== null) settings['turboConsole.turboPath'] = turboPath;
 
