@@ -28,6 +28,8 @@ export type { RunAllOptions, RunTaskOptions } from './run-args/common/run-args.t
 
 export { turboRunAllArgs, turboRunArgs } from './run-args/utils/run-args.util.ts';
 
+export { SINGLE_PACKAGE } from './shared/turbo/common/turbo-args.const.ts';
+
 export { TurboException } from './shared/errors/common/turbo.exception.ts';
 
 export type { TurboErrorKind } from './shared/errors/common/turbo-error.type.ts';
