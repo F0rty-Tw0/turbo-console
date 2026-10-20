@@ -1,4 +1,5 @@
 import { detailsCase, lensCase } from '../utils/single-package-details.spec.util.ts';
+import { flagCase } from '../utils/single-package-flag.spec.util.ts';
 import { runCase } from '../utils/single-package-run.spec.util.ts';
 import { rowAndTasksCase } from '../utils/single-package-tree.spec.util.ts';
 import { markDone, revealTree, rootAt, step, turboApi } from '../utils/suite-env.spec.util.ts';
@@ -18,5 +19,6 @@ export const run = async (): Promise<void> => {
   await runCase(api, root);
   await detailsCase(api, root);
   await lensCase(root);
+  await flagCase(api, root, env.budgetFactor);
   await markDone(env);
 };
