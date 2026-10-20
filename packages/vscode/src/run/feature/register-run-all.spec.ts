@@ -18,7 +18,7 @@ const BUILD: RunAllDefinition = { root: '/one', id: '*build', affected: false };
 const BUILD_AFFECTED: RunAllDefinition = { ...BUILD, affected: true };
 
 const launchOf = (affected: boolean): RunAllLaunch => {
-  const launch: RunAllLaunch = { root: '/one', binaryPath: TURBO_BINARY_STUB.path, taskName: 'build', affected };
+  const launch: RunAllLaunch = { root: '/one', binaryPath: TURBO_BINARY_STUB.path, taskName: 'build', affected, singlePackage: false };
 
   return launch;
 };

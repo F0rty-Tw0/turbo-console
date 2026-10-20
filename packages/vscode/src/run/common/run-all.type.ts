@@ -38,6 +38,7 @@ export type RunAllLaunch = {
   readonly binaryPath: string;
   readonly taskName: string;
   readonly affected: boolean;
+  readonly singlePackage: boolean;
 };
 
 /** The task events of run all tasks, already narrowed to them: a process starting and a task ending. */

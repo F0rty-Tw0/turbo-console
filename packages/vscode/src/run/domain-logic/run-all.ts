@@ -70,6 +70,9 @@ export class RunAllGuard {
   }
 }
 
+/** Whether the root's model is single-package, so its turbo run takes `--single-package`; false with no model. */
+const isSinglePackage = (state: RootState | undefined): boolean => state?.model?.singlePackage ?? false;
+
 /** The state to list tasks of: none once the root has gone. */
 const loadedStates = (state: RootState | undefined): RootState[] => {
   if (state === undefined) return [];
@@ -101,7 +104,7 @@ const start = async (ports: RunAllPorts, launch: RunAllLaunch): Promise<Terminab
       return null;
     }
 
-    const args = turboRunAllArgs(launch.taskName, { affected: launch.affected });
+    const args = turboRunAllArgs(launch.taskName, { affected: launch.affected }, launch.singlePackage);
 
     return await ports.execute(launch, args);
   } catch (error) {
@@ -188,7 +191,14 @@ export const runAll = async (roots: Roots, guard: RunAllGuard, ports: RunAllPort
 
   if (task === undefined) return;
 
-  const launch: RunAllLaunch = { root, binaryPath: binary.path, taskName: task.value, affected: request.affected };
+  const singlePackage = isSinglePackage(state);
+  const launch: RunAllLaunch = {
+    root,
+    binaryPath: binary.path,
+    taskName: task.value,
+    affected: request.affected,
+    singlePackage
+  };
 
   await launchAll(guard, ports, launch);
 };
