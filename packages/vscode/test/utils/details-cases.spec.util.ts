@@ -11,9 +11,8 @@ import { endedRun, taskNodeNamed } from './run-wait.spec.util.ts';
 import { loadsOf, step, waitFor } from './suite-env.spec.util.ts';
 import { manifestTree } from './tree-walk.spec.util.ts';
 import { whenLoadedAfter } from './watch-wait.spec.util.ts';
+import { OPEN_COMMAND } from '../common/details.const.ts';
 import type { DetailsScene } from '../common/details.type.ts';
-
-const OPEN_COMMAND = 'turboConsole.openPackageDetails';
 
 const OUTPUTS_GLOB = 'zz-details-out/**';
 
