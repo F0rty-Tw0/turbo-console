@@ -1,4 +1,4 @@
-import { array, number, object, string, enum as zodEnum } from 'zod/mini';
+import { array, boolean, number, object, string, enum as zodEnum } from 'zod/mini';
 
 const executionSchema = object({ startTime: number(), endTime: number(), exitCode: number() });
 
@@ -16,6 +16,12 @@ const taskSchema = object({ taskId: string(), execution: executionSchema, cache:
 
 /**
  * A `.turbo/runs/<id>.json` file written by `turbo run --summarize`. Times are epoch milliseconds. Unknown keys are
- * stripped; every listed key is required.
+ * stripped; every listed key is required. A `monorepo: false` summary has bare `taskId`s; `readRunSummaryFile` rewrites
+ * them.
  */
-export const runSummarySchema = object({ id: string(), execution: runExecutionSchema, tasks: array(taskSchema) });
+export const runSummarySchema = object({
+  id: string(),
+  monorepo: boolean(),
+  execution: runExecutionSchema,
+  tasks: array(taskSchema)
+});
