@@ -1,6 +1,8 @@
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
+import { packagePathTextOf, packageTextOf, shownTextOf } from './model-view.util.ts';
+import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { modelViewWith } from '../test/utils/row-context.spec.util.ts';
 
@@ -194,6 +196,64 @@ describe('FEATURE: model view', () => {
       const labels = labelsOfNames(['@a/x​', 'x']);
 
       expect(labels).toStrictEqual(['@a/x', 'x']);
+    });
+  });
+});
+
+const rootOf = (label: string | null): PackageNode => {
+  const base = packageOf('//', [TASK_NODE_STUB], '');
+  const pkg: PackageNode = { ...base, label };
+
+  return pkg;
+};
+
+describe('FEATURE: single-package row text', () => {
+  describe('GIVEN the single-package // node with a label', () => {
+    it.each([true, false])('WHEN scopeShown is %s THEN the row reads the label, never //', (scopeShown) => {
+      const pkg = rootOf('single-app');
+      const view = modelViewWith([pkg]);
+
+      expect(shownTextOf(view, pkg, scopeShown)).toBe('single-app');
+    });
+
+    it('WHEN the label is scoped THEN scopes shown keep it and scopes hidden drop the scope', () => {
+      const pkg = rootOf('@acme/app');
+      const view = modelViewWith([pkg]);
+
+      expect(shownTextOf(view, pkg, true)).toBe('@acme/app');
+      expect(shownTextOf(view, pkg, false)).toBe('app');
+    });
+
+    it('WHEN the label is null THEN the row falls back to the name', () => {
+      const pkg = rootOf(null);
+
+      expect(shownTextOf(modelViewWith([pkg]), pkg, false)).toBe('//');
+    });
+
+    it('WHEN the label holds controls, a bidi mark and 10 kB THEN both toggle states read it cleaned and cut', () => {
+      const pkg = rootOf(`a\u0000b\u202ec${'x'.repeat(10_000)}`);
+      const view = modelViewWith([pkg]);
+
+      for (const scopeShown of [true, false]) {
+        const text = shownTextOf(view, pkg, scopeShown);
+
+        expect(text).toHaveLength(LABEL_MAX);
+        expect(text.startsWith('abcxx')).toBe(true);
+        expect(text).not.toContain('\u0000');
+        expect(text).not.toContain('\u202e');
+      }
+    });
+  });
+
+  describe('GIVEN packageTextOf and packagePathTextOf', () => {
+    it('THEN the text is label ?? name', () => {
+      expect(packageTextOf(rootOf('single-app'))).toBe('single-app');
+      expect(packageTextOf(packageOf('a'))).toBe('a');
+    });
+
+    it('THEN an empty path reads "." and any other path is unchanged', () => {
+      expect(packagePathTextOf('')).toBe('.');
+      expect(packagePathTextOf('apps/web')).toBe('apps/web');
     });
   });
 });

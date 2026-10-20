@@ -10,6 +10,12 @@ import type { ModelView } from '../common/model-view.type.ts';
 
 const SCOPED_NAME = /^@[^/]+\/(.+)$/u;
 
+/** The text a package row and the places beside it show: its label (the single-package root), else its name. */
+export const packageTextOf = (pkg: PackageNode): string => pkg.label ?? pkg.name;
+
+/** The path a package shows: `.` for the repo root (path `""`), else the path unchanged. */
+export const packagePathTextOf = (path: string): string => (path === '' ? '.' : path);
+
 /** Spec 1c-b §4.1: an offered task, or (scripts hidden) a script whose id is live under the package's folder root. */
 export const isShownPackage = (pkg: PackageNode, scriptsShown: boolean, liveOfRoot: ReadonlySet<string>): boolean => {
   const isShownTask = (task: TaskNode): boolean => isListedTask(task, scriptsShown) || isLiveScript(task, liveOfRoot);
@@ -35,7 +41,7 @@ const rowTextOf = (label: string): string => cleanText(label, LABEL_MAX);
 
 /** The row text of a scoped name's rest; `null` with no scope, or when the rest would read blank (`@a/` + a zero-width space). */
 const restTextOf = (pkg: PackageNode): string | null => {
-  const rest = restOf(pkg.name);
+  const rest = restOf(packageTextOf(pkg));
 
   if (rest === null) return null;
 
@@ -53,7 +59,7 @@ const textCountsOf = (texts: string[]): Map<string, number> => {
   return counts;
 };
 
-/** Every package still reading its rest whose row text another row shares falls back to its full name; true when one did. */
+/** Every package still reading its rest whose row text another row shares falls back to its full shown text; true when one did. */
 const fellBack = (shown: PackageNode[], bare: boolean[], texts: string[]): boolean => {
   const counts = textCountsOf(texts);
   let isAnyFallen = false;
@@ -67,7 +73,7 @@ const fellBack = (shown: PackageNode[], bare: boolean[], texts: string[]): boole
     if (!isShared || !isBare) continue;
 
     bare[index] = false;
-    texts[index] = rowTextOf(pkg.name);
+    texts[index] = rowTextOf(packageTextOf(pkg));
     isAnyFallen = true;
   }
 
@@ -76,28 +82,28 @@ const fellBack = (shown: PackageNode[], bare: boolean[], texts: string[]): boole
 
 /**
  * Spec §4.8: a scoped name reads its rest, unless the text its row reads (cleaned) is the text of another shown
- * package's row; then it keeps its full name. A fallback can make a new pair (`@a/x` back to full meets `@b/@a/x`
+ * package's row; then it keeps its full shown text. A fallback can make a new pair (`@a/x` back to full meets `@b/@a/x`
  * reading `@a/x`), so passes repeat until none falls back: no two rows of a root read the same text, unless their full
- * names already do once cleaned. Maps each full name to the cleaned text its row reads.
+ * shown texts already do once cleaned. Maps each package name to the cleaned text its row reads.
  */
 const bareTextsOf = (shown: PackageNode[]): Map<string, string> => {
   const restTexts = shown.map(restTextOf);
   const bare = restTexts.map((text) => text !== null);
-  const texts = shown.map((pkg, index) => restTexts[index] ?? rowTextOf(pkg.name));
+  const texts = shown.map((pkg, index) => restTexts[index] ?? rowTextOf(packageTextOf(pkg)));
   let isFalling = true;
 
   while (isFalling) isFalling = fellBack(shown, bare, texts);
 
-  const pairs = shown.map((pkg, index): [string, string] => [pkg.name, texts[index] ?? rowTextOf(pkg.name)]);
+  const pairs = shown.map((pkg, index): [string, string] => [pkg.name, texts[index] ?? rowTextOf(packageTextOf(pkg))]);
 
   return new Map(pairs);
 };
 
-/** The cleaned label a package row reads: its full name while scopes are shown, else its bare text. */
+/** The cleaned label a package row reads: its full shown text while scopes are shown, else its bare text. */
 export const shownTextOf = (view: ModelView, pkg: PackageNode, scopeShown: boolean): string => {
   const bareText = view.bareTexts.get(pkg.name);
 
-  if (scopeShown || bareText === undefined) return rowTextOf(pkg.name);
+  if (scopeShown || bareText === undefined) return rowTextOf(packageTextOf(pkg));
 
   return bareText;
 };

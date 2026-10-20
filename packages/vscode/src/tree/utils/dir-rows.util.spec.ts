@@ -195,3 +195,46 @@ describe('FEATURE: children rows of a directory', () => {
     });
   });
 });
+
+describe('FEATURE: the single-package // row', () => {
+  describe('GIVEN the single-package // node', () => {
+    const pkg: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app' };
+    const view = modelViewWith([pkg]);
+    const level = { dirs: [], packages: ['//'] };
+
+    it.each([true, false])('WHEN scopeShown is %s THEN the row reads the label, shows "." and keeps // as identity', (scopeShown) => {
+      const [row] = dirRows('/ws', level, view, scopeShown);
+
+      expect(row).toMatchObject({
+        id: 'pkg:/ws\0//',
+        key: '//',
+        packageName: '//',
+        label: 'single-app',
+        description: '.',
+        tooltip: ['single-app', 'Path: .', 'Tasks: 1']
+      });
+    });
+
+    it('WHEN the folders view lists the top level THEN the // package is its one row', () => {
+      const rows = dirRows('/ws', view.folders, view, false);
+
+      expect(rows.map((row) => row.label)).toStrictEqual(['single-app']);
+    });
+
+    it('WHEN the label is hostile THEN the row label is cleaned and at most LABEL_MAX', () => {
+      const hostile: PackageNode = { ...pkg, label: `a\u0000b${BIDI}c${'x'.repeat(10_000)}` };
+      const [row] = dirRows('/ws', level, modelViewWith([hostile]), false);
+
+      expect(row?.label).toHaveLength(LABEL_MAX);
+      expect(row?.label.startsWith('abcxx')).toBe(true);
+    });
+  });
+
+  describe('GIVEN a monorepo package (label null)', () => {
+    it('WHEN its row builds THEN label, description and tooltip read as before', () => {
+      const [row] = dirRows('/ws', { dirs: [], packages: ['a'] }, modelViewWith([packageAt('a', 'packages/a')]), false);
+
+      expect(row).toMatchObject({ label: 'a', description: 'packages/a', tooltip: ['a', 'Path: packages/a', 'Tasks: 1'] });
+    });
+  });
+});
