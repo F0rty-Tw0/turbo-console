@@ -97,7 +97,7 @@ const runLaunch = async (launch: Launch, scratch: RunScratch): Promise<void> => 
   const workspace = await WORKSPACES[launch.workspace](scratch, launch.name);
   const turboPath = await TURBO_PATHS[launch.turboPath](scratch);
   const userDataName = launch.userData === 'U1' ? 'U1' : `${launch.name}-user`;
-  const userDataDir = await userDataDirFor(scratch, userDataName, turboPath);
+  const userDataDir = await userDataDirFor(scratch, userDataName, turboPath, launch.settings);
   const doneFile = join(scratch.dir, `${launch.name}.done`);
   const snapshotCopy = join(scratch.dir, `${launch.name}.user-data`);
   const restore = await snapshotForRelaunch(launch, userDataDir, snapshotCopy);

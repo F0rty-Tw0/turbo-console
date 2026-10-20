@@ -97,6 +97,7 @@ describe('FEATURE: registerTree settings', () => {
     it('WHEN only turboConsole.treeMode changes THEN the icons mode is left alone', () => {
       changeSetting('treeMode', 'list');
 
+      expect(tree.setMode).toHaveBeenCalledExactlyOnceWith('list');
       expect(tree.setIcons).not.toHaveBeenCalled();
     });
   });

@@ -23,8 +23,8 @@ export type LaunchTurboPath = 'dev' | 'stub' | 'late' | 'unset';
 type LaunchUserData = 'U1' | 'own';
 
 /**
- * One VS Code window of the integration run (spec §5.3). `suite` names the bundle `dist-test/<suite>.cjs`, and `env` is
- * merged into `extensionTestsEnv`.
+ * One VS Code window of the integration run (spec §5.3). `suite` names the bundle `dist-test/<suite>.cjs`, `env` is
+ * merged into `extensionTestsEnv`, and `settings` go into the user settings before the window opens.
  */
 export type Launch = {
   readonly name: LaunchName;
@@ -34,6 +34,7 @@ export type Launch = {
   readonly userData: LaunchUserData;
   readonly posixOnly: boolean;
   readonly env: Readonly<Record<string, string>>;
+  readonly settings: Readonly<Record<string, string>>;
 };
 
 /**

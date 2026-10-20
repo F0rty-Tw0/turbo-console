@@ -20,6 +20,11 @@ export const MAX_TIMING_ATTEMPTS = 3;
 
 const NO_ENV: Readonly<Record<string, string>> = {};
 
+const NO_SETTINGS: Readonly<Record<string, string>> = {};
+
+/** L11 opens with theme icons already set, so the setting is read at activation, not only on a change. */
+const THEME_ICONS: Readonly<Record<string, string>> = { 'turboConsole.icons': 'theme' };
+
 const SCM_BASE_KEY = 'TURBO_SCM_BASE';
 
 const SCM_HEAD_KEY = 'TURBO_SCM_HEAD';
@@ -34,7 +39,8 @@ const L1: Launch = {
   turboPath: 'dev',
   userData: 'U1',
   posixOnly: false,
-  env: PINNED_RANGE
+  env: PINNED_RANGE,
+  settings: NO_SETTINGS
 };
 
 const L2: Launch = { ...L1, name: 'L2', suite: 'warm.suite' };
@@ -46,7 +52,8 @@ const L3: Launch = {
   turboPath: 'unset',
   userData: 'own',
   posixOnly: false,
-  env: NO_ENV
+  env: NO_ENV,
+  settings: NO_SETTINGS
 };
 
 const L4: Launch = { ...L3, name: 'L4', suite: 'no-binary.suite', workspace: 'fixture' };
@@ -63,9 +70,16 @@ const L9: Launch = { ...L1, name: 'L9', suite: 'tree-polish.suite', workspace: '
 
 const L10: Launch = { ...L1, name: 'L10', suite: 'scripts.suite', workspace: 'fixture', userData: 'own', env: NO_ENV };
 
-const L11: Launch = { ...L3, name: 'L11', suite: 'single-package.suite', workspace: 'single-package', turboPath: 'dev' };
+const L11: Launch = {
+  ...L3,
+  name: 'L11',
+  suite: 'single-package.suite',
+  workspace: 'single-package',
+  turboPath: 'dev',
+  settings: THEME_ICONS
+};
 
-const L12: Launch = { ...L11, name: 'L12', suite: 'empty-workspace.suite', workspace: 'empty-workspace' };
+const L12: Launch = { ...L11, name: 'L12', suite: 'empty-workspace.suite', workspace: 'empty-workspace', settings: NO_SETTINGS };
 
 /**
  * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L12 each get a user-data dir
