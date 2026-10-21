@@ -1,3 +1,5 @@
+import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+
 type NoInspection = { readonly kind: 'none' };
 
 type PackageInspection = { readonly kind: 'package'; readonly name: string };
@@ -37,3 +39,6 @@ type EscapeInput = { readonly kind: 'escape'; readonly where: EscapeWhere };
 
 /** What the user did that can change the inspection. */
 export type InspectionInput = SelectInput | PickInput | LinkInput | PlainInput | EscapeInput;
+
+/** The part of the saved view state that holds the inspection. */
+export type InspectionFields = Pick<GraphViewState, 'selected' | 'link' | 'trace'>;

@@ -98,7 +98,9 @@ export class GraphSelection {
   private viewState(drawn: DrawnGraph): GraphViewState {
     const { zoom, pan } = this.deps.view.viewport();
     const controls = this.deps.controls();
-    const state: GraphViewState = { hash: drawn.hash, zoom, pan, selected: this.selected, ...controls };
+    // grug: interim defaults until Task 3.4 saves the inspection
+    const inspection = { detailsOpen: true, link: null, trace: null };
+    const state: GraphViewState = { hash: drawn.hash, zoom, pan, selected: this.selected, ...controls, ...inspection };
 
     return state;
   }

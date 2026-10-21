@@ -18,7 +18,10 @@ const FIRST: GraphViewState = {
   depth: 1,
   hidden: [],
   focus: null,
-  tags: []
+  tags: [],
+  detailsOpen: true,
+  link: null,
+  trace: null
 };
 
 const SECOND: GraphViewState = { ...FIRST, zoom: 2 };

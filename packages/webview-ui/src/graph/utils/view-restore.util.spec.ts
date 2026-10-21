@@ -17,7 +17,10 @@ const SAVED: GraphViewState = {
   depth: 1,
   hidden: [],
   focus: null,
-  tags: []
+  tags: [],
+  detailsOpen: true,
+  link: null,
+  trace: null
 };
 
 const PACKAGES = ['web', 'api'];

@@ -28,7 +28,10 @@ const STATE: GraphViewState = {
   depth: 2,
   hidden: ['web', 'gone'],
   focus: 'web',
-  tags: ['ui', 'old']
+  tags: ['ui', 'old'],
+  detailsOpen: true,
+  link: null,
+  trace: null
 };
 
 describe('FEATURE: restoredFilters', () => {

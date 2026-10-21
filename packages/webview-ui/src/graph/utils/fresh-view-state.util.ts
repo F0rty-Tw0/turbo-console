@@ -4,7 +4,7 @@ import { DEFAULT_DEPTH } from '../common/graph.const.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
 
-/** The view state of a graph with nothing saved: the default camera, no selection and the controls' defaults. */
+/** The view state of a graph with nothing saved: the default camera, no selection, the controls' defaults and no inspection. */
 export const freshViewStateOf = (hash: string): GraphViewState => {
   const state: GraphViewState = {
     hash,
@@ -16,7 +16,10 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
     depth: DEFAULT_DEPTH,
     hidden: [],
     focus: null,
-    tags: []
+    tags: [],
+    detailsOpen: true,
+    link: null,
+    trace: null
   };
 
   return state;
