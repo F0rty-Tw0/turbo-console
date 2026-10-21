@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { matchesSearch } from './search.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 
-const WEB_APP: GraphPackage = { name: 'Web-App', path: 'apps/Web', tags: [] };
+const WEB_APP: GraphPackage = { name: 'Web-App', path: 'apps/Web', tags: [], taskCount: 0 };
 
-const CONSTRUCTOR: GraphPackage = { name: 'constructor', path: 'x', tags: [] };
+const CONSTRUCTOR: GraphPackage = { name: 'constructor', path: 'x', tags: [], taskCount: 0 };
 
 describe('FEATURE: matchesSearch', () => {
   describe('GIVEN the package Web-App at apps/Web', () => {

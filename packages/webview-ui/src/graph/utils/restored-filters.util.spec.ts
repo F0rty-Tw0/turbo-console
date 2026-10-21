@@ -8,10 +8,10 @@ import type { GraphFilters, GraphFocus } from '../common/graph-filters.type.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
 
 const INFOS: GraphPackage[] = [
-  { name: 'web', path: 'apps/web', tags: ['ui'] },
-  { name: 'api', path: 'apps/api', tags: [] },
-  { name: '__proto__', path: 'libs/proto', tags: [] },
-  { name: 'constructor', path: 'libs/ctor', tags: [] }
+  { name: 'web', path: 'apps/web', tags: ['ui'], taskCount: 0 },
+  { name: 'api', path: 'apps/api', tags: [], taskCount: 0 },
+  { name: '__proto__', path: 'libs/proto', tags: [], taskCount: 0 },
+  { name: 'constructor', path: 'libs/ctor', tags: [], taskCount: 0 }
 ];
 
 const GRAPH: DrawnGraph = { hash: 'h', packages: ['web', 'api', '__proto__', 'constructor'], infos: INFOS, edges: [] };

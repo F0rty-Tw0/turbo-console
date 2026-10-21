@@ -19,6 +19,11 @@ const EDGE_A: GraphEdge = { source: 'a', target: 'b' };
 const EDGE_B: GraphEdge = { source: 'b', target: 'a' };
 const ARROW_NAMED: GraphEdge = { source: 'a>b', target: 'c' };
 const ARROW_SPLIT: GraphEdge = { source: 'a', target: 'b>c' };
+const GRAPH_INFOS = [
+  graphPackageOf('@org/x', 'packages/libs/x', [], 1),
+  graphPackageOf('a', 'packages/a', [], 1),
+  graphPackageOf('web', 'apps/web', ['app', 'ui'], 2)
+];
 const CACHE: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
 const GHOST_POINT = { x: 1, y: 1 };
 const GHOST_POSITIONS = { ...POSITIONS_STUB, ghost: GHOST_POINT };
@@ -29,6 +34,14 @@ describe('FEATURE: graph state builder', () => {
       const state = graphStateOf(GRAPH_MODEL_STUB, null);
 
       expect(state).toStrictEqual(GRAPH_STATE_STUB);
+    });
+  });
+
+  describe('GIVEN a package with two visible tasks and an atom-file one', () => {
+    it('WHEN the state is built THEN taskCount counts the visible tasks only', () => {
+      const state = graphStateOf(GRAPH_MODEL_STUB, null);
+
+      expect(state).toMatchObject({ kind: 'graph', packages: GRAPH_INFOS });
     });
   });
 
@@ -80,6 +93,13 @@ describe('FEATURE: graph state builder', () => {
 });
 
 describe('FEATURE: graph hash', () => {
+  it('GIVEN packages whose task counts differ WHEN hashed THEN the hash is the same', () => {
+    const few = graphHashOf([graphPackageOf('a', 'x', [], 1)], []);
+    const many = graphHashOf([graphPackageOf('a', 'x', [], 40)], []);
+
+    expect(few).toBe(many);
+  });
+
   it.each([
     [[], [], '878f5675'],
     [[graphPackageOf('a', 'packages/a'), graphPackageOf('b', 'packages/b')], [{ source: 'a', target: 'b' }], '4abfc33a'],

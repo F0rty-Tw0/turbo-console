@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import { GraphSession } from './graph-session.ts';
@@ -15,7 +17,7 @@ import {
   GROWN_LOADED_STUB,
   PROTO_LOADED_STUB
 } from '../test/stubs/graph-model.stub.ts';
-import { lastStateOf, portsWith, positionsOf } from '../test/utils/graph-session.spec.util.ts';
+import { lastStateOf, portsWith, positionsOf, postedOf } from '../test/utils/graph-session.spec.util.ts';
 
 type ShownSession = {
   readonly session: GraphSession;
@@ -166,6 +168,130 @@ describe('FEATURE: graph session messages', () => {
       await session.receive({ type: 'openDetails', packageName: 'web' });
 
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('no panel');
+    });
+  });
+
+  describe('GIVEN an explainEdge from the page', () => {
+    it('WHEN it names an edge of the graph THEN an edgeExplained for it is posted last', async () => {
+      const { session, ports } = shownSession();
+
+      vi.mocked(ports.readText).mockResolvedValue('{"dependencies":{"a":"1"}}');
+      await session.receive({ type: 'ready' });
+      await session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+
+      const last = postedOf(ports).at(-1);
+
+      const result = { kind: 'found' };
+
+      expect(last).toMatchObject({ type: 'edgeExplained', source: 'web', target: 'a', result });
+    });
+
+    it('WHEN it names a package that is not listed THEN nothing is read and the drop is logged', async () => {
+      const { session, ports } = shownSession();
+
+      await session.receive({ type: 'explainEdge', source: 'ghost', target: 'a' });
+
+      expect(ports.readText).not.toHaveBeenCalled();
+      expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
+    });
+
+    it('WHEN the panel is hidden before the read resolves THEN no edgeExplained is posted', async () => {
+      const { session, ports } = shownSession();
+      const read = Promise.withResolvers<string | null>();
+
+      vi.mocked(ports.readText).mockReturnValue(read.promise);
+      await session.receive({ type: 'ready' });
+
+      const answered = session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+
+      session.setVisible(false);
+      read.resolve('{}');
+      await answered;
+
+      expect(postedOf(ports).filter((message) => message.type === 'edgeExplained')).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN an explainEdge whose read is still pending', () => {
+    it('WHEN more explainEdge arrive THEN only the first and the last are read and the last reply is posted', async () => {
+      const { session, ports } = shownSession();
+      const read = Promise.withResolvers<string | null>();
+
+      vi.mocked(ports.readText).mockReturnValueOnce(read.promise).mockResolvedValue('{"dependencies":{"@org/x":"1"}}');
+      await session.receive({ type: 'ready' });
+
+      const first = session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+      const second = session.receive({ type: 'explainEdge', source: 'web', target: '@org/x' });
+      const last = session.receive({ type: 'explainEdge', source: 'a', target: '@org/x' });
+
+      await Promise.all([second, last]);
+
+      expect(ports.readText).toHaveBeenCalledTimes(1);
+
+      read.resolve('{}');
+      await first;
+
+      const explained = postedOf(ports).filter((message) => message.type === 'edgeExplained');
+
+      expect(ports.readText).toHaveBeenCalledTimes(2);
+      expect(ports.readText).toHaveBeenLastCalledWith(join('/ws', 'packages/a', 'package.json'));
+      expect(explained).toHaveLength(2);
+      expect(explained.at(-1)).toMatchObject({ type: 'edgeExplained', source: 'a', target: '@org/x' });
+    });
+
+    it('WHEN an openManifest arrives THEN it opens without waiting for the read', async () => {
+      const { session, ports } = shownSession();
+      const read = Promise.withResolvers<string | null>();
+
+      vi.mocked(ports.readText).mockReturnValueOnce(read.promise).mockResolvedValue('{}');
+      await session.receive({ type: 'ready' });
+
+      const explained = session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+
+      await session.receive({ type: 'openManifest', packageName: 'web', line: 3 });
+
+      expect(ports.openAt).toHaveBeenCalledTimes(1);
+
+      read.resolve('{}');
+      await explained;
+    });
+
+    it('WHEN the panel is disposed before the read resolves THEN the pending request is not read', async () => {
+      const { session, ports } = shownSession();
+      const read = Promise.withResolvers<string | null>();
+
+      vi.mocked(ports.readText).mockReturnValue(read.promise);
+      await session.receive({ type: 'ready' });
+
+      const first = session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+
+      await session.receive({ type: 'explainEdge', source: 'a', target: '@org/x' });
+      session.dispose();
+      read.resolve('{}');
+      await first;
+
+      expect(ports.readText).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('GIVEN an openManifest from the page', () => {
+    it('WHEN it names a package of the graph THEN its package.json opens at the line', async () => {
+      const { session, ports } = shownSession();
+
+      vi.mocked(ports.readText).mockResolvedValue('{}');
+
+      await session.receive({ type: 'openManifest', packageName: 'web', line: 3 });
+
+      expect(ports.openAt).toHaveBeenCalledExactlyOnceWith(join('/ws', 'apps/web', 'package.json'), 3);
+    });
+
+    it('WHEN it names a package that is not listed THEN nothing opens and the drop is logged', async () => {
+      const { session, ports } = shownSession();
+
+      await session.receive({ type: 'openManifest', packageName: 'ghost', line: 3 });
+
+      expect(ports.openAt).not.toHaveBeenCalled();
+      expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
     });
   });
 

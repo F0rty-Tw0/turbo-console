@@ -51,6 +51,8 @@ class GraphPageController {
 
     if (!isGraphHostMessage(message)) return;
 
+    if (message.type !== 'state') return;
+
     this.show(message.state, at);
   }
 

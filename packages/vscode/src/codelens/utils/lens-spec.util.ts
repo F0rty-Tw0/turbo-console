@@ -4,17 +4,9 @@ import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { TaskOffer } from '../../run/common/picker.type.ts';
 import { packageForManifest, relativePathOf } from '../../run/utils/package-lookup.util.ts';
 import { taskItemsOf } from '../../run/utils/picker-items.util.ts';
+import { lineAt } from '../../shared/utils/text-line.util.ts';
 import { LENS_NAMES_MAX, LENS_TEXT_MAX } from '../common/codelens.const.ts';
 import type { LensSpec } from '../common/codelens.type.ts';
-
-/** The editor counts CR LF, a lone CR and a lone LF as one line break each. */
-const LINE_BREAK = /\r\n|[\r\n]/g;
-
-const lineAt = (text: string, offset: number): number => {
-  const breaks = text.slice(0, offset).match(LINE_BREAK);
-
-  return breaks?.length ?? 0;
-};
 
 /**
  * `findNodeAtLocation` returns the key's value, so the key is the first child of that value's property node. A parse

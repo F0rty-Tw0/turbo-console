@@ -21,13 +21,30 @@ export type {
   ToolView
 } from './bridge/common/details-state.type.ts';
 
-export type { GraphHostMessage, GraphWebviewMessage } from './bridge/common/graph-message.type.ts';
+export type {
+  EdgeExplainResult,
+  GraphEdgeExplainedMessage,
+  GraphHostMessage,
+  GraphStateMessage,
+  GraphWebviewMessage,
+  ManifestEntry,
+  ManifestField
+} from './bridge/common/graph-message.type.ts';
 
 export type { GraphEdge, GraphPackage, GraphReady, GraphState, Position, Positions } from './bridge/common/graph-state.type.ts';
 
 export type { GraphViewState } from './bridge/common/graph-view-state.type.ts';
 
 export type { WebviewSlots } from './shell/common/webview-html.type.ts';
+
+export {
+  ENTRY_TEXT_MAX,
+  MANIFEST_ENTRIES_MAX,
+  MANIFEST_FIELDS,
+  MANIFEST_FILE_MAX,
+  MANIFEST_LINE_MAX,
+  TASK_COUNT_MAX
+} from './bridge/common/graph-message.const.ts';
 
 export { ICON_ID_PATTERN, TOOL_ICON_PREFIX } from './details/common/run-view.const.ts';
 

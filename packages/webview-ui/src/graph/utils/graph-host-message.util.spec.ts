@@ -16,16 +16,16 @@ const ORIGIN = { x: 0, y: 0 };
 const POSITIONS: Positions = { app: ORIGIN, core: ORIGIN };
 
 const PACKAGES = [
-  { name: 'app', path: 'apps/app', tags: ['ui'] },
-  { name: 'core', path: 'packages/core', tags: [] }
+  { name: 'app', path: 'apps/app', tags: ['ui'], taskCount: 3 },
+  { name: 'core', path: 'packages/core', tags: [], taskCount: 0 }
 ];
 
 const OBJECT_NAMES = [
-  { name: '__proto__', path: '', tags: ['__proto__'] },
-  { name: 'constructor', path: 'packages/constructor', tags: ['constructor'] }
+  { name: '__proto__', path: '', tags: ['__proto__'], taskCount: 0 },
+  { name: 'constructor', path: 'packages/constructor', tags: ['constructor'], taskCount: 0 }
 ];
 
-const ROOT_PACKAGES = [{ name: '//', path: '', tags: [] }];
+const ROOT_PACKAGES = [{ name: '//', path: '', tags: [], taskCount: 0 }];
 
 const STRING_PACKAGES = ['app'];
 
@@ -33,17 +33,37 @@ const NULL_PACKAGES = [null];
 
 const UNDEFINED_PACKAGES = [undefined];
 
-const NUMERIC_NAME_PACKAGES = [{ name: 5, path: 'p', tags: [] }];
+const NUMERIC_NAME_PACKAGES = [{ name: 5, path: 'p', tags: [], taskCount: 0 }];
 
-const NO_PATH_PACKAGES = [{ name: 'a', tags: [] }];
+const NO_PATH_PACKAGES = [{ name: 'a', tags: [], taskCount: 0 }];
 
-const NUMERIC_PATH_PACKAGES = [{ name: 'a', path: 1, tags: [] }];
+const NUMERIC_PATH_PACKAGES = [{ name: 'a', path: 1, tags: [], taskCount: 0 }];
 
-const NO_TAGS_PACKAGES = [{ name: 'a', path: 'p' }];
+const NO_TAGS_PACKAGES = [{ name: 'a', path: 'p', taskCount: 0 }];
 
-const STRING_TAGS_PACKAGES = [{ name: 'a', path: 'p', tags: 'ui' }];
+const STRING_TAGS_PACKAGES = [{ name: 'a', path: 'p', tags: 'ui', taskCount: 0 }];
 
-const NUMERIC_TAG_PACKAGES = [{ name: 'a', path: 'p', tags: ['ui', 2] }];
+const NUMERIC_TAG_PACKAGES = [{ name: 'a', path: 'p', tags: ['ui', 2], taskCount: 0 }];
+
+const NO_TASK_COUNT_PACKAGES = [{ name: 'a', path: 'p', tags: [] }];
+
+const packagesWithTaskCount = (taskCount: unknown): unknown[] => [{ name: 'a', path: 'p', tags: [], taskCount }];
+
+const ZERO_TASK_COUNT_PACKAGES = packagesWithTaskCount(0);
+
+const MAX_TASK_COUNT_PACKAGES = packagesWithTaskCount(100_000);
+
+const EXTREME_TASK_COUNT_PACKAGES = [...ZERO_TASK_COUNT_PACKAGES, ...MAX_TASK_COUNT_PACKAGES];
+
+const MISSING_RESULT = { kind: 'missing', file: 'package.json' };
+
+const UNREADABLE_RESULT = { kind: 'unreadable', file: 'package.json' };
+
+const NO_ENTRIES_RESULT = { kind: 'found', file: 'p', entries: [] };
+
+const EXPLAINED = { type: 'edgeExplained', source: 'app', target: 'core', result: MISSING_RESULT };
+
+const OBJECT_NAMES_EXPLAINED = { type: 'edgeExplained', source: '__proto__', target: 'constructor', result: UNREADABLE_RESULT };
 
 const GRAPH = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null };
 
@@ -70,11 +90,29 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['graph with no positions', GRAPH],
       ['graph with cached positions', CACHED_GRAPH],
       ['graph whose packages are named like Object members', { ...GRAPH, packages: OBJECT_NAMES }],
-      ['graph with a root package at the empty path', { ...GRAPH, packages: ROOT_PACKAGES }]
+      ['graph with a root package at the empty path', { ...GRAPH, packages: ROOT_PACKAGES }],
+      ['graph whose packages have taskCount 0 and 100 000', { ...GRAPH, packages: EXTREME_TASK_COUNT_PACKAGES }]
     ])('WHEN its state is %s THEN it is accepted', (_name, state) => {
       const isMessage = isGraphHostMessage(stateMessageOf(state));
 
       expect(isMessage).toBe(true);
+    });
+  });
+
+  describe('GIVEN an edgeExplained message', () => {
+    it.each([
+      ['a missing result', EXPLAINED],
+      ['names like Object members', OBJECT_NAMES_EXPLAINED]
+    ])('WHEN it has %s THEN it is accepted', (_name, message) => {
+      const isMessage = isGraphHostMessage(message);
+
+      expect(isMessage).toBe(true);
+    });
+
+    it('WHEN its result is a found one with no entries THEN it is rejected', () => {
+      const isMessage = isGraphHostMessage({ ...EXPLAINED, result: NO_ENTRIES_RESULT });
+
+      expect(isMessage).toBe(false);
     });
   });
 
@@ -84,6 +122,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a string', 'state'],
       ['an empty object', {}],
       ['an unknown type', { type: 'nope' }],
+      ['a message of an unknown type that carries a state', { type: 'nope', state: GRAPH }],
       ['a state message with no state', { type: 'state' }],
       ['a string state', stateMessageOf('x')],
       ['an unknown state kind', stateMessageOf({ kind: 'other' })],
@@ -100,6 +139,12 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with a package with no tags', stateMessageOf({ ...GRAPH, packages: NO_TAGS_PACKAGES })],
       ['a graph with string tags', stateMessageOf({ ...GRAPH, packages: STRING_TAGS_PACKAGES })],
       ['a graph with a numeric tag', stateMessageOf({ ...GRAPH, packages: NUMERIC_TAG_PACKAGES })],
+      ['a graph with no taskCount', stateMessageOf({ ...GRAPH, packages: NO_TASK_COUNT_PACKAGES })],
+      ['a graph with a negative taskCount', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount(-1) })],
+      ['a graph with a fractional taskCount', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount(1.5) })],
+      ['a graph with a taskCount of 100 001', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount(100_001) })],
+      ['a graph with a string taskCount', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount('3') })],
+      ['a graph with a NaN taskCount', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount(NaN) })],
       ['a graph with a null edge', stateMessageOf({ ...GRAPH, edges: [null] })],
       ['a graph with a string edge', stateMessageOf({ ...GRAPH, edges: ['app>core'] })],
       ['a graph with an edge with no target', stateMessageOf({ ...GRAPH, edges: [NO_TARGET_EDGE] })],

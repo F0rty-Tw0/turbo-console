@@ -9,6 +9,8 @@ export type GraphPackage = {
   readonly name: string;
   readonly path: string;
   readonly tags: string[];
+  /** The package's visible tasks; not part of the layout hash. */
+  readonly taskCount: number;
 };
 
 /** Where a node centre sits. */

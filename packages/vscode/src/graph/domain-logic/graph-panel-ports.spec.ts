@@ -39,6 +39,13 @@ describe('FEATURE: the ports of one graph panel', () => {
     ports = graphPortsOf(deps, '/ws', posted, view.view);
   });
 
+  describe('GIVEN the editor effects of the host', () => {
+    it('WHEN the ports are built THEN readText and openAt are the host ones', () => {
+      expect(ports.readText).toBe(fakes.host.readText);
+      expect(ports.openAt).toBe(fakes.host.openAt);
+    });
+  });
+
   describe('GIVEN a state to post', () => {
     it('WHEN it is posted THEN it is recorded and sent to the view', () => {
       ports.post(STATE_POSTED);

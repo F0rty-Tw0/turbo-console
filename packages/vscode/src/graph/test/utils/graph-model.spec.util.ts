@@ -9,8 +9,8 @@ export const rootNode = (name: string, tags: string[] = []): PackageNode => {
   return node;
 };
 
-export const graphPackageOf = (name: string, path: string, tags: string[] = []): GraphPackage => {
-  const info: GraphPackage = { name, path, tags };
+export const graphPackageOf = (name: string, path: string, tags: string[] = [], taskCount = 0): GraphPackage => {
+  const info: GraphPackage = { name, path, tags, taskCount };
 
   return info;
 };
