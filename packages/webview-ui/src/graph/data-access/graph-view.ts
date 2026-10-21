@@ -2,6 +2,7 @@ import cytoscape from 'cytoscape';
 import type { Core, EdgeSingular, ElementDefinition, EventObject, EventObjectNode, NodeSingular } from 'cytoscape';
 
 import { graphStyleOf } from './graph-style.ts';
+import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 import type { GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
@@ -123,7 +124,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
   };
   const fit = (): void => {
     cy.resize();
-    cy.fit(undefined, FIT_PADDING_PX);
+    fitVisible(cy, FIT_PADDING_PX);
   };
   const viewport = (): Viewport => {
     const current: Viewport = { zoom: cy.zoom(), pan: cy.pan() };
@@ -143,6 +144,9 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     setGraph,
     select: (selected, closure): void => classElements(cy, selected, closure),
     fit,
+    setVisible: (visible: ReadonlySet<string>): void => showOnly(cy, visible),
+    resize: (): void => void cy.resize(),
+    centreOn: (name: string): void => centreOnNode(cy, name),
     viewport,
     setViewport,
     setPositions,

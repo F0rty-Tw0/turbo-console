@@ -1,5 +1,6 @@
 import type { GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
+import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
 import type { ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 
 export type WorkerStub = 'real' | 'throwOnce' | 'error' | 'silent' | 'malformed';
@@ -38,6 +39,24 @@ export type ThemeStub = {
 export type ThemeSwitch = {
   readonly names: string[];
   readonly theme: ThemeStub;
+};
+
+/** What a viewer sees of the graph: how far it is zoomed and where it is panned. */
+export type Camera = Pick<GraphViewState, 'zoom' | 'pan'>;
+
+/** A width in CSS pixels read just before and just after one input. */
+export type WidthChange = {
+  readonly before: number;
+  readonly after: number;
+};
+
+/** The controls panel's part of the saved view state, as the panel's own inputs show it. */
+export type ControlsFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags'>;
+
+/** A key to press, and the accessible name of the control that holds focus once it has been handled. */
+export type FocusStep = {
+  readonly key: string;
+  readonly focus: string;
 };
 
 /** Package name to the state the probe reports for it. */

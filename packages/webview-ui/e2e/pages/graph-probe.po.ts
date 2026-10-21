@@ -7,13 +7,8 @@ import type { Position, Positions } from '../../src/bridge/common/graph-state.ty
 import type { LayoutEngine, ProbeEdge, ProbeNode, ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 import { NODE_HEIGHT, NODE_PADDING_X } from '../../src/graph/common/graph.const.ts';
 import type { EdgeStates, NodeStates } from '../common/graph.type.ts';
+import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
-
-const sortedNames = (names: string[]): string[] => {
-  const copy = [...names];
-
-  return copy.sort();
-};
 
 const idOf = (node: ProbeNode): string => node.id;
 
@@ -74,10 +69,6 @@ export class GraphProbePage {
 
   public async edgeColor(): Promise<string> {
     return this.page.evaluate((): string => window.__tcGraphProbe?.edgeColor() ?? '');
-  }
-
-  public async firstFrameMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.firstFrameMs() ?? null);
   }
 
   public async selected(): Promise<string | null> {

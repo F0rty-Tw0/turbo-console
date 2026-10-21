@@ -7,7 +7,18 @@ import type { RestorePlan } from '../common/restore-plan.type.ts';
 
 const PAN: Position = { x: -10, y: 20 };
 
-const SAVED: GraphViewState = { hash: 'h1', zoom: 1.5, pan: PAN, selected: 'web' };
+const SAVED: GraphViewState = {
+  hash: 'h1',
+  zoom: 1.5,
+  pan: PAN,
+  selected: 'web',
+  controlsOpen: true,
+  search: '',
+  depth: 1,
+  hidden: [],
+  focus: null,
+  tags: []
+};
 
 const PACKAGES = ['web', 'api'];
 

@@ -12,12 +12,11 @@ import {
   RELAYOUT_LABEL,
   RETRY_LABEL
 } from '../../src/graph/common/graph.const.ts';
-import { BROKEN_MEASURE, NEXT_FRAME, PROBE_WANTED, THEME_VAR_NAMES, WORKER_STUBS } from '../common/graph.const.ts';
-import type { GraphOptions, ThemeStub } from '../common/graph.type.ts';
+import { BROKEN_MEASURE, NEXT_FRAME, PROBE_WANTED, WORKER_STUBS } from '../common/graph.const.ts';
+import type { GraphOptions } from '../common/graph.type.ts';
 import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
 import { graphDistMock } from '../test/mocks/graph-dist.mock.ts';
 import { savedStateScript } from '../test/utils/graph-saved-state.spec.util.ts';
-import { switchTheme } from '../test/utils/graph-theme.spec.util.ts';
 import { pollutedBuiltins, trustedTypesEscapes } from '../test/utils/graph-trusted-types.spec.util.ts';
 
 const TOOLBAR_BUTTONS = [FIT_LABEL, RELAYOUT_LABEL, CLEAR_LABEL];
@@ -38,7 +37,7 @@ export class GraphPage {
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
     this.loading = page.getByText(LOADING_TEXT, { exact: true });
     this.notice = page.getByText(FALLBACK_NOTICE_TEXT);
-    this.status = page.getByRole('status');
+    this.status = page.getByRole('status').filter({ hasNotText: /^Showing/ });
   }
 
   /** Opens the real graph page under the graph CSP; every option is applied before the page loads. */
@@ -90,10 +89,6 @@ export class GraphPage {
 
   public async focusContainer(): Promise<void> {
     await this.container.focus();
-  }
-
-  public async applyTheme(theme: ThemeStub): Promise<void> {
-    await this.page.evaluate(switchTheme, { names: THEME_VAR_NAMES, theme });
   }
 
   public async expectText(text: string): Promise<void> {
@@ -149,6 +144,10 @@ export class GraphPage {
 
   public async expectDisabled(label: string): Promise<void> {
     await expect(this.buttonOf(label)).toBeDisabled();
+  }
+
+  public async expectEnabled(label: string): Promise<void> {
+    await expect(this.buttonOf(label)).toBeEnabled();
   }
 
   public async expectButtonFocused(label: string): Promise<void> {

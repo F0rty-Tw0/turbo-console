@@ -4,6 +4,9 @@ import type { WorkerStub } from './graph.type.ts';
 
 export const GRAPH_DIST_DIR = join(import.meta.dirname, '../../dist/graph');
 
+/** The package count of `largeState` by default. */
+export const LARGE_PACKAGE_COUNT = 300;
+
 /** Every `--vscode-*` name the theme stubs set, so `applyTheme` can clear them between themes. */
 export const THEME_VAR_NAMES = [
   '--vscode-editor-background',

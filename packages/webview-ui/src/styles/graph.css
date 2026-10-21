@@ -128,3 +128,188 @@ p {
 .graph-container:focus-visible {
   outline-offset: -1px;
 }
+
+/* Controls panel */
+
+.graph-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.graph-body .graph-container {
+  min-width: 0;
+}
+
+.graph-controls {
+  display: flex;
+  flex: 0 0 260px;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  overflow: auto;
+  color: var(--vscode-sideBar-foreground);
+  background: var(--vscode-sideBar-background);
+  border-inline-end: 1px solid var(--vscode-panel-border);
+}
+
+.controls-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.controls-input {
+  padding: var(--space-1);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: var(--radius);
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  font: inherit;
+}
+
+.controls-tags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+}
+
+.controls-legend {
+  padding: 0 var(--space-1);
+}
+
+.controls-tag {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+/* Native checkboxes ignore theme colours, so the box is drawn here; the tick is two borders of a rotated box. */
+.controls-check {
+  display: inline-grid;
+  flex: none;
+  place-content: center;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border: 1px solid var(--vscode-checkbox-border, currentColor);
+  border-radius: 3px;
+  background: var(--vscode-checkbox-background, transparent);
+  appearance: none;
+  cursor: pointer;
+}
+
+.controls-check:checked::before {
+  content: '';
+  width: 8px;
+  height: 4px;
+  margin-bottom: 2px;
+  border-bottom: 2px solid var(--vscode-checkbox-foreground, currentColor);
+  border-left: 2px solid var(--vscode-checkbox-foreground, currentColor);
+  transform: rotate(-45deg);
+}
+
+.controls-check:indeterminate::before {
+  content: '';
+  width: 8px;
+  border-bottom: 2px solid var(--vscode-checkbox-foreground, currentColor);
+}
+
+.graph-controls > .text-button {
+  align-self: flex-start;
+}
+
+.controls-count {
+  color: var(--vscode-descriptionForeground);
+}
+
+.controls-header,
+.controls-row {
+  display: flex;
+  align-items: center;
+}
+
+.controls-header {
+  margin-top: var(--space-2);
+  font-weight: 600;
+}
+
+.controls-row {
+  padding-inline-start: var(--space-3);
+}
+
+.controls-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px var(--space-1);
+  border-radius: var(--radius);
+}
+
+.controls-row .controls-cell:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.controls-name,
+.controls-focus {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.controls-name {
+  overflow: hidden;
+  min-width: 0;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.controls-focus {
+  color: var(--vscode-textLink-foreground);
+}
+
+.controls-folder {
+  overflow-wrap: anywhere;
+}
+
+.controls-cell:focus-within,
+.controls-row[aria-current='true'] {
+  color: var(--vscode-list-activeSelectionForeground, inherit);
+  background: var(--vscode-list-activeSelectionBackground);
+}
+
+[aria-disabled='true'],
+.is-dimmed {
+  opacity: 0.5;
+}
+
+/* A dimmed row's name button is disabled too; the row's dim alone sets it, as nested opacities would multiply to 0.25. */
+.is-dimmed [aria-disabled='true'] {
+  opacity: 1;
+}
+
+.text-button[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* The toggle's filters-on dot; the label also says it, so the dot is not the only cue. */
+.text-button.has-filters::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-start: var(--space-1);
+  border-radius: 50%;
+  background: var(--vscode-focusBorder);
+  vertical-align: middle;
+}

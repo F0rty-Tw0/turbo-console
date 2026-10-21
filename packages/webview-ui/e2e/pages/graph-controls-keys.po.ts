@@ -1,0 +1,107 @@
+import type { Locator, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
+
+import type { FocusStep } from '../common/graph.type.ts';
+import type { AriaRoleName } from '../common/playwright.type.ts';
+import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+
+const MAX_TABS = 25;
+
+/** The first line of an aria snapshot: `- checkbox "Show web" [checked]` names the role, then the accessible name. */
+const SNAPSHOT_NAME = /^- [\w-]+ "((?:[^"\\]|\\.)*)"/;
+
+/** Keyboard walking over the controls panel: Tab stops, the package grid's roving focus and what holds focus. */
+export class GraphControlsKeys {
+  public readonly focused: Locator;
+  public readonly grid: Locator;
+  public readonly panel: Locator;
+
+  private readonly page: Page;
+
+  public constructor(page: Page) {
+    this.page = page;
+    this.focused = page.locator(':focus');
+    this.grid = page.getByRole('grid');
+    this.panel = page.getByRole('complementary');
+  }
+
+  /** Presses Tab until the focused control is named `name`; fails after 25 presses. */
+  public async tabTo(name: string): Promise<void> {
+    await this.pressUntil('Tab', name);
+  }
+
+  public async shiftTabTo(name: string): Promise<void> {
+    await this.pressUntil('Shift+Tab', name);
+  }
+
+  public async type(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  /** Presses each step's key in turn and returns the steps as walked: each key with the control it left focused. */
+  public async walk(steps: FocusStep[]): Promise<FocusStep[]> {
+    const walked: FocusStep[] = [];
+
+    for (const { key } of steps) {
+      await this.page.keyboard.press(key);
+
+      const focus = await this.focusedName();
+      const step: FocusStep = { key, focus };
+
+      walked.push(step);
+    }
+
+    return walked;
+  }
+
+  public async expectFocusedName(name: string): Promise<void> {
+    await expect(this.focused).toHaveAccessibleName(name);
+  }
+
+  public async expectFocusedRole(role: AriaRoleName): Promise<void> {
+    await expect(this.focused).toHaveRole(role);
+  }
+
+  /** The grid holds `count` controls at `tabindex="0"`: one means the list is a single Tab stop. */
+  public async expectListTabStops(count: number): Promise<void> {
+    await expect(this.grid.locator('[tabindex="0"]')).toHaveCount(count);
+  }
+
+  /** The row's box lies inside the panel's box: the aside scrolls, so its box is the scrollport and the grid's is as tall as the list. */
+  public async expectRowInView(name: string): Promise<void> {
+    const check = this.page.getByRole('checkbox', { name: `Show ${name}`, exact: true });
+    const row = this.grid.getByRole('row').filter({ has: check });
+
+    await expect.poll(async (): Promise<boolean> => this.isInPanel(row)).toBe(true);
+  }
+
+  private async pressUntil(key: string, name: string): Promise<void> {
+    for (let presses = 0; presses < MAX_TABS; presses += 1) {
+      await this.page.keyboard.press(key);
+
+      const focusedName = await this.focusedName();
+
+      if (focusedName === name) return;
+    }
+
+    throw new Error(`graph e2e: ${name} was not reached in ${MAX_TABS} presses of ${key}`);
+  }
+
+  private async focusedName(): Promise<string> {
+    const holders = await this.focused.count();
+
+    if (holders === 0) return '';
+
+    const snapshot = await this.focused.ariaSnapshot();
+    const match = SNAPSHOT_NAME.exec(snapshot);
+
+    return match?.[1] ?? '';
+  }
+
+  private async isInPanel(row: Locator): Promise<boolean> {
+    const scrollport = await this.panel.evaluate(readRect);
+    const box = await row.evaluate(readRect);
+
+    return isInside(box, scrollport);
+  }
+}

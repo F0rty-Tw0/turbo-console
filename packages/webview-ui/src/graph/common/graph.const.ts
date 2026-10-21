@@ -1,3 +1,4 @@
+import type { Column } from './roving.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 
 export const NODE_HEIGHT = 32;
@@ -8,6 +9,12 @@ export const NODE_PADDING_X = 24;
 export const NODE_FONT_SIZE = 13;
 
 export const VIEW_STATE_DEBOUNCE_MS = 250;
+
+export const MIN_DEPTH = 1;
+
+export const MAX_DEPTH = 5;
+
+export const DEFAULT_DEPTH = 1;
 
 export const LOADING_TEXT = 'Loading packages…';
 
@@ -60,3 +67,21 @@ export const ELK_OPTIONS: Readonly<Record<string, string>> = {
   'elk.layered.nodePlacement.strategy': 'SIMPLE',
   'elk.edgeRouting': 'POLYLINE'
 };
+
+/** The group header for packages whose path has no folder part. */
+export const ROOT_FOLDER = '(root)';
+
+export const CONTROLS_LABEL = 'Controls';
+
+export const CONTROLS_FILTERED_LABEL = 'Controls (filters on)';
+
+export const SEARCH_LABEL = 'Search packages';
+
+export const DEPTH_LABEL = 'Focus depth';
+
+export const TAGS_LABEL = 'Tags';
+
+export const SHOW_ALL_LABEL = 'Show all';
+
+/** A package row's cells, left to right; the list keys move through them in this order. */
+export const COLUMNS: Column[] = ['check', 'name', 'focus'];

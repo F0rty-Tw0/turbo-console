@@ -8,7 +8,18 @@ import type { ViewStateSaver } from '../common/graph-page.type.ts';
 
 const PAN: Position = { x: 0, y: 0 };
 
-const FIRST: GraphViewState = { hash: 'h', zoom: 1, pan: PAN, selected: null };
+const FIRST: GraphViewState = {
+  hash: 'h',
+  zoom: 1,
+  pan: PAN,
+  selected: null,
+  controlsOpen: true,
+  search: '',
+  depth: 1,
+  hidden: [],
+  focus: null,
+  tags: []
+};
 
 const SECOND: GraphViewState = { ...FIRST, zoom: 2 };
 
