@@ -78,6 +78,36 @@ describe('FEATURE: listen', () => {
     });
   });
 
+  describe('GIVEN b has the ghost class', () => {
+    it('WHEN b is tapped THEN no handler runs', () => {
+      cy.getElementById('b').addClass('ghost');
+
+      cy.getElementById('b').emit('tap');
+
+      expect(handlers.onTapNode).not.toHaveBeenCalled();
+      expect(handlers.onTapEdge).not.toHaveBeenCalled();
+      expect(handlers.onTapBackground).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the ghost edge a>b is tapped THEN no handler runs', () => {
+      cy.getElementById(edgeIdOf({ source: 'a', target: 'b' })).addClass('ghost');
+
+      cy.getElementById(edgeIdOf({ source: 'a', target: 'b' })).emit('tap');
+
+      expect(handlers.onTapEdge).not.toHaveBeenCalled();
+      expect(handlers.onTapNode).not.toHaveBeenCalled();
+      expect(handlers.onTapBackground).not.toHaveBeenCalled();
+    });
+
+    it('WHEN b is double tapped THEN onDoubleTapNode does not run', () => {
+      cy.getElementById('b').addClass('ghost');
+
+      cy.getElementById('b').emit('dbltap');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN node a was dragged to 5, 6', () => {
     it('WHEN the drag is freed THEN onDragEnd gets every node centre', () => {
       cy.getElementById('a').position({ x: 5, y: 6 });

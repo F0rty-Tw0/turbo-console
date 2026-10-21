@@ -142,6 +142,31 @@ describe('FEATURE: graph visibility', () => {
     });
   });
 
+  describe('GIVEN ghost nodes among the shown ones', () => {
+    it('WHEN c is a ghost shown with a and b THEN fit receives exactly a and b', () => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      showOnly(cy, new Set(['a', 'b', 'c']));
+      cy.getElementById('c').addClass('ghost');
+      fitVisible(cy, PADDING_PX);
+
+      const [shown] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+
+      expect(fitted.map(idOf).sort()).toStrictEqual(['a', 'b']);
+    });
+
+    it('WHEN only ghost nodes are shown THEN fit is not called', () => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      showOnly(cy, new Set(['b', 'c']));
+      cy.nodes().addClass('ghost');
+      fitVisible(cy, PADDING_PX);
+
+      expect(fit).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a zoom of 2', () => {
     it('WHEN c is centred THEN the zoom is kept and c sits at the middle of the view', () => {
       cy.zoom(2);

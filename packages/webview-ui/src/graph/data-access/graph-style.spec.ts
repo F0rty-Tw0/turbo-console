@@ -61,4 +61,47 @@ describe('FEATURE: graphStyleOf edge states', () => {
       expect(cy.getElementById(BC).numericStyle('width')).toBe(2);
     });
   });
+
+  describe('GIVEN a node with the highlighted and ghost classes', () => {
+    it('THEN its border is dashed and its label is 75% opaque', () => {
+      cy.getElementById('a').addClass('highlighted ghost');
+
+      expect(cy.getElementById('a').style('border-style')).toBe('dashed');
+      expect(cy.getElementById('a').numericStyle('text-opacity')).toBe(0.75);
+    });
+
+    it('THEN it keeps the highlight width and colour and the plain label colour', () => {
+      const ghost = cy.getElementById('a');
+      const plainHighlight = cy.getElementById('b');
+      const plain = cy.getElementById('c');
+
+      ghost.addClass('highlighted ghost');
+      plainHighlight.addClass('highlighted');
+
+      expect(ghost.numericStyle('border-width')).toBe(2);
+      expect(ghost.style('border-color')).toBe(plainHighlight.style('border-color'));
+      expect(ghost.style('color')).toBe(plain.style('color'));
+    });
+  });
+
+  describe('GIVEN an edge with the highlighted and ghost classes', () => {
+    it('THEN its line is dashed and keeps the highlight colour', () => {
+      const ghost = cy.getElementById(AB);
+      const plainHighlight = cy.getElementById(BC);
+
+      ghost.addClass('highlighted ghost');
+      plainHighlight.addClass('highlighted');
+
+      expect(ghost.style('line-style')).toBe('dashed');
+      expect(ghost.style('line-color')).toBe(plainHighlight.style('line-color'));
+    });
+  });
+
+  describe('GIVEN a plain node and a plain edge', () => {
+    it('THEN the border and line are solid and the label is fully opaque', () => {
+      expect(cy.getElementById('a').style('border-style')).toBe('solid');
+      expect(cy.getElementById('a').numericStyle('text-opacity')).toBe(1);
+      expect(cy.getElementById(AB).style('line-style')).toBe('solid');
+    });
+  });
 });

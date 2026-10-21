@@ -11,9 +11,9 @@ export const showOnly = (cy: Core, visible: ReadonlySet<string>): void => {
   cy.batch((): void => void cy.nodes().forEach(setDisplay));
 };
 
-/** Fits the camera to the visible nodes; with none visible the camera stays. */
+/** Fits the camera to the visible nodes, ghosts apart; with none visible the camera stays. */
 export const fitVisible = (cy: Core, paddingPx: number): void => {
-  const shown = cy.nodes(':visible');
+  const shown = cy.nodes(':visible').not('.ghost');
   const nothingShown = shown.empty();
 
   if (nothingShown) return;

@@ -2,6 +2,7 @@ import type { Core } from 'cytoscape';
 
 import type { ControlsElements } from './controls-elements.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
+import type { GhostMarks } from './ghost.type.ts';
 import type { ProbeFacts } from './graph-probe.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
@@ -70,6 +71,8 @@ export type GraphView = {
   readonly fit: () => void;
   /** Shows exactly these package names; the rest are hidden, not moved. */
   readonly setVisible: (visible: ReadonlySet<string>) => void;
+  /** Draws the trace's hidden path packages as ghosts; empty marks clear them. Call after every `setVisible`, which hides a ghost again. */
+  readonly setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>) => void;
   /** Re-measures the container, keeping zoom and pan. */
   readonly resize: () => void;
   /** Pans so the named package sits at the view centre, keeping the zoom. */

@@ -1,11 +1,13 @@
 import cytoscape from 'cytoscape';
 import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 
+import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
 import { applyPaint } from './graph-paint.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GhostMarks } from '../common/ghost.type.ts';
 import type { GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
@@ -97,6 +99,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     paint: (paint: Paint): void => applyPaint(cy, paint),
     fit,
     setVisible: (visible: ReadonlySet<string>): void => showOnly(cy, visible),
+    setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>): void => setGhosts(cy, marks, visible),
     resize: (): void => void cy.resize(),
     centreOn: (name: string): void => centreOnNode(cy, name),
     viewport,
