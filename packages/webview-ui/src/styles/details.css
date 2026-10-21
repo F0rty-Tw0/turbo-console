@@ -1,8 +1,24 @@
-/* Package Details page. Colors come only from --vscode-* theme variables, so light, dark and high contrast all follow the theme. */
+/*
+ * Package Details page. Colors come only from --vscode-* theme variables, so light, dark and high contrast all follow
+ * the theme. The custom properties below are layout tokens or aliases of --vscode-* variables, never colour values.
+ */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius: 4px;
+  --radius-pill: 999px;
+  /* VS Code defines contrastBorder only in high contrast themes, so they get it and every other theme the widget border. */
+  --frame: var(--vscode-contrastBorder, var(--vscode-widget-border, var(--vscode-panel-border)));
+  --code-font: var(--vscode-editor-font-family, monospace);
+}
 
 body {
   margin: 0;
-  padding: 0 16px 24px;
+  padding: 0 var(--space-4) var(--space-5);
   color: var(--vscode-foreground);
   background: var(--vscode-editor-background);
   font-family: var(--vscode-font-family);
@@ -16,7 +32,8 @@ h3,
 p,
 ul,
 dl,
-dd {
+dd,
+pre {
   margin: 0;
 }
 
@@ -25,12 +42,25 @@ ul {
   list-style: none;
 }
 
+/* Code text: the package path, the command block, a Script body and list tokens. An unset editor size inherits the page's. */
+.package-path,
+.command pre,
+.fields dd.code,
+.tokens code {
+  font-family: var(--code-font);
+  font-size: var(--vscode-editor-font-size);
+}
+
+/* Page header */
+
 .page-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
-  padding: 16px 0 12px;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid;
+  border-bottom-color: var(--frame);
 }
 
 .page-title {
@@ -50,65 +80,98 @@ ul {
 }
 
 .tags,
-.badges {
+.chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
-.tags:empty,
-.badges:empty {
+.tags:empty {
   display: none;
 }
 
+/* Package tags are the only filled pills; task chips are outlined, so the two never look alike. */
 .tag,
-.badge {
-  padding: 1px 6px;
-  border-radius: 9px;
-  color: var(--vscode-badge-foreground);
-  background: var(--vscode-badge-background);
+.chip {
+  max-width: 100%;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
   font-size: 0.9em;
 }
 
-.badge-note {
-  padding: 1px 0;
-  color: var(--vscode-descriptionForeground);
-  font-size: 0.9em;
+.tag {
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
 }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: 1px solid;
+  border-color: var(--frame);
+  color: var(--vscode-descriptionForeground);
+}
+
+.chip .codicon {
+  flex: none;
+}
+
+/* Buttons */
 
 .page-actions,
 .card-actions {
   display: inline-flex;
-  gap: 2px;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .icon-button,
 .text-button {
   border: 1px solid var(--vscode-contrastBorder, transparent);
-  border-radius: 4px;
+  border-radius: var(--radius);
   color: inherit;
   background: transparent;
   font: inherit;
   cursor: pointer;
 }
 
+/* The 16 px codicon plus padding and border: a hit area of at least 24 × 24 px. */
 .icon-button {
   display: inline-flex;
-  padding: 3px;
+  padding: var(--space-1);
 }
 
 .icon-button:hover {
   background: var(--vscode-toolbar-hoverBackground);
 }
 
+.icon-button:active {
+  background: var(--vscode-toolbar-activeBackground, var(--vscode-toolbar-hoverBackground));
+}
+
+/* Dark Modern's secondary background is transparent: like VS Code's own buttons, the theme's button border draws the edge. */
 .text-button {
-  padding: 2px 8px;
+  padding: var(--space-1) var(--space-2);
+  border-color: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
   color: var(--vscode-button-secondaryForeground);
   background: var(--vscode-button-secondaryBackground);
 }
 
 .text-button:hover {
   background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/*
+ * Run and Stop share one box, so a swap never moves the card's content. Without inline-flex the button's height
+ * follows the glyph metrics, which shift when the codicon font loads.
+ */
+.run-button {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5em;
 }
 
 /* High contrast themes mark hover with a dashed outline; :not(:focus-visible) keeps the focus outline on a hovered button. */
@@ -123,19 +186,26 @@ ul {
   outline-offset: 1px;
 }
 
+/* Banners */
+
 .banners {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
+.banners:not(:empty) {
+  padding-top: var(--space-3);
+}
+
+/* The tone class overrides the transparent default border colour. */
 .banner {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border: 1px solid;
-  border-radius: 4px;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
 }
 
 .banner-text {
@@ -160,78 +230,169 @@ ul {
   color: var(--vscode-errorForeground);
 }
 
+/* Sections */
+
 .card-sections {
   display: grid;
-  gap: 16px;
-  padding-top: 12px;
+  gap: var(--space-5);
+  padding-top: var(--space-4);
 }
 
 .card-section {
   display: grid;
-  gap: 8px;
+  gap: var(--space-3);
 }
 
 .section-title {
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid;
+  border-bottom-color: var(--frame);
   font-size: 1em;
   font-weight: 600;
 }
 
+.section-count {
+  color: var(--vscode-descriptionForeground);
+  font-weight: normal;
+}
+
+/* As many 26em columns as fit: two or three on a wide panel, one on a narrow one. */
 .cards {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 26em), 1fr));
+  gap: var(--space-3);
 }
 
+/* Task card */
+
+/*
+ * Every frame (this one, .page-header, .chip, .section-title) sets width and style apart from colour: an unset colour
+ * variable inside a `border` shorthand drops the whole border, but as a lone `border-color` it falls back to
+ * currentColor and keeps it, so a status change never changes a width or shifts the layout.
+ */
 .card {
   display: grid;
-  gap: 8px;
+  align-content: start;
+  gap: var(--space-2);
   min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
-  border-radius: 4px;
+  padding: var(--space-3);
+  border: 1px solid;
+  border-color: var(--frame);
+  border-inline-start-width: 3px;
+  border-inline-start-color: var(--status-color, var(--frame));
+  border-radius: var(--radius);
+  container-type: inline-size;
 }
 
+/* The status has its own full-width row under the title and buttons, so no title length hides it; title and buttons centre on one line. */
 .card-header {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-areas:
+    'title actions'
+    'status status';
   align-items: center;
-  gap: 4px 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-2);
 }
 
 .card-title {
+  grid-area: title;
   min-width: 0;
   font-size: 1.15em;
   font-weight: 600;
 }
 
+/* A fixed-height line, blank when idle: a runState patch never changes the card's height. */
 .run-status {
-  display: inline-flex;
-  flex: 1 1 auto;
+  display: flex;
+  grid-area: status;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
+  min-width: 0;
+  height: max(1lh, 16px);
+  overflow: hidden;
   color: var(--vscode-descriptionForeground);
+}
+
+.run-status .codicon {
+  flex: none;
+}
+
+.run-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-actions {
+  grid-area: actions;
+}
+
+.card-description {
+  color: var(--vscode-descriptionForeground);
+}
+
+/* High contrast gives the code block the page background, so the outline is its only edge there. */
+.command pre {
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  outline: 1px solid var(--vscode-contrastBorder, transparent);
+  background: var(--vscode-textCodeBlock-background);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .fields {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 2px 12px;
+  gap: var(--space-1) var(--space-3);
 }
 
-.fields dt {
+.fields dt,
+.fields dd.empty {
   color: var(--vscode-descriptionForeground);
 }
 
-/* A multi-line script shows its real line breaks. */
 .fields dd {
+  min-width: 0;
+}
+
+/* A multi-line script shows its real line breaks. */
+.fields dd.code {
   white-space: pre-wrap;
 }
 
-.fields dd.field-icon-value {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.tokens li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Outlined like the command block: in high contrast the token background is the page's, so the outline is its only edge. */
+.tokens code {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius);
+  outline: 1px solid var(--vscode-contrastBorder, transparent);
+  background: var(--vscode-textCodeBlock-background);
+  overflow-wrap: anywhere;
+}
+
+/* A narrow card puts each term above its value; the space goes between pairs, so each term stays with its value. */
+@container (width < 22em) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0;
+  }
+
+  .fields dt:not(:first-child) {
+    margin-top: var(--space-2);
+  }
 }
 
 .missing,

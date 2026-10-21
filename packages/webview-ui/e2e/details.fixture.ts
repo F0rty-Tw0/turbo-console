@@ -2,11 +2,13 @@ import { test as base } from '@playwright/test';
 
 import { DetailsPage } from './pages/details.po.ts';
 import { PageClock } from './pages/page-clock.po.ts';
+import { PageLayout } from './pages/page-layout.po.ts';
 import { PageViewport } from './pages/page-viewport.po.ts';
 
 type DetailsFixtures = {
   readonly detailsPage: DetailsPage;
   readonly pageClock: PageClock;
+  readonly pageLayout: PageLayout;
   readonly pageViewport: PageViewport;
 };
 
@@ -18,6 +20,9 @@ export const test = base.extend<DetailsFixtures>({
   },
   pageClock: async ({ page }, use): Promise<void> => {
     await use(new PageClock(page));
+  },
+  pageLayout: async ({ page }, use): Promise<void> => {
+    await use(new PageLayout(page));
   },
   pageViewport: async ({ page }, use): Promise<void> => {
     await use(new PageViewport(page));
