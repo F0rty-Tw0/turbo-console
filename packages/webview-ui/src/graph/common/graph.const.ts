@@ -60,3 +60,6 @@ export const ELK_OPTIONS: Readonly<Record<string, string>> = {
   'elk.layered.nodePlacement.strategy': 'SIMPLE',
   'elk.edgeRouting': 'POLYLINE'
 };
+
+/** The group header for packages whose path has no folder part. */
+export const ROOT_FOLDER = '(root)';
