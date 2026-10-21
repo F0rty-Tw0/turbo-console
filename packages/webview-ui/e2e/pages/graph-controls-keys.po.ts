@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { SEARCH_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { FocusStep } from '../common/graph.type.ts';
 import type { AriaRoleName } from '../common/playwright.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
@@ -22,7 +23,7 @@ export class GraphControlsKeys {
     this.page = page;
     this.focused = page.locator(':focus');
     this.grid = page.getByRole('grid');
-    this.panel = page.getByRole('complementary');
+    this.panel = page.getByRole('complementary').filter({ has: page.getByRole('searchbox', { name: SEARCH_LABEL, exact: true }) });
   }
 
   /** Presses Tab until the focused control is named `name`; fails after 25 presses. */
@@ -32,6 +33,11 @@ export class GraphControlsKeys {
 
   public async shiftTabTo(name: string): Promise<void> {
     await this.pressUntil('Shift+Tab', name);
+  }
+
+  /** Presses ArrowDown until the focused control is named `name`; fails after 25 presses. */
+  public async arrowTo(name: string): Promise<void> {
+    await this.pressUntil('ArrowDown', name);
   }
 
   public async type(text: string): Promise<void> {

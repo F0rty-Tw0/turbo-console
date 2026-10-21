@@ -1,6 +1,7 @@
-import type { GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
+import type { EdgeExplainResult, GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
+import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
 import type { ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 
 export type WorkerStub = 'real' | 'throwOnce' | 'error' | 'silent' | 'malformed';
@@ -87,6 +88,47 @@ export type PositionsMessage = Extract<GraphWebviewMessage, MessageTag<'position
 export type LayoutDoneMessage = Extract<GraphWebviewMessage, MessageTag<'layoutDone'>>;
 
 export type OpenDetailsMessage = Extract<GraphWebviewMessage, MessageTag<'openDetails'>>;
+
+export type ExplainEdgeMessage = Extract<GraphWebviewMessage, MessageTag<'explainEdge'>>;
+
+export type OpenManifestMessage = Extract<GraphWebviewMessage, MessageTag<'openManifest'>>;
+
+type ResultKind<TKind extends string> = { readonly kind: TKind };
+
+/** The host's answer when it read the manifest and found entries. */
+export type FoundExplainResult = Extract<EdgeExplainResult, ResultKind<'found'>>;
+
+/** What a package view shows beside its name; `tags: []` means the "No tags" line. */
+export type PackageFacts = {
+  readonly path: string;
+  readonly tags: string[];
+  readonly button: string;
+};
+
+/** One line of the empty view's guide as the page shows it: its icon, what can be selected, and how (key names without backticks). */
+export type GuideLine = {
+  readonly icon: GraphIconId;
+  readonly name: string;
+  readonly text: string;
+};
+
+/** A node centre as `[name, x, y]`. */
+export type PositionRow = readonly [string, number, number];
+
+export type NeighbourGroup = 'Direct dependencies' | 'Direct dependents';
+
+/** A toolbar group by its accessible name, and its buttons in order. */
+export type ToolbarGroup = {
+  readonly name: string;
+  readonly buttons: string[];
+};
+
+/** Three opaque colours the page's pressed toggles are drawn in, as `rgb()` text. */
+export type InputOptionColors = {
+  readonly background: string;
+  readonly border: string;
+  readonly foreground: string;
+};
 
 /** The hash and the sorted package names of a `positions` message; `hash` is `undefined` before one is posted. */
 export type PostedPositions = {

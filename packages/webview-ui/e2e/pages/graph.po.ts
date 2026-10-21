@@ -4,6 +4,8 @@ import { expect } from '@playwright/test';
 import { PageDiagnostics } from './page-diagnostics.po.ts';
 import {
   CLEAR_LABEL,
+  CONTROLS_LABEL,
+  DETAILS_LABEL,
   FALLBACK_NOTICE_TEXT,
   FIT_LABEL,
   GRAPH_LABEL,
@@ -19,7 +21,7 @@ import { graphDistMock } from '../test/mocks/graph-dist.mock.ts';
 import { savedStateScript } from '../test/utils/graph-saved-state.spec.util.ts';
 import { pollutedBuiltins, trustedTypesEscapes } from '../test/utils/graph-trusted-types.spec.util.ts';
 
-const TOOLBAR_BUTTONS = [FIT_LABEL, RELAYOUT_LABEL, CLEAR_LABEL];
+const TOOLBAR_BUTTONS = [CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, CLEAR_LABEL];
 
 /** The graph page's DOM: toolbar, status line, notice and container, and the keys and themes that act on them. */
 export class GraphPage {
@@ -158,7 +160,7 @@ export class GraphPage {
     await expect(this.container).toBeFocused();
   }
 
-  /** No host state yet: toolbar and the empty container shown, all three toolbar buttons disabled. */
+  /** No host state yet: toolbar and the empty container shown, every toolbar button disabled. */
   public async expectPreState(): Promise<void> {
     await expect(this.container).toBeVisible();
 

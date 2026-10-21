@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../../src/graph/common/graph.const.ts';
+import { readRect } from '../test/utils/element-rect.spec.util.ts';
 
 /** The controls panel around the package grid: its toolbar toggle, search, depth, tags, Show all and count line. */
 export class GraphControlsPage {
@@ -15,8 +16,11 @@ export class GraphControlsPage {
 
   public constructor(page: Page) {
     this.toggleButton = page.getByRole('button', { name: /^Controls/ });
-    this.panel = page.getByRole('complementary', { includeHidden: true });
     this.searchBox = page.getByRole('searchbox', { name: SEARCH_LABEL, exact: true });
+    const asides = page.getByRole('complementary', { includeHidden: true });
+    const holder = page.getByRole('searchbox', { name: SEARCH_LABEL, exact: true, includeHidden: true });
+
+    this.panel = asides.filter({ has: holder });
     this.depth = page.getByRole('spinbutton', { name: DEPTH_LABEL, exact: true });
     this.tags = page.getByRole('group', { name: TAGS_LABEL, exact: true });
     this.showAllButton = page.getByRole('button', { name: SHOW_ALL_LABEL, exact: true });
@@ -56,6 +60,11 @@ export class GraphControlsPage {
     await expect(this.toggleButton).toHaveAttribute('aria-expanded', String(isExpanded));
   }
 
+  /** The panel's border box is `px` wide, within half a pixel. */
+  public async expectPanelWidth(px: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.panelWidth()).toBeCloseTo(px, 0);
+  }
+
   public async expectToggleName(name: string): Promise<void> {
     await expect(this.toggleButton).toHaveAccessibleName(name);
   }
@@ -82,5 +91,11 @@ export class GraphControlsPage {
 
   public async expectSearchValue(text: string): Promise<void> {
     await expect(this.searchBox).toHaveValue(text);
+  }
+
+  private async panelWidth(): Promise<number> {
+    const rect = await this.panel.evaluate(readRect);
+
+    return rect.width;
   }
 }

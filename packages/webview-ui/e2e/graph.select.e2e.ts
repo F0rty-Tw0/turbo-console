@@ -79,7 +79,7 @@ test.describe('FEATURE: graph selection', () => {
         graphProbe.expectEdgeStates(UI_EDGES));
 
       await test.step('AND the status line counts them', async (): Promise<void> =>
-        graphPage.expectStatus('ui: 3 dependencies, 1 dependents'));
+        graphPage.expectStatus('ui · 3 dependencies, 1 direct · 1 dependent, 1 direct'));
     }
   );
 
@@ -99,7 +99,7 @@ test.describe('FEATURE: graph selection', () => {
       await test.step('AND every edge is highlighted', async (): Promise<void> => graphProbe.expectEdgeStates(CORE_EDGES));
 
       await test.step('AND the status line counts them', async (): Promise<void> =>
-        graphPage.expectStatus('core: 2 dependencies, 3 dependents'));
+        graphPage.expectStatus('core · 2 dependencies, 1 direct · 3 dependents, 2 direct'));
     }
   );
 
@@ -119,7 +119,7 @@ test.describe('FEATURE: graph selection', () => {
       await test.step('AND every edge is dimmed', async (): Promise<void> => graphProbe.expectEdgeStates(DOCS_EDGES));
 
       await test.step('AND the status line counts none', async (): Promise<void> =>
-        graphPage.expectStatus('docs: 0 dependencies, 0 dependents'));
+        graphPage.expectStatus('docs · 0 dependencies, 0 direct · 0 dependents, 0 direct'));
     }
   );
 

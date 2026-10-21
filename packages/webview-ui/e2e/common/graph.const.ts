@@ -4,6 +4,9 @@ import type { WorkerStub } from './graph.type.ts';
 
 export const GRAPH_DIST_DIR = join(import.meta.dirname, '../../dist/graph');
 
+/** How far from an edge's drawn segment a click must land to miss it, in CSS pixels. */
+export const EDGE_CLEARANCE_PX = 14;
+
 /** The package count of `largeState` by default. */
 export const LARGE_PACKAGE_COUNT = 300;
 
