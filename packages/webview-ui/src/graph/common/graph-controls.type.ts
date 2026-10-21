@@ -55,3 +55,11 @@ export type ControlsActions = {
   readonly onSearch: (text: string) => void;
   readonly onPick: (name: string) => void;
 };
+
+/** What the package list's keyboard asks of `GraphControls`; `pan` is true for a select by key. */
+export type KeyboardDeps = {
+  readonly isVisible: (name: string) => boolean;
+  readonly selected: () => string | null;
+  readonly onSelect: (name: string, pan: boolean) => void;
+  readonly onOpenDetails: (name: string) => void;
+};

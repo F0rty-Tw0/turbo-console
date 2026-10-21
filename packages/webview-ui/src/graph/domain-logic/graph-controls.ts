@@ -1,9 +1,10 @@
 // eslint-disable-next-line local/no-unused-exports -- first imported by Task 3.4
+import { ControlsKeyboard } from './controls-keyboard.ts';
 import { wireControls } from './graph-controls-events.ts';
-import { renderControls, renderSearch } from './graph-controls-render.ts';
+import { renderControls, renderSearch, revealSelected } from './graph-controls-render.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ControlsElements } from '../common/controls-elements.type.ts';
-import type { ControlsActions, ControlsView, GraphControlsDeps } from '../common/graph-controls.type.ts';
+import type { ControlsActions, ControlsView, GraphControlsDeps, KeyboardDeps } from '../common/graph-controls.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import { DEFAULT_DEPTH } from '../common/graph.const.ts';
@@ -68,6 +69,8 @@ export class GraphControls {
   public markSelected(name: string | null): void {
     this.selected = name;
     this.render();
+
+    if (this.mounted !== null) revealSelected(this.mounted.elements, name, this.isOpen);
   }
 
   /** Builds and swaps in the panel for `graph` and applies the saved state; no `onVisibleChange`, no `onSave`. */
@@ -92,6 +95,9 @@ export class GraphControls {
 
     wireControls(elements, this.actionsOf(mounted));
     renderSearch(elements, graph.infos, restored.search);
+    const keyboardDeps: KeyboardDeps = { ...this.deps, isVisible: (name) => this.shown.has(name), selected: () => this.selected };
+
+    new ControlsKeyboard(elements, keyboardDeps);
     this.shown = visibleOf(graph.infos, graph.edges, this.applied);
     this.render();
   }

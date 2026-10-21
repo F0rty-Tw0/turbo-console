@@ -69,6 +69,18 @@ const renderGroupSearch = (group: ControlsGroup, byName: Map<string, GraphPackag
   group.line.hidden = !hasMatch;
 };
 
+/** Scrolls the selected row into view; a collapsed panel or a row the search left out stays put, and focus never moves. */
+export const revealSelected = (elements: ControlsElements, name: string | null, isOpen: boolean): void => {
+  if (name === null || !isOpen) return;
+
+  const rows = elements.groups.flatMap((group) => group.rows);
+  const row = rows.find((candidate) => candidate.name === name);
+
+  if (row === undefined || row.line.hidden) return;
+
+  row.line.scrollIntoView({ block: 'nearest' });
+};
+
 /** Hides the rows whose name and path miss `search`, and a group with no row left; the filters are untouched. */
 export const renderSearch = (elements: ControlsElements, infos: GraphPackage[], search: string): void => {
   const byName = new Map(infos.map((info): [string, GraphPackage] => [info.name, info]));
