@@ -25,7 +25,7 @@ const graphOf = (names: string[], edges: ElkEdge[]): ElkNode => {
 };
 
 const positionIn = (positions: Positions, name: string): Position => {
-  const position = positions[name];
+  const position = Object.hasOwn(positions, name) ? positions[name] : undefined;
 
   if (position === undefined) throw new Error(`no position for ${name}`);
 
@@ -83,6 +83,32 @@ describe('FEATURE: breadthfirstPositions', () => {
       const gap = Math.abs(positionIn(positions, 'b').x - positionIn(positions, 'a').x);
 
       expect(gap).toBeGreaterThan(150);
+    });
+  });
+
+  describe('GIVEN packages named like Object.prototype members, app > constructor > toString', () => {
+    const prototypeNames = graphOf(
+      ['app', 'constructor', 'toString'],
+      [edgeOf('app', 'constructor'), edgeOf('constructor', 'toString')]
+    );
+
+    it('WHEN laid out THEN each package gets its own entry', () => {
+      const positions = breadthfirstPositions(prototypeNames);
+
+      const ownNames = Object.keys(positions);
+
+      expect(ownNames).toStrictEqual(['app', 'constructor', 'toString']);
+    });
+
+    it('WHEN laid out THEN dependents still sit above their dependencies', () => {
+      const positions = breadthfirstPositions(prototypeNames);
+
+      const app = positionIn(positions, 'app').y;
+      const constructorY = positionIn(positions, 'constructor').y;
+      const toStringY = positionIn(positions, 'toString').y;
+
+      expect(app).toBeLessThan(constructorY);
+      expect(constructorY).toBeLessThan(toStringY);
     });
   });
 
