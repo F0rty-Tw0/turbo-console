@@ -19,7 +19,7 @@ const REQUIRED_DETAILS_FILES = REQUIRED_DETAILS_NAMES.map((name) => `${DETAILS_D
 
 const GRAPH_DIR = `${WEBVIEW_DIR}graph/`;
 
-const REQUIRED_GRAPH_NAMES = ['index.html', 'main.js'];
+const REQUIRED_GRAPH_NAMES = ['index.html', 'main.js', 'graph.css', 'elkjs-LICENSE.md', 'THIRD-PARTY-NOTICES.md'];
 
 const REQUIRED_GRAPH_FILES = REQUIRED_GRAPH_NAMES.map((name) => `${GRAPH_DIR}${name}`);
 
