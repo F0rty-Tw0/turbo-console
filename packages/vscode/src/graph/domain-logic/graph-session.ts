@@ -1,6 +1,7 @@
 import type { GraphPackage, GraphState, GraphWebviewMessage, Positions } from '@turbo-console/webview-ui';
 
 import { answerRequest } from './graph-explain.ts';
+import { LatestWins } from './latest-wins.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
@@ -12,10 +13,16 @@ import { graphStateOfRoot } from '../utils/graph-state.util.ts';
 
 const NO_PACKAGES: GraphPackage[] = [];
 
+type ExplainJob = {
+  readonly request: ExplainRequest;
+  readonly value: unknown;
+};
+
 /**
  * The host side of one Package Graph panel. Each state is built from the store and the layout cache when it is posted
  * or a message is checked, so a message is always judged against the graph as it is now. Nothing is posted before the
  * page's `ready` or while hidden; hiding resets `ready` because the page is rebuilt on show. An edge explanation is posted only if the panel is still shown and ready after its read.
+ * One `explainEdge` is answered at a time; the one waiting behind it is replaced by each newer request, so a page that floods them costs one read in flight and one waiting.
  */
 export class GraphSession {
   private readonly root: string;
@@ -25,6 +32,7 @@ export class GraphSession {
   private isVisible = false;
   private isReady = false;
   private isDisposed = false;
+  private readonly explains = new LatestWins<ExplainJob>();
 
   public constructor(root: string, roots: Roots, ports: GraphPorts) {
     this.root = root;
@@ -128,8 +136,11 @@ export class GraphSession {
 
         return;
       case 'explainEdge':
+        await this.explains.run({ request: message, value }, async (job) => this.answer(job));
+
+        return;
       case 'openManifest':
-        await this.inspect(message, value);
+        await this.answer({ request: message, value });
 
         return;
     }
@@ -168,7 +179,10 @@ export class GraphSession {
     }
   }
 
-  private async inspect(request: ExplainRequest, value: unknown): Promise<void> {
+  private async answer(job: ExplainJob): Promise<void> {
+    if (this.isDisposed) return;
+
+    const { request, value } = job;
     const state = this.stateNow();
     const canPost = (): boolean => !this.isDisposed && this.isVisible && this.isReady;
     const context: ExplainContext = { state, root: this.root, ports: this.ports, canPost };

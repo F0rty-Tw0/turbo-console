@@ -212,6 +212,68 @@ describe('FEATURE: graph session messages', () => {
     });
   });
 
+  describe('GIVEN an explainEdge whose read is still pending', () => {
+    it('WHEN more explainEdge arrive THEN only the first and the last are read and the last reply is posted', async () => {
+      const { session, ports } = shownSession();
+      const read = Promise.withResolvers<string | null>();
+
+      vi.mocked(ports.readText).mockReturnValueOnce(read.promise).mockResolvedValue('{"dependencies":{"@org/x":"1"}}');
+      await session.receive({ type: 'ready' });
+
+      const first = session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+      const second = session.receive({ type: 'explainEdge', source: 'web', target: '@org/x' });
+      const last = session.receive({ type: 'explainEdge', source: 'a', target: '@org/x' });
+
+      await Promise.all([second, last]);
+
+      expect(ports.readText).toHaveBeenCalledTimes(1);
+
+      read.resolve('{}');
+      await first;
+
+      const explained = postedOf(ports).filter((message) => message.type === 'edgeExplained');
+
+      expect(ports.readText).toHaveBeenCalledTimes(2);
+      expect(ports.readText).toHaveBeenLastCalledWith(join('/ws', 'packages/a', 'package.json'));
+      expect(explained).toHaveLength(2);
+      expect(explained.at(-1)).toMatchObject({ type: 'edgeExplained', source: 'a', target: '@org/x' });
+    });
+
+    it('WHEN an openManifest arrives THEN it opens without waiting for the read', async () => {
+      const { session, ports } = shownSession();
+      const read = Promise.withResolvers<string | null>();
+
+      vi.mocked(ports.readText).mockReturnValue(read.promise);
+      await session.receive({ type: 'ready' });
+
+      const explained = session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+
+      await session.receive({ type: 'openManifest', packageName: 'web', line: 3 });
+
+      expect(ports.openAt).toHaveBeenCalledTimes(1);
+
+      read.resolve('{}');
+      await explained;
+    });
+
+    it('WHEN the panel is disposed before the read resolves THEN the pending request is not read', async () => {
+      const { session, ports } = shownSession();
+      const read = Promise.withResolvers<string | null>();
+
+      vi.mocked(ports.readText).mockReturnValue(read.promise);
+      await session.receive({ type: 'ready' });
+
+      const first = session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+
+      await session.receive({ type: 'explainEdge', source: 'a', target: '@org/x' });
+      session.dispose();
+      read.resolve('{}');
+      await first;
+
+      expect(ports.readText).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('GIVEN an openManifest from the page', () => {
     it('WHEN it names a package of the graph THEN its package.json opens at the line', async () => {
       const { session, ports } = shownSession();
