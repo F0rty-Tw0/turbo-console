@@ -7,6 +7,12 @@ import { lineAt } from '../../shared/utils/text-line.util.ts';
 
 const BOM = '﻿';
 
+type ManifestQuery = {
+  readonly root: Node;
+  readonly body: string;
+  readonly dependency: string;
+};
+
 const ALIAS_PREFIXES = ['npm:', 'workspace:'];
 
 const stringValueOf = (node: Node | undefined): string | null => {
@@ -50,7 +56,8 @@ const fieldObjectOf = (root: Node, field: ManifestField): Node | null => {
   return property?.children?.[1] ?? null;
 };
 
-const entryOf = (field: ManifestField, property: Node, body: string, dependency: string): ManifestEntry | null => {
+const entryOf = (field: ManifestField, property: Node, query: ManifestQuery): ManifestEntry | null => {
+  const { body, dependency } = query;
   const [keyNode, valueNode] = property.children ?? [];
 
   if (keyNode === undefined || valueNode === undefined) return null;
@@ -70,12 +77,14 @@ const entryOf = (field: ManifestField, property: Node, body: string, dependency:
   return entry;
 };
 
-const entriesOfField = (field: ManifestField, root: Node, body: string, dependency: string): ManifestEntry[] => {
-  const fieldObject = fieldObjectOf(root, field);
+const entriesOfField = (field: ManifestField, query: ManifestQuery, room: number): ManifestEntry[] => {
+  const fieldObject = fieldObjectOf(query.root, field);
   const entries: ManifestEntry[] = [];
 
   for (const property of fieldObject?.children ?? []) {
-    const entry = entryOf(field, property, body, dependency);
+    if (entries.length >= room) break;
+
+    const entry = entryOf(field, property, query);
 
     if (entry !== null) entries.push(entry);
   }
@@ -107,7 +116,15 @@ export const manifestEntriesOf = (text: string, dependency: string): ManifestEnt
 
   if (root === null) return null;
 
-  const entries = MANIFEST_FIELDS.flatMap((field): ManifestEntry[] => entriesOfField(field, root, body, dependency));
+  const query: ManifestQuery = { root, body, dependency };
+  const entries: ManifestEntry[] = [];
 
-  return entries.slice(0, MANIFEST_ENTRIES_MAX);
+  for (const field of MANIFEST_FIELDS) {
+    const room = MANIFEST_ENTRIES_MAX - entries.length;
+    const inField = entriesOfField(field, query, room);
+
+    for (const entry of inField) entries.push(entry);
+  }
+
+  return entries;
 };

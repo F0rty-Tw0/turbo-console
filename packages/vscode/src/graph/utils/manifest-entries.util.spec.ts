@@ -176,6 +176,26 @@ const unreadable: [string, string, string, null][] = [
   ['nesting deep enough to overflow the parser', `{ "dependencies": { "core": "1" }, "x": ${'['.repeat(10_000)}`, 'core', null]
 ];
 
+const CPU_BUDGET_MS = 1_000;
+
+const flood = (): string => {
+  const aliases = Array.from({ length: 50_000 }, (_, i): string => `    "k${i}": "npm:core@1",`);
+
+  return rows('\n', '{', '  "dependencies": {', ...aliases, '    "end": "1"', '  }', '}');
+};
+
+const FLOOD_TEXT = flood();
+
+const cpuMsOf = (work: () => void): number => {
+  const before = process.cpuUsage();
+
+  work();
+
+  const { user, system } = process.cpuUsage(before);
+
+  return (user + system) / 1_000;
+};
+
 describe('FEATURE: manifestEntriesOf', () => {
   describe('GIVEN a manifest that names the dependency', () => {
     it.each(FOUND_CASES)('WHEN it has %s THEN the entries are listed', (_label, text, dependency, expected) => {
@@ -198,6 +218,20 @@ describe('FEATURE: manifestEntriesOf', () => {
       const entries = manifestEntriesOf(text, dependency);
 
       expect(entries).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a manifest of about 1 MiB where every entry matches', () => {
+    it('WHEN it is read THEN the first 8 entries come back within the CPU budget', () => {
+      let entries: ManifestEntry[] | null = null;
+
+      const cpuMs = cpuMsOf(() => {
+        entries = manifestEntriesOf(FLOOD_TEXT, 'core');
+      });
+
+      expect(FLOOD_TEXT.length).toBeGreaterThan(1_000_000);
+      expect(entries).toHaveLength(8);
+      expect(cpuMs).toBeLessThan(CPU_BUDGET_MS);
     });
   });
 });
