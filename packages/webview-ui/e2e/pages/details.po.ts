@@ -5,14 +5,10 @@ import { PageDiagnostics } from './page-diagnostics.po.ts';
 import { TaskCardSection } from './task-card.po.ts';
 import type { HostMessage, WebviewMessage } from '../../src/bridge/common/details-message.type.ts';
 import type { DetailsState, RunView } from '../../src/bridge/common/details-state.type.ts';
-import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
+import { CODICON_LOADED, HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
 import { detailsDistMock } from '../test/mocks/details-dist.mock.ts';
 
 const postToPage = (message: HostMessage): void => window.postMessage(message, '*');
-
-/** `document.fonts.check('16px codicon')` is also true when no codicon face exists at all, so look for a loaded face. */
-const CODICON_LOADED = `document.fonts.check('16px codicon')
-  && [...document.fonts].some((face) => face.family.replaceAll('"', '') === 'codicon' && face.status === 'loaded')`;
 
 /** Resolves after two frames, so the scroll events of the last scroll have fired. */
 const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';

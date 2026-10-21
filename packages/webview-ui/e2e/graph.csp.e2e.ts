@@ -24,7 +24,7 @@ test.describe('FEATURE: graph page CSP', () => {
   test(
     'GIVEN the graph CSP, a graph renders through real ELK with no violation or error',
     { annotation: AC5 },
-    async ({ graphHost, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphHost, graphIcons, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND a graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_STUB));
@@ -32,6 +32,8 @@ test.describe('FEATURE: graph page CSP', () => {
       await test.step('THEN seven nodes are drawn', async (): Promise<void> => graphProbe.expectNodeCount(7));
 
       await test.step('AND the layout came from ELK', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
+
+      await test.step('AND the codicon stylesheet is loaded', async (): Promise<void> => graphIcons.expectCodiconStylesheet());
 
       await test.step('AND no CSP violation is recorded', async (): Promise<void> => graphPage.expectNoViolations());
 

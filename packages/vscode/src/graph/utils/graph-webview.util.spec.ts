@@ -5,7 +5,7 @@ import { graphHtml, graphTitleOf } from './graph-webview.util.ts';
 import type { HtmlAssets } from '../../shared/common/html-assets.type.ts';
 
 const CSP_SOURCE = 'https://webview.test';
-const FIXTURE_TEMPLATE = '{{csp}}|{{nonce}}|{{scriptUri}}|{{styleUri}}';
+const FIXTURE_TEMPLATE = '{{csp}}|{{nonce}}|{{scriptUri}}|{{styleUri}}|{{codiconUri}}';
 const SLICE_ONE_TEMPLATE = '{{csp}}|{{nonce}}|{{scriptUri}}';
 
 const assetsOf = (uriOf: HtmlAssets['uriOf']): HtmlAssets => {
@@ -15,16 +15,19 @@ const assetsOf = (uriOf: HtmlAssets['uriOf']): HtmlAssets => {
 };
 
 describe('FEATURE: the graph page html', () => {
-  describe('GIVEN the template with all four slots', () => {
-    it('WHEN it is rendered THEN the csp is the graph csp and the nonce and two file URIs fill their slots', () => {
+  describe('GIVEN the template with all five slots', () => {
+    it('WHEN it is rendered THEN the csp is the graph csp and the nonce and three file URIs fill their slots', () => {
       const uriOf = vi.fn((name: string) => `https://webview.test/graph/${name}`);
 
       const html = graphHtml(FIXTURE_TEMPLATE, assetsOf(uriOf), 'N0nce');
 
       const csp = graphCsp('N0nce', CSP_SOURCE);
 
-      expect(html).toBe(`${csp}|N0nce|https://webview.test/graph/main.js|https://webview.test/graph/graph.css`);
-      expect(uriOf.mock.calls).toStrictEqual([['main.js'], ['graph.css']]);
+      const fileNames = ['main.js', 'graph.css', 'codicon.css'];
+      const uris = fileNames.map((name) => `https://webview.test/graph/${name}`);
+
+      expect(html).toBe(`${csp}|N0nce|${uris.join('|')}`);
+      expect(uriOf.mock.calls).toStrictEqual([['main.js'], ['graph.css'], ['codicon.css']]);
     });
   });
 
