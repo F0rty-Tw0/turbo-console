@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
 
 import { panelViewOf } from './panel-view.ts';
-import type { PanelFake, PanelFakes } from '../../details/test/common/vscode-fakes.type.ts';
-import { webviewPanelMock } from '../../details/test/mocks/webview-panel.mock.ts';
 import type { EditorPanelView } from '../common/panel-view.type.ts';
+import type { PanelFake, PanelFakes } from '../test/common/vscode-fakes.type.ts';
+import { webviewPanelMock } from '../test/mocks/webview-panel.mock.ts';
 
 type Message = { readonly type: 'ping' };
 

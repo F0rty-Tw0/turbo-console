@@ -5,16 +5,11 @@ import { PanelDryRun } from './panel-dry-run.ts';
 import { PanelTitle } from './panel-title.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
+import { droppedMessageText } from '../../shared/utils/dropped-message.util.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { CommandMessage, DetailsPorts, DryRunResult, PanelKey, PosterGate } from '../common/details.type.ts';
 import { commandOf } from '../utils/details-command.util.ts';
-import {
-  cardTaskIdsOf,
-  checkedTaskMessage,
-  droppedMessageText,
-  parseWebviewMessage,
-  refusedRunTextOf
-} from '../utils/details-message.util.ts';
+import { cardTaskIdsOf, checkedTaskMessage, parseWebviewMessage, refusedRunTextOf } from '../utils/details-message.util.ts';
 
 /**
  * The host side of one Package Details panel. Every state is built from the store, the runs and the dry run

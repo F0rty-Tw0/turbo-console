@@ -2,7 +2,6 @@ import type { DetailsState, TaskCard, TaskMessage, WebviewMessage } from '@turbo
 
 import { ALREADY_RUNNING_TEXT } from '../../run/common/run.const.ts';
 import { webviewMessageSchema } from '../common/details-message.schema.ts';
-import { DROPPED_MESSAGE_MAX, UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
 import type { CardTaskIds, CommandMessage } from '../common/details.type.ts';
 
 const NO_CARDS: CardTaskIds = { all: new Set() };
@@ -63,13 +62,4 @@ export const refusedRunTextOf = (message: CommandMessage, state: DetailsState | 
   const isHiddenScript = !state.scriptsShown && card !== undefined && !card.isTurboTask;
 
   return isHiddenScript ? ALREADY_RUNNING_TEXT : null;
-};
-
-/** The log text of a dropped message: its JSON cut to `DROPPED_MESSAGE_MAX`. Never throws, whatever the value holds. */
-export const droppedMessageText = (value: unknown): string => {
-  try {
-    return JSON.stringify(value).slice(0, DROPPED_MESSAGE_MAX);
-  } catch {
-    return UNPRINTABLE_MESSAGE;
-  }
 };

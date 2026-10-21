@@ -5,9 +5,10 @@ import * as vscode from 'vscode';
 import type { Output } from '../../shared/common/output.type.ts';
 import { setPanelHtml } from '../../shared/data-access/panel-html.ts';
 import { panelViewOf } from '../../shared/data-access/panel-view.ts';
+import { panelOptionsOf } from '../../shared/utils/panel-options.util.ts';
 import { DETAILS_ASSET_DIR, DETAILS_VIEW_TYPE } from '../common/details.const.ts';
 import type { PanelHost, PanelView } from '../common/panel.type.ts';
-import { detailsHtml, panelOptionsOf } from '../utils/details-webview.util.ts';
+import { detailsHtml } from '../utils/details-webview.util.ts';
 
 /** The editor effects of Package Details: panels over `createWebviewPanel`, `readDryRun`, commands and the output channel. */
 export const editorPanelHost = (extensionUri: vscode.Uri, output: Output, rootOf: PanelHost['rootOf']): PanelHost => {

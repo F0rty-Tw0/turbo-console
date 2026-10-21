@@ -29,12 +29,12 @@ describe('FEATURE: the graph page html', () => {
   });
 
   describe('GIVEN a template without the style slot', () => {
-    it('WHEN it is rendered THEN it renders without throwing', () => {
+    it('WHEN it is rendered THEN the three slots it has are filled and the style uri is left out', () => {
       const uriOf = (name: string): string => `https://webview.test/graph/${name}`;
 
-      const render = (): string => graphHtml(SLICE_ONE_TEMPLATE, assetsOf(uriOf), 'n');
+      const html = graphHtml(SLICE_ONE_TEMPLATE, assetsOf(uriOf), 'n');
 
-      expect(render).not.toThrow();
+      expect(html).toBe(`${graphCsp('n', CSP_SOURCE)}|n|https://webview.test/graph/main.js`);
     });
   });
 

@@ -12,7 +12,7 @@ import type { Output } from '../shared/common/output.type.ts';
  * It sits beside the layers, like `extension.ts`, because it joins `data-access` to `feature`.
  */
 export const createPanels = (
-  context: vscode.ExtensionContext,
+  context: Pick<vscode.ExtensionContext, 'extensionUri'>,
   session: PanelRoots,
   shared: Pick<PanelsDeps, 'runs' | 'scripts'>,
   output: Output

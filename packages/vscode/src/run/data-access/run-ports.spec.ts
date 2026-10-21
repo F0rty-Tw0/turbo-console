@@ -24,7 +24,7 @@ vi.mock('vscode', () => {
 });
 
 describe('FEATURE: run all editor ports', () => {
-  const output: Output = { error: vi.fn(), warn: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+  const output: Output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
   const roots: Roots = { get: vi.fn(), all: vi.fn(), onDidChange: vi.fn() };
 
   beforeEach(() => {

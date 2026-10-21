@@ -5,12 +5,13 @@ import { DetailsPanels } from './details-panels.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { PanelsDeps } from '../common/panel.type.ts';
 import type { HostFakes } from '../test/common/panel-fakes.type.ts';
-import { hostMock, viewMock } from '../test/mocks/panel-host.mock.ts';
+import { hostMock } from '../test/mocks/panel-host.mock.ts';
 import { DETAILS_LOADED_STUB } from '../test/stubs/details-model.stub.ts';
 import { statesPostedOf } from '../test/utils/panels-setup.spec.util.ts';
 

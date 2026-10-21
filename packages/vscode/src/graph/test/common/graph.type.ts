@@ -1,7 +1,7 @@
 import type { GraphHostMessage, Positions } from '@turbo-console/webview-ui';
 import type { Mock } from 'vitest';
 
-import type { ViewFake } from '../../../details/test/common/panel-fakes.type.ts';
+import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphHost } from '../../common/graph-panel.type.ts';
 
@@ -19,4 +19,5 @@ export type GraphHostFakes = {
   readonly views: ViewFake<GraphHostMessage>[];
   readonly cached: Map<string, GraphLayoutCacheEntry>;
   readonly log: Mock<GraphHost['log']>;
+  readonly info: Mock<GraphHost['info']>;
 };

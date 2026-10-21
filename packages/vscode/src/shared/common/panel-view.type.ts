@@ -9,3 +9,10 @@ export type EditorPanelView<TMessage> = {
   readonly onDispose: (listener: () => void) => void;
   readonly dispose: () => void;
 };
+
+/** What `wirePanel` drives of a panel's session. */
+export type WiredSession = {
+  readonly receive: (value: unknown) => Promise<void>;
+  readonly setVisible: (visible: boolean) => void;
+  readonly start: () => void;
+};

@@ -6,7 +6,6 @@ import { registerDetails } from './details/feature/register-details.ts';
 import { createGraph } from './graph/graph-wiring.ts';
 import type { Roots } from './roots/common/coordinator.type.ts';
 import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/root.type.ts';
-import type { RootsPruner } from './roots/common/roots-pruner.type.ts';
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
@@ -103,6 +102,11 @@ const bindViews = (view: VisibleView, visibility: TreeVisibility, ticker: Elapse
   visibility.bind(view);
 
   return ticker.bind(view);
+};
+
+/** A registry of per-root panels: `pruneRoots` closes the panels of roots that left the store. */
+type RootsPruner = {
+  readonly pruneRoots: () => void;
 };
 
 /** What a roots change does: the tree redraws, the watchers drop gone roots and each panel registry closes its gone roots' panels. */

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import { graphRootOf } from './graph-root.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
@@ -12,14 +13,14 @@ const NO_ROOT_TEXT = 'Turbo Console: no Turborepo workspace found';
 
 type PortSpies = {
   readonly ports: RootPickPorts;
-  readonly pick: ReturnType<typeof vi.fn<RootPickPorts['pick']>>;
-  readonly info: ReturnType<typeof vi.fn<RootPickPorts['info']>>;
+  readonly pick: Mock<RootPickPorts['pick']>;
+  readonly info: Mock<RootPickPorts['info']>;
 };
 
 const portsMock = (activeFile: string | null, rootOf: string | null, picked: string | undefined): PortSpies => {
   const pick = vi.fn<RootPickPorts['pick']>().mockResolvedValue(picked);
   const info = vi.fn<RootPickPorts['info']>();
-  const ports: RootPickPorts = { activeFile: () => activeFile, rootOf: () => rootOf, pick, info };
+  const ports: RootPickPorts = { activeFile: () => activeFile, rootOf: () => rootOf, pick, info, error: vi.fn(), log: vi.fn() };
   const spies: PortSpies = { ports, pick, info };
 
   return spies;

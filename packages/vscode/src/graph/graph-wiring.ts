@@ -24,7 +24,7 @@ export const createGraph = (context: GraphContext, session: PanelRoots, details:
   };
   const host = editorGraphHost(context.extensionUri, output, context.workspaceState);
   const panels = new GraphPanels({ roots: session.store, host, setPanelVisible, openDetails });
-  const ports = editorGraphCommandPorts(manifestFile, rootOf);
+  const ports = editorGraphCommandPorts(manifestFile, rootOf, output.error);
   const wiring: GraphWiring = {
     api: panels.api(),
     pruneRoots: () => {

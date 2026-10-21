@@ -7,10 +7,13 @@ import type { Mock } from 'vitest';
 import * as vscode from 'vscode';
 
 import { setPanelHtml } from './panel-html.ts';
-import type { PanelFake, PanelFakes, UriFake } from '../../details/test/common/vscode-fakes.type.ts';
-import { webviewPanelMock } from '../../details/test/mocks/webview-panel.mock.ts';
-import { CSP_SOURCE_STUB } from '../../details/test/stubs/csp-source.stub.ts';
-import type { HtmlBuilder } from '../common/html-assets.type.ts';
+import type { HtmlAssets, HtmlBuilder } from '../common/html-assets.type.ts';
+import type { PanelFake, PanelFakes, UriFake } from '../test/common/vscode-fakes.type.ts';
+import { webviewPanelMock } from '../test/mocks/webview-panel.mock.ts';
+import { CSP_SOURCE_STUB } from '../test/stubs/csp-source.stub.ts';
+
+/** The arguments of one `HtmlBuilder` call. */
+type BuildCall = [template: string, assets: HtmlAssets, nonce: string];
 
 type CreatePanel = (viewType: string, title: string, column: number, options: unknown) => PanelFake;
 
@@ -41,7 +44,7 @@ vi.mock('vscode', () => {
   return module;
 });
 
-const firstCallOf = (build: Mock<HtmlBuilder>): Parameters<HtmlBuilder> => {
+const firstCallOf = (build: Mock<HtmlBuilder>): BuildCall => {
   const [call] = build.mock.calls;
 
   if (call === undefined) throw new Error('build was not called');

@@ -252,18 +252,34 @@ describe('FEATURE: graph session', () => {
       expect(ports.log).not.toHaveBeenCalled();
     });
 
-    it('WHEN it is started or shown THEN it neither subscribes nor reports', () => {
-      const store = loadedStore();
-      const { ports } = shownSession(null, store);
-      const session = new GraphSession('/ws', store, ports);
+    describe('WHEN it is started or shown', () => {
+      it('THEN it does not subscribe to the store', () => {
+        const store = loadedStore();
+        const { ports } = shownSession(null, store);
+        const session = new GraphSession('/ws', store, ports);
+        const onDidChange = vi.spyOn(store, 'onDidChange');
 
-      session.dispose();
-      vi.mocked(ports.setPanelVisible).mockClear();
+        session.dispose();
 
-      session.start();
-      session.setVisible(true);
+        session.start();
+        session.setVisible(true);
 
-      expect(ports.setPanelVisible).not.toHaveBeenCalled();
+        expect(onDidChange).not.toHaveBeenCalled();
+      });
+
+      it('THEN it does not report the panel', () => {
+        const store = loadedStore();
+        const { ports } = shownSession(null, store);
+        const session = new GraphSession('/ws', store, ports);
+
+        session.dispose();
+        vi.mocked(ports.setPanelVisible).mockClear();
+
+        session.start();
+        session.setVisible(true);
+
+        expect(ports.setPanelVisible).not.toHaveBeenCalled();
+      });
     });
   });
 });

@@ -6,13 +6,14 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { flushSettles } from '../../roots/test/utils/deferred-ports.spec.util.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { OpenPanel } from '../common/panel.type.ts';
 import type { HostFakes } from '../test/common/panel-fakes.type.ts';
-import { hostMock, viewMock } from '../test/mocks/panel-host.mock.ts';
+import { hostMock } from '../test/mocks/panel-host.mock.ts';
 import { DETAILS_LOADED_STUB, DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
 import { deferEnsureLoaded, markStale } from '../test/utils/panels-setup.spec.util.ts';
 

@@ -1,12 +1,11 @@
-import type { GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
+import type { GraphState, GraphWebviewMessage, Positions } from '@turbo-console/webview-ui';
 
-import { droppedMessageText } from '../../details/utils/details-message.util.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
 import { acceptedPositions } from '../utils/graph-cache.util.ts';
-import { parseGraphMessage } from '../utils/graph-message.util.ts';
+import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
 import { graphStateOfRoot } from '../utils/graph-state.util.ts';
 
 const NO_NAMES: string[] = [];
@@ -65,17 +64,6 @@ export class GraphSession {
     this.publish();
   }
 
-  /** Posts the current state when the panel is shown and its page is ready. */
-  public publish(): void {
-    const canPost = !this.isDisposed && this.isVisible && this.isReady;
-
-    if (!canPost) return;
-
-    const state = this.stateNow();
-
-    this.ports.post({ type: 'state', state });
-  }
-
   /** Reports the panel hidden once when it last reported it shown. */
   public dispose(): void {
     if (this.isDisposed) return;
@@ -85,6 +73,17 @@ export class GraphSession {
     for (const unsubscribe of this.unsubscribes) unsubscribe();
 
     if (this.isVisible) this.ports.setPanelVisible(false);
+  }
+
+  /** Posts the current state when the panel is shown and its page is ready. */
+  private publish(): void {
+    const canPost = !this.isDisposed && this.isVisible && this.isReady;
+
+    if (!canPost) return;
+
+    const state = this.stateNow();
+
+    this.ports.post({ type: 'state', state });
   }
 
   private stateNow(): GraphState {
@@ -111,7 +110,7 @@ export class GraphSession {
 
         return;
       case 'reload':
-        this.roots.get(this.root)?.coordinator.request('refresh');
+        this.reload(value);
 
         return;
       case 'openDetails':
@@ -123,10 +122,24 @@ export class GraphSession {
 
         return;
       case 'layoutDone':
-        this.ports.log(`graph layout ${message.engine} ${message.ms} ms`);
+        this.ports.info(`graph layout ${message.engine} ${message.ms} ms`);
 
         return;
     }
+  }
+
+  /** The page shows Reload only on an error state, so a `reload` at any other time is dropped and never reloads the root. */
+  private reload(value: unknown): void {
+    const state = this.stateNow();
+    const isError = state.kind === 'error';
+
+    if (!isError) {
+      this.drop(value);
+
+      return;
+    }
+
+    this.roots.get(this.root)?.coordinator.request('refresh');
   }
 
   private async openDetails(packageName: string, value: unknown): Promise<void> {
@@ -147,7 +160,7 @@ export class GraphSession {
     }
   }
 
-  private storePositions(hash: string, positions: unknown, value: unknown): void {
+  private storePositions(hash: string, positions: Positions, value: unknown): void {
     const state = this.stateNow();
     const accepted = acceptedPositions(state, { hash, positions });
 
@@ -163,7 +176,7 @@ export class GraphSession {
   }
 
   private drop(value: unknown): void {
-    const dropped = droppedMessageText(value);
+    const dropped = droppedGraphText(value);
 
     this.ports.log(logTextOf(`Dropped a graph message: ${dropped}`));
   }

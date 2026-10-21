@@ -1,6 +1,7 @@
 import type { PackageEdge, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphState } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphState, Positions } from '@turbo-console/webview-ui';
 
+import { coversExactly } from './graph-cache.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
@@ -49,13 +50,20 @@ const edgesOf = (modelEdges: PackageEdge[]): GraphEdge[] => {
   return Array.from(byPair.values()).toSorted(compareEdges);
 };
 
+/** The cached positions when the entry is for this exact graph: the same hash and a point for exactly its packages. */
+const cachedPositionsOf = (cache: GraphLayoutCacheEntry | null, hash: string, packages: string[]): Positions | null => {
+  if (cache?.hash !== hash) return null;
+
+  return coversExactly(cache.positions, packages) ? cache.positions : null;
+};
+
 export const graphStateOf = (model: WorkspaceModel, cache: GraphLayoutCacheEntry | null): GraphState => {
   if (model.singlePackage) return SINGLE_PACKAGE;
 
   const packages = model.packages.map((pkg) => pkg.name).toSorted(compareText);
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
-  const positions = cache?.hash === hash ? cache.positions : null;
+  const positions = cachedPositionsOf(cache, hash, packages);
   const state: GraphState = { kind: 'graph', hash, packages, edges, positions };
 
   return state;

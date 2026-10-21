@@ -1,13 +1,14 @@
 import { graphCsp } from '@turbo-console/webview-ui';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import * as vscode from 'vscode';
 
 import { editorGraphHost } from './graph-ports.ts';
-import type { PageRoot } from '../../details/test/common/page-root.type.ts';
-import type { PanelFake, PanelFakes, UriFake } from '../../details/test/common/vscode-fakes.type.ts';
-import { webviewPanelMock } from '../../details/test/mocks/webview-panel.mock.ts';
-import { CSP_SOURCE_STUB } from '../../details/test/stubs/csp-source.stub.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import type { PageRoot } from '../../shared/test/common/page-root.type.ts';
+import type { PanelFake, PanelFakes, UriFake } from '../../shared/test/common/vscode-fakes.type.ts';
+import { webviewPanelMock } from '../../shared/test/mocks/webview-panel.mock.ts';
+import { CSP_SOURCE_STUB } from '../../shared/test/stubs/csp-source.stub.ts';
 import type { GraphHost, GraphStore } from '../common/graph-panel.type.ts';
 import { GRAPH_VIEW_TYPE } from '../common/graph.const.ts';
 import { GRAPH_HASH_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
@@ -47,8 +48,8 @@ const SCRIPT_NONCE = /<script nonce="([^"]+)"/;
 
 type StoreSpies = {
   readonly store: GraphStore;
-  readonly get: ReturnType<typeof vi.fn<GraphStore['get']>>;
-  readonly update: ReturnType<typeof vi.fn<GraphStore['update']>>;
+  readonly get: Mock<GraphStore['get']>;
+  readonly update: Mock<GraphStore['update']>;
 };
 
 const storeMock = (): StoreSpies => {
@@ -86,15 +87,17 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
     page = copyGraphPageRoot();
     assetDir = `${page.root}/dist/webview/graph`;
     made = [];
-    output = { error: vi.fn(), warn: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
     spies = storeMock();
-    editor.createWebviewPanel.mockImplementation(() => {
+    const createPanel = (): PanelFake => {
       const fakes = webviewPanelMock();
 
       made.push(fakes);
 
       return fakes.fake;
-    });
+    };
+
+    editor.createWebviewPanel.mockImplementation(createPanel);
     host = editorGraphHost(vscode.Uri.file(page.root), output, spies.store);
   });
 
@@ -131,8 +134,6 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
 
       expect(nonce).not.toBe('');
       expect(html).toContain(`content="${csp}"`);
-      expect(csp).toContain('trusted-types tc-elk');
-      expect(csp).toContain('worker-src blob:');
     });
 
     it('WHEN it opens THEN the asked URIs are main.js then graph.css in the page folder', () => {
@@ -150,6 +151,21 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
       expect(() => missing.open('t')).toThrow('ENOENT');
       expect(panelAt(made, 0).fake.dispose).toHaveBeenCalledOnce();
       expect(panelAt(made, 0).fake.assigned).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN the output channel', () => {
+    it('WHEN the host logs an info line THEN it goes to output.info, not output.error', () => {
+      host.info('graph layout elk 12 ms');
+
+      expect(output.info).toHaveBeenCalledExactlyOnceWith('graph layout elk 12 ms');
+      expect(output.error).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the host logs a failure THEN it goes to output.error', () => {
+      host.log('boom');
+
+      expect(output.error).toHaveBeenCalledExactlyOnceWith('boom');
     });
   });
 

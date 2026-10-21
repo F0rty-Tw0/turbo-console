@@ -2,7 +2,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import type { PageRoot } from '../../../details/test/common/page-root.type.ts';
+import type { PageRoot } from '../../../shared/test/common/page-root.type.ts';
 import { GRAPH_ASSET_DIR } from '../../common/graph.const.ts';
 
 /** A temp extension root whose page folder holds the graph page template; `dispose` deletes it. */

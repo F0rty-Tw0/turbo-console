@@ -1,7 +1,7 @@
 import { webviewCsp } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
-import { detailsHtml, panelOptionsOf } from './details-webview.util.ts';
+import { detailsHtml } from './details-webview.util.ts';
 import type { HtmlAssets } from '../../shared/common/html-assets.type.ts';
 
 const TEMPLATE_LINES = [
@@ -50,25 +50,6 @@ describe('FEATURE: the details page html and panel options', () => {
 
     it('WHEN the template has a slot the page does not fill THEN rendering throws', () => {
       expect(() => detailsHtml('{{other}}', assetsMock(), 'n')).toThrow('unfilled webview slot');
-    });
-  });
-
-  describe('GIVEN the page folder', () => {
-    it('WHEN options are built THEN scripts are on and only that folder is a resource root', () => {
-      const options = panelOptionsOf('page-folder');
-
-      expect(options).toStrictEqual({
-        enableScripts: true,
-        enableForms: false,
-        localResourceRoots: ['page-folder'],
-        retainContextWhenHidden: false
-      });
-    });
-
-    it('WHEN options are built THEN command uris stay unset', () => {
-      const options = panelOptionsOf('page-folder');
-
-      expect(options).not.toHaveProperty('enableCommandUris');
     });
   });
 });

@@ -2,7 +2,7 @@ import { graphApiOf } from './graph-api.ts';
 import { graphPortsOf } from './graph-panel-ports.ts';
 import { GraphSession } from './graph-session.ts';
 import type { GraphApi } from '../../shared/common/api.type.ts';
-import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import { wirePanel } from '../../shared/domain-logic/panel-wiring.ts';
 import type { GraphOpener, GraphPanelsDeps, OpenGraphPanel } from '../common/graph-panel.type.ts';
 import { graphTitleOf } from '../utils/graph-webview.util.ts';
 
@@ -76,27 +76,11 @@ export class GraphPanels implements GraphOpener {
   }
 
   private wire(panel: OpenGraphPanel, session: GraphSession): OpenGraphPanel {
-    const { root, view } = panel;
-    const report = (error: unknown): void => {
-      this.deps.host.log(logTextOf(error));
+    const close = (): void => {
+      this.close(panel.root);
     };
 
-    view.onDispose(() => {
-      this.close(root);
-    });
-    view.onMessage((value) => {
-      void session.receive(value).catch(report);
-    });
-    session.setVisible(view.isVisible());
-    view.onViewState(() => {
-      session.setVisible(view.isVisible());
-    });
-
-    try {
-      session.start();
-    } catch (error: unknown) {
-      report(error);
-    }
+    wirePanel(panel.view, session, close, this.deps.host.log);
 
     return panel;
   }

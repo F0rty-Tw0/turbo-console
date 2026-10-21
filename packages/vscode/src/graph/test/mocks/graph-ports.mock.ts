@@ -16,7 +16,8 @@ export const graphPortsMock = (cached: Map<string, GraphLayoutCacheEntry> = new 
     writeCache: vi.fn(writeCache),
     openDetails,
     setPanelVisible: vi.fn(),
-    log: vi.fn()
+    log: vi.fn(),
+    info: vi.fn()
   };
 
   return ports;

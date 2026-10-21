@@ -10,12 +10,14 @@ import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts'
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
-import { GRAPH_MODEL_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
+import { GRAPH_HASH_STUB, GRAPH_MODEL_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
 import { rootNode } from '../test/utils/graph-model.spec.util.ts';
 
 const EDGE_A: GraphEdge = { source: 'a', target: 'b' };
 const EDGE_B: GraphEdge = { source: 'b', target: 'a' };
-const CACHE: GraphLayoutCacheEntry = { hash: 'dc7e01eb', positions: POSITIONS_STUB };
+const CACHE: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
+const GHOST_POINT = { x: 1, y: 1 };
+const GHOST_POSITIONS = { ...POSITIONS_STUB, ghost: GHOST_POINT };
 
 describe('FEATURE: graph state builder', () => {
   describe('GIVEN a model with unsorted edges and one pair listed twice', () => {
@@ -54,6 +56,12 @@ describe('FEATURE: graph state builder', () => {
 
       expect(graphStateOf(grown, CACHE)).toMatchObject({ positions: null });
     });
+
+    it('WHEN its hash is the graph hash but its key set is not the packages THEN positions are null', () => {
+      const entry: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: GHOST_POSITIONS };
+
+      expect(graphStateOf(GRAPH_MODEL_STUB, entry)).toMatchObject({ positions: null });
+    });
   });
 });
 
@@ -61,7 +69,8 @@ describe('FEATURE: graph hash', () => {
   it.each([
     [[], [], '878f5675'],
     [['a', 'b'], [{ source: 'a', target: 'b' }], 'e7a8462b'],
-    [['é'], [], 'cd4b4901']
+    [['é'], [], 'cd4b4901'],
+    [['p3'], [], '0fcb6dd0']
   ])('GIVEN packages %j and edges %j WHEN hashed THEN it is %s (FNV-1a over UTF-8)', (packages, edges, expected) => {
     expect(graphHashOf(packages, edges)).toBe(expected);
   });

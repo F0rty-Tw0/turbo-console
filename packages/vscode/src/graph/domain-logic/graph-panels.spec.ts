@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { GraphPanels } from './graph-panels.ts';
-import { POSTED_MAX } from '../../details/common/details.const.ts';
-import type { ViewFake } from '../../details/test/common/panel-fakes.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { POSTED_MAX } from '../../shared/common/panel.const.ts';
+import type { ViewFake } from '../../shared/test/common/panel-fakes.type.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphPanelsDeps } from '../common/graph-panel.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
@@ -110,15 +110,15 @@ describe('FEATURE: graph panel registry', () => {
     });
   });
 
-  describe('GIVEN a root with no entry', () => {
-    it('WHEN the graph opens THEN null comes back and no panel is made', () => {
+  describe('GIVEN no panel is open', () => {
+    it('WHEN the graph opens for a root the store does not hold THEN null comes back and no panel is made', () => {
       const opened = panels.open('/gone');
 
       expect(opened).toBeNull();
       expect(fakes.open).not.toHaveBeenCalled();
     });
 
-    it('WHEN the test API receives for it THEN it rejects', async () => {
+    it('WHEN the test API receives for a root THEN it rejects', async () => {
       await expect(panels.api().receive('/ws', READY)).rejects.toThrow('no open graph panel');
     });
   });

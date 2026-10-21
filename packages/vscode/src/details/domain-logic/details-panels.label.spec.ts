@@ -4,10 +4,11 @@ import { DetailsPanels } from './details-panels.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import type { ViewFake } from '../../shared/test/common/panel-fakes.type.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { PanelKey } from '../common/details.type.ts';
-import type { HostFakes, ViewFake } from '../test/common/panel-fakes.type.ts';
+import type { HostFakes } from '../test/common/panel-fakes.type.ts';
 import { hostMock } from '../test/mocks/panel-host.mock.ts';
 import { A_PACKAGE_STUB, DETAILS_LOADED_STUB, DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
 

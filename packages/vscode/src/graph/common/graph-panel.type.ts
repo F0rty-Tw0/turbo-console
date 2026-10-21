@@ -16,12 +16,13 @@ export type GraphStore = {
   readonly update: (key: string, value: GraphLayoutCacheEntry) => PromiseLike<void>;
 };
 
-/** Editor effects of the graph registry. `open` throws, with no panel left behind, when the page cannot be built; `log` never throws. */
+/** Editor effects of the graph registry. `open` throws, with no panel left behind, when the page cannot be built; `log` and `info` never throw. */
 export type GraphHost = {
   readonly open: (title: string) => EditorPanelView<GraphHostMessage>;
   readonly readCache: GraphPorts['readCache'];
   readonly writeCache: GraphPorts['writeCache'];
   readonly log: (text: string) => void;
+  readonly info: (text: string) => void;
 };
 
 /** `setPanelVisible` is `RootsSession.setPanelVisible`; only a session's port closure calls it. */
@@ -52,12 +53,17 @@ export type GraphOpener = {
   readonly dispose: () => void;
 };
 
-/** What `graphRootOf` asks of the editor: the active file, the folder holding a file, a folder pick and an info message. */
+/**
+ * What the Show Package Graph command asks of the editor: the active file, the folder holding a file, a folder pick, an
+ * info and an error message, and the output log. `info`, `error` and `log` never throw.
+ */
 export type RootPickPorts = {
   readonly activeFile: () => string | null;
   readonly rootOf: (file: string) => string | null;
   readonly pick: (folders: RootFolder[]) => Promise<string | undefined>;
   readonly info: (text: string) => void;
+  readonly error: (text: string) => void;
+  readonly log: (text: string) => void;
 };
 
 /** What `createGraph` reads of the Details registry: opening a package's panel. */
