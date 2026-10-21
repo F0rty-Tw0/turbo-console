@@ -113,6 +113,24 @@ const found: [string, string, string, ManifestEntry[]][] = [
     rows('\n', '{', '  "dependencies": { "core": "1" },', '  "dependencies": { "core": "2" }', '}'),
     'core',
     [entry('dependencies', 'core', '2', 2)]
+  ],
+  [
+    'a duplicate of a field key that is not an object: the last object wins',
+    rows('\n', '{', '  "dependencies": { "core": "1" },', '  "dependencies": 1', '}'),
+    'core',
+    [entry('dependencies', 'core', '1', 1)]
+  ],
+  [
+    'a non-object field key before an object one',
+    rows('\n', '{', '  "dependencies": 1,', '  "dependencies": { "core": "2" }', '}'),
+    'core',
+    [entry('dependencies', 'core', '2', 2)]
+  ],
+  [
+    'a key and its value on different lines: the line is the key line',
+    rows('\n', '{', '  "dependencies": {', '    "core":', '      "1"', '  }', '}'),
+    'core',
+    [entry('dependencies', 'core', '1', 2)]
   ]
 ];
 
