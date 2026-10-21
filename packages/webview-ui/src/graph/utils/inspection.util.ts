@@ -1,12 +1,5 @@
 import { NO_INSPECTION, PLAIN_INPUT_KINDS } from '../common/inspection.const.ts';
-import type {
-  EscapeWhere,
-  Inspection,
-  InspectionInput,
-  PlainInput,
-  PlainInputKind,
-  SelectVia
-} from '../common/inspection.type.ts';
+import type { EscapeWhere, Inspection, InspectionInput, PlainInput, PlainInputKind, SelectVia } from '../common/inspection.type.ts';
 
 const packageOf = (name: string): Inspection => {
   const inspection: Inspection = { kind: 'package', name };

@@ -48,8 +48,11 @@ const MANY_ALIAS_LINES = manyAliasLines();
 
 const MANY_ALIAS_TEXT = rows('\n', ...MANY_ALIAS_LINES);
 
-const manyAliasEntries = (): ManifestEntry[] =>
-  Array.from({ length: 8 }, (_, i): ManifestEntry => entry('dependencies', `k${i}`, 'npm:core@1', 2 + i, around(MANY_ALIAS_LINES, 2 + i)));
+const manyAliasEntries = (): ManifestEntry[] => {
+  return Array.from({ length: 8 }, (_, i): ManifestEntry =>
+    entry('dependencies', `k${i}`, 'npm:core@1', 2 + i, around(MANY_ALIAS_LINES, 2 + i))
+  );
+};
 
 const aliasRows = (prefix: string): string[] =>
   Array.from({ length: 5 }, (_, i): string => `    "${prefix}${i}": "npm:core@1"${i < 4 ? ',' : ''}`);
@@ -72,13 +75,11 @@ const SPLIT_ALIAS_LINES = [
 const SPLIT_ALIAS_TEXT = rows('\n', ...SPLIT_ALIAS_LINES);
 
 const splitAliasEntries = (): ManifestEntry[] => {
-  const inDependencies = Array.from(
-    { length: 5 },
-    (_, i): ManifestEntry => entry('dependencies', `d${i}`, 'npm:core@1', 2 + i, around(SPLIT_ALIAS_LINES, 2 + i))
+  const inDependencies = Array.from({ length: 5 }, (_, i): ManifestEntry =>
+    entry('dependencies', `d${i}`, 'npm:core@1', 2 + i, around(SPLIT_ALIAS_LINES, 2 + i))
   );
-  const inDevDependencies = Array.from(
-    { length: 3 },
-    (_, i): ManifestEntry => entry('devDependencies', `v${i}`, 'npm:core@1', 9 + i, around(SPLIT_ALIAS_LINES, 9 + i))
+  const inDevDependencies = Array.from({ length: 3 }, (_, i): ManifestEntry =>
+    entry('devDependencies', `v${i}`, 'npm:core@1', 9 + i, around(SPLIT_ALIAS_LINES, 9 + i))
   );
 
   return [...inDependencies, ...inDevDependencies];
