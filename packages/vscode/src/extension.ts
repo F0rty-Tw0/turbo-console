@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
 import { registerCodeLens } from './codelens/feature/register-codelens.ts';
-import type { PanelsDeps } from './details/common/panel.type.ts';
-import { editorPanelHost } from './details/data-access/details-ports.ts';
-import { DetailsPanels } from './details/domain-logic/details-panels.ts';
+import { createPanels } from './details/details-wiring.ts';
 import { registerDetails } from './details/feature/register-details.ts';
+import { createGraph } from './graph/graph-wiring.ts';
 import type { Roots } from './roots/common/coordinator.type.ts';
 import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/root.type.ts';
+import type { RootsPruner } from './roots/common/roots-pruner.type.ts';
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
@@ -15,7 +15,7 @@ import { editorRunAllPorts, editorRunPorts } from './run/data-access/run-ports.t
 import { forwardRunAllEvents, forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
 import { RunSession } from './run/domain-logic/run-session.ts';
 import { registerCopy } from './run/feature/register-copy.ts';
-import { manifestFile, registerPickers, rootOf } from './run/feature/register-pickers.ts';
+import { manifestFile, registerPickers } from './run/feature/register-pickers.ts';
 import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
 import type { RunCommandsUi, Timings, TimingsStart, TurboConsoleApi } from './shared/common/api.type.ts';
@@ -37,6 +37,7 @@ import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-view
 import { registerPackageActions } from './tree/feature/package-actions.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
 import { currentIcons, currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
+import type { RootWatchers } from './watch/common/watch.type.ts';
 import { watchRoot } from './watch/data-access/root-watchers.ts';
 import { registerWatchers } from './watch/feature/register-watchers.ts';
 
@@ -59,21 +60,6 @@ const createSession = (context: vscode.ExtensionContext, output: Output): RootsS
   const ports: SessionPorts = { depsFor, now: () => performance.now(), warn: output.warn };
 
   return new RootsSession(ports);
-};
-
-/** The details panels over the root session; a panel reports its visibility to the session only through this closure. */
-const createPanels = (
-  context: vscode.ExtensionContext,
-  session: RootsSession,
-  shared: Pick<PanelsDeps, 'runs' | 'scripts'>,
-  output: Output
-): DetailsPanels => {
-  const setPanelVisible: PanelsDeps['setPanelVisible'] = (root, panelId, visible) => {
-    session.setPanelVisible(root, panelId, visible);
-  };
-  const host = editorPanelHost(context.extensionUri, output, rootOf);
-
-  return new DetailsPanels({ roots: session.store, ...shared, host, setPanelVisible });
 };
 
 /** The run, pick and run-all commands, the forwarding of turbo task events and the package.json CodeLens. */
@@ -119,6 +105,22 @@ const bindViews = (view: VisibleView, visibility: TreeVisibility, ticker: Elapse
   return ticker.bind(view);
 };
 
+/** What a roots change does: the tree redraws, the watchers drop gone roots and each panel registry closes its gone roots' panels. */
+const rootsChangedOf = (
+  tree: Pick<PackagesTreeProvider, 'rootsChanged'>,
+  watchers: Pick<RootWatchers, 'prune'>,
+  panels: RootsPruner[]
+): (() => void) => {
+  const onRoots = (): void => {
+    tree.rootsChanged();
+    watchers.prune();
+
+    for (const panel of panels) panel.pruneRoots();
+  };
+
+  return onRoots;
+};
+
 /**
  * Spec §3 activation: registers the view, commands and listeners, finds the roots and sets the context key. No turbo
  * spawn and no load: the first load starts when the view asks for its children or turns visible. In an untrusted
@@ -134,6 +136,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, { runs: runSession.runs, scripts }, output);
+  const graph = createGraph(context, session, panels, output);
   const treeVisibility = new TreeVisibility();
   const ticker = new ElapsedTicker(runSession.runs, tickerPortsOf(tree));
   const api: TurboConsoleApi = {
@@ -145,6 +148,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     loads: session.loads,
     whenIdle: async (root: string): Promise<void> => session.whenIdle(root),
     details: panels.api(),
+    graph: graph.api,
     treeVisible: treeVisibility.read,
     ticker: ticker.api()
   };
@@ -155,21 +159,16 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     context.subscriptions.push(bindViews(registerTree(contextOf(context, scripts), session, tree, output), treeVisibility, ticker));
 
     const watchers = registerWatchers(session, watchRoot);
-    const onRoots = (): void => {
-      tree.rootsChanged();
-      watchers.prune();
-      panels.pruneRoots();
-    };
-    const details = registerDetails(panels, vscode.commands.registerCommand, manifestFile);
 
     context.subscriptions.push(
       watchers,
-      details,
+      registerDetails(panels, vscode.commands.registerCommand, manifestFile),
+      graph.register(),
       registerRunCommands(session, runSession, { tree, scripts }, output),
       registerPanel(session.store, commands, help)
     );
 
-    const rootsFound = registerRoots(context, session, onRoots, output.error);
+    const rootsFound = registerRoots(context, session, rootsChangedOf(tree, watchers, [panels, graph]), output.error);
 
     // Two spans of this extension's own work, split at the wait for the roots' stat results: with that wait inside,
     // CI runners logged 10–470 ms for identical code, so the wait is left out of the budget.

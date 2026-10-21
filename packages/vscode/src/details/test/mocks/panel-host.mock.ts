@@ -1,28 +1,33 @@
 import type { DryRunState } from '@turbo-console/core';
+import type { HostMessage } from '@turbo-console/webview-ui';
 import { vi } from 'vitest';
 
-import type { PanelHost, PanelView } from '../../common/panel.type.ts';
+import type { EditorPanelView } from '../../../shared/common/panel-view.type.ts';
+import type { PanelHost } from '../../common/panel.type.ts';
 import type { HostFakes, ViewFake } from '../common/panel-fakes.type.ts';
 
 const FOLDER_ROOTS = ['/ws', '/other', '/bare'];
 
-/** A shown view whose `send` resolves; `overrides` replace members of the `PanelView` (a throwing listener, a failing send). */
-export const viewMock = (visible = true, overrides: Partial<PanelView> = {}): ViewFake => {
+/** A shown view whose `send` resolves; `overrides` replace members of the view (a throwing listener, a failing send). */
+export const viewMock = <TMessage = HostMessage>(
+  visible = true,
+  overrides: Partial<EditorPanelView<TMessage>> = {}
+): ViewFake<TMessage> => {
   const state = { visible, isDisposed: false };
   const messageListeners: ((value: unknown) => void)[] = [];
   const stateListeners: (() => void)[] = [];
   const disposeListeners: (() => void)[] = [];
-  const send = vi.fn<PanelView['send']>(async () => Promise.resolve(true));
-  const reveal = vi.fn<PanelView['reveal']>();
-  const setTitle = vi.fn<PanelView['setTitle']>();
-  const dispose = vi.fn<PanelView['dispose']>(() => {
+  const send = vi.fn<EditorPanelView<TMessage>['send']>(async () => Promise.resolve(true));
+  const reveal = vi.fn<EditorPanelView<TMessage>['reveal']>();
+  const setTitle = vi.fn<EditorPanelView<TMessage>['setTitle']>();
+  const dispose = vi.fn<EditorPanelView<TMessage>['dispose']>(() => {
     if (state.isDisposed) return;
 
     state.isDisposed = true;
 
     for (const listener of disposeListeners) listener();
   });
-  const view: PanelView = {
+  const view: EditorPanelView<TMessage> = {
     isVisible: () => state.visible,
     reveal,
     setTitle,
@@ -47,7 +52,7 @@ export const viewMock = (visible = true, overrides: Partial<PanelView> = {}): Vi
   const message = (value: unknown): void => {
     for (const listener of messageListeners) listener(value);
   };
-  const fake: ViewFake = { view, send, reveal, setTitle, dispose, show, message, close: dispose };
+  const fake: ViewFake<TMessage> = { view, send, reveal, setTitle, dispose, show, message, close: dispose };
 
   return fake;
 };

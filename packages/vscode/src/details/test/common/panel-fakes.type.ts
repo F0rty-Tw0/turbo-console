@@ -1,15 +1,17 @@
 import type { DryRunState } from '@turbo-console/core';
+import type { HostMessage } from '@turbo-console/webview-ui';
 import type { Mock } from 'vitest';
 
-import type { PanelHost, PanelView } from '../../common/panel.type.ts';
+import type { EditorPanelView } from '../../../shared/common/panel-view.type.ts';
+import type { PanelHost } from '../../common/panel.type.ts';
 
 /** A `PanelView` the spec drives: `show` changes visibility and fires the view-state listeners, `close` is the user closing the tab. */
-export type ViewFake = {
-  readonly view: PanelView;
-  readonly send: Mock<PanelView['send']>;
-  readonly reveal: Mock<PanelView['reveal']>;
-  readonly setTitle: Mock<PanelView['setTitle']>;
-  readonly dispose: Mock<PanelView['dispose']>;
+export type ViewFake<TMessage = HostMessage> = {
+  readonly view: EditorPanelView<TMessage>;
+  readonly send: Mock<EditorPanelView<TMessage>['send']>;
+  readonly reveal: Mock<EditorPanelView<TMessage>['reveal']>;
+  readonly setTitle: Mock<EditorPanelView<TMessage>['setTitle']>;
+  readonly dispose: Mock<EditorPanelView<TMessage>['dispose']>;
   readonly show: (visible: boolean) => void;
   readonly message: (value: unknown) => void;
   readonly close: () => void;

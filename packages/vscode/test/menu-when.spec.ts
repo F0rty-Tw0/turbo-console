@@ -91,7 +91,13 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
       };
 
       const items = shownIn(MENUS['view/title'], keys);
-      const expected = [scopeToggle, scriptsToggle, 'turboConsole.refresh navigation@3', 'turboConsole.showFolders navigation@2'];
+      const expected = [
+        scopeToggle,
+        scriptsToggle,
+        'turboConsole.refresh navigation@3',
+        'turboConsole.showFolders navigation@2',
+        'turboConsole.openPackageGraph navigation@4'
+      ];
 
       expect(items).toStrictEqual(expected.toSorted());
     }
@@ -105,6 +111,16 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('Scripts') && whenMatches(entry.when, keys));
 
     expect(shown.map((entry) => entry.command)).toStrictEqual([command]);
+  });
+
+  it.each([
+    [true, ['turboConsole.openPackageGraph']],
+    [false, []]
+  ])('GIVEN the extension active is %s WHEN the command palette is read THEN Show Package Graph shows as %j', (active, expected) => {
+    const keys = { 'turboConsole.active': active };
+    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('PackageGraph') && whenMatches(entry.when, keys));
+
+    expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
   });
 
   it.each(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask', 'turboConsole.copyCommand'])(

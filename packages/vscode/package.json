@@ -181,6 +181,12 @@
         "icon": "$(open-preview)"
       },
       {
+        "command": "turboConsole.openPackageGraph",
+        "title": "Show Package Graph",
+        "category": "Turbo Console",
+        "icon": "$(type-hierarchy)"
+      },
+      {
         "command": "turboConsole.openPackageJson",
         "title": "Open package.json",
         "category": "Turbo Console",
@@ -233,6 +239,11 @@
           "command": "turboConsole.refresh",
           "when": "view == turboConsole.tree",
           "group": "navigation@3"
+        },
+        {
+          "command": "turboConsole.openPackageGraph",
+          "when": "view == turboConsole.tree",
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -320,6 +331,10 @@
       "commandPalette": [
         {
           "command": "turboConsole.refresh",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.openPackageGraph",
           "when": "turboConsole.active"
         },
         {
@@ -590,7 +605,7 @@
     }
   },
   "scripts": {
-    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --minify --external:vscode --outfile=dist/extension.cjs && node -e \"const fs=require('node:fs');fs.rmSync('dist/webview/details',{recursive:true,force:true});fs.cpSync('../webview-ui/dist/details','dist/webview/details',{recursive:true})\" && node scripts/tool-icons.ts",
+    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node22 --main-fields=module,main --minify --external:vscode --outfile=dist/extension.cjs && node -e \"const fs=require('node:fs');fs.rmSync('dist/webview/details',{recursive:true,force:true});fs.cpSync('../webview-ui/dist/details','dist/webview/details',{recursive:true});fs.rmSync('dist/webview/graph',{recursive:true,force:true});fs.cpSync('../webview-ui/dist/graph','dist/webview/graph',{recursive:true})\" && node scripts/tool-icons.ts",
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",

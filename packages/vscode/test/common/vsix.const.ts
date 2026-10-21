@@ -17,10 +17,17 @@ const REQUIRED_DETAILS_NAMES = [
 
 const REQUIRED_DETAILS_FILES = REQUIRED_DETAILS_NAMES.map((name) => `${DETAILS_DIR}${name}`);
 
-export const REQUIRED_FILES = ['dist/extension.cjs', ...REQUIRED_DETAILS_FILES];
+const GRAPH_DIR = `${WEBVIEW_DIR}graph/`;
+
+const REQUIRED_GRAPH_NAMES = ['index.html', 'main.js'];
+
+const REQUIRED_GRAPH_FILES = REQUIRED_GRAPH_NAMES.map((name) => `${GRAPH_DIR}${name}`);
+
+export const REQUIRED_FILES = ['dist/extension.cjs', ...REQUIRED_DETAILS_FILES, ...REQUIRED_GRAPH_FILES];
 
 export const WEBVIEW_FILES = [
   ...REQUIRED_DETAILS_FILES,
+  ...REQUIRED_GRAPH_FILES,
   `${DETAILS_DIR}LICENSE-CODE`,
   `${DETAILS_DIR}SIMPLE-ICONS-LICENSE.md`,
   `${DETAILS_DIR}SIMPLE-ICONS-DISCLAIMER.md`
