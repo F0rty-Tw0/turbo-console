@@ -1,6 +1,7 @@
 import type { Camera } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
+import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 
 const AC1 = { description: 'M4-2 AC1', type: 'requirement' };
@@ -75,6 +76,47 @@ test.describe('FEATURE: graph package list', () => {
       await test.step('WHEN the background is tapped', async (): Promise<void> => graphCanvas.tapBackground());
 
       await test.step('THEN no row is current', async (): Promise<void> => graphList.expectNoRowCurrent());
+    }
+  );
+
+  test(
+    'GIVEN the controls graph, a second tap on the selected node under a search that hides its row keeps the row current and focuses the graph',
+    { annotation: AC1 },
+    async ({ graphCanvas, graphHost, graphKeys, graphList, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('AND core is tapped', async (): Promise<void> => graphCanvas.tapNode('core'));
+
+      await test.step('THEN the core row is current', async (): Promise<void> => graphList.expectRowCurrent('core'));
+
+      await test.step('WHEN the search is reached by Shift+Tab', async (): Promise<void> => graphKeys.shiftTabTo('Search packages'));
+
+      await test.step('AND xyz is typed', async (): Promise<void> => graphKeys.type('xyz'));
+
+      await test.step('THEN no row is listed', async (): Promise<void> => graphList.expectRowsListed([]));
+
+      await test.step('WHEN core is tapped again', async (): Promise<void> => graphCanvas.tapNode('core'));
+
+      await test.step('THEN the core row is still current', async (): Promise<void> => graphList.expectRowCurrent('core'));
+
+      await test.step('AND the graph container holds focus', async (): Promise<void> => graphPage.expectContainerFocused());
+    }
+  );
+
+  test(
+    'GIVEN 300 packages, a tap on a node far down the list scrolls its row into view',
+    { annotation: AC1 },
+    async ({ graphCanvas, graphHost, graphKeys, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+
+      await test.step('AND pkg-290 is tapped', async (): Promise<void> => graphCanvas.tapNode('pkg-290'));
+
+      await test.step('THEN the pkg-290 row is scrolled into view in the panel', async (): Promise<void> =>
+        graphKeys.expectRowInView('pkg-290'));
     }
   );
 

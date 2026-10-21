@@ -38,20 +38,28 @@ export class GraphControlsKeys {
     await this.page.keyboard.type(text);
   }
 
+  /** Presses each step's key in turn and returns the steps as walked: each key with the control it left focused. */
+  public async walk(steps: FocusStep[]): Promise<FocusStep[]> {
+    const walked: FocusStep[] = [];
+
+    for (const { key } of steps) {
+      await this.page.keyboard.press(key);
+
+      const focus = await this.focusedName();
+      const step: FocusStep = { key, focus };
+
+      walked.push(step);
+    }
+
+    return walked;
+  }
+
   public async expectFocusedName(name: string): Promise<void> {
     await expect(this.focused).toHaveAccessibleName(name);
   }
 
   public async expectFocusedRole(role: AriaRoleName): Promise<void> {
     await expect(this.focused).toHaveRole(role);
-  }
-
-  /** Presses each step's key, then expects focus on the control it names, before the next key. */
-  public async expectWalk(steps: FocusStep[]): Promise<void> {
-    for (const { key, focus } of steps) {
-      await this.page.keyboard.press(key);
-      await this.expectFocusedName(focus);
-    }
   }
 
   /** The grid holds `count` controls at `tabindex="0"`: one means the list is a single Tab stop. */

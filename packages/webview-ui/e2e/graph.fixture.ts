@@ -61,3 +61,5 @@ export const test = base.extend<GraphFixtures>({
     await use(new PageClock(page));
   }
 });
+
+export { expect } from '@playwright/test';
