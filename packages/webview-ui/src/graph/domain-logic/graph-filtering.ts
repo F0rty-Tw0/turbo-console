@@ -7,7 +7,7 @@ import type { ProbeFacts } from '../common/graph-probe.type.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 import { visibleSelection } from '../utils/visible-selection.util.ts';
 
-type FilteringFacts = Pick<ProbeFacts, 'visibleIds' | 'controlsBuiltMs' | 'filterAppliedMs'>;
+type FilteringFacts = Pick<ProbeFacts, 'controlsBuiltMs' | 'filterAppliedMs'>;
 
 /**
  * The controls panel and the selection it drives; the only place that knows `GraphControls`. A visible set the
@@ -64,14 +64,7 @@ export class GraphFiltering {
   }
 
   public facts(): FilteringFacts {
-    const visibleIds = (): string[] => {
-      const visible = this.controls.visible();
-      const ids = [...visible];
-
-      return ids.sort();
-    };
     const facts: FilteringFacts = {
-      visibleIds,
       controlsBuiltMs: (): number | null => this.builtMs,
       filterAppliedMs: (): number | null => this.appliedMs
     };

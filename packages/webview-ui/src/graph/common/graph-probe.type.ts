@@ -37,7 +37,7 @@ export type GraphProbe = {
   /** From the latest `graph` state's message event to the first Cytoscape `render` after it; `null` until that render. */
   readonly firstFrameMs: () => number | null;
   readonly layoutEngine: () => LayoutEngine | null;
-  /** The package names the controls leave visible, sorted. */
+  /** The package names Cytoscape draws, sorted: nodes a filter hides are `display: none`. */
   readonly visibleIds: () => string[];
   /** From the latest `graph` state's message event to its controls panel built and restored; `null` until then. */
   readonly controlsBuiltMs: () => number | null;
@@ -46,10 +46,7 @@ export type GraphProbe = {
 };
 
 /** The probe facts only the page controller knows. */
-export type ProbeFacts = Pick<
-  GraphProbe,
-  'firstFrameMs' | 'layoutEngine' | 'selected' | 'visibleIds' | 'controlsBuiltMs' | 'filterAppliedMs'
->;
+export type ProbeFacts = Pick<GraphProbe, 'firstFrameMs' | 'layoutEngine' | 'selected' | 'controlsBuiltMs' | 'filterAppliedMs'>;
 
 /* eslint-disable @typescript-eslint/naming-convention -- the e2e tests set and read these exact names on window */
 

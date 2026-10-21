@@ -23,6 +23,8 @@ const styleText = (element: NodeSingular | EdgeSingular, name: string): string =
   return typeof value === 'string' ? value : '';
 };
 
+const idOf = (node: NodeSingular): string => node.id();
+
 const probeEdgeOf = (edge: EdgeSingular): ProbeEdge => {
   const source = edge.source().id();
   const target = edge.target().id();
@@ -69,6 +71,11 @@ export const createGraphProbe = (view: GraphView, facts: ProbeFacts): GraphProbe
     return view.cy().nodes().map(probeNodeOf);
   };
   const edges = (): ProbeEdge[] => view.cy().edges().map(probeEdgeOf);
+  const visibleIds = (): string[] => {
+    const ids = view.cy().nodes(':visible').map(idOf);
+
+    return ids.sort();
+  };
   const edgeColor = (): string => {
     const first = view.cy().edges().first();
     const isNone = first.empty();
@@ -79,7 +86,7 @@ export const createGraphProbe = (view: GraphView, facts: ProbeFacts): GraphProbe
   };
   const zoom = (): number => view.viewport().zoom;
   const pan = (): Position => view.viewport().pan;
-  const probe: GraphProbe = { ...facts, nodes, edges, edgeColor, zoom, pan };
+  const probe: GraphProbe = { ...facts, nodes, edges, visibleIds, edgeColor, zoom, pan };
 
   return probe;
 };
