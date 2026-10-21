@@ -53,11 +53,12 @@ export type GraphInspectionDeps = {
   readonly canShow: (name: string) => boolean;
 };
 
-/** What the keep-clear pan reads: the canvas, the page's container and details aside, and the inspection's anchors. */
+/** What the keep-clear pan reads: the canvas, the page's container and details aside, the inspection and its drawn ghosts. */
 export type KeepClearDeps = {
   readonly view: GraphView;
   readonly page: PageElements;
   readonly inspection: Inspection;
+  readonly ghostNodes: string[];
 };
 
 /** What the details panel, `Clear selection` and the container's keys ask of `GraphInspection`. */

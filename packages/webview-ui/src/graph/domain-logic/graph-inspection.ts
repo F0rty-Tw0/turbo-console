@@ -63,7 +63,8 @@ export class GraphInspection {
   public keepClear(trigger: KeepClearTrigger): void {
     const { view, page } = this.deps;
     const isPan = shouldKeepClear(trigger, this.details.isOverlay(), this.details.isOpen());
-    const keepDeps: KeepClearDeps = { view, page, inspection: this.inspection };
+    const ghostNodes = this.canvas.ghostNodes();
+    const keepDeps: KeepClearDeps = { view, page, inspection: this.inspection, ghostNodes };
 
     if (isPan) keepClearInspection(keepDeps);
   }

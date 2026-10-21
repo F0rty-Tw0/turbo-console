@@ -1,8 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
-import { anchorsOf, keepClearPanOf } from './keep-clear.util.ts';
+import { anchorsOf, keepClearNamesOf, keepClearPanOf } from './keep-clear.util.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
+
+type KeepClearNamesRow = {
+  readonly title: string;
+  readonly inspection: Inspection;
+  readonly ghostNodes: string[];
+  readonly expected: string[];
+};
+
+const TRACE: Inspection = { kind: 'trace', start: 'web', end: 'base' };
+
+const PICKING: Inspection = { kind: 'picking', start: 'web', isNudged: false };
+
+const PACKAGE: Inspection = { kind: 'package', name: 'web' };
+
+const LINK: Inspection = { kind: 'link', source: 'web', target: 'ui' };
+
+const NONE: Inspection = { kind: 'none' };
 
 const boxOf = (x1: number, x2: number): AnchorBox => {
   const box: AnchorBox = { x1, x2 };
@@ -67,6 +84,40 @@ describe('FEATURE: anchorsOf', () => {
       const anchors = anchorsOf(inspection);
 
       expect(anchors).toStrictEqual(expected);
+    });
+  });
+});
+
+describe('FEATURE: keepClearNamesOf', () => {
+  describe('GIVEN an inspection and the ghost nodes drawn for it', () => {
+    it.each<KeepClearNamesRow>([
+      { title: 'a trace with one ghost', inspection: TRACE, ghostNodes: ['core'], expected: ['web', 'base', 'core'] },
+      { title: 'a trace with no ghost', inspection: TRACE, ghostNodes: [], expected: ['web', 'base'] },
+      {
+        title: 'a trace with ghosts named like Object members',
+        inspection: TRACE,
+        ghostNodes: ['__proto__', 'constructor'],
+        expected: ['web', 'base', '__proto__', 'constructor']
+      },
+      {
+        title: 'a trace whose ghosts repeat an end',
+        inspection: TRACE,
+        ghostNodes: ['base', 'core', 'core'],
+        expected: ['web', 'base', 'core']
+      },
+      { title: 'a package with stray ghosts', inspection: PACKAGE, ghostNodes: ['core'], expected: ['web'] },
+      {
+        title: 'a link with stray ghosts',
+        inspection: LINK,
+        ghostNodes: ['core'],
+        expected: ['web', 'ui']
+      },
+      { title: 'a picking with stray ghosts', inspection: PICKING, ghostNodes: ['core'], expected: ['web'] },
+      { title: 'none with stray ghosts', inspection: NONE, ghostNodes: ['core'], expected: [] }
+    ])('WHEN it is $title THEN the names kept clear are $expected', ({ inspection, ghostNodes, expected }) => {
+      const names = keepClearNamesOf(inspection, ghostNodes);
+
+      expect(names).toStrictEqual(expected);
     });
   });
 });

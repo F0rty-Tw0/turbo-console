@@ -18,6 +18,7 @@ export class InspectionCanvas {
   private readonly view: GraphView;
   private shown: CanvasShown | null = null;
   private filterText = '';
+  private ghosts: string[] = [];
 
   public constructor(view: GraphView) {
     this.view = view;
@@ -35,6 +36,7 @@ export class InspectionCanvas {
     if (isRebuild || !isSameStart) this.filterText = '';
 
     this.shown = shown;
+    this.ghosts = ghosts.nodes;
     this.paint(shown);
     this.view.setGhosts(ghosts, shown.visible);
   }
@@ -49,6 +51,12 @@ export class InspectionCanvas {
   /** Forgets what was drawn, for a page about to show another graph or none. */
   public reset(): void {
     this.shown = null;
+    this.ghosts = [];
+  }
+
+  /** The hidden path packages drawn as ghosts by the latest draw. */
+  public ghostNodes(): string[] {
+    return this.ghosts;
   }
 
   /** An empty filter lights every path candidate. */

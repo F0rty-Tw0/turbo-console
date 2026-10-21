@@ -33,3 +33,14 @@ export const anchorsOf = (inspection: Inspection): string[] => {
       return [inspection.start, inspection.end];
   }
 };
+
+/** The names kept clear: the anchors, plus for a trace its drawn ghosts, so a refit that framed them does not pan them off. */
+export const keepClearNamesOf = (inspection: Inspection, ghostNodes: string[]): string[] => {
+  const anchors = anchorsOf(inspection);
+
+  if (inspection.kind !== 'trace') return anchors;
+
+  const names = new Set([...anchors, ...ghostNodes]);
+
+  return [...names];
+};

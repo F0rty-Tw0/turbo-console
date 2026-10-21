@@ -1,12 +1,15 @@
 import type { KeepClearDeps } from '../common/graph-inspection.type.ts';
-import { anchorsOf, keepClearPanOf } from '../utils/keep-clear.util.ts';
+import { keepClearNamesOf, keepClearPanOf } from '../utils/keep-clear.util.ts';
 
-/** Pans the inspection's anchors clear of the details overlay, measured in container px; no pan with nothing to clear. */
+/**
+ * Pans the inspection's anchors, and a trace's ghosts, clear of the details overlay, measured in container px; no pan
+ * with nothing to clear or a box too wide to fit beside the overlay.
+ */
 export const keepClearInspection = (deps: KeepClearDeps): void => {
-  const { view, page, inspection } = deps;
+  const { view, page, inspection, ghostNodes } = deps;
   const aside = page.body.querySelector('#graph-details');
-  const anchors = anchorsOf(inspection);
-  const box = view.anchorBox(anchors);
+  const names = keepClearNamesOf(inspection, ghostNodes);
+  const box = view.anchorBox(names);
 
   if (aside === null || box === null) return;
 
