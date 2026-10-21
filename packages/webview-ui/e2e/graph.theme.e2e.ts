@@ -13,7 +13,7 @@ test.describe('FEATURE: graph theme', () => {
 
       await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
 
-      await test.step('AND the dark theme is applied', async (): Promise<void> => graphPage.applyTheme(THEME_DARK_STUB));
+      await test.step('AND the dark theme is applied', async (): Promise<void> => graphLook.applyTheme(THEME_DARK_STUB));
 
       await test.step('THEN node fill, label and frame follow the dark variables', async (): Promise<void> =>
         graphLook.expectNodeColors('web', THEME_DARK_STUB.expected));
@@ -21,7 +21,7 @@ test.describe('FEATURE: graph theme', () => {
       await test.step('AND the edge colour follows them', async (): Promise<void> =>
         graphLook.expectEdgeColor(THEME_DARK_STUB.expected.edge));
 
-      await test.step('WHEN the light theme is applied', async (): Promise<void> => graphPage.applyTheme(THEME_LIGHT_STUB));
+      await test.step('WHEN the light theme is applied', async (): Promise<void> => graphLook.applyTheme(THEME_LIGHT_STUB));
 
       await test.step('THEN node fill, label and frame follow the light variables', async (): Promise<void> =>
         graphLook.expectNodeColors('web', THEME_LIGHT_STUB.expected));
@@ -39,7 +39,7 @@ test.describe('FEATURE: graph theme', () => {
 
       await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
 
-      await test.step('AND the high-contrast theme is applied', async (): Promise<void> => graphPage.applyTheme(THEME_HC_STUB));
+      await test.step('AND the high-contrast theme is applied', async (): Promise<void> => graphLook.applyTheme(THEME_HC_STUB));
 
       await test.step('THEN the frame is contrastBorder, not panel-border', async (): Promise<void> =>
         graphLook.expectNodeColors('web', THEME_HC_STUB.expected));

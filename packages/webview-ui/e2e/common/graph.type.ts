@@ -1,5 +1,6 @@
 import type { GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
+import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
 import type { ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 
 export type WorkerStub = 'real' | 'throwOnce' | 'error' | 'silent' | 'malformed';
@@ -39,6 +40,9 @@ export type ThemeSwitch = {
   readonly names: string[];
   readonly theme: ThemeStub;
 };
+
+/** What a viewer sees of the graph: how far it is zoomed and where it is panned. */
+export type Camera = Pick<GraphViewState, 'zoom' | 'pan'>;
 
 /** Package name to the state the probe reports for it. */
 export type NodeStates = Readonly<Record<string, ProbeState>>;

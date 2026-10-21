@@ -2,14 +2,11 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
-import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
-import type { ExpectedThemeColors } from '../common/graph.type.ts';
-import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
-
-const ZOOM_TOLERANCE = 0.01;
-
-const PAN_TOLERANCE_PX = 1;
+import { THEME_VAR_NAMES } from '../common/graph.const.ts';
+import type { ExpectedThemeColors, ThemeStub } from '../common/graph.type.ts';
+import { isPanNear, isZoomNear } from '../test/utils/graph-camera.spec.util.ts';
+import { switchTheme, withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
 
 type NodeColors = Pick<ExpectedThemeColors, 'fill' | 'frame' | 'label'>;
 
@@ -23,23 +20,18 @@ const colorsOf = (colors: NodeColors): NodeColors => {
   return plain;
 };
 
-const isZoomNear = (zoom: number, view: GraphViewState): boolean => Math.abs(zoom - view.zoom) / view.zoom <= ZOOM_TOLERANCE;
-
-const isPanNear = (pan: Position | null, view: GraphViewState): boolean => {
-  if (pan === null) return false;
-
-  const dx = Math.abs(pan.x - view.pan.x);
-  const dy = Math.abs(pan.y - view.pan.y);
-
-  return dx <= PAN_TOLERANCE_PX && dy <= PAN_TOLERANCE_PX;
-};
-
 /** What the user sees of the drawn graph: the camera, the theme colours and the first frame, read through the probe. */
 export class GraphLook {
+  private readonly page: Page;
   private readonly probe: GraphProbePage;
 
   public constructor(page: Page) {
+    this.page = page;
     this.probe = new GraphProbePage(page);
+  }
+
+  public async applyTheme(theme: ThemeStub): Promise<void> {
+    await this.page.evaluate(switchTheme, { names: THEME_VAR_NAMES, theme });
   }
 
   /** Zoom and pan match `view` within a tolerance, and so does the selection. */
@@ -100,8 +92,8 @@ export class GraphLook {
   private async isView(view: GraphViewState): Promise<boolean> {
     const zoom = await this.probe.zoom();
     const pan = await this.probe.pan();
-    const isZoomClose = isZoomNear(zoom, view);
-    const isPanClose = isPanNear(pan, view);
+    const isZoomClose = isZoomNear(zoom, view.zoom);
+    const isPanClose = isPanNear(pan, view.pan);
 
     return isZoomClose && isPanClose;
   }
