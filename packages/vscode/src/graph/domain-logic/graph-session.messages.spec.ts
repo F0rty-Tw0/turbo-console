@@ -1,13 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { GraphSession } from './graph-session.ts';
+import type { LoadedModel } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
-import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB, GRAPH_PACKAGES_STUB, GROWN_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
+import {
+  GRAPH_HASH_STUB,
+  GRAPH_LOADED_STUB,
+  GRAPH_PACKAGES_STUB,
+  GROWN_LOADED_STUB,
+  PROTO_LOADED_STUB
+} from '../test/stubs/graph-model.stub.ts';
 import { lastStateOf, portsWith, positionsOf } from '../test/utils/graph-session.spec.util.ts';
 
 type ShownSession = {
@@ -24,13 +31,18 @@ const emptyStore = (): RootStore => {
   return store;
 };
 
-const loadedStore = (): RootStore => {
+const loadedStore = (loaded: LoadedModel = GRAPH_LOADED_STUB): RootStore => {
   const store = emptyStore();
 
-  store.apply('/ws', GRAPH_LOADED_STUB);
+  store.apply('/ws', loaded);
 
   return store;
 };
+
+/** The JSON a page posts: a `__proto__` key in it is an own key once parsed, as the webview channel delivers it. */
+const overTheWire = (message: unknown): unknown => JSON.parse(JSON.stringify(message));
+
+const cachedPositionsOf = (ports: GraphPorts): unknown => vi.mocked(ports.writeCache).mock.calls[0]?.[1].positions;
 
 /** A started, shown session on `/ws`; `cached` seeds its layout cache. */
 const shownSession = (cached: GraphLayoutCacheEntry | null = null, store: RootStore = loadedStore()): ShownSession => {
@@ -89,6 +101,32 @@ describe('FEATURE: graph session messages', () => {
       await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions: positionsOf(names) });
 
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('Dropped a graph message: positions with 5001 keys');
+    });
+
+    it('WHEN a package is named __proto__ and the posted JSON names it THEN the positions are cached with it as an own key', async () => {
+      const { session, ports } = shownSession(null, loadedStore(PROTO_LOADED_STUB));
+
+      await session.receive({ type: 'ready' });
+
+      const { hash, packages } = lastStateOf(ports);
+      const message = overTheWire({ type: 'positions', hash, positions: positionsOf(packages) });
+
+      await session.receive(message);
+
+      expect(Object.hasOwn(cachedPositionsOf(ports) ?? {}, '__proto__')).toBe(true);
+    });
+
+    it('WHEN a package is named __proto__ and its positions are cached THEN Object.prototype is untouched', async () => {
+      const { session, ports } = shownSession(null, loadedStore(PROTO_LOADED_STUB));
+
+      await session.receive({ type: 'ready' });
+
+      const { hash, packages } = lastStateOf(ports);
+
+      await session.receive(overTheWire({ type: 'positions', hash, positions: positionsOf(packages) }));
+
+      expect(Object.hasOwn(Object.prototype, 'x')).toBe(false);
+      expect(Object.getPrototypeOf(cachedPositionsOf(ports))).toBe(Object.prototype);
     });
 
     it('WHEN one name is not a package THEN they are dropped and logged', async () => {

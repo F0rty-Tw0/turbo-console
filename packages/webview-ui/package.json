@@ -19,6 +19,10 @@
     "test": "vitest run",
     "e2e": "playwright test"
   },
+  "dependencies": {
+    "cytoscape": "catalog:runtime",
+    "elkjs": "catalog:runtime"
+  },
   "devDependencies": {
     "@playwright/test": "catalog:dev",
     "@turbo-console/core": "workspace:*",

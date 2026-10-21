@@ -1,4 +1,4 @@
-import type { GraphHostMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 
@@ -12,3 +12,14 @@ export type GraphPorts = {
   readonly log: (text: string) => void;
   readonly info: (text: string) => void;
 };
+
+type PositionsTag = { readonly type: 'positions' };
+
+type UncheckedPositionsMessage = {
+  readonly type: 'positions';
+  readonly hash: string;
+  readonly positions: unknown;
+};
+
+/** A message that passed `graphMessageSchema`: a `positions` record is still unread. */
+export type SchemaGraphMessage = Exclude<GraphWebviewMessage, PositionsTag> | UncheckedPositionsMessage;

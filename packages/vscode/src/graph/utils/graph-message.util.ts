@@ -1,10 +1,12 @@
 import type { GraphWebviewMessage } from '@turbo-console/webview-ui';
 
+import { parsePositions } from './graph-cache.util.ts';
 import { isRecord } from './record.util.ts';
 import { UNPRINTABLE_MESSAGE } from '../../shared/common/panel.const.ts';
 import { droppedMessageText } from '../../shared/utils/dropped-message.util.ts';
 import { graphMessageSchema } from '../common/graph-message.schema.ts';
 import { POSITIONS_MAX } from '../common/graph.const.ts';
+import type { SchemaGraphMessage } from '../common/graph.type.ts';
 
 /** The key count of `raw.positions` when it is an object, else 0. A throwing getter or proxy trap throws. */
 const positionsSizeOf = (raw: unknown): number => {
@@ -17,9 +19,22 @@ const positionsSizeOf = (raw: unknown): number => {
   return Object.keys(positions).length;
 };
 
+/** A schema-checked message, with its `positions` record checked and copied by `parsePositions`; `null` when it fails. */
+const checkedMessageOf = (message: SchemaGraphMessage): GraphWebviewMessage | null => {
+  if (message.type !== 'positions') return message;
+
+  const positions = parsePositions(message.positions);
+
+  if (positions === null) return null;
+
+  const checked: GraphWebviewMessage = { type: 'positions', hash: message.hash, positions };
+
+  return checked;
+};
+
 /**
  * The webview is a trust boundary: a value that fails the schema is `null`; only the keys the schema names survive.
- * A `positions` record past `POSITIONS_MAX` keys is `null` before the schema walks it. Never throws: `safeParse`
+ * A `positions` record past `POSITIONS_MAX` keys is `null` before anything walks it. Never throws: `safeParse`
  * rethrows a throwing getter or proxy trap, which is `null` too.
  */
 export const parseGraphMessage = (raw: unknown): GraphWebviewMessage | null => {
@@ -30,7 +45,9 @@ export const parseGraphMessage = (raw: unknown): GraphWebviewMessage | null => {
 
     const parsed = graphMessageSchema.safeParse(raw);
 
-    return parsed.success ? parsed.data : null;
+    if (!parsed.success) return null;
+
+    return checkedMessageOf(parsed.data);
   } catch {
     return null;
   }

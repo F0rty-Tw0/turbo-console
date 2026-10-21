@@ -1,6 +1,9 @@
 import type { WebviewMessage } from './details-message.type.ts';
 import type { GraphWebviewMessage } from './graph-message.type.ts';
 
+/** An object whose keys are read one by one, at the page's trust boundaries. */
+export type UnknownRecord = Readonly<Record<string, unknown>>;
+
 /** Receives the `data` of every message event the host posts to the page. */
 export type MessageListener = (message: unknown) => void;
 

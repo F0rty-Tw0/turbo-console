@@ -18,7 +18,10 @@ const FULL_LIST = [
   'dist/webview/details/SIMPLE-ICONS-LICENSE.md',
   'dist/webview/details/SIMPLE-ICONS-DISCLAIMER.md',
   'dist/webview/graph/index.html',
-  'dist/webview/graph/main.js'
+  'dist/webview/graph/main.js',
+  'dist/webview/graph/graph.css',
+  'dist/webview/graph/elkjs-LICENSE.md',
+  'dist/webview/graph/THIRD-PARTY-NOTICES.md'
 ];
 
 describe('FEATURE: vsixProblems', () => {
@@ -159,6 +162,19 @@ describe('FEATURE: vsixProblems', () => {
       expect(problems).toHaveLength(1);
       expect(problems[0]).toContain('dist/webview/graph/main.js');
     });
+  });
+
+  describe('GIVEN a list without a graph support file', () => {
+    it.each([['graph.css'], ['elkjs-LICENSE.md'], ['THIRD-PARTY-NOTICES.md']])(
+      'WHEN %s is missing THEN one problem names the missing file',
+      (name) => {
+        const files = FULL_LIST.filter((file) => !file.endsWith(`/graph/${name}`));
+
+        const problems = vsixProblems(files);
+
+        expect(problems).toStrictEqual([`missing dist/webview/graph/${name}`]);
+      }
+    );
   });
 
   describe('GIVEN a list with dist/webview/graph/stray.js', () => {

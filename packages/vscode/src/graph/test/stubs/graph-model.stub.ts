@@ -43,3 +43,10 @@ const GROWN_MODEL_STUB: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GR
 
 /** `GRAPH_LOADED_STUB` plus a package `zed`: a new model object with a new graph hash. */
 export const GROWN_LOADED_STUB: LoadedModel = { ...GRAPH_LOADED_STUB, model: GROWN_MODEL_STUB };
+
+const PROTO_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: '__proto__' };
+
+const PROTO_MODEL_STUB: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, PROTO_NODE] };
+
+/** `GRAPH_LOADED_STUB` plus a package named `__proto__`. */
+export const PROTO_LOADED_STUB: LoadedModel = { ...GRAPH_LOADED_STUB, model: PROTO_MODEL_STUB };

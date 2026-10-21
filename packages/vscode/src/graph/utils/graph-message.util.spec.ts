@@ -1,3 +1,4 @@
+import type { GraphWebviewMessage, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { droppedGraphText, parseGraphMessage } from './graph-message.util.ts';
@@ -15,6 +16,8 @@ const LONG_KEY_POSITIONS = { [LONG_NAME]: POINT };
 const MAX_X_MIN_Y = { x: 1e7, y: -1e7 };
 const MIN_X_MAX_Y = { x: -1e7, y: 1e7 };
 const LIMIT_POSITIONS = { a: MAX_X_MIN_Y, b: MIN_X_MAX_Y };
+const PROTO_MESSAGE_JSON = `{"type":"positions","hash":"${HASH}","positions":{"__proto__":{"x":1,"y":2},"a":{"x":3,"y":4}}}`;
+const INHERITING_POSITIONS: unknown = Object.create(POSITIONS);
 const THROWING_TYPE = {
   get type(): string {
     throw new Error('getter trap');
@@ -25,6 +28,13 @@ const THROWING_POSITIONS = {
   get positions(): never {
     throw new Error('getter trap');
   }
+};
+
+/** The positions of a parsed `positions` message, else `null`. */
+const positionsIn = (parsed: GraphWebviewMessage | null): Positions | null => {
+  if (parsed?.type !== 'positions') return null;
+
+  return parsed.positions;
 };
 
 /** A `positions` message whose record has `count` keys. */
@@ -69,6 +79,9 @@ describe('FEATURE: graph webview message validation', () => {
       ['a position key past 214 units', { type: 'positions', hash: HASH, positions: LONG_KEY_POSITIONS }],
       ['a positions list', { type: 'positions', hash: HASH, positions: [POINT] }],
       ['null positions', { type: 'positions', hash: HASH, positions: null }],
+      ['no positions', { type: 'positions', hash: HASH }],
+      ['a Map of positions', { type: 'positions', hash: HASH, positions: new Map() }],
+      ['a positions record with a prototype of its own', { type: 'positions', hash: HASH, positions: INHERITING_POSITIONS }],
       ['a positions record past 5000 keys', positionsWith(5001)],
       ['an unknown engine', { type: 'layoutDone', ms: 1, engine: 'webgl' }],
       ['a negative layout time', { type: 'layoutDone', ms: -1, engine: 'elk' }],
@@ -101,6 +114,21 @@ describe('FEATURE: graph webview message validation', () => {
       const message = { type: 'positions', hash: HASH, positions: LIMIT_POSITIONS };
 
       expect(parseGraphMessage(message)).toStrictEqual(message);
+    });
+  });
+
+  describe('GIVEN positions parsed from JSON with an own __proto__ key', () => {
+    it('WHEN parsed THEN the __proto__ point survives as an own key', () => {
+      const positions = positionsIn(parseGraphMessage(JSON.parse(PROTO_MESSAGE_JSON)));
+
+      expect(Object.getOwnPropertyDescriptor(positions ?? {}, '__proto__')?.value).toStrictEqual({ x: 1, y: 2 });
+    });
+
+    it('WHEN parsed THEN the copy keeps the plain prototype and Object.prototype gains nothing', () => {
+      const positions = positionsIn(parseGraphMessage(JSON.parse(PROTO_MESSAGE_JSON)));
+
+      expect(Object.getPrototypeOf(positions)).toBe(Object.prototype);
+      expect(Object.hasOwn(Object.prototype, 'x')).toBe(false);
     });
   });
 

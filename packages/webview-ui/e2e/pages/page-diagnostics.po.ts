@@ -1,7 +1,7 @@
 import type { ConsoleMessage, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { VIOLATION_RECORDER } from '../common/shell.const.ts';
+import { STRING_SINK_PROBE, VIOLATION_RECORDER } from '../common/shell.const.ts';
 
 /** What went wrong in the page: console errors, uncaught exceptions and CSP violations. */
 export class PageDiagnostics {
@@ -24,6 +24,23 @@ export class PageDiagnostics {
     const violations = await this.page.evaluate<string[]>('window.__violations');
 
     expect(violations).toEqual([]);
+  }
+
+  public async expectViolation(): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.page.evaluate<number>('window.__violations.length')).toBeGreaterThanOrEqual(1);
+  }
+
+  public async expectInlineScriptBlocked(): Promise<void> {
+    const ran = await this.page.evaluate<unknown>('window.__ran');
+
+    expect(ran).toBeUndefined();
+  }
+
+  /** Trusted Types: under `require-trusted-types-for 'script'` a plain string written to `innerHTML` throws a TypeError. */
+  public async expectStringSinkRefused(): Promise<void> {
+    const outcome = await this.page.evaluate<string>(STRING_SINK_PROBE);
+
+    expect(outcome).toBe('TypeError');
   }
 
   public expectNoErrors(): void {

@@ -1,6 +1,7 @@
-import { codicon, textElement } from './page-elements.ts';
+import { codicon } from './page-elements.ts';
 import { holdSwappedButton } from './run-click-hold.ts';
 import type { RunView } from '../../bridge/common/details-state.type.ts';
+import { textElement } from '../../shared/ui/text-element.ts';
 import type { CardIndex, CardRefs, RunTexts } from '../common/details-page.type.ts';
 import { RUNNING_STATUS_COLOR_VAR, STOP_ICON_ID } from '../common/run-view.const.ts';
 import { safeColorVar } from '../utils/run-view.util.ts';

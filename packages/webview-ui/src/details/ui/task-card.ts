@@ -1,7 +1,8 @@
 import { chipList, commandBlock } from './card-parts.ts';
-import { iconButton, runButton, textElement } from './page-elements.ts';
+import { iconButton, runButton } from './page-elements.ts';
 import { fillRun } from './patch-run.ts';
 import type { DryRunPhase, RunView, TaskCard } from '../../bridge/common/details-state.type.ts';
+import { textElement } from '../../shared/ui/text-element.ts';
 import type { CardRefs, FieldRow, FieldValue, RenderContext, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
 import { STOP_ICON_ID } from '../common/run-view.const.ts';
 import { cacheValue, definitionValue, descriptionText, listValue, plainValue } from '../utils/field-text.util.ts';

@@ -1,8 +1,6 @@
+import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import type { HostMessage } from '../../bridge/common/details-message.type.ts';
-
-type UnknownRecord = Readonly<Record<string, unknown>>;
-
-const isRecord = (value: unknown): value is UnknownRecord => typeof value === 'object' && value !== null;
+import { isRecord } from '../../bridge/utils/record.util.ts';
 
 const isRunStateMessage = (message: UnknownRecord): boolean => {
   const hasTaskId = typeof message['taskId'] === 'string';

@@ -1,10 +1,8 @@
-import { discriminatedUnion, gte, literal, lte, maxLength, number, object, record, regex, string, enum as zodEnum } from 'zod/mini';
+import { discriminatedUnion, gte, literal, lte, maxLength, number, object, regex, string, unknown, enum as zodEnum } from 'zod/mini';
 
-import { COORDINATE_MAX, GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX } from './graph.const.ts';
+import { GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX } from './graph.const.ts';
 
 const packageNameSchema = string().check(maxLength(PACKAGE_NAME_MAX));
-
-const coordinateSchema = number().check(gte(-COORDINATE_MAX), lte(COORDINATE_MAX));
 
 const readySchema = object({ type: literal('ready') });
 
@@ -12,12 +10,14 @@ const reloadSchema = object({ type: literal('reload') });
 
 const openDetailsSchema = object({ type: literal('openDetails'), packageName: packageNameSchema });
 
-const pointSchema = object({ x: coordinateSchema, y: coordinateSchema });
-
+/**
+ * `positions` passes through unread: zod's `record()` drops an own `__proto__` key, so a package named `__proto__`
+ * could never be cached. `parseGraphMessage` checks the record itself.
+ */
 const positionsSchema = object({
   type: literal('positions'),
   hash: string().check(regex(GRAPH_HASH_PATTERN)),
-  positions: record(packageNameSchema, pointSchema)
+  positions: unknown()
 });
 
 const layoutMsSchema = number().check(gte(0), lte(LAYOUT_MS_MAX));
