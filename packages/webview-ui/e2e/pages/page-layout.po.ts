@@ -7,6 +7,8 @@ import { readRect } from '../test/utils/element-rect.spec.util.ts';
 
 type ThemeVars = Record<string, string>;
 
+type BorderSide = 'top' | 'bottom';
+
 /** Runs in the page: sets each variable on the root element, where VS Code puts its theme variables. */
 const setRootVars = (vars: ThemeVars): void => {
   const rootStyle = document.documentElement.style;
@@ -15,6 +17,9 @@ const setRootVars = (vars: ThemeVars): void => {
 };
 
 const readFontFamily = (element: Element): string => getComputedStyle(element).fontFamily;
+
+const readBorderWidth = (element: Element, side: BorderSide): string =>
+  getComputedStyle(element).getPropertyValue(`border-${side}-width`);
 
 const topOf = (rect: ElementRect): number => rect.top;
 
@@ -52,6 +57,14 @@ export class PageLayout {
 
     expect(fontFamily).toContain(family);
     expect(fontFamily).not.toContain(otherFamily);
+  }
+
+  /** The first `selector` element's computed `side` border width is `width`. */
+  public async expectBorderWidth(selector: string, side: BorderSide, width: string): Promise<void> {
+    const element = this.page.locator(selector).first();
+    const borderWidth = await element.evaluate(readBorderWidth, side);
+
+    expect(borderWidth).toBe(width);
   }
 
   /** The first two cards share a row: the same `top`, a different `left`. */

@@ -60,6 +60,12 @@ const LONG_TITLE_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [LONG
 
 const LONG_OUTPUT_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [LONG_OUTPUT_CARD] };
 
+const NOT_CACHEABLE: TaskDefinition = { ...TASK_DEFINITION_STUB, cache: false };
+
+const NOT_CACHEABLE_CARD: TaskCard = { ...TASK_CARD_STUB, definition: NOT_CACHEABLE };
+
+const CHIP_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [NOT_CACHEABLE_CARD] };
+
 const TWO_CARDS_STATE = packageWithTasks(taskNames(2));
 
 /** [viewport width, where a fact's value sits]: the facts go to one column below a 22em card. */
@@ -207,6 +213,18 @@ test.describe('FEATURE: package details page, layout and theme', () => {
 
     await test.step('THEN the token outline is solid in that colour', async (): Promise<void> =>
       card.expectTokenOutline('solid', GREEN));
+  });
+
+  test('GIVEN no theme border variable, every frame still draws a 1px edge', async ({ detailsPage, pageLayout }): Promise<void> => {
+    await test.step('WHEN the page shows a card with a chip', async (): Promise<void> => detailsPage.open(CHIP_STATE));
+
+    await test.step('THEN the page header has a 1px bottom edge', async (): Promise<void> =>
+      pageLayout.expectBorderWidth('.page-header', 'bottom', '1px'));
+
+    await test.step('AND the section title has a 1px bottom edge', async (): Promise<void> =>
+      pageLayout.expectBorderWidth('.section-title', 'bottom', '1px'));
+
+    await test.step('AND the chip has a 1px frame', async (): Promise<void> => pageLayout.expectBorderWidth('.chip', 'top', '1px'));
   });
 
   test('GIVEN a passed run, the card start edge takes the status colour', async ({ detailsPage, pageLayout }): Promise<void> => {
