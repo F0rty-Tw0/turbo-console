@@ -55,6 +55,12 @@ export type DragRecord = {
   readonly zoom: number;
 };
 
+/** Main-thread CPU ms a scripted pan used, in total and in its costliest step. */
+export type PanCpu = {
+  readonly totalMs: number;
+  readonly maxStepMs: number;
+};
+
 type MessageTag<TType extends string> = { readonly type: TType };
 
 export type PositionsMessage = Extract<GraphWebviewMessage, MessageTag<'positions'>>;

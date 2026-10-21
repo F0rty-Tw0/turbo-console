@@ -17,7 +17,7 @@ test.describe('FEATURE: graph tripwires', () => {
       graphHost.recordBundleAndLayout());
   });
 
-  test('GIVEN a target-like graph, a scripted 2 s pan uses under 1.5 s of main-thread CPU', async ({
+  test('GIVEN a target-like graph, a scripted 2 s pan uses under 1.5 s of main-thread CPU and no step over 50 ms', async ({
     graphCanvas,
     graphHost,
     graphPage,
@@ -32,6 +32,7 @@ test.describe('FEATURE: graph tripwires', () => {
     await test.step('WHEN the graph is panned for 2 s after a 500 ms warm-up', async (): Promise<void> =>
       graphCanvas.scriptedPan(30, 120));
 
-    await test.step('THEN the pan used under 1500 ms of main-thread CPU', (): void => graphCanvas.expectPanCpuUnder(1500));
+    await test.step('THEN the pan used under 1500 ms of CPU and no step over 50 ms', (): void =>
+      graphCanvas.expectPanCpuUnder(1500, 50));
   });
 });

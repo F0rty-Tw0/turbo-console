@@ -1,6 +1,7 @@
 import type { CDPSession, Page } from '@playwright/test';
 
 import { MS_PER_SECOND, THREAD_TIME_METRIC } from '../../common/graph.const.ts';
+import type { PanCpu } from '../../common/graph.type.ts';
 
 const threadTimeMs = async (session: CDPSession): Promise<number> => {
   const { metrics } = await session.send('Performance.getMetrics');
@@ -11,19 +12,32 @@ const threadTimeMs = async (session: CDPSession): Promise<number> => {
   return metric.value * MS_PER_SECOND;
 };
 
-/** The ms of main-thread CPU time `work` took: CPU time, not wall time, so a starved renderer does not inflate it. */
-export const cpuTimeOf = async (page: Page, work: () => Promise<void>): Promise<number> => {
+/**
+ * The main-thread CPU ms `work` took in total and in its costliest step; `work` calls `endStep` after each step.
+ * CPU time, not wall time, so contention for the CPU does not inflate it; core type and clock still do.
+ */
+export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>) => Promise<void>): Promise<PanCpu> => {
   const session = await page.context().newCDPSession(page);
 
-  await session.send('Performance.enable');
+  try {
+    await session.send('Performance.enable');
 
-  const before = await threadTimeMs(session);
+    const start = await threadTimeMs(session);
+    let last = start;
+    let maxStepMs = 0;
+    const endStep = async (): Promise<void> => {
+      const now = await threadTimeMs(session);
 
-  await work();
+      maxStepMs = Math.max(maxStepMs, now - last);
+      last = now;
+    };
 
-  const after = await threadTimeMs(session);
+    await work(endStep);
 
-  await session.detach();
+    const pan: PanCpu = { totalMs: last - start, maxStepMs };
 
-  return after - before;
+    return pan;
+  } finally {
+    await session.detach();
+  }
 };
