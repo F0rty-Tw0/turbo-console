@@ -38,6 +38,6 @@ export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>
 
     return pan;
   } finally {
-    await session.detach();
+    await session.detach().catch((): undefined => undefined);
   }
 };
