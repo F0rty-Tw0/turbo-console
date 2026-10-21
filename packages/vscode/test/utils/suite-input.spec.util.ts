@@ -42,9 +42,12 @@ const isShownPackage = (value: unknown): value is ShownPackage => {
 
   const dependencies = value['dependencies'];
   const hasDependencies = Array.isArray(dependencies) && dependencies.every(isString);
+  const tags = value['tags'];
+  const hasTags = Array.isArray(tags) && tags.every(isString);
   const hasNames = typeof value['name'] === 'string' && typeof value['path'] === 'string';
+  const hasLists = hasDependencies && hasTags;
 
-  return hasNames && hasDependencies && isPackageRole(value['role']);
+  return hasNames && hasLists && isPackageRole(value['role']);
 };
 
 const isShownTask = (value: unknown): value is ShownTask => {

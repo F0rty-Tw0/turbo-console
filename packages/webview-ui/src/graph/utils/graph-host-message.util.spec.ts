@@ -15,7 +15,37 @@ const ORIGIN = { x: 0, y: 0 };
 
 const POSITIONS: Positions = { app: ORIGIN, core: ORIGIN };
 
-const GRAPH = { kind: 'graph', hash: 'h', packages: ['app', 'core'], edges: EDGES, positions: null };
+const PACKAGES = [
+  { name: 'app', path: 'apps/app', tags: ['ui'] },
+  { name: 'core', path: 'packages/core', tags: [] }
+];
+
+const OBJECT_NAMES = [
+  { name: '__proto__', path: '', tags: ['__proto__'] },
+  { name: 'constructor', path: 'packages/constructor', tags: ['constructor'] }
+];
+
+const ROOT_PACKAGES = [{ name: '//', path: '', tags: [] }];
+
+const STRING_PACKAGES = ['app'];
+
+const NULL_PACKAGES = [null];
+
+const UNDEFINED_PACKAGES = [undefined];
+
+const NUMERIC_NAME_PACKAGES = [{ name: 5, path: 'p', tags: [] }];
+
+const NO_PATH_PACKAGES = [{ name: 'a', tags: [] }];
+
+const NUMERIC_PATH_PACKAGES = [{ name: 'a', path: 1, tags: [] }];
+
+const NO_TAGS_PACKAGES = [{ name: 'a', path: 'p' }];
+
+const STRING_TAGS_PACKAGES = [{ name: 'a', path: 'p', tags: 'ui' }];
+
+const NUMERIC_TAG_PACKAGES = [{ name: 'a', path: 'p', tags: ['ui', 2] }];
+
+const GRAPH = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null };
 
 const CACHED_GRAPH = { ...GRAPH, positions: POSITIONS };
 
@@ -38,7 +68,9 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['error', ERROR],
       ['singlePackage', SINGLE_PACKAGE],
       ['graph with no positions', GRAPH],
-      ['graph with cached positions', CACHED_GRAPH]
+      ['graph with cached positions', CACHED_GRAPH],
+      ['graph whose packages are named like Object members', { ...GRAPH, packages: OBJECT_NAMES }],
+      ['graph with a root package at the empty path', { ...GRAPH, packages: ROOT_PACKAGES }]
     ])('WHEN its state is %s THEN it is accepted', (_name, state) => {
       const isMessage = isGraphHostMessage(stateMessageOf(state));
 
@@ -59,8 +91,15 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with a numeric hash', stateMessageOf({ ...GRAPH, hash: 5 })],
       ['a graph with string packages', stateMessageOf({ ...GRAPH, packages: 'x' })],
       ['a graph with null edges', stateMessageOf({ ...GRAPH, edges: null })],
-      ['a graph with a numeric package name', stateMessageOf({ ...GRAPH, packages: ['app', 5] })],
-      ['a graph with a null package name', stateMessageOf({ ...GRAPH, packages: [null] })],
+      ['a graph with a string package', stateMessageOf({ ...GRAPH, packages: STRING_PACKAGES })],
+      ['a graph with a null package', stateMessageOf({ ...GRAPH, packages: NULL_PACKAGES })],
+      ['a graph with an undefined package', stateMessageOf({ ...GRAPH, packages: UNDEFINED_PACKAGES })],
+      ['a graph with a numeric package name', stateMessageOf({ ...GRAPH, packages: NUMERIC_NAME_PACKAGES })],
+      ['a graph with a package with no path', stateMessageOf({ ...GRAPH, packages: NO_PATH_PACKAGES })],
+      ['a graph with a numeric path', stateMessageOf({ ...GRAPH, packages: NUMERIC_PATH_PACKAGES })],
+      ['a graph with a package with no tags', stateMessageOf({ ...GRAPH, packages: NO_TAGS_PACKAGES })],
+      ['a graph with string tags', stateMessageOf({ ...GRAPH, packages: STRING_TAGS_PACKAGES })],
+      ['a graph with a numeric tag', stateMessageOf({ ...GRAPH, packages: NUMERIC_TAG_PACKAGES })],
       ['a graph with a null edge', stateMessageOf({ ...GRAPH, edges: [null] })],
       ['a graph with a string edge', stateMessageOf({ ...GRAPH, edges: ['app>core'] })],
       ['a graph with an edge with no target', stateMessageOf({ ...GRAPH, edges: [NO_TARGET_EDGE] })],

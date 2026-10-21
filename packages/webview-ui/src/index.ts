@@ -23,7 +23,7 @@ export type {
 
 export type { GraphHostMessage, GraphWebviewMessage } from './bridge/common/graph-message.type.ts';
 
-export type { GraphEdge, GraphReady, GraphState, Position, Positions } from './bridge/common/graph-state.type.ts';
+export type { GraphEdge, GraphPackage, GraphReady, GraphState, Position, Positions } from './bridge/common/graph-state.type.ts';
 
 export type { GraphViewState } from './bridge/common/graph-view-state.type.ts';
 

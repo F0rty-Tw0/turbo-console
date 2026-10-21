@@ -1,18 +1,33 @@
 import assert from 'node:assert/strict';
 
-import type { GraphEdge, GraphReady } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphReady } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
 import { lastGraphState } from './graph-posted.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { PanelInfo } from '../../src/shared/common/api.type.ts';
-import { GRAPH_COMMAND, HASH_PATTERN, ROOT_PACKAGE_NAME } from '../common/graph.const.ts';
+import { GRAPH_COMMAND, HASH_PATTERN, HUB_TAG, ROOT_PACKAGE_NAME } from '../common/graph.const.ts';
 import type { GraphScene } from '../common/graph.type.ts';
 import type { ShownManifest, ShownPackage } from '../common/launch.type.ts';
 
 const CLOSE_EDITOR_COMMAND = 'workbench.action.closeActiveEditor';
 
 const sorted = (names: string[]): string[] => names.toSorted();
+
+const packageLineOf = (pkg: GraphPackage): string => JSON.stringify([pkg.name, pkg.path, pkg.tags]);
+
+/** The host's records exactly as sent, one JSON line each, sorted. */
+const sentLinesOf = (packages: GraphPackage[]): string[] => packages.map(packageLineOf).toSorted();
+
+const manifestLineOf = (pkg: ShownPackage): string => {
+  const unique = new Set(pkg.tags);
+  const tags = Array.from(unique).toSorted();
+
+  return JSON.stringify([pkg.name, pkg.path, tags]);
+};
+
+/** The manifest's records with their tags deduplicated and sorted, as the host sends them, one JSON line each, sorted. */
+const manifestLinesOf = (packages: ShownPackage[]): string[] => packages.map(manifestLineOf).toSorted();
 
 const requireState = (scene: GraphScene): GraphReady => {
   const { api, root } = scene;
@@ -64,14 +79,18 @@ export const openCase = async (scene: GraphScene): Promise<void> => {
 
     const state = requireState(scene);
     const [panel] = api.graph.panels();
-    const packages = state.packages.filter((name): boolean => name !== ROOT_PACKAGE_NAME);
-    const manifestNames = shownPackagesOf(manifest).map((pkg): string => pkg.name);
+    const shown = shownPackagesOf(manifest);
+    const sent = state.packages.filter((pkg): boolean => pkg.name !== ROOT_PACKAGE_NAME);
+    const packages = sent.map((pkg): string => pkg.name);
+    const manifestNames = shown.map((pkg): string => pkg.name);
     const edgeLines = state.edges.map(edgeLineOf);
 
     assert.equal(api.graph.panels().length, 1);
     assert.deepEqual(panel, { root, visible: true });
     assert.deepEqual(sorted(packages), sorted(manifestNames));
     assert.deepEqual(sorted(edgeLines), expectedEdgesOf(manifest));
+    assert.deepEqual(sentLinesOf(sent), manifestLinesOf(shown));
+    assert.ok(sent.some((pkg): boolean => pkg.tags.includes(HUB_TAG)));
 
     assert.equal(state.positions, null);
     assert.match(state.hash, HASH_PATTERN);
@@ -100,7 +119,7 @@ export const cacheCase = async (scene: GraphScene): Promise<void> => {
     const positioned = positionedNamesOf(state);
 
     assert.equal(state.hash, firstHash);
-    assert.deepEqual(sorted(positioned), sorted(state.packages));
+    assert.deepEqual(sorted(positioned), sorted(state.packages.map((pkg): string => pkg.name)));
   });
 };
 

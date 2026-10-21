@@ -1,4 +1,4 @@
-import type { GraphState, GraphWebviewMessage, Positions } from '@turbo-console/webview-ui';
+import type { GraphPackage, GraphState, GraphWebviewMessage, Positions } from '@turbo-console/webview-ui';
 
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
@@ -6,9 +6,10 @@ import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
 import { acceptedPositions } from '../utils/graph-cache.util.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
+import { packageNamesOf } from '../utils/graph-package.util.ts';
 import { graphStateOfRoot } from '../utils/graph-state.util.ts';
 
-const NO_NAMES: string[] = [];
+const NO_PACKAGES: GraphPackage[] = [];
 
 /**
  * The host side of one Package Graph panel. Each state is built from the store and the layout cache when it is posted
@@ -144,7 +145,8 @@ export class GraphSession {
 
   private async openDetails(packageName: string, value: unknown): Promise<void> {
     const state = this.stateNow();
-    const names = state.kind === 'graph' ? state.packages : NO_NAMES;
+    const listed = state.kind === 'graph' ? state.packages : NO_PACKAGES;
+    const names = packageNamesOf(listed);
     const isListed = names.includes(packageName);
 
     if (!isListed) {
