@@ -22,20 +22,10 @@ export const BROKEN_MEASURE = `CanvasRenderingContext2D.prototype.measureText = 
   throw new Error('measureText is broken');
 };`;
 
-/** Init script: records the duration of every long task in `window.__longTasks`; `window.__flushLongTasks` adds those not delivered yet. */
-export const LONGTASK_RECORDER = `window.__longTasks = [];
-const longTaskObserver = new PerformanceObserver((list) => {
-  for (const entry of list.getEntries()) window.__longTasks.push(entry.duration);
-});
-longTaskObserver.observe({ type: 'longtask', buffered: true });
-window.__flushLongTasks = () => {
-  for (const entry of longTaskObserver.takeRecords()) window.__longTasks.push(entry.duration);
-};`;
+/** The CDP `Performance.getMetrics` entry holding the main thread's CPU time, in seconds. */
+export const THREAD_TIME_METRIC = 'ThreadTime';
 
-/** Evaluates to the long task durations so far, including any the observer has not delivered yet. */
-export const READ_LONG_TASKS = '(() => { window.__flushLongTasks(); return window.__longTasks; })()';
-
-export const CLEAR_LONG_TASKS = 'window.__longTasks = []';
+export const MS_PER_SECOND = 1000;
 
 /** Resolves after two frames, so the effects of the last input have run. */
 export const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
