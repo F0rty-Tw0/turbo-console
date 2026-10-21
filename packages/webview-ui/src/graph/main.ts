@@ -1,5 +1,6 @@
+import type { DetailsViews } from './common/details.type.ts';
 import type { GraphViewFactory, NodeSizer } from './common/graph-page.type.ts';
-import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
+import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { NodeSize } from './common/node-size.type.ts';
 // Imported before any module that loads Cytoscape: elk-client creates the one `tc-elk` policy as it loads.
 import { createElk } from './data-access/elk-client.ts';
@@ -10,6 +11,14 @@ import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
 import { buildControls } from './ui/controls-elements.ts';
+import { buildDetails } from './ui/details-elements.ts';
+import { emptyView } from './ui/details-empty.ts';
+import { explainView } from './ui/details-explain.ts';
+import { hintView } from './ui/details-hint.ts';
+import { linkView } from './ui/details-link.ts';
+import { packageView } from './ui/details-package.ts';
+import { candidateItems, pickingView } from './ui/details-picking.ts';
+import { stepItems, traceView } from './ui/details-trace.ts';
 import { buildPage } from './ui/page-elements.ts';
 import { nodeSizeOf } from './utils/node-size.util.ts';
 import { themeColorsOf } from './utils/theme-colors.util.ts';
@@ -43,7 +52,31 @@ const saver = createViewStateSaver(bridge.saveState, VIEW_STATE_DEBOUNCE_MS);
 const runner = createLayoutRunner({ createElk, timeoutMs: FALLBACK_TIMEOUT_MS, fallback: breadthfirstPositions });
 const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily);
 const now = (): number => performance.now();
-const controller = createGraphController({ bridge, page, createView, runner, saver, sizeOf: labelSizer(), now, build: buildControls });
+const views: DetailsViews = {
+  build: buildDetails,
+  empty: emptyView,
+  package: packageView,
+  link: linkView,
+  explain: explainView,
+  picking: pickingView,
+  trace: traceView,
+  hint: hintView,
+  candidateItems,
+  stepItems
+};
+const overlay = window.matchMedia(OVERLAY_MEDIA_QUERY);
+const controller = createGraphController({
+  bridge,
+  page,
+  createView,
+  runner,
+  saver,
+  sizeOf: labelSizer(),
+  now,
+  build: buildControls,
+  views,
+  overlay
+});
 
 const applyTheme = (): void => {
   const style = getComputedStyle(document.body);

@@ -1,20 +1,24 @@
 import { GraphControls } from './graph-controls.ts';
-import { GraphSelection } from './graph-selection.ts';
+import { GraphInspection } from './graph-inspection.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { GraphControlsDeps, GraphFilteringDeps } from '../common/graph-controls.type.ts';
-import type { ControlsViewFields, DrawnGraph, GraphSelectionDeps } from '../common/graph-page.type.ts';
+import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
+import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
-import { visibleSelection } from '../utils/visible-selection.util.ts';
 
-type FilteringFacts = Pick<ProbeFacts, 'controlsBuiltMs' | 'filterAppliedMs'>;
+type FilteringFacts = Pick<
+  ProbeFacts,
+  'controlsBuiltMs' | 'filterAppliedMs' | 'selected' | 'inspection' | 'detailsBuiltMs' | 'pickingBuiltMs' | 'traceMs'
+>;
 
 /**
- * The controls panel and the selection it drives; the only place that knows `GraphControls`. A visible set the
- * controls report is shown, drops a selection it leaves out and refits; the restored one is shown without a fit.
+ * The controls panel and the inspection it drives; the only place that knows both `GraphControls` and
+ * `GraphInspection`. A visible set the controls report is shown, re-checks the inspection and refits; the restored
+ * one is shown without a fit.
  */
 export class GraphFiltering {
-  public readonly selection: GraphSelection;
+  public readonly inspection: GraphInspection;
 
   private readonly deps: GraphFilteringDeps;
   private readonly controls: GraphControls;
@@ -22,30 +26,33 @@ export class GraphFiltering {
   private appliedMs: number | null = null;
 
   public constructor(deps: GraphFilteringDeps) {
-    const { bridge, page, view, saver, drawn, build, now } = deps;
+    const { page, view, build, now } = deps;
     const controlsDeps: GraphControlsDeps = {
       page,
       build,
       now,
       onVisibleChange: (visible): void => this.showVisible(visible),
-      onSelect: (name, pan): void => this.select(name, pan),
-      onOpenDetails: (): void => this.selection.openDetails(),
-      onSave: (): void => this.selection.save(),
+      onSelect: (name): void => this.inspection.select(name),
+      onFocused: (name): void => this.inspection.focused(name),
+      onOpenDetails: (): void => this.inspection.openDetails(),
+      onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
     };
-    const selectionDeps: GraphSelectionDeps = {
-      bridge,
-      page,
-      view,
-      saver,
-      drawn,
+    const inspectionDeps: GraphInspectionDeps = {
+      ...deps,
+      visible: (): ReadonlySet<string> => this.controls.visible(),
+      focus: (): string | null => this.controls.focusName(),
       controls: (): ControlsViewFields => this.controls.fields(),
-      onSelected: (name): void => this.controls.markSelected(name)
+      onSelected: (name): void => this.controls.markSelected(name),
+      onFocusOn: (name): void => this.controls.focusOn(name),
+      onExclude: (name): void => this.controls.exclude(name),
+      // Task 3.5 wires Show to the controls.
+      onShow: (): void => undefined
     };
 
     this.deps = deps;
     this.controls = new GraphControls(controlsDeps);
-    this.selection = new GraphSelection(selectionDeps);
+    this.inspection = new GraphInspection(inspectionDeps);
   }
 
   /** Builds the panel for `graph` from `saved` (defaults without one) and shows its visible set; `at` is the state's arrival. */
@@ -64,9 +71,11 @@ export class GraphFiltering {
   }
 
   public facts(): FilteringFacts {
+    const inspectionFacts = this.inspection.facts();
     const facts: FilteringFacts = {
       controlsBuiltMs: (): number | null => this.builtMs,
-      filterAppliedMs: (): number | null => this.appliedMs
+      filterAppliedMs: (): number | null => this.appliedMs,
+      ...inspectionFacts
     };
 
     return facts;
@@ -74,15 +83,10 @@ export class GraphFiltering {
 
   private showVisible(visible: ReadonlySet<string>): void {
     const { view, page, now } = this.deps;
-    const selected = this.selection.current();
-    const kept = visibleSelection(selected, visible);
-    const isLost = kept !== selected;
     const isAny = visible.size > 0;
 
     view.setVisible(visible);
-
-    if (isLost) this.selection.select(null);
-
+    this.inspection.recheck(visible);
     page.fit.disabled = !isAny;
 
     if (isAny) view.fit();
@@ -90,11 +94,5 @@ export class GraphFiltering {
     const inputAt = this.controls.inputAt();
 
     if (inputAt !== null) this.appliedMs = now() - inputAt;
-  }
-
-  private select(name: string, pan: boolean): void {
-    this.selection.select(name);
-
-    if (pan) this.deps.view.centreOn(name);
   }
 }

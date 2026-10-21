@@ -1,4 +1,3 @@
-/* eslint-disable local/no-unused-exports -- first imported by Task 3.4 */
 import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import { ESC_KEY_TEXT, HINT_CANCEL_TEXT } from '../common/details.const.ts';

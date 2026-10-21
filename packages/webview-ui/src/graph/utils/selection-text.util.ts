@@ -1,8 +1,11 @@
+import { pluralOf } from './plural.util.ts';
 import type { Closure } from '../common/closure.type.ts';
+import type { Neighbours } from '../common/neighbours.type.ts';
 
-/** The status line: `<name>: <n> dependencies, <m> dependents`, `''` with no selection. */
-export const selectionText = (selected: string | null, closure: Closure | null): string => {
-  if (selected === null || closure === null) return '';
+/** The status line of a selected package: `<name> · N dependencies, M direct · N dependents, M direct`. */
+export const selectionText = (name: string, closure: Closure, direct: Neighbours): string => {
+  const dependencies = pluralOf(closure.dependencies.size, 'dependency', 'dependencies');
+  const dependents = pluralOf(closure.dependents.size, 'dependent', 'dependents');
 
-  return `${selected}: ${closure.dependencies.size} dependencies, ${closure.dependents.size} dependents`;
+  return `${name} · ${dependencies}, ${direct.dependencies.length} direct · ${dependents}, ${direct.dependents.length} direct`;
 };

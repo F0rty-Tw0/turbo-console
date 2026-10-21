@@ -1,3 +1,4 @@
+import type { Inspection } from './inspection.type.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 
 export type ProbeState = 'selected' | 'highlighted' | 'dimmed' | 'normal';
@@ -43,10 +44,29 @@ export type GraphProbe = {
   readonly controlsBuiltMs: () => number | null;
   /** From the latest filter input to the return of the fit after it; `null` until an input changed the visible set. */
   readonly filterAppliedMs: () => number | null;
+  /** What the page is showing details of. */
+  readonly inspection: () => Inspection;
+  /** From a `package` inspection being set to its details view shown; `null` until one is. */
+  readonly detailsBuiltMs: () => number | null;
+  /** From a `picking` inspection being set, before its candidates are found, to its view shown; `null` until one is. */
+  readonly pickingBuiltMs: () => number | null;
+  /** From a `trace` inspection being set, before its path is walked, to its view shown; `null` until one is. */
+  readonly traceMs: () => number | null;
 };
 
 /** The probe facts only the page controller knows. */
-export type ProbeFacts = Pick<GraphProbe, 'firstFrameMs' | 'layoutEngine' | 'selected' | 'controlsBuiltMs' | 'filterAppliedMs'>;
+export type ProbeFacts = Pick<
+  GraphProbe,
+  | 'firstFrameMs'
+  | 'layoutEngine'
+  | 'selected'
+  | 'controlsBuiltMs'
+  | 'filterAppliedMs'
+  | 'inspection'
+  | 'detailsBuiltMs'
+  | 'pickingBuiltMs'
+  | 'traceMs'
+>;
 
 /* eslint-disable @typescript-eslint/naming-convention -- the e2e tests set and read these exact names on window */
 

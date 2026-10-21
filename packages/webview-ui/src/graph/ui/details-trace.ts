@@ -1,4 +1,3 @@
-/* eslint-disable local/no-unused-exports -- first imported by Task 3.4 */
 import { actionButton, leadOf, markOf, nameButton, viewBase } from './details-parts.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { TraceDetails } from '../common/details-view.type.ts';

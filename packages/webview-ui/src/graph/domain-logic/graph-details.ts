@@ -1,4 +1,3 @@
-/* eslint-disable local/no-unused-exports -- first imported by Task 3.4 */
 import { shownHintOf } from './graph-details-picking.ts';
 import { focusedNameOf, refocusList, updateExplain, updateView } from './graph-details-render.ts';
 import { emptyOf, wireExplain, wiredViewOf } from './graph-details-wire.ts';

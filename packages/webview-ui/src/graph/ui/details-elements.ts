@@ -1,4 +1,3 @@
-/* eslint-disable local/no-unused-exports -- first imported by Task 3.4 */
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { DetailsElements } from '../common/details-view.type.ts';
 import { DETAILS_LABEL } from '../common/graph.const.ts';

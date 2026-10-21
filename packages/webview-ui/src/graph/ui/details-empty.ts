@@ -1,4 +1,3 @@
-/* eslint-disable local/no-unused-exports -- first imported by Task 3.4 */
 import { keyedLine, leadOf, viewBase } from './details-parts.ts';
 import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';

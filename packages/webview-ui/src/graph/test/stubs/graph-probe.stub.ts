@@ -1,5 +1,6 @@
 import type { Position } from '../../../bridge/common/graph-state.type.ts';
 import type { GraphProbe } from '../../common/graph-probe.type.ts';
+import { NO_INSPECTION } from '../../common/inspection.const.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
 
@@ -14,5 +15,9 @@ export const GRAPH_PROBE_STUB: GraphProbe = {
   layoutEngine: () => null,
   visibleIds: () => [],
   controlsBuiltMs: () => null,
-  filterAppliedMs: () => null
+  filterAppliedMs: () => null,
+  inspection: () => NO_INSPECTION,
+  detailsBuiltMs: () => null,
+  pickingBuiltMs: () => null,
+  traceMs: () => null
 };

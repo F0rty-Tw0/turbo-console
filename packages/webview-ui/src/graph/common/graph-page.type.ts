@@ -1,6 +1,7 @@
 import type { Core } from 'cytoscape';
 
 import type { ControlsElements } from './controls-elements.type.ts';
+import type { DetailsViews } from './details.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
 import type { GhostMarks } from './ghost.type.ts';
 import type { ProbeFacts } from './graph-probe.type.ts';
@@ -112,6 +113,10 @@ export type GraphControllerDeps = {
   readonly now: () => number;
   /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
   readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;
+  /** The details view builders, handed in because `domain-logic` may not import `ui`. */
+  readonly views: DetailsViews;
+  /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
+  readonly overlay: MediaQueryList;
 };
 
 /** The graph the page shows: its hash, package names and records, and its drawable edges. */
@@ -120,19 +125,6 @@ export type DrawnGraph = {
   readonly packages: string[];
   readonly infos: GraphPackage[];
   readonly edges: GraphEdge[];
-};
-
-export type GraphSelectionDeps = {
-  readonly bridge: Bridge;
-  readonly page: PageElements;
-  readonly view: GraphView;
-  readonly saver: ViewStateSaver;
-  /** The graph shown or being laid out; `null` while the page shows no graph. */
-  readonly drawn: () => DrawnGraph | null;
-  /** The controls fields every save carries along. */
-  readonly controls: () => ControlsViewFields;
-  /** The selection changed or was forgotten; `null` for none. */
-  readonly onSelected: (name: string | null) => void;
 };
 
 export type GraphController = {
