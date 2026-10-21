@@ -96,6 +96,19 @@ describe('FEATURE: createLayoutRunner, a run overtaken by a newer one', () => {
       await expect(second).resolves.toMatchObject({ hash: 'h2', engine: 'fallback', ms: FALLBACK_TIMEOUT_MS });
     });
 
+    it('WHEN the first run times out while the second is in flight THEN a third run drops the second ELK', async () => {
+      const thirdElk = elkMock();
+
+      createElk.mockReturnValueOnce(thirdElk.elk);
+      vi.advanceTimersByTime(FALLBACK_TIMEOUT_MS - 1000);
+      await first;
+
+      void runner.run('h3', ELK_GRAPH_STUB);
+
+      expect(secondElk.terminate).toHaveBeenCalledOnce();
+      expect(thirdElk.layout).toHaveBeenCalledOnce();
+    });
+
     it('WHEN the second run finishes while the first still hangs THEN a third run reuses the second ELK', async () => {
       secondElk.resolveLayout(LAID_OUT_STUB);
       await second;

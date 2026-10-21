@@ -2,7 +2,7 @@ import type { GraphWebviewMessage } from '../../src/bridge/common/graph-message.
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 
-export type WorkerStub = 'real' | 'throwOnce' | 'error' | 'silent';
+export type WorkerStub = 'real' | 'throwOnce' | 'error' | 'silent' | 'malformed';
 
 export type GraphOptions = {
   readonly inlineScript?: boolean;

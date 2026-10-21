@@ -133,6 +133,12 @@ export class GraphPage {
     expect(polluted).toEqual([]);
   }
 
+  public async expectNotFailedNow(): Promise<void> {
+    const isFailed = await this.page.getByText(LAYOUT_FAILED_TEXT).isVisible();
+
+    expect(isFailed).toBe(false);
+  }
+
   /** The page says the graph could not be drawn, and why. */
   public async expectLayoutFailed(): Promise<void> {
     await expect(this.page.getByText(LAYOUT_FAILED_TEXT)).toBeVisible();

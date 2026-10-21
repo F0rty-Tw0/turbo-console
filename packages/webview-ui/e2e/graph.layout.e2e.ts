@@ -165,4 +165,29 @@ test.describe('FEATURE: graph layout', () => {
 
     await test.step('AND no positions were posted', async (): Promise<void> => graphHost.expectNoPositionsPosted());
   });
+
+  test('GIVEN an older layout that throws after a cached state replaced it, the cached graph stays', async ({
+    graphHost,
+    graphPage,
+    graphProbe
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened with a worker that answers a malformed layout', async (): Promise<void> =>
+      graphPage.open({ workers: 'malformed' }));
+
+    await test.step('AND a state without positions, then another hash with positions, are sent', async (): Promise<void> =>
+      graphHost.sendStates([DIAMOND_CHAIN_STUB, OTHER_HASH_CACHED_STUB]));
+
+    await test.step('AND the worker has answered its register and layout commands', async (): Promise<void> =>
+      graphHost.expectWorkerMessages(2));
+
+    await test.step('AND two frames pass', async (): Promise<void> => graphPage.waitFrames());
+
+    await test.step('THEN the page does not say the graph could not be drawn', async (): Promise<void> =>
+      graphPage.expectNotFailedNow());
+
+    await test.step('AND the layout came from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
+
+    await test.step('AND the nodes sit at the cached positions', async (): Promise<void> =>
+      graphProbe.expectNodesAt(DIAMOND_CHAIN_POSITIONS_STUB));
+  });
 });

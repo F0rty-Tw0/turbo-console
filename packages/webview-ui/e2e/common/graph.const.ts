@@ -118,9 +118,31 @@ const SILENT_WORKER = `(() => {
   };
 })();`;
 
+/** A worker that answers each command after 200 ms, with a layout whose `children` is not an array, so reading it throws. */
+const MALFORMED_WORKER = `(() => {
+  ${COUNTERS}
+  window.Worker = class extends EventTarget {
+    constructor() {
+      super();
+      window.__workers += 1;
+    }
+    postMessage(message) {
+      const data = message.cmd === 'layout' ? { id: 'root', children: {} } : null;
+      setTimeout(() => {
+        window.__workerMessages += 1;
+        this.onmessage?.({ data: { id: message.id, data } });
+      }, 200);
+    }
+    terminate() {
+      window.__terminated += 1;
+    }
+  };
+})();`;
+
 export const WORKER_STUBS: Readonly<Record<WorkerStub, string>> = {
   real: REAL_WORKER,
   throwOnce: THROW_ONCE_WORKER,
   error: ERROR_WORKER,
-  silent: SILENT_WORKER
+  silent: SILENT_WORKER,
+  malformed: MALFORMED_WORKER
 };
