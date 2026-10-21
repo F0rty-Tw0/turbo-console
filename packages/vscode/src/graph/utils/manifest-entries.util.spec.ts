@@ -52,6 +52,32 @@ const MANY_ALIAS_TEXT = rows('\n', ...MANY_ALIAS_LINES);
 const manyAliasEntries = (): ManifestEntry[] =>
   Array.from({ length: 8 }, (_, i): ManifestEntry => entry('dependencies', `k${i}`, 'npm:core@1', 2 + i));
 
+const aliasRows = (prefix: string): string[] =>
+  Array.from({ length: 5 }, (_, i): string => `    "${prefix}${i}": "npm:core@1"${i < 4 ? ',' : ''}`);
+
+const DEPENDENCY_ALIASES = aliasRows('d');
+
+const DEV_DEPENDENCY_ALIASES = aliasRows('v');
+
+const SPLIT_ALIAS_TEXT = rows(
+  '\n',
+  '{',
+  '  "dependencies": {',
+  ...DEPENDENCY_ALIASES,
+  '  },',
+  '  "devDependencies": {',
+  ...DEV_DEPENDENCY_ALIASES,
+  '  }',
+  '}'
+);
+
+const splitAliasEntries = (): ManifestEntry[] => {
+  const inDependencies = Array.from({ length: 5 }, (_, i): ManifestEntry => entry('dependencies', `d${i}`, 'npm:core@1', 2 + i));
+  const inDevDependencies = Array.from({ length: 3 }, (_, i): ManifestEntry => entry('devDependencies', `v${i}`, 'npm:core@1', 9 + i));
+
+  return [...inDependencies, ...inDevDependencies];
+};
+
 const LONG_SPEC = `npm:core@${'1'.repeat(300)}`;
 
 const LONG_LINES = ['{', '  "dependencies": {', `    "${'k'.repeat(250)}": "${LONG_SPEC}"`, '  }', '}'];
@@ -167,6 +193,7 @@ const objectNames: [string, string, string, ManifestEntry[]][] = [
 
 const cuts: [string, string, string, ManifestEntry[]][] = [
   ['more than 8 matches are cut to 8', MANY_ALIAS_TEXT, 'core', manyAliasEntries()],
+  ['5 matches in dependencies and 5 in devDependencies are cut to 8 in field order', SPLIT_ALIAS_TEXT, 'core', splitAliasEntries()],
   ['a key and a spec over 200 characters are cut with an ellipsis', rows('\n', ...LONG_LINES), 'core', LONG_ENTRIES],
   [
     'a spec of exactly 200 characters is kept whole',
