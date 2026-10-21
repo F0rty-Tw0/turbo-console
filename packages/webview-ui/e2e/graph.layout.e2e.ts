@@ -189,5 +189,7 @@ test.describe('FEATURE: graph layout', () => {
 
     await test.step('AND the nodes sit at the cached positions', async (): Promise<void> =>
       graphProbe.expectNodesAt(DIAMOND_CHAIN_POSITIONS_STUB));
+
+    await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
   });
 });
