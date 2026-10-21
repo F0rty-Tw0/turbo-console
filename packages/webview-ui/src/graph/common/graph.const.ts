@@ -85,3 +85,6 @@ export const SHOW_ALL_LABEL = 'Show all';
 
 /** A package row's cells, left to right; the list keys move through them in this order. */
 export const COLUMNS: Column[] = ['check', 'name', 'focus'];
+
+/** The gap kept between anchor nodes and the details overlay's left edge. */
+export const KEEP_CLEAR_MARGIN_PX = 16;

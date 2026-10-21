@@ -1,6 +1,7 @@
 import cytoscape from 'cytoscape';
 import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 
+import { anchorBoxOf, panBy } from './graph-camera.ts';
 import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
 import { applyPaint } from './graph-paint.ts';
@@ -9,6 +10,7 @@ import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
 import type { GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
+import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
@@ -27,6 +29,12 @@ const positionOf = (positions: Positions, name: string): Position => {
   const position = Object.hasOwn(positions, name) ? positions[name] : undefined;
 
   return position ?? ORIGIN;
+};
+
+const placeNodes = (cy: Core, placed: Positions): void => {
+  const placeNode = (node: NodeSingular): Position => positionOf(placed, node.id());
+
+  cy.nodes().positions(placeNode);
 };
 
 const nodeDefinitionsOf = (packages: string[], positions: Positions, sizeOf: NodeSizer): ElementDefinition[] => {
@@ -89,11 +97,6 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     cy.resize();
     cy.viewport({ zoom, pan });
   };
-  const setPositions = (placed: Positions): void => {
-    const placeNode = (node: NodeSingular): Position => positionOf(placed, node.id());
-
-    cy.nodes().positions(placeNode);
-  };
   const view: GraphView = {
     setGraph,
     paint: (paint: Paint): void => applyPaint(cy, paint),
@@ -102,9 +105,11 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>): void => setGhosts(cy, marks, visible),
     resize: (): void => void cy.resize(),
     centreOn: (name: string): void => centreOnNode(cy, name),
+    anchorBox: (names: string[]): AnchorBox | null => anchorBoxOf(cy, names),
+    panBy: (dx: number): void => panBy(cy, dx),
     viewport,
     setViewport,
-    setPositions,
+    setPositions: (placed: Positions): void => placeNodes(cy, placed),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
     cy: (): Core => cy
   };
