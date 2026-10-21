@@ -293,6 +293,11 @@ p {
   opacity: 0.5;
 }
 
+/* A dimmed row's name button is disabled too; the row's dim alone sets it, as nested opacities would multiply to 0.25. */
+.is-dimmed [aria-disabled='true'] {
+  opacity: 1;
+}
+
 .text-button[aria-disabled='true'] {
   cursor: default;
 }

@@ -9,6 +9,7 @@ import { THEME_VAR_NAMES } from '../common/graph.const.ts';
 import type { ControlsFields, ExpectedThemeColors, ThemeStub } from '../common/graph.type.ts';
 import { isPanNear, isZoomNear } from '../test/utils/graph-camera.spec.util.ts';
 import { checkedTagNames, lockedShowNames, uncheckedShowNames } from '../test/utils/graph-controls-fields.spec.util.ts';
+import { effectiveOpacityOf } from '../test/utils/graph-controls.spec.util.ts';
 import { switchTheme, withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
 
 type NodeColors = Pick<ExpectedThemeColors, 'fill' | 'frame' | 'label'>;
@@ -119,6 +120,13 @@ export class GraphLook {
 
     test.info().annotations.push({ type: 'first-frame-ms', description: String(measured) });
     expect(measured).toBeLessThan(ms);
+  }
+
+  /** The package's name in the list is drawn at `opacity`, every ancestor's included, as nested opacities multiply. */
+  public async expectNameOpacity(name: string, opacity: number): Promise<void> {
+    const button = this.page.getByRole('grid').getByRole('button', { name, exact: true });
+
+    await expect.poll(async (): Promise<number> => button.evaluate(effectiveOpacityOf)).toBe(opacity);
   }
 
   private async controlsFields(): Promise<ControlsFields> {

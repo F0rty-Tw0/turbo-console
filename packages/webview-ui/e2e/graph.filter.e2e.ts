@@ -90,7 +90,7 @@ test.describe('FEATURE: graph filters', () => {
   test(
     'GIVEN the lib tag checked, only lib packages are visible and the others are dimmed but checked',
     { annotation: AC1 },
-    async ({ graphCamera, graphControls, graphHost, graphPage }): Promise<void> => {
+    async ({ graphCamera, graphControls, graphHost, graphLook, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
@@ -102,6 +102,9 @@ test.describe('FEATURE: graph filters', () => {
       await test.step('AND a click on web selects nothing', async (): Promise<void> => graphCamera.expectUntappable('web'));
 
       await test.step('AND the web row is dimmed', async (): Promise<void> => graphControls.expectRowDimmed('web', true));
+
+      await test.step('AND its name is drawn at half opacity, not dimmed twice', async (): Promise<void> =>
+        graphLook.expectNameOpacity('web', 0.5));
 
       await test.step('AND the web row is still checked', async (): Promise<void> => graphControls.expectRowChecked('web', true));
     }
