@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 import { GraphControlsPage } from './graph-controls.po.ts';
+import { GraphPackageList } from './graph-package-list.po.ts';
 import { GraphTimings } from './graph-timings.po.ts';
 import { postStates } from '../test/utils/graph-host-state.spec.util.ts';
 import { largeState } from '../test/utils/graph-large.spec.util.ts';
@@ -27,6 +28,7 @@ const readFresh = async (read: () => Promise<number | null>): Promise<number> =>
 /** Wall-time samples of the probe's timing facts, one per forced repeat of the step. */
 export class GraphSamples {
   private readonly controls: GraphControlsPage;
+  private readonly list: GraphPackageList;
   private readonly page: Page;
   private readonly timings: GraphTimings;
   private builtSamples: number[] = [];
@@ -35,6 +37,7 @@ export class GraphSamples {
   public constructor(page: Page) {
     this.page = page;
     this.controls = new GraphControlsPage(page);
+    this.list = new GraphPackageList(page);
     this.timings = new GraphTimings(page);
   }
 
@@ -58,7 +61,7 @@ export class GraphSamples {
     for (let toggle = 0; toggle < repeats; toggle += 1) {
       const hiddenCount = toggle % 2 === 0 ? 1 : 0;
 
-      await this.controls.toggleRow(name);
+      await this.list.toggleRow(name);
       await this.controls.expectCount(total - hiddenCount, total);
       samples.push(await readFresh(async (): Promise<number | null> => this.timings.filterAppliedMs()));
     }

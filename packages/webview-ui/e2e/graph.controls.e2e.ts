@@ -27,16 +27,15 @@ test.describe('FEATURE: graph controls panel', () => {
   test(
     'GIVEN the controls graph, the panel lists its groups, rows, tags and count under the CSP',
     { annotation: AC5 },
-    async ({ graphControls, graphHost, graphPage }): Promise<void> => {
+    async ({ graphControls, graphHost, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
       await test.step('THEN the groups are listed with their counts', async (): Promise<void> =>
-        graphControls.expectGroups(['(root) (1)', 'apps (2)', 'packages (5)']));
+        graphList.expectGroups(['(root) (1)', 'apps (2)', 'packages (5)']));
 
-      await test.step('AND the grid holds three headers and eight rows', async (): Promise<void> =>
-        graphControls.expectGridShape(3, 8));
+      await test.step('AND the grid holds three headers and eight rows', async (): Promise<void> => graphList.expectGridShape(3, 8));
 
       await test.step('AND the tags are listed', async (): Promise<void> => graphControls.expectTags(['app', 'lib', 'ui']));
 
@@ -55,14 +54,14 @@ test.describe('FEATURE: graph controls panel', () => {
   test(
     'GIVEN a graph without tags, the panel has no Tags fieldset',
     { annotation: AC1 },
-    async ({ graphControls, graphHost, graphPage }): Promise<void> => {
+    async ({ graphControls, graphHost, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND an untagged graph is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
 
       await test.step('THEN there is no Tags fieldset', async (): Promise<void> => graphControls.expectNoTagsFieldset());
 
-      await test.step('AND the one folder group is listed', async (): Promise<void> => graphControls.expectGroups(['packages (7)']));
+      await test.step('AND the one folder group is listed', async (): Promise<void> => graphList.expectGroups(['packages (7)']));
     }
   );
 
@@ -125,12 +124,12 @@ test.describe('FEATURE: graph controls panel', () => {
   test(
     'GIVEN a package unchecked, the Controls button shows filters on until Show all',
     { annotation: AC1 },
-    async ({ graphControls, graphHost, graphPage }): Promise<void> => {
+    async ({ graphControls, graphHost, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
-      await test.step('AND the web row is unchecked', async (): Promise<void> => graphControls.toggleRow('web'));
+      await test.step('AND the web row is unchecked', async (): Promise<void> => graphList.toggleRow('web'));
 
       await test.step('AND the panel is collapsed', async (): Promise<void> => graphControls.toggle());
 

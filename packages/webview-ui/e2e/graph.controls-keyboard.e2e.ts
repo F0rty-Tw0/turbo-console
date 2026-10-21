@@ -92,15 +92,14 @@ test.describe('FEATURE: graph controls keyboard', () => {
   test(
     'GIVEN the controls graph, the package list is one Tab stop that lands on the first group checkbox',
     { annotation: AC1 },
-    async ({ graphControls, graphHost, graphKeys, graphPage }): Promise<void> => {
+    async ({ graphHost, graphKeys, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
       await test.step('AND the first group checkbox is reached by Tab', async (): Promise<void> => graphKeys.tabTo('(root) (1)'));
 
-      await test.step('THEN the grid holds three headers and eight rows', async (): Promise<void> =>
-        graphControls.expectGridShape(3, 8));
+      await test.step('THEN the grid holds three headers and eight rows', async (): Promise<void> => graphList.expectGridShape(3, 8));
 
       await test.step('AND the list has one Tab stop', async (): Promise<void> => graphKeys.expectListTabStops(1));
 
@@ -302,7 +301,7 @@ test.describe('FEATURE: graph controls keyboard', () => {
   test(
     'GIVEN nothing filtered, Space on Show all changes nothing and Space on a locked row checkbox is ignored',
     { annotation: AC1 },
-    async ({ graphControls, graphHost, graphKeys, graphPage }): Promise<void> => {
+    async ({ graphControls, graphHost, graphKeys, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
@@ -327,13 +326,13 @@ test.describe('FEATURE: graph controls keyboard', () => {
       await test.step('THEN web and its two dependencies are counted as visible', async (): Promise<void> =>
         graphControls.expectCount(3, 8));
 
-      await test.step('AND the web checkbox is locked', async (): Promise<void> => graphControls.expectRowLocked('web'));
+      await test.step('AND the web checkbox is locked', async (): Promise<void> => graphList.expectRowLocked('web'));
 
       await test.step('WHEN Left and Left reach the web checkbox', async (): Promise<void> => graphKeys.expectWalk(LEFT_TO_SHOW_WEB));
 
       await test.step('AND Space is pressed on the locked checkbox', async (): Promise<void> => graphPage.pressKey('Space'));
 
-      await test.step('THEN the web checkbox is still locked', async (): Promise<void> => graphControls.expectRowLocked('web'));
+      await test.step('THEN the web checkbox is still locked', async (): Promise<void> => graphList.expectRowLocked('web'));
 
       await test.step('AND three of eight packages are still visible', async (): Promise<void> => graphControls.expectCount(3, 8));
     }
@@ -342,24 +341,24 @@ test.describe('FEATURE: graph controls keyboard', () => {
   test(
     'GIVEN a package selected by tap, a tap on the same node under a search that hides its row keeps the row current and focuses the graph, and a tap far down a long list scrolls its row into view',
     { annotation: AC1 },
-    async ({ graphCanvas, graphControls, graphHost, graphKeys, graphPage }): Promise<void> => {
+    async ({ graphCanvas, graphControls, graphHost, graphKeys, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
       await test.step('AND core is tapped', async (): Promise<void> => graphCanvas.tapNode('core'));
 
-      await test.step('THEN the core row is current', async (): Promise<void> => graphControls.expectRowCurrent('core'));
+      await test.step('THEN the core row is current', async (): Promise<void> => graphList.expectRowCurrent('core'));
 
       await test.step('WHEN the search is reached by Shift+Tab', async (): Promise<void> => graphKeys.shiftTabTo('Search packages'));
 
       await test.step('AND xyz is typed', async (): Promise<void> => graphKeys.type('xyz'));
 
-      await test.step('THEN no row is listed', async (): Promise<void> => graphControls.expectRowsListed([]));
+      await test.step('THEN no row is listed', async (): Promise<void> => graphList.expectRowsListed([]));
 
       await test.step('WHEN core is tapped again', async (): Promise<void> => graphCanvas.tapNode('core'));
 
-      await test.step('THEN the core row is still current', async (): Promise<void> => graphControls.expectRowCurrent('core'));
+      await test.step('THEN the core row is still current', async (): Promise<void> => graphList.expectRowCurrent('core'));
 
       await test.step('AND the graph container holds focus', async (): Promise<void> => graphPage.expectContainerFocused());
 

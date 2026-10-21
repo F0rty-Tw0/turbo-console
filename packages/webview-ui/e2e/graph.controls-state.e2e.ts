@@ -65,16 +65,16 @@ test.describe('FEATURE: graph controls saved state', () => {
   test(
     'GIVEN every control changed and the panel collapsed, reopening restores the controls and keeps the hand-moved camera',
     { annotation: AC4 },
-    async ({ graphCamera, graphCanvas, graphControls, graphHost, graphLook, graphPage }): Promise<void> => {
+    async ({ graphCamera, graphCanvas, graphControls, graphHost, graphList, graphLook, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
       await test.step('AND the depth is set to 2', async (): Promise<void> => graphControls.setDepth('2'));
 
-      await test.step('AND core is focused', async (): Promise<void> => graphControls.focusOn('core'));
+      await test.step('AND core is focused', async (): Promise<void> => graphList.focusOn('core'));
 
-      await test.step('AND the docs row is unchecked', async (): Promise<void> => graphControls.toggleRow('docs'));
+      await test.step('AND the docs row is unchecked', async (): Promise<void> => graphList.toggleRow('docs'));
 
       await test.step('AND a is searched', async (): Promise<void> => graphControls.search('a'));
 
@@ -150,16 +150,16 @@ test.describe('FEATURE: graph controls saved state', () => {
   test(
     'GIVEN a hidden package, a focus and a moved camera saved, an edited graph keeps the surviving filters, fits to the visible nodes and does not save the dropped name back',
     { annotation: AC4 },
-    async ({ graphCanvas, graphControls, graphHost, graphLook, graphPage }): Promise<void> => {
+    async ({ graphCanvas, graphControls, graphHost, graphList, graphLook, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
-      await test.step('AND the docs row is unchecked', async (): Promise<void> => graphControls.toggleRow('docs'));
+      await test.step('AND the docs row is unchecked', async (): Promise<void> => graphList.toggleRow('docs'));
 
-      await test.step('AND the admin row is unchecked', async (): Promise<void> => graphControls.toggleRow('admin'));
+      await test.step('AND the admin row is unchecked', async (): Promise<void> => graphList.toggleRow('admin'));
 
-      await test.step('AND web is focused', async (): Promise<void> => graphControls.focusOn('web'));
+      await test.step('AND web is focused', async (): Promise<void> => graphList.focusOn('web'));
 
       await test.step('AND the graph is zoomed', async (): Promise<void> => graphCanvas.zoomBy(-300));
 
@@ -186,24 +186,24 @@ test.describe('FEATURE: graph controls saved state', () => {
       await test.step('AND the controls graph is sent again', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
       await test.step('THEN the docs row is checked, so docs was not saved as hidden', async (): Promise<void> =>
-        graphControls.expectRowChecked('docs', true));
+        graphList.expectRowChecked('docs', true));
     }
   );
 
   test(
     'GIVEN a row unchecked and an edited graph sent at once, the new graph is built with that row still unchecked',
     { annotation: RF3 },
-    async ({ graphCamera, graphControls, graphHost, graphPage }): Promise<void> => {
+    async ({ graphCamera, graphHost, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
-      await test.step('AND the web row is unchecked', async (): Promise<void> => graphControls.toggleRow('web'));
+      await test.step('AND the web row is unchecked', async (): Promise<void> => graphList.toggleRow('web'));
 
       await test.step('AND the edited graph is sent with no wait', async (): Promise<void> =>
         graphHost.sendState(CONTROLS_EDITED_STUB));
 
-      await test.step('THEN the web row is unchecked', async (): Promise<void> => graphControls.expectRowChecked('web', false));
+      await test.step('THEN the web row is unchecked', async (): Promise<void> => graphList.expectRowChecked('web', false));
 
       await test.step('AND every edited package but web is visible', async (): Promise<void> =>
         graphCamera.expectVisible(EDITED_BUT_WEB));
@@ -213,16 +213,16 @@ test.describe('FEATURE: graph controls saved state', () => {
   test(
     'GIVEN saved filters naming Object members, or a focus saved as hidden, they restore as plain names and the focus is unhidden',
     { annotation: RF4 },
-    async ({ graphControls, graphHost, graphLook, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphHost, graphList, graphLook, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened with filters named __proto__ and constructor', async (): Promise<void> =>
         graphPage.open({ savedState: PROTO_SAVED }));
 
       await test.step('AND the proto graph is sent', async (): Promise<void> => graphHost.sendState(PROTO_CONTROLS_STUB));
 
       await test.step('THEN the __proto__ row is unchecked', async (): Promise<void> =>
-        graphControls.expectRowChecked('__proto__', false));
+        graphList.expectRowChecked('__proto__', false));
 
-      await test.step('AND the constructor row is locked', async (): Promise<void> => graphControls.expectRowLocked('constructor'));
+      await test.step('AND the constructor row is locked', async (): Promise<void> => graphList.expectRowLocked('constructor'));
 
       await test.step('AND nothing is selected, as __proto__ is not visible', async (): Promise<void> =>
         graphProbe.expectSelected(null));
@@ -234,12 +234,12 @@ test.describe('FEATURE: graph controls saved state', () => {
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
-      await test.step('THEN the ui row is locked', async (): Promise<void> => graphControls.expectRowLocked('ui'));
+      await test.step('THEN the ui row is locked', async (): Promise<void> => graphList.expectRowLocked('ui'));
 
       await test.step('AND nothing is hidden', async (): Promise<void> =>
         graphLook.expectControlsFields({ ...DEFAULT_CONTROLS, focus: 'ui' }));
 
-      await test.step('WHEN ui is focused again, which clears the focus', async (): Promise<void> => graphControls.focusOn('ui'));
+      await test.step('WHEN ui is focused again, which clears the focus', async (): Promise<void> => graphList.focusOn('ui'));
 
       await test.step('THEN the ui row is shown and nothing is hidden or focused', async (): Promise<void> =>
         graphLook.expectControlsFields(DEFAULT_CONTROLS));

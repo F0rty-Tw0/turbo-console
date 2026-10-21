@@ -6,6 +6,7 @@ import { GraphControlsKeys } from './pages/graph-controls-keys.po.ts';
 import { GraphControlsPage } from './pages/graph-controls.po.ts';
 import { GraphHost } from './pages/graph-host.po.ts';
 import { GraphLook } from './pages/graph-look.po.ts';
+import { GraphPackageList } from './pages/graph-package-list.po.ts';
 import { GraphProbePage } from './pages/graph-probe.po.ts';
 import { GraphSamples } from './pages/graph-samples.po.ts';
 import { GraphPage } from './pages/graph.po.ts';
@@ -17,6 +18,7 @@ type GraphFixtures = {
   readonly graphControls: GraphControlsPage;
   readonly graphHost: GraphHost;
   readonly graphKeys: GraphControlsKeys;
+  readonly graphList: GraphPackageList;
   readonly graphLook: GraphLook;
   readonly graphPage: GraphPage;
   readonly graphProbe: GraphProbePage;
@@ -39,6 +41,9 @@ export const test = base.extend<GraphFixtures>({
   },
   graphKeys: async ({ page }, use): Promise<void> => {
     await use(new GraphControlsKeys(page));
+  },
+  graphList: async ({ page }, use): Promise<void> => {
+    await use(new GraphPackageList(page));
   },
   graphLook: async ({ page }, use): Promise<void> => {
     await use(new GraphLook(page));
