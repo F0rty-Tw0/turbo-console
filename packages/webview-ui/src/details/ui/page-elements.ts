@@ -44,6 +44,17 @@ export const iconButton = (iconId: string, label: string, onClick: Listener): HT
   return button;
 };
 
+/** The Run/Stop button: a text button holding the icon, then the visible text; `label` is its accessible name and tooltip. */
+export const runButton = (iconId: string, text: string, label: string, onClick: Listener): HTMLButtonElement => {
+  const button = iconButton(iconId, label, onClick);
+  const caption = textElement('span', '', text);
+
+  button.className = 'text-button run-button';
+  button.append(caption);
+
+  return button;
+};
+
 export const textButton = (label: string, onClick: Listener): HTMLButtonElement => {
   const button = textElement('button', 'text-button', label);
 

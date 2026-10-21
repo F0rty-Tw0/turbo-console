@@ -23,6 +23,13 @@ export const RUNNING_RUN_VIEW_STUB: RunView = {
   isSpinning: true
 };
 
+export const PASSED_RUN_VIEW_STUB: RunView = {
+  ...NOT_IDLE_RUN_VIEW,
+  iconId: 'pass',
+  colorVar: '--vscode-testing-iconPassed',
+  text: 'passed'
+};
+
 export const STOPPED_RUN_VIEW_STUB: RunView = {
   ...NOT_IDLE_RUN_VIEW,
   iconId: 'debug-stop',

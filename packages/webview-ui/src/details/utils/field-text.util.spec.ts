@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { cacheText, definitionText, hiddenScriptsText, listText, noCardsText } from './field-text.util.ts';
+import {
+  cacheValue,
+  definitionValue,
+  descriptionText,
+  hiddenScriptsText,
+  listValue,
+  noCardsText,
+  plainValue
+} from './field-text.util.ts';
 
 const COMMAND = 'vite build';
 
@@ -11,67 +19,102 @@ const HIDDEN_NONE = { scriptsShown: false, hiddenScriptCount: 0 };
 const SHOWN_WITH_COUNT = { scriptsShown: true, hiddenScriptCount: 3 };
 
 describe('FEATURE: field texts', () => {
-  describe('GIVEN an empty list', () => {
-    it('WHEN it is the inputs field THEN it reads as turbo default inputs', () => {
-      expect(listText([], 'inputs')).toBe('default (all files in the package)');
+  describe('GIVEN an empty list value', () => {
+    it('WHEN it is the inputs field THEN it is an empty value reading turbo default inputs', () => {
+      expect(listValue([], 'inputs')).toStrictEqual({ kind: 'empty', text: 'default (all files in the package)' });
     });
 
-    it('WHEN it is any other field THEN it reads "none"', () => {
-      expect(listText([], 'other')).toBe('none');
-    });
-  });
-
-  describe('GIVEN a list with values', () => {
-    it('WHEN it is rendered THEN the values join with a comma', () => {
-      expect(listText(['a', 'b'], 'other')).toBe('a, b');
-    });
-
-    it('WHEN it is the inputs field THEN the values join with a comma', () => {
-      expect(listText(['src/**'], 'inputs')).toBe('src/**');
+    it('WHEN it is any other field THEN it is an empty value reading "none"', () => {
+      expect(listValue([], 'other')).toStrictEqual({ kind: 'empty', text: 'none' });
     });
   });
 
-  describe('GIVEN a known cache status', () => {
+  describe('GIVEN a list value with entries', () => {
+    it('WHEN it is any other field THEN the entries stay separate', () => {
+      expect(listValue(['a', 'b'], 'other')).toStrictEqual({ kind: 'list', entries: ['a', 'b'] });
+    });
+
+    it('WHEN it is the inputs field THEN the entries stay separate', () => {
+      expect(listValue(['src/**'], 'inputs')).toStrictEqual({ kind: 'list', entries: ['src/**'] });
+    });
+  });
+
+  describe('GIVEN a known cache status value', () => {
     it.each([
       ['HIT', 'cached: will replay'],
       ['MISS', 'not cached: will run'],
       ['deferred', 'unknown: decided at run time']
-    ] as const)('WHEN the status is %s THEN it reads "%s"', (status, text) => {
-      expect(cacheText(status, 'ready')).toBe(text);
+    ] as const)('WHEN the status is %s THEN it is a plain value reading "%s"', (status, text) => {
+      expect(cacheValue(status, 'ready')).toStrictEqual({ kind: 'plain', text, isCode: false });
     });
   });
 
-  describe('GIVEN no cache status', () => {
-    it('WHEN the dry run is loading THEN it reads "loading…"', () => {
-      expect(cacheText(null, 'loading')).toBe('loading…');
+  describe('GIVEN no cache status value', () => {
+    it('WHEN the dry run is loading THEN it is an empty value reading "loading…"', () => {
+      expect(cacheValue(null, 'loading')).toStrictEqual({ kind: 'empty', text: 'loading…' });
     });
 
-    it('WHEN the dry run failed THEN it reads "—"', () => {
-      expect(cacheText(null, 'failed')).toBe('—');
+    it('WHEN the dry run failed THEN it is an empty value reading "—"', () => {
+      expect(cacheValue(null, 'failed')).toStrictEqual({ kind: 'empty', text: '—' });
     });
 
-    it('WHEN the dry run is ready THEN it reads "—"', () => {
-      expect(cacheText(null, 'ready')).toBe('—');
-    });
-  });
-
-  describe('GIVEN a task with no command and no definition', () => {
-    it('WHEN its definition text is read during a dry run THEN it says the task runs its dependencies', () => {
-      expect(definitionText(null, 'loading')).toBe('No command (runs its dependencies)');
+    it('WHEN the dry run is ready THEN it is an empty value reading "—"', () => {
+      expect(cacheValue(null, 'ready')).toStrictEqual({ kind: 'empty', text: '—' });
     });
   });
 
-  describe('GIVEN a task with a command and no definition', () => {
-    it('WHEN the dry run is loading THEN it reads "loading…"', () => {
-      expect(definitionText(COMMAND, 'loading')).toBe('loading…');
+  describe('GIVEN a task with no command and no definition value', () => {
+    it.each(['loading', 'ready'] as const)(
+      'WHEN the dry run is %s THEN it is a plain value saying the task runs its dependencies',
+      (phase) => {
+        expect(definitionValue(null, phase)).toStrictEqual({
+          kind: 'plain',
+          text: 'No command (runs its dependencies)',
+          isCode: false
+        });
+      }
+    );
+  });
+
+  describe('GIVEN a task with a command and no definition value', () => {
+    it('WHEN the dry run is loading THEN it is an empty value reading "loading…"', () => {
+      expect(definitionValue(COMMAND, 'loading')).toStrictEqual({ kind: 'empty', text: 'loading…' });
     });
 
-    it('WHEN the dry run failed THEN it reads "—"', () => {
-      expect(definitionText(COMMAND, 'failed')).toBe('—');
+    it('WHEN the dry run failed THEN it is an empty value reading "—"', () => {
+      expect(definitionValue(COMMAND, 'failed')).toStrictEqual({ kind: 'empty', text: '—' });
     });
 
-    it('WHEN the dry run is ready THEN it reads "—"', () => {
-      expect(definitionText(COMMAND, 'ready')).toBe('—');
+    it('WHEN the dry run is ready THEN it is an empty value reading "—"', () => {
+      expect(definitionValue(COMMAND, 'ready')).toStrictEqual({ kind: 'empty', text: '—' });
+    });
+  });
+
+  describe('GIVEN a plain value', () => {
+    it('WHEN the text is null THEN it is an empty value reading "none"', () => {
+      expect(plainValue(null, true)).toStrictEqual({ kind: 'empty', text: 'none' });
+    });
+
+    it('WHEN the text is a multi-line command THEN it is a plain code value with the text verbatim', () => {
+      expect(plainValue('echo a\nb', true)).toStrictEqual({ kind: 'plain', text: 'echo a\nb', isCode: true });
+    });
+  });
+
+  describe('GIVEN a description', () => {
+    it('WHEN it is null THEN there is no text', () => {
+      expect(descriptionText(null)).toBeNull();
+    });
+
+    it('WHEN it is empty THEN there is no text', () => {
+      expect(descriptionText('')).toBeNull();
+    });
+
+    it('WHEN it is only whitespace THEN there is no text', () => {
+      expect(descriptionText(' \n\t ')).toBeNull();
+    });
+
+    it('WHEN it has words THEN the text is the description verbatim', () => {
+      expect(descriptionText(' Builds the app ')).toBe(' Builds the app ');
     });
   });
 

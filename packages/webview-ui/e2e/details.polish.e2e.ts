@@ -1,14 +1,15 @@
 import { expect, test } from './details.fixture.ts';
+import { CONTINUOUS_CHIP, SCRIPT_TERMS } from './test/common/details.const.ts';
 import {
   MISSING_PACKAGE_STUB,
   PACKAGE_DETAILS_STUB,
+  PASSED_RUN_VIEW_STUB,
   RUNNING_RUN_VIEW_STUB,
   RUN_VIEW_STUB,
   STOPPED_RUN_VIEW_STUB,
   TASK_CARD_STUB
 } from './test/stubs/details-state.stub.ts';
 import type { CacheStatus, PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
-import type { FieldRow } from '../src/details/common/details-page.type.ts';
 
 const AC1 = { description: 'AC1', type: 'requirement' };
 const AC2 = { description: 'AC2', type: 'requirement' };
@@ -16,13 +17,11 @@ const AC4 = { description: 'AC4', type: 'requirement' };
 const AC7 = { description: 'AC7', type: 'requirement' };
 const AC9 = { description: 'AC9', type: 'requirement' };
 
-const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
-
 const RUNNING_FOR_59S: RunView = { ...RUNNING_RUN_VIEW_STUB, elapsedMs: 59_000 };
 
 const CONTINUOUS: RunView = { ...RUNNING_RUN_VIEW_STUB, iconId: 'pulse', text: 'continuous', elapsedMs: 5000, isSpinning: false };
 
-const PASSED_HIT: RunView = { ...NOT_IDLE, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: '3.2s · cached' };
+const PASSED_HIT: RunView = { ...PASSED_RUN_VIEW_STUB, text: '3.2s · cached' };
 
 const RUNNING_CARD: TaskCard = { ...TASK_CARD_STUB, run: RUNNING_RUN_VIEW_STUB };
 
@@ -56,33 +55,21 @@ const MIXED_RUNNING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [T
 
 const EMPTY_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [] };
 
-const SCRIPT_ROWS: FieldRow[] = [
-  ['Command', 'pnpm run build'],
-  ['Script', 'tsc -b'],
-  ['Description', 'Builds the web app'],
-  ['Dependents', 'docs#build']
-];
+const IDLE_CONTINUOUS_RUN: RunView = { ...RUN_VIEW_STUB, iconId: 'server-process', text: 'continuous' };
+
+const IDLE_CONTINUOUS_CARD: TaskCard = { ...CONTINUOUS_CARD, run: IDLE_CONTINUOUS_RUN };
+
+const IDLE_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_STUB, IDLE_CONTINUOUS_CARD] };
+
+const PASSED_VAR = '--vscode-testing-iconPassed';
+
+const RUNNING_VAR = '--vscode-progressBar-background';
 
 const CACHE_CASES: [CacheStatus, string][] = [
   ['HIT', 'cached: will replay'],
   ['MISS', 'not cached: will run'],
   ['deferred', 'unknown: decided at run time']
 ];
-
-const cacheRows = (cacheText: string): FieldRow[] => {
-  const rows: FieldRow[] = [
-    ['Command', 'tsc -b'],
-    ['Description', 'Builds the web app'],
-    ['Cache', cacheText],
-    ['Inputs', 'src/**'],
-    ['Outputs', 'dist/**'],
-    ['Depends on', '^build'],
-    ['Env', 'API_URL'],
-    ['Dependents', 'docs#build']
-  ];
-
-  return rows;
-};
 
 test.describe('FEATURE: package details page, run clock and task kinds', () => {
   test(
@@ -173,27 +160,27 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
       await test.step('AND the plain running icon spins', async (): Promise<void> =>
         plain.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', ''));
 
-      await test.step('AND runs until stopped follows the badges', async (): Promise<void> =>
-        continuous.expectBadgeRow(['Cacheable', 'Continuous', 'runs until stopped']));
+      await test.step('AND the continuous card has the one Continuous chip', async (): Promise<void> =>
+        continuous.expectChips([CONTINUOUS_CHIP]));
 
-      await test.step('AND the plain card has no such text', async (): Promise<void> =>
-        plain.expectBadgeRow(['Cacheable', 'Continuous']));
+      await test.step('AND the plain card, whose dry run says persistent, has the same chip', async (): Promise<void> =>
+        plain.expectChips([CONTINUOUS_CHIP]));
     }
   );
 
   test(
-    'GIVEN a continuous card and a loading dry run, runs until stopped shows alone',
+    'GIVEN a continuous card and a loading dry run, the Continuous chip shows alone',
     { annotation: AC2 },
     async ({ detailsPage }): Promise<void> => {
       await test.step('WHEN the page shows the loading state', async (): Promise<void> => detailsPage.open(CONTINUOUS_LOADING_STATE));
 
-      await test.step('THEN the badge row holds only runs until stopped', async (): Promise<void> =>
-        detailsPage.card('dev').expectBadgeRow(['runs until stopped']));
+      await test.step('THEN the chips hold only the Continuous chip', async (): Promise<void> =>
+        detailsPage.card('dev').expectChips([CONTINUOUS_CHIP]));
     }
   );
 
   test(
-    'GIVEN an idle script card, it offers Run and Copy, a blank status and its script fields',
+    'GIVEN an idle script card, it offers Run and Copy, a blank status and its script facts',
     { annotation: AC9 },
     async ({ detailsPage }): Promise<void> => {
       const card = detailsPage.card('build');
@@ -208,7 +195,13 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('AND a blank status line', async (): Promise<void> => card.expectBlankStatus());
 
-      await test.step('AND the Command and Script fields', async (): Promise<void> => card.expectFields(SCRIPT_ROWS));
+      await test.step('AND the run command in its block', async (): Promise<void> =>
+        expect(card.commandBlock('Run command')).toHaveText('pnpm run build'));
+
+      await test.step('AND the Script and Dependents facts', async (): Promise<void> => card.expectFields(SCRIPT_TERMS));
+
+      await test.step('AND the Script fact is the body as code', async (): Promise<void> =>
+        card.expectFact('Script', 'code', 'tsc -b'));
 
       await test.step('WHEN its run starts', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
 
@@ -286,9 +279,100 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
     }
   );
 
+  test(
+    'GIVEN an idle turbo card and an idle continuous card, both show a blank status',
+    { annotation: AC1 },
+    async ({ detailsPage }): Promise<void> => {
+      await test.step('WHEN the page shows both idle cards', async (): Promise<void> => detailsPage.open(IDLE_STATE));
+
+      await test.step('THEN the turbo card status is blank', async (): Promise<void> => detailsPage.card('build').expectBlankStatus());
+
+      await test.step('AND the continuous card status is blank', async (): Promise<void> =>
+        detailsPage.card('dev').expectBlankStatus());
+    }
+  );
+
+  test(
+    'GIVEN a card whose run changes, its status color follows the run',
+    { annotation: AC1 },
+    async ({ detailsPage }): Promise<void> => {
+      const card = detailsPage.card('build');
+
+      await test.step('WHEN the page shows the idle card', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
+
+      await test.step('THEN the card has no status color', async (): Promise<void> => card.expectStatusColor(null));
+
+      await test.step('WHEN the task runs', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
+
+      await test.step('THEN the status color is the progress bar variable', async (): Promise<void> =>
+        card.expectStatusColor(RUNNING_VAR));
+
+      await test.step('WHEN the task passes', async (): Promise<void> => detailsPage.sendRunState('web#build', PASSED_HIT));
+
+      await test.step('THEN the status color is the passed variable', async (): Promise<void> => card.expectStatusColor(PASSED_VAR));
+
+      await test.step('WHEN the run goes back to idle', async (): Promise<void> =>
+        detailsPage.sendRunState('web#build', RUN_VIEW_STUB));
+
+      await test.step('THEN the card has no status color again', async (): Promise<void> => card.expectStatusColor(null));
+    }
+  );
+
+  test(
+    'GIVEN a Run button, it reads Run, and Stop reads Stop once the task runs',
+    { annotation: AC1 },
+    async ({ detailsPage }): Promise<void> => {
+      const card = detailsPage.card('build');
+
+      await test.step('WHEN the page shows the idle card', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
+
+      await test.step('THEN Run build shows the text Run', async (): Promise<void> => card.expectButtonText('Run build', 'Run'));
+
+      await test.step('WHEN the task runs', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
+
+      await test.step('THEN Stop build shows the text Stop', async (): Promise<void> => card.expectButtonText('Stop build', 'Stop'));
+    }
+  );
+
+  test(
+    'GIVEN a running card, its run text carries the clock text as its tooltip',
+    { annotation: AC1 },
+    async ({ detailsPage, pageClock }): Promise<void> => {
+      const card = detailsPage.card('build');
+
+      await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+      await test.step('AND the page shows a running card', async (): Promise<void> => detailsPage.open(RUNNING_STATE));
+
+      await test.step('AND a second passes', async (): Promise<void> => pageClock.tick(1000));
+
+      await test.step('THEN the tooltip equals the text running · 1s', async (): Promise<void> =>
+        card.expectRunTextTooltip('running · 1s'));
+    }
+  );
+
+  test(
+    'GIVEN a running card, a full state keeps its status color and tooltip',
+    { annotation: AC1 },
+    async ({ detailsPage, pageClock }): Promise<void> => {
+      const card = detailsPage.card('build');
+
+      await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
+
+      await test.step('AND the page shows a running card', async (): Promise<void> => detailsPage.open(RUNNING_STATE));
+
+      await test.step('AND the host posts the whole state again', async (): Promise<void> => detailsPage.sendState(RUNNING_STATE));
+
+      await test.step('THEN the status color is still the progress bar variable', async (): Promise<void> =>
+        card.expectStatusColor(RUNNING_VAR));
+
+      await test.step('AND the run text still has its tooltip', async (): Promise<void> => card.expectRunTextTooltip('running · 0s'));
+    }
+  );
+
   for (const [cacheStatus, cacheText] of CACHE_CASES) {
     test(
-      `GIVEN a dry-run cache status ${cacheStatus}, the Cache field reads ${cacheText}`,
+      `GIVEN a dry-run cache status ${cacheStatus}, the Cache fact reads ${cacheText}`,
       { annotation: AC7 },
       async ({ detailsPage }): Promise<void> => {
         const task: TaskCard = { ...TASK_CARD_STUB, cacheStatus };
@@ -296,8 +380,8 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
         await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
 
-        await test.step('THEN the Cache field reads the new text', async (): Promise<void> =>
-          detailsPage.card('build').expectFields(cacheRows(cacheText)));
+        await test.step('THEN the Cache fact reads the new text', async (): Promise<void> =>
+          detailsPage.card('build').expectFact('Cache', 'plain', cacheText));
       }
     );
   }

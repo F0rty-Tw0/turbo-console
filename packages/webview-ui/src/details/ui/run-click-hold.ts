@@ -30,7 +30,7 @@ export const holdPointerClicks = (): void => {
  * Ignores every click on the Run/Stop button `button` swapped in, keyboard ones included, for `RUN_SWAP_HOLD_MS`: a
  * click meant for the old button would relaunch a stopped run or stop a fresh one. Other Run/Stop buttons stay live: a
  * swap changes only its own card's status and button, and the resize that can come with a run's end holds them itself.
- * A swap can change its card's height, but never by enough to put another card's button under the old spot.
+ * A swap never changes its card's height: the status line has a fixed height and Run/Stop share one box (polish spec 3 §4.3).
  */
 export const holdSwappedButton = (button: HTMLButtonElement): void => {
   fullHolds.set(button, holdEnd());

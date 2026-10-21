@@ -51,10 +51,12 @@ const cardSection = (title: string, cardElements: HTMLElement[]): HTMLElement[] 
   if (cardElements.length === 0) return [];
 
   const section = textElement('section', 'card-section', '');
-  const heading = textElement('h2', 'section-title', `${title} (${cardElements.length})`);
+  const heading = textElement('h2', 'section-title', `${title} `);
+  const count = textElement('span', 'section-count', `(${cardElements.length})`);
   const cardList = textElement('div', 'cards', '');
   const sections = [section];
 
+  heading.append(count);
   cardList.append(...cardElements);
   section.append(heading, cardList);
 

@@ -61,12 +61,50 @@ const HIDDEN_SCRIPTS_ENDED_STATE: PackageDetails = { ...HIDDEN_SCRIPTS_STATE, ta
 
 const TWO_CARDS_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, packageName: 'b', tasks: [turboCard('one'), turboCard('two')] };
 
+/** Two turbo cards and two script cards: two rows of two at 1100 px, a stack of four at 320 px. */
+const FOUR_CARDS_STATE: PackageDetails = {
+  ...PACKAGE_DETAILS_STUB,
+  packageName: 'b',
+  tasks: [turboCard('one'), turboCard('two'), scriptCard('three'), scriptCard('four')]
+};
+
+/** An ended run whose status text, 101 characters, overflows the status line at both swap widths. */
+const LONG_STOPPED_RUN_VIEW: RunView = {
+  ...STOPPED_RUN_VIEW_STUB,
+  text: 'stopped · 3.0s · a status text long enough to overflow the status line of a card at either swap width'
+};
+
+/** Two columns of cards, and the narrowest panel. */
+const SWAP_PAGE_WIDTHS = [1100, 320];
+
+const SWAP_PAGE_HEIGHT = 800;
+
+/**
+ * Two columns of cards: two 26em (416 px) columns, their 12 px gap and the 32 px body padding need 876 px. The scripts
+ * `a b | check` and `fmt | long` then share rows, so Run check sits one row straight above Stop long.
+ */
 const PAGE_WIDTH = 1080;
 
-const PAGE_HEIGHT = 500;
+/**
+ * `SCROLLING_STATE` at `PAGE_WIDTH` is 916 px tall, and a script row is 197 px (a 185 px card plus the 12 px gap), all
+ * measured in the harness on Linux. At 916 − 197 px the page scrolls by one row; once the panel closes it fits, so its
+ * content slides down that row and puts the centre of Run check exactly where the centre of Stop long was.
+ */
+const PAGE_HEIGHT = 719;
 
-/** At this height, the title's scroll into view after the full state puts Run lint where Stop long was. */
-const HIDDEN_SCRIPTS_PAGE_HEIGHT = 545;
+/**
+ * One column of cards, under the 876 px of `PAGE_WIDTH`: in two, the script `long` sits alone in the left column and
+ * Run lint in the right one, so no scroll could slide Run lint under Stop long.
+ */
+const HIDDEN_SCRIPTS_PAGE_WIDTH = 800;
+
+/**
+ * At this height, the title's scroll into view after the full state puts Run lint where Stop long was. Measured in the
+ * harness on Linux at `HIDDEN_SCRIPTS_PAGE_WIDTH`: `HIDDEN_SCRIPTS_STATE` is 1655 px tall and the centre of Stop long
+ * sits 182 px above its end, so scrolled to the bottom it shows at 672 − 182 = 490 px. The full state scrolls the page
+ * back to its top, where the centre of Run lint sits at 490 px.
+ */
+const HIDDEN_SCRIPTS_PAGE_HEIGHT = 672;
 
 /** The terminal panel's height in the repro: VS Code closes it with the run's last terminal, and the page grows by it. */
 const PANEL_HEIGHT = 296;
@@ -183,7 +221,7 @@ test.describe('FEATURE: a layout shift holds pointer clicks on every Run/Stop bu
       await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
 
       await test.step('AND is short enough to scroll', async (): Promise<void> =>
-        pageViewport.resize(PAGE_WIDTH, HIDDEN_SCRIPTS_PAGE_HEIGHT));
+        pageViewport.resize(HIDDEN_SCRIPTS_PAGE_WIDTH, HIDDEN_SCRIPTS_PAGE_HEIGHT));
 
       await test.step('AND shows package b with scripts hidden and long running', async (): Promise<void> =>
         detailsPage.open(HIDDEN_SCRIPTS_STATE));
@@ -218,7 +256,7 @@ test.describe('FEATURE: a layout shift holds pointer clicks on every Run/Stop bu
       await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
 
       await test.step('AND is short enough to scroll', async (): Promise<void> =>
-        pageViewport.resize(PAGE_WIDTH, HIDDEN_SCRIPTS_PAGE_HEIGHT));
+        pageViewport.resize(HIDDEN_SCRIPTS_PAGE_WIDTH, HIDDEN_SCRIPTS_PAGE_HEIGHT));
 
       await test.step('AND shows package b with scripts hidden and long running', async (): Promise<void> =>
         detailsPage.open(HIDDEN_SCRIPTS_STATE));
@@ -280,4 +318,42 @@ test.describe('FEATURE: a layout shift holds pointer clicks on every Run/Stop bu
         detailsPage.expectPosted([{ type: 'ready' }, { type: 'run', taskId: 'b#two' }]));
     }
   );
+
+  for (const width of SWAP_PAGE_WIDTHS) {
+    test(
+      `GIVEN a long status text at ${String(width)} px, a Run → Stop → Run swap changes no card’s height or position`,
+      { annotation: AC6 },
+      async ({ detailsPage, pageLayout, pageViewport }): Promise<void> => {
+        await test.step('WHEN the page has the width under test', async (): Promise<void> =>
+          pageViewport.resize(width, SWAP_PAGE_HEIGHT));
+
+        await test.step('AND shows the cards one to four', async (): Promise<void> => detailsPage.open(FOUR_CARDS_STATE));
+
+        await test.step('AND every card’s box is noted', async (): Promise<void> => pageLayout.rememberCardRects());
+
+        await test.step('AND one starts running', async (): Promise<void> => detailsPage.sendRunState('b#one', RUNNING_RUN_VIEW_STUB));
+
+        await test.step('THEN one shows Stop', async (): Promise<void> =>
+          expect(detailsPage.card('one').runButton).toHaveAttribute('aria-label', 'Stop one'));
+
+        await test.step('AND every card keeps its box', async (): Promise<void> => pageLayout.expectCardRectsKept());
+
+        await test.step('WHEN one ends stopped with a long status text', async (): Promise<void> =>
+          detailsPage.sendRunState('b#one', LONG_STOPPED_RUN_VIEW));
+
+        await test.step('THEN one shows the long status text', async (): Promise<void> =>
+          detailsPage.card('one').expectRunTextTooltip(LONG_STOPPED_RUN_VIEW.text));
+
+        await test.step('AND the run text is cut off instead of wrapping', async (): Promise<void> =>
+          pageLayout.card('one').expectRunTextTruncated());
+
+        await test.step('AND the status stays one line tall', async (): Promise<void> => pageLayout.card('one').expectStatusOneLine());
+
+        await test.step('AND one shows Run', async (): Promise<void> =>
+          expect(detailsPage.card('one').runButton).toHaveAttribute('aria-label', 'Run one'));
+
+        await test.step('AND every card still keeps its box', async (): Promise<void> => pageLayout.expectCardRectsKept());
+      }
+    );
+  }
 });
