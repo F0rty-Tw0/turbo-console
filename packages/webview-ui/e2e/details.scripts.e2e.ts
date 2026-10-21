@@ -1,4 +1,5 @@
 import { expect, test } from './details.fixture.ts';
+import { SCRIPT_TERMS } from './test/common/details.const.ts';
 import {
   HOSTILE_NAME_STUB,
   PACKAGE_DETAILS_STUB,
@@ -7,7 +8,6 @@ import {
   TASK_CARD_STUB
 } from './test/stubs/details-state.stub.ts';
 import type { PackageDetails, TaskCard } from '../src/bridge/common/details-state.type.ts';
-import type { FieldRow } from '../src/details/common/details-page.type.ts';
 import { RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC6 = { description: 'AC6', type: 'requirement' };
@@ -73,30 +73,16 @@ const HOSTILE_SCRIPT_CARD: TaskCard = {
 
 const HOSTILE_SCRIPT_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [HOSTILE_SCRIPT_CARD] };
 
-const HOSTILE_SCRIPT_ROWS: FieldRow[] = [
-  ['Command', 'pnpm run lint'],
-  ['Script', HOSTILE_NAME_STUB],
-  ['Description', 'none'],
-  ['Dependents', 'none']
-];
+const HOSTILE_REFUSED_CARD: TaskCard = { ...HOSTILE_SCRIPT_CARD, runCommand: null };
+
+const HOSTILE_REFUSED_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [HOSTILE_REFUSED_CARD] };
 
 const RUNNING_CARD_CASES: [string, TaskCard][] = [
   ['turbo', TURBO_RUNNING_CARD],
   ['script', KEPT_SCRIPT_CARD]
 ];
 
-const SCRIPT_ROWS: FieldRow[] = [
-  ['Command', 'pnpm run lint'],
-  ['Script', 'eslint .'],
-  ['Description', 'none'],
-  ['Dependents', 'none']
-];
-
-const REFUSED_ROWS: FieldRow[] = [
-  ['Script', 'eslint .'],
-  ['Description', 'none'],
-  ['Dependents', 'none']
-];
+const REFUSED_TERMS = ['Dependents'];
 
 test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
   test(
@@ -109,6 +95,9 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
       await test.step('THEN the turbo section comes first, then the scripts section', async (): Promise<void> =>
         expect(detailsPage.sectionTitles).toHaveText(['Turbo tasks (2)', 'Scripts (1)']));
 
+      await test.step('AND each count sits in its own span', async (): Promise<void> =>
+        expect(detailsPage.sectionCounts).toHaveText(['(2)', '(1)']));
+
       await test.step('AND the turbo cards come before the script card', async (): Promise<void> =>
         expect(detailsPage.cardTitles).toHaveText(['build', 'test', 'lint']));
     }
@@ -120,8 +109,20 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
     async ({ detailsPage }): Promise<void> => {
       await test.step('WHEN the page shows the script card', async (): Promise<void> => detailsPage.open(MIXED_STATE));
 
-      await test.step('THEN its fields are Command, Script, Description and Dependents', async (): Promise<void> =>
-        detailsPage.card('lint').expectFields(SCRIPT_ROWS));
+      await test.step('THEN its run command shows in the Run command block', async (): Promise<void> =>
+        expect(detailsPage.card('lint').commandBlock('Run command')).toHaveText('pnpm run lint'));
+
+      await test.step('AND its facts are Script and Dependents', async (): Promise<void> =>
+        detailsPage.card('lint').expectFields(SCRIPT_TERMS));
+
+      await test.step('AND the Script fact is the body as code', async (): Promise<void> =>
+        detailsPage.card('lint').expectFact('Script', 'code', 'eslint .'));
+
+      await test.step('AND the empty Dependents fact is quiet', async (): Promise<void> =>
+        detailsPage.card('lint').expectFact('Dependents', 'empty', 'none'));
+
+      await test.step('AND it has no description paragraph', async (): Promise<void> =>
+        detailsPage.card('lint').expectDescription(null));
 
       await test.step('AND its idle status is blank', async (): Promise<void> => detailsPage.card('lint').expectBlankStatus());
     }
@@ -253,10 +254,29 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
       await test.step('THEN the card title text is the name', async (): Promise<void> =>
         expect(card.title).toHaveText(HOSTILE_NAME_STUB));
 
-      await test.step('AND the Script field is the body as text', async (): Promise<void> => card.expectFields(HOSTILE_SCRIPT_ROWS));
+      await test.step('AND the Script fact is the body as text', async (): Promise<void> =>
+        card.expectFact('Script', 'code', HOSTILE_NAME_STUB));
 
       await test.step('AND the Copy button label carries the name as text', async (): Promise<void> =>
         expect(card.copyButton).toHaveAttribute('aria-label', `Copy command for ${HOSTILE_NAME_STUB}`));
+
+      await test.step('AND no image element exists', async (): Promise<void> => expect(detailsPage.images).toHaveCount(0));
+
+      await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
+    }
+  );
+
+  test(
+    'GIVEN a script the run flow refuses with a hostile body, the Script block shows it as text',
+    { annotation: AC6 },
+    async ({ detailsPage }): Promise<void> => {
+      const card = detailsPage.card(HOSTILE_NAME_STUB);
+
+      await test.step('WHEN the page shows the refused hostile script card', async (): Promise<void> =>
+        detailsPage.open(HOSTILE_REFUSED_STATE));
+
+      await test.step('THEN the Script block is the body as text', async (): Promise<void> =>
+        expect(card.commandBlock('Script')).toHaveText(HOSTILE_NAME_STUB));
 
       await test.step('AND no image element exists', async (): Promise<void> => expect(detailsPage.images).toHaveCount(0));
 
@@ -273,14 +293,20 @@ test.describe('FEATURE: package details page, turbo tasks and scripts', () => {
   });
 
   test(
-    'GIVEN a script the run flow refuses, its card has no Command field but keeps Run and Copy',
+    'GIVEN a script the run flow refuses, its body is the Script block, with no Run command block and no Script fact, and it keeps Run and Copy',
     { annotation: AC6 },
     async ({ detailsPage }): Promise<void> => {
       const card = detailsPage.card('a b');
 
       await test.step('WHEN the page shows the refused script card', async (): Promise<void> => detailsPage.open(REFUSED_STATE));
 
-      await test.step('THEN its fields start at Script', async (): Promise<void> => card.expectFields(REFUSED_ROWS));
+      await test.step('THEN the body shows in the Script block', async (): Promise<void> =>
+        expect(card.commandBlock('Script')).toHaveText('eslint .'));
+
+      await test.step('AND there is no Run command block', async (): Promise<void> =>
+        expect(card.commandBlock('Run command')).toHaveCount(0));
+
+      await test.step('AND its facts are only Dependents', async (): Promise<void> => card.expectFields(REFUSED_TERMS));
 
       await test.step('AND it offers Run', async (): Promise<void> => expect(card.runButton).toHaveAttribute('aria-label', 'Run a b'));
 

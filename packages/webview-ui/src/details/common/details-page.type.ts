@@ -51,5 +51,13 @@ export type RenderedPage = {
   readonly focusTargets: FocusTargets;
 };
 
-/** The optional `iconId` puts a tool-icon codicon before the value (spec 1c-c §4.6). */
-export type FieldRow = readonly [term: string, value: string, iconId?: string];
+type ListFieldValue = { readonly kind: 'list'; readonly entries: string[] };
+
+type EmptyFieldValue = { readonly kind: 'empty'; readonly text: string };
+
+type PlainFieldValue = { readonly kind: 'plain'; readonly text: string; readonly isCode: boolean };
+
+/** What a field row's value is: separate list entries, a muted placeholder, or one text (code when `isCode`). */
+export type FieldValue = ListFieldValue | EmptyFieldValue | PlainFieldValue;
+
+export type FieldRow = readonly [term: string, value: FieldValue];

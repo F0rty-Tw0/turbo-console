@@ -1,6 +1,5 @@
-import type { TaskDefinition } from '@turbo-console/core';
-
 import { expect, test } from './details.fixture.ts';
+import { CONTINUOUS_CHIP, FULL_TERMS } from './test/common/details.const.ts';
 import {
   HOSTILE_NAME_STUB,
   MISSING_PACKAGE_STUB,
@@ -8,13 +7,11 @@ import {
   PASSED_RUN_VIEW_STUB,
   RUNNING_RUN_VIEW_STUB,
   RUN_VIEW_STUB,
-  TASK_CARD_STUB,
-  TASK_DEFINITION_STUB
+  TASK_CARD_STUB
 } from './test/stubs/details-state.stub.ts';
 import { packageWithTasks, taskNames } from './test/utils/details-state.spec.util.ts';
 import type { WebviewMessage } from '../src/bridge/common/details-message.type.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
-import type { FieldRow } from '../src/details/common/details-page.type.ts';
 import { RUNNING_STATUS_COLOR_VAR, RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC1 = { description: 'AC1', type: 'requirement' };
@@ -39,20 +36,7 @@ const LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loadin
 
 const SHORT_LOADING_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, dryRun: 'loading', tasks: [] };
 
-const FOCUS_KEPT_LABELS = ['Refresh', 'Copy command for build'];
-
-const CACHE_ONLY: TaskDefinition = { ...TASK_DEFINITION_STUB, persistent: false };
-
-const PERSISTENT_ONLY: TaskDefinition = { ...TASK_DEFINITION_STUB, cache: false };
-
-const NO_FLAGS: TaskDefinition = { ...TASK_DEFINITION_STUB, cache: false, persistent: false };
-
-const BADGE_CASES: [string, TaskDefinition | null, string[]][] = [
-  ['only cache set', CACHE_ONLY, ['Cacheable']],
-  ['only persistent set', PERSISTENT_ONLY, ['Continuous']],
-  ['neither flag set', NO_FLAGS, []],
-  ['no definition yet', null, []]
-];
+const FOCUS_KEPT_LABELS = ['Refresh', 'Run build', 'Copy command for build'];
 
 const ALL_ACTIONS_POSTED: WebviewMessage[] = [
   { type: 'ready' },
@@ -62,17 +46,6 @@ const ALL_ACTIONS_POSTED: WebviewMessage[] = [
   { type: 'refresh', scope: 'dryRun' },
   { type: 'openPackageJson' },
   { type: 'showOutput' }
-];
-
-const FULL_FIELDS: FieldRow[] = [
-  ['Command', 'tsc -b'],
-  ['Description', 'Builds the web app'],
-  ['Cache', 'cached: will replay'],
-  ['Inputs', 'src/**'],
-  ['Outputs', 'dist/**'],
-  ['Depends on', '^build'],
-  ['Env', 'API_URL'],
-  ['Dependents', 'docs#build']
 ];
 
 test.describe('FEATURE: package details page', () => {
@@ -86,26 +59,40 @@ test.describe('FEATURE: package details page', () => {
     await test.step('AND every tag renders', async (): Promise<void> =>
       expect(detailsPage.tags).toHaveText(['scope:web', 'type:app']));
 
-    await test.step('AND every card field renders', async (): Promise<void> => detailsPage.card('build').expectFields(FULL_FIELDS));
+    await test.step('AND the facts are Cache to Dependents, with no Command, Tool or Description row', async (): Promise<void> =>
+      detailsPage.card('build').expectFields(FULL_TERMS));
 
-    await test.step('AND both badges render', async (): Promise<void> =>
-      detailsPage.card('build').expectBadges(['Cacheable', 'Continuous']));
+    await test.step('AND the command shows in its labelled block', async (): Promise<void> =>
+      expect(detailsPage.card('build').commandBlock('Command')).toHaveText('tsc -b'));
+
+    await test.step('AND the description shows under the title', async (): Promise<void> =>
+      detailsPage.card('build').expectDescription('Builds the web app'));
+
+    await test.step('AND the Cache fact is a plain value', async (): Promise<void> =>
+      detailsPage.card('build').expectFact('Cache', 'plain', 'cached: will replay'));
+
+    await test.step('AND the Inputs fact is a token', async (): Promise<void> =>
+      detailsPage.card('build').expectFact('Inputs', 'list', ['src/**']));
+
+    await test.step('AND the Outputs fact is a token', async (): Promise<void> =>
+      detailsPage.card('build').expectFact('Outputs', 'list', ['dist/**']));
+
+    await test.step('AND the Depends on fact is a token', async (): Promise<void> =>
+      detailsPage.card('build').expectFact('Depends on', 'list', ['^build']));
+
+    await test.step('AND the Env fact is a token', async (): Promise<void> =>
+      detailsPage.card('build').expectFact('Env', 'list', ['API_URL']));
+
+    await test.step('AND the Dependents fact is a token', async (): Promise<void> =>
+      detailsPage.card('build').expectFact('Dependents', 'list', ['docs#build']));
+
+    await test.step('AND the one chip is Continuous, and Cacheable is not a chip', async (): Promise<void> =>
+      detailsPage.card('build').expectChips([CONTINUOUS_CHIP]));
 
     await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
 
     await test.step('AND no console or page error is logged', (): void => detailsPage.expectNoErrors());
   });
-
-  for (const [given, definition, badges] of BADGE_CASES) {
-    test(`GIVEN a task with ${given}, the card shows badges [${badges.join(', ')}]`, async ({ detailsPage }): Promise<void> => {
-      const task: TaskCard = { ...TASK_CARD_STUB, definition };
-      const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [task] };
-
-      await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
-
-      await test.step('THEN exactly those badges render', async (): Promise<void> => detailsPage.card('build').expectBadges(badges));
-    });
-  }
 
   test(
     'GIVEN a package with a hostile name, the name renders as text',
@@ -284,34 +271,36 @@ test.describe('FEATURE: package details page', () => {
   });
 
   test('GIVEN a dry run in flight, the card reads loading', async ({ detailsPage }): Promise<void> => {
-    const rows: FieldRow[] = [
-      ['Command', 'tsc -b'],
-      ['Description', 'Builds the web app'],
-      ['Definition', 'loading…'],
-      ['Dependents', 'docs#build']
-    ];
+    const card = detailsPage.card('build');
 
     await test.step('WHEN the page shows a loading state', async (): Promise<void> => detailsPage.open(LOADING_STATE));
 
     await test.step('THEN no banner shows', async (): Promise<void> => expect(detailsPage.banners).toHaveCount(0));
 
-    await test.step('AND the definition reads loading…', async (): Promise<void> => detailsPage.card('build').expectFields(rows));
+    await test.step('AND the facts are Definition and Dependents', async (): Promise<void> =>
+      card.expectFields(['Definition', 'Dependents']));
+
+    await test.step('AND the definition reads loading… as an empty value', async (): Promise<void> =>
+      card.expectFact('Definition', 'empty', 'loading…'));
+
+    await test.step('AND the command shows in its block', async (): Promise<void> =>
+      expect(card.commandBlock('Command')).toHaveText('tsc -b'));
   });
 
   test('GIVEN a task with no command, the card says it runs its dependencies', async ({ detailsPage }): Promise<void> => {
-    const card: TaskCard = { ...PENDING_CARD, command: null };
-    const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [card] };
-    const rows: FieldRow[] = [
-      ['Command', 'none'],
-      ['Description', 'Builds the web app'],
-      ['Definition', 'No command (runs its dependencies)'],
-      ['Dependents', 'docs#build']
-    ];
+    const task: TaskCard = { ...PENDING_CARD, command: null };
+    const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [task] };
+    const card = detailsPage.card('build');
 
     await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(state));
 
-    await test.step('THEN the definition says the task runs its dependencies', async (): Promise<void> =>
-      detailsPage.card('build').expectFields(rows));
+    await test.step('THEN the facts are Definition and Dependents', async (): Promise<void> =>
+      card.expectFields(['Definition', 'Dependents']));
+
+    await test.step('AND the definition says the task runs its dependencies, as a plain value', async (): Promise<void> =>
+      card.expectFact('Definition', 'plain', 'No command (runs its dependencies)'));
+
+    await test.step('AND there is no command block', async (): Promise<void> => card.expectNoCommandBlock());
   });
 
   test('GIVEN a kept scroll position and a short loading state first, the full state restores it', async ({

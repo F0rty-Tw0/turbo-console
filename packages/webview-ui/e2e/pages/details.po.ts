@@ -1,10 +1,11 @@
-import type { ConsoleMessage, Locator, Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { PageDiagnostics } from './page-diagnostics.po.ts';
 import { TaskCardSection } from './task-card.po.ts';
 import type { HostMessage, WebviewMessage } from '../../src/bridge/common/details-message.type.ts';
 import type { DetailsState, RunView } from '../../src/bridge/common/details-state.type.ts';
-import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL, VIOLATION_RECORDER } from '../common/shell.const.ts';
+import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
 import { detailsDistMock } from '../test/mocks/details-dist.mock.ts';
 
 const postToPage = (message: HostMessage): void => window.postMessage(message, '*');
@@ -26,18 +27,19 @@ export class DetailsPage {
   public readonly missingNotice: Locator;
   public readonly noCardsNotice: Locator;
   public readonly sectionTitles: Locator;
+  public readonly sectionCounts: Locator;
   public readonly cardTitles: Locator;
   public readonly reloadBanner: Locator;
   public readonly dryRunBanner: Locator;
   public readonly banners: Locator;
 
-  private readonly errors: string[];
+  private readonly diagnostics: PageDiagnostics;
   private readonly page: Page;
   private scrolledY: number;
 
   public constructor(page: Page) {
     this.page = page;
-    this.errors = [];
+    this.diagnostics = new PageDiagnostics(page);
     this.scrolledY = 0;
     this.heading = page.getByRole('heading', { level: 1 });
     this.path = page.locator('.package-path');
@@ -48,6 +50,7 @@ export class DetailsPage {
     this.missingNotice = page.getByText('Package no longer in the workspace');
     this.noCardsNotice = page.locator('.no-tasks');
     this.sectionTitles = page.getByRole('heading', { level: 2 });
+    this.sectionCounts = page.locator('.section-count');
     this.cardTitles = page.getByRole('heading', { level: 3 });
     this.reloadBanner = page.locator('.banner-warning');
     this.dryRunBanner = page.locator('.banner-error');
@@ -58,9 +61,7 @@ export class DetailsPage {
   public async open(state: DetailsState): Promise<void> {
     const message: HostMessage = { type: 'state', state };
 
-    this.page.on('console', (consoleMessage: ConsoleMessage): void => this.recordConsoleError(consoleMessage));
-    this.page.on('pageerror', (error: Error): void => this.recordPageError(error));
-    await this.page.addInitScript({ content: VIOLATION_RECORDER });
+    await this.diagnostics.attach();
     await this.page.addInitScript({ content: HOST_API_STUB });
     await this.page.route(`${SHELL_ORIGIN}/**`, detailsDistMock());
     await this.page.goto(SHELL_URL);
@@ -178,30 +179,16 @@ export class DetailsPage {
   }
 
   public async expectNoViolations(): Promise<void> {
-    const violations = await this.page.evaluate<string[]>('window.__violations');
-
-    expect(violations).toEqual([]);
+    await this.diagnostics.expectNoViolations();
   }
 
   public expectNoErrors(): void {
-    expect(this.errors).toEqual([]);
+    this.diagnostics.expectNoErrors();
   }
 
   private button(label: string): Locator {
     const button = this.page.getByRole('button', { name: label, exact: true });
 
     return button;
-  }
-
-  private recordConsoleError(message: ConsoleMessage): void {
-    const type = message.type();
-
-    if (type !== 'error') return;
-
-    this.errors.push(message.text());
-  }
-
-  private recordPageError(error: Error): void {
-    this.errors.push(error.message);
   }
 }

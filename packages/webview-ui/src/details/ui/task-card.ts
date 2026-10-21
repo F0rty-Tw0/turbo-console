@@ -1,11 +1,10 @@
-import { codicon, iconButton, runButton, textElement } from './page-elements.ts';
+import { chipList, commandBlock } from './card-parts.ts';
+import { iconButton, runButton, textElement } from './page-elements.ts';
 import { fillRun } from './patch-run.ts';
 import type { DryRunPhase, RunView, TaskCard } from '../../bridge/common/details-state.type.ts';
-import type { CardRefs, FieldRow, RenderContext, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
-import { NONE_TEXT, RUNS_UNTIL_STOPPED_TEXT } from '../common/field-text.const.ts';
+import type { CardRefs, FieldRow, FieldValue, RenderContext, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
 import { STOP_ICON_ID } from '../common/run-view.const.ts';
-import { cacheText, definitionText, listText } from '../utils/field-text.util.ts';
-import { safeToolIconId } from '../utils/run-view.util.ts';
+import { cacheValue, definitionValue, descriptionText, listValue, plainValue } from '../utils/field-text.util.ts';
 
 const runButtonFor = (card: TaskCard, context: RenderContext): RunButtonFactory => {
   const { name, taskId } = card;
@@ -27,111 +26,111 @@ const runButtonFor = (card: TaskCard, context: RenderContext): RunButtonFactory 
   };
 };
 
-const definitionRows = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
+const turboFacts = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
   const { definition } = card;
 
   if (definition === null) {
-    const pending = definitionText(card.command, phase);
-    const pendingRows: FieldRow[] = [['Definition', pending]];
+    const definitionFact = definitionValue(card.command, phase);
+    const pendingFacts: FieldRow[] = [['Definition', definitionFact]];
 
-    return pendingRows;
+    return pendingFacts;
   }
 
-  const rows: FieldRow[] = [
-    ['Cache', cacheText(card.cacheStatus, phase)],
-    ['Inputs', listText(definition.inputs, 'inputs')],
-    ['Outputs', listText(definition.outputs, 'other')],
-    ['Depends on', listText(definition.dependsOn, 'other')],
-    ['Env', listText(definition.env, 'other')]
+  const facts: FieldRow[] = [
+    ['Cache', cacheValue(card.cacheStatus, phase)],
+    ['Inputs', listValue(definition.inputs, 'inputs')],
+    ['Outputs', listValue(definition.outputs, 'other')],
+    ['Depends on', listValue(definition.dependsOn, 'other')],
+    ['Env', listValue(definition.env, 'other')]
   ];
 
-  return rows;
+  return facts;
 };
 
-/** The Tool row (spec 1c-c §4.6): the logo only when the host's icon id is one of the tool icon font's, else the name alone. */
-const toolRows = (card: TaskCard): FieldRow[] => {
-  const { tool } = card;
+/** The Script fact only when no block already shows the body: the block shows `runCommand`, or there is no block at all. */
+const scriptFacts = (card: TaskCard): FieldRow[] => {
+  const bodyIsBlock = card.runCommand === null && card.command !== null;
 
-  if (tool === null) return [];
+  if (bodyIsBlock) return [];
 
-  const iconId = safeToolIconId(tool.iconId);
+  const script = plainValue(card.command, true);
+  const facts: FieldRow[] = [['Script', script]];
 
-  if (iconId === null) return [['Tool', tool.title]];
-
-  return [['Tool', tool.title, iconId]];
+  return facts;
 };
 
-const turboRows = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
-  const command = card.command ?? NONE_TEXT;
-  const description = card.description ?? NONE_TEXT;
-  const definition = definitionRows(card, phase);
-  const tool = toolRows(card);
-  const rows: FieldRow[] = [['Command', command], ...tool, ['Description', description], ...definition];
+const kindFacts = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
+  if (card.isTurboTask) return turboFacts(card, phase);
 
-  return rows;
+  return scriptFacts(card);
 };
 
-const runCommandRows = (runCommand: string | null): FieldRow[] => {
-  if (runCommand === null) return [];
+const blockOf = (label: string, text: string | null): HTMLDivElement[] => {
+  if (text === null) return [];
 
-  const rows: FieldRow[] = [['Command', runCommand]];
+  const block = commandBlock(label, text);
+  const blocks = [block];
 
-  return rows;
+  return blocks;
 };
 
-/** A script card shows how it runs, then its body; a script the run flow refuses has no run command (spec 1c-b §4.10). */
-const scriptRows = (card: TaskCard): FieldRow[] => {
-  const runCommand = runCommandRows(card.runCommand);
-  const script = card.command ?? NONE_TEXT;
-  const description = card.description ?? NONE_TEXT;
-  const tool = toolRows(card);
-  const rows: FieldRow[] = [...runCommand, ['Script', script], ...tool, ['Description', description]];
+/** Turbo: the command. Script: how it runs, else its body (polish spec 3 §4.3 item 3). A card with no text has no block. */
+const commandBlocks = (card: TaskCard): HTMLDivElement[] => {
+  if (card.isTurboTask) return blockOf('Command', card.command);
 
-  return rows;
+  if (card.runCommand !== null) return blockOf('Run command', card.runCommand);
+
+  return blockOf('Script', card.command);
 };
 
-const kindRows = (card: TaskCard, phase: DryRunPhase): FieldRow[] => {
-  if (card.isTurboTask) return turboRows(card, phase);
+const descriptions = (card: TaskCard): HTMLParagraphElement[] => {
+  const text = descriptionText(card.description);
 
-  return scriptRows(card);
+  if (text === null) return [];
+
+  const paragraph = textElement('p', 'card-description', text);
+  const paragraphs = [paragraph];
+
+  return paragraphs;
 };
 
-/** A plain `dd`, or with an icon id a `field-icon-value` one holding the codicon, then the value in a span (no text node between). */
-const valueCell = (value: string, iconId: string | undefined): HTMLElement => {
-  if (iconId === undefined) return textElement('dd', '', value);
+const plainClass = (isCode: boolean): string => {
+  if (isCode) return 'code';
 
-  const cell = textElement('dd', 'field-icon-value', '');
+  return '';
+};
 
-  cell.append(codicon(iconId), textElement('span', '', value));
+const valueCell = (value: FieldValue): HTMLElement => {
+  if (value.kind === 'empty') return textElement('dd', 'empty', value.text);
+
+  if (value.kind === 'plain') return textElement('dd', plainClass(value.isCode), value.text);
+
+  const cell = textElement('dd', '', '');
+  const tokens = textElement('ul', 'tokens', '');
+
+  for (const entry of value.entries) {
+    const token = textElement('li', '', '');
+
+    token.append(textElement('code', '', entry));
+    tokens.append(token);
+  }
+
+  cell.append(tokens);
 
   return cell;
 };
 
 const fieldList = (card: TaskCard, phase: DryRunPhase): HTMLDListElement => {
   const list = document.createElement('dl');
-  const cardRows = kindRows(card, phase);
-  const dependents = listText(card.dependents, 'other');
-  const rows: FieldRow[] = [...cardRows, ['Dependents', dependents]];
+  const kind = kindFacts(card, phase);
+  const dependents = listValue(card.dependents, 'other');
+  const rows: FieldRow[] = [...kind, ['Dependents', dependents]];
 
   list.className = 'fields';
 
-  for (const [term, value, iconId] of rows) {
-    list.append(textElement('dt', '', term), valueCell(value, iconId));
+  for (const [term, value] of rows) {
+    list.append(textElement('dt', '', term), valueCell(value));
   }
-
-  return list;
-};
-
-/** The badges come from the dry run; "runs until stopped" from the model, so it shows before and without one. */
-const badges = (card: TaskCard): HTMLUListElement => {
-  const { definition } = card;
-  const list = textElement('ul', 'badges', '');
-
-  if (definition?.cache === true) list.append(textElement('li', 'badge', 'Cacheable'));
-
-  if (definition?.persistent === true) list.append(textElement('li', 'badge', 'Continuous'));
-
-  if (card.persistent) list.append(textElement('li', 'badge-note', RUNS_UNTIL_STOPPED_TEXT));
 
   return list;
 };
@@ -168,12 +167,14 @@ export const taskCard = (card: TaskCard, phase: DryRunPhase, context: RenderCont
   const refs: CardRefs = { taskId, card: element, status, runSlot, runButton: buildRunButton };
 
   const header = cardHeader(card, refs, context);
+  const description = descriptions(card);
+  const blocks = commandBlocks(card);
+  const chips = chipList(card);
   const fields = fieldList(card, phase);
-  const badgeList = badges(card);
   const rendered: RenderedCard = { element, refs };
 
   fillRun(refs, card.run, context.runTexts);
-  element.append(header, badgeList, fields);
+  element.append(header, ...description, ...blocks, ...chips, fields);
 
   return rendered;
 };

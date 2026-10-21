@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 
 import type { HostMessage } from '../../src/bridge/common/details-message.type.ts';
 import type { RunView } from '../../src/bridge/common/details-state.type.ts';
-import type { FieldRow } from '../../src/details/common/details-page.type.ts';
+import { factValueOf } from '../test/utils/card-fact.spec.util.ts';
 
 /** Dispatches the message event and clicks the focused control in one task, so both land in the same frame. */
 const deliverAndClickFocused = (message: HostMessage): void => {
@@ -16,19 +16,37 @@ const deliverAndClickFocused = (message: HostMessage): void => {
   if (focused instanceof HTMLElement) focused.click();
 };
 
-const expectTextOnly = async (value: Locator): Promise<void> => {
-  await expect(value.locator('.codicon')).toHaveCount(0);
-  await expect(value).not.toHaveClass(/field-icon-value/);
+const countNodes = (element: HTMLElement): number => element.childNodes.length;
+
+const firstNodeType = (element: HTMLElement): number => element.childNodes[0]?.nodeType ?? 0;
+
+const TEXT_NODE = 3;
+
+const NOT_EMPTY_OR_CODE = /^(?!.*\b(empty|code)\b)/u;
+
+const expectTextChip = async (chip: Locator, title: string): Promise<void> => {
+  const nodeCount = await chip.evaluate(countNodes);
+  const nodeType = await chip.evaluate(firstNodeType);
+
+  await expect(chip).toHaveAttribute('class', 'chip chip-tool');
+  await expect(chip).toHaveText(title);
+  expect(nodeCount).toBe(1);
+  expect(nodeType).toBe(TEXT_NODE);
 };
 
-const expectLogo = async (value: Locator, iconId: string, title: string): Promise<void> => {
-  const countNodes = (cell: HTMLElement): number => cell.childNodes.length;
-  const nodeCount = await value.evaluate(countNodes);
+const expectLogoChip = async (chip: Locator, iconId: string, title: string): Promise<void> => {
+  const nodeCount = await chip.evaluate(countNodes);
 
-  await expect(value).toHaveClass('field-icon-value');
+  await expect(chip).toHaveAttribute('class', 'chip chip-tool chip-icon');
   expect(nodeCount).toBe(2);
-  await expect(value.locator('> :first-child')).toHaveClass(`codicon codicon-${iconId}`);
-  await expect(value.locator('> span:not(.codicon)')).toHaveText(title);
+  await expect(chip.locator('> :first-child')).toHaveClass(`codicon codicon-${iconId}`);
+  await expect(chip.locator('> span:not(.codicon)')).toHaveText(title);
+};
+
+const expectListFact = async (value: Locator, entries: string[]): Promise<void> => {
+  await expect(value.locator('> ul.tokens > li')).toHaveCount(entries.length);
+  await expect(value.locator('> ul.tokens > li > code')).toHaveText(entries);
+  await expect(value).toHaveText(entries.join(''));
 };
 
 /** One task card, found by its exact title text, never by a selector built from the name. */
@@ -76,40 +94,72 @@ export class TaskCardSection {
 
   /** The value of field `term` as rendered, line breaks included, unlike `toHaveText`, which collapses whitespace. */
   public async expectRenderedField(term: string, renderedText: string): Promise<void> {
-    const value = this.root.getByText(term, { exact: true }).locator('+ dd');
+    const value = factValueOf(this.root, term);
 
     await expect(value).toHaveJSProperty('innerText', renderedText);
   }
 
-  public async expectFields(rows: FieldRow[]): Promise<void> {
-    const terms = rows.map(([term]: FieldRow): string => term);
-    const values = rows.map(([, value]: FieldRow): string => value);
+  /** The labelled command block (`role=group`), found by its exact accessible name. */
+  public commandBlock(label: string): Locator {
+    const block = this.root.getByRole('group', { name: label, exact: true });
 
+    return block;
+  }
+
+  public async expectNoCommandBlock(): Promise<void> {
+    await expect(this.root.locator('.command')).toHaveCount(0);
+  }
+
+  /** The `dt` texts, in order; a value is checked with `expectFact`. */
+  public async expectFields(terms: string[]): Promise<void> {
     await expect(this.root.locator('dt')).toHaveText(terms);
-    await expect(this.root.locator('dd')).toHaveText(values);
+  }
+
+  /** The header's children, in order, by their exact class. */
+  public async expectHeaderOrder(classNames: string[]): Promise<void> {
+    await expect(this.root.locator('header.card-header > *')).toHaveClass(classNames);
+  }
+
+  /** Every chip, in order; no chips means no `ul.chips` at all. */
+  public async expectChips(texts: string[]): Promise<void> {
+    await expect(this.root.locator('.chips > li')).toHaveText(texts);
   }
 
   /**
-   * The `Tool` value: its text; with an icon id, a `field-icon-value` cell of exactly two nodes (the codicon span, then the text span);
-   * without one, no codicon and no `field-icon-value` class.
+   * The Tool chip: with an icon id, `li.chip.chip-tool.chip-icon` of exactly two nodes (the codicon span, then the title span);
+   * without one, `li.chip.chip-tool` of one text node.
    */
-  public async expectToolField(title: string, iconId: string | null): Promise<void> {
-    const value = this.root.locator('dt', { hasText: /^Tool$/ }).locator('+ dd');
+  public async expectToolChip(title: string, iconId: string | null): Promise<void> {
+    const chip = this.root.locator('.chips > li.chip-tool');
 
-    await expect(value).toHaveText(title);
+    if (iconId === null) return expectTextChip(chip, title);
 
-    if (iconId === null) return expectTextOnly(value);
-
-    await expectLogo(value, iconId, title);
+    await expectLogoChip(chip, iconId, title);
   }
 
-  public async expectBadges(labels: string[]): Promise<void> {
-    await expect(this.root.locator('.badge')).toHaveText(labels);
+  public expectFact(term: string, kind: 'plain' | 'code' | 'empty', text: string): Promise<void>;
+  public expectFact(term: string, kind: 'list', entries: string[]): Promise<void>;
+  /** The value of fact `term`: its kind (class `code`, class `empty`, neither, or a token list) and its text. */
+  public async expectFact(term: string, kind: 'plain' | 'code' | 'empty' | 'list', content: string | string[]): Promise<void> {
+    const value = factValueOf(this.root, term);
+
+    if (typeof content !== 'string') return expectListFact(value, content);
+
+    await expect(value).toHaveText(content);
+    await expect(value.locator('ul')).toHaveCount(0);
+
+    if (kind === 'plain') return expect(value).toHaveClass(NOT_EMPTY_OR_CODE);
+
+    await expect(value).toHaveClass(kind);
   }
 
-  /** Every item of the badge row, badges and notes alike, in order. */
-  public async expectBadgeRow(texts: string[]): Promise<void> {
-    await expect(this.root.locator('.badges > li')).toHaveText(texts);
+  /** The description paragraph shows `text`; `null` means there is none. */
+  public async expectDescription(text: string | null): Promise<void> {
+    const description = this.root.locator('p.card-description');
+
+    if (text === null) return expect(description).toHaveCount(0);
+
+    await expect(description).toHaveText(text);
   }
 
   public async expectRunButtonUnfocused(): Promise<void> {

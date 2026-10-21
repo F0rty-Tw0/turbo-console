@@ -16,7 +16,10 @@ export const MISSING_PACKAGE_TEXT = 'Package no longer in the workspace';
 /** Spec 1c-a §4.5, §4.7 and §4.10 texts, verbatim. */
 export const NO_TASK_CARDS_TEXT = 'No tasks in this package.';
 
-export const RUNS_UNTIL_STOPPED_TEXT = 'runs until stopped';
+/** Polish spec 3 §4.3 item 4: one chip replaces the dry-run "Continuous" badge and the "runs until stopped" note. */
+export const CONTINUOUS_CHIP_TEXT = 'Continuous · runs until stopped';
+
+export const NOT_CACHEABLE_CHIP_TEXT = 'Not cacheable';
 
 /** Spec 1c-b §4.10 section titles; the page adds each section's card count. */
 export const TURBO_TASKS_TITLE = 'Turbo tasks';

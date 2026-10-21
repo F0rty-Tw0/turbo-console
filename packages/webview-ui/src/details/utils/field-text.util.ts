@@ -1,4 +1,5 @@
 import type { CacheStatus, DryRunPhase, PackageDetails } from '../../bridge/common/details-state.type.ts';
+import type { FieldValue } from '../common/details-page.type.ts';
 import {
   CACHE_TEXTS,
   DEFAULT_INPUTS_TEXT,
@@ -17,26 +18,58 @@ const pendingText = (phase: DryRunPhase): string => {
   return UNAVAILABLE_TEXT;
 };
 
-/** A list field's text; an empty `inputs` means turbo's default (every file in the package). */
-export const listText = (values: string[], field: 'inputs' | 'other'): string => {
-  if (values.length > 0) return values.join(', ');
+/** A list field's value; an empty `inputs` means turbo's default (every file in the package). */
+export const listValue = (values: string[], field: 'inputs' | 'other'): FieldValue => {
+  const list: FieldValue = { kind: 'list', entries: values };
+  const defaultInputs: FieldValue = { kind: 'empty', text: DEFAULT_INPUTS_TEXT };
+  const none: FieldValue = { kind: 'empty', text: NONE_TEXT };
 
-  if (field === 'inputs') return DEFAULT_INPUTS_TEXT;
+  if (values.length > 0) return list;
 
-  return NONE_TEXT;
+  if (field === 'inputs') return defaultInputs;
+
+  return none;
 };
 
-export const cacheText = (status: CacheStatus | null, phase: DryRunPhase): string => {
-  if (status !== null) return CACHE_TEXTS[status];
+export const cacheValue = (status: CacheStatus | null, phase: DryRunPhase): FieldValue => {
+  const pending: FieldValue = { kind: 'empty', text: pendingText(phase) };
 
-  return pendingText(phase);
+  if (status === null) return pending;
+
+  const known: FieldValue = { kind: 'plain', text: CACHE_TEXTS[status], isCode: false };
+
+  return known;
 };
 
 /** What a turbo card without a definition shows in its place; a script card has no definition rows. */
-export const definitionText = (command: string | null, phase: DryRunPhase): string => {
-  if (command === null) return NO_COMMAND_TEXT;
+export const definitionValue = (command: string | null, phase: DryRunPhase): FieldValue => {
+  const noCommand: FieldValue = { kind: 'plain', text: NO_COMMAND_TEXT, isCode: false };
+  const pending: FieldValue = { kind: 'empty', text: pendingText(phase) };
 
-  return pendingText(phase);
+  if (command === null) return noCommand;
+
+  return pending;
+};
+
+/** A description worth a paragraph: `null` for none, and for one that is empty or only whitespace. */
+export const descriptionText = (description: string | null): string | null => {
+  if (description === null) return null;
+
+  const trimmed = description.trim();
+
+  if (trimmed === '') return null;
+
+  return description;
+};
+
+export const plainValue = (text: string | null, isCode: boolean): FieldValue => {
+  const none: FieldValue = { kind: 'empty', text: NONE_TEXT };
+
+  if (text === null) return none;
+
+  const plain: FieldValue = { kind: 'plain', text, isCode };
+
+  return plain;
 };
 
 /**
