@@ -1,7 +1,8 @@
 /**
  * Runs one job at a time. A job that arrives while another runs waits in a single slot, and each newer arrival replaces
  * it; `run` for a replaced job resolves at once without running it. When the running job finishes, the waiting one runs,
- * and the `run` that started the chain resolves after the last of them.
+ * and the `run` that started the chain resolves after the last of them. A job that throws rejects that `run` and drops the
+ * waiting one.
  */
 export class LatestWins<T> {
   private isRunning = false;
@@ -25,6 +26,7 @@ export class LatestWins<T> {
       }
     } finally {
       this.isRunning = false;
+      this.waiting = null;
     }
   }
 

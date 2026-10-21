@@ -43,5 +43,25 @@ describe('FEATURE: LatestWins', () => {
 
       expect(ran).toStrictEqual(['bad', 'good']);
     });
+
+    it('WHEN it throws with a job waiting THEN the waiting job is dropped, not run after a later one', async () => {
+      const queue = new LatestWins<string>();
+      const ran: string[] = [];
+      const work = async (job: string): Promise<void> => {
+        ran.push(job);
+        await Promise.resolve();
+
+        if (job === 'bad') throw new Error('boom');
+      };
+
+      const bad = queue.run('bad', work);
+      const waiting = queue.run('waiting', work);
+
+      await waiting;
+      await expect(bad).rejects.toThrow('boom');
+      await queue.run('newer', work);
+
+      expect(ran).toStrictEqual(['bad', 'newer']);
+    });
   });
 });
