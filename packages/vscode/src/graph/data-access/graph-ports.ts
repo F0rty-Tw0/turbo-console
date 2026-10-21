@@ -38,7 +38,7 @@ export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state:
     const cursor = new vscode.Position(line, 0);
     const selection = new vscode.Range(cursor, cursor);
 
-    await vscode.window.showTextDocument(vscode.Uri.file(path), { selection });
+    await vscode.window.showTextDocument(vscode.Uri.file(path), { selection, viewColumn: vscode.ViewColumn.Beside });
   };
   const host: GraphHost = { open, readCache, writeCache, readText, openAt, log: output.error, info: output.info };
 

@@ -43,7 +43,7 @@ vi.mock('vscode', () => {
   };
   const window = { createWebviewPanel: editor.createWebviewPanel, showTextDocument: editor.showTextDocument };
   const uri = { joinPath, file };
-  const viewColumn = { Active: -1 };
+  const viewColumn = { Active: -1, Beside: -2 };
 
   class Position {
     public readonly line: number;
@@ -197,12 +197,12 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
   });
 
   describe('GIVEN a file to open at a line', () => {
-    it('WHEN openAt is called THEN the file opens with the cursor at the line, column 0', async () => {
+    it('WHEN openAt is called THEN the file opens beside the graph with the cursor at the line, column 0', async () => {
       await host.openAt('/ws/apps/web/package.json', 7);
 
       const cursor = { line: 7, character: 0 };
       const selection = { start: cursor, end: cursor };
-      const options = { selection };
+      const options = { selection, viewColumn: -2 };
 
       expect(editor.showTextDocument).toHaveBeenCalledExactlyOnceWith({ fsPath: '/ws/apps/web/package.json' }, options);
     });
