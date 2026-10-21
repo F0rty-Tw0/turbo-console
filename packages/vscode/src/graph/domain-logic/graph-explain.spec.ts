@@ -157,6 +157,8 @@ describe('FEATURE: graph explain', () => {
 
   describe('GIVEN an openManifest', () => {
     it('WHEN the package is listed THEN its package.json opens at the line', async () => {
+      vi.mocked(ports.readText).mockResolvedValue('{}');
+
       const handled = await answerRequest({ type: 'openManifest', packageName: 'web', line: 7 }, context);
 
       expect(handled).toBe(true);
@@ -164,6 +166,8 @@ describe('FEATURE: graph explain', () => {
     });
 
     it('WHEN the package is the root package THEN <root>/package.json opens', async () => {
+      vi.mocked(ports.readText).mockResolvedValue('{}');
+
       await answerRequest({ type: 'openManifest', packageName: '//', line: 0 }, context);
 
       expect(ports.openAt).toHaveBeenCalledExactlyOnceWith(join('/ws', 'package.json'), 0);
@@ -183,7 +187,29 @@ describe('FEATURE: graph explain', () => {
       expect(ports.openAt).not.toHaveBeenCalled();
     });
 
+    it('WHEN the file is not a readable regular file (readText gives null) THEN nothing opens and the path is logged', async () => {
+      const handled = await answerRequest({ type: 'openManifest', packageName: 'web', line: 1 }, context);
+
+      const absolute = join('/ws', 'apps/web', 'package.json');
+
+      expect(handled).toBe(true);
+      expect(ports.readText).toHaveBeenCalledExactlyOnceWith(absolute);
+      expect(ports.openAt).not.toHaveBeenCalled();
+      expect(ports.log).toHaveBeenCalledExactlyOnceWith(`Not a readable package.json: ${absolute}`);
+    });
+
+    it('WHEN readText rejects THEN nothing opens and the failure is logged', async () => {
+      vi.mocked(ports.readText).mockRejectedValue(new Error('EACCES'));
+
+      const handled = await answerRequest({ type: 'openManifest', packageName: 'web', line: 1 }, context);
+
+      expect(handled).toBe(true);
+      expect(ports.openAt).not.toHaveBeenCalled();
+      expect(ports.log).toHaveBeenCalledWith('EACCES');
+    });
+
     it('WHEN openAt rejects THEN the failure is logged and the result is true', async () => {
+      vi.mocked(ports.readText).mockResolvedValue('{}');
       vi.mocked(ports.openAt).mockRejectedValue(new Error('no editor'));
 
       const handled = await answerRequest({ type: 'openManifest', packageName: 'web', line: 1 }, context);

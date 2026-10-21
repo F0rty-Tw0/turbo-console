@@ -243,7 +243,7 @@ describe('FEATURE: graph session messages', () => {
       const { session, ports } = shownSession();
       const read = Promise.withResolvers<string | null>();
 
-      vi.mocked(ports.readText).mockReturnValue(read.promise);
+      vi.mocked(ports.readText).mockReturnValueOnce(read.promise).mockResolvedValue('{}');
       await session.receive({ type: 'ready' });
 
       const explained = session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
@@ -277,6 +277,8 @@ describe('FEATURE: graph session messages', () => {
   describe('GIVEN an openManifest from the page', () => {
     it('WHEN it names a package of the graph THEN its package.json opens at the line', async () => {
       const { session, ports } = shownSession();
+
+      vi.mocked(ports.readText).mockResolvedValue('{}');
 
       await session.receive({ type: 'openManifest', packageName: 'web', line: 3 });
 
