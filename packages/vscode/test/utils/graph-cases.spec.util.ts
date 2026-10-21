@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 
+import type { TaskKind } from '@turbo-console/repo-gen';
 import type { GraphEdge, GraphPackage, GraphReady } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
@@ -8,9 +9,12 @@ import { step, waitFor } from './suite-env.spec.util.ts';
 import type { PanelInfo } from '../../src/shared/common/api.type.ts';
 import { GRAPH_COMMAND, HASH_PATTERN, HUB_TAG, ROOT_PACKAGE_NAME } from '../common/graph.const.ts';
 import type { GraphScene } from '../common/graph.type.ts';
-import type { ShownManifest, ShownPackage } from '../common/launch.type.ts';
+import type { ShownManifest, ShownPackage, ShownTask } from '../common/launch.type.ts';
 
 const CLOSE_EDITOR_COMMAND = 'workbench.action.closeActiveEditor';
+
+/** The manifest task kinds turbo's model does not list: the host's `atom-file` filter drops the first, the model never holds the others. */
+const UNLISTED_TASK_KINDS = new Set<TaskKind>(['atom-file', 'carrier', 'phantom']);
 
 const sorted = (names: string[]): string[] => names.toSorted();
 
@@ -43,6 +47,8 @@ const positionedNamesOf = (state: GraphReady): string[] => {
 
   return Object.keys(state.positions);
 };
+
+const taskCountOf = (pkg: GraphPackage): number => pkg.taskCount;
 
 const isShown = (pkg: ShownPackage): boolean => pkg.role !== 'atom-definitions';
 
@@ -84,6 +90,9 @@ export const openCase = async (scene: GraphScene): Promise<void> => {
     const packages = sent.map((pkg): string => pkg.name);
     const manifestNames = shown.map((pkg): string => pkg.name);
     const edgeLines = state.edges.map(edgeLineOf);
+    const isListed = (task: ShownTask, pkg: GraphPackage): boolean =>
+      task.packageName === pkg.name && !UNLISTED_TASK_KINDS.has(task.kind);
+    const visibleCountOf = (pkg: GraphPackage): number => manifest.tasks.filter((task): boolean => isListed(task, pkg)).length;
 
     assert.equal(api.graph.panels().length, 1);
     assert.deepEqual(panel, { root, visible: true });
@@ -91,6 +100,8 @@ export const openCase = async (scene: GraphScene): Promise<void> => {
     assert.deepEqual(sorted(edgeLines), expectedEdgesOf(manifest));
     assert.deepEqual(sentLinesOf(sent), manifestLinesOf(shown));
     assert.ok(sent.some((pkg): boolean => pkg.tags.includes(HUB_TAG)));
+    assert.deepEqual(sent.map(taskCountOf), sent.map(visibleCountOf));
+    assert.ok(sent.some((pkg): boolean => pkg.taskCount > 0));
 
     assert.equal(state.positions, null);
     assert.match(state.hash, HASH_PATTERN);
