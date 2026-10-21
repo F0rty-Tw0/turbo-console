@@ -81,8 +81,10 @@ const L11: Launch = {
 
 const L12: Launch = { ...L11, name: 'L12', suite: 'empty-workspace.suite', workspace: 'empty-workspace', settings: NO_SETTINGS };
 
+const L13: Launch = { ...L9, name: 'L13', suite: 'graph.suite' };
+
 /**
- * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L12 each get a user-data dir
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L13 each get a user-data dir
  * of their own.
  */
-export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12];
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13];
