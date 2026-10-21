@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { resolveTool, toolIconIdOf } from './tool-of.util.ts';
 import { TOOLS } from '../common/tool.const.ts';
@@ -22,7 +22,8 @@ const chainOf = (length: number): Record<string, string> => {
 };
 
 const FAN_OUT_SIZE = 14;
-const FAN_OUT_LIMIT_MS = 200;
+/** The resolver's expansion budget: it reads one script body per expansion and stops when the budget runs out. */
+const EXPANSION_BUDGET = 256;
 
 /** `size` scripts whose bodies all run every script: the paths multiply, no tool is ever reached. */
 const fanOutOf = (size: number): Record<string, string> => {
@@ -212,17 +213,16 @@ describe('FEATURE: tool detection', () => {
   });
 
   describe('GIVEN 14 scripts that each run all the others and none reach a tool', () => {
-    it('WHEN their shared body is resolved THEN the result is null, and it comes back quickly', () => {
+    it('WHEN their shared body is resolved THEN the result is null after exactly the expansion budget', () => {
       const bodies = fanOutOf(FAN_OUT_SIZE);
       const scripts = scriptsOf(bodies);
       const command = bodies['s0'] ?? '';
-      const startedAt = performance.now();
+      const reads = vi.spyOn(scripts.bodies, 'get');
 
       const found = resolveTool(command, scripts);
-      const elapsed = performance.now() - startedAt;
 
       expect(found).toBeNull();
-      expect(elapsed).toBeLessThan(FAN_OUT_LIMIT_MS);
+      expect(reads).toHaveBeenCalledTimes(EXPANSION_BUDGET);
     });
 
     it('WHEN a command runs one of them and then vitest THEN the whole call is null', () => {
