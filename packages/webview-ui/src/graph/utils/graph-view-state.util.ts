@@ -17,7 +17,7 @@ const readPosition = (raw: unknown): Position | null => {
   return position;
 };
 
-const readBoolean = (value: unknown): boolean => (typeof value === 'boolean' ? value : true);
+const readControlsOpen = (value: unknown): boolean => (typeof value === 'boolean' ? value : true);
 
 const readString = (value: unknown): string => (typeof value === 'string' ? value : '');
 
@@ -40,7 +40,7 @@ const readNames = (value: unknown): string[] => {
   return [...value];
 };
 
-/** The saved camera, selection and controls, rebuilt field by field; `null` when anything about `raw` is off. */
+/** The saved camera, selection and controls, rebuilt field by field; `null` when the camera or selection is off, a bad controls field takes its default. */
 export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   if (!isRecord(raw)) return null;
 
@@ -58,7 +58,7 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
     zoom,
     pan,
     selected,
-    controlsOpen: readBoolean(raw['controlsOpen']),
+    controlsOpen: readControlsOpen(raw['controlsOpen']),
     search: readString(raw['search']),
     depth: readDepth(raw['depth']),
     hidden: readNames(raw['hidden']),
