@@ -1,16 +1,17 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
-import { CLEAR_LONG_TASKS, ONE_FRAME } from '../common/graph.const.ts';
+import { ONE_FRAME } from '../common/graph.const.ts';
 import type { DragRecord } from '../common/graph.type.ts';
 import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { emptySpotOf, nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
+import { cpuTimeOf } from '../test/utils/graph-thread-time.spec.util.ts';
 
 const DRAG_STEPS = 8;
 
@@ -36,11 +37,13 @@ export class GraphCanvas {
   private readonly page: Page;
   private readonly probe: GraphProbePage;
   private drag: DragRecord | null;
+  private panCpuMs: number | null;
 
   public constructor(page: Page) {
     this.page = page;
     this.probe = new GraphProbePage(page);
     this.drag = null;
+    this.panCpuMs = null;
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
   }
 
@@ -94,22 +97,33 @@ export class GraphCanvas {
     await this.dragFrom(spot, dx, dy);
   }
 
-  /** Waits `warmUpFrames`, forgets the long tasks so far, then drags the background one step per frame for `panFrames`. */
+  /** Waits `warmUpFrames`, then drags the background one step per frame for `panFrames`, keeping the main-thread CPU time that took. */
   public async scriptedPan(warmUpFrames: number, panFrames: number): Promise<void> {
     const spot = await this.emptySpot();
 
     for (let frame = 0; frame < warmUpFrames; frame += 1) await this.page.evaluate(ONE_FRAME);
 
-    await this.page.evaluate(CLEAR_LONG_TASKS);
-    await this.page.mouse.move(spot.x, spot.y);
-    await this.page.mouse.down();
+    this.panCpuMs = await cpuTimeOf(this.page, async (): Promise<void> => {
+      await this.page.mouse.move(spot.x, spot.y);
+      await this.page.mouse.down();
 
-    for (let frame = 1; frame <= panFrames; frame += 1) {
-      await this.page.mouse.move(spot.x + frame, spot.y + frame);
-      await this.page.evaluate(ONE_FRAME);
-    }
+      for (let frame = 1; frame <= panFrames; frame += 1) {
+        await this.page.mouse.move(spot.x + frame, spot.y + frame);
+        await this.page.evaluate(ONE_FRAME);
+      }
 
-    await this.page.mouse.up();
+      await this.page.mouse.up();
+    });
+  }
+
+  /** The last scripted pan used under `ms` of main-thread CPU time; CPU time, so machine load does not move it. Recorded as a test annotation. */
+  public expectPanCpuUnder(ms: number): void {
+    const measured = this.panCpuMs;
+
+    if (measured === null) throw new Error('graph e2e: no scripted pan ran');
+
+    test.info().annotations.push({ type: 'pan-cpu-ms', description: String(Math.round(measured)) });
+    expect(measured).toBeLessThan(ms);
   }
 
   public async expectAllNodesInView(): Promise<void> {

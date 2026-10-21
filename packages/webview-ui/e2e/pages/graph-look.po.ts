@@ -4,7 +4,6 @@ import { expect, test } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
-import { READ_LONG_TASKS } from '../common/graph.const.ts';
 import type { ExpectedThemeColors } from '../common/graph.type.ts';
 import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
 
@@ -37,11 +36,9 @@ const isPanNear = (pan: Position | null, view: GraphViewState): boolean => {
 
 /** What the user sees of the drawn graph: the camera, the theme colours and the first frame, read through the probe. */
 export class GraphLook {
-  private readonly page: Page;
   private readonly probe: GraphProbePage;
 
   public constructor(page: Page) {
-    this.page = page;
     this.probe = new GraphProbePage(page);
   }
 
@@ -98,16 +95,6 @@ export class GraphLook {
 
     test.info().annotations.push({ type: 'first-frame-ms', description: String(measured) });
     expect(measured).toBeLessThan(ms);
-  }
-
-  public async expectLongTasks(maxCount: number, maxMs: number): Promise<void> {
-    const durations = await this.page.evaluate<number[]>(READ_LONG_TASKS);
-    const longest = Math.max(0, ...durations);
-
-    test.info().annotations.push({ type: 'long-tasks', description: String(durations.length) });
-    test.info().annotations.push({ type: 'longest-long-task-ms', description: String(longest) });
-    expect(durations.length).toBeLessThanOrEqual(maxCount);
-    expect(longest).toBeLessThanOrEqual(maxMs);
   }
 
   private async isView(view: GraphViewState): Promise<boolean> {

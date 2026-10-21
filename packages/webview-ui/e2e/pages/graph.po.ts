@@ -12,7 +12,7 @@ import {
   RELAYOUT_LABEL,
   RETRY_LABEL
 } from '../../src/graph/common/graph.const.ts';
-import { BROKEN_MEASURE, LONGTASK_RECORDER, NEXT_FRAME, PROBE_WANTED, THEME_VAR_NAMES, WORKER_STUBS } from '../common/graph.const.ts';
+import { BROKEN_MEASURE, NEXT_FRAME, PROBE_WANTED, THEME_VAR_NAMES, WORKER_STUBS } from '../common/graph.const.ts';
 import type { GraphOptions, ThemeStub } from '../common/graph.type.ts';
 import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
 import { graphDistMock } from '../test/mocks/graph-dist.mock.ts';
@@ -53,7 +53,6 @@ export class GraphPage {
 
     if (options.isMeasureBroken === true) await this.page.addInitScript({ content: BROKEN_MEASURE });
 
-    await this.page.addInitScript({ content: LONGTASK_RECORDER });
     await this.page.addInitScript({ content: WORKER_STUBS[options.workers ?? 'real'] });
     await this.page.route(`${SHELL_ORIGIN}/**`, graphDistMock(options));
     await this.page.goto(SHELL_URL);
