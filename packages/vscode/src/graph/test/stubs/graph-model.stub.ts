@@ -24,7 +24,7 @@ const A_X: GraphEdge = { source: 'a', target: '@org/x' };
 const WEB_X: GraphEdge = { source: 'web', target: '@org/x' };
 const WEB_A: GraphEdge = { source: 'web', target: 'a' };
 
-export const GRAPH_HASH_STUB: string = '4056529b';
+export const GRAPH_HASH_STUB: string = '9bafdda7';
 
 export const GRAPH_PACKAGES_STUB: string[] = ['@org/x', 'a', 'web'];
 

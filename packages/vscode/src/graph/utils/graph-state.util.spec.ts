@@ -1,6 +1,6 @@
 import { TurboException } from '@turbo-console/core';
 import type { WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphPackage, GraphState } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphState } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { graphHashOf, graphStateOf, graphStateOfRoot } from './graph-state.util.ts';
@@ -11,18 +11,14 @@ import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import { GRAPH_HASH_STUB, GRAPH_MODEL_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
-import { rootNode, taggedNode } from '../test/utils/graph-model.spec.util.ts';
-
-const infoOf = (name: string, path: string, tags: string[] = []): GraphPackage => {
-  const info: GraphPackage = { name, path, tags };
-
-  return info;
-};
+import { graphPackageOf, rootNode } from '../test/utils/graph-model.spec.util.ts';
 
 const ROOT_FIRST_NAMES = [{ name: '//' }, { name: '@org/x' }, { name: 'a' }, { name: 'web' }];
 const PROTO_NAMES = [{ name: '__proto__', tags: ['constructor'] }];
 const EDGE_A: GraphEdge = { source: 'a', target: 'b' };
 const EDGE_B: GraphEdge = { source: 'b', target: 'a' };
+const ARROW_NAMED: GraphEdge = { source: 'a>b', target: 'c' };
+const ARROW_SPLIT: GraphEdge = { source: 'a', target: 'b>c' };
 const CACHE: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
 const GHOST_POINT = { x: 1, y: 1 };
 const GHOST_POSITIONS = { ...POSITIONS_STUB, ghost: GHOST_POINT };
@@ -54,6 +50,16 @@ describe('FEATURE: graph state builder', () => {
     });
   });
 
+  describe('GIVEN a package named __proto__ tagged constructor', () => {
+    it('WHEN the state is built THEN its record keeps the name and tag', () => {
+      const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [rootNode('__proto__', ['constructor'])] };
+
+      const state = graphStateOf(model, null);
+
+      expect(state).toMatchObject({ packages: PROTO_NAMES });
+    });
+  });
+
   describe('GIVEN a layout cache entry', () => {
     it('WHEN its hash is the graph hash THEN positions are the cached ones', () => {
       expect(graphStateOf(GRAPH_MODEL_STUB, CACHE)).toMatchObject({ positions: POSITIONS_STUB });
@@ -76,38 +82,51 @@ describe('FEATURE: graph state builder', () => {
 describe('FEATURE: graph hash', () => {
   it.each([
     [[], [], '878f5675'],
-    [[infoOf('a', 'packages/a'), infoOf('b', 'packages/b')], [{ source: 'a', target: 'b' }], '3dccca8e'],
-    [[infoOf('é', '')], [], '3af7d88d'],
-    [[infoOf('p3', 'packages/p3', ['t'])], [], '9a1d7495']
+    [[graphPackageOf('a', 'packages/a'), graphPackageOf('b', 'packages/b')], [{ source: 'a', target: 'b' }], '4abfc33a'],
+    [[graphPackageOf('é', '')], [], '3af7d88d'],
+    [[graphPackageOf('p3', 'packages/p3', ['t'])], [], '9a1d7495'],
+    [[graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], [], '6d3562a7'],
+    [[graphPackageOf('__proto__', '', ['constructor'])], [], '64b21699']
   ])('GIVEN packages %j and edges %j WHEN hashed THEN it is %s (FNV-1a over UTF-8)', (packages, edges, expected) => {
     expect(graphHashOf(packages, edges)).toBe(expected);
   });
 
   it('WHEN the same graph is listed in another order THEN the hash is the same', () => {
-    const shuffled = graphHashOf([infoOf('b', 'y'), infoOf('a', 'x')], [EDGE_B, EDGE_A]);
+    const shuffled = graphHashOf([graphPackageOf('b', 'y'), graphPackageOf('a', 'x')], [EDGE_B, EDGE_A]);
 
-    expect(shuffled).toBe(graphHashOf([infoOf('a', 'x'), infoOf('b', 'y')], [EDGE_A, EDGE_B]));
+    expect(shuffled).toBe(graphHashOf([graphPackageOf('a', 'x'), graphPackageOf('b', 'y')], [EDGE_A, EDGE_B]));
   });
 
   it('WHEN an edge is added THEN the hash changes', () => {
-    const packages = [infoOf('a', 'x'), infoOf('b', 'y')];
+    const packages = [graphPackageOf('a', 'x'), graphPackageOf('b', 'y')];
 
     expect(graphHashOf(packages, [EDGE_A])).not.toBe(graphHashOf(packages, [EDGE_A, EDGE_B]));
   });
 
   it('WHEN a path changes THEN the hash changes', () => {
-    expect(graphHashOf([infoOf('a', 'x2'), infoOf('b', 'y', ['t'])], [])).toBe('89e0a85f');
-    expect(graphHashOf([infoOf('a', 'x'), infoOf('b', 'y', ['t'])], [])).toBe('6d3562a7');
+    const base = graphHashOf([graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], []);
+
+    const changed = graphHashOf([graphPackageOf('a', 'x2'), graphPackageOf('b', 'y', ['t'])], []);
+
+    expect(changed).not.toBe(base);
   });
 
   it('WHEN a tag changes THEN the hash changes', () => {
-    expect(graphHashOf([infoOf('a', 'x'), infoOf('b', 'y', ['u'])], [])).toBe('548ec05a');
+    const base = graphHashOf([graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], []);
+
+    const changed = graphHashOf([graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['u'])], []);
+
+    expect(changed).not.toBe(base);
   });
 
-  it('GIVEN a package named __proto__ with the tag constructor WHEN hashed and built THEN both work', () => {
-    const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [taggedNode('__proto__', ['constructor'])] };
+  it('GIVEN edges whose names contain > WHEN hashed THEN the two ways to split a>b>c differ', () => {
+    const names = ['a', 'a>b', 'b', 'b>c', 'c'];
+    const packages = names.map((name) => graphPackageOf(name, ''));
 
-    expect(graphStateOf(model, null)).toMatchObject({ packages: PROTO_NAMES });
+    const named = graphHashOf(packages, [ARROW_NAMED]);
+    const split = graphHashOf(packages, [ARROW_SPLIT]);
+
+    expect(named).not.toBe(split);
   });
 });
 

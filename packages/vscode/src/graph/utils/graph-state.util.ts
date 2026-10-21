@@ -36,12 +36,13 @@ const fnv1a = (text: string): string => {
 };
 
 /**
- * FNV-1a over a `[name, path, tags]` JSON line per package in name order, a blank line, then the sorted
- * `source>target` lines, so input order never matters but a changed path or tag does.
+ * FNV-1a over a `[name, path, tags]` JSON line per package in name order, a blank line, then a `[source, target]` JSON line per edge
+ * in sorted order, so input order never matters but a changed path or tag does. Tags are hashed in the order given: `graphStateOf`
+ * sorts them first.
  */
 export const graphHashOf = (packages: GraphPackage[], edges: GraphEdge[]): string => {
   const packageLines = packages.toSorted(comparePackages).map((pkg) => JSON.stringify([pkg.name, pkg.path, pkg.tags]));
-  const lines = edges.toSorted(compareEdges).map((edge) => `${edge.source}>${edge.target}`);
+  const lines = edges.toSorted(compareEdges).map((edge) => JSON.stringify([edge.source, edge.target]));
   const text = `${packageLines.join('\n')}\n\n${lines.join('\n')}`;
 
   return fnv1a(text);
