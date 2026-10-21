@@ -1,5 +1,6 @@
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { KeyboardDeps } from '../common/graph-controls.type.ts';
+import { COLUMNS } from '../common/graph.const.ts';
 import type { CellAt, Column, ListLine } from '../common/roving.type.ts';
 import { enterActionOf, entryCellOf, firstSelectableOf } from '../utils/list-keys.util.ts';
 import { nextCell } from '../utils/roving.util.ts';
@@ -12,8 +13,6 @@ type GridLine = {
   readonly cells: GridCells;
   readonly row: ControlsRow | null;
 };
-
-const COLUMNS: Column[] = ['check', 'name', 'focus'];
 
 const headerLineOf = (group: ControlsGroup): GridLine => {
   const cells: GridCells = { check: group.check };
