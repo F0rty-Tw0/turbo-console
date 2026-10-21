@@ -1,4 +1,3 @@
-/* eslint-disable local/no-unused-exports -- the graph page's main.ts imports createElk once the page view lands (Task 2.3). */
 import workerText from 'elkjs/lib/elk-worker.min.js';
 
 import { createElkClient } from './elk-worker-client.ts';

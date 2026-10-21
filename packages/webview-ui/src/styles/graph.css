@@ -1,7 +1,16 @@
 /*
  * Package Graph page. Colors come only from --vscode-* theme variables, so light, dark and high contrast all follow
- * the theme.
+ * the theme. The custom properties below are layout tokens, never colour values. The canvas colours are set in code
+ * from the same variables.
  */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --radius: 4px;
+}
 
 html,
 body {
@@ -16,4 +25,106 @@ body {
   background: var(--vscode-editor-background);
   font-family: var(--vscode-font-family);
   font-size: 13px;
+}
+
+/* The flex and grid displays below would otherwise override the user-agent rule for `hidden`. */
+[hidden] {
+  display: none !important;
+}
+
+p {
+  margin: 0;
+}
+
+.graph-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Toolbar */
+
+.graph-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.graph-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--vscode-descriptionForeground);
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.text-button {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
+  border-radius: var(--radius);
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+  font: inherit;
+  cursor: pointer;
+}
+
+.text-button:hover:not(:disabled) {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.text-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+/* Fallback notice */
+
+.graph-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--vscode-inputValidation-warningBorder);
+  border-radius: var(--radius);
+  background: var(--vscode-inputValidation-warningBackground);
+}
+
+.graph-notice-text {
+  flex: 1 1 auto;
+}
+
+/* Loading, error and single-package message */
+
+.graph-message {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  color: var(--vscode-descriptionForeground);
+  text-align: center;
+}
+
+/* Graph canvas; the pre-shipped Cytoscape rule makes it `position: relative`. */
+
+.graph-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.graph-container:focus-visible {
+  outline-offset: -1px;
 }

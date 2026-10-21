@@ -1,6 +1,7 @@
 import type { ConsoleMessage, Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL, STRING_SINK_PROBE, VIOLATION_RECORDER } from '../common/shell.const.ts';
 import type { ShellOptions } from '../common/shell.type.ts';
 import { distMock } from '../test/mocks/dist.mock.ts';
@@ -14,7 +15,7 @@ export class ShellPage {
   public constructor(page: Page) {
     this.page = page;
     this.errors = [];
-    this.readyMarker = page.getByTestId('webview-ui-ready');
+    this.readyMarker = page.getByRole('application', { name: GRAPH_LABEL });
   }
 
   public async goto(options: ShellOptions = {}): Promise<void> {

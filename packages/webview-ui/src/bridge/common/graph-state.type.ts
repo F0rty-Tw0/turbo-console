@@ -22,7 +22,7 @@ type GraphError = {
 
 type GraphSinglePackage = { readonly kind: 'singlePackage' };
 
-type GraphReady = {
+export type GraphReady = {
   readonly kind: 'graph';
   readonly hash: string;
   readonly packages: string[];
