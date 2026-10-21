@@ -44,6 +44,9 @@ export type ThemeSwitch = {
 /** What a viewer sees of the graph: how far it is zoomed and where it is panned. */
 export type Camera = Pick<GraphViewState, 'zoom' | 'pan'>;
 
+/** The controls panel's part of the saved view state, as the panel's own inputs show it. */
+export type ControlsFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags'>;
+
 /** A key to press, and the accessible name of the control that holds focus once it has been handled. */
 export type FocusStep = {
   readonly key: string;

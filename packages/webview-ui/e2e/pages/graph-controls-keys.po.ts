@@ -15,11 +15,13 @@ export class GraphControlsKeys {
   private readonly focused: Locator;
   private readonly grid: Locator;
   private readonly page: Page;
+  private readonly panel: Locator;
 
   public constructor(page: Page) {
     this.page = page;
     this.focused = page.locator(':focus');
     this.grid = page.getByRole('grid');
+    this.panel = page.getByRole('complementary');
   }
 
   /** Presses Tab until the focused control is named `name`; fails after 25 presses. */
@@ -56,12 +58,12 @@ export class GraphControlsKeys {
     await expect(this.grid.locator('[tabindex="0"]')).toHaveCount(count);
   }
 
-  /** The row's box lies inside the list's scrollport. */
+  /** The row's box lies inside the panel's box: the aside scrolls, so its box is the scrollport and the grid's is as tall as the list. */
   public async expectRowInView(name: string): Promise<void> {
     const check = this.page.getByRole('checkbox', { name: `Show ${name}`, exact: true });
     const row = this.grid.getByRole('row').filter({ has: check });
 
-    await expect.poll(async (): Promise<boolean> => this.isInList(row)).toBe(true);
+    await expect.poll(async (): Promise<boolean> => this.isInPanel(row)).toBe(true);
   }
 
   private async pressUntil(key: string, name: string): Promise<void> {
@@ -87,10 +89,10 @@ export class GraphControlsKeys {
     return match?.[1] ?? '';
   }
 
-  private async isInList(row: Locator): Promise<boolean> {
-    const list = await this.grid.evaluate(readRect);
+  private async isInPanel(row: Locator): Promise<boolean> {
+    const scrollport = await this.panel.evaluate(readRect);
     const box = await row.evaluate(readRect);
 
-    return isInside(box, list);
+    return isInside(box, scrollport);
   }
 }

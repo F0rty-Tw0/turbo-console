@@ -76,10 +76,6 @@ export class GraphProbePage {
     return this.page.evaluate((): string => window.__tcGraphProbe?.edgeColor() ?? '');
   }
 
-  public async firstFrameMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.firstFrameMs() ?? null);
-  }
-
   public async selected(): Promise<string | null> {
     return this.page.evaluate((): string | null => window.__tcGraphProbe?.selected() ?? null);
   }

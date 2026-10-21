@@ -1,14 +1,25 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
+import { GraphTimings } from './graph-timings.po.ts';
 import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
+import { DEPTH_LABEL, SEARCH_LABEL, TAGS_LABEL } from '../../src/graph/common/graph.const.ts';
 import { THEME_VAR_NAMES } from '../common/graph.const.ts';
-import type { ExpectedThemeColors, ThemeStub } from '../common/graph.type.ts';
+import type { ControlsFields, ExpectedThemeColors, ThemeStub } from '../common/graph.type.ts';
 import { isPanNear, isZoomNear } from '../test/utils/graph-camera.spec.util.ts';
+import { checkedTagNames, lockedShowNames, uncheckedShowNames } from '../test/utils/graph-controls-fields.spec.util.ts';
 import { switchTheme, withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
 
 type NodeColors = Pick<ExpectedThemeColors, 'fill' | 'frame' | 'label'>;
+
+const SHOW_ROW = /^Show /;
+
+const sorted = (names: string[]): string[] => {
+  const copy = [...names];
+
+  return copy.sort();
+};
 
 const colorsOf = (colors: NodeColors): NodeColors => {
   const plain: NodeColors = {
@@ -20,14 +31,28 @@ const colorsOf = (colors: NodeColors): NodeColors => {
   return plain;
 };
 
-/** What the user sees of the drawn graph: the camera, the theme colours and the first frame, read through the probe. */
+/** What the user sees of the drawn graph: the camera, the theme colours, the controls and the timing facts, read through the probe. */
 export class GraphLook {
+  private readonly depth: Locator;
   private readonly page: Page;
   private readonly probe: GraphProbePage;
+  private readonly rowChecks: Locator;
+  private readonly searchBox: Locator;
+  private readonly tagChecks: Locator;
+  private readonly timings: GraphTimings;
+  private readonly toggleButton: Locator;
 
   public constructor(page: Page) {
     this.page = page;
     this.probe = new GraphProbePage(page);
+    this.timings = new GraphTimings(page);
+    this.toggleButton = page.getByRole('button', { name: /^Controls/ });
+    this.searchBox = page.getByRole('searchbox', { name: SEARCH_LABEL, exact: true, includeHidden: true });
+    this.depth = page.getByRole('spinbutton', { name: DEPTH_LABEL, exact: true, includeHidden: true });
+    this.rowChecks = page.getByRole('checkbox', { name: SHOW_ROW, includeHidden: true });
+    const tagGroup = page.getByRole('group', { name: TAGS_LABEL, exact: true, includeHidden: true });
+
+    this.tagChecks = tagGroup.getByRole('checkbox', { includeHidden: true });
   }
 
   public async applyTheme(theme: ThemeStub): Promise<void> {
@@ -79,14 +104,40 @@ export class GraphLook {
     expect(others).not.toContain(selected);
   }
 
+  /** The panel's own inputs, hidden ones included, show exactly these fields; list order does not count. */
+  public async expectControlsFields(fields: ControlsFields): Promise<void> {
+    const expected: ControlsFields = { ...fields, hidden: sorted(fields.hidden), tags: sorted(fields.tags) };
+
+    await expect.poll(async (): Promise<ControlsFields> => this.controlsFields()).toEqual(expected);
+  }
+
   /** Polls until the first frame is measured, checks it, and records it as a test annotation. */
   public async expectFirstFrameUnder(ms: number): Promise<void> {
-    await expect.poll(async (): Promise<number | null> => this.probe.firstFrameMs()).not.toBeNull();
+    await expect.poll(async (): Promise<number | null> => this.timings.firstFrameMs()).not.toBeNull();
 
-    const measured = await this.probe.firstFrameMs();
+    const measured = await this.timings.firstFrameMs();
 
     test.info().annotations.push({ type: 'first-frame-ms', description: String(measured) });
     expect(measured).toBeLessThan(ms);
+  }
+
+  private async controlsFields(): Promise<ControlsFields> {
+    const expanded = await this.toggleButton.getAttribute('aria-expanded');
+    const search = await this.searchBox.inputValue();
+    const depth = await this.depth.inputValue();
+    const hidden = await this.rowChecks.evaluateAll(uncheckedShowNames);
+    const locked = await this.rowChecks.evaluateAll(lockedShowNames);
+    const tags = await this.tagChecks.evaluateAll(checkedTagNames);
+    const fields: ControlsFields = {
+      controlsOpen: expanded === 'true',
+      search,
+      depth: Number(depth),
+      hidden: sorted(hidden),
+      focus: locked[0] ?? null,
+      tags: sorted(tags)
+    };
+
+    return fields;
   }
 
   private async isView(view: GraphViewState): Promise<boolean> {

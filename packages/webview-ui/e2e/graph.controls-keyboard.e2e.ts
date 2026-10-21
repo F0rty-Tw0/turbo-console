@@ -2,6 +2,7 @@ import type { Camera, FocusStep } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { without } from './test/utils/graph-controls.spec.util.ts';
+import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 
 const AC1 = { description: 'M4-2 AC1', type: 'requirement' };
@@ -339,7 +340,7 @@ test.describe('FEATURE: graph controls keyboard', () => {
   );
 
   test(
-    'GIVEN a package selected by tap, a tap on the same node under a search that hides its row keeps the row current and focuses the graph',
+    'GIVEN a package selected by tap, a tap on the same node under a search that hides its row keeps the row current and focuses the graph, and a tap far down a long list scrolls its row into view',
     { annotation: AC1 },
     async ({ graphCanvas, graphControls, graphHost, graphKeys, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -361,6 +362,15 @@ test.describe('FEATURE: graph controls keyboard', () => {
       await test.step('THEN the core row is still current', async (): Promise<void> => graphControls.expectRowCurrent('core'));
 
       await test.step('AND the graph container holds focus', async (): Promise<void> => graphPage.expectContainerFocused());
+
+      await test.step('WHEN the search is cleared', async (): Promise<void> => graphControls.search(''));
+
+      await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+
+      await test.step('AND pkg-290 is tapped', async (): Promise<void> => graphCanvas.tapNode('pkg-290'));
+
+      await test.step('THEN the pkg-290 row is scrolled into view in the panel', async (): Promise<void> =>
+        graphKeys.expectRowInView('pkg-290'));
     }
   );
 });
