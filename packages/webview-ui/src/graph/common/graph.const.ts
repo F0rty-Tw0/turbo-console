@@ -8,6 +8,9 @@ export const NODE_PADDING_X = 24;
 /** Label size in px, for both `measureText` and Cytoscape. */
 export const NODE_FONT_SIZE = 13;
 
+/** The class `GraphView.setGhosts` gives a trace's hidden path packages and their path links. */
+export const GHOST_CLASS = 'ghost';
+
 export const VIEW_STATE_DEBOUNCE_MS = 250;
 
 export const MIN_DEPTH = 1;

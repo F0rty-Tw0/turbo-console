@@ -23,9 +23,8 @@ export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActi
     onFilter: (text): void => actions.filter(text),
     onOpenManifest: (packageName, line): void => bridge.post({ type: 'openManifest', packageName, line }),
     onResize: (): void => view.resize(),
-    // Task 3.5 gives these two their keep-clear pan.
-    onLayout: (): void => undefined,
-    onOpened: (): void => undefined,
+    onLayout: (): void => actions.keepClear('layout'),
+    onOpened: (): void => actions.keepClear('opened'),
     onSave: (): void => actions.save()
   };
 

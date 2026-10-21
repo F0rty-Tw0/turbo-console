@@ -10,6 +10,7 @@ import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.t
 import { DEFAULT_DEPTH } from '../common/graph.const.ts';
 import { depthOf, focusOn, isFiltered, sameMembers, showAllOf, toggleRow, withDepth } from '../utils/controls-rules.util.ts';
 import { folderGroupsOf, tagsOf } from '../utils/folder-group.util.ts';
+import { isShowable } from '../utils/ghost-show.util.ts';
 import { controlsFieldsOf, restoredFilters } from '../utils/restored-filters.util.ts';
 import { visibleOf } from '../utils/visibility.util.ts';
 
@@ -60,6 +61,18 @@ export class GraphControls {
   /** The details panel's Exclude: unticks `name`; the focused package stays, as in the list. */
   public exclude(name: string): void {
     if (this.mounted !== null) this.edit(this.mounted, toggleRow(this.applied, name, false));
+  }
+
+  /** The details panel's Show: re-ticks `name`, a hidden path package of the trace. */
+  public show(name: string): void {
+    if (this.mounted !== null) this.edit(this.mounted, toggleRow(this.applied, name, true));
+  }
+
+  /** Whether re-ticking `name` alone would draw it again. */
+  public canShow(name: string): boolean {
+    const graph = this.mounted?.graph ?? null;
+
+    return graph !== null && isShowable(graph.infos, graph.edges, this.applied, name);
   }
 
   public markSelected(name: string | null): void {

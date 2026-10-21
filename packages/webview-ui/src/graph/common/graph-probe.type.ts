@@ -3,7 +3,10 @@ import type { Position } from '../../bridge/common/graph-state.type.ts';
 
 export type ProbeState = 'selected' | 'highlighted' | 'dimmed' | 'normal';
 
-/** `x`, `y` are model centres; `renderedX`, `renderedY` the centre in page CSS pixels; colours are Cytoscape's `rgb(...)`. */
+/**
+ * `x`, `y` are model centres; `renderedX`, `renderedY` the centre in page CSS pixels; colours are Cytoscape's `rgb(...)`.
+ * A ghost (a trace's hidden path package) reads `highlighted` plus `isGhost`.
+ */
 export type ProbeNode = {
   readonly id: string;
   readonly x: number;
@@ -16,12 +19,18 @@ export type ProbeNode = {
   readonly frame: string;
   readonly label: string;
   readonly fill: string;
+  readonly isGhost: boolean;
+  readonly borderStyle: string;
 };
 
 export type ProbeEdge = {
   readonly source: string;
   readonly target: string;
   readonly state: ProbeState;
+  readonly isGhost: boolean;
+  /** Cytoscape's `visible()`: false with a hidden end or a `display: none` bypass. */
+  readonly isDrawn: boolean;
+  readonly lineStyle: string;
 };
 
 export type LayoutEngine = 'elk' | 'cache' | 'fallback';
@@ -38,7 +47,7 @@ export type GraphProbe = {
   /** From the latest `graph` state's message event to the first Cytoscape `render` after it; `null` until that render. */
   readonly firstFrameMs: () => number | null;
   readonly layoutEngine: () => LayoutEngine | null;
-  /** The package names Cytoscape draws, sorted: nodes a filter hides are `display: none`. */
+  /** The package names Cytoscape draws, sorted, ghosts left out: nodes a filter hides are `display: none`. */
   readonly visibleIds: () => string[];
   /** From the latest `graph` state's message event to its controls panel built and restored; `null` until then. */
   readonly controlsBuiltMs: () => number | null;

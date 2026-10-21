@@ -2,9 +2,8 @@ import type { Core, EdgeSingular, NodeSingular } from 'cytoscape';
 
 import { showOnly } from './graph-visibility.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
+import { GHOST_CLASS } from '../common/graph.const.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
-
-const GHOST_CLASS = 'ghost';
 
 /** Clears every ghost class and display bypass: nodes are shown as `visible` says, links follow their ends. */
 const resetGhosts = (cy: Core, visible: ReadonlySet<string>): void => {

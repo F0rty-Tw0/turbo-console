@@ -1,13 +1,23 @@
 import type { DetailsViews } from './details.type.ts';
 import type { ControlsViewFields, DrawnGraph, GraphView, PageElements, ViewStateSaver } from './graph-page.type.ts';
-import type { ProbeFacts } from './graph-probe.type.ts';
 import type { Inspection, InspectionInput } from './inspection.type.ts';
+import type { KeepClearTrigger } from './keep-clear.type.ts';
+import type { TraceCandidates, TraceResult } from './trace.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 
 /** What a same-hash state does: relabel the shown package in place, and ask again for the shown link's entry. */
 export type SameHashPlan = {
   readonly isUpdate: boolean;
   readonly isReask: boolean;
+};
+
+/** What the canvas draws for an inspection: the graph and visible set it was built for, its trace and its candidates. */
+export type CanvasShown = {
+  readonly inspection: Inspection;
+  readonly drawn: DrawnGraph;
+  readonly visible: ReadonlySet<string>;
+  readonly trace: TraceResult | null;
+  readonly candidates: TraceCandidates | null;
 };
 
 /** What a save writes besides the camera and the controls: the inspection and whether Details is open. */
@@ -39,6 +49,15 @@ export type GraphInspectionDeps = {
   readonly onFocusOn: (name: string) => void;
   readonly onExclude: (name: string) => void;
   readonly onShow: (name: string) => void;
+  /** Whether "Show" can re-tick `name` alone to draw it again. */
+  readonly canShow: (name: string) => boolean;
+};
+
+/** What the keep-clear pan reads: the canvas, the page's container and details aside, and the inspection's anchors. */
+export type KeepClearDeps = {
+  readonly view: GraphView;
+  readonly page: PageElements;
+  readonly inspection: Inspection;
 };
 
 /** What the details panel, `Clear selection` and the container's keys ask of `GraphInspection`. */
@@ -48,7 +67,5 @@ export type InspectionActions = {
   readonly filter: (text: string) => void;
   readonly openDetails: () => void;
   readonly save: () => void;
+  readonly keepClear: (trigger: KeepClearTrigger) => void;
 };
-
-/** The probe facts `GraphInspection` knows. */
-export type InspectionFacts = Pick<ProbeFacts, 'selected' | 'inspection' | 'detailsBuiltMs' | 'pickingBuiltMs' | 'traceMs'>;

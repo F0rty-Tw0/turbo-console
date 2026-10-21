@@ -5,6 +5,7 @@ import type { GraphControlsDeps, GraphFilteringDeps } from '../common/graph-cont
 import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
+import type { Inspection } from '../common/inspection.type.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
 type FilteringFacts = Pick<
@@ -14,8 +15,8 @@ type FilteringFacts = Pick<
 
 /**
  * The controls panel and the inspection it drives; the only place that knows both `GraphControls` and
- * `GraphInspection`. A visible set the controls report is shown, re-checks the inspection and refits; the restored
- * one is shown without a fit.
+ * `GraphInspection`. A visible set the controls report is shown, re-checks the inspection, refits and keeps the
+ * inspection clear of the details overlay; the restored one is shown without a fit or a pan.
  */
 export class GraphFiltering {
   public readonly inspection: GraphInspection;
@@ -46,8 +47,8 @@ export class GraphFiltering {
       onSelected: (name): void => this.controls.markSelected(name),
       onFocusOn: (name): void => this.controls.focusOn(name),
       onExclude: (name): void => this.controls.exclude(name),
-      // Task 3.5 wires Show to the controls.
-      onShow: (): void => undefined
+      onShow: (name): void => this.controls.show(name),
+      canShow: (name): boolean => this.controls.canShow(name)
     };
 
     this.deps = deps;
@@ -71,11 +72,15 @@ export class GraphFiltering {
   }
 
   public facts(): FilteringFacts {
-    const inspectionFacts = this.inspection.facts();
+    const { inspection } = this;
     const facts: FilteringFacts = {
       controlsBuiltMs: (): number | null => this.builtMs,
       filterAppliedMs: (): number | null => this.appliedMs,
-      ...inspectionFacts
+      selected: (): string | null => inspection.selected(),
+      inspection: (): Inspection => inspection.current(),
+      detailsBuiltMs: (): number | null => inspection.builtMs('package'),
+      pickingBuiltMs: (): number | null => inspection.builtMs('picking'),
+      traceMs: (): number | null => inspection.builtMs('trace')
     };
 
     return facts;
@@ -90,6 +95,8 @@ export class GraphFiltering {
     page.fit.disabled = !isAny;
 
     if (isAny) view.fit();
+
+    this.inspection.keepClear('filter');
 
     const inputAt = this.controls.inputAt();
 

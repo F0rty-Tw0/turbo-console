@@ -2,6 +2,7 @@ import type { Core, EventObject, EventObjectEdge, EventObjectNode, NodeSingular 
 
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
+import { GHOST_CLASS } from '../common/graph.const.ts';
 
 const centreEntryOf = (node: NodeSingular): [string, Position] => {
   const { x, y } = node.position();
@@ -12,7 +13,7 @@ const centreEntryOf = (node: NodeSingular): [string, Position] => {
 
 const nodeName = (event: EventObjectNode): string => event.target.id();
 
-const isGhost = (event: EventObjectNode | EventObjectEdge): boolean => event.target.hasClass('ghost');
+const isGhost = (event: EventObjectNode | EventObjectEdge): boolean => event.target.hasClass(GHOST_CLASS);
 
 const positionsOf = (cy: Core): Positions => {
   const entries = cy.nodes().map(centreEntryOf);
