@@ -38,12 +38,12 @@ describe('FEATURE: create bridge', () => {
       expect((): void => bridge.post({ type: 'showOutput' })).not.toThrow();
     });
 
-    it('WHEN the scroll is saved THEN it reads back 0', () => {
+    it('WHEN state is saved THEN savedState stays undefined', () => {
       const bridge = createBridge();
 
-      bridge.saveScroll(120);
+      bridge.saveState({ scrollY: 120 });
 
-      expect(bridge.scrollY()).toBe(0);
+      expect(bridge.savedState()).toBeUndefined();
     });
   });
 
@@ -73,25 +73,27 @@ describe('FEATURE: create bridge', () => {
       expect(postMessage).toHaveBeenCalledWith({ type: 'refresh', scope: 'root' });
     });
 
-    it('WHEN the scroll is saved THEN scrollY reads it back', () => {
+    it('WHEN state is saved THEN savedState reads back what was given, whatever its shape', () => {
       stubHost();
       const bridge = createBridge();
 
-      bridge.saveScroll(120);
+      bridge.saveState({ zoom: 2 });
 
-      expect(bridge.scrollY()).toBe(120);
+      expect(bridge.savedState()).toStrictEqual({ zoom: 2 });
     });
 
-    it('WHEN no state was saved THEN scrollY is 0', () => {
+    it('WHEN no state was saved THEN savedState is undefined', () => {
       stubHost();
 
-      expect(createBridge().scrollY()).toBe(0);
+      expect(createBridge().savedState()).toBeUndefined();
     });
 
-    it('WHEN the saved state is not an object THEN scrollY is 0', () => {
-      stubHost('garbage');
+    it('WHEN a graph message is posted THEN the host receives it', () => {
+      const postMessage = stubHost();
 
-      expect(createBridge().scrollY()).toBe(0);
+      createBridge().post({ type: 'openDetails', packageName: 'web' });
+
+      expect(postMessage).toHaveBeenCalledWith({ type: 'openDetails', packageName: 'web' });
     });
 
     it('WHEN a message event arrives THEN the listener gets its data', () => {

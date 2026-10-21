@@ -13,10 +13,16 @@ import {
 import type {
   DetailsState,
   DryRunPhase,
+  GraphEdge,
+  GraphHostMessage,
+  GraphState,
+  GraphViewState,
+  GraphWebviewMessage,
   HostMessage,
   MissingPackage,
   OpenPackageJsonMessage,
   PackageDetails,
+  Positions,
   ReadyMessage,
   RefreshMessage,
   RunStateMessage,
@@ -30,6 +36,11 @@ import type {
   WebviewSlots
   // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 } from './index.ts';
+
+type ExpectedEdge = { readonly source: string; readonly target: string };
+type ExpectedPosition = { readonly x: number; readonly y: number };
+type ExpectedStateMessage = { readonly type: 'state'; readonly state: GraphState };
+type LayoutDoneKey = { readonly type: 'layoutDone' };
 
 /** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern and tool-icon prefix constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
@@ -76,6 +87,13 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<TaskCard['persistent']>().toEqualTypeOf<boolean>();
       expectTypeOf<TaskCard['tool']>().toEqualTypeOf<ToolView | null>();
       expectTypeOf<ToolView['iconId']>().toEqualTypeOf<string | null>();
+      expectTypeOf<GraphEdge>().toEqualTypeOf<ExpectedEdge>();
+      expectTypeOf<Positions[string]>().toEqualTypeOf<ExpectedPosition>();
+      expectTypeOf<GraphState['kind']>().toEqualTypeOf<'loading' | 'error' | 'singlePackage' | 'graph'>();
+      expectTypeOf<GraphHostMessage>().toEqualTypeOf<ExpectedStateMessage>();
+      expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<'ready' | 'reload' | 'openDetails' | 'positions' | 'layoutDone'>();
+      expectTypeOf<Extract<GraphWebviewMessage, LayoutDoneKey>['engine']>().toEqualTypeOf<'elk' | 'fallback'>();
+      expectTypeOf<GraphViewState['selected']>().toEqualTypeOf<string | null>();
     });
   });
 });

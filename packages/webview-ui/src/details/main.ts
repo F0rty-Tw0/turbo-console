@@ -5,13 +5,15 @@ import { patchRun } from './ui/patch-run.ts';
 import { holdPointerClicks, installRunClickHold } from './ui/run-click-hold.ts';
 import { RunClock } from './ui/run-clock.ts';
 import { isHostMessage } from './utils/host-message.util.ts';
+import type { ScrollState } from '../bridge/common/bridge.type.ts';
 import type { DetailsState } from '../bridge/common/details-state.type.ts';
 import { createBridge } from '../bridge/data-access/create-bridge.ts';
+import { readScrollY } from '../bridge/utils/scroll-state.util.ts';
 
 const bridge = createBridge();
 const clock = new RunClock();
 const root = document.createElement('main');
-const savedScrollY = bridge.scrollY();
+const savedScrollY = readScrollY(bridge.savedState());
 const noCards: CardIndex = new Map();
 const noTargets: FocusTargets = new Map();
 let page: RenderedPage = { cards: noCards, focusTargets: noTargets };
@@ -62,7 +64,9 @@ const receive = (message: unknown): void => {
 const saveScroll = (): void => {
   if (!isScrollRestored) return;
 
-  bridge.saveScroll(scrollY);
+  const state: ScrollState = { scrollY };
+
+  bridge.saveState(state);
 };
 
 // A held Enter repeats its click; a repeat must never hit a Run/Stop button swapped in under it.

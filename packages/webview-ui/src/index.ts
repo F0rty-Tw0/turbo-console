@@ -21,6 +21,12 @@ export type {
   ToolView
 } from './bridge/common/details-state.type.ts';
 
+export type { GraphHostMessage, GraphWebviewMessage } from './bridge/common/graph-message.type.ts';
+
+export type { GraphEdge, GraphState, Positions } from './bridge/common/graph-state.type.ts';
+
+export type { GraphViewState } from './bridge/common/graph-view-state.type.ts';
+
 export type { WebviewSlots } from './shell/common/webview-html.type.ts';
 
 export { ICON_ID_PATTERN, TOOL_ICON_PREFIX } from './details/common/run-view.const.ts';
