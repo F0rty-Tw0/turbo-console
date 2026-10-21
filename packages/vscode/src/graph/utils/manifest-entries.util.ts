@@ -13,6 +13,11 @@ type ManifestQuery = {
   readonly dependency: string;
 };
 
+const HIGH_SURROGATE_FIRST = 0xd800;
+const HIGH_SURROGATE_LAST = 0xdbff;
+
+const PAIR_SAFE_MAX = ENTRY_TEXT_MAX - 1;
+
 const ALIAS_PREFIXES = ['npm:', 'workspace:'];
 
 const stringValueOf = (node: Node | undefined): string | null => {
@@ -31,10 +36,15 @@ const withoutBom = (text: string): string => {
   return text.slice(BOM.length);
 };
 
+const isHighSurrogate = (unit: number): boolean => unit >= HIGH_SURROGATE_FIRST && unit <= HIGH_SURROGATE_LAST;
+
 const cut = (text: string): string => {
   if (text.length <= ENTRY_TEXT_MAX) return text;
 
-  return `${text.slice(0, ENTRY_TEXT_MAX)}…`;
+  const splitsPair = isHighSurrogate(text.charCodeAt(PAIR_SAFE_MAX));
+  const keptUnits = splitsPair ? PAIR_SAFE_MAX : ENTRY_TEXT_MAX;
+
+  return `${text.slice(0, keptUnits)}…`;
 };
 
 const isAliasOf = (spec: string | null, dependency: string): boolean => {

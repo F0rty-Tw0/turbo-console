@@ -155,6 +155,18 @@ const cuts: [string, string, string, ManifestEntry[]][] = [
     rows('\n', '{', '  "dependencies": {', `    "core": "${'s'.repeat(200)}"`, '  }', '}'),
     'core',
     [entry('dependencies', 'core', 's'.repeat(200), 2)]
+  ],
+  [
+    'an emoji straddling the 200 character cut: it is dropped whole, never split',
+    rows('\n', '{', '  "dependencies": {', `    "core": "${'s'.repeat(199)}😀tail"`, '  }', '}'),
+    'core',
+    [entry('dependencies', 'core', `${'s'.repeat(199)}…`, 2)]
+  ],
+  [
+    'an emoji ending exactly at the 200 character cut: it is kept whole',
+    rows('\n', '{', '  "dependencies": {', `    "core": "${'s'.repeat(198)}😀tail"`, '  }', '}'),
+    'core',
+    [entry('dependencies', 'core', `${'s'.repeat(198)}😀…`, 2)]
   ]
 ];
 
