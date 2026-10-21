@@ -310,7 +310,6 @@ ul {
   gap: var(--space-1);
   min-width: 0;
   height: max(1lh, 16px);
-  overflow: hidden;
   color: var(--vscode-descriptionForeground);
 }
 
