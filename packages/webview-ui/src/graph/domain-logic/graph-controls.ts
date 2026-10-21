@@ -49,10 +49,6 @@ export class GraphControls {
     deps.page.controls.addEventListener('click', (): void => this.toggleOpen());
   }
 
-  public filters(): GraphFilters {
-    return this.applied;
-  }
-
   public visible(): ReadonlySet<string> {
     return this.shown;
   }
@@ -94,7 +90,11 @@ export class GraphControls {
 
     wireControls(elements, this.actionsOf(mounted));
     renderSearch(elements, graph.infos, restored.search);
-    const keyboardDeps: KeyboardDeps = { ...this.deps, isVisible: (name) => this.shown.has(name), selected: () => this.selected };
+    const keyboardDeps: KeyboardDeps = {
+      ...this.deps,
+      isVisible: (name): boolean => this.shown.has(name),
+      selected: (): string | null => this.selected
+    };
 
     new ControlsKeyboard(elements, keyboardDeps);
     this.shown = visibleOf(graph.infos, graph.edges, this.applied);

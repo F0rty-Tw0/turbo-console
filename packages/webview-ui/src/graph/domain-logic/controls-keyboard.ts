@@ -93,7 +93,7 @@ export class ControlsKeyboard {
   }
 
   /** Re-derives the lines and puts the Tab stop on the remembered cell, or the first checkbox when its line is gone. */
-  public refresh(): void {
+  private refresh(): void {
     const lines = gridLinesOf(this.elements);
     const remembered = cellAtOf(lines, this.cell);
     const entry = entryCellOf(lines, remembered);
