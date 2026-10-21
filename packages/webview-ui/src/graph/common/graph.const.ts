@@ -9,6 +9,12 @@ export const NODE_FONT_SIZE = 13;
 
 export const VIEW_STATE_DEBOUNCE_MS = 250;
 
+export const MIN_DEPTH = 1;
+
+export const MAX_DEPTH = 5;
+
+export const DEFAULT_DEPTH = 1;
+
 export const LOADING_TEXT = 'Loading packages…';
 
 export const LAYOUT_FAILED_TEXT = 'The package graph could not be drawn';

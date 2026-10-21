@@ -6,7 +6,22 @@ import type { GraphViewState } from '../../bridge/common/graph-view-state.type.t
 
 const PAN: Position = { x: -10, y: 20 };
 
-const VALID: GraphViewState = { hash: 'h', zoom: 1.5, pan: PAN, selected: 'web' };
+const VALID: GraphViewState = {
+  hash: 'h',
+  zoom: 1.5,
+  pan: PAN,
+  selected: 'web',
+  controlsOpen: false,
+  search: 'ui',
+  depth: 3,
+  hidden: ['docs', '__proto__'],
+  focus: 'core',
+  tags: ['lib', 'constructor']
+};
+
+const CAMERA = { hash: 'h', zoom: 1.5, pan: PAN, selected: 'web' };
+
+const DEFAULTED: GraphViewState = { ...CAMERA, controlsOpen: true, search: '', depth: 1, hidden: [], focus: null, tags: [] };
 
 const ORIGIN: Position = { x: 0, y: 0 };
 
@@ -33,6 +48,41 @@ describe('FEATURE: readGraphViewState', () => {
       const state = readGraphViewState(raw);
 
       expect(state).toStrictEqual(VALID);
+    });
+
+    it('WHEN it holds only the camera and the selection THEN the controls fields take their defaults', () => {
+      const state = readGraphViewState(CAMERA);
+
+      expect(state).toStrictEqual(DEFAULTED);
+    });
+  });
+
+  describe('GIVEN a valid state with one bad controls field', () => {
+    it.each([
+      ['a non-boolean controlsOpen', { controlsOpen: 'yes' }, { controlsOpen: true }],
+      ['a non-string search', { search: 5 }, { search: '' }],
+      ['a zero depth', { depth: 0 }, { depth: 1 }],
+      ['a depth above the maximum', { depth: 6 }, { depth: 1 }],
+      ['a fractional depth', { depth: 2.5 }, { depth: 1 }],
+      ['a string depth', { depth: '3' }, { depth: 1 }],
+      ['a NaN depth', { depth: NaN }, { depth: 1 }],
+      ['a numeric focus', { focus: 4 }, { focus: null }],
+      ['a string hidden', { hidden: 'docs' }, { hidden: [] }],
+      ['a hidden with a number', { hidden: ['docs', 3] }, { hidden: [] }],
+      ['a tags with a null', { tags: ['lib', null] }, { tags: [] }]
+    ])('WHEN it holds %s THEN only that field falls back', (_name, bad, fixed) => {
+      const state = readGraphViewState({ ...VALID, ...bad });
+
+      expect(state).toStrictEqual({ ...VALID, ...fixed });
+    });
+
+    it.each([
+      ['the minimum', 1],
+      ['the maximum', 5]
+    ])('WHEN depth is %s THEN it is kept', (_name, depth) => {
+      const state = readGraphViewState({ ...VALID, depth });
+
+      expect(state).toStrictEqual({ ...VALID, depth });
     });
   });
 

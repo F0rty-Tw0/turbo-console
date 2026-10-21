@@ -1,6 +1,7 @@
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 import type { DrawnGraph, GraphSelectionDeps } from '../common/graph-page.type.ts';
+import { DEFAULT_DEPTH } from '../common/graph.const.ts';
 import { closureOf } from '../utils/closure.util.ts';
 import { selectionText } from '../utils/selection-text.util.ts';
 
@@ -87,7 +88,19 @@ export class GraphSelection {
 
   private viewState(drawn: DrawnGraph): GraphViewState {
     const { zoom, pan } = this.deps.view.viewport();
-    const state: GraphViewState = { hash: drawn.hash, zoom, pan, selected: this.selected };
+    // grug: interim defaults until Task 3.4 passes the controls state
+    const state: GraphViewState = {
+      hash: drawn.hash,
+      zoom,
+      pan,
+      selected: this.selected,
+      controlsOpen: true,
+      search: '',
+      depth: DEFAULT_DEPTH,
+      hidden: [],
+      focus: null,
+      tags: []
+    };
 
     return state;
   }
