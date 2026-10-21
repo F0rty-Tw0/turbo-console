@@ -5,6 +5,7 @@ import {
   HOSTILE_NAME_STUB,
   MISSING_PACKAGE_STUB,
   PACKAGE_DETAILS_STUB,
+  PASSED_RUN_VIEW_STUB,
   RUNNING_RUN_VIEW_STUB,
   RUN_VIEW_STUB,
   TASK_CARD_STUB,
@@ -14,15 +15,13 @@ import { packageWithTasks, taskNames } from './test/utils/details-state.spec.uti
 import type { WebviewMessage } from '../src/bridge/common/details-message.type.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
 import type { FieldRow } from '../src/details/common/details-page.type.ts';
-import { RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
+import { RUNNING_STATUS_COLOR_VAR, RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC1 = { description: 'AC1', type: 'requirement' };
 const AC4 = { description: 'AC4', type: 'requirement' };
 const AC5 = { description: 'AC5', type: 'requirement' };
 
 const NOT_IDLE: RunView = { ...RUN_VIEW_STUB, isIdle: false };
-
-const PASSED: RunView = { ...NOT_IDLE, iconId: 'pass', colorVar: '--vscode-testing-iconPassed', text: 'passed' };
 
 const HOSTILE_RUN: RunView = { ...NOT_IDLE, iconId: 'a b', colorVar: '--x) url(https://e/', text: 'hostile' };
 
@@ -157,7 +156,7 @@ test.describe('FEATURE: package details page', () => {
   test('GIVEN a runState with a theme color, the status icon takes it', async ({ detailsPage }): Promise<void> => {
     await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
 
-    await test.step('AND the task passes', async (): Promise<void> => detailsPage.sendRunState('web#build', PASSED));
+    await test.step('AND the task passes', async (): Promise<void> => detailsPage.sendRunState('web#build', PASSED_RUN_VIEW_STUB));
 
     await test.step('THEN the icon is colored by the theme variable', async (): Promise<void> =>
       detailsPage.card('build').expectStatusIcon('codicon codicon-pass', 'var(--vscode-testing-iconPassed)'));
@@ -172,11 +171,20 @@ test.describe('FEATURE: package details page', () => {
 
     await test.step('WHEN the page shows a card with the hostile run', async (): Promise<void> => detailsPage.open(state));
 
-    await test.step('AND a runState repeats it', async (): Promise<void> => detailsPage.sendRunState('web#build', HOSTILE_RUN));
+    await test.step('AND the task starts running', async (): Promise<void> =>
+      detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
+
+    await test.step('THEN the card has the running status color', async (): Promise<void> =>
+      card.expectStatusColor(RUNNING_STATUS_COLOR_VAR));
+
+    await test.step('WHEN a runState ends it with the hostile run', async (): Promise<void> =>
+      detailsPage.sendRunState('web#build', HOSTILE_RUN));
 
     await test.step('THEN the card shows the run text', async (): Promise<void> => expect(card.status).toHaveText('hostile'));
 
     await test.step('AND the icon has no class or color from them', async (): Promise<void> => card.expectStatusIcon('codicon', ''));
+
+    await test.step('AND the card has no status color', async (): Promise<void> => card.expectStatusColor(null));
 
     await test.step('AND no console or page error is logged', (): void => detailsPage.expectNoErrors());
   });

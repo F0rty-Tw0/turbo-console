@@ -1,4 +1,4 @@
-import { codicon, iconButton, textElement } from './page-elements.ts';
+import { codicon, iconButton, runButton, textElement } from './page-elements.ts';
 import { fillRun } from './patch-run.ts';
 import type { DryRunPhase, RunView, TaskCard } from '../../bridge/common/details-state.type.ts';
 import type { CardRefs, FieldRow, RenderContext, RenderedCard, RunButtonFactory } from '../common/details-page.type.ts';
@@ -13,9 +13,9 @@ const runButtonFor = (card: TaskCard, context: RenderContext): RunButtonFactory 
   const stop = (): void => bridge.post({ type: 'stop', taskId });
   const run = (): void => bridge.post({ type: 'run', taskId });
   const runOrStop = (view: RunView): HTMLButtonElement => {
-    if (view.isRunning) return iconButton(STOP_ICON_ID, `Stop ${name}`, stop);
+    if (view.isRunning) return runButton(STOP_ICON_ID, 'Stop', `Stop ${name}`, stop);
 
-    return iconButton('play', `Run ${name}`, run);
+    return runButton('play', 'Run', `Run ${name}`, run);
   };
 
   return (view: RunView): HTMLButtonElement => {
@@ -163,9 +163,9 @@ export const taskCard = (card: TaskCard, phase: DryRunPhase, context: RenderCont
   const element = textElement('section', 'card', '');
   const status = textElement('span', 'run-status', '');
   const runSlot = textElement('span', 'run-slot', '');
-  const runButton = runButtonFor(card, context);
-  const { taskId, isTurboTask } = card;
-  const refs: CardRefs = { taskId, isTurboTask, status, runSlot, runButton };
+  const buildRunButton = runButtonFor(card, context);
+  const { taskId } = card;
+  const refs: CardRefs = { taskId, card: element, status, runSlot, runButton: buildRunButton };
 
   const header = cardHeader(card, refs, context);
   const fields = fieldList(card, phase);

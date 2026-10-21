@@ -2,14 +2,13 @@ import { codicon, textElement } from './page-elements.ts';
 import { holdSwappedButton } from './run-click-hold.ts';
 import type { RunView } from '../../bridge/common/details-state.type.ts';
 import type { CardIndex, CardRefs, RunTexts } from '../common/details-page.type.ts';
-import { STOP_ICON_ID } from '../common/run-view.const.ts';
+import { RUNNING_STATUS_COLOR_VAR, STOP_ICON_ID } from '../common/run-view.const.ts';
 import { safeColorVar } from '../utils/run-view.util.ts';
 
 const STOP_ICON = `.codicon-${STOP_ICON_ID}`;
 
-const statusIcon = (run: RunView): HTMLSpanElement => {
+const statusIcon = (run: RunView, colorVar: string | null): HTMLSpanElement => {
   const icon = codicon(run.iconId);
-  const colorVar = safeColorVar(run.colorVar);
 
   if (run.isSpinning) icon.classList.add('codicon-modifier-spin');
 
@@ -18,18 +17,32 @@ const statusIcon = (run: RunView): HTMLSpanElement => {
   return icon;
 };
 
-/** A script card's status stays blank until it has a run to show (spec 1c-b §4.5). */
-const fillStatus = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
-  const isIdleScript = !refs.isTurboTask && run.isIdle;
+const fillStatusColor = (refs: CardRefs, colorVar: string | null): void => {
+  if (colorVar === null) {
+    refs.card.style.removeProperty('--status-color');
 
-  if (isIdleScript) {
+    return;
+  }
+
+  refs.card.style.setProperty('--status-color', `var(${colorVar})`);
+};
+
+/** Every card's status stays blank until it has a run to show (spec 1c-b §4.5, polish spec 3 §4.4). */
+const fillStatus = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
+  const ownColorVar = safeColorVar(run.colorVar);
+  const liveColorVar = run.isRunning ? RUNNING_STATUS_COLOR_VAR : ownColorVar;
+  const cardColorVar = run.isIdle ? null : liveColorVar;
+
+  fillStatusColor(refs, cardColorVar);
+
+  if (run.isIdle) {
     runTexts.drop(refs.taskId);
     refs.status.replaceChildren();
 
     return;
   }
 
-  const icon = statusIcon(run);
+  const icon = statusIcon(run, ownColorVar);
   const text = textElement('span', 'run-text', '');
 
   runTexts.show(refs.taskId, text, run);

@@ -12,8 +12,10 @@ const TICK_MS = 1000;
 
 const writeText = (entry: RunningText): void => {
   const sinceReceivedMs = performance.now() - entry.receivedAt;
+  const text = runText(entry.run, sinceReceivedMs);
 
-  entry.element.textContent = runText(entry.run, sinceReceivedMs);
+  entry.element.textContent = text;
+  entry.element.title = text;
 };
 
 /**
