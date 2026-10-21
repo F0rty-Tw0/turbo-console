@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { renderWebviewHtml, webviewCsp } from './webview-html.util.ts';
+import { graphCsp, renderWebviewHtml, webviewCsp } from './webview-html.util.ts';
 
 const SPEC_CSP =
   "default-src 'none'; script-src 'nonce-n'; style-src vscode-resource: 'nonce-n'; font-src vscode-resource:; img-src vscode-resource: data:; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'";
@@ -83,6 +83,20 @@ describe('FEATURE: webview html', () => {
   describe('GIVEN a nonce and a cspSource', () => {
     it('WHEN the csp is built THEN it is the spec string', () => {
       expect(webviewCsp('n', 'vscode-resource:')).toBe(SPEC_CSP);
+    });
+  });
+
+  describe('GIVEN a nonce and a cspSource for the graph page', () => {
+    it('WHEN the graph csp is built THEN it is the base csp with trusted-types tc-elk and worker-src blob:', () => {
+      const base = webviewCsp('n', 'vscode-resource:');
+
+      const csp = graphCsp('n', 'vscode-resource:');
+
+      expect(csp).toBe(`${base.replace("trusted-types 'none'", 'trusted-types tc-elk')}; worker-src blob:`);
+    });
+
+    it('WHEN the graph csp is built THEN it holds no unsafe-eval, unsafe-inline or connect-src', () => {
+      expect(graphCsp('n', 'vscode-resource:')).not.toMatch(/unsafe-eval|unsafe-inline|connect-src/);
     });
   });
 });

@@ -2,7 +2,7 @@ import { webviewCsp } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
 import { detailsHtml, panelOptionsOf } from './details-webview.util.ts';
-import type { HtmlAssets } from '../common/details-webview.type.ts';
+import type { HtmlAssets } from '../../shared/common/html-assets.type.ts';
 
 const TEMPLATE_LINES = [
   '<meta http-equiv="Content-Security-Policy" content="{{csp}}" />',

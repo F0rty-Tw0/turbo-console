@@ -5,6 +5,7 @@ import {
   TOOL_ICON_PREFIX,
   durationText,
   elapsedText,
+  graphCsp,
   hiddenScriptsText,
   renderWebviewHtml,
   webviewCsp
@@ -48,6 +49,7 @@ const RUNTIME_EXPORTS = [
   'TOOL_ICON_PREFIX',
   'durationText',
   'elapsedText',
+  'graphCsp',
   'hiddenScriptsText',
   'renderWebviewHtml',
   'webviewCsp'
@@ -66,6 +68,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.TOOL_ICON_PREFIX).toBe(TOOL_ICON_PREFIX);
       expect(entry.durationText).toBe(durationText);
       expect(entry.elapsedText).toBe(elapsedText);
+      expect(entry.graphCsp).toBe(graphCsp);
       expect(entry.hiddenScriptsText).toBe(hiddenScriptsText);
       expect(entry.renderWebviewHtml).toBe(renderWebviewHtml);
       expect(entry.webviewCsp).toBe(webviewCsp);

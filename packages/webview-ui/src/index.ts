@@ -23,7 +23,7 @@ export type {
 
 export type { GraphHostMessage, GraphWebviewMessage } from './bridge/common/graph-message.type.ts';
 
-export type { GraphEdge, GraphState, Positions } from './bridge/common/graph-state.type.ts';
+export type { GraphEdge, GraphState, Position, Positions } from './bridge/common/graph-state.type.ts';
 
 export type { GraphViewState } from './bridge/common/graph-view-state.type.ts';
 
@@ -35,4 +35,4 @@ export { durationText, elapsedText } from './bridge/utils/duration-text.util.ts'
 
 export { hiddenScriptsText } from './details/utils/field-text.util.ts';
 
-export { renderWebviewHtml, webviewCsp } from './shell/utils/webview-html.util.ts';
+export { graphCsp, renderWebviewHtml, webviewCsp } from './shell/utils/webview-html.util.ts';

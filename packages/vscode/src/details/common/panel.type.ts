@@ -5,19 +5,11 @@ import type { PanelKey } from './details.type.ts';
 import type { Coordinator, Roots } from '../../roots/common/coordinator.type.ts';
 import type { FileLookupPorts } from '../../run/common/picker.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
+import type { EditorPanelView } from '../../shared/common/panel-view.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 
-/** One webview panel as the registry drives it. Listeners live as long as the panel; `dispose` is safe to repeat. */
-export type PanelView = {
-  readonly isVisible: () => boolean;
-  readonly reveal: () => void;
-  readonly setTitle: (title: string) => void;
-  readonly send: (message: HostMessage) => PromiseLike<unknown>;
-  readonly onMessage: (listener: (value: unknown) => void) => void;
-  readonly onViewState: (listener: () => void) => void;
-  readonly onDispose: (listener: () => void) => void;
-  readonly dispose: () => void;
-};
+/** One webview panel as the registry drives it. */
+export type PanelView = EditorPanelView<HostMessage>;
 
 /**
  * Editor effects of the registry. `open` creates a panel with its page set and throws, with no panel left behind, when

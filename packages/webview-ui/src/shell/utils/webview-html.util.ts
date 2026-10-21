@@ -37,11 +37,7 @@ export const renderWebviewHtml = (template: string, slots: WebviewSlots): string
   return html;
 };
 
-/**
- * The Content-Security-Policy every webview page runs under; `cspSource` is `webview.cspSource` in VS Code. The
- * result goes through `renderWebviewHtml` raw: pass a host-built nonce and `cspSource`, never repo text.
- */
-export const webviewCsp = (nonce: string, cspSource: string): string => {
+const directivesOf = (nonce: string, cspSource: string, trustedTypes: string): string[] => {
   const directives = [
     "default-src 'none'",
     `script-src 'nonce-${nonce}'`,
@@ -51,8 +47,26 @@ export const webviewCsp = (nonce: string, cspSource: string): string => {
     "base-uri 'none'",
     "form-action 'none'",
     "require-trusted-types-for 'script'",
-    "trusted-types 'none'"
+    trustedTypes
   ];
+
+  return directives;
+};
+
+/**
+ * The Content-Security-Policy every webview page runs under; `cspSource` is `webview.cspSource` in VS Code. The
+ * result goes through `renderWebviewHtml` raw: pass a host-built nonce and `cspSource`, never repo text.
+ */
+export const webviewCsp = (nonce: string, cspSource: string): string => {
+  const directives = directivesOf(nonce, cspSource, "trusted-types 'none'");
+
+  return directives.join('; ');
+};
+
+/** The policy of the Package Graph page: the base one plus the `tc-elk` Trusted Types policy and `blob:` workers. */
+export const graphCsp = (nonce: string, cspSource: string): string => {
+  const base = directivesOf(nonce, cspSource, 'trusted-types tc-elk');
+  const directives = [...base, 'worker-src blob:'];
 
   return directives.join('; ');
 };
