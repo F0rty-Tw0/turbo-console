@@ -1,6 +1,6 @@
 import type { GraphWebviewMessage } from '@turbo-console/webview-ui';
 
-import { isRecord } from './graph-cache.util.ts';
+import { isRecord } from './record.util.ts';
 import { UNPRINTABLE_MESSAGE } from '../../shared/common/panel.const.ts';
 import { droppedMessageText } from '../../shared/utils/dropped-message.util.ts';
 import { graphMessageSchema } from '../common/graph-message.schema.ts';

@@ -1,7 +1,7 @@
 import type { GraphState, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { acceptedPositions, coversExactly, isRecord, layoutEntryOf } from './graph-cache.util.ts';
+import { acceptedPositions, coversExactly, layoutEntryOf } from './graph-cache.util.ts';
 import { GRAPH_HASH_STUB, GRAPH_PACKAGES_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const STATE: GraphState = GRAPH_STATE_STUB;
@@ -66,17 +66,6 @@ describe('FEATURE: exact key cover', () => {
     ['a renamed key', renamedPositions(), false]
   ])('GIVEN %s WHEN checked against the packages THEN it is %s', (_name, positions, expected) => {
     expect(coversExactly(positions, GRAPH_PACKAGES_STUB)).toBe(expected);
-  });
-});
-
-describe('FEATURE: record check', () => {
-  it.each<[string, unknown, boolean]>([
-    ['an object', { a: 1 }, true],
-    ['an array', [1], false],
-    ['null', null, false],
-    ['a string', 'x', false]
-  ])('GIVEN %s WHEN checked THEN it is %s', (_name, value, expected) => {
-    expect(isRecord(value)).toBe(expected);
   });
 });
 

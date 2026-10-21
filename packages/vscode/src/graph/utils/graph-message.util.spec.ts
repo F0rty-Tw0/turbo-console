@@ -11,9 +11,10 @@ const POINT_WITHOUT_Y = { x: 1 };
 const POSITIONS_WITHOUT_Y = { a: POINT_WITHOUT_Y };
 const POINT_WITH_EXTRA = { x: 1, y: 2, z: 3 };
 const POSITIONS_WITH_EXTRA = { a: POINT_WITH_EXTRA };
-const FAR_POINT = { x: 1e7 + 1, y: 0 };
 const LONG_KEY_POSITIONS = { [LONG_NAME]: POINT };
-const FAR_POSITIONS = { a: FAR_POINT };
+const MAX_X_MIN_Y = { x: 1e7, y: -1e7 };
+const MIN_X_MAX_Y = { x: -1e7, y: 1e7 };
+const LIMIT_POSITIONS = { a: MAX_X_MIN_Y, b: MIN_X_MAX_Y };
 const THROWING_TYPE = {
   get type(): string {
     throw new Error('getter trap');
@@ -66,13 +67,46 @@ describe('FEATURE: graph webview message validation', () => {
       ['an upper-case hash', { type: 'positions', hash: 'DC7E01EB', positions: POSITIONS }],
       ['a package name past 214 units', { type: 'openDetails', packageName: LONG_NAME }],
       ['a position key past 214 units', { type: 'positions', hash: HASH, positions: LONG_KEY_POSITIONS }],
-      ['a coordinate past 1e7', { type: 'positions', hash: HASH, positions: FAR_POSITIONS }],
+      ['a positions list', { type: 'positions', hash: HASH, positions: [POINT] }],
+      ['null positions', { type: 'positions', hash: HASH, positions: null }],
       ['a positions record past 5000 keys', positionsWith(5001)],
       ['an unknown engine', { type: 'layoutDone', ms: 1, engine: 'webgl' }],
+      ['a negative layout time', { type: 'layoutDone', ms: -1, engine: 'elk' }],
+      ['a layout time past 10 minutes', { type: 'layoutDone', ms: 600_001, engine: 'elk' }],
+      ['an infinite layout time', { type: 'layoutDone', ms: Infinity, engine: 'elk' }],
       ['a throwing getter', THROWING_TYPE],
       ['a throwing positions getter', THROWING_POSITIONS]
     ])('WHEN parsed THEN %s is null', (_label, raw) => {
       expect(parseGraphMessage(raw)).toBeNull();
+    });
+  });
+
+  describe('GIVEN a point that is not a layout coordinate', () => {
+    it.each([
+      ['a NaN x', { x: NaN, y: 0 }],
+      ['an infinite y', { x: 0, y: Infinity }],
+      ['an x below -1e7', { x: -1e7 - 1, y: 0 }],
+      ['a y past 1e7', { x: 0, y: 1e7 + 1 }]
+    ])('WHEN parsed THEN %s makes the message null', (_label, point) => {
+      const positions = { a: point };
+
+      expect(parseGraphMessage({ type: 'positions', hash: HASH, positions })).toBeNull();
+    });
+  });
+
+  describe('GIVEN points exactly at ±1e7 on both axes', () => {
+    it('WHEN parsed THEN the message passes unchanged', () => {
+      const message = { type: 'positions', hash: HASH, positions: LIMIT_POSITIONS };
+
+      expect(parseGraphMessage(message)).toStrictEqual(message);
+    });
+  });
+
+  describe('GIVEN a layout time of 0', () => {
+    it('WHEN parsed THEN it passes', () => {
+      const message = { type: 'layoutDone', ms: 0, engine: 'elk' };
+
+      expect(parseGraphMessage(message)).toStrictEqual(message);
     });
   });
 

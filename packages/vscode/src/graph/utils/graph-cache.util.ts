@@ -1,5 +1,6 @@
 import type { GraphState, Position, Positions } from '@turbo-console/webview-ui';
 
+import { isRecord } from './record.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import { COORDINATE_MAX } from '../common/graph.const.ts';
 
@@ -7,8 +8,6 @@ type PositionsMessage = {
   readonly hash: string;
   readonly positions: Positions;
 };
-
-export const isRecord = (value: unknown): value is object => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const isCoordinate = (value: number): boolean => Number.isFinite(value) && Math.abs(value) <= COORDINATE_MAX;
 

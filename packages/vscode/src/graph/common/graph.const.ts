@@ -27,3 +27,6 @@ export const POSITIONS_MAX = 5000;
 
 /** A stored or posted coordinate past this magnitude is not a layout. */
 export const COORDINATE_MAX = 1e7;
+
+/** A `layoutDone` duration past this (10 minutes) is not a layout time. */
+export const LAYOUT_MS_MAX = 600_000;

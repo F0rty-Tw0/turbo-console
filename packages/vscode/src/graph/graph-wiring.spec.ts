@@ -23,7 +23,11 @@ type CreatePanel = (viewType: string, title: string, column: number, options: un
 
 /** `vscode` exists only inside the editor, so the module is replaced here by the calls the wiring makes. */
 const editor = vi.hoisted(() => {
-  const spies = { registerCommand: vi.fn<RegisterCommand>(), createWebviewPanel: vi.fn<CreatePanel>() };
+  const spies = {
+    registerCommand: vi.fn<RegisterCommand>(),
+    createWebviewPanel: vi.fn<CreatePanel>(),
+    showErrorMessage: vi.fn<(text: string) => Promise<undefined>>()
+  };
 
   return spies;
 });
@@ -49,7 +53,11 @@ vi.mock('vscode', () => {
   }
 
   const commands = { registerCommand: editor.registerCommand };
-  const window = { createWebviewPanel: editor.createWebviewPanel, activeTextEditor: undefined };
+  const window = {
+    createWebviewPanel: editor.createWebviewPanel,
+    showErrorMessage: editor.showErrorMessage,
+    activeTextEditor: undefined
+  };
   const viewColumn = { Active: -1 };
   const module = { Uri: FakeUri, ViewColumn: viewColumn, commands, window };
 
@@ -78,17 +86,21 @@ const commandCallback = (): ((arg: unknown) => unknown) => {
 
 const createPanel = (): PanelFake => webviewPanelMock().fake;
 
+const throwingCreatePanel = (): never => {
+  throw new Error('no webview');
+};
+
 describe('FEATURE: the graph wiring', () => {
   let page: PageRoot;
   let store: RootStore;
   let unregister: Mock<() => void>;
   let session: PanelRoots;
   let details: GraphDetails;
+  let output: Output;
   let graph: GraphWiring;
 
   beforeEach(() => {
-    const output: Output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
-
+    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
     page = copyGraphPageRoot();
     store = new RootStore();
     store.set([ROOT_FOLDER_STUB], () => coordinatorMock());
@@ -102,6 +114,8 @@ describe('FEATURE: the graph wiring', () => {
     editor.registerCommand.mockReturnValue({ dispose: unregister });
     editor.createWebviewPanel.mockReset();
     editor.createWebviewPanel.mockImplementation(createPanel);
+    editor.showErrorMessage.mockReset();
+    editor.showErrorMessage.mockResolvedValue(undefined);
     graph = createGraph(contextOf(page), session, details, output);
   });
 
@@ -129,6 +143,26 @@ describe('FEATURE: the graph wiring', () => {
       registered.dispose();
 
       expect(unregister).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN the editor cannot make a webview panel', () => {
+    it('WHEN Show Package Graph runs THEN the failure goes to the output channel as an error', async () => {
+      editor.createWebviewPanel.mockImplementationOnce(throwingCreatePanel);
+      graph.register();
+
+      await commandCallback()(undefined);
+
+      expect(output.error).toHaveBeenCalledExactlyOnceWith('no webview');
+    });
+
+    it('WHEN Show Package Graph runs THEN no panel is listed', async () => {
+      editor.createWebviewPanel.mockImplementationOnce(throwingCreatePanel);
+      graph.register();
+
+      await commandCallback()(undefined);
+
+      expect(graph.api.panels()).toStrictEqual([]);
     });
   });
 
