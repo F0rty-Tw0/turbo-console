@@ -6,7 +6,7 @@ import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
-import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** The graph page's elements, built once by `buildPage`; DOM order is the Tab order (toolbar, then container). */
@@ -75,10 +75,11 @@ export type GraphControllerDeps = {
   readonly now: () => number;
 };
 
-/** The graph the page shows: its hash and its drawable edges. */
+/** The graph the page shows: its hash, package names and records, and its drawable edges. */
 export type DrawnGraph = {
   readonly hash: string;
   readonly packages: string[];
+  readonly infos: GraphPackage[];
   readonly edges: GraphEdge[];
 };
 

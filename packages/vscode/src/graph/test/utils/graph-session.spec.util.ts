@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphPorts } from '../../common/graph.type.ts';
+import { packageNamesOf } from '../../utils/graph-package.util.ts';
 import type { PostedGraph } from '../common/graph.type.ts';
 import { graphPortsMock } from '../mocks/graph-ports.mock.ts';
 
@@ -26,7 +27,7 @@ export const lastStateOf = (ports: GraphPorts): PostedGraph => {
 
   if (state?.kind !== 'graph') throw new Error(`last posted state is ${state?.kind ?? 'missing'}, not graph`);
 
-  const posted: PostedGraph = { hash: state.hash, packages: state.packages, positions: state.positions };
+  const posted: PostedGraph = { hash: state.hash, packages: packageNamesOf(state.packages), positions: state.positions };
 
   return posted;
 };

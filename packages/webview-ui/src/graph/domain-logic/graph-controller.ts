@@ -7,7 +7,7 @@ import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView, Graph
 import type { LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import { LOADING_TEXT } from '../common/graph.const.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
-import { drawableEdges } from '../utils/closure.util.ts';
+import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { elkGraphOf } from '../utils/elk-graph.util.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
@@ -81,9 +81,8 @@ class GraphPageController {
 
     const raw = this.deps.bridge.savedState();
     const saved = readGraphViewState(raw);
-    const edges = drawableEdges(state.packages, state.edges);
 
-    this.drawn = { hash: state.hash, packages: state.packages, edges };
+    this.drawn = drawnGraphOf(state);
     this.engine = null;
     this.graphAt = at;
     this.firstFrame = null;

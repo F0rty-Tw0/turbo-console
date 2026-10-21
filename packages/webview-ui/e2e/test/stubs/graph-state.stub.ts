@@ -1,4 +1,5 @@
 import type { GraphEdge, GraphReady, GraphState, Position, Positions } from '../../../src/bridge/common/graph-state.type.ts';
+import { packageOf, packagesOf } from '../utils/graph-package.spec.util.ts';
 
 const WEB_CENTRE: Position = { x: 300, y: 0 };
 
@@ -42,7 +43,7 @@ const DANGLING_EDGES: GraphEdge[] = [...DIAMOND_CHAIN_EDGES, GHOST_EDGE];
 export const DIAMOND_CHAIN_STUB: GraphReady = {
   kind: 'graph',
   hash: 'a1b2c3d4',
-  packages: ['base', 'config', 'core', 'data', 'docs', 'ui', 'web'],
+  packages: packagesOf(['base', 'config', 'core', 'data', 'docs', 'ui', 'web']),
   edges: DIAMOND_CHAIN_EDGES,
   positions: null
 };
@@ -52,7 +53,7 @@ export const DIAMOND_CHAIN_CACHED_STUB: GraphReady = { ...DIAMOND_CHAIN_STUB, po
 export const EDITED_STUB: GraphReady = {
   ...DIAMOND_CHAIN_STUB,
   hash: 'e5f6a7b8',
-  packages: [...DIAMOND_CHAIN_STUB.packages, 'cli'],
+  packages: [...DIAMOND_CHAIN_STUB.packages, packageOf('cli')],
   positions: null
 };
 
@@ -62,7 +63,7 @@ export const NO_EDGES_STUB: GraphReady = { ...DIAMOND_CHAIN_STUB, hash: 'c0ffee0
 export const MONOREPO_ROOT_STUB: GraphReady = {
   ...DIAMOND_CHAIN_STUB,
   hash: 'd00dfeed',
-  packages: ['//', ...DIAMOND_CHAIN_STUB.packages],
+  packages: [packageOf('//', ''), ...DIAMOND_CHAIN_STUB.packages],
   edges: DANGLING_EDGES
 };
 
@@ -73,7 +74,7 @@ export const OTHER_HASH_CACHED_STUB: GraphReady = { ...DIAMOND_CHAIN_CACHED_STUB
 export const CONSTRUCTOR_UNCACHED_STUB: GraphReady = {
   ...DIAMOND_CHAIN_CACHED_STUB,
   hash: 'c0c0c0c0',
-  packages: [...DIAMOND_CHAIN_STUB.packages, 'constructor']
+  packages: [...DIAMOND_CHAIN_STUB.packages, packageOf('constructor')]
 };
 
 const OBJECT_MEMBER_EDGES: GraphEdge[] = [
@@ -86,7 +87,7 @@ const OBJECT_MEMBER_EDGES: GraphEdge[] = [
 export const OBJECT_MEMBER_NAMES_STUB: GraphReady = {
   kind: 'graph',
   hash: 'f00dface',
-  packages: ['__proto__', 'app', 'constructor', 'toString'],
+  packages: packagesOf(['__proto__', 'app', 'constructor', 'toString']),
   edges: OBJECT_MEMBER_EDGES,
   positions: null
 };
@@ -101,7 +102,7 @@ const ARROW_NAME_EDGES: GraphEdge[] = [
 export const ARROW_NAMES_STUB: GraphReady = {
   kind: 'graph',
   hash: 'a0b0c0d0',
-  packages: ['a', 'a>b', 'b', 'b>c', 'c'],
+  packages: packagesOf(['a', 'a>b', 'b', 'b>c', 'c']),
   edges: ARROW_NAME_EDGES,
   positions: null
 };

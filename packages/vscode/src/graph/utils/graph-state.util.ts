@@ -1,7 +1,8 @@
-import type { PackageEdge, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphState, Positions } from '@turbo-console/webview-ui';
+import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
+import type { GraphEdge, GraphPackage, GraphState, Positions } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
+import { packageNamesOf } from './graph-package.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
@@ -23,6 +24,8 @@ const compareText = (left: string, right: string): number => {
 const compareEdges = (left: GraphEdge, right: GraphEdge): number =>
   compareText(left.source, right.source) || compareText(left.target, right.target);
 
+const comparePackages = (left: GraphPackage, right: GraphPackage): number => compareText(left.name, right.name);
+
 const fnv1a = (text: string): string => {
   const bytes = new TextEncoder().encode(text);
   let hash = FNV_OFFSET;
@@ -32,13 +35,24 @@ const fnv1a = (text: string): string => {
   return hash.toString(16).padStart(8, '0');
 };
 
-/** FNV-1a over the sorted names and the sorted `source>target` lines, so input order never matters. */
-export const graphHashOf = (packages: string[], edges: GraphEdge[]): string => {
-  const names = packages.toSorted(compareText);
+/**
+ * FNV-1a over a `[name, path, tags]` JSON line per package in name order, a blank line, then the sorted
+ * `source>target` lines, so input order never matters but a changed path or tag does.
+ */
+export const graphHashOf = (packages: GraphPackage[], edges: GraphEdge[]): string => {
+  const packageLines = packages.toSorted(comparePackages).map((pkg) => JSON.stringify([pkg.name, pkg.path, pkg.tags]));
   const lines = edges.toSorted(compareEdges).map((edge) => `${edge.source}>${edge.target}`);
-  const text = `${names.join('\n')}\n\n${lines.join('\n')}`;
+  const text = `${packageLines.join('\n')}\n\n${lines.join('\n')}`;
 
   return fnv1a(text);
+};
+
+/** The name, the path and the tags of a node, the tags deduplicated and sorted. */
+const packageOf = (node: PackageNode): GraphPackage => {
+  const tags = Array.from(new Set(node.tags)).toSorted(compareText);
+  const info: GraphPackage = { name: node.name, path: node.path, tags };
+
+  return info;
 };
 
 /** `kind` dropped, pairs deduped, sorted by source then target. */
@@ -60,10 +74,10 @@ const cachedPositionsOf = (cache: GraphLayoutCacheEntry | null, hash: string, pa
 export const graphStateOf = (model: WorkspaceModel, cache: GraphLayoutCacheEntry | null): GraphState => {
   if (model.singlePackage) return SINGLE_PACKAGE;
 
-  const packages = model.packages.map((pkg) => pkg.name).toSorted(compareText);
+  const packages = model.packages.map(packageOf).toSorted(comparePackages);
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
-  const positions = cachedPositionsOf(cache, hash, packages);
+  const positions = cachedPositionsOf(cache, hash, packageNamesOf(packages));
   const state: GraphState = { kind: 'graph', hash, packages, edges, positions };
 
   return state;

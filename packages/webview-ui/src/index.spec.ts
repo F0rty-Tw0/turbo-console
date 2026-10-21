@@ -16,6 +16,7 @@ import type {
   DryRunPhase,
   GraphEdge,
   GraphHostMessage,
+  GraphPackage,
   GraphState,
   GraphViewState,
   GraphWebviewMessage,
@@ -39,6 +40,7 @@ import type {
 } from './index.ts';
 
 type ExpectedEdge = { readonly source: string; readonly target: string };
+type ExpectedPackage = { readonly name: string; readonly path: string; readonly tags: string[] };
 type ExpectedPosition = { readonly x: number; readonly y: number };
 type ExpectedStateMessage = { readonly type: 'state'; readonly state: GraphState };
 type LayoutDoneKey = { readonly type: 'layoutDone' };
@@ -91,6 +93,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<TaskCard['tool']>().toEqualTypeOf<ToolView | null>();
       expectTypeOf<ToolView['iconId']>().toEqualTypeOf<string | null>();
       expectTypeOf<GraphEdge>().toEqualTypeOf<ExpectedEdge>();
+      expectTypeOf<GraphPackage>().toEqualTypeOf<ExpectedPackage>();
       expectTypeOf<Positions[string]>().toEqualTypeOf<ExpectedPosition>();
       expectTypeOf<GraphState['kind']>().toEqualTypeOf<'loading' | 'error' | 'singlePackage' | 'graph'>();
       expectTypeOf<GraphHostMessage>().toEqualTypeOf<ExpectedStateMessage>();

@@ -4,6 +4,13 @@ export type GraphEdge = {
   readonly target: string;
 };
 
+/** A package as the page lists it; the host deduplicates and sorts `tags`. */
+export type GraphPackage = {
+  readonly name: string;
+  readonly path: string;
+  readonly tags: string[];
+};
+
 /** Where a node centre sits. */
 export type Position = {
   readonly x: number;
@@ -25,7 +32,7 @@ type GraphSinglePackage = { readonly kind: 'singlePackage' };
 export type GraphReady = {
   readonly kind: 'graph';
   readonly hash: string;
-  readonly packages: string[];
+  readonly packages: GraphPackage[];
   readonly edges: GraphEdge[];
   readonly positions: Positions | null;
 };

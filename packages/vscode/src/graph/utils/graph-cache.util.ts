@@ -1,5 +1,6 @@
 import type { GraphState, Position, Positions } from '@turbo-console/webview-ui';
 
+import { packageNamesOf } from './graph-package.util.ts';
 import { isRecord } from './record.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import { COORDINATE_MAX, PACKAGE_NAME_MAX } from '../common/graph.const.ts';
@@ -72,7 +73,7 @@ export const coversExactly = (positions: Positions, packages: string[]): boolean
 export const acceptedPositions = (state: GraphState, message: PositionsMessage): Positions | null => {
   if (state.kind !== 'graph' || message.hash !== state.hash) return null;
 
-  return coversExactly(message.positions, state.packages) ? message.positions : null;
+  return coversExactly(message.positions, packageNamesOf(state.packages)) ? message.positions : null;
 };
 
 /** Reads what `workspaceState` hands back; anything that is not a hash with points within `COORDINATE_MAX` is `null`. */

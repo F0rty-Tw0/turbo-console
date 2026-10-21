@@ -64,7 +64,7 @@ export const openCase = async (scene: GraphScene): Promise<void> => {
 
     const state = requireState(scene);
     const [panel] = api.graph.panels();
-    const packages = state.packages.filter((name): boolean => name !== ROOT_PACKAGE_NAME);
+    const packages = state.packages.map((pkg): string => pkg.name).filter((name): boolean => name !== ROOT_PACKAGE_NAME);
     const manifestNames = shownPackagesOf(manifest).map((pkg): string => pkg.name);
     const edgeLines = state.edges.map(edgeLineOf);
 
@@ -100,7 +100,7 @@ export const cacheCase = async (scene: GraphScene): Promise<void> => {
     const positioned = positionedNamesOf(state);
 
     assert.equal(state.hash, firstHash);
-    assert.deepEqual(sorted(positioned), sorted(state.packages));
+    assert.deepEqual(sorted(positioned), sorted(state.packages.map((pkg): string => pkg.name)));
   });
 };
 

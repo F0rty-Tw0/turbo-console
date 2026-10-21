@@ -7,3 +7,9 @@ export const rootNode = (name: string): PackageNode => {
 
   return node;
 };
+
+export const taggedNode = (name: string, tags: string[]): PackageNode => {
+  const node: PackageNode = { ...PACKAGE_NODE_STUB, name, tags };
+
+  return node;
+};

@@ -1,3 +1,4 @@
+import { packagesOf } from './graph-package.spec.util.ts';
 import type { GraphEdge, GraphReady } from '../../../src/bridge/common/graph-state.type.ts';
 
 const LIB_COUNT = 4;
@@ -72,7 +73,7 @@ export const targetLikeState = (): GraphReady => {
   const libLinks = libEdges();
   const featLinks = featEdges();
   const appLinks = appEdges();
-  const packages = [...HUBS, ...libs, ...feats, ...apps];
+  const packages = packagesOf([...HUBS, ...libs, ...feats, ...apps]);
   const edges = [...libLinks, ...featLinks, ...appLinks];
   const state: GraphReady = { kind: 'graph', hash: '7a7a7a7a', packages, edges, positions: null };
 

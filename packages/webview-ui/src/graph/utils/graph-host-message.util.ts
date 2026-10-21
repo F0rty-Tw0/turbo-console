@@ -12,10 +12,19 @@ const isEdge = (value: unknown): boolean => {
   return isString(source) && isString(target);
 };
 
+const isPackage = (value: unknown): boolean => {
+  if (!isRecord(value)) return false;
+
+  const { name, path, tags } = value;
+  const hasTags = Array.isArray(tags) && tags.every(isString);
+
+  return isString(name) && isString(path) && hasTags;
+};
+
 const isGraphShape = (state: UnknownRecord): boolean => {
   const { hash, packages, edges, positions } = state;
   const hasHash = typeof hash === 'string';
-  const hasPackages = Array.isArray(packages) && packages.every(isString);
+  const hasPackages = Array.isArray(packages) && packages.every(isPackage);
   const hasEdges = Array.isArray(edges) && edges.every(isEdge);
   const hasPositions = positions === null || isRecord(positions);
 
@@ -39,7 +48,7 @@ const isGraphState = (state: unknown): boolean => {
 };
 
 /**
- * Narrows a posted value to a `state` message by its state's `kind` and shape, down to each package name and edge end;
+ * Narrows a posted value to a `state` message by its state's `kind` and shape, down to each package's name, path and tags and each edge end;
  * anything else is ignored. The payload itself comes from the extension host, which builds it.
  */
 export const isGraphHostMessage = (value: unknown): value is GraphHostMessage => {

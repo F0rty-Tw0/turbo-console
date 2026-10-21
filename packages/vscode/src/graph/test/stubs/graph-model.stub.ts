@@ -1,5 +1,5 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphState, Position, Positions } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphState, Position, Positions } from '@turbo-console/webview-ui';
 
 import type { LoadedModel } from '../../../roots/common/root.type.ts';
 import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
@@ -11,7 +11,12 @@ const A_X_PROD: PackageEdge = { source: 'a', target: '@org/x', kind: 'prod' };
 const WEB_X_PROD: PackageEdge = { source: 'web', target: '@org/x', kind: 'prod' };
 const UNSORTED_EDGES: PackageEdge[] = [WEB_A_DEV, WEB_A_PROD, A_X_PROD, WEB_X_PROD];
 
-export const GRAPH_MODEL_STUB: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, edges: UNSORTED_EDGES };
+const TAGGED_WEB_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'web', path: 'apps/web', tags: ['ui', 'app', 'ui'] };
+const A_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'a', path: 'packages/a' };
+const X_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: '@org/x', path: 'packages/libs/x' };
+const GRAPH_NODES: PackageNode[] = [TAGGED_WEB_NODE, A_NODE, X_NODE];
+
+export const GRAPH_MODEL_STUB: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: GRAPH_NODES, edges: UNSORTED_EDGES };
 
 export const GRAPH_LOADED_STUB: LoadedModel = { ...LOADED_MODEL_STUB, model: GRAPH_MODEL_STUB };
 
@@ -19,14 +24,20 @@ const A_X: GraphEdge = { source: 'a', target: '@org/x' };
 const WEB_X: GraphEdge = { source: 'web', target: '@org/x' };
 const WEB_A: GraphEdge = { source: 'web', target: 'a' };
 
-export const GRAPH_HASH_STUB: string = 'dc7e01eb';
+export const GRAPH_HASH_STUB: string = '4056529b';
 
 export const GRAPH_PACKAGES_STUB: string[] = ['@org/x', 'a', 'web'];
+
+export const GRAPH_INFOS_STUB: GraphPackage[] = [
+  { name: '@org/x', path: 'packages/libs/x', tags: [] },
+  { name: 'a', path: 'packages/a', tags: [] },
+  { name: 'web', path: 'apps/web', tags: ['app', 'ui'] }
+];
 
 export const GRAPH_STATE_STUB: GraphState = {
   kind: 'graph',
   hash: GRAPH_HASH_STUB,
-  packages: GRAPH_PACKAGES_STUB,
+  packages: GRAPH_INFOS_STUB,
   edges: [A_X, WEB_X, WEB_A],
   positions: null
 };
