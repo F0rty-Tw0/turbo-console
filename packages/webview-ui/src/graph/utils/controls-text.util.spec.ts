@@ -24,10 +24,10 @@ describe('FEATURE: controls text', () => {
       expect(title).toBe('(root)');
     });
 
-    it('WHEN the folder is a real folder named (root) THEN the title is that name', () => {
+    it('WHEN the folder is a real folder named (root) THEN the title is told apart from the root group', () => {
       const title = folderTitleOf('(root)');
 
-      expect(title).toBe('(root)');
+      expect(title).toBe('./(root)');
     });
 
     it('WHEN the folder is apps THEN the title is the folder', () => {

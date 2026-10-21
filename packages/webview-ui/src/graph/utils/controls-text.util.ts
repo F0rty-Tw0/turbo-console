@@ -1,8 +1,10 @@
 import { CONTROLS_FILTERED_LABEL, CONTROLS_LABEL, ROOT_FOLDER } from '../common/graph.const.ts';
 
-/** The folder as a group title; `''` is the root folder. */
+/** The folder as a group title; `''` is the root folder, and a real folder named like it gets `./` so the two differ. */
 export const folderTitleOf = (folder: string): string => {
   if (folder === '') return ROOT_FOLDER;
+
+  if (folder === ROOT_FOLDER) return `./${folder}`;
 
   return folder;
 };
