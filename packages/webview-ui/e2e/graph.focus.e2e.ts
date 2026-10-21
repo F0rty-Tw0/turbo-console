@@ -18,6 +18,8 @@ const CORE_AT_1 = ['core', 'config', 'data', 'ui'];
 
 const CORE_AT_2 = ['core', 'config', 'base', 'data', 'ui', 'web', 'admin'];
 
+const LIB = ['base', 'config', 'core', 'data'];
+
 test.describe('FEATURE: graph focus', () => {
   test(
     'GIVEN a package focused, its neighbours at depth 1 stay visible, it is selected and locked',
@@ -118,6 +120,50 @@ test.describe('FEATURE: graph focus', () => {
       await test.step('AND the lib tag is checked', async (): Promise<void> => graphControls.toggleTag('lib'));
 
       await test.step('THEN ui and core are visible', async (): Promise<void> => graphCamera.expectVisible(['ui', 'core']));
+    }
+  );
+
+  test(
+    'GIVEN core focused and ui tapped, focusing core again clears the focus and keeps ui selected',
+    { annotation: AC1 },
+    async ({ graphCamera, graphCanvas, graphControls, graphHost, graphPage, graphProbe }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('AND core is focused', async (): Promise<void> => graphControls.focusOn('core'));
+
+      await test.step('AND ui is tapped', async (): Promise<void> => graphCanvas.tapNode('ui'));
+
+      await test.step('THEN ui is selected', async (): Promise<void> => graphProbe.expectSelected('ui'));
+
+      await test.step('WHEN core is focused again', async (): Promise<void> => graphControls.focusOn('core'));
+
+      await test.step('THEN every package is visible', async (): Promise<void> => graphCamera.expectVisible(ALL));
+
+      await test.step('AND ui is still selected', async (): Promise<void> => graphProbe.expectSelected('ui'));
+    }
+  );
+
+  test(
+    'GIVEN ui focused and the lib tag checked, focusing ui again clears the focus and selects nothing the tag hides',
+    { annotation: AC1 },
+    async ({ graphCamera, graphControls, graphHost, graphPage, graphProbe }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('AND ui is focused', async (): Promise<void> => graphControls.focusOn('ui'));
+
+      await test.step('AND the lib tag is checked', async (): Promise<void> => graphControls.toggleTag('lib'));
+
+      await test.step('THEN ui and core are visible', async (): Promise<void> => graphCamera.expectVisible(['ui', 'core']));
+
+      await test.step('WHEN ui is focused again', async (): Promise<void> => graphControls.focusOn('ui'));
+
+      await test.step('THEN only the lib packages are visible', async (): Promise<void> => graphCamera.expectVisible(LIB));
+
+      await test.step('AND nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
     }
   );
 

@@ -126,8 +126,11 @@ export class GraphControls {
   }
 
   private focus(mounted: Mounted, name: string): void {
-    this.change(mounted, focusOn(this.applied, name, this.depth));
-    this.deps.onSelect(name, false);
+    const next = focusOn(this.applied, name, this.depth);
+
+    this.change(mounted, next);
+
+    if (next.focus !== null) this.deps.onSelect(name, false);
   }
 
   private setDepth(mounted: Mounted, text: string): void {
