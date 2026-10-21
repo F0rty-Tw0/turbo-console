@@ -31,6 +31,8 @@ const STRING_PACKAGES = ['app'];
 
 const NULL_PACKAGES = [null];
 
+const UNDEFINED_PACKAGES = [undefined];
+
 const NUMERIC_NAME_PACKAGES = [{ name: 5, path: 'p', tags: [] }];
 
 const NO_PATH_PACKAGES = [{ name: 'a', tags: [] }];
@@ -91,6 +93,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with null edges', stateMessageOf({ ...GRAPH, edges: null })],
       ['a graph with a string package', stateMessageOf({ ...GRAPH, packages: STRING_PACKAGES })],
       ['a graph with a null package', stateMessageOf({ ...GRAPH, packages: NULL_PACKAGES })],
+      ['a graph with an undefined package', stateMessageOf({ ...GRAPH, packages: UNDEFINED_PACKAGES })],
       ['a graph with a numeric package name', stateMessageOf({ ...GRAPH, packages: NUMERIC_NAME_PACKAGES })],
       ['a graph with a package with no path', stateMessageOf({ ...GRAPH, packages: NO_PATH_PACKAGES })],
       ['a graph with a numeric path', stateMessageOf({ ...GRAPH, packages: NUMERIC_PATH_PACKAGES })],

@@ -14,17 +14,20 @@ const CLOSE_EDITOR_COMMAND = 'workbench.action.closeActiveEditor';
 
 const sorted = (names: string[]): string[] => names.toSorted();
 
-const infoLinesOf = (pkgs: GraphPackage[]): string[] => {
-  const lineOf = (pkg: GraphPackage): string => {
-    const unique = new Set(pkg.tags);
-    const tags = Array.from(unique).toSorted();
-    const entry = [pkg.name, pkg.path, tags];
+const packageLineOf = (pkg: GraphPackage): string => JSON.stringify([pkg.name, pkg.path, pkg.tags]);
 
-    return JSON.stringify(entry);
-  };
+/** The host's records exactly as sent, one JSON line each, sorted. */
+const sentLinesOf = (packages: GraphPackage[]): string[] => packages.map(packageLineOf).toSorted();
 
-  return pkgs.map(lineOf).toSorted();
+const manifestLineOf = (pkg: ShownPackage): string => {
+  const unique = new Set(pkg.tags);
+  const tags = Array.from(unique).toSorted();
+
+  return JSON.stringify([pkg.name, pkg.path, tags]);
 };
+
+/** The manifest's records with their tags deduplicated and sorted, as the host sends them, one JSON line each, sorted. */
+const manifestLinesOf = (packages: ShownPackage[]): string[] => packages.map(manifestLineOf).toSorted();
 
 const requireState = (scene: GraphScene): GraphReady => {
   const { api, root } = scene;
@@ -86,7 +89,7 @@ export const openCase = async (scene: GraphScene): Promise<void> => {
     assert.deepEqual(panel, { root, visible: true });
     assert.deepEqual(sorted(packages), sorted(manifestNames));
     assert.deepEqual(sorted(edgeLines), expectedEdgesOf(manifest));
-    assert.deepEqual(infoLinesOf(sent), infoLinesOf(shown));
+    assert.deepEqual(sentLinesOf(sent), manifestLinesOf(shown));
     assert.ok(sent.some((pkg): boolean => pkg.tags.includes(HUB_TAG)));
 
     assert.equal(state.positions, null);

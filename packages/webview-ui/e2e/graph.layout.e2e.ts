@@ -6,7 +6,7 @@ import {
   EDITED_STUB,
   OTHER_HASH_CACHED_STUB
 } from './test/stubs/graph-state.stub.ts';
-import { packageNamesOf } from './test/utils/graph-names.spec.util.ts';
+import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 
 const RF1 = { description: 'M4-1 Review Focus 1', type: 'requirement' };
 
@@ -34,7 +34,7 @@ test.describe('FEATURE: graph layout', () => {
       graphProbe.expectNodesAtPostedPositions());
 
     await test.step('AND the posted positions name the state hash and every package', async (): Promise<void> =>
-      graphHost.expectPositionsPosted('a1b2c3d4', packageNamesOf(DIAMOND_CHAIN_STUB)));
+      graphHost.expectPositionsPosted('a1b2c3d4', stateNamesOf(DIAMOND_CHAIN_STUB)));
 
     await test.step('AND layoutDone reports elk', async (): Promise<void> => graphHost.expectLayoutDone('elk'));
 
@@ -51,7 +51,7 @@ test.describe('FEATURE: graph layout', () => {
         graphHost.sendStates([DIAMOND_CHAIN_STUB, EDITED_STUB]));
 
       await test.step('THEN the nodes are the second graph', async (): Promise<void> =>
-        graphProbe.expectNodeIds(packageNamesOf(EDITED_STUB)));
+        graphProbe.expectNodeIds(stateNamesOf(EDITED_STUB)));
 
       await test.step('AND the layout came from ELK', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
 
@@ -97,7 +97,7 @@ test.describe('FEATURE: graph layout', () => {
     await test.step('AND one worker was created', async (): Promise<void> => graphHost.expectWorkers(1));
 
     await test.step('AND the new positions were posted', async (): Promise<void> =>
-      graphHost.expectPositionsPosted('a1b2c3d4', packageNamesOf(DIAMOND_CHAIN_STUB)));
+      graphHost.expectPositionsPosted('a1b2c3d4', stateNamesOf(DIAMOND_CHAIN_STUB)));
   });
 
   test('GIVEN an ELK layout, dragging a node posts the new positions', async ({

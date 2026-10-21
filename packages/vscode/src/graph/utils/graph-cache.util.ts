@@ -73,7 +73,10 @@ export const coversExactly = (positions: Positions, packages: string[]): boolean
 export const acceptedPositions = (state: GraphState, message: PositionsMessage): Positions | null => {
   if (state.kind !== 'graph' || message.hash !== state.hash) return null;
 
-  return coversExactly(message.positions, packageNamesOf(state.packages)) ? message.positions : null;
+  const names = packageNamesOf(state.packages);
+  const isCovered = coversExactly(message.positions, names);
+
+  return isCovered ? message.positions : null;
 };
 
 /** Reads what `workspaceState` hands back; anything that is not a hash with points within `COORDINATE_MAX` is `null`. */

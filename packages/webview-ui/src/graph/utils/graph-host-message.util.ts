@@ -48,8 +48,8 @@ const isGraphState = (state: unknown): boolean => {
 };
 
 /**
- * Narrows a posted value to a `state` message by its state's `kind` and shape, down to each package's name, path and tags and each edge end;
- * anything else is ignored. The payload itself comes from the extension host, which builds it.
+ * Narrows a posted value to a `state` message by its state's `kind` and shape, down to each package's name, path and tags and each
+ * edge end; anything else is ignored. The payload itself comes from the extension host, which builds it.
  */
 export const isGraphHostMessage = (value: unknown): value is GraphHostMessage => {
   if (!isRecord(value)) return false;

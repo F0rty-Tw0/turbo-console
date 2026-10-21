@@ -1,6 +1,6 @@
 import { test } from './graph.fixture.ts';
 import { DIAMOND_CHAIN_CACHED_STUB, DIAMOND_CHAIN_STUB } from './test/stubs/graph-state.stub.ts';
-import { packageNamesOf } from './test/utils/graph-names.spec.util.ts';
+import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 
 const AC4 = { description: 'M4-1 AC4', type: 'requirement' };
 
@@ -31,7 +31,7 @@ test.describe('FEATURE: graph layout fallback', () => {
       await test.step('AND the notice is gone', async (): Promise<void> => graphPage.expectNoNotice());
 
       await test.step('AND the positions were posted', async (): Promise<void> =>
-        graphHost.expectPositionsPosted('a1b2c3d4', packageNamesOf(DIAMOND_CHAIN_STUB)));
+        graphHost.expectPositionsPosted('a1b2c3d4', stateNamesOf(DIAMOND_CHAIN_STUB)));
     }
   );
 

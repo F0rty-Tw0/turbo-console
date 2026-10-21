@@ -12,7 +12,7 @@ import {
   OBJECT_MEMBER_NAMES_STUB,
   SINGLE_PACKAGE_STUB
 } from './test/stubs/graph-state.stub.ts';
-import { packageNamesOf } from './test/utils/graph-names.spec.util.ts';
+import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 
 const AC1 = { description: 'M4-1 AC1', type: 'requirement' };
 
@@ -37,7 +37,7 @@ test.describe('FEATURE: graph render', () => {
       await test.step('AND the graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_STUB));
 
       await test.step('THEN every package is a node', async (): Promise<void> =>
-        graphProbe.expectNodeIds(packageNamesOf(DIAMOND_CHAIN_STUB)));
+        graphProbe.expectNodeIds(stateNamesOf(DIAMOND_CHAIN_STUB)));
 
       await test.step('AND every edge is drawn once, none highlighted or dimmed', async (): Promise<void> =>
         graphProbe.expectEdgeStates(DIAMOND_EDGES_NORMAL));
@@ -63,7 +63,7 @@ test.describe('FEATURE: graph render', () => {
       await test.step('AND the monorepo-root graph state is sent', async (): Promise<void> => graphHost.sendState(MONOREPO_ROOT_STUB));
 
       await test.step('THEN every listed package is a node, the // root among them', async (): Promise<void> =>
-        graphProbe.expectNodeIds(packageNamesOf(MONOREPO_ROOT_STUB)));
+        graphProbe.expectNodeIds(stateNamesOf(MONOREPO_ROOT_STUB)));
 
       await test.step('AND only the six edges with both ends listed are drawn', async (): Promise<void> =>
         graphProbe.expectEdgeCount(6));
@@ -140,7 +140,7 @@ test.describe('FEATURE: graph render', () => {
     await test.step('AND the state is sent', async (): Promise<void> => graphHost.sendState(ARROW_NAMES_STUB));
 
     await test.step('THEN every package is a node', async (): Promise<void> =>
-      graphProbe.expectNodeIds(packageNamesOf(ARROW_NAMES_STUB)));
+      graphProbe.expectNodeIds(stateNamesOf(ARROW_NAMES_STUB)));
 
     await test.step('AND all three edges are drawn', async (): Promise<void> => graphProbe.expectEdgeCount(3));
 
@@ -161,13 +161,13 @@ test.describe('FEATURE: graph render', () => {
     await test.step('THEN the layout came from ELK', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
 
     await test.step('AND every package is a node', async (): Promise<void> =>
-      graphProbe.expectNodeIds(packageNamesOf(OBJECT_MEMBER_NAMES_STUB)));
+      graphProbe.expectNodeIds(stateNamesOf(OBJECT_MEMBER_NAMES_STUB)));
 
     await test.step('AND no two nodes share a position, and none is off the number line', async (): Promise<void> =>
       graphProbe.expectDistinctPositions());
 
     await test.step('AND the posted positions hold an own key for every package', async (): Promise<void> =>
-      graphHost.expectPositionsPosted(OBJECT_MEMBER_NAMES_STUB.hash, packageNamesOf(OBJECT_MEMBER_NAMES_STUB)));
+      graphHost.expectPositionsPosted(OBJECT_MEMBER_NAMES_STUB.hash, stateNamesOf(OBJECT_MEMBER_NAMES_STUB)));
 
     await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
   });
@@ -182,7 +182,7 @@ test.describe('FEATURE: graph render', () => {
     await test.step('AND the state is sent', async (): Promise<void> => graphHost.sendState(CONSTRUCTOR_UNCACHED_STUB));
 
     await test.step('THEN every package is a node', async (): Promise<void> =>
-      graphProbe.expectNodeIds(packageNamesOf(CONSTRUCTOR_UNCACHED_STUB)));
+      graphProbe.expectNodeIds(stateNamesOf(CONSTRUCTOR_UNCACHED_STUB)));
 
     await test.step('AND no two nodes share a position, and none is off the number line', async (): Promise<void> =>
       graphProbe.expectDistinctPositions());
