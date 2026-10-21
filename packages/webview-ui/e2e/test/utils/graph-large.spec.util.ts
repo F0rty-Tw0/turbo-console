@@ -1,7 +1,6 @@
 import { packageOf } from './graph-package.spec.util.ts';
 import type { GraphEdge, GraphPackage, GraphReady, Position, Positions } from '../../../src/bridge/common/graph-state.type.ts';
-
-export const LARGE_PACKAGE_COUNT = 300;
+import { LARGE_PACKAGE_COUNT } from '../../common/graph.const.ts';
 
 const GROUP_COUNT = 30;
 

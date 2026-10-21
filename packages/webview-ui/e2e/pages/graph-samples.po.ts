@@ -1,7 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
-import { GraphControlsPage } from './graph-controls.po.ts';
 import { GraphPackageList } from './graph-package-list.po.ts';
 import { GraphTimings } from './graph-timings.po.ts';
 import { postStates } from '../test/utils/graph-host-state.spec.util.ts';
@@ -27,7 +26,6 @@ const readFresh = async (read: () => Promise<number | null>): Promise<number> =>
 
 /** Wall-time samples of the probe's timing facts, one per forced repeat of the step. */
 export class GraphSamples {
-  private readonly controls: GraphControlsPage;
   private readonly list: GraphPackageList;
   private readonly page: Page;
   private readonly timings: GraphTimings;
@@ -36,7 +34,6 @@ export class GraphSamples {
 
   public constructor(page: Page) {
     this.page = page;
-    this.controls = new GraphControlsPage(page);
     this.list = new GraphPackageList(page);
     this.timings = new GraphTimings(page);
   }
@@ -47,7 +44,7 @@ export class GraphSamples {
 
     for (const count of counts) {
       await this.page.evaluate(postStates, [largeState(count)]);
-      await this.controls.expectCount(count, count);
+      await this.waitForCount(count, count);
       samples.push(await readFresh(async (): Promise<number | null> => this.timings.controlsBuiltMs()));
     }
 
@@ -62,7 +59,7 @@ export class GraphSamples {
       const hiddenCount = toggle % 2 === 0 ? 1 : 0;
 
       await this.list.toggleRow(name);
-      await this.controls.expectCount(total - hiddenCount, total);
+      await this.waitForCount(total - hiddenCount, total);
       samples.push(await readFresh(async (): Promise<number | null> => this.timings.filterAppliedMs()));
     }
 
@@ -75,5 +72,10 @@ export class GraphSamples {
 
   public expectFilterAppliedMinUnder(ms: number): void {
     expectMinUnder('filter-applied-ms', this.appliedSamples, ms);
+  }
+
+  /** Waits, without asserting, until the count line reads `visible` of `total`. */
+  private async waitForCount(visible: number, total: number): Promise<void> {
+    await this.page.getByText(`Showing ${visible} of ${total} packages`, { exact: true }).waitFor();
   }
 }

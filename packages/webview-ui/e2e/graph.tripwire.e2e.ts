@@ -1,5 +1,5 @@
+import { LARGE_PACKAGE_COUNT } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
-import { LARGE_PACKAGE_COUNT } from './test/utils/graph-large.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 
 const AC6 = { description: 'M4-2 AC6', type: 'requirement' };
@@ -15,6 +15,9 @@ const SAMPLES = 5;
 const BUILD_COUNTS = [300, 301, 300, 301, 300];
 
 const BUDGET_MS = 50;
+
+/** Each sample toggles pkg-007 once, so an odd count leaves it hidden. */
+const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
 
 test.describe('FEATURE: graph tripwires', () => {
   test('GIVEN a 14-package target-like graph, the first frame lands under 2 s', async ({
@@ -69,8 +72,8 @@ test.describe('FEATURE: graph tripwires', () => {
       await test.step('THEN the fastest filter change was applied in under 50 ms', (): void =>
         graphSamples.expectFilterAppliedMinUnder(BUDGET_MS));
 
-      await test.step('AND 299 of 300 packages are counted as visible', async (): Promise<void> =>
-        graphControls.expectCount(299, 300));
+      await test.step(`AND ${LAST_VISIBLE} of ${LARGE_PACKAGE_COUNT} packages are counted as visible`, async (): Promise<void> =>
+        graphControls.expectCount(LAST_VISIBLE, LARGE_PACKAGE_COUNT));
     }
   );
 });
