@@ -5,8 +5,6 @@ import type { Node } from 'jsonc-parser';
 
 import { lineAt } from '../../shared/utils/text-line.util.ts';
 
-const BOM = '﻿';
-
 type ManifestQuery = {
   readonly root: Node;
   readonly body: string;
@@ -26,14 +24,6 @@ const stringValueOf = (node: Node | undefined): string | null => {
   if (typeof node.value !== 'string') return null;
 
   return node.value;
-};
-
-const withoutBom = (text: string): string => {
-  const hasBom = text.startsWith(BOM);
-
-  if (!hasBom) return text;
-
-  return text.slice(BOM.length);
 };
 
 const isHighSurrogate = (unit: number): boolean => unit >= HIGH_SURROGATE_FIRST && unit <= HIGH_SURROGATE_LAST;
@@ -121,12 +111,11 @@ const parsedRootOf = (body: string): Node | null => {
  * compared on parsed nodes, never looked up on an object.
  */
 export const manifestEntriesOf = (text: string, dependency: string): ManifestEntry[] | null => {
-  const body = withoutBom(text);
-  const root = parsedRootOf(body);
+  const root = parsedRootOf(text);
 
   if (root === null) return null;
 
-  const query: ManifestQuery = { root, body, dependency };
+  const query: ManifestQuery = { root, body: text, dependency };
   const entries: ManifestEntry[] = [];
 
   for (const field of MANIFEST_FIELDS) {
