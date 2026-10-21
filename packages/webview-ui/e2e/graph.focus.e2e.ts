@@ -1,4 +1,3 @@
-import type { Camera } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { without } from './test/utils/graph-controls.spec.util.ts';
@@ -198,7 +197,7 @@ test.describe('FEATURE: graph focus', () => {
 
       await test.step('AND the search is a', async (): Promise<void> => graphControls.search('a'));
 
-      await test.step('WHEN Show all is pressed', async (): Promise<void> => graphControls.showAll());
+      await test.step('AND Show all is pressed', async (): Promise<void> => graphControls.showAll());
 
       await test.step('THEN every package is visible', async (): Promise<void> => graphCamera.expectVisible(ALL));
 
@@ -257,14 +256,14 @@ test.describe('FEATURE: graph focus', () => {
 
       await test.step('AND the graph is zoomed', async (): Promise<void> => graphCanvas.zoomBy(-300));
 
-      const before = await test.step('AND the camera is noted', async (): Promise<Camera> => graphCamera.camera());
+      await test.step('AND the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
 
-      await test.step('WHEN core is focused', async (): Promise<void> => graphList.focusOn('core'));
+      await test.step('AND core is focused', async (): Promise<void> => graphList.focusOn('core'));
 
       await test.step('THEN every visible package is inside the container', async (): Promise<void> =>
         graphCamera.expectVisibleInView());
 
-      await test.step('AND the camera moved', async (): Promise<void> => graphCamera.expectCameraNot(before));
+      await test.step('AND the camera moved', async (): Promise<void> => graphCamera.expectCameraMoved());
     }
   );
 });

@@ -1,4 +1,3 @@
-import type { Camera } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
@@ -130,15 +129,15 @@ test.describe('FEATURE: graph package list', () => {
 
       await test.step('AND the graph is zoomed out', async (): Promise<void> => graphCanvas.zoomBy(1000));
 
-      const before = await test.step('AND the camera is noted', async (): Promise<Camera> => graphCamera.camera());
+      await test.step('AND the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
 
-      await test.step('WHEN the core name button is pressed', async (): Promise<void> => graphList.pick('core'));
+      await test.step('AND the core name button is pressed', async (): Promise<void> => graphList.pick('core'));
 
       await test.step('THEN core is selected', async (): Promise<void> => graphProbe.expectSelected('core'));
 
       await test.step('AND core is at the container centre', async (): Promise<void> => graphCamera.expectCentred('core'));
 
-      await test.step('AND the zoom is as before', async (): Promise<void> => graphCamera.expectZoom(before.zoom));
+      await test.step('AND the zoom is as before', async (): Promise<void> => graphCamera.expectZoomUnchanged());
     }
   );
 

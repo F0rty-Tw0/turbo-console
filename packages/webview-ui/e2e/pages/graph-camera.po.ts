@@ -6,7 +6,6 @@ import { expect } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
-import { NEXT_FRAME } from '../common/graph.const.ts';
 import type { Camera } from '../common/graph.type.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
@@ -30,23 +29,19 @@ export class GraphCamera {
 
   private readonly page: Page;
   private readonly probe: GraphProbePage;
+  private remembered: Camera | null;
 
   public constructor(page: Page) {
     this.page = page;
     this.probe = new GraphProbePage(page);
+    this.remembered = null;
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
     this.canvas = this.container.locator('canvas').first();
   }
 
-  public async camera(): Promise<Camera> {
-    const zoom = await this.probe.zoom();
-    const pan = await this.probe.pan();
-
-    if (pan === null) throw new Error('graph e2e: the probe reports no pan');
-
-    const camera: Camera = { zoom, pan };
-
-    return camera;
+  /** Remembers zoom and pan as they are now, for the `expect*Unchanged` and `expectCameraMoved` checks. */
+  public async rememberCamera(): Promise<void> {
+    this.remembered = await this.camera();
   }
 
   /** The drawn width: the first canvas layer, which Cytoscape sizes on `resize`; the container's own box follows CSS alone. */
@@ -56,17 +51,22 @@ export class GraphCamera {
     return rect.width;
   }
 
-  /** Polls until zoom and pan match `camera` within GraphLook's tolerances. */
-  public async expectCamera(camera: Camera): Promise<void> {
+  /** Polls until zoom and pan match the remembered camera within GraphLook's tolerances. */
+  public async expectCameraUnchanged(): Promise<void> {
+    const camera = this.rememberedCamera();
+
     await expect.poll(async (): Promise<boolean> => this.isCamera(camera)).toBe(true);
   }
 
-  /** Polls until zoom or pan is outside the tolerances around `camera`. */
-  public async expectCameraNot(camera: Camera): Promise<void> {
+  /** Polls until zoom or pan is outside the tolerances around the remembered camera. */
+  public async expectCameraMoved(): Promise<void> {
+    const camera = this.rememberedCamera();
+
     await expect.poll(async (): Promise<boolean> => this.isCamera(camera)).toBe(false);
   }
 
-  public async expectZoom(zoom: number): Promise<void> {
+  public async expectZoomUnchanged(): Promise<void> {
+    const { zoom } = this.rememberedCamera();
     const isZoom = async (): Promise<boolean> => {
       const now = await this.probe.zoom();
 
@@ -87,15 +87,6 @@ export class GraphCamera {
     await expect.poll(async (): Promise<string[]> => this.visibleOutside()).toEqual([]);
   }
 
-  /** A click at the node's rendered centre selects nothing, once the click has been handled. */
-  public async expectUntappable(id: string): Promise<void> {
-    const node = await this.nodeOf(id);
-
-    await this.page.mouse.click(node.renderedX, node.renderedY);
-    await this.page.evaluate(NEXT_FRAME);
-    await this.probe.expectSelected(null);
-  }
-
   /** The node's rendered centre is within a few pixels of the container's centre. */
   public async expectCentred(id: string): Promise<void> {
     await expect.poll(async (): Promise<number> => this.centreOffset(id)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
@@ -113,6 +104,23 @@ export class GraphCamera {
     };
 
     await expect.poll(isWidth).toBe(true);
+  }
+
+  private async camera(): Promise<Camera> {
+    const zoom = await this.probe.zoom();
+    const pan = await this.probe.pan();
+
+    if (pan === null) throw new Error('graph e2e: the probe reports no pan');
+
+    const camera: Camera = { zoom, pan };
+
+    return camera;
+  }
+
+  private rememberedCamera(): Camera {
+    if (this.remembered === null) throw new Error('graph e2e: rememberCamera must run first');
+
+    return this.remembered;
   }
 
   private async visibleIds(): Promise<string[]> {

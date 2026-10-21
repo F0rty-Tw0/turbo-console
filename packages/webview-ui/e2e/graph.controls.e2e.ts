@@ -1,4 +1,3 @@
-import type { Camera } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { DIAMOND_CHAIN_CACHED_STUB, ERROR_STUB } from './test/stubs/graph-state.stub.ts';
@@ -77,7 +76,7 @@ test.describe('FEATURE: graph controls panel', () => {
 
       await test.step('AND the graph is panned', async (): Promise<void> => graphCanvas.panBy(40, 25));
 
-      const before = await test.step('AND the camera is noted', async (): Promise<Camera> => graphCamera.camera());
+      await test.step('AND the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
 
       const width = await test.step('AND the container width is noted', async (): Promise<number> => graphCamera.containerWidth());
 
@@ -91,7 +90,7 @@ test.describe('FEATURE: graph controls panel', () => {
 
       await test.step('AND the container is wider', async (): Promise<void> => graphCamera.expectContainerWidthAbove(width));
 
-      await test.step('AND zoom and pan are as before', async (): Promise<void> => graphCamera.expectCamera(before));
+      await test.step('AND zoom and pan are as before', async (): Promise<void> => graphCamera.expectCameraUnchanged());
 
       await test.step('AND nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
 
@@ -111,9 +110,9 @@ test.describe('FEATURE: graph controls panel', () => {
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
-      await test.step('AND the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
+      await test.step('THEN the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
 
-      await test.step('AND an error state is sent', async (): Promise<void> => graphHost.sendState(ERROR_STUB));
+      await test.step('WHEN an error state is sent', async (): Promise<void> => graphHost.sendState(ERROR_STUB));
 
       await test.step('THEN the error text is shown', async (): Promise<void> => graphPage.expectText('turbo exited with code 1'));
 

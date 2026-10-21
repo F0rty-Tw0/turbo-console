@@ -1,4 +1,4 @@
-import type { Camera, FocusStep } from './common/graph.type.ts';
+import type { FocusStep } from './common/graph.type.ts';
 import { expect, test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { without } from './test/utils/graph-controls.spec.util.ts';
@@ -98,16 +98,16 @@ test.describe('FEATURE: graph controls keyboard activation', () => {
 
       await test.step('THEN core and its dependencies are visible', async (): Promise<void> => graphCamera.expectVisible(CORE_AT_1));
 
-      const fitted = await test.step('AND the camera is noted', async (): Promise<Camera> => graphCamera.camera());
+      await test.step('WHEN the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
 
-      await test.step('WHEN Left is pressed', async (): Promise<void> => graphPage.pressKey('ArrowLeft'));
+      await test.step('AND Left is pressed', async (): Promise<void> => graphPage.pressKey('ArrowLeft'));
 
       await test.step('AND Enter is pressed on the core name', async (): Promise<void> => graphPage.pressKey('Enter'));
 
       await test.step('THEN the host received one openDetails for core', async (): Promise<void> =>
         graphHost.expectOpenDetails('core'));
 
-      await test.step('AND the camera has not moved', async (): Promise<void> => graphCamera.expectCamera(fitted));
+      await test.step('AND the camera has not moved', async (): Promise<void> => graphCamera.expectCameraUnchanged());
     }
   );
 

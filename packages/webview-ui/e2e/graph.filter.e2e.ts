@@ -1,4 +1,3 @@
-import type { Camera } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB, CONTROLS_POSITIONS_STUB, PROTO_CONTROLS_STUB } from './test/stubs/graph-controls.stub.ts';
 import { without } from './test/utils/graph-controls.spec.util.ts';
@@ -18,7 +17,7 @@ test.describe('FEATURE: graph filters', () => {
   test(
     'GIVEN a package unchecked, it is hidden, untappable and no node moves',
     { annotation: AC3 },
-    async ({ graphCamera, graphControls, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphCamera, graphCanvas, graphControls, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
@@ -34,18 +33,22 @@ test.describe('FEATURE: graph filters', () => {
       await test.step('AND every node keeps its position', async (): Promise<void> =>
         graphProbe.expectNodesAt(CONTROLS_POSITIONS_STUB));
 
-      await test.step('AND a click on web selects nothing', async (): Promise<void> => graphCamera.expectUntappable('web'));
-
       await test.step('AND Show all is enabled', async (): Promise<void> => graphControls.expectShowAllDisabled(false));
 
       await test.step('AND no positions were posted', async (): Promise<void> => graphHost.expectNoPositionsPosted());
+
+      await test.step('WHEN web is clicked', async (): Promise<void> => graphCanvas.tapNode('web'));
+
+      await test.step('AND two frames pass', async (): Promise<void> => graphPage.waitFrames());
+
+      await test.step('THEN nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
     }
   );
 
   test(
     'GIVEN a folder unchecked, its packages are hidden and the other group stays checked',
     { annotation: AC1 },
-    async ({ graphCamera, graphHost, graphList, graphPage }): Promise<void> => {
+    async ({ graphCamera, graphCanvas, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
@@ -55,12 +58,16 @@ test.describe('FEATURE: graph filters', () => {
       await test.step('THEN admin and web are not visible', async (): Promise<void> =>
         graphCamera.expectVisible(without(ALL, ['admin', 'web'])));
 
-      await test.step('AND a click on admin selects nothing', async (): Promise<void> => graphCamera.expectUntappable('admin'));
-
       await test.step('AND the apps group is unchecked', async (): Promise<void> => graphList.expectGroupChecked('apps (2)', false));
 
       await test.step('AND the packages group is checked', async (): Promise<void> =>
         graphList.expectGroupChecked('packages (5)', true));
+
+      await test.step('WHEN admin is clicked', async (): Promise<void> => graphCanvas.tapNode('admin'));
+
+      await test.step('AND two frames pass', async (): Promise<void> => graphPage.waitFrames());
+
+      await test.step('THEN nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
     }
   );
 
@@ -74,7 +81,7 @@ test.describe('FEATURE: graph filters', () => {
 
       await test.step('AND the web row is unchecked', async (): Promise<void> => graphList.toggleRow('web'));
 
-      await test.step('AND the apps group reads mixed', async (): Promise<void> => graphList.expectGroupMixed('apps (2)'));
+      await test.step('THEN the apps group reads mixed', async (): Promise<void> => graphList.expectGroupMixed('apps (2)'));
 
       await test.step('WHEN the apps group is activated', async (): Promise<void> => graphList.toggleGroup('apps (2)'));
 
@@ -87,7 +94,7 @@ test.describe('FEATURE: graph filters', () => {
   test(
     'GIVEN the lib tag checked, only lib packages are visible and the others are dimmed but checked',
     { annotation: AC1 },
-    async ({ graphCamera, graphControls, graphHost, graphList, graphLook, graphPage }): Promise<void> => {
+    async ({ graphCamera, graphCanvas, graphControls, graphHost, graphList, graphLook, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
@@ -96,14 +103,18 @@ test.describe('FEATURE: graph filters', () => {
 
       await test.step('THEN only the lib packages are visible', async (): Promise<void> => graphCamera.expectVisible(LIB));
 
-      await test.step('AND a click on web selects nothing', async (): Promise<void> => graphCamera.expectUntappable('web'));
-
       await test.step('AND the web row is dimmed', async (): Promise<void> => graphList.expectRowDimmed('web'));
 
       await test.step('AND its name is drawn at half opacity, not dimmed twice', async (): Promise<void> =>
         graphLook.expectNameOpacity('web', 0.5));
 
       await test.step('AND the web row is still checked', async (): Promise<void> => graphList.expectRowChecked('web', true));
+
+      await test.step('WHEN web is clicked', async (): Promise<void> => graphCanvas.tapNode('web'));
+
+      await test.step('AND two frames pass', async (): Promise<void> => graphPage.waitFrames());
+
+      await test.step('THEN nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
     }
   );
 
@@ -207,11 +218,11 @@ test.describe('FEATURE: graph filters', () => {
 
       await test.step('AND the graph is panned', async (): Promise<void> => graphCanvas.panBy(40, 25));
 
-      const before = await test.step('AND the camera is noted', async (): Promise<Camera> => graphCamera.camera());
+      await test.step('AND the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
 
-      await test.step('WHEN the web row is unchecked', async (): Promise<void> => graphList.toggleRow('web'));
+      await test.step('AND the web row is unchecked', async (): Promise<void> => graphList.toggleRow('web'));
 
-      await test.step('THEN zoom and pan are as before', async (): Promise<void> => graphCamera.expectCamera(before));
+      await test.step('THEN zoom and pan are as before', async (): Promise<void> => graphCamera.expectCameraUnchanged());
 
       await test.step('AND only the lib packages are visible', async (): Promise<void> => graphCamera.expectVisible(LIB));
 
