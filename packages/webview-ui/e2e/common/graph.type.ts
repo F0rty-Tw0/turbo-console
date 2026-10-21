@@ -44,6 +44,12 @@ export type ThemeSwitch = {
 /** What a viewer sees of the graph: how far it is zoomed and where it is panned. */
 export type Camera = Pick<GraphViewState, 'zoom' | 'pan'>;
 
+/** A key to press, and the accessible name of the control that holds focus once it has been handled. */
+export type FocusStep = {
+  readonly key: string;
+  readonly focus: string;
+};
+
 /** Package name to the state the probe reports for it. */
 export type NodeStates = Readonly<Record<string, ProbeState>>;
 

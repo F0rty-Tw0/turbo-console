@@ -2,6 +2,7 @@ import { test as base } from '@playwright/test';
 
 import { GraphCamera } from './pages/graph-camera.po.ts';
 import { GraphCanvas } from './pages/graph-canvas.po.ts';
+import { GraphControlsKeys } from './pages/graph-controls-keys.po.ts';
 import { GraphControlsPage } from './pages/graph-controls.po.ts';
 import { GraphHost } from './pages/graph-host.po.ts';
 import { GraphLook } from './pages/graph-look.po.ts';
@@ -14,6 +15,7 @@ type GraphFixtures = {
   readonly graphCanvas: GraphCanvas;
   readonly graphControls: GraphControlsPage;
   readonly graphHost: GraphHost;
+  readonly graphKeys: GraphControlsKeys;
   readonly graphLook: GraphLook;
   readonly graphPage: GraphPage;
   readonly graphProbe: GraphProbePage;
@@ -32,6 +34,9 @@ export const test = base.extend<GraphFixtures>({
   },
   graphHost: async ({ page }, use): Promise<void> => {
     await use(new GraphHost(page));
+  },
+  graphKeys: async ({ page }, use): Promise<void> => {
+    await use(new GraphControlsKeys(page));
   },
   graphLook: async ({ page }, use): Promise<void> => {
     await use(new GraphLook(page));

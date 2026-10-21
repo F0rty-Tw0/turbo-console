@@ -196,7 +196,10 @@ export class GraphControlsPage {
     return this.grid.getByRole('button', { name, exact: true });
   }
 
+  /** Hidden rows count: a search that leaves a package out hides its row, and its marks stay on it. */
   private rowOf(name: string): Locator {
-    return this.rows.filter({ has: this.page.getByRole('checkbox', { name: `Show ${name}`, exact: true }) });
+    const check = this.page.getByRole('checkbox', { name: `Show ${name}`, exact: true, includeHidden: true });
+
+    return this.grid.getByRole('row', { includeHidden: true }).filter({ has: check });
   }
 }

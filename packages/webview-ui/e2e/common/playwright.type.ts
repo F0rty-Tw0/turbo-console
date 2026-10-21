@@ -1,4 +1,7 @@
-import type { Route } from '@playwright/test';
+import type { Page, Route } from '@playwright/test';
+
+/** A role name `getByRole` accepts. */
+export type AriaRoleName = Parameters<Page['getByRole']>[0];
 
 export type RouteHandler = (route: Route) => Promise<void>;
 
