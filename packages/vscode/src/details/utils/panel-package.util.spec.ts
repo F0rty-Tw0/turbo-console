@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { hasPackage, revealed } from './panel-package.util.ts';
+import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { OpenPanel } from '../common/panel.type.ts';
-import { viewMock } from '../test/mocks/panel-host.mock.ts';
 import { DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
 
 const KEY: PanelKey = { root: '/ws', packageName: 'a' };

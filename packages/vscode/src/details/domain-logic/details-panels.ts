@@ -6,6 +6,7 @@ import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import { NOT_PACKAGE_TEXT } from '../../run/common/picker.const.ts';
 import { packageOfFile } from '../../run/domain-logic/pick-for-file.ts';
 import type { DetailsApi } from '../../shared/common/api.type.ts';
+import { wirePanel } from '../../shared/domain-logic/panel-wiring.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { OPEN_FAILED_TEXT } from '../common/details.const.ts';
 import type { PanelKey } from '../common/details.type.ts';
@@ -177,26 +178,11 @@ export class DetailsPanels {
 
   private wire(parts: PanelParts, view: OpenPanel['view'], session: DetailsSession): OpenPanel {
     const { key, id, posted } = parts;
-    const report = (error: unknown): void => {
-      this.deps.host.log(logTextOf(error));
+    const close = (): void => {
+      this.close(id);
     };
 
-    view.onDispose(() => {
-      this.close(id);
-    });
-    view.onMessage((value) => {
-      void session.receive(value).catch(report);
-    });
-    session.setVisible(view.isVisible());
-    view.onViewState(() => {
-      session.setVisible(view.isVisible());
-    });
-
-    try {
-      session.start();
-    } catch (error: unknown) {
-      report(error);
-    }
+    wirePanel(view, session, close, this.deps.host.log);
 
     const panel: OpenPanel = { key, view, session, posted };
 

@@ -6,12 +6,12 @@ import * as vscode from 'vscode';
 
 import { editorPanelHost } from './details-ports.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import type { PageRoot } from '../../shared/test/common/page-root.type.ts';
+import type { PanelFake, PanelFakes, UriFake } from '../../shared/test/common/vscode-fakes.type.ts';
+import { webviewPanelMock } from '../../shared/test/mocks/webview-panel.mock.ts';
+import { CSP_SOURCE_STUB } from '../../shared/test/stubs/csp-source.stub.ts';
 import { DETAILS_VIEW_TYPE } from '../common/details.const.ts';
 import type { PanelHost, PanelView } from '../common/panel.type.ts';
-import type { PageRoot } from '../test/common/page-root.type.ts';
-import type { PanelFake, PanelFakes, UriFake } from '../test/common/vscode-fakes.type.ts';
-import { webviewPanelMock } from '../test/mocks/webview-panel.mock.ts';
-import { CSP_SOURCE_STUB } from '../test/stubs/csp-source.stub.ts';
 import { copyPageRoot } from '../test/utils/page-root.spec.util.ts';
 
 type CreatePanel = (viewType: string, title: string, column: number, options: unknown) => PanelFake;
@@ -107,7 +107,7 @@ describe('FEATURE: the editor effects of Package Details', () => {
     page = copyPageRoot();
     assetDir = `${page.root}/dist/webview/details`;
     made = [];
-    output = { error: vi.fn(), warn: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
     editor.createWebviewPanel.mockImplementation(() => {
       const fakes = webviewPanelMock();
 

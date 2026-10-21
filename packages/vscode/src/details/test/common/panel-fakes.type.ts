@@ -1,19 +1,8 @@
 import type { DryRunState } from '@turbo-console/core';
 import type { Mock } from 'vitest';
 
-import type { PanelHost, PanelView } from '../../common/panel.type.ts';
-
-/** A `PanelView` the spec drives: `show` changes visibility and fires the view-state listeners, `close` is the user closing the tab. */
-export type ViewFake = {
-  readonly view: PanelView;
-  readonly send: Mock<PanelView['send']>;
-  readonly reveal: Mock<PanelView['reveal']>;
-  readonly setTitle: Mock<PanelView['setTitle']>;
-  readonly dispose: Mock<PanelView['dispose']>;
-  readonly show: (visible: boolean) => void;
-  readonly message: (value: unknown) => void;
-  readonly close: () => void;
-};
+import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
+import type { PanelHost } from '../../common/panel.type.ts';
 
 /** A `PanelHost` of spies: `open` hands out `views` in order (a fresh shown view each time unless the spec queued one). */
 export type HostFakes = {

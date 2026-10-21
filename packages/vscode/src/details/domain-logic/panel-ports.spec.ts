@@ -3,10 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { panelPortsOf } from './panel-ports.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { PanelKey } from '../common/details.type.ts';
 import type { PanelParts, PanelsDeps } from '../common/panel.type.ts';
-import { hostMock, viewMock } from '../test/mocks/panel-host.mock.ts';
+import { hostMock } from '../test/mocks/panel-host.mock.ts';
 
 const KEY: PanelKey = { root: '/ws', packageName: 'a' };
 

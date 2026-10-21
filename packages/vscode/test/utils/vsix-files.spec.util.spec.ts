@@ -16,7 +16,9 @@ const FULL_LIST = [
   'dist/webview/details/tool-icons.css',
   'dist/webview/details/TOOL-ICONS-NOTICE.md',
   'dist/webview/details/SIMPLE-ICONS-LICENSE.md',
-  'dist/webview/details/SIMPLE-ICONS-DISCLAIMER.md'
+  'dist/webview/details/SIMPLE-ICONS-DISCLAIMER.md',
+  'dist/webview/graph/index.html',
+  'dist/webview/graph/main.js'
 ];
 
 describe('FEATURE: vsixProblems', () => {
@@ -139,12 +141,33 @@ describe('FEATURE: vsixProblems', () => {
 
   describe('GIVEN a list with a file in another dist/webview folder', () => {
     it('WHEN it is checked THEN one problem names it', () => {
-      const files = [...FULL_LIST, 'dist/webview/graph/main.js'];
+      const files = [...FULL_LIST, 'dist/webview/other/main.js'];
+
+      const problems = vsixProblems(files);
+
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toContain('dist/webview/other/main.js');
+    });
+  });
+
+  describe('GIVEN a list without dist/webview/graph/main.js', () => {
+    it('WHEN it is checked THEN one problem names the missing file', () => {
+      const files = FULL_LIST.filter((file) => file !== 'dist/webview/graph/main.js');
 
       const problems = vsixProblems(files);
 
       expect(problems).toHaveLength(1);
       expect(problems[0]).toContain('dist/webview/graph/main.js');
+    });
+  });
+
+  describe('GIVEN a list with dist/webview/graph/stray.js', () => {
+    it('WHEN it is checked THEN one problem says the webview file is unexpected', () => {
+      const files = [...FULL_LIST, 'dist/webview/graph/stray.js'];
+
+      const problems = vsixProblems(files);
+
+      expect(problems).toStrictEqual(['unexpected webview file: dist/webview/graph/stray.js']);
     });
   });
 

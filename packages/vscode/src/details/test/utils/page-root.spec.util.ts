@@ -2,8 +2,8 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { PageRoot } from '../../../shared/test/common/page-root.type.ts';
 import { DETAILS_ASSET_DIR } from '../../common/details.const.ts';
-import type { PageRoot } from '../common/page-root.type.ts';
 
 /** A temp extension root whose page folder holds the details page template; `dispose` deletes it. */
 export const copyPageRoot = (): PageRoot => {

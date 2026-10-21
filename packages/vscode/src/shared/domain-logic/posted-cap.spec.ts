@@ -2,7 +2,7 @@ import type { HostMessage, RunStateMessage, RunView } from '@turbo-console/webvi
 import { describe, expect, it } from 'vitest';
 
 import { recordPosted } from './posted-cap.ts';
-import { POSTED_MAX } from '../common/details.const.ts';
+import { POSTED_MAX } from '../common/panel.const.ts';
 
 const RUN_VIEW_STUB: RunView = {
   iconId: 'tools',

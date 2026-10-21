@@ -72,7 +72,7 @@ describe('FEATURE: registerTree settings', () => {
       request: vi.fn(),
       changed: vi.fn()
     };
-    const output: Output = { error: vi.fn(), warn: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    const output: Output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
 
     editor.settings.clear();
     editor.onDidChangeConfiguration.mockReset();

@@ -26,9 +26,13 @@ export const createOutput = (): Output => {
   const warn = safely((line) => {
     channel.warn(line);
   });
+  const info = safely((line) => {
+    channel.info(line);
+  });
   const output: Output = {
     error,
     warn,
+    info,
     show: () => {
       channel.show(true);
     },

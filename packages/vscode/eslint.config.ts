@@ -35,6 +35,7 @@ const webviewHostImports: FlatConfig.Config = {
               'TOOL_ICON_PREFIX',
               'durationText',
               'elapsedText',
+              'graphCsp',
               'hiddenScriptsText',
               'renderWebviewHtml',
               'webviewCsp'

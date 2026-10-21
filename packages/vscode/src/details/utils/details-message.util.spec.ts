@@ -1,16 +1,9 @@
 import type { DetailsState, WebviewMessage } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import {
-  cardTaskIdsOf,
-  checkedTaskMessage,
-  droppedMessageText,
-  parseWebviewMessage,
-  refusedRunTextOf
-} from './details-message.util.ts';
+import { cardTaskIdsOf, checkedTaskMessage, parseWebviewMessage, refusedRunTextOf } from './details-message.util.ts';
 import { toDetailsState } from './details-state.util.ts';
 import { ALREADY_RUNNING_TEXT } from '../../run/common/run.const.ts';
-import { DROPPED_MESSAGE_MAX, UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
 import type { CardTaskIds, CommandMessage } from '../common/details.type.ts';
 import {
   ADHOC_TASK_STUB,
@@ -143,50 +136,6 @@ describe('FEATURE: webview message validation', () => {
 
     it('WHEN no message parsed THEN the task-id check keeps it null', () => {
       expect(checkedTaskMessage(null, TASK_IDS)).toBeNull();
-    });
-  });
-});
-
-describe('FEATURE: dropped message log text', () => {
-  describe('GIVEN a plain object', () => {
-    it('WHEN logged THEN the text is its JSON', () => {
-      expect(droppedMessageText({ type: 'nope' })).toBe('{"type":"nope"}');
-    });
-  });
-
-  describe('GIVEN a very long message', () => {
-    it('WHEN logged THEN the text is cut to the log maximum', () => {
-      const text = droppedMessageText({ type: 'x'.repeat(DROPPED_MESSAGE_MAX * 2) });
-
-      expect(text).toHaveLength(DROPPED_MESSAGE_MAX);
-    });
-  });
-
-  describe('GIVEN a value JSON cannot print', () => {
-    it('WHEN the value holds a BigInt THEN the text is the unprintable marker and nothing throws', () => {
-      expect(droppedMessageText({ type: 'run', taskId: 10n })).toBe(UNPRINTABLE_MESSAGE);
-    });
-
-    it('WHEN the value is circular THEN the text is the unprintable marker', () => {
-      const circular: Record<string, unknown> = { type: 'run' };
-
-      circular['self'] = circular;
-
-      expect(droppedMessageText(circular)).toBe(UNPRINTABLE_MESSAGE);
-    });
-
-    it('WHEN the value is undefined THEN the text is the unprintable marker', () => {
-      expect(droppedMessageText(undefined)).toBe(UNPRINTABLE_MESSAGE);
-    });
-
-    it('WHEN a toJSON getter throws THEN the text is the unprintable marker', () => {
-      const hostile = {
-        toJSON: (): never => {
-          throw new Error('boom');
-        }
-      };
-
-      expect(droppedMessageText(hostile)).toBe(UNPRINTABLE_MESSAGE);
     });
   });
 });

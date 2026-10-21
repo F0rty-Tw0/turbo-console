@@ -1,15 +1,16 @@
 import type { WebviewMessage } from './details-message.type.ts';
+import type { GraphWebviewMessage } from './graph-message.type.ts';
 
 /** Receives the `data` of every message event the host posts to the page. */
 export type MessageListener = (message: unknown) => void;
 
-/** What the webview does with the extension host: send messages, receive messages, keep its scroll across a rebuild. */
+/** What the webview does with the extension host: send messages, receive messages, keep a page's state across a rebuild. */
 export type Bridge = {
   readonly ready: () => void;
-  readonly post: (message: WebviewMessage) => void;
+  readonly post: (message: WebviewMessage | GraphWebviewMessage) => void;
   readonly onMessage: (listener: MessageListener) => void;
-  readonly scrollY: () => number;
-  readonly saveScroll: (y: number) => void;
+  readonly savedState: () => unknown;
+  readonly saveState: (state: unknown) => void;
 };
 
 /** What the page keeps in the webview `getState`/`setState` store. */

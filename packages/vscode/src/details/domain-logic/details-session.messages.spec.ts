@@ -12,9 +12,9 @@ import { ALREADY_RUNNING_TEXT } from '../../run/common/run.const.ts';
 import type { RunRequest } from '../../run/common/run.type.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { RUN_REQUEST_STUB } from '../../run/test/stubs/run.stub.ts';
+import { UNPRINTABLE_MESSAGE } from '../../shared/common/panel.const.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
-import { UNPRINTABLE_MESSAGE } from '../common/details.const.ts';
 import type { DetailsPorts } from '../common/details.type.ts';
 import { detailsPortsMock } from '../test/mocks/details-ports.mock.ts';
 import {

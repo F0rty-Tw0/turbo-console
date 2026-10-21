@@ -17,7 +17,7 @@ const fulfillShellHtml = async (route: Route, options: ShellOptions): Promise<vo
   const template = await readFile(join(DIST_DIR, 'index.html'), 'utf8');
   const nonce = randomBytes(16).toString('base64');
   const csp = webviewCsp(nonce, SHELL_ORIGIN);
-  const html = renderWebviewHtml(template, { csp, nonce });
+  const html = renderWebviewHtml(template, { csp, nonce, scriptUri: 'main.js' });
 
   if (options.inlineScript !== true) return route.fulfill({ body: html, contentType: 'text/html' });
 

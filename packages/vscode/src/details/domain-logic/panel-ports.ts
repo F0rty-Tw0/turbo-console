@@ -1,10 +1,8 @@
 import type { DryRunRequest, DryRunState } from '@turbo-console/core';
-import type { HostMessage } from '@turbo-console/webview-ui';
 
-import { recordPosted } from './posted-cap.ts';
-import { safePost } from './safe-post.ts';
 import type { Coordinator, RootEntry, Roots } from '../../roots/common/coordinator.type.ts';
 import type { FileLookupPorts } from '../../run/common/picker.type.ts';
+import { recordingPost } from '../../shared/domain-logic/panel-wiring.ts';
 import { NO_BINARY_TEXT } from '../common/details.const.ts';
 import type { DetailsPorts } from '../common/details.type.ts';
 import type { FileLookup, PanelHost, PanelParts, PanelView, PanelsDeps } from '../common/panel.type.ts';
@@ -41,11 +39,7 @@ export const fileLookupOf = (roots: Roots, host: PanelHost): FileLookup => {
 export const panelPortsOf = (deps: PanelsDeps, parts: PanelParts, view: PanelView): DetailsPorts => {
   const { roots, host } = deps;
   const { key, id, posted } = parts;
-  const send = safePost(view.send, host.log);
-  const post = (message: HostMessage): void => {
-    recordPosted(posted, message);
-    send(message);
-  };
+  const post = recordingPost(view.send, posted, host.log);
   const dryRun = async (request: DryRunRequest, signal: AbortSignal): Promise<DryRunState[]> => {
     const binary = roots.get(key.root)?.state.binary ?? null;
 

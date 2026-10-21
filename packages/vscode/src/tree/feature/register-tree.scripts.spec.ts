@@ -93,7 +93,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
       request: vi.fn(),
       changed: vi.fn()
     };
-    output = { error: vi.fn(), warn: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
 
     editor.createTreeView.mockReset();
     editor.registerCommand.mockReset();
