@@ -73,106 +73,100 @@ describe('FEATURE: graph visibility', () => {
     cy.destroy();
   });
 
-  describe('FEATURE: showOnly', () => {
-    describe('GIVEN a graph of four nodes', () => {
-      it('WHEN a and b are shown THEN only a and b are visible', () => {
-        showOnly(cy, new Set(['a', 'b']));
+  describe('GIVEN a graph of four nodes', () => {
+    it('WHEN a and b are shown THEN only a and b are visible', () => {
+      showOnly(cy, new Set(['a', 'b']));
 
-        expect(visibleIds(cy)).toStrictEqual(['a', 'b']);
-      });
+      expect(visibleIds(cy)).toStrictEqual(['a', 'b']);
+    });
 
-      it('WHEN a and b are shown THEN only the edge between them is visible', () => {
-        showOnly(cy, new Set(['a', 'b']));
+    it('WHEN a and b are shown THEN only the edge between them is visible', () => {
+      showOnly(cy, new Set(['a', 'b']));
 
-        expect(visibleEdgeIds(cy)).toStrictEqual(['a>b']);
-      });
+      expect(visibleEdgeIds(cy)).toStrictEqual(['a>b']);
+    });
 
-      it('WHEN a is shown and then every name is shown THEN all four nodes are visible again', () => {
-        showOnly(cy, new Set(['a']));
-        showOnly(cy, ALL_IDS);
+    it('WHEN a is shown and then every name is shown THEN all four nodes are visible again', () => {
+      showOnly(cy, new Set(['a']));
+      showOnly(cy, ALL_IDS);
 
-        expect(visibleIds(cy)).toStrictEqual(['__proto__', 'a', 'b', 'c']);
-      });
+      expect(visibleIds(cy)).toStrictEqual(['__proto__', 'a', 'b', 'c']);
+    });
 
-      it('WHEN only a is shown THEN no node moves', () => {
-        const before = positionsOf(cy);
+    it('WHEN only a is shown THEN no node moves', () => {
+      const before = positionsOf(cy);
 
-        showOnly(cy, new Set(['a']));
+      showOnly(cy, new Set(['a']));
 
-        expect(positionsOf(cy)).toStrictEqual(before);
-      });
+      expect(positionsOf(cy)).toStrictEqual(before);
+    });
 
-      it('WHEN a is shown and the style and node classes are reapplied THEN only a is visible', () => {
-        showOnly(cy, new Set(['a']));
-        cy.style(graphStyleOf(COLORS, 'sans-serif'));
-        cy.nodes().forEach((node: NodeSingular): void => void node.classes(['normal']));
+    it('WHEN a is shown and the style and node classes are reapplied THEN only a is visible', () => {
+      showOnly(cy, new Set(['a']));
+      cy.style(graphStyleOf(COLORS, 'sans-serif'));
+      cy.nodes().forEach((node: NodeSingular): void => void node.classes(['normal']));
 
-        expect(visibleIds(cy)).toStrictEqual(['a']);
-      });
+      expect(visibleIds(cy)).toStrictEqual(['a']);
+    });
 
-      it('WHEN the visible set is empty THEN no node is visible', () => {
-        showOnly(cy, new Set());
+    it('WHEN the visible set is empty THEN no node is visible', () => {
+      showOnly(cy, new Set());
 
-        expect(visibleIds(cy)).toStrictEqual([]);
+      expect(visibleIds(cy)).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN a spy on the Cytoscape fit', () => {
+    it('WHEN a and b are shown THEN fit receives exactly those nodes and the padding', () => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      showOnly(cy, new Set(['a', 'b']));
+      fitVisible(cy, PADDING_PX);
+
+      const [shown, padding] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+      const fittedIds = fitted.map(idOf).sort();
+
+      expect(fit).toHaveBeenCalledTimes(1);
+      expect(fittedIds).toStrictEqual(['a', 'b']);
+      expect(padding).toBe(PADDING_PX);
+    });
+
+    it('WHEN nothing is shown THEN fit is not called', () => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      showOnly(cy, new Set());
+      fitVisible(cy, PADDING_PX);
+
+      expect(fit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a zoom of 2', () => {
+    it('WHEN c is centred THEN the zoom is kept and c sits at the middle of the view', () => {
+      cy.zoom(2);
+
+      centreOnNode(cy, 'c');
+
+      const rendered = cy.getElementById('c').renderedPosition();
+      const offsetX = Math.abs(rendered.x - cy.width() / 2);
+      const offsetY = Math.abs(rendered.y - cy.height() / 2);
+
+      expect({ zoom: cy.zoom(), offsetX: offsetX < 0.1, offsetY: offsetY < 0.1 }).toStrictEqual({
+        zoom: 2,
+        offsetX: true,
+        offsetY: true
       });
     });
   });
 
-  describe('FEATURE: fitVisible', () => {
-    describe('GIVEN a spy on the Cytoscape fit', () => {
-      it('WHEN a and b are shown THEN fit receives exactly those nodes and the padding', () => {
-        const fit = vi.spyOn(cy, 'fit');
+  describe('GIVEN a name that is not in the graph', () => {
+    it('WHEN it is centred THEN nothing throws and the pan is unchanged', () => {
+      const { x, y } = cy.pan();
+      const pan: Position = { x, y };
 
-        showOnly(cy, new Set(['a', 'b']));
-        fitVisible(cy, PADDING_PX);
-
-        const [shown, padding] = fit.mock.calls[0] ?? [];
-        const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
-        const fittedIds = fitted.map(idOf).sort();
-
-        expect(fit).toHaveBeenCalledTimes(1);
-        expect(fittedIds).toStrictEqual(['a', 'b']);
-        expect(padding).toBe(PADDING_PX);
-      });
-
-      it('WHEN nothing is shown THEN fit is not called', () => {
-        const fit = vi.spyOn(cy, 'fit');
-
-        showOnly(cy, new Set());
-        fitVisible(cy, PADDING_PX);
-
-        expect(fit).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('FEATURE: centreOnNode', () => {
-    describe('GIVEN a zoom of 2', () => {
-      it('WHEN c is centred THEN the zoom is kept and c sits at the middle of the view', () => {
-        cy.zoom(2);
-
-        centreOnNode(cy, 'c');
-
-        const rendered = cy.getElementById('c').renderedPosition();
-        const offsetX = Math.abs(rendered.x - cy.width() / 2);
-        const offsetY = Math.abs(rendered.y - cy.height() / 2);
-
-        expect({ zoom: cy.zoom(), offsetX: offsetX < 0.1, offsetY: offsetY < 0.1 }).toStrictEqual({
-          zoom: 2,
-          offsetX: true,
-          offsetY: true
-        });
-      });
-    });
-
-    describe('GIVEN a name that is not in the graph', () => {
-      it('WHEN it is centred THEN nothing throws and the pan is unchanged', () => {
-        const { x, y } = cy.pan();
-        const pan: Position = { x, y };
-
-        expect(() => centreOnNode(cy, 'ghost')).not.toThrow();
-        expect(cy.pan()).toStrictEqual(pan);
-      });
+      expect(() => centreOnNode(cy, 'ghost')).not.toThrow();
+      expect(cy.pan()).toStrictEqual(pan);
     });
   });
 });
