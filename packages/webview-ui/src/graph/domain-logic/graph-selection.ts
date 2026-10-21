@@ -1,7 +1,6 @@
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 import type { DrawnGraph, GraphSelectionDeps } from '../common/graph-page.type.ts';
-import { DEFAULT_DEPTH } from '../common/graph.const.ts';
 import { closureOf } from '../utils/closure.util.ts';
 import { selectionText } from '../utils/selection-text.util.ts';
 
@@ -29,24 +28,21 @@ export class GraphSelection {
     return this.selected;
   }
 
-  /** Selects `name` (`null` clears) in the drawn graph, then saves the view state at once. */
+  /** Selects `name` (`null` clears) in the drawn graph, marks it in the controls, then saves the view state at once. */
   public select(name: string | null): void {
     const drawn = this.deps.drawn();
 
     if (drawn === null) return;
 
     const closure = closureIn(drawn, name);
-    const { page, saver, view } = this.deps;
+    const { page, view } = this.deps;
 
     this.selected = name;
     view.select(name, closure);
     page.status.textContent = selectionText(name, closure);
     page.clear.disabled = name === null;
-
-    const state = this.viewState(drawn);
-
-    saver.schedule(state);
-    saver.flush();
+    this.deps.onSelected(name);
+    this.save();
   }
 
   /** Forgets the selection without saving it, for a page about to show another graph or none. */
@@ -54,6 +50,19 @@ export class GraphSelection {
     this.selected = null;
     this.deps.page.status.textContent = '';
     this.deps.page.clear.disabled = true;
+    this.deps.onSelected(null);
+  }
+
+  /** Saves the camera, the selection and the controls at once. */
+  public save(): void {
+    const drawn = this.deps.drawn();
+
+    if (drawn === null) return;
+
+    const state = this.viewState(drawn);
+
+    this.deps.saver.schedule(state);
+    this.deps.saver.flush();
   }
 
   public tapNode(name: string): void {
@@ -88,19 +97,8 @@ export class GraphSelection {
 
   private viewState(drawn: DrawnGraph): GraphViewState {
     const { zoom, pan } = this.deps.view.viewport();
-    // grug: interim defaults until Task 3.4 passes the controls state
-    const state: GraphViewState = {
-      hash: drawn.hash,
-      zoom,
-      pan,
-      selected: this.selected,
-      controlsOpen: true,
-      search: '',
-      depth: DEFAULT_DEPTH,
-      hidden: [],
-      focus: null,
-      tags: []
-    };
+    const controls = this.deps.controls();
+    const state: GraphViewState = { hash: drawn.hash, zoom, pan, selected: this.selected, ...controls };
 
     return state;
   }

@@ -1,6 +1,8 @@
 import type { Core } from 'cytoscape';
 
 import type { Closure } from './closure.type.ts';
+import type { ControlsElements } from './controls-elements.type.ts';
+import type { FolderGroup } from './folder-group.type.ts';
 import type { ProbeFacts } from './graph-probe.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
@@ -87,6 +89,8 @@ export type GraphControllerDeps = {
   readonly saver: ViewStateSaver;
   readonly sizeOf: NodeSizer;
   readonly now: () => number;
+  /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
+  readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;
 };
 
 /** The graph the page shows: its hash, package names and records, and its drawable edges. */
@@ -104,6 +108,10 @@ export type GraphSelectionDeps = {
   readonly saver: ViewStateSaver;
   /** The graph shown or being laid out; `null` while the page shows no graph. */
   readonly drawn: () => DrawnGraph | null;
+  /** The controls fields every save carries along. */
+  readonly controls: () => ControlsViewFields;
+  /** The selection changed or was forgotten; `null` for none. */
+  readonly onSelected: (name: string | null) => void;
 };
 
 export type GraphController = {

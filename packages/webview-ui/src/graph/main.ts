@@ -9,6 +9,7 @@ import { createGraphView } from './data-access/graph-view.ts';
 import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
+import { buildControls } from './ui/controls-elements.ts';
 import { buildPage } from './ui/page-elements.ts';
 import { nodeSizeOf } from './utils/node-size.util.ts';
 import { themeColorsOf } from './utils/theme-colors.util.ts';
@@ -42,7 +43,7 @@ const saver = createViewStateSaver(bridge.saveState, VIEW_STATE_DEBOUNCE_MS);
 const runner = createLayoutRunner({ createElk, timeoutMs: FALLBACK_TIMEOUT_MS, fallback: breadthfirstPositions });
 const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily);
 const now = (): number => performance.now();
-const controller = createGraphController({ bridge, page, createView, runner, saver, sizeOf: labelSizer(), now });
+const controller = createGraphController({ bridge, page, createView, runner, saver, sizeOf: labelSizer(), now, build: buildControls });
 
 const applyTheme = (): void => {
   const style = getComputedStyle(document.body);

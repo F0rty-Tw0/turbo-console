@@ -1,4 +1,3 @@
-// eslint-disable-next-line local/no-unused-exports -- first imported by Task 3.4
 import { ControlsKeyboard } from './controls-keyboard.ts';
 import { wireControls } from './graph-controls-events.ts';
 import { renderControls, renderSearch, revealSelected } from './graph-controls-render.ts';

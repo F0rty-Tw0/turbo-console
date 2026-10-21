@@ -1,7 +1,7 @@
 import type { ControlsElements } from './controls-elements.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
 import type { GraphFilters } from './graph-filters.type.ts';
-import type { PageElements } from './graph-page.type.ts';
+import type { GraphSelectionDeps, PageElements } from './graph-page.type.ts';
 
 /** What `restoredFilters` rebuilds from a saved state: the filters, the two inputs' values and whether the panel opens. */
 export type RestoredControls = {
@@ -42,6 +42,10 @@ export type GraphControlsDeps = {
   readonly onSave: () => void;
   readonly onResize: () => void;
 };
+
+/** What `GraphFiltering` needs to own the selection and the controls: the selection's deps, the clock and `build`. */
+export type GraphFilteringDeps = Pick<GraphSelectionDeps, 'bridge' | 'page' | 'view' | 'saver' | 'drawn'> &
+  Pick<GraphControlsDeps, 'build' | 'now'>;
 
 /** What the panel's listeners ask of `GraphControls`, in the panel's own terms; `names` are a folder's package names. */
 export type ControlsActions = {

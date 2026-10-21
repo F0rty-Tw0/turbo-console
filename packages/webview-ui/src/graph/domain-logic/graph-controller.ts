@@ -1,5 +1,6 @@
+import { GraphFiltering } from './graph-filtering.ts';
+import { GraphFrames } from './graph-frames.ts';
 import { showFailure, showGraphView, showMessage, showStateMessage } from './graph-page-states.ts';
-import { GraphSelection } from './graph-selection.ts';
 import { postLayout } from './layout-post.ts';
 import type { GraphReady, GraphState, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -12,33 +13,33 @@ import { elkGraphOf } from '../utils/elk-graph.util.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
 import { restorePlanOf } from '../utils/view-restore.util.ts';
+import { visibleSelection } from '../utils/visible-selection.util.ts';
 
 /** Shows the host's states; lays a graph out unless the host sent cached positions, and posts the layout back. */
 class GraphPageController {
   public readonly view: GraphView;
 
   private readonly deps: GraphControllerDeps;
-  private readonly selection: GraphSelection;
+  private readonly frames: GraphFrames;
+  private readonly filtering: GraphFiltering;
   private drawn: DrawnGraph | null = null;
   private engine: LayoutEngine | null = null;
-  private graphAt = 0;
-  private firstFrame: number | null = null;
-  private isFramePending = false;
 
   public constructor(deps: GraphControllerDeps) {
-    const { bridge, page, saver } = deps;
+    const { bridge, page } = deps;
     const handlers: GraphViewHandlers = {
-      onTapNode: (name: string): void => this.selection.tapNode(name),
-      onTapBackground: (): void => this.selection.select(null),
-      onDoubleTapNode: (): void => this.selection.openDetails(),
+      onTapNode: (name: string): void => this.filtering.selection.tapNode(name),
+      onTapBackground: (): void => this.filtering.selection.select(null),
+      onDoubleTapNode: (): void => this.filtering.selection.openDetails(),
       onDragEnd: (positions: Positions): void => this.postDragged(positions),
-      onViewport: (): void => this.selection.saveViewport(),
-      onRender: (): void => this.markFrame()
+      onViewport: (): void => this.filtering.selection.saveViewport(),
+      onRender: (): void => this.frames.mark()
     };
 
     this.deps = deps;
+    this.frames = new GraphFrames(deps.now);
     this.view = deps.createView(page.container, handlers);
-    this.selection = new GraphSelection({ bridge, page, view: this.view, saver, drawn: (): DrawnGraph | null => this.drawn });
+    this.filtering = new GraphFiltering({ ...deps, view: this.view, drawn: (): DrawnGraph | null => this.drawn });
     page.fit.addEventListener('click', (): void => this.view.fit());
     page.relayout.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.relayout()));
     page.retry.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.relayout()));
@@ -54,10 +55,12 @@ class GraphPageController {
   }
 
   public facts(): ProbeFacts {
+    const filteringFacts = this.filtering.facts();
     const facts: ProbeFacts = {
-      selected: (): string | null => this.selection.current(),
-      firstFrameMs: (): number | null => this.firstFrame,
-      layoutEngine: (): LayoutEngine | null => this.engine
+      selected: (): string | null => this.filtering.selection.current(),
+      firstFrameMs: (): number | null => this.frames.firstFrameMs(),
+      layoutEngine: (): LayoutEngine | null => this.engine,
+      ...filteringFacts
     };
 
     return facts;
@@ -71,7 +74,7 @@ class GraphPageController {
     }
 
     this.drawn = null;
-    this.selection.reset();
+    this.filtering.selection.reset();
     showStateMessage(this.deps.page, state);
   }
 
@@ -84,10 +87,8 @@ class GraphPageController {
 
     this.drawn = drawnGraphOf(state);
     this.engine = null;
-    this.graphAt = at;
-    this.firstFrame = null;
-    this.isFramePending = false;
-    this.selection.reset();
+    this.frames.start(at);
+    this.filtering.selection.reset();
 
     const { positions } = state;
 
@@ -133,12 +134,16 @@ class GraphPageController {
     showGraphView(this.deps.page, engine === 'fallback');
     this.view.setGraph(drawn.packages, drawn.edges, positions, this.deps.sizeOf);
     this.engine = engine;
-    this.isFramePending = true;
+    this.frames.arm();
+
+    const visible = this.filtering.restore(saved, drawn, this.frames.receivedAt());
 
     if (plan.kind === 'restore') this.view.setViewport(plan.zoom, plan.pan);
     else this.view.fit();
 
-    this.selection.select(plan.selected);
+    const selected = visibleSelection(plan.selected, visible);
+
+    this.filtering.selection.select(selected);
   }
 
   /** Re-layout and Retry: a fresh run for the current graph, then a fit; a successful run hides the notice. */
@@ -168,7 +173,7 @@ class GraphPageController {
 
       this.drawn = null;
       this.engine = null;
-      this.selection.reset();
+      this.filtering.selection.reset();
       showFailure(this.deps.page, error);
     }
   }
@@ -180,13 +185,6 @@ class GraphPageController {
     if (hash === undefined || !isCacheable) return;
 
     this.deps.bridge.post({ type: 'positions', hash, positions });
-  }
-
-  private markFrame(): void {
-    if (!this.isFramePending) return;
-
-    this.isFramePending = false;
-    this.firstFrame = this.deps.now() - this.graphAt;
   }
 }
 
