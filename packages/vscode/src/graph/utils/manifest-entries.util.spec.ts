@@ -109,10 +109,10 @@ const found: [string, string, string, ManifestEntry[]][] = [
     [entry('dependencies', 'core', '1', 2), entry('dependencies', 'core', '2', 3)]
   ],
   [
-    'a later duplicate of a field key is ignored',
+    'a duplicate of a field key: the last one wins, as in JSON.parse',
     rows('\n', '{', '  "dependencies": { "core": "1" },', '  "dependencies": { "core": "2" }', '}'),
     'core',
-    [entry('dependencies', 'core', '1', 1)]
+    [entry('dependencies', 'core', '2', 2)]
   ]
 ];
 

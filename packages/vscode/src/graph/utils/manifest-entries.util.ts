@@ -61,7 +61,7 @@ const fieldObjectOf = (root: Node, field: ManifestField): Node | null => {
 
     return stringValueOf(key) === field && value?.type === 'object';
   };
-  const property = root.children?.find(isFieldObject);
+  const property = root.children?.findLast(isFieldObject);
 
   return property?.children?.[1] ?? null;
 };
