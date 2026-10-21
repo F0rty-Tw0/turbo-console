@@ -15,10 +15,10 @@ const messageTextOf = (state: MessageState): string => {
   }
 };
 
-/** Toolbar, notice and container hidden, `text` shown; Reload only when `canReload`. */
+/** Toolbar, notice and body hidden, `text` shown; Reload only when `canReload`. */
 export const showMessage = (page: PageElements, text: string, canReload: boolean): void => {
   page.toolbar.hidden = true;
-  page.container.hidden = true;
+  page.body.hidden = true;
   page.notice.hidden = true;
   page.message.hidden = false;
   page.messageText.textContent = text;
@@ -39,12 +39,13 @@ export const showFailure = (page: PageElements, error: unknown): void => {
   showMessage(page, `${LAYOUT_FAILED_TEXT}: ${reason}`, false);
 };
 
-/** Toolbar and container shown with Fit and Re-layout enabled; the notice only for a fallback layout. */
+/** Toolbar and body shown with Controls, Fit and Re-layout enabled; the notice only for a fallback layout. */
 export const showGraphView = (page: PageElements, isFallback: boolean): void => {
   page.message.hidden = true;
   page.toolbar.hidden = false;
-  page.container.hidden = false;
+  page.body.hidden = false;
   page.notice.hidden = !isFallback;
+  page.controls.disabled = false;
   page.fit.disabled = false;
   page.relayout.disabled = false;
 };

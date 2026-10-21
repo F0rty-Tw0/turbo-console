@@ -9,10 +9,12 @@ import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 
-/** The graph page's elements, built once by `buildPage`; DOM order is the Tab order (toolbar, then container). */
+/** The graph page's elements, built once by `buildPage`; DOM order is the Tab order (toolbar, then the body). */
 export type PageElements = {
   readonly root: HTMLElement;
   readonly toolbar: HTMLElement;
+  /** Toggles the controls panel `aside#graph-controls`; `GraphControls` keeps its label and `aria-expanded` current. */
+  readonly controls: HTMLButtonElement;
   readonly fit: HTMLButtonElement;
   readonly relayout: HTMLButtonElement;
   readonly clear: HTMLButtonElement;
@@ -22,6 +24,8 @@ export type PageElements = {
   readonly message: HTMLElement;
   readonly messageText: HTMLElement;
   readonly reload: HTMLButtonElement;
+  /** `div.graph-body`: the controls panel, once a graph shows, then the container. */
+  readonly body: HTMLElement;
   readonly container: HTMLElement;
 };
 

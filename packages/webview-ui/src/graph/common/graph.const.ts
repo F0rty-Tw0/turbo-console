@@ -69,3 +69,15 @@ export const ELK_OPTIONS: Readonly<Record<string, string>> = {
 
 /** The group header for packages whose path has no folder part. */
 export const ROOT_FOLDER = '(root)';
+
+export const CONTROLS_LABEL = 'Controls';
+
+export const CONTROLS_FILTERED_LABEL = 'Controls (filters on)';
+
+export const SEARCH_LABEL = 'Search packages';
+
+export const DEPTH_LABEL = 'Focus depth';
+
+export const TAGS_LABEL = 'Tags';
+
+export const SHOW_ALL_LABEL = 'Show all';
