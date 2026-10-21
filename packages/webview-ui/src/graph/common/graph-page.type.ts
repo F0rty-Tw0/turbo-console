@@ -19,6 +19,10 @@ export type PageElements = {
   readonly toolbar: HTMLElement;
   /** Toggles the controls panel `aside#graph-controls`; `GraphControls` keeps its label and `aria-expanded` current. */
   readonly controls: HTMLButtonElement;
+  /** Toggles the details panel `aside#graph-details`. */
+  readonly details: HTMLButtonElement;
+  /** `span.filters-on` inside the Controls button, shown while any filter is on. */
+  readonly filtersOn: HTMLElement;
   readonly fit: HTMLButtonElement;
   readonly relayout: HTMLButtonElement;
   readonly clear: HTMLButtonElement;
@@ -32,6 +36,12 @@ export type PageElements = {
   readonly body: HTMLElement;
   readonly container: HTMLElement;
 };
+
+/** What `buildToolbar` builds: the toolbar and the parts of it the page drives. */
+export type ToolbarElements = Pick<
+  PageElements,
+  'toolbar' | 'controls' | 'details' | 'fit' | 'relayout' | 'clear' | 'status' | 'filtersOn'
+>;
 
 /** The controls fields of the saved view state: what `GraphControls` keeps and the selection's saves carry along. */
 export type ControlsViewFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags'>;

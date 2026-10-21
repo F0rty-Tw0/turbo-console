@@ -170,7 +170,7 @@ export class GraphControls {
 
     const view: ControlsView = { filters: applied, visible: shown, total: mounted.graph.infos.length, selected, isOpen };
 
-    renderControls(mounted.elements, this.deps.page.controls, view);
+    renderControls(mounted.elements, this.deps.page, view);
   }
 
   private change(mounted: Mounted, next: GraphFilters): void {

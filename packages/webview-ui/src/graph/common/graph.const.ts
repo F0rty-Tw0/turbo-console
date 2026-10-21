@@ -75,6 +75,18 @@ export const CONTROLS_LABEL = 'Controls';
 
 export const CONTROLS_FILTERED_LABEL = 'Controls (filters on)';
 
+export const DETAILS_LABEL = 'Details';
+
+export const PANELS_LABEL = 'Panels';
+
+export const VIEW_LABEL = 'View';
+
+/** Shown inside the Controls button while any filter is on, next to its label. */
+export const FILTERS_ON_TEXT = 'filters on';
+
+/** Below this width the details panel overlays the canvas instead of docking beside it; `graph.css` repeats the literal. */
+export const OVERLAY_MEDIA_QUERY = '(width < 960px)';
+
 export const SEARCH_LABEL = 'Search packages';
 
 export const DEPTH_LABEL = 'Focus depth';
