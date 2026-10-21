@@ -12,5 +12,8 @@ export const MANIFEST_ENTRIES_MAX = 8;
 /** The highest 0-based `package.json` line the page and the host accept. */
 export const MANIFEST_LINE_MAX = 1_000_000;
 
+/** The longest `package.json` path an explained edge names; the page rejects a longer one. */
+export const MANIFEST_FILE_MAX = 1_024;
+
 /** The highest `taskCount` the page accepts. */
 export const TASK_COUNT_MAX = 100_000;

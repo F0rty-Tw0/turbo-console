@@ -41,6 +41,7 @@ export {
   ENTRY_TEXT_MAX,
   MANIFEST_ENTRIES_MAX,
   MANIFEST_FIELDS,
+  MANIFEST_FILE_MAX,
   MANIFEST_LINE_MAX,
   TASK_COUNT_MAX
 } from './bridge/common/graph-message.const.ts';

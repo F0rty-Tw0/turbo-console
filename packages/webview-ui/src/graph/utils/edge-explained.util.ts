@@ -1,9 +1,13 @@
 import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
-import { ENTRY_TEXT_MAX, MANIFEST_ENTRIES_MAX, MANIFEST_FIELDS, MANIFEST_LINE_MAX } from '../../bridge/common/graph-message.const.ts';
+import {
+  ENTRY_TEXT_MAX,
+  MANIFEST_ENTRIES_MAX,
+  MANIFEST_FIELDS,
+  MANIFEST_FILE_MAX,
+  MANIFEST_LINE_MAX
+} from '../../bridge/common/graph-message.const.ts';
 import type { ManifestField } from '../../bridge/common/graph-message.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-
-const FILE_MAX = 1_024;
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 
@@ -36,7 +40,7 @@ const isResult = (result: unknown): boolean => {
 
   const { kind, file, entries } = result;
 
-  const isFile = isShortString(file, FILE_MAX);
+  const isFile = isShortString(file, MANIFEST_FILE_MAX);
 
   if (!isFile) return false;
 
