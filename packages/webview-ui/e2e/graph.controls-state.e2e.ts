@@ -211,6 +211,22 @@ test.describe('FEATURE: graph controls saved state', () => {
   );
 
   test(
+    'GIVEN keyboard focus in the package list, an edited graph rebuilds the panel and the search box takes the focus',
+    { annotation: AC4 },
+    async ({ graphHost, graphKeys, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('AND the first group checkbox is reached by Tab', async (): Promise<void> => graphKeys.tabTo('(root) (1)'));
+
+      await test.step('AND the edited graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_EDITED_STUB));
+
+      await test.step('THEN the search box holds focus', async (): Promise<void> => graphKeys.expectFocusedName('Search packages'));
+    }
+  );
+
+  test(
     'GIVEN saved filters naming Object members, or a focus saved as hidden, they restore as plain names and the focus is unhidden',
     { annotation: RF4 },
     async ({ graphHost, graphList, graphLook, graphPage, graphProbe }): Promise<void> => {

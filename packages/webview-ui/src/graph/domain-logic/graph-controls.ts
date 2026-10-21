@@ -1,4 +1,5 @@
 import { ControlsKeyboard } from './controls-keyboard.ts';
+import { mountRestoredPanel } from './controls-panel-mount.ts';
 import { wireControls } from './graph-controls-events.ts';
 import { renderControls, renderSearch, revealSelected } from './graph-controls-render.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -73,21 +74,15 @@ export class GraphControls {
     const elements = this.deps.build(folderGroupsOf(graph.infos), tagsOf(graph.infos));
     const restored = restoredFilters(state, graph);
     const mounted: Mounted = { graph, elements };
+    const previous = this.mounted?.elements ?? null;
 
-    if (this.mounted === null) this.deps.page.body.prepend(elements.panel);
-    else this.mounted.elements.panel.replaceWith(elements.panel);
-
+    mountRestoredPanel(this.deps.page.body, previous, elements, restored);
     this.mounted = mounted;
     this.applied = restored.filters;
     this.search = restored.search;
     this.depth = restored.depth;
     this.isOpen = restored.isOpen;
     this.stamp = null;
-    elements.search.value = restored.search;
-    elements.depth.value = String(restored.depth);
-
-    for (const [tag, box] of elements.tags) box.checked = restored.filters.tags.has(tag);
-
     wireControls(elements, this.actionsOf(mounted));
     renderSearch(elements, graph.infos, restored.search);
     const keyboardDeps: KeyboardDeps = {
