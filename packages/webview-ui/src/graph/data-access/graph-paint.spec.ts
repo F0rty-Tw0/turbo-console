@@ -1,0 +1,115 @@
+import cytoscape from 'cytoscape';
+import type { Core, EdgeSingular, NodeSingular } from 'cytoscape';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { applyPaint } from './graph-paint.ts';
+import { graphStyleOf } from './graph-style.ts';
+import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import type { ProbeState } from '../common/graph-probe.type.ts';
+import type { Paint } from '../common/paint.type.ts';
+import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
+import { edgeIdOf } from '../utils/edge-id.util.ts';
+
+const NODE_STATES = new Map<string, ProbeState>([
+  ['a', 'selected'],
+  ['b', 'highlighted'],
+  ['c', 'dimmed'],
+  ['__proto__', 'normal']
+]);
+
+const paintOfStates = (nodeState: (name: string) => ProbeState, edgeState: (edge: GraphEdge) => ProbeState): Paint => {
+  const paint: Paint = { nodeState, edgeState };
+
+  return paint;
+};
+
+const stateOfName = (name: string): ProbeState => NODE_STATES.get(name) ?? 'normal';
+
+const FIRST_PAINT: Paint = paintOfStates(stateOfName, (): ProbeState => 'normal');
+
+const uniformPaint = (state: ProbeState): Paint => {
+  return paintOfStates(
+    (): ProbeState => state,
+    (): ProbeState => state
+  );
+};
+
+const classesOf = (element: NodeSingular | EdgeSingular): string[] => element.classes();
+
+describe('FEATURE: applyPaint', () => {
+  let cy: Core;
+
+  beforeEach(() => {
+    cy = cytoscape({ headless: true, styleEnabled: true, elements: CANVAS_ELEMENTS });
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  describe('GIVEN a paint that gives each package a state', () => {
+    it('WHEN it is applied THEN each node has exactly that state class', () => {
+      applyPaint(cy, FIRST_PAINT);
+
+      const ids = ['a', 'b', 'c', '__proto__'];
+      const classes = ids.map((id: string): string[] => classesOf(cy.getElementById(id)));
+
+      expect(classes).toStrictEqual([['selected'], ['highlighted'], ['dimmed'], ['normal']]);
+    });
+
+    it('WHEN it is applied THEN the selected style still applies to the node', () => {
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+
+      applyPaint(cy, FIRST_PAINT);
+
+      expect(cy.getElementById('a').numericStyle('border-width')).toBe(3);
+    });
+  });
+
+  describe('GIVEN an edge paint that selects a>b', () => {
+    it('WHEN it is applied THEN each edge is asked with its ends and gets its state class', () => {
+      const edgeState = vi.fn((edge: GraphEdge): ProbeState => (edge.source === 'a' ? 'selected' : 'dimmed'));
+
+      applyPaint(cy, paintOfStates(stateOfName, edgeState));
+
+      const ab = cy.getElementById(edgeIdOf({ source: 'a', target: 'b' }));
+      const bc = cy.getElementById(edgeIdOf({ source: 'b', target: 'c' }));
+
+      expect(edgeState).toHaveBeenCalledWith({ source: 'a', target: 'b' });
+      expect(edgeState).toHaveBeenCalledWith({ source: 'b', target: 'c' });
+      expect([classesOf(ab), classesOf(bc)]).toStrictEqual([['selected'], ['dimmed']]);
+    });
+  });
+
+  describe('GIVEN everything painted dimmed', () => {
+    it('WHEN a second paint makes everything normal THEN no element keeps the dimmed class', () => {
+      applyPaint(cy, uniformPaint('dimmed'));
+
+      applyPaint(cy, uniformPaint('normal'));
+
+      const classes = cy.elements().map(classesOf);
+      const expected = classes.map((): string[] => ['normal']);
+
+      expect(classes).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN node a carries the ghost class', () => {
+    it('WHEN it is painted selected then normal THEN ghost survives both paints', () => {
+      const node = cy.getElementById('a');
+
+      node.addClass('ghost');
+
+      applyPaint(cy, uniformPaint('selected'));
+      const selected = classesOf(node).sort();
+
+      applyPaint(cy, uniformPaint('normal'));
+      const normal = classesOf(node).sort();
+
+      expect([selected, normal]).toStrictEqual([
+        ['ghost', 'selected'],
+        ['ghost', 'normal']
+      ]);
+    });
+  });
+});

@@ -29,6 +29,8 @@ class GraphPageController {
     const { bridge, page } = deps;
     const handlers: GraphViewHandlers = {
       onTapNode: (name: string): void => this.filtering.selection.tapNode(name),
+      // grug: interim no-op until Task 3.4 wires edge taps
+      onTapEdge: (): void => undefined,
       onTapBackground: (): void => this.filtering.selection.select(null),
       onDoubleTapNode: (): void => this.filtering.selection.openDetails(),
       onDragEnd: (positions: Positions): void => this.postDragged(positions),

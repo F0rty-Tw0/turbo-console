@@ -1,11 +1,11 @@
 import type { Core } from 'cytoscape';
 
-import type { Closure } from './closure.type.ts';
 import type { ControlsElements } from './controls-elements.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
 import type { ProbeFacts } from './graph-probe.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
+import type { Paint } from './paint.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
@@ -50,6 +50,8 @@ export type Viewport = {
 /** What the Cytoscape view reports back; names are package names. */
 export type GraphViewHandlers = {
   readonly onTapNode: (name: string) => void;
+  /** A link tapped on the canvas; `source` depends on `target`. */
+  readonly onTapEdge: (source: string, target: string) => void;
   readonly onTapBackground: () => void;
   readonly onDoubleTapNode: (name: string) => void;
   /** Every node's current centre, after the user dropped a dragged node. */
@@ -62,7 +64,8 @@ export type GraphViewHandlers = {
 /** The Cytoscape canvas view of one page. */
 export type GraphView = {
   readonly setGraph: (packages: string[], edges: GraphEdge[], positions: Positions, sizeOf: NodeSizer) => void;
-  readonly select: (selected: string | null, closure: Closure | null) => void;
+  /** Gives each package and link one of the four state classes. */
+  readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */
   readonly fit: () => void;
   /** Shows exactly these package names; the rest are hidden, not moved. */

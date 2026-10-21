@@ -1,8 +1,21 @@
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 import type { DrawnGraph, GraphSelectionDeps } from '../common/graph-page.type.ts';
+import { NO_INSPECTION } from '../common/inspection.const.ts';
+import type { Inspection } from '../common/inspection.type.ts';
 import { closureOf } from '../utils/closure.util.ts';
+import { paintOf } from '../utils/paint.util.ts';
 import { selectionText } from '../utils/selection-text.util.ts';
+
+const NO_LIT: ReadonlySet<string> = new Set();
+
+const inspectionOf = (name: string | null): Inspection => {
+  if (name === null) return NO_INSPECTION;
+
+  const inspection: Inspection = { kind: 'package', name };
+
+  return inspection;
+};
 
 const closureIn = (drawn: DrawnGraph, name: string | null): Closure | null => {
   if (name === null) return null;
@@ -38,7 +51,7 @@ export class GraphSelection {
     const { page, view } = this.deps;
 
     this.selected = name;
-    view.select(name, closure);
+    view.paint(paintOf(inspectionOf(name), drawn.edges, null, NO_LIT));
     page.status.textContent = selectionText(name, closure);
     page.clear.disabled = name === null;
     this.deps.onSelected(name);
