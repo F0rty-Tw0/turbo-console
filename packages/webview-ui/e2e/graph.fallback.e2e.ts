@@ -1,5 +1,5 @@
 import { test } from './graph.fixture.ts';
-import { DIAMOND_CHAIN_STUB } from './test/stubs/graph-state.stub.ts';
+import { DIAMOND_CHAIN_CACHED_STUB, DIAMOND_CHAIN_STUB } from './test/stubs/graph-state.stub.ts';
 
 const AC4 = { description: 'M4-1 AC4', type: 'requirement' };
 
@@ -107,6 +107,20 @@ test.describe('FEATURE: graph layout fallback', () => {
     await test.step('THEN the page says the graph could not be drawn', async (): Promise<void> => graphPage.expectLayoutFailed());
 
     await test.step('AND the loading message is gone', async (): Promise<void> => graphPage.expectNotLoading());
+
+    await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
+  });
+
+  test('GIVEN label sizing that throws, a cached graph state also says the graph could not be drawn', async ({
+    graphHost,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened with a canvas whose measureText throws', async (): Promise<void> =>
+      graphPage.open({ isMeasureBroken: true }));
+
+    await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
+
+    await test.step('THEN the page says the graph could not be drawn', async (): Promise<void> => graphPage.expectLayoutFailed());
 
     await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
   });

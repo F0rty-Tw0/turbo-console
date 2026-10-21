@@ -49,11 +49,11 @@ const fallbackPositions = (fallback: LayoutRunnerDeps['fallback'], graph: ElkNod
 export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
   let elk: ElkLike | null = null;
   let latest = 0;
-  let inFlight = 0;
+  let busy: ElkLike | null = null;
   const dropBusyElk = (): void => {
-    if (inFlight === 0) return;
+    if (busy === null || busy !== elk) return;
 
-    elk?.terminate();
+    busy.terminate();
     elk = null;
   };
   const run = async (hash: string, graph: ElkNode): Promise<LayoutResult | null> => {
@@ -83,12 +83,12 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
 
     const current = elk;
 
-    inFlight += 1;
+    busy = current;
 
     const settled = layoutWithin(current, graph, deps.timeoutMs);
     const laidOut = await settled.catch(failed);
 
-    inFlight -= 1;
+    if (busy === current) busy = null;
 
     const isStale = ticket !== latest;
 

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createLayoutRunner } from './layout-runner.ts';
 import { FALLBACK_TIMEOUT_MS } from '../common/graph.const.ts';
-import type { ElkLike, LayoutResult, LayoutRunnerDeps } from '../common/layout.type.ts';
+import type { ElkLike, LayoutResult, LayoutRunner, LayoutRunnerDeps } from '../common/layout.type.ts';
 import type { ElkMock } from '../test/common/elk-mock.type.ts';
 import { elkMock, fallbackMock, serialElkMock } from '../test/mocks/elk.mock.ts';
 import { CENTRES_STUB, ELK_GRAPH_STUB, FALLBACK_POSITIONS_STUB, LAID_OUT_STUB } from '../test/stubs/layout.stub.ts';
@@ -28,15 +28,14 @@ describe('FEATURE: createLayoutRunner, a run overtaken by a newer one', () => {
     let secondElk: ElkMock;
     let first: Promise<LayoutResult | null>;
     let second: Promise<LayoutResult | null>;
+    let runner: LayoutRunner;
 
     beforeEach((): void => {
       fallback = fallbackMock(FALLBACK_POSITIONS_STUB);
       firstElk = elkMock();
       secondElk = elkMock();
       createElk = vi.fn<() => ElkLike>().mockReturnValueOnce(firstElk.elk).mockReturnValueOnce(secondElk.elk);
-
-      const runner = createLayoutRunner(runnerDepsOf(createElk, fallback));
-
+      runner = createLayoutRunner(runnerDepsOf(createElk, fallback));
       first = runner.run('h1', ELK_GRAPH_STUB);
       vi.advanceTimersByTime(1000);
       second = runner.run('h2', ELK_GRAPH_STUB);
@@ -95,6 +94,17 @@ describe('FEATURE: createLayoutRunner, a run overtaken by a newer one', () => {
       vi.advanceTimersByTime(1000);
 
       await expect(second).resolves.toMatchObject({ hash: 'h2', engine: 'fallback', ms: FALLBACK_TIMEOUT_MS });
+    });
+
+    it('WHEN the second run finishes while the first still hangs THEN a third run reuses the second ELK', async () => {
+      secondElk.resolveLayout(LAID_OUT_STUB);
+      await second;
+
+      void runner.run('h3', ELK_GRAPH_STUB);
+
+      expect(secondElk.terminate).not.toHaveBeenCalled();
+      expect(createElk).toHaveBeenCalledTimes(2);
+      expect(secondElk.layout).toHaveBeenCalledTimes(2);
     });
   });
 

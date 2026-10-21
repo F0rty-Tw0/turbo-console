@@ -142,6 +142,8 @@ test.describe('FEATURE: graph render', () => {
 
     await test.step('AND all three edges are drawn', async (): Promise<void> => graphProbe.expectEdgeCount(3));
 
+    await test.step('AND ELK laid them out', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
+
     await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
   });
 

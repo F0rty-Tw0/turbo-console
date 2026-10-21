@@ -1,5 +1,6 @@
 import { showFailure, showGraphView, showMessage, showStateMessage } from './graph-page-states.ts';
 import { GraphSelection } from './graph-selection.ts';
+import { postLayout } from './layout-post.ts';
 import type { GraphReady, GraphState, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView, GraphViewHandlers } from '../common/graph-page.type.ts';
@@ -39,8 +40,8 @@ class GraphPageController {
     this.view = deps.createView(page.container, handlers);
     this.selection = new GraphSelection({ bridge, page, view: this.view, saver, drawn: (): DrawnGraph | null => this.drawn });
     page.fit.addEventListener('click', (): void => this.view.fit());
-    page.relayout.addEventListener('click', (): void => void this.guard(this.relayout()));
-    page.retry.addEventListener('click', (): void => void this.guard(this.relayout()));
+    page.relayout.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.relayout()));
+    page.retry.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.relayout()));
     page.reload.addEventListener('click', (): void => bridge.post({ type: 'reload' }));
   }
 
@@ -89,14 +90,16 @@ class GraphPageController {
     this.isFramePending = false;
     this.selection.reset();
 
-    if (state.positions !== null) {
-      this.place(state.positions, 'cache', saved);
+    const { positions } = state;
+
+    if (positions !== null) {
+      void this.guard((): void => this.place(positions, 'cache', saved));
 
       return;
     }
 
     showMessage(this.deps.page, LOADING_TEXT, false);
-    void this.guard(this.layOut(saved));
+    void this.guard(async (): Promise<void> => this.layOut(saved));
   }
 
   private async layOut(saved: GraphViewState | null): Promise<void> {
@@ -105,7 +108,7 @@ class GraphPageController {
     if (result === null) return;
 
     this.place(result.positions, result.engine, saved);
-    this.postLayout(result);
+    postLayout(this.deps.bridge, result);
   }
 
   /** Runs ELK for the current graph; `null` when the run went stale or the page moved on to another graph. */
@@ -149,28 +152,26 @@ class GraphPageController {
     this.engine = result.engine;
     this.deps.page.notice.hidden = result.engine !== 'fallback';
     this.view.fit();
-    this.postLayout(result);
+    postLayout(this.deps.bridge, result);
   }
 
-  /** Awaits a layout step; a throw replaces the graph with its reason, and the next graph state, even the same one, draws afresh. */
-  private async guard(step: Promise<void>): Promise<void> {
+  /**
+   * Runs a draw or layout step. A throw while the step's graph is still the one drawn replaces the graph with its
+   * reason, and the next graph state, even the same one, draws afresh; a throw from a graph since replaced is dropped.
+   */
+  private async guard(step: () => unknown): Promise<void> {
+    const hash = this.drawn?.hash;
+
     try {
-      await step;
+      await step();
     } catch (error: unknown) {
+      if (this.drawn?.hash !== hash) return;
+
       this.drawn = null;
       this.engine = null;
       this.selection.reset();
       showFailure(this.deps.page, error);
     }
-  }
-
-  /** Only ELK positions go to the host cache; a fallback layout is never cached. */
-  private postLayout(result: LayoutResult): void {
-    const { bridge } = this.deps;
-
-    if (result.engine === 'elk') bridge.post({ type: 'positions', hash: result.hash, positions: result.positions });
-
-    bridge.post({ type: 'layoutDone', ms: result.ms, engine: result.engine });
   }
 
   private postDragged(positions: Positions): void {
