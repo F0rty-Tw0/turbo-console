@@ -76,6 +76,7 @@ export type ShownPackage = {
   readonly path: string;
   readonly role: PackageRole;
   readonly dependencies: string[];
+  readonly tags: string[];
 };
 
 export type ShownTask = {
