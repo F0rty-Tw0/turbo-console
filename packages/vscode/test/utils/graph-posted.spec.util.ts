@@ -8,7 +8,7 @@ export const graphStates = (api: TurboConsoleApi, root: string): GraphReady[] =>
   const states: GraphReady[] = [];
 
   for (const message of posted) {
-    if (message.state.kind === 'graph') states.push(message.state);
+    if (message.type === 'state' && message.state.kind === 'graph') states.push(message.state);
   }
 
   return states;

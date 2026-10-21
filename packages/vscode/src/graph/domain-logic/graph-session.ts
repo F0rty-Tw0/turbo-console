@@ -1,9 +1,10 @@
 import type { GraphPackage, GraphState, GraphWebviewMessage, Positions } from '@turbo-console/webview-ui';
 
+import { answerRequest } from './graph-explain.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
-import type { GraphPorts } from '../common/graph.type.ts';
+import type { ExplainContext, ExplainRequest, GraphPorts } from '../common/graph.type.ts';
 import { acceptedPositions } from '../utils/graph-cache.util.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
 import { packageNamesOf } from '../utils/graph-package.util.ts';
@@ -14,7 +15,7 @@ const NO_PACKAGES: GraphPackage[] = [];
 /**
  * The host side of one Package Graph panel. Each state is built from the store and the layout cache when it is posted
  * or a message is checked, so a message is always judged against the graph as it is now. Nothing is posted before the
- * page's `ready` or while hidden; hiding resets `ready` because the page is rebuilt on show.
+ * page's `ready` or while hidden; hiding resets `ready` because the page is rebuilt on show. An edge explanation is posted only if the panel is still shown and ready after its read.
  */
 export class GraphSession {
   private readonly root: string;
@@ -126,6 +127,11 @@ export class GraphSession {
         this.ports.info(`graph layout ${message.engine} ${message.ms} ms`);
 
         return;
+      case 'explainEdge':
+      case 'openManifest':
+        await this.inspect(message, value);
+
+        return;
     }
   }
 
@@ -160,6 +166,15 @@ export class GraphSession {
     } catch (error: unknown) {
       this.ports.log(logTextOf(error));
     }
+  }
+
+  private async inspect(request: ExplainRequest, value: unknown): Promise<void> {
+    const state = this.stateNow();
+    const canPost = (): boolean => !this.isDisposed && this.isVisible && this.isReady;
+    const context: ExplainContext = { state, root: this.root, ports: this.ports, canPost };
+    const isHandled = await answerRequest(request, context);
+
+    if (!isHandled) this.drop(value);
   }
 
   private storePositions(hash: string, positions: Positions, value: unknown): void {

@@ -5,7 +5,7 @@ import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 
 const pkgOf = (name: string, path: string, tags: string[] = []): GraphPackage => {
-  const pkg: GraphPackage = { name, path, tags };
+  const pkg: GraphPackage = { name, path, tags, taskCount: 0 };
 
   return pkg;
 };

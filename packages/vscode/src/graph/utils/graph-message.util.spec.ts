@@ -53,7 +53,11 @@ describe('FEATURE: graph webview message validation', () => {
       { type: 'openDetails', packageName: 'web' },
       { type: 'positions', hash: HASH, positions: POSITIONS },
       { type: 'layoutDone', ms: 12, engine: 'elk' },
-      { type: 'layoutDone', ms: 3, engine: 'fallback' }
+      { type: 'layoutDone', ms: 3, engine: 'fallback' },
+      { type: 'explainEdge', source: 'web', target: 'core' },
+      { type: 'openManifest', packageName: 'web', line: 0 },
+      { type: 'openManifest', packageName: 'web', line: 1_000_000 },
+      { type: 'explainEdge', source: '__proto__', target: 'constructor' }
     ])('WHEN parsed THEN $type passes unchanged', (message) => {
       expect(parseGraphMessage(message)).toStrictEqual(message);
     });
@@ -72,6 +76,15 @@ describe('FEATURE: graph webview message validation', () => {
       ['undefined', undefined],
       ['an unknown type', { type: 'nope' }],
       ['an openDetails without a name', { type: 'openDetails' }],
+      ['an explainEdge without a target', { type: 'explainEdge', source: 'web' }],
+      ['an explainEdge source past 214 units', { type: 'explainEdge', source: LONG_NAME, target: 'core' }],
+      ['an explainEdge target past 214 units', { type: 'explainEdge', source: 'web', target: LONG_NAME }],
+      ['an openManifest without a line', { type: 'openManifest', packageName: 'web' }],
+      ['an openManifest with line -1', { type: 'openManifest', packageName: 'web', line: -1 }],
+      ['an openManifest with line 1 000 001', { type: 'openManifest', packageName: 'web', line: 1_000_001 }],
+      ['an openManifest with a fractional line', { type: 'openManifest', packageName: 'web', line: 1.5 }],
+      ['an openManifest with a NaN line', { type: 'openManifest', packageName: 'web', line: NaN }],
+      ['an openManifest name past 214 units', { type: 'openManifest', packageName: LONG_NAME, line: 1 }],
       ['a point missing y', { type: 'positions', hash: HASH, positions: POSITIONS_WITHOUT_Y }],
       ['a hash that is not eight hex digits', { type: 'positions', hash: 'h', positions: POSITIONS }],
       ['an upper-case hash', { type: 'positions', hash: 'DC7E01EB', positions: POSITIONS }],

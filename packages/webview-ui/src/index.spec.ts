@@ -14,13 +14,18 @@ import {
 import type {
   DetailsState,
   DryRunPhase,
+  EdgeExplainResult,
   GraphEdge,
+  GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphPackage,
   GraphState,
+  GraphStateMessage,
   GraphViewState,
   GraphWebviewMessage,
   HostMessage,
+  ManifestEntry,
+  ManifestField,
   MissingPackage,
   OpenPackageJsonMessage,
   PackageDetails,
@@ -40,14 +45,36 @@ import type {
 } from './index.ts';
 
 type ExpectedEdge = { readonly source: string; readonly target: string };
-type ExpectedPackage = { readonly name: string; readonly path: string; readonly tags: string[] };
+type ExpectedPackage = { readonly name: string; readonly path: string; readonly tags: string[]; readonly taskCount: number };
 type ExpectedPosition = { readonly x: number; readonly y: number };
 type ExpectedStateMessage = { readonly type: 'state'; readonly state: GraphState };
+type ExpectedEntry = {
+  readonly field: 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
+  readonly key: string;
+  readonly spec: string;
+  readonly line: number;
+};
+type ExpectedFound = { readonly kind: 'found'; readonly file: string; readonly entries: ExpectedEntry[] };
+type ExpectedMissing = { readonly kind: 'missing'; readonly file: string };
+type ExpectedUnreadable = { readonly kind: 'unreadable'; readonly file: string };
+type ExpectedResult = ExpectedFound | ExpectedMissing | ExpectedUnreadable;
+type ExpectedExplainedMessage = {
+  readonly type: 'edgeExplained';
+  readonly source: string;
+  readonly target: string;
+  readonly result: ExpectedResult;
+};
 type LayoutDoneKey = { readonly type: 'layoutDone' };
+type OpenManifestKey = { readonly type: 'openManifest' };
 
 /** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern and tool-icon prefix constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
+  'ENTRY_TEXT_MAX',
   'ICON_ID_PATTERN',
+  'MANIFEST_ENTRIES_MAX',
+  'MANIFEST_FIELDS',
+  'MANIFEST_LINE_MAX',
+  'TASK_COUNT_MAX',
   'TOOL_ICON_PREFIX',
   'durationText',
   'elapsedText',
@@ -66,6 +93,11 @@ describe('FEATURE: webview-ui package entry', () => {
       const names = Object.keys(entry).toSorted();
 
       expect(names).toStrictEqual(RUNTIME_EXPORTS);
+      expect(entry.ENTRY_TEXT_MAX).toBe(200);
+      expect(entry.MANIFEST_ENTRIES_MAX).toBe(8);
+      expect(entry.MANIFEST_LINE_MAX).toBe(1_000_000);
+      expect(entry.TASK_COUNT_MAX).toBe(100_000);
+      expect(entry.MANIFEST_FIELDS).toStrictEqual(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']);
       expect(entry.ICON_ID_PATTERN).toBe(ICON_ID_PATTERN);
       expect(entry.TOOL_ICON_PREFIX).toBe(TOOL_ICON_PREFIX);
       expect(entry.durationText).toBe(durationText);
@@ -96,8 +128,16 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphPackage>().toEqualTypeOf<ExpectedPackage>();
       expectTypeOf<Positions[string]>().toEqualTypeOf<ExpectedPosition>();
       expectTypeOf<GraphState['kind']>().toEqualTypeOf<'loading' | 'error' | 'singlePackage' | 'graph'>();
-      expectTypeOf<GraphHostMessage>().toEqualTypeOf<ExpectedStateMessage>();
-      expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<'ready' | 'reload' | 'openDetails' | 'positions' | 'layoutDone'>();
+      expectTypeOf<ManifestField>().toEqualTypeOf<ExpectedEntry['field']>();
+      expectTypeOf<ManifestEntry>().toEqualTypeOf<ExpectedEntry>();
+      expectTypeOf<EdgeExplainResult>().toEqualTypeOf<ExpectedResult>();
+      expectTypeOf<GraphEdgeExplainedMessage>().toEqualTypeOf<ExpectedExplainedMessage>();
+      expectTypeOf<GraphStateMessage>().toEqualTypeOf<ExpectedStateMessage>();
+      expectTypeOf<GraphHostMessage>().toEqualTypeOf<ExpectedStateMessage | ExpectedExplainedMessage>();
+      expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
+        'ready' | 'reload' | 'openDetails' | 'positions' | 'layoutDone' | 'explainEdge' | 'openManifest'
+      >();
+      expectTypeOf<Extract<GraphWebviewMessage, OpenManifestKey>['line']>().toEqualTypeOf<number>();
       expectTypeOf<Extract<GraphWebviewMessage, LayoutDoneKey>['engine']>().toEqualTypeOf<'elk' | 'fallback'>();
       expectTypeOf<GraphViewState['selected']>().toEqualTypeOf<string | null>();
     });

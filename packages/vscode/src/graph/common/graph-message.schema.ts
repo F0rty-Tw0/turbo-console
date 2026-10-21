@@ -1,4 +1,18 @@
-import { discriminatedUnion, gte, literal, lte, maxLength, number, object, regex, string, unknown, enum as zodEnum } from 'zod/mini';
+import { MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
+import {
+  discriminatedUnion,
+  gte,
+  int,
+  literal,
+  lte,
+  maxLength,
+  number,
+  object,
+  regex,
+  string,
+  unknown,
+  enum as zodEnum
+} from 'zod/mini';
 
 import { GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX } from './graph.const.ts';
 
@@ -9,6 +23,14 @@ const readySchema = object({ type: literal('ready') });
 const reloadSchema = object({ type: literal('reload') });
 
 const openDetailsSchema = object({ type: literal('openDetails'), packageName: packageNameSchema });
+
+const explainEdgeSchema = object({ type: literal('explainEdge'), source: packageNameSchema, target: packageNameSchema });
+
+const openManifestSchema = object({
+  type: literal('openManifest'),
+  packageName: packageNameSchema,
+  line: int().check(gte(0), lte(MANIFEST_LINE_MAX))
+});
 
 /**
  * `positions` passes through unread: zod's `record()` drops an own `__proto__` key, so a package named `__proto__`
@@ -33,5 +55,7 @@ export const graphMessageSchema = discriminatedUnion('type', [
   reloadSchema,
   openDetailsSchema,
   positionsSchema,
-  layoutDoneSchema
+  layoutDoneSchema,
+  explainEdgeSchema,
+  openManifestSchema
 ]);

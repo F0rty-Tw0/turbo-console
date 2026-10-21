@@ -21,6 +21,8 @@ export type GraphHost = {
   readonly open: (title: string) => EditorPanelView<GraphHostMessage>;
   readonly readCache: GraphPorts['readCache'];
   readonly writeCache: GraphPorts['writeCache'];
+  readonly readText: GraphPorts['readText'];
+  readonly openAt: GraphPorts['openAt'];
   readonly log: (text: string) => void;
   readonly info: (text: string) => void;
 };

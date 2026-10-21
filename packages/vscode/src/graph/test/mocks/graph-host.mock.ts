@@ -24,10 +24,12 @@ export const graphHostMock = (): GraphHostFakes => {
   const writeCache = (root: string, entry: GraphLayoutCacheEntry): void => {
     cached.set(root, entry);
   };
+  const readText = vi.fn<GraphHost['readText']>();
+  const openAt = vi.fn<GraphHost['openAt']>();
   const log = vi.fn<GraphHost['log']>();
   const info = vi.fn<GraphHost['info']>();
-  const host: GraphHost = { open, readCache, writeCache, log, info };
-  const fakes: GraphHostFakes = { host, open, views, cached, log, info };
+  const host: GraphHost = { open, readCache, writeCache, readText, openAt, log, info };
+  const fakes: GraphHostFakes = { host, open, views, cached, readText, openAt, log, info };
 
   return fakes;
 };

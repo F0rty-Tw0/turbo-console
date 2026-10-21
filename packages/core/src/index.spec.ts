@@ -57,6 +57,7 @@ const RUNTIME_EXPORTS = [
   'readCachedWorkspace',
   'readDryRun',
   'readNewestRunSummary',
+  'readSmallFile',
   'resolveTurbo',
   'runSummarySchema',
   'turboRunAllArgs',

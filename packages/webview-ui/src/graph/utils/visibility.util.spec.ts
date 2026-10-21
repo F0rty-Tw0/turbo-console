@@ -11,7 +11,7 @@ type FilterSpec = {
 };
 
 const pkgOf = (name: string, path: string, tags: string[] = []): GraphPackage => {
-  const pkg: GraphPackage = { name, path, tags };
+  const pkg: GraphPackage = { name, path, tags, taskCount: 0 };
 
   return pkg;
 };

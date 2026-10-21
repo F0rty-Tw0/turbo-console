@@ -1,13 +1,18 @@
-import type { GraphHostMessage, GraphWebviewMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 
-/** Editor effects of one graph panel. `openDetails` may reject; `log` (failures) and `info` take one clean line and must not throw. */
+/**
+ * Editor effects of one graph panel. `openDetails` and `openAt` may reject; `readText` rejects on a file it cannot open and gives
+ * `null` for one over the read cap; `log` (failures) and `info` take one clean line and must not throw.
+ */
 export type GraphPorts = {
   readonly post: (message: GraphHostMessage) => void;
   readonly readCache: (root: string) => GraphLayoutCacheEntry | null;
   readonly writeCache: (root: string, entry: GraphLayoutCacheEntry) => void;
   readonly openDetails: (packageName: string) => Promise<void>;
+  readonly readText: (path: string) => Promise<string | null>;
+  readonly openAt: (path: string, line: number) => Promise<void>;
   readonly setPanelVisible: (visible: boolean) => void;
   readonly log: (text: string) => void;
   readonly info: (text: string) => void;
@@ -23,3 +28,16 @@ type UncheckedPositionsMessage = {
 
 /** A message that passed `graphMessageSchema`: a `positions` record is still unread. */
 export type SchemaGraphMessage = Exclude<GraphWebviewMessage, PositionsTag> | UncheckedPositionsMessage;
+
+type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };
+
+/** A page request to look into the graph: the reply to an edge or the opening of a package's manifest. */
+export type ExplainRequest = Extract<GraphWebviewMessage, ExplainTag>;
+
+/** What `answerRequest` needs of the session: the state it judges against, the workspace root, the ports and whether a reply may still be posted. */
+export type ExplainContext = {
+  readonly state: GraphState;
+  readonly root: string;
+  readonly ports: GraphPorts;
+  readonly canPost: () => boolean;
+};

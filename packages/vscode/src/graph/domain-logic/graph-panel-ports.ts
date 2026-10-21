@@ -27,6 +27,8 @@ export const graphPortsOf = (
     readCache: host.readCache,
     writeCache: host.writeCache,
     openDetails,
+    readText: host.readText,
+    openAt: host.openAt,
     setPanelVisible,
     log: host.log,
     info: host.info

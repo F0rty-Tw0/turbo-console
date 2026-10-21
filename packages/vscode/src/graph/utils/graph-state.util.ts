@@ -6,6 +6,7 @@ import { packageNamesOf } from './graph-package.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
+import { isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 
 const FNV_OFFSET = 0x811c9dc5;
@@ -48,10 +49,11 @@ export const graphHashOf = (packages: GraphPackage[], edges: GraphEdge[]): strin
   return fnv1a(text);
 };
 
-/** The name, the path and the tags of a node, the tags deduplicated and sorted. */
+/** The name, the path, the tags (deduplicated and sorted) and the visible task count of a node; only the first three are hashed. */
 const packageOf = (node: PackageNode): GraphPackage => {
   const tags = Array.from(new Set(node.tags)).toSorted(compareText);
-  const info: GraphPackage = { name: node.name, path: node.path, tags };
+  const taskCount = node.tasks.filter(isVisibleTask).length;
+  const info: GraphPackage = { name: node.name, path: node.path, tags, taskCount };
 
   return info;
 };

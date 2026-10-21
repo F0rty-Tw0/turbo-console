@@ -1,4 +1,4 @@
-import type { GraphHostMessage, GraphState, Position, Positions } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphState, GraphStateMessage, Position, Positions } from '@turbo-console/webview-ui';
 import { vi } from 'vitest';
 
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
@@ -16,10 +16,17 @@ export const portsWith = (cached: GraphLayoutCacheEntry | null): GraphPorts => {
   return graphPortsMock(seed);
 };
 
-const postedOf = (ports: GraphPorts): GraphHostMessage[] => vi.mocked(ports.post).mock.calls.map(([message]) => message);
+const isState = (message: GraphHostMessage): message is GraphStateMessage => message.type === 'state';
 
-/** The states of every message posted so far, in order. */
-export const postedStatesOf = (ports: GraphPorts): GraphState[] => postedOf(ports).map((message) => message.state);
+/** Every message posted so far, in order. */
+export const postedOf = (ports: GraphPorts): GraphHostMessage[] => vi.mocked(ports.post).mock.calls.map(([message]) => message);
+
+/** The states of every state message posted so far, in order. */
+export const postedStatesOf = (ports: GraphPorts): GraphState[] => {
+  const states = postedOf(ports).filter(isState);
+
+  return states.map((message) => message.state);
+};
 
 /** The last posted state, which must be a `graph` state. */
 export const lastStateOf = (ports: GraphPorts): PostedGraph => {

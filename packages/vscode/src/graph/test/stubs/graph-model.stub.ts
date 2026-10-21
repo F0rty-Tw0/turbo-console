@@ -1,9 +1,9 @@
-import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
+import type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import type { GraphEdge, GraphPackage, GraphState, Position, Positions } from '@turbo-console/webview-ui';
 
 import type { LoadedModel } from '../../../roots/common/root.type.ts';
 import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
-import { PACKAGE_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
+import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
 
 const WEB_A_DEV: PackageEdge = { source: 'web', target: 'a', kind: 'dev' };
 const WEB_A_PROD: PackageEdge = { source: 'web', target: 'a', kind: 'prod' };
@@ -11,7 +11,17 @@ const A_X_PROD: PackageEdge = { source: 'a', target: '@org/x', kind: 'prod' };
 const WEB_X_PROD: PackageEdge = { source: 'web', target: '@org/x', kind: 'prod' };
 const UNSORTED_EDGES: PackageEdge[] = [WEB_A_DEV, WEB_A_PROD, A_X_PROD, WEB_X_PROD];
 
-const TAGGED_WEB_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'web', path: 'apps/web', tags: ['ui', 'app', 'ui'] };
+const LINT_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'lint', name: 'lint' };
+const ATOM_FILE_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'f', name: 'f', kind: 'atom-file' };
+const WEB_TASKS: TaskNode[] = [TASK_NODE_STUB, LINT_TASK, ATOM_FILE_TASK];
+
+const TAGGED_WEB_NODE: PackageNode = {
+  ...PACKAGE_NODE_STUB,
+  name: 'web',
+  path: 'apps/web',
+  tags: ['ui', 'app', 'ui'],
+  tasks: WEB_TASKS
+};
 const A_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'a', path: 'packages/a' };
 const X_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: '@org/x', path: 'packages/libs/x' };
 const GRAPH_NODES: PackageNode[] = [TAGGED_WEB_NODE, A_NODE, X_NODE];
@@ -29,9 +39,9 @@ export const GRAPH_HASH_STUB: string = '9bafdda7';
 export const GRAPH_PACKAGES_STUB: string[] = ['@org/x', 'a', 'web'];
 
 export const GRAPH_INFOS_STUB: GraphPackage[] = [
-  { name: '@org/x', path: 'packages/libs/x', tags: [] },
-  { name: 'a', path: 'packages/a', tags: [] },
-  { name: 'web', path: 'apps/web', tags: ['app', 'ui'] }
+  { name: '@org/x', path: 'packages/libs/x', tags: [], taskCount: 1 },
+  { name: 'a', path: 'packages/a', tags: [], taskCount: 1 },
+  { name: 'web', path: 'apps/web', tags: ['app', 'ui'], taskCount: 2 }
 ];
 
 export const GRAPH_STATE_STUB: GraphState = {

@@ -1,3 +1,4 @@
+import { readSmallFile } from '@turbo-console/core';
 import type { GraphHostMessage } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
@@ -13,7 +14,7 @@ import { GRAPH_ASSET_DIR, GRAPH_CACHE_KEY_PREFIX, GRAPH_VIEW_TYPE } from '../com
 import { layoutEntryOf } from '../utils/graph-cache.util.ts';
 import { graphHtml } from '../utils/graph-webview.util.ts';
 
-/** The editor effects of the Package Graph: panels over `createWebviewPanel`, the layout cache in `workspaceState` and the output channel. */
+/** The editor effects of the Package Graph: panels over `createWebviewPanel`, the layout cache in `workspaceState`, manifest reads and opens, and the output channel. */
 export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state: GraphStore): GraphHost => {
   const assetRoot = vscode.Uri.joinPath(extensionUri, ...GRAPH_ASSET_DIR);
   const options = panelOptionsOf(assetRoot);
@@ -32,7 +33,14 @@ export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state:
       output.error(logTextOf(error));
     });
   };
-  const host: GraphHost = { open, readCache, writeCache, log: output.error, info: output.info };
+  const readText = async (path: string): Promise<string | null> => readSmallFile(path);
+  const openAt = async (path: string, line: number): Promise<void> => {
+    const cursor = new vscode.Position(line, 0);
+    const selection = new vscode.Range(cursor, cursor);
+
+    await vscode.window.showTextDocument(vscode.Uri.file(path), { selection });
+  };
+  const host: GraphHost = { open, readCache, writeCache, readText, openAt, log: output.error, info: output.info };
 
   return host;
 };

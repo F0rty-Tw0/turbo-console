@@ -4,8 +4,8 @@ import { drawnGraphOf } from './drawn-graph.util.ts';
 import type { GraphEdge, GraphPackage, GraphReady } from '../../bridge/common/graph-state.type.ts';
 
 const PACKAGES: GraphPackage[] = [
-  { name: 'core', path: 'packages/core', tags: [] },
-  { name: 'web', path: 'apps/web', tags: ['ui'] }
+  { name: 'core', path: 'packages/core', tags: [], taskCount: 0 },
+  { name: 'web', path: 'apps/web', tags: ['ui'], taskCount: 0 }
 ];
 
 const KEPT_EDGE: GraphEdge = { source: 'web', target: 'core' };

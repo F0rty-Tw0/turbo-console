@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { graphCsp } from '@turbo-console/webview-ui';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
@@ -16,9 +20,11 @@ import { copyGraphPageRoot } from '../test/utils/page-root.spec.util.ts';
 
 type CreatePanel = (viewType: string, title: string, column: number, options: unknown) => PanelFake;
 
+type ShowTextDocument = (file: UriFake, options: unknown) => Promise<void>;
+
 /** `vscode` exists only inside the editor, so the module is replaced here by the calls `graph-ports.ts` makes. */
 const editor = vi.hoisted(() => {
-  const spies = { createWebviewPanel: vi.fn<CreatePanel>() };
+  const spies = { createWebviewPanel: vi.fn<CreatePanel>(), showTextDocument: vi.fn<ShowTextDocument>() };
 
   return spies;
 });
@@ -35,10 +41,31 @@ vi.mock('vscode', () => {
 
     return uri;
   };
-  const window = { createWebviewPanel: editor.createWebviewPanel };
+  const window = { createWebviewPanel: editor.createWebviewPanel, showTextDocument: editor.showTextDocument };
   const uri = { joinPath, file };
   const viewColumn = { Active: -1 };
-  const module = { Uri: uri, ViewColumn: viewColumn, window };
+
+  class Position {
+    public readonly line: number;
+    public readonly character: number;
+
+    public constructor(line: number, character: number) {
+      this.line = line;
+      this.character = character;
+    }
+  }
+
+  class Range {
+    public readonly start: Position;
+    public readonly end: Position;
+
+    public constructor(start: Position, end: Position) {
+      this.start = start;
+      this.end = end;
+    }
+  }
+
+  const module = { Uri: uri, ViewColumn: viewColumn, window, Position, Range };
 
   return module;
 });
@@ -166,6 +193,56 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
       host.log('boom');
 
       expect(output.error).toHaveBeenCalledExactlyOnceWith('boom');
+    });
+  });
+
+  describe('GIVEN a file to open at a line', () => {
+    it('WHEN openAt is called THEN the file opens with the cursor at the line, column 0', async () => {
+      await host.openAt('/ws/apps/web/package.json', 7);
+
+      const cursor = { line: 7, character: 0 };
+      const selection = { start: cursor, end: cursor };
+      const options = { selection };
+
+      expect(editor.showTextDocument).toHaveBeenCalledExactlyOnceWith({ fsPath: '/ws/apps/web/package.json' }, options);
+    });
+  });
+
+  describe('GIVEN a file to read', () => {
+    let dir: string;
+
+    beforeEach(() => {
+      dir = mkdtempSync(join(tmpdir(), 'graph-read-'));
+    });
+
+    afterEach(() => {
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('WHEN readText reads a small file THEN it returns its text', async () => {
+      const file = join(dir, 'package.json');
+
+      writeFileSync(file, '{"name":"web"}');
+
+      const text = await host.readText(file);
+
+      expect(text).toBe('{"name":"web"}');
+    });
+
+    it('WHEN the file is over 1 MiB THEN readText returns null', async () => {
+      const file = join(dir, 'big.json');
+
+      writeFileSync(file, 'x'.repeat(1024 * 1024 + 1));
+
+      const text = await host.readText(file);
+
+      expect(text).toBeNull();
+    });
+
+    it('WHEN the file is missing THEN readText rejects', async () => {
+      const missing = host.readText(join(dir, 'none.json'));
+
+      await expect(missing).rejects.toThrow('ENOENT');
     });
   });
 
