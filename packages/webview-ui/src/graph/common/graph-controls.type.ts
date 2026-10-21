@@ -40,6 +40,7 @@ export type GraphControlsDeps = {
   readonly onSelect: (name: string, pan: boolean) => void;
   readonly onOpenDetails: (name: string) => void;
   readonly onSave: () => void;
+  /** Re-measures the canvas now; Cytoscape's own observers wait a 100 ms debounce. */
   readonly onResize: () => void;
 };
 

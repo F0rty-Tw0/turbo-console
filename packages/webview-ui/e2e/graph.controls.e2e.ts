@@ -1,4 +1,5 @@
-import { test } from './graph.fixture.ts';
+import type { WidthChange } from './common/graph.type.ts';
+import { expect, test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { DIAMOND_CHAIN_CACHED_STUB, ERROR_STUB } from './test/stubs/graph-state.stub.ts';
 
@@ -65,7 +66,7 @@ test.describe('FEATURE: graph controls panel', () => {
   );
 
   test(
-    'GIVEN a zoomed and panned graph, collapsing the panel resizes the canvas and moves no camera',
+    'GIVEN the controls graph, collapsing the panel after a zoom and pan resizes the canvas at once and moves no camera',
     { annotation: RF5 },
     async ({ graphCamera, graphCanvas, graphControls, graphHost, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -78,9 +79,8 @@ test.describe('FEATURE: graph controls panel', () => {
 
       await test.step('AND the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
 
-      const width = await test.step('AND the container width is noted', async (): Promise<number> => graphCamera.containerWidth());
-
-      await test.step('WHEN the Controls button is pressed', async (): Promise<void> => graphControls.toggle());
+      const width = await test.step('AND the Controls button is pressed', async (): Promise<WidthChange> =>
+        graphCamera.toggleControlsInOneTask());
 
       await test.step('THEN the panel is hidden', async (): Promise<void> => graphControls.expectOpen(false));
 
@@ -88,7 +88,7 @@ test.describe('FEATURE: graph controls panel', () => {
 
       await test.step('AND the button is still named Controls', async (): Promise<void> => graphControls.expectToggleName('Controls'));
 
-      await test.step('AND the container is wider', async (): Promise<void> => graphCamera.expectContainerWidthAbove(width));
+      await test.step('AND the canvas grew in the task of the click', (): void => expect(width.after).toBeGreaterThan(width.before));
 
       await test.step('AND zoom and pan are as before', async (): Promise<void> => graphCamera.expectCameraUnchanged());
 
@@ -98,7 +98,8 @@ test.describe('FEATURE: graph controls panel', () => {
 
       await test.step('THEN the panel is open', async (): Promise<void> => graphControls.expectOpen(true));
 
-      await test.step('AND the container is as wide as before', async (): Promise<void> => graphCamera.expectContainerWidth(width));
+      await test.step('AND the container is as wide as before', async (): Promise<void> =>
+        graphCamera.expectContainerWidth(width.before));
     }
   );
 

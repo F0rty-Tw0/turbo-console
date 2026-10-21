@@ -6,10 +6,11 @@ import { expect } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
-import type { Camera } from '../common/graph.type.ts';
+import type { Camera, WidthChange } from '../common/graph.type.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { isPanNear, isZoomNear } from '../test/utils/graph-camera.spec.util.ts';
+import { toggleControlsMeasured } from '../test/utils/graph-controls.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 
 const CENTRE_TOLERANCE_PX = 3;
@@ -44,11 +45,12 @@ export class GraphCamera {
     this.remembered = await this.camera();
   }
 
-  /** The drawn width: the first canvas layer, which Cytoscape sizes on `resize`; the container's own box follows CSS alone. */
-  public async containerWidth(): Promise<number> {
-    const rect = await this.canvas.evaluate(readRect);
-
-    return rect.width;
+  /**
+   * Presses the Controls toggle inside one task and returns the canvas width read just before and just after; only
+   * a resize the click itself runs shows here, as Cytoscape's own observers wait a 100 ms debounce.
+   */
+  public async toggleControlsInOneTask(): Promise<WidthChange> {
+    return this.canvas.evaluate(toggleControlsMeasured);
   }
 
   /** Polls until zoom and pan match the remembered camera within GraphLook's tolerances. */
@@ -92,10 +94,6 @@ export class GraphCamera {
     await expect.poll(async (): Promise<number> => this.centreOffset(id)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
   }
 
-  public async expectContainerWidthAbove(px: number): Promise<void> {
-    await expect.poll(async (): Promise<number> => this.containerWidth()).toBeGreaterThan(px);
-  }
-
   public async expectContainerWidth(px: number): Promise<void> {
     const isWidth = async (): Promise<boolean> => {
       const width = await this.containerWidth();
@@ -104,6 +102,13 @@ export class GraphCamera {
     };
 
     await expect.poll(isWidth).toBe(true);
+  }
+
+  /** The drawn width: the first canvas layer, which Cytoscape sizes on `resize`; the container's own box follows CSS alone. */
+  private async containerWidth(): Promise<number> {
+    const rect = await this.canvas.evaluate(readRect);
+
+    return rect.width;
   }
 
   private async camera(): Promise<Camera> {

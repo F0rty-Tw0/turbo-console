@@ -44,6 +44,12 @@ export type ThemeSwitch = {
 /** What a viewer sees of the graph: how far it is zoomed and where it is panned. */
 export type Camera = Pick<GraphViewState, 'zoom' | 'pan'>;
 
+/** A width in CSS pixels read just before and just after one input. */
+export type WidthChange = {
+  readonly before: number;
+  readonly after: number;
+};
+
 /** The controls panel's part of the saved view state, as the panel's own inputs show it. */
 export type ControlsFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags'>;
 
