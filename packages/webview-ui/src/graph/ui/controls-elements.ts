@@ -1,4 +1,4 @@
-// eslint-disable-next-line local/no-unused-exports -- first imported by Task 3.2
+// eslint-disable-next-line local/no-unused-exports -- first imported by Task 3.4
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';

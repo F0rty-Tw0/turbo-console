@@ -29,6 +29,9 @@ export type PageElements = {
   readonly container: HTMLElement;
 };
 
+/** The controls fields of the saved view state: what `GraphControls` keeps and the selection's saves carry along. */
+export type ControlsViewFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags'>;
+
 /** Debounces view-state saves; `flush` saves a pending state at once. */
 export type ViewStateSaver = {
   readonly schedule: (state: GraphViewState) => void;
