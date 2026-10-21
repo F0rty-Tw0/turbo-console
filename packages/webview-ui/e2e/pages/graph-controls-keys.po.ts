@@ -12,10 +12,11 @@ const SNAPSHOT_NAME = /^- [\w-]+ "((?:[^"\\]|\\.)*)"/;
 
 /** Keyboard walking over the controls panel: Tab stops, the package grid's roving focus and what holds focus. */
 export class GraphControlsKeys {
-  private readonly focused: Locator;
-  private readonly grid: Locator;
+  public readonly focused: Locator;
+  public readonly grid: Locator;
+  public readonly panel: Locator;
+
   private readonly page: Page;
-  private readonly panel: Locator;
 
   public constructor(page: Page) {
     this.page = page;

@@ -10,17 +10,12 @@ import type { ControlsFields, ExpectedThemeColors, ThemeStub } from '../common/g
 import { isPanNear, isZoomNear } from '../test/utils/graph-camera.spec.util.ts';
 import { checkedTagNames, lockedShowNames, uncheckedShowNames } from '../test/utils/graph-controls-fields.spec.util.ts';
 import { effectiveOpacityOf } from '../test/utils/graph-controls.spec.util.ts';
+import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { switchTheme, withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
 
 type NodeColors = Pick<ExpectedThemeColors, 'fill' | 'frame' | 'label'>;
 
 const SHOW_ROW = /^Show /;
-
-const sorted = (names: string[]): string[] => {
-  const copy = [...names];
-
-  return copy.sort();
-};
 
 const colorsOf = (colors: NodeColors): NodeColors => {
   const plain: NodeColors = {
@@ -34,14 +29,15 @@ const colorsOf = (colors: NodeColors): NodeColors => {
 
 /** What the user sees of the drawn graph: the camera, the theme colours, the controls and the timing facts, read through the probe. */
 export class GraphLook {
-  private readonly depth: Locator;
+  public readonly depth: Locator;
+  public readonly rowChecks: Locator;
+  public readonly searchBox: Locator;
+  public readonly tagChecks: Locator;
+  public readonly toggleButton: Locator;
+
   private readonly page: Page;
   private readonly probe: GraphProbePage;
-  private readonly rowChecks: Locator;
-  private readonly searchBox: Locator;
-  private readonly tagChecks: Locator;
   private readonly timings: GraphTimings;
-  private readonly toggleButton: Locator;
 
   public constructor(page: Page) {
     this.page = page;
@@ -107,7 +103,7 @@ export class GraphLook {
 
   /** The panel's own inputs, hidden ones included, show exactly these fields; list order does not count. */
   public async expectControlsFields(fields: ControlsFields): Promise<void> {
-    const expected: ControlsFields = { ...fields, hidden: sorted(fields.hidden), tags: sorted(fields.tags) };
+    const expected: ControlsFields = { ...fields, hidden: sortedNames(fields.hidden), tags: sortedNames(fields.tags) };
 
     await expect.poll(async (): Promise<ControlsFields> => this.controlsFields()).toEqual(expected);
   }
@@ -140,9 +136,9 @@ export class GraphLook {
       controlsOpen: expanded === 'true',
       search,
       depth: Number(depth),
-      hidden: sorted(hidden),
+      hidden: sortedNames(hidden),
       focus: locked[0] ?? null,
-      tags: sorted(tags)
+      tags: sortedNames(tags)
     };
 
     return fields;
