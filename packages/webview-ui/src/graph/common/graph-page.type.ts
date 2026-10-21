@@ -54,7 +54,14 @@ export type GraphViewHandlers = {
 export type GraphView = {
   readonly setGraph: (packages: string[], edges: GraphEdge[], positions: Positions, sizeOf: NodeSizer) => void;
   readonly select: (selected: string | null, closure: Closure | null) => void;
+  /** Fits the camera to the visible nodes; with none visible it does nothing. */
   readonly fit: () => void;
+  /** Shows exactly these package names; the rest are hidden, not moved. */
+  readonly setVisible: (visible: ReadonlySet<string>) => void;
+  /** Re-measures the container, keeping zoom and pan. */
+  readonly resize: () => void;
+  /** Pans so the named package sits at the view centre, keeping the zoom. */
+  readonly centreOn: (name: string) => void;
   readonly viewport: () => Viewport;
   readonly setViewport: (zoom: number, pan: Position) => void;
   readonly setPositions: (positions: Positions) => void;
