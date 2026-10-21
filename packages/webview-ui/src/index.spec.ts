@@ -73,6 +73,7 @@ const RUNTIME_EXPORTS = [
   'ICON_ID_PATTERN',
   'MANIFEST_ENTRIES_MAX',
   'MANIFEST_FIELDS',
+  'MANIFEST_FILE_MAX',
   'MANIFEST_LINE_MAX',
   'TASK_COUNT_MAX',
   'TOOL_ICON_PREFIX',
@@ -95,6 +96,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(names).toStrictEqual(RUNTIME_EXPORTS);
       expect(entry.ENTRY_TEXT_MAX).toBe(200);
       expect(entry.MANIFEST_ENTRIES_MAX).toBe(8);
+      expect(entry.MANIFEST_FILE_MAX).toBe(1_024);
       expect(entry.MANIFEST_LINE_MAX).toBe(1_000_000);
       expect(entry.TASK_COUNT_MAX).toBe(100_000);
       expect(entry.MANIFEST_FIELDS).toStrictEqual(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']);
