@@ -142,8 +142,8 @@ describe('FEATURE: graph visibility', () => {
     });
   });
 
-  describe('GIVEN ghost nodes among the shown ones', () => {
-    it('WHEN c is a ghost shown with a and b THEN fit receives exactly a and b', () => {
+  describe('GIVEN a ghost c shown with a and b', () => {
+    it('WHEN fitVisible runs THEN fit receives a, b and c', () => {
       const fit = vi.spyOn(cy, 'fit');
 
       showOnly(cy, new Set(['a', 'b', 'c']));
@@ -153,17 +153,22 @@ describe('FEATURE: graph visibility', () => {
       const [shown] = fit.mock.calls[0] ?? [];
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
 
-      expect(fitted.map(idOf).sort()).toStrictEqual(['a', 'b']);
+      expect(fitted.map(idOf).sort()).toStrictEqual(['a', 'b', 'c']);
     });
+  });
 
-    it('WHEN only ghost nodes are shown THEN fit is not called', () => {
+  describe('GIVEN only ghost nodes shown', () => {
+    it('WHEN fitVisible runs THEN fit receives them', () => {
       const fit = vi.spyOn(cy, 'fit');
 
       showOnly(cy, new Set(['b', 'c']));
       cy.nodes().addClass('ghost');
       fitVisible(cy, PADDING_PX);
 
-      expect(fit).not.toHaveBeenCalled();
+      const [shown] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+
+      expect(fitted.map(idOf).sort()).toStrictEqual(['b', 'c']);
     });
   });
 

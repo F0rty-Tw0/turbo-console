@@ -1,7 +1,5 @@
 import type { Core, NodeSingular } from 'cytoscape';
 
-import { GHOST_CLASS } from '../common/graph.const.ts';
-
 /** Hides every node outside `visible` with a bypass `display`, which survives restyling and class changes and keeps positions. */
 export const showOnly = (cy: Core, visible: ReadonlySet<string>): void => {
   const setDisplay = (node: NodeSingular): void => {
@@ -13,9 +11,9 @@ export const showOnly = (cy: Core, visible: ReadonlySet<string>): void => {
   cy.batch((): void => void cy.nodes().forEach(setDisplay));
 };
 
-/** Fits the camera to the visible nodes, ghosts apart; with none visible the camera stays. */
+/** Fits the camera to the visible nodes, a trace's ghosts included so they stay on screen; with none visible the camera stays. */
 export const fitVisible = (cy: Core, paddingPx: number): void => {
-  const shown = cy.nodes(':visible').not(`.${GHOST_CLASS}`);
+  const shown = cy.nodes(':visible');
   const nothingShown = shown.empty();
 
   if (nothingShown) return;
