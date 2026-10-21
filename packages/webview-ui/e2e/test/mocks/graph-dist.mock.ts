@@ -5,16 +5,15 @@ import { join } from 'node:path';
 import type { Route } from '@playwright/test';
 
 import { graphCsp, renderWebviewHtml } from '../../../src/shell/utils/webview-html.util.ts';
+import { GRAPH_DIST_DIR } from '../../common/graph.const.ts';
+import type { GraphOptions } from '../../common/graph.type.ts';
 import type { RouteHandler } from '../../common/playwright.type.ts';
 import { SHELL_ORIGIN, UNNONCED_SCRIPT } from '../../common/shell.const.ts';
-import type { ShellOptions } from '../../common/shell.type.ts';
-
-const DIST_DIR = join(import.meta.dirname, '../../../dist/graph');
 
 const withUnnoncedScript = (html: string): string => html.replace('</body>', `${UNNONCED_SCRIPT}</body>`);
 
-const fulfillShellHtml = async (route: Route, options: ShellOptions): Promise<void> => {
-  const template = await readFile(join(DIST_DIR, 'index.html'), 'utf8');
+const fulfillGraphHtml = async (route: Route, options: GraphOptions): Promise<void> => {
+  const template = await readFile(join(GRAPH_DIST_DIR, 'index.html'), 'utf8');
   const nonce = randomBytes(16).toString('base64');
   const csp = graphCsp(nonce, SHELL_ORIGIN);
   const html = renderWebviewHtml(template, { csp, nonce, scriptUri: 'main.js', styleUri: 'graph.css' });
@@ -25,13 +24,13 @@ const fulfillShellHtml = async (route: Route, options: ShellOptions): Promise<vo
 };
 
 /** Serves the built `dist/graph/` files; `index.html` gets the graph CSP and a fresh nonce per request. */
-export const distMock = (options: ShellOptions = {}): RouteHandler => {
+export const graphDistMock = (options: GraphOptions = {}): RouteHandler => {
   return async (route: Route): Promise<void> => {
     const url = new URL(route.request().url());
     const fileName = url.pathname.slice(1);
 
-    if (fileName === 'index.html') return fulfillShellHtml(route, options);
+    if (fileName === 'index.html') return fulfillGraphHtml(route, options);
 
-    await route.fulfill({ path: join(DIST_DIR, fileName) });
+    await route.fulfill({ path: join(GRAPH_DIST_DIR, fileName) });
   };
 };
