@@ -151,6 +151,8 @@ test.describe('FEATURE: graph controls keyboard activation', () => {
 
       await test.step('AND Space is pressed', async (): Promise<void> => graphPage.pressKey('Space'));
 
+      await test.step('AND two frames pass', async (): Promise<void> => graphPage.waitFrames());
+
       await test.step('THEN nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
     }
   );
