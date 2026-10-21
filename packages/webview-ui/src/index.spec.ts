@@ -24,6 +24,7 @@ import type {
   GraphViewState,
   GraphWebviewMessage,
   HostMessage,
+  ManifestContext,
   ManifestEntry,
   ManifestField,
   MissingPackage,
@@ -48,11 +49,13 @@ type ExpectedEdge = { readonly source: string; readonly target: string };
 type ExpectedPackage = { readonly name: string; readonly path: string; readonly tags: string[]; readonly taskCount: number };
 type ExpectedPosition = { readonly x: number; readonly y: number };
 type ExpectedStateMessage = { readonly type: 'state'; readonly state: GraphState };
+type ExpectedContext = { readonly before?: string; readonly after?: string };
 type ExpectedEntry = {
   readonly field: 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
   readonly key: string;
   readonly spec: string;
   readonly line: number;
+  readonly context: ExpectedContext;
 };
 type ExpectedFound = { readonly kind: 'found'; readonly file: string; readonly entries: ExpectedEntry[] };
 type ExpectedMissing = { readonly kind: 'missing'; readonly file: string };
@@ -132,6 +135,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphState['kind']>().toEqualTypeOf<'loading' | 'error' | 'singlePackage' | 'graph'>();
       expectTypeOf<ManifestField>().toEqualTypeOf<ExpectedEntry['field']>();
       expectTypeOf<ManifestEntry>().toEqualTypeOf<ExpectedEntry>();
+      expectTypeOf<ManifestContext>().toEqualTypeOf<ExpectedEntry['context']>();
       expectTypeOf<EdgeExplainResult>().toEqualTypeOf<ExpectedResult>();
       expectTypeOf<GraphEdgeExplainedMessage>().toEqualTypeOf<ExpectedExplainedMessage>();
       expectTypeOf<GraphStateMessage>().toEqualTypeOf<ExpectedStateMessage>();

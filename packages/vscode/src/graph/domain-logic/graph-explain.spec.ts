@@ -53,7 +53,8 @@ describe('FEATURE: graph explain', () => {
 
       const handled = await answerRequest({ type: 'explainEdge', source: 'web', target: 'core' }, context);
 
-      const entries = [{ field: 'dependencies', key: 'core', spec: '^1', line: 2 }];
+      const neighbours = { before: '  "dependencies": {', after: '  }' };
+      const entries = [{ field: 'dependencies', key: 'core', spec: '^1', line: 2, context: neighbours }];
       const result = { kind: 'found', file: 'apps/web/package.json', entries };
 
       expect(handled).toBe(true);
@@ -66,7 +67,8 @@ describe('FEATURE: graph explain', () => {
 
       await answerRequest({ type: 'explainEdge', source: '//', target: 'core' }, context);
 
-      const entries = [{ field: 'dependencies', key: 'core', spec: '^1', line: 2 }];
+      const neighbours = { before: '  "dependencies": {', after: '  }' };
+      const entries = [{ field: 'dependencies', key: 'core', spec: '^1', line: 2, context: neighbours }];
       const result = { kind: 'found', file: 'package.json', entries };
 
       expect(ports.readText).toHaveBeenCalledExactlyOnceWith(join('/ws', 'package.json'));
@@ -164,7 +166,8 @@ describe('FEATURE: graph explain', () => {
 
       await answerRequest({ type: 'explainEdge', source: 'web', target: 'core' }, context);
 
-      const entries = [{ field: 'dependencies', key: 'core', spec: '1', line: MANIFEST_LINE_MAX }];
+      const neighbours = { before: '' };
+      const entries = [{ field: 'dependencies', key: 'core', spec: '1', line: MANIFEST_LINE_MAX, context: neighbours }];
       const result = { kind: 'found', file: 'apps/web/package.json', entries };
 
       expect(ports.post).toHaveBeenCalledExactlyOnceWith({ type: 'edgeExplained', source: 'web', target: 'core', result });

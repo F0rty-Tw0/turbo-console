@@ -27,6 +27,7 @@ export type {
   GraphHostMessage,
   GraphStateMessage,
   GraphWebviewMessage,
+  ManifestContext,
   ManifestEntry,
   ManifestField
 } from './bridge/common/graph-message.type.ts';

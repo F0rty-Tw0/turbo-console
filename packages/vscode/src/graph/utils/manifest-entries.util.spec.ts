@@ -1,21 +1,20 @@
-import type { ManifestEntry, ManifestField } from '@turbo-console/webview-ui';
+import type { ManifestContext, ManifestEntry } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { manifestEntriesOf } from './manifest-entries.util.ts';
+import { BOM_STUB, CONTEXT_CASES_STUB, IN_BLOCK_STUB, PLAIN_ENTRIES_STUB, PLAIN_STUB } from '../test/stubs/manifest-entries.stub.ts';
+import { entry, rows } from '../test/utils/manifest-entry.spec.util.ts';
 
-const rows = (eol: string, ...lines: string[]): string => lines.join(eol);
+const around = (lines: string[], line: number): ManifestContext => {
+  const before = lines[line - 1];
+  const after = lines[line + 1];
 
-const entry = (field: ManifestField, key: string, spec: string, line: number): ManifestEntry => {
-  const found: ManifestEntry = { field, key, spec, line };
+  if (before === undefined || after === undefined) throw new Error(`line ${line} has no neighbour on both sides`);
 
-  return found;
+  const context: ManifestContext = { before, after };
+
+  return context;
 };
-
-const BOM = '﻿';
-
-const PLAIN = ['{', '  "name": "web",', '  "dependencies": {', '    "core": "^1.0.0"', '  }', '}'];
-
-const PLAIN_ENTRIES = [entry('dependencies', 'core', '^1.0.0', 3)];
 
 const ALIAS_LINES = [
   '{',
@@ -31,10 +30,10 @@ const ALIAS_LINES = [
 ];
 
 const ALIAS_ENTRIES = [
-  entry('dependencies', 'a', 'npm:core@^1.2.0', 2),
-  entry('dependencies', 'b', 'workspace:core@*', 3),
-  entry('dependencies', 'c', 'npm:core', 4),
-  entry('dependencies', 'd', 'workspace:core', 5)
+  entry('dependencies', 'a', 'npm:core@^1.2.0', 2, { before: '  "dependencies": {', after: '    "b": "workspace:core@*",' }),
+  entry('dependencies', 'b', 'workspace:core@*', 3, { before: '    "a": "npm:core@^1.2.0",', after: '    "c": "npm:core",' }),
+  entry('dependencies', 'c', 'npm:core', 4, { before: '    "b": "workspace:core@*",', after: '    "d": "workspace:core",' }),
+  entry('dependencies', 'd', 'workspace:core', 5, { before: '    "c": "npm:core",', after: '    "e": "npm:core-extra@1",' })
 ];
 
 const manyAliasLines = (): string[] => {
@@ -50,7 +49,7 @@ const MANY_ALIAS_LINES = manyAliasLines();
 const MANY_ALIAS_TEXT = rows('\n', ...MANY_ALIAS_LINES);
 
 const manyAliasEntries = (): ManifestEntry[] =>
-  Array.from({ length: 8 }, (_, i): ManifestEntry => entry('dependencies', `k${i}`, 'npm:core@1', 2 + i));
+  Array.from({ length: 8 }, (_, i): ManifestEntry => entry('dependencies', `k${i}`, 'npm:core@1', 2 + i, around(MANY_ALIAS_LINES, 2 + i)));
 
 const aliasRows = (prefix: string): string[] =>
   Array.from({ length: 5 }, (_, i): string => `    "${prefix}${i}": "npm:core@1"${i < 4 ? ',' : ''}`);
@@ -59,8 +58,7 @@ const DEPENDENCY_ALIASES = aliasRows('d');
 
 const DEV_DEPENDENCY_ALIASES = aliasRows('v');
 
-const SPLIT_ALIAS_TEXT = rows(
-  '\n',
+const SPLIT_ALIAS_LINES = [
   '{',
   '  "dependencies": {',
   ...DEPENDENCY_ALIASES,
@@ -69,11 +67,19 @@ const SPLIT_ALIAS_TEXT = rows(
   ...DEV_DEPENDENCY_ALIASES,
   '  }',
   '}'
-);
+];
+
+const SPLIT_ALIAS_TEXT = rows('\n', ...SPLIT_ALIAS_LINES);
 
 const splitAliasEntries = (): ManifestEntry[] => {
-  const inDependencies = Array.from({ length: 5 }, (_, i): ManifestEntry => entry('dependencies', `d${i}`, 'npm:core@1', 2 + i));
-  const inDevDependencies = Array.from({ length: 3 }, (_, i): ManifestEntry => entry('devDependencies', `v${i}`, 'npm:core@1', 9 + i));
+  const inDependencies = Array.from(
+    { length: 5 },
+    (_, i): ManifestEntry => entry('dependencies', `d${i}`, 'npm:core@1', 2 + i, around(SPLIT_ALIAS_LINES, 2 + i))
+  );
+  const inDevDependencies = Array.from(
+    { length: 3 },
+    (_, i): ManifestEntry => entry('devDependencies', `v${i}`, 'npm:core@1', 9 + i, around(SPLIT_ALIAS_LINES, 9 + i))
+  );
 
   return [...inDependencies, ...inDevDependencies];
 };
@@ -82,27 +88,30 @@ const LONG_SPEC = `npm:core@${'1'.repeat(300)}`;
 
 const LONG_LINES = ['{', '  "dependencies": {', `    "${'k'.repeat(250)}": "${LONG_SPEC}"`, '  }', '}'];
 
-const LONG_ENTRIES = [entry('dependencies', `${'k'.repeat(200)}…`, `${LONG_SPEC.slice(0, 200)}…`, 2)];
+const LONG_ENTRIES = [entry('dependencies', `${'k'.repeat(200)}…`, `${LONG_SPEC.slice(0, 200)}…`, 2, IN_BLOCK_STUB)];
 
 const found: [string, string, string, ManifestEntry[]][] = [
-  ['a plain dependencies entry', rows('\n', ...PLAIN), 'core', PLAIN_ENTRIES],
+  ['a plain dependencies entry', rows('\n', ...PLAIN_STUB), 'core', PLAIN_ENTRIES_STUB],
   [
     'the same name in dependencies and peerDependencies, peer listed first, field order wins',
     rows('\n', '{', '  "peerDependencies": { "core": ">=1" },', '  "dependencies": { "core": "^1" }', '}'),
     'core',
-    [entry('dependencies', 'core', '^1', 2), entry('peerDependencies', 'core', '>=1', 1)]
+    [
+      entry('dependencies', 'core', '^1', 2, { before: '  "peerDependencies": { "core": ">=1" },', after: '}' }),
+      entry('peerDependencies', 'core', '>=1', 1, { before: '{', after: '  "dependencies": { "core": "^1" }' })
+    ]
   ],
   [
     'a devDependencies entry',
     rows('\n', '{', '  "devDependencies": {', '    "core": "workspace:*"', '  }', '}'),
     'core',
-    [entry('devDependencies', 'core', 'workspace:*', 2)]
+    [entry('devDependencies', 'core', 'workspace:*', 2, { before: '  "devDependencies": {', after: '  }' })]
   ],
   [
     'an optionalDependencies entry',
     rows('\n', '{', '  "optionalDependencies": { "core": "1" }', '}'),
     'core',
-    [entry('optionalDependencies', 'core', '1', 1)]
+    [entry('optionalDependencies', 'core', '1', 1, { before: '{', after: '}' })]
   ],
   [
     'npm: and workspace: aliases, with and without a version, and not their look-alikes',
@@ -114,65 +123,70 @@ const found: [string, string, string, ManifestEntry[]][] = [
     'a key that is itself an alias of another package: matched by its key',
     rows('\n', '{', '  "dependencies": {', '    "core": "npm:other@1"', '  }', '}'),
     'core',
-    [entry('dependencies', 'core', 'npm:other@1', 2)]
+    [entry('dependencies', 'core', 'npm:other@1', 2, IN_BLOCK_STUB)]
   ],
   [
     'a number value: the spec is its source text',
     rows('\n', '{', '  "dependencies": {', '    "core": 1', '  }', '}'),
     'core',
-    [entry('dependencies', 'core', '1', 2)]
+    [entry('dependencies', 'core', '1', 2, IN_BLOCK_STUB)]
   ],
   [
     'an object value: the spec is its source text',
     rows('\n', '{', '  "dependencies": {', '    "core": { "v": 1 }', '  }', '}'),
     'core',
-    [entry('dependencies', 'core', '{ "v": 1 }', 2)]
+    [entry('dependencies', 'core', '{ "v": 1 }', 2, IN_BLOCK_STUB)]
   ],
   [
     'two keys of the same name in one field give two entries',
     rows('\n', '{', '  "dependencies": {', '    "core": "1",', '    "core": "2"', '  }', '}'),
     'core',
-    [entry('dependencies', 'core', '1', 2), entry('dependencies', 'core', '2', 3)]
+    [
+      entry('dependencies', 'core', '1', 2, { before: '  "dependencies": {', after: '    "core": "2"' }),
+      entry('dependencies', 'core', '2', 3, { before: '    "core": "1",', after: '  }' })
+    ]
   ],
   [
     'a duplicate of a field key: the last one wins, as in JSON.parse',
     rows('\n', '{', '  "dependencies": { "core": "1" },', '  "dependencies": { "core": "2" }', '}'),
     'core',
-    [entry('dependencies', 'core', '2', 2)]
+    [entry('dependencies', 'core', '2', 2, { before: '  "dependencies": { "core": "1" },', after: '}' })]
   ],
   [
     'a duplicate of a field key that is not an object: the last object wins',
     rows('\n', '{', '  "dependencies": { "core": "1" },', '  "dependencies": 1', '}'),
     'core',
-    [entry('dependencies', 'core', '1', 1)]
+    [entry('dependencies', 'core', '1', 1, { before: '{', after: '  "dependencies": 1' })]
   ],
   [
     'a non-object field key before an object one',
     rows('\n', '{', '  "dependencies": 1,', '  "dependencies": { "core": "2" }', '}'),
     'core',
-    [entry('dependencies', 'core', '2', 2)]
+    [entry('dependencies', 'core', '2', 2, { before: '  "dependencies": 1,', after: '}' })]
   ],
   [
     'a key and its value on different lines: the line is the key line',
     rows('\n', '{', '  "dependencies": {', '    "core":', '      "1"', '  }', '}'),
     'core',
-    [entry('dependencies', 'core', '1', 2)]
+    [entry('dependencies', 'core', '1', 2, { before: '  "dependencies": {', after: '      "1"' })]
   ]
 ];
 
 const lineBreaks: [string, string, string, ManifestEntry[]][] = [
-  ['CR LF line ends', rows('\r\n', ...PLAIN), 'core', PLAIN_ENTRIES],
-  ['lone CR line ends', rows('\r', ...PLAIN), 'core', PLAIN_ENTRIES],
-  ['a BOM', `${BOM}${rows('\n', ...PLAIN)}`, 'core', PLAIN_ENTRIES],
-  ['a BOM and CR LF line ends', `${BOM}${rows('\r\n', ...PLAIN)}`, 'core', PLAIN_ENTRIES]
+  ['CR LF line ends', rows('\r\n', ...PLAIN_STUB), 'core', PLAIN_ENTRIES_STUB],
+  ['lone CR line ends', rows('\r', ...PLAIN_STUB), 'core', PLAIN_ENTRIES_STUB],
+  ['a BOM_STUB', `${BOM_STUB}${rows('\n', ...PLAIN_STUB)}`, 'core', PLAIN_ENTRIES_STUB],
+  ['a BOM_STUB and CR LF line ends', `${BOM_STUB}${rows('\r\n', ...PLAIN_STUB)}`, 'core', PLAIN_ENTRIES_STUB]
 ];
+
+const IN_BLOCK_COMMA: ManifestContext = { before: '  "dependencies": {', after: '  },' };
 
 const tolerant: [string, string, string, ManifestEntry[]][] = [
   [
     'a comment and a trailing comma',
     rows('\n', '{', '  // note', '  "dependencies": {', '    "core": "^1",', '  },', '}'),
     'core',
-    [entry('dependencies', 'core', '^1', 3)]
+    [entry('dependencies', 'core', '^1', 3, IN_BLOCK_COMMA)]
   ]
 ];
 
@@ -181,13 +195,13 @@ const objectNames: [string, string, string, ManifestEntry[]][] = [
     'a dependency named __proto__',
     rows('\n', '{', '  "dependencies": {', '    "__proto__": "1"', '  }', '}'),
     '__proto__',
-    [entry('dependencies', '__proto__', '1', 2)]
+    [entry('dependencies', '__proto__', '1', 2, IN_BLOCK_STUB)]
   ],
   [
     'a constructor key aliasing core',
     rows('\n', '{', '  "dependencies": {', '    "constructor": "npm:core@1"', '  }', '}'),
     'core',
-    [entry('dependencies', 'constructor', 'npm:core@1', 2)]
+    [entry('dependencies', 'constructor', 'npm:core@1', 2, IN_BLOCK_STUB)]
   ]
 ];
 
@@ -199,19 +213,19 @@ const cuts: [string, string, string, ManifestEntry[]][] = [
     'a spec of exactly 200 characters is kept whole',
     rows('\n', '{', '  "dependencies": {', `    "core": "${'s'.repeat(200)}"`, '  }', '}'),
     'core',
-    [entry('dependencies', 'core', 's'.repeat(200), 2)]
+    [entry('dependencies', 'core', 's'.repeat(200), 2, IN_BLOCK_STUB)]
   ],
   [
     'an emoji straddling the 200 character cut: it is dropped whole, never split',
     rows('\n', '{', '  "dependencies": {', `    "core": "${'s'.repeat(199)}😀tail"`, '  }', '}'),
     'core',
-    [entry('dependencies', 'core', `${'s'.repeat(199)}…`, 2)]
+    [entry('dependencies', 'core', `${'s'.repeat(199)}…`, 2, IN_BLOCK_STUB)]
   ],
   [
     'an emoji ending exactly at the 200 character cut: it is kept whole',
     rows('\n', '{', '  "dependencies": {', `    "core": "${'s'.repeat(198)}😀tail"`, '  }', '}'),
     'core',
-    [entry('dependencies', 'core', `${'s'.repeat(198)}😀…`, 2)]
+    [entry('dependencies', 'core', `${'s'.repeat(198)}😀…`, 2, IN_BLOCK_STUB)]
   ]
 ];
 
@@ -256,6 +270,14 @@ const cpuMsOf = (work: () => void): number => {
 describe('FEATURE: manifestEntriesOf', () => {
   describe('GIVEN a manifest that names the dependency', () => {
     it.each(FOUND_CASES)('WHEN it has %s THEN the entries are listed', (_label, text, dependency, expected) => {
+      const entries = manifestEntriesOf(text, dependency);
+
+      expect(entries).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a manifest whose entries have neighbour lines', () => {
+    it.each(CONTEXT_CASES_STUB)('WHEN it has %s THEN the context is filled', (_label, text, dependency, expected) => {
       const entries = manifestEntriesOf(text, dependency);
 
       expect(entries).toStrictEqual(expected);
