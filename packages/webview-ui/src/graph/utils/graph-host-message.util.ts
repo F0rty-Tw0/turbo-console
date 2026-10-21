@@ -1,16 +1,25 @@
+import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import type { GraphHostMessage } from '../../bridge/common/graph-message.type.ts';
+import { isRecord } from '../../bridge/utils/record.util.ts';
 
-type UnknownRecord = Readonly<Record<string, unknown>>;
+const isString = (value: unknown): value is string => typeof value === 'string';
 
-const isRecord = (value: unknown): value is UnknownRecord => typeof value === 'object' && value !== null;
+const isEdge = (value: unknown): boolean => {
+  if (!isRecord(value)) return false;
+
+  const { source, target } = value;
+
+  return isString(source) && isString(target);
+};
 
 const isGraphShape = (state: UnknownRecord): boolean => {
   const { hash, packages, edges, positions } = state;
   const hasHash = typeof hash === 'string';
-  const hasLists = Array.isArray(packages) && Array.isArray(edges);
+  const hasPackages = Array.isArray(packages) && packages.every(isString);
+  const hasEdges = Array.isArray(edges) && edges.every(isEdge);
   const hasPositions = positions === null || isRecord(positions);
 
-  return hasHash && hasLists && hasPositions;
+  return hasHash && hasPackages && hasEdges && hasPositions;
 };
 
 const isGraphState = (state: unknown): boolean => {
@@ -30,8 +39,8 @@ const isGraphState = (state: unknown): boolean => {
 };
 
 /**
- * Narrows a posted value to a `state` message by its state's `kind` and top-level shape; anything else is ignored. The
- * payload itself comes from the extension host, which builds it.
+ * Narrows a posted value to a `state` message by its state's `kind` and shape, down to each package name and edge end;
+ * anything else is ignored. The payload itself comes from the extension host, which builds it.
  */
 export const isGraphHostMessage = (value: unknown): value is GraphHostMessage => {
   if (!isRecord(value)) return false;

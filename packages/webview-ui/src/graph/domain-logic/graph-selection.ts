@@ -78,6 +78,8 @@ export class GraphSelection {
   }
 
   private onKey(event: KeyboardEvent): void {
+    if (event.repeat) return;
+
     if (event.key === 'Escape') this.select(null);
 
     if (event.key === 'Enter') this.openDetails();

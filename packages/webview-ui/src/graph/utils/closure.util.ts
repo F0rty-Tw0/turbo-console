@@ -1,3 +1,4 @@
+import { edgeIdOf } from './edge-id.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 
@@ -14,7 +15,8 @@ const edgesByStart = (edges: GraphEdge[], startOf: EndOf): Map<string, GraphEdge
     const start = startOf(edge);
     const sameStart = byStart.get(start) ?? [];
 
-    byStart.set(start, [...sameStart, edge]);
+    sameStart.push(edge);
+    byStart.set(start, sameStart);
   }
 
   return byStart;
@@ -48,14 +50,14 @@ export const closureOf = (selected: string, edges: GraphEdge[]): Closure => {
   return closure;
 };
 
-/** The edges whose two ends are both in `packages`, each `source>target` pair once, in order. */
+/** The edges whose two ends are both in `packages`, each `source`, `target` pair once, in order. */
 export const drawableEdges = (packages: string[], edges: GraphEdge[]): GraphEdge[] => {
   const names = new Set(packages);
   const seen = new Set<string>();
   const drawable: GraphEdge[] = [];
 
   for (const edge of edges) {
-    const key = `${edge.source}>${edge.target}`;
+    const key = edgeIdOf(edge);
     const hasSource = names.has(edge.source);
     const hasTarget = names.has(edge.target);
     const isRepeat = seen.has(key);

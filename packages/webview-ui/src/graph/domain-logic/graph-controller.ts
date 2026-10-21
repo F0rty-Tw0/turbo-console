@@ -1,4 +1,4 @@
-import { showGraphView, showMessage, showStateMessage } from './graph-page-states.ts';
+import { showFailure, showGraphView, showMessage, showStateMessage } from './graph-page-states.ts';
 import { GraphSelection } from './graph-selection.ts';
 import type { GraphReady, GraphState, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -39,8 +39,8 @@ class GraphPageController {
     this.view = deps.createView(page.container, handlers);
     this.selection = new GraphSelection({ bridge, page, view: this.view, saver, drawn: (): DrawnGraph | null => this.drawn });
     page.fit.addEventListener('click', (): void => this.view.fit());
-    page.relayout.addEventListener('click', (): void => void this.relayout());
-    page.retry.addEventListener('click', (): void => void this.relayout());
+    page.relayout.addEventListener('click', (): void => void this.guard(this.relayout()));
+    page.retry.addEventListener('click', (): void => void this.guard(this.relayout()));
     page.reload.addEventListener('click', (): void => bridge.post({ type: 'reload' }));
   }
 
@@ -96,7 +96,7 @@ class GraphPageController {
     }
 
     showMessage(this.deps.page, LOADING_TEXT, false);
-    void this.layOut(saved);
+    void this.guard(this.layOut(saved));
   }
 
   private async layOut(saved: GraphViewState | null): Promise<void> {
@@ -150,6 +150,18 @@ class GraphPageController {
     this.deps.page.notice.hidden = result.engine !== 'fallback';
     this.view.fit();
     this.postLayout(result);
+  }
+
+  /** Awaits a layout step; a throw replaces the graph with its reason, and the next graph state, even the same one, draws afresh. */
+  private async guard(step: Promise<void>): Promise<void> {
+    try {
+      await step;
+    } catch (error: unknown) {
+      this.drawn = null;
+      this.engine = null;
+      this.selection.reset();
+      showFailure(this.deps.page, error);
+    }
   }
 
   /** Only ELK positions go to the host cache; a fallback layout is never cached. */

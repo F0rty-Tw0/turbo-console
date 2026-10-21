@@ -1,6 +1,6 @@
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
-import { LOADING_TEXT, SINGLE_PACKAGE_TEXT } from '../common/graph.const.ts';
+import { LAYOUT_FAILED_TEXT, LOADING_TEXT, SINGLE_PACKAGE_TEXT } from '../common/graph.const.ts';
 
 type MessageState = Exclude<GraphState, GraphReady>;
 
@@ -30,6 +30,13 @@ export const showStateMessage = (page: PageElements, state: MessageState): void 
   const text = messageTextOf(state);
 
   showMessage(page, text, state.kind === 'error');
+};
+
+/** The page's own failure, with its reason; no Reload, because the host is in its graph state and drops `reload` there. */
+export const showFailure = (page: PageElements, error: unknown): void => {
+  const reason = error instanceof Error ? error.message : 'unknown error';
+
+  showMessage(page, `${LAYOUT_FAILED_TEXT}: ${reason}`, false);
 };
 
 /** Toolbar and container shown with Fit and Re-layout enabled; the notice only for a fallback layout. */

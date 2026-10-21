@@ -3,7 +3,7 @@ import { cpSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { build } from 'esbuild';
-import type { BuildOptions, BuildResult, OnLoadArgs, OnLoadResult, Plugin } from 'esbuild';
+import type { BuildOptions, BuildResult, OnLoadArgs, OnLoadResult, Plugin, PluginBuild } from 'esbuild';
 
 const PACKAGE_ROOT = join(import.meta.dirname, '..');
 
@@ -18,7 +18,7 @@ const BROWSER_BUNDLE: BuildOptions = { ...BUNDLE, platform: 'browser', format: '
 /** The graph bundle holds the ELK worker source as a string, for the page's blob worker. */
 const elkWorkerText: Plugin = {
   name: 'elk-worker-text',
-  setup: (pluginBuild) => {
+  setup: (pluginBuild: PluginBuild): void => {
     const asText = (args: OnLoadArgs): OnLoadResult => {
       const loaded: OnLoadResult = { contents: readFileSync(args.path, 'utf8'), loader: 'text' };
 

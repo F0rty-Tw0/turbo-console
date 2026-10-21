@@ -59,10 +59,8 @@ export type GraphView = {
   readonly setViewport: (zoom: number, pan: Position) => void;
   readonly setPositions: (positions: Positions) => void;
   readonly applyTheme: (colors: ThemeColors) => void;
-  readonly positions: () => Positions;
   /** For the test probe only. */
   readonly cy: () => Core;
-  readonly destroy: () => void;
 };
 
 export type GraphViewFactory = (container: HTMLElement, handlers: GraphViewHandlers) => GraphView;

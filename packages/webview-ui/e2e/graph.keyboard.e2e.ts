@@ -7,7 +7,7 @@ const RF4 = { description: 'M4-1 Review Focus 4', type: 'requirement' };
 
 test.describe('FEATURE: graph keyboard', () => {
   test(
-    'GIVEN a selected package and the container focused, Enter posts openDetails for it',
+    'GIVEN a package selected by a tap, Enter posts openDetails for it',
     { annotation: AC7 },
     async ({ graphCanvas, graphHost, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -16,11 +16,26 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('AND core is tapped', async (): Promise<void> => graphCanvas.tapNode('core'));
 
-      await test.step('AND the container is focused', async (): Promise<void> => graphPage.focusContainer());
-
       await test.step('AND Enter is pressed', async (): Promise<void> => graphPage.pressKey('Enter'));
 
       await test.step('THEN the host received openDetails for core', async (): Promise<void> => graphHost.expectOpenDetails('core'));
+    }
+  );
+
+  test(
+    'GIVEN a selected package, holding Enter until it repeats posts openDetails once',
+    { annotation: AC7 },
+    async ({ graphCanvas, graphHost, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
+
+      await test.step('AND core is tapped', async (): Promise<void> => graphCanvas.tapNode('core'));
+
+      await test.step('AND Enter is held until it repeats', async (): Promise<void> => graphPage.holdKey('Enter'));
+
+      await test.step('THEN the host received one openDetails for core', async (): Promise<void> =>
+        graphHost.expectOpenDetails('core'));
     }
   );
 
@@ -32,9 +47,9 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
 
-      await test.step('AND the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
+      await test.step('THEN the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
 
-      await test.step('AND the container is focused', async (): Promise<void> => graphPage.focusContainer());
+      await test.step('WHEN the container is focused', async (): Promise<void> => graphPage.focusContainer());
 
       await test.step('AND Enter is pressed', async (): Promise<void> => graphPage.pressKey('Enter'));
 
@@ -79,9 +94,9 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
 
-      await test.step('AND the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
+      await test.step('THEN the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
 
-      await test.step('AND Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
+      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
 
       await test.step('THEN Fit is focused', async (): Promise<void> => graphPage.expectButtonFocused('Fit'));
 

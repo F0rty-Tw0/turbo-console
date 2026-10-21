@@ -55,8 +55,10 @@ const flushWhenHidden = (): void => {
   if (document.visibilityState === 'hidden') saver.flush();
 };
 
+const themeObserver = new MutationObserver(applyTheme);
+
 applyTheme();
-new MutationObserver(applyTheme).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 document.addEventListener('visibilitychange', flushWhenHidden);
 addEventListener('pagehide', saver.flush);
 bridge.onMessage(controller.receive);

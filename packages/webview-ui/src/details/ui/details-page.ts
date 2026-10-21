@@ -1,8 +1,9 @@
 import { banners } from './banners.ts';
-import { iconButton, textElement } from './page-elements.ts';
+import { iconButton } from './page-elements.ts';
 import { taskCard } from './task-card.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { DetailsState, MissingPackage, PackageDetails } from '../../bridge/common/details-state.type.ts';
+import { textElement } from '../../shared/ui/text-element.ts';
 import type { CardIndex, CardRefs, FocusTargets, RenderContext, RenderedPage, RunTexts } from '../common/details-page.type.ts';
 import { MISSING_PACKAGE_TEXT, SCRIPTS_TITLE, TURBO_TASKS_TITLE } from '../common/field-text.const.ts';
 import { noCardsText } from '../utils/field-text.util.ts';

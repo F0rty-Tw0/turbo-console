@@ -3,7 +3,7 @@ import type { Position as CytoscapePosition, ElementDefinition } from 'cytoscape
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import { FALLBACK_SPACING_FACTOR, NODE_HEIGHT, NODE_PADDING_X } from '../common/graph.const.ts';
+import { cellPitchOf } from '../utils/grid-layout.util.ts';
 
 /**
  * Cytoscape's BFS (`collection/algorithms/bfs-dfs.mjs`) keeps its visited and parent-edge tables in plain objects
@@ -13,8 +13,8 @@ const cytoscapeIdOf = (index: number): string => `n${index}`;
 
 const idEntryOf = (child: ElkNode, index: number): [string, string] => [child.id, cytoscapeIdOf(index)];
 
-const nodeOf = (_child: ElkNode, index: number): ElementDefinition => {
-  const data = { id: cytoscapeIdOf(index) };
+const nodeOf = ([, id]: [string, string]): ElementDefinition => {
+  const data = { id };
   const node: ElementDefinition = { data };
 
   return node;
@@ -37,8 +37,6 @@ const edgesOf = (edge: ElkEdge, idsByName: Map<string, string>): ElementDefiniti
   return [definition];
 };
 
-const widerOf = (widest: number, child: ElkNode): number => Math.max(widest, child.width ?? 0);
-
 /**
  * Cytoscape's `breadthfirst` on the main thread, for when ELK fails: dependents above their dependencies.
  * Headless nodes are 1 px square, so with `spacingFactor: 1` the layout returns a unit grid (column, depth), which is
@@ -47,16 +45,15 @@ const widerOf = (widest: number, child: ElkNode): number => Math.max(widest, chi
 export const breadthfirstPositions = (graph: ElkNode): Positions => {
   const children = graph.children ?? [];
   const elkEdges = graph.edges ?? [];
-  const columnPitch = children.reduce(widerOf, 0) + NODE_PADDING_X;
-  const rowPitch = NODE_HEIGHT * FALLBACK_SPACING_FACTOR;
+  const pitch = cellPitchOf(children);
   const idEntries = children.map(idEntryOf);
   const idsByName = new Map(idEntries);
-  const nodes = children.map(nodeOf);
+  const nodes = idEntries.map(nodeOf);
   const edges = elkEdges.flatMap((edge: ElkEdge): ElementDefinition[] => edgesOf(edge, idsByName));
   const elements = [...nodes, ...edges];
   const cy = cytoscape({ headless: true, elements });
   const scaled = (cell: CytoscapePosition): Position => {
-    const position: Position = { x: cell.x * columnPitch, y: cell.y * rowPitch };
+    const position: Position = { x: cell.x * pitch.x, y: cell.y * pitch.y };
 
     return position;
   };

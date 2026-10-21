@@ -67,6 +67,39 @@ export const createPolicyMock = (): Mock<TrustedTypePolicyFactory['createPolicy'
   return vi.fn<TrustedTypePolicyFactory['createPolicy']>(createPolicy);
 };
 
+/**
+ * An `ElkLike` that works one job at a time, as the ELK worker does: each layout resolves `laidOut` `jobMs` after the
+ * job before it ended. Runs on the fake timers.
+ */
+export const serialElkMock = (laidOut: ElkNode, jobMs: number): ElkLike => {
+  let freeAt = 0;
+  const layout = async (): Promise<ElkNode> => {
+    const now = performance.now();
+    const startAt = Math.max(now, freeAt);
+
+    freeAt = startAt + jobMs;
+
+    const waitMs = freeAt - now;
+    const finish = (resolve: (value: ElkNode) => void): void => {
+      setTimeout((): void => resolve(laidOut), waitMs);
+    };
+
+    return new Promise(finish);
+  };
+  const elk: ElkLike = { layout, onError: vi.fn<ElkLike['onError']>(), terminate: vi.fn<ElkLike['terminate']>() };
+
+  return elk;
+};
+
+/** A layout fallback that always throws, as Cytoscape's breadthfirst might. */
+export const failingFallbackMock = (): Mock<LayoutRunnerDeps['fallback']> => {
+  const fallback = (): Positions => {
+    throw new Error('breadthfirst failed');
+  };
+
+  return vi.fn<LayoutRunnerDeps['fallback']>(fallback);
+};
+
 /** A layout fallback that always answers `positions`. */
 export const fallbackMock = (positions: Positions): Mock<LayoutRunnerDeps['fallback']> => {
   const fallback = (): Positions => positions;

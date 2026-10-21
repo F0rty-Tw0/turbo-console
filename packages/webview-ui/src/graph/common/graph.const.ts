@@ -11,6 +11,8 @@ export const VIEW_STATE_DEBOUNCE_MS = 250;
 
 export const LOADING_TEXT = 'Loading packages…';
 
+export const LAYOUT_FAILED_TEXT = 'The package graph could not be drawn';
+
 export const SINGLE_PACKAGE_TEXT = 'This is a single-package repo, so there is no package graph';
 
 export const FALLBACK_NOTICE_TEXT = 'Simplified layout: the layout worker failed';
@@ -42,6 +44,9 @@ export const FALLBACK_COLORS: ThemeColors = {
 export const ELK_POLICY_NAME = 'tc-elk';
 
 export const FALLBACK_TIMEOUT_MS = 5000;
+
+/** Starts every edge id, in Cytoscape and ELK alike: no package name holds a NUL, so no edge id is ever a node id. */
+export const EDGE_ID_PREFIX = '\u0000';
 
 /** Fallback row pitch in node heights. */
 export const FALLBACK_SPACING_FACTOR = 3;

@@ -1,5 +1,6 @@
-import { codicon, textElement } from './page-elements.ts';
+import { codicon } from './page-elements.ts';
 import type { TaskCard, ToolView } from '../../bridge/common/details-state.type.ts';
+import { textElement } from '../../shared/ui/text-element.ts';
 import { CONTINUOUS_CHIP_TEXT, NOT_CACHEABLE_CHIP_TEXT } from '../common/field-text.const.ts';
 import { safeToolIconId } from '../utils/run-view.util.ts';
 

@@ -1,7 +1,6 @@
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+import { isRecord } from '../../bridge/utils/record.util.ts';
 
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
@@ -25,9 +24,7 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   const pan = readPosition(raw['pan']);
   const isSelectionValid = selected === null || typeof selected === 'string';
   const isZoomValid = isFiniteNumber(zoom) && zoom > 0;
-
   const isHashValid = typeof hash === 'string';
-
   const areFieldsValid = isHashValid && isZoomValid && isSelectionValid;
 
   if (!areFieldsValid || pan === null) return null;

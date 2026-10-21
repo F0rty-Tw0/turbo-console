@@ -17,6 +17,11 @@ export const THEME_VAR_NAMES = [
 /** Init script: opts the page into exposing `window.__tcGraphProbe`. */
 export const PROBE_WANTED = 'window.__tcGraphProbeWanted = true;';
 
+/** Init script: every canvas text measurement throws, as a page whose label sizing broke. */
+export const BROKEN_MEASURE = `CanvasRenderingContext2D.prototype.measureText = () => {
+  throw new Error('measureText is broken');
+};`;
+
 /** Init script: records the duration of every long task in `window.__longTasks`; `window.__flushLongTasks` adds those not delivered yet. */
 export const LONGTASK_RECORDER = `window.__longTasks = [];
 const longTaskObserver = new PerformanceObserver((list) => {
@@ -37,8 +42,9 @@ export const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => 
 
 export const ONE_FRAME = 'new Promise((resolve) => requestAnimationFrame(resolve))';
 
-const COUNTERS = 'window.__workers = 0; window.__terminated = 0;';
+const COUNTERS = 'window.__workers = 0; window.__terminated = 0; window.__workerMessages = 0;';
 
+/** The real worker, counted: each one built, each terminated, and each message any of them sent the page. */
 const REAL_WORKER = `(() => {
   ${COUNTERS}
   const RealWorker = window.Worker;
@@ -46,6 +52,9 @@ const REAL_WORKER = `(() => {
     constructor(...args) {
       super(...args);
       window.__workers += 1;
+      this.addEventListener('message', () => {
+        window.__workerMessages += 1;
+      });
     }
     terminate() {
       window.__terminated += 1;
@@ -115,16 +124,3 @@ export const WORKER_STUBS: Readonly<Record<WorkerStub, string>> = {
   error: ERROR_WORKER,
   silent: SILENT_WORKER
 };
-
-/** The `setState` value once it matches the probe's zoom, pan and selection (the save is debounced), else `null`. */
-export const SAVED_STATE_MATCHING_PROBE = `(() => {
-  const saved = window.__state;
-  const probe = window.__tcGraphProbe;
-
-  if (saved === undefined || probe === undefined) return null;
-
-  const pan = probe.pan();
-  const isCurrent = saved.selected === probe.selected() && saved.zoom === probe.zoom() && saved.pan.x === pan.x && saved.pan.y === pan.y;
-
-  return isCurrent ? saved : null;
-})()`;

@@ -1,11 +1,12 @@
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
+import { edgeIdOf } from './edge-id.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import { ELK_OPTIONS } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 
 const elkEdgeOf = (edge: GraphEdge): ElkEdge => {
-  const elkEdge: ElkEdge = { id: `${edge.source}>${edge.target}`, sources: [edge.source], targets: [edge.target] };
+  const elkEdge: ElkEdge = { id: edgeIdOf(edge), sources: [edge.source], targets: [edge.target] };
 
   return elkEdge;
 };

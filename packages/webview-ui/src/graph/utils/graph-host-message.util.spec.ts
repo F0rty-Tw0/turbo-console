@@ -7,6 +7,10 @@ const EDGE: GraphEdge = { source: 'app', target: 'core' };
 
 const EDGES = [EDGE];
 
+const NO_TARGET_EDGE = { source: 'app' };
+
+const NUMERIC_SOURCE_EDGE = { source: 1, target: 'core' };
+
 const ORIGIN = { x: 0, y: 0 };
 
 const POSITIONS: Positions = { app: ORIGIN, core: ORIGIN };
@@ -55,6 +59,12 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with a numeric hash', stateMessageOf({ ...GRAPH, hash: 5 })],
       ['a graph with string packages', stateMessageOf({ ...GRAPH, packages: 'x' })],
       ['a graph with null edges', stateMessageOf({ ...GRAPH, edges: null })],
+      ['a graph with a numeric package name', stateMessageOf({ ...GRAPH, packages: ['app', 5] })],
+      ['a graph with a null package name', stateMessageOf({ ...GRAPH, packages: [null] })],
+      ['a graph with a null edge', stateMessageOf({ ...GRAPH, edges: [null] })],
+      ['a graph with a string edge', stateMessageOf({ ...GRAPH, edges: ['app>core'] })],
+      ['a graph with an edge with no target', stateMessageOf({ ...GRAPH, edges: [NO_TARGET_EDGE] })],
+      ['a graph with an edge with a numeric source', stateMessageOf({ ...GRAPH, edges: [NUMERIC_SOURCE_EDGE] })],
       ['a graph with string positions', stateMessageOf({ ...GRAPH, positions: 'x' })]
     ])('WHEN it is %s THEN it is rejected', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);

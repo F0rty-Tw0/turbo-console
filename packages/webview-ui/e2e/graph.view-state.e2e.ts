@@ -4,6 +4,11 @@ import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.
 
 const AC3 = { description: 'M4-1 AC3', type: 'requirement' };
 
+const ORIGIN = { x: 0, y: 0 };
+
+/** The diamond's hash and a real package, but a zoom that is not a number. */
+const BAD_ZOOM_VIEW = { hash: 'a1b2c3d4', zoom: 'wide', pan: ORIGIN, selected: 'core' };
+
 test.describe('FEATURE: graph view state', () => {
   test(
     'GIVEN a zoomed, panned graph with core selected, reopening with the saved view restores it',
@@ -18,6 +23,8 @@ test.describe('FEATURE: graph view state', () => {
       await test.step('AND the graph is zoomed', async (): Promise<void> => graphCanvas.zoomBy(-300));
 
       await test.step('AND the graph is panned', async (): Promise<void> => graphCanvas.panBy(40, 25));
+
+      await test.step('THEN the view is saved', async (): Promise<void> => graphHost.expectViewSaved());
 
       const carried = await test.step('WHEN the page is reopened with the saved view', async (): Promise<GraphViewState> =>
         graphHost.reopen());
@@ -43,6 +50,8 @@ test.describe('FEATURE: graph view state', () => {
       await test.step('AND the graph is zoomed', async (): Promise<void> => graphCanvas.zoomBy(-300));
 
       await test.step('AND the graph is panned', async (): Promise<void> => graphCanvas.panBy(40, 25));
+
+      await test.step('THEN the view is saved', async (): Promise<void> => graphHost.expectViewSaved());
 
       const carried = await test.step('WHEN the page is reopened with the saved view', async (): Promise<GraphViewState> =>
         graphHost.reopen());
@@ -70,6 +79,8 @@ test.describe('FEATURE: graph view state', () => {
 
       await test.step('THEN cli is selected', async (): Promise<void> => graphProbe.expectSelected('cli'));
 
+      await test.step('AND the view is saved', async (): Promise<void> => graphHost.expectViewSaved());
+
       await test.step('WHEN the page is reopened with the saved view', async (): Promise<GraphViewState> => graphHost.reopen());
 
       await test.step('AND a cached state without cli is sent', async (): Promise<void> =>
@@ -79,14 +90,22 @@ test.describe('FEATURE: graph view state', () => {
     }
   );
 
-  test('GIVEN invalid saved state, the page ignores it', async ({ graphHost, graphPage, graphProbe }): Promise<void> => {
-    await test.step('WHEN invalid saved state is seeded', async (): Promise<void> => graphHost.seedSavedState({ zoom: 'wide' }));
-
-    await test.step('AND the page is opened', async (): Promise<void> => graphPage.open());
+  test('GIVEN a saved view whose zoom is not a number, the page ignores it, fits and selects nothing', async ({
+    graphCanvas,
+    graphHost,
+    graphPage,
+    graphProbe
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened with that saved view', async (): Promise<void> =>
+      graphPage.open({ savedState: BAD_ZOOM_VIEW }));
 
     await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
 
     await test.step('THEN seven nodes are drawn', async (): Promise<void> => graphProbe.expectNodeCount(7));
+
+    await test.step('AND nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
+
+    await test.step('AND every node lies inside the container', async (): Promise<void> => graphCanvas.expectAllNodesInView());
 
     await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
   });

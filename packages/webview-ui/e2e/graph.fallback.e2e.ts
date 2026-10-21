@@ -56,6 +56,16 @@ test.describe('FEATURE: graph layout fallback', () => {
       await test.step('WHEN a node is dragged', async (): Promise<void> => graphCanvas.dragNode('ui', 30, 30));
 
       await test.step('THEN still no positions were posted', async (): Promise<void> => graphHost.expectNoPositionsPosted());
+
+      await test.step('WHEN Re-layout is pressed', async (): Promise<void> => graphPage.pressButton('Re-layout'));
+
+      await test.step('THEN layoutDone reports fallback twice', async (): Promise<void> =>
+        graphHost.expectLayoutDones(['fallback', 'fallback']));
+
+      await test.step('AND the simplified-layout notice still shows with Retry', async (): Promise<void> =>
+        graphPage.expectFallbackNotice());
+
+      await test.step('AND the layout is still the fallback', async (): Promise<void> => graphProbe.expectLayoutEngine('fallback'));
     }
   );
 
@@ -84,4 +94,20 @@ test.describe('FEATURE: graph layout fallback', () => {
         graphHost.expectFallbackPosted());
     }
   );
+
+  test('GIVEN label sizing that throws, the page says the graph could not be drawn instead of loading forever', async ({
+    graphHost,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened with a canvas whose measureText throws', async (): Promise<void> =>
+      graphPage.open({ isMeasureBroken: true }));
+
+    await test.step('AND a graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_STUB));
+
+    await test.step('THEN the page says the graph could not be drawn', async (): Promise<void> => graphPage.expectLayoutFailed());
+
+    await test.step('AND the loading message is gone', async (): Promise<void> => graphPage.expectNotLoading());
+
+    await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
+  });
 });

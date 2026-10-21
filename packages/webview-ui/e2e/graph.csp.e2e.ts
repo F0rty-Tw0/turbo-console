@@ -65,6 +65,16 @@ test.describe('FEATURE: graph page CSP', () => {
     }
   );
 
+  test(
+    'GIVEN the graph CSP, no second tc-elk policy, no default policy and no raw blob worker can be made',
+    { annotation: AC5 },
+    async ({ graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('THEN each of the three throws a TypeError', async (): Promise<void> => graphPage.expectTrustedTypesLocked());
+    }
+  );
+
   test('GIVEN no probe flag, the page exposes no probe', async ({ graphPage, graphProbe }): Promise<void> => {
     await test.step('WHEN the page is opened without the probe flag', async (): Promise<void> => graphPage.open({ probe: false }));
 

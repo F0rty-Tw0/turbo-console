@@ -91,6 +91,27 @@ describe('FEATURE: drawableEdges', () => {
     });
   });
 
+  describe('GIVEN package names that hold >', () => {
+    const packages = ['a', 'b', 'c', 'a>b', 'b>c'];
+
+    it('WHEN the edges a>b > c and a > b>c both come THEN both are kept', () => {
+      const first: GraphEdge = { source: 'a>b', target: 'c' };
+      const second: GraphEdge = { source: 'a', target: 'b>c' };
+
+      const edges = drawableEdges(packages, [first, second]);
+
+      expect(edges).toStrictEqual([first, second]);
+    });
+
+    it('WHEN an edge a > b comes beside a package a>b THEN it is kept', () => {
+      const edge: GraphEdge = { source: 'a', target: 'b' };
+
+      const edges = drawableEdges(packages, [edge]);
+
+      expect(edges).toStrictEqual([edge]);
+    });
+  });
+
   describe('GIVEN a root package //', () => {
     it('WHEN an edge runs from // to web THEN it is kept like any other', () => {
       const edge: GraphEdge = { source: '//', target: 'web' };

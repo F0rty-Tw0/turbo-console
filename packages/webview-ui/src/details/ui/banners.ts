@@ -1,6 +1,7 @@
-import { codicon, textButton, textElement } from './page-elements.ts';
+import { codicon, textButton } from './page-elements.ts';
 import type { RefreshMessage } from '../../bridge/common/details-message.type.ts';
 import type { PackageDetails } from '../../bridge/common/details-state.type.ts';
+import { textElement } from '../../shared/ui/text-element.ts';
 import type { RenderContext } from '../common/details-page.type.ts';
 
 type BannerTone = 'warning' | 'error';

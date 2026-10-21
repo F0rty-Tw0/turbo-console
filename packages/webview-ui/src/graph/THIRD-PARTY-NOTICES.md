@@ -5,8 +5,9 @@ The Package Graph page bundles the two libraries below into `main.js`.
 ## elkjs 0.12.0
 
 - License: EPL-2.0. The package is licensed `EPL-2.0 OR GPL-3.0-or-later`; this extension uses it under EPL-2.0.
-- Shipped unmodified, as a string inside `main.js` that the page runs as a blob worker.
-- Source: https://github.com/kieler/elkjs
+- Shipped unmodified, in two parts inside `main.js`: `lib/elk-api.js` bundled as code, and `lib/elk-worker.min.js` as a
+  string that the page runs as a blob worker.
+- Source: https://github.com/kieler/elkjs/tree/0.12.0
 - Full license text: `elkjs-LICENSE.md`, beside this file.
 
 ## cytoscape 3.34.4

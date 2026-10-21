@@ -2,7 +2,7 @@ import type { GraphState, Position, Positions } from '@turbo-console/webview-ui'
 
 import { isRecord } from './record.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
-import { COORDINATE_MAX } from '../common/graph.const.ts';
+import { COORDINATE_MAX, PACKAGE_NAME_MAX } from '../common/graph.const.ts';
 
 type PositionsMessage = {
   readonly hash: string;
@@ -30,19 +30,29 @@ const pointOf = (value: unknown): Position | null => {
   return point;
 };
 
+const isPlainRecord = (value: unknown): value is object => {
+  if (!isRecord(value)) return false;
+
+  const prototype: unknown = Object.getPrototypeOf(value);
+
+  return prototype === Object.prototype || prototype === null;
+};
+
 /**
- * Fresh `Positions` (only `x` and `y` kept) when every value is a point within `COORDINATE_MAX`, else `null`.
- * `Object.fromEntries` defines each key as an own property, so a `__proto__` key never sets the prototype.
+ * Fresh `Positions` (only `x` and `y` kept) when `raw` is a plain object whose every key is a package-length name and
+ * every value a point within `COORDINATE_MAX`, else `null`. It walks own keys only, so an own `__proto__` key counts
+ * like any other, and `Object.fromEntries` defines each key as an own property, so it never sets the prototype.
  */
-const finitePositionsOf = (raw: unknown): Positions | null => {
-  if (!isRecord(raw)) return null;
+export const parsePositions = (raw: unknown): Positions | null => {
+  if (!isPlainRecord(raw)) return null;
 
   const entries: [string, Position][] = [];
 
   for (const [name, value] of Object.entries(raw)) {
     const point = pointOf(value);
+    const isNameTooLong = name.length > PACKAGE_NAME_MAX;
 
-    if (point === null) return null;
+    if (point === null || isNameTooLong) return null;
 
     entries.push([name, point]);
   }
@@ -71,7 +81,7 @@ export const layoutEntryOf = (raw: unknown): GraphLayoutCacheEntry | null => {
 
   if (typeof raw.hash !== 'string') return null;
 
-  const positions = finitePositionsOf(raw.positions);
+  const positions = parsePositions(raw.positions);
 
   if (positions === null) return null;
 

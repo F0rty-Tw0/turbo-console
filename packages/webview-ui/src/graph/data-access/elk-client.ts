@@ -7,7 +7,7 @@ import type { ScriptUrlPolicy } from '../common/script-url-policy.type.ts';
 
 const pagePolicyOf = (): ScriptUrlPolicy | null => {
   try {
-    return createScriptUrlPolicy(trustedTypes);
+    return createScriptUrlPolicy(trustedTypes, location.origin);
   } catch {
     return null;
   }

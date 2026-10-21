@@ -1,11 +1,15 @@
 import type { GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
-import type { GraphReady, Position } from '../../src/bridge/common/graph-state.type.ts';
+import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 
 export type WorkerStub = 'real' | 'throwOnce' | 'error' | 'silent';
 
 export type GraphOptions = {
   readonly inlineScript?: boolean;
+  /** `true` makes canvas `measureText` throw, so laying out any graph fails before it is drawn. */
+  readonly isMeasureBroken?: boolean;
+  /** The webview state VS Code kept, as `getState` hands it to the page; any value, valid or not. */
+  readonly savedState?: unknown;
   readonly workers?: WorkerStub;
   /** `false` skips the VS Code host stub, so the page runs on its stub bridge. */
   readonly host?: boolean;
@@ -13,12 +17,10 @@ export type GraphOptions = {
   readonly probe?: boolean;
 };
 
-export type PackageGraphState = GraphReady;
-
 type CssVars = Readonly<Record<string, string>>;
 
 /** Cytoscape-resolved colours as `rgb(r, g, b)`; compared with whitespace stripped. */
-export type ThemeColors = {
+export type ExpectedThemeColors = {
   readonly fill: string;
   readonly label: string;
   readonly frame: string;
@@ -29,7 +31,7 @@ export type ThemeColors = {
 export type ThemeStub = {
   readonly bodyClass: string;
   readonly vars: CssVars;
-  readonly expected: ThemeColors;
+  readonly expected: ExpectedThemeColors;
 };
 
 /** The names the in-page theme switch clears, then the variables and body class it sets. */
@@ -66,3 +68,18 @@ export type PostedPositions = {
   readonly hash: string | undefined;
   readonly names: string[];
 };
+
+/* eslint-disable @typescript-eslint/naming-convention -- the host and worker init scripts set these exact names on window */
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- only an interface merges into Window
+  interface Window {
+    __posted?: GraphWebviewMessage[];
+    readonly __workers?: number;
+    readonly __terminated?: number;
+    readonly __workerMessages?: number;
+    __state?: unknown;
+  }
+}
+
+/* eslint-enable @typescript-eslint/naming-convention */

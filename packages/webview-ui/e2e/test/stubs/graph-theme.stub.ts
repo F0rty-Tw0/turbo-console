@@ -1,4 +1,4 @@
-import type { ThemeColors, ThemeStub } from '../../common/graph.type.ts';
+import type { ExpectedThemeColors, ThemeStub } from '../../common/graph.type.ts';
 
 const DARK_VARS: Readonly<Record<string, string>> = {
   '--vscode-editor-background': '#1f1f1f',
@@ -8,7 +8,7 @@ const DARK_VARS: Readonly<Record<string, string>> = {
   '--vscode-focusBorder': '#0078d4'
 };
 
-const DARK_COLORS: ThemeColors = {
+const DARK_COLORS: ExpectedThemeColors = {
   fill: 'rgb(31, 31, 31)',
   label: 'rgb(204, 204, 204)',
   frame: 'rgb(43, 43, 43)',
@@ -26,7 +26,7 @@ const LIGHT_VARS: Readonly<Record<string, string>> = {
   '--vscode-focusBorder': '#005fb8'
 };
 
-const LIGHT_COLORS: ThemeColors = {
+const LIGHT_COLORS: ExpectedThemeColors = {
   fill: 'rgb(255, 255, 255)',
   label: 'rgb(59, 59, 59)',
   frame: 'rgb(229, 229, 229)',
@@ -46,7 +46,7 @@ const HC_VARS: Readonly<Record<string, string>> = {
   '--vscode-focusBorder': '#f38518'
 };
 
-const HC_COLORS: ThemeColors = {
+const HC_COLORS: ExpectedThemeColors = {
   fill: 'rgb(0, 0, 0)',
   label: 'rgb(255, 255, 255)',
   frame: 'rgb(111, 195, 223)',

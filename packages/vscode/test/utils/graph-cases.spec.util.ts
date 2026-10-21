@@ -1,18 +1,20 @@
 import assert from 'node:assert/strict';
 
+import type { GraphEdge, GraphReady } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
 import { lastGraphState } from './graph-posted.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
+import type { PanelInfo } from '../../src/shared/common/api.type.ts';
 import { GRAPH_COMMAND, HASH_PATTERN, ROOT_PACKAGE_NAME } from '../common/graph.const.ts';
-import type { GraphScene, PackageGraphHostState } from '../common/graph.type.ts';
+import type { GraphScene } from '../common/graph.type.ts';
 import type { ShownManifest, ShownPackage } from '../common/launch.type.ts';
 
 const CLOSE_EDITOR_COMMAND = 'workbench.action.closeActiveEditor';
 
 const sorted = (names: string[]): string[] => names.toSorted();
 
-const requireState = (scene: GraphScene): PackageGraphHostState => {
+const requireState = (scene: GraphScene): GraphReady => {
   const { api, root } = scene;
   const state = lastGraphState(api, root);
 
@@ -21,31 +23,34 @@ const requireState = (scene: GraphScene): PackageGraphHostState => {
   return state;
 };
 
-const positionedNamesOf = (state: PackageGraphHostState): string[] => {
+const positionedNamesOf = (state: GraphReady): string[] => {
   if (state.positions === null) return [];
 
   return Object.keys(state.positions);
 };
 
-/** The packages the graph draws: all but the atom definitions packages, which the model hides as the tree does. */
-const shownPackagesOf = (manifest: ShownManifest): ShownPackage[] =>
-  manifest.packages.filter((pkg) => pkg.role !== 'atom-definitions');
+const isShown = (pkg: ShownPackage): boolean => pkg.role !== 'atom-definitions';
 
-/** The shown packages' dependency pairs that join two shown packages, as the host's deduped edges name them. */
+/** The packages the graph draws: all but the atom definitions packages, which the model hides as the tree does. */
+const shownPackagesOf = (manifest: ShownManifest): ShownPackage[] => manifest.packages.filter(isShown);
+
+const edgeLineOf = (edge: GraphEdge): string => `${edge.source}>${edge.target}`;
+
+/** The shown packages' dependency pairs that join two shown packages, each once and sorted, as the host's deduped edges name them. */
 const expectedEdgesOf = (manifest: ShownManifest): string[] => {
   const shown = shownPackagesOf(manifest);
-  const names = new Set(shown.map((pkg) => pkg.name));
-  const lines: string[] = [];
+  const names = new Set(shown.map((pkg): string => pkg.name));
+  const lines = new Set<string>();
 
   for (const pkg of shown) {
     for (const dependency of pkg.dependencies) {
       const isWorkspaceDependency = names.has(dependency);
 
-      if (isWorkspaceDependency) lines.push(`${pkg.name}>${dependency}`);
+      if (isWorkspaceDependency) lines.add(`${pkg.name}>${dependency}`);
     }
   }
 
-  return lines;
+  return sorted([...lines]);
 };
 
 /** Opening twice keeps one shown panel; its graph holds every manifest package and every edge between them. */
@@ -59,15 +64,14 @@ export const openCase = async (scene: GraphScene): Promise<void> => {
 
     const state = requireState(scene);
     const [panel] = api.graph.panels();
-    const packages = state.packages.filter((name) => name !== ROOT_PACKAGE_NAME);
-    const manifestNames = shownPackagesOf(manifest).map((pkg) => pkg.name);
-    const edgeLines = state.edges.map((edge) => `${edge.source}>${edge.target}`);
+    const packages = state.packages.filter((name): boolean => name !== ROOT_PACKAGE_NAME);
+    const manifestNames = shownPackagesOf(manifest).map((pkg): string => pkg.name);
+    const edgeLines = state.edges.map(edgeLineOf);
 
     assert.equal(api.graph.panels().length, 1);
     assert.deepEqual(panel, { root, visible: true });
     assert.deepEqual(sorted(packages), sorted(manifestNames));
-
-    for (const line of expectedEdgesOf(manifest)) assert.ok(edgeLines.includes(line), `edge ${line} is drawn`);
+    assert.deepEqual(sorted(edgeLines), expectedEdgesOf(manifest));
 
     assert.equal(state.positions, null);
     assert.match(state.hash, HASH_PATTERN);
@@ -110,7 +114,8 @@ export const detailsCase = async (scene: GraphScene): Promise<void> => {
     if (first === undefined) throw new Error('the fixture manifest has no shown package');
 
     const { name } = first;
-    const isOpened = (): boolean => api.details.panels().some((panel) => panel.root === root && panel.packageName === name);
+    const isPanelOf = (panel: PanelInfo): boolean => panel.root === root && panel.packageName === name;
+    const isOpened = (): boolean => api.details.panels().some(isPanelOf);
 
     await api.graph.receive(root, { type: 'openDetails', packageName: name });
     await waitFor('details panel', isOpened);

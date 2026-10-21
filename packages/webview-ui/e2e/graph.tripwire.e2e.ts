@@ -28,9 +28,9 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('AND the target-like state is sent', async (): Promise<void> => graphHost.sendState(targetLikeState()));
 
-    await test.step('AND the layout has finished', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
+    await test.step('THEN the layout has finished', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
 
-    await test.step('AND the graph is panned for 2 s after a 500 ms warm-up', async (): Promise<void> =>
+    await test.step('WHEN the graph is panned for 2 s after a 500 ms warm-up', async (): Promise<void> =>
       graphCanvas.scriptedPan(30, 120));
 
     await test.step('THEN at most one long task and none over 200 ms ran', async (): Promise<void> =>

@@ -1,30 +1,22 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import type { GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
+import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
-import { CLEAR_LONG_TASKS, NEXT_FRAME, ONE_FRAME } from '../common/graph.const.ts';
+import { CLEAR_LONG_TASKS, ONE_FRAME } from '../common/graph.const.ts';
 import type { DragRecord } from '../common/graph.type.ts';
 import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { emptySpotOf, nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
-import { lastPositionsPosted } from '../test/utils/graph-posted.spec.util.ts';
+import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 
 const DRAG_STEPS = 8;
 
 const WHEEL_NOTCH = 100;
 
 const DRAG_TOLERANCE = 2;
-
-const idOf = (node: ProbeNode): string => node.id;
-
-const sortedIds = (nodes: ProbeNode[]): string[] => {
-  const ids = nodes.map(idOf);
-
-  return ids.sort();
-};
 
 /** How far `moved` sits from where the drag should have put the node, per axis, in model units. */
 const dragError = (moved: Position | undefined, drag: DragRecord): Position => {
@@ -35,15 +27,19 @@ const dragError = (moved: Position | undefined, drag: DragRecord): Position => {
   return error;
 };
 
+const isWithinTolerance = (error: Position): boolean => error.x <= DRAG_TOLERANCE && error.y <= DRAG_TOLERANCE;
+
 /** Mouse and wheel input on the drawn graph, aimed through the probe's rendered node centres. */
 export class GraphCanvas {
   public readonly container: Locator;
 
   private readonly page: Page;
+  private readonly probe: GraphProbePage;
   private drag: DragRecord | null;
 
   public constructor(page: Page) {
     this.page = page;
+    this.probe = new GraphProbePage(page);
     this.drag = null;
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
   }
@@ -68,7 +64,7 @@ export class GraphCanvas {
 
   public async dragNode(id: string, dx: number, dy: number): Promise<void> {
     const node = await this.nodeOf(id);
-    const zoom = await this.zoom();
+    const zoom = await this.probe.zoom();
     const from: Position = { x: node.x, y: node.y };
     const grab: ViewportPoint = { x: node.renderedX, y: node.renderedY };
 
@@ -124,22 +120,21 @@ export class GraphCanvas {
     await expect.poll(async (): Promise<number> => this.outsideCount()).toBeGreaterThan(0);
   }
 
-  /** The last posted positions moved the dragged node by the drag, in model units, and still name every node. */
+  /** Polls until the last posted positions moved the dragged node by the drag, in model units; they still name every node. */
   public async expectDragPosted(): Promise<void> {
     const drag = this.drag;
 
     if (drag === null) throw new Error('graph e2e: no node was dragged');
 
-    await this.page.evaluate(NEXT_FRAME);
+    const message = 'the last posted positions move the dragged node by the drag';
 
-    const posted = await this.page.evaluate<GraphWebviewMessage[]>('window.__posted');
-    const positions: Positions = lastPositionsPosted(posted) ?? {};
-    const error = dragError(positions[drag.id], drag);
-    const nodes = await this.nodes();
+    await expect.poll(async (): Promise<boolean> => this.isDragPosted(drag), { message }).toBe(true);
 
-    expect(error.x).toBeLessThanOrEqual(DRAG_TOLERANCE);
-    expect(error.y).toBeLessThanOrEqual(DRAG_TOLERANCE);
-    expect(Object.keys(positions).sort()).toEqual(sortedIds(nodes));
+    const positions = await this.lastPosted();
+    const names = Object.keys(positions).sort();
+    const ids = await this.probe.nodeIds();
+
+    expect(names).toEqual(ids);
   }
 
   private async dragFrom(from: ViewportPoint, dx: number, dy: number): Promise<void> {
@@ -149,9 +144,22 @@ export class GraphCanvas {
     await this.page.mouse.up();
   }
 
+  private async isDragPosted(drag: DragRecord): Promise<boolean> {
+    const positions = await this.lastPosted();
+    const error = dragError(positions[drag.id], drag);
+
+    return isWithinTolerance(error);
+  }
+
+  private async lastPosted(): Promise<Positions> {
+    const posted = await readPosted(this.page);
+
+    return lastPositionsPosted(posted) ?? {};
+  }
+
   private async outsideCount(): Promise<number> {
     const container = await this.container.evaluate(readRect);
-    const zoom = await this.zoom();
+    const zoom = await this.probe.zoom();
     const nodes = await this.drawn();
     const boxes = nodes.map((node): ElementRect => nodeBoxOf(node, zoom));
     const outside = boxes.filter((box): boolean => !isInside(box, container));
@@ -161,7 +169,7 @@ export class GraphCanvas {
 
   private async emptySpot(): Promise<ViewportPoint> {
     const container = await this.container.evaluate(readRect);
-    const zoom = await this.zoom();
+    const zoom = await this.probe.zoom();
     const nodes = await this.drawn();
 
     return emptySpotOf(container, nodes, zoom);
@@ -183,24 +191,10 @@ export class GraphCanvas {
     return node;
   }
 
-  private async zoom(): Promise<number> {
-    return this.page.evaluate<number>('window.__tcGraphProbe.zoom()');
-  }
-
   /** The nodes once any are drawn: a posted state reaches the page, and ELK answers, some tasks later. */
   private async drawn(): Promise<ProbeNode[]> {
-    const count = async (): Promise<number> => {
-      const nodes = await this.nodes();
+    await this.probe.waitForNodes();
 
-      return nodes.length;
-    };
-
-    await expect.poll(count).toBeGreaterThan(0);
-
-    return this.nodes();
-  }
-
-  private async nodes(): Promise<ProbeNode[]> {
-    return this.page.evaluate<ProbeNode[]>('window.__tcGraphProbe.nodes()');
+    return this.probe.nodes();
   }
 }

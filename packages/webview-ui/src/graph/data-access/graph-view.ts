@@ -6,6 +6,7 @@ import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-s
 import type { Closure } from '../common/closure.type.ts';
 import type { GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { edgeStateOf, nodeStateOf } from '../utils/highlight.util.ts';
 
 const FIT_PADDING_PX = 24;
@@ -38,7 +39,7 @@ const nodeDefinitionsOf = (packages: string[], positions: Positions, sizeOf: Nod
 };
 
 const edgeDefinitionOf = (edge: GraphEdge): ElementDefinition => {
-  const data = { id: `${edge.source}>${edge.target}`, source: edge.source, target: edge.target };
+  const data = { id: edgeIdOf(edge), source: edge.source, target: edge.target };
   const definition: ElementDefinition = { data };
 
   return definition;
@@ -146,9 +147,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     setViewport,
     setPositions,
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
-    positions: (): Positions => positionsOf(cy),
-    cy: (): Core => cy,
-    destroy: (): void => cy.destroy()
+    cy: (): Core => cy
   };
 
   listen(cy, handlers);
