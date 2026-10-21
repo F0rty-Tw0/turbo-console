@@ -102,7 +102,6 @@ export type TraceViewModel = {
 };
 
 /** The view builders `main.ts` hands to `GraphDetails`, since `domain-logic` may not import `ui`. */
-// eslint-disable-next-line local/no-unused-exports -- first imported by Task 3.3
 export type DetailsViews = {
   readonly build: () => DetailsElements;
   readonly empty: (isOverlay: boolean) => EmptyDetails;
