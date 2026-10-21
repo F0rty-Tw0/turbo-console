@@ -35,6 +35,7 @@ const webviewHostImports: FlatConfig.Config = {
               'ICON_ID_PATTERN',
               'MANIFEST_ENTRIES_MAX',
               'MANIFEST_FIELDS',
+              'MANIFEST_FILE_MAX',
               'MANIFEST_LINE_MAX',
               'TASK_COUNT_MAX',
               'TOOL_ICON_PREFIX',

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import { MANIFEST_FILE_MAX, MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
 import type { EdgeExplainResult, GraphEdge, GraphEdgeExplainedMessage, GraphPackage, GraphReady } from '@turbo-console/webview-ui';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
@@ -49,13 +50,19 @@ const textOf = async (context: ExplainContext, absolute: string): Promise<string
 };
 
 const resultOf = (text: string | null, shown: string, target: string): EdgeExplainResult => {
-  const unreadable: EdgeExplainResult = { kind: 'unreadable', file: shown };
+  const isShownTooLong = shown.length > MANIFEST_FILE_MAX;
+  const file = isShownTooLong ? MANIFEST_FILE : shown;
+  const unreadable: EdgeExplainResult = { kind: 'unreadable', file };
 
-  if (text === null) return unreadable;
+  if (text === null || isShownTooLong) return unreadable;
 
   const entries = manifestEntriesOf(text, target);
 
   if (entries === null) return unreadable;
+
+  const isPastLimit = entries.some((entry) => entry.line > MANIFEST_LINE_MAX);
+
+  if (isPastLimit) return unreadable;
 
   if (entries.length === 0) {
     const missing: EdgeExplainResult = { kind: 'missing', file: shown };

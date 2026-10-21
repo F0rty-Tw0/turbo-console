@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import { MANIFEST_FILE_MAX, MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
 import type { GraphReady, GraphState } from '@turbo-console/webview-ui';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
@@ -130,6 +131,43 @@ describe('FEATURE: graph explain', () => {
 
       expect(handled).toBe(true);
       expect(ports.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN an explainEdge whose answer the page would reject', () => {
+    it('WHEN the package path makes the shown file longer than the page accepts THEN an unreadable reply names package.json', async () => {
+      const packages = [graphPackageOf('deep', 'd'.repeat(MANIFEST_FILE_MAX)), graphPackageOf('core', 'packages/core')];
+      const edges = [{ source: 'deep', target: 'core' }];
+      const deep: GraphReady = { ...READY, packages, edges };
+
+      vi.mocked(ports.readText).mockResolvedValue(MANIFEST);
+
+      await answerRequest({ type: 'explainEdge', source: 'deep', target: 'core' }, contextOver(deep));
+
+      const result = { kind: 'unreadable', file: 'package.json' };
+
+      expect(ports.post).toHaveBeenCalledExactlyOnceWith({ type: 'edgeExplained', source: 'deep', target: 'core', result });
+    });
+
+    it('WHEN an entry sits on a line past the page limit THEN an unreadable reply is posted', async () => {
+      vi.mocked(ports.readText).mockResolvedValue(`${'\n'.repeat(MANIFEST_LINE_MAX + 1)}{"dependencies":{"core":"1"}}`);
+
+      await answerRequest({ type: 'explainEdge', source: 'web', target: 'core' }, context);
+
+      const result = { kind: 'unreadable', file: 'apps/web/package.json' };
+
+      expect(ports.post).toHaveBeenCalledExactlyOnceWith({ type: 'edgeExplained', source: 'web', target: 'core', result });
+    });
+
+    it('WHEN an entry sits on the last line the page accepts THEN a found reply is posted', async () => {
+      vi.mocked(ports.readText).mockResolvedValue(`${'\n'.repeat(MANIFEST_LINE_MAX)}{"dependencies":{"core":"1"}}`);
+
+      await answerRequest({ type: 'explainEdge', source: 'web', target: 'core' }, context);
+
+      const entries = [{ field: 'dependencies', key: 'core', spec: '1', line: MANIFEST_LINE_MAX }];
+      const result = { kind: 'found', file: 'apps/web/package.json', entries };
+
+      expect(ports.post).toHaveBeenCalledExactlyOnceWith({ type: 'edgeExplained', source: 'web', target: 'core', result });
     });
   });
 
