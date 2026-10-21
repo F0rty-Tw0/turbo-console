@@ -25,8 +25,9 @@ describe('FEATURE: folderOf', () => {
   it.each([
     ['apps/web', 'apps'],
     ['packages/ui/button', 'packages/ui'],
-    ['tools', '(root)'],
-    ['', '(root)'],
+    ['tools', ''],
+    ['', ''],
+    ['(root)/a', '(root)'],
     ['__proto__/x', '__proto__']
   ])('GIVEN the path %j WHEN the folder is taken THEN it is %j', (path, expected) => {
     const folder = folderOf(path);
@@ -40,13 +41,27 @@ describe('FEATURE: folderGroupsOf', () => {
     it('WHEN grouped THEN the root group comes first, then folders by code unit', () => {
       const groups = folderGroupsOf(MIXED);
 
-      expect(groups.map((group) => group.folder)).toStrictEqual(['(root)', 'apps', 'packages/ui']);
+      expect(groups.map((group) => group.folder)).toStrictEqual(['', 'apps', 'packages/ui']);
     });
 
     it('WHEN grouped THEN the rows of each group are sorted by name', () => {
       const groups = folderGroupsOf(MIXED);
 
       expect(groups.map(namesOf)).toStrictEqual([['root-pkg', 'tools-pkg'], ['admin', 'web', 'zeta'], ['button']]);
+    });
+  });
+
+  describe('GIVEN a top-level folder named (root) and a package at the root', () => {
+    it('WHEN grouped THEN they land in two groups, the root one first', () => {
+      const rootPkg = pkgOf('a', 'a');
+      const folderPkg = pkgOf('b', '(root)/b');
+
+      const groups = folderGroupsOf([folderPkg, rootPkg]);
+
+      expect(groups).toStrictEqual([
+        { folder: '', packages: [rootPkg] },
+        { folder: '(root)', packages: [folderPkg] }
+      ]);
     });
   });
 

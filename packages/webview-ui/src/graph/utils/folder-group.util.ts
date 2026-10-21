@@ -1,6 +1,5 @@
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
-import { ROOT_FOLDER } from '../common/graph.const.ts';
 
 const byCodeUnit = (left: string, right: string): number => {
   if (left < right) return -1;
@@ -13,23 +12,23 @@ const byName = (left: GraphPackage, right: GraphPackage): number => byCodeUnit(l
 const byFolder = (left: FolderGroup, right: FolderGroup): number => {
   if (left.folder === right.folder) return 0;
 
-  if (left.folder === ROOT_FOLDER) return -1;
+  if (left.folder === '') return -1;
 
-  if (right.folder === ROOT_FOLDER) return 1;
+  if (right.folder === '') return 1;
 
   return byCodeUnit(left.folder, right.folder);
 };
 
-/** The path without its last `/` segment; `ROOT_FOLDER` when nothing remains. */
+/** The path without its last `/` segment; `''`, the root folder, when nothing remains. */
 export const folderOf = (path: string): string => {
   const cut = path.lastIndexOf('/');
 
-  if (cut <= 0) return ROOT_FOLDER;
+  if (cut <= 0) return '';
 
   return path.slice(0, cut);
 };
 
-/** One group per parent folder, `ROOT_FOLDER` first then by code unit, rows by name; the input is not changed. */
+/** One group per parent folder, the root folder `''` first then by code unit, rows by name; the input is not changed. */
 export const folderGroupsOf = (packages: GraphPackage[]): FolderGroup[] => {
   const byParent = new Map<string, GraphPackage[]>();
 

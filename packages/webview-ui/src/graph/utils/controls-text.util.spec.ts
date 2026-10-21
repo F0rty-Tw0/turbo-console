@@ -24,7 +24,7 @@ describe('FEATURE: controls text', () => {
       expect(title).toBe('(root)');
     });
 
-    it('WHEN the folder is the root folder THEN the title is the root folder', () => {
+    it('WHEN the folder is a real folder named (root) THEN the title is that name', () => {
       const title = folderTitleOf('(root)');
 
       expect(title).toBe('(root)');
