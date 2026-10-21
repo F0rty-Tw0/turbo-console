@@ -29,12 +29,19 @@ const selectorOf = (match: RegExpExecArray): string => {
 
 const bodyOf = (match: RegExpExecArray): string => match[2] ?? '';
 
-/** The first rule whose selector is exactly `selector`, ignoring whitespace. */
+const hasSelector = (rule: RegExpExecArray, selector: string): boolean => {
+  const list = selectorOf(rule);
+  const selectors = list.split(/\s*,\s*/);
+
+  return selectors.includes(selector);
+};
+
+/** The first rule whose selector list holds exactly `selector`, ignoring whitespace. */
 const ruleOf = (text: string, selector: string): RegExpExecArray | undefined => {
   const matches = text.matchAll(RULE_PATTERN);
   const rules = Array.from(matches);
 
-  return rules.find((rule) => selectorOf(rule) === selector);
+  return rules.find((rule) => hasSelector(rule, selector));
 };
 
 const declarationsOf = (text: string, selector: string): string => {
@@ -135,6 +142,25 @@ describe('FEATURE: graph.css', () => {
 
     it.each(['background', 'foreground', 'border', 'bottomBorder'])('WHEN it is read THEN it uses keybindingLabel-%s', (name) => {
       expect(declarations).toContain(`var(--vscode-keybindingLabel-${name})`);
+    });
+  });
+
+  describe('GIVEN the details panel views', () => {
+    it.each([
+      ['.excerpt-row.is-entry', 'var(--vscode-editor-selectionBackground)'],
+      ['.excerpt-row.is-entry', 'var(--vscode-editor-selectionForeground, var(--vscode-editor-foreground))'],
+      ['.excerpt-number', 'var(--vscode-editorLineNumber-foreground)'],
+      ['.icon-warning', 'var(--vscode-list-warningForeground, var(--vscode-editorWarning-foreground))'],
+      ['.icon-info', 'var(--vscode-editorInfo-foreground)'],
+      ['.details-lead', 'var(--tc-muted)'],
+      ['.primary-button', 'var(--vscode-button-background)'],
+      ['.details-tag', 'var(--vscode-badge-background)'],
+      ['.graph-hint', 'pointer-events: none'],
+      ['.graph-hint', 'position: absolute']
+    ])('WHEN the %s rule is read THEN it holds %s', (selector, expected) => {
+      const declarations = declarationsOf(css, selector);
+
+      expect(declarations).toContain(expected);
     });
   });
 

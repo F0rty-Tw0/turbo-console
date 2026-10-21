@@ -367,3 +367,374 @@ kbd {
     box-shadow: -2px 0 8px var(--vscode-widget-shadow);
   }
 }
+
+/* Details panel views */
+
+.details-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.details-view ul,
+.details-view ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.details-title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.details-heading {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.details-view[data-view='empty'] .details-heading {
+  font-size: 13px;
+}
+
+.details-view h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.details-path,
+.details-lead,
+.details-line,
+.details-muted,
+.details-steps,
+.trace-link,
+.details-mark {
+  color: var(--tc-muted);
+}
+
+.details-path,
+.details-code,
+.excerpt {
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.details-section,
+.details-footer {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.icon-button {
+  display: inline-grid;
+  flex: none;
+  place-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  color: inherit;
+  background: none;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.details-guide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.details-guide li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 2px var(--space-2);
+}
+
+.details-guide .codicon {
+  grid-row: span 2;
+  color: var(--tc-muted);
+}
+
+.details-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.details-tag {
+  padding: 1px 6px;
+  border-radius: 2px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  font-size: 12px;
+}
+
+.details-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.details-view[data-view='trace'] .details-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.details-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.details-row .text-button {
+  justify-content: center;
+  padding-inline: var(--space-1);
+  white-space: nowrap;
+}
+
+.primary-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: var(--radius);
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.details-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 2px 0;
+}
+
+/* `button.`: the link view's explain section carries the class too. */
+.details-name,
+button.details-explain {
+  padding: 0;
+  border: 0;
+  color: var(--vscode-textLink-foreground);
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.details-item .details-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.details-name[aria-disabled='true'],
+button.details-explain[aria-disabled='true'] {
+  cursor: default;
+}
+
+.details-mark,
+.details-status,
+.details-file {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.details-ends {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.details-explain-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.details-view h3.details-file {
+  color: var(--tc-muted);
+  font-weight: 400;
+}
+
+.icon-info {
+  color: var(--vscode-editorInfo-foreground);
+}
+
+.icon-warning {
+  color: var(--vscode-list-warningForeground, var(--vscode-editorWarning-foreground));
+}
+
+.details-entries {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: var(--space-3);
+}
+
+.details-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.excerpt {
+  align-self: stretch;
+  padding: var(--space-1) 0;
+  overflow-x: auto;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+  background: var(--vscode-editor-background);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: normal;
+}
+
+.excerpt-row {
+  display: flex;
+  gap: var(--space-2);
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--space-2);
+}
+
+.excerpt-number {
+  flex: none;
+  min-width: 2ch;
+  color: var(--vscode-editorLineNumber-foreground);
+  text-align: end;
+}
+
+.excerpt-text {
+  white-space: pre;
+}
+
+.excerpt-row.is-entry {
+  color: var(--vscode-editor-selectionForeground, var(--vscode-editor-foreground));
+  background: var(--vscode-editor-selectionBackground);
+}
+
+.excerpt-row.is-entry .excerpt-number {
+  color: inherit;
+}
+
+.details-filter {
+  padding: var(--space-1);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: var(--radius);
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  font: inherit;
+}
+
+.details-view > .text-button {
+  align-self: flex-start;
+}
+
+/* Trace steps: a rail of rings joined by a line, ends ringed in the focus colour, a ghost's ring dashed. */
+
+.trace-step {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: var(--space-2);
+}
+
+.trace-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--space-1);
+}
+
+.trace-rail::before {
+  content: '';
+  flex: none;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 2px solid var(--vscode-charts-blue);
+  border-radius: 50%;
+}
+
+.trace-step:not(:last-child) .trace-rail::after {
+  content: '';
+  flex: 1;
+  width: 2px;
+  min-height: 28px;
+  background: var(--vscode-charts-blue);
+}
+
+.trace-step.is-end .trace-rail::before {
+  border: 3px solid var(--vscode-focusBorder);
+}
+
+.trace-step.is-ghost .trace-rail::before {
+  border: 2px dashed var(--tc-muted);
+}
+
+.trace-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-2);
+}
+
+.trace-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.trace-link {
+  font-size: 12px;
+}
+
+/* Canvas hint while picking a trace end */
+
+.graph-hint {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+  color: var(--vscode-sideBar-foreground);
+  background: var(--vscode-sideBar-background);
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
