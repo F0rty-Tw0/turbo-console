@@ -86,6 +86,8 @@ describe('FEATURE: graph webview message validation', () => {
       ['a NaN x', { x: NaN, y: 0 }],
       ['an infinite y', { x: 0, y: Infinity }],
       ['an x below -1e7', { x: -1e7 - 1, y: 0 }],
+      ['an x past 1e7', { x: 1e7 + 1, y: 0 }],
+      ['a y below -1e7', { x: 0, y: -1e7 - 1 }],
       ['a y past 1e7', { x: 0, y: 1e7 + 1 }]
     ])('WHEN parsed THEN %s makes the message null', (_label, point) => {
       const positions = { a: point };
