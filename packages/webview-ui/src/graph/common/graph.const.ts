@@ -1,3 +1,4 @@
+import type { Column } from './roving.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 
 export const NODE_HEIGHT = 32;
@@ -81,3 +82,6 @@ export const DEPTH_LABEL = 'Focus depth';
 export const TAGS_LABEL = 'Tags';
 
 export const SHOW_ALL_LABEL = 'Show all';
+
+/** A package row's cells, left to right; the list keys move through them in this order. */
+export const COLUMNS: Column[] = ['check', 'name', 'focus'];

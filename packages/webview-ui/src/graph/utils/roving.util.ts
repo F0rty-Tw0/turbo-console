@@ -1,6 +1,5 @@
+import { COLUMNS } from '../common/graph.const.ts';
 import type { CellAt, Column, ListLine } from '../common/roving.type.ts';
-
-const COLUMNS: Column[] = ['check', 'name', 'focus'];
 
 const landingColumnOf = (from: ListLine, to: ListLine, at: CellAt, remembered: Column): Column => {
   if (to.kind === 'header') return 'check';
