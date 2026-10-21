@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { resolveTool, toolIconIdOf } from './tool-of.util.ts';
 import { TOOLS } from '../common/tool.const.ts';
@@ -22,7 +22,8 @@ const chainOf = (length: number): Record<string, string> => {
 };
 
 const FAN_OUT_SIZE = 14;
-const FAN_OUT_LIMIT_MS = 200;
+/** The resolver's expansion budget: it reads one script body per expansion and stops when the budget runs out. */
+const EXPANSION_BUDGET = 256;
 
 /** `size` scripts whose bodies all run every script: the paths multiply, no tool is ever reached. */
 const fanOutOf = (size: number): Record<string, string> => {
@@ -212,17 +213,20 @@ describe('FEATURE: tool detection', () => {
   });
 
   describe('GIVEN 14 scripts that each run all the others and none reach a tool', () => {
-    it('WHEN their shared body is resolved THEN the result is null, and it comes back quickly', () => {
+    describe('WHEN their shared body is resolved', () => {
       const bodies = fanOutOf(FAN_OUT_SIZE);
       const scripts = scriptsOf(bodies);
-      const command = bodies['s0'] ?? '';
-      const startedAt = performance.now();
+      const reads = vi.spyOn(scripts.bodies, 'get');
+      const found = resolveTool(bodies['s0'] ?? '', scripts);
+      const readCount = reads.mock.calls.length;
 
-      const found = resolveTool(command, scripts);
-      const elapsed = performance.now() - startedAt;
+      it('THEN the result is null', () => {
+        expect(found).toBeNull();
+      });
 
-      expect(found).toBeNull();
-      expect(elapsed).toBeLessThan(FAN_OUT_LIMIT_MS);
+      it('THEN it reads exactly the expansion budget of bodies', () => {
+        expect(readCount).toBe(EXPANSION_BUDGET);
+      });
     });
 
     it('WHEN a command runs one of them and then vitest THEN the whole call is null', () => {
@@ -233,10 +237,19 @@ describe('FEATURE: tool detection', () => {
   });
 
   describe(`GIVEN ci running ${WIDE_SIZE} tool-less scripts and then t: vitest`, () => {
-    it('WHEN npm run ci is resolved THEN it is Vitest via ci and t, within the expansion budget', () => {
-      const outcome = outcomeOf('npm run ci', scriptsOf(wideOf(WIDE_SIZE)));
+    describe('WHEN npm run ci is resolved', () => {
+      const scripts = scriptsOf(wideOf(WIDE_SIZE));
+      const reads = vi.spyOn(scripts.bodies, 'get');
+      const outcome = outcomeOf('npm run ci', scripts);
+      const readCount = reads.mock.calls.length;
 
-      expect(outcome).toStrictEqual(['vitest', ['ci', 't']]);
+      it('THEN it is Vitest via ci and t', () => {
+        expect(outcome).toStrictEqual(['vitest', ['ci', 't']]);
+      });
+
+      it('THEN it reads ci, every leaf and t once each, within the expansion budget', () => {
+        expect(readCount).toBe(WIDE_SIZE + 2);
+      });
     });
   });
 
