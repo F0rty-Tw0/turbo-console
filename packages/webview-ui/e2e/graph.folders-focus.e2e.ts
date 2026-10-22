@@ -29,6 +29,8 @@ const FOCUSED_APPS_VIEW = {
   packages: APPS_IDS
 };
 
+const APPS_VIEW = { ...FOCUSED_APPS_VIEW, buttons: ['Collapse', 'Focus folder', 'Exclude folder'] };
+
 const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => savedWith(BOARDS.hash, overrides);
 
 test.describe('FEATURE: folder focus', () => {
@@ -207,6 +209,31 @@ test.describe('FEATURE: folder focus', () => {
       await test.step('THEN web is inspected and the apps packages stay visible', async (): Promise<void> => {
         await graphDetails.expectInspection(packageInspection('web'));
         await graphGrouping.expectVisibleIds(APPS_IDS);
+      });
+    }
+  );
+
+  test(
+    'GIVEN the only visible folder inspected, Focus folder and Clear focus relabel its details button',
+    { annotation: C6 },
+    async ({ graphFolderInspect, graphGrouping, graphList }): Promise<void> => {
+      await test.step('WHEN the packages group is unchecked, apps tapped and Focus folder pressed', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphList.toggleGroup('packages (3)');
+        await graphGrouping.expectVisibleIds(APPS_IDS);
+        await graphFolderInspect.tapFolder('apps');
+        await graphFolderInspect.pressAction('Focus folder');
+      });
+
+      await test.step('THEN the details button and the apps header button read Clear focus', async (): Promise<void> => {
+        await graphFolderInspect.expectHeaderFocusText('apps', 'Clear focus');
+        await graphFolderInspect.expectFolderView(FOCUSED_APPS_VIEW);
+      });
+
+      await test.step('WHEN Clear focus is pressed THEN both read Focus again', async (): Promise<void> => {
+        await graphFolderInspect.pressAction('Clear focus');
+        await graphFolderInspect.expectHeaderFocusText('apps', 'Focus');
+        await graphFolderInspect.expectFolderView(APPS_VIEW);
       });
     }
   );

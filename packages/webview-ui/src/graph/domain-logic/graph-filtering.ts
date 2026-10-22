@@ -42,6 +42,7 @@ export class GraphFiltering {
       build,
       now,
       onVisibleChange: (visible): void => this.showVisible(visible),
+      onSameVisible: (): void => this.recheckFolder(),
       onSelect: (name): void => this.inspection.select(name),
       onFocusToggle: (name, setFilters): void => this.inspection.focused(name, setFilters),
       onOpenDetails: (): void => this.inspection.openDetails(),
@@ -150,10 +151,14 @@ export class GraphFiltering {
 
   /** A collapse or expand: the controls and the save follow, and an inspected folder's view relabels its Collapse or Expand. */
   private foldersChanged(): void {
-    const isFolder = this.inspection.current().kind === 'folder';
-
     this.controls.setCollapsed(this.folders.collapsed());
     this.inspection.saveViewport();
+    this.recheckFolder();
+  }
+
+  /** An inspected folder's view shows its collapse and focus, so it is built again after either changes; others stay. */
+  private recheckFolder(): void {
+    const isFolder = this.inspection.current().kind === 'folder';
 
     if (isFolder) this.inspection.recheck(this.controls.visible());
   }

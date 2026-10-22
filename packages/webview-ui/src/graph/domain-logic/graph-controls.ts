@@ -18,7 +18,8 @@ const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, depth: DEFAUL
 
 /**
  * The controls panel's state: the filters, the search, the focus depth and whether the panel is open. A listener
- * changes the state, renders it, reports a changed visible set, then asks for a save; `restore` reports nothing.
+ * changes the state, renders it, reports a changed visible set or a kept one, then asks for a save; `restore` reports
+ * nothing.
  */
 export class GraphControls {
   public applied = NO_FILTERS;
@@ -184,7 +185,8 @@ export class GraphControls {
 
     const isSame = sameMembers(before, this.shown);
 
-    if (!isSame) this.deps.onVisibleChange(this.shown);
+    if (isSame) this.deps.onSameVisible();
+    else this.deps.onVisibleChange(this.shown);
 
     this.deps.onSave();
   }

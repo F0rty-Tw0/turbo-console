@@ -40,6 +40,8 @@ export type GraphControlsDeps = {
   readonly now: () => number;
   /** Only when the visible set changed. */
   readonly onVisibleChange: (visible: ReadonlySet<string>) => void;
+  /** A filter change that left the visible set as it was: a view showing the filters, like a folder's Focus, relabels. */
+  readonly onSameVisible: () => void;
   /** A package name clicked, or chosen by key, in the list. */
   readonly onSelect: (name: string) => void;
   /** Every focus toggle: the new focus, or `null` when it was cleared; `setFilters` applies it, called once by the receiver. */
