@@ -78,7 +78,7 @@ test.describe('FEATURE: folder widget menus', () => {
   );
 
   test(
-    'GIVEN the apps "…" menu, the arrow keys move between its items, Escape closes it onto the "…" and a click outside closes it',
+    'GIVEN the apps "…" menu, the arrow keys move between its items, and Escape or a click on empty canvas closes it onto the "…"',
     { annotation: C9 },
     async ({ graphCanvas, graphFolderInspect, graphMenus }): Promise<void> => {
       await test.step('WHEN the grouped boards open and the apps "…" is pressed', async (): Promise<void> => {
@@ -108,7 +108,26 @@ test.describe('FEATURE: folder widget menus', () => {
         await graphCanvas.tapBackground();
       });
 
-      await test.step('THEN the menu is gone', async (): Promise<void> => graphMenus.expectNoMenu());
+      await test.step('THEN the menu is gone and focus is back on the apps "…"', async (): Promise<void> =>
+        graphMenus.expectFocusOnEllipsis('apps'));
+    }
+  );
+
+  test(
+    'GIVEN the apps "…" menu, a click on Fit closes it and leaves focus on Fit',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphMenus, graphPage }): Promise<void> => {
+      await test.step('WHEN the grouped boards open and the apps "…" is pressed', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphMenus.openFolderMenu('apps');
+      });
+
+      await test.step('AND Fit is clicked', async (): Promise<void> => graphPage.pressButton(FIT_LABEL));
+
+      await test.step('THEN the menu is gone and focus is on Fit', async (): Promise<void> => {
+        await graphMenus.expectNoMenu();
+        await graphPage.expectButtonFocused(FIT_LABEL);
+      });
     }
   );
 

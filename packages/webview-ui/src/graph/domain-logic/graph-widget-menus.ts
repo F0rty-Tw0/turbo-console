@@ -13,9 +13,18 @@ type OpenMenu = {
   readonly items: HTMLElement[];
 };
 
+/** An outside press's default action blurs to the body when it lands on nothing focusable; focus goes back. */
+const refocusIfLost = (returnTo: HTMLElement): void => {
+  const active = document.activeElement;
+  const isLost = active === null || active === document.body;
+
+  if (isLost) returnTo.focus();
+};
+
 /**
  * The folder and package menus over the canvas, at most one open. An item runs, then the menu closes; a close returns
- * focus to the target's shown "…", else to the container, and only when the focus was inside the menu.
+ * focus to the target's shown "…", else to the container, and only when the focus was inside the menu. A click
+ * outside keeps that return only when it lands on nothing focusable; a focusable control it lands on keeps the focus.
  */
 export class GraphWidgetMenus {
   private readonly deps: GraphWidgetMenusDeps;
@@ -143,8 +152,18 @@ export class GraphWidgetMenus {
 
     const path = event.composedPath();
     const isInside = path.includes(open.menu);
+    const hadFocus = open.menu.contains(document.activeElement);
 
-    if (!isInside) this.close();
+    if (isInside) return;
+
+    this.close();
+
+    const returnTo = document.activeElement;
+    const isElement = returnTo instanceof HTMLElement;
+
+    if (!hadFocus || !isElement) return;
+
+    document.addEventListener('pointerup', (): void => refocusIfLost(returnTo), { capture: true, once: true });
   }
 
   private anchorRectOf(target: MenuTarget, opener: HTMLButtonElement | null): RectPx | null {
