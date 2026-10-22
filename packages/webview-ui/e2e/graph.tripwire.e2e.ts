@@ -27,8 +27,17 @@ const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
 /** After Fit and the zoom to 120 px boxes, 9 of the 30 boxes of `largeState()` overlap the canvas; 6 leaves slack. */
 const BOXES_IN_VIEW = 6;
 
+/**
+ * About 290 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
+ * frame), so the budget sits between them with room for CI runners that measure up to 2.7x slower.
+ */
+const GROUPED_PAN_MS = 1100;
+
 /** Each sample toggles pkg-007 once, so an odd count leaves it hidden. */
 const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
+
+// Tracing snapshots the DOM on every mouse move, on the page's main thread, and that CPU lands inside the measured pan.
+test.use({ trace: 'off' });
 
 test.describe('FEATURE: graph tripwires', () => {
   test('GIVEN a 14-package target-like graph, the first frame lands under 2 s', async ({
@@ -104,7 +113,7 @@ test.describe('FEATURE: graph tripwires', () => {
     });
   });
 
-  test('GIVEN 300 packages grouped and zoomed to readable boxes, a scripted 2 s pan uses under 1.5 s of main-thread CPU and no step over 50 ms', async ({
+  test('GIVEN 300 packages grouped and zoomed to readable boxes, a scripted 2 s pan uses under 1.1 s of main-thread CPU and no step over 50 ms', async ({
     graphCanvas,
     graphGrouping,
     graphHost,
@@ -140,8 +149,8 @@ test.describe('FEATURE: graph tripwires', () => {
       await graphCanvas.scriptedPan(30, 120, spot);
     });
 
-    await test.step('THEN the pan used under 1500 ms of CPU and no step over 50 ms', (): void =>
-      graphCanvas.expectPanCpuUnder(1500, 50));
+    await test.step('THEN the pan used under 1100 ms of CPU and no step over 50 ms', (): void =>
+      graphCanvas.expectPanCpuUnder(GROUPED_PAN_MS, 50));
   });
 
   test(
