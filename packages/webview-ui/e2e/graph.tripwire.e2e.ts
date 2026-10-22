@@ -6,6 +6,7 @@ import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
+import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const AC6 = { description: 'M4-2 AC6', type: 'requirement' };
 
@@ -22,6 +23,9 @@ const BUILD_COUNTS = [300, 301, 300, 301, 300];
 const BUDGET_MS = 50;
 
 const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
+
+/** After Fit and the zoom to 120 px boxes, 9 of the 30 boxes of `largeState()` overlap the canvas; 6 leaves slack. */
+const BOXES_IN_VIEW = 6;
 
 /** Each sample toggles pkg-007 once, so an odd count leaves it hidden. */
 const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
@@ -61,6 +65,8 @@ test.describe('FEATURE: graph tripwires', () => {
       graphCanvas.expectPanCpuUnder(1500, 50));
   });
 
+  // The saved camera (zoom 1, pan at the origin) looks at an empty corner of the grouped layout, so this first frame
+  // times the grouped ELK run and the draw, not painting boxes in view; the grouped pan below frames the boxes first.
   test('GIVEN 300 packages saved as grouped, the grouped layout lands in under 2 s, is cached, and a second open runs no layout', async ({
     graphGrouping,
     graphHost,
@@ -115,10 +121,18 @@ test.describe('FEATURE: graph tripwires', () => {
       await graphGrouping.expectFolderCount(30);
     });
 
-    await test.step('WHEN the graph is zoomed until every box is at least 120 px wide', async (): Promise<void> => {
+    await test.step('WHEN Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> => {
+      await graphPage.pressButton(FIT_LABEL);
+      await graphCanvas.expectAllNodesInView();
+    });
+
+    await test.step('AND the graph is zoomed until every box is at least 120 px wide', async (): Promise<void> => {
       await graphGrouping.zoomBoxesTo(120);
       await graphGrouping.expectBoxesAtLeast(120);
     });
+
+    await test.step('THEN at least 6 boxes are in view, so the pan draws boxes', async (): Promise<void> =>
+      graphGrouping.expectBoxesInView(BOXES_IN_VIEW));
 
     await test.step('AND it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
       const spot = await graphGrouping.freeSpot();

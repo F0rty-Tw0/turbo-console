@@ -13,7 +13,7 @@ import { boxRectOf, folderKeyed, holdsCentre, membershipFaultsOf, overlapFaultsO
 import { freeSpotOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 
-const MAX_ZOOM_NOTCHES = 30;
+const MAX_ZOOM_NOTCHES = 60;
 
 const ZOOM_IN_NOTCH = -100;
 
@@ -75,7 +75,7 @@ export class GraphBoxesPage {
     return this.page.evaluate((): string[] => window.__tcGraphProbe?.visibleIds() ?? []);
   }
 
-  /** Wheels in one notch at a time, at most 30, until the narrowest box is `minWidthPx` wide. */
+  /** Wheels in one notch at a time, at most 60, until the narrowest box is `minWidthPx` wide. */
   public async zoomBoxesTo(minWidthPx: number): Promise<void> {
     for (let notch = 0; notch < MAX_ZOOM_NOTCHES; notch += 1) {
       const narrowest = await this.narrowestBox();

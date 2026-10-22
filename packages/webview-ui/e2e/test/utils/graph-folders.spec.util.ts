@@ -103,3 +103,18 @@ export const clipFaultsOf = (canvas: ElementRect, folders: ProbeFolder[]): strin
 
   return folders.filter(isClipped).map(nameOf);
 };
+
+/** How many boxes overlap the canvas at all, so a camera parked off the graph reads 0. */
+export const inViewCountOf = (canvas: ElementRect, folders: ProbeFolder[]): number => {
+  const isInView = (folder: ProbeFolder): boolean => {
+    const rect = boxRectOf(folder);
+    const isLeftOf = rect.left + rect.width < canvas.left;
+    const isAbove = rect.top + rect.height < canvas.top;
+    const isRightOf = rect.left > canvas.left + canvas.width;
+    const isBelow = rect.top > canvas.top + canvas.height;
+
+    return !(isLeftOf || isAbove || isRightOf || isBelow);
+  };
+
+  return folders.filter(isInView).length;
+};

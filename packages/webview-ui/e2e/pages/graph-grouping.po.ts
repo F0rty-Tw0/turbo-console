@@ -18,7 +18,7 @@ import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.
 import { ONE_FRAME } from '../common/graph.const.ts';
 import type { PositionsMessage } from '../common/graph.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { boxGrabOf, clipFaultsOf, folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
+import { boxGrabOf, clipFaultsOf, folderKeyed, inViewCountOf } from '../test/utils/graph-folders.spec.util.ts';
 import { positionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 
 const TOOLBAR_LABELS = [CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, CLEAR_LABEL];
@@ -140,11 +140,23 @@ export class GraphGroupingPage extends GraphBoxesPage {
     await expect.poll(async (): Promise<string[]> => this.clipFaults()).toEqual([]);
   }
 
+  /** At least `count` boxes overlap the canvas, so a timing run draws boxes rather than empty space. */
+  public async expectBoxesInView(count: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.boxesInView()).toBeGreaterThanOrEqual(count);
+  }
+
   private async clipFaults(): Promise<string[]> {
     const canvas = await this.container.evaluate(readRect);
     const folders = await this.folders();
 
     return clipFaultsOf(canvas, folders);
+  }
+
+  private async boxesInView(): Promise<number> {
+    const canvas = await this.container.evaluate(readRect);
+    const folders = await this.folders();
+
+    return inViewCountOf(canvas, folders);
   }
 
   private async isCanvasFitting(): Promise<boolean> {
