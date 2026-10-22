@@ -27,3 +27,7 @@ export const folderToggleTextOf = (isCollapsed: boolean): string => (isCollapsed
 
 export const folderToggleLabelOf = (title: string, isCollapsed: boolean): string =>
   `${folderToggleTextOf(isCollapsed)} folder ${title}`;
+
+export const folderFocusTextOf = (isFocus: boolean): string => (isFocus ? 'Clear focus' : 'Focus');
+
+export const folderFocusLabelOf = (title: string): string => `Focus folder ${title}`;

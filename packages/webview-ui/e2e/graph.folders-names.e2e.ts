@@ -37,15 +37,17 @@ const AWKWARD_LINKS: FolderLinkFacts[] = [
 
 const COLLAPSED_WALK: FocusStep[] = [
   { key: 'ArrowRight', focus: 'Expand folder apps' },
-  { key: 'ArrowRight', focus: 'Expand folder apps' }
+  { key: 'ArrowRight', focus: 'Focus folder apps' }
 ];
 
 const FLAT_WALK: FocusStep[] = [{ key: 'ArrowRight', focus: 'apps (2)' }];
 
 const GROUPED_WALK: FocusStep[] = [{ key: 'ArrowRight', focus: 'Collapse folder apps' }];
 
+const GROUPED_FOCUS_WALK: FocusStep[] = [...GROUPED_WALK, { key: 'ArrowRight', focus: 'Focus folder apps' }];
+
 test.describe('FEATURE: folder names and keys', () => {
-  test('GIVEN the collapsed boards list, ArrowRight reaches the header button once and Space and Enter press it', async ({
+  test('GIVEN the collapsed boards list, ArrowRight reaches the header button then the header Focus button and Space and Enter press the button', async ({
     graphFolders,
     graphGrouping,
     graphHost,
@@ -63,10 +65,14 @@ test.describe('FEATURE: folder names and keys', () => {
     const walked = await test.step('AND ArrowRight is pressed twice', async (): Promise<FocusStep[]> =>
       graphKeys.walk(COLLAPSED_WALK));
 
-    await test.step('THEN the header button took focus and the second press stayed on it', (): void =>
+    await test.step('THEN the header button took focus and the second press landed on the header Focus button', (): void =>
       expect(walked).toEqual(COLLAPSED_WALK));
 
-    await test.step('WHEN Space is pressed', async (): Promise<void> => graphKeys.press('Space'));
+    await test.step('WHEN ArrowLeft returns to the header button and Space is pressed', async (): Promise<void> => {
+      await graphKeys.press('ArrowLeft');
+      await graphKeys.expectFocusedName('Expand folder apps');
+      await graphKeys.press('Space');
+    });
 
     await test.step('THEN apps is expanded', async (): Promise<void> => {
       await graphGrouping.expectFolderCollapsed('apps', false);
@@ -105,7 +111,7 @@ test.describe('FEATURE: folder names and keys', () => {
     await test.step('THEN the header button took focus', (): void => expect(groupedWalk).toEqual(GROUPED_WALK));
   });
 
-  test('GIVEN the Tab stop on a header button, ungrouping gives the stop back to the list so Tab still reaches it', async ({
+  test('GIVEN the Tab stop on the header Focus button, ungrouping gives the stop back to the list so Tab still reaches it', async ({
     graphGrouping,
     graphHost,
     graphKeys,
@@ -119,13 +125,17 @@ test.describe('FEATURE: folder names and keys', () => {
       await graphKeys.tabTo('apps (2)');
     });
 
-    const walked = await test.step('AND ArrowRight is pressed', async (): Promise<FocusStep[]> => graphKeys.walk(GROUPED_WALK));
+    const walked = await test.step('AND ArrowRight is pressed twice', async (): Promise<FocusStep[]> =>
+      graphKeys.walk(GROUPED_FOCUS_WALK));
 
-    await test.step('THEN the Tab stop sits on the header button', (): void => expect(walked).toEqual(GROUPED_WALK));
+    await test.step('THEN the Tab stop sits on the header Focus button', (): void => expect(walked).toEqual(GROUPED_FOCUS_WALK));
 
     await test.step('WHEN Group by folder is unchecked', async (): Promise<void> => graphGrouping.setGrouped(false));
 
-    await test.step('THEN Tab reaches the apps group checkbox again', async (): Promise<void> => graphKeys.tabTo('apps (2)'));
+    await test.step('THEN the list is one Tab stop and Tab reaches the apps group checkbox again', async (): Promise<void> => {
+      await graphKeys.expectListTabStops(1);
+      await graphKeys.tabTo('apps (2)');
+    });
   });
 
   test(

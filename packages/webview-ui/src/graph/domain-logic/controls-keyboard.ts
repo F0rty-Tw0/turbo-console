@@ -63,6 +63,7 @@ export class ControlsKeyboard {
     for (const group of this.elements.groups) {
       group.check.tabIndex = -1;
       group.toggle.tabIndex = -1;
+      group.focus.tabIndex = -1;
 
       for (const { check, pick, focus } of group.rows) for (const cell of [check, pick, focus]) cell.tabIndex = -1;
     }

@@ -8,9 +8,9 @@ import type { ControlsMounted, ControlsView, GraphControlsDeps } from '../common
 import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import { DEFAULT_DEPTH } from '../common/graph.const.ts';
-import { depthOf, focusOn, isFiltered, sameMembers, showAllOf, toggleRow, withDepth } from '../utils/controls-rules.util.ts';
+import { focusFolderOn, focusOn, sameMembers } from '../utils/controls-rules.util.ts';
 import { folderGroupsOf, tagsOf } from '../utils/folder-group.util.ts';
-import { isShowable } from '../utils/ghost-show.util.ts';
+import { clearFolderFocusOf, excludeFolderOf, focusFolderOf, showFolderOf } from '../utils/folder-rules.util.ts';
 import { controlsFieldsOf, restoredFilters } from '../utils/restored-filters.util.ts';
 import { visibleOf } from '../utils/visibility.util.ts';
 
@@ -22,9 +22,9 @@ const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, depth: DEFAUL
  */
 export class GraphControls {
   public applied = NO_FILTERS;
+  public mounted: ControlsMounted | null = null;
 
   private readonly deps: GraphControlsDeps;
-  private mounted: ControlsMounted | null = null;
   private shown = new Set<string>();
   private search = '';
   private isOpen = true;
@@ -52,28 +52,6 @@ export class GraphControls {
 
   public fields(): Omit<ControlsViewFields, 'collapsed'> {
     return controlsFieldsOf(this.applied, this.search, this.isOpen, this.isGrouped);
-  }
-
-  /** The details panel's Focus: the list's Focus toggle on `name`. */
-  public focusOn(name: string): void {
-    if (this.mounted !== null) this.focus(this.mounted, name);
-  }
-
-  /** The details panel's Exclude: unticks `name`; the focused package stays, as in the list. */
-  public exclude(name: string): void {
-    if (this.mounted !== null) this.edit(this.mounted, toggleRow(this.applied, name, false));
-  }
-
-  /** The details panel's Show: re-ticks `name`, a hidden path package of the trace. */
-  public show(name: string): void {
-    if (this.mounted !== null) this.edit(this.mounted, toggleRow(this.applied, name, true));
-  }
-
-  /** Whether re-ticking `name` alone would draw it again. */
-  public canShow(name: string): boolean {
-    const graph = this.mounted?.graph ?? null;
-
-    return graph !== null && isShowable(graph.infos, graph.edges, this.applied, name);
   }
 
   public markSelected(name: string | null): void {
@@ -124,18 +102,31 @@ export class GraphControls {
     this.deps.onFocusToggle(focused, setFilters);
   }
 
-  public setDepth(mounted: ControlsMounted, text: string): void {
-    const depth = depthOf(text);
+  /** Expands `folder` so its packages are drawn, then focuses it as a filter change; it selects nothing. */
+  public focusFolder(folder: string): void {
+    if (this.mounted === null) return;
 
-    if (depth === null) return;
-
-    this.change(mounted, withDepth(this.applied, depth));
+    this.deps.onFolderFocus(folder);
+    this.edit(this.mounted, focusFolderOn(this.applied, folder));
   }
 
-  public showAll(mounted: ControlsMounted): void {
-    const isOn = isFiltered(this.applied);
+  /** Clears a folder focus only; a package focus is cleared by its own toggle. */
+  public clearFocus(): void {
+    if (this.mounted !== null) this.edit(this.mounted, clearFolderFocusOf(this.applied));
+  }
 
-    if (isOn) this.change(mounted, showAllOf(this.applied));
+  /** Unticks every package of `folder` as the group checkbox does; the focused package is skipped. */
+  public excludeFolder(folder: string): void {
+    if (this.mounted !== null) this.edit(this.mounted, excludeFolderOf(this.applied, this.mounted.graph.infos, folder));
+  }
+
+  /** The group checkbox twin: checks all when the folder is not fully checked, else unchecks all. */
+  public showFolder(folder: string): void {
+    if (this.mounted !== null) this.edit(this.mounted, showFolderOf(this.applied, this.mounted.graph.infos, folder));
+  }
+
+  public focusedFolder(): string | null {
+    return focusFolderOf(this.applied);
   }
 
   public setSearch(mounted: ControlsMounted, text: string): void {

@@ -1,3 +1,4 @@
+import { canShowRow, excludeRow, focusRow, showRow } from './graph-controls-rows.ts';
 import { GraphControls } from './graph-controls.ts';
 import { GraphFolders } from './graph-folders.ts';
 import { GraphInspection } from './graph-inspection.ts';
@@ -44,6 +45,7 @@ export class GraphFiltering {
       onOpenDetails: (): void => this.inspection.openDetails(),
       onGrouping,
       onToggleFolder: (folder): void => this.folders.toggle(folder),
+      onFolderFocus: (folder): void => this.folders.expand([folder]),
       onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
     };
@@ -57,10 +59,10 @@ export class GraphFiltering {
       focus: (): string | null => focusNameOf(this.controls.applied),
       controls: (): ControlsViewFields => this.fields(),
       onSelected: (name): void => this.controls.markSelected(name),
-      onFocusOn: (name): void => this.controls.focusOn(name),
-      onExclude: (name): void => this.controls.exclude(name),
-      onShow: (name): void => this.controls.show(name),
-      canShow: (name): boolean => this.controls.canShow(name),
+      onFocusOn: (name): void => focusRow(this.controls, name),
+      onExclude: (name): void => excludeRow(this.controls, name),
+      onShow: (name): void => showRow(this.controls, name),
+      canShow: (name): boolean => canShowRow(this.controls, name),
       folders: canvasFolders
     };
     const foldersDeps: GraphFoldersDeps = {

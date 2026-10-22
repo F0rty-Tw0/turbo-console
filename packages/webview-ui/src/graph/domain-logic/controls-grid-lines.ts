@@ -4,11 +4,13 @@ import type { CellAt, Column, GridCells, GridLine } from '../common/roving.type.
 
 const columnsOf = (cells: GridCells): Column[] => COLUMNS.filter((column) => cells[column] !== undefined);
 
-/** A header has the group checkbox, and the Expand or Collapse button while it is not hidden. */
+/** A header has the group checkbox, and the Expand or Collapse and Focus buttons while they are not hidden. */
 const headerLineOf = (group: ControlsGroup): GridLine => {
   const cells: GridCells = { check: group.check };
 
   if (!group.toggle.hidden) cells.name = group.toggle;
+
+  if (!group.focus.hidden) cells.focus = group.focus;
 
   const columns = columnsOf(cells);
   const line: GridLine = { kind: 'header', columns, cells, row: null };

@@ -7,13 +7,15 @@ export type ControlsRow = {
   readonly focus: HTMLButtonElement;
 };
 
-/** One folder of the list: its header line, group checkbox and Expand or Collapse button, then its rows in list order. */
+/** One folder of the list: its header line, group checkbox, Expand or Collapse button and Focus button, then its rows in list order. */
 export type ControlsGroup = {
   readonly folder: string;
   readonly line: HTMLElement;
   readonly check: HTMLInputElement;
   /** The header's Expand or Collapse button; `hidden` while the page is flat. */
   readonly toggle: HTMLButtonElement;
+  /** The header's Focus or Clear focus button; `hidden` while the page is flat. */
+  readonly focus: HTMLButtonElement;
   readonly rows: ControlsRow[];
 };
 

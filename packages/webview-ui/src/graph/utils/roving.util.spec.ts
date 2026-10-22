@@ -5,7 +5,7 @@ import type { CellAt, Column, ListLine } from '../common/roving.type.ts';
 
 const HEADER_FLAT: ListLine = { kind: 'header', columns: ['check'] };
 
-const HEADER_GROUPED: ListLine = { kind: 'header', columns: ['check', 'name'] };
+const HEADER_GROUPED: ListLine = { kind: 'header', columns: ['check', 'name', 'focus'] };
 
 const ROW: ListLine = { kind: 'row', columns: ['check', 'name', 'focus'] };
 
@@ -68,19 +68,37 @@ describe('FEATURE: nextCell', () => {
   describe('GIVEN a list of grouped headers and rows', () => {
     const GROUPED_MOVES: MoveCase[] = [
       ['ArrowRight', at(0, 'check'), 'name', at(0, 'name')],
-      ['ArrowRight', at(0, 'name'), 'name', null],
-      ['ArrowLeft', at(0, 'name'), 'name', at(0, 'check')],
-      ['ArrowDown', at(1, 'focus'), 'name', at(2, 'focus')],
-      ['ArrowUp', at(1, 'focus'), 'name', at(0, 'name')],
+      ['ArrowRight', at(0, 'name'), 'name', at(0, 'focus')],
+      ['ArrowRight', at(0, 'focus'), 'focus', null],
+      ['ArrowLeft', at(0, 'focus'), 'focus', at(0, 'name')],
+      ['ArrowLeft', at(0, 'check'), 'name', null],
+      ['ArrowDown', at(0, 'focus'), 'focus', at(1, 'focus')],
       ['ArrowDown', at(0, 'name'), 'name', at(1, 'name')],
-      ['ArrowDown', at(2, 'focus'), 'name', at(3, 'name')],
-      ['Home', at(4, 'focus'), 'focus', at(0, 'name')]
+      ['ArrowUp', at(1, 'focus'), 'focus', at(0, 'focus')],
+      ['ArrowUp', at(1, 'name'), 'name', at(0, 'name')],
+      ['ArrowDown', at(2, 'focus'), 'focus', at(3, 'focus')],
+      ['Home', at(4, 'focus'), 'focus', at(0, 'focus')],
+      ['End', at(0, 'check'), 'focus', at(4, 'check')]
     ];
 
     it.each(GROUPED_MOVES)('WHEN %j is pressed from %j with %s remembered THEN the move is %j', (key, from, remembered, expected) => {
       const cell = nextCell(GROUPED_LINES, from, key, remembered);
 
       expect(cell).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a flat header with one column', () => {
+    it('WHEN ArrowRight is pressed on it THEN there is no move', () => {
+      const cell = nextCell(LINES, at(0, 'check'), 'ArrowRight', 'name');
+
+      expect(cell).toBeNull();
+    });
+
+    it('WHEN ArrowDown is pressed from it with focus remembered THEN focus on the next row is reached', () => {
+      const cell = nextCell(LINES, at(0, 'check'), 'ArrowDown', 'focus');
+
+      expect(cell).toStrictEqual(at(1, 'focus'));
     });
   });
 
