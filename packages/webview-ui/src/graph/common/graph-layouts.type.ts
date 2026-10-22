@@ -41,4 +41,6 @@ export type GraphLayoutsDeps = {
   readonly onDrawn: (saved: GraphViewState | null) => void;
   /** After every placement on screen: cache, layout result, switch, Re-layout. */
   readonly onPlaced: (mode: LayoutGrouping) => void;
+  /** The checkbox turned grouping off, before the flat layout is placed. */
+  readonly onGroupingOff: () => void;
 };

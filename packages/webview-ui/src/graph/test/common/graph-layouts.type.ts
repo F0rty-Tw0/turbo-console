@@ -24,6 +24,7 @@ export type LayoutsRig = {
   readonly runs: LayoutRuns;
   readonly onDrawn: Mock<GraphLayoutsDeps['onDrawn']>;
   readonly onPlaced: Mock<GraphLayoutsDeps['onPlaced']>;
+  readonly onGroupingOff: Mock<GraphLayoutsDeps['onGroupingOff']>;
   /** Every message posted to the host so far, in order. */
   readonly posts: () => (WebviewMessage | GraphWebviewMessage)[];
   /** Sets what `deps.drawn()` answers: the drawn graph of `state`, or `null`. */

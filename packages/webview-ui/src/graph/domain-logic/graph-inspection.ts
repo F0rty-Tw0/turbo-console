@@ -1,21 +1,18 @@
 import { GraphDetails } from './graph-details.ts';
-import { detailsDepsOf, wireInspectionKeys } from './graph-inspection-details.ts';
+import { detailsDepsOf, folderActionsOf, postExplain, postOpenDetails, wireInspectionKeys } from './graph-inspection-details.ts';
+import { GraphInspectionFolders } from './graph-inspection-folders.ts';
 import { keepClearInspection } from './graph-keep-clear.ts';
 import { InspectionCanvas } from './inspection-canvas.ts';
 import { scheduleSave } from './inspection-save.ts';
+import { recheckedOf, restoredOf, shownPartsOf } from './inspection-shown.ts';
 import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { DetailsContext } from '../common/graph-details.type.ts';
-import type { CanvasShown, GraphInspectionDeps, InspectionSave, KeepClearDeps } from '../common/graph-inspection.type.ts';
+import type { FolderActions } from '../common/folder-actions.type.ts';
+import type { GraphInspectionDeps, InspectionSave, KeepClearDeps } from '../common/graph-inspection.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
-import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 import { focusInputOf, inputPlanOf, sameHashPlanOf } from '../utils/inspection-flow.util.ts';
-import { selectedOf, shownOf } from '../utils/inspection-parts.util.ts';
-import { recheckInspection } from '../utils/inspection-recheck.util.ts';
-import { restoredInspection } from '../utils/inspection-state.util.ts';
-import { inspectionTextOf } from '../utils/inspection-text.util.ts';
-import { showableNamesOf } from '../utils/showable.util.ts';
+import { selectedOf } from '../utils/inspection-parts.util.ts';
 
 /**
  * The live inspection and everything that shows it: the details panel, the canvas, the status line and
@@ -28,6 +25,7 @@ export class GraphInspection {
 
   private readonly deps: GraphInspectionDeps;
   private readonly details: GraphDetails;
+  private readonly reach: GraphInspectionFolders;
   private readonly timings = new Map<string, number>();
   private inspection: Inspection = NO_INSPECTION;
 
@@ -35,6 +33,7 @@ export class GraphInspection {
     this.deps = deps;
     this.canvas = new InspectionCanvas(deps.view, deps.folders);
     this.details = new GraphDetails(detailsDepsOf(deps, this));
+    this.reach = new GraphInspectionFolders(deps.folders);
     wireInspectionKeys(deps.page, this);
   }
 
@@ -85,6 +84,39 @@ export class GraphInspection {
     this.deps.page.container.focus();
   }
 
+  /** A tap on a box outside its packages or on a collapsed node; ignored while a mode switch waits, and while picking. */
+  public tapFolder(folder: string): void {
+    const canAct = this.deps.canAct();
+
+    if (!canAct) return;
+
+    this.input({ kind: 'selectFolder', folder });
+    this.deps.page.container.focus();
+  }
+
+  /** After `folder` collapsed from any source: an inspection inside it becomes the folder, kept clear like any change. */
+  public collapsed(folder: string): void {
+    const next = this.reach.afterCollapse(this.inspection, folder);
+
+    if (next === null) return;
+
+    this.apply(next, false);
+    this.keepClear();
+  }
+
+  /** Enter on the graph: toggles an inspected folder, else opens Package Details of the inspected package, if any. */
+  public enter(): void {
+    const { inspection } = this;
+
+    if (inspection.kind === 'folder') this.deps.folders.toggle(inspection.folder);
+    else this.openDetails();
+  }
+
+  /** The folder actions for widgets and menus, over the same calls as the details panel's folder buttons. */
+  public folderActions(): FolderActions {
+    return folderActionsOf(this.deps);
+  }
+
   /**
    * A list Focus toggle: selects the new focus, or only refreshes the views (picking, a cleared focus). The input is
    * read off the inspection before `setFilters` runs, so a picking the filter rule then drops selects nothing (§4.3).
@@ -105,25 +137,16 @@ export class GraphInspection {
 
   /** After a filter change: keeps, narrows or drops the inspection for the new visible set. */
   public recheck(visible: ReadonlySet<string>): void {
-    const drawn = this.deps.drawn();
+    const next = recheckedOf(this.deps, this.inspection, visible);
 
-    if (drawn === null) return;
-
-    const next = recheckInspection(this.inspection, visible, drawn.edges, null);
-
-    this.apply(next, false);
+    if (next !== null) this.apply(next, false);
   }
 
   /** Rebuilds the saved inspection, or none, for the placed graph; a restored link asks for its entry again. */
   public restore(saved: GraphViewState | null, visible: ReadonlySet<string>): void {
-    const drawn = this.deps.drawn();
+    const restored = restoredOf(this.deps, saved, visible);
 
-    if (drawn === null) return;
-
-    const state = saved ?? freshViewStateOf(drawn.hash);
-    const restored = restoredInspection(state, drawn.edges, visible, new Set<string>());
-
-    this.apply(restored, true);
+    if (restored !== null) this.apply(restored, true);
   }
 
   /** A same-hash state: relabels a shown package's task count in place, or asks again for a shown link's entry. */
@@ -133,12 +156,7 @@ export class GraphInspection {
 
     if (plan.isUpdate) this.apply(inspection, false);
 
-    if (plan.reask !== null) this.explain(plan.reask.source, plan.reask.target);
-  }
-
-  /** Asks the host for the manifest entry behind the link `source` → `target`. */
-  public explain(source: string, target: string): void {
-    this.deps.bridge.post({ type: 'explainEdge', source, target });
+    if (plan.reask !== null) postExplain(this.deps.bridge, plan.reask.source, plan.reask.target);
   }
 
   public explained(message: GraphEdgeExplainedMessage): void {
@@ -167,7 +185,7 @@ export class GraphInspection {
     scheduleSave(this.deps, shown);
   }
 
-  /** Enter on the graph: opens Package Details of the inspected package, if any. */
+  /** Opens Package Details of the inspected package, if any. */
   public openDetails(): void {
     const name = this.selected();
 
@@ -175,7 +193,7 @@ export class GraphInspection {
   }
 
   public openDetailsOf(name: string): void {
-    this.deps.bridge.post({ type: 'openDetails', packageName: name });
+    postOpenDetails(this.deps.bridge, name);
   }
 
   /** How long the latest inspection of `kind` took from being set to its details view shown; `null` until one did. */
@@ -183,27 +201,23 @@ export class GraphInspection {
     return this.timings.get(kind) ?? null;
   }
 
-  /** Shows `next` everywhere and saves it; `isRebuild` builds the details view again (a restore). */
+  /**
+   * Shows `next` everywhere and saves it; `isRebuild` builds the details view again (a restore). The collapsed folders
+   * holding its packages expand after its trace is known and before the canvas draws; the camera stays.
+   */
   private apply(next: Inspection, isRebuild: boolean): void {
     const { deps } = this;
-    const drawn = deps.drawn();
-
-    if (drawn === null) return;
-
     const started = deps.now();
-    const visible = deps.visible();
-    const details = shownOf(next, drawn.edges, visible);
-    const trace = details.kind === 'trace' ? details.trace : null;
-    const candidates = details.kind === 'picking' ? details.candidates : null;
-    const showable = showableNamesOf(trace?.path ?? [], visible, deps.canShow);
-    const context: DetailsContext = { drawn, visible, focus: deps.focus(), showable, isRebuild, scene: null, focusedFolder: null };
-    const canvas: CanvasShown = { inspection: next, drawn, visible, trace, candidates };
+    const shown = shownPartsOf(deps, next, isRebuild);
+
+    if (shown === null) return;
 
     this.inspection = next;
-    this.details.show(details, context);
+    this.details.show(shown.details, shown.context);
     this.timings.set(next.kind, deps.now() - started);
-    this.canvas.draw(canvas, isRebuild);
-    deps.page.status.textContent = inspectionTextOf(next, drawn.edges, trace, visible, null);
+    this.reach.reach(next, shown.canvas.trace);
+    this.canvas.draw(shown.canvas, isRebuild);
+    deps.page.status.textContent = shown.status;
     deps.page.clear.disabled = next.kind === 'none';
     deps.onSelected(selectedOf(next));
     this.save();

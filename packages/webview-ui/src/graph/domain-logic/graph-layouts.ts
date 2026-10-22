@@ -68,9 +68,14 @@ export class GraphLayouts {
     await this.layOut(mode);
   }
 
-  /** Places the mode's snapshot, or shows its progress text and lays it out, reusing a run of that mode in flight. */
+  /**
+   * Places the mode's snapshot, or shows its progress text and lays it out, reusing a run of that mode in flight. A switch
+   * to flat reports the grouping off first, at the click, before any layout lands.
+   */
   public async switchTo(next: LayoutGrouping): Promise<void> {
     if (!this.hasDrawn) return;
+
+    if (next === 'flat') this.deps.onGroupingOff();
 
     const plan = switchPlanOf(next, this.onScreen, this.snapshots.has(next));
 

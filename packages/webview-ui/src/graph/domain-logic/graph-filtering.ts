@@ -6,13 +6,15 @@ import type { GraphViewState } from '../../bridge/common/graph-view-state.type.t
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphControlsDeps, GraphFilteringDeps } from '../common/graph-controls.type.ts';
 import type { GraphFoldersDeps } from '../common/graph-folders.type.ts';
-import type { CanvasFolders, GraphInspectionDeps } from '../common/graph-inspection.type.ts';
+import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
-import type { Inspection } from '../common/inspection.type.ts';
+import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
 import { focusNameOf } from '../utils/controls-rules.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
+
+const CLEAR: InspectionInput = { kind: 'clear' };
 
 type FilteringFacts = Pick<
   ProbeFacts,
@@ -49,29 +51,29 @@ export class GraphFiltering {
       onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
     };
-    const canvasFolders: CanvasFolders = {
-      scene: (): FolderScene | null => this.folders.scene(),
-      show: (): void => this.folders.show()
-    };
     const inspectionDeps: GraphInspectionDeps = {
       ...deps,
       visible: (): ReadonlySet<string> => this.controls.visible(),
       focus: (): string | null => focusNameOf(this.controls.applied),
+      focusedFolder: (): string | null => this.controls.focusedFolder(),
       controls: (): ControlsViewFields => this.fields(),
       onSelected: (name): void => this.controls.markSelected(name),
       onFocusOn: (name): void => focusRow(this.controls, name),
       onExclude: (name): void => excludeRow(this.controls, name),
       onShow: (name): void => showRow(this.controls, name),
       canShow: (name): boolean => canShowRow(this.controls, name),
-      folders: canvasFolders
+      onFocusFolder: (folder): void => this.controls.focusFolder(folder),
+      onClearFocus: (): void => this.controls.clearFocus(),
+      onExcludeFolder: (folder): void => this.controls.excludeFolder(folder),
+      onShowFolder: (folder): void => this.controls.showFolder(folder),
+      folders: this.inspectionFolders()
     };
     const foldersDeps: GraphFoldersDeps = {
       ...deps,
       repaint: (scene): void => this.inspection.canvas.repaint(scene),
       visible: (): ReadonlySet<string> => this.controls.visible(),
       ghosts: (): string[] => this.inspection.canvas.ghostNodes(),
-      // Task 3.5 wires the collapse of an inspected folder here.
-      onCollapsed: (): void => undefined,
+      onCollapsed: (folder): void => this.inspection.collapsed(folder),
       onChange: (): void => this.foldersChanged()
     };
 
@@ -99,6 +101,15 @@ export class GraphFiltering {
     return visible;
   }
 
+  /** The Group by folder checkbox turned off, at the click: a folder inspection ends and a folder focus clears. */
+  public groupingOff(): void {
+    const isFolder = this.inspection.current().kind === 'folder';
+
+    if (isFolder) this.inspection.input(CLEAR);
+
+    this.controls.clearFocus();
+  }
+
   public facts(): FilteringFacts {
     const { inspection } = this;
     const facts: FilteringFacts = {
@@ -123,6 +134,18 @@ export class GraphFiltering {
     const fields: ControlsViewFields = { ...own, collapsed };
 
     return fields;
+  }
+
+  /** The folder hooks of the inspection, read when called: `folders` is built after the inspection. */
+  private inspectionFolders(): GraphInspectionDeps['folders'] {
+    const folders: GraphInspectionDeps['folders'] = {
+      scene: (): FolderScene | null => this.folders.scene(),
+      show: (): void => this.folders.show(),
+      expand: (names): void => this.folders.expand(names),
+      toggle: (folder): void => this.folders.toggle(folder)
+    };
+
+    return folders;
   }
 
   private foldersChanged(): void {
