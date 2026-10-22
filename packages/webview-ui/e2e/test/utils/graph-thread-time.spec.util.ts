@@ -21,7 +21,10 @@ export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>
   const session = await page.context().newCDPSession(page);
 
   try {
-    await session.send('Performance.enable');
+    // The default time domain starts the clock unchecked: on Windows, ThreadTime reads 0 until Chromium has timed the
+    // TSC rate over 50 ms, then jumps by all the CPU the thread used since it started (C44, two Windows CI failures).
+    // `threadTicks` makes Chromium wait for that timing before the clock's origin is taken.
+    await session.send('Performance.enable', { timeDomain: 'threadTicks' });
 
     const start = await threadTimeMs(session);
     const t0 = performance.now();
