@@ -3,7 +3,17 @@ import { describe, expect, it } from 'vitest';
 import { nextCell } from './roving.util.ts';
 import type { CellAt, Column, ListLine } from '../common/roving.type.ts';
 
-const LINES: ListLine[] = [{ kind: 'header' }, { kind: 'row' }, { kind: 'row' }, { kind: 'header' }, { kind: 'row' }];
+const HEADER_FLAT: ListLine = { kind: 'header', columns: ['check'] };
+
+const HEADER_GROUPED: ListLine = { kind: 'header', columns: ['check', 'name'] };
+
+const ROW: ListLine = { kind: 'row', columns: ['check', 'name', 'focus'] };
+
+const LINES: ListLine[] = [HEADER_FLAT, ROW, ROW, HEADER_FLAT, ROW];
+
+const GROUPED_LINES: ListLine[] = [HEADER_GROUPED, ROW, ROW, HEADER_GROUPED, ROW];
+
+const NAME_ONLY_LINES: ListLine[] = [HEADER_FLAT, { kind: 'row', columns: ['name', 'focus'] }, { kind: 'row', columns: [] }];
 
 const at = (line: number, column: Column): CellAt => {
   const cell: CellAt = { line, column };
@@ -30,6 +40,7 @@ const MOVES: MoveCase[] = [
   ['ArrowRight', at(1, 'name'), 'name', at(1, 'focus')],
   ['ArrowRight', at(1, 'focus'), 'focus', null],
   ['ArrowRight', at(0, 'check'), 'name', null],
+  ['ArrowRight', at(0, 'focus'), 'name', null],
   ['ArrowLeft', at(1, 'focus'), 'focus', at(1, 'name')],
   ['ArrowLeft', at(1, 'name'), 'name', at(1, 'check')],
   ['ArrowLeft', at(1, 'check'), 'name', null],
@@ -49,6 +60,39 @@ describe('FEATURE: nextCell', () => {
 
     it('WHEN ArrowUp is pressed from a line past the end THEN there is no move', () => {
       const cell = nextCell(LINES, at(9, 'name'), 'ArrowUp', 'name');
+
+      expect(cell).toBeNull();
+    });
+  });
+
+  describe('GIVEN a list of grouped headers and rows', () => {
+    const GROUPED_MOVES: MoveCase[] = [
+      ['ArrowRight', at(0, 'check'), 'name', at(0, 'name')],
+      ['ArrowRight', at(0, 'name'), 'name', null],
+      ['ArrowLeft', at(0, 'name'), 'name', at(0, 'check')],
+      ['ArrowDown', at(1, 'focus'), 'name', at(2, 'focus')],
+      ['ArrowUp', at(1, 'focus'), 'name', at(0, 'name')],
+      ['ArrowDown', at(0, 'name'), 'name', at(1, 'name')],
+      ['ArrowDown', at(2, 'focus'), 'name', at(3, 'name')],
+      ['Home', at(4, 'focus'), 'focus', at(0, 'name')]
+    ];
+
+    it.each(GROUPED_MOVES)('WHEN %j is pressed from %j with %s remembered THEN the move is %j', (key, from, remembered, expected) => {
+      const cell = nextCell(GROUPED_LINES, from, key, remembered);
+
+      expect(cell).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN lines whose columns do not include the one wanted', () => {
+    it('WHEN the target line starts after the wanted column THEN it lands on the first column', () => {
+      const cell = nextCell(NAME_ONLY_LINES, at(0, 'check'), 'ArrowDown', 'check');
+
+      expect(cell).toStrictEqual(at(1, 'name'));
+    });
+
+    it('WHEN the target line has no columns THEN there is no move', () => {
+      const cell = nextCell(NAME_ONLY_LINES, at(1, 'name'), 'ArrowDown', 'name');
 
       expect(cell).toBeNull();
     });

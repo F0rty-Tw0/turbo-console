@@ -43,6 +43,10 @@ export class GraphControlsKeys {
     await this.pressUntil('ArrowDown', name);
   }
 
+  public async press(key: string): Promise<void> {
+    await this.page.keyboard.press(key);
+  }
+
   public async type(text: string): Promise<void> {
     await this.page.keyboard.type(text);
   }

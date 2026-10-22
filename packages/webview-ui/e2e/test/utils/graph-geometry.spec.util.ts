@@ -33,7 +33,9 @@ export const nodeAt = (id: string, renderedX: number, renderedY: number): ProbeN
     fill: '',
     isGhost: false,
     borderStyle: 'solid',
-    effectiveOpacity: 1
+    effectiveOpacity: 1,
+    isVisible: true,
+    isCollapsed: false
   };
 
   return node;

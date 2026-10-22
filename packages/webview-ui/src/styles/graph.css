@@ -294,13 +294,15 @@ p {
   border-radius: var(--radius);
 }
 
-.controls-row .controls-cell:nth-child(2) {
+.controls-row .controls-cell:nth-child(2),
+.controls-header .controls-cell:first-child {
   flex: 1;
   min-width: 0;
 }
 
 .controls-name,
-.controls-focus {
+.controls-focus,
+.controls-toggle {
   padding: 0;
   border: 0;
   color: inherit;
@@ -317,8 +319,13 @@ p {
   white-space: nowrap;
 }
 
-.controls-focus {
+.controls-focus,
+.controls-toggle {
   color: var(--vscode-textLink-foreground);
+}
+
+.controls-toggle {
+  font-weight: 400;
 }
 
 .controls-folder {

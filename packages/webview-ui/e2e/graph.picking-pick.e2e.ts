@@ -162,4 +162,26 @@ test.describe('FEATURE: graph trace candidate pick', () => {
       await test.step('AND the picking view is shown', async (): Promise<void> => graphTrace.expectPicking('web'));
     }
   );
+
+  test('GIVEN a trace being picked from web, double-tapping web posts openDetails for web and keeps picking', async ({
+    graphCanvas,
+    graphDetails,
+    graphHost,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+    await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
+
+    await test.step('AND web is tapped', async (): Promise<void> => graphCanvas.tapNode('web'));
+
+    await test.step('AND Start trace is pressed', async (): Promise<void> => graphDetails.startTrace());
+
+    await test.step('AND web is double-tapped', async (): Promise<void> => graphCanvas.doubleTapNode('web'));
+
+    await test.step('THEN the host received openDetails for web', async (): Promise<void> => graphHost.expectOpenDetails('web'));
+
+    await test.step('AND web is still being picked from', async (): Promise<void> =>
+      graphDetails.expectInspection(pickingInspection('web', false)));
+  });
 });

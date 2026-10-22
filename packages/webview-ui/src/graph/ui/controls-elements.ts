@@ -4,7 +4,14 @@ import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import { DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common/graph.const.ts';
-import { countTextOf, focusLabelOf, folderTitleOf, groupLabelOf, showLabelOf } from '../utils/controls-text.util.ts';
+import {
+  countTextOf,
+  focusLabelOf,
+  folderTitleOf,
+  folderToggleTextOf,
+  groupLabelOf,
+  showLabelOf
+} from '../utils/controls-text.util.ts';
 
 /** A checked list checkbox, out of the Tab order: the list is one Tab stop with a roving focus. */
 const listCheck = (label: string): HTMLInputElement => {
@@ -62,8 +69,9 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
 };
 
 /**
- * One header cell: the group checkbox and the folder title with its total package count. The title repeats the
- * checkbox's name, so it is hidden from the accessibility tree and the row is named once.
+ * One header: a cell with the group checkbox and the folder title with its total package count, then a cell with the
+ * Expand or Collapse button. The title repeats the checkbox's name, so it is hidden from the accessibility tree and the
+ * row is named once. `renderControls` sets the button's text, label and `hidden`.
  */
 const folderGroup = (group: FolderGroup): ControlsGroup => {
   const { folder, packages } = group;
@@ -71,10 +79,13 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   const label = groupLabelOf(title, packages.length);
   const check = listCheck(label);
   const text = textElement('span', 'controls-folder', label);
-  const cell = gridCell(check, text);
-  const line = gridLine('controls-header', [cell]);
+  const toggle = listButton('controls-toggle', folderToggleTextOf(false));
+  const cells = [gridCell(check, text), gridCell(toggle)];
+  const line = gridLine('controls-header', cells);
   const rows = packages.map(packageRow);
-  const controlsGroup: ControlsGroup = { folder, line, check, rows };
+  const controlsGroup: ControlsGroup = { folder, line, check, toggle, rows };
+
+  toggle.hidden = true;
 
   text.setAttribute('aria-hidden', 'true');
 

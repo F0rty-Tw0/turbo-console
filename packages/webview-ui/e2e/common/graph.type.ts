@@ -116,7 +116,12 @@ export type GuideLine = {
   readonly text: string;
 };
 
+/** The timing fact a set of samples was read from. */
+export type SampleType =
+  'collapse-ms' | 'controls-built-ms' | 'details-built-ms' | 'expand-ms' | 'filter-applied-ms' | 'picking-built-ms' | 'trace-ms';
+
 /** A node centre as `[name, x, y]`. */
+
 export type PositionRow = readonly [string, number, number];
 
 export type NeighbourGroup = 'Direct dependencies' | 'Direct dependents';

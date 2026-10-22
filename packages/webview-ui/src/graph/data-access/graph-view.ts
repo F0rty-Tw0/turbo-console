@@ -3,6 +3,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 
 import { setBoxes } from './graph-boxes.ts';
 import { anchorBoxOf, panBy } from './graph-camera.ts';
+import { createFoldersView } from './graph-folders-view.ts';
 import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
 import { applyPaint } from './graph-paint.ts';
@@ -11,6 +12,7 @@ import { graphStyleOf } from './graph-style.ts';
 import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
+import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
 import type { GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
@@ -54,7 +56,7 @@ const drawGraph = (cy: Core, nodes: ElementDefinition[], edges: GraphEdge[]): vo
 };
 
 /** Cytoscape on `container` with the preset layout (positions are node centres) and the canvas renderer. */
-export const createGraphView = (container: HTMLElement, handlers: GraphViewHandlers, fontFamily: string): GraphView => {
+const cytoscapeOn = (container: HTMLElement): Core => {
   const layout = { name: 'preset' };
   const renderer = { name: 'canvas' };
   const options = {
@@ -66,7 +68,14 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     autounselectify: true,
     boxSelectionEnabled: false
   };
-  const cy = cytoscape(options);
+
+  return cytoscape(options);
+};
+
+/** The page's canvas view: Cytoscape, the folder pass over it and the canvas events reported to `handlers`. */
+export const createGraphView = (container: HTMLElement, handlers: GraphViewHandlers, fontFamily: string): GraphView => {
+  const cy = cytoscapeOn(container);
+  const folders = createFoldersView(cy);
   const setGraph = (packages: string[], edges: GraphEdge[], placed: Positions, sizeOf: NodeSizer): void => {
     const nodes = nodeDefinitionsOf(packages, placed, sizeOf);
 
@@ -85,9 +94,17 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     cy.resize();
     cy.viewport({ zoom, pan });
   };
+  const paint = (next: Paint): void => {
+    applyPaint(cy, next);
+    folders.paint(next);
+  };
+  const setPositions = (placed: Positions): void => {
+    placeNodes(cy, placed);
+    folders.recentre();
+  };
   const view: GraphView = {
     setGraph,
-    paint: (paint: Paint): void => applyPaint(cy, paint),
+    paint,
     fit,
     setVisible: (visible: ReadonlySet<string>): void => showOnly(cy, visible),
     setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>): void => setGhosts(cy, marks, visible),
@@ -98,12 +115,14 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     viewport,
     setViewport,
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
-    setPositions: (placed: Positions): void => placeNodes(cy, placed),
+    setPositions,
+    showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
     cy: (): Core => cy
   };
 
   listen(cy, handlers);
+  cy.on('dragfreeon', 'node', (): void => folders.recentre());
 
   return view;
 };

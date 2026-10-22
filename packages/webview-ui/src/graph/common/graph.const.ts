@@ -9,6 +9,9 @@ export const NODE_PADDING_X = 24;
 /** Label size in px, for both `measureText` and Cytoscape. */
 export const NODE_FONT_SIZE = 13;
 
+/** The four state classes `GraphView.paint` gives; an element has exactly one of them once painted. */
+export const STATE_CLASSES = 'selected highlighted dimmed normal';
+
 /** The class `GraphView.setGhosts` gives a trace's hidden path packages and their path links. */
 export const GHOST_CLASS = 'ghost';
 
@@ -88,6 +91,34 @@ export const ELK_OPTIONS: Readonly<Record<string, string>> = {
 /** Starts every folder box id, in Cytoscape and ELK alike; package names never start with U+0001. */
 export const FOLDER_ID_PREFIX = '\u0001';
 
+/** Starts every collapsed folder node id; package names never start with U+0002. */
+export const COLLAPSED_ID_PREFIX = '\u0002';
+
+/** Starts every folder link id; package names never start with U+0003. */
+export const FOLDER_LINK_ID_PREFIX = '\u0003';
+
+export const COLLAPSED_NODE_WIDTH = 180;
+
+export const COLLAPSED_NODE_HEIGHT = 56;
+
+/** Widest a collapsed node's title may be, in raw text px, before it is cut with an ellipsis. */
+export const COLLAPSED_LABEL_MAX_PX = 116;
+
+/** The node drawn in place of a collapsed folder's box and packages. */
+export const FOLDER_NODE_CLASS = 'folder-node';
+
+/** The edge drawn for the package links between a collapsed folder and another drawn end, merged. */
+export const FOLDER_LINK_CLASS = 'folder-link';
+
+/** A box or package link the folder pass hides: the stylesheet gives it `display: none`, which `resetGhosts` never clears. */
+export const FOLDER_HIDDEN_CLASS = 'folder-hidden';
+
+/** A collapsed folder's box, hidden with its packages while the collapsed node stands in for it. */
+export const BOX_COLLAPSED_CLASS = 'box-collapsed';
+
+/** A dimmed box: frame, label and fill fade, never `opacity`, which a compound multiplies into its packages. */
+export const DIMMED_BOX_CLASS = 'dimmed-box';
+
 /** Room ELK leaves around a folder's packages, and Cytoscape's compound padding, in px. */
 export const FOLDER_PADDING_PX = 32;
 
@@ -131,3 +162,6 @@ export const COLUMNS: Column[] = ['check', 'name', 'focus'];
 
 /** The gap kept between anchor nodes and the details overlay's left edge. */
 export const KEEP_CLEAR_MARGIN_PX = 16;
+
+/** A graph with more packages than this opens grouped with every folder collapsed, when nothing is saved for it. */
+export const LARGE_GRAPH_PACKAGES = 300;

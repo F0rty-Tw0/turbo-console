@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { controlsLabelOf, countTextOf, focusLabelOf, folderTitleOf, groupLabelOf, showLabelOf } from './controls-text.util.ts';
+import {
+  controlsLabelOf,
+  countTextOf,
+  focusLabelOf,
+  folderTitleOf,
+  folderToggleLabelOf,
+  folderToggleTextOf,
+  groupLabelOf,
+  showLabelOf
+} from './controls-text.util.ts';
 
 describe('FEATURE: controls text', () => {
   describe('GIVEN a folder group header', () => {
@@ -68,6 +77,28 @@ describe('FEATURE: controls text', () => {
       const label = controlsLabelOf(true);
 
       expect(label).toBe('Controls (filters on)');
+    });
+  });
+
+  describe('GIVEN a folder header toggle', () => {
+    it.each([
+      ['collapsed', true, 'Expand'],
+      ['expanded', false, 'Collapse']
+    ])('WHEN the folder is %s THEN the text is %s', (_name, isCollapsed, expected) => {
+      const text = folderToggleTextOf(isCollapsed);
+
+      expect(text).toBe(expected);
+    });
+
+    it.each([
+      ['apps', true, 'Expand folder apps'],
+      ['apps', false, 'Collapse folder apps'],
+      ['(root)', true, 'Expand folder (root)'],
+      ['./(root)', true, 'Expand folder ./(root)']
+    ])('WHEN the title is %s and collapsed is %s THEN the label is %s', (title, isCollapsed, expected) => {
+      const label = folderToggleLabelOf(title, isCollapsed);
+
+      expect(label).toBe(expected);
     });
   });
 

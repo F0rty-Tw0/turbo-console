@@ -35,11 +35,11 @@ const APPS_GROUP: FolderGroup = { folder: 'apps', packages: [packageOf('a'), pac
 
 const PACKAGES_GROUP: FolderGroup = { folder: 'packages', packages: [packageOf('c')] };
 
-/**
- * `apps` holds `a` and `b`, `packages` holds `c`, the root folder holds `d`; `__proto__` is in no group, because Cytoscape
- * 3.34 `remove()` skips that id (a plain-object lookup), so `move` cannot re-link it to a parent.
- */
+/** `apps` holds `a` and `b`, `packages` holds `c`, the root folder holds `d`; `__proto__` is in no group. */
 export const BOX_GROUPS_STUB: FolderGroup[] = [ROOT_GROUP, APPS_GROUP, PACKAGES_GROUP];
+
+/** One folder holding the two package names that are keys of `Object.prototype`: the drawn `__proto__` and `constructor`. */
+export const PROTO_NAMES_GROUP_STUB: FolderGroup = { folder: 'tools', packages: [packageOf('__proto__'), packageOf('constructor')] };
 
 /** A group naming a package that is not drawn. */
 export const GONE_GROUP_STUB: FolderGroup = { folder: 'apps', packages: [packageOf('gone')] };

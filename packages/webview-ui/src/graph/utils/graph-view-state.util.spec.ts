@@ -38,7 +38,8 @@ const VALID: GraphViewState = {
   detailsOpen: false,
   link: LINK_REF,
   trace: TRACE_REF,
-  grouped: true
+  grouped: true,
+  collapsed: ['apps', '__proto__']
 };
 
 const CAMERA = { hash: 'h', zoom: 1.5, pan: PAN, selected: 'web' };
@@ -54,7 +55,8 @@ const DEFAULTED: GraphViewState = {
   detailsOpen: true,
   link: null,
   trace: null,
-  grouped: false
+  grouped: false,
+  collapsed: []
 };
 
 const ORIGIN: Position = { x: 0, y: 0 };
@@ -140,6 +142,20 @@ describe('FEATURE: readGraphViewState', () => {
       const state = readGraphViewState({ ...CAMERA, ...saved });
 
       expect(state?.grouped).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a state with a saved collapsed value', () => {
+    it.each([
+      ['a folder list', ['apps', '(root)'], { collapsed: ['apps', '(root)'] }],
+      ['an empty list', [], { collapsed: [] }],
+      ['missing', [], {}],
+      ['a string', [], { collapsed: 'apps' }],
+      ['a list with a number', [], { collapsed: [1] }]
+    ])('WHEN it is %s THEN collapsed reads %j', (_name, expected, saved) => {
+      const state = readGraphViewState({ ...CAMERA, ...saved });
+
+      expect(state?.collapsed).toStrictEqual(expected);
     });
   });
 

@@ -6,7 +6,9 @@ export type ProbeState = 'selected' | 'highlighted' | 'dimmed' | 'normal';
 /**
  * `x`, `y` are model centres; `renderedX`, `renderedY` the centre in page CSS pixels; colours are Cytoscape's `rgb(...)`.
  * `effectiveOpacity` is Cytoscape's `node.effectiveOpacity()`: the node's opacity times its ancestors'.
- * A ghost (a trace's hidden path package) reads `highlighted` plus `isGhost`.
+ * A ghost (a trace's hidden path package) reads `highlighted` plus `isGhost`. `isVisible` is the filter sense: the
+ * package's own `display` is `element` and it is no ghost, so a package inside a collapsed folder stays visible;
+ * `isCollapsed` says its folder box is collapsed.
  */
 export type ProbeNode = {
   readonly id: string;
@@ -23,6 +25,8 @@ export type ProbeNode = {
   readonly isGhost: boolean;
   readonly borderStyle: string;
   readonly effectiveOpacity: number;
+  readonly isVisible: boolean;
+  readonly isCollapsed: boolean;
 };
 
 export type ProbeEdge = {
@@ -36,8 +40,9 @@ export type ProbeEdge = {
 };
 
 /**
- * A folder box: `folder` is the key (`''` the root); the rect is the box's centre and size in page CSS pixels, as
- * `ProbeNode`'s; `packages` lists all the folder's packages by name, hidden ones included.
+ * A folder box: `folder` is the key (`''` the root); `state` and the rect (centre and size in page CSS pixels, as
+ * `ProbeNode`'s) come from the box while expanded and from the collapsed node while collapsed, 0 when it is not drawn;
+ * `packages` lists all the folder's packages by name, hidden ones included.
  */
 export type ProbeFolder = {
   readonly folder: string;
@@ -49,6 +54,17 @@ export type ProbeFolder = {
   readonly renderedWidth: number;
   readonly renderedHeight: number;
   readonly packages: string[];
+};
+
+/** A drawn folder link: an end reads the folder key when it is a collapsed folder, else the package name. */
+export type ProbeFolderLink = {
+  readonly source: string;
+  readonly target: string;
+  /** The package links it stands for. */
+  readonly count: number;
+  /** Cytoscape's `visible()`. */
+  readonly isDrawn: boolean;
+  readonly state: ProbeState;
 };
 
 export type LayoutEngine = 'elk' | 'cache' | 'fallback';
@@ -65,12 +81,16 @@ export type GraphProbe = {
   /** From the latest `graph` state's message event to the first Cytoscape `render` after it; `null` until that render. */
   readonly firstFrameMs: () => number | null;
   readonly layoutEngine: () => LayoutEngine | null;
-  /** The package names Cytoscape draws, sorted, ghosts left out: nodes a filter hides are `display: none`. */
+  /** The package names the filters leave visible, sorted, ghosts left out: a package in a collapsed folder stays in. */
   readonly visibleIds: () => string[];
   /** Whether the page shows the packages in folder boxes. */
   readonly grouped: () => boolean;
   /** The folder boxes sorted by key (`''` first); `[]` while the graph is flat. */
   readonly folders: () => ProbeFolder[];
+  /** The drawn folder links in drawing order. */
+  readonly folderLinks: () => ProbeFolderLink[];
+  /** From the latest collapse or expand to the first frame drawn after it; `null` until that frame. */
+  readonly toggleMs: () => number | null;
   /** From the latest `graph` state's message event to its controls panel built and restored; `null` until then. */
   readonly controlsBuiltMs: () => number | null;
   /** From the latest filter input to the return of the fit after it; `null` until an input changed the visible set. */
@@ -98,6 +118,7 @@ export type ProbeFacts = Pick<
   | 'detailsBuiltMs'
   | 'pickingBuiltMs'
   | 'traceMs'
+  | 'toggleMs'
 >;
 
 /* eslint-disable @typescript-eslint/naming-convention -- the e2e tests set and read these exact names on window */

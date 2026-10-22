@@ -8,8 +8,10 @@ import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView, Graph
 import type { LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
+import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
+import { openingStateOf } from '../utils/grouping-open.util.ts';
 import { groupingOf } from '../utils/layout-plan.util.ts';
 import { taskCountsDiffer } from '../utils/task-counts.util.ts';
 import { restorePlanOf } from '../utils/view-restore.util.ts';
@@ -25,6 +27,8 @@ class GraphPageController {
   private readonly filtering: GraphFiltering;
   private readonly layouts: GraphLayouts;
   private drawn: DrawnGraph | null = null;
+  private opening: GraphViewState | null = null;
+  private hasShownGraph = false;
 
   public constructor(deps: GraphControllerDeps) {
     const { bridge, page } = deps;
@@ -33,10 +37,14 @@ class GraphPageController {
       onTapEdge: (source: string, target: string): void => this.filtering.inspection.tapEdge(source, target),
       onTapBackground: (): void => this.filtering.inspection.input(BACKGROUND),
       onTapFolder: (): void => undefined,
-      onDoubleTapNode: (): void => this.filtering.inspection.openDetails(),
+      onDoubleTapNode: (name: string): void => this.filtering.inspection.openDetailsOf(name),
+      onDoubleTapFolder: (folder: string): void => this.filtering.folders.toggle(folder),
       onDragEnd: (positions: Positions): void => this.layouts.dragged(positions),
       onViewport: (): void => this.filtering.inspection.saveViewport(),
-      onRender: (): void => this.frames.mark()
+      onRender: (): void => {
+        this.frames.mark();
+        this.filtering.folders.rendered();
+      }
     };
 
     this.deps = deps;
@@ -46,7 +54,9 @@ class GraphPageController {
       ...deps,
       view: this.view,
       drawn: (): DrawnGraph | null => this.drawn,
-      onGrouping: (isGrouped: boolean): void => this.switchGrouping(isGrouped)
+      onGrouping: (isGrouped: boolean): void => this.switchGrouping(isGrouped),
+      isGrouped: (): boolean => this.layouts.drawnMode() === 'folders',
+      canAct: (): boolean => this.layouts.mode() === 'folders' && this.layouts.drawnMode() === 'folders'
     });
     this.layouts = new GraphLayouts({
       ...deps,
@@ -54,7 +64,7 @@ class GraphPageController {
       view: this.view,
       drawn: (): DrawnGraph | null => this.drawn,
       onDrawn: (saved: GraphViewState | null): void => this.afterDraw(saved),
-      onPlaced: (): void => undefined
+      onPlaced: (): void => this.filtering.folders.redraw()
     });
     page.fit.addEventListener('click', (): void => this.view.fit());
     page.relayout.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.layouts.relayout()));
@@ -106,8 +116,12 @@ class GraphPageController {
     }
 
     const raw = this.deps.bridge.savedState();
-    const saved = readGraphViewState(raw);
+    const read = readGraphViewState(raw);
+    const folders = folderKeysOf(state.packages);
+    const saved = openingStateOf(read, state.hash, folders, state.packages.length, this.hasShownGraph);
 
+    this.opening = saved === read ? null : saved;
+    this.hasShownGraph = true;
     this.drawn = drawnGraphOf(state);
     this.frames.start(at);
     this.filtering.inspection.reset();
@@ -120,7 +134,8 @@ class GraphPageController {
 
     if (drawn === null) return;
 
-    const plan = restorePlanOf(saved, drawn.hash);
+    const camera = saved === this.opening ? null : saved;
+    const plan = restorePlanOf(camera, drawn.hash);
 
     this.frames.arm();
 

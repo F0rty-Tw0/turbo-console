@@ -38,7 +38,7 @@ export const restoredFilters = (state: GraphViewState, graph: DrawnGraph): Resto
   return restored;
 };
 
-/** The controls part of the saved view state: the inverse of `restoredFilters`; the focus is saved by name only. */
+/** The controls part of the saved view state: the inverse of `restoredFilters`, without `collapsed` (the folders own it); the focus is saved by name only. */
 export const controlsFieldsOf = (
   filters: GraphFilters,
   search: string,
@@ -46,9 +46,9 @@ export const controlsFieldsOf = (
   isOpen: boolean,
   isGrouped: boolean
   // eslint-disable-next-line max-params -- five until `depth` moves into `GraphFilters`, leaving four
-): ControlsViewFields => {
+): Omit<ControlsViewFields, 'collapsed'> => {
   const { hidden, focus, tags } = filters;
-  const fields: ControlsViewFields = {
+  const fields: Omit<ControlsViewFields, 'collapsed'> = {
     controlsOpen: isOpen,
     search,
     depth,

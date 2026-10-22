@@ -124,9 +124,10 @@ describe('FEATURE: GraphLayouts', () => {
   });
 
   describe('GIVEN both layouts cached and flat dragged', () => {
-    it('WHEN the reader switches to grouped and back THEN each switch places its snapshot and fits', () => {
+    it('WHEN the reader switches to grouped and back THEN each switch places its snapshot, runs the folder pass and then fits', () => {
       harness.open(CACHED_BOTH, null);
       harness.layouts.dragged(DRAGGED_POSITIONS_STUB);
+      harness.onPlaced.mockClear();
 
       void harness.layouts.switchTo('folders');
       void harness.layouts.switchTo('flat');
@@ -135,6 +136,7 @@ describe('FEATURE: GraphLayouts', () => {
       expect(harness.view.setGrouping).toHaveBeenLastCalledWith(null);
       expect(harness.view.setPositions).toHaveBeenLastCalledWith(DRAGGED_POSITIONS_STUB);
       expect(harness.view.fit).toHaveBeenCalledTimes(2);
+      expect(harness.onPlaced).toHaveBeenCalledBefore(harness.view.fit);
     });
   });
 

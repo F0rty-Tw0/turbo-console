@@ -1,23 +1,20 @@
 import type { EdgeSingular, NodeSingular } from 'cytoscape';
 
-import { packageNodes } from './graph-boxes.ts';
-import { probeFoldersOf } from './graph-probe-folders.ts';
+import { packageEdges, packageNodes } from './graph-boxes.ts';
+import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
+import { probeStateOf } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
-import type { GraphProbe, ProbeEdge, ProbeFacts, ProbeFolder, ProbeHost, ProbeNode, ProbeState } from '../common/graph-probe.type.ts';
-import { GHOST_CLASS } from '../common/graph.const.ts';
-
-const stateOf = (element: NodeSingular | EdgeSingular): ProbeState => {
-  const isSelected = element.hasClass('selected');
-  const isHighlighted = element.hasClass('highlighted');
-  const isDimmed = element.hasClass('dimmed');
-
-  if (isSelected) return 'selected';
-
-  if (isHighlighted) return 'highlighted';
-
-  return isDimmed ? 'dimmed' : 'normal';
-};
+import type {
+  GraphProbe,
+  ProbeEdge,
+  ProbeFacts,
+  ProbeFolder,
+  ProbeFolderLink,
+  ProbeHost,
+  ProbeNode
+} from '../common/graph-probe.type.ts';
+import { BOX_COLLAPSED_CLASS, GHOST_CLASS } from '../common/graph.const.ts';
 
 /** A resolved style value as text; Cytoscape types `style(name)` as `any`. */
 const styleText = (element: NodeSingular | EdgeSingular, name: string): string => {
@@ -28,13 +25,20 @@ const styleText = (element: NodeSingular | EdgeSingular, name: string): string =
 
 const idOf = (node: NodeSingular): string => node.id();
 
+/** The filter sense: the package's own `display` is `element` and it is no ghost; a collapsed folder's box hides it, not this. */
+const isFilterVisible = (node: NodeSingular): boolean => {
+  const isShown = styleText(node, 'display') === 'element';
+
+  return isShown && !node.hasClass(GHOST_CLASS);
+};
+
 const probeEdgeOf = (edge: EdgeSingular): ProbeEdge => {
   const source = edge.source().id();
   const target = edge.target().id();
   const probeEdge: ProbeEdge = {
     source,
     target,
-    state: stateOf(edge),
+    state: probeStateOf(edge),
     isGhost: edge.hasClass(GHOST_CLASS),
     isDrawn: edge.visible(),
     lineStyle: styleText(edge, 'line-style')
@@ -52,6 +56,7 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
   const frame = styleText(node, 'border-color');
   const label = styleText(node, 'color');
   const fill = styleText(node, 'background-color');
+  const isCollapsed = node.parent().is(`.${BOX_COLLAPSED_CLASS}`);
   const probeNode: ProbeNode = {
     id: node.id(),
     x,
@@ -60,13 +65,15 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     renderedY,
     width: node.width(),
     height: node.height(),
-    state: stateOf(node),
+    state: probeStateOf(node),
     frame,
     label,
     fill,
     isGhost: node.hasClass(GHOST_CLASS),
     borderStyle: styleText(node, 'border-style'),
-    effectiveOpacity: node.effectiveOpacity()
+    effectiveOpacity: node.effectiveOpacity(),
+    isVisible: isFilterVisible(node),
+    isCollapsed
   };
 
   return probeNode;
@@ -86,15 +93,16 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
 
     return packageNodes(view.cy()).map(withOrigin);
   };
-  const edges = (): ProbeEdge[] => view.cy().edges().map(probeEdgeOf);
+  const edges = (): ProbeEdge[] => packageEdges(view.cy()).map(probeEdgeOf);
   const visibleIds = (): string[] => {
-    const ids = packageNodes(view.cy()).filter(':visible').not(`.${GHOST_CLASS}`).map(idOf);
+    const ids = packageNodes(view.cy()).filter(isFilterVisible).map(idOf);
 
     return ids.sort();
   };
   const folders = (): ProbeFolder[] => probeFoldersOf(view.cy(), originOf());
+  const folderLinks = (): ProbeFolderLink[] => probeFolderLinksOf(view.cy());
   const edgeColor = (): string => {
-    const first = view.cy().edges().first();
+    const first = packageEdges(view.cy()).first();
     const isNone = first.empty();
 
     if (isNone) return '';
@@ -103,7 +111,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
   };
   const zoom = (): number => view.viewport().zoom;
   const pan = (): Position => view.viewport().pan;
-  const probe: GraphProbe = { ...facts, nodes, edges, visibleIds, folders, edgeColor, zoom, pan };
+  const probe: GraphProbe = { ...facts, nodes, edges, visibleIds, folders, folderLinks, edgeColor, zoom, pan };
 
   return probe;
 };

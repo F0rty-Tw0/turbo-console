@@ -3,7 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { enterActionOf, entryCellOf, firstSelectableOf } from './list-keys.util.ts';
 import type { CellAt, Column, ListLine } from '../common/roving.type.ts';
 
-const LINES: ListLine[] = [{ kind: 'header' }, { kind: 'row' }, { kind: 'row' }];
+const HEADER_FLAT: ListLine = { kind: 'header', columns: ['check'] };
+
+const HEADER_GROUPED: ListLine = { kind: 'header', columns: ['check', 'name'] };
+
+const ROW: ListLine = { kind: 'row', columns: ['check', 'name', 'focus'] };
+
+const LINES: ListLine[] = [HEADER_FLAT, ROW, ROW];
+
+const GROUPED_LINES: ListLine[] = [HEADER_GROUPED, ROW, ROW];
 
 const at = (line: number, column: Column): CellAt => {
   const cell: CellAt = { line, column };
@@ -31,8 +39,22 @@ describe('FEATURE: entryCellOf', () => {
       expect(cell).toStrictEqual(at(2, 'focus'));
     });
 
-    it('WHEN the remembered cell is a name button on a header THEN it is the first checkbox', () => {
+    it('WHEN the remembered cell is a name button on a flat header THEN it is the first checkbox', () => {
       const cell = entryCellOf(LINES, at(0, 'name'));
+
+      expect(cell).toStrictEqual(at(0, 'check'));
+    });
+  });
+
+  describe('GIVEN a grouped header and two rows', () => {
+    it('WHEN the remembered cell is the header toggle THEN it is kept', () => {
+      const cell = entryCellOf(GROUPED_LINES, at(0, 'name'));
+
+      expect(cell).toStrictEqual(at(0, 'name'));
+    });
+
+    it('WHEN the remembered cell is a focus button on the header THEN it is the first checkbox', () => {
+      const cell = entryCellOf(GROUPED_LINES, at(0, 'focus'));
 
       expect(cell).toStrictEqual(at(0, 'check'));
     });

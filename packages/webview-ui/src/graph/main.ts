@@ -1,5 +1,5 @@
 import type { DetailsViews } from './common/details.type.ts';
-import type { GraphViewFactory, NodeSizer } from './common/graph-page.type.ts';
+import type { GraphViewFactory, NodeSizer, TextMeasure } from './common/graph-page.type.ts';
 import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { NodeSize } from './common/node-size.type.ts';
 // Imported before any module that loads Cytoscape: elk-client creates the one `tc-elk` policy as it loads.
@@ -27,21 +27,25 @@ import { createBridge } from '../bridge/data-access/create-bridge.ts';
 // Canvas `ctx.font` cannot resolve `var(--vscode-font-family)`, so labels are measured in the body's computed family.
 const fontFamily = getComputedStyle(document.body).fontFamily;
 
-const labelSizer = (): NodeSizer => {
+const textMeasure = (): TextMeasure => {
   const context = document.createElement('canvas').getContext('2d');
 
   if (context === null) throw new Error('graph page: no 2d canvas context to measure labels');
 
   context.font = `${NODE_FONT_SIZE}px ${fontFamily}`;
 
-  const sizeOf = (name: string): NodeSize => {
-    const { width } = context.measureText(name);
+  const measure = (text: string): number => context.measureText(text).width;
 
-    return nodeSizeOf(width);
-  };
+  return measure;
+};
+
+const labelSizer = (measure: TextMeasure): NodeSizer => {
+  const sizeOf = (name: string): NodeSize => nodeSizeOf(measure(name));
 
   return sizeOf;
 };
+
+const measure = textMeasure();
 
 const bridge = createBridge();
 const page = buildPage();
@@ -71,7 +75,8 @@ const controller = createGraphController({
   createView,
   runner,
   saver,
-  sizeOf: labelSizer(),
+  sizeOf: labelSizer(measure),
+  measure,
   now,
   build: buildControls,
   views,

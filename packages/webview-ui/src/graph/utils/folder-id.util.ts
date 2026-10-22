@@ -1,4 +1,4 @@
-import { FOLDER_ID_PREFIX } from '../common/graph.const.ts';
+import { COLLAPSED_ID_PREFIX, FOLDER_ID_PREFIX, FOLDER_LINK_ID_PREFIX } from '../common/graph.const.ts';
 
 const LAST_RESERVED_CODE_UNIT = 3;
 
@@ -11,4 +11,21 @@ export const isPackageId = (id: string): boolean => {
   const isReserved = first <= LAST_RESERVED_CODE_UNIT;
 
   return !isReserved;
+};
+
+/** The collapsed folder node id: the prefix plus the folder key, apart from `folderIdOf` and every package name. */
+export const collapsedIdOf = (folder: string): string => `${COLLAPSED_ID_PREFIX}${folder}`;
+
+/** The folder link id; `source` and `target` are element ids, and U+0000 cannot occur in either. */
+export const folderLinkIdOf = (source: string, target: string): string => `${FOLDER_LINK_ID_PREFIX}${source}\u0000${target}`;
+
+/** The folder key of a box or collapsed node id; `null` for a package, edge or folder link id. */
+export const folderOfElementId = (id: string): string | null => {
+  const isBox = id.startsWith(FOLDER_ID_PREFIX);
+  const isCollapsed = id.startsWith(COLLAPSED_ID_PREFIX);
+  const isFolderId = isBox || isCollapsed;
+
+  if (!isFolderId) return null;
+
+  return id.slice(FOLDER_ID_PREFIX.length);
 };

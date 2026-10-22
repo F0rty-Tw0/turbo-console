@@ -19,6 +19,7 @@ import { ONE_FRAME } from '../common/graph.const.ts';
 import type { PositionsMessage } from '../common/graph.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { boxGrabOf, clipFaultsOf, folderKeyed, inViewCountOf } from '../test/utils/graph-folders.spec.util.ts';
+import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { positionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 
 const TOOLBAR_LABELS = [CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, CLEAR_LABEL];
@@ -102,6 +103,11 @@ export class GraphGroupingPage extends GraphBoxesPage {
     await expect.poll(async (): Promise<boolean | null> => this.savedGrouped()).toBe(isOn);
   }
 
+  /** The view state the page saved holds exactly these collapsed folders, in any order. */
+  public async expectCollapsedSaved(folders: string[]): Promise<void> {
+    await expect.poll(async (): Promise<string[] | null> => this.savedCollapsed()).toEqual(sortedNames(folders));
+  }
+
   /** The notice shows exactly `text`, or is hidden for `null`. */
   public async expectNotice(text: string | null): Promise<void> {
     if (text === null) {
@@ -140,6 +146,11 @@ export class GraphGroupingPage extends GraphBoxesPage {
     await expect.poll(async (): Promise<string[]> => this.clipFaults()).toEqual([]);
   }
 
+  /** Every drawn folder, box or collapsed node, lies inside the canvas, none cut at its edge. */
+  public async expectFoldersInsideCanvas(): Promise<void> {
+    await expect.poll(async (): Promise<string[]> => this.clipFaults()).toEqual([]);
+  }
+
   /** At least `count` boxes overlap the canvas, so a timing run draws boxes rather than empty space. */
   public async expectBoxesInView(count: number): Promise<void> {
     await expect.poll(async (): Promise<number> => this.boxesInView()).toBeGreaterThanOrEqual(count);
@@ -172,6 +183,15 @@ export class GraphGroupingPage extends GraphBoxesPage {
     const raw = await this.page.evaluate((): unknown => window.__state);
 
     return readGraphViewState(raw)?.grouped ?? null;
+  }
+
+  private async savedCollapsed(): Promise<string[] | null> {
+    const raw = await this.page.evaluate((): unknown => window.__state);
+    const collapsed = readGraphViewState(raw)?.collapsed;
+
+    if (collapsed === undefined) return null;
+
+    return sortedNames(collapsed);
   }
 
   private async groupedFact(): Promise<boolean | null> {

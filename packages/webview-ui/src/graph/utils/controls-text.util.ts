@@ -22,3 +22,8 @@ export const controlsLabelOf = (isFiltered: boolean): string => {
 export const showLabelOf = (name: string): string => `Show ${name}`;
 
 export const focusLabelOf = (name: string): string => `Focus ${name}`;
+
+export const folderToggleTextOf = (isCollapsed: boolean): string => (isCollapsed ? 'Expand' : 'Collapse');
+
+export const folderToggleLabelOf = (title: string, isCollapsed: boolean): string =>
+  `${folderToggleTextOf(isCollapsed)} folder ${title}`;

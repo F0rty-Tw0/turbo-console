@@ -1,11 +1,29 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import elkConstructor from 'elkjs/lib/elk.bundled.js';
 
-import type { Position, Positions } from '../../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphPackage, Position, Positions } from '../../../bridge/common/graph-state.type.ts';
+import type { FolderScene } from '../../common/folder-scene.type.ts';
+import type { DrawnGraph } from '../../common/graph-page.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import { groupedElkGraphOf } from '../../utils/elk-grouped-graph.util.ts';
+import { folderSceneOf } from '../../utils/folder-scene.util.ts';
 import type { ElkRect } from '../common/folder-boards.type.ts';
 import { BOARDS_EDGES_STUB, BOARDS_GROUPS_STUB, BOARDS_SIZE_STUB } from '../stubs/folder-boards.stub.ts';
+
+/** The boards fixture's packages in the order docs, web, @acme/config, @acme/ui, @acme/utils. */
+export const BOARDS_INFOS: GraphPackage[] = BOARDS_GROUPS_STUB.flatMap((group) => group.packages);
+
+export const BOARDS_EDGES: GraphEdge[] = BOARDS_EDGES_STUB;
+
+export const BOARDS_NAMES: string[] = BOARDS_INFOS.map((pkg) => pkg.name);
+
+/** The boards fixture as the page's drawn graph. */
+export const BOARDS_DRAWN: DrawnGraph = { hash: 'boards', packages: BOARDS_NAMES, infos: BOARDS_INFOS, edges: BOARDS_EDGES };
+
+/** The boards fixture as a folder scene; `visible` defaults to every package. */
+export const boardsSceneOf = (collapsed: string[], visible?: string[], ghosts: string[] = []): FolderScene => {
+  return folderSceneOf(BOARDS_INFOS, BOARDS_EDGES, new Set(collapsed), new Set(visible ?? BOARDS_NAMES), new Set(ghosts));
+};
 
 export const boardsSizeOf = (): NodeSize => BOARDS_SIZE_STUB;
 

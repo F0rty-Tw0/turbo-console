@@ -1,65 +1,9 @@
-import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
-import type { KeyboardDeps } from '../common/graph-controls.type.ts';
-import { COLUMNS } from '../common/graph.const.ts';
-import type { CellAt, Column, ListLine } from '../common/roving.type.ts';
+import { cellAtOf, elementAt, gridLinesOf } from './controls-grid-lines.ts';
+import type { ControlsElements, ControlsRow } from '../common/controls-elements.type.ts';
+import type { GraphControlsDeps, KeyboardDeps } from '../common/graph-controls.type.ts';
+import type { CellAt, Column, GridLine } from '../common/roving.type.ts';
 import { enterActionOf, entryCellOf, firstSelectableOf } from '../utils/list-keys.util.ts';
 import { nextCell } from '../utils/roving.util.ts';
-
-type GridCells = Partial<Record<Column, HTMLElement>>;
-
-/** A listed line with its cells; `row` is null for a group header. */
-type GridLine = {
-  readonly kind: ListLine['kind'];
-  readonly cells: GridCells;
-  readonly row: ControlsRow | null;
-};
-
-const headerLineOf = (group: ControlsGroup): GridLine => {
-  const cells: GridCells = { check: group.check };
-  const line: GridLine = { kind: 'header', cells, row: null };
-
-  return line;
-};
-
-const rowLineOf = (row: ControlsRow): GridLine => {
-  const cells: GridCells = { check: row.check, name: row.pick, focus: row.focus };
-  const line: GridLine = { kind: 'row', cells, row };
-
-  return line;
-};
-
-/** The headers and rows the search leaves in the list, in DOM order. */
-const gridLinesOf = (elements: ControlsElements): GridLine[] => {
-  const lines: GridLine[] = [];
-
-  for (const group of elements.groups) {
-    if (group.line.hidden) continue;
-
-    const listed = group.rows.filter((row) => !row.line.hidden);
-    const header = headerLineOf(group);
-    const rowLines = listed.map(rowLineOf);
-
-    lines.push(header, ...rowLines);
-  }
-
-  return lines;
-};
-
-const cellAtOf = (lines: GridLine[], target: EventTarget | null): CellAt | null => {
-  for (const [line, gridLine] of lines.entries()) {
-    const column = COLUMNS.find((candidate) => gridLine.cells[candidate] === target);
-
-    if (column === undefined) continue;
-
-    const at: CellAt = { line, column };
-
-    return at;
-  }
-
-  return null;
-};
-
-const elementAt = (lines: GridLine[], at: CellAt): HTMLElement | undefined => lines[at.line]?.cells[at.column];
 
 const isActivation = (key: string): boolean => key === 'Enter' || key === ' ';
 
@@ -71,10 +15,21 @@ const namesOf = (lines: GridLine[]): string[] => {
   return names;
 };
 
+/** What the list keys ask: the controls' own deps, the visible test and the selection. */
+export const keyboardDepsOf = (
+  deps: GraphControlsDeps,
+  isVisible: KeyboardDeps['isVisible'],
+  selected: KeyboardDeps['selected']
+): KeyboardDeps => {
+  const keyboardDeps: KeyboardDeps = { ...deps, isVisible, selected };
+
+  return keyboardDeps;
+};
+
 /**
  * The package list's roving-tabindex grid and the search box's list keys. The list is one Tab stop, `cell`; every
- * other cell stays at `tabindex=-1`. It listens to the search `input` after `GraphControls` does, so the lines it
- * re-derives are the ones the search just left in.
+ * other cell stays at `tabindex=-1`. It listens to the search and Group by folder `input` after `GraphControls` does,
+ * so the lines it re-derives are the ones the search left in and the header buttons the checkbox left shown.
  */
 export class ControlsKeyboard {
   private readonly elements: ControlsElements;
@@ -89,6 +44,7 @@ export class ControlsKeyboard {
     elements.list.addEventListener('focusin', (event): void => this.onFocusIn(event));
     elements.search.addEventListener('keydown', (event): void => this.onSearchKey(event));
     elements.search.addEventListener('input', (): void => this.refresh());
+    elements.grouping.addEventListener('input', (): void => this.refresh());
     this.refresh();
   }
 
@@ -106,6 +62,7 @@ export class ControlsKeyboard {
   private clearStops(): void {
     for (const group of this.elements.groups) {
       group.check.tabIndex = -1;
+      group.toggle.tabIndex = -1;
 
       for (const { check, pick, focus } of group.rows) for (const cell of [check, pick, focus]) cell.tabIndex = -1;
     }

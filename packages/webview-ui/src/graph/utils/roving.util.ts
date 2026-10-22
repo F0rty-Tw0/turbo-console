@@ -1,10 +1,19 @@
 import { COLUMNS } from '../common/graph.const.ts';
 import type { CellAt, Column, ListLine } from '../common/roving.type.ts';
 
-const landingColumnOf = (from: ListLine, to: ListLine, at: CellAt, remembered: Column): Column => {
-  if (to.kind === 'header') return 'check';
+/** The column kept when `to` has it, else the last of its columns at or before it in `COLUMNS`, else its first. */
+const landingColumnOf = (from: ListLine, to: ListLine, at: CellAt, remembered: Column): Column | undefined => {
+  const wanted = from.columns.length === 1 ? remembered : at.column;
 
-  return from.kind === 'row' ? at.column : remembered;
+  const isKept = to.columns.includes(wanted);
+
+  if (isKept) return wanted;
+
+  const wantedIndex = COLUMNS.indexOf(wanted);
+  const isAtOrBefore = (column: Column): boolean => COLUMNS.indexOf(column) <= wantedIndex;
+  const before = to.columns.filter(isAtOrBefore);
+
+  return before.at(-1) ?? to.columns[0];
 };
 
 const lineMove = (lines: ListLine[], at: CellAt, target: number, remembered: Column): CellAt | null => {
@@ -15,6 +24,9 @@ const lineMove = (lines: ListLine[], at: CellAt, target: number, remembered: Col
   if (from === undefined || to === undefined || !isMove) return null;
 
   const column = landingColumnOf(from, to, at, remembered);
+
+  if (column === undefined) return null;
+
   const cell: CellAt = { line: target, column };
 
   return cell;
@@ -22,10 +34,11 @@ const lineMove = (lines: ListLine[], at: CellAt, target: number, remembered: Col
 
 const columnMove = (lines: ListLine[], at: CellAt, step: number): CellAt | null => {
   const line = lines[at.line];
+  const index = line?.columns.indexOf(at.column) ?? -1;
 
-  if (line === undefined || line.kind === 'header') return null;
+  if (line === undefined || index === -1) return null;
 
-  const column = COLUMNS[COLUMNS.indexOf(at.column) + step];
+  const column = line.columns[index + step];
 
   if (column === undefined) return null;
 

@@ -112,6 +112,10 @@ export class GraphBoxesPage {
     await expect.poll(async (): Promise<string[]> => this.packagesOf(folder)).toEqual(sorted);
   }
 
+  public async expectFolderCollapsed(folder: string, isCollapsed: boolean): Promise<void> {
+    await expect.poll(async (): Promise<boolean> => this.isCollapsed(folder)).toBe(isCollapsed);
+  }
+
   public async expectFolderStates(state: ProbeState): Promise<void> {
     const folders = await this.folders();
     const states = folders.map(stateOf);
@@ -166,6 +170,12 @@ export class GraphBoxesPage {
     const folders = await this.folders();
 
     return folders.length;
+  }
+
+  private async isCollapsed(folder: string): Promise<boolean> {
+    const folders = await this.folders();
+
+    return folderKeyed(folders, folder).isCollapsed;
   }
 
   private async packagesOf(folder: string): Promise<string[]> {

@@ -104,4 +104,51 @@ describe('FEATURE: graphStyleOf edge states', () => {
       expect(cy.getElementById(AB).style('line-style')).toBe('solid');
     });
   });
+
+  describe('GIVEN the folder pass classes', () => {
+    it('WHEN a node and an edge are folder-hidden THEN both have display none', () => {
+      cy.getElementById('a').addClass('folder-hidden');
+      cy.getElementById(AB).addClass('folder-hidden');
+
+      expect([cy.getElementById('a').style('display'), cy.getElementById(AB).style('display')]).toStrictEqual(['none', 'none']);
+    });
+
+    it('WHEN a node is a folder-node THEN it shows its label data wrapped at 116 px', () => {
+      const node = cy.getElementById('a');
+
+      node.data('label', 'apps\n2 packages');
+      node.addClass('folder-node');
+
+      expect([node.style('label'), node.style('text-wrap'), node.style('text-max-width')]).toStrictEqual([
+        'apps\n2 packages',
+        'wrap',
+        '116px'
+      ]);
+    });
+
+    it('WHEN an edge is a folder-link THEN it shows its label on an opaque background of the canvas colour', () => {
+      const edge = cy.getElementById(AB);
+
+      edge.data('label', '2 links');
+      edge.addClass('folder-link');
+
+      expect([edge.style('label'), edge.numericStyle('text-background-opacity')]).toStrictEqual(['2 links', 1]);
+      expect(edge.style('text-background-color')).toBe(cy.getElementById('a').style('background-color'));
+    });
+
+    it('WHEN a node is a dimmed-box THEN frame, label and fill are 25% opaque and its opacity stays 1', () => {
+      const node = cy.getElementById('a');
+
+      node.addClass('dimmed-box');
+
+      const opacities = [
+        node.numericStyle('border-opacity'),
+        node.numericStyle('text-opacity'),
+        node.numericStyle('background-opacity')
+      ];
+
+      expect(opacities).toStrictEqual([0.25, 0.25, 0.25]);
+      expect(node.numericStyle('opacity')).toBe(1);
+    });
+  });
 });

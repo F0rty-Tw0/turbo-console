@@ -32,7 +32,8 @@ const STATE: GraphViewState = {
   detailsOpen: true,
   link: null,
   trace: null,
-  grouped: false
+  grouped: false,
+  collapsed: []
 };
 
 describe('FEATURE: restoredFilters', () => {

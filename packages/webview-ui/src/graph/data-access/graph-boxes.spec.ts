@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { packageNodes, setBoxes } from './graph-boxes.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
-import { BOX_GROUPS_STUB, GONE_GROUP_STUB } from '../test/stubs/folder-boxes.stub.ts';
+import { BOX_GROUPS_STUB, GONE_GROUP_STUB, PROTO_NAMES_GROUP_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
 
 const BOX_IDS = ['\u0001', '\u0001apps', '\u0001packages'];
@@ -35,6 +35,8 @@ const PACKAGE_IDS = ['a', 'b', 'c'];
 const CHILD_IDS = ['a', 'b'];
 
 const ALL_IDS = ['a', 'b', 'c', 'd', '__proto__'];
+
+const PROTO_IDS = ['__proto__', 'constructor'];
 
 describe('FEATURE: setBoxes', () => {
   let cy: Core;
@@ -95,6 +97,21 @@ describe('FEATURE: setBoxes', () => {
 
       expect(packageNodes(cy)).toHaveLength(5);
       expect(cy.nodes(':parent')).toHaveLength(0);
+    });
+  });
+
+  describe('GIVEN packages named like Object.prototype keys', () => {
+    it('WHEN the boxes are set THEN __proto__ and constructor sit in their box and null frees them', () => {
+      const data = { id: 'constructor' };
+
+      cy.add({ data });
+      setBoxes(cy, [PROTO_NAMES_GROUP_STUB]);
+
+      expect(parentIdsOf(cy, PROTO_IDS)).toStrictEqual(['\u0001tools', '\u0001tools']);
+
+      setBoxes(cy, null);
+
+      expect(parentIdsOf(cy, PROTO_IDS)).toStrictEqual([]);
     });
   });
 

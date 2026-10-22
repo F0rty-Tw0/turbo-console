@@ -23,15 +23,17 @@ import { showableNamesOf } from '../utils/showable.util.ts';
  * Keys are handled on the graph container only, so a key on a toolbar button never acts here.
  */
 export class GraphInspection {
+  /** The inspection's paint, ghosts and folder pass on the canvas; `GraphFolders` repaints it and reads its ghosts. */
+  public readonly canvas: InspectionCanvas;
+
   private readonly deps: GraphInspectionDeps;
   private readonly details: GraphDetails;
   private readonly timings = new Map<string, number>();
-  private readonly canvas: InspectionCanvas;
   private inspection: Inspection = NO_INSPECTION;
 
   public constructor(deps: GraphInspectionDeps) {
     this.deps = deps;
-    this.canvas = new InspectionCanvas(deps.view);
+    this.canvas = new InspectionCanvas(deps.view, deps.folders);
     this.details = new GraphDetails(detailsDepsOf(deps, this));
     wireInspectionKeys(deps.page, this);
   }

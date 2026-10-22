@@ -8,6 +8,7 @@ import { graphStyleOf } from './graph-style.ts';
 import { showOnly } from './graph-visibility.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
+import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
 import { CANVAS_COLORS, canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
@@ -52,7 +53,7 @@ const MARKS_PROTO: GhostMarks = { nodes: ['__proto__'], edges: [edgeOf('d', '__p
 
 const NO_MARKS: GhostMarks = { nodes: [], edges: [] };
 
-const PLAIN_PAINT: Paint = { nodeState: () => 'normal', edgeState: () => 'normal' };
+const PLAIN_PAINT: Paint = { nodeState: () => 'normal', edgeState: () => 'normal', ...NORMAL_FOLDER_PAINT };
 
 const idOf = (element: NodeSingular | EdgeSingular): string => element.id();
 

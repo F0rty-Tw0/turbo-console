@@ -3,7 +3,7 @@ import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/con
 import type { ControlsView } from '../common/graph-controls.type.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
 import { groupStateOf, isFiltered, isGroupLocked, rowViewOf } from '../utils/controls-rules.util.ts';
-import { controlsLabelOf, countTextOf } from '../utils/controls-text.util.ts';
+import { controlsLabelOf, countTextOf, folderTitleOf, folderToggleLabelOf, folderToggleTextOf } from '../utils/controls-text.util.ts';
 import { matchesSearch } from '../utils/search.util.ts';
 
 const setDisabled = (element: HTMLElement, isDisabled: boolean): void => {
@@ -21,9 +21,22 @@ const renderRow = (row: ControlsRow, view: ControlsView): void => {
   row.line.setAttribute('aria-current', String(row.name === selected));
 };
 
+const renderToggle = (group: ControlsGroup, view: ControlsView): void => {
+  const { toggle, folder } = group;
+  const isCollapsed = view.collapsed.has(folder);
+  const title = folderTitleOf(folder);
+
+  toggle.hidden = !view.grouped;
+  toggle.textContent = folderToggleTextOf(isCollapsed);
+  toggle.setAttribute('aria-label', folderToggleLabelOf(title, isCollapsed));
+  toggle.setAttribute('aria-expanded', String(!isCollapsed));
+};
+
 const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
   const names = group.rows.map((row) => row.name);
   const state = groupStateOf(view.filters, names);
+
+  renderToggle(group, view);
 
   group.check.checked = state === 'checked';
   group.check.indeterminate = state === 'mixed';
@@ -34,6 +47,7 @@ const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
 
 /**
  * Paints the attributes only, never rebuilds. An indeterminate group box is unchecked, so activating it checks all.
+ * A folder header's button reads Expand or Collapse and is hidden while flat.
  * `toggles` are the toolbar's Controls button, which shows the panel's openness, and its "filters on" mark.
  */
 export const renderControls = (

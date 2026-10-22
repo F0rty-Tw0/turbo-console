@@ -33,7 +33,7 @@ const M4_1_PAN = { x: 30, y: 40 };
 
 const M4_1_VIEW = { hash: 'c0a1b2c3', zoom: 2, pan: M4_1_PAN, selected: 'core' };
 
-const M4_1_RESTORED: GraphViewState = { ...M4_1_VIEW, ...DEFAULT_CONTROLS, detailsOpen: true, link: null, trace: null };
+const M4_1_RESTORED: GraphViewState = { ...M4_1_VIEW, ...DEFAULT_CONTROLS, detailsOpen: true, link: null, trace: null, collapsed: [] };
 
 const PROTO_SAVED = {
   hash: 'f1f1f1f1',

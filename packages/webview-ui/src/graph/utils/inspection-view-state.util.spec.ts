@@ -23,7 +23,8 @@ const C: ControlsViewFields = {
   hidden: ['docs'],
   focus: 'web',
   tags: ['app'],
-  grouped: false
+  grouped: false,
+  collapsed: ['apps']
 };
 
 const PAN: Position = { x: 1, y: 2 };

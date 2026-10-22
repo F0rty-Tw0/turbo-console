@@ -6,6 +6,7 @@ import { expect } from '@playwright/test';
 import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { LayoutEngine, ProbeEdge, ProbeNode, ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 import { NODE_HEIGHT, NODE_PADDING_X } from '../../src/graph/common/graph.const.ts';
+import { LAYOUT_SETTLE_MS } from '../common/graph.const.ts';
 import type { EdgeStates, NodeStates } from '../common/graph.type.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
@@ -118,8 +119,9 @@ export class GraphProbePage {
     await expect.poll(async (): Promise<string | null> => this.selected()).toBe(name);
   }
 
+  /** Waits past the page's own ELK timeout: an uncached layout settles as `elk` or `fallback` only within it. */
   public async expectLayoutEngine(engine: LayoutEngine): Promise<void> {
-    await expect.poll(async (): Promise<LayoutEngine | null> => this.layoutEngine()).toBe(engine);
+    await expect.poll(async (): Promise<LayoutEngine | null> => this.layoutEngine(), { timeout: LAYOUT_SETTLE_MS }).toBe(engine);
   }
 
   /** `ordered` lists names from the top row down: each sits strictly below the one before. */
