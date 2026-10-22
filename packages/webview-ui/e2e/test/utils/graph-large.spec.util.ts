@@ -11,13 +11,13 @@ const GRID_COLUMNS = 20;
 const GRID_SPACING = 120;
 
 /** `0` to `count - 1`, in order. */
-const indexesOf = (count: number): number[] => {
+export const indexesOf = (count: number): number[] => {
   const slots = Array.from({ length: count });
 
   return Array.from(slots.keys());
 };
 
-const nameOf = (index: number): string => `pkg-${String(index).padStart(3, '0')}`;
+export const nameOf = (index: number): string => `pkg-${String(index).padStart(3, '0')}`;
 
 const largePackageOf = (index: number): GraphPackage => {
   const name = nameOf(index);
@@ -40,7 +40,7 @@ const largeEdgesFrom = (index: number): GraphEdge[] => {
   return [neighbour, earlier];
 };
 
-const largeEntryOf = (index: number): [string, Position] => {
+export const largeEntryOf = (index: number): [string, Position] => {
   const centre: Position = { x: (index % GRID_COLUMNS) * GRID_SPACING, y: Math.floor(index / GRID_COLUMNS) * GRID_SPACING };
 
   return [nameOf(index), centre];

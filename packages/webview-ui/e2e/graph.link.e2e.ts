@@ -1,4 +1,3 @@
-import type { EdgeStates, NodeStates } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { PROTO_DETAILS_STUB } from './test/stubs/graph-details-edge.stub.ts';
 import { DETAILS_RECOUNT_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
@@ -15,6 +14,7 @@ import {
   UI_CHANGED_ROWS_STUB,
   UI_ENTRIES_STUB
 } from './test/stubs/graph-explain.stub.ts';
+import { WEB_UI_EDGES_STUB, WEB_UI_NODES_STUB } from './test/stubs/graph-link-states.stub.ts';
 import { linkInspection, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
@@ -22,29 +22,6 @@ const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 const RF1 = { description: 'M4-3 RF1', type: 'requirement' };
 
 const RF5 = { description: 'M4-3 RF5', type: 'requirement' };
-
-const WEB_UI_NODES: NodeStates = {
-  web: 'highlighted',
-  ui: 'highlighted',
-  admin: 'dimmed',
-  docs: 'dimmed',
-  data: 'dimmed',
-  core: 'dimmed',
-  config: 'dimmed',
-  base: 'dimmed',
-  solo: 'dimmed'
-};
-
-const WEB_UI_EDGES: EdgeStates = {
-  'web>ui': 'selected',
-  'web>data': 'dimmed',
-  'admin>ui': 'dimmed',
-  'docs>web': 'dimmed',
-  'ui>core': 'dimmed',
-  'data>core': 'dimmed',
-  'core>config': 'dimmed',
-  'config>base': 'dimmed'
-};
 
 test.describe('FEATURE: graph link explain', () => {
   test(
@@ -68,10 +45,10 @@ test.describe('FEATURE: graph link explain', () => {
       await test.step('AND Clear selection is enabled', async (): Promise<void> => graphPage.expectEnabled('Clear selection'));
 
       await test.step('AND the two ends are highlighted, the rest dimmed', async (): Promise<void> =>
-        graphProbe.expectNodeStates(WEB_UI_NODES));
+        graphProbe.expectNodeStates(WEB_UI_NODES_STUB));
 
       await test.step('AND the link edge is selected, the rest dimmed', async (): Promise<void> =>
-        graphProbe.expectEdgeStates(WEB_UI_EDGES));
+        graphProbe.expectEdgeStates(WEB_UI_EDGES_STUB));
 
       await test.step('AND no list row is current', async (): Promise<void> => graphList.expectNoRowCurrent());
 

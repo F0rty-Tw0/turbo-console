@@ -65,3 +65,30 @@ export const SITE_TO_STORE_HIDDEN_FACTS_STUB: TraceFacts = { ...SITE_TO_STORE_FA
 export const SITE_TO_STORE_TAGGED_FACTS_STUB: TraceFacts = { ...SITE_TO_STORE_FACTS_STUB, hidden: ['bridge'], showable: [] };
 
 export const PROTO_TO_PLAIN_HIDDEN_FACTS_STUB: TraceFacts = { ...PROTO_TO_PLAIN_FACTS_STUB, hidden: ['constructor'] };
+
+/** `web` to `base` before `data>base` exists: all five packages. */
+export const WEB_TO_BASE_FACTS_STUB: TraceFacts = {
+  start: 'web',
+  end: 'base',
+  summary: 'web depends on base: 5 packages on the shortest path.',
+  path: ['web', 'data', 'core', 'config', 'base'],
+  hidden: []
+};
+
+/** After the edit adds `data>base`, the path skips `core` and `config`. */
+export const WEB_TO_BASE_SHORT_FACTS_STUB: TraceFacts = {
+  start: 'web',
+  end: 'base',
+  summary: 'web depends on base: 3 packages on the shortest path.',
+  path: ['web', 'data', 'base'],
+  hidden: []
+};
+
+/** `largeState()`: `pkg-299` reaches `pkg-000` through `pkg-001`, the first of the two children of `pkg-003` in name order. */
+export const PKG_299_TO_000_FACTS_STUB: TraceFacts = {
+  start: 'pkg-299',
+  end: 'pkg-000',
+  summary: 'pkg-299 depends on pkg-000: 7 packages on the shortest path.',
+  path: ['pkg-299', 'pkg-099', 'pkg-033', 'pkg-011', 'pkg-003', 'pkg-001', 'pkg-000'],
+  hidden: []
+};
