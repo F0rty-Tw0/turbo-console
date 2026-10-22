@@ -55,7 +55,7 @@ export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActi
     onToggleFolder: folderActions.toggle,
     onFocusFolder: folderActions.focusFolder,
     onExcludeFolder: (folder): void => deps.onExcludeFolder(folder),
-    onFilter: (text): void => actions.filter(text),
+    onFilter: (text): void => actions.canvas.filter(text),
     onOpenManifest: (packageName, line): void => bridge.post({ type: 'openManifest', packageName, line }),
     onResize: (): void => view.resize(),
     onLayout: (): void => actions.keepClear(),

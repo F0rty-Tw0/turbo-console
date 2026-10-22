@@ -3,7 +3,7 @@ import type { GraphOptions } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { threeFoldersState } from './test/utils/graph-boards.spec.util.ts';
 import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
-import { traceInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { packageInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import type { Position } from '../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
@@ -12,6 +12,8 @@ import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 const C6 = { description: 'M4-4 C6', type: 'requirement' };
 
 const FOCUS_5 = { description: 'M4-4 Review Focus 5', type: 'requirement' };
+
+const REACH = { description: 'M4-4 §4.6', type: 'requirement' };
 
 const BOARDS = placedBoardsState();
 
@@ -110,6 +112,52 @@ test.describe('FEATURE: folder inspection reaching collapsed folders and the ove
       });
 
       await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
+    }
+  );
+
+  test(
+    'GIVEN a package picked while flat inside a folder saved collapsed, grouping again expands that folder',
+    { annotation: REACH },
+    async ({ graphDetails, graphFolderInspect, graphGrouping, graphList }): Promise<void> => {
+      await test.step('WHEN packages is saved collapsed, the view goes flat and ui is picked', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped({ collapsed: ['packages'] }), BOARDS);
+        await graphGrouping.setGrouped(false);
+        await graphGrouping.expectFolderCount(0);
+        await graphList.pick(UI);
+      });
+
+      await test.step('AND Group by folder is checked again', async (): Promise<void> => graphGrouping.setGrouped(true));
+
+      await test.step('THEN ui stays inspected and packages is expanded', async (): Promise<void> => {
+        await graphGrouping.expectFolderCount(2);
+        await graphDetails.expectInspection(packageInspection(UI));
+        await graphGrouping.expectFolderCollapsed('packages', false);
+      });
+    }
+  );
+
+  test(
+    'GIVEN a trace made while flat through a ghost in a folder saved collapsed, grouping again expands it for the ghost',
+    { annotation: REACH },
+    async ({ graphDetails, graphFolderInspect, graphGrouping, graphList, graphTrace }): Promise<void> => {
+      await test.step('WHEN f2 is saved collapsed, the view goes flat, b is unchecked and a traced to c', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped({ collapsed: ['f2'] }), THREE);
+        await graphGrouping.setGrouped(false);
+        await graphGrouping.expectFolderCount(0);
+        await graphList.toggleRow('b');
+        await graphList.pick('a');
+        await graphDetails.startTrace();
+        await graphList.pick('c');
+        await graphTrace.expectGhost('b');
+      });
+
+      await test.step('AND Group by folder is checked again', async (): Promise<void> => graphGrouping.setGrouped(true));
+
+      await test.step('THEN the trace stays and f2 is expanded for the ghost b', async (): Promise<void> => {
+        await graphGrouping.expectFolderCount(3);
+        await graphDetails.expectInspection(traceInspection('a', 'c'));
+        await graphGrouping.expectFolderCollapsed('f2', false);
+      });
     }
   );
 });

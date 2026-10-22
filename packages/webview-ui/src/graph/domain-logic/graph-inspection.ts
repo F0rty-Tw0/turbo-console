@@ -20,7 +20,7 @@ import { selectedOf } from '../utils/inspection-parts.util.ts';
  * Keys are handled on the graph container only, so a key on a toolbar button never acts here.
  */
 export class GraphInspection {
-  /** The inspection's paint, ghosts and folder pass on the canvas; `GraphFolders` repaints it and reads its ghosts. */
+  /** The inspection's paint, ghosts and folder pass on the canvas; `GraphFolders` repaints it and reads its ghosts; the picking filter lights it. */
   public readonly canvas: InspectionCanvas;
 
   private readonly deps: GraphInspectionDeps;
@@ -142,6 +142,16 @@ export class GraphInspection {
     if (next !== null) this.apply(next, false);
   }
 
+  /**
+   * After a grouped placement: expands the collapsed folders holding the inspection, ghosts of its trace included, as
+   * `apply` does. Nothing is drawn or saved here, so the first draw's restore keeps the saved state.
+   */
+  public reachCurrent(): void {
+    const shown = shownPartsOf(this.deps, this.inspection, false);
+
+    if (shown !== null) this.reach.reach(this.inspection, shown.canvas.trace);
+  }
+
   /** Rebuilds the saved inspection, or none, for the placed graph; a restored link asks for its entry again. */
   public restore(saved: GraphViewState | null, visible: ReadonlySet<string>): void {
     const restored = restoredOf(this.deps, saved, visible);
@@ -151,10 +161,9 @@ export class GraphInspection {
 
   /** A same-hash state: relabels a shown package's task count in place, or asks again for a shown link's entry. */
   public refreshed(isChanged: boolean): void {
-    const { inspection } = this;
-    const plan = sameHashPlanOf(inspection, isChanged);
+    const plan = sameHashPlanOf(this.inspection, isChanged);
 
-    if (plan.isUpdate) this.apply(inspection, false);
+    if (plan.isUpdate) this.apply(this.inspection, false);
 
     if (plan.reask !== null) postExplain(this.deps.bridge, plan.reask.source, plan.reask.target);
   }
@@ -221,10 +230,5 @@ export class GraphInspection {
     deps.page.clear.disabled = next.kind === 'none';
     deps.onSelected(selectedOf(next));
     this.save();
-  }
-
-  /** The picking filter changed: only the canvas lights follow, as the panel updated its own lists. */
-  public filter(text: string): void {
-    this.canvas.filter(text);
   }
 }

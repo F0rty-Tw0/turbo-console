@@ -102,11 +102,16 @@ export type KeepClearDeps = {
   readonly ghostNodes: string[];
 };
 
+/** The canvas lights of the picking filter; the panel updates its own lists. */
+type PickingLights = {
+  readonly filter: (text: string) => void;
+};
+
 /** What the details panel, `Clear selection` and the container's keys ask of `GraphInspection`. */
 export type InspectionActions = {
   readonly input: (input: InspectionInput) => void;
-  /** Each keystroke in the picking filter box. */
-  readonly filter: (text: string) => void;
+  /** Lit by each keystroke in the picking filter box. */
+  readonly canvas: PickingLights;
   readonly openDetailsOf: (name: string) => void;
   /** Enter on the graph container. */
   readonly enter: () => void;

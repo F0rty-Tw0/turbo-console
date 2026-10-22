@@ -64,7 +64,7 @@ class GraphPageController {
       view: this.view,
       drawn: (): DrawnGraph | null => this.drawn,
       onDrawn: (saved: GraphViewState | null): void => this.afterDraw(saved),
-      onPlaced: (): void => this.filtering.folders.redraw(),
+      onPlaced: (): void => this.filtering.placed(),
       onGroupingOff: (): void => this.filtering.groupingOff()
     });
     page.fit.addEventListener('click', (): void => this.view.fit());
