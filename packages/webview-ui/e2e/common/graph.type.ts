@@ -78,9 +78,10 @@ export type DragRecord = {
   readonly zoom: number;
 };
 
-/** Main-thread CPU ms a scripted pan used, in total and in its costliest step. */
-export type PanCpu = {
+/** Main-thread CPU ms a stepped run used, in total and in its cheapest and costliest step. */
+export type CpuSteps = {
   readonly totalMs: number;
+  readonly minStepMs: number;
   readonly maxStepMs: number;
 };
 

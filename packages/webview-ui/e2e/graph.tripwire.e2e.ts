@@ -42,6 +42,17 @@ const TOGGLED_FOLDERS = ['group-2', 'group-3', 'group-4', 'group-12', 'group-13'
 
 const GROUP_COUNT = 30;
 
+/**
+ * A fresh Windows renderer reads ThreadTime as 0 until Chromium has timed its TSC rate over 50 ms, then jumps by all
+ * the CPU the thread used since it started; 12 steps of 10 ms spin cross that point.
+ */
+const SPIN_STEPS = 12;
+
+const SPIN_MS = 10;
+
+/** A clock that is not counting yet reads exactly 0, so any read above 0 passes; a busy runner can deschedule most of a spin. */
+const SPIN_FLOOR_MS = 0;
+
 /** Each sample toggles pkg-007 once, so an odd count leaves it hidden. */
 const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
 
@@ -49,6 +60,16 @@ const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
 test.use({ trace: 'off' });
 
 test.describe('FEATURE: graph tripwires', () => {
+  test('GIVEN a fresh renderer, the CPU clock the pan tripwires read counts every 10 ms spin from the first step', async ({
+    cpuClock
+  }): Promise<void> => {
+    await test.step('WHEN a blank page busy-waits 10 ms per step for 12 steps', async (): Promise<void> =>
+      cpuClock.spinSteps(SPIN_STEPS, SPIN_MS));
+
+    await test.step('THEN every step read more than 1 ms and less than 50 ms of CPU', (): void =>
+      cpuClock.expectEveryStepBetween(SPIN_FLOOR_MS, BUDGET_MS));
+  });
+
   test('GIVEN a 14-package target-like graph, the first frame lands under 2 s', async ({
     graphHost,
     graphLook,
