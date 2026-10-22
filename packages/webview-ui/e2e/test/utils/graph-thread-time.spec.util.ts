@@ -1,4 +1,3 @@
-/* eslint-disable -- C44 probe instrumentation, removed before merge */
 import type { CDPSession, Page } from '@playwright/test';
 
 import { MS_PER_SECOND, THREAD_TIME_METRIC } from '../../common/graph.const.ts';
@@ -27,30 +26,19 @@ export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>
     await session.send('Performance.enable', { timeDomain: 'threadTicks' });
 
     const start = await threadTimeMs(session);
-    const t0 = performance.now();
-    let lastWall = t0;
     let last = start;
     let minStepMs = Number.POSITIVE_INFINITY;
     let maxStepMs = 0;
-    const steps: string[] = [];
     const endStep = async (): Promise<void> => {
       const now = await threadTimeMs(session);
-      const wall = performance.now();
+      const stepMs = now - last;
 
-      steps.push(`${(wall - lastWall).toFixed(0)}/${(now - last).toFixed(1)}`);
-      minStepMs = Math.min(minStepMs, now - last);
-      maxStepMs = Math.max(maxStepMs, now - last);
+      minStepMs = Math.min(minStepMs, stepMs);
+      maxStepMs = Math.max(maxStepMs, stepMs);
       last = now;
-      lastWall = wall;
     };
 
     await work(endStep);
-
-    const series = maxStepMs >= 20 ? steps.join(' ') : steps.slice(0, 4).join(' ');
-
-    console.log(
-      `C44 pan start=${start.toFixed(1)} total=${(last - start).toFixed(1)} max=${maxStepMs.toFixed(1)} wall=${(lastWall - t0).toFixed(0)} steps(wall/cpu)=${series}`
-    );
 
     const cpu: CpuSteps = { totalMs: last - start, minStepMs, maxStepMs };
 

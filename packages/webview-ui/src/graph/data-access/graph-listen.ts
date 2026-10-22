@@ -1,4 +1,3 @@
-/* eslint-disable -- C44 mutant: 100 ms freeze in one pan frame, removed in the next commit */
 import type { Core, EventObject, EventObjectEdge, EventObjectNode, NodeSingular } from 'cytoscape';
 
 import { packageNodes } from './graph-boxes.ts';
@@ -93,21 +92,6 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   cy.on('tap', 'edge', onEdge);
   cy.on('tap', onBackground);
   cy.on('dragfreeon', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
-  let mutantPanEvents = -1;
-
-  cy.on('tapstart', (): void => {
-    mutantPanEvents = 0;
-  });
-  cy.on('viewport', (): void => {
-    if (mutantPanEvents >= 0) mutantPanEvents += 1;
-    if (mutantPanEvents === 40) {
-      const end = performance.now() + 100;
-
-      while (performance.now() < end) {
-        // C44 mutant: a 100 ms freeze on the 40th viewport event of the first press.
-      }
-    }
-    handlers.onViewport();
-  });
+  cy.on('viewport', handlers.onViewport);
   cy.on('render', handlers.onRender);
 };
