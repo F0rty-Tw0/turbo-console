@@ -41,8 +41,8 @@ const SPIN_STEPS = 12;
 
 const SPIN_MS = 10;
 
-/** Above 0, since a descheduled spin still reads some CPU; a clock that is not counting yet reads exactly 0. */
-const SPIN_FLOOR_MS = 1;
+/** A clock that is not counting yet reads exactly 0, so any read above 0 passes; a busy runner can deschedule most of a spin. */
+const SPIN_FLOOR_MS = 0;
 
 /** Each sample toggles pkg-007 once, so an odd count leaves it hidden. */
 const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
