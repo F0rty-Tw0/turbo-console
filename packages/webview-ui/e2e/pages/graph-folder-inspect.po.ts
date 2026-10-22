@@ -88,7 +88,7 @@ export class GraphFolderInspect {
   /** The folder view's title, summary line, action buttons and member packages, in order. */
   public async expectFolderView(facts: FolderViewFacts): Promise<void> {
     await expect(this.view.getByRole('heading', { level: 2 })).toHaveText(facts.heading);
-    await expect(this.view.locator('.details-path')).toHaveText(facts.summary);
+    await expect(this.view.locator('.details-muted')).toHaveText(facts.summary);
     await expect(this.view.locator('.details-actions button')).toHaveText(facts.buttons);
     await expect(this.view.locator('.details-list .details-name')).toHaveText(facts.packages);
   }
@@ -111,9 +111,10 @@ export class GraphFolderInspect {
     await expect.poll(async (): Promise<(string | null)[]> => buttons.evaluateAll(ariaLabelsOf)).toEqual(labels);
   }
 
-  /** The header Focus button of the folder titled `title` reads `Focus` or `Clear focus`. */
+  /** The header Focus button of the folder titled `title` reads `Focus` or `Clear focus`, in regular weight like Collapse. */
   public async expectHeaderFocusText(title: string, text: 'Focus' | 'Clear focus'): Promise<void> {
     await expect(this.headerFocus(title)).toHaveText(text);
+    await expect(this.headerFocus(title)).toHaveCSS('font-weight', '400');
   }
 
   /** The folder's frame ends left of the details overlay with the keep-clear margin to spare. */

@@ -68,7 +68,7 @@ const memberList = (model: FolderViewModel): MemberList => {
 /** A folder's facts: its counts, Expand or Collapse, Focus folder and Exclude folder, and every package in it. */
 export const folderView = (model: FolderViewModel): FolderViewElements => {
   const base = viewBase('folder', model.title, model.isOverlay);
-  const summary = textElement('p', 'details-path', model.summary);
+  const summary = textElement('p', 'details-muted', model.summary);
   const parts = actionsOf(model);
   const list = memberList(model);
   const { actions, ...buttons } = parts;
