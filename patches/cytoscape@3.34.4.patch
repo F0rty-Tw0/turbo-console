@@ -1,7 +1,25 @@
 diff --git a/dist/cytoscape.cjs.js b/dist/cytoscape.cjs.js
-index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..14abe0d4b68414b4ee06b6b602f09722a5a3c904 100644
+index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..216f44eeca095f519819068ec662d2ea2a7ebca0 100644
 --- a/dist/cytoscape.cjs.js
 +++ b/dist/cytoscape.cjs.js
+@@ -14743,7 +14743,7 @@ elesfn$1.remove = function () {
+   var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+   var self = this;
+   var elesToRemove = [];
+-  var elesToRemoveIds = {};
++  var elesToRemoveIds = Object.create(null); // patched: an id such as `constructor` or `__proto__` must not read an inherited key
+   var cy = self._private.cy;
+ 
+   // add connected edges
+@@ -14797,7 +14797,7 @@ elesfn$1.remove = function () {
+     pllEdge.clearTraversalCache();
+   }
+   var alteredParents = [];
+-  alteredParents.ids = {};
++  alteredParents.ids = Object.create(null); // patched, as above
+   function removeChildRef(parent, ele) {
+     ele = ele[0];
+     parent = parent[0];
 @@ -30804,6 +30804,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
      var prevBging = _p.backgrounding;
      var totalCompleted = 0;
@@ -12,9 +30,27 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..14abe0d4b68414b4ee06b6b602f09722
        if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
          totalCompleted++;
 diff --git a/dist/cytoscape.esm.mjs b/dist/cytoscape.esm.mjs
-index 98ca0ed0a971159db005a0ae80da1dac080d9ade..b43f86a70fd08ea2a3655fbc1984db168a4f042d 100644
+index 98ca0ed0a971159db005a0ae80da1dac080d9ade..c42e65beb86cd6e818c796111969765283f9dffa 100644
 --- a/dist/cytoscape.esm.mjs
 +++ b/dist/cytoscape.esm.mjs
+@@ -14741,7 +14741,7 @@ elesfn$1.remove = function () {
+   var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+   var self = this;
+   var elesToRemove = [];
+-  var elesToRemoveIds = {};
++  var elesToRemoveIds = Object.create(null); // patched: an id such as `constructor` or `__proto__` must not read an inherited key
+   var cy = self._private.cy;
+ 
+   // add connected edges
+@@ -14795,7 +14795,7 @@ elesfn$1.remove = function () {
+     pllEdge.clearTraversalCache();
+   }
+   var alteredParents = [];
+-  alteredParents.ids = {};
++  alteredParents.ids = Object.create(null); // patched, as above
+   function removeChildRef(parent, ele) {
+     ele = ele[0];
+     parent = parent[0];
 @@ -30802,6 +30802,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
      var prevBging = _p.backgrounding;
      var totalCompleted = 0;
@@ -25,9 +61,27 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..b43f86a70fd08ea2a3655fbc1984db16
        if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
          totalCompleted++;
 diff --git a/dist/cytoscape.umd.js b/dist/cytoscape.umd.js
-index b7d4dabff383755c8cda3021b719b2f0064e8896..c8ebddeaa6b43a76a6ee06efb86e883d2de2fd1a 100644
+index b7d4dabff383755c8cda3021b719b2f0064e8896..23a37cce3d481fb122042d21e8b920df236d21d4 100644
 --- a/dist/cytoscape.umd.js
 +++ b/dist/cytoscape.umd.js
+@@ -14747,7 +14747,7 @@
+     var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+     var self = this;
+     var elesToRemove = [];
+-    var elesToRemoveIds = {};
++    var elesToRemoveIds = Object.create(null); // patched: an id such as `constructor` or `__proto__` must not read an inherited key
+     var cy = self._private.cy;
+ 
+     // add connected edges
+@@ -14801,7 +14801,7 @@
+       pllEdge.clearTraversalCache();
+     }
+     var alteredParents = [];
+-    alteredParents.ids = {};
++    alteredParents.ids = Object.create(null); // patched, as above
+     function removeChildRef(parent, ele) {
+       ele = ele[0];
+       parent = parent[0];
 @@ -30808,6 +30808,8 @@ var printLayoutInfo;
        var prevBging = _p.backgrounding;
        var totalCompleted = 0;
@@ -37,6 +91,28 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..c8ebddeaa6b43a76a6ee06efb86e883d
          var bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', _i);
          if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
            totalCompleted++;
+diff --git a/src/collection/index.mjs b/src/collection/index.mjs
+index 0330661a8d2a5af043d0594a1c84782a7e193c20..fa25df6ef16015f7bb7903a869c2e087f67175a6 100644
+--- a/src/collection/index.mjs
++++ b/src/collection/index.mjs
+@@ -586,7 +586,7 @@ elesfn.inside = function(){
+ elesfn.remove = function( notifyRenderer = true, removeFromPool = true ){
+   let self = this;
+   let elesToRemove = [];
+-  let elesToRemoveIds = {};
++  let elesToRemoveIds = Object.create(null); // patched, see dist
+   let cy = self._private.cy;
+ 
+   // add connected edges
+@@ -648,7 +648,7 @@ elesfn.remove = function( notifyRenderer = true, removeFromPool = true ){
+   }
+ 
+   let alteredParents = [];
+-  alteredParents.ids = {};
++  alteredParents.ids = Object.create(null); // patched, see dist
+ 
+   function removeChildRef( parent, ele ){
+     ele = ele[0];
 diff --git a/src/extensions/renderer/canvas/drawing-nodes.mjs b/src/extensions/renderer/canvas/drawing-nodes.mjs
 index 18b0f33b9d79fc0257a66803aa774052bf693211..3ad02769b9b3384e4d114bed00e3dac108b9de07 100644
 --- a/src/extensions/renderer/canvas/drawing-nodes.mjs

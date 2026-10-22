@@ -48,5 +48,7 @@ allowBuilds:
 patchedDependencies:
   # drawImages counts a `background-image: none` slot as loaded in its outside pass only, so `backgrounding` flips and
   # every directly drawn node (folder boxes) re-styles itself each frame; a grouped pan cost twice the CPU of a flat one.
-  # Drop the patch once a cytoscape release skips undefined image slots there; a version bump fails install until then.
+  # remove() keeps its ids in plain objects, so an element named `constructor` or `__proto__` was skipped by `remove()`
+  # and `move()` (it never joined its folder box); the patch makes both maps prototype-free.
+  # Drop the patch once a cytoscape release fixes both; a version bump fails install until then.
   cytoscape@3.34.4: patches/cytoscape@3.34.4.patch
