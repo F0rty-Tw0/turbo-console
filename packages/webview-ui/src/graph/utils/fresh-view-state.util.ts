@@ -19,7 +19,8 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
     tags: [],
     detailsOpen: true,
     link: null,
-    trace: null
+    trace: null,
+    grouped: false
   };
 
   return state;

@@ -2,7 +2,8 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import type { ElkLike, LayoutResult, LayoutRunner, LayoutRunnerDeps } from '../common/layout.type.ts';
-import { centresOf } from '../utils/elk-centres.util.ts';
+import { nestedCentresOf } from '../utils/elk-centres.util.ts';
+import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
 import { gridPositions } from '../utils/grid-layout.util.ts';
 
 /** Rejects on a worker `error` event, a rejected layout, or no layout within `timeoutMs`; the timer never outlives it. */
@@ -31,10 +32,12 @@ const failed = (): null => null;
 
 /** The fallback's positions, or a plain grid when the fallback throws too, so a run always ends with a layout. */
 const fallbackPositions = (fallback: LayoutRunnerDeps['fallback'], graph: ElkNode): Positions => {
+  const flat = flatElkGraphOf(graph);
+
   try {
-    return fallback(graph);
+    return fallback(flat);
   } catch {
-    return gridPositions(graph);
+    return gridPositions(flat);
   }
 };
 
@@ -101,7 +104,7 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
       return fallbackResult();
     }
 
-    const positions = centresOf(laidOut);
+    const positions = nestedCentresOf(laidOut);
 
     return resultOf(positions, 'elk');
   };

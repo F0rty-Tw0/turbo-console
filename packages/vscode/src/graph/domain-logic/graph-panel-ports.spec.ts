@@ -85,9 +85,9 @@ describe('FEATURE: the ports of one graph panel', () => {
 
   describe('GIVEN the host effects', () => {
     it('WHEN an entry is written and read back THEN it goes through the host cache', () => {
-      ports.writeCache('/ws', ENTRY);
+      ports.writeCache('/ws', 'folders', ENTRY);
 
-      expect(ports.readCache('/ws')).toStrictEqual(ENTRY);
+      expect(ports.readCache('/ws', 'folders')).toStrictEqual(ENTRY);
     });
 
     it('WHEN a failure is logged THEN it goes to the host log', () => {

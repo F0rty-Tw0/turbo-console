@@ -3,15 +3,18 @@ import { vi } from 'vitest';
 
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphPorts } from '../../common/graph.type.ts';
+import { cacheKeyOf } from '../../utils/graph-cache.util.ts';
 import { packageNamesOf } from '../../utils/graph-package.util.ts';
 import type { PostedGraph } from '../common/graph.type.ts';
 import { graphPortsMock } from '../mocks/graph-ports.mock.ts';
 
-/** The spy ports of a session on `/ws`; `cached` seeds the layout cache of `/ws`. */
-export const portsWith = (cached: GraphLayoutCacheEntry | null): GraphPorts => {
+/** The spy ports of a session on `/ws`; `flat` and `folders` seed the two layout caches of `/ws`. */
+export const portsWith = (flat: GraphLayoutCacheEntry | null, folders: GraphLayoutCacheEntry | null = null): GraphPorts => {
   const seed = new Map<string, GraphLayoutCacheEntry>();
 
-  if (cached !== null) seed.set('/ws', cached);
+  if (flat !== null) seed.set(cacheKeyOf('/ws', 'flat'), flat);
+
+  if (folders !== null) seed.set(cacheKeyOf('/ws', 'folders'), folders);
 
   return graphPortsMock(seed);
 };
@@ -34,7 +37,12 @@ export const lastStateOf = (ports: GraphPorts): PostedGraph => {
 
   if (state?.kind !== 'graph') throw new Error(`last posted state is ${state?.kind ?? 'missing'}, not graph`);
 
-  const posted: PostedGraph = { hash: state.hash, packages: packageNamesOf(state.packages), positions: state.positions };
+  const posted: PostedGraph = {
+    hash: state.hash,
+    packages: packageNamesOf(state.packages),
+    positions: state.positions,
+    folderPositions: state.folderPositions
+  };
 
   return posted;
 };

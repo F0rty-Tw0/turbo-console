@@ -21,6 +21,7 @@ const NO_SELECTION_STOPS: FocusStep[] = tabStopsOf([
   'Re-layout',
   'Search packages',
   'Focus depth',
+  'Group by folder',
   'Show all',
   'packages (7)',
   'Package graph'
@@ -31,6 +32,7 @@ const SELECTION_STOPS: FocusStep[] = tabStopsOf([
   'Clear selection',
   'Search packages',
   'Focus depth',
+  'Group by folder',
   'Show all',
   'packages (7)',
   'Package graph',
@@ -177,14 +179,14 @@ test.describe('FEATURE: graph keyboard', () => {
   );
 
   test(
-    'GIVEN tagged packages and Focus depth reached by Tab, Tab walks the app, lib and ui tags, then Show all',
+    'GIVEN tagged packages and Group by folder reached by Tab, Tab walks the app, lib and ui tags, then Show all',
     { annotation: AC1 },
     async ({ graphHost, graphKeys, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
-      await test.step('AND Focus depth is reached by Tab', async (): Promise<void> => graphKeys.tabTo('Focus depth'));
+      await test.step('AND Group by folder is reached by Tab', async (): Promise<void> => graphKeys.tabTo('Group by folder'));
 
       await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
 

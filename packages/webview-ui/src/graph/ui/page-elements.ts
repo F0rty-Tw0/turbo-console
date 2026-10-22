@@ -63,6 +63,7 @@ export const buildPage = (): PageElements => {
     ...tools,
     root,
     notice,
+    noticeText,
     retry,
     message,
     messageText,

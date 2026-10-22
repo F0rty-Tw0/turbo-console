@@ -1,13 +1,20 @@
-import type { GraphState, Position, Positions } from '@turbo-console/webview-ui';
+import type { GraphState, LayoutGrouping, Position, Positions } from '@turbo-console/webview-ui';
 
 import { packageNamesOf } from './graph-package.util.ts';
 import { isRecord } from './record.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
-import { COORDINATE_MAX, PACKAGE_NAME_MAX } from '../common/graph.const.ts';
+import { COORDINATE_MAX, GRAPH_CACHE_KEY_PREFIX, GRAPH_FOLDERS_CACHE_KEY_PREFIX, PACKAGE_NAME_MAX } from '../common/graph.const.ts';
 
 type PositionsMessage = {
   readonly hash: string;
   readonly positions: Positions;
+};
+
+/** The `workspaceState` key of a root's layout cache in one grouping. */
+export const cacheKeyOf = (root: string, grouping: LayoutGrouping): string => {
+  const prefix = grouping === 'folders' ? GRAPH_FOLDERS_CACHE_KEY_PREFIX : GRAPH_CACHE_KEY_PREFIX;
+
+  return `${prefix}${root}`;
 };
 
 const isCoordinate = (value: number): boolean => Number.isFinite(value) && Math.abs(value) <= COORDINATE_MAX;

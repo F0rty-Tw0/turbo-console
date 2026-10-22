@@ -6,7 +6,7 @@ const ORIGIN = { x: 0, y: 0 };
 
 describe('FEATURE: freshViewStateOf', () => {
   describe('GIVEN a graph hash with no saved state', () => {
-    it('WHEN a fresh state is made THEN it holds the hash, the default camera, no selection and the default controls', () => {
+    it('WHEN a fresh state is made THEN it holds the hash, the default camera, no selection and the default controls and no grouping', () => {
       const state = freshViewStateOf('h');
 
       expect(state).toStrictEqual({
@@ -22,7 +22,8 @@ describe('FEATURE: freshViewStateOf', () => {
         tags: [],
         detailsOpen: true,
         link: null,
-        trace: null
+        trace: null,
+        grouped: false
       });
     });
   });

@@ -11,7 +11,15 @@ const RF3 = { description: 'M4-2 Review Focus 3', type: 'requirement' };
 
 const RF4 = { description: 'M4-2 Review Focus 4', type: 'requirement' };
 
-const DEFAULT_CONTROLS: ControlsFields = { controlsOpen: true, search: '', depth: 1, hidden: [], focus: null, tags: [] };
+const DEFAULT_CONTROLS: ControlsFields = {
+  controlsOpen: true,
+  search: '',
+  depth: 1,
+  hidden: [],
+  focus: null,
+  tags: [],
+  grouped: false
+};
 
 const ORIGIN = { x: 0, y: 0 };
 
@@ -54,7 +62,8 @@ const SAVED_CONTROLS: ControlsFields = {
   depth: 2,
   hidden: ['docs'],
   focus: 'core',
-  tags: ['lib']
+  tags: ['lib'],
+  grouped: false
 };
 
 const BAD_FIELDS_SAVED = { ...M4_1_VIEW, selected: null, depth: 7, search: 5, hidden: 'web', tags: [1] };
@@ -100,6 +109,27 @@ test.describe('FEATURE: graph controls saved state', () => {
         graphCamera.expectVisible(CORE_AT_2_LIBS));
 
       await test.step('AND no worker was created', async (): Promise<void> => graphHost.expectWorkers(0));
+    }
+  );
+
+  test(
+    'GIVEN Group by folder checked, reopening restores it checked with every other control at its default',
+    { annotation: AC4 },
+    async ({ graphControls, graphHost, graphLook, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('AND Group by folder is checked', async (): Promise<void> => graphControls.pressGrouping());
+
+      await test.step('AND the page is reopened with the saved view', async (): Promise<GraphViewState> => graphHost.reopen());
+
+      await test.step('AND the same state is sent again', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('THEN the checkbox is checked and the other controls are the defaults', async (): Promise<void> =>
+        graphLook.expectControlsFields({ ...DEFAULT_CONTROLS, grouped: true }));
+
+      await test.step('AND the page reports grouped mode', async (): Promise<void> => graphControls.expectGroupedFact(true));
     }
   );
 

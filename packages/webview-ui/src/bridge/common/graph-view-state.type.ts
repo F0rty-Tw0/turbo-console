@@ -22,4 +22,6 @@ export type GraphViewState = {
   readonly detailsOpen: boolean;
   readonly link: GraphLinkRef | null;
   readonly trace: GraphTraceRef | null;
+  /** Whether the page is grouped by folder; carried across a hash change. */
+  readonly grouped: boolean;
 };

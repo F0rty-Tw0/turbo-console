@@ -20,7 +20,8 @@ const SAVED: GraphViewState = {
   tags: [],
   detailsOpen: true,
   link: null,
-  trace: null
+  trace: null,
+  grouped: false
 };
 
 describe('FEATURE: restorePlanOf', () => {

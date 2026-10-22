@@ -21,7 +21,8 @@ const FIRST: GraphViewState = {
   tags: [],
   detailsOpen: true,
   link: null,
-  trace: null
+  trace: null,
+  grouped: false
 };
 
 const SECOND: GraphViewState = { ...FIRST, zoom: 2 };

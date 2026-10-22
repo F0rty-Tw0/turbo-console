@@ -2,10 +2,14 @@ import cytoscape from 'cytoscape';
 import type { CollectionReturnValue, Core, EdgeSingular, ElementDefinition, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setBoxes } from './graph-boxes.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
+import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
+import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
 
 const COLORS: ThemeColors = { background: '#111', label: '#eee', edge: '#888', selected: '#f00', highlighted: '#0f0', frame: '#444' };
 
@@ -61,6 +65,11 @@ const copyEntryOf = (node: NodeSingular): [string, Position] => {
 const positionsOf = (cy: Core): [string, Position][] => cy.nodes().map(copyEntryOf);
 
 const ALL_IDS: ReadonlySet<string> = new Set(['a', 'b', 'c', '__proto__']);
+
+const FIVE_IDS = ['a', 'b', 'c', 'd', '__proto__'];
+
+/** The three boxes and the five packages, sorted by code unit. */
+const FRAMED_IDS = ['\u0001', '\u0001apps', '\u0001packages', '__proto__', 'a', 'b', 'c', 'd'];
 
 describe('FEATURE: graph visibility', () => {
   let cy: Core;
@@ -169,6 +178,57 @@ describe('FEATURE: graph visibility', () => {
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
 
       expect(fitted.map(idOf).sort()).toStrictEqual(['b', 'c']);
+    });
+  });
+
+  describe('GIVEN folder boxes around the packages', () => {
+    const boxDisplays = (): string[] => {
+      const boxIds = cy.nodes(':parent').map(idOf);
+
+      return boxIds.map((id: string): string => styleTextOf(cy, id, 'display'));
+    };
+
+    beforeEach(() => {
+      cy.destroy();
+      cy = boxedCyMock();
+      setBoxes(cy, BOX_GROUPS_STUB);
+    });
+
+    it('WHEN only a is shown THEN b, c, d and __proto__ are hidden and a is shown', () => {
+      showOnly(cy, new Set(['a']));
+
+      const displays = FIVE_IDS.map((id: string): string => styleTextOf(cy, id, 'display'));
+
+      expect(displays).toStrictEqual(['element', 'none', 'none', 'none', 'none']);
+    });
+
+    it('WHEN only a is shown THEN every box keeps display element', () => {
+      showOnly(cy, new Set(['a']));
+
+      expect(boxDisplays()).toStrictEqual(['element', 'element', 'element']);
+    });
+
+    it('WHEN fitVisible runs THEN fit receives the packages and their boxes, whose frames reach past the packages', () => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      fitVisible(cy, PADDING_PX);
+
+      const [shown] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+
+      expect(fitted.map(idOf).sort()).toStrictEqual(FRAMED_IDS);
+    });
+
+    it('WHEN only a is shown and fitVisible runs THEN fit receives a and the apps box only', () => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      showOnly(cy, new Set(['a']));
+      fitVisible(cy, PADDING_PX);
+
+      const [shown] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+
+      expect(fitted.map(idOf).sort()).toStrictEqual(['\u0001apps', 'a']);
     });
   });
 

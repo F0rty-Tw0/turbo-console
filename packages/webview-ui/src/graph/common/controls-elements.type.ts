@@ -21,6 +21,8 @@ export type ControlsElements = {
   readonly panel: HTMLElement;
   readonly search: HTMLInputElement;
   readonly depth: HTMLInputElement;
+  /** The Group by folder checkbox, unchecked until `restore` or a click. */
+  readonly grouping: HTMLInputElement;
   /** One checkbox per tag; empty when no package has tags, and then the panel has no tag fieldset. */
   readonly tags: Map<string, HTMLInputElement>;
   /** Dimmed with `aria-disabled`, never `disabled`, so it stays a Tab stop. */

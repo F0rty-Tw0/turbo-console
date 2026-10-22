@@ -1,10 +1,14 @@
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 import { describe, expect, it } from 'vitest';
 
+import { drawnGraphOf } from './drawn-graph.util.ts';
 import { edgeIdOf } from './edge-id.util.ts';
-import { elkGraphOf } from './elk-graph.util.ts';
+import { elkGraphOf, layoutGraphOf } from './elk-graph.util.ts';
+import { groupedElkGraphOf } from './elk-grouped-graph.util.ts';
+import { folderGroupsOf } from './folder-group.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
+import { STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 
 const SIZE: NodeSize = { width: 100, height: 32 };
 
@@ -81,5 +85,25 @@ describe('FEATURE: elkGraphOf', () => {
     const graph = elkGraphOf([], [], sizeOf);
 
     expect(graph).toMatchObject({ id: 'root', children: [], edges: [] });
+  });
+});
+
+describe('FEATURE: layoutGraphOf', () => {
+  describe('GIVEN the drawn graph of web in apps, ui and core in packages', () => {
+    const drawn = drawnGraphOf(STATE_STUB);
+
+    it('WHEN built flat THEN it is the flat ELK input', () => {
+      const graph = layoutGraphOf(drawn, 'flat', sizeOf);
+
+      expect(graph).toStrictEqual(elkGraphOf(drawn.packages, drawn.edges, sizeOf));
+    });
+
+    it('WHEN built grouped THEN it is the grouped ELK input of its folders', () => {
+      const groups = folderGroupsOf(drawn.infos);
+
+      const graph = layoutGraphOf(drawn, 'folders', sizeOf);
+
+      expect(graph).toStrictEqual(groupedElkGraphOf(groups, drawn.edges, sizeOf));
+    });
   });
 });

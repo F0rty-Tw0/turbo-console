@@ -24,7 +24,7 @@ const EDGES = [
   { source: '__proto__', target: 'constructor' }
 ];
 
-const READY: GraphReady = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null };
+const READY: GraphReady = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, folderPositions: null };
 
 const LOADING: GraphState = { kind: 'loading' };
 

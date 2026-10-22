@@ -32,7 +32,8 @@ export const nodeAt = (id: string, renderedX: number, renderedY: number): ProbeN
     label: '',
     fill: '',
     isGhost: false,
-    borderStyle: 'solid'
+    borderStyle: 'solid',
+    effectiveOpacity: 1
   };
 
   return node;
@@ -132,6 +133,52 @@ export const emptySpotOf = (container: ElementRect, nodes: ProbeNode[], edges: P
   const spot = candidatesOf(container).find(isEmpty);
 
   if (spot === undefined) throw new Error('graph e2e: every container corner and side is covered by a node or an edge');
+
+  return spot;
+};
+
+const GRID_STEP = 20;
+
+const GRID_EDGE_INSET = 2;
+
+const BOX_GROWTH = 2;
+
+const isPointInGrownBox = (point: ViewportPoint, box: ElementRect): boolean => {
+  const grown: ElementRect = {
+    left: box.left - BOX_GROWTH,
+    top: box.top - BOX_GROWTH,
+    width: box.width + 2 * BOX_GROWTH,
+    height: box.height + 2 * BOX_GROWTH
+  };
+
+  return isInsideBox(point, grown);
+};
+
+/** `start`, `start + step`, ... while below `limit`. */
+const stepsOf = (start: number, limit: number): number[] => {
+  const count = Math.max(0, Math.ceil((limit - start) / GRID_STEP));
+  const slots = Array.from({ length: count });
+
+  return Array.from(slots.keys(), (index): number => start + index * GRID_STEP);
+};
+
+/**
+ * The first point of a 20 px grid over the container, 2 px in from each edge, that no box rect (grown by 2 px) holds;
+ * throws when none does.
+ */
+export const freeSpotOf = (container: ElementRect, boxes: ElementRect[]): ViewportPoint => {
+  const rows = stepsOf(container.top + GRID_EDGE_INSET, container.top + container.height - GRID_EDGE_INSET);
+  const columns = stepsOf(container.left + GRID_EDGE_INSET, container.left + container.width - GRID_EDGE_INSET);
+  const pointAt = (y: number, x: number): ViewportPoint => {
+    const point: ViewportPoint = { x, y };
+
+    return point;
+  };
+  const points = rows.flatMap((y): ViewportPoint[] => columns.map((x): ViewportPoint => pointAt(y, x)));
+  const isFree = (point: ViewportPoint): boolean => !boxes.some((box): boolean => isPointInGrownBox(point, box));
+  const spot = points.find(isFree);
+
+  if (spot === undefined) throw new Error('graph e2e: every grid point of the container lies inside a folder box');
 
   return spot;
 };

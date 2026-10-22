@@ -65,9 +65,11 @@ const EXPLAINED = { type: 'edgeExplained', source: 'app', target: 'core', result
 
 const OBJECT_NAMES_EXPLAINED = { type: 'edgeExplained', source: '__proto__', target: 'constructor', result: UNREADABLE_RESULT };
 
-const GRAPH = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null };
+const GRAPH = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, folderPositions: null };
 
 const CACHED_GRAPH = { ...GRAPH, positions: POSITIONS };
+
+const WITHOUT_FOLDER_POSITIONS = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null };
 
 const LOADING = { kind: 'loading' };
 
@@ -89,6 +91,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['singlePackage', SINGLE_PACKAGE],
       ['graph with no positions', GRAPH],
       ['graph with cached positions', CACHED_GRAPH],
+      ['graph with cached folder positions', { ...GRAPH, folderPositions: POSITIONS }],
       ['graph whose packages are named like Object members', { ...GRAPH, packages: OBJECT_NAMES }],
       ['graph with a root package at the empty path', { ...GRAPH, packages: ROOT_PACKAGES }],
       ['graph whose packages have taskCount 0 and 100 000', { ...GRAPH, packages: EXTREME_TASK_COUNT_PACKAGES }]
@@ -149,7 +152,9 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with a string edge', stateMessageOf({ ...GRAPH, edges: ['app>core'] })],
       ['a graph with an edge with no target', stateMessageOf({ ...GRAPH, edges: [NO_TARGET_EDGE] })],
       ['a graph with an edge with a numeric source', stateMessageOf({ ...GRAPH, edges: [NUMERIC_SOURCE_EDGE] })],
-      ['a graph with string positions', stateMessageOf({ ...GRAPH, positions: 'x' })]
+      ['a graph with string positions', stateMessageOf({ ...GRAPH, positions: 'x' })],
+      ['a graph with string folder positions', stateMessageOf({ ...GRAPH, folderPositions: 'x' })],
+      ['a graph with no folderPositions key', stateMessageOf(WITHOUT_FOLDER_POSITIONS)]
     ])('WHEN it is %s THEN it is rejected', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 

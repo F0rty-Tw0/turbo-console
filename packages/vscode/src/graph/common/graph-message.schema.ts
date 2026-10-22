@@ -39,7 +39,8 @@ const openManifestSchema = object({
 const positionsSchema = object({
   type: literal('positions'),
   hash: string().check(regex(GRAPH_HASH_PATTERN)),
-  positions: unknown()
+  positions: unknown(),
+  grouping: zodEnum(['flat', 'folders'])
 });
 
 const layoutMsSchema = number().check(gte(0), lte(LAYOUT_MS_MAX));

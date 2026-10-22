@@ -1,6 +1,14 @@
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
+import type { LayoutNotice, LayoutScreen } from '../common/graph-layouts.type.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
-import { LAYOUT_FAILED_TEXT, LOADING_TEXT, SINGLE_PACKAGE_TEXT } from '../common/graph.const.ts';
+import {
+  FALLBACK_NOTICE,
+  FALLBACK_NOTICE_TEXT,
+  LAYOUT_FAILED_TEXT,
+  LOADING_TEXT,
+  NO_NOTICE,
+  SINGLE_PACKAGE_TEXT
+} from '../common/graph.const.ts';
 
 type MessageState = Exclude<GraphState, GraphReady>;
 
@@ -16,7 +24,7 @@ const messageTextOf = (state: MessageState): string => {
 };
 
 /** Toolbar, notice and body hidden, `text` shown; Reload only when `canReload`. */
-export const showMessage = (page: PageElements, text: string, canReload: boolean): void => {
+const showMessage = (page: PageElements, text: string, canReload: boolean): void => {
   page.toolbar.hidden = true;
   page.body.hidden = true;
   page.notice.hidden = true;
@@ -39,14 +47,36 @@ export const showFailure = (page: PageElements, error: unknown): void => {
   showMessage(page, `${LAYOUT_FAILED_TEXT}: ${reason}`, false);
 };
 
+/** The notice line: hidden for `none`; the simplified-layout copy with Retry for `fallback`; a progress text without Retry. */
+const showLayoutNotice = (page: PageElements, notice: LayoutNotice): void => {
+  const text = notice.kind === 'progress' ? notice.text : FALLBACK_NOTICE_TEXT;
+
+  page.noticeText.textContent = text;
+  page.retry.hidden = notice.kind !== 'fallback';
+  page.notice.hidden = notice.kind === 'none';
+};
+
 /** Toolbar and body shown with Controls, Details, Fit and Re-layout enabled; the notice only for a fallback layout. */
-export const showGraphView = (page: PageElements, isFallback: boolean): void => {
+const showGraphView = (page: PageElements, isFallback: boolean): void => {
+  const notice: LayoutNotice = isFallback ? FALLBACK_NOTICE : NO_NOTICE;
+
   page.message.hidden = true;
   page.toolbar.hidden = false;
   page.body.hidden = false;
-  page.notice.hidden = !isFallback;
+  showLayoutNotice(page, notice);
   page.controls.disabled = false;
   page.details.disabled = false;
   page.fit.disabled = false;
   page.relayout.disabled = false;
+};
+
+/** What the layouts drive on the page: Loading, the graph view, the notice line. */
+export const layoutScreenOf = (page: PageElements): LayoutScreen => {
+  const screen: LayoutScreen = {
+    showLoading: (): void => showMessage(page, LOADING_TEXT, false),
+    showGraph: (isFallback: boolean): void => showGraphView(page, isFallback),
+    showNotice: (notice: LayoutNotice): void => showLayoutNotice(page, notice)
+  };
+
+  return screen;
 };

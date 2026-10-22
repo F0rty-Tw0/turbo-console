@@ -1,7 +1,28 @@
-import type { StylesheetJson } from 'cytoscape';
+import type { Css, StylesheetJson } from 'cytoscape';
 
-import { NODE_FONT_SIZE } from '../common/graph.const.ts';
+import { FOLDER_PADDING_PX, NODE_FONT_SIZE } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+
+/**
+ * A box with packages (`node:parent`): padding, no label, no overlay, a fixed size the compound ignores for its
+ * children's bounds, the frame and the editor background. A childless box matches only `node`, so its size comes from
+ * `data(width)` and `data(height)`, which a box does not carry.
+ */
+const boxStyleOf = (colors: ThemeColors): Css.Node => {
+  const padding = `${FOLDER_PADDING_PX}px`;
+  const box = {
+    padding,
+    label: '',
+    'overlay-opacity': 0,
+    width: 1,
+    height: 1,
+    'border-width': 1,
+    'border-color': colors.frame,
+    'background-color': colors.background
+  } as const;
+
+  return box;
+};
 
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with
@@ -40,6 +61,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
   const dimmed = { opacity: 0.25 };
   const style: StylesheetJson = [
     { selector: 'node', style: node },
+    { selector: 'node:parent', style: boxStyleOf(colors) },
     { selector: 'edge', style: edge },
     { selector: 'node.selected', style: selectedNode },
     { selector: 'node.highlighted', style: highlightedNode },

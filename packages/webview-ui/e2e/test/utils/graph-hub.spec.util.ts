@@ -27,7 +27,7 @@ export const hubGraphState = (count = LARGE_PACKAGE_COUNT): GraphReady => {
   const packages = indexes.map(hubPackageOf);
   const edges = indexes.slice(1).map(dependentEdgeOf);
   const positions: Positions = Object.fromEntries(indexes.map(largeEntryOf));
-  const state: GraphReady = { kind: 'graph', hash: hashOf(count), packages, edges, positions };
+  const state: GraphReady = { kind: 'graph', hash: hashOf(count), packages, edges, positions, folderPositions: null };
 
   return state;
 };

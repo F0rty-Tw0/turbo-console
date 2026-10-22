@@ -1,12 +1,11 @@
-import type { GraphPackage, GraphState, GraphWebviewMessage, Positions } from '@turbo-console/webview-ui';
+import type { GraphPackage, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import { answerRequest } from './graph-explain.ts';
+import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
 import { LatestWins } from './latest-wins.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import type { ExplainContext, ExplainRequest, GraphPorts } from '../common/graph.type.ts';
-import { acceptedPositions } from '../utils/graph-cache.util.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
 import { packageNamesOf } from '../utils/graph-package.util.ts';
 import { graphStateOfRoot } from '../utils/graph-state.util.ts';
@@ -97,10 +96,10 @@ export class GraphSession {
   }
 
   private stateNow(): GraphState {
-    const cache = this.ports.readCache(this.root);
+    const caches = layoutCachesOf(this.ports, this.root);
     const rootState = this.roots.get(this.root)?.state;
 
-    return graphStateOfRoot(rootState, cache);
+    return graphStateOfRoot(rootState, caches);
   }
 
   private rootChanged(change: RootChange): void {
@@ -127,10 +126,13 @@ export class GraphSession {
         await this.openDetails(message.packageName, value);
 
         return;
-      case 'positions':
-        this.storePositions(message.hash, message.positions, value);
+      case 'positions': {
+        const isStored = storePositions(this.ports, this.root, this.stateNow(), message);
+
+        if (!isStored) this.drop(value);
 
         return;
+      }
       case 'layoutDone':
         this.ports.info(`graph layout ${message.engine} ${message.ms} ms`);
 
@@ -189,21 +191,6 @@ export class GraphSession {
     const isHandled = await answerRequest(request, context);
 
     if (!isHandled) this.drop(value);
-  }
-
-  private storePositions(hash: string, positions: Positions, value: unknown): void {
-    const state = this.stateNow();
-    const accepted = acceptedPositions(state, { hash, positions });
-
-    if (accepted === null) {
-      this.drop(value);
-
-      return;
-    }
-
-    const entry: GraphLayoutCacheEntry = { hash, positions: accepted };
-
-    this.ports.writeCache(this.root, entry);
   }
 
   private drop(value: unknown): void {

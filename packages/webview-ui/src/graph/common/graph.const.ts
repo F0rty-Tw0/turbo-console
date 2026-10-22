@@ -1,3 +1,4 @@
+import type { LayoutNotice } from './graph-layouts.type.ts';
 import type { Column } from './roving.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 
@@ -29,6 +30,16 @@ export const LAYOUT_FAILED_TEXT = 'The package graph could not be drawn';
 export const SINGLE_PACKAGE_TEXT = 'This is a single-package repo, so there is no package graph';
 
 export const FALLBACK_NOTICE_TEXT = 'Simplified layout: the layout worker failed';
+
+/** The notice while the first grouped layout runs and the flat graph stays on screen. */
+export const LAYING_OUT_FOLDERS_TEXT = 'Laying out folders…';
+
+/** The notice while the first flat layout runs and the grouped graph stays on screen. */
+export const LAYING_OUT_GRAPH_TEXT = 'Laying out the graph…';
+
+export const NO_NOTICE: LayoutNotice = { kind: 'none' };
+
+export const FALLBACK_NOTICE: LayoutNotice = { kind: 'fallback' };
 
 export const FIT_LABEL = 'Fit';
 
@@ -74,6 +85,18 @@ export const ELK_OPTIONS: Readonly<Record<string, string>> = {
   'elk.edgeRouting': 'POLYLINE'
 };
 
+/** Starts every folder box id, in Cytoscape and ELK alike; package names never start with U+0001. */
+export const FOLDER_ID_PREFIX = '\u0001';
+
+/** Room ELK leaves around a folder's packages, and Cytoscape's compound padding, in px. */
+export const FOLDER_PADDING_PX = 32;
+
+/** The grouped root: the same layered options, with edges between packages of different folders laid out together. */
+export const ELK_GROUPED_ROOT_OPTIONS: Readonly<Record<string, string>> = {
+  ...ELK_OPTIONS,
+  'elk.hierarchyHandling': 'INCLUDE_CHILDREN'
+};
+
 /** The group header for packages whose path has no folder part. */
 export const ROOT_FOLDER = '(root)';
 
@@ -96,6 +119,8 @@ export const OVERLAY_MEDIA_QUERY = '(width < 960px)';
 export const SEARCH_LABEL = 'Search packages';
 
 export const DEPTH_LABEL = 'Focus depth';
+
+export const GROUP_BY_FOLDER_LABEL = 'Group by folder';
 
 export const TAGS_LABEL = 'Tags';
 

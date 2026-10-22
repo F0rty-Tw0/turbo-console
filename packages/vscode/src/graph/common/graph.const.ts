@@ -7,6 +7,8 @@ export const GRAPH_COMMAND = 'turboConsole.openPackageGraph';
 
 export const GRAPH_CACHE_KEY_PREFIX = 'turboConsole.graphLayout:';
 
+export const GRAPH_FOLDERS_CACHE_KEY_PREFIX = 'turboConsole.graphLayout.folders:';
+
 export const NO_ROOT_TEXT = 'Turbo Console: no Turborepo workspace found';
 
 export const GRAPH_OPEN_FAILED_TEXT = 'Could not open the Package Graph. See Output.';

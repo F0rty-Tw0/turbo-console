@@ -10,9 +10,10 @@ export type PostedGraph = {
   readonly hash: string;
   readonly packages: string[];
   readonly positions: Positions | null;
+  readonly folderPositions: Positions | null;
 };
 
-/** A `GraphHost` of spies: `open` hands out `views` in order; the layout cache is the in-memory `cached` map. */
+/** A `GraphHost` of spies: `open` hands out `views` in order; the layout caches are the in-memory `cached` map, keyed by `cacheKeyOf`. */
 export type GraphHostFakes = {
   readonly host: GraphHost;
   readonly open: Mock<GraphHost['open']>;

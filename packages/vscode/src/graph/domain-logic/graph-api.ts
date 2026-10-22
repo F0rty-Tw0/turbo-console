@@ -27,7 +27,7 @@ export const graphApiOf = (panels: ReadonlyMap<string, OpenGraphPanel>, readCach
 
     await panel.session.receive(message);
   };
-  const cachedHash = (root: string): string | null => readCache(root)?.hash ?? null;
+  const cachedHash = (root: string): string | null => readCache(root, 'flat')?.hash ?? null;
   const api: GraphApi = { panels: list, posted, receive, cachedHash };
 
   return api;

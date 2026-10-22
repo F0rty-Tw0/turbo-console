@@ -45,7 +45,8 @@ export const DIAMOND_CHAIN_STUB: GraphReady = {
   hash: 'a1b2c3d4',
   packages: packagesOf(['base', 'config', 'core', 'data', 'docs', 'ui', 'web']),
   edges: DIAMOND_CHAIN_EDGES,
-  positions: null
+  positions: null,
+  folderPositions: null
 };
 
 export const DIAMOND_CHAIN_CACHED_STUB: GraphReady = { ...DIAMOND_CHAIN_STUB, positions: DIAMOND_CHAIN_POSITIONS_STUB };
@@ -89,7 +90,8 @@ export const OBJECT_MEMBER_NAMES_STUB: GraphReady = {
   hash: 'f00dface',
   packages: packagesOf(['__proto__', 'app', 'constructor', 'toString']),
   edges: OBJECT_MEMBER_EDGES,
-  positions: null
+  positions: null,
+  folderPositions: null
 };
 
 const ARROW_NAME_EDGES: GraphEdge[] = [
@@ -104,7 +106,8 @@ export const ARROW_NAMES_STUB: GraphReady = {
   hash: 'a0b0c0d0',
   packages: packagesOf(['a', 'a>b', 'b', 'b>c', 'c']),
   edges: ARROW_NAME_EDGES,
-  positions: null
+  positions: null,
+  folderPositions: null
 };
 
 export const LOADING_STUB: GraphState = { kind: 'loading' };

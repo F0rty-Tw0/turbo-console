@@ -1,8 +1,10 @@
 import type { EdgeSingular, NodeSingular } from 'cytoscape';
 
+import { packageNodes } from './graph-boxes.ts';
+import { probeFoldersOf } from './graph-probe-folders.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
-import type { GraphProbe, ProbeEdge, ProbeFacts, ProbeHost, ProbeNode, ProbeState } from '../common/graph-probe.type.ts';
+import type { GraphProbe, ProbeEdge, ProbeFacts, ProbeFolder, ProbeHost, ProbeNode, ProbeState } from '../common/graph-probe.type.ts';
 import { GHOST_CLASS } from '../common/graph.const.ts';
 
 const stateOf = (element: NodeSingular | EdgeSingular): ProbeState => {
@@ -63,7 +65,8 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     label,
     fill,
     isGhost: node.hasClass(GHOST_CLASS),
-    borderStyle: styleText(node, 'border-style')
+    borderStyle: styleText(node, 'border-style'),
+    effectiveOpacity: node.effectiveOpacity()
   };
 
   return probeNode;
@@ -81,14 +84,15 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     const origin = originOf();
     const withOrigin = (node: NodeSingular): ProbeNode => probeNodeOf(node, origin);
 
-    return view.cy().nodes().map(withOrigin);
+    return packageNodes(view.cy()).map(withOrigin);
   };
   const edges = (): ProbeEdge[] => view.cy().edges().map(probeEdgeOf);
   const visibleIds = (): string[] => {
-    const ids = view.cy().nodes(':visible').not(`.${GHOST_CLASS}`).map(idOf);
+    const ids = packageNodes(view.cy()).filter(':visible').not(`.${GHOST_CLASS}`).map(idOf);
 
     return ids.sort();
   };
+  const folders = (): ProbeFolder[] => probeFoldersOf(view.cy(), originOf());
   const edgeColor = (): string => {
     const first = view.cy().edges().first();
     const isNone = first.empty();
@@ -99,7 +103,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
   };
   const zoom = (): number => view.viewport().zoom;
   const pan = (): Position => view.viewport().pan;
-  const probe: GraphProbe = { ...facts, nodes, edges, visibleIds, edgeColor, zoom, pan };
+  const probe: GraphProbe = { ...facts, nodes, edges, visibleIds, folders, edgeColor, zoom, pan };
 
   return probe;
 };

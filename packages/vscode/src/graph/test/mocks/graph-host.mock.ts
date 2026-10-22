@@ -1,4 +1,4 @@
-import type { GraphHostMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 import { vi } from 'vitest';
 
 import type { EditorPanelView } from '../../../shared/common/panel-view.type.ts';
@@ -6,9 +6,10 @@ import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
 import { viewMock } from '../../../shared/test/mocks/panel-view.mock.ts';
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphHost } from '../../common/graph-panel.type.ts';
+import { cacheKeyOf } from '../../utils/graph-cache.util.ts';
 import type { GraphHostFakes } from '../common/graph.type.ts';
 
-/** Every host effect a spy; `open` hands out shown views and the layout cache is an in-memory map. */
+/** Every host effect a spy; `open` hands out shown views and the layout caches are an in-memory map keyed by `cacheKeyOf`. */
 export const graphHostMock = (): GraphHostFakes => {
   const views: ViewFake<GraphHostMessage>[] = [];
   const cached = new Map<string, GraphLayoutCacheEntry>();
@@ -20,9 +21,10 @@ export const graphHostMock = (): GraphHostFakes => {
     return fake.view;
   };
   const open = vi.fn<GraphHost['open']>(openView);
-  const readCache = (root: string): GraphLayoutCacheEntry | null => cached.get(root) ?? null;
-  const writeCache = (root: string, entry: GraphLayoutCacheEntry): void => {
-    cached.set(root, entry);
+  const readCache = (root: string, grouping: LayoutGrouping): GraphLayoutCacheEntry | null =>
+    cached.get(cacheKeyOf(root, grouping)) ?? null;
+  const writeCache = (root: string, grouping: LayoutGrouping, entry: GraphLayoutCacheEntry): void => {
+    cached.set(cacheKeyOf(root, grouping), entry);
   };
   const readText = vi.fn<GraphHost['readText']>();
   const openAt = vi.fn<GraphHost['openAt']>();

@@ -31,7 +31,8 @@ const STATE: GraphViewState = {
   tags: ['ui', 'old'],
   detailsOpen: true,
   link: null,
-  trace: null
+  trace: null,
+  grouped: false
 };
 
 describe('FEATURE: restoredFilters', () => {
@@ -39,7 +40,7 @@ describe('FEATURE: restoredFilters', () => {
     it('WHEN restored THEN only the known entries stay and the focused name leaves hidden', () => {
       const focus: GraphFocus = { name: 'web', depth: 2 };
       const filters: GraphFilters = { hidden: new Set(), focus, tags: new Set(['ui']) };
-      const expected: RestoredControls = { filters, search: 'we', depth: 2, isOpen: false };
+      const expected: RestoredControls = { filters, search: 'we', depth: 2, isOpen: false, isGrouped: false };
 
       const restored = restoredFilters(STATE, GRAPH);
 
@@ -61,20 +62,50 @@ describe('FEATURE: restoredFilters', () => {
   });
 });
 
+describe('FEATURE: restoredFilters grouping', () => {
+  it.each([
+    ['a grouped saved state', true],
+    ['an ungrouped saved state', false]
+  ])('GIVEN %s WHEN restored THEN isGrouped follows it', (_name, grouped) => {
+    const restored = restoredFilters({ ...STATE, grouped }, GRAPH);
+
+    expect(restored.isGrouped).toBe(grouped);
+  });
+});
+
 describe('FEATURE: controlsFieldsOf', () => {
+  it.each([
+    ['grouped', true],
+    ['ungrouped', false]
+  ])('GIVEN a %s panel WHEN saved THEN grouped follows it', (_name, isGrouped) => {
+    const filters: GraphFilters = { hidden: new Set(), focus: null, tags: new Set() };
+
+    const fields = controlsFieldsOf(filters, '', 2, true, isGrouped);
+
+    expect(fields.grouped).toBe(isGrouped);
+  });
+
   it('GIVEN hidden names, a focus and tags WHEN saved THEN the fields list them and name the focus', () => {
     const focus: GraphFocus = { name: 'web', depth: 2 };
     const filters: GraphFilters = { hidden: new Set(['api']), focus, tags: new Set(['ui']) };
 
-    const fields = controlsFieldsOf(filters, 'we', 2, false);
+    const fields = controlsFieldsOf(filters, 'we', 2, false, false);
 
-    expect(fields).toStrictEqual({ controlsOpen: false, search: 'we', depth: 2, hidden: ['api'], focus: 'web', tags: ['ui'] });
+    expect(fields).toStrictEqual({
+      controlsOpen: false,
+      search: 'we',
+      depth: 2,
+      hidden: ['api'],
+      focus: 'web',
+      tags: ['ui'],
+      grouped: false
+    });
   });
 
   it('GIVEN no focus WHEN saved THEN the focus is null', () => {
     const filters: GraphFilters = { hidden: new Set(), focus: null, tags: new Set() };
 
-    const fields = controlsFieldsOf(filters, '', 1, true);
+    const fields = controlsFieldsOf(filters, '', 1, true, false);
 
     expect(fields.focus).toBeNull();
   });

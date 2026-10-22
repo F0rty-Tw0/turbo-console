@@ -37,7 +37,8 @@ const VALID: GraphViewState = {
   tags: ['lib', 'constructor'],
   detailsOpen: false,
   link: LINK_REF,
-  trace: TRACE_REF
+  trace: TRACE_REF,
+  grouped: true
 };
 
 const CAMERA = { hash: 'h', zoom: 1.5, pan: PAN, selected: 'web' };
@@ -52,7 +53,8 @@ const DEFAULTED: GraphViewState = {
   tags: [],
   detailsOpen: true,
   link: null,
-  trace: null
+  trace: null,
+  grouped: false
 };
 
 const ORIGIN: Position = { x: 0, y: 0 };
@@ -124,6 +126,20 @@ describe('FEATURE: readGraphViewState', () => {
       const state = readGraphViewState({ ...VALID, depth });
 
       expect(state).toStrictEqual({ ...VALID, depth });
+    });
+  });
+
+  describe('GIVEN a state with a saved grouped value', () => {
+    it.each([
+      ['true', true, { grouped: true }],
+      ['false', false, { grouped: false }],
+      ['missing', false, {}],
+      ["the string 'true'", false, { grouped: 'true' }],
+      ['the number 1', false, { grouped: 1 }]
+    ])('WHEN it is %s THEN grouped reads %s', (_name, expected, saved) => {
+      const state = readGraphViewState({ ...CAMERA, ...saved });
+
+      expect(state?.grouped).toBe(expected);
     });
   });
 

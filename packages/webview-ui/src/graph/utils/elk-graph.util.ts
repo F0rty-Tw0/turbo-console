@@ -1,7 +1,11 @@
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { edgeIdOf } from './edge-id.util.ts';
+import { groupedElkGraphOf } from './elk-grouped-graph.util.ts';
+import { folderGroupsOf } from './folder-group.util.ts';
+import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import type { DrawnGraph } from '../common/graph-page.type.ts';
 import { ELK_OPTIONS } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 
@@ -24,4 +28,13 @@ export const elkGraphOf = (packages: string[], edges: GraphEdge[], sizeOf: (name
   const graph: ElkNode = { id: 'root', layoutOptions: ELK_OPTIONS, children, edges: elkEdges };
 
   return graph;
+};
+
+/** The ELK input of the drawn graph in `mode`: flat, or one compound per folder. */
+export const layoutGraphOf = (drawn: DrawnGraph, mode: LayoutGrouping, sizeOf: (name: string) => NodeSize): ElkNode => {
+  if (mode === 'flat') return elkGraphOf(drawn.packages, drawn.edges, sizeOf);
+
+  const groups = folderGroupsOf(drawn.infos);
+
+  return groupedElkGraphOf(groups, drawn.edges, sizeOf);
 };

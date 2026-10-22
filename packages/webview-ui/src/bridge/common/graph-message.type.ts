@@ -73,10 +73,15 @@ type GraphOpenManifestMessage = {
   readonly line: number;
 };
 
-type GraphPositionsMessage = {
+/** Which layout a `positions` post belongs to: the flat graph or the one grouped by folder. */
+export type LayoutGrouping = 'flat' | 'folders';
+
+/** Positions for the host's layout cache of `grouping`; keys are exactly the package names. */
+export type GraphPositionsMessage = {
   readonly type: 'positions';
   readonly hash: string;
   readonly positions: Positions;
+  readonly grouping: LayoutGrouping;
 };
 
 type GraphLayoutDoneMessage = {

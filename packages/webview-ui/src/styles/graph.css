@@ -196,6 +196,12 @@ p {
   gap: var(--space-1);
 }
 
+.controls-grouping {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .controls-input {
   padding: var(--space-1);
   border: 1px solid var(--vscode-input-border, transparent);

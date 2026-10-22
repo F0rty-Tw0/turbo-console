@@ -37,6 +37,7 @@ export type GraphReady = {
   readonly packages: GraphPackage[];
   readonly edges: GraphEdge[];
   readonly positions: Positions | null;
+  readonly folderPositions: Positions | null;
 };
 
 export type GraphState = GraphLoading | GraphError | GraphSinglePackage | GraphReady;

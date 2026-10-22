@@ -44,11 +44,10 @@ const loadedStore = (loaded: LoadedModel = GRAPH_LOADED_STUB): RootStore => {
 /** The JSON a page posts: a `__proto__` key in it is an own key once parsed, as the webview channel delivers it. */
 const overTheWire = (message: unknown): unknown => JSON.parse(JSON.stringify(message));
 
-const cachedPositionsOf = (ports: GraphPorts): unknown => vi.mocked(ports.writeCache).mock.calls[0]?.[1].positions;
+const cachedPositionsOf = (ports: GraphPorts): unknown => vi.mocked(ports.writeCache).mock.calls[0]?.[2].positions;
 
-/** A started, shown session on `/ws`; `cached` seeds its layout cache. */
-const shownSession = (cached: GraphLayoutCacheEntry | null = null, store: RootStore = loadedStore()): ShownSession => {
-  const ports = portsWith(cached);
+/** A started, shown session on `/ws` over `ports`. */
+const shownSessionOn = (ports: GraphPorts, store: RootStore = loadedStore()): ShownSession => {
   const session = new GraphSession('/ws', store, ports);
 
   session.setVisible(true);
@@ -57,6 +56,13 @@ const shownSession = (cached: GraphLayoutCacheEntry | null = null, store: RootSt
   const shown: ShownSession = { session, store, ports };
 
   return shown;
+};
+
+/** A started, shown session on `/ws`; `cached` seeds its flat layout cache. */
+const shownSession = (cached: GraphLayoutCacheEntry | null = null, store: RootStore = loadedStore()): ShownSession => {
+  const ports = portsWith(cached);
+
+  return shownSessionOn(ports, store);
 };
 
 describe('FEATURE: graph session messages', () => {
@@ -69,7 +75,7 @@ describe('FEATURE: graph session messages', () => {
 
       store.apply('/ws', GROWN_LOADED_STUB);
 
-      await session.receive({ type: 'positions', hash: first.hash, positions: positionsOf(first.packages) });
+      await session.receive({ type: 'positions', hash: first.hash, positions: positionsOf(first.packages), grouping: 'flat' });
 
       expect(ports.writeCache).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
@@ -81,16 +87,16 @@ describe('FEATURE: graph session messages', () => {
       await session.receive({ type: 'ready' });
       const positions = positionsOf(GRAPH_PACKAGES_STUB);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'flat' });
 
-      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', { hash: GRAPH_HASH_STUB, positions });
+      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', { hash: GRAPH_HASH_STUB, positions });
     });
 
     it('WHEN one package is missing THEN they are dropped and logged', async () => {
       const { session, ports } = shownSession();
       const positions = positionsOf(['@org/x', 'a']);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'flat' });
 
       expect(ports.writeCache).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
@@ -100,7 +106,7 @@ describe('FEATURE: graph session messages', () => {
       const { session, ports } = shownSession();
       const names = Array.from({ length: 5001 }, (_, index) => `p${index}`);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions: positionsOf(names) });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions: positionsOf(names), grouping: 'flat' });
 
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('Dropped a graph message: positions with 5001 keys');
     });
@@ -111,7 +117,7 @@ describe('FEATURE: graph session messages', () => {
       await session.receive({ type: 'ready' });
 
       const { hash, packages } = lastStateOf(ports);
-      const message = overTheWire({ type: 'positions', hash, positions: positionsOf(packages) });
+      const message = overTheWire({ type: 'positions', hash, positions: positionsOf(packages), grouping: 'flat' });
 
       await session.receive(message);
 
@@ -125,17 +131,59 @@ describe('FEATURE: graph session messages', () => {
 
       const { hash, packages } = lastStateOf(ports);
 
-      await session.receive(overTheWire({ type: 'positions', hash, positions: positionsOf(packages) }));
+      await session.receive(overTheWire({ type: 'positions', hash, positions: positionsOf(packages), grouping: 'flat' }));
 
       expect(Object.hasOwn(Object.prototype, 'x')).toBe(false);
       expect(Object.getPrototypeOf(cachedPositionsOf(ports))).toBe(Object.prototype);
+    });
+
+    it('WHEN a folders post carries the current hash and every package THEN it is stored once under the folders entry', async () => {
+      const { session, ports } = shownSession();
+      const positions = positionsOf(GRAPH_PACKAGES_STUB);
+
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'folders' });
+
+      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'folders', { hash: GRAPH_HASH_STUB, positions });
+    });
+
+    it.each([['\u0001apps'], ['\u0002apps']])(
+      'WHEN a folders post names %j in place of a package THEN it is dropped and logged',
+      async (id) => {
+        const { session, ports } = shownSession();
+        const others = GRAPH_PACKAGES_STUB.slice(1);
+        const names = [...others, id];
+
+        await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions: positionsOf(names), grouping: 'folders' });
+
+        expect(ports.writeCache).not.toHaveBeenCalled();
+        expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
+      }
+    );
+
+    it('WHEN a flat and a folders post share the hash THEN each is stored under its own entry', async () => {
+      const { session, ports } = shownSession();
+      const positions = positionsOf(GRAPH_PACKAGES_STUB);
+
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'flat' });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'folders' });
+
+      expect(vi.mocked(ports.writeCache).mock.calls.map(([, grouping]) => grouping)).toStrictEqual(['flat', 'folders']);
+    });
+
+    it('WHEN only the folders cache is seeded THEN the published state carries folderPositions and no positions', async () => {
+      const entry: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: positionsOf(GRAPH_PACKAGES_STUB) };
+      const { session, ports } = shownSessionOn(portsWith(null, entry));
+
+      await session.receive({ type: 'ready' });
+
+      expect(lastStateOf(ports)).toMatchObject({ positions: null, folderPositions: entry.positions });
     });
 
     it('WHEN one name is not a package THEN they are dropped and logged', async () => {
       const { session, ports } = shownSession();
       const positions = positionsOf([...GRAPH_PACKAGES_STUB, 'ghost']);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'flat' });
 
       expect(ports.writeCache).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));

@@ -5,6 +5,7 @@ export type ProbeState = 'selected' | 'highlighted' | 'dimmed' | 'normal';
 
 /**
  * `x`, `y` are model centres; `renderedX`, `renderedY` the centre in page CSS pixels; colours are Cytoscape's `rgb(...)`.
+ * `effectiveOpacity` is Cytoscape's `node.effectiveOpacity()`: the node's opacity times its ancestors'.
  * A ghost (a trace's hidden path package) reads `highlighted` plus `isGhost`.
  */
 export type ProbeNode = {
@@ -21,6 +22,7 @@ export type ProbeNode = {
   readonly fill: string;
   readonly isGhost: boolean;
   readonly borderStyle: string;
+  readonly effectiveOpacity: number;
 };
 
 export type ProbeEdge = {
@@ -31,6 +33,22 @@ export type ProbeEdge = {
   /** Cytoscape's `visible()`: false with a hidden end or a `display: none` bypass. */
   readonly isDrawn: boolean;
   readonly lineStyle: string;
+};
+
+/**
+ * A folder box: `folder` is the key (`''` the root); the rect is the box's centre and size in page CSS pixels, as
+ * `ProbeNode`'s; `packages` lists all the folder's packages by name, hidden ones included.
+ */
+export type ProbeFolder = {
+  readonly folder: string;
+  readonly isCollapsed: boolean;
+  readonly isVisible: boolean;
+  readonly state: ProbeState;
+  readonly renderedX: number;
+  readonly renderedY: number;
+  readonly renderedWidth: number;
+  readonly renderedHeight: number;
+  readonly packages: string[];
 };
 
 export type LayoutEngine = 'elk' | 'cache' | 'fallback';
@@ -49,6 +67,10 @@ export type GraphProbe = {
   readonly layoutEngine: () => LayoutEngine | null;
   /** The package names Cytoscape draws, sorted, ghosts left out: nodes a filter hides are `display: none`. */
   readonly visibleIds: () => string[];
+  /** Whether the page shows the packages in folder boxes. */
+  readonly grouped: () => boolean;
+  /** The folder boxes sorted by key (`''` first); `[]` while the graph is flat. */
+  readonly folders: () => ProbeFolder[];
   /** From the latest `graph` state's message event to its controls panel built and restored; `null` until then. */
   readonly controlsBuiltMs: () => number | null;
   /** From the latest filter input to the return of the fit after it; `null` until an input changed the visible set. */
@@ -68,6 +90,7 @@ export type ProbeFacts = Pick<
   GraphProbe,
   | 'firstFrameMs'
   | 'layoutEngine'
+  | 'grouped'
   | 'selected'
   | 'controlsBuiltMs'
   | 'filterAppliedMs'

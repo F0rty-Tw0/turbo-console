@@ -27,13 +27,26 @@ export const restoredFilters = (state: GraphViewState, graph: DrawnGraph): Resto
   const hidden = new Set(state.hidden.filter(isKept));
   const tags = new Set(state.tags.filter((tag) => knownTags.has(tag)));
   const filters: GraphFilters = { hidden, focus, tags };
-  const restored: RestoredControls = { filters, search: state.search, depth: state.depth, isOpen: state.controlsOpen };
+  const restored: RestoredControls = {
+    filters,
+    search: state.search,
+    depth: state.depth,
+    isOpen: state.controlsOpen,
+    isGrouped: state.grouped
+  };
 
   return restored;
 };
 
 /** The controls part of the saved view state: the inverse of `restoredFilters`; the focus is saved by name only. */
-export const controlsFieldsOf = (filters: GraphFilters, search: string, depth: number, isOpen: boolean): ControlsViewFields => {
+export const controlsFieldsOf = (
+  filters: GraphFilters,
+  search: string,
+  depth: number,
+  isOpen: boolean,
+  isGrouped: boolean
+  // eslint-disable-next-line max-params -- five until `depth` moves into `GraphFilters`, leaving four
+): ControlsViewFields => {
   const { hidden, focus, tags } = filters;
   const fields: ControlsViewFields = {
     controlsOpen: isOpen,
@@ -41,7 +54,8 @@ export const controlsFieldsOf = (filters: GraphFilters, search: string, depth: n
     depth,
     hidden: [...hidden],
     focus: focus?.name ?? null,
-    tags: [...tags]
+    tags: [...tags],
+    grouped: isGrouped
   };
 
   return fields;

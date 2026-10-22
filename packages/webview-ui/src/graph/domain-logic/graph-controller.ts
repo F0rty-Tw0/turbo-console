@@ -1,33 +1,30 @@
 import { GraphFiltering } from './graph-filtering.ts';
 import { GraphFrames } from './graph-frames.ts';
-import { postDragged, showRelayout } from './graph-layout-actions.ts';
-import { showFailure, showGraphView, showMessage, showStateMessage } from './graph-page-states.ts';
-import { postLayout } from './layout-post.ts';
+import { GraphLayouts } from './graph-layouts.ts';
+import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
 import type { GraphPackage, GraphReady, GraphState, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView, GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
-import { LOADING_TEXT } from '../common/graph.const.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
-import type { LayoutResult } from '../common/layout.type.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
-import { elkGraphOf } from '../utils/elk-graph.util.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
+import { groupingOf } from '../utils/layout-plan.util.ts';
 import { taskCountsDiffer } from '../utils/task-counts.util.ts';
 import { restorePlanOf } from '../utils/view-restore.util.ts';
 
 const BACKGROUND: InspectionInput = { kind: 'background' };
 
-/** Shows the host's states; lays a graph out unless the host sent cached positions, and posts the layout back. */
+/** Shows the host's states; a graph state goes to the layouts, which draw it and post its layout back. */
 class GraphPageController {
   public readonly view: GraphView;
 
   private readonly deps: GraphControllerDeps;
   private readonly frames: GraphFrames;
   private readonly filtering: GraphFiltering;
+  private readonly layouts: GraphLayouts;
   private drawn: DrawnGraph | null = null;
-  private engine: LayoutEngine | null = null;
 
   public constructor(deps: GraphControllerDeps) {
     const { bridge, page } = deps;
@@ -35,8 +32,9 @@ class GraphPageController {
       onTapNode: (name: string): void => this.filtering.inspection.tapNode(name),
       onTapEdge: (source: string, target: string): void => this.filtering.inspection.tapEdge(source, target),
       onTapBackground: (): void => this.filtering.inspection.input(BACKGROUND),
+      onTapFolder: (): void => undefined,
       onDoubleTapNode: (): void => this.filtering.inspection.openDetails(),
-      onDragEnd: (positions: Positions): void => postDragged(bridge, this.drawn, this.engine, positions),
+      onDragEnd: (positions: Positions): void => this.layouts.dragged(positions),
       onViewport: (): void => this.filtering.inspection.saveViewport(),
       onRender: (): void => this.frames.mark()
     };
@@ -44,10 +42,23 @@ class GraphPageController {
     this.deps = deps;
     this.frames = new GraphFrames(deps.now);
     this.view = deps.createView(page.container, handlers);
-    this.filtering = new GraphFiltering({ ...deps, view: this.view, drawn: (): DrawnGraph | null => this.drawn });
+    this.filtering = new GraphFiltering({
+      ...deps,
+      view: this.view,
+      drawn: (): DrawnGraph | null => this.drawn,
+      onGrouping: (isGrouped: boolean): void => this.switchGrouping(isGrouped)
+    });
+    this.layouts = new GraphLayouts({
+      ...deps,
+      screen: layoutScreenOf(page),
+      view: this.view,
+      drawn: (): DrawnGraph | null => this.drawn,
+      onDrawn: (saved: GraphViewState | null): void => this.afterDraw(saved),
+      onPlaced: (): void => undefined
+    });
     page.fit.addEventListener('click', (): void => this.view.fit());
-    page.relayout.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.relayout()));
-    page.retry.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.relayout()));
+    page.relayout.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.layouts.relayout()));
+    page.retry.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.layouts.relayout()));
     page.reload.addEventListener('click', (): void => bridge.post({ type: 'reload' }));
   }
 
@@ -64,7 +75,8 @@ class GraphPageController {
     const filteringFacts = this.filtering.facts();
     const facts: ProbeFacts = {
       firstFrameMs: (): number | null => this.frames.firstFrameMs(),
-      layoutEngine: (): LayoutEngine | null => this.engine,
+      layoutEngine: (): LayoutEngine | null => this.layouts.engine(),
+      grouped: (): boolean => this.layouts.mode() === 'folders',
       ...filteringFacts
     };
 
@@ -97,54 +109,19 @@ class GraphPageController {
     const saved = readGraphViewState(raw);
 
     this.drawn = drawnGraphOf(state);
-    this.engine = null;
     this.frames.start(at);
     this.filtering.inspection.reset();
-
-    const { positions } = state;
-
-    if (positions !== null) {
-      void this.guard((): void => this.place(positions, 'cache', saved));
-
-      return;
-    }
-
-    showMessage(this.deps.page, LOADING_TEXT, false);
-    void this.guard(async (): Promise<void> => this.layOut(saved));
+    void this.guard(async (): Promise<void> => this.layouts.show(state, saved));
   }
 
-  private async layOut(saved: GraphViewState | null): Promise<void> {
-    const result = await this.currentLayout();
-
-    if (result === null) return;
-
-    this.place(result.positions, result.engine, saved);
-    postLayout(this.deps.bridge, result);
-  }
-
-  /** Runs ELK for the current graph; `null` when the run went stale or the page moved on to another graph. */
-  private async currentLayout(): Promise<LayoutResult | null> {
-    const drawn = this.drawn;
-
-    if (drawn === null) return null;
-
-    const graph = elkGraphOf(drawn.packages, drawn.edges, this.deps.sizeOf);
-    const result = await this.deps.runner.run(drawn.hash, graph);
-    const isCurrent = result?.hash === this.drawn?.hash;
-
-    return isCurrent ? result : null;
-  }
-
-  private place(positions: Positions, engine: LayoutEngine, saved: GraphViewState | null): void {
+  /** After a hash's first draw: filters, inspection and the saved camera or a fit. */
+  private afterDraw(saved: GraphViewState | null): void {
     const drawn = this.drawn;
 
     if (drawn === null) return;
 
     const plan = restorePlanOf(saved, drawn.hash);
 
-    showGraphView(this.deps.page, engine === 'fallback');
-    this.view.setGraph(drawn.packages, drawn.edges, positions, this.deps.sizeOf);
-    this.engine = engine;
     this.frames.arm();
 
     const visible = this.filtering.restore(saved, drawn, this.frames.receivedAt());
@@ -166,14 +143,10 @@ class GraphPageController {
     this.filtering.inspection.refreshed(isChanged);
   }
 
-  /** Re-layout and Retry: a fresh run for the current graph, then a fit; a successful run hides the notice. */
-  private async relayout(): Promise<void> {
-    const result = await this.currentLayout();
+  private switchGrouping(isGrouped: boolean): void {
+    const mode = groupingOf(isGrouped);
 
-    if (result === null) return;
-
-    this.engine = result.engine;
-    showRelayout(this.deps.bridge, this.deps.page, this.view, result);
+    void this.guard(async (): Promise<void> => this.layouts.switchTo(mode));
   }
 
   /**
@@ -189,7 +162,7 @@ class GraphPageController {
       if (this.drawn?.hash !== hash) return;
 
       this.drawn = null;
-      this.engine = null;
+      this.layouts.reset();
       this.filtering.inspection.reset();
       showFailure(this.deps.page, error);
     }

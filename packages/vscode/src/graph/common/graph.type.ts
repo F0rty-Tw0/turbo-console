@@ -1,4 +1,4 @@
-import type { GraphHostMessage, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphState, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 
@@ -8,8 +8,8 @@ import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
  */
 export type GraphPorts = {
   readonly post: (message: GraphHostMessage) => void;
-  readonly readCache: (root: string) => GraphLayoutCacheEntry | null;
-  readonly writeCache: (root: string, entry: GraphLayoutCacheEntry) => void;
+  readonly readCache: (root: string, grouping: LayoutGrouping) => GraphLayoutCacheEntry | null;
+  readonly writeCache: (root: string, grouping: LayoutGrouping, entry: GraphLayoutCacheEntry) => void;
   readonly openDetails: (packageName: string) => Promise<void>;
   readonly readText: (path: string) => Promise<string | null>;
   readonly openAt: (path: string, line: number) => Promise<void>;
@@ -24,6 +24,7 @@ type UncheckedPositionsMessage = {
   readonly type: 'positions';
   readonly hash: string;
   readonly positions: unknown;
+  readonly grouping: LayoutGrouping;
 };
 
 /** A message that passed `graphMessageSchema`: a `positions` record is still unread. */

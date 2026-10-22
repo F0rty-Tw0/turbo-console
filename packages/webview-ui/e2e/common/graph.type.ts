@@ -4,7 +4,7 @@ import type { GraphViewState } from '../../src/bridge/common/graph-view-state.ty
 import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
 import type { ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 
-export type WorkerStub = 'real' | 'throwOnce' | 'error' | 'silent' | 'malformed';
+export type WorkerStub = 'real' | 'held' | 'throwOnce' | 'error' | 'silent' | 'malformed';
 
 export type GraphOptions = {
   readonly inlineScript?: boolean;
@@ -52,7 +52,7 @@ export type WidthChange = {
 };
 
 /** The controls panel's part of the saved view state, as the panel's own inputs show it. */
-export type ControlsFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags'>;
+export type ControlsFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags' | 'grouped'>;
 
 /** The details panel's part of the saved view state: whether it is open and the link or trace it shows. */
 export type DetailsFields = Pick<GraphViewState, 'detailsOpen' | 'link' | 'trace'>;
@@ -158,6 +158,8 @@ declare global {
     readonly __workers?: number;
     readonly __terminated?: number;
     readonly __workerMessages?: number;
+    readonly __releaseWorker?: () => void;
+    readonly __holdWorker?: () => void;
     __state?: unknown;
   }
 }
