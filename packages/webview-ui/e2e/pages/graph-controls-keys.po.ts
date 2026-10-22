@@ -8,8 +8,11 @@ import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
 
 const MAX_TABS = 25;
 
-/** The first line of an aria snapshot: `- checkbox "Show web" [checked]` names the role, then the accessible name. */
-const SNAPSHOT_NAME = /^- [\w-]+ "((?:[^"\\]|\\.)*)"/;
+/**
+ * The first line of an aria snapshot: `- checkbox "Show web" [checked]` names the role, then the accessible name. A name
+ * holding `: ` makes the line a quoted YAML key, `- 'button "Open (a: b)"': Open`, so the role may follow an opening quote.
+ */
+const SNAPSHOT_NAME = /^- '?[\w-]+ "((?:[^"\\]|\\.)*)"/;
 
 /** Keyboard walking over the controls panel: Tab stops, the package grid's roving focus and what holds focus. */
 export class GraphControlsKeys {

@@ -117,6 +117,16 @@ export type PositionRow = readonly [string, number, number];
 
 export type NeighbourGroup = 'Direct dependencies' | 'Direct dependents';
 
+/** What a trace view shows; `showable` defaults to `hidden`, the names that get a Show button. */
+export type TraceFacts = {
+  readonly start: string;
+  readonly end: string;
+  readonly summary: string;
+  readonly path: string[];
+  readonly hidden: string[];
+  readonly showable?: string[];
+};
+
 /** A toolbar group by its accessible name, and its buttons in order. */
 export type ToolbarGroup = {
   readonly name: string;

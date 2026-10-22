@@ -5,6 +5,7 @@ import { GraphCanvas } from './pages/graph-canvas.po.ts';
 import { GraphControlsKeys } from './pages/graph-controls-keys.po.ts';
 import { GraphControlsPage } from './pages/graph-controls.po.ts';
 import { GraphDetailsLink } from './pages/graph-details-link.po.ts';
+import { GraphDetailsTrace } from './pages/graph-details-trace.po.ts';
 import { GraphDetailsPage } from './pages/graph-details.po.ts';
 import { GraphExplainHost } from './pages/graph-explain-host.po.ts';
 import { GraphHost } from './pages/graph-host.po.ts';
@@ -33,6 +34,7 @@ type GraphFixtures = {
   readonly graphReplies: GraphExplainHost;
   readonly graphSamples: GraphSamples;
   readonly graphToolbar: GraphToolbar;
+  readonly graphTrace: GraphDetailsTrace;
   readonly pageClock: PageClock;
 };
 
@@ -81,6 +83,9 @@ export const test = base.extend<GraphFixtures>({
   },
   graphToolbar: async ({ page }, use): Promise<void> => {
     await use(new GraphToolbar(page));
+  },
+  graphTrace: async ({ page }, use): Promise<void> => {
+    await use(new GraphDetailsTrace(page));
   },
   pageClock: async ({ page }, use): Promise<void> => {
     await use(new PageClock(page));
