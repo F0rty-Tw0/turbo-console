@@ -1,36 +1,42 @@
-import { tagsOf } from './folder-group.util.ts';
-import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { folderOf, tagsOf } from './folder-group.util.ts';
+import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
+import type { GraphFocus, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { RestoredControls } from '../common/graph-controls.type.ts';
-import type { GraphFilters, GraphFocus } from '../common/graph-filters.type.ts';
+import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 
-const focusOf = (state: GraphViewState, known: Set<string>): GraphFocus | null => {
-  const { focus, depth } = state;
+const isFocusKnown = (focus: GraphFocus, infos: GraphPackage[]): boolean => {
+  if (focus.kind === 'package') return infos.some((info) => info.name === focus.name);
+
+  return infos.some((info) => folderOf(info.path) === focus.folder);
+};
+
+/** A folder focus needs the grouped page to show and clear it, so a flat saved state drops it. */
+const focusOf = (state: GraphViewState, graph: DrawnGraph): GraphFocus | null => {
+  const { focus } = state;
 
   if (focus === null) return null;
 
-  const isKnown = known.has(focus);
+  if (focus.kind === 'folder' && !state.grouped) return null;
 
-  if (!isKnown) return null;
+  const isKnown = isFocusKnown(focus, graph.infos);
 
-  const restored: GraphFocus = { name: focus, depth };
-
-  return restored;
+  return isKnown ? focus : null;
 };
 
-/** The saved filters kept to what the drawn graph still has; the focused name leaves `hidden`; `depth` is taken as is. */
+/** The saved filters kept to what the drawn graph still has; the focused package leaves `hidden`; `filters.depth` is the saved depth as is. */
 export const restoredFilters = (state: GraphViewState, graph: DrawnGraph): RestoredControls => {
   const known = new Set(graph.infos.map((info) => info.name));
   const knownTags = new Set(tagsOf(graph.infos));
-  const focus = focusOf(state, known);
-  const isKept = (name: string): boolean => known.has(name) && name !== focus?.name;
+  const focus = focusOf(state, graph);
+  const focusedName = focus?.kind === 'package' ? focus.name : null;
+  const isKept = (name: string): boolean => known.has(name) && name !== focusedName;
   const hidden = new Set(state.hidden.filter(isKept));
   const tags = new Set(state.tags.filter((tag) => knownTags.has(tag)));
-  const filters: GraphFilters = { hidden, focus, tags };
+  const filters: GraphFilters = { hidden, focus, depth: state.depth, tags };
   const restored: RestoredControls = {
     filters,
     search: state.search,
-    depth: state.depth,
     isOpen: state.controlsOpen,
     isGrouped: state.grouped
   };
@@ -38,22 +44,20 @@ export const restoredFilters = (state: GraphViewState, graph: DrawnGraph): Resto
   return restored;
 };
 
-/** The controls part of the saved view state: the inverse of `restoredFilters`, without `collapsed` (the folders own it); the focus is saved by name only. */
+/** The controls part of the saved view state: the inverse of `restoredFilters`, without `collapsed` (the folders own it). */
 export const controlsFieldsOf = (
   filters: GraphFilters,
   search: string,
-  depth: number,
   isOpen: boolean,
   isGrouped: boolean
-  // eslint-disable-next-line max-params -- five until `depth` moves into `GraphFilters`, leaving four
 ): Omit<ControlsViewFields, 'collapsed'> => {
-  const { hidden, focus, tags } = filters;
+  const { hidden, focus, depth, tags } = filters;
   const fields: Omit<ControlsViewFields, 'collapsed'> = {
     controlsOpen: isOpen,
     search,
     depth,
     hidden: [...hidden],
-    focus: focus?.name ?? null,
+    focus,
     tags: [...tags],
     grouped: isGrouped
   };

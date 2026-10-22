@@ -14,6 +14,7 @@ const wireGroup = (group: ControlsGroup, actions: ControlsActions): void => {
 
   group.check.addEventListener('input', (): void => actions.onGroup(names, group.check.checked));
   group.toggle.addEventListener('click', (): void => actions.onToggle(group.folder));
+  group.focus.addEventListener('click', (): void => actions.onFolderFocus(group.folder));
 
   for (const row of group.rows) wireRow(row, actions);
 };

@@ -1,10 +1,18 @@
+import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
 import type { GroupState, RowView } from '../common/graph-controls.type.ts';
-import type { GraphFilters, GraphFocus } from '../common/graph-filters.type.ts';
+import type { GraphFilters } from '../common/graph-filters.type.ts';
 import { MAX_DEPTH, MIN_DEPTH } from '../common/graph.const.ts';
 
 const WHOLE_DIGITS = /^\d+$/;
 
-const isFocused = (filters: GraphFilters, name: string): boolean => filters.focus?.name === name;
+/** The focused package's name; a folder focus or no focus is `null`. */
+export const focusNameOf = (filters: GraphFilters): string | null => {
+  if (filters.focus?.kind !== 'package') return null;
+
+  return filters.focus.name;
+};
+
+const isFocused = (filters: GraphFilters, name: string): boolean => focusNameOf(filters) === name;
 
 const withHidden = (filters: GraphFilters, hidden: Set<string>): GraphFilters => {
   const next: GraphFilters = { ...filters, hidden };
@@ -67,28 +75,44 @@ export const groupStateOf = (filters: GraphFilters, names: string[]): GroupState
 export const isGroupLocked = (filters: GraphFilters, names: string[]): boolean => {
   const others = withoutFocus(filters, names);
 
-  return filters.focus !== null && others.length === 0;
+  return focusNameOf(filters) !== null && others.length === 0;
 };
 
-/** Focuses `name` at `depth` and shows it; focusing the focused name again clears the focus. */
-export const focusOn = (filters: GraphFilters, name: string, depth: number): GraphFilters => {
+/** Focuses `name` and shows it, replacing a folder focus; focusing the focused name again clears the focus. */
+export const focusOn = (filters: GraphFilters, name: string): GraphFilters => {
   const isFocus = isFocused(filters, name);
 
   if (isFocus) return withFocus(filters, null);
 
   const hidden = hiddenAfter(filters, [name], true);
-  const focus: GraphFocus = { name, depth };
+  const focus: GraphFocus = { kind: 'package', name };
   const next: GraphFilters = { ...filters, hidden, focus };
 
   return next;
 };
 
-export const withDepth = (filters: GraphFilters, depth: number): GraphFilters => {
-  if (filters.focus === null) return filters;
+/** Focuses `folder`, replacing a package focus without hiding it; the focused folder again returns `filters` itself. */
+export const focusFolderOn = (filters: GraphFilters, folder: string): GraphFilters => {
+  const isFocus = filters.focus?.kind === 'folder' && filters.focus.folder === folder;
 
-  const focus: GraphFocus = { name: filters.focus.name, depth };
+  if (isFocus) return filters;
+
+  const focus: GraphFocus = { kind: 'folder', folder };
 
   return withFocus(filters, focus);
+};
+
+/** No focus; with none to clear, `filters` itself. */
+export const focusClearedOf = (filters: GraphFilters): GraphFilters => {
+  if (filters.focus === null) return filters;
+
+  return withFocus(filters, null);
+};
+
+export const withDepth = (filters: GraphFilters, depth: number): GraphFilters => {
+  const next: GraphFilters = { ...filters, depth };
+
+  return next;
 };
 
 export const withTag = (filters: GraphFilters, tag: string, isChecked: boolean): GraphFilters => {
@@ -102,7 +126,7 @@ export const withTag = (filters: GraphFilters, tag: string, isChecked: boolean):
   return next;
 };
 
-/** Clears the hidden names, the focus and the tags. */
+/** Clears the hidden names, either focus and the tags; the depth stays. */
 export const showAllOf = (filters: GraphFilters): GraphFilters => {
   const cleared: GraphFilters = { ...filters, hidden: new Set(), focus: null, tags: new Set() };
 

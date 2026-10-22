@@ -29,6 +29,12 @@ const trace = (start: string, end: string): Inspection => {
   return inspection;
 };
 
+const folder = (key: string): Inspection => {
+  const inspection: Inspection = { kind: 'folder', folder: key };
+
+  return inspection;
+};
+
 const NUDGED: Inspection = { kind: 'picking', start: 'web', isNudged: true };
 
 type PlanRow = {
@@ -53,6 +59,17 @@ const PLAN_ROWS: PlanRow[] = [
   { title: 'picking that turns nudged', previous: pick('web'), next: NUDGED, isRebuild: false, expected: 'update' },
   { title: 'nothing again', previous: NO_INSPECTION, next: NO_INSPECTION, isRebuild: false, expected: 'update' },
   { title: 'nothing again on a rebuild', previous: NO_INSPECTION, next: NO_INSPECTION, isRebuild: true, expected: 'rebuild' },
+  { title: 'the same folder', previous: folder('apps'), next: folder('apps'), isRebuild: false, expected: 'update' },
+  { title: 'the same folder on a rebuild', previous: folder('apps'), next: folder('apps'), isRebuild: true, expected: 'rebuild' },
+  { title: 'a folder then another', previous: folder('apps'), next: folder('packages'), isRebuild: false, expected: 'swap' },
+  { title: 'nothing then a folder', previous: NO_INSPECTION, next: folder('apps'), isRebuild: false, expected: 'swap' },
+  {
+    title: 'the root folder then a folder named (root)',
+    previous: folder(''),
+    next: folder('(root)'),
+    isRebuild: false,
+    expected: 'swap'
+  },
   { title: 'the same __proto__ package', previous: pkg('__proto__'), next: pkg('__proto__'), isRebuild: false, expected: 'update' }
 ];
 

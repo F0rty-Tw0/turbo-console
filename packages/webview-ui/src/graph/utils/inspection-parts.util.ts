@@ -31,6 +31,7 @@ export const shownOf = (inspection: Inspection, edges: GraphEdge[], visible: Rea
     case 'none':
     case 'package':
     case 'link':
+    case 'folder':
       return inspection;
   }
 };

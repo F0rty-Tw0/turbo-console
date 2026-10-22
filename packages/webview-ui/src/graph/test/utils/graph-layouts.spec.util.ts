@@ -30,6 +30,7 @@ export const layoutsRigOf = (): LayoutsRig => {
   const runs = layoutRunsMock();
   const onDrawn = vi.fn<GraphLayoutsDeps['onDrawn']>();
   const onPlaced = vi.fn<GraphLayoutsDeps['onPlaced']>();
+  const onGroupingOff = vi.fn<GraphLayoutsDeps['onGroupingOff']>();
   const sizeOf = (): NodeSize => NODE_SIZE;
   const deps: GraphLayoutsDeps = {
     bridge,
@@ -39,7 +40,8 @@ export const layoutsRigOf = (): LayoutsRig => {
     sizeOf,
     drawn: (): DrawnGraph | null => drawn,
     onDrawn,
-    onPlaced
+    onPlaced,
+    onGroupingOff
   };
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const setDrawn = (state: GraphReady | null): void => {
@@ -51,7 +53,7 @@ export const layoutsRigOf = (): LayoutsRig => {
 
     drawn = drawnGraphOf(state);
   };
-  const rig: LayoutsRig = { deps, screen, view, runs, onDrawn, onPlaced, posts, setDrawn };
+  const rig: LayoutsRig = { deps, screen, view, runs, onDrawn, onPlaced, onGroupingOff, posts, setDrawn };
 
   return rig;
 };

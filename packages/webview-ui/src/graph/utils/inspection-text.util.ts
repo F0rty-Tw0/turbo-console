@@ -1,9 +1,12 @@
 import { closureOf } from './closure.util.ts';
+import { folderTitleOf } from './controls-text.util.ts';
+import { folderStatusText } from './folder-text.util.ts';
 import { neighboursOf } from './neighbours.util.ts';
 import { pluralOf } from './plural.util.ts';
 import { selectionText } from './selection-text.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import { HINT_NUDGE_TEXT } from '../common/details.const.ts';
+import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { Inspection, TraceInspection } from '../common/inspection.type.ts';
 import type { TraceResult } from '../common/trace.type.ts';
 
@@ -30,12 +33,22 @@ const traceText = (inspection: TraceInspection, trace: TraceResult | null, visib
   return `Trace ${start} → ${end}: ${packages}${hiddenText}`;
 };
 
-/** The toolbar status line for an inspection (spec §4.3); `''` for none, and for a trace not yet walked. */
+const folderText = (folder: string, scene: FolderScene | null): string => {
+  if (scene === null) return '';
+
+  const title = folderTitleOf(folder);
+
+  return folderStatusText(title, scene, folder);
+};
+
+/** The toolbar status line for an inspection (spec §4.3); `''` for none, a trace not yet walked, and a folder with no scene. */
 export const inspectionTextOf = (
   inspection: Inspection,
   edges: GraphEdge[],
   trace: TraceResult | null,
-  visible: ReadonlySet<string>
+  visible: ReadonlySet<string>,
+  scene: FolderScene | null
+  // eslint-disable-next-line max-params -- five inputs, pinned by the plan's Interfaces (Task 3.3)
 ): string => {
   switch (inspection.kind) {
     case 'none':
@@ -44,6 +57,8 @@ export const inspectionTextOf = (
       return packageText(inspection.name, edges);
     case 'link':
       return `${inspection.source} depends on ${inspection.target}`;
+    case 'folder':
+      return folderText(inspection.folder, scene);
     case 'picking':
       return inspection.isNudged ? HINT_NUDGE_TEXT : `Trace from ${inspection.start}: select the end package`;
     case 'trace':

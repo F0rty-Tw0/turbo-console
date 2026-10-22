@@ -1,3 +1,4 @@
+import { canShowRow, excludeRow, focusRow, showRow } from './graph-controls-rows.ts';
 import { GraphControls } from './graph-controls.ts';
 import { GraphFolders } from './graph-folders.ts';
 import { GraphInspection } from './graph-inspection.ts';
@@ -5,12 +6,15 @@ import type { GraphViewState } from '../../bridge/common/graph-view-state.type.t
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphControlsDeps, GraphFilteringDeps } from '../common/graph-controls.type.ts';
 import type { GraphFoldersDeps } from '../common/graph-folders.type.ts';
-import type { CanvasFolders, GraphInspectionDeps } from '../common/graph-inspection.type.ts';
+import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
-import type { Inspection } from '../common/inspection.type.ts';
+import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
+import { focusNameOf } from '../utils/controls-rules.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
+
+const CLEAR: InspectionInput = { kind: 'clear' };
 
 type FilteringFacts = Pick<
   ProbeFacts,
@@ -38,37 +42,39 @@ export class GraphFiltering {
       build,
       now,
       onVisibleChange: (visible): void => this.showVisible(visible),
+      onSameVisible: (): void => this.recheckFolder(),
       onSelect: (name): void => this.inspection.select(name),
       onFocusToggle: (name, setFilters): void => this.inspection.focused(name, setFilters),
       onOpenDetails: (): void => this.inspection.openDetails(),
       onGrouping,
       onToggleFolder: (folder): void => this.folders.toggle(folder),
+      onFolderFocus: (folder): void => this.folders.expand([folder]),
       onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
-    };
-    const canvasFolders: CanvasFolders = {
-      scene: (): FolderScene | null => this.folders.scene(),
-      show: (): void => this.folders.show()
     };
     const inspectionDeps: GraphInspectionDeps = {
       ...deps,
       visible: (): ReadonlySet<string> => this.controls.visible(),
-      focus: (): string | null => this.controls.focusName(),
+      focus: (): string | null => focusNameOf(this.controls.applied),
+      focusedFolder: (): string | null => this.controls.focusedFolder(),
       controls: (): ControlsViewFields => this.fields(),
       onSelected: (name): void => this.controls.markSelected(name),
-      onFocusOn: (name): void => this.controls.focusOn(name),
-      onExclude: (name): void => this.controls.exclude(name),
-      onShow: (name): void => this.controls.show(name),
-      canShow: (name): boolean => this.controls.canShow(name),
-      folders: canvasFolders
+      onFocusOn: (name): void => focusRow(this.controls, name),
+      onExclude: (name): void => excludeRow(this.controls, name),
+      onShow: (name): void => showRow(this.controls, name),
+      canShow: (name): boolean => canShowRow(this.controls, name),
+      onFocusFolder: (folder): void => this.controls.focusFolder(folder),
+      onClearFocus: (): void => this.controls.clearFocus(),
+      onExcludeFolder: (folder): void => this.controls.excludeFolder(folder),
+      onShowFolder: (folder): void => this.controls.showFolder(folder),
+      folders: this.inspectionFolders()
     };
     const foldersDeps: GraphFoldersDeps = {
       ...deps,
       repaint: (scene): void => this.inspection.canvas.repaint(scene),
       visible: (): ReadonlySet<string> => this.controls.visible(),
       ghosts: (): string[] => this.inspection.canvas.ghostNodes(),
-      // Task 3.5 wires the collapse of an inspected folder here.
-      onCollapsed: (): void => undefined,
+      onCollapsed: (folder): void => this.inspection.collapsed(folder),
       onChange: (): void => this.foldersChanged()
     };
 
@@ -94,6 +100,24 @@ export class GraphFiltering {
     this.deps.page.fit.disabled = visible.size === 0;
 
     return visible;
+  }
+
+  /** The Group by folder checkbox turned off, at the click: a folder inspection ends and a folder focus clears. */
+  public groupingOff(): void {
+    const isFolder = this.inspection.current().kind === 'folder';
+
+    if (isFolder) this.inspection.input(CLEAR);
+
+    this.controls.clearFocus();
+  }
+
+  /** A layout placed, after the first draw's restore: the folder pass runs, then a grouped one reaches for the inspection. */
+  public placed(): void {
+    this.folders.redraw();
+
+    const scene = this.folders.scene();
+
+    if (scene !== null) this.inspection.reachCurrent();
   }
 
   public facts(): FilteringFacts {
@@ -122,9 +146,30 @@ export class GraphFiltering {
     return fields;
   }
 
+  /** The folder hooks of the inspection, read when called: `folders` is built after the inspection. */
+  private inspectionFolders(): GraphInspectionDeps['folders'] {
+    const folders: GraphInspectionDeps['folders'] = {
+      scene: (): FolderScene | null => this.folders.scene(),
+      show: (): void => this.folders.show(),
+      expand: (names): void => this.folders.expand(names),
+      toggle: (folder): void => this.folders.toggle(folder)
+    };
+
+    return folders;
+  }
+
+  /** A collapse or expand: the controls and the save follow, and an inspected folder's view relabels its Collapse or Expand. */
   private foldersChanged(): void {
     this.controls.setCollapsed(this.folders.collapsed());
     this.inspection.saveViewport();
+    this.recheckFolder();
+  }
+
+  /** An inspected folder's view shows its collapse and focus, so it is built again after either changes; others stay. */
+  private recheckFolder(): void {
+    const isFolder = this.inspection.current().kind === 'folder';
+
+    if (isFolder) this.inspection.recheck(this.controls.visible());
   }
 
   private showVisible(visible: ReadonlySet<string>): void {

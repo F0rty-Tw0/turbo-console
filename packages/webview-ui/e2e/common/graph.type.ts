@@ -51,11 +51,13 @@ export type WidthChange = {
   readonly after: number;
 };
 
-/** The controls panel's part of the saved view state, as the panel's own inputs show it. */
-export type ControlsFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags' | 'grouped'>;
+type DomFocus = { readonly focus: string | null };
 
-/** The details panel's part of the saved view state: whether it is open and the link or trace it shows. */
-export type DetailsFields = Pick<GraphViewState, 'detailsOpen' | 'link' | 'trace'>;
+/** The controls panel's part of the saved view state, as the panel's own inputs show it: `focus` is the locked package's name read from the DOM. */
+export type ControlsFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'tags' | 'grouped'> & DomFocus;
+
+/** The details panel's part of the saved view state: whether it is open and the link, trace or folder it shows. */
+export type DetailsFields = Pick<GraphViewState, 'detailsOpen' | 'link' | 'trace' | 'folder'>;
 
 /** A key to press, and the accessible name of the control that holds focus once it has been handled. */
 export type FocusStep = {

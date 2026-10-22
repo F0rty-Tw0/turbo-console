@@ -36,7 +36,7 @@ class GraphPageController {
       onTapNode: (name: string): void => this.filtering.inspection.tapNode(name),
       onTapEdge: (source: string, target: string): void => this.filtering.inspection.tapEdge(source, target),
       onTapBackground: (): void => this.filtering.inspection.input(BACKGROUND),
-      onTapFolder: (): void => undefined,
+      onTapFolder: (folder: string): void => this.filtering.inspection.tapFolder(folder),
       onDoubleTapNode: (name: string): void => this.filtering.inspection.openDetailsOf(name),
       onDoubleTapFolder: (folder: string): void => this.filtering.folders.toggle(folder),
       onDragEnd: (positions: Positions): void => this.layouts.dragged(positions),
@@ -64,7 +64,8 @@ class GraphPageController {
       view: this.view,
       drawn: (): DrawnGraph | null => this.drawn,
       onDrawn: (saved: GraphViewState | null): void => this.afterDraw(saved),
-      onPlaced: (): void => this.filtering.folders.redraw()
+      onPlaced: (): void => this.filtering.placed(),
+      onGroupingOff: (): void => this.filtering.groupingOff()
     });
     page.fit.addEventListener('click', (): void => this.view.fit());
     page.relayout.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.layouts.relayout()));

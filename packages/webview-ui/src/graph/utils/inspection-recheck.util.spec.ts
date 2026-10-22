@@ -4,6 +4,8 @@ import { recheckInspection } from './inspection-recheck.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
+import { BOARDS_EDGES, BOARDS_INFOS, BOARDS_NAMES, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
+import { folderInspection } from '../test/utils/inspections.spec.util.ts';
 
 const E: GraphEdge[] = [
   { source: 'web', target: 'ui' },
@@ -86,9 +88,56 @@ describe('FEATURE: recheckInspection', () => {
       },
       { title: 'a trace needs no edges', current: TRACE, visible: ALL_THREE, edges: [], expected: TRACE }
     ])('WHEN $title THEN the result is exact', ({ current, visible, edges, expected }) => {
-      const next = recheckInspection(current, visible, edges);
+      const next = recheckInspection(current, visible, edges, null);
 
       expect(next).toStrictEqual(expected);
+    });
+  });
+});
+
+const withoutDocsAndWeb = BOARDS_NAMES.filter((name) => name !== 'docs' && name !== 'web');
+
+const ALL_BOARDS = new Set(BOARDS_NAMES);
+
+const WITHOUT_APPS = new Set(withoutDocsAndWeb);
+
+const BOARDS_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, {});
+
+const GHOST_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { visible: withoutDocsAndWeb, ghosts: ['web'] });
+
+const ROOT_INFOS = [{ name: 'root-a', path: 'root-a', tags: [], taskCount: 0 }];
+
+const ROOT_SCENE = sceneOf(ROOT_INFOS, [], {});
+
+const FOLDER_APPS = folderInspection('apps');
+
+describe('FEATURE: recheckInspection of a folder', () => {
+  describe('GIVEN a filter change', () => {
+    it.each([
+      { title: 'a folder with visible members stays', current: FOLDER_APPS, visible: ALL_BOARDS, scene: BOARDS_SCENE, isKept: true },
+      {
+        title: 'a folder with no visible member goes',
+        current: FOLDER_APPS,
+        visible: WITHOUT_APPS,
+        scene: BOARDS_SCENE,
+        isKept: false
+      },
+      { title: 'a ghost member keeps the folder', current: FOLDER_APPS, visible: WITHOUT_APPS, scene: GHOST_SCENE, isKept: true },
+      { title: 'an unknown folder goes', current: folderInspection('zzz'), visible: ALL_BOARDS, scene: BOARDS_SCENE, isKept: false },
+      { title: 'a null scene ends the folder', current: FOLDER_APPS, visible: ALL_BOARDS, scene: null, isKept: false },
+      {
+        title: 'the root folder with a visible root package stays',
+        current: folderInspection(''),
+        visible: new Set(['root-a']),
+        scene: ROOT_SCENE,
+        isKept: true
+      }
+    ])('WHEN $title THEN the inspection is kept or none', ({ current, visible, scene, isKept }) => {
+      const expected = isKept ? current : NONE;
+
+      const next = recheckInspection(current, visible, BOARDS_EDGES, scene);
+
+      expect(next).toBe(expected);
     });
   });
 });

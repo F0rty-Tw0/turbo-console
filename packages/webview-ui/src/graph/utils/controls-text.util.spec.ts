@@ -4,6 +4,8 @@ import {
   controlsLabelOf,
   countTextOf,
   focusLabelOf,
+  folderFocusLabelOf,
+  folderFocusTextOf,
   folderTitleOf,
   folderToggleLabelOf,
   folderToggleTextOf,
@@ -97,6 +99,37 @@ describe('FEATURE: controls text', () => {
       ['./(root)', true, 'Expand folder ./(root)']
     ])('WHEN the title is %s and collapsed is %s THEN the label is %s', (title, isCollapsed, expected) => {
       const label = folderToggleLabelOf(title, isCollapsed);
+
+      expect(label).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a folder header Focus button', () => {
+    it.each([
+      ['its folder is the focus', 'Clear focus', true],
+      ['its folder is not the focus', 'Focus', false]
+    ])('WHEN %s THEN the text is %s', (_name, expected, isFocus) => {
+      const text = folderFocusTextOf(isFocus);
+
+      expect(text).toBe(expected);
+    });
+
+    it.each([
+      ['apps', 'Focus folder apps'],
+      ['(root)', 'Focus folder (root)'],
+      ['./(root)', 'Focus folder ./(root)']
+    ])('WHEN the title is %s THEN the label is %s', (title, expected) => {
+      const label = folderFocusLabelOf(title);
+
+      expect(label).toBe(expected);
+    });
+
+    it.each([
+      ['', 'Focus folder (root)'],
+      ['(root)', 'Focus folder ./(root)']
+    ])('WHEN the folder key %j is titled THEN the label is %s', (folder, expected) => {
+      const title = folderTitleOf(folder);
+      const label = folderFocusLabelOf(title);
 
       expect(label).toBe(expected);
     });

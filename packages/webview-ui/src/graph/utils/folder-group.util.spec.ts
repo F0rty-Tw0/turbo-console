@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { folderGroupsOf, folderKeysOf, folderOf, modeGroupsOf, tagsOf } from './folder-group.util.ts';
+import { folderGroupsOf, folderKeysOf, folderOf, modeGroupsOf, namesInFolderOf, tagsOf } from './folder-group.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
+import { BOARDS_INFOS } from '../test/utils/folder-boards.spec.util.ts';
 
 const pkgOf = (name: string, path: string, tags: string[] = []): GraphPackage => {
   const pkg: GraphPackage = { name, path, tags, taskCount: 0 };
@@ -136,5 +137,41 @@ describe('FEATURE: tagsOf', () => {
     const tags = tagsOf([]);
 
     expect(tags).toStrictEqual([]);
+  });
+});
+
+describe('FEATURE: namesInFolderOf', () => {
+  describe('GIVEN the boards packages', () => {
+    it.each([
+      ['apps', ['docs', 'web']],
+      ['packages', ['@acme/config', '@acme/ui', '@acme/utils']],
+      ['', []]
+    ])('WHEN the folder is %j THEN the names are %j', (folder, expected) => {
+      const names = namesInFolderOf(BOARDS_INFOS, folder);
+
+      expect(names).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a root package and a __proto__ folder', () => {
+    const PACKAGES: GraphPackage[] = [pkgOf('r', 'r'), pkgOf('p', '__proto__/p'), pkgOf('b', 'x/b'), pkgOf('a', 'x/a')];
+
+    it('WHEN the root folder is asked THEN the root package is listed', () => {
+      const names = namesInFolderOf(PACKAGES, '');
+
+      expect(names).toStrictEqual(['r']);
+    });
+
+    it('WHEN the __proto__ folder is asked THEN its names are listed', () => {
+      const names = namesInFolderOf(PACKAGES, '__proto__');
+
+      expect(names).toStrictEqual(['p']);
+    });
+
+    it('WHEN a folder holds several packages THEN the input order is kept', () => {
+      const names = namesInFolderOf(PACKAGES, 'x');
+
+      expect(names).toStrictEqual(['b', 'a']);
+    });
   });
 });

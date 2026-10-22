@@ -12,7 +12,7 @@ export const mountRestoredPanel = (
   restored: RestoredControls
 ): void => {
   next.search.value = restored.search;
-  next.depth.value = String(restored.depth);
+  next.depth.value = String(restored.filters.depth);
   next.grouping.checked = restored.isGrouped;
 
   for (const [tag, box] of next.tags) box.checked = restored.filters.tags.has(tag);

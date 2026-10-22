@@ -1,6 +1,8 @@
 import { drawableEdges } from './closure.util.ts';
+import { folderOf } from './folder-group.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
-import type { GraphFilters, GraphFocus } from '../common/graph-filters.type.ts';
+import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFilters } from '../common/graph-filters.type.ts';
 
 type EndOf = (edge: GraphEdge) => string;
 
@@ -46,24 +48,31 @@ const withinDepth = (start: string, depth: number, neighbours: Map<string, strin
   return reached;
 };
 
-const knownFocusOf = (names: Set<string>, focus: GraphFocus | null): GraphFocus | null => {
-  if (focus === null) return null;
+const packageFocusOf = (names: Set<string>, focus: GraphFocus | null): string | null => {
+  if (focus?.kind !== 'package') return null;
 
   const isKnown = names.has(focus.name);
 
-  if (!isKnown) return null;
-
-  return focus;
+  return isKnown ? focus.name : null;
 };
 
-const focusSetOf = (names: Set<string>, edges: GraphEdge[], focus: GraphFocus | null): Set<string> => {
-  if (focus === null) return names;
+const folderFocusOf = (packages: GraphPackage[], focus: GraphFocus | null): string | null => {
+  if (focus?.kind !== 'folder') return null;
+
+  const { folder } = focus;
+  const isKnown = packages.some((pkg) => folderOf(pkg.path) === folder);
+
+  return isKnown ? folder : null;
+};
+
+const focusSetOf = (names: Set<string>, edges: GraphEdge[], focused: string | null, depth: number): Set<string> => {
+  if (focused === null) return names;
 
   const drawn = drawableEdges([...names], edges);
   const dependencyWalk = neighboursOf(drawn, sourceOf, targetOf);
   const dependentWalk = neighboursOf(drawn, targetOf, sourceOf);
-  const dependencies = withinDepth(focus.name, focus.depth, dependencyWalk);
-  const dependents = withinDepth(focus.name, focus.depth, dependentWalk);
+  const dependencies = withinDepth(focused, depth, dependencyWalk);
+  const dependents = withinDepth(focused, depth, dependentWalk);
   const inFocus = new Set([...dependencies, ...dependents]);
 
   return inFocus;
@@ -75,24 +84,30 @@ const hasAnyTag = (pkg: GraphPackage, tags: ReadonlySet<string>): boolean => {
   return pkg.tags.some((tag) => tags.has(tag));
 };
 
-/** The package names the graph shows: the focus neighbourhood, narrowed by tags and unchecked names; the focus itself always stays. */
+/**
+ * The package names the graph shows, narrowed by tags and unchecked names: a package focus keeps its neighbourhood (within
+ * `filters.depth`) and itself; a folder focus keeps the packages of that folder and ignores the depth. An unknown focus narrows nothing.
+ */
 export const visibleOf = (packages: GraphPackage[], edges: GraphEdge[], filters: GraphFilters): Set<string> => {
   const names = new Set(packages.map(nameOf));
-  const focus = knownFocusOf(names, filters.focus);
-  const inFocus = focusSetOf(names, edges, focus);
+  const focusedName = packageFocusOf(names, filters.focus);
+  const focusedFolder = folderFocusOf(packages, filters.focus);
+  const inFocus = focusSetOf(names, edges, focusedName, filters.depth);
   const visible = new Set<string>();
 
   for (const pkg of packages) {
     const isInFocus = inFocus.has(pkg.name);
+    const isInFolder = focusedFolder === null || folderOf(pkg.path) === focusedFolder;
+    const isOutside = !isInFocus || !isInFolder;
     const isTagged = hasAnyTag(pkg, filters.tags);
     const isHidden = filters.hidden.has(pkg.name);
 
-    if (!isInFocus || !isTagged || isHidden) continue;
+    if (isOutside || !isTagged || isHidden) continue;
 
     visible.add(pkg.name);
   }
 
-  if (focus !== null) visible.add(focus.name);
+  if (focusedName !== null) visible.add(focusedName);
 
   return visible;
 };

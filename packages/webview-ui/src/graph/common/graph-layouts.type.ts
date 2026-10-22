@@ -39,6 +39,8 @@ export type GraphLayoutsDeps = {
   readonly drawn: () => DrawnGraph | null;
   /** After the first draw of a hash: the controller restores filters, inspection and camera. */
   readonly onDrawn: (saved: GraphViewState | null) => void;
-  /** After every placement on screen: cache, layout result, switch, Re-layout. */
+  /** After every placement on screen: cache, layout result, switch, Re-layout; a first draw calls it after `onDrawn`. */
   readonly onPlaced: (mode: LayoutGrouping) => void;
+  /** The checkbox turned grouping off, before the flat layout is placed. */
+  readonly onGroupingOff: () => void;
 };

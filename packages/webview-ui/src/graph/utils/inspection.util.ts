@@ -46,6 +46,14 @@ const linkFrom = (current: Inspection, source: string, target: string): Inspecti
   return nudged;
 };
 
+const folderFrom = (current: Inspection, folder: string): Inspection => {
+  if (current.kind === 'picking') return current;
+
+  const inspection: Inspection = { kind: 'folder', folder };
+
+  return inspection;
+};
+
 const cancelFrom = (current: Inspection): Inspection => {
   if (current.kind !== 'picking') return current;
 
@@ -110,6 +118,8 @@ export const nextInspection = (current: Inspection, input: InspectionInput): Ins
     case 'tapLink':
     case 'explain':
       return linkFrom(current, input.source, input.target);
+    case 'selectFolder':
+      return folderFrom(current, input.folder);
     case 'escape':
       return escapeFrom(current, input.where);
   }

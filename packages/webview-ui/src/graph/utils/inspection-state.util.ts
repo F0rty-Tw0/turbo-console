@@ -5,7 +5,7 @@ import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, InspectionFields, LinkInspection, TraceInspection } from '../common/inspection.type.ts';
 
 const fieldsOf = (parts: Partial<InspectionFields>): InspectionFields => {
-  const fields: InspectionFields = { selected: null, link: null, trace: null, ...parts };
+  const fields: InspectionFields = { selected: null, link: null, trace: null, folder: null, ...parts };
 
   return fields;
 };
@@ -33,6 +33,8 @@ export const inspectionFieldsOf = (inspection: Inspection): InspectionFields => 
       return fieldsOf({ selected: inspection.name });
     case 'picking':
       return fieldsOf({ selected: inspection.start });
+    case 'folder':
+      return fieldsOf({ folder: inspection.folder });
     case 'link':
       return linkFieldsOf(inspection);
     case 'trace':
@@ -69,6 +71,20 @@ const linkFrom = (saved: InspectionFields, edges: GraphEdge[], visible: Readonly
   return link;
 };
 
+const folderFrom = (saved: InspectionFields, folders: ReadonlySet<string>): Inspection | null => {
+  const { folder } = saved;
+
+  if (folder === null) return null;
+
+  const isKnown = folders.has(folder);
+
+  if (!isKnown) return null;
+
+  const inspection: Inspection = { kind: 'folder', folder };
+
+  return inspection;
+};
+
 const selectedFrom = (saved: InspectionFields, visible: ReadonlySet<string>): Inspection | null => {
   const { selected } = saved;
 
@@ -83,11 +99,20 @@ const selectedFrom = (saved: InspectionFields, visible: ReadonlySet<string>): In
   return name;
 };
 
-/** The inspection a new page rebuilds from its saved state: the trace, else the link, else the selection, whichever still fits the drawn graph. */
-export const restoredInspection = (saved: InspectionFields, edges: GraphEdge[], visible: ReadonlySet<string>): Inspection => {
+/**
+ * The inspection a new page rebuilds from its saved state: the trace, else the link, else the folder, else the selection,
+ * whichever still fits the drawn graph. `folders` holds the existing, not hidden folders.
+ */
+export const restoredInspection = (
+  saved: InspectionFields,
+  edges: GraphEdge[],
+  visible: ReadonlySet<string>,
+  folders: ReadonlySet<string>
+): Inspection => {
   const trace = traceFrom(saved, visible);
   const link = linkFrom(saved, edges, visible);
+  const folder = folderFrom(saved, folders);
   const selected = selectedFrom(saved, visible);
 
-  return trace ?? link ?? selected ?? NO_INSPECTION;
+  return trace ?? link ?? folder ?? selected ?? NO_INSPECTION;
 };

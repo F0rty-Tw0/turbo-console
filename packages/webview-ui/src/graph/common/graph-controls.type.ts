@@ -5,11 +5,10 @@ import type { GraphFoldersDeps } from './graph-folders.type.ts';
 import type { GraphInspectionDeps } from './graph-inspection.type.ts';
 import type { DrawnGraph, PageElements } from './graph-page.type.ts';
 
-/** What `restoredFilters` rebuilds from a saved state: the filters, the two inputs' values, whether the panel opens and whether it is grouped. */
+/** What `restoredFilters` rebuilds from a saved state: the filters (the depth with them), the search text, whether the panel opens and whether it is grouped. */
 export type RestoredControls = {
   readonly filters: GraphFilters;
   readonly search: string;
-  readonly depth: number;
   readonly isOpen: boolean;
   readonly isGrouped: boolean;
 };
@@ -41,6 +40,8 @@ export type GraphControlsDeps = {
   readonly now: () => number;
   /** Only when the visible set changed. */
   readonly onVisibleChange: (visible: ReadonlySet<string>) => void;
+  /** A filter change that left the visible set as it was: a view showing the filters, like a folder's Focus, relabels. */
+  readonly onSameVisible: () => void;
   /** A package name clicked, or chosen by key, in the list. */
   readonly onSelect: (name: string) => void;
   /** Every focus toggle: the new focus, or `null` when it was cleared; `setFilters` applies it, called once by the receiver. */
@@ -50,6 +51,8 @@ export type GraphControlsDeps = {
   readonly onGrouping: (isGrouped: boolean) => void;
   /** A folder header's Expand or Collapse button was pressed. */
   readonly onToggleFolder: (folder: string) => void;
+  /** A folder is about to be focused: the receiver expands it so its packages are drawn. */
+  readonly onFolderFocus: (folder: string) => void;
   readonly onSave: () => void;
   /** Re-measures the canvas now; Cytoscape's own observers wait a 100 ms debounce. */
   readonly onResize: () => void;
@@ -76,11 +79,20 @@ export type ControlsOps = {
   readonly edit: (mounted: ControlsMounted, next: GraphFilters) => void;
   readonly change: (mounted: ControlsMounted, next: GraphFilters) => void;
   readonly focus: (mounted: ControlsMounted, name: string) => void;
-  readonly setDepth: (mounted: ControlsMounted, text: string) => void;
-  readonly showAll: (mounted: ControlsMounted) => void;
+  readonly focusFolder: (folder: string) => void;
+  readonly clearFocus: () => void;
+  readonly focusedFolder: () => string | null;
   readonly setSearch: (mounted: ControlsMounted, text: string) => void;
   readonly setGrouping: (isGrouped: boolean) => void;
   readonly pick: (name: string) => void;
+};
+
+/** What the details panel's row actions read and call on `GraphControls`. */
+export type ControlsRowsHost = {
+  readonly mounted: ControlsMounted | null;
+  readonly applied: GraphFilters;
+  readonly edit: ControlsOps['edit'];
+  readonly focus: ControlsOps['focus'];
 };
 
 /** What the panel's listeners ask of `GraphControls`, in the panel's own terms; `names` are a folder's package names. */
@@ -92,6 +104,7 @@ export type ControlsActions = {
   readonly onDepthBlur: () => void;
   readonly onGrouping: (isGrouped: boolean) => void;
   readonly onToggle: (folder: string) => void;
+  readonly onFolderFocus: (folder: string) => void;
   readonly onTag: (tag: string, isChecked: boolean) => void;
   readonly onShowAll: () => void;
   readonly onSearch: (text: string) => void;

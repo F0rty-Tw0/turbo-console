@@ -1,6 +1,6 @@
 import { closureOf } from './closure.util.ts';
 import { edgeIdOf } from './edge-id.util.ts';
-import { folderPaintOf } from './folder-paint.util.ts';
+import { folderPaintOf, folderRowPaintOf } from './folder-paint.util.ts';
 import { edgeStateOf, nodeStateOf } from './highlight.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -76,6 +76,8 @@ const statePaintOf = (inspection: Inspection, edges: GraphEdge[], trace: TraceRe
       return packagePaint(inspection.name, edges);
     case 'link':
       return linkPaint(inspection);
+    case 'folder':
+      return everyState('normal');
     case 'picking':
       return pickingPaint(inspection.start, lit);
     case 'trace':
@@ -96,6 +98,8 @@ export const paintOf = (
   scene: FolderScene | null
   // eslint-disable-next-line max-params -- five inputs, pinned by the plan's Cross-phase interfaces (Task 2.2)
 ): Paint => {
+  if (inspection.kind === 'folder') return folderRowPaintOf(inspection.folder, edges, scene);
+
   const paint = statePaintOf(inspection, edges, trace, lit);
 
   if (inspection.kind === 'none') return paint;

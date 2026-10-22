@@ -2,6 +2,7 @@ import type {
   DetailsElements,
   EmptyDetails,
   ExplainDetails,
+  FolderViewElements,
   LinkDetails,
   PackageDetails,
   PickingDetails,
@@ -65,6 +66,26 @@ export type UnreadableExplain = { readonly kind: 'unreadable'; readonly file: st
 /** Where the link's manifest lookup is: still reading, the entries found, none naming the target, or the file unreadable. */
 export type ExplainState = ReadingExplain | FoundExplain | MissingExplain | UnreadableExplain;
 
+/** A folder's facts: all its packages, the links with both ends inside, and the visible links into and out of it. */
+export type FolderCounts = {
+  readonly packages: number;
+  readonly inside: number;
+  readonly linksIn: number;
+  readonly linksOut: number;
+};
+
+/** `members` holds every package of the folder by code unit, a hidden one `isVisible: false`; `isOverlay` keeps `folderView` to one parameter. */
+export type FolderViewModel = {
+  readonly folder: string;
+  readonly title: string;
+  readonly summary: string;
+  readonly packagesTitle: string;
+  readonly isCollapsed: boolean;
+  readonly isFocused: boolean;
+  readonly isOverlay: boolean;
+  readonly members: NeighbourModel[];
+};
+
 /** The candidate groups while picking a trace end: dependencies of the start, its dependents, and the unrelated. */
 export type CandidateKey = 'forward' | 'backward' | 'none';
 
@@ -110,6 +131,7 @@ export type DetailsViews = {
   readonly explain: (state: ExplainState) => ExplainDetails;
   readonly picking: (model: PickingViewModel, isOverlay: boolean) => PickingDetails;
   readonly trace: (model: TraceViewModel, isOverlay: boolean) => TraceDetails;
+  readonly folder: (model: FolderViewModel) => FolderViewElements;
   readonly hint: (start: string, isNudged: boolean) => HTMLElement;
   readonly candidateItems: (group: CandidateGroupModel) => HTMLLIElement[];
   readonly stepItems: (steps: TraceStepModel[]) => HTMLLIElement[];

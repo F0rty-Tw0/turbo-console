@@ -8,24 +8,24 @@ import type { ControlsMounted, ControlsView, GraphControlsDeps } from '../common
 import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import { DEFAULT_DEPTH } from '../common/graph.const.ts';
-import { depthOf, focusOn, isFiltered, sameMembers, showAllOf, toggleRow, withDepth } from '../utils/controls-rules.util.ts';
+import { focusFolderOn, focusOn, sameMembers } from '../utils/controls-rules.util.ts';
 import { folderGroupsOf, tagsOf } from '../utils/folder-group.util.ts';
-import { isShowable } from '../utils/ghost-show.util.ts';
+import { clearFolderFocusOf, excludeFolderOf, focusFolderOf, showFolderOf } from '../utils/folder-rules.util.ts';
 import { controlsFieldsOf, restoredFilters } from '../utils/restored-filters.util.ts';
 import { visibleOf } from '../utils/visibility.util.ts';
 
-const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, tags: new Set() };
+const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, depth: DEFAULT_DEPTH, tags: new Set() };
 
 /**
  * The controls panel's state: the filters, the search, the focus depth and whether the panel is open. A listener
- * changes the state, renders it, reports a changed visible set, then asks for a save; `restore` reports nothing.
+ * changes the state, renders it, reports a changed visible set or a kept one, then asks for a save; `restore` reports
+ * nothing.
  */
 export class GraphControls {
   public applied = NO_FILTERS;
-  public depth = DEFAULT_DEPTH;
+  public mounted: ControlsMounted | null = null;
 
   private readonly deps: GraphControlsDeps;
-  private mounted: ControlsMounted | null = null;
   private shown = new Set<string>();
   private search = '';
   private isOpen = true;
@@ -39,6 +39,10 @@ export class GraphControls {
     deps.page.controls.addEventListener('click', (): void => this.toggleOpen());
   }
 
+  public get depth(): number {
+    return this.applied.depth;
+  }
+
   public visible(): ReadonlySet<string> {
     return this.shown;
   }
@@ -48,33 +52,7 @@ export class GraphControls {
   }
 
   public fields(): Omit<ControlsViewFields, 'collapsed'> {
-    return controlsFieldsOf(this.applied, this.search, this.depth, this.isOpen, this.isGrouped);
-  }
-
-  public focusName(): string | null {
-    return this.applied.focus?.name ?? null;
-  }
-
-  /** The details panel's Focus: the list's Focus toggle on `name`. */
-  public focusOn(name: string): void {
-    if (this.mounted !== null) this.focus(this.mounted, name);
-  }
-
-  /** The details panel's Exclude: unticks `name`; the focused package stays, as in the list. */
-  public exclude(name: string): void {
-    if (this.mounted !== null) this.edit(this.mounted, toggleRow(this.applied, name, false));
-  }
-
-  /** The details panel's Show: re-ticks `name`, a hidden path package of the trace. */
-  public show(name: string): void {
-    if (this.mounted !== null) this.edit(this.mounted, toggleRow(this.applied, name, true));
-  }
-
-  /** Whether re-ticking `name` alone would draw it again. */
-  public canShow(name: string): boolean {
-    const graph = this.mounted?.graph ?? null;
-
-    return graph !== null && isShowable(graph.infos, graph.edges, this.applied, name);
+    return controlsFieldsOf(this.applied, this.search, this.isOpen, this.isGrouped);
   }
 
   public markSelected(name: string | null): void {
@@ -95,7 +73,6 @@ export class GraphControls {
     this.mounted = mounted;
     this.applied = restored.filters;
     this.search = restored.search;
-    this.depth = restored.depth;
     this.isOpen = restored.isOpen;
     this.isGrouped = restored.isGrouped;
     this.stamp = null;
@@ -119,26 +96,38 @@ export class GraphControls {
   }
 
   public focus(mounted: ControlsMounted, name: string): void {
-    const next = focusOn(this.applied, name, this.depth);
-    const focused = next.focus?.name ?? null;
+    const next = focusOn(this.applied, name);
+    const focused = next.focus === null ? null : name;
     const setFilters = (): void => this.change(mounted, next);
 
     this.deps.onFocusToggle(focused, setFilters);
   }
 
-  public setDepth(mounted: ControlsMounted, text: string): void {
-    const depth = depthOf(text);
+  /** Expands `folder` so its packages are drawn, then focuses it as a filter change; it selects nothing. */
+  public focusFolder(folder: string): void {
+    if (this.mounted === null) return;
 
-    if (depth === null) return;
-
-    this.depth = depth;
-    this.change(mounted, withDepth(this.applied, depth));
+    this.deps.onFolderFocus(folder);
+    this.edit(this.mounted, focusFolderOn(this.applied, folder));
   }
 
-  public showAll(mounted: ControlsMounted): void {
-    const isOn = isFiltered(this.applied);
+  /** Clears a folder focus only; a package focus is cleared by its own toggle. */
+  public clearFocus(): void {
+    if (this.mounted !== null) this.edit(this.mounted, clearFolderFocusOf(this.applied));
+  }
 
-    if (isOn) this.change(mounted, showAllOf(this.applied));
+  /** Unticks every package of `folder` as the group checkbox does; the focused package is skipped. */
+  public excludeFolder(folder: string): void {
+    if (this.mounted !== null) this.edit(this.mounted, excludeFolderOf(this.applied, this.mounted.graph.infos, folder));
+  }
+
+  /** The group checkbox twin: checks all when the folder is not fully checked, else unchecks all. */
+  public showFolder(folder: string): void {
+    if (this.mounted !== null) this.edit(this.mounted, showFolderOf(this.applied, this.mounted.graph.infos, folder));
+  }
+
+  public focusedFolder(): string | null {
+    return focusFolderOf(this.applied);
   }
 
   public setSearch(mounted: ControlsMounted, text: string): void {
@@ -196,7 +185,8 @@ export class GraphControls {
 
     const isSame = sameMembers(before, this.shown);
 
-    if (!isSame) this.deps.onVisibleChange(this.shown);
+    if (isSame) this.deps.onSameVisible();
+    else this.deps.onVisibleChange(this.shown);
 
     this.deps.onSave();
   }

@@ -3,7 +3,7 @@ export type DetailsElements = {
 };
 
 /** The `data-view` of a view's root section. */
-export type DetailsViewKind = 'empty' | 'package' | 'link' | 'picking' | 'trace';
+export type DetailsViewKind = 'empty' | 'package' | 'link' | 'picking' | 'trace' | 'folder';
 
 /** Every view's root and title row; `close` always exists and is `hidden` while the panel is docked. */
 export type DetailsViewBase = {
@@ -72,6 +72,25 @@ type TraceParts = {
 };
 
 export type TraceDetails = DetailsViewBase & TraceParts;
+
+/** A folder's package row; `mark` is the hidden mark, `hidden` while the package is visible. */
+export type FolderMemberItem = {
+  readonly name: string;
+  readonly pick: HTMLButtonElement;
+  readonly mark: HTMLElement;
+};
+
+/** `toggle` reads Expand or Collapse, `focus` Focus folder or Clear focus. */
+type FolderParts = {
+  readonly kind: 'folder';
+  readonly summary: HTMLElement;
+  readonly toggle: HTMLButtonElement;
+  readonly focus: HTMLButtonElement;
+  readonly exclude: HTMLButtonElement;
+  readonly members: FolderMemberItem[];
+};
+
+export type FolderViewElements = DetailsViewBase & FolderParts;
 
 export type ExcerptRowElements = {
   readonly row: HTMLElement;

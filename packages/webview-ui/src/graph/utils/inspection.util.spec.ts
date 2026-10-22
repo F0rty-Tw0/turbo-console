@@ -16,6 +16,8 @@ const NUDGED: Inspection = { kind: 'picking', start: 'web', isNudged: true };
 
 const TRACE: Inspection = { kind: 'trace', start: 'web', end: 'core' };
 
+const FOLDER_APPS: Inspection = { kind: 'folder', folder: 'apps' };
+
 const PROTO_PKG: Inspection = { kind: 'package', name: '__proto__' };
 
 const PROTO_PICKING: Inspection = { kind: 'picking', start: '__proto__', isNudged: false };
@@ -28,7 +30,8 @@ const EVERY_STATE: [string, Inspection][] = [
   ['a link', LINK],
   ['picking', PICKING],
   ['picking, nudged', NUDGED],
-  ['a trace', TRACE]
+  ['a trace', TRACE],
+  ['a folder', FOLDER_APPS]
 ];
 
 const select = (name: string, via: SelectVia): InspectionInput => {
@@ -61,6 +64,12 @@ const escape = (where: EscapeWhere): InspectionInput => {
   return built;
 };
 
+const selectFolder = (folder: string): InspectionInput => {
+  const built: InspectionInput = { kind: 'selectFolder', folder };
+
+  return built;
+};
+
 const BACKGROUND: InspectionInput = { kind: 'background' };
 
 const CLEAR: InspectionInput = { kind: 'clear' };
@@ -81,6 +90,12 @@ const pkg = (name: string): Inspection => {
 
 const link = (source: string, target: string): Inspection => {
   const built: Inspection = { kind: 'link', source, target };
+
+  return built;
+};
+
+const folderOf = (folder: string): Inspection => {
+  const built: Inspection = { kind: 'folder', folder };
 
   return built;
 };
@@ -308,6 +323,56 @@ describe('FEATURE: nextInspection', () => {
       const next = nextInspection(from, SWAP_ENDS);
 
       expect(next).toStrictEqual(from);
+    });
+  });
+
+  describe('GIVEN a folder is selected', () => {
+    it.each([
+      ['none', NONE, 'apps', folderOf('apps')],
+      ['a package', PKG, 'apps', folderOf('apps')],
+      ['a link', LINK, 'apps', folderOf('apps')],
+      ['a trace', TRACE, 'apps', folderOf('apps')],
+      ['a folder, packages', FOLDER_APPS, 'packages', folderOf('packages')],
+      ['a folder, the root', FOLDER_APPS, '', folderOf('')]
+    ])('WHEN from %s THEN the folder %s is inspected', (_title, from, folder, to) => {
+      const next = nextInspection(from, selectFolder(folder));
+
+      expect(next).toStrictEqual(to);
+    });
+
+    it.each([
+      ['picking', PICKING],
+      ['picking, nudged', NUDGED]
+    ])('WHEN from %s THEN the same picking stays', (_title, from) => {
+      const next = nextInspection(from, selectFolder('apps'));
+
+      expect(next).toBe(from);
+    });
+  });
+
+  describe('GIVEN a folder is inspected', () => {
+    it.each([
+      ['background', BACKGROUND, NONE],
+      ['escape on the canvas', escape('canvas'), NONE],
+      ['select web via canvas', select('web', 'canvas'), PKG],
+      ['tapLink web to ui', tapLink('web', 'ui'), LINK]
+    ])('WHEN %s THEN the inspection becomes the next one', (_title, input, to) => {
+      const next = nextInspection(FOLDER_APPS, input);
+
+      expect(next).toStrictEqual(to);
+    });
+
+    it.each([
+      ['escape in the panel', escape('panel')],
+      ['startTrace', START_TRACE],
+      ['clearTrace', CLEAR_TRACE],
+      ['swapEnds', SWAP_ENDS],
+      ['cancel', CANCEL],
+      ['pick web', pick('web')]
+    ])('WHEN %s THEN the same folder stays', (_title, input) => {
+      const next = nextInspection(FOLDER_APPS, input);
+
+      expect(next).toBe(FOLDER_APPS);
     });
   });
 });

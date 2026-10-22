@@ -56,6 +56,13 @@ export const folderGroupsOf = (packages: GraphPackage[]): FolderGroup[] => {
   return groups.sort(byFolder);
 };
 
+/** The names of the packages whose folder is `folder`, in input order. */
+export const namesInFolderOf = (packages: GraphPackage[], folder: string): string[] => {
+  const inFolder = packages.filter((pkg) => folderOf(pkg.path) === folder);
+
+  return inFolder.map((pkg) => pkg.name);
+};
+
 /** The folder keys of `folderGroupsOf`, in its order. */
 export const folderKeysOf = (packages: GraphPackage[]): string[] => folderGroupsOf(packages).map((group) => group.folder);
 

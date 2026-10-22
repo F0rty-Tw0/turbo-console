@@ -23,3 +23,9 @@ export const trace = (start: string, end: string): Inspection => {
 
   return inspection;
 };
+
+export const folderInspection = (folder: string): Inspection => {
+  const inspection: Inspection = { kind: 'folder', folder };
+
+  return inspection;
+};

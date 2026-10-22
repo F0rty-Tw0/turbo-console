@@ -7,6 +7,8 @@ import { DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common
 import {
   countTextOf,
   focusLabelOf,
+  folderFocusLabelOf,
+  folderFocusTextOf,
   folderTitleOf,
   folderToggleTextOf,
   groupLabelOf,
@@ -56,7 +58,7 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
   const { name } = pkg;
   const check = listCheck(showLabelOf(name));
   const pick = listButton('controls-name', name);
-  const focus = listButton('controls-focus', 'Focus');
+  const focus = listButton('controls-focus', folderFocusTextOf(false));
   const cells = [gridCell(check), gridCell(pick), gridCell(focus)];
   const line = gridLine('controls-row', cells);
 
@@ -70,8 +72,8 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
 
 /**
  * One header: a cell with the group checkbox and the folder title with its total package count, then a cell with the
- * Expand or Collapse button. The title repeats the checkbox's name, so it is hidden from the accessibility tree and the
- * row is named once. `renderControls` sets the button's text, label and `hidden`.
+ * Expand or Collapse button and one with the Focus button. The title repeats the checkbox's name, so it is hidden from
+ * the accessibility tree and the row is named once. `renderControls` sets the buttons' text, labels and `hidden`.
  */
 const folderGroup = (group: FolderGroup): ControlsGroup => {
   const { folder, packages } = group;
@@ -80,12 +82,15 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   const check = listCheck(label);
   const text = textElement('span', 'controls-folder', label);
   const toggle = listButton('controls-toggle', folderToggleTextOf(false));
-  const cells = [gridCell(check, text), gridCell(toggle)];
+  const focus = listButton('controls-focus', 'Focus');
+  const cells = [gridCell(check, text), gridCell(toggle), gridCell(focus)];
   const line = gridLine('controls-header', cells);
   const rows = packages.map(packageRow);
-  const controlsGroup: ControlsGroup = { folder, line, check, toggle, rows };
+  const controlsGroup: ControlsGroup = { folder, line, check, toggle, focus, rows };
 
   toggle.hidden = true;
+  focus.hidden = true;
+  focus.setAttribute('aria-label', folderFocusLabelOf(title));
 
   text.setAttribute('aria-hidden', 'true');
 
