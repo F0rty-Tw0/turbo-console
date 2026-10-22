@@ -41,3 +41,58 @@ export type RowButtonRects = {
   readonly chevron: RectPx;
   readonly ellipsis: RectPx;
 };
+
+/** The drawn folder boxes and collapsed nodes by folder key, and the selected package while drawn; container px. */
+export type WidgetRects = {
+  readonly boxes: ReadonlyMap<string, RectPx>;
+  readonly collapsed: ReadonlyMap<string, RectPx>;
+  readonly selected: RectPx | null;
+};
+
+type FolderMenuTarget = {
+  readonly kind: 'folder';
+  readonly folder: string;
+};
+
+type PackageMenuTarget = {
+  readonly kind: 'package';
+  readonly name: string;
+};
+
+/** What a "…" opens a menu for. */
+export type MenuTarget = FolderMenuTarget | PackageMenuTarget;
+
+export type WidgetPlanInput = {
+  readonly rects: WidgetRects;
+  readonly bounds: LayerBounds;
+  readonly isGrouped: boolean;
+};
+
+/** A header row with at least one shown button. */
+export type RowPlan = {
+  readonly folder: string;
+  readonly kind: RowKind;
+  readonly placement: RowPlacement;
+  readonly isChevronShown: boolean;
+  readonly isEllipsisShown: boolean;
+};
+
+/** One positioning pass: the rows to show and the shown package "…", `null` when none. */
+export type WidgetPlan = {
+  readonly rows: RowPlan[];
+  readonly packageButton: RectPx | null;
+};
+
+/** One folder's header row: the chevron and "…", and for a box also its title and count. */
+export type FolderRowElements = {
+  readonly root: HTMLElement;
+  readonly chevron: HTMLButtonElement;
+  readonly ellipsis: HTMLButtonElement;
+};
+
+/** The widget builders, handed in because `domain-logic` may not import `ui`. */
+export type WidgetViews = {
+  /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
+  readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
+  readonly packageButton: (name: string) => HTMLButtonElement;
+};

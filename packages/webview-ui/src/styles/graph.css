@@ -177,6 +177,77 @@ p {
   min-width: 0;
 }
 
+/* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons take pointer events. */
+.graph-widgets {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.widget-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  pointer-events: none;
+}
+
+/* Keeps the "…" at the row's right end, also on a collapsed row with no title and when the chevron is hidden. */
+.widget-row > .widget-button:last-child {
+  margin-left: auto;
+}
+
+.widget-button {
+  display: inline-flex;
+  flex: none;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
+  border-radius: var(--radius);
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.widget-button:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.widget-button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.widget-package-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.widget-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.widget-count {
+  flex: none;
+  color: var(--tc-muted);
+}
+
 .graph-controls {
   display: flex;
   flex: 0 0 260px;
@@ -378,6 +449,7 @@ kbd {
 @media (width < 960px) {
   .graph-details {
     position: absolute;
+    z-index: 2;
     width: 280px;
     inset-block: 0;
     inset-inline-end: 0;

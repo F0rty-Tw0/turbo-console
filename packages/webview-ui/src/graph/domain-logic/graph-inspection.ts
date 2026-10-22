@@ -58,13 +58,13 @@ export class GraphInspection {
 
   /** Pans the inspection's anchors clear of the open overlay; restore and refresh never call it. */
   public keepClear(): void {
-    const { view, page } = this.deps;
+    const { view, page, buttonBox } = this.deps;
     const aside = this.details.overlayPanel();
 
     if (aside === null) return;
 
     const ghostNodes = this.canvas.ghostNodes();
-    const keepDeps: KeepClearDeps = { view, page, aside, inspection: this.inspection, ghostNodes };
+    const keepDeps: KeepClearDeps = { view, page, aside, inspection: this.inspection, ghostNodes, buttonBox };
 
     keepClearInspection(keepDeps);
   }

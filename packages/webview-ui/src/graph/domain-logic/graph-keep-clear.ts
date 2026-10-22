@@ -1,14 +1,16 @@
 import type { KeepClearDeps } from '../common/graph-inspection.type.ts';
-import { keepClearNamesOf, keepClearPanOf } from '../utils/keep-clear.util.ts';
+import { joinedBoxOf, keepClearNamesOf, keepClearPanOf } from '../utils/keep-clear.util.ts';
 
 /**
- * Pans the inspection's anchors, and a trace's ghosts, clear of the details overlay, measured in container px; no pan
- * with nothing to clear or a box too wide to fit beside the overlay.
+ * Pans the inspection's anchors, a trace's ghosts and the package "…", clear of the details overlay, measured in
+ * container px; no pan with nothing to clear or a box too wide to fit beside the overlay.
  */
 export const keepClearInspection = (deps: KeepClearDeps): void => {
-  const { view, page, aside, inspection, ghostNodes } = deps;
+  const { view, page, aside, inspection, ghostNodes, buttonBox } = deps;
   const names = keepClearNamesOf(inspection, ghostNodes);
-  const box = view.anchorBox(names);
+  const anchor = view.anchorBox(names);
+  const button = buttonBox();
+  const box = joinedBoxOf(anchor, button);
 
   if (box === null) return;
 

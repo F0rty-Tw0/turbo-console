@@ -130,5 +130,6 @@ export class GraphFolders {
     const labelOf = labelsOf(scene, this.deps.measure);
 
     this.deps.view.showFolders(scene, labelOf);
+    this.deps.onRedrawn();
   }
 }

@@ -11,6 +11,7 @@ import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { Paint } from './paint.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
+import type { WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -36,9 +37,11 @@ export type PageElements = {
   readonly message: HTMLElement;
   readonly messageText: HTMLElement;
   readonly reload: HTMLButtonElement;
-  /** `div.graph-body`: the controls panel, once a graph shows, then the container. */
+  /** `div.graph-body`: the controls panel, once a graph shows, the container, the widget layer, then the details panel. */
   readonly body: HTMLElement;
   readonly container: HTMLElement;
+  /** `div.graph-widgets`: the canvas widgets' layer over the container, its DOM sibling right after it. */
+  readonly widgets: HTMLElement;
 };
 
 /** What `buildToolbar` builds: the toolbar and the parts of it the page drives. */
@@ -125,6 +128,8 @@ export type GraphView = {
   /** The folder pass (`FoldersView.show`); call after every `setVisible` and `setGhosts`. */
   readonly showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string) => void;
   readonly applyTheme: (colors: ThemeColors) => void;
+  /** The drawn folder boxes and collapsed nodes, and the `selected` package while drawn, in container px. */
+  readonly widgetRects: (selected: string | null) => WidgetRects;
   /** For the test probe only. */
   readonly cy: () => Core;
 };
@@ -145,6 +150,8 @@ export type GraphControllerDeps = {
   readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;
   /** The details view builders, handed in because `domain-logic` may not import `ui`. */
   readonly views: DetailsViews;
+  /** The canvas widget builders, handed in because `domain-logic` may not import `ui`. */
+  readonly widgetViews: WidgetViews;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
   readonly overlay: MediaQueryList;
 };

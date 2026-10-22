@@ -1,15 +1,17 @@
 import { canShowRow, excludeRow, focusRow, showRow } from './graph-controls-rows.ts';
 import { GraphControls } from './graph-controls.ts';
+import { inspectionFoldersOf, widgetsOf } from './graph-filtering-hooks.ts';
 import { GraphFolders } from './graph-folders.ts';
 import { GraphInspection } from './graph-inspection.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphControlsDeps, GraphFilteringDeps } from '../common/graph-controls.type.ts';
 import type { GraphFoldersDeps } from '../common/graph-folders.type.ts';
 import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
+import type { WidgetWiring } from '../common/graph-widgets.type.ts';
 import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
+import type { AnchorBox } from '../common/keep-clear.type.ts';
 import { focusNameOf } from '../utils/controls-rules.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
@@ -22,8 +24,8 @@ type FilteringFacts = Pick<
 >;
 
 /**
- * The controls panel, the inspection it drives and the collapsed folders; the only place that knows `GraphControls`,
- * `GraphInspection` and `GraphFolders`. A visible set the controls report is shown, runs the folder pass, re-checks the
+ * The controls panel, the inspection it drives, the collapsed folders and the widget layer over them; the only place
+ * that knows `GraphControls`, `GraphInspection` and `GraphFolders`. A visible set the controls report is shown, runs the folder pass, re-checks the
  * inspection, refits and keeps the inspection clear of the details overlay; the restored one is shown without a fit or a pan.
  */
 export class GraphFiltering {
@@ -32,6 +34,7 @@ export class GraphFiltering {
 
   private readonly deps: GraphFilteringDeps;
   private readonly controls: GraphControls;
+  private readonly widgets: WidgetWiring;
   private builtMs: number | null = null;
   private appliedMs: number | null = null;
 
@@ -67,7 +70,8 @@ export class GraphFiltering {
       onClearFocus: (): void => this.controls.clearFocus(),
       onExcludeFolder: (folder): void => this.controls.excludeFolder(folder),
       onShowFolder: (folder): void => this.controls.showFolder(folder),
-      folders: this.inspectionFolders()
+      folders: inspectionFoldersOf((): GraphFolders => this.folders),
+      buttonBox: (): AnchorBox | null => this.widgets.buttonBox()
     };
     const foldersDeps: GraphFoldersDeps = {
       ...deps,
@@ -75,13 +79,15 @@ export class GraphFiltering {
       visible: (): ReadonlySet<string> => this.controls.visible(),
       ghosts: (): string[] => this.inspection.canvas.ghostNodes(),
       onCollapsed: (folder): void => this.inspection.collapsed(folder),
-      onChange: (): void => this.foldersChanged()
+      onChange: (): void => this.foldersChanged(),
+      onRedrawn: (): void => this.widgets.refresh()
     };
 
     this.deps = deps;
     this.controls = new GraphControls(controlsDeps);
     this.inspection = new GraphInspection(inspectionDeps);
     this.folders = new GraphFolders(foldersDeps);
+    this.widgets = widgetsOf(deps, this.inspection, this.folders);
   }
 
   /** Builds the panel for `graph` from `saved` (defaults without one) and shows its visible set; `at` is the state's arrival. */
@@ -120,6 +126,12 @@ export class GraphFiltering {
     if (scene !== null) this.inspection.reachCurrent();
   }
 
+  /** A frame was drawn: it ends a toggle's timing and the widgets follow the camera. */
+  public rendered(): void {
+    this.folders.rendered();
+    this.widgets.position();
+  }
+
   public facts(): FilteringFacts {
     const { inspection } = this;
     const facts: FilteringFacts = {
@@ -144,18 +156,6 @@ export class GraphFiltering {
     const fields: ControlsViewFields = { ...own, collapsed };
 
     return fields;
-  }
-
-  /** The folder hooks of the inspection, read when called: `folders` is built after the inspection. */
-  private inspectionFolders(): GraphInspectionDeps['folders'] {
-    const folders: GraphInspectionDeps['folders'] = {
-      scene: (): FolderScene | null => this.folders.scene(),
-      show: (): void => this.folders.show(),
-      expand: (names): void => this.folders.expand(names),
-      toggle: (folder): void => this.folders.toggle(folder)
-    };
-
-    return folders;
   }
 
   /** A collapse or expand: the controls and the save follow, and an inspected folder's view relabels its Collapse or Expand. */

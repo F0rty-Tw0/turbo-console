@@ -43,7 +43,7 @@ class GraphPageController {
       onViewport: (): void => this.filtering.inspection.saveViewport(),
       onRender: (): void => {
         this.frames.mark();
-        this.filtering.folders.rendered();
+        this.filtering.rendered();
       }
     };
 
