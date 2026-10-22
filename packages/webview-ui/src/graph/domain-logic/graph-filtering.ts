@@ -148,9 +148,14 @@ export class GraphFiltering {
     return folders;
   }
 
+  /** A collapse or expand: the controls and the save follow, and an inspected folder's view relabels its Collapse or Expand. */
   private foldersChanged(): void {
+    const isFolder = this.inspection.current().kind === 'folder';
+
     this.controls.setCollapsed(this.folders.collapsed());
     this.inspection.saveViewport();
+
+    if (isFolder) this.inspection.recheck(this.controls.visible());
   }
 
   private showVisible(visible: ReadonlySet<string>): void {

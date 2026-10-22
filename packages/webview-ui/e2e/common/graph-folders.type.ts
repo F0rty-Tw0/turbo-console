@@ -36,3 +36,19 @@ export type BoxDragRecord = {
   readonly dy: number;
   readonly zoom: number;
 };
+
+/** One saved-folder case: the folders saved collapsed, the folder saved as inspected and the status it reads. */
+export type FolderStatusRow = {
+  readonly name: string;
+  readonly collapsed: string[];
+  readonly folder: string;
+  readonly status: string;
+};
+
+/** What the details panel's folder view shows: its title, its summary line, its action buttons and its member packages, in order. */
+export type FolderViewFacts = {
+  readonly heading: string;
+  readonly summary: string;
+  readonly buttons: string[];
+  readonly packages: string[];
+};

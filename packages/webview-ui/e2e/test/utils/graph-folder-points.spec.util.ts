@@ -1,4 +1,4 @@
-import { boxRectOf } from './graph-folders.spec.util.ts';
+import { boxGrabOf, boxRectOf } from './graph-folders.spec.util.ts';
 import type { Position, Positions } from '../../../src/bridge/common/graph-state.type.ts';
 import type { ProbeFolder, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import type { BoxDragRecord } from '../../common/graph-folders.type.ts';
@@ -28,6 +28,13 @@ export const boxCornerOf = (folder: ProbeFolder): ViewportPoint => {
   const corner: ViewportPoint = { x: rect.left + CORNER_INSET_PX, y: rect.top + CORNER_INSET_PX };
 
   return corner;
+};
+
+/** A folder's tap point: the centre of its collapsed node, or the middle of its box's left padding band, level with its centre. */
+export const folderPadTapOf = (folder: ProbeFolder, zoom: number): ViewportPoint => {
+  if (folder.isCollapsed) return centreOfFolder(folder);
+
+  return boxGrabOf(folder, zoom);
 };
 
 /** A folder's tap point: the centre of its collapsed node, or the corner of its box. */

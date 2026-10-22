@@ -82,6 +82,11 @@ export class GraphPackageList {
     await expect(this.showCheck(name)).toHaveAttribute('aria-disabled', 'true');
   }
 
+  /** The row's box is checked and can be unchecked again: no focus holds it. */
+  public async expectRowUnlocked(name: string): Promise<void> {
+    await expect(this.showCheck(name)).not.toHaveAttribute('aria-disabled', 'true');
+  }
+
   public async expectRowDimmed(name: string): Promise<void> {
     await expect(this.rowOf(name)).toHaveClass(DIMMED);
   }
