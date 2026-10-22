@@ -9,6 +9,7 @@ import type { CanvasFolders, GraphInspectionDeps } from '../common/graph-inspect
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
 import type { Inspection } from '../common/inspection.type.ts';
+import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
 type FilteringFacts = Pick<
@@ -41,6 +42,7 @@ export class GraphFiltering {
       onFocusToggle: (name, setFilters): void => this.inspection.focused(name, setFilters),
       onOpenDetails: (): void => this.inspection.openDetails(),
       onGrouping,
+      onToggleFolder: (folder): void => this.folders.toggle(folder),
       onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
     };
@@ -52,7 +54,7 @@ export class GraphFiltering {
       ...deps,
       visible: (): ReadonlySet<string> => this.controls.visible(),
       focus: (): string | null => this.controls.focusName(),
-      controls: (): ControlsViewFields => this.controls.fields(),
+      controls: (): ControlsViewFields => this.fields(),
       onSelected: (name): void => this.controls.markSelected(name),
       onFocusOn: (name): void => this.controls.focusOn(name),
       onExclude: (name): void => this.controls.exclude(name),
@@ -66,7 +68,8 @@ export class GraphFiltering {
       visible: (): ReadonlySet<string> => this.controls.visible(),
       ghosts: (): string[] => this.inspection.canvas.ghostNodes(),
       // Task 3.5 wires the collapse of an inspected folder here.
-      onCollapsed: (): void => undefined
+      onCollapsed: (): void => undefined,
+      onChange: (): void => this.foldersChanged()
     };
 
     this.deps = deps;
@@ -80,6 +83,8 @@ export class GraphFiltering {
     const state = saved ?? freshViewStateOf(graph.hash);
 
     this.controls.restore(state, graph);
+    this.folders.load(state.collapsed, new Set(folderKeysOf(graph.infos)));
+    this.controls.setCollapsed(this.folders.collapsed());
     this.builtMs = this.deps.now() - at;
 
     const visible = this.controls.visible();
@@ -105,6 +110,21 @@ export class GraphFiltering {
     };
 
     return facts;
+  }
+
+  /** The controls' fields and the collapsed folders: the part of the saved view state this class owns. */
+  private fields(): ControlsViewFields {
+    const live = this.folders.collapsed();
+    const own = this.controls.fields();
+    const collapsed = [...live];
+    const fields: ControlsViewFields = { ...own, collapsed };
+
+    return fields;
+  }
+
+  private foldersChanged(): void {
+    this.controls.setCollapsed(this.folders.collapsed());
+    this.inspection.saveViewport();
   }
 
   private showVisible(visible: ReadonlySet<string>): void {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { folderGroupsOf, folderOf, modeGroupsOf, tagsOf } from './folder-group.util.ts';
+import { folderGroupsOf, folderKeysOf, folderOf, modeGroupsOf, tagsOf } from './folder-group.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 
@@ -100,6 +100,14 @@ describe('FEATURE: folderGroupsOf', () => {
 
       expect(input.map((pkg) => pkg.name)).toStrictEqual(['b', 'a']);
     });
+  });
+});
+
+describe('FEATURE: folderKeysOf', () => {
+  it('GIVEN packages in several folders and at the root WHEN the keys are taken THEN they follow the group order', () => {
+    const keys = folderKeysOf(MIXED);
+
+    expect(keys).toStrictEqual(['', 'apps', 'packages/ui']);
   });
 });
 

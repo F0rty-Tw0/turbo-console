@@ -47,8 +47,11 @@ export type ToolbarElements = Pick<
   'toolbar' | 'controls' | 'details' | 'fit' | 'relayout' | 'clear' | 'status' | 'filtersOn'
 >;
 
-/** The controls fields of the saved view state: what `GraphControls` keeps and the selection's saves carry along. */
-export type ControlsViewFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags' | 'grouped'>;
+/** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
+export type ControlsViewFields = Pick<
+  GraphViewState,
+  'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags' | 'grouped' | 'collapsed'
+>;
 
 /** Debounces view-state saves; `flush` saves a pending state at once. */
 export type ViewStateSaver = {

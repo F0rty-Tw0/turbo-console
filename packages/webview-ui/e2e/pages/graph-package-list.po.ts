@@ -1,8 +1,10 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-/** A name button's accessible name is the package name; the focus button's starts with `Focus `. */
-const NAME_BUTTON = /^(?!Focus )/;
+/** A name button's accessible name is the package name; the focus button's starts with `Focus `, a header's with `Expand folder ` or `Collapse folder `. */
+const NAME_BUTTON = /^(?!Focus |Expand folder |Collapse folder )/;
+
+const FOLDER_TOGGLE = /^(Expand|Collapse) folder /;
 
 const DIMMED = /is-dimmed/;
 
@@ -19,8 +21,10 @@ export class GraphPackageList {
   public constructor(page: Page) {
     this.page = page;
     this.grid = page.getByRole('grid');
-    this.headers = this.grid.getByRole('row').filter({ hasNot: page.getByRole('button') });
-    this.rows = this.grid.getByRole('row').filter({ has: page.getByRole('button') });
+    const focusButton = page.getByRole('button', { name: /^Focus / });
+
+    this.headers = this.grid.getByRole('row').filter({ hasNot: focusButton });
+    this.rows = this.grid.getByRole('row').filter({ has: focusButton });
     this.nameButtons = this.grid.getByRole('button', { name: NAME_BUTTON });
     this.currentRows = this.grid.locator('[aria-current="true"]');
   }
@@ -50,6 +54,22 @@ export class GraphPackageList {
   /** Moves keyboard focus to the name button without pressing it. */
   public async focusName(name: string): Promise<void> {
     await this.nameButton(name).focus();
+  }
+
+  /** Presses the header button named `name`, `Collapse folder apps` or `Expand folder apps`. */
+  public async pressFolderToggle(name: string): Promise<void> {
+    await this.folderToggle(name).click();
+  }
+
+  /** The header button named `name` shows `text` and reports `isExpanded`. */
+  public async expectFolderToggle(name: string, text: string, isExpanded: boolean): Promise<void> {
+    await expect(this.folderToggle(name)).toHaveText(text);
+    await expect(this.folderToggle(name)).toHaveAttribute('aria-expanded', String(isExpanded));
+  }
+
+  /** No header shows an Expand or Collapse button: the page is flat. */
+  public async expectNoFolderToggles(): Promise<void> {
+    await expect(this.grid.getByRole('button', { name: FOLDER_TOGGLE })).toHaveCount(0);
   }
 
   public async expectRowChecked(name: string, isChecked: boolean): Promise<void> {
@@ -93,7 +113,7 @@ export class GraphPackageList {
 
   /** The group headers shown, in list order. */
   public async expectGroups(labels: string[]): Promise<void> {
-    await expect(this.headers).toHaveText(labels);
+    await expect(this.headers).toHaveText(labels, { useInnerText: true });
   }
 
   /** The package rows shown, in list order. */
@@ -108,6 +128,10 @@ export class GraphPackageList {
   public async expectGridShape(groupCount: number, rowCount: number): Promise<void> {
     await expect(this.headers).toHaveCount(groupCount);
     await expect(this.rows).toHaveCount(rowCount);
+  }
+
+  private folderToggle(name: string): Locator {
+    return this.grid.getByRole('button', { name, exact: true });
   }
 
   private showCheck(name: string): Locator {

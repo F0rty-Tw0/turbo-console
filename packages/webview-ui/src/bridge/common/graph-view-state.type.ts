@@ -24,4 +24,6 @@ export type GraphViewState = {
   readonly trace: GraphTraceRef | null;
   /** Whether the page is grouped by folder; carried across a hash change. */
   readonly grouped: boolean;
+  /** The collapsed folder keys; kept while the page is flat and carried across a hash change minus the folders the new hash lacks. */
+  readonly collapsed: string[];
 };

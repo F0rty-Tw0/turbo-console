@@ -8,8 +8,10 @@ import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView, Graph
 import type { LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
+import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
+import { openingStateOf } from '../utils/grouping-open.util.ts';
 import { groupingOf } from '../utils/layout-plan.util.ts';
 import { taskCountsDiffer } from '../utils/task-counts.util.ts';
 import { restorePlanOf } from '../utils/view-restore.util.ts';
@@ -25,6 +27,8 @@ class GraphPageController {
   private readonly filtering: GraphFiltering;
   private readonly layouts: GraphLayouts;
   private drawn: DrawnGraph | null = null;
+  private opening: GraphViewState | null = null;
+  private hasShownGraph = false;
 
   public constructor(deps: GraphControllerDeps) {
     const { bridge, page } = deps;
@@ -112,8 +116,12 @@ class GraphPageController {
     }
 
     const raw = this.deps.bridge.savedState();
-    const saved = readGraphViewState(raw);
+    const read = readGraphViewState(raw);
+    const folders = folderKeysOf(state.packages);
+    const saved = openingStateOf(read, state.hash, folders, state.packages.length, this.hasShownGraph);
 
+    this.opening = saved === read ? null : saved;
+    this.hasShownGraph = true;
     this.drawn = drawnGraphOf(state);
     this.frames.start(at);
     this.filtering.inspection.reset();
@@ -126,7 +134,8 @@ class GraphPageController {
 
     if (drawn === null) return;
 
-    const plan = restorePlanOf(saved, drawn.hash);
+    const camera = saved === this.opening ? null : saved;
+    const plan = restorePlanOf(camera, drawn.hash);
 
     this.frames.arm();
 

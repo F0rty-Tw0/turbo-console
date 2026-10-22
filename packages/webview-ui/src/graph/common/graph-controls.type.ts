@@ -21,13 +21,15 @@ export type RowView = {
   readonly isLocked: boolean;
 };
 
-/** What `renderControls` paints: the filters, the visible set, the package total, the selection and the panel's openness. */
+/** What `renderControls` paints: the filters, the visible set, the package total, the selection, the panel's openness, and whether folders are grouped and which are collapsed. */
 export type ControlsView = {
   readonly filters: GraphFilters;
   readonly visible: ReadonlySet<string>;
   readonly total: number;
   readonly selected: string | null;
   readonly isOpen: boolean;
+  readonly grouped: boolean;
+  readonly collapsed: ReadonlySet<string>;
 };
 
 export type GroupState = 'checked' | 'unchecked' | 'mixed';
@@ -46,6 +48,8 @@ export type GraphControlsDeps = {
   readonly onOpenDetails: (name: string) => void;
   /** The Group by folder checkbox changed: the receiver switches the layout, then the controls save. */
   readonly onGrouping: (isGrouped: boolean) => void;
+  /** A folder header's Expand or Collapse button was pressed. */
+  readonly onToggleFolder: (folder: string) => void;
   readonly onSave: () => void;
   /** Re-measures the canvas now; Cytoscape's own observers wait a 100 ms debounce. */
   readonly onResize: () => void;
@@ -87,6 +91,7 @@ export type ControlsActions = {
   readonly onDepth: (text: string) => void;
   readonly onDepthBlur: () => void;
   readonly onGrouping: (isGrouped: boolean) => void;
+  readonly onToggle: (folder: string) => void;
   readonly onTag: (tag: string, isChecked: boolean) => void;
   readonly onShowAll: () => void;
   readonly onSearch: (text: string) => void;

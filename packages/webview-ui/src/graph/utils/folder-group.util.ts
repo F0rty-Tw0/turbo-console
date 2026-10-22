@@ -56,6 +56,9 @@ export const folderGroupsOf = (packages: GraphPackage[]): FolderGroup[] => {
   return groups.sort(byFolder);
 };
 
+/** The folder keys of `folderGroupsOf`, in its order. */
+export const folderKeysOf = (packages: GraphPackage[]): string[] => folderGroupsOf(packages).map((group) => group.folder);
+
 /** The folder boxes of a layout mode: none while flat, else `folderGroupsOf`. */
 export const modeGroupsOf = (packages: GraphPackage[], mode: LayoutGrouping): FolderGroup[] | null => {
   if (mode === 'flat') return null;

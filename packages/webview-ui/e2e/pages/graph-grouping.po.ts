@@ -102,6 +102,11 @@ export class GraphGroupingPage extends GraphBoxesPage {
     await expect.poll(async (): Promise<boolean | null> => this.savedGrouped()).toBe(isOn);
   }
 
+  /** The view state the page saved holds exactly these collapsed folders. */
+  public async expectCollapsedSaved(folders: string[]): Promise<void> {
+    await expect.poll(async (): Promise<string[] | null> => this.savedCollapsed()).toEqual(folders);
+  }
+
   /** The notice shows exactly `text`, or is hidden for `null`. */
   public async expectNotice(text: string | null): Promise<void> {
     if (text === null) {
@@ -172,6 +177,12 @@ export class GraphGroupingPage extends GraphBoxesPage {
     const raw = await this.page.evaluate((): unknown => window.__state);
 
     return readGraphViewState(raw)?.grouped ?? null;
+  }
+
+  private async savedCollapsed(): Promise<string[] | null> {
+    const raw = await this.page.evaluate((): unknown => window.__state);
+
+    return readGraphViewState(raw)?.collapsed ?? null;
   }
 
   private async groupedFact(): Promise<boolean | null> {

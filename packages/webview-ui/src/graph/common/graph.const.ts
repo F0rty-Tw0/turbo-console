@@ -162,3 +162,6 @@ export const COLUMNS: Column[] = ['check', 'name', 'focus'];
 
 /** The gap kept between anchor nodes and the details overlay's left edge. */
 export const KEEP_CLEAR_MARGIN_PX = 16;
+
+/** A graph with more packages than this opens grouped with every folder collapsed, when nothing is saved for it. */
+export const LARGE_GRAPH_PACKAGES = 300;

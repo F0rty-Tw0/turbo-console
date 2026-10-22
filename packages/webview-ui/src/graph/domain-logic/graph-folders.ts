@@ -2,6 +2,7 @@ import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphFoldersDeps } from '../common/graph-folders.type.ts';
 import type { TextMeasure } from '../common/graph-page.type.ts';
 import { collapsedLabelOf } from '../utils/collapsed-label.util.ts';
+import { collapsedOf } from '../utils/collapsed-restore.util.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
 import { folderSceneOf } from '../utils/folder-scene.util.ts';
 
@@ -24,6 +25,7 @@ const labelsOf = (scene: FolderScene | null, measure: TextMeasure): LabelOf => {
 export class GraphFolders {
   private readonly deps: GraphFoldersDeps;
   private readonly collapsedSet = new Set<string>();
+  private hasLoaded = false;
   private toggleStart: number | null = null;
   private measured: number | null = null;
 
@@ -33,6 +35,21 @@ export class GraphFolders {
 
   public collapsed(): ReadonlySet<string> {
     return this.collapsedSet;
+  }
+
+  /**
+   * Takes the collapsed folders of a graph just drawn. The page's first graph reads `saved`; a later one (a hash change)
+   * keeps the live set cut to `known`, so a folder the live set lacks opens expanded. Draws nothing and reports nothing.
+   */
+  public load(saved: string[], known: ReadonlySet<string>): void {
+    const live = [...this.collapsedSet];
+    const source = this.hasLoaded ? live : saved;
+    const kept = collapsedOf(source, known);
+
+    this.hasLoaded = true;
+    this.collapsedSet.clear();
+
+    for (const folder of kept) this.collapsedSet.add(folder);
   }
 
   /** What the folder pass draws; `null` while no graph is drawn or the drawing is flat. */
@@ -66,6 +83,7 @@ export class GraphFolders {
     else this.collapsedSet.delete(folder);
 
     this.redraw();
+    this.deps.onChange();
 
     if (isCollapse) this.deps.onCollapsed(folder);
   }
@@ -75,6 +93,7 @@ export class GraphFolders {
     for (const folder of folders) this.collapsedSet.delete(folder);
 
     this.redraw();
+    this.deps.onChange();
   }
 
   /** Repaints the inspection with the new scene, then runs the folder pass. */

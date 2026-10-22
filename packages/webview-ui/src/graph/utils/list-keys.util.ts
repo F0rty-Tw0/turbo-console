@@ -10,7 +10,7 @@ export const entryCellOf = (lines: ListLine[], at: CellAt | null): CellAt | null
 
   if (at === null || line === undefined) return FIRST_CELL;
 
-  const isMissingCell = line.kind === 'header' && at.column !== 'check';
+  const isMissingCell = !line.columns.includes(at.column);
 
   return isMissingCell ? FIRST_CELL : at;
 };

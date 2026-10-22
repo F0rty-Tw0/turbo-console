@@ -18,6 +18,7 @@ export const foldersRigMock = (): FoldersRig => {
   const showFolders = vi.fn<GraphView['showFolders']>();
   const repaint = vi.fn<GraphFoldersDeps['repaint']>();
   const onCollapsed = vi.fn<GraphFoldersDeps['onCollapsed']>();
+  const onChange = vi.fn<GraphFoldersDeps['onChange']>();
   const view: GraphFoldersDeps['view'] = { showFolders };
   const deps: GraphFoldersDeps = {
     view,
@@ -29,9 +30,10 @@ export const foldersRigMock = (): FoldersRig => {
     canAct: (): boolean => world.canAct,
     measure: (text: string): number => text.length,
     now: (): number => world.clock,
-    onCollapsed
+    onCollapsed,
+    onChange
   };
-  const rig: FoldersRig = { deps, world, showFolders, repaint, onCollapsed };
+  const rig: FoldersRig = { deps, world, showFolders, repaint, onCollapsed, onChange };
 
   return rig;
 };

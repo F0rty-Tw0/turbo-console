@@ -1,10 +1,10 @@
-import { ControlsKeyboard } from './controls-keyboard.ts';
+import { ControlsKeyboard, keyboardDepsOf } from './controls-keyboard.ts';
 import { mountRestoredPanel } from './controls-panel-mount.ts';
 import { controlsActionsOf } from './graph-controls-actions.ts';
 import { wireControls } from './graph-controls-events.ts';
 import { renderControls, renderSearch, revealSelected } from './graph-controls-render.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { ControlsMounted, ControlsView, GraphControlsDeps, KeyboardDeps } from '../common/graph-controls.type.ts';
+import type { ControlsMounted, ControlsView, GraphControlsDeps } from '../common/graph-controls.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import { DEFAULT_DEPTH } from '../common/graph.const.ts';
@@ -30,6 +30,7 @@ export class GraphControls {
   private search = '';
   private isOpen = true;
   private isGrouped = false;
+  private collapsed: ReadonlySet<string> = new Set();
   private selected: string | null = null;
   private stamp: number | null = null;
 
@@ -46,7 +47,7 @@ export class GraphControls {
     return this.stamp;
   }
 
-  public fields(): ControlsViewFields {
+  public fields(): Omit<ControlsViewFields, 'collapsed'> {
     return controlsFieldsOf(this.applied, this.search, this.depth, this.isOpen, this.isGrouped);
   }
 
@@ -98,13 +99,13 @@ export class GraphControls {
     this.isOpen = restored.isOpen;
     this.isGrouped = restored.isGrouped;
     this.stamp = null;
-    wireControls(elements, controlsActionsOf(mounted, this));
+    wireControls(elements, controlsActionsOf(mounted, this, this.deps.onToggleFolder));
     renderSearch(elements, graph.infos, restored.search);
-    const keyboardDeps: KeyboardDeps = {
-      ...this.deps,
-      isVisible: (name): boolean => this.shown.has(name),
-      selected: (): string | null => this.selected
-    };
+    const keyboardDeps = keyboardDepsOf(
+      this.deps,
+      (name): boolean => this.shown.has(name),
+      (): string | null => this.selected
+    );
 
     new ControlsKeyboard(elements, keyboardDeps);
     this.shown = visibleOf(graph.infos, graph.edges, this.applied);
@@ -148,8 +149,15 @@ export class GraphControls {
 
   public setGrouping(isGrouped: boolean): void {
     this.isGrouped = isGrouped;
+    this.render();
     this.deps.onGrouping(isGrouped);
     this.deps.onSave();
+  }
+
+  /** The folder headers' buttons follow `collapsed`; the caller owns the set. */
+  public setCollapsed(collapsed: ReadonlySet<string>): void {
+    this.collapsed = collapsed;
+    this.render();
   }
 
   public pick(name: string): void {
@@ -167,11 +175,12 @@ export class GraphControls {
   }
 
   private render(): void {
-    const { mounted, applied, shown, selected, isOpen } = this;
+    const { mounted, applied, shown, selected, isOpen, isGrouped, collapsed } = this;
 
     if (mounted === null) return;
 
-    const view: ControlsView = { filters: applied, visible: shown, total: mounted.graph.infos.length, selected, isOpen };
+    const total = mounted.graph.infos.length;
+    const view: ControlsView = { filters: applied, visible: shown, total, selected, isOpen, grouped: isGrouped, collapsed };
 
     renderControls(mounted.elements, this.deps.page, view);
   }

@@ -105,6 +105,67 @@ describe('FEATURE: GraphFolders', () => {
     });
   });
 
+  describe('GIVEN a folder list saved for the boards graph', () => {
+    const known = new Set(['apps', 'packages']);
+
+    it('WHEN it is loaded the first time THEN the saved folders the graph has are collapsed', () => {
+      folders.load(['apps', 'gone'], known);
+
+      expect(folders.collapsed()).toStrictEqual(new Set(['apps']));
+    });
+
+    describe('WHEN packages is collapsed by hand and a second hash loads with other folders', () => {
+      beforeEach(() => {
+        folders.load(['apps'], known);
+        folders.toggle('apps');
+        folders.toggle('packages');
+      });
+
+      it('THEN the live set is kept and its saved list is ignored', () => {
+        folders.load(['apps', 'tools'], new Set(['apps', 'packages', 'tools']));
+
+        expect(folders.collapsed()).toStrictEqual(new Set(['packages']));
+      });
+
+      it('THEN the live set loses the folders the new hash lacks', () => {
+        folders.load([], new Set(['apps', 'tools']));
+
+        expect(folders.collapsed()).toStrictEqual(new Set());
+      });
+    });
+
+    it('WHEN it is loaded THEN nothing is drawn and onChange does not run', () => {
+      folders.load(['apps'], known);
+
+      expect(rig.showFolders).not.toHaveBeenCalled();
+      expect(rig.onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN the boards graph drawn grouped and onChange spied', () => {
+    it('WHEN apps is toggled THEN onChange runs once after the folder pass', () => {
+      folders.toggle('apps');
+
+      const [changeOrder] = rig.onChange.mock.invocationCallOrder;
+      const [showOrder] = rig.showFolders.mock.invocationCallOrder;
+
+      expect(rig.onChange).toHaveBeenCalledOnce();
+      expect(changeOrder).toBeGreaterThan(showOrder ?? 0);
+    });
+
+    it('WHEN apps is expanded THEN onChange runs once', () => {
+      folders.expand(['apps']);
+
+      expect(rig.onChange).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN a folder the graph lacks is toggled THEN onChange does not run', () => {
+      folders.toggle('gone');
+
+      expect(rig.onChange).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN the checkbox mode is not the mode on screen', () => {
     beforeEach(() => {
       rig.world.canAct = false;

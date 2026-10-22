@@ -95,7 +95,8 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
     detailsOpen: readDetailsOpen(raw['detailsOpen']),
     link: readLink(raw['link']),
     trace: readTrace(raw['trace']),
-    grouped: readGrouped(raw['grouped'])
+    grouped: readGrouped(raw['grouped']),
+    collapsed: readNames(raw['collapsed'])
   };
 
   return state;
