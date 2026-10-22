@@ -6,7 +6,7 @@ import type { Position, Positions } from '../../src/bridge/common/graph-state.ty
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
-import type { DragRecord, PanCpu } from '../common/graph.type.ts';
+import type { CpuSteps, DragRecord } from '../common/graph.type.ts';
 import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { emptySpotOf, nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
@@ -38,7 +38,7 @@ export class GraphCanvas {
   private readonly page: Page;
   private readonly probe: GraphProbePage;
   private drag: DragRecord | null;
-  private panCpu: PanCpu | null;
+  private panCpu: CpuSteps | null;
 
   public constructor(page: Page) {
     this.page = page;

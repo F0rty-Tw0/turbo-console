@@ -2,7 +2,7 @@
 import type { CDPSession, Page } from '@playwright/test';
 
 import { MS_PER_SECOND, THREAD_TIME_METRIC } from '../../common/graph.const.ts';
-import type { PanCpu } from '../../common/graph.type.ts';
+import type { CpuSteps } from '../../common/graph.type.ts';
 
 const threadTimeMs = async (session: CDPSession): Promise<number> => {
   const { metrics } = await session.send('Performance.getMetrics');
@@ -14,10 +14,10 @@ const threadTimeMs = async (session: CDPSession): Promise<number> => {
 };
 
 /**
- * The main-thread CPU ms `work` took in total and in its costliest step; `work` calls `endStep` after each step.
+ * The main-thread CPU ms `work` took in total and in its cheapest and costliest step; `work` calls `endStep` after each step.
  * CPU time, not wall time, so contention for the CPU does not inflate it; core type and clock still do.
  */
-export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>) => Promise<void>): Promise<PanCpu> => {
+export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>) => Promise<void>): Promise<CpuSteps> => {
   const session = await page.context().newCDPSession(page);
 
   try {
@@ -27,6 +27,7 @@ export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>
     const t0 = performance.now();
     let lastWall = t0;
     let last = start;
+    let minStepMs = Number.POSITIVE_INFINITY;
     let maxStepMs = 0;
     const steps: string[] = [];
     const endStep = async (): Promise<void> => {
@@ -34,6 +35,7 @@ export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>
       const wall = performance.now();
 
       steps.push(`${(wall - lastWall).toFixed(0)}/${(now - last).toFixed(1)}`);
+      minStepMs = Math.min(minStepMs, now - last);
       maxStepMs = Math.max(maxStepMs, now - last);
       last = now;
       lastWall = wall;
@@ -47,9 +49,9 @@ export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>
       `C44 pan start=${start.toFixed(1)} total=${(last - start).toFixed(1)} max=${maxStepMs.toFixed(1)} wall=${(lastWall - t0).toFixed(0)} steps(wall/cpu)=${series}`
     );
 
-    const pan: PanCpu = { totalMs: last - start, maxStepMs };
+    const cpu: CpuSteps = { totalMs: last - start, minStepMs, maxStepMs };
 
-    return pan;
+    return cpu;
   } finally {
     await session.detach().catch((): undefined => undefined);
   }
