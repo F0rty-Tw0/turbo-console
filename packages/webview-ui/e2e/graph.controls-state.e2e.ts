@@ -36,6 +36,7 @@ const M4_1_VIEW = { hash: 'c0a1b2c3', zoom: 2, pan: M4_1_PAN, selected: 'core' }
 const M4_1_RESTORED: GraphViewState = {
   ...M4_1_VIEW,
   ...DEFAULT_CONTROLS,
+  focus: null,
   detailsOpen: true,
   link: null,
   trace: null,

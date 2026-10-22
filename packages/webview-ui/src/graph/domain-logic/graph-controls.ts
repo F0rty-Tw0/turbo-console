@@ -14,7 +14,7 @@ import { isShowable } from '../utils/ghost-show.util.ts';
 import { controlsFieldsOf, restoredFilters } from '../utils/restored-filters.util.ts';
 import { visibleOf } from '../utils/visibility.util.ts';
 
-const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, tags: new Set() };
+const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, depth: DEFAULT_DEPTH, tags: new Set() };
 
 /**
  * The controls panel's state: the filters, the search, the focus depth and whether the panel is open. A listener
@@ -22,7 +22,6 @@ const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, tags: new Set
  */
 export class GraphControls {
   public applied = NO_FILTERS;
-  public depth = DEFAULT_DEPTH;
 
   private readonly deps: GraphControlsDeps;
   private mounted: ControlsMounted | null = null;
@@ -39,6 +38,10 @@ export class GraphControls {
     deps.page.controls.addEventListener('click', (): void => this.toggleOpen());
   }
 
+  public get depth(): number {
+    return this.applied.depth;
+  }
+
   public visible(): ReadonlySet<string> {
     return this.shown;
   }
@@ -48,11 +51,7 @@ export class GraphControls {
   }
 
   public fields(): Omit<ControlsViewFields, 'collapsed'> {
-    return controlsFieldsOf(this.applied, this.search, this.depth, this.isOpen, this.isGrouped);
-  }
-
-  public focusName(): string | null {
-    return this.applied.focus?.name ?? null;
+    return controlsFieldsOf(this.applied, this.search, this.isOpen, this.isGrouped);
   }
 
   /** The details panel's Focus: the list's Focus toggle on `name`. */
@@ -95,7 +94,6 @@ export class GraphControls {
     this.mounted = mounted;
     this.applied = restored.filters;
     this.search = restored.search;
-    this.depth = restored.depth;
     this.isOpen = restored.isOpen;
     this.isGrouped = restored.isGrouped;
     this.stamp = null;
@@ -119,8 +117,8 @@ export class GraphControls {
   }
 
   public focus(mounted: ControlsMounted, name: string): void {
-    const next = focusOn(this.applied, name, this.depth);
-    const focused = next.focus?.name ?? null;
+    const next = focusOn(this.applied, name);
+    const focused = next.focus === null ? null : name;
     const setFilters = (): void => this.change(mounted, next);
 
     this.deps.onFocusToggle(focused, setFilters);
@@ -131,7 +129,6 @@ export class GraphControls {
 
     if (depth === null) return;
 
-    this.depth = depth;
     this.change(mounted, withDepth(this.applied, depth));
   }
 

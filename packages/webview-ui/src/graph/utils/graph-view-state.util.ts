@@ -1,5 +1,5 @@
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphLinkRef, GraphTraceRef, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFocus, GraphLinkRef, GraphTraceRef, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { DEFAULT_DEPTH, MAX_DEPTH, MIN_DEPTH } from '../common/graph.const.ts';
 
@@ -30,7 +30,31 @@ const readDepth = (value: unknown): number => {
   return value;
 };
 
-const readFocus = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+const readFocus = (value: unknown): GraphFocus | null => {
+  if (typeof value === 'string') {
+    const migrated: GraphFocus = { kind: 'package', name: value };
+
+    return migrated;
+  }
+
+  if (!isRecord(value)) return null;
+
+  const { kind, name, folder } = value;
+
+  if (kind === 'package' && typeof name === 'string') {
+    const focus: GraphFocus = { kind, name };
+
+    return focus;
+  }
+
+  if (kind === 'folder' && typeof folder === 'string') {
+    const focus: GraphFocus = { kind, folder };
+
+    return focus;
+  }
+
+  return null;
+};
 
 const readNames = (value: unknown): string[] => {
   const isNameList = Array.isArray(value) && value.every((entry) => typeof entry === 'string');

@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import { visibleOf } from './visibility.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
-import type { GraphFilters, GraphFocus } from '../common/graph-filters.type.ts';
+import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFilters } from '../common/graph-filters.type.ts';
 
 type FilterSpec = {
   readonly hidden?: string[];
   readonly focus?: GraphFocus;
+  readonly depth?: number;
   readonly tags?: string[];
 };
 
@@ -26,7 +28,8 @@ const filtersOf = (spec: FilterSpec): GraphFilters => {
   const hidden = new Set(spec.hidden);
   const focus = spec.focus ?? null;
   const tags = new Set(spec.tags);
-  const filters: GraphFilters = { hidden, focus, tags };
+  const depth = spec.depth ?? 1;
+  const filters: GraphFilters = { hidden, focus, depth, tags };
 
   return filters;
 };
@@ -61,21 +64,27 @@ const SHOP_EDGES: GraphEdge[] = [
 
 const ALL = ['admin', 'base', 'config', 'core', 'docs', 'forms', 'ui', 'web'];
 
-const UI_DEPTH_1: GraphFocus = { name: 'ui', depth: 1 };
+const UI: GraphFocus = { kind: 'package', name: 'ui' };
 
-const UI_DEPTH_2: GraphFocus = { name: 'ui', depth: 2 };
+const CORE: GraphFocus = { kind: 'package', name: 'core' };
 
-const CORE_DEPTH_1: GraphFocus = { name: 'core', depth: 1 };
+const GHOST: GraphFocus = { kind: 'package', name: 'ghost' };
 
-const CORE_DEPTH_2: GraphFocus = { name: 'core', depth: 2 };
+const WEB: GraphFocus = { kind: 'package', name: 'web' };
 
-const GHOST_DEPTH_2: GraphFocus = { name: 'ghost', depth: 2 };
+const A: GraphFocus = { kind: 'package', name: 'a' };
 
-const WEB_DEPTH_5: GraphFocus = { name: 'web', depth: 5 };
+const PROTO_FOCUS: GraphFocus = { kind: 'package', name: '__proto__' };
 
-const A_DEPTH_5: GraphFocus = { name: 'a', depth: 5 };
+const APPS: GraphFocus = { kind: 'folder', folder: 'apps' };
 
-const PROTO_DEPTH_1: GraphFocus = { name: '__proto__', depth: 1 };
+const PACKAGES: GraphFocus = { kind: 'folder', folder: 'packages' };
+
+const ROOT_FOLDER: GraphFocus = { kind: 'folder', folder: '' };
+
+const NO_FOLDER: GraphFocus = { kind: 'folder', folder: 'nope' };
+
+const PROTO_FOLDER: GraphFocus = { kind: 'folder', folder: '__proto__' };
 
 const PROTO: GraphPackage[] = [
   pkgOf('__proto__', 'x/__proto__', ['constructor']),
@@ -91,18 +100,18 @@ describe('FEATURE: visibleOf', () => {
       ['no filter', {}, ALL],
       ['core unchecked', { hidden: ['core'] }, ['admin', 'base', 'config', 'docs', 'forms', 'ui', 'web']],
       ['packages/ folder unchecked', { hidden: ['ui', 'forms', 'core', 'config', 'base'] }, ['admin', 'docs', 'web']],
-      ['focus ui depth 1', { focus: UI_DEPTH_1 }, ['admin', 'core', 'ui', 'web']],
-      ['focus ui depth 2', { focus: UI_DEPTH_2 }, ['admin', 'config', 'core', 'ui', 'web']],
-      ['focus core depth 1', { focus: CORE_DEPTH_1 }, ['config', 'core', 'forms', 'ui']],
-      ['focus core depth 2', { focus: CORE_DEPTH_2 }, ['admin', 'base', 'config', 'core', 'forms', 'ui', 'web']],
+      ['focus ui depth 1', { focus: UI, depth: 1 }, ['admin', 'core', 'ui', 'web']],
+      ['focus ui depth 2', { focus: UI, depth: 2 }, ['admin', 'config', 'core', 'ui', 'web']],
+      ['focus core depth 1', { focus: CORE, depth: 1 }, ['config', 'core', 'forms', 'ui']],
+      ['focus core depth 2', { focus: CORE, depth: 2 }, ['admin', 'base', 'config', 'core', 'forms', 'ui', 'web']],
       ['tag lib', { tags: ['lib'] }, ['config', 'core']],
       ['tag ui', { tags: ['ui'] }, ['forms', 'ui', 'web']],
       ['tags app and lib', { tags: ['app', 'lib'] }, ['admin', 'config', 'core', 'web']],
-      ['focus ui/1 + tag lib (excludes the focus)', { focus: UI_DEPTH_1, tags: ['lib'] }, ['core', 'ui']],
-      ['focus ui/1 + ui, web unchecked', { focus: UI_DEPTH_1, hidden: ['ui', 'web'] }, ['admin', 'core', 'ui']],
+      ['focus ui/1 + tag lib (excludes the focus)', { focus: UI, depth: 1, tags: ['lib'] }, ['core', 'ui']],
+      ['focus ui/1 + ui, web unchecked', { focus: UI, depth: 1, hidden: ['ui', 'web'] }, ['admin', 'core', 'ui']],
       [
         'focus core/2 + ui unchecked (depth-2 web, admin stay)',
-        { focus: CORE_DEPTH_2, hidden: ['ui'] },
+        { focus: CORE, depth: 2, hidden: ['ui'] },
         ['admin', 'base', 'config', 'core', 'forms', 'web']
       ]
     ])('WHEN %s THEN the visible names are exact', (_label, spec, expected) => {
@@ -112,9 +121,36 @@ describe('FEATURE: visibleOf', () => {
     });
 
     it('WHEN the focus names no package THEN nothing is narrowed', () => {
-      const visible = sortedVisible(SHOP, SHOP_EDGES, { focus: GHOST_DEPTH_2 });
+      const visible = sortedVisible(SHOP, SHOP_EDGES, { focus: GHOST, depth: 2 });
 
       expect(visible).toStrictEqual(ALL);
+    });
+  });
+
+  describe('GIVEN a folder focus on the shop packages', () => {
+    it.each([
+      ['folder apps', { focus: APPS }, ['admin', 'web']],
+      ['folder packages', { focus: PACKAGES }, ['base', 'config', 'core', 'forms', 'ui']],
+      ['folder apps + admin unchecked', { focus: APPS, hidden: ['admin'] }, ['web']],
+      ['folder apps + both unchecked (no focus-stays rule)', { focus: APPS, hidden: ['admin', 'web'] }, []],
+      ['folder apps + tag ui', { focus: APPS, tags: ['ui'] }, ['web']],
+      ['folder packages + tag lib', { focus: PACKAGES, tags: ['lib'] }, ['config', 'core']],
+      ['the root folder', { focus: ROOT_FOLDER }, ['docs']],
+      ['an unknown folder', { focus: NO_FOLDER }, ALL],
+      ['folder apps at depth 3', { focus: APPS, depth: 3 }, ['admin', 'web']],
+      ['folder apps at depth 0', { focus: APPS, depth: 0 }, ['admin', 'web']]
+    ])('WHEN %s THEN the visible names are exact', (_label, spec, expected) => {
+      const visible = sortedVisible(SHOP, SHOP_EDGES, spec);
+
+      expect(visible).toStrictEqual(expected);
+    });
+
+    it('WHEN the folder is __proto__ THEN only its package is visible', () => {
+      const packages = [pkgOf('a', '__proto__/a'), pkgOf('b', 'x/b')];
+
+      const visible = sortedVisible(packages, [], { focus: PROTO_FOLDER });
+
+      expect(visible).toStrictEqual(['a']);
     });
   });
 
@@ -122,7 +158,7 @@ describe('FEATURE: visibleOf', () => {
     it('WHEN web is focused deeply THEN the unknown name is not visible', () => {
       const edges = [...SHOP_EDGES, edgeOf('web', 'ghost')];
 
-      const visible = sortedVisible(SHOP, edges, { focus: WEB_DEPTH_5 });
+      const visible = sortedVisible(SHOP, edges, { focus: WEB, depth: 5 });
 
       expect(visible).not.toContain('ghost');
     });
@@ -133,7 +169,7 @@ describe('FEATURE: visibleOf', () => {
       const packages = [pkgOf('a', 'x/a'), pkgOf('b', 'x/b')];
       const edges = [edgeOf('a', 'b'), edgeOf('b', 'a')];
 
-      const visible = sortedVisible(packages, edges, { focus: A_DEPTH_5 });
+      const visible = sortedVisible(packages, edges, { focus: A, depth: 5 });
 
       expect(visible).toStrictEqual(['a', 'b']);
     });
@@ -143,7 +179,7 @@ describe('FEATURE: visibleOf', () => {
     it.each([
       ['no filter', {}, ['__proto__', 'constructor', 'plain']],
       ['constructor unchecked', { hidden: ['constructor'] }, ['__proto__', 'plain']],
-      ['focus __proto__ depth 1', { focus: PROTO_DEPTH_1 }, ['__proto__', 'constructor']],
+      ['focus __proto__ depth 1', { focus: PROTO_FOCUS, depth: 1 }, ['__proto__', 'constructor']],
       ['tag __proto__', { tags: ['__proto__'] }, ['constructor']],
       ['tag constructor', { tags: ['constructor'] }, ['__proto__']]
     ])('WHEN %s THEN the visible names are exact', (_label, spec, expected) => {

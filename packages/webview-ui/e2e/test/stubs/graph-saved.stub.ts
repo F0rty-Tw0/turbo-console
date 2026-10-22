@@ -25,6 +25,7 @@ export const SAVED_BASE_STUB: GraphViewState = {
   selected: null,
   ...DEFAULT_CONTROLS_STUB,
   ...DEFAULT_DETAILS_STUB,
+  focus: null,
   collapsed: []
 };
 

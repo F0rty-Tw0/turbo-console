@@ -5,11 +5,10 @@ import type { GraphFoldersDeps } from './graph-folders.type.ts';
 import type { GraphInspectionDeps } from './graph-inspection.type.ts';
 import type { DrawnGraph, PageElements } from './graph-page.type.ts';
 
-/** What `restoredFilters` rebuilds from a saved state: the filters, the two inputs' values, whether the panel opens and whether it is grouped. */
+/** What `restoredFilters` rebuilds from a saved state: the filters (the depth with them), the search text, whether the panel opens and whether it is grouped. */
 export type RestoredControls = {
   readonly filters: GraphFilters;
   readonly search: string;
-  readonly depth: number;
   readonly isOpen: boolean;
   readonly isGrouped: boolean;
 };

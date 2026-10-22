@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { readGraphViewState } from './graph-view-state.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFocus, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 const PAN: Position = { x: -10, y: 20 };
 
@@ -24,6 +24,8 @@ const TRACE_WITH_EXTRA_KEY = { ...TRACE_REF, extra: 1 };
 
 const PROTO_LINK_REF = { source: '__proto__', target: 'constructor' };
 
+const CORE_FOCUS: GraphFocus = { kind: 'package', name: 'core' };
+
 const VALID: GraphViewState = {
   hash: 'h',
   zoom: 1.5,
@@ -33,7 +35,7 @@ const VALID: GraphViewState = {
   search: 'ui',
   depth: 3,
   hidden: ['docs', '__proto__'],
-  focus: 'core',
+  focus: CORE_FOCUS,
   tags: ['lib', 'constructor'],
   detailsOpen: false,
   link: LINK_REF,
@@ -158,6 +160,40 @@ describe('FEATURE: readGraphViewState', () => {
       const state = readGraphViewState({ ...CAMERA, ...saved });
 
       expect(state?.collapsed).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a state with a saved focus value', () => {
+    it.each([
+      ['the old package string', 'web', { kind: 'package', name: 'web' }],
+      ['a package focus', { kind: 'package', name: 'web' }, { kind: 'package', name: 'web' }],
+      ['a package focus with an extra key', { kind: 'package', name: 'web', depth: 3 }, { kind: 'package', name: 'web' }],
+      ['a folder focus', { kind: 'folder', folder: 'apps' }, { kind: 'folder', folder: 'apps' }],
+      ['the root folder focus', { kind: 'folder', folder: '' }, { kind: 'folder', folder: '' }],
+      ['an empty old string', '', { kind: 'package', name: '' }],
+      ['a folder focus with a number', { kind: 'folder', folder: 3 }, null],
+      ['a package focus with a number', { kind: 'package', name: 1 }, null],
+      ['an unknown kind', { kind: 'other' }, null],
+      ['null', null, null],
+      ['the number 5', 5, null]
+    ])('WHEN it is %s THEN focus reads %j', (_name, focus, expected) => {
+      const state = readGraphViewState({ ...CAMERA, focus });
+
+      expect(state?.focus).toStrictEqual(expected);
+    });
+
+    it('WHEN it is missing THEN focus reads null', () => {
+      const state = readGraphViewState(CAMERA);
+
+      expect(state?.focus).toBeNull();
+    });
+
+    it('WHEN it is a parsed __proto__ folder THEN the folder is kept', () => {
+      const focus: unknown = JSON.parse('{"kind":"folder","folder":"__proto__"}');
+
+      const state = readGraphViewState({ ...CAMERA, focus });
+
+      expect(state?.focus).toStrictEqual({ kind: 'folder', folder: '__proto__' });
     });
   });
 

@@ -9,6 +9,7 @@ import type { CanvasFolders, GraphInspectionDeps } from '../common/graph-inspect
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
 import type { Inspection } from '../common/inspection.type.ts';
+import { focusNameOf } from '../utils/controls-rules.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
@@ -53,7 +54,7 @@ export class GraphFiltering {
     const inspectionDeps: GraphInspectionDeps = {
       ...deps,
       visible: (): ReadonlySet<string> => this.controls.visible(),
-      focus: (): string | null => this.controls.focusName(),
+      focus: (): string | null => focusNameOf(this.controls.applied),
       controls: (): ControlsViewFields => this.fields(),
       onSelected: (name): void => this.controls.markSelected(name),
       onFocusOn: (name): void => this.controls.focusOn(name),

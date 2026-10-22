@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { viewStateOf } from './inspection-view-state.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphLinkRef, GraphTraceRef, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFocus, GraphLinkRef, GraphTraceRef, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { InspectionSave } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, Viewport } from '../common/graph-page.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
@@ -16,12 +16,14 @@ type ViewStateRow = {
   readonly fields: InspectionFields;
 };
 
+const WEB_FOCUS: GraphFocus = { kind: 'package', name: 'web' };
+
 const C: ControlsViewFields = {
   controlsOpen: false,
   search: 'we',
   depth: 2,
   hidden: ['docs'],
-  focus: 'web',
+  focus: WEB_FOCUS,
   tags: ['app'],
   grouped: false,
   collapsed: ['apps']

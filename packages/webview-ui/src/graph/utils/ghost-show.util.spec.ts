@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { isShowable } from './ghost-show.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
-import type { GraphFilters, GraphFocus } from '../common/graph-filters.type.ts';
+import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFilters } from '../common/graph-filters.type.ts';
 
 type FilterSpec = {
   readonly hidden?: string[];
@@ -26,7 +27,7 @@ const filtersOf = (spec: FilterSpec): GraphFilters => {
   const hidden = new Set(spec.hidden);
   const focus = spec.focus ?? null;
   const tags = new Set(spec.tags);
-  const filters: GraphFilters = { hidden, focus, tags };
+  const filters: GraphFilters = { hidden, focus, depth: 1, tags };
 
   return filters;
 };
@@ -41,7 +42,7 @@ const PACKAGES: GraphPackage[] = [
 
 const EDGES: GraphEdge[] = [edgeOf('web', 'ui'), edgeOf('ui', 'core')];
 
-const AROUND_WEB: GraphFocus = { name: 'web', depth: 1 };
+const AROUND_WEB: GraphFocus = { kind: 'package', name: 'web' };
 
 const NONE: FilterSpec = {};
 
