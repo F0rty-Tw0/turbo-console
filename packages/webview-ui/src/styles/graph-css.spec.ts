@@ -61,6 +61,13 @@ describe('FEATURE: graph.css', () => {
     expect(declarations).toContain(MUTED_TOKEN);
   });
 
+  it('GIVEN the body rule WHEN it is read THEN it drops the webview default padding so the panels meet the editor edges', () => {
+    const rules = Array.from(css.matchAll(RULE_PATTERN));
+    const body = rules.find((rule) => selectorOf(rule) === 'body');
+
+    expect(body?.[2]).toContain('padding: 0;');
+  });
+
   describe('GIVEN the controls panel rule', () => {
     const declarations = declarationsOf(css, '.graph-controls');
 
