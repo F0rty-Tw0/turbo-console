@@ -1,11 +1,22 @@
 import { wireWidgets } from './graph-widgets-wire.ts';
+import { packageActionsOf } from './package-actions.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
-import type { GraphFilteringDeps } from '../common/graph-controls.type.ts';
+import type { WidgetHostDeps } from '../common/graph-controls.type.ts';
 import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
-import type { WidgetSources, WidgetState, WidgetWireDeps, WidgetWiring } from '../common/graph-widgets.type.ts';
+import type {
+  MenuSources,
+  WidgetFilters,
+  WidgetInspection,
+  WidgetSources,
+  WidgetState,
+  WidgetWireDeps,
+  WidgetWiring
+} from '../common/graph-widgets.type.ts';
+import type { MenuItemModel } from '../common/widget-menu.type.ts';
+import type { MenuTarget } from '../common/widget.type.ts';
+import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from '../utils/widget-menu-model.util.ts';
 
-/** The widget menus open from Task 4.3 on; until then a "…" click does nothing. */
-const NO_MENU = (): void => undefined;
+type FolderSource = Pick<WidgetSources, 'scene'>;
 
 /** The folder hooks of the inspection, read when called: `folders` is built after the inspection. */
 export const inspectionFoldersOf = (folders: () => GraphInspectionDeps['folders']): GraphInspectionDeps['folders'] => {
@@ -19,13 +30,39 @@ export const inspectionFoldersOf = (folders: () => GraphInspectionDeps['folders'
   return hooks;
 };
 
-/** The wired widget layer, reading the mode on screen, the folder scene and the selected package at each refresh. */
+/** A menu's items from the filters, the scene and the visible set as they are when it opens. */
+const menuOfFrom = (
+  deps: WidgetHostDeps,
+  inspection: WidgetInspection,
+  folders: FolderSource,
+  controls: WidgetFilters
+): MenuSources['menuOf'] => {
+  const packageActions = packageActionsOf(deps, inspection);
+  const menuOf = (target: MenuTarget): MenuItemModel[] => {
+    const filters = controls.applied;
+
+    if (target.kind === 'package') {
+      const state = packageMenuStateOf(target.name, filters, deps.visible());
+
+      return packageMenuOf(target.name, state, packageActions);
+    }
+
+    const state = folderMenuStateOf(target.folder, folders.scene(), filters);
+
+    return folderMenuOf(target.folder, state, inspection.folderActions());
+  };
+
+  return menuOf;
+};
+
+/** The wired layer, its menus and the breadcrumb, reading the mode on screen, the folder scene, the selection and the filters when used. */
 export const widgetsOf = (
-  deps: GraphFilteringDeps,
-  inspection: Pick<WidgetSources, 'selected' | 'folderActions'>,
-  folders: Pick<WidgetSources, 'scene'>
+  deps: WidgetHostDeps,
+  inspection: WidgetInspection,
+  folders: FolderSource,
+  controls: WidgetFilters
 ): WidgetWiring => {
-  const { page, view, widgetViews, overlay, isGrouped, canAct } = deps;
+  const { page, view, widgetViews, overlay, isGrouped, canAct, drawn, focusedFolder, onClearFocus } = deps;
   const state = (): WidgetState => {
     const current: WidgetState = { isGrouped: isGrouped(), scene: folders.scene(), selectedPackage: inspection.selected() };
 
@@ -39,7 +76,11 @@ export const widgetsOf = (
     state,
     actions: inspection.folderActions(),
     canAct,
-    onMenu: NO_MENU
+    menuOf: menuOfFrom(deps, inspection, folders, controls),
+    selection: (): MenuTarget | null => menuTargetOf(inspection.current()),
+    focusedFolder,
+    drawn,
+    clearFocus: onClearFocus
   };
 
   return wireWidgets(wireDeps);

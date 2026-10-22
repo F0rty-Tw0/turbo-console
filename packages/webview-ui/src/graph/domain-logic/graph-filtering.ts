@@ -1,27 +1,23 @@
 import { canShowRow, excludeRow, focusRow, showRow } from './graph-controls-rows.ts';
 import { GraphControls } from './graph-controls.ts';
+import { filteringFactsOf } from './graph-filtering-facts.ts';
 import { inspectionFoldersOf, widgetsOf } from './graph-filtering-hooks.ts';
 import { GraphFolders } from './graph-folders.ts';
 import { GraphInspection } from './graph-inspection.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { GraphControlsDeps, GraphFilteringDeps } from '../common/graph-controls.type.ts';
+import type { GraphControlsDeps, GraphFilteringDeps, WidgetHostDeps } from '../common/graph-controls.type.ts';
 import type { GraphFoldersDeps } from '../common/graph-folders.type.ts';
 import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
-import type { ProbeFacts } from '../common/graph-probe.type.ts';
+import type { FilteringFacts, FilteringTimes } from '../common/graph-probe.type.ts';
 import type { WidgetWiring } from '../common/graph-widgets.type.ts';
-import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
+import type { InspectionInput } from '../common/inspection.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import { focusNameOf } from '../utils/controls-rules.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
 const CLEAR: InspectionInput = { kind: 'clear' };
-
-type FilteringFacts = Pick<
-  ProbeFacts,
-  'controlsBuiltMs' | 'filterAppliedMs' | 'selected' | 'inspection' | 'detailsBuiltMs' | 'pickingBuiltMs' | 'traceMs' | 'toggleMs'
->;
 
 /**
  * The controls panel, the inspection it drives, the collapsed folders and the widget layer over them; the only place
@@ -55,7 +51,7 @@ export class GraphFiltering {
       onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
     };
-    const inspectionDeps: GraphInspectionDeps = {
+    const inspectionDeps: GraphInspectionDeps & WidgetHostDeps = {
       ...deps,
       visible: (): ReadonlySet<string> => this.controls.visible(),
       focus: (): string | null => focusNameOf(this.controls.applied),
@@ -87,7 +83,7 @@ export class GraphFiltering {
     this.controls = new GraphControls(controlsDeps);
     this.inspection = new GraphInspection(inspectionDeps);
     this.folders = new GraphFolders(foldersDeps);
-    this.widgets = widgetsOf(deps, this.inspection, this.folders);
+    this.widgets = widgetsOf(inspectionDeps, this.inspection, this.folders, this.controls);
   }
 
   /** Builds the panel for `graph` from `saved` (defaults without one) and shows its visible set; `at` is the state's arrival. */
@@ -108,13 +104,14 @@ export class GraphFiltering {
     return visible;
   }
 
-  /** The Group by folder checkbox turned off, at the click: a folder inspection ends and a folder focus clears. */
+  /** The Group by folder checkbox turned off, at the click: a folder inspection ends, a folder focus clears, then an open widget menu closes. */
   public groupingOff(): void {
     const isFolder = this.inspection.current().kind === 'folder';
 
     if (isFolder) this.inspection.input(CLEAR);
 
     this.controls.clearFocus();
+    this.widgets.groupingOff();
   }
 
   /** A layout placed, after the first draw's restore: the folder pass runs, then a grouped one reaches for the inspection. */
@@ -133,19 +130,12 @@ export class GraphFiltering {
   }
 
   public facts(): FilteringFacts {
-    const { inspection } = this;
-    const facts: FilteringFacts = {
+    const times: FilteringTimes = {
       controlsBuiltMs: (): number | null => this.builtMs,
-      filterAppliedMs: (): number | null => this.appliedMs,
-      selected: (): string | null => inspection.selected(),
-      inspection: (): Inspection => inspection.current(),
-      detailsBuiltMs: (): number | null => inspection.builtMs('package'),
-      pickingBuiltMs: (): number | null => inspection.builtMs('picking'),
-      traceMs: (): number | null => inspection.builtMs('trace'),
-      toggleMs: (): number | null => this.folders.toggleMs()
+      filterAppliedMs: (): number | null => this.appliedMs
     };
 
-    return facts;
+    return filteringFactsOf(this.inspection, this.folders, times);
   }
 
   /** The controls' fields and the collapsed folders: the part of the saved view state this class owns. */

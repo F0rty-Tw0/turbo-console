@@ -11,6 +11,7 @@ import { createGraphView } from './data-access/graph-view.ts';
 import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
+import { breadcrumbLine, buildBreadcrumb } from './ui/breadcrumb-elements.ts';
 import { buildControls } from './ui/controls-elements.ts';
 import { buildDetails } from './ui/details-elements.ts';
 import { emptyView } from './ui/details-empty.ts';
@@ -23,6 +24,7 @@ import { candidateItems, pickingView } from './ui/details-picking.ts';
 import { stepItems, traceView } from './ui/details-trace.ts';
 import { buildPage } from './ui/page-elements.ts';
 import { buildFolderRow, buildPackageButton } from './ui/widget-elements.ts';
+import { buildMenu } from './ui/widget-menu.ts';
 import { nodeSizeOf } from './utils/node-size.util.ts';
 import { themeColorsOf } from './utils/theme-colors.util.ts';
 import { createBridge } from '../bridge/data-access/create-bridge.ts';
@@ -72,7 +74,13 @@ const views: DetailsViews = {
   candidateItems,
   stepItems
 };
-const widgetViews: WidgetViews = { row: buildFolderRow, packageButton: buildPackageButton };
+const widgetViews: WidgetViews = {
+  row: buildFolderRow,
+  packageButton: buildPackageButton,
+  menu: buildMenu,
+  breadcrumb: buildBreadcrumb,
+  breadcrumbLine
+};
 const overlay = window.matchMedia(OVERLAY_MEDIA_QUERY);
 const controller = createGraphController({
   bridge,

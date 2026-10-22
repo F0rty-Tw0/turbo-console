@@ -160,6 +160,10 @@ export class GraphWidgetsPage {
     await expect(this.layer.locator('.widget-package-button')).toHaveCount(0);
   }
 
+  public async expectNoRow(folder: string): Promise<void> {
+    await expect(this.ellipsisOf(folder)).toHaveCount(0);
+  }
+
   public async expectNoRows(): Promise<void> {
     await expect(this.layer.locator('.widget-row')).toHaveCount(0);
   }

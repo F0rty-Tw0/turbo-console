@@ -1,4 +1,4 @@
-import type { LayerBounds, Point, RectPx, Size } from '../common/widget.type.ts';
+import type { LayerBounds, MenuTarget, Point, RectPx, Size, WidgetRects } from '../common/widget.type.ts';
 
 /** The layer part no overlay covers. */
 export const uncoveredAreaOf = (bounds: LayerBounds): RectPx => {
@@ -18,4 +18,11 @@ export const menuPlaceOf = (anchor: RectPx, menu: Size, area: RectPx): Point => 
   const place: Point = { x: Math.max(left, area.x1), y: Math.max(top, area.y1) };
 
   return place;
+};
+
+/** The drawn rect a menu for `target` opens beside when it has no shown "…": its box or collapsed node, or the selected package. */
+export const targetRectOf = (rects: WidgetRects, target: MenuTarget): RectPx | null => {
+  if (target.kind === 'package') return rects.selected;
+
+  return rects.boxes.get(target.folder) ?? rects.collapsed.get(target.folder) ?? null;
 };

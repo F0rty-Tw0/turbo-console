@@ -17,5 +17,7 @@ export const GRAPH_ICON_IDS = [
   'chevron-down',
   'chevron-right',
   'chevron-left',
-  'ellipsis'
+  'ellipsis',
+  'check',
+  'dash'
 ] as const;

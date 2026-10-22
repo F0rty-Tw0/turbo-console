@@ -121,6 +121,27 @@ export type ProbeFacts = Pick<
   | 'toggleMs'
 >;
 
+/** The probe facts the controls, the inspection and the folders know. */
+export type FilteringFacts = Pick<
+  ProbeFacts,
+  'controlsBuiltMs' | 'filterAppliedMs' | 'selected' | 'inspection' | 'detailsBuiltMs' | 'pickingBuiltMs' | 'traceMs' | 'toggleMs'
+>;
+
+/** What the filtering's facts read off the inspection. */
+export type FactsInspection = {
+  readonly selected: () => string | null;
+  readonly current: () => Inspection;
+  readonly builtMs: (kind: Inspection['kind']) => number | null;
+};
+
+/** What the filtering's facts read off the folders. */
+export type FactsFolders = {
+  readonly toggleMs: () => number | null;
+};
+
+/** The filtering's own timings, read by its facts. */
+export type FilteringTimes = Pick<FilteringFacts, 'controlsBuiltMs' | 'filterAppliedMs'>;
+
 /* eslint-disable @typescript-eslint/naming-convention -- the e2e tests set and read these exact names on window */
 
 /** Where the probe goes: `window` in the page. `__tcGraphProbe` stays mutable: it is assigned. */

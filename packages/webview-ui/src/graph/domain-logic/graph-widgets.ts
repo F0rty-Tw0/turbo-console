@@ -99,7 +99,7 @@ export class GraphWidgets {
 
   /** Where a menu for `target` opens, from the latest pass; `null` while its row or "…" is not placed. */
   public anchorOf(target: MenuTarget): MenuAnchor | null {
-    if (target.kind === 'package') return this.packageAnchor();
+    if (target.kind === 'package') return this.packageAnchor(target.name);
 
     const row = this.plan.rows.find((plan) => plan.folder === target.folder);
 
@@ -113,12 +113,18 @@ export class GraphWidgets {
     return anchor;
   }
 
-  private packageAnchor(): MenuAnchor | null {
+  /** The layer's size and the overlay edge, as the last `refreshBounds` read them. */
+  public layerBounds(): LayerBounds {
+    return this.bounds;
+  }
+
+  private packageAnchor(name: string): MenuAnchor | null {
+    const { button } = this;
     const rect = this.plan.packageButton;
 
-    if (rect === null || this.button === null) return null;
+    if (rect === null || button?.name !== name) return null;
 
-    const anchor: MenuAnchor = { rect, opener: this.button.button };
+    const anchor: MenuAnchor = { rect, opener: button.button };
 
     return anchor;
   }

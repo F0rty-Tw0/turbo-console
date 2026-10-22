@@ -1,3 +1,5 @@
+import type { BreadcrumbElements, MenuElements, MenuItemModel } from './widget-menu.type.ts';
+
 /** A rectangle in container px, as Cytoscape's `renderedBoundingBox`. */
 export type RectPx = {
   readonly x1: number;
@@ -35,6 +37,19 @@ export type LayerBounds = {
 export type ShowFolderState = {
   readonly checked: 'true' | 'false' | 'mixed';
   readonly isDisabled: boolean;
+};
+
+/** What a folder's menu reads: its collapse, whether it is the focus, and its "Show folder" state. */
+export type FolderMenuState = {
+  readonly isCollapsed: boolean;
+  readonly isFocus: boolean;
+  readonly show: ShowFolderState;
+};
+
+/** What a package's menu reads: whether it is the focus and whether its list checkbox is ticked. */
+export type PackageMenuState = {
+  readonly isFocus: boolean;
+  readonly isShown: boolean;
 };
 
 export type RowButtonRects = {
@@ -95,4 +110,8 @@ export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
   readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
   readonly packageButton: (name: string) => HTMLButtonElement;
+  readonly menu: (model: MenuItemModel[]) => MenuElements;
+  readonly breadcrumb: () => BreadcrumbElements;
+  /** One muted breadcrumb line; `hasIcon` puts the `info` Codicon before it. */
+  readonly breadcrumbLine: (text: string, hasIcon: boolean) => HTMLElement;
 };

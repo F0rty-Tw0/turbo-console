@@ -1,8 +1,12 @@
 import type { FolderActions } from './folder-actions.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
-import type { GraphView, PageElements } from './graph-page.type.ts';
+import type { GraphFilters } from './graph-filters.type.ts';
+import type { DrawnGraph, GraphView, PageElements } from './graph-page.type.ts';
+import type { Inspection } from './inspection.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
-import type { MenuTarget, RectPx, WidgetViews } from './widget.type.ts';
+import type { PackageInspectionActions } from './package-actions.type.ts';
+import type { MenuItemModel } from './widget-menu.type.ts';
+import type { LayerBounds, MenuTarget, RectPx, WidgetViews } from './widget.type.ts';
 
 /** What the widget layer shows, read at each refresh. */
 export type WidgetState = {
@@ -32,22 +36,68 @@ type CanAct = {
   readonly canAct: () => boolean;
 };
 
-/** What `wireWidgets` needs: the layer's deps, with `canAct` as the layer's `isActive`; it finds the details panel itself. */
-export type WidgetWireDeps = Omit<GraphWidgetsDeps, 'aside' | 'isActive'> & CanAct;
+/** What the menus and the breadcrumb read and call, from the inspection, the controls and the folders. */
+export type MenuSources = {
+  readonly menuOf: (target: MenuTarget) => MenuItemModel[];
+  /** What Shift+F10 opens a menu for: the inspected folder or package, `null` for neither. */
+  readonly selection: () => MenuTarget | null;
+  readonly focusedFolder: () => string | null;
+  readonly drawn: () => DrawnGraph | null;
+  /** Clears a folder focus only. */
+  readonly clearFocus: () => void;
+};
 
-/** Where the layer's state comes from: `GraphFolders` gives the scene, `GraphInspection` the selection and the folder actions. */
+/** What `wireWidgets` needs: the layer's deps, with `canAct` as the layer's `isActive` and the menus as its `onMenu`; it finds the details panel itself. */
+export type WidgetWireDeps = Omit<GraphWidgetsDeps, 'aside' | 'isActive' | 'onMenu'> & CanAct & MenuSources;
+
+/** Where the layer's state comes from: `GraphFolders` gives the scene, `GraphInspection` the inspection, the selection and the folder actions. */
 export type WidgetSources = {
   readonly scene: () => FolderScene | null;
+  readonly current: () => Inspection;
   readonly selected: () => string | null;
   readonly folderActions: () => FolderActions;
 };
 
-/** The wired layer, as the folder pass, the render loop and the keep-clear pan call it. */
+/** The inspection as the widget layer and its menus read and call it. */
+export type WidgetInspection = Pick<WidgetSources, 'current' | 'selected' | 'folderActions'> & PackageInspectionActions;
+
+/** The controls' filters, read when a menu opens. */
+export type WidgetFilters = {
+  readonly applied: GraphFilters;
+};
+
+/** The wired layer, as the folder pass, the render loop, the keep-clear pan and the Group by folder checkbox call it. */
 export type WidgetWiring = {
   readonly refresh: () => void;
   readonly position: () => void;
   readonly buttonBox: () => AnchorBox | null;
+  /** Grouping was turned off: an open menu closes and the breadcrumb follows the cleared focus. */
+  readonly groupingOff: () => void;
 };
+
+/** What a menu reads off the layer: where it opens from and the area it must stay in. */
+export type MenuAnchors = {
+  readonly anchorOf: (target: MenuTarget) => MenuAnchor | null;
+  readonly layerBounds: () => LayerBounds;
+};
+
+type MenuHost = {
+  readonly page: PageElements;
+  readonly view: Pick<GraphView, 'widgetRects'>;
+  readonly anchors: MenuAnchors;
+  readonly build: WidgetViews['menu'];
+  /** The checkbox's mode and the mode on screen are both grouped, so Shift+F10 may open a menu. */
+  readonly isActive: () => boolean;
+};
+
+export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & MenuHost;
+
+type BreadcrumbHost = {
+  readonly layer: HTMLElement;
+  readonly views: Pick<WidgetViews, 'breadcrumb' | 'breadcrumbLine'>;
+};
+
+export type GraphBreadcrumbDeps = Pick<MenuSources, 'focusedFolder' | 'drawn' | 'clearFocus'> & BreadcrumbHost;
 
 /** Where a menu opens from: the "…" rect in container px and its button, `null` while hidden. */
 export type MenuAnchor = {

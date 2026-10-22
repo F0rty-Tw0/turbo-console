@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { menuPlaceOf, uncoveredAreaOf } from './menu-place.util.ts';
-import type { LayerBounds, Point, RectPx, Size } from '../common/widget.type.ts';
+import { menuPlaceOf, targetRectOf, uncoveredAreaOf } from './menu-place.util.ts';
+import type { LayerBounds, MenuTarget, Point, RectPx, Size, WidgetRects } from '../common/widget.type.ts';
 
 const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
   const rect: RectPx = { x1, y1, x2, y2 };
@@ -73,5 +73,60 @@ describe('FEATURE: menuPlaceOf', () => {
 
       expect(place).toStrictEqual(pointOf(500, 74));
     });
+  });
+});
+
+const BOX = rectOf(10, 20, 300, 200);
+
+const NODE = rectOf(400, 20, 580, 76);
+
+const SELECTED = rectOf(40, 60, 120, 90);
+
+const RECTS: WidgetRects = {
+  boxes: new Map([
+    ['apps', BOX],
+    ['__proto__', BOX]
+  ]),
+  collapsed: new Map([
+    ['packages', NODE],
+    ['', NODE]
+  ]),
+  selected: SELECTED
+};
+
+const folderTarget = (folder: string): MenuTarget => {
+  const target: MenuTarget = { kind: 'folder', folder };
+
+  return target;
+};
+
+const packageTarget = (name: string): MenuTarget => {
+  const target: MenuTarget = { kind: 'package', name };
+
+  return target;
+};
+
+describe('FEATURE: targetRectOf', () => {
+  describe('GIVEN the box apps and __proto__, the collapsed packages and root, and a selected package', () => {
+    it.each([
+      { title: 'the box apps', target: folderTarget('apps'), expected: BOX },
+      { title: 'the box __proto__', target: folderTarget('__proto__'), expected: BOX },
+      { title: 'the collapsed packages', target: folderTarget('packages'), expected: NODE },
+      { title: 'the collapsed root', target: folderTarget(''), expected: NODE },
+      { title: 'an undrawn folder', target: folderTarget('docs'), expected: null },
+      { title: 'the selected package', target: packageTarget('web'), expected: SELECTED }
+    ])('WHEN $title is looked up THEN its rect is $expected', ({ target, expected }) => {
+      const rect = targetRectOf(RECTS, target);
+
+      expect(rect).toStrictEqual(expected);
+    });
+  });
+
+  it('GIVEN no drawn selected package WHEN a package is looked up THEN there is no rect', () => {
+    const rects: WidgetRects = { ...RECTS, selected: null };
+
+    const rect = targetRectOf(rects, packageTarget('web'));
+
+    expect(rect).toBeNull();
   });
 });
