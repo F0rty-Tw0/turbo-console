@@ -2,10 +2,11 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { compareRunsDirs } from './bench-comparison.ts';
 import type { BenchResult, ComparisonRow } from '../common/bench.type.ts';
+import { FS_SPEC_TIMEOUT_MS } from '../test/common/bench.const.ts';
 
 const writeRun = async (runsDir: string, run: string, medianNs: number): Promise<void> => {
   const file = join(runsDir, run, 'packages', 'core', 'results.json');
@@ -15,6 +16,8 @@ const writeRun = async (runsDir: string, run: string, medianNs: number): Promise
   await mkdir(dirname(file), { recursive: true });
   await writeFile(file, json);
 };
+
+vi.setConfig({ testTimeout: FS_SPEC_TIMEOUT_MS, hookTimeout: FS_SPEC_TIMEOUT_MS });
 
 describe('FEATURE: runs dir comparison', () => {
   let root = '';

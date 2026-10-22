@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runBenchesCli } from './run-benches.feature.ts';
+import { FS_SPEC_TIMEOUT_MS } from '../test/common/bench.const.ts';
 
 const writeBench = async (packageDir: string, source: string): Promise<void> => {
   const testDir = join(packageDir, 'src', 'test');
@@ -12,6 +13,8 @@ const writeBench = async (packageDir: string, source: string): Promise<void> => 
   await mkdir(testDir, { recursive: true });
   await writeFile(join(testDir, 'one.bench.ts'), source);
 };
+
+vi.setConfig({ testTimeout: FS_SPEC_TIMEOUT_MS, hookTimeout: FS_SPEC_TIMEOUT_MS });
 
 describe('FEATURE: run-benches CLI', () => {
   let root = '';
