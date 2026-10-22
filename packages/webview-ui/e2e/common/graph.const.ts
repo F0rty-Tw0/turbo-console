@@ -170,7 +170,8 @@ export const DOCKED_CANVAS_PX = DOCKED_WIDTH_PX - CONTROLS_WIDTH_PX - DETAILS_WI
 export const TOGGLE_BUDGET_MS = 100;
 
 /**
- * How long to wait for a layout to settle: the page's ELK timeout plus room for the worker to start on a slow runner,
- * where an uncached 301-package layout took over the 5 s poll default.
+ * How long to wait for a layout to settle: the page's ELK timeout (which already covers the worker start) plus room
+ * for the page's message handling and first draw on a slow runner, where an uncached 301-package layout took over the
+ * 5 s poll default.
  */
 export const LAYOUT_SETTLE_MS = 3 * FALLBACK_TIMEOUT_MS;
