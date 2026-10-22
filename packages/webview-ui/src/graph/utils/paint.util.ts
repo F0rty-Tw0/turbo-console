@@ -1,14 +1,17 @@
 import { closureOf } from './closure.util.ts';
 import { edgeIdOf } from './edge-id.util.ts';
+import { folderPaintOf } from './folder-paint.util.ts';
 import { edgeStateOf, nodeStateOf } from './highlight.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
 import type { Inspection, LinkInspection, TraceInspection } from '../common/inspection.type.ts';
+import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { TraceResult } from '../common/trace.type.ts';
 
 const paintWith = (nodeState: (name: string) => ProbeState, edgeState: (edge: GraphEdge) => ProbeState): Paint => {
-  const paint: Paint = { nodeState, edgeState };
+  const paint: Paint = { nodeState, edgeState, ...NORMAL_FOLDER_PAINT };
 
   return paint;
 };
@@ -65,11 +68,7 @@ const tracePaint = (inspection: TraceInspection, trace: TraceResult | null): Pai
   return paintWith(nodeState, edgeState);
 };
 
-/**
- * The state of each package and link for what the page inspects. `lit` holds the path candidates the picking filter
- * leaves in the lists; it only matters while picking.
- */
-export const paintOf = (inspection: Inspection, edges: GraphEdge[], trace: TraceResult | null, lit: ReadonlySet<string>): Paint => {
+const statePaintOf = (inspection: Inspection, edges: GraphEdge[], trace: TraceResult | null, lit: ReadonlySet<string>): Paint => {
   switch (inspection.kind) {
     case 'none':
       return everyState('normal');
@@ -82,4 +81,27 @@ export const paintOf = (inspection: Inspection, edges: GraphEdge[], trace: Trace
     case 'trace':
       return tracePaint(inspection, trace);
   }
+};
+
+/**
+ * The state of each package, link, folder box, collapsed folder and folder link for what the page inspects. `lit` holds
+ * the path candidates the picking filter leaves in the lists; it only matters while picking. A `null` scene leaves every
+ * folder state `normal`.
+ */
+export const paintOf = (
+  inspection: Inspection,
+  edges: GraphEdge[],
+  trace: TraceResult | null,
+  lit: ReadonlySet<string>,
+  scene: FolderScene | null
+  // eslint-disable-next-line max-params -- five inputs, pinned by the plan's Cross-phase interfaces (Task 2.2)
+): Paint => {
+  const paint = statePaintOf(inspection, edges, trace, lit);
+
+  if (inspection.kind === 'none') return paint;
+
+  const folderPaint = folderPaintOf(paint.nodeState, paint.edgeState, scene);
+  const folded: Paint = { ...paint, ...folderPaint };
+
+  return folded;
 };

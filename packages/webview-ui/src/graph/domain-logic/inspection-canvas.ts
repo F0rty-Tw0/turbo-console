@@ -62,7 +62,7 @@ export class InspectionCanvas {
   /** An empty filter lights every path candidate. */
   private paint(shown: CanvasShown): void {
     const lit = litOf(shown.candidates, shown.drawn.infos, this.filterText);
-    const paint = paintOf(shown.inspection, shown.drawn.edges, shown.trace, lit);
+    const paint = paintOf(shown.inspection, shown.drawn.edges, shown.trace, lit, null);
 
     this.view.paint(paint);
   }

@@ -7,6 +7,7 @@ import { applyPaint } from './graph-paint.ts';
 import { graphStyleOf } from './graph-style.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
+import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
@@ -21,7 +22,7 @@ const NODE_STATES = new Map<string, ProbeState>([
 ]);
 
 const paintOfStates = (nodeState: (name: string) => ProbeState, edgeState: (edge: GraphEdge) => ProbeState): Paint => {
-  const paint: Paint = { nodeState, edgeState };
+  const paint: Paint = { nodeState, edgeState, ...NORMAL_FOLDER_PAINT };
 
   return paint;
 };

@@ -180,7 +180,7 @@ const expectedRowsOf = (row: PaintCase): PaintRows => {
 describe('FEATURE: paintOf', () => {
   describe('GIVEN the shop graph', () => {
     it.each(CASES)('WHEN the inspection is $title THEN each package and link gets its state', (row: PaintCase) => {
-      const paint = paintOf(row.inspection, SHOP, row.trace, new Set(row.lit));
+      const paint = paintOf(row.inspection, SHOP, row.trace, new Set(row.lit), null);
 
       const rows = rowsOf(paint);
 
@@ -194,7 +194,7 @@ describe('FEATURE: paintOf', () => {
       const edges: GraphEdge[] = [edge];
       const inspection: Inspection = { kind: 'package', name: '__proto__' };
 
-      const paint = paintOf(inspection, edges, null, new Set());
+      const paint = paintOf(inspection, edges, null, new Set(), null);
 
       expect(paint.nodeState('__proto__')).toBe('selected');
       expect(paint.nodeState('constructor')).toBe('highlighted');
