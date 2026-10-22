@@ -114,7 +114,10 @@ export class GraphFiltering {
   /** A layout placed, after the first draw's restore: the folder pass runs, then a grouped one reaches for the inspection. */
   public placed(): void {
     this.folders.redraw();
-    this.inspection.reachCurrent();
+
+    const scene = this.folders.scene();
+
+    if (scene !== null) this.inspection.reachCurrent();
   }
 
   public facts(): FilteringFacts {

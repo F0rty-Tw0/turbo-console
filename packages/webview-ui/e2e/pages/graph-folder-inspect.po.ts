@@ -88,7 +88,10 @@ export class GraphFolderInspect {
   /** The folder view's title, summary line, action buttons and member packages, in order. */
   public async expectFolderView(facts: FolderViewFacts): Promise<void> {
     await expect(this.view.getByRole('heading', { level: 2 })).toHaveText(facts.heading);
-    await expect(this.view.locator('.details-muted')).toHaveText(facts.summary);
+    const summary = this.view.locator('.details-muted');
+
+    await expect(summary).toHaveText(facts.summary);
+    await expect(summary).not.toHaveCSS('font-family', /monospace/);
     await expect(this.view.locator('.details-actions button')).toHaveText(facts.buttons);
     await expect(this.view.locator('.details-list .details-name')).toHaveText(facts.packages);
   }

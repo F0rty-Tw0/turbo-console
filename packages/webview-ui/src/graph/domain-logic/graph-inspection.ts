@@ -144,7 +144,8 @@ export class GraphInspection {
 
   /**
    * After a grouped placement: expands the collapsed folders holding the inspection, ghosts of its trace included, as
-   * `apply` does. Nothing is drawn or saved here, so the first draw's restore keeps the saved state.
+   * `apply` does. It draws and saves only through the folders' expand, and never the inspection itself, so the first
+   * draw's restore keeps the saved inspection.
    */
   public reachCurrent(): void {
     const shown = shownPartsOf(this.deps, this.inspection, false);
