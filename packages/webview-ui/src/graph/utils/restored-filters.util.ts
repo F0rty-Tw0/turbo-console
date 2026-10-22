@@ -11,10 +11,13 @@ const isFocusKnown = (focus: GraphFocus, infos: GraphPackage[]): boolean => {
   return infos.some((info) => folderOf(info.path) === focus.folder);
 };
 
+/** A folder focus needs the grouped page to show and clear it, so a flat saved state drops it. */
 const focusOf = (state: GraphViewState, graph: DrawnGraph): GraphFocus | null => {
   const { focus } = state;
 
   if (focus === null) return null;
+
+  if (focus.kind === 'folder' && !state.grouped) return null;
 
   const isKnown = isFocusKnown(focus, graph.infos);
 

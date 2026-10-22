@@ -89,7 +89,7 @@ describe('FEATURE: restoredFilters focus', () => {
     ['the root folder without a root package', GRAPH, ROOT_FOCUS, null],
     ['the folder __proto__', GRAPH, PROTO_FOLDER_FOCUS, null]
   ])('GIVEN a saved focus on %s WHEN restored THEN the focus is %j', (_name, graph, saved, expected) => {
-    const restored = restoredFilters({ ...STATE, focus: saved }, graph);
+    const restored = restoredFilters({ ...STATE, focus: saved, grouped: true }, graph);
 
     expect(restored.filters.focus).toStrictEqual(expected);
   });
@@ -125,6 +125,15 @@ describe('FEATURE: restoredFilters grouping', () => {
     const restored = restoredFilters({ ...STATE, grouped }, GRAPH);
 
     expect(restored.isGrouped).toBe(grouped);
+  });
+
+  it.each([
+    ['a folder focus', null, APPS_FOCUS],
+    ['a package focus', WEB_FOCUS, WEB_FOCUS]
+  ])('GIVEN %s in an ungrouped saved state WHEN restored THEN the focus is %j', (_name, expected, saved) => {
+    const restored = restoredFilters({ ...STATE, focus: saved, grouped: false }, GRAPH);
+
+    expect(restored.filters.focus).toStrictEqual(expected);
   });
 });
 
