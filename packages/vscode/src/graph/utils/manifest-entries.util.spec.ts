@@ -2,7 +2,14 @@ import type { ManifestContext, ManifestEntry } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { manifestEntriesOf } from './manifest-entries.util.ts';
-import { BOM_STUB, CONTEXT_CASES_STUB, IN_BLOCK_STUB, PLAIN_ENTRIES_STUB, PLAIN_STUB } from '../test/stubs/manifest-entries.stub.ts';
+import {
+  BIDI_CASES_STUB,
+  BOM_STUB,
+  CONTEXT_CASES_STUB,
+  IN_BLOCK_STUB,
+  PLAIN_ENTRIES_STUB,
+  PLAIN_STUB
+} from '../test/stubs/manifest-entries.stub.ts';
 import { entry, rows } from '../test/utils/manifest-entry.spec.util.ts';
 
 const around = (lines: string[], line: number): ManifestContext => {
@@ -279,6 +286,14 @@ describe('FEATURE: manifestEntriesOf', () => {
 
   describe('GIVEN a manifest whose entries have neighbour lines', () => {
     it.each(CONTEXT_CASES_STUB)('WHEN it has %s THEN the context is filled', (_label, text, dependency, expected) => {
+      const entries = manifestEntriesOf(text, dependency);
+
+      expect(entries).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a manifest with bidi or invisible control characters', () => {
+    it.each(BIDI_CASES_STUB)('WHEN it has %s THEN each is shown as U+FFFD', (_label, text, dependency, expected) => {
       const entries = manifestEntriesOf(text, dependency);
 
       expect(entries).toStrictEqual(expected);

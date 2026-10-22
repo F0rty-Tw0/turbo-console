@@ -81,3 +81,41 @@ export const CONTEXT_CASES_STUB: [string, string, string, ManifestEntry[]][] = [
     [entry('dependencies', 'core', '1', 3, { before: `    "zz": "${'a'.repeat(188)}…`, after: '  }' })]
   ]
 ];
+
+const SHOWN = '\uFFFD';
+
+const inField = (inner: string): string => rows('\n', '{', '  "dependencies": {', inner, '  }', '}');
+
+/** One row per class of bidi or invisible control character, each in another part of the entry; all are shown as U+FFFD. */
+export const BIDI_CASES_STUB: [string, string, string, ManifestEntry[]][] = [
+  [
+    'LRM and RLM in the spec',
+    inField('    "core": "^1\u200E\u200F"'),
+    'core',
+    [entry('dependencies', 'core', `^1${SHOWN}${SHOWN}`, 2, IN_BLOCK_STUB)]
+  ],
+  [
+    'every embedding and override in the before neighbour',
+    rows('\n', '{', '  "dependencies": {', '    "\u202Aa\u202Bb\u202Cc\u202Dd\u202Ee": "1",', '    "core": "1"', '  }', '}'),
+    'core',
+    [entry('dependencies', 'core', '1', 3, { before: `    "${SHOWN}a${SHOWN}b${SHOWN}c${SHOWN}d${SHOWN}e": "1",`, after: '  }' })]
+  ],
+  [
+    'every isolate in the after neighbour',
+    rows('\n', '{', '  "dependencies": {', '    "core": "1",', '    "\u2066a\u2067b\u2068c\u2069": "2"', '  }', '}'),
+    'core',
+    [entry('dependencies', 'core', '1', 2, { before: '  "dependencies": {', after: `    "${SHOWN}a${SHOWN}b${SHOWN}c${SHOWN}": "2"` })]
+  ],
+  [
+    'an ALM in an alias key',
+    inField('    "\u061Ccore": "npm:core@1"'),
+    'core',
+    [entry('dependencies', `${SHOWN}core`, 'npm:core@1', 2, IN_BLOCK_STUB)]
+  ],
+  [
+    'an override straddling the 200 character cut: it is shown, and the cut still keeps 200',
+    inField(`    "core": "${'s'.repeat(199)}\u202Etail"`),
+    'core',
+    [entry('dependencies', 'core', `${'s'.repeat(199)}${SHOWN}…`, 2, IN_BLOCK_STUB)]
+  ]
+];

@@ -21,6 +21,11 @@ const NO_SIDE: ManifestContext = {};
 
 const ALIAS_PREFIXES = ['npm:', 'workspace:'];
 
+/** ALM, LRM and RLM, the embeddings and overrides, and the isolates. */
+const BIDI_CONTROLS = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu;
+
+const SHOWN_CONTROL = '\uFFFD';
+
 const stringValueOf = (node: Node | undefined): string | null => {
   if (node === undefined) return null;
 
@@ -31,7 +36,10 @@ const stringValueOf = (node: Node | undefined): string | null => {
 
 const isHighSurrogate = (unit: number): boolean => unit >= HIGH_SURROGATE_FIRST && unit <= HIGH_SURROGATE_LAST;
 
-const cut = (text: string): string => {
+/** Shows bidi and invisible control characters as U+FFFD before the length cut, so file text cannot reorder the excerpt. */
+const cut = (raw: string): string => {
+  const text = raw.replace(BIDI_CONTROLS, SHOWN_CONTROL);
+
   if (text.length <= ENTRY_TEXT_MAX) return text;
 
   const splitsPair = isHighSurrogate(text.charCodeAt(PAIR_SAFE_MAX));
