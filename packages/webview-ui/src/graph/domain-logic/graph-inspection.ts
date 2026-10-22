@@ -196,14 +196,14 @@ export class GraphInspection {
     const trace = details.kind === 'trace' ? details.trace : null;
     const candidates = details.kind === 'picking' ? details.candidates : null;
     const showable = showableNamesOf(trace?.path ?? [], visible, deps.canShow);
-    const context: DetailsContext = { drawn, visible, focus: deps.focus(), showable, isRebuild };
+    const context: DetailsContext = { drawn, visible, focus: deps.focus(), showable, isRebuild, scene: null, focusedFolder: null };
     const canvas: CanvasShown = { inspection: next, drawn, visible, trace, candidates };
 
     this.inspection = next;
     this.details.show(details, context);
     this.timings.set(next.kind, deps.now() - started);
     this.canvas.draw(canvas, isRebuild);
-    deps.page.status.textContent = inspectionTextOf(next, drawn.edges, trace, visible);
+    deps.page.status.textContent = inspectionTextOf(next, drawn.edges, trace, visible, null);
     deps.page.clear.disabled = next.kind === 'none';
     deps.onSelected(selectedOf(next));
     this.save();

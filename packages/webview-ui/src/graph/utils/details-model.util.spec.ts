@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { linkModelOf, packageModelOf, pickingModelOf, traceModelOf } from './details-model.util.ts';
+import { folderModelOf, linkModelOf, packageModelOf, pickingModelOf, traceModelOf } from './details-model.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type {
   CandidateGroupModel,
+  FolderViewModel,
   NeighbourModel,
   PackageViewModel,
   PickingViewModel,
@@ -14,6 +15,7 @@ import type { DetailsContext } from '../common/graph-details.type.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
 import type { TraceInspection } from '../common/inspection.type.ts';
 import type { TraceCandidate, TraceCandidates, TraceResult } from '../common/trace.type.ts';
+import { BOARDS_EDGES, BOARDS_INFOS, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
 
 const infoOf = (name: string, path: string): GraphPackage => {
   const info: GraphPackage = { name, path, tags: [], taskCount: 0 };
@@ -42,7 +44,9 @@ const CTX: DetailsContext = {
   visible: VISIBLE,
   focus: 'web',
   showable: SHOWABLE,
-  isRebuild: false
+  isRebuild: false,
+  scene: null,
+  focusedFolder: null
 };
 
 const ctxWith = (info: GraphPackage): DetailsContext => {
@@ -77,6 +81,21 @@ const TRACE_WEB_UI: TraceInspection = { kind: 'trace', start: 'web', end: 'ui' }
 const TRACE_UI_WEB: TraceInspection = { kind: 'trace', start: 'ui', end: 'web' };
 
 const PROTO_CANDIDATES: TraceCandidates = { forward: [], backward: [], none: ['__proto__'] };
+
+const BOARDS_CTX: DetailsContext = { ...CTX, scene: sceneOf(BOARDS_INFOS, BOARDS_EDGES, {}) };
+
+const memberOf = (name: string, isVisible: boolean): NeighbourModel => {
+  const member: NeighbourModel = { name, isVisible };
+
+  return member;
+};
+
+const ctxOver = (infos: GraphPackage[]): DetailsContext => {
+  const scene = sceneOf(infos, [], {});
+  const context: DetailsContext = { ...CTX, scene };
+
+  return context;
+};
 
 describe('FEATURE: details models', () => {
   describe('GIVEN web, focused, depending on ui (hidden) and core, with docs depending on it', () => {
@@ -204,6 +223,105 @@ describe('FEATURE: details models', () => {
       const model = pickingModelOf('__proto__', PROTO_CANDIDATES, PROTO_CANDIDATES);
 
       expect(model.groups[2]?.items[0]?.name).toBe('__proto__');
+    });
+  });
+  describe('GIVEN the boards scene', () => {
+    it('WHEN the model of packages is built THEN it is exact, members sorted and visible', () => {
+      const members = [memberOf('@acme/config', true), memberOf('@acme/ui', true), memberOf('@acme/utils', true)];
+      const expected: FolderViewModel = {
+        folder: 'packages',
+        title: 'packages',
+        summary: '3 packages · 1 link inside',
+        packagesTitle: 'Packages (3)',
+        isCollapsed: false,
+        isFocused: false,
+        isOverlay: false,
+        members
+      };
+
+      const model = folderModelOf('packages', BOARDS_CTX, false);
+
+      expect(model).toStrictEqual(expected);
+    });
+
+    it('WHEN packages is the folder focus THEN it is focused', () => {
+      const context: DetailsContext = { ...BOARDS_CTX, focusedFolder: 'packages' };
+
+      const model = folderModelOf('packages', context, false);
+
+      expect(model?.isFocused).toBe(true);
+    });
+
+    it('WHEN apps is the folder focus THEN packages is not focused', () => {
+      const context: DetailsContext = { ...BOARDS_CTX, focusedFolder: 'apps' };
+
+      const model = folderModelOf('packages', context, false);
+
+      expect(model?.isFocused).toBe(false);
+    });
+
+    it('WHEN the panel overlays the canvas THEN the model says so', () => {
+      const model = folderModelOf('packages', BOARDS_CTX, true);
+
+      expect(model?.isOverlay).toBe(true);
+    });
+
+    it('WHEN @acme/ui is not visible THEN its member is hidden and the count stays 3', () => {
+      const scene = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { visible: ['docs', 'web', '@acme/config', '@acme/utils'] });
+      const context: DetailsContext = { ...BOARDS_CTX, scene };
+      const members = [memberOf('@acme/config', true), memberOf('@acme/ui', false), memberOf('@acme/utils', true)];
+
+      const model = folderModelOf('packages', context, false);
+
+      expect(model?.members).toStrictEqual(members);
+      expect(model?.packagesTitle).toBe('Packages (3)');
+    });
+
+    it('WHEN packages is collapsed THEN the model is collapsed', () => {
+      const scene = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'] });
+      const context: DetailsContext = { ...BOARDS_CTX, scene };
+
+      const model = folderModelOf('packages', context, false);
+
+      expect(model?.isCollapsed).toBe(true);
+    });
+
+    it('WHEN the folder is unknown THEN there is no model', () => {
+      const model = folderModelOf('zzz', BOARDS_CTX, false);
+
+      expect(model).toBeNull();
+    });
+  });
+
+  describe('GIVEN no folder scene', () => {
+    it('WHEN the model of packages is built THEN there is no model', () => {
+      const model = folderModelOf('packages', CTX, false);
+
+      expect(model).toBeNull();
+    });
+  });
+
+  describe('GIVEN a folder whose packages are not in code unit order', () => {
+    it('WHEN the model is built THEN the members run by code unit', () => {
+      const context = ctxOver([infoOf('web', 'f/web'), infoOf('Zed', 'f/Zed'), infoOf('@acme/a', 'f/a')]);
+      const members = [memberOf('@acme/a', true), memberOf('Zed', true), memberOf('web', true)];
+
+      const model = folderModelOf('f', context, false);
+
+      expect(model?.members).toStrictEqual(members);
+    });
+  });
+
+  describe('GIVEN root packages beside a real (root) folder', () => {
+    it.each([
+      { folder: '', expected: '(root)' },
+      { folder: '(root)', expected: './(root)' }
+    ])('WHEN the model of "$folder" is built THEN its title is $expected', ({ folder, expected }) => {
+      const context = ctxOver([infoOf('r', 'r'), infoOf('p', '(root)/p')]);
+
+      const model = folderModelOf(folder, context, false);
+
+      expect(model?.title).toBe(expected);
     });
   });
 });

@@ -1,5 +1,12 @@
 import { namedButtonOf, wirePicking } from './graph-details-picking.ts';
-import type { EmptyDetails, ExplainDetails, NeighbourItem, PackageDetails, TraceDetails } from '../common/details-view.type.ts';
+import type {
+  EmptyDetails,
+  ExplainDetails,
+  FolderViewElements,
+  NeighbourItem,
+  PackageDetails,
+  TraceDetails
+} from '../common/details-view.type.ts';
 import type { ExplainState } from '../common/details.type.ts';
 import type {
   DetailsContext,
@@ -10,7 +17,7 @@ import type {
   ShownTrace
 } from '../common/graph-details.type.ts';
 import type { InspectionInput, LinkInspection } from '../common/inspection.type.ts';
-import { linkModelOf, packageModelOf, pickingModelOf, traceModelOf } from '../utils/details-model.util.ts';
+import { folderModelOf, linkModelOf, packageModelOf, pickingModelOf, traceModelOf } from '../utils/details-model.util.ts';
 
 /** Builds the input a neighbour's Explain posts; a link always names its dependent first. */
 type ExplainInputOf = (neighbour: string) => InspectionInput;
@@ -136,6 +143,28 @@ const traceOf = (traced: ShownTrace, context: DetailsContext, env: DetailsEnv): 
   return view;
 };
 
+const wireFolder = (view: FolderViewElements, folder: string, env: DetailsEnv): void => {
+  const { deps } = env;
+
+  for (const member of view.members) onClick(member.pick, (): void => deps.onInput(selectInput(member.name)));
+
+  onClick(view.toggle, (): void => deps.onToggleFolder(folder));
+  onClick(view.focus, (): void => deps.onFocusFolder(folder));
+  onClick(view.exclude, (): void => deps.onExcludeFolder(folder));
+};
+
+const folderOf = (folder: string, context: DetailsContext, env: DetailsEnv): DetailsView => {
+  const model = folderModelOf(folder, context, env.isOverlay);
+
+  if (model === null) return emptyOf(env);
+
+  const view = wired(env.deps.views.folder(model), env);
+
+  wireFolder(view, folder, env);
+
+  return view;
+};
+
 /** Builds the view for `inspection` with its listeners; one with nothing to show is the Empty view. */
 export const wiredViewOf = (inspection: ShownInspection, context: DetailsContext, env: DetailsEnv): DetailsView => {
   switch (inspection.kind) {
@@ -146,7 +175,7 @@ export const wiredViewOf = (inspection: ShownInspection, context: DetailsContext
     case 'link':
       return linkOf(inspection, context, env);
     case 'folder':
-      return emptyOf(env);
+      return folderOf(inspection.folder, context, env);
     case 'picking':
       return pickingOf(inspection, env);
     case 'trace':

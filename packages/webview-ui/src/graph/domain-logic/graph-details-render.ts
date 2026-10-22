@@ -1,10 +1,11 @@
 import { renderPicking } from './graph-details-picking.ts';
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
-import type { ExplainDetails, ExplainEntry, NeighbourItem, PackageDetails, TraceDetails } from '../common/details-view.type.ts';
-import { CLEAR_FOCUS_LABEL, FOCUS_LABEL } from '../common/details.const.ts';
+import type { ExplainDetails, ExplainEntry, NeighbourItem, PackageDetails } from '../common/details-view.type.ts';
+import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL, FOCUS_LABEL } from '../common/details.const.ts';
 import type { DetailsViews, ExplainState, FoundExplain } from '../common/details.type.ts';
 import type { DetailsContext, DetailsView, ShownInspection, ShownTrace } from '../common/graph-details.type.ts';
-import { packageModelOf, traceModelOf } from '../utils/details-model.util.ts';
+import { folderToggleTextOf } from '../utils/controls-text.util.ts';
+import { folderModelOf, packageModelOf, traceModelOf } from '../utils/details-model.util.ts';
 import {
   entryLabelOf,
   missingTextOf,
@@ -46,13 +47,39 @@ const updatePackage = (view: PackageDetails, name: string, context: DetailsConte
   return true;
 };
 
-const updateTrace = (view: TraceDetails, traced: ShownTrace, context: DetailsContext, views: DetailsViews): void => {
+/** The member list of one folder never changes within a hash, so only its states are rewritten; `false` for an unknown folder. */
+const updateFolder = (view: DetailsView, folder: string, context: DetailsContext): boolean => {
+  const model = folderModelOf(folder, context, false);
+
+  if (view.kind !== 'folder' || model === null) return false;
+
+  view.summary.textContent = model.summary;
+  view.toggle.textContent = folderToggleTextOf(model.isCollapsed);
+  view.focus.textContent = model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_FOLDER_LABEL;
+
+  const visibleByName = new Map(model.members.map((member) => [member.name, member.isVisible]));
+
+  for (const item of view.members) {
+    const isVisible = visibleByName.get(item.name) ?? false;
+
+    item.mark.hidden = isVisible;
+    setDisabled(item.pick, !isVisible);
+  }
+
+  return true;
+};
+
+const updateTrace = (view: DetailsView, traced: ShownTrace, context: DetailsContext, views: DetailsViews): boolean => {
+  if (view.kind !== 'trace') return false;
+
   const { visible, showable } = context;
   const model = traceModelOf(traced, traced.trace, visible, showable);
   const items = views.stepItems(model.steps);
 
   view.lead.textContent = traceSummaryOf(model.start, model.end, model.direction, model.steps.length);
   view.steps.replaceChildren(...items);
+
+  return true;
 };
 
 /** Updates the shown view in place for the same inspection; `false` when it cannot, and the view must be built again. */
@@ -65,15 +92,13 @@ export const updateView = (view: DetailsView, inspection: ShownInspection, conte
     case 'package':
       return view.kind === 'package' && updatePackage(view, inspection.name, context);
     case 'folder':
-      return false;
+      return updateFolder(view, inspection.folder, context);
     case 'picking':
       if (view.kind === 'picking') renderPicking(view, inspection, context.drawn.infos, views);
 
       return view.kind === 'picking';
     case 'trace':
-      if (view.kind === 'trace') updateTrace(view, inspection, context, views);
-
-      return view.kind === 'trace';
+      return updateTrace(view, inspection, context, views);
   }
 };
 

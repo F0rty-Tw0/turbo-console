@@ -14,6 +14,7 @@ import { buildControls } from './ui/controls-elements.ts';
 import { buildDetails } from './ui/details-elements.ts';
 import { emptyView } from './ui/details-empty.ts';
 import { explainView } from './ui/details-explain.ts';
+import { folderView } from './ui/details-folder.ts';
 import { hintView } from './ui/details-hint.ts';
 import { linkView } from './ui/details-link.ts';
 import { packageView } from './ui/details-package.ts';
@@ -64,6 +65,7 @@ const views: DetailsViews = {
   explain: explainView,
   picking: pickingView,
   trace: traceView,
+  folder: folderView,
   hint: hintView,
   candidateItems,
   stepItems

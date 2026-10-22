@@ -1,8 +1,11 @@
+import { folderTitleOf } from './controls-text.util.ts';
 import { manifestFileOf } from './details-text.util.ts';
+import { folderCountsOf, folderPackagesTitleOf, folderSummaryOf } from './folder-text.util.ts';
 import { neighboursOf } from './neighbours.util.ts';
 import type {
   CandidateGroupModel,
   CandidateModel,
+  FolderViewModel,
   LinkViewModel,
   NeighbourModel,
   PackageViewModel,
@@ -47,6 +50,35 @@ export const linkModelOf = (source: string, target: string, context: DetailsCont
   const path = info?.path ?? '';
   const file = manifestFileOf(path);
   const model: LinkViewModel = { source, target, file };
+
+  return model;
+};
+
+/** `null` with no folder scene (flat) or for a folder the scene does not know. */
+export const folderModelOf = (folder: string, context: DetailsContext, isOverlay: boolean): FolderViewModel | null => {
+  const { scene, focusedFolder } = context;
+
+  if (scene === null) return null;
+
+  const names = scene.members.get(folder);
+
+  if (names === undefined) return null;
+
+  const sorted = Array.from(names);
+
+  sorted.sort();
+
+  const counts = folderCountsOf(scene, folder);
+  const model: FolderViewModel = {
+    folder,
+    title: folderTitleOf(folder),
+    summary: folderSummaryOf(counts),
+    packagesTitle: folderPackagesTitleOf(counts.packages),
+    isCollapsed: scene.collapsed.has(folder),
+    isFocused: focusedFolder === folder,
+    isOverlay,
+    members: neighbourModels(sorted, scene.visible)
+  };
 
   return model;
 };

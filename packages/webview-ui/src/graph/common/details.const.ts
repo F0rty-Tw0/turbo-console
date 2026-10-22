@@ -39,6 +39,10 @@ export const CLEAR_FOCUS_LABEL = 'Clear focus';
 
 export const EXCLUDE_LABEL = 'Exclude';
 
+export const FOCUS_FOLDER_LABEL = 'Focus folder';
+
+export const EXCLUDE_FOLDER_LABEL = 'Exclude folder';
+
 export const START_TRACE_LABEL = 'Start trace';
 
 export const EXPLAIN_LABEL = 'Explain';
