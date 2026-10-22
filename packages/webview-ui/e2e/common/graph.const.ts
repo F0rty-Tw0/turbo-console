@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { WorkerStub } from './graph.type.ts';
 import { HELD_WORKER } from './held-worker.const.ts';
 import { COUNTERS } from './worker-counters.const.ts';
+import { FALLBACK_TIMEOUT_MS } from '../../src/graph/common/graph.const.ts';
 
 export const GRAPH_DIST_DIR = join(import.meta.dirname, '../../dist/graph');
 
@@ -167,3 +168,9 @@ export const DOCKED_CANVAS_PX = DOCKED_WIDTH_PX - CONTROLS_WIDTH_PX - DETAILS_WI
 
 /** The most a folder collapse or expand may take, from the toggle to the first frame after it, in ms. */
 export const TOGGLE_BUDGET_MS = 100;
+
+/**
+ * How long to wait for a layout to settle: the page's ELK timeout plus room for the worker to start on a slow runner,
+ * where an uncached 301-package layout took over the 5 s poll default.
+ */
+export const LAYOUT_SETTLE_MS = 3 * FALLBACK_TIMEOUT_MS;
