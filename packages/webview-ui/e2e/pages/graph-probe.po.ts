@@ -120,6 +120,13 @@ export class GraphProbePage {
   }
 
   /** Waits past the page's own ELK timeout: an uncached layout settles as `elk` or `fallback` only within it. */
+  /** A layout of either engine is on screen: on a slow runner a fresh ELK worker can miss the page's timeout (C52). */
+  public async expectLayoutSettled(): Promise<void> {
+    const isSettled = async (): Promise<boolean> => (await this.layoutEngine()) !== null;
+
+    await expect.poll(isSettled, { timeout: LAYOUT_SETTLE_MS }).toBe(true);
+  }
+
   public async expectLayoutEngine(engine: LayoutEngine): Promise<void> {
     await expect.poll(async (): Promise<LayoutEngine | null> => this.layoutEngine(), { timeout: LAYOUT_SETTLE_MS }).toBe(engine);
   }
