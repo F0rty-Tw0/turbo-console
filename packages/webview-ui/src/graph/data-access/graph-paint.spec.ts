@@ -13,6 +13,7 @@ import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
+import { folderLinkIdOf } from '../utils/folder-id.util.ts';
 
 const NODE_STATES = new Map<string, ProbeState>([
   ['a', 'selected'],
@@ -151,6 +152,28 @@ describe('FEATURE: applyPaint with folder boxes', () => {
 
       expect(nodeClasses).toStrictEqual([['selected'], ['highlighted'], ['dimmed'], ['normal']]);
       expect(linkClasses).toStrictEqual([['normal'], ['normal']]);
+    });
+  });
+
+  describe('GIVEN a folder link between a and c', () => {
+    beforeEach(() => {
+      const data = { id: folderLinkIdOf('a', 'c'), source: 'a', target: 'c' };
+
+      cy.add({ data, classes: 'folder-link' });
+    });
+
+    it('WHEN a selected paint is applied THEN the folder link gets no package-edge class', () => {
+      applyPaint(cy, uniformPaint('selected'));
+
+      expect(classesOf(cy.getElementById(folderLinkIdOf('a', 'c')))).toStrictEqual(['folder-link']);
+    });
+
+    it('WHEN a paint is applied THEN the edge state is asked for the two package links only', () => {
+      const edgeState = vi.fn((): ProbeState => 'normal');
+
+      applyPaint(cy, paintOfStates(stateOfName, edgeState));
+
+      expect(edgeState).toHaveBeenCalledTimes(2);
     });
   });
 });

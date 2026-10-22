@@ -1,6 +1,6 @@
 import type { EdgeSingular, NodeSingular } from 'cytoscape';
 
-import { packageNodes } from './graph-boxes.ts';
+import { packageEdges, packageNodes } from './graph-boxes.ts';
 import { probeFoldersOf } from './graph-probe-folders.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
@@ -86,7 +86,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
 
     return packageNodes(view.cy()).map(withOrigin);
   };
-  const edges = (): ProbeEdge[] => view.cy().edges().map(probeEdgeOf);
+  const edges = (): ProbeEdge[] => packageEdges(view.cy()).map(probeEdgeOf);
   const visibleIds = (): string[] => {
     const ids = packageNodes(view.cy()).filter(':visible').not(`.${GHOST_CLASS}`).map(idOf);
 
@@ -94,7 +94,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
   };
   const folders = (): ProbeFolder[] => probeFoldersOf(view.cy(), originOf());
   const edgeColor = (): string => {
-    const first = view.cy().edges().first();
+    const first = packageEdges(view.cy()).first();
     const isNone = first.empty();
 
     if (isNone) return '';

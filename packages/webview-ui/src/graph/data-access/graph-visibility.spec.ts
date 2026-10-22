@@ -3,12 +3,15 @@ import type { CollectionReturnValue, Core, EdgeSingular, ElementDefinition, Node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
+import { createFoldersView } from './graph-folders-view.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
+import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
 
 const COLORS: ThemeColors = { background: '#111', label: '#eee', edge: '#888', selected: '#f00', highlighted: '#0f0', frame: '#444' };
@@ -229,6 +232,33 @@ describe('FEATURE: graph visibility', () => {
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
 
       expect(fitted.map(idOf).sort()).toStrictEqual(['\u0001apps', 'a']);
+    });
+  });
+
+  describe('GIVEN the boards graph grouped with a spy on the Cytoscape fit', () => {
+    const fittedIdsOf = (collapsed: string[]): string[] => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      createFoldersView(cy).show(boardsSceneOf(collapsed), (folder: string): string => folder);
+      fitVisible(cy, PADDING_PX);
+
+      const [shown] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+
+      return fitted.map(idOf).sort();
+    };
+
+    beforeEach(() => {
+      cy.destroy();
+      cy = boardsCyMock();
+    });
+
+    it('WHEN apps is collapsed THEN fit receives its collapsed node and the packages box with its packages, not docs', () => {
+      expect(fittedIdsOf(['apps'])).toStrictEqual(['\u0001packages', '\u0002apps', '@acme/config', '@acme/ui', '@acme/utils']);
+    });
+
+    it('WHEN every folder is collapsed THEN fit receives the two collapsed nodes', () => {
+      expect(fittedIdsOf(['apps', 'packages'])).toStrictEqual(['\u0002apps', '\u0002packages']);
     });
   });
 

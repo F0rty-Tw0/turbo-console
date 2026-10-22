@@ -13,6 +13,7 @@ import { boxedCyMock, containerAtMock } from '../test/mocks/folder-boxes.mock.ts
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { GRAPH_PROBE_STUB } from '../test/stubs/graph-probe.stub.ts';
 import { CANVAS_COLORS, canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
+import { folderLinkIdOf } from '../utils/folder-id.util.ts';
 
 const GHOST_CLASSES = 'highlighted ghost';
 
@@ -171,6 +172,14 @@ describe('FEATURE: createGraphProbe folder facts', () => {
 
     it('WHEN the edges are read THEN both links remain', () => {
       expect(probe.edges()).toHaveLength(2);
+    });
+
+    it('WHEN a folder link is drawn THEN the edges are still the two package links', () => {
+      const data = { id: folderLinkIdOf('a', 'c'), source: 'a', target: 'c' };
+
+      cy.add({ data, classes: 'folder-link' });
+
+      expect(probe.edges().map((edge: ProbeEdge): string => `${edge.source}>${edge.target}`)).toStrictEqual(['a>b', 'b>c']);
     });
 
     it('WHEN the opacity is read THEN a normal package is 1 and a dimmed one 0.25 inside its unclassed box', () => {

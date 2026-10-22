@@ -3,6 +3,7 @@ import type { Core } from 'cytoscape';
 import type { ControlsElements } from './controls-elements.type.ts';
 import type { DetailsViews } from './details.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
+import type { FolderScene } from './folder-scene.type.ts';
 import type { GhostMarks } from './ghost.type.ts';
 import type { ProbeFacts } from './graph-probe.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
@@ -57,6 +58,9 @@ export type ViewStateSaver = {
 
 export type NodeSizer = (name: string) => NodeSize;
 
+/** The raw width of `text` in the label font, in px, no padding. */
+export type TextMeasure = (text: string) => number;
+
 export type Viewport = {
   readonly zoom: number;
   readonly pan: Position;
@@ -68,9 +72,11 @@ export type GraphViewHandlers = {
   /** A link tapped on the canvas; `source` depends on `target`. */
   readonly onTapEdge: (source: string, target: string) => void;
   readonly onTapBackground: () => void;
-  /** A tap on a folder box outside its packages; `folder` is the key (`''` the root). */
+  /** A tap on a folder box outside its packages or on a collapsed folder; `folder` is the key (`''` the root). */
   readonly onTapFolder: (folder: string) => void;
   readonly onDoubleTapNode: (name: string) => void;
+  /** Two taps on the same box or the same collapsed folder within `DOUBLE_TAP_MS`, after the second `onTapFolder`. */
+  readonly onDoubleTapFolder: (folder: string) => void;
   /** Every node's current centre, after the user dropped a dragged node. */
   readonly onDragEnd: (positions: Positions) => void;
   readonly onViewport: () => void;
@@ -78,10 +84,20 @@ export type GraphViewHandlers = {
   readonly onRender: () => void;
 };
 
+/** The folder pass over the boxes `setGrouping` drew: collapsed folders, folder links and the classes that hide what they replace. */
+export type FoldersView = {
+  /** Hides collapsed and unshown boxes and the package links a collapsed folder replaces, then draws collapsed nodes and folder links; `null` removes them. */
+  readonly show: (scene: FolderScene | null, labelOf: (folder: string) => string) => void;
+  /** Classes boxes, collapsed nodes and folder links; `show` re-applies the last paint to what it draws. */
+  readonly paint: (paint: Paint) => void;
+  /** Moves each collapsed node to the centre of all its packages, hidden ones included. */
+  readonly recentre: () => void;
+};
+
 /** The Cytoscape canvas view of one page. */
 export type GraphView = {
   readonly setGraph: (packages: string[], edges: GraphEdge[], positions: Positions, sizeOf: NodeSizer) => void;
-  /** Gives each package and link one of the four state classes. */
+  /** Gives each package, link, box, collapsed folder and folder link its state class. */
   readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */
   readonly fit: () => void;
@@ -101,7 +117,10 @@ export type GraphView = {
   readonly setViewport: (zoom: number, pan: Position) => void;
   /** Draws one box per group around its packages, or none for `null`; positions are unchanged, call `setPositions` after. */
   readonly setGrouping: (groups: FolderGroup[] | null) => void;
+  /** Places the packages, then re-centres the collapsed folders on them. */
   readonly setPositions: (positions: Positions) => void;
+  /** The folder pass (`FoldersView.show`); call after every `setVisible` and `setGhosts`. */
+  readonly showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string) => void;
   readonly applyTheme: (colors: ThemeColors) => void;
   /** For the test probe only. */
   readonly cy: () => Core;
@@ -116,6 +135,8 @@ export type GraphControllerDeps = {
   readonly runner: LayoutRunner;
   readonly saver: ViewStateSaver;
   readonly sizeOf: NodeSizer;
+  /** What a collapsed folder's title is cut to fit with. */
+  readonly measure: TextMeasure;
   readonly now: () => number;
   /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
   readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;

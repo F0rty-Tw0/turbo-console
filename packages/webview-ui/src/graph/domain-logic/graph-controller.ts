@@ -33,7 +33,8 @@ class GraphPageController {
       onTapEdge: (source: string, target: string): void => this.filtering.inspection.tapEdge(source, target),
       onTapBackground: (): void => this.filtering.inspection.input(BACKGROUND),
       onTapFolder: (): void => undefined,
-      onDoubleTapNode: (): void => this.filtering.inspection.openDetails(),
+      onDoubleTapNode: (name: string): void => this.filtering.inspection.openDetailsOf(name),
+      onDoubleTapFolder: (): void => undefined,
       onDragEnd: (positions: Positions): void => this.layouts.dragged(positions),
       onViewport: (): void => this.filtering.inspection.saveViewport(),
       onRender: (): void => this.frames.mark()

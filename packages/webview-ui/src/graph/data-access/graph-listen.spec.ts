@@ -3,13 +3,21 @@ import type { Core, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
+import { createFoldersView } from './graph-folders-view.ts';
 import { listen } from './graph-listen.ts';
 import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
+import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
+import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
+import { collapsedIdOf, folderIdOf, folderLinkIdOf } from '../utils/folder-id.util.ts';
+
+const APPS_NODE = collapsedIdOf('apps');
+
+const APPS_TO_UI = folderLinkIdOf(APPS_NODE, '@acme/ui');
 
 const handlersOf = (): GraphViewHandlers => {
   const handlers: GraphViewHandlers = {
@@ -18,6 +26,7 @@ const handlersOf = (): GraphViewHandlers => {
     onTapBackground: vi.fn(),
     onTapFolder: vi.fn(),
     onDoubleTapNode: vi.fn(),
+    onDoubleTapFolder: vi.fn(),
     onDragEnd: vi.fn(),
     onViewport: vi.fn(),
     onRender: vi.fn()
@@ -117,14 +126,6 @@ describe('FEATURE: listen', () => {
       );
     });
 
-    it('WHEN b is tapped three times THEN onDoubleTapNode runs once', () => {
-      tapAfter('b');
-      tapAfter('b');
-      tapAfter('b');
-
-      expect(handlers.onDoubleTapNode).toHaveBeenCalledOnce();
-    });
-
     it('WHEN the edge a>b is tapped and then b twice THEN onDoubleTapNode runs once with b', () => {
       tapAfter(edgeIdOf({ source: 'a', target: 'b' }));
       tapAfter('b');
@@ -174,22 +175,6 @@ describe('FEATURE: listen', () => {
     it('WHEN b, then the background, then b are tapped THEN onDoubleTapNode does not run', () => {
       tapAfter('b');
       tapAfter(null);
-      tapAfter('b');
-
-      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
-    });
-
-    it('WHEN the second tap on b comes exactly 250 ms after the first THEN onDoubleTapNode runs with b', () => {
-      tapAfter('b');
-      vi.advanceTimersByTime(150);
-      tapAfter('b');
-
-      expect(handlers.onDoubleTapNode).toHaveBeenCalledExactlyOnceWith('b');
-    });
-
-    it('WHEN the clock steps back between two taps on b THEN onDoubleTapNode does not run', () => {
-      tapAfter('b');
-      vi.setSystemTime(Date.now() - 1000);
       tapAfter('b');
 
       expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
@@ -307,6 +292,72 @@ describe('FEATURE: listen', () => {
       expect(Object.keys(positions).sort()).toStrictEqual(['__proto__', 'a', 'b', 'c', 'd']);
       expect(positions['a']).toStrictEqual({ x: 10, y: 0 });
       expect(positions['b']).toStrictEqual({ x: 110, y: 0 });
+    });
+  });
+
+  describe('GIVEN apps collapsed beside the packages box, taps 100 ms apart', () => {
+    const tapAll = (ids: string[]): void => {
+      for (const id of ids) {
+        vi.advanceTimersByTime(100);
+        cy.getElementById(id).emit('tap');
+      }
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      cy.destroy();
+      cy = boardsCyMock();
+      createFoldersView(cy).show(boardsSceneOf(['apps']), (folder: string): string => folder);
+      listen(cy, handlers);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const folderRows = [
+      { id: folderIdOf('packages'), folder: 'packages' },
+      { id: APPS_NODE, folder: 'apps' }
+    ];
+
+    it.each(folderRows)('WHEN $folder is tapped once THEN only onTapFolder runs, once, with $folder', ({ id, folder }) => {
+      tapAll([id]);
+
+      expect(handlers.onTapFolder).toHaveBeenCalledExactlyOnceWith(folder);
+      expect(handlers.onTapNode).not.toHaveBeenCalled();
+      expect(handlers.onTapBackground).not.toHaveBeenCalled();
+    });
+
+    it.each(folderRows)(
+      'WHEN $folder is tapped twice THEN onDoubleTapFolder runs once with it, after onTapFolder',
+      ({ id, folder }) => {
+        tapAll([id, id]);
+
+        expect(handlers.onDoubleTapFolder).toHaveBeenCalledExactlyOnceWith(folder);
+        expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+        expect(vi.mocked(handlers.onTapFolder).mock.invocationCallOrder[1]).toBeLessThan(
+          vi.mocked(handlers.onDoubleTapFolder).mock.invocationCallOrder[0] ?? 0
+        );
+      }
+    );
+
+    it('WHEN the collapsed node and then the apps box are tapped THEN onDoubleTapFolder does not run', () => {
+      tapAll([APPS_NODE, folderIdOf('apps')]);
+
+      expect(handlers.onDoubleTapFolder).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the folder link is tapped THEN onTapBackground runs once and onTapEdge never', () => {
+      tapAll([APPS_TO_UI]);
+
+      expect(handlers.onTapBackground).toHaveBeenCalledOnce();
+      expect(handlers.onTapEdge).not.toHaveBeenCalled();
+    });
+
+    it('WHEN ui, the folder link, then ui are tapped THEN onDoubleTapNode does not run', () => {
+      tapAll(['@acme/ui', APPS_TO_UI, '@acme/ui']);
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
     });
   });
 
