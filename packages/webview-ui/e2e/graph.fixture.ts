@@ -1,5 +1,6 @@
 import { test as base } from '@playwright/test';
 
+import { CpuClock } from './pages/cpu-clock.po.ts';
 import { GraphCamera } from './pages/graph-camera.po.ts';
 import { GraphCanvas } from './pages/graph-canvas.po.ts';
 import { GraphControlsKeys } from './pages/graph-controls-keys.po.ts';
@@ -21,6 +22,7 @@ import { GraphPage } from './pages/graph.po.ts';
 import { PageClock } from './pages/page-clock.po.ts';
 
 type GraphFixtures = {
+  readonly cpuClock: CpuClock;
   readonly graphCamera: GraphCamera;
   readonly graphCanvas: GraphCanvas;
   readonly graphControls: GraphControlsPage;
@@ -43,6 +45,9 @@ type GraphFixtures = {
 };
 
 export const test = base.extend<GraphFixtures>({
+  cpuClock: async ({ page }, use): Promise<void> => {
+    await use(new CpuClock(page));
+  },
   graphCamera: async ({ page }, use): Promise<void> => {
     await use(new GraphCamera(page));
   },

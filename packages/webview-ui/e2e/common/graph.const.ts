@@ -35,6 +35,9 @@ export const THREAD_TIME_METRIC = 'ThreadTime';
 
 export const MS_PER_SECOND = 1000;
 
+/** An empty page, so the renderer that loads it has run almost nothing before a CPU read. */
+export const BLANK_PAGE = 'data:text/html,<p>blank</p>';
+
 /** Resolves after two frames, so the effects of the last input have run. */
 export const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
 
