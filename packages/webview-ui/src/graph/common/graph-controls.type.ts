@@ -37,10 +37,10 @@ export type GraphControlsDeps = {
   readonly now: () => number;
   /** Only when the visible set changed. */
   readonly onVisibleChange: (visible: ReadonlySet<string>) => void;
-  /** `pan` is true for a click on a package name. */
-  readonly onSelect: (name: string, pan: boolean) => void;
-  /** After every focus toggle: the new focus, or `null` when it was cleared. */
-  readonly onFocused: (name: string | null) => void;
+  /** A package name clicked, or chosen by key, in the list. */
+  readonly onSelect: (name: string) => void;
+  /** Every focus toggle: the new focus, or `null` when it was cleared; `setFilters` applies it, called once by the receiver. */
+  readonly onFocusToggle: (name: string | null, setFilters: () => void) => void;
   readonly onOpenDetails: (name: string) => void;
   readonly onSave: () => void;
   /** Re-measures the canvas now; Cytoscape's own observers wait a 100 ms debounce. */
@@ -86,10 +86,10 @@ export type ControlsActions = {
   readonly onPick: (name: string) => void;
 };
 
-/** What the package list's keyboard asks of `GraphControls`; `pan` is true for a select by key. */
+/** What the package list's keyboard asks of `GraphControls`. */
 export type KeyboardDeps = {
   readonly isVisible: (name: string) => boolean;
   readonly selected: () => string | null;
-  readonly onSelect: (name: string, pan: boolean) => void;
+  readonly onSelect: (name: string) => void;
   readonly onOpenDetails: (name: string) => void;
 };

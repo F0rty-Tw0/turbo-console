@@ -23,52 +23,28 @@ const SAVED: GraphViewState = {
   trace: null
 };
 
-const PACKAGES = ['web', 'api'];
-
-const WITHOUT_WEB = ['api'];
-
 describe('FEATURE: restorePlanOf', () => {
-  it('GIVEN no saved state WHEN a graph is placed THEN it is fitted with no selection', () => {
-    const expected: RestorePlan = { kind: 'fit', selected: null };
+  it('GIVEN no saved state WHEN a graph is placed THEN it is fitted', () => {
+    const expected: RestorePlan = { kind: 'fit' };
 
-    const plan = restorePlanOf(null, 'h1', PACKAGES);
+    const plan = restorePlanOf(null, 'h1');
 
     expect(plan).toStrictEqual(expected);
   });
 
-  describe('GIVEN a saved state for the same hash', () => {
-    it('WHEN the selection is still drawn THEN the camera and the selection are restored', () => {
-      const expected: RestorePlan = { kind: 'restore', zoom: 1.5, pan: PAN, selected: 'web' };
+  it('GIVEN a saved state for the same hash WHEN a graph is placed THEN the camera is restored', () => {
+    const expected: RestorePlan = { kind: 'restore', zoom: 1.5, pan: PAN };
 
-      const plan = restorePlanOf(SAVED, 'h1', PACKAGES);
+    const plan = restorePlanOf(SAVED, 'h1');
 
-      expect(plan).toStrictEqual(expected);
-    });
-
-    it('WHEN the selection is not drawn THEN the camera is restored with no selection', () => {
-      const expected: RestorePlan = { kind: 'restore', zoom: 1.5, pan: PAN, selected: null };
-
-      const plan = restorePlanOf(SAVED, 'h1', WITHOUT_WEB);
-
-      expect(plan).toStrictEqual(expected);
-    });
+    expect(plan).toStrictEqual(expected);
   });
 
-  describe('GIVEN a saved state for another hash', () => {
-    it('WHEN the selection is still drawn THEN the graph is fitted and the selection kept', () => {
-      const expected: RestorePlan = { kind: 'fit', selected: 'web' };
+  it('GIVEN a saved state for another hash WHEN a graph is placed THEN it is fitted', () => {
+    const expected: RestorePlan = { kind: 'fit' };
 
-      const plan = restorePlanOf(SAVED, 'h2', PACKAGES);
+    const plan = restorePlanOf(SAVED, 'h2');
 
-      expect(plan).toStrictEqual(expected);
-    });
-
-    it('WHEN the selection is gone THEN the graph is fitted with no selection', () => {
-      const expected: RestorePlan = { kind: 'fit', selected: null };
-
-      const plan = restorePlanOf(SAVED, 'h2', WITHOUT_WEB);
-
-      expect(plan).toStrictEqual(expected);
-    });
+    expect(plan).toStrictEqual(expected);
   });
 });

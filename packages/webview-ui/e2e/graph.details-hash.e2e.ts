@@ -3,7 +3,8 @@ import { DETAILS_EDITED_STUB, DETAILS_RECOUNT_STUB, DETAILS_STUB } from './test/
 import { FOUND_UI_STUB, UI_ENTRIES_STUB } from './test/stubs/graph-explain.stub.ts';
 import { WEB_RECOUNT_FACTS_STUB } from './test/stubs/graph-saved.stub.ts';
 import { WEB_TO_BASE_FACTS_STUB, WEB_TO_BASE_SHORT_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
-import { NONE_INSPECTION, linkInspection, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { linkInspection, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const C5 = { description: 'M4-3 C5', type: 'requirement' };
 
@@ -99,7 +100,7 @@ test.describe('FEATURE: graph details after a new graph hash', () => {
       await test.step('AND the edited graph, which has no solo, is sent', async (): Promise<void> =>
         graphHost.sendState(DETAILS_EDITED_STUB));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the panel is empty', async (): Promise<void> => graphDetails.expectEmpty());
 

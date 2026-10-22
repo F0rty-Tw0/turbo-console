@@ -1,6 +1,7 @@
 import { test } from './graph.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
-import { NONE_INSPECTION, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { packageInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 
@@ -84,7 +85,7 @@ test.describe('FEATURE: graph inspection transitions', () => {
 
       await test.step('AND the background is tapped', async (): Promise<void> => graphCanvas.tapBackground());
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('WHEN the web to ui link is tapped again', async (): Promise<void> => graphLink.tapLink('web', 'ui'));
 
@@ -92,13 +93,13 @@ test.describe('FEATURE: graph inspection transitions', () => {
 
       await test.step('AND Escape is pressed', async (): Promise<void> => graphPage.pressKey('Escape'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('WHEN core is tapped', async (): Promise<void> => graphCanvas.tapNode('core'));
 
       await test.step('AND Clear selection is pressed', async (): Promise<void> => graphPage.pressButton('Clear selection'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the panel is empty', async (): Promise<void> => graphDetails.expectEmpty());
 

@@ -1,7 +1,8 @@
 import { test } from './graph.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { SAVED_BASE_STUB } from './test/stubs/graph-saved.stub.ts';
-import { NONE_INSPECTION, linkInspection, packageInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { linkInspection, packageInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const C5 = { description: 'M4-3 C5', type: 'requirement' };
 
@@ -51,7 +52,7 @@ test.describe('FEATURE: graph details restore order', () => {
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the panel is empty', async (): Promise<void> => graphDetails.expectEmpty());
     }
@@ -68,7 +69,7 @@ test.describe('FEATURE: graph details restore order', () => {
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the host was asked to explain nothing', async (): Promise<void> => graphReplies.expectNoExplainAsked());
     }
@@ -125,7 +126,7 @@ test.describe('FEATURE: graph details restore order', () => {
 
       await test.step('AND the panel is open', async (): Promise<void> => graphDetails.expectOpen(true));
 
-      await test.step('AND nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('AND nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }

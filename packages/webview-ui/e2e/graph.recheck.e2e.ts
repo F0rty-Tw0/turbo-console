@@ -7,13 +7,8 @@ import {
   WEB_TO_CORE_FACTS_STUB,
   WEB_TO_CORE_HIDDEN_FACTS_STUB
 } from './test/stubs/graph-trace-facts.stub.ts';
-import {
-  NONE_INSPECTION,
-  linkInspection,
-  packageInspection,
-  pickingInspection,
-  traceInspection
-} from './test/utils/graph-inspection.spec.util.ts';
+import { linkInspection, packageInspection, pickingInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 
@@ -41,7 +36,7 @@ test.describe('FEATURE: graph inspection re-check on a filter change', () => {
 
       await test.step('WHEN web is unticked in the list', async (): Promise<void> => graphList.toggleRow('web'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the panel is empty', async (): Promise<void> => graphDetails.expectEmpty());
 
@@ -66,7 +61,7 @@ test.describe('FEATURE: graph inspection re-check on a filter change', () => {
 
       await test.step('WHEN ui is unticked in the list', async (): Promise<void> => graphList.toggleRow('ui'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND focus stays on the ui checkbox', async (): Promise<void> => graphKeys.expectFocusedName('Show ui'));
     }
@@ -91,7 +86,7 @@ test.describe('FEATURE: graph inspection re-check on a filter change', () => {
 
       await test.step('WHEN web is unticked in the list', async (): Promise<void> => graphList.toggleRow('web'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND focus stays on the web checkbox', async (): Promise<void> => graphKeys.expectFocusedName('Show web'));
     }
@@ -175,7 +170,7 @@ test.describe('FEATURE: graph inspection re-check on a filter change', () => {
 
       await test.step('AND web is unticked in the list', async (): Promise<void> => graphList.toggleRow('web'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the panel is empty', async (): Promise<void> => graphDetails.expectEmpty());
 

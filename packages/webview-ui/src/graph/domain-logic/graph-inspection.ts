@@ -9,15 +9,12 @@ import type { DetailsContext } from '../common/graph-details.type.ts';
 import type { CanvasShown, GraphInspectionDeps, InspectionSave, KeepClearDeps } from '../common/graph-inspection.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
-import type { KeepClearTrigger } from '../common/keep-clear.type.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
-import { focusInputOf, sameHashPlanOf, shouldPan } from '../utils/inspection-flow.util.ts';
-import { candidatesFor, selectedOf, traceFor } from '../utils/inspection-parts.util.ts';
+import { focusInputOf, inputPlanOf, sameHashPlanOf } from '../utils/inspection-flow.util.ts';
+import { selectedOf, shownOf } from '../utils/inspection-parts.util.ts';
 import { recheckInspection } from '../utils/inspection-recheck.util.ts';
 import { restoredInspection } from '../utils/inspection-state.util.ts';
 import { inspectionTextOf } from '../utils/inspection-text.util.ts';
-import { nextInspection } from '../utils/inspection.util.ts';
-import { shouldKeepClear } from '../utils/keep-clear-trigger.util.ts';
 import { showableNamesOf } from '../utils/showable.util.ts';
 
 /**
@@ -47,26 +44,28 @@ export class GraphInspection {
     return selectedOf(this.inspection);
   }
 
-  /** Applies the input; the camera moves only when `shouldPan` says so, then keeps the anchors clear of an overlay. */
+  /** Applies the input; the camera centres only as `inputPlanOf` says, then keeps a changed inspection clear of an overlay. */
   public input(input: InspectionInput): void {
-    const next = nextInspection(this.inspection, input);
-    const isPan = shouldPan(input, next);
+    const plan = inputPlanOf(this.inspection, input);
 
-    this.apply(next, false);
+    this.apply(plan.next, false);
 
-    if (isPan && next.kind === 'package') this.deps.view.centreOn(next.name);
+    if (plan.centre !== null) this.deps.view.centreOn(plan.centre);
 
-    this.keepClear('input');
+    if (plan.isKeepClear) this.keepClear();
   }
 
-  /** Pans the inspection's anchors clear of the open overlay; restore and refresh never pan. */
-  public keepClear(trigger: KeepClearTrigger): void {
+  /** Pans the inspection's anchors clear of the open overlay; restore and refresh never call it. */
+  public keepClear(): void {
     const { view, page } = this.deps;
-    const isPan = shouldKeepClear(trigger, this.details.isOverlay(), this.details.isOpen());
-    const ghostNodes = this.canvas.ghostNodes();
-    const keepDeps: KeepClearDeps = { view, page, inspection: this.inspection, ghostNodes };
+    const aside = this.details.overlayPanel();
 
-    if (isPan) keepClearInspection(keepDeps);
+    if (aside === null) return;
+
+    const ghostNodes = this.canvas.ghostNodes();
+    const keepDeps: KeepClearDeps = { view, page, aside, inspection: this.inspection, ghostNodes };
+
+    keepClearInspection(keepDeps);
   }
 
   /** A package chosen in the controls list or search. */
@@ -84,9 +83,14 @@ export class GraphInspection {
     this.deps.page.container.focus();
   }
 
-  /** A list Focus toggle: selects the new focus, or only refreshes the views (picking, a cleared focus). */
-  public focused(name: string | null): void {
+  /**
+   * A list Focus toggle: selects the new focus, or only refreshes the views (picking, a cleared focus). The input is
+   * read off the inspection before `setFilters` runs, so a picking the filter rule then drops selects nothing (§4.3).
+   */
+  public focused(name: string | null, setFilters: () => void): void {
     const input = focusInputOf(this.inspection, name);
+
+    setFilters();
 
     if (input === null) this.apply(this.inspection, false);
     else this.input(input);
@@ -124,11 +128,15 @@ export class GraphInspection {
   public refreshed(isChanged: boolean): void {
     const { inspection } = this;
     const plan = sameHashPlanOf(inspection, isChanged);
-    const isReask = plan.isReask && inspection.kind === 'link';
 
     if (plan.isUpdate) this.apply(inspection, false);
 
-    if (isReask) this.deps.bridge.post({ type: 'explainEdge', source: inspection.source, target: inspection.target });
+    if (plan.reask !== null) this.explain(plan.reask.source, plan.reask.target);
+  }
+
+  /** Asks the host for the manifest entry behind the link `source` → `target`. */
+  public explain(source: string, target: string): void {
+    this.deps.bridge.post({ type: 'explainEdge', source, target });
   }
 
   public explained(message: GraphEdgeExplainedMessage): void {
@@ -157,10 +165,15 @@ export class GraphInspection {
     scheduleSave(this.deps, shown);
   }
 
+  /** Enter on the graph: opens Package Details of the inspected package, if any. */
   public openDetails(): void {
     const name = this.selected();
 
-    if (name !== null) this.deps.bridge.post({ type: 'openDetails', packageName: name });
+    if (name !== null) this.openDetailsOf(name);
+  }
+
+  public openDetailsOf(name: string): void {
+    this.deps.bridge.post({ type: 'openDetails', packageName: name });
   }
 
   /** How long the latest inspection of `kind` took from being set to its details view shown; `null` until one did. */
@@ -177,16 +190,17 @@ export class GraphInspection {
 
     const started = deps.now();
     const visible = deps.visible();
-    const trace = traceFor(next, drawn.edges);
-    const candidates = candidatesFor(next, drawn.edges, visible);
+    const details = shownOf(next, drawn.edges, visible);
+    const trace = details.kind === 'trace' ? details.trace : null;
+    const candidates = details.kind === 'picking' ? details.candidates : null;
     const showable = showableNamesOf(trace?.path ?? [], visible, deps.canShow);
-    const context: DetailsContext = { drawn, visible, focus: deps.focus(), trace, candidates, showable, isRebuild };
-    const shown: CanvasShown = { inspection: next, drawn, visible, trace, candidates };
+    const context: DetailsContext = { drawn, visible, focus: deps.focus(), showable, isRebuild };
+    const canvas: CanvasShown = { inspection: next, drawn, visible, trace, candidates };
 
     this.inspection = next;
-    this.details.show(next, context);
+    this.details.show(details, context);
     this.timings.set(next.kind, deps.now() - started);
-    this.canvas.draw(shown, isRebuild);
+    this.canvas.draw(canvas, isRebuild);
     deps.page.status.textContent = inspectionTextOf(next, drawn.edges, trace, visible);
     deps.page.clear.disabled = next.kind === 'none';
     deps.onSelected(selectedOf(next));

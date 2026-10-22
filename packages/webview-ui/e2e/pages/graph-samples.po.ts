@@ -74,7 +74,9 @@ export class GraphSamples {
     const samples: number[] = [];
 
     for (const count of counts) {
-      await this.page.evaluate(postStates, [largeState(count)]);
+      const json = JSON.stringify([largeState(count)]);
+
+      await this.page.evaluate(postStates, json);
       await this.waitForCount(count, count);
       samples.push(await readFresh(async (): Promise<number | null> => this.timings.controlsBuiltMs()));
     }

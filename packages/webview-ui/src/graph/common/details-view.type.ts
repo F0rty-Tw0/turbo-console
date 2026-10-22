@@ -1,5 +1,3 @@
-import type { CandidateKey, ExplainState } from './details.type.ts';
-
 export type DetailsElements = {
   readonly panel: HTMLElement;
 };
@@ -51,7 +49,6 @@ export type LinkDetails = DetailsViewBase & LinkParts;
 
 /** A candidate group; `empty` reads "None" or "No match" and is `hidden` while the list has items. */
 export type PickingGroup = {
-  readonly key: CandidateKey;
   readonly heading: HTMLElement;
   readonly list: HTMLUListElement;
   readonly empty: HTMLElement;
@@ -77,6 +74,7 @@ type TraceParts = {
 export type TraceDetails = DetailsViewBase & TraceParts;
 
 export type ExcerptRowElements = {
+  readonly row: HTMLElement;
   readonly number: HTMLElement;
   readonly text: HTMLElement;
 };
@@ -90,8 +88,8 @@ export type ExplainEntry = {
 /** The explain block of one `ExplainState`; parts a state does not draw are `null` or empty. */
 export type ExplainDetails = {
   readonly root: HTMLElement;
-  readonly kind: ExplainState['kind'];
-  readonly heading: HTMLElement | null;
+  /** The file name in a found block's heading. */
+  readonly file: HTMLElement | null;
   readonly text: HTMLElement | null;
   readonly entries: ExplainEntry[];
   readonly open: HTMLButtonElement | null;

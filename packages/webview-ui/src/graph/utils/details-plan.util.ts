@@ -37,6 +37,3 @@ export const detailsPlanOf = (previous: Inspection | null, next: Inspection, isR
 
   return 'update';
 };
-
-/** A new view takes focus to its heading only when the panel held focus; an update leaves focus alone. */
-export const movesFocusToHeading = (plan: DetailsPlan, hadFocus: boolean): boolean => plan !== 'update' && hadFocus;

@@ -1,5 +1,5 @@
 import { test } from './graph.fixture.ts';
-import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
+import { DETAILS_RECOUNT_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import {
   DATA_ROWS_STUB,
   FOUND_DATA_STUB,
@@ -11,8 +11,11 @@ import {
   UI_ENTRY_ROWS_STUB,
   UNREADABLE_STUB
 } from './test/stubs/graph-explain.stub.ts';
+import { linkInspection } from './test/utils/graph-inspection.spec.util.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
+
+const RF1 = { description: 'M4-3 RF1', type: 'requirement' };
 
 test.describe('FEATURE: graph link excerpt', () => {
   test(
@@ -95,6 +98,34 @@ test.describe('FEATURE: graph link excerpt', () => {
       await test.step('AND there is no Open button', async (): Promise<void> => graphLink.expectNoOpenButton());
 
       await test.step('AND it has no side border', async (): Promise<void> => graphLink.expectNoSideBorder('Unreadable'));
+    }
+  );
+
+  test(
+    'GIVEN a focused Open at line, a reply with fewer entries builds the explain block again and moves focus to the heading',
+    { annotation: RF1 },
+    async ({ graphDetails, graphHost, graphLink, graphPage, graphReplies }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
+
+      await test.step('AND the web to ui link is tapped', async (): Promise<void> => graphLink.tapLink('web', 'ui'));
+
+      await test.step('AND the host answers with two entries', async (): Promise<void> => graphReplies.answerExplain(FOUND_UI_STUB));
+
+      await test.step('AND the devDependencies Open at line is focused', async (): Promise<void> =>
+        graphLink.focusOpen('devDependencies', 'ui'));
+
+      await test.step('AND the same graph with new task counts is sent', async (): Promise<void> =>
+        graphHost.sendState(DETAILS_RECOUNT_STUB));
+
+      await test.step('AND the host answers the second ask with one entry', async (): Promise<void> =>
+        graphReplies.answerExplain(FOUND_DATA_STUB));
+
+      await test.step('THEN the web to ui link is still inspected', async (): Promise<void> =>
+        graphDetails.expectInspection(linkInspection('web', 'ui')));
+
+      await test.step('AND focus is on the panel heading', async (): Promise<void> => graphDetails.expectHeadingFocused());
     }
   );
 });

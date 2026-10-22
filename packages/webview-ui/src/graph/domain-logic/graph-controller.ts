@@ -140,7 +140,7 @@ class GraphPageController {
 
     if (drawn === null) return;
 
-    const plan = restorePlanOf(saved, drawn.hash, drawn.packages);
+    const plan = restorePlanOf(saved, drawn.hash);
 
     showGraphView(this.deps.page, engine === 'fallback');
     this.view.setGraph(drawn.packages, drawn.edges, positions, this.deps.sizeOf);

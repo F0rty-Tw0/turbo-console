@@ -2,8 +2,9 @@ import { filteredCandidatesOf, litCandidatesOf } from './candidate-filter.util.t
 import { candidatesOf } from './trace-candidates.util.ts';
 import { traceOf } from './trace.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
+import type { ShownInspection } from '../common/graph-details.type.ts';
 import type { Inspection } from '../common/inspection.type.ts';
-import type { TraceCandidates, TraceResult } from '../common/trace.type.ts';
+import type { TraceCandidates } from '../common/trace.type.ts';
 
 /** The inspected package: a `package` inspection's name, `null` in every other kind. */
 export const selectedOf = (inspection: Inspection): string | null => {
@@ -12,18 +13,26 @@ export const selectedOf = (inspection: Inspection): string | null => {
   return inspection.name;
 };
 
-/** The shortest path a `trace` inspection shows; `null` in every other kind. */
-export const traceFor = (inspection: Inspection, edges: GraphEdge[]): TraceResult | null => {
-  if (inspection.kind !== 'trace') return null;
+/** The inspection with what its view is built from: a trace's shortest path, a picking's end candidates. */
+export const shownOf = (inspection: Inspection, edges: GraphEdge[], visible: ReadonlySet<string>): ShownInspection => {
+  switch (inspection.kind) {
+    case 'picking': {
+      const candidates = candidatesOf(edges, inspection.start, visible);
+      const picking: ShownInspection = { ...inspection, candidates };
 
-  return traceOf(edges, inspection.start, inspection.end);
-};
+      return picking;
+    }
+    case 'trace': {
+      const trace = traceOf(edges, inspection.start, inspection.end);
+      const traced: ShownInspection = { ...inspection, trace };
 
-/** The end candidates a `picking` inspection lists; `null` in every other kind. */
-export const candidatesFor = (inspection: Inspection, edges: GraphEdge[], visible: ReadonlySet<string>): TraceCandidates | null => {
-  if (inspection.kind !== 'picking') return null;
-
-  return candidatesOf(edges, inspection.start, visible);
+      return traced;
+    }
+    case 'none':
+    case 'package':
+    case 'link':
+      return inspection;
+  }
 };
 
 /** The names lit while picking: the path candidates the filter leaves; none when not picking. */

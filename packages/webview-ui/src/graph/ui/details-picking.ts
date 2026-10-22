@@ -50,7 +50,7 @@ const groupSection = (start: string, model: CandidateGroupModel): GroupSection =
   empty.hidden = items.length > 0;
   section.append(heading, list, empty);
 
-  const group: PickingGroup = { key: model.key, heading, list, empty };
+  const group: PickingGroup = { heading, list, empty };
   const parts: GroupSection = { section, group };
 
   return parts;

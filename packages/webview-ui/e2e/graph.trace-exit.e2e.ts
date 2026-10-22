@@ -2,8 +2,9 @@ import { expect, test } from './graph.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { CORE_TO_WEB_FACTS_STUB, WEB_TO_CORE_FOCUSED_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { FOCUS_UI_PICKING_NODES_STUB } from './test/stubs/graph-trace-states.stub.ts';
-import { NONE_INSPECTION, packageInspection, pickingInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { packageInspection, pickingInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
 import type { GraphTraceRef, GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
+import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 
@@ -96,7 +97,7 @@ test.describe('FEATURE: graph trace exits', () => {
 
       await test.step('AND Escape is pressed', async (): Promise<void> => graphPage.pressKey('Escape'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the status line is empty', async (): Promise<void> => graphPage.expectStatus(''));
 
@@ -114,7 +115,7 @@ test.describe('FEATURE: graph trace exits', () => {
 
       await test.step('AND Escape is pressed on the trace', async (): Promise<void> => graphPage.pressKey('Escape'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the status line is empty', async (): Promise<void> => graphPage.expectStatus(''));
 
@@ -178,7 +179,7 @@ test.describe('FEATURE: graph trace exits', () => {
 
       await test.step('AND the background is tapped', async (): Promise<void> => graphCanvas.tapBackground());
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the panel is empty', async (): Promise<void> => graphDetails.expectEmpty());
 
@@ -192,7 +193,7 @@ test.describe('FEATURE: graph trace exits', () => {
 
       await test.step('AND Clear selection is pressed', async (): Promise<void> => graphPage.pressButton('Clear selection'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the camera is as before', async (): Promise<void> => graphCamera.expectCameraUnchanged());
     }
@@ -229,6 +230,28 @@ test.describe('FEATURE: graph trace exits', () => {
 
       await test.step('THEN the trace runs through data, which the focus hides and Show cannot bring back', async (): Promise<void> =>
         graphTrace.expectTrace(WEB_TO_CORE_FOCUSED_FACTS_STUB));
+    }
+  );
+
+  test(
+    'GIVEN a trace being picked, Focus in the list on a package that hides the start ends at nothing',
+    { annotation: RF3 },
+    async ({ graphCanvas, graphDetails, graphHost, graphList, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
+
+      await test.step('AND web is tapped', async (): Promise<void> => graphCanvas.tapNode('web'));
+
+      await test.step('AND Start trace is pressed', async (): Promise<void> => graphDetails.startTrace());
+
+      await test.step('AND solo, which has no links, is focused in the list', async (): Promise<void> => graphList.focusOn('solo'));
+
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
+
+      await test.step('AND the panel is empty', async (): Promise<void> => graphDetails.expectEmpty());
+
+      await test.step('AND no package is selected in the list', async (): Promise<void> => graphList.expectNoRowCurrent());
     }
   );
 

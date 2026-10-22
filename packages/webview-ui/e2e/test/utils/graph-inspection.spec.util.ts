@@ -1,8 +1,5 @@
 import type { Inspection } from '../../../src/graph/common/inspection.type.ts';
 
-/** Nothing is being inspected. */
-export const NONE_INSPECTION: Inspection = { kind: 'none' };
-
 export const packageInspection = (name: string): Inspection => {
   const inspection: Inspection = { kind: 'package', name };
 

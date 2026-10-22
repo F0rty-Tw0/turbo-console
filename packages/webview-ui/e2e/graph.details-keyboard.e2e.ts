@@ -3,7 +3,8 @@ import { expect, test } from './graph.fixture.ts';
 import { DETAILS_NAMES_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { FOUND_DATA_STUB } from './test/stubs/graph-explain.stub.ts';
 import { tabStopsOf } from './test/utils/graph-focus-steps.spec.util.ts';
-import { NONE_INSPECTION, linkInspection, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { linkInspection, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 
@@ -71,7 +72,7 @@ test.describe('FEATURE: graph details panel by keyboard', () => {
 
       await test.step('AND Space is pressed', async (): Promise<void> => graphPage.pressKey('Space'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND focus is on the Details heading', async (): Promise<void> => graphKeys.expectFocusedRole('heading'));
 

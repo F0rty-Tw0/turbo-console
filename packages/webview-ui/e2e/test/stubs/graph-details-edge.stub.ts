@@ -14,9 +14,10 @@ const PROTO_EDGES: GraphEdge[] = [
   { source: 'constructor', target: 'plain' }
 ];
 
+/** `__proto__` sits off the origin, so a cached position lost on the way in would put it on top of `constructor`. */
 const PROTO_ROWS: PositionRow[] = [
-  ['__proto__', 0, 0],
-  ['constructor', 0, 150],
+  ['constructor', 0, 0],
+  ['__proto__', 200, 0],
   ['plain', 0, 300]
 ];
 

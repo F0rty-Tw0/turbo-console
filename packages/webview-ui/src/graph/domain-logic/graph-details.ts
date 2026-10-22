@@ -10,14 +10,16 @@ import type {
   DetailsView,
   GraphDetailsDeps,
   ShownExplain,
-  ShownHint
+  ShownHint,
+  ShownInspection
 } from '../common/graph-details.type.ts';
-import { NO_INSPECTION } from '../common/inspection.const.ts';
-import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
-import { detailsPlanOf, movesFocusToHeading } from '../utils/details-plan.util.ts';
+import type { InspectionInput } from '../common/inspection.type.ts';
+import { detailsPlanOf } from '../utils/details-plan.util.ts';
 import { explainPlanOf, explainStateOf, isReplyFor } from '../utils/explain-state.util.ts';
 
 const PANEL_ESCAPE: InspectionInput = { kind: 'escape', where: 'panel' };
+
+const NOTHING_SHOWN: ShownInspection = { kind: 'none' };
 
 /**
  * The details panel: one view at a time for the inspection, swapped, updated in place or rebuilt by `show`, with
@@ -27,7 +29,7 @@ export class GraphDetails {
   private readonly deps: GraphDetailsDeps;
   private aside: HTMLElement | null = null;
   private view: DetailsView | null = null;
-  private shown: Inspection | null = null;
+  private shown: ShownInspection | null = null;
   private context: DetailsContext | null = null;
   private explain: ShownExplain | null = null;
   private hint: ShownHint | null = null;
@@ -52,13 +54,13 @@ export class GraphDetails {
       body.append(aside);
       this.aside = aside;
       this.view = view;
-      this.shown = NO_INSPECTION;
+      this.shown = NOTHING_SHOWN;
     }
 
     this.applyOpen();
   }
 
-  public show(inspection: Inspection, context: DetailsContext): void {
+  public show(inspection: ShownInspection, context: DetailsContext): void {
     const { aside } = this;
 
     if (aside === null) return;
@@ -67,10 +69,8 @@ export class GraphDetails {
     const hadFocus = aside.contains(document.activeElement);
     const focused = focusedNameOf(aside);
     const isUpdated = this.updated(plan, inspection, context, focused);
-    const built = plan === 'swap' ? 'swap' : 'rebuild';
-    const focusesHeading = movesFocusToHeading(built, hadFocus);
 
-    if (!isUpdated) this.build(aside, inspection, context, focusesHeading);
+    if (!isUpdated) this.build(aside, inspection, context, hadFocus);
 
     this.hint = shownHintOf(this.hint, inspection, this.deps);
     this.shown = inspection;
@@ -103,15 +103,19 @@ export class GraphDetails {
     return this.open;
   }
 
-  public isOverlay(): boolean {
-    return this.deps.overlay.matches;
+  /** The aside while it is open over the canvas, else `null` (docked, closed or not mounted). */
+  public overlayPanel(): HTMLElement | null {
+    const isOverlay = this.deps.overlay.matches;
+
+    return isOverlay && this.open ? this.aside : null;
   }
 
   private envOf(): DetailsEnv {
     const env: DetailsEnv = {
       deps: this.deps,
-      isOverlay: this.isOverlay(),
+      isOverlay: this.deps.overlay.matches,
       onClose: (): void => this.close(),
+      shown: (): ShownInspection | null => this.shown,
       context: (): DetailsContext | null => this.context
     };
 
@@ -119,7 +123,7 @@ export class GraphDetails {
   }
 
   /** Updates the shown view in place when the plan says so and it can; a list rebuilt in place applies the removed-focus rule. */
-  private updated(plan: DetailsPlan, inspection: Inspection, context: DetailsContext, focused: string | null): boolean {
+  private updated(plan: DetailsPlan, inspection: ShownInspection, context: DetailsContext, focused: string | null): boolean {
     const { view } = this;
 
     if (plan !== 'update' || view === null) return false;
@@ -146,14 +150,15 @@ export class GraphDetails {
     return true;
   }
 
-  private build(aside: HTMLElement, inspection: Inspection, context: DetailsContext, focusesHeading: boolean): void {
+  /** A view built while the panel held focus takes focus to its heading (spec §4.5). */
+  private build(aside: HTMLElement, inspection: ShownInspection, context: DetailsContext, hadFocus: boolean): void {
     const view = wiredViewOf(inspection, context, this.envOf());
 
     aside.replaceChildren(view.root);
     this.view = view;
     this.explain = null;
 
-    if (focusesHeading) view.heading.focus();
+    if (hadFocus) view.heading.focus();
 
     if (inspection.kind === 'link') this.deps.onExplain(inspection.source, inspection.target);
   }
@@ -184,7 +189,7 @@ export class GraphDetails {
     this.open = open;
     this.applyOpen();
 
-    if (!this.isOverlay()) this.deps.onResize();
+    if (!this.deps.overlay.matches) this.deps.onResize();
 
     this.deps.onSave();
 
@@ -194,7 +199,7 @@ export class GraphDetails {
   /** The overlay never opens on its own; a close button that had focus hands it to the Details toggle. */
   private relayout(): void {
     const close = this.view?.close ?? null;
-    const isOverlay = this.isOverlay();
+    const isOverlay = this.deps.overlay.matches;
 
     if (this.aside === null) return;
 
@@ -208,6 +213,6 @@ export class GraphDetails {
 
     if (this.open) this.deps.onResize();
 
-    this.deps.onLayout(isOverlay);
+    this.deps.onLayout();
   }
 }

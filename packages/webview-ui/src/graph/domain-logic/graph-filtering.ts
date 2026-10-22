@@ -34,7 +34,7 @@ export class GraphFiltering {
       now,
       onVisibleChange: (visible): void => this.showVisible(visible),
       onSelect: (name): void => this.inspection.select(name),
-      onFocused: (name): void => this.inspection.focused(name),
+      onFocusToggle: (name, setFilters): void => this.inspection.focused(name, setFilters),
       onOpenDetails: (): void => this.inspection.openDetails(),
       onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
@@ -96,7 +96,7 @@ export class GraphFiltering {
 
     if (isAny) view.fit();
 
-    this.inspection.keepClear('filter');
+    this.inspection.keepClear();
 
     const inputAt = this.controls.inputAt();
 

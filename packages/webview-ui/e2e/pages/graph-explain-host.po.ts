@@ -29,8 +29,9 @@ export class GraphExplainHost {
   /** Answers as if the host had been asked about `source` and `target`, whatever the page asked; returns once the page has handled it. */
   public async answerExplainFor(source: string, target: string, result: EdgeExplainResult): Promise<void> {
     const reply: GraphEdgeExplainedMessage = { type: 'edgeExplained', source, target, result };
+    const json = JSON.stringify(reply);
 
-    await this.page.evaluate(postReply, reply);
+    await this.page.evaluate(postReply, json);
     await this.page.evaluate(NEXT_FRAME);
   }
 

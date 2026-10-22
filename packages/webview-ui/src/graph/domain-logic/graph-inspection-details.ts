@@ -7,7 +7,7 @@ const CLEAR: InspectionInput = { kind: 'clear' };
 
 const CANVAS_ESCAPE: InspectionInput = { kind: 'escape', where: 'canvas' };
 
-/** The details panel's deps: its inputs go to `actions`, its host requests to the bridge, its list actions to the controls. */
+/** The details panel's deps: its inputs and its explain and Package Details requests go to `actions`, Open to the bridge, its list actions to the controls. */
 export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActions): GraphDetailsDeps => {
   const { bridge, page, view, views, overlay } = deps;
   const detailsDeps: GraphDetailsDeps = {
@@ -15,16 +15,16 @@ export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActi
     views,
     overlay,
     onInput: (input): void => actions.input(input),
-    onExplain: (source, target): void => bridge.post({ type: 'explainEdge', source, target }),
-    onOpenDetails: (name): void => bridge.post({ type: 'openDetails', packageName: name }),
+    onExplain: (source, target): void => actions.explain(source, target),
+    onOpenDetails: (name): void => actions.openDetailsOf(name),
     onFocus: (name): void => deps.onFocusOn(name),
     onExclude: (name): void => deps.onExclude(name),
     onShow: (name): void => deps.onShow(name),
     onFilter: (text): void => actions.filter(text),
     onOpenManifest: (packageName, line): void => bridge.post({ type: 'openManifest', packageName, line }),
     onResize: (): void => view.resize(),
-    onLayout: (): void => actions.keepClear('layout'),
-    onOpened: (): void => actions.keepClear('opened'),
+    onLayout: (): void => actions.keepClear(),
+    onOpened: (): void => actions.keepClear(),
     onSave: (): void => actions.save()
   };
 

@@ -1,7 +1,8 @@
 import { test } from './graph.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { WEB_TO_CORE_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
-import { NONE_INSPECTION, packageInspection, pickingInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { packageInspection, pickingInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 
@@ -172,7 +173,7 @@ test.describe('FEATURE: graph trace by keyboard', () => {
 
       await test.step('AND Escape is pressed', async (): Promise<void> => graphPage.pressKey('Escape'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('WHEN Shift+Tab reaches Search packages', async (): Promise<void> => graphKeys.shiftTabTo('Search packages'));
 
@@ -186,7 +187,7 @@ test.describe('FEATURE: graph trace by keyboard', () => {
 
       await test.step('AND Enter is pressed', async (): Promise<void> => graphPage.pressKey('Enter'));
 
-      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND Clear selection is disabled', async (): Promise<void> => graphPage.expectDisabled('Clear selection'));
     }

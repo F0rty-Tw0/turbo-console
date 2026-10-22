@@ -118,9 +118,9 @@ export class GraphControls {
   public focus(mounted: ControlsMounted, name: string): void {
     const next = focusOn(this.applied, name, this.depth);
     const focused = next.focus?.name ?? null;
+    const setFilters = (): void => this.change(mounted, next);
 
-    this.change(mounted, next);
-    this.deps.onFocused(focused);
+    this.deps.onFocusToggle(focused, setFilters);
   }
 
   public setDepth(mounted: ControlsMounted, text: string): void {
@@ -147,7 +147,7 @@ export class GraphControls {
   public pick(name: string): void {
     const isVisible = this.shown.has(name);
 
-    if (isVisible) this.deps.onSelect(name, true);
+    if (isVisible) this.deps.onSelect(name);
   }
 
   private toggleOpen(): void {

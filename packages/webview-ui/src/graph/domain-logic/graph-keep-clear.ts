@@ -6,12 +6,11 @@ import { keepClearNamesOf, keepClearPanOf } from '../utils/keep-clear.util.ts';
  * with nothing to clear or a box too wide to fit beside the overlay.
  */
 export const keepClearInspection = (deps: KeepClearDeps): void => {
-  const { view, page, inspection, ghostNodes } = deps;
-  const aside = page.body.querySelector('#graph-details');
+  const { view, page, aside, inspection, ghostNodes } = deps;
   const names = keepClearNamesOf(inspection, ghostNodes);
   const box = view.anchorBox(names);
 
-  if (aside === null || box === null) return;
+  if (box === null) return;
 
   const container = page.container.getBoundingClientRect();
   const overlay = aside.getBoundingClientRect();

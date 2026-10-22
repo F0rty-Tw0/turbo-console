@@ -158,6 +158,19 @@ describe('FEATURE: setGhosts', () => {
     });
   });
 
+  describe('GIVEN no ghosts are drawn', () => {
+    it('WHEN empty marks are set THEN no element style is written', () => {
+      let writes = 0;
+
+      cy.on('style', () => {
+        writes += 1;
+      });
+      setGhosts(cy, NO_MARKS, V1);
+
+      expect(writes).toBe(0);
+    });
+  });
+
   describe('GIVEN marks that name nothing in the graph', () => {
     it('WHEN they are set THEN nothing throws and the visible nodes are unchanged', () => {
       const before = visibleNodes(cy);

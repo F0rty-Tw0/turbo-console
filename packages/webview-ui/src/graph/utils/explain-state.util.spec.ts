@@ -90,6 +90,7 @@ const STATE_ROWS: StateRow[] = [
 const REPLY_ROWS: ReplyRow[] = [
   { title: 'the shown link', message: reply('web', 'ui'), current: link('web', 'ui'), expected: true },
   { title: 'the shown link reversed', message: reply('ui', 'web'), current: link('web', 'ui'), expected: false },
+  { title: 'another source into the shown target', message: reply('admin', 'ui'), current: link('web', 'ui'), expected: false },
   { title: 'a link while a package shows', message: reply('web', 'ui'), current: PKG_WEB, expected: false },
   { title: 'a link before anything shows', message: reply('web', 'ui'), current: null, expected: false },
   {

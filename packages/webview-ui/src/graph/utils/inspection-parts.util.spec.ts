@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { candidatesFor, litOf, selectedOf, traceFor } from './inspection-parts.util.ts';
+import { litOf, selectedOf, shownOf } from './inspection-parts.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
+import type { ShownInspection } from '../common/graph-details.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { TraceCandidate, TraceCandidates, TraceResult } from '../common/trace.type.ts';
 import { link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
@@ -46,34 +47,30 @@ describe('FEATURE: selectedOf', () => {
   });
 });
 
-describe('FEATURE: traceFor', () => {
-  describe('GIVEN the drawn edges', () => {
-    it('WHEN a trace shows THEN its path is walked', () => {
-      const result = traceFor(trace('web', 'core'), E);
-
-      expect(result).toStrictEqual(WEB_TRACE);
-    });
-
-    it('WHEN an end is being picked THEN there is no path', () => {
-      const result = traceFor(pick('web', false), E);
-
-      expect(result).toBeNull();
-    });
-  });
-});
-
-describe('FEATURE: candidatesFor', () => {
+describe('FEATURE: shownOf', () => {
   describe('GIVEN the drawn edges and the visible packages', () => {
-    it('WHEN an end is being picked THEN the candidates are found from its start', () => {
-      const result = candidatesFor(pick('web', false), E, ALL);
+    it('WHEN a trace shows THEN it carries its walked path', () => {
+      const expected: ShownInspection = { kind: 'trace', start: 'web', end: 'core', trace: WEB_TRACE };
 
-      expect(result).toStrictEqual(WEB_CANDIDATES);
+      const shown = shownOf(trace('web', 'core'), E, ALL);
+
+      expect(shown).toStrictEqual(expected);
     });
 
-    it('WHEN a trace shows THEN there are no candidates', () => {
-      const result = candidatesFor(trace('web', 'core'), E, ALL);
+    it('WHEN an end is being picked THEN it carries the candidates found from its start', () => {
+      const expected: ShownInspection = { kind: 'picking', start: 'web', isNudged: false, candidates: WEB_CANDIDATES };
 
-      expect(result).toBeNull();
+      const shown = shownOf(pick('web', false), E, ALL);
+
+      expect(shown).toStrictEqual(expected);
+    });
+
+    it('WHEN a package shows THEN it is the inspection itself', () => {
+      const inspection = pkg('web');
+
+      const shown = shownOf(inspection, E, ALL);
+
+      expect(shown).toBe(inspection);
     });
   });
 });

@@ -1,14 +1,20 @@
 import type { DetailsViews } from './details.type.ts';
 import type { ControlsViewFields, DrawnGraph, GraphView, PageElements, ViewStateSaver } from './graph-page.type.ts';
-import type { Inspection, InspectionInput } from './inspection.type.ts';
-import type { KeepClearTrigger } from './keep-clear.type.ts';
+import type { Inspection, InspectionInput, LinkInspection } from './inspection.type.ts';
 import type { TraceCandidates, TraceResult } from './trace.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 
-/** What a same-hash state does: relabel the shown package in place, and ask again for the shown link's entry. */
+/** What a same-hash state does: relabel the shown package in place, and ask again for the shown link's entry (`null`: none). */
 export type SameHashPlan = {
   readonly isUpdate: boolean;
-  readonly isReask: boolean;
+  readonly reask: LinkInspection | null;
+};
+
+/** What an input does: the next inspection, the package the camera centres, and whether the keep-clear pan follows. */
+export type InputPlan = {
+  readonly next: Inspection;
+  readonly centre: string | null;
+  readonly isKeepClear: boolean;
 };
 
 /** What the canvas draws for an inspection: the graph and visible set it was built for, its trace and its candidates. */
@@ -53,10 +59,12 @@ export type GraphInspectionDeps = {
   readonly canShow: (name: string) => boolean;
 };
 
-/** What the keep-clear pan reads: the canvas, the page's container and details aside, the inspection and its drawn ghosts. */
+/** What the keep-clear pan reads: the canvas, the page's container, the details aside, the inspection and its drawn ghosts. */
 export type KeepClearDeps = {
   readonly view: GraphView;
   readonly page: PageElements;
+  /** The details panel while it overlays the canvas. */
+  readonly aside: HTMLElement;
   readonly inspection: Inspection;
   readonly ghostNodes: string[];
 };
@@ -66,7 +74,9 @@ export type InspectionActions = {
   readonly input: (input: InspectionInput) => void;
   /** Each keystroke in the picking filter box. */
   readonly filter: (text: string) => void;
+  readonly openDetailsOf: (name: string) => void;
+  readonly explain: (source: string, target: string) => void;
   readonly openDetails: () => void;
   readonly save: () => void;
-  readonly keepClear: (trigger: KeepClearTrigger) => void;
+  readonly keepClear: () => void;
 };

@@ -1,4 +1,4 @@
-import { hasEdge } from './edge-exists.util.ts';
+import { isLinkKept } from './link-kept.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { GraphLinkRef, GraphTraceRef } from '../../bridge/common/graph-view-state.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
@@ -60,12 +60,9 @@ const linkFrom = (saved: InspectionFields, edges: GraphEdge[], visible: Readonly
   if (saved.link === null) return null;
 
   const { source, target } = saved.link;
-  const hasSource = visible.has(source);
-  const hasTarget = visible.has(target);
-  const isDrawn = hasEdge(edges, source, target);
-  const stays = hasSource && hasTarget && isDrawn;
+  const isKept = isLinkKept(saved.link, visible, edges);
 
-  if (!stays) return null;
+  if (!isKept) return null;
 
   const link: Inspection = { kind: 'link', source, target };
 

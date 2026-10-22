@@ -1,7 +1,8 @@
+import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { PickingDetails, PickingGroup } from '../common/details-view.type.ts';
 import { NONE_TEXT, NO_MATCH_TEXT } from '../common/details.const.ts';
 import type { CandidateGroupModel, DetailsViews } from '../common/details.type.ts';
-import type { DetailsContext, DetailsEnv, GraphDetailsDeps, ShownHint } from '../common/graph-details.type.ts';
+import type { DetailsEnv, GraphDetailsDeps, ShownHint, ShownPicking } from '../common/graph-details.type.ts';
 import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
 import type { TraceCandidates } from '../common/trace.type.ts';
 import { filteredCandidatesOf, firstCandidateOf } from '../utils/candidate-filter.util.ts';
@@ -19,12 +20,18 @@ export const namedButtonOf = (event: Event): HTMLButtonElement | null => {
   return target.closest<HTMLButtonElement>('button[data-name]');
 };
 
-const filteredOf = (view: PickingDetails, context: DetailsContext | null): TraceCandidates | null => {
-  const candidates = context?.candidates ?? null;
+const filteredOf = (view: PickingDetails, picking: ShownPicking, packages: GraphPackage[]): TraceCandidates => {
+  return filteredCandidatesOf(picking.candidates, packages, view.filter.value);
+};
 
-  if (context === null || candidates === null) return null;
+/** The shown picking and the drawn packages at event time; `null` once the panel shows something else. */
+const pickingAt = (env: DetailsEnv): [ShownPicking, GraphPackage[]] | null => {
+  const shown = env.shown();
+  const context = env.context();
 
-  return filteredCandidatesOf(candidates, context.drawn.infos, view.filter.value);
+  if (shown?.kind !== 'picking' || context === null) return null;
+
+  return [shown, context.drawn.infos];
 };
 
 const renderGroup = (parts: PickingGroup, start: string, model: CandidateGroupModel, views: DetailsViews): void => {
@@ -36,13 +43,10 @@ const renderGroup = (parts: PickingGroup, start: string, model: CandidateGroupMo
   parts.list.replaceChildren(...items);
 };
 
-/** Rebuilds the candidate lists for the filter box's text; `false` when the context holds no candidates. */
-export const renderPicking = (view: PickingDetails, start: string, context: DetailsContext, views: DetailsViews): boolean => {
-  const { candidates } = context;
-  const filtered = filteredOf(view, context);
-
-  if (candidates === null || filtered === null) return false;
-
+/** Rebuilds the candidate lists for the filter box's text. */
+export const renderPicking = (view: PickingDetails, picking: ShownPicking, packages: GraphPackage[], views: DetailsViews): void => {
+  const { start, candidates } = picking;
+  const filtered = filteredOf(view, picking, packages);
   const model = pickingModelOf(start, candidates, filtered);
 
   model.groups.forEach((group, index) => {
@@ -50,8 +54,6 @@ export const renderPicking = (view: PickingDetails, start: string, context: Deta
 
     if (parts !== undefined) renderGroup(parts, start, group, views);
   });
-
-  return true;
 };
 
 const pickInput = (name: string): InspectionInput => {
@@ -64,18 +66,17 @@ const pickInput = (name: string): InspectionInput => {
 const onFilterKey = (event: KeyboardEvent, view: PickingDetails, env: DetailsEnv): void => {
   if (event.key === 'Escape') event.preventDefault();
 
-  if (event.key !== 'Enter') return;
+  const at = pickingAt(env);
 
-  const filtered = filteredOf(view, env.context());
+  if (event.key !== 'Enter' || at === null) return;
 
-  if (filtered === null) return;
-
+  const filtered = filteredOf(view, ...at);
   const name = firstCandidateOf(filtered);
 
   if (name !== null) env.deps.onInput(pickInput(name));
 };
 
-export const wirePicking = (view: PickingDetails, start: string, env: DetailsEnv): void => {
+export const wirePicking = (view: PickingDetails, env: DetailsEnv): void => {
   const { deps } = env;
   const { filter } = view;
   const onPick = (event: Event): void => {
@@ -84,9 +85,9 @@ export const wirePicking = (view: PickingDetails, start: string, env: DetailsEnv
     if (name !== undefined) deps.onInput(pickInput(name));
   };
   const onFilter = (): void => {
-    const context = env.context();
+    const at = pickingAt(env);
 
-    if (context !== null) renderPicking(view, start, context, deps.views);
+    if (at !== null) renderPicking(view, ...at, deps.views);
 
     deps.onFilter(filter.value);
   };

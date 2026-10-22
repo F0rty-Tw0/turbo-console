@@ -96,7 +96,7 @@ describe('FEATURE: nextInspection', () => {
     it.each([
       ['none, ui via canvas', NONE, select('ui', 'canvas'), pkg('ui')],
       ['a package, ui via list', PKG, select('ui', 'list'), pkg('ui')],
-      ['a package, web via search', PKG, select('web', 'search'), pkg('web')],
+      ['a package, web via a list Focus', PKG, select('web', 'focus'), pkg('web')],
       ['a link, ui via panel', LINK, select('ui', 'panel'), pkg('ui')],
       ['a trace, ui via canvas', TRACE, select('ui', 'canvas'), pkg('ui')],
       ['none, __proto__ via list', NONE, select('__proto__', 'list'), pkg('__proto__')]
@@ -111,7 +111,6 @@ describe('FEATURE: nextInspection', () => {
     it.each([
       ['ui via canvas', PICKING, select('ui', 'canvas'), trace('web', 'ui')],
       ['ui via list', PICKING, select('ui', 'list'), trace('web', 'ui')],
-      ['ui via search', PICKING, select('ui', 'search'), trace('web', 'ui')],
       ['ui via panel', PICKING, select('ui', 'panel'), PICKING],
       ['the start via canvas', PICKING, select('web', 'canvas'), PICKING],
       ['the start via list', PICKING, select('web', 'list'), PICKING],

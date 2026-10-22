@@ -1,15 +1,12 @@
-import { hasEdge } from './edge-exists.util.ts';
+import { isLinkKept } from './link-kept.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, LinkInspection, TraceInspection } from '../common/inspection.type.ts';
 
 const recheckLink = (current: LinkInspection, visible: ReadonlySet<string>, edges: GraphEdge[]): Inspection => {
-  const hasSource = visible.has(current.source);
-  const hasTarget = visible.has(current.target);
-  const isDrawn = hasEdge(edges, current.source, current.target);
-  const stays = hasSource && hasTarget && isDrawn;
+  const isKept = isLinkKept(current, visible, edges);
 
-  return stays ? current : NO_INSPECTION;
+  return isKept ? current : NO_INSPECTION;
 };
 
 const recheckTrace = (current: TraceInspection, visible: ReadonlySet<string>): Inspection => {

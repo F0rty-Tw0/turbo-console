@@ -1,8 +1,15 @@
 import { namedButtonOf, wirePicking } from './graph-details-picking.ts';
 import type { EmptyDetails, ExplainDetails, NeighbourItem, PackageDetails, TraceDetails } from '../common/details-view.type.ts';
 import type { ExplainState } from '../common/details.type.ts';
-import type { DetailsContext, DetailsEnv, DetailsView } from '../common/graph-details.type.ts';
-import type { Inspection, InspectionInput, LinkInspection, TraceInspection } from '../common/inspection.type.ts';
+import type {
+  DetailsContext,
+  DetailsEnv,
+  DetailsView,
+  ShownInspection,
+  ShownPicking,
+  ShownTrace
+} from '../common/graph-details.type.ts';
+import type { InspectionInput, LinkInspection } from '../common/inspection.type.ts';
 import { linkModelOf, packageModelOf, pickingModelOf, traceModelOf } from '../utils/details-model.util.ts';
 
 /** Builds the input a neighbour's Explain posts; a link always names its dependent first. */
@@ -90,15 +97,12 @@ const linkOf = (inspection: LinkInspection, context: DetailsContext, env: Detail
   return view;
 };
 
-const pickingOf = (start: string, context: DetailsContext, env: DetailsEnv): DetailsView => {
-  const { candidates } = context;
-
-  if (candidates === null) return emptyOf(env);
-
+const pickingOf = (picking: ShownPicking, env: DetailsEnv): DetailsView => {
+  const { start, candidates } = picking;
   const model = pickingModelOf(start, candidates, candidates);
   const view = wired(env.deps.views.picking(model, env.isOverlay), env);
 
-  wirePicking(view, start, env);
+  wirePicking(view, env);
 
   return view;
 };
@@ -122,12 +126,9 @@ const wireTrace = (view: TraceDetails, env: DetailsEnv): void => {
   onClick(view.swap, (): void => deps.onInput(SWAP_ENDS));
 };
 
-const traceOf = (inspection: TraceInspection, context: DetailsContext, env: DetailsEnv): DetailsView => {
-  const { trace, visible, showable } = context;
-
-  if (trace === null) return emptyOf(env);
-
-  const model = traceModelOf(inspection, trace, visible, showable);
+const traceOf = (traced: ShownTrace, context: DetailsContext, env: DetailsEnv): DetailsView => {
+  const { visible, showable } = context;
+  const model = traceModelOf(traced, traced.trace, visible, showable);
   const view = wired(env.deps.views.trace(model, env.isOverlay), env);
 
   wireTrace(view, env);
@@ -136,7 +137,7 @@ const traceOf = (inspection: TraceInspection, context: DetailsContext, env: Deta
 };
 
 /** Builds the view for `inspection` with its listeners; one with nothing to show is the Empty view. */
-export const wiredViewOf = (inspection: Inspection, context: DetailsContext, env: DetailsEnv): DetailsView => {
+export const wiredViewOf = (inspection: ShownInspection, context: DetailsContext, env: DetailsEnv): DetailsView => {
   switch (inspection.kind) {
     case 'none':
       return emptyOf(env);
@@ -145,7 +146,7 @@ export const wiredViewOf = (inspection: Inspection, context: DetailsContext, env
     case 'link':
       return linkOf(inspection, context, env);
     case 'picking':
-      return pickingOf(inspection.start, context, env);
+      return pickingOf(inspection, env);
     case 'trace':
       return traceOf(inspection, context, env);
   }

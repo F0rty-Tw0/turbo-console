@@ -48,7 +48,7 @@ const excerptRow = (excerpt: HTMLElement, row: ExcerptRow): ExcerptRowElements =
   line.append(number, text);
   excerpt.append(line);
 
-  const elements: ExcerptRowElements = { number, text };
+  const elements: ExcerptRowElements = { row: line, number, text };
 
   return elements;
 };
@@ -73,25 +73,24 @@ const entryOf = (list: HTMLElement, entry: ManifestEntry): ExplainEntry => {
   return parts;
 };
 
-const fileHeading = (file: string): HTMLElement => {
+const fileHeading = (file: HTMLElement): HTMLElement => {
   const heading = textElement('h3', 'details-file', '');
   const icon = graphIcon('file');
-  const code = textElement('span', 'details-code', file);
 
-  heading.append(icon, code);
+  heading.append(icon, file);
 
   return heading;
 };
 
-const explainOf = (state: ExplainState): ExplainDetails => {
+const explainOf = (): ExplainDetails => {
   const root = textElement('div', 'details-explain-body', '');
-  const base: ExplainDetails = { root, kind: state.kind, heading: null, text: null, entries: [], open: null };
+  const base: ExplainDetails = { root, file: null, text: null, entries: [], open: null };
 
   return base;
 };
 
 const readingOf = (state: ReadingExplain): ExplainDetails => {
-  const base = explainOf(state);
+  const base = explainOf();
   const readingText = readingTextOf(state.file);
   const text = lineOf(readingText);
 
@@ -103,20 +102,21 @@ const readingOf = (state: ReadingExplain): ExplainDetails => {
 };
 
 const foundOf = (state: FoundExplain): ExplainDetails => {
-  const base = explainOf(state);
-  const heading = fileHeading(state.file);
+  const base = explainOf();
+  const file = textElement('span', 'details-code', state.file);
+  const heading = fileHeading(file);
   const list = textElement('ul', 'details-entries', '');
   const entries = state.entries.map((entry) => entryOf(list, entry));
 
   base.root.append(heading, list);
 
-  const view: ExplainDetails = { ...base, heading, entries };
+  const view: ExplainDetails = { ...base, file, entries };
 
   return view;
 };
 
 const missingOf = (state: MissingExplain): ExplainDetails => {
-  const base = explainOf(state);
+  const base = explainOf();
   const heading = statusOf('info', NO_ENTRY_TEXT);
   const missingText = missingTextOf(state.file, state.target);
   const text = lineOf(missingText);
@@ -124,20 +124,20 @@ const missingOf = (state: MissingExplain): ExplainDetails => {
 
   base.root.append(heading, text, open);
 
-  const view: ExplainDetails = { ...base, heading, text, open };
+  const view: ExplainDetails = { ...base, text, open };
 
   return view;
 };
 
 const unreadableOf = (state: UnreadableExplain): ExplainDetails => {
-  const base = explainOf(state);
+  const base = explainOf();
   const heading = statusOf('warning', UNREADABLE_TEXT);
   const unreadableText = unreadableTextOf(state.file);
   const text = lineOf(unreadableText);
 
   base.root.append(heading, text);
 
-  const view: ExplainDetails = { ...base, heading, text };
+  const view: ExplainDetails = { ...base, text };
 
   return view;
 };

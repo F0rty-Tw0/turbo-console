@@ -27,10 +27,15 @@ const applyGhosts = (cy: Core, marks: GhostMarks): void => {
 
 /**
  * Draws the trace's hidden path packages as ghosts: shown, classed `ghost`, their path links classed `ghost` and
- * their other links hidden. Always resets first, so empty `marks` clears; `setVisible` hides a ghost again, so
- * call this after every `setVisible`.
+ * their other links hidden. Resets first, so empty `marks` clears; with no ghost drawn and none to draw it writes
+ * nothing. `setVisible` hides a ghost again, so call this after every `setVisible`.
  */
 export const setGhosts = (cy: Core, marks: GhostMarks, visible: ReadonlySet<string>): void => {
+  const hadGhosts = cy.elements(`.${GHOST_CLASS}`).nonempty();
+  const hasGhosts = marks.nodes.length > 0 || marks.edges.length > 0;
+
+  if (!hadGhosts && !hasGhosts) return;
+
   cy.batch((): void => {
     resetGhosts(cy, visible);
     applyGhosts(cy, marks);

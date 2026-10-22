@@ -1,12 +1,20 @@
-import type { GraphEdgeExplainedMessage } from '../../../src/bridge/common/graph-message.type.ts';
-import type { GraphState } from '../../../src/bridge/common/graph-state.type.ts';
+/**
+ * Runs in the page through `evaluate`: posts each state as the host does, in order, within one task. `json` holds the
+ * states as JSON, since the `evaluate` argument drops an own `__proto__` key that `JSON.parse` and `postMessage` keep.
+ */
+export const postStates = (json: string): void => {
+  const parsed: unknown = JSON.parse(json);
 
-/** Runs in the page through `evaluate`: posts each state as the host does, in order, within one task. */
-export const postStates = (states: GraphState[]): void => {
+  if (!Array.isArray(parsed)) return;
+
+  const states: unknown[] = parsed;
+
   for (const state of states) window.postMessage({ type: 'state', state }, '*');
 };
 
-/** Runs in the page through `evaluate`: posts one host reply to the page's message listener. */
-export const postReply = (reply: GraphEdgeExplainedMessage): void => {
+/** Runs in the page through `evaluate`: posts one host reply, sent as JSON for the same reason, to the page's message listener. */
+export const postReply = (json: string): void => {
+  const reply: unknown = JSON.parse(json);
+
   window.postMessage(reply, '*');
 };

@@ -3,8 +3,7 @@ import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { ExplainDetails, ExplainEntry, NeighbourItem, PackageDetails, TraceDetails } from '../common/details-view.type.ts';
 import { CLEAR_FOCUS_LABEL, FOCUS_LABEL } from '../common/details.const.ts';
 import type { DetailsViews, ExplainState, FoundExplain } from '../common/details.type.ts';
-import type { DetailsContext, DetailsView } from '../common/graph-details.type.ts';
-import type { Inspection, TraceInspection } from '../common/inspection.type.ts';
+import type { DetailsContext, DetailsView, ShownInspection, ShownTrace } from '../common/graph-details.type.ts';
 import { packageModelOf, traceModelOf } from '../utils/details-model.util.ts';
 import {
   entryLabelOf,
@@ -47,22 +46,17 @@ const updatePackage = (view: PackageDetails, name: string, context: DetailsConte
   return true;
 };
 
-const updateTrace = (view: TraceDetails, inspection: TraceInspection, context: DetailsContext, views: DetailsViews): boolean => {
-  const { trace, visible, showable } = context;
-
-  if (trace === null) return false;
-
-  const model = traceModelOf(inspection, trace, visible, showable);
+const updateTrace = (view: TraceDetails, traced: ShownTrace, context: DetailsContext, views: DetailsViews): void => {
+  const { visible, showable } = context;
+  const model = traceModelOf(traced, traced.trace, visible, showable);
   const items = views.stepItems(model.steps);
 
   view.lead.textContent = traceSummaryOf(model.start, model.end, model.direction, model.steps.length);
   view.steps.replaceChildren(...items);
-
-  return true;
 };
 
 /** Updates the shown view in place for the same inspection; `false` when it cannot, and the view must be built again. */
-export const updateView = (view: DetailsView, inspection: Inspection, context: DetailsContext, views: DetailsViews): boolean => {
+export const updateView = (view: DetailsView, inspection: ShownInspection, context: DetailsContext, views: DetailsViews): boolean => {
   switch (inspection.kind) {
     case 'none':
       return view.kind === 'empty';
@@ -71,9 +65,13 @@ export const updateView = (view: DetailsView, inspection: Inspection, context: D
     case 'package':
       return view.kind === 'package' && updatePackage(view, inspection.name, context);
     case 'picking':
-      return view.kind === 'picking' && renderPicking(view, inspection.start, context, views);
+      if (view.kind === 'picking') renderPicking(view, inspection, context.drawn.infos, views);
+
+      return view.kind === 'picking';
     case 'trace':
-      return view.kind === 'trace' && updateTrace(view, inspection, context, views);
+      if (view.kind === 'trace') updateTrace(view, inspection, context, views);
+
+      return view.kind === 'trace';
   }
 };
 
@@ -104,8 +102,8 @@ export const refocusList = (view: DetailsView, focused: string | null): void => 
   if (refocus === 'heading') view.heading.focus();
 };
 
-const setText = (element: Element | null | undefined, text: string): void => {
-  if (element !== null && element !== undefined) element.textContent = text;
+const setText = (element: HTMLElement | null, text: string): void => {
+  if (element !== null) element.textContent = text;
 };
 
 const updateEntry = (parts: ExplainEntry, entry: ManifestEntry): void => {
@@ -119,14 +117,14 @@ const updateEntry = (parts: ExplainEntry, entry: ManifestEntry): void => {
 
     setText(elements.number, String(row.number));
     setText(elements.text, row.text);
-    elements.number.parentElement?.classList.toggle('is-entry', row.isEntry);
+    elements.row.classList.toggle('is-entry', row.isEntry);
   });
   setText(parts.open, openAtLabelOf(entry.line));
   parts.open.setAttribute('aria-label', openManifestLabelOf(entry));
 };
 
 const updateFound = (details: ExplainDetails, state: FoundExplain): void => {
-  setText(details.heading?.lastElementChild, state.file);
+  setText(details.file, state.file);
   details.entries.forEach((parts, index) => {
     const entry = state.entries[index];
 

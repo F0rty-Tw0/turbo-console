@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { detailsPlanOf, movesFocusToHeading } from './details-plan.util.ts';
+import { detailsPlanOf } from './details-plan.util.ts';
 import type { DetailsPlan } from '../common/graph-details.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
@@ -39,12 +39,6 @@ type PlanRow = {
   readonly expected: DetailsPlan;
 };
 
-type FocusRow = {
-  readonly plan: DetailsPlan;
-  readonly hadFocus: boolean;
-  readonly expected: boolean;
-};
-
 const PLAN_ROWS: PlanRow[] = [
   { title: 'nothing shown yet', previous: null, next: pkg('web'), isRebuild: false, expected: 'swap' },
   { title: 'the same package', previous: pkg('web'), next: pkg('web'), isRebuild: false, expected: 'update' },
@@ -62,28 +56,12 @@ const PLAN_ROWS: PlanRow[] = [
   { title: 'the same __proto__ package', previous: pkg('__proto__'), next: pkg('__proto__'), isRebuild: false, expected: 'update' }
 ];
 
-const FOCUS_ROWS: FocusRow[] = [
-  { plan: 'swap', hadFocus: true, expected: true },
-  { plan: 'rebuild', hadFocus: true, expected: true },
-  { plan: 'swap', hadFocus: false, expected: false },
-  { plan: 'rebuild', hadFocus: false, expected: false },
-  { plan: 'update', hadFocus: true, expected: false }
-];
-
 describe('FEATURE: details plan', () => {
   describe('GIVEN the inspection shown and the next one', () => {
     it.each(PLAN_ROWS)('WHEN the next is $title THEN the plan is $expected', (row) => {
       const plan = detailsPlanOf(row.previous, row.next, row.isRebuild);
 
       expect(plan).toBe(row.expected);
-    });
-  });
-
-  describe('GIVEN a plan and whether the panel held focus', () => {
-    it.each(FOCUS_ROWS)('WHEN the plan is $plan with focus $hadFocus THEN the heading takes focus: $expected', (row) => {
-      const moves = movesFocusToHeading(row.plan, row.hadFocus);
-
-      expect(moves).toBe(row.expected);
     });
   });
 });

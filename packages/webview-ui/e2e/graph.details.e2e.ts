@@ -1,7 +1,8 @@
 import type { PackageFacts, WidthChange } from './common/graph.type.ts';
 import { expect, test } from './graph.fixture.ts';
 import { DETAILS_RECOUNT_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
-import { NONE_INSPECTION, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { packageInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 
@@ -58,7 +59,7 @@ test.describe('FEATURE: graph details panel', () => {
 
       await test.step('AND the panel shows the empty view', async (): Promise<void> => graphDetails.expectEmpty());
 
-      await test.step('AND nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NONE_INSPECTION));
+      await test.step('AND nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND Clear selection is disabled', async (): Promise<void> => graphPage.expectDisabled('Clear selection'));
 

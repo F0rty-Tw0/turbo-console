@@ -41,8 +41,6 @@ const CTX: DetailsContext = {
   drawn: DRAWN,
   visible: VISIBLE,
   focus: 'web',
-  trace: null,
-  candidates: null,
   showable: SHOWABLE,
   isRebuild: false
 };

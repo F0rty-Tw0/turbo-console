@@ -1,7 +1,7 @@
 import type { EmptyDetails, ExplainDetails, LinkDetails, PackageDetails, PickingDetails, TraceDetails } from './details-view.type.ts';
 import type { DetailsViews, ExplainState } from './details.type.ts';
 import type { DrawnGraph, PageElements } from './graph-page.type.ts';
-import type { InspectionInput } from './inspection.type.ts';
+import type { Inspection, InspectionInput, PickingInspection, TraceInspection } from './inspection.type.ts';
 import type { TraceCandidates, TraceResult } from './trace.type.ts';
 
 /** How `show` changes the panel: a new view, the shown view updated in place, or the same view built again. */
@@ -16,16 +16,24 @@ export type Refocus = 'item' | 'heading' | 'none';
 /** One view of the details panel. */
 export type DetailsView = EmptyDetails | PackageDetails | LinkDetails | PickingDetails | TraceDetails;
 
-/**
- * What the views are built from. `candidates` is the full, unfiltered result while picking, else `null`; `showable`
- * holds the path packages whose Show is allowed; `isRebuild` builds the shown view again.
- */
+type PickingParts = { readonly candidates: TraceCandidates };
+
+type TraceParts = { readonly trace: TraceResult };
+
+/** A picking with its full, unfiltered end candidates. */
+export type ShownPicking = PickingInspection & PickingParts;
+
+/** A trace with the path it walked. */
+export type ShownTrace = TraceInspection & TraceParts;
+
+/** The inspection the panel shows; a picking and a trace carry what their views are built from. */
+export type ShownInspection = Exclude<Inspection, PickingInspection | TraceInspection> | ShownPicking | ShownTrace;
+
+/** What the views are built from besides the inspection: `showable` holds the path packages whose Show is allowed; `isRebuild` builds the shown view again. */
 export type DetailsContext = {
   readonly drawn: DrawnGraph;
   readonly visible: ReadonlySet<string>;
   readonly focus: string | null;
-  readonly trace: TraceResult | null;
-  readonly candidates: TraceCandidates | null;
   readonly showable: ReadonlySet<string>;
   readonly isRebuild: boolean;
 };
@@ -49,17 +57,18 @@ export type GraphDetailsDeps = {
   readonly onOpenManifest: (packageName: string, line: number) => void;
   readonly onResize: () => void;
   /** After a switch between docked and overlay. */
-  readonly onLayout: (isOverlay: boolean) => void;
+  readonly onLayout: () => void;
   /** After the panel opened, and after the resize that came with it. */
   readonly onOpened: () => void;
   readonly onSave: () => void;
 };
 
-/** What a view's listeners reach at event time; `context` is `null` until the first `show`. */
+/** What a view's listeners reach at event time; `shown` and `context` are `null` until the first `show`. */
 export type DetailsEnv = {
   readonly deps: GraphDetailsDeps;
   readonly isOverlay: boolean;
   readonly onClose: () => void;
+  readonly shown: () => ShownInspection | null;
   readonly context: () => DetailsContext | null;
 };
 
