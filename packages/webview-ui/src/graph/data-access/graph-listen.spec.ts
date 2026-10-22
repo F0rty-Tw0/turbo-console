@@ -142,6 +142,38 @@ describe('FEATURE: listen', () => {
       expect(handlers.onDoubleTapNode).toHaveBeenCalledExactlyOnceWith('b');
     });
 
+    it('WHEN b, then the edge a>b, then b are tapped THEN onDoubleTapNode does not run', () => {
+      tapAfter('b');
+      tapAfter(edgeIdOf({ source: 'a', target: 'b' }));
+      tapAfter('b');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+
+    it('WHEN b, then the background, then b are tapped THEN onDoubleTapNode does not run', () => {
+      tapAfter('b');
+      tapAfter(null);
+      tapAfter('b');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the second tap on b comes exactly 250 ms after the first THEN onDoubleTapNode runs with b', () => {
+      tapAfter('b');
+      vi.advanceTimersByTime(150);
+      tapAfter('b');
+
+      expect(handlers.onDoubleTapNode).toHaveBeenCalledExactlyOnceWith('b');
+    });
+
+    it('WHEN the clock steps back between two taps on b THEN onDoubleTapNode does not run', () => {
+      tapAfter('b');
+      vi.setSystemTime(Date.now() - 1000);
+      tapAfter('b');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+
     it('WHEN the second tap on b comes 251 ms after the first THEN onDoubleTapNode does not run', () => {
       tapAfter('b');
       vi.advanceTimersByTime(151);

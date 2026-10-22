@@ -33,7 +33,8 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
 
   /** Records a tap on `name` (`null`: anything but a package) and says whether it completes a double tap. */
   const noteTap = (name: string | null, at: number): boolean => {
-    const isDouble = name !== null && name === lastPackage && at - lastTapAt <= DOUBLE_TAP_MS;
+    const gap = at - lastTapAt;
+    const isDouble = name !== null && name === lastPackage && gap >= 0 && gap <= DOUBLE_TAP_MS;
 
     lastPackage = isDouble ? null : name;
     lastTapAt = at;
