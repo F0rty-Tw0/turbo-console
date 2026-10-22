@@ -120,6 +120,15 @@ describe('FEATURE: graph.css', () => {
       expect(declarations).toContain(`var(--vscode-inputOption-${name}`);
     });
 
+    it.each(['.vscode-high-contrast', '.vscode-high-contrast-light'])(
+      'WHEN the %s rule is read THEN an inner activeBorder ring marks it',
+      (themeClass) => {
+        const declarations = declarationsOf(css, `${themeClass} ${PRESSED_SELECTOR}`);
+
+        expect(declarations).toContain('box-shadow: inset 0 0 0 1px var(--vscode-inputOption-activeBorder)');
+      }
+    );
+
     it('WHEN its place is compared with the hover rule THEN it comes later and wins', () => {
       const hoverStart = ruleStartOf(HOVER_SELECTOR);
 
