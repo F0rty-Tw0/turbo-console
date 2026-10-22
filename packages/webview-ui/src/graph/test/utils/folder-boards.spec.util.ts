@@ -7,7 +7,7 @@ import type { DrawnGraph } from '../../common/graph-page.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import { groupedElkGraphOf } from '../../utils/elk-grouped-graph.util.ts';
 import { folderSceneOf } from '../../utils/folder-scene.util.ts';
-import type { ElkRect } from '../common/folder-boards.type.ts';
+import type { ElkRect, SceneParts } from '../common/folder-boards.type.ts';
 import { BOARDS_EDGES_STUB, BOARDS_GROUPS_STUB, BOARDS_SIZE_STUB } from '../stubs/folder-boards.stub.ts';
 
 /** The boards fixture's packages in the order docs, web, @acme/config, @acme/ui, @acme/utils. */
@@ -23,6 +23,31 @@ export const BOARDS_DRAWN: DrawnGraph = { hash: 'boards', packages: BOARDS_NAMES
 /** The boards fixture as a folder scene; `visible` defaults to every package. */
 export const boardsSceneOf = (collapsed: string[], visible?: string[], ghosts: string[] = []): FolderScene => {
   return folderSceneOf(BOARDS_INFOS, BOARDS_EDGES, new Set(collapsed), new Set(visible ?? BOARDS_NAMES), new Set(ghosts));
+};
+
+const infoOf = (name: string, path: string): GraphPackage => {
+  const info: GraphPackage = { name, path, tags: [], taskCount: 0 };
+
+  return info;
+};
+
+/** Three folders: `a` and `c` in `f1`, `b` in `f2`, `d` in `f3`. */
+export const THREE: GraphPackage[] = [infoOf('a', 'f1/a'), infoOf('b', 'f2/b'), infoOf('c', 'f1/c'), infoOf('d', 'f3/d')];
+
+export const THREE_EDGES: GraphEdge[] = [
+  { source: 'a', target: 'b' },
+  { source: 'b', target: 'c' },
+  { source: 'b', target: 'd' }
+];
+
+/** A folder scene over any fixture; `visible` defaults to every package, `collapsed` and `ghosts` to none. */
+export const sceneOf = (infos: GraphPackage[], edges: GraphEdge[], parts: SceneParts): FolderScene => {
+  const names = infos.map((info) => info.name);
+  const collapsed = new Set(parts.collapsed ?? []);
+  const visible = new Set(parts.visible ?? names);
+  const ghosts = new Set(parts.ghosts ?? []);
+
+  return folderSceneOf(infos, edges, collapsed, visible, ghosts);
 };
 
 export const boardsSizeOf = (): NodeSize => BOARDS_SIZE_STUB;

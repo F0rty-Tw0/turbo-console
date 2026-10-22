@@ -6,7 +6,7 @@ import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, InspectionFields } from '../common/inspection.type.ts';
 
 const fieldsOf = (parts: Partial<InspectionFields>): InspectionFields => {
-  const fields: InspectionFields = { selected: null, link: null, trace: null, ...parts };
+  const fields: InspectionFields = { selected: null, link: null, trace: null, folder: null, ...parts };
 
   return fields;
 };
@@ -24,9 +24,21 @@ const LINK: Inspection = { kind: 'link', source: 'web', target: 'ui' };
 
 const TRACE: Inspection = { kind: 'trace', start: 'web', end: 'core' };
 
+const FOLDER_APPS: Inspection = { kind: 'folder', folder: 'apps' };
+
+const FOLDER_ROOT: Inspection = { kind: 'folder', folder: '' };
+
+const FOLDER_PACKAGES: Inspection = { kind: 'folder', folder: 'packages' };
+
+const PROTO_FOLDER: Inspection = { kind: 'folder', folder: '__proto__' };
+
 const PROTO_TRACE: Inspection = { kind: 'trace', start: '__proto__', end: 'constructor' };
 
 const ALL = new Set(['web', 'ui', 'core']);
+
+const NO_FOLDERS = new Set<string>();
+
+const FOLDERS = new Set(['apps', 'packages']);
 
 const WEB_CORE = new Set(['web', 'core']);
 
@@ -76,6 +88,8 @@ describe('FEATURE: inspectionFieldsOf', () => {
         inspection: { kind: 'trace', start: 'core', end: 'web' } satisfies Inspection,
         expected: fieldsOf({ selected: 'core', trace: SWAPPED_TRACE_REF })
       },
+      { title: 'a folder saves only the folder', inspection: FOLDER_APPS, expected: fieldsOf({ folder: 'apps' }) },
+      { title: 'the root folder saves its empty key', inspection: FOLDER_ROOT, expected: fieldsOf({ folder: '' }) },
       {
         title: 'a __proto__ link saves only the link',
         inspection: { kind: 'link', source: '__proto__', target: 'constructor' } satisfies Inspection,
@@ -183,7 +197,75 @@ describe('FEATURE: restoredInspection', () => {
         expected: PROTO_TRACE
       }
     ])('WHEN $title THEN the inspection is exact', ({ saved, edges, visible, expected }) => {
-      const inspection = restoredInspection(saved, edges, visible);
+      const inspection = restoredInspection(saved, edges, visible, NO_FOLDERS);
+
+      expect(inspection).toStrictEqual(expected);
+    });
+  });
+});
+
+describe('FEATURE: restoredInspection with folders', () => {
+  describe('GIVEN a saved folder and the folders that still exist', () => {
+    it.each([
+      {
+        title: 'a valid trace wins over link, folder and selected',
+        saved: fieldsOf({ trace: TRACE_REF, link: LINK_REF, folder: 'apps', selected: 'web' }),
+        visible: ALL,
+        folders: FOLDERS,
+        expected: TRACE
+      },
+      {
+        title: 'a trace with a hidden end falls to the link',
+        saved: fieldsOf({ trace: TRACE_REF, link: LINK_REF, folder: 'apps', selected: 'web' }),
+        visible: WEB_UI,
+        folders: FOLDERS,
+        expected: LINK
+      },
+      {
+        title: 'a folder wins over selected',
+        saved: fieldsOf({ folder: 'packages', selected: 'web' }),
+        visible: ALL,
+        folders: FOLDERS,
+        expected: FOLDER_PACKAGES
+      },
+      {
+        title: 'a folder that is gone falls to selected',
+        saved: fieldsOf({ folder: 'gone', selected: 'web' }),
+        visible: ALL,
+        folders: FOLDERS,
+        expected: PKG
+      },
+      {
+        title: 'a hidden folder falls to selected',
+        saved: fieldsOf({ folder: 'apps', selected: 'web' }),
+        visible: ALL,
+        folders: new Set(['packages']),
+        expected: PKG
+      },
+      {
+        title: 'the root folder comes back',
+        saved: fieldsOf({ folder: '' }),
+        visible: ALL,
+        folders: new Set(['']),
+        expected: FOLDER_ROOT
+      },
+      {
+        title: 'a __proto__ folder comes back',
+        saved: fieldsOf({ folder: '__proto__' }),
+        visible: ALL,
+        folders: new Set(['__proto__']),
+        expected: PROTO_FOLDER
+      },
+      {
+        title: 'a __proto__ folder that is gone goes',
+        saved: fieldsOf({ folder: '__proto__' }),
+        visible: ALL,
+        folders: new Set(['x']),
+        expected: NONE
+      },
+      { title: 'no folder saved gives none', saved: fieldsOf({}), visible: ALL, folders: FOLDERS, expected: NONE }
+    ])('WHEN $title THEN the inspection is exact', ({ saved, visible, folders, expected }) => {
+      const inspection = restoredInspection(saved, E, visible, folders);
 
       expect(inspection).toStrictEqual(expected);
     });

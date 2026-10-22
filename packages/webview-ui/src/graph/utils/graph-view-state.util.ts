@@ -42,6 +42,8 @@ const readNames = (value: unknown): string[] => {
 
 const readDetailsOpen = (value: unknown): boolean => (typeof value === 'boolean' ? value : true);
 
+const readFolder = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+
 const readGrouped = (value: unknown): boolean => (typeof value === 'boolean' ? value : false);
 
 const readLink = (value: unknown): GraphLinkRef | null => {
@@ -95,6 +97,7 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
     detailsOpen: readDetailsOpen(raw['detailsOpen']),
     link: readLink(raw['link']),
     trace: readTrace(raw['trace']),
+    folder: readFolder(raw['folder']),
     grouped: readGrouped(raw['grouped']),
     collapsed: readNames(raw['collapsed'])
   };

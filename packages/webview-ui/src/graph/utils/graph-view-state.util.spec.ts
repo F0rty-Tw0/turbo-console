@@ -38,6 +38,7 @@ const VALID: GraphViewState = {
   detailsOpen: false,
   link: LINK_REF,
   trace: TRACE_REF,
+  folder: 'apps',
   grouped: true,
   collapsed: ['apps', '__proto__']
 };
@@ -55,6 +56,7 @@ const DEFAULTED: GraphViewState = {
   detailsOpen: true,
   link: null,
   trace: null,
+  folder: null,
   grouped: false,
   collapsed: []
 };
@@ -156,6 +158,21 @@ describe('FEATURE: readGraphViewState', () => {
       const state = readGraphViewState({ ...CAMERA, ...saved });
 
       expect(state?.collapsed).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a state with a saved folder value', () => {
+    it.each([
+      ['a folder key', 'apps', { folder: 'apps' }],
+      ['the root key', '', { folder: '' }],
+      ['__proto__', '__proto__', { folder: '__proto__' }],
+      ['the number 7', null, { folder: 7 }],
+      ['null', null, { folder: null }],
+      ['missing', null, {}]
+    ])('WHEN it is %s THEN folder reads %j', (_name, expected, saved) => {
+      const state = readGraphViewState({ ...CAMERA, ...saved });
+
+      expect(state?.folder).toBe(expected);
     });
   });
 

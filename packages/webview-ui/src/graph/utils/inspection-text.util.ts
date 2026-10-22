@@ -44,6 +44,8 @@ export const inspectionTextOf = (
       return packageText(inspection.name, edges);
     case 'link':
       return `${inspection.source} depends on ${inspection.target}`;
+    case 'folder':
+      return '';
     case 'picking':
       return inspection.isNudged ? HINT_NUDGE_TEXT : `Trace from ${inspection.start}: select the end package`;
     case 'trace':

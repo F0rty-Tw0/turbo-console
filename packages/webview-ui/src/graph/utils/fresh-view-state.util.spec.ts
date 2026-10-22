@@ -23,6 +23,7 @@ describe('FEATURE: freshViewStateOf', () => {
         detailsOpen: true,
         link: null,
         trace: null,
+        folder: null,
         grouped: false,
         collapsed: []
       });

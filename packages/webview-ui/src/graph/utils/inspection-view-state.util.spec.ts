@@ -7,7 +7,7 @@ import type { InspectionSave } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, Viewport } from '../common/graph-page.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, InspectionFields } from '../common/inspection.type.ts';
-import { link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
+import { folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 
 type ViewStateRow = {
   readonly title: string;
@@ -37,9 +37,9 @@ const stateOf = (fields: InspectionFields, detailsOpen: boolean): GraphViewState
   return state;
 };
 
-const NONE_FIELDS: InspectionFields = { selected: null, link: null, trace: null };
+const NONE_FIELDS: InspectionFields = { selected: null, link: null, trace: null, folder: null };
 
-const WEB_FIELDS: InspectionFields = { selected: 'web', link: null, trace: null };
+const WEB_FIELDS: InspectionFields = { selected: 'web', link: null, trace: null, folder: null };
 
 const WEB_UI_LINK: GraphLinkRef = { source: 'web', target: 'ui' };
 
@@ -49,13 +49,15 @@ const WEB_UI_TRACE: GraphTraceRef = { start: 'web', end: 'ui' };
 
 const UI_WEB_TRACE: GraphTraceRef = { start: 'ui', end: 'web' };
 
-const LINK_FIELDS: InspectionFields = { selected: null, link: WEB_UI_LINK, trace: null };
+const LINK_FIELDS: InspectionFields = { selected: null, link: WEB_UI_LINK, trace: null, folder: null };
 
-const TRACE_FIELDS: InspectionFields = { selected: 'web', link: null, trace: WEB_UI_TRACE };
+const TRACE_FIELDS: InspectionFields = { selected: 'web', link: null, trace: WEB_UI_TRACE, folder: null };
 
-const SWAPPED_FIELDS: InspectionFields = { selected: 'ui', link: null, trace: UI_WEB_TRACE };
+const SWAPPED_FIELDS: InspectionFields = { selected: 'ui', link: null, trace: UI_WEB_TRACE, folder: null };
 
-const PROTO_FIELDS: InspectionFields = { selected: null, link: PROTO_LINK, trace: null };
+const PROTO_FIELDS: InspectionFields = { selected: null, link: PROTO_LINK, trace: null, folder: null };
+
+const FOLDER_FIELDS: InspectionFields = { selected: null, link: null, trace: null, folder: 'apps' };
 
 describe('FEATURE: viewStateOf', () => {
   describe('GIVEN the camera and the controls fields', () => {
@@ -64,6 +66,7 @@ describe('FEATURE: viewStateOf', () => {
       { title: 'a package is inspected with the panel closed', inspection: pkg('web'), detailsOpen: false, fields: WEB_FIELDS },
       { title: 'a link is inspected', inspection: link('web', 'ui'), detailsOpen: true, fields: LINK_FIELDS },
       { title: 'an end is being picked', inspection: pick('web', false), detailsOpen: true, fields: WEB_FIELDS },
+      { title: 'a folder is inspected', inspection: folderInspection('apps'), detailsOpen: true, fields: FOLDER_FIELDS },
       { title: 'a trace shows', inspection: trace('web', 'ui'), detailsOpen: true, fields: TRACE_FIELDS },
       { title: 'a trace shows after Swap ends', inspection: trace('ui', 'web'), detailsOpen: true, fields: SWAPPED_FIELDS },
       {

@@ -5,3 +5,10 @@ export type ElkRect = {
   readonly right: number;
   readonly bottom: number;
 };
+
+/** What `sceneOf` takes besides the fixture: each part defaults to every package (`visible`) or none. */
+export type SceneParts = {
+  readonly collapsed?: string[];
+  readonly visible?: string[];
+  readonly ghosts?: string[];
+};

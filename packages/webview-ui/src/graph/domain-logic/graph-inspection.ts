@@ -109,7 +109,7 @@ export class GraphInspection {
 
     if (drawn === null) return;
 
-    const next = recheckInspection(this.inspection, visible, drawn.edges);
+    const next = recheckInspection(this.inspection, visible, drawn.edges, null);
 
     this.apply(next, false);
   }
@@ -121,7 +121,7 @@ export class GraphInspection {
     if (drawn === null) return;
 
     const state = saved ?? freshViewStateOf(drawn.hash);
-    const restored = restoredInspection(state, drawn.edges, visible);
+    const restored = restoredInspection(state, drawn.edges, visible, new Set<string>());
 
     this.apply(restored, true);
   }

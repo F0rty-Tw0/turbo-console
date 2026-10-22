@@ -10,6 +10,8 @@ const identityOf = (inspection: Inspection): string[] => {
       return [inspection.kind, inspection.name];
     case 'link':
       return [inspection.kind, inspection.source, inspection.target];
+    case 'folder':
+      return [inspection.kind, inspection.folder];
     case 'picking':
       return [inspection.kind, inspection.start];
     case 'trace':

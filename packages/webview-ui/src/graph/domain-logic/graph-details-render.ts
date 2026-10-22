@@ -64,6 +64,8 @@ export const updateView = (view: DetailsView, inspection: ShownInspection, conte
       return view.kind === 'link';
     case 'package':
       return view.kind === 'package' && updatePackage(view, inspection.name, context);
+    case 'folder':
+      return false;
     case 'picking':
       if (view.kind === 'picking') renderPicking(view, inspection, context.drawn.infos, views);
 

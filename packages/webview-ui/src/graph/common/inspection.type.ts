@@ -8,10 +8,12 @@ export type LinkInspection = { readonly kind: 'link'; readonly source: string; r
 
 export type PickingInspection = { readonly kind: 'picking'; readonly start: string; readonly isNudged: boolean };
 
+export type FolderInspection = { readonly kind: 'folder'; readonly folder: string };
+
 export type TraceInspection = { readonly kind: 'trace'; readonly start: string; readonly end: string };
 
-/** What the graph page is showing details of: nothing, a package, a link, a trace being picked, or a trace. */
-export type Inspection = NoInspection | PackageInspection | LinkInspection | PickingInspection | TraceInspection;
+/** What the graph page is showing details of: nothing, a package, a link, a folder, a trace being picked, or a trace. */
+export type Inspection = NoInspection | PackageInspection | LinkInspection | FolderInspection | PickingInspection | TraceInspection;
 
 /**
  * Where a package was chosen: the list (its search's Enter included), the panel, the canvas, or a list Focus toggle.
@@ -37,11 +39,14 @@ type LinkInput = { readonly kind: 'tapLink' | 'explain'; readonly source: string
 /** An input that carries nothing beyond its kind. */
 export type PlainInput = { readonly kind: PlainInputKind };
 
+/** A folder chosen from a box, a collapsed node, a list header or a menu; ignored while picking. */
+type FolderInput = { readonly kind: 'selectFolder'; readonly folder: string };
+
 /** Escape pressed on the canvas or in the panel. */
 type EscapeInput = { readonly kind: 'escape'; readonly where: EscapeWhere };
 
 /** What the user did that can change the inspection. */
-export type InspectionInput = SelectInput | PickInput | LinkInput | PlainInput | EscapeInput;
+export type InspectionInput = SelectInput | PickInput | LinkInput | FolderInput | PlainInput | EscapeInput;
 
 /** The part of the saved view state that holds the inspection. */
-export type InspectionFields = Pick<GraphViewState, 'selected' | 'link' | 'trace'>;
+export type InspectionFields = Pick<GraphViewState, 'selected' | 'link' | 'trace' | 'folder'>;

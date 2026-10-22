@@ -15,7 +15,7 @@ export const DEFAULT_CONTROLS_STUB: ControlsFields = {
 };
 
 /** The details fields of a page that has never saved them: open, with no link or trace. */
-export const DEFAULT_DETAILS_STUB: DetailsFields = { detailsOpen: true, link: null, trace: null };
+export const DEFAULT_DETAILS_STUB: DetailsFields = { detailsOpen: true, link: null, trace: null, folder: null };
 
 /** A valid saved view for `DETAILS_STUB`: fitted camera at rest, nothing selected, every field at its default. */
 export const SAVED_BASE_STUB: GraphViewState = {

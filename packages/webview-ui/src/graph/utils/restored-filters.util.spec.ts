@@ -32,6 +32,7 @@ const STATE: GraphViewState = {
   detailsOpen: true,
   link: null,
   trace: null,
+  folder: null,
   grouped: false,
   collapsed: []
 };

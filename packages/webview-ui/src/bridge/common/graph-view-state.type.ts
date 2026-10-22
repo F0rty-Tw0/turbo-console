@@ -22,6 +22,8 @@ export type GraphViewState = {
   readonly detailsOpen: boolean;
   readonly link: GraphLinkRef | null;
   readonly trace: GraphTraceRef | null;
+  /** The inspected folder key (`''` is the root folder); a folder inspection saves it. */
+  readonly folder: string | null;
   /** Whether the page is grouped by folder; carried across a hash change. */
   readonly grouped: boolean;
   /** The collapsed folder keys; kept while the page is flat and carried across a hash change minus the folders the new hash lacks. */

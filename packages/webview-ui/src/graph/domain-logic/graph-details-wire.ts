@@ -145,6 +145,8 @@ export const wiredViewOf = (inspection: ShownInspection, context: DetailsContext
       return packageOf(inspection.name, context, env);
     case 'link':
       return linkOf(inspection, context, env);
+    case 'folder':
+      return emptyOf(env);
     case 'picking':
       return pickingOf(inspection, env);
     case 'trace':

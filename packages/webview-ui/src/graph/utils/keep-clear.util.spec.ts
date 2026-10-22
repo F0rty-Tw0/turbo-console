@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf, folderIdOf } from './folder-id.util.ts';
 import { anchorsOf, keepClearNamesOf, keepClearPanOf } from './keep-clear.util.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
@@ -26,6 +27,8 @@ const boxOf = (x1: number, x2: number): AnchorBox => {
 
   return box;
 };
+
+const FOLDER: Inspection = { kind: 'folder', folder: 'apps' };
 
 describe('FEATURE: keepClearPanOf', () => {
   describe('GIVEN an anchor box, the container width and the overlay edge', () => {
@@ -75,6 +78,8 @@ describe('FEATURE: anchorsOf', () => {
       ['a link', { kind: 'link', source: 'web', target: 'ui' }, ['web', 'ui']],
       ['a picking, nudged or not', { kind: 'picking', start: 'web', isNudged: true }, ['web']],
       ['a trace', { kind: 'trace', start: 'web', end: 'core' }, ['web', 'core']],
+      ['a folder', { kind: 'folder', folder: 'apps' }, [folderIdOf('apps'), collapsedIdOf('apps')]],
+      ['the root folder', { kind: 'folder', folder: '' }, ['\u0001', '\u0002']],
       [
         'a link between names like Object members',
         { kind: 'link', source: '__proto__', target: 'constructor' },
@@ -113,6 +118,12 @@ describe('FEATURE: keepClearNamesOf', () => {
         expected: ['web', 'ui']
       },
       { title: 'a picking with stray ghosts', inspection: PICKING, ghostNodes: ['core'], expected: ['web'] },
+      {
+        title: 'a folder with stray ghosts',
+        inspection: FOLDER,
+        ghostNodes: ['x'],
+        expected: [folderIdOf('apps'), collapsedIdOf('apps')]
+      },
       { title: 'none with stray ghosts', inspection: NONE, ghostNodes: ['core'], expected: [] }
     ])('WHEN it is $title THEN the names kept clear are $expected', ({ inspection, ghostNodes, expected }) => {
       const names = keepClearNamesOf(inspection, ghostNodes);
