@@ -1,5 +1,8 @@
 import { LARGE_PACKAGE_COUNT } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
+import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
+import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
+import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 
 const AC6 = { description: 'M4-2 AC6', type: 'requirement' };
@@ -15,6 +18,8 @@ const SAMPLES = 5;
 const BUILD_COUNTS = [300, 301, 300, 301, 300];
 
 const BUDGET_MS = 50;
+
+const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
 
 /** Each sample toggles pkg-007 once, so an odd count leaves it hidden. */
 const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
@@ -74,6 +79,61 @@ test.describe('FEATURE: graph tripwires', () => {
 
       await test.step(`AND ${LAST_VISIBLE} of ${LARGE_PACKAGE_COUNT} packages are counted as visible`, async (): Promise<void> =>
         graphControls.expectCount(LAST_VISIBLE, LARGE_PACKAGE_COUNT));
+    }
+  );
+
+  test(
+    'GIVEN 300 packages on a hub, the fastest of five details builds is under 50 ms',
+    { annotation: AC6 },
+    async ({ graphDetails, graphHost, graphPage, graphSamples }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the hub graph is sent', async (): Promise<void> => graphHost.sendState(hubGraphState()));
+
+      await test.step('AND pkg-000 is inspected five times', async (): Promise<void> => graphSamples.collectDetailsBuilt(SAMPLES));
+
+      await test.step('THEN the fastest details build was under 50 ms', (): void =>
+        graphSamples.expectDetailsBuiltMinUnder(BUDGET_MS));
+
+      await test.step('AND pkg-000 lists 299 direct dependents', async (): Promise<void> =>
+        graphDetails.expectNeighbourCount('Direct dependents', HUB_DEPENDENTS));
+    }
+  );
+
+  test(
+    'GIVEN a trace start on a 299-candidate hub, the fastest of five picking builds is under 50 ms',
+    { annotation: AC6 },
+    async ({ graphHost, graphPage, graphSamples, graphTrace }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the hub graph is sent', async (): Promise<void> => graphHost.sendState(hubGraphState()));
+
+      await test.step('AND a trace is started from pkg-000 five times', async (): Promise<void> =>
+        graphSamples.collectPickingBuilt(SAMPLES));
+
+      await test.step('THEN the fastest picking build was under 50 ms', (): void =>
+        graphSamples.expectPickingBuiltMinUnder(BUDGET_MS));
+
+      await test.step('AND the picking view lists 299 dependents', async (): Promise<void> =>
+        graphTrace.expectCandidateCount('backward', HUB_DEPENDENTS));
+    }
+  );
+
+  test(
+    'GIVEN a trace on the 300-package graph, the fastest of five is under 50 ms',
+    { annotation: AC6 },
+    async ({ graphHost, graphPage, graphSamples, graphTrace }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the 300-package graph is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+
+      await test.step('AND pkg-299 is traced to pkg-000 five times', async (): Promise<void> =>
+        graphSamples.collectTraceBuilt(SAMPLES));
+
+      await test.step('THEN the fastest trace was under 50 ms', (): void => graphSamples.expectTraceMinUnder(BUDGET_MS));
+
+      await test.step('AND the trace is the seven-package shortest path', async (): Promise<void> =>
+        graphTrace.expectTrace(PKG_299_TO_000_FACTS_STUB));
     }
   );
 });

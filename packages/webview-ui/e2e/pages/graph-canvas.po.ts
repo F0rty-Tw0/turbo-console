@@ -179,8 +179,9 @@ export class GraphCanvas {
     const container = await this.container.evaluate(readRect);
     const zoom = await this.probe.zoom();
     const nodes = await this.drawn();
+    const edges = await this.probe.edges();
 
-    return emptySpotOf(container, nodes, zoom);
+    return emptySpotOf(container, nodes, edges, zoom);
   }
 
   private async centre(): Promise<ViewportPoint> {

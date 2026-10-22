@@ -1,19 +1,23 @@
 import { GraphFiltering } from './graph-filtering.ts';
 import { GraphFrames } from './graph-frames.ts';
+import { postDragged, showRelayout } from './graph-layout-actions.ts';
 import { showFailure, showGraphView, showMessage, showStateMessage } from './graph-page-states.ts';
 import { postLayout } from './layout-post.ts';
-import type { GraphReady, GraphState, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphPackage, GraphReady, GraphState, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView, GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import { LOADING_TEXT } from '../common/graph.const.ts';
+import type { InspectionInput } from '../common/inspection.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { elkGraphOf } from '../utils/elk-graph.util.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
+import { taskCountsDiffer } from '../utils/task-counts.util.ts';
 import { restorePlanOf } from '../utils/view-restore.util.ts';
-import { visibleSelection } from '../utils/visible-selection.util.ts';
+
+const BACKGROUND: InspectionInput = { kind: 'background' };
 
 /** Shows the host's states; lays a graph out unless the host sent cached positions, and posts the layout back. */
 class GraphPageController {
@@ -28,11 +32,12 @@ class GraphPageController {
   public constructor(deps: GraphControllerDeps) {
     const { bridge, page } = deps;
     const handlers: GraphViewHandlers = {
-      onTapNode: (name: string): void => this.filtering.selection.tapNode(name),
-      onTapBackground: (): void => this.filtering.selection.select(null),
-      onDoubleTapNode: (): void => this.filtering.selection.openDetails(),
-      onDragEnd: (positions: Positions): void => this.postDragged(positions),
-      onViewport: (): void => this.filtering.selection.saveViewport(),
+      onTapNode: (name: string): void => this.filtering.inspection.tapNode(name),
+      onTapEdge: (source: string, target: string): void => this.filtering.inspection.tapEdge(source, target),
+      onTapBackground: (): void => this.filtering.inspection.input(BACKGROUND),
+      onDoubleTapNode: (): void => this.filtering.inspection.openDetails(),
+      onDragEnd: (positions: Positions): void => postDragged(bridge, this.drawn, this.engine, positions),
+      onViewport: (): void => this.filtering.inspection.saveViewport(),
       onRender: (): void => this.frames.mark()
     };
 
@@ -51,15 +56,13 @@ class GraphPageController {
 
     if (!isGraphHostMessage(message)) return;
 
-    if (message.type !== 'state') return;
-
-    this.show(message.state, at);
+    if (message.type === 'state') this.show(message.state, at);
+    else this.filtering.inspection.explained(message);
   }
 
   public facts(): ProbeFacts {
     const filteringFacts = this.filtering.facts();
     const facts: ProbeFacts = {
-      selected: (): string | null => this.filtering.selection.current(),
       firstFrameMs: (): number | null => this.frames.firstFrameMs(),
       layoutEngine: (): LayoutEngine | null => this.engine,
       ...filteringFacts
@@ -76,13 +79,19 @@ class GraphPageController {
     }
 
     this.drawn = null;
-    this.filtering.selection.reset();
+    this.filtering.inspection.reset();
     showStateMessage(this.deps.page, state);
   }
 
-  /** A re-post of the graph shown or in flight does nothing, so it never resets the camera or the layout. */
+  /** A re-post of the graph shown or in flight never resets the camera or the layout; it only refreshes task counts. */
   private showGraph(state: GraphReady, at: number): void {
-    if (state.hash === this.drawn?.hash) return;
+    const shown = this.drawn;
+
+    if (shown !== null && state.hash === shown.hash) {
+      this.refresh(shown, state.packages);
+
+      return;
+    }
 
     const raw = this.deps.bridge.savedState();
     const saved = readGraphViewState(raw);
@@ -90,7 +99,7 @@ class GraphPageController {
     this.drawn = drawnGraphOf(state);
     this.engine = null;
     this.frames.start(at);
-    this.filtering.selection.reset();
+    this.filtering.inspection.reset();
 
     const { positions } = state;
 
@@ -131,7 +140,7 @@ class GraphPageController {
 
     if (drawn === null) return;
 
-    const plan = restorePlanOf(saved, drawn.hash, drawn.packages);
+    const plan = restorePlanOf(saved, drawn.hash);
 
     showGraphView(this.deps.page, engine === 'fallback');
     this.view.setGraph(drawn.packages, drawn.edges, positions, this.deps.sizeOf);
@@ -140,12 +149,21 @@ class GraphPageController {
 
     const visible = this.filtering.restore(saved, drawn, this.frames.receivedAt());
 
+    this.filtering.inspection.mount(saved);
+
     if (plan.kind === 'restore') this.view.setViewport(plan.zoom, plan.pan);
     else this.view.fit();
 
-    const selected = visibleSelection(plan.selected, visible);
+    this.filtering.inspection.restore(saved, visible);
+  }
 
-    this.filtering.selection.select(selected);
+  /** A same-hash state: changed task counts replace the drawn ones, then the inspection follows. */
+  private refresh(shown: DrawnGraph, packages: GraphPackage[]): void {
+    const isChanged = taskCountsDiffer(shown.infos, packages);
+
+    if (isChanged) this.drawn = { ...shown, infos: packages };
+
+    this.filtering.inspection.refreshed(isChanged);
   }
 
   /** Re-layout and Retry: a fresh run for the current graph, then a fit; a successful run hides the notice. */
@@ -154,11 +172,8 @@ class GraphPageController {
 
     if (result === null) return;
 
-    this.view.setPositions(result.positions);
     this.engine = result.engine;
-    this.deps.page.notice.hidden = result.engine !== 'fallback';
-    this.view.fit();
-    postLayout(this.deps.bridge, result);
+    showRelayout(this.deps.bridge, this.deps.page, this.view, result);
   }
 
   /**
@@ -175,18 +190,9 @@ class GraphPageController {
 
       this.drawn = null;
       this.engine = null;
-      this.filtering.selection.reset();
+      this.filtering.inspection.reset();
       showFailure(this.deps.page, error);
     }
-  }
-
-  private postDragged(positions: Positions): void {
-    const hash = this.drawn?.hash;
-    const isCacheable = this.engine === 'elk' || this.engine === 'cache';
-
-    if (hash === undefined || !isCacheable) return;
-
-    this.deps.bridge.post({ type: 'positions', hash, positions });
   }
 }
 

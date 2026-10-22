@@ -21,7 +21,11 @@ const FULL_LIST = [
   'dist/webview/graph/main.js',
   'dist/webview/graph/graph.css',
   'dist/webview/graph/elkjs-LICENSE.md',
-  'dist/webview/graph/THIRD-PARTY-NOTICES.md'
+  'dist/webview/graph/THIRD-PARTY-NOTICES.md',
+  'dist/webview/graph/codicon.css',
+  'dist/webview/graph/codicon.ttf',
+  'dist/webview/graph/LICENSE',
+  'dist/webview/graph/LICENSE-CODE'
 ];
 
 describe('FEATURE: vsixProblems', () => {
@@ -45,7 +49,7 @@ describe('FEATURE: vsixProblems', () => {
 
   describe('GIVEN a list without codicon.ttf', () => {
     it('WHEN it is checked THEN one problem names the missing file', () => {
-      const files = FULL_LIST.filter((file) => !file.endsWith('codicon.ttf'));
+      const files = FULL_LIST.filter((file) => file !== 'dist/webview/details/codicon.ttf');
 
       const problems = vsixProblems(files);
 
@@ -165,7 +169,7 @@ describe('FEATURE: vsixProblems', () => {
   });
 
   describe('GIVEN a list without a graph support file', () => {
-    it.each([['graph.css'], ['elkjs-LICENSE.md'], ['THIRD-PARTY-NOTICES.md']])(
+    it.each([['graph.css'], ['elkjs-LICENSE.md'], ['THIRD-PARTY-NOTICES.md'], ['codicon.css'], ['codicon.ttf'], ['LICENSE']])(
       'WHEN %s is missing THEN one problem names the missing file',
       (name) => {
         const files = FULL_LIST.filter((file) => !file.endsWith(`/graph/${name}`));

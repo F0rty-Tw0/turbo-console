@@ -1,7 +1,8 @@
 import type { ControlsElements } from './controls-elements.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
 import type { GraphFilters } from './graph-filters.type.ts';
-import type { GraphSelectionDeps, PageElements } from './graph-page.type.ts';
+import type { GraphInspectionDeps } from './graph-inspection.type.ts';
+import type { DrawnGraph, PageElements } from './graph-page.type.ts';
 
 /** What `restoredFilters` rebuilds from a saved state: the filters, the two inputs' values and whether the panel opens. */
 export type RestoredControls = {
@@ -36,17 +37,41 @@ export type GraphControlsDeps = {
   readonly now: () => number;
   /** Only when the visible set changed. */
   readonly onVisibleChange: (visible: ReadonlySet<string>) => void;
-  /** `pan` is true for a click on a package name. */
-  readonly onSelect: (name: string, pan: boolean) => void;
+  /** A package name clicked, or chosen by key, in the list. */
+  readonly onSelect: (name: string) => void;
+  /** Every focus toggle: the new focus, or `null` when it was cleared; `setFilters` applies it, called once by the receiver. */
+  readonly onFocusToggle: (name: string | null, setFilters: () => void) => void;
   readonly onOpenDetails: (name: string) => void;
   readonly onSave: () => void;
   /** Re-measures the canvas now; Cytoscape's own observers wait a 100 ms debounce. */
   readonly onResize: () => void;
 };
 
-/** What `GraphFiltering` needs to own the selection and the controls: the selection's deps, the clock and `build`. */
-export type GraphFilteringDeps = Pick<GraphSelectionDeps, 'bridge' | 'page' | 'view' | 'saver' | 'drawn'> &
-  Pick<GraphControlsDeps, 'build' | 'now'>;
+/** What `GraphFiltering` needs to own the inspection and the controls: the inspection's deps and `build`. */
+export type GraphFilteringDeps = Pick<
+  GraphInspectionDeps,
+  'bridge' | 'page' | 'view' | 'saver' | 'drawn' | 'now' | 'views' | 'overlay'
+> &
+  Pick<GraphControlsDeps, 'build'>;
+
+/** The controls panel built for one graph. */
+export type ControlsMounted = {
+  readonly graph: DrawnGraph;
+  readonly elements: ControlsElements;
+};
+
+/** What the panel's actions call on `GraphControls`; `applied` and `depth` are read at event time. */
+export type ControlsOps = {
+  readonly applied: GraphFilters;
+  readonly depth: number;
+  readonly edit: (mounted: ControlsMounted, next: GraphFilters) => void;
+  readonly change: (mounted: ControlsMounted, next: GraphFilters) => void;
+  readonly focus: (mounted: ControlsMounted, name: string) => void;
+  readonly setDepth: (mounted: ControlsMounted, text: string) => void;
+  readonly showAll: (mounted: ControlsMounted) => void;
+  readonly setSearch: (mounted: ControlsMounted, text: string) => void;
+  readonly pick: (name: string) => void;
+};
 
 /** What the panel's listeners ask of `GraphControls`, in the panel's own terms; `names` are a folder's package names. */
 export type ControlsActions = {
@@ -61,10 +86,10 @@ export type ControlsActions = {
   readonly onPick: (name: string) => void;
 };
 
-/** What the package list's keyboard asks of `GraphControls`; `pan` is true for a select by key. */
+/** What the package list's keyboard asks of `GraphControls`. */
 export type KeyboardDeps = {
   readonly isVisible: (name: string) => boolean;
   readonly selected: () => string | null;
-  readonly onSelect: (name: string, pan: boolean) => void;
+  readonly onSelect: (name: string) => void;
   readonly onOpenDetails: (name: string) => void;
 };

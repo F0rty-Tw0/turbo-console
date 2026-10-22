@@ -163,13 +163,13 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
       expect(html).toContain(`content="${csp}"`);
     });
 
-    it('WHEN it opens THEN the asked URIs are main.js then graph.css in the page folder', () => {
+    it('WHEN it opens THEN the asked URIs are main.js, graph.css, then codicon.css in the page folder', () => {
       host.open('t');
 
       const { asWebviewUri } = panelAt(made, 0).fake.webview;
       const asked = asWebviewUri.mock.calls.map((call) => call[0].fsPath);
 
-      expect(asked).toStrictEqual([`${assetDir}/main.js`, `${assetDir}/graph.css`]);
+      expect(asked).toStrictEqual([`${assetDir}/main.js`, `${assetDir}/graph.css`, `${assetDir}/codicon.css`]);
     });
 
     it('WHEN the page template cannot be read THEN the panel is disposed, given no html, and the error is thrown', () => {

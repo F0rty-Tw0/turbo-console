@@ -1,12 +1,63 @@
-import { test } from './graph.fixture.ts';
+import type { FocusStep } from './common/graph.type.ts';
+import { expect, test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
+import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
+import { FOUND_UI_STUB } from './test/stubs/graph-explain.stub.ts';
 import { DIAMOND_CHAIN_CACHED_STUB } from './test/stubs/graph-state.stub.ts';
+import { tabStopsOf } from './test/utils/graph-focus-steps.spec.util.ts';
 
 const AC7 = { description: 'M4-1 AC7', type: 'requirement' };
 
 const AC1 = { description: 'M4-2 AC1', type: 'requirement' };
 
 const RF4 = { description: 'M4-1 Review Focus 4', type: 'requirement' };
+
+const AC1_DETAILS = { description: 'M4-3 AC1', type: 'requirement' };
+
+const NO_SELECTION_STOPS: FocusStep[] = tabStopsOf([
+  'Controls',
+  'Details',
+  'Fit',
+  'Re-layout',
+  'Search packages',
+  'Focus depth',
+  'Show all',
+  'packages (7)',
+  'Package graph'
+]);
+
+const SELECTION_STOPS: FocusStep[] = tabStopsOf([
+  'Re-layout',
+  'Clear selection',
+  'Search packages',
+  'Focus depth',
+  'Show all',
+  'packages (7)',
+  'Package graph',
+  'View Package Details · 0 tasks',
+  'Focus',
+  'Exclude',
+  'Start trace',
+  'config',
+  'Explain core → config',
+  'data',
+  'Explain data → core',
+  'ui',
+  'Explain ui → core'
+]);
+
+const COLLAPSED_STOPS: FocusStep[] = tabStopsOf(['Details', 'Fit', 'Re-layout', 'Package graph']);
+
+const LINK_STOPS: FocusStep[] = tabStopsOf([
+  'web',
+  'ui',
+  'Open package.json at line 6 (dependencies: ui)',
+  'Open package.json at line 10 (devDependencies: ui)'
+]);
+
+const PICKING_STOPS: FocusStep[] = tabStopsOf(['Filter packages', 'data', 'ui']);
+
+const TRACE_STOPS: FocusStep[] = tabStopsOf(['web', 'data']);
 
 test.describe('FEATURE: graph keyboard', () => {
   test(
@@ -90,7 +141,7 @@ test.describe('FEATURE: graph keyboard', () => {
   );
 
   test(
-    'GIVEN no selection, Tab walks Controls, Fit, Re-layout, the search, depth, Show all, the package list, then the graph container',
+    'GIVEN no selection, Tab walks Controls, Details, Fit, Re-layout, the search, depth, Show all, the package list, then the graph container',
     { annotation: AC7 },
     async ({ graphHost, graphKeys, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -99,42 +150,15 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('THEN the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
 
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
+      const walked = await test.step('WHEN Tab is pressed nine times', async (): Promise<FocusStep[]> =>
+        graphKeys.walk(NO_SELECTION_STOPS));
 
-      await test.step('THEN Controls is focused', async (): Promise<void> => graphPage.expectButtonFocused('Controls'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Fit is focused', async (): Promise<void> => graphPage.expectButtonFocused('Fit'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Re-layout is focused', async (): Promise<void> => graphPage.expectButtonFocused('Re-layout'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Search packages is focused', async (): Promise<void> => graphKeys.expectFocusedName('Search packages'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Focus depth is focused', async (): Promise<void> => graphKeys.expectFocusedName('Focus depth'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Show all is focused', async (): Promise<void> => graphPage.expectButtonFocused('Show all'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN packages (7) is focused', async (): Promise<void> => graphKeys.expectFocusedName('packages (7)'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN the graph container is focused', async (): Promise<void> => graphPage.expectContainerFocused());
+      await test.step('THEN focus visited every stop in order', (): void => expect(walked).toEqual(NO_SELECTION_STOPS));
     }
   );
 
   test(
-    'GIVEN a selection made by tap and Fit focused, Tab walks Re-layout, Clear selection, the panel, the package list, then the container',
+    'GIVEN a selection made by tap and Fit focused, Tab walks the toolbar, the controls, the container, then the details panel',
     { annotation: AC7 },
     async ({ graphCanvas, graphHost, graphKeys, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -145,33 +169,10 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('AND the Fit button is focused', async (): Promise<void> => graphPage.focusButton('Fit'));
 
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
+      const walked = await test.step('WHEN Tab is pressed seventeen times', async (): Promise<FocusStep[]> =>
+        graphKeys.walk(SELECTION_STOPS));
 
-      await test.step('THEN Re-layout is focused', async (): Promise<void> => graphPage.expectButtonFocused('Re-layout'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Clear selection is focused', async (): Promise<void> => graphPage.expectButtonFocused('Clear selection'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Search packages is focused', async (): Promise<void> => graphKeys.expectFocusedName('Search packages'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Focus depth is focused', async (): Promise<void> => graphKeys.expectFocusedName('Focus depth'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN Show all is focused', async (): Promise<void> => graphPage.expectButtonFocused('Show all'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN packages (7) is focused', async (): Promise<void> => graphKeys.expectFocusedName('packages (7)'));
-
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
-
-      await test.step('THEN the graph container is focused', async (): Promise<void> => graphPage.expectContainerFocused());
+      await test.step('THEN focus visited every stop in order', (): void => expect(walked).toEqual(SELECTION_STOPS));
     }
   );
 
@@ -204,9 +205,9 @@ test.describe('FEATURE: graph keyboard', () => {
   );
 
   test(
-    'GIVEN a collapsed panel and Controls focused, Tab skips the panel: Fit, Re-layout, then the graph container',
+    'GIVEN a collapsed panel and Controls focused, Tab skips the panel: Details, Fit, Re-layout, then the graph container',
     { annotation: AC1 },
-    async ({ graphControls, graphHost, graphPage }): Promise<void> => {
+    async ({ graphControls, graphHost, graphKeys, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
@@ -215,17 +216,60 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('AND the Controls button is focused', async (): Promise<void> => graphPage.focusButton('Controls'));
 
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
+      const walked = await test.step('WHEN Tab is pressed four times', async (): Promise<FocusStep[]> =>
+        graphKeys.walk(COLLAPSED_STOPS));
 
-      await test.step('THEN Fit is focused', async (): Promise<void> => graphPage.expectButtonFocused('Fit'));
+      await test.step('THEN focus visited every stop in order', (): void => expect(walked).toEqual(COLLAPSED_STOPS));
+    }
+  );
 
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
+  test(
+    'GIVEN a tapped link and the graph focused, Tab walks the two ends, then each Open at line button',
+    { annotation: AC1_DETAILS },
+    async ({ graphHost, graphKeys, graphLink, graphPage, graphReplies }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
-      await test.step('THEN Re-layout is focused', async (): Promise<void> => graphPage.expectButtonFocused('Re-layout'));
+      await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
 
-      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
+      await test.step('AND the web to ui link is tapped', async (): Promise<void> => graphLink.tapLink('web', 'ui'));
 
-      await test.step('THEN the graph container is focused', async (): Promise<void> => graphPage.expectContainerFocused());
+      await test.step('AND the host answers with two entries', async (): Promise<void> => graphReplies.answerExplain(FOUND_UI_STUB));
+
+      await test.step('AND the graph is focused', async (): Promise<void> => graphPage.focusContainer());
+
+      const walked = await test.step('WHEN Tab is pressed four times', async (): Promise<FocusStep[]> => graphKeys.walk(LINK_STOPS));
+
+      await test.step('THEN focus visited every stop in order', (): void => expect(walked).toEqual(LINK_STOPS));
+    }
+  );
+
+  test(
+    'GIVEN a trace being picked, Tab walks the filter and the first candidates, and in the trace view the first steps',
+    { annotation: AC1_DETAILS },
+    async ({ graphCanvas, graphDetails, graphHost, graphKeys, graphList, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
+
+      await test.step('AND web is tapped', async (): Promise<void> => graphCanvas.tapNode('web'));
+
+      await test.step('AND Start trace is pressed', async (): Promise<void> => graphDetails.startTrace());
+
+      await test.step('AND the graph is focused', async (): Promise<void> => graphPage.focusContainer());
+
+      const picking = await test.step('WHEN Tab is pressed three times', async (): Promise<FocusStep[]> =>
+        graphKeys.walk(PICKING_STOPS));
+
+      await test.step('THEN focus visited the filter and the first two candidates', (): void =>
+        expect(picking).toEqual(PICKING_STOPS));
+
+      await test.step('WHEN core is picked in the list', async (): Promise<void> => graphList.pick('core'));
+
+      await test.step('AND the graph is focused', async (): Promise<void> => graphPage.focusContainer());
+
+      const trace = await test.step('AND Tab is pressed twice', async (): Promise<FocusStep[]> => graphKeys.walk(TRACE_STOPS));
+
+      await test.step('THEN focus visited the first two steps', (): void => expect(trace).toEqual(TRACE_STOPS));
     }
   );
 });

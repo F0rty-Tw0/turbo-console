@@ -1,14 +1,18 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { SEARCH_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { FocusStep } from '../common/graph.type.ts';
 import type { AriaRoleName } from '../common/playwright.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
 
 const MAX_TABS = 25;
 
-/** The first line of an aria snapshot: `- checkbox "Show web" [checked]` names the role, then the accessible name. */
-const SNAPSHOT_NAME = /^- [\w-]+ "((?:[^"\\]|\\.)*)"/;
+/**
+ * The first line of an aria snapshot: `- checkbox "Show web" [checked]` names the role, then the accessible name. A name
+ * holding `: ` makes the line a quoted YAML key, `- 'button "Open (a: b)"': Open`, so the role may follow an opening quote.
+ */
+const SNAPSHOT_NAME = /^- '?[\w-]+ "((?:[^"\\]|\\.)*)"/;
 
 /** Keyboard walking over the controls panel: Tab stops, the package grid's roving focus and what holds focus. */
 export class GraphControlsKeys {
@@ -22,7 +26,7 @@ export class GraphControlsKeys {
     this.page = page;
     this.focused = page.locator(':focus');
     this.grid = page.getByRole('grid');
-    this.panel = page.getByRole('complementary');
+    this.panel = page.getByRole('complementary').filter({ has: page.getByRole('searchbox', { name: SEARCH_LABEL, exact: true }) });
   }
 
   /** Presses Tab until the focused control is named `name`; fails after 25 presses. */
@@ -32,6 +36,11 @@ export class GraphControlsKeys {
 
   public async shiftTabTo(name: string): Promise<void> {
     await this.pressUntil('Shift+Tab', name);
+  }
+
+  /** Presses ArrowDown until the focused control is named `name`; fails after 25 presses. */
+  public async arrowTo(name: string): Promise<void> {
+    await this.pressUntil('ArrowDown', name);
   }
 
   public async type(text: string): Promise<void> {

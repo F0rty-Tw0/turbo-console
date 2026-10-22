@@ -15,16 +15,34 @@ const isManifestField = (value: unknown): value is ManifestField => MANIFEST_FIE
 
 const isShortString = (value: unknown, max: number): boolean => isString(value) && value.length <= max;
 
+const isSide = (side: unknown): boolean => side === undefined || isShortString(side, ENTRY_TEXT_MAX + 1);
+
+const isContext = (value: unknown, line: number): boolean => {
+  if (!isRecord(value)) return false;
+
+  const { before, after } = value;
+  const isBeforeAllowed = before === undefined || line >= 1;
+
+  return isBeforeAllowed && isSide(before) && isSide(after);
+};
+
 const isEntry = (value: unknown): boolean => {
   if (!isRecord(value)) return false;
 
-  const { field, key, spec, line } = value;
+  const { field, key, spec, line, context } = value;
+
+  if (typeof line !== 'number') return false;
+
   const isField = isManifestField(field);
   const isKey = isShortString(key, ENTRY_TEXT_MAX + 1);
   const isSpec = isShortString(spec, ENTRY_TEXT_MAX + 1);
-  const isLine = typeof line === 'number' && Number.isInteger(line) && line >= 0 && line <= MANIFEST_LINE_MAX;
+  const isWhole = Number.isInteger(line);
+  const isLine = isWhole && line >= 0 && line <= MANIFEST_LINE_MAX;
+  const isEntryShape = isField && isKey && isSpec;
 
-  return isField && isKey && isSpec && isLine;
+  if (!isEntryShape || !isLine) return false;
+
+  return isContext(context, line);
 };
 
 const isEntries = (entries: unknown): boolean => {

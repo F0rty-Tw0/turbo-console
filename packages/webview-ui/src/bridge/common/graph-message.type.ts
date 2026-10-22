@@ -3,12 +3,19 @@ import type { GraphState, Positions } from './graph-state.type.ts';
 /** The `package.json` field that holds a dependency entry. */
 export type ManifestField = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
 
+/** The lines around an entry's key line, each cut like `spec`; a side is absent at the start or end of the file. */
+export type ManifestContext = {
+  readonly before?: string;
+  readonly after?: string;
+};
+
 /** One entry of a dependent's `package.json`: `line` is 0-based; `key` and `spec` are cut to `ENTRY_TEXT_MAX` characters plus `…`. */
 export type ManifestEntry = {
   readonly field: ManifestField;
   readonly key: string;
   readonly spec: string;
   readonly line: number;
+  readonly context: ManifestContext;
 };
 
 type FoundResult = {

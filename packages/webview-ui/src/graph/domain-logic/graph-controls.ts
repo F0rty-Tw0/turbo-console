@@ -1,32 +1,18 @@
 import { ControlsKeyboard } from './controls-keyboard.ts';
 import { mountRestoredPanel } from './controls-panel-mount.ts';
+import { controlsActionsOf } from './graph-controls-actions.ts';
 import { wireControls } from './graph-controls-events.ts';
 import { renderControls, renderSearch, revealSelected } from './graph-controls-render.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { ControlsElements } from '../common/controls-elements.type.ts';
-import type { ControlsActions, ControlsView, GraphControlsDeps, KeyboardDeps } from '../common/graph-controls.type.ts';
+import type { ControlsMounted, ControlsView, GraphControlsDeps, KeyboardDeps } from '../common/graph-controls.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import { DEFAULT_DEPTH } from '../common/graph.const.ts';
-import {
-  depthOf,
-  focusOn,
-  isFiltered,
-  sameMembers,
-  showAllOf,
-  toggleGroup,
-  toggleRow,
-  withDepth,
-  withTag
-} from '../utils/controls-rules.util.ts';
+import { depthOf, focusOn, isFiltered, sameMembers, showAllOf, toggleRow, withDepth } from '../utils/controls-rules.util.ts';
 import { folderGroupsOf, tagsOf } from '../utils/folder-group.util.ts';
+import { isShowable } from '../utils/ghost-show.util.ts';
 import { controlsFieldsOf, restoredFilters } from '../utils/restored-filters.util.ts';
 import { visibleOf } from '../utils/visibility.util.ts';
-
-type Mounted = {
-  readonly graph: DrawnGraph;
-  readonly elements: ControlsElements;
-};
 
 const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, tags: new Set() };
 
@@ -35,12 +21,13 @@ const NO_FILTERS: GraphFilters = { hidden: new Set(), focus: null, tags: new Set
  * changes the state, renders it, reports a changed visible set, then asks for a save; `restore` reports nothing.
  */
 export class GraphControls {
+  public applied = NO_FILTERS;
+  public depth = DEFAULT_DEPTH;
+
   private readonly deps: GraphControlsDeps;
-  private mounted: Mounted | null = null;
-  private applied = NO_FILTERS;
+  private mounted: ControlsMounted | null = null;
   private shown = new Set<string>();
   private search = '';
-  private depth = DEFAULT_DEPTH;
   private isOpen = true;
   private selected: string | null = null;
   private stamp: number | null = null;
@@ -62,6 +49,32 @@ export class GraphControls {
     return controlsFieldsOf(this.applied, this.search, this.depth, this.isOpen);
   }
 
+  public focusName(): string | null {
+    return this.applied.focus?.name ?? null;
+  }
+
+  /** The details panel's Focus: the list's Focus toggle on `name`. */
+  public focusOn(name: string): void {
+    if (this.mounted !== null) this.focus(this.mounted, name);
+  }
+
+  /** The details panel's Exclude: unticks `name`; the focused package stays, as in the list. */
+  public exclude(name: string): void {
+    if (this.mounted !== null) this.edit(this.mounted, toggleRow(this.applied, name, false));
+  }
+
+  /** The details panel's Show: re-ticks `name`, a hidden path package of the trace. */
+  public show(name: string): void {
+    if (this.mounted !== null) this.edit(this.mounted, toggleRow(this.applied, name, true));
+  }
+
+  /** Whether re-ticking `name` alone would draw it again. */
+  public canShow(name: string): boolean {
+    const graph = this.mounted?.graph ?? null;
+
+    return graph !== null && isShowable(graph.infos, graph.edges, this.applied, name);
+  }
+
   public markSelected(name: string | null): void {
     this.selected = name;
     this.render();
@@ -73,7 +86,7 @@ export class GraphControls {
   public restore(state: GraphViewState, graph: DrawnGraph): void {
     const elements = this.deps.build(folderGroupsOf(graph.infos), tagsOf(graph.infos));
     const restored = restoredFilters(state, graph);
-    const mounted: Mounted = { graph, elements };
+    const mounted: ControlsMounted = { graph, elements };
     const previous = this.mounted?.elements ?? null;
 
     mountRestoredPanel(this.deps.page.body, previous, elements, restored);
@@ -83,7 +96,7 @@ export class GraphControls {
     this.depth = restored.depth;
     this.isOpen = restored.isOpen;
     this.stamp = null;
-    wireControls(elements, this.actionsOf(mounted));
+    wireControls(elements, controlsActionsOf(mounted, this));
     renderSearch(elements, graph.infos, restored.search);
     const keyboardDeps: KeyboardDeps = {
       ...this.deps,
@@ -96,39 +109,21 @@ export class GraphControls {
     this.render();
   }
 
-  private actionsOf(mounted: Mounted): ControlsActions {
-    const actions: ControlsActions = {
-      onRow: (name, isChecked): void => this.edit(mounted, toggleRow(this.applied, name, isChecked)),
-      onGroup: (names, isChecked): void => this.edit(mounted, toggleGroup(this.applied, names, isChecked)),
-      onFocus: (name): void => this.focus(mounted, name),
-      onDepth: (text): void => this.setDepth(mounted, text),
-      onDepthBlur: (): void => {
-        mounted.elements.depth.value = String(this.depth);
-      },
-      onTag: (tag, isChecked): void => this.change(mounted, withTag(this.applied, tag, isChecked)),
-      onShowAll: (): void => this.showAll(mounted),
-      onSearch: (text): void => this.setSearch(mounted, text),
-      onPick: (name): void => this.pick(name)
-    };
-
-    return actions;
-  }
-
   /** A rule that returns the same filters ignored the input (the focused row, a locked group): repaint, undoing the toggle. */
-  private edit(mounted: Mounted, next: GraphFilters): void {
+  public edit(mounted: ControlsMounted, next: GraphFilters): void {
     if (next === this.applied) this.render();
     else this.change(mounted, next);
   }
 
-  private focus(mounted: Mounted, name: string): void {
+  public focus(mounted: ControlsMounted, name: string): void {
     const next = focusOn(this.applied, name, this.depth);
+    const focused = next.focus?.name ?? null;
+    const setFilters = (): void => this.change(mounted, next);
 
-    this.change(mounted, next);
-
-    if (next.focus !== null) this.deps.onSelect(name, false);
+    this.deps.onFocusToggle(focused, setFilters);
   }
 
-  private setDepth(mounted: Mounted, text: string): void {
+  public setDepth(mounted: ControlsMounted, text: string): void {
     const depth = depthOf(text);
 
     if (depth === null) return;
@@ -137,22 +132,22 @@ export class GraphControls {
     this.change(mounted, withDepth(this.applied, depth));
   }
 
-  private showAll(mounted: Mounted): void {
+  public showAll(mounted: ControlsMounted): void {
     const isOn = isFiltered(this.applied);
 
     if (isOn) this.change(mounted, showAllOf(this.applied));
   }
 
-  private setSearch(mounted: Mounted, text: string): void {
+  public setSearch(mounted: ControlsMounted, text: string): void {
     this.search = text;
     renderSearch(mounted.elements, mounted.graph.infos, text);
     this.deps.onSave();
   }
 
-  private pick(name: string): void {
+  public pick(name: string): void {
     const isVisible = this.shown.has(name);
 
-    if (isVisible) this.deps.onSelect(name, true);
+    if (isVisible) this.deps.onSelect(name);
   }
 
   private toggleOpen(): void {
@@ -170,10 +165,10 @@ export class GraphControls {
 
     const view: ControlsView = { filters: applied, visible: shown, total: mounted.graph.infos.length, selected, isOpen };
 
-    renderControls(mounted.elements, this.deps.page.controls, view);
+    renderControls(mounted.elements, this.deps.page, view);
   }
 
-  private change(mounted: Mounted, next: GraphFilters): void {
+  public change(mounted: ControlsMounted, next: GraphFilters): void {
     const { graph } = mounted;
     const before = this.shown;
 

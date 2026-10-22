@@ -142,6 +142,36 @@ describe('FEATURE: graph visibility', () => {
     });
   });
 
+  describe('GIVEN a ghost c shown with a and b', () => {
+    it('WHEN fitVisible runs THEN fit receives a, b and c', () => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      showOnly(cy, new Set(['a', 'b', 'c']));
+      cy.getElementById('c').addClass('ghost');
+      fitVisible(cy, PADDING_PX);
+
+      const [shown] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+
+      expect(fitted.map(idOf).sort()).toStrictEqual(['a', 'b', 'c']);
+    });
+  });
+
+  describe('GIVEN only ghost nodes shown', () => {
+    it('WHEN fitVisible runs THEN fit receives them', () => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      showOnly(cy, new Set(['b', 'c']));
+      cy.nodes().addClass('ghost');
+      fitVisible(cy, PADDING_PX);
+
+      const [shown] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+
+      expect(fitted.map(idOf).sort()).toStrictEqual(['b', 'c']);
+    });
+  });
+
   describe('GIVEN a zoom of 2', () => {
     it('WHEN c is centred THEN the zoom is kept and c sits at the middle of the view', () => {
       cy.zoom(2);

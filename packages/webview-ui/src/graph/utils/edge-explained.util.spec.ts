@@ -5,10 +5,12 @@ import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import { MANIFEST_FIELDS } from '../../bridge/common/graph-message.const.ts';
 
 const entryOf = (over: object = {}): object => {
-  const entry = { field: 'dependencies', key: 'core', spec: '^1', line: 3, ...over };
+  const entry = { field: 'dependencies', key: 'core', spec: '^1', line: 3, context: {}, ...over };
 
   return entry;
 };
+
+const withContext = (context: object, line = 3): object => entryOf({ context, line });
 
 const foundOf = (entries: unknown[], over: object = {}): object => {
   const result = { kind: 'found', file: 'apps/web/package.json', entries, ...over };
@@ -28,6 +30,10 @@ const fieldEntriesOf = (): object[] => MANIFEST_FIELDS.map((field): object => en
 
 const longEntries = (): object[] => [entryOf({ key: 'k'.repeat(201), spec: 's'.repeat(201), line: 0 }), entryOf({ line: 1_000_000 })];
 
+const SIDE_MAX = 'c'.repeat(201);
+
+const OVER_SIDE = 'c'.repeat(202);
+
 const MISSING = { kind: 'missing', file: 'package.json' };
 
 const ACCEPTED: [string, UnknownRecord][] = [
@@ -37,6 +43,13 @@ const ACCEPTED: [string, UnknownRecord][] = [
   ['key and spec of 201 characters, line 0 and 1 000 000', explainedOf(foundOf(longEntries()))],
   ['missing', explainedOf(MISSING)],
   ['unreadable, file of 1 024 characters', explainedOf({ kind: 'unreadable', file: 'f'.repeat(1_024) })],
+  ['both context sides', explainedOf(foundOf([withContext({ before: 'a', after: 'b' })]))],
+  ['an empty context', explainedOf(foundOf([withContext({})]))],
+  ['context sides that are undefined', explainedOf(foundOf([withContext({ before: undefined, after: undefined })]))],
+  ['empty context sides', explainedOf(foundOf([withContext({ before: '', after: '' })]))],
+  ['context sides of 201 characters', explainedOf(foundOf([withContext({ before: SIDE_MAX, after: SIDE_MAX })]))],
+  ['line 0 and only an after side', explainedOf(foundOf([withContext({ after: 'b' }, 0)]))],
+  ['an extra context key', explainedOf(foundOf([withContext({ before: 'a', extra: 1 })]))],
   ['names like Object members', explainedOf(foundOf([entryOf({ key: '__proto__' })]), { source: '__proto__', target: 'constructor' })]
 ];
 
@@ -55,6 +68,16 @@ const REJECTED: [string, UnknownRecord][] = [
   ['a fractional line', explainedOf(foundOf([entryOf({ line: 1.5 })]))],
   ['a NaN line', explainedOf(foundOf([entryOf({ line: NaN })]))],
   ['a string line', explainedOf(foundOf([entryOf({ line: '3' })]))],
+  ['no context', explainedOf(foundOf([entryOf({ context: undefined })]))],
+  ['a null context', explainedOf(foundOf([entryOf({ context: null })]))],
+  ['a string context', explainedOf(foundOf([entryOf({ context: 'a' })]))],
+  ['a numeric context', explainedOf(foundOf([entryOf({ context: 1 })]))],
+  ['a before side of 202 characters', explainedOf(foundOf([withContext({ before: OVER_SIDE })]))],
+  ['an after side of 202 characters', explainedOf(foundOf([withContext({ after: OVER_SIDE })]))],
+  ['a numeric before side', explainedOf(foundOf([withContext({ before: 1 })]))],
+  ['a null after side', explainedOf(foundOf([withContext({ after: null })]))],
+  ['a before side on line 0', explainedOf(foundOf([withContext({ before: 'x' }, 0)]))],
+  ['an empty before side on line 0', explainedOf(foundOf([withContext({ before: '' }, 0)]))],
   ['a file of 1 025 characters', explainedOf({ kind: 'missing', file: 'f'.repeat(1_025) })],
   ['a numeric file', explainedOf({ kind: 'unreadable', file: 1 })],
   ['missing with no file', explainedOf({ kind: 'missing' })],

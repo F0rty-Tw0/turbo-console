@@ -39,11 +39,13 @@ export class GraphHost {
   }
 
   public async sendState(state: GraphState): Promise<void> {
-    await this.page.evaluate(postStates, [state]);
+    await this.sendStates([state]);
   }
 
   public async sendStates(states: GraphState[]): Promise<void> {
-    await this.page.evaluate(postStates, states);
+    const json = JSON.stringify(states);
+
+    await this.page.evaluate(postStates, json);
   }
 
   /** Reloads the page with the view state it saved, as VS Code does on a restore, and hands that state back. */

@@ -1,13 +1,14 @@
 import { ENTRY_TEXT_MAX, MANIFEST_ENTRIES_MAX, MANIFEST_FIELDS } from '@turbo-console/webview-ui';
-import type { ManifestEntry, ManifestField } from '@turbo-console/webview-ui';
+import type { ManifestContext, ManifestEntry, ManifestField } from '@turbo-console/webview-ui';
 import { parseTree } from 'jsonc-parser';
 import type { Node } from 'jsonc-parser';
 
-import { lineAt } from '../../shared/utils/text-line.util.ts';
+import { lineAt, linesOf } from '../../shared/utils/text-line.util.ts';
 
 type ManifestQuery = {
   readonly root: Node;
   readonly body: string;
+  readonly lines: string[];
   readonly dependency: string;
 };
 
@@ -16,7 +17,14 @@ const HIGH_SURROGATE_LAST = 0xdbff;
 
 const PAIR_SAFE_MAX = ENTRY_TEXT_MAX - 1;
 
+const NO_SIDE: ManifestContext = {};
+
 const ALIAS_PREFIXES = ['npm:', 'workspace:'];
+
+/** ALM, LRM and RLM, the embeddings and overrides, and the isolates. */
+const BIDI_CONTROLS = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu;
+
+const SHOWN_CONTROL = '\uFFFD';
 
 const stringValueOf = (node: Node | undefined): string | null => {
   if (node === undefined) return null;
@@ -28,7 +36,10 @@ const stringValueOf = (node: Node | undefined): string | null => {
 
 const isHighSurrogate = (unit: number): boolean => unit >= HIGH_SURROGATE_FIRST && unit <= HIGH_SURROGATE_LAST;
 
-const cut = (text: string): string => {
+/** Shows bidi and invisible control characters as U+FFFD before the length cut, so file text cannot reorder the excerpt. */
+const cut = (raw: string): string => {
+  const text = raw.replace(BIDI_CONTROLS, SHOWN_CONTROL);
+
   if (text.length <= ENTRY_TEXT_MAX) return text;
 
   const splitsPair = isHighSurrogate(text.charCodeAt(PAIR_SAFE_MAX));
@@ -56,8 +67,36 @@ const fieldObjectOf = (root: Node, field: ManifestField): Node | null => {
   return property?.children?.[1] ?? null;
 };
 
+const beforeOf = (lines: string[], line: number): ManifestContext => {
+  const text = lines[line - 1];
+
+  if (line < 1 || text === undefined) return NO_SIDE;
+
+  const side: ManifestContext = { before: cut(text) };
+
+  return side;
+};
+
+const afterOf = (lines: string[], line: number): ManifestContext => {
+  const text = lines[line + 1];
+
+  if (text === undefined) return NO_SIDE;
+
+  const side: ManifestContext = { after: cut(text) };
+
+  return side;
+};
+
+const contextOf = (lines: string[], line: number): ManifestContext => {
+  const beforeSide = beforeOf(lines, line);
+  const afterSide = afterOf(lines, line);
+  const context: ManifestContext = { ...beforeSide, ...afterSide };
+
+  return context;
+};
+
 const entryOf = (field: ManifestField, property: Node, query: ManifestQuery): ManifestEntry | null => {
-  const { body, dependency } = query;
+  const { body, lines, dependency } = query;
   const [keyNode, valueNode] = property.children ?? [];
 
   if (keyNode === undefined || valueNode === undefined) return null;
@@ -72,7 +111,9 @@ const entryOf = (field: ManifestField, property: Node, query: ManifestQuery): Ma
   if (key === null || !isMatch) return null;
 
   const spec = text ?? body.slice(valueNode.offset, valueNode.offset + valueNode.length);
-  const entry: ManifestEntry = { field, key: cut(key), spec: cut(spec), line: lineAt(body, keyNode.offset) };
+  const line = lineAt(body, keyNode.offset);
+  const context = contextOf(lines, line);
+  const entry: ManifestEntry = { field, key: cut(key), spec: cut(spec), line, context };
 
   return entry;
 };
@@ -115,7 +156,7 @@ export const manifestEntriesOf = (text: string, dependency: string): ManifestEnt
 
   if (root === null) return null;
 
-  const query: ManifestQuery = { root, body: text, dependency };
+  const query: ManifestQuery = { root, body: text, lines: linesOf(text), dependency };
   const entries: ManifestEntry[] = [];
 
   for (const field of MANIFEST_FIELDS) {

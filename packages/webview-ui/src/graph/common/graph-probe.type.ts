@@ -1,8 +1,12 @@
+import type { Inspection } from './inspection.type.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 
 export type ProbeState = 'selected' | 'highlighted' | 'dimmed' | 'normal';
 
-/** `x`, `y` are model centres; `renderedX`, `renderedY` the centre in page CSS pixels; colours are Cytoscape's `rgb(...)`. */
+/**
+ * `x`, `y` are model centres; `renderedX`, `renderedY` the centre in page CSS pixels; colours are Cytoscape's `rgb(...)`.
+ * A ghost (a trace's hidden path package) reads `highlighted` plus `isGhost`.
+ */
 export type ProbeNode = {
   readonly id: string;
   readonly x: number;
@@ -15,12 +19,18 @@ export type ProbeNode = {
   readonly frame: string;
   readonly label: string;
   readonly fill: string;
+  readonly isGhost: boolean;
+  readonly borderStyle: string;
 };
 
 export type ProbeEdge = {
   readonly source: string;
   readonly target: string;
   readonly state: ProbeState;
+  readonly isGhost: boolean;
+  /** Cytoscape's `visible()`: false with a hidden end or a `display: none` bypass. */
+  readonly isDrawn: boolean;
+  readonly lineStyle: string;
 };
 
 export type LayoutEngine = 'elk' | 'cache' | 'fallback';
@@ -37,16 +47,35 @@ export type GraphProbe = {
   /** From the latest `graph` state's message event to the first Cytoscape `render` after it; `null` until that render. */
   readonly firstFrameMs: () => number | null;
   readonly layoutEngine: () => LayoutEngine | null;
-  /** The package names Cytoscape draws, sorted: nodes a filter hides are `display: none`. */
+  /** The package names Cytoscape draws, sorted, ghosts left out: nodes a filter hides are `display: none`. */
   readonly visibleIds: () => string[];
   /** From the latest `graph` state's message event to its controls panel built and restored; `null` until then. */
   readonly controlsBuiltMs: () => number | null;
   /** From the latest filter input to the return of the fit after it; `null` until an input changed the visible set. */
   readonly filterAppliedMs: () => number | null;
+  /** What the page is showing details of. */
+  readonly inspection: () => Inspection;
+  /** From a `package` inspection being set to its details view shown; `null` until one is. */
+  readonly detailsBuiltMs: () => number | null;
+  /** From a `picking` inspection being set, before its candidates are found, to its view shown; `null` until one is. */
+  readonly pickingBuiltMs: () => number | null;
+  /** From a `trace` inspection being set, before its path is walked, to its view shown; `null` until one is. */
+  readonly traceMs: () => number | null;
 };
 
 /** The probe facts only the page controller knows. */
-export type ProbeFacts = Pick<GraphProbe, 'firstFrameMs' | 'layoutEngine' | 'selected' | 'controlsBuiltMs' | 'filterAppliedMs'>;
+export type ProbeFacts = Pick<
+  GraphProbe,
+  | 'firstFrameMs'
+  | 'layoutEngine'
+  | 'selected'
+  | 'controlsBuiltMs'
+  | 'filterAppliedMs'
+  | 'inspection'
+  | 'detailsBuiltMs'
+  | 'pickingBuiltMs'
+  | 'traceMs'
+>;
 
 /* eslint-disable @typescript-eslint/naming-convention -- the e2e tests set and read these exact names on window */
 

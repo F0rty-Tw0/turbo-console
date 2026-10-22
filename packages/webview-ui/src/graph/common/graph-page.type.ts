@@ -1,11 +1,14 @@
 import type { Core } from 'cytoscape';
 
-import type { Closure } from './closure.type.ts';
 import type { ControlsElements } from './controls-elements.type.ts';
+import type { DetailsViews } from './details.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
+import type { GhostMarks } from './ghost.type.ts';
 import type { ProbeFacts } from './graph-probe.type.ts';
+import type { AnchorBox } from './keep-clear.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
+import type { Paint } from './paint.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
@@ -17,6 +20,10 @@ export type PageElements = {
   readonly toolbar: HTMLElement;
   /** Toggles the controls panel `aside#graph-controls`; `GraphControls` keeps its label and `aria-expanded` current. */
   readonly controls: HTMLButtonElement;
+  /** Toggles the details panel `aside#graph-details`. */
+  readonly details: HTMLButtonElement;
+  /** `span.filters-on` inside the Controls button, shown while any filter is on. */
+  readonly filtersOn: HTMLElement;
   readonly fit: HTMLButtonElement;
   readonly relayout: HTMLButtonElement;
   readonly clear: HTMLButtonElement;
@@ -30,6 +37,12 @@ export type PageElements = {
   readonly body: HTMLElement;
   readonly container: HTMLElement;
 };
+
+/** What `buildToolbar` builds: the toolbar and the parts of it the page drives. */
+export type ToolbarElements = Pick<
+  PageElements,
+  'toolbar' | 'controls' | 'details' | 'fit' | 'relayout' | 'clear' | 'status' | 'filtersOn'
+>;
 
 /** The controls fields of the saved view state: what `GraphControls` keeps and the selection's saves carry along. */
 export type ControlsViewFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags'>;
@@ -50,6 +63,8 @@ export type Viewport = {
 /** What the Cytoscape view reports back; names are package names. */
 export type GraphViewHandlers = {
   readonly onTapNode: (name: string) => void;
+  /** A link tapped on the canvas; `source` depends on `target`. */
+  readonly onTapEdge: (source: string, target: string) => void;
   readonly onTapBackground: () => void;
   readonly onDoubleTapNode: (name: string) => void;
   /** Every node's current centre, after the user dropped a dragged node. */
@@ -62,15 +77,22 @@ export type GraphViewHandlers = {
 /** The Cytoscape canvas view of one page. */
 export type GraphView = {
   readonly setGraph: (packages: string[], edges: GraphEdge[], positions: Positions, sizeOf: NodeSizer) => void;
-  readonly select: (selected: string | null, closure: Closure | null) => void;
+  /** Gives each package and link one of the four state classes. */
+  readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */
   readonly fit: () => void;
   /** Shows exactly these package names; the rest are hidden, not moved. */
   readonly setVisible: (visible: ReadonlySet<string>) => void;
+  /** Draws the trace's hidden path packages as ghosts; empty marks clear them. Call after every `setVisible`, which hides a ghost again. */
+  readonly setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>) => void;
   /** Re-measures the container, keeping zoom and pan. */
   readonly resize: () => void;
   /** Pans so the named package sits at the view centre, keeping the zoom. */
   readonly centreOn: (name: string) => void;
+  /** The horizontal span of the named visible packages in container px; `null` when none is visible. */
+  readonly anchorBox: (names: string[]) => AnchorBox | null;
+  /** Pans horizontally by `dx` rendered px with no animation, keeping the zoom. */
+  readonly panBy: (dx: number) => void;
   readonly viewport: () => Viewport;
   readonly setViewport: (zoom: number, pan: Position) => void;
   readonly setPositions: (positions: Positions) => void;
@@ -91,6 +113,10 @@ export type GraphControllerDeps = {
   readonly now: () => number;
   /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
   readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;
+  /** The details view builders, handed in because `domain-logic` may not import `ui`. */
+  readonly views: DetailsViews;
+  /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
+  readonly overlay: MediaQueryList;
 };
 
 /** The graph the page shows: its hash, package names and records, and its drawable edges. */
@@ -99,19 +125,6 @@ export type DrawnGraph = {
   readonly packages: string[];
   readonly infos: GraphPackage[];
   readonly edges: GraphEdge[];
-};
-
-export type GraphSelectionDeps = {
-  readonly bridge: Bridge;
-  readonly page: PageElements;
-  readonly view: GraphView;
-  readonly saver: ViewStateSaver;
-  /** The graph shown or being laid out; `null` while the page shows no graph. */
-  readonly drawn: () => DrawnGraph | null;
-  /** The controls fields every save carries along. */
-  readonly controls: () => ControlsViewFields;
-  /** The selection changed or was forgotten; `null` for none. */
-  readonly onSelected: (name: string | null) => void;
 };
 
 export type GraphController = {

@@ -19,7 +19,10 @@ describe('FEATURE: freshViewStateOf', () => {
         depth: 1,
         hidden: [],
         focus: null,
-        tags: []
+        tags: [],
+        detailsOpen: true,
+        link: null,
+        trace: null
       });
     });
   });

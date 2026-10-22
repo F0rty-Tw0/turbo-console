@@ -59,6 +59,10 @@ export class GraphProbePage {
     return this.page.evaluate((): ProbeNode[] => window.__tcGraphProbe?.nodes() ?? []);
   }
 
+  public async edges(): Promise<ProbeEdge[]> {
+    return this.page.evaluate((): ProbeEdge[] => window.__tcGraphProbe?.edges() ?? []);
+  }
+
   public async zoom(): Promise<number> {
     return this.page.evaluate((): number => window.__tcGraphProbe?.zoom() ?? 0);
   }
@@ -165,10 +169,6 @@ export class GraphProbePage {
 
   private async layoutEngine(): Promise<LayoutEngine | null> {
     return this.page.evaluate((): LayoutEngine | null => window.__tcGraphProbe?.layoutEngine() ?? null);
-  }
-
-  private async edges(): Promise<ProbeEdge[]> {
-    return this.page.evaluate((): ProbeEdge[] => window.__tcGraphProbe?.edges() ?? []);
   }
 
   private async nodeCount(): Promise<number> {

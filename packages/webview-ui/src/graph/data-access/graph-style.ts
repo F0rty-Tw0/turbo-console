@@ -5,7 +5,8 @@ import type { ThemeColors } from '../common/theme-colors.type.ts';
 
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with
- * a triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.select` applies.
+ * a triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies;
+ * `ghost` (dashed) is the one `GraphView.setGhosts` applies.
  * Every colour comes from `colors`.
  */
 export const graphStyleOf = (colors: ThemeColors, fontFamily: string): StylesheetJson => {
@@ -33,6 +34,9 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
   const selectedNode = { 'border-width': 3, 'border-color': colors.selected };
   const highlightedNode = { 'border-width': 2, 'border-color': colors.highlighted };
   const highlightedEdge = { width: 2, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
+  const selectedEdge = { width: 3, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
+  const ghostNode = { 'border-style': 'dashed', 'text-opacity': 0.75 } as const;
+  const ghostEdge = { 'line-style': 'dashed' } as const;
   const dimmed = { opacity: 0.25 };
   const style: StylesheetJson = [
     { selector: 'node', style: node },
@@ -40,6 +44,9 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
     { selector: 'node.selected', style: selectedNode },
     { selector: 'node.highlighted', style: highlightedNode },
     { selector: 'edge.highlighted', style: highlightedEdge },
+    { selector: 'edge.selected', style: selectedEdge },
+    { selector: 'node.ghost', style: ghostNode },
+    { selector: 'edge.ghost', style: ghostEdge },
     { selector: '.dimmed', style: dimmed }
   ];
 

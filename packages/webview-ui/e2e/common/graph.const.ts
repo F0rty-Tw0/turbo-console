@@ -4,6 +4,9 @@ import type { WorkerStub } from './graph.type.ts';
 
 export const GRAPH_DIST_DIR = join(import.meta.dirname, '../../dist/graph');
 
+/** How far from an edge's drawn segment a click must land to miss it, in CSS pixels. */
+export const EDGE_CLEARANCE_PX = 14;
+
 /** The package count of `largeState` by default. */
 export const LARGE_PACKAGE_COUNT = 300;
 
@@ -139,3 +142,21 @@ export const WORKER_STUBS: Readonly<Record<WorkerStub, string>> = {
   silent: SILENT_WORKER,
   malformed: MALFORMED_WORKER
 };
+
+/** The widest editor that still lays the details panel over the canvas: one pixel under the 960 px breakpoint. */
+export const OVERLAY_WIDTH_PX = 959;
+
+/** The narrowest editor that docks the details panel beside the canvas. */
+export const DOCKED_WIDTH_PX = 960;
+
+/** The width of the controls aside. */
+const CONTROLS_WIDTH_PX = 260;
+
+/** The width of the details aside, docked or overlaid. */
+export const DETAILS_WIDTH_PX = 280;
+
+/** The drawn canvas width at `OVERLAY_WIDTH_PX`: the overlay takes none. */
+export const OVERLAY_CANVAS_PX = OVERLAY_WIDTH_PX - CONTROLS_WIDTH_PX;
+
+/** The drawn canvas width at `DOCKED_WIDTH_PX`: both asides take theirs. */
+export const DOCKED_CANVAS_PX = DOCKED_WIDTH_PX - CONTROLS_WIDTH_PX - DETAILS_WIDTH_PX;

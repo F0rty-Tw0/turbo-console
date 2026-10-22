@@ -4,7 +4,13 @@ import type { Page } from '@playwright/test';
 
 import type { GraphWebviewMessage } from '../../../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../../../src/bridge/common/graph-state.type.ts';
-import type { LayoutDoneMessage, OpenDetailsMessage, PositionsMessage } from '../../common/graph.type.ts';
+import type {
+  ExplainEdgeMessage,
+  LayoutDoneMessage,
+  OpenDetailsMessage,
+  OpenManifestMessage,
+  PositionsMessage
+} from '../../common/graph.type.ts';
 
 const isPositions = (message: GraphWebviewMessage): message is PositionsMessage => message.type === 'positions';
 
@@ -12,11 +18,23 @@ const isLayoutDone = (message: GraphWebviewMessage): message is LayoutDoneMessag
 
 const isOpenDetails = (message: GraphWebviewMessage): message is OpenDetailsMessage => message.type === 'openDetails';
 
+const isExplainEdge = (message: GraphWebviewMessage): message is ExplainEdgeMessage => message.type === 'explainEdge';
+
+const isOpenManifest = (message: GraphWebviewMessage): message is OpenManifestMessage => message.type === 'openManifest';
+
 export const positionsPosted = (posted: GraphWebviewMessage[]): PositionsMessage[] => posted.filter(isPositions);
 
 export const layoutDonePosted = (posted: GraphWebviewMessage[]): LayoutDoneMessage[] => posted.filter(isLayoutDone);
 
 export const openDetailsPosted = (posted: GraphWebviewMessage[]): OpenDetailsMessage[] => posted.filter(isOpenDetails);
+
+export const explainEdgePosted = (posted: GraphWebviewMessage[]): ExplainEdgeMessage[] => posted.filter(isExplainEdge);
+
+export const openManifestPosted = (posted: GraphWebviewMessage[]): OpenManifestMessage[] => posted.filter(isOpenManifest);
+
+/** The newest `explainEdge` the page posted, `null` before one. */
+export const lastExplainPosted = (posted: GraphWebviewMessage[]): ExplainEdgeMessage | null =>
+  explainEdgePosted(posted).at(-1) ?? null;
 
 /** The positions of the last `positions` message, `null` before one is posted. */
 export const lastPositionsPosted = (posted: GraphWebviewMessage[]): Positions | null => {

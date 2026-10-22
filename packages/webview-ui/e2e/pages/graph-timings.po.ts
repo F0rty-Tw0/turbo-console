@@ -21,4 +21,16 @@ export class GraphTimings {
   public async filterAppliedMs(): Promise<number | null> {
     return this.page.evaluate((): number | null => window.__tcGraphProbe?.filterAppliedMs() ?? null);
   }
+
+  public async detailsBuiltMs(): Promise<number | null> {
+    return this.page.evaluate((): number | null => window.__tcGraphProbe?.detailsBuiltMs() ?? null);
+  }
+
+  public async pickingBuiltMs(): Promise<number | null> {
+    return this.page.evaluate((): number | null => window.__tcGraphProbe?.pickingBuiltMs() ?? null);
+  }
+
+  public async traceMs(): Promise<number | null> {
+    return this.page.evaluate((): number | null => window.__tcGraphProbe?.traceMs() ?? null);
+  }
 }

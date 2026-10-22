@@ -19,7 +19,16 @@ const REQUIRED_DETAILS_FILES = REQUIRED_DETAILS_NAMES.map((name) => `${DETAILS_D
 
 const GRAPH_DIR = `${WEBVIEW_DIR}graph/`;
 
-const REQUIRED_GRAPH_NAMES = ['index.html', 'main.js', 'graph.css', 'elkjs-LICENSE.md', 'THIRD-PARTY-NOTICES.md'];
+const REQUIRED_GRAPH_NAMES = [
+  'index.html',
+  'main.js',
+  'graph.css',
+  'elkjs-LICENSE.md',
+  'THIRD-PARTY-NOTICES.md',
+  'codicon.css',
+  'codicon.ttf',
+  'LICENSE'
+];
 
 const REQUIRED_GRAPH_FILES = REQUIRED_GRAPH_NAMES.map((name) => `${GRAPH_DIR}${name}`);
 
@@ -29,6 +38,7 @@ export const WEBVIEW_FILES = [
   ...REQUIRED_DETAILS_FILES,
   ...REQUIRED_GRAPH_FILES,
   `${DETAILS_DIR}LICENSE-CODE`,
+  `${GRAPH_DIR}LICENSE-CODE`,
   `${DETAILS_DIR}SIMPLE-ICONS-LICENSE.md`,
   `${DETAILS_DIR}SIMPLE-ICONS-DISCLAIMER.md`
 ];

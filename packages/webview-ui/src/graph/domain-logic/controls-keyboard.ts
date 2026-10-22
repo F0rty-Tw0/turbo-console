@@ -187,7 +187,7 @@ export class ControlsKeyboard {
     const action = enterActionOf(target, name);
 
     if (action === 'details') this.deps.onOpenDetails(name);
-    else this.deps.onSelect(name, true);
+    else this.deps.onSelect(name);
   }
 
   private onSearchKey(event: KeyboardEvent): void {
@@ -212,6 +212,6 @@ export class ControlsKeyboard {
     const visible = new Set(order.filter(isVisible));
     const name = firstSelectableOf(order, visible);
 
-    if (name !== null) this.deps.onSelect(name, true);
+    if (name !== null) this.deps.onSelect(name);
   }
 }

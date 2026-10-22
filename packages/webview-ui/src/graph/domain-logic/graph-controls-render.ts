@@ -1,6 +1,7 @@
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { ControlsView } from '../common/graph-controls.type.ts';
+import type { PageElements } from '../common/graph-page.type.ts';
 import { groupStateOf, isFiltered, isGroupLocked, rowViewOf } from '../utils/controls-rules.util.ts';
 import { controlsLabelOf, countTextOf } from '../utils/controls-text.util.ts';
 import { matchesSearch } from '../utils/search.util.ts';
@@ -33,17 +34,21 @@ const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
 
 /**
  * Paints the attributes only, never rebuilds. An indeterminate group box is unchecked, so activating it checks all.
- * `toggle` is the toolbar's Controls button, which shows the panel's openness and a dot while filters are on.
+ * `toggles` are the toolbar's Controls button, which shows the panel's openness, and its "filters on" mark.
  */
-export const renderControls = (elements: ControlsElements, toggle: HTMLButtonElement, view: ControlsView): void => {
+export const renderControls = (
+  elements: ControlsElements,
+  toggles: Pick<PageElements, 'controls' | 'filtersOn'>,
+  view: ControlsView
+): void => {
   const isOn = isFiltered(view.filters);
 
   elements.panel.hidden = !view.isOpen;
   elements.count.textContent = countTextOf(view.visible.size, view.total);
   setDisabled(elements.showAll, !isOn);
-  toggle.setAttribute('aria-label', controlsLabelOf(isOn));
-  toggle.setAttribute('aria-expanded', String(view.isOpen));
-  toggle.classList.toggle('has-filters', isOn);
+  toggles.controls.setAttribute('aria-label', controlsLabelOf(isOn));
+  toggles.controls.setAttribute('aria-expanded', String(view.isOpen));
+  toggles.filtersOn.hidden = !isOn;
 
   for (const group of elements.groups) renderGroup(group, view);
 };

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import type { ManifestContext } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
 import { explainedFor, lastGraphState } from './graph-posted.spec.util.ts';
@@ -10,6 +11,7 @@ import { ROOT_PACKAGE_NAME } from '../common/graph.const.ts';
 import type { GraphFixtureLink, GraphScene } from '../common/graph.type.ts';
 
 const MANIFEST_FILE = 'package.json';
+const NO_SIDE: ManifestContext = {};
 const BREAK = /\r\n|[\r\n]/;
 
 const isObject = (value: unknown): value is object => typeof value === 'object' && value !== null;
@@ -27,6 +29,36 @@ const readSpec = (parsed: unknown, target: string): string => {
   if (entry === undefined || typeof entry[1] !== 'string') throw new Error(`the fixture manifest has no dependency ${target}`);
 
   return entry[1];
+};
+
+/** The line just before `line` in the fixture file's own lines, or no side at the first line. */
+const beforeSideOf = (lines: string[], line: number): ManifestContext => {
+  const before = lines[line - 1];
+
+  if (line < 1 || before === undefined) return NO_SIDE;
+
+  const side: ManifestContext = { before };
+
+  return side;
+};
+
+/** The line just after `line` in the fixture file's own lines, or no side at the last line. */
+const afterSideOf = (lines: string[], line: number): ManifestContext => {
+  const after = lines[line + 1];
+
+  if (after === undefined) return NO_SIDE;
+
+  const side: ManifestContext = { after };
+
+  return side;
+};
+
+const contextOf = (lines: string[], line: number): ManifestContext => {
+  const beforeSide = beforeSideOf(lines, line);
+  const afterSide = afterSideOf(lines, line);
+  const context: ManifestContext = { ...beforeSide, ...afterSide };
+
+  return context;
 };
 
 /** The first graph edge whose dependent is a manifest package, with its entry's spec and line found independently of the host's parser. */
@@ -48,7 +80,8 @@ const fixtureLinkOf = async (scene: GraphScene): Promise<GraphFixtureLink> => {
   const lines = text.split(BREAK);
   const line = lines.findIndex((row): boolean => row.trimStart().startsWith(`${JSON.stringify(edge.target)}:`));
   const spec = readSpec(JSON.parse(text), edge.target);
-  const link: GraphFixtureLink = { source: edge.source, target: edge.target, file, spec, line };
+  const context = contextOf(lines, line);
+  const link: GraphFixtureLink = { source: edge.source, target: edge.target, file, spec, line, context };
 
   return link;
 };
@@ -73,7 +106,7 @@ export const explainCase = async (scene: GraphScene): Promise<void> => {
 
     if (result.kind !== 'found') throw new Error(`the reply is ${result.kind}, not found`);
 
-    const expected = { field: 'dependencies', key: link.target, spec: link.spec, line: link.line };
+    const expected = { field: 'dependencies', key: link.target, spec: link.spec, line: link.line, context: link.context };
 
     assert.equal(result.file, `${pkg.path}/${MANIFEST_FILE}`);
     assert.ok(link.line >= 0);

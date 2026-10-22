@@ -6,3 +6,6 @@ export const lineAt = (text: string, offset: number): number => {
 
   return breaks?.length ?? 0;
 };
+
+/** The lines of `text` without their breaks: element `i` is editor line `i`; a text ending in a break ends in an empty line. */
+export const linesOf = (text: string): string[] => text.split(LINE_BREAK);

@@ -124,7 +124,7 @@ test.describe('FEATURE: graph controls panel', () => {
   test(
     'GIVEN a package unchecked, the Controls button shows filters on until Show all',
     { annotation: AC1 },
-    async ({ graphControls, graphHost, graphList, graphPage }): Promise<void> => {
+    async ({ graphControls, graphHost, graphList, graphPage, graphToolbar }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
@@ -136,11 +136,15 @@ test.describe('FEATURE: graph controls panel', () => {
       await test.step('THEN the button is named Controls (filters on)', async (): Promise<void> =>
         graphControls.expectToggleName('Controls (filters on)'));
 
+      await test.step('AND the filters-on mark is shown', async (): Promise<void> => graphToolbar.expectFiltersOn(true));
+
       await test.step('WHEN the panel is opened', async (): Promise<void> => graphControls.toggle());
 
       await test.step('AND Show all is pressed', async (): Promise<void> => graphControls.showAll());
 
       await test.step('THEN the button is named Controls', async (): Promise<void> => graphControls.expectToggleName('Controls'));
+
+      await test.step('AND the filters-on mark is gone', async (): Promise<void> => graphToolbar.expectFiltersOn(false));
     }
   );
 });

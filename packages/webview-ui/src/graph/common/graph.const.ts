@@ -8,6 +8,9 @@ export const NODE_PADDING_X = 24;
 /** Label size in px, for both `measureText` and Cytoscape. */
 export const NODE_FONT_SIZE = 13;
 
+/** The class `GraphView.setGhosts` gives a trace's hidden path packages and their path links. */
+export const GHOST_CLASS = 'ghost';
+
 export const VIEW_STATE_DEBOUNCE_MS = 250;
 
 export const MIN_DEPTH = 1;
@@ -75,6 +78,18 @@ export const CONTROLS_LABEL = 'Controls';
 
 export const CONTROLS_FILTERED_LABEL = 'Controls (filters on)';
 
+export const DETAILS_LABEL = 'Details';
+
+export const PANELS_LABEL = 'Panels';
+
+export const VIEW_LABEL = 'View';
+
+/** Shown inside the Controls button while any filter is on, next to its label. */
+export const FILTERS_ON_TEXT = 'filters on';
+
+/** Below this width the details panel overlays the canvas instead of docking beside it; `graph.css` repeats the literal. */
+export const OVERLAY_MEDIA_QUERY = '(width < 960px)';
+
 export const SEARCH_LABEL = 'Search packages';
 
 export const DEPTH_LABEL = 'Focus depth';
@@ -85,3 +100,6 @@ export const SHOW_ALL_LABEL = 'Show all';
 
 /** A package row's cells, left to right; the list keys move through them in this order. */
 export const COLUMNS: Column[] = ['check', 'name', 'focus'];
+
+/** The gap kept between anchor nodes and the details overlay's left edge. */
+export const KEEP_CLEAR_MARGIN_PX = 16;

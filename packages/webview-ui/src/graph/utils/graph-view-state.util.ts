@@ -1,5 +1,5 @@
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphLinkRef, GraphTraceRef, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { DEFAULT_DEPTH, MAX_DEPTH, MIN_DEPTH } from '../common/graph.const.ts';
 
@@ -40,7 +40,33 @@ const readNames = (value: unknown): string[] => {
   return [...value];
 };
 
-/** The saved camera, selection and controls, rebuilt field by field; `null` when the camera or selection is off, a bad controls field takes its default. */
+const readDetailsOpen = (value: unknown): boolean => (typeof value === 'boolean' ? value : true);
+
+const readLink = (value: unknown): GraphLinkRef | null => {
+  if (!isRecord(value)) return null;
+
+  const { source, target } = value;
+
+  if (typeof source !== 'string' || typeof target !== 'string') return null;
+
+  const link: GraphLinkRef = { source, target };
+
+  return link;
+};
+
+const readTrace = (value: unknown): GraphTraceRef | null => {
+  if (!isRecord(value)) return null;
+
+  const { start, end } = value;
+
+  if (typeof start !== 'string' || typeof end !== 'string') return null;
+
+  const trace: GraphTraceRef = { start, end };
+
+  return trace;
+};
+
+/** The saved camera, selection, controls and inspection, rebuilt field by field; `null` when the camera or selection is off, a bad controls or inspection field takes its default. */
 export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   if (!isRecord(raw)) return null;
 
@@ -63,7 +89,10 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
     depth: readDepth(raw['depth']),
     hidden: readNames(raw['hidden']),
     focus: readFocus(raw['focus']),
-    tags: readNames(raw['tags'])
+    tags: readNames(raw['tags']),
+    detailsOpen: readDetailsOpen(raw['detailsOpen']),
+    link: readLink(raw['link']),
+    trace: readTrace(raw['trace'])
   };
 
   return state;

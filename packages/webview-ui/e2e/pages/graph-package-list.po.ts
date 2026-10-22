@@ -29,6 +29,11 @@ export class GraphPackageList {
     await this.showCheck(name).click();
   }
 
+  /** Dispatches the click on the row's checkbox, which does not move keyboard focus to it. */
+  public async uncheckWithoutFocus(name: string): Promise<void> {
+    await this.showCheck(name).dispatchEvent('click');
+  }
+
   public async toggleGroup(label: string): Promise<void> {
     await this.groupCheck(label).click();
   }

@@ -39,13 +39,14 @@ export const showFailure = (page: PageElements, error: unknown): void => {
   showMessage(page, `${LAYOUT_FAILED_TEXT}: ${reason}`, false);
 };
 
-/** Toolbar and body shown with Controls, Fit and Re-layout enabled; the notice only for a fallback layout. */
+/** Toolbar and body shown with Controls, Details, Fit and Re-layout enabled; the notice only for a fallback layout. */
 export const showGraphView = (page: PageElements, isFallback: boolean): void => {
   page.message.hidden = true;
   page.toolbar.hidden = false;
   page.body.hidden = false;
   page.notice.hidden = !isFallback;
   page.controls.disabled = false;
+  page.details.disabled = false;
   page.fit.disabled = false;
   page.relayout.disabled = false;
 };

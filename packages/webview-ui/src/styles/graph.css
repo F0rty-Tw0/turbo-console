@@ -1,7 +1,7 @@
 /*
  * Package Graph page. Colors come only from --vscode-* theme variables, so light, dark and high contrast all follow
- * the theme. The custom properties below are layout tokens, never colour values. The canvas colours are set in code
- * from the same variables.
+ * the theme. The custom properties below are layout tokens, never colour values, except --tc-muted, a mix of two
+ * --vscode-* variables for secondary text. The canvas colours are set in code from the same variables.
  */
 
 :root {
@@ -10,6 +10,7 @@
   --space-3: 12px;
   --space-4: 16px;
   --radius: 4px;
+  --tc-muted: color-mix(in srgb, var(--vscode-foreground) 75%, var(--vscode-editor-background));
 }
 
 html,
@@ -19,6 +20,7 @@ body {
 
 body {
   margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   color: var(--vscode-foreground);
@@ -63,6 +65,9 @@ p {
 }
 
 .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
   border-radius: var(--radius);
@@ -79,6 +84,36 @@ p {
 .text-button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* An open panel's toggle; after the hover rule, which has the same specificity, so the pressed look wins. */
+.graph-toolbar .text-button[aria-expanded='true'] {
+  border-color: var(--vscode-inputOption-activeBorder, transparent);
+  color: var(--vscode-inputOption-activeForeground);
+  background: var(--vscode-inputOption-activeBackground);
+}
+
+/* High contrast themes give the pressed state no fill and every button the same contrast border, so an inner ring marks it. */
+.vscode-high-contrast .graph-toolbar .text-button[aria-expanded='true'],
+.vscode-high-contrast-light .graph-toolbar .text-button[aria-expanded='true'] {
+  box-shadow: inset 0 0 0 1px var(--vscode-inputOption-activeBorder);
+}
+
+.toolbar-group {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 16px;
+  background: var(--vscode-panel-border);
+}
+
+.filters-on {
+  display: inline-flex;
+  gap: var(--space-1);
+  color: var(--vscode-editorInfo-foreground);
 }
 
 :focus-visible {
@@ -132,6 +167,7 @@ p {
 /* Controls panel */
 
 .graph-body {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
@@ -144,6 +180,7 @@ p {
 .graph-controls {
   display: flex;
   flex: 0 0 260px;
+  box-sizing: border-box;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-2);
@@ -302,14 +339,409 @@ p {
   cursor: default;
 }
 
-/* The toggle's filters-on dot; the label also says it, so the dot is not the only cue. */
-.text-button.has-filters::after {
+kbd {
+  padding: 0 var(--space-1);
+  border: 1px solid var(--vscode-keybindingLabel-border);
+  border-bottom-color: var(--vscode-keybindingLabel-bottomBorder);
+  border-radius: 3px;
+  color: var(--vscode-keybindingLabel-foreground);
+  background: var(--vscode-keybindingLabel-background);
+  font: inherit;
+}
+
+/* Details panel: docked beside the canvas, or over it in a narrow editor. */
+
+.graph-details {
+  display: flex;
+  flex: 0 0 280px;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  overflow: auto;
+  color: var(--vscode-sideBar-foreground);
+  background: var(--vscode-sideBar-background);
+  border-inline-start: 1px solid var(--vscode-panel-border);
+}
+
+/* OVERLAY_MEDIA_QUERY in graph.const.ts. An absolutely positioned flex child ignores flex-basis, so it gets a width. */
+@media (width < 960px) {
+  .graph-details {
+    position: absolute;
+    width: 280px;
+    inset-block: 0;
+    inset-inline-end: 0;
+    box-shadow: -2px 0 8px var(--vscode-widget-shadow);
+  }
+}
+
+/* Details panel views */
+
+.details-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.details-view ul,
+.details-view ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.details-title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.details-heading {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.details-view[data-view='empty'] .details-heading {
+  font-size: 13px;
+}
+
+.details-view h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.details-path,
+.details-lead,
+.details-line,
+.details-muted,
+.details-steps,
+.trace-link,
+.details-mark {
+  color: var(--tc-muted);
+}
+
+.details-path,
+.details-code,
+.excerpt {
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.details-section,
+.details-footer {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.icon-button {
+  display: inline-grid;
+  flex: none;
+  place-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  color: inherit;
+  background: none;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.details-guide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.details-guide li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 2px var(--space-2);
+}
+
+.details-guide .codicon {
+  grid-row: span 2;
+  color: var(--tc-muted);
+}
+
+.details-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.details-tag {
+  padding: 1px 6px;
+  border-radius: 2px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  font-size: 12px;
+}
+
+.details-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.details-view[data-view='trace'] .details-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.details-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.details-row .text-button {
+  justify-content: center;
+  padding-inline: var(--space-1);
+  white-space: nowrap;
+}
+
+.primary-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: var(--radius);
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.details-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 2px 0;
+}
+
+/* `button.`: the link view's explain section carries the class too. */
+.details-name,
+button.details-explain {
+  padding: 0;
+  border: 0;
+  color: var(--vscode-textLink-foreground);
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.details-item .details-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.details-name[aria-disabled='true'],
+button.details-explain[aria-disabled='true'] {
+  cursor: default;
+}
+
+.details-mark,
+.details-status,
+.details-file {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.details-ends {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.details-explain-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.details-view h3.details-file {
+  color: var(--tc-muted);
+  font-weight: 400;
+}
+
+.icon-info {
+  color: var(--vscode-editorInfo-foreground);
+}
+
+.icon-warning {
+  color: var(--vscode-list-warningForeground, var(--vscode-editorWarning-foreground));
+}
+
+.details-entries {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: var(--space-3);
+}
+
+.details-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.excerpt {
+  align-self: stretch;
+  padding: var(--space-1) 0;
+  overflow-x: auto;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+  background: var(--vscode-editor-background);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: normal;
+}
+
+.excerpt-row {
+  display: flex;
+  gap: var(--space-2);
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--space-2);
+}
+
+.excerpt-number {
+  flex: none;
+  min-width: 2ch;
+  color: var(--vscode-editorLineNumber-foreground);
+  text-align: end;
+}
+
+.excerpt-text {
+  white-space: pre;
+}
+
+.excerpt-row.is-entry {
+  color: var(--vscode-editor-selectionForeground, var(--vscode-editor-foreground));
+  background: var(--vscode-editor-selectionBackground);
+}
+
+.excerpt-row.is-entry .excerpt-number {
+  color: inherit;
+}
+
+.details-filter {
+  padding: var(--space-1);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: var(--radius);
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  font: inherit;
+}
+
+.details-view > .text-button {
+  align-self: flex-start;
+}
+
+/* Trace steps: a rail of rings joined by a line, ends ringed in the focus colour, a ghost's ring dashed. */
+
+.trace-step {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: var(--space-2);
+}
+
+.trace-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--space-1);
+}
+
+.trace-rail::before {
   content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-inline-start: var(--space-1);
+  flex: none;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 2px solid var(--vscode-charts-blue);
   border-radius: 50%;
-  background: var(--vscode-focusBorder);
-  vertical-align: middle;
+}
+
+.trace-step:not(:last-child) .trace-rail::after {
+  content: '';
+  flex: 1;
+  width: 2px;
+  min-height: 28px;
+  background: var(--vscode-charts-blue);
+}
+
+.trace-step.is-end .trace-rail::before {
+  border: 3px solid var(--vscode-focusBorder);
+}
+
+.trace-step.is-ghost .trace-rail::before {
+  border: 2px dashed var(--tc-muted);
+}
+
+.trace-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-2);
+}
+
+.trace-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.trace-link {
+  font-size: 12px;
+}
+
+/* Canvas hint while picking a trace end */
+
+.graph-hint {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+  color: var(--vscode-sideBar-foreground);
+  background: var(--vscode-sideBar-background);
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+  pointer-events: none;
+  overflow-wrap: anywhere;
 }

@@ -16,7 +16,7 @@ const fulfillGraphHtml = async (route: Route, options: GraphOptions): Promise<vo
   const template = await readFile(join(GRAPH_DIST_DIR, 'index.html'), 'utf8');
   const nonce = randomBytes(16).toString('base64');
   const csp = graphCsp(nonce, SHELL_ORIGIN);
-  const html = renderWebviewHtml(template, { csp, nonce, scriptUri: 'main.js', styleUri: 'graph.css' });
+  const html = renderWebviewHtml(template, { csp, nonce, scriptUri: 'main.js', styleUri: 'graph.css', codiconUri: 'codicon.css' });
 
   if (options.inlineScript !== true) return route.fulfill({ body: html, contentType: 'text/html' });
 
