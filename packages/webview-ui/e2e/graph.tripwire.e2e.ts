@@ -3,7 +3,10 @@ import { test } from './graph.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
+import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
+import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
+import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const AC6 = { description: 'M4-2 AC6', type: 'requirement' };
 
@@ -21,8 +24,20 @@ const BUDGET_MS = 50;
 
 const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
 
+/** After Fit and the zoom to 120 px boxes, 9 of the 30 boxes of `largeState()` overlap the canvas; 6 leaves slack. */
+const BOXES_IN_VIEW = 6;
+
+/**
+ * About 290 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
+ * frame), so the budget sits between them with room for CI runners that measure up to 2.7x slower.
+ */
+const GROUPED_PAN_MS = 1100;
+
 /** Each sample toggles pkg-007 once, so an odd count leaves it hidden. */
 const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
+
+// Tracing snapshots the DOM on every mouse move, on the page's main thread, and that CPU lands inside the measured pan.
+test.use({ trace: 'off' });
 
 test.describe('FEATURE: graph tripwires', () => {
   test('GIVEN a 14-package target-like graph, the first frame lands under 2 s', async ({
@@ -57,6 +72,85 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('THEN the pan used under 1500 ms of CPU and no step over 50 ms', (): void =>
       graphCanvas.expectPanCpuUnder(1500, 50));
+  });
+
+  // The saved camera (zoom 1, pan at the origin) looks at an empty corner of the grouped layout, so this first frame
+  // times the grouped ELK run and the draw, not painting boxes in view; the grouped pan below frames the boxes first.
+  test('GIVEN 300 packages saved as grouped, the grouped layout lands in under 2 s, is cached, and a second open runs no layout', async ({
+    graphGrouping,
+    graphHost,
+    graphLook,
+    graphPage,
+    graphProbe
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
+      graphPage.open({ savedState: groupedSavedState(largeState().hash) }));
+
+    await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+
+    await test.step('THEN the first frame came in under 2000 ms', async (): Promise<void> => graphLook.expectFirstFrameUnder(2000));
+
+    await test.step('AND the layout is ELK and 30 boxes are drawn', async (): Promise<void> => {
+      await graphProbe.expectLayoutEngine('elk');
+      await graphGrouping.expectFolderCount(30);
+    });
+
+    await test.step('AND the grouped positions were posted', async (): Promise<void> => graphGrouping.expectPostedGrouping('folders'));
+
+    const posted = await graphGrouping.postedPositions();
+    const large = largeState();
+    const folderCache: GraphReady = { ...large, folderPositions: posted };
+
+    await test.step('WHEN the page is reopened with the saved view and the folders cache is sent', async (): Promise<void> => {
+      await graphHost.expectViewSaved();
+      await graphHost.reopen();
+      await graphHost.sendState(folderCache);
+    });
+
+    await test.step('THEN the layout came from the cache and no worker was created', async (): Promise<void> => {
+      await graphProbe.expectLayoutEngine('cache');
+      await graphHost.expectWorkers(0);
+    });
+  });
+
+  test('GIVEN 300 packages grouped and zoomed to readable boxes, a scripted 2 s pan uses under 1.1 s of main-thread CPU and no step over 50 ms', async ({
+    graphCanvas,
+    graphGrouping,
+    graphHost,
+    graphPage,
+    graphProbe
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
+      graphPage.open({ savedState: groupedSavedState(largeState().hash) }));
+
+    await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+
+    await test.step('THEN the grouped layout has finished', async (): Promise<void> => {
+      await graphProbe.expectLayoutEngine('elk');
+      await graphGrouping.expectFolderCount(30);
+    });
+
+    await test.step('WHEN Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> => {
+      await graphPage.pressButton(FIT_LABEL);
+      await graphCanvas.expectAllNodesInView();
+    });
+
+    await test.step('AND the graph is zoomed until every box is at least 120 px wide', async (): Promise<void> => {
+      await graphGrouping.zoomBoxesTo(120);
+      await graphGrouping.expectBoxesAtLeast(120);
+    });
+
+    await test.step('THEN at least 6 boxes are in view, so the pan draws boxes', async (): Promise<void> =>
+      graphGrouping.expectBoxesInView(BOXES_IN_VIEW));
+
+    await test.step('AND it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
+      const spot = await graphGrouping.freeSpot();
+
+      await graphCanvas.scriptedPan(30, 120, spot);
+    });
+
+    await test.step('THEN the pan used under 1100 ms of CPU and no step over 50 ms', (): void =>
+      graphCanvas.expectPanCpuUnder(GROUPED_PAN_MS, 50));
   });
 
   test(

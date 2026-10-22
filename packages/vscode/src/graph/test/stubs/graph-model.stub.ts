@@ -4,6 +4,7 @@ import type { GraphEdge, GraphPackage, GraphState, Position, Positions } from '@
 import type { LoadedModel } from '../../../roots/common/root.type.ts';
 import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
+import type { GraphLayoutCaches } from '../../common/graph-cache.type.ts';
 
 const WEB_A_DEV: PackageEdge = { source: 'web', target: 'a', kind: 'dev' };
 const WEB_A_PROD: PackageEdge = { source: 'web', target: 'a', kind: 'prod' };
@@ -49,7 +50,8 @@ export const GRAPH_STATE_STUB: GraphState = {
   hash: GRAPH_HASH_STUB,
   packages: GRAPH_INFOS_STUB,
   edges: [A_X, WEB_X, WEB_A],
-  positions: null
+  positions: null,
+  folderPositions: null
 };
 
 const X_POINT: Position = { x: 0, y: 0 };
@@ -71,3 +73,6 @@ const PROTO_MODEL_STUB: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GR
 
 /** `GRAPH_LOADED_STUB` plus a package named `__proto__`. */
 export const PROTO_LOADED_STUB: LoadedModel = { ...GRAPH_LOADED_STUB, model: PROTO_MODEL_STUB };
+
+/** Both layout caches missed: for a state built with no stored layout. */
+export const NO_LAYOUT_CACHES_STUB: GraphLayoutCaches = { flat: null, folders: null };

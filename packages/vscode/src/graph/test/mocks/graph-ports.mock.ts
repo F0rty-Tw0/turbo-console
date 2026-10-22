@@ -1,13 +1,16 @@
+import type { LayoutGrouping } from '@turbo-console/webview-ui';
 import { vi } from 'vitest';
 
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphPorts } from '../../common/graph.type.ts';
+import { cacheKeyOf } from '../../utils/graph-cache.util.ts';
 
-/** Every port a spy; the cache is an in-memory map seeded with `cached`, and `openDetails` and `openAt` resolve, `readText` gives `null`. */
+/** Every port a spy; the caches are an in-memory map keyed by `cacheKeyOf` and seeded with `cached`, and `openDetails` and `openAt` resolve, `readText` gives `null`. */
 export const graphPortsMock = (cached: Map<string, GraphLayoutCacheEntry> = new Map()): GraphPorts => {
-  const readCache = (root: string): GraphLayoutCacheEntry | null => cached.get(root) ?? null;
-  const writeCache = (root: string, entry: GraphLayoutCacheEntry): void => {
-    cached.set(root, entry);
+  const readCache = (root: string, grouping: LayoutGrouping): GraphLayoutCacheEntry | null =>
+    cached.get(cacheKeyOf(root, grouping)) ?? null;
+  const writeCache = (root: string, grouping: LayoutGrouping, entry: GraphLayoutCacheEntry): void => {
+    cached.set(cacheKeyOf(root, grouping), entry);
   };
   const openDetails = vi.fn<GraphPorts['openDetails']>().mockResolvedValue(undefined);
   const readText = vi.fn<GraphPorts['readText']>().mockResolvedValue(null);

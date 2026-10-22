@@ -104,6 +104,7 @@ export const openCase = async (scene: GraphScene): Promise<void> => {
     assert.ok(sent.some((pkg): boolean => pkg.taskCount > 0));
 
     assert.equal(state.positions, null);
+    assert.equal(state.folderPositions, null);
     assert.match(state.hash, HASH_PATTERN);
   });
 };

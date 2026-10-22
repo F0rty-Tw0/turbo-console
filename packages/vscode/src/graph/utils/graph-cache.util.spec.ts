@@ -1,7 +1,7 @@
 import type { GraphState, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { acceptedPositions, coversExactly, layoutEntryOf } from './graph-cache.util.ts';
+import { acceptedPositions, cacheKeyOf, coversExactly, layoutEntryOf } from './graph-cache.util.ts';
 import { GRAPH_HASH_STUB, GRAPH_PACKAGES_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const STATE: GraphState = GRAPH_STATE_STUB;
@@ -119,5 +119,19 @@ describe('FEATURE: layout entry read from storage', () => {
     ['a null map', { hash: GRAPH_HASH_STUB, positions: null }]
   ])('GIVEN %s WHEN read THEN it is null', (_name, raw) => {
     expect(layoutEntryOf(raw)).toBeNull();
+  });
+});
+
+describe('FEATURE: cache key', () => {
+  it('GIVEN the flat grouping WHEN keyed THEN it is the flat prefix and the root', () => {
+    expect(cacheKeyOf('/ws', 'flat')).toBe('turboConsole.graphLayout:/ws');
+  });
+
+  it('GIVEN the folders grouping WHEN keyed THEN it is the folders prefix and the root', () => {
+    expect(cacheKeyOf('/ws', 'folders')).toBe('turboConsole.graphLayout.folders:/ws');
+  });
+
+  it('GIVEN a root that starts like the folders prefix WHEN keyed flat THEN it differs from the folders key of the shorter root', () => {
+    expect(cacheKeyOf('.folders:/ws', 'flat')).not.toBe(cacheKeyOf('/ws', 'folders'));
   });
 });

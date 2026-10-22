@@ -3,14 +3,15 @@ import type { ControlsFields, DetailsFields, PackageFacts } from '../../common/g
 
 const ORIGIN = { x: 0, y: 0 };
 
-/** The six controls fields of a page that has never saved them. */
+/** The seven controls fields of a page that has never saved them. */
 export const DEFAULT_CONTROLS_STUB: ControlsFields = {
   controlsOpen: true,
   search: '',
   depth: 1,
   hidden: [],
   focus: null,
-  tags: []
+  tags: [],
+  grouped: false
 };
 
 /** The details fields of a page that has never saved them: open, with no link or trace. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { folderGroupsOf, folderOf, tagsOf } from './folder-group.util.ts';
+import { folderGroupsOf, folderOf, modeGroupsOf, tagsOf } from './folder-group.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 
@@ -99,6 +99,18 @@ describe('FEATURE: folderGroupsOf', () => {
       folderGroupsOf(input);
 
       expect(input.map((pkg) => pkg.name)).toStrictEqual(['b', 'a']);
+    });
+  });
+});
+
+describe('FEATURE: modeGroupsOf', () => {
+  describe('GIVEN packages in several folders', () => {
+    it('WHEN the mode is flat THEN there are no groups', () => {
+      expect(modeGroupsOf(MIXED, 'flat')).toBeNull();
+    });
+
+    it('WHEN the mode is folders THEN the groups are folderGroupsOf', () => {
+      expect(modeGroupsOf(MIXED, 'folders')).toStrictEqual(folderGroupsOf(MIXED));
     });
   });
 });

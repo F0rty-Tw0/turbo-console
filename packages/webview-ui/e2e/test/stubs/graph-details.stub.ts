@@ -56,7 +56,8 @@ export const DETAILS_STUB: GraphReady = {
   hash: 'd3a11001',
   packages: DETAILS_PACKAGES,
   edges: DETAILS_EDGES,
-  positions: DETAILS_POSITIONS_STUB
+  positions: DETAILS_POSITIONS_STUB,
+  folderPositions: null
 };
 
 const RECOUNTED_PACKAGES: GraphPackage[] = [

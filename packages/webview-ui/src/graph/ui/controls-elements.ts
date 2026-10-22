@@ -1,18 +1,10 @@
+import { checkbox, depthInput, field, groupingField, searchInput } from './controls-fields.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
-import { DEFAULT_DEPTH, DEPTH_LABEL, MAX_DEPTH, MIN_DEPTH, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common/graph.const.ts';
+import { DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common/graph.const.ts';
 import { countTextOf, focusLabelOf, folderTitleOf, groupLabelOf, showLabelOf } from '../utils/controls-text.util.ts';
-
-const checkbox = (className: string): HTMLInputElement => {
-  const check = document.createElement('input');
-
-  check.type = 'checkbox';
-  check.className = className;
-
-  return check;
-};
 
 /** A checked list checkbox, out of the Tab order: the list is one Tab stop with a roving focus. */
 const listCheck = (label: string): HTMLInputElement => {
@@ -89,40 +81,6 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   return controlsGroup;
 };
 
-/** A caption above its input; the wrapping `<label>` names the input. */
-const field = (text: string, input: HTMLInputElement): HTMLElement => {
-  const label = textElement('label', 'controls-field', '');
-  const caption = textElement('span', 'controls-caption', text);
-
-  label.append(caption, input);
-
-  return label;
-};
-
-const searchInput = (): HTMLInputElement => {
-  const search = document.createElement('input');
-
-  search.type = 'search';
-  search.className = 'controls-input';
-  search.autocomplete = 'off';
-  search.spellcheck = false;
-
-  return search;
-};
-
-const depthInput = (): HTMLInputElement => {
-  const depth = document.createElement('input');
-
-  depth.type = 'number';
-  depth.className = 'controls-input';
-  depth.min = String(MIN_DEPTH);
-  depth.max = String(MAX_DEPTH);
-  depth.step = '1';
-  depth.defaultValue = String(DEFAULT_DEPTH);
-
-  return depth;
-};
-
 const tagEntry = (tag: string): [string, HTMLInputElement] => [tag, checkbox('controls-check')];
 
 const tagFieldset = (tags: Map<string, HTMLInputElement>): HTMLElement => {
@@ -181,12 +139,13 @@ const packageGrid = (groups: ControlsGroup[]): HTMLElement => {
 };
 
 /**
- * The controls panel `aside#graph-controls`, unwired: search, depth, the tag fieldset (only when tags exist), Show all,
+ * The controls panel `aside#graph-controls`, unwired: search, depth, Group by folder, the tag fieldset (only when tags exist), Show all,
  * the count line and the package grid, in that DOM order. Groups and rows keep the order given.
  */
 export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsElements => {
   const search = searchInput();
   const depth = depthInput();
+  const grouping = checkbox('controls-check');
   const tagEntries = tags.map(tagEntry);
   const tagBoxes = new Map(tagEntries);
   const showAll = showAllButton();
@@ -197,13 +156,13 @@ export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsEl
   const panel = textElement('aside', 'graph-controls', '');
 
   panel.id = 'graph-controls';
-  panel.append(field(SEARCH_LABEL, search), field(DEPTH_LABEL, depth));
+  panel.append(field(SEARCH_LABEL, search), field(DEPTH_LABEL, depth), groupingField(grouping));
 
   if (tagBoxes.size > 0) panel.append(tagFieldset(tagBoxes));
 
   panel.append(showAll, count, list);
 
-  const controls: ControlsElements = { panel, search, depth, tags: tagBoxes, showAll, count, list, groups: controlsGroups };
+  const controls: ControlsElements = { panel, search, depth, grouping, tags: tagBoxes, showAll, count, list, groups: controlsGroups };
 
   return controls;
 };

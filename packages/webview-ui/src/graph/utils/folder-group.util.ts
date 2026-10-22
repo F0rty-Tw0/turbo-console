@@ -1,3 +1,4 @@
+import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 
@@ -53,6 +54,13 @@ export const folderGroupsOf = (packages: GraphPackage[]): FolderGroup[] => {
   }
 
   return groups.sort(byFolder);
+};
+
+/** The folder boxes of a layout mode: none while flat, else `folderGroupsOf`. */
+export const modeGroupsOf = (packages: GraphPackage[], mode: LayoutGrouping): FolderGroup[] | null => {
+  if (mode === 'flat') return null;
+
+  return folderGroupsOf(packages);
 };
 
 /** Every tag of every package, once, sorted by code unit. */

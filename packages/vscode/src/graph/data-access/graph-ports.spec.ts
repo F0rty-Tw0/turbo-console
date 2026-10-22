@@ -247,32 +247,66 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
   });
 
   describe('GIVEN the layout cache', () => {
-    it('WHEN an entry is written THEN workspaceState is updated once under the root key', () => {
-      host.writeCache('/ws', ENTRY);
+    it('WHEN a flat entry is written THEN workspaceState is updated once under the flat root key', () => {
+      host.writeCache('/ws', 'flat', ENTRY);
 
       expect(spies.update).toHaveBeenCalledExactlyOnceWith('turboConsole.graphLayout:/ws', ENTRY);
     });
 
-    it('WHEN a valid entry was stored THEN it is read back for that root', () => {
+    it('WHEN a folders entry is written THEN workspaceState is updated once under the folders root key', () => {
+      host.writeCache('/ws', 'folders', ENTRY);
+
+      expect(spies.update).toHaveBeenCalledExactlyOnceWith('turboConsole.graphLayout.folders:/ws', ENTRY);
+    });
+
+    it('WHEN a valid flat entry was stored THEN it is read back from the flat key', () => {
       spies.get.mockReturnValue(ENTRY);
 
-      const entry = host.readCache('/ws');
+      const entry = host.readCache('/ws', 'flat');
 
       expect(entry).toStrictEqual(ENTRY);
       expect(spies.get).toHaveBeenCalledExactlyOnceWith('turboConsole.graphLayout:/ws');
     });
 
+    it('WHEN a valid folders entry was stored THEN it is read back from the folders key', () => {
+      spies.get.mockReturnValue(ENTRY);
+
+      const entry = host.readCache('/ws', 'folders');
+
+      expect(entry).toStrictEqual(ENTRY);
+      expect(spies.get).toHaveBeenCalledExactlyOnceWith('turboConsole.graphLayout.folders:/ws');
+    });
+
     it('WHEN the memento holds garbage THEN the read is null', () => {
       spies.get.mockReturnValue('x');
 
-      expect(host.readCache('/ws')).toBeNull();
+      expect(host.readCache('/ws', 'flat')).toBeNull();
+    });
+
+    it('WHEN the memento holds garbage under the folders key THEN the read is null', () => {
+      spies.get.mockReturnValue('x');
+
+      expect(host.readCache('/ws', 'folders')).toBeNull();
     });
 
     it('WHEN the update rejects THEN the failure is logged through output.error and the write does not throw', async () => {
       spies.update.mockRejectedValue(new Error('quota'));
 
       expect(() => {
-        host.writeCache('/ws', ENTRY);
+        host.writeCache('/ws', 'flat', ENTRY);
+      }).not.toThrow();
+      await vi.waitFor(() => {
+        expect(output.error).toHaveBeenCalledOnce();
+      });
+
+      expect(vi.mocked(output.error).mock.calls[0]?.[0]).toContain('quota');
+    });
+
+    it('WHEN the folders update rejects THEN the failure is logged through output.error and the write does not throw', async () => {
+      spies.update.mockRejectedValue(new Error('quota'));
+
+      expect(() => {
+        host.writeCache('/ws', 'folders', ENTRY);
       }).not.toThrow();
       await vi.waitFor(() => {
         expect(output.error).toHaveBeenCalledOnce();

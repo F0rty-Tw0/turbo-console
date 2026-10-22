@@ -29,7 +29,8 @@ export const PROTO_DETAILS_STUB: GraphReady = {
   hash: 'f2f2f2f2',
   packages: PROTO_PACKAGES,
   edges: PROTO_EDGES,
-  positions: PROTO_POSITIONS
+  positions: PROTO_POSITIONS,
+  folderPositions: null
 };
 
 export const LONG_NAME_STUB: string = 'a-very-long-package-name-that-keeps-going-and-going-and-going';
@@ -64,7 +65,8 @@ export const LONG_PATH_STUB: GraphReady = {
   hash: '1e9a0001',
   packages: LONG_PACKAGES,
   edges: LONG_EDGES,
-  positions: LONG_POSITIONS
+  positions: LONG_POSITIONS,
+  folderPositions: null
 };
 
 export const UNBROKEN_NAME_STUB: string = 'n'.repeat(70);
@@ -89,5 +91,6 @@ export const UNBROKEN_PATH_STUB: GraphReady = {
   hash: '1e9a0002',
   packages: UNBROKEN_PACKAGES,
   edges: UNBROKEN_EDGES,
-  positions: UNBROKEN_POSITIONS
+  positions: UNBROKEN_POSITIONS,
+  folderPositions: null
 };

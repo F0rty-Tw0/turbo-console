@@ -25,13 +25,15 @@ const isPackage = (value: unknown): boolean => {
 };
 
 const isGraphShape = (state: UnknownRecord): boolean => {
-  const { hash, packages, edges, positions } = state;
+  const { hash, packages, edges, positions, folderPositions } = state;
   const hasHash = typeof hash === 'string';
   const hasPackages = Array.isArray(packages) && packages.every(isPackage);
   const hasEdges = Array.isArray(edges) && edges.every(isEdge);
   const hasPositions = positions === null || isRecord(positions);
+  const hasFolderPositions = folderPositions === null || isRecord(folderPositions);
+  const hasCaches = hasPositions && hasFolderPositions;
 
-  return hasHash && hasPackages && hasEdges && hasPositions;
+  return hasHash && hasPackages && hasEdges && hasCaches;
 };
 
 const isGraphState = (state: unknown): boolean => {

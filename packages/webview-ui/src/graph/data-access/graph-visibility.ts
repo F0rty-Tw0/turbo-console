@@ -1,6 +1,8 @@
 import type { Core, NodeSingular } from 'cytoscape';
 
-/** Hides every node outside `visible` with a bypass `display`, which survives restyling and class changes and keeps positions. */
+import { packageNodes } from './graph-boxes.ts';
+
+/** Hides every package outside `visible` with a bypass `display`, which survives restyling and class changes and keeps positions. */
 export const showOnly = (cy: Core, visible: ReadonlySet<string>): void => {
   const setDisplay = (node: NodeSingular): void => {
     const display = visible.has(node.id()) ? 'element' : 'none';
@@ -8,17 +10,22 @@ export const showOnly = (cy: Core, visible: ReadonlySet<string>): void => {
     node.style('display', display);
   };
 
-  cy.batch((): void => void cy.nodes().forEach(setDisplay));
+  cy.batch((): void => void packageNodes(cy).forEach(setDisplay));
 };
 
-/** Fits the camera to the visible nodes, a trace's ghosts included so they stay on screen; with none visible the camera stays. */
+/**
+ * Fits the camera to the visible packages, a trace's ghosts included so they stay on screen, and to their folder boxes,
+ * whose frames reach past the packages by the box padding; with none visible the camera stays.
+ */
 export const fitVisible = (cy: Core, paddingPx: number): void => {
-  const shown = cy.nodes(':visible');
+  const shown = packageNodes(cy).filter(':visible');
   const nothingShown = shown.empty();
 
   if (nothingShown) return;
 
-  cy.fit(shown, paddingPx);
+  const framed = shown.union(shown.parents());
+
+  cy.fit(framed, paddingPx);
 };
 
 /** Pans so the node sits at the view centre, keeping the zoom; an unknown name does nothing. */

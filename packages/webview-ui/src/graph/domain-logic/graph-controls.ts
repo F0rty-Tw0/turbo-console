@@ -29,6 +29,7 @@ export class GraphControls {
   private shown = new Set<string>();
   private search = '';
   private isOpen = true;
+  private isGrouped = false;
   private selected: string | null = null;
   private stamp: number | null = null;
 
@@ -46,7 +47,7 @@ export class GraphControls {
   }
 
   public fields(): ControlsViewFields {
-    return controlsFieldsOf(this.applied, this.search, this.depth, this.isOpen);
+    return controlsFieldsOf(this.applied, this.search, this.depth, this.isOpen, this.isGrouped);
   }
 
   public focusName(): string | null {
@@ -95,6 +96,7 @@ export class GraphControls {
     this.search = restored.search;
     this.depth = restored.depth;
     this.isOpen = restored.isOpen;
+    this.isGrouped = restored.isGrouped;
     this.stamp = null;
     wireControls(elements, controlsActionsOf(mounted, this));
     renderSearch(elements, graph.infos, restored.search);
@@ -141,6 +143,12 @@ export class GraphControls {
   public setSearch(mounted: ControlsMounted, text: string): void {
     this.search = text;
     renderSearch(mounted.elements, mounted.graph.infos, text);
+    this.deps.onSave();
+  }
+
+  public setGrouping(isGrouped: boolean): void {
+    this.isGrouped = isGrouped;
+    this.deps.onGrouping(isGrouped);
     this.deps.onSave();
   }
 

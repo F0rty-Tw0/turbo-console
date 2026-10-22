@@ -29,6 +29,8 @@ export type PageElements = {
   readonly clear: HTMLButtonElement;
   readonly status: HTMLElement;
   readonly notice: HTMLElement;
+  /** The `p` inside the notice: the simplified-layout copy, or a mode switch's progress text. */
+  readonly noticeText: HTMLElement;
   readonly retry: HTMLButtonElement;
   readonly message: HTMLElement;
   readonly messageText: HTMLElement;
@@ -45,7 +47,7 @@ export type ToolbarElements = Pick<
 >;
 
 /** The controls fields of the saved view state: what `GraphControls` keeps and the selection's saves carry along. */
-export type ControlsViewFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags'>;
+export type ControlsViewFields = Pick<GraphViewState, 'controlsOpen' | 'search' | 'depth' | 'hidden' | 'focus' | 'tags' | 'grouped'>;
 
 /** Debounces view-state saves; `flush` saves a pending state at once. */
 export type ViewStateSaver = {
@@ -66,6 +68,8 @@ export type GraphViewHandlers = {
   /** A link tapped on the canvas; `source` depends on `target`. */
   readonly onTapEdge: (source: string, target: string) => void;
   readonly onTapBackground: () => void;
+  /** A tap on a folder box outside its packages; `folder` is the key (`''` the root). */
+  readonly onTapFolder: (folder: string) => void;
   readonly onDoubleTapNode: (name: string) => void;
   /** Every node's current centre, after the user dropped a dragged node. */
   readonly onDragEnd: (positions: Positions) => void;
@@ -95,6 +99,8 @@ export type GraphView = {
   readonly panBy: (dx: number) => void;
   readonly viewport: () => Viewport;
   readonly setViewport: (zoom: number, pan: Position) => void;
+  /** Draws one box per group around its packages, or none for `null`; positions are unchanged, call `setPositions` after. */
+  readonly setGrouping: (groups: FolderGroup[] | null) => void;
   readonly setPositions: (positions: Positions) => void;
   readonly applyTheme: (colors: ThemeColors) => void;
   /** For the test probe only. */

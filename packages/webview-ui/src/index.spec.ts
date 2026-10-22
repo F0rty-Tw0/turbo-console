@@ -19,11 +19,13 @@ import type {
   GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphPackage,
+  GraphReady,
   GraphState,
   GraphStateMessage,
   GraphViewState,
   GraphWebviewMessage,
   HostMessage,
+  LayoutGrouping,
   ManifestContext,
   ManifestEntry,
   ManifestField,
@@ -69,6 +71,7 @@ type ExpectedExplainedMessage = {
 };
 type LayoutDoneKey = { readonly type: 'layoutDone' };
 type OpenManifestKey = { readonly type: 'openManifest' };
+type PositionsKey = { readonly type: 'positions' };
 
 /** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern and tool-icon prefix constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
@@ -145,6 +148,9 @@ describe('FEATURE: webview-ui package entry', () => {
       >();
       expectTypeOf<Extract<GraphWebviewMessage, OpenManifestKey>['line']>().toEqualTypeOf<number>();
       expectTypeOf<Extract<GraphWebviewMessage, LayoutDoneKey>['engine']>().toEqualTypeOf<'elk' | 'fallback'>();
+      expectTypeOf<LayoutGrouping>().toEqualTypeOf<'flat' | 'folders'>();
+      expectTypeOf<Extract<GraphWebviewMessage, PositionsKey>['grouping']>().toEqualTypeOf<LayoutGrouping>();
+      expectTypeOf<GraphReady['folderPositions']>().toEqualTypeOf<Positions | null>();
       expectTypeOf<GraphViewState['selected']>().toEqualTypeOf<string | null>();
     });
   });

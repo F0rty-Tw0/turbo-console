@@ -1,0 +1,51 @@
+diff --git a/dist/cytoscape.cjs.js b/dist/cytoscape.cjs.js
+index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..14abe0d4b68414b4ee06b6b602f09722a5a3c904 100644
+--- a/dist/cytoscape.cjs.js
++++ b/dist/cytoscape.cjs.js
+@@ -30804,6 +30804,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
+     var prevBging = _p.backgrounding;
+     var totalCompleted = 0;
+     for (var _i = 0; _i < image.length; _i++) {
++      // patched: a 'none' url is not an image; counting it in the outside pass flips backgrounding and re-styles every frame
++      if (!urlDefined[_i]) continue;
+       var bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', _i);
+       if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
+         totalCompleted++;
+diff --git a/dist/cytoscape.esm.mjs b/dist/cytoscape.esm.mjs
+index 98ca0ed0a971159db005a0ae80da1dac080d9ade..b43f86a70fd08ea2a3655fbc1984db168a4f042d 100644
+--- a/dist/cytoscape.esm.mjs
++++ b/dist/cytoscape.esm.mjs
+@@ -30802,6 +30802,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
+     var prevBging = _p.backgrounding;
+     var totalCompleted = 0;
+     for (var _i = 0; _i < image.length; _i++) {
++      // patched: a 'none' url is not an image; counting it in the outside pass flips backgrounding and re-styles every frame
++      if (!urlDefined[_i]) continue;
+       var bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', _i);
+       if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
+         totalCompleted++;
+diff --git a/dist/cytoscape.umd.js b/dist/cytoscape.umd.js
+index b7d4dabff383755c8cda3021b719b2f0064e8896..c8ebddeaa6b43a76a6ee06efb86e883d2de2fd1a 100644
+--- a/dist/cytoscape.umd.js
++++ b/dist/cytoscape.umd.js
+@@ -30808,6 +30808,8 @@ var printLayoutInfo;
+       var prevBging = _p.backgrounding;
+       var totalCompleted = 0;
+       for (var _i = 0; _i < image.length; _i++) {
++        // patched: a 'none' url is not an image; counting it in the outside pass flips backgrounding and re-styles every frame
++        if (!urlDefined[_i]) continue;
+         var bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', _i);
+         if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
+           totalCompleted++;
+diff --git a/src/extensions/renderer/canvas/drawing-nodes.mjs b/src/extensions/renderer/canvas/drawing-nodes.mjs
+index 18b0f33b9d79fc0257a66803aa774052bf693211..3ad02769b9b3384e4d114bed00e3dac108b9de07 100644
+--- a/src/extensions/renderer/canvas/drawing-nodes.mjs
++++ b/src/extensions/renderer/canvas/drawing-nodes.mjs
+@@ -177,6 +177,7 @@ CRp.drawNode = function( context, node, shiftToOriginWithBb, drawLabel = true, s
+     let totalCompleted = 0;
+ 
+     for( let i = 0; i < image.length; i++ ){
++      if( !urlDefined[i] ){ continue; } // patched, see dist
+       const bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', i);
+       if( inside && bgContainment === 'over' || !inside && bgContainment === 'inside' ){
+         totalCompleted++;

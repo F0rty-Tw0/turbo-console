@@ -98,13 +98,16 @@ export class GraphCanvas {
     await this.dragFrom(spot, dx, dy);
   }
 
-  /** Waits `warmUpFrames`, then drags the background one step per frame for `panFrames`, keeping the main-thread CPU each step took. */
-  public async scriptedPan(warmUpFrames: number, panFrames: number): Promise<void> {
-    const spot = await this.emptySpot();
+  /**
+   * Waits `warmUpFrames`, then drags one step per frame for `panFrames` from `spot`, or from an empty spot of the flat
+   * graph, keeping the main-thread CPU each step took.
+   */
+  public async scriptedPan(warmUpFrames: number, panFrames: number, spot?: ViewportPoint): Promise<void> {
+    const start = spot ?? (await this.emptySpot());
 
     for (let frame = 0; frame < warmUpFrames; frame += 1) await this.page.evaluate(ONE_FRAME);
 
-    this.panCpu = await cpuStepsOf(this.page, async (endStep): Promise<void> => dragPerFrame(this.page, spot, panFrames, endStep));
+    this.panCpu = await cpuStepsOf(this.page, async (endStep): Promise<void> => dragPerFrame(this.page, start, panFrames, endStep));
   }
 
   /** The last scripted pan used a measured, non-zero total under `totalMs` of main-thread CPU with no step over `stepMs`; both are recorded as annotations. */

@@ -33,7 +33,8 @@ export const CONTROLS_STUB: GraphReady = {
   hash: 'c0a1b2c3',
   packages: CONTROLS_PACKAGES,
   edges: CONTROLS_EDGES,
-  positions: null
+  positions: null,
+  folderPositions: null
 };
 
 export const CONTROLS_CACHED_STUB: GraphReady = { ...CONTROLS_STUB, positions: CONTROLS_POSITIONS_STUB };
@@ -71,5 +72,6 @@ export const PROTO_CONTROLS_STUB: GraphReady = {
   hash: 'f1f1f1f1',
   packages: PROTO_PACKAGES,
   edges: PROTO_EDGES,
-  positions: PROTO_POSITIONS
+  positions: PROTO_POSITIONS,
+  folderPositions: null
 };

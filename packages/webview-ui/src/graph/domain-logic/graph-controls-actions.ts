@@ -11,6 +11,7 @@ export const controlsActionsOf = (mounted: ControlsMounted, ops: ControlsOps): C
     onDepthBlur: (): void => {
       mounted.elements.depth.value = String(ops.depth);
     },
+    onGrouping: (isGrouped): void => ops.setGrouping(isGrouped),
     onTag: (tag, isChecked): void => ops.change(mounted, withTag(ops.applied, tag, isChecked)),
     onShowAll: (): void => ops.showAll(mounted),
     onSearch: (text): void => ops.setSearch(mounted, text),

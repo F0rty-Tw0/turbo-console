@@ -51,6 +51,23 @@ test.describe('FEATURE: graph controls panel', () => {
     }
   );
 
+  test('GIVEN the controls panel, Group by folder sits on its own line under Focus depth, unchecked, and the keyboard toggles it', async ({
+    graphControls,
+    graphHost,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+    await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
+
+    await test.step('THEN the checkbox is unchecked and below the depth field, before Show all', async (): Promise<void> =>
+      graphControls.expectGroupingBelowDepth());
+
+    await test.step('WHEN it is focused and Space is pressed', async (): Promise<void> => graphControls.pressGrouping());
+
+    await test.step('THEN the page reports grouped mode', async (): Promise<void> => graphControls.expectGroupedFact(true));
+  });
+
   test(
     'GIVEN a graph without tags, the panel has no Tags fieldset',
     { annotation: AC1 },

@@ -22,7 +22,8 @@ const C: ControlsViewFields = {
   depth: 2,
   hidden: ['docs'],
   focus: 'web',
-  tags: ['app']
+  tags: ['app'],
+  grouped: false
 };
 
 const PAN: Position = { x: 1, y: 2 };

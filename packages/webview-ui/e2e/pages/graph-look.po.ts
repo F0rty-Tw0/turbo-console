@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphTimings } from './graph-timings.po.ts';
 import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
-import { DEPTH_LABEL, SEARCH_LABEL, TAGS_LABEL } from '../../src/graph/common/graph.const.ts';
+import { DEPTH_LABEL, GROUP_BY_FOLDER_LABEL, SEARCH_LABEL, TAGS_LABEL } from '../../src/graph/common/graph.const.ts';
 import { THEME_VAR_NAMES } from '../common/graph.const.ts';
 import type { ControlsFields, ExpectedThemeColors, ThemeStub } from '../common/graph.type.ts';
 import { isPanNear, isZoomNear } from '../test/utils/graph-camera.spec.util.ts';
@@ -30,6 +30,7 @@ const colorsOf = (colors: NodeColors): NodeColors => {
 /** What the user sees of the drawn graph: the camera, the theme colours, the controls and the timing facts, read through the probe. */
 export class GraphLook {
   public readonly depth: Locator;
+  public readonly grouping: Locator;
   public readonly rowChecks: Locator;
   public readonly searchBox: Locator;
   public readonly tagChecks: Locator;
@@ -46,6 +47,7 @@ export class GraphLook {
     this.toggleButton = page.getByRole('button', { name: /^Controls/ });
     this.searchBox = page.getByRole('searchbox', { name: SEARCH_LABEL, exact: true, includeHidden: true });
     this.depth = page.getByRole('spinbutton', { name: DEPTH_LABEL, exact: true, includeHidden: true });
+    this.grouping = page.getByRole('checkbox', { name: GROUP_BY_FOLDER_LABEL, exact: true, includeHidden: true });
     this.rowChecks = page.getByRole('checkbox', { name: SHOW_ROW, includeHidden: true });
     const tagGroup = page.getByRole('group', { name: TAGS_LABEL, exact: true, includeHidden: true });
 
@@ -132,13 +134,15 @@ export class GraphLook {
     const hidden = await this.rowChecks.evaluateAll(uncheckedShowNames);
     const locked = await this.rowChecks.evaluateAll(lockedShowNames);
     const tags = await this.tagChecks.evaluateAll(checkedTagNames);
+    const grouped = await this.grouping.isChecked();
     const fields: ControlsFields = {
       controlsOpen: expanded === 'true',
       search,
       depth: Number(depth),
       hidden: sortedNames(hidden),
       focus: locked[0] ?? null,
-      tags: sortedNames(tags)
+      tags: sortedNames(tags),
+      grouped
     };
 
     return fields;

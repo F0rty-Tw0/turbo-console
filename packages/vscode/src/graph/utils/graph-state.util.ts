@@ -7,7 +7,7 @@ import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
 import { isVisibleTask } from '../../tree/utils/task-filter.util.ts';
-import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
+import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
 
 const FNV_OFFSET = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
@@ -74,25 +74,27 @@ const cachedPositionsOf = (cache: GraphLayoutCacheEntry | null, hash: string, pa
   return coversExactly(cache.positions, packages) ? cache.positions : null;
 };
 
-export const graphStateOf = (model: WorkspaceModel, cache: GraphLayoutCacheEntry | null): GraphState => {
+export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches): GraphState => {
   if (model.singlePackage) return SINGLE_PACKAGE;
 
   const packages = model.packages.map(packageOf).toSorted(comparePackages);
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
-  const positions = cachedPositionsOf(cache, hash, packageNamesOf(packages));
-  const state: GraphState = { kind: 'graph', hash, packages, edges, positions };
+  const names = packageNamesOf(packages);
+  const positions = cachedPositionsOf(caches.flat, hash, names);
+  const folderPositions = cachedPositionsOf(caches.folders, hash, names);
+  const state: GraphState = { kind: 'graph', hash, packages, edges, positions, folderPositions };
 
   return state;
 };
 
 /** A root's state as the page sees it. Fixed texts only, never the failure's own message. */
-export const graphStateOfRoot = (state: RootState | undefined, cache: GraphLayoutCacheEntry | null): GraphState => {
+export const graphStateOfRoot = (state: RootState | undefined, caches: GraphLayoutCaches): GraphState => {
   if (state === undefined) return LOADING;
 
   const model = shownModelOf(state);
 
-  if (model !== null) return graphStateOf(model, cache);
+  if (model !== null) return graphStateOf(model, caches);
 
   if (state.error === null) return LOADING;
 

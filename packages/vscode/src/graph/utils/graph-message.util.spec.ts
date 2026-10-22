@@ -16,7 +16,7 @@ const LONG_KEY_POSITIONS = { [LONG_NAME]: POINT };
 const MAX_X_MIN_Y = { x: 1e7, y: -1e7 };
 const MIN_X_MAX_Y = { x: -1e7, y: 1e7 };
 const LIMIT_POSITIONS = { a: MAX_X_MIN_Y, b: MIN_X_MAX_Y };
-const PROTO_MESSAGE_JSON = `{"type":"positions","hash":"${HASH}","positions":{"__proto__":{"x":1,"y":2},"a":{"x":3,"y":4}}}`;
+const PROTO_MESSAGE_JSON = `{"type":"positions","hash":"${HASH}","positions":{"__proto__":{"x":1,"y":2},"a":{"x":3,"y":4}},"grouping":"flat"}`;
 const INHERITING_POSITIONS: unknown = Object.create(POSITIONS);
 const THROWING_TYPE = {
   get type(): string {
@@ -25,6 +25,7 @@ const THROWING_TYPE = {
 };
 const THROWING_POSITIONS = {
   type: 'positions',
+  grouping: 'flat',
   get positions(): never {
     throw new Error('getter trap');
   }
@@ -40,7 +41,7 @@ const positionsIn = (parsed: GraphWebviewMessage | null): Positions | null => {
 /** A `positions` message whose record has `count` keys. */
 const positionsWith = (count: number): Record<string, unknown> => {
   const entries = Array.from({ length: count }, (_, index): [string, typeof POINT] => [`p${index}`, POINT]);
-  const message = { type: 'positions', hash: HASH, positions: Object.fromEntries(entries) };
+  const message = { type: 'positions', hash: HASH, positions: Object.fromEntries(entries), grouping: 'flat' };
 
   return message;
 };
@@ -51,7 +52,7 @@ describe('FEATURE: graph webview message validation', () => {
       { type: 'ready' },
       { type: 'reload' },
       { type: 'openDetails', packageName: 'web' },
-      { type: 'positions', hash: HASH, positions: POSITIONS },
+      { type: 'positions', hash: HASH, positions: POSITIONS, grouping: 'flat' },
       { type: 'layoutDone', ms: 12, engine: 'elk' },
       { type: 'layoutDone', ms: 3, engine: 'fallback' },
       { type: 'explainEdge', source: 'web', target: 'core' },
@@ -63,11 +64,27 @@ describe('FEATURE: graph webview message validation', () => {
     });
   });
 
+  describe('GIVEN a positions post with a grouping', () => {
+    it.each([['folders'], ['flat']])('WHEN the grouping is %s THEN it is kept', (grouping) => {
+      const raw = { type: 'positions', hash: HASH, positions: POSITIONS, grouping };
+
+      expect(parseGraphMessage(raw)).toStrictEqual(raw);
+    });
+
+    it.each([
+      ['no grouping', { type: 'positions', hash: HASH, positions: POSITIONS }],
+      ['an unknown grouping', { type: 'positions', hash: HASH, positions: POSITIONS, grouping: 'grid' }],
+      ['a numeric grouping', { type: 'positions', hash: HASH, positions: POSITIONS, grouping: 1 }]
+    ])('WHEN it has %s THEN it is null', (_label, raw) => {
+      expect(parseGraphMessage(raw)).toBeNull();
+    });
+  });
+
   describe('GIVEN a message with unknown keys', () => {
     it('WHEN parsed THEN the keys are stripped, at the top and inside a point', () => {
-      const raw = { type: 'positions', hash: HASH, extra: 1, positions: POSITIONS_WITH_EXTRA };
+      const raw = { type: 'positions', hash: HASH, extra: 1, positions: POSITIONS_WITH_EXTRA, grouping: 'flat' };
 
-      expect(parseGraphMessage(raw)).toStrictEqual({ type: 'positions', hash: HASH, positions: POSITIONS });
+      expect(parseGraphMessage(raw)).toStrictEqual({ type: 'positions', hash: HASH, positions: POSITIONS, grouping: 'flat' });
     });
   });
 
@@ -85,16 +102,19 @@ describe('FEATURE: graph webview message validation', () => {
       ['an openManifest with a fractional line', { type: 'openManifest', packageName: 'web', line: 1.5 }],
       ['an openManifest with a NaN line', { type: 'openManifest', packageName: 'web', line: NaN }],
       ['an openManifest name past 214 units', { type: 'openManifest', packageName: LONG_NAME, line: 1 }],
-      ['a point missing y', { type: 'positions', hash: HASH, positions: POSITIONS_WITHOUT_Y }],
-      ['a hash that is not eight hex digits', { type: 'positions', hash: 'h', positions: POSITIONS }],
-      ['an upper-case hash', { type: 'positions', hash: 'DC7E01EB', positions: POSITIONS }],
+      ['a point missing y', { type: 'positions', hash: HASH, positions: POSITIONS_WITHOUT_Y, grouping: 'flat' }],
+      ['a hash that is not eight hex digits', { type: 'positions', hash: 'h', positions: POSITIONS, grouping: 'flat' }],
+      ['an upper-case hash', { type: 'positions', hash: 'DC7E01EB', positions: POSITIONS, grouping: 'flat' }],
       ['a package name past 214 units', { type: 'openDetails', packageName: LONG_NAME }],
-      ['a position key past 214 units', { type: 'positions', hash: HASH, positions: LONG_KEY_POSITIONS }],
-      ['a positions list', { type: 'positions', hash: HASH, positions: [POINT] }],
-      ['null positions', { type: 'positions', hash: HASH, positions: null }],
-      ['no positions', { type: 'positions', hash: HASH }],
-      ['a Map of positions', { type: 'positions', hash: HASH, positions: new Map() }],
-      ['a positions record with a prototype of its own', { type: 'positions', hash: HASH, positions: INHERITING_POSITIONS }],
+      ['a position key past 214 units', { type: 'positions', hash: HASH, positions: LONG_KEY_POSITIONS, grouping: 'flat' }],
+      ['a positions list', { type: 'positions', hash: HASH, positions: [POINT], grouping: 'flat' }],
+      ['null positions', { type: 'positions', hash: HASH, positions: null, grouping: 'flat' }],
+      ['no positions', { type: 'positions', hash: HASH, grouping: 'flat' }],
+      ['a Map of positions', { type: 'positions', hash: HASH, positions: new Map(), grouping: 'flat' }],
+      [
+        'a positions record with a prototype of its own',
+        { type: 'positions', hash: HASH, positions: INHERITING_POSITIONS, grouping: 'flat' }
+      ],
       ['a positions record past 5000 keys', positionsWith(5001)],
       ['an unknown engine', { type: 'layoutDone', ms: 1, engine: 'webgl' }],
       ['a negative layout time', { type: 'layoutDone', ms: -1, engine: 'elk' }],
@@ -118,13 +138,13 @@ describe('FEATURE: graph webview message validation', () => {
     ])('WHEN parsed THEN %s makes the message null', (_label, point) => {
       const positions = { a: point };
 
-      expect(parseGraphMessage({ type: 'positions', hash: HASH, positions })).toBeNull();
+      expect(parseGraphMessage({ type: 'positions', hash: HASH, positions, grouping: 'flat' })).toBeNull();
     });
   });
 
   describe('GIVEN points exactly at ±1e7 on both axes', () => {
     it('WHEN parsed THEN the message passes unchanged', () => {
-      const message = { type: 'positions', hash: HASH, positions: LIMIT_POSITIONS };
+      const message = { type: 'positions', hash: HASH, positions: LIMIT_POSITIONS, grouping: 'flat' };
 
       expect(parseGraphMessage(message)).toStrictEqual(message);
     });

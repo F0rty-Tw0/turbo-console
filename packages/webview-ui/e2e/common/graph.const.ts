@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 
 import type { WorkerStub } from './graph.type.ts';
+import { HELD_WORKER } from './held-worker.const.ts';
+import { COUNTERS } from './worker-counters.const.ts';
 
 export const GRAPH_DIST_DIR = join(import.meta.dirname, '../../dist/graph');
 
@@ -37,8 +39,6 @@ export const MS_PER_SECOND = 1000;
 export const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
 
 export const ONE_FRAME = 'new Promise((resolve) => requestAnimationFrame(resolve))';
-
-const COUNTERS = 'window.__workers = 0; window.__terminated = 0; window.__workerMessages = 0;';
 
 /** The real worker, counted: each one built, each terminated, and each message any of them sent the page. */
 const REAL_WORKER = `(() => {
@@ -137,6 +137,7 @@ const MALFORMED_WORKER = `(() => {
 
 export const WORKER_STUBS: Readonly<Record<WorkerStub, string>> = {
   real: REAL_WORKER,
+  held: HELD_WORKER,
   throwOnce: THROW_ONCE_WORKER,
   error: ERROR_WORKER,
   silent: SILENT_WORKER,

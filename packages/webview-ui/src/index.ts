@@ -27,6 +27,7 @@ export type {
   GraphHostMessage,
   GraphStateMessage,
   GraphWebviewMessage,
+  LayoutGrouping,
   ManifestContext,
   ManifestEntry,
   ManifestField

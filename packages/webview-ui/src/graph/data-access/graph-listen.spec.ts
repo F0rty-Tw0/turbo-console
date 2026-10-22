@@ -1,10 +1,13 @@
 import cytoscape from 'cytoscape';
-import type { Core } from 'cytoscape';
+import type { Core, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setBoxes } from './graph-boxes.ts';
 import { listen } from './graph-listen.ts';
 import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
+import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
+import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
@@ -13,6 +16,7 @@ const handlersOf = (): GraphViewHandlers => {
     onTapNode: vi.fn(),
     onTapEdge: vi.fn(),
     onTapBackground: vi.fn(),
+    onTapFolder: vi.fn(),
     onDoubleTapNode: vi.fn(),
     onDragEnd: vi.fn(),
     onViewport: vi.fn(),
@@ -20,6 +24,23 @@ const handlersOf = (): GraphViewHandlers => {
   };
 
   return handlers;
+};
+
+/**
+ * Frees a drag the way Cytoscape 3.34 does on mouse up: `dragfreeon` once on the grabbed node, then `dragfree` on every
+ * dragged element, which for a box is the box and all its descendants.
+ */
+const freeDrag = (grabbed: NodeSingular): void => {
+  const dragged = grabbed.union(grabbed.descendants());
+
+  grabbed.emit('dragfreeon');
+  dragged.emit('dragfree');
+};
+
+const firstDragOf = (handlers: GraphViewHandlers): Positions => {
+  const [positions] = vi.mocked(handlers.onDragEnd).mock.calls[0] ?? [];
+
+  return positions ?? {};
 };
 
 describe('FEATURE: listen', () => {
@@ -224,7 +245,7 @@ describe('FEATURE: listen', () => {
     it('WHEN the drag is freed THEN onDragEnd gets every node centre', () => {
       cy.getElementById('a').position({ x: 5, y: 6 });
 
-      cy.getElementById('a').emit('dragfree');
+      freeDrag(cy.getElementById('a'));
 
       const calls = vi.mocked(handlers.onDragEnd).mock.calls;
       const positions: Positions = calls[0]?.[0] ?? {};
@@ -232,6 +253,60 @@ describe('FEATURE: listen', () => {
       expect(calls).toHaveLength(1);
       expect(positions['a']).toStrictEqual({ x: 5, y: 6 });
       expect(Object.keys(positions).sort()).toStrictEqual(['__proto__', 'a', 'b', 'c']);
+    });
+  });
+
+  describe('GIVEN folder boxes around the packages', () => {
+    beforeEach(() => {
+      cy.destroy();
+      cy = boxedCyMock();
+      setBoxes(cy, BOX_GROUPS_STUB);
+      listen(cy, handlers);
+    });
+
+    it('WHEN the apps box is tapped THEN only onTapFolder runs, once, with apps', () => {
+      cy.getElementById('\u0001apps').emit('tap');
+
+      expect(handlers.onTapFolder).toHaveBeenCalledExactlyOnceWith('apps');
+      expect(handlers.onTapNode).not.toHaveBeenCalled();
+      expect(handlers.onTapEdge).not.toHaveBeenCalled();
+      expect(handlers.onTapBackground).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the root box is tapped THEN onTapFolder runs with the empty key', () => {
+      cy.getElementById('\u0001').emit('tap');
+
+      expect(handlers.onTapFolder).toHaveBeenCalledExactlyOnceWith('');
+    });
+
+    it('WHEN package a inside a box is tapped THEN only onTapNode runs, with a', () => {
+      cy.getElementById('a').emit('tap');
+
+      expect(handlers.onTapNode).toHaveBeenCalledExactlyOnceWith('a');
+      expect(handlers.onTapFolder).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a is tapped, then the box, then a THEN onDoubleTapNode does not run', () => {
+      cy.getElementById('a').emit('tap');
+      cy.getElementById('\u0001apps').emit('tap');
+      cy.getElementById('a').emit('tap');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the box moves with b hidden and its drag is freed THEN onDragEnd gets the five packages, b moved once', () => {
+      const box = cy.getElementById('\u0001apps');
+
+      cy.getElementById('b').style('display', 'none');
+      box.shift({ x: 10, y: 0 });
+      freeDrag(box);
+
+      const positions = firstDragOf(handlers);
+
+      expect(handlers.onDragEnd).toHaveBeenCalledOnce();
+      expect(Object.keys(positions).sort()).toStrictEqual(['__proto__', 'a', 'b', 'c', 'd']);
+      expect(positions['a']).toStrictEqual({ x: 10, y: 0 });
+      expect(positions['b']).toStrictEqual({ x: 110, y: 0 });
     });
   });
 

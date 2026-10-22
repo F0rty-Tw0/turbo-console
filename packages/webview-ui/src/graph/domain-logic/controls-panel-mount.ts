@@ -13,6 +13,7 @@ export const mountRestoredPanel = (
 ): void => {
   next.search.value = restored.search;
   next.depth.value = String(restored.depth);
+  next.grouping.checked = restored.isGrouped;
 
   for (const [tag, box] of next.tags) box.checked = restored.filters.tags.has(tag);
 

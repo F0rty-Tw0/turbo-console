@@ -27,7 +27,7 @@ export class GraphFiltering {
   private appliedMs: number | null = null;
 
   public constructor(deps: GraphFilteringDeps) {
-    const { page, view, build, now } = deps;
+    const { page, view, build, now, onGrouping } = deps;
     const controlsDeps: GraphControlsDeps = {
       page,
       build,
@@ -36,6 +36,7 @@ export class GraphFiltering {
       onSelect: (name): void => this.inspection.select(name),
       onFocusToggle: (name, setFilters): void => this.inspection.focused(name, setFilters),
       onOpenDetails: (): void => this.inspection.openDetails(),
+      onGrouping,
       onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
     };

@@ -1,4 +1,4 @@
-import type { GraphHostMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
 import { graphApiOf } from './graph-api.ts';
@@ -6,6 +6,7 @@ import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import type { GraphHost, OpenGraphPanel } from '../common/graph-panel.type.ts';
 import { GRAPH_HASH_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
+import { cacheKeyOf } from '../utils/graph-cache.util.ts';
 
 const STATE_POSTED: GraphHostMessage = { type: 'state', state: GRAPH_STATE_STUB };
 const READY = { type: 'ready' };
@@ -28,7 +29,7 @@ const panelsOf = (panels: OpenGraphPanel[]): Map<string, OpenGraphPanel> => {
 };
 
 const readCacheOf = (entries: Record<string, GraphLayoutCacheEntry>): GraphHost['readCache'] => {
-  const read = (root: string): GraphLayoutCacheEntry | null => entries[root] ?? null;
+  const read = (root: string, grouping: LayoutGrouping): GraphLayoutCacheEntry | null => entries[cacheKeyOf(root, grouping)] ?? null;
 
   return read;
 };
@@ -85,9 +86,15 @@ describe('FEATURE: the graph test API', () => {
 
   describe('GIVEN the layout cache', () => {
     it('WHEN a root has an entry THEN its cached hash is the entry hash', () => {
-      const api = graphApiOf(panelsOf([]), readCacheOf({ '/ws': ENTRY }));
+      const api = graphApiOf(panelsOf([]), readCacheOf({ [cacheKeyOf('/ws', 'flat')]: ENTRY }));
 
       expect(api.cachedHash('/ws')).toBe(GRAPH_HASH_STUB);
+    });
+
+    it('WHEN a root has only a folders entry THEN its cached hash is null', () => {
+      const api = graphApiOf(panelsOf([]), readCacheOf({ [cacheKeyOf('/ws', 'folders')]: ENTRY }));
+
+      expect(api.cachedHash('/ws')).toBeNull();
     });
 
     it('WHEN a root has no entry THEN its cached hash is null', () => {

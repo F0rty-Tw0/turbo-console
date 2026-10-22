@@ -2,11 +2,14 @@ import cytoscape from 'cytoscape';
 import type { Core, EdgeSingular, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setBoxes } from './graph-boxes.ts';
 import { applyPaint } from './graph-paint.ts';
 import { graphStyleOf } from './graph-style.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
 import type { Paint } from '../common/paint.type.ts';
+import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
+import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
@@ -110,6 +113,43 @@ describe('FEATURE: applyPaint', () => {
         ['ghost', 'selected'],
         ['ghost', 'normal']
       ]);
+    });
+  });
+});
+
+const PAINTED_IDS = ['a', 'b', 'c', '__proto__'];
+
+describe('FEATURE: applyPaint with folder boxes', () => {
+  let cy: Core;
+
+  beforeEach(() => {
+    cy = boxedCyMock();
+    setBoxes(cy, BOX_GROUPS_STUB);
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  describe('GIVEN a paint that gives each package a state', () => {
+    it('WHEN it is applied THEN every box has no state class', () => {
+      applyPaint(cy, FIRST_PAINT);
+
+      const boxes = cy.nodes(':parent');
+      const classes = boxes.map(classesOf);
+
+      expect(classes).toStrictEqual([[], [], []]);
+    });
+
+    it('WHEN it is applied THEN the packages and links still get their classes', () => {
+      applyPaint(cy, FIRST_PAINT);
+
+      const nodeClasses = PAINTED_IDS.map((id: string): string[] => classesOf(cy.getElementById(id)));
+      const links = cy.edges();
+      const linkClasses = links.map(classesOf);
+
+      expect(nodeClasses).toStrictEqual([['selected'], ['highlighted'], ['dimmed'], ['normal']]);
+      expect(linkClasses).toStrictEqual([['normal'], ['normal']]);
     });
   });
 });

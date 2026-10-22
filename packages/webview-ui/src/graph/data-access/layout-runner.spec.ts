@@ -1,3 +1,4 @@
+import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,7 +9,9 @@ import type { ElkLike, LayoutResult, LayoutRunner } from '../common/layout.type.
 import type { ElkMock } from '../test/common/elk-mock.type.ts';
 import { elkMock, failingFallbackMock, fallbackMock } from '../test/mocks/elk.mock.ts';
 import { CENTRES_STUB, ELK_GRAPH_STUB, FALLBACK_POSITIONS_STUB, LAID_OUT_STUB } from '../test/stubs/layout.stub.ts';
+import { boardsGraphOf } from '../test/utils/folder-boards.spec.util.ts';
 import { runnerDepsOf } from '../test/utils/layout-runner.spec.util.ts';
+import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
 
 const GRID_APP: Position = { x: 0, y: 0 };
 const GRID_POSITIONS: Positions = { app: GRID_APP };
@@ -176,6 +179,65 @@ describe('FEATURE: createLayoutRunner', () => {
       const result = await runner.run('h1', ELK_GRAPH_STUB);
 
       expect(result).toMatchObject({ hash: 'h1', engine: 'fallback', positions: GRID_POSITIONS });
+    });
+  });
+
+  describe('GIVEN a grouped graph', () => {
+    const grouped = boardsGraphOf();
+    const flat = flatElkGraphOf(grouped);
+    const web: ElkNode = { id: 'web', x: 10, y: 20, width: 40, height: 30 };
+    const ui: ElkNode = { id: 'ui', x: 0, y: 0, width: 20, height: 20 };
+    const apps: ElkNode = { id: '\u0001apps', x: 100, y: 200, children: [web] };
+    const libs: ElkNode = { id: '\u0001libs', x: 300, y: 0, children: [ui] };
+    const laidOut: ElkNode = { id: 'root', children: [apps, libs] };
+    const webCentre: Position = { x: 130, y: 235 };
+    const uiCentre: Position = { x: 310, y: 10 };
+    const nestedCentres: Positions = { web: webCentre, ui: uiCentre };
+
+    it('WHEN the layout resolves THEN the positions are the nested centres and the engine is elk', async () => {
+      const runner = createLayoutRunner(runnerDepsOf(() => mock.elk));
+
+      const pending = runner.run('h1', grouped);
+
+      mock.resolveLayout(laidOut);
+
+      await expect(pending).resolves.toMatchObject({ engine: 'elk', positions: nestedCentres });
+    });
+
+    it('WHEN ELK rejects THEN the fallback lays out the flattened graph', async () => {
+      const fallback = fallbackMock(FALLBACK_POSITIONS_STUB);
+      const runner = createLayoutRunner(runnerDepsOf(() => mock.elk, fallback));
+
+      const pending = runner.run('h1', grouped);
+
+      mock.rejectLayout(new Error('bad graph'));
+
+      await expect(pending).resolves.toMatchObject({ engine: 'fallback' });
+      expect(fallback).toHaveBeenCalledOnce();
+      expect(fallback.mock.calls[0]?.[0]).toStrictEqual(flat);
+    });
+
+    it('WHEN createElk throws THEN the fallback lays out the flattened graph', async () => {
+      const refuse = (): ElkLike => {
+        throw new Error('Trusted Types policy tc-elk is unavailable');
+      };
+      const fallback = fallbackMock(FALLBACK_POSITIONS_STUB);
+      const runner = createLayoutRunner(runnerDepsOf(refuse, fallback));
+
+      await runner.run('h1', grouped);
+
+      expect(fallback.mock.calls[0]?.[0]).toStrictEqual(flat);
+    });
+
+    it('WHEN there is no ELK and the fallback throws THEN the grid covers the packages only', async () => {
+      const refuse = (): ElkLike => {
+        throw new Error('Trusted Types policy tc-elk is unavailable');
+      };
+      const runner = createLayoutRunner(runnerDepsOf(refuse, failingFallbackMock()));
+
+      const result = await runner.run('h1', grouped);
+
+      expect(Object.keys(result?.positions ?? {})).toStrictEqual(['docs', 'web', '@acme/config', '@acme/ui', '@acme/utils']);
     });
   });
 });

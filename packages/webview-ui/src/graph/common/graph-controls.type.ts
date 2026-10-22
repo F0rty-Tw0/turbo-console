@@ -4,12 +4,13 @@ import type { GraphFilters } from './graph-filters.type.ts';
 import type { GraphInspectionDeps } from './graph-inspection.type.ts';
 import type { DrawnGraph, PageElements } from './graph-page.type.ts';
 
-/** What `restoredFilters` rebuilds from a saved state: the filters, the two inputs' values and whether the panel opens. */
+/** What `restoredFilters` rebuilds from a saved state: the filters, the two inputs' values, whether the panel opens and whether it is grouped. */
 export type RestoredControls = {
   readonly filters: GraphFilters;
   readonly search: string;
   readonly depth: number;
   readonly isOpen: boolean;
+  readonly isGrouped: boolean;
 };
 
 /** One row's look: `isDimmed` means checked but outside the focus or tags; `isLocked` is the focused row. */
@@ -42,6 +43,8 @@ export type GraphControlsDeps = {
   /** Every focus toggle: the new focus, or `null` when it was cleared; `setFilters` applies it, called once by the receiver. */
   readonly onFocusToggle: (name: string | null, setFilters: () => void) => void;
   readonly onOpenDetails: (name: string) => void;
+  /** The Group by folder checkbox changed: the receiver switches the layout, then the controls save. */
+  readonly onGrouping: (isGrouped: boolean) => void;
   readonly onSave: () => void;
   /** Re-measures the canvas now; Cytoscape's own observers wait a 100 ms debounce. */
   readonly onResize: () => void;
@@ -52,7 +55,7 @@ export type GraphFilteringDeps = Pick<
   GraphInspectionDeps,
   'bridge' | 'page' | 'view' | 'saver' | 'drawn' | 'now' | 'views' | 'overlay'
 > &
-  Pick<GraphControlsDeps, 'build'>;
+  Pick<GraphControlsDeps, 'build' | 'onGrouping'>;
 
 /** The controls panel built for one graph. */
 export type ControlsMounted = {
@@ -70,6 +73,7 @@ export type ControlsOps = {
   readonly setDepth: (mounted: ControlsMounted, text: string) => void;
   readonly showAll: (mounted: ControlsMounted) => void;
   readonly setSearch: (mounted: ControlsMounted, text: string) => void;
+  readonly setGrouping: (isGrouped: boolean) => void;
   readonly pick: (name: string) => void;
 };
 
@@ -80,6 +84,7 @@ export type ControlsActions = {
   readonly onFocus: (name: string) => void;
   readonly onDepth: (text: string) => void;
   readonly onDepthBlur: () => void;
+  readonly onGrouping: (isGrouped: boolean) => void;
   readonly onTag: (tag: string, isChecked: boolean) => void;
   readonly onShowAll: () => void;
   readonly onSearch: (text: string) => void;

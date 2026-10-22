@@ -42,6 +42,8 @@ const readNames = (value: unknown): string[] => {
 
 const readDetailsOpen = (value: unknown): boolean => (typeof value === 'boolean' ? value : true);
 
+const readGrouped = (value: unknown): boolean => (typeof value === 'boolean' ? value : false);
+
 const readLink = (value: unknown): GraphLinkRef | null => {
   if (!isRecord(value)) return null;
 
@@ -92,7 +94,8 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
     tags: readNames(raw['tags']),
     detailsOpen: readDetailsOpen(raw['detailsOpen']),
     link: readLink(raw['link']),
-    trace: readTrace(raw['trace'])
+    trace: readTrace(raw['trace']),
+    grouped: readGrouped(raw['grouped'])
   };
 
   return state;

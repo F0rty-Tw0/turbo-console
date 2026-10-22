@@ -1,13 +1,16 @@
 import cytoscape from 'cytoscape';
-import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
+import type { Core, ElementDefinition } from 'cytoscape';
 
+import { setBoxes } from './graph-boxes.ts';
 import { anchorBoxOf, panBy } from './graph-camera.ts';
 import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
 import { applyPaint } from './graph-paint.ts';
+import { placeNodes, positionOf } from './graph-place.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
 import type { GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
@@ -21,21 +24,6 @@ const FIT_PADDING_PX = 24;
 const MIN_ZOOM = 0.05;
 
 const MAX_ZOOM = 2;
-
-const ORIGIN: Position = { x: 0, y: 0 };
-
-/** Own entries only, so a package named `constructor` or `toString` never resolves to an inherited member. */
-const positionOf = (positions: Positions, name: string): Position => {
-  const position = Object.hasOwn(positions, name) ? positions[name] : undefined;
-
-  return position ?? ORIGIN;
-};
-
-const placeNodes = (cy: Core, placed: Positions): void => {
-  const placeNode = (node: NodeSingular): Position => positionOf(placed, node.id());
-
-  cy.nodes().positions(placeNode);
-};
 
 const nodeDefinitionsOf = (packages: string[], positions: Positions, sizeOf: NodeSizer): ElementDefinition[] => {
   const definitionOf = (name: string): ElementDefinition => {
@@ -109,6 +97,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     panBy: (dx: number): void => panBy(cy, dx),
     viewport,
     setViewport,
+    setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
     setPositions: (placed: Positions): void => placeNodes(cy, placed),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
     cy: (): Core => cy
