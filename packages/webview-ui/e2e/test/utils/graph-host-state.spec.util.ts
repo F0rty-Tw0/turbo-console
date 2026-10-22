@@ -5,7 +5,7 @@
 export const postStates = (json: string): void => {
   const parsed: unknown = JSON.parse(json);
 
-  if (!Array.isArray(parsed)) return;
+  if (!Array.isArray(parsed)) throw new TypeError('postStates expects a JSON array of states');
 
   const states: unknown[] = parsed;
 

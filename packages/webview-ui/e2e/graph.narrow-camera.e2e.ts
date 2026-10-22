@@ -67,6 +67,21 @@ test.describe('FEATURE: graph camera in a narrow editor', () => {
       await test.step('AND docs is tapped again', async (): Promise<void> => graphCanvas.tapNode('docs'));
 
       await test.step('THEN docs is clear of the overlay again', async (): Promise<void> => graphNarrow.expectAnchorsClear(['docs']));
+
+      await test.step('WHEN the canvas is panned so docs sits in the overlay margin again', async (): Promise<void> =>
+        graphCanvas.panBy(10, 0));
+
+      await test.step('AND two frames pass', async (): Promise<void> => graphPage.waitFrames());
+
+      await test.step('AND the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
+
+      await test.step('AND focus is put on the Exclude button', async (): Promise<void> => graphDetails.focusButton('Exclude'));
+
+      await test.step('AND Escape is pressed', async (): Promise<void> => graphPage.pressKey('Escape'));
+
+      await test.step('AND two frames pass', async (): Promise<void> => graphPage.waitFrames());
+
+      await test.step('THEN the camera is unchanged', async (): Promise<void> => graphCamera.expectCameraUnchanged());
     }
   );
 
