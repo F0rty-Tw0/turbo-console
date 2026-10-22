@@ -11,3 +11,6 @@ export const PERSISTENT_ROOT_ID = '//#dev';
 
 /** Every task of the fixture, sorted: `format` has no `turbo.json` key, so its place here shows a script is a turbo task. */
 export const SINGLE_TASK_IDS: string[] = ['//#build', '//#dev', '//#format', '//#lint', '//#test:unit'];
+
+/** `git init` on a loaded Windows runner takes well over Vitest's 5s default. Matches repo-gen. */
+export const GIT_SPAWN_TIMEOUT_MS = 60_000;

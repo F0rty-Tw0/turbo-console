@@ -2,9 +2,10 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { findBenchFiles, importBenchFile } from './bench-files.ts';
+import { FS_SPEC_TIMEOUT_MS } from '../test/common/bench.const.ts';
 
 const BENCH_SOURCE = "export default [{ name: 'one', fn: () => 1, gate: true }];\n";
 
@@ -14,6 +15,8 @@ const writeSource = async (root: string, path: string): Promise<void> => {
   await mkdir(dirname(file), { recursive: true });
   await writeFile(file, BENCH_SOURCE);
 };
+
+vi.setConfig({ testTimeout: FS_SPEC_TIMEOUT_MS, hookTimeout: FS_SPEC_TIMEOUT_MS });
 
 describe('FEATURE: bench files', () => {
   let root = '';

@@ -3,13 +3,16 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { writeBenchResults } from './bench-results.ts';
 import { benchResultsSchema } from '../common/bench.schema.ts';
 import type { BenchResult } from '../common/bench.type.ts';
+import { FS_SPEC_TIMEOUT_MS } from '../test/common/bench.const.ts';
 
 const RESULT: BenchResult = { name: 'core/parse', medianNs: 1500, samples: 25, gate: true };
+
+vi.setConfig({ testTimeout: FS_SPEC_TIMEOUT_MS, hookTimeout: FS_SPEC_TIMEOUT_MS });
 
 describe('FEATURE: bench results file', () => {
   let dir = '';

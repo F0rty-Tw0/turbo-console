@@ -2,10 +2,11 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { readRunsDir } from './bench-runs.ts';
 import type { BenchResult } from '../common/bench.type.ts';
+import { FS_SPEC_TIMEOUT_MS } from '../test/common/bench.const.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
 
@@ -22,6 +23,8 @@ const writeJson = async (root: string, path: string, value: unknown): Promise<vo
   await mkdir(dirname(file), { recursive: true });
   await writeFile(file, json);
 };
+
+vi.setConfig({ testTimeout: FS_SPEC_TIMEOUT_MS, hookTimeout: FS_SPEC_TIMEOUT_MS });
 
 describe('FEATURE: bench runs dir', () => {
   let root = '';

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runBenchCompare } from './bench-compare.feature.ts';
 import type { BenchResult } from '../common/bench.type.ts';
+import { FS_SPEC_TIMEOUT_MS } from '../test/common/bench.const.ts';
 
 const writeRuns = async (runsDir: string, medianNs: number): Promise<void> => {
   const results: BenchResult[] = [{ name: 'core/parse', medianNs, samples: 25, gate: true }];
@@ -18,6 +19,8 @@ const writeRuns = async (runsDir: string, medianNs: number): Promise<void> => {
     await writeFile(file, json);
   }
 };
+
+vi.setConfig({ testTimeout: FS_SPEC_TIMEOUT_MS, hookTimeout: FS_SPEC_TIMEOUT_MS });
 
 describe('FEATURE: bench-compare CLI', () => {
   let root = '';

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { initGit, writeEmptyWorkspace, writeSingleApp } from './single-package-fixture.spec.util.ts';
+import { GIT_SPAWN_TIMEOUT_MS } from '../common/single-package.const.ts';
 
 type Writer = (dir: string) => Promise<void>;
 
@@ -42,7 +43,7 @@ describe('FEATURE: single-package fixture writers', () => {
   });
 
   afterEach(async () => {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 5 });
   });
 
   describe.each(WRITERS)('GIVEN %s', (_, write) => {
@@ -104,13 +105,17 @@ describe('FEATURE: single-package fixture writers', () => {
   });
 
   describe('GIVEN a written fixture', () => {
-    it('WHEN initGit runs THEN the dir is a git repo', async () => {
-      await writeSingleApp(dir);
-      await initGit(dir);
+    it(
+      'WHEN initGit runs THEN the dir is a git repo',
+      async () => {
+        await writeSingleApp(dir);
+        await initGit(dir);
 
-      const head = await stat(join(dir, '.git', 'HEAD'));
+        const head = await stat(join(dir, '.git', 'HEAD'));
 
-      expect(head.isFile()).toBe(true);
-    });
+        expect(head.isFile()).toBe(true);
+      },
+      GIT_SPAWN_TIMEOUT_MS
+    );
   });
 });
