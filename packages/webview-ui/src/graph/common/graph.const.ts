@@ -88,6 +88,21 @@ export const ELK_OPTIONS: Readonly<Record<string, string>> = {
 /** Starts every folder box id, in Cytoscape and ELK alike; package names never start with U+0001. */
 export const FOLDER_ID_PREFIX = '\u0001';
 
+/** Starts every collapsed folder node id; package names never start with U+0002. */
+export const COLLAPSED_ID_PREFIX = '\u0002';
+
+/** Starts every folder link id; package names never start with U+0003. */
+export const FOLDER_LINK_ID_PREFIX = '\u0003';
+
+// eslint-disable-next-line local/no-unused-exports -- Task 2.3 sizes the collapsed node with it
+export const COLLAPSED_NODE_WIDTH = 180;
+
+// eslint-disable-next-line local/no-unused-exports -- Task 2.3 sizes the collapsed node with it
+export const COLLAPSED_NODE_HEIGHT = 56;
+
+/** Widest a collapsed node's title may be, in raw text px, before it is cut with an ellipsis. */
+export const COLLAPSED_LABEL_MAX_PX = 116;
+
 /** Room ELK leaves around a folder's packages, and Cytoscape's compound padding, in px. */
 export const FOLDER_PADDING_PX = 32;
 
