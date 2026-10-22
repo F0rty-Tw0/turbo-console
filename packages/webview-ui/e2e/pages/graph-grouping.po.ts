@@ -146,6 +146,11 @@ export class GraphGroupingPage extends GraphBoxesPage {
     await expect.poll(async (): Promise<string[]> => this.clipFaults()).toEqual([]);
   }
 
+  /** Every drawn folder, box or collapsed node, lies inside the canvas, none cut at its edge. */
+  public async expectFoldersInsideCanvas(): Promise<void> {
+    await expect.poll(async (): Promise<string[]> => this.clipFaults()).toEqual([]);
+  }
+
   /** At least `count` boxes overlap the canvas, so a timing run draws boxes rather than empty space. */
   public async expectBoxesInView(count: number): Promise<void> {
     await expect.poll(async (): Promise<number> => this.boxesInView()).toBeGreaterThanOrEqual(count);

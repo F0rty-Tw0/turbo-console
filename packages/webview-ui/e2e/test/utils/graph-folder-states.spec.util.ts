@@ -4,6 +4,7 @@ import { positionsOf } from './graph-positions.spec.util.ts';
 import { groupedSavedState } from './graph-saved-state.spec.util.ts';
 import type { GraphEdge, GraphReady } from '../../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
+import { freshViewStateOf } from '../../../src/graph/utils/fresh-view-state.util.ts';
 
 /** `boardsState()` with a grouped layout cached at fixed centres, so geometry never depends on ELK. */
 export const placedBoardsState = (): GraphReady => {
@@ -73,6 +74,36 @@ export const awkwardNamesState = (): GraphReady => {
       ['x', 300, 0],
       ['a', 0, 300],
       ['constructor', 300, 300]
+    ])
+  };
+
+  return state;
+};
+
+/** A saved flat view of `hash` with exactly these folders collapsed, so Group by folder collapses them on arrival. */
+export const flatCollapsedSavedState = (hash: string, collapsed: string[]): GraphViewState => {
+  const fresh = freshViewStateOf(hash);
+  const state: GraphViewState = { ...fresh, collapsed };
+
+  return state;
+};
+
+/** `a`, `m` and `b`, each alone in its folder, in one wide row: the fit is as wide as the row, so a node wider than its box shows. */
+export const wideRowFolderState = (): GraphReady => {
+  const state: GraphReady = {
+    kind: 'graph',
+    hash: 'f01d0003',
+    packages: [packageOf('a', 'x/a'), packageOf('m', 'mid/m'), packageOf('b', 'y/b')],
+    edges: [],
+    positions: positionsOf([
+      ['a', 0, 0],
+      ['m', 400, 0],
+      ['b', 800, 0]
+    ]),
+    folderPositions: positionsOf([
+      ['a', 0, 0],
+      ['m', 400, 0],
+      ['b', 800, 0]
     ])
   };
 

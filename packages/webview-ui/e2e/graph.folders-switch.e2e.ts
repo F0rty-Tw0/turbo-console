@@ -6,6 +6,7 @@ import {
   bothCachedBoardsState,
   cachedBoardsState
 } from './test/utils/graph-boards.spec.util.ts';
+import { flatCollapsedSavedState, wideRowFolderState } from './test/utils/graph-folder-states.spec.util.ts';
 import { packageOf, stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
 import { LAYING_OUT_FOLDERS_TEXT } from '../src/graph/common/graph.const.ts';
@@ -19,6 +20,10 @@ const RF1 = { description: 'M4-4 Review Focus 1', type: 'requirement' };
 const RF2 = { description: 'M4-4 Review Focus 2', type: 'requirement' };
 
 const OTHER_HASH = 'b0a2d501';
+
+const WIDE_ROW = wideRowFolderState();
+
+const ROW_FOLDERS = ['mid', 'x', 'y'];
 
 const BOARDS = boardsState();
 
@@ -244,6 +249,24 @@ test.describe('FEATURE: grouped graph switching', () => {
         await graphGrouping.expectFolderKeys(BOARD_FOLDER_KEYS);
         await graphProbe.expectLayoutEngine('cache');
       });
+    }
+  );
+
+  test(
+    'GIVEN a flat view with one-package folders saved collapsed, switching to grouped fits the collapsed nodes into the canvas',
+    { annotation: RF1 },
+    async ({ graphFolders, graphGrouping, graphHost, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened with the folders saved collapsed but the view flat', async (): Promise<void> =>
+        graphPage.open({ savedState: flatCollapsedSavedState(WIDE_ROW.hash, ROW_FOLDERS) }));
+
+      await test.step('AND the wide row is sent with both layouts cached', async (): Promise<void> => graphHost.sendState(WIDE_ROW));
+
+      await test.step('AND Group by folder is checked', async (): Promise<void> => graphGrouping.setGrouped(true));
+
+      await test.step('THEN every folder is collapsed', async (): Promise<void> => graphFolders.expectAllCollapsed(true));
+
+      await test.step('AND no collapsed node is cut at the canvas edge', async (): Promise<void> =>
+        graphGrouping.expectFoldersInsideCanvas());
     }
   );
 });

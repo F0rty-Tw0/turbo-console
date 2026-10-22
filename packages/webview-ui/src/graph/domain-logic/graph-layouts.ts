@@ -157,9 +157,9 @@ export class GraphLayouts {
 
     view.setPositions(positions);
     this.deps.screen.showNotice(this.noticeOf(mode));
-    view.fit();
     this.onScreen = mode;
     this.deps.onPlaced(mode);
+    view.fit();
   }
 
   /** The hash's first draw; the controller then restores filters, inspection and camera. */

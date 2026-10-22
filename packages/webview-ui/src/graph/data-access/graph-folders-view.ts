@@ -64,6 +64,7 @@ const classScene = (cy: Core, scene: FolderScene): void => {
     return isSourceIn || isInCollapsed(edge.target().id(), scene);
   };
 
+  // Insurance: each such link has an end in a hidden box, which already hides it in Cytoscape.
   packageEdges(cy).filter(touchesCollapsed).addClass(FOLDER_HIDDEN_CLASS);
 };
 
