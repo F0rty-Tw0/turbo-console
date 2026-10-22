@@ -234,9 +234,13 @@ p {
   left: 0;
 }
 
+/*
+ * The title takes the room the count leaves (basis 0) and is cut first, down to a 3ch floor; only then the count is
+ * cut too, so the 24 px buttons stay inside a 120 px box.
+ */
 .widget-title {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1 1 0;
+  min-width: 3ch;
   overflow: hidden;
   color: var(--vscode-foreground);
   white-space: nowrap;
@@ -244,8 +248,12 @@ p {
 }
 
 .widget-count {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
   color: var(--tc-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* A folder or package menu, placed from script; above the rows and the breadcrumb. */

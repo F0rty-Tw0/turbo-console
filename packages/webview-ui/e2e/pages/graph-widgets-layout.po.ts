@@ -52,15 +52,6 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
     await expect(this.ellipsisOf(folder)).toBeFocused();
   }
 
-  /** Both the folder's chevron and its "…" are shown, whichever way it is expanded. */
-  public async expectHeaderShown(folder: string): Promise<void> {
-    const title = folderTitleOf(folder);
-    const chevron = this.layer.getByRole('button', { name: `Collapse ${title}`, exact: true });
-
-    await expect(chevron).toBeVisible();
-    await this.expectEllipsisShown(folder);
-  }
-
   public async expectEllipsisShown(folder: string): Promise<void> {
     await expect(this.ellipsisOf(folder)).toBeVisible();
   }

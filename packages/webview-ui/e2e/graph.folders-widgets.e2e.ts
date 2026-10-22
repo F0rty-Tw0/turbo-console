@@ -60,7 +60,8 @@ test.describe('FEATURE: folder widget placement', () => {
         await graphWidgets.zoomBoxOver('apps', WIDGET_MIN_BOX_PX);
       });
 
-      await test.step('THEN the apps chevron and "…" show again', async (): Promise<void> => graphWidgets.expectHeaderShown('apps'));
+      await test.step('THEN the apps chevron and "…" show again inside its box, within a pixel', async (): Promise<void> =>
+        graphWidgets.expectRowFollowsBox('apps'));
     }
   );
 
