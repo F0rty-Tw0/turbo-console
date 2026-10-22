@@ -35,6 +35,20 @@ export class GraphDetailsLink {
     await this.page.mouse.click(middle.x, middle.y);
   }
 
+  /** Clicks the link's middle, then its target node, back to back: inside Cytoscape's 250 ms double-tap window. */
+  public async tapLinkThenTarget(source: string, target: string): Promise<void> {
+    await this.probe.waitForNodes();
+
+    const nodes = await this.probe.nodes();
+    const middle = edgeMidpointOf(nodes, source, target);
+    const end = nodes.find((node): boolean => node.id === target);
+
+    if (end === undefined) throw new Error(`graph e2e: no node ${target} is drawn`);
+
+    await this.page.mouse.click(middle.x, middle.y);
+    await this.page.mouse.click(end.renderedX, end.renderedY);
+  }
+
   public async pressEnd(name: string): Promise<void> {
     await this.panel.getByRole('button', { name, exact: true }).click();
   }

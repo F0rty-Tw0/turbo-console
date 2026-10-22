@@ -21,9 +21,19 @@ const positionsOf = (cy: Core): Positions => {
   return Object.fromEntries(entries);
 };
 
-/** Reports the canvas events to `handlers`; the tap on the background is the core's own, never a node's or edge's, and a ghost's taps report nothing. */
+/**
+ * Reports the canvas events to `handlers`; the tap on the background is the core's own, never a node's or edge's, and a
+ * ghost's taps report nothing. Cytoscape fires `dbltap` on timing alone, so a double tap counts only when both taps hit
+ * the same node.
+ */
 export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
-  const onBackground = (event: EventObject): void => {
+  let previousTarget: unknown = null;
+  let lastTarget: unknown = null;
+
+  const onAnyTap = (event: EventObject): void => {
+    previousTarget = lastTarget;
+    lastTarget = event.target;
+
     if (event.target === cy) handlers.onTapBackground();
   };
   const onNode = (event: EventObjectNode): void => {
@@ -35,8 +45,9 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   };
   const onDoubleNode = (event: EventObjectNode): void => {
     const ghost = isGhost(event);
+    const isSameTarget = previousTarget === event.target;
 
-    if (ghost) return;
+    if (ghost || !isSameTarget) return;
 
     handlers.onDoubleTapNode(nodeName(event));
   };
@@ -53,7 +64,7 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
 
   cy.on('tap', 'node', onNode);
   cy.on('tap', 'edge', onEdge);
-  cy.on('tap', onBackground);
+  cy.on('tap', onAnyTap);
   cy.on('dbltap', 'node', onDoubleNode);
   cy.on('dragfree', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
   cy.on('viewport', handlers.onViewport);

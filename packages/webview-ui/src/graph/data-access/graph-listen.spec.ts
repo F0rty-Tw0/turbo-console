@@ -71,10 +71,40 @@ describe('FEATURE: listen', () => {
   });
 
   describe('GIVEN a double tap on a node', () => {
-    it('WHEN it is b THEN onDoubleTapNode runs with b', () => {
+    it('WHEN both taps were on b THEN onDoubleTapNode runs with b', () => {
+      cy.getElementById('b').emit('tap');
+      cy.getElementById('b').emit('tap');
+
       cy.getElementById('b').emit('dbltap');
 
       expect(handlers.onDoubleTapNode).toHaveBeenCalledExactlyOnceWith('b');
+    });
+
+    it('WHEN the first tap was on the edge a>b THEN onDoubleTapNode does not run', () => {
+      cy.getElementById(edgeIdOf({ source: 'a', target: 'b' })).emit('tap');
+      cy.getElementById('b').emit('tap');
+
+      cy.getElementById('b').emit('dbltap');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the first tap was on a THEN onDoubleTapNode does not run', () => {
+      cy.getElementById('a').emit('tap');
+      cy.getElementById('b').emit('tap');
+
+      cy.getElementById('b').emit('dbltap');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the first tap was on the background THEN onDoubleTapNode does not run', () => {
+      cy.emit('tap');
+      cy.getElementById('b').emit('tap');
+
+      cy.getElementById('b').emit('dbltap');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
     });
   });
 
@@ -101,6 +131,8 @@ describe('FEATURE: listen', () => {
 
     it('WHEN b is double tapped THEN onDoubleTapNode does not run', () => {
       cy.getElementById('b').addClass('ghost');
+      cy.getElementById('b').emit('tap');
+      cy.getElementById('b').emit('tap');
 
       cy.getElementById('b').emit('dbltap');
 
