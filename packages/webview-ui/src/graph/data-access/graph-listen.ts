@@ -2,7 +2,7 @@ import type { Core, EventObject, EventObjectEdge, EventObjectNode, NodeSingular 
 
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
-import { GHOST_CLASS } from '../common/graph.const.ts';
+import { DOUBLE_TAP_MS, GHOST_CLASS } from '../common/graph.const.ts';
 
 const centreEntryOf = (node: NodeSingular): [string, Position] => {
   const { x, y } = node.position();
@@ -23,36 +23,45 @@ const positionsOf = (cy: Core): Positions => {
 
 /**
  * Reports the canvas events to `handlers`; the tap on the background is the core's own, never a node's or edge's, and a
- * ghost's taps report nothing. Cytoscape fires `dbltap` on timing alone, so a double tap counts only when both taps hit
- * the same node.
+ * ghost's taps report nothing. A double tap is two taps on the same package id within `DOUBLE_TAP_MS`, detected here:
+ * Cytoscape's `dbltap` fires on timing alone, whatever the first tap hit, and spends the pair so a real double-click
+ * right after a tap elsewhere never fires. Ids, not elements, so a redraw between the taps keeps the pair.
  */
 export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
-  let previousTarget: unknown = null;
-  let lastTarget: unknown = null;
+  let lastPackage: string | null = null;
+  let lastTapAt = Number.NEGATIVE_INFINITY;
 
-  const onAnyTap = (event: EventObject): void => {
-    previousTarget = lastTarget;
-    lastTarget = event.target;
+  /** Records a tap on `name` (`null`: anything but a package) and says whether it completes a double tap. */
+  const noteTap = (name: string | null, at: number): boolean => {
+    const isDouble = name !== null && name === lastPackage && at - lastTapAt <= DOUBLE_TAP_MS;
 
-    if (event.target === cy) handlers.onTapBackground();
+    lastPackage = isDouble ? null : name;
+    lastTapAt = at;
+
+    return isDouble;
+  };
+  const onBackground = (event: EventObject): void => {
+    if (event.target !== cy) return;
+
+    noteTap(null, event.timeStamp);
+    handlers.onTapBackground();
   };
   const onNode = (event: EventObjectNode): void => {
     const ghost = isGhost(event);
+    const id = nodeName(event);
+    const name = ghost ? null : id;
+    const isDouble = noteTap(name, event.timeStamp);
 
-    if (ghost) return;
+    if (name === null) return;
 
-    handlers.onTapNode(nodeName(event));
-  };
-  const onDoubleNode = (event: EventObjectNode): void => {
-    const ghost = isGhost(event);
-    const isSameTarget = previousTarget === event.target;
+    handlers.onTapNode(name);
 
-    if (ghost || !isSameTarget) return;
-
-    handlers.onDoubleTapNode(nodeName(event));
+    if (isDouble) handlers.onDoubleTapNode(name);
   };
   const onEdge = (event: EventObjectEdge): void => {
     const ghost = isGhost(event);
+
+    noteTap(null, event.timeStamp);
 
     if (ghost) return;
 
@@ -64,8 +73,7 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
 
   cy.on('tap', 'node', onNode);
   cy.on('tap', 'edge', onEdge);
-  cy.on('tap', onAnyTap);
-  cy.on('dbltap', 'node', onDoubleNode);
+  cy.on('tap', onBackground);
   cy.on('dragfree', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
   cy.on('viewport', handlers.onViewport);
   cy.on('render', handlers.onRender);

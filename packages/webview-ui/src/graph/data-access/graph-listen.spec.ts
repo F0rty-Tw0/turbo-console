@@ -70,38 +70,87 @@ describe('FEATURE: listen', () => {
     });
   });
 
-  describe('GIVEN a double tap on a node', () => {
-    it('WHEN both taps were on b THEN onDoubleTapNode runs with b', () => {
-      cy.getElementById('b').emit('tap');
-      cy.getElementById('b').emit('tap');
+  describe('GIVEN taps 100 ms apart', () => {
+    const tapAfter = (id: string | null): void => {
+      vi.advanceTimersByTime(100);
 
-      cy.getElementById('b').emit('dbltap');
+      if (id === null) cy.emit('tap');
+      else cy.getElementById(id).emit('tap');
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('WHEN both taps are on b THEN onDoubleTapNode runs once with b, after onTapNode', () => {
+      tapAfter('b');
+      tapAfter('b');
+
+      expect(handlers.onDoubleTapNode).toHaveBeenCalledExactlyOnceWith('b');
+      expect(vi.mocked(handlers.onTapNode).mock.invocationCallOrder[1]).toBeLessThan(
+        vi.mocked(handlers.onDoubleTapNode).mock.invocationCallOrder[0] ?? 0
+      );
+    });
+
+    it('WHEN b is tapped three times THEN onDoubleTapNode runs once', () => {
+      tapAfter('b');
+      tapAfter('b');
+      tapAfter('b');
+
+      expect(handlers.onDoubleTapNode).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the edge a>b is tapped and then b twice THEN onDoubleTapNode runs once with b', () => {
+      tapAfter(edgeIdOf({ source: 'a', target: 'b' }));
+      tapAfter('b');
+      tapAfter('b');
 
       expect(handlers.onDoubleTapNode).toHaveBeenCalledExactlyOnceWith('b');
     });
 
-    it('WHEN the first tap was on the edge a>b THEN onDoubleTapNode does not run', () => {
-      cy.getElementById(edgeIdOf({ source: 'a', target: 'b' })).emit('tap');
-      cy.getElementById('b').emit('tap');
-
-      cy.getElementById('b').emit('dbltap');
+    it('WHEN the first tap is on the edge a>b THEN onDoubleTapNode does not run', () => {
+      tapAfter(edgeIdOf({ source: 'a', target: 'b' }));
+      tapAfter('b');
 
       expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
     });
 
-    it('WHEN the first tap was on a THEN onDoubleTapNode does not run', () => {
-      cy.getElementById('a').emit('tap');
-      cy.getElementById('b').emit('tap');
-
-      cy.getElementById('b').emit('dbltap');
+    it('WHEN the first tap is on a THEN onDoubleTapNode does not run', () => {
+      tapAfter('a');
+      tapAfter('b');
 
       expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
     });
 
-    it('WHEN the first tap was on the background THEN onDoubleTapNode does not run', () => {
-      cy.emit('tap');
-      cy.getElementById('b').emit('tap');
+    it('WHEN the first tap is on the background THEN onDoubleTapNode does not run', () => {
+      tapAfter(null);
+      tapAfter('b');
 
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the graph is redrawn between two taps on b THEN onDoubleTapNode runs with b', () => {
+      tapAfter('b');
+      cy.elements().remove();
+      cy.add(CANVAS_ELEMENTS);
+      tapAfter('b');
+
+      expect(handlers.onDoubleTapNode).toHaveBeenCalledExactlyOnceWith('b');
+    });
+
+    it('WHEN the second tap on b comes 251 ms after the first THEN onDoubleTapNode does not run', () => {
+      tapAfter('b');
+      vi.advanceTimersByTime(151);
+      tapAfter('b');
+
+      expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
+    });
+
+    it("WHEN Cytoscape's own dbltap fires on b THEN onDoubleTapNode does not run", () => {
       cy.getElementById('b').emit('dbltap');
 
       expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
@@ -131,10 +180,9 @@ describe('FEATURE: listen', () => {
 
     it('WHEN b is double tapped THEN onDoubleTapNode does not run', () => {
       cy.getElementById('b').addClass('ghost');
-      cy.getElementById('b').emit('tap');
-      cy.getElementById('b').emit('tap');
 
-      cy.getElementById('b').emit('dbltap');
+      cy.getElementById('b').emit('tap');
+      cy.getElementById('b').emit('tap');
 
       expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
     });

@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { ManifestEntry } from '../../src/bridge/common/graph-message.type.ts';
 import type { ExcerptRow } from '../../src/graph/common/details.type.ts';
-import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
+import { DETAILS_LABEL, DOUBLE_TAP_MS } from '../../src/graph/common/graph.const.ts';
 import { expectExcerptRow } from '../test/utils/graph-excerpt.spec.util.ts';
 import { edgeMidpointOf } from '../test/utils/graph-geometry.spec.util.ts';
 
@@ -35,8 +35,11 @@ export class GraphDetailsLink {
     await this.page.mouse.click(middle.x, middle.y);
   }
 
-  /** Clicks the link's middle, then its target node, back to back: inside Cytoscape's 250 ms double-tap window. */
-  public async tapLinkThenTarget(source: string, target: string): Promise<void> {
+  /**
+   * Clicks the link's middle, then its target node once or twice, all inside the double-tap window; throws when the
+   * clicks took longer, since the case would then pass without testing anything.
+   */
+  public async tapLinkThenTarget(source: string, target: string, clickCount: 1 | 2): Promise<void> {
     await this.probe.waitForNodes();
 
     const nodes = await this.probe.nodes();
@@ -45,8 +48,15 @@ export class GraphDetailsLink {
 
     if (end === undefined) throw new Error(`graph e2e: no node ${target} is drawn`);
 
+    const startedAt = Date.now();
+
     await this.page.mouse.click(middle.x, middle.y);
-    await this.page.mouse.click(end.renderedX, end.renderedY);
+    await this.page.mouse.click(end.renderedX, end.renderedY, { clickCount });
+
+    const endedAt = Date.now();
+    const tookMs = endedAt - startedAt;
+
+    if (tookMs >= DOUBLE_TAP_MS) throw new Error(`graph e2e: the clicks took ${tookMs} ms, outside the double-tap window`);
   }
 
   public async pressEnd(name: string): Promise<void> {
