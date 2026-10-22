@@ -13,6 +13,9 @@ export const GHOST_CLASS = 'ghost';
 
 export const VIEW_STATE_DEBOUNCE_MS = 250;
 
+/** Two taps on the same package this close together are a double tap; Cytoscape's own `dbltap` window. */
+export const DOUBLE_TAP_MS = 250;
+
 export const MIN_DEPTH = 1;
 
 export const MAX_DEPTH = 5;

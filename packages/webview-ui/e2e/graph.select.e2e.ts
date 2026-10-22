@@ -178,4 +178,34 @@ test.describe('FEATURE: graph selection', () => {
 
     await test.step('THEN the host received openDetails for core', async (): Promise<void> => graphHost.expectOpenDetails('core'));
   });
+
+  test('GIVEN a cached graph, tapping a link and then a package quickly does not open Details', async ({
+    graphHost,
+    graphLink,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+    await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
+
+    await test.step('AND the link data > core and then core are tapped quickly', async (): Promise<void> =>
+      graphLink.tapLinkThenTarget('data', 'core', 1));
+
+    await test.step('THEN the host received no openDetails', async (): Promise<void> => graphHost.expectNoOpenDetails());
+  });
+
+  test('GIVEN a cached graph, double-tapping a package right after tapping a link posts openDetails for it', async ({
+    graphHost,
+    graphLink,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+    await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
+
+    await test.step('AND the link data > core is tapped and core double-tapped right after', async (): Promise<void> =>
+      graphLink.tapLinkThenTarget('data', 'core', 2));
+
+    await test.step('THEN the host received openDetails for core', async (): Promise<void> => graphHost.expectOpenDetails('core'));
+  });
 });
