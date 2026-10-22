@@ -1,4 +1,5 @@
 import type { DetailsViews } from './details.type.ts';
+import type { FolderScene } from './folder-scene.type.ts';
 import type { ControlsViewFields, DrawnGraph, GraphView, PageElements, ViewStateSaver } from './graph-page.type.ts';
 import type { Inspection, InspectionInput, LinkInspection } from './inspection.type.ts';
 import type { TraceCandidates, TraceResult } from './trace.type.ts';
@@ -32,6 +33,12 @@ export type InspectionSave = {
   readonly detailsOpen: boolean;
 };
 
+/** The folder hooks the inspection canvas runs: the scene its paint covers and the folder pass after its ghosts. */
+export type CanvasFolders = {
+  readonly scene: () => FolderScene | null;
+  readonly show: () => void;
+};
+
 export type GraphInspectionDeps = {
   readonly bridge: Bridge;
   readonly page: PageElements;
@@ -57,6 +64,7 @@ export type GraphInspectionDeps = {
   readonly onShow: (name: string) => void;
   /** Whether "Show" can re-tick `name` alone to draw it again. */
   readonly canShow: (name: string) => boolean;
+  readonly folders: CanvasFolders;
 };
 
 /** What the keep-clear pan reads: the canvas, the page's container, the details aside, the inspection and its drawn ghosts. */

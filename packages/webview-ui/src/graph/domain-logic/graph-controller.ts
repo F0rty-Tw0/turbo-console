@@ -34,10 +34,13 @@ class GraphPageController {
       onTapBackground: (): void => this.filtering.inspection.input(BACKGROUND),
       onTapFolder: (): void => undefined,
       onDoubleTapNode: (name: string): void => this.filtering.inspection.openDetailsOf(name),
-      onDoubleTapFolder: (): void => undefined,
+      onDoubleTapFolder: (folder: string): void => this.filtering.folders.toggle(folder),
       onDragEnd: (positions: Positions): void => this.layouts.dragged(positions),
       onViewport: (): void => this.filtering.inspection.saveViewport(),
-      onRender: (): void => this.frames.mark()
+      onRender: (): void => {
+        this.frames.mark();
+        this.filtering.folders.rendered();
+      }
     };
 
     this.deps = deps;
@@ -47,7 +50,9 @@ class GraphPageController {
       ...deps,
       view: this.view,
       drawn: (): DrawnGraph | null => this.drawn,
-      onGrouping: (isGrouped: boolean): void => this.switchGrouping(isGrouped)
+      onGrouping: (isGrouped: boolean): void => this.switchGrouping(isGrouped),
+      isGrouped: (): boolean => this.layouts.drawnMode() === 'folders',
+      canAct: (): boolean => this.layouts.mode() === 'folders' && this.layouts.drawnMode() === 'folders'
     });
     this.layouts = new GraphLayouts({
       ...deps,
@@ -55,7 +60,7 @@ class GraphPageController {
       view: this.view,
       drawn: (): DrawnGraph | null => this.drawn,
       onDrawn: (saved: GraphViewState | null): void => this.afterDraw(saved),
-      onPlaced: (): void => undefined
+      onPlaced: (): void => this.filtering.folders.redraw()
     });
     page.fit.addEventListener('click', (): void => this.view.fit());
     page.relayout.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.layouts.relayout()));

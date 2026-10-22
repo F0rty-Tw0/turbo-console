@@ -1,8 +1,11 @@
 import { GraphControls } from './graph-controls.ts';
+import { GraphFolders } from './graph-folders.ts';
 import { GraphInspection } from './graph-inspection.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphControlsDeps, GraphFilteringDeps } from '../common/graph-controls.type.ts';
-import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
+import type { GraphFoldersDeps } from '../common/graph-folders.type.ts';
+import type { CanvasFolders, GraphInspectionDeps } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
 import type { Inspection } from '../common/inspection.type.ts';
@@ -10,16 +13,17 @@ import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
 type FilteringFacts = Pick<
   ProbeFacts,
-  'controlsBuiltMs' | 'filterAppliedMs' | 'selected' | 'inspection' | 'detailsBuiltMs' | 'pickingBuiltMs' | 'traceMs'
+  'controlsBuiltMs' | 'filterAppliedMs' | 'selected' | 'inspection' | 'detailsBuiltMs' | 'pickingBuiltMs' | 'traceMs' | 'toggleMs'
 >;
 
 /**
- * The controls panel and the inspection it drives; the only place that knows both `GraphControls` and
- * `GraphInspection`. A visible set the controls report is shown, re-checks the inspection, refits and keeps the
- * inspection clear of the details overlay; the restored one is shown without a fit or a pan.
+ * The controls panel, the inspection it drives and the collapsed folders; the only place that knows `GraphControls`,
+ * `GraphInspection` and `GraphFolders`. A visible set the controls report is shown, runs the folder pass, re-checks the
+ * inspection, refits and keeps the inspection clear of the details overlay; the restored one is shown without a fit or a pan.
  */
 export class GraphFiltering {
   public readonly inspection: GraphInspection;
+  public readonly folders: GraphFolders;
 
   private readonly deps: GraphFilteringDeps;
   private readonly controls: GraphControls;
@@ -40,6 +44,10 @@ export class GraphFiltering {
       onSave: (): void => this.inspection.save(),
       onResize: (): void => view.resize()
     };
+    const canvasFolders: CanvasFolders = {
+      scene: (): FolderScene | null => this.folders.scene(),
+      show: (): void => this.folders.show()
+    };
     const inspectionDeps: GraphInspectionDeps = {
       ...deps,
       visible: (): ReadonlySet<string> => this.controls.visible(),
@@ -49,12 +57,22 @@ export class GraphFiltering {
       onFocusOn: (name): void => this.controls.focusOn(name),
       onExclude: (name): void => this.controls.exclude(name),
       onShow: (name): void => this.controls.show(name),
-      canShow: (name): boolean => this.controls.canShow(name)
+      canShow: (name): boolean => this.controls.canShow(name),
+      folders: canvasFolders
+    };
+    const foldersDeps: GraphFoldersDeps = {
+      ...deps,
+      repaint: (scene): void => this.inspection.canvas.repaint(scene),
+      visible: (): ReadonlySet<string> => this.controls.visible(),
+      ghosts: (): string[] => this.inspection.canvas.ghostNodes(),
+      // Task 3.5 wires the collapse of an inspected folder here.
+      onCollapsed: (): void => undefined
     };
 
     this.deps = deps;
     this.controls = new GraphControls(controlsDeps);
     this.inspection = new GraphInspection(inspectionDeps);
+    this.folders = new GraphFolders(foldersDeps);
   }
 
   /** Builds the panel for `graph` from `saved` (defaults without one) and shows its visible set; `at` is the state's arrival. */
@@ -67,6 +85,7 @@ export class GraphFiltering {
     const visible = this.controls.visible();
 
     this.deps.view.setVisible(visible);
+    this.folders.redraw();
     this.deps.page.fit.disabled = visible.size === 0;
 
     return visible;
@@ -81,7 +100,8 @@ export class GraphFiltering {
       inspection: (): Inspection => inspection.current(),
       detailsBuiltMs: (): number | null => inspection.builtMs('package'),
       pickingBuiltMs: (): number | null => inspection.builtMs('picking'),
-      traceMs: (): number | null => inspection.builtMs('trace')
+      traceMs: (): number | null => inspection.builtMs('trace'),
+      toggleMs: (): number | null => this.folders.toggleMs()
     };
 
     return facts;
@@ -92,6 +112,7 @@ export class GraphFiltering {
     const isAny = visible.size > 0;
 
     view.setVisible(visible);
+    this.folders.redraw();
     this.inspection.recheck(visible);
     page.fit.disabled = !isAny;
 

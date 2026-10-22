@@ -1,6 +1,7 @@
 import type { ControlsElements } from './controls-elements.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
 import type { GraphFilters } from './graph-filters.type.ts';
+import type { GraphFoldersDeps } from './graph-folders.type.ts';
 import type { GraphInspectionDeps } from './graph-inspection.type.ts';
 import type { DrawnGraph, PageElements } from './graph-page.type.ts';
 
@@ -50,12 +51,13 @@ export type GraphControlsDeps = {
   readonly onResize: () => void;
 };
 
-/** What `GraphFiltering` needs to own the inspection and the controls: the inspection's deps and `build`. */
+/** What `GraphFiltering` needs to own the inspection, the controls and the folders: their deps it cannot build itself. */
 export type GraphFilteringDeps = Pick<
   GraphInspectionDeps,
   'bridge' | 'page' | 'view' | 'saver' | 'drawn' | 'now' | 'views' | 'overlay'
 > &
-  Pick<GraphControlsDeps, 'build' | 'onGrouping'>;
+  Pick<GraphControlsDeps, 'build' | 'onGrouping'> &
+  Pick<GraphFoldersDeps, 'measure' | 'isGrouped' | 'canAct'>;
 
 /** The controls panel built for one graph. */
 export type ControlsMounted = {
