@@ -11,6 +11,7 @@ import { GraphExplainHost } from './pages/graph-explain-host.po.ts';
 import { GraphHost } from './pages/graph-host.po.ts';
 import { GraphIcons } from './pages/graph-icons.po.ts';
 import { GraphLook } from './pages/graph-look.po.ts';
+import { GraphNarrow } from './pages/graph-narrow.po.ts';
 import { GraphPackageList } from './pages/graph-package-list.po.ts';
 import { GraphProbePage } from './pages/graph-probe.po.ts';
 import { GraphSamples } from './pages/graph-samples.po.ts';
@@ -29,6 +30,7 @@ type GraphFixtures = {
   readonly graphLink: GraphDetailsLink;
   readonly graphList: GraphPackageList;
   readonly graphLook: GraphLook;
+  readonly graphNarrow: GraphNarrow;
   readonly graphPage: GraphPage;
   readonly graphProbe: GraphProbePage;
   readonly graphReplies: GraphExplainHost;
@@ -68,6 +70,9 @@ export const test = base.extend<GraphFixtures>({
   },
   graphLook: async ({ page }, use): Promise<void> => {
     await use(new GraphLook(page));
+  },
+  graphNarrow: async ({ page }, use): Promise<void> => {
+    await use(new GraphNarrow(page));
   },
   graphPage: async ({ page }, use): Promise<void> => {
     await use(new GraphPage(page));

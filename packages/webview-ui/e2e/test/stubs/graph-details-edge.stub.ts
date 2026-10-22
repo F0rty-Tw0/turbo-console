@@ -31,7 +31,7 @@ export const PROTO_DETAILS_STUB: GraphReady = {
   positions: PROTO_POSITIONS
 };
 
-const LONG_NAME = 'a-very-long-package-name-that-keeps-going-and-going-and-going';
+export const LONG_NAME_STUB: string = 'a-very-long-package-name-that-keeps-going-and-going-and-going';
 
 const LONG_SEGMENTS = 12;
 
@@ -44,14 +44,14 @@ const LONG_PARTS: string[] = ['packages', ...LONG_NESTING];
 const LONG_PATH = LONG_PARTS.join('/');
 
 const LONG_PACKAGES: GraphPackage[] = [
-  packageOf(LONG_NAME, LONG_PATH, ['a-very-long-tag-name-for-one-badge'], 1),
+  packageOf(LONG_NAME_STUB, LONG_PATH, ['a-very-long-tag-name-for-one-badge'], 1),
   packageOf('plain', 'apps/plain', [], 0)
 ];
 
-const LONG_EDGES: GraphEdge[] = [{ source: LONG_NAME, target: 'plain' }];
+const LONG_EDGES: GraphEdge[] = [{ source: LONG_NAME_STUB, target: 'plain' }];
 
 const LONG_ROWS: PositionRow[] = [
-  [LONG_NAME, 0, 0],
+  [LONG_NAME_STUB, 0, 0],
   ['plain', 0, 150]
 ];
 
@@ -64,4 +64,29 @@ export const LONG_PATH_STUB: GraphReady = {
   packages: LONG_PACKAGES,
   edges: LONG_EDGES,
   positions: LONG_POSITIONS
+};
+
+export const UNBROKEN_NAME_STUB: string = 'n'.repeat(70);
+
+const UNBROKEN_PACKAGES: GraphPackage[] = [
+  packageOf(UNBROKEN_NAME_STUB, `packages/${'p'.repeat(70)}`, ['t'.repeat(60)], 1),
+  packageOf('plain', 'apps/plain', [], 0)
+];
+
+const UNBROKEN_EDGES: GraphEdge[] = [{ source: UNBROKEN_NAME_STUB, target: 'plain' }];
+
+const UNBROKEN_ROWS: PositionRow[] = [
+  [UNBROKEN_NAME_STUB, 0, 0],
+  ['plain', 0, 150]
+];
+
+const UNBROKEN_POSITIONS: Positions = positionsOf(UNBROKEN_ROWS);
+
+/** A package whose name, path segment and tag are runs of letters with no hyphen, slash or space to break at. */
+export const UNBROKEN_PATH_STUB: GraphReady = {
+  kind: 'graph',
+  hash: '1e9a0002',
+  packages: UNBROKEN_PACKAGES,
+  edges: UNBROKEN_EDGES,
+  positions: UNBROKEN_POSITIONS
 };
