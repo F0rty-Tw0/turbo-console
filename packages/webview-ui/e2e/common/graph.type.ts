@@ -169,6 +169,8 @@ declare global {
     readonly __releaseWorker?: () => void;
     readonly __holdWorker?: () => void;
     __state?: unknown;
+    /** `defaultPrevented` of each `contextmenu` event, as a late listener saw it. */
+    __contextMenus?: boolean[];
   }
 }
 

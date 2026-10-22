@@ -39,12 +39,12 @@ const CLEAR_MARGIN_PX = 15;
 export class GraphWidgetsPage {
   public readonly layer: Locator;
 
-  private readonly aside: Locator;
-  private readonly canvas: GraphCanvas;
-  private readonly container: Locator;
-  private readonly folders: GraphFoldersPage;
-  private readonly page: Page;
-  private readonly probe: GraphProbePage;
+  protected readonly aside: Locator;
+  protected readonly canvas: GraphCanvas;
+  protected readonly container: Locator;
+  protected readonly folders: GraphFoldersPage;
+  protected readonly page: Page;
+  protected readonly probe: GraphProbePage;
 
   public constructor(page: Page) {
     this.page = page;
@@ -168,7 +168,7 @@ export class GraphWidgetsPage {
     await expect(this.layer.locator('.widget-row')).toHaveCount(0);
   }
 
-  private async boxOf(folder: string): Promise<ElementRect> {
+  protected async boxOf(folder: string): Promise<ElementRect> {
     const folders = await this.folders.folders();
 
     return boxRectOf(folderKeyed(folders, folder));

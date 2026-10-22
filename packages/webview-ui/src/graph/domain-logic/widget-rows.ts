@@ -95,7 +95,7 @@ export class WidgetRows {
     for (const [folder, entry] of this.rows) placeRow(entry, byFolder.get(folder));
   }
 
-  /** Focus that sat in a rebuilt row goes to its new chevron, once the pass placed it. */
+  /** Focus that sat in a rebuilt row goes to its new chevron, and focus in a row that moved stays on its button, once the pass placed it. */
   public restoreFocus(): void {
     const target = this.refocus;
 
@@ -135,6 +135,16 @@ export class WidgetRows {
     if (hadFocus) this.refocus = elements.chevron;
   }
 
+  /** A row button with focus is blurred when its row moves in the DOM, so `restoreFocus` gives it back after the pass. */
+  private keepFocus(): void {
+    const focused = this.deps.layer.ownerDocument.activeElement;
+    const entries = this.rows.values();
+    const rows = [...entries];
+    const isInRow = rows.some((entry) => entry.elements.root.contains(focused));
+
+    if (isInRow && focused instanceof HTMLButtonElement) this.refocus ??= focused;
+  }
+
   /** Puts the rows in the scene's order, in the map and in the DOM (the Tab order); a no-op while it holds. */
   private order(folders: string[], before: HTMLElement | null): void {
     const keys = this.rows.keys();
@@ -142,6 +152,8 @@ export class WidgetRows {
     const isSame = sameOrder(current, folders);
 
     if (isSame) return;
+
+    this.keepFocus();
 
     for (const folder of folders) {
       const entry = this.rows.get(folder);

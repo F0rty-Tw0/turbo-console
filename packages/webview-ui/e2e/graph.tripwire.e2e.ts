@@ -148,7 +148,8 @@ test.describe('FEATURE: graph tripwires', () => {
     graphGrouping,
     graphHost,
     graphPage,
-    graphProbe
+    graphProbe,
+    graphWidgets
   }): Promise<void> => {
     await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
       graphPage.open({ savedState: groupedSavedState(largeState().hash) }));
@@ -172,6 +173,9 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('THEN at least 6 boxes are in view, so the pan draws boxes', async (): Promise<void> =>
       graphGrouping.expectBoxesInView(BOXES_IN_VIEW));
+
+    await test.step('AND the header widgets are shown, so the pan moves them too', async (): Promise<void> =>
+      graphWidgets.expectHeaderButtonsShown());
 
     await test.step('AND it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
       const spot = await graphGrouping.freeSpot();
