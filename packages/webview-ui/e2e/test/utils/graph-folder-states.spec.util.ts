@@ -1,0 +1,80 @@
+import { boardsState } from './graph-boards.spec.util.ts';
+import { packageOf } from './graph-package.spec.util.ts';
+import { positionsOf } from './graph-positions.spec.util.ts';
+import { groupedSavedState } from './graph-saved-state.spec.util.ts';
+import type { GraphEdge, GraphReady } from '../../../src/bridge/common/graph-state.type.ts';
+import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
+
+/** `boardsState()` with a grouped layout cached at fixed centres, so geometry never depends on ELK. */
+export const placedBoardsState = (): GraphReady => {
+  const base = boardsState();
+  const folderPositions = positionsOf([
+    ['docs', 0, 0],
+    ['web', 200, 0],
+    ['@acme/config', 0, 300],
+    ['@acme/ui', 200, 300],
+    ['@acme/utils', 400, 300]
+  ]);
+  const state: GraphReady = { ...base, folderPositions };
+
+  return state;
+};
+
+/** A saved grouped view of `hash` with exactly these folders collapsed. */
+export const collapsedSavedState = (hash: string, collapsed: string[]): GraphViewState => {
+  const grouped = groupedSavedState(hash);
+  const state: GraphViewState = { ...grouped, collapsed };
+
+  return state;
+};
+
+/** `a` in `x`, `m` in `mid` and `b` in `y`, linked a to m to b, so a trace from `a` to `b` can run through `m`. */
+export const ghostFolderState = (): GraphReady => {
+  const edges: GraphEdge[] = [
+    { source: 'a', target: 'm' },
+    { source: 'm', target: 'b' }
+  ];
+  const state: GraphReady = {
+    kind: 'graph',
+    hash: 'f01d0001',
+    packages: [packageOf('a', 'x/a'), packageOf('m', 'mid/m'), packageOf('b', 'y/b')],
+    edges,
+    positions: null,
+    folderPositions: positionsOf([
+      ['a', 0, 0],
+      ['m', 0, 200],
+      ['b', 0, 400]
+    ])
+  };
+
+  return state;
+};
+
+/** A root package, a real `(root)` folder, a `__proto__` folder and a package named `constructor`, on a 2 x 2 grid. */
+export const awkwardNamesState = (): GraphReady => {
+  const edges: GraphEdge[] = [
+    { source: 'solo', target: 'x' },
+    { source: 'constructor', target: 'a' },
+    { source: 'x', target: 'a' }
+  ];
+  const state: GraphReady = {
+    kind: 'graph',
+    hash: 'f01d0002',
+    packages: [
+      packageOf('solo', 'solo'),
+      packageOf('x', '(root)/x'),
+      packageOf('a', '__proto__/a'),
+      packageOf('constructor', 'tools/constructor')
+    ],
+    edges,
+    positions: null,
+    folderPositions: positionsOf([
+      ['solo', 0, 0],
+      ['x', 300, 0],
+      ['a', 0, 300],
+      ['constructor', 300, 300]
+    ])
+  };
+
+  return state;
+};

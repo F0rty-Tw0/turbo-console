@@ -161,3 +161,6 @@ export const OVERLAY_CANVAS_PX = OVERLAY_WIDTH_PX - CONTROLS_WIDTH_PX;
 
 /** The drawn canvas width at `DOCKED_WIDTH_PX`: both asides take theirs. */
 export const DOCKED_CANVAS_PX = DOCKED_WIDTH_PX - CONTROLS_WIDTH_PX - DETAILS_WIDTH_PX;
+
+/** The most a folder collapse or expand may take, from the toggle to the first frame after it, in ms. */
+export const TOGGLE_BUDGET_MS = 100;

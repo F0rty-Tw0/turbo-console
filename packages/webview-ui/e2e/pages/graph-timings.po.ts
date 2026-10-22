@@ -30,6 +30,10 @@ export class GraphTimings {
     return this.page.evaluate((): number | null => window.__tcGraphProbe?.pickingBuiltMs() ?? null);
   }
 
+  public async toggleMs(): Promise<number | null> {
+    return this.page.evaluate((): number | null => window.__tcGraphProbe?.toggleMs() ?? null);
+  }
+
   public async traceMs(): Promise<number | null> {
     return this.page.evaluate((): number | null => window.__tcGraphProbe?.traceMs() ?? null);
   }

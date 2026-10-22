@@ -1,4 +1,4 @@
-import { LARGE_PACKAGE_COUNT } from './common/graph.const.ts';
+import { LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
@@ -9,6 +9,10 @@ import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const AC6 = { description: 'M4-2 AC6', type: 'requirement' };
+
+const C2 = { description: 'M4-4 C2', type: 'requirement' };
+
+const C4 = { description: 'M4-4 C4', type: 'requirement' };
 
 /**
  * The smallest of 5 wall-time samples of each isolated step, because starvation inflates single samples but rarely all
@@ -32,6 +36,11 @@ const BOXES_IN_VIEW = 6;
  * frame), so the budget sits between them with room for CI runners that measure up to 2.7x slower.
  */
 const GROUPED_PAN_MS = 1100;
+
+/** Five folders of `largeState()` that sit well inside the canvas after Fit and the zoom to 120 px boxes. */
+const TOGGLED_FOLDERS = ['group-2', 'group-3', 'group-4', 'group-12', 'group-13'];
+
+const GROUP_COUNT = 30;
 
 /** Each sample toggles pkg-007 once, so an odd count leaves it hidden. */
 const LAST_VISIBLE = LARGE_PACKAGE_COUNT - (SAMPLES % 2);
@@ -152,6 +161,75 @@ test.describe('FEATURE: graph tripwires', () => {
     await test.step('THEN the pan used under 1100 ms of CPU and no step over 50 ms', (): void =>
       graphCanvas.expectPanCpuUnder(GROUPED_PAN_MS, 50));
   });
+
+  test(
+    'GIVEN 300 packages grouped with every folder expanded, the fastest of five collapses and of five expands is under 100 ms',
+    { annotation: C2 },
+    async ({ graphCanvas, graphFolders, graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
+      await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
+        graphPage.open({ savedState: groupedSavedState(largeState().hash) }));
+
+      await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+
+      await test.step('THEN the grouped layout has finished', async (): Promise<void> => {
+        await graphProbe.expectLayoutEngine('elk');
+        await graphGrouping.expectFolderCount(GROUP_COUNT);
+      });
+
+      await test.step('WHEN Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> => {
+        await graphPage.pressButton(FIT_LABEL);
+        await graphCanvas.expectAllNodesInView();
+      });
+
+      await test.step('AND the graph is zoomed until every box is at least 120 px wide', async (): Promise<void> => {
+        await graphGrouping.zoomBoxesTo(120);
+        await graphGrouping.expectBoxesAtLeast(120);
+      });
+
+      await test.step('THEN at least 6 boxes, the five to toggle among them, are in view', async (): Promise<void> => {
+        await graphGrouping.expectBoxesInView(BOXES_IN_VIEW);
+        await graphFolders.expectFoldersInView(TOGGLED_FOLDERS);
+      });
+
+      await test.step('WHEN each of the five folders is collapsed, then expanded, by its list button', async (): Promise<void> =>
+        graphFolders.collectToggleMs(TOGGLED_FOLDERS));
+
+      await test.step('THEN the fastest collapse and the fastest expand were under 100 ms', (): void =>
+        graphFolders.expectToggleMinUnder(TOGGLE_BUDGET_MS));
+    }
+  );
+
+  test(
+    'GIVEN 301 packages and no saved state, the page opens grouped with all 30 folders collapsed',
+    { annotation: C4 },
+    async ({ graphFolders, graphGrouping, graphHost, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND a 301-package state is sent', async (): Promise<void> =>
+        graphHost.sendState(largeState(LARGE_PACKAGE_COUNT + 1)));
+
+      await test.step('THEN Group by folder is checked', async (): Promise<void> => graphGrouping.expectGrouped(true));
+
+      await test.step('AND 30 folders are drawn, all collapsed', async (): Promise<void> => {
+        await graphGrouping.expectFolderCount(GROUP_COUNT);
+        await graphFolders.expectAllCollapsed(true);
+      });
+    }
+  );
+
+  test(
+    'GIVEN 300 packages and no saved state, the page opens flat',
+    { annotation: C4 },
+    async ({ graphFolders, graphGrouping, graphHost, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND a 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+
+      await test.step('THEN Group by folder is unchecked', async (): Promise<void> => graphGrouping.expectGrouped(false));
+
+      await test.step('AND no folder is drawn', async (): Promise<void> => graphFolders.expectFolders([]));
+    }
+  );
 
   test(
     'GIVEN 300 packages, the fastest of five controls builds and of five filter changes is under 50 ms',
