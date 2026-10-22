@@ -165,3 +165,14 @@ export const KEEP_CLEAR_MARGIN_PX = 16;
 
 /** A graph with more packages than this opens grouped with every folder collapsed, when nothing is saved for it. */
 export const LARGE_GRAPH_PACKAGES = 300;
+
+/** A header widget's button size, and its inset from the box edge, in px. */
+export const WIDGET_BUTTON_PX = 24;
+
+export const WIDGET_INSET_PX = 8;
+
+/** Header widgets hide while the box or collapsed node is under this many px wide on screen. */
+export const WIDGET_MIN_BOX_PX = 120;
+
+/** The breadcrumb shows at most this many link lines, then one line counting the folders left. */
+export const BREADCRUMB_MAX_LINES = 3;

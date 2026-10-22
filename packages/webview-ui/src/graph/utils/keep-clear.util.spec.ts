@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { collapsedIdOf, folderIdOf } from './folder-id.util.ts';
-import { anchorsOf, keepClearNamesOf, keepClearPanOf } from './keep-clear.util.ts';
+import { anchorsOf, joinedBoxOf, keepClearNamesOf, keepClearPanOf } from './keep-clear.util.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 
@@ -129,6 +129,22 @@ describe('FEATURE: keepClearNamesOf', () => {
       const names = keepClearNamesOf(inspection, ghostNodes);
 
       expect(names).toStrictEqual(expected);
+    });
+  });
+});
+
+describe('FEATURE: joinedBoxOf', () => {
+  describe('GIVEN an anchor box and a button box', () => {
+    it.each<[string, AnchorBox | null, AnchorBox | null, AnchorBox | null]>([
+      ['both set: the union span', boxOf(10, 50), boxOf(48, 72), boxOf(10, 72)],
+      ['the button spans wider on the left', boxOf(40, 50), boxOf(10, 45), boxOf(10, 50)],
+      ['no anchor: the button', null, boxOf(48, 72), boxOf(48, 72)],
+      ['no button: the anchor', boxOf(10, 50), null, boxOf(10, 50)],
+      ['neither', null, null, null]
+    ])('WHEN %s THEN the joined box is the expected one', (_title, anchor, button, expected) => {
+      const joined = joinedBoxOf(anchor, button);
+
+      expect(joined).toStrictEqual(expected);
     });
   });
 });

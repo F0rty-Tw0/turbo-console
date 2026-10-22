@@ -2,7 +2,8 @@ import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 
-const byCodeUnit = (left: string, right: string): number => {
+/** Orders strings by code unit, never by locale. */
+export const byCodeUnit = (left: string, right: string): number => {
   if (left < right) return -1;
 
   return left > right ? 1 : 0;
