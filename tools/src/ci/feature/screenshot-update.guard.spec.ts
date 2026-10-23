@@ -4,8 +4,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = join(import.meta.dirname, '../../../../');
-/** `--update-snapshots` or Playwright's short `-u`. */
-const FLAG = /--update-snapshots|\s-u(\s|=|$)/;
+/** `--update-snapshots` or Playwright's short `-u`, bare or with a glued mode (`-uall`). */
+const FLAG = /--update-snapshots|\s-u\S*(\s|$)/;
+const UPDATE_KEY = /^\s*updateSnapshots:/gm;
+const NEVER_UPDATE = /^\s*updateSnapshots: 'none',$/m;
 const GUARD = "github.event_name == 'workflow_dispatch' && inputs.update-snapshots";
 
 type Scripts = { readonly screenshots: string };
@@ -80,7 +82,8 @@ describe('FEATURE: Screenshot update guard', () => {
 
       const result = hasFlag(scripts.screenshots);
 
-      expect(config).toContain("updateSnapshots: 'none'");
+      expect(config.match(UPDATE_KEY)).toHaveLength(1);
+      expect(config).toMatch(NEVER_UPDATE);
       expect(result).toBe(false);
     });
   });

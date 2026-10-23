@@ -7,8 +7,8 @@
  * 1. Push the branch, then `gh workflow run ci.yml --ref <branch> -f update-snapshots=true`. That run skips `check`,
  *    runs the suite with `--update-snapshots=all` and, only when it passes, uploads `e2e/screenshots/` as
  *    `screenshots-baselines-<attempt>`. The `screenshots (update baselines)` job must be green.
- * 2. Rerun the job once (or dispatch again); `gh run download <run> -n screenshots-baselines-<n> -D run-<n>` each into
- *    its own folder and `cmp` file by file. They must be byte-identical, else stop and decide a root fix or a tolerance.
+ * 2. Rerun the job once (or dispatch again); `gh run download <run> -n screenshots-baselines-<attempt>
+ *    -D run-<run>-<attempt>` each into its own folder and `cmp` file by file. They must be byte-identical, else stop and decide a root fix or a tolerance.
  * 3. Check each PNG by pixel: sample the canvas background, a node fill and a label colour per theme with ffmpeg and
  *    compare them with that theme's stub values.
  * 4. Copy the PNGs over `e2e/screenshots/`, commit, push; the job goes green.

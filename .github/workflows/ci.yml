@@ -272,6 +272,7 @@ jobs:
 
       # SHA = actions/upload-artifact@v7.0.2
       # Only after a green capture: the folder also holds the checked-out baselines, so a crashed run would upload stale PNGs.
+      # if-no-files-found only catches a missing folder; the rerun-and-cmp step of the baseline procedure catches stale PNGs.
       - name: Upload new baselines
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.update-snapshots }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
