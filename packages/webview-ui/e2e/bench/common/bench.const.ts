@@ -2,10 +2,10 @@ import type { BenchRowDef } from './bench.type.ts';
 
 type BenchRowKey = 'openCold' | 'openCached' | 'panCpu' | 'panP95' | 'openColdLarge' | 'panCpuLarge' | 'toggleLarge';
 
-const OPEN_COLD: BenchRowDef = { name: 'graph open cold target-like', gate: false, samples: 7 };
-const OPEN_CACHED: BenchRowDef = { name: 'graph open cached target-like', gate: false, samples: 7 };
-const PAN_CPU: BenchRowDef = { name: 'graph pan cpu target-like', gate: false, samples: 5 };
-const PAN_P95: BenchRowDef = { name: 'graph pan p95 frame target-like', gate: false, samples: 5 };
+const OPEN_COLD: BenchRowDef = { name: 'graph open cold target-like', gate: true, samples: 7 };
+const OPEN_CACHED: BenchRowDef = { name: 'graph open cached target-like', gate: true, samples: 7 };
+const PAN_CPU: BenchRowDef = { name: 'graph pan cpu target-like', gate: true, samples: 5 };
+const PAN_P95: BenchRowDef = { name: 'graph pan p95 frame target-like', gate: true, samples: 5 };
 const OPEN_COLD_LARGE: BenchRowDef = { name: 'graph open cold large grouped', gate: false, samples: 3 };
 const PAN_CPU_LARGE: BenchRowDef = { name: 'graph pan cpu large grouped', gate: false, samples: 3 };
 const TOGGLE_LARGE: BenchRowDef = { name: 'graph folder toggle large', gate: false, samples: 3 };
