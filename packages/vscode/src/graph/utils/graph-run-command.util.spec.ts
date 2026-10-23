@@ -45,4 +45,14 @@ describe('FEATURE: the tree command of a graph run request', () => {
       expect(chosen.arg).toStrictEqual(A_BUILD_ROW);
     });
   });
+
+  describe('GIVEN the task a#build under /other', () => {
+    it('WHEN it is run THEN the row carries /other as its root', () => {
+      const request: GraphRunRequest = { type: 'runTask', taskId: 'a#build', noCache: false };
+
+      const chosen = runCommandOf(request, A_BUILD_TASK, '/other');
+
+      expect(chosen.arg).toStrictEqual({ ...A_BUILD_ROW, root: '/other' });
+    });
+  });
 });
