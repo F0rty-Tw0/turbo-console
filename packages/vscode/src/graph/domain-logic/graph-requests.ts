@@ -1,0 +1,46 @@
+import type { GraphPackage, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
+
+import type { Coordinator } from '../../roots/common/coordinator.type.ts';
+import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import type { GraphPorts, GraphRequestMessage } from '../common/graph.type.ts';
+import { packageNamesOf } from '../utils/graph-package.util.ts';
+
+const NO_PACKAGES: GraphPackage[] = [];
+
+const REQUEST_TYPES: string[] = ['reload', 'openDetails', 'runTask', 'stopTask'];
+
+export function isRequestMessage(message: GraphWebviewMessage): message is GraphRequestMessage {
+  return REQUEST_TYPES.includes(message.type);
+}
+
+/** The page shows Reload only on an error state, so a `reload` at any other time is not honoured and never reloads the root. */
+export function reloadOf(state: GraphState, coordinator: Pick<Coordinator, 'request'> | undefined): boolean {
+  const isError = state.kind === 'error';
+
+  if (!isError) return false;
+
+  coordinator?.request('refresh');
+
+  return true;
+}
+
+/** `false` when the package is not listed; a rejection of the port is logged and the request still counts as handled. */
+export async function openDetailsOf(
+  packageName: string,
+  state: GraphState,
+  ports: Pick<GraphPorts, 'openDetails' | 'log'>
+): Promise<boolean> {
+  const listed = state.kind === 'graph' ? state.packages : NO_PACKAGES;
+  const names = packageNamesOf(listed);
+  const isListed = names.includes(packageName);
+
+  if (!isListed) return false;
+
+  try {
+    await ports.openDetails(packageName);
+  } catch (error: unknown) {
+    ports.log(logTextOf(error));
+  }
+
+  return true;
+}

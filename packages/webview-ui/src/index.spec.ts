@@ -20,8 +20,12 @@ import type {
   GraphHostMessage,
   GraphPackage,
   GraphReady,
+  GraphRunState,
+  GraphRunsMessage,
+  GraphShowTasksMessage,
   GraphState,
   GraphStateMessage,
+  GraphTask,
   GraphViewState,
   GraphWebviewMessage,
   HostMessage,
@@ -49,6 +53,14 @@ import type {
 
 type ExpectedEdge = { readonly source: string; readonly target: string };
 type ExpectedPackage = { readonly name: string; readonly path: string; readonly tags: string[]; readonly taskCount: number };
+type ExpectedTask = {
+  readonly id: string;
+  readonly packageName: string;
+  readonly name: string;
+  readonly command: string | null;
+  readonly isRunnable: boolean;
+  readonly dependencies: string[];
+};
 type ExpectedPosition = { readonly x: number; readonly y: number };
 type ExpectedStateMessage = { readonly type: 'state'; readonly state: GraphState };
 type ExpectedContext = { readonly before?: string; readonly after?: string };
@@ -73,6 +85,7 @@ type LayoutDoneKey = { readonly type: 'layoutDone' };
 type OpenManifestKey = { readonly type: 'openManifest' };
 type PositionsKey = { readonly type: 'positions' };
 type ExportImageKey = { readonly type: 'exportImage' };
+type RunTaskKey = { readonly type: 'runTask' };
 
 /** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern and tool-icon prefix constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
@@ -143,10 +156,25 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<EdgeExplainResult>().toEqualTypeOf<ExpectedResult>();
       expectTypeOf<GraphEdgeExplainedMessage>().toEqualTypeOf<ExpectedExplainedMessage>();
       expectTypeOf<GraphStateMessage>().toEqualTypeOf<ExpectedStateMessage>();
-      expectTypeOf<GraphHostMessage>().toEqualTypeOf<ExpectedStateMessage | ExpectedExplainedMessage>();
-      expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
-        'ready' | 'reload' | 'openDetails' | 'positions' | 'layoutDone' | 'explainEdge' | 'openManifest' | 'exportImage'
+      expectTypeOf<GraphTask>().toEqualTypeOf<ExpectedTask>();
+      expectTypeOf<GraphRunState>().toEqualTypeOf<'running' | 'passed' | 'failed' | 'stopped' | 'failed-to-start'>();
+      expectTypeOf<GraphReady['tasks']>().toEqualTypeOf<GraphTask[]>();
+      expectTypeOf<GraphHostMessage>().toEqualTypeOf<
+        ExpectedStateMessage | ExpectedExplainedMessage | GraphRunsMessage | GraphShowTasksMessage
       >();
+      expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
+        | 'ready'
+        | 'reload'
+        | 'openDetails'
+        | 'positions'
+        | 'layoutDone'
+        | 'explainEdge'
+        | 'openManifest'
+        | 'exportImage'
+        | 'runTask'
+        | 'stopTask'
+      >();
+      expectTypeOf<Extract<GraphWebviewMessage, RunTaskKey>['noCache']>().toEqualTypeOf<boolean>();
       expectTypeOf<Extract<GraphWebviewMessage, OpenManifestKey>['line']>().toEqualTypeOf<number>();
       expectTypeOf<Extract<GraphWebviewMessage, LayoutDoneKey>['engine']>().toEqualTypeOf<'elk' | 'fallback'>();
       expectTypeOf<Extract<GraphWebviewMessage, ExportImageKey>['png']>().toEqualTypeOf<string>();

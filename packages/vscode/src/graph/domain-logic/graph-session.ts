@@ -1,17 +1,15 @@
-import type { GraphPackage, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
+import type { GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import { answerRequest } from './graph-explain.ts';
 import { GraphImageSaver } from './graph-image-saver.ts';
 import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
+import { isRequestMessage, openDetailsOf, reloadOf } from './graph-requests.ts';
 import { LatestWins } from './latest-wins.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { ExplainContext, ExplainRequest, GraphPorts } from '../common/graph.type.ts';
+import type { ExplainContext, ExplainRequest, GraphPorts, GraphRequestMessage } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
-import { packageNamesOf } from '../utils/graph-package.util.ts';
 import { graphStateOfRoot } from '../utils/graph-state.util.ts';
-
-const NO_PACKAGES: GraphPackage[] = [];
 
 type ExplainJob = {
   readonly request: ExplainRequest;
@@ -115,18 +113,16 @@ export class GraphSession {
   }
 
   private async handle(message: GraphWebviewMessage, value: unknown): Promise<void> {
+    if (isRequestMessage(message)) {
+      await this.handleRequest(message, value);
+
+      return;
+    }
+
     switch (message.type) {
       case 'ready':
         this.isReady = true;
         this.publish();
-
-        return;
-      case 'reload':
-        this.reload(value);
-
-        return;
-      case 'openDetails':
-        await this.openDetails(message.packageName, value);
 
         return;
       case 'positions': {
@@ -155,36 +151,25 @@ export class GraphSession {
     }
   }
 
-  /** The page shows Reload only on an error state, so a `reload` at any other time is dropped and never reloads the root. */
-  private reload(value: unknown): void {
-    const state = this.stateNow();
-    const isError = state.kind === 'error';
+  private async handleRequest(message: GraphRequestMessage, value: unknown): Promise<void> {
+    switch (message.type) {
+      case 'reload': {
+        const isReloaded = reloadOf(this.stateNow(), this.roots.get(this.root)?.coordinator);
 
-    if (!isError) {
-      this.drop(value);
+        if (!isReloaded) this.drop(value);
 
-      return;
-    }
+        return;
+      }
+      case 'openDetails': {
+        const isOpened = await openDetailsOf(message.packageName, this.stateNow(), this.ports);
 
-    this.roots.get(this.root)?.coordinator.request('refresh');
-  }
+        if (!isOpened) this.drop(value);
 
-  private async openDetails(packageName: string, value: unknown): Promise<void> {
-    const state = this.stateNow();
-    const listed = state.kind === 'graph' ? state.packages : NO_PACKAGES;
-    const names = packageNamesOf(listed);
-    const isListed = names.includes(packageName);
-
-    if (!isListed) {
-      this.drop(value);
-
-      return;
-    }
-
-    try {
-      await this.ports.openDetails(packageName);
-    } catch (error: unknown) {
-      this.ports.log(logTextOf(error));
+        return;
+      }
+      case 'runTask':
+      case 'stopTask':
+        this.drop(value);
     }
   }
 

@@ -1,4 +1,5 @@
 import { isEdgeExplained } from './edge-explained.util.ts';
+import { isGraphTaskList, isRunsRecord, isTaskIdList } from './graph-task-shape.util.ts';
 import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { GraphHostMessage } from '../../bridge/common/graph-message.type.ts';
@@ -25,15 +26,16 @@ const isPackage = (value: unknown): boolean => {
 };
 
 const isGraphShape = (state: UnknownRecord): boolean => {
-  const { hash, packages, edges, positions, folderPositions } = state;
+  const { hash, packages, edges, positions, folderPositions, tasks } = state;
   const hasHash = typeof hash === 'string';
   const hasPackages = Array.isArray(packages) && packages.every(isPackage);
   const hasEdges = Array.isArray(edges) && edges.every(isEdge);
   const hasPositions = positions === null || isRecord(positions);
   const hasFolderPositions = folderPositions === null || isRecord(folderPositions);
   const hasCaches = hasPositions && hasFolderPositions;
+  const hasGraph = hasHash && hasPackages && hasEdges;
 
-  return hasHash && hasPackages && hasEdges && hasCaches;
+  return hasGraph && hasCaches && isGraphTaskList(tasks);
 };
 
 const isGraphState = (state: unknown): boolean => {
@@ -53,9 +55,10 @@ const isGraphState = (state: unknown): boolean => {
 };
 
 /**
- * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, path, tags and task count and
- * each edge end, or to an `edgeExplained` message by its names and result; anything else is ignored. The payload itself comes from the
- * extension host, which builds it.
+ * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, path, tags and task
+ * count, each edge end and each task's fields; to an `edgeExplained` message by its names and result; to a `runs` message by its
+ * run states; or to a `showTasks` message by its task ids. Anything else is ignored. The payload itself comes from the extension
+ * host, which builds it.
  */
 export const isGraphHostMessage = (value: unknown): value is GraphHostMessage => {
   if (!isRecord(value)) return false;
@@ -65,6 +68,10 @@ export const isGraphHostMessage = (value: unknown): value is GraphHostMessage =>
       return isGraphState(value['state']);
     case 'edgeExplained':
       return isEdgeExplained(value);
+    case 'runs':
+      return isRunsRecord(value['runs']);
+    case 'showTasks':
+      return isTaskIdList(value['taskIds']);
     default:
       return false;
   }

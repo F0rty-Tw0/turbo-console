@@ -12,5 +12,6 @@ export const WIDE_TITLE_STUB: GraphReady = {
   packages: WIDE_PACKAGES,
   edges: [],
   positions: null,
-  folderPositions: null
+  folderPositions: null,
+  tasks: []
 };

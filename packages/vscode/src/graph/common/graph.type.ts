@@ -35,6 +35,11 @@ type UncheckedPositionsMessage = {
 /** A message that passed `graphMessageSchema`: a `positions` record is still unread. */
 export type SchemaGraphMessage = Exclude<GraphWebviewMessage, PositionsTag> | UncheckedPositionsMessage;
 
+type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' };
+
+/** A page request the session answers from the state it builds now: a reload, a package's details or a task run or stop. */
+export type GraphRequestMessage = Extract<GraphWebviewMessage, RequestTag>;
+
 type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };
 
 /** A page request to look into the graph: the reply to an edge or the opening of a package's manifest. */

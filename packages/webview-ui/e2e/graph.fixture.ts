@@ -22,6 +22,7 @@ import { GraphNarrow } from './pages/graph-narrow.po.ts';
 import { GraphPackageList } from './pages/graph-package-list.po.ts';
 import { GraphProbePage } from './pages/graph-probe.po.ts';
 import { GraphSamples } from './pages/graph-samples.po.ts';
+import { GraphTaskHost } from './pages/graph-task-host.po.ts';
 import { GraphToolbar } from './pages/graph-toolbar.po.ts';
 import { GraphWidgetsBand } from './pages/graph-widgets-band.po.ts';
 import { GraphPage } from './pages/graph.po.ts';
@@ -50,6 +51,7 @@ type GraphFixtures = {
   readonly graphProbe: GraphProbePage;
   readonly graphReplies: GraphExplainHost;
   readonly graphSamples: GraphSamples;
+  readonly graphTaskHost: GraphTaskHost;
   readonly graphToolbar: GraphToolbar;
   readonly graphTrace: GraphDetailsTrace;
   readonly graphWidgets: GraphWidgetsBand;
@@ -122,6 +124,9 @@ export const test = base.extend<GraphFixtures>({
   },
   graphSamples: async ({ page }, use): Promise<void> => {
     await use(new GraphSamples(page));
+  },
+  graphTaskHost: async ({ page }, use): Promise<void> => {
+    await use(new GraphTaskHost(page));
   },
   graphToolbar: async ({ page }, use): Promise<void> => {
     await use(new GraphToolbar(page));

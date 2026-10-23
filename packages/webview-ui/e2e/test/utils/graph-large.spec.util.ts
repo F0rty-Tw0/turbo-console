@@ -54,7 +54,7 @@ export const largeState = (count = LARGE_PACKAGE_COUNT): GraphReady => {
   const packages = indexes.map(largePackageOf);
   const edges = indexes.flatMap(largeEdgesFrom);
   const positions: Positions = Object.fromEntries(indexes.map(largeEntryOf));
-  const state: GraphReady = { kind: 'graph', hash: hashOf(count), packages, edges, positions, folderPositions: null };
+  const state: GraphReady = { kind: 'graph', hash: hashOf(count), packages, edges, positions, folderPositions: null, tasks: [] };
 
   return state;
 };

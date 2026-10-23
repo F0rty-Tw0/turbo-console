@@ -34,7 +34,8 @@ export const CONTROLS_STUB: GraphReady = {
   packages: CONTROLS_PACKAGES,
   edges: CONTROLS_EDGES,
   positions: null,
-  folderPositions: null
+  folderPositions: null,
+  tasks: []
 };
 
 export const CONTROLS_CACHED_STUB: GraphReady = { ...CONTROLS_STUB, positions: CONTROLS_POSITIONS_STUB };
@@ -73,5 +74,6 @@ export const PROTO_CONTROLS_STUB: GraphReady = {
   packages: PROTO_PACKAGES,
   edges: PROTO_EDGES,
   positions: PROTO_POSITIONS,
-  folderPositions: null
+  folderPositions: null,
+  tasks: []
 };

@@ -37,6 +37,7 @@ export const ghostFolderState = (): GraphReady => {
   ];
   const state: GraphReady = {
     kind: 'graph',
+    tasks: [],
     hash: 'f01d0001',
     packages: [packageOf('a', 'x/a'), packageOf('m', 'mid/m'), packageOf('b', 'y/b')],
     edges,
@@ -60,6 +61,7 @@ export const awkwardNamesState = (): GraphReady => {
   ];
   const state: GraphReady = {
     kind: 'graph',
+    tasks: [],
     hash: 'f01d0002',
     packages: [
       packageOf('solo', 'solo'),
@@ -92,6 +94,7 @@ export const flatCollapsedSavedState = (hash: string, collapsed: string[]): Grap
 export const wideRowFolderState = (): GraphReady => {
   const state: GraphReady = {
     kind: 'graph',
+    tasks: [],
     hash: 'f01d0003',
     packages: [packageOf('a', 'x/a'), packageOf('m', 'mid/m'), packageOf('b', 'y/b')],
     edges: [],
@@ -117,6 +120,7 @@ export const LONG_FOLDER = 'a-very-long-folder-name-for-the-ellipsis-check';
 export const longTitleState = (): GraphReady => {
   const state: GraphReady = {
     kind: 'graph',
+    tasks: [],
     hash: 'f01d0005',
     packages: [packageOf('pkg', `${LONG_FOLDER}/pkg`)],
     edges: [],

@@ -1,5 +1,6 @@
 import { MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
 import {
+  boolean,
   discriminatedUnion,
   gte,
   int,
@@ -14,12 +15,14 @@ import {
   enum as zodEnum
 } from 'zod/mini';
 
-import { EXPORT_PNG_MAX, GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX } from './graph.const.ts';
+import { EXPORT_PNG_MAX, GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX, TASK_ID_MAX } from './graph.const.ts';
 
 /** Base64 characters only, with no `data:` prefix. */
 const BASE64_PATTERN = /^[A-Za-z0-9+/]*={0,2}$/;
 
 const packageNameSchema = string().check(maxLength(PACKAGE_NAME_MAX));
+
+const taskIdSchema = string().check(maxLength(TASK_ID_MAX));
 
 const readySchema = object({ type: literal('ready') });
 
@@ -55,6 +58,10 @@ const exportImageSchema = object({
   png: string().check(maxLength(EXPORT_PNG_MAX, { abort: true }), regex(BASE64_PATTERN))
 });
 
+const runTaskSchema = object({ type: literal('runTask'), taskId: taskIdSchema, noCache: boolean() });
+
+const stopTaskSchema = object({ type: literal('stopTask'), taskId: taskIdSchema });
+
 /**
  * A message from the graph webview, which is a trust boundary. Unknown keys are stripped; whether a package name or a
  * hash is current is checked by the session against the state built at that moment.
@@ -67,5 +74,7 @@ export const graphMessageSchema = discriminatedUnion('type', [
   layoutDoneSchema,
   explainEdgeSchema,
   openManifestSchema,
-  exportImageSchema
+  exportImageSchema,
+  runTaskSchema,
+  stopTaskSchema
 ]);

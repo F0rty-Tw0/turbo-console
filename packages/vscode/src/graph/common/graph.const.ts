@@ -24,6 +24,9 @@ export const GRAPH_HASH_PATTERN = /^[0-9a-f]{8}$/;
 /** npm's limit on a package name's length; no workspace package has a longer one. */
 export const PACKAGE_NAME_MAX = 214;
 
+/** A task id is `package#task`; no real one is longer than this. */
+export const TASK_ID_MAX = 1024;
+
 /** A `positions` message with more keys than this is dropped before its values are checked. */
 export const POSITIONS_MAX = 5000;
 

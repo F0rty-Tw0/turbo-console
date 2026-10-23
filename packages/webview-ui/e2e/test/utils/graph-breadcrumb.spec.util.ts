@@ -28,6 +28,7 @@ export const breadcrumbState = (): GraphReady => {
   ];
   const state: GraphReady = {
     kind: 'graph',
+    tasks: [],
     hash: 'f01d0004',
     packages: [
       packageOf('core-1', 'core/core-1'),
