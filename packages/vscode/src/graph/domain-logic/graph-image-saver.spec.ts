@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphImageSaver } from './graph-image-saver.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
@@ -91,6 +91,18 @@ describe('FEATURE: the graph image saver', () => {
   });
 
   describe('GIVEN bytes that are not a PNG', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('WHEN they are saved THEN only their first 12 characters are decoded', async () => {
+      const from = vi.spyOn(Buffer, 'from');
+
+      await saver.save(NOT_PNG);
+
+      expect(from).toHaveBeenCalledExactlyOnceWith(NOT_PNG.slice(0, 12), 'base64');
+    });
+
     it('WHEN they are saved THEN an error shows, the dialog stays shut and the failure is logged', async () => {
       await saver.save(NOT_PNG);
 

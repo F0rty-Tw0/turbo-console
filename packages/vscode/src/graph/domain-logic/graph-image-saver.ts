@@ -4,8 +4,12 @@ import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { PNG_SIGNATURE } from '../common/graph.const.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
 
+/** 12 base64 characters decode to 9 bytes, enough for the 8-byte signature. */
+const SIGNATURE_CHARS = 12;
+
 /**
- * Saves the PNG a graph page posts: the signature is checked first, then the user picks a file and the bytes are written.
+ * Saves the PNG a graph page posts: the signature is checked on the first characters before the rest is decoded, then
+ * the user picks a file and the bytes are written.
  * One save runs at a time; a post that arrives while a dialog or write is open is dropped. Never rejects: a failed dialog
  * or write is logged and shown as an error message.
  */
@@ -26,8 +30,8 @@ export class GraphImageSaver {
       return;
     }
 
-    const bytes = new Uint8Array(Buffer.from(png, 'base64'));
-    const isPng = PNG_SIGNATURE.every((byte, index) => bytes[index] === byte);
+    const head = Buffer.from(png.slice(0, SIGNATURE_CHARS), 'base64');
+    const isPng = PNG_SIGNATURE.every((byte, index) => head[index] === byte);
 
     if (!isPng) {
       this.ports.log('Dropped a graph message: exportImage that is not a PNG');
@@ -35,6 +39,8 @@ export class GraphImageSaver {
 
       return;
     }
+
+    const bytes = new Uint8Array(Buffer.from(png, 'base64'));
 
     this.isSaving = true;
 
