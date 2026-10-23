@@ -3,16 +3,14 @@
  * Only the CI `screenshots` job (the pinned Playwright container, Linux) produces or checks the baselines; a dev machine
  * renders other pixels and only proves the suite is stable on itself.
  *
- * Baseline procedure:
- * 1. Intended change: push; the job fails and uploads `test-results/<test>/<name>-actual.png`. Bootstrap: under
- *    `updateSnapshots: 'none'` a missing baseline fails before any capture (Playwright 1.64 `matchers/expect.js`,
- *    `toHaveScreenshot`), so put `--update-snapshots=all` on the CI command and point the upload step at `e2e/screenshots/`
- *    with `if: always()`; that run writes the PNGs and passes.
- * 2. Rerun the job once, or start a fresh run on the same tree; the two runs' PNGs must be byte-identical (`cmp`), else
- *    stop and decide a root fix or a tolerance.
- * 3. `gh run download <run> -n screenshots-diff-<attempt>` for both runs, `cmp` them; check each PNG by pixel: sample the
- *    canvas background, a node fill and a label colour per theme with ffmpeg and compare them with that theme's stub values.
- * 4. Copy the PNGs over `e2e/screenshots/` (drop any `-actual` suffix), commit, push; the job goes green.
+ * Baseline procedure (new or changed screenshots; push and PR runs never write baselines):
+ * 1. Push the branch, then `gh workflow run ci.yml --ref <branch> -f update-snapshots=true`. That run skips `check`,
+ *    runs the suite with `--update-snapshots=all` and uploads `e2e/screenshots/` as `screenshots-baselines-<attempt>`.
+ * 2. Rerun the job once (or dispatch again); `gh run download <run> -n screenshots-baselines-<attempt>` both and `cmp`
+ *    them. They must be byte-identical, else stop and decide a root fix or a tolerance.
+ * 3. Check each PNG by pixel: sample the canvas background, a node fill and a label colour per theme with ffmpeg and
+ *    compare them with that theme's stub values.
+ * 4. Copy the PNGs over `e2e/screenshots/`, commit, push; the job goes green.
  */
 import { defineConfig, devices } from '@playwright/test';
 
