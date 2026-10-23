@@ -1,4 +1,4 @@
-import type { LongTask } from './common/bench.type.ts';
+import type { LongTask } from '../common/bench.type.ts';
 
 const isWithin = (time: number, tOn: number, tOff: number): boolean => tOn <= time && time <= tOff;
 

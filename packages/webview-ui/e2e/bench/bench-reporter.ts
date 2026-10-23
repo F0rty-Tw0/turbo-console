@@ -3,8 +3,8 @@ import { dirname, resolve } from 'node:path';
 
 import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 
-import { resultsOf, sampleOf } from './bench-results.ts';
 import type { Annotation, BenchRow, BenchSample } from './common/bench.type.ts';
+import { resultsOf, sampleOf } from './utils/bench-results.util.ts';
 
 type BenchReporterOptions = { readonly outputFile: string };
 

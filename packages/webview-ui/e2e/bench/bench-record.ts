@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 
-import { sampleAnnotation } from './bench-results.ts';
 import type { BenchRowDef } from './common/bench.type.ts';
+import { sampleAnnotation } from './utils/bench-results.util.ts';
 
 export const recordSample = (row: BenchRowDef, ms: number): void => {
   const annotation = sampleAnnotation({ name: row.name, ms, gate: row.gate });

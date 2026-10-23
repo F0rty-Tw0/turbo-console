@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { resultsOf, sampleAnnotation, sampleOf } from './bench-results.ts';
-import type { BenchSample } from './common/bench.type.ts';
+import { resultsOf, sampleAnnotation, sampleOf } from './bench-results.util.ts';
+import type { BenchSample } from '../common/bench.type.ts';
 
 const sample = (name: string, ms: number, gate = false): BenchSample => {
   const built: BenchSample = { name, ms, gate };

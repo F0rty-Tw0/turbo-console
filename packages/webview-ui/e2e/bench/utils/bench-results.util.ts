@@ -1,5 +1,5 @@
-import { median } from './bench-stats.ts';
-import type { Annotation, BenchRow, BenchSample, SampleAnnotation } from './common/bench.type.ts';
+import { median } from './bench-stats.util.ts';
+import type { Annotation, BenchRow, BenchSample, SampleAnnotation } from '../common/bench.type.ts';
 
 const BENCH_PREFIX = 'webview-ui/';
 const SAMPLE_TYPE = 'bench-sample';

@@ -1,4 +1,4 @@
-import type { BenchRowDef } from './common/bench.type.ts';
+import type { BenchRowDef } from './bench.type.ts';
 
 type BenchRowKey = 'openCold' | 'openCached' | 'panCpu' | 'panP95' | 'openColdLarge' | 'panCpuLarge' | 'toggleLarge';
 

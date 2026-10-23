@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { deltasOf, longestWithin } from './pan-trace.ts';
+import { deltasOf, longestWithin } from './pan-trace.util.ts';
 
 describe('FEATURE: pan trace', () => {
   it('GIVEN frames 10, 30, 50, 70, 90 and a window 30 to 70, WHEN deltas are taken, THEN the edges count and the rest do not', () => {

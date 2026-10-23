@@ -5,9 +5,9 @@ import { largeGroupedOptions, largeGroupedPan, largeToggleMs } from './bench/ben
 import { cachedOpen, coldOpen } from './bench/bench-open.ts';
 import { targetLikePan } from './bench/bench-pan.ts';
 import { collectSamples, recordSample } from './bench/bench-record.ts';
-import { BENCH_ROWS, LONG_TASK_BUDGET_MS } from './bench/bench-rows.const.ts';
-import { median } from './bench/bench-stats.ts';
+import { BENCH_ROWS, LONG_TASK_BUDGET_MS } from './bench/common/bench.const.ts';
 import type { PanSample } from './bench/common/bench.type.ts';
+import { median } from './bench/utils/bench-stats.util.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 

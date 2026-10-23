@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BENCH_ROWS } from './bench-rows.const.ts';
+import { BENCH_ROWS } from './bench.const.ts';
 
 const SPEC_NAMES = [
   'graph open cold target-like',

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { median, p95 } from './bench-stats.ts';
+import { median, p95 } from './bench-stats.util.ts';
 
 describe('FEATURE: bench stats', () => {
   it('GIVEN an odd count, WHEN the median is taken, THEN the middle value by number order is returned', () => {

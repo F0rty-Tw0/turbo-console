@@ -4,7 +4,7 @@ import type { Page } from '@playwright/test';
 
 import { NEXT_FRAME } from '../common/graph.const.ts';
 import type { PanTrace, RawPanTrace } from './common/bench.type.ts';
-import { deltasOf, longestWithin } from './pan-trace.ts';
+import { deltasOf, longestWithin } from './utils/pan-trace.util.ts';
 
 /**
  * Runs in base and head alike: records every frame and long task, and the window the pan ran in.

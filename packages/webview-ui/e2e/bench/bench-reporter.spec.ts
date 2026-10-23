@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- Playwright loads a reporter through its default export, a class
 import BenchReporter from './bench-reporter.ts';
-import { sampleAnnotation } from './bench-results.ts';
 import type { BenchSample } from './common/bench.type.ts';
+import { sampleAnnotation } from './utils/bench-results.util.ts';
 
 const passed: FullResult = { status: 'passed', startTime: new Date(), duration: 1 };
 const failed: FullResult = { status: 'failed', startTime: new Date(), duration: 1 };

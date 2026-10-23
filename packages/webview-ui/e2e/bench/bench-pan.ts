@@ -1,8 +1,8 @@
 import type { Browser } from '@playwright/test';
 
 import { withSession } from './bench-session.ts';
-import { p95 } from './bench-stats.ts';
 import type { BenchSession, PanSample } from './common/bench.type.ts';
+import { p95 } from './utils/bench-stats.util.ts';
 import { targetLikeState } from '../test/utils/graph-target-like.spec.util.ts';
 
 const WARM_UP_FRAMES = 30;
