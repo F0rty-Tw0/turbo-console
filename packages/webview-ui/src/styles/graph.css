@@ -213,14 +213,18 @@ p {
   padding: 0;
   border: 1px solid var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
   border-radius: var(--radius);
+  /* An opaque base under the secondary colour, which Dark Modern makes transparent and High Contrast leaves unset. */
+  --tc-widget-fill: var(--vscode-button-secondaryBackground, transparent);
+
   color: var(--vscode-button-secondaryForeground);
-  background: var(--vscode-button-secondaryBackground);
+  background-color: var(--vscode-editor-background);
+  background-image: linear-gradient(var(--tc-widget-fill), var(--tc-widget-fill));
   cursor: pointer;
   pointer-events: auto;
 }
 
 .widget-button:hover {
-  background: var(--vscode-button-secondaryHoverBackground);
+  --tc-widget-fill: var(--vscode-button-secondaryHoverBackground, transparent);
 }
 
 .widget-button:focus-visible {

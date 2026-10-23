@@ -139,5 +139,15 @@ export const menuFaultsOf = (menu: ElementRect, container: ElementRect, areaRigh
   return [...left, ...top, ...bottom, ...right];
 };
 
+/** Runs in the page through `evaluate`: sets each theme variable on the root as VS Code does; `null` removes it. */
+export const setRootVars = (vars: Record<string, string | null>): void => {
+  const root = document.documentElement.style;
+
+  for (const [name, value] of Object.entries(vars)) {
+    if (value === null) root.removeProperty(name);
+    else root.setProperty(name, value);
+  }
+};
+
 /** Runs in the page through `evaluate`: the element's scroll offsets, left then top. */
 export const scrollOf = (element: Element): number[] => [element.scrollLeft, element.scrollTop];

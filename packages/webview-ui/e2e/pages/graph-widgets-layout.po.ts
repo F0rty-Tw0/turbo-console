@@ -4,7 +4,7 @@ import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import { WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { ellipsisNameOf, isCutText, rectOf, scrollOf, titleFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
+import { ellipsisNameOf, isCutText, rectOf, scrollOf, setRootVars, titleFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 const MAX_ZOOM_NOTCHES = 60;
 
@@ -88,9 +88,19 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
     await this.canvas.panBy(dx, 0);
   }
 
+  /** Sets `--vscode-*` theme variables on the root; `null` removes one, as High Contrast leaves some unset. */
+  public async setThemeVars(vars: Record<string, string | null>): Promise<void> {
+    await this.page.evaluate(setRootVars, vars);
+  }
+
   /** The layer never scrolled: a menu or widget out of view did not drag its content. */
   public async expectLayerUnscrolled(): Promise<void> {
     await expect.poll(async (): Promise<number[]> => this.layer.evaluate(scrollOf)).toEqual([0, 0]);
+  }
+
+  /** The folder's box chevron paints `color` as its background colour. */
+  public async expectChevronBackground(folder: string, color: string): Promise<void> {
+    await expect(this.chevronOf(folder, true)).toHaveCSS('background-color', color);
   }
 
   /** Moves keyboard focus to the graph container, the Tab stop before the first widget. */

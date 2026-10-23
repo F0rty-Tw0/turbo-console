@@ -18,6 +18,14 @@ const ADMIN_PACKAGES = [...BOARDS.packages, packageOf('admin', 'apps/admin')];
 /** The boards under a new hash with `admin` added to apps, laid out afresh. */
 const WITH_ADMIN: GraphReady = { ...BOARDS, hash: 'b0a2d501', packages: ADMIN_PACKAGES, folderPositions: null };
 
+const EDITOR_BACKGROUND = 'rgb(31, 31, 31)';
+
+/** Dark Modern's secondary button background: fully transparent. */
+const CLEAR_SECONDARY = { '--vscode-editor-background': EDITOR_BACKGROUND, '--vscode-button-secondaryBackground': 'rgba(0, 0, 0, 0)' };
+
+/** High Contrast leaves the secondary button background unset. */
+const UNSET_SECONDARY = { '--vscode-button-secondaryBackground': null };
+
 const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => savedWith(BOARDS.hash, overrides);
 
 test.describe('FEATURE: folder widget placement', () => {
@@ -282,6 +290,26 @@ test.describe('FEATURE: folder widget placement', () => {
 
       await test.step('THEN the apps row reads 3 packages', async (): Promise<void> =>
         graphWidgets.expectBoxRow('apps', '3 packages'));
+    }
+  );
+
+  test(
+    'GIVEN a theme whose secondary button background is transparent or unset, a header button keeps an opaque editor base',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the grouped boards open with a transparent secondary button background', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphWidgets.setThemeVars(CLEAR_SECONDARY);
+      });
+
+      await test.step('THEN the apps chevron paints the editor background', async (): Promise<void> =>
+        graphWidgets.expectChevronBackground('apps', EDITOR_BACKGROUND));
+
+      await test.step('WHEN the secondary button background is unset', async (): Promise<void> =>
+        graphWidgets.setThemeVars(UNSET_SECONDARY));
+
+      await test.step('THEN the apps chevron still paints the editor background', async (): Promise<void> =>
+        graphWidgets.expectChevronBackground('apps', EDITOR_BACKGROUND));
     }
   );
 });
