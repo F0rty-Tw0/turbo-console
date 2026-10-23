@@ -215,6 +215,18 @@ describe('FEATURE: dropped graph message log text', () => {
     expect(droppedGraphText(positionsWith(5001))).toBe('positions with 5001 keys');
   });
 
+  it('GIVEN an exportImage with a string png WHEN logged THEN the text is only its character count', () => {
+    expect(droppedGraphText({ type: 'exportImage', png: 'data:image/png;base64,AAAA' })).toBe('exportImage with 26 chars');
+  });
+
+  it('GIVEN an exportImage with a numeric png WHEN logged THEN the text is its JSON', () => {
+    expect(droppedGraphText({ type: 'exportImage', png: 7 })).toBe('{"type":"exportImage","png":7}');
+  });
+
+  it('GIVEN another type with a string png WHEN logged THEN the text is its JSON', () => {
+    expect(droppedGraphText({ type: 'nope', png: 'AAAA' })).toBe('{"type":"nope","png":"AAAA"}');
+  });
+
   it('GIVEN a throwing positions getter WHEN logged THEN the text is the unprintable marker', () => {
     expect(droppedGraphText(THROWING_POSITIONS)).toBe(UNPRINTABLE_MESSAGE);
   });
