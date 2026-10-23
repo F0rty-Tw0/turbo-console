@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 
 import type { TaskPanel } from '../../common/graph-task.type.ts';
 import type { TaskControls } from '../../common/task-controls.type.ts';
+import type { TaskDetails } from '../../common/task-details.type.ts';
 
 export const taskPanelMock = (): Mocked<TaskPanel> => {
   const panel: Mocked<TaskPanel> = {
@@ -23,4 +24,14 @@ export const taskControlsMock = (): Mocked<TaskControls> => {
   };
 
   return controls;
+};
+
+export const taskDetailsMock = (): Mocked<TaskDetails> => {
+  const details: Mocked<TaskDetails> = {
+    enter: vi.fn<TaskDetails['enter']>(),
+    exit: vi.fn<TaskDetails['exit']>(),
+    show: vi.fn<TaskDetails['show']>()
+  };
+
+  return details;
 };

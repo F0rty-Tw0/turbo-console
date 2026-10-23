@@ -1,17 +1,22 @@
 import type { Mocked } from 'vitest';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { parkedViewOf } from './parked-view.ts';
+import { parkedScreenOf, parkedViewOf } from './parked-view.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
+import type { LayoutScreen } from '../common/graph-layouts.type.ts';
 import type { GraphView, Viewport } from '../common/graph-page.type.ts';
+import { FALLBACK_NOTICE } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
+import { layoutScreenMock } from '../test/mocks/graph-layouts.mock.ts';
 import { graphViewMock } from '../test/mocks/graph-view.mock.ts';
 
 type Mutator = keyof GraphView;
 
 type Call = (view: GraphView) => void;
+
+type ScreenCall = (screen: LayoutScreen) => void;
 
 const PACKAGE_PAN: Position = { x: 4, y: -2 };
 
@@ -40,6 +45,37 @@ const MUTATIONS: [Mutator, Call][] = [
   ['setPositions', (view: GraphView): void => view.setPositions({})],
   ['showFolders', (view: GraphView): void => view.showFolders(null, String)]
 ];
+
+const SCREEN_CALLS: [keyof LayoutScreen, ScreenCall][] = [
+  ['showLoading', (screen: LayoutScreen): void => screen.showLoading()],
+  ['showGraph', (screen: LayoutScreen): void => screen.showGraph(false)],
+  ['showNotice', (screen: LayoutScreen): void => screen.showNotice(FALLBACK_NOTICE)]
+];
+
+describe('FEATURE: parkedScreenOf', () => {
+  let inner: Mocked<LayoutScreen>;
+  let isParked: boolean;
+  let screen: LayoutScreen;
+
+  beforeEach(() => {
+    inner = layoutScreenMock();
+    isParked = true;
+    screen = parkedScreenOf(inner, (): boolean => isParked);
+  });
+
+  it.each(SCREEN_CALLS)('GIVEN the screen is parked WHEN %s is called THEN the inner screen never hears of it', (name, call) => {
+    call(screen);
+
+    expect(inner[name]).not.toHaveBeenCalled();
+  });
+
+  it.each(SCREEN_CALLS)('GIVEN the screen is not parked WHEN %s is called THEN the inner screen does it', (name, call) => {
+    isParked = false;
+    call(screen);
+
+    expect(inner[name]).toHaveBeenCalledOnce();
+  });
+});
 
 describe('FEATURE: parkedViewOf', () => {
   let inner: Mocked<GraphView>;

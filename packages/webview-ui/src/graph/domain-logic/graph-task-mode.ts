@@ -1,4 +1,5 @@
 import { GraphTaskLayout } from './graph-task-layout.ts';
+import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
@@ -12,9 +13,12 @@ import { choiceOf, droppedNoticeOf, requestOf } from '../utils/task-choice.util.
 
 /**
  * Task mode's state and routing: whether it is active, the host's latest tasks and hash, and the task view it saves.
- * Its layout lives in `GraphTaskLayout`, its page parts in the task panel and Controls; the package graph is parked meanwhile.
+ * Its layout lives in `GraphTaskLayout`, its selected task and side panel in `GraphTaskSelection`, its page parts in the
+ * task panel and Controls; the package graph is parked meanwhile.
  */
 export class GraphTaskMode {
+  public readonly selection: GraphTaskSelection;
+
   private readonly deps: TaskModeDeps;
   private readonly layout: GraphTaskLayout;
   private readonly panel: TaskPanel;
@@ -30,11 +34,21 @@ export class GraphTaskMode {
       saved: (): TaskViewState | null => deps.modes.task(),
       onPlaced: (): void => this.saveCamera()
     });
+    this.selection = new GraphTaskSelection({
+      view: deps.view,
+      detailsOf: deps.detailsOf,
+      task: (): TaskViewState => this.view(),
+      save: (edit: Partial<TaskViewState>): void => this.saveView(edit)
+    });
     this.panel = deps.panelOf({ onShowAll: (): void => this.choose({ capLifted: true }, null) });
     this.controls = deps.controlsOf({
       onSearch: (search: string): void => this.saveView({ search }),
       onDepth: (depth: number): void => this.choose({ depth }, null),
-      onResize: (): void => deps.view.resize()
+      onPick: (id: string): void => this.selection.select(id),
+      onToggle: (controlsOpen: boolean): void => {
+        deps.view.resize();
+        deps.modes.savePanels({ controlsOpen });
+      }
     });
   }
 
@@ -53,6 +67,8 @@ export class GraphTaskMode {
 
     const request = requestOf(this.tasks, this.shownSet());
     const shownKey = this.layout.key();
+
+    this.selection.setShown(request.tasks);
 
     if (request.key === shownKey) return;
 
@@ -144,6 +160,7 @@ export class GraphTaskMode {
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));
     this.panel.show({ isEmpty, hiddenCount: shownSet.hiddenCount });
     this.controls.setRows(request.tasks);
+    this.selection.setShown(request.tasks);
     this.deps.view.resize();
 
     if (isEmpty) {
@@ -161,12 +178,13 @@ export class GraphTaskMode {
   private enter(): void {
     if (this.hasEntered) return;
 
-    const isOpen = this.deps.modes.current()?.controlsOpen ?? true;
+    const current = this.deps.modes.current();
 
     this.hasEntered = true;
     this.deps.screen.showGraph(this.engine() === 'fallback');
     this.panel.enter();
-    this.controls.enter(this.view(), isOpen);
+    this.controls.enter(this.view(), current?.controlsOpen ?? true);
+    this.selection.enter(current?.detailsOpen ?? true);
   }
 
   /** Saves the task camera, empties the canvas and hands the page back to the package graph. */
@@ -177,6 +195,7 @@ export class GraphTaskMode {
     this.hasEntered = false;
     this.panel.exit();
     this.controls.exit();
+    this.selection.exit();
     this.deps.view.resize();
     this.deps.onExit();
   }

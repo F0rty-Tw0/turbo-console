@@ -27,6 +27,9 @@ export type ProbeNode = {
   readonly effectiveOpacity: number;
   readonly isVisible: boolean;
   readonly isCollapsed: boolean;
+  /** A task's run outline: 0 wide with no run state. */
+  readonly outlineWidth: number;
+  readonly outlineColor: string;
 };
 
 export type ProbeEdge = {

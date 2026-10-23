@@ -13,6 +13,7 @@ import type { NodeSize } from './node-size.type.ts';
 import type { Paint } from './paint.type.ts';
 import type { TaskCanvas } from './task-canvas.type.ts';
 import type { TaskControlsViews } from './task-controls.type.ts';
+import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -176,6 +177,8 @@ export type GraphControllerDeps = {
   readonly widgetViews: WidgetViews;
   /** The task Controls builders, handed in because `domain-logic` may not import `ui`. */
   readonly taskViews: TaskControlsViews;
+  /** The task side panel builders, handed in for the same reason. */
+  readonly taskDetailsViews: TaskDetailsViews;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
   readonly overlay: MediaQueryList;
   /** The computed `--vscode-editor-background` of `body`, read at each export. */

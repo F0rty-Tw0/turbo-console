@@ -1,0 +1,156 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock, Mocked } from 'vitest';
+
+import { GraphTaskSelection } from './graph-task-selection.ts';
+import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { TaskCanvas } from '../common/task-canvas.type.ts';
+import type { TaskDetails, TaskDetailsActions, TaskDetailsModel, TaskRuns } from '../common/task-details.type.ts';
+import { taskDetailsMock } from '../test/mocks/graph-task-mode.mock.ts';
+import { taskCanvasMock } from '../test/mocks/graph-view.mock.ts';
+import { API_BUILD_STUB, TASK_CHAIN_STUB, TASK_VIEW_STUB, WEB_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
+
+type SelectionRig = {
+  readonly canvas: Mocked<TaskCanvas>;
+  readonly details: Mocked<TaskDetails>;
+  readonly save: Mock<(edit: Partial<TaskViewState>) => void>;
+  readonly view: () => TaskViewState;
+};
+
+const WEB_BUILD_MODEL: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, dependencies: [API_BUILD_STUB] };
+
+const rigOf = (): SelectionRig => {
+  const canvas = taskCanvasMock();
+  const details = taskDetailsMock();
+  let saved: TaskViewState = TASK_VIEW_STUB;
+  const saving = (edit: Partial<TaskViewState>): void => {
+    saved = { ...saved, ...edit };
+  };
+  const save = vi.fn<(edit: Partial<TaskViewState>) => void>(saving);
+  const view = (): TaskViewState => saved;
+  const rig: SelectionRig = { canvas, details, save, view };
+
+  return rig;
+};
+
+describe('FEATURE: GraphTaskSelection', () => {
+  let rig: SelectionRig;
+  let selection: GraphTaskSelection;
+  let panelActions: TaskDetailsActions | undefined;
+
+  beforeEach(() => {
+    rig = rigOf();
+
+    const view = { tasks: rig.canvas };
+
+    selection = new GraphTaskSelection({
+      view,
+      detailsOf: (actions: TaskDetailsActions): TaskDetails => {
+        panelActions = actions;
+
+        return rig.details;
+      },
+      task: rig.view,
+      save: rig.save
+    });
+    selection.setShown(TASK_CHAIN_STUB);
+  });
+
+  describe('GIVEN the chain is shown and nothing is selected', () => {
+    it('WHEN web#build is tapped THEN it is saved, painted and shown with api#build as its dependency', () => {
+      selection.tapNode('web#build');
+
+      expect(selection.selected()).toBe('web#build');
+      expect(rig.save).toHaveBeenLastCalledWith({ selected: 'web#build' });
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
+      expect(rig.details.show).toHaveBeenLastCalledWith(WEB_BUILD_MODEL);
+    });
+
+    it('WHEN web#build is tapped twice THEN nothing is selected, painted or shown', () => {
+      selection.tapNode('web#build');
+      selection.tapNode('web#build');
+
+      expect(selection.selected()).toBeNull();
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+      expect(rig.details.show).toHaveBeenLastCalledWith(null);
+    });
+
+    it('WHEN the pkg:web compound is tapped THEN nothing is saved', () => {
+      selection.tapNode('pkg:web');
+
+      expect(selection.selected()).toBeNull();
+      expect(rig.save).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a task that is not shown is tapped THEN nothing is saved', () => {
+      selection.tapNode('gone#build');
+
+      expect(rig.save).not.toHaveBeenCalled();
+    });
+
+    it('WHEN web#build is picked twice from a list THEN it stays selected', () => {
+      selection.select('web#build');
+      selection.select('web#build');
+
+      expect(selection.selected()).toBe('web#build');
+    });
+  });
+
+  describe('GIVEN web#build is selected', () => {
+    beforeEach(() => {
+      selection.tapNode('web#build');
+    });
+
+    it('WHEN the selection is cleared THEN nothing is selected', () => {
+      selection.clear();
+
+      expect(selection.selected()).toBeNull();
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+    });
+
+    it('WHEN the panel asks for api#build THEN api#build is selected', () => {
+      panelActions?.onSelect('api#build');
+
+      expect(selection.selected()).toBe('api#build');
+    });
+
+    it('WHEN the panel asks to clear THEN nothing is selected', () => {
+      panelActions?.onClear();
+
+      expect(selection.selected()).toBeNull();
+    });
+
+    it('WHEN web#build is running THEN every map is painted and the panel reads running', () => {
+      const runs: TaskRuns = { 'web#build': 'running' };
+
+      selection.runs(runs);
+
+      const running: TaskDetailsModel = { ...WEB_BUILD_MODEL, state: 'running' };
+
+      expect(rig.canvas.runStates).toHaveBeenLastCalledWith(runs);
+      expect(rig.details.show).toHaveBeenLastCalledWith(running);
+    });
+
+    it('WHEN the shown tasks lose web#build THEN the selection is saved as null', () => {
+      selection.setShown([API_BUILD_STUB]);
+
+      expect(rig.save).toHaveBeenLastCalledWith({ selected: null });
+      expect(rig.details.show).toHaveBeenLastCalledWith(null);
+    });
+
+    it('WHEN the shown tasks keep web#build THEN nothing more is saved', () => {
+      rig.save.mockClear();
+      selection.setShown(TASK_CHAIN_STUB);
+
+      expect(rig.save).not.toHaveBeenCalled();
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
+    });
+  });
+
+  it('GIVEN entering open WHEN left THEN the panel enters open and exits', () => {
+    selection.enter(true);
+    selection.exit();
+
+    expect(rig.details.enter).toHaveBeenCalledExactlyOnceWith(true);
+    expect(rig.details.exit).toHaveBeenCalledTimes(1);
+  });
+});

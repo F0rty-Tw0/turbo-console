@@ -79,6 +79,14 @@ describe('FEATURE: ViewStateModes', () => {
       expect(saver.schedule).toHaveBeenLastCalledWith({ ...FRESH_H2, mode: 'tasks' });
     });
 
+    it('WHEN the panels are saved THEN nothing is written', () => {
+      const modes = new ViewStateModes(saver, null);
+
+      modes.savePanels({ controlsOpen: false });
+
+      expect(saver.schedule).not.toHaveBeenCalled();
+    });
+
     it('WHEN a package save arrives THEN it is written in package mode with no task', () => {
       const modes = new ViewStateModes(saver, null);
 
@@ -155,6 +163,14 @@ describe('FEATURE: ViewStateModes', () => {
       const modes = new ViewStateModes(saver, TASK_SAVED);
 
       modes.packages.schedule({ ...PACKAGE_STATE, detailsOpen: false });
+
+      expect(saver.schedule).toHaveBeenLastCalledWith({ ...TASK_SAVED, detailsOpen: false });
+    });
+
+    it('WHEN task mode closes its Details THEN the write takes detailsOpen and keeps the task', () => {
+      const modes = new ViewStateModes(saver, TASK_SAVED);
+
+      modes.savePanels({ detailsOpen: false });
 
       expect(saver.schedule).toHaveBeenLastCalledWith({ ...TASK_SAVED, detailsOpen: false });
     });

@@ -53,10 +53,10 @@ class GraphPageController {
 
     if (!isGraphHostMessage(message)) return;
 
-    // `runs` is accepted and ignored until task mode reads it.
     if (message.type === 'state') this.show(message.state, at);
     else if (message.type === 'showTasks') this.tasks.showTasks(message.taskIds, at);
     else if (message.type === 'edgeExplained') this.packages.filtering.inspection.explained(message);
+    else this.tasks.selection.runs(message.runs);
   }
 
   public facts(): ProbeFacts {

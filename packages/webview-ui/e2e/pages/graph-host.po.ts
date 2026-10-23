@@ -28,6 +28,9 @@ type LayoutEngineName = LayoutDoneMessage['engine'];
 
 const engineOf = (message: LayoutDoneMessage): LayoutEngineName => message.engine;
 
+/** Playwright's default `expect` timeout, which this config keeps. */
+const DEFAULT_POLL_MS = 5_000;
+
 /** The VS Code host stand-in: states in, posted messages and worker counts out, the saved view state kept across a reopen. */
 export class GraphHost {
   private readonly page: Page;
@@ -115,9 +118,9 @@ export class GraphHost {
     await expect.poll(async (): Promise<LayoutEngineName | undefined> => this.lastLayoutEngine()).toBe(engine);
   }
 
-  /** Every `layoutDone` so far, by engine, in order. */
-  public async expectLayoutDones(engines: LayoutEngineName[]): Promise<void> {
-    await expect.poll(async (): Promise<LayoutEngineName[]> => this.layoutEngines()).toEqual(engines);
+  /** Every `layoutDone` so far, by engine, in order; `timeout` overrides the default poll timeout. */
+  public async expectLayoutDones(engines: LayoutEngineName[], timeout = DEFAULT_POLL_MS): Promise<void> {
+    await expect.poll(async (): Promise<LayoutEngineName[]> => this.layoutEngines(), { timeout }).toEqual(engines);
   }
 
   /** A fallback layout reports `layoutDone` and never posts `positions`. */

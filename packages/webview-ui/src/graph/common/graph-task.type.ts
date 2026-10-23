@@ -3,6 +3,7 @@ import type { LayoutScreen } from './graph-layouts.type.ts';
 import type { GraphView, NodeSizer, PackageSaver } from './graph-page.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { TaskControls, TaskControlsActions } from './task-controls.type.ts';
+import type { TaskDetails, TaskDetailsActions } from './task-details.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewMode, GraphViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -14,6 +15,8 @@ export type TaskModes = {
   readonly current: () => GraphViewState | null;
   readonly setMode: (mode: GraphViewMode, hash: string) => void;
   readonly saveTask: (task: TaskViewState, hash: string) => void;
+  /** Saves the task Controls or Details open state. */
+  readonly savePanels: (panels: Partial<Pick<GraphViewState, 'controlsOpen' | 'detailsOpen'>>) => void;
 };
 
 /** What the package side reads of `ViewStateModes`: its saver, the mode, which parks it in task mode, and the state it redraws with. */
@@ -72,6 +75,8 @@ export type TaskModeDeps = {
   readonly panelOf: (actions: TaskPanelActions) => TaskPanel;
   /** Builds the task Controls over the page, its fields wired to `actions`. */
   readonly controlsOf: (actions: TaskControlsActions) => TaskControls;
+  /** Builds the task side panel over the page, its dependency and Clear buttons wired to `actions`. */
+  readonly detailsOf: (actions: TaskDetailsActions) => TaskDetails;
 };
 
 /** What the controller hands `taskModeOf` besides its own deps and the view. */

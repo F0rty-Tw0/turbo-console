@@ -1,10 +1,20 @@
 import cytoscape from 'cytoscape';
-import type { Core } from 'cytoscape';
+import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
+
+/** Each run state and its `CANVAS_RUN_COLORS` entry as Cytoscape reports it. */
+const RUN_OUTLINES: [GraphRunState, string][] = [
+  ['running', 'rgb(255,255,0)'],
+  ['passed', 'rgb(0,255,17)'],
+  ['failed', 'rgb(255,0,17)'],
+  ['stopped', 'rgb(119,119,119)'],
+  ['failed-to-start', 'rgb(255,0,34)']
+];
 
 const AB = edgeIdOf({ source: 'a', target: 'b' });
 
@@ -150,5 +160,39 @@ describe('FEATURE: graphStyleOf edge states', () => {
       expect(opacities).toStrictEqual([0.25, 0.25, 0.25]);
       expect(node.numericStyle('opacity')).toBe(1);
     });
+  });
+});
+
+describe('FEATURE: graphStyleOf task nodes', () => {
+  let cy: Core;
+
+  beforeEach(() => {
+    const data = { id: 'web#build', label: 'build' };
+    const task: ElementDefinition = { data, classes: 'task' };
+
+    cy = cytoscape({ headless: true, styleEnabled: true, elements: [task] });
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  it('GIVEN a task node THEN its label is the task name, not its id', () => {
+    expect(cy.getElementById('web#build').style('label')).toBe('build');
+  });
+
+  it('GIVEN a task with no run class THEN it has no outline', () => {
+    expect(cy.getElementById('web#build').numericStyle('outline-width')).toBe(0);
+  });
+
+  it.each(RUN_OUTLINES)('GIVEN a task classed run-%s THEN it has a 3 wide outline 2 out in %s', (state, rgb) => {
+    const node = cy.getElementById('web#build');
+
+    node.addClass(`run-${state}`);
+
+    expect(node.numericStyle('outline-width')).toBe(3);
+    expect(node.numericStyle('outline-offset')).toBe(2);
+    expect(node.style('outline-color')).toBe(rgb);
   });
 });

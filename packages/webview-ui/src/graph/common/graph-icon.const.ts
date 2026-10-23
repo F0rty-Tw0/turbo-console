@@ -21,5 +21,9 @@ export const GRAPH_ICON_IDS = [
   'check',
   'dash',
   'desktop-download',
-  'tasklist'
+  'tasklist',
+  'sync',
+  'pass',
+  'error',
+  'debug-stop'
 ] as const;

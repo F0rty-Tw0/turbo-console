@@ -49,6 +49,17 @@ export class ViewStateModes {
     this.write(state);
   }
 
+  /** Writes a task mode panel's open state over the last state; nothing before any state is written. */
+  public savePanels(panels: Partial<Pick<GraphViewState, 'controlsOpen' | 'detailsOpen'>>): void {
+    const last = this.last;
+
+    if (last === null) return;
+
+    const state: GraphViewState = { ...last, ...panels };
+
+    this.write(state);
+  }
+
   private schedulePackages(state: PackageViewState): void {
     const last = this.last;
 

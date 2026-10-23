@@ -10,10 +10,11 @@ import type { Viewport } from '../../common/graph-page.type.ts';
 import type { TaskModeDeps, TaskModes, TaskPanel, TaskView } from '../../common/graph-task.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import type { TaskControls } from '../../common/task-controls.type.ts';
+import type { TaskDetails } from '../../common/task-details.type.ts';
 import { freshViewStateOf } from '../../utils/fresh-view-state.util.ts';
-import type { TaskModeRig, TaskViewMock } from '../common/graph-task-mode.type.ts';
+import type { TaskModeRig, TaskPartsMock, TaskViewMock } from '../common/graph-task-mode.type.ts';
 import { layoutScreenMock } from '../mocks/graph-layouts.mock.ts';
-import { taskControlsMock, taskPanelMock } from '../mocks/graph-task-mode.mock.ts';
+import { taskControlsMock, taskDetailsMock, taskPanelMock } from '../mocks/graph-task-mode.mock.ts';
 import { taskCanvasMock } from '../mocks/graph-view.mock.ts';
 import { layoutRunsMock } from '../mocks/layout-runner.mock.ts';
 import { TASK_VIEW_STUB } from '../stubs/graph-task.stub.ts';
@@ -34,6 +35,36 @@ export const taskSavedOf = (task: Partial<TaskViewState>, mode: GraphViewMode = 
   return saved;
 };
 
+/** The task canvas and camera, each call that orders a layout noted by name. */
+const taskViewMockOf = (noting: (name: string) => () => void): TaskViewMock => {
+  const tasks = taskCanvasMock();
+  const view: TaskViewMock = {
+    tasks,
+    fit: vi.fn<TaskView['fit']>(noting('fit')),
+    setViewport: vi.fn<TaskView['setViewport']>(noting('setViewport')),
+    viewport: vi.fn<TaskView['viewport']>(() => TASK_CAMERA),
+    resize: vi.fn<TaskView['resize']>()
+  };
+
+  tasks.show.mockImplementation(noting('show'));
+
+  return view;
+};
+
+const sizeOf = (): NodeSize => NODE_SIZE;
+
+const taskPartsMockOf = (): TaskPartsMock => {
+  const panel = taskPanelMock();
+  const controls = taskControlsMock();
+  const details = taskDetailsMock();
+  const panelOf = vi.fn<TaskModeDeps['panelOf']>((): TaskPanel => panel);
+  const controlsOf = vi.fn<TaskModeDeps['controlsOf']>((): TaskControls => controls);
+  const detailsOf = vi.fn<TaskModeDeps['detailsOf']>((): TaskDetails => details);
+  const parts: TaskPartsMock = { panel, controls, details, panelOf, controlsOf, detailsOf };
+
+  return parts;
+};
+
 /** Every double a `GraphTaskMode` needs, over the spec's `modes`. */
 export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const posted: (WebviewMessage | GraphWebviewMessage)[] = [];
@@ -48,41 +79,31 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const post = (message: WebviewMessage | GraphWebviewMessage): void => {
     posted.push(message);
   };
-  const tasks = taskCanvasMock();
-  const view: TaskViewMock = {
-    tasks,
-    fit: vi.fn<TaskView['fit']>(noting('fit')),
-    setViewport: vi.fn<TaskView['setViewport']>(noting('setViewport')),
-    viewport: vi.fn<TaskView['viewport']>(() => TASK_CAMERA),
-    resize: vi.fn<TaskView['resize']>()
-  };
+  const view = taskViewMockOf(noting);
   const frames = { start: vi.fn<FrameClock['start']>(), arm: vi.fn<FrameClock['arm']>(noting('arm')) };
   const bridge: Bridge = { ready: vi.fn(), post, onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
   const runs = layoutRunsMock();
   const screen = layoutScreenMock();
-  const panel = taskPanelMock();
-  const controls = taskControlsMock();
+  const parts = taskPartsMockOf();
+  const { panelOf, controlsOf, detailsOf } = parts;
   const onExit = vi.fn<() => void>();
-  const panelOf = vi.fn<TaskModeDeps['panelOf']>((): TaskPanel => panel);
-  const controlsOf = vi.fn<TaskModeDeps['controlsOf']>((): TaskControls => controls);
   const deps: TaskModeDeps = {
     view,
     runner: runs.runner,
-    sizeOf: (): NodeSize => NODE_SIZE,
+    sizeOf,
     bridge,
     screen,
     modes,
     frames,
     onExit,
     panelOf,
-    controlsOf
+    controlsOf,
+    detailsOf
   };
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const calls = (): string[] => [...called];
 
-  tasks.show.mockImplementation(noting('show'));
-
-  const rig: TaskModeRig = { deps, view, runs, screen, frames, modes, posts, calls, panel, controls, onExit, panelOf, controlsOf };
+  const rig: TaskModeRig = { ...parts, deps, view, runs, screen, frames, modes, posts, calls, onExit };
 
   return rig;
 };

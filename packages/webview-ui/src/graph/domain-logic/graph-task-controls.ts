@@ -50,14 +50,22 @@ export class GraphTaskControls {
   }
 
   public exit(): void {
+    const { panel } = this.elements;
+    const hadFocus = panel.contains(document.activeElement);
+
     this.isActive = false;
-    this.elements.panel.hidden = true;
+    panel.hidden = true;
     this.deps.page.controls.setAttribute('aria-controls', PACKAGE_CONTROLS_ID);
+
+    if (hadFocus) this.deps.page.taskMode.focus();
   }
 
   public setRows(tasks: GraphTask[]): void {
     const rows = tasks.map(this.deps.views.row);
     const lines = rows.map((row) => row.line);
+    const { onPick } = this.deps.actions;
+
+    for (const { task, pick } of rows) pick.addEventListener('click', (): void => onPick(task.id));
 
     this.rows = rows;
     this.elements.list.replaceChildren(...lines);
@@ -74,7 +82,7 @@ export class GraphTaskControls {
 
     this.isOpen = !this.isOpen;
     this.render();
-    this.deps.actions.onResize();
+    this.deps.actions.onToggle(this.isOpen);
   }
 
   private searched(): void {

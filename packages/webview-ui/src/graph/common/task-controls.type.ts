@@ -24,11 +24,12 @@ export type TaskControlsViews = {
   readonly row: (task: GraphTask) => TaskControlsRow;
 };
 
-/** What the task Controls report: a new search text, a valid Dependents depth, and a panel opened or closed. */
+/** What the task Controls report: a new search text, a valid Dependents depth, a picked row and a panel opened or closed. */
 export type TaskControlsActions = {
   readonly onSearch: (search: string) => void;
   readonly onDepth: (depth: number) => void;
-  readonly onResize: () => void;
+  readonly onPick: (id: string) => void;
+  readonly onToggle: (isOpen: boolean) => void;
 };
 
 /** The task Controls panel while task mode is on: it replaces the package Controls panel and follows the Controls button. */
@@ -42,7 +43,7 @@ export type TaskControls = {
 
 /** What `GraphTaskControls` builds its panel with and reports to. */
 export type TaskControlsDeps = {
-  readonly page: Pick<PageElements, 'body' | 'controls'>;
+  readonly page: Pick<PageElements, 'body' | 'controls' | 'taskMode'>;
   readonly views: TaskControlsViews;
   readonly actions: TaskControlsActions;
 };

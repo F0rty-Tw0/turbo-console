@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphTaskMode } from './graph-task-mode.ts';
 import { ViewStateModes } from './view-state-modes.ts';
-import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphReady, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
@@ -10,7 +10,13 @@ import type { TaskPanelActions } from '../common/graph-task.type.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
-import { MORE_TASKS_STATE_STUB, TASK_CHAIN_STUB, TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
+import {
+  MORE_TASKS_STATE_STUB,
+  TASK_CHAIN_STUB,
+  TASK_STATE_STUB,
+  WEB_BUILD_STUB,
+  WEB_LINT_STUB
+} from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { TASK_CAMERA, taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
 import { taskLayoutKeyOf } from '../utils/elk-task-graph.util.ts';
@@ -37,6 +43,13 @@ const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN);
 const MORE_KEY = taskLayoutKeyOf(MORE_TASKS_STATE_STUB.tasks, new Set([...SHOWN, 'web#test']));
 
 const SAVED_PAN: Position = { x: -40, y: 60 };
+
+/** The same hash without `api#build`. */
+const NO_API_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [WEB_BUILD_STUB, WEB_LINT_STUB] };
+
+const WEB_BUILD_SAVED = taskSavedOf({});
+
+const DETAILS_CLOSED: GraphViewState = { ...WEB_BUILD_SAVED, detailsOpen: false };
 
 /** The rig over a real `ViewStateModes` that starts from `saved`. */
 const rigOf = (saved: GraphViewState | null): TaskModeRig => {
@@ -299,6 +312,52 @@ describe('FEATURE: GraphTaskMode', () => {
 
       expect(rig.modes.task()).toMatchObject({ search: 'api' });
       expect(rig.runs.count()).toBe(1);
+    });
+  });
+
+  describe('GIVEN task mode with web#build chosen, details closed and the chain received', () => {
+    beforeEach(() => {
+      rig = rigOf(DETAILS_CLOSED);
+      mode = new GraphTaskMode(rig.deps);
+      mode.received(TASK_STATE_STUB, 7);
+    });
+
+    it('WHEN entered THEN the task details enter closed', () => {
+      expect(rig.details.enter).toHaveBeenCalledExactlyOnceWith(false);
+    });
+
+    it('WHEN api#build is tapped twice THEN nothing is selected', () => {
+      mode.selection.tapNode('api#build');
+      mode.selection.tapNode('api#build');
+
+      expect(mode.selection.selected()).toBeNull();
+    });
+
+    it('WHEN the pkg:api compound is tapped THEN the selection is unchanged', () => {
+      mode.selection.tapNode('api#build');
+      mode.selection.tapNode('pkg:api');
+
+      expect(mode.selection.selected()).toBe('api#build');
+    });
+
+    it('WHEN a Controls row picks api#build THEN it is saved as selected', () => {
+      controlsActionsOf(rig)?.onPick('api#build');
+
+      expect(rig.modes.task()).toMatchObject({ selected: 'api#build' });
+    });
+
+    it('WHEN a same-hash state arrives without the selected api#build THEN the saved selection is null', () => {
+      mode.selection.tapNode('api#build');
+      mode.received(NO_API_STATE, 8);
+
+      expect(mode.selection.selected()).toBeNull();
+      expect(rig.modes.task()).toMatchObject({ chosen: ['web#build'], selected: null });
+    });
+
+    it('WHEN the toggle is pressed THEN the task details exit', () => {
+      mode.toggle(9);
+
+      expect(rig.details.exit).toHaveBeenCalledOnce();
     });
   });
 });

@@ -1,3 +1,6 @@
+import type { GraphIconId } from './graph-icon.type.ts';
+import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
+
 /** The most tasks task mode draws before it cuts dependent and dependency hops. */
 export const TASK_CAP = 300;
 
@@ -38,3 +41,38 @@ export const UNKNOWN_TASKS_TEXT = 'Those tasks are not in this workspace';
 /** The prompt while nothing is chosen. */
 export const EMPTY_TASKS_TEXT =
   'Choose tasks to show: select a package and pick Show tasks, use Show in task graph on the details page, or run Turbo Console: Show Task Graph…';
+
+/** The id of the task details panel, which the Details button points at while task mode is on. */
+export const TASK_DETAILS_ID = 'graph-task-details';
+
+/** Starts each run state class on a task node: `run-running`, `run-passed`, `run-failed`, `run-stopped`, `run-failed-to-start`. */
+export const RUN_CLASS_PREFIX = 'run-';
+
+export const RUN_LABEL = 'Run';
+
+export const RUN_NO_CACHE_LABEL = 'Run without cache';
+
+export const STOP_LABEL = 'Stop';
+
+export const DEPENDENCIES_LABEL = 'Dependencies';
+
+/** The command line of a task whose package script is missing. */
+export const NO_COMMAND_TEXT = 'No command';
+
+/** The word the task panel shows beside each run state's icon. */
+export const RUN_STATE_TEXT: Readonly<Record<GraphRunState, string>> = {
+  running: 'Running',
+  passed: 'Passed',
+  failed: 'Failed',
+  stopped: 'Stopped',
+  'failed-to-start': 'Failed to start'
+};
+
+/** The Codicon of each run state, as the Tasks tree draws it. */
+export const RUN_STATE_ICONS: Readonly<Record<GraphRunState, GraphIconId>> = {
+  running: 'sync',
+  passed: 'pass',
+  failed: 'error',
+  stopped: 'debug-stop',
+  'failed-to-start': 'error'
+};

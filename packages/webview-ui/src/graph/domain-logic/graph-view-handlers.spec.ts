@@ -25,6 +25,8 @@ describe('FEATURE: viewHandlersOf', () => {
     let dragged: Mock<(positions: Positions) => void>;
     let taskDragged: Mock<() => void>;
     let saveCamera: Mock<() => void>;
+    let selectTask: Mock<(id: string) => void>;
+    let clearTask: Mock<() => void>;
     let isTaskMode: boolean;
     let handlers: GraphViewHandlers;
 
@@ -40,6 +42,8 @@ describe('FEATURE: viewHandlersOf', () => {
       dragged = vi.fn<(positions: Positions) => void>();
       taskDragged = vi.fn<() => void>();
       saveCamera = vi.fn<() => void>();
+      selectTask = vi.fn<(id: string) => void>();
+      clearTask = vi.fn<() => void>();
       isTaskMode = false;
       const mark = (): void => {
         calls.push('mark');
@@ -52,7 +56,8 @@ describe('FEATURE: viewHandlersOf', () => {
       const filtering = { inspection, folders, rendered };
       const layouts = { dragged };
       const frames = { mark };
-      const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera };
+      const selection = { tapNode: selectTask, clear: clearTask };
+      const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera, selection };
 
       handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks });
     });
@@ -128,6 +133,26 @@ describe('FEATURE: viewHandlersOf', () => {
         const packageCalls = spies.map((spy) => spy.mock.calls.length);
 
         expect(packageCalls).toStrictEqual([0, 0, 0, 0, 0, 0]);
+      });
+
+      it('WHEN a task is tapped THEN task mode taps it', () => {
+        handlers.onTapNode('web#build');
+
+        expect(selectTask).toHaveBeenCalledExactlyOnceWith('web#build');
+      });
+
+      it('WHEN the background is tapped THEN task mode clears its selection', () => {
+        handlers.onTapBackground();
+
+        expect(clearTask).toHaveBeenCalledOnce();
+      });
+
+      it('WHEN a link is tapped or a task double-tapped THEN task mode selects nothing', () => {
+        handlers.onTapEdge('web#build', 'ui#build');
+        handlers.onDoubleTapNode('web#build');
+
+        expect(selectTask).not.toHaveBeenCalled();
+        expect(clearTask).not.toHaveBeenCalled();
       });
 
       it('WHEN a drag ends THEN task mode keeps it and the layouts hear nothing', () => {

@@ -11,16 +11,19 @@ export const GRAPH_TASK_STUB: GraphTask = {
   dependencies: []
 };
 
-const API_BUILD: GraphTask = { ...GRAPH_TASK_STUB, id: 'api#build', packageName: 'api' };
+/** `api#build`, needed by `web#build`. */
+export const API_BUILD_STUB: GraphTask = { ...GRAPH_TASK_STUB, id: 'api#build', packageName: 'api' };
 
-const WEB_BUILD: GraphTask = { ...GRAPH_TASK_STUB, id: 'web#build', packageName: 'web', dependencies: ['api#build'] };
+/** `web#build`, which needs `api#build`. */
+export const WEB_BUILD_STUB: GraphTask = { ...GRAPH_TASK_STUB, id: 'web#build', packageName: 'web', dependencies: ['api#build'] };
 
-const WEB_LINT: GraphTask = { ...GRAPH_TASK_STUB, id: 'web#lint', packageName: 'web', name: 'lint' };
+/** `web#lint`, standing alone. */
+export const WEB_LINT_STUB: GraphTask = { ...GRAPH_TASK_STUB, id: 'web#lint', packageName: 'web', name: 'lint' };
 
 const WEB_TEST: GraphTask = { ...GRAPH_TASK_STUB, id: 'web#test', packageName: 'web', name: 'test', dependencies: ['web#build'] };
 
 /** `web#build` needs `api#build`; `web#lint` stands alone. */
-export const TASK_CHAIN_STUB: GraphTask[] = [API_BUILD, WEB_BUILD, WEB_LINT];
+export const TASK_CHAIN_STUB: GraphTask[] = [API_BUILD_STUB, WEB_BUILD_STUB, WEB_LINT_STUB];
 
 /** A graph state of hash `h1` with `TASK_CHAIN_STUB` and no package. */
 export const TASK_STATE_STUB: GraphReady = {

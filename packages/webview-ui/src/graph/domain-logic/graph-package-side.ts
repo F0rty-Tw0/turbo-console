@@ -7,7 +7,7 @@ import type { GraphViewState } from '../../bridge/common/graph-view-state.type.t
 import type { FrameClock } from '../common/frame-clock.type.ts';
 import type { DrawnGraph, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { PackageModes } from '../common/graph-task.type.ts';
-import { parkedViewOf } from '../data-access/parked-view.ts';
+import { parkedScreenOf, parkedViewOf } from '../data-access/parked-view.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
@@ -32,7 +32,10 @@ export class GraphPackageSide {
 
   public constructor(deps: GraphControllerDeps, screenView: GraphView, frames: FrameClock, modes: PackageModes) {
     const isPackageMode = (): boolean => modes.mode() === 'packages';
-    const view = parkedViewOf(screenView, (): boolean => !isPackageMode());
+    const isParked = (): boolean => !isPackageMode();
+    const view = parkedViewOf(screenView, isParked);
+    const pageScreen = layoutScreenOf(deps.page);
+    const screen = parkedScreenOf(pageScreen, isParked);
 
     this.deps = deps;
     this.view = view;
@@ -50,7 +53,7 @@ export class GraphPackageSide {
     });
     this.layouts = new GraphLayouts({
       ...deps,
-      screen: layoutScreenOf(deps.page),
+      screen,
       view,
       drawn: (): DrawnGraph | null => this.drawn,
       onDrawn: (saved: GraphViewState | null): void => this.afterDraw(saved),

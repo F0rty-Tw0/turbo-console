@@ -150,8 +150,9 @@ p {
   color: var(--vscode-descriptionForeground);
 }
 
-/* Task mode replaces the package Controls panel with #graph-task-controls and drops the package widgets, which would sit at stale spots. */
+/* Task mode replaces the package Controls and Details panels with its own and drops the package widgets, which would sit at stale spots. */
 .task-mode #graph-controls,
+.task-mode #graph-details,
 .task-mode .widget-row,
 .task-mode .graph-breadcrumb,
 .task-mode .widget-package-button:not(.task-widget-button) {
@@ -165,6 +166,33 @@ p {
 .controls-task-package {
   margin-inline-start: var(--space-2);
   color: var(--vscode-descriptionForeground);
+}
+
+/* The task run state: the icon takes the colour the canvas outline uses, the word keeps the panel's. */
+.task-run-state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.task-run-state[data-state='running'] .codicon {
+  color: var(--vscode-charts-yellow);
+}
+
+.task-run-state[data-state='passed'] .codicon {
+  color: var(--vscode-testing-iconPassed);
+}
+
+.task-run-state[data-state='failed'] .codicon {
+  color: var(--vscode-testing-iconFailed);
+}
+
+.task-run-state[data-state='stopped'] .codicon {
+  color: var(--vscode-disabledForeground);
+}
+
+.task-run-state[data-state='failed-to-start'] .codicon {
+  color: var(--vscode-errorForeground);
 }
 
 /* Loading, error and single-package message */

@@ -23,6 +23,13 @@ const styleText = (element: NodeSingular | EdgeSingular, name: string): string =
   return typeof value === 'string' ? value : '';
 };
 
+/** A resolved numeric style value; Cytoscape types `numericStyle(name)` as `any`. */
+const styleNumber = (node: NodeSingular, name: string): number => {
+  const value: unknown = node.numericStyle(name);
+
+  return typeof value === 'number' ? value : 0;
+};
+
 const idOf = (node: NodeSingular): string => node.id();
 
 /** The filter sense: the package's own `display` is `element` and it is no ghost; a collapsed folder's box hides it, not this. */
@@ -73,7 +80,9 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     borderStyle: styleText(node, 'border-style'),
     effectiveOpacity: node.effectiveOpacity(),
     isVisible: isFilterVisible(node),
-    isCollapsed
+    isCollapsed,
+    outlineWidth: styleNumber(node, 'outline-width'),
+    outlineColor: styleText(node, 'outline-color')
   };
 
   return probeNode;

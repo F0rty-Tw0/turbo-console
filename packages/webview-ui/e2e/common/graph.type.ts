@@ -30,6 +30,12 @@ export type ExpectedThemeColors = {
   readonly selected: string;
 };
 
+/** A task node's run outline: its width and its colour as `rgb(r, g, b)`. */
+export type RunOutline = {
+  readonly width: number;
+  readonly colour: string;
+};
+
 export type ThemeStub = {
   readonly bodyClass: string;
   readonly vars: CssVars;

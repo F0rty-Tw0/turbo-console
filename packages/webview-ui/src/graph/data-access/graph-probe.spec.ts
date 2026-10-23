@@ -123,6 +123,13 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
       expect(edge).toMatchObject({ isDrawn: false });
     });
 
+    it('WHEN c carries run-failed THEN its outline reads 3 wide in the failed colour and a has none', () => {
+      cy.getElementById('c').addClass('run-failed');
+
+      expect(nodeOf(probe, 'c')).toMatchObject({ outlineWidth: 3, outlineColor: 'rgb(255,0,17)' });
+      expect(nodeOf(probe, 'a')).toMatchObject({ outlineWidth: 0 });
+    });
+
     it('WHEN the visible ids are read THEN the ghost is left out', () => {
       const ids = probe.visibleIds();
 
