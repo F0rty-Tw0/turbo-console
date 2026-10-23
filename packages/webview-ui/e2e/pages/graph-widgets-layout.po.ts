@@ -4,13 +4,22 @@ import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import { WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { isCutText, rectOf, titleFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
+import { ellipsisNameOf, isCutText, rectOf, scrollOf, titleFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 const MAX_ZOOM_NOTCHES = 60;
 
 const ZOOM_OUT_NOTCH = 100;
 
 const ZOOM_IN_NOTCH = -100;
+
+/** Where `panNodeUnderOverlay` leaves a node's centre: this far right of the overlay's left edge. */
+const NODE_UNDER_OVERLAY_PX = 120;
+
+/** Where `panBoxOffRight` leaves a box's left edge: this far right of the canvas. */
+const OFF_RIGHT_PX = 40;
+
+/** Where `panBoxUnderOverlay` leaves a box's right edge: this far right of the overlay's left edge, so its "…" is covered. */
+const UNDER_OVERLAY_PX = 40;
 
 /** How the header rows follow their boxes through zoom, filters and panels, and what the overlay and a narrow box hide. */
 export class GraphWidgetsLayout extends GraphWidgetsPage {
@@ -41,6 +50,47 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
 
       await this.canvas.zoomBy(ZOOM_IN_NOTCH);
     }
+  }
+
+  /** Pans the canvas so the box's right end, "…" included, sits under the open overlay while its chevron stays left of it. */
+  public async panBoxUnderOverlay(folder: string): Promise<void> {
+    const box = await this.boxOf(folder);
+    const aside = await this.aside.evaluate(readRect);
+    const dx = aside.left + UNDER_OVERLAY_PX - (box.left + box.width);
+
+    await this.canvas.panBy(dx, 0);
+  }
+
+  /** The box's "…" is in the layer but hidden, as the overlay covers it, while its chevron shows. */
+  public async expectEllipsisUnderOverlay(folder: string): Promise<void> {
+    const ellipsis = this.layer.getByRole('button', { name: ellipsisNameOf(folder), exact: true, includeHidden: true });
+
+    await expect(ellipsis).toHaveCount(1);
+    await expect(ellipsis).toBeHidden();
+    await expect(this.chevronOf(folder, true)).toBeVisible();
+  }
+
+  /** Pans the canvas so the package's centre sits 120 px right of the open overlay's left edge, under the overlay. */
+  public async panNodeUnderOverlay(name: string): Promise<void> {
+    const node = await this.nodeRectOf(name);
+    const aside = await this.aside.evaluate(readRect);
+    const dx = aside.left + NODE_UNDER_OVERLAY_PX - (node.left + node.width / 2);
+
+    await this.canvas.panBy(dx, 0);
+  }
+
+  /** Pans the canvas so the whole box lies right of the canvas, off screen. */
+  public async panBoxOffRight(folder: string): Promise<void> {
+    const box = await this.boxOf(folder);
+    const container = await this.container.evaluate(readRect);
+    const dx = container.left + container.width + OFF_RIGHT_PX - box.left;
+
+    await this.canvas.panBy(dx, 0);
+  }
+
+  /** The layer never scrolled: a menu or widget out of view did not drag its content. */
+  public async expectLayerUnscrolled(): Promise<void> {
+    await expect.poll(async (): Promise<number[]> => this.layer.evaluate(scrollOf)).toEqual([0, 0]);
   }
 
   /** Moves keyboard focus to the graph container, the Tab stop before the first widget. */

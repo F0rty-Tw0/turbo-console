@@ -138,3 +138,6 @@ export const menuFaultsOf = (menu: ElementRect, container: ElementRect, areaRigh
 
   return [...left, ...top, ...bottom, ...right];
 };
+
+/** Runs in the page through `evaluate`: the element's scroll offsets, left then top. */
+export const scrollOf = (element: Element): number[] => [element.scrollLeft, element.scrollTop];

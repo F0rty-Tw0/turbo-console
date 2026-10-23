@@ -29,9 +29,6 @@ const COLLAPSED_ROW_TOP_PX = 8;
 /** Where `panIntoOverlayMargin` leaves a node's right edge: inside the 16 px keep-clear margin left of the overlay. */
 const MARGIN_GAP_PX = 8;
 
-/** Where `panBoxUnderOverlay` leaves a box's right edge: this far right of the overlay's left edge, so its "…" is covered. */
-const UNDER_OVERLAY_PX = 40;
-
 /** The keep-clear margin left of the overlay, less a pixel of rounding. */
 const CLEAR_MARGIN_PX = 15;
 
@@ -83,24 +80,6 @@ export class GraphWidgetsPage {
     const dx = aside.left - MARGIN_GAP_PX - (node.left + node.width);
 
     await this.canvas.panBy(dx, 0);
-  }
-
-  /** Pans the canvas so the box's right end, "…" included, sits under the open overlay while its chevron stays left of it. */
-  public async panBoxUnderOverlay(folder: string): Promise<void> {
-    const box = await this.boxOf(folder);
-    const aside = await this.aside.evaluate(readRect);
-    const dx = aside.left + UNDER_OVERLAY_PX - (box.left + box.width);
-
-    await this.canvas.panBy(dx, 0);
-  }
-
-  /** The box's "…" is in the layer but hidden, as the overlay covers it, while its chevron shows. */
-  public async expectEllipsisUnderOverlay(folder: string): Promise<void> {
-    const ellipsis = this.layer.getByRole('button', { name: ellipsisNameOf(folder), exact: true, includeHidden: true });
-
-    await expect(ellipsis).toHaveCount(1);
-    await expect(ellipsis).toBeHidden();
-    await expect(this.chevronOf(folder, true)).toBeVisible();
   }
 
   /** The layer is the container's next sibling and covers exactly the container's rect. */
@@ -174,7 +153,7 @@ export class GraphWidgetsPage {
     return boxRectOf(folderKeyed(folders, folder));
   }
 
-  private async nodeRectOf(name: string): Promise<ElementRect> {
+  protected async nodeRectOf(name: string): Promise<ElementRect> {
     const nodes = await this.probe.nodes();
     const zoom = await this.probe.zoom();
 

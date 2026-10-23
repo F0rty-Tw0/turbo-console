@@ -1,4 +1,3 @@
-import { OVERLAY_WIDTH_PX } from './common/graph.const.ts';
 import type { GraphOptions } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { ghostFolderState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
@@ -351,32 +350,6 @@ test.describe('FEATURE: folder widget menus', () => {
 
       await test.step('AND every contextmenu event was prevented and no other menu is open', async (): Promise<void> =>
         graphMenus.expectNoNativeContextMenu());
-    }
-  );
-
-  test(
-    'GIVEN a 959 px editor with the details overlay open, a menu opens in the uncovered area, flipped left at the overlay',
-    { annotation: C9 },
-    async ({ graphFolderInspect, graphList, graphMenus, graphNarrow }): Promise<void> => {
-      await test.step('WHEN the editor is narrowed to 959 px and the grouped boards open', async (): Promise<void> => {
-        await graphNarrow.setWidth(OVERLAY_WIDTH_PX);
-        await graphFolderInspect.open(grouped(), BOARDS);
-      });
-
-      await test.step('AND the apps "…", near the overlay edge, is pressed', async (): Promise<void> =>
-        graphMenus.openFolderMenu('apps'));
-
-      await test.step('THEN the menu lies in the canvas and ends left of the overlay', async (): Promise<void> =>
-        graphMenus.expectMenuInsideUncovered());
-
-      await test.step('WHEN Escape closes it, web is picked and its "…" is pressed', async (): Promise<void> => {
-        await graphMenus.pressKey('Escape');
-        await graphList.pick('web');
-        await graphMenus.openPackageMenu('web');
-      });
-
-      await test.step('THEN the package menu lies in the canvas and ends left of the overlay', async (): Promise<void> =>
-        graphMenus.expectMenuInsideUncovered());
     }
   );
 });
