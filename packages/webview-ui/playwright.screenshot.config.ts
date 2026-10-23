@@ -4,10 +4,10 @@
  * renders other pixels and only proves the suite is stable on itself.
  *
  * Baseline procedure:
- * 1. Bootstrap or intended change: push; the job fails and uploads `test-results/`. Under `updateSnapshots: 'none'` a missing
- *    baseline fails before any capture (Playwright 1.64 `matchers/expect.js`, `toHaveScreenshot`), so a bootstrap run needs
- *    `--update-snapshots=all` on the CI command and the upload step pointed at `e2e/screenshots/` with `if: always()`;
- *    a changed shot uploads `test-results/<test>/<name>-actual.png`.
+ * 1. Intended change: push; the job fails and uploads `test-results/<test>/<name>-actual.png`. Bootstrap: under
+ *    `updateSnapshots: 'none'` a missing baseline fails before any capture (Playwright 1.64 `matchers/expect.js`,
+ *    `toHaveScreenshot`), so put `--update-snapshots=all` on the CI command and point the upload step at `e2e/screenshots/`
+ *    with `if: always()`; that run writes the PNGs and passes.
  * 2. Rerun the job once, or start a fresh run on the same tree; the two runs' PNGs must be byte-identical (`cmp`), else
  *    stop and decide a root fix or a tolerance.
  * 3. `gh run download <run> -n screenshots-diff-<attempt>` for both runs, `cmp` them; check each PNG by pixel: sample the

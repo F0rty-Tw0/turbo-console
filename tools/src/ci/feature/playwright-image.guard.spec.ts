@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = join(import.meta.dirname, '../../../../');
-const TAG = /mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)(?:-[a-z]+)?/g;
+const TAG = /mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)/g;
 const DEV_BLOCK = /^ {2}dev:\n((?: {4}.*\n?)*)/m;
 const DEV_PLAYWRIGHT = /^ {4}'@playwright\/test':\s*'(\d+\.\d+\.\d+)'/m;
 
