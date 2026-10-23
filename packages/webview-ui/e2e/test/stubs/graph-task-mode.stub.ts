@@ -45,3 +45,10 @@ export const TASK_MODE_MORE_TASKS_STUB: GraphReady = {
   ...TASK_MODE_STATE_STUB,
   tasks: [...TASKS, taskOf('app', 'deploy', ['app#build'])]
 };
+
+/** `TASK_MODE_NEW_HASH_STUB` again, same hash, with `docs` given its first task, `docs#build`. */
+export const TASK_MODE_DOCS_TASK_STUB: GraphReady = {
+  ...TASK_MODE_NEW_HASH_STUB,
+  packages: [...TASK_MODE_STATE_STUB.packages, packageOf('docs', 'packages/docs', [], 1)],
+  tasks: [...TASKS, taskOf('docs', 'build', [])]
+};

@@ -9,6 +9,9 @@ import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewMode, GraphViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 
+/** The task Controls or Details open state, as task mode saves it. */
+export type TaskPanelsOpen = Partial<Pick<GraphViewState, 'controlsOpen' | 'detailsOpen'>>;
+
 /** What task mode reads and writes of `ViewStateModes`. */
 export type TaskModes = {
   readonly mode: () => GraphViewMode;
@@ -17,7 +20,7 @@ export type TaskModes = {
   readonly setMode: (mode: GraphViewMode, hash: string) => void;
   readonly saveTask: (task: TaskViewState, hash: string) => void;
   /** Saves the task Controls or Details open state. */
-  readonly savePanels: (panels: Partial<Pick<GraphViewState, 'controlsOpen' | 'detailsOpen'>>) => void;
+  readonly savePanels: (panels: TaskPanelsOpen) => void;
 };
 
 /** What the package side reads of `ViewStateModes`: its saver, the mode, which parks it in task mode, and the state it redraws with. */
@@ -35,6 +38,8 @@ export type PackageSideHooks = {
   readonly frames: FrameClock;
   readonly modes: PackageModes;
   readonly tasks: PackageTasks;
+  /** The page now shows a message instead of the graph: task mode shows its graph again with the next graph state. */
+  readonly onMessage: () => void;
 };
 
 /** The canvas calls task mode makes: the task canvas, the camera and a re-measure after a panel change. */
@@ -90,6 +95,12 @@ export type TaskModeDeps = {
   readonly detailsOf: (actions: TaskDetailsActions) => TaskDetails;
   /** Builds the selected task's "…" and its menu over the widget layer. */
   readonly widgetsOf: () => TaskWidgets;
+};
+
+/** What a task panel's open or close touches: the canvas, re-measured, and the saved open state. */
+export type PanelToggleDeps = {
+  readonly view: Pick<TaskView, 'resize'>;
+  readonly modes: Pick<TaskModes, 'savePanels'>;
 };
 
 /** What the controller hands `taskModeOf` besides its own deps and the view. */

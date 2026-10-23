@@ -11,7 +11,6 @@ import type { PackageModes, PackageSideHooks } from '../common/graph-task.type.t
 import { parkedScreenOf, parkedViewOf } from '../data-access/parked-view.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
-import { readGraphViewState } from '../utils/graph-view-state.util.ts';
 import { openingStateOf } from '../utils/grouping-open.util.ts';
 import { groupingOf } from '../utils/layout-plan.util.ts';
 
@@ -28,6 +27,7 @@ export class GraphPackageSide {
   private readonly view: GraphView;
   private readonly frames: FrameClock;
   private readonly modes: PackageModes;
+  private readonly onMessage: () => void;
   private drawn: DrawnGraph | null = null;
   private opening: GraphViewState | null = null;
   private hasShownGraph = false;
@@ -44,21 +44,24 @@ export class GraphPackageSide {
       ...parkedScreen,
       showGraph: (isFallback: boolean): void => this.showScreenGraph(parkedScreen, isFallback)
     };
+    const isGrouped = (): boolean => isPackageMode() && this.layouts.drawnMode() === 'folders';
+    const canAct = (): boolean => isGrouped() && this.layouts.mode() === 'folders';
 
     this.deps = deps;
     this.view = view;
     this.frames = frames;
     this.modes = modes;
+    this.onMessage = hooks.onMessage;
     this.filtering = new GraphFiltering({
       ...deps,
       ...hooks.tasks,
       saver: modes.packages,
       view,
       drawn: (): DrawnGraph | null => this.drawn,
-      onGrouping: (isGrouped: boolean): void => this.switchGrouping(isGrouped),
+      onGrouping: (grouped: boolean): void => this.switchGrouping(grouped),
       isPackageMode,
-      isGrouped: (): boolean => isPackageMode() && this.layouts.drawnMode() === 'folders',
-      canAct: (): boolean => isPackageMode() && this.layouts.mode() === 'folders' && this.layouts.drawnMode() === 'folders'
+      isGrouped,
+      canAct
     });
     this.layouts = new GraphLayouts({
       ...deps,
@@ -81,6 +84,7 @@ export class GraphPackageSide {
     this.drawn = null;
     this.filtering.inspection.reset();
     showStateMessage(this.deps.page, state);
+    this.onMessage();
   }
 
   /** The hash of the package graph shown or being laid out; `null` while none is. */
@@ -116,6 +120,7 @@ export class GraphPackageSide {
       this.layouts.reset();
       this.filtering.inspection.reset();
       showFailure(this.deps.page, error);
+      this.onMessage();
     }
   }
 
@@ -133,8 +138,7 @@ export class GraphPackageSide {
       return;
     }
 
-    const raw = this.deps.bridge.savedState();
-    const read = readGraphViewState(raw);
+    const read = this.modes.current();
     const folders = folderKeysOf(state.packages);
     const saved = openingStateOf(read, state.hash, folders, state.packages.length, this.hasShownGraph);
 

@@ -1,13 +1,16 @@
+import { keepBoxClear } from './graph-keep-clear.ts';
 import { GraphWidgetMenus } from './graph-widget-menus.ts';
 import { setHidden, translateOf, writeStyle } from './widget-rows.ts';
 import { TASK_WIDGET_CLASS } from '../common/graph-task.const.ts';
 import type { MenuAnchor } from '../common/graph-widgets.type.ts';
+import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { TaskDetailsModel, TaskMenuActions, TaskRunAction, TaskWidgetsDeps } from '../common/task-details.type.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { LayerBounds, MenuTarget, RectPx } from '../common/widget.type.ts';
+import { joinedBoxOf } from '../utils/keep-clear.util.ts';
 import { taskMenuOf } from '../utils/task-menu-model.util.ts';
 import { runMessageOf } from '../utils/task-run.util.ts';
-import { isWidgetShown, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
+import { isWidgetShown, overlayLeftOf, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
 
 type TaskButton = {
   readonly id: string;
@@ -17,7 +20,9 @@ type TaskButton = {
 /**
  * The selected task's "…" over the canvas and its menu: Run and Run without cache for a runnable task, Stop while it
  * runs, and no "…" while the menu would be empty. An item posts what the task panel's button posts for the task shown
- * when it runs, so a stale item posts nothing. Shift+F10 opens nothing in task mode.
+ * when it runs, so a stale item posts nothing. Shift+F10 opens nothing in task mode. While the task details panel
+ * overlays the canvas, the "…" hides under it and the menu opens left of it; when it turns to overlay, the selected
+ * task pans clear of it.
  */
 export class GraphTaskWidgets {
   private readonly deps: TaskWidgetsDeps;
@@ -44,6 +49,7 @@ export class GraphTaskWidgets {
       menuOf: (target: MenuTarget): MenuItemModel[] => this.menuOf(target),
       selection: (): MenuTarget | null => null
     });
+    deps.overlay.addEventListener('change', (): void => this.relayout());
   }
 
   /** The "…" beside the selected task of `model`; none for `null`, outside task mode, or while its menu would be empty. */
@@ -64,6 +70,30 @@ export class GraphTaskWidgets {
   public rendered(): void {
     this.place();
     this.menus.follow();
+  }
+
+  /** Pans the selected task and its "…" clear of the task details panel while it overlays the canvas. */
+  public keepClear(): void {
+    const id = this.model?.task.id ?? null;
+    const aside = this.deps.aside();
+    const isOverlaid = this.deps.overlay.matches && !aside.hidden;
+
+    if (id === null || !isOverlaid) return;
+
+    const { view, page } = this.deps;
+    const box = joinedBoxOf(view.anchorBox([id]), this.buttonBox(id));
+
+    keepBoxClear(view, page.container, aside, box);
+  }
+
+  /** The overlay media query flipped: in task mode, the "…" is placed against the new bounds and the selected task kept clear. */
+  private relayout(): void {
+    const isActive = this.deps.isActive();
+
+    if (!isActive) return;
+
+    this.place();
+    this.keepClear();
   }
 
   public exit(): void {
@@ -134,9 +164,20 @@ export class GraphTaskWidgets {
     return anchor;
   }
 
+  /** The "…" span of task `id` at the camera now, shown or not; `null` while it has none. */
+  private buttonBox(id: string): AnchorBox | null {
+    const { selected } = this.deps.view.widgetRects(id);
+
+    if (this.button === null || selected === null) return null;
+
+    return packageButtonRectOf(selected);
+  }
+
   private bounds(): LayerBounds {
-    const { offsetWidth, offsetHeight } = this.deps.page.container;
-    const bounds: LayerBounds = { width: offsetWidth, height: offsetHeight, overlayLeft: null };
+    const { overlay, aside, page } = this.deps;
+    const { offsetWidth, offsetHeight } = page.container;
+    const overlayLeft = overlayLeftOf(aside(), page.container, overlay.matches);
+    const bounds: LayerBounds = { width: offsetWidth, height: offsetHeight, overlayLeft };
 
     return bounds;
   }

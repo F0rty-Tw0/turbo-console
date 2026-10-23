@@ -4,8 +4,8 @@ import { taskDetailsModelOf, taskWithId } from '../utils/task-run.util.ts';
 
 /**
  * The selected task of the shown set: taps, Controls rows and the panel's dependency buttons select it, and every
- * change paints the canvas, refills the task panel and moves the task "…". A selection the shown set loses is saved
- * as `null` (RF4).
+ * change paints the canvas, refills the task panel and moves the task "…"; a task the reader selects then pans clear
+ * of the panel overlaying the canvas. A selection the shown set loses is saved as `null` (RF4).
  */
 export class GraphTaskSelection {
   private readonly deps: TaskSelectionDeps;
@@ -78,9 +78,12 @@ export class GraphTaskSelection {
     this.widgets.rendered();
   }
 
+  /** A reader's choice: a task selected keeps clear of the panel overlaying the canvas. */
   private saveSelected(id: string | null): void {
     this.deps.save({ selected: id });
     this.repaint();
+
+    if (id !== null) this.widgets.keepClear();
   }
 
   private modelOf(): TaskDetailsModel | null {

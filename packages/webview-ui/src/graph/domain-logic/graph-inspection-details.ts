@@ -8,6 +8,8 @@ const CLEAR: InspectionInput = { kind: 'clear' };
 
 const CANVAS_ESCAPE: InspectionInput = { kind: 'escape', where: 'canvas' };
 
+const PANEL_ESCAPE: InspectionInput = { kind: 'escape', where: 'panel' };
+
 /** Asks the host for the manifest entry behind the link `source` → `target`. */
 export const postExplain = (bridge: Bridge, source: string, target: string): void => {
   bridge.post({ type: 'explainEdge', source, target });
@@ -59,12 +61,20 @@ export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActi
     onFilter: (text): void => actions.canvas.filter(text),
     onOpenManifest: (packageName, line): void => bridge.post({ type: 'openManifest', packageName, line }),
     onResize: (): void => view.resize(),
+    isPackageMode: deps.isPackageMode,
     onLayout: (): void => actions.keepClear(),
     onOpened: (): void => actions.keepClear(),
     onSave: (): void => actions.save()
   };
 
   return detailsDeps;
+};
+
+/** Escape in the details panel, not a held repeat, steps the inspection back. */
+export const onPanelKey = (event: KeyboardEvent, deps: Pick<GraphDetailsDeps, 'onInput'>): void => {
+  const isEscape = !event.repeat && event.key === 'Escape';
+
+  if (isEscape) deps.onInput(PANEL_ESCAPE);
 };
 
 const onKey = (event: KeyboardEvent, actions: InspectionActions): void => {
@@ -77,7 +87,7 @@ const onKey = (event: KeyboardEvent, actions: InspectionActions): void => {
 
 /**
  * `Clear selection`, and Escape and Enter on the graph container only, so a key on a toolbar button never acts here.
- * The keys act only while the package graph owns the canvas.
+ * Both act only while the package graph owns the canvas.
  */
 export const wireInspectionKeys = (deps: GraphInspectionDeps, actions: InspectionActions): void => {
   const onContainerKey = (event: KeyboardEvent): void => {
@@ -85,7 +95,12 @@ export const wireInspectionKeys = (deps: GraphInspectionDeps, actions: Inspectio
 
     if (isPackageMode) onKey(event, actions);
   };
+  const onClear = (): void => {
+    const isPackageMode = deps.isPackageMode();
 
-  deps.page.clear.addEventListener('click', (): void => actions.input(CLEAR));
+    if (isPackageMode) actions.input(CLEAR);
+  };
+
+  deps.page.clear.addEventListener('click', onClear);
   deps.page.container.addEventListener('keydown', onContainerKey);
 };

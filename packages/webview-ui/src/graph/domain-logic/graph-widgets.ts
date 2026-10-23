@@ -2,7 +2,7 @@ import { WidgetRows, setHidden, translateOf, writeStyle } from './widget-rows.ts
 import type { GraphWidgetsDeps, MenuAnchor } from '../common/graph-widgets.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds, MenuTarget, RectPx, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
-import { buttonRectsOf, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
+import { buttonRectsOf, overlayLeftOf, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
 import { widgetPlanOf } from '../utils/widget-plan.util.ts';
 
 type PackageEntry = {
@@ -11,13 +11,6 @@ type PackageEntry = {
 };
 
 const NO_PLAN: WidgetPlan = { rows: [], packageButton: null };
-
-/** The details panel's left edge in container px while it overlays the canvas, else `null`. */
-const overlayLeftOf = (panel: HTMLElement | null, container: HTMLElement, isOverlay: boolean): number | null => {
-  if (panel === null || !isOverlay || panel.hidden) return null;
-
-  return panel.offsetLeft - container.offsetLeft;
-};
 
 /**
  * The folder header rows and the selected package's "…" over the canvas: `refresh` rebuilds them from the scene and the

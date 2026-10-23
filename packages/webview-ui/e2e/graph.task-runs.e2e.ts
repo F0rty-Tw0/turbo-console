@@ -183,7 +183,7 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
         await test.step('THEN the saved selection is null', async (): Promise<void> =>
           graphTaskHost.expectSavedTask({ selected: null }));
 
-        await test.step('AND the panel shows nothing', async (): Promise<void> => graphTaskDetails.expectEmpty());
+        await test.step('AND the panel shows the empty lead', async (): Promise<void> => graphTaskDetails.expectEmpty());
 
         await test.step('WHEN the spot where Run was is clicked', async (): Promise<void> => page.mouse.click(runSpot.x, runSpot.y));
 

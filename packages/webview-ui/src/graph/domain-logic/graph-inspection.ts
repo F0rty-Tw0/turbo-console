@@ -4,7 +4,7 @@ import { GraphInspectionFolders } from './graph-inspection-folders.ts';
 import { keepClearInspection } from './graph-keep-clear.ts';
 import { InspectionCanvas } from './inspection-canvas.ts';
 import { scheduleSave } from './inspection-save.ts';
-import { recheckedOf, restoredOf, shownPartsOf } from './inspection-shown.ts';
+import { recheckedOf, restoredOf, showInspectionBar, shownPartsOf } from './inspection-shown.ts';
 import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FolderActions } from '../common/folder-actions.type.ts';
@@ -177,8 +177,7 @@ export class GraphInspection {
   public reset(): void {
     this.inspection = NO_INSPECTION;
     this.canvas.reset();
-    this.deps.page.status.textContent = '';
-    this.deps.page.clear.disabled = true;
+    showInspectionBar(this.deps, NO_INSPECTION, '');
     this.deps.onSelected(null);
   }
 
@@ -227,8 +226,7 @@ export class GraphInspection {
     this.timings.set(next.kind, deps.now() - started);
     this.reach.reach(next, shown.canvas.trace);
     this.canvas.draw(shown.canvas, isRebuild);
-    deps.page.status.textContent = shown.status;
-    deps.page.clear.disabled = next.kind === 'none';
+    showInspectionBar(deps, next, shown.status);
     deps.onSelected(selectedOf(next));
     this.save();
   }

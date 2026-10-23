@@ -2,7 +2,14 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
-import { RUN_LABEL, RUN_NO_CACHE_LABEL, STOP_LABEL, TASK_DETAILS_ID } from '../../src/graph/common/graph-task.const.ts';
+import {
+  RUN_LABEL,
+  RUN_NO_CACHE_LABEL,
+  STOP_LABEL,
+  TASK_DETAILS_ID,
+  TASK_EMPTY_LEAD_TEXT
+} from '../../src/graph/common/graph-task.const.ts';
+import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
 
 /** The task side panel `#graph-task-details`: the selected task's name, command, run state, dependencies and run buttons. */
 export class GraphTaskDetails {
@@ -57,9 +64,10 @@ export class GraphTaskDetails {
     await expect(state).toHaveText(word);
   }
 
-  /** The panel shows no task: no heading, no button. */
+  /** The panel shows no task: the Details heading, the empty lead and no button. */
   public async expectEmpty(): Promise<void> {
-    await expect(this.panel.getByRole('heading')).toHaveCount(0);
+    await expect(this.panel.getByRole('heading')).toHaveText(DETAILS_LABEL);
+    await expect(this.panel.locator('.details-lead')).toHaveText(TASK_EMPTY_LEAD_TEXT);
     await expect(this.panel.getByRole('button')).toHaveCount(0);
   }
 }

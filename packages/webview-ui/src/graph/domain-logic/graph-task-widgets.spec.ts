@@ -1,0 +1,284 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mocked } from 'vitest';
+
+import { GraphTaskWidgets } from './graph-task-widgets.ts';
+import type { Bridge } from '../../bridge/common/bridge.type.ts';
+import type { GraphView, PageElements } from '../common/graph-page.type.ts';
+import { TASK_WIDGET_CLASS } from '../common/graph-task.const.ts';
+import type { TaskDetailsModel, TaskWidgetsDeps } from '../common/task-details.type.ts';
+import type { MenuElements } from '../common/widget-menu.type.ts';
+import type { RectPx, WidgetRects } from '../common/widget.type.ts';
+import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { graphViewMock } from '../test/mocks/graph-view.mock.ts';
+import { switchableMediaQueryMock } from '../test/mocks/media-query.mock.ts';
+import { taskWidgetViewsMock } from '../test/mocks/task-widget-views.mock.ts';
+import { API_BUILD_STUB, GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
+import { HOME_CAMERA_STUB } from '../test/stubs/layout.stub.ts';
+
+type WidgetsRig = {
+  readonly page: PageElements;
+  readonly view: Mocked<GraphView>;
+  readonly bridge: Mocked<Bridge>;
+  /** The task details panel, its left edge at `PANEL_LEFT`. */
+  readonly aside: HTMLElement;
+  /** The "…" buttons built so far, the latest last. */
+  readonly buttons: HTMLButtonElement[];
+  /** The menus built so far, the latest last. */
+  readonly menus: MenuElements[];
+  readonly widgetsOf: (isOverlay: boolean) => GraphTaskWidgets;
+  /** Flips the overlay media query, running its `change` listeners. */
+  readonly flipOverlay: (isOverlay: boolean) => void;
+  readonly setActive: (isActive: boolean) => void;
+};
+
+const CANVAS_WIDTH = 400;
+
+const PANEL_LEFT = 300;
+
+/** `a#build` drawn left of the panel: its "…" clear of it. */
+const LEFT_RECT: RectPx = { x1: 100, y1: 50, x2: 180, y2: 80 };
+
+/** `a#build` drawn across the panel's left edge: its "…" under it. */
+const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
+
+const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [] };
+
+const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [] };
+
+const setSize = (element: HTMLElement, left: number, width: number): void => {
+  Object.defineProperty(element, 'offsetLeft', { value: left });
+  Object.defineProperty(element, 'offsetWidth', { value: width });
+  Object.defineProperty(element, 'offsetHeight', { value: 300 });
+};
+
+const rectsOf = (selected: RectPx): WidgetRects => {
+  const rects: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected, zoom: 1 };
+
+  return rects;
+};
+
+const rigOf = (): WidgetsRig => {
+  const { page, views, buttons, menus } = taskWidgetViewsMock();
+  const view = graphViewMock(HOME_CAMERA_STUB);
+  const bridge: Mocked<Bridge> = { ready: vi.fn(), post: vi.fn(), onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
+  const aside = document.createElement('aside');
+  const overlay = switchableMediaQueryMock(false);
+  const activity = { isActive: true };
+  const setActive = (isActive: boolean): void => {
+    activity.isActive = isActive;
+  };
+  const widgetsOf = (isOverlay: boolean): GraphTaskWidgets => {
+    overlay.flip(isOverlay);
+
+    const deps: TaskWidgetsDeps = {
+      page,
+      view,
+      views,
+      bridge,
+      isActive: (): boolean => activity.isActive,
+      overlay: overlay.query,
+      aside: (): HTMLElement => aside
+    };
+
+    return new GraphTaskWidgets(deps);
+  };
+
+  setSize(page.container, 0, CANVAS_WIDTH);
+  setSize(aside, PANEL_LEFT, 100);
+  view.widgetRects.mockReturnValue(rectsOf(LEFT_RECT));
+
+  const rig: WidgetsRig = { page, view, bridge, aside, buttons, menus, widgetsOf, flipOverlay: overlay.flip, setActive };
+
+  return rig;
+};
+
+/** The task "…" buttons on the layer. */
+const taskButtonsOf = (rig: WidgetsRig): HTMLButtonElement[] =>
+  rig.buttons.filter((button) => button.isConnected && button.className.includes(TASK_WIDGET_CLASS));
+
+/** Opens the menu of the shown task "…" and hands back its Stop item. */
+const stopItemOf = (rig: WidgetsRig): HTMLElement | undefined => {
+  const [button] = taskButtonsOf(rig);
+
+  button?.click();
+
+  const [menu] = rig.menus;
+
+  return menu?.items[2];
+};
+
+describe('FEATURE: GraphTaskWidgets', () => {
+  let rig: WidgetsRig;
+
+  beforeEach(() => {
+    vi.stubGlobal('document', fakeDocumentMock());
+    rig = rigOf();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN the details panel docked', () => {
+    let widgets: GraphTaskWidgets;
+
+    beforeEach(() => {
+      widgets = rig.widgetsOf(false);
+      widgets.show(RUNNING);
+    });
+
+    it('WHEN a#build is shown running THEN one shown task "…" sits on the layer', () => {
+      const buttons = taskButtonsOf(rig);
+
+      expect(buttons).toHaveLength(1);
+      expect(buttons[0]?.hidden).toBe(false);
+    });
+
+    it('WHEN a#build is shown again THEN its "…" is kept', () => {
+      const [before] = taskButtonsOf(rig);
+
+      widgets.show({ ...RUNNING, state: 'passed' });
+
+      expect(taskButtonsOf(rig)).toStrictEqual([before]);
+    });
+
+    it('WHEN api#build is shown instead THEN the a#build "…" goes and one other takes its place', () => {
+      const [before] = taskButtonsOf(rig);
+
+      widgets.show(API_RUNNING);
+
+      const after = taskButtonsOf(rig);
+
+      expect(after).toHaveLength(1);
+      expect(after[0]).not.toBe(before);
+    });
+
+    it('WHEN the selection clears THEN no task "…" is left', () => {
+      widgets.show(null);
+
+      expect(taskButtonsOf(rig)).toHaveLength(0);
+    });
+
+    it('WHEN a#build is drawn across the panel edge THEN its "…" still shows', () => {
+      rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
+      widgets.rendered();
+
+      expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
+    });
+
+    it('WHEN the a#build "…" opens its menu and Stop is clicked THEN stopTask is posted', () => {
+      stopItemOf(rig)?.click();
+
+      expect(rig.bridge.post).toHaveBeenCalledExactlyOnceWith({ type: 'stopTask', taskId: 'a#build' });
+    });
+
+    it('WHEN the menu opened, then api#build is shown, and the old Stop is clicked THEN nothing is posted', () => {
+      const stop = stopItemOf(rig);
+
+      widgets.show(API_RUNNING);
+      stop?.click();
+
+      expect(rig.bridge.post).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the selection keeps clear THEN the camera stays', () => {
+      rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
+      widgets.keepClear();
+
+      expect(rig.view.panBy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN the details panel docked and a#build shown running across its left edge', () => {
+    let widgets: GraphTaskWidgets;
+
+    beforeEach(() => {
+      widgets = rig.widgetsOf(false);
+      rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
+      rig.view.anchorBox.mockReturnValue({ x1: UNDER_RECT.x1, x2: UNDER_RECT.x2 });
+      widgets.show(RUNNING);
+    });
+
+    it('WHEN the panel turns to overlay THEN the camera pans a#build and its "…" left of the panel, by a margin', () => {
+      rig.flipOverlay(true);
+
+      expect(rig.view.panBy).toHaveBeenCalledExactlyOnceWith(PANEL_LEFT - 16 - (UNDER_RECT.x2 + 12));
+    });
+
+    it('WHEN the panel turns to overlay THEN the "…" hides under it until the camera moves', () => {
+      rig.flipOverlay(true);
+
+      expect(taskButtonsOf(rig)[0]?.hidden).toBe(true);
+    });
+
+    it('WHEN task mode is left, entered again and the panel turns to overlay THEN the camera pans once', () => {
+      widgets.exit();
+      widgets.show(RUNNING);
+      rig.flipOverlay(true);
+
+      expect(rig.view.panBy).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN task mode is off and the panel turns to overlay THEN the camera stays and the "…" is left as it was', () => {
+      rig.setActive(false);
+      rig.flipOverlay(true);
+
+      expect(rig.view.panBy).not.toHaveBeenCalled();
+      expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
+    });
+  });
+
+  describe('GIVEN the details panel overlays the canvas', () => {
+    let widgets: GraphTaskWidgets;
+
+    beforeEach(() => {
+      widgets = rig.widgetsOf(true);
+      widgets.show(RUNNING);
+    });
+
+    it('WHEN a#build is drawn left of the panel THEN its "…" shows', () => {
+      expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
+    });
+
+    it('WHEN a#build is drawn across the panel edge THEN its "…" hides', () => {
+      rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
+      widgets.rendered();
+
+      expect(taskButtonsOf(rig)[0]?.hidden).toBe(true);
+    });
+
+    describe('WHEN a#build is drawn across the panel edge and the selection keeps clear', () => {
+      beforeEach(() => {
+        rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
+        rig.view.anchorBox.mockReturnValue({ x1: UNDER_RECT.x1, x2: UNDER_RECT.x2 });
+        widgets.keepClear();
+      });
+
+      it('THEN the camera pans a#build and its "…" left of the panel, by a margin', () => {
+        const buttonRight = UNDER_RECT.x2 + 12;
+
+        expect(rig.view.panBy).toHaveBeenCalledExactlyOnceWith(PANEL_LEFT - 16 - buttonRight);
+      });
+
+      it('THEN the anchor read is a#build', () => {
+        expect(rig.view.anchorBox).toHaveBeenCalledExactlyOnceWith(['a#build']);
+      });
+    });
+
+    it('WHEN the panel is closed and the selection keeps clear THEN the camera stays', () => {
+      rig.aside.hidden = true;
+      rig.view.anchorBox.mockReturnValue({ x1: UNDER_RECT.x1, x2: UNDER_RECT.x2 });
+      widgets.keepClear();
+
+      expect(rig.view.panBy).not.toHaveBeenCalled();
+    });
+
+    it('WHEN nothing is selected and the selection keeps clear THEN the camera stays', () => {
+      widgets.show(null);
+      rig.view.anchorBox.mockReturnValue({ x1: UNDER_RECT.x1, x2: UNDER_RECT.x2 });
+      widgets.keepClear();
+
+      expect(rig.view.panBy).not.toHaveBeenCalled();
+    });
+  });
+});

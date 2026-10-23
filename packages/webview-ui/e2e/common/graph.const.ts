@@ -70,6 +70,9 @@ export const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => 
 
 export const ONE_FRAME = 'new Promise((resolve) => requestAnimationFrame(resolve))';
 
+/** Every canvas read throws from now on, so an image export fails. */
+export const BREAK_CANVAS_READS = "HTMLCanvasElement.prototype.toDataURL = () => { throw new Error('graph e2e: canvas read'); }";
+
 /** The real worker, counted: each one built, each terminated, and each message any of them sent the page. */
 const REAL_WORKER = `(() => {
   ${COUNTERS}

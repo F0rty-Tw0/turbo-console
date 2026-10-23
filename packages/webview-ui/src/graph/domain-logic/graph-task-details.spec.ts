@@ -5,7 +5,8 @@ import { GraphTaskDetails } from './graph-task-details.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { WebviewMessage } from '../../bridge/common/details-message.type.ts';
 import type { GraphWebviewMessage } from '../../bridge/common/graph-message.type.ts';
-import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
+import { TASK_DETAILS_ID, TASK_EMPTY_LEAD_TEXT } from '../common/graph-task.const.ts';
+import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskDetailsActions, TaskDetailsDeps, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskDetailsViewsMock } from '../test/mocks/task-details-views.mock.ts';
@@ -29,6 +30,15 @@ const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dep
 const PASSED: TaskDetailsModel = { ...RUNNING, state: 'passed' };
 
 const button = (): HTMLButtonElement => document.createElement('button');
+
+/** Every text set in `element` and below it, depth first: in the shown empty view, its heading, then its lead. */
+const shownTextOf = (element: Element): string[] => {
+  const children = Array.from(element.children);
+  const nested = children.flatMap(shownTextOf);
+  const all = [element.textContent, ...nested];
+
+  return all.filter((text) => text !== '');
+};
 
 const rigOf = (): DetailsRig => {
   const posted: Posted[] = [];
@@ -74,6 +84,10 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(rig.deps.page.details.getAttribute('aria-expanded')).toBe('true');
     });
 
+    it('WHEN entered THEN the panel shows the Details heading and the empty lead', () => {
+      expect(shownTextOf(rig.panel)).toStrictEqual(['Details', TASK_EMPTY_LEAD_TEXT]);
+    });
+
     it('WHEN entered THEN Clear selection is disabled', () => {
       expect(rig.deps.page.clear.disabled).toBe(true);
     });
@@ -99,7 +113,7 @@ describe('FEATURE: GraphTaskDetails', () => {
       rig.deps.page.clear.click();
 
       expect(rig.panel.hidden).toBe(true);
-      expect(rig.deps.page.details.getAttribute('aria-controls')).toBe('graph-details');
+      expect(rig.deps.page.details.getAttribute('aria-controls')).toBe(DETAILS_ID);
       expect(rig.onClear).not.toHaveBeenCalled();
     });
 
@@ -151,12 +165,26 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(rig.onSelect).toHaveBeenCalledWith('api#build');
     });
 
-    it('WHEN the selection is cleared THEN the panel is empty and the old Run posts nothing', () => {
+    it('WHEN the selection is cleared THEN the panel shows the empty lead and the old Run posts nothing', () => {
       details.show(null);
       view?.run.click();
 
-      expect(rig.panel.children).toHaveLength(0);
+      expect(shownTextOf(rig.panel)).toStrictEqual(['Details', TASK_EMPTY_LEAD_TEXT]);
       expect(rig.posted).toStrictEqual([]);
+    });
+
+    it('WHEN task mode is left THEN Run posts nothing', () => {
+      details.exit();
+      view?.run.click();
+
+      expect(rig.posted).toStrictEqual([]);
+    });
+
+    it('WHEN task mode is left THEN the api#build button asks for nothing', () => {
+      details.exit();
+      view?.dependencies[0]?.button.click();
+
+      expect(rig.onSelect).not.toHaveBeenCalled();
     });
 
     it('WHEN the task is shown again THEN the old view posts nothing', () => {

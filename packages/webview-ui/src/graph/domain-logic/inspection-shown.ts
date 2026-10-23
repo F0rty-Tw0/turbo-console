@@ -32,6 +32,20 @@ export const shownPartsOf = (deps: GraphInspectionDeps, next: Inspection, isRebu
   return parts;
 };
 
+/** Shows `inspection` on the toolbar's status line and Clear selection, only while the package graph owns the canvas: task mode owns both meanwhile. */
+export const showInspectionBar = (
+  deps: Pick<GraphInspectionDeps, 'page' | 'isPackageMode'>,
+  inspection: Inspection,
+  status: string
+): void => {
+  const isPackageMode = deps.isPackageMode();
+
+  if (!isPackageMode) return;
+
+  deps.page.status.textContent = status;
+  deps.page.clear.disabled = inspection.kind === 'none';
+};
+
 /** `current` kept, narrowed or dropped for a new visible set; `null` while the page shows no graph. */
 export const recheckedOf = (deps: GraphInspectionDeps, current: Inspection, visible: ReadonlySet<string>): Inspection | null => {
   const drawn = deps.drawn();

@@ -91,6 +91,16 @@ describe('FEATURE: GraphTaskSelection', () => {
       expect(rig.save).not.toHaveBeenCalled();
     });
 
+    it('WHEN web#build is tapped THEN it keeps clear of the panel after the task "…" moved to it', () => {
+      selection.tapNode('web#build');
+
+      const shownAt = rig.widgets.show.mock.invocationCallOrder.at(-1) ?? 0;
+      const clearAt = rig.widgets.keepClear.mock.invocationCallOrder[0] ?? 0;
+
+      expect(rig.widgets.keepClear).toHaveBeenCalledOnce();
+      expect(clearAt).toBeGreaterThan(shownAt);
+    });
+
     it('WHEN web#build is picked twice from a list THEN it stays selected', () => {
       selection.select('web#build');
       selection.select('web#build');
@@ -104,11 +114,18 @@ describe('FEATURE: GraphTaskSelection', () => {
       selection.tapNode('web#build');
     });
 
-    it('WHEN the selection is cleared THEN nothing is selected', () => {
+    it('WHEN the selection is cleared THEN nothing is selected and nothing more keeps clear', () => {
       selection.clear();
 
       expect(selection.selected()).toBeNull();
       expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+      expect(rig.widgets.keepClear).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the shown tasks keep web#build THEN nothing more keeps clear', () => {
+      selection.setShown(TASK_CHAIN_STUB);
+
+      expect(rig.widgets.keepClear).toHaveBeenCalledOnce();
     });
 
     it('WHEN the panel asks for api#build THEN api#build is selected', () => {

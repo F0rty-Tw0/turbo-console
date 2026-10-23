@@ -1,4 +1,4 @@
-import { actionButton, lineOf, sectionOf } from './details-parts.ts';
+import { actionButton, leadOf, lineOf, sectionOf } from './details-parts.ts';
 import { graphIcon } from './graph-icon.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
@@ -10,7 +10,8 @@ import {
   RUN_STATE_ICONS,
   RUN_STATE_TEXT,
   STOP_LABEL,
-  TASK_DETAILS_ID
+  TASK_DETAILS_ID,
+  TASK_EMPTY_LEAD_TEXT
 } from '../common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../common/graph.const.ts';
 import type { TaskDependencyButton, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
@@ -60,6 +61,20 @@ export const buildTaskDetailsPanel = (): HTMLElement => {
   panel.setAttribute('aria-label', DETAILS_LABEL);
 
   return panel;
+};
+
+/** What the task side panel shows with no task selected: the Details heading and what selecting a task shows here. */
+export const buildTaskDetailsEmpty = (): HTMLElement => {
+  const root = textElement('section', 'details-view', '');
+  const row = textElement('div', 'details-title', '');
+  const heading = textElement('h2', 'details-heading', DETAILS_LABEL);
+  const lead = leadOf(TASK_EMPTY_LEAD_TEXT);
+
+  heading.tabIndex = -1;
+  row.append(heading);
+  root.append(row, lead);
+
+  return root;
 };
 
 const dependencySection = (dependencies: TaskDependencyButton[]): HTMLElement => {

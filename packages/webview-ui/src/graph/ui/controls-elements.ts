@@ -3,7 +3,7 @@ import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
-import { DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common/graph.const.ts';
+import { CONTROLS_ID, DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common/graph.const.ts';
 import {
   countTextOf,
   focusLabelOf,
@@ -171,7 +171,7 @@ export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsEl
   const list = packageGrid(controlsGroups);
   const panel = textElement('aside', 'graph-controls', '');
 
-  panel.id = 'graph-controls';
+  panel.id = CONTROLS_ID;
   panel.append(field(SEARCH_LABEL, search), field(DEPTH_LABEL, depth), groupingField(grouping));
 
   if (tagBoxes.size > 0) panel.append(tagFieldset(tagBoxes));

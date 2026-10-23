@@ -39,6 +39,8 @@ export type TaskDetailsView = {
 export type TaskDetailsViews = {
   /** The empty, hidden `aside#graph-task-details`. */
   readonly panel: () => HTMLElement;
+  /** What the panel shows while no task is selected. */
+  readonly empty: () => HTMLElement;
   readonly view: (model: TaskDetailsModel) => TaskDetailsView;
 };
 
@@ -78,15 +80,21 @@ export type TaskWidgets = {
   readonly rendered: () => void;
   /** Task mode ends: the menu closes and the "…" goes. */
   readonly exit: () => void;
+  /** The reader selected a task or opened the panel: the task and its "…" pan clear of the panel overlaying the canvas. */
+  readonly keepClear: () => void;
 };
 
 export type TaskWidgetsDeps = {
   readonly page: PageElements;
-  readonly view: Pick<GraphView, 'widgetRects' | 'viewport'>;
+  readonly view: Pick<GraphView, 'widgetRects' | 'viewport' | 'anchorBox' | 'panBy'>;
   readonly views: Pick<WidgetViews, 'packageButton' | 'menu'>;
   readonly bridge: Bridge;
   /** Task mode is on, so the "…" may open its menu. */
   readonly isActive: () => boolean;
+  /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the task details panel overlays the canvas. */
+  readonly overlay: MediaQueryList;
+  /** The task details panel; the "…" and its menu stay left of it while it overlays the canvas. */
+  readonly aside: () => HTMLElement;
 };
 
 /** What `GraphTaskSelection` paints on, builds the panel and the "…" with, and reads and saves the task view through. */

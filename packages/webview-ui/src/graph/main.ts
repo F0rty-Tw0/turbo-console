@@ -27,7 +27,7 @@ import { candidateItems, pickingView } from './ui/details-picking.ts';
 import { stepItems, traceView } from './ui/details-trace.ts';
 import { buildPage } from './ui/page-elements.ts';
 import { buildTaskControls, buildTaskRow } from './ui/task-controls-elements.ts';
-import { buildTaskDetails, buildTaskDetailsPanel } from './ui/task-details-elements.ts';
+import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from './ui/task-details-elements.ts';
 import { buildFolderRow, buildPackageButton } from './ui/widget-elements.ts';
 import { buildMenu } from './ui/widget-menu.ts';
 import { nodeSizeOf } from './utils/node-size.util.ts';
@@ -100,7 +100,7 @@ const widgetViews: WidgetViews = {
   breadcrumbLine
 };
 const taskViews: TaskControlsViews = { build: buildTaskControls, row: buildTaskRow };
-const taskDetailsViews: TaskDetailsViews = { panel: buildTaskDetailsPanel, view: buildTaskDetails };
+const taskDetailsViews: TaskDetailsViews = { panel: buildTaskDetailsPanel, empty: buildTaskDetailsEmpty, view: buildTaskDetails };
 const overlay = window.matchMedia(OVERLAY_MEDIA_QUERY);
 const controller = createGraphController({
   bridge,

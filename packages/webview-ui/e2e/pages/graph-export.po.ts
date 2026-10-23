@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { EXPORT_LABEL } from '../../src/graph/common/graph.const.ts';
-import { NEXT_FRAME } from '../common/graph.const.ts';
+import { BREAK_CANVAS_READS, NEXT_FRAME } from '../common/graph.const.ts';
 import type { ExportImageMessage, PngBounds, PngInfo, TitleBandInk } from '../common/graph.type.ts';
 import { pngInfoOf, titleBandInkOf } from '../test/utils/graph-png.spec.util.ts';
 import { exportImagePosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
@@ -31,6 +31,11 @@ export class GraphExport {
 
   public async press(): Promise<void> {
     await this.button.click();
+  }
+
+  /** Every canvas read throws from now on, so the next export fails. */
+  public async breakCanvasReads(): Promise<void> {
+    await this.page.evaluate(BREAK_CANVAS_READS);
   }
 
   /** Clicks the button's spot even while it is disabled; a disabled button swallows the click. */

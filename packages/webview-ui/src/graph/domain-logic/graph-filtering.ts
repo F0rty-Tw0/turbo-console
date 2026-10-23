@@ -36,21 +36,17 @@ export class GraphFiltering {
   private appliedMs: number | null = null;
 
   public constructor(deps: GraphFilteringDeps) {
-    const { page, view, build, now, onGrouping } = deps;
     const controlsDeps: GraphControlsDeps = {
-      page,
-      build,
-      now,
+      ...deps,
       onVisibleChange: (visible): void => this.showVisible(visible),
       onSameVisible: (): void => this.recheckFolder(),
       onSelect: (name): void => this.inspection.select(name),
       onFocusToggle: (name, setFilters): void => this.inspection.focused(name, setFilters),
       onOpenDetails: (): void => this.inspection.openDetails(),
-      onGrouping,
       onToggleFolder: (folder): void => this.folders.toggle(folder),
       onFolderFocus: (folder): void => this.folders.expand([folder]),
       onSave: (): void => this.inspection.save(),
-      onResize: (): void => view.resize()
+      onResize: (): void => deps.view.resize()
     };
     const inspectionDeps: GraphInspectionDeps & WidgetHostDeps = {
       ...deps,

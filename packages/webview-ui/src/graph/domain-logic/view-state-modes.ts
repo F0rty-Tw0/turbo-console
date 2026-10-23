@@ -1,5 +1,6 @@
 import type { GraphViewMode, GraphViewState, PackageViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { PackageSaver, ViewStateSaver } from '../common/graph-page.type.ts';
+import type { TaskPanelsOpen } from '../common/graph-task.type.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
 /**
@@ -50,7 +51,7 @@ export class ViewStateModes {
   }
 
   /** Writes a task mode panel's open state over the last state; nothing before any state is written. */
-  public savePanels(panels: Partial<Pick<GraphViewState, 'controlsOpen' | 'detailsOpen'>>): void {
+  public savePanels(panels: TaskPanelsOpen): void {
     const last = this.last;
 
     if (last === null) return;

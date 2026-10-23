@@ -149,6 +149,12 @@ export const ELK_GROUPED_ROOT_OPTIONS: Readonly<Record<string, string>> = {
 /** The group header for packages whose path has no folder part. */
 export const ROOT_FOLDER = '(root)';
 
+/** The package Controls panel's id, which the Controls button points at outside task mode. */
+export const CONTROLS_ID = 'graph-controls';
+
+/** The package Details panel's id, which the Details button points at outside task mode. */
+export const DETAILS_ID = 'graph-details';
+
 export const CONTROLS_LABEL = 'Controls';
 
 export const CONTROLS_FILTERED_LABEL = 'Controls (filters on)';

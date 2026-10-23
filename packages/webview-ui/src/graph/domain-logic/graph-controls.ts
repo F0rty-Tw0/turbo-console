@@ -156,6 +156,10 @@ export class GraphControls {
   }
 
   private toggleOpen(): void {
+    const isPackageMode = this.deps.isPackageMode();
+
+    if (!isPackageMode) return;
+
     this.isOpen = !this.isOpen;
     this.render();
 

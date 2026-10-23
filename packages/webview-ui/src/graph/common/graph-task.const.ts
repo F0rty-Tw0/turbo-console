@@ -51,6 +51,9 @@ export const EMPTY_TASKS_TEXT =
 /** The id of the task details panel, which the Details button points at while task mode is on. */
 export const TASK_DETAILS_ID = 'graph-task-details';
 
+/** The task details panel's lead while no task is selected. */
+export const TASK_EMPTY_LEAD_TEXT = 'Select a task to see its command, dependencies and run actions here.';
+
 /** Starts each run state class on a task node: `run-running`, `run-passed`, `run-failed`, `run-stopped`, `run-failed-to-start`. */
 export const RUN_CLASS_PREFIX = 'run-';
 

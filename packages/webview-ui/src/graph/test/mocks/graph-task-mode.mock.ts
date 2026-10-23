@@ -40,7 +40,8 @@ export const taskWidgetsMock = (): Mocked<TaskWidgets> => {
   const widgets: Mocked<TaskWidgets> = {
     show: vi.fn<TaskWidgets['show']>(),
     rendered: vi.fn<TaskWidgets['rendered']>(),
-    exit: vi.fn<TaskWidgets['exit']>()
+    exit: vi.fn<TaskWidgets['exit']>(),
+    keepClear: vi.fn<TaskWidgets['keepClear']>()
   };
 
   return widgets;

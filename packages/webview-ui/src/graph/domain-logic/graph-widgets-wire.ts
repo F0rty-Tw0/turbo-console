@@ -10,11 +10,12 @@ import type {
   WidgetWireDeps,
   WidgetWiring
 } from '../common/graph-widgets.type.ts';
+import { DETAILS_ID } from '../common/graph.const.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds } from '../common/widget.type.ts';
 import { isMenuOpenKey } from '../utils/menu-keys.util.ts';
 
-const DETAILS_SELECTOR = '#graph-details';
+const DETAILS_SELECTOR = `#${DETAILS_ID}`;
 
 /** A record that can move the container or the overlay: a direct child of the body shown or hidden. */
 const isBodyRecord = (record: MutationRecord, body: HTMLElement): boolean => record.target.parentNode === body;

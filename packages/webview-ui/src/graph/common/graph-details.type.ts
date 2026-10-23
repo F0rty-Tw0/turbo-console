@@ -74,6 +74,8 @@ export type GraphDetailsDeps = {
   /** `line` is 0-based. */
   readonly onOpenManifest: (packageName: string, line: number) => void;
   readonly onResize: () => void;
+  /** The Details button opens and closes this panel only while the package graph owns the canvas. */
+  readonly isPackageMode: () => boolean;
   /** After a switch between docked and overlay. */
   readonly onLayout: () => void;
   /** After the panel opened, and after the resize that came with it. */

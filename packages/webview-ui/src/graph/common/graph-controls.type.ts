@@ -57,6 +57,8 @@ export type GraphControlsDeps = {
   readonly onSave: () => void;
   /** Re-measures the canvas now; Cytoscape's own observers wait a 100 ms debounce. */
   readonly onResize: () => void;
+  /** The Controls button opens and closes this panel only while the package graph owns the canvas. */
+  readonly isPackageMode: () => boolean;
 };
 
 /** What `GraphFiltering` needs to own the inspection, the controls and the folders: their deps it cannot build itself. */

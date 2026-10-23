@@ -1,4 +1,5 @@
 import { GraphTaskLayout } from './graph-task-layout.ts';
+import { savePanelToggle } from './graph-task-panel.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -44,10 +45,7 @@ export class GraphTaskMode {
       onSearch: (search: string): void => this.saveView({ search }),
       onDepth: (depth: number): void => this.choose({ depth }, null),
       onPick: (id: string): void => this.selection.select(id),
-      onToggle: (controlsOpen: boolean): void => {
-        deps.view.resize();
-        deps.modes.savePanels({ controlsOpen });
-      }
+      onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen })
     });
   }
 
@@ -72,6 +70,11 @@ export class GraphTaskMode {
     if (request.key === shownKey) return;
 
     this.render(at, null);
+  }
+
+  /** A message replaced the graph view: the next graph state shows the toolbar, the body and the task parts again. */
+  public suspend(): void {
+    this.hasEntered = false;
   }
 
   /** Package mode → task mode with the saved choice, or the prompt; task mode → package mode with the task camera saved. */

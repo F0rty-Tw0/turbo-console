@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buttonRectsOf, isWidgetShown, packageButtonRectOf, rowPlacementOf } from './widget-geometry.util.ts';
+import { buttonRectsOf, isWidgetShown, overlayLeftOf, packageButtonRectOf, rowPlacementOf } from './widget-geometry.util.ts';
 import type { FolderRect, LayerBounds, RectPx, RowButtonRects, RowPlacement } from '../common/widget.type.ts';
 
 const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
@@ -227,5 +227,23 @@ describe('FEATURE: isWidgetShown', () => {
 
       expect(isShown).toBe(expected);
     });
+  });
+});
+
+describe('FEATURE: overlayLeftOf', () => {
+  const container = { offsetLeft: 40 };
+
+  it.each([
+    { title: 'overlays the canvas', isOverlay: true, hidden: false, expected: 260 },
+    { title: 'docks beside the canvas', isOverlay: false, hidden: false, expected: null },
+    { title: 'is closed', isOverlay: true, hidden: true, expected: null }
+  ])('GIVEN a panel at 300 WHEN it $title THEN its left edge in container px is $expected', ({ isOverlay, hidden, expected }) => {
+    const panel = { offsetLeft: 300, hidden };
+
+    expect(overlayLeftOf(panel, container, isOverlay)).toBe(expected);
+  });
+
+  it('GIVEN no panel WHEN the overlay layout is on THEN there is no edge', () => {
+    expect(overlayLeftOf(null, container, true)).toBeNull();
   });
 });

@@ -5,7 +5,9 @@ import type { ToolbarElements } from '../common/graph-page.type.ts';
 import { MODE_LABEL, TASK_MODE_LABEL } from '../common/graph-task.const.ts';
 import {
   CLEAR_LABEL,
+  CONTROLS_ID,
   CONTROLS_LABEL,
+  DETAILS_ID,
   DETAILS_LABEL,
   EXPORT_LABEL,
   FILTERS_ON_TEXT,
@@ -92,9 +94,9 @@ const statusLine = (): HTMLElement => {
  */
 export const buildToolbar = (): ToolbarElements => {
   const taskMode = pressToggle('tasklist', TASK_MODE_LABEL);
-  const controls = panelToggle('layout-sidebar-left', CONTROLS_LABEL, 'graph-controls');
+  const controls = panelToggle('layout-sidebar-left', CONTROLS_LABEL, CONTROLS_ID);
   const filtersOn = filtersOnMark();
-  const details = panelToggle('layout-sidebar-right', DETAILS_LABEL, 'graph-details');
+  const details = panelToggle('layout-sidebar-right', DETAILS_LABEL, DETAILS_ID);
   const fit = iconButton('screen-full', FIT_LABEL);
   const relayout = iconButton('refresh', RELAYOUT_LABEL);
   const exportImage = iconButton('desktop-download', EXPORT_LABEL);

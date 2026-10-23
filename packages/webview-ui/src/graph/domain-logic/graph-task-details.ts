@@ -1,9 +1,7 @@
 import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
+import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskDetailsDeps, TaskDetailsModel, TaskDetailsView, TaskRunAction } from '../common/task-details.type.ts';
 import { runMessageOf } from '../utils/task-run.util.ts';
-
-/** The package Details panel's id, which the Details button points at again when task mode ends. */
-const PACKAGE_DETAILS_ID = 'graph-details';
 
 /** The focus key of a focused element with no `data-focus`: the new view's heading takes focus. */
 const HEADING_KEY = 'heading';
@@ -39,6 +37,7 @@ export class GraphTaskDetails {
   public constructor(deps: TaskDetailsDeps) {
     this.deps = deps;
     this.panel = deps.views.panel();
+    this.panel.replaceChildren(deps.views.empty());
     deps.page.details.addEventListener('click', (): void => this.toggleOpen());
     deps.page.clear.addEventListener('click', (): void => this.cleared());
   }
@@ -60,12 +59,12 @@ export class GraphTaskDetails {
 
     this.isActive = false;
     this.panel.hidden = true;
-    this.deps.page.details.setAttribute('aria-controls', PACKAGE_DETAILS_ID);
+    this.deps.page.details.setAttribute('aria-controls', DETAILS_ID);
 
     if (hadFocus) this.deps.page.taskMode.focus();
   }
 
-  /** Shows `model`, or empties the panel; focus inside the panel moves to the new view's twin of the focused button. */
+  /** Shows `model`, or the empty lead; focus inside the panel moves to the new view's twin of the focused button. */
   public show(model: TaskDetailsModel | null): void {
     const key = this.focusedKey();
 
@@ -73,7 +72,7 @@ export class GraphTaskDetails {
     this.renderClear();
 
     if (model === null) {
-      this.panel.replaceChildren();
+      this.panel.replaceChildren(this.deps.views.empty());
 
       if (key !== null) this.deps.page.details.focus();
 
@@ -98,9 +97,11 @@ export class GraphTaskDetails {
     for (const { task, button } of view.dependencies) button.addEventListener('click', (): void => this.pick(model, task.id));
   }
 
-  /** Posts the button's message, only from a click on the view of the task shown now. */
+  /** Posts the button's message, only from a click on the view of the task shown now, in task mode. */
   private act(model: TaskDetailsModel, action: TaskRunAction): void {
-    if (model !== this.model) return;
+    const isShown = this.isShown(model);
+
+    if (!isShown) return;
 
     const message = runMessageOf(model, action);
 
@@ -108,7 +109,13 @@ export class GraphTaskDetails {
   }
 
   private pick(model: TaskDetailsModel, id: string): void {
-    if (model === this.model) this.deps.actions.onSelect(id);
+    const isShown = this.isShown(model);
+
+    if (isShown) this.deps.actions.onSelect(id);
+  }
+
+  private isShown(model: TaskDetailsModel): boolean {
+    return this.isActive && model === this.model;
   }
 
   private focusedKey(): string | null {
