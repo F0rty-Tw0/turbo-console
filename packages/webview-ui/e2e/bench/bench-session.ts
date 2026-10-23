@@ -14,7 +14,7 @@ import { GraphPage } from '../pages/graph.po.ts';
 /** The Desktop Chrome size the tripwires use. */
 const VIEWPORT = { width: 1280, height: 720 };
 
-/** A fresh context and page with the pan recorder installed before the graph page opens; closed when `work` ends. */
+/** A fresh context and page with the pan recorder installed before the graph page opens; checked for page errors after `work`, closed when it ends. */
 export const withSession = async <T>(
   browser: Browser,
   options: GraphOptions,
@@ -41,7 +41,11 @@ export const withSession = async <T>(
     await recorder.install();
     await graphPage.open(options);
 
-    return await work(session);
+    const result = await work(session);
+
+    graphPage.expectNoErrors();
+
+    return result;
   } finally {
     await context.close();
   }
