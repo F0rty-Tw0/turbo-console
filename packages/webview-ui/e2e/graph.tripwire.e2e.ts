@@ -32,8 +32,9 @@ const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
 const BOXES_IN_VIEW = 6;
 
 /**
- * About 290 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
- * frame), so the budget sits between them with room for CI runners that measure up to 2.7x slower.
+ * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
+ * frame), so the budget sits between them with room for CI runners that measure up to 3.4x slower. The 120 px box
+ * zoom (about 0.21) is below the header rows' 0.5 floor, so no widget moves in this pan.
  */
 const GROUPED_PAN_MS = 1100;
 
@@ -174,8 +175,8 @@ test.describe('FEATURE: graph tripwires', () => {
     await test.step('THEN at least 6 boxes are in view, so the pan draws boxes', async (): Promise<void> =>
       graphGrouping.expectBoxesInView(BOXES_IN_VIEW));
 
-    await test.step('AND the header widgets are shown, so the pan moves them too', async (): Promise<void> =>
-      graphWidgets.expectHeaderButtonsShown());
+    await test.step('AND no header widget is shown at this zoom, so the pan times the boxes alone', async (): Promise<void> =>
+      graphWidgets.expectNoHeaderButtonShown());
 
     await test.step('AND it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
       const spot = await graphGrouping.freeSpot();
