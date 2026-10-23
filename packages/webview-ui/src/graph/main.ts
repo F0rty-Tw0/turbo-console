@@ -2,6 +2,7 @@ import type { DetailsViews } from './common/details.type.ts';
 import type { GraphViewFactory, NodeSizer, TextMeasure } from './common/graph-page.type.ts';
 import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { NodeSize } from './common/node-size.type.ts';
+import type { ThemeColors } from './common/theme-colors.type.ts';
 import type { WidgetViews } from './common/widget.type.ts';
 // Imported before any module that loads Cytoscape: elk-client creates the one `tc-elk` policy as it loads.
 import { createElk } from './data-access/elk-client.ts';
@@ -42,6 +43,19 @@ const textMeasure = (): TextMeasure => {
   const measure = (text: string): number => context.measureText(text).width;
 
   return measure;
+};
+
+/** The graph colours from `body`'s computed theme variables, read now. */
+const themeColors = (): ThemeColors => {
+  const style = getComputedStyle(document.body);
+
+  return themeColorsOf((name: string): string => style.getPropertyValue(name));
+};
+
+const background = (): string => {
+  const colors = themeColors();
+
+  return colors.background;
 };
 
 const labelSizer = (measure: TextMeasure): NodeSizer => {
@@ -94,12 +108,12 @@ const controller = createGraphController({
   build: buildControls,
   views,
   widgetViews,
-  overlay
+  overlay,
+  background
 });
 
 const applyTheme = (): void => {
-  const style = getComputedStyle(document.body);
-  const colors = themeColorsOf((name: string): string => style.getPropertyValue(name));
+  const colors = themeColors();
 
   controller.view.applyTheme(colors);
 };

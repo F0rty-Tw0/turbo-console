@@ -58,7 +58,8 @@ describe('FEATURE: graph webview message validation', () => {
       { type: 'explainEdge', source: 'web', target: 'core' },
       { type: 'openManifest', packageName: 'web', line: 0 },
       { type: 'openManifest', packageName: 'web', line: 1_000_000 },
-      { type: 'explainEdge', source: '__proto__', target: 'constructor' }
+      { type: 'explainEdge', source: '__proto__', target: 'constructor' },
+      { type: 'exportImage', png: 'iVBORw0KGgo=' }
     ])('WHEN parsed THEN $type passes unchanged', (message) => {
       expect(parseGraphMessage(message)).toStrictEqual(message);
     });
@@ -173,6 +174,31 @@ describe('FEATURE: graph webview message validation', () => {
     });
   });
 
+  describe('GIVEN an exportImage post', () => {
+    it('WHEN png is exactly 33,554,432 base64 characters THEN it passes', () => {
+      const raw = { type: 'exportImage', png: 'A'.repeat(33_554_432) };
+
+      expect(parseGraphMessage(raw)).toStrictEqual(raw);
+    });
+
+    it.each([
+      ['one character over the cap', { type: 'exportImage', png: 'A'.repeat(33_554_433) }],
+      ['a data: URI prefix', { type: 'exportImage', png: 'data:image/png;base64,iVBORw0KGgo=' }],
+      ['a non-base64 character', { type: 'exportImage', png: 'iVBOR w0KGgo=' }],
+      ['a numeric png', { type: 'exportImage', png: 7 }],
+      ['no png', { type: 'exportImage' }]
+    ])('WHEN it has %s THEN it is null', (_label, raw) => {
+      expect(parseGraphMessage(raw)).toBeNull();
+    });
+
+    it('WHEN it carries an unknown key THEN the key is stripped', () => {
+      expect(parseGraphMessage({ type: 'exportImage', png: 'AAAA', extra: 1 })).toStrictEqual({
+        type: 'exportImage',
+        png: 'AAAA'
+      });
+    });
+  });
+
   describe('GIVEN a positions record of exactly 5000 keys', () => {
     it('WHEN parsed THEN it passes', () => {
       expect(parseGraphMessage(positionsWith(5000))).not.toBeNull();
@@ -187,6 +213,18 @@ describe('FEATURE: dropped graph message log text', () => {
 
   it('GIVEN a positions record past 5000 keys WHEN logged THEN the text is only its size', () => {
     expect(droppedGraphText(positionsWith(5001))).toBe('positions with 5001 keys');
+  });
+
+  it('GIVEN an exportImage with a string png WHEN logged THEN the text is only its character count', () => {
+    expect(droppedGraphText({ type: 'exportImage', png: 'data:image/png;base64,AAAA' })).toBe('exportImage with 26 chars');
+  });
+
+  it('GIVEN an exportImage with a numeric png WHEN logged THEN the text is its JSON', () => {
+    expect(droppedGraphText({ type: 'exportImage', png: 7 })).toBe('{"type":"exportImage","png":7}');
+  });
+
+  it('GIVEN another type with a string png WHEN logged THEN the text is its JSON', () => {
+    expect(droppedGraphText({ type: 'nope', png: 'AAAA' })).toBe('{"type":"nope","png":"AAAA"}');
   });
 
   it('GIVEN a throwing positions getter WHEN logged THEN the text is the unprintable marker', () => {

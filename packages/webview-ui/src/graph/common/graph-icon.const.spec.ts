@@ -10,10 +10,10 @@ const CODICON_CSS_PATH = join(import.meta.dirname, '../../../node_modules/@vscod
 
 describe('FEATURE: graph icon ids', () => {
   describe('GIVEN the icon id list', () => {
-    it('WHEN it is counted THEN it holds the 18 spec ids and the menu check and dash', () => {
+    it('WHEN it is counted THEN it holds the 18 spec ids, the menu check and dash, and the export download', () => {
       const count = GRAPH_ICON_IDS.length;
 
-      expect(count).toBe(20);
+      expect(count).toBe(21);
     });
 
     it('WHEN eye-closed is looked up THEN it is in the list', () => {

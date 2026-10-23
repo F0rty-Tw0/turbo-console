@@ -44,6 +44,13 @@ describe('FEATURE: the ports of one graph panel', () => {
       expect(ports.readText).toBe(fakes.host.readText);
       expect(ports.openAt).toBe(fakes.host.openAt);
     });
+
+    it('WHEN the ports are built THEN the four save ports are the host ones', () => {
+      expect(ports.pickSaveUri).toBe(fakes.host.pickSaveUri);
+      expect(ports.writeBytes).toBe(fakes.host.writeBytes);
+      expect(ports.showInfo).toBe(fakes.host.showInfo);
+      expect(ports.showError).toBe(fakes.host.showError);
+    });
   });
 
   describe('GIVEN a state to post', () => {

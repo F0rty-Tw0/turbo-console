@@ -8,6 +8,7 @@ import type { Mock } from 'vitest';
 import * as vscode from 'vscode';
 
 import { editorGraphHost } from './graph-ports.ts';
+import { pickSaveUri, showError, showInfo, writeBytes } from './graph-save-ports.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import type { PageRoot } from '../../shared/test/common/page-root.type.ts';
 import type { PanelFake, PanelFakes, UriFake } from '../../shared/test/common/vscode-fakes.type.ts';
@@ -193,6 +194,14 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
       host.log('boom');
 
       expect(output.error).toHaveBeenCalledExactlyOnceWith('boom');
+    });
+  });
+
+  describe('GIVEN the save ports', () => {
+    it('WHEN the host is built THEN its save members are the graph-save-ports functions', () => {
+      const saves = [host.pickSaveUri, host.writeBytes, host.showInfo, host.showError];
+
+      expect(saves).toStrictEqual([pickSaveUri, writeBytes, showInfo, showError]);
     });
   });
 

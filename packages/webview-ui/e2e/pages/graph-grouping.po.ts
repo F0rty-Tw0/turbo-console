@@ -5,24 +5,14 @@ import { expect } from '@playwright/test';
 import { GraphBoxesPage } from './graph-boxes.po.ts';
 import type { LayoutGrouping } from '../../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../../src/bridge/common/graph-state.type.ts';
-import {
-  CLEAR_LABEL,
-  CONTROLS_LABEL,
-  DETAILS_LABEL,
-  FIT_LABEL,
-  GROUP_BY_FOLDER_LABEL,
-  LOADING_TEXT,
-  RELAYOUT_LABEL
-} from '../../src/graph/common/graph.const.ts';
+import { GROUP_BY_FOLDER_LABEL, LOADING_TEXT } from '../../src/graph/common/graph.const.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
-import { ONE_FRAME } from '../common/graph.const.ts';
+import { ONE_FRAME, TOOLBAR_LABELS } from '../common/graph.const.ts';
 import type { PositionsMessage } from '../common/graph.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { boxGrabOf, clipFaultsOf, folderKeyed, inViewCountOf } from '../test/utils/graph-folders.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { positionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
-
-const TOOLBAR_LABELS = [CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, CLEAR_LABEL];
 
 const CANVAS_TOLERANCE_PX = 1;
 

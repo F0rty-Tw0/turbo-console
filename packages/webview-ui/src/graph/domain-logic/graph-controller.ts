@@ -2,6 +2,7 @@ import { GraphFiltering } from './graph-filtering.ts';
 import { GraphFrames } from './graph-frames.ts';
 import { GraphLayouts } from './graph-layouts.ts';
 import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
+import { wireToolbar } from './graph-toolbar-actions.ts';
 import type { GraphPackage, GraphReady, GraphState, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView, GraphViewHandlers } from '../common/graph-page.type.ts';
@@ -67,10 +68,9 @@ class GraphPageController {
       onPlaced: (): void => this.filtering.placed(),
       onGroupingOff: (): void => this.filtering.groupingOff()
     });
-    page.fit.addEventListener('click', (): void => this.view.fit());
-    page.relayout.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.layouts.relayout()));
-    page.retry.addEventListener('click', (): void => void this.guard(async (): Promise<void> => this.layouts.relayout()));
-    page.reload.addEventListener('click', (): void => bridge.post({ type: 'reload' }));
+    const relayout = (): void => void this.guard(async (): Promise<void> => this.layouts.relayout());
+
+    wireToolbar({ page, view: this.view, bridge, background: deps.background, relayout });
   }
 
   public receive(message: unknown): void {

@@ -19,6 +19,18 @@ const positionsSizeOf = (raw: unknown): number => {
   return Object.keys(positions).length;
 };
 
+/** The character count of `raw.png` when `raw` is an `exportImage` whose `png` is a string, else `null`. A throwing getter throws. */
+const pngLengthOf = (raw: unknown): number | null => {
+  if (!isRecord(raw) || !('type' in raw) || !('png' in raw)) return null;
+
+  const { type, png } = raw;
+  const isExportText = type === 'exportImage' && typeof png === 'string';
+
+  if (!isExportText) return null;
+
+  return png.length;
+};
+
 /** A schema-checked message, with its `positions` record checked and copied by `parsePositions`; `null` when it fails. */
 const checkedMessageOf = (message: SchemaGraphMessage): GraphWebviewMessage | null => {
   if (message.type !== 'positions') return message;
@@ -53,12 +65,19 @@ export const parseGraphMessage = (raw: unknown): GraphWebviewMessage | null => {
   }
 };
 
-/** The log text of a dropped graph message: only its size when its `positions` is past `POSITIONS_MAX`, else its cut JSON. Never throws. */
+/**
+ * The log text of a dropped graph message: only its size when its `positions` is past `POSITIONS_MAX` or it is an
+ * `exportImage` with a string `png`, which can be 32 MiB and is never stringified; else its cut JSON. Never throws.
+ */
 export const droppedGraphText = (raw: unknown): string => {
   try {
     const size = positionsSizeOf(raw);
 
     if (size > POSITIONS_MAX) return `positions with ${size} keys`;
+
+    const pngLength = pngLengthOf(raw);
+
+    if (pngLength !== null) return `exportImage with ${pngLength} chars`;
   } catch {
     return UNPRINTABLE_MESSAGE;
   }

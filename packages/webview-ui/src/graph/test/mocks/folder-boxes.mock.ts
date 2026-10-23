@@ -5,10 +5,10 @@ import { graphStyleOf } from '../../data-access/graph-style.ts';
 import { BOX_ELEMENTS_STUB } from '../stubs/folder-boxes.stub.ts';
 import { CANVAS_COLORS } from '../utils/canvas-elements.spec.util.ts';
 
-/** A headless Cytoscape of `BOX_ELEMENTS_STUB`, positions kept as given (no fit), with the page's stylesheet. */
+/** A headless Cytoscape of a copy of `BOX_ELEMENTS_STUB` (Cytoscape moves the positions it is given in place), positions kept as given (no fit), with the page's stylesheet. */
 export const boxedCyMock = (): Core => {
   const layout = { name: 'preset', fit: false };
-  const cy = cytoscape({ headless: true, styleEnabled: true, layout, elements: BOX_ELEMENTS_STUB });
+  const cy = cytoscape({ headless: true, styleEnabled: true, layout, elements: structuredClone(BOX_ELEMENTS_STUB) });
   const style = graphStyleOf(CANVAS_COLORS, 'sans-serif');
 
   cy.style(style);

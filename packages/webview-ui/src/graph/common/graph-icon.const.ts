@@ -19,5 +19,6 @@ export const GRAPH_ICON_IDS = [
   'chevron-left',
   'ellipsis',
   'check',
-  'dash'
+  'dash',
+  'desktop-download'
 ] as const;

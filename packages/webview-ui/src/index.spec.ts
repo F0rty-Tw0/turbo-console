@@ -72,6 +72,7 @@ type ExpectedExplainedMessage = {
 type LayoutDoneKey = { readonly type: 'layoutDone' };
 type OpenManifestKey = { readonly type: 'openManifest' };
 type PositionsKey = { readonly type: 'positions' };
+type ExportImageKey = { readonly type: 'exportImage' };
 
 /** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern and tool-icon prefix constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
@@ -144,10 +145,11 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphStateMessage>().toEqualTypeOf<ExpectedStateMessage>();
       expectTypeOf<GraphHostMessage>().toEqualTypeOf<ExpectedStateMessage | ExpectedExplainedMessage>();
       expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
-        'ready' | 'reload' | 'openDetails' | 'positions' | 'layoutDone' | 'explainEdge' | 'openManifest'
+        'ready' | 'reload' | 'openDetails' | 'positions' | 'layoutDone' | 'explainEdge' | 'openManifest' | 'exportImage'
       >();
       expectTypeOf<Extract<GraphWebviewMessage, OpenManifestKey>['line']>().toEqualTypeOf<number>();
       expectTypeOf<Extract<GraphWebviewMessage, LayoutDoneKey>['engine']>().toEqualTypeOf<'elk' | 'fallback'>();
+      expectTypeOf<Extract<GraphWebviewMessage, ExportImageKey>['png']>().toEqualTypeOf<string>();
       expectTypeOf<LayoutGrouping>().toEqualTypeOf<'flat' | 'folders'>();
       expectTypeOf<Extract<GraphWebviewMessage, PositionsKey>['grouping']>().toEqualTypeOf<LayoutGrouping>();
       expectTypeOf<GraphReady['folderPositions']>().toEqualTypeOf<Positions | null>();

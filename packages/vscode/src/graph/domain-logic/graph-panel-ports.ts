@@ -31,7 +31,11 @@ export const graphPortsOf = (
     openAt: host.openAt,
     setPanelVisible,
     log: host.log,
-    info: host.info
+    info: host.info,
+    pickSaveUri: host.pickSaveUri,
+    writeBytes: host.writeBytes,
+    showInfo: host.showInfo,
+    showError: host.showError
   };
 
   return ports;
