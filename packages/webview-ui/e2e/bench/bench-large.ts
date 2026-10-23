@@ -1,5 +1,4 @@
 import type { Browser } from '@playwright/test';
-import { expect } from '@playwright/test';
 
 import { withSession } from './bench-session.ts';
 import { PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
@@ -46,9 +45,7 @@ const pannedCpu = async (session: BenchSession): Promise<number> => {
 
   await canvas.scriptedPan(WARM_UP_FRAMES, PAN_FRAMES, spot);
 
-  const cpu = canvas.lastPanCpu();
-
-  if (cpu === null) throw new Error('bench: the scripted pan recorded no CPU');
+  const cpu = canvas.measuredPanCpu();
 
   return cpu.totalMs;
 };
@@ -60,13 +57,7 @@ const toggledMs = async (session: BenchSession): Promise<number> => {
   await folders.expectFoldersInView([TOGGLED_FOLDER]);
   await folders.toggleInList(TOGGLED_FOLDER, true);
 
-  await expect.poll(async (): Promise<number | null> => timings.toggleMs()).not.toBeNull();
-
-  const ms = await timings.toggleMs();
-
-  if (ms === null) throw new Error('bench: the folder toggle was not measured');
-
-  return ms;
+  return timings.measuredToggleMs();
 };
 
 /** Main-thread CPU of a scripted 2 s pan over the grouped 300-package graph. */

@@ -107,15 +107,18 @@ export class GraphCanvas {
     });
   }
 
-  public lastPanCpu(): CpuSteps | null {
-    return this.panCpu;
+  /** The main-thread CPU of the last scripted pan; throws when none ran. */
+  public measuredPanCpu(): CpuSteps {
+    const pan = this.panCpu;
+
+    if (pan === null) throw new Error('graph e2e: no scripted pan ran');
+
+    return pan;
   }
 
   /** The last scripted pan used a measured, non-zero total under `totalMs` of main-thread CPU with no step over `stepMs`; both are recorded as annotations. */
   public expectPanCpuUnder(totalMs: number, stepMs: number): void {
-    const pan = this.panCpu;
-
-    if (pan === null) throw new Error('graph e2e: no scripted pan ran');
+    const pan = this.measuredPanCpu();
 
     test.info().annotations.push({ type: 'pan-cpu-ms', description: String(Math.round(pan.totalMs)) });
     test.info().annotations.push({ type: 'pan-max-step-cpu-ms', description: String(Math.round(pan.maxStepMs)) });

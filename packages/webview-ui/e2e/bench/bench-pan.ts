@@ -17,10 +17,7 @@ const pannedAfterElk = async (session: BenchSession): Promise<PanSample> => {
   await recorder.markOff();
 
   const trace = await recorder.read();
-  const cpu = canvas.lastPanCpu();
-
-  if (cpu === null) throw new Error('bench: the scripted pan recorded no CPU');
-
+  const cpu = canvas.measuredPanCpu();
   const sample: PanSample = { cpuMs: cpu.totalMs, p95Ms: p95(trace.frameDeltasMs), longestLongTaskMs: trace.longestLongTaskMs };
 
   return sample;

@@ -7,16 +7,6 @@ import type { GraphReady, Positions } from '../../src/bridge/common/graph-state.
 import type { GraphOptions } from '../common/graph.type.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 
-const firstFrameOf = async (session: BenchSession): Promise<number> => {
-  await expect.poll(async (): Promise<number | null> => session.timings.firstFrameMs()).not.toBeNull();
-
-  const ms = await session.timings.firstFrameMs();
-
-  if (ms === null) throw new Error('bench: the first frame was not measured');
-
-  return ms;
-};
-
 const lastPositionsOf = async (session: BenchSession): Promise<Positions> => {
   const posted = async (): Promise<Positions | null> => lastPositionsPosted(await readPosted(session.page));
 
@@ -31,7 +21,7 @@ export const coldOpen = async (browser: Browser, state: GraphReady, options: Gra
     await session.host.sendState(state);
     await session.probe.expectLayoutEngine('elk');
 
-    const firstFrameMs = await firstFrameOf(session);
+    const firstFrameMs = await session.timings.measuredFirstFrameMs();
     const positions = await lastPositionsOf(session);
     const result: ColdOpen = { firstFrameMs, positions };
 
@@ -47,7 +37,7 @@ export const cachedOpen = async (browser: Browser, state: GraphReady): Promise<n
     await session.host.sendState(state);
     await session.probe.expectLayoutEngine('cache');
 
-    return firstFrameOf(session);
+    return session.timings.measuredFirstFrameMs();
   };
 
   return withSession(browser, {}, opened);
