@@ -13,7 +13,7 @@ test.describe('FEATURE: bench session', () => {
       await session.page.evaluate(NEXT_FRAME);
     };
 
-    await expect(withSession(browser, {}, throwing)).rejects.toThrow();
+    await expect(withSession(browser, {}, throwing)).rejects.toThrow('bench page error');
   });
 
   test('GIVEN work that raises no page error, WHEN the work ends, THEN the result returns', async ({ browser }): Promise<void> => {
