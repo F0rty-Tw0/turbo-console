@@ -1,5 +1,6 @@
-import { EXPORT_FAILED_TEXT } from '../common/graph.const.ts';
 import type { ExportActions, ToolbarWiring } from '../common/toolbar-actions.type.ts';
+
+const EXPORT_FAILED_TEXT = 'Could not export the image';
 
 /**
  * One Export image press: the view's PNG on the theme background goes to the host and clears an earlier

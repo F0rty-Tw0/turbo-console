@@ -50,8 +50,6 @@ export const RELAYOUT_LABEL = 'Re-layout';
 
 export const EXPORT_LABEL = 'Export image';
 
-export const EXPORT_FAILED_TEXT = 'Could not export the image';
-
 export const CLEAR_LABEL = 'Clear selection';
 
 export const RETRY_LABEL = 'Retry';
@@ -128,12 +126,6 @@ export const FOLDER_PADDING_PX = 32;
 
 /** The class `exportPngOf` gives every folder box while `cy.png` runs, so the stylesheet draws the box titles into the image. */
 export const EXPORTING_CLASS = 'exporting';
-
-/** Longest side of an exported image, in px. */
-export const EXPORT_MAX_PX = 4096;
-
-/** Most the export enlarges the graph, so a small graph is not blown up to a blurry image. */
-export const EXPORT_MAX_SCALE = 2;
 
 /** The border of a package, folder box or collapsed node while neither selected nor highlighted, in px. */
 export const NODE_BORDER_PX = 1;

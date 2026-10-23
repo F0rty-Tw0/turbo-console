@@ -1,6 +1,12 @@
 import type { Core } from 'cytoscape';
 
-import { EXPORTING_CLASS, EXPORT_MAX_PX, EXPORT_MAX_SCALE } from '../common/graph.const.ts';
+import { EXPORTING_CLASS } from '../common/graph.const.ts';
+
+/** Longest side of an exported image, in px. */
+const EXPORT_MAX_PX = 4096;
+
+/** Most the export enlarges the graph, so a small graph is not blown up to a blurry image. */
+const EXPORT_MAX_SCALE = 2;
 
 /** The `cy.png` scale that keeps both sides at `EXPORT_MAX_PX` or less; `cy.png` multiplies by the device pixel ratio itself, so it is divided out here. */
 const scaleOf = (cy: Core, pixelRatio: number): number => {
