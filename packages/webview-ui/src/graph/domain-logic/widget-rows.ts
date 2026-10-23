@@ -6,6 +6,8 @@ import { sameOrder } from '../utils/same-order.util.ts';
 
 type RowEntry = {
   readonly kind: RowKind;
+  /** The package count the row was built with. */
+  readonly count: number;
   readonly elements: FolderRowElements;
 };
 
@@ -103,22 +105,23 @@ export class WidgetRows {
     target?.focus();
   }
 
-  /** Builds a folder's row, or builds it again when the folder collapsed or expanded. */
+  /** Builds a folder's row, or builds it again when the folder collapsed or expanded or its package count changed. */
   private syncRow(folder: string, scene: FolderScene, before: HTMLElement | null): void {
     const isCollapsed = scene.collapsed.has(folder);
     const kind: RowKind = isCollapsed ? 'collapsed' : 'box';
+    const count = scene.members.get(folder)?.length ?? 0;
     const entry = this.rows.get(folder);
+    const isCurrent = entry?.kind === kind && entry.count === count;
 
-    if (entry?.kind === kind) return;
+    if (isCurrent) return;
 
     const { views, onToggle, onMenu } = this.deps;
-    const count = scene.members.get(folder)?.length ?? 0;
     const elements = views.row(kind, folderTitleOf(folder), count);
     const target: MenuTarget = { kind: 'folder', folder };
 
     elements.chevron.addEventListener('click', (): void => onToggle(folder));
     elements.ellipsis.addEventListener('click', (): void => onMenu(target, elements.ellipsis));
-    this.rows.set(folder, { kind, elements });
+    this.rows.set(folder, { kind, count, elements });
 
     if (entry === undefined) this.deps.layer.insertBefore(elements.root, before);
     else this.replace(entry, elements);

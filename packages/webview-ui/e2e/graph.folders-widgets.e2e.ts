@@ -1,7 +1,9 @@
 import { DOCKED_WIDTH_PX, OVERLAY_WIDTH_PX, WIDGET_MIN_BOX_PX } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
 import { LONG_FOLDER, longTitleState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
+import { packageOf } from './test/utils/graph-package.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
+import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
@@ -10,6 +12,11 @@ const C9 = { description: 'M4-4 C9', type: 'requirement' };
 const BOARDS = placedBoardsState();
 
 const FOLDERS = ['apps', 'packages'];
+
+const ADMIN_PACKAGES = [...BOARDS.packages, packageOf('admin', 'apps/admin')];
+
+/** The boards under a new hash with `admin` added to apps, laid out afresh. */
+const WITH_ADMIN: GraphReady = { ...BOARDS, hash: 'b0a2d501', packages: ADMIN_PACKAGES, folderPositions: null };
 
 const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => savedWith(BOARDS.hash, overrides);
 
@@ -256,6 +263,25 @@ test.describe('FEATURE: folder widget placement', () => {
 
       await test.step('THEN the focus is still on the packages chevron', async (): Promise<void> =>
         graphWidgets.expectChevronFocused('packages', true));
+    }
+  );
+
+  test(
+    'GIVEN the boards grouped, a new graph that adds a package to apps updates the apps row count',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphGrouping, graphHost, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the grouped boards open with apps reading 2 packages', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphWidgets.expectBoxRow('apps', '2 packages');
+      });
+
+      await test.step('AND a new graph adds admin to apps', async (): Promise<void> => {
+        await graphHost.sendState(WITH_ADMIN);
+        await graphGrouping.expectFolderPackages('apps', ['admin', 'docs', 'web']);
+      });
+
+      await test.step('THEN the apps row reads 3 packages', async (): Promise<void> =>
+        graphWidgets.expectBoxRow('apps', '3 packages'));
     }
   );
 });
