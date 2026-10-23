@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = join(import.meta.dirname, '../../../../');
-const TAG = /mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)-[a-z]+/g;
+const TAG = /mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)(?:-[a-z]+)?/g;
 const DEV_BLOCK = /^ {2}dev:\n((?: {4}.*\n?)*)/m;
 const DEV_PLAYWRIGHT = /^ {4}'@playwright\/test':\s*'(\d+\.\d+\.\d+)'/m;
 
@@ -43,6 +43,14 @@ describe('FEATURE: Playwright image version guard', () => {
       const result = containerVersionsOf('container: mcr.microsoft.com/playwright:v1.64.0-noble');
 
       expect(result).toStrictEqual(['1.64.0']);
+    });
+  });
+
+  describe('GIVEN a workflow with a Playwright container tag without a distro suffix', () => {
+    it('WHEN the versions are read THEN the tag version is listed', () => {
+      const result = containerVersionsOf('container: mcr.microsoft.com/playwright:v1.65.0');
+
+      expect(result).toStrictEqual(['1.65.0']);
     });
   });
 
