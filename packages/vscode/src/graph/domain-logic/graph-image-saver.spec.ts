@@ -67,6 +67,15 @@ describe('FEATURE: the graph image saver', () => {
       expect(ports.showInfo).not.toHaveBeenCalled();
     });
 
+    it('WHEN the write rejects with a message starting "Error: " THEN the error shows it once and the log keeps it whole', async () => {
+      vi.mocked(ports.writeBytes).mockRejectedValue(new Error('Error: EACCES: permission denied'));
+
+      await saver.save(PNG);
+
+      expect(ports.showError).toHaveBeenCalledExactlyOnceWith('Could not save the graph image: EACCES: permission denied');
+      expect(ports.log).toHaveBeenCalledExactlyOnceWith('Error: EACCES: permission denied');
+    });
+
     it('WHEN the dialog rejects THEN an error shows its message and the next save opens a dialog', async () => {
       vi.mocked(ports.pickSaveUri).mockRejectedValueOnce(new Error('no window'));
 

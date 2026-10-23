@@ -7,6 +7,9 @@ import type { GraphPorts } from '../common/graph.type.ts';
 /** 12 base64 characters decode to 9 bytes, enough for the 8-byte signature. */
 const SIGNATURE_CHARS = 12;
 
+/** VS Code's `FileSystemError` message already starts with this, which the toast would show twice. */
+const ERROR_PREFIX = /^Error: /;
+
 /**
  * Saves the PNG a graph page posts: the signature is checked on the first characters before the rest is decoded, then
  * the user picks a file and the bytes are written.
@@ -48,9 +51,10 @@ export class GraphImageSaver {
       await this.pickAndWrite(bytes);
     } catch (error: unknown) {
       const text = logTextOf(error);
+      const shown = text.replace(ERROR_PREFIX, '');
 
       this.ports.log(text);
-      this.ports.showError(`Could not save the graph image: ${text}`);
+      this.ports.showError(`Could not save the graph image: ${shown}`);
     } finally {
       this.isSaving = false;
     }
