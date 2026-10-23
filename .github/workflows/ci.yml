@@ -236,14 +236,14 @@ jobs:
         run: pnpm turbo run build --filter=@turbo-console/webview-ui
 
       - name: Screenshots
-        run: pnpm --filter @turbo-console/webview-ui run screenshots
+        run: pnpm --filter @turbo-console/webview-ui exec playwright test --config playwright.screenshot.config.ts --update-snapshots=all
 
       # SHA = actions/upload-artifact@v7.0.2
       - name: Upload actual, expected and diff PNGs
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: screenshots-diff-${{ github.run_attempt }}
-          path: packages/webview-ui/test-results/
+          path: packages/webview-ui/e2e/screenshots/
           if-no-files-found: ignore
           retention-days: 14
