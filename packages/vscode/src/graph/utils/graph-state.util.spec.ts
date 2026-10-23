@@ -1,6 +1,6 @@
 import { TurboException } from '@turbo-console/core';
-import type { WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphState, Positions } from '@turbo-console/webview-ui';
+import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
+import type { GraphEdge, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { graphHashOf, graphStateOf, graphStateOfRoot } from './graph-state.util.ts';
@@ -9,6 +9,7 @@ import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
+import { TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
 import {
   GRAPH_HASH_STUB,
@@ -96,6 +97,12 @@ const CACHE_CASES: CacheCase[] = [
   }
 ];
 
+const tasksOf = (state: GraphState): GraphTask[] => {
+  if (state.kind !== 'graph') return [];
+
+  return state.tasks;
+};
+
 describe('FEATURE: graph state builder', () => {
   describe('GIVEN a model with unsorted edges and one pair listed twice', () => {
     it('WHEN the state is built THEN each package carries its path and its tags sorted and deduplicated, and edges are sorted, deduped and carry no kind', () => {
@@ -110,6 +117,35 @@ describe('FEATURE: graph state builder', () => {
       const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB);
 
       expect(state).toMatchObject({ kind: 'graph', packages: GRAPH_INFOS });
+    });
+  });
+
+  describe('GIVEN a model with one more task', () => {
+    const extra: TaskNode = { ...TASK_NODE_STUB, id: 'a#lint', name: 'lint' };
+    const withExtra = (node: PackageNode): PackageNode => {
+      const isA = node.name === 'a';
+      const grownNode: PackageNode = { ...node, tasks: [...node.tasks, extra] };
+
+      return isA ? grownNode : node;
+    };
+    const grown = (): WorkspaceModel => {
+      const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: GRAPH_MODEL_STUB.packages.map(withExtra) };
+
+      return model;
+    };
+
+    it('WHEN the state is built THEN the hash is unchanged', () => {
+      const state = graphStateOf(grown(), NO_LAYOUT_CACHES_STUB);
+
+      expect(state).toMatchObject({ hash: GRAPH_HASH_STUB });
+    });
+
+    it('WHEN the state is built THEN tasks has one more entry', () => {
+      const base = tasksOf(graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB));
+
+      const tasks = tasksOf(graphStateOf(grown(), NO_LAYOUT_CACHES_STUB));
+
+      expect(tasks).toHaveLength(base.length + 1);
     });
   });
 
