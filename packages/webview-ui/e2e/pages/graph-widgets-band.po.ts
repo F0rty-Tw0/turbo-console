@@ -8,8 +8,23 @@ import { rectOf } from '../test/utils/graph-widgets.spec.util.ts';
 /** How far inside a node's top-left corner `tapNodeCorner` clicks, in CSS px. */
 const CORNER_INSET_PX = 2;
 
+const MAX_ZOOM_NOTCHES = 60;
+
+const ZOOM_IN_NOTCH = -100;
+
 /** How the header rows fit the box band as the camera zooms, and stay clear of a collapsed node's title. */
 export class GraphWidgetsBand extends GraphWidgetsLayout {
+  /** Wheels in one notch at a time, at most 60, until some header button shows. */
+  public async zoomUntilRowsShown(): Promise<void> {
+    for (let notch = 0; notch < MAX_ZOOM_NOTCHES; notch += 1) {
+      const shown = await this.shownHeaderButtonCount();
+
+      if (shown > 0) return;
+
+      await this.zoomBy(ZOOM_IN_NOTCH);
+    }
+  }
+
   /** Clicks 2 px inside the package's drawn top-left corner. */
   public async tapNodeCorner(name: string): Promise<void> {
     const node = await this.nodeRectOf(name);

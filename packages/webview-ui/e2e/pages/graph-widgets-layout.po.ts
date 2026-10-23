@@ -169,6 +169,11 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
     await expect.poll(async (): Promise<number> => this.coveredCount()).toBe(0);
   }
 
+  /** At least `count` header buttons are shown, so a timing run pans a layer that draws widgets. */
+  public async expectHeaderButtonsShown(count: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.shownHeaderButtonCount()).toBeGreaterThanOrEqual(count);
+  }
+
   /** No header button is shown anywhere, so a timing run pans the boxes alone. */
   public async expectNoHeaderButtonShown(): Promise<void> {
     await expect.poll(async (): Promise<number> => this.shownHeaderButtonCount()).toBe(0);

@@ -38,6 +38,18 @@ const BOXES_IN_VIEW = 6;
  */
 const GROUPED_PAN_MS = 1100;
 
+/**
+ * About 690 ms pinned (685 to 701) with tracing off, at the first notch past the rows' 0.5 zoom floor (about 0.51);
+ * the budget keeps about the grouped pan's 3.4x room. This zoom also draws more canvas detail than the 120 px pan, so the
+ * gap to that pan is not widget cost alone.
+ */
+const ROWS_PAN_MS = 2400;
+
+/** At the first zoom that shows header rows, 2 of the 30 boxes of `largeState()` overlap the canvas, each with its 2 buttons. */
+const ROWS_BOXES_IN_VIEW = 2;
+
+const ROWS_BUTTONS_SHOWN = 4;
+
 /** Five folders of `largeState()` that sit well inside the canvas after Fit and the zoom to 120 px boxes. */
 const TOGGLED_FOLDERS = ['group-2', 'group-3', 'group-4', 'group-12', 'group-13'];
 
@@ -186,6 +198,47 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('THEN the pan used under 1100 ms of CPU and no step over 50 ms', (): void =>
       graphCanvas.expectPanCpuUnder(GROUPED_PAN_MS, 50));
+  });
+
+  test('GIVEN 300 packages grouped and zoomed until header rows show, a scripted 2 s pan uses under 2.4 s of main-thread CPU and no step over 50 ms', async ({
+    graphCanvas,
+    graphGrouping,
+    graphHost,
+    graphPage,
+    graphProbe,
+    graphWidgets
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
+      graphPage.open({ savedState: groupedSavedState(largeState().hash) }));
+
+    await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+
+    await test.step('THEN the grouped layout has finished', async (): Promise<void> => {
+      await graphProbe.expectLayoutEngine('elk');
+      await graphGrouping.expectFolderCount(30);
+    });
+
+    await test.step('WHEN Fit frames the graph and the boxes are zoomed to 120 px', async (): Promise<void> => {
+      await graphPage.pressButton(FIT_LABEL);
+      await graphCanvas.expectAllNodesInView();
+      await graphGrouping.zoomBoxesTo(120);
+    });
+
+    await test.step('AND the graph is zoomed in until header rows show', async (): Promise<void> => graphWidgets.zoomUntilRowsShown());
+
+    await test.step('THEN at least 4 header buttons and 2 boxes are in view, so the pan moves widgets over boxes', async (): Promise<void> => {
+      await graphWidgets.expectHeaderButtonsShown(ROWS_BUTTONS_SHOWN);
+      await graphGrouping.expectBoxesInView(ROWS_BOXES_IN_VIEW);
+    });
+
+    await test.step('AND it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
+      const spot = await graphGrouping.freeSpot();
+
+      await graphCanvas.scriptedPan(30, 120, spot);
+    });
+
+    await test.step('THEN the pan used under 2400 ms of CPU and no step over 50 ms', (): void =>
+      graphCanvas.expectPanCpuUnder(ROWS_PAN_MS, 50));
   });
 
   test(
