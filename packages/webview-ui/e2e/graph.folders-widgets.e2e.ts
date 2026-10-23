@@ -28,6 +28,9 @@ const EDITOR_BACKGROUND = 'rgb(31, 31, 31)';
 /** Dark Modern's secondary button background: fully transparent. */
 const CLEAR_SECONDARY = { '--vscode-editor-background': EDITOR_BACKGROUND, '--vscode-button-secondaryBackground': 'rgba(0, 0, 0, 0)' };
 
+/** An opaque secondary button background no theme ships, so only the widget's own fill can paint it. */
+const TEST_SECONDARY = 'rgb(200, 30, 90)';
+
 /** High Contrast leaves the secondary button background unset. */
 const UNSET_SECONDARY = { '--vscode-button-secondaryBackground': null };
 
@@ -317,13 +320,19 @@ test.describe('FEATURE: folder widget placement', () => {
   );
 
   test(
-    'GIVEN a theme whose secondary button background is transparent or unset, a header button keeps an opaque editor base',
+    'GIVEN a header button, it paints the secondary button background over an opaque editor base, which stays when that background is transparent or unset',
     { annotation: C9 },
     async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
-      await test.step('WHEN the grouped boards open with a transparent secondary button background', async (): Promise<void> => {
+      await test.step('WHEN the grouped boards open with an opaque test secondary button background', async (): Promise<void> => {
         await graphFolderInspect.open(grouped(), BOARDS);
-        await graphWidgets.setThemeVars(CLEAR_SECONDARY);
+        await graphWidgets.setThemeVars({ '--vscode-button-secondaryBackground': TEST_SECONDARY });
       });
+
+      await test.step('THEN the apps chevron paints the secondary colour over its base', async (): Promise<void> =>
+        graphWidgets.expectChevronFill('apps', TEST_SECONDARY));
+
+      await test.step('WHEN the secondary button background turns transparent', async (): Promise<void> =>
+        graphWidgets.setThemeVars(CLEAR_SECONDARY));
 
       await test.step('THEN the apps chevron paints the editor background', async (): Promise<void> =>
         graphWidgets.expectChevronBackground('apps', EDITOR_BACKGROUND));

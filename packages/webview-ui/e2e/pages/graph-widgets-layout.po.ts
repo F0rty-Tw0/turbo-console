@@ -117,6 +117,11 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
     await expect(this.chevronOf(folder, true)).toHaveCSS('background-color', color);
   }
 
+  /** The folder's box chevron paints `color` as one flat layer over its background colour. */
+  public async expectChevronFill(folder: string, color: string): Promise<void> {
+    await expect(this.chevronOf(folder, true)).toHaveCSS('background-image', `linear-gradient(${color}, ${color})`);
+  }
+
   /** Moves keyboard focus to the graph container, the Tab stop before the first widget. */
   public async focusContainer(): Promise<void> {
     await this.container.focus();
