@@ -4,6 +4,7 @@ import type { Mock } from 'vitest';
 
 import { graphPortsOf } from './graph-panel-ports.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
+import { RunStore } from '../../run/domain-logic/run-store.ts';
 import type { ViewFake } from '../../shared/test/common/panel-fakes.type.ts';
 import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import type { GraphPanelsDeps } from '../common/graph-panel.type.ts';
@@ -34,7 +35,7 @@ describe('FEATURE: the ports of one graph panel', () => {
     setPanelVisible = vi.fn<GraphPanelsDeps['setPanelVisible']>();
     openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
 
-    const deps: GraphPanelsDeps = { roots: new RootStore(), host: fakes.host, setPanelVisible, openDetails };
+    const deps: GraphPanelsDeps = { roots: new RootStore(), host: fakes.host, setPanelVisible, openDetails, runs: new RunStore() };
 
     ports = graphPortsOf(deps, '/ws', posted, view.view);
   });

@@ -1,6 +1,7 @@
 import type { GraphHostMessage, GraphState, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
+import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 
 /**
  * Editor effects of one graph panel. `openDetails` and `openAt` may reject; `readText` rejects on a file it cannot open and gives
@@ -39,6 +40,13 @@ type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopT
 
 /** A page request the session answers from the state it builds now: a reload, a package's details or a task run or stop. */
 export type GraphRequestMessage = Extract<GraphWebviewMessage, RequestTag>;
+
+/** What a request is judged against: the state built now, the root's coordinator and the ports a request may use. */
+export type RequestContext = {
+  readonly state: GraphState;
+  readonly coordinator: Pick<Coordinator, 'request'> | undefined;
+  readonly ports: Pick<GraphPorts, 'openDetails' | 'log'>;
+};
 
 type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };
 

@@ -38,3 +38,6 @@ export const LAYOUT_MS_MAX = 600_000;
 
 /** An `exportImage` post past this many base64 characters (32 MiB) is not a graph image. */
 export const EXPORT_PNG_MAX = 33_554_432;
+
+/** Run changes of a task graph are posted at most once per this many milliseconds, so a burst of task events is one post. */
+export const RUNS_COALESCE_MS = 50;

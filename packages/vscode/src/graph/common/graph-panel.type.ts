@@ -6,7 +6,7 @@ import type { GraphPorts } from './graph.type.ts';
 import type { PanelKey } from '../../details/common/details.type.ts';
 import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
-import type { Disposed } from '../../run/common/run.type.ts';
+import type { Disposed, Runs } from '../../run/common/run.type.ts';
 import type { GraphApi } from '../../shared/common/api.type.ts';
 import type { EditorPanelView } from '../../shared/common/panel-view.type.ts';
 
@@ -37,6 +37,7 @@ export type GraphPanelsDeps = {
   readonly host: GraphHost;
   readonly setPanelVisible: (root: string, panelId: string, visible: boolean) => void;
   readonly openDetails: (key: PanelKey) => Promise<void>;
+  readonly runs: Runs;
 };
 
 /** What the registry and the test API ask of a panel's `GraphSession`. */

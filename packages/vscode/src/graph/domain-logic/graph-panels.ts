@@ -59,7 +59,7 @@ export class GraphPanels implements GraphOpener {
   private build(root: string, title: string): OpenGraphPanel {
     const view = this.deps.host.open(title);
     const posted: OpenGraphPanel['posted'] = [];
-    const session = new GraphSession(root, this.deps.roots, graphPortsOf(this.deps, root, posted, view));
+    const session = new GraphSession(root, this.deps.roots, graphPortsOf(this.deps, root, posted, view), this.deps.runs);
 
     try {
       const panel = this.wire({ root, view, session, posted }, session);

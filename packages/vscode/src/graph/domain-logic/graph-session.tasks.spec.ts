@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { GraphSession } from './graph-session.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
+import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { portsWith } from '../test/utils/graph-session.spec.util.ts';
 
 describe('FEATURE: graph session task messages before the run wiring', () => {
@@ -10,7 +11,7 @@ describe('FEATURE: graph session task messages before the run wiring', () => {
       'WHEN %j arrives THEN it is dropped and logged',
       async (raw) => {
         const ports = portsWith(null);
-        const session = new GraphSession('/ws', new RootStore(), ports);
+        const session = new GraphSession('/ws', new RootStore(), ports, new RunStore());
 
         await session.receive(raw);
 

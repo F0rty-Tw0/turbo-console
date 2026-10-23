@@ -2,7 +2,7 @@ import type { GraphPackage, GraphState, GraphWebviewMessage } from '@turbo-conso
 
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { GraphPorts, GraphRequestMessage } from '../common/graph.type.ts';
+import type { GraphPorts, GraphRequestMessage, RequestContext } from '../common/graph.type.ts';
 import { packageNamesOf } from '../utils/graph-package.util.ts';
 
 const NO_PACKAGES: GraphPackage[] = [];
@@ -14,7 +14,7 @@ export function isRequestMessage(message: GraphWebviewMessage): message is Graph
 }
 
 /** The page shows Reload only on an error state, so a `reload` at any other time is not honoured and never reloads the root. */
-export function reloadOf(state: GraphState, coordinator: Pick<Coordinator, 'request'> | undefined): boolean {
+function reloadOf(state: GraphState, coordinator: Pick<Coordinator, 'request'> | undefined): boolean {
   const isError = state.kind === 'error';
 
   if (!isError) return false;
@@ -25,7 +25,7 @@ export function reloadOf(state: GraphState, coordinator: Pick<Coordinator, 'requ
 }
 
 /** `false` when the package is not listed; a rejection of the port is logged and the request still counts as handled. */
-export async function openDetailsOf(
+async function openDetailsOf(
   packageName: string,
   state: GraphState,
   ports: Pick<GraphPorts, 'openDetails' | 'log'>
@@ -43,4 +43,19 @@ export async function openDetailsOf(
   }
 
   return true;
+}
+
+/** `false` when the page asked for something the state does not allow; the session logs and drops that message. */
+export async function requestHandledOf(message: GraphRequestMessage, context: RequestContext): Promise<boolean> {
+  const { state, coordinator, ports } = context;
+
+  switch (message.type) {
+    case 'reload':
+      return reloadOf(state, coordinator);
+    case 'openDetails':
+      return openDetailsOf(message.packageName, state, ports);
+    case 'runTask':
+    case 'stopTask':
+      return false;
+  }
 }
