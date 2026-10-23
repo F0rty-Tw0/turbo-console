@@ -180,6 +180,12 @@ export type TitleBandInk = {
   readonly nearSides: number;
 };
 
+/** A base64 PNG and the `rgb(...)` colour whose ink is counted in it. */
+export type ColourInkInput = {
+  readonly png: string;
+  readonly colour: string;
+};
+
 /** The hash and the sorted package names of a `positions` message; `hash` is `undefined` before one is posted. */
 export type PostedPositions = {
   readonly hash: string | undefined;

@@ -75,6 +75,7 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     state: probeStateOf(node),
     frame,
     label,
+    text: styleText(node, 'label'),
     fill,
     isGhost: node.hasClass(GHOST_CLASS),
     borderStyle: styleText(node, 'border-style'),

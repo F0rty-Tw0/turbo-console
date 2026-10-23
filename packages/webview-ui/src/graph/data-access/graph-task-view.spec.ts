@@ -86,6 +86,21 @@ describe('FEATURE: createTaskCanvas', () => {
       expect(cy.getElementById('pkg:web').data('title')).toBe('web');
     });
 
+    it('WHEN shown THEN each compound is classed task-box, so its title is drawn on the page', () => {
+      canvas.show(DRAWING);
+
+      expect(cy.nodes('.task-box').map(idOf)).toStrictEqual(['pkg:api', 'pkg:web']);
+    });
+
+    it('WHEN a root task is shown THEN its pkg:// compound is titled //, as the package graph labels the root package', () => {
+      const tasks = [taskOf('//#build', [])];
+      const rootDrawing: TaskDrawing = { ...DRAWING, tasks };
+
+      canvas.show(rootDrawing);
+
+      expect(cy.getElementById('pkg://').data('title')).toBe('//');
+    });
+
     it('WHEN shown THEN each task sits in its package compound, classed task and labelled by its name', () => {
       canvas.show(DRAWING);
 

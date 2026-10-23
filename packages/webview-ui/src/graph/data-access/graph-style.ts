@@ -1,8 +1,6 @@
-import type { Css, NodeSingular, StylesheetJson, StylesheetJsonBlock } from 'cytoscape';
+import type { Css, NodeSingular, StylesheetJson } from 'cytoscape';
 
-import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
-import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
-import { RUN_CLASS_PREFIX, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { taskRulesOf } from './graph-task-style.ts';
 import {
   COLLAPSED_LABEL_MAX_PX,
   DIMMED_BOX_CLASS,
@@ -61,17 +59,6 @@ const DIMMED = { opacity: 0.25 } as const;
 
 const DIMMED_BOX = { 'border-opacity': 0.25, 'text-opacity': 0.25, 'background-opacity': 0.25 } as const;
 
-/** A task node shows its task name; its id is `package#name`. */
-const TASK_NODE = { label: 'data(label)' } as const;
-
-/** A task's run state as an outline outside its frame, so it never hides the selection border. */
-const runRuleOf = (colors: ThemeColors, state: GraphRunState): StylesheetJsonBlock => {
-  const style = { 'outline-color': colors.runs[state], 'outline-width': 3, 'outline-offset': 2 };
-  const rule: StylesheetJsonBlock = { selector: `node.${RUN_CLASS_PREFIX}${state}`, style };
-
-  return rule;
-};
-
 /** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
 const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
 
@@ -79,11 +66,11 @@ const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
 const titleWidthOf = (box: NodeSingular): string => `${box.width()}px`;
 
 /**
- * What `exportPngOf` adds to a box while it runs: its folder title centred in the top padding band, inside the frame,
- * cut with an ellipsis when wider than the box; the page never shows it. `cy.png` bounds skip the title, so outside
- * the frame it would be cut off at the image edge.
+ * A box's title centred in the top padding band, inside the frame, cut with an ellipsis when wider than the box. A folder
+ * box draws it only while `exportPngOf` runs, since the page shows its DOM header row instead; `taskRulesOf` left-aligns
+ * it for a task box. `cy.png` bounds skip the title, so outside the frame it would be cut off at the image edge.
  */
-const EXPORTING_BOX = {
+const BOX_TITLE = {
   label: 'data(title)',
   'text-valign': 'top',
   'text-halign': 'center',
@@ -95,7 +82,7 @@ const EXPORTING_BOX = {
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with
  * a triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies;
- * `ghost` (dashed) is the one `GraphView.setGhosts` applies; a `task` node reads its name and a `run-<state>` class outlines it. The folder pass draws `folder-node` (a collapsed folder, its
+ * `ghost` (dashed) is the one `GraphView.setGhosts` applies; `taskRulesOf` adds the task mode rules. The folder pass draws `folder-node` (a collapsed folder, its
  * label wrapped) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it.
  * Every colour comes from `colors`.
  */
@@ -126,18 +113,17 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
   const highlightedEdge = { width: 2, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
   const selectedEdge = { width: 3, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
   const folderNode = { label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px` } as const;
-  const runRules = RUN_STATES.map((state) => runRuleOf(colors, state));
+  const taskRules = taskRulesOf(colors, BOX_TITLE);
   const style: StylesheetJson = [
     { selector: 'node', style: node },
-    { selector: `node.${TASK_NODE_CLASS}`, style: TASK_NODE },
     { selector: 'node:parent', style: boxStyleOf(colors) },
-    { selector: `node:parent.${EXPORTING_CLASS}`, style: EXPORTING_BOX },
+    { selector: `node:parent.${EXPORTING_CLASS}`, style: BOX_TITLE },
+    ...taskRules,
     { selector: 'edge', style: edge },
     { selector: 'node.selected', style: selectedNode },
     { selector: 'node.highlighted', style: highlightedNode },
     { selector: 'edge.highlighted', style: highlightedEdge },
     { selector: 'edge.selected', style: selectedEdge },
-    ...runRules,
     { selector: 'node.ghost', style: GHOST_NODE },
     { selector: 'edge.ghost', style: GHOST_EDGE },
     { selector: '.dimmed', style: DIMMED },

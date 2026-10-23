@@ -21,6 +21,8 @@ export type ProbeNode = {
   readonly state: ProbeState;
   readonly frame: string;
   readonly label: string;
+  /** The label text drawn on the page: a package's name, a task box's package name, empty for a box with none. */
+  readonly text: string;
   readonly fill: string;
   readonly isGhost: boolean;
   readonly borderStyle: string;

@@ -124,6 +124,25 @@ test.describe('FEATURE: graph task layout', () => {
       await test.step('WHEN Export image is pressed', async (): Promise<void> => graphExport.press());
 
       await test.step('THEN one PNG is posted', async (): Promise<void> => graphExport.expectOnePng(ANY_SIDE));
+
+      await test.step('AND the top box title is drawn inside its frame, clear of the image sides', async (): Promise<void> =>
+        graphExport.expectTopTitleClearOfSides());
+    }
+  );
+
+  test(
+    'GIVEN the chain drawn, each package box shows its package name at the left of its top padding band, clear of the link entering at its centre',
+    { annotation: RF3 },
+    async ({ graphHost, graphPage, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN the page opens with app#build chosen', async (): Promise<void> =>
+        graphPage.open({ savedState: SAVED_TASK_VIEW }));
+
+      await test.step('AND the task state is sent', async (): Promise<void> => graphHost.sendState(TASK_MODE_STATE_STUB));
+
+      await test.step('AND the chain is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(CHAIN));
+
+      await test.step('THEN each box is titled by its package, inked left of the middle strip and not in it', async (): Promise<void> =>
+        graphTaskProbe.expectBoxTitlesDrawn(['app', 'lib', 'ui']));
     }
   );
 

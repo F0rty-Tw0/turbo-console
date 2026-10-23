@@ -13,6 +13,9 @@ export const DEFAULT_TASK_DEPTH = 1;
 /** Starts every package compound id of the task graph; package names hold no `:`, so no task id starts this way. */
 export const TASK_BOX_PREFIX = 'pkg:';
 
+/** The class of every package compound of the task graph, which draws its package name on the page; folder boxes have DOM header rows instead. */
+export const TASK_BOX_CLASS = 'task-box';
+
 /** The class of every task node, so a walk of the task graph skips the package compounds. */
 export const TASK_NODE_CLASS = 'task';
 
