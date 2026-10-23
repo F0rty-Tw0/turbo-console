@@ -30,7 +30,8 @@ export const GHOST_STUB: GraphReady = {
   packages: GHOST_PACKAGES,
   edges: GHOST_EDGES,
   positions: GHOST_POSITIONS,
-  folderPositions: null
+  folderPositions: null,
+  tasks: []
 };
 
 const FAR_ROWS: PositionRow[] = [WIDE_ROW, ['site', 700, 0], ['bridge', 1100, 150], ['store', 700, 300]];

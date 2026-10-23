@@ -4,6 +4,7 @@ import { GraphSession } from './graph-session.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
@@ -15,7 +16,7 @@ import {
   GROWN_LOADED_STUB,
   POSITIONS_STUB
 } from '../test/stubs/graph-model.stub.ts';
-import { lastStateOf, portsWith, postedStatesOf } from '../test/utils/graph-session.spec.util.ts';
+import { lastStateOf, portsWith, postedOf, postedStatesOf } from '../test/utils/graph-session.spec.util.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const STATE_CACHE = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
@@ -46,7 +47,7 @@ const loadedStore = (): RootStore => {
 /** A started, shown session on `/ws`; `cached` seeds its layout cache. */
 const shownSession = (cached: GraphLayoutCacheEntry | null = null, store: RootStore = loadedStore()): ShownSession => {
   const ports = portsWith(cached);
-  const session = new GraphSession('/ws', store, ports);
+  const session = new GraphSession('/ws', store, ports, new RunStore());
 
   session.setVisible(true);
   session.start();
@@ -63,7 +64,10 @@ describe('FEATURE: graph session', () => {
 
       await session.receive({ type: 'ready' });
 
-      expect(ports.post).toHaveBeenCalledExactlyOnceWith({ type: 'state', state: GRAPH_STATE_STUB });
+      expect(postedOf(ports)).toStrictEqual([
+        { type: 'state', state: GRAPH_STATE_STUB },
+        { type: 'runs', runs: {} }
+      ]);
     });
 
     it('WHEN the model changes before ready THEN nothing is posted', () => {
@@ -82,7 +86,7 @@ describe('FEATURE: graph session', () => {
       store.apply('/ws', GROWN_LOADED_STUB);
 
       expect(lastStateOf(ports).packages).toContain('zed');
-      expect(ports.post).toHaveBeenCalledTimes(2);
+      expect(postedStatesOf(ports)).toHaveLength(2);
     });
 
     it('WHEN the same model is applied again THEN no second state is posted', async () => {
@@ -92,7 +96,7 @@ describe('FEATURE: graph session', () => {
 
       store.apply('/ws', GRAPH_LOADED_STUB);
 
-      expect(ports.post).toHaveBeenCalledOnce();
+      expect(postedStatesOf(ports)).toHaveLength(1);
     });
 
     it('WHEN the page sends ready twice THEN each ready posts the state', async () => {
@@ -101,7 +105,7 @@ describe('FEATURE: graph session', () => {
       await session.receive({ type: 'ready' });
       await session.receive({ type: 'ready' });
 
-      expect(ports.post).toHaveBeenCalledTimes(2);
+      expect(postedStatesOf(ports)).toHaveLength(2);
     });
   });
 
@@ -133,7 +137,7 @@ describe('FEATURE: graph session', () => {
 
         store.apply('/ws', GROWN_LOADED_STUB);
 
-        expect(ports.post).toHaveBeenCalledOnce();
+        expect(postedStatesOf(ports)).toHaveLength(1);
       });
 
       it('THEN showing it posts nothing until the page is ready again, then one state', async () => {
@@ -149,7 +153,7 @@ describe('FEATURE: graph session', () => {
         await session.receive({ type: 'ready' });
 
         expect(postedOnShow).toBe(0);
-        expect(ports.post).toHaveBeenCalledOnce();
+        expect(postedStatesOf(ports)).toHaveLength(1);
       });
     });
 
@@ -161,7 +165,7 @@ describe('FEATURE: graph session', () => {
 
       session.setVisible(true);
 
-      expect(ports.post).toHaveBeenCalledOnce();
+      expect(postedStatesOf(ports)).toHaveLength(1);
     });
 
     it('WHEN another root changes THEN nothing is posted', async () => {
@@ -174,7 +178,7 @@ describe('FEATURE: graph session', () => {
 
       store.apply('/other', GROWN_LOADED_STUB);
 
-      expect(ports.post).toHaveBeenCalledOnce();
+      expect(postedStatesOf(ports)).toHaveLength(1);
     });
   });
 
@@ -237,7 +241,7 @@ describe('FEATURE: graph session', () => {
 
       store.apply('/ws', GROWN_LOADED_STUB);
 
-      expect(ports.post).toHaveBeenCalledOnce();
+      expect(postedStatesOf(ports)).toHaveLength(1);
     });
 
     it('WHEN a message arrives THEN nothing happens, not even a log', async () => {
@@ -256,7 +260,7 @@ describe('FEATURE: graph session', () => {
       it('THEN it does not subscribe to the store', () => {
         const store = loadedStore();
         const { ports } = shownSession(null, store);
-        const session = new GraphSession('/ws', store, ports);
+        const session = new GraphSession('/ws', store, ports, new RunStore());
         const onDidChange = vi.spyOn(store, 'onDidChange');
 
         session.dispose();
@@ -270,7 +274,7 @@ describe('FEATURE: graph session', () => {
       it('THEN it does not report the panel', () => {
         const store = loadedStore();
         const { ports } = shownSession(null, store);
-        const session = new GraphSession('/ws', store, ports);
+        const session = new GraphSession('/ws', store, ports, new RunStore());
 
         session.dispose();
         vi.mocked(ports.setPanelVisible).mockClear();

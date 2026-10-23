@@ -5,6 +5,7 @@ import type { Mock } from 'vitest';
 import { GraphPanels } from './graph-panels.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { POSTED_MAX } from '../../shared/common/panel.const.ts';
 import type { ViewFake } from '../../shared/test/common/panel-fakes.type.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
@@ -15,6 +16,7 @@ import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } 
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const READY = { type: 'ready' };
+const RUNS_POSTED: GraphHostMessage = { type: 'runs', runs: {} };
 const STATE_POSTED: GraphHostMessage = { type: 'state', state: GRAPH_STATE_STUB };
 
 const viewAt = (fakes: GraphHostFakes, index: number): ViewFake<GraphHostMessage> => {
@@ -40,7 +42,7 @@ describe('FEATURE: graph panel registry', () => {
     setPanelVisible = vi.fn<GraphPanelsDeps['setPanelVisible']>();
     const openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
 
-    panels = new GraphPanels({ roots: store, host: fakes.host, setPanelVisible, openDetails });
+    panels = new GraphPanels({ roots: store, host: fakes.host, setPanelVisible, openDetails, runs: new RunStore() });
   });
 
   describe('GIVEN a loaded root', () => {
@@ -75,8 +77,8 @@ describe('FEATURE: graph panel registry', () => {
 
       viewAt(fakes, 0).message(READY);
 
-      expect(panels.api().posted('/ws')).toStrictEqual([STATE_POSTED]);
-      expect(viewAt(fakes, 0).send).toHaveBeenCalledExactlyOnceWith(STATE_POSTED);
+      expect(panels.api().posted('/ws')).toStrictEqual([STATE_POSTED, RUNS_POSTED]);
+      expect(viewAt(fakes, 0).send).toHaveBeenCalledTimes(2);
     });
 
     it('WHEN the page sends ready more than the cap THEN only the last POSTED_MAX messages are kept', () => {

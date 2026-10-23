@@ -7,6 +7,7 @@ import type { LoadedModel } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
@@ -48,7 +49,7 @@ const cachedPositionsOf = (ports: GraphPorts): unknown => vi.mocked(ports.writeC
 
 /** A started, shown session on `/ws` over `ports`. */
 const shownSessionOn = (ports: GraphPorts, store: RootStore = loadedStore()): ShownSession => {
-  const session = new GraphSession('/ws', store, ports);
+  const session = new GraphSession('/ws', store, ports, new RunStore());
 
   session.setVisible(true);
   session.start();

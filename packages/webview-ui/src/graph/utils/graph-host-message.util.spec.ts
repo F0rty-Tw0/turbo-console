@@ -65,11 +65,24 @@ const EXPLAINED = { type: 'edgeExplained', source: 'app', target: 'core', result
 
 const OBJECT_NAMES_EXPLAINED = { type: 'edgeExplained', source: '__proto__', target: 'constructor', result: UNREADABLE_RESULT };
 
-const GRAPH = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, folderPositions: null };
+const TASK = {
+  id: 'app#build',
+  packageName: 'app',
+  name: 'build',
+  command: 'tsc',
+  isRunnable: true,
+  dependencies: ['core#build']
+};
+
+const TASKS = [TASK, { id: 'core#build', packageName: 'core', name: 'build', command: null, isRunnable: false, dependencies: [] }];
+
+const GRAPH = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, folderPositions: null, tasks: [] };
 
 const CACHED_GRAPH = { ...GRAPH, positions: POSITIONS };
 
-const WITHOUT_FOLDER_POSITIONS = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null };
+const WITHOUT_FOLDER_POSITIONS = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, tasks: [] };
+
+const WITHOUT_TASKS = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, folderPositions: null };
 
 const LOADING = { kind: 'loading' };
 
@@ -79,6 +92,19 @@ const SINGLE_PACKAGE = { kind: 'singlePackage' };
 
 const stateMessageOf = (state: unknown): unknown => {
   const message = { type: 'state', state };
+
+  return message;
+};
+
+const graphWithTaskOf = (change: object): unknown => {
+  const task = { ...TASK, ...change };
+  const tasks = [task];
+
+  return stateMessageOf({ ...GRAPH, tasks });
+};
+
+const runsMessageOf = (runs: unknown): unknown => {
+  const message = { type: 'runs', runs };
 
   return message;
 };
@@ -93,6 +119,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['graph with cached positions', CACHED_GRAPH],
       ['graph with cached folder positions', { ...GRAPH, folderPositions: POSITIONS }],
       ['graph whose packages are named like Object members', { ...GRAPH, packages: OBJECT_NAMES }],
+      ['graph with tasks', { ...GRAPH, tasks: TASKS }],
       ['graph with a root package at the empty path', { ...GRAPH, packages: ROOT_PACKAGES }],
       ['graph whose packages have taskCount 0 and 100 000', { ...GRAPH, packages: EXTREME_TASK_COUNT_PACKAGES }]
     ])('WHEN its state is %s THEN it is accepted', (_name, state) => {
@@ -116,6 +143,28 @@ describe('FEATURE: isGraphHostMessage', () => {
       const isMessage = isGraphHostMessage({ ...EXPLAINED, result: NO_ENTRIES_RESULT });
 
       expect(isMessage).toBe(false);
+    });
+  });
+
+  describe('GIVEN a runs message', () => {
+    it.each([
+      ['no runs', {}],
+      ['a running and a failed-to-start task', { 'app#build': 'running', 'core#build': 'failed-to-start' }]
+    ])('WHEN it has %s THEN it is accepted', (_name, runs) => {
+      const isMessage = isGraphHostMessage({ type: 'runs', runs });
+
+      expect(isMessage).toBe(true);
+    });
+  });
+
+  describe('GIVEN a showTasks message', () => {
+    it.each([
+      ['one task id', ['app#build']],
+      ['no task ids', []]
+    ])('WHEN it has %s THEN it is accepted', (_name, taskIds) => {
+      const isMessage = isGraphHostMessage({ type: 'showTasks', taskIds });
+
+      expect(isMessage).toBe(true);
     });
   });
 
@@ -154,7 +203,23 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with an edge with a numeric source', stateMessageOf({ ...GRAPH, edges: [NUMERIC_SOURCE_EDGE] })],
       ['a graph with string positions', stateMessageOf({ ...GRAPH, positions: 'x' })],
       ['a graph with string folder positions', stateMessageOf({ ...GRAPH, folderPositions: 'x' })],
-      ['a graph with no folderPositions key', stateMessageOf(WITHOUT_FOLDER_POSITIONS)]
+      ['a graph with no folderPositions key', stateMessageOf(WITHOUT_FOLDER_POSITIONS)],
+      ['a graph with no tasks key', stateMessageOf(WITHOUT_TASKS)],
+      ['a graph with string tasks', stateMessageOf({ ...GRAPH, tasks: 'x' })],
+      ['a graph with a null task', stateMessageOf({ ...GRAPH, tasks: [null] })],
+      ['a graph with a numeric task id', graphWithTaskOf({ id: 1 })],
+      ['a graph with a task with no packageName', graphWithTaskOf({ packageName: undefined })],
+      ['a graph with a numeric task command', graphWithTaskOf({ command: 7 })],
+      ['a graph with a string isRunnable', graphWithTaskOf({ isRunnable: 'yes' })],
+      ['a graph with a numeric task dependency', graphWithTaskOf({ dependencies: [1] })],
+      ['a runs message with string runs', runsMessageOf('x')],
+      ['a runs message with null runs', runsMessageOf(null)],
+      ['a runs message with an array of runs', runsMessageOf([])],
+      ['a runs message with an unknown run state', runsMessageOf({ 'app#build': 'busy' })],
+      ['a runs message with a numeric run state', runsMessageOf({ 'app#build': 5 })],
+      ['a showTasks message with a string taskIds', { type: 'showTasks', taskIds: 'a' }],
+      ['a showTasks message with a numeric task id', { type: 'showTasks', taskIds: [1] }],
+      ['a showTasks message with no taskIds', { type: 'showTasks' }]
     ])('WHEN it is %s THEN it is rejected', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 

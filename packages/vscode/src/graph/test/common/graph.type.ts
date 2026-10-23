@@ -27,4 +27,5 @@ export type GraphHostFakes = {
   readonly writeBytes: Mock<GraphHost['writeBytes']>;
   readonly showInfo: Mock<GraphHost['showInfo']>;
   readonly showError: Mock<GraphHost['showError']>;
+  readonly executeCommand: Mock<GraphHost['executeCommand']>;
 };

@@ -1,4 +1,4 @@
-import type { GraphState, Positions } from './graph-state.type.ts';
+import type { GraphRunState, GraphState, Positions } from './graph-state.type.ts';
 
 /** The `package.json` field that holds a dependency entry. */
 export type ManifestField = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
@@ -49,8 +49,19 @@ export type GraphEdgeExplainedMessage = {
   readonly result: EdgeExplainResult;
 };
 
+export type GraphRunsMessage = {
+  readonly type: 'runs';
+  readonly runs: Readonly<Record<string, GraphRunState>>;
+};
+
+/** Asks the page to show these tasks in task mode. */
+export type GraphShowTasksMessage = {
+  readonly type: 'showTasks';
+  readonly taskIds: string[];
+};
+
 /** Host to webview. */
-export type GraphHostMessage = GraphStateMessage | GraphEdgeExplainedMessage;
+export type GraphHostMessage = GraphStateMessage | GraphEdgeExplainedMessage | GraphRunsMessage | GraphShowTasksMessage;
 
 type GraphReadyMessage = { readonly type: 'ready' };
 
@@ -96,6 +107,17 @@ type GraphExportImageMessage = {
   readonly png: string;
 };
 
+type GraphRunTaskMessage = {
+  readonly type: 'runTask';
+  readonly taskId: string;
+  readonly noCache: boolean;
+};
+
+type GraphStopTaskMessage = {
+  readonly type: 'stopTask';
+  readonly taskId: string;
+};
+
 /** Webview to host. The webview is a trust boundary: the host validates every message. */
 export type GraphWebviewMessage =
   | GraphReadyMessage
@@ -105,4 +127,6 @@ export type GraphWebviewMessage =
   | GraphLayoutDoneMessage
   | GraphExplainEdgeMessage
   | GraphOpenManifestMessage
-  | GraphExportImageMessage;
+  | GraphExportImageMessage
+  | GraphRunTaskMessage
+  | GraphStopTaskMessage;

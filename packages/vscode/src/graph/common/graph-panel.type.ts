@@ -6,7 +6,7 @@ import type { GraphPorts } from './graph.type.ts';
 import type { PanelKey } from '../../details/common/details.type.ts';
 import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
-import type { Disposed } from '../../run/common/run.type.ts';
+import type { Disposed, Runs } from '../../run/common/run.type.ts';
 import type { GraphApi } from '../../shared/common/api.type.ts';
 import type { EditorPanelView } from '../../shared/common/panel-view.type.ts';
 
@@ -16,7 +16,7 @@ export type GraphStore = {
   readonly update: (key: string, value: GraphLayoutCacheEntry) => PromiseLike<void>;
 };
 
-/** Editor effects of the graph registry. `open` throws, with no panel left behind, when the page cannot be built; `pickSaveUri` and `writeBytes` may reject; `log`, `info`, `showInfo` and `showError` never throw. */
+/** Editor effects of the graph registry. `open` throws, with no panel left behind, when the page cannot be built; `pickSaveUri`, `writeBytes` and `executeCommand` may reject; `log`, `info`, `showInfo` and `showError` never throw. */
 export type GraphHost = {
   readonly open: (title: string) => EditorPanelView<GraphHostMessage>;
   readonly readCache: GraphPorts['readCache'];
@@ -29,6 +29,7 @@ export type GraphHost = {
   readonly writeBytes: GraphPorts['writeBytes'];
   readonly showInfo: GraphPorts['showInfo'];
   readonly showError: GraphPorts['showError'];
+  readonly executeCommand: GraphPorts['executeCommand'];
 };
 
 /** `setPanelVisible` is `RootsSession.setPanelVisible`; only a session's port closure calls it. */
@@ -37,6 +38,7 @@ export type GraphPanelsDeps = {
   readonly host: GraphHost;
   readonly setPanelVisible: (root: string, panelId: string, visible: boolean) => void;
   readonly openDetails: (key: PanelKey) => Promise<void>;
+  readonly runs: Runs;
 };
 
 /** What the registry and the test API ask of a panel's `GraphSession`. */

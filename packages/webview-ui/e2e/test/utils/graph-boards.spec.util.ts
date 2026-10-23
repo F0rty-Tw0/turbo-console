@@ -56,7 +56,8 @@ export const boardsState = (): GraphReady => {
     packages,
     edges: BOARDS_EDGES,
     positions: null,
-    folderPositions: null
+    folderPositions: null,
+    tasks: []
   };
 
   return state;
@@ -95,6 +96,7 @@ export const rootFoldersState = (): GraphReady => {
   ];
   const state: GraphReady = {
     kind: 'graph',
+    tasks: [],
     hash: 'f01d0010',
     packages: [packageOf('r', 'r'), packageOf('p', '(root)/p'), packageOf('b', 'apps/b')],
     edges,
@@ -117,6 +119,7 @@ export const protoFolderState = (): GraphReady => {
   ];
   const state: GraphReady = {
     kind: 'graph',
+    tasks: [],
     hash: 'f01d0011',
     packages: [packageOf('a', '__proto__/a'), packageOf('b', 'x/b'), packageOf('constructor', 'x/constructor')],
     edges,
@@ -140,6 +143,7 @@ export const threeFoldersState = (): GraphReady => {
   ];
   const state: GraphReady = {
     kind: 'graph',
+    tasks: [],
     hash: 'f01d0012',
     packages: [packageOf('a', 'f1/a'), packageOf('c', 'f1/c'), packageOf('b', 'f2/b'), packageOf('d', 'f3/d')],
     edges,

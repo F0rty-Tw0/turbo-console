@@ -25,6 +25,8 @@ export type {
   EdgeExplainResult,
   GraphEdgeExplainedMessage,
   GraphHostMessage,
+  GraphRunsMessage,
+  GraphShowTasksMessage,
   GraphStateMessage,
   GraphWebviewMessage,
   LayoutGrouping,
@@ -33,7 +35,16 @@ export type {
   ManifestField
 } from './bridge/common/graph-message.type.ts';
 
-export type { GraphEdge, GraphPackage, GraphReady, GraphState, Position, Positions } from './bridge/common/graph-state.type.ts';
+export type {
+  GraphEdge,
+  GraphPackage,
+  GraphReady,
+  GraphRunState,
+  GraphState,
+  GraphTask,
+  Position,
+  Positions
+} from './bridge/common/graph-state.type.ts';
 
 export type { GraphViewState } from './bridge/common/graph-view-state.type.ts';
 

@@ -9,6 +9,7 @@ import { copyGraphPageRoot } from './test/utils/page-root.spec.util.ts';
 import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
 import { RootStore } from '../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../roots/test/mocks/coordinator.mock.ts';
+import { RunStore } from '../run/domain-logic/run-store.ts';
 import type { Output } from '../shared/common/output.type.ts';
 import type { PageRoot } from '../shared/test/common/page-root.type.ts';
 import type { PanelFake, UriFake } from '../shared/test/common/vscode-fakes.type.ts';
@@ -116,7 +117,7 @@ describe('FEATURE: the graph wiring', () => {
     editor.createWebviewPanel.mockImplementation(createPanel);
     editor.showErrorMessage.mockReset();
     editor.showErrorMessage.mockResolvedValue(undefined);
-    graph = createGraph(contextOf(page), session, details, output);
+    graph = createGraph(contextOf(page), session, details, output, new RunStore());
   });
 
   afterEach(() => {
