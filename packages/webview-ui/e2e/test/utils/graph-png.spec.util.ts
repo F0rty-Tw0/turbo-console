@@ -1,4 +1,4 @@
-import type { PngInfo } from '../../common/graph.type.ts';
+import type { PngInfo, TitleBandInk } from '../../common/graph.type.ts';
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
@@ -23,4 +23,45 @@ export const pngInfoOf = (base64: string): PngInfo => {
   const info: PngInfo = { isPng, width, height };
 
   return info;
+};
+
+/**
+ * Runs in the page: decodes a base64 PNG exported at scale 2 and counts its ink, pixels 64 or more off the top-left
+ * background in some channel, in rows 8 to 55 of the 64 px top padding band of a box at the image top; `nearSides`
+ * counts the ink within 32 px of the left or right edge, `inside` the rest.
+ */
+export const titleBandInkOf = async (png: string): Promise<TitleBandInk> => {
+  const BAND_TOP = 8;
+  const BAND_END = 56;
+  const SIDE_PX = 32;
+  const INK_DIFF = 64;
+  const CHANNELS = [0, 1, 2];
+  const charCodeOf = (char: string): number => char.charCodeAt(0);
+  const bytes = Uint8Array.from(atob(png), charCodeOf);
+  const blob = new Blob([bytes], { type: 'image/png' });
+  const image = await createImageBitmap(blob);
+  const canvas = new OffscreenCanvas(image.width, image.height);
+  const context = canvas.getContext('2d');
+
+  if (context === null) throw new Error('No 2D context to decode the PNG');
+
+  context.drawImage(image, 0, 0);
+
+  const { data, width } = context.getImageData(0, 0, image.width, BAND_END);
+  const columns = Array.from({ length: width }, (_, x: number): number => x);
+  const rows = Array.from({ length: BAND_END - BAND_TOP }, (_, index: number): number => BAND_TOP + index);
+  const channelOff = (offset: number, channel: number): boolean =>
+    Math.abs((data[offset + channel] ?? 0) - (data[channel] ?? 0)) >= INK_DIFF;
+  const isInk = (x: number, y: number): boolean => {
+    const offset = (y * width + x) * 4;
+
+    return CHANNELS.some((channel: number): boolean => channelOff(offset, channel));
+  };
+  const inkOfRow = (y: number): number[] => columns.filter((x: number): boolean => isInk(x, y));
+  const inkColumns = rows.flatMap(inkOfRow);
+  const isNearSide = (x: number): boolean => x < SIDE_PX || x >= width - SIDE_PX;
+  const nearSides = inkColumns.filter(isNearSide).length;
+  const ink: TitleBandInk = { inside: inkColumns.length - nearSides, nearSides };
+
+  return ink;
 };

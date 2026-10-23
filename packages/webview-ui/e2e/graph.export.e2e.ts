@@ -1,6 +1,7 @@
 import type { PngBounds } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
+import { WIDE_TITLE_STUB } from './test/stubs/graph-export.stub.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
@@ -87,6 +88,42 @@ test.describe('FEATURE: graph export image', () => {
 
       await test.step('THEN one exportImage is posted, a PNG with each side 1 to 4096 px', async (): Promise<void> =>
         graphExport.expectOnePng(ANY_SIDE));
+    }
+  );
+
+  test(
+    'GIVEN the controls graph grouped into boxes, WHEN Export image is pressed, THEN the top box shows its title inside its frame',
+    { annotation: AC5 },
+    async ({ graphExport, graphHost, graphPage, graphProbe }): Promise<void> => {
+      await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
+        graphPage.open({ savedState: groupedSavedState(CONTROLS_CACHED_STUB.hash) }));
+
+      await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('AND the grouped layout has finished', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
+
+      await test.step('AND Export image is pressed', async (): Promise<void> => graphExport.press());
+
+      await test.step('THEN the top box title is drawn in its top padding band', async (): Promise<void> =>
+        graphExport.expectTopTitleDrawn());
+    }
+  );
+
+  test(
+    'GIVEN a folder title wider than its box, WHEN Export image is pressed, THEN the title is cut short of the image sides',
+    { annotation: AC5 },
+    async ({ graphExport, graphHost, graphPage, graphProbe }): Promise<void> => {
+      await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
+        graphPage.open({ savedState: groupedSavedState(WIDE_TITLE_STUB.hash) }));
+
+      await test.step('AND the wide-title graph is sent', async (): Promise<void> => graphHost.sendState(WIDE_TITLE_STUB));
+
+      await test.step('AND the grouped layout has finished', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
+
+      await test.step('AND Export image is pressed', async (): Promise<void> => graphExport.press());
+
+      await test.step('THEN the title is drawn in the top padding band, clear of both image sides', async (): Promise<void> =>
+        graphExport.expectTopTitleClearOfSides());
     }
   );
 

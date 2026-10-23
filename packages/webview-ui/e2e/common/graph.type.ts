@@ -168,6 +168,12 @@ export type PngBounds = {
   readonly maxHeight: number;
 };
 
+/** Ink pixels in the title band of a box at the top of an exported PNG: between the side margins, and within them. */
+export type TitleBandInk = {
+  readonly inside: number;
+  readonly nearSides: number;
+};
+
 /** The hash and the sorted package names of a `positions` message; `hash` is `undefined` before one is posted. */
 export type PostedPositions = {
   readonly hash: string | undefined;

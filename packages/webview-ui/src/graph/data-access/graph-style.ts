@@ -1,4 +1,4 @@
-import type { Css, StylesheetJson } from 'cytoscape';
+import type { Css, NodeSingular, StylesheetJson } from 'cytoscape';
 
 import {
   COLLAPSED_LABEL_MAX_PX,
@@ -50,8 +50,25 @@ const folderLinkStyleOf = (colors: ThemeColors, fontFamily: string): Css.Edge =>
 
 const HIDDEN = { display: 'none' } as const;
 
-/** What `exportPngOf` adds to a box while it runs: its folder title above the frame, which the page never shows. */
-const EXPORTING_BOX = { label: 'data(title)', 'text-valign': 'top', 'text-halign': 'center' } as const;
+/** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
+const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
+
+/** A box's width without its padding, so its title ends a padding short of each side of the frame. */
+const titleWidthOf = (box: NodeSingular): string => `${box.width()}px`;
+
+/**
+ * What `exportPngOf` adds to a box while it runs: its folder title centred in the top padding band, inside the frame,
+ * cut with an ellipsis when wider than the box; the page never shows it. `cy.png` bounds skip the title, so outside
+ * the frame it would be cut off at the image edge.
+ */
+const EXPORTING_BOX = {
+  label: 'data(title)',
+  'text-valign': 'top',
+  'text-halign': 'center',
+  'text-margin-y': TITLE_MARGIN_Y,
+  'text-wrap': 'ellipsis',
+  'text-max-width': titleWidthOf
+} as const;
 
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with
