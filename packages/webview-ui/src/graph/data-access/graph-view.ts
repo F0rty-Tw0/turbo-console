@@ -3,6 +3,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 
 import { setBoxes } from './graph-boxes.ts';
 import { anchorBoxOf, panBy } from './graph-camera.ts';
+import { exportPngOf } from './graph-export.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
@@ -126,6 +127,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),
+    exportPng: (bg: string): string => exportPngOf(cy, bg, window.devicePixelRatio),
     cy: (): Core => cy
   };
 

@@ -3,6 +3,7 @@ import type { Css, StylesheetJson } from 'cytoscape';
 import {
   COLLAPSED_LABEL_MAX_PX,
   DIMMED_BOX_CLASS,
+  EXPORTING_CLASS,
   FOLDER_HIDDEN_CLASS,
   FOLDER_LINK_CLASS,
   FOLDER_NODE_CLASS,
@@ -47,6 +48,11 @@ const folderLinkStyleOf = (colors: ThemeColors, fontFamily: string): Css.Edge =>
   return folderLink;
 };
 
+const HIDDEN = { display: 'none' } as const;
+
+/** What `exportPngOf` adds to a box while it runs: its folder title above the frame, which the page never shows. */
+const EXPORTING_BOX = { label: 'data(title)', 'text-valign': 'top', 'text-halign': 'center' } as const;
+
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with
  * a triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies;
@@ -85,10 +91,10 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
   const dimmed = { opacity: 0.25 };
   const folderNode = { label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px` } as const;
   const dimmedBox = { 'border-opacity': 0.25, 'text-opacity': 0.25, 'background-opacity': 0.25 };
-  const hidden = { display: 'none' } as const;
   const style: StylesheetJson = [
     { selector: 'node', style: node },
     { selector: 'node:parent', style: boxStyleOf(colors) },
+    { selector: `node:parent.${EXPORTING_CLASS}`, style: EXPORTING_BOX },
     { selector: 'edge', style: edge },
     { selector: 'node.selected', style: selectedNode },
     { selector: 'node.highlighted', style: highlightedNode },
@@ -100,7 +106,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
     { selector: `node.${FOLDER_NODE_CLASS}`, style: folderNode },
     { selector: `edge.${FOLDER_LINK_CLASS}`, style: folderLinkStyleOf(colors, fontFamily) },
     { selector: `node.${DIMMED_BOX_CLASS}`, style: dimmedBox },
-    { selector: `.${FOLDER_HIDDEN_CLASS}`, style: hidden }
+    { selector: `.${FOLDER_HIDDEN_CLASS}`, style: HIDDEN }
   ];
 
   return style;

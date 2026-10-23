@@ -115,6 +115,16 @@ describe('FEATURE: setBoxes', () => {
     });
   });
 
+  describe('GIVEN three folder groups with titles', () => {
+    it('WHEN the boxes are set THEN each box carries its folder title as data', () => {
+      setBoxes(cy, BOX_GROUPS_STUB);
+
+      const titles = BOX_IDS.map((id: string): unknown => cy.getElementById(id).data('title'));
+
+      expect(titles).toStrictEqual(['(root)', 'apps', 'packages']);
+    });
+  });
+
   describe('GIVEN the apps box', () => {
     it('WHEN the style applies THEN it has 32 px padding, no label and the 1 px frame colour', () => {
       setBoxes(cy, BOX_GROUPS_STUB);

@@ -130,6 +130,8 @@ export type GraphView = {
   readonly applyTheme: (colors: ThemeColors) => void;
   /** The drawn folder boxes and collapsed nodes, and the `selected` package while drawn, in container px. */
   readonly widgetRects: (selected: string | null) => WidgetRects;
+  /** The whole graph as a PNG, base64 with no data-URI prefix, folder titles drawn on the boxes; throws when the canvas cannot render it. */
+  readonly exportPng: (bg: string) => string;
   /** For the test probe only. */
   readonly cy: () => Core;
 };

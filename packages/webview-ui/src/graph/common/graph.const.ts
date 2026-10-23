@@ -122,6 +122,15 @@ export const DIMMED_BOX_CLASS = 'dimmed-box';
 /** Room ELK leaves around a folder's packages, and Cytoscape's compound padding, in px. */
 export const FOLDER_PADDING_PX = 32;
 
+/** The class `exportPngOf` gives every folder box while `cy.png` runs, so the stylesheet draws the box titles into the image. */
+export const EXPORTING_CLASS = 'exporting';
+
+/** Longest side of an exported image, in px. */
+export const EXPORT_MAX_PX = 4096;
+
+/** Most the export enlarges the graph, so a small graph is not blown up to a blurry image. */
+export const EXPORT_MAX_SCALE = 2;
+
 /** The border of a package, folder box or collapsed node while neither selected nor highlighted, in px. */
 export const NODE_BORDER_PX = 1;
 
