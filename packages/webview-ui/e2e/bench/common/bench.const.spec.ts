@@ -43,18 +43,18 @@ describe('FEATURE: bench rows', () => {
   });
 
   describe('GIVEN the table samples', () => {
-    it('WHEN they are listed THEN each row keeps its planned count', () => {
+    it('WHEN they are listed THEN each row keeps the count the A/A check ran with', () => {
       const samples = ROWS.map((row): number => row.samples);
 
       expect(samples).toStrictEqual([7, 7, 5, 5, 3, 3, 3]);
     });
   });
 
-  describe('GIVEN the three large rows', () => {
-    it('WHEN their gates are read THEN none is gated (roadmap Decision 8)', () => {
-      const gates = [BENCH_ROWS.openColdLarge.gate, BENCH_ROWS.panCpuLarge.gate, BENCH_ROWS.toggleLarge.gate];
+  describe('GIVEN the table gates', () => {
+    it('WHEN they are listed THEN the A/A-checked target-like rows gate and the large rows do not (roadmap Decision 8)', () => {
+      const gates = ROWS.map((row): boolean => row.gate);
 
-      expect(gates).toStrictEqual([false, false, false]);
+      expect(gates).toStrictEqual([true, true, true, true, false, false, false]);
     });
   });
 
