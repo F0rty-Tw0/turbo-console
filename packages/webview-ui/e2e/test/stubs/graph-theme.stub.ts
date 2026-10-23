@@ -1,7 +1,7 @@
 import type { ExpectedThemeColors, ThemeStub } from '../../common/graph.type.ts';
 
 const DARK_VARS: Readonly<Record<string, string>> = {
-  '--vscode-editor-background': '#1f1f1f',
+  '--vscode-editor-background': '#1f1f20',
   '--vscode-foreground': '#cccccc',
   '--vscode-panel-border': '#2b2b2b',
   '--vscode-descriptionForeground': '#9d9d9d',
