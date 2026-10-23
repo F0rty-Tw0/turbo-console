@@ -9,6 +9,19 @@ import type { GraphHost } from '../../common/graph-panel.type.ts';
 import { cacheKeyOf } from '../../utils/graph-cache.util.ts';
 import type { GraphHostFakes } from '../common/graph.type.ts';
 
+type MemoryCache = Pick<GraphHost, 'readCache' | 'writeCache'>;
+
+const memoryCacheOf = (cached: Map<string, GraphLayoutCacheEntry>): MemoryCache => {
+  const readCache = (root: string, grouping: LayoutGrouping): GraphLayoutCacheEntry | null =>
+    cached.get(cacheKeyOf(root, grouping)) ?? null;
+  const writeCache = (root: string, grouping: LayoutGrouping, entry: GraphLayoutCacheEntry): void => {
+    cached.set(cacheKeyOf(root, grouping), entry);
+  };
+  const memory: MemoryCache = { readCache, writeCache };
+
+  return memory;
+};
+
 /** Every host effect a spy; `open` hands out shown views and the layout caches are an in-memory map keyed by `cacheKeyOf`. */
 export const graphHostMock = (): GraphHostFakes => {
   const views: ViewFake<GraphHostMessage>[] = [];
@@ -21,17 +34,42 @@ export const graphHostMock = (): GraphHostFakes => {
     return fake.view;
   };
   const open = vi.fn<GraphHost['open']>(openView);
-  const readCache = (root: string, grouping: LayoutGrouping): GraphLayoutCacheEntry | null =>
-    cached.get(cacheKeyOf(root, grouping)) ?? null;
-  const writeCache = (root: string, grouping: LayoutGrouping, entry: GraphLayoutCacheEntry): void => {
-    cached.set(cacheKeyOf(root, grouping), entry);
-  };
+  const { readCache, writeCache } = memoryCacheOf(cached);
   const readText = vi.fn<GraphHost['readText']>();
   const openAt = vi.fn<GraphHost['openAt']>();
   const log = vi.fn<GraphHost['log']>();
   const info = vi.fn<GraphHost['info']>();
-  const host: GraphHost = { open, readCache, writeCache, readText, openAt, log, info };
-  const fakes: GraphHostFakes = { host, open, views, cached, readText, openAt, log, info };
+  const pickSaveUri = vi.fn<GraphHost['pickSaveUri']>().mockResolvedValue(null);
+  const writeBytes = vi.fn<GraphHost['writeBytes']>().mockResolvedValue(undefined);
+  const showInfo = vi.fn<GraphHost['showInfo']>();
+  const showError = vi.fn<GraphHost['showError']>();
+  const host: GraphHost = {
+    open,
+    readCache,
+    writeCache,
+    readText,
+    openAt,
+    log,
+    info,
+    pickSaveUri,
+    writeBytes,
+    showInfo,
+    showError
+  };
+  const fakes: GraphHostFakes = {
+    host,
+    open,
+    views,
+    cached,
+    readText,
+    openAt,
+    log,
+    info,
+    pickSaveUri,
+    writeBytes,
+    showInfo,
+    showError
+  };
 
   return fakes;
 };
