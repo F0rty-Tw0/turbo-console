@@ -43,6 +43,22 @@ describe('FEATURE: bench results', () => {
     });
   });
 
+  describe('GIVEN gated samples of one row', () => {
+    it('WHEN rows are built THEN the row is gated', () => {
+      const samples = [sample('a', 1, true), sample('a', 2, true)];
+
+      const rows = resultsOf(samples);
+
+      expect(rows.map((row) => row.gate)).toStrictEqual([true]);
+    });
+
+    it('WHEN the row has one sample THEN the row is gated', () => {
+      const rows = resultsOf([sample('a', 1, true)]);
+
+      expect(rows.map((row) => row.gate)).toStrictEqual([true]);
+    });
+  });
+
   describe('GIVEN one name with two gate values', () => {
     it('WHEN rows are built THEN it throws naming the row', () => {
       const samples = [sample('a', 1, true), sample('a', 2, false)];
