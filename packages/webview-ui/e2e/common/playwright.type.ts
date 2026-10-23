@@ -11,7 +11,7 @@ export type ViewportPoint = {
   readonly y: number;
 };
 
-/** A synthetic camera input at `point`: wheel lines to zoom by. */
+/** A synthetic camera input at `point`: wheel lines to zoom by, or px to drag right by. */
 export type SyntheticMove = {
   readonly point: ViewportPoint;
   readonly amount: number;

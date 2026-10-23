@@ -5,7 +5,7 @@ import { GraphMenusPage } from './graph-menus.po.ts';
 import { SEARCH_LABEL } from '../../src/graph/common/graph.const.ts';
 import { packageActionsLabelOf } from '../../src/graph/utils/controls-text.util.ts';
 import type { SyntheticMove, ViewportPoint } from '../common/playwright.type.ts';
-import { wheelLinesAt } from '../test/utils/graph-camera-events.spec.util.ts';
+import { mouseDragAt, wheelLinesAt } from '../test/utils/graph-camera-events.spec.util.ts';
 import { ellipsisNameOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** Wheel lines that zoom out by 2/3 in one Cytoscape step: `10^(−33 · (4/3) / 250)` ≈ 0.667. */
@@ -23,6 +23,13 @@ export class GraphMenuPaths extends GraphMenusPage {
     const move: SyntheticMove = { point, amount: TWO_THIRDS_LINES };
 
     await this.container.evaluate(wheelLinesAt, move);
+  }
+
+  /** Pans `dx` px right from `point` by mouse events alone, so the zoom stays and no press closes the menu. */
+  public async panWithoutPress(point: ViewportPoint, dx: number): Promise<void> {
+    const move: SyntheticMove = { point, amount: dx };
+
+    await this.container.evaluate(mouseDragAt, move);
   }
 
   public async focusSearch(): Promise<void> {

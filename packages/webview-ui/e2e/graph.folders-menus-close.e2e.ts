@@ -83,6 +83,31 @@ test.describe('FEATURE: folder widget menu closing', () => {
   );
 
   test(
+    'GIVEN the apps menu open, a pan that keeps the zoom closes it',
+    { annotation: C9 },
+    async ({ graphCamera, graphFolderInspect, graphGrouping, graphMenus }): Promise<void> => {
+      await test.step('WHEN the grouped boards open and the apps menu opens', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphMenus.openFolderMenu('apps');
+        await graphCamera.rememberCamera();
+      });
+
+      await test.step('AND the canvas is panned 40 px right by mouse events alone', async (): Promise<void> => {
+        const spot = await graphGrouping.freeSpot();
+
+        await graphMenus.panWithoutPress(spot, 40);
+      });
+
+      await test.step('THEN the camera moved with the zoom unchanged', async (): Promise<void> => {
+        await graphCamera.expectCameraMoved();
+        await graphCamera.expectZoomUnchanged();
+      });
+
+      await test.step('AND the menu is gone', async (): Promise<void> => graphMenus.expectNoMenu());
+    }
+  );
+
+  test(
     'GIVEN focus in the search box, Shift+F10 leaves the native context menu alone',
     { annotation: C9 },
     async ({ graphFolderInspect, graphMenus }): Promise<void> => {
