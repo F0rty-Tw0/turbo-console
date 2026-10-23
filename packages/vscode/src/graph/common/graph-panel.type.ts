@@ -16,7 +16,7 @@ export type GraphStore = {
   readonly update: (key: string, value: GraphLayoutCacheEntry) => PromiseLike<void>;
 };
 
-/** Editor effects of the graph registry. `open` throws, with no panel left behind, when the page cannot be built; `pickSaveUri` and `writeBytes` may reject; `log`, `info`, `showInfo` and `showError` never throw. */
+/** Editor effects of the graph registry. `open` throws, with no panel left behind, when the page cannot be built; `pickSaveUri`, `writeBytes` and `executeCommand` may reject; `log`, `info`, `showInfo` and `showError` never throw. */
 export type GraphHost = {
   readonly open: (title: string) => EditorPanelView<GraphHostMessage>;
   readonly readCache: GraphPorts['readCache'];
@@ -29,6 +29,7 @@ export type GraphHost = {
   readonly writeBytes: GraphPorts['writeBytes'];
   readonly showInfo: GraphPorts['showInfo'];
   readonly showError: GraphPorts['showError'];
+  readonly executeCommand: GraphPorts['executeCommand'];
 };
 
 /** `setPanelVisible` is `RootsSession.setPanelVisible`; only a session's port closure calls it. */

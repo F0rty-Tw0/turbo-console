@@ -12,6 +12,7 @@ export const graphPortsMock = (cached: Map<string, GraphLayoutCacheEntry> = new 
   const openAt = vi.fn<GraphPorts['openAt']>().mockResolvedValue(undefined);
   const pickSaveUri = vi.fn<GraphPorts['pickSaveUri']>().mockResolvedValue(null);
   const writeBytes = vi.fn<GraphPorts['writeBytes']>().mockResolvedValue(undefined);
+  const executeCommand = vi.fn<GraphPorts['executeCommand']>().mockResolvedValue(undefined);
   const ports: GraphPorts = {
     post: vi.fn(),
     readCache: vi.fn(readCache),
@@ -25,7 +26,8 @@ export const graphPortsMock = (cached: Map<string, GraphLayoutCacheEntry> = new 
     pickSaveUri,
     writeBytes,
     showInfo: vi.fn(),
-    showError: vi.fn()
+    showError: vi.fn(),
+    executeCommand
   };
 
   return ports;

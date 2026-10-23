@@ -44,6 +44,7 @@ export const graphHostMock = (): GraphHostFakes => {
   const writeBytes = vi.fn<GraphHost['writeBytes']>().mockResolvedValue(undefined);
   const showInfo = vi.fn<GraphHost['showInfo']>();
   const showError = vi.fn<GraphHost['showError']>();
+  const executeCommand = vi.fn<GraphHost['executeCommand']>().mockResolvedValue(undefined);
   const host: GraphHost = {
     open,
     readCache,
@@ -55,7 +56,8 @@ export const graphHostMock = (): GraphHostFakes => {
     pickSaveUri,
     writeBytes,
     showInfo,
-    showError
+    showError,
+    executeCommand
   };
   const fakes: GraphHostFakes = {
     host,
@@ -69,7 +71,8 @@ export const graphHostMock = (): GraphHostFakes => {
     pickSaveUri,
     writeBytes,
     showInfo,
-    showError
+    showError,
+    executeCommand
   };
 
   return fakes;

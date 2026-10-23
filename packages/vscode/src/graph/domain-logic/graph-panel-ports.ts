@@ -35,7 +35,8 @@ export const graphPortsOf = (
     pickSaveUri: host.pickSaveUri,
     writeBytes: host.writeBytes,
     showInfo: host.showInfo,
-    showError: host.showError
+    showError: host.showError,
+    executeCommand: host.executeCommand
   };
 
   return ports;

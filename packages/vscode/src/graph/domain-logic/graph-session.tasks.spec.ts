@@ -5,8 +5,8 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { portsWith } from '../test/utils/graph-session.spec.util.ts';
 
-describe('FEATURE: graph session task messages before the run wiring', () => {
-  describe('GIVEN a session on /ws', () => {
+describe('FEATURE: graph session task messages without a loaded root', () => {
+  describe('GIVEN a session on /ws with no graph state yet', () => {
     it.each([[{ type: 'runTask', taskId: 'a#build', noCache: false }], [{ type: 'stopTask', taskId: 'a#build' }]])(
       'WHEN %j arrives THEN it is dropped and logged',
       async (raw) => {

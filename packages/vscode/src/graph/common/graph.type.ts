@@ -6,7 +6,7 @@ import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 /**
  * Editor effects of one graph panel. `openDetails` and `openAt` may reject; `readText` rejects on a file it cannot open and gives
  * `null` for one over the read cap; `pickSaveUri` gives the chosen path or `null` on a cancel and may reject, as may `writeBytes`;
- * `log` (failures), `info`, `showInfo` and `showError` take one clean line and must not throw.
+ * `executeCommand` runs a registered command and may reject; `log` (failures), `info`, `showInfo` and `showError` take one clean line and must not throw.
  */
 export type GraphPorts = {
   readonly post: (message: GraphHostMessage) => void;
@@ -22,6 +22,7 @@ export type GraphPorts = {
   readonly writeBytes: (path: string, bytes: Uint8Array) => Promise<void>;
   readonly showInfo: (text: string) => void;
   readonly showError: (text: string) => void;
+  readonly executeCommand: (command: string, arg: unknown) => Promise<void>;
 };
 
 type PositionsTag = { readonly type: 'positions' };
@@ -41,11 +42,17 @@ type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopT
 /** A page request the session answers from the state it builds now: a reload, a package's details or a task run or stop. */
 export type GraphRequestMessage = Extract<GraphWebviewMessage, RequestTag>;
 
-/** What a request is judged against: the state built now, the root's coordinator and the ports a request may use. */
+type RunTag = { readonly type: 'runTask' | 'stopTask' };
+
+/** A page request to run or stop one task of the graph. */
+export type GraphRunRequest = Extract<GraphWebviewMessage, RunTag>;
+
+/** What a request is judged against: the state built now, the root, its coordinator and the ports a request may use. */
 export type RequestContext = {
   readonly state: GraphState;
+  readonly root: string;
   readonly coordinator: Pick<Coordinator, 'request'> | undefined;
-  readonly ports: Pick<GraphPorts, 'openDetails' | 'log'>;
+  readonly ports: Pick<GraphPorts, 'openDetails' | 'log' | 'executeCommand'>;
 };
 
 type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };

@@ -1,5 +1,6 @@
 import type { GraphPackage, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
+import { routeRun } from './graph-run-route.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { GraphPorts, GraphRequestMessage, RequestContext } from '../common/graph.type.ts';
@@ -47,7 +48,7 @@ async function openDetailsOf(
 
 /** `false` when the page asked for something the state does not allow; the session logs and drops that message. */
 export async function requestHandledOf(message: GraphRequestMessage, context: RequestContext): Promise<boolean> {
-  const { state, coordinator, ports } = context;
+  const { state, root, coordinator, ports } = context;
 
   switch (message.type) {
     case 'reload':
@@ -56,6 +57,6 @@ export async function requestHandledOf(message: GraphRequestMessage, context: Re
       return openDetailsOf(message.packageName, state, ports);
     case 'runTask':
     case 'stopTask':
-      return false;
+      return routeRun(message, state, ports, root);
   }
 }

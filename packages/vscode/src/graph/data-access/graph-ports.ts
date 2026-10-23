@@ -53,7 +53,10 @@ export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state:
     pickSaveUri,
     writeBytes,
     showInfo,
-    showError
+    showError,
+    executeCommand: async (command, arg) => {
+      await vscode.commands.executeCommand(command, arg);
+    }
   };
 
   return host;
