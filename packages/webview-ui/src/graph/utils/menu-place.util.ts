@@ -30,5 +30,7 @@ export const menuPlaceOf = (anchor: RectPx, menu: Size, area: RectPx): Point => 
 export const targetRectOf = (rects: WidgetRects, target: MenuTarget): RectPx | null => {
   if (target.kind === 'package') return rects.selected;
 
-  return rects.boxes.get(target.folder) ?? rects.collapsed.get(target.folder) ?? null;
+  const folder = rects.boxes.get(target.folder) ?? rects.collapsed.get(target.folder);
+
+  return folder?.rect ?? null;
 };

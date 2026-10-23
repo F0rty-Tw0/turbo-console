@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { widgetPlanOf } from './widget-plan.util.ts';
-import type { LayerBounds, RectPx, RowPlan, WidgetPlanInput, WidgetRects } from '../common/widget.type.ts';
+import type { FolderRect, LayerBounds, RectPx, RowPlan, WidgetPlanInput, WidgetRects } from '../common/widget.type.ts';
 
 const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
   const rect: RectPx = { x1, y1, x2, y2 };
@@ -9,11 +9,19 @@ const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
   return rect;
 };
 
+/** A drawn folder at `{x1, y1, x2, y2}`, its border-free width its rect's. */
+const folderOf = (x1: number, y1: number, x2: number, y2: number): FolderRect => {
+  const rect = rectOf(x1, y1, x2, y2);
+  const folder: FolderRect = { rect, width: x2 - x1 };
+
+  return folder;
+};
+
 const BOUNDS: LayerBounds = { width: 1000, height: 600, overlayLeft: null };
 
-const APPS = rectOf(100, 50, 400, 300);
+const APPS = folderOf(100, 50, 400, 300);
 
-const PACKAGES = rectOf(500, 50, 800, 300);
+const PACKAGES = folderOf(500, 50, 800, 300);
 
 const NO_RECTS: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected: null, zoom: 1 };
 
@@ -65,7 +73,7 @@ describe('FEATURE: widgetPlanOf', () => {
 
   describe('GIVEN boxes the layer cannot show a row for', () => {
     it('WHEN a box is 119 px wide THEN it gets no row', () => {
-      const boxes = new Map([['apps', rectOf(100, 50, 219, 300)]]);
+      const boxes = new Map([['apps', folderOf(100, 50, 219, 300)]]);
 
       const plan = widgetPlanOf(inputOf({ boxes }));
 
@@ -73,7 +81,7 @@ describe('FEATURE: widgetPlanOf', () => {
     });
 
     it('WHEN a box lies wholly left of x = 0 THEN it gets no row', () => {
-      const boxes = new Map([['apps', rectOf(-400, 50, -100, 300)]]);
+      const boxes = new Map([['apps', folderOf(-400, 50, -100, 300)]]);
 
       const plan = widgetPlanOf(inputOf({ boxes }));
 
@@ -90,7 +98,7 @@ describe('FEATURE: widgetPlanOf', () => {
   });
 
   it('GIVEN a collapsed node 180 by 56 px WHEN planned THEN it gets a collapsed row 8 px below its top', () => {
-    const collapsed = new Map([['apps', rectOf(100, 100, 280, 156)]]);
+    const collapsed = new Map([['apps', folderOf(100, 100, 280, 156)]]);
 
     const plan = widgetPlanOf(inputOf({ collapsed }));
     const placement = { y: 108 };

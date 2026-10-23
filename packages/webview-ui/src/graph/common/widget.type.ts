@@ -8,6 +8,12 @@ export type RectPx = {
   readonly y2: number;
 };
 
+/** A drawn box or collapsed node: its rendered rect, and its rendered width without the border `selected` and `highlighted` thicken. */
+export type FolderRect = {
+  readonly rect: RectPx;
+  readonly width: number;
+};
+
 export type Point = {
   readonly x: number;
   readonly y: number;
@@ -61,8 +67,8 @@ export type RowButtonRects = {
 
 /** The drawn folder boxes and collapsed nodes by folder key, and the selected package while drawn; container px. */
 export type WidgetRects = {
-  readonly boxes: ReadonlyMap<string, RectPx>;
-  readonly collapsed: ReadonlyMap<string, RectPx>;
+  readonly boxes: ReadonlyMap<string, FolderRect>;
+  readonly collapsed: ReadonlyMap<string, FolderRect>;
   readonly selected: RectPx | null;
   /** The camera zoom the rects were read at. */
   readonly zoom: number;

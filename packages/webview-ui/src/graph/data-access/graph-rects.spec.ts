@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { setBoxes } from './graph-boxes.ts';
 import { widgetRectsOf } from './graph-rects.ts';
 import { showOnly } from './graph-visibility.ts';
-import { FOLDER_HIDDEN_CLASS, FOLDER_NODE_CLASS } from '../common/graph.const.ts';
-import type { RectPx } from '../common/widget.type.ts';
+import { FOLDER_HIDDEN_CLASS, FOLDER_NODE_CLASS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import type { FolderRect, RectPx } from '../common/widget.type.ts';
 import { boardsCyMock, groupedCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { PROTO_EDGES_STUB, PROTO_GROUPS_STUB, PROTO_POSITIONS_STUB } from '../test/stubs/folder-boards.stub.ts';
@@ -27,6 +27,13 @@ const addCollapsed = (cy: Core, folder: string): void => {
   cy.add({ data, position, classes: FOLDER_NODE_CLASS });
 };
 
+const NO_RECT: RectPx = { x1: Number.NaN, y1: Number.NaN, x2: Number.NaN, y2: Number.NaN };
+
+/** NaN edges and width in place of a missing apps box, so its rect never widens. */
+const NO_FOLDER: FolderRect = { rect: NO_RECT, width: Number.NaN };
+
+const appsOf = (cy: Core): FolderRect => widgetRectsOf(cy, null).boxes.get('apps') ?? NO_FOLDER;
+
 describe('FEATURE: widgetRectsOf', () => {
   describe('GIVEN the boards drawn grouped at zoom 0.5', () => {
     let cy: Core;
@@ -41,7 +48,26 @@ describe('FEATURE: widgetRectsOf', () => {
 
       const rects = widgetRectsOf(cy, null);
 
-      expect(rects.boxes.get('apps')).toStrictEqual(expected);
+      expect(rects.boxes.get('apps')?.rect).toStrictEqual(expected);
+    });
+
+    it('WHEN read THEN the apps width is its body and 32 px padding each side, drawn at the zoom, without its border', () => {
+      const box = cy.getElementById(folderIdOf('apps'));
+      const expected = (box.width() + 2 * FOLDER_PADDING_PX) * 0.5;
+
+      const rects = widgetRectsOf(cy, null);
+
+      expect(rects.boxes.get('apps')?.width).toBe(expected);
+    });
+
+    it.each(['selected', 'highlighted'])('WHEN the apps box is painted %s THEN its rect widens but its width stays', (state) => {
+      const before = appsOf(cy);
+
+      cy.getElementById(folderIdOf('apps')).addClass(state);
+      const after = appsOf(cy);
+
+      expect(after.rect.x2).toBeGreaterThan(before.rect.x2);
+      expect(after.width).toBe(before.width);
     });
 
     it('WHEN read THEN the rects carry the camera zoom they were read at', () => {
@@ -65,8 +91,20 @@ describe('FEATURE: widgetRectsOf', () => {
 
       const rects = widgetRectsOf(cy, null);
 
-      expect(rects.collapsed.get('packages')).toStrictEqual(expected);
+      expect(rects.collapsed.get('packages')?.rect).toStrictEqual(expected);
     });
+
+    it.each(['normal', 'selected', 'highlighted'])(
+      'WHEN packages is drawn as a collapsed node painted %s THEN its width is 180 px at zoom 0.5, without its border',
+      (state) => {
+        addCollapsed(cy, 'packages');
+        cy.getElementById(collapsedIdOf('packages')).addClass(state);
+
+        const rects = widgetRectsOf(cy, null);
+
+        expect(rects.collapsed.get('packages')?.width).toBe(90);
+      }
+    );
 
     it('WHEN web is selected THEN its rendered rect is the selected rect', () => {
       const expected = renderedRectOf(cy.getElementById('web'));

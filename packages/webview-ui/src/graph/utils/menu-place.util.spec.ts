@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { menuPlaceOf, targetRectOf, uncoveredAreaOf } from './menu-place.util.ts';
-import type { LayerBounds, MenuTarget, Point, RectPx, Size, WidgetRects } from '../common/widget.type.ts';
+import type { FolderRect, LayerBounds, MenuTarget, Point, RectPx, Size, WidgetRects } from '../common/widget.type.ts';
 
 const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
   const rect: RectPx = { x1, y1, x2, y2 };
@@ -93,14 +93,18 @@ const NODE = rectOf(400, 20, 580, 76);
 
 const SELECTED = rectOf(40, 60, 120, 90);
 
+const BOX_FOLDER: FolderRect = { rect: BOX, width: 290 };
+
+const NODE_FOLDER: FolderRect = { rect: NODE, width: 180 };
+
 const RECTS: WidgetRects = {
   boxes: new Map([
-    ['apps', BOX],
-    ['__proto__', BOX]
+    ['apps', BOX_FOLDER],
+    ['__proto__', BOX_FOLDER]
   ]),
   collapsed: new Map([
-    ['packages', NODE],
-    ['', NODE]
+    ['packages', NODE_FOLDER],
+    ['', NODE_FOLDER]
   ]),
   selected: SELECTED,
   zoom: 1

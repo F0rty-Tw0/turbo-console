@@ -1,7 +1,7 @@
 import type { Core, NodeCollection, NodeSingular } from 'cytoscape';
 
 import { FOLDER_NODE_CLASS } from '../common/graph.const.ts';
-import type { RectPx, WidgetRects } from '../common/widget.type.ts';
+import type { FolderRect, RectPx, WidgetRects } from '../common/widget.type.ts';
 import { folderOfElementId } from '../utils/folder-id.util.ts';
 
 const RENDERED_BOX = { includeLabels: false, includeOverlays: false };
@@ -13,15 +13,32 @@ const renderedRectOf = (node: NodeSingular): RectPx => {
   return rect;
 };
 
-/** The drawn nodes' rendered rects by folder key, in collection order. */
-const rectsByFolder = (nodes: NodeCollection): Map<string, RectPx> => {
-  const rects = new Map<string, RectPx>();
+/** The node's border width in graph px; Cytoscape types `numericStyle` as `any`. */
+const borderWidthOf = (node: NodeSingular): number => {
+  const width: unknown = node.numericStyle('border-width');
+
+  return typeof width === 'number' ? width : 0;
+};
+
+/** The rendered rect, and the rendered outer width less the border, so a `selected` or `highlighted` border leaves it alone. */
+const folderRectOf = (node: NodeSingular): FolderRect => {
+  const rect = renderedRectOf(node);
+  const zoom = node.cy().zoom();
+  const width = node.renderedOuterWidth() - borderWidthOf(node) * zoom;
+  const folderRect: FolderRect = { rect, width };
+
+  return folderRect;
+};
+
+/** The drawn nodes' folder rects by folder key, in collection order. */
+const rectsByFolder = (nodes: NodeCollection): Map<string, FolderRect> => {
+  const rects = new Map<string, FolderRect>();
 
   for (const node of nodes) {
     const folder = folderOfElementId(node.id());
     const isDrawn = node.visible();
 
-    if (folder !== null && isDrawn) rects.set(folder, renderedRectOf(node));
+    if (folder !== null && isDrawn) rects.set(folder, folderRectOf(node));
   }
 
   return rects;

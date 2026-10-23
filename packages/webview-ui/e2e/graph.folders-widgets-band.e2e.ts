@@ -17,6 +17,9 @@ const LONG_PAN: Position = { x: 400, y: 300 };
 /** Zoom 120/180: the 180 px collapsed node is drawn at the 120 px minimum, its row at scale 0.667. */
 const NODE_MIN_ZOOM = 0.667;
 
+/** The node's body is drawn 117 px wide, under the minimum, but its 3 px selected border draws its bounds 120.6 px wide. */
+const SELECTED_BORDER_ZOOM = 0.652;
+
 const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => savedWith(BOARDS.hash, overrides);
 
 const longCollapsedAt = (zoom: number): GraphViewState => {
@@ -96,6 +99,24 @@ test.describe('FEATURE: folder header rows in the box band', () => {
       await test.step('THEN its chevron and "…" sit on the node full size, clear of the widest title', async (): Promise<void> => {
         await graphWidgets.expectCollapsedRow(LONG_FOLDER);
         await graphWidgets.expectCollapsedClearOfLabel(LONG_FOLDER);
+      });
+    }
+  );
+
+  test(
+    'GIVEN a collapsed node drawn under 120 px wide at zoom 0.652, selecting it and thickening its border shows no buttons',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the page opens with the node collapsed at zoom 0.652', async (): Promise<void> =>
+        graphFolderInspect.open(longCollapsedAt(SELECTED_BORDER_ZOOM), LONG));
+
+      await test.step('THEN it shows no header button', async (): Promise<void> => graphWidgets.expectHeaderHidden(LONG_FOLDER));
+
+      await test.step('WHEN the node is tapped', async (): Promise<void> => graphFolderInspect.tapFolder(LONG_FOLDER));
+
+      await test.step('THEN it is selected and still shows no header button', async (): Promise<void> => {
+        await graphFolderInspect.expectFolderState(LONG_FOLDER, 'selected');
+        await graphWidgets.expectHeaderStaysHidden(LONG_FOLDER);
       });
     }
   );

@@ -1,5 +1,5 @@
 import { FOLDER_PADDING_PX, WIDGET_BUTTON_PX, WIDGET_INSET_PX, WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
-import type { LayerBounds, RectPx, RowButtonRects, RowKind, RowPlacement } from '../common/widget.type.ts';
+import type { FolderRect, LayerBounds, RectPx, RowButtonRects, RowKind, RowPlacement } from '../common/widget.type.ts';
 
 /** The room a box row keeps above and below its buttons inside the band, in px. */
 const BAND_MARGIN_PX = 2;
@@ -56,16 +56,15 @@ const collapsedRowOf = (box: RectPx, zoom: number): RowPlacement | null => {
 
 /**
  * The header row inside a box (scaled to its rendered band and centred in it) or a collapsed node (scaled with the
- * zoom, 8 px in); `null` while the box is under `WIDGET_MIN_BOX_PX` wide, or under the half-size floor at `zoom`.
+ * zoom, 8 px in), placed on its rect; `null` while its border-free width is under `WIDGET_MIN_BOX_PX`, so selecting it
+ * never shows or hides the row, or under the half-size floor at `zoom`.
  */
-export const rowPlacementOf = (box: RectPx, kind: RowKind, zoom: number): RowPlacement | null => {
-  const boxWidth = box.x2 - box.x1;
+export const rowPlacementOf = (folder: FolderRect, kind: RowKind, zoom: number): RowPlacement | null => {
+  if (folder.width < WIDGET_MIN_BOX_PX) return null;
 
-  if (boxWidth < WIDGET_MIN_BOX_PX) return null;
+  if (kind === 'box') return boxRowOf(folder.rect, zoom);
 
-  if (kind === 'box') return boxRowOf(box, zoom);
-
-  return collapsedRowOf(box, zoom);
+  return collapsedRowOf(folder.rect, zoom);
 };
 
 /** The chevron at the row's left end and the "…" at its right end, as drawn at the row's scale. */

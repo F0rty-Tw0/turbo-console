@@ -1,8 +1,8 @@
 import { buttonRectsOf, isWidgetShown, packageButtonRectOf, rowPlacementOf } from './widget-geometry.util.ts';
-import type { RectPx, RowKind, RowPlan, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
+import type { FolderRect, RectPx, RowKind, RowPlan, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
 
 /** The row of a box or collapsed node wide enough for one, with at least one button shown; else `null`. */
-const rowPlanOf = (folder: string, rect: RectPx, kind: RowKind, input: WidgetPlanInput): RowPlan | null => {
+const rowPlanOf = (folder: string, rect: FolderRect, kind: RowKind, input: WidgetPlanInput): RowPlan | null => {
   const { bounds, rects } = input;
   const placement = rowPlacementOf(rect, kind, rects.zoom);
 
@@ -19,7 +19,7 @@ const rowPlanOf = (folder: string, rect: RectPx, kind: RowKind, input: WidgetPla
   return row;
 };
 
-const rowsOf = (rects: ReadonlyMap<string, RectPx>, kind: RowKind, input: WidgetPlanInput): RowPlan[] => {
+const rowsOf = (rects: ReadonlyMap<string, FolderRect>, kind: RowKind, input: WidgetPlanInput): RowPlan[] => {
   const rows: RowPlan[] = [];
 
   for (const [folder, rect] of rects) {

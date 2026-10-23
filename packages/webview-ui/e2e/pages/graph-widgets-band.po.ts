@@ -12,6 +12,9 @@ const MAX_ZOOM_NOTCHES = 60;
 
 const ZOOM_IN_NOTCH = -100;
 
+/** Resolves after two frames. */
+const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
+
 /** How the header rows fit the box band as the camera zooms, and stay clear of a collapsed node's title. */
 export class GraphWidgetsBand extends GraphWidgetsLayout {
   /** Wheels in one notch at a time, at most 60, until some header button shows. */
@@ -44,6 +47,12 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
     const zoom = await this.probe.zoom();
 
     await expect.poll(async (): Promise<number> => this.chevronDrop(folder)).toBeGreaterThanOrEqual(px * zoom);
+  }
+
+  /** Two frames on, so the pass a repaint queued has run, the folder still has no shown header button. */
+  public async expectHeaderStaysHidden(folder: string): Promise<void> {
+    await this.page.evaluate(NEXT_FRAME);
+    await this.expectHeaderHidden(folder);
   }
 
   /** The collapsed node's chevron and "…" lie left and right of the widest title it can draw. */
