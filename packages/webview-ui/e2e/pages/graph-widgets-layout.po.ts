@@ -4,7 +4,15 @@ import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import { WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { ellipsisNameOf, isCutText, rectOf, scrollOf, setRootVars, titleFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
+import {
+  ellipsisNameOf,
+  fractionalPlacementsOf,
+  isCutText,
+  rectOf,
+  scrollOf,
+  setRootVars,
+  titleFaultsOf
+} from '../test/utils/graph-widgets.spec.util.ts';
 
 const MAX_ZOOM_NOTCHES = 60;
 
@@ -96,6 +104,12 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
   /** The layer never scrolled: a menu or widget out of view did not drag its content. */
   public async expectLayerUnscrolled(): Promise<void> {
     await expect.poll(async (): Promise<number[]> => this.layer.evaluate(scrollOf)).toEqual([0, 0]);
+  }
+
+  /** Every shown row and package "…" sits on whole CSS pixels and every row is a whole number of pixels wide. */
+  public async expectWholePixelPlacement(): Promise<void> {
+    await expect(this.layer.locator('.widget-row:visible').first()).toBeVisible();
+    await expect.poll(async (): Promise<string[]> => this.layer.evaluate(fractionalPlacementsOf)).toEqual([]);
   }
 
   /** The folder's box chevron paints `color` as its background colour. */

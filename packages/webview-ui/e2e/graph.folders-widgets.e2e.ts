@@ -312,4 +312,22 @@ test.describe('FEATURE: folder widget placement', () => {
         graphWidgets.expectChevronBackground('apps', EDITOR_BACKGROUND));
     }
   );
+
+  test(
+    'GIVEN the boards grouped and web picked, after a zoom every row and the package "…" sit on whole pixels',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphList, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the grouped boards open, web is picked and the canvas is zoomed in a notch', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphList.pick('web');
+        await graphWidgets.zoomBy(-100);
+      });
+
+      await test.step('THEN every shown row and the package "…" are placed on whole CSS pixels', async (): Promise<void> =>
+        graphWidgets.expectWholePixelPlacement());
+
+      await test.step('AND the rows still follow their boxes within a pixel', async (): Promise<void> =>
+        graphWidgets.expectRowsFollowBoxes(FOLDERS));
+    }
+  );
 });

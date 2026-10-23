@@ -22,9 +22,15 @@ export const setHidden = (element: HTMLElement, isHidden: boolean): void => {
   if (element.hidden !== isHidden) element.hidden = isHidden;
 };
 
-export const translateOf = (x: number, y: number): string => `translate(${x}px, ${y}px)`;
+/** Whole CSS px, so a 1 px border is not blurred over two device pixels. */
+export const translateOf = (x: number, y: number): string => {
+  const left = Math.round(x);
+  const top = Math.round(y);
 
-/** Shows and places a row from its plan; without one, or with one of the other kind, the row is hidden. */
+  return `translate(${left}px, ${top}px)`;
+};
+
+/** Shows and places a row from its plan, on whole px; without one, or with one of the other kind, the row is hidden. */
 const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
   const { root, chevron, ellipsis } = entry.elements;
   const isPlaced = plan?.kind === entry.kind;
@@ -34,9 +40,11 @@ const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
   if (!isPlaced) return;
 
   const { x, y, width } = plan.placement;
+  const right = Math.round(x + width);
+  const left = Math.round(x);
 
   writeStyle(root, 'transform', translateOf(x, y));
-  writeStyle(root, 'width', `${width}px`);
+  writeStyle(root, 'width', `${right - left}px`);
   setHidden(chevron, !plan.isChevronShown);
   setHidden(ellipsis, !plan.isEllipsisShown);
 };

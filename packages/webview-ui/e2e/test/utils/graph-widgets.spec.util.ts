@@ -139,6 +139,25 @@ export const menuFaultsOf = (menu: ElementRect, container: ElementRect, areaRigh
   return [...left, ...top, ...bottom, ...right];
 };
 
+/**
+ * Runs in the page through `evaluate`: each shown row or package "…" translated by, or an unscaled row as wide as, a
+ * fraction of a pixel; a scaled row's CSS width is whole only once scaled.
+ */
+export const fractionalPlacementsOf = (layer: Element): string[] => {
+  const placed = layer.querySelectorAll<HTMLElement>('.widget-row:not([hidden]), .widget-package-button:not([hidden])');
+  const placementOf = (element: HTMLElement): string => {
+    const { transform, width } = element.style;
+    const isScaled = transform.includes('scale(');
+    const translate = /translate\([^)]*\)/.exec(transform)?.[0] ?? '';
+    const shownWidth = isScaled ? '' : width;
+
+    return `${translate} ${shownWidth}`;
+  };
+  const placements = Array.from(placed, placementOf);
+
+  return placements.filter((placement): boolean => /\d\.\d/.test(placement));
+};
+
 /** Runs in the page through `evaluate`: sets each theme variable on the root as VS Code does; `null` removes it. */
 export const setRootVars = (vars: Record<string, string | null>): void => {
   const root = document.documentElement.style;
