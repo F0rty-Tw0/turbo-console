@@ -1,12 +1,12 @@
 import type { GraphView, PageElements } from './graph-page.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 
-/** What one Export image press goes through: the view's PNG on `background()`, posted to the host, or `showError` on a throw. */
+/** What one Export image press goes through: the view's PNG on `background()`, posted to the host; `status` shows a failure. */
 export type ExportActions = {
   readonly view: Pick<GraphView, 'exportPng'>;
   readonly background: () => string;
   readonly post: Bridge['post'];
-  readonly showError: (text: string) => void;
+  readonly status: Pick<HTMLElement, 'textContent'>;
 };
 
 /** What `wireToolbar` hangs the toolbar, Retry and Reload clicks on; `relayout` is the controller's guarded Re-layout. */
