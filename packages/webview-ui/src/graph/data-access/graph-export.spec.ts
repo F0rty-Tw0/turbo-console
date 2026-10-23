@@ -4,10 +4,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { setBoxes } from './graph-boxes.ts';
 import { exportPngOf } from './graph-export.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
-import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
+import { BOX_GROUPS_STUB, BOX_IDS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
-
-const BOX_IDS = ['\u0001', '\u0001apps', '\u0001packages'];
 
 const BG = '#1f1f1f';
 
@@ -27,9 +25,9 @@ const hasExportingClass = (cy: Core, id: string): boolean => cy.getElementById(i
 
 const labelOf = (cy: Core, id: string): string => styleTextOf(cy, id, 'label');
 
-const classesOf = (cy: Core): boolean[] => BOX_IDS.map((id: string): boolean => hasExportingClass(cy, id));
+const classesOf = (cy: Core): boolean[] => BOX_IDS_STUB.map((id: string): boolean => hasExportingClass(cy, id));
 
-const labelsOf = (cy: Core): string[] => BOX_IDS.map((id: string): string => labelOf(cy, id));
+const labelsOf = (cy: Core): string[] => BOX_IDS_STUB.map((id: string): string => labelOf(cy, id));
 
 /** `cy.png` is overloaded, so `vi.spyOn` types it by its last overload; a typed stub takes its place and records the graph as each call sees it. */
 const stubPng = (cy: Core, result: string): PngSeen[] => {
@@ -46,6 +44,10 @@ const stubPng = (cy: Core, result: string): PngSeen[] => {
   Object.assign(cy, { png });
 
   return seen;
+};
+
+const throwingPng = (): string => {
+  throw new Error('boom');
 };
 
 const callOf = (seen: PngSeen[], index: number): PngSeen => seen[index] ?? EMPTY_SEEN;
@@ -77,11 +79,7 @@ describe('FEATURE: exportPngOf', () => {
     });
 
     it('WHEN cy.png throws THEN the error propagates and no box keeps the class', () => {
-      Object.assign(cy, {
-        png: (): string => {
-          throw new Error('boom');
-        }
-      });
+      Object.assign(cy, { png: throwingPng });
 
       expect(() => exportPngOf(cy, BG, 1)).toThrow('boom');
       expect(classesOf(cy)).toStrictEqual([false, false, false]);
