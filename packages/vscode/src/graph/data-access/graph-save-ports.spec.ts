@@ -1,10 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as vscode from 'vscode';
+import { describe, expect, it, vi } from 'vitest';
 
-import { editorGraphHost } from './graph-ports.ts';
-import type { Output } from '../../shared/common/output.type.ts';
+import { pickSaveUri, showError, showInfo, writeBytes } from './graph-save-ports.ts';
 import type { UriFake } from '../../shared/test/common/vscode-fakes.type.ts';
-import type { GraphHost, GraphStore } from '../common/graph-panel.type.ts';
 
 type ShowSaveDialog = (options: unknown) => Promise<UriFake | undefined>;
 
@@ -23,12 +20,6 @@ const editor = vi.hoisted(() => {
 });
 
 vi.mock('vscode', () => {
-  const joinPath = (base: UriFake, ...parts: string[]): UriFake => {
-    const segments = [base.fsPath, ...parts];
-    const joined: UriFake = { fsPath: segments.join('/') };
-
-    return joined;
-  };
   const file = (fsPath: string): UriFake => {
     const uri: UriFake = { fsPath };
 
@@ -40,34 +31,22 @@ vi.mock('vscode', () => {
     showErrorMessage: editor.showErrorMessage
   };
   const fs = { writeFile: editor.writeFile };
-  const uri = { joinPath, file };
-  const viewColumn = { Active: -1, Beside: -2 };
+  const uri = { file };
   const workspace = { fs };
-  const module = { Uri: uri, ViewColumn: viewColumn, window, workspace };
+  const module = { Uri: uri, window, workspace };
 
   return module;
 });
 
-const STORE: GraphStore = { get: vi.fn(), update: vi.fn() };
-
-describe('FEATURE: the save ports of the Package Graph host', () => {
-  let host: GraphHost;
-
-  beforeEach(() => {
-    const output: Output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
-    const extensionUri = vscode.Uri.file('/ext');
-
-    host = editorGraphHost(extensionUri, output, STORE);
-  });
-
+describe('FEATURE: the save ports of the Package Graph', () => {
   describe('GIVEN the editor save dialog', () => {
     it('WHEN pickSaveUri opens it THEN it gets the default file, the PNG filter and the title', async () => {
-      editor.showSaveDialog.mockResolvedValue({ fsPath: '/out/x.png' });
-
-      await host.pickSaveUri('/ws/a.png');
-
       const defaultUri: UriFake = { fsPath: '/ws/a.png' };
       const filters = { 'PNG image': ['png'] };
+
+      editor.showSaveDialog.mockResolvedValue({ fsPath: '/out/x.png' });
+
+      await pickSaveUri('/ws/a.png');
 
       expect(editor.showSaveDialog).toHaveBeenCalledExactlyOnceWith({
         defaultUri,
@@ -79,7 +58,7 @@ describe('FEATURE: the save ports of the Package Graph host', () => {
     it('WHEN a file is chosen THEN pickSaveUri resolves its fsPath', async () => {
       editor.showSaveDialog.mockResolvedValue({ fsPath: '/out/x.png' });
 
-      const path = await host.pickSaveUri('/ws/a.png');
+      const path = await pickSaveUri('/ws/a.png');
 
       expect(path).toBe('/out/x.png');
     });
@@ -87,7 +66,7 @@ describe('FEATURE: the save ports of the Package Graph host', () => {
     it('WHEN the dialog is cancelled THEN pickSaveUri resolves null', async () => {
       editor.showSaveDialog.mockResolvedValue(undefined);
 
-      const path = await host.pickSaveUri('/ws/a.png');
+      const path = await pickSaveUri('/ws/a.png');
 
       expect(path).toBeNull();
     });
@@ -97,7 +76,7 @@ describe('FEATURE: the save ports of the Package Graph host', () => {
     it('WHEN writeBytes runs THEN workspace.fs writes them to the path', async () => {
       const bytes = Uint8Array.from([1, 2, 3]);
 
-      await host.writeBytes('/out/x.png', bytes);
+      await writeBytes('/out/x.png', bytes);
 
       expect(editor.writeFile).toHaveBeenCalledExactlyOnceWith({ fsPath: '/out/x.png' }, bytes);
     });
@@ -105,13 +84,13 @@ describe('FEATURE: the save ports of the Package Graph host', () => {
 
   describe('GIVEN a message to show', () => {
     it('WHEN showInfo runs THEN the editor shows an information message', () => {
-      host.showInfo('saved');
+      showInfo('saved');
 
       expect(editor.showInformationMessage).toHaveBeenCalledExactlyOnceWith('saved');
     });
 
     it('WHEN showError runs THEN the editor shows an error message', () => {
-      host.showError('broke');
+      showError('broke');
 
       expect(editor.showErrorMessage).toHaveBeenCalledExactlyOnceWith('broke');
     });
