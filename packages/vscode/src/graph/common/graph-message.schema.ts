@@ -49,7 +49,7 @@ const layoutDoneSchema = object({ type: literal('layoutDone'), ms: layoutMsSchem
 
 const exportImageSchema = object({
   type: literal('exportImage'),
-  png: string().check(maxLength(EXPORT_PNG_MAX), regex(BASE64_PATTERN))
+  png: string().check(maxLength(EXPORT_PNG_MAX, { abort: true }), regex(BASE64_PATTERN))
 });
 
 /**
