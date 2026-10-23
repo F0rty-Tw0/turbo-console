@@ -1,10 +1,11 @@
-import { median } from './bench-stats.util.ts';
-import type { Annotation, BenchRow, BenchSample, SampleAnnotation } from '../common/bench.type.ts';
+import type { TestDetailsAnnotation } from '@playwright/test';
 
-const BENCH_PREFIX = 'webview-ui/';
+import { median } from './bench-stats.util.ts';
+import { BENCH_PREFIX, NS_PER_MS, ROW_NAME } from '../common/bench.const.ts';
+import type { BenchRow, BenchSample } from '../common/bench.type.ts';
+
 const SAMPLE_TYPE = 'bench-sample';
-const ROW_NAME = /^[\w@./ -]+$/u;
-const NS_PER_MS = 1_000_000;
+const NOTE_TYPE = 'bench-note';
 
 type SampleGroup = [string, BenchSample[]];
 
@@ -18,13 +19,20 @@ const isBenchSample = (value: unknown): value is BenchSample => {
   return hasName && hasMs && hasGate;
 };
 
-export const sampleAnnotation = (sample: BenchSample): SampleAnnotation => {
-  const annotation: SampleAnnotation = { type: SAMPLE_TYPE, description: JSON.stringify(sample) };
+export const sampleAnnotation = (sample: BenchSample): TestDetailsAnnotation => {
+  const annotation: TestDetailsAnnotation = { type: SAMPLE_TYPE, description: JSON.stringify(sample) };
 
   return annotation;
 };
 
-export const sampleOf = (annotation: Annotation): BenchSample | null => {
+/** A line the reporter prints after the rows; it never reaches results.json. */
+export const noteAnnotation = (text: string): TestDetailsAnnotation => {
+  const annotation: TestDetailsAnnotation = { type: NOTE_TYPE, description: text };
+
+  return annotation;
+};
+
+export const sampleOf = (annotation: TestDetailsAnnotation): BenchSample | null => {
   if (annotation.type !== SAMPLE_TYPE) return null;
 
   const parsed: unknown = JSON.parse(annotation.description ?? '');
@@ -32,6 +40,14 @@ export const sampleOf = (annotation: Annotation): BenchSample | null => {
   if (!isBenchSample(parsed)) throw new Error(`${SAMPLE_TYPE} annotation is not a sample: ${annotation.description}`);
 
   return parsed;
+};
+
+export const noteOf = (annotation: TestDetailsAnnotation): string | null => {
+  const isNote = annotation.type === NOTE_TYPE;
+
+  if (!isNote) return null;
+
+  return annotation.description ?? null;
 };
 
 const groupByName = (samples: BenchSample[]): Map<string, BenchSample[]> => {
@@ -57,7 +73,7 @@ const msOf = (rowName: string, sample: BenchSample): number => {
 };
 
 const gateOf = (rowName: string, samples: BenchSample[]): boolean => {
-  const gates = new Set(samples.map((sample) => sample.gate));
+  const gates = new Set(samples.map((sample): boolean => sample.gate));
 
   if (gates.size > 1) throw new Error(`bench row ${rowName} has samples with different gate values`);
 
@@ -70,7 +86,7 @@ const rowOf = ([name, samples]: SampleGroup): BenchRow => {
 
   if (!isNameValid) throw new Error(`bench row name is not allowed: ${JSON.stringify(rowName)}`);
 
-  const times = samples.map((sample) => msOf(rowName, sample));
+  const times = samples.map((sample): number => msOf(rowName, sample));
   const medianNs = median(times) * NS_PER_MS;
   const gate = gateOf(rowName, samples);
   const row: BenchRow = { name: rowName, medianNs, samples: samples.length, gate };

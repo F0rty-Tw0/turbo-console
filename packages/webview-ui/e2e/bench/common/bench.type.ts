@@ -27,17 +27,6 @@ export type BenchRow = {
   readonly gate: boolean;
 };
 
-export type Annotation = {
-  readonly type: string;
-  readonly description?: string | undefined;
-};
-
-/** A sample annotation always carries its JSON, so it is also a Playwright annotation. */
-export type SampleAnnotation = {
-  readonly type: string;
-  readonly description: string;
-};
-
 export type LongTask = {
   readonly startTime: number;
   readonly duration: number;

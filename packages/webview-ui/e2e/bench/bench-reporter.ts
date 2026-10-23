@@ -1,25 +1,16 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
+import type { TestDetailsAnnotation } from '@playwright/test';
+import type { FullResult, Reporter, TestResult } from '@playwright/test/reporter';
 
-import type { Annotation, BenchRow, BenchSample } from './common/bench.type.ts';
-import { resultsOf, sampleOf } from './utils/bench-results.util.ts';
+import { NS_PER_MS } from './common/bench.const.ts';
+import type { BenchRow, BenchSample } from './common/bench.type.ts';
+import { noteOf, resultsOf, sampleOf } from './utils/bench-results.util.ts';
 
 type BenchReporterOptions = { readonly outputFile: string };
 
 type FailedRun = { readonly status: 'failed' };
-
-const NOTE_TYPE = 'bench-note';
-const NS_PER_MS = 1_000_000;
-
-const noteOf = (annotation: Annotation): string | null => {
-  const isNote = annotation.type === NOTE_TYPE;
-
-  if (!isNote) return null;
-
-  return annotation.description ?? null;
-};
 
 const lineOf = (row: BenchRow): string => {
   const medianMs = row.medianNs / NS_PER_MS;
@@ -37,7 +28,15 @@ export default class BenchReporter implements Reporter {
     this.outputFile = resolve(process.cwd(), options.outputFile);
   }
 
-  public collect(annotations: Annotation[]): void {
+  public onBegin(): void {
+    rmSync(this.outputFile, { force: true });
+  }
+
+  public onTestEnd(_test: unknown, result: Pick<TestResult, 'annotations'>): void {
+    this.collect(result.annotations);
+  }
+
+  private collect(annotations: TestDetailsAnnotation[]): void {
     for (const annotation of annotations) {
       const sample = sampleOf(annotation);
       const note = noteOf(annotation);
@@ -46,14 +45,6 @@ export default class BenchReporter implements Reporter {
 
       if (note !== null) this.notes.push(note);
     }
-  }
-
-  public onBegin(): void {
-    rmSync(this.outputFile, { force: true });
-  }
-
-  public onTestEnd(_test: TestCase, result: TestResult): void {
-    this.collect(result.annotations);
   }
 
   private finish(result: FullResult): FailedRun | undefined {

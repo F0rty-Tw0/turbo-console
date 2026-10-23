@@ -2,6 +2,7 @@ import type { Browser } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { withSession } from './bench-session.ts';
+import { PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
 import type { BenchSession } from './common/bench.type.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
@@ -14,8 +15,6 @@ const BOX_WIDTH_PX = 120;
 /** After Fit and the zoom to 120 px boxes, 9 of the 30 boxes overlap the canvas; 6 leaves slack. */
 const BOXES_IN_VIEW = 6;
 
-const WARM_UP_FRAMES = 30;
-const PAN_FRAMES = 120;
 const TOGGLED_FOLDER = 'group-2';
 
 export const largeGroupedOptions = (): GraphOptions => {

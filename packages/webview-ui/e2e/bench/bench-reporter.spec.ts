@@ -8,16 +8,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/naming-convention -- Playwright loads a reporter through its default export, a class
 import BenchReporter from './bench-reporter.ts';
 import type { BenchSample } from './common/bench.type.ts';
-import { sampleAnnotation } from './utils/bench-results.util.ts';
+import { BENCH_SAMPLE_STUB } from './test/stubs/bench.stub.ts';
+import { noteAnnotation, sampleAnnotation } from './utils/bench-results.util.ts';
 
 const passed: FullResult = { status: 'passed', startTime: new Date(), duration: 1 };
 const failed: FullResult = { status: 'failed', startTime: new Date(), duration: 1 };
 
-const sample = (name: string, ms: number): BenchSample => {
-  const built: BenchSample = { name, ms, gate: false };
-
-  return built;
-};
+const SAMPLE: BenchSample = { ...BENCH_SAMPLE_STUB, ms: 2 };
 
 describe('FEATURE: bench reporter', () => {
   let directory = '';
@@ -35,33 +32,33 @@ describe('FEATURE: bench reporter', () => {
   describe('GIVEN collected samples, a note and a foreign annotation', () => {
     it('WHEN a passed run ends THEN results.json holds only the rows', async () => {
       const reporter = new BenchReporter({ outputFile });
+      const annotations = [sampleAnnotation(SAMPLE), noteAnnotation('long-task-ms 4'), { type: 'pan-cpu-ms' }];
 
-      reporter.collect([
-        sampleAnnotation(sample('a', 2)),
-        { type: 'bench-note', description: 'long-task-ms 4' },
-        { type: 'pan-cpu-ms' }
-      ]);
+      reporter.onTestEnd({}, { annotations });
 
       const status = await reporter.onEnd(passed);
+      const written: unknown = JSON.parse(readFileSync(outputFile, 'utf8'));
 
       expect(status).toBeUndefined();
-      expect(JSON.parse(readFileSync(outputFile, 'utf8'))).toStrictEqual([
-        { name: 'webview-ui/a', medianNs: 2_000_000, samples: 1, gate: false }
-      ]);
+      expect(written).toStrictEqual([{ name: 'webview-ui/a', medianNs: 2_000_000, samples: 1, gate: false }]);
     });
   });
 
   describe('GIVEN a stale results file', () => {
     it('WHEN the run begins and a failed run ends THEN no file exists', async () => {
-      const reporter = new BenchReporter({ outputFile: join(directory, 'results.json') });
+      const staleFile = join(directory, 'results.json');
+      const reporter = new BenchReporter({ outputFile: staleFile });
+      const annotations = [sampleAnnotation(SAMPLE)];
 
-      writeFileSync(join(directory, 'results.json'), '[]');
+      writeFileSync(staleFile, '[]');
       reporter.onBegin();
-      reporter.collect([sampleAnnotation(sample('a', 2))]);
+      reporter.onTestEnd({}, { annotations });
 
       await reporter.onEnd(failed);
 
-      expect(existsSync(join(directory, 'results.json'))).toBe(false);
+      const exists = existsSync(staleFile);
+
+      expect(exists).toBe(false);
     });
   });
 
@@ -70,9 +67,10 @@ describe('FEATURE: bench reporter', () => {
       const reporter = new BenchReporter({ outputFile });
 
       const status = await reporter.onEnd(passed);
+      const exists = existsSync(outputFile);
 
       expect(status).toStrictEqual({ status: 'failed' });
-      expect(existsSync(outputFile)).toBe(false);
+      expect(exists).toBe(false);
     });
   });
 
@@ -80,7 +78,9 @@ describe('FEATURE: bench reporter', () => {
     it('WHEN asked whether it prints to stdio THEN it answers false', () => {
       const reporter = new BenchReporter({ outputFile });
 
-      expect(reporter.printsToStdio()).toBe(false);
+      const printsToStdio = reporter.printsToStdio();
+
+      expect(printsToStdio).toBe(false);
     });
   });
 });

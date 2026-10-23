@@ -26,3 +26,16 @@ export const BENCH_ROWS: Readonly<Record<BenchRowKey, BenchRowDef>> = {
 
 /** The median of the longest long task of each target-like pan stays within this. */
 export const LONG_TASK_BUDGET_MS = 50;
+
+export const BENCH_PREFIX = 'webview-ui/';
+
+/** The characters a bench row name may hold, prefix included. */
+export const ROW_NAME = /^[\w@./ -]+$/u;
+
+export const NS_PER_MS = 1_000_000;
+
+/** Frames a scripted pan waits before it drags. */
+export const WARM_UP_FRAMES = 30;
+
+/** Frames a scripted pan drags for, one step each: 2 s at 60 Hz. */
+export const PAN_FRAMES = 120;
