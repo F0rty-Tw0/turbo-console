@@ -48,6 +48,15 @@ export const THREAD_TIME_METRIC = 'ThreadTime';
 
 export const MS_PER_SECOND = 1000;
 
+/**
+ * macOS runners read the grouped pan 683-1422 ms and the header-rows pan 1559-2842 ms (C58, 2026-10-23, `pan-cpu-ms`
+ * log lines): about 2x spread on one runner image, inferred to be host CPU loss counted as thread time. Their budgets
+ * sit about 1.7x over the worst reading, still under the ~3150 ms an unpatched Cytoscape would read there (inferred);
+ * Linux and Windows keep the tight budgets on the same code and catch a lost patch anyway. Stopgap until C58's
+ * calibrated budget.
+ */
+export const IS_MAC_RUNNER = process.platform === 'darwin';
+
 /** Chromium on macOS fires no `contextmenu` for Shift+F10, so a test that watches that event cannot run there. */
 export const IS_SHIFT_F10_SILENT = process.platform === 'darwin';
 

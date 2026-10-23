@@ -1,6 +1,8 @@
 import { packagesOf } from './graph-package.spec.util.ts';
 import { targetLikeState } from './graph-target-like.spec.util.ts';
+import { taskSavedState } from './graph-task-saved.spec.util.ts';
 import type { GraphEdge, GraphReady, GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
+import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
 
 const DEPENDENT_COUNT = 400;
 
@@ -113,4 +115,11 @@ export const targetLikeTasksState = (): GraphReady => {
   const state: GraphReady = { ...base, hash: '7a7a7a7b', tasks };
 
   return state;
+};
+
+/** A saved task view of `targetLikeTasksState`'s hash with `TARGET_LIKE_HUB_TASK` chosen, so the state shows its chain on arrival. */
+export const targetLikeHubSavedState = (): GraphViewState => {
+  const { hash } = targetLikeTasksState();
+
+  return taskSavedState(hash, { chosen: [TARGET_LIKE_HUB_TASK] });
 };

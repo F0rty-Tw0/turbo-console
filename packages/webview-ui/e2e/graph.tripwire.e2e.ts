@@ -1,4 +1,4 @@
-import { LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS } from './common/graph.const.ts';
+import { IS_MAC_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
@@ -30,15 +30,6 @@ const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
 
 /** After Fit and the zoom to 120 px boxes, 9 of the 30 boxes of `largeState()` overlap the canvas; 6 leaves slack. */
 const BOXES_IN_VIEW = 6;
-
-/**
- * macOS runners read the grouped pan 683-1422 ms and the header-rows pan 1559-2842 ms (C58, 2026-10-23, `pan-cpu-ms`
- * log lines): about 2x spread on one runner image, inferred to be host CPU loss counted as thread time. Their budgets
- * sit about 1.7x over the worst reading, still under the ~3150 ms an unpatched Cytoscape would read there (inferred);
- * Linux and Windows keep the tight budgets on the same code and catch a lost patch anyway. Stopgap until C58's
- * calibrated budget.
- */
-const IS_MAC_RUNNER = process.platform === 'darwin';
 
 /**
  * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every

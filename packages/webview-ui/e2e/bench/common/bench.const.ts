@@ -1,6 +1,7 @@
 import type { BenchRowDef } from './bench.type.ts';
 
-type BenchRowKey = 'openCold' | 'openCached' | 'panCpu' | 'panP95' | 'openColdLarge' | 'panCpuLarge' | 'toggleLarge';
+type BenchRowKey =
+  'openCold' | 'openCached' | 'panCpu' | 'panP95' | 'openColdLarge' | 'panCpuLarge' | 'toggleLarge' | 'taskOpen' | 'taskPanCpu';
 
 const OPEN_COLD: BenchRowDef = { name: 'graph open cold target-like', gate: true, samples: 7 };
 const OPEN_CACHED: BenchRowDef = { name: 'graph open cached target-like', gate: true, samples: 7 };
@@ -9,9 +10,12 @@ const PAN_P95: BenchRowDef = { name: 'graph pan p95 frame target-like', gate: tr
 const OPEN_COLD_LARGE: BenchRowDef = { name: 'graph open cold large grouped', gate: false, samples: 3 };
 const PAN_CPU_LARGE: BenchRowDef = { name: 'graph pan cpu large grouped', gate: false, samples: 3 };
 const TOGGLE_LARGE: BenchRowDef = { name: 'graph folder toggle large', gate: false, samples: 3 };
+const TASK_OPEN: BenchRowDef = { name: 'graph task open target-like', gate: false, samples: 3 };
+const TASK_PAN_CPU: BenchRowDef = { name: 'graph task pan cpu target-like', gate: false, samples: 3 };
 
 /**
- * Rows of spec 3.1 in order; the bench job writes each as `webview-ui/<name>`.
+ * Rows of spec 3.1 in order, then the two task-mode rows, which record without gating until a CI baseline exists.
+ * The bench job writes each as `webview-ui/<name>`.
  * The open rows time message receipt to the first render after layout; the page load is not in them.
  */
 export const BENCH_ROWS: Readonly<Record<BenchRowKey, BenchRowDef>> = {
@@ -21,7 +25,9 @@ export const BENCH_ROWS: Readonly<Record<BenchRowKey, BenchRowDef>> = {
   panP95: PAN_P95,
   openColdLarge: OPEN_COLD_LARGE,
   panCpuLarge: PAN_CPU_LARGE,
-  toggleLarge: TOGGLE_LARGE
+  toggleLarge: TOGGLE_LARGE,
+  taskOpen: TASK_OPEN,
+  taskPanCpu: TASK_PAN_CPU
 };
 
 /** The median of the longest long task of each target-like pan stays within this. */

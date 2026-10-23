@@ -6,6 +6,7 @@ import type { BenchSession, ColdOpen } from './common/bench.type.ts';
 import type { GraphReady, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
+import { targetLikeHubSavedState, targetLikeTasksState } from '../test/utils/graph-target-like-tasks.spec.util.ts';
 
 const lastPositionsOf = async (session: BenchSession): Promise<Positions> => {
   const posted = async (): Promise<Positions | null> => lastPositionsPosted(await readPosted(session.page));
@@ -56,3 +57,14 @@ export const cachedOpen = async (browser: Browser, state: GraphReady): Promise<n
 
   return withSession(browser, {}, opened);
 };
+
+const taskOpened = async (session: BenchSession): Promise<number> => {
+  await session.host.sendState(targetLikeTasksState());
+  await session.probe.expectLayoutEngine('elk');
+
+  return session.timings.measuredFirstFrameMs();
+};
+
+/** First frame of the target-like task state opened in task mode with the hub task chosen; a task layout posts no positions, so only the probe says it is done. */
+export const taskOpen = async (browser: Browser): Promise<number> =>
+  withSession(browser, { savedState: targetLikeHubSavedState() }, taskOpened);
