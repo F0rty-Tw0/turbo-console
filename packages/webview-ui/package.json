@@ -18,6 +18,7 @@
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "e2e": "playwright test",
+    "bench": "playwright test --config playwright.bench.config.ts",
     "screenshots": "playwright test --config playwright.screenshot.config.ts"
   },
   "dependencies": {

@@ -9,6 +9,7 @@ import { ONE_FRAME } from '../common/graph.const.ts';
 import type { CpuSteps, DragRecord } from '../common/graph.type.ts';
 import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+import { dragError, isWithinTolerance } from '../test/utils/graph-drag-error.spec.util.ts';
 import { emptySpotOf, nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 import { dragPerFrame } from '../test/utils/graph-scripted-pan.spec.util.ts';
@@ -17,19 +18,6 @@ import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
 const DRAG_STEPS = 8;
 
 const WHEEL_NOTCH = 100;
-
-const DRAG_TOLERANCE = 2;
-
-/** How far `moved` sits from where the drag should have put the node, per axis, in model units. */
-const dragError = (moved: Position | undefined, drag: DragRecord): Position => {
-  const x = Math.abs((moved?.x ?? Number.NaN) - (drag.from.x + drag.dx / drag.zoom));
-  const y = Math.abs((moved?.y ?? Number.NaN) - (drag.from.y + drag.dy / drag.zoom));
-  const error: Position = { x, y };
-
-  return error;
-};
-
-const isWithinTolerance = (error: Position): boolean => error.x <= DRAG_TOLERANCE && error.y <= DRAG_TOLERANCE;
 
 /** Mouse and wheel input on the drawn graph, aimed through the probe's rendered node centres. */
 export class GraphCanvas {
@@ -100,21 +88,37 @@ export class GraphCanvas {
 
   /**
    * Waits `warmUpFrames`, then drags one step per frame for `panFrames` from `spot`, or from an empty spot of the flat
-   * graph, keeping the main-thread CPU each step took.
+   * graph, keeping the main-thread CPU each step took. `afterWarmUp` runs inside the CPU measurement, before the first
+   * drag step, so a caller can mark the pan window after the CDP session is set up.
    */
-  public async scriptedPan(warmUpFrames: number, panFrames: number, spot?: ViewportPoint): Promise<void> {
+  public async scriptedPan(
+    warmUpFrames: number,
+    panFrames: number,
+    spot?: ViewportPoint,
+    afterWarmUp?: () => Promise<void>
+  ): Promise<void> {
     const start = spot ?? (await this.emptySpot());
 
     for (let frame = 0; frame < warmUpFrames; frame += 1) await this.page.evaluate(ONE_FRAME);
 
-    this.panCpu = await cpuStepsOf(this.page, async (endStep): Promise<void> => dragPerFrame(this.page, start, panFrames, endStep));
+    this.panCpu = await cpuStepsOf(this.page, async (endStep): Promise<void> => {
+      await afterWarmUp?.();
+      await dragPerFrame(this.page, start, panFrames, endStep);
+    });
+  }
+
+  /** The main-thread CPU of the last scripted pan; throws when none ran. */
+  public measuredPanCpu(): CpuSteps {
+    const pan = this.panCpu;
+
+    if (pan === null) throw new Error('graph e2e: no scripted pan ran');
+
+    return pan;
   }
 
   /** The last scripted pan used a measured, non-zero total under `totalMs` of main-thread CPU with no step over `stepMs`; both are recorded as annotations. */
   public expectPanCpuUnder(totalMs: number, stepMs: number): void {
-    const pan = this.panCpu;
-
-    if (pan === null) throw new Error('graph e2e: no scripted pan ran');
+    const pan = this.measuredPanCpu();
 
     test.info().annotations.push({ type: 'pan-cpu-ms', description: String(Math.round(pan.totalMs)) });
     test.info().annotations.push({ type: 'pan-max-step-cpu-ms', description: String(Math.round(pan.maxStepMs)) });

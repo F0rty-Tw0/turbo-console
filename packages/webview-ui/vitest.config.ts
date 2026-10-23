@@ -5,7 +5,7 @@ export default defineConfig({
     name: 'webview-ui',
     root: import.meta.dirname,
     watch: false,
-    include: ['src/**/*.spec.ts'],
+    include: ['src/**/*.spec.ts', 'e2e/bench/**/*.spec.ts'],
     exclude: ['**/fixtures/**', '**/tmp/**', '**/node_modules/**']
   }
 });

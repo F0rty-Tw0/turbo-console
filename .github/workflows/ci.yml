@@ -132,6 +132,16 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm turbo run build
 
+      # The webview-ui bench suite drives Chromium. A base without the suite just carries an unused browser.
+      - name: Install Chromium for base
+        working-directory: base
+        run: pnpm --filter @turbo-console/webview-ui exec playwright install --with-deps --only-shell chromium
+
+      # With one Playwright version on both sides this install is a no-op; it matters when the PR bumps Playwright.
+      - name: Install Chromium for head
+        working-directory: head
+        run: pnpm --filter @turbo-console/webview-ui exec playwright install --with-deps --only-shell chromium
+
       # Order alternates B,H / H,B / B,H so steady runner drift hits both sides alike; one task at a time so benches do
       # not share CPUs. A failed base run only warns: its iteration is skipped and the compare runs without it. When every
       # base run fails, a turbo dry run (which reads turbo.jsonc and package turbo.json files too) counts base's bench
