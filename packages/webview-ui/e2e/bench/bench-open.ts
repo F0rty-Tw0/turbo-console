@@ -25,10 +25,11 @@ const lastPositionsOf = async (session: BenchSession): Promise<Positions> => {
   return session.grouping.postedPositions();
 };
 
-/** Opens a fresh page, sends `state`, and times its first frame; returns the positions the layout posted. */
+/** Opens a fresh page, sends `state`, and times the first frame of its ELK layout; returns the positions the layout posted. */
 export const coldOpen = async (browser: Browser, state: GraphReady, options: GraphOptions = {}): Promise<ColdOpen> => {
   const opened = async (session: BenchSession): Promise<ColdOpen> => {
     await session.host.sendState(state);
+    await session.probe.expectLayoutEngine('elk');
 
     const firstFrameMs = await firstFrameOf(session);
     const positions = await lastPositionsOf(session);
