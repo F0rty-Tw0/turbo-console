@@ -18,7 +18,8 @@ export type WidgetState = {
 
 export type GraphWidgetsDeps = {
   readonly page: PageElements;
-  readonly view: Pick<GraphView, 'widgetRects'>;
+  /** `viewport` is for the menus, which close when the camera moves. */
+  readonly view: Pick<GraphView, 'widgetRects' | 'viewport'>;
   readonly widgetViews: WidgetViews;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
   readonly overlay: MediaQueryList;
@@ -83,7 +84,8 @@ export type MenuAnchors = {
 
 type MenuHost = {
   readonly page: PageElements;
-  readonly view: Pick<GraphView, 'widgetRects'>;
+  /** `viewport` is the camera a menu opened at, so a move closes it. */
+  readonly view: Pick<GraphView, 'widgetRects' | 'viewport'>;
   readonly anchors: MenuAnchors;
   readonly build: WidgetViews['menu'];
   /** The checkbox's mode and the mode on screen are both grouped, so Shift+F10 may open a menu. */

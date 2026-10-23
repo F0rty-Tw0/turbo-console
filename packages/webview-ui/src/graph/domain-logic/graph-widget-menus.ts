@@ -1,8 +1,11 @@
+import { isFocusAway, isOwnPress, refocusIfLost } from './widget-menu-focus.ts';
+import type { Viewport } from '../common/graph-page.type.ts';
 import type { GraphWidgetMenusDeps } from '../common/graph-widgets.type.ts';
 import type { MenuItem } from '../common/widget-menu.type.ts';
 import type { MenuTarget, RectPx, Size } from '../common/widget.type.ts';
 import { menuIndexOf } from '../utils/menu-keys.util.ts';
 import { menuPlaceOf, targetRectOf, uncoveredAreaOf } from '../utils/menu-place.util.ts';
+import { isSameViewport } from '../utils/viewport.util.ts';
 import { isMenuItem } from '../utils/widget-menu-model.util.ts';
 
 type OpenMenu = {
@@ -11,20 +14,16 @@ type OpenMenu = {
   readonly hasOpener: boolean;
   readonly menu: HTMLElement;
   readonly items: HTMLElement[];
-};
-
-/** An outside press's default action blurs to the body when it lands on nothing focusable; focus goes back. */
-const refocusIfLost = (returnTo: HTMLElement): void => {
-  const active = document.activeElement;
-  const isLost = active === null || active === document.body;
-
-  if (isLost) returnTo.focus();
+  /** The camera the menu opened at; a pass at another one closes it. */
+  readonly viewport: Viewport;
 };
 
 /**
  * The folder and package menus over the canvas, at most one open. An item runs, then the menu closes; a close returns
  * focus to the target's shown "…", else to the container, and only when the focus was inside the menu. A click
  * outside keeps that return only when it lands on nothing focusable; a focusable control it lands on keeps the focus.
+ * A click on the menu's own "…" closes it, focus leaving it for another control closes it there, and a camera move
+ * closes it with focus back on a still shown "…".
  */
 export class GraphWidgetMenus {
   private readonly deps: GraphWidgetMenusDeps;
@@ -51,22 +50,25 @@ export class GraphWidgetMenus {
     this.open(target, opener);
   }
 
-  /** Builds the menu beside `opener`, or beside the target's drawn rect without one; nothing while neither is placed. */
+  /** Builds the menu beside `opener`, or beside the target's drawn rect without one; nothing while neither is placed. A press on the open menu's own "…" closes it. */
   public open(target: MenuTarget, opener: HTMLButtonElement | null): void {
+    const isOwnOpener = opener !== null && opener === this.currentOpener();
     const rect = this.anchorRectOf(target, opener);
 
     this.remove();
 
-    if (rect === null) return;
+    if (rect === null || isOwnOpener) return;
 
     const model = this.deps.menuOf(target);
     const entries = model.filter(isMenuItem);
     const { menu, items } = this.deps.build(model);
+    const viewport = this.deps.view.viewport();
 
     entries.forEach((entry, index): void => items[index]?.addEventListener('click', (): void => this.activate(entry)));
     menu.addEventListener('keydown', (event): void => this.onKey(event));
+    menu.addEventListener('focusout', (event): void => this.onFocusOut(event));
     this.deps.page.widgets.append(menu);
-    this.current = { target, hasOpener: opener !== null, menu, items };
+    this.current = { target, hasOpener: opener !== null, menu, items, viewport };
     this.place(menu, rect);
 
     const first = entries.findIndex((entry) => !entry.isDisabled);
@@ -89,6 +91,25 @@ export class GraphWidgetMenus {
     this.dismiss(null);
   }
 
+  /** After a positioning pass: a camera other than the menu's closes it, and focus inside goes to its "…" while shown, else stays. */
+  public follow(): void {
+    const open = this.current;
+
+    if (open === null) return;
+
+    const viewport = this.deps.view.viewport();
+    const isSame = isSameViewport(viewport, open.viewport);
+
+    if (isSame) return;
+
+    const hadFocus = open.menu.contains(document.activeElement);
+    const opener = this.openerOf(open);
+
+    this.remove();
+
+    if (hadFocus) opener?.focus();
+  }
+
   private dismiss(focusTo: HTMLElement | null): void {
     const open = this.current;
 
@@ -109,6 +130,14 @@ export class GraphWidgetMenus {
     const anchor = this.deps.anchors.anchorOf(open.target);
 
     return anchor?.opener ?? null;
+  }
+
+  private currentOpener(): HTMLButtonElement | null {
+    const open = this.current;
+
+    if (open === null) return null;
+
+    return this.openerOf(open);
   }
 
   private remove(): void {
@@ -150,11 +179,10 @@ export class GraphWidgetMenus {
 
     if (open === null) return;
 
-    const path = event.composedPath();
-    const isInside = path.includes(open.menu);
+    const isOwn = isOwnPress(event, open.menu, this.openerOf(open));
     const hadFocus = open.menu.contains(document.activeElement);
 
-    if (isInside) return;
+    if (isOwn) return;
 
     this.close();
 
@@ -164,6 +192,17 @@ export class GraphWidgetMenus {
     if (!hadFocus || !isElement) return;
 
     document.addEventListener('pointerup', (): void => refocusIfLost(returnTo), { capture: true, once: true });
+  }
+
+  /** Focus moved to a control outside the menu other than its "…": the menu closes and the focus stays there. */
+  private onFocusOut(event: FocusEvent): void {
+    const open = this.current;
+
+    if (open === null) return;
+
+    const isAway = isFocusAway(event, open.menu, this.openerOf(open));
+
+    if (isAway) this.remove();
   }
 
   private anchorRectOf(target: MenuTarget, opener: HTMLButtonElement | null): RectPx | null {

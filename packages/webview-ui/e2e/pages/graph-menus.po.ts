@@ -30,11 +30,12 @@ export class GraphMenusPage {
   public readonly breadcrumb: Locator;
   public readonly menu: Locator;
 
+  protected readonly container: Locator;
+  protected readonly page: Page;
+  protected readonly widgets: GraphWidgetsPage;
+
   private readonly aside: Locator;
-  private readonly container: Locator;
   private readonly grouping: Locator;
-  private readonly page: Page;
-  private readonly widgets: GraphWidgetsPage;
 
   public constructor(page: Page) {
     this.page = page;
@@ -172,7 +173,7 @@ export class GraphMenusPage {
     await expect(this.breadcrumb.locator('.breadcrumb-line')).toHaveText(lines);
   }
 
-  private async contextMenus(): Promise<boolean[]> {
+  protected async contextMenus(): Promise<boolean[]> {
     return this.page.evaluate((): boolean[] => window.__contextMenus ?? []);
   }
 

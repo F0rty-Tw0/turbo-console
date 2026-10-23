@@ -80,7 +80,10 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
       widgets.refresh();
       breadcrumb.update();
     },
-    position: (): void => widgets.position(),
+    position: (): void => {
+      widgets.position();
+      menus.follow();
+    },
     buttonBox: (): AnchorBox | null => widgets.packageButtonBox(),
     groupingOff: (): void => {
       menus.drop();

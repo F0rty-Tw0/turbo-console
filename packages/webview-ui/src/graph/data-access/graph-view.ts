@@ -74,6 +74,15 @@ const cytoscapeOn = (container: HTMLElement): Core => {
   return cytoscape(options);
 };
 
+/** A copy of the camera: `cy.pan()` is Cytoscape's own object, which a later pan changes in place. */
+const viewportOf = (cy: Core): Viewport => {
+  const { x, y } = cy.pan();
+  const pan: Position = { x, y };
+  const current: Viewport = { zoom: cy.zoom(), pan };
+
+  return current;
+};
+
 /** The page's canvas view: Cytoscape, the folder pass over it and the canvas events reported to `handlers`. */
 export const createGraphView = (container: HTMLElement, handlers: GraphViewHandlers, fontFamily: string): GraphView => {
   const cy = cytoscapeOn(container);
@@ -87,11 +96,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     cy.resize();
     fitVisible(cy, FIT_PADDING_PX);
   };
-  const viewport = (): Viewport => {
-    const current: Viewport = { zoom: cy.zoom(), pan: cy.pan() };
-
-    return current;
-  };
+  const viewport = (): Viewport => viewportOf(cy);
   const setViewport = (zoom: number, pan: Position): void => {
     cy.resize();
     cy.viewport({ zoom, pan });
