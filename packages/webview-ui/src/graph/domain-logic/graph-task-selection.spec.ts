@@ -4,14 +4,15 @@ import type { Mock, Mocked } from 'vitest';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { TaskCanvas } from '../common/task-canvas.type.ts';
-import type { TaskDetails, TaskDetailsActions, TaskDetailsModel, TaskRuns } from '../common/task-details.type.ts';
-import { taskDetailsMock } from '../test/mocks/graph-task-mode.mock.ts';
+import type { TaskDetails, TaskDetailsActions, TaskDetailsModel, TaskRuns, TaskWidgets } from '../common/task-details.type.ts';
+import { taskDetailsMock, taskWidgetsMock } from '../test/mocks/graph-task-mode.mock.ts';
 import { taskCanvasMock } from '../test/mocks/graph-view.mock.ts';
 import { API_BUILD_STUB, TASK_CHAIN_STUB, TASK_VIEW_STUB, WEB_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 
 type SelectionRig = {
   readonly canvas: Mocked<TaskCanvas>;
   readonly details: Mocked<TaskDetails>;
+  readonly widgets: Mocked<TaskWidgets>;
   readonly save: Mock<(edit: Partial<TaskViewState>) => void>;
   readonly view: () => TaskViewState;
 };
@@ -21,13 +22,14 @@ const WEB_BUILD_MODEL: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, d
 const rigOf = (): SelectionRig => {
   const canvas = taskCanvasMock();
   const details = taskDetailsMock();
+  const widgets = taskWidgetsMock();
   let saved: TaskViewState = TASK_VIEW_STUB;
   const saving = (edit: Partial<TaskViewState>): void => {
     saved = { ...saved, ...edit };
   };
   const save = vi.fn<(edit: Partial<TaskViewState>) => void>(saving);
   const view = (): TaskViewState => saved;
-  const rig: SelectionRig = { canvas, details, save, view };
+  const rig: SelectionRig = { canvas, details, widgets, save, view };
 
   return rig;
 };
@@ -49,6 +51,7 @@ describe('FEATURE: GraphTaskSelection', () => {
 
         return rig.details;
       },
+      widgetsOf: (): TaskWidgets => rig.widgets,
       task: rig.view,
       save: rig.save
     });
@@ -63,6 +66,7 @@ describe('FEATURE: GraphTaskSelection', () => {
       expect(rig.save).toHaveBeenLastCalledWith({ selected: 'web#build' });
       expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
       expect(rig.details.show).toHaveBeenLastCalledWith(WEB_BUILD_MODEL);
+      expect(rig.widgets.show).toHaveBeenLastCalledWith(WEB_BUILD_MODEL);
     });
 
     it('WHEN web#build is tapped twice THEN nothing is selected, painted or shown', () => {
@@ -128,6 +132,7 @@ describe('FEATURE: GraphTaskSelection', () => {
 
       expect(rig.canvas.runStates).toHaveBeenLastCalledWith(runs);
       expect(rig.details.show).toHaveBeenLastCalledWith(running);
+      expect(rig.widgets.show).toHaveBeenLastCalledWith(running);
     });
 
     it('WHEN the shown tasks lose web#build THEN the selection is saved as null', () => {
@@ -135,6 +140,7 @@ describe('FEATURE: GraphTaskSelection', () => {
 
       expect(rig.save).toHaveBeenLastCalledWith({ selected: null });
       expect(rig.details.show).toHaveBeenLastCalledWith(null);
+      expect(rig.widgets.show).toHaveBeenLastCalledWith(null);
     });
 
     it('WHEN the shown tasks keep web#build THEN nothing more is saved', () => {
@@ -146,11 +152,18 @@ describe('FEATURE: GraphTaskSelection', () => {
     });
   });
 
-  it('GIVEN entering open WHEN left THEN the panel enters open and exits', () => {
+  it('GIVEN entering open WHEN left THEN the panel enters open and exits, and the task "…" goes', () => {
     selection.enter(true);
     selection.exit();
 
     expect(rig.details.enter).toHaveBeenCalledExactlyOnceWith(true);
     expect(rig.details.exit).toHaveBeenCalledTimes(1);
+    expect(rig.widgets.exit).toHaveBeenCalledTimes(1);
+  });
+
+  it('GIVEN a frame rendered WHEN it is passed on THEN the task "…" follows', () => {
+    selection.rendered();
+
+    expect(rig.widgets.rendered).toHaveBeenCalledTimes(1);
   });
 });

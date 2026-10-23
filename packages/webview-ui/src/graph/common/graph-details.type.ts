@@ -62,6 +62,8 @@ export type GraphDetailsDeps = {
   readonly onFocus: (name: string) => void;
   readonly onExclude: (name: string) => void;
   readonly onShow: (name: string) => void;
+  readonly onShowTasks: (name: string) => void;
+  readonly hasTasks: (name: string) => boolean;
   /** The folder view's Expand or Collapse. */
   readonly onToggleFolder: (folder: string) => void;
   /** The folder view's Focus folder, which reads Clear focus while the folder is the focus. */

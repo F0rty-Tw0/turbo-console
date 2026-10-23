@@ -46,6 +46,13 @@ export const requestOf = (tasks: GraphTask[], shownSet: ShownSet): TaskLayoutReq
   return request;
 };
 
+/** The ids of package `name`'s tasks, in the task list order. */
+export const packageTaskIdsOf = (tasks: GraphTask[], name: string): string[] => {
+  const owned = tasks.filter((task) => task.packageName === name);
+
+  return owned.map((task) => task.id);
+};
+
 /** The notice for `dropped` chosen ids that match no task; none for 0. */
 export const droppedNoticeOf = (dropped: number): string | null => {
   if (dropped === 0) return null;

@@ -95,6 +95,10 @@ export type GraphInspectionDeps = {
   readonly folders: CanvasFolders & InspectionFolders;
   /** The selected package's "…" span in container px, `null` without one; the keep-clear pan clears it too. */
   readonly buttonBox: () => AnchorBox | null;
+  /** Show tasks: task mode on every visible task of `name`. */
+  readonly onShowTasks: (name: string) => void;
+  /** Whether `name` has a visible task, so Show tasks is offered. */
+  readonly hasTasks: (name: string) => boolean;
 };
 
 /** What the keep-clear pan reads: the canvas, the page's container, the details aside, the inspection, its drawn ghosts and the package "…". */

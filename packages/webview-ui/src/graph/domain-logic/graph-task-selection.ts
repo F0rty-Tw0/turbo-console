@@ -1,14 +1,16 @@
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import type { TaskDetails, TaskDetailsModel, TaskRuns, TaskSelectionDeps } from '../common/task-details.type.ts';
+import type { TaskDetails, TaskDetailsModel, TaskRuns, TaskSelectionDeps, TaskWidgets } from '../common/task-details.type.ts';
 import { taskDetailsModelOf, taskWithId } from '../utils/task-run.util.ts';
 
 /**
  * The selected task of the shown set: taps, Controls rows and the panel's dependency buttons select it, and every
- * change paints the canvas and refills the task panel. A selection the shown set loses is saved as `null` (RF4).
+ * change paints the canvas, refills the task panel and moves the task "…". A selection the shown set loses is saved
+ * as `null` (RF4).
  */
 export class GraphTaskSelection {
   private readonly deps: TaskSelectionDeps;
   private readonly details: TaskDetails;
+  private readonly widgets: TaskWidgets;
   private shown: GraphTask[] = [];
   private latestRuns: TaskRuns = {};
 
@@ -18,6 +20,7 @@ export class GraphTaskSelection {
       onSelect: (id: string): void => this.select(id),
       onClear: (): void => this.clear()
     });
+    this.widgets = deps.widgetsOf();
   }
 
   public selected(): string | null {
@@ -67,6 +70,12 @@ export class GraphTaskSelection {
 
   public exit(): void {
     this.details.exit();
+    this.widgets.exit();
+  }
+
+  /** After a frame: the selected task's "…" follows it. */
+  public rendered(): void {
+    this.widgets.rendered();
   }
 
   private saveSelected(id: string | null): void {
@@ -90,5 +99,6 @@ export class GraphTaskSelection {
     tasks.paint(target);
     tasks.runStates(this.latestRuns);
     this.details.show(model);
+    this.widgets.show(model);
   }
 }

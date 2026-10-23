@@ -9,7 +9,7 @@ import type { ShownSet } from '../common/shown-set.type.ts';
 import type { TaskControls } from '../common/task-controls.type.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 import { shownSetOf } from '../utils/shown-set.util.ts';
-import { choiceOf, droppedNoticeOf, requestOf } from '../utils/task-choice.util.ts';
+import { choiceOf, droppedNoticeOf, packageTaskIdsOf, requestOf } from '../utils/task-choice.util.ts';
 
 /**
  * Task mode's state and routing: whether it is active, the host's latest tasks and hash, and the task view it saves.
@@ -35,8 +35,7 @@ export class GraphTaskMode {
       onPlaced: (): void => this.saveCamera()
     });
     this.selection = new GraphTaskSelection({
-      view: deps.view,
-      detailsOf: deps.detailsOf,
+      ...deps,
       task: (): TaskViewState => this.view(),
       save: (edit: Partial<TaskViewState>): void => this.saveView(edit)
     });
@@ -99,6 +98,11 @@ export class GraphTaskMode {
     }
 
     this.choose({ chosen, capLifted: false, selected: null }, at, droppedNoticeOf(dropped));
+  }
+
+  /** The ids of package `name`'s tasks in the latest state, which Show tasks chooses. */
+  public packageTaskIds(name: string): string[] {
+    return packageTaskIdsOf(this.tasks, name);
   }
 
   /** Saves the camera on screen and the key of the layout under it; nothing before a task layout is placed. */

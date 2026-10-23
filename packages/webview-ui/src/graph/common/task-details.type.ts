@@ -1,4 +1,5 @@
 import type { GraphView, PageElements } from './graph-page.type.ts';
+import type { WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -64,10 +65,35 @@ export type TaskDetailsDeps = {
   readonly onToggle: (isOpen: boolean) => void;
 };
 
-/** What `GraphTaskSelection` paints on, builds the panel with, and reads and saves the task view through. */
+/** What the task "…" menu's items call: the panel's run button `action` for the task `id`. */
+export type TaskMenuActions = {
+  readonly act: (id: string, action: TaskRunAction) => void;
+};
+
+/** The selected task's "…" over the canvas and the menu it opens, which task mode shows while it is on. */
+export type TaskWidgets = {
+  /** The "…" beside the selected task of `model`; none for `null`, outside task mode, or while its menu would be empty. */
+  readonly show: (model: TaskDetailsModel | null) => void;
+  /** After a frame: the "…" follows its task, and a camera move closes the menu. */
+  readonly rendered: () => void;
+  /** Task mode ends: the menu closes and the "…" goes. */
+  readonly exit: () => void;
+};
+
+export type TaskWidgetsDeps = {
+  readonly page: PageElements;
+  readonly view: Pick<GraphView, 'widgetRects' | 'viewport'>;
+  readonly views: Pick<WidgetViews, 'packageButton' | 'menu'>;
+  readonly bridge: Bridge;
+  /** Task mode is on, so the "…" may open its menu. */
+  readonly isActive: () => boolean;
+};
+
+/** What `GraphTaskSelection` paints on, builds the panel and the "…" with, and reads and saves the task view through. */
 export type TaskSelectionDeps = {
   readonly view: Pick<GraphView, 'tasks'>;
   readonly detailsOf: (actions: TaskDetailsActions) => TaskDetails;
+  readonly widgetsOf: () => TaskWidgets;
   readonly task: () => TaskViewState;
   readonly save: (edit: Partial<TaskViewState>) => void;
 };

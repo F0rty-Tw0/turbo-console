@@ -14,7 +14,7 @@ import type { TaskDetails } from '../../common/task-details.type.ts';
 import { freshViewStateOf } from '../../utils/fresh-view-state.util.ts';
 import type { TaskModeRig, TaskPartsMock, TaskViewMock } from '../common/graph-task-mode.type.ts';
 import { layoutScreenMock } from '../mocks/graph-layouts.mock.ts';
-import { taskControlsMock, taskDetailsMock, taskPanelMock } from '../mocks/graph-task-mode.mock.ts';
+import { taskControlsMock, taskDetailsMock, taskPanelMock, taskWidgetsMock } from '../mocks/graph-task-mode.mock.ts';
 import { taskCanvasMock } from '../mocks/graph-view.mock.ts';
 import { layoutRunsMock } from '../mocks/layout-runner.mock.ts';
 import { TASK_VIEW_STUB } from '../stubs/graph-task.stub.ts';
@@ -98,7 +98,8 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     onExit,
     panelOf,
     controlsOf,
-    detailsOf
+    detailsOf,
+    widgetsOf: taskWidgetsMock
   };
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const calls = (): string[] => [...called];

@@ -51,6 +51,8 @@ export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActi
     onFocus: (name): void => deps.onFocusOn(name),
     onExclude: (name): void => deps.onExclude(name),
     onShow: (name): void => deps.onShow(name),
+    onShowTasks: (name): void => deps.onShowTasks(name),
+    hasTasks: (name): boolean => deps.hasTasks(name),
     onToggleFolder: folderActions.toggle,
     onFocusFolder: folderActions.focusFolder,
     onExcludeFolder: (folder): void => deps.onExcludeFolder(folder),

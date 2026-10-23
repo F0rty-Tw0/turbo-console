@@ -19,6 +19,9 @@ export const TASK_NODE_CLASS = 'task';
 /** The `main.graph-page` class while task mode is on; CSS hides the package Controls panel and the package widgets by it. */
 export const TASK_MODE_CLASS = 'task-mode';
 
+/** The class of the selected task's "…", which task mode keeps while it hides the package "…". */
+export const TASK_WIDGET_CLASS = 'task-widget-button';
+
 /** The id of the task mode Controls panel, which the Controls button points at while task mode is on. */
 export const TASK_CONTROLS_ID = 'graph-task-controls';
 
@@ -37,6 +40,9 @@ export const SHOW_TASKS_LABEL = 'Show tasks';
 
 /** The notice when every requested task id matches no task. */
 export const UNKNOWN_TASKS_TEXT = 'Those tasks are not in this workspace';
+
+/** How long a task notice shown in package mode stays, since no task render comes to replace it. */
+export const PACKAGE_NOTICE_MS = 8000;
 
 /** The prompt while nothing is chosen. */
 export const EMPTY_TASKS_TEXT =

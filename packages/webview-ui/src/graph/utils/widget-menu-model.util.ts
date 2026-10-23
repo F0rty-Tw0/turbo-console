@@ -6,6 +6,7 @@ import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL, FOCUS_LABEL, OPEN_DETAILS_LABEL,
 import type { FolderActions } from '../common/folder-actions.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
+import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import { SHOW_FOLDER_LABEL, SHOW_PACKAGE_LABEL } from '../common/graph.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { PackageActions } from '../common/package-actions.type.ts';
@@ -14,7 +15,9 @@ import type { FolderMenuState, MenuTarget, PackageMenuState } from '../common/wi
 
 const SEPARATOR: MenuItemModel = { kind: 'separator' };
 
-const itemOf = (label: string, run: () => void): MenuItem => {
+const NO_ITEMS: MenuItemModel[] = [];
+
+export const itemOf = (label: string, run: () => void): MenuItem => {
   const item: MenuItem = { kind: 'item', label, role: 'menuitem', checked: null, isDisabled: false, run };
 
   return item;
@@ -42,16 +45,22 @@ export const folderMenuOf = (folder: string, state: FolderMenuState, actions: Fo
   return model;
 };
 
-/** View Package Details · Focus or Clear focus · Start trace · separator · Show package, the list checkbox's twin, locked while focused. */
+/**
+ * View Package Details · Focus or Clear focus · Start trace · Show tasks, for a package with a visible task · separator
+ * · Show package, the list checkbox's twin, locked while focused.
+ */
 export const packageMenuOf = (name: string, state: PackageMenuState, actions: PackageActions): MenuItemModel[] => {
   const details = itemOf(OPEN_DETAILS_LABEL, (): void => actions.openDetails(name));
   const clear = itemOf(CLEAR_FOCUS_LABEL, (): void => actions.clearFocus());
   const focusOn = itemOf(FOCUS_LABEL, (): void => actions.focus(name));
   const focus = state.isFocus ? clear : focusOn;
   const trace = itemOf(START_TRACE_LABEL, (): void => actions.startTrace());
+  const showTasks = itemOf(SHOW_TASKS_LABEL, (): void => actions.showTasks(name));
+  const taskItems: MenuItemModel[] = [showTasks];
+  const tasks = state.hasTasks ? taskItems : NO_ITEMS;
   const checked = state.isShown ? 'true' : 'false';
   const show = checkItemOf(SHOW_PACKAGE_LABEL, checked, state.isFocus, (): void => actions.setShown(name, !state.isShown));
-  const model: MenuItemModel[] = [details, focus, trace, SEPARATOR, show];
+  const model: MenuItemModel[] = [details, focus, trace, ...tasks, SEPARATOR, show];
 
   return model;
 };
@@ -67,11 +76,16 @@ export const folderMenuStateOf = (folder: string, scene: FolderScene | null, fil
   return state;
 };
 
-/** A package's menu state: the package focus, and "Show package" from its list checkbox. */
-export const packageMenuStateOf = (name: string, filters: GraphFilters, visible: ReadonlySet<string>): PackageMenuState => {
+/** A package's menu state: the package focus, "Show package" from its list checkbox, and whether it has a visible task. */
+export const packageMenuStateOf = (
+  name: string,
+  filters: GraphFilters,
+  visible: ReadonlySet<string>,
+  hasTasks: boolean
+): PackageMenuState => {
   const isFocus = focusNameOf(filters) === name;
   const { isChecked } = rowViewOf(filters, visible, name);
-  const state: PackageMenuState = { isFocus, isShown: isChecked };
+  const state: PackageMenuState = { isFocus, isShown: isChecked, hasTasks };
 
   return state;
 };

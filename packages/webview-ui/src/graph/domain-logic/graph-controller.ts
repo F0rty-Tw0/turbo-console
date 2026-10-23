@@ -1,6 +1,6 @@
 import { GraphFrames } from './graph-frames.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
-import { taskModeOf } from './graph-task-wiring.ts';
+import { packageTasksOf, taskModeOf } from './graph-task-wiring.ts';
 import { wireToolbar } from './graph-toolbar-actions.ts';
 import { viewHandlersOf } from './graph-view-handlers.ts';
 import { ViewStateModes } from './view-state-modes.ts';
@@ -37,11 +37,12 @@ class GraphPageController {
       layouts: () => this.packages.layouts,
       tasks: () => this.tasks
     });
+    const tasks = packageTasksOf((): ReturnType<typeof taskModeOf> => this.tasks, deps.now);
 
     this.deps = deps;
     this.frames = frames;
     this.view = deps.createView(page.container, handlers);
-    this.packages = new GraphPackageSide(deps, this.view, frames, modes);
+    this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks });
     this.tasks = taskModeOf(deps, this.view, { modes, frames, onExit: (): void => this.exitTasks() });
     const relayout = (): void => this.relayout();
 
@@ -117,6 +118,7 @@ class GraphPageController {
     const { pending } = this;
 
     this.pending = null;
+    this.packages.keepToggleFocus();
 
     if (pending !== null) this.packages.show(pending.state, pending.at);
     else this.packages.redraw();

@@ -5,8 +5,9 @@ import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-stat
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
+import type { LayoutScreen } from '../common/graph-layouts.type.ts';
 import type { DrawnGraph, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
-import type { PackageModes } from '../common/graph-task.type.ts';
+import type { PackageModes, PackageSideHooks } from '../common/graph-task.type.ts';
 import { parkedScreenOf, parkedViewOf } from '../data-access/parked-view.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
@@ -17,6 +18,7 @@ import { groupingOf } from '../utils/layout-plan.util.ts';
 /**
  * The package graph: shows the host's states, hands a graph state to the layouts, which draw it and post its layout back.
  * It draws through a view parked while task mode owns the canvas, and its folder and key actions wait for package mode.
+ * Leaving task mode from the Task mode toggle gives the toggle its focus back once the graph shows again.
  */
 export class GraphPackageSide {
   public readonly filtering: GraphFiltering;
@@ -29,13 +31,19 @@ export class GraphPackageSide {
   private drawn: DrawnGraph | null = null;
   private opening: GraphViewState | null = null;
   private hasShownGraph = false;
+  private isToggleFocusKept = false;
 
-  public constructor(deps: GraphControllerDeps, screenView: GraphView, frames: FrameClock, modes: PackageModes) {
+  public constructor(deps: GraphControllerDeps, screenView: GraphView, hooks: PackageSideHooks) {
+    const { frames, modes } = hooks;
     const isPackageMode = (): boolean => modes.mode() === 'packages';
     const isParked = (): boolean => !isPackageMode();
     const view = parkedViewOf(screenView, isParked);
     const pageScreen = layoutScreenOf(deps.page);
-    const screen = parkedScreenOf(pageScreen, isParked);
+    const parkedScreen = parkedScreenOf(pageScreen, isParked);
+    const screen: LayoutScreen = {
+      ...parkedScreen,
+      showGraph: (isFallback: boolean): void => this.showScreenGraph(parkedScreen, isFallback)
+    };
 
     this.deps = deps;
     this.view = view;
@@ -43,6 +51,7 @@ export class GraphPackageSide {
     this.modes = modes;
     this.filtering = new GraphFiltering({
       ...deps,
+      ...hooks.tasks,
       saver: modes.packages,
       view,
       drawn: (): DrawnGraph | null => this.drawn,
@@ -84,6 +93,11 @@ export class GraphPackageSide {
     const saved = this.modes.current();
 
     void this.guard(async (): Promise<void> => this.layouts.redraw(saved));
+  }
+
+  /** Task mode is being left: a toggle with focus gets it back once the package graph shows, as the loading screen drops it. */
+  public keepToggleFocus(): void {
+    this.isToggleFocusKept = document.activeElement === this.deps.page.taskMode;
   }
 
   /**
@@ -130,6 +144,17 @@ export class GraphPackageSide {
     this.frames.start(at);
     this.filtering.inspection.reset();
     void this.guard(async (): Promise<void> => this.layouts.show(state, saved));
+  }
+
+  private showScreenGraph(screen: LayoutScreen, isFallback: boolean): void {
+    const { activeElement, body } = document;
+    const isFocusLost = activeElement === null || activeElement === body;
+    const isRefocus = this.isToggleFocusKept && isFocusLost;
+
+    screen.showGraph(isFallback);
+    this.isToggleFocusKept = false;
+
+    if (isRefocus) this.deps.page.taskMode.focus();
   }
 
   private afterDraw(saved: GraphViewState | null): void {

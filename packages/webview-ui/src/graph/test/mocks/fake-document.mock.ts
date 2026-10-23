@@ -32,6 +32,14 @@ class FakeElement {
       const joined = all.join(' ');
 
       this.className = joined.trim();
+    },
+    toggle: (name: string, force: boolean): void => {
+      const names = this.className.split(' ');
+      const others = names.filter((each) => each !== '' && each !== name);
+      const withName = [...others, name];
+      const kept = force ? withName : others;
+
+      this.className = kept.join(' ');
     }
   };
 

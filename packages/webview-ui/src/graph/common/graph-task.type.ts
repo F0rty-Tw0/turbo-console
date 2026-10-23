@@ -1,9 +1,10 @@
 import type { FrameClock } from './frame-clock.type.ts';
+import type { GraphInspectionDeps } from './graph-inspection.type.ts';
 import type { LayoutScreen } from './graph-layouts.type.ts';
 import type { GraphView, NodeSizer, PackageSaver } from './graph-page.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { TaskControls, TaskControlsActions } from './task-controls.type.ts';
-import type { TaskDetails, TaskDetailsActions } from './task-details.type.ts';
+import type { TaskDetails, TaskDetailsActions, TaskWidgets } from './task-details.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewMode, GraphViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -24,6 +25,16 @@ export type PackageModes = {
   readonly packages: PackageSaver;
   readonly mode: () => GraphViewMode;
   readonly current: () => GraphViewState | null;
+};
+
+/** The package graph's way into task mode: Show tasks chooses every task of the package the host sent. */
+export type PackageTasks = Pick<GraphInspectionDeps, 'onShowTasks' | 'hasTasks'>;
+
+/** What the controller hands the package side besides its own deps and the view on screen. */
+export type PackageSideHooks = {
+  readonly frames: FrameClock;
+  readonly modes: PackageModes;
+  readonly tasks: PackageTasks;
 };
 
 /** The canvas calls task mode makes: the task canvas, the camera and a re-measure after a panel change. */
@@ -53,7 +64,7 @@ export type TaskPanel = {
   /** Leaves package mode's look back: no class, the toggle unpressed, every task line hidden. */
   readonly exit: () => void;
   readonly show: (view: TaskPanelView) => void;
-  /** Shows `text` in the notice line, or hides it for `null`. */
+  /** Shows `text` in the notice line, or hides it for `null`; one shown in package mode hides after `PACKAGE_NOTICE_MS`. */
   readonly notice: (text: string | null) => void;
 };
 
@@ -77,6 +88,8 @@ export type TaskModeDeps = {
   readonly controlsOf: (actions: TaskControlsActions) => TaskControls;
   /** Builds the task side panel over the page, its dependency and Clear buttons wired to `actions`. */
   readonly detailsOf: (actions: TaskDetailsActions) => TaskDetails;
+  /** Builds the selected task's "…" and its menu over the widget layer. */
+  readonly widgetsOf: () => TaskWidgets;
 };
 
 /** What the controller hands `taskModeOf` besides its own deps and the view. */

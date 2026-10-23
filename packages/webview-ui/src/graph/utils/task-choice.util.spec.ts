@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { taskLayoutKeyOf } from './elk-task-graph.util.ts';
-import { choiceOf, droppedNoticeOf, matchesTaskSearch, requestOf, taskDepthOf } from './task-choice.util.ts';
+import { choiceOf, droppedNoticeOf, matchesTaskSearch, packageTaskIdsOf, requestOf, taskDepthOf } from './task-choice.util.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 import { GRAPH_TASK_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
 
@@ -59,6 +59,19 @@ describe('FEATURE: task choice rules', () => {
 
       expect(ids).toStrictEqual(['api#build', 'web#build']);
       expect(request.key).toBe(taskLayoutKeyOf(TASK_CHAIN_STUB, request.shown));
+    });
+  });
+
+  describe('GIVEN the chain api#build, web#build and web#lint by package', () => {
+    it.each([
+      { name: 'web', expected: ['web#build', 'web#lint'] },
+      { name: 'api', expected: ['api#build'] },
+      { name: 'docs', expected: [] },
+      { name: '__proto__', expected: [] }
+    ])('WHEN the tasks of $name are read THEN they are $expected', ({ name, expected }) => {
+      const ids = packageTaskIdsOf(TASK_CHAIN_STUB, name);
+
+      expect(ids).toStrictEqual(expected);
     });
   });
 

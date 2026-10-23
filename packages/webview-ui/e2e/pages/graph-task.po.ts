@@ -10,19 +10,25 @@ import {
   EMPTY_TASKS_TEXT,
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
+  SHOW_TASKS_LABEL,
   TASK_CONTROLS_ID,
   TASK_MODE_LABEL
 } from '../../src/graph/common/graph-task.const.ts';
+import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { tasksHiddenText } from '../../src/graph/utils/task-text.util.ts';
+import { nodeRectNamed, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 const titlesOf = (buttons: HTMLElement[]): string[] => buttons.map((button) => button.title);
 
 /** Task mode's page parts: the Task mode toggle, the prompt, the cap banner, the notice and the task Controls panel. */
 export class GraphTask {
   public readonly toggleButton: Locator;
+  public readonly showTasksButton: Locator;
 
   private readonly page: Page;
+  private readonly aside: Locator;
+  private readonly menuList: Locator;
   private readonly probe: GraphProbePage;
   private readonly prompt: Locator;
   private readonly bannerText: Locator;
@@ -39,6 +45,25 @@ export class GraphTask {
     this.showAll = page.getByRole('button', { name: SHOW_ALL_TASKS_LABEL, exact: true });
     this.notice = page.locator('.graph-task-notice');
     this.rows = page.locator(`#${TASK_CONTROLS_ID}`).getByRole('grid').getByRole('button');
+    this.aside = page.getByRole('complementary', { name: DETAILS_LABEL, exact: true });
+    this.showTasksButton = this.detailsButton(SHOW_TASKS_LABEL);
+    this.menuList = page.getByRole('menu');
+  }
+
+  /** The details panel's button named exactly `name`. */
+  public detailsButton(name: string): Locator {
+    return this.aside.getByRole('button', { name, exact: true });
+  }
+
+  /** Presses the selected task's "…" and waits for its menu. */
+  public async menu(id: string): Promise<void> {
+    await this.menuButton(id).click();
+    await expect(this.menuList).toBeVisible();
+  }
+
+  /** The selected task's "…" covers the task's drawn top-right corner. */
+  public async expectMenuButtonOnCorner(id: string): Promise<void> {
+    await expect.poll(async (): Promise<boolean> => this.isOnCorner(id)).toBe(true);
   }
 
   public async toggle(): Promise<void> {
@@ -98,6 +123,22 @@ export class GraphTask {
   /** The debounced save has caught up with the task camera: the saved task view's zoom and pan are the probe's. */
   public async expectCameraSaved(): Promise<void> {
     await expect.poll(async (): Promise<boolean> => this.isCameraSaved()).toBe(true);
+  }
+
+  private menuButton(id: string): Locator {
+    return this.page.getByRole('button', { name: `Actions for ${id}`, exact: true });
+  }
+
+  private async isOnCorner(id: string): Promise<boolean> {
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+    const node = nodeRectNamed(nodes, zoom, id);
+    const button = await rectOf(this.menuButton(id));
+    const right = node.left + node.width;
+    const isAcrossRight = button.left < right && right < button.left + button.width;
+    const isAcrossTop = button.top < node.top && node.top < button.top + button.height;
+
+    return isAcrossRight && isAcrossTop;
   }
 
   private async isCameraSaved(): Promise<boolean> {

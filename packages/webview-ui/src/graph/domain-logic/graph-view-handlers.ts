@@ -29,6 +29,7 @@ type HandledLayouts = {
 type HandledSelection = {
   readonly tapNode: (id: string) => void;
   readonly clear: () => void;
+  readonly rendered: () => void;
 };
 
 type HandledTasks = {
@@ -52,8 +53,8 @@ const NOTHING = (): void => undefined;
 
 /**
  * Routes each Cytoscape event by mode: in package mode to the inspection, the folders or the layouts; in task mode a
- * drag, a camera move, a node tap and a background tap to task mode, and every other tap to nothing. Every frame marks
- * the frame clock first.
+ * drag, a camera move, a node tap, a background tap and a frame to task mode, and every other tap to nothing. Every frame
+ * marks the frame clock first.
  */
 export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers => {
   const { frames, filtering, layouts, tasks } = targets;
@@ -96,7 +97,8 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
 
       frames.mark();
 
-      if (!isTaskMode) filtering().rendered();
+      if (isTaskMode) tasks().selection.rendered();
+      else filtering().rendered();
     }
   };
 

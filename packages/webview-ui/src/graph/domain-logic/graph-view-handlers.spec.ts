@@ -56,7 +56,10 @@ describe('FEATURE: viewHandlersOf', () => {
       const filtering = { inspection, folders, rendered };
       const layouts = { dragged };
       const frames = { mark };
-      const selection = { tapNode: selectTask, clear: clearTask };
+      const taskRendered = (): void => {
+        calls.push('task rendered');
+      };
+      const selection = { tapNode: selectTask, clear: clearTask, rendered: taskRendered };
       const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera, selection };
 
       handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks });
@@ -169,10 +172,10 @@ describe('FEATURE: viewHandlersOf', () => {
         expect(saveViewport).not.toHaveBeenCalled();
       });
 
-      it('WHEN a frame renders THEN only the frame clock is marked', () => {
+      it('WHEN a frame renders THEN the frame clock is marked before the task selection hears of it', () => {
         handlers.onRender();
 
-        expect(calls).toStrictEqual(['mark']);
+        expect(calls).toStrictEqual(['mark', 'task rendered']);
       });
     });
   });
