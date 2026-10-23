@@ -4,6 +4,7 @@ import { isInside, readRect } from './element-rect.spec.util.ts';
 import { nodeBoxOf } from './graph-geometry.spec.util.ts';
 import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import { folderTitleOf } from '../../../src/graph/utils/controls-text.util.ts';
+import type { RowFrame } from '../../common/graph-folders.type.ts';
 import { WIDGET_BUTTON_PX, WIDGET_INSET_PX } from '../../common/graph.const.ts';
 import type { ElementRect } from '../../common/playwright.type.ts';
 
@@ -21,6 +22,26 @@ const BAND_PX = 32;
 
 /** How far a menu may reach past the area it should lie in, in CSS pixels. */
 const MENU_TOLERANCE_PX = 0.5;
+
+/** The room a box row keeps above and below its buttons inside the band, in CSS px. */
+const BAND_MARGIN_PX = 2;
+
+/** A box row at `zoom`: scaled to fit the 32 px band as drawn, 2 px clear above and below, at most full size, and centred in it. */
+export const boxRowFrameOf = (zoom: number): RowFrame => {
+  const band = BAND_PX * zoom;
+  const scale = Math.min(1, (band - 2 * BAND_MARGIN_PX) / WIDGET_BUTTON_PX);
+  const side = WIDGET_BUTTON_PX * scale;
+  const frame: RowFrame = { top: (band - side) / 2, inset: WIDGET_INSET_PX * scale, side };
+
+  return frame;
+};
+
+/** A collapsed node's row, at any zoom: full size, 8 px in. */
+export const collapsedRowFrameOf = (): RowFrame => {
+  const frame: RowFrame = { top: WIDGET_INSET_PX, inset: WIDGET_INSET_PX, side: WIDGET_BUTTON_PX };
+
+  return frame;
+};
 
 /** The fault of one edge more than a pixel from where it should be; none when it is within a pixel. */
 export const offFaultsOf = (edge: string, actual: number, expected: number): string[] => {
@@ -65,20 +86,22 @@ export const rectOf = async (button: Locator): Promise<ElementRect> => {
   return rect;
 };
 
-/** The chevron's left edge sits 8 px in from the box's, its top `topPx` below the box's. */
-export const chevronFaultsOf = (box: ElementRect, chevron: ElementRect, topPx: number): string[] => {
-  const left = offFaultsOf('chevron left', chevron.left, box.left + WIDGET_INSET_PX);
-  const top = offFaultsOf('chevron top', chevron.top, box.top + topPx);
+/** The chevron sits `frame.inset` in from the box's left edge and `frame.top` below its top, a `frame.side` px square. */
+export const chevronFaultsOf = (box: ElementRect, chevron: ElementRect, frame: RowFrame): string[] => {
+  const left = offFaultsOf('chevron left', chevron.left, box.left + frame.inset);
+  const top = offFaultsOf('chevron top', chevron.top, box.top + frame.top);
+  const width = offFaultsOf('chevron width', chevron.width, frame.side);
 
-  return [...left, ...top];
+  return [...left, ...top, ...width];
 };
 
-/** The "…" ends 8 px in from the box's right edge, its top `topPx` below the box's. */
-export const ellipsisFaultsOf = (box: ElementRect, ellipsis: ElementRect, topPx: number): string[] => {
-  const right = offFaultsOf('"…" right', ellipsis.left + ellipsis.width, box.left + box.width - WIDGET_INSET_PX);
-  const top = offFaultsOf('"…" top', ellipsis.top, box.top + topPx);
+/** The "…" ends `frame.inset` in from the box's right edge, `frame.top` below its top, a `frame.side` px square. */
+export const ellipsisFaultsOf = (box: ElementRect, ellipsis: ElementRect, frame: RowFrame): string[] => {
+  const right = offFaultsOf('"…" right', ellipsis.left + ellipsis.width, box.left + box.width - frame.inset);
+  const top = offFaultsOf('"…" top', ellipsis.top, box.top + frame.top);
+  const width = offFaultsOf('"…" width', ellipsis.width, frame.side);
 
-  return [...right, ...top];
+  return [...right, ...top, ...width];
 };
 
 /** The package "…" is centred on the node's drawn top-right corner, which the selected border puts half its width outside the node. */

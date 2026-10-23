@@ -50,7 +50,7 @@ export const widgetRectsOf = (cy: Core, selected: string | null): WidgetRects =>
   const boxes = rectsByFolder(boxNodes);
   const collapsed = rectsByFolder(collapsedNodes);
   const selectedRect = selectedRectOf(cy, selected);
-  const rects: WidgetRects = { boxes, collapsed, selected: selectedRect };
+  const rects: WidgetRects = { boxes, collapsed, selected: selectedRect, zoom: cy.zoom() };
 
   return rects;
 };

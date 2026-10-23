@@ -15,7 +15,7 @@ const APPS = rectOf(100, 50, 400, 300);
 
 const PACKAGES = rectOf(500, 50, 800, 300);
 
-const NO_RECTS: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected: null };
+const NO_RECTS: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected: null, zoom: 1 };
 
 const inputOf = (rects: Partial<WidgetRects>, overrides: Partial<WidgetPlanInput> = {}): WidgetPlanInput => {
   const full: WidgetRects = { ...NO_RECTS, ...rects };
@@ -25,7 +25,7 @@ const inputOf = (rects: Partial<WidgetRects>, overrides: Partial<WidgetPlanInput
 };
 
 const boxRowOf = (folder: string, x: number): RowPlan => {
-  const placement = { x, y: 54, width: 284 };
+  const placement = { x, y: 54, width: 284, scale: 1 };
   const row: RowPlan = { folder, kind: 'box', placement, isChevronShown: true, isEllipsisShown: true };
 
   return row;
@@ -79,6 +79,14 @@ describe('FEATURE: widgetPlanOf', () => {
 
       expect(plan.rows).toStrictEqual([]);
     });
+  });
+
+  it('GIVEN the box apps at zoom 0.49, where its row would be under half size WHEN planned THEN it gets no row', () => {
+    const boxes = new Map([['apps', APPS]]);
+
+    const plan = widgetPlanOf(inputOf({ boxes, zoom: 0.49 }));
+
+    expect(plan.rows).toStrictEqual([]);
   });
 
   it('GIVEN a collapsed node 180 by 56 px WHEN planned THEN it gets a collapsed row 8 px below its top', () => {

@@ -22,7 +22,7 @@ import { GraphPackageList } from './pages/graph-package-list.po.ts';
 import { GraphProbePage } from './pages/graph-probe.po.ts';
 import { GraphSamples } from './pages/graph-samples.po.ts';
 import { GraphToolbar } from './pages/graph-toolbar.po.ts';
-import { GraphWidgetsLayout } from './pages/graph-widgets-layout.po.ts';
+import { GraphWidgetsBand } from './pages/graph-widgets-band.po.ts';
 import { GraphPage } from './pages/graph.po.ts';
 import { PageClock } from './pages/page-clock.po.ts';
 
@@ -50,7 +50,7 @@ type GraphFixtures = {
   readonly graphSamples: GraphSamples;
   readonly graphToolbar: GraphToolbar;
   readonly graphTrace: GraphDetailsTrace;
-  readonly graphWidgets: GraphWidgetsLayout;
+  readonly graphWidgets: GraphWidgetsBand;
   readonly pageClock: PageClock;
 };
 
@@ -125,7 +125,7 @@ export const test = base.extend<GraphFixtures>({
     await use(new GraphDetailsTrace(page));
   },
   graphWidgets: async ({ page }, use): Promise<void> => {
-    await use(new GraphWidgetsLayout(page));
+    await use(new GraphWidgetsBand(page));
   },
   pageClock: async ({ page }, use): Promise<void> => {
     await use(new PageClock(page));

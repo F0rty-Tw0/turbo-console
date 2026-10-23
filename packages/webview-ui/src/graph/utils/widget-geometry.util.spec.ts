@@ -17,9 +17,15 @@ const boundsOf = (overlayLeft: number | null): LayerBounds => {
 
 const BOX = rectOf(100, 50, 400, 300);
 
-const BOX_ROW: RowPlacement = { x: 108, y: 54, width: 284 };
+const BOX_ROW: RowPlacement = { x: 108, y: 54, width: 284, scale: 1 };
 
-const COLLAPSED_ROW: RowPlacement = { x: 108, y: 58, width: 284 };
+const COLLAPSED_ROW: RowPlacement = { x: 108, y: 58, width: 284, scale: 1 };
+
+/** The docked 960 px editor's Fit zoom. */
+const FIT_ZOOM = 0.658;
+
+/** A collapsed node 180 px wide in graph px, as drawn at `zoom`. */
+const collapsedAt = (zoom: number): RectPx => rectOf(100, 50, 100 + 180 * zoom, 50 + 56 * zoom);
 
 describe('FEATURE: rowPlacementOf', () => {
   describe('GIVEN a folder box 300 px wide', () => {
@@ -27,9 +33,59 @@ describe('FEATURE: rowPlacementOf', () => {
       { kind: 'box' as const, expected: BOX_ROW },
       { kind: 'collapsed' as const, expected: COLLAPSED_ROW }
     ])('WHEN the row kind is $kind THEN it is placed at $expected', ({ kind, expected }) => {
-      const placement = rowPlacementOf(BOX, kind);
+      const placement = rowPlacementOf(BOX, kind, 1);
 
       expect(placement).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a folder box 300 px wide whose 32 px band is drawn at the camera zoom', () => {
+    it.each([
+      { zoom: 1, y: 54 },
+      { zoom: 2, y: 70 },
+      { zoom: 0.875, y: 52 }
+    ])('WHEN the zoom is $zoom THEN the box row is full size and centred in the band at y $y', ({ zoom, y }) => {
+      const placement = rowPlacementOf(BOX, 'box', zoom);
+
+      expect(placement).toMatchObject({ x: 108, y, width: 284, scale: 1 });
+    });
+
+    it('WHEN the zoom is the 0.658 Fit THEN the row is scaled to about 0.71, 2 px clear inside the band, its drawn width the box minus scaled insets', () => {
+      const scale = (32 * FIT_ZOOM - 4) / 24;
+      const expected: RowPlacement = { x: BOX.x1 + 8 * scale, y: BOX.y1 + 2, width: (300 - 16 * scale) / scale, scale };
+
+      const placement = rowPlacementOf(BOX, 'box', FIT_ZOOM);
+
+      expect(scale).toBeCloseTo(0.7107, 4);
+      expect(placement).toStrictEqual(expected);
+    });
+
+    it.each([
+      { zoom: 0.5, isPlaced: true },
+      { zoom: 0.49, isPlaced: false }
+    ])('WHEN the zoom is $zoom, at the 0.5 scale floor THEN a box row exists is $isPlaced', ({ zoom, isPlaced }) => {
+      const placement = rowPlacementOf(BOX, 'box', zoom);
+
+      expect(placement !== null).toBe(isPlaced);
+    });
+
+    it('WHEN the zoom is 0.8 for a collapsed node 300 px wide THEN its row stays 8 px below the top, unscaled', () => {
+      const placement = rowPlacementOf(BOX, 'collapsed', 0.8);
+
+      expect(placement).toStrictEqual(COLLAPSED_ROW);
+    });
+  });
+
+  describe('GIVEN a collapsed node 180 px wide whose 116 px widest label is drawn at the camera zoom', () => {
+    it.each([
+      { zoom: 2, isPlaced: true },
+      { zoom: 1, isPlaced: true },
+      { zoom: 0.99, isPlaced: false },
+      { zoom: 0.667, isPlaced: false }
+    ])('WHEN the zoom is $zoom THEN a row clear of the label exists is $isPlaced', ({ zoom, isPlaced }) => {
+      const placement = rowPlacementOf(collapsedAt(zoom), 'collapsed', zoom);
+
+      expect(placement !== null).toBe(isPlaced);
     });
   });
 
@@ -40,7 +96,7 @@ describe('FEATURE: rowPlacementOf', () => {
     ])('WHEN it is $width px wide THEN a row placement exists is $isPlaced', ({ width, isPlaced }) => {
       const box = rectOf(0, 0, width, 100);
 
-      const placement = rowPlacementOf(box, 'box');
+      const placement = rowPlacementOf(box, 'box', 1);
 
       expect(placement !== null).toBe(isPlaced);
     });
@@ -53,6 +109,17 @@ describe('FEATURE: buttonRectsOf', () => {
       const expected: RowButtonRects = { chevron: rectOf(108, 54, 132, 78), ellipsis: rectOf(368, 54, 392, 78) };
 
       const rects = buttonRectsOf(BOX_ROW);
+
+      expect(rects).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN the row at x 100, y 50, 200 px wide drawn at scale 0.5', () => {
+    it('WHEN the buttons are placed THEN they are 12 px squares at the ends of its 100 px drawn width', () => {
+      const row: RowPlacement = { x: 100, y: 50, width: 200, scale: 0.5 };
+      const expected: RowButtonRects = { chevron: rectOf(100, 50, 112, 62), ellipsis: rectOf(188, 50, 200, 62) };
+
+      const rects = buttonRectsOf(row);
 
       expect(rects).toStrictEqual(expected);
     });

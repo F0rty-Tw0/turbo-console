@@ -102,7 +102,8 @@ const RECTS: WidgetRects = {
     ['packages', NODE],
     ['', NODE]
   ]),
-  selected: SELECTED
+  selected: SELECTED,
+  zoom: 1
 };
 
 const folderTarget = (folder: string): MenuTarget => {

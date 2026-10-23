@@ -1,0 +1,68 @@
+import { expect } from '@playwright/test';
+
+import { GraphWidgetsLayout } from './graph-widgets-layout.po.ts';
+import type { ElementRect } from '../common/playwright.type.ts';
+import { bandFaultsOf, labelFaultsOf } from '../test/utils/graph-widget-band.spec.util.ts';
+import { rectOf } from '../test/utils/graph-widgets.spec.util.ts';
+
+/** How far inside a node's top-left corner `tapNodeCorner` clicks, in CSS px. */
+const CORNER_INSET_PX = 2;
+
+/** How the header rows fit the box band as the camera zooms, and stay clear of a collapsed node's title. */
+export class GraphWidgetsBand extends GraphWidgetsLayout {
+  /** Clicks 2 px inside the package's drawn top-left corner. */
+  public async tapNodeCorner(name: string): Promise<void> {
+    const node = await this.nodeRectOf(name);
+
+    await this.page.mouse.click(node.left + CORNER_INSET_PX, node.top + CORNER_INSET_PX);
+  }
+
+  /** The box's chevron and "…" both show and lie inside its top band as drawn at the camera zoom. */
+  public async expectRowInBand(folder: string): Promise<void> {
+    await expect(this.chevronOf(folder, true)).toBeVisible();
+    await expect(this.ellipsisOf(folder)).toBeVisible();
+    await expect.poll(async (): Promise<string[]> => this.bandFaults(folder)).toEqual([]);
+  }
+
+  /** The box's chevron top sits at least `px · zoom` below the box top. */
+  public async expectChevronBelowTop(folder: string, px: number): Promise<void> {
+    const zoom = await this.probe.zoom();
+
+    await expect.poll(async (): Promise<number> => this.chevronDrop(folder)).toBeGreaterThanOrEqual(px * zoom);
+  }
+
+  /** The collapsed node's chevron and "…" lie left and right of the widest title it can draw. */
+  public async expectCollapsedClearOfLabel(folder: string): Promise<void> {
+    await expect.poll(async (): Promise<string[]> => this.labelFaults(folder)).toEqual([]);
+  }
+
+  private async buttonsOf(folder: string, isExpanded: boolean): Promise<ElementRect[]> {
+    const chevron = await rectOf(this.chevronOf(folder, isExpanded));
+    const ellipsis = await rectOf(this.ellipsisOf(folder));
+
+    return [chevron, ellipsis];
+  }
+
+  private async bandFaults(folder: string): Promise<string[]> {
+    const box = await this.boxOf(folder);
+    const buttons = await this.buttonsOf(folder, true);
+    const zoom = await this.probe.zoom();
+
+    return bandFaultsOf(box, buttons, zoom);
+  }
+
+  private async labelFaults(folder: string): Promise<string[]> {
+    const node = await this.boxOf(folder);
+    const buttons = await this.buttonsOf(folder, false);
+    const zoom = await this.probe.zoom();
+
+    return labelFaultsOf(node, buttons, zoom);
+  }
+
+  private async chevronDrop(folder: string): Promise<number> {
+    const box = await this.boxOf(folder);
+    const chevron = await rectOf(this.chevronOf(folder, true));
+
+    return chevron.top - box.top;
+  }
+}

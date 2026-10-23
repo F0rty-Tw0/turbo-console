@@ -20,11 +20,13 @@ export type Size = {
 
 export type RowKind = 'box' | 'collapsed';
 
-/** A header row's left edge, top edge and width; the row is `WIDGET_BUTTON_PX` high. */
+/** A header row's left edge, top edge and unscaled CSS width; the row is `WIDGET_BUTTON_PX` high before its scale. */
 export type RowPlacement = {
   readonly x: number;
   readonly y: number;
   readonly width: number;
+  /** Drawn at this scale from its top left, so it spans `width · scale` px. */
+  readonly scale: number;
 };
 
 /** The widget layer's size and, when the details panel overlays the canvas, the container x where it starts. */
@@ -62,6 +64,8 @@ export type WidgetRects = {
   readonly boxes: ReadonlyMap<string, RectPx>;
   readonly collapsed: ReadonlyMap<string, RectPx>;
   readonly selected: RectPx | null;
+  /** The camera zoom the rects were read at. */
+  readonly zoom: number;
 };
 
 type FolderMenuTarget = {

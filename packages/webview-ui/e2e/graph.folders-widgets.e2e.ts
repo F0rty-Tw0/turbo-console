@@ -1,6 +1,6 @@
 import { DOCKED_WIDTH_PX, OVERLAY_WIDTH_PX, WIDGET_MIN_BOX_PX } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
-import { LONG_FOLDER, longTitleState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
+import { LONG_FOLDER, ghostFolderState, longTitleState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { packageOf } from './test/utils/graph-package.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
@@ -12,6 +12,11 @@ const C9 = { description: 'M4-4 C9', type: 'requirement' };
 const BOARDS = placedBoardsState();
 
 const FOLDERS = ['apps', 'packages'];
+
+const GHOSTS = ghostFolderState();
+
+/** Apps, about 317 graph px wide, drawn this wide is past zoom 0.5: both the 120 px rule and the half-size floor pass. */
+const APPS_ROW_BACK_PX = 160;
 
 const ADMIN_PACKAGES = [...BOARDS.packages, packageOf('admin', 'apps/admin')];
 
@@ -63,20 +68,38 @@ test.describe('FEATURE: folder widget placement', () => {
 
       await test.step('THEN apps has no shown header button', async (): Promise<void> => graphWidgets.expectHeaderHidden('apps'));
 
-      await test.step('AND packages, still wide enough, keeps its buttons', async (): Promise<void> =>
-        graphWidgets.expectRowFollowsBox('packages'));
+      await test.step('AND packages, wider but drawn where a row would be under half size, hides its buttons too', async (): Promise<void> =>
+        graphWidgets.expectHeaderHidden('packages'));
 
       await test.step('WHEN the list header collapses apps', async (): Promise<void> => graphFolders.toggleInList('apps', true));
 
       await test.step('THEN apps is collapsed', async (): Promise<void> => graphGrouping.expectFolderCollapsed('apps', true));
 
-      await test.step('WHEN the list header expands apps and the canvas is zoomed in until apps is 120 px wide', async (): Promise<void> => {
+      await test.step('WHEN the list header expands apps and the canvas is zoomed in until apps is 160 px wide', async (): Promise<void> => {
         await graphFolders.toggleInList('apps', false);
-        await graphWidgets.zoomBoxOver('apps', WIDGET_MIN_BOX_PX);
+        await graphWidgets.zoomBoxOver('apps', APPS_ROW_BACK_PX);
       });
 
       await test.step('THEN the apps chevron and "…" show again inside its box, within a pixel', async (): Promise<void> =>
         graphWidgets.expectRowFollowsBox('apps'));
+    }
+  );
+
+  test(
+    'GIVEN lone-package boxes under 120 px wide at zoom 1, their header buttons hide, and Fit widening them shows them',
+    { annotation: C9 },
+    async ({ graphCanvas, graphFolderInspect, graphPage, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the page opens grouped at zoom 1', async (): Promise<void> =>
+        graphFolderInspect.open(savedWith(GHOSTS.hash, {}), GHOSTS));
+
+      await test.step('THEN the x box shows no header button', async (): Promise<void> => graphWidgets.expectHeaderHidden('x'));
+
+      await test.step('WHEN Fit widens the boxes past 120 px', async (): Promise<void> => {
+        await graphPage.pressButton(FIT_LABEL);
+        await graphCanvas.expectAllNodesInView();
+      });
+
+      await test.step('THEN the x chevron and "…" sit on its box', async (): Promise<void> => graphWidgets.expectRowFollowsBox('x'));
     }
   );
 

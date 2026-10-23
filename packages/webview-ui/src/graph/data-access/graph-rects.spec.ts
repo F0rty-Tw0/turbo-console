@@ -44,6 +44,12 @@ describe('FEATURE: widgetRectsOf', () => {
       expect(rects.boxes.get('apps')).toStrictEqual(expected);
     });
 
+    it('WHEN read THEN the rects carry the camera zoom they were read at', () => {
+      const rects = widgetRectsOf(cy, null);
+
+      expect(rects.zoom).toBe(0.5);
+    });
+
     it('WHEN the apps box is hidden by the folder pass THEN it is left out', () => {
       cy.getElementById(folderIdOf('apps')).addClass(FOLDER_HIDDEN_CLASS);
 

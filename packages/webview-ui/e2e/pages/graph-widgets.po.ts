@@ -6,11 +6,14 @@ import { GraphFoldersPage } from './graph-folders.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { DETAILS_LABEL, GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
+import type { RowFrame } from '../common/graph-folders.type.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { boxRectOf, folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
 import {
+  boxRowFrameOf,
   chevronFaultsOf,
+  collapsedRowFrameOf,
   cornerFaultsOf,
   ellipsisFaultsOf,
   ellipsisNameOf,
@@ -20,11 +23,8 @@ import {
   rectOf
 } from '../test/utils/graph-widgets.spec.util.ts';
 
-/** How far a box's header row sits below the box's top: centred in the 32 px band. */
-const BOX_ROW_TOP_PX = 4;
-
-/** How far a collapsed node's row sits below the node's top: the 8 px inset. */
-const COLLAPSED_ROW_TOP_PX = 8;
+/** Where a box or collapsed node's row buttons sit at a camera zoom. */
+type RowFrameOf = (zoom: number) => RowFrame;
 
 /** Where `panIntoOverlayMargin` leaves a node's right edge: inside the 16 px keep-clear margin left of the overlay. */
 const MARGIN_GAP_PX = 8;
@@ -100,22 +100,22 @@ export class GraphWidgetsPage {
     await expect(row.locator('.widget-count')).toHaveText(count);
   }
 
-  /** The chevron sits 8 px in from the box's left edge and 4 px below its top. */
+  /** The chevron sits 8 px in from the box's left edge, centred in the band at the box's top. */
   public async expectChevronOnBox(folder: string): Promise<void> {
-    await expect.poll(async (): Promise<string[]> => this.chevronFaults(folder, true, BOX_ROW_TOP_PX)).toEqual([]);
+    await expect.poll(async (): Promise<string[]> => this.chevronFaults(folder, true, boxRowFrameOf)).toEqual([]);
   }
 
   /** The "…" ends 8 px in from the box's right edge, level with the chevron. */
   public async expectEllipsisOnBox(folder: string): Promise<void> {
-    await expect.poll(async (): Promise<string[]> => this.ellipsisFaults(folder, BOX_ROW_TOP_PX)).toEqual([]);
+    await expect.poll(async (): Promise<string[]> => this.ellipsisFaults(folder, boxRowFrameOf)).toEqual([]);
   }
 
   /** A collapsed node's row: an Expand chevron and the "…" in its top corners, 8 px in, and no title. */
   public async expectCollapsedRow(folder: string): Promise<void> {
     await expect(this.chevronOf(folder, false)).toHaveAttribute('aria-expanded', 'false');
     await expect(this.rowOf(folder).locator('.widget-title')).toHaveCount(0);
-    await expect.poll(async (): Promise<string[]> => this.chevronFaults(folder, false, COLLAPSED_ROW_TOP_PX)).toEqual([]);
-    await expect.poll(async (): Promise<string[]> => this.ellipsisFaults(folder, COLLAPSED_ROW_TOP_PX)).toEqual([]);
+    await expect.poll(async (): Promise<string[]> => this.chevronFaults(folder, false, collapsedRowFrameOf)).toEqual([]);
+    await expect.poll(async (): Promise<string[]> => this.ellipsisFaults(folder, collapsedRowFrameOf)).toEqual([]);
   }
 
   /** The chevron has focus, as after a click on the row it replaced. */
@@ -160,18 +160,20 @@ export class GraphWidgetsPage {
     return nodeRectNamed(nodes, zoom, name);
   }
 
-  private async chevronFaults(folder: string, isExpanded: boolean, topPx: number): Promise<string[]> {
+  private async chevronFaults(folder: string, isExpanded: boolean, frameOf: RowFrameOf): Promise<string[]> {
     const box = await this.boxOf(folder);
     const chevron = await rectOf(this.chevronOf(folder, isExpanded));
+    const zoom = await this.probe.zoom();
 
-    return chevronFaultsOf(box, chevron, topPx);
+    return chevronFaultsOf(box, chevron, frameOf(zoom));
   }
 
-  private async ellipsisFaults(folder: string, topPx: number): Promise<string[]> {
+  private async ellipsisFaults(folder: string, frameOf: RowFrameOf): Promise<string[]> {
     const box = await this.boxOf(folder);
     const ellipsis = await rectOf(this.ellipsisOf(folder));
+    const zoom = await this.probe.zoom();
 
-    return ellipsisFaultsOf(box, ellipsis, topPx);
+    return ellipsisFaultsOf(box, ellipsis, frameOf(zoom));
   }
 
   private async packageButtonFaults(name: string): Promise<string[]> {
