@@ -1,13 +1,22 @@
 import assert from 'node:assert/strict';
 
 import type { TaskKind } from '@turbo-console/repo-gen';
-import type { GraphEdge, GraphPackage, GraphReady } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphReady, GraphRunState } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
-import { lastGraphState } from './graph-posted.spec.util.ts';
+import { lastGraphState, postedRuns, postedShowTasks } from './graph-posted.spec.util.ts';
+import { endedRun, startRun, taskNodeNamed } from './run-wait.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
-import type { PanelInfo } from '../../src/shared/common/api.type.ts';
-import { GRAPH_COMMAND, HASH_PATTERN, HUB_TAG, ROOT_PACKAGE_NAME } from '../common/graph.const.ts';
+import type { PanelInfo, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
+import {
+  GRAPH_COMMAND,
+  HASH_PATTERN,
+  HUB_TAG,
+  ROOT_PACKAGE_NAME,
+  TASK_GRAPH_COMMAND,
+  TASK_ID,
+  TASK_PACKAGE
+} from '../common/graph.const.ts';
 import type { GraphScene } from '../common/graph.type.ts';
 import type { ShownManifest, ShownPackage, ShownTask } from '../common/launch.type.ts';
 
@@ -151,5 +160,54 @@ export const detailsCase = async (scene: GraphScene): Promise<void> => {
     await api.graph.receive(root, { type: 'openDetails', packageName: name });
     await waitFor('details panel', isOpened);
     await api.details.whenIdle(root, name);
+  });
+};
+
+/** `Show Task Graph…` on a task row asks that root's panel to show that one task. */
+export const taskGraphCase = async (scene: GraphScene): Promise<void> => {
+  const { api, root } = scene;
+
+  await step('L13-6: Show Task Graph on a task row posts showTasks for that task', async () => {
+    const node = await taskNodeNamed(api, TASK_PACKAGE, TASK_ID);
+
+    await vscode.commands.executeCommand(TASK_GRAPH_COMMAND, node);
+    await waitFor('showTasks post', () => postedShowTasks(api, root) !== null);
+
+    assert.deepEqual(postedShowTasks(api, root), { type: 'showTasks', taskIds: [TASK_ID] });
+  });
+};
+
+/** The run states `id` went through in the `runs` maps posted to the panel of `root`, oldest first; a map without `id` adds none. */
+const runStatesOf = (api: TurboConsoleApi, root: string, id: string): GraphRunState[] => {
+  const states: GraphRunState[] = [];
+
+  for (const message of postedRuns(api, root)) {
+    const state = message.runs[id];
+
+    if (state !== undefined) states.push(state);
+  }
+
+  return states;
+};
+
+/** Running the task from its row repaints the graph: its `runs` entry goes `running`, then `passed`. */
+export const runRepaintCase = async (scene: GraphScene): Promise<void> => {
+  const { api, root } = scene;
+
+  await step('L13-7: running the task posts runs with it running, then passed', async () => {
+    const node = await taskNodeNamed(api, TASK_PACKAGE, TASK_ID);
+    const launchedAt = await startRun(api, node);
+    const ended = await endedRun(api, node, launchedAt);
+    const isPassedPosted = (): boolean => runStatesOf(api, root, TASK_ID).includes('passed');
+
+    await waitFor('passed runs post', isPassedPosted);
+
+    const states = runStatesOf(api, root, TASK_ID);
+    const firstRunning = states.indexOf('running');
+    const lastPassed = states.lastIndexOf('passed');
+
+    assert.equal(ended.state, 'passed');
+    assert.ok(firstRunning >= 0, `no running post for ${TASK_ID}: ${states.join(', ')}`);
+    assert.ok(lastPassed > firstRunning, `passed is not posted after running: ${states.join(', ')}`);
   });
 };
