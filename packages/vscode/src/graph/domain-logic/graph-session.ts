@@ -145,6 +145,10 @@ export class GraphSession {
         await this.answer({ request: message, value });
 
         return;
+      case 'exportImage':
+        this.drop(value);
+
+        return;
     }
   }
 

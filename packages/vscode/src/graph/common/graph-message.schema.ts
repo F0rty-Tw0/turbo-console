@@ -14,7 +14,7 @@ import {
   enum as zodEnum
 } from 'zod/mini';
 
-import { GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX } from './graph.const.ts';
+import { BASE64_PATTERN, EXPORT_PNG_MAX, GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX } from './graph.const.ts';
 
 const packageNameSchema = string().check(maxLength(PACKAGE_NAME_MAX));
 
@@ -47,6 +47,11 @@ const layoutMsSchema = number().check(gte(0), lte(LAYOUT_MS_MAX));
 
 const layoutDoneSchema = object({ type: literal('layoutDone'), ms: layoutMsSchema, engine: zodEnum(['elk', 'fallback']) });
 
+const exportImageSchema = object({
+  type: literal('exportImage'),
+  png: string().check(maxLength(EXPORT_PNG_MAX), regex(BASE64_PATTERN))
+});
+
 /**
  * A message from the graph webview, which is a trust boundary. Unknown keys are stripped; whether a package name or a
  * hash is current is checked by the session against the state built at that moment.
@@ -58,5 +63,6 @@ export const graphMessageSchema = discriminatedUnion('type', [
   positionsSchema,
   layoutDoneSchema,
   explainEdgeSchema,
-  openManifestSchema
+  openManifestSchema,
+  exportImageSchema
 ]);
