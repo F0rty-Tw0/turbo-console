@@ -52,7 +52,11 @@ const themeColors = (): ThemeColors => {
   return themeColorsOf((name: string): string => style.getPropertyValue(name));
 };
 
-const background = (): string => themeColors().background;
+const background = (): string => {
+  const colors = themeColors();
+
+  return colors.background;
+};
 
 const labelSizer = (measure: TextMeasure): NodeSizer => {
   const sizeOf = (name: string): NodeSize => nodeSizeOf(measure(name));
