@@ -32,11 +32,21 @@ const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
 const BOXES_IN_VIEW = 6;
 
 /**
- * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
- * frame), so the budget sits between them with room for CI runners that measure up to 3.4x slower. The 120 px box
- * zoom (about 0.21) is below the header rows' 0.5 floor, so no widget moves in this pan.
+ * macOS runners read the grouped pan 683-1422 ms and the header-rows pan 1559-2842 ms (C58, 2026-10-23, `pan-cpu-ms`
+ * log lines): about 2x spread on one runner image, inferred to be host CPU loss counted as thread time. Their budgets
+ * sit about 1.7x over the worst reading, still under the ~3150 ms an unpatched Cytoscape would read there (inferred);
+ * Linux and Windows keep the tight budgets on the same code and catch a lost patch anyway. Stopgap until C58's
+ * calibrated budget.
  */
-const GROUPED_PAN_MS = 1100;
+const IS_MAC_RUNNER = process.platform === 'darwin';
+
+/**
+ * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
+ * frame), so the budget sits between them with room for CI runners that measure up to 3.4x slower (macOS reads up to
+ * 4.4x, see `IS_MAC_RUNNER`). The 120 px box zoom (about 0.21) is below the header rows' 0.5 floor, so no widget moves
+ * in this pan.
+ */
+const GROUPED_PAN_MS = IS_MAC_RUNNER ? 2400 : 1100;
 
 /**
  * About 690 ms pinned (685 to 701) with tracing off, at the first notch past the rows' 0.5 zoom floor (about 0.51);
@@ -44,7 +54,10 @@ const GROUPED_PAN_MS = 1100;
  * this zoom, not per-row widget cost: with 2 boxes and 4 buttons in view, a mutant forcing a layout read on every widget
  * style write measured 693 ms, inside the base's spread.
  */
-const ROWS_PAN_MS = 2400;
+const ROWS_PAN_MS = IS_MAC_RUNNER ? 4800 : 2400;
+
+/** The grouped pans' slowest step; macOS read up to 52 ms there (C58), so it gets about 1.7x, Linux and Windows the 50 ms long-task line. */
+const GROUPED_PAN_STEP_MS = IS_MAC_RUNNER ? 90 : 50;
 
 /** At the first zoom that shows header rows, 2 of the 30 boxes of `largeState()` overlap the canvas, each with its 2 buttons. */
 const ROWS_BOXES_IN_VIEW = 2;
@@ -157,7 +170,7 @@ test.describe('FEATURE: graph tripwires', () => {
     });
   });
 
-  test('GIVEN 300 packages grouped and zoomed to readable boxes, a scripted 2 s pan uses under 1.1 s of main-thread CPU and no step over 50 ms', async ({
+  test('GIVEN 300 packages grouped and zoomed to readable boxes, a scripted 2 s pan uses under 1.1 s of main-thread CPU (2.4 s on macOS) and no step over 50 ms (90 ms on macOS)', async ({
     graphCanvas,
     graphGrouping,
     graphHost,
@@ -200,11 +213,11 @@ test.describe('FEATURE: graph tripwires', () => {
       await graphCanvas.scriptedPan(30, 120, spot);
     });
 
-    await test.step('THEN the pan used under 1100 ms of CPU and no step over 50 ms', (): void =>
-      graphCanvas.expectPanCpuUnder(GROUPED_PAN_MS, 50));
+    await test.step('THEN the pan used under its CPU and step budgets', (): void =>
+      graphCanvas.expectPanCpuUnder(GROUPED_PAN_MS, GROUPED_PAN_STEP_MS));
   });
 
-  test('GIVEN 300 packages grouped and zoomed until header rows show, a scripted 2 s pan uses under 2.4 s of main-thread CPU and no step over 50 ms', async ({
+  test('GIVEN 300 packages grouped and zoomed until header rows show, a scripted 2 s pan uses under 2.4 s of main-thread CPU (4.8 s on macOS) and no step over 50 ms (90 ms on macOS)', async ({
     graphCanvas,
     graphGrouping,
     graphHost,
@@ -244,8 +257,8 @@ test.describe('FEATURE: graph tripwires', () => {
       await graphCanvas.scriptedPan(30, 120, spot);
     });
 
-    await test.step('THEN the pan used under 2400 ms of CPU and no step over 50 ms', (): void =>
-      graphCanvas.expectPanCpuUnder(ROWS_PAN_MS, 50));
+    await test.step('THEN the pan used under its CPU and step budgets', (): void =>
+      graphCanvas.expectPanCpuUnder(ROWS_PAN_MS, GROUPED_PAN_STEP_MS));
   });
 
   test(
