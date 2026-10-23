@@ -15,7 +15,7 @@ const boundsOf = (overlayLeft: number | null): LayerBounds => {
   return bounds;
 };
 
-/** A drawn folder whose border-free width is `width`, its rect's width unless a thicker border widens the rect. */
+/** A drawn folder whose plain-border width is `width`, its rect's width unless a thicker border widens the rect. */
 const folderOf = (rect: RectPx, width = rect.x2 - rect.x1): FolderRect => {
   const folder: FolderRect = { rect, width };
 
@@ -144,8 +144,8 @@ describe('FEATURE: rowPlacementOf', () => {
     });
   });
 
-  describe('GIVEN a folder drawn selected at zoom 0.655, its 3 px border widening its 117.9 px border-free width to a 121.2 px rect', () => {
-    const selected = folderOf(rectOf(100, 50, 100 + 185 * 0.655, 50 + 61 * 0.655), 180 * 0.655);
+  describe('GIVEN a folder drawn selected at zoom 0.655, its 3 px border widening its 119.9 px plain-border width to a 121.2 px rect', () => {
+    const selected = folderOf(rectOf(100, 50, 100 + 185 * 0.655, 50 + 61 * 0.655), 183 * 0.655);
 
     it.each(['box' as const, 'collapsed' as const])('WHEN the row kind is %s THEN it has no row', (kind) => {
       const placement = rowPlacementOf(selected, kind, 0.655);
@@ -154,8 +154,8 @@ describe('FEATURE: rowPlacementOf', () => {
     });
   });
 
-  describe('GIVEN a folder whose 300 px rect is 2 px wider than its border-free width', () => {
-    it('WHEN the row is placed THEN it spans the rect, not the border-free width', () => {
+  describe('GIVEN a folder whose 300 px rect is 2 px wider than its plain-border width', () => {
+    it('WHEN the row is placed THEN it spans the rect, not the plain-border width', () => {
       const folder = folderOf(BOX, 298);
 
       const placement = rowPlacementOf(folder, 'box', 1);

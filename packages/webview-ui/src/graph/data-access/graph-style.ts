@@ -7,6 +7,7 @@ import {
   FOLDER_LINK_CLASS,
   FOLDER_NODE_CLASS,
   FOLDER_PADDING_PX,
+  NODE_BORDER_PX,
   NODE_FONT_SIZE
 } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
@@ -24,7 +25,7 @@ const boxStyleOf = (colors: ThemeColors): Css.Node => {
     'overlay-opacity': 0,
     width: 1,
     height: 1,
-    'border-width': 1,
+    'border-width': NODE_BORDER_PX,
     'border-color': colors.frame,
     'background-color': colors.background
   } as const;
@@ -65,7 +66,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
     'font-family': fontFamily,
     color: colors.label,
     'background-color': colors.background,
-    'border-width': 1,
+    'border-width': NODE_BORDER_PX,
     'border-color': colors.frame
   } as const;
   const edge = {

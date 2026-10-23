@@ -122,6 +122,9 @@ export const DIMMED_BOX_CLASS = 'dimmed-box';
 /** Room ELK leaves around a folder's packages, and Cytoscape's compound padding, in px. */
 export const FOLDER_PADDING_PX = 32;
 
+/** The border of a package, folder box or collapsed node while neither selected nor highlighted, in px. */
+export const NODE_BORDER_PX = 1;
+
 /** The grouped root: the same layered options, with edges between packages of different folders laid out together. */
 export const ELK_GROUPED_ROOT_OPTIONS: Readonly<Record<string, string>> = {
   ...ELK_OPTIONS,

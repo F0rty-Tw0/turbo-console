@@ -9,7 +9,7 @@ const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
   return rect;
 };
 
-/** A drawn folder at `{x1, y1, x2, y2}`, its border-free width its rect's. */
+/** A drawn folder at `{x1, y1, x2, y2}`, its plain-border width its rect's. */
 const folderOf = (x1: number, y1: number, x2: number, y2: number): FolderRect => {
   const rect = rectOf(x1, y1, x2, y2);
   const folder: FolderRect = { rect, width: x2 - x1 };

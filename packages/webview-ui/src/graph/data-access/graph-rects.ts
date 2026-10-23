@@ -1,6 +1,6 @@
 import type { Core, NodeCollection, NodeSingular } from 'cytoscape';
 
-import { FOLDER_NODE_CLASS } from '../common/graph.const.ts';
+import { FOLDER_NODE_CLASS, NODE_BORDER_PX } from '../common/graph.const.ts';
 import type { FolderRect, RectPx, WidgetRects } from '../common/widget.type.ts';
 import { folderOfElementId } from '../utils/folder-id.util.ts';
 
@@ -20,11 +20,11 @@ const borderWidthOf = (node: NodeSingular): number => {
   return typeof width === 'number' ? width : 0;
 };
 
-/** The rendered rect, and the rendered outer width less the border, so a `selected` or `highlighted` border leaves it alone. */
+/** The rendered rect, and its width at the plain border, so a `selected` or `highlighted` border leaves the width alone. */
 const folderRectOf = (node: NodeSingular): FolderRect => {
   const rect = renderedRectOf(node);
-  const zoom = node.cy().zoom();
-  const width = node.renderedOuterWidth() - borderWidthOf(node) * zoom;
+  const extraBorder = (borderWidthOf(node) - NODE_BORDER_PX) * node.cy().zoom();
+  const width = rect.x2 - rect.x1 - extraBorder;
   const folderRect: FolderRect = { rect, width };
 
   return folderRect;

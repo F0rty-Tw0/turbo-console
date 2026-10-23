@@ -8,7 +8,7 @@ export type RectPx = {
   readonly y2: number;
 };
 
-/** A drawn box or collapsed node: its rendered rect, and its rendered width without the border `selected` and `highlighted` thicken. */
+/** A drawn box or collapsed node: its rendered rect, and the rect's width with the plain border `selected` and `highlighted` thicken. */
 export type FolderRect = {
   readonly rect: RectPx;
   readonly width: number;

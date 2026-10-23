@@ -56,7 +56,7 @@ const collapsedRowOf = (box: RectPx, zoom: number): RowPlacement | null => {
 
 /**
  * The header row inside a box (scaled to its rendered band and centred in it) or a collapsed node (scaled with the
- * zoom, 8 px in), placed on its rect; `null` while its border-free width is under `WIDGET_MIN_BOX_PX`, so selecting it
+ * zoom, 8 px in), placed on its rect; `null` while its plain-border width is under `WIDGET_MIN_BOX_PX`, so selecting it
  * never shows or hides the row, or under the half-size floor at `zoom`.
  */
 export const rowPlacementOf = (folder: FolderRect, kind: RowKind, zoom: number): RowPlacement | null => {

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { setBoxes } from './graph-boxes.ts';
 import { widgetRectsOf } from './graph-rects.ts';
 import { showOnly } from './graph-visibility.ts';
-import { FOLDER_HIDDEN_CLASS, FOLDER_NODE_CLASS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { FOLDER_HIDDEN_CLASS, FOLDER_NODE_CLASS } from '../common/graph.const.ts';
 import type { FolderRect, RectPx } from '../common/widget.type.ts';
 import { boardsCyMock, groupedCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
@@ -29,10 +29,12 @@ const addCollapsed = (cy: Core, folder: string): void => {
 
 const NO_RECT: RectPx = { x1: Number.NaN, y1: Number.NaN, x2: Number.NaN, y2: Number.NaN };
 
-/** NaN edges and width in place of a missing apps box, so its rect never widens. */
+/** NaN edges and width in place of a missing folder, so its rect never widens. */
 const NO_FOLDER: FolderRect = { rect: NO_RECT, width: Number.NaN };
 
 const appsOf = (cy: Core): FolderRect => widgetRectsOf(cy, null).boxes.get('apps') ?? NO_FOLDER;
+
+const collapsedPackagesOf = (cy: Core): FolderRect => widgetRectsOf(cy, null).collapsed.get('packages') ?? NO_FOLDER;
 
 describe('FEATURE: widgetRectsOf', () => {
   describe('GIVEN the boards drawn grouped at zoom 0.5', () => {
@@ -51,13 +53,10 @@ describe('FEATURE: widgetRectsOf', () => {
       expect(rects.boxes.get('apps')?.rect).toStrictEqual(expected);
     });
 
-    it('WHEN read THEN the apps width is its body and 32 px padding each side, drawn at the zoom, without its border', () => {
-      const box = cy.getElementById(folderIdOf('apps'));
-      const expected = (box.width() + 2 * FOLDER_PADDING_PX) * 0.5;
+    it('WHEN read with the plain border THEN the apps width is its rect width', () => {
+      const { rect, width } = appsOf(cy);
 
-      const rects = widgetRectsOf(cy, null);
-
-      expect(rects.boxes.get('apps')?.width).toBe(expected);
+      expect(width).toBe(rect.x2 - rect.x1);
     });
 
     it.each(['selected', 'highlighted'])('WHEN the apps box is painted %s THEN its rect widens but its width stays', (state) => {
@@ -94,15 +93,16 @@ describe('FEATURE: widgetRectsOf', () => {
       expect(rects.collapsed.get('packages')?.rect).toStrictEqual(expected);
     });
 
-    it.each(['normal', 'selected', 'highlighted'])(
-      'WHEN packages is drawn as a collapsed node painted %s THEN its width is 180 px at zoom 0.5, without its border',
+    it.each(['selected', 'highlighted'])(
+      'WHEN packages is drawn as a collapsed node painted %s THEN its width is its plain-border rect width',
       (state) => {
         addCollapsed(cy, 'packages');
+        const plain = collapsedPackagesOf(cy);
+
         cy.getElementById(collapsedIdOf('packages')).addClass(state);
+        const painted = collapsedPackagesOf(cy);
 
-        const rects = widgetRectsOf(cy, null);
-
-        expect(rects.collapsed.get('packages')?.width).toBe(90);
+        expect(painted.width).toBe(plain.rect.x2 - plain.rect.x1);
       }
     );
 
