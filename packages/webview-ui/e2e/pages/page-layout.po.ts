@@ -3,6 +3,7 @@ import { expect } from '@playwright/test';
 
 import { CardLayout } from './card-layout.po.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
+import { CODICON_STATUS } from '../common/shell.const.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 
 type ThemeVars = Record<string, string>;
@@ -95,6 +96,13 @@ export class PageLayout {
 
     expect(this.rememberedRects).not.toBeNull();
     expect(rects).toEqual(this.rememberedRects);
+  }
+
+  /** The codicon font face exists and is still 'loading', so glyphs lay out in the fallback font. */
+  public async expectCodiconFontLoading(): Promise<void> {
+    const readStatus = async (): Promise<unknown> => this.page.evaluate<unknown>(CODICON_STATUS);
+
+    await expect.poll(readStatus).toBe('loading');
   }
 
   /** The button labelled `label` is at least `size` × `size` CSS pixels. */

@@ -46,6 +46,11 @@ window.acquireVsCodeApi = () => ({
   setState: (state) => { window.__state = state; }
 });`;
 
+const IS_CODICON_FACE = `(face) => face.family.replaceAll('"', '') === 'codicon'`;
+
 /** `document.fonts.check('16px codicon')` is also true when no codicon face exists at all, so look for a loaded face. */
 export const CODICON_LOADED = `document.fonts.check('16px codicon')
-  && [...document.fonts].some((face) => face.family.replaceAll('"', '') === 'codicon' && face.status === 'loaded')`;
+  && [...document.fonts].find(${IS_CODICON_FACE})?.status === 'loaded'`;
+
+/** The codicon face's load status; `undefined` when the page declares no codicon face. */
+export const CODICON_STATUS = `[...document.fonts].find(${IS_CODICON_FACE})?.status`;
