@@ -1,8 +1,10 @@
 import { basename, join } from 'node:path';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import { PNG_SIGNATURE } from '../common/graph.const.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
+
+/** The first eight bytes of every PNG file. */
+const PNG_SIGNATURE: number[] = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 /** 12 base64 characters decode to 9 bytes, enough for the 8-byte signature. */
 const SIGNATURE_CHARS = 12;

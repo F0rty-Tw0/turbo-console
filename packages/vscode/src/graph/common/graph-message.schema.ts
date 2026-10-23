@@ -14,7 +14,10 @@ import {
   enum as zodEnum
 } from 'zod/mini';
 
-import { BASE64_PATTERN, EXPORT_PNG_MAX, GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX } from './graph.const.ts';
+import { EXPORT_PNG_MAX, GRAPH_HASH_PATTERN, LAYOUT_MS_MAX, PACKAGE_NAME_MAX } from './graph.const.ts';
+
+/** Base64 characters only, with no `data:` prefix. */
+const BASE64_PATTERN = /^[A-Za-z0-9+/]*={0,2}$/;
 
 const packageNameSchema = string().check(maxLength(PACKAGE_NAME_MAX));
 

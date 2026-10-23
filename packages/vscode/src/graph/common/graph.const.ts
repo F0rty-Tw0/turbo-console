@@ -35,15 +35,3 @@ export const LAYOUT_MS_MAX = 600_000;
 
 /** An `exportImage` post past this many base64 characters (32 MiB) is not a graph image. */
 export const EXPORT_PNG_MAX = 33_554_432;
-
-/** Base64 characters only, with no `data:` prefix. */
-export const BASE64_PATTERN = /^[A-Za-z0-9+/]*={0,2}$/;
-
-/** The first eight bytes of every PNG file. */
-export const PNG_SIGNATURE: number[] = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-
-/** The save dialog's title for the graph image. */
-export const SAVE_TITLE = 'Export Package Graph Image';
-
-/** The save dialog's file filter for the graph image. */
-export const SAVE_FILTERS: Record<string, string[]> = { 'PNG image': ['png'] };

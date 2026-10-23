@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
 
-import { SAVE_FILTERS, SAVE_TITLE } from '../common/graph.const.ts';
+/** The save dialog's title for the graph image. */
+const SAVE_TITLE = 'Export Package Graph Image';
+
+/** The save dialog's file filter for the graph image. */
+const SAVE_FILTERS: Record<string, string[]> = { 'PNG image': ['png'] };
 
 /** The path the user picked in the save dialog, or `null` when they cancelled. */
 export const pickSaveUri = async (defaultPath: string): Promise<string | null> => {
