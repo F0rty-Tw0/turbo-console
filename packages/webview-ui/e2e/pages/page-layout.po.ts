@@ -23,6 +23,8 @@ const readBorderWidth = (element: Element, side: BorderSide): string =>
 
 const topOf = (rect: ElementRect): number => rect.top;
 
+const CODICON_STATUS = `[...document.fonts].find((face) => face.family.replaceAll('"', '') === 'codicon')?.status`;
+
 /** The page's theme and the layout of its cards and buttons, read from computed styles and boxes. */
 export class PageLayout {
   private readonly page: Page;
@@ -95,6 +97,12 @@ export class PageLayout {
 
     expect(this.rememberedRects).not.toBeNull();
     expect(rects).toEqual(this.rememberedRects);
+  }
+
+  public async expectCodiconFontLoading(): Promise<void> {
+    const readStatus = async (): Promise<unknown> => this.page.evaluate<unknown>(CODICON_STATUS);
+
+    await expect.poll(readStatus).toBe('loading');
   }
 
   /** The button labelled `label` is at least `size` × `size` CSS pixels. */

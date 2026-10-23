@@ -102,6 +102,19 @@ test.describe('FEATURE: package details page, layout and theme', () => {
       await test.step('THEN the button box is at least 24 px each way', async (): Promise<void> =>
         pageLayout.expectHitArea(label, 24));
     });
+
+    test(`GIVEN the ${label} icon button while the codicon font loads, its hit area is at least 24 × 24`, async ({
+      detailsPage,
+      pageLayout
+    }): Promise<void> => {
+      await test.step('WHEN the codicon font never arrives', (): void => detailsPage.holdCodiconFont());
+
+      await test.step('AND the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
+
+      await test.step('THEN the codicon font is still loading', async (): Promise<void> => pageLayout.expectCodiconFontLoading());
+
+      await test.step('AND the button box is at least 24 px each way', async (): Promise<void> => pageLayout.expectHitArea(label, 24));
+    });
   }
 
   test('GIVEN two cards at 1100 px, they sit side by side', async ({ detailsPage, pageLayout }): Promise<void> => {

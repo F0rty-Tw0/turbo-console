@@ -13,6 +13,8 @@ const postToPage = (message: HostMessage): void => window.postMessage(message, '
 /** Resolves after two frames, so the scroll events of the last scroll have fired. */
 const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
 
+const holdRequest = async (): Promise<void> => new Promise<void>((): void => undefined);
+
 export class DetailsPage {
   public readonly heading: Locator;
   public readonly path: Locator;
@@ -32,11 +34,13 @@ export class DetailsPage {
   private readonly diagnostics: PageDiagnostics;
   private readonly page: Page;
   private scrolledY: number;
+  private isCodiconHeld: boolean;
 
   public constructor(page: Page) {
     this.page = page;
     this.diagnostics = new PageDiagnostics(page);
     this.scrolledY = 0;
+    this.isCodiconHeld = false;
     this.heading = page.getByRole('heading', { level: 1 });
     this.path = page.locator('.package-path');
     this.tags = page.locator('.tag');
@@ -60,6 +64,9 @@ export class DetailsPage {
     await this.diagnostics.attach();
     await this.page.addInitScript({ content: HOST_API_STUB });
     await this.page.route(`${SHELL_ORIGIN}/**`, detailsDistMock());
+
+    if (this.isCodiconHeld) await this.page.route(`${SHELL_ORIGIN}/codicon.ttf*`, holdRequest);
+
     await this.page.goto(SHELL_URL);
     await this.page.evaluate(postToPage, message);
     await this.heading.waitFor();
@@ -76,6 +83,14 @@ export class DetailsPage {
     const card = new TaskCardSection(this.page, taskName);
 
     return card;
+  }
+
+  /**
+   * Before `open`: the codicon font request never answers, as while VS Code is still serving it.
+   * `open` adds the hold after its catch-all route, because Playwright tries the latest route first.
+   */
+  public holdCodiconFont(): void {
+    this.isCodiconHeld = true;
   }
 
   /** Before `open`: the user asked the OS for reduced motion. */

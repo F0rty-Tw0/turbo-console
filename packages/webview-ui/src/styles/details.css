@@ -142,6 +142,11 @@ ul {
   padding: var(--space-1);
 }
 
+/* A fixed width, so the box keeps 24 px while the codicon font loads or after it fails and a narrower fallback glyph shows. */
+.icon-button .codicon {
+  width: 16px;
+}
+
 .icon-button:hover {
   background: var(--vscode-toolbar-hoverBackground);
 }
