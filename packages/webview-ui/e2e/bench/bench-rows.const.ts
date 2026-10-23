@@ -10,7 +10,10 @@ const OPEN_COLD_LARGE: BenchRowDef = { name: 'graph open cold large grouped', ga
 const PAN_CPU_LARGE: BenchRowDef = { name: 'graph pan cpu large grouped', gate: false, samples: 3 };
 const TOGGLE_LARGE: BenchRowDef = { name: 'graph folder toggle large', gate: false, samples: 3 };
 
-/** Rows of spec 3.1 in order; the bench job writes each as `webview-ui/<name>`. */
+/**
+ * Rows of spec 3.1 in order; the bench job writes each as `webview-ui/<name>`.
+ * The open rows time message receipt to the first render after layout; the page load is not in them.
+ */
 export const BENCH_ROWS: Readonly<Record<BenchRowKey, BenchRowDef>> = {
   openCold: OPEN_COLD,
   openCached: OPEN_CACHED,
