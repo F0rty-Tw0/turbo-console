@@ -93,5 +93,13 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   cy.on('tap', onBackground);
   cy.on('dragfreeon', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
   cy.on('viewport', handlers.onViewport);
-  cy.on('render', handlers.onRender);
+  cy.on('render', (): void => {
+    const end = performance.now() + 30;
+
+    while (performance.now() < end) {
+      // deliberate slowdown for the M4-6 bench proof; throwaway branch
+    }
+
+    handlers.onRender();
+  });
 };
