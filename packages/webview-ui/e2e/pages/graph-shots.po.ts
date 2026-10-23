@@ -70,16 +70,13 @@ export class GraphShots {
     await this.settle();
   }
 
-  /** Each folder's header row is visible. */
   public async expectHeaderRows(folders: string[]): Promise<void> {
     for (const folder of folders) await expect(this.widgets.rowOf(folder)).toBeVisible();
   }
 
   /** Opens the page, lays `setup.state` out with ELK, waits for the view to be saved and reopens the page from it. */
   private async captureLayout(setup: ShotSetup): Promise<Positions> {
-    const savedState = setup.saved ?? undefined;
-
-    await this.graph.open({ savedState });
+    await this.graph.open({ savedState: setup.saved });
     await this.host.sendState(setup.state);
     await this.probe.expectLayoutEngine('elk');
 

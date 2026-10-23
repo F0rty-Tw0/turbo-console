@@ -1,9 +1,10 @@
 import type { ShotSetup } from './common/graph-shots.type.ts';
 import { expect, test } from './graph.fixture.ts';
 import { GraphShots } from './pages/graph-shots.po.ts';
+import { FOLDERS_SHOT_COLLAPSED } from './test/common/graph-shots.const.ts';
 import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
 import { collapsedSavedState } from './test/utils/graph-folder-states.spec.util.ts';
-import { FOLDERS_SHOT_COLLAPSED, foldersShotState } from './test/utils/graph-folders-shot.spec.util.ts';
+import { foldersShotState } from './test/utils/graph-folders-shot.spec.util.ts';
 import { closedPanelsSavedState } from './test/utils/graph-shot-state.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 
@@ -60,10 +61,10 @@ test.describe('FEATURE: theme screenshots', () => {
       await test.step('WHEN the folders graph is grouped with tools collapsed and reopened from its cache', async (): Promise<void> =>
         shots.openCached(FOLDERS_SETUP, theme));
 
-      await test.step('AND the apps and libs header rows are shown', async (): Promise<void> =>
+      await test.step('THEN the apps and libs header rows are shown', async (): Promise<void> =>
         shots.expectHeaderRows(['apps', 'libs']));
 
-      await test.step(`THEN the page matches folders-${name}.png`, async (): Promise<void> =>
+      await test.step(`AND the page matches folders-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`folders-${name}.png`));
     });
   }

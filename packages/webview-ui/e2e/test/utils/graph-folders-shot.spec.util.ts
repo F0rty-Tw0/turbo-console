@@ -1,9 +1,6 @@
 import { packageOf } from './graph-package.spec.util.ts';
 import type { GraphEdge, GraphReady } from '../../../src/bridge/common/graph-state.type.ts';
 
-/** The folders the folders shot's saved view collapses; `apps` and `libs` stay open. */
-export const FOLDERS_SHOT_COLLAPSED: string[] = ['tools'];
-
 const EDGES: GraphEdge[] = [
   { source: 'web', target: 'ui' },
   { source: 'web', target: 'core' },
