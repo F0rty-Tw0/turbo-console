@@ -2,6 +2,7 @@ import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import type { ToolbarElements } from '../common/graph-page.type.ts';
+import { MODE_LABEL, TASK_MODE_LABEL } from '../common/graph-task.const.ts';
 import {
   CLEAR_LABEL,
   CONTROLS_LABEL,
@@ -33,6 +34,15 @@ const panelToggle = (id: GraphIconId, label: string, panelId: string): HTMLButto
 
   button.setAttribute('aria-controls', panelId);
   button.setAttribute('aria-expanded', 'false');
+
+  return button;
+};
+
+/** An unpressed toggle button; task mode sets `aria-pressed` while it is on. */
+const pressToggle = (id: GraphIconId, label: string): HTMLButtonElement => {
+  const button = iconButton(id, label);
+
+  button.setAttribute('aria-pressed', 'false');
 
   return button;
 };
@@ -77,10 +87,11 @@ const statusLine = (): HTMLElement => {
 };
 
 /**
- * The toolbar in its pre-state, every button disabled: the Panels group (Controls, Details), the View group (Fit,
- * Re-layout, Export image), Clear selection, then the status line. DOM order is the Tab order.
+ * The toolbar in its pre-state, every button disabled: the Mode group (Task mode), the Panels group (Controls, Details),
+ * the View group (Fit, Re-layout, Export image), Clear selection, then the status line. DOM order is the Tab order.
  */
 export const buildToolbar = (): ToolbarElements => {
+  const taskMode = pressToggle('tasklist', TASK_MODE_LABEL);
   const controls = panelToggle('layout-sidebar-left', CONTROLS_LABEL, 'graph-controls');
   const filtersOn = filtersOnMark();
   const details = panelToggle('layout-sidebar-right', DETAILS_LABEL, 'graph-details');
@@ -89,6 +100,8 @@ export const buildToolbar = (): ToolbarElements => {
   const exportImage = iconButton('desktop-download', EXPORT_LABEL);
   const clear = iconButton('close', CLEAR_LABEL);
   const status = statusLine();
+  const mode = toolbarGroup(MODE_LABEL, taskMode);
+  const modeEnd = separator();
   const panels = toolbarGroup(PANELS_LABEL, controls, details);
   const panelsEnd = separator();
   const view = toolbarGroup(VIEW_LABEL, fit, relayout, exportImage);
@@ -96,9 +109,9 @@ export const buildToolbar = (): ToolbarElements => {
   const toolbar = textElement('header', 'graph-toolbar', '');
 
   controls.append(filtersOn);
-  toolbar.append(panels, panelsEnd, view, viewEnd, clear, status);
+  toolbar.append(mode, modeEnd, panels, panelsEnd, view, viewEnd, clear, status);
 
-  const elements: ToolbarElements = { toolbar, controls, details, fit, relayout, exportImage, clear, status, filtersOn };
+  const elements: ToolbarElements = { toolbar, taskMode, controls, details, fit, relayout, exportImage, clear, status, filtersOn };
 
   return elements;
 };

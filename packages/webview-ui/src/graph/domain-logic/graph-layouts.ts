@@ -107,6 +107,18 @@ export class GraphLayouts {
     await this.layOut(this.checked);
   }
 
+  /** Leaving task mode: draws the checkbox's mode afresh from its snapshot, laying out only when none is cached, then restores `saved`. */
+  public async redraw(saved: GraphViewState | null): Promise<void> {
+    this.saved = saved;
+    this.hasDrawn = false;
+    this.onScreen = this.checked;
+
+    const isCached = this.snapshots.has(this.checked);
+
+    if (isCached) this.place(this.checked);
+    else await this.layOut(this.checked);
+  }
+
   /** Keeps a drag in the snapshot on screen and posts it for that mode's cache unless its layout fell back. */
   public dragged(positions: Positions): void {
     const drawn = this.deps.drawn();

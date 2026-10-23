@@ -10,16 +10,22 @@ const CODICON_CSS_PATH = join(import.meta.dirname, '../../../node_modules/@vscod
 
 describe('FEATURE: graph icon ids', () => {
   describe('GIVEN the icon id list', () => {
-    it('WHEN it is counted THEN it holds the 18 spec ids, the menu check and dash, and the export download', () => {
+    it('WHEN it is counted THEN it holds the 18 spec ids, the menu check and dash, the export download and the task mode toggle', () => {
       const count = GRAPH_ICON_IDS.length;
 
-      expect(count).toBe(21);
+      expect(count).toBe(22);
     });
 
     it('WHEN eye-closed is looked up THEN it is in the list', () => {
       const hasEyeClosed = GRAPH_ICON_IDS.includes('eye-closed');
 
       expect(hasEyeClosed).toBe(true);
+    });
+
+    it('WHEN tasklist, the Task mode icon, is looked up THEN it is in the list', () => {
+      const hasTasklist = GRAPH_ICON_IDS.includes('tasklist');
+
+      expect(hasTasklist).toBe(true);
     });
   });
 

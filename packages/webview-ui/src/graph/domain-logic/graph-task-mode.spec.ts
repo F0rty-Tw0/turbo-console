@@ -5,12 +5,16 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
+import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
+import type { TaskPanelActions } from '../common/graph-task.type.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
+import type { TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { MORE_TASKS_STATE_STUB, TASK_CHAIN_STUB, TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { TASK_CAMERA, taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
 import { taskLayoutKeyOf } from '../utils/elk-task-graph.util.ts';
+import { droppedTasksText } from '../utils/task-text.util.ts';
 
 const API_AT: Position = { x: 10, y: 20 };
 
@@ -35,7 +39,7 @@ const MORE_KEY = taskLayoutKeyOf(MORE_TASKS_STATE_STUB.tasks, new Set([...SHOWN,
 const SAVED_PAN: Position = { x: -40, y: 60 };
 
 /** The rig over a real `ViewStateModes` that starts from `saved`. */
-const rigOf = (saved: GraphViewState): TaskModeRig => {
+const rigOf = (saved: GraphViewState | null): TaskModeRig => {
   const saver: ViewStateSaver = { schedule: vi.fn(), flush: vi.fn() };
   const modes = new ViewStateModes(saver, saved);
 
@@ -43,6 +47,10 @@ const rigOf = (saved: GraphViewState): TaskModeRig => {
 };
 
 const drawnOf = (rig: TaskModeRig): TaskDrawing | undefined => rig.view.tasks.show.mock.lastCall?.[0];
+
+const panelActionsOf = (rig: TaskModeRig): TaskPanelActions | undefined => rig.panelOf.mock.lastCall?.[0];
+
+const controlsActionsOf = (rig: TaskModeRig): TaskControlsActions | undefined => rig.controlsOf.mock.lastCall?.[0];
 
 describe('FEATURE: GraphTaskMode', () => {
   let rig: TaskModeRig;
@@ -189,6 +197,108 @@ describe('FEATURE: GraphTaskMode', () => {
       expect(mode.isActive()).toBe(false);
       expect(rig.runs.count()).toBe(0);
       expect(rig.screen.showGraph).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN package mode with nothing saved and a state received', () => {
+    beforeEach(() => {
+      rig = rigOf(null);
+      mode = new GraphTaskMode(rig.deps);
+      mode.received(TASK_STATE_STUB, 7);
+      mode.toggle(8);
+    });
+
+    it('WHEN the toggle is pressed THEN task mode shows the prompt and lays nothing out', () => {
+      expect(mode.isActive()).toBe(true);
+      expect(rig.panel.enter).toHaveBeenCalledOnce();
+      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: true, hiddenCount: 0 });
+      expect(rig.runs.count()).toBe(0);
+    });
+
+    it('WHEN a depth is typed THEN it is saved with nothing chosen', () => {
+      controlsActionsOf(rig)?.onDepth(3);
+
+      expect(rig.modes.task()).toMatchObject({ chosen: [], depth: 3 });
+    });
+  });
+
+  describe('GIVEN package mode with web#build saved and a state received', () => {
+    beforeEach(() => {
+      rig = rigOf(taskSavedOf({ layoutKey: KEY, zoom: 1.25, pan: SAVED_PAN }, 'packages'));
+      mode = new GraphTaskMode(rig.deps);
+      mode.received(TASK_STATE_STUB, 7);
+    });
+
+    it('WHEN the toggle is pressed THEN the chain runs and lands with the saved task camera', async () => {
+      mode.toggle(8);
+      await rig.runs.settle(0, resultOf(KEY, POSITIONS));
+
+      expect(rig.frames.start).toHaveBeenCalledExactlyOnceWith(8);
+      expect(rig.view.setViewport).toHaveBeenCalledExactlyOnceWith(1.25, SAVED_PAN);
+    });
+
+    it('WHEN showTasks names api#build and an unknown id THEN api#build is chosen alone, the cap holds and one id is reported dropped', () => {
+      mode.showTasks(['api#build', 'zzz#none'], 8);
+
+      expect(mode.isActive()).toBe(true);
+      expect(rig.modes.task()).toMatchObject({ chosen: ['api#build'], capLifted: false, selected: null });
+      expect(rig.panel.notice).toHaveBeenLastCalledWith(droppedTasksText(1));
+    });
+
+    it('WHEN showTasks names only an unknown id THEN package mode stays and says those tasks are not in this workspace', () => {
+      mode.showTasks(['zzz#none'], 8);
+
+      expect(mode.isActive()).toBe(false);
+      expect(rig.panel.notice).toHaveBeenCalledExactlyOnceWith(UNKNOWN_TASKS_TEXT);
+    });
+  });
+
+  describe('GIVEN the chain placed after a toggle', () => {
+    beforeEach(async () => {
+      rig = rigOf(taskSavedOf({}, 'packages'));
+      mode = new GraphTaskMode(rig.deps);
+      mode.received(TASK_STATE_STUB, 7);
+      mode.toggle(8);
+      await rig.runs.settle(0, resultOf(KEY, POSITIONS));
+    });
+
+    it('WHEN the toggle is pressed again THEN the task camera is saved, the canvas emptied and package mode shown again', () => {
+      mode.toggle(9);
+
+      expect(rig.modes.mode()).toBe('packages');
+      expect(rig.modes.task()).toMatchObject({ layoutKey: KEY, ...TASK_CAMERA });
+      expect(rig.view.tasks.clear).toHaveBeenCalledOnce();
+      expect(rig.panel.exit).toHaveBeenCalledOnce();
+      expect(rig.onExit).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN showTasks names only an unknown id THEN the choice is kept', () => {
+      mode.showTasks(['zzz#none'], 9);
+
+      expect(rig.modes.task()).toMatchObject({ chosen: ['web#build'] });
+      expect(rig.panel.notice).toHaveBeenLastCalledWith(UNKNOWN_TASKS_TEXT);
+    });
+
+    it('WHEN the cap is lifted and the depth changes THEN the cap stays lifted and the set is placed again with a fit', () => {
+      panelActionsOf(rig)?.onShowAll();
+      controlsActionsOf(rig)?.onDepth(0);
+
+      expect(rig.modes.task()).toMatchObject({ depth: 0, capLifted: true });
+      expect(rig.view.fit).toHaveBeenCalledTimes(3);
+    });
+
+    it('WHEN Show all tasks is pressed THEN the cap is lifted for this choice', () => {
+      panelActionsOf(rig)?.onShowAll();
+
+      expect(rig.modes.task()).toMatchObject({ chosen: ['web#build'], capLifted: true });
+      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 0 });
+    });
+
+    it('WHEN a search is typed THEN it is saved and nothing lays out again', () => {
+      controlsActionsOf(rig)?.onSearch('api');
+
+      expect(rig.modes.task()).toMatchObject({ search: 'api' });
+      expect(rig.runs.count()).toBe(1);
     });
   });
 });

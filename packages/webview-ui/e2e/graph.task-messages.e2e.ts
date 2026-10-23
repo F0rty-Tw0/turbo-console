@@ -5,7 +5,7 @@ const SLICE_1 = { description: 'M4-5a slice 1', type: 'requirement' };
 
 test.describe('FEATURE: graph task messages', () => {
   test(
-    'GIVEN the graph shown with tasks, the page ignores the runs and showTasks messages and a malformed one',
+    'GIVEN the graph shown with tasks, the page ignores the runs, a showTasks naming no known task and a malformed message',
     { annotation: SLICE_1 },
     async ({ graphHost, graphPage, graphProbe, graphTaskHost }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -15,7 +15,8 @@ test.describe('FEATURE: graph task messages', () => {
       await test.step('AND the host posts runs', async (): Promise<void> =>
         graphTaskHost.sendRuns({ 'base#build': 'running', 'base#test': 'failed-to-start' }));
 
-      await test.step('AND the host posts showTasks', async (): Promise<void> => graphTaskHost.sendShowTasks(['base#build']));
+      await test.step('AND the host posts showTasks naming only zzz#none', async (): Promise<void> =>
+        graphTaskHost.sendShowTasks(['zzz#none']));
 
       await test.step('AND the host posts a malformed runs', async (): Promise<void> =>
         graphTaskHost.sendRaw({ type: 'runs', runs: 'x' }));

@@ -53,8 +53,9 @@ class GraphPageController {
 
     if (!isGraphHostMessage(message)) return;
 
-    // `runs` and `showTasks` are accepted and ignored until task mode reads them.
+    // `runs` is accepted and ignored until task mode reads it.
     if (message.type === 'state') this.show(message.state, at);
+    else if (message.type === 'showTasks') this.tasks.showTasks(message.taskIds, at);
     else if (message.type === 'edgeExplained') this.packages.filtering.inspection.explained(message);
   }
 
@@ -111,13 +112,14 @@ class GraphPageController {
     return this.packages.layouts.engine();
   }
 
-  /** Leaving task mode shows the package state held meanwhile. */
+  /** Leaving task mode shows the package state held meanwhile, else draws the package graph again. */
   private exitTasks(): void {
     const { pending } = this;
 
     this.pending = null;
 
     if (pending !== null) this.packages.show(pending.state, pending.at);
+    else this.packages.redraw();
   }
 }
 

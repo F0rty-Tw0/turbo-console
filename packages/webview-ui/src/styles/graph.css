@@ -86,8 +86,9 @@ p {
   cursor: default;
 }
 
-/* An open panel's toggle; after the hover rule, which has the same specificity, so the pressed look wins. */
-.graph-toolbar .text-button[aria-expanded='true'] {
+/* An open panel's toggle and the pressed Task mode toggle; after the hover rule, which has the same specificity, so the pressed look wins. */
+.graph-toolbar .text-button[aria-expanded='true'],
+.graph-toolbar .text-button[aria-pressed='true'] {
   border-color: var(--vscode-inputOption-activeBorder, transparent);
   color: var(--vscode-inputOption-activeForeground);
   background: var(--vscode-inputOption-activeBackground);
@@ -95,7 +96,9 @@ p {
 
 /* High contrast themes give the pressed state no fill and every button the same contrast border, so an inner ring marks it. */
 .vscode-high-contrast .graph-toolbar .text-button[aria-expanded='true'],
-.vscode-high-contrast-light .graph-toolbar .text-button[aria-expanded='true'] {
+.vscode-high-contrast-light .graph-toolbar .text-button[aria-expanded='true'],
+.vscode-high-contrast .graph-toolbar .text-button[aria-pressed='true'],
+.vscode-high-contrast-light .graph-toolbar .text-button[aria-pressed='true'] {
   box-shadow: inset 0 0 0 1px var(--vscode-inputOption-activeBorder);
 }
 
@@ -135,8 +138,33 @@ p {
   background: var(--vscode-inputValidation-warningBackground);
 }
 
-.graph-notice-text {
+.graph-notice-text,
+.graph-task-banner-text {
   flex: 1 1 auto;
+}
+
+/* Task mode: the prompt with nothing chosen. The cap banner and the notice reuse the notice look. */
+
+.graph-task-prompt {
+  margin: var(--space-2) var(--space-3) 0;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Task mode replaces the package Controls panel with #graph-task-controls and drops the package widgets, which would sit at stale spots. */
+.task-mode #graph-controls,
+.task-mode .widget-row,
+.task-mode .graph-breadcrumb,
+.task-mode .widget-package-button:not(.task-widget-button) {
+  display: none;
+}
+
+#graph-task-controls .controls-row {
+  padding-inline-start: 0;
+}
+
+.controls-task-package {
+  margin-inline-start: var(--space-2);
+  color: var(--vscode-descriptionForeground);
 }
 
 /* Loading, error and single-package message */

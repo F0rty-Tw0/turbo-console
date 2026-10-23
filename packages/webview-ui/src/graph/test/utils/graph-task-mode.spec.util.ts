@@ -7,11 +7,13 @@ import type { Position } from '../../../bridge/common/graph-state.type.ts';
 import type { GraphViewMode, GraphViewState, TaskViewState } from '../../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../../common/frame-clock.type.ts';
 import type { Viewport } from '../../common/graph-page.type.ts';
-import type { TaskModeDeps, TaskModes, TaskView } from '../../common/graph-task.type.ts';
+import type { TaskModeDeps, TaskModes, TaskPanel, TaskView } from '../../common/graph-task.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
+import type { TaskControls } from '../../common/task-controls.type.ts';
 import { freshViewStateOf } from '../../utils/fresh-view-state.util.ts';
 import type { TaskModeRig, TaskViewMock } from '../common/graph-task-mode.type.ts';
 import { layoutScreenMock } from '../mocks/graph-layouts.mock.ts';
+import { taskControlsMock, taskPanelMock } from '../mocks/graph-task-mode.mock.ts';
 import { taskCanvasMock } from '../mocks/graph-view.mock.ts';
 import { layoutRunsMock } from '../mocks/layout-runner.mock.ts';
 import { TASK_VIEW_STUB } from '../stubs/graph-task.stub.ts';
@@ -51,12 +53,18 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     tasks,
     fit: vi.fn<TaskView['fit']>(noting('fit')),
     setViewport: vi.fn<TaskView['setViewport']>(noting('setViewport')),
-    viewport: vi.fn<TaskView['viewport']>(() => TASK_CAMERA)
+    viewport: vi.fn<TaskView['viewport']>(() => TASK_CAMERA),
+    resize: vi.fn<TaskView['resize']>()
   };
   const frames = { start: vi.fn<FrameClock['start']>(), arm: vi.fn<FrameClock['arm']>(noting('arm')) };
   const bridge: Bridge = { ready: vi.fn(), post, onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
   const runs = layoutRunsMock();
   const screen = layoutScreenMock();
+  const panel = taskPanelMock();
+  const controls = taskControlsMock();
+  const onExit = vi.fn<() => void>();
+  const panelOf = vi.fn<TaskModeDeps['panelOf']>((): TaskPanel => panel);
+  const controlsOf = vi.fn<TaskModeDeps['controlsOf']>((): TaskControls => controls);
   const deps: TaskModeDeps = {
     view,
     runner: runs.runner,
@@ -65,14 +73,16 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     screen,
     modes,
     frames,
-    onExit: vi.fn()
+    onExit,
+    panelOf,
+    controlsOf
   };
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const calls = (): string[] => [...called];
 
   tasks.show.mockImplementation(noting('show'));
 
-  const rig: TaskModeRig = { deps, view, runs, screen, frames, modes, posts, calls };
+  const rig: TaskModeRig = { deps, view, runs, screen, frames, modes, posts, calls, panel, controls, onExit, panelOf, controlsOf };
 
   return rig;
 };

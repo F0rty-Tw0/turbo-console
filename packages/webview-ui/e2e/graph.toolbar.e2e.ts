@@ -6,11 +6,13 @@ const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 
 const AC7 = { description: 'M4-3 AC7', type: 'requirement' };
 
+const MODE: ToolbarGroup = { name: 'Mode', buttons: ['Task mode'] };
+
 const PANELS: ToolbarGroup = { name: 'Panels', buttons: ['Controls', 'Details'] };
 
 const VIEW: ToolbarGroup = { name: 'View', buttons: ['Fit', 'Re-layout', 'Export image'] };
 
-const GROUPS: ToolbarGroup[] = [PANELS, VIEW];
+const GROUPS: ToolbarGroup[] = [MODE, PANELS, VIEW];
 
 const CONTROLS_WIDTH_PX = 260;
 
@@ -18,17 +20,20 @@ const DETAILS_WIDTH_PX = 280;
 
 test.describe('FEATURE: graph toolbar', () => {
   test(
-    'GIVEN the details graph, the toolbar has a Panels group, a View group, two separators and a lone Clear selection, each with its icon',
+    'GIVEN the details graph, the toolbar has a Mode group, a Panels group, a View group, three separators and a lone Clear selection, each with its icon',
     { annotation: AC1 },
     async ({ graphHost, graphPage, graphToolbar }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
 
-      await test.step('THEN the Panels and View groups hold their buttons and Clear selection stands alone', async (): Promise<void> =>
+      await test.step('THEN the Mode, Panels and View groups hold their buttons and Clear selection stands alone', async (): Promise<void> =>
         graphToolbar.expectGroups(GROUPS));
 
-      await test.step('AND two separators divide the three parts', async (): Promise<void> => graphToolbar.expectSeparators(2));
+      await test.step('AND three separators divide the four parts', async (): Promise<void> => graphToolbar.expectSeparators(3));
+
+      await test.step('AND Task mode draws a tasklist icon', async (): Promise<void> =>
+        graphToolbar.expectIcon('Task mode', 'tasklist'));
 
       await test.step('AND Controls draws a left sidebar icon', async (): Promise<void> =>
         graphToolbar.expectIcon('Controls', 'layout-sidebar-left'));

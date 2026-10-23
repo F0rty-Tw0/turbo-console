@@ -15,6 +15,7 @@ const RF4 = { description: 'M4-1 Review Focus 4', type: 'requirement' };
 const AC1_DETAILS = { description: 'M4-3 AC1', type: 'requirement' };
 
 const NO_SELECTION_STOPS: FocusStep[] = tabStopsOf([
+  'Task mode',
   'Controls',
   'Details',
   'Fit',
@@ -145,7 +146,7 @@ test.describe('FEATURE: graph keyboard', () => {
   );
 
   test(
-    'GIVEN no selection, Tab walks Controls, Details, Fit, Re-layout, Export image, the search, depth, Show all, the package list, then the graph container',
+    'GIVEN no selection, Tab walks Task mode, Controls, Details, Fit, Re-layout, Export image, the search, depth, Show all, the package list, then the graph container',
     { annotation: AC7 },
     async ({ graphHost, graphKeys, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -154,7 +155,7 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('THEN the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
 
-      const walked = await test.step('WHEN Tab is pressed eleven times', async (): Promise<FocusStep[]> =>
+      const walked = await test.step('WHEN Tab is pressed twelve times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(NO_SELECTION_STOPS));
 
       await test.step('THEN focus visited every stop in order', (): void => expect(walked).toEqual(NO_SELECTION_STOPS));

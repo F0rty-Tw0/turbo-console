@@ -1,5 +1,6 @@
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { DEFAULT_TASK_DEPTH } from '../common/graph-task.const.ts';
 import { DEFAULT_DEPTH } from '../common/graph.const.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
@@ -28,4 +29,20 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
   };
 
   return state;
+};
+
+/** The task view with nothing saved: nothing chosen, the cap on, the default depth, no search and the default camera. */
+export const freshTaskViewOf = (): TaskViewState => {
+  const task: TaskViewState = {
+    chosen: [],
+    capLifted: false,
+    depth: DEFAULT_TASK_DEPTH,
+    selected: null,
+    search: '',
+    zoom: 1,
+    pan: ORIGIN,
+    layoutKey: ''
+  };
+
+  return task;
 };

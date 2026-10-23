@@ -59,7 +59,10 @@ const drawGraph = (cy: Core, nodes: ElementDefinition[], edges: GraphEdge[]): vo
   cy.add([...nodes, ...links]);
 };
 
-/** Cytoscape on `container` with the preset layout (positions are node centres) and the canvas renderer. */
+/**
+ * Cytoscape on `container` with the preset layout (positions are node centres) and the canvas renderer. Its own resize
+ * is debounced 100 ms, so until then a tap after the toolbar wraps lands where the canvas was; a resize per change ends that.
+ */
 const cytoscapeOn = (container: HTMLElement): Core => {
   const layout = { name: 'preset' };
   const renderer = { name: 'canvas' };
@@ -72,8 +75,11 @@ const cytoscapeOn = (container: HTMLElement): Core => {
     autounselectify: true,
     boxSelectionEnabled: false
   };
+  const cy = cytoscape(options);
 
-  return cytoscape(options);
+  new ResizeObserver((): void => void cy.resize()).observe(container);
+
+  return cy;
 };
 
 /** A copy of the camera: `cy.pan()` is Cytoscape's own object, which a later pan changes in place. */

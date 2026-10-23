@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { freshViewStateOf } from './fresh-view-state.util.ts';
+import { freshTaskViewOf, freshViewStateOf } from './fresh-view-state.util.ts';
 
 const ORIGIN = { x: 0, y: 0 };
 
@@ -29,6 +29,21 @@ describe('FEATURE: freshViewStateOf', () => {
         mode: 'packages',
         task: null
       });
+    });
+  });
+
+  it('GIVEN no saved task view WHEN a fresh one is made THEN nothing is chosen, the cap holds, depth is 1 and the camera is the default', () => {
+    const task = freshTaskViewOf();
+
+    expect(task).toStrictEqual({
+      chosen: [],
+      capLifted: false,
+      depth: 1,
+      selected: null,
+      search: '',
+      zoom: 1,
+      pan: ORIGIN,
+      layoutKey: ''
     });
   });
 });

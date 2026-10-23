@@ -54,6 +54,13 @@ export class GraphTaskLayout {
     if (request !== null) await this.layOut(request, false);
   }
 
+  /** Empties the task canvas and forgets the key asked for, so a run still in flight lands on nothing. */
+  public clear(): void {
+    this.wanted = null;
+    this.placed = null;
+    this.deps.view.tasks.clear();
+  }
+
   /** Keeps the dragged centres as the layout of the key on screen. */
   public dragged(): void {
     const { placed } = this;

@@ -25,6 +25,7 @@ export class GraphPackageSide {
   private readonly deps: GraphControllerDeps;
   private readonly view: GraphView;
   private readonly frames: FrameClock;
+  private readonly modes: PackageModes;
   private drawn: DrawnGraph | null = null;
   private opening: GraphViewState | null = null;
   private hasShownGraph = false;
@@ -36,6 +37,7 @@ export class GraphPackageSide {
     this.deps = deps;
     this.view = view;
     this.frames = frames;
+    this.modes = modes;
     this.filtering = new GraphFiltering({
       ...deps,
       saver: modes.packages,
@@ -72,6 +74,13 @@ export class GraphPackageSide {
   /** The hash of the package graph shown or being laid out; `null` while none is. */
   public drawnHash(): string | null {
     return this.drawn?.hash ?? null;
+  }
+
+  /** Task mode was left: the package graph drawn before is drawn again with the saved package view. */
+  public redraw(): void {
+    const saved = this.modes.current();
+
+    void this.guard(async (): Promise<void> => this.layouts.redraw(saved));
   }
 
   /**

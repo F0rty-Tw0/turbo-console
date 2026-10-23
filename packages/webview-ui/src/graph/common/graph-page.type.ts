@@ -6,11 +6,13 @@ import type { FolderGroup } from './folder-group.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
 import type { GhostMarks } from './ghost.type.ts';
 import type { ProbeFacts } from './graph-probe.type.ts';
+import type { TaskScreenElements } from './graph-task.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { Paint } from './paint.type.ts';
 import type { TaskCanvas } from './task-canvas.type.ts';
+import type { TaskControlsViews } from './task-controls.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -21,7 +23,12 @@ import type { GraphViewState, PackageViewState } from '../../bridge/common/graph
 export type PageElements = {
   readonly root: HTMLElement;
   readonly toolbar: HTMLElement;
-  /** Toggles the controls panel `aside#graph-controls`; `GraphControls` keeps its label and `aria-expanded` current. */
+  /** The Task mode toggle, first in the toolbar; `aria-pressed` while task mode is on. */
+  readonly taskMode: HTMLButtonElement;
+  /**
+   * Toggles the controls panel `aside#graph-controls`; `GraphControls` keeps its label and `aria-expanded` current. In task
+   * mode it toggles `aside#graph-task-controls`, and `GraphTaskControls` points `aria-controls` and `aria-expanded` there.
+   */
   readonly controls: HTMLButtonElement;
   /** Toggles the details panel `aside#graph-details`. */
   readonly details: HTMLButtonElement;
@@ -37,6 +44,8 @@ export type PageElements = {
   /** The `p` inside the notice: the simplified-layout copy, or a mode switch's progress text. */
   readonly noticeText: HTMLElement;
   readonly retry: HTMLButtonElement;
+  /** Task mode's notice, cap banner and prompt, between the notice and the message. */
+  readonly taskScreen: TaskScreenElements;
   readonly message: HTMLElement;
   readonly messageText: HTMLElement;
   readonly reload: HTMLButtonElement;
@@ -50,7 +59,7 @@ export type PageElements = {
 /** What `buildToolbar` builds: the toolbar and the parts of it the page drives. */
 export type ToolbarElements = Pick<
   PageElements,
-  'toolbar' | 'controls' | 'details' | 'fit' | 'relayout' | 'exportImage' | 'clear' | 'status' | 'filtersOn'
+  'toolbar' | 'taskMode' | 'controls' | 'details' | 'fit' | 'relayout' | 'exportImage' | 'clear' | 'status' | 'filtersOn'
 >;
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
@@ -165,6 +174,8 @@ export type GraphControllerDeps = {
   readonly views: DetailsViews;
   /** The canvas widget builders, handed in because `domain-logic` may not import `ui`. */
   readonly widgetViews: WidgetViews;
+  /** The task Controls builders, handed in because `domain-logic` may not import `ui`. */
+  readonly taskViews: TaskControlsViews;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
   readonly overlay: MediaQueryList;
   /** The computed `--vscode-editor-background` of `body`, read at each export. */

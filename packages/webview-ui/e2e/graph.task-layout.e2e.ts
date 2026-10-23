@@ -1,7 +1,8 @@
 import type { PngBounds } from './common/graph.type.ts';
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { TASK_MODE_MORE_TASKS_STUB, TASK_MODE_NEW_HASH_STUB, TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
+import { TASK_MODE_LABEL } from '../src/graph/common/graph-task.const.ts';
 import { FIT_LABEL, RELAYOUT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const RF3 = { description: 'M4-5a RF3', type: 'requirement' };
@@ -9,6 +10,9 @@ const RF3 = { description: 'M4-5a RF3', type: 'requirement' };
 const ANY_SIDE: PngBounds = { minWidth: 1, maxWidth: 4096, minHeight: 1, maxHeight: 4096 };
 
 const CHAIN = ['app#build', 'lib#build', 'ui#build'];
+
+/** `lib#build` at depth 1: the `ui#build` it needs and its dependents `app#build` and `lib#test`. */
+const LIB_SET = ['app#build', 'lib#build', 'lib#test', 'ui#build'];
 
 const SAVED_TASK_VIEW = taskSavedState('7a5c0001', { chosen: ['app#build'] });
 
@@ -146,7 +150,7 @@ test.describe('FEATURE: graph task layout', () => {
   test(
     'GIVEN a cold open in task mode with the package graph held, the toolbar acts on the task graph',
     { annotation: RF3 },
-    async ({ graphHost, graphPage, graphTaskProbe }): Promise<void> => {
+    async ({ graphHost, graphPage, graphTask, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the page opens with app#build chosen', async (): Promise<void> =>
         graphPage.open({ savedState: SAVED_TASK_VIEW }));
 
@@ -158,11 +162,16 @@ test.describe('FEATURE: graph task layout', () => {
         await graphPage.expectEnabled(FIT_LABEL);
         await graphPage.expectEnabled(RELAYOUT_LABEL);
       });
+
+      await test.step('AND the Task mode toggle is enabled and pressed', async (): Promise<void> => {
+        await graphPage.expectEnabled(TASK_MODE_LABEL);
+        await graphTask.expectPressed(true);
+      });
     }
   );
 
   test(
-    'GIVEN a cold open in task mode, a state, runs and showTasks arriving together draw the chain',
+    'GIVEN a cold open in task mode, a state, runs and showTasks arriving together draw the shown tasks',
     { annotation: RF3 },
     async ({ graphHost, graphPage, graphTaskHost, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the page opens with app#build chosen', async (): Promise<void> =>
@@ -174,9 +183,9 @@ test.describe('FEATURE: graph task layout', () => {
         await graphTaskHost.sendShowTasks(['lib#build']);
       });
 
-      await test.step('THEN the graph body shows the chain', async (): Promise<void> => {
+      await test.step('THEN the graph body shows lib#build with its dependency and dependents', async (): Promise<void> => {
         await graphPage.expectNotLoading();
-        await graphTaskProbe.expectTaskIds(CHAIN);
+        await graphTaskProbe.expectTaskIds(LIB_SET);
         await graphPage.expectEnabled(FIT_LABEL);
       });
     }

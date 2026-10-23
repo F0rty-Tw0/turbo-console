@@ -2,6 +2,7 @@ import type { DetailsViews } from './common/details.type.ts';
 import type { GraphViewFactory, NodeSizer, TextMeasure } from './common/graph-page.type.ts';
 import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { NodeSize } from './common/node-size.type.ts';
+import type { TaskControlsViews } from './common/task-controls.type.ts';
 import type { ThemeColors } from './common/theme-colors.type.ts';
 import type { WidgetViews } from './common/widget.type.ts';
 // Imported before any module that loads Cytoscape: elk-client creates the one `tc-elk` policy as it loads.
@@ -24,6 +25,7 @@ import { packageView } from './ui/details-package.ts';
 import { candidateItems, pickingView } from './ui/details-picking.ts';
 import { stepItems, traceView } from './ui/details-trace.ts';
 import { buildPage } from './ui/page-elements.ts';
+import { buildTaskControls, buildTaskRow } from './ui/task-controls-elements.ts';
 import { buildFolderRow, buildPackageButton } from './ui/widget-elements.ts';
 import { buildMenu } from './ui/widget-menu.ts';
 import { nodeSizeOf } from './utils/node-size.util.ts';
@@ -95,6 +97,7 @@ const widgetViews: WidgetViews = {
   breadcrumb: buildBreadcrumb,
   breadcrumbLine
 };
+const taskViews: TaskControlsViews = { build: buildTaskControls, row: buildTaskRow };
 const overlay = window.matchMedia(OVERLAY_MEDIA_QUERY);
 const controller = createGraphController({
   bridge,
@@ -108,6 +111,7 @@ const controller = createGraphController({
   build: buildControls,
   views,
   widgetViews,
+  taskViews,
   overlay,
   background
 });
