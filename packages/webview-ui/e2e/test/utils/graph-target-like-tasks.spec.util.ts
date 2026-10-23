@@ -1,4 +1,5 @@
 import { packagesOf } from './graph-package.spec.util.ts';
+import { targetLikeState } from './graph-target-like.spec.util.ts';
 import type { GraphEdge, GraphReady, GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
 
 const DEPENDENT_COUNT = 400;
@@ -50,3 +51,66 @@ export const overCapTasksState = (): GraphReady => {
 
 /** Every task id of `overCapTasksState`. */
 export const overCapTaskIds = (): string[] => overCapTasksState().tasks.map((task) => task.id);
+
+/** The tasks every package of `targetLikeTasksState` has; `build` also needs the `build` of each package it needs. */
+const OWN_TASKS: Record<string, string[]> = {
+  test: ['build'],
+  lint: [],
+  typecheck: ['build'],
+  docs: ['build'],
+  pack: ['build'],
+  e2e: ['test']
+};
+
+/** `lib-3#build`: it needs `hub#build` and has six dependents, so it has dependencies and dependents both. */
+export const TARGET_LIKE_CHOSEN_TASK = 'lib-3#build';
+
+/** `hub#build`: the most dependents of any task (every lib, `util-a`, `util-b`, and its own `test` / `typecheck` / `docs` / `pack`). */
+export const TARGET_LIKE_HUB_TASK = 'hub#build';
+
+const targetLikeTaskOf = (packageName: string, name: string, dependencies: string[]): GraphTask => {
+  const task: GraphTask = { id: `${packageName}#${name}`, packageName, name, command: name, isRunnable: true, dependencies };
+
+  return task;
+};
+
+const ownTasksOf = (packageName: string): GraphTask[] => {
+  const names = Object.keys(OWN_TASKS);
+  const taskOf = (name: string): GraphTask => {
+    const needed = OWN_TASKS[name] ?? [];
+
+    return targetLikeTaskOf(
+      packageName,
+      name,
+      needed.map((own) => `${packageName}#${own}`)
+    );
+  };
+
+  return names.map(taskOf);
+};
+
+const buildOf = (state: GraphReady, packageName: string): GraphTask => {
+  const needs = state.edges.filter((edge) => edge.source === packageName);
+  const dependencies = needs.map((edge) => `${edge.target}#build`);
+
+  return targetLikeTaskOf(packageName, 'build', dependencies);
+};
+
+/**
+ * `targetLikeState` with 98 tasks (`build`, `test`, `lint`, `typecheck`, `docs`, `pack`, `e2e` per package), hash `7a7a7a7b`.
+ * Each `build` needs the `build` of every package its package needs. `hub#docs` needs only `hub#build`, which needs nothing,
+ * and nothing needs `hub#docs`: choosing it shows two tasks joined by one lone edge.
+ */
+export const targetLikeTasksState = (): GraphReady => {
+  const base = targetLikeState();
+  const tasksOf = (pkg: GraphReady['packages'][number]): GraphTask[] => {
+    const own = ownTasksOf(pkg.name);
+    const build = buildOf(base, pkg.name);
+
+    return [build, ...own];
+  };
+  const tasks = base.packages.flatMap(tasksOf);
+  const state: GraphReady = { ...base, hash: '7a7a7a7b', tasks };
+
+  return state;
+};
