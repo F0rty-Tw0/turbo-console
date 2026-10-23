@@ -40,8 +40,9 @@ const GROUPED_PAN_MS = 1100;
 
 /**
  * About 690 ms pinned (685 to 701) with tracing off, at the first notch past the rows' 0.5 zoom floor (about 0.51);
- * the budget keeps about the grouped pan's 3.4x room. This zoom also draws more canvas detail than the 120 px pan, so the
- * gap to that pan is not widget cost alone.
+ * the budget keeps about the grouped pan's 3.4x room. It guards the pan with rows shown and the canvas detail drawn at
+ * this zoom, not per-row widget cost: with 2 boxes and 4 buttons in view, a mutant forcing a layout read on every widget
+ * style write measured 693 ms, inside the base's spread.
  */
 const ROWS_PAN_MS = 2400;
 
