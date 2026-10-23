@@ -29,6 +29,10 @@ describe('FEATURE: bench rows', () => {
     expect(gates).toStrictEqual([false, false, false]);
   });
 
+  it('GIVEN the target-like pan rows, THEN they take the same samples (they are recorded together)', () => {
+    expect(BENCH_ROWS.panCpu.samples).toBe(BENCH_ROWS.panP95.samples);
+  });
+
   it('GIVEN each row, THEN it takes at least 3 whole samples', () => {
     for (const row of Object.values(BENCH_ROWS)) expect(Number.isInteger(row.samples) && row.samples >= 3).toBe(true);
   });
