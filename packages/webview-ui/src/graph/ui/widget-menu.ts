@@ -52,12 +52,13 @@ const elementOf = (entry: MenuItemModel): HTMLElement => {
   return itemElementOf(entry);
 };
 
-/** A `role="menu"` of the model's items and separators; `items` holds the item elements in model order. */
-export const buildMenu = (model: MenuItemModel[]): MenuElements => {
+/** A `role="menu"` named `label`, of the model's items and separators; `items` holds the item elements in model order. */
+export const buildMenu = (model: MenuItemModel[], label: string): MenuElements => {
   const menu = textElement('div', 'widget-menu', '');
   const items: HTMLElement[] = [];
 
   menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', label);
   menu.tabIndex = -1;
 
   for (const entry of model) {

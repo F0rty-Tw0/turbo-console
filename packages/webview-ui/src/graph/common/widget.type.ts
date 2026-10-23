@@ -114,7 +114,8 @@ export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
   readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
   readonly packageButton: (name: string) => HTMLButtonElement;
-  readonly menu: (model: MenuItemModel[]) => MenuElements;
+  /** `label` is the menu's accessible name, the one its "…" has. */
+  readonly menu: (model: MenuItemModel[], label: string) => MenuElements;
   readonly breadcrumb: () => BreadcrumbElements;
   /** One muted breadcrumb line; `hasIcon` puts the `info` Codicon before it. */
   readonly breadcrumbLine: (text: string, hasIcon: boolean) => HTMLElement;

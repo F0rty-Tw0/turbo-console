@@ -85,7 +85,8 @@ test.describe('FEATURE: folder widget menus', () => {
         await graphMenus.openFolderMenu('apps');
       });
 
-      await test.step('THEN the menu lists Collapse, Focus folder and Show folder, with Collapse focused', async (): Promise<void> => {
+      await test.step('THEN the menu is named for apps and lists Collapse, Focus folder and Show folder, with Collapse focused', async (): Promise<void> => {
+        await graphMenus.expectFolderMenuNamed('apps');
         await graphMenus.expectItems(FOLDER_ITEMS);
         await graphMenus.expectFocusedItem('Collapse');
       });
@@ -145,8 +146,9 @@ test.describe('FEATURE: folder widget menus', () => {
         await graphFolders.expectListToggle('apps', false);
       });
 
-      await test.step('WHEN Expand is chosen from the apps menu', async (): Promise<void> => {
+      await test.step('WHEN Expand is chosen from the apps menu, named for apps on the collapsed node', async (): Promise<void> => {
         await graphMenus.openFolderMenu('apps');
+        await graphMenus.expectFolderMenuNamed('apps');
         await graphMenus.item('Expand').click();
       });
 
@@ -295,7 +297,8 @@ test.describe('FEATURE: folder widget menus', () => {
         await graphMenus.openPackageMenu('web');
       });
 
-      await test.step('THEN the menu lists View Package Details, Focus, Start trace and Show package', async (): Promise<void> => {
+      await test.step('THEN the menu is named for web and lists View Package Details, Focus, Start trace and Show package', async (): Promise<void> => {
+        await graphMenus.expectPackageMenuNamed('web');
         await graphMenus.expectItems(['View Package Details', 'Focus', 'Start trace', 'Show package']);
         await graphMenus.expectItemChecked('Show package', 'true');
       });

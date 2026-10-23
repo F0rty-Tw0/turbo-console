@@ -3,6 +3,7 @@ import type { Viewport } from '../common/graph-page.type.ts';
 import type { GraphWidgetMenusDeps } from '../common/graph-widgets.type.ts';
 import type { MenuItem } from '../common/widget-menu.type.ts';
 import type { MenuTarget, RectPx, Size } from '../common/widget.type.ts';
+import { actionsLabelOf } from '../utils/controls-text.util.ts';
 import { menuIndexOf } from '../utils/menu-keys.util.ts';
 import { menuPlaceOf, targetRectOf, uncoveredAreaOf } from '../utils/menu-place.util.ts';
 import { isSameViewport } from '../utils/viewport.util.ts';
@@ -61,7 +62,7 @@ export class GraphWidgetMenus {
 
     const model = this.deps.menuOf(target);
     const entries = model.filter(isMenuItem);
-    const { menu, items } = this.deps.build(model);
+    const { menu, items } = this.deps.build(model, actionsLabelOf(target));
     const viewport = this.deps.view.viewport();
 
     entries.forEach((entry, index): void => items[index]?.addEventListener('click', (): void => this.activate(entry)));

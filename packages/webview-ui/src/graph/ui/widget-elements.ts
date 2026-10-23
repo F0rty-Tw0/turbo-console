@@ -2,6 +2,7 @@ import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import type { FolderRowElements, RowKind } from '../common/widget.type.ts';
+import { folderActionsLabelOf, packageActionsLabelOf } from '../utils/controls-text.util.ts';
 import { pluralOf } from '../utils/plural.util.ts';
 
 /** A 24 px icon button; the aria-label is its accessible name. */
@@ -12,6 +13,15 @@ const widgetButton = (id: GraphIconId, label: string): HTMLButtonElement => {
   button.type = 'button';
   button.setAttribute('aria-label', label);
   button.append(icon);
+
+  return button;
+};
+
+/** A "…" that opens a menu. */
+const menuButton = (label: string): HTMLButtonElement => {
+  const button = widgetButton('ellipsis', label);
+
+  button.setAttribute('aria-haspopup', 'menu');
 
   return button;
 };
@@ -48,7 +58,7 @@ const titleParts = (kind: RowKind, title: string, count: number): HTMLElement[] 
 export const buildFolderRow = (kind: RowKind, title: string, count: number): FolderRowElements => {
   const root = textElement('div', `widget-row widget-row-${kind}`, '');
   const chevron = chevronOf(kind, title);
-  const ellipsis = widgetButton('ellipsis', `Actions for folder ${title}`);
+  const ellipsis = menuButton(folderActionsLabelOf(title));
   const middle = titleParts(kind, title, count);
   const row: FolderRowElements = { root, chevron, ellipsis };
 
@@ -60,7 +70,7 @@ export const buildFolderRow = (kind: RowKind, title: string, count: number): Fol
 
 /** The selected package's "…", hidden until the layer places it. */
 export const buildPackageButton = (name: string): HTMLButtonElement => {
-  const button = widgetButton('ellipsis', `Actions for ${name}`);
+  const button = menuButton(packageActionsLabelOf(name));
 
   button.classList.add('widget-package-button');
   button.hidden = true;

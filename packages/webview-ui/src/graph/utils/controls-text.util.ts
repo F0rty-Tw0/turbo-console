@@ -1,4 +1,5 @@
 import { CONTROLS_FILTERED_LABEL, CONTROLS_LABEL, ROOT_FOLDER } from '../common/graph.const.ts';
+import type { MenuTarget } from '../common/widget.type.ts';
 
 /** The folder as a group title; `''` is the root folder, and a real folder named like it gets `./` so the two differ. */
 export const folderTitleOf = (folder: string): string => {
@@ -31,3 +32,16 @@ export const folderToggleLabelOf = (title: string, isCollapsed: boolean): string
 export const folderFocusTextOf = (isFocus: boolean): string => (isFocus ? 'Clear focus' : 'Focus');
 
 export const folderFocusLabelOf = (title: string): string => `Focus folder ${title}`;
+
+export const folderActionsLabelOf = (title: string): string => `Actions for folder ${title}`;
+
+export const packageActionsLabelOf = (name: string): string => `Actions for ${name}`;
+
+/** The accessible name of the target's "…" and of the menu it opens. */
+export const actionsLabelOf = (target: MenuTarget): string => {
+  if (target.kind === 'package') return packageActionsLabelOf(target.name);
+
+  const title = folderTitleOf(target.folder);
+
+  return folderActionsLabelOf(title);
+};
