@@ -4,6 +4,7 @@ import { filteringFactsOf } from './graph-filtering-facts.ts';
 import { inspectionFoldersOf, widgetsOf } from './graph-filtering-hooks.ts';
 import { GraphFolders } from './graph-folders.ts';
 import { GraphInspection } from './graph-inspection.ts';
+import { setFitAndExportDisabled } from './graph-page-states.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { GraphControlsDeps, GraphFilteringDeps, WidgetHostDeps } from '../common/graph-controls.type.ts';
 import type { GraphFoldersDeps } from '../common/graph-folders.type.ts';
@@ -99,7 +100,7 @@ export class GraphFiltering {
 
     this.deps.view.setVisible(visible);
     this.folders.redraw();
-    this.deps.page.fit.disabled = visible.size === 0;
+    setFitAndExportDisabled(this.deps.page, visible.size === 0);
 
     return visible;
   }
@@ -169,7 +170,7 @@ export class GraphFiltering {
     view.setVisible(visible);
     this.folders.redraw();
     this.inspection.recheck(visible);
-    page.fit.disabled = !isAny;
+    setFitAndExportDisabled(page, !isAny);
 
     if (isAny) view.fit();
 

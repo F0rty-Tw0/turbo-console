@@ -56,7 +56,13 @@ const showLayoutNotice = (page: PageElements, notice: LayoutNotice): void => {
   page.notice.hidden = notice.kind === 'none';
 };
 
-/** Toolbar and body shown with Controls, Details, Fit and Re-layout enabled; the notice only for a fallback layout. */
+/** Fit and Export image are enabled together: both need a visible package. */
+export const setFitAndExportDisabled = (page: Pick<PageElements, 'fit' | 'exportImage'>, isDisabled: boolean): void => {
+  page.fit.disabled = isDisabled;
+  page.exportImage.disabled = isDisabled;
+};
+
+/** Toolbar and body shown with Controls, Details, Fit, Re-layout and Export image enabled; the notice only for a fallback layout. */
 const showGraphView = (page: PageElements, isFallback: boolean): void => {
   const notice: LayoutNotice = isFallback ? FALLBACK_NOTICE : NO_NOTICE;
 
@@ -66,7 +72,7 @@ const showGraphView = (page: PageElements, isFallback: boolean): void => {
   showLayoutNotice(page, notice);
   page.controls.disabled = false;
   page.details.disabled = false;
-  page.fit.disabled = false;
+  setFitAndExportDisabled(page, false);
   page.relayout.disabled = false;
 };
 

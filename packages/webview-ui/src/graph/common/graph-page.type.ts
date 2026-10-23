@@ -28,6 +28,8 @@ export type PageElements = {
   readonly filtersOn: HTMLElement;
   readonly fit: HTMLButtonElement;
   readonly relayout: HTMLButtonElement;
+  /** Enabled exactly when `fit` is: both need a visible package. */
+  readonly exportImage: HTMLButtonElement;
   readonly clear: HTMLButtonElement;
   readonly status: HTMLElement;
   readonly notice: HTMLElement;
@@ -47,7 +49,7 @@ export type PageElements = {
 /** What `buildToolbar` builds: the toolbar and the parts of it the page drives. */
 export type ToolbarElements = Pick<
   PageElements,
-  'toolbar' | 'controls' | 'details' | 'fit' | 'relayout' | 'clear' | 'status' | 'filtersOn'
+  'toolbar' | 'controls' | 'details' | 'fit' | 'relayout' | 'exportImage' | 'clear' | 'status' | 'filtersOn'
 >;
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
@@ -156,6 +158,8 @@ export type GraphControllerDeps = {
   readonly widgetViews: WidgetViews;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
   readonly overlay: MediaQueryList;
+  /** The computed `--vscode-editor-background` of `body`, read at each export. */
+  readonly background: () => string;
 };
 
 /** The graph the page shows: its hash, package names and records, and its drawable edges. */

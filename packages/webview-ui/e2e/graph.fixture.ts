@@ -9,6 +9,7 @@ import { GraphDetailsLink } from './pages/graph-details-link.po.ts';
 import { GraphDetailsTrace } from './pages/graph-details-trace.po.ts';
 import { GraphDetailsPage } from './pages/graph-details.po.ts';
 import { GraphExplainHost } from './pages/graph-explain-host.po.ts';
+import { GraphExport } from './pages/graph-export.po.ts';
 import { GraphFolderInspect } from './pages/graph-folder-inspect.po.ts';
 import { GraphFolderPackages } from './pages/graph-folder-packages.po.ts';
 import { GraphFoldersPage } from './pages/graph-folders.po.ts';
@@ -32,6 +33,7 @@ type GraphFixtures = {
   readonly graphCanvas: GraphCanvas;
   readonly graphControls: GraphControlsPage;
   readonly graphDetails: GraphDetailsPage;
+  readonly graphExport: GraphExport;
   readonly graphFolderInspect: GraphFolderInspect;
   readonly graphFolderPackages: GraphFolderPackages;
   readonly graphFolders: GraphFoldersPage;
@@ -69,6 +71,9 @@ export const test = base.extend<GraphFixtures>({
   },
   graphDetails: async ({ page }, use): Promise<void> => {
     await use(new GraphDetailsPage(page));
+  },
+  graphExport: async ({ page }, use): Promise<void> => {
+    await use(new GraphExport(page));
   },
   graphFolderInspect: async ({ page }, use): Promise<void> => {
     await use(new GraphFolderInspect(page));

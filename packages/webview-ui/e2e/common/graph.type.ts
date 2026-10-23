@@ -99,6 +99,8 @@ export type ExplainEdgeMessage = Extract<GraphWebviewMessage, MessageTag<'explai
 
 export type OpenManifestMessage = Extract<GraphWebviewMessage, MessageTag<'openManifest'>>;
 
+export type ExportImageMessage = Extract<GraphWebviewMessage, MessageTag<'exportImage'>>;
+
 type ResultKind<TKind extends string> = { readonly kind: TKind };
 
 /** The host's answer when it read the manifest and found entries. */
@@ -149,6 +151,21 @@ export type InputOptionColors = {
   readonly background: string;
   readonly border: string;
   readonly foreground: string;
+};
+
+/** What a base64 image's header says: whether it starts with the PNG signature, and its IHDR width and height in px. */
+export type PngInfo = {
+  readonly isPng: boolean;
+  readonly width: number;
+  readonly height: number;
+};
+
+/** The px range, both ends included, each side of an exported PNG must fall in. */
+export type PngBounds = {
+  readonly minWidth: number;
+  readonly maxWidth: number;
+  readonly minHeight: number;
+  readonly maxHeight: number;
 };
 
 /** The hash and the sorted package names of a `positions` message; `hash` is `undefined` before one is posted. */

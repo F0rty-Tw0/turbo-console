@@ -48,6 +48,10 @@ export const FIT_LABEL = 'Fit';
 
 export const RELAYOUT_LABEL = 'Re-layout';
 
+export const EXPORT_LABEL = 'Export image';
+
+export const EXPORT_FAILED_TEXT = 'Could not export the image';
+
 export const CLEAR_LABEL = 'Clear selection';
 
 export const RETRY_LABEL = 'Retry';

@@ -6,6 +6,7 @@ import type { GraphWebviewMessage } from '../../../src/bridge/common/graph-messa
 import type { Positions } from '../../../src/bridge/common/graph-state.type.ts';
 import type {
   ExplainEdgeMessage,
+  ExportImageMessage,
   LayoutDoneMessage,
   OpenDetailsMessage,
   OpenManifestMessage,
@@ -22,6 +23,8 @@ const isExplainEdge = (message: GraphWebviewMessage): message is ExplainEdgeMess
 
 const isOpenManifest = (message: GraphWebviewMessage): message is OpenManifestMessage => message.type === 'openManifest';
 
+const isExportImage = (message: GraphWebviewMessage): message is ExportImageMessage => message.type === 'exportImage';
+
 export const positionsPosted = (posted: GraphWebviewMessage[]): PositionsMessage[] => posted.filter(isPositions);
 
 export const layoutDonePosted = (posted: GraphWebviewMessage[]): LayoutDoneMessage[] => posted.filter(isLayoutDone);
@@ -31,6 +34,8 @@ export const openDetailsPosted = (posted: GraphWebviewMessage[]): OpenDetailsMes
 export const explainEdgePosted = (posted: GraphWebviewMessage[]): ExplainEdgeMessage[] => posted.filter(isExplainEdge);
 
 export const openManifestPosted = (posted: GraphWebviewMessage[]): OpenManifestMessage[] => posted.filter(isOpenManifest);
+
+export const exportImagePosted = (posted: GraphWebviewMessage[]): ExportImageMessage[] => posted.filter(isExportImage);
 
 /** The newest `explainEdge` the page posted, `null` before one. */
 export const lastExplainPosted = (posted: GraphWebviewMessage[]): ExplainEdgeMessage | null =>
