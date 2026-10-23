@@ -1,7 +1,6 @@
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-
-const isString = (value: unknown): value is string => typeof value === 'string';
+import { isString } from '../../bridge/utils/string.util.ts';
 
 const isStringList = (value: unknown): boolean => Array.isArray(value) && value.every(isString);
 

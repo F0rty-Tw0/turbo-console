@@ -1,5 +1,5 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphPackage, GraphState, Positions } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
 import { packageNamesOf } from './graph-package.util.ts';
@@ -16,6 +16,7 @@ const KEY_SEPARATOR = '\0';
 const SINGLE_PACKAGE: GraphState = { kind: 'singlePackage' };
 const LOAD_KIND = 'load-no-model';
 const LOADING: GraphState = { kind: 'loading' };
+const NO_TASKS: GraphTask[] = [];
 
 const compareText = (left: string, right: string): number => {
   if (left < right) return -1;
@@ -106,4 +107,15 @@ export const graphStateOfRoot = (state: RootState | undefined, caches: GraphLayo
   const failed: GraphState = { kind: 'error', message: MESSAGE_TEXTS[kind] };
 
   return failed;
+};
+
+/** What `graphStateOfRoot(state, ...)` lists as tasks, without building the rest of the state: none unless the root shows a multi-package graph. */
+export const graphTasksOfRoot = (state: RootState | undefined): GraphTask[] => {
+  if (state === undefined) return NO_TASKS;
+
+  const model = shownModelOf(state);
+
+  if (model === null || model.singlePackage) return NO_TASKS;
+
+  return graphTasksOf(model);
 };

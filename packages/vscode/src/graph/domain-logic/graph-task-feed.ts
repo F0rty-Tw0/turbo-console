@@ -3,30 +3,24 @@ import type { GraphRunsMessage, GraphState, GraphTask } from '@turbo-console/web
 import type { RunEntry, Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
-import type { GraphPorts } from '../common/graph.type.ts';
+import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
 import { runsMapOf } from '../utils/graph-tasks.util.ts';
 
 const NO_TASKS: GraphTask[] = [];
-
-/** `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now. */
-type FeedGate = {
-  readonly canPost: () => boolean;
-  readonly state: () => GraphState;
-};
 
 type TaskFeedDeps = {
   readonly root: string;
   readonly runs: Pick<Runs, 'get' | 'onDidChange'>;
   readonly ports: Pick<GraphPorts, 'post' | 'log'>;
-  readonly gate: FeedGate;
+  readonly gate: TaskFeedGate;
 };
 
 const tasksOf = (state: GraphState): GraphTask[] => (state.kind === 'graph' ? state.tasks : NO_TASKS);
 
 /**
  * What a graph panel is told about tasks besides its state: the run states of its root, coalesced so a burst of task
- * events is one post, and the one `showTasks` request held until the page can take it. `flush` is the one point that
- * posts the full map and the held request, right after a state is posted.
+ * events is one post, and the one `showTasks` request held until the page can take it. `showTasks` is never posted before
+ * a `graph` state: `flush` is the one point that posts the full map and the held request, right after a state is posted.
  */
 export class GraphTaskFeed {
   private readonly deps: TaskFeedDeps;
@@ -39,6 +33,8 @@ export class GraphTaskFeed {
   }
 
   public start(): void {
+    if (this.unsubscribe !== null) return;
+
     this.unsubscribe = this.deps.runs.onDidChange((entry) => {
       this.changed(entry);
     });
@@ -54,23 +50,26 @@ export class GraphTaskFeed {
   public flush(state: GraphState): void {
     this.cancelTimer();
     this.postRuns(tasksOf(state));
-    this.postHeld();
+    this.postHeld(state);
   }
 
-  /** The latest request wins while the page cannot take it; a single-package root has no task graph to show. */
+  /**
+   * The latest request wins while the page cannot take it, which is until a `graph` state has been posted; a single-package
+   * root has no task graph to show.
+   */
   public showTasks(taskIds: string[]): void {
     const { gate, ports } = this.deps;
     const state = gate.state();
 
     if (state.kind === 'singlePackage') {
-      ports.log(logTextOf('Ignored showTasks: a single-package root has no task graph'));
+      this.ignoreSinglePackage();
 
       return;
     }
 
     const canPost = gate.canPost();
 
-    if (!canPost) {
+    if (!canPost || state.kind !== 'graph') {
       this.held = taskIds;
 
       return;
@@ -102,9 +101,7 @@ export class GraphTaskFeed {
 
     if (!canPost) return;
 
-    const state = this.deps.gate.state();
-
-    this.postRuns(tasksOf(state));
+    this.postRuns(this.deps.gate.tasks());
   }
 
   private cancelTimer(): void {
@@ -121,8 +118,21 @@ export class GraphTaskFeed {
     ports.post(message);
   }
 
-  private postHeld(): void {
+  private ignoreSinglePackage(): void {
+    this.deps.ports.log(logTextOf('Ignored showTasks: a single-package root has no task graph'));
+  }
+
+  private postHeld(state: GraphState): void {
     if (this.held === null) return;
+
+    if (state.kind === 'singlePackage') {
+      this.held = null;
+      this.ignoreSinglePackage();
+
+      return;
+    }
+
+    if (state.kind !== 'graph') return;
 
     const taskIds = this.held;
 

@@ -126,6 +126,16 @@ describe('FEATURE: graph runs map', () => {
     });
   });
 
+  describe('GIVEN runs of the same id under two roots', () => {
+    it('WHEN the map is built for /other THEN it holds the /other state only', () => {
+      const get = lookupOf(runOf(ROOT, 'a#build', 'running'), runOf('/other', 'a#build', 'failed'));
+
+      const runs = runsMapOf('/other', LISTED, get);
+
+      expect(runs).toStrictEqual({ 'a#build': 'failed' });
+    });
+  });
+
   describe('GIVEN a run of an id that is not listed', () => {
     it('WHEN the map is built THEN it is absent', () => {
       const get = lookupOf(runOf(ROOT, 'gone#build', 'running'));

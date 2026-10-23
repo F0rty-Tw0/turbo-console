@@ -1,4 +1,4 @@
-import type { GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
+import type { GraphState, GraphTask, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import { answerRequest } from './graph-explain.ts';
 import { GraphImageSaver } from './graph-image-saver.ts';
@@ -9,9 +9,9 @@ import { LatestWins } from './latest-wins.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { ExplainContext, ExplainRequest, GraphPorts, RequestContext } from '../common/graph.type.ts';
+import type { ExplainContext, ExplainRequest, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
-import { graphStateOfRoot } from '../utils/graph-state.util.ts';
+import { graphStateOfRoot, graphTasksOfRoot } from '../utils/graph-state.util.ts';
 
 type ExplainJob = {
   readonly request: ExplainRequest;
@@ -44,7 +44,11 @@ export class GraphSession {
     this.ports = ports;
     this.images = new GraphImageSaver(root, ports);
 
-    const gate = { canPost: (): boolean => this.canPost(), state: (): GraphState => this.stateNow() };
+    const gate: TaskFeedGate = {
+      canPost: (): boolean => this.canPost(),
+      state: (): GraphState => this.stateNow(),
+      tasks: (): GraphTask[] => graphTasksOfRoot(this.roots.get(this.root)?.state)
+    };
 
     this.feed = new GraphTaskFeed({ root, runs, ports, gate });
   }

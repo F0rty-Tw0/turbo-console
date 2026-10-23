@@ -8,8 +8,7 @@ import {
 } from '../../bridge/common/graph-message.const.ts';
 import type { ManifestField } from '../../bridge/common/graph-message.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-
-const isString = (value: unknown): value is string => typeof value === 'string';
+import { isString } from '../../bridge/utils/string.util.ts';
 
 const isManifestField = (value: unknown): value is ManifestField => MANIFEST_FIELDS.some((field) => field === value);
 

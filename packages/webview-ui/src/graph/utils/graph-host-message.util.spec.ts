@@ -214,6 +214,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with a numeric task dependency', graphWithTaskOf({ dependencies: [1] })],
       ['a runs message with string runs', runsMessageOf('x')],
       ['a runs message with null runs', runsMessageOf(null)],
+      ['a runs message with an array of runs', runsMessageOf([])],
       ['a runs message with an unknown run state', runsMessageOf({ 'app#build': 'busy' })],
       ['a runs message with a numeric run state', runsMessageOf({ 'app#build': 5 })],
       ['a showTasks message with a string taskIds', { type: 'showTasks', taskIds: 'a' }],

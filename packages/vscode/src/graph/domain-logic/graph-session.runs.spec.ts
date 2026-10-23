@@ -27,15 +27,30 @@ const loadedStore = (): RootStore => {
 };
 
 /** A started, shown session on `/ws` over a real `RunStore`; its page is not ready yet. */
-const shownSession = (store: RootStore = loadedStore()): ShownSession => {
+const shownSession = (store: RootStore = loadedStore(), runs: RunStore = new RunStore()): ShownSession => {
   const ports = portsWith(null);
-  const runs = new RunStore();
   const session = new GraphSession('/ws', store, ports, runs);
 
   session.setVisible(true);
   session.start();
 
   const shown: ShownSession = { session, runs, ports };
+
+  return shown;
+};
+
+/** A ready session hidden while a#build starts and ends, then revealed and ready again. */
+const revealedSession = async (): Promise<ShownSession> => {
+  const shown = shownSession();
+  const { session, runs } = shown;
+
+  await session.receive({ type: 'ready' });
+  session.setVisible(false);
+  runs.tryStart(RUN_A_BUILD_STUB, 1000);
+  runs.processEnded(A_BUILD_DEFINITION_STUB, 0, 2000);
+  session.setVisible(true);
+  await session.receive({ type: 'ready' });
+  vi.advanceTimersByTime(200);
 
   return shown;
 };
@@ -97,6 +112,17 @@ describe('FEATURE: graph session runs feed', () => {
     });
 
     describe('WHEN the panel is hidden and a#build starts and ends', () => {
+      it('THEN no timer is armed', async () => {
+        const { session, runs } = shownSession();
+
+        await session.receive({ type: 'ready' });
+        session.setVisible(false);
+        runs.tryStart(RUN_A_BUILD_STUB, 1000);
+        runs.processEnded(A_BUILD_DEFINITION_STUB, 0, 2000);
+
+        expect(vi.getTimerCount()).toBe(0);
+      });
+
       it('THEN no runs message is posted for 200 ms', async () => {
         const { session, runs, ports } = shownSession();
 
@@ -104,26 +130,20 @@ describe('FEATURE: graph session runs feed', () => {
         session.setVisible(false);
         runs.tryStart(RUN_A_BUILD_STUB, 1000);
         runs.processEnded(A_BUILD_DEFINITION_STUB, 0, 2000);
-        const timersArmed = vi.getTimerCount();
-
         vi.advanceTimersByTime(200);
 
-        expect(timersArmed).toBe(0);
         expect(postedRunsOf(ports)).toStrictEqual([{}]);
       });
 
-      it('THEN the reveal and ready post the state, then the map with the final result', async () => {
-        const { session, runs, ports } = shownSession();
-
-        await session.receive({ type: 'ready' });
-        session.setVisible(false);
-        runs.tryStart(RUN_A_BUILD_STUB, 1000);
-        runs.processEnded(A_BUILD_DEFINITION_STUB, 0, 2000);
-        session.setVisible(true);
-        await session.receive({ type: 'ready' });
-        vi.advanceTimersByTime(200);
+      it('THEN the reveal and ready each post the state, then a map', async () => {
+        const { ports } = await revealedSession();
 
         expect(postedTypesOf(ports)).toStrictEqual(['state', 'runs', 'state', 'runs']);
+      });
+
+      it('THEN the last map carries the final result', async () => {
+        const { ports } = await revealedSession();
+
         expect(postedRunsOf(ports).at(-1)).toStrictEqual({ 'a#build': 'passed' });
       });
     });
@@ -185,7 +205,7 @@ describe('FEATURE: graph session runs feed', () => {
     });
 
     describe('WHEN the session is disposed with a timer armed', () => {
-      it('THEN advancing 100 ms posts nothing and no timer is left', async () => {
+      it('THEN advancing 100 ms posts nothing', async () => {
         const { session, runs, ports } = shownSession();
 
         await session.receive({ type: 'ready' });
@@ -196,6 +216,15 @@ describe('FEATURE: graph session runs feed', () => {
         vi.advanceTimersByTime(100);
 
         expect(postedOf(ports)).toHaveLength(postedBefore);
+      });
+
+      it('THEN no timer is left', async () => {
+        const { session, runs } = shownSession();
+
+        await session.receive({ type: 'ready' });
+        runs.tryStart(RUN_A_BUILD_STUB, 1000);
+        session.dispose();
+
         expect(vi.getTimerCount()).toBe(0);
       });
 
@@ -211,11 +240,13 @@ describe('FEATURE: graph session runs feed', () => {
       });
 
       it('THEN the runs listener is unsubscribed', () => {
-        const { session, runs } = shownSession();
+        const runs = new RunStore();
         const off = vi.fn();
 
         vi.spyOn(runs, 'onDidChange').mockReturnValue(off);
-        session.start();
+
+        const { session } = shownSession(loadedStore(), runs);
+
         session.dispose();
 
         expect(off).toHaveBeenCalledOnce();

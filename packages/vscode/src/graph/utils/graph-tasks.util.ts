@@ -48,13 +48,8 @@ export const graphTasksOf = (model: WorkspaceModel): GraphTask[] => {
 
 /** The run state of each listed task that has a run under `root`; unlisted ids and other roots never appear. */
 export const runsMapOf = (root: string, tasks: GraphTask[], get: RunLookup): Record<string, GraphRunState> => {
-  const runs: Record<string, GraphRunState> = {};
+  const entries = tasks.map(({ id }): [string, GraphRunState | undefined] => [id, get(root, id)?.state]);
+  const withRun = entries.filter((entry): entry is [string, GraphRunState] => entry[1] !== undefined);
 
-  for (const { id } of tasks) {
-    const state = get(root, id)?.state;
-
-    if (state !== undefined) runs[id] = state;
-  }
-
-  return runs;
+  return Object.fromEntries(withRun);
 };

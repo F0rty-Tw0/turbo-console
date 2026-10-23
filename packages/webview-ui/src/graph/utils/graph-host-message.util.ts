@@ -4,8 +4,7 @@ import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { GraphHostMessage } from '../../bridge/common/graph-message.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-
-const isString = (value: unknown): value is string => typeof value === 'string';
+import { isString } from '../../bridge/utils/string.util.ts';
 
 const isEdge = (value: unknown): boolean => {
   if (!isRecord(value)) return false;

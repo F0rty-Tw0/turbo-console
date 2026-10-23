@@ -117,6 +117,29 @@ describe('FEATURE: graph session showTasks', () => {
     });
   });
 
+  describe('GIVEN a ready session on a root that is still loading', () => {
+    it('WHEN showTasks is called THEN nothing is posted besides the loading state and its map', async () => {
+      const { session, ports } = shownSession(new RootStore());
+
+      await session.receive({ type: 'ready' });
+      session.showTasks(['a#build']);
+
+      expect(postedTypesOf(ports)).toStrictEqual(['state', 'runs']);
+    });
+
+    it('WHEN the graph arrives THEN the request follows the graph state and its map', async () => {
+      const store = new RootStore();
+      const { session, ports } = shownSession(store);
+
+      await session.receive({ type: 'ready' });
+      session.showTasks(['a#build']);
+      store.set([ROOT_FOLDER_STUB], () => coordinatorMock());
+      store.apply('/ws', GRAPH_LOADED_STUB);
+
+      expect(postedTypesOf(ports)).toStrictEqual(['state', 'runs', 'state', 'runs', 'showTasks']);
+    });
+  });
+
   describe('GIVEN a shown session on a single-package root', () => {
     it('WHEN showTasks is called THEN nothing is posted or held and the request is logged once', async () => {
       const store = loadedStore();

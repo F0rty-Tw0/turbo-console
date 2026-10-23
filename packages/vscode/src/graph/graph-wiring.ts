@@ -22,7 +22,7 @@ export const createGraph = (
   details: GraphDetails,
   output: Output,
   runs: Runs
-  // eslint-disable-next-line max-params -- the wiring inputs plus the run store, pinned by the plan
+  // eslint-disable-next-line max-params -- the wiring inputs plus the run store `extension.ts` passes
 ): GraphWiring => {
   const setPanelVisible = (root: string, panelId: string, visible: boolean): void => {
     session.setPanelVisible(root, panelId, visible);

@@ -8,10 +8,15 @@ import { packageNamesOf } from '../utils/graph-package.util.ts';
 
 const NO_PACKAGES: GraphPackage[] = [];
 
-const REQUEST_TYPES: string[] = ['reload', 'openDetails', 'runTask', 'stopTask'];
+const REQUEST_TYPES: Readonly<Record<GraphRequestMessage['type'], true>> = {
+  reload: true,
+  openDetails: true,
+  runTask: true,
+  stopTask: true
+};
 
 export function isRequestMessage(message: GraphWebviewMessage): message is GraphRequestMessage {
-  return REQUEST_TYPES.includes(message.type);
+  return Object.hasOwn(REQUEST_TYPES, message.type);
 }
 
 /** The page shows Reload only on an error state, so a `reload` at any other time is not honoured and never reloads the root. */

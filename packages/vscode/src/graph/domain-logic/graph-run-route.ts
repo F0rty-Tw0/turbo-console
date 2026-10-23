@@ -2,21 +2,12 @@ import type { GraphState } from '@turbo-console/webview-ui';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { GraphPorts, GraphRunRequest } from '../common/graph.type.ts';
-
-const RUN_COMMAND = 'turboConsole.runTask';
-const RUN_WITHOUT_CACHE_COMMAND = 'turboConsole.runTaskWithoutCache';
-const STOP_COMMAND = 'turboConsole.stopTask';
-
-const commandOf = (request: GraphRunRequest): string => {
-  if (request.type === 'stopTask') return STOP_COMMAND;
-
-  return request.noCache ? RUN_WITHOUT_CACHE_COMMAND : RUN_COMMAND;
-};
+import { runCommandOf } from '../utils/graph-run-command.util.ts';
 
 /**
- * Runs or stops a task the host listed, through the tree's run commands. The row is built from the host's `GraphTask`, so
- * the page names only an id. `false` when the state is not a graph or the id is not a listed task; a rejection of the port is
- * logged and the request still counts as handled.
+ * Runs or stops a task the host listed, through the tree's run commands. `false` when the state is not a graph, the id is not a
+ * listed task, or a run is asked of a task that is not runnable (a stop is allowed for any listed task); a rejection of the port
+ * is logged and the request still counts as handled.
  */
 export async function routeRun(
   request: GraphRunRequest,
@@ -30,10 +21,14 @@ export async function routeRun(
 
   if (task === undefined) return false;
 
-  const row = { kind: 'task', root, key: task.id, packageName: task.packageName };
+  const isUnrunnableRun = request.type === 'runTask' && !task.isRunnable;
+
+  if (isUnrunnableRun) return false;
+
+  const { command, arg } = runCommandOf(request, task, root);
 
   try {
-    await ports.executeCommand(commandOf(request), row);
+    await ports.executeCommand(command, arg);
   } catch (error: unknown) {
     ports.log(logTextOf(error));
   }

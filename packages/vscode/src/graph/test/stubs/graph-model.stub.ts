@@ -1,5 +1,5 @@
 import type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphPackage, GraphState, GraphTask, Position, Positions } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphReady, GraphTask, Position, Positions } from '@turbo-console/webview-ui';
 
 import type { LoadedModel } from '../../../roots/common/root.type.ts';
 import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
@@ -48,7 +48,7 @@ export const GRAPH_INFOS_STUB: GraphPackage[] = [
   { name: 'web', path: 'apps/web', tags: ['app', 'ui'], taskCount: 2 }
 ];
 
-const GRAPH_TASK_ROWS: GraphTask[] = [
+export const GRAPH_TASKS_STUB: GraphTask[] = [
   { id: '@org/x#build', packageName: '@org/x', name: 'build', command: 'tsc', isRunnable: true, dependencies: [] },
   { id: 'a#build', packageName: 'a', name: 'build', command: 'tsc', isRunnable: true, dependencies: [] },
   {
@@ -62,14 +62,14 @@ const GRAPH_TASK_ROWS: GraphTask[] = [
   { id: 'web#lint', packageName: 'web', name: 'lint', command: 'tsc', isRunnable: true, dependencies: [] }
 ];
 
-export const GRAPH_STATE_STUB: GraphState = {
+export const GRAPH_STATE_STUB: GraphReady = {
   kind: 'graph',
   hash: GRAPH_HASH_STUB,
   packages: GRAPH_INFOS_STUB,
   edges: [A_X, WEB_X, WEB_A],
   positions: null,
   folderPositions: null,
-  tasks: GRAPH_TASK_ROWS
+  tasks: GRAPH_TASKS_STUB
 };
 
 const X_POINT: Position = { x: 0, y: 0 };

@@ -78,7 +78,7 @@ class GraphPageController {
 
     if (!isGraphHostMessage(message)) return;
 
-    // `runs` and `showTasks` are accepted and ignored here; task mode consumes them in slice 2.
+    // `runs` and `showTasks` are accepted and ignored until task mode reads them.
     if (message.type === 'state') this.show(message.state, at);
     else if (message.type === 'edgeExplained') this.filtering.inspection.explained(message);
   }
