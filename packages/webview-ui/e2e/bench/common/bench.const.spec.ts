@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BENCH_ROWS } from './bench.const.ts';
+import { BENCH_PREFIX, BENCH_ROWS, ROW_NAME } from './bench.const.ts';
 
 const SPEC_NAMES = [
   'graph open cold target-like',
@@ -12,28 +12,47 @@ const SPEC_NAMES = [
   'graph folder toggle large'
 ];
 
+const ROWS = Object.values(BENCH_ROWS);
+
 describe('FEATURE: bench rows', () => {
-  it('GIVEN the table, THEN it lists the 7 rows of spec 3.1 in order', () => {
-    const names = Object.values(BENCH_ROWS).map((row): string => row.name);
+  describe('GIVEN the table', () => {
+    it('WHEN its names are listed THEN they are the 7 rows of spec 3.1 in order', () => {
+      const names = ROWS.map((row): string => row.name);
 
-    expect(names).toStrictEqual(SPEC_NAMES);
+      expect(names).toStrictEqual(SPEC_NAMES);
+    });
   });
 
-  it('GIVEN each row, THEN webview-ui/<name> is a valid bench name', () => {
-    for (const row of Object.values(BENCH_ROWS)) expect(`webview-ui/${row.name}`).toMatch(/^[\w@./ -]+$/u);
+  describe('GIVEN each row', () => {
+    it('WHEN its name is prefixed THEN it is a valid bench name', () => {
+      for (const row of ROWS) {
+        const benchName = BENCH_PREFIX + row.name;
+
+        expect(benchName).toMatch(ROW_NAME);
+      }
+    });
+
+    it('WHEN its samples are counted THEN it takes at least 3 whole samples', () => {
+      for (const row of ROWS) {
+        const isWhole = Number.isInteger(row.samples);
+
+        expect(isWhole).toBe(true);
+        expect(row.samples).toBeGreaterThanOrEqual(3);
+      }
+    });
   });
 
-  it('GIVEN the three large rows, THEN none is gated (roadmap Decision 8)', () => {
-    const gates = [BENCH_ROWS.openColdLarge.gate, BENCH_ROWS.panCpuLarge.gate, BENCH_ROWS.toggleLarge.gate];
+  describe('GIVEN the three large rows', () => {
+    it('WHEN their gates are read THEN none is gated (roadmap Decision 8)', () => {
+      const gates = [BENCH_ROWS.openColdLarge.gate, BENCH_ROWS.panCpuLarge.gate, BENCH_ROWS.toggleLarge.gate];
 
-    expect(gates).toStrictEqual([false, false, false]);
+      expect(gates).toStrictEqual([false, false, false]);
+    });
   });
 
-  it('GIVEN the target-like pan rows, THEN they take the same samples (they are recorded together)', () => {
-    expect(BENCH_ROWS.panCpu.samples).toBe(BENCH_ROWS.panP95.samples);
-  });
-
-  it('GIVEN each row, THEN it takes at least 3 whole samples', () => {
-    for (const row of Object.values(BENCH_ROWS)) expect(Number.isInteger(row.samples) && row.samples >= 3).toBe(true);
+  describe('GIVEN the target-like pan rows', () => {
+    it('WHEN their samples are compared THEN they match (they are recorded together)', () => {
+      expect(BENCH_ROWS.panCpu.samples).toBe(BENCH_ROWS.panP95.samples);
+    });
   });
 });
