@@ -13,5 +13,11 @@ export const GRAPH_ICON_IDS = [
   'file',
   'info',
   'warning',
-  'eye-closed'
+  'eye-closed',
+  'chevron-down',
+  'chevron-right',
+  'chevron-left',
+  'ellipsis',
+  'check',
+  'dash'
 ] as const;

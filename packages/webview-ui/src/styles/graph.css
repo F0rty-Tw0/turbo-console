@@ -177,6 +177,192 @@ p {
   min-width: 0;
 }
 
+/* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons take pointer events. */
+.graph-widgets {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.widget-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+/* Keeps the "…" at the row's right end, also on a collapsed row with no title and when the chevron is hidden. */
+.widget-row > .widget-button:last-child {
+  margin-left: auto;
+}
+
+.widget-button {
+  display: inline-flex;
+  flex: none;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
+  border-radius: var(--radius);
+  /* An opaque base under the secondary colour, which Dark Modern makes transparent and High Contrast leaves unset. */
+  --tc-widget-fill: var(--vscode-button-secondaryBackground, transparent);
+
+  color: var(--vscode-button-secondaryForeground);
+  background-color: var(--vscode-editor-background);
+  background-image: linear-gradient(var(--tc-widget-fill), var(--tc-widget-fill));
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.widget-button:hover {
+  --tc-widget-fill: var(--vscode-button-secondaryHoverBackground, transparent);
+}
+
+.widget-button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.widget-package-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/*
+ * The title takes the room the count leaves (basis 0) and is cut first, down to a 3ch floor; only then the count is
+ * cut too, so the 24 px buttons stay inside a 120 px box.
+ */
+.widget-title {
+  flex: 1 1 0;
+  min-width: 3ch;
+  overflow: hidden;
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.widget-count {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--tc-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* A folder or package menu, placed from script; above the rows and the breadcrumb. */
+.widget-menu {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 160px;
+  padding: var(--space-1) 0;
+  border: 1px solid var(--vscode-menu-border, var(--vscode-contrastBorder, transparent));
+  border-radius: var(--radius);
+  color: var(--vscode-menu-foreground);
+  background: var(--vscode-menu-background);
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+  pointer-events: auto;
+}
+
+.widget-menu:focus {
+  outline: none;
+}
+
+.widget-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid transparent;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.widget-menu-item:hover,
+.widget-menu-item:focus {
+  color: var(--vscode-menu-selectionForeground);
+  background: var(--vscode-menu-selectionBackground);
+  outline: none;
+}
+
+.widget-menu-item:focus-visible {
+  border-color: var(--vscode-menu-selectionBorder, var(--vscode-focusBorder));
+}
+
+.widget-menu-item[aria-disabled='true'] {
+  color: var(--vscode-disabledForeground);
+  cursor: default;
+}
+
+.widget-menu-check {
+  display: inline-flex;
+  flex: none;
+  width: 16px;
+}
+
+.widget-menu hr {
+  width: 100%;
+  margin: var(--space-1) 0;
+  border: none;
+  border-top: 1px solid var(--vscode-menu-separatorBackground, var(--vscode-panel-border));
+}
+
+/* The folder focus breadcrumb, at the layer's top left under any menu. */
+.graph-breadcrumb {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  max-width: calc(100% - 16px);
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-contrastBorder, transparent));
+  border-radius: var(--radius);
+  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+  background: var(--vscode-editorWidget-background);
+  pointer-events: auto;
+}
+
+.breadcrumb-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.breadcrumb-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumb-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--tc-muted);
+}
+
 .graph-controls {
   display: flex;
   flex: 0 0 260px;
@@ -378,6 +564,7 @@ kbd {
 @media (width < 960px) {
   .graph-details {
     position: absolute;
+    z-index: 2;
     width: 280px;
     inset-block: 0;
     inset-inline-end: 0;

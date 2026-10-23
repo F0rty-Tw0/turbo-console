@@ -47,3 +47,14 @@ export const keepClearNamesOf = (inspection: Inspection, ghostNodes: string[]): 
 
   return [...names];
 };
+
+/** The span of both boxes, so the camera also clears a button that overhangs its anchor; either one missing gives the other. */
+export const joinedBoxOf = (anchor: AnchorBox | null, button: AnchorBox | null): AnchorBox | null => {
+  if (anchor === null) return button;
+
+  if (button === null) return anchor;
+
+  const joined: AnchorBox = { x1: Math.min(anchor.x1, button.x1), x2: Math.max(anchor.x2, button.x2) };
+
+  return joined;
+};

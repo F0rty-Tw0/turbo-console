@@ -25,4 +25,5 @@ export type FoldersRig = {
   readonly repaint: Mock<GraphFoldersDeps['repaint']>;
   readonly onCollapsed: Mock<GraphFoldersDeps['onCollapsed']>;
   readonly onChange: Mock<GraphFoldersDeps['onChange']>;
+  readonly onRedrawn: Mock<GraphFoldersDeps['onRedrawn']>;
 };

@@ -2,6 +2,7 @@ import type { DetailsViews } from './common/details.type.ts';
 import type { GraphViewFactory, NodeSizer, TextMeasure } from './common/graph-page.type.ts';
 import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { NodeSize } from './common/node-size.type.ts';
+import type { WidgetViews } from './common/widget.type.ts';
 // Imported before any module that loads Cytoscape: elk-client creates the one `tc-elk` policy as it loads.
 import { createElk } from './data-access/elk-client.ts';
 import { breadthfirstPositions } from './data-access/fallback-layout.ts';
@@ -10,6 +11,7 @@ import { createGraphView } from './data-access/graph-view.ts';
 import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
+import { breadcrumbLine, buildBreadcrumb } from './ui/breadcrumb-elements.ts';
 import { buildControls } from './ui/controls-elements.ts';
 import { buildDetails } from './ui/details-elements.ts';
 import { emptyView } from './ui/details-empty.ts';
@@ -21,6 +23,8 @@ import { packageView } from './ui/details-package.ts';
 import { candidateItems, pickingView } from './ui/details-picking.ts';
 import { stepItems, traceView } from './ui/details-trace.ts';
 import { buildPage } from './ui/page-elements.ts';
+import { buildFolderRow, buildPackageButton } from './ui/widget-elements.ts';
+import { buildMenu } from './ui/widget-menu.ts';
 import { nodeSizeOf } from './utils/node-size.util.ts';
 import { themeColorsOf } from './utils/theme-colors.util.ts';
 import { createBridge } from '../bridge/data-access/create-bridge.ts';
@@ -70,6 +74,13 @@ const views: DetailsViews = {
   candidateItems,
   stepItems
 };
+const widgetViews: WidgetViews = {
+  row: buildFolderRow,
+  packageButton: buildPackageButton,
+  menu: buildMenu,
+  breadcrumb: buildBreadcrumb,
+  breadcrumbLine
+};
 const overlay = window.matchMedia(OVERLAY_MEDIA_QUERY);
 const controller = createGraphController({
   bridge,
@@ -82,6 +93,7 @@ const controller = createGraphController({
   now,
   build: buildControls,
   views,
+  widgetViews,
   overlay
 });
 

@@ -16,11 +16,13 @@ import { GraphGroupingPage } from './pages/graph-grouping.po.ts';
 import { GraphHost } from './pages/graph-host.po.ts';
 import { GraphIcons } from './pages/graph-icons.po.ts';
 import { GraphLook } from './pages/graph-look.po.ts';
+import { GraphMenuPaths } from './pages/graph-menu-paths.po.ts';
 import { GraphNarrow } from './pages/graph-narrow.po.ts';
 import { GraphPackageList } from './pages/graph-package-list.po.ts';
 import { GraphProbePage } from './pages/graph-probe.po.ts';
 import { GraphSamples } from './pages/graph-samples.po.ts';
 import { GraphToolbar } from './pages/graph-toolbar.po.ts';
+import { GraphWidgetsBand } from './pages/graph-widgets-band.po.ts';
 import { GraphPage } from './pages/graph.po.ts';
 import { PageClock } from './pages/page-clock.po.ts';
 
@@ -40,6 +42,7 @@ type GraphFixtures = {
   readonly graphLink: GraphDetailsLink;
   readonly graphList: GraphPackageList;
   readonly graphLook: GraphLook;
+  readonly graphMenus: GraphMenuPaths;
   readonly graphNarrow: GraphNarrow;
   readonly graphPage: GraphPage;
   readonly graphProbe: GraphProbePage;
@@ -47,6 +50,7 @@ type GraphFixtures = {
   readonly graphSamples: GraphSamples;
   readonly graphToolbar: GraphToolbar;
   readonly graphTrace: GraphDetailsTrace;
+  readonly graphWidgets: GraphWidgetsBand;
   readonly pageClock: PageClock;
 };
 
@@ -96,6 +100,9 @@ export const test = base.extend<GraphFixtures>({
   graphLook: async ({ page }, use): Promise<void> => {
     await use(new GraphLook(page));
   },
+  graphMenus: async ({ page }, use): Promise<void> => {
+    await use(new GraphMenuPaths(page));
+  },
   graphNarrow: async ({ page }, use): Promise<void> => {
     await use(new GraphNarrow(page));
   },
@@ -116,6 +123,9 @@ export const test = base.extend<GraphFixtures>({
   },
   graphTrace: async ({ page }, use): Promise<void> => {
     await use(new GraphDetailsTrace(page));
+  },
+  graphWidgets: async ({ page }, use): Promise<void> => {
+    await use(new GraphWidgetsBand(page));
   },
   pageClock: async ({ page }, use): Promise<void> => {
     await use(new PageClock(page));

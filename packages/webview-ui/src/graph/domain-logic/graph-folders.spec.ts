@@ -166,6 +166,24 @@ describe('FEATURE: GraphFolders', () => {
     });
   });
 
+  describe('GIVEN the boards graph drawn grouped and onRedrawn spied', () => {
+    it('WHEN the folders are redrawn THEN onRedrawn runs once after the folder pass', () => {
+      folders.redraw();
+
+      const [redrawnOrder] = rig.onRedrawn.mock.invocationCallOrder;
+      const [showOrder] = rig.showFolders.mock.invocationCallOrder;
+
+      expect(rig.onRedrawn).toHaveBeenCalledOnce();
+      expect(redrawnOrder).toBeGreaterThan(showOrder ?? 0);
+    });
+
+    it('WHEN the folder pass alone is shown THEN onRedrawn runs once', () => {
+      folders.show();
+
+      expect(rig.onRedrawn).toHaveBeenCalledOnce();
+    });
+  });
+
   describe('GIVEN the checkbox mode is not the mode on screen', () => {
     beforeEach(() => {
       rig.world.canAct = false;

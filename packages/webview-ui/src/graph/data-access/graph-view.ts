@@ -8,6 +8,7 @@ import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
 import { applyPaint } from './graph-paint.ts';
 import { placeNodes, positionOf } from './graph-place.ts';
+import { widgetRectsOf } from './graph-rects.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
@@ -18,6 +19,7 @@ import type { GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../commo
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import type { WidgetRects } from '../common/widget.type.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
 const FIT_PADDING_PX = 24;
@@ -72,6 +74,15 @@ const cytoscapeOn = (container: HTMLElement): Core => {
   return cytoscape(options);
 };
 
+/** A copy of the camera: `cy.pan()` is Cytoscape's own object, which a later pan changes in place. */
+const viewportOf = (cy: Core): Viewport => {
+  const { x, y } = cy.pan();
+  const pan: Position = { x, y };
+  const current: Viewport = { zoom: cy.zoom(), pan };
+
+  return current;
+};
+
 /** The page's canvas view: Cytoscape, the folder pass over it and the canvas events reported to `handlers`. */
 export const createGraphView = (container: HTMLElement, handlers: GraphViewHandlers, fontFamily: string): GraphView => {
   const cy = cytoscapeOn(container);
@@ -85,11 +96,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     cy.resize();
     fitVisible(cy, FIT_PADDING_PX);
   };
-  const viewport = (): Viewport => {
-    const current: Viewport = { zoom: cy.zoom(), pan: cy.pan() };
-
-    return current;
-  };
+  const viewport = (): Viewport => viewportOf(cy);
   const setViewport = (zoom: number, pan: Position): void => {
     cy.resize();
     cy.viewport({ zoom, pan });
@@ -118,6 +125,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     setPositions,
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
+    widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),
     cy: (): Core => cy
   };
 

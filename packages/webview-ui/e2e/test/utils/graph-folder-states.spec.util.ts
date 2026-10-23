@@ -109,3 +109,20 @@ export const wideRowFolderState = (): GraphReady => {
 
   return state;
 };
+
+/** The folder of this title, alone in the graph with one package, so its box is as narrow as a box gets and cuts the title. */
+export const LONG_FOLDER = 'a-very-long-folder-name-for-the-ellipsis-check';
+
+/** One package in `LONG_FOLDER`, placed at the origin. */
+export const longTitleState = (): GraphReady => {
+  const state: GraphReady = {
+    kind: 'graph',
+    hash: 'f01d0005',
+    packages: [packageOf('pkg', `${LONG_FOLDER}/pkg`)],
+    edges: [],
+    positions: null,
+    folderPositions: positionsOf([['pkg', 0, 0]])
+  };
+
+  return state;
+};

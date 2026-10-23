@@ -32,11 +32,11 @@ const textBlock = (className: string, line: HTMLElement, button: HTMLButtonEleme
   return block;
 };
 
-/** The row that holds the controls panel, once a graph shows, then the container. */
-const graphBody = (container: HTMLElement): HTMLElement => {
+/** The row that holds the controls panel, once a graph shows, the container and the widget layer over it. */
+const graphBody = (container: HTMLElement, widgets: HTMLElement): HTMLElement => {
   const body = textElement('div', 'graph-body', '');
 
-  body.append(container);
+  body.append(container, widgets);
 
   return body;
 };
@@ -54,7 +54,8 @@ export const buildPage = (): PageElements => {
   const messageText = textElement('p', 'graph-message-text', '');
   const message = textBlock('graph-message', messageText, reload);
   const container = graphContainer();
-  const body = graphBody(container);
+  const widgets = textElement('div', 'graph-widgets', '');
+  const body = graphBody(container, widgets);
   const root = textElement('main', 'graph-page', '');
 
   root.append(tools.toolbar, notice, message, body);
@@ -69,7 +70,8 @@ export const buildPage = (): PageElements => {
     messageText,
     reload,
     body,
-    container
+    container,
+    widgets
   };
 
   return page;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  actionsLabelOf,
   controlsLabelOf,
   countTextOf,
   focusLabelOf,
@@ -12,8 +13,25 @@ import {
   groupLabelOf,
   showLabelOf
 } from './controls-text.util.ts';
+import type { MenuTarget } from '../common/widget.type.ts';
 
 describe('FEATURE: controls text', () => {
+  describe('GIVEN a menu target', () => {
+    const apps: MenuTarget = { kind: 'folder', folder: 'apps' };
+    const root: MenuTarget = { kind: 'folder', folder: '' };
+    const web: MenuTarget = { kind: 'package', name: 'web' };
+
+    it.each([
+      { title: 'the folder apps', target: apps, expected: 'Actions for folder apps' },
+      { title: 'the root folder', target: root, expected: 'Actions for folder (root)' },
+      { title: 'the package web', target: web, expected: 'Actions for web' }
+    ])('WHEN it is $title THEN its actions label is $expected', ({ target, expected }) => {
+      const label = actionsLabelOf(target);
+
+      expect(label).toBe(expected);
+    });
+  });
+
   describe('GIVEN a folder group header', () => {
     it('WHEN the folder is apps with 3 packages THEN the label is the folder and its count', () => {
       const label = groupLabelOf('apps', 3);

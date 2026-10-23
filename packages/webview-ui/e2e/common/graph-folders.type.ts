@@ -52,3 +52,10 @@ export type FolderViewFacts = {
   readonly buttons: string[];
   readonly packages: string[];
 };
+
+/** Where a header row's buttons sit on their box or node: `top` below its top, `inset` in from its sides, `side` px squares. */
+export type RowFrame = {
+  readonly top: number;
+  readonly inset: number;
+  readonly side: number;
+};

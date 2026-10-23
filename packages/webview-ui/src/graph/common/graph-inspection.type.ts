@@ -3,6 +3,7 @@ import type { FolderScene } from './folder-scene.type.ts';
 import type { DetailsContext, ShownInspection } from './graph-details.type.ts';
 import type { ControlsViewFields, DrawnGraph, GraphView, PageElements, ViewStateSaver } from './graph-page.type.ts';
 import type { Inspection, InspectionInput, LinkInspection } from './inspection.type.ts';
+import type { AnchorBox } from './keep-clear.type.ts';
 import type { TraceCandidates, TraceResult } from './trace.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 
@@ -90,9 +91,11 @@ export type GraphInspectionDeps = {
   /** The checkbox's mode and the mode on screen are both grouped, so a folder tap may act. */
   readonly canAct: () => boolean;
   readonly folders: CanvasFolders & InspectionFolders;
+  /** The selected package's "…" span in container px, `null` without one; the keep-clear pan clears it too. */
+  readonly buttonBox: () => AnchorBox | null;
 };
 
-/** What the keep-clear pan reads: the canvas, the page's container, the details aside, the inspection and its drawn ghosts. */
+/** What the keep-clear pan reads: the canvas, the page's container, the details aside, the inspection, its drawn ghosts and the package "…". */
 export type KeepClearDeps = {
   readonly view: GraphView;
   readonly page: PageElements;
@@ -100,6 +103,7 @@ export type KeepClearDeps = {
   readonly aside: HTMLElement;
   readonly inspection: Inspection;
   readonly ghostNodes: string[];
+  readonly buttonBox: () => AnchorBox | null;
 };
 
 /** The canvas lights of the picking filter; the panel updates its own lists. */

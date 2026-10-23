@@ -172,7 +172,11 @@ describe('FEATURE: graph.css', () => {
       ['.primary-button', 'var(--vscode-button-background)'],
       ['.details-tag', 'var(--vscode-badge-background)'],
       ['.graph-hint', 'pointer-events: none'],
-      ['.graph-hint', 'position: absolute']
+      ['.graph-hint', 'position: absolute'],
+      ['.widget-button', 'background-color: var(--vscode-editor-background)'],
+      ['.widget-button', 'background-image: linear-gradient(var(--tc-widget-fill), var(--tc-widget-fill))'],
+      ['.widget-button', '--tc-widget-fill: var(--vscode-button-secondaryBackground, transparent)'],
+      ['.widget-button:hover', '--tc-widget-fill: var(--vscode-button-secondaryHoverBackground, transparent)']
     ])('WHEN the %s rule is read THEN it holds %s', (selector, expected) => {
       const declarations = declarationsOf(css, selector);
 

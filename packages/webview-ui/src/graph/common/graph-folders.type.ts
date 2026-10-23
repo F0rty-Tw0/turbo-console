@@ -20,4 +20,6 @@ export type GraphFoldersDeps = {
   readonly onCollapsed: (folder: string) => void;
   /** After a toggle or an expand drew the folders again: the collapsed set changed. */
   readonly onChange: () => void;
+  /** After every folder pass, from `redraw` and `show` alike: the widget layer follows the scene and the selection. */
+  readonly onRedrawn: () => void;
 };

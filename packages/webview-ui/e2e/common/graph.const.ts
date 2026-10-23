@@ -36,6 +36,11 @@ export const THREAD_TIME_METRIC = 'ThreadTime';
 
 export const MS_PER_SECOND = 1000;
 
+/** Chromium on macOS fires no `contextmenu` for Shift+F10, so a test that watches that event cannot run there. */
+export const IS_SHIFT_F10_SILENT = process.platform === 'darwin';
+
+export const SHIFT_F10_SILENT_REASON = 'Chromium on macOS fires no contextmenu event for Shift+F10';
+
 /** An empty page, so the renderer that loads it has run almost nothing before a CPU read. */
 export const BLANK_PAGE = 'data:text/html,<p>blank</p>';
 
@@ -165,6 +170,14 @@ export const OVERLAY_CANVAS_PX = OVERLAY_WIDTH_PX - CONTROLS_WIDTH_PX;
 
 /** The drawn canvas width at `DOCKED_WIDTH_PX`: both asides take theirs. */
 export const DOCKED_CANVAS_PX = DOCKED_WIDTH_PX - CONTROLS_WIDTH_PX - DETAILS_WIDTH_PX;
+
+/** A header widget's button size, and its inset from the box edge, in px; `src/graph/common/graph.const.ts` holds the same numbers. */
+export const WIDGET_BUTTON_PX = 24;
+
+export const WIDGET_INSET_PX = 8;
+
+/** Header widgets hide while the box is under this many px wide on screen. */
+export const WIDGET_MIN_BOX_PX = 120;
 
 /** The most a folder collapse or expand may take, from the toggle to the first frame after it, in ms. */
 export const TOGGLE_BUDGET_MS = 100;
