@@ -165,6 +165,9 @@ test.describe('FEATURE: graph tripwires', () => {
     graphProbe,
     graphWidgets
   }): Promise<void> => {
+    // The CPU budget is the gate; macOS CI ran this in 29 s of the default 30, so wall time gets 3x.
+    test.slow();
+
     await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
       graphPage.open({ savedState: groupedSavedState(largeState().hash) }));
 
@@ -209,6 +212,9 @@ test.describe('FEATURE: graph tripwires', () => {
     graphProbe,
     graphWidgets
   }): Promise<void> => {
+    // The CPU budget is the gate; macOS CI runs the sibling grouped pan in 29 s of the default 30, so wall time gets 3x.
+    test.slow();
+
     await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
       graphPage.open({ savedState: groupedSavedState(largeState().hash) }));
 
