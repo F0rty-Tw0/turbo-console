@@ -6,11 +6,15 @@ import { NEXT_FRAME } from '../common/graph.const.ts';
 import type { PanTrace, RawPanTrace } from './common/bench.type.ts';
 import { deltasOf, longestWithin } from './pan-trace.ts';
 
-/** Runs in base and head alike: records every frame and long task, and the window the pan ran in. */
+/**
+ * Runs in base and head alike: records every frame and long task, and the window the pan ran in.
+ * Frames push `performance.now()` from inside the callback: the callback's `time` argument is the frame's vsync time,
+ * and the catch-up frames after a long one carry stale vsync times, so deltas of `time` hide the long frame.
+ */
 const RECORDER_SCRIPT = `(() => {
   const state = { frames: [], tasks: [], tOn: null, tOff: null };
-  const onFrame = (time) => {
-    state.frames.push(time);
+  const onFrame = () => {
+    state.frames.push(performance.now());
     requestAnimationFrame(onFrame);
   };
   const onTasks = (list) => {
@@ -51,7 +55,7 @@ export class PanRecorder {
     await this.page.evaluate((): void => window.__benchPan?.markOff());
   }
 
-  /** Waits a frame first: the observer delivers long tasks after they end, so the last ones arrive late. */
+  /** Waits a frame first, so a long task that ended just before `markOff` has reached the observer. */
   public async read(): Promise<PanTrace> {
     await this.page.evaluate(NEXT_FRAME);
 
