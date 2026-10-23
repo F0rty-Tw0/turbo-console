@@ -1,7 +1,7 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import type { BenchRowDef } from './common/bench.type.ts';
-import { sampleAnnotation } from './utils/bench-results.util.ts';
+import { sampleAnnotation, sampleOf } from './utils/bench-results.util.ts';
 
 export const recordSample = (row: BenchRowDef, ms: number): void => {
   const annotation = sampleAnnotation({ name: row.name, ms, gate: row.gate });
@@ -21,4 +21,12 @@ export const collectSamples = async (row: BenchRowDef, measure: () => Promise<nu
   }
 
   return values;
+};
+
+/** The running test recorded every sample of `row`, so the reporter writes it with its full count. */
+export const expectRecorded = (row: BenchRowDef): void => {
+  const samples = test.info().annotations.map(sampleOf);
+  const ofRow = samples.filter((sample): boolean => sample?.name === row.name);
+
+  expect(ofRow).toHaveLength(row.samples);
 };

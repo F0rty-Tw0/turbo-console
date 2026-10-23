@@ -31,6 +31,20 @@ export const coldOpen = async (browser: Browser, state: GraphReady, options: Gra
   return withSession(browser, options, opened);
 };
 
+export const coldFirstFrameMs = async (browser: Browser, state: GraphReady, options: GraphOptions = {}): Promise<number> => {
+  const opened = await coldOpen(browser, state, options);
+
+  return opened.firstFrameMs;
+};
+
+/** `state` carrying the positions its cold ELK layout posted, so `cachedOpen` takes the layout from the cache. */
+export const cachedState = async (browser: Browser, state: GraphReady): Promise<GraphReady> => {
+  const { positions } = await coldOpen(browser, state);
+  const cached: GraphReady = { ...state, positions };
+
+  return cached;
+};
+
 /** First frame of a `state` that carries `positions`, so the layout comes from the cache. */
 export const cachedOpen = async (browser: Browser, state: GraphReady): Promise<number> => {
   const opened = async (session: BenchSession): Promise<number> => {
