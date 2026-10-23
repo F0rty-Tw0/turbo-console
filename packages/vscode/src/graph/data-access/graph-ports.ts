@@ -2,6 +2,7 @@ import { readSmallFile } from '@turbo-console/core';
 import type { GraphHostMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
+import { pickSaveUri, showError, showInfo, writeBytes } from './graph-save-ports.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import type { EditorPanelView } from '../../shared/common/panel-view.type.ts';
 import { setPanelHtml } from '../../shared/data-access/panel-html.ts';
@@ -41,7 +42,19 @@ export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state:
 
     await vscode.window.showTextDocument(vscode.Uri.file(path), { selection, viewColumn: vscode.ViewColumn.Beside });
   };
-  const host: GraphHost = { open, readCache, writeCache, readText, openAt, log: output.error, info: output.info };
+  const host: GraphHost = {
+    open,
+    readCache,
+    writeCache,
+    readText,
+    openAt,
+    log: output.error,
+    info: output.info,
+    pickSaveUri,
+    writeBytes,
+    showInfo,
+    showError
+  };
 
   return host;
 };

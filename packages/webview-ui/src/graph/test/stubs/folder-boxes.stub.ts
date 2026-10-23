@@ -38,6 +38,9 @@ const PACKAGES_GROUP: FolderGroup = { folder: 'packages', packages: [packageOf('
 /** `apps` holds `a` and `b`, `packages` holds `c`, the root folder holds `d`; `__proto__` is in no group. */
 export const BOX_GROUPS_STUB: FolderGroup[] = [ROOT_GROUP, APPS_GROUP, PACKAGES_GROUP];
 
+/** The box ids of `BOX_GROUPS_STUB`, sorted: the root folder, `apps`, then `packages`. */
+export const BOX_IDS_STUB: string[] = ['\u0001', '\u0001apps', '\u0001packages'];
+
 /** One folder holding the two package names that are keys of `Object.prototype`: the drawn `__proto__` and `constructor`. */
 export const PROTO_NAMES_GROUP_STUB: FolderGroup = { folder: 'tools', packages: [packageOf('__proto__'), packageOf('constructor')] };
 

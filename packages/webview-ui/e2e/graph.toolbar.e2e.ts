@@ -8,7 +8,7 @@ const AC7 = { description: 'M4-3 AC7', type: 'requirement' };
 
 const PANELS: ToolbarGroup = { name: 'Panels', buttons: ['Controls', 'Details'] };
 
-const VIEW: ToolbarGroup = { name: 'View', buttons: ['Fit', 'Re-layout'] };
+const VIEW: ToolbarGroup = { name: 'View', buttons: ['Fit', 'Re-layout', 'Export image'] };
 
 const GROUPS: ToolbarGroup[] = [PANELS, VIEW];
 
@@ -40,6 +40,9 @@ test.describe('FEATURE: graph toolbar', () => {
 
       await test.step('AND Re-layout draws a refresh icon', async (): Promise<void> =>
         graphToolbar.expectIcon('Re-layout', 'refresh'));
+
+      await test.step('AND Export image draws a desktop-download icon', async (): Promise<void> =>
+        graphToolbar.expectIcon('Export image', 'desktop-download'));
 
       await test.step('AND Clear selection draws a close icon', async (): Promise<void> =>
         graphToolbar.expectIcon('Clear selection', 'close'));

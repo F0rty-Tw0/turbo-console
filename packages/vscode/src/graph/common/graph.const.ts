@@ -32,3 +32,6 @@ export const COORDINATE_MAX = 1e7;
 
 /** A `layoutDone` duration past this (10 minutes) is not a layout time. */
 export const LAYOUT_MS_MAX = 600_000;
+
+/** An `exportImage` post past this many base64 characters (32 MiB) is not a graph image. */
+export const EXPORT_PNG_MAX = 33_554_432;

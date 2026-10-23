@@ -90,6 +90,12 @@ type GraphLayoutDoneMessage = {
   readonly engine: 'elk' | 'fallback';
 };
 
+/** A PNG of the graph for the host to save: base64 characters only, no `data:` prefix. */
+type GraphExportImageMessage = {
+  readonly type: 'exportImage';
+  readonly png: string;
+};
+
 /** Webview to host. The webview is a trust boundary: the host validates every message. */
 export type GraphWebviewMessage =
   | GraphReadyMessage
@@ -98,4 +104,5 @@ export type GraphWebviewMessage =
   | GraphPositionsMessage
   | GraphLayoutDoneMessage
   | GraphExplainEdgeMessage
-  | GraphOpenManifestMessage;
+  | GraphOpenManifestMessage
+  | GraphExportImageMessage;

@@ -6,6 +6,7 @@ import {
   CLEAR_LABEL,
   CONTROLS_LABEL,
   DETAILS_LABEL,
+  EXPORT_LABEL,
   FILTERS_ON_TEXT,
   FIT_LABEL,
   PANELS_LABEL,
@@ -48,12 +49,12 @@ const filtersOnMark = (): HTMLElement => {
   return mark;
 };
 
-const toolbarGroup = (label: string, first: HTMLButtonElement, second: HTMLButtonElement): HTMLElement => {
+const toolbarGroup = (label: string, ...buttons: HTMLButtonElement[]): HTMLElement => {
   const group = textElement('div', 'toolbar-group', '');
 
   group.setAttribute('role', 'group');
   group.setAttribute('aria-label', label);
-  group.append(first, second);
+  group.append(...buttons);
 
   return group;
 };
@@ -77,7 +78,7 @@ const statusLine = (): HTMLElement => {
 
 /**
  * The toolbar in its pre-state, every button disabled: the Panels group (Controls, Details), the View group (Fit,
- * Re-layout), Clear selection, then the status line. DOM order is the Tab order.
+ * Re-layout, Export image), Clear selection, then the status line. DOM order is the Tab order.
  */
 export const buildToolbar = (): ToolbarElements => {
   const controls = panelToggle('layout-sidebar-left', CONTROLS_LABEL, 'graph-controls');
@@ -85,18 +86,19 @@ export const buildToolbar = (): ToolbarElements => {
   const details = panelToggle('layout-sidebar-right', DETAILS_LABEL, 'graph-details');
   const fit = iconButton('screen-full', FIT_LABEL);
   const relayout = iconButton('refresh', RELAYOUT_LABEL);
+  const exportImage = iconButton('desktop-download', EXPORT_LABEL);
   const clear = iconButton('close', CLEAR_LABEL);
   const status = statusLine();
   const panels = toolbarGroup(PANELS_LABEL, controls, details);
   const panelsEnd = separator();
-  const view = toolbarGroup(VIEW_LABEL, fit, relayout);
+  const view = toolbarGroup(VIEW_LABEL, fit, relayout, exportImage);
   const viewEnd = separator();
   const toolbar = textElement('header', 'graph-toolbar', '');
 
   controls.append(filtersOn);
   toolbar.append(panels, panelsEnd, view, viewEnd, clear, status);
 
-  const elements: ToolbarElements = { toolbar, controls, details, fit, relayout, clear, status, filtersOn };
+  const elements: ToolbarElements = { toolbar, controls, details, fit, relayout, exportImage, clear, status, filtersOn };
 
   return elements;
 };

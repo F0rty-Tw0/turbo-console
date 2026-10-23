@@ -1,6 +1,7 @@
 import type { GraphPackage, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import { answerRequest } from './graph-explain.ts';
+import { GraphImageSaver } from './graph-image-saver.ts';
 import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
 import { LatestWins } from './latest-wins.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
@@ -32,11 +33,13 @@ export class GraphSession {
   private isReady = false;
   private isDisposed = false;
   private readonly explains = new LatestWins<ExplainJob>();
+  private readonly images: GraphImageSaver;
 
   public constructor(root: string, roots: Roots, ports: GraphPorts) {
     this.root = root;
     this.roots = roots;
     this.ports = ports;
+    this.images = new GraphImageSaver(root, ports);
   }
 
   public start(): void {
@@ -143,6 +146,10 @@ export class GraphSession {
         return;
       case 'openManifest':
         await this.answer({ request: message, value });
+
+        return;
+      case 'exportImage':
+        await this.images.save(message.png);
 
         return;
     }

@@ -3,10 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { packageNodes, setBoxes } from './graph-boxes.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
-import { BOX_GROUPS_STUB, GONE_GROUP_STUB, PROTO_NAMES_GROUP_STUB } from '../test/stubs/folder-boxes.stub.ts';
+import { BOX_GROUPS_STUB, BOX_IDS_STUB, GONE_GROUP_STUB, PROTO_NAMES_GROUP_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
-
-const BOX_IDS = ['\u0001', '\u0001apps', '\u0001packages'];
 
 const BOUNDS = { includeLabels: false, includeOverlays: false };
 
@@ -53,7 +51,7 @@ describe('FEATURE: setBoxes', () => {
     it('WHEN the boxes are set THEN one box per group exists and a and b sit in the apps box', () => {
       setBoxes(cy, BOX_GROUPS_STUB);
 
-      expect(boxIdsOf(cy)).toStrictEqual(BOX_IDS);
+      expect(boxIdsOf(cy)).toStrictEqual(BOX_IDS_STUB);
       expect(parentIdsOf(cy, CHILD_IDS)).toStrictEqual(['\u0001apps', '\u0001apps']);
     });
 
@@ -69,7 +67,7 @@ describe('FEATURE: setBoxes', () => {
       setBoxes(cy, BOX_GROUPS_STUB);
       setBoxes(cy, BOX_GROUPS_STUB);
 
-      expect(boxIdsOf(cy)).toStrictEqual(BOX_IDS);
+      expect(boxIdsOf(cy)).toStrictEqual(BOX_IDS_STUB);
     });
 
     it('WHEN the boxes are set THEN packageNodes lists the five packages only', () => {
@@ -112,6 +110,16 @@ describe('FEATURE: setBoxes', () => {
       setBoxes(cy, null);
 
       expect(parentIdsOf(cy, PROTO_IDS)).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN three folder groups with titles', () => {
+    it('WHEN the boxes are set THEN each box carries its folder title as data', () => {
+      setBoxes(cy, BOX_GROUPS_STUB);
+
+      const titles = BOX_IDS_STUB.map((id: string): unknown => cy.getElementById(id).data('title'));
+
+      expect(titles).toStrictEqual(['(root)', 'apps', 'packages']);
     });
   });
 

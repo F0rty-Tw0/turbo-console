@@ -2,6 +2,7 @@ import type { Core, EdgeCollection, EdgeSingular, NodeCollection, NodeSingular }
 
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import { EDGE_ID_PREFIX } from '../common/graph.const.ts';
+import { folderTitleOf } from '../utils/controls-text.util.ts';
 import { folderIdOf, isPackageId } from '../utils/folder-id.util.ts';
 
 const isPackageNode = (node: NodeSingular): boolean => isPackageId(node.id());
@@ -24,7 +25,7 @@ const clearBoxes = (cy: Core): void => {
 const fillBox = (cy: Core, group: FolderGroup): void => {
   const parent = folderIdOf(group.folder);
 
-  const data = { id: parent };
+  const data = { id: parent, title: folderTitleOf(group.folder) };
 
   cy.add({ data });
 

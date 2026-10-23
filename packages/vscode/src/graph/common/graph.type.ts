@@ -4,7 +4,8 @@ import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 
 /**
  * Editor effects of one graph panel. `openDetails` and `openAt` may reject; `readText` rejects on a file it cannot open and gives
- * `null` for one over the read cap; `log` (failures) and `info` take one clean line and must not throw.
+ * `null` for one over the read cap; `pickSaveUri` gives the chosen path or `null` on a cancel and may reject, as may `writeBytes`;
+ * `log` (failures), `info`, `showInfo` and `showError` take one clean line and must not throw.
  */
 export type GraphPorts = {
   readonly post: (message: GraphHostMessage) => void;
@@ -16,6 +17,10 @@ export type GraphPorts = {
   readonly setPanelVisible: (visible: boolean) => void;
   readonly log: (text: string) => void;
   readonly info: (text: string) => void;
+  readonly pickSaveUri: (defaultPath: string) => Promise<string | null>;
+  readonly writeBytes: (path: string, bytes: Uint8Array) => Promise<void>;
+  readonly showInfo: (text: string) => void;
+  readonly showError: (text: string) => void;
 };
 
 type PositionsTag = { readonly type: 'positions' };

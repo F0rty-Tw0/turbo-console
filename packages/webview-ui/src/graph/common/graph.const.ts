@@ -48,6 +48,8 @@ export const FIT_LABEL = 'Fit';
 
 export const RELAYOUT_LABEL = 'Re-layout';
 
+export const EXPORT_LABEL = 'Export image';
+
 export const CLEAR_LABEL = 'Clear selection';
 
 export const RETRY_LABEL = 'Retry';
@@ -121,6 +123,9 @@ export const DIMMED_BOX_CLASS = 'dimmed-box';
 
 /** Room ELK leaves around a folder's packages, and Cytoscape's compound padding, in px. */
 export const FOLDER_PADDING_PX = 32;
+
+/** The class `exportPngOf` gives every folder box while `cy.png` runs, so the stylesheet draws the box titles into the image. */
+export const EXPORTING_CLASS = 'exporting';
 
 /** The border of a package, folder box or collapsed node while neither selected nor highlighted, in px. */
 export const NODE_BORDER_PX = 1;

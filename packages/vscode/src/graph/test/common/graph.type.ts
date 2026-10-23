@@ -23,4 +23,8 @@ export type GraphHostFakes = {
   readonly openAt: Mock<GraphHost['openAt']>;
   readonly log: Mock<GraphHost['log']>;
   readonly info: Mock<GraphHost['info']>;
+  readonly pickSaveUri: Mock<GraphHost['pickSaveUri']>;
+  readonly writeBytes: Mock<GraphHost['writeBytes']>;
+  readonly showInfo: Mock<GraphHost['showInfo']>;
+  readonly showError: Mock<GraphHost['showError']>;
 };
