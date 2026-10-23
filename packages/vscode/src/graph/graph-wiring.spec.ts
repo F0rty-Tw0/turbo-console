@@ -66,6 +66,8 @@ vi.mock('vscode', () => {
 });
 
 const COMMAND = 'turboConsole.openPackageGraph';
+const TASK_COMMAND = 'turboConsole.showTaskGraph';
+const TASK_ROW = { kind: 'task', root: '/ws', key: 'web#build', packageName: 'web' };
 
 const contextOf = (page: PageRoot): GraphContext => {
   const update = vi.fn().mockResolvedValue(undefined);
@@ -75,15 +77,17 @@ const contextOf = (page: PageRoot): GraphContext => {
   return context;
 };
 
-/** The callback the wiring registered for Show Package Graph. */
-const commandCallback = (): ((arg: unknown) => unknown) => {
-  const graphCall = editor.registerCommand.mock.calls.find(([command]) => command === COMMAND);
+/** The callback the wiring registered for `command`. */
+const callbackOf = (command: string): ((arg: unknown) => unknown) => {
+  const graphCall = editor.registerCommand.mock.calls.find(([registered]) => registered === command);
   const [, callback] = graphCall ?? [];
 
-  if (callback === undefined) throw new Error(`${COMMAND} was not registered`);
+  if (callback === undefined) throw new Error(`${command} was not registered`);
 
   return callback;
 };
+
+const commandCallback = (): ((arg: unknown) => unknown) => callbackOf(COMMAND);
 
 const createPanel = (): PanelFake => webviewPanelMock().fake;
 
@@ -132,18 +136,28 @@ describe('FEATURE: the graph wiring', () => {
   });
 
   describe('GIVEN the graph is registered', () => {
-    it('WHEN it registers THEN Show Package Graph is registered once', () => {
+    it('WHEN it registers THEN Show Package Graph and Show Task Graph are registered', () => {
       graph.register();
 
-      expect(editor.registerCommand).toHaveBeenCalledExactlyOnceWith(COMMAND, expect.any(Function));
+      const commands = editor.registerCommand.mock.calls.map(([command]) => command);
+
+      expect(commands).toStrictEqual([COMMAND, TASK_COMMAND]);
     });
 
-    it('WHEN the registration is disposed THEN the command is unregistered', () => {
+    it('WHEN the registration is disposed THEN both commands are unregistered', () => {
       const registered = graph.register();
 
       registered.dispose();
 
-      expect(unregister).toHaveBeenCalledOnce();
+      expect(unregister).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN Show Task Graph runs on a task row THEN the panel of its root opens', async () => {
+      graph.register();
+
+      await callbackOf(TASK_COMMAND)(TASK_ROW);
+
+      expect(graph.api.panels()).toHaveLength(1);
     });
   });
 

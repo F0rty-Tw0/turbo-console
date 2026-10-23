@@ -5,11 +5,17 @@ export const GRAPH_ASSET_DIR: string[] = ['dist', 'webview', 'graph'];
 
 export const GRAPH_COMMAND = 'turboConsole.openPackageGraph';
 
+export const SHOW_TASK_GRAPH_COMMAND = 'turboConsole.showTaskGraph';
+
 export const GRAPH_CACHE_KEY_PREFIX = 'turboConsole.graphLayout:';
 
 export const GRAPH_FOLDERS_CACHE_KEY_PREFIX = 'turboConsole.graphLayout.folders:';
 
 export const NO_ROOT_TEXT = 'Turbo Console: no Turborepo workspace found';
+
+export const SINGLE_PACKAGE_TASKS_TEXT = 'This is a single-package repo, so there is no task graph';
+
+export const TASK_PICK_PLACEHOLDER = 'Choose tasks to show';
 
 export const GRAPH_OPEN_FAILED_TEXT = 'Could not open the Package Graph. See Output.';
 

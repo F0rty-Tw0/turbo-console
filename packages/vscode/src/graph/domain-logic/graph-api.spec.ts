@@ -14,7 +14,7 @@ const ENTRY = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
 
 const panelOf = (root: string, visible: boolean): OpenGraphPanel => {
   const receive = vi.fn<OpenGraphPanel['session']['receive']>().mockResolvedValue(undefined);
-  const session: OpenGraphPanel['session'] = { receive, dispose: vi.fn() };
+  const session: OpenGraphPanel['session'] = { receive, showTasks: vi.fn(), dispose: vi.fn() };
   const { view } = viewMock<GraphHostMessage>(visible);
   const posted = [STATE_POSTED];
   const panel: OpenGraphPanel = { root, view, session, posted };

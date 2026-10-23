@@ -187,6 +187,11 @@
         "icon": "$(type-hierarchy)"
       },
       {
+        "command": "turboConsole.showTaskGraph",
+        "title": "Show Task Graph…",
+        "category": "Turbo Console"
+      },
+      {
         "command": "turboConsole.openPackageJson",
         "title": "Open package.json",
         "category": "Turbo Console",
@@ -335,6 +340,10 @@
         },
         {
           "command": "turboConsole.openPackageGraph",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.showTaskGraph",
           "when": "turboConsole.active"
         },
         {

@@ -123,6 +123,16 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
   });
 
+  it.each([
+    [true, ['turboConsole.showTaskGraph']],
+    [false, []]
+  ])('GIVEN the extension active is %s WHEN the command palette is read THEN Show Task Graph shows as %j', (active, expected) => {
+    const keys = { 'turboConsole.active': active };
+    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('TaskGraph') && whenMatches(entry.when, keys));
+
+    expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+  });
+
   it.each(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask', 'turboConsole.copyCommand'])(
     'GIVEN the row command %s WHEN the command palette is read THEN it is hidden there',
     (command) => {

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import type { RootFolder } from '../../roots/common/root.type.ts';
+import type { PickItem } from '../../run/common/picker.type.ts';
 import type { RootPickPorts } from '../common/graph-panel.type.ts';
 
 const itemOf = (folder: RootFolder): vscode.QuickPickItem => {
@@ -16,9 +17,15 @@ const pickRoot = async (folders: RootFolder[]): Promise<string | undefined> => {
   return picked?.description;
 };
 
+const pickTasks = async (items: PickItem[], placeHolder: string): Promise<string[] | undefined> => {
+  const picked = await vscode.window.showQuickPick(items, { canPickMany: true, placeHolder });
+
+  return picked?.map((item) => item.value);
+};
+
 /**
  * The editor effects of the Show Package Graph command: the active manifest (`fileOf` is the run pickers'
- * `manifestFile`), the folder of a file, a folder pick, an info and an error message, and `log` (the output channel).
+ * `manifestFile`), the folder of a file, a folder pick, a multi-pick, an info and an error message, and `log` (the output channel).
  */
 export const editorGraphCommandPorts = (
   fileOf: (arg: unknown) => string | null,
@@ -29,6 +36,7 @@ export const editorGraphCommandPorts = (
     activeFile: () => fileOf(undefined),
     rootOf,
     pick: pickRoot,
+    pickMany: pickTasks,
     info: (text) => {
       void vscode.window.showInformationMessage(text);
     },

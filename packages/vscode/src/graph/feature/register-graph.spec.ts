@@ -11,11 +11,14 @@ import type { GraphOpener, RootPickPorts } from '../common/graph-panel.type.ts';
 import { GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const COMMAND = 'turboConsole.openPackageGraph';
+const TASK_COMMAND = 'turboConsole.showTaskGraph';
+const TASK_ROW = { kind: 'task', root: '/ws', key: 'web#build', packageName: 'web' };
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 
 type Registered = {
   readonly register: CommandRegistry;
   readonly run: () => unknown;
+  readonly runTaskGraph: (arg: unknown) => unknown;
   readonly unregister: Mock<() => void>;
   readonly ids: string[];
 };
@@ -33,7 +36,8 @@ const registrationMock = (): Registered => {
     return disposable;
   };
   const run = (): unknown => handlers.get(COMMAND)?.(undefined);
-  const registered: Registered = { register, run, unregister, ids };
+  const runTaskGraph = (arg: unknown): unknown => handlers.get(TASK_COMMAND)?.(arg);
+  const registered: Registered = { register, run, runTaskGraph, unregister, ids };
 
   return registered;
 };
@@ -46,8 +50,17 @@ const openerMock = (): GraphOpener => {
 };
 
 const portsOf = (picked: string | undefined): RootPickPorts => {
+  const pickMany = vi.fn<RootPickPorts['pickMany']>().mockResolvedValue(undefined);
   const pick = vi.fn<RootPickPorts['pick']>().mockResolvedValue(picked);
-  const ports: RootPickPorts = { activeFile: () => null, rootOf: () => null, pick, info: vi.fn(), error: vi.fn(), log: vi.fn() };
+  const ports: RootPickPorts = {
+    activeFile: () => null,
+    rootOf: () => null,
+    pick,
+    pickMany,
+    info: vi.fn(),
+    error: vi.fn(),
+    log: vi.fn()
+  };
 
   return ports;
 };
@@ -66,12 +79,12 @@ const storeOf = (folders: RootFolder[]): RootStore => {
 };
 
 describe('FEATURE: the Show Package Graph command', () => {
-  it('GIVEN it is registered THEN the command id is turboConsole.openPackageGraph', () => {
+  it('GIVEN it is registered THEN the command ids are Show Package Graph and Show Task Graph', () => {
     const registered = registrationMock();
 
     registerGraph(openerMock(), storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
 
-    expect(registered.ids).toStrictEqual([COMMAND]);
+    expect(registered.ids).toStrictEqual([COMMAND, TASK_COMMAND]);
   });
 
   it('GIVEN a resolvable root WHEN the command runs THEN that root opens', async () => {
@@ -119,14 +132,24 @@ describe('FEATURE: the Show Package Graph command', () => {
     });
   });
 
-  it('GIVEN it is registered WHEN it is disposed THEN the command is removed and the panels are disposed', () => {
+  it('GIVEN a task row WHEN Show Task Graph runs THEN that root opens', async () => {
+    const panels = openerMock();
+    const registered = registrationMock();
+
+    registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
+    await registered.runTaskGraph(TASK_ROW);
+
+    expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
+  });
+
+  it('GIVEN it is registered WHEN it is disposed THEN both commands are removed and the panels are disposed', () => {
     const panels = openerMock();
     const registered = registrationMock();
     const graph = registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
 
     graph.dispose();
 
-    expect(registered.unregister).toHaveBeenCalledOnce();
+    expect(registered.unregister).toHaveBeenCalledTimes(2);
     expect(panels.dispose).toHaveBeenCalledOnce();
   });
 });
