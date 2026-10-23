@@ -11,7 +11,8 @@ import type { GraphHostFakes } from '../common/graph.type.ts';
 
 type MemoryCache = Pick<GraphHost, 'readCache' | 'writeCache'>;
 
-const memoryCacheOf = (cached: Map<string, GraphLayoutCacheEntry>): MemoryCache => {
+/** The layout cache pair over `cached`, keyed by `cacheKeyOf`. */
+export const memoryCacheMock = (cached: Map<string, GraphLayoutCacheEntry>): MemoryCache => {
   const readCache = (root: string, grouping: LayoutGrouping): GraphLayoutCacheEntry | null =>
     cached.get(cacheKeyOf(root, grouping)) ?? null;
   const writeCache = (root: string, grouping: LayoutGrouping, entry: GraphLayoutCacheEntry): void => {
@@ -34,7 +35,7 @@ export const graphHostMock = (): GraphHostFakes => {
     return fake.view;
   };
   const open = vi.fn<GraphHost['open']>(openView);
-  const { readCache, writeCache } = memoryCacheOf(cached);
+  const { readCache, writeCache } = memoryCacheMock(cached);
   const readText = vi.fn<GraphHost['readText']>();
   const openAt = vi.fn<GraphHost['openAt']>();
   const log = vi.fn<GraphHost['log']>();

@@ -4,9 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 import { GraphSession } from './graph-session.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
+import { PNG_STUB } from '../test/stubs/graph-image.stub.ts';
 import { portsWith } from '../test/utils/graph-session.spec.util.ts';
-
-const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]).toString('base64');
 
 describe('FEATURE: graph session image export', () => {
   describe('GIVEN a session on /ws', () => {
@@ -14,7 +13,7 @@ describe('FEATURE: graph session image export', () => {
       const ports = portsWith(null);
       const session = new GraphSession('/ws', new RootStore(), ports);
 
-      await session.receive({ type: 'exportImage', png: PNG });
+      await session.receive({ type: 'exportImage', png: PNG_STUB });
 
       expect(ports.pickSaveUri).toHaveBeenCalledExactlyOnceWith(join('/ws', 'ws-package-graph.png'));
     });
@@ -23,7 +22,7 @@ describe('FEATURE: graph session image export', () => {
       const ports = portsWith(null);
       const session = new GraphSession('/ws', new RootStore(), ports);
 
-      await session.receive({ type: 'exportImage', png: `data:image/png;base64,${PNG}` });
+      await session.receive({ type: 'exportImage', png: `data:image/png;base64,${PNG_STUB}` });
 
       expect(ports.pickSaveUri).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));

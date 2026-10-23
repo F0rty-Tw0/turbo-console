@@ -5,9 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GraphImageSaver } from './graph-image-saver.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
+import { PNG_STUB } from '../test/stubs/graph-image.stub.ts';
 
-const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-const PNG = Buffer.from([...SIGNATURE, 1, 2, 3]).toString('base64');
+const PNG_BYTES = Uint8Array.from(Buffer.from(PNG_STUB, 'base64'));
 const NOT_PNG = Buffer.from('plain text, not a PNG').toString('base64');
 
 type Deferred = {
@@ -40,19 +40,19 @@ describe('FEATURE: the graph image saver', () => {
     });
 
     it('WHEN it is saved THEN the dialog opens at <root>/<basename>-package-graph.png', async () => {
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
       expect(ports.pickSaveUri).toHaveBeenCalledExactlyOnceWith(join('/ws', 'ws-package-graph.png'));
     });
 
     it('WHEN it is saved THEN the plain bytes are written to the picked path', async () => {
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
-      expect(ports.writeBytes).toHaveBeenCalledExactlyOnceWith('/out/x.png', Uint8Array.from([...SIGNATURE, 1, 2, 3]));
+      expect(ports.writeBytes).toHaveBeenCalledExactlyOnceWith('/out/x.png', PNG_BYTES);
     });
 
     it('WHEN it is saved THEN an info shows the path', async () => {
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
       expect(ports.showInfo).toHaveBeenCalledExactlyOnceWith('Saved the graph image to /out/x.png.');
     });
@@ -60,7 +60,7 @@ describe('FEATURE: the graph image saver', () => {
     it('WHEN the write rejects THEN an error shows its message and the failure is logged', async () => {
       vi.mocked(ports.writeBytes).mockRejectedValue(new Error('disk full'));
 
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
       expect(ports.showError).toHaveBeenCalledExactlyOnceWith('Could not save the graph image: disk full');
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('disk full');
@@ -70,7 +70,7 @@ describe('FEATURE: the graph image saver', () => {
     it('WHEN the write rejects with a message starting "Error: " THEN the error shows it once and the log keeps it whole', async () => {
       vi.mocked(ports.writeBytes).mockRejectedValue(new Error('Error: EACCES: permission denied'));
 
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
       expect(ports.showError).toHaveBeenCalledExactlyOnceWith('Could not save the graph image: EACCES: permission denied');
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('Error: EACCES: permission denied');
@@ -79,8 +79,8 @@ describe('FEATURE: the graph image saver', () => {
     it('WHEN the dialog rejects THEN an error shows its message and the next save opens a dialog', async () => {
       vi.mocked(ports.pickSaveUri).mockRejectedValueOnce(new Error('no window'));
 
-      await saver.save(PNG);
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
+      await saver.save(PNG_STUB);
 
       expect(ports.showError).toHaveBeenCalledExactlyOnceWith('Could not save the graph image: no window');
       expect(ports.pickSaveUri).toHaveBeenCalledTimes(2);
@@ -91,7 +91,7 @@ describe('FEATURE: the graph image saver', () => {
     it('WHEN a PNG is saved THEN nothing is written and no message shows', async () => {
       vi.mocked(ports.pickSaveUri).mockResolvedValue(null);
 
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
       expect(ports.writeBytes).not.toHaveBeenCalled();
       expect(ports.showInfo).not.toHaveBeenCalled();
@@ -122,7 +122,7 @@ describe('FEATURE: the graph image saver', () => {
 
     it('WHEN they are saved THEN the next PNG still opens a dialog', async () => {
       await saver.save(NOT_PNG);
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
       expect(ports.pickSaveUri).toHaveBeenCalledOnce();
     });
@@ -135,11 +135,11 @@ describe('FEATURE: the graph image saver', () => {
     beforeEach(() => {
       first = deferred();
       vi.mocked(ports.pickSaveUri).mockReturnValueOnce(first.promise);
-      firstSave = saver.save(PNG);
+      firstSave = saver.save(PNG_STUB);
     });
 
     it('WHEN a second arrives THEN it is dropped and logged with no second dialog', async () => {
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
       expect(ports.pickSaveUri).toHaveBeenCalledOnce();
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('Dropped a graph message: exportImage while a save is open');
@@ -149,7 +149,7 @@ describe('FEATURE: the graph image saver', () => {
       first.resolve(null);
       await firstSave;
 
-      await saver.save(PNG);
+      await saver.save(PNG_STUB);
 
       expect(ports.pickSaveUri).toHaveBeenCalledTimes(2);
     });
