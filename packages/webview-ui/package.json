@@ -17,7 +17,8 @@
     "typecheck": "node ../../node_modules/typescript7/bin/tsc -p tsconfig.spec.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "bench": "playwright test --config playwright.bench.config.ts"
   },
   "dependencies": {
     "cytoscape": "catalog:runtime",

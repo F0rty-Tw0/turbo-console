@@ -1,5 +1,5 @@
 import { median } from './bench-stats.ts';
-import type { Annotation, BenchRow, BenchSample } from './common/bench.type.ts';
+import type { Annotation, BenchRow, BenchSample, SampleAnnotation } from './common/bench.type.ts';
 
 const BENCH_PREFIX = 'webview-ui/';
 const SAMPLE_TYPE = 'bench-sample';
@@ -18,8 +18,8 @@ const isBenchSample = (value: unknown): value is BenchSample => {
   return hasName && hasMs && hasGate;
 };
 
-export const sampleAnnotation = (sample: BenchSample): Annotation => {
-  const annotation: Annotation = { type: SAMPLE_TYPE, description: JSON.stringify(sample) };
+export const sampleAnnotation = (sample: BenchSample): SampleAnnotation => {
+  const annotation: SampleAnnotation = { type: SAMPLE_TYPE, description: JSON.stringify(sample) };
 
   return annotation;
 };
