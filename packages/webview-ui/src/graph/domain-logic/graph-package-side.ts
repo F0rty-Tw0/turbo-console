@@ -5,7 +5,7 @@ import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-stat
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
-import type { DrawnGraph, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
+import type { DrawnGraph, GraphControllerDeps, GraphView, PackageSaver } from '../common/graph-page.type.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
@@ -24,12 +24,13 @@ export class GraphPackageSide {
   private opening: GraphViewState | null = null;
   private hasShownGraph = false;
 
-  public constructor(deps: GraphControllerDeps, view: GraphView, frames: FrameClock) {
+  public constructor(deps: GraphControllerDeps, view: GraphView, frames: FrameClock, saver: PackageSaver) {
     this.deps = deps;
     this.view = view;
     this.frames = frames;
     this.filtering = new GraphFiltering({
       ...deps,
+      saver,
       view,
       drawn: (): DrawnGraph | null => this.drawn,
       onGrouping: (isGrouped: boolean): void => this.switchGrouping(isGrouped),

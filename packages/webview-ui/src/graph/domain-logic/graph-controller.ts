@@ -2,9 +2,11 @@ import { GraphFrames } from './graph-frames.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { wireToolbar } from './graph-toolbar-actions.ts';
 import { viewHandlersOf } from './graph-view-handlers.ts';
+import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
+import { readGraphViewState } from '../utils/graph-view-state.util.ts';
 
 /** Routes the host's messages and the view's events; the package side shows the states and draws the graph. */
 class GraphPageController {
@@ -17,6 +19,8 @@ class GraphPageController {
   public constructor(deps: GraphControllerDeps) {
     const { bridge, page } = deps;
     const frames = new GraphFrames(deps.now);
+    const saved = readGraphViewState(bridge.savedState());
+    const modes = new ViewStateModes(deps.saver, saved);
     const handlers = viewHandlersOf({
       frames,
       filtering: () => this.packages.filtering,
@@ -26,7 +30,7 @@ class GraphPageController {
     this.deps = deps;
     this.frames = frames;
     this.view = deps.createView(page.container, handlers);
-    this.packages = new GraphPackageSide(deps, this.view, frames);
+    this.packages = new GraphPackageSide(deps, this.view, frames, modes.packages);
     const relayout = (): void => void this.packages.guard(async (): Promise<void> => this.packages.layouts.relayout());
 
     wireToolbar({ page, view: this.view, bridge, background: deps.background, relayout });

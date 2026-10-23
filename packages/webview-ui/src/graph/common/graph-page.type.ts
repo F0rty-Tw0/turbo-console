@@ -14,7 +14,7 @@ import type { ThemeColors } from './theme-colors.type.ts';
 import type { WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphViewState, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** The graph page's elements, built once by `buildPage`; DOM order is the Tab order (toolbar, then the body). */
 export type PageElements = {
@@ -61,6 +61,12 @@ export type ControlsViewFields = Pick<
 /** Debounces view-state saves; `flush` saves a pending state at once. */
 export type ViewStateSaver = {
   readonly schedule: (state: GraphViewState) => void;
+  readonly flush: () => void;
+};
+
+/** The package graph's saver: `ViewStateModes` adds the mode and the task view to each state before it is saved. */
+export type PackageSaver = {
+  readonly schedule: (state: PackageViewState) => void;
   readonly flush: () => void;
 };
 

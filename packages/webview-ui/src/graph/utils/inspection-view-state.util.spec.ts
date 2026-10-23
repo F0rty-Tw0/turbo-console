@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { viewStateOf } from './inspection-view-state.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphFocus, GraphLinkRef, GraphTraceRef, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFocus, GraphLinkRef, GraphTraceRef, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { InspectionSave } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, Viewport } from '../common/graph-page.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
@@ -33,8 +33,8 @@ const PAN: Position = { x: 1, y: 2 };
 
 const CAMERA: Viewport = { zoom: 2, pan: PAN };
 
-const stateOf = (fields: InspectionFields, detailsOpen: boolean): GraphViewState => {
-  const state: GraphViewState = { hash: 'h1', zoom: 2, pan: PAN, ...C, ...fields, detailsOpen };
+const stateOf = (fields: InspectionFields, detailsOpen: boolean): PackageViewState => {
+  const state: PackageViewState = { hash: 'h1', zoom: 2, pan: PAN, ...C, ...fields, detailsOpen };
 
   return state;
 };

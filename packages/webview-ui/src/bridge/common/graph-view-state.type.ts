@@ -13,6 +13,21 @@ type FolderFocus = { readonly kind: 'folder'; readonly folder: string };
 /** What the controls narrow the graph to: one package and its neighbours (within the filters' depth), or the packages of one folder (`''` is the root folder). */
 export type GraphFocus = PackageFocus | FolderFocus;
 
+/** Which graph the page draws: the package graph or the task graph. */
+export type GraphViewMode = 'packages' | 'tasks';
+
+/** What task mode keeps: the chosen task ids, whether the cap is lifted, the Dependents depth, the selection, the search, the camera and the key of its last layout. */
+export type TaskViewState = {
+  readonly chosen: string[];
+  readonly capLifted: boolean;
+  readonly depth: number;
+  readonly selected: string | null;
+  readonly search: string;
+  readonly zoom: number;
+  readonly pan: Position;
+  readonly layoutKey: string;
+};
+
 /** What the graph page keeps in the webview state: the camera, the selection, the controls panel and the inspection for one graph hash. */
 export type GraphViewState = {
   readonly hash: string;
@@ -35,4 +50,11 @@ export type GraphViewState = {
   readonly grouped: boolean;
   /** The collapsed folder keys; kept while the page is flat and carried across a hash change minus the folders the new hash lacks. */
   readonly collapsed: string[];
+  /** Which graph the page draws; an old save reads `'packages'`. */
+  readonly mode: GraphViewMode;
+  /** The last task view; kept across package saves and hash changes, `null` until task mode saves one. */
+  readonly task: TaskViewState | null;
 };
+
+/** The view state the package graph saves: everything but the mode and the task view, which `ViewStateModes` adds. */
+export type PackageViewState = Omit<GraphViewState, 'mode' | 'task'>;

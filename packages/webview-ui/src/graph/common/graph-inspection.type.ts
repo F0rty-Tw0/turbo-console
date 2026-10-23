@@ -1,7 +1,7 @@
 import type { DetailsViews } from './details.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
 import type { DetailsContext, ShownInspection } from './graph-details.type.ts';
-import type { ControlsViewFields, DrawnGraph, GraphView, PageElements, ViewStateSaver } from './graph-page.type.ts';
+import type { ControlsViewFields, DrawnGraph, GraphView, PackageSaver, PageElements } from './graph-page.type.ts';
 import type { Inspection, InspectionInput, LinkInspection } from './inspection.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { TraceCandidates, TraceResult } from './trace.type.ts';
@@ -60,7 +60,7 @@ export type GraphInspectionDeps = {
   readonly bridge: Bridge;
   readonly page: PageElements;
   readonly view: GraphView;
-  readonly saver: ViewStateSaver;
+  readonly saver: PackageSaver;
   readonly now: () => number;
   /** The details view builders, handed in because `domain-logic` may not import `ui`. */
   readonly views: DetailsViews;
