@@ -5,12 +5,21 @@ on:
     branches:
       - master
   pull_request:
+  # Regenerates the theme screenshot baselines; see packages/webview-ui/playwright.screenshot.config.ts.
+  workflow_dispatch:
+    inputs:
+      update-snapshots:
+        description: Write new screenshot baselines and upload them as an artifact
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   check:
+    # A baseline run only needs the screenshots job.
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.update-snapshots) }}
     strategy:
       fail-fast: false
       matrix:
@@ -212,6 +221,8 @@ jobs:
         run: node head/tools/dist/bench-compare.js runs/base runs/head
 
   screenshots:
+    # A baseline run always passes, so it gets its own check name and never masks a red PR check on the same SHA.
+    name: ${{ (github.event_name == 'workflow_dispatch' && inputs.update-snapshots) && 'screenshots (update baselines)' || 'screenshots' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     # Tag = catalogs.dev['@playwright/test'] in pnpm-workspace.yaml; tools/src/ci/feature/playwright-image.guard.spec.ts fails when they differ.
@@ -245,8 +256,9 @@ jobs:
       - name: Build webview-ui
         run: pnpm turbo run build --filter=@turbo-console/webview-ui
 
+      # Push and pull_request runs never take the update path: inputs is empty outside workflow_dispatch.
       - name: Screenshots
-        run: pnpm --filter @turbo-console/webview-ui run screenshots
+        run: pnpm --filter @turbo-console/webview-ui run screenshots ${{ (github.event_name == 'workflow_dispatch' && inputs.update-snapshots) && '--update-snapshots=all' || '' }}
 
       # SHA = actions/upload-artifact@v7.0.2
       - name: Upload actual, expected and diff PNGs
@@ -256,4 +268,16 @@ jobs:
           name: screenshots-diff-${{ github.run_attempt }}
           path: packages/webview-ui/test-results/
           if-no-files-found: ignore
+          retention-days: 14
+
+      # SHA = actions/upload-artifact@v7.0.2
+      # Only after a green capture: the folder also holds the checked-out baselines, so a crashed run would upload stale PNGs.
+      # if-no-files-found only catches a missing folder; the rerun-and-cmp step of the baseline procedure catches stale PNGs.
+      - name: Upload new baselines
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update-snapshots }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: screenshots-baselines-${{ github.run_attempt }}
+          path: packages/webview-ui/e2e/screenshots/
+          if-no-files-found: error
           retention-days: 14
