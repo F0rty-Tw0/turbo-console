@@ -2,7 +2,6 @@ import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { FolderActions } from '../common/folder-actions.type.ts';
 import type { GraphDetailsDeps } from '../common/graph-details.type.ts';
 import type { GraphInspectionDeps, InspectionActions } from '../common/graph-inspection.type.ts';
-import type { PageElements } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
 
 const CLEAR: InspectionInput = { kind: 'clear' };
@@ -74,8 +73,17 @@ const onKey = (event: KeyboardEvent, actions: InspectionActions): void => {
   if (event.key === 'Enter') actions.enter();
 };
 
-/** `Clear selection`, and Escape and Enter on the graph container only, so a key on a toolbar button never acts here. */
-export const wireInspectionKeys = (page: PageElements, actions: InspectionActions): void => {
-  page.clear.addEventListener('click', (): void => actions.input(CLEAR));
-  page.container.addEventListener('keydown', (event: KeyboardEvent): void => onKey(event, actions));
+/**
+ * `Clear selection`, and Escape and Enter on the graph container only, so a key on a toolbar button never acts here.
+ * The keys act only while the package graph owns the canvas.
+ */
+export const wireInspectionKeys = (deps: GraphInspectionDeps, actions: InspectionActions): void => {
+  const onContainerKey = (event: KeyboardEvent): void => {
+    const isPackageMode = deps.isPackageMode();
+
+    if (isPackageMode) onKey(event, actions);
+  };
+
+  deps.page.clear.addEventListener('click', (): void => actions.input(CLEAR));
+  deps.page.container.addEventListener('keydown', onContainerKey);
 };

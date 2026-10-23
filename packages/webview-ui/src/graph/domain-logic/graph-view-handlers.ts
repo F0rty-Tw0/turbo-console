@@ -26,30 +26,61 @@ type HandledLayouts = {
   readonly dragged: (positions: Positions) => void;
 };
 
-/** What the view's events reach; `filtering` and `layouts` are read per event, since the view is built before them. */
+type HandledTasks = {
+  readonly isActive: () => boolean;
+  readonly dragged: () => void;
+  readonly saveCamera: () => void;
+};
+
+/** What the view's events reach; the targets are read per event, since the view is built before them. */
 type ViewHandlerTargets = {
   readonly frames: Pick<FrameClock, 'mark'>;
   readonly filtering: () => HandledFiltering;
   readonly layouts: () => HandledLayouts;
+  readonly tasks: () => HandledTasks;
 };
 
 const BACKGROUND: InspectionInput = { kind: 'background' };
 
-/** Routes each Cytoscape event to the inspection, the folders, the layouts or the frame clock. */
+const NOTHING = (): void => undefined;
+
+/**
+ * Routes each Cytoscape event by mode: in package mode to the inspection, the folders or the layouts; in task mode a
+ * drag and a camera move to task mode, and taps to nothing yet. Every frame marks the frame clock first.
+ */
 export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers => {
-  const { frames, filtering, layouts } = targets;
+  const { frames, filtering, layouts, tasks } = targets;
+  const byMode = <Args extends unknown[]>(onPackages: (...args: Args) => void, onTasks = NOTHING): ((...args: Args) => void) => {
+    const handle = (...args: Args): void => {
+      const isTaskMode = tasks().isActive();
+
+      if (isTaskMode) onTasks();
+      else onPackages(...args);
+    };
+
+    return handle;
+  };
   const handlers: GraphViewHandlers = {
-    onTapNode: (name: string): void => filtering().inspection.tapNode(name),
-    onTapEdge: (source: string, target: string): void => filtering().inspection.tapEdge(source, target),
-    onTapBackground: (): void => filtering().inspection.input(BACKGROUND),
-    onTapFolder: (folder: string): void => filtering().inspection.tapFolder(folder),
-    onDoubleTapNode: (name: string): void => filtering().inspection.openDetailsOf(name),
-    onDoubleTapFolder: (folder: string): void => filtering().folders.toggle(folder),
-    onDragEnd: (positions: Positions): void => layouts().dragged(positions),
-    onViewport: (): void => filtering().inspection.saveViewport(),
+    onTapNode: byMode((name: string): void => filtering().inspection.tapNode(name)),
+    onTapEdge: byMode((source: string, target: string): void => filtering().inspection.tapEdge(source, target)),
+    onTapBackground: byMode((): void => filtering().inspection.input(BACKGROUND)),
+    onTapFolder: byMode((folder: string): void => filtering().inspection.tapFolder(folder)),
+    onDoubleTapNode: byMode((name: string): void => filtering().inspection.openDetailsOf(name)),
+    onDoubleTapFolder: byMode((folder: string): void => filtering().folders.toggle(folder)),
+    onDragEnd: byMode(
+      (positions: Positions): void => layouts().dragged(positions),
+      (): void => tasks().dragged()
+    ),
+    onViewport: byMode(
+      (): void => filtering().inspection.saveViewport(),
+      (): void => tasks().saveCamera()
+    ),
     onRender: (): void => {
+      const isTaskMode = tasks().isActive();
+
       frames.mark();
-      filtering().rendered();
+
+      if (!isTaskMode) filtering().rendered();
     }
   };
 

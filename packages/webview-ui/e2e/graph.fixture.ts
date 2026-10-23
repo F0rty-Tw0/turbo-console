@@ -23,6 +23,7 @@ import { GraphPackageList } from './pages/graph-package-list.po.ts';
 import { GraphProbePage } from './pages/graph-probe.po.ts';
 import { GraphSamples } from './pages/graph-samples.po.ts';
 import { GraphTaskHost } from './pages/graph-task-host.po.ts';
+import { GraphTaskProbe } from './pages/graph-task-probe.po.ts';
 import { GraphToolbar } from './pages/graph-toolbar.po.ts';
 import { GraphWidgetsBand } from './pages/graph-widgets-band.po.ts';
 import { GraphPage } from './pages/graph.po.ts';
@@ -52,6 +53,7 @@ type GraphFixtures = {
   readonly graphReplies: GraphExplainHost;
   readonly graphSamples: GraphSamples;
   readonly graphTaskHost: GraphTaskHost;
+  readonly graphTaskProbe: GraphTaskProbe;
   readonly graphToolbar: GraphToolbar;
   readonly graphTrace: GraphDetailsTrace;
   readonly graphWidgets: GraphWidgetsBand;
@@ -127,6 +129,9 @@ export const test = base.extend<GraphFixtures>({
   },
   graphTaskHost: async ({ page }, use): Promise<void> => {
     await use(new GraphTaskHost(page));
+  },
+  graphTaskProbe: async ({ page }, use): Promise<void> => {
+    await use(new GraphTaskProbe(page));
   },
   graphToolbar: async ({ page }, use): Promise<void> => {
     await use(new GraphToolbar(page));

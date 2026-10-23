@@ -5,14 +5,19 @@ import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-stat
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
-import type { DrawnGraph, GraphControllerDeps, GraphView, PackageSaver } from '../common/graph-page.type.ts';
+import type { DrawnGraph, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
+import type { PackageModes } from '../common/graph-task.type.ts';
+import { parkedViewOf } from '../data-access/parked-view.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
 import { openingStateOf } from '../utils/grouping-open.util.ts';
 import { groupingOf } from '../utils/layout-plan.util.ts';
 
-/** The package graph: shows the host's states, hands a graph state to the layouts, which draw it and post its layout back. */
+/**
+ * The package graph: shows the host's states, hands a graph state to the layouts, which draw it and post its layout back.
+ * It draws through a view parked while task mode owns the canvas, and its folder and key actions wait for package mode.
+ */
 export class GraphPackageSide {
   public readonly filtering: GraphFiltering;
   public readonly layouts: GraphLayouts;
@@ -24,18 +29,22 @@ export class GraphPackageSide {
   private opening: GraphViewState | null = null;
   private hasShownGraph = false;
 
-  public constructor(deps: GraphControllerDeps, view: GraphView, frames: FrameClock, saver: PackageSaver) {
+  public constructor(deps: GraphControllerDeps, screenView: GraphView, frames: FrameClock, modes: PackageModes) {
+    const isPackageMode = (): boolean => modes.mode() === 'packages';
+    const view = parkedViewOf(screenView, (): boolean => !isPackageMode());
+
     this.deps = deps;
     this.view = view;
     this.frames = frames;
     this.filtering = new GraphFiltering({
       ...deps,
-      saver,
+      saver: modes.packages,
       view,
       drawn: (): DrawnGraph | null => this.drawn,
       onGrouping: (isGrouped: boolean): void => this.switchGrouping(isGrouped),
-      isGrouped: (): boolean => this.layouts.drawnMode() === 'folders',
-      canAct: (): boolean => this.layouts.mode() === 'folders' && this.layouts.drawnMode() === 'folders'
+      isPackageMode,
+      isGrouped: (): boolean => isPackageMode() && this.layouts.drawnMode() === 'folders',
+      canAct: (): boolean => isPackageMode() && this.layouts.mode() === 'folders' && this.layouts.drawnMode() === 'folders'
     });
     this.layouts = new GraphLayouts({
       ...deps,
@@ -58,6 +67,11 @@ export class GraphPackageSide {
     this.drawn = null;
     this.filtering.inspection.reset();
     showStateMessage(this.deps.page, state);
+  }
+
+  /** The hash of the package graph shown or being laid out; `null` while none is. */
+  public drawnHash(): string | null {
+    return this.drawn?.hash ?? null;
   }
 
   /**

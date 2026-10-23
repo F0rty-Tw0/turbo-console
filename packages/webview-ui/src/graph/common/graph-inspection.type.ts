@@ -90,6 +90,8 @@ export type GraphInspectionDeps = {
   readonly onShowFolder: (folder: string) => void;
   /** The checkbox's mode and the mode on screen are both grouped, so a folder tap may act. */
   readonly canAct: () => boolean;
+  /** The package graph owns the canvas; in task mode the inspection keys do nothing. */
+  readonly isPackageMode: () => boolean;
   readonly folders: CanvasFolders & InspectionFolders;
   /** The selected package's "…" span in container px, `null` without one; the keep-clear pan clears it too. */
   readonly buttonBox: () => AnchorBox | null;

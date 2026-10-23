@@ -62,7 +62,7 @@ export type GraphControlsDeps = {
 /** What `GraphFiltering` needs to own the inspection, the controls and the folders: their deps it cannot build itself. */
 export type GraphFilteringDeps = Pick<
   GraphInspectionDeps,
-  'bridge' | 'page' | 'view' | 'saver' | 'drawn' | 'now' | 'views' | 'overlay'
+  'bridge' | 'page' | 'view' | 'saver' | 'drawn' | 'now' | 'views' | 'overlay' | 'isPackageMode'
 > &
   Pick<GraphControlsDeps, 'build' | 'onGrouping'> &
   Pick<GraphFoldersDeps, 'measure' | 'isGrouped' | 'canAct'> &

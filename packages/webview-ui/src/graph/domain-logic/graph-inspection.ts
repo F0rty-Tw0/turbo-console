@@ -34,7 +34,7 @@ export class GraphInspection {
     this.canvas = new InspectionCanvas(deps.view, deps.folders);
     this.details = new GraphDetails(detailsDepsOf(deps, this));
     this.reach = new GraphInspectionFolders(deps.folders);
-    wireInspectionKeys(deps.page, this);
+    wireInspectionKeys(deps, this);
   }
 
   public current(): Inspection {

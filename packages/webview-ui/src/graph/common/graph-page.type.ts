@@ -10,6 +10,7 @@ import type { AnchorBox } from './keep-clear.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { Paint } from './paint.type.ts';
+import type { TaskCanvas } from './task-canvas.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -142,6 +143,8 @@ export type GraphView = {
   readonly exportPng: (bg: string) => string;
   /** For the test probe only. */
   readonly cy: () => Core;
+  /** The task graph on the same core; task mode draws here, and package mode never draws at once. */
+  readonly tasks: TaskCanvas;
 };
 
 export type GraphViewFactory = (container: HTMLElement, handlers: GraphViewHandlers) => GraphView;

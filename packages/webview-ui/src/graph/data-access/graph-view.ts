@@ -11,6 +11,7 @@ import { applyPaint } from './graph-paint.ts';
 import { placeNodes, positionOf } from './graph-place.ts';
 import { widgetRectsOf } from './graph-rects.ts';
 import { graphStyleOf } from './graph-style.ts';
+import { createTaskCanvas } from './graph-task-view.ts';
 import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
@@ -88,6 +89,7 @@ const viewportOf = (cy: Core): Viewport => {
 export const createGraphView = (container: HTMLElement, handlers: GraphViewHandlers, fontFamily: string): GraphView => {
   const cy = cytoscapeOn(container);
   const folders = createFoldersView(cy);
+  const tasks = createTaskCanvas(cy);
   const setGraph = (packages: string[], edges: GraphEdge[], placed: Positions, sizeOf: NodeSizer): void => {
     const nodes = nodeDefinitionsOf(packages, placed, sizeOf);
 
@@ -128,7 +130,8 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),
     exportPng: (bg: string): string => exportPngOf(cy, bg, window.devicePixelRatio),
-    cy: (): Core => cy
+    cy: (): Core => cy,
+    tasks
   };
 
   listen(cy, handlers);

@@ -23,6 +23,9 @@ describe('FEATURE: viewHandlersOf', () => {
     let saveViewport: Mock<() => void>;
     let toggle: Mock<(folder: string) => void>;
     let dragged: Mock<(positions: Positions) => void>;
+    let taskDragged: Mock<() => void>;
+    let saveCamera: Mock<() => void>;
+    let isTaskMode: boolean;
     let handlers: GraphViewHandlers;
 
     beforeEach((): void => {
@@ -35,6 +38,9 @@ describe('FEATURE: viewHandlersOf', () => {
       saveViewport = vi.fn<() => void>();
       toggle = vi.fn<(folder: string) => void>();
       dragged = vi.fn<(positions: Positions) => void>();
+      taskDragged = vi.fn<() => void>();
+      saveCamera = vi.fn<() => void>();
+      isTaskMode = false;
       const mark = (): void => {
         calls.push('mark');
       };
@@ -46,8 +52,9 @@ describe('FEATURE: viewHandlersOf', () => {
       const filtering = { inspection, folders, rendered };
       const layouts = { dragged };
       const frames = { mark };
+      const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera };
 
-      handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts });
+      handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks });
     });
 
     it('WHEN a frame renders THEN the frame clock is marked before the filtering hears of it', () => {
@@ -102,6 +109,46 @@ describe('FEATURE: viewHandlersOf', () => {
       handlers.onViewport();
 
       expect(saveViewport).toHaveBeenCalledOnce();
+    });
+
+    describe('AND task mode is active', () => {
+      beforeEach(() => {
+        isTaskMode = true;
+      });
+
+      it('WHEN nodes, links, the background and folders are tapped once or twice THEN the package side hears nothing', () => {
+        handlers.onTapNode('web#build');
+        handlers.onTapEdge('web#build', 'ui#build');
+        handlers.onTapBackground();
+        handlers.onTapFolder('apps');
+        handlers.onDoubleTapNode('web#build');
+        handlers.onDoubleTapFolder('apps');
+
+        const spies = [tapNode, tapEdge, input, tapFolder, openDetailsOf, toggle];
+        const packageCalls = spies.map((spy) => spy.mock.calls.length);
+
+        expect(packageCalls).toStrictEqual([0, 0, 0, 0, 0, 0]);
+      });
+
+      it('WHEN a drag ends THEN task mode keeps it and the layouts hear nothing', () => {
+        handlers.onDragEnd(POSITIONS);
+
+        expect(taskDragged).toHaveBeenCalledOnce();
+        expect(dragged).not.toHaveBeenCalled();
+      });
+
+      it('WHEN the viewport moves THEN task mode saves its camera and the inspection hears nothing', () => {
+        handlers.onViewport();
+
+        expect(saveCamera).toHaveBeenCalledOnce();
+        expect(saveViewport).not.toHaveBeenCalled();
+      });
+
+      it('WHEN a frame renders THEN only the frame clock is marked', () => {
+        handlers.onRender();
+
+        expect(calls).toStrictEqual(['mark']);
+      });
     });
   });
 });

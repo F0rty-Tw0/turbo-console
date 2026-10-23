@@ -9,9 +9,10 @@ import type { NodeSize } from '../common/node-size.type.ts';
 
 const PADDING = `[top=${FOLDER_PADDING_PX},left=${FOLDER_PADDING_PX},bottom=${FOLDER_PADDING_PX},right=${FOLDER_PADDING_PX}]`;
 
-const COMPOUND_OPTIONS: Readonly<Record<string, string>> = { ...ELK_OPTIONS, 'elk.padding': PADDING };
+/** A padded compound: the layered options plus room for its frame. */
+export const COMPOUND_OPTIONS: Readonly<Record<string, string>> = { ...ELK_OPTIONS, 'elk.padding': PADDING };
 
-const elkEdgeOf = (edge: GraphEdge): ElkEdge => {
+export const elkEdgeOf = (edge: GraphEdge): ElkEdge => {
   const elkEdge: ElkEdge = { id: edgeIdOf(edge), sources: [edge.source], targets: [edge.target] };
 
   return elkEdge;
