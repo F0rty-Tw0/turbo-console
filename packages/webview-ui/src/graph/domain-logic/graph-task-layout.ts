@@ -1,12 +1,14 @@
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
+import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
 import { engineNoticeOf } from '../utils/layout-plan.util.ts';
 
 /**
- * The task graph's layout: the key asked for, the layout on screen, and every layout so far by key in page memory, a
- * drag included. Runs share the package runner, latest wins; a task layout never posts `positions` or `layoutDone`.
+ * The task graph's layout: the key asked for, the layout on screen, and the last `TASK_LAYOUT_MEMORY` layouts shown by
+ * key in page memory, a drag included. Runs share the package runner, latest wins; a task layout never posts `positions`
+ * or `layoutDone`. A layout that throws while still asked for empties the canvas and goes to `onFailure`.
  */
 export class GraphTaskLayout {
   private readonly deps: TaskLayoutDeps;
@@ -35,23 +37,14 @@ export class GraphTaskLayout {
   /** Places the key's layout from memory at once, or lays it out; the saved camera returns only for the key it was saved with. */
   public async show(request: TaskLayoutRequest): Promise<void> {
     this.wanted = request;
-
-    const kept = this.memory.get(request.key);
-
-    if (kept !== undefined) {
-      this.place(request, kept, true);
-
-      return;
-    }
-
-    await this.layOut(request, true);
+    await this.guard(request, async (): Promise<void> => this.placeOrLayOut(request));
   }
 
   /** Re-layout and Retry: a fresh run of the key asked for, then a fit. */
   public async relayout(): Promise<void> {
     const request = this.wanted;
 
-    if (request !== null) await this.layOut(request, false);
+    if (request !== null) await this.guard(request, async (): Promise<void> => this.layOut(request, false));
   }
 
   /** Empties the task canvas and forgets the key asked for, so a run still in flight lands on nothing. */
@@ -71,7 +64,43 @@ export class GraphTaskLayout {
     const moved: LayoutResult = { ...placed, positions };
 
     this.placed = moved;
-    this.memory.set(moved.hash, moved);
+    this.remember(moved);
+  }
+
+  /** A throw while `request` is still asked for empties the canvas and is reported; one from a request since replaced is dropped. */
+  private async guard(request: TaskLayoutRequest, step: () => Promise<void>): Promise<void> {
+    try {
+      await step();
+    } catch (error: unknown) {
+      if (this.wanted !== request) return;
+
+      this.clear();
+      this.deps.onFailure(error);
+    }
+  }
+
+  private async placeOrLayOut(request: TaskLayoutRequest): Promise<void> {
+    const kept = this.memory.get(request.key);
+
+    if (kept === undefined) {
+      await this.layOut(request, true);
+
+      return;
+    }
+
+    this.remember(kept);
+    this.place(request, kept, true);
+  }
+
+  /** Keeps `result` as the layout shown last, forgetting the one shown least recently past `TASK_LAYOUT_MEMORY`. */
+  private remember(result: LayoutResult): void {
+    this.memory.delete(result.hash);
+    this.memory.set(result.hash, result);
+
+    const [oldest] = this.memory.keys();
+    const isFull = this.memory.size > TASK_LAYOUT_MEMORY;
+
+    if (isFull && oldest !== undefined) this.memory.delete(oldest);
   }
 
   private async layOut(request: TaskLayoutRequest, canRestore: boolean): Promise<void> {
@@ -85,7 +114,7 @@ export class GraphTaskLayout {
 
     if (isSuperseded) return;
 
-    this.memory.set(result.hash, result);
+    this.remember(result);
     this.place(request, result, canRestore);
   }
 

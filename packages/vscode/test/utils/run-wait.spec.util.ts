@@ -25,11 +25,11 @@ export const taskNodeNamed = async (api: TurboConsoleApi, name: string, taskId: 
   return node;
 };
 
-/** Runs the task of `node` with the row command `command`; returns the run's launch token once VS Code holds it. */
-export const startRunWith = async (api: TurboConsoleApi, node: TreeNode, command: string): Promise<number> => {
+/** Runs the task of `node` through `start`; returns the run's launch token once VS Code holds it. */
+export const startRunBy = async (api: TurboConsoleApi, node: TreeNode, start: () => Thenable<unknown>): Promise<number> => {
   const clickedAt = Date.now();
 
-  await vscode.commands.executeCommand(command, node);
+  await start();
 
   const entry = api.runs.get(node.root, node.key);
   const isThisRun = entry !== undefined && entry.launchedAt >= clickedAt;
@@ -37,6 +37,17 @@ export const startRunWith = async (api: TurboConsoleApi, node: TreeNode, command
   if (!isThisRun) throw new Error(`no run of ${node.key} started`);
 
   return entry.launchedAt;
+};
+
+/** Runs the task of `node` with the row command `command`; returns the run's launch token once VS Code holds it. */
+export const startRunWith = async (api: TurboConsoleApi, node: TreeNode, command: string): Promise<number> =>
+  startRunBy(api, node, async (): Promise<unknown> => vscode.commands.executeCommand(command, node));
+
+/** Runs the task of `node` as the graph page's Run does, through the open graph panel of its root; returns the launch token. */
+export const startGraphRun = async (api: TurboConsoleApi, node: TreeNode): Promise<number> => {
+  const runFromGraph = async (): Promise<void> => api.graph.receive(node.root, { type: 'runTask', taskId: node.key, noCache: false });
+
+  return startRunBy(api, node, runFromGraph);
 };
 
 /** Runs the task of `node` as its inline Run button does; returns the run's launch token once VS Code holds it. */

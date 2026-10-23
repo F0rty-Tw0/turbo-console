@@ -3,7 +3,6 @@ import { savePanelToggle } from './graph-task-panel.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskModeDeps, TaskPanel } from '../common/graph-task.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
@@ -19,9 +18,10 @@ import { choiceOf, droppedNoticeOf, packageTaskIdsOf, requestOf } from '../utils
  */
 export class GraphTaskMode {
   public readonly selection: GraphTaskSelection;
+  /** The task layout, which Re-layout, Retry and the probe's engine read act on. */
+  public readonly layout: GraphTaskLayout;
 
   private readonly deps: TaskModeDeps;
-  private readonly layout: GraphTaskLayout;
   private readonly panel: TaskPanel;
   private readonly controls: TaskControls;
   private tasks: GraphTask[] = [];
@@ -53,7 +53,11 @@ export class GraphTaskMode {
     return this.deps.modes.mode() === 'tasks';
   }
 
-  /** Keeps the state's tasks; while active, shows the graph view once and draws the shown tasks when their key changed. */
+  /**
+   * Keeps the state's tasks; while active, shows the graph view once and draws the shown tasks when their key changed. A
+   * same key, never an empty set's, still refreshes the selected task's panel and the banner, since commands and hidden
+   * tasks are not in the key.
+   */
   public received(state: GraphReady, at: number): void {
     this.tasks = state.tasks;
     this.hash = state.hash;
@@ -62,12 +66,17 @@ export class GraphTaskMode {
 
     this.enter();
 
-    const request = requestOf(this.tasks, this.shownSet());
+    const shownSet = this.shownSet();
+    const request = requestOf(this.tasks, shownSet);
     const shownKey = this.layout.key();
 
     this.selection.setShown(request.tasks);
 
-    if (request.key === shownKey) return;
+    if (request.key === shownKey) {
+      this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount });
+
+      return;
+    }
 
     this.render(at, null);
   }
@@ -122,14 +131,6 @@ export class GraphTaskMode {
   /** A drag only moves the layout kept in page memory; nothing is posted. */
   public dragged(): void {
     this.layout.dragged();
-  }
-
-  public engine(): LayoutEngine | null {
-    return this.layout.engine();
-  }
-
-  public async relayout(): Promise<void> {
-    await this.layout.relayout();
   }
 
   private view(): TaskViewState {
@@ -188,7 +189,7 @@ export class GraphTaskMode {
     const current = this.deps.modes.current();
 
     this.hasEntered = true;
-    this.deps.screen.showGraph(this.engine() === 'fallback');
+    this.deps.screen.showGraph(this.layout.engine() === 'fallback');
     this.panel.enter();
     this.controls.enter(this.view(), current?.controlsOpen ?? true);
     this.selection.enter(current?.detailsOpen ?? true);

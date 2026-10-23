@@ -103,6 +103,13 @@ describe('FEATURE: shownSetOf', () => {
       expect(shown.ids).toHaveLength(306);
     });
 
+    // A dependents index that copies its list per push takes about 8 s here; one that pushes in place about 0.1 s.
+    it('WHEN 50000 dependents at hop 1 THEN all of them are cut within 3 s', { timeout: 3000 }, () => {
+      const shown = shownSetOf({ tasks: fanOf(50_000, 0), chosen: ['root#t'], depth: 1, capLifted: false });
+
+      expect(shown).toStrictEqual({ ids: ['root#t'], hiddenCount: 50_000, droppedIds: [] });
+    });
+
     it('WHEN 299 dependencies and 1 dependent make 301 THEN the dependent is cut', () => {
       const shown = shownSetOf({ tasks: mixOf(299, 1), chosen: ['root#t'], depth: 1, capLifted: false });
 

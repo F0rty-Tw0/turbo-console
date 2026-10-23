@@ -151,20 +151,13 @@ describe('FEATURE: ViewStateModes', () => {
       expect([modes.mode(), modes.current()]).toStrictEqual(['tasks', TASK_SAVED]);
     });
 
-    it('WHEN a package save with its own zoom and controls closed arrives THEN the write keeps the last package zoom and takes controlsOpen', () => {
+    it('WHEN a package save with its own zoom and panels closed arrives THEN nothing is written', () => {
       const modes = new ViewStateModes(saver, TASK_SAVED);
 
-      modes.packages.schedule({ ...PACKAGE_STATE, zoom: 9, controlsOpen: false });
+      modes.packages.schedule({ ...PACKAGE_STATE, zoom: 9, controlsOpen: false, detailsOpen: false });
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...TASK_SAVED, controlsOpen: false });
-    });
-
-    it('WHEN a package save with Details closed arrives THEN the write takes detailsOpen', () => {
-      const modes = new ViewStateModes(saver, TASK_SAVED);
-
-      modes.packages.schedule({ ...PACKAGE_STATE, detailsOpen: false });
-
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...TASK_SAVED, detailsOpen: false });
+      expect(saver.schedule).not.toHaveBeenCalled();
+      expect(modes.current()).toStrictEqual(TASK_SAVED);
     });
 
     it('WHEN task mode closes its Details THEN the write takes detailsOpen and keeps the task', () => {
@@ -175,10 +168,11 @@ describe('FEATURE: ViewStateModes', () => {
       expect(saver.schedule).toHaveBeenLastCalledWith({ ...TASK_SAVED, detailsOpen: false });
     });
 
-    it('WHEN a task is saved after a package save THEN the shared controls field survives', () => {
+    it('WHEN task mode closes Controls and a stale package save follows THEN a task save keeps controlsOpen false', () => {
       const modes = new ViewStateModes(saver, TASK_SAVED);
 
-      modes.packages.schedule({ ...PACKAGE_STATE, controlsOpen: false });
+      modes.savePanels({ controlsOpen: false });
+      modes.packages.schedule(PACKAGE_STATE);
       modes.saveTask(NEXT_TASK, 'h1');
 
       expect(saver.schedule).toHaveBeenLastCalledWith({ ...TASK_SAVED, controlsOpen: false, task: NEXT_TASK });

@@ -3,9 +3,15 @@ import { ERROR_STUB, LOADING_STUB } from './test/stubs/graph-state.stub.ts';
 import { TASK_MODE_DOCS_TASK_STUB, TASK_MODE_NEW_HASH_STUB, TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import type { GraphState } from '../src/bridge/common/graph-state.type.ts';
-import { LOADING_TEXT } from '../src/graph/common/graph.const.ts';
+import { CONTROLS_LABEL, DETAILS_LABEL, LOADING_TEXT } from '../src/graph/common/graph.const.ts';
 
 const STATES = { description: 'M4-5a slice 2 review P1', type: 'requirement' };
+
+const ESCAPE = { description: 'M4-5a slice 2 review note 9', type: 'requirement' };
+
+const FAILURE = { description: 'M4-5a slice 2 review note 10', type: 'requirement' };
+
+const PANELS = { description: 'M4-5a spec 6 shared controlsOpen, slice 2 review S1', type: 'requirement' };
 
 const SHOW_TASKS = { description: 'M4-5a spec 3.2.1, slice 2 review note 4', type: 'requirement' };
 
@@ -85,6 +91,79 @@ test.describe('FEATURE: Show tasks after a refresh', () => {
 
       await test.step('THEN the details panel offers Show tasks', async (): Promise<void> =>
         expect(graphTask.showTasksButton).toBeVisible());
+    }
+  );
+});
+
+test.describe('FEATURE: Escape in task mode', () => {
+  test(
+    'GIVEN app#build selected in task mode, Escape on the container clears the selection',
+    { annotation: ESCAPE },
+    async ({ graphCanvas, graphHost, graphPage, graphTaskDetails, graphTaskHost, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN the page opens cold in task mode with app#build chosen', async (): Promise<void> => {
+        await graphPage.open({ savedState: taskSavedState('7a5c0001', { chosen: ['app#build'] }) });
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphTaskProbe.expectTaskIds(CHAIN);
+      });
+
+      await test.step('AND app#build is tapped and the container focused', async (): Promise<void> => {
+        await graphCanvas.tapNode('app#build');
+        await graphTaskHost.expectSavedTask({ selected: 'app#build' });
+        await graphPage.focusContainer();
+      });
+
+      await test.step('WHEN Escape is pressed', async (): Promise<void> => graphPage.pressKey('Escape'));
+
+      await test.step('THEN nothing is selected and the panel shows its empty lead', async (): Promise<void> => {
+        await graphTaskHost.expectSavedTask({ selected: null });
+        await graphTaskDetails.expectEmpty();
+      });
+    }
+  );
+});
+
+test.describe('FEATURE: a task layout that throws', () => {
+  test(
+    'GIVEN a cold open in task mode with label sizing that throws, the page says the graph could not be drawn',
+    { annotation: FAILURE },
+    async ({ graphHost, graphPage }): Promise<void> => {
+      await test.step('WHEN the page opens in task mode with app#build chosen and a canvas whose measureText throws', async (): Promise<void> =>
+        graphPage.open({ isMeasureBroken: true, savedState: taskSavedState('7a5c0001', { chosen: ['app#build'] }) }));
+
+      await test.step('AND the task state is sent', async (): Promise<void> => graphHost.sendState(TASK_MODE_STATE_STUB));
+
+      await test.step('THEN the page says the graph could not be drawn', async (): Promise<void> => graphPage.expectLayoutFailed());
+
+      await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
+    }
+  );
+});
+
+test.describe('FEATURE: task panels across a same-hash refresh', () => {
+  test(
+    'GIVEN task mode with Controls closed over a picked package, a same-hash state with new task counts keeps controlsOpen false',
+    { annotation: PANELS },
+    async ({ graphHost, graphList, graphPage, graphProbe, graphTask, graphTaskHost }): Promise<void> => {
+      await test.step('WHEN the graph with docs is drawn and app is picked', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_MODE_NEW_HASH_STUB);
+        await graphProbe.expectNodeIds([...PACKAGES, 'docs']);
+        await graphList.pick('app');
+      });
+
+      await test.step('AND task mode is on with Controls closed', async (): Promise<void> => {
+        await graphTask.toggle();
+        await graphPage.pressButton(CONTROLS_LABEL);
+        await graphTaskHost.expectSaved({ controlsOpen: false });
+      });
+
+      await test.step('AND the same hash arrives with docs#build', async (): Promise<void> =>
+        graphHost.sendState(TASK_MODE_DOCS_TASK_STUB));
+
+      await test.step('AND Details is closed, which saves again', async (): Promise<void> => graphPage.pressButton(DETAILS_LABEL));
+
+      await test.step('THEN the save keeps controlsOpen false', async (): Promise<void> =>
+        graphTaskHost.expectSaved({ controlsOpen: false, detailsOpen: false }));
     }
   );
 });

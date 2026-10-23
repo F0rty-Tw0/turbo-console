@@ -5,7 +5,7 @@ import type { GraphEdge, GraphPackage, GraphReady, GraphRunState } from '@turbo-
 import * as vscode from 'vscode';
 
 import { lastGraphState, postedRuns, postedShowTasks } from './graph-posted.spec.util.ts';
-import { endedRun, startRun, taskNodeNamed } from './run-wait.spec.util.ts';
+import { endedRun, startGraphRun, taskNodeNamed } from './run-wait.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { PanelInfo, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import {
@@ -190,13 +190,13 @@ const runStatesOf = (api: TurboConsoleApi, root: string, id: string): GraphRunSt
   return states;
 };
 
-/** Running the task from its row repaints the graph: its `runs` entry goes `running`, then `passed`. */
+/** Running the task from the graph page repaints the graph: its `runs` entry goes `running`, then `passed`. */
 export const runRepaintCase = async (scene: GraphScene): Promise<void> => {
   const { api, root } = scene;
 
-  await step('L13-7: running the task posts runs with it running, then passed', async () => {
+  await step('L13-7: running the task from the graph posts runs with it running, then passed', async () => {
     const node = await taskNodeNamed(api, TASK_PACKAGE, TASK_ID);
-    const launchedAt = await startRun(api, node);
+    const launchedAt = await startGraphRun(api, node);
     const ended = await endedRun(api, node, launchedAt);
     const isPassedPosted = (): boolean => runStatesOf(api, root, TASK_ID).includes('passed');
 

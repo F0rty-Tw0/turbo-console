@@ -111,14 +111,14 @@ describe('FEATURE: GraphTaskMode', () => {
       await rig.runs.settle(0, null);
 
       expect(rig.calls()).toStrictEqual([]);
-      expect(mode.engine()).toBeNull();
+      expect(mode.layout.engine()).toBeNull();
     });
 
     it('WHEN the runner falls back THEN that layout is placed and the engine is fallback', async () => {
       await rig.runs.settle(0, resultOf(KEY, POSITIONS, 'fallback'));
 
       expect(drawnOf(rig)?.positions).toStrictEqual(POSITIONS);
-      expect(mode.engine()).toBe('fallback');
+      expect(mode.layout.engine()).toBe('fallback');
       expect(rig.screen.showNotice).toHaveBeenLastCalledWith({ kind: 'fallback' });
     });
 
@@ -163,7 +163,7 @@ describe('FEATURE: GraphTaskMode', () => {
     });
 
     it('WHEN Re-layout is pressed THEN a fresh run is placed and the camera fits', async () => {
-      const relaid = mode.relayout();
+      const relaid = mode.layout.relayout();
 
       await rig.runs.settle(1, resultOf(KEY, DRAGGED));
       await relaid;

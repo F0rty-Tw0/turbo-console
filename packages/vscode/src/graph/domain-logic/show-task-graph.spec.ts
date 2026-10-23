@@ -160,6 +160,27 @@ describe('FEATURE: the Show Task Graph command', () => {
       expect(fixture.pickMany).not.toHaveBeenCalled();
       expect(fixture.open).not.toHaveBeenCalled();
     });
+
+    it('WHEN the command runs from one of its task rows THEN the user is told and nothing opens', async () => {
+      await runWith({ ...TASK_ROW, root: '/ws' }, fixture);
+
+      expect(fixture.ports.info).toHaveBeenCalledExactlyOnceWith(SINGLE_PACKAGE_TEXT);
+      expect(fixture.open).not.toHaveBeenCalled();
+      expect(fixture.showTasks).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a task row whose root has no model', () => {
+    it('WHEN the command runs THEN the panel opens on that task', async () => {
+      const failed = new RootStore();
+
+      failed.set([ROOT_FOLDER_STUB], () => coordinatorMock());
+
+      await runWith({ ...TASK_ROW, root: '/ws' }, fixture, failed);
+
+      expect(fixture.open).toHaveBeenCalledExactlyOnceWith('/ws');
+      expect(fixture.showTasks).toHaveBeenCalledExactlyOnceWith(['web#build']);
+    });
   });
 
   describe('GIVEN a root that has no model after loading', () => {

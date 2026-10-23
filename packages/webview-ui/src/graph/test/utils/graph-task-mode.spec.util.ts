@@ -87,6 +87,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const parts = taskPartsMockOf();
   const { panelOf, controlsOf, detailsOf } = parts;
   const onExit = vi.fn<() => void>();
+  const onFailure = vi.fn<(error: unknown) => void>();
   const deps: TaskModeDeps = {
     view,
     runner: runs.runner,
@@ -96,6 +97,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     modes,
     frames,
     onExit,
+    onFailure,
     panelOf,
     controlsOf,
     detailsOf,
@@ -104,7 +106,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const calls = (): string[] => [...called];
 
-  const rig: TaskModeRig = { ...parts, deps, view, runs, screen, frames, modes, posts, calls, onExit };
+  const rig: TaskModeRig = { ...parts, deps, view, runs, screen, frames, modes, posts, calls, onExit, onFailure };
 
   return rig;
 };

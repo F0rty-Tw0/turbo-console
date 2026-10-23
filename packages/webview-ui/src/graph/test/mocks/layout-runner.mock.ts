@@ -6,6 +6,7 @@ import type { LayoutRuns } from '../common/graph-layouts.type.ts';
 type PendingRun = {
   readonly graph: ElkNode;
   readonly resolve: (result: LayoutResult | null) => void;
+  readonly reject: (error: Error) => void;
 };
 
 const settledTasks = async (): Promise<void> => {
@@ -16,12 +17,12 @@ const settledTasks = async (): Promise<void> => {
   return new Promise(wait);
 };
 
-/** A runner whose runs stay pending until `settle`; it never drops a run itself, the test settles a dropped run with `null`. */
+/** A runner whose runs stay pending until `settle` or `fail`; it never drops a run itself, the test settles a dropped run with `null`. */
 export const layoutRunsMock = (): LayoutRuns => {
   const pending: PendingRun[] = [];
   const run = async (_hash: string, graph: ElkNode): Promise<LayoutResult | null> => {
-    const keep = (resolve: PendingRun['resolve']): void => {
-      pending.push({ graph, resolve });
+    const keep = (resolve: PendingRun['resolve'], reject: PendingRun['reject']): void => {
+      pending.push({ graph, resolve, reject });
     };
 
     return new Promise(keep);
@@ -39,8 +40,12 @@ export const layoutRunsMock = (): LayoutRuns => {
     runAt(index).resolve(result);
     await settledTasks();
   };
+  const fail = async (index: number, error: Error): Promise<void> => {
+    runAt(index).reject(error);
+    await settledTasks();
+  };
   const runner: LayoutRunner = { run };
-  const runs: LayoutRuns = { runner, count, graphOf, settle };
+  const runs: LayoutRuns = { runner, count, graphOf, settle, fail };
 
   return runs;
 };

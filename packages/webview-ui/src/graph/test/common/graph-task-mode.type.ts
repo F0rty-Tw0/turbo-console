@@ -31,6 +31,7 @@ export type TaskModeRig = {
   readonly controls: Mocked<TaskControls>;
   readonly details: Mocked<TaskDetails>;
   readonly onExit: Mock<() => void>;
+  readonly onFailure: Mock<(error: unknown) => void>;
   /** Called once by task mode with the panel's actions. */
   readonly panelOf: Mock<TaskModeDeps['panelOf']>;
   /** Called once by task mode with the Controls' actions. */

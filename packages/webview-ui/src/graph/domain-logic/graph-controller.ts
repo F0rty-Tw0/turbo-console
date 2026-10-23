@@ -41,7 +41,7 @@ class GraphPageController {
     this.frames = frames;
     this.view = deps.createView(page.container, handlers);
     this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks, onMessage });
-    this.tasks = taskModeOf(deps, this.view, { modes, frames, onExit: (): void => this.routing.exitTasks() });
+    this.tasks = taskModeOf(deps, this.view, { modes, frames, onMessage, onExit: (): void => this.routing.exitTasks() });
     this.routing = new GraphStateRouting({ tasks: this.tasks, packages: this.packages, now: deps.now });
     const relayout = (): void => this.relayout();
 
@@ -77,7 +77,7 @@ class GraphPageController {
     const isTaskMode = this.tasks.isActive();
 
     if (isTaskMode) {
-      void this.tasks.relayout();
+      void this.tasks.layout.relayout();
 
       return;
     }
@@ -88,7 +88,7 @@ class GraphPageController {
   private engine(): LayoutEngine | null {
     const isTaskMode = this.tasks.isActive();
 
-    if (isTaskMode) return this.tasks.engine();
+    if (isTaskMode) return this.tasks.layout.engine();
 
     return this.packages.layouts.engine();
   }

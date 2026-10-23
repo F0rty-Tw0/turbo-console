@@ -35,9 +35,10 @@ const dependentsIndexOf = (dependencies: Index): Index => {
 
   for (const [id, needed] of dependencies) {
     for (const dependency of needed) {
-      const dependents = index.get(dependency) ?? [];
+      const dependents = index.get(dependency);
 
-      index.set(dependency, [...dependents, id]);
+      if (dependents === undefined) index.set(dependency, [id]);
+      else dependents.push(id);
     }
   }
 

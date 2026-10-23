@@ -4,8 +4,8 @@ import type { TaskPanelsOpen } from '../common/graph-task.type.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
 /**
- * The one save path for both modes. A package save keeps the mode and the last task view; in task mode it only carries
- * `controlsOpen` and `detailsOpen` into the last package state, so the task camera never takes a package camera.
+ * The one save path for both modes. A package save keeps the mode and the last task view; in task mode it writes nothing,
+ * since task mode saves the shared `controlsOpen` and `detailsOpen` itself and the package fields wait for package mode.
  */
 export class ViewStateModes {
   public readonly packages: PackageSaver;
@@ -61,22 +61,16 @@ export class ViewStateModes {
     this.write(state);
   }
 
+  /** Task mode owns the panels' open state, so a package save then would write the package side's stale copy. */
   private schedulePackages(state: PackageViewState): void {
-    const last = this.last;
+    const isTaskMode = this.mode() === 'tasks';
 
-    if (last === null || last.mode === 'packages') {
-      const task = this.task();
-      const kept: GraphViewState = { ...state, mode: 'packages', task };
+    if (isTaskMode) return;
 
-      this.write(kept);
+    const task = this.task();
+    const kept: GraphViewState = { ...state, mode: 'packages', task };
 
-      return;
-    }
-
-    const { controlsOpen, detailsOpen } = state;
-    const shared: GraphViewState = { ...last, controlsOpen, detailsOpen };
-
-    this.write(shared);
+    this.write(kept);
   }
 
   private write(state: GraphViewState): void {

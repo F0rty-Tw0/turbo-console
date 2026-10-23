@@ -1,13 +1,29 @@
-import { layoutScreenOf } from './graph-page-states.ts';
+import { layoutScreenOf, showFailure } from './graph-page-states.ts';
 import { GraphTaskControls } from './graph-task-controls.ts';
 import { GraphTaskDetails } from './graph-task-details.ts';
 import { GraphTaskMode } from './graph-task-mode.ts';
 import { saveDetailsToggle, taskPanelOf } from './graph-task-panel.ts';
 import { GraphTaskWidgets } from './graph-task-widgets.ts';
 import type { GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
-import type { PackageTasks, TaskModeDeps, TaskModeHooks, TaskPanel, TaskPanelActions } from '../common/graph-task.type.ts';
+import type {
+  PackageTasks,
+  TaskKeyMode,
+  TaskModeDeps,
+  TaskModeHooks,
+  TaskPanel,
+  TaskPanelActions
+} from '../common/graph-task.type.ts';
 import type { TaskControls, TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskDetails, TaskDetailsActions, TaskWidgets } from '../common/task-details.type.ts';
+
+/** Escape on the graph container, not a held repeat, clears the task selection in task mode, as it clears the package one. */
+export const onTaskKey = (event: Pick<KeyboardEvent, 'key' | 'repeat'>, mode: TaskKeyMode): void => {
+  if (event.repeat || event.key !== 'Escape') return;
+
+  const isActive = mode.isActive();
+
+  if (isActive) mode.selection.clear();
+};
 
 /** Task mode over the real view (never the parked one) and the runner the package graph shares; the Task mode toggle flips it. */
 export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: TaskModeHooks): GraphTaskMode => {
@@ -22,10 +38,27 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
   const detailsOf = (actions: TaskDetailsActions): TaskDetails => new GraphTaskDetails({ page, views, bridge, actions, onToggle });
   const widgetsOf = (): TaskWidgets => widgets;
   const screen = layoutScreenOf(page);
-  const taskDeps: TaskModeDeps = { ...hooks, view, runner, sizeOf, bridge, screen, panelOf, controlsOf, detailsOf, widgetsOf };
+  const onFailure = (error: unknown): void => {
+    showFailure(page, error);
+    hooks.onMessage();
+  };
+  const taskDeps: TaskModeDeps = {
+    ...hooks,
+    view,
+    runner,
+    sizeOf,
+    bridge,
+    screen,
+    panelOf,
+    controlsOf,
+    detailsOf,
+    widgetsOf,
+    onFailure
+  };
   const mode = new GraphTaskMode(taskDeps);
 
   page.taskMode.addEventListener('click', (): void => mode.toggle(deps.now()));
+  page.container.addEventListener('keydown', (event: KeyboardEvent): void => onTaskKey(event, mode));
 
   return mode;
 };

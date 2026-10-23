@@ -1,3 +1,5 @@
+import type { WorkspaceModel } from '@turbo-console/core';
+
 import { graphRootOf } from './graph-root.ts';
 import type { Roots } from '../../roots/common/coordinator.type.ts';
 import { taskTargetOf } from '../../run/utils/run-target.util.ts';
@@ -29,6 +31,15 @@ const rowRequestOf = (arg: unknown): TaskGraphRequest | null => {
   return request;
 };
 
+/** A single-package model has no task graph: the user is told so, and nothing opens. */
+const refusesSinglePackage = (model: WorkspaceModel | null | undefined, ports: RootPickPorts): boolean => {
+  const isSinglePackage = model?.singlePackage === true;
+
+  if (isSinglePackage) ports.info(SINGLE_PACKAGE_TASKS_TEXT);
+
+  return isSinglePackage;
+};
+
 const pickedRequestOf = async ({ roots, ports }: ShowTaskGraphDeps): Promise<TaskGraphRequest | null> => {
   const root = await graphRootOf(roots, ports);
 
@@ -44,11 +55,9 @@ const pickedRequestOf = async ({ roots, ports }: ShowTaskGraphDeps): Promise<Tas
     return panelOnly;
   }
 
-  if (model.singlePackage) {
-    ports.info(SINGLE_PACKAGE_TASKS_TEXT);
+  const isRefused = refusesSinglePackage(model, ports);
 
-    return null;
-  }
+  if (isRefused) return null;
 
   const items = taskGraphItemsOf(graphTasksOf(model), root);
   const taskIds = await ports.pickMany(items, TASK_PICK_PLACEHOLDER);
@@ -73,15 +82,23 @@ const openWith = ({ root, taskIds }: TaskGraphRequest, { panels, ports }: ShowTa
 
 /**
  * `turboConsole.showTaskGraph`: a task row opens its root's graph on that task with no question; otherwise the user picks
- * tasks of the resolved root. A single-package root is told it has no task graph, a cancelled or empty pick opens nothing,
- * and a root with no model opens the panel alone so its error screen shows. A panel that cannot be opened is logged and the
- * user told to see Output.
+ * tasks of the resolved root. A single-package root, a task row's included, is told it has no task graph and opens
+ * nothing; a cancelled or empty pick opens nothing, and a root with no model opens the panel alone so its error screen
+ * shows. A panel that cannot be opened is logged and the user told to see Output.
  */
 export const showTaskGraph = async (arg: unknown, deps: ShowTaskGraphDeps): Promise<void> => {
   const row = rowRequestOf(arg);
-  const request = row ?? (await pickedRequestOf(deps));
 
-  if (request === null) return;
+  if (row === null) {
+    const picked = await pickedRequestOf(deps);
 
-  openWith(request, deps);
+    if (picked !== null) openWith(picked, deps);
+
+    return;
+  }
+
+  const model = deps.roots.get(row.root)?.state.model;
+  const isRefused = refusesSinglePackage(model, deps.ports);
+
+  if (!isRefused) openWith(row, deps);
 };

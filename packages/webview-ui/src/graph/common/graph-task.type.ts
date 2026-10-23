@@ -87,6 +87,8 @@ export type TaskModeDeps = {
   readonly frames: Pick<FrameClock, 'start' | 'arm'>;
   /** Task mode was left: the controller shows the package graph again. */
   readonly onExit: () => void;
+  /** A task layout threw: the page shows the reason, and the next graph state shows the task graph afresh. */
+  readonly onFailure: (error: unknown) => void;
   /** Builds the task panel over the page, its Show all tasks wired to `actions`. */
   readonly panelOf: (actions: TaskPanelActions) => TaskPanel;
   /** Builds the task Controls over the page, its fields wired to `actions`. */
@@ -103,11 +105,23 @@ export type PanelToggleDeps = {
   readonly modes: Pick<TaskModes, 'savePanels'>;
 };
 
+type SelectionClear = {
+  readonly clear: () => void;
+};
+
+/** What Escape on the graph acts on in task mode: whether it is on, and its selection's clear. */
+export type TaskKeyMode = {
+  readonly isActive: () => boolean;
+  readonly selection: SelectionClear;
+};
+
 /** What the controller hands `taskModeOf` besides its own deps and the view. */
 export type TaskModeHooks = {
   readonly modes: TaskModes;
   readonly frames: FrameClock;
   readonly onExit: () => void;
+  /** The page now shows a message instead of the graph, as `PackageSideHooks.onMessage`. */
+  readonly onMessage: () => void;
 };
 
 /** The asked-for ids that match a task, once each in the order asked, and how many matched none. */

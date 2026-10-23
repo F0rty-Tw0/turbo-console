@@ -41,7 +41,7 @@ export class GraphTask {
     this.probe = new GraphProbePage(page);
     this.toggleButton = page.getByRole('button', { name: TASK_MODE_LABEL, exact: true });
     this.prompt = page.getByText(EMPTY_TASKS_TEXT, { exact: true });
-    this.bannerText = page.locator('.graph-task-banner-text');
+    this.bannerText = page.getByRole('status').and(page.locator('.graph-task-banner-text'));
     this.showAll = page.getByRole('button', { name: SHOW_ALL_TASKS_LABEL, exact: true });
     this.notice = page.locator('.graph-task-notice');
     this.rows = page.locator(`#${TASK_CONTROLS_ID}`).getByRole('grid').getByRole('button');

@@ -45,7 +45,10 @@ const hiddenLine = (className: string, text: string, isStatus: boolean): HTMLEle
   return line;
 };
 
-/** Task mode's lines above the canvas, all hidden in package mode: the notice, the cap banner and the prompt. */
+/**
+ * Task mode's lines above the canvas, all hidden in package mode: the notice, the cap banner and the prompt. The notice
+ * and the banner's count are status lines, announced when their text changes.
+ */
 const taskScreen = (): TaskScreenElements => {
   const notice = hiddenLine('graph-notice graph-task-notice', '', true);
   const bannerText = textElement('p', 'graph-task-banner-text', '');
@@ -53,6 +56,8 @@ const taskScreen = (): TaskScreenElements => {
   const banner = textBlock('graph-notice graph-task-banner', bannerText, showAll);
   const prompt = hiddenLine('graph-task-prompt', EMPTY_TASKS_TEXT, false);
   const screen: TaskScreenElements = { prompt, banner, bannerText, showAll, notice };
+
+  bannerText.setAttribute('role', 'status');
 
   return screen;
 };

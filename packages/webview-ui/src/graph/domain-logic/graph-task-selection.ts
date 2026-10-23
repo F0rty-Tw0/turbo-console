@@ -13,6 +13,7 @@ export class GraphTaskSelection {
   private readonly widgets: TaskWidgets;
   private shown: GraphTask[] = [];
   private latestRuns: TaskRuns = {};
+  private isEntered = false;
 
   public constructor(deps: TaskSelectionDeps) {
     this.deps = deps;
@@ -46,9 +47,11 @@ export class GraphTaskSelection {
     this.saveSelected(null);
   }
 
+  /** Keeps the latest runs; outside task mode they wait for the repaint on entering, so the hidden panel is not rebuilt. */
   public runs(runs: TaskRuns): void {
     this.latestRuns = runs;
-    this.repaint();
+
+    if (this.isEntered) this.repaint();
   }
 
   /** The tasks now shown; a selected task outside them is saved as no selection. */
@@ -64,11 +67,13 @@ export class GraphTaskSelection {
   }
 
   public enter(isOpen: boolean): void {
+    this.isEntered = true;
     this.details.enter(isOpen);
     this.repaint();
   }
 
   public exit(): void {
+    this.isEntered = false;
     this.details.exit();
     this.widgets.exit();
   }

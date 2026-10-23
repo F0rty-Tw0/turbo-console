@@ -4,6 +4,9 @@ import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 /** The most tasks task mode draws before it cuts dependent and dependency hops. */
 export const TASK_CAP = 300;
 
+/** How many task layouts page memory keeps by key; the one shown least recently goes first. */
+export const TASK_LAYOUT_MEMORY = 20;
+
 export const MIN_TASK_DEPTH = 0;
 
 export const MAX_TASK_DEPTH = 5;

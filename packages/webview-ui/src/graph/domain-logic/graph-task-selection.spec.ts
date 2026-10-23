@@ -140,9 +140,10 @@ describe('FEATURE: GraphTaskSelection', () => {
       expect(selection.selected()).toBeNull();
     });
 
-    it('WHEN web#build is running THEN every map is painted and the panel reads running', () => {
+    it('WHEN web#build is running in task mode THEN every map is painted and the panel reads running', () => {
       const runs: TaskRuns = { 'web#build': 'running' };
 
+      selection.enter(true);
       selection.runs(runs);
 
       const running: TaskDetailsModel = { ...WEB_BUILD_MODEL, state: 'running' };
@@ -166,6 +167,33 @@ describe('FEATURE: GraphTaskSelection', () => {
 
       expect(rig.save).not.toHaveBeenCalled();
       expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
+    });
+  });
+
+  describe('GIVEN web#build selected and task mode left', () => {
+    const runs: TaskRuns = { 'web#build': 'running' };
+
+    beforeEach(() => {
+      selection.tapNode('web#build');
+      selection.enter(true);
+      selection.exit();
+      rig.details.show.mockClear();
+      rig.canvas.runStates.mockClear();
+    });
+
+    it('WHEN runs arrive THEN the hidden panel and the canvas are not repainted', () => {
+      selection.runs(runs);
+
+      expect(rig.details.show).not.toHaveBeenCalled();
+      expect(rig.canvas.runStates).not.toHaveBeenCalled();
+    });
+
+    it('WHEN runs arrive and task mode is entered again THEN the panel reads running', () => {
+      selection.runs(runs);
+      selection.enter(true);
+
+      expect(rig.canvas.runStates).toHaveBeenLastCalledWith(runs);
+      expect(rig.details.show).toHaveBeenLastCalledWith({ ...WEB_BUILD_MODEL, state: 'running' });
     });
   });
 
