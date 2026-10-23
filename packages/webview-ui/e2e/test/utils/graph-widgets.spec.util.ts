@@ -36,9 +36,11 @@ export const boxRowFrameOf = (zoom: number): RowFrame => {
   return frame;
 };
 
-/** A collapsed node's row, at any zoom: full size, 8 px in. */
-export const collapsedRowFrameOf = (): RowFrame => {
-  const frame: RowFrame = { top: WIDGET_INSET_PX, inset: WIDGET_INSET_PX, side: WIDGET_BUTTON_PX };
+/** A collapsed node's row at `zoom`: scaled with it up to full size, 8 px in at that scale. */
+export const collapsedRowFrameOf = (zoom: number): RowFrame => {
+  const scale = Math.min(1, zoom);
+  const inset = WIDGET_INSET_PX * scale;
+  const frame: RowFrame = { top: inset, inset, side: WIDGET_BUTTON_PX * scale };
 
   return frame;
 };

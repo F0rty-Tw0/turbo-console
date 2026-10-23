@@ -1,16 +1,10 @@
-import {
-  COLLAPSED_LABEL_MAX_PX,
-  FOLDER_PADDING_PX,
-  WIDGET_BUTTON_PX,
-  WIDGET_INSET_PX,
-  WIDGET_MIN_BOX_PX
-} from '../common/graph.const.ts';
+import { FOLDER_PADDING_PX, WIDGET_BUTTON_PX, WIDGET_INSET_PX, WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
 import type { LayerBounds, RectPx, RowButtonRects, RowKind, RowPlacement } from '../common/widget.type.ts';
 
 /** The room a box row keeps above and below its buttons inside the band, in px. */
 const BAND_MARGIN_PX = 2;
 
-/** The smallest scale a box row is drawn at; under it the row is hidden. */
+/** The smallest scale a header row is drawn at; under it the row is hidden. */
 const MIN_ROW_SCALE = 0.5;
 
 const squareAt = (x: number, y: number, side: number): RectPx => {
@@ -43,27 +37,26 @@ const boxRowOf = (box: RectPx, zoom: number): RowPlacement | null => {
   return placement;
 };
 
-/** The collapsed row, 8 px in; `null` while its buttons could meet the widest label centred on the node. */
+/**
+ * The collapsed row, scaled with the zoom up to full size and 8 px in at that scale; `null` under `MIN_ROW_SCALE`. The
+ * node keeps `(COLLAPSED_NODE_WIDTH − COLLAPSED_LABEL_MAX_PX) / 2 · zoom` = `32 · zoom` px beside its widest label, never
+ * less than the row's `(8 + 24) · scale`, so the buttons never meet the label.
+ */
 const collapsedRowOf = (box: RectPx, zoom: number): RowPlacement | null => {
-  const boxWidth = box.x2 - box.x1;
-  const labelGap = (boxWidth - COLLAPSED_LABEL_MAX_PX * zoom) / 2;
-  const isLabelReached = labelGap < WIDGET_INSET_PX + WIDGET_BUTTON_PX;
+  const scale = Math.min(1, zoom);
 
-  if (isLabelReached) return null;
+  if (scale < MIN_ROW_SCALE) return null;
 
-  const placement: RowPlacement = {
-    x: box.x1 + WIDGET_INSET_PX,
-    y: box.y1 + WIDGET_INSET_PX,
-    width: boxWidth - 2 * WIDGET_INSET_PX,
-    scale: 1
-  };
+  const inset = WIDGET_INSET_PX * scale;
+  const width = (box.x2 - box.x1 - 2 * inset) / scale;
+  const placement: RowPlacement = { x: box.x1 + inset, y: box.y1 + inset, width, scale };
 
   return placement;
 };
 
 /**
- * The header row inside a box (scaled to its rendered band and centred in it) or a collapsed node (8 px in); `null`
- * while the box is under `WIDGET_MIN_BOX_PX` wide, or by the box or collapsed rule at `zoom`.
+ * The header row inside a box (scaled to its rendered band and centred in it) or a collapsed node (scaled with the
+ * zoom, 8 px in); `null` while the box is under `WIDGET_MIN_BOX_PX` wide, or under the half-size floor at `zoom`.
  */
 export const rowPlacementOf = (box: RectPx, kind: RowKind, zoom: number): RowPlacement | null => {
   const boxWidth = box.x2 - box.x1;

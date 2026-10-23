@@ -14,7 +14,7 @@ const LONG = longTitleState();
 /** Puts the long-title node, placed at the origin, in the canvas middle at any zoom. */
 const LONG_PAN: Position = { x: 400, y: 300 };
 
-/** Zoom 120/180: the 180 px collapsed node is drawn at the 120 px minimum, so only the label rule can hide its buttons. */
+/** Zoom 120/180: the 180 px collapsed node is drawn at the 120 px minimum, its row at scale 0.667. */
 const NODE_MIN_ZOOM = 0.667;
 
 const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => savedWith(BOARDS.hash, overrides);
@@ -79,18 +79,21 @@ test.describe('FEATURE: folder header rows in the box band', () => {
   );
 
   test(
-    'GIVEN a collapsed node with a long title, its buttons hide while they could meet the title and show clear of it at zoom 2',
+    'GIVEN a collapsed node with a long title, its buttons show on it clear of the widest title at zoom 0.667 and at zoom 2',
     { annotation: C9 },
     async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
-      await test.step('WHEN the page opens with the node collapsed at zoom 0.667', async (): Promise<void> =>
+      await test.step('WHEN the page opens with the node collapsed at zoom 0.667, drawn 120 px wide', async (): Promise<void> =>
         graphFolderInspect.open(longCollapsedAt(NODE_MIN_ZOOM), LONG));
 
-      await test.step('THEN the node shows no header button', async (): Promise<void> => graphWidgets.expectHeaderHidden(LONG_FOLDER));
+      await test.step('THEN its chevron and "…" sit on the node at that scale, clear of the widest title', async (): Promise<void> => {
+        await graphWidgets.expectCollapsedRow(LONG_FOLDER);
+        await graphWidgets.expectCollapsedClearOfLabel(LONG_FOLDER);
+      });
 
       await test.step('WHEN the page opens with the node collapsed at zoom 2', async (): Promise<void> =>
         graphFolderInspect.open(longCollapsedAt(2), LONG));
 
-      await test.step('THEN its chevron and "…" sit on the node, clear of the widest title', async (): Promise<void> => {
+      await test.step('THEN its chevron and "…" sit on the node full size, clear of the widest title', async (): Promise<void> => {
         await graphWidgets.expectCollapsedRow(LONG_FOLDER);
         await graphWidgets.expectCollapsedClearOfLabel(LONG_FOLDER);
       });

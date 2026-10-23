@@ -110,7 +110,7 @@ export class GraphWidgetsPage {
     await expect.poll(async (): Promise<string[]> => this.ellipsisFaults(folder, boxRowFrameOf)).toEqual([]);
   }
 
-  /** A collapsed node's row: an Expand chevron and the "…" in its top corners, 8 px in, and no title. */
+  /** A collapsed node's row: an Expand chevron and the "…" in its top corners, 8 px in at the row's scale, and no title. */
   public async expectCollapsedRow(folder: string): Promise<void> {
     await expect(this.chevronOf(folder, false)).toHaveAttribute('aria-expanded', 'false');
     await expect(this.rowOf(folder).locator('.widget-title')).toHaveCount(0);
