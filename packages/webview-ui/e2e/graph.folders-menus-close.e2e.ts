@@ -57,4 +57,43 @@ test.describe('FEATURE: folder widget menu closing', () => {
         graphMenus.expectFocusOnEllipsis('apps'));
     }
   );
+
+  test(
+    'GIVEN focus in the search box, Shift+F10 leaves the native context menu alone',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphMenus }): Promise<void> => {
+      await test.step('WHEN the grouped boards open and the search box is focused', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphMenus.recordContextMenus();
+        await graphMenus.focusSearch();
+      });
+
+      await test.step('AND Shift+F10 is pressed', async (): Promise<void> => graphMenus.pressKey('Shift+F10'));
+
+      await test.step('THEN no contextmenu was prevented and no page menu opened', async (): Promise<void> => {
+        await graphMenus.expectNativeContextMenuAllowed();
+        await graphMenus.expectNoMenu();
+      });
+    }
+  );
+
+  test(
+    'GIVEN web picked and focus on a details panel button, Shift+F10 leaves the native context menu alone',
+    { annotation: C9 },
+    async ({ graphDetails, graphFolderInspect, graphList, graphMenus }): Promise<void> => {
+      await test.step('WHEN the grouped boards open, web is picked and Start trace is focused', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphList.pick('web');
+        await graphMenus.recordContextMenus();
+        await graphDetails.focusButton('Start trace');
+      });
+
+      await test.step('AND Shift+F10 is pressed', async (): Promise<void> => graphMenus.pressKey('Shift+F10'));
+
+      await test.step('THEN no contextmenu was prevented and no page menu opened', async (): Promise<void> => {
+        await graphMenus.expectNativeContextMenuAllowed();
+        await graphMenus.expectNoMenu();
+      });
+    }
+  );
 });
