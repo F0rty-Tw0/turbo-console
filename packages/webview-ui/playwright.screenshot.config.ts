@@ -16,7 +16,18 @@
  */
 import { defineConfig, devices } from '@playwright/test';
 
-const chromium = { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 };
+/**
+ * Partial raster re-rasters only a changed element's ink rect, so the LCD subpixel fringe of text set after first paint
+ * (the toolbar status line) lands or not depending on tile history; a full re-raster makes the pixels repeat.
+ */
+const launchOptions = { args: ['--disable-partial-raster'] };
+
+const chromium = {
+  ...devices['Desktop Chrome'],
+  viewport: { width: 1280, height: 800 },
+  deviceScaleFactor: 1,
+  launchOptions
+};
 
 const projects = [{ name: 'chromium', use: chromium }];
 
