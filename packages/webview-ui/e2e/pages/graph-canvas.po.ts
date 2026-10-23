@@ -13,7 +13,7 @@ import { dragError, isWithinTolerance } from '../test/utils/graph-drag-error.spe
 import { emptySpotOf, nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 import { dragPerFrame } from '../test/utils/graph-scripted-pan.spec.util.ts';
-import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
+import { cpuStepsOf, recordPanCpu } from '../test/utils/graph-thread-time.spec.util.ts';
 
 const DRAG_STEPS = 8;
 
@@ -116,12 +116,11 @@ export class GraphCanvas {
     return pan;
   }
 
-  /** The last scripted pan used a measured, non-zero total under `totalMs` of main-thread CPU with no step over `stepMs`; both are recorded as annotations. */
+  /** The last scripted pan used a measured, non-zero total under `totalMs` of main-thread CPU with no step over `stepMs`; both are recorded as annotations and printed before the asserts, so a failing run logs them too. */
   public expectPanCpuUnder(totalMs: number, stepMs: number): void {
     const pan = this.measuredPanCpu();
 
-    test.info().annotations.push({ type: 'pan-cpu-ms', description: String(Math.round(pan.totalMs)) });
-    test.info().annotations.push({ type: 'pan-max-step-cpu-ms', description: String(Math.round(pan.maxStepMs)) });
+    recordPanCpu(test.info(), pan, totalMs, stepMs);
     expect(pan.totalMs).toBeGreaterThan(0);
     expect(pan.totalMs).toBeLessThan(totalMs);
     expect(pan.maxStepMs).toBeLessThan(stepMs);

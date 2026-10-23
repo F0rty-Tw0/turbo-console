@@ -1,4 +1,4 @@
-import type { CDPSession, Page } from '@playwright/test';
+import type { CDPSession, Page, TestInfo } from '@playwright/test';
 
 import { MS_PER_SECOND, THREAD_TIME_METRIC } from '../../common/graph.const.ts';
 import type { CpuSteps } from '../../common/graph.type.ts';
@@ -46,4 +46,16 @@ export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>
   } finally {
     await session.detach().catch((): undefined => undefined);
   }
+};
+
+/** Annotates the pan CPU readings and prints them as one `pan-cpu-ms` stdout line, so the CI log carries them even when a budget fails. */
+export const recordPanCpu = (info: TestInfo, pan: CpuSteps, totalMs: number, stepMs: number): void => {
+  const total = Math.round(pan.totalMs);
+  const maxStep = Math.round(pan.maxStepMs);
+
+  info.annotations.push({ type: 'pan-cpu-ms', description: String(total) });
+  info.annotations.push({ type: 'pan-max-step-cpu-ms', description: String(maxStep) });
+  process.stdout.write(
+    `pan-cpu-ms total=${total} maxStep=${maxStep} budget=${totalMs} stepBudget=${stepMs} host=${process.platform}-${process.arch} ${info.title}\n`
+  );
 };
