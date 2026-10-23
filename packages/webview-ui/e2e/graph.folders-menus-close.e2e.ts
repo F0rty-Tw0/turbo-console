@@ -1,3 +1,4 @@
+import { IS_SHIFT_F10_SILENT, SHIFT_F10_SILENT_REASON } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
 import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
@@ -111,6 +112,9 @@ test.describe('FEATURE: folder widget menu closing', () => {
     'GIVEN focus in the search box, Shift+F10 leaves the native context menu alone',
     { annotation: C9 },
     async ({ graphFolderInspect, graphMenus }): Promise<void> => {
+      // eslint-disable-next-line playwright/no-skipped-test -- macOS Chromium never fires the event this test watches
+      test.skip(IS_SHIFT_F10_SILENT, SHIFT_F10_SILENT_REASON);
+
       await test.step('WHEN the grouped boards open and the search box is focused', async (): Promise<void> => {
         await graphFolderInspect.open(grouped(), BOARDS);
         await graphMenus.recordContextMenus();
@@ -130,6 +134,9 @@ test.describe('FEATURE: folder widget menu closing', () => {
     'GIVEN web picked and focus on a details panel button, Shift+F10 leaves the native context menu alone',
     { annotation: C9 },
     async ({ graphDetails, graphFolderInspect, graphList, graphMenus }): Promise<void> => {
+      // eslint-disable-next-line playwright/no-skipped-test -- macOS Chromium never fires the event this test watches
+      test.skip(IS_SHIFT_F10_SILENT, SHIFT_F10_SILENT_REASON);
+
       await test.step('WHEN the grouped boards open, web is picked and Start trace is focused', async (): Promise<void> => {
         await graphFolderInspect.open(grouped(), BOARDS);
         await graphList.pick('web');

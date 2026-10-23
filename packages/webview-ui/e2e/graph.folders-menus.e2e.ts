@@ -1,3 +1,4 @@
+import { IS_SHIFT_F10_SILENT, SHIFT_F10_SILENT_REASON } from './common/graph.const.ts';
 import type { GraphOptions } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
 import { ghostFolderState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
@@ -340,6 +341,9 @@ test.describe('FEATURE: folder widget menus', () => {
     'GIVEN the apps folder selected and the container focused, Shift+F10 opens the page menu and no native one',
     { annotation: C9 },
     async ({ graphFolderInspect, graphMenus, graphWidgets }): Promise<void> => {
+      // eslint-disable-next-line playwright/no-skipped-test -- macOS Chromium never fires the event this test watches
+      test.skip(IS_SHIFT_F10_SILENT, SHIFT_F10_SILENT_REASON);
+
       await test.step('WHEN the grouped boards open, apps is tapped and the container is focused', async (): Promise<void> => {
         await graphFolderInspect.open(grouped(), BOARDS);
         await graphFolderInspect.tapFolder('apps');

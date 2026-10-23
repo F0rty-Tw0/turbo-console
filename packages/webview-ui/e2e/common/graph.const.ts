@@ -36,6 +36,11 @@ export const THREAD_TIME_METRIC = 'ThreadTime';
 
 export const MS_PER_SECOND = 1000;
 
+/** Chromium on macOS fires no `contextmenu` for Shift+F10, so a test that watches that event cannot run there. */
+export const IS_SHIFT_F10_SILENT = process.platform === 'darwin';
+
+export const SHIFT_F10_SILENT_REASON = 'Chromium on macOS fires no contextmenu event for Shift+F10';
+
 /** An empty page, so the renderer that loads it has run almost nothing before a CPU read. */
 export const BLANK_PAGE = 'data:text/html,<p>blank</p>';
 
