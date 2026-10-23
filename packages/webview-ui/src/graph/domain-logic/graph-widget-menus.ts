@@ -24,7 +24,7 @@ type OpenMenu = {
  * focus to the target's shown "…", else to the container, and only when the focus was inside the menu. A click
  * outside keeps that return only when it lands on nothing focusable; a focusable control it lands on keeps the focus.
  * A click on the menu's own "…" closes it, focus leaving it for another control closes it there, and a camera move
- * closes it with focus back on a still shown "…".
+ * closes it like any other close.
  */
 export class GraphWidgetMenus {
   private readonly deps: GraphWidgetMenusDeps;
@@ -92,7 +92,7 @@ export class GraphWidgetMenus {
     this.dismiss(null);
   }
 
-  /** After a positioning pass: a camera other than the menu's closes it, and focus inside goes to its "…" while shown, else stays. */
+  /** After a positioning pass: a camera other than the menu's closes it, and focus inside goes to its "…" while shown, else to the container. */
   public follow(): void {
     const open = this.current;
 
@@ -101,14 +101,7 @@ export class GraphWidgetMenus {
     const viewport = this.deps.view.viewport();
     const isSame = isSameViewport(viewport, open.viewport);
 
-    if (isSame) return;
-
-    const hadFocus = open.menu.contains(document.activeElement);
-    const opener = this.openerOf(open);
-
-    this.remove();
-
-    if (hadFocus) opener?.focus();
+    if (!isSame) this.close();
   }
 
   private dismiss(focusTo: HTMLElement | null): void {

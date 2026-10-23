@@ -11,6 +11,12 @@ export type ViewportPoint = {
   readonly y: number;
 };
 
+/** A synthetic camera input at `point`: wheel lines to zoom by. */
+export type SyntheticMove = {
+  readonly point: ViewportPoint;
+  readonly amount: number;
+};
+
 /** An element's box from `getBoundingClientRect`. */
 export type ElementRect = {
   readonly top: number;

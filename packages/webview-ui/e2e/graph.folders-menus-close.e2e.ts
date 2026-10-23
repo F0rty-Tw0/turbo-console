@@ -59,6 +59,30 @@ test.describe('FEATURE: folder widget menu closing', () => {
   );
 
   test(
+    'GIVEN the apps menu open at zoom 0.6, a zoom to 0.4 in one step hides its "…", closes the menu and gives focus to the graph',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphGrouping, graphMenus, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the grouped boards open at zoom 0.6 and the apps menu opens', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped({ zoom: 0.6 }), BOARDS);
+        await graphMenus.openFolderMenu('apps');
+      });
+
+      await test.step("AND one wheel event zooms the canvas to 0.4, under the header rows' 0.5 floor", async (): Promise<void> => {
+        const spot = await graphGrouping.freeSpot();
+
+        await graphMenus.zoomOutInOneStep(spot);
+      });
+
+      await test.step('THEN the apps "…" is hidden', async (): Promise<void> => graphWidgets.expectHeaderHidden('apps'));
+
+      await test.step('AND the menu is gone and focus is on the graph container', async (): Promise<void> => {
+        await graphMenus.expectNoMenu();
+        await graphMenus.expectFocusOnContainer();
+      });
+    }
+  );
+
+  test(
     'GIVEN focus in the search box, Shift+F10 leaves the native context menu alone',
     { annotation: C9 },
     async ({ graphFolderInspect, graphMenus }): Promise<void> => {

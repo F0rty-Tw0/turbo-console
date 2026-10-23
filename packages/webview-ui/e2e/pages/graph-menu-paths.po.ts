@@ -4,13 +4,25 @@ import { expect } from '@playwright/test';
 import { GraphMenusPage } from './graph-menus.po.ts';
 import { SEARCH_LABEL } from '../../src/graph/common/graph.const.ts';
 import { packageActionsLabelOf } from '../../src/graph/utils/controls-text.util.ts';
+import type { SyntheticMove, ViewportPoint } from '../common/playwright.type.ts';
+import { wheelLinesAt } from '../test/utils/graph-camera-events.spec.util.ts';
 import { ellipsisNameOf } from '../test/utils/graph-widgets.spec.util.ts';
+
+/** Wheel lines that zoom out by 2/3 in one Cytoscape step: `10^(−33 · (4/3) / 250)` ≈ 0.667. */
+const TWO_THIRDS_LINES = 4 / 3;
 
 /** How a widget menu is announced and the ways it closes, and where the page leaves the native context menu alone. */
 export class GraphMenuPaths extends GraphMenusPage {
   /** Presses the folder's "…", as a second press while its menu is open. */
   public async pressFolderEllipsis(folder: string): Promise<void> {
     await this.widgets.ellipsisOf(folder).click();
+  }
+
+  /** Zooms out by 2/3 in a single wheel event at `point`, with focus left where it is; the page must not have wheeled yet. */
+  public async zoomOutInOneStep(point: ViewportPoint): Promise<void> {
+    const move: SyntheticMove = { point, amount: TWO_THIRDS_LINES };
+
+    await this.container.evaluate(wheelLinesAt, move);
   }
 
   public async focusSearch(): Promise<void> {
