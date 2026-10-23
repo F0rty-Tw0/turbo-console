@@ -3,6 +3,7 @@ import { expect } from '@playwright/test';
 
 import { CardLayout } from './card-layout.po.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
+import { CODICON_STATUS } from '../common/shell.const.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 
 type ThemeVars = Record<string, string>;
@@ -22,8 +23,6 @@ const readBorderWidth = (element: Element, side: BorderSide): string =>
   getComputedStyle(element).getPropertyValue(`border-${side}-width`);
 
 const topOf = (rect: ElementRect): number => rect.top;
-
-const CODICON_STATUS = `[...document.fonts].find((face) => face.family.replaceAll('"', '') === 'codicon')?.status`;
 
 /** The page's theme and the layout of its cards and buttons, read from computed styles and boxes. */
 export class PageLayout {
@@ -99,6 +98,7 @@ export class PageLayout {
     expect(rects).toEqual(this.rememberedRects);
   }
 
+  /** The codicon font face exists and is still 'loading', so glyphs lay out in the fallback font. */
   public async expectCodiconFontLoading(): Promise<void> {
     const readStatus = async (): Promise<unknown> => this.page.evaluate<unknown>(CODICON_STATUS);
 
