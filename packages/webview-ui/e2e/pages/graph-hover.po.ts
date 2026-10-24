@@ -14,9 +14,10 @@ import { emptySpotOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { recordHoverCpu } from '../test/utils/graph-hover-cpu.spec.util.ts';
 import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
 
-const FRAME_MS = 16;
+/** The span one step stands for when `hoverFlowCpu` sizes a run; a step takes about two frames, so it is not a frame. */
+const STEP_SPAN_MS = 16;
 
-/** Each frame the pointer sits 1 px right of the node's centre or on it, so it moves yet stays on the node. */
+/** Each step the pointer sits 1 px right of the node's centre or on it, so it moves yet stays on the node. */
 const NUDGE_PX = 1;
 
 /** The pointer resting on the drawn graph, aimed through the probe's rendered node centres. */
@@ -56,20 +57,22 @@ export class GraphHover {
   }
 
   /**
-   * Rests the pointer on node `id`, then nudges it 1 px per frame for `ms`, keeping the main-thread CPU each frame took.
-   * The pointer keeps moving, so the flow overlay never reaches its idle stop and every frame draws it.
-   * Also counts the Cytoscape renders those frames caused.
+   * Rests the pointer on node `id`, then nudges it 1 px per step for `spanMs / 16` steps (3000 gives 188), keeping the
+   * main-thread CPU each step took. A step is a mouse move plus one `requestAnimationFrame` round trip, about two
+   * frames, so the run lasts about twice `spanMs` of wall time (188 steps take about 6 s).
+   * The pointer keeps moving, so the flow overlay never reaches its idle stop and draws throughout.
+   * Also counts the Cytoscape renders those steps caused; the hover-enter paint happens in `overNode`, before either measure starts.
    */
-  public async hoverFlowCpu(id: string, ms: number): Promise<void> {
+  public async hoverFlowCpu(id: string, spanMs: number): Promise<void> {
     await this.overNode(id);
 
     const node = await this.nodeOf(id);
-    const frames = Math.ceil(ms / FRAME_MS);
+    const steps = Math.ceil(spanMs / STEP_SPAN_MS);
     const rendersBefore = await this.renderCount();
 
     this.hoverCpu = await cpuStepsOf(this.page, async (endStep): Promise<void> => {
-      for (let frame = 1; frame <= frames; frame += 1) {
-        await this.page.mouse.move(node.renderedX + (frame % 2) * NUDGE_PX, node.renderedY);
+      for (let step = 1; step <= steps; step += 1) {
+        await this.page.mouse.move(node.renderedX + (step % 2) * NUDGE_PX, node.renderedY);
         await this.page.evaluate(ONE_FRAME);
         await endStep();
       }

@@ -11,7 +11,8 @@ const HOVER_FLOW = { description: 'M4-5a spec 6.8', type: 'requirement' };
 
 const SAVED_VIEW = targetLikeHubSavedState();
 
-const HOVER_MS = 3000;
+/** Sizes the run: `hoverFlowCpu` takes one step per 16 ms of it, so 3000 gives 188 steps, each about two frames, about 6 s in all. */
+const HOVER_STEP_SPAN_MS = 3000;
 
 /**
  * About 509 ms pinned (498 to 513) with tracing off; the budget keeps the pans' 3.4x room for slower CI runners, and
@@ -25,9 +26,10 @@ const HOVER_FLOW_MS = IS_MAC_RUNNER ? 2240 : 1731;
 const HOVER_STEP_MS = IS_MAC_RUNNER ? 90 : 50;
 
 /**
- * Cytoscape `render` events during the 3 s hover: the flow overlay exists so Cytoscape never redraws while the dashes
- * move. The base reads 0 over about 188 frames (3 runs); a mutant forcing `cy.forceRender()` in `viewport` every frame
- * reads about 376. Host-independent, unlike the CPU budget, which that mutant (about 877 ms pinned) stays inside.
+ * Cytoscape `render` events during the 188-step hover (about 6 s): the flow overlay exists so Cytoscape never redraws
+ * while the dashes move. The hover-enter paint happens before the measure, so it is not counted. The base reads 0 over
+ * the 188 steps (3 runs); a mutant forcing `cy.forceRender()` in `viewport` every frame reads about 376, two a step.
+ * Host-independent, unlike the CPU budget, which that mutant (about 877 ms pinned) stays inside.
  */
 const RENDER_LIMIT = 2;
 
@@ -36,7 +38,7 @@ test.use({ trace: 'off' });
 
 test.describe('FEATURE: task graph hover-flow tripwire', () => {
   test(
-    'GIVEN the hub task of a target-like state framed by Fit, a 3 s hover with the pointer moving every frame uses under its main-thread CPU and step budgets',
+    'GIVEN the hub task of a target-like state framed by Fit, a 188-step hover (about 6 s) with the pointer moving every step uses under its main-thread CPU and step budgets',
     { annotation: HOVER_FLOW },
     async ({ graphCanvas, graphFlow, graphHost, graphHover, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened in task mode with the hub task chosen', async (): Promise<void> =>
@@ -59,8 +61,8 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
         await graphFlow.expectInked(true);
       });
 
-      await test.step('WHEN the pointer moves 1 px every frame on the hub task for 3 s', async (): Promise<void> =>
-        graphHover.hoverFlowCpu(TARGET_LIKE_HUB_TASK, HOVER_MS));
+      await test.step('WHEN the pointer moves 1 px every step on the hub task for 188 steps, about 6 s', async (): Promise<void> =>
+        graphHover.hoverFlowCpu(TARGET_LIKE_HUB_TASK, HOVER_STEP_SPAN_MS));
 
       await test.step('THEN the flow overlay was still drawing at the end, so the run measured a live flow', async (): Promise<void> =>
         graphFlow.expectInked(true));
@@ -68,7 +70,7 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
       await test.step('AND the hover stayed under the CPU and step budgets', (): void =>
         graphHover.expectHoverCpuUnder(HOVER_FLOW_MS, HOVER_STEP_MS));
 
-      await test.step(`AND Cytoscape drew at most ${RENDER_LIMIT} frames, so the flow stayed on its overlay`, (): void =>
+      await test.step(`AND Cytoscape rendered at most ${RENDER_LIMIT} times, so the flow stayed on its overlay`, (): void =>
         graphHover.expectHoverRendersAtMost(RENDER_LIMIT));
     }
   );
