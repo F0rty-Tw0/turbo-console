@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { atomResultOf } from './atom-result.util.ts';
-import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
-
-type TaskEntry = RunSummary['tasks'][number];
+import type { RunSummaryTask } from '../../shared/turbo/common/turbo.type.ts';
 
 const EXECUTION = { startTime: 1000, endTime: 1500, exitCode: 0 };
 
@@ -11,12 +9,12 @@ const MISS = { status: 'MISS' } as const;
 
 const HIT = { status: 'HIT' } as const;
 
-const MISS_ENTRY: TaskEntry = { taskId: 'pkg#file', execution: EXECUTION, cache: MISS };
+const MISS_ENTRY: RunSummaryTask = { taskId: 'pkg#file', execution: EXECUTION, cache: MISS };
 
-const entryWith = (status: 'HIT' | 'MISS', execution: Partial<TaskEntry['execution']>): TaskEntry => {
+const entryWith = (status: 'HIT' | 'MISS', execution: Partial<RunSummaryTask['execution']>): RunSummaryTask => {
   const merged = { ...EXECUTION, ...execution };
   const cache = status === 'HIT' ? HIT : MISS;
-  const entry: TaskEntry = { ...MISS_ENTRY, execution: merged, cache };
+  const entry: RunSummaryTask = { ...MISS_ENTRY, execution: merged, cache };
 
   return entry;
 };

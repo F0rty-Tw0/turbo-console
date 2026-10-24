@@ -6,7 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import { readAtomResults } from './read-atom-results.ts';
 import { runSummarySchema } from '../../shared/turbo/common/run-summary.schema.ts';
-import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
+import type { RunSummary, RunSummaryTask } from '../../shared/turbo/common/turbo.type.ts';
 import type { AtomResult } from '../common/atom-result.type.ts';
 import type * as runSummaryFiles from '../data-access/run-summary-files.ts';
 import { A, B, C, FILE_IDS, NEWEST_OF_ALL, OLDEST, WITHOUT_RUN_5 } from '../test/common/atom-results.const.ts';
@@ -48,7 +48,7 @@ const RUN_3 = 'run-3-b-only';
 const B_OF_RUN_3: AtomResult = { outcome: 'failed', durationMs: 1085, endedAt: 1792868568133 };
 
 /** The task without its `cache` when it is B, so `runSummarySchema` rejects the whole summary. */
-const withoutCacheOfB = (task: RunSummary['tasks'][number]): Partial<RunSummary['tasks'][number]> => {
+const withoutCacheOfB = (task: RunSummaryTask): Partial<RunSummaryTask> => {
   if (task.taskId !== B) return task;
 
   const { taskId, execution } = task;
