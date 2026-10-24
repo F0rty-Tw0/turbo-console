@@ -50,11 +50,14 @@ export class GraphTaskSelection {
     this.saveSelected(null);
   }
 
-  /** Keeps the latest runs; outside task mode they wait for the repaint on entering, so the hidden panel is not rebuilt. */
+  /**
+   * Keeps the latest runs; outside task mode they wait for the repaint on entering, so the hidden panel is not rebuilt.
+   * Runs leave the highlight as it is, so they never restart an idle flow.
+   */
   public runs(runs: TaskRuns): void {
     this.latestRuns = runs;
 
-    if (this.isEntered) this.repaint();
+    if (this.isEntered) this.refill(this.modelOf());
   }
 
   /** The pointer entered the shown task `id` or left it (`null`); a compound or a task not shown changes nothing. */
@@ -65,7 +68,7 @@ export class GraphTaskSelection {
     if (isUnshown) return;
 
     this.hovered = id;
-    this.deps.view.tasks.paint(highlightTargetOf(this.selectedShown(), this.hovered));
+    this.paint(highlightTargetOf(this.selectedShown(), this.hovered));
   }
 
   /** The tasks now shown; a selected task outside them is saved as no selection. */
@@ -124,10 +127,25 @@ export class GraphTaskSelection {
   private repaint(): void {
     const model = this.modelOf();
     const target = highlightTargetOf(model?.task.id ?? null, this.hovered);
-    const { tasks } = this.deps.view;
 
-    tasks.paint(target);
-    tasks.runStates(this.latestRuns);
+    this.paint(target);
+    this.refill(model);
+  }
+
+  /** Paints the canvas for `target`, then tells the flow whether the painted target has highlighted edges. */
+  private paint(target: string | null): void {
+    const { view, onHighlight } = this.deps;
+
+    view.tasks.paint(target);
+
+    const litEdges = view.flowEdges();
+    const isOn = target !== null && litEdges.length > 0;
+
+    onHighlight(isOn);
+  }
+
+  private refill(model: TaskDetailsModel | null): void {
+    this.deps.view.tasks.runStates(this.latestRuns);
     this.details.show(model);
     this.widgets.show(model);
   }

@@ -64,7 +64,12 @@ describe('FEATURE: viewHandlersOf', () => {
       const selection = { tapNode: selectTask, clear: clearTask, rendered: taskRendered };
       const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera, hover: hoverTask, selection };
 
-      handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks });
+      const viewportChanged = (): void => {
+        calls.push('flow cleared');
+      };
+      const flow = { viewportChanged };
+
+      handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks, flow: () => flow });
     });
 
     it('WHEN a frame renders THEN the frame clock is marked before the filtering hears of it', () => {
@@ -119,6 +124,12 @@ describe('FEATURE: viewHandlersOf', () => {
       handlers.onViewport();
 
       expect(saveViewport).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the viewport moves THEN the flow overlay is cleared', () => {
+      handlers.onViewport();
+
+      expect(calls).toStrictEqual(['flow cleared']);
     });
 
     it('WHEN a node is hovered in package mode THEN task mode hears nothing', () => {
@@ -185,6 +196,12 @@ describe('FEATURE: viewHandlersOf', () => {
 
         expect(saveCamera).toHaveBeenCalledOnce();
         expect(saveViewport).not.toHaveBeenCalled();
+      });
+
+      it('WHEN the viewport moves THEN the flow overlay is cleared', () => {
+        handlers.onViewport();
+
+        expect(calls).toStrictEqual(['flow cleared']);
       });
 
       it('WHEN a frame renders THEN the frame clock is marked before the task selection hears of it', () => {

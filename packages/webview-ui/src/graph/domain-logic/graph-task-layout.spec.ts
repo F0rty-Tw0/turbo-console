@@ -53,6 +53,23 @@ describe('FEATURE: GraphTaskLayout', () => {
     layout = new GraphTaskLayout({ ...rig.deps, saved: (): null => null, onPlaced: vi.fn() });
   });
 
+  describe('GIVEN the flow overlay', () => {
+    it('WHEN a layout lands THEN the flow stops before the canvas draws it', async () => {
+      await land('k0');
+
+      const stoppedAt = rig.flow.stop.mock.invocationCallOrder[0] ?? Number.NaN;
+      const shownAt = rig.view.tasks.show.mock.invocationCallOrder[0] ?? Number.NaN;
+
+      expect(stoppedAt).toBeLessThan(shownAt);
+    });
+
+    it('WHEN the task canvas is cleared THEN the flow stops', () => {
+      layout.clear();
+
+      expect(rig.flow.stop).toHaveBeenCalledOnce();
+    });
+  });
+
   describe('GIVEN as many layouts landed as page memory keeps', () => {
     beforeEach(async () => {
       await landEach(TASK_LAYOUT_MEMORY);

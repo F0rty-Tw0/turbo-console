@@ -3,6 +3,7 @@ import type { Mock, Mocked } from 'vitest';
 import type { LayoutRuns } from './graph-layouts.type.ts';
 import type { WebviewMessage } from '../../../bridge/common/details-message.type.ts';
 import type { GraphWebviewMessage } from '../../../bridge/common/graph-message.type.ts';
+import type { FlowControl } from '../../common/flow.type.ts';
 import type { FrameClock } from '../../common/frame-clock.type.ts';
 import type { LayoutScreen } from '../../common/graph-layouts.type.ts';
 import type { PageElements } from '../../common/graph-page.type.ts';
@@ -32,6 +33,8 @@ export type TaskModeRig = {
   readonly details: Mocked<TaskDetails>;
   readonly onExit: Mock<() => void>;
   readonly onFailure: Mock<(error: unknown) => void>;
+  /** The flow overlay; `deps.onHighlight` is its `highlightChanged`. */
+  readonly flow: Mocked<FlowControl>;
   /** Called once by task mode with the panel's actions. */
   readonly panelOf: Mock<TaskModeDeps['panelOf']>;
   /** Called once by task mode with the Controls' actions. */

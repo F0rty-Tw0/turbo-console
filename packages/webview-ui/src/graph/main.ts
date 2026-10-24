@@ -1,5 +1,7 @@
 import type { DetailsViews } from './common/details.type.ts';
-import type { GraphViewFactory, NodeSizer, TextMeasure } from './common/graph-page.type.ts';
+import { REDUCED_MOTION_QUERY } from './common/flow.const.ts';
+import type { FlowControl, FlowEdgeGeometry } from './common/flow.type.ts';
+import type { FlowFactory, GraphView, GraphViewFactory, NodeSizer, TextMeasure, Viewport } from './common/graph-page.type.ts';
 import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { NodeSize } from './common/node-size.type.ts';
 import type { TaskControlsViews } from './common/task-controls.type.ts';
@@ -14,6 +16,7 @@ import { createGraphView } from './data-access/graph-view.ts';
 import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
+import { GraphFlow } from './domain-logic/graph-flow.ts';
 import { breadcrumbLine, buildBreadcrumb } from './ui/breadcrumb-elements.ts';
 import { buildControls } from './ui/controls-elements.ts';
 import { buildDetails } from './ui/details-elements.ts';
@@ -25,6 +28,7 @@ import { linkView } from './ui/details-link.ts';
 import { packageView } from './ui/details-package.ts';
 import { candidateItems, pickingView } from './ui/details-picking.ts';
 import { stepItems, traceView } from './ui/details-trace.ts';
+import { fitFlowCanvas } from './ui/flow-canvas.ts';
 import { buildPage } from './ui/page-elements.ts';
 import { buildTaskControls, buildTaskRow } from './ui/task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from './ui/task-details-elements.ts';
@@ -102,10 +106,28 @@ const widgetViews: WidgetViews = {
 const taskViews: TaskControlsViews = { build: buildTaskControls, row: buildTaskRow };
 const taskDetailsViews: TaskDetailsViews = { panel: buildTaskDetailsPanel, empty: buildTaskDetailsEmpty, view: buildTaskDetails };
 const overlay = window.matchMedia(OVERLAY_MEDIA_QUERY);
+const reducedMotion = window.matchMedia(REDUCED_MOTION_QUERY);
+const createFlow: FlowFactory = (view: GraphView): FlowControl => {
+  const flow = new GraphFlow({
+    canvas: page.flow,
+    container: page.container,
+    edges: (): FlowEdgeGeometry[] => view.flowEdges(),
+    viewport: (): Viewport => view.viewport(),
+    now,
+    frame: (run: () => void): number => requestAnimationFrame(run),
+    cancelFrame: (id: number): void => cancelAnimationFrame(id),
+    after: (run: () => void, ms: number): number => window.setTimeout(run, ms),
+    cancelAfter: (id: number): void => window.clearTimeout(id),
+    isReduced: (): boolean => reducedMotion.matches
+  });
+
+  return flow;
+};
 const controller = createGraphController({
   bridge,
   page,
   createView,
+  createFlow,
   runner,
   saver,
   sizeOf: labelSizer(measure),
@@ -124,6 +146,7 @@ const applyTheme = (): void => {
   const colors = themeColors();
 
   controller.view.applyTheme(colors);
+  controller.flow.setColor(colors.highlighted);
 };
 
 const flushWhenHidden = (): void => {
@@ -131,9 +154,11 @@ const flushWhenHidden = (): void => {
 };
 
 const themeObserver = new MutationObserver(applyTheme);
+const flowSizer = new ResizeObserver((): void => fitFlowCanvas(page.flow, page.container));
 
 applyTheme();
 themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+flowSizer.observe(page.container);
 document.addEventListener('visibilitychange', flushWhenHidden);
 addEventListener('pagehide', saver.flush);
 bridge.onMessage(controller.receive);

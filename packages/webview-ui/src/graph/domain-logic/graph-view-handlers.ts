@@ -1,4 +1,5 @@
 import type { Positions } from '../../bridge/common/graph-state.type.ts';
+import type { FlowControl } from '../common/flow.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
@@ -46,6 +47,7 @@ type ViewHandlerTargets = {
   readonly filtering: () => HandledFiltering;
   readonly layouts: () => HandledLayouts;
   readonly tasks: () => HandledTasks;
+  readonly flow: () => Pick<FlowControl, 'viewportChanged'>;
 };
 
 const BACKGROUND: InspectionInput = { kind: 'background' };
@@ -55,10 +57,10 @@ const NOTHING = (): void => undefined;
 /**
  * Routes each Cytoscape event by mode: in package mode to the inspection, the folders or the layouts; in task mode a
  * drag, a camera move, a node tap, a background tap and a frame to task mode, and every other tap to nothing. Every frame
- * marks the frame clock first.
+ * marks the frame clock first; every camera move clears the flow overlay first.
  */
 export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers => {
-  const { frames, filtering, layouts, tasks } = targets;
+  const { frames, filtering, layouts, tasks, flow } = targets;
   const byMode = <Args extends unknown[]>(
     onPackages: (...args: Args) => void,
     onTasks: (...args: Args) => void = NOTHING
@@ -72,6 +74,10 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
 
     return handle;
   };
+  const saveViewport = byMode(
+    (): void => filtering().inspection.saveViewport(),
+    (): void => tasks().saveCamera()
+  );
   const handlers: GraphViewHandlers = {
     onTapNode: byMode(
       (name: string): void => filtering().inspection.tapNode(name),
@@ -89,10 +95,10 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
       (positions: Positions): void => layouts().dragged(positions),
       (): void => tasks().dragged()
     ),
-    onViewport: byMode(
-      (): void => filtering().inspection.saveViewport(),
-      (): void => tasks().saveCamera()
-    ),
+    onViewport: (): void => {
+      flow().viewportChanged();
+      saveViewport();
+    },
     onHoverNode: byMode<[string | null]>(NOTHING, (id: string | null): void => tasks().hover(id)),
     onRender: (): void => {
       const isTaskMode = tasks().isActive();

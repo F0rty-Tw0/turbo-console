@@ -1,3 +1,4 @@
+import type { FlowControl } from './flow.type.ts';
 import type { FrameClock } from './frame-clock.type.ts';
 import type { GraphInspectionDeps } from './graph-inspection.type.ts';
 import type { LayoutScreen } from './graph-layouts.type.ts';
@@ -43,7 +44,7 @@ export type PackageSideHooks = {
 };
 
 /** The canvas calls task mode makes: the task canvas, the camera and a re-measure after a panel change. */
-export type TaskView = Pick<GraphView, 'tasks' | 'fit' | 'setViewport' | 'viewport' | 'resize'>;
+export type TaskView = Pick<GraphView, 'tasks' | 'fit' | 'setViewport' | 'viewport' | 'resize' | 'flowEdges'>;
 
 /** The task mode lines above the canvas, built once by `buildPage`, all hidden in package mode. */
 export type TaskScreenElements = {
@@ -97,6 +98,10 @@ export type TaskModeDeps = {
   readonly detailsOf: (actions: TaskDetailsActions) => TaskDetails;
   /** Builds the selected task's "…" and its menu over the widget layer. */
   readonly widgetsOf: () => TaskWidgets;
+  /** The flow overlay, stopped as a layout is placed or the task canvas empties. */
+  readonly flow: Pick<FlowControl, 'stop'>;
+  /** After each task canvas paint: tells the flow overlay whether the painted target has highlighted edges. */
+  readonly onHighlight: (isOn: boolean) => void;
 };
 
 /** What a task panel's open or close touches: the canvas, re-measured, and the saved open state. */
@@ -122,6 +127,8 @@ export type TaskModeHooks = {
   readonly onExit: () => void;
   /** The page now shows a message instead of the graph, as `PackageSideHooks.onMessage`. */
   readonly onMessage: () => void;
+  /** The controller-built flow overlay. */
+  readonly flow: FlowControl;
 };
 
 /** The asked-for ids that match a task, once each in the order asked, and how many matched none. */

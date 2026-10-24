@@ -47,10 +47,11 @@ export class GraphTaskLayout {
     if (request !== null) await this.guard(request, async (): Promise<void> => this.layOut(request, false));
   }
 
-  /** Empties the task canvas and forgets the key asked for, so a run still in flight lands on nothing. */
+  /** Stops the flow, empties the task canvas and forgets the key asked for, so a run still in flight lands on nothing. */
   public clear(): void {
     this.wanted = null;
     this.placed = null;
+    this.deps.flow.stop();
     this.deps.view.tasks.clear();
   }
 
@@ -118,12 +119,13 @@ export class GraphTaskLayout {
     this.place(request, result, canRestore);
   }
 
-  /** Draws the layout, restores the saved camera when its key is this one (else fits), then arms the frame clock. */
+  /** Stops the flow, draws the layout, restores the saved camera when its key is this one (else fits), then arms the frame clock. */
   private place(request: TaskLayoutRequest, result: LayoutResult, canRestore: boolean): void {
-    const { view, screen, frames, sizeOf } = this.deps;
+    const { view, screen, frames, sizeOf, flow } = this.deps;
     const saved = this.deps.saved();
     const isSavedCamera = canRestore && saved?.layoutKey === request.key;
 
+    flow.stop();
     view.tasks.show({ tasks: request.tasks, positions: result.positions, sizeOf });
     this.placed = result;
     screen.showNotice(engineNoticeOf(result.engine));

@@ -1,7 +1,7 @@
-import type { NodeStates } from './common/graph.type.ts';
 import { test } from './graph-task.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
+import { TARGET_LIKE_NORMAL_SHOWN, allNormal, targetLikeLitStatesOf } from './test/utils/graph-target-like-lit.spec.util.ts';
 import { TARGET_LIKE_CHOSEN_TASK, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 
@@ -11,35 +11,6 @@ const RF5 = { description: 'M4-5a Review Focus 5', type: 'requirement' };
 
 const TARGET_LIKE_HASH = '7a7a7a7b';
 
-/** The own tasks of `lib-3#build` in the shown set; each needs only `lib-3#build`, which needs `hub#build`. */
-const OWN_TASKS = ['lib-3#docs', 'lib-3#pack', 'lib-3#test', 'lib-3#typecheck'];
-
-const SHOWN_IDS = ['feat-2#build', 'feat-3#build', 'hub#build', 'lib-3#build', ...OWN_TASKS];
-
-const COMPOUND_IDS = ['pkg:feat-2', 'pkg:feat-3', 'pkg:hub', 'pkg:lib-3'];
-
-const allNormal = (ids: string[]): NodeStates => Object.fromEntries(ids.map((id): [string, 'normal'] => [id, 'normal']));
-
-/** `leaf` selected, its two dependencies highlighted, the other own tasks and both dependents dimmed. */
-const litStatesOf = (leaf: string): NodeStates => {
-  const own = Object.fromEntries(OWN_TASKS.map((id): [string, 'selected' | 'dimmed'] => [id, id === leaf ? 'selected' : 'dimmed']));
-  const states: NodeStates = {
-    ...own,
-    'feat-2#build': 'dimmed',
-    'feat-3#build': 'dimmed',
-    'hub#build': 'highlighted',
-    'lib-3#build': 'highlighted',
-    'pkg:feat-2': 'dimmed',
-    'pkg:feat-3': 'dimmed',
-    'pkg:hub': 'normal',
-    'pkg:lib-3': 'normal'
-  };
-
-  return states;
-};
-
-const NORMAL_SHOWN = allNormal([...SHOWN_IDS, ...COMPOUND_IDS]);
-
 const PACKAGES = stateNamesOf(CONTROLS_CACHED_STUB);
 
 test.describe('FEATURE: graph task hover', () => {
@@ -47,7 +18,7 @@ test.describe('FEATURE: graph task hover', () => {
     test.beforeEach(async ({ graphHost, graphPage, graphProbe }): Promise<void> => {
       await graphPage.open({ savedState: taskSavedState(TARGET_LIKE_HASH, { chosen: [TARGET_LIKE_CHOSEN_TASK] }) });
       await graphHost.sendState(targetLikeTasksState());
-      await graphProbe.expectNodeStates(NORMAL_SHOWN);
+      await graphProbe.expectNodeStates(TARGET_LIKE_NORMAL_SHOWN);
     });
 
     test(
@@ -57,11 +28,12 @@ test.describe('FEATURE: graph task hover', () => {
         await test.step('WHEN lib-3#test is hovered', async (): Promise<void> => graphHover.overNode('lib-3#test'));
 
         await test.step('THEN it reads selected, its chain highlighted and the rest dimmed', async (): Promise<void> =>
-          graphProbe.expectNodeStates(litStatesOf('lib-3#test')));
+          graphProbe.expectNodeStates(targetLikeLitStatesOf('lib-3#test')));
 
         await test.step('WHEN the pointer leaves', async (): Promise<void> => graphHover.overBackground());
 
-        await test.step('THEN every node reads normal', async (): Promise<void> => graphProbe.expectNodeStates(NORMAL_SHOWN));
+        await test.step('THEN every node reads normal', async (): Promise<void> =>
+          graphProbe.expectNodeStates(TARGET_LIKE_NORMAL_SHOWN));
       }
     );
 
@@ -77,7 +49,7 @@ test.describe('FEATURE: graph task hover', () => {
         await test.step('AND lib-3#docs is hovered', async (): Promise<void> => graphHover.overNode('lib-3#docs'));
 
         await test.step('THEN the canvas lights lib-3#docs while the panel still reads test', async (): Promise<void> => {
-          await graphProbe.expectNodeStates(litStatesOf('lib-3#docs'));
+          await graphProbe.expectNodeStates(targetLikeLitStatesOf('lib-3#docs'));
           await graphTaskDetails.expectTask('test', 'test');
         });
 
@@ -88,7 +60,7 @@ test.describe('FEATURE: graph task hover', () => {
         });
 
         await test.step('THEN lib-3#pack stays highlighted and the panel reads pack', async (): Promise<void> => {
-          await graphProbe.expectNodeStates(litStatesOf('lib-3#pack'));
+          await graphProbe.expectNodeStates(targetLikeLitStatesOf('lib-3#pack'));
           await graphTaskDetails.expectTask('pack', 'pack');
         });
       }

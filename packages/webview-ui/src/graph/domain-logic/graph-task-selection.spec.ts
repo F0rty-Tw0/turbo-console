@@ -3,6 +3,7 @@ import type { Mock, Mocked } from 'vitest';
 
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { TaskCanvas } from '../common/task-canvas.type.ts';
 import type { TaskDetails, TaskDetailsActions, TaskDetailsModel, TaskRuns, TaskWidgets } from '../common/task-details.type.ts';
 import { taskDetailsMock, taskWidgetsMock } from '../test/mocks/graph-task-mode.mock.ts';
@@ -42,7 +43,7 @@ describe('FEATURE: GraphTaskSelection', () => {
   beforeEach(() => {
     rig = rigOf();
 
-    const view = { tasks: rig.canvas };
+    const view = { tasks: rig.canvas, flowEdges: (): FlowEdgeGeometry[] => [] };
 
     selection = new GraphTaskSelection({
       view,
@@ -53,7 +54,8 @@ describe('FEATURE: GraphTaskSelection', () => {
       },
       widgetsOf: (): TaskWidgets => rig.widgets,
       task: rig.view,
-      save: rig.save
+      save: rig.save,
+      onHighlight: vi.fn<(isOn: boolean) => void>()
     });
     selection.setShown(TASK_CHAIN_STUB);
   });

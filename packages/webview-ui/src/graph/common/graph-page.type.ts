@@ -2,6 +2,7 @@ import type { Core } from 'cytoscape';
 
 import type { ControlsElements } from './controls-elements.type.ts';
 import type { DetailsViews } from './details.type.ts';
+import type { FlowControl, FlowEdgeGeometry } from './flow.type.ts';
 import type { FolderGroup } from './folder-group.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
 import type { GhostMarks } from './ghost.type.ts';
@@ -50,9 +51,11 @@ export type PageElements = {
   readonly message: HTMLElement;
   readonly messageText: HTMLElement;
   readonly reload: HTMLButtonElement;
-  /** `div.graph-body`: the controls panel, once a graph shows, the container, the widget layer, then the details panel. */
+  /** `div.graph-body`: the controls panel, once a graph shows, the container, the flow overlay, the widget layer, then the details panel. */
   readonly body: HTMLElement;
   readonly container: HTMLElement;
+  /** `canvas.graph-flow`: the moving dashes over the highlighted task edges, under the widget layer; `aria-hidden`. */
+  readonly flow: HTMLCanvasElement;
   /** `div.graph-widgets`: the canvas widgets' layer over the container, its DOM sibling right after it. */
   readonly widgets: HTMLElement;
 };
@@ -153,6 +156,8 @@ export type GraphView = {
   readonly widgetRects: (selected: string | null) => WidgetRects;
   /** The whole graph as a PNG, base64 with no data-URI prefix, folder titles drawn on the boxes; throws when the canvas cannot render it. */
   readonly exportPng: (bg: string) => string;
+  /** The highlighted edges drawn now, in model coordinates, for the flow overlay. */
+  readonly flowEdges: () => FlowEdgeGeometry[];
   /** For the test probe only. */
   readonly cy: () => Core;
   /** The task graph on the same core; task mode draws here, and package mode never draws at once. */
@@ -161,10 +166,14 @@ export type GraphView = {
 
 export type GraphViewFactory = (container: HTMLElement, handlers: GraphViewHandlers) => GraphView;
 
+export type FlowFactory = (view: GraphView) => FlowControl;
+
 export type GraphControllerDeps = {
   readonly bridge: Bridge;
   readonly page: PageElements;
   readonly createView: GraphViewFactory;
+  /** Builds the flow overlay over the view, once, right after `createView`. */
+  readonly createFlow: FlowFactory;
   readonly runner: LayoutRunner;
   readonly saver: ViewStateSaver;
   readonly sizeOf: NodeSizer;
@@ -198,5 +207,6 @@ export type DrawnGraph = {
 export type GraphController = {
   readonly receive: (message: unknown) => void;
   readonly view: GraphView;
+  readonly flow: FlowControl;
   readonly facts: ProbeFacts;
 };
