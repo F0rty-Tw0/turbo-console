@@ -15,12 +15,12 @@ const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => sav
 
 test.describe('FEATURE: folder widget layer', () => {
   test(
-    'GIVEN the boards grouped, the layer follows the container and each box has a header row',
+    'GIVEN the boards grouped, the flow overlay and the layer follow the container and each box has a header row',
     { annotation: C9 },
     async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => graphFolderInspect.open(grouped(), BOARDS));
 
-      await test.step("THEN the layer is the container's next sibling over the container's rect", async (): Promise<void> =>
+      await test.step("THEN the flow overlay then the layer follow the container, the layer over the container's rect", async (): Promise<void> =>
         graphWidgets.expectLayerAfterContainer());
 
       await test.step('AND apps has a header row with its title and 2 packages', async (): Promise<void> =>

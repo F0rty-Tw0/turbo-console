@@ -39,6 +39,7 @@ export class GraphWidgetsPage {
   protected readonly aside: Locator;
   protected readonly canvas: GraphCanvas;
   protected readonly container: Locator;
+  protected readonly flow: Locator;
   protected readonly folders: GraphFoldersPage;
   protected readonly page: Page;
   protected readonly probe: GraphProbePage;
@@ -49,6 +50,7 @@ export class GraphWidgetsPage {
     this.folders = new GraphFoldersPage(page);
     this.probe = new GraphProbePage(page);
     this.layer = page.locator('.graph-widgets');
+    this.flow = page.locator('.graph-flow');
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
     this.aside = page.getByRole('complementary', { name: DETAILS_LABEL, exact: true });
   }
@@ -82,10 +84,11 @@ export class GraphWidgetsPage {
     await this.canvas.panBy(dx, 0);
   }
 
-  /** The layer is the container's next sibling and covers exactly the container's rect. */
+  /** The flow overlay is the container's next sibling, the layer is the overlay's, and the layer covers exactly the container's rect. */
   public async expectLayerAfterContainer(): Promise<void> {
     await expect(this.layer).toBeAttached();
-    await expect.poll(async (): Promise<boolean> => this.container.evaluate(isNextSiblingOf, 'graph-widgets')).toBe(true);
+    await expect.poll(async (): Promise<boolean> => this.container.evaluate(isNextSiblingOf, 'graph-flow')).toBe(true);
+    await expect.poll(async (): Promise<boolean> => this.flow.evaluate(isNextSiblingOf, 'graph-widgets')).toBe(true);
     await expect.poll(async (): Promise<string[]> => layerFaultsOf(this.layer, this.container)).toEqual([]);
   }
 
