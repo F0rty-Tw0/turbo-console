@@ -1,17 +1,30 @@
 import type { PackageNode, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { taskRowOf, taskRows } from './task-rows.util.ts';
-import { ATOM_VIEW_STUB, A_FILE_STUB, E2E_PACKAGE_STUB, SPACED_FILE_STUB } from '../test/stubs/atom-view.stub.ts';
+import { taskChildRows, taskRowOf, taskRows } from './task-rows.util.ts';
+import {
+  ATOM_VIEW_STUB,
+  A_FILE_STUB,
+  E2E_PACKAGE_STUB,
+  LIVE_FILE_STUB,
+  SMOKE_FILE_STUB,
+  SPACED_FILE_STUB,
+  TWO_GROUP_PACKAGE_STUB,
+  TWO_GROUP_VIEW_STUB
+} from '../test/stubs/atom-view.stub.ts';
 import { ROW_SCOPE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { atomContextOf } from '../test/utils/atom-context.spec.util.ts';
 import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const CONTEXT = atomContextOf(ATOM_VIEW_STUB);
 
+const TWO_GROUP_CONTEXT = atomContextOf(TWO_GROUP_VIEW_STUB);
+
 const AGGREGATE_ID = 'e2e#e2e-ci--all';
 
 const UMBRELLA_ID = 'e2e#e2e-ci';
+
+const SMOKE_UMBRELLA_ID = 'e2e#e2e-smoke';
 
 const OTHER_GROUP: TaskNode['atom'] = { group: 'other', isLive: false };
 
@@ -99,6 +112,36 @@ describe('FEATURE: task rows of a package with Atomizer groups', () => {
 
     it('WHEN an unknown id is looked up THEN it has no row', () => {
       expect(taskRowOf(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, 'e2e#nope', CONTEXT)).toBeUndefined();
+    });
+  });
+
+  describe('GIVEN a package holding two groups', () => {
+    it('WHEN listed THEN each umbrella is collapsible and both aggregates are hidden', () => {
+      const rows = taskRows(ROW_SCOPE_STUB, TWO_GROUP_PACKAGE_STUB, TWO_GROUP_CONTEXT);
+
+      expect(rows.map((row) => [row.key, row.collapsible])).toStrictEqual([
+        ['e2e#build', 'none'],
+        [UMBRELLA_ID, 'collapsed'],
+        [SMOKE_UMBRELLA_ID, 'collapsed']
+      ]);
+    });
+
+    it('WHEN the first umbrella is opened THEN only its own files show', () => {
+      const rows = taskChildRows(ROW_SCOPE_STUB, TWO_GROUP_PACKAGE_STUB, UMBRELLA_ID, TWO_GROUP_CONTEXT);
+
+      expect(rows.map((row) => row.key)).toStrictEqual([A_FILE_STUB.task.id, SPACED_FILE_STUB.task.id, LIVE_FILE_STUB.task.id]);
+    });
+
+    it('WHEN the second umbrella is opened THEN only its own file shows', () => {
+      const rows = taskChildRows(ROW_SCOPE_STUB, TWO_GROUP_PACKAGE_STUB, SMOKE_UMBRELLA_ID, TWO_GROUP_CONTEXT);
+
+      expect(rows.map((row) => row.key)).toStrictEqual([SMOKE_FILE_STUB.task.id]);
+    });
+
+    it('WHEN a file of the second group is looked up THEN its file row comes back', () => {
+      const row = taskRowOf(ROW_SCOPE_STUB, TWO_GROUP_PACKAGE_STUB, SMOKE_FILE_STUB.task.id, TWO_GROUP_CONTEXT);
+
+      expect([row?.label, row?.contextValue]).toStrictEqual(['tests/smoke.spec.ts', 'turboTask.atomFile']);
     });
   });
 });

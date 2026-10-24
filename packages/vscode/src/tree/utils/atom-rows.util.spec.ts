@@ -11,7 +11,10 @@ import {
   A_FILE_STUB,
   E2E_PACKAGE_STUB,
   LIVE_FILE_STUB,
-  SPACED_FILE_STUB
+  SMOKE_FILE_STUB,
+  SPACED_FILE_STUB,
+  TWO_GROUP_PACKAGE_STUB,
+  TWO_GROUP_VIEW_STUB
 } from '../test/stubs/atom-view.stub.ts';
 import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { atomContextOf } from '../test/utils/atom-context.spec.util.ts';
@@ -154,6 +157,14 @@ describe('FEATURE: atom file rows of a package', () => {
       const rows = packageFileRows(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, atomContextOf(ATOM_VIEW_STUB));
 
       expect(rows.map((row) => row.key)).toStrictEqual([A_ID, B_ID, LIVE_ID]);
+    });
+  });
+
+  describe('GIVEN a package with two groups', () => {
+    it('WHEN the package file rows are built THEN the files of both groups are rows', () => {
+      const rows = packageFileRows(ROW_SCOPE_STUB, TWO_GROUP_PACKAGE_STUB, atomContextOf(TWO_GROUP_VIEW_STUB));
+
+      expect(rows.map((row) => row.key)).toStrictEqual([A_ID, B_ID, LIVE_ID, SMOKE_FILE_STUB.task.id]);
     });
   });
 

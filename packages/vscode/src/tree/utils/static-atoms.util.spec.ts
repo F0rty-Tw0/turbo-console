@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { staticAtomLookup } from './static-atoms.util.ts';
 import { NO_ATOMS } from '../common/atom.const.ts';
-import { ATOM_MODEL_STUB } from '../test/stubs/atom-view.stub.ts';
+import { ATOM_GROUP_STUB, ATOM_MODEL_STUB, SMOKE_GROUP_STUB, TWO_GROUP_MODEL_STUB } from '../test/stubs/atom-view.stub.ts';
 
 describe('FEATURE: static atom lookup', () => {
   describe('GIVEN a model holding the group of package e2e', () => {
@@ -12,16 +12,28 @@ describe('FEATURE: static atom lookup', () => {
       expect(lookup('/ws', 'e2e')).toBe(lookup('/ws', 'e2e'));
     });
 
-    it('WHEN the package is read THEN its group lists three files and nothing is loaded', () => {
-      const view = lookup('/ws', 'e2e');
+    it('WHEN the package is read THEN its group lists three files', () => {
+      expect(lookup('/ws', 'e2e').groups[0]?.files).toHaveLength(3);
+    });
 
-      expect(view.groups[0]?.files).toHaveLength(3);
-      expect(view.dryRun).toBeNull();
-      expect(view.results).toBeNull();
+    it('WHEN the package is read THEN no dry run is loaded', () => {
+      expect(lookup('/ws', 'e2e').dryRun).toBeNull();
+    });
+
+    it('WHEN the package is read THEN no results are loaded', () => {
+      expect(lookup('/ws', 'e2e').results).toBeNull();
     });
 
     it('WHEN a package without groups is read THEN no groups come back', () => {
       expect(lookup('/ws', 'build-only').groups).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN a model whose package e2e holds two groups', () => {
+    it('WHEN the package is read THEN both groups come back in order', () => {
+      const lookup = staticAtomLookup(() => TWO_GROUP_MODEL_STUB);
+
+      expect(lookup('/ws', 'e2e').groups).toStrictEqual([ATOM_GROUP_STUB, SMOKE_GROUP_STUB]);
     });
   });
 

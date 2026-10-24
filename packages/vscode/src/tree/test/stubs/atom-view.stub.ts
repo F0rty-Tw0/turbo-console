@@ -73,3 +73,43 @@ export const ATOM_GROUP_STUB: AtomGroup = {
 export const ATOM_VIEW_STUB: AtomView = { groups: [ATOM_GROUP_STUB], dryRun: null, results: null };
 
 export const ATOM_MODEL_STUB: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [E2E_PACKAGE_STUB] };
+
+const SMOKE_ATOM: NonNullable<TaskNode['atom']> = { group: 'e2e-smoke', isLive: false };
+
+const SMOKE_UMBRELLA_TASK: TaskNode = {
+  ...TASK_NODE_STUB,
+  id: 'e2e#e2e-smoke',
+  name: 'e2e-smoke',
+  kind: 'atom-umbrella',
+  atom: SMOKE_ATOM
+};
+
+const SMOKE_AGGREGATE_TASK: TaskNode = {
+  ...TASK_NODE_STUB,
+  id: 'e2e#e2e-smoke--all',
+  name: 'e2e-smoke--all',
+  kind: 'atom-aggregate',
+  atom: SMOKE_ATOM
+};
+
+const SMOKE_TASK: TaskNode = {
+  ...TASK_NODE_STUB,
+  id: 'e2e#e2e-smoke--tests/smoke.spec.ts',
+  name: 'e2e-smoke--tests/smoke.spec.ts',
+  kind: 'atom-file',
+  atom: SMOKE_ATOM
+};
+
+export const SMOKE_FILE_STUB: AtomFile = { task: SMOKE_TASK, specPath: 'tests/smoke.spec.ts', isLive: false };
+
+export const SMOKE_GROUP_STUB: AtomGroup = { packageName: 'e2e', umbrella: SMOKE_UMBRELLA_TASK, files: [SMOKE_FILE_STUB] };
+
+/** Package `e2e` holding two groups: `e2e-ci` of `E2E_PACKAGE_STUB`, then `e2e-smoke` with one file. */
+export const TWO_GROUP_PACKAGE_STUB: PackageNode = {
+  ...E2E_PACKAGE_STUB,
+  tasks: [...E2E_PACKAGE_STUB.tasks, SMOKE_UMBRELLA_TASK, SMOKE_AGGREGATE_TASK, SMOKE_TASK]
+};
+
+export const TWO_GROUP_VIEW_STUB: AtomView = { groups: [ATOM_GROUP_STUB, SMOKE_GROUP_STUB], dryRun: null, results: null };
+
+export const TWO_GROUP_MODEL_STUB: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [TWO_GROUP_PACKAGE_STUB] };
