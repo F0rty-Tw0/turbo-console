@@ -1,3 +1,4 @@
+import { packageFileRows } from './atom-rows.util.ts';
 import { dirRows } from './dir-rows.util.ts';
 import { liveOf } from './live-of.util.ts';
 import { rootRows } from './root-rows.util.ts';
@@ -41,7 +42,8 @@ export const allRows = (state: RootState, context: RowContext): TreeRow[] => {
   const dirChildren = dirs.flatMap((dir) => dirRows(root, dir, view, context.scopeShown));
   const shown = Array.from(view.packages.values());
   const tasks = shown.flatMap((pkg) => taskRows(scope, pkg, context));
+  const files = shown.flatMap((pkg) => packageFileRows(scope, pkg, context));
   const scripts = shown.flatMap((pkg) => scriptRows(scope, pkg, context));
 
-  return [...top, ...dirChildren, ...tasks, ...scripts];
+  return [...top, ...dirChildren, ...tasks, ...files, ...scripts];
 };

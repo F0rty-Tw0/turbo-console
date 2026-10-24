@@ -17,7 +17,7 @@ import { runCases } from '../utils/run-cases.spec.util.ts';
 import { countTurboSpawns } from '../utils/spawn-counter.spec.util.ts';
 import { budget, loadsOf, log, markDone, revealTree, rootAt, spanMs, step, turboApi, waitFor } from '../utils/suite-env.spec.util.ts';
 import { readManifest, readSuiteEnv } from '../utils/suite-input.spec.util.ts';
-import { busiestPackage, manifestTree, packageNodeNamed, walkTree } from '../utils/tree-walk.spec.util.ts';
+import { busiestPackage, packageNodeNamed, treeRowsOf, walkTree } from '../utils/tree-walk.spec.util.ts';
 import { watchCases } from '../utils/watch-cases.spec.util.ts';
 import { whenQuiet } from '../utils/watch-wait.spec.util.ts';
 
@@ -120,7 +120,7 @@ export const run = async (): Promise<void> => {
       expand = await expandMs(api, name);
     });
     await step('1: the tree lists every package and visible task', async () => {
-      const expected = manifestTree(manifest);
+      const expected = treeRowsOf(manifest);
       const expectedTasks = Object.values(expected.tasks);
       const hasRows = expected.packages.length > 0 && expectedTasks.length > 0;
       const walked = await walkTree(api);

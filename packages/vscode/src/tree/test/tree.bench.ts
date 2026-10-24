@@ -13,7 +13,6 @@ import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { devTurboPath } from '../../shared/test/utils/dev-turbo.spec.util.ts';
 import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
-import { NO_ATOMS_LOOKUP } from '../common/atom.const.ts';
 import type { ModelView, ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, TreeNode } from '../common/tree-node.type.ts';
 import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
@@ -24,6 +23,7 @@ import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
 import { rowScopeOf } from '../utils/row-scope.util.ts';
 import { isVisibleTurboTask } from '../utils/script-task.util.ts';
+import { staticAtomLookup } from '../utils/static-atoms.util.ts';
 import { taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
@@ -72,7 +72,7 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsS
       live: NOTHING_LIVE,
       now: 0,
       tools,
-      atoms: NO_ATOMS_LOOKUP
+      atoms: staticAtomLookup(() => model)
     };
 
     return allRows(state, context);
@@ -176,7 +176,7 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
     live: runningIds,
     now: TICK_NOW,
     tools,
-    atoms: NO_ATOMS_LOOKUP
+    atoms: staticAtomLookup(() => model)
   };
   const cache = new Map<string, TreeNode>();
   const nodes = entries.map((entry) => nodeFor(cache, entryRowOf(model, entry, context)));
