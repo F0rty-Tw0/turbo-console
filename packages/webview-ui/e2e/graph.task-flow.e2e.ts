@@ -1,6 +1,7 @@
 import type { ElementRect } from './common/playwright.type.ts';
 import { expect, test } from './graph-task.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
+import { colourSwapsOf } from './test/utils/graph-flow-ink.spec.util.ts';
 import { TARGET_LIKE_NORMAL_SHOWN, targetLikeLitStatesOf } from './test/utils/graph-target-like-lit.spec.util.ts';
 import { TARGET_LIKE_CHOSEN_TASK, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
@@ -14,6 +15,8 @@ const TARGET_LIKE_HASH = '7a7a7a7b';
 
 /** `lib-3#test` needs `lib-3#build`, which needs `hub#build`: two straight highlighted edges. */
 const LEAF = 'lib-3#test';
+
+const LEAF_DEPENDENCY = 'lib-3#build';
 
 /** One dash cycle (`FLOW_CYCLE_MS`), so two samples this far apart show the dashes at the same phase. */
 const CYCLE_MS = 160;
@@ -52,6 +55,35 @@ test.describe('FEATURE: graph task flow', () => {
         expect(later).not.toBe(earlier);
       });
     });
+
+    test(
+      'on screen the flow shows as background-coloured dashes moving along the highlighted edge',
+      { annotation: FLOW },
+      async ({ graphFlow }): Promise<void> => {
+        let earlier = '';
+        let later = '';
+
+        await test.step('WHEN lib-3#test is hovered, a frame draws and its edge to lib-3#build is read', async (): Promise<void> => {
+          await graphFlow.hover(LEAF);
+          await graphFlow.tick(16);
+          earlier = await graphFlow.edgeColours(LEAF, LEAF_DEPENDENCY);
+        });
+
+        await test.step('AND 80 ms later it is read again', async (): Promise<void> => {
+          await graphFlow.tick(80);
+          later = await graphFlow.edgeColours(LEAF, LEAF_DEPENDENCY);
+        });
+
+        await test.step('THEN each reading shows both colours and some pixels swap between them', (): void => {
+          const readings = `${earlier} -> ${later}`;
+          const swaps = colourSwapsOf(earlier, later);
+
+          expect(earlier, readings).toMatch(/h.*b|b.*h/);
+          expect(later, readings).toMatch(/h.*b|b.*h/);
+          expect(swaps, readings).toBeGreaterThan(0);
+        });
+      }
+    );
 
     test(
       'with no pointer move the flow stops after 3 s and stays stopped, the highlight kept',

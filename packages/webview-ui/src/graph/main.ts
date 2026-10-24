@@ -146,7 +146,7 @@ const applyTheme = (): void => {
   const colors = themeColors();
 
   controller.view.applyTheme(colors);
-  controller.flow.setColor(colors.highlighted);
+  controller.flow.setColor(colors.background);
 };
 
 const flushWhenHidden = (): void => {

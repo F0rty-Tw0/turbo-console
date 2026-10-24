@@ -5,11 +5,11 @@ import { GraphProbePage } from './graph-probe.po.ts';
 import { PageClock } from './page-clock.po.ts';
 import { FLOW_CLASS } from '../../src/graph/common/flow.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
-import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
-import type { FlowInk } from '../common/graph-flow.type.ts';
+import { FALLBACK_COLORS, GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
+import type { FlowEdgeShot, FlowInk } from '../common/graph-flow.type.ts';
 import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { readFlowInk } from '../test/utils/graph-flow-ink.spec.util.ts';
+import { readEdgeColours, readFlowInk } from '../test/utils/graph-flow-ink.spec.util.ts';
 import { emptySpotOf } from '../test/utils/graph-geometry.spec.util.ts';
 
 const FRAME_MS = 16;
@@ -18,6 +18,16 @@ const FRAME_MS = 16;
 const NUDGE_PX = 2;
 
 const DRAG_STEPS = 8;
+
+/** One 12 px dash cycle around an edge's middle, a pixel apart. */
+const EDGE_STEPS = Array.from({ length: 13 }, (_, index: number): number => index - 6);
+
+const EDGE_CLIP_HALF_PX = 10;
+
+const EDGE_CLIP_PX = EDGE_CLIP_HALF_PX * 2 + 1;
+
+/** The test page sets no theme variables, so the graph and the overlay draw in the fallback colours. */
+const FLOW_COLORS = { highlighted: FALLBACK_COLORS.highlighted, background: FALLBACK_COLORS.background };
 
 const readImage = (canvas: HTMLCanvasElement): string => canvas.toDataURL();
 
@@ -145,6 +155,37 @@ export class GraphFlowPage {
 
     expect(pointerEvents).toBe('none');
     expect(nextClass).toBe('graph-widgets');
+  }
+
+  /**
+   * A screenshot of the page, the graph canvas and the overlay together, read at the 13 px of the straight edge from
+   * `source` to `target` around its middle: one dash cycle, each `h` for the highlight colour, `b` for the background.
+   */
+  public async edgeColours(source: string, target: string): Promise<string> {
+    const from = await this.nodeOf(source);
+    const to = await this.nodeOf(target);
+    const length = Math.hypot(to.renderedX - from.renderedX, to.renderedY - from.renderedY);
+    const unit: ViewportPoint = { x: (to.renderedX - from.renderedX) / length, y: (to.renderedY - from.renderedY) / length };
+    const middle: ViewportPoint = { x: (from.renderedX + to.renderedX) / 2, y: (from.renderedY + to.renderedY) / 2 };
+    const clip = {
+      x: Math.round(middle.x) - EDGE_CLIP_HALF_PX,
+      y: Math.round(middle.y) - EDGE_CLIP_HALF_PX,
+      width: EDGE_CLIP_PX,
+      height: EDGE_CLIP_PX
+    };
+    const pointOf = (step: number): ViewportPoint => {
+      const point: ViewportPoint = {
+        x: Math.round(middle.x + unit.x * step) - clip.x,
+        y: Math.round(middle.y + unit.y * step) - clip.y
+      };
+
+      return point;
+    };
+    const points = EDGE_STEPS.map(pointOf);
+    const shot = await this.page.screenshot({ clip });
+    const input: FlowEdgeShot = { png: shot.toString('base64'), points, ...FLOW_COLORS };
+
+    return this.page.evaluate(readEdgeColours, input);
   }
 
   private async ink(): Promise<FlowInk> {
