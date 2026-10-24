@@ -9,18 +9,15 @@ import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { FAILED_ICON, PASSED_ICON, SPEC_FILE_ICON } from '../common/icon.const.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
-import type { IconSpec, RowScope, TaskContextValue, TaskDisplay, TreeRow } from '../common/tree-row.type.ts';
+import type { AtomFileContextValue, IconSpec, RowScope, TaskContextValue, TaskDisplay, TreeRow } from '../common/tree-row.type.ts';
 
-/** A file task is a turbo task, so the two script keys are unreachable; they map to the plain file value to keep the record total. */
-const ATOM_FILE_CONTEXTS: Readonly<Record<TaskContextValue, TaskContextValue>> = {
-  turboTask: 'turboTask.atomFile',
+const PLAIN_FILE_CONTEXT: AtomFileContextValue = 'turboTask.atomFile';
+
+/** A file task is a turbo task, so only the turbo values occur; a script value, which cannot, reads as the plain file value. */
+const ATOM_FILE_CONTEXTS: Readonly<Partial<Record<TaskContextValue, AtomFileContextValue>>> = {
+  turboTask: PLAIN_FILE_CONTEXT,
   'turboTask.cached': 'turboTask.cached.atomFile',
-  'turboTask.running': 'turboTask.running.atomFile',
-  'turboTask.atomFile': 'turboTask.atomFile',
-  'turboTask.cached.atomFile': 'turboTask.cached.atomFile',
-  'turboTask.running.atomFile': 'turboTask.running.atomFile',
-  turboScript: 'turboTask.atomFile',
-  'turboScript.running': 'turboTask.atomFile'
+  'turboTask.running': 'turboTask.running.atomFile'
 };
 
 const RESULT_ICONS: Readonly<Record<AtomResult['outcome'], IconSpec>> = {
@@ -85,7 +82,7 @@ export const fileRow = (scope: RowScope, pkg: PackageNode, file: AtomFile, conte
     label: cleanText(file.specPath, LABEL_MAX),
     description: cleanText(shown.description, DESCRIPTION_MAX),
     icon: shown.icon,
-    contextValue: ATOM_FILE_CONTEXTS[shown.contextValue],
+    contextValue: ATOM_FILE_CONTEXTS[shown.contextValue] ?? PLAIN_FILE_CONTEXT,
     collapsible: 'none',
     tooltip,
     command: null
