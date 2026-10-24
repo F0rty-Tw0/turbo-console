@@ -56,6 +56,8 @@ export type { AffectedTasks, DryRun, PackageGraph, RunSummary, TurboVersionRange
 
 export { assertTaskName } from './shared/turbo/utils/turbo-name.util.ts';
 
+export type { AtomFile, AtomGroup } from './workspace/common/atom-group.type.ts';
+
 export type {
   LockfileName,
   PackageEdge,
@@ -68,3 +70,5 @@ export type {
 } from './workspace/common/workspace-model.type.ts';
 
 export { loadWorkspace } from './workspace/domain-logic/load-workspace.ts';
+
+export { atomGroupsOf } from './workspace/utils/atom-groups.util.ts';

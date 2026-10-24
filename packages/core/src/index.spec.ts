@@ -7,6 +7,8 @@ import { PACKAGE_NAME } from './index.ts';
 import type {
   AffectedResult,
   AffectedTasks,
+  AtomFile,
+  AtomGroup,
   CachedWorkspace,
   DryRun,
   DryRunRequest,
@@ -46,6 +48,7 @@ const RUNTIME_EXPORTS = [
   'TurboException',
   'affectedTasksSchema',
   'assertTaskName',
+  'atomGroupsOf',
   'dryRunSchema',
   'isWithin',
   'loadWorkspace',
@@ -87,6 +90,8 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<PackageNode>().toHaveProperty('tasks');
       expectTypeOf<PackageEdge>().toHaveProperty('target');
       expectTypeOf<TaskNode>().toHaveProperty('kind');
+      expectTypeOf<AtomGroup>().toHaveProperty('files');
+      expectTypeOf<AtomFile>().toHaveProperty('specPath');
       expectTypeOf<AffectedResult['mode']>().toEqualTypeOf<'package' | 'task'>();
       expectTypeOf<DryRunState['cache']>().toEqualTypeOf<'HIT' | 'MISS' | 'deferred'>();
       expectTypeOf<DryRunState['definition']>().toEqualTypeOf<TaskDefinition>();
