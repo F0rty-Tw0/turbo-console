@@ -65,6 +65,16 @@ describe('FEATURE: packageActionsOf', () => {
       expect(deps.onExclude).toHaveBeenCalledWith('docs');
       expect(callCountOf(deps) + callCountOf(inspection)).toBe(1);
     });
+
+    it('WHEN showTasks runs for docs THEN only onShowTasks is called with docs', () => {
+      const deps = packageActionsDepsMock('web');
+      const inspection = packageInspectionActionsMock();
+
+      packageActionsOf(deps, inspection).showTasks('docs');
+
+      expect(deps.onShowTasks).toHaveBeenCalledWith('docs');
+      expect(callCountOf(deps) + callCountOf(inspection)).toBe(1);
+    });
   });
 
   it('GIVEN no focused package WHEN clearFocus runs THEN nothing is called', () => {

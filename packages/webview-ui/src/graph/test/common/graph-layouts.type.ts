@@ -14,6 +14,8 @@ export type LayoutRuns = {
   readonly graphOf: (index: number) => ElkNode;
   /** Resolves run `index` with `result`, then lets every reaction to it run. */
   readonly settle: (index: number, result: LayoutResult | null) => Promise<void>;
+  /** Rejects run `index` with `error`, then lets every reaction to it run. */
+  readonly fail: (index: number, error: Error) => Promise<void>;
 };
 
 /** The deps of a `GraphLayouts` under test and the doubles behind them. */

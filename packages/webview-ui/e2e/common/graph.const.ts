@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { WorkerStub } from './graph.type.ts';
 import { HELD_WORKER } from './held-worker.const.ts';
 import { COUNTERS } from './worker-counters.const.ts';
+import { TASK_MODE_LABEL } from '../../src/graph/common/graph-task.const.ts';
 import {
   CLEAR_LABEL,
   CONTROLS_LABEL,
@@ -16,7 +17,7 @@ import {
 export const GRAPH_DIST_DIR = join(import.meta.dirname, '../../dist/graph');
 
 /** Every toolbar button's accessible name, in DOM order. */
-export const TOOLBAR_LABELS = [CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, EXPORT_LABEL, CLEAR_LABEL];
+export const TOOLBAR_LABELS = [TASK_MODE_LABEL, CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, EXPORT_LABEL, CLEAR_LABEL];
 
 /** How far from an edge's drawn segment a click must land to miss it, in CSS pixels. */
 export const EDGE_CLEARANCE_PX = 14;
@@ -37,15 +38,19 @@ export const THEME_VAR_NAMES = [
 /** Init script: opts the page into exposing `window.__tcGraphProbe`. */
 export const PROBE_WANTED = 'window.__tcGraphProbeWanted = true;';
 
-/** Init script: every canvas text measurement throws, as a page whose label sizing broke. */
-export const BROKEN_MEASURE = `CanvasRenderingContext2D.prototype.measureText = () => {
-  throw new Error('measureText is broken');
-};`;
-
 /** The CDP `Performance.getMetrics` entry holding the main thread's CPU time, in seconds. */
 export const THREAD_TIME_METRIC = 'ThreadTime';
 
 export const MS_PER_SECOND = 1000;
+
+/**
+ * macOS runners read the grouped pan 683-1422 ms and the header-rows pan 1559-2842 ms (C58, 2026-10-23, `pan-cpu-ms`
+ * log lines): about 2x spread on one runner image, inferred to be host CPU loss counted as thread time. Their budgets
+ * sit about 1.7x over the worst reading, still under the ~3150 ms an unpatched Cytoscape would read there (inferred);
+ * Linux and Windows keep the tight budgets on the same code and catch a lost patch anyway. Stopgap until C58's
+ * calibrated budget.
+ */
+export const IS_MAC_RUNNER = process.platform === 'darwin';
 
 /** Chromium on macOS fires no `contextmenu` for Shift+F10, so a test that watches that event cannot run there. */
 export const IS_SHIFT_F10_SILENT = process.platform === 'darwin';
@@ -59,6 +64,9 @@ export const BLANK_PAGE = 'data:text/html,<p>blank</p>';
 export const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
 
 export const ONE_FRAME = 'new Promise((resolve) => requestAnimationFrame(resolve))';
+
+/** Every canvas read throws from now on, so an image export fails. */
+export const BREAK_CANVAS_READS = "HTMLCanvasElement.prototype.toDataURL = () => { throw new Error('graph e2e: canvas read'); }";
 
 /** The real worker, counted: each one built, each terminated, and each message any of them sent the page. */
 const REAL_WORKER = `(() => {

@@ -12,6 +12,7 @@ import {
   START_TRACE_LABEL
 } from '../common/details.const.ts';
 import type { NeighbourModel, PackageViewModel } from '../common/details.type.ts';
+import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import { TAGS_LABEL } from '../common/graph.const.ts';
 import { dependenciesTitleOf, dependentsTitleOf, explainLabelOf, openDetailsLabelOf, pathTextOf } from '../utils/details-text.util.ts';
 
@@ -30,6 +31,7 @@ type PackageActions = {
   readonly focus: HTMLButtonElement;
   readonly exclude: HTMLButtonElement;
   readonly startTrace: HTMLButtonElement;
+  readonly showTasks: HTMLButtonElement;
 };
 
 const tagOf = (tag: string): HTMLElement => textElement('li', 'details-tag', tag);
@@ -65,14 +67,15 @@ const actionsOf = (model: PackageViewModel): PackageActions => {
   const focus = actionButton(focusText);
   const exclude = actionButton(EXCLUDE_LABEL);
   const startTrace = actionButton(START_TRACE_LABEL);
+  const showTasks = actionButton(SHOW_TASKS_LABEL);
   const row = textElement('div', 'details-row', '');
 
   if (model.isFocused) exclude.setAttribute('aria-disabled', 'true');
 
-  row.append(focus, exclude, startTrace);
+  row.append(focus, exclude, startTrace, showTasks);
   actions.append(openDetails, row);
 
-  const parts: PackageActions = { actions, openLabel, openDetails, focus, exclude, startTrace };
+  const parts: PackageActions = { actions, openLabel, openDetails, focus, exclude, startTrace, showTasks };
 
   return parts;
 };

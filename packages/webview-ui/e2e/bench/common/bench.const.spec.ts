@@ -9,14 +9,16 @@ const SPEC_NAMES = [
   'graph pan p95 frame target-like',
   'graph open cold large grouped',
   'graph pan cpu large grouped',
-  'graph folder toggle large'
+  'graph folder toggle large',
+  'graph task open target-like',
+  'graph task pan cpu target-like'
 ];
 
 const ROWS = Object.values(BENCH_ROWS);
 
 describe('FEATURE: bench rows', () => {
   describe('GIVEN the table', () => {
-    it('WHEN its names are listed THEN they are the 7 rows of spec 3.1 in order', () => {
+    it("WHEN its names are listed THEN they are the 9 rows: spec 3.1's 7, then the 2 task rows, in order", () => {
       const names = ROWS.map((row): string => row.name);
 
       expect(names).toStrictEqual(SPEC_NAMES);
@@ -46,7 +48,7 @@ describe('FEATURE: bench rows', () => {
     it('WHEN they are listed THEN each row keeps the count the A/A check ran with', () => {
       const samples = ROWS.map((row): number => row.samples);
 
-      expect(samples).toStrictEqual([7, 7, 5, 5, 3, 3, 3]);
+      expect(samples).toStrictEqual([7, 7, 5, 5, 3, 3, 3, 3, 3]);
     });
   });
 
@@ -54,7 +56,14 @@ describe('FEATURE: bench rows', () => {
     it('WHEN they are listed THEN the A/A-checked target-like rows gate and the large rows do not (roadmap Decision 8)', () => {
       const gates = ROWS.map((row): boolean => row.gate);
 
-      expect(gates).toStrictEqual([true, true, true, true, false, false, false]);
+      expect(gates).toStrictEqual([true, true, true, true, false, false, false, false, false]);
+    });
+  });
+
+  describe('GIVEN the task rows', () => {
+    it('WHEN their gates are read THEN neither gates until a CI baseline exists', () => {
+      expect(BENCH_ROWS.taskOpen.gate).toBe(false);
+      expect(BENCH_ROWS.taskPanCpu.gate).toBe(false);
     });
   });
 

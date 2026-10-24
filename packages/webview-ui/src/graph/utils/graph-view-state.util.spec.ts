@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { readGraphViewState } from './graph-view-state.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphFocus, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFocus, GraphViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 const PAN: Position = { x: -10, y: 20 };
 
@@ -42,7 +42,9 @@ const VALID: GraphViewState = {
   trace: TRACE_REF,
   folder: 'apps',
   grouped: true,
-  collapsed: ['apps', '__proto__']
+  collapsed: ['apps', '__proto__'],
+  mode: 'packages',
+  task: null
 };
 
 const CAMERA = { hash: 'h', zoom: 1.5, pan: PAN, selected: 'web' };
@@ -60,7 +62,9 @@ const DEFAULTED: GraphViewState = {
   trace: null,
   folder: null,
   grouped: false,
-  collapsed: []
+  collapsed: [],
+  mode: 'packages',
+  task: null
 };
 
 const ORIGIN: Position = { x: 0, y: 0 };
@@ -70,6 +74,21 @@ const PAN_WITHOUT_Y = { x: 1 };
 const INFINITE_PAN: Position = { x: Infinity, y: 0 };
 
 const PAN_WITH_EXTRA_KEY = { ...PAN, z: 3 };
+
+const TASK: TaskViewState = {
+  chosen: ['web#build'],
+  capLifted: false,
+  depth: 1,
+  selected: null,
+  search: '',
+  zoom: 1,
+  pan: ORIGIN,
+  layoutKey: 'k1'
+};
+
+const TASK_STATE: GraphViewState = { ...VALID, mode: 'tasks', task: TASK };
+
+const NO_TASK = { mode: 'packages', task: null };
 
 describe('FEATURE: readGraphViewState', () => {
   describe('GIVEN a valid saved state', () => {
@@ -249,6 +268,84 @@ describe('FEATURE: readGraphViewState', () => {
       const state = readGraphViewState(raw);
 
       expect(state).toBeNull();
+    });
+  });
+
+  describe('GIVEN a saved task view', () => {
+    it('WHEN mode is tasks and the task is valid THEN both are kept', () => {
+      const state = readGraphViewState(TASK_STATE);
+
+      expect(state).toStrictEqual(TASK_STATE);
+    });
+
+    it('WHEN the task carries extra keys THEN they are stripped', () => {
+      const task = { ...TASK, extra: 1, pan: PAN_WITH_EXTRA_KEY };
+
+      const state = readGraphViewState({ ...TASK_STATE, task });
+
+      expect(state?.task).toStrictEqual({ ...TASK, pan: PAN });
+    });
+
+    it.each([
+      ['an old save', CAMERA],
+      ['mode tasks with no task', { ...CAMERA, mode: 'tasks' }],
+      ['mode tasks with a null task', { ...CAMERA, mode: 'tasks', task: null }],
+      ["mode 'grid'", { ...CAMERA, mode: 'grid' }],
+      ['a string task', { ...TASK_STATE, task: 'web#build' }]
+    ])('WHEN it holds %s THEN mode reads packages and task null', (_name, raw) => {
+      const state = readGraphViewState(raw);
+
+      expect(state).toMatchObject(NO_TASK);
+    });
+
+    it.each([
+      ['a chosen that is not an array', { chosen: 'web#build' }],
+      ['a chosen with a number', { chosen: ['web#build', 3] }],
+      ['a non-boolean capLifted', { capLifted: 'no' }],
+      ['a numeric selected', { selected: 3 }],
+      ['a missing selected', { selected: undefined }],
+      ['a non-string search', { search: 5 }],
+      ['a NaN zoom', { zoom: NaN }],
+      ['a zero zoom', { zoom: 0 }],
+      ['a pan without y', { pan: PAN_WITHOUT_Y }],
+      ['an infinite pan', { pan: INFINITE_PAN }],
+      ['a numeric layoutKey', { layoutKey: 1 }]
+    ])('WHEN its task holds %s THEN mode reads packages and task null', (_name, bad) => {
+      const task = { ...TASK, ...bad };
+
+      const state = readGraphViewState({ ...TASK_STATE, task });
+
+      expect(state).toMatchObject(NO_TASK);
+    });
+
+    it.each(['packages', 'grid'])('WHEN mode is %s and the task is valid THEN mode reads packages and the task is kept', (mode) => {
+      const state = readGraphViewState({ ...TASK_STATE, mode });
+
+      expect(state).toMatchObject({ mode: 'packages', task: TASK });
+    });
+
+    it('WHEN the task selects a task THEN the selection is kept', () => {
+      const task = { ...TASK, selected: 'web#build' };
+
+      const state = readGraphViewState({ ...TASK_STATE, task });
+
+      expect(state?.task?.selected).toBe('web#build');
+    });
+
+    it.each([
+      [9, 1],
+      [-2, 1],
+      ['x', 1],
+      [2.5, 1],
+      [0, 0],
+      [3, 3],
+      [5, 5]
+    ])('WHEN its depth is %j THEN depth reads %j', (depth, expected) => {
+      const task = { ...TASK, depth };
+
+      const state = readGraphViewState({ ...TASK_STATE, task });
+
+      expect(state?.task?.depth).toBe(expected);
     });
   });
 });

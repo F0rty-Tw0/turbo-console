@@ -1,7 +1,7 @@
 import type { DetailsViews } from './details.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
 import type { DetailsContext, ShownInspection } from './graph-details.type.ts';
-import type { ControlsViewFields, DrawnGraph, GraphView, PageElements, ViewStateSaver } from './graph-page.type.ts';
+import type { ControlsViewFields, DrawnGraph, GraphView, PackageSaver, PageElements } from './graph-page.type.ts';
 import type { Inspection, InspectionInput, LinkInspection } from './inspection.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { TraceCandidates, TraceResult } from './trace.type.ts';
@@ -60,7 +60,7 @@ export type GraphInspectionDeps = {
   readonly bridge: Bridge;
   readonly page: PageElements;
   readonly view: GraphView;
-  readonly saver: ViewStateSaver;
+  readonly saver: PackageSaver;
   readonly now: () => number;
   /** The details view builders, handed in because `domain-logic` may not import `ui`. */
   readonly views: DetailsViews;
@@ -90,9 +90,15 @@ export type GraphInspectionDeps = {
   readonly onShowFolder: (folder: string) => void;
   /** The checkbox's mode and the mode on screen are both grouped, so a folder tap may act. */
   readonly canAct: () => boolean;
+  /** The package graph owns the canvas; in task mode the inspection keys do nothing. */
+  readonly isPackageMode: () => boolean;
   readonly folders: CanvasFolders & InspectionFolders;
   /** The selected package's "…" span in container px, `null` without one; the keep-clear pan clears it too. */
   readonly buttonBox: () => AnchorBox | null;
+  /** Show tasks: task mode on every visible task of `name`. */
+  readonly onShowTasks: (name: string) => void;
+  /** Whether `name` has a visible task, so Show tasks is offered. */
+  readonly hasTasks: (name: string) => boolean;
 };
 
 /** What the keep-clear pan reads: the canvas, the page's container, the details aside, the inspection, its drawn ghosts and the package "…". */

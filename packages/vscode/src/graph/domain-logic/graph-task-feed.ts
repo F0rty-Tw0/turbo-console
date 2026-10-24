@@ -54,8 +54,8 @@ export class GraphTaskFeed {
   }
 
   /**
-   * The latest request wins while the page cannot take it, which is until a `graph` state has been posted; a single-package
-   * root has no task graph to show.
+   * The latest request wins while the page cannot take it, which is until a `graph` state has been posted; a hold while the
+   * state is not `graph` is logged, so a root stuck in `error` leaves a trace. A single-package root has no task graph to show.
    */
   public showTasks(taskIds: string[]): void {
     const { gate, ports } = this.deps;
@@ -70,12 +70,22 @@ export class GraphTaskFeed {
     const canPost = gate.canPost();
 
     if (!canPost || state.kind !== 'graph') {
-      this.held = taskIds;
+      this.hold(taskIds, state);
 
       return;
     }
 
     ports.post({ type: 'showTasks', taskIds });
+  }
+
+  private hold(taskIds: string[], state: GraphState): void {
+    this.held = taskIds;
+
+    if (state.kind === 'graph') return;
+
+    const text = `Holding showTasks for ${this.deps.root} until the graph loads: state is ${state.kind}`;
+
+    this.deps.ports.log(logTextOf(text));
   }
 
   private changed(entry: RunEntry): void {

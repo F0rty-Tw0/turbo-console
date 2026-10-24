@@ -21,12 +21,17 @@ export type ProbeNode = {
   readonly state: ProbeState;
   readonly frame: string;
   readonly label: string;
+  /** The label text drawn on the page: a package's name, a task box's package name, empty for a box with none. */
+  readonly text: string;
   readonly fill: string;
   readonly isGhost: boolean;
   readonly borderStyle: string;
   readonly effectiveOpacity: number;
   readonly isVisible: boolean;
   readonly isCollapsed: boolean;
+  /** A task's run outline: 0 wide with no run state. */
+  readonly outlineWidth: number;
+  readonly outlineColor: string;
 };
 
 export type ProbeEdge = {

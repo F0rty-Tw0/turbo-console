@@ -105,6 +105,14 @@ describe('FEATURE: graph task feed', () => {
       expect(postedShowTasksOf(ports)).toStrictEqual([]);
     });
 
+    it('WHEN showTasks is called THEN the hold is logged once with the root and the state kind', () => {
+      const { feed, ports } = feedAt(state);
+
+      feed.showTasks(['a#build']);
+
+      expect(ports.log).toHaveBeenCalledExactlyOnceWith(`Holding showTasks for /ws until the graph loads: state is ${state.kind}`);
+    });
+
     it('WHEN showTasks is called and the graph state is flushed THEN the request follows the runs', () => {
       const { feed, ports } = feedAt(state);
 
@@ -156,14 +164,17 @@ describe('FEATURE: graph task feed', () => {
       expect(postedShowTasksOf(ports)).toStrictEqual([]);
     });
 
-    it('WHEN the held request meets a single-package state THEN it is logged once', () => {
+    it('WHEN the held request meets a single-package state THEN it is logged as held, then ignored once', () => {
       const { feed, ports, gate } = feedAt(LOADING);
 
       vi.mocked(gate.canPost).mockReturnValue(false);
       feed.showTasks(['a#build']);
       feed.flush(SINGLE_PACKAGE);
 
-      expect(ports.log).toHaveBeenCalledOnce();
+      expect(vi.mocked(ports.log).mock.calls).toStrictEqual([
+        ['Holding showTasks for /ws until the graph loads: state is loading'],
+        ['Ignored showTasks: a single-package root has no task graph']
+      ]);
     });
 
     it('WHEN the held request meets a single-package state THEN a later graph state does not post it', () => {

@@ -1,6 +1,7 @@
 import { shownHintOf } from './graph-details-picking.ts';
 import { focusedNameOf, refocusList, updateExplain, updateView } from './graph-details-render.ts';
 import { emptyOf, wireExplain, wiredViewOf } from './graph-details-wire.ts';
+import { onPanelKey } from './graph-inspection-details.ts';
 import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
 import type { ExplainState } from '../common/details.type.ts';
 import type {
@@ -13,11 +14,8 @@ import type {
   ShownHint,
   ShownInspection
 } from '../common/graph-details.type.ts';
-import type { InspectionInput } from '../common/inspection.type.ts';
 import { detailsPlanOf } from '../utils/details-plan.util.ts';
 import { explainPlanOf, explainStateOf, isReplyFor } from '../utils/explain-state.util.ts';
-
-const PANEL_ESCAPE: InspectionInput = { kind: 'escape', where: 'panel' };
 
 const NOTHING_SHOWN: ShownInspection = { kind: 'none' };
 
@@ -49,7 +47,7 @@ export class GraphDetails {
       const aside = this.deps.views.build().panel;
       const view = emptyOf(this.envOf());
 
-      aside.addEventListener('keydown', (event): void => this.keydown(event));
+      aside.addEventListener('keydown', (event): void => onPanelKey(event, this.deps));
       aside.replaceChildren(view.root);
       body.append(aside);
       this.aside = aside;
@@ -128,7 +126,7 @@ export class GraphDetails {
 
     if (plan !== 'update' || view === null) return false;
 
-    const isUpdated = updateView(view, inspection, context, this.deps.views);
+    const isUpdated = updateView(view, inspection, context, this.deps);
 
     if (isUpdated) refocusList(view, focused);
 
@@ -163,14 +161,10 @@ export class GraphDetails {
     if (inspection.kind === 'link') this.deps.onExplain(inspection.source, inspection.target);
   }
 
-  private keydown(event: KeyboardEvent): void {
-    if (event.repeat) return;
-
-    if (event.key === 'Escape') this.deps.onInput(PANEL_ESCAPE);
-  }
-
   private toggle(): void {
-    if (this.aside !== null) this.setOpen(!this.open);
+    const isPackageMode = this.deps.isPackageMode();
+
+    if (this.aside !== null && isPackageMode) this.setOpen(!this.open);
   }
 
   private close(): void {

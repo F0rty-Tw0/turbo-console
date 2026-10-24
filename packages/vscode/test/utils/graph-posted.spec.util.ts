@@ -1,4 +1,4 @@
-import type { GraphEdgeExplainedMessage, GraphReady } from '@turbo-console/webview-ui';
+import type { GraphEdgeExplainedMessage, GraphReady, GraphRunsMessage, GraphShowTasksMessage } from '@turbo-console/webview-ui';
 
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 
@@ -33,4 +33,28 @@ export const explainedFor = (api: TurboConsoleApi, root: string, source: string,
   }
 
   return newest;
+};
+
+/** The newest `showTasks` request posted to the panel of `root`, `null` before there is one. */
+export const postedShowTasks = (api: TurboConsoleApi, root: string): GraphShowTasksMessage | null => {
+  const posted = api.graph.posted(root);
+  let newest: GraphShowTasksMessage | null = null;
+
+  for (const message of posted) {
+    if (message.type === 'showTasks') newest = message;
+  }
+
+  return newest;
+};
+
+/** The `runs` maps posted to the panel of `root`, oldest first. */
+export const postedRuns = (api: TurboConsoleApi, root: string): GraphRunsMessage[] => {
+  const posted = api.graph.posted(root);
+  const maps: GraphRunsMessage[] = [];
+
+  for (const message of posted) {
+    if (message.type === 'runs') maps.push(message);
+  }
+
+  return maps;
 };

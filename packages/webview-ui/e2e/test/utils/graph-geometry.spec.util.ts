@@ -30,12 +30,15 @@ export const nodeAt = (id: string, renderedX: number, renderedY: number): ProbeN
     state: 'normal',
     frame: '',
     label: '',
+    text: id,
     fill: '',
     isGhost: false,
     borderStyle: 'solid',
     effectiveOpacity: 1,
     isVisible: true,
-    isCollapsed: false
+    isCollapsed: false,
+    outlineWidth: 0,
+    outlineColor: ''
   };
 
   return node;

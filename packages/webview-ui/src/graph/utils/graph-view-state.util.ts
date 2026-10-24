@@ -1,6 +1,15 @@
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphFocus, GraphLinkRef, GraphTraceRef, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type {
+  GraphFocus,
+  GraphLinkRef,
+  GraphTraceRef,
+  GraphViewMode,
+  GraphViewState,
+  TaskViewState
+} from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
+import type { Viewport } from '../common/graph-page.type.ts';
+import { DEFAULT_TASK_DEPTH, MAX_TASK_DEPTH, MIN_TASK_DEPTH } from '../common/graph-task.const.ts';
 import { DEFAULT_DEPTH, MAX_DEPTH, MIN_DEPTH } from '../common/graph.const.ts';
 
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
@@ -21,14 +30,29 @@ const readControlsOpen = (value: unknown): boolean => (typeof value === 'boolean
 
 const readString = (value: unknown): string => (typeof value === 'string' ? value : '');
 
-const readDepth = (value: unknown): number => {
-  const isInRange = typeof value === 'number' && value >= MIN_DEPTH && value <= MAX_DEPTH;
+const readCamera = (zoom: unknown, rawPan: unknown): Viewport | null => {
+  const pan = readPosition(rawPan);
+  const isZoomValid = isFiniteNumber(zoom) && zoom > 0;
+
+  if (!isZoomValid || pan === null) return null;
+
+  const camera: Viewport = { zoom, pan };
+
+  return camera;
+};
+
+const depthWithin = (value: unknown, min: number, max: number): number | null => {
+  const isInRange = typeof value === 'number' && value >= min && value <= max;
   const isWhole = Number.isInteger(value);
 
-  if (!isInRange || !isWhole) return DEFAULT_DEPTH;
+  if (!isInRange || !isWhole) return null;
 
   return value;
 };
+
+const readDepth = (value: unknown): number => depthWithin(value, MIN_DEPTH, MAX_DEPTH) ?? DEFAULT_DEPTH;
+
+const readTaskDepth = (value: unknown): number => depthWithin(value, MIN_TASK_DEPTH, MAX_TASK_DEPTH) ?? DEFAULT_TASK_DEPTH;
 
 const readFocus = (value: unknown): GraphFocus | null => {
   if (typeof value === 'string') {
@@ -56,10 +80,12 @@ const readFocus = (value: unknown): GraphFocus | null => {
   return null;
 };
 
-const readNames = (value: unknown): string[] => {
-  const isNameList = Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+const isNameList = (value: unknown): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 
-  if (!isNameList) return [];
+const readNames = (value: unknown): string[] => {
+  const isList = isNameList(value);
+
+  if (!isList) return [];
 
   return [...value];
 };
@@ -94,23 +120,48 @@ const readTrace = (value: unknown): GraphTraceRef | null => {
   return trace;
 };
 
-/** The saved camera, selection, controls and inspection, rebuilt field by field; `null` when the camera or selection is off, a bad controls or inspection field takes its default. */
+/** The saved task view, rebuilt field by field; `null` when any field is off, except a bad depth, which takes its default. */
+const readTask = (raw: unknown): TaskViewState | null => {
+  if (!isRecord(raw)) return null;
+
+  const { chosen, capLifted, selected, search, layoutKey } = raw;
+  const camera = readCamera(raw['zoom'], raw['pan']);
+  const isChosenValid = isNameList(chosen);
+  const isSelectionValid = selected === null || typeof selected === 'string';
+  const areTextsValid = typeof search === 'string' && typeof layoutKey === 'string';
+  const areFieldsValid = isChosenValid && typeof capLifted === 'boolean' && isSelectionValid && areTextsValid;
+
+  if (!areFieldsValid || camera === null) return null;
+
+  const depth = readTaskDepth(raw['depth']);
+  const task: TaskViewState = { chosen: [...chosen], capLifted, depth, selected, search, ...camera, layoutKey };
+
+  return task;
+};
+
+/** Task mode only with a task view to show; anything else reads as package mode. */
+const readMode = (value: unknown, task: TaskViewState | null): GraphViewMode => {
+  const isTaskMode = value === 'tasks' && task !== null;
+
+  return isTaskMode ? 'tasks' : 'packages';
+};
+
+/** The saved camera, selection, controls, inspection, mode and task view, rebuilt field by field; `null` when the camera or selection is off, a bad controls, inspection or task field takes its default. */
 export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   if (!isRecord(raw)) return null;
 
-  const { hash, zoom, selected } = raw;
-  const pan = readPosition(raw['pan']);
+  const { hash, selected } = raw;
+  const camera = readCamera(raw['zoom'], raw['pan']);
   const isSelectionValid = selected === null || typeof selected === 'string';
-  const isZoomValid = isFiniteNumber(zoom) && zoom > 0;
   const isHashValid = typeof hash === 'string';
-  const areFieldsValid = isHashValid && isZoomValid && isSelectionValid;
+  const areFieldsValid = isHashValid && isSelectionValid;
 
-  if (!areFieldsValid || pan === null) return null;
+  if (!areFieldsValid || camera === null) return null;
 
+  const task = readTask(raw['task']);
   const state: GraphViewState = {
     hash,
-    zoom,
-    pan,
+    ...camera,
     selected,
     controlsOpen: readControlsOpen(raw['controlsOpen']),
     search: readString(raw['search']),
@@ -123,7 +174,9 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
     trace: readTrace(raw['trace']),
     folder: readFolder(raw['folder']),
     grouped: readGrouped(raw['grouped']),
-    collapsed: readNames(raw['collapsed'])
+    collapsed: readNames(raw['collapsed']),
+    mode: readMode(raw['mode'], task),
+    task
   };
 
   return state;

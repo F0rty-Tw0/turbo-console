@@ -9,7 +9,8 @@ import {
   LOADING_TEXT,
   RETRY_LABEL
 } from '../../src/graph/common/graph.const.ts';
-import { BROKEN_MEASURE, NEXT_FRAME, PROBE_WANTED, TOOLBAR_LABELS, WORKER_STUBS } from '../common/graph.const.ts';
+import { BROKEN_MEASURE, MEASURE_FIXED } from '../common/broken-measure.const.ts';
+import { NEXT_FRAME, PROBE_WANTED, TOOLBAR_LABELS, WORKER_STUBS } from '../common/graph.const.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
 import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
 import { graphDistMock } from '../test/mocks/graph-dist.mock.ts';
@@ -66,6 +67,11 @@ export class GraphPage {
     await this.page.keyboard.down(key);
     await this.page.keyboard.down(key);
     await this.page.keyboard.up(key);
+  }
+
+  /** Canvas text measurement broken by `isMeasureBroken` works again. */
+  public async fixMeasure(): Promise<void> {
+    await this.page.evaluate(MEASURE_FIXED);
   }
 
   /** Two frames, so a message posted to the page has been handled. */

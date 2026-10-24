@@ -45,6 +45,7 @@ import type {
   StateMessage,
   TaskCard,
   TaskMessage,
+  TaskViewState,
   ToolView,
   WebviewMessage,
   WebviewSlots
@@ -62,6 +63,16 @@ type ExpectedTask = {
   readonly dependencies: string[];
 };
 type ExpectedPosition = { readonly x: number; readonly y: number };
+type ExpectedTaskView = {
+  readonly chosen: string[];
+  readonly capLifted: boolean;
+  readonly depth: number;
+  readonly selected: string | null;
+  readonly search: string;
+  readonly zoom: number;
+  readonly pan: ExpectedPosition;
+  readonly layoutKey: string;
+};
 type ExpectedStateMessage = { readonly type: 'state'; readonly state: GraphState };
 type ExpectedContext = { readonly before?: string; readonly after?: string };
 type ExpectedEntry = {
@@ -182,6 +193,9 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<Extract<GraphWebviewMessage, PositionsKey>['grouping']>().toEqualTypeOf<LayoutGrouping>();
       expectTypeOf<GraphReady['folderPositions']>().toEqualTypeOf<Positions | null>();
       expectTypeOf<GraphViewState['selected']>().toEqualTypeOf<string | null>();
+      expectTypeOf<TaskViewState>().toEqualTypeOf<ExpectedTaskView>();
+      expectTypeOf<GraphViewState['mode']>().toEqualTypeOf<'packages' | 'tasks'>();
+      expectTypeOf<GraphViewState['task']>().toEqualTypeOf<TaskViewState | null>();
     });
   });
 });

@@ -19,7 +19,8 @@ export const packageActionsOf = (deps: PackageActionsDeps, actions: PackageInspe
     focus: (name): void => deps.onFocusOn(name),
     clearFocus,
     startTrace: (): void => actions.input(START_TRACE),
-    setShown
+    setShown,
+    showTasks: (name): void => deps.onShowTasks(name)
   };
 
   return packageActions;

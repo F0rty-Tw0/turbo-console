@@ -134,6 +134,19 @@ describe('FEATURE: packageMenuOf', () => {
     });
   });
 
+  it.each([
+    { title: 'no visible task', hasTasks: false, expected: ['View Package Details', 'Focus', 'Start trace', '---', 'Show package'] },
+    {
+      title: 'a visible task',
+      hasTasks: true,
+      expected: ['View Package Details', 'Focus', 'Start trace', 'Show tasks', '---', 'Show package']
+    }
+  ])('GIVEN a package with $title WHEN it is listed THEN it reads $expected', ({ hasTasks, expected }) => {
+    const labels = labelsOf(packageMenuOf('web', packageStateOf({ hasTasks }), packageActionsMock()));
+
+    expect(labels).toStrictEqual(expected);
+  });
+
   it('GIVEN a package whose checkbox is unticked WHEN Show package is read THEN it is unchecked', () => {
     const item = itemLabelled(packageMenuOf('web', packageStateOf({ isShown: false }), packageActionsMock()), 'Show package');
 
@@ -147,7 +160,8 @@ describe('FEATURE: packageMenuOf', () => {
       { label: 'Clear focus', state: packageStateOf({ isFocus: true }), action: 'clearFocus', args: [] },
       { label: 'Start trace', state: packageStateOf(), action: 'startTrace', args: [] },
       { label: 'Show package', state: packageStateOf({ isShown: false }), action: 'setShown', args: [name, true] },
-      { label: 'Show package', state: packageStateOf(), action: 'setShown', args: [name, false] }
+      { label: 'Show package', state: packageStateOf(), action: 'setShown', args: [name, false] },
+      { label: 'Show tasks', state: packageStateOf({ hasTasks: true }), action: 'showTasks', args: [name] }
     ] as const)('WHEN $label runs from $state THEN only $action is called with $args', ({ label, state, action, args }) => {
       const actions = packageActionsMock();
       const model: MenuItemModel[] = packageMenuOf(name, state, actions);
@@ -215,9 +229,15 @@ describe('FEATURE: packageMenuStateOf', () => {
     ])('WHEN $title THEN the state is $expected', ({ name, hidden, focus, expected }) => {
       const filters = menuFiltersOf(hidden, focus);
 
-      const state = packageMenuStateOf(name, filters, ALL_VISIBLE);
+      const state = packageMenuStateOf(name, filters, ALL_VISIBLE, false);
 
       expect(state).toStrictEqual(expected);
+    });
+
+    it('WHEN web has a visible task THEN the state says so', () => {
+      const state = packageMenuStateOf('web', menuFiltersOf([], null), ALL_VISIBLE, true);
+
+      expect(state).toStrictEqual(packageStateOf({ hasTasks: true }));
     });
   });
 });

@@ -6,6 +6,7 @@ import type { GraphPorts } from './graph.type.ts';
 import type { PanelKey } from '../../details/common/details.type.ts';
 import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
+import type { PickItem } from '../../run/common/picker.type.ts';
 import type { Disposed, Runs } from '../../run/common/run.type.ts';
 import type { GraphApi } from '../../shared/common/api.type.ts';
 import type { EditorPanelView } from '../../shared/common/panel-view.type.ts';
@@ -44,6 +45,7 @@ export type GraphPanelsDeps = {
 /** What the registry and the test API ask of a panel's `GraphSession`. */
 type GraphPanelSession = {
   readonly receive: (value: unknown) => Promise<void>;
+  readonly showTasks: (taskIds: string[]) => void;
   readonly dispose: () => void;
 };
 
@@ -62,13 +64,14 @@ export type GraphOpener = {
 };
 
 /**
- * What the Show Package Graph command asks of the editor: the active file, the folder holding a file, a folder pick, an
- * info and an error message, and the output log. `info`, `error` and `log` never throw.
+ * What the Show Package Graph and Show Task Graph commands ask of the editor: the active file, the folder holding a file, a folder pick, an
+ * info and an error message, and the output log. `pickMany` resolves the values of the ticked rows, `undefined` when cancelled. `info`, `error` and `log` never throw.
  */
 export type RootPickPorts = {
   readonly activeFile: () => string | null;
   readonly rootOf: (file: string) => string | null;
   readonly pick: (folders: RootFolder[]) => Promise<string | undefined>;
+  readonly pickMany: (items: PickItem[], placeHolder: string) => Promise<string[] | undefined>;
   readonly info: (text: string) => void;
   readonly error: (text: string) => void;
   readonly log: (text: string) => void;

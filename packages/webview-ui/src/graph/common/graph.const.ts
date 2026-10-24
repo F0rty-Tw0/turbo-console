@@ -59,6 +59,15 @@ export const RELOAD_LABEL = 'Reload';
 /** The graph container's accessible name, also the page's readiness marker for the e2e tests. */
 export const GRAPH_LABEL = 'Package graph';
 
+/** Light Modern run colours; `--vscode-disabledForeground` is `#61616180`, written as the `rgba` Cytoscape parses. */
+const FALLBACK_RUN_COLORS: ThemeColors['runs'] = {
+  running: '#bf8803',
+  passed: '#388a34',
+  failed: '#f14c4c',
+  stopped: 'rgba(97, 97, 97, 0.5)',
+  'failed-to-start': '#f85149'
+};
+
 /** Light Modern values, for a page with no `--vscode-*` variables (a plain browser). */
 export const FALLBACK_COLORS: ThemeColors = {
   background: '#ffffff',
@@ -66,7 +75,8 @@ export const FALLBACK_COLORS: ThemeColors = {
   edge: '#717171',
   selected: '#005fb8',
   highlighted: '#1a85ff',
-  frame: '#e5e5e5'
+  frame: '#e5e5e5',
+  runs: FALLBACK_RUN_COLORS
 };
 
 /** The one Trusted Types policy the graph CSP allows (`trusted-types tc-elk`). */
@@ -138,6 +148,12 @@ export const ELK_GROUPED_ROOT_OPTIONS: Readonly<Record<string, string>> = {
 
 /** The group header for packages whose path has no folder part. */
 export const ROOT_FOLDER = '(root)';
+
+/** The package Controls panel's id, which the Controls button points at outside task mode. */
+export const CONTROLS_ID = 'graph-controls';
+
+/** The package Details panel's id, which the Details button points at outside task mode. */
+export const DETAILS_ID = 'graph-details';
 
 export const CONTROLS_LABEL = 'Controls';
 

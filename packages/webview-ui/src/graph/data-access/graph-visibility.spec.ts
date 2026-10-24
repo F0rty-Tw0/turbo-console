@@ -11,10 +11,19 @@ import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
+import { CANVAS_RUN_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
 
-const COLORS: ThemeColors = { background: '#111', label: '#eee', edge: '#888', selected: '#f00', highlighted: '#0f0', frame: '#444' };
+const COLORS: ThemeColors = {
+  background: '#111',
+  label: '#eee',
+  edge: '#888',
+  selected: '#f00',
+  highlighted: '#0f0',
+  frame: '#444',
+  runs: CANVAS_RUN_COLORS
+};
 
 const PADDING_PX = 24;
 

@@ -6,7 +6,7 @@ import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 
 type PickItem = { readonly label: string; readonly description?: string };
 
-type ShowQuickPick = (items: PickItem[], options: unknown) => Promise<PickItem | undefined>;
+type ShowQuickPick = (items: PickItem[], options: unknown) => Promise<PickItem | PickItem[] | undefined>;
 
 /** `vscode` exists only inside the editor, so the module is replaced here by the calls `graph-command-ports.ts` makes. */
 const editor = vi.hoisted(() => {
@@ -32,6 +32,11 @@ vi.mock('vscode', () => {
 
 const OTHER_FOLDER: RootFolder = { root: '/other', name: 'ws' };
 const FOLDERS: RootFolder[] = [ROOT_FOLDER_STUB, OTHER_FOLDER];
+
+const TASK_ITEMS = [
+  { label: 'build', description: 'web', root: '/ws', value: 'web#build' },
+  { label: 'build', description: 'api', root: '/ws', value: 'api#build' }
+];
 
 const pickSecond = async (items: PickItem[]): Promise<PickItem | undefined> => Promise.resolve(items[1]);
 
@@ -71,6 +76,38 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
       const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn());
 
       const picked = await ports.pick(FOLDERS);
+
+      expect(picked).toBeUndefined();
+    });
+  });
+
+  describe('GIVEN task items', () => {
+    it('WHEN the user ticks both THEN the result is their values in order', async () => {
+      editor.showQuickPick.mockResolvedValue(TASK_ITEMS);
+      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn());
+
+      const picked = await ports.pickMany(TASK_ITEMS, 'Choose tasks to show');
+
+      expect(picked).toStrictEqual(['web#build', 'api#build']);
+    });
+
+    it('WHEN the pick is shown THEN it allows many and carries the placeholder', async () => {
+      editor.showQuickPick.mockResolvedValue(undefined);
+      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn());
+
+      await ports.pickMany(TASK_ITEMS, 'Choose tasks to show');
+
+      expect(editor.showQuickPick).toHaveBeenCalledExactlyOnceWith(TASK_ITEMS, {
+        canPickMany: true,
+        placeHolder: 'Choose tasks to show'
+      });
+    });
+
+    it('WHEN the user cancels THEN the result is undefined', async () => {
+      editor.showQuickPick.mockResolvedValue(undefined);
+      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn());
+
+      const picked = await ports.pickMany(TASK_ITEMS, 'Choose tasks to show');
 
       expect(picked).toBeUndefined();
     });

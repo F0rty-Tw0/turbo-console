@@ -2,12 +2,13 @@ import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { FolderActions } from '../common/folder-actions.type.ts';
 import type { GraphDetailsDeps } from '../common/graph-details.type.ts';
 import type { GraphInspectionDeps, InspectionActions } from '../common/graph-inspection.type.ts';
-import type { PageElements } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
 
 const CLEAR: InspectionInput = { kind: 'clear' };
 
 const CANVAS_ESCAPE: InspectionInput = { kind: 'escape', where: 'canvas' };
+
+const PANEL_ESCAPE: InspectionInput = { kind: 'escape', where: 'panel' };
 
 /** Asks the host for the manifest entry behind the link `source` → `target`. */
 export const postExplain = (bridge: Bridge, source: string, target: string): void => {
@@ -52,18 +53,28 @@ export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActi
     onFocus: (name): void => deps.onFocusOn(name),
     onExclude: (name): void => deps.onExclude(name),
     onShow: (name): void => deps.onShow(name),
+    onShowTasks: (name): void => deps.onShowTasks(name),
+    hasTasks: (name): boolean => deps.hasTasks(name),
     onToggleFolder: folderActions.toggle,
     onFocusFolder: folderActions.focusFolder,
     onExcludeFolder: (folder): void => deps.onExcludeFolder(folder),
     onFilter: (text): void => actions.canvas.filter(text),
     onOpenManifest: (packageName, line): void => bridge.post({ type: 'openManifest', packageName, line }),
     onResize: (): void => view.resize(),
+    isPackageMode: deps.isPackageMode,
     onLayout: (): void => actions.keepClear(),
     onOpened: (): void => actions.keepClear(),
     onSave: (): void => actions.save()
   };
 
   return detailsDeps;
+};
+
+/** Escape in the details panel, not a held repeat, steps the inspection back. */
+export const onPanelKey = (event: KeyboardEvent, deps: Pick<GraphDetailsDeps, 'onInput'>): void => {
+  const isEscape = !event.repeat && event.key === 'Escape';
+
+  if (isEscape) deps.onInput(PANEL_ESCAPE);
 };
 
 const onKey = (event: KeyboardEvent, actions: InspectionActions): void => {
@@ -74,8 +85,22 @@ const onKey = (event: KeyboardEvent, actions: InspectionActions): void => {
   if (event.key === 'Enter') actions.enter();
 };
 
-/** `Clear selection`, and Escape and Enter on the graph container only, so a key on a toolbar button never acts here. */
-export const wireInspectionKeys = (page: PageElements, actions: InspectionActions): void => {
-  page.clear.addEventListener('click', (): void => actions.input(CLEAR));
-  page.container.addEventListener('keydown', (event: KeyboardEvent): void => onKey(event, actions));
+/**
+ * `Clear selection`, and Escape and Enter on the graph container only, so a key on a toolbar button never acts here.
+ * Both act only while the package graph owns the canvas.
+ */
+export const wireInspectionKeys = (deps: GraphInspectionDeps, actions: InspectionActions): void => {
+  const onContainerKey = (event: KeyboardEvent): void => {
+    const isPackageMode = deps.isPackageMode();
+
+    if (isPackageMode) onKey(event, actions);
+  };
+  const onClear = (): void => {
+    const isPackageMode = deps.isPackageMode();
+
+    if (isPackageMode) actions.input(CLEAR);
+  };
+
+  deps.page.clear.addEventListener('click', onClear);
+  deps.page.container.addEventListener('keydown', onContainerKey);
 };

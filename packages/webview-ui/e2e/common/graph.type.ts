@@ -30,6 +30,12 @@ export type ExpectedThemeColors = {
   readonly selected: string;
 };
 
+/** A task node's run outline: its width and its colour as `rgb(r, g, b)`. */
+export type RunOutline = {
+  readonly width: number;
+  readonly colour: string;
+};
+
 export type ThemeStub = {
   readonly bodyClass: string;
   readonly vars: CssVars;
@@ -172,6 +178,12 @@ export type PngBounds = {
 export type TitleBandInk = {
   readonly inside: number;
   readonly nearSides: number;
+};
+
+/** A base64 PNG and the `rgb(...)` colour whose ink is counted in it. */
+export type ColourInkInput = {
+  readonly png: string;
+  readonly colour: string;
 };
 
 /** The hash and the sorted package names of a `positions` message; `hash` is `undefined` before one is posted. */

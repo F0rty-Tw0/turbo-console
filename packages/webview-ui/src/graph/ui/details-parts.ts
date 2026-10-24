@@ -3,6 +3,7 @@ import { textElement } from '../../shared/ui/text-element.ts';
 import type { DetailsViewBase, DetailsViewKind } from '../common/details-view.type.ts';
 import { CLOSE_DETAILS_LABEL, HIDDEN_TEXT } from '../common/details.const.ts';
 import type { KeyedPart } from '../common/details.type.ts';
+import { DETAILS_ID } from '../common/graph.const.ts';
 import { keyedPartsOf } from '../utils/keyed-text.util.ts';
 
 const closeButton = (isOverlay: boolean): HTMLButtonElement => {
@@ -12,7 +13,7 @@ const closeButton = (isOverlay: boolean): HTMLButtonElement => {
   button.type = 'button';
   button.hidden = !isOverlay;
   button.setAttribute('aria-label', CLOSE_DETAILS_LABEL);
-  button.setAttribute('aria-controls', 'graph-details');
+  button.setAttribute('aria-controls', DETAILS_ID);
   button.append(icon);
 
   return button;

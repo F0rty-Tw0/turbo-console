@@ -3,7 +3,7 @@ import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { ExplainDetails, ExplainEntry, NeighbourItem, PackageDetails } from '../common/details-view.type.ts';
 import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL, FOCUS_LABEL } from '../common/details.const.ts';
 import type { DetailsViews, ExplainState, FoundExplain } from '../common/details.type.ts';
-import type { DetailsContext, DetailsView, ShownInspection, ShownTrace } from '../common/graph-details.type.ts';
+import type { DetailsContext, DetailsView, GraphDetailsDeps, ShownInspection, ShownTrace } from '../common/graph-details.type.ts';
 import { folderToggleTextOf } from '../utils/controls-text.util.ts';
 import { folderModelOf, packageModelOf, traceModelOf } from '../utils/details-model.util.ts';
 import {
@@ -33,7 +33,7 @@ const updateNeighbour = (item: NeighbourItem, visible: ReadonlySet<string>): voi
   setDisabled(item.explain, !isVisible);
 };
 
-const updatePackage = (view: PackageDetails, name: string, context: DetailsContext): boolean => {
+const updatePackage = (view: PackageDetails, name: string, context: DetailsContext, hasTasks: (name: string) => boolean): boolean => {
   const model = packageModelOf(name, context);
 
   if (model === null) return false;
@@ -41,6 +41,7 @@ const updatePackage = (view: PackageDetails, name: string, context: DetailsConte
   view.openLabel.textContent = openDetailsLabelOf(model.taskCount);
   view.focus.textContent = model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_LABEL;
   setDisabled(view.exclude, model.isFocused);
+  view.showTasks.hidden = !hasTasks(name);
 
   for (const item of [...view.dependencies, ...view.dependents]) updateNeighbour(item, context.visible);
 
@@ -82,15 +83,25 @@ const updateTrace = (view: DetailsView, traced: ShownTrace, context: DetailsCont
   return true;
 };
 
-/** Updates the shown view in place for the same inspection; `false` when it cannot, and the view must be built again. */
-export const updateView = (view: DetailsView, inspection: ShownInspection, context: DetailsContext, views: DetailsViews): boolean => {
+/**
+ * Updates the shown view in place for the same inspection, a package's Show tasks offered again as its tasks now say;
+ * `false` when it cannot, and the view must be built again.
+ */
+export const updateView = (
+  view: DetailsView,
+  inspection: ShownInspection,
+  context: DetailsContext,
+  deps: Pick<GraphDetailsDeps, 'views' | 'hasTasks'>
+): boolean => {
+  const { views, hasTasks } = deps;
+
   switch (inspection.kind) {
     case 'none':
       return view.kind === 'empty';
     case 'link':
       return view.kind === 'link';
     case 'package':
-      return view.kind === 'package' && updatePackage(view, inspection.name, context);
+      return view.kind === 'package' && updatePackage(view, inspection.name, context, hasTasks);
     case 'folder':
       return updateFolder(view, inspection.folder, context);
     case 'picking':

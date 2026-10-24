@@ -28,9 +28,9 @@ export const folderStateOf = (overrides: Partial<FolderMenuState> = {}): FolderM
   return state;
 };
 
-/** An unfocused package whose list checkbox is ticked, with `overrides` on top. */
+/** An unfocused package with no visible task whose list checkbox is ticked, with `overrides` on top. */
 export const packageStateOf = (overrides: Partial<PackageMenuState> = {}): PackageMenuState => {
-  const state: PackageMenuState = { isFocus: false, isShown: true, ...overrides };
+  const state: PackageMenuState = { isFocus: false, isShown: true, hasTasks: false, ...overrides };
 
   return state;
 };

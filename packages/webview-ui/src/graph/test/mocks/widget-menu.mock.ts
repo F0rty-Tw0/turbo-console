@@ -15,7 +15,8 @@ export const packageActionsMock = (): PackageActions => {
     focus: vi.fn(),
     clearFocus: vi.fn(),
     startTrace: vi.fn(),
-    setShown: vi.fn()
+    setShown: vi.fn(),
+    showTasks: vi.fn()
   };
 
   return actions;
@@ -23,7 +24,13 @@ export const packageActionsMock = (): PackageActions => {
 
 /** The inspection's list hooks with `focused` as the focused package. */
 export const packageActionsDepsMock = (focused: string | null): PackageActionsDeps => {
-  const deps: PackageActionsDeps = { focus: (): string | null => focused, onFocusOn: vi.fn(), onExclude: vi.fn(), onShow: vi.fn() };
+  const deps: PackageActionsDeps = {
+    focus: (): string | null => focused,
+    onFocusOn: vi.fn(),
+    onExclude: vi.fn(),
+    onShow: vi.fn(),
+    onShowTasks: vi.fn()
+  };
 
   return deps;
 };

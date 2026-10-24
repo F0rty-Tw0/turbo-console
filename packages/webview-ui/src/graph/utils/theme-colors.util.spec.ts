@@ -12,7 +12,20 @@ const DARK: Record<string, string> = {
   '--vscode-focusBorder': '#0078d4',
   '--vscode-charts-blue': '#3794ff',
   '--vscode-contrastBorder': '',
-  '--vscode-panel-border': '#2b2b2b'
+  '--vscode-panel-border': '#2b2b2b',
+  '--vscode-charts-yellow': '#cca700',
+  '--vscode-testing-iconPassed': '#73c991',
+  '--vscode-testing-iconFailed': '#f14c4c',
+  '--vscode-disabledForeground': '#cccccc',
+  '--vscode-errorForeground': '#f85149'
+};
+
+const DARK_RUNS: ThemeColors['runs'] = {
+  running: '#cca700',
+  passed: '#73c991',
+  failed: '#f14c4c',
+  stopped: '#cccccc',
+  'failed-to-start': '#f85149'
 };
 
 const DARK_COLORS: ThemeColors = {
@@ -21,7 +34,8 @@ const DARK_COLORS: ThemeColors = {
   edge: '#9d9d9d',
   selected: '#0078d4',
   highlighted: '#3794ff',
-  frame: '#2b2b2b'
+  frame: '#2b2b2b',
+  runs: DARK_RUNS
 };
 
 describe('FEATURE: themeColorsOf', () => {
@@ -32,7 +46,7 @@ describe('FEATURE: themeColorsOf', () => {
       expect(colors).toStrictEqual(DARK_COLORS);
     });
 
-    it('WHEN the colours are read THEN only the seven theme variables are read', () => {
+    it('WHEN the colours are read THEN only the twelve theme variables are read', () => {
       const read: string[] = [];
 
       themeColorsOf(cssVariableReaderMock(DARK, read));
@@ -61,6 +75,17 @@ describe('FEATURE: themeColorsOf', () => {
     const colors = themeColorsOf(cssVariableReaderMock({}));
 
     expect(colors).toStrictEqual(FALLBACK_COLORS);
+  });
+
+  it.each([
+    ['#cccccc80', 'rgba(204, 204, 204, 0.5)'],
+    ['#ccc8', 'rgba(204, 204, 204, 0.53)']
+  ])('GIVEN the stopped colour %s with alpha WHEN the colours are read THEN it reads as %s, which Cytoscape parses', (hex, rgba) => {
+    const translucent = { ...DARK, '--vscode-disabledForeground': hex };
+
+    const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+    expect(colors.runs.stopped).toBe(rgba);
   });
 
   it('GIVEN a value with surrounding spaces WHEN the colours are read THEN it is trimmed', () => {

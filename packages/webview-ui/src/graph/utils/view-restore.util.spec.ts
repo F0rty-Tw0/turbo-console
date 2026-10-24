@@ -23,7 +23,9 @@ const SAVED: GraphViewState = {
   trace: null,
   folder: null,
   grouped: false,
-  collapsed: []
+  collapsed: [],
+  mode: 'packages',
+  task: null
 };
 
 describe('FEATURE: restorePlanOf', () => {

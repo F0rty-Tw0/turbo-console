@@ -20,7 +20,15 @@ type PortSpies = {
 const portsMock = (activeFile: string | null, rootOf: string | null, picked: string | undefined): PortSpies => {
   const pick = vi.fn<RootPickPorts['pick']>().mockResolvedValue(picked);
   const info = vi.fn<RootPickPorts['info']>();
-  const ports: RootPickPorts = { activeFile: () => activeFile, rootOf: () => rootOf, pick, info, error: vi.fn(), log: vi.fn() };
+  const ports: RootPickPorts = {
+    activeFile: () => activeFile,
+    rootOf: () => rootOf,
+    pick,
+    pickMany: vi.fn(),
+    info,
+    error: vi.fn(),
+    log: vi.fn()
+  };
   const spies: PortSpies = { ports, pick, info };
 
   return spies;

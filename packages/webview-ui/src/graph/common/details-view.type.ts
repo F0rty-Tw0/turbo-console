@@ -31,6 +31,8 @@ type PackageParts = {
   readonly focus: HTMLButtonElement;
   readonly exclude: HTMLButtonElement;
   readonly startTrace: HTMLButtonElement;
+  /** Hidden for a package with no visible task. */
+  readonly showTasks: HTMLButtonElement;
   readonly dependencies: NeighbourItem[];
   readonly dependents: NeighbourItem[];
 };

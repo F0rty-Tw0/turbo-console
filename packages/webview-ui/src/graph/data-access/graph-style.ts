@@ -1,5 +1,6 @@
 import type { Css, NodeSingular, StylesheetJson } from 'cytoscape';
 
+import { taskRulesOf } from './graph-task-style.ts';
 import {
   COLLAPSED_LABEL_MAX_PX,
   DIMMED_BOX_CLASS,
@@ -50,6 +51,14 @@ const folderLinkStyleOf = (colors: ThemeColors, fontFamily: string): Css.Edge =>
 
 const HIDDEN = { display: 'none' } as const;
 
+const GHOST_NODE = { 'border-style': 'dashed', 'text-opacity': 0.75 } as const;
+
+const GHOST_EDGE = { 'line-style': 'dashed' } as const;
+
+const DIMMED = { opacity: 0.25 } as const;
+
+const DIMMED_BOX = { 'border-opacity': 0.25, 'text-opacity': 0.25, 'background-opacity': 0.25 } as const;
+
 /** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
 const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
 
@@ -57,11 +66,11 @@ const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
 const titleWidthOf = (box: NodeSingular): string => `${box.width()}px`;
 
 /**
- * What `exportPngOf` adds to a box while it runs: its folder title centred in the top padding band, inside the frame,
- * cut with an ellipsis when wider than the box; the page never shows it. `cy.png` bounds skip the title, so outside
- * the frame it would be cut off at the image edge.
+ * A box's title centred in the top padding band, inside the frame, cut with an ellipsis when wider than the box. A folder
+ * box draws it only while `exportPngOf` runs, since the page shows its DOM header row instead; `taskRulesOf` left-aligns
+ * it for a task box. `cy.png` bounds skip the title, so outside the frame it would be cut off at the image edge.
  */
-const EXPORTING_BOX = {
+const BOX_TITLE = {
   label: 'data(title)',
   'text-valign': 'top',
   'text-halign': 'center',
@@ -73,7 +82,7 @@ const EXPORTING_BOX = {
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with
  * a triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies;
- * `ghost` (dashed) is the one `GraphView.setGhosts` applies. The folder pass draws `folder-node` (a collapsed folder, its
+ * `ghost` (dashed) is the one `GraphView.setGhosts` applies; `taskRulesOf` adds the task mode rules. The folder pass draws `folder-node` (a collapsed folder, its
  * label wrapped) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it.
  * Every colour comes from `colors`.
  */
@@ -103,26 +112,24 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
   const highlightedNode = { 'border-width': 2, 'border-color': colors.highlighted };
   const highlightedEdge = { width: 2, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
   const selectedEdge = { width: 3, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
-  const ghostNode = { 'border-style': 'dashed', 'text-opacity': 0.75 } as const;
-  const ghostEdge = { 'line-style': 'dashed' } as const;
-  const dimmed = { opacity: 0.25 };
   const folderNode = { label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px` } as const;
-  const dimmedBox = { 'border-opacity': 0.25, 'text-opacity': 0.25, 'background-opacity': 0.25 };
+  const taskRules = taskRulesOf(colors, BOX_TITLE);
   const style: StylesheetJson = [
     { selector: 'node', style: node },
     { selector: 'node:parent', style: boxStyleOf(colors) },
-    { selector: `node:parent.${EXPORTING_CLASS}`, style: EXPORTING_BOX },
+    { selector: `node:parent.${EXPORTING_CLASS}`, style: BOX_TITLE },
+    ...taskRules,
     { selector: 'edge', style: edge },
     { selector: 'node.selected', style: selectedNode },
     { selector: 'node.highlighted', style: highlightedNode },
     { selector: 'edge.highlighted', style: highlightedEdge },
     { selector: 'edge.selected', style: selectedEdge },
-    { selector: 'node.ghost', style: ghostNode },
-    { selector: 'edge.ghost', style: ghostEdge },
-    { selector: '.dimmed', style: dimmed },
+    { selector: 'node.ghost', style: GHOST_NODE },
+    { selector: 'edge.ghost', style: GHOST_EDGE },
+    { selector: '.dimmed', style: DIMMED },
     { selector: `node.${FOLDER_NODE_CLASS}`, style: folderNode },
     { selector: `edge.${FOLDER_LINK_CLASS}`, style: folderLinkStyleOf(colors, fontFamily) },
-    { selector: `node.${DIMMED_BOX_CLASS}`, style: dimmedBox },
+    { selector: `node.${DIMMED_BOX_CLASS}`, style: DIMMED_BOX },
     { selector: `.${FOLDER_HIDDEN_CLASS}`, style: HIDDEN }
   ];
 

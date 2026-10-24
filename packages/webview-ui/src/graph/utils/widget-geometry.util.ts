@@ -93,3 +93,14 @@ export const isWidgetShown = (rect: RectPx, bounds: LayerBounds): boolean => {
 
   return bounds.overlayLeft === null || rect.x2 <= bounds.overlayLeft;
 };
+
+/** A details panel's left edge in container px while it overlays the canvas, else `null`: closed, docked or not built. */
+export const overlayLeftOf = (
+  panel: Pick<HTMLElement, 'hidden' | 'offsetLeft'> | null,
+  container: Pick<HTMLElement, 'offsetLeft'>,
+  isOverlay: boolean
+): number | null => {
+  if (panel === null || !isOverlay || panel.hidden) return null;
+
+  return panel.offsetLeft - container.offsetLeft;
+};

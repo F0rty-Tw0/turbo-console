@@ -1,4 +1,4 @@
-import type { PngInfo, TitleBandInk } from '../../common/graph.type.ts';
+import type { ColourInkInput, PngInfo, TitleBandInk } from '../../common/graph.type.ts';
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
@@ -64,4 +64,33 @@ export const titleBandInkOf = async (png: string): Promise<TitleBandInk> => {
   const ink: TitleBandInk = { inside: inkColumns.length - nearSides, nearSides };
 
   return ink;
+};
+
+/**
+ * Runs in the page: decodes a base64 PNG and counts its pixels within 24 of `colour` in every channel. Anti-aliased
+ * lines of a lighter colour fade toward the background, so they never come that close to a darker label colour.
+ */
+export const colourInkOf = async ({ png, colour }: ColourInkInput): Promise<number> => {
+  const TOLERANCE = 24;
+  const CHANNELS = [0, 1, 2];
+  const channelTexts = colour.match(/\d+/g) ?? [];
+  const rgb = channelTexts.map(Number);
+  const charCodeOf = (char: string): number => char.charCodeAt(0);
+  const bytes = Uint8Array.from(atob(png), charCodeOf);
+  const blob = new Blob([bytes], { type: 'image/png' });
+  const image = await createImageBitmap(blob);
+  const canvas = new OffscreenCanvas(image.width, image.height);
+  const context = canvas.getContext('2d');
+
+  if (context === null) throw new Error('No 2D context to decode the PNG');
+
+  context.drawImage(image, 0, 0);
+
+  const { data } = context.getImageData(0, 0, image.width, image.height);
+  const pixels = Array.from({ length: data.length / 4 }, (_, index: number): number => index * 4);
+  const isNear = (offset: number, channel: number): boolean =>
+    Math.abs((data[offset + channel] ?? 0) - (rgb[channel] ?? 0)) <= TOLERANCE;
+  const isInk = (offset: number): boolean => CHANNELS.every((channel: number): boolean => isNear(offset, channel));
+
+  return pixels.filter(isInk).length;
 };

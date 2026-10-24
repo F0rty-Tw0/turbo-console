@@ -6,7 +6,7 @@ import { expect } from '@playwright/test';
 import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { LayoutEngine, ProbeEdge, ProbeNode, ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 import { NODE_HEIGHT, NODE_PADDING_X } from '../../src/graph/common/graph.const.ts';
-import { LAYOUT_SETTLE_MS } from '../common/graph.const.ts';
+import { LAYOUT_SETTLE_MS, NEXT_FRAME } from '../common/graph.const.ts';
 import type { EdgeStates, NodeStates } from '../common/graph.type.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
@@ -52,8 +52,10 @@ export class GraphProbePage {
     this.page = page;
   }
 
+  /** Nodes are drawn and two frames have passed, so a toolbar reflow from the last input has reached Cytoscape's tap offset. */
   public async waitForNodes(): Promise<void> {
     await this.page.waitForFunction(hasNodes);
+    await this.page.evaluate(NEXT_FRAME);
   }
 
   public async nodes(): Promise<ProbeNode[]> {

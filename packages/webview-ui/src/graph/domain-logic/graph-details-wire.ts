@@ -78,6 +78,8 @@ const wirePackage = (view: PackageDetails, name: string, env: DetailsEnv): void 
   onClick(view.focus, (): void => deps.onFocus(name));
   onClick(view.exclude, (): void => deps.onExclude(name));
   onClick(view.startTrace, (): void => deps.onInput(START_TRACE));
+  onClick(view.showTasks, (): void => deps.onShowTasks(name));
+  view.showTasks.hidden = !deps.hasTasks(name);
 };
 
 const packageOf = (name: string, context: DetailsContext, env: DetailsEnv): DetailsView => {
