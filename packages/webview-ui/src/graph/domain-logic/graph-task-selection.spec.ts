@@ -270,6 +270,15 @@ describe('FEATURE: GraphTaskSelection', () => {
     expect(rig.widgets.exit).toHaveBeenCalledTimes(1);
   });
 
+  it('GIVEN web#build hovered WHEN task mode is left and entered again THEN the canvas is painted with no target', () => {
+    selection.hover('web#build');
+    selection.enter(true);
+    selection.exit();
+    selection.enter(true);
+
+    expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+  });
+
   it('GIVEN a frame rendered WHEN it is passed on THEN the task "…" follows', () => {
     selection.rendered();
 

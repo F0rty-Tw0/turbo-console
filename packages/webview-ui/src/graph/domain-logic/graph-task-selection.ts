@@ -93,8 +93,10 @@ export class GraphTaskSelection {
     this.repaint();
   }
 
+  /** Leaving task mode drops the hover too: no mouseout reaches a pointer that stays, so re-entering would light it stale. */
   public exit(): void {
     this.isEntered = false;
+    this.hovered = null;
     this.details.exit();
     this.widgets.exit();
   }
