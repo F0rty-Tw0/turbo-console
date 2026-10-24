@@ -5,6 +5,9 @@ import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
 import type { ShownManifest, ShownTask, WalkedTree } from '../common/launch.type.ts';
 
+/** Core's separator between an atom group's umbrella name and a file's spec path in a file task's name. */
+const GROUP_SEPARATOR = '--';
+
 const SHOWN_TASK_KINDS: ReadonlySet<TaskKind> = new Set<TaskKind>(['task', 'aggregate', 'umbrella']);
 
 const shownTasksOf = (manifest: ShownManifest): ShownTask[] => {
@@ -25,12 +28,22 @@ const sortGroups = (groups: Record<string, string[]>): void => {
   for (const group of Object.values(groups)) group.sort();
 };
 
-/** The package a `task` row sits under, through its `pkg` node or its umbrella's `task` node; throws when it sits anywhere else. */
+/**
+ * The package a `task` row sits under, through its `pkg` node or its umbrella's `task` node; throws when it sits
+ * anywhere else, or under an umbrella whose `<umbrella>--` prefix its key lacks.
+ */
 const packageKeyOf = (task: TreeNode, parent: TreeNode | undefined): string => {
   const isInPackage = parent?.kind === 'pkg' || parent?.kind === 'task';
   const isOutside = parent === undefined || !isInPackage || parent.packageName === null;
 
   if (isOutside) throw new Error(`task row ${task.key} sits outside a package`);
+
+  const isUnderTask = parent.kind === 'task';
+  const filePrefix = `${parent.key}${GROUP_SEPARATOR}`;
+  const hasPrefix = task.key.startsWith(filePrefix);
+  const isFileOfParent = !isUnderTask || hasPrefix;
+
+  if (!isFileOfParent) throw new Error(`task row ${task.key} sits under ${parent.key}, not of its group`);
 
   return parent.packageName;
 };
