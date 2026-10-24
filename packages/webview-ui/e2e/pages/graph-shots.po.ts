@@ -12,7 +12,7 @@ import { GraphToolbar } from './graph-toolbar.po.ts';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { GraphPage } from './graph.po.ts';
 import type { Positions } from '../../src/bridge/common/graph-state.type.ts';
-import type { ShotSetup } from '../common/graph-shots.type.ts';
+import type { ShotSetup, TaskShotSetup } from '../common/graph-shots.type.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
 import type { ThemeStub } from '../common/graph.type.ts';
 import { cachedShotState } from '../test/utils/graph-shot-state.spec.util.ts';
@@ -59,6 +59,20 @@ export class GraphShots {
     await this.settle();
   }
 
+  /**
+   * Task mode, ELK once, the selected task restored; settled. Reduced motion is on before the page opens, so the flow
+   * overlay never draws and its moving dashes stay out of the shot.
+   */
+  public async openTasks(setup: TaskShotSetup, theme: ThemeStub): Promise<void> {
+    await this.page.emulateMedia({ reducedMotion: 'reduce' });
+    await this.graph.open({ savedState: setup.saved });
+    await this.look.applyTheme(theme);
+    await this.host.sendState(setup.state);
+    await this.probe.expectLayoutEngine('elk');
+    await this.expectTaskSelected(setup.saved.task?.selected ?? null);
+    await this.settle();
+  }
+
   /** Controls open, `name` selected by keyboard, Details open and headed `name`; settled. */
   public async inspect(name: string): Promise<void> {
     await this.controls.toggle();
@@ -86,6 +100,17 @@ export class GraphShots {
     await this.host.reopen();
 
     return positions;
+  }
+
+  /** Task mode draws the selection as the node state, not as the probe's package selection. */
+  private async expectTaskSelected(id: string | null): Promise<void> {
+    const isSelected = async (): Promise<boolean> => {
+      const nodes = await this.probe.nodes();
+
+      return nodes.some((node): boolean => node.id === id && node.state === 'selected');
+    };
+
+    await expect.poll(isSelected).toBe(true);
   }
 
   /** Codicons drawn, canvas at its container's size, two frames painted, and no hover style under the mouse. */
