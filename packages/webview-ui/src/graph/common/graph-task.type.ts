@@ -100,8 +100,8 @@ export type TaskModeDeps = {
   readonly widgetsOf: () => TaskWidgets;
   /** The flow overlay, stopped as a layout is placed or the task canvas empties. */
   readonly flow: Pick<FlowControl, 'stop'>;
-  /** After each task canvas paint and each placed task layout: tells the flow overlay whether the painted target has highlighted task edges. */
-  readonly onHighlight: (isOn: boolean) => void;
+  /** After each task canvas paint and each placed task layout: tells the flow overlay how many task edges the painted target highlights. */
+  readonly onHighlight: (litEdgeCount: number) => void;
 };
 
 /** What a task panel's open or close touches: the canvas, re-measured, and the saved open state. */

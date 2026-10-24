@@ -54,7 +54,7 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
     detailsOf,
     widgetsOf,
     onFailure,
-    onHighlight: (isOn: boolean): void => hooks.flow.highlightChanged(isOn)
+    onHighlight: (litEdgeCount: number): void => hooks.flow.highlightChanged(litEdgeCount)
   };
   const mode = new GraphTaskMode(taskDeps);
 

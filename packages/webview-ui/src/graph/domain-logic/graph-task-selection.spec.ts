@@ -55,7 +55,7 @@ describe('FEATURE: GraphTaskSelection', () => {
       widgetsOf: (): TaskWidgets => rig.widgets,
       task: rig.view,
       save: rig.save,
-      onHighlight: vi.fn<(isOn: boolean) => void>()
+      onHighlight: vi.fn<(litEdgeCount: number) => void>()
     });
     selection.setShown(TASK_CHAIN_STUB);
   });

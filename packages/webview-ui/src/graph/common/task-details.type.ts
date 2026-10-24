@@ -100,8 +100,8 @@ export type TaskWidgetsDeps = {
 /** What `GraphTaskSelection` paints on, builds the panel and the "…" with, and reads and saves the task view through. */
 export type TaskSelectionDeps = {
   readonly view: Pick<GraphView, 'tasks' | 'flowEdges'>;
-  /** After each canvas paint: `isOn` while the painted target has highlighted edges. */
-  readonly onHighlight: (isOn: boolean) => void;
+  /** After each canvas paint: how many edges the painted target highlights, `0` for none. */
+  readonly onHighlight: (litEdgeCount: number) => void;
   readonly detailsOf: (actions: TaskDetailsActions) => TaskDetails;
   readonly widgetsOf: () => TaskWidgets;
   readonly task: () => TaskViewState;

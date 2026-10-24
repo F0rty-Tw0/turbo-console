@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import { GraphFlow } from './graph-flow.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
@@ -34,6 +35,7 @@ describe('FEATURE: GraphFlow', () => {
   let container: HTMLElement;
   let isReduced: boolean;
   let litEdges: FlowEdgeGeometry[];
+  let readEdges: Mock<() => FlowEdgeGeometry[]>;
   let flow: GraphFlow;
 
   beforeEach(() => {
@@ -47,11 +49,12 @@ describe('FEATURE: GraphFlow', () => {
     container = document.createElement('div');
     isReduced = false;
     litEdges = [EDGE];
+    readEdges = vi.fn<() => FlowEdgeGeometry[]>((): FlowEdgeGeometry[] => litEdges);
     flow = new GraphFlow({
       ...clock,
       canvas,
       container,
-      edges: (): FlowEdgeGeometry[] => litEdges,
+      edges: readEdges,
       viewport: (): Viewport => CAMERA,
       isReduced: (): boolean => isReduced
     });
@@ -64,12 +67,16 @@ describe('FEATURE: GraphFlow', () => {
 
   describe('GIVEN a highlight in task mode', () => {
     beforeEach(() => {
-      flow.highlightChanged(true);
+      flow.highlightChanged(1);
     });
 
     it('WHEN it turns on THEN one frame is asked for and nothing is drawn yet', () => {
       expect(clock.pendingFrames()).toBe(1);
       expect(pen.stroke).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it turns on THEN the edge geometry is not read before a frame draws it', () => {
+      expect(readEdges).not.toHaveBeenCalled();
     });
 
     it('WHEN a frame runs THEN the canvas is cleared and the edge drawn at the camera, at the phase of the clock', () => {
@@ -86,7 +93,7 @@ describe('FEATURE: GraphFlow', () => {
     });
 
     it('WHEN it turns on again while running THEN still one frame is pending', () => {
-      flow.highlightChanged(true);
+      flow.highlightChanged(1);
 
       expect(clock.pendingFrames()).toBe(1);
     });
@@ -123,7 +130,7 @@ describe('FEATURE: GraphFlow', () => {
 
     it('WHEN it idled and a highlight turns on again THEN it runs again', () => {
       clock.advance(FLOW_IDLE_MS);
-      flow.highlightChanged(true);
+      flow.highlightChanged(1);
 
       expect(clock.pendingFrames()).toBe(1);
     });
@@ -131,7 +138,7 @@ describe('FEATURE: GraphFlow', () => {
     it('WHEN the highlight turns off THEN no frame is pending and the canvas is cleared', () => {
       clock.advance(40);
       pen.clearRect.mockClear();
-      flow.highlightChanged(false);
+      flow.highlightChanged(0);
 
       expect(clock.pendingFrames()).toBe(0);
       expect(pen.clearRect).toHaveBeenCalledOnce();
@@ -140,7 +147,7 @@ describe('FEATURE: GraphFlow', () => {
     it('WHEN it stops THEN the idle timer goes too, so a later highlight runs its full idle time', () => {
       clock.advance(2000);
       flow.stop();
-      flow.highlightChanged(true);
+      flow.highlightChanged(1);
       clock.advance(2000);
 
       expect(clock.pendingFrames()).toBe(1);
@@ -162,7 +169,7 @@ describe('FEATURE: GraphFlow', () => {
     });
 
     it('WHEN a highlight turns on THEN no frame is asked for and nothing is ever drawn', () => {
-      flow.highlightChanged(true);
+      flow.highlightChanged(1);
       clock.advance(200);
 
       expect(clock.pendingFrames()).toBe(0);
@@ -173,14 +180,14 @@ describe('FEATURE: GraphFlow', () => {
   describe(`GIVEN the limit of ${FLOW_EDGE_LIMIT} highlighted edges`, () => {
     it(`WHEN ${FLOW_EDGE_LIMIT} edges are lit THEN the flow starts`, () => {
       litEdges = edgesOf(FLOW_EDGE_LIMIT);
-      flow.highlightChanged(true);
+      flow.highlightChanged(FLOW_EDGE_LIMIT);
 
       expect(clock.pendingFrames()).toBe(1);
     });
 
     it(`WHEN ${FLOW_EDGE_LIMIT + 1} edges are lit THEN no frame is asked for and nothing is ever drawn`, () => {
       litEdges = edgesOf(FLOW_EDGE_LIMIT + 1);
-      flow.highlightChanged(true);
+      flow.highlightChanged(FLOW_EDGE_LIMIT + 1);
       clock.advance(200);
 
       expect(clock.pendingFrames()).toBe(0);
@@ -188,11 +195,11 @@ describe('FEATURE: GraphFlow', () => {
     });
 
     it(`WHEN a running flow's highlight grows to ${FLOW_EDGE_LIMIT + 1} edges THEN it stops and the canvas is cleared`, () => {
-      flow.highlightChanged(true);
+      flow.highlightChanged(1);
       clock.advance(40);
       pen.clearRect.mockClear();
       litEdges = edgesOf(FLOW_EDGE_LIMIT + 1);
-      flow.highlightChanged(true);
+      flow.highlightChanged(FLOW_EDGE_LIMIT + 1);
 
       expect(clock.pendingFrames()).toBe(0);
       expect(pen.clearRect).toHaveBeenCalledOnce();

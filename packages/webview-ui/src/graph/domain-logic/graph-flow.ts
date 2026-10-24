@@ -22,9 +22,11 @@ export class GraphFlow implements FlowControl {
     deps.container.addEventListener('pointermove', (): void => this.moved());
   }
 
-  public highlightChanged(isOn: boolean): void {
+  public highlightChanged(litEdgeCount: number): void {
     const isReduced = this.deps.isReduced();
-    const isAnimated = isOn && !isReduced && !this.isOverLimit();
+    const isOn = litEdgeCount > 0;
+    const isOverLimit = litEdgeCount > FLOW_EDGE_LIMIT;
+    const isAnimated = isOn && !isReduced && !isOverLimit;
 
     if (!isAnimated) {
       this.stop();
@@ -58,10 +60,6 @@ export class GraphFlow implements FlowControl {
 
   public setColor(css: string): void {
     this.color = css;
-  }
-
-  private isOverLimit(): boolean {
-    return this.deps.edges().length > FLOW_EDGE_LIMIT;
   }
 
   private schedule(): void {

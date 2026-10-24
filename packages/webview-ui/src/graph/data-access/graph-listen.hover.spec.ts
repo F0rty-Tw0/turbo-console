@@ -37,6 +37,48 @@ describe('FEATURE: listen hover', () => {
       expect(vi.mocked(handlers.onHoverNode).mock.calls).toStrictEqual([['a'], [null]]);
     });
 
+    it('WHEN the pointer moves on a node it never left THEN onHoverNode hears nothing more', () => {
+      cy.getElementById('a').emit('mouseover');
+      cy.getElementById('a').emit('mousemove');
+
+      expect(vi.mocked(handlers.onHoverNode).mock.calls).toStrictEqual([['a']]);
+    });
+
+    it('WHEN the pointer leaves the canvas from a node and returns to it THEN onHoverNode gets its id again', () => {
+      cy.getElementById('a').emit('mouseover');
+      cy.emit('mouseout');
+      cy.getElementById('a').emit('mousemove');
+
+      expect(vi.mocked(handlers.onHoverNode).mock.calls).toStrictEqual([['a'], [null], ['a']]);
+    });
+
+    it('WHEN the pointer moves twice after returning THEN onHoverNode hears the node once', () => {
+      cy.getElementById('a').emit('mouseover');
+      cy.emit('mouseout');
+      cy.getElementById('a').emit('mousemove');
+      cy.getElementById('a').emit('mousemove');
+
+      expect(vi.mocked(handlers.onHoverNode).mock.calls).toStrictEqual([['a'], [null], ['a']]);
+    });
+
+    it('WHEN the pointer returns onto another node, which also gets a mouseover, THEN onHoverNode hears it once', () => {
+      cy.getElementById('a').emit('mouseover');
+      cy.emit('mouseout');
+      cy.getElementById('b').emit('mousemove');
+      cy.getElementById('b').emit('mouseover');
+
+      expect(vi.mocked(handlers.onHoverNode).mock.calls).toStrictEqual([['a'], [null], ['b']]);
+    });
+
+    it('WHEN the pointer returns to a node, leaves it and enters it again THEN onHoverNode hears each enter', () => {
+      cy.emit('mouseout');
+      cy.getElementById('a').emit('mousemove');
+      cy.getElementById('a').emit('mouseout');
+      cy.getElementById('a').emit('mouseover');
+
+      expect(vi.mocked(handlers.onHoverNode).mock.calls).toStrictEqual([[null], ['a'], [null], ['a']]);
+    });
+
     it('WHEN the pointer enters an edge THEN onHoverNode hears nothing', () => {
       cy.getElementById(edgeIdOf({ source: 'a', target: 'b' })).emit('mouseover');
 

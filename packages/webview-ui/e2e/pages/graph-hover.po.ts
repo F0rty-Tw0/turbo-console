@@ -20,6 +20,9 @@ const STEP_SPAN_MS = 16;
 /** Each step the pointer sits 1 px right of the node's centre or on it, so it moves yet stays on the node. */
 const NUDGE_PX = 1;
 
+/** How far above the canvas's box `leaveCanvas` puts the pointer. */
+const LEAVE_GAP_PX = 4;
+
 /** The pointer resting on the drawn graph, aimed through the probe's rendered node centres. */
 export class GraphHover {
   private readonly page: Page;
@@ -53,6 +56,16 @@ export class GraphHover {
     const spot: ViewportPoint = emptySpotOf(container, nodes, edges, zoom);
 
     await this.page.mouse.move(spot.x, spot.y);
+    await this.page.evaluate(ONE_FRAME);
+  }
+
+  /** Moves the pointer just above the canvas's box, off the container, and lets a frame draw. */
+  public async leaveCanvas(): Promise<void> {
+    const container = await this.container.evaluate(readRect);
+    const x = container.left + container.width / 2;
+    const y = container.top - LEAVE_GAP_PX;
+
+    await this.page.mouse.move(x, y);
     await this.page.evaluate(ONE_FRAME);
   }
 

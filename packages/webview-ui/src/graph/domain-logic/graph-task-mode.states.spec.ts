@@ -124,7 +124,7 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       const stoppedAt = rig.flow.stop.mock.invocationCallOrder.at(-1) ?? Number.NaN;
       const heardAt = rig.flow.highlightChanged.mock.invocationCallOrder.at(-1) ?? Number.NaN;
 
-      expect(rig.flow.highlightChanged).toHaveBeenLastCalledWith(true);
+      expect(rig.flow.highlightChanged).toHaveBeenLastCalledWith(1);
       expect(stoppedAt).toBeLessThan(heardAt);
     });
   });

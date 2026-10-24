@@ -16,6 +16,8 @@ const RF5 = { description: 'M4-5a Review Focus 5', type: 'requirement' };
 
 const S1 = { description: 'M4-5a slice 3 review S1: a hover must not outlive the pointer', type: 'requirement' };
 
+const D1 = { description: 'M4-5a slice 3 delta review D1: a pointer returning to the same task lights it again', type: 'requirement' };
+
 const TARGET_LIKE_HASH = '7a7a7a7b';
 
 const PACKAGES = stateNamesOf(CONTROLS_CACHED_STUB);
@@ -90,6 +92,27 @@ test.describe('FEATURE: graph task hover', () => {
 
         await test.step('THEN lib-3#build reads selected and lib-3#docs is not lit', async (): Promise<void> =>
           graphProbe.expectNodeStates(targetLikeBuildLitStates()));
+      }
+    );
+
+    test(
+      'a pointer that leaves the canvas and returns straight onto the same task lights it again',
+      { annotation: D1 },
+      async ({ graphHover, graphProbe }): Promise<void> => {
+        await test.step('WHEN lib-3#test is hovered and the pointer leaves the canvas', async (): Promise<void> => {
+          await graphHover.overNode('lib-3#test');
+          await graphProbe.expectNodeStates(targetLikeLitStatesOf('lib-3#test'));
+          await graphHover.leaveCanvas();
+        });
+
+        await test.step('THEN every node reads normal', async (): Promise<void> =>
+          graphProbe.expectNodeStates(TARGET_LIKE_NORMAL_SHOWN));
+
+        await test.step('WHEN the pointer returns straight onto lib-3#test', async (): Promise<void> =>
+          graphHover.overNode('lib-3#test'));
+
+        await test.step('THEN it reads selected again, its chain highlighted', async (): Promise<void> =>
+          graphProbe.expectNodeStates(targetLikeLitStatesOf('lib-3#test')));
       }
     );
 

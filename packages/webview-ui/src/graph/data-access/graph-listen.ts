@@ -24,13 +24,46 @@ const positionsOf = (cy: Core): Positions => {
   return Object.fromEntries(entries);
 };
 
-/** The core's own `mouseout`, never a node's bubbling up: the pointer left the canvas, so no node is hovered. */
-const hoverEndOf = (cy: Core, handlers: GraphViewHandlers): ((event: EventObject) => void) => {
-  const onMouseOut = (event: EventObject): void => {
-    if (event.target === cy) handlers.onHoverNode(null);
+/**
+ * Reports the hovered node on `mouseover`, none on `mouseout`, and none on the core's own `mouseout`, never a node's
+ * bubbling up: the pointer left the canvas, so no node is hovered. Cytoscape keeps the node it last hovered across that
+ * exit and sends no `mouseover` when the pointer returns to it, so the first `mousemove` on a node after an exit reports
+ * it; a `mouseover` that follows in the same move is the same report and is skipped.
+ */
+const listenHover = (cy: Core, handlers: GraphViewHandlers): void => {
+  let isOutside = false;
+  let returnedTo: string | null = null;
+  const onOver = (event: EventObjectNode): void => {
+    const name = nodeName(event);
+    const isReturn = name === returnedTo;
+
+    isOutside = false;
+    returnedTo = null;
+
+    if (!isReturn) handlers.onHoverNode(name);
+  };
+  const onOut = (): void => {
+    returnedTo = null;
+    handlers.onHoverNode(null);
+  };
+  const onLeave = (event: EventObject): void => {
+    if (event.target !== cy) return;
+
+    isOutside = true;
+    onOut();
+  };
+  const onMove = (event: EventObjectNode): void => {
+    if (!isOutside) return;
+
+    isOutside = false;
+    returnedTo = nodeName(event);
+    handlers.onHoverNode(returnedTo);
   };
 
-  return onMouseOut;
+  cy.on('mouseover', 'node', onOver);
+  cy.on('mouseout', 'node', onOut);
+  cy.on('mouseout', onLeave);
+  cy.on('mousemove', 'node', onMove);
 };
 
 /**
@@ -41,7 +74,8 @@ const hoverEndOf = (cy: Core, handlers: GraphViewHandlers): ((event: EventObject
  * right after a tap elsewhere never fires. Ids, not elements, so a redraw between the taps keeps the pair. A drag ends
  * on `dragfreeon`, emitted once on the grabbed node; `dragfree` fires on every dragged element, a box's packages too.
  * Cytoscape ends a node's hover from its own mousemove only, which never runs once the pointer is outside the container,
- * so a pointer leaving the canvas straight from a node ends the hover on the core's own `mouseout` (the container's).
+ * so a pointer leaving the canvas straight from a node ends the hover on the core's own `mouseout` (the container's),
+ * and the pointer coming back onto the same node starts it again on that node's first `mousemove`.
  */
 export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   const noteTap = tapPairOf();
@@ -102,9 +136,7 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   cy.on('tap', 'node', onNode);
   cy.on('tap', 'edge', onEdge);
   cy.on('tap', onBackground);
-  cy.on('mouseover', 'node', (event: EventObjectNode): void => handlers.onHoverNode(nodeName(event)));
-  cy.on('mouseout', 'node', (): void => handlers.onHoverNode(null));
-  cy.on('mouseout', hoverEndOf(cy, handlers));
+  listenHover(cy, handlers);
   cy.on('dragfreeon', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
   cy.on('viewport', handlers.onViewport);
   cy.on('render', handlers.onRender);

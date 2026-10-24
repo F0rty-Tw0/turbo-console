@@ -148,13 +148,13 @@ export class GraphTaskSelection {
     this.announce(target);
   }
 
-  /** Tells the flow whether the painted `target` has highlighted task edges on the canvas. */
+  /** Tells the flow how many task edges the painted `target` highlights on the canvas, `0` for no target. */
   private announce(target: string | null): void {
     const { view, onHighlight } = this.deps;
     const litEdges = view.flowEdges();
-    const isOn = target !== null && litEdges.length > 0;
+    const litEdgeCount = target === null ? 0 : litEdges.length;
 
-    onHighlight(isOn);
+    onHighlight(litEdgeCount);
   }
 
   private refill(model: TaskDetailsModel | null): void {

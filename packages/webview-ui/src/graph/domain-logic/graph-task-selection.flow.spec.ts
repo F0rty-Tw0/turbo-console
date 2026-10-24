@@ -17,7 +17,7 @@ const LIT_EDGE: FlowEdgeGeometry = { source: ORIGIN, target: ORIGIN, controlPoin
 describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
   let canvas: Mocked<TaskCanvas>;
   let litEdges: FlowEdgeGeometry[];
-  let onHighlight: Mock<(isOn: boolean) => void>;
+  let onHighlight: Mock<(litEdgeCount: number) => void>;
   let selection: GraphTaskSelection;
 
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
 
     const view = { tasks: canvas, flowEdges };
 
-    onHighlight = vi.fn<(isOn: boolean) => void>();
+    onHighlight = vi.fn<(litEdgeCount: number) => void>();
     selection = new GraphTaskSelection({
       view,
       detailsOf: taskDetailsMock,
@@ -53,7 +53,7 @@ describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
       const paintedAt = canvas.paint.mock.invocationCallOrder.at(-1) ?? Number.NaN;
       const heardAt = onHighlight.mock.invocationCallOrder[0] ?? Number.NaN;
 
-      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(true);
+      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(1);
       expect(paintedAt).toBeLessThan(heardAt);
     });
 
@@ -61,26 +61,33 @@ describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
       selection.hover('web#build');
       selection.hover(null);
 
-      expect(onHighlight).toHaveBeenLastCalledWith(false);
+      expect(onHighlight).toHaveBeenLastCalledWith(0);
     });
 
     it('WHEN web#build is tapped THEN the flow hears of a highlight', () => {
       selection.tapNode('web#build');
 
-      expect(onHighlight).toHaveBeenLastCalledWith(true);
+      expect(onHighlight).toHaveBeenLastCalledWith(1);
+    });
+
+    it('WHEN web#build is hovered with three edges lit THEN the flow hears the count of three', () => {
+      litEdges = [LIT_EDGE, LIT_EDGE, LIT_EDGE];
+      selection.hover('web#build');
+
+      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(3);
     });
 
     it('WHEN web#build is hovered while no edge is lit THEN the flow hears of no highlight', () => {
       litEdges = [];
       selection.hover('web#build');
 
-      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(false);
+      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(0);
     });
 
     it('WHEN the task layout is placed THEN the flow hears of no highlight', () => {
       selection.placed();
 
-      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(false);
+      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(0);
     });
   });
 
@@ -101,14 +108,14 @@ describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
       canvas.paint.mockClear();
       selection.placed();
 
-      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(true);
+      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(1);
       expect(canvas.paint).not.toHaveBeenCalled();
     });
 
     it('WHEN the shown tasks lose web#build THEN the flow hears the highlight is gone', () => {
       selection.setShown([]);
 
-      expect(onHighlight).toHaveBeenLastCalledWith(false);
+      expect(onHighlight).toHaveBeenLastCalledWith(0);
     });
   });
 });

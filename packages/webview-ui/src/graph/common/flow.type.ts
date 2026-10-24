@@ -17,8 +17,8 @@ export type FlowSegment = {
 
 /** What the page's flow overlay is told; `GraphFlow` implements it, and the controller builds it once with the view. */
 export type FlowControl = {
-  /** A task-mode paint: `isOn` while the painted target has highlighted task edges. */
-  readonly highlightChanged: (isOn: boolean) => void;
+  /** A task-mode paint: how many task edges the painted target highlights, `0` for none. */
+  readonly highlightChanged: (litEdgeCount: number) => void;
   /** The pointer moved over the canvas. */
   readonly moved: () => void;
   readonly viewportChanged: () => void;
