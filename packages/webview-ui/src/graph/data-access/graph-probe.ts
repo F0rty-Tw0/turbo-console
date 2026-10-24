@@ -121,7 +121,14 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
   };
   const zoom = (): number => view.viewport().zoom;
   const pan = (): Position => view.viewport().pan;
-  const probe: GraphProbe = { ...facts, nodes, edges, visibleIds, folders, folderLinks, edgeColor, zoom, pan };
+  let renders = 0;
+
+  view.cy().on('render', (): void => {
+    renders += 1;
+  });
+
+  const renderCount = (): number => renders;
+  const probe: GraphProbe = { ...facts, nodes, edges, visibleIds, folders, folderLinks, edgeColor, zoom, pan, renderCount };
 
   return probe;
 };

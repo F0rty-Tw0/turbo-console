@@ -90,6 +90,17 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
     cy.destroy();
   });
 
+  it('GIVEN no render yet WHEN the render count is read THEN it is 0', () => {
+    expect(probe.renderCount()).toBe(0);
+  });
+
+  it('GIVEN two Cytoscape renders WHEN the render count is read THEN it is 2', () => {
+    cy.emit('render');
+    cy.emit('render');
+
+    expect(probe.renderCount()).toBe(2);
+  });
+
   describe('GIVEN b drawn as a ghost on the path a, b, c', () => {
     it('WHEN the nodes are read THEN b is a highlighted ghost with a dashed border', () => {
       const node = nodeOf(probe, 'b');
