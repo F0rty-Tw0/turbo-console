@@ -12,10 +12,20 @@ const umbrellaGroupOf = (groups: AtomGroup[], taskId: string): AtomGroup | undef
   return groups.find((group) => group.umbrella.id === taskId);
 };
 
-const fileOf = (groups: AtomGroup[], taskId: string): AtomFile | undefined => {
-  const files = groups.flatMap((group) => group.files);
+const groupNamed = (groups: AtomGroup[], name: string): AtomGroup | undefined => {
+  return groups.find((group) => group.umbrella.atom?.group === name);
+};
 
-  return files.find((file) => file.task.id === taskId);
+/** Only an `atom-file` task is a file, and only of the group its `atom` names, so no other group's files are searched. */
+const fileOf = (groups: AtomGroup[], task: TaskNode): AtomFile | undefined => {
+  const { atom } = task;
+
+  if (task.kind !== 'atom-file' || atom === null) return undefined;
+
+  const group = groupNamed(groups, atom.group);
+  const files = group?.files ?? [];
+
+  return files.find((file) => file.task.id === task.id);
 };
 
 /** The aggregate of a group is replaced by its umbrella; one whose group the package does not hold stays a plain task. */
@@ -24,7 +34,9 @@ const isHiddenAggregate = (task: TaskNode, groups: AtomGroup[]): boolean => {
 
   if (task.kind !== 'atom-aggregate' || atom === null) return false;
 
-  return groups.some((group) => group.umbrella.atom?.group === atom.group);
+  const group = groupNamed(groups, atom.group);
+
+  return group !== undefined;
 };
 
 /** A task the tree lists as a row of its package: a visible turbo task whose aggregate is not replaced by an umbrella. */
@@ -67,7 +79,7 @@ export const taskRowOf = (scope: RowScope, pkg: PackageNode, taskId: string, con
   if (task === undefined) return undefined;
 
   const { groups } = context.atoms(scope.root, pkg.name);
-  const file = fileOf(groups, taskId);
+  const file = fileOf(groups, task);
 
   if (file !== undefined) return fileRow(scope, pkg, file, context);
 
