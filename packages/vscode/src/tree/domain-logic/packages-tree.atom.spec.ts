@@ -4,7 +4,7 @@ import { PackagesTree } from './packages-tree.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
-import { ATOM_MODEL_STUB, A_FILE_STUB } from '../test/stubs/atom-view.stub.ts';
+import { ATOM_MODEL_STUB, A_FILE_STUB, LIVE_FILE_STUB, SPACED_FILE_STUB } from '../test/stubs/atom-view.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith } from '../test/utils/tree-model.spec.util.ts';
 
@@ -52,11 +52,14 @@ describe('FEATURE: packages tree Atomizer rows', () => {
     it('WHEN the umbrella is opened THEN its three files show', async () => {
       const files = await tree.children(UMBRELLA_NODE);
 
-      expect(files.map((node) => node.key)).toHaveLength(3);
+      expect(files.map((node) => node.key)).toStrictEqual([A_FILE_STUB.task.id, SPACED_FILE_STUB.task.id, LIVE_FILE_STUB.task.id]);
     });
 
-    it('WHEN the umbrella and a file are read THEN the umbrella counts files and the file is bare', () => {
+    it('WHEN the umbrella is read THEN it counts its files', () => {
       expect(tree.rowOf(UMBRELLA_NODE).description).toBe('3 files');
+    });
+
+    it('WHEN a file is read THEN its description is bare', () => {
       expect(tree.rowOf(A_FILE_NODE).description).toBe('');
     });
   });

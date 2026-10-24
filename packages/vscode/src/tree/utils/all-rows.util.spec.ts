@@ -171,14 +171,27 @@ describe('FEATURE: every row of a root holding Atomizer groups', () => {
   describe('GIVEN package e2e with a group of three files', () => {
     const state: RootState = { ...ROOT_STATE_STUB, model: ATOM_MODEL_STUB };
 
-    it('WHEN listed THEN each file row is there once and the aggregate is not', () => {
+    it('WHEN listed THEN each file row is there', () => {
       const rows = allRows(state, atomContextOf(ATOM_VIEW_STUB));
-      const ids = sortedIds(rows);
 
-      expect(ids).toContain('task:/ws\0e2e#e2e-ci--tests/a.spec.ts');
-      expect(ids).toContain('task:/ws\0e2e#e2e-ci--tests/b fails.spec.ts');
-      expect(ids).toContain('task:/ws\0e2e#e2e-ci--tests/live.spec.ts');
-      expect(ids).not.toContain('task:/ws\0e2e#e2e-ci--all');
+      expect(sortedIds(rows)).toStrictEqual(
+        expect.arrayContaining([
+          'task:/ws\0e2e#e2e-ci--tests/a.spec.ts',
+          'task:/ws\0e2e#e2e-ci--tests/b fails.spec.ts',
+          'task:/ws\0e2e#e2e-ci--tests/live.spec.ts'
+        ])
+      );
+    });
+
+    it('WHEN listed THEN the aggregate is not', () => {
+      const rows = allRows(state, atomContextOf(ATOM_VIEW_STUB));
+
+      expect(sortedIds(rows)).not.toContain('task:/ws\0e2e#e2e-ci--all');
+    });
+
+    it('WHEN listed THEN no id repeats', () => {
+      const ids = sortedIds(allRows(state, atomContextOf(ATOM_VIEW_STUB)));
+
       expect(new Set(ids).size).toBe(ids.length);
     });
   });

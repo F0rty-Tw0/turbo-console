@@ -17,17 +17,17 @@ describe('FEATURE: tree refresh of Atomizer file rows', () => {
   let refresher: TreeRefresher;
   let fileANode: TreeNode | undefined;
 
-  beforeEach(() => {
-    fixture = refresherFixtureOf();
-    refresher = new TreeRefresher(fixture.deps);
-
-    const rows = packageFileRows(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, atomContextOf(ATOM_VIEW_STUB));
-    const nodes = nodesOf(fixture.cache, rows);
-
-    fileANode = nodes.find((node) => node.key === FILE_A_ID);
-  });
-
   describe('GIVEN the cache holds the file nodes of the umbrella', () => {
+    beforeEach(() => {
+      fixture = refresherFixtureOf();
+      refresher = new TreeRefresher(fixture.deps);
+
+      const rows = packageFileRows(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, atomContextOf(ATOM_VIEW_STUB));
+      const nodes = nodesOf(fixture.cache, rows);
+
+      fileANode = nodes.find((node) => node.key === FILE_A_ID);
+    });
+
     it('WHEN the tick lists the running file THEN only its node is fired, once', () => {
       refresher.refreshTasks(new Map([['/ws', new Set([FILE_A_ID])]]));
 
