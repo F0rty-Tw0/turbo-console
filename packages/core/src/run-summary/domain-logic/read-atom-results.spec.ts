@@ -8,7 +8,9 @@ import { readAtomResults } from './read-atom-results.ts';
 import { B, FILE_IDS, NEWEST_OF_ALL, OLDEST, RUN_1_ONLY, WITHOUT_RUN_5 } from '../test/common/atom-results.const.ts';
 import { readAtomFixture } from '../test/utils/atom-fixture.spec.util.ts';
 import { writeAtomRuns } from '../test/utils/atom-runs.spec.util.ts';
-import { newRunsRoot, writeRun } from '../test/utils/run-summary.spec.util.ts';
+import { newRunsRoot, summaryJson, taskEntry, writeRun } from '../test/utils/run-summary.spec.util.ts';
+
+const WINDOW = { startTime: 1000, endTime: 2000 };
 
 let tempDir = '';
 
@@ -70,6 +72,19 @@ describe('FEATURE: read atom results', () => {
       await writeRun(root, 'run-4.json', text, OLDEST);
 
       await expect(readAtomResults(root, FILE_IDS)).resolves.toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a summary that lists only another package with the same task name', () => {
+    it('WHEN read THEN the id of our package has no key', async () => {
+      const root = await newRunsRoot(tempDir, 'other package');
+      const copy = taskEntry('@fx/e2e-atoms#e2e-ci--tests/b fails.spec.ts', WINDOW, 'MISS');
+      const carrier = taskEntry('@fx/e2e#e2e-ci-src--tests/b fails.spec.ts', WINDOW, 'MISS');
+      const text = summaryJson('turbo run e2e-ci', WINDOW, 0, [copy, carrier]);
+
+      await writeRun(root, 'copies-only.json', text, OLDEST);
+
+      await expect(readAtomResults(root, FILE_IDS)).resolves.toStrictEqual(new Map());
     });
   });
 

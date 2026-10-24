@@ -18,7 +18,7 @@ const collect = (summary: RunSummary, fileIds: ReadonlySet<string>, results: Map
 };
 
 /**
- * Spec §3.2: the newest result of each of `fileIds` (exact `taskId` match) across the newest `MAX_SUMMARY_TRIES`
+ * The newest result of each of `fileIds` (exact `taskId` match) across the newest `MAX_SUMMARY_TRIES`
  * summaries of `<root>/.turbo/runs`, newest first, future-dated files left out before that cap as `readNewestRunSummary`
  * does. A summary that fails to read or parse is skipped whole. Stops reading once every id has a result, so an id in
  * no summary has no key. Empty map when there is no runs directory. Rejects with `TurboException` `io` as
