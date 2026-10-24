@@ -66,7 +66,8 @@ export class GraphTaskDetails {
 
   /** The panel shows no task: the Details heading, the empty lead and no button. */
   public async expectEmpty(): Promise<void> {
-    await expect(this.panel.getByRole('heading')).toHaveText(DETAILS_LABEL);
+    await expect(this.panel.getByRole('heading', { level: 2 })).toHaveText(DETAILS_LABEL);
+    await expect(this.panel.getByRole('heading', { level: 3 })).toHaveCount(0);
     await expect(this.panel.locator('.details-lead')).toHaveText(TASK_EMPTY_LEAD_TEXT);
     await expect(this.panel.getByRole('button')).toHaveCount(0);
   }

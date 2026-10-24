@@ -174,7 +174,10 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
       'a same-hash state without the selected app#build clears the saved selection and empties the panel',
       { annotation: RF4 },
       async ({ graphCanvas, graphHost, graphTaskDetails, graphTaskHost, page }): Promise<void> => {
-        await test.step('WHEN app#build is tapped', async (): Promise<void> => graphCanvas.tapNode('app#build'));
+        await test.step('WHEN app#build is tapped', async (): Promise<void> => {
+          await graphCanvas.tapNode('app#build');
+          await graphTaskHost.expectSavedTask({ selected: 'app#build' });
+        });
 
         const runSpot = await test.step('AND Run is on screen', async (): Promise<Position> => graphTaskDetails.runSpot());
 

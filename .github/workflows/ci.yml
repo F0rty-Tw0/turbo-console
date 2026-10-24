@@ -66,6 +66,17 @@ jobs:
       - name: Check
         run: pnpm turbo run lint typecheck test build contract e2e ${{ runner.os == 'Windows' && '--concurrency=2' || '' }}
 
+      # SHA = actions/upload-artifact@v7.0.2
+      # Playwright keeps a trace per failed e2e (retain-on-failure); without it a one-off CI failure has only the log.
+      - name: Upload e2e traces
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: e2e-results-${{ matrix.os }}-${{ github.run_attempt }}
+          path: packages/webview-ui/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
       # SHA = actions/cache@v6.1.0
       - name: Cache VS Code test build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
