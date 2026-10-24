@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphFlow } from './graph-flow.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import { FLOW_CYCLE_MS, FLOW_DASH_PX, FLOW_IDLE_MS } from '../common/flow.const.ts';
+import { FLOW_CYCLE_MS, FLOW_DASH_PX, FLOW_EDGE_LIMIT, FLOW_IDLE_MS } from '../common/flow.const.ts';
 import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { Viewport } from '../common/graph-page.type.ts';
 import type { FlowClockMock, FlowPenMock } from '../test/common/graph-flow.type.ts';
@@ -24,6 +24,8 @@ const COLOR = 'rgb(0, 122, 204)';
 
 const CANVAS_SIZE = { width: 200, height: 100 };
 
+const edgesOf = (count: number): FlowEdgeGeometry[] => Array.from({ length: count }, (): FlowEdgeGeometry => EDGE);
+
 const POINTER_MOVE = new Event('pointermove');
 
 describe('FEATURE: GraphFlow', () => {
@@ -31,6 +33,7 @@ describe('FEATURE: GraphFlow', () => {
   let pen: FlowPenMock;
   let container: HTMLElement;
   let isReduced: boolean;
+  let litEdges: FlowEdgeGeometry[];
   let flow: GraphFlow;
 
   beforeEach(() => {
@@ -43,11 +46,12 @@ describe('FEATURE: GraphFlow', () => {
     pen = flowPenMock();
     container = document.createElement('div');
     isReduced = false;
+    litEdges = [EDGE];
     flow = new GraphFlow({
       ...clock,
       canvas,
       container,
-      edges: (): FlowEdgeGeometry[] => [EDGE],
+      edges: (): FlowEdgeGeometry[] => litEdges,
       viewport: (): Viewport => CAMERA,
       isReduced: (): boolean => isReduced
     });
@@ -163,6 +167,35 @@ describe('FEATURE: GraphFlow', () => {
 
       expect(clock.pendingFrames()).toBe(0);
       expect(pen.stroke).not.toHaveBeenCalled();
+    });
+  });
+
+  describe(`GIVEN the limit of ${FLOW_EDGE_LIMIT} highlighted edges`, () => {
+    it(`WHEN ${FLOW_EDGE_LIMIT} edges are lit THEN the flow starts`, () => {
+      litEdges = edgesOf(FLOW_EDGE_LIMIT);
+      flow.highlightChanged(true);
+
+      expect(clock.pendingFrames()).toBe(1);
+    });
+
+    it(`WHEN ${FLOW_EDGE_LIMIT + 1} edges are lit THEN no frame is asked for and nothing is ever drawn`, () => {
+      litEdges = edgesOf(FLOW_EDGE_LIMIT + 1);
+      flow.highlightChanged(true);
+      clock.advance(200);
+
+      expect(clock.pendingFrames()).toBe(0);
+      expect(pen.stroke).not.toHaveBeenCalled();
+    });
+
+    it(`WHEN a running flow's highlight grows to ${FLOW_EDGE_LIMIT + 1} edges THEN it stops and the canvas is cleared`, () => {
+      flow.highlightChanged(true);
+      clock.advance(40);
+      pen.clearRect.mockClear();
+      litEdges = edgesOf(FLOW_EDGE_LIMIT + 1);
+      flow.highlightChanged(true);
+
+      expect(clock.pendingFrames()).toBe(0);
+      expect(pen.clearRect).toHaveBeenCalledOnce();
     });
   });
 

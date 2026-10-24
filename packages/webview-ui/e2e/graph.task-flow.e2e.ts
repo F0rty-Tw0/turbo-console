@@ -3,12 +3,19 @@ import { expect, test } from './graph-task.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { colourSwapsOf } from './test/utils/graph-flow-ink.spec.util.ts';
 import { TARGET_LIKE_NORMAL_SHOWN, targetLikeLitStatesOf } from './test/utils/graph-target-like-lit.spec.util.ts';
-import { TARGET_LIKE_CHOSEN_TASK, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
+import {
+  OVER_CAP_ROOT_TASK,
+  TARGET_LIKE_CHOSEN_TASK,
+  overCapTasksState,
+  targetLikeTasksState
+} from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
-import { VIEW_STATE_DEBOUNCE_MS } from '../src/graph/common/graph.const.ts';
+import { FIT_LABEL, VIEW_STATE_DEBOUNCE_MS } from '../src/graph/common/graph.const.ts';
 
 const FLOW = { description: 'M4-5a AC7, spec 3.5', type: 'requirement' };
+
+const CAP = { description: 'M4-5a slice 3 performance review: the flow edge cap', type: 'requirement' };
 
 const DRIFT = { description: 'M4-5a Risks: overlay geometry drift', type: 'requirement' };
 
@@ -229,6 +236,32 @@ test.describe('FEATURE: graph task flow', () => {
         await graphProbe.expectNodeStates(targetLikeLitStatesOf(LEAF));
         await graphFlow.expectInked(true);
       });
+    }
+  );
+
+  test(
+    'GIVEN 400 dependents lit, the root hover keeps the highlight and draws no flow',
+    { annotation: CAP },
+    async ({ graphFlow, graphHost, graphHover, graphPage, pageClock }): Promise<void> => {
+      await test.step('WHEN the over-cap state is shown with its cap lifted and Fit centres it (400 leaves are wider than the minimum zoom shows, so the root sits mid-view)', async (): Promise<void> => {
+        await pageClock.install();
+        await graphPage.open({
+          savedState: taskSavedState(overCapTasksState().hash, { chosen: [OVER_CAP_ROOT_TASK], capLifted: true })
+        });
+        await graphHost.sendState(overCapTasksState());
+        await graphFlow.waitForNode(OVER_CAP_ROOT_TASK);
+        await graphPage.pressButton(FIT_LABEL);
+        await graphFlow.tick(400);
+      });
+
+      await test.step('AND the root task is hovered and 200 ms pass', async (): Promise<void> => {
+        await graphFlow.hover(OVER_CAP_ROOT_TASK);
+        await graphFlow.tick(200);
+      });
+
+      await test.step('THEN its edges read highlighted', async (): Promise<void> => graphHover.expectLitEdges());
+
+      await test.step('AND the flow overlay has no ink', async (): Promise<void> => graphFlow.expectInked(false));
     }
   );
 });
