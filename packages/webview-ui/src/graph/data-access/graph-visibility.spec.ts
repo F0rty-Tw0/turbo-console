@@ -22,7 +22,8 @@ const COLORS: ThemeColors = {
   selected: '#f00',
   highlighted: '#0f0',
   frame: '#444',
-  runs: CANVAS_RUN_COLORS
+  runs: CANVAS_RUN_COLORS,
+  dimmedOpacity: 0.25
 };
 
 const PADDING_PX = 24;

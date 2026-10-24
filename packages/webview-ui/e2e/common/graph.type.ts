@@ -180,6 +180,12 @@ export type TitleBandInk = {
   readonly nearSides: number;
 };
 
+/** A base64 PNG and the `rgb(...)` background its pixels' contrast is read against. */
+export type ContrastInput = {
+  readonly png: string;
+  readonly background: string;
+};
+
 /** A base64 PNG and the `rgb(...)` colour whose ink is counted in it. */
 export type ColourInkInput = {
   readonly png: string;

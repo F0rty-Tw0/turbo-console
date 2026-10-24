@@ -35,6 +35,14 @@ const boxStyleOf = (colors: ThemeColors): Css.Node => {
   return box;
 };
 
+/** A box faded with `dimmed-box`: its frame, title and fill at the theme's dimmed opacity, its packages untouched. */
+const dimmedBoxStyleOf = (colors: ThemeColors): Css.Node => {
+  const opacity = colors.dimmedOpacity;
+  const dimmedBox = { 'border-opacity': opacity, 'text-opacity': opacity, 'background-opacity': opacity } as const;
+
+  return dimmedBox;
+};
+
 /** A folder link's `<n> link(s)` label, on the canvas background so a crossing line never runs through it. */
 const folderLinkStyleOf = (colors: ThemeColors, fontFamily: string): Css.Edge => {
   const folderLink = {
@@ -54,10 +62,6 @@ const HIDDEN = { display: 'none' } as const;
 const GHOST_NODE = { 'border-style': 'dashed', 'text-opacity': 0.75 } as const;
 
 const GHOST_EDGE = { 'line-style': 'dashed' } as const;
-
-const DIMMED = { opacity: 0.25 } as const;
-
-const DIMMED_BOX = { 'border-opacity': 0.25, 'text-opacity': 0.25, 'background-opacity': 0.25 } as const;
 
 /** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
 const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
@@ -112,6 +116,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
   const highlightedNode = { 'border-width': 2, 'border-color': colors.highlighted };
   const highlightedEdge = { width: 2, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
   const selectedEdge = { width: 3, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
+  const dimmed = { opacity: colors.dimmedOpacity };
   const folderNode = { label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px` } as const;
   const taskRules = taskRulesOf(colors, BOX_TITLE);
   const style: StylesheetJson = [
@@ -126,10 +131,10 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
     { selector: 'edge.selected', style: selectedEdge },
     { selector: 'node.ghost', style: GHOST_NODE },
     { selector: 'edge.ghost', style: GHOST_EDGE },
-    { selector: '.dimmed', style: DIMMED },
+    { selector: '.dimmed', style: dimmed },
     { selector: `node.${FOLDER_NODE_CLASS}`, style: folderNode },
     { selector: `edge.${FOLDER_LINK_CLASS}`, style: folderLinkStyleOf(colors, fontFamily) },
-    { selector: `node.${DIMMED_BOX_CLASS}`, style: DIMMED_BOX },
+    { selector: `node.${DIMMED_BOX_CLASS}`, style: dimmedBoxStyleOf(colors) },
     { selector: `.${FOLDER_HIDDEN_CLASS}`, style: HIDDEN }
   ];
 

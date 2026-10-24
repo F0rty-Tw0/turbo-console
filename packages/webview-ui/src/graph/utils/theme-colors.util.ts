@@ -1,23 +1,9 @@
+import { dimmedOpacityOf, hexChannelsOf } from './contrast.util.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
 import type { CssVariableReader, ThemeColors } from '../common/theme-colors.type.ts';
 
 /** `#rgba` or `#rrggbbaa`: a hex colour with alpha, which Cytoscape rejects. */
 const ALPHA_HEX = /^#(?:[\da-f]{4}|[\da-f]{8})$/iu;
-
-const CHANNELS = [0, 1, 2, 3];
-
-const channelsOf = (hex: string): number[] => {
-  const digits = hex.slice(1);
-  const width = digits.length / CHANNELS.length;
-  const channelOf = (index: number): number => {
-    const part = digits.slice(index * width, (index + 1) * width);
-    const full = width === 1 ? `${part}${part}` : part;
-
-    return Number.parseInt(full, 16);
-  };
-
-  return CHANNELS.map(channelOf);
-};
 
 /** A hex colour with alpha as the `rgba()` Cytoscape parses, the alpha to two places; any other value is kept. */
 const cytoscapeColourOf = (value: string): string => {
@@ -25,7 +11,7 @@ const cytoscapeColourOf = (value: string): string => {
 
   if (!isAlphaHex) return value;
 
-  const [red, green, blue, alpha = 255] = channelsOf(value);
+  const [red, green, blue, alpha = 255] = hexChannelsOf(value);
   const opacity = Math.round((alpha / 255) * 100) / 100;
 
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
@@ -34,7 +20,8 @@ const cytoscapeColourOf = (value: string): string => {
 /**
  * The graph colours from the theme variables, each trimmed (`getPropertyValue` keeps the leading space), a blank one
  * replaced by its `FALLBACK_COLORS` entry. VS Code sets `--vscode-contrastBorder` only in high contrast themes, so the
- * node frame takes it there and `--vscode-panel-border` everywhere else. Run outlines take the Tasks tree's status colours.
+ * node frame takes it there and `--vscode-panel-border` everywhere else, and dimmed elements rise from 0.25 until they keep
+ * 3:1 against the background there. Run outlines take the Tasks tree's status colours.
  */
 export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const valueOf = (name: string, fallback: string): string => {
@@ -55,14 +42,20 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
     stopped: valueOf('--vscode-disabledForeground', fallbackRuns.stopped),
     'failed-to-start': valueOf('--vscode-errorForeground', fallbackRuns['failed-to-start'])
   };
+  const background = valueOf('--vscode-editor-background', FALLBACK_COLORS.background);
+  const label = valueOf('--vscode-foreground', FALLBACK_COLORS.label);
+  const edge = valueOf('--vscode-descriptionForeground', FALLBACK_COLORS.edge);
+  const highContrastDim = dimmedOpacityOf(background, [label, edge, frame]);
+  const dimmedOpacity = contrastBorder === '' ? FALLBACK_COLORS.dimmedOpacity : highContrastDim;
   const colors: ThemeColors = {
-    background: valueOf('--vscode-editor-background', FALLBACK_COLORS.background),
-    label: valueOf('--vscode-foreground', FALLBACK_COLORS.label),
-    edge: valueOf('--vscode-descriptionForeground', FALLBACK_COLORS.edge),
+    background,
+    label,
+    edge,
     selected: valueOf('--vscode-focusBorder', FALLBACK_COLORS.selected),
     highlighted: valueOf('--vscode-charts-blue', FALLBACK_COLORS.highlighted),
     frame,
-    runs
+    runs,
+    dimmedOpacity
   };
 
   return colors;

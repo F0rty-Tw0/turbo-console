@@ -6,10 +6,12 @@ import { GraphTimings } from './graph-timings.po.ts';
 import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
 import { DEPTH_LABEL, GROUP_BY_FOLDER_LABEL, SEARCH_LABEL, TAGS_LABEL } from '../../src/graph/common/graph.const.ts';
 import { THEME_VAR_NAMES } from '../common/graph.const.ts';
-import type { ControlsFields, ExpectedThemeColors, ThemeStub } from '../common/graph.type.ts';
+import type { ContrastInput, ControlsFields, ExpectedThemeColors, ThemeStub } from '../common/graph.type.ts';
 import { isPanNear, isZoomNear } from '../test/utils/graph-camera.spec.util.ts';
+import { maxContrastIn } from '../test/utils/graph-contrast.spec.util.ts';
 import { checkedTagNames, lockedShowNames, uncheckedShowNames } from '../test/utils/graph-controls-fields.spec.util.ts';
 import { effectiveOpacityOf } from '../test/utils/graph-controls.spec.util.ts';
+import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { switchTheme, withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
 
@@ -94,6 +96,18 @@ export class GraphLook {
     await expect.poll(readColor).toBe(withoutSpaces(color));
   }
 
+  /** Polls until node `id` reads dimmed and its whole box, frame and label, reads at least `ratio` against `background`. */
+  public async expectDimmedContrastAtLeast(id: string, background: string, ratio: number): Promise<void> {
+    await expect.poll(async (): Promise<string | undefined> => this.stateOf(id)).toBe('dimmed');
+    await expect.poll(async (): Promise<number> => this.contrastOf(id, background)).toBeGreaterThanOrEqual(ratio);
+  }
+
+  /** Polls until node `id` reads dimmed and its whole box reads below `ratio` against `background`. */
+  public async expectDimmedContrastBelow(id: string, background: string, ratio: number): Promise<void> {
+    await expect.poll(async (): Promise<string | undefined> => this.stateOf(id)).toBe('dimmed');
+    await expect.poll(async (): Promise<number> => this.contrastOf(id, background)).toBeLessThan(ratio);
+  }
+
   /** The selected node's frame differs from every other node's. */
   public async expectSelectedFrameDiffers(id: string): Promise<void> {
     const nodes = await this.probe.nodes();
@@ -146,6 +160,28 @@ export class GraphLook {
     };
 
     return fields;
+  }
+
+  /** The largest WCAG ratio of any pixel in node `id`'s box against `background`, read from a screenshot clip. */
+  private async contrastOf(id: string, background: string): Promise<number> {
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+    const node = nodes.find((candidate): boolean => candidate.id === id);
+
+    if (node === undefined) throw new Error(`graph e2e: no node ${id} to read the contrast of`);
+
+    const box = nodeBoxOf(node, zoom);
+    const clip = { x: box.left, y: box.top, width: box.width, height: box.height };
+    const shot = await this.page.screenshot({ clip });
+    const input: ContrastInput = { png: shot.toString('base64'), background };
+
+    return this.page.evaluate(maxContrastIn, input);
+  }
+
+  private async stateOf(id: string): Promise<string | undefined> {
+    const nodes = await this.probe.nodes();
+
+    return nodes.find((candidate): boolean => candidate.id === id)?.state;
   }
 
   private async isView(view: GraphViewState): Promise<boolean> {

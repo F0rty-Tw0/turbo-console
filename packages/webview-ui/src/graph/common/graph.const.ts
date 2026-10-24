@@ -76,7 +76,8 @@ export const FALLBACK_COLORS: ThemeColors = {
   selected: '#005fb8',
   highlighted: '#1a85ff',
   frame: '#e5e5e5',
-  runs: FALLBACK_RUN_COLORS
+  runs: FALLBACK_RUN_COLORS,
+  dimmedOpacity: 0.25
 };
 
 /** The one Trusted Types policy the graph CSP allows (`trusted-types tc-elk`). */

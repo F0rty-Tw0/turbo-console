@@ -20,6 +20,15 @@ const DARK: Record<string, string> = {
   '--vscode-errorForeground': '#f85149'
 };
 
+/** `THEME_HC_STUB`'s colours over the dark rows: white label and edges, the `#6fc3df` contrast border, a black editor. */
+const HC_STUB: Record<string, string> = {
+  ...DARK,
+  '--vscode-editor-background': '#000000',
+  '--vscode-foreground': '#ffffff',
+  '--vscode-descriptionForeground': '#ffffff',
+  '--vscode-contrastBorder': '#6fc3df'
+};
+
 const DARK_RUNS: ThemeColors['runs'] = {
   running: '#cca700',
   passed: '#73c991',
@@ -35,7 +44,8 @@ const DARK_COLORS: ThemeColors = {
   selected: '#0078d4',
   highlighted: '#3794ff',
   frame: '#2b2b2b',
-  runs: DARK_RUNS
+  runs: DARK_RUNS,
+  dimmedOpacity: 0.25
 };
 
 describe('FEATURE: themeColorsOf', () => {
@@ -61,6 +71,18 @@ describe('FEATURE: themeColorsOf', () => {
     const colors = themeColorsOf(cssVariableReaderMock(highContrast));
 
     expect(colors.frame).toBe('#6fc3df');
+  });
+
+  it('GIVEN no contrast border WHEN the colours are read THEN dimmed elements keep 0.25', () => {
+    const colors = themeColorsOf(cssVariableReaderMock(DARK));
+
+    expect(colors.dimmedOpacity).toBe(0.25);
+  });
+
+  it('GIVEN the high contrast stub WHEN the colours are read THEN dimmed elements rise to 0.55, where the frame reads 3.3:1', () => {
+    const colors = themeColorsOf(cssVariableReaderMock(HC_STUB));
+
+    expect(colors.dimmedOpacity).toBe(0.55);
   });
 
   it('GIVEN a blank contrast border WHEN the colours are read THEN panel-border is the frame', () => {

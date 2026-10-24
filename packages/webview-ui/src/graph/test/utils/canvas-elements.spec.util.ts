@@ -20,7 +20,8 @@ export const CANVAS_COLORS: ThemeColors = {
   selected: '#f00',
   highlighted: '#0f0',
   frame: '#444',
-  runs: CANVAS_RUN_COLORS
+  runs: CANVAS_RUN_COLORS,
+  dimmedOpacity: 0.25
 };
 
 export const canvasNodeOf = (id: string): ElementDefinition => {
