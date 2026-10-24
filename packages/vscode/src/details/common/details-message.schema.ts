@@ -2,7 +2,7 @@ import { discriminatedUnion, literal, object, string, enum as zodEnum } from 'zo
 
 const readySchema = object({ type: literal('ready') });
 
-const taskSchema = object({ type: zodEnum(['run', 'stop', 'copy']), taskId: string() });
+const taskSchema = object({ type: zodEnum(['run', 'stop', 'copy', 'showInTaskGraph']), taskId: string() });
 
 const openPackageJsonSchema = object({ type: literal('openPackageJson') });
 

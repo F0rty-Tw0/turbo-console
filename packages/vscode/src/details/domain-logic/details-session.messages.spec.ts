@@ -89,7 +89,8 @@ describe('FEATURE: details session messages', () => {
     it.each([
       ['run', 'turboConsole.runTask'],
       ['stop', 'turboConsole.stopTask'],
-      ['copy', 'turboConsole.copyCommand']
+      ['copy', 'turboConsole.copyCommand'],
+      ['showInTaskGraph', 'turboConsole.showTaskGraph']
     ])('WHEN %s of a panel task arrives THEN it executes %s on that task row', async (type, command) => {
       await session.receive({ type, taskId: 'a#build' });
 
@@ -149,7 +150,8 @@ describe('FEATURE: details session messages', () => {
 
     it.each([
       ['run', 'turboConsole.runTask'],
-      ['copy', 'turboConsole.copyCommand']
+      ['copy', 'turboConsole.copyCommand'],
+      ['showInTaskGraph', 'turboConsole.showTaskGraph']
     ])('WHEN a reload leaves a script card and %s names it THEN it executes', async (type, command) => {
       store.apply('/ws', WITH_SCRIPT);
 
@@ -158,7 +160,7 @@ describe('FEATURE: details session messages', () => {
       expect(ports.execute).toHaveBeenCalledExactlyOnceWith(command, { ...BUILD_ROW, key: 'a#adhoc' });
     });
 
-    it.each(['run', 'stop', 'copy'])(
+    it.each(['run', 'stop', 'copy', 'showInTaskGraph'])(
       'WHEN scripts are hidden and %s names an idle script THEN it is dropped and logged, as it has no card',
       async (type) => {
         vi.mocked(ports.scriptsShown).mockReturnValue(false);
@@ -187,7 +189,8 @@ describe('FEATURE: details session messages', () => {
 
       it.each([
         ['stop', 'turboConsole.stopTask'],
-        ['copy', 'turboConsole.copyCommand']
+        ['copy', 'turboConsole.copyCommand'],
+        ['showInTaskGraph', 'turboConsole.showTaskGraph']
       ])('WHEN %s names it THEN it still executes', async (type, command) => {
         await session.receive({ type, taskId: 'a#adhoc' });
 

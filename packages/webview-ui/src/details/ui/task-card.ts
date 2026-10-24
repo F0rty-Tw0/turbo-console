@@ -136,13 +136,25 @@ const fieldList = (card: TaskCard, phase: DryRunPhase): HTMLDListElement => {
   return list;
 };
 
+const taskGraphButtons = (card: TaskCard, context: RenderContext): HTMLButtonElement[] => {
+  if (!context.hasTaskGraph) return [];
+
+  const show = (): void => context.bridge.post({ type: 'showInTaskGraph', taskId: card.taskId });
+  const button = iconButton('graph', `Show in task graph: ${card.name}`, show);
+
+  context.focusTargets.set(`taskGraph:${card.taskId}`, button);
+
+  return [button];
+};
+
 const cardActions = (card: TaskCard, refs: CardRefs, context: RenderContext): HTMLSpanElement => {
   const actions = textElement('span', 'card-actions', '');
   const copy = (): void => context.bridge.post({ type: 'copy', taskId: card.taskId });
   const copyButton = iconButton('copy', `Copy command for ${card.name}`, copy);
+  const graphButtons = taskGraphButtons(card, context);
 
   context.focusTargets.set(`copy:${card.taskId}`, copyButton);
-  actions.append(refs.runSlot, copyButton);
+  actions.append(refs.runSlot, copyButton, ...graphButtons);
 
   return actions;
 };

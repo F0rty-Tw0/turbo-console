@@ -142,6 +142,10 @@ export class DetailsPage {
     await expect(this.button(label)).toBeFocused();
   }
 
+  public async expectNoButton(label: string): Promise<void> {
+    await expect(this.button(label)).toHaveCount(0);
+  }
+
   public async expectScrollKept(): Promise<void> {
     const scrollY = await this.page.evaluate<number>('scrollY');
 

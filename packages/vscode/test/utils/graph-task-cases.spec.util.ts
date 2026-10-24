@@ -1,0 +1,55 @@
+import assert from 'node:assert/strict';
+
+import * as vscode from 'vscode';
+
+import { packageStates } from './details-posted.spec.util.ts';
+import { lastGraphState, postedShowTasks } from './graph-posted.spec.util.ts';
+import { step, waitFor } from './suite-env.spec.util.ts';
+import type { GraphPanelInfo, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
+import { OPEN_COMMAND } from '../common/details.const.ts';
+import { TASK_ID } from '../common/graph.const.ts';
+import type { GraphScene } from '../common/graph.type.ts';
+
+const showTasksCountOf = (api: TurboConsoleApi, root: string): number => {
+  const posted = api.graph.posted(root);
+  const requests = posted.filter((message): boolean => message.type === 'showTasks');
+
+  return requests.length;
+};
+
+/** The package of the task `TASK_ID` in the graph panel's last state; throws when the state or the task is missing. */
+const taskPackageOf = (scene: GraphScene): string => {
+  const { api, root } = scene;
+  const state = lastGraphState(api, root);
+  const task = state?.tasks.find((candidate): boolean => candidate.id === TASK_ID);
+
+  if (task === undefined) throw new Error(`the graph state has no task ${TASK_ID}`);
+
+  return task.packageName;
+};
+
+/** `Show in task graph` on a task card of the Details page asks that root's graph panel to show that one task. */
+export const detailsTaskGraphCase = async (scene: GraphScene): Promise<void> => {
+  const { api, root } = scene;
+
+  await step('L13-8: Show in task graph on a Details card posts showTasks for that task', async () => {
+    const packageName = taskPackageOf(scene);
+    const before = showTasksCountOf(api, root);
+
+    await vscode.commands.executeCommand(OPEN_COMMAND, { kind: 'pkg', root, packageName });
+    await waitFor('package state', () => packageStates(api, root, packageName).length > 0);
+    await api.details.whenIdle(root, packageName);
+
+    const newest = packageStates(api, root, packageName).at(-1);
+
+    assert.equal(newest?.taskGraph, true);
+
+    await api.details.receive(root, packageName, { type: 'showInTaskGraph', taskId: TASK_ID });
+    await waitFor('showTasks post', () => showTasksCountOf(api, root) > before);
+
+    const isGraphOfRoot = (panel: GraphPanelInfo): boolean => panel.root === root;
+
+    assert.deepEqual(postedShowTasks(api, root), { type: 'showTasks', taskIds: [TASK_ID] });
+    assert.ok(api.graph.panels().some(isGraphOfRoot), 'no graph panel for the root');
+  });
+};

@@ -33,7 +33,7 @@ export const parseWebviewMessage = (value: unknown): WebviewMessage | null => {
   }
 };
 
-/** Whether `message` names a task (Run, Stop or Copy), so it must be checked against the panel's card ids. */
+/** Whether `message` names a task (Run, Stop, Copy or Show in task graph), so it must be checked against the panel's card ids. */
 export const isTaskMessage = (message: WebviewMessage | null): message is TaskMessage => message !== null && 'taskId' in message;
 
 /**
@@ -49,7 +49,7 @@ export const checkedTaskMessage = (message: WebviewMessage | null, ids: CardTask
 /**
  * The text a Run is refused with, or `null` to let it run. While the root's binary failed, Run shows the banner's binary
  * text. While scripts are hidden, a script card shows only while its script runs, so its Run gets the already-running
- * text: a run that ends before the run command acts would otherwise relaunch the hidden script. Stop and Copy pass.
+ * text: a run that ends before the run command acts would otherwise relaunch the hidden script. Every other task message passes.
  */
 export const refusedRunTextOf = (message: CommandMessage, state: DetailsState | null, isBinaryFailed: boolean): string | null => {
   const isRun = message.type === 'run' && state?.kind === 'package';

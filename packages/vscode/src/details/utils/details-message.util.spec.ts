@@ -34,7 +34,7 @@ describe('FEATURE: webview message validation', () => {
       expect(accepted({ type: 'ready' }, TASK_IDS)).toStrictEqual({ type: 'ready' });
     });
 
-    it.each(['run', 'stop', 'copy'])('WHEN parsed THEN %s of a panel task passes', (type) => {
+    it.each(['run', 'stop', 'copy', 'showInTaskGraph'])('WHEN parsed THEN %s of a panel task passes', (type) => {
       expect(accepted({ type, taskId: 'a#build' }, TASK_IDS)).toStrictEqual({ type, taskId: 'a#build' });
     });
 
@@ -70,7 +70,7 @@ describe('FEATURE: webview message validation', () => {
   });
 
   describe('GIVEN a task id that is not one of the panel tasks', () => {
-    it.each(['run', 'stop', 'copy'])('WHEN %s names a task of another package THEN it is dropped', (type) => {
+    it.each(['run', 'stop', 'copy', 'showInTaskGraph'])('WHEN %s names a task of another package THEN it is dropped', (type) => {
       expect(accepted({ type, taskId: 'other#build' }, TASK_IDS)).toBeNull();
     });
 
@@ -88,7 +88,7 @@ describe('FEATURE: webview message validation', () => {
   });
 
   describe('GIVEN a script card', () => {
-    it.each(['run', 'copy', 'stop'])('WHEN %s names it THEN it passes', (type) => {
+    it.each(['run', 'copy', 'stop', 'showInTaskGraph'])('WHEN %s names it THEN it passes', (type) => {
       expect(accepted({ type, taskId: 'a#adhoc' }, TASK_IDS)).toStrictEqual({ type, taskId: 'a#adhoc' });
     });
   });
@@ -96,7 +96,7 @@ describe('FEATURE: webview message validation', () => {
   describe('GIVEN no state, so an empty task set', () => {
     const noTasks: CardTaskIds = { all: new Set() };
 
-    it.each(['run', 'stop', 'copy'])('WHEN %s arrives THEN it is dropped', (type) => {
+    it.each(['run', 'stop', 'copy', 'showInTaskGraph'])('WHEN %s arrives THEN it is dropped', (type) => {
       expect(accepted({ type, taskId: 'a#build' }, noTasks)).toBeNull();
     });
 

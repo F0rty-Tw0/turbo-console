@@ -17,14 +17,15 @@ describe('FEATURE: details panel commands', () => {
     it.each([
       ['run', 'turboConsole.runTask'],
       ['stop', 'turboConsole.stopTask'],
-      ['copy', 'turboConsole.copyCommand']
+      ['copy', 'turboConsole.copyCommand'],
+      ['showInTaskGraph', 'turboConsole.showTaskGraph']
     ] as const)('WHEN %s is mapped THEN it runs %s on the panel task row', (type, command) => {
       const arg = { kind: 'task', root: '/ws', key: 'a#build', packageName: 'a' };
 
       expect(commandOf({ type, taskId: 'a#build' }, KEY)).toStrictEqual({ command, arg });
     });
 
-    it.each(['run', 'stop', 'copy'] as const)(
+    it.each(['run', 'stop', 'copy', 'showInTaskGraph'] as const)(
       'WHEN %s is mapped THEN the run commands read the panel task from its argument',
       (type) => {
         const { arg } = commandOf({ type, taskId: 'a#build' }, KEY);
