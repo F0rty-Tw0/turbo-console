@@ -18,11 +18,15 @@ export type { DryRunRequest, DryRunState, TaskDefinition } from './dry-run/commo
 
 export { readDryRun } from './dry-run/domain-logic/read-dry-run.ts';
 
+export type { AtomResult } from './run-summary/common/atom-result.type.ts';
+
 export type { RunMatch, RunToMatch } from './run-summary/common/run-match.type.ts';
 
 export { matchRunSummary } from './run-summary/domain-logic/match-run-summary.ts';
 
 export { readNewestRunSummary } from './run-summary/domain-logic/read-newest-run-summary.ts';
+
+export { readAtomResults } from './run-summary/domain-logic/read-atom-results.ts';
 
 export { readSmallFile } from './shared/fs/data-access/small-file.ts';
 
@@ -56,6 +60,8 @@ export type { AffectedTasks, DryRun, PackageGraph, RunSummary, TurboVersionRange
 
 export { assertTaskName } from './shared/turbo/utils/turbo-name.util.ts';
 
+export type { AtomFile, AtomGroup } from './workspace/common/atom-group.type.ts';
+
 export type {
   LockfileName,
   PackageEdge,
@@ -68,3 +74,5 @@ export type {
 } from './workspace/common/workspace-model.type.ts';
 
 export { loadWorkspace } from './workspace/domain-logic/load-workspace.ts';
+
+export { atomGroupsOf } from './workspace/utils/atom-groups.util.ts';

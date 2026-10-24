@@ -9,7 +9,7 @@ import { READ_NO_FOLLOW } from '../../shared/fs/common/open-flags.const.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
 import { isWithin } from '../../shared/fs/utils/path-within.util.ts';
 import { runSummarySchema } from '../../shared/turbo/common/run-summary.schema.ts';
-import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
+import type { RunSummary, RunSummaryTask } from '../../shared/turbo/common/turbo.type.ts';
 import { ROOT_NAME } from '../../workspace/utils/turbo-task-lookup.util.ts';
 import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
 import { MAX_SUMMARY_BYTES } from '../common/run-summary.const.ts';
@@ -114,7 +114,7 @@ export const listRunSummaryFiles = async (root: string): Promise<RunSummaryFile[
   return files.filter(isListed);
 };
 
-const withRootId = (task: RunSummary['tasks'][number]): RunSummary['tasks'][number] => {
+const withRootId = (task: RunSummaryTask): RunSummaryTask => {
   const rewritten = { ...task, taskId: `${ROOT_NAME}#${task.taskId}` };
 
   return rewritten;

@@ -21,6 +21,9 @@ export type DryRun = output<typeof dryRunSchema>;
 
 export type RunSummary = output<typeof runSummarySchema>;
 
+/** One task entry of a run summary. */
+export type RunSummaryTask = RunSummary['tasks'][number];
+
 /** One finished turbo process; `exitCode` is turbo's own, non-zero included. */
 export type TurboResult = {
   readonly stdout: string;

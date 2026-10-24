@@ -1,7 +1,7 @@
 import { mkdir, utimes, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import type { RunSummary } from '../../../shared/turbo/common/turbo.type.ts';
+import type { RunSummary, RunSummaryTask } from '../../../shared/turbo/common/turbo.type.ts';
 import type { RunWindow } from '../common/run-window.type.ts';
 import { RUN_SUMMARY_STUB } from '../stubs/run-summary.stub.ts';
 
@@ -32,7 +32,7 @@ export const summaryText = (id: string): string => {
 };
 
 /** One task entry of a summary: `taskId` ran over `span` and ended with cache `status`, exit code 0. */
-export const taskEntry = (taskId: string, span: RunWindow, status: 'HIT' | 'MISS'): RunSummary['tasks'][number] => {
+export const taskEntry = (taskId: string, span: RunWindow, status: 'HIT' | 'MISS'): RunSummaryTask => {
   const execution = { ...span, exitCode: 0 };
   const cache = { status };
   const entry = { taskId, execution, cache };

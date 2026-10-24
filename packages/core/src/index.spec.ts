@@ -7,6 +7,9 @@ import { PACKAGE_NAME } from './index.ts';
 import type {
   AffectedResult,
   AffectedTasks,
+  AtomFile,
+  AtomGroup,
+  AtomResult,
   CachedWorkspace,
   DryRun,
   DryRunRequest,
@@ -46,6 +49,7 @@ const RUNTIME_EXPORTS = [
   'TurboException',
   'affectedTasksSchema',
   'assertTaskName',
+  'atomGroupsOf',
   'dryRunSchema',
   'isWithin',
   'loadWorkspace',
@@ -54,6 +58,7 @@ const RUNTIME_EXPORTS = [
   'plainLine',
   'plainLines',
   'readAffected',
+  'readAtomResults',
   'readCachedWorkspace',
   'readDryRun',
   'readNewestRunSummary',
@@ -87,6 +92,8 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<PackageNode>().toHaveProperty('tasks');
       expectTypeOf<PackageEdge>().toHaveProperty('target');
       expectTypeOf<TaskNode>().toHaveProperty('kind');
+      expectTypeOf<AtomGroup>().toHaveProperty('files');
+      expectTypeOf<AtomFile>().toHaveProperty('specPath');
       expectTypeOf<AffectedResult['mode']>().toEqualTypeOf<'package' | 'task'>();
       expectTypeOf<DryRunState['cache']>().toEqualTypeOf<'HIT' | 'MISS' | 'deferred'>();
       expectTypeOf<DryRunState['definition']>().toEqualTypeOf<TaskDefinition>();
@@ -98,6 +105,7 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<RunSummary>().toHaveProperty('execution');
       expectTypeOf<RunToMatch>().toHaveProperty('launchedAt');
       expectTypeOf<RunMatch['cache']>().toEqualTypeOf<'HIT' | 'MISS' | null>();
+      expectTypeOf<AtomResult['outcome']>().toEqualTypeOf<'passed' | 'failed' | 'cached'>();
       expectTypeOf<TurboVersionRange>().toHaveProperty('maxExclusive');
     });
 

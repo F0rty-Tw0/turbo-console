@@ -1,7 +1,5 @@
-import { newestRunNames } from './newest-run-names.ts';
+import { pastRunNames } from './newest-run-names.ts';
 import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
-import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
-import { SUMMARY_MTIME_SLACK_MS } from '../common/run-summary.const.ts';
 import { readRunSummaryFile } from '../data-access/run-summary-files.ts';
 
 /**
@@ -14,9 +12,7 @@ import { readRunSummaryFile } from '../data-access/run-summary-files.ts';
  * when the directory or a file in it exists but cannot be resolved, listed or stat'ed.
  */
 export const readNewestRunSummary = async (root: string): Promise<RunSummary | null> => {
-  const latestMs = Date.now() + SUMMARY_MTIME_SLACK_MS;
-  const isNotFuture = (file: RunSummaryFile): boolean => file.mtimeMs <= latestMs;
-  const names = await newestRunNames(root, isNotFuture);
+  const names = await pastRunNames(root);
 
   if (names === null) return null;
 
