@@ -262,7 +262,7 @@ test.describe('FEATURE: package details page, card structure', () => {
     await test.step('AND Copy is still there', async (): Promise<void> => expect(detailsPage.card('build').copyButton).toHaveCount(1));
   });
 
-  test('GIVEN a turbo task and a script card, only the turbo task has Show in task graph', async ({ detailsPage }): Promise<void> => {
+  test('GIVEN a turbo task and a script card, both have Show in task graph', async ({ detailsPage }): Promise<void> => {
     const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_STUB, SCRIPT_CARD] };
 
     await test.step('WHEN the page shows both cards', async (): Promise<void> => detailsPage.open(state));
@@ -270,7 +270,7 @@ test.describe('FEATURE: package details page, card structure', () => {
     await test.step('THEN the turbo task card has the button', async (): Promise<void> =>
       detailsPage.expectButtonCount('Show in task graph: build', 1));
 
-    await test.step('AND the script card has none', async (): Promise<void> =>
-      detailsPage.expectButtonCount('Show in task graph: lint', 0));
+    await test.step('AND the script card has it too', async (): Promise<void> =>
+      detailsPage.expectButtonCount('Show in task graph: lint', 1));
   });
 });

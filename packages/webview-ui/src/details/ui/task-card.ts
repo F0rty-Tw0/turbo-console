@@ -137,9 +137,7 @@ const fieldList = (card: TaskCard, phase: DryRunPhase): HTMLDListElement => {
 };
 
 const taskGraphButtons = (card: TaskCard, context: RenderContext): HTMLButtonElement[] => {
-  const isGraphed = context.hasTaskGraph && card.isTurboTask;
-
-  if (!isGraphed) return [];
+  if (!context.hasTaskGraph) return [];
 
   const show = (): void => context.bridge.post({ type: 'showInTaskGraph', taskId: card.taskId });
   const button = iconButton('graph', `Show in task graph: ${card.name}`, show);
