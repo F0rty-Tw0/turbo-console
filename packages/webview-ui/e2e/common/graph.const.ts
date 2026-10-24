@@ -38,11 +38,6 @@ export const THEME_VAR_NAMES = [
 /** Init script: opts the page into exposing `window.__tcGraphProbe`. */
 export const PROBE_WANTED = 'window.__tcGraphProbeWanted = true;';
 
-/** Init script: every canvas text measurement throws, as a page whose label sizing broke. */
-export const BROKEN_MEASURE = `CanvasRenderingContext2D.prototype.measureText = () => {
-  throw new Error('measureText is broken');
-};`;
-
 /** The CDP `Performance.getMetrics` entry holding the main thread's CPU time, in seconds. */
 export const THREAD_TIME_METRIC = 'ThreadTime';
 

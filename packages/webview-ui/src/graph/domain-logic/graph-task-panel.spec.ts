@@ -5,32 +5,52 @@ import { PACKAGE_NOTICE_MS, UNKNOWN_TASKS_TEXT } from '../common/graph-task.cons
 import type { TaskPanel, TaskScreenElements } from '../common/graph-task.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskWidgetsMock } from '../test/mocks/graph-task-mode.mock.ts';
-import { droppedTasksText } from '../utils/task-text.util.ts';
+import { droppedTasksText, tasksHiddenText } from '../utils/task-text.util.ts';
 
 type PanelRig = {
   readonly panel: TaskPanel;
   readonly notice: HTMLElement;
   /** The toolbar status line. */
   readonly status: HTMLElement;
+  readonly banner: HTMLElement;
+  /** The cap banner's `role=status` line. */
+  readonly bannerText: HTMLElement;
 };
 
 const line = (): HTMLElement => document.createElement('p');
 
 const rigOf = (): PanelRig => {
   const notice = line();
+  const banner = line();
+  const bannerText = line();
   const taskScreen: TaskScreenElements = {
     prompt: line(),
-    banner: line(),
-    bannerText: line(),
+    banner,
+    bannerText,
     showAll: document.createElement('button'),
     notice
   };
   const status = line();
   const page = { root: line(), taskMode: document.createElement('button'), taskScreen, container: line(), status };
   const panel = taskPanelOf(page, { onShowAll: vi.fn() });
-  const rig: PanelRig = { panel, notice, status };
+  const rig: PanelRig = { panel, notice, status, banner, bannerText };
 
   return rig;
+};
+
+/** Every value written to `element[key]` from now on; reads still see the last one. */
+const writesOf = <K extends 'textContent' | 'hidden'>(element: HTMLElement, key: K): HTMLElement[K][] => {
+  const writes: HTMLElement[K][] = [];
+  let value = element[key];
+  const get = (): HTMLElement[K] => value;
+  const set = (next: HTMLElement[K]): void => {
+    writes.push(next);
+    value = next;
+  };
+
+  Object.defineProperty(element, key, { get, set });
+
+  return writes;
 };
 
 describe('FEATURE: taskPanelOf notice', () => {
@@ -92,6 +112,56 @@ describe('FEATURE: taskPanelOf notice', () => {
     panel.enter();
 
     expect(status.textContent).toBe('');
+  });
+});
+
+describe('FEATURE: taskPanelOf banner', () => {
+  let panel: TaskPanel;
+  let banner: HTMLElement;
+  let bannerText: HTMLElement;
+
+  beforeEach(() => {
+    vi.stubGlobal('document', fakeDocumentMock());
+    ({ panel, banner, bannerText } = rigOf());
+    panel.show({ isEmpty: false, hiddenCount: 2 });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN the banner shows 2 tasks hidden', () => {
+    it('WHEN the same count shows again THEN its status text is not written again', () => {
+      const writes = writesOf(bannerText, 'textContent');
+
+      panel.show({ isEmpty: false, hiddenCount: 2 });
+
+      expect({ writes, text: bannerText.textContent }).toStrictEqual({ writes: [], text: tasksHiddenText(2) });
+    });
+
+    it('WHEN the same count shows again THEN the banner is not hidden or shown again', () => {
+      const writes = writesOf(banner, 'hidden');
+
+      panel.show({ isEmpty: false, hiddenCount: 2 });
+
+      expect({ writes, hidden: banner.hidden }).toStrictEqual({ writes: [], hidden: false });
+    });
+
+    it('WHEN a new count shows THEN its status text is written once', () => {
+      const writes = writesOf(bannerText, 'textContent');
+
+      panel.show({ isEmpty: false, hiddenCount: 3 });
+
+      expect(writes).toStrictEqual([tasksHiddenText(3)]);
+    });
+
+    it('WHEN no task is hidden THEN the banner is hidden once', () => {
+      const writes = writesOf(banner, 'hidden');
+
+      panel.show({ isEmpty: false, hiddenCount: 0 });
+
+      expect(writes).toStrictEqual([true]);
+    });
   });
 });
 

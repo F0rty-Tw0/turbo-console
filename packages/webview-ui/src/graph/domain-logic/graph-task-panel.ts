@@ -24,7 +24,8 @@ export const saveDetailsToggle = (deps: PanelToggleDeps, widgets: Pick<TaskWidge
  * the pressed toggle, the prompt, the cap banner and its Show all tasks button, and the notice line. Entering empties
  * the package selection's status line, which the package inspection writes again once its graph shows. Show all tasks
  * hides itself with the banner, so it hands focus to the canvas. A notice shown in package mode, where no task render
- * replaces it, hides after `PACKAGE_NOTICE_MS`.
+ * replaces it, hides after `PACKAGE_NOTICE_MS`. The banner and its `role=status` text are written only when they change,
+ * so a same-key state re-posted by the host does not make a screen reader announce the banner again.
  */
 export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions): TaskPanel => {
   const { prompt, banner, bannerText, showAll, notice } = page.taskScreen;
@@ -36,9 +37,14 @@ export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions): Tas
     page.taskMode.setAttribute('aria-pressed', String(isOn));
   };
   const show = (view: TaskPanelView): void => {
+    const isBannerHidden = view.hiddenCount === 0;
+    const text = tasksHiddenText(view.hiddenCount);
+
     prompt.hidden = !view.isEmpty;
-    banner.hidden = view.hiddenCount === 0;
-    bannerText.textContent = tasksHiddenText(view.hiddenCount);
+
+    if (banner.hidden !== isBannerHidden) banner.hidden = isBannerHidden;
+
+    if (bannerText.textContent !== text) bannerText.textContent = text;
   };
   const showNotice = (text: string | null): void => {
     notice.hidden = text === null;

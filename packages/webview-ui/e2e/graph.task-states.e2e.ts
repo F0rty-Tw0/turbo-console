@@ -11,6 +11,8 @@ const ESCAPE = { description: 'M4-5a slice 2 review note 9', type: 'requirement'
 
 const FAILURE = { description: 'M4-5a slice 2 review note 10', type: 'requirement' };
 
+const RECOVERY = { description: 'M4-5a slice 2 delta review note 1', type: 'requirement' };
+
 const PANELS = { description: 'M4-5a spec 6 shared controlsOpen, slice 2 review S1', type: 'requirement' };
 
 const SHOW_TASKS = { description: 'M4-5a spec 3.2.1, slice 2 review note 4', type: 'requirement' };
@@ -124,15 +126,26 @@ test.describe('FEATURE: Escape in task mode', () => {
 
 test.describe('FEATURE: a task layout that throws', () => {
   test(
-    'GIVEN a cold open in task mode with label sizing that throws, the page says the graph could not be drawn',
-    { annotation: FAILURE },
-    async ({ graphHost, graphPage }): Promise<void> => {
+    'GIVEN a cold open in task mode with label sizing that throws, the page says the graph could not be drawn, then draws the next state',
+    { annotation: [FAILURE, RECOVERY] },
+    async ({ graphHost, graphPage, graphTaskProbe, graphToolbar }): Promise<void> => {
       await test.step('WHEN the page opens in task mode with app#build chosen and a canvas whose measureText throws', async (): Promise<void> =>
         graphPage.open({ isMeasureBroken: true, savedState: taskSavedState('7a5c0001', { chosen: ['app#build'] }) }));
 
       await test.step('AND the task state is sent', async (): Promise<void> => graphHost.sendState(TASK_MODE_STATE_STUB));
 
       await test.step('THEN the page says the graph could not be drawn', async (): Promise<void> => graphPage.expectLayoutFailed());
+
+      await test.step('WHEN measureText works again and the task state is sent again', async (): Promise<void> => {
+        await graphPage.fixMeasure();
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+      });
+
+      await test.step('THEN the graph body and the toolbar show with the chain drawn', async (): Promise<void> => {
+        await expect(graphPage.container).toBeVisible();
+        await expect(graphToolbar.toolbar).toBeVisible();
+        await graphTaskProbe.expectTaskIds(CHAIN);
+      });
 
       await test.step('AND no console or page error is logged', (): void => graphPage.expectNoErrors());
     }
