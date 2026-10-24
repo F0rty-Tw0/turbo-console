@@ -65,7 +65,7 @@ export class TaskCardSection {
     this.root = page.locator('section.card').filter({ has: heading });
     this.title = this.root.locator('.card-title');
     this.runButton = this.root.locator('.run-slot button');
-    this.copyButton = this.root.locator('.card-actions > button');
+    this.copyButton = this.root.getByRole('button', { name: /^Copy command/ });
     this.status = this.root.locator('.run-status');
     this.statusIcon = this.status.locator('.codicon');
   }

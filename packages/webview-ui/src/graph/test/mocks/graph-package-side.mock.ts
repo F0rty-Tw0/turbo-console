@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 
+import { flowControlMock } from './graph-flow.mock.ts';
 import { graphViewMock } from './graph-view.mock.ts';
 import { layoutRunsMock } from './layout-runner.mock.ts';
 import { mediaQueryMock } from './media-query.mock.ts';
@@ -82,6 +83,7 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
     bridge,
     page,
     createView: vi.fn(() => view),
+    createFlow: flowControlMock,
     runner: runs.runner,
     saver,
     sizeOf: (): NodeSize => NODE_SIZE,

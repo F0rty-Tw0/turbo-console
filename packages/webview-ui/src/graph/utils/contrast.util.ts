@@ -1,0 +1,138 @@
+import { FALLBACK_COLORS } from '../common/graph.const.ts';
+
+/** Red, green and blue as sRGB 0 to 1, then alpha 0 to 1. */
+type Rgba = readonly [number, number, number, number];
+
+const HEX = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/iu;
+
+const RGB_FUNCTION = /^rgba?\(([^)]*)\)$/iu;
+
+/** The 3:1 WCAG floor for non-text contrast, with a margin for anti-aliasing and rounding. */
+const DIMMED_MIN_RATIO = 3.3;
+
+/** 0.25 to 0.8 in 0.05 steps, built from hundredths so no step drifts off its two places. */
+const DIMMED_STEPS = Array.from({ length: 12 }, (_, step: number): number => (25 + step * 5) / 100);
+
+const DIMMED_MAX = 0.8;
+
+/** A hex colour's channels, 0 to 255: three for `#rgb` and `#rrggbb`, four with an alpha digit pair or digit. */
+export const hexChannelsOf = (hex: string): number[] => {
+  const digits = hex.slice(1);
+  const width = digits.length > 4 ? 2 : 1;
+  const count = digits.length / width;
+  const channelOf = (index: number): number => {
+    const part = digits.slice(index * width, (index + 1) * width);
+    const full = width === 1 ? `${part}${part}` : part;
+
+    return Number.parseInt(full, 16);
+  };
+
+  return Array.from({ length: count }, (_, index: number): number => channelOf(index));
+};
+
+const rgbaFrom = (bytes: number[], alpha: number): Rgba => {
+  const [red = 0, green = 0, blue = 0] = bytes;
+  const rgba: Rgba = [red / 255, green / 255, blue / 255, alpha];
+
+  return rgba;
+};
+
+/** `rgb(r, g, b)` or `rgba(r, g, b, a)` with plain numbers; `null` for any other shape. */
+const functionRgbaOf = (body: string): Rgba | null => {
+  const texts = body.split(',');
+  const isNumberText = (text: string): boolean => text.trim() !== '' && Number.isFinite(Number(text));
+  const hasThreeOrFour = texts.length === 3 || texts.length === 4;
+  const isWellFormed = hasThreeOrFour && texts.every(isNumberText);
+
+  if (!isWellFormed) return null;
+
+  const [red = 0, green = 0, blue = 0, alpha = 1] = texts.map(Number);
+
+  return rgbaFrom([red, green, blue], alpha);
+};
+
+const rgbaOf = (colour: string): Rgba | null => {
+  const trimmed = colour.trim();
+  const match = RGB_FUNCTION.exec(trimmed);
+  const body = match?.[1];
+  const isHex = HEX.test(trimmed);
+
+  if (body !== undefined) return functionRgbaOf(body);
+
+  if (!isHex) return null;
+
+  const [red = 0, green = 0, blue = 0, alpha = 255] = hexChannelsOf(trimmed);
+
+  return rgbaFrom([red, green, blue], alpha / 255);
+};
+
+const isRgba = (value: Rgba | null): value is Rgba => value !== null;
+
+const linearOf = (channel: number): number => {
+  if (channel <= 0.04045) return channel / 12.92;
+
+  const lifted = (channel + 0.055) / 1.055;
+
+  return lifted ** 2.4;
+};
+
+const luminanceOf = ([red, green, blue]: Rgba): number => 0.2126 * linearOf(red) + 0.7152 * linearOf(green) + 0.0722 * linearOf(blue);
+
+/** The WCAG ratio of two opaque colours, to two places. */
+const ratioOf = (first: Rgba, second: Rgba): number => {
+  const firstLuminance = luminanceOf(first);
+  const secondLuminance = luminanceOf(second);
+  const lighter = Math.max(firstLuminance, secondLuminance);
+  const darker = Math.min(firstLuminance, secondLuminance);
+  const ratio = (lighter + 0.05) / (darker + 0.05);
+
+  return Math.round(ratio * 100) / 100;
+};
+
+/** `foreground` drawn at `opacity`, its own alpha included, over the opaque `background`. */
+const blendOf = (foreground: Rgba, background: Rgba, opacity: number): Rgba => {
+  const alpha = opacity * foreground[3];
+  const mix = (index: 0 | 1 | 2): number => alpha * foreground[index] + (1 - alpha) * background[index];
+  const blended: Rgba = [mix(0), mix(1), mix(2), 1];
+
+  return blended;
+};
+
+/**
+ * The WCAG contrast ratio of two colours (`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`), 1 to 21 to two places,
+ * alpha not counted; 1, no contrast, when either does not parse.
+ */
+export const contrastRatioOf = (first: string, second: string): number => {
+  const firstRgba = rgbaOf(first);
+  const secondRgba = rgbaOf(second);
+
+  if (firstRgba === null || secondRgba === null) return 1;
+
+  return ratioOf(firstRgba, secondRgba);
+};
+
+/**
+ * The opacity a dimmed element takes: the smallest 0.05 step from 0.25 at which every foreground, blended over
+ * `background`, reads at least 3.3:1 against it; 0.8 when none does, so a dimmed element still reads dimmed; 0.25 when
+ * a colour does not parse.
+ */
+export const dimmedOpacityOf = (background: string, foregrounds: string[]): number => {
+  const base = rgbaOf(background);
+  const parsed = foregrounds.map(rgbaOf);
+  const colours = parsed.filter(isRgba);
+
+  if (base === null || colours.length < foregrounds.length) return FALLBACK_COLORS.dimmedOpacity;
+
+  const readsAt = (opacity: number): boolean => {
+    const reads = (colour: Rgba): boolean => {
+      const blended = blendOf(colour, base, opacity);
+
+      return ratioOf(blended, base) >= DIMMED_MIN_RATIO;
+    };
+
+    return colours.every(reads);
+  };
+  const lowest = DIMMED_STEPS.find(readsAt);
+
+  return lowest ?? DIMMED_MAX;
+};

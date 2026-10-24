@@ -7,3 +7,9 @@ export type ShotSetup = {
   readonly saved: GraphViewState;
   readonly cache: 'positions' | 'folderPositions';
 };
+
+/** What a task shot starts from: the task state and the saved task view with its chosen task selected; tasks cache no positions. */
+export type TaskShotSetup = {
+  readonly state: GraphReady;
+  readonly saved: GraphViewState;
+};

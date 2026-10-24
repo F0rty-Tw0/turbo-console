@@ -108,7 +108,8 @@ const packagePage = (root: HTMLElement, state: PackageDetails, context: RenderCo
  */
 export const render = (root: HTMLElement, state: DetailsState, bridge: Bridge, runTexts: RunTexts): RenderedPage => {
   const focusTargets: FocusTargets = new Map();
-  const context: RenderContext = { bridge, focusTargets, runTexts };
+  const hasTaskGraph = state.kind === 'package' && state.taskGraph;
+  const context: RenderContext = { bridge, hasTaskGraph, focusTargets, runTexts };
 
   runTexts.reset();
 

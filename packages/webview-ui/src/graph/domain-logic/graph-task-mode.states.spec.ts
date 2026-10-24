@@ -4,6 +4,7 @@ import { GraphTaskMode } from './graph-task-mode.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphReady, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
@@ -21,6 +22,8 @@ const API_AT: Position = { x: 10, y: 20 };
 const WEB_AT: Position = { x: 10, y: 120 };
 
 const POSITIONS: Positions = { 'api#build': API_AT, 'web#build': WEB_AT };
+
+const LIT_EDGE: FlowEdgeGeometry = { source: WEB_AT, target: API_AT, controlPoints: [] };
 
 /** `web#build` with its package script edited: a new command it cannot run, under the same ids and so the same layout key. */
 const EDITED_WEB_BUILD: GraphTask = { ...WEB_BUILD_STUB, command: 'vite build', isRunnable: false };
@@ -103,6 +106,26 @@ describe('FEATURE: GraphTaskMode across page states', () => {
 
       expect(rig.view.resize).toHaveBeenCalledOnce();
       expect(rig.modes.current()).toMatchObject({ controlsOpen: false });
+    });
+  });
+
+  describe('GIVEN package mode with web#build saved as selected and its chain lit once drawn', () => {
+    beforeEach(() => {
+      open(taskSavedOf({ selected: 'web#build' }, 'packages'));
+      rig.view.flowEdges.mockReturnValue([LIT_EDGE]);
+      mode.received(TASK_STATE_STUB, 7);
+      mode.toggle(8);
+      rig.flow.highlightChanged.mockClear();
+    });
+
+    it('WHEN the chain lands THEN the flow hears of the restored highlight after the layout stops it', async () => {
+      await rig.runs.settle(0, resultOf(KEY, POSITIONS));
+
+      const stoppedAt = rig.flow.stop.mock.invocationCallOrder.at(-1) ?? Number.NaN;
+      const heardAt = rig.flow.highlightChanged.mock.invocationCallOrder.at(-1) ?? Number.NaN;
+
+      expect(rig.flow.highlightChanged).toHaveBeenLastCalledWith(1);
+      expect(stoppedAt).toBeLessThan(heardAt);
     });
   });
 

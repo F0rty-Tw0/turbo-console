@@ -5,6 +5,7 @@ import { packageTasksOf, taskModeOf } from './graph-task-wiring.ts';
 import { wireToolbar } from './graph-toolbar-actions.ts';
 import { viewHandlersOf } from './graph-view-handlers.ts';
 import { ViewStateModes } from './view-state-modes.ts';
+import type { FlowControl } from '../common/flow.type.ts';
 import type { GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
@@ -16,6 +17,7 @@ import { readGraphViewState } from '../utils/graph-view-state.util.ts';
  */
 class GraphPageController {
   public readonly view: GraphView;
+  public readonly flow: FlowControl;
 
   private readonly deps: GraphControllerDeps;
   private readonly frames: GraphFrames;
@@ -32,7 +34,8 @@ class GraphPageController {
       frames,
       filtering: () => this.packages.filtering,
       layouts: () => this.packages.layouts,
-      tasks: () => this.tasks
+      tasks: () => this.tasks,
+      flow: () => this.flow
     });
     const tasks = packageTasksOf((): ReturnType<typeof taskModeOf> => this.tasks, deps.now);
     const onMessage = (): void => this.tasks.suspend();
@@ -40,8 +43,15 @@ class GraphPageController {
     this.deps = deps;
     this.frames = frames;
     this.view = deps.createView(page.container, handlers);
+    this.flow = deps.createFlow(this.view);
     this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks, onMessage });
-    this.tasks = taskModeOf(deps, this.view, { modes, frames, onMessage, onExit: (): void => this.routing.exitTasks() });
+    this.tasks = taskModeOf(deps, this.view, {
+      modes,
+      frames,
+      onMessage,
+      onExit: (): void => this.routing.exitTasks(),
+      flow: this.flow
+    });
     this.routing = new GraphStateRouting({ tasks: this.tasks, packages: this.packages, now: deps.now });
     const relayout = (): void => this.relayout();
 
@@ -98,7 +108,7 @@ class GraphPageController {
 export const createGraphController = (deps: GraphControllerDeps): GraphController => {
   const page = new GraphPageController(deps);
   const receive = (message: unknown): void => page.receive(message);
-  const controller: GraphController = { receive, view: page.view, facts: page.facts() };
+  const controller: GraphController = { receive, view: page.view, flow: page.flow, facts: page.facts() };
 
   return controller;
 };

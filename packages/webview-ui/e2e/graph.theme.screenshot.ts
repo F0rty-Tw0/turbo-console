@@ -7,6 +7,7 @@ import { collapsedSavedState } from './test/utils/graph-folder-states.spec.util.
 import { foldersShotState } from './test/utils/graph-folders-shot.spec.util.ts';
 import { closedPanelsSavedState } from './test/utils/graph-shot-state.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
+import { taskShotSetup } from './test/utils/graph-task-shot.spec.util.ts';
 
 const THEMES = [
   { name: 'dark', theme: THEME_DARK_STUB },
@@ -23,6 +24,8 @@ const TARGET_LIKE: ShotSetup = {
   saved: closedPanelsSavedState(TARGET_LIKE_STATE.hash),
   cache: 'positions'
 };
+
+const TASK_SETUP = taskShotSetup();
 
 const FOLDERS_SETUP: ShotSetup = {
   state: FOLDERS,
@@ -53,6 +56,16 @@ test.describe('FEATURE: theme screenshots', () => {
 
       await test.step(`THEN the page matches target-like-inspect-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`target-like-inspect-${name}.png`));
+    });
+
+    test(`GIVEN the ${name} theme, the task graph matches task-graph-${name}.png`, async ({ page }): Promise<void> => {
+      const shots = new GraphShots(page);
+
+      await test.step('WHEN the chosen task is laid out in task mode with its selection restored', async (): Promise<void> =>
+        shots.openTasks(TASK_SETUP, theme));
+
+      await test.step(`THEN the page matches task-graph-${name}.png`, async (): Promise<void> =>
+        expect(page).toHaveScreenshot(`task-graph-${name}.png`));
     });
 
     test(`GIVEN the ${name} theme, the grouped folders match folders-${name}.png`, async ({ page }): Promise<void> => {

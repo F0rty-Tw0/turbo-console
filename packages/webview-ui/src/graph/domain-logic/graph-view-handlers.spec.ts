@@ -27,6 +27,7 @@ describe('FEATURE: viewHandlersOf', () => {
     let saveCamera: Mock<() => void>;
     let selectTask: Mock<(id: string) => void>;
     let clearTask: Mock<() => void>;
+    let hoverTask: Mock<(id: string | null) => void>;
     let isTaskMode: boolean;
     let handlers: GraphViewHandlers;
 
@@ -44,6 +45,7 @@ describe('FEATURE: viewHandlersOf', () => {
       saveCamera = vi.fn<() => void>();
       selectTask = vi.fn<(id: string) => void>();
       clearTask = vi.fn<() => void>();
+      hoverTask = vi.fn<(id: string | null) => void>();
       isTaskMode = false;
       const mark = (): void => {
         calls.push('mark');
@@ -60,9 +62,14 @@ describe('FEATURE: viewHandlersOf', () => {
         calls.push('task rendered');
       };
       const selection = { tapNode: selectTask, clear: clearTask, rendered: taskRendered };
-      const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera, selection };
+      const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera, hover: hoverTask, selection };
 
-      handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks });
+      const viewportChanged = (): void => {
+        calls.push('flow cleared');
+      };
+      const flow = { viewportChanged };
+
+      handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks, flow: () => flow });
     });
 
     it('WHEN a frame renders THEN the frame clock is marked before the filtering hears of it', () => {
@@ -119,6 +126,18 @@ describe('FEATURE: viewHandlersOf', () => {
       expect(saveViewport).toHaveBeenCalledOnce();
     });
 
+    it('WHEN the viewport moves THEN the flow overlay is cleared', () => {
+      handlers.onViewport();
+
+      expect(calls).toStrictEqual(['flow cleared']);
+    });
+
+    it('WHEN a node is hovered in package mode THEN task mode hears nothing', () => {
+      handlers.onHoverNode('web');
+
+      expect(hoverTask).not.toHaveBeenCalled();
+    });
+
     describe('AND task mode is active', () => {
       beforeEach(() => {
         isTaskMode = true;
@@ -142,6 +161,13 @@ describe('FEATURE: viewHandlersOf', () => {
         handlers.onTapNode('web#build');
 
         expect(selectTask).toHaveBeenCalledExactlyOnceWith('web#build');
+      });
+
+      it('WHEN a task is hovered and the pointer leaves THEN task mode hovers it, then nothing', () => {
+        handlers.onHoverNode('web#build');
+        handlers.onHoverNode(null);
+
+        expect(hoverTask.mock.calls).toStrictEqual([['web#build'], [null]]);
       });
 
       it('WHEN the background is tapped THEN task mode clears its selection', () => {
@@ -170,6 +196,12 @@ describe('FEATURE: viewHandlersOf', () => {
 
         expect(saveCamera).toHaveBeenCalledOnce();
         expect(saveViewport).not.toHaveBeenCalled();
+      });
+
+      it('WHEN the viewport moves THEN the flow overlay is cleared', () => {
+        handlers.onViewport();
+
+        expect(calls).toStrictEqual(['flow cleared']);
       });
 
       it('WHEN a frame renders THEN the frame clock is marked before the task selection hears of it', () => {

@@ -93,6 +93,12 @@ export type CpuSteps = {
   readonly maxStepMs: number;
 };
 
+/** The main-thread CPU budgets of a hover-flow run: its total and its slowest step, in ms. */
+export type HoverBudget = {
+  readonly totalMs: number;
+  readonly stepMs: number;
+};
+
 type MessageTag<TType extends string> = { readonly type: TType };
 
 export type PositionsMessage = Extract<GraphWebviewMessage, MessageTag<'positions'>>;
@@ -178,6 +184,12 @@ export type PngBounds = {
 export type TitleBandInk = {
   readonly inside: number;
   readonly nearSides: number;
+};
+
+/** A base64 PNG and the `rgb(...)` background its pixels' contrast is read against. */
+export type ContrastInput = {
+  readonly png: string;
+  readonly background: string;
 };
 
 /** A base64 PNG and the `rgb(...)` colour whose ink is counted in it. */

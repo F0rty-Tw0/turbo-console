@@ -3,6 +3,7 @@ import type { Mock, Mocked } from 'vitest';
 
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { TaskCanvas } from '../common/task-canvas.type.ts';
 import type { TaskDetails, TaskDetailsActions, TaskDetailsModel, TaskRuns, TaskWidgets } from '../common/task-details.type.ts';
 import { taskDetailsMock, taskWidgetsMock } from '../test/mocks/graph-task-mode.mock.ts';
@@ -42,7 +43,7 @@ describe('FEATURE: GraphTaskSelection', () => {
   beforeEach(() => {
     rig = rigOf();
 
-    const view = { tasks: rig.canvas };
+    const view = { tasks: rig.canvas, flowEdges: (): FlowEdgeGeometry[] => [] };
 
     selection = new GraphTaskSelection({
       view,
@@ -53,7 +54,8 @@ describe('FEATURE: GraphTaskSelection', () => {
       },
       widgetsOf: (): TaskWidgets => rig.widgets,
       task: rig.view,
-      save: rig.save
+      save: rig.save,
+      onHighlight: vi.fn<(litEdgeCount: number) => void>()
     });
     selection.setShown(TASK_CHAIN_STUB);
   });
@@ -106,6 +108,68 @@ describe('FEATURE: GraphTaskSelection', () => {
       selection.select('web#build');
 
       expect(selection.selected()).toBe('web#build');
+    });
+  });
+
+  describe('GIVEN the chain is shown and web#build is hovered', () => {
+    beforeEach(() => {
+      rig.save.mockClear();
+      rig.details.show.mockClear();
+      rig.widgets.show.mockClear();
+      selection.hover('web#build');
+    });
+
+    it('WHEN nothing is selected THEN the canvas paints web#build and no panel, widget or save moves', () => {
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
+      expect(rig.details.show).not.toHaveBeenCalled();
+      expect(rig.widgets.show).not.toHaveBeenCalled();
+      expect(rig.save).not.toHaveBeenCalled();
+      expect(selection.selected()).toBeNull();
+    });
+
+    it('WHEN the pointer leaves THEN the canvas paints no target', () => {
+      selection.hover(null);
+
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+    });
+
+    it('WHEN the shown tasks lose web#build THEN the hover is forgotten and the canvas paints no target', () => {
+      selection.setShown([API_BUILD_STUB]);
+
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+
+      selection.setShown(TASK_CHAIN_STUB);
+
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+    });
+
+    it('WHEN a run state arrives THEN the canvas keeps painting web#build', () => {
+      selection.enter(true);
+      selection.runs({ 'web#build': 'running' });
+
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
+    });
+  });
+
+  describe('GIVEN api#build is selected', () => {
+    beforeEach(() => {
+      selection.tapNode('api#build');
+      rig.canvas.paint.mockClear();
+    });
+
+    it('WHEN web#build is hovered then the pointer leaves THEN the canvas paints web#build then api#build, and api#build stays selected', () => {
+      selection.hover('web#build');
+      selection.hover(null);
+
+      expect(rig.canvas.paint.mock.calls).toStrictEqual([['web#build'], ['api#build']]);
+      expect(selection.selected()).toBe('api#build');
+    });
+
+    it('WHEN the pkg:web compound or a task that is not shown is hovered THEN nothing is painted', () => {
+      selection.hover('pkg:web');
+      selection.hover('gone#build');
+
+      expect(rig.canvas.paint).not.toHaveBeenCalled();
     });
   });
 
@@ -204,6 +268,15 @@ describe('FEATURE: GraphTaskSelection', () => {
     expect(rig.details.enter).toHaveBeenCalledExactlyOnceWith(true);
     expect(rig.details.exit).toHaveBeenCalledTimes(1);
     expect(rig.widgets.exit).toHaveBeenCalledTimes(1);
+  });
+
+  it('GIVEN web#build hovered WHEN task mode is left and entered again THEN the canvas is painted with no target', () => {
+    selection.hover('web#build');
+    selection.enter(true);
+    selection.exit();
+    selection.enter(true);
+
+    expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
   });
 
   it('GIVEN a frame rendered WHEN it is passed on THEN the task "…" follows', () => {

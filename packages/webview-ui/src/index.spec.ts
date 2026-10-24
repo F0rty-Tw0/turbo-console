@@ -144,13 +144,14 @@ describe('FEATURE: webview-ui package entry', () => {
         ReadyMessage | TaskMessage | OpenPackageJsonMessage | RefreshMessage | ShowOutputMessage
       >();
       expectTypeOf<HostMessage>().toEqualTypeOf<StateMessage | RunStateMessage>();
-      expectTypeOf<TaskMessage['type']>().toEqualTypeOf<'run' | 'stop' | 'copy'>();
+      expectTypeOf<TaskMessage['type']>().toEqualTypeOf<'run' | 'stop' | 'copy' | 'showInTaskGraph'>();
       expectTypeOf<RefreshMessage['scope']>().toEqualTypeOf<'dryRun' | 'root'>();
       expectTypeOf<StateMessage['state']>().toEqualTypeOf<DetailsState>();
       expectTypeOf<RunStateMessage['run']>().toEqualTypeOf<RunView>();
       expectTypeOf<DetailsState>().toEqualTypeOf<PackageDetails | MissingPackage>();
       expectTypeOf<DryRunPhase>().toEqualTypeOf<'loading' | 'ready' | 'failed'>();
       expectTypeOf<PackageDetails['tasks']>().toEqualTypeOf<TaskCard[]>();
+      expectTypeOf<PackageDetails['taskGraph']>().toEqualTypeOf<boolean>();
       expectTypeOf<TaskCard['cacheStatus']>().toEqualTypeOf<'HIT' | 'MISS' | 'deferred' | null>();
       expectTypeOf<RunView['colorVar']>().toEqualTypeOf<string | null>();
       expectTypeOf<RunView['elapsedMs']>().toEqualTypeOf<number | null>();

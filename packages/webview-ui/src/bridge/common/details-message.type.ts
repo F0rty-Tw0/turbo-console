@@ -4,7 +4,7 @@ export type ReadyMessage = { readonly type: 'ready' };
 
 /** `taskId` must be a task of the panel's current state; the host drops any other. */
 export type TaskMessage = {
-  readonly type: 'run' | 'stop' | 'copy';
+  readonly type: 'run' | 'stop' | 'copy' | 'showInTaskGraph';
   readonly taskId: string;
 };
 

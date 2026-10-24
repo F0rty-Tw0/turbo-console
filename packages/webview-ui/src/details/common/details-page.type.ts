@@ -34,14 +34,15 @@ export type RenderedCard = {
 };
 
 /**
- * Focusable controls by focus key (`run:<taskId>`, `copy:<taskId>`, `refresh`, `open`, `retry-<scope>`, `title`), built
+ * Focusable controls by focus key (`run:<taskId>`, `copy:<taskId>`, `taskGraph:<taskId>`, `refresh`, `open`, `retry-<scope>`, `title`), built
  * by `render`. A re-render finds the focused control here by identity, never through a selector or a dataset key.
  */
 export type FocusTargets = Map<string, HTMLElement>;
 
-/** What every part of the page is built with: the bridge it posts through, the focus targets it registers in, its run texts. */
+/** What every part of the page is built with: the bridge it posts through, the focus targets it registers in, its run texts, whether the cards offer Show in task graph. */
 export type RenderContext = {
   readonly bridge: Bridge;
+  readonly hasTaskGraph: boolean;
   readonly focusTargets: FocusTargets;
   readonly runTexts: RunTexts;
 };

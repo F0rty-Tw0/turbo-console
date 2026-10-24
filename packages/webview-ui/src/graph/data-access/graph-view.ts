@@ -4,6 +4,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 import { setBoxes } from './graph-boxes.ts';
 import { anchorBoxOf, panBy } from './graph-camera.ts';
 import { exportPngOf } from './graph-export.ts';
+import { flowEdgesOf } from './graph-flow-edges.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
@@ -14,6 +15,7 @@ import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
 import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
@@ -105,7 +107,6 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     cy.resize();
     fitVisible(cy, FIT_PADDING_PX);
   };
-  const viewport = (): Viewport => viewportOf(cy);
   const setViewport = (zoom: number, pan: Position): void => {
     cy.resize();
     cy.viewport({ zoom, pan });
@@ -128,7 +129,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     centreOn: (name: string): void => centreOnNode(cy, name),
     anchorBox: (names: string[]): AnchorBox | null => anchorBoxOf(cy, names),
     panBy: (dx: number): void => panBy(cy, dx),
-    viewport,
+    viewport: (): Viewport => viewportOf(cy),
     setViewport,
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
     setPositions,
@@ -136,6 +137,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),
     exportPng: (bg: string): string => exportPngOf(cy, bg, window.devicePixelRatio),
+    flowEdges: (): FlowEdgeGeometry[] => flowEdgesOf(cy),
     cy: (): Core => cy,
     tasks
   };

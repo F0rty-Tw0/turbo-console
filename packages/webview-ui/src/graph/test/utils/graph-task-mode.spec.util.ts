@@ -13,6 +13,7 @@ import type { TaskControls } from '../../common/task-controls.type.ts';
 import type { TaskDetails } from '../../common/task-details.type.ts';
 import { freshViewStateOf } from '../../utils/fresh-view-state.util.ts';
 import type { TaskModeRig, TaskPartsMock, TaskViewMock } from '../common/graph-task-mode.type.ts';
+import { flowControlMock } from '../mocks/graph-flow.mock.ts';
 import { layoutScreenMock } from '../mocks/graph-layouts.mock.ts';
 import { taskControlsMock, taskDetailsMock, taskPanelMock, taskWidgetsMock } from '../mocks/graph-task-mode.mock.ts';
 import { taskCanvasMock } from '../mocks/graph-view.mock.ts';
@@ -43,7 +44,8 @@ const taskViewMockOf = (noting: (name: string) => () => void): TaskViewMock => {
     fit: vi.fn<TaskView['fit']>(noting('fit')),
     setViewport: vi.fn<TaskView['setViewport']>(noting('setViewport')),
     viewport: vi.fn<TaskView['viewport']>(() => TASK_CAMERA),
-    resize: vi.fn<TaskView['resize']>()
+    resize: vi.fn<TaskView['resize']>(),
+    flowEdges: vi.fn<TaskView['flowEdges']>(() => [])
   };
 
   tasks.show.mockImplementation(noting('show'));
@@ -88,6 +90,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const { panelOf, controlsOf, detailsOf } = parts;
   const onExit = vi.fn<() => void>();
   const onFailure = vi.fn<(error: unknown) => void>();
+  const flow = flowControlMock();
   const deps: TaskModeDeps = {
     view,
     runner: runs.runner,
@@ -101,12 +104,14 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     panelOf,
     controlsOf,
     detailsOf,
-    widgetsOf: taskWidgetsMock
+    widgetsOf: taskWidgetsMock,
+    flow,
+    onHighlight: flow.highlightChanged
   };
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const calls = (): string[] => [...called];
 
-  const rig: TaskModeRig = { ...parts, deps, view, runs, screen, frames, modes, posts, calls, onExit, onFailure };
+  const rig: TaskModeRig = { ...parts, deps, view, runs, screen, frames, modes, posts, calls, onExit, onFailure, flow };
 
   return rig;
 };

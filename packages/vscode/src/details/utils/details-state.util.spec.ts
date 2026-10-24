@@ -86,7 +86,8 @@ describe('FEATURE: package details state', () => {
         path: 'packages/a',
         tags: ['lib'],
         dryRun: 'loading',
-        reloadError: null
+        reloadError: null,
+        taskGraph: true
       });
     });
 

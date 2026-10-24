@@ -233,6 +233,13 @@ p {
   min-width: 0;
 }
 
+/* Task edge flow: a canvas over the graph canvas, sized to the container from script, under the widget layer that follows it in the DOM. */
+.graph-flow {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
 /* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons take pointer events. */
 .graph-widgets {
   position: absolute;

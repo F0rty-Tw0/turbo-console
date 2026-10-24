@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { ViewStateModes } from './view-state-modes.ts';
@@ -32,6 +33,7 @@ const throwPlace = (): never => {
 describe('FEATURE: GraphTaskLayout', () => {
   let rig: TaskModeRig;
   let layout: GraphTaskLayout;
+  let onDrawn: Mock<() => void>;
 
   /** Shows the layout of `key` and lands it as the latest run. */
   const land = async (key: string): Promise<void> => {
@@ -50,7 +52,35 @@ describe('FEATURE: GraphTaskLayout', () => {
     const saver: ViewStateSaver = { schedule: vi.fn(), flush: vi.fn() };
 
     rig = taskModeRigOf(new ViewStateModes(saver, taskSavedOf({})));
-    layout = new GraphTaskLayout({ ...rig.deps, saved: (): null => null, onPlaced: vi.fn() });
+    onDrawn = vi.fn<() => void>();
+    layout = new GraphTaskLayout({ ...rig.deps, saved: (): null => null, onPlaced: vi.fn(), onDrawn });
+  });
+
+  describe('GIVEN the flow overlay', () => {
+    it('WHEN a layout lands THEN the flow stops before the canvas draws it', async () => {
+      await land('k0');
+
+      const stoppedAt = rig.flow.stop.mock.invocationCallOrder[0] ?? Number.NaN;
+      const shownAt = rig.view.tasks.show.mock.invocationCallOrder[0] ?? Number.NaN;
+
+      expect(stoppedAt).toBeLessThan(shownAt);
+    });
+
+    it('WHEN a layout lands THEN the drawn highlight goes back to the flow once the camera is set', async () => {
+      await land('k0');
+
+      const fitAt = rig.view.fit.mock.invocationCallOrder[0] ?? Number.NaN;
+      const drawnAt = onDrawn.mock.invocationCallOrder[0] ?? Number.NaN;
+
+      expect(onDrawn).toHaveBeenCalledOnce();
+      expect(fitAt).toBeLessThan(drawnAt);
+    });
+
+    it('WHEN the task canvas is cleared THEN the flow stops', () => {
+      layout.clear();
+
+      expect(rig.flow.stop).toHaveBeenCalledOnce();
+    });
   });
 
   describe('GIVEN as many layouts landed as page memory keeps', () => {

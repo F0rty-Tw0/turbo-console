@@ -238,4 +238,39 @@ test.describe('FEATURE: package details page, card structure', () => {
       await test.step('AND the Script fact is an empty value', async (): Promise<void> => card.expectFact('Script', 'empty', 'none'));
     }
   );
+
+  test('GIVEN a package with a task graph, Show in task graph posts the task id', async ({ detailsPage }): Promise<void> => {
+    await test.step('WHEN the page shows the card', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
+
+    await test.step('AND Show in task graph is clicked', async (): Promise<void> =>
+      detailsPage.pressButton('Show in task graph: build'));
+
+    await test.step('THEN the page posts showInTaskGraph with its id', async (): Promise<void> =>
+      detailsPage.expectLastPosted({ type: 'showInTaskGraph', taskId: 'web#build' }));
+  });
+
+  test('GIVEN a package with no task graph, the card has no Show in task graph and keeps Copy', async ({
+    detailsPage
+  }): Promise<void> => {
+    const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, taskGraph: false };
+
+    await test.step('WHEN the page shows the card', async (): Promise<void> => detailsPage.open(state));
+
+    await test.step('THEN there is no Show in task graph button', async (): Promise<void> =>
+      detailsPage.expectButtonCount('Show in task graph: build', 0));
+
+    await test.step('AND Copy is still there', async (): Promise<void> => expect(detailsPage.card('build').copyButton).toHaveCount(1));
+  });
+
+  test('GIVEN a turbo task and a script card, both have Show in task graph', async ({ detailsPage }): Promise<void> => {
+    const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_STUB, SCRIPT_CARD] };
+
+    await test.step('WHEN the page shows both cards', async (): Promise<void> => detailsPage.open(state));
+
+    await test.step('THEN the turbo task card has the button', async (): Promise<void> =>
+      detailsPage.expectButtonCount('Show in task graph: build', 1));
+
+    await test.step('AND the script card has it too', async (): Promise<void> =>
+      detailsPage.expectButtonCount('Show in task graph: lint', 1));
+  });
 });

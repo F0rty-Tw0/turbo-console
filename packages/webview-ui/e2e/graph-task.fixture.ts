@@ -1,9 +1,13 @@
 import { test as graphTest } from './graph.fixture.ts';
+import { GraphFlowPage } from './pages/graph-flow.po.ts';
+import { GraphHover } from './pages/graph-hover.po.ts';
 import { GraphTaskDetails } from './pages/graph-task-details.po.ts';
 import { GraphTaskNarrow } from './pages/graph-task-narrow.po.ts';
 import { GraphTask } from './pages/graph-task.po.ts';
 
 type GraphTaskFixtures = {
+  readonly graphFlow: GraphFlowPage;
+  readonly graphHover: GraphHover;
   readonly graphTask: GraphTask;
   readonly graphTaskDetails: GraphTaskDetails;
   readonly graphTaskNarrow: GraphTaskNarrow;
@@ -11,6 +15,12 @@ type GraphTaskFixtures = {
 
 /** The graph fixtures plus task mode's page parts; `graph.fixture.ts` is at its line cap. */
 export const test = graphTest.extend<GraphTaskFixtures>({
+  graphFlow: async ({ page }, use): Promise<void> => {
+    await use(new GraphFlowPage(page));
+  },
+  graphHover: async ({ page }, use): Promise<void> => {
+    await use(new GraphHover(page));
+  },
   graphTask: async ({ page }, use): Promise<void> => {
     await use(new GraphTask(page));
   },

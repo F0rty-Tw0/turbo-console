@@ -74,7 +74,8 @@ export const PACKAGE_DETAILS_STUB: PackageDetails = {
   dryRun: 'ready',
   reloadError: null,
   scriptsShown: true,
-  hiddenScriptCount: 0
+  hiddenScriptCount: 0,
+  taskGraph: true
 };
 
 export const MISSING_PACKAGE_STUB: MissingPackage = { kind: 'missing', root: '/repo', packageName: 'web', label: null };

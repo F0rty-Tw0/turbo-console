@@ -5,7 +5,8 @@ import type { CommandMessage, DetailsCommand, PanelKey } from '../common/details
 const TASK_COMMANDS: Readonly<Record<TaskMessage['type'], string>> = {
   run: 'turboConsole.runTask',
   stop: 'turboConsole.stopTask',
-  copy: 'turboConsole.copyCommand'
+  copy: 'turboConsole.copyCommand',
+  showInTaskGraph: 'turboConsole.showTaskGraph'
 };
 
 /**

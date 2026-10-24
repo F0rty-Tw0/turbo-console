@@ -1,3 +1,4 @@
+import { buildFlowCanvas } from './flow-canvas.ts';
 import { buildToolbar } from './toolbar-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
@@ -62,11 +63,11 @@ const taskScreen = (): TaskScreenElements => {
   return screen;
 };
 
-/** The row that holds the controls panel, once a graph shows, the container and the widget layer over it. */
-const graphBody = (container: HTMLElement, widgets: HTMLElement): HTMLElement => {
+/** The row that holds the controls panel, once a graph shows, the container, then the flow overlay and the widget layer over it. */
+const graphBody = (container: HTMLElement, flow: HTMLCanvasElement, widgets: HTMLElement): HTMLElement => {
   const body = textElement('div', 'graph-body', '');
 
-  body.append(container, widgets);
+  body.append(container, flow, widgets);
 
   return body;
 };
@@ -86,8 +87,9 @@ export const buildPage = (): PageElements => {
   const message = textBlock('graph-message', messageText, reload);
   const tasks = taskScreen();
   const container = graphContainer();
+  const flow = buildFlowCanvas();
   const widgets = textElement('div', 'graph-widgets', '');
-  const body = graphBody(container, widgets);
+  const body = graphBody(container, flow, widgets);
   const root = textElement('main', 'graph-page', '');
 
   root.append(tools.toolbar, notice, tasks.notice, tasks.banner, tasks.prompt, message, body);
@@ -104,6 +106,7 @@ export const buildPage = (): PageElements => {
     reload,
     body,
     container,
+    flow,
     widgets
   };
 

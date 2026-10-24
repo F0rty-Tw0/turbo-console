@@ -43,6 +43,7 @@ export const graphViewMock = (camera: Viewport): Mocked<GraphView> => {
     applyTheme: vi.fn<GraphView['applyTheme']>(),
     widgetRects: vi.fn<GraphView['widgetRects']>(),
     exportPng: vi.fn<GraphView['exportPng']>(() => ''),
+    flowEdges: vi.fn<GraphView['flowEdges']>(() => []),
     cy: vi.fn<GraphView['cy']>(),
     tasks: taskCanvasMock()
   };

@@ -83,6 +83,8 @@ export type GraphProbe = {
   readonly selected: () => string | null;
   readonly zoom: () => number;
   readonly pan: () => Position;
+  /** The Cytoscape `render` events since the probe was made: a redraw of the canvas, which the flow overlay exists to avoid. */
+  readonly renderCount: () => number;
   /** From the latest `graph` state's message event to the first Cytoscape `render` after it; `null` until that render. */
   readonly firstFrameMs: () => number | null;
   readonly layoutEngine: () => LayoutEngine | null;
