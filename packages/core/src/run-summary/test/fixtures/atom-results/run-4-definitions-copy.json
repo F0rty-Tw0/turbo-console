@@ -1,0 +1,67 @@
+{
+  "id": "3L9a8GbpRAixnI2vx3VYCQc8qSr",
+  "monorepo": true,
+  "execution": {
+    "command": "turbo run e2e-ci--tests/b fails.spec.ts",
+    "startTime": 1792868574737,
+    "endTime": 1792868575830,
+    "exitCode": 1
+  },
+  "tasks": [
+    {
+      "taskId": "@fx/e2e#e2e-ci--tests/b fails.spec.ts",
+      "execution": {
+        "startTime": 1792868574745,
+        "endTime": 1792868575830,
+        "exitCode": 1
+      },
+      "cache": {
+        "status": "MISS"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci-src--tests/b fails.spec.ts",
+      "execution": {
+        "startTime": 1792868574744,
+        "endTime": 1792868574744,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    },
+    {
+      "taskId": "@fx/e2e-atoms#e2e-ci--tests/b fails.spec.ts",
+      "execution": {
+        "startTime": 1792868574759,
+        "endTime": 1792868574821,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "MISS"
+      }
+    },
+    {
+      "taskId": "@fx/e2e-atoms#e2e-ci-src--tests/b fails.spec.ts",
+      "execution": {
+        "startTime": 1792868574744,
+        "endTime": 1792868574759,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "MISS"
+      }
+    },
+    {
+      "taskId": "@fx/lib#build",
+      "execution": {
+        "startTime": 1792868574744,
+        "endTime": 1792868574744,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    }
+  ]
+}

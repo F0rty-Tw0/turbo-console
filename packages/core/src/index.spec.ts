@@ -9,6 +9,7 @@ import type {
   AffectedTasks,
   AtomFile,
   AtomGroup,
+  AtomResult,
   CachedWorkspace,
   DryRun,
   DryRunRequest,
@@ -57,6 +58,7 @@ const RUNTIME_EXPORTS = [
   'plainLine',
   'plainLines',
   'readAffected',
+  'readAtomResults',
   'readCachedWorkspace',
   'readDryRun',
   'readNewestRunSummary',
@@ -103,6 +105,7 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<RunSummary>().toHaveProperty('execution');
       expectTypeOf<RunToMatch>().toHaveProperty('launchedAt');
       expectTypeOf<RunMatch['cache']>().toEqualTypeOf<'HIT' | 'MISS' | null>();
+      expectTypeOf<AtomResult['outcome']>().toEqualTypeOf<'passed' | 'failed' | 'cached'>();
       expectTypeOf<TurboVersionRange>().toHaveProperty('maxExclusive');
     });
 

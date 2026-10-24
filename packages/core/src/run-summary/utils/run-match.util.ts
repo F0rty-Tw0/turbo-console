@@ -21,7 +21,7 @@ export const runCommandOf = (run: RunToMatch): string => `turbo run ${run.task.n
 const spanOf = (span: Span): number => span.endTime - span.startTime;
 
 /** A real duration: finite and not negative. A broken summary can give `endTime < startTime` or an overflow. */
-const isRealDuration = (durationMs: number): boolean => Number.isFinite(durationMs) && durationMs >= 0;
+export const isRealDuration = (durationMs: number): boolean => Number.isFinite(durationMs) && durationMs >= 0;
 
 /** Whether `file` was written within `SUMMARY_MTIME_SLACK_MS` of `[launchedAt, endedAt]`, so it may hold the summary of `run`. */
 export const isNearRun = (file: RunSummaryFile, run: RunToMatch): boolean => {

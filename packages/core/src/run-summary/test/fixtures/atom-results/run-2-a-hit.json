@@ -1,0 +1,111 @@
+{
+  "id": "3L9a5frHMCkDjjG1IOuQgsGBmWH",
+  "monorepo": true,
+  "execution": {
+    "command": "turbo run e2e-ci --filter=@fx/e2e",
+    "startTime": 1792868554570,
+    "endTime": 1792868555277,
+    "exitCode": 1
+  },
+  "tasks": [
+    {
+      "taskId": "@fx/e2e#e2e-ci--tests/a.spec.ts",
+      "execution": {
+        "startTime": 1792868555266,
+        "endTime": 1792868555266,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci--tests/b fails.spec.ts",
+      "execution": {
+        "startTime": 1792868554579,
+        "endTime": 1792868555277,
+        "exitCode": 1
+      },
+      "cache": {
+        "status": "MISS"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci--tests/live.spec.ts",
+      "execution": {
+        "startTime": 1792868554579,
+        "endTime": 1792868555266,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "MISS"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci--tests/nested/c.spec.ts",
+      "execution": {
+        "startTime": 1792868554579,
+        "endTime": 1792868554579,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci-src--tests/a.spec.ts",
+      "execution": {
+        "startTime": 1792868554579,
+        "endTime": 1792868554579,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci-src--tests/b fails.spec.ts",
+      "execution": {
+        "startTime": 1792868554579,
+        "endTime": 1792868554579,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci-src--tests/live.spec.ts",
+      "execution": {
+        "startTime": 1792868554578,
+        "endTime": 1792868554578,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci-src--tests/nested/c.spec.ts",
+      "execution": {
+        "startTime": 1792868554578,
+        "endTime": 1792868554578,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    },
+    {
+      "taskId": "@fx/lib#build",
+      "execution": {
+        "startTime": 1792868554578,
+        "endTime": 1792868554579,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    }
+  ]
+}

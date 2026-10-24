@@ -1,0 +1,45 @@
+{
+  "id": "3L9a7O39PLN7guH0VYEl2z3wRyH",
+  "monorepo": true,
+  "execution": {
+    "command": "turbo run e2e-ci--tests/b fails.spec.ts --filter=@fx/e2e",
+    "startTime": 1792868567038,
+    "endTime": 1792868568133,
+    "exitCode": 1
+  },
+  "tasks": [
+    {
+      "taskId": "@fx/e2e#e2e-ci--tests/b fails.spec.ts",
+      "execution": {
+        "startTime": 1792868567048,
+        "endTime": 1792868568133,
+        "exitCode": 1
+      },
+      "cache": {
+        "status": "MISS"
+      }
+    },
+    {
+      "taskId": "@fx/e2e#e2e-ci-src--tests/b fails.spec.ts",
+      "execution": {
+        "startTime": 1792868567048,
+        "endTime": 1792868567048,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    },
+    {
+      "taskId": "@fx/lib#build",
+      "execution": {
+        "startTime": 1792868567048,
+        "endTime": 1792868567048,
+        "exitCode": 0
+      },
+      "cache": {
+        "status": "HIT"
+      }
+    }
+  ]
+}
