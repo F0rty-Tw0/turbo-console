@@ -1,6 +1,7 @@
 import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 
 import type { LiveIds, RunLookup } from '../../../run/common/run.type.ts';
+import { NO_ATOMS_LOOKUP } from '../../common/atom.const.ts';
 import type { ModelView } from '../../common/model-view.type.ts';
 import type { RowContext } from '../../common/tree-node.type.ts';
 import type { TreeMode } from '../../common/tree-row.type.ts';
@@ -36,7 +37,8 @@ export const rowContextOf = (
     scriptsShown,
     live,
     now: ROW_NOW,
-    tools: resolveLookupMock()
+    tools: resolveLookupMock(),
+    atoms: NO_ATOMS_LOOKUP
   };
 
   return context;

@@ -4,6 +4,7 @@ import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
+import { NO_ATOMS_LOOKUP } from '../common/atom.const.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { IconsMode, TreeMode, TreeRow } from '../common/tree-row.type.ts';
@@ -123,7 +124,8 @@ export class PackagesTree {
       scriptsShown: scriptsShown(),
       live: runningIds,
       now: wallNow(),
-      tools: this.toolOfCommand
+      tools: this.toolOfCommand,
+      atoms: NO_ATOMS_LOOKUP
     };
 
     return context;

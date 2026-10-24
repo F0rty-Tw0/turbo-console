@@ -58,7 +58,15 @@ export type TreeRow = {
 };
 
 /** A kind token (`turboTask`, `turboScript`), then at most one state token; menus match them by prefix (spec 1c-a §4.12). */
-export type TaskContextValue = 'turboTask' | 'turboTask.running' | 'turboTask.cached' | 'turboScript' | 'turboScript.running';
+export type TaskContextValue =
+  | 'turboTask'
+  | 'turboTask.running'
+  | 'turboTask.cached'
+  | 'turboTask.atomFile'
+  | 'turboTask.cached.atomFile'
+  | 'turboTask.running.atomFile'
+  | 'turboScript'
+  | 'turboScript.running';
 
 /**
  * What the row builders need of a folder: its `root` (row ids and run lookups key on the folder root, which is not
