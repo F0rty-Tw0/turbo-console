@@ -28,15 +28,14 @@ const sortGroups = (groups: Record<string, string[]>): void => {
 /** The package a `task` row sits under, through its `pkg` node or its umbrella's `task` node; throws when it sits anywhere else. */
 const packageKeyOf = (task: TreeNode, parent: TreeNode | undefined): string => {
   const isInPackage = parent?.kind === 'pkg' || parent?.kind === 'task';
+  const isOutside = parent === undefined || !isInPackage || parent.packageName === null;
 
-  if (parent === undefined || !isInPackage || parent.packageName === null) {
-    throw new Error(`task row ${task.key} sits outside a package`);
-  }
+  if (isOutside) throw new Error(`task row ${task.key} sits outside a package`);
 
   return parent.packageName;
 };
 
-/** Only an umbrella is expandable: VS Code asks for the children of a node whose item is not `None`. */
+/** Of task rows, only an umbrella is expandable: VS Code asks for the children of a node whose item is not `None`. */
 const isExpandable = (api: TurboConsoleApi, node: TreeNode): boolean => {
   if (node.kind === 'msg') return false;
 
