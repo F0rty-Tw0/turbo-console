@@ -149,6 +149,11 @@ const applyTheme = (): void => {
   controller.flow.setColor(colors.background);
 };
 
+/** Reduced motion turned on mid-flow ends the dashes now, not at the idle stop. */
+const stopFlowWhenReduced = (): void => {
+  if (reducedMotion.matches) controller.flow.stop();
+};
+
 const flushWhenHidden = (): void => {
   if (document.visibilityState === 'hidden') saver.flush();
 };
@@ -159,6 +164,7 @@ const flowSizer = new ResizeObserver((): void => fitFlowCanvas(page.flow, page.c
 applyTheme();
 themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 flowSizer.observe(page.container);
+reducedMotion.addEventListener('change', stopFlowWhenReduced);
 document.addEventListener('visibilitychange', flushWhenHidden);
 addEventListener('pagehide', saver.flush);
 bridge.onMessage(controller.receive);

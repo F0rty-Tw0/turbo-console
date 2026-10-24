@@ -134,6 +134,22 @@ test.describe('FEATURE: graph task flow', () => {
     });
 
     test(
+      'reduced motion turned on mid-flow clears the overlay within a few frames, long before the idle stop',
+      { annotation: FLOW },
+      async ({ graphFlow }): Promise<void> => {
+        await test.step('WHEN lib-3#test is hovered and the flow has drawn for 200 ms', async (): Promise<void> => {
+          await graphFlow.hover(LEAF);
+          await graphFlow.tick(200);
+          await graphFlow.expectInked(true);
+        });
+
+        await test.step('AND the OS asks for reduced motion', async (): Promise<void> => graphFlow.reduceMotion());
+
+        await test.step('THEN the overlay clears', async (): Promise<void> => graphFlow.waitForClear());
+      }
+    );
+
+    test(
       'GIVEN reduced motion, a hovered task never inks the overlay',
       { annotation: FLOW },
       async ({ graphFlow, graphProbe }): Promise<void> => {

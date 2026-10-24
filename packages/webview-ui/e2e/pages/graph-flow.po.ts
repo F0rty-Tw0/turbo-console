@@ -120,6 +120,17 @@ export class GraphFlowPage {
     for (let passed = 0; passed < ms; passed += FRAME_MS) await this.clock.tick(FRAME_MS);
   }
 
+  /** Ticks one frame per poll until the overlay has no ink; the fake clock reaches `FLOW_IDLE_MS` only after far more polls. */
+  public async waitForClear(): Promise<void> {
+    const isClear = async (): Promise<boolean> => {
+      await this.clock.tick(FRAME_MS);
+
+      return (await this.inkCount()) === 0;
+    };
+
+    await expect.poll(isClear).toBe(true);
+  }
+
   /** The pixels with alpha above 0. */
   public async inkCount(): Promise<number> {
     const ink = await this.ink();
