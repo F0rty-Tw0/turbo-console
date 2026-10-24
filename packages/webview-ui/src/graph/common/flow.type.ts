@@ -17,7 +17,7 @@ export type FlowSegment = {
 
 /** What the page's flow overlay is told; `GraphFlow` implements it, and the controller builds it once with the view. */
 export type FlowControl = {
-  /** A task-mode paint: `isOn` while the painted target has highlighted edges. */
+  /** A task-mode paint: `isOn` while the painted target has highlighted task edges. */
   readonly highlightChanged: (isOn: boolean) => void;
   /** The pointer moved over the canvas. */
   readonly moved: () => void;
@@ -37,7 +37,7 @@ export type FlowPen = Pick<
 export type GraphFlowDeps = {
   readonly canvas: HTMLCanvasElement;
   readonly container: HTMLElement;
-  /** The highlighted edges' geometry now. */
+  /** The highlighted task edges' geometry now. */
   readonly edges: () => FlowEdgeGeometry[];
   readonly viewport: () => Viewport;
   readonly now: () => number;

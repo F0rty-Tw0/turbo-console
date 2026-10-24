@@ -119,7 +119,10 @@ export class GraphTaskLayout {
     this.place(request, result, canRestore);
   }
 
-  /** Stops the flow, draws the layout, restores the saved camera when its key is this one (else fits), then arms the frame clock. */
+  /**
+   * Stops the flow, draws the layout, restores the saved camera when its key is this one (else fits), arms the frame
+   * clock, then hands the drawn highlight back to the flow.
+   */
   private place(request: TaskLayoutRequest, result: LayoutResult, canRestore: boolean): void {
     const { view, screen, frames, sizeOf, flow } = this.deps;
     const saved = this.deps.saved();
@@ -135,5 +138,6 @@ export class GraphTaskLayout {
 
     frames.arm();
     this.deps.onPlaced();
+    this.deps.onDrawn();
   }
 }

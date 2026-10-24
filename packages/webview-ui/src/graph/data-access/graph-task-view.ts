@@ -4,7 +4,7 @@ import { positionOf } from './graph-place.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
-import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { DIMMED_BOX_CLASS, STATE_CLASSES } from '../common/graph.const.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
@@ -105,7 +105,7 @@ const taskDefinitionOf = (task: GraphTask, drawing: TaskDrawing): ElementDefinit
 
 const edgeDefinitionOf = (edge: GraphEdge): ElementDefinition => {
   const data = { id: edgeIdOf(edge), source: edge.source, target: edge.target };
-  const definition: ElementDefinition = { data };
+  const definition: ElementDefinition = { data, classes: TASK_LINK_CLASS };
 
   return definition;
 };

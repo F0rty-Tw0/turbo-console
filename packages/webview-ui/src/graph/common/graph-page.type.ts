@@ -156,7 +156,7 @@ export type GraphView = {
   readonly widgetRects: (selected: string | null) => WidgetRects;
   /** The whole graph as a PNG, base64 with no data-URI prefix, folder titles drawn on the boxes; throws when the canvas cannot render it. */
   readonly exportPng: (bg: string) => string;
-  /** The highlighted edges drawn now, in model coordinates, for the flow overlay. */
+  /** The highlighted task edges drawn now, in model coordinates, for the flow overlay; never a package graph edge. */
   readonly flowEdges: () => FlowEdgeGeometry[];
   /** For the test probe only. */
   readonly cy: () => Core;

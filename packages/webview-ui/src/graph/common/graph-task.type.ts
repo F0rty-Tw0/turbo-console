@@ -100,7 +100,7 @@ export type TaskModeDeps = {
   readonly widgetsOf: () => TaskWidgets;
   /** The flow overlay, stopped as a layout is placed or the task canvas empties. */
   readonly flow: Pick<FlowControl, 'stop'>;
-  /** After each task canvas paint: tells the flow overlay whether the painted target has highlighted edges. */
+  /** After each task canvas paint and each placed task layout: tells the flow overlay whether the painted target has highlighted task edges. */
   readonly onHighlight: (isOn: boolean) => void;
 };
 
@@ -144,10 +144,12 @@ export type TaskLayoutRequest = {
   readonly key: string;
 };
 
-/** What `GraphTaskLayout` adds: the saved task view for its camera rule, and a hook after each placement. */
+/** What `GraphTaskLayout` adds: the saved task view for its camera rule, and hooks after each placement. */
 type TaskLayoutHooks = {
   readonly saved: () => TaskViewState | null;
   readonly onPlaced: () => void;
+  /** After `onPlaced`: the drawn layout's highlight goes back to the flow overlay the placement stopped. */
+  readonly onDrawn: () => void;
 };
 
 export type TaskLayoutDeps = TaskModeDeps & TaskLayoutHooks;

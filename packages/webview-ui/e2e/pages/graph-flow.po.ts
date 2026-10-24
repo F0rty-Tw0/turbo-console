@@ -59,15 +59,14 @@ export class GraphFlowPage {
 
   /** Ticks one frame per poll until the posted graph's nodes are drawn. */
   public async waitForLayout(): Promise<void> {
-    const isDrawn = async (): Promise<boolean> => {
-      await this.clock.tick(FRAME_MS);
+    await this.waitForNodes((nodes: ProbeNode[]): boolean => nodes.length > 0);
+  }
 
-      const nodes = await this.probe.nodes();
+  /** Ticks one frame per poll until node `id` is drawn. */
+  public async waitForNode(id: string): Promise<void> {
+    const isNode = (node: ProbeNode): boolean => node.id === id;
 
-      return nodes.length > 0;
-    };
-
-    await expect.poll(isDrawn).toBe(true);
+    await this.waitForNodes((nodes: ProbeNode[]): boolean => nodes.some(isNode));
   }
 
   public async tap(id: string): Promise<void> {
@@ -186,6 +185,18 @@ export class GraphFlowPage {
     const input: FlowEdgeShot = { png: shot.toString('base64'), points, ...FLOW_COLORS };
 
     return this.page.evaluate(readEdgeColours, input);
+  }
+
+  private async waitForNodes(isDrawn: (nodes: ProbeNode[]) => boolean): Promise<void> {
+    const isReady = async (): Promise<boolean> => {
+      await this.clock.tick(FRAME_MS);
+
+      const nodes = await this.probe.nodes();
+
+      return isDrawn(nodes);
+    };
+
+    await expect.poll(isReady).toBe(true);
   }
 
   private async ink(): Promise<FlowInk> {

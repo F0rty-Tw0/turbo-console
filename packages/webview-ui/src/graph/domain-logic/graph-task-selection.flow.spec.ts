@@ -76,6 +76,12 @@ describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
 
       expect(onHighlight).toHaveBeenCalledExactlyOnceWith(false);
     });
+
+    it('WHEN the task layout is placed THEN the flow hears of no highlight', () => {
+      selection.placed();
+
+      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(false);
+    });
   });
 
   describe('GIVEN web#build selected', () => {
@@ -89,6 +95,14 @@ describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
 
       expect(canvas.runStates).toHaveBeenLastCalledWith({ 'web#build': 'running' });
       expect(onHighlight).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the task layout is placed THEN the flow hears of the highlight again and the canvas is not repainted', () => {
+      canvas.paint.mockClear();
+      selection.placed();
+
+      expect(onHighlight).toHaveBeenCalledExactlyOnceWith(true);
+      expect(canvas.paint).not.toHaveBeenCalled();
     });
 
     it('WHEN the shown tasks lose web#build THEN the flow hears the highlight is gone', () => {

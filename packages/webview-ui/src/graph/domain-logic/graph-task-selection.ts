@@ -104,6 +104,14 @@ export class GraphTaskSelection {
     this.widgets.rendered();
   }
 
+  /**
+   * After a task layout is placed, which draws the kept paint and stops the flow: the flow hears of the painted target
+   * again, so a restored selection's flow starts as a fresh tap's does.
+   */
+  public placed(): void {
+    this.announce(highlightTargetOf(this.selectedShown(), this.hovered));
+  }
+
   /** A reader's choice: a task selected keeps clear of the panel overlaying the canvas. */
   private saveSelected(id: string | null): void {
     this.deps.save({ selected: id });
@@ -132,12 +140,15 @@ export class GraphTaskSelection {
     this.refill(model);
   }
 
-  /** Paints the canvas for `target`, then tells the flow whether the painted target has highlighted edges. */
+  /** Paints the canvas for `target`, then tells the flow. */
   private paint(target: string | null): void {
+    this.deps.view.tasks.paint(target);
+    this.announce(target);
+  }
+
+  /** Tells the flow whether the painted `target` has highlighted task edges on the canvas. */
+  private announce(target: string | null): void {
     const { view, onHighlight } = this.deps;
-
-    view.tasks.paint(target);
-
     const litEdges = view.flowEdges();
     const isOn = target !== null && litEdges.length > 0;
 

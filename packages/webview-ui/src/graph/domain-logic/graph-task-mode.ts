@@ -33,7 +33,8 @@ export class GraphTaskMode {
     this.layout = new GraphTaskLayout({
       ...deps,
       saved: (): TaskViewState | null => deps.modes.task(),
-      onPlaced: (): void => this.saveCamera()
+      onPlaced: (): void => this.saveCamera(),
+      onDrawn: (): void => this.selection.placed()
     });
     this.selection = new GraphTaskSelection({
       ...deps,

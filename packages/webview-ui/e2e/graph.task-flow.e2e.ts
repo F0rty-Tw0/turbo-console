@@ -5,6 +5,7 @@ import { colourSwapsOf } from './test/utils/graph-flow-ink.spec.util.ts';
 import { TARGET_LIKE_NORMAL_SHOWN, targetLikeLitStatesOf } from './test/utils/graph-target-like-lit.spec.util.ts';
 import { TARGET_LIKE_CHOSEN_TASK, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
+import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
 import { VIEW_STATE_DEBOUNCE_MS } from '../src/graph/common/graph.const.ts';
 
 const FLOW = { description: 'M4-5a AC7, spec 3.5', type: 'requirement' };
@@ -26,6 +27,11 @@ const PAN = { dx: 60, dy: 40 };
 const DRIFT_TOLERANCE_PX = 12;
 
 const NO_BOUNDS: ElementRect = { left: Number.NaN, top: Number.NaN, width: 0, height: 0 };
+
+const LEAF_SELECTED_SAVED = taskSavedState(TARGET_LIKE_HASH, { chosen: [TARGET_LIKE_CHOSEN_TASK], selected: LEAF });
+
+/** Package mode, with lib-3#build chosen and lib-3#test selected for task mode. */
+const PACKAGE_MODE_SAVED: GraphViewState = { ...LEAF_SELECTED_SAVED, mode: 'packages' };
 
 test.describe('FEATURE: graph task flow', () => {
   test.describe('GIVEN task mode with lib-3#build chosen under the fake clock', () => {
@@ -185,6 +191,44 @@ test.describe('FEATURE: graph task flow', () => {
 
       await test.step('AND it takes no pointer events, with the widget layer next', async (): Promise<void> =>
         graphFlow.expectUnderWidgets());
+    }
+  );
+
+  test(
+    'GIVEN lib-3 selected in package mode, entering task mode draws no flow until the task layout lands, then the saved selection flows',
+    { annotation: FLOW },
+    async ({ graphFlow, graphGrouping, graphHost, graphPage, graphProbe, graphTask, pageClock }): Promise<void> => {
+      await test.step('WHEN the package graph is laid out and lib-3 is selected', async (): Promise<void> => {
+        await pageClock.install();
+        await graphPage.open({ savedState: PACKAGE_MODE_SAVED, workers: 'held' });
+        await graphGrouping.releaseWorker();
+        await graphHost.sendState(targetLikeTasksState());
+        await graphFlow.waitForLayout();
+        await graphFlow.tap('lib-3');
+        await graphProbe.expectSelected('lib-3');
+      });
+
+      await test.step('AND the worker is held, Task mode is pressed and 100 ms pass', async (): Promise<void> => {
+        await graphGrouping.holdWorker();
+        await graphTask.toggleButton.dispatchEvent('click');
+        await graphFlow.tick(100);
+      });
+
+      await test.step('THEN the overlay is clear while the package graph is still drawn', async (): Promise<void> => {
+        await graphFlow.expectInked(false);
+        await graphProbe.expectSelected('lib-3');
+      });
+
+      await test.step('WHEN the worker is released and the task layout lands', async (): Promise<void> => {
+        await graphGrouping.releaseWorker();
+        await graphFlow.waitForNode(LEAF);
+        await graphFlow.tick(32);
+      });
+
+      await test.step('THEN the saved selection reads lit and its flow is drawn', async (): Promise<void> => {
+        await graphProbe.expectNodeStates(targetLikeLitStatesOf(LEAF));
+        await graphFlow.expectInked(true);
+      });
     }
   );
 });

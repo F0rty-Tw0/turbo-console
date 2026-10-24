@@ -22,6 +22,9 @@ export const TASK_BOX_CLASS = 'task-box';
 /** The class of every task node, so a walk of the task graph skips the package compounds. */
 export const TASK_NODE_CLASS = 'task';
 
+/** The class of every task graph edge, so the flow overlay never reads a package graph edge still on the core. */
+export const TASK_LINK_CLASS = 'task-link';
+
 /** The `main.graph-page` class while task mode is on; CSS hides the package Controls panel and the package widgets by it. */
 export const TASK_MODE_CLASS = 'task-mode';
 
