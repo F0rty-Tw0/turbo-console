@@ -1,8 +1,6 @@
-import { newestRunNames } from './newest-run-names.ts';
+import { pastRunNames } from './newest-run-names.ts';
 import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
 import type { AtomResult } from '../common/atom-result.type.ts';
-import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
-import { SUMMARY_MTIME_SLACK_MS } from '../common/run-summary.const.ts';
 import { readRunSummaryFile } from '../data-access/run-summary-files.ts';
 import { atomResultOf } from '../utils/atom-result.util.ts';
 
@@ -22,16 +20,14 @@ const collect = (summary: RunSummary, fileIds: ReadonlySet<string>, results: Map
  * summaries of `<root>/.turbo/runs`, newest first, future-dated files left out before that cap as `readNewestRunSummary`
  * does. A summary that fails to read or parse is skipped whole. Stops reading once every id has a result, so an id in
  * no summary has no key. Empty map when there is no runs directory. Rejects with `TurboException` `io` as
- * `newestRunNames` does.
+ * `pastRunNames` does.
  */
 export const readAtomResults = async (root: string, fileIds: ReadonlySet<string>): Promise<Map<string, AtomResult>> => {
   const results = new Map<string, AtomResult>();
 
   if (fileIds.size === 0) return results;
 
-  const latestMs = Date.now() + SUMMARY_MTIME_SLACK_MS;
-  const isNotFuture = (file: RunSummaryFile): boolean => file.mtimeMs <= latestMs;
-  const names = await newestRunNames(root, isNotFuture);
+  const names = await pastRunNames(root);
 
   if (names === null) return results;
 
