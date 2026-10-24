@@ -19,12 +19,20 @@ const fileOf = (groups: AtomGroup[], taskId: string): AtomFile | undefined => {
 };
 
 /** The aggregate of a group is replaced by its umbrella; one whose group the package does not hold stays a plain task. */
-export const isHiddenAggregate = (task: TaskNode, groups: AtomGroup[]): boolean => {
+const isHiddenAggregate = (task: TaskNode, groups: AtomGroup[]): boolean => {
   const { atom } = task;
 
   if (task.kind !== 'atom-aggregate' || atom === null) return false;
 
   return groups.some((group) => group.umbrella.atom?.group === atom.group);
+};
+
+/** A task the tree lists as a row of its package: a visible turbo task whose aggregate is not replaced by an umbrella. */
+export const isListedTurboTask = (task: TaskNode, groups: AtomGroup[]): boolean => {
+  const isVisible = isVisibleTurboTask(task);
+  const isHidden = isHiddenAggregate(task, groups);
+
+  return isVisible && !isHidden;
 };
 
 const rowOfTask = (scope: RowScope, pkg: PackageNode, task: TaskNode, context: RowContext): TreeRow => {
@@ -43,13 +51,7 @@ const rowOfTask = (scope: RowScope, pkg: PackageNode, task: TaskNode, context: R
  */
 export const taskRows = (scope: RowScope, pkg: PackageNode, context: RowContext): TreeRow[] => {
   const { groups } = context.atoms(scope.root, pkg.name);
-  const isShown = (task: TaskNode): boolean => {
-    const isVisible = isVisibleTurboTask(task);
-    const isHidden = isHiddenAggregate(task, groups);
-
-    return isVisible && !isHidden;
-  };
-  const turbo = pkg.tasks.filter(isShown);
+  const turbo = pkg.tasks.filter((task) => isListedTurboTask(task, groups));
   const rows = turbo.map((task) => rowOfTask(scope, pkg, task, context));
   const group = groupRowOf(scope, pkg, context);
 

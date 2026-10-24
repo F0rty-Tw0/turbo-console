@@ -22,9 +22,8 @@ import { diffModels } from '../utils/model-diff.util.ts';
 import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
 import { rowScopeOf } from '../utils/row-scope.util.ts';
-import { isVisibleTurboTask } from '../utils/script-task.util.ts';
 import { staticAtomLookup } from '../utils/static-atoms.util.ts';
-import { isHiddenAggregate, taskRowOf } from '../utils/task-rows.util.ts';
+import { isListedTurboTask, taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
@@ -124,8 +123,7 @@ const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
 
   for (const pkg of view.packages.values()) {
     const { groups } = atoms(model.root, pkg.name);
-    const isListed = (task: TaskNode): boolean => isVisibleTurboTask(task) && !isHiddenAggregate(task, groups);
-    const runnable = pkg.tasks.filter(isListed);
+    const runnable = pkg.tasks.filter((task) => isListedTurboTask(task, groups));
 
     for (const task of runnable) entries.push(runningEntryOf(model.root, pkg, task));
 
