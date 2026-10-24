@@ -37,6 +37,7 @@ type HandledTasks = {
   readonly selection: HandledSelection;
   readonly dragged: () => void;
   readonly saveCamera: () => void;
+  readonly hover: (id: string | null) => void;
 };
 
 /** What the view's events reach; the targets are read per event, since the view is built before them. */
@@ -92,6 +93,7 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
       (): void => filtering().inspection.saveViewport(),
       (): void => tasks().saveCamera()
     ),
+    onHoverNode: byMode<[string | null]>(NOTHING, (id: string | null): void => tasks().hover(id)),
     onRender: (): void => {
       const isTaskMode = tasks().isActive();
 

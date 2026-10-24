@@ -91,6 +91,8 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   cy.on('tap', 'node', onNode);
   cy.on('tap', 'edge', onEdge);
   cy.on('tap', onBackground);
+  cy.on('mouseover', 'node', (event: EventObjectNode): void => handlers.onHoverNode(nodeName(event)));
+  cy.on('mouseout', 'node', (): void => handlers.onHoverNode(null));
   cy.on('dragfreeon', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
   cy.on('viewport', handlers.onViewport);
   cy.on('render', handlers.onRender);

@@ -1,11 +1,13 @@
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskDetails, TaskDetailsModel, TaskRuns, TaskSelectionDeps, TaskWidgets } from '../common/task-details.type.ts';
+import { highlightTargetOf } from '../utils/hover-target.util.ts';
 import { taskDetailsModelOf, taskWithId } from '../utils/task-run.util.ts';
 
 /**
  * The selected task of the shown set: taps, Controls rows and the panel's dependency buttons select it, and every
  * change paints the canvas, refills the task panel and moves the task "…"; a task the reader selects then pans clear
- * of the panel overlaying the canvas. A selection the shown set loses is saved as `null` (RF4).
+ * of the panel overlaying the canvas. A selection the shown set loses is saved as `null` (RF4). The hovered task only
+ * repaints the canvas: it never selects, saves or refills the panel.
  */
 export class GraphTaskSelection {
   private readonly deps: TaskSelectionDeps;
@@ -14,6 +16,7 @@ export class GraphTaskSelection {
   private shown: GraphTask[] = [];
   private latestRuns: TaskRuns = {};
   private isEntered = false;
+  private hovered: string | null = null;
 
   public constructor(deps: TaskSelectionDeps) {
     this.deps = deps;
@@ -54,12 +57,27 @@ export class GraphTaskSelection {
     if (this.isEntered) this.repaint();
   }
 
+  /** The pointer entered the shown task `id` or left it (`null`); a compound or a task not shown changes nothing. */
+  public hover(id: string | null): void {
+    const task = taskWithId(this.shown, id);
+    const isUnshown = id !== null && task === undefined;
+
+    if (isUnshown) return;
+
+    this.hovered = id;
+    this.deps.view.tasks.paint(highlightTargetOf(this.selectedShown(), this.hovered));
+  }
+
   /** The tasks now shown; a selected task outside them is saved as no selection. */
   public setShown(tasks: GraphTask[]): void {
     const selected = this.selected();
     const kept = taskWithId(tasks, selected);
 
     this.shown = tasks;
+
+    const hovered = taskWithId(tasks, this.hovered);
+
+    if (hovered === undefined) this.hovered = null;
 
     if (selected !== null && kept === undefined) this.deps.save({ selected: null });
 
@@ -91,6 +109,10 @@ export class GraphTaskSelection {
     if (id !== null) this.widgets.keepClear();
   }
 
+  private selectedShown(): string | null {
+    return this.modelOf()?.task.id ?? null;
+  }
+
   private modelOf(): TaskDetailsModel | null {
     const task = taskWithId(this.shown, this.selected());
 
@@ -101,7 +123,7 @@ export class GraphTaskSelection {
 
   private repaint(): void {
     const model = this.modelOf();
-    const target = model?.task.id ?? null;
+    const target = highlightTargetOf(model?.task.id ?? null, this.hovered);
     const { tasks } = this.deps.view;
 
     tasks.paint(target);

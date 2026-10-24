@@ -128,6 +128,11 @@ export class GraphTaskMode {
     this.saveView({ zoom, pan, layoutKey });
   }
 
+  /** The pointer entered a task or left it (`null`); the canvas lights its chain without selecting it. */
+  public hover(id: string | null): void {
+    this.selection.hover(id);
+  }
+
   /** A drag only moves the layout kept in page memory; nothing is posted. */
   public dragged(): void {
     this.layout.dragged();

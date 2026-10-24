@@ -109,6 +109,68 @@ describe('FEATURE: GraphTaskSelection', () => {
     });
   });
 
+  describe('GIVEN the chain is shown and web#build is hovered', () => {
+    beforeEach(() => {
+      rig.save.mockClear();
+      rig.details.show.mockClear();
+      rig.widgets.show.mockClear();
+      selection.hover('web#build');
+    });
+
+    it('WHEN nothing is selected THEN the canvas paints web#build and no panel, widget or save moves', () => {
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
+      expect(rig.details.show).not.toHaveBeenCalled();
+      expect(rig.widgets.show).not.toHaveBeenCalled();
+      expect(rig.save).not.toHaveBeenCalled();
+      expect(selection.selected()).toBeNull();
+    });
+
+    it('WHEN the pointer leaves THEN the canvas paints no target', () => {
+      selection.hover(null);
+
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+    });
+
+    it('WHEN the shown tasks lose web#build THEN the hover is forgotten and the canvas paints no target', () => {
+      selection.setShown([API_BUILD_STUB]);
+
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+
+      selection.setShown(TASK_CHAIN_STUB);
+
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+    });
+
+    it('WHEN a run state arrives THEN the canvas keeps painting web#build', () => {
+      selection.enter(true);
+      selection.runs({ 'web#build': 'running' });
+
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
+    });
+  });
+
+  describe('GIVEN api#build is selected', () => {
+    beforeEach(() => {
+      selection.tapNode('api#build');
+      rig.canvas.paint.mockClear();
+    });
+
+    it('WHEN web#build is hovered then the pointer leaves THEN the canvas paints web#build then api#build, and api#build stays selected', () => {
+      selection.hover('web#build');
+      selection.hover(null);
+
+      expect(rig.canvas.paint.mock.calls).toStrictEqual([['web#build'], ['api#build']]);
+      expect(selection.selected()).toBe('api#build');
+    });
+
+    it('WHEN the pkg:web compound or a task that is not shown is hovered THEN nothing is painted', () => {
+      selection.hover('pkg:web');
+      selection.hover('gone#build');
+
+      expect(rig.canvas.paint).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN web#build is selected', () => {
     beforeEach(() => {
       selection.tapNode('web#build');

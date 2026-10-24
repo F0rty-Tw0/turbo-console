@@ -29,6 +29,7 @@ const handlersOf = (): GraphViewHandlers => {
     onDoubleTapFolder: vi.fn(),
     onDragEnd: vi.fn(),
     onViewport: vi.fn(),
+    onHoverNode: vi.fn(),
     onRender: vi.fn()
   };
 
@@ -79,6 +80,21 @@ describe('FEATURE: listen', () => {
       cy.getElementById('__proto__').emit('tap');
 
       expect(handlers.onTapNode).toHaveBeenCalledExactlyOnceWith('__proto__');
+    });
+  });
+
+  describe('GIVEN the pointer moves over a node', () => {
+    it('WHEN the pointer enters then leaves a node THEN onHoverNode gets its id then null', () => {
+      cy.getElementById('a').emit('mouseover');
+      cy.getElementById('a').emit('mouseout');
+
+      expect(vi.mocked(handlers.onHoverNode).mock.calls).toStrictEqual([['a'], [null]]);
+    });
+
+    it('WHEN the pointer enters an edge THEN onHoverNode hears nothing', () => {
+      cy.getElementById(edgeIdOf({ source: 'a', target: 'b' })).emit('mouseover');
+
+      expect(handlers.onHoverNode).not.toHaveBeenCalled();
     });
   });
 

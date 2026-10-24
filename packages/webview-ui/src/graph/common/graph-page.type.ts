@@ -105,6 +105,8 @@ export type GraphViewHandlers = {
   /** Every node's current centre, after the user dropped a dragged node. */
   readonly onDragEnd: (positions: Positions) => void;
   readonly onViewport: () => void;
+  /** The pointer entered a node (`name` its id) or left it (`null`); only task mode paints it. */
+  readonly onHoverNode: (name: string | null) => void;
   /** Each Cytoscape `render` event (a drawn frame). */
   readonly onRender: () => void;
 };
