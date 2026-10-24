@@ -93,6 +93,12 @@ export type CpuSteps = {
   readonly maxStepMs: number;
 };
 
+/** The main-thread CPU budgets of a hover-flow run: its total and its slowest step, in ms. */
+export type HoverBudget = {
+  readonly totalMs: number;
+  readonly stepMs: number;
+};
+
 type MessageTag<TType extends string> = { readonly type: TType };
 
 export type PositionsMessage = Extract<GraphWebviewMessage, MessageTag<'positions'>>;

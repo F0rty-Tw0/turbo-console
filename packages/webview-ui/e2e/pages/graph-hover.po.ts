@@ -1,21 +1,36 @@
+/* eslint-disable no-underscore-dangle -- the page exposes the probe under this exact name on window */
+
 import type { Locator, Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
-import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
+import type { ProbeEdge, ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
+import type { CpuSteps } from '../common/graph.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { emptySpotOf } from '../test/utils/graph-geometry.spec.util.ts';
+import { recordHoverCpu } from '../test/utils/graph-hover-cpu.spec.util.ts';
+import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
+
+const FRAME_MS = 16;
+
+/** Each frame the pointer sits 1 px right of the node's centre or on it, so it moves yet stays on the node. */
+const NUDGE_PX = 1;
 
 /** The pointer resting on the drawn graph, aimed through the probe's rendered node centres. */
 export class GraphHover {
   private readonly page: Page;
   private readonly probe: GraphProbePage;
   private readonly container: Locator;
+  private hoverCpu: CpuSteps | null;
+  private hoverRenders: number | null;
 
   public constructor(page: Page) {
     this.page = page;
+    this.hoverCpu = null;
+    this.hoverRenders = null;
     this.probe = new GraphProbePage(page);
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
   }
@@ -38,6 +53,79 @@ export class GraphHover {
 
     await this.page.mouse.move(spot.x, spot.y);
     await this.page.evaluate(ONE_FRAME);
+  }
+
+  /**
+   * Rests the pointer on node `id`, then nudges it 1 px per frame for `ms`, keeping the main-thread CPU each frame took.
+   * The pointer keeps moving, so the flow overlay never reaches its idle stop and every frame draws it.
+   * Also counts the Cytoscape renders those frames caused.
+   */
+  public async hoverFlowCpu(id: string, ms: number): Promise<void> {
+    await this.overNode(id);
+
+    const node = await this.nodeOf(id);
+    const frames = Math.ceil(ms / FRAME_MS);
+    const rendersBefore = await this.renderCount();
+
+    this.hoverCpu = await cpuStepsOf(this.page, async (endStep): Promise<void> => {
+      for (let frame = 1; frame <= frames; frame += 1) {
+        await this.page.mouse.move(node.renderedX + (frame % 2) * NUDGE_PX, node.renderedY);
+        await this.page.evaluate(ONE_FRAME);
+        await endStep();
+      }
+    });
+    this.hoverRenders = (await this.renderCount()) - rendersBefore;
+  }
+
+  /** The main-thread CPU of the last `hoverFlowCpu`; throws when none ran. */
+  public measuredHoverCpu(): CpuSteps {
+    const hover = this.hoverCpu;
+
+    if (hover === null) throw new Error('graph e2e: no hover-flow run was measured');
+
+    return hover;
+  }
+
+  /** The Cytoscape renders during the last `hoverFlowCpu`; throws when none ran. */
+  public measuredHoverRenders(): number {
+    const renders = this.hoverRenders;
+
+    if (renders === null) throw new Error('graph e2e: no hover-flow run was measured');
+
+    return renders;
+  }
+
+  /** The last `hoverFlowCpu` used a measured, non-zero total under `totalMs` of main-thread CPU with no step over `stepMs`; both are recorded and printed before the asserts, so a failing run logs them too. */
+  public expectHoverCpuUnder(totalMs: number, stepMs: number): void {
+    const hover = this.measuredHoverCpu();
+
+    recordHoverCpu(test.info(), hover, this.measuredHoverRenders(), { totalMs, stepMs });
+    expect(hover.totalMs).toBeGreaterThan(0);
+    expect(hover.totalMs).toBeLessThan(totalMs);
+    expect(hover.maxStepMs).toBeLessThan(stepMs);
+  }
+
+  /** The last `hoverFlowCpu` made Cytoscape render at most `limit` times: the flow stayed on its overlay. */
+  public expectHoverRendersAtMost(limit: number): void {
+    expect(this.measuredHoverRenders()).toBeLessThanOrEqual(limit);
+  }
+
+  /** At least one drawn edge reads `highlighted`: the hovered chain is lit, so the flow has edges to draw. */
+  public async expectLitEdges(): Promise<void> {
+    const isLit = (edge: ProbeEdge): boolean => edge.isDrawn && edge.state === 'highlighted';
+
+    const litCount = async (): Promise<number> => {
+      const edges = await this.probe.edges();
+
+      return edges.filter(isLit).length;
+    };
+
+    await expect.poll(litCount).toBeGreaterThan(0);
+  }
+
+  /** The Cytoscape `render` events since the page opened. */
+  private async renderCount(): Promise<number> {
+    return this.page.evaluate((): number => window.__tcGraphProbe?.renderCount() ?? 0);
   }
 
   private async nodeOf(id: string): Promise<ProbeNode> {
