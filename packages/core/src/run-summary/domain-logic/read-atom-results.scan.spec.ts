@@ -5,13 +5,13 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { readAtomResults } from './read-atom-results.ts';
-import { runSummarySchema } from '../../shared/turbo/common/run-summary.schema.ts';
-import type { RunSummary, RunSummaryTask } from '../../shared/turbo/common/turbo.type.ts';
+import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
 import type { AtomResult } from '../common/atom-result.type.ts';
 import type * as runSummaryFiles from '../data-access/run-summary-files.ts';
 import { A, B, C, FILE_IDS, NEWEST_OF_ALL, OLDEST, WITHOUT_RUN_5 } from '../test/common/atom-results.const.ts';
 import { readAtomFixture } from '../test/utils/atom-fixture.spec.util.ts';
 import { writeAtomRuns } from '../test/utils/atom-runs.spec.util.ts';
+import { brokenRun5 } from '../test/utils/broken-run.spec.util.ts';
 import { newRunsRoot, summaryJson, taskEntry, writeRun } from '../test/utils/run-summary.spec.util.ts';
 
 const reads = vi.hoisted(() => {
@@ -46,27 +46,6 @@ const WINDOW = { startTime: 1000, endTime: 2000 };
 const RUN_3 = 'run-3-b-only';
 
 const B_OF_RUN_3: AtomResult = { outcome: 'failed', durationMs: 1085, endedAt: 1792868568133 };
-
-/** The task without its `cache` when it is B, so `runSummarySchema` rejects the whole summary. */
-const withoutCacheOfB = (task: RunSummaryTask): Partial<RunSummaryTask> => {
-  if (task.taskId !== B) return task;
-
-  const { taskId, execution } = task;
-
-  const stripped = { taskId, execution };
-
-  return stripped;
-};
-
-/** The run 5 text with the `cache` of its B entry removed. */
-const brokenRun5 = (text: string): string => {
-  const json: unknown = JSON.parse(text);
-  const summary = runSummarySchema.parse(json);
-  const tasks = summary.tasks.map(withoutCacheOfB);
-  const broken = { ...summary, tasks };
-
-  return JSON.stringify(broken);
-};
 
 let tempDir = '';
 
