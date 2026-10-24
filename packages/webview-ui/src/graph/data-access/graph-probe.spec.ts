@@ -1,17 +1,15 @@
-/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle -- the probe's window names are the e2e contract */
-
 import cytoscape from 'cytoscape';
 import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
 import { createFoldersView } from './graph-folders-view.ts';
-import { createGraphProbe, exposeProbe } from './graph-probe.ts';
+import { createGraphProbe } from './graph-probe.ts';
 import { graphStyleOf } from './graph-style.ts';
 import type { GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FoldersView, GraphView, Viewport } from '../common/graph-page.type.ts';
-import type { GraphProbe, ProbeEdge, ProbeFacts, ProbeFolder, ProbeHost, ProbeNode, ProbeState } from '../common/graph-probe.type.ts';
+import type { GraphProbe, ProbeEdge, ProbeFacts, ProbeFolder, ProbeNode, ProbeState } from '../common/graph-probe.type.ts';
 import type { Paint } from '../common/paint.type.ts';
 import { boardsCyMock, groupedCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock, containerAtMock } from '../test/mocks/folder-boxes.mock.ts';
@@ -43,28 +41,6 @@ const edgeOf = (probe: GraphProbe, source: string, target: string): ProbeEdge | 
 
   return probe.edges().find(isEnds);
 };
-
-describe('FEATURE: exposeProbe', () => {
-  it.each([
-    ['no flag', {}],
-    ["the string 'true'", { __tcGraphProbeWanted: 'true' }],
-    ['the number 1', { __tcGraphProbeWanted: 1 }]
-  ])('GIVEN %s WHEN the probe is offered THEN none is exposed', (_name, host: ProbeHost) => {
-    exposeProbe(host, GRAPH_PROBE_STUB);
-
-    expect(host.__tcGraphProbe).toBeUndefined();
-  });
-
-  it('GIVEN the flag true WHEN the probe is offered THEN the host holds that probe', () => {
-    const host: ProbeHost = { __tcGraphProbeWanted: true };
-
-    exposeProbe(host, GRAPH_PROBE_STUB);
-
-    const exposed: GraphProbe | undefined = host.__tcGraphProbe;
-
-    expect(exposed).toBe(GRAPH_PROBE_STUB);
-  });
-});
 
 describe('FEATURE: createGraphProbe ghost facts', () => {
   let cy: Core;

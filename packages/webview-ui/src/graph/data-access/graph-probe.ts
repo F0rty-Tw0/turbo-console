@@ -133,10 +133,15 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
   return probe;
 };
 
-/** Assigns the probe only when the page was opened with `__tcGraphProbeWanted === true`. */
-export const exposeProbe = (host: ProbeHost, probe: GraphProbe): void => {
+/**
+ * Builds and assigns the probe only when the page was opened with `__tcGraphProbeWanted === true`, so a production page
+ * never registers the probe's `render` counter.
+ */
+export const exposeProbe = (host: ProbeHost, probeOf: () => GraphProbe): void => {
   // eslint-disable-next-line no-underscore-dangle -- the e2e init script sets this exact name on window
   if (host.__tcGraphProbeWanted !== true) return;
+
+  const probe = probeOf();
 
   // eslint-disable-next-line no-underscore-dangle -- the e2e tests read this exact name from window
   host.__tcGraphProbe = probe;
