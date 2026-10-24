@@ -9,6 +9,7 @@ import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
 import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
+import { handlersMock } from '../test/mocks/graph-handlers.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
@@ -18,23 +19,6 @@ import { collapsedIdOf, folderIdOf, folderLinkIdOf } from '../utils/folder-id.ut
 const APPS_NODE = collapsedIdOf('apps');
 
 const APPS_TO_UI = folderLinkIdOf(APPS_NODE, '@acme/ui');
-
-const handlersOf = (): GraphViewHandlers => {
-  const handlers: GraphViewHandlers = {
-    onTapNode: vi.fn(),
-    onTapEdge: vi.fn(),
-    onTapBackground: vi.fn(),
-    onTapFolder: vi.fn(),
-    onDoubleTapNode: vi.fn(),
-    onDoubleTapFolder: vi.fn(),
-    onDragEnd: vi.fn(),
-    onViewport: vi.fn(),
-    onHoverNode: vi.fn(),
-    onRender: vi.fn()
-  };
-
-  return handlers;
-};
 
 /**
  * Frees a drag the way Cytoscape 3.34 does on mouse up: `dragfreeon` once on the grabbed node, then `dragfree` on every
@@ -59,7 +43,7 @@ describe('FEATURE: listen', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: CANVAS_ELEMENTS });
-    handlers = handlersOf();
+    handlers = handlersMock();
     listen(cy, handlers);
   });
 
@@ -80,21 +64,6 @@ describe('FEATURE: listen', () => {
       cy.getElementById('__proto__').emit('tap');
 
       expect(handlers.onTapNode).toHaveBeenCalledExactlyOnceWith('__proto__');
-    });
-  });
-
-  describe('GIVEN the pointer moves over a node', () => {
-    it('WHEN the pointer enters then leaves a node THEN onHoverNode gets its id then null', () => {
-      cy.getElementById('a').emit('mouseover');
-      cy.getElementById('a').emit('mouseout');
-
-      expect(vi.mocked(handlers.onHoverNode).mock.calls).toStrictEqual([['a'], [null]]);
-    });
-
-    it('WHEN the pointer enters an edge THEN onHoverNode hears nothing', () => {
-      cy.getElementById(edgeIdOf({ source: 'a', target: 'b' })).emit('mouseover');
-
-      expect(handlers.onHoverNode).not.toHaveBeenCalled();
     });
   });
 

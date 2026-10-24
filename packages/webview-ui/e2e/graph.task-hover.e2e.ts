@@ -1,13 +1,20 @@
 import { test } from './graph-task.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
-import { TARGET_LIKE_NORMAL_SHOWN, allNormal, targetLikeLitStatesOf } from './test/utils/graph-target-like-lit.spec.util.ts';
+import {
+  TARGET_LIKE_NORMAL_SHOWN,
+  allNormal,
+  targetLikeBuildLitStates,
+  targetLikeLitStatesOf
+} from './test/utils/graph-target-like-lit.spec.util.ts';
 import { TARGET_LIKE_CHOSEN_TASK, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 
 const HOVER = { description: 'M4-5a spec 3.6, T4', type: 'requirement' };
 
 const RF5 = { description: 'M4-5a Review Focus 5', type: 'requirement' };
+
+const S1 = { description: 'M4-5a slice 3 review S1: a hover must not outlive the pointer', type: 'requirement' };
 
 const TARGET_LIKE_HASH = '7a7a7a7b';
 
@@ -63,6 +70,26 @@ test.describe('FEATURE: graph task hover', () => {
           await graphProbe.expectNodeStates(targetLikeLitStatesOf('lib-3#pack'));
           await graphTaskDetails.expectTask('pack', 'pack');
         });
+      }
+    );
+
+    test(
+      'a pointer that leaves the canvas straight from a task ends the hover: lib-3#docs hovered, then the panel button for lib-3#build clicked, lights the lib-3#build chain and not docs',
+      { annotation: S1 },
+      async ({ graphCanvas, graphHover, graphProbe, graphTaskDetails, graphTaskHost }): Promise<void> => {
+        await test.step('WHEN lib-3#test is clicked and lib-3#docs is hovered', async (): Promise<void> => {
+          await graphCanvas.tapNode('lib-3#test');
+          await graphTaskHost.expectSavedTask({ selected: 'lib-3#test' });
+          await graphHover.overNode('lib-3#docs');
+        });
+
+        await test.step('AND the pointer goes straight onto the panel and clicks the lib-3#build button', async (): Promise<void> => {
+          await graphTaskDetails.pickDependency('lib-3#build');
+          await graphTaskHost.expectSavedTask({ selected: 'lib-3#build' });
+        });
+
+        await test.step('THEN lib-3#build reads selected and lib-3#docs is not lit', async (): Promise<void> =>
+          graphProbe.expectNodeStates(targetLikeBuildLitStates()));
       }
     );
   });

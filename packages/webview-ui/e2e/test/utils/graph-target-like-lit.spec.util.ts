@@ -29,3 +29,20 @@ export const targetLikeLitStatesOf = (leaf: string): NodeStates => {
 
 /** The target-like set with `lib-3#build` chosen and nothing lit. */
 export const TARGET_LIKE_NORMAL_SHOWN = allNormal([...SHOWN_IDS, ...COMPOUND_IDS]);
+
+/** The target-like set with `lib-3#build` itself the lit task: `lib-3#build` selected, `hub#build` and the six dependents highlighted. */
+export const targetLikeBuildLitStates = (): NodeStates => {
+  const dependents = [...OWN_TASKS, 'feat-2#build', 'feat-3#build'];
+  const lit = Object.fromEntries(dependents.map((id): [string, 'highlighted'] => [id, 'highlighted']));
+  const states: NodeStates = {
+    ...lit,
+    'hub#build': 'highlighted',
+    'lib-3#build': 'selected',
+    'pkg:feat-2': 'normal',
+    'pkg:feat-3': 'normal',
+    'pkg:hub': 'normal',
+    'pkg:lib-3': 'normal'
+  };
+
+  return states;
+};

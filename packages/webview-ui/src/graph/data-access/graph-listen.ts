@@ -24,6 +24,15 @@ const positionsOf = (cy: Core): Positions => {
   return Object.fromEntries(entries);
 };
 
+/** The core's own `mouseout`, never a node's bubbling up: the pointer left the canvas, so no node is hovered. */
+const hoverEndOf = (cy: Core, handlers: GraphViewHandlers): ((event: EventObject) => void) => {
+  const onMouseOut = (event: EventObject): void => {
+    if (event.target === cy) handlers.onHoverNode(null);
+  };
+
+  return onMouseOut;
+};
+
 /**
  * Reports the canvas events to `handlers`; the tap on the background is the core's own, never a node's or edge's, a
  * folder link's tap is a background tap, and a ghost's taps report nothing. A double tap is two taps on the same package,
@@ -31,6 +40,8 @@ const positionsOf = (cy: Core): Positions => {
  * Cytoscape's `dbltap` fires on timing alone, whatever the first tap hit, and spends the pair so a real double-click
  * right after a tap elsewhere never fires. Ids, not elements, so a redraw between the taps keeps the pair. A drag ends
  * on `dragfreeon`, emitted once on the grabbed node; `dragfree` fires on every dragged element, a box's packages too.
+ * Cytoscape ends a node's hover from its own mousemove only, which never runs once the pointer is outside the container,
+ * so a pointer leaving the canvas straight from a node ends the hover on the core's own `mouseout` (the container's).
  */
 export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   const noteTap = tapPairOf();
@@ -93,6 +104,7 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   cy.on('tap', onBackground);
   cy.on('mouseover', 'node', (event: EventObjectNode): void => handlers.onHoverNode(nodeName(event)));
   cy.on('mouseout', 'node', (): void => handlers.onHoverNode(null));
+  cy.on('mouseout', hoverEndOf(cy, handlers));
   cy.on('dragfreeon', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
   cy.on('viewport', handlers.onViewport);
   cy.on('render', handlers.onRender);
