@@ -43,7 +43,12 @@ const rowOfTask = (scope: RowScope, pkg: PackageNode, task: TaskNode, context: R
  */
 export const taskRows = (scope: RowScope, pkg: PackageNode, context: RowContext): TreeRow[] => {
   const { groups } = context.atoms(scope.root, pkg.name);
-  const isShown = (task: TaskNode): boolean => isVisibleTurboTask(task) && !isHiddenAggregate(task, groups);
+  const isShown = (task: TaskNode): boolean => {
+    const isVisible = isVisibleTurboTask(task);
+    const isHidden = isHiddenAggregate(task, groups);
+
+    return isVisible && !isHidden;
+  };
   const turbo = pkg.tasks.filter(isShown);
   const rows = turbo.map((task) => rowOfTask(scope, pkg, task, context));
   const group = groupRowOf(scope, pkg, context);

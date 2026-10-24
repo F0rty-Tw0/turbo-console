@@ -10,7 +10,10 @@ const viewsOf = (model: WorkspaceModel): ReadonlyMap<string, AtomView> => {
   for (const group of atomGroupsOf(model)) {
     const known = views.get(group.packageName)?.groups ?? [];
 
-    views.set(group.packageName, { groups: [...known, group], dryRun: null, results: null });
+    const groups = [...known, group];
+    const view: AtomView = { groups, dryRun: null, results: null };
+
+    views.set(group.packageName, view);
   }
 
   return views;
@@ -28,9 +31,10 @@ export const staticAtomLookup = (modelOf: (root: string) => WorkspaceModel | nul
 
     if (model === null) return NO_ATOMS;
 
-    const views = cache.get(model) ?? viewsOf(model);
+    const cached = cache.get(model);
+    const views = cached ?? viewsOf(model);
 
-    cache.set(model, views);
+    if (cached === undefined) cache.set(model, views);
 
     return views.get(packageName) ?? NO_ATOMS;
   };
