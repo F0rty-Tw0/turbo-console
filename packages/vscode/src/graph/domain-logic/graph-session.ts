@@ -21,8 +21,8 @@ type ExplainJob = {
  * The host side of one Package Graph panel. Each state is built from the store and the layout cache when it is posted
  * or a message is checked, so a message is always judged against the graph as it is now. Nothing is posted before the
  * page's `ready` or while hidden; hiding resets `ready` because the page is rebuilt on show. Every state post is followed
- * by the run states of its tasks and a held `showTasks`, through the `GraphTaskFeed`. An edge explanation is posted only if
- * the panel is still shown and ready after its read.
+ * by the run states of its tasks, the Atomizer counts of its groups and a held `showTasks`, through the `GraphTaskFeed`. An
+ * edge explanation is posted only if the panel is still shown and ready after its read.
  * One `explainEdge` is answered at a time; the one waiting behind it is replaced by each newer request, so a page that floods them costs one read in flight and one waiting.
  */
 export class GraphSession {
@@ -109,7 +109,10 @@ export class GraphSession {
     if (this.isVisible) this.ports.setPanelVisible(false);
   }
 
-  /** Posts the current state, then its run states and any held `showTasks`, when the panel is shown and its page is ready. */
+  /**
+   * Posts the current state, then its run states, its atom counts and any held `showTasks`, when the panel is shown and its
+   * page is ready.
+   */
   private publish(): void {
     if (!this.canPost()) return;
 
