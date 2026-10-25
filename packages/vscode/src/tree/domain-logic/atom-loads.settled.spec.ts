@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 import { AtomLoads } from './atom-loads.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
-import { FILE_A, OTHER_ROOT, PKG, ROOT } from '../test/common/atom-loads.const.ts';
-import type { LoadsHarness } from '../test/common/atom-loads.type.ts';
-import { ATOM_RESULT_STUB, BASE_MODEL_STUB } from '../test/stubs/atom-loads.stub.ts';
+import { BASE_SPEC_PATHS, FILE_A, OTHER_ROOT, PKG, ROOT } from '../test/common/atom-load.const.ts';
+import type { LoadsHarness } from '../test/common/atom-load.type.ts';
+import { ATOM_RESULT_STUB } from '../test/stubs/atom-load.stub.ts';
 import {
   dryRunAt,
   dryStateOf,
@@ -15,7 +15,7 @@ import {
   toFailed,
   toLoaded,
   toLoading
-} from '../test/utils/atom-loads.spec.util.ts';
+} from '../test/utils/atom-load.spec.util.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 
 const loadsOf = (h: LoadsHarness): AtomLoads => new AtomLoads(h.ports, h.modelOf);
@@ -62,7 +62,7 @@ describe('FEATURE: atom loads of a package that settled', () => {
       const loads = loadsOf(h);
 
       await toLoaded(h, loads);
-      h.model(OTHER_ROOT, BASE_MODEL_STUB);
+      h.model(OTHER_ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.childrenRequested(OTHER_ROOT, PKG);
       dryRunAt(h, 1).resolve([]);
       scanAt(h, 1).resolve(new Map());
@@ -176,7 +176,7 @@ describe('FEATURE: atom loads of a package that settled', () => {
       const loads = loadsOf(h);
 
       await toFailed(h, loads);
-      loads.modelChanged(ROOT, BASE_MODEL_STUB);
+      loads.modelChanged(ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.childrenRequested(ROOT, PKG);
 
       expect(h.dryRun).toHaveBeenCalledTimes(1);
@@ -235,7 +235,7 @@ describe('FEATURE: atom loads of a package that settled', () => {
       const h = loadsHarness();
       const loads = loadsOf(h);
 
-      h.model(ROOT, BASE_MODEL_STUB);
+      h.model(ROOT, atomModelOf(BASE_SPEC_PATHS));
       h.noBinary();
       loads.childrenRequested(ROOT, PKG);
 

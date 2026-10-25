@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { AtomLoads } from './atom-loads.ts';
-import { PKG } from '../test/common/atom-loads.const.ts';
-import { BASE_MODEL_STUB } from '../test/stubs/atom-loads.stub.ts';
-import { dryRunAt, flush, loadsHarness } from '../test/utils/atom-loads.spec.util.ts';
+import { BASE_SPEC_PATHS, PKG } from '../test/common/atom-load.const.ts';
+import { dryRunAt, flush, loadsHarness } from '../test/utils/atom-load.spec.util.ts';
+import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 
 const HOSTILE_ROOT = '/ws\n2026-10-25 forged entry';
 
@@ -13,7 +13,7 @@ describe('FEATURE: atom loads log lines', () => {
       const h = loadsHarness();
       const loads = new AtomLoads(h.ports, h.modelOf);
 
-      h.model(HOSTILE_ROOT, BASE_MODEL_STUB);
+      h.model(HOSTILE_ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.childrenRequested(HOSTILE_ROOT, PKG);
       dryRunAt(h, 0).reject(new Error('boom'));
       await flush();

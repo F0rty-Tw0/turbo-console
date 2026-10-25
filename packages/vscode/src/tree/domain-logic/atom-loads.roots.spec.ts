@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { AtomLoads } from './atom-loads.ts';
-import { FILE_A, OTHER_ROOT, PKG, ROOT } from '../test/common/atom-loads.const.ts';
-import { BASE_MODEL_STUB } from '../test/stubs/atom-loads.stub.ts';
-import { dryRunAt, dryStateOf, flush, loadsHarness, toLoaded, toLoading } from '../test/utils/atom-loads.spec.util.ts';
+import { BASE_SPEC_PATHS, FILE_A, OTHER_ROOT, PKG, ROOT } from '../test/common/atom-load.const.ts';
+import { dryRunAt, dryStateOf, flush, loadsHarness, toLoaded, toLoading } from '../test/utils/atom-load.spec.util.ts';
+import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 
 describe('FEATURE: atom loads of roots that are gone', () => {
   describe('GIVEN a loading package in a root that is no longer kept', () => {
@@ -59,7 +59,7 @@ describe('FEATURE: atom loads of roots that are gone', () => {
       const loads = new AtomLoads(h.ports, h.modelOf);
 
       await toLoaded(h, loads);
-      h.model(OTHER_ROOT, BASE_MODEL_STUB);
+      h.model(OTHER_ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.rootsKept(new Set([ROOT, OTHER_ROOT]));
 
       expect(loads.view(ROOT, PKG).dryRun?.get(FILE_A)).toBe('HIT');

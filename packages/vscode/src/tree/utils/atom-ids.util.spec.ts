@@ -2,7 +2,7 @@ import { atomGroupsOf } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { atomFileIds, atomIdsKey } from './atom-ids.util.ts';
-import { FILE_A, FILE_B } from '../test/common/atom-loads.const.ts';
+import { FILE_A, FILE_B } from '../test/common/atom-load.const.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 
 const BASE_GROUPS = atomGroupsOf(atomModelOf(['tests/a.spec.ts', 'tests/b fails.spec.ts']));

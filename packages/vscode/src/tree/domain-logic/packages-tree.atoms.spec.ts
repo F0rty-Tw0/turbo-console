@@ -6,77 +6,27 @@ import { PackagesTree } from './packages-tree.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
-import type { RunEntry } from '../../run/common/run.type.ts';
-import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { AtomHostPorts } from '../common/atom-load.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
-import { FILE_A, PKG, ROOT, UMBRELLA_ID } from '../test/common/atom-loads.const.ts';
-import type { ChildrenOf, LoadsHarness } from '../test/common/atom-loads.type.ts';
-import { BASE_MODEL_STUB } from '../test/stubs/atom-loads.stub.ts';
+import {
+  BASE_SPEC_PATHS,
+  ENDED_MATCHED,
+  ENDED_MATCHING,
+  FILE_A,
+  OTHER_ENDED,
+  PKG,
+  ROOT,
+  STILL_RUNNING,
+  UMBRELLA_TICK
+} from '../test/common/atom-load.const.ts';
+import type { ChildrenOf, LoadsHarness, RunCase } from '../test/common/atom-load.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
+import { FILE_TREE_NODE_STUB, PLAIN_TASK_TREE_NODE_STUB, UMBRELLA_TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
-import { dryRunAt, dryStateOf, flush, loadsHarness, scanAt } from '../test/utils/atom-loads.spec.util.ts';
+import { dryRunAt, dryStateOf, flush, loadsHarness, settleFailed, settleOk } from '../test/utils/atom-load.spec.util.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
-import { loadedOf, nodeKeyed, umbrellaNodeOf } from '../test/utils/atom-tree.spec.util.ts';
+import { expandAll, loadedOf, nodeKeyed, runOf, umbrellaNodeOf } from '../test/utils/atom-tree.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
-
-const FILE_NODE: TreeNode = { kind: 'task', id: `task:${ROOT}\0${FILE_A}`, root: ROOT, key: FILE_A, packageName: PKG };
-
-const PLAIN_TASK_NODE: TreeNode = { kind: 'task', id: `task:${ROOT}\0a#build`, root: ROOT, key: 'a#build', packageName: 'a' };
-
-const COLLAPSED_UMBRELLA_NODE: TreeNode = {
-  kind: 'task',
-  id: `task:${ROOT}\0${UMBRELLA_ID}`,
-  root: ROOT,
-  key: UMBRELLA_ID,
-  packageName: PKG
-};
-
-const TICK = new Map([[ROOT, new Set([UMBRELLA_ID])]]);
-
-/** Opens `node` and every row under it, as a user expanding the whole tree would. */
-const expandAll = async (tree: PackagesTree, node?: TreeNode): Promise<void> => {
-  const children = await tree.children(node);
-  const walks = children.map(async (child) => expandAll(tree, child));
-
-  await Promise.all(walks);
-};
-
-const settleOk = async (h: LoadsHarness, index: number): Promise<void> => {
-  const states = [dryStateOf(FILE_A, 'HIT')];
-
-  dryRunAt(h, index).resolve(states);
-  scanAt(h, index).resolve(new Map());
-
-  await flush();
-};
-
-const settleFailed = async (h: LoadsHarness): Promise<void> => {
-  dryRunAt(h, 0).reject(new Error('dry-run boom'));
-  scanAt(h, 0).reject(new Error('scan boom'));
-
-  await flush();
-};
-
-type RunCase = {
-  readonly when: string;
-  readonly patch: Partial<RunEntry>;
-  readonly calls: number;
-};
-
-const STILL_RUNNING: Partial<RunEntry> = { state: 'running' };
-
-const ENDED_MATCHING: Partial<RunEntry> = { state: 'passed', matching: true };
-
-const ENDED_MATCHED: Partial<RunEntry> = { state: 'passed' };
-
-const OTHER_ENDED: Partial<RunEntry> = { state: 'passed', packageName: 'a', taskId: 'a#build' };
-
-const runOf = (patch: Partial<RunEntry>): RunEntry => {
-  const entry: RunEntry = { ...RUN_ENTRY_STUB, root: ROOT, taskId: FILE_A, packageName: PKG, ...patch };
-
-  return entry;
-};
 
 describe('FEATURE: packages tree Atomizer loads', () => {
   let h: LoadsHarness;
@@ -111,7 +61,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
 
   describe('GIVEN a root holding group e2e-ci of @fx/e2e', () => {
     beforeEach(() => {
-      treeOver(BASE_MODEL_STUB);
+      treeOver(atomModelOf(BASE_SPEC_PATHS));
     });
 
     describe('WHEN the umbrella is opened', () => {
@@ -134,8 +84,8 @@ describe('FEATURE: packages tree Atomizer loads', () => {
       const packages = await tree.children();
 
       await tree.children(nodeKeyed(packages, PKG));
-      await tree.children(FILE_NODE);
-      await tree.children(PLAIN_TASK_NODE);
+      await tree.children(FILE_TREE_NODE_STUB);
+      await tree.children(PLAIN_TASK_TREE_NODE_STUB);
 
       expect(h.binaryOf).not.toHaveBeenCalled();
     });
@@ -155,7 +105,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
 
       it('WHEN ten elapsed ticks re-request its children THEN dryRun and the scan ran once', async () => {
         for (let tick = 0; tick < 10; tick += 1) {
-          tree.refreshTasks(TICK);
+          tree.refreshTasks(UMBRELLA_TICK);
           await tree.children(umbrella);
         }
 
@@ -189,7 +139,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
     });
 
     it('WHEN a group never listed loads THEN nothing fires', async () => {
-      await tree.children(COLLAPSED_UMBRELLA_NODE);
+      await tree.children(UMBRELLA_TREE_NODE_STUB);
       fire.mockClear();
       await settleOk(h, 0);
 
@@ -207,7 +157,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
     let umbrella: TreeNode;
 
     beforeEach(async () => {
-      treeOver(BASE_MODEL_STUB);
+      treeOver(atomModelOf(BASE_SPEC_PATHS));
       umbrella = await umbrellaNodeOf(children);
       await tree.children(umbrella);
       await settleOk(h, 0);
@@ -229,7 +179,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
         const after = atomModelOf(['tests/a.spec.ts', 'tests/b fails.spec.ts']);
 
         store.apply(ROOT, loadedOf(after));
-        tree.refreshFor({ root: ROOT, before: BASE_MODEL_STUB, after, errorBefore: null, errorAfter: null });
+        tree.refreshFor({ root: ROOT, before: atomModelOf(BASE_SPEC_PATHS), after, errorBefore: null, errorAfter: null });
       });
 
       it('THEN no load starts', () => {
@@ -245,7 +195,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
       const after = atomModelOf(['tests/a.spec.ts']);
 
       store.apply(ROOT, loadedOf(after));
-      tree.refreshFor({ root: ROOT, before: BASE_MODEL_STUB, after, errorBefore: null, errorAfter: null });
+      tree.refreshFor({ root: ROOT, before: atomModelOf(BASE_SPEC_PATHS), after, errorBefore: null, errorAfter: null });
       await tree.children(umbrella);
 
       expect(h.dryRun).toHaveBeenCalledTimes(2);
@@ -261,7 +211,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
       store.set([], coordinatorMock);
       tree.rootsChanged();
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
-      store.apply(ROOT, loadedOf(BASE_MODEL_STUB));
+      store.apply(ROOT, loadedOf(atomModelOf(BASE_SPEC_PATHS)));
       tree.rootsChanged();
 
       const reopened = await umbrellaNodeOf(children);
@@ -278,7 +228,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
     });
 
     it('WHEN every row is opened THEN no binary is read for a load', async () => {
-      await expandAll(tree);
+      await expandAll(children);
 
       expect(h.binaryOf).not.toHaveBeenCalled();
     });

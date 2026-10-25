@@ -1,6 +1,7 @@
 import type { AtomResult, DryRunRequest, DryRunState, TurboBinary, WorkspaceModel } from '@turbo-console/core';
 import type { Mock } from 'vitest';
 
+import type { RunEntry } from '../../../run/common/run.type.ts';
 import type { AtomLoadPorts } from '../../common/atom-load.type.ts';
 import type { TreeNode } from '../../common/tree-node.type.ts';
 
@@ -42,3 +43,10 @@ export type LoadsHarness = {
 
 /** What lists a node's children: `PackagesTree.children` or the provider's `getChildren`; no node lists the top level. */
 export type ChildrenOf = (node?: TreeNode) => Promise<TreeNode[]>;
+
+/** One `runChanged` case: the patch over the run entry and how many dry runs have started once it is applied. */
+export type RunCase = {
+  readonly when: string;
+  readonly patch: Partial<RunEntry>;
+  readonly calls: number;
+};

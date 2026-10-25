@@ -1,11 +1,12 @@
 import type { AtomResult, DryRunRequest, DryRunState, TurboBinary, WorkspaceModel } from '@turbo-console/core';
 import { vi } from 'vitest';
 
+import { atomModelOf } from './atom-model.spec.util.ts';
 import { TURBO_BINARY_STUB } from '../../../roots/test/stubs/root.stub.ts';
 import type { AtomLoadPorts } from '../../common/atom-load.type.ts';
-import { FILE_A, PKG, ROOT } from '../common/atom-loads.const.ts';
-import type { ChildrenRequester, DeferredDryRun, DeferredScan, LoadsHarness } from '../common/atom-loads.type.ts';
-import { ATOM_RESULT_STUB, BASE_MODEL_STUB, DRY_RUN_STATE_STUB } from '../stubs/atom-loads.stub.ts';
+import { BASE_SPEC_PATHS, FILE_A, PKG, ROOT } from '../common/atom-load.const.ts';
+import type { ChildrenRequester, DeferredDryRun, DeferredScan, LoadsHarness } from '../common/atom-load.type.ts';
+import { ATOM_RESULT_STUB, DRY_RUN_STATE_STUB } from '../stubs/atom-load.stub.ts';
 
 /** A dry-run state of task `id` with cache state `cache`. */
 export const dryStateOf = (id: string, cache: DryRunState['cache']): DryRunState => {
@@ -87,7 +88,7 @@ export const scanAt = (h: LoadsHarness, index: number): DeferredScan => {
 
 /** Package `PKG` of `ROOT` loading: the base model set, children requested, both parts pending. */
 export const toLoading = (h: LoadsHarness, loads: ChildrenRequester): void => {
-  h.model(ROOT, BASE_MODEL_STUB);
+  h.model(ROOT, atomModelOf(BASE_SPEC_PATHS));
   loads.childrenRequested(ROOT, PKG);
 };
 
@@ -105,6 +106,22 @@ export const toLoaded = async (h: LoadsHarness, loads: ChildrenRequester): Promi
 /** `toLoading`, then both parts reject. */
 export const toFailed = async (h: LoadsHarness, loads: ChildrenRequester): Promise<void> => {
   toLoading(h, loads);
+  dryRunAt(h, 0).reject(new Error('dry-run boom'));
+  scanAt(h, 0).reject(new Error('scan boom'));
+
+  await flush();
+};
+
+/** Both parts of load `index` settle OK: `FILE_A` is a HIT and the scan finds nothing. */
+export const settleOk = async (h: LoadsHarness, index: number): Promise<void> => {
+  dryRunAt(h, index).resolve([dryStateOf(FILE_A, 'HIT')]);
+  scanAt(h, index).resolve(new Map());
+
+  await flush();
+};
+
+/** Both parts of the first load reject. */
+export const settleFailed = async (h: LoadsHarness): Promise<void> => {
   dryRunAt(h, 0).reject(new Error('dry-run boom'));
   scanAt(h, 0).reject(new Error('scan boom'));
 

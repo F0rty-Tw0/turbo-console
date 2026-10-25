@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { AtomLoads } from './atom-loads.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
-import { FILE_A, FILE_B, OTHER_ROOT, PKG, ROOT } from '../test/common/atom-loads.const.ts';
-import type { LoadsHarness } from '../test/common/atom-loads.type.ts';
-import { BASE_MODEL_STUB } from '../test/stubs/atom-loads.stub.ts';
-import { dryRunAt, dryStateOf, flush, loadsHarness, scanAt, toLoading } from '../test/utils/atom-loads.spec.util.ts';
+import { BASE_SPEC_PATHS, FILE_A, FILE_B, OTHER_ROOT, PKG, ROOT } from '../test/common/atom-load.const.ts';
+import type { LoadsHarness } from '../test/common/atom-load.type.ts';
+import { dryRunAt, dryStateOf, flush, loadsHarness, scanAt, toLoading } from '../test/utils/atom-load.spec.util.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 
 const loadsOf = (h: LoadsHarness): AtomLoads => new AtomLoads(h.ports, h.modelOf);
@@ -17,7 +16,7 @@ describe('FEATURE: atom loads of a package that is not loaded yet or is loading'
       const loads = loadsOf(h);
       const request = { tasks: ['e2e-ci'], packages: [PKG], singlePackage: false };
 
-      h.model(ROOT, BASE_MODEL_STUB);
+      h.model(ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.childrenRequested(ROOT, PKG);
 
       expect(h.dryRun).toHaveBeenCalledExactlyOnceWith(TURBO_BINARY_STUB, request, expect.any(AbortSignal));
@@ -29,7 +28,7 @@ describe('FEATURE: atom loads of a package that is not loaded yet or is loading'
       const h = loadsHarness();
       const loads = loadsOf(h);
 
-      h.model(ROOT, BASE_MODEL_STUB);
+      h.model(ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.runEnded(ROOT, PKG);
 
       expect(h.dryRun).not.toHaveBeenCalled();
@@ -41,7 +40,7 @@ describe('FEATURE: atom loads of a package that is not loaded yet or is loading'
       const h = loadsHarness();
       const loads = loadsOf(h);
 
-      h.model(ROOT, BASE_MODEL_STUB);
+      h.model(ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.refreshAll();
 
       expect(h.dryRun).not.toHaveBeenCalled();
@@ -52,8 +51,8 @@ describe('FEATURE: atom loads of a package that is not loaded yet or is loading'
       const h = loadsHarness();
       const loads = loadsOf(h);
 
-      h.model(ROOT, BASE_MODEL_STUB);
-      loads.modelChanged(ROOT, BASE_MODEL_STUB);
+      h.model(ROOT, atomModelOf(BASE_SPEC_PATHS));
+      loads.modelChanged(ROOT, atomModelOf(BASE_SPEC_PATHS));
 
       expect(h.dryRun).not.toHaveBeenCalled();
       expect(h.changed).not.toHaveBeenCalled();
@@ -221,8 +220,8 @@ describe('FEATURE: atom loads of a package that is not loaded yet or is loading'
       const h = loadsHarness();
       const loads = loadsOf(h);
 
-      h.model(ROOT, BASE_MODEL_STUB);
-      h.model(OTHER_ROOT, BASE_MODEL_STUB);
+      h.model(ROOT, atomModelOf(BASE_SPEC_PATHS));
+      h.model(OTHER_ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.childrenRequested(ROOT, PKG);
       loads.childrenRequested(OTHER_ROOT, PKG);
       loads.runEnded(ROOT, PKG);
@@ -236,8 +235,8 @@ describe('FEATURE: atom loads of a package that is not loaded yet or is loading'
       const h = loadsHarness();
       const loads = loadsOf(h);
 
-      h.model(ROOT, BASE_MODEL_STUB);
-      h.model(OTHER_ROOT, BASE_MODEL_STUB);
+      h.model(ROOT, atomModelOf(BASE_SPEC_PATHS));
+      h.model(OTHER_ROOT, atomModelOf(BASE_SPEC_PATHS));
       loads.childrenRequested(ROOT, PKG);
       loads.childrenRequested(OTHER_ROOT, PKG);
       dryRunAt(h, 1).resolve([dryStateOf(FILE_A, 'HIT')]);

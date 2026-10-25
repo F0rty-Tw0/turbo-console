@@ -5,11 +5,11 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { AtomHostPorts } from '../common/atom-load.type.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
-import { FILE_A, ROOT } from '../test/common/atom-loads.const.ts';
-import type { ChildrenOf, LoadsHarness } from '../test/common/atom-loads.type.ts';
-import { BASE_MODEL_STUB } from '../test/stubs/atom-loads.stub.ts';
+import { BASE_SPEC_PATHS, FILE_A, ROOT } from '../test/common/atom-load.const.ts';
+import type { ChildrenOf, LoadsHarness } from '../test/common/atom-load.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
-import { dryRunAt, dryStateOf, flush, loadsHarness, scanAt } from '../test/utils/atom-loads.spec.util.ts';
+import { dryRunAt, dryStateOf, flush, loadsHarness, scanAt } from '../test/utils/atom-load.spec.util.ts';
+import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 import { loadedOf, umbrellaNodeOf } from '../test/utils/atom-tree.spec.util.ts';
 import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
 
@@ -43,7 +43,7 @@ describe('FEATURE: packages provider Atomizer loads', () => {
 
       provider = new PackagesTreeProvider(store, 'list', 'builtin', deps);
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
-      store.apply(ROOT, loadedOf(BASE_MODEL_STUB));
+      store.apply(ROOT, loadedOf(atomModelOf(BASE_SPEC_PATHS)));
       await provider.getChildren(await umbrellaNodeOf(children));
     });
 
