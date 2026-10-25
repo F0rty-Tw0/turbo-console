@@ -124,7 +124,7 @@ const orderedGroupsOf = (base: Positions, groups: AtomBoxSpec[], expanded: Reado
   const ordered: OrderedGroup[] = [];
 
   for (const spec of groups) {
-    const at = base[spec.umbrellaId];
+    const at = Object.hasOwn(base, spec.umbrellaId) ? base[spec.umbrellaId] : undefined;
     const isOpen = expanded.has(spec.umbrellaId);
     const isExpandable = isOpen && spec.fileIds.length > 0 && at !== undefined;
 

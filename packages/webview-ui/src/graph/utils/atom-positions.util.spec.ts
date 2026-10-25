@@ -285,4 +285,22 @@ describe('FEATURE: atom positions', () => {
       ]);
     });
   });
+
+  describe('GIVEN an open group named like an inherited member that the base does not place', () => {
+    const lowerBase = positionsOf([
+      ['a', 100, 120],
+      ['z', 300, 100]
+    ]);
+    const aSpec: AtomBoxSpec = { ...A_SPEC, umbrellaId: 'a' };
+    const zSpec: AtomBoxSpec = { ...B_SPEC, umbrellaId: 'z' };
+    const inheritedSpec: AtomBoxSpec = { ...A_SPEC, umbrellaId: 'constructor', fileIds: ['c1'] };
+    const open = new Set(['a', 'constructor', 'z']);
+
+    it('WHEN the groups open THEN the placed ones still open in base order and it opens nothing', () => {
+      const withoutIt = atomPositionsOf(lowerBase, [aSpec, zSpec], new Set(['a', 'z']));
+      const withIt = atomPositionsOf(lowerBase, [aSpec, inheritedSpec, zSpec], open);
+
+      expect(withIt).toStrictEqual(withoutIt);
+    });
+  });
 });
