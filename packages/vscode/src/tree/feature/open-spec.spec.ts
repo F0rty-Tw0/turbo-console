@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import type { AtomFile, PackageNode, TaskNode } from '@turbo-console/core';
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -14,7 +15,10 @@ import type { OpenSpecPorts } from '../common/open-spec.type.ts';
 import type { TreeNode } from '../common/tree-node.type.ts';
 import { BASE_SPEC_PATHS, FILE_B, PKG, ROOT } from '../test/common/atom-load.const.ts';
 import { FILE_TREE_NODE_STUB, UMBRELLA_TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
+import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
+import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
+import { fileRow } from '../utils/atom-rows.util.ts';
 
 const FOLDER: RootFolder = { root: ROOT, name: 'ws' };
 
@@ -25,6 +29,26 @@ const fileNodeOf = (specPath: string): TreeNode => {
   const node: TreeNode = { ...FILE_TREE_NODE_STUB, id: `task:${ROOT}\0${key}`, key };
 
   return node;
+};
+
+const PLAIN_ATOM: NonNullable<TaskNode['atom']> = { group: 'e2e-ci', isLive: false };
+
+const B_TASK: TaskNode = {
+  ...TASK_NODE_STUB,
+  id: FILE_B,
+  name: 'e2e-ci--tests/b fails.spec.ts',
+  kind: 'atom-file',
+  atom: PLAIN_ATOM
+};
+
+const B_FILE: AtomFile = { task: B_TASK, specPath: 'tests/b fails.spec.ts', isLive: false };
+
+/** The argument VS Code hands Open Spec when the real file row of `file` is clicked. */
+const rowArgOf = (file: AtomFile): unknown => {
+  const pkg: PackageNode = { ...PACKAGE_NODE_STUB, name: PKG };
+  const row = fileRow(ROW_SCOPE_STUB, pkg, file, rowContextOf('list'));
+
+  return row.command?.args[0];
 };
 
 const PACKAGE_ROW: TreeNode = { ...UMBRELLA_TREE_NODE_STUB, kind: 'pkg', key: PKG };
@@ -91,6 +115,14 @@ describe('FEATURE: Open Spec command', () => {
 
       expect(open).toHaveBeenCalledExactlyOnceWith(join('/ws', 'packages', 'e2e', 'tests', 'b fails.spec.ts'));
       expect(error).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it is invoked with the argument of the real spaced file row THEN that spec opens under its package', async () => {
+      const arg = rowArgOf(B_FILE);
+
+      await invoke(arg);
+
+      expect(open).toHaveBeenCalledExactlyOnceWith(join('/ws', 'packages', 'e2e', 'tests', 'b fails.spec.ts'));
     });
 
     it.each<[string, unknown]>([
