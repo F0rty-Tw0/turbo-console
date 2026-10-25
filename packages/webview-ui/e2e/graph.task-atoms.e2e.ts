@@ -187,28 +187,29 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
     }
   );
 
-  test('GIVEN the umbrella chosen and a file hovered in its expanded group, the pointer leaving the canvas and coming back to that file shows its spec path again', async ({
-    graphAtoms,
-    graphHover,
-    openUmbrella
-  }): Promise<void> => {
-    await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+  test(
+    'GIVEN the umbrella chosen and a file hovered in its expanded group, the pointer leaving the canvas and coming back to that file shows its spec path again',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, graphHover, openUmbrella }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
 
-    await test.step('AND the group is expanded', async (): Promise<void> => {
-      await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
-      await graphAtoms.expectFilesDrawn(FILE_IDS, true);
-    });
+      await test.step('AND the group is expanded', async (): Promise<void> => {
+        await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
+        await graphAtoms.expectFilesDrawn(FILE_IDS, true);
+      });
 
-    await test.step('AND the live file is hovered', async (): Promise<void> => graphHover.overNode(LIVE_FILE));
+      await test.step('AND the live file is hovered', async (): Promise<void> => graphHover.overNode(LIVE_FILE));
 
-    await test.step('AND the pointer leaves the canvas', async (): Promise<void> => graphHover.leaveCanvas());
+      await test.step('AND the pointer leaves the canvas', async (): Promise<void> => graphHover.leaveCanvas());
 
-    await test.step('THEN the canvas has no title', async (): Promise<void> => graphAtoms.expectCanvasTitle(null));
+      await test.step('THEN the canvas has no title', async (): Promise<void> => graphAtoms.expectCanvasTitle(null));
 
-    await test.step('WHEN the live file is hovered again', async (): Promise<void> => graphHover.overNode(LIVE_FILE));
+      await test.step('WHEN the live file is hovered again', async (): Promise<void> => graphHover.overNode(LIVE_FILE));
 
-    await test.step('THEN the canvas title is its spec path', async (): Promise<void> => graphAtoms.expectCanvasTitle(LIVE_SPEC_PATH));
-  });
+      await test.step('THEN the canvas title is its spec path', async (): Promise<void> =>
+        graphAtoms.expectCanvasTitle(LIVE_SPEC_PATH));
+    }
+  );
 
   test(
     'GIVEN the umbrella chosen and its group expanded, a second double tap removes the files and the box and puts every task node back',
