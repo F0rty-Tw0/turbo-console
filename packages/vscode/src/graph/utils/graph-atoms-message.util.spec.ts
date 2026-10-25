@@ -1,4 +1,4 @@
-import type { GraphReady, GraphState } from '@turbo-console/webview-ui';
+import type { GraphAtomGroup, GraphReady, GraphState } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { atomsMessageOf } from './graph-atoms-message.util.ts';
@@ -71,6 +71,21 @@ describe('FEATURE: atoms message of a graph state', () => {
   describe('GIVEN a view that does not know the group', () => {
     it('WHEN the message is built THEN counts is "2 files" and every file is none', () => {
       expect(atomsMessageOf(ROOT, ATOM_STATE, NO_GROUP_LOOKUP)).toStrictEqual(UNLOADED_MESSAGE);
+    });
+  });
+
+  describe('GIVEN a listed atom group and a group whose umbrella is not a listed task', () => {
+    it('WHEN the message is built THEN it holds only the listed group', () => {
+      const unlistedGroup: GraphAtomGroup = { umbrellaId: 'gone#smoke', files: [] };
+      const atomGroups = [...ATOM_STATE.atomGroups, unlistedGroup];
+      const state: GraphReady = { ...ATOM_STATE, atomGroups };
+      const counts = umbrellaCounts(GRAPH_ATOM_GROUP_STUB, GRAPH_ATOM_VIEW_STUB);
+      const group = { counts, files: LOADED_FILES };
+      const groups = { [UMBRELLA_ID]: group };
+
+      const message = atomsMessageOf(ROOT, state, GRAPH_ATOM_LOOKUP_STUB);
+
+      expect(message).toStrictEqual({ type: 'atoms', groups });
     });
   });
 
