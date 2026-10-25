@@ -8,6 +8,7 @@ import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphRequestMessage, RequestContext } from '../common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import {
+  APP_BUILD_TASK_STUB,
   ATOM_E2E_PACKAGE_STUB,
   ATOM_FILE_A_TASK_STUB,
   ATOM_UMBRELLA_TASK_STUB,
@@ -33,11 +34,12 @@ const TWO_GROUP_PACKAGE: PackageNode = {
   ...ATOM_E2E_PACKAGE_STUB,
   tasks: [...ATOM_E2E_PACKAGE_STUB.tasks, ...SMOKE_TASKS]
 };
-const TWO_GROUP_MODEL: WorkspaceModel = { ...GRAPH_ATOM_MODEL_STUB, packages: [TWO_GROUP_PACKAGE] };
+const [, ...OTHER_PACKAGES] = GRAPH_ATOM_MODEL_STUB.packages;
+const TWO_GROUP_MODEL: WorkspaceModel = { ...GRAPH_ATOM_MODEL_STUB, packages: [TWO_GROUP_PACKAGE, ...OTHER_PACKAGES] };
 const TWO_GROUP_STATE = graphStateOf(TWO_GROUP_MODEL, NO_LAYOUT_CACHES_STUB);
 const SHOWN_UMBRELLAS: GraphRequestMessage = {
   type: 'shownUmbrellas',
-  ids: [ATOM_UMBRELLA_TASK_STUB.id, SMOKE_UMBRELLA.id, 'gone#nothing', ATOM_FILE_A_TASK_STUB.id]
+  ids: [ATOM_UMBRELLA_TASK_STUB.id, SMOKE_UMBRELLA.id, 'gone#nothing', ATOM_FILE_A_TASK_STUB.id, APP_BUILD_TASK_STUB.id]
 };
 
 const contextOf = (state: GraphState, atoms: RequestContext['atoms'] = SHARED_ATOMS_STUB): RequestContext => {
@@ -185,7 +187,7 @@ describe('FEATURE: graph request handling', () => {
 
 describe('FEATURE: graph shownUmbrellas request', () => {
   describe('GIVEN a graph state with two umbrellas of one package', () => {
-    it('WHEN it names both, a file and an unknown id THEN childrenRequested(root, package) runs once', async () => {
+    it('WHEN it names both, a file, a listed build and an unknown id THEN childrenRequested(root, package) runs once', async () => {
       const { atoms, childrenRequested } = atomsFake(() => GRAPH_ATOM_UNLOADED_VIEW_STUB);
 
       await requestHandledOf(SHOWN_UMBRELLAS, contextOf(TWO_GROUP_STATE, atoms));
