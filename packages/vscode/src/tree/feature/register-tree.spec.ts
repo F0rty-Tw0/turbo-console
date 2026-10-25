@@ -194,6 +194,21 @@ describe('FEATURE: registerTree scope toggle', () => {
 
       expect(disposed).toStrictEqual(expect.arrayContaining(['turboConsole.showScope', 'turboConsole.hideScope']));
     });
+
+    describe('WHEN Refresh is invoked', () => {
+      beforeEach(async () => {
+        registerWith();
+        await invoke('turboConsole.refresh');
+      });
+
+      it('THEN the session is asked for one refresh', () => {
+        expect(session.request).toHaveBeenCalledExactlyOnceWith('refresh');
+      });
+
+      it('THEN the tree reloads its Atomizer groups once', () => {
+        expect(tree.refreshAtoms).toHaveBeenCalledOnce();
+      });
+    });
   });
 
   describe('GIVEN a registered tree with scopes hidden', () => {

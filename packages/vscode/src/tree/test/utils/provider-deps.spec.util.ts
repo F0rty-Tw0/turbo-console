@@ -1,3 +1,4 @@
+import { ATOM_IDLE_PORTS } from './tree-ports.spec.util.ts';
 import type { LiveIds, RunLookup } from '../../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../../shared/common/scripts-toggle.type.ts';
 import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
@@ -17,7 +18,7 @@ export const providerDepsOf = (
   runningIds: LiveIds = NOTHING_LIVE
 ): TreeProviderDeps => {
   const runs: TreeProviderDeps['runs'] = { get, runningIds };
-  const deps: TreeProviderDeps = { runs, treeVisible: new Map(), scripts };
+  const deps: TreeProviderDeps = { runs, treeVisible: new Map(), scripts, atom: ATOM_IDLE_PORTS };
 
   return deps;
 };

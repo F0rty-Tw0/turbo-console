@@ -8,6 +8,7 @@ import type { LiveIds, RunEntry } from '../../run/common/run.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
+import { ATOM_IDLE_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 import { SCRIPT_PACKAGE, SCRIPT_TASK, scriptRunOf } from '../test/utils/tree-refresher.spec.util.ts';
 
 const LIVE: ReadonlySet<string> = new Set([SCRIPT_TASK.id]);
@@ -59,7 +60,8 @@ describe('FEATURE: the Scripts group in the packages tree', () => {
       fire,
       treeVisible: new Map(),
       now: () => 7,
-      wallNow: () => 7
+      wallNow: () => 7,
+      atom: ATOM_IDLE_PORTS
     };
 
     tree = new PackagesTree(store, 'list', 'builtin', ports);

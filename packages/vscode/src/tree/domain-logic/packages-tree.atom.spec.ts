@@ -7,6 +7,7 @@ import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { ATOM_MODEL_STUB, A_FILE_STUB, LIVE_FILE_STUB, SPACED_FILE_STUB } from '../test/stubs/atom-view.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith } from '../test/utils/tree-model.spec.util.ts';
+import { ATOM_IDLE_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 
 const PACKAGE_NODE: TreeNode = { kind: 'pkg', id: 'pkg:/ws\0e2e', root: '/ws', key: 'e2e', packageName: 'e2e' };
 
@@ -33,7 +34,8 @@ describe('FEATURE: packages tree Atomizer rows', () => {
         fire: vi.fn<TreePorts['fire']>(),
         treeVisible: new Map(),
         now: () => 7,
-        wallNow: () => 7
+        wallNow: () => 7,
+        atom: ATOM_IDLE_PORTS
       };
       const base = loadedWith([]);
       const loaded = { ...base, model: ATOM_MODEL_STUB };

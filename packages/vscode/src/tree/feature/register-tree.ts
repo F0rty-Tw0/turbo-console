@@ -145,6 +145,7 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
   });
   const refresh = vscode.commands.registerCommand('turboConsole.refresh', () => {
     session.request('refresh');
+    tree.refreshAtoms();
   });
   const showFolders = vscode.commands.registerCommand('turboConsole.showFolders', async () => writeTreeMode('folders'));
   const showList = vscode.commands.registerCommand('turboConsole.showList', async () => writeTreeMode('list'));

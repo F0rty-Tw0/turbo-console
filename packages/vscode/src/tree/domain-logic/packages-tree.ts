@@ -1,17 +1,16 @@
+import { AtomTree } from './atom-tree.ts';
 import { ModelViews } from './model-views.ts';
 import { TreeRefresher } from './tree-refresh.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
-import type { AtomLookup } from '../common/atom-view.type.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { IconsMode, TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { nodesOf } from '../utils/node-cache.util.ts';
 import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts';
 import { rootRowOf, rootRows } from '../utils/root-rows.util.ts';
-import { staticAtomLookup } from '../utils/static-atoms.util.ts';
 import { markAsked, markShown } from '../utils/tree-visible-span.util.ts';
 
 /**
@@ -26,8 +25,8 @@ export class PackagesTree {
   private readonly views = new ModelViews(resolveTool);
   private readonly viewOf: ModelViewsOf = (model, scriptsShown, live) => this.views.of(model, scriptsShown, live);
   private readonly toolOfCommand: ToolLookup = (pkg, singlePackage, command) => this.views.toolOf(pkg, singlePackage, command);
-  private readonly atomsOf: AtomLookup = staticAtomLookup((root) => this.store.get(root)?.state.model ?? null);
   private readonly refresher: TreeRefresher;
+  private readonly atoms: AtomTree;
   private mode: TreeMode;
   private icons: IconsMode;
   private scopeShown = false;
@@ -41,6 +40,7 @@ export class PackagesTree {
     const rowContext = (): RowContext => this.rowContext();
 
     this.refresher = new TreeRefresher({ store, cache: this.cache, fire: ports.fire, rowContext });
+    this.atoms = new AtomTree(store, this.cache, ports);
   }
 
   /** No node: the single root's rows, or one node per root. A root's rows wait for its first answer (spec §4.3). */
@@ -52,6 +52,8 @@ export class PackagesTree {
     const entry = this.store.get(node.root);
 
     if (entry === undefined) return [];
+
+    this.atoms.childrenRequested(node);
 
     const context = this.rowContext();
     const rows = childRowsOf(entry.state, node, context);
@@ -70,6 +72,7 @@ export class PackagesTree {
   }
 
   public refreshFor(change: RootChange): void {
+    this.atoms.modelChanged(change);
     this.refresher.refreshFor(change);
   }
 
@@ -103,17 +106,29 @@ export class PackagesTree {
     this.redraw();
   }
 
-  /** After roots were added or removed: redraws the whole tree and forgets the nodes of a removed root. */
+  /** After roots were added or removed: a removed root loses its Atomizer loads and its nodes, then the whole tree redraws. */
   public rootsChanged(): void {
+    this.atoms.rootsChanged();
     this.redraw();
   }
 
   public runChanged(entry: RunEntry): void {
     this.refresher.runChanged(entry);
+    this.atoms.runChanged(entry);
   }
 
   public refreshTasks(running: RunningTasks): void {
     this.refresher.refreshTasks(running);
+  }
+
+  /** The Refresh command: every Atomizer package loaded so far loads again; one never opened stays unloaded. */
+  public refreshAtoms(): void {
+    this.atoms.refreshAll();
+  }
+
+  /** Aborts the pending Atomizer loads; none of them redraws anything afterwards. */
+  public dispose(): void {
+    this.atoms.dispose();
   }
 
   private rowContext(): RowContext {
@@ -127,7 +142,7 @@ export class PackagesTree {
       live: runningIds,
       now: wallNow(),
       tools: this.toolOfCommand,
-      atoms: this.atomsOf
+      atoms: this.atoms.view
     };
 
     return context;
