@@ -25,27 +25,29 @@ const atomGroupsOf = (state: GraphState): GraphAtomGroup[] => {
   return state.atomGroups;
 };
 
-describe('FEATURE: graph state of a model with an Atomizer group', () => {
-  const state = graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB);
+describe('FEATURE: graph state of an Atomizer model', () => {
+  describe('GIVEN a model with one Atomizer group', () => {
+    const state = graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB);
 
-  it('WHEN the state is built THEN atomGroups holds the group with its files in spec path order', () => {
-    const fileA: GraphAtomFile = { id: ATOM_FILE_A_TASK_STUB.id, specPath: 'tests/a.spec.ts', isLive: false };
-    const fileB: GraphAtomFile = { id: ATOM_FILE_B_TASK_STUB.id, specPath: 'tests/b fails.spec.ts', isLive: true };
-    const files = [fileA, fileB];
-    const group: GraphAtomGroup = { umbrellaId: ATOM_UMBRELLA_TASK_STUB.id, files };
+    it('WHEN the state is built THEN atomGroups holds the group with its files in spec path order', () => {
+      const fileA: GraphAtomFile = { id: ATOM_FILE_A_TASK_STUB.id, specPath: 'tests/a.spec.ts', isLive: false };
+      const fileB: GraphAtomFile = { id: ATOM_FILE_B_TASK_STUB.id, specPath: 'tests/b fails.spec.ts', isLive: true };
+      const files = [fileA, fileB];
+      const group: GraphAtomGroup = { umbrellaId: ATOM_UMBRELLA_TASK_STUB.id, files };
 
-    expect(atomGroupsOf(state)).toStrictEqual([group]);
-  });
+      expect(atomGroupsOf(state)).toStrictEqual([group]);
+    });
 
-  it('WHEN the state is built THEN the package taskCount still counts the aggregate', () => {
-    const packages = packagesOf(state);
+    it('WHEN the state is built THEN the package taskCount still counts the aggregate', () => {
+      const packages = packagesOf(state);
 
-    expect(packages.find((pkg) => pkg.name === '@fx/e2e')?.taskCount).toBe(2);
-  });
+      expect(packages.find((pkg) => pkg.name === '@fx/e2e')?.taskCount).toBe(2);
+    });
 
-  it('WHEN the run ids of the root are read THEN they are the task ids then the file ids', () => {
-    const root = { ...ROOT_STATE_STUB, model: GRAPH_ATOM_MODEL_STUB };
+    it('WHEN the run ids of the root are read THEN they are the task ids then the file ids', () => {
+      const root = { ...ROOT_STATE_STUB, model: GRAPH_ATOM_MODEL_STUB };
 
-    expect(runIdsOfRoot(root)).toStrictEqual([...TASK_IDS, ATOM_FILE_A_TASK_STUB.id, ATOM_FILE_B_TASK_STUB.id]);
+      expect(runIdsOfRoot(root)).toStrictEqual([...TASK_IDS, ATOM_FILE_A_TASK_STUB.id, ATOM_FILE_B_TASK_STUB.id]);
+    });
   });
 });
