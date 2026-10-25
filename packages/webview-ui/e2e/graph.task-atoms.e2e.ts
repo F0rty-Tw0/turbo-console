@@ -1,5 +1,6 @@
 import { test } from './graph-task.fixture.ts';
 import { THEME_HC_STUB } from './test/stubs/graph-theme.stub.ts';
+import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import type { GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../src/bridge/common/graph-state.type.ts';
@@ -63,6 +64,8 @@ const SKIPPED_STATE = { counts: '10 files · 9 cached', files: SKIPPED_FILES };
 const SKIPPED_GROUPS = { [TARGET_LIKE_UMBRELLA]: SKIPPED_STATE };
 
 const SHOWN_POST = [TARGET_LIKE_UMBRELLA];
+
+const PACKAGE_NAMES = stateNamesOf(targetLikeTasksState());
 
 test.describe('FEATURE: graph task mode with an Atomizer group', () => {
   test(
@@ -255,6 +258,27 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
       await test.step('AND a task node is dragged', async (): Promise<void> => graphCanvas.dragNode('feat-1#build', 60, 60));
 
       await test.step('THEN no node moved', async (): Promise<void> => graphTaskProbe.expectTaskPositions(expanded));
+    }
+  );
+
+  test(
+    'GIVEN the umbrella chosen and its group expanded, leaving task mode lets a package node be dragged',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, graphCanvas, graphProbe, graphTask, openUmbrella }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND the umbrella is double tapped', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('AND its files are drawn', async (): Promise<void> => graphAtoms.expectFilesDrawn(FILE_IDS, true));
+
+      await test.step('AND Task mode is pressed', async (): Promise<void> => graphTask.toggle());
+
+      await test.step('AND the package nodes are drawn', async (): Promise<void> => graphProbe.expectNodeIds(PACKAGE_NAMES));
+
+      await test.step('AND a package node is dragged by 60 px right and 40 px down', async (): Promise<void> =>
+        graphCanvas.dragNode('feat-1', 60, 40));
+
+      await test.step('THEN the posted positions moved it by the drag', async (): Promise<void> => graphCanvas.expectDragPosted());
     }
   );
 });
