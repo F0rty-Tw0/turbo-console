@@ -132,6 +132,7 @@ const controller = createGraphController({
   runner,
   saver,
   sizeOf: labelSizer(measure),
+  taskSizeOf: labelSizer(measure),
   measure,
   now,
   build: buildControls,

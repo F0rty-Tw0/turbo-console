@@ -39,9 +39,9 @@ const outcomeRuleOf = (className: string, color: string): StylesheetJsonBlock =>
   return rule;
 };
 
-/** A task's run state as an outline outside its frame, so it never hides the selection border. */
+/** A task's run state as a 2 px outline at its frame, as wide as a file's outcome outline; the run rule wins over it by stylesheet order. */
 const runRuleOf = (colors: ThemeColors, state: GraphRunState): StylesheetJsonBlock => {
-  const style = { 'outline-color': colors.runs[state], 'outline-width': 3, 'outline-offset': 2 };
+  const style = { 'outline-color': colors.runs[state], 'outline-width': 2, 'outline-offset': 0 };
   const rule: StylesheetJsonBlock = { selector: `node.${RUN_CLASS_PREFIX}${state}`, style };
 
   return rule;

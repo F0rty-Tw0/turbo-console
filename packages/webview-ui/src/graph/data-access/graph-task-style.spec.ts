@@ -130,12 +130,11 @@ describe('FEATURE: taskRulesOf Atomizer files and boxes in graphStyleOf', () => 
     expect(file.style('outline-color')).toBe(rgb);
   });
 
-  it('GIVEN a failed atom file that is running THEN it shows the 3 wide run outline, not the outcome one', () => {
+  it('GIVEN a failed atom file that is running THEN the run colour wins over the outcome one', () => {
     const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
 
     file.addClass('atom-failed run-running');
 
-    expect(file.numericStyle('outline-width')).toBe(3);
     expect(file.style('outline-color')).toBe('rgb(255,255,0)');
   });
 
@@ -207,13 +206,13 @@ describe('FEATURE: taskRulesOf task nodes in graphStyleOf', () => {
     expect(cy.getElementById('web#build').numericStyle('outline-width')).toBe(0);
   });
 
-  it.each(RUN_OUTLINES)('GIVEN a task classed run-%s THEN it has a 3 wide outline 2 out in %s', (state, rgb) => {
+  it.each(RUN_OUTLINES)('GIVEN a task classed run-%s THEN it has a 2 wide outline 0 out in %s', (state, rgb) => {
     const node = cy.getElementById('web#build');
 
     node.addClass(`run-${state}`);
 
-    expect(node.numericStyle('outline-width')).toBe(3);
-    expect(node.numericStyle('outline-offset')).toBe(2);
+    expect(node.numericStyle('outline-width')).toBe(2);
+    expect(node.numericStyle('outline-offset')).toBe(0);
     expect(node.style('outline-color')).toBe(rgb);
   });
 });

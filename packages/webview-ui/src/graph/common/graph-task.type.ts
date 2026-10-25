@@ -83,6 +83,8 @@ export type TaskModeDeps = {
   readonly view: TaskView;
   readonly runner: LayoutRunner;
   readonly sizeOf: NodeSizer;
+  /** Sizes plain text, the umbrella counts line. */
+  readonly textSizeOf: NodeSizer;
   readonly bridge: Bridge;
   readonly screen: LayoutScreen;
   readonly modes: TaskModes;

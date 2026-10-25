@@ -37,7 +37,7 @@ const CACHED_OUTCOME = { width: 2, colour: 'rgb(177, 128, 215)' };
 const PASSED_OUTCOME = { width: 2, colour: 'rgb(115, 201, 145)' };
 
 /** The high contrast stub's `--vscode-charts-yellow`, the running outline. */
-const RUNNING_OUTLINE = { width: 3, colour: 'rgb(255, 211, 112)' };
+const RUNNING_OUTLINE = { width: 2, colour: 'rgb(255, 211, 112)' };
 
 /** 10 files make 4 columns: (4 x 96 + 3 x 8) + 2 x 12 wide, and 3 rows: umbrella + 8 + (3 x 20 + 2 x 8) + 2 x 12 tall. */
 const BOX_WIDTH = 432;

@@ -86,6 +86,12 @@ export type PackageSaver = {
 
 export type NodeSizer = (name: string) => NodeSize;
 
+/** What sizes an umbrella: `name` its task name line, `counts` its counts line. */
+export type UmbrellaSizers = {
+  readonly name: NodeSizer;
+  readonly counts: NodeSizer;
+};
+
 /** The raw width of `text` in the label font, in px, no padding. */
 export type TextMeasure = (text: string) => number;
 
@@ -179,6 +185,8 @@ export type GraphControllerDeps = {
   readonly runner: LayoutRunner;
   readonly saver: ViewStateSaver;
   readonly sizeOf: NodeSizer;
+  /** Sizes task names; the package graph keeps `sizeOf`. */
+  readonly taskSizeOf: NodeSizer;
   /** What a collapsed folder's title is cut to fit with. */
   readonly measure: TextMeasure;
   readonly now: () => number;

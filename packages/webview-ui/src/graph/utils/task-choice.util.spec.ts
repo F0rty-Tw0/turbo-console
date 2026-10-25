@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { umbrellaSizeOf } from './atom-size.util.ts';
 import { taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import { choiceOf, droppedNoticeOf, matchesTaskSearch, packageTaskIdsOf, requestOf, taskDepthOf } from './task-choice.util.ts';
-import type { NodeSizer } from '../common/graph-page.type.ts';
+import type { NodeSizer, UmbrellaSizers } from '../common/graph-page.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 import { GRAPH_TASK_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -16,6 +16,8 @@ const sizer: NodeSizer = (text) => {
 
   return size;
 };
+
+const SIZERS: UmbrellaSizers = { name: sizer, counts: sizer };
 
 const NO_COUNTS = new Map<string, number>();
 
@@ -68,7 +70,7 @@ describe('FEATURE: task choice rules', () => {
 
   describe('GIVEN the shown set web#build and api#build', () => {
     it('WHEN the request is made THEN it holds those tasks in the task list order under their layout key', () => {
-      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, NO_COUNTS, sizer);
+      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, NO_COUNTS, SIZERS);
       const ids = request.tasks.map((task) => task.id);
 
       expect(ids).toStrictEqual(['api#build', 'web#build']);
@@ -76,33 +78,33 @@ describe('FEATURE: task choice rules', () => {
     });
 
     it('WHEN a shown umbrella’s file count changes THEN the key changes', () => {
-      const ten = requestOf(TASK_CHAIN_STUB, SHOWN_SET, UMBRELLA_COUNTS, sizer);
-      const eleven = requestOf(TASK_CHAIN_STUB, SHOWN_SET, new Map([['web#build', 11]]), sizer);
+      const ten = requestOf(TASK_CHAIN_STUB, SHOWN_SET, UMBRELLA_COUNTS, SIZERS);
+      const eleven = requestOf(TASK_CHAIN_STUB, SHOWN_SET, new Map([['web#build', 11]]), SIZERS);
 
       expect(eleven.key).not.toBe(ten.key);
     });
 
     it('WHEN a shown task is an umbrella THEN its key differs from today’s', () => {
-      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, UMBRELLA_COUNTS, sizer);
+      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, UMBRELLA_COUNTS, SIZERS);
 
       expect(request.key).not.toBe(taskLayoutKeyOf(TASK_CHAIN_STUB, request.shown, NO_COUNTS));
     });
 
     it('WHEN a shown task is an umbrella THEN sizes holds umbrellaSizeOf for it and no other id', () => {
-      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, UMBRELLA_COUNTS, sizer);
+      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, UMBRELLA_COUNTS, SIZERS);
 
-      expect([...request.sizes]).toStrictEqual([['web#build', umbrellaSizeOf(sizer, 'build', 10)]]);
+      expect([...request.sizes]).toStrictEqual([['web#build', umbrellaSizeOf(SIZERS, 'build', 10)]]);
     });
 
     it('WHEN the only umbrella is not shown THEN the key is today’s key', () => {
-      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, new Map([['web#lint', 10]]), sizer);
+      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, new Map([['web#lint', 10]]), SIZERS);
       const drawn = TASK_CHAIN_STUB.filter((task) => request.shown.has(task.id));
 
       expect(request.key).toBe(taskLayoutKeyOf(drawn, request.shown, NO_COUNTS));
     });
 
     it('WHEN the only umbrella is not shown THEN no task has a size', () => {
-      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, new Map([['web#lint', 10]]), sizer);
+      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, new Map([['web#lint', 10]]), SIZERS);
 
       expect(request.sizes.size).toBe(0);
     });
