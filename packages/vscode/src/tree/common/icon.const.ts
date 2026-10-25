@@ -15,7 +15,7 @@ export const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' }
 
 export const FAILED_ICON: IconSpec = { id: 'error', color: 'testing.iconFailed' };
 
-export const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'disabledForeground' };
+export const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'descriptionForeground' };
 
 /** Spec 1c-a §4.5 task-kind icons: below every run-state icon, above the idle wrench. */
 export const CONTINUOUS_IDLE_ICON: IconSpec = { id: 'server-process', color: null };

@@ -1,7 +1,7 @@
 import type { NodeStates } from './common/graph.type.ts';
 import { expect, test } from './graph-task.fixture.ts';
 import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
-import { THEME_HC_STUB } from './test/stubs/graph-theme.stub.ts';
+import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import type { GraphWebviewMessage } from '../src/bridge/common/graph-message.type.ts';
 import type { GraphReady, Position } from '../src/bridge/common/graph-state.type.ts';
@@ -21,6 +21,16 @@ const LIB_SET = ['app#build', 'lib#build', 'lib#test', 'ui#build'];
 
 /** The high contrast stub's `--vscode-testing-iconFailed`, `#f48771`, as Cytoscape reports it. */
 const FAILED_RGB = 'rgb(244, 135, 113)';
+
+/**
+ * Each stub's `--vscode-descriptionForeground` as Cytoscape reports it. The dark and high contrast stubs' old
+ * `--vscode-disabledForeground` differs; the light one reads the same once Cytoscape drops its alpha.
+ */
+const STOPPED_THEMES = [
+  { name: 'light', stub: THEME_LIGHT_STUB, stopped: 'rgb(97, 97, 97)' },
+  { name: 'dark', stub: THEME_DARK_STUB, stopped: 'rgb(157, 157, 157)' },
+  { name: 'high contrast', stub: THEME_HC_STUB, stopped: 'rgb(255, 255, 255)' }
+];
 
 const RUN_APP: GraphWebviewMessage = { type: 'runTask', taskId: 'app#build', noCache: false };
 
@@ -81,6 +91,39 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
           graphTaskProbe.expectRunOutline('app#build', null));
       }
     );
+
+    for (const { name, stub, stopped } of STOPPED_THEMES) {
+      test(
+        `a stopped app#build is outlined in the ${name} theme description colour`,
+        { annotation: RUNS },
+        async ({ graphLook, graphTaskHost, graphTaskProbe }): Promise<void> => {
+          await test.step(`WHEN the ${name} theme applies and app#build stopped`, async (): Promise<void> => {
+            await graphLook.applyTheme(stub);
+            await graphTaskHost.sendRuns({ 'app#build': 'stopped' });
+          });
+
+          await test.step('THEN app#build has a 3 wide outline in the description colour', async (): Promise<void> =>
+            graphTaskProbe.expectRunOutline('app#build', { width: 3, colour: stopped }));
+        }
+      );
+    }
+
+    for (const { name, stub, stopped } of STOPPED_THEMES) {
+      test(
+        `the panel of a stopped app#build paints its icon in the ${name} theme description colour`,
+        { annotation: RUNS },
+        async ({ graphCanvas, graphLook, graphTaskDetails, graphTaskHost }): Promise<void> => {
+          await test.step(`WHEN the ${name} theme applies and app#build stopped and is tapped`, async (): Promise<void> => {
+            await graphLook.applyTheme(stub);
+            await graphTaskHost.sendRuns({ 'app#build': 'stopped' });
+            await graphCanvas.tapNode('app#build');
+          });
+
+          await test.step('THEN the run state icon has the description colour', async (): Promise<void> =>
+            graphTaskDetails.expectStateIconColour('stopped', stopped));
+        }
+      );
+    }
 
     test(
       'the panel of app#build posts Run, Run without cache and, once running, Stop, and a dependency button selects lib#build',

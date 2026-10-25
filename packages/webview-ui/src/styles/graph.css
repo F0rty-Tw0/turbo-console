@@ -188,7 +188,7 @@ p {
 }
 
 .task-run-state[data-state='stopped'] .codicon {
-  color: var(--vscode-disabledForeground);
+  color: var(--vscode-descriptionForeground);
 }
 
 .task-run-state[data-state='failed-to-start'] .codicon {

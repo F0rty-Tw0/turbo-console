@@ -19,7 +19,7 @@ const IDLE_ICON: IconSpec = { id: 'tools', color: null };
 const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
 const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 const FAILED_ICON: IconSpec = { id: 'error', color: 'testing.iconFailed' };
-const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'disabledForeground' };
+const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'descriptionForeground' };
 
 const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
 const MISS_MATCH: RunMatch = { cache: 'MISS', durationMs: 3200 };
@@ -142,7 +142,7 @@ describe('FEATURE: task item display of a turbo task', () => {
   });
 
   describe('GIVEN a task the user stopped', () => {
-    it('WHEN it has an end time THEN it shows the dimmed stop icon and stopped with the time from click to end', () => {
+    it('WHEN it has an end time THEN it shows the stop icon and stopped with the time from click to end', () => {
       const entry = entryIn({
         state: 'stopped',
         stopRequested: true,
