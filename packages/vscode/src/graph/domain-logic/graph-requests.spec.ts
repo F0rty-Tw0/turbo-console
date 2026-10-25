@@ -1,11 +1,10 @@
-import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
+import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 import type { GraphState } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
 import { isRequestMessage, requestHandledOf } from './graph-requests.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
-import { TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphRequestMessage, RequestContext } from '../common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import {
@@ -17,6 +16,7 @@ import {
 } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
 import { atomsFake } from '../test/utils/graph-feeds.spec.util.ts';
+import { smokeGroupTasksOf } from '../test/utils/graph-model.spec.util.ts';
 import { graphStateOf } from '../utils/graph-state.util.ts';
 
 const ERROR_STATE: GraphState = { kind: 'error', message: 'failed' };
@@ -27,24 +27,11 @@ const OPEN_WEB: GraphRequestMessage = { type: 'openDetails', packageName: 'web' 
 const OPEN_GONE: GraphRequestMessage = { type: 'openDetails', packageName: 'gone' };
 const RUN_A_BUILD: GraphRequestMessage = { type: 'runTask', taskId: 'a#build', noCache: false };
 const STOP_A_BUILD: GraphRequestMessage = { type: 'stopTask', taskId: 'a#build' };
-const SMOKE_ATOM: NonNullable<TaskNode['atom']> = { group: 'smoke', isLive: false };
-const SMOKE_UMBRELLA: TaskNode = {
-  ...TASK_NODE_STUB,
-  id: '@fx/e2e#smoke',
-  name: 'smoke',
-  kind: 'atom-umbrella',
-  atom: SMOKE_ATOM
-};
-const SMOKE_FILE: TaskNode = {
-  ...TASK_NODE_STUB,
-  id: '@fx/e2e#smoke--x.spec.ts',
-  name: 'smoke--x.spec.ts',
-  kind: 'atom-file',
-  atom: SMOKE_ATOM
-};
+const SMOKE_TASKS = smokeGroupTasksOf(ATOM_E2E_PACKAGE_STUB.name);
+const [SMOKE_UMBRELLA] = SMOKE_TASKS;
 const TWO_GROUP_PACKAGE: PackageNode = {
   ...ATOM_E2E_PACKAGE_STUB,
-  tasks: [...ATOM_E2E_PACKAGE_STUB.tasks, SMOKE_UMBRELLA, SMOKE_FILE]
+  tasks: [...ATOM_E2E_PACKAGE_STUB.tasks, ...SMOKE_TASKS]
 };
 const TWO_GROUP_MODEL: WorkspaceModel = { ...GRAPH_ATOM_MODEL_STUB, packages: [TWO_GROUP_PACKAGE] };
 const TWO_GROUP_STATE = graphStateOf(TWO_GROUP_MODEL, NO_LAYOUT_CACHES_STUB);

@@ -14,6 +14,7 @@ import {
   ATOM_UMBRELLA_TASK_STUB,
   GRAPH_ATOM_MODEL_STUB
 } from '../test/stubs/graph-atom-model.stub.ts';
+import { smokeGroupTasksOf } from '../test/utils/graph-model.spec.util.ts';
 
 const P_BUILD: TaskNode = { ...TASK_NODE_STUB, id: 'p#build', dependencies: ['p#dev', 'p#f'] };
 const P_DEV: TaskNode = { ...TASK_NODE_STUB, id: 'p#dev', name: 'dev', command: 'vite', isTurboTask: false };
@@ -60,21 +61,8 @@ const LISTED: string[] = [A_BUILD.id];
 const UMBRELLA_ID = ATOM_UMBRELLA_TASK_STUB.id;
 const FILE_A = ATOM_FILE_A_TASK_STUB.id;
 const FILE_B = ATOM_FILE_B_TASK_STUB.id;
-const SMOKE_ATOM: NonNullable<TaskNode['atom']> = { group: 'smoke', isLive: false };
-const SMOKE_UMBRELLA: TaskNode = {
-  ...TASK_NODE_STUB,
-  id: '@fx/a#smoke',
-  name: 'smoke',
-  kind: 'atom-umbrella',
-  atom: SMOKE_ATOM
-};
-const SMOKE_FILE: TaskNode = {
-  ...TASK_NODE_STUB,
-  id: '@fx/a#smoke--x.spec.ts',
-  name: 'smoke--x.spec.ts',
-  kind: 'atom-file',
-  atom: SMOKE_ATOM
-};
+const SMOKE_TASKS = smokeGroupTasksOf('@fx/a');
+const [SMOKE_UMBRELLA] = SMOKE_TASKS;
 
 const taskNamed = (tasks: GraphTask[], id: string): GraphTask | undefined => tasks.find((task) => task.id === id);
 
@@ -178,7 +166,7 @@ describe('FEATURE: graph listing of atom groups', () => {
 
   describe('GIVEN two groups in two packages', () => {
     it('WHEN listed THEN atomGroups is sorted by umbrella id', () => {
-      const smoke = packageOf('@fx/a', [SMOKE_UMBRELLA, SMOKE_FILE]);
+      const smoke = packageOf('@fx/a', SMOKE_TASKS);
 
       const listing = graphListingOf(modelOf(ATOM_E2E_PACKAGE_STUB, smoke));
 
