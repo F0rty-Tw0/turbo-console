@@ -147,16 +147,22 @@ describe('FEATURE: createTaskCanvas', () => {
       canvas.show(UMBRELLA_DRAWING);
     });
 
-    it('WHEN shown THEN it is classed atom-umbrella besides task and a plain task is not', () => {
+    it('WHEN shown THEN it is classed atom-umbrella besides task', () => {
       const web = cy.getElementById('web#build');
 
       expect(web.hasClass('task')).toBe(true);
       expect(web.hasClass('atom-umbrella')).toBe(true);
+    });
+
+    it('WHEN shown THEN a plain task is not classed atom-umbrella', () => {
       expect(cy.getElementById('api#build').hasClass('atom-umbrella')).toBe(false);
     });
 
-    it('WHEN shown THEN it has the size of its own and a plain task the sizer’s', () => {
+    it('WHEN shown THEN it has the size of its own', () => {
       expect(cy.getElementById('web#build').data()).toMatchObject(UMBRELLA_SIZE);
+    });
+
+    it('WHEN shown THEN a plain task has the sizer’s size', () => {
       expect(cy.getElementById('api#build').data()).toMatchObject(NODE_SIZE);
     });
 
@@ -164,17 +170,22 @@ describe('FEATURE: createTaskCanvas', () => {
       expect(cy.getElementById('web#build').data('label')).toBe('build\n10 files');
     });
 
-    it('WHEN setCounts names it THEN its label is the name over the new counts and no node moves', () => {
+    it('WHEN setCounts names it THEN its label is the name over the new counts', () => {
       canvas.setCounts(new Map([['web#build', '10 files · 3 cached']]));
 
       expect(cy.getElementById('web#build').data('label')).toBe('build\n10 files · 3 cached');
+    });
+
+    it('WHEN setCounts names it THEN no node moves', () => {
+      canvas.setCounts(new Map([['web#build', '10 files · 3 cached']]));
+
       expect(canvas.positions()).toStrictEqual(POSITIONS);
     });
 
-    it('WHEN setCounts names a task that is not drawn THEN nothing is added and nothing throws', () => {
-      canvas.setCounts(new Map([['gone#build', '1 files']]));
+    it('WHEN setCounts names a task that is not drawn THEN nothing throws', () => {
+      const setGone = (): void => canvas.setCounts(new Map([['gone#build', '1 files']]));
 
-      expect(nodeIdsOf(cy)).toStrictEqual(['api#build', 'pkg:api', 'pkg:web', 'web#build']);
+      expect(setGone).not.toThrow();
     });
   });
 

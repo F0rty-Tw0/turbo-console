@@ -176,10 +176,9 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
   const setCounts = (labels: ReadonlyMap<string, string>): void => {
     const countNode = (counts: string, id: string): void => {
       const node = cy.getElementById(id);
-      const isDrawn = node.nonempty();
       const name: unknown = node.data('name');
 
-      if (isDrawn) node.data('label', labelOf(String(name), counts));
+      node.data('label', labelOf(String(name), counts));
     };
 
     cy.batch((): void => labels.forEach(countNode));
