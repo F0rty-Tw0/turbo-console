@@ -109,6 +109,38 @@ const WITHOUT_TASKS = {
   atomGroups: []
 };
 
+const WITHOUT_ATOM_GROUPS = {
+  kind: 'graph',
+  hash: 'h',
+  packages: PACKAGES,
+  edges: EDGES,
+  positions: null,
+  folderPositions: null,
+  tasks: []
+};
+
+const ATOM_FILE = { id: 'app#e2e-ci--a.spec.ts', specPath: 'a.spec.ts', isLive: true };
+
+const ATOM_FILES = [ATOM_FILE];
+
+const ATOM_GROUPS = [{ umbrellaId: 'app#e2e-ci', files: ATOM_FILES }];
+
+const FAILED_FILES = { [ATOM_FILE.id]: 'failed' };
+
+const ATOM_STATE = { counts: '1 files', files: FAILED_FILES };
+
+const ATOM_STATES = { 'app#e2e-ci': ATOM_STATE };
+
+const NO_IS_LIVE_FILES = [{ id: 'f', specPath: 'p' }];
+
+const NO_IS_LIVE_GROUPS = [{ umbrellaId: 'u', files: NO_IS_LIVE_FILES }];
+
+const SKIPPED_FILES = { f: 'skipped' };
+
+const SKIPPED_STATE = { counts: '1 files', files: SKIPPED_FILES };
+
+const SKIPPED_STATES = { u: SKIPPED_STATE };
+
 const LOADING = { kind: 'loading' };
 
 const ERROR = { kind: 'error', message: 'x' };
@@ -145,6 +177,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['graph with cached folder positions', { ...GRAPH, folderPositions: POSITIONS }],
       ['graph whose packages are named like Object members', { ...GRAPH, packages: OBJECT_NAMES }],
       ['graph with tasks', { ...GRAPH, tasks: TASKS }],
+      ['graph with an atom group', { ...GRAPH, atomGroups: ATOM_GROUPS }],
       ['graph with a root package at the empty path', { ...GRAPH, packages: ROOT_PACKAGES }],
       ['graph whose packages have taskCount 0 and 100 000', { ...GRAPH, packages: EXTREME_TASK_COUNT_PACKAGES }]
     ])('WHEN its state is %s THEN it is accepted', (_name, state) => {
@@ -193,6 +226,17 @@ describe('FEATURE: isGraphHostMessage', () => {
     });
   });
 
+  describe('GIVEN an atoms message', () => {
+    it.each([
+      ['no groups', {}],
+      ['a group with a failed file', ATOM_STATES]
+    ])('WHEN it has %s THEN it is accepted', (_name, groups) => {
+      const isMessage = isGraphHostMessage({ type: 'atoms', groups });
+
+      expect(isMessage).toBe(true);
+    });
+  });
+
   describe('GIVEN anything else', () => {
     it.each([
       ['null', null],
@@ -230,6 +274,11 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with string folder positions', stateMessageOf({ ...GRAPH, folderPositions: 'x' })],
       ['a graph with no folderPositions key', stateMessageOf(WITHOUT_FOLDER_POSITIONS)],
       ['a graph with no tasks key', stateMessageOf(WITHOUT_TASKS)],
+      ['a graph with no atomGroups key', stateMessageOf(WITHOUT_ATOM_GROUPS)],
+      ['a graph with string atomGroups', stateMessageOf({ ...GRAPH, atomGroups: 'x' })],
+      ['a graph with a group whose file has no isLive', stateMessageOf({ ...GRAPH, atomGroups: NO_IS_LIVE_GROUPS })],
+      ['an atoms message with string groups', { type: 'atoms', groups: 'x' }],
+      ['an atoms message with an outcome outside the four', { type: 'atoms', groups: SKIPPED_STATES }],
       ['a graph with string tasks', stateMessageOf({ ...GRAPH, tasks: 'x' })],
       ['a graph with a null task', stateMessageOf({ ...GRAPH, tasks: [null] })],
       ['a graph with a numeric task id', graphWithTaskOf({ id: 1 })],

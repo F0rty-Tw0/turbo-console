@@ -1,5 +1,5 @@
 import { isEdgeExplained } from './edge-explained.util.ts';
-import { isGraphTaskList, isRunsRecord, isTaskIdList } from './graph-task-shape.util.ts';
+import { isAtomGroupList, isAtomStateRecord, isGraphTaskList, isRunsRecord, isTaskIdList } from './graph-task-shape.util.ts';
 import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { GraphHostMessage } from '../../bridge/common/graph-message.type.ts';
@@ -24,17 +24,23 @@ const isPackage = (value: unknown): boolean => {
   return isString(name) && isString(path) && hasTags && hasTaskCount;
 };
 
+const hasCachesOf = (state: UnknownRecord): boolean => {
+  const { positions, folderPositions } = state;
+  const hasPositions = positions === null || isRecord(positions);
+  const hasFolderPositions = folderPositions === null || isRecord(folderPositions);
+
+  return hasPositions && hasFolderPositions;
+};
+
 const isGraphShape = (state: UnknownRecord): boolean => {
-  const { hash, packages, edges, positions, folderPositions, tasks } = state;
+  const { hash, packages, edges, tasks, atomGroups } = state;
   const hasHash = typeof hash === 'string';
   const hasPackages = Array.isArray(packages) && packages.every(isPackage);
   const hasEdges = Array.isArray(edges) && edges.every(isEdge);
-  const hasPositions = positions === null || isRecord(positions);
-  const hasFolderPositions = folderPositions === null || isRecord(folderPositions);
-  const hasCaches = hasPositions && hasFolderPositions;
   const hasGraph = hasHash && hasPackages && hasEdges;
+  const hasTasks = isGraphTaskList(tasks) && isAtomGroupList(atomGroups);
 
-  return hasGraph && hasCaches && isGraphTaskList(tasks);
+  return hasGraph && hasCachesOf(state) && hasTasks;
 };
 
 const isGraphState = (state: unknown): boolean => {
@@ -55,9 +61,10 @@ const isGraphState = (state: unknown): boolean => {
 
 /**
  * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, path, tags and task
- * count, each edge end and each task's fields; to an `edgeExplained` message by its names and result; to a `runs` message by its
- * run states; or to a `showTasks` message by its task ids. Anything else is ignored. The payload itself comes from the extension
- * host, which builds it.
+ * count, each edge end, each task's fields and each atom group's files; to an `edgeExplained` message by its names and
+ * result; to a `runs` message by its run states; to a `showTasks` message by its task ids; or to an `atoms` message by its
+ * counts lines and the four outcome words. Anything else is ignored. The payload itself comes from the extension host,
+ * which builds it.
  */
 export const isGraphHostMessage = (value: unknown): value is GraphHostMessage => {
   if (!isRecord(value)) return false;
@@ -71,6 +78,8 @@ export const isGraphHostMessage = (value: unknown): value is GraphHostMessage =>
       return isRunsRecord(value['runs']);
     case 'showTasks':
       return isTaskIdList(value['taskIds']);
+    case 'atoms':
+      return isAtomStateRecord(value['groups']);
     default:
       return false;
   }
