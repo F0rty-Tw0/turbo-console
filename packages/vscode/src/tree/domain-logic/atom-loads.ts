@@ -1,10 +1,11 @@
 import { atomGroupsOf } from '@turbo-console/core';
 import type { AtomGroup, AtomResult, DryRunRequest, DryRunState, TurboBinary, WorkspaceModel } from '@turbo-console/core';
 
+import { AtomWaits } from './atom-waits.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { AtomLoadPorts } from '../common/atom-load.type.ts';
 import type { AtomCache, AtomLookup, AtomView } from '../common/atom-view.type.ts';
-import { atomFileIds, atomIdsKey } from '../utils/atom-ids.util.ts';
+import { atomFileIds, atomIdsKey, packageAtomIdsKey } from '../utils/atom-ids.util.ts';
 import { staticAtomLookup } from '../utils/static-atoms.util.ts';
 
 type Part = 'dry-run' | 'scan';
@@ -37,25 +38,21 @@ const groupsOf = (model: WorkspaceModel | null): AtomGroup[] => {
   return atomGroupsOf(model);
 };
 
-const idsOf = (groups: AtomGroup[], packageName: string): string => {
-  const own = groups.filter((group) => group.packageName === packageName);
-
-  return atomIdsKey(own);
-};
-
 const umbrellaNameOf = (group: AtomGroup): string => group.umbrella.name;
 
 /**
  * The load of each package's Atomizer rows, one entry per `(root, packageName)`: a dry run and a results scan that settle
  * on their own. No entry is Not loaded; Loading, Loaded and Failed answer every event alike, so an entry holds no state
  * word. Only a children request creates an entry; a run end, a refresh or a model change then restarts or drops it
- * (spec 3.5, 3.6). A result of an aborted or replaced load is dropped before it stores, logs or announces anything.
+ * (spec 3.5, 3.6). A children request that finds no turbo binary waits for the root's next model change (`AtomWaits`).
+ * A result of an aborted or replaced load is dropped before it stores, logs or announces anything.
  */
 export class AtomLoads {
   private readonly ports: AtomLoadPorts;
   private readonly modelOf: (root: string) => WorkspaceModel | null;
   private readonly statics: AtomLookup;
   private readonly entries = new Map<string, LoadEntry>();
+  private readonly waits = new AtomWaits();
 
   public constructor(ports: AtomLoadPorts, modelOf: (root: string) => WorkspaceModel | null) {
     this.ports = ports;
@@ -78,7 +75,13 @@ export class AtomLoads {
   public childrenRequested(root: string, packageName: string): void {
     const isKnown = this.entries.has(keyOf(root, packageName));
 
-    if (!isKnown) this.start(root, packageName);
+    if (isKnown) return;
+
+    const binary = this.ports.binaryOf(root);
+
+    if (binary === null) this.waits.add(root, packageName);
+
+    this.start(root, packageName);
   }
 
   public runEnded(root: string, packageName: string): void {
@@ -91,17 +94,24 @@ export class AtomLoads {
     for (const entry of this.snapshot()) this.start(entry.root, entry.packageName);
   }
 
-  /** An entry whose package kept the same umbrella and file ids keeps its load; any other drops back to Not loaded. */
+  /**
+   * An entry whose package kept the same umbrella and file ids keeps its load; any other drops back to Not loaded. Each
+   * waiting package of `root` asks again; one without groups now is forgotten.
+   */
   public modelChanged(root: string, model: WorkspaceModel | null): void {
     const groups = groupsOf(model);
 
     for (const entry of this.snapshot()) {
       if (entry.root !== root) continue;
 
-      const ids = idsOf(groups, entry.packageName);
+      const ids = packageAtomIdsKey(groups, entry.packageName);
 
       if (ids !== entry.ids) this.drop(entry);
     }
+
+    const retried = this.waits.takeOf(root, groups);
+
+    for (const packageName of retried) this.childrenRequested(root, packageName);
   }
 
   /** A removed root keeps no load: a root added again at the same path starts Not loaded. Nothing is announced for a root that is gone. */
@@ -114,12 +124,15 @@ export class AtomLoads {
       entry.controller.abort();
       this.entries.delete(keyOf(entry.root, entry.packageName));
     }
+
+    this.waits.keep(kept);
   }
 
   public dispose(): void {
     for (const entry of this.entries.values()) entry.controller.abort();
 
     this.entries.clear();
+    this.waits.clear();
   }
 
   /** Does nothing without a turbo binary, a model or a group: the entry, if any, stays as it is. */

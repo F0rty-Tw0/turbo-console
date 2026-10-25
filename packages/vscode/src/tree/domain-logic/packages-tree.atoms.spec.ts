@@ -1,8 +1,8 @@
-import type { WorkspaceModel } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { PackagesTree } from './packages-tree.ts';
+import type { LoadedModel } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
@@ -14,7 +14,7 @@ import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { dryRunAt, dryStateOf, flush, loadsHarness, settleFailed, settleOk } from '../test/utils/atom-load.spec.util.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
-import { expandAll, loadedOf, runOf, umbrellaNodeOf } from '../test/utils/atom-tree.spec.util.ts';
+import { cachedOf, expandAll, loadedOf, runOf, umbrellaNodeOf } from '../test/utils/atom-tree.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 
 describe('FEATURE: packages tree Atomizer loads', () => {
@@ -25,7 +25,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
 
   const children: ChildrenOf = async (node) => tree.children(node);
 
-  const treeOver = (model: WorkspaceModel): void => {
+  const treeOver = (loaded: LoadedModel): void => {
     const atom: AtomHostPorts = { binaryOf: h.binaryOf, dryRun: h.dryRun, results: h.results, log: h.log };
     const ports: TreePorts = {
       runs: () => undefined,
@@ -39,7 +39,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
 
     tree = new PackagesTree(store, 'list', 'builtin', ports);
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
-    store.apply(ROOT, loadedOf(model));
+    store.apply(ROOT, loaded);
   };
 
   beforeEach(() => {
@@ -50,7 +50,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
 
   describe('GIVEN a root holding group e2e-ci of @fx/e2e', () => {
     beforeEach(() => {
-      treeOver(atomModelOf(BASE_SPEC_PATHS));
+      treeOver(loadedOf(atomModelOf(BASE_SPEC_PATHS)));
     });
 
     describe('WHEN the umbrella is opened', () => {
@@ -84,7 +84,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
     let umbrella: TreeNode;
 
     beforeEach(async () => {
-      treeOver(atomModelOf(BASE_SPEC_PATHS));
+      treeOver(loadedOf(atomModelOf(BASE_SPEC_PATHS)));
       umbrella = await umbrellaNodeOf(children);
       await tree.children(umbrella);
       await settle();
@@ -105,7 +105,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
     let umbrella: TreeNode;
 
     beforeEach(async () => {
-      treeOver(atomModelOf(BASE_SPEC_PATHS));
+      treeOver(loadedOf(atomModelOf(BASE_SPEC_PATHS)));
       umbrella = await umbrellaNodeOf(children);
       await tree.children(umbrella);
       fire.mockClear();
@@ -126,11 +126,38 @@ describe('FEATURE: packages tree Atomizer loads', () => {
     });
   });
 
+  describe('GIVEN a restored expanded group of a cached model published before its turbo binary resolved', () => {
+    let umbrella: TreeNode;
+
+    beforeEach(async () => {
+      h.binaryOf.mockImplementation((root) => store.get(root)?.state.binary ?? null);
+      treeOver(cachedOf(atomModelOf(BASE_SPEC_PATHS)));
+      store.onDidChange((change) => {
+        tree.refreshFor(change);
+      });
+      umbrella = await umbrellaNodeOf(children);
+      await tree.children(umbrella);
+      fire.mockClear();
+      store.apply(ROOT, loadedOf(atomModelOf(BASE_SPEC_PATHS)));
+    });
+
+    it('WHEN the same model is published again with its binary THEN one dry run starts', () => {
+      expect(h.dryRun).toHaveBeenCalledExactlyOnceWith(TURBO_BINARY_STUB, expect.anything(), expect.any(AbortSignal));
+    });
+
+    it('WHEN that dry run settles THEN the umbrella node the tree listed fires once', async () => {
+      dryRunAt(h, 0).resolve([dryStateOf(FILE_A, 'HIT')]);
+      await flush();
+
+      expect(fire.mock.calls).toStrictEqual([[[umbrella]]]);
+    });
+  });
+
   describe('GIVEN a loaded group e2e-ci of @fx/e2e', () => {
     let umbrella: TreeNode;
 
     beforeEach(async () => {
-      treeOver(atomModelOf(BASE_SPEC_PATHS));
+      treeOver(loadedOf(atomModelOf(BASE_SPEC_PATHS)));
       umbrella = await umbrellaNodeOf(children);
       await tree.children(umbrella);
       await settleOk(h, 0);
@@ -192,7 +219,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
 
   describe('GIVEN a root without Atomizer groups', () => {
     beforeEach(() => {
-      treeOver(WORKSPACE_MODEL_STUB);
+      treeOver(loadedOf(WORKSPACE_MODEL_STUB));
     });
 
     it('WHEN every row is opened THEN no binary is read for a load', async () => {

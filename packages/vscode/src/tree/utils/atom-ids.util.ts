@@ -19,3 +19,10 @@ export const atomIdsKey = (groups: AtomGroup[]): string => {
 
   return ids.toSorted().join(SEPARATOR);
 };
+
+/** `atomIdsKey` of the groups of `packageName` alone. */
+export const packageAtomIdsKey = (groups: AtomGroup[], packageName: string): string => {
+  const own = groups.filter((group) => group.packageName === packageName);
+
+  return atomIdsKey(own);
+};

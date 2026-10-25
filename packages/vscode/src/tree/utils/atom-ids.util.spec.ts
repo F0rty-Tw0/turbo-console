@@ -1,8 +1,8 @@
 import { atomGroupsOf } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { atomFileIds, atomIdsKey } from './atom-ids.util.ts';
-import { FILE_A, FILE_B } from '../test/common/atom-load.const.ts';
+import { atomFileIds, atomIdsKey, packageAtomIdsKey } from './atom-ids.util.ts';
+import { FILE_A, FILE_B, PKG } from '../test/common/atom-load.const.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 
 const BASE_GROUPS = atomGroupsOf(atomModelOf(['tests/a.spec.ts', 'tests/b fails.spec.ts']));
@@ -41,6 +41,18 @@ describe('FEATURE: atom file ids', () => {
   describe('GIVEN no groups', () => {
     it('WHEN listed THEN no id comes back', () => {
       expect(atomFileIds([])).toStrictEqual([]);
+    });
+  });
+});
+
+describe('FEATURE: package atom ids key', () => {
+  describe('GIVEN the groups of package @fx/e2e', () => {
+    it('WHEN keyed by that package THEN the key is the key of its groups', () => {
+      expect(packageAtomIdsKey(BASE_GROUPS, PKG)).toBe(atomIdsKey(BASE_GROUPS));
+    });
+
+    it('WHEN keyed by another package THEN the key is empty', () => {
+      expect(packageAtomIdsKey(BASE_GROUPS, 'a')).toBe('');
     });
   });
 });

@@ -15,6 +15,13 @@ export const loadedOf = (model: WorkspaceModel): LoadedModel => {
   return loaded;
 };
 
+/** The cached load of `model` as a reload publishes it first: read from the cache before the turbo binary resolved. */
+export const cachedOf = (model: WorkspaceModel): LoadedModel => {
+  const cached: LoadedModel = { ...LOADED_MODEL_STUB, binary: null, model, fromCache: true, isFresh: false };
+
+  return cached;
+};
+
 /** The node of `nodes` with `key`; a spec whose row is missing fails here, by name. */
 export const nodeKeyed = (nodes: TreeNode[], key: string): TreeNode => {
   const found = nodes.find((node) => node.key === key);
