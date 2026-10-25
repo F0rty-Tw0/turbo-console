@@ -3,13 +3,19 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import type { GraphRunsMessage, GraphShowTasksMessage, GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
+import type {
+  GraphAtomGroupState,
+  GraphAtomsMessage,
+  GraphRunsMessage,
+  GraphShowTasksMessage,
+  GraphWebviewMessage
+} from '../../src/bridge/common/graph-message.type.ts';
 import type { GraphRunState } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState, TaskViewState } from '../../src/bridge/common/graph-view-state.type.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
 import { postReply } from '../test/utils/graph-host-state.spec.util.ts';
-import { explainEdgePosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
+import { explainEdgePosted, readPosted, shownUmbrellasPosted } from '../test/utils/graph-posted.spec.util.ts';
 
 const isRunPost = (message: GraphWebviewMessage): boolean => message.type === 'runTask' || message.type === 'stopTask';
 
@@ -23,6 +29,12 @@ export class GraphTaskHost {
 
   public async sendRuns(runs: Readonly<Record<string, GraphRunState>>): Promise<void> {
     const message: GraphRunsMessage = { type: 'runs', runs };
+
+    await this.sendRaw(message);
+  }
+
+  public async sendAtoms(groups: Readonly<Record<string, GraphAtomGroupState>>): Promise<void> {
+    const message: GraphAtomsMessage = { type: 'atoms', groups };
 
     await this.sendRaw(message);
   }
@@ -57,6 +69,11 @@ export class GraphTaskHost {
     expect(posts).toEqual([]);
   }
 
+  /** Polls until the ids of the page's `shownUmbrellas` posts, in order, are `expected`. */
+  public async expectShownUmbrellas(expected: string[][]): Promise<void> {
+    await expect.poll(async (): Promise<string[][]> => this.shownUmbrellas()).toEqual(expected);
+  }
+
   /** A frame on, the page has posted no `explainEdge`. */
   public async expectNoExplainPosted(): Promise<void> {
     await this.page.evaluate(NEXT_FRAME);
@@ -72,6 +89,13 @@ export class GraphTaskHost {
 
     await this.page.evaluate(postReply, json);
     await this.page.evaluate(NEXT_FRAME);
+  }
+
+  private async shownUmbrellas(): Promise<string[][]> {
+    const posted = await readPosted(this.page);
+    const messages = shownUmbrellasPosted(posted);
+
+    return messages.map((message) => message.ids);
   }
 
   private async taskPosts(): Promise<GraphWebviewMessage[]> {

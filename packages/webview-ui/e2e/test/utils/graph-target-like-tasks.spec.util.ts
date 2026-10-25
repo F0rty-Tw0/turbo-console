@@ -1,7 +1,7 @@
 import { packagesOf } from './graph-package.spec.util.ts';
 import { targetLikeState } from './graph-target-like.spec.util.ts';
 import { taskSavedState } from './graph-task-saved.spec.util.ts';
-import type { GraphEdge, GraphReady, GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
+import type { GraphAtomFile, GraphAtomGroup, GraphEdge, GraphReady, GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
 
 const DEPENDENT_COUNT = 400;
@@ -99,12 +99,41 @@ const buildOf = (state: GraphReady, packageName: string): GraphTask => {
   return targetLikeTaskOf(packageName, 'build', dependencies);
 };
 
+/** The Atomizer umbrella of `targetLikeTasksState`: `app-1#e2e-ci`, which needs the `build` of `feat-1` and `feat-2`. */
+export const TARGET_LIKE_UMBRELLA = 'app-1#e2e-ci';
+
+const UMBRELLA_DEPENDENCIES = ['feat-1#build', 'feat-2#build'];
+
+/** The spec path of file `position` (0-based), repo-gen's shape: the first is the one live file, `tests/spec-001.live.spec.ts`. */
+const specPathOf = (position: number): string => {
+  const id = String(position + 1).padStart(3, '0');
+  const suffix = position === 0 ? '.live.spec.ts' : '.spec.ts';
+
+  return `tests/spec-${id}${suffix}`;
+};
+
+const atomFileOf = (position: number): GraphAtomFile => {
+  const specPath = specPathOf(position);
+  const file: GraphAtomFile = { id: `${TARGET_LIKE_UMBRELLA}--${specPath}`, specPath, isLive: position === 0 };
+
+  return file;
+};
+
+const umbrellaGroupOf = (fileCount: number): GraphAtomGroup => {
+  const slots = Array.from({ length: fileCount });
+  const files = slots.map((_slot, position) => atomFileOf(position));
+  const group: GraphAtomGroup = { umbrellaId: TARGET_LIKE_UMBRELLA, files };
+
+  return group;
+};
+
 /**
- * `targetLikeState` with 98 tasks (`build`, `test`, `lint`, `typecheck`, `docs`, `pack`, `e2e` per package), hash `7a7a7a7b`.
+ * `targetLikeState` with 99 tasks (`build`, `test`, `lint`, `typecheck`, `docs`, `pack`, `e2e` per package, and the
+ * umbrella `app-1#e2e-ci`), hash `7a7a7a7b`, and the umbrella's group of `fileCount` files, the first live.
  * Each `build` needs the `build` of every package its package needs. `hub#docs` needs only `hub#build`, which needs nothing,
  * and nothing needs `hub#docs`: choosing it shows two tasks joined by one lone edge.
  */
-export const targetLikeTasksState = (): GraphReady => {
+export const targetLikeTasksState = (fileCount = 10): GraphReady => {
   const base = targetLikeState();
   const tasksOf = (pkg: GraphReady['packages'][number]): GraphTask[] => {
     const own = ownTasksOf(pkg.name);
@@ -112,8 +141,11 @@ export const targetLikeTasksState = (): GraphReady => {
 
     return [build, ...own];
   };
-  const tasks = base.packages.flatMap(tasksOf);
-  const state: GraphReady = { ...base, hash: '7a7a7a7b', tasks };
+  const packageTasks = base.packages.flatMap(tasksOf);
+  const umbrella = targetLikeTaskOf('app-1', 'e2e-ci', UMBRELLA_DEPENDENCIES);
+  const tasks = [...packageTasks, umbrella];
+  const atomGroups = [umbrellaGroupOf(fileCount)];
+  const state: GraphReady = { ...base, hash: '7a7a7a7b', tasks, atomGroups };
 
   return state;
 };
