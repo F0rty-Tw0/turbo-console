@@ -80,14 +80,17 @@ const setFileOutcomes = (cy: Core, outcomes: Record<string, GraphAtomOutcome>): 
 /**
  * Shows the whole spec path of a hovered file, whose label is cut short, as the container's native tooltip. Leaving the
  * file or the canvas, or the file's removal on a collapse or redraw, takes the tooltip away so none stays stale.
+ * Cytoscape sends no `mouseover` when the pointer comes back from outside the canvas to the file it left from, so a
+ * `mousemove` on a file shows the tooltip too, writing it only when it differs.
  */
 const titleFilesOn = (cy: Core): void => {
   const fileSelector = `node.${ATOM_FILE_CLASS}`;
   const showTitle = (event: EventObjectNode): void => {
     const specPath: unknown = event.target.data('specPath');
+    const title = String(specPath);
     const container = cy.container();
 
-    container?.setAttribute('title', String(specPath));
+    if (container?.getAttribute('title') !== title) container?.setAttribute('title', title);
   };
   const clearTitle = (): void => {
     const container = cy.container();
@@ -95,7 +98,7 @@ const titleFilesOn = (cy: Core): void => {
     container?.removeAttribute('title');
   };
 
-  cy.on('mouseover', fileSelector, showTitle);
+  cy.on('mouseover mousemove', fileSelector, showTitle);
   cy.on('mouseout', clearTitle);
   cy.on('remove', fileSelector, clearTitle);
 };

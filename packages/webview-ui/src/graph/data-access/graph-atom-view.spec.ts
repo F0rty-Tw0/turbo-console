@@ -236,6 +236,16 @@ describe('FEATURE: createAtomCanvas', () => {
       expect(container.getAttribute('title')).toBe('tests/spec-001.live.spec.ts');
     });
 
+    it('WHEN the pointer leaves the canvas from a file and moves on it again THEN the container title is its spec path', () => {
+      const file = cy.getElementById(FILE_IDS[0] ?? '');
+
+      file.emit('mouseover');
+      cy.emit('mouseout');
+      file.emit('mousemove');
+
+      expect(container.getAttribute('title')).toBe('tests/spec-001.live.spec.ts');
+    });
+
     it.each([
       ['the pointer leaves the file', (): void => void cy.getElementById(SPACED).emit('mouseout')],
       ['the pointer leaves the canvas from the file', (): void => void cy.emit('mouseout')],
