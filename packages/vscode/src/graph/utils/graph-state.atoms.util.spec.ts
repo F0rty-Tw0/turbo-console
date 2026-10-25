@@ -1,4 +1,4 @@
-import type { GraphPackage, GraphState } from '@turbo-console/webview-ui';
+import type { GraphAtomFile, GraphAtomGroup, GraphPackage, GraphState } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { graphStateOf, runIdsOfRoot } from './graph-state.util.ts';
@@ -19,13 +19,22 @@ const packagesOf = (state: GraphState): GraphPackage[] => {
   return state.packages;
 };
 
+const atomGroupsOf = (state: GraphState): GraphAtomGroup[] => {
+  if (state.kind !== 'graph') return [];
+
+  return state.atomGroups;
+};
+
 describe('FEATURE: graph state of a model with an Atomizer group', () => {
   const state = graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB);
 
-  it('WHEN the state is built THEN atomGroups holds the group', () => {
-    const groups = [{ umbrellaId: ATOM_UMBRELLA_TASK_STUB.id }];
+  it('WHEN the state is built THEN atomGroups holds the group with its files in spec path order', () => {
+    const fileA: GraphAtomFile = { id: ATOM_FILE_A_TASK_STUB.id, specPath: 'tests/a.spec.ts', isLive: false };
+    const fileB: GraphAtomFile = { id: ATOM_FILE_B_TASK_STUB.id, specPath: 'tests/b fails.spec.ts', isLive: true };
+    const files = [fileA, fileB];
+    const group: GraphAtomGroup = { umbrellaId: ATOM_UMBRELLA_TASK_STUB.id, files };
 
-    expect(state).toMatchObject({ atomGroups: groups });
+    expect(atomGroupsOf(state)).toStrictEqual([group]);
   });
 
   it('WHEN the state is built THEN the package taskCount still counts the aggregate', () => {
