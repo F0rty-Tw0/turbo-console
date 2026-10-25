@@ -1,7 +1,5 @@
 import { join, relative, win32 } from 'node:path';
 
-import { isWithin } from '@turbo-console/core';
-
 const SEGMENT_SEPARATOR = /[/\\]/;
 
 /** `win32.isAbsolute` also accepts every posix absolute path (`/etc/x`), so one check covers both platforms. */
@@ -10,14 +8,15 @@ const isAbsoluteAnywhere = (specPath: string): boolean => win32.isAbsolute(specP
 const climbs = (specPath: string): boolean => specPath.split(SEGMENT_SEPARATOR).includes('..');
 
 const isBelow = (packageDir: string, path: string): boolean => {
-  const isDir = relative(packageDir, path) === '';
+  const fromPackage = relative(packageDir, path);
+  const isDir = fromPackage === '';
 
-  return isWithin(packageDir, path) && !isDir;
+  return !isDir;
 };
 
 /**
  * The file `specPath` names inside `packageDir`, or `null` when it is absolute on either platform, has a `..` segment,
- * or resolves to the package directory itself (an empty or `.` path) or outside it. The spec path comes from the
+ * or resolves to the package directory itself (an empty or `.` path). The spec path comes from the
  * user's Atomizer config, so it is checked here before an editor opens it.
  */
 export const specPathOf = (packageDir: string, specPath: string): string | null => {
