@@ -71,11 +71,7 @@ export const elkTaskGraphOf = (
  * What a task layout depends on: the sorted shown task ids, the sorted ids of the links between them, and, when a shown
  * task has a file count, those counts by sorted id. Without counts the key is the one of a graph with none.
  */
-export const taskLayoutKeyOf = (
-  tasks: GraphTask[],
-  shown: ReadonlySet<string>,
-  fileCounts: ReadonlyMap<string, number> = new Map()
-): string => {
+export const taskLayoutKeyOf = (tasks: GraphTask[], shown: ReadonlySet<string>, fileCounts: ReadonlyMap<string, number>): string => {
   const ids = tasks.filter((task) => shown.has(task.id)).map((task) => task.id);
   const edgeIds = taskEdgesOf(tasks, shown).map(edgeIdOf);
   const counted = ids.filter((id) => fileCounts.has(id)).sort();

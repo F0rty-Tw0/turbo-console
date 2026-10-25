@@ -21,6 +21,8 @@ const TASKS: GraphTask[] = [
 
 const BOTH = new Set(['web#build', 'api#build']);
 
+const NO_COUNTS = new Map<string, number>();
+
 const NO_SIZES = new Map<string, NodeSize>();
 
 const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };
@@ -90,7 +92,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed twice, the set in another order THEN the keys are equal', () => {
       const reversed = new Set(['api#build', 'web#build']);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH)).toBe(taskLayoutKeyOf(TASKS, reversed));
+      expect(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS)).toBe(taskLayoutKeyOf(TASKS, reversed, NO_COUNTS));
     });
   });
 
@@ -98,7 +100,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed THEN the key differs', () => {
       const more = new Set([...BOTH, 'web#lint']);
 
-      expect(taskLayoutKeyOf(TASKS, more)).not.toBe(taskLayoutKeyOf(TASKS, BOTH));
+      expect(taskLayoutKeyOf(TASKS, more, NO_COUNTS)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS));
     });
   });
 
@@ -106,7 +108,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed THEN the key differs', () => {
       const unlinked = [taskOf('api#build', []), taskOf('web#build', [])];
 
-      expect(taskLayoutKeyOf(unlinked, BOTH)).not.toBe(taskLayoutKeyOf(TASKS, BOTH));
+      expect(taskLayoutKeyOf(unlinked, BOTH, NO_COUNTS)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS));
     });
   });
 });
@@ -130,7 +132,7 @@ describe('FEATURE: taskLayoutKeyOf with file counts', () => {
     it('WHEN no shown task has a count THEN the key is the one without counts', () => {
       const strangers = new Map([['web#lint', 3]]);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, strangers)).toBe(taskLayoutKeyOf(TASKS, BOTH));
+      expect(taskLayoutKeyOf(TASKS, BOTH, strangers)).toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS));
     });
   });
 });
