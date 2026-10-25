@@ -17,6 +17,7 @@ import type {
   RowScope,
   TaskContextValue,
   TaskDisplay,
+  TaskRowArg,
   TreeRow
 } from '../common/tree-row.type.ts';
 
@@ -74,7 +75,7 @@ const shownOf = (file: AtomFile, result: AtomResult | undefined, entry: RunEntry
 
 /** A click opens the spec; its argument holds the row's node fields, the shape every task command reads a row by. */
 const openSpecCommandOf = (id: string, root: string, key: string, packageName: string): RowCommand => {
-  const node = { kind: 'task', id, root, key, packageName };
+  const node: TaskRowArg = { kind: 'task', id, root, key, packageName };
   const command: RowCommand = { command: OPEN_SPEC_COMMAND, args: [node] };
 
   return command;
