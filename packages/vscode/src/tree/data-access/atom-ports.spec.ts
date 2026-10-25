@@ -1,3 +1,4 @@
+import type { DryRunRequest } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { editorAtomPorts } from './atom-ports.ts';
@@ -6,6 +7,8 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
+
+const DRY_RUN_REQUEST: DryRunRequest = { tasks: ['e2e-ci'], packages: ['@fx/e2e'], singlePackage: false };
 
 const LOADED_STATE: RootState = { ...ROOT_STATE_STUB, binary: TURBO_BINARY_STUB };
 
@@ -32,6 +35,16 @@ describe('FEATURE: editor Atomizer ports', () => {
       const binary = editorAtomPorts(roots, output).binaryOf('/gone');
 
       expect(binary).toBeNull();
+    });
+
+    it('WHEN the dry run starts with an aborted signal THEN core aborts it before the binary is run', async () => {
+      const controller = new AbortController();
+
+      controller.abort();
+
+      const dryRun = editorAtomPorts(roots, output).dryRun(TURBO_BINARY_STUB, DRY_RUN_REQUEST, controller.signal);
+
+      await expect(dryRun).rejects.toThrow('was aborted');
     });
 
     it('WHEN a line is logged THEN the output gets it as one warning', () => {
