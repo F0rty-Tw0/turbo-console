@@ -119,6 +119,17 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
       expect(rig.atoms.expand).toHaveBeenCalledWith(specOf(E2E_CI), 'pkg:app', E2E_CI.files, OUTCOME_STATE[UMBRELLA]?.files);
     });
 
+    it('WHEN a file has the id of a task THEN the group is drawn without that file in its spec', () => {
+      const clash: GraphAtomGroup['files'] = [{ id: 'lib#e2e-ci', specPath: 'a.spec.ts', isLive: false }];
+      const files = [...clash, ...E2E_CI.files];
+
+      groups.received([{ umbrellaId: UMBRELLA, files }]);
+      groups.toggle(UMBRELLA);
+
+      expect(rig.atoms.expand).toHaveBeenCalledOnce();
+      expect(rig.atoms.expand.mock.calls[0]?.[0].fileIds).toStrictEqual(FILE_IDS);
+    });
+
     it('WHEN the group has no files THEN toggling does nothing', () => {
       groups.received([groupOf(UMBRELLA, 0)]);
 

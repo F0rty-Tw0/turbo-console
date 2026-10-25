@@ -3,6 +3,7 @@ import type { GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
 import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
 import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
+import { atomSpecOf } from '../utils/atom-spec.util.ts';
 
 type Outcomes = Record<string, GraphAtomOutcome>;
 
@@ -14,20 +15,6 @@ const keyOfMaybe = (group: GraphAtomGroup | undefined): string | null => {
   if (group === undefined) return null;
 
   return keyOf(group);
-};
-
-const specOf = (group: GraphAtomGroup, placement: AtomPlacement): AtomBoxSpec | null => {
-  const umbrellaSize = placement.sizes.get(group.umbrellaId);
-  const isShown = placement.shown.has(group.umbrellaId);
-  const hasBox = placement.pkgBoxes.has(group.umbrellaId);
-  const isDrawable = isShown && umbrellaSize !== undefined && hasBox && group.files.length > 0;
-
-  if (!isDrawable) return null;
-
-  const fileIds = group.files.map((file) => file.id);
-  const spec: AtomBoxSpec = { umbrellaId: group.umbrellaId, umbrellaSize, fileIds };
-
-  return spec;
 };
 
 /**
@@ -81,7 +68,8 @@ export class GraphAtomExpansion {
   public apply(groups: ReadonlyMap<string, GraphAtomGroup>, outcomes: ReadonlyMap<string, Outcomes>, placement: AtomPlacement): void {
     const specs = this.drawableSpecs(groups, placement);
     const collapsed = this.collapseStale(groups);
-    const fresh = specs.filter((spec) => this.open.has(spec.umbrellaId) && !this.drawn.has(spec.umbrellaId));
+    const isFresh = (spec: AtomBoxSpec): boolean => this.open.has(spec.umbrellaId) && !this.drawn.has(spec.umbrellaId);
+    const fresh = specs.filter(isFresh);
 
     for (const spec of fresh) this.draw(spec, groups, outcomes, placement);
 
@@ -101,7 +89,7 @@ export class GraphAtomExpansion {
     const specs: AtomBoxSpec[] = [];
 
     for (const group of groups.values()) {
-      const spec = specOf(group, placement);
+      const spec = atomSpecOf(group, placement);
 
       if (spec !== null) specs.push(spec);
     }
