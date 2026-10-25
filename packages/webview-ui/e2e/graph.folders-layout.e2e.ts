@@ -90,7 +90,9 @@ test.describe('FEATURE: grouped graph layout', () => {
 
       await test.step('AND Group by folder is checked', async (): Promise<void> => graphGrouping.setGrouped(true));
 
-      await test.step('THEN there is a box for each of group-0 to group-29', async (): Promise<void> =>
+      await test.step('THEN the grouped layout has finished', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
+
+      await test.step('AND there is a box for each of group-0 to group-29', async (): Promise<void> =>
         graphGrouping.expectFolderKeys(GROUP_FOLDERS));
 
       await test.step('AND each box surrounds its packages and no other', async (): Promise<void> =>
