@@ -1,3 +1,4 @@
+import { atomGroupsOf } from '@turbo-console/core';
 import type { AtomGroup, AtomResult, DryRunRequest, DryRunState, TurboBinary, WorkspaceModel } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
@@ -29,6 +30,18 @@ const FAILED_PART: Record<Part, EntryPatch> = { 'dry-run': DRY_RUN_FAILED, scan:
 const keyOf = (root: string, packageName: string): string => JSON.stringify([root, packageName]);
 
 const cacheOf = (state: DryRunState): [string, AtomCache] => [state.id, state.cache];
+
+const groupsOf = (model: WorkspaceModel | null): AtomGroup[] => {
+  if (model === null) return [];
+
+  return atomGroupsOf(model);
+};
+
+const idsOf = (groups: AtomGroup[], packageName: string): string => {
+  const own = groups.filter((group) => group.packageName === packageName);
+
+  return atomIdsKey(own);
+};
 
 const umbrellaNameOf = (group: AtomGroup): string => group.umbrella.name;
 
@@ -80,10 +93,12 @@ export class AtomLoads {
 
   /** An entry whose package kept the same umbrella and file ids keeps its load; any other drops back to Not loaded. */
   public modelChanged(root: string, model: WorkspaceModel | null): void {
+    const groups = groupsOf(model);
+
     for (const entry of this.snapshot()) {
       if (entry.root !== root) continue;
 
-      const ids = this.idsOf(entry, model);
+      const ids = idsOf(groups, entry.packageName);
 
       if (ids !== entry.ids) this.drop(entry);
     }
@@ -173,14 +188,6 @@ export class AtomLoads {
     if (live?.controller !== source.controller) return null;
 
     return live;
-  }
-
-  private idsOf(entry: LoadEntry, model: WorkspaceModel | null): string {
-    if (model === null) return '';
-
-    const { groups } = this.statics(entry.root, entry.packageName);
-
-    return atomIdsKey(groups);
   }
 
   private drop(entry: LoadEntry): void {

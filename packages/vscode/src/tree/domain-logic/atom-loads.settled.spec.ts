@@ -102,6 +102,31 @@ describe('FEATURE: atom loads of a package that settled', () => {
       expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, PKG);
     });
 
+    it('WHEN the model refreshes with other ids while the store still holds the old model THEN it is Not loaded', async () => {
+      const h = loadsHarness();
+      const loads = loadsOf(h);
+      const fewer = atomModelOf(['tests/a.spec.ts']);
+
+      await toLoaded(h, loads);
+      h.changed.mockClear();
+      loads.modelChanged(ROOT, fewer);
+
+      expect(loads.view(ROOT, PKG).dryRun).toBeNull();
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, PKG);
+    });
+
+    it('WHEN the model refreshes with its groups gone THEN it is Not loaded and the package is announced', async () => {
+      const h = loadsHarness();
+      const loads = loadsOf(h);
+
+      await toLoaded(h, loads);
+      h.changed.mockClear();
+      loads.modelChanged(ROOT, null);
+
+      expect(loads.view(ROOT, PKG).results).toBeNull();
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, PKG);
+    });
+
     it('WHEN the binary is gone and the run ends THEN the entry stays as it is', async () => {
       const h = loadsHarness();
       const loads = loadsOf(h);
