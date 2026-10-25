@@ -120,8 +120,8 @@ export const step = async (name: string, fn: () => Promise<void> | void): Promis
 /**
  * Logs a timing and asserts it is within `limitMs` times the env's budget factor (spec §5.3 case 9: 1× locally, 3× on
  * CI). A miss is appended to the env's miss file before the throw, so the harness can relaunch on a timing miss and not
- * on a functional failure. A non-finite timing, such as one never measured, is a functional failure: it throws without
- * recording a miss.
+ * on a functional failure. A non-finite timing, such as one never measured, or a non-finite budget, such as one scaled
+ * by a failed probe, is a functional failure: it throws without recording a miss.
  */
 export const budget = (name: string, ms: number, limitMs: number, env: SuiteEnv): void => {
   const limit = limitMs * env.budgetFactor;
@@ -129,8 +129,11 @@ export const budget = (name: string, ms: number, limitMs: number, env: SuiteEnv)
   log(`timing ${name}: ${ms.toFixed(1)} ms (budget ${limit.toFixed(1)} ms)`);
 
   const isMeasured = Number.isFinite(ms);
+  const isLimited = Number.isFinite(limit);
 
   if (!isMeasured) throw new Error(`${name}: timing never measured (${ms})`);
+
+  if (!isLimited) throw new Error(`${name}: budget not a finite number (${limit})`);
 
   if (ms <= limit) return;
 
