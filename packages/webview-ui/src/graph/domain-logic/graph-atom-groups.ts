@@ -38,7 +38,7 @@ export class GraphAtomGroups {
     this.counts = new Map(keptCounts);
   }
 
-  /** Keeps the counts of the known umbrellas in `groups`, then writes them to the canvas when a layout is placed. */
+  /** Keeps the counts of the known umbrellas in `groups`, then writes those of the placed umbrellas to the canvas. */
   public states(groups: Record<string, GraphAtomGroupState>): void {
     const isKnown = ([id]: [string, GraphAtomGroupState]): boolean => this.groups.has(id);
     const entries = Object.entries(groups);
@@ -46,7 +46,7 @@ export class GraphAtomGroups {
 
     for (const [id, state] of knownEntries) this.counts.set(id, state.counts);
 
-    if (this.placement !== null) this.deps.view.tasks.setCounts(this.labels());
+    if (this.placement !== null) this.deps.view.tasks.setCounts(this.drawnLabels(this.placement));
   }
 
   /** The file count of each umbrella. */
@@ -69,6 +69,16 @@ export class GraphAtomGroups {
     const entries = groupEntries.map(labelOf);
 
     return new Map(entries);
+  }
+
+  /** The counts line of each umbrella the placed layout draws as one; a plain-sized task keeps its name. */
+  private drawnLabels(placement: Placement): ReadonlyMap<string, string> {
+    const isDrawn = ([id]: [string, string]): boolean => placement.sizes.has(id);
+    const labels = this.labels();
+    const labelEntries = [...labels];
+    const drawn = labelEntries.filter(isDrawn);
+
+    return new Map(drawn);
   }
 
   /** Keeps the layout just placed and reports its umbrellas to the host. */

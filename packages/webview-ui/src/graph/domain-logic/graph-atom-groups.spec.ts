@@ -135,6 +135,13 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       expect(rig.groups.labels().get('lib#e2e-ci')).toBe('2 files');
     });
 
+    it('WHEN the same groups are received again THEN their counts are kept', () => {
+      rig.groups.states(COUNTED_E2E_CI);
+      rig.groups.received([LIB_CI, E2E_CI]);
+
+      expect(rig.groups.labels().get('app#e2e-ci')).toBe('10 files · 3 cached');
+    });
+
     it('WHEN atoms arrive before any layout is placed THEN the canvas is not touched', () => {
       rig.groups.states(COUNTED_E2E_CI);
 
@@ -148,17 +155,47 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       rig.groups.placed(new Set(['app#e2e-ci']), BASE, SIZES);
     });
 
-    it('WHEN atoms arrive for it THEN setCounts gets its counts without the name and no position is set', () => {
+    it('WHEN atoms arrive for it THEN setCounts gets its counts without the name', () => {
       rig.groups.states(COUNTED_E2E_CI);
 
       expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(new Map([['app#e2e-ci', '10 files · 3 cached']]));
+    });
+
+    it('WHEN atoms arrive for it THEN no position is set', () => {
+      rig.groups.states(COUNTED_E2E_CI);
+
       expect(rig.tasks.setPositions).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the group is received and placed again THEN a later atoms message keeps the counts it had', () => {
+      rig.groups.states(COUNTED_E2E_CI);
+      rig.groups.received([E2E_CI]);
+      rig.groups.placed(new Set(['app#e2e-ci']), BASE, SIZES);
+
+      rig.groups.states(UNKNOWN_GONE);
+
+      expect(rig.tasks.setCounts).toHaveBeenLastCalledWith(new Map([['app#e2e-ci', '10 files · 3 cached']]));
     });
 
     it('WHEN atoms name an unknown umbrella THEN the counts it has are unchanged', () => {
       rig.groups.states(UNKNOWN_GONE);
 
       expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(new Map([['app#e2e-ci', '10 files']]));
+    });
+  });
+
+  describe('GIVEN a layout is placed where one known umbrella is a plain-sized task', () => {
+    beforeEach(() => {
+      rig.groups.received([LIB_CI, E2E_CI]);
+      rig.groups.placed(new Set(['app#e2e-ci', 'lib#e2e-ci']), BASE, SIZES);
+    });
+
+    it('WHEN atoms name both THEN setCounts gets only the umbrella the layout sized', () => {
+      const both = { ...COUNTED_E2E_CI, ...COUNTED_LIB_CI };
+
+      rig.groups.states(both);
+
+      expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(new Map([['app#e2e-ci', '10 files · 3 cached']]));
     });
   });
 
@@ -209,16 +246,22 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
   });
 
   describe('GIVEN the layout is cleared', () => {
-    it('WHEN atoms arrive after it THEN the canvas is not touched and reshown posts nothing', () => {
+    beforeEach(() => {
       rig.groups.received([E2E_CI]);
       rig.groups.placed(new Set(['app#e2e-ci']), BASE, SIZES);
       rig.post.mockClear();
-
       rig.groups.clear();
+    });
+
+    it('WHEN atoms arrive after it THEN the canvas is not touched', () => {
       rig.groups.states(COUNTED_E2E_CI);
-      rig.groups.reshown();
 
       expect(rig.tasks.setCounts).not.toHaveBeenCalled();
+    });
+
+    it('WHEN reshown follows it THEN nothing is posted', () => {
+      rig.groups.reshown();
+
       expect(rig.post).not.toHaveBeenCalled();
     });
   });
