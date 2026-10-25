@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphAtomGroups } from './graph-atom-groups.ts';
 import type { GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
-import type { GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
+import type { GraphAtomFile, GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
 import { BASE, SIZES, TASKS, atomRigOf, groupOf } from '../test/utils/graph-atom-groups.spec.util.ts';
@@ -13,8 +13,20 @@ const MORE_ID = `atom-more:${UMBRELLA}`;
 
 const SHOWN = new Set([UMBRELLA]);
 
-/** The id of the Kth file of a group, counting from 1: `f01` is the first. */
+/** The id of the file at `position` of a group, counting from 1: `app#e2e-ci--0.spec.ts` is the first. */
 const fileId = (position: number): string => `${UMBRELLA}--${position - 1}.spec.ts`;
+
+const F02 = fileId(2);
+
+const F10 = fileId(10);
+
+const F30 = fileId(30);
+
+const F02_CACHED = { [F02]: 'cached' } as const;
+
+const F30_FAILED = { [F30]: 'failed' } as const;
+
+const F30_PASSED = { [F30]: 'passed' } as const;
 
 const atomsOf = (files: Record<string, GraphAtomOutcome>): Record<string, GraphAtomGroupState> => {
   const state: GraphAtomGroupState = { counts: '40 files', files };
@@ -42,7 +54,7 @@ const drawnIdsOf = (rig: AtomRig): string[] => lastDrawOf(rig).spec.files.map((f
 /** The group with the file at `position` marked live. */
 const withLiveFile = (group: GraphAtomGroup, position: number): GraphAtomGroup => {
   const liveId = fileId(position);
-  const markLive = (file: GraphAtomGroup['files'][number]): GraphAtomGroup['files'][number] => {
+  const markLive = (file: GraphAtomFile): GraphAtomFile => {
     const isLive = file.id === liveId;
 
     if (!isLive) return file;
@@ -57,19 +69,23 @@ const withLiveFile = (group: GraphAtomGroup, position: number): GraphAtomGroup =
   return marked;
 };
 
-describe('FEATURE: toggling a capped Atomizer group by its count node', () => {
+describe('FEATURE: a capped Atomizer group toggled by its count node and redrawn when its drawn files change', () => {
   let rig: AtomRig;
   let groups: GraphAtomGroups;
+
+  const placeGroup = (fileCount: number): void => {
+    groups.received([groupOf(UMBRELLA, fileCount)]);
+    groups.placed(SHOWN, BASE, SIZES, TASKS);
+  };
 
   beforeEach(() => {
     rig = atomRigOf();
     groups = new GraphAtomGroups(rig.deps);
-    groups.received([groupOf(UMBRELLA, 12)]);
-    groups.placed(SHOWN, BASE, SIZES, TASKS);
   });
 
   describe('GIVEN a 12-file group expanded', () => {
     beforeEach(() => {
+      placeGroup(12);
       groups.toggle(UMBRELLA);
     });
 
@@ -81,31 +97,27 @@ describe('FEATURE: toggling a capped Atomizer group by its count node', () => {
       expect(rig.atoms.collapse).toHaveBeenCalledExactlyOnceWith(UMBRELLA, 'pkg:app');
     });
 
-    it('WHEN the count node of an unknown umbrella is double tapped THEN nothing changes', () => {
-      rig.atoms.collapse.mockClear();
-      rig.atoms.expand.mockClear();
+    describe('WHEN the count node of an unknown umbrella is double tapped', () => {
+      beforeEach(() => {
+        rig.atoms.collapse.mockClear();
+        rig.atoms.expand.mockClear();
 
-      groups.toggle('atom-more:unknown#x');
+        groups.toggle('atom-more:unknown#x');
+      });
 
-      expect(rig.atoms.collapse).not.toHaveBeenCalled();
-      expect(rig.atoms.expand).not.toHaveBeenCalled();
+      it('THEN nothing collapses', () => {
+        expect(rig.atoms.collapse).not.toHaveBeenCalled();
+      });
+
+      it('THEN nothing expands', () => {
+        expect(rig.atoms.expand).not.toHaveBeenCalled();
+      });
     });
-  });
-});
-
-describe('FEATURE: redrawing a capped Atomizer group when its drawn files change', () => {
-  let rig: AtomRig;
-  let groups: GraphAtomGroups;
-
-  beforeEach(() => {
-    rig = atomRigOf();
-    groups = new GraphAtomGroups(rig.deps);
-    groups.received([groupOf(UMBRELLA, 40)]);
-    groups.placed(SHOWN, BASE, SIZES, TASKS);
   });
 
   describe('GIVEN a 40-file group expanded with no outcomes', () => {
     beforeEach(() => {
+      placeGroup(40);
       groups.toggle(UMBRELLA);
     });
 
@@ -114,18 +126,19 @@ describe('FEATURE: redrawing a capped Atomizer group when its drawn files change
         rig.atoms.collapse.mockClear();
         rig.atoms.expand.mockClear();
 
-        groups.states(atomsOf({ [fileId(30)]: 'failed' }));
+        groups.states(atomsOf(F30_FAILED));
+      });
+
+      it('THEN f30 is drawn', () => {
+        expect(drawnIdsOf(rig)).toContain(F30);
       });
 
       it('THEN f30 is drawn with its failed outcome', () => {
-        const { spec, outcomes } = lastDrawOf(rig);
-
-        expect(spec.files.map((file) => file.id)).toContain(fileId(30));
-        expect(outcomes[fileId(30)]).toBe('failed');
+        expect(lastDrawOf(rig).outcomes[F30]).toBe('failed');
       });
 
       it('THEN f10 is gone', () => {
-        expect(drawnIdsOf(rig)).not.toContain(fileId(10));
+        expect(drawnIdsOf(rig)).not.toContain(F10);
       });
 
       it('THEN the box keeps its 11 nodes', () => {
@@ -140,30 +153,40 @@ describe('FEATURE: redrawing a capped Atomizer group when its drawn files change
 
     describe('WHEN f30 failed and an atoms message then passes it', () => {
       beforeEach(() => {
-        groups.states(atomsOf({ [fileId(30)]: 'failed' }));
+        groups.states(atomsOf(F30_FAILED));
         rig.atoms.expand.mockClear();
 
-        groups.states(atomsOf({ [fileId(30)]: 'passed' }));
+        groups.states(atomsOf(F30_PASSED));
       });
 
       it('THEN f30 is gone', () => {
-        expect(drawnIdsOf(rig)).not.toContain(fileId(30));
+        expect(drawnIdsOf(rig)).not.toContain(F30);
       });
 
       it('THEN f10 is back', () => {
-        expect(drawnIdsOf(rig)).toContain(fileId(10));
+        expect(drawnIdsOf(rig)).toContain(F10);
       });
     });
 
-    it('WHEN an atoms message caches f02, which is drawn, THEN the outcomes are written without a redraw', () => {
-      rig.atoms.collapse.mockClear();
-      rig.atoms.expand.mockClear();
+    describe('WHEN an atoms message caches f02, which is drawn', () => {
+      beforeEach(() => {
+        rig.atoms.collapse.mockClear();
+        rig.atoms.expand.mockClear();
 
-      groups.states(atomsOf({ [fileId(2)]: 'cached' }));
+        groups.states(atomsOf(F02_CACHED));
+      });
 
-      expect(rig.atoms.collapse).not.toHaveBeenCalled();
-      expect(rig.atoms.expand).not.toHaveBeenCalled();
-      expect(rig.atoms.setOutcomes).toHaveBeenLastCalledWith({ [fileId(2)]: 'cached' });
+      it('THEN the group is not collapsed', () => {
+        expect(rig.atoms.collapse).not.toHaveBeenCalled();
+      });
+
+      it('THEN the group is not expanded again', () => {
+        expect(rig.atoms.expand).not.toHaveBeenCalled();
+      });
+
+      it('THEN the outcome is written', () => {
+        expect(rig.atoms.setOutcomes).toHaveBeenLastCalledWith(F02_CACHED);
+      });
     });
 
     it('WHEN a state adds f41 THEN the count node says 31 more', () => {
@@ -175,10 +198,12 @@ describe('FEATURE: redrawing a capped Atomizer group when its drawn files change
     });
 
     it('WHEN a state makes f02 live THEN the group is redrawn', () => {
+      const live = withLiveFile(groupOf(UMBRELLA, 40), 2);
+
       rig.atoms.collapse.mockClear();
       rig.atoms.expand.mockClear();
 
-      groups.received([withLiveFile(groupOf(UMBRELLA, 40), 2)]);
+      groups.received([live]);
 
       expect(rig.atoms.collapse).toHaveBeenCalledOnce();
       expect(rig.atoms.expand).toHaveBeenCalledOnce();
@@ -186,9 +211,10 @@ describe('FEATURE: redrawing a capped Atomizer group when its drawn files change
   });
 
   it('GIVEN a 40-file group left collapsed WHEN an atoms message fails f30 THEN no position is set', () => {
+    placeGroup(40);
     rig.atoms.setPositions.mockClear();
 
-    groups.states(atomsOf({ [fileId(30)]: 'failed' }));
+    groups.states(atomsOf(F30_FAILED));
 
     expect(rig.atoms.setPositions).not.toHaveBeenCalled();
   });

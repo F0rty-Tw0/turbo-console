@@ -3,7 +3,7 @@ import type { GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
-import { atomSpecOf } from '../utils/atom-spec.util.ts';
+import { atomSpecOf, outcomesOf } from '../utils/atom-spec.util.ts';
 
 type Outcomes = Record<string, GraphAtomOutcome>;
 
@@ -19,8 +19,8 @@ const keyOfMaybe = (spec: AtomDrawSpec | undefined): string | null => {
 
 /**
  * The umbrellas open on the canvas and the groups drawn for them. `apply` makes the canvas match: a group that closed,
- * left the layout or got other drawn files or another hidden count is collapsed, one newly open is drawn (or closed again if the canvas refuses
- * it), and every position is set from the base.
+ * left the layout or got other drawn files or another hidden count is collapsed, one newly open is drawn (or closed
+ * again if the canvas refuses it), and every position is set from the base.
  */
 export class GraphAtomExpansion {
   private readonly view: AtomGroupsDeps['view'];
@@ -95,7 +95,7 @@ export class GraphAtomExpansion {
     const specs = new Map<string, AtomDrawSpec>();
 
     for (const group of groups.values()) {
-      const spec = atomSpecOf(group, placement, outcomes.get(group.umbrellaId) ?? {});
+      const spec = atomSpecOf(group, placement, outcomesOf(outcomes, group.umbrellaId));
 
       if (spec !== null) specs.set(spec.umbrellaId, spec);
     }
@@ -149,7 +149,7 @@ export class GraphAtomExpansion {
 
     if (pkgBoxId === undefined) return false;
 
-    const fileOutcomes = outcomes.get(spec.umbrellaId) ?? {};
+    const fileOutcomes = outcomesOf(outcomes, spec.umbrellaId);
     const isDrawn = this.view.atoms.expand(spec, pkgBoxId, fileOutcomes);
 
     if (isDrawn) this.drawn.set(spec.umbrellaId, { key: keyOf(spec), pkgBoxId });
