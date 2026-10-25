@@ -33,7 +33,7 @@ export const PASSED_RUN_VIEW_STUB: RunView = {
 export const STOPPED_RUN_VIEW_STUB: RunView = {
   ...NOT_IDLE_RUN_VIEW,
   iconId: 'debug-stop',
-  colorVar: '--vscode-disabledForeground',
+  colorVar: '--vscode-descriptionForeground',
   text: 'stopped · 3.0s'
 };
 

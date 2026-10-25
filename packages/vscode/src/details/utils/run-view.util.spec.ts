@@ -154,7 +154,7 @@ describe('FEATURE: run view of a task', () => {
     it('WHEN viewed THEN a theme id without a dot becomes its variable unchanged', () => {
       const view = toRunView(TASK_NODE_STUB, entryIn({ state: 'stopped' }), NOW);
 
-      expect(view.colorVar).toBe('--vscode-disabledForeground');
+      expect(view.colorVar).toBe('--vscode-descriptionForeground');
     });
   });
 

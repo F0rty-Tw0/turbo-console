@@ -122,7 +122,7 @@ test.describe('FEATURE: package details page, the Tool chip', () => {
       detailsPage.sendRunState('web#build', STOPPED_RUN_VIEW_STUB));
 
     await test.step('THEN the status icon is the stop icon', async (): Promise<void> =>
-      card.expectStatusIcon('codicon codicon-debug-stop', 'var(--vscode-disabledForeground)'));
+      card.expectStatusIcon('codicon codicon-debug-stop', 'var(--vscode-descriptionForeground)'));
 
     await test.step('AND the Tool chip still carries the logo', async (): Promise<void> =>
       card.expectToolChip('Vitest', 'turbo-console-vitest'));
