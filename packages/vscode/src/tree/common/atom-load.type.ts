@@ -11,3 +11,6 @@ export type AtomLoadPorts = {
   readonly log: (line: string) => void;
   readonly changed: (root: string, packageName: string) => void;
 };
+
+/** The half of `AtomLoadPorts` the host builds; the tree adds `changed`, which redraws its own nodes. */
+export type AtomHostPorts = Omit<AtomLoadPorts, 'changed'>;
