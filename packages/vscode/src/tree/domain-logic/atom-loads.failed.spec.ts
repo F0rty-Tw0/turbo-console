@@ -5,7 +5,7 @@ import { AtomLoads } from './atom-loads.ts';
 import { BASE_SPEC_PATHS, FILE_A, PKG, ROOT } from '../test/common/atom-load.const.ts';
 import type { LoadsHarness } from '../test/common/atom-load.type.ts';
 import { ATOM_RESULT_STUB } from '../test/stubs/atom-load.stub.ts';
-import { dryRunAt, flush, loadsHarness, scanAt, toFailed, toLoading } from '../test/utils/atom-load.spec.util.ts';
+import { dryRunAt, flush, loadsHarness, scanAt, toFailed, toLoaded, toLoading } from '../test/utils/atom-load.spec.util.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 
 describe('FEATURE: atom loads of a package whose load failed', () => {
@@ -99,6 +99,17 @@ describe('FEATURE: atom loads of a package whose load failed', () => {
       loads.childrenRequested(ROOT, PKG);
 
       expect(h.dryRun).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('GIVEN a loaded package whose restart dry run rejects', () => {
+    it('WHEN the view is read THEN it has no dry-run states', async () => {
+      await toLoaded(h, loads);
+      loads.runEnded(ROOT, PKG);
+      dryRunAt(h, 1).reject(new Error('turbo exploded'));
+      await flush();
+
+      expect(loads.view(ROOT, PKG).dryRun).toBeNull();
     });
   });
 

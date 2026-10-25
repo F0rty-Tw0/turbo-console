@@ -64,5 +64,17 @@ describe('FEATURE: atom loads of roots that are gone', () => {
 
       expect(loads.view(ROOT, PKG).dryRun?.get(FILE_A)).toBe('HIT');
     });
+
+    it('WHEN the other root model changes with other ids THEN its data stays', async () => {
+      const h = loadsHarness();
+      const loads = new AtomLoads(h.ports, h.modelOf);
+      const fewer = atomModelOf(['tests/a.spec.ts']);
+
+      await toLoaded(h, loads);
+      h.model(OTHER_ROOT, fewer);
+      loads.modelChanged(OTHER_ROOT, fewer);
+
+      expect(loads.view(ROOT, PKG).dryRun?.get(FILE_A)).toBe('HIT');
+    });
   });
 });
