@@ -212,7 +212,7 @@ describe('FEATURE: atom loads of a package that settled', () => {
       expect(view.dryRun).toBeNull();
       expect(view.results?.get(FILE_A)).toStrictEqual(ATOM_RESULT_STUB);
       expect(h.dryRun).toHaveBeenCalledTimes(1);
-      expect(h.log).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('dry-run'));
+      expect(h.log).toHaveBeenCalledExactlyOnceWith('atoms /ws @fx/e2e: dry-run failed: turbo exploded');
     });
   });
 

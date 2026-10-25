@@ -160,7 +160,9 @@ export class AtomLoads {
 
     if (live === null) return;
 
-    this.ports.log(`atoms ${source.packageName}: ${part} failed: ${logTextOf(error)}`);
+    const line = `atoms ${source.root} ${source.packageName}: ${part} failed: ${logTextOf(error)}`;
+
+    this.ports.log(logTextOf(line));
     this.commit(source, FAILED_PART[part]);
   }
 
