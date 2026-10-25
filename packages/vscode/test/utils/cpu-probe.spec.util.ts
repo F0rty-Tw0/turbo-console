@@ -28,5 +28,12 @@ const sampleMs = (): number => {
   return performance.now() - start;
 };
 
-/** `PROBE_SAMPLES` timings of the same fixed main-thread work, so a caller can tell how fast this thread runs right now. */
-export const cpuProbeSamples = (): number[] => Array.from({ length: PROBE_SAMPLES }, sampleMs);
+/**
+ * `PROBE_SAMPLES` timings of the same fixed main-thread work, so a caller can tell how fast this thread runs right now.
+ * One untimed run goes first: the first JSON round trip pays the JIT warm-up and runs ~1.6× the rest.
+ */
+export const cpuProbeSamples = (): number[] => {
+  sampleMs();
+
+  return Array.from({ length: PROBE_SAMPLES }, sampleMs);
+};
