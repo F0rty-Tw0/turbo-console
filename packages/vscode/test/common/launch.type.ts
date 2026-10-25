@@ -65,8 +65,33 @@ export type RunScratch = {
   readonly dispose: () => Promise<void>;
 };
 
+/** L1's cold tree-visible span less its turbo time, and the slack it is budgeted against, both in ms. */
+export type ColdTree = {
+  readonly ownMs: number;
+  readonly slackMs: number;
+};
+
+/** A closed span of `performance.now()` times, in ms. */
+export type TimeRange = {
+  readonly start: number;
+  readonly end: number;
+};
+
+/** One turbo process: its spawn-to-close range, and the cpu time this thread used over that range, in ms. */
+export type TurboRun = {
+  readonly start: number;
+  readonly end: number;
+  readonly busyMs: number;
+};
+
+/**
+ * `count` is the turbo spawns since the last `reset`, `--version` calls left out. `turboMs` is how long this thread sat
+ * idle while turbo processes ran inside `window` (see `idleMs`), `--version` calls included; a process still running is
+ * left out.
+ */
 export type SpawnCounter = {
   readonly count: () => number;
+  readonly turboMs: (window: TimeRange) => number;
   readonly reset: () => void;
   readonly dispose: () => void;
 };

@@ -7,7 +7,7 @@ import type { LoadRecord } from '../../src/roots/common/coordinator.type.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { Span } from '../../src/shared/common/span.type.ts';
 import { EXTENSION_ID } from '../common/launch.const.ts';
-import type { SuiteEnv } from '../common/launch.type.ts';
+import type { SuiteEnv, TimeRange } from '../common/launch.type.ts';
 
 const POLL_MS = 10;
 
@@ -55,10 +55,19 @@ export const loadsOf = (api: TurboConsoleApi, root: string): LoadRecord[] => {
   return records;
 };
 
-export const spanMs = (name: string, span: Span | undefined): number => {
+/** `span` as a closed range; throws with `name` when it was never opened or never closed. */
+export const rangeOf = (name: string, span: Span | undefined): TimeRange => {
   if (span?.end === undefined || span.end === null) throw new Error(`${name}: span not closed`);
 
-  return span.end - span.start;
+  const range: TimeRange = { start: span.start, end: span.end };
+
+  return range;
+};
+
+export const spanMs = (name: string, span: Span | undefined): number => {
+  const range = rangeOf(name, span);
+
+  return range.end - range.start;
 };
 
 /** Polls `isDone` until it holds; throws with `name` after `limitMs` (30 s by default). */
@@ -111,8 +120,8 @@ export const step = async (name: string, fn: () => Promise<void> | void): Promis
 /**
  * Logs a timing and asserts it is within `limitMs` times the env's budget factor (spec §5.3 case 9: 1× locally, 3× on
  * CI). A miss is appended to the env's miss file before the throw, so the harness can relaunch on a timing miss and not
- * on a functional failure. A non-finite timing, such as one never measured, is a functional failure: it throws without
- * recording a miss.
+ * on a functional failure. A non-finite timing, such as one never measured, or a non-finite budget, such as one scaled
+ * by a failed probe, is a functional failure: it throws without recording a miss.
  */
 export const budget = (name: string, ms: number, limitMs: number, env: SuiteEnv): void => {
   const limit = limitMs * env.budgetFactor;
@@ -120,8 +129,11 @@ export const budget = (name: string, ms: number, limitMs: number, env: SuiteEnv)
   log(`timing ${name}: ${ms.toFixed(1)} ms (budget ${limit.toFixed(1)} ms)`);
 
   const isMeasured = Number.isFinite(ms);
+  const isLimited = Number.isFinite(limit);
 
   if (!isMeasured) throw new Error(`${name}: timing never measured (${ms})`);
+
+  if (!isLimited) throw new Error(`${name}: budget not a finite number (${limit})`);
 
   if (ms <= limit) return;
 

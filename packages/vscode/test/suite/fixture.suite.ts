@@ -1,22 +1,32 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 
-import { loadWorkspace, resolveTurbo } from '@turbo-console/core';
 import * as vscode from 'vscode';
 
 import type { Timings, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { BACKDATE_MS } from '../common/launch.const.ts';
-import type { SuiteEnv } from '../common/launch.type.ts';
+import type { ColdTree, SpawnCounter, SuiteEnv } from '../common/launch.type.ts';
 import { backdateTree } from '../utils/backdate.spec.util.ts';
+import { cpuProbeSamples } from '../utils/cpu-probe.spec.util.ts';
 import { iconsCase } from '../utils/icons-case.spec.util.ts';
 import { packageLifecycleCase } from '../utils/package-lifecycle.spec.util.ts';
 import { parityCase } from '../utils/parity-case.spec.util.ts';
 import { runCases } from '../utils/run-cases.spec.util.ts';
 import { countTurboSpawns } from '../utils/spawn-counter.spec.util.ts';
-import { budget, loadsOf, log, markDone, revealTree, rootAt, spanMs, step, turboApi, waitFor } from '../utils/suite-env.spec.util.ts';
+import {
+  budget,
+  loadsOf,
+  log,
+  markDone,
+  rangeOf,
+  revealTree,
+  rootAt,
+  spanMs,
+  step,
+  turboApi,
+  waitFor
+} from '../utils/suite-env.spec.util.ts';
 import { readManifest, readSuiteEnv } from '../utils/suite-input.spec.util.ts';
+import { medianOf } from '../utils/timing.spec.util.ts';
 import { busiestPackage, packageNodeNamed, treeRowsOf, walkTree } from '../utils/tree-walk.spec.util.ts';
 import { watchCases } from '../utils/watch-cases.spec.util.ts';
 import { whenQuiet } from '../utils/watch-wait.spec.util.ts';
@@ -25,23 +35,46 @@ const ACTIVATION_BUDGET_MS = 50;
 
 const TREE_VISIBLE_SLACK_MS = 200;
 
+/**
+ * The median `cpuProbeSamples` timing on the reference machine at rest (L1 at load average 2 logged 5.1–6.0 ms): a
+ * probe this fast leaves the slack unscaled.
+ */
+const PROBE_REFERENCE_MS = 6;
+
 const EXPAND_BUDGET_MS = 50;
 
-/** Spec §5.3 case 9: the suite's own timing of one `loadWorkspace` call, with a cache dir of its own. */
-const queryMs = async (root: string, turboPath: string): Promise<number> => {
-  const cacheDir = await mkdtemp(join(tmpdir(), 'tc-it-query-'));
-  const options = { trusted: true, overridePath: turboPath } as const;
+/**
+ * Spec §5.3 case 9 cold: reveals the view between two runs of the cpu probe and measures the tree-visible span less the
+ * time this thread sat idle inside it while turbo processes ran (the override's `--version` call and the query; see
+ * `countTurboSpawns`). That idle time is the wait on turbo's own work, so it is logged, not budgeted; case 7-cold counts
+ * the query spawns. The rest is this extension's own work, time it kept this thread busy while turbo ran included, and
+ * its slack is `TREE_VISIBLE_SLACK_MS` scaled by how much slower than `PROBE_REFERENCE_MS` the probe ran, so a loaded
+ * machine widens it as much as it slows the same thread. The span must not be open before the first probe, or the probe
+ * would run inside it.
+ */
+const revealCold = async (api: TurboConsoleApi, root: string, counter: SpawnCounter): Promise<ColdTree> => {
+  const isOpened = api.timings.treeVisible.has(root);
 
-  try {
-    const binary = await resolveTurbo(root, options);
-    const start = performance.now();
+  assert.equal(isOpened, false, 'the tree-visible span opened before the cpu probe ran');
 
-    await loadWorkspace(binary, { cacheDir });
+  const before = cpuProbeSamples();
 
-    return performance.now() - start;
-  } finally {
-    await rm(cacheDir, { recursive: true, force: true });
-  }
+  await revealTree(api, root);
+
+  const after = cpuProbeSamples();
+  const probes = [...before, ...after];
+  const probe = medianOf(probes);
+  const slowdown = Math.max(1, probe / PROBE_REFERENCE_MS);
+  const probeText = probes.map((ms) => ms.toFixed(1)).join(' ');
+  const span = rangeOf('tree visible', api.timings.treeVisible.get(root));
+  const visible = span.end - span.start;
+  const turbo = counter.turboMs(span);
+  const cold: ColdTree = { ownMs: visible - turbo, slackMs: TREE_VISIBLE_SLACK_MS * slowdown };
+
+  log(`timing cpu probe: median ${probe.toFixed(1)} ms of ${probeText}, slack scaled ${slowdown.toFixed(2)}x`);
+  log(`timing tree visible cold: ${visible.toFixed(1)} ms, turbo wait ${turbo.toFixed(1)} ms of it (not budgeted)`);
+
+  return cold;
 };
 
 /** Spec §5.3 case 9 expand: `getChildren` on a package plus `getTreeItem` for each child, as VS Code does on expand. */
@@ -104,13 +137,16 @@ export const run = async (): Promise<void> => {
   const api = await turboApi();
   const root = rootAt(0);
   const counter = countTurboSpawns(turboPath);
+  let cold: ColdTree = { ownMs: Number.NaN, slackMs: Number.NaN };
   let expand = Number.NaN;
 
   try {
     await step('7-activation: no load before the view opens', () => {
       assert.deepEqual(loadsOf(api, root), []);
     });
-    await step('reveal the view', async () => revealTree(api, root));
+    await step('reveal the view', async () => {
+      cold = await revealCold(api, root, counter);
+    });
     await step('7-cold: one turbo spawn', () => {
       assert.equal(counter.count(), 1);
     });
@@ -130,12 +166,8 @@ export const run = async (): Promise<void> => {
       log(`tree: ${walked.packages.length} packages, ${walkedTasks.length} tasks, ${walked.messages.length} messages`);
       assert.deepEqual(walked, expected);
     });
-    await step('9: cold timings', async () => {
-      const visible = spanMs('tree visible', api.timings.treeVisible.get(root));
-      const query = await queryMs(root, turboPath);
-
-      log(`timing query: ${query.toFixed(1)} ms`);
-      budget('tree visible cold', visible, query + TREE_VISIBLE_SLACK_MS, env);
+    await step('9: cold timings', () => {
+      budget('tree visible cold, own work', cold.ownMs, cold.slackMs, env);
       budget('expand', expand, EXPAND_BUDGET_MS, env);
       activationBudget(api.timings, env);
     });
