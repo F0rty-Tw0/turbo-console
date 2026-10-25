@@ -106,8 +106,9 @@ export class PackagesTree {
     this.redraw();
   }
 
-  /** After roots were added or removed: redraws the whole tree and forgets the nodes of a removed root. */
+  /** After roots were added or removed: a removed root loses its Atomizer loads and its nodes, then the whole tree redraws. */
   public rootsChanged(): void {
+    this.atoms.rootsChanged();
     this.redraw();
   }
 

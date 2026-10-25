@@ -104,6 +104,18 @@ export class AtomLoads {
     }
   }
 
+  /** A removed root keeps no load: a root added again at the same path starts Not loaded. Nothing is announced for a root that is gone. */
+  public rootsKept(kept: ReadonlySet<string>): void {
+    for (const entry of this.snapshot()) {
+      const isKept = kept.has(entry.root);
+
+      if (isKept) continue;
+
+      entry.controller.abort();
+      this.entries.delete(keyOf(entry.root, entry.packageName));
+    }
+  }
+
   public dispose(): void {
     for (const entry of this.entries.values()) entry.controller.abort();
 

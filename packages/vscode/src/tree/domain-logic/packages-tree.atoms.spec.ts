@@ -256,6 +256,20 @@ describe('FEATURE: packages tree Atomizer loads', () => {
 
       expect(h.dryRun).toHaveBeenCalledTimes(2);
     });
+
+    it('WHEN the root is removed and added again THEN opening its group starts a second load', async () => {
+      store.set([], coordinatorMock);
+      tree.rootsChanged();
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      store.apply(ROOT, loadedOf(BASE_MODEL_STUB));
+      tree.rootsChanged();
+
+      const reopened = await umbrellaNodeOf(children);
+
+      await tree.children(reopened);
+
+      expect(h.dryRun).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('GIVEN a root without Atomizer groups', () => {

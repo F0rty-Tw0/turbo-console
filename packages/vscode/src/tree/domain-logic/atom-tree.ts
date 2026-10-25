@@ -1,12 +1,14 @@
 import type { AtomGroup, WorkspaceModel } from '@turbo-console/core';
 
 import { AtomLoads } from './atom-loads.ts';
-import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
+import type { RootChange, RootEntry, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { AtomLoadPorts } from '../common/atom-load.type.ts';
 import type { AtomLookup, AtomView } from '../common/atom-view.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
+
+const rootOf = (entry: RootEntry): string => entry.state.folder.root;
 
 /**
  * The tree's side of the Atomizer loads (spec 3.5): which node and run events reach `AtomLoads`, and which nodes redraw
@@ -15,6 +17,7 @@ import { rowIdOf } from '../utils/row-id.util.ts';
  */
 export class AtomTree {
   public readonly view: AtomLookup;
+  private readonly store: Roots;
   private readonly cache: ReadonlyMap<string, TreeNode>;
   private readonly fire: TreePorts['fire'];
   private readonly loads: AtomLoads;
@@ -25,6 +28,7 @@ export class AtomTree {
     };
     const modelOf = (root: string): WorkspaceModel | null => store.get(root)?.state.model ?? null;
 
+    this.store = store;
     this.cache = cache;
     this.fire = ports.fire;
     this.loads = new AtomLoads({ ...ports.atom, changed }, modelOf);
@@ -53,6 +57,13 @@ export class AtomTree {
 
   public modelChanged(change: RootChange): void {
     this.loads.modelChanged(change.root, change.after);
+  }
+
+  /** After roots were added or removed: a root the store no longer holds loses its loads. */
+  public rootsChanged(): void {
+    const folders = this.store.all().map(rootOf);
+
+    this.loads.rootsKept(new Set(folders));
   }
 
   public refreshAll(): void {
