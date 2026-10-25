@@ -1,4 +1,5 @@
 import type { BenchRowDef } from './bench.type.ts';
+import { WIDGET_BUTTON_PX } from '../../../src/graph/common/graph.const.ts';
 
 type StretchRowKey = 'smallOpen' | 'smallPan' | 'mediumPan' | 'mediumToggle' | 'largePan';
 
@@ -24,5 +25,18 @@ export const STRETCH_ROWS: Readonly<Record<StretchRowKey, BenchRowDef>> = {
 /** Umbrellas expanded before the M rows are measured; the next one is the M toggle's. */
 export const MEDIUM_EXPANDED = 5;
 
-/** A collapsed umbrella must render at least this wide to be tapped; below it the run zooms onto it first. */
-export const MIN_TAP_PX = 4;
+/**
+ * A collapsed umbrella must render at least this wide to be double tapped; below it the run zooms onto it first. The first tap
+ * selects it and puts the 24 px "…" over its top-right corner, which covers the centre of any node under 24 px wide, so the
+ * second tap would land on the button; the extra 8 px keeps the centre clear of it.
+ */
+export const MIN_TAP_PX = WIDGET_BUTTON_PX + 8;
+
+/** Double taps tried before a group that stays as it was fails the run. */
+export const MAX_TAP_ATTEMPTS = 3;
+
+/**
+ * How long a double tap has to flip the group's box before the next attempt. Under CPU load the 5000 node canvas can hold a
+ * mouse down for 400 ms or more, and Cytoscape then drops the tap pair, so the group does not toggle at all.
+ */
+export const TAP_SETTLE_MS = 8000;

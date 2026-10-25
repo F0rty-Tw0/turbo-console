@@ -15,6 +15,9 @@ import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 /** How far, in model px, a side of the drawn box may sit from the computed one: the box also wraps the border of the nodes it holds. */
 const BOX_TOLERANCE_PX = 3;
 
+/** Playwright's default `expect` timeout. */
+const EXPECT_TIMEOUT_MS = 5000;
+
 const idOf = (node: ProbeNode): string => node.id;
 
 /** The node's rect with its padding, as `boundingBox({ includeLabels: false })` reports a box. */
@@ -114,9 +117,9 @@ export class GraphAtoms {
     await expect.poll(errorOf).toBeLessThanOrEqual(BOX_TOLERANCE_PX);
   }
 
-  /** The box `atom:<umbrellaId>` is drawn for `isDrawn`, or gone. */
-  public async expectBoxDrawn(umbrellaId: string, isDrawn: boolean): Promise<void> {
-    await expect.poll(async (): Promise<boolean> => this.isBoxDrawn(umbrellaId)).toBe(isDrawn);
+  /** The box `atom:<umbrellaId>` is drawn for `isDrawn`, or gone; `timeoutMs` replaces the 5 s of the config for a graph slow to redraw. */
+  public async expectBoxDrawn(umbrellaId: string, isDrawn: boolean, timeoutMs = EXPECT_TIMEOUT_MS): Promise<void> {
+    await expect.poll(async (): Promise<boolean> => this.isBoxDrawn(umbrellaId), { timeout: timeoutMs }).toBe(isDrawn);
   }
 
   /** The canvas container's native tooltip reads `title`, or it has none for `null`. */

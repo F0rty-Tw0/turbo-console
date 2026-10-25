@@ -17,6 +17,6 @@ export default defineConfig({
   retries: 0,
   testDir: './e2e',
   testMatch: '**/*.stretch.ts',
-  timeout: 600_000,
+  timeout: 1_800_000,
   workers: 1
 });

@@ -2,11 +2,10 @@ import type { Browser } from '@playwright/test';
 
 import { withSession } from './bench-session.ts';
 import { expanded, panFrameMs, stretchOpened, toggledAt } from './bench-stretch-frame.ts';
-import type { BenchSession, LargeSample } from './common/bench.type.ts';
+import type { BenchSession, LargeSample, OpenSample } from './common/bench.type.ts';
 import { MEDIUM_EXPANDED } from './common/stretch.const.ts';
 import { median } from './utils/bench-stats.util.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
-import { GraphAtoms } from '../pages/graph-atoms.po.ts';
 import { STRETCH_UMBRELLAS, stretchSavedState } from '../test/utils/graph-stretch.spec.util.ts';
 
 const BYTES_PER_MB = 1024 * 1024;
@@ -17,14 +16,16 @@ const stretchOptions = (): GraphOptions => {
   return options;
 };
 
-const openedFirstFrame = async (session: BenchSession): Promise<number> => {
-  await stretchOpened(session);
+const openedFirstFrame = async (session: BenchSession): Promise<OpenSample> => {
+  const fit = await stretchOpened(session);
+  const firstFrameMs = await session.timings.measuredFirstFrameMs();
+  const sample: OpenSample = { firstFrameMs, fit };
 
-  return session.timings.measuredFirstFrameMs();
+  return sample;
 };
 
-/** First frame of the stretch state opened in task mode with every task chosen and every group collapsed. */
-export const stretchOpen = async (browser: Browser): Promise<number> => withSession(browser, stretchOptions(), openedFirstFrame);
+/** First frame of the stretch state opened in task mode with every task chosen and every group collapsed, and the Fit that framed it. */
+export const stretchOpen = async (browser: Browser): Promise<OpenSample> => withSession(browser, stretchOptions(), openedFirstFrame);
 
 /** Median frame time of a 2 s pan over the stretch graph with the first `expandCount` umbrellas expanded. */
 export const stretchPan = async (browser: Browser, expandCount: number): Promise<number> => {
@@ -43,17 +44,13 @@ const toggledMedian = async (session: BenchSession): Promise<number> => {
 
   if (target === undefined) throw new Error('bench stretch: no umbrella left to toggle');
 
-  const atoms = new GraphAtoms(session.page);
-
   await stretchOpened(session);
   await expanded(session, STRETCH_UMBRELLAS.slice(0, MEDIUM_EXPANDED));
-  await toggledAt(session, target);
-  await atoms.expectBoxDrawn(target, true);
+  await toggledAt(session, target, true);
 
   const expandMs = await session.timings.measuredAtomToggleMs();
 
-  await toggledAt(session, target);
-  await atoms.expectBoxDrawn(target, false);
+  await toggledAt(session, target, false);
 
   const collapseMs = await session.timings.measuredAtomToggleMs();
 
