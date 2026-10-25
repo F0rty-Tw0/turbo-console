@@ -49,9 +49,14 @@ const EXPAND_BUDGET_MS = 50;
  * `countTurboSpawns`). That idle time is the wait on turbo's own work, so it is logged, not budgeted; case 7-cold counts
  * the query spawns. The rest is this extension's own work, time it kept this thread busy while turbo ran included, and
  * its slack is `TREE_VISIBLE_SLACK_MS` scaled by how much slower than `PROBE_REFERENCE_MS` the probe ran, so a loaded
- * machine widens it as much as it slows the same thread.
+ * machine widens it as much as it slows the same thread. The span must not be open before the first probe, or the probe
+ * would run inside it.
  */
 const revealCold = async (api: TurboConsoleApi, root: string, counter: SpawnCounter): Promise<ColdTree> => {
+  const isOpened = api.timings.treeVisible.has(root);
+
+  assert.equal(isOpened, false, 'the tree-visible span opened before the cpu probe ran');
+
   const before = cpuProbeSamples();
 
   await revealTree(api, root);
