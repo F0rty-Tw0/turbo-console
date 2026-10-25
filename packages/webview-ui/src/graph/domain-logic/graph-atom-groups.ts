@@ -50,7 +50,7 @@ export class GraphAtomGroups {
 
   /**
    * Keeps the state's groups by umbrella id; the counts and outcomes of an umbrella no group names are forgotten. While a
-   * layout is kept, the expanded groups follow: one that left collapses, one with another file list is drawn again.
+   * layout is kept, the expanded groups follow: one that left collapses, one whose drawn files or hidden count changed is drawn again.
    */
   public received(groups: GraphAtomGroup[]): void {
     const entryOf = (group: GraphAtomGroup): [string, GraphAtomGroup] => [group.umbrellaId, group];
@@ -70,7 +70,7 @@ export class GraphAtomGroups {
 
   /**
    * Keeps the counts and file outcomes of the known umbrellas in `groups`, then writes the counts of the placed umbrellas
-   * and the outcomes of the expanded ones to the canvas.
+   * to the canvas, draws again each expanded group whose drawn files the outcomes changed, and writes their outcomes.
    */
   public states(groups: Record<string, GraphAtomGroupState>): void {
     const isKnown = ([id]: [string, GraphAtomGroupState]): boolean => this.groups.has(id);
@@ -85,6 +85,7 @@ export class GraphAtomGroups {
     if (this.placement === null) return;
 
     this.deps.view.tasks.setCounts(this.drawnLabels(this.placement));
+    this.sync();
     this.expansion.outcomes(this.outcomes);
   }
 
