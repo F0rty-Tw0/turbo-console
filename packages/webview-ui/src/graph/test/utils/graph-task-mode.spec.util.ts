@@ -16,7 +16,7 @@ import type { TaskModeRig, TaskPartsMock, TaskViewMock } from '../common/graph-t
 import { flowControlMock } from '../mocks/graph-flow.mock.ts';
 import { layoutScreenMock } from '../mocks/graph-layouts.mock.ts';
 import { taskControlsMock, taskDetailsMock, taskPanelMock, taskWidgetsMock } from '../mocks/graph-task-mode.mock.ts';
-import { taskCanvasMock } from '../mocks/graph-view.mock.ts';
+import { atomCanvasMock, taskCanvasMock } from '../mocks/graph-view.mock.ts';
 import { layoutRunsMock } from '../mocks/layout-runner.mock.ts';
 import { TASK_VIEW_STUB } from '../stubs/graph-task.stub.ts';
 
@@ -41,6 +41,7 @@ const taskViewMockOf = (noting: (name: string) => () => void): TaskViewMock => {
   const tasks = taskCanvasMock();
   const view: TaskViewMock = {
     tasks,
+    atoms: atomCanvasMock(),
     fit: vi.fn<TaskView['fit']>(noting('fit')),
     setViewport: vi.fn<TaskView['setViewport']>(noting('setViewport')),
     viewport: vi.fn<TaskView['viewport']>(() => TASK_CAMERA),
@@ -106,6 +107,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     detailsOf,
     widgetsOf: taskWidgetsMock,
     flow,
+    now: (): number => 0,
     onHighlight: flow.highlightChanged
   };
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];

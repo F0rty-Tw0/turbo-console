@@ -98,6 +98,44 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       });
     });
 
+    describe('WHEN the group is expanded', () => {
+      beforeEach(() => {
+        mode.layout.atoms.toggle('web#build');
+        rig.view.atoms.expand.mockClear();
+      });
+
+      it('THEN a state of the same key with other files replaces the files and positions them again', () => {
+        const renamed = [
+          { id: 'web#build--c.spec.ts', specPath: 'c.spec.ts', isLive: false },
+          { id: 'web#build--d.spec.ts', specPath: 'd.spec.ts', isLive: false }
+        ];
+        const group: GraphAtomGroup = { umbrellaId: 'web#build', files: renamed };
+        const replaced: GraphReady = { ...UMBRELLA_STATE, atomGroups: [group] };
+
+        mode.received(replaced, 9);
+
+        expect(rig.view.atoms.collapse).toHaveBeenCalledOnce();
+        expect(rig.view.atoms.expand).toHaveBeenCalledOnce();
+        expect(rig.runs.count()).toBe(1);
+      });
+
+      it('THEN leaving task mode collapses it and lets the canvas grab again', () => {
+        mode.toggle(9);
+
+        expect(rig.view.atoms.collapse).toHaveBeenCalledExactlyOnceWith('web#build', 'pkg:web');
+        expect(rig.view.atoms.setGrabbable).toHaveBeenLastCalledWith(true);
+      });
+
+      it('THEN entering task mode again draws the group collapsed', async () => {
+        mode.toggle(9);
+        mode.toggle(10);
+        await Promise.resolve();
+
+        expect(rig.view.tasks.show).toHaveBeenCalledTimes(2);
+        expect(rig.view.atoms.expand).not.toHaveBeenCalled();
+      });
+    });
+
     describe('WHEN the state arrives with the group gone', () => {
       beforeEach(async () => {
         mode.received(TASK_STATE_STUB, 9);
