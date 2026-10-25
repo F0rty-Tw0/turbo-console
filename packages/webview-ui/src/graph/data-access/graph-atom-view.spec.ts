@@ -10,6 +10,7 @@ import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { fileOf } from '../test/utils/atom-file.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA_SIZE: NodeSize = { width: 160, height: 52 };
@@ -67,12 +68,6 @@ const parentIdOf = (cy: Core, id: string): string => {
 
 const BOX_ID = 'atom:web#e2e-ci';
 
-const fileOf = (id: string): GraphAtomFile => {
-  const file: GraphAtomFile = { id, specPath: 'tests/x.spec.ts', isLive: false };
-
-  return file;
-};
-
 const BOX_TASK_DATA = { id: BOX_ID };
 
 /** A task node that happens to have the id of the box. */
@@ -82,7 +77,7 @@ const boxTaskOf = (): ElementDefinition => {
   return task;
 };
 
-const CONSTRUCTOR_SPEC: AtomDrawSpec = { ...SPEC, fileIds: ['constructor'], files: [fileOf('constructor')] };
+const CONSTRUCTOR_SPEC: AtomDrawSpec = { ...SPEC, fileIds: ['constructor'], files: [fileOf('constructor', 'tests/x.spec.ts')] };
 
 const nodeIdsOf = (cy: Core): string[] => {
   const ids = cy.nodes().map(idOf);

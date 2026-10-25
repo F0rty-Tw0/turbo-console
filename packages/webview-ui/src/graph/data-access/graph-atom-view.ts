@@ -10,12 +10,12 @@ import {
   ATOM_FILE_SIZE,
   ATOM_LIVE_CLASS,
   ATOM_MORE_CLASS,
-  ATOM_MORE_PREFIX,
   ATOM_OUTCOME_CLASSES,
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
 import { TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import type { AtomCanvas } from '../common/task-canvas.type.ts';
+import { moreIdOf } from '../utils/atom-spec.util.ts';
 
 const OUTCOME_CLASSES = Object.values(ATOM_OUTCOME_CLASSES).join(' ');
 
@@ -61,7 +61,7 @@ const fileDefinitionOf = (file: GraphAtomFile, boxId: string, outcomes: Record<s
 const moreDefinitionsOf = (spec: AtomDrawSpec, boxId: string): ElementDefinition[] => {
   if (spec.hidden === 0) return [];
 
-  const id = `${ATOM_MORE_PREFIX}${spec.umbrellaId}`;
+  const id = moreIdOf(spec.umbrellaId);
   const data = { id, label: `+${spec.hidden} more`, parent: boxId, ...ATOM_FILE_SIZE };
   const definition: ElementDefinition = { group: 'nodes', data, classes: ATOM_MORE_CLASS };
 

@@ -1,15 +1,17 @@
 import cytoscape from 'cytoscape';
 import type { Core } from 'cytoscape';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
-import type { GraphAtomFile, GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { fileOf } from '../test/utils/atom-file.spec.util.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { atomSpecOf } from '../utils/atom-spec.util.ts';
@@ -21,12 +23,6 @@ const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 const FREE_ID = 'web#e2e-ci--a';
 
 const CLASH_ID = 'web#build';
-
-const fileOf = (id: string): GraphAtomFile => {
-  const file: GraphAtomFile = { id, specPath: 'a.spec.ts', isLive: false };
-
-  return file;
-};
 
 const GROUP: GraphAtomGroup = { umbrellaId: 'web#e2e-ci', files: [fileOf(FREE_ID), fileOf(CLASH_ID)] };
 
@@ -74,16 +70,19 @@ const MORE_SPEC: AtomDrawSpec = {
   hidden: 2
 };
 
-describe('FEATURE: createAtomCanvas drawing the spec files', () => {
+describe('FEATURE: createAtomCanvas drawing the spec files and the count node', () => {
   let cy: Core;
+  let tasks: TaskCanvas;
   let atoms: AtomCanvas;
 
   beforeEach(() => {
     const layout = { name: 'preset', fit: false };
 
-    cy = cytoscape({ headless: true, layout });
-    createTaskCanvas(cy).show(DRAWING);
+    cy = cytoscape({ headless: true, styleEnabled: true, layout });
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+    tasks = createTaskCanvas(cy);
     atoms = createAtomCanvas(cy);
+    tasks.show(DRAWING);
   });
 
   afterEach(() => {
@@ -112,34 +111,17 @@ describe('FEATURE: createAtomCanvas drawing the spec files', () => {
         expect(files.map((node) => node.id())).toStrictEqual([FREE_ID]);
       });
 
-      it('THEN the task keeps its class and its parent', () => {
+      it('THEN the task keeps its task class and takes no atom-file class', () => {
         const task = cy.getElementById(CLASH_ID);
 
-        expect(task.hasClass('task')).toBe(true);
-        expect(task.hasClass('atom-file')).toBe(false);
+        expect(task.classes()).toContain('task');
+        expect(task.classes()).not.toContain('atom-file');
+      });
+
+      it('THEN the task keeps its parent', () => {
         expect(parentIdOf(cy, CLASH_ID)).toBe('pkg:web');
       });
     });
-  });
-});
-
-describe('FEATURE: createAtomCanvas drawing the count node', () => {
-  let cy: Core;
-  let tasks: TaskCanvas;
-  let atoms: AtomCanvas;
-
-  beforeEach(() => {
-    const layout = { name: 'preset', fit: false };
-
-    cy = cytoscape({ headless: true, styleEnabled: true, layout });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
-    tasks = createTaskCanvas(cy);
-    atoms = createAtomCanvas(cy);
-    tasks.show(DRAWING);
-  });
-
-  afterEach(() => {
-    cy.destroy();
   });
 
   describe('GIVEN a spec with 2 hidden files', () => {
@@ -147,11 +129,17 @@ describe('FEATURE: createAtomCanvas drawing the count node', () => {
       atoms.expand(MORE_SPEC, 'pkg:web', {});
     });
 
-    it('WHEN it expands THEN the count node is in the box with only the atom-more class and the file size', () => {
+    it('WHEN it expands THEN the count node is in the box', () => {
+      expect(parentIdOf(cy, MORE_ID)).toBe('atom:web#e2e-ci');
+    });
+
+    it('WHEN it expands THEN the count node has only the atom-more class', () => {
+      expect(cy.getElementById(MORE_ID).classes()).toStrictEqual(['atom-more']);
+    });
+
+    it('WHEN it expands THEN the count node has the file size', () => {
       const more = cy.getElementById(MORE_ID);
 
-      expect(parentIdOf(cy, MORE_ID)).toBe('atom:web#e2e-ci');
-      expect(more.classes()).toStrictEqual(['atom-more']);
       expect([more.data('width'), more.data('height')]).toStrictEqual([96, 20]);
     });
 
@@ -181,6 +169,34 @@ describe('FEATURE: createAtomCanvas drawing the count node', () => {
       atoms.collapse('web#e2e-ci', 'pkg:web');
 
       expect(cy.getElementById(MORE_ID).empty()).toBe(true);
+    });
+  });
+
+  describe('GIVEN a spec with 2 hidden files expanded on a canvas with a container', () => {
+    let container: HTMLElement;
+
+    beforeEach(() => {
+      vi.stubGlobal('document', fakeDocumentMock());
+      container = document.createElement('div');
+      vi.spyOn(cy, 'container').mockReturnValue(container);
+      atoms.expand(MORE_SPEC, 'pkg:web', {});
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    });
+
+    it('WHEN the pointer enters the count node THEN the container has no title', () => {
+      cy.getElementById(MORE_ID).emit('mouseover');
+
+      expect(container.getAttribute('title')).toBeNull();
+    });
+
+    it('WHEN the pointer moves on the count node THEN the container has no title', () => {
+      cy.getElementById(MORE_ID).emit('mousemove');
+
+      expect(container.getAttribute('title')).toBeNull();
     });
   });
 
