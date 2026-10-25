@@ -126,7 +126,7 @@ describe('FEATURE: graph visibility', () => {
 
     it('WHEN a is shown and the style and node classes are reapplied THEN only a is visible', () => {
       showOnly(cy, new Set(['a']));
-      cy.style(graphStyleOf(COLORS, 'sans-serif'));
+      cy.style(graphStyleOf(COLORS, 'sans-serif', false));
       cy.nodes().forEach((node: NodeSingular): void => void node.classes(['normal']));
 
       expect(visibleIds(cy)).toStrictEqual(['a']);

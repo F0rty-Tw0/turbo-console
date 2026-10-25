@@ -79,7 +79,7 @@ describe('FEATURE: createAtomCanvas drawing the spec files and the count node', 
     const layout = { name: 'preset', fit: false };
 
     cy = cytoscape({ headless: true, styleEnabled: true, layout });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
     tasks = createTaskCanvas(cy);
     atoms = createAtomCanvas(cy);
     tasks.show(DRAWING);

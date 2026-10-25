@@ -9,7 +9,7 @@ import { CANVAS_COLORS } from '../utils/canvas-elements.spec.util.ts';
 export const boxedCyMock = (): Core => {
   const layout = { name: 'preset', fit: false };
   const cy = cytoscape({ headless: true, styleEnabled: true, layout, elements: structuredClone(BOX_ELEMENTS_STUB) });
-  const style = graphStyleOf(CANVAS_COLORS, 'sans-serif');
+  const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
 
   cy.style(style);
 

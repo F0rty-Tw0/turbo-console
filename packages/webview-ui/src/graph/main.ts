@@ -82,7 +82,7 @@ document.body.append(page.root);
 
 const saver = createViewStateSaver(bridge.saveState, VIEW_STATE_DEBOUNCE_MS);
 const runner = createLayoutRunner({ createElk, timeoutMs: FALLBACK_TIMEOUT_MS, fallback: breadthfirstPositions });
-const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily);
+const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily, false);
 const now = (): number => performance.now();
 const views: DetailsViews = {
   build: buildDetails,

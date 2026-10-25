@@ -88,9 +88,10 @@ const BOX_TITLE = {
  * a triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies;
  * `ghost` (dashed) is the one `GraphView.setGhosts` applies; `taskRulesOf` adds the task mode rules. The folder pass draws `folder-node` (a collapsed folder, its
  * label wrapped) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it.
- * Every colour comes from `colors`.
+ * Every colour comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font
+ * before their name; the base node rule keeps `fontFamily`.
  */
-export const graphStyleOf = (colors: ThemeColors, fontFamily: string): StylesheetJson => {
+export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: boolean): StylesheetJson => {
   const node = {
     shape: 'round-rectangle',
     width: 'data(width)',
@@ -118,7 +119,8 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string): Styleshee
   const selectedEdge = { width: 3, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
   const dimmed = { opacity: colors.dimmedOpacity };
   const folderNode = { label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px` } as const;
-  const taskRules = taskRulesOf(colors, BOX_TITLE);
+  const glyphFamily = glyphs ? `codicon, ${fontFamily}` : null;
+  const taskRules = taskRulesOf(colors, BOX_TITLE, glyphFamily);
   const style: StylesheetJson = [
     { selector: 'node', style: node },
     { selector: 'node:parent', style: boxStyleOf(colors) },
