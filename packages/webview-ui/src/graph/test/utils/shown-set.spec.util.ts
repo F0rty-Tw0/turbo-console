@@ -41,6 +41,36 @@ export const depsOf = (hop1: number, hop2: number): GraphTask[] => {
   return tasks;
 };
 
+/**
+ * How many array elements `run` reads through the array iterator, which every spread, `for…of`,
+ * destructure, and `new Set(array)` goes through. Copying an n-long list once per push reads n²/2 here.
+ */
+export const arrayReadsOf = (run: () => void): number => {
+  const original = Object.getOwnPropertyDescriptor(Array.prototype, Symbol.iterator);
+  const iterate = Array.prototype[Symbol.iterator];
+  let reads = 0;
+
+  function* counted(this: unknown[]): Generator<unknown> {
+    const values = iterate.call(this);
+
+    for (let step = values.next(); step.done !== true; step = values.next()) {
+      reads += 1;
+
+      yield step.value;
+    }
+  }
+
+  Object.defineProperty(Array.prototype, Symbol.iterator, { ...original, value: counted });
+
+  try {
+    run();
+  } finally {
+    Object.defineProperty(Array.prototype, Symbol.iterator, { ...original, value: iterate });
+  }
+
+  return reads;
+};
+
 /** `root#t` with `dependencies` dependencies and `dependents` dependents, all at hop 1. */
 export const mixOf = (dependencies: number, dependents: number): GraphTask[] => {
   const below = idsOf('u-', dependencies);
