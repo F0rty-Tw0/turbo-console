@@ -1,7 +1,10 @@
+import { recordNote } from './bench-record.ts';
 import { PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
 import type { BenchSession, CanvasReading, StretchFit, StretchPan } from './common/bench.type.ts';
 import { MAX_TAP_ATTEMPTS, MIN_TAP_PX, TAP_SETTLE_MS } from './common/stretch.const.ts';
 import { stretchPanOf } from './utils/pan-trace.util.ts';
+import { isPollTimeout } from './utils/poll-timeout.util.ts';
+import { tapNoteOf } from './utils/stretch-note.util.ts';
 import { dragRegionOf, extentOf, isCentred, isPointInside, nodeNamed, offsetToCentre, panStepOf } from './utils/stretch-view.util.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
@@ -156,18 +159,22 @@ const expectCentreInside = async (session: BenchSession, id: string): Promise<vo
   if (!isInContainer) throw new Error(`bench stretch: ${id} centre ${centre.x},${centre.y} is outside the container`);
 };
 
-/** The group's box is `isDrawn` within `TAP_SETTLE_MS`. */
+/** The group's box is `isDrawn` within `TAP_SETTLE_MS`; any error other than that poll timing out is rethrown. */
 const hasSettledAs = async (atoms: GraphAtoms, id: string, isDrawn: boolean): Promise<boolean> => {
   try {
     await atoms.expectBoxDrawn(id, isDrawn, TAP_SETTLE_MS);
-  } catch {
-    return false;
+  } catch (error) {
+    const isTimeout = isPollTimeout(error);
+
+    if (isTimeout) return false;
+
+    throw error;
   }
 
   return true;
 };
 
-/** Double taps the umbrella until its box is `isDrawn`, up to `MAX_TAP_ATTEMPTS` times; a tap pair Cytoscape dropped toggles nothing. */
+/** Double taps the umbrella until its box is `isDrawn`, up to `MAX_TAP_ATTEMPTS` times, noting how many it took; a tap pair Cytoscape dropped toggles nothing. */
 const tappedUntil = async (session: BenchSession, id: string, isDrawn: boolean): Promise<void> => {
   const atoms = new GraphAtoms(session.page);
 
@@ -176,7 +183,11 @@ const tappedUntil = async (session: BenchSession, id: string, isDrawn: boolean):
 
     const isSettled = await hasSettledAs(atoms, id, isDrawn);
 
-    if (isSettled) return;
+    if (isSettled) {
+      recordNote(tapNoteOf(id, attempt + 1));
+
+      return;
+    }
   }
 
   throw new Error(`bench stretch: ${MAX_TAP_ATTEMPTS} double taps left the box of ${id} ${isDrawn ? 'undrawn' : 'drawn'}`);

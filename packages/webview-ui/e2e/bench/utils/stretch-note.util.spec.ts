@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { heapNoteOf, panNoteOf } from './stretch-note.util.ts';
+import { heapNoteOf, panNoteOf, tapNoteOf } from './stretch-note.util.ts';
 import type { StretchPan } from '../common/bench.type.ts';
 
 describe('FEATURE: stretch notes', () => {
@@ -19,6 +19,14 @@ describe('FEATURE: stretch notes', () => {
       const note = heapNoteOf(39.84);
 
       expect(note).toBe('stretch L main JS heap 39.8 MB');
+    });
+  });
+
+  describe('GIVEN a toggle that took two double taps', () => {
+    it('WHEN it is worded THEN it names the umbrella and the attempts', () => {
+      const note = tapNoteOf('pkg-000#e2e-ci', 2);
+
+      expect(note).toBe('stretch tap pkg-000#e2e-ci attempts 2');
     });
   });
 });

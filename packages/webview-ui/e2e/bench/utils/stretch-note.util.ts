@@ -6,3 +6,6 @@ export const panNoteOf = (size: string, pan: StretchPan): string =>
 
 /** The finding the L row records: `stretch L main JS heap 39.8 MB`. */
 export const heapNoteOf = (heapMb: number): string => `stretch L main JS heap ${heapMb.toFixed(1)} MB`;
+
+/** The finding a toggle records: `stretch tap pkg-000#e2e-ci attempts 2`, the double taps it took to flip the group's box. */
+export const tapNoteOf = (id: string, attempts: number): string => `stretch tap ${id} attempts ${attempts}`;
