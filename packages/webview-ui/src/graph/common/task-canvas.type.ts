@@ -41,9 +41,9 @@ export type TaskCanvas = {
  * `GraphAtomGroups`'s; a call for a group the canvas does not draw does nothing.
  */
 export type AtomCanvas = {
-  /** Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node per file, outlined by its outcome. */
+  /** Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node per file whose id is free, outlined by its outcome; nothing is drawn if the box's id is taken. */
   readonly expand: (spec: AtomBoxSpec, pkgBoxId: string, files: GraphAtomFile[], outcomes: Record<string, GraphAtomOutcome>) => void;
-  /** Moves the umbrella back into `pkgBoxId` and removes its files and box. */
+  /** Moves the umbrella back into `pkgBoxId` and removes its files and box; a node of the box's id that is not a box stays. */
   readonly collapse: (umbrellaId: string, pkgBoxId: string) => void;
   /** Moves each drawn node in `positions` to its centre; an id not drawn is skipped. */
   readonly setPositions: (positions: Positions) => void;
@@ -51,4 +51,6 @@ export type AtomCanvas = {
   readonly setOutcomes: (outcomes: Record<string, GraphAtomOutcome>) => void;
   /** Whether the canvas lets the user drag nodes: it does not while any group is expanded. */
   readonly setGrabbable: (isGrabbable: boolean) => void;
+  /** Whether `id` is a box or file this canvas drew; a task that merely shares the id of one is not. */
+  readonly isAtomNode: (id: string) => boolean;
 };

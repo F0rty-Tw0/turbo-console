@@ -87,6 +87,18 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
       expect(rig.atoms.setGrabbable).not.toHaveBeenCalled();
     });
 
+    it.each([
+      ['a task named like its box', `atom:${UMBRELLA}`],
+      ['a task named like one of its files', FIRST_FILE]
+    ])('WHEN %s is toggled and the canvas draws no such box or file THEN nothing changes', (_name, nodeId) => {
+      rig.atoms.isAtomNode.mockReturnValue(false);
+
+      groups.toggle(nodeId);
+
+      expect(rig.atoms.expand).not.toHaveBeenCalled();
+      expect(rig.atoms.setPositions).not.toHaveBeenCalled();
+    });
+
     it('WHEN it is toggled THEN autoungrabify holds, and the runs are marked again', () => {
       groups.toggle(UMBRELLA);
 

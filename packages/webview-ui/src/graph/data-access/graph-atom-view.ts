@@ -48,7 +48,8 @@ const fileDefinitionOf = (file: GraphAtomFile, boxId: string, outcomes: Record<s
   const { width, height } = ATOM_FILE_SIZE;
   const data = { id: file.id, label: fileNameOf(file.specPath), parent: boxId, width, height };
   const liveClass = file.isLive ? ATOM_LIVE_CLASS : '';
-  const classNames = [ATOM_FILE_CLASS, outcomeClassOf(outcomes[file.id]), liveClass];
+  const outcome = Object.hasOwn(outcomes, file.id) ? outcomes[file.id] : undefined;
+  const classNames = [ATOM_FILE_CLASS, outcomeClassOf(outcome), liveClass];
   const classes = classNames.filter(Boolean).join(' ');
   const definition: ElementDefinition = { data, classes };
 
@@ -71,8 +72,10 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
     const umbrella = cy.getElementById(spec.umbrellaId);
     const boxId = `${ATOM_BOX_PREFIX}${spec.umbrellaId}`;
     const isMissing = umbrella.empty();
+    const isTaken = cy.getElementById(boxId).nonempty();
+    const isUnusable = isMissing || isTaken;
 
-    if (isMissing) return;
+    if (isUnusable) return;
 
     const fileNodes = files.map((file) => fileDefinitionOf(file, boxId, outcomes));
 
@@ -85,9 +88,9 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
   const collapse = (umbrellaId: string, pkgBoxId: string): void => {
     const box = cy.getElementById(`${ATOM_BOX_PREFIX}${umbrellaId}`);
     const umbrella = cy.getElementById(umbrellaId);
-    const isClosed = box.empty();
+    const isOpen = box.hasClass(ATOM_BOX_CLASS);
 
-    if (isClosed) return;
+    if (!isOpen) return;
 
     cy.batch((): void => {
       umbrella.move({ parent: pkgBoxId });
@@ -117,7 +120,12 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
     cy.batch((): void => Object.entries(outcomes).forEach(markFile));
   };
   const setGrabbable = (isGrabbable: boolean): void => void cy.autoungrabify(!isGrabbable);
-  const canvas: AtomCanvas = { expand, collapse, setPositions, setOutcomes, setGrabbable };
+  const isAtomNode = (id: string): boolean => {
+    const node = cy.getElementById(id);
+
+    return node.hasClass(ATOM_BOX_CLASS) || node.hasClass(ATOM_FILE_CLASS);
+  };
+  const canvas: AtomCanvas = { expand, collapse, setPositions, setOutcomes, setGrabbable, isAtomNode };
 
   return canvas;
 };

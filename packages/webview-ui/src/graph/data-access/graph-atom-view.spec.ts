@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape';
-import type { Core, NodeSingular } from 'cytoscape';
+import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
@@ -57,6 +57,25 @@ const parentIdOf = (cy: Core, id: string): string => {
 
   return parentId;
 };
+
+const BOX_ID = 'atom:web#e2e-ci';
+
+const fileOf = (id: string): GraphAtomFile => {
+  const file: GraphAtomFile = { id, specPath: 'tests/x.spec.ts', isLive: false };
+
+  return file;
+};
+
+const BOX_TASK_DATA = { id: BOX_ID };
+
+/** A task node that happens to have the id of the box. */
+const boxTaskOf = (): ElementDefinition => {
+  const task: ElementDefinition = { data: BOX_TASK_DATA, classes: 'task' };
+
+  return task;
+};
+
+const CONSTRUCTOR_SPEC: AtomBoxSpec = { ...SPEC, fileIds: ['constructor'] };
 
 const nodeIdsOf = (cy: Core): string[] => {
   const ids = cy.nodes().map(idOf);
@@ -151,6 +170,48 @@ describe('FEATURE: createAtomCanvas', () => {
         expect(nodeIdsOf(cy)).toStrictEqual(before);
         expect(parentIdOf(cy, 'web#e2e-ci')).toBe('pkg:web');
       });
+    });
+  });
+
+  describe('GIVEN a node of the canvas already holds an id the group needs', () => {
+    it('WHEN a task has the id of the box THEN expanding draws nothing and throws nothing', () => {
+      cy.add(boxTaskOf());
+      const before = nodeIdsOf(cy);
+
+      expect(() => atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES)).not.toThrow();
+      expect(nodeIdsOf(cy)).toStrictEqual(before);
+      expect(parentIdOf(cy, 'web#e2e-ci')).toBe('pkg:web');
+    });
+
+    it('WHEN a task has the id of the box THEN collapsing keeps that task', () => {
+      cy.add(boxTaskOf());
+
+      atoms.collapse('web#e2e-ci', 'pkg:web');
+
+      expect(cy.getElementById(BOX_ID).nonempty()).toBe(true);
+    });
+
+    it('WHEN a file id is named like an inherited member THEN the file takes no outcome class', () => {
+      atoms.expand(CONSTRUCTOR_SPEC, 'pkg:web', [fileOf('constructor')], {});
+
+      expect(cy.getElementById('constructor').classes()).toStrictEqual(['atom-file']);
+    });
+  });
+
+  describe('GIVEN the group is expanded and nodes are asked about', () => {
+    beforeEach(() => {
+      atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES);
+    });
+
+    it.each([
+      ['the box', true, BOX_ID],
+      ['a file', true, SPACED],
+      ['the umbrella', false, 'web#e2e-ci'],
+      ['another task', false, 'api#build'],
+      ['an id nothing holds', false, 'ghost'],
+      ['an empty id', false, '']
+    ])('WHEN %s is asked about THEN isAtomNode is %s', (_name, expected, id) => {
+      expect(atoms.isAtomNode(id)).toBe(expected);
     });
   });
 

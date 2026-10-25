@@ -5,6 +5,7 @@ import type { GraphAtomGroup, GraphTask, Positions } from '../../bridge/common/g
 import { ATOM_BOX_PREFIX } from '../common/graph-atom.const.ts';
 import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
+import { atomSpecOf } from '../utils/atom-spec.util.ts';
 import { taskBoxIdOf } from '../utils/elk-task-graph.util.ts';
 
 const pkgBoxEntryOf = (task: GraphTask): [string, string] => [task.id, taskBoxIdOf(task.packageName)];
@@ -174,12 +175,23 @@ export class GraphAtomGroups {
     this.expansion.release();
   }
 
-  /** The umbrella id of the group a node belongs to: the umbrella itself, its `atom:` box or one of its files. */
+  /**
+   * The umbrella id of the group a node belongs to: the umbrella itself, its `atom:` box or one of its files. A task that
+   * merely shares the id of a box or file belongs to none.
+   */
   private groupOf(nodeId: string): string | null {
-    const umbrellaId = umbrellaOfBox(nodeId);
-    const isGroup = this.groups.has(umbrellaId);
+    const isUmbrella = this.groups.has(nodeId);
 
-    if (isGroup) return umbrellaId;
+    if (isUmbrella) return nodeId;
+
+    const isAtomNode = this.deps.view.atoms.isAtomNode(nodeId);
+
+    if (!isAtomNode) return null;
+
+    const umbrellaId = umbrellaOfBox(nodeId);
+    const isBox = this.groups.has(umbrellaId);
+
+    if (isBox) return umbrellaId;
 
     const hasFile = (group: GraphAtomGroup): boolean => group.files.some((file) => file.id === nodeId);
     const values = this.groups.values();
@@ -191,16 +203,12 @@ export class GraphAtomGroups {
 
   /** Whether the kept layout shows the umbrella as one with files to expand into. */
   private isDrawable(umbrellaId: string): boolean {
+    const group = this.groups.get(umbrellaId);
     const { placement } = this;
-    const fileCount = this.groups.get(umbrellaId)?.files.length ?? 0;
 
-    if (placement === null || fileCount === 0) return false;
+    if (group === undefined || placement === null) return false;
 
-    const isShown = placement.shown.has(umbrellaId);
-    const isSized = placement.sizes.has(umbrellaId);
-    const hasBox = placement.pkgBoxes.has(umbrellaId);
-
-    return isShown && isSized && hasBox;
+    return atomSpecOf(group, placement) !== null;
   }
 
   /** Makes the canvas match the expanded set against the kept layout; nothing before a layout is placed. */
