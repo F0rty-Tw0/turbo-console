@@ -1,5 +1,6 @@
 import type { GraphState } from '@turbo-console/webview-ui';
 
+import { Coalescer } from './coalescer.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
@@ -19,10 +20,13 @@ type AtomFeedDeps = {
 export class GraphAtomFeed {
   private readonly deps: AtomFeedDeps;
   private unsubscribe: (() => void) | null = null;
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private readonly coalescer: Coalescer;
 
   public constructor(deps: AtomFeedDeps) {
     this.deps = deps;
+    this.coalescer = new Coalescer(RUNS_COALESCE_MS, () => {
+      this.fire();
+    });
   }
 
   public start(): void {
@@ -36,11 +40,11 @@ export class GraphAtomFeed {
   public stop(): void {
     this.unsubscribe?.();
     this.unsubscribe = null;
-    this.cancelTimer();
+    this.coalescer.cancel();
   }
 
   public flush(state: GraphState): void {
-    this.cancelTimer();
+    this.coalescer.cancel();
     this.post(state);
   }
 
@@ -49,27 +53,15 @@ export class GraphAtomFeed {
 
     const canPost = this.deps.gate.canPost();
 
-    if (!canPost || this.timer !== null) return;
-
-    this.timer = setTimeout(() => {
-      this.fire();
-    }, RUNS_COALESCE_MS);
+    if (canPost) this.coalescer.arm();
   }
 
   private fire(): void {
-    this.timer = null;
-
     const canPost = this.deps.gate.canPost();
 
     if (!canPost) return;
 
     this.post(this.deps.gate.state());
-  }
-
-  private cancelTimer(): void {
-    if (this.timer !== null) clearTimeout(this.timer);
-
-    this.timer = null;
   }
 
   private post(state: GraphState): void {

@@ -1,5 +1,6 @@
 import type { GraphRunsMessage, GraphState } from '@turbo-console/webview-ui';
 
+import { Coalescer } from './coalescer.ts';
 import { GraphAtomFeed } from './graph-atom-feed.ts';
 import type { RunEntry, Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
@@ -25,12 +26,15 @@ type TaskFeedDeps = {
 export class GraphTaskFeed {
   private readonly deps: TaskFeedDeps;
   private unsubscribe: (() => void) | null = null;
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private readonly coalescer: Coalescer;
   private held: string[] | null = null;
   private readonly atomFeed: GraphAtomFeed;
 
   public constructor(deps: TaskFeedDeps) {
     this.deps = deps;
+    this.coalescer = new Coalescer(RUNS_COALESCE_MS, () => {
+      this.fire();
+    });
     this.atomFeed = new GraphAtomFeed({ root: deps.root, atoms: deps.atoms, ports: deps.ports, gate: deps.gate });
   }
 
@@ -48,12 +52,12 @@ export class GraphTaskFeed {
     this.atomFeed.stop();
     this.unsubscribe?.();
     this.unsubscribe = null;
-    this.cancelTimer();
+    this.coalescer.cancel();
     this.held = null;
   }
 
   public flush(state: GraphState): void {
-    this.cancelTimer();
+    this.coalescer.cancel();
     this.postRuns(runIdsOf(state));
     this.atomFeed.flush(state);
     this.postHeld(state);
@@ -97,33 +101,17 @@ export class GraphTaskFeed {
   private changed(entry: RunEntry): void {
     if (entry.root !== this.deps.root) return;
 
-    this.armTimer();
-  }
-
-  private armTimer(): void {
     const canPost = this.deps.gate.canPost();
 
-    if (!canPost || this.timer !== null) return;
-
-    this.timer = setTimeout(() => {
-      this.fire();
-    }, RUNS_COALESCE_MS);
+    if (canPost) this.coalescer.arm();
   }
 
   private fire(): void {
-    this.timer = null;
-
     const canPost = this.deps.gate.canPost();
 
     if (!canPost) return;
 
     this.postRuns(this.deps.gate.runIds());
-  }
-
-  private cancelTimer(): void {
-    if (this.timer !== null) clearTimeout(this.timer);
-
-    this.timer = null;
   }
 
   private postRuns(ids: string[]): void {
