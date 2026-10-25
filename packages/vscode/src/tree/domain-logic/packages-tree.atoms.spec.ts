@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { PackagesTree } from './packages-tree.ts';
+import { sharedAtomsOf } from './shared-atoms.ts';
 import type { LoadedModel } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
@@ -26,7 +27,8 @@ describe('FEATURE: packages tree Atomizer loads', () => {
   const children: ChildrenOf = async (node) => tree.children(node);
 
   const treeOver = (loaded: LoadedModel): void => {
-    const atom: AtomHostPorts = { binaryOf: h.binaryOf, dryRun: h.dryRun, results: h.results, log: h.log };
+    const host: AtomHostPorts = { binaryOf: h.binaryOf, dryRun: h.dryRun, results: h.results, log: h.log };
+    const atom = sharedAtomsOf(store, host);
     const ports: TreePorts = {
       runs: () => undefined,
       ...SCRIPTS_HIDDEN_PORTS,

@@ -1,4 +1,6 @@
-import type { AtomResult, DryRunRequest, DryRunState, TurboBinary } from '@turbo-console/core';
+import type { AtomResult, DryRunRequest, DryRunState, TurboBinary, WorkspaceModel } from '@turbo-console/core';
+
+import type { AtomLookup } from './atom-view.type.ts';
 
 /**
  * What `AtomLoads` reads and calls. `binaryOf` is `null` for a folder whose turbo is not resolved. `dryRun` and `results`
@@ -12,5 +14,23 @@ export type AtomLoadPorts = {
   readonly changed: (root: string, packageName: string) => void;
 };
 
-/** The half of `AtomLoadPorts` the host builds; the tree adds `changed`, which redraws its own nodes. */
+/** The half of `AtomLoadPorts` the host builds; `sharedAtomsOf` adds `changed`, which tells every listener. */
 export type AtomHostPorts = Omit<AtomLoadPorts, 'changed'>;
+
+/** Hears that the view of one package of `root` changed. */
+export type AtomListener = (root: string, packageName: string) => void;
+
+/**
+ * The one `AtomLoads` of a window, shared by the tree and the graph: its public methods plus `onDidChange`, which
+ * subscribes a listener and returns its remover. `dispose` forgets every listener, then aborts every load.
+ */
+export type SharedAtoms = {
+  readonly view: AtomLookup;
+  readonly childrenRequested: (root: string, packageName: string) => void;
+  readonly runEnded: (root: string, packageName: string) => void;
+  readonly refreshAll: () => void;
+  readonly modelChanged: (root: string, model: WorkspaceModel | null) => void;
+  readonly rootsKept: (kept: ReadonlySet<string>) => void;
+  readonly dispose: () => void;
+  readonly onDidChange: (listener: AtomListener) => () => void;
+};

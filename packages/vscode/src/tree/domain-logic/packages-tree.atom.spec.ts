@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PackagesTree } from './packages-tree.ts';
+import { sharedAtomsOf } from './shared-atoms.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
@@ -27,6 +28,7 @@ describe('FEATURE: packages tree Atomizer rows', () => {
 
     beforeEach(() => {
       const store = new RootStore();
+      const atom = sharedAtomsOf(store, ATOM_IDLE_PORTS);
       const ports: TreePorts = {
         runs: () => undefined,
         scriptsShown: () => false,
@@ -35,7 +37,7 @@ describe('FEATURE: packages tree Atomizer rows', () => {
         treeVisible: new Map(),
         now: () => 7,
         wallNow: () => 7,
-        atom: ATOM_IDLE_PORTS
+        atom
       };
       const base = loadedWith([]);
       const loaded = { ...base, model: ATOM_MODEL_STUB };

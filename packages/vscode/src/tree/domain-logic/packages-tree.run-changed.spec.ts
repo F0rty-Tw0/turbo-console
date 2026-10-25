@@ -9,8 +9,8 @@ import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { TreePorts } from '../common/tree-node.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
+import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
-import { ATOM_IDLE_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 import { SCRIPT_PACKAGE, SCRIPT_TASK, scriptRunOf } from '../test/utils/tree-refresher.spec.util.ts';
 
 const LIVE: ReadonlySet<string> = new Set([SCRIPT_TASK.id]);
@@ -40,7 +40,7 @@ describe('FEATURE: packages tree scripts toggle and run membership', () => {
       treeVisible: new Map(),
       now: () => 7,
       wallNow: () => 7,
-      atom: ATOM_IDLE_PORTS
+      atom: SHARED_ATOMS_STUB
     };
 
     tree = new PackagesTree(store, 'list', 'builtin', ports);

@@ -1,8 +1,8 @@
-import { ATOM_IDLE_PORTS } from './tree-ports.spec.util.ts';
 import type { LiveIds, RunLookup } from '../../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../../shared/common/scripts-toggle.type.ts';
 import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { TreeProviderDeps } from '../../common/tree-node.type.ts';
+import { SHARED_ATOMS_STUB } from '../stubs/shared-atoms.stub.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
@@ -10,7 +10,7 @@ const NOTHING_LIVE: LiveIds = () => new Set();
 
 /**
  * The provider's deps with every run lookup answering `get`, the running ids `runningIds` answers (none unless given), an
- * empty span map and the scripts toggle (hidden unless given).
+ * empty span map, the scripts toggle (hidden unless given) and idle shared Atomizer loads.
  */
 export const providerDepsOf = (
   get: RunLookup = NEVER_RAN,
@@ -18,7 +18,7 @@ export const providerDepsOf = (
   runningIds: LiveIds = NOTHING_LIVE
 ): TreeProviderDeps => {
   const runs: TreeProviderDeps['runs'] = { get, runningIds };
-  const deps: TreeProviderDeps = { runs, treeVisible: new Map(), scripts, atom: ATOM_IDLE_PORTS };
+  const deps: TreeProviderDeps = { runs, treeVisible: new Map(), scripts, atom: SHARED_ATOMS_STUB };
 
   return deps;
 };

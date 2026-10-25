@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { AtomTree } from './atom-tree.ts';
+import { sharedAtomsOf } from './shared-atoms.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
-import type { AtomHostPorts } from '../common/atom-load.type.ts';
+import type { AtomHostPorts, SharedAtoms } from '../common/atom-load.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import {
   BASE_SPEC_PATHS,
@@ -44,6 +45,7 @@ describe('FEATURE: atom tree', () => {
   let fire: Mock<TreePorts['fire']>;
   let cache: Map<string, TreeNode>;
   let store: RootStore;
+  let shared: SharedAtoms;
   let atoms: AtomTree;
 
   const changeTo = (paths: string[]): RootChange => {
@@ -60,11 +62,12 @@ describe('FEATURE: atom tree', () => {
     cache = new Map();
     store = new RootStore();
 
-    const atom: AtomHostPorts = { binaryOf: h.binaryOf, dryRun: h.dryRun, results: h.results, log: h.log };
+    const host: AtomHostPorts = { binaryOf: h.binaryOf, dryRun: h.dryRun, results: h.results, log: h.log };
 
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
     store.apply(ROOT, loadedOf(atomModelOf(BASE_SPEC_PATHS)));
-    atoms = new AtomTree(store, cache, { atom, fire });
+    shared = sharedAtomsOf(store, host);
+    atoms = new AtomTree(store, cache, { atom: shared, fire });
   });
 
   describe('GIVEN a root holding group e2e-ci of @fx/e2e', () => {
@@ -175,6 +178,14 @@ describe('FEATURE: atom tree', () => {
       atoms.modelChanged(changeTo(['tests/a.spec.ts']));
 
       expect(fire).toHaveBeenCalledExactlyOnceWith([UMBRELLA_TREE_NODE_STUB]);
+    });
+
+    it('WHEN the tree is disposed THEN a later load change fires no node', async () => {
+      atoms.dispose();
+      shared.childrenRequested(ROOT, PKG);
+      await settleOk(h, 1);
+
+      expect(fire).not.toHaveBeenCalled();
     });
   });
 
