@@ -2,7 +2,7 @@ import { GraphAtomExpansion } from './graph-atom-expansion.ts';
 import { GraphAtomTiming } from './graph-atom-timing.ts';
 import type { GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup, GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
-import { ATOM_BOX_PREFIX } from '../common/graph-atom.const.ts';
+import { ATOM_BOX_PREFIX, ATOM_MORE_PREFIX } from '../common/graph-atom.const.ts';
 import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import { atomSpecOf } from '../utils/atom-spec.util.ts';
@@ -17,6 +17,15 @@ const umbrellaOfBox = (nodeId: string): string => {
   if (!isBox) return nodeId;
 
   return nodeId.slice(ATOM_BOX_PREFIX.length);
+};
+
+/** The umbrella id behind an `atom-more:` count node id; any other id as it is. */
+const umbrellaOfMore = (nodeId: string): string => {
+  const isMore = nodeId.startsWith(ATOM_MORE_PREFIX);
+
+  if (!isMore) return nodeId;
+
+  return nodeId.slice(ATOM_MORE_PREFIX.length);
 };
 
 /**
@@ -176,7 +185,7 @@ export class GraphAtomGroups {
   }
 
   /**
-   * The umbrella id of the group a node belongs to: the umbrella itself, its `atom:` box or one of its files. A task that
+   * The umbrella id of the group a node belongs to: the umbrella itself, its `atom:` box, its `atom-more:` count node or one of its files. A task that
    * merely shares the id of a box or file belongs to none.
    */
   private groupOf(nodeId: string): string | null {
@@ -192,6 +201,11 @@ export class GraphAtomGroups {
     const isBox = this.groups.has(umbrellaId);
 
     if (isBox) return umbrellaId;
+
+    const moreUmbrellaId = umbrellaOfMore(nodeId);
+    const isMore = this.groups.has(moreUmbrellaId);
+
+    if (isMore) return moreUmbrellaId;
 
     const hasFile = (group: GraphAtomGroup): boolean => group.files.some((file) => file.id === nodeId);
     const values = this.groups.values();

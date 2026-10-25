@@ -15,6 +15,9 @@ export const ATOM_BOX_CLASS = 'atom-box';
 /** The class of an Atomizer file node; it is never a `task`. */
 export const ATOM_FILE_CLASS = 'atom-file';
 
+/** The class of the count node that stands for the files an expanded group does not draw; it is never a `task`. */
+export const ATOM_MORE_CLASS = 'atom-more';
+
 /** The class of a file node whose test is a live one; its border is dashed. */
 export const ATOM_LIVE_CLASS = 'atom-live';
 
@@ -27,6 +30,12 @@ export const ATOM_OUTCOME_CLASSES: Readonly<Record<Exclude<GraphAtomOutcome, 'no
 
 /** The id prefix of an expanded group's box: `atom:<umbrellaId>`. */
 export const ATOM_BOX_PREFIX = 'atom:';
+
+/** The id prefix of a capped group's count node: `atom-more:<umbrellaId>`. */
+export const ATOM_MORE_PREFIX = 'atom-more:';
+
+/** The most files an expanded group draws before its count node; a group of one more draws them all. */
+export const ATOM_FILE_CAP = 10;
 
 /** The size of a file node in an expanded group. */
 export const ATOM_FILE_SIZE = { width: 96, height: 20 } as const;

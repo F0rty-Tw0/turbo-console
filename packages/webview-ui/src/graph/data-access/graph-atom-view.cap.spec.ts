@@ -3,11 +3,14 @@ import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
+import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphAtomFile, GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import type { AtomCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import type { AtomCanvas, TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { atomSpecOf } from '../utils/atom-spec.util.ts';
 
@@ -61,6 +64,16 @@ const parentIdOf = (cy: Core, id: string): string => {
   return parent?.id() ?? '';
 };
 
+const MORE_ID = 'atom-more:web#e2e-ci';
+
+const MORE_SPEC: AtomDrawSpec = {
+  umbrellaId: 'web#e2e-ci',
+  umbrellaSize: UMBRELLA_SIZE,
+  fileIds: [FREE_ID, MORE_ID],
+  files: [fileOf(FREE_ID)],
+  hidden: 2
+};
+
 describe('FEATURE: createAtomCanvas drawing the spec files', () => {
   let cy: Core;
   let atoms: AtomCanvas;
@@ -107,5 +120,73 @@ describe('FEATURE: createAtomCanvas drawing the spec files', () => {
         expect(parentIdOf(cy, CLASH_ID)).toBe('pkg:web');
       });
     });
+  });
+});
+
+describe('FEATURE: createAtomCanvas drawing the count node', () => {
+  let cy: Core;
+  let tasks: TaskCanvas;
+  let atoms: AtomCanvas;
+
+  beforeEach(() => {
+    const layout = { name: 'preset', fit: false };
+
+    cy = cytoscape({ headless: true, styleEnabled: true, layout });
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+    tasks = createTaskCanvas(cy);
+    atoms = createAtomCanvas(cy);
+    tasks.show(DRAWING);
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  describe('GIVEN a spec with 2 hidden files', () => {
+    beforeEach(() => {
+      atoms.expand(MORE_SPEC, 'pkg:web', {});
+    });
+
+    it('WHEN it expands THEN the count node is in the box with only the atom-more class and the file size', () => {
+      const more = cy.getElementById(MORE_ID);
+
+      expect(parentIdOf(cy, MORE_ID)).toBe('atom:web#e2e-ci');
+      expect(more.classes()).toStrictEqual(['atom-more']);
+      expect([more.data('width'), more.data('height')]).toStrictEqual([96, 20]);
+    });
+
+    it('WHEN it expands THEN the count node reads +2 more, not its id', () => {
+      expect(cy.getElementById(MORE_ID).data('label')).toBe('+2 more');
+      expect(cy.getElementById(MORE_ID).style('label')).toBe('+2 more');
+    });
+
+    it('WHEN the group is asked THEN the count node is an atom node', () => {
+      expect(atoms.isAtomNode(MORE_ID)).toBe(true);
+    });
+
+    it('WHEN an outcome arrives for the count node THEN it takes no outcome class', () => {
+      atoms.setOutcomes({ [MORE_ID]: 'failed' });
+
+      expect(cy.getElementById(MORE_ID).classes()).toStrictEqual(['atom-more']);
+    });
+
+    it('WHEN a run state arrives for the count node THEN it takes no run class', () => {
+      tasks.runStates({ [MORE_ID]: 'running' });
+      tasks.remark();
+
+      expect(cy.getElementById(MORE_ID).classes()).toStrictEqual(['atom-more']);
+    });
+
+    it('WHEN the group collapses THEN the count node is gone', () => {
+      atoms.collapse('web#e2e-ci', 'pkg:web');
+
+      expect(cy.getElementById(MORE_ID).empty()).toBe(true);
+    });
+  });
+
+  it('GIVEN a spec with no hidden file WHEN it expands THEN no count node is drawn', () => {
+    atoms.expand({ ...MORE_SPEC, fileIds: [FREE_ID], hidden: 0 }, 'pkg:web', {});
+
+    expect(cy.nodes('.atom-more').empty()).toBe(true);
   });
 });

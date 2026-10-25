@@ -9,6 +9,8 @@ import {
   ATOM_FILE_CLASS,
   ATOM_FILE_SIZE,
   ATOM_LIVE_CLASS,
+  ATOM_MORE_CLASS,
+  ATOM_MORE_PREFIX,
   ATOM_OUTCOME_CLASSES,
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
@@ -54,6 +56,16 @@ const fileDefinitionOf = (file: GraphAtomFile, boxId: string, outcomes: Record<s
   const definition: ElementDefinition = { data, classes };
 
   return definition;
+};
+
+const moreDefinitionsOf = (spec: AtomDrawSpec, boxId: string): ElementDefinition[] => {
+  if (spec.hidden === 0) return [];
+
+  const id = `${ATOM_MORE_PREFIX}${spec.umbrellaId}`;
+  const data = { id, label: `+${spec.hidden} more`, parent: boxId, ...ATOM_FILE_SIZE };
+  const definition: ElementDefinition = { group: 'nodes', data, classes: ATOM_MORE_CLASS };
+
+  return [definition];
 };
 
 const boxDefinitionOf = (boxId: string, pkgBoxId: string): ElementDefinition => {
@@ -118,11 +130,13 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
     if (isUnusable) return false;
 
     const fileNodes = spec.files.map((file) => fileDefinitionOf(file, boxId, outcomes));
+    const moreNodes = moreDefinitionsOf(spec, boxId);
 
     cy.batch((): void => {
       cy.add(boxDefinitionOf(boxId, pkgBoxId));
       umbrella.move({ parent: boxId });
       cy.add(fileNodes);
+      cy.add(moreNodes);
     });
 
     return true;
@@ -154,7 +168,7 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
   const isAtomNode = (id: string): boolean => {
     const node = cy.getElementById(id);
 
-    return node.hasClass(ATOM_BOX_CLASS) || node.hasClass(ATOM_FILE_CLASS);
+    return node.hasClass(ATOM_BOX_CLASS) || node.hasClass(ATOM_FILE_CLASS) || node.hasClass(ATOM_MORE_CLASS);
   };
   const canvas: AtomCanvas = { expand, collapse, setPositions, setOutcomes, setGrabbable, isAtomNode };
 

@@ -8,6 +8,7 @@ import {
   ATOM_FILE_CLASS,
   ATOM_FILE_SIZE,
   ATOM_LIVE_CLASS,
+  ATOM_MORE_CLASS,
   ATOM_OUTCOME_CLASSES,
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
@@ -66,6 +67,7 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node): Stylesheet
     { selector: `node.${ATOM_UMBRELLA_CLASS}`, style: UMBRELLA_NODE },
     { selector: `node:parent.${TASK_BOX_CLASS}`, style: taskBox },
     { selector: `node.${ATOM_FILE_CLASS}`, style: ATOM_FILE },
+    { selector: `node.${ATOM_MORE_CLASS}`, style: ATOM_FILE },
     { selector: `node:parent.${ATOM_BOX_CLASS}`, style: ATOM_BOX },
     ...outcomeRules,
     { selector: `node.${ATOM_LIVE_CLASS}`, style: ATOM_LIVE },
