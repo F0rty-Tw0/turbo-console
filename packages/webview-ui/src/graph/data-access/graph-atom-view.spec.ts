@@ -6,7 +6,7 @@ import { createAtomCanvas } from './graph-atom-view.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
+import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
@@ -30,9 +30,15 @@ const FILES: GraphAtomFile[] = [
 
 const FILE_IDS = FILES.map((file) => file.id);
 
-const SPEC: AtomBoxSpec = { umbrellaId: 'web#e2e-ci', umbrellaSize: UMBRELLA_SIZE, fileIds: FILE_IDS };
+const SPEC: AtomDrawSpec = {
+  umbrellaId: 'web#e2e-ci',
+  umbrellaSize: UMBRELLA_SIZE,
+  fileIds: FILE_IDS,
+  files: FILES,
+  hidden: 0
+};
 
-const GHOST_SPEC: AtomBoxSpec = { ...SPEC, umbrellaId: 'ghost#e2e-ci' };
+const GHOST_SPEC: AtomDrawSpec = { ...SPEC, umbrellaId: 'ghost#e2e-ci' };
 
 const OUTCOMES: Record<string, GraphAtomOutcome> = {
   [FILE_IDS[0] ?? '']: 'passed',
@@ -76,7 +82,7 @@ const boxTaskOf = (): ElementDefinition => {
   return task;
 };
 
-const CONSTRUCTOR_SPEC: AtomBoxSpec = { ...SPEC, fileIds: ['constructor'] };
+const CONSTRUCTOR_SPEC: AtomDrawSpec = { ...SPEC, fileIds: ['constructor'], files: [fileOf('constructor')] };
 
 const nodeIdsOf = (cy: Core): string[] => {
   const ids = cy.nodes().map(idOf);
@@ -103,7 +109,7 @@ describe('FEATURE: createAtomCanvas', () => {
   describe('GIVEN an umbrella of three files inside its package box', () => {
     describe('WHEN the group expands', () => {
       beforeEach(() => {
-        atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES);
+        atoms.expand(SPEC, 'pkg:web', OUTCOMES);
       });
 
       it('THEN the box atom:<id> is an atom-box in the package box and holds the umbrella', () => {
@@ -146,7 +152,7 @@ describe('FEATURE: createAtomCanvas', () => {
       it('THEN the umbrella is back in its package box and the box and files are gone', () => {
         const before = nodeIdsOf(cy);
 
-        atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES);
+        atoms.expand(SPEC, 'pkg:web', OUTCOMES);
         atoms.collapse('web#e2e-ci', 'pkg:web');
 
         expect(parentIdOf(cy, 'web#e2e-ci')).toBe('pkg:web');
@@ -158,7 +164,7 @@ describe('FEATURE: createAtomCanvas', () => {
       it('THEN expanding an unknown umbrella adds nothing', () => {
         const before = nodeIdsOf(cy);
 
-        atoms.expand(GHOST_SPEC, 'pkg:ghost', FILES, OUTCOMES);
+        atoms.expand(GHOST_SPEC, 'pkg:ghost', OUTCOMES);
 
         expect(nodeIdsOf(cy)).toStrictEqual(before);
       });
@@ -176,17 +182,17 @@ describe('FEATURE: createAtomCanvas', () => {
 
   describe('GIVEN a group is asked to expand', () => {
     it('WHEN its umbrella is drawn and its box id is free THEN expand reports it drew', () => {
-      expect(atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES)).toBe(true);
+      expect(atoms.expand(SPEC, 'pkg:web', OUTCOMES)).toBe(true);
     });
 
     it('WHEN its umbrella is not drawn THEN expand reports it drew nothing', () => {
-      expect(atoms.expand(GHOST_SPEC, 'pkg:ghost', FILES, OUTCOMES)).toBe(false);
+      expect(atoms.expand(GHOST_SPEC, 'pkg:ghost', OUTCOMES)).toBe(false);
     });
 
     it('WHEN a task has the id of its box THEN expand reports it drew nothing', () => {
       cy.add(boxTaskOf());
 
-      expect(atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES)).toBe(false);
+      expect(atoms.expand(SPEC, 'pkg:web', OUTCOMES)).toBe(false);
     });
   });
 
@@ -195,7 +201,7 @@ describe('FEATURE: createAtomCanvas', () => {
       cy.add(boxTaskOf());
       const before = nodeIdsOf(cy);
 
-      expect(() => atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES)).not.toThrow();
+      expect(() => atoms.expand(SPEC, 'pkg:web', OUTCOMES)).not.toThrow();
       expect(nodeIdsOf(cy)).toStrictEqual(before);
       expect(parentIdOf(cy, 'web#e2e-ci')).toBe('pkg:web');
     });
@@ -209,7 +215,7 @@ describe('FEATURE: createAtomCanvas', () => {
     });
 
     it('WHEN a file id is named like an inherited member THEN the file takes no outcome class', () => {
-      atoms.expand(CONSTRUCTOR_SPEC, 'pkg:web', [fileOf('constructor')], {});
+      atoms.expand(CONSTRUCTOR_SPEC, 'pkg:web', {});
 
       expect(cy.getElementById('constructor').classes()).toStrictEqual(['atom-file']);
     });
@@ -222,7 +228,7 @@ describe('FEATURE: createAtomCanvas', () => {
       vi.stubGlobal('document', fakeDocumentMock());
       container = document.createElement('div');
       vi.spyOn(cy, 'container').mockReturnValue(container);
-      atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES);
+      atoms.expand(SPEC, 'pkg:web', OUTCOMES);
     });
 
     afterEach(() => {
@@ -266,7 +272,7 @@ describe('FEATURE: createAtomCanvas', () => {
 
   describe('GIVEN the group is expanded and nodes are asked about', () => {
     beforeEach(() => {
-      atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES);
+      atoms.expand(SPEC, 'pkg:web', OUTCOMES);
     });
 
     it.each([
@@ -283,7 +289,7 @@ describe('FEATURE: createAtomCanvas', () => {
 
   describe('GIVEN the group is expanded', () => {
     beforeEach(() => {
-      atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES);
+      atoms.expand(SPEC, 'pkg:web', OUTCOMES);
     });
 
     it('WHEN positions are set THEN every drawn node in them moves and an id not drawn is skipped', () => {

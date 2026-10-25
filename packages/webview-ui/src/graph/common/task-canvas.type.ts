@@ -1,8 +1,8 @@
-import type { AtomBoxSpec } from './atom-layout.type.ts';
+import type { AtomDrawSpec } from './atom-layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
-import type { GraphAtomFile, GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
 
 /**
  * What task mode draws: the shown tasks, their centres, the node sizer for their names, the size of each umbrella that
@@ -42,12 +42,7 @@ export type TaskCanvas = {
  */
 export type AtomCanvas = {
   /** Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node per file whose id is free, outlined by its outcome; whether it drew, since nothing is drawn if the umbrella is not drawn or the box's id is taken. */
-  readonly expand: (
-    spec: AtomBoxSpec,
-    pkgBoxId: string,
-    files: GraphAtomFile[],
-    outcomes: Record<string, GraphAtomOutcome>
-  ) => boolean;
+  readonly expand: (spec: AtomDrawSpec, pkgBoxId: string, outcomes: Record<string, GraphAtomOutcome>) => boolean;
   /** Moves the umbrella back into `pkgBoxId` and removes its files and box; a node of the box's id that is not a box stays. */
   readonly collapse: (umbrellaId: string, pkgBoxId: string) => void;
   /** Moves each drawn node in `positions` to its centre; an id not drawn is skipped. */

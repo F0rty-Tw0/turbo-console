@@ -30,10 +30,12 @@ const withGroupFiles = (...ids: string[]): GraphAtomGroup => {
 
 describe('FEATURE: atomSpecOf', () => {
   it('GIVEN a shown, sized, boxed umbrella with files WHEN read THEN the spec names its size and file ids', () => {
-    expect(atomSpecOf(GROUP, PLACEMENT)).toStrictEqual({
+    expect(atomSpecOf(GROUP, PLACEMENT, {})).toStrictEqual({
       umbrellaId: 'app#e2e',
       umbrellaSize: SIZE,
-      fileIds: ['app#e2e--a', 'app#e2e--b']
+      fileIds: ['app#e2e--a', 'app#e2e--b'],
+      files: GROUP.files,
+      hidden: 0
     });
   });
 
@@ -42,23 +44,23 @@ describe('FEATURE: atomSpecOf', () => {
     ['not sized', { ...PLACEMENT, sizes: new Map<string, NodeSize>() }],
     ['in no package box', { ...PLACEMENT, pkgBoxes: new Map<string, string>() }]
   ])('GIVEN an umbrella that is %s WHEN read THEN it has no spec', (_name, placement) => {
-    expect(atomSpecOf(GROUP, placement)).toBeNull();
+    expect(atomSpecOf(GROUP, placement, {})).toBeNull();
   });
 
   it('GIVEN a group of no files WHEN read THEN it has no spec', () => {
-    expect(atomSpecOf(withGroupFiles(), PLACEMENT)).toBeNull();
+    expect(atomSpecOf(withGroupFiles(), PLACEMENT, {})).toBeNull();
   });
 
   it('GIVEN a file with the id of a task WHEN read THEN the spec leaves that file out', () => {
     const pkgBoxes = new Map([...PLACEMENT.pkgBoxes, ['app#build', 'pkg:app']]);
     const group = withGroupFiles('app#build', 'app#e2e--b');
 
-    expect(atomSpecOf(group, { ...PLACEMENT, pkgBoxes })?.fileIds).toStrictEqual(['app#e2e--b']);
+    expect(atomSpecOf(group, { ...PLACEMENT, pkgBoxes }, {})?.fileIds).toStrictEqual(['app#e2e--b']);
   });
 
   it('GIVEN a group whose every file has the id of a task WHEN read THEN it has no spec', () => {
     const pkgBoxes = new Map([...PLACEMENT.pkgBoxes, ['app#build', 'pkg:app']]);
 
-    expect(atomSpecOf(withGroupFiles('app#build'), { ...PLACEMENT, pkgBoxes })).toBeNull();
+    expect(atomSpecOf(withGroupFiles('app#build'), { ...PLACEMENT, pkgBoxes }, {})).toBeNull();
   });
 });

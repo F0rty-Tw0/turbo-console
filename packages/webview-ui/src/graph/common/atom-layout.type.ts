@@ -1,5 +1,5 @@
 import type { NodeSize } from './node-size.type.ts';
-import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 
 /** One group to expand: its umbrella's id and size, and its file ids in the order they fill the grid. */
 export type AtomBoxSpec = {
@@ -7,6 +7,15 @@ export type AtomBoxSpec = {
   readonly umbrellaSize: NodeSize;
   readonly fileIds: string[];
 };
+
+/** The files a box draws; `hidden` is the count of free files not drawn, and 0 means no count node. */
+type AtomDrawn = {
+  readonly files: GraphAtomFile[];
+  readonly hidden: number;
+};
+
+/** An `AtomBoxSpec` with what it draws. */
+export type AtomDrawSpec = AtomBoxSpec & AtomDrawn;
 
 /** A box's frame: its top-left corner and size. */
 export type BoxBounds = {

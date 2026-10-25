@@ -2,7 +2,7 @@ import type { Core, ElementDefinition, EventObjectNode, NodeSingular } from 'cyt
 
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
+import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import {
   ATOM_BOX_CLASS,
   ATOM_BOX_PREFIX,
@@ -108,12 +108,7 @@ const titleFilesOn = (cy: Core): void => {
  * selector, since a file id holds spaces and slashes. `autoungrabify` is the core's own, so package mode shares it.
  */
 export const createAtomCanvas = (cy: Core): AtomCanvas => {
-  const expand = (
-    spec: AtomBoxSpec,
-    pkgBoxId: string,
-    files: GraphAtomFile[],
-    outcomes: Record<string, GraphAtomOutcome>
-  ): boolean => {
+  const expand = (spec: AtomDrawSpec, pkgBoxId: string, outcomes: Record<string, GraphAtomOutcome>): boolean => {
     const umbrella = cy.getElementById(spec.umbrellaId);
     const boxId = `${ATOM_BOX_PREFIX}${spec.umbrellaId}`;
     const isMissing = umbrella.empty();
@@ -122,7 +117,7 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
 
     if (isUnusable) return false;
 
-    const fileNodes = files.map((file) => fileDefinitionOf(file, boxId, outcomes));
+    const fileNodes = spec.files.map((file) => fileDefinitionOf(file, boxId, outcomes));
 
     cy.batch((): void => {
       cy.add(boxDefinitionOf(boxId, pkgBoxId));

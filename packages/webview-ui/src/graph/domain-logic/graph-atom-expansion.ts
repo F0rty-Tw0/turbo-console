@@ -1,6 +1,6 @@
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
-import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
+import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
 import { atomSpecOf } from '../utils/atom-spec.util.ts';
@@ -67,9 +67,9 @@ export class GraphAtomExpansion {
   }
 
   public apply(groups: ReadonlyMap<string, GraphAtomGroup>, outcomes: ReadonlyMap<string, Outcomes>, placement: AtomPlacement): void {
-    const specs = this.drawableSpecs(groups, placement);
+    const specs = this.drawableSpecs(groups, outcomes, placement);
     const collapsed = this.collapseStale(groups);
-    const isFresh = (spec: AtomBoxSpec): boolean => this.open.has(spec.umbrellaId) && !this.drawn.has(spec.umbrellaId);
+    const isFresh = (spec: AtomDrawSpec): boolean => this.open.has(spec.umbrellaId) && !this.drawn.has(spec.umbrellaId);
     const fresh = specs.filter(isFresh);
     const hasDrawn = this.drawFresh(fresh, groups, outcomes, placement);
 
@@ -85,11 +85,15 @@ export class GraphAtomExpansion {
   }
 
   /** The specs of the groups the layout can draw; an open group it cannot is no longer open. */
-  private drawableSpecs(groups: ReadonlyMap<string, GraphAtomGroup>, placement: AtomPlacement): AtomBoxSpec[] {
-    const specs: AtomBoxSpec[] = [];
+  private drawableSpecs(
+    groups: ReadonlyMap<string, GraphAtomGroup>,
+    outcomes: ReadonlyMap<string, Outcomes>,
+    placement: AtomPlacement
+  ): AtomDrawSpec[] {
+    const specs: AtomDrawSpec[] = [];
 
     for (const group of groups.values()) {
-      const spec = atomSpecOf(group, placement);
+      const spec = atomSpecOf(group, placement, outcomes.get(group.umbrellaId) ?? {});
 
       if (spec !== null) specs.push(spec);
     }
@@ -126,7 +130,7 @@ export class GraphAtomExpansion {
 
   /** Draws each newly open group; one the canvas refuses is closed again, so it moves no node and keeps grabbing. Whether any was drawn. */
   private drawFresh(
-    fresh: AtomBoxSpec[],
+    fresh: AtomDrawSpec[],
     groups: ReadonlyMap<string, GraphAtomGroup>,
     outcomes: ReadonlyMap<string, Outcomes>,
     placement: AtomPlacement
@@ -145,7 +149,7 @@ export class GraphAtomExpansion {
 
   /** Expands the group and records it as drawn; whether the canvas drew it. */
   private draw(
-    spec: AtomBoxSpec,
+    spec: AtomDrawSpec,
     groups: ReadonlyMap<string, GraphAtomGroup>,
     outcomes: ReadonlyMap<string, Outcomes>,
     placement: AtomPlacement
@@ -156,7 +160,7 @@ export class GraphAtomExpansion {
     if (group === undefined || pkgBoxId === undefined) return false;
 
     const fileOutcomes = outcomes.get(spec.umbrellaId) ?? {};
-    const isDrawn = this.view.atoms.expand(spec, pkgBoxId, group.files, fileOutcomes);
+    const isDrawn = this.view.atoms.expand(spec, pkgBoxId, fileOutcomes);
 
     if (isDrawn) this.drawn.set(spec.umbrellaId, { key: keyOf(group), pkgBoxId });
 

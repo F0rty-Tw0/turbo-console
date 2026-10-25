@@ -208,7 +208,7 @@ export class GraphAtomGroups {
 
     if (group === undefined || placement === null) return false;
 
-    return atomSpecOf(group, placement) !== null;
+    return atomSpecOf(group, placement, this.outcomes.get(umbrellaId) ?? {}) !== null;
   }
 
   /** Makes the canvas match the expanded set against the kept layout; nothing before a layout is placed. */

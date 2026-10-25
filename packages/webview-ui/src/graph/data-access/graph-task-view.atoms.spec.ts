@@ -6,7 +6,7 @@ import { createAtomCanvas } from './graph-atom-view.ts';
 import { probeStateOf } from './graph-probe-state.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
+import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
@@ -43,7 +43,13 @@ const SPACED = 'web#e2e-ci--tests/b fails.spec.ts';
 
 const FILES: GraphAtomFile[] = [{ id: SPACED, specPath: 'tests/b fails.spec.ts', isLive: false }];
 
-const SPEC: AtomBoxSpec = { umbrellaId: 'web#e2e-ci', umbrellaSize: UMBRELLA_SIZE, fileIds: [SPACED] };
+const SPEC: AtomDrawSpec = {
+  umbrellaId: 'web#e2e-ci',
+  umbrellaSize: UMBRELLA_SIZE,
+  fileIds: [SPACED],
+  files: FILES,
+  hidden: 0
+};
 
 describe('FEATURE: the task canvas with an expanded Atomizer group', () => {
   let cy: Core;
@@ -69,20 +75,20 @@ describe('FEATURE: the task canvas with an expanded Atomizer group', () => {
     });
 
     it('WHEN the group expands and the runs are marked again THEN the file takes run-running', () => {
-      atoms.expand(SPEC, 'pkg:web', FILES, {});
+      atoms.expand(SPEC, 'pkg:web', {});
       tasks.remark();
 
       expect(cy.getElementById(SPACED).hasClass('run-running')).toBe(true);
     });
 
     it('WHEN the group expands and the runs are not marked again THEN the file has no run class', () => {
-      atoms.expand(SPEC, 'pkg:web', FILES, {});
+      atoms.expand(SPEC, 'pkg:web', {});
 
       expect(cy.getElementById(SPACED).hasClass('run-running')).toBe(false);
     });
 
     it('WHEN the file then stops running THEN it loses run-running', () => {
-      atoms.expand(SPEC, 'pkg:web', FILES, {});
+      atoms.expand(SPEC, 'pkg:web', {});
       tasks.runStates({});
 
       expect(cy.getElementById(SPACED).hasClass('run-running')).toBe(false);
@@ -91,7 +97,7 @@ describe('FEATURE: the task canvas with an expanded Atomizer group', () => {
 
   describe('GIVEN the group is expanded and a task is selected', () => {
     beforeEach(() => {
-      atoms.expand(SPEC, 'pkg:web', FILES, {});
+      atoms.expand(SPEC, 'pkg:web', {});
     });
 
     it('WHEN the umbrella is the target THEN its package box is not dimmed, though its box sits between', () => {
@@ -120,7 +126,7 @@ describe('FEATURE: the task canvas with an expanded Atomizer group', () => {
     });
 
     it('WHEN the group expands and the canvas is marked again THEN its box is dimmed with the umbrella inside', () => {
-      atoms.expand(SPEC, 'pkg:web', FILES, {});
+      atoms.expand(SPEC, 'pkg:web', {});
       tasks.remark();
 
       expect(probeStateOf(cy.getElementById('atom:web#e2e-ci'))).toBe('dimmed');
