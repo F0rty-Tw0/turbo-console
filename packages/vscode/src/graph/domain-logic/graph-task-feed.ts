@@ -1,7 +1,9 @@
 import type { GraphRunsMessage, GraphState } from '@turbo-console/webview-ui';
 
+import { GraphAtomFeed } from './graph-atom-feed.ts';
 import type { RunEntry, Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
 import { runIdsOf, runsMapOf } from '../utils/graph-tasks.util.ts';
@@ -11,24 +13,30 @@ type TaskFeedDeps = {
   readonly runs: Pick<Runs, 'get' | 'onDidChange'>;
   readonly ports: Pick<GraphPorts, 'post' | 'log'>;
   readonly gate: TaskFeedGate;
+  readonly atoms: Pick<SharedAtoms, 'onDidChange' | 'view'>;
 };
 
 /**
  * What a graph panel is told about tasks besides its state: the run states of its root, coalesced so a burst of task
- * events is one post, and the one `showTasks` request held until the page can take it. `showTasks` is never posted before
- * a `graph` state: `flush` is the one point that posts the full map and the held request, right after a state is posted.
+ * events is one post, the Atomizer counts of its groups (a `GraphAtomFeed`) and the one `showTasks` request held until the
+ * page can take it. `showTasks` is never posted before a `graph` state: `flush` is the one point that posts the full runs
+ * map, the atoms and the held request, in that order, right after a state is posted.
  */
 export class GraphTaskFeed {
   private readonly deps: TaskFeedDeps;
   private unsubscribe: (() => void) | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private held: string[] | null = null;
+  private readonly atomFeed: GraphAtomFeed;
 
   public constructor(deps: TaskFeedDeps) {
     this.deps = deps;
+    this.atomFeed = new GraphAtomFeed({ root: deps.root, atoms: deps.atoms, ports: deps.ports, gate: deps.gate });
   }
 
   public start(): void {
+    this.atomFeed.start();
+
     if (this.unsubscribe !== null) return;
 
     this.unsubscribe = this.deps.runs.onDidChange((entry) => {
@@ -37,6 +45,7 @@ export class GraphTaskFeed {
   }
 
   public stop(): void {
+    this.atomFeed.stop();
     this.unsubscribe?.();
     this.unsubscribe = null;
     this.cancelTimer();
@@ -46,6 +55,7 @@ export class GraphTaskFeed {
   public flush(state: GraphState): void {
     this.cancelTimer();
     this.postRuns(runIdsOf(state));
+    this.atomFeed.flush(state);
     this.postHeld(state);
   }
 

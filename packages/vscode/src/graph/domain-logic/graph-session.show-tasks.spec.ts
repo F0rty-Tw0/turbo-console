@@ -7,6 +7,7 @@ import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
 import { GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
+import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { postedShowTasksOf, postedTypesOf } from '../test/utils/graph-session-runs.spec.util.ts';
 import { portsWith, postedOf } from '../test/utils/graph-session.spec.util.ts';
 
@@ -29,7 +30,7 @@ const loadedStore = (): RootStore => {
 const shownSession = (store: RootStore = loadedStore()): ShownSession => {
   const ports = portsWith(null);
   const runs = new RunStore();
-  const session = new GraphSession('/ws', store, ports, runs);
+  const session = new GraphSession('/ws', store, ports, feedsOf(runs));
 
   session.setVisible(true);
   session.start();

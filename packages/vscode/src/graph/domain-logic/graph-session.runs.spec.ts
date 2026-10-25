@@ -11,6 +11,7 @@ import type { GraphPorts } from '../common/graph.type.ts';
 import { ATOM_FILE_A_TASK_STUB, GRAPH_ATOM_MODEL_STUB } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
 import { A_BUILD_DEFINITION_STUB, RUN_A_BUILD_STUB } from '../test/stubs/graph-run.stub.ts';
+import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { postedRunsOf, postedTypesOf } from '../test/utils/graph-session-runs.spec.util.ts';
 import { portsWith, postedOf } from '../test/utils/graph-session.spec.util.ts';
 
@@ -32,7 +33,7 @@ const loadedStore = (loaded: LoadedModel = GRAPH_LOADED_STUB): RootStore => {
 /** A started, shown session on `/ws` over a real `RunStore`; its page is not ready yet. */
 const shownSession = (store: RootStore = loadedStore(), runs: RunStore = new RunStore()): ShownSession => {
   const ports = portsWith(null);
-  const session = new GraphSession('/ws', store, ports, runs);
+  const session = new GraphSession('/ws', store, ports, feedsOf(runs));
 
   session.setVisible(true);
   session.start();

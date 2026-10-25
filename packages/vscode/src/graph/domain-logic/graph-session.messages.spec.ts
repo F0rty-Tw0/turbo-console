@@ -18,6 +18,7 @@ import {
   GROWN_LOADED_STUB,
   PROTO_LOADED_STUB
 } from '../test/stubs/graph-model.stub.ts';
+import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { lastStateOf, portsWith, positionsOf, postedOf } from '../test/utils/graph-session.spec.util.ts';
 
 type ShownSession = {
@@ -49,7 +50,7 @@ const cachedPositionsOf = (ports: GraphPorts): unknown => vi.mocked(ports.writeC
 
 /** A started, shown session on `/ws` over `ports`. */
 const shownSessionOn = (ports: GraphPorts, store: RootStore = loadedStore()): ShownSession => {
-  const session = new GraphSession('/ws', store, ports, new RunStore());
+  const session = new GraphSession('/ws', store, ports, feedsOf(new RunStore()));
 
   session.setVisible(true);
   session.start();

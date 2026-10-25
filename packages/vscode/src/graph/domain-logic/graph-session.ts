@@ -7,9 +7,8 @@ import { isRequestMessage, requestHandledOf } from './graph-requests.ts';
 import { GraphTaskFeed } from './graph-task-feed.ts';
 import { LatestWins } from './latest-wins.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
-import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { ExplainContext, ExplainRequest, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
+import type { ExplainContext, ExplainRequest, GraphFeeds, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
 import { graphStateOfRoot, runIdsOfRoot } from '../utils/graph-state.util.ts';
 
@@ -37,11 +36,13 @@ export class GraphSession {
   private readonly explains = new LatestWins<ExplainJob>();
   private readonly images: GraphImageSaver;
   private readonly feed: GraphTaskFeed;
+  private readonly atoms: GraphFeeds['atoms'];
 
-  public constructor(root: string, roots: Roots, ports: GraphPorts, runs: Runs) {
+  public constructor(root: string, roots: Roots, ports: GraphPorts, feeds: GraphFeeds) {
     this.root = root;
     this.roots = roots;
     this.ports = ports;
+    this.atoms = feeds.atoms;
     this.images = new GraphImageSaver(root, ports);
 
     const gate: TaskFeedGate = {
@@ -50,7 +51,7 @@ export class GraphSession {
       runIds: (): string[] => runIdsOfRoot(this.roots.get(this.root)?.state)
     };
 
-    this.feed = new GraphTaskFeed({ root, runs, ports, gate });
+    this.feed = new GraphTaskFeed({ root, runs: feeds.runs, ports, gate, atoms: feeds.atoms });
   }
 
   public start(): void {
@@ -181,7 +182,7 @@ export class GraphSession {
 
   private requestContext(): RequestContext {
     const coordinator = this.roots.get(this.root)?.coordinator;
-    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports };
+    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, atoms: this.atoms };
 
     return context;
   }

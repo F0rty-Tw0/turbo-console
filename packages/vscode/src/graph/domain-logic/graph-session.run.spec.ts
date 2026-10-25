@@ -7,6 +7,7 @@ import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
 import { GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
+import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { portsWith } from '../test/utils/graph-session.spec.util.ts';
 
 type ReadySession = {
@@ -26,7 +27,7 @@ const loadedStore = (): RootStore => {
 /** A started, shown session on `/ws` whose page has posted `ready`. */
 const readySession = async (): Promise<ReadySession> => {
   const ports = portsWith(null);
-  const session = new GraphSession('/ws', loadedStore(), ports, new RunStore());
+  const session = new GraphSession('/ws', loadedStore(), ports, feedsOf(new RunStore()));
 
   session.setVisible(true);
   session.start();

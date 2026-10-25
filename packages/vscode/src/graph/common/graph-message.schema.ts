@@ -1,5 +1,6 @@
-import { MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
+import { MANIFEST_LINE_MAX, TASK_COUNT_MAX } from '@turbo-console/webview-ui';
 import {
+  array,
   boolean,
   discriminatedUnion,
   gte,
@@ -62,6 +63,8 @@ const runTaskSchema = object({ type: literal('runTask'), taskId: taskIdSchema, n
 
 const stopTaskSchema = object({ type: literal('stopTask'), taskId: taskIdSchema });
 
+const shownUmbrellasSchema = object({ type: literal('shownUmbrellas'), ids: array(taskIdSchema).check(maxLength(TASK_COUNT_MAX)) });
+
 /**
  * A message from the graph webview, which is a trust boundary. Unknown keys are stripped; whether a package name or a
  * hash is current is checked by the session against the state built at that moment.
@@ -76,5 +79,6 @@ export const graphMessageSchema = discriminatedUnion('type', [
   openManifestSchema,
   exportImageSchema,
   runTaskSchema,
-  stopTaskSchema
+  stopTaskSchema,
+  shownUmbrellasSchema
 ]);

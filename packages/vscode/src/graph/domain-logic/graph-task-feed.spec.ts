@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphTaskFeed } from './graph-task-feed.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import { GRAPH_STATE_STUB, GRAPH_TASKS_STUB } from '../test/stubs/graph-model.stub.ts';
@@ -29,7 +30,7 @@ const feedAt = (state: GraphState): FeedFixture => {
   const stateOf = vi.fn<TaskFeedGate['state']>().mockReturnValue(state);
   const runIds = vi.fn<TaskFeedGate['runIds']>().mockReturnValue(GRAPH_TASKS_STUB.map((task) => task.id));
   const gate: TaskFeedGate = { canPost, state: stateOf, runIds };
-  const feed = new GraphTaskFeed({ root: '/ws', runs, ports, gate });
+  const feed = new GraphTaskFeed({ root: '/ws', runs, ports, gate, atoms: SHARED_ATOMS_STUB });
   const fixture: FeedFixture = { feed, runs, ports, gate };
 
   return fixture;

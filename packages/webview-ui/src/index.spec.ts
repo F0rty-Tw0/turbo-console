@@ -17,6 +17,9 @@ import type {
   EdgeExplainResult,
   GraphAtomFile,
   GraphAtomGroup,
+  GraphAtomGroupState,
+  GraphAtomOutcome,
+  GraphAtomsMessage,
   GraphEdge,
   GraphEdgeExplainedMessage,
   GraphHostMessage,
@@ -25,6 +28,7 @@ import type {
   GraphRunState,
   GraphRunsMessage,
   GraphShowTasksMessage,
+  GraphShownUmbrellasMessage,
   GraphState,
   GraphStateMessage,
   GraphTask,
@@ -66,6 +70,9 @@ type ExpectedTask = {
 };
 type ExpectedAtomFile = { readonly id: string; readonly specPath: string; readonly isLive: boolean };
 type ExpectedAtomGroup = { readonly umbrellaId: string; readonly files: GraphAtomFile[] };
+type ExpectedAtomGroupState = { readonly counts: string; readonly files: Record<string, 'passed' | 'failed' | 'cached' | 'none'> };
+type ExpectedAtomsMessage = { readonly type: 'atoms'; readonly groups: Record<string, GraphAtomGroupState> };
+type ExpectedShownUmbrellasMessage = { readonly type: 'shownUmbrellas'; readonly ids: string[] };
 type ExpectedPosition = { readonly x: number; readonly y: number };
 type ExpectedTaskView = {
   readonly chosen: string[];
@@ -179,8 +186,12 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphAtomGroup>().toEqualTypeOf<ExpectedAtomGroup>();
       expectTypeOf<GraphAtomFile>().toEqualTypeOf<ExpectedAtomFile>();
       expectTypeOf<GraphHostMessage>().toEqualTypeOf<
-        ExpectedStateMessage | ExpectedExplainedMessage | GraphRunsMessage | GraphShowTasksMessage
+        ExpectedStateMessage | ExpectedExplainedMessage | GraphRunsMessage | GraphShowTasksMessage | GraphAtomsMessage
       >();
+      expectTypeOf<GraphAtomOutcome>().toEqualTypeOf<'passed' | 'failed' | 'cached' | 'none'>();
+      expectTypeOf<GraphAtomGroupState>().toEqualTypeOf<ExpectedAtomGroupState>();
+      expectTypeOf<GraphAtomsMessage>().toEqualTypeOf<ExpectedAtomsMessage>();
+      expectTypeOf<GraphShownUmbrellasMessage>().toEqualTypeOf<ExpectedShownUmbrellasMessage>();
       expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
         | 'ready'
         | 'reload'
@@ -192,6 +203,7 @@ describe('FEATURE: webview-ui package entry', () => {
         | 'exportImage'
         | 'runTask'
         | 'stopTask'
+        | 'shownUmbrellas'
       >();
       expectTypeOf<Extract<GraphWebviewMessage, RunTaskKey>['noCache']>().toEqualTypeOf<boolean>();
       expectTypeOf<Extract<GraphWebviewMessage, OpenManifestKey>['line']>().toEqualTypeOf<number>();

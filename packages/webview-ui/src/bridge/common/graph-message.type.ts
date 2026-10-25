@@ -60,8 +60,24 @@ export type GraphShowTasksMessage = {
   readonly taskIds: string[];
 };
 
+/** What a file of an Atomizer group last did, or `none` when nothing is known of it. */
+export type GraphAtomOutcome = 'passed' | 'failed' | 'cached' | 'none';
+
+/** The counts line of one umbrella and the outcome of each of its files, by file task id. */
+export type GraphAtomGroupState = {
+  readonly counts: string;
+  readonly files: Record<string, GraphAtomOutcome>;
+};
+
+/** The state of every Atomizer group of the graph, by umbrella id. */
+export type GraphAtomsMessage = {
+  readonly type: 'atoms';
+  readonly groups: Record<string, GraphAtomGroupState>;
+};
+
 /** Host to webview. */
-export type GraphHostMessage = GraphStateMessage | GraphEdgeExplainedMessage | GraphRunsMessage | GraphShowTasksMessage;
+export type GraphHostMessage =
+  GraphStateMessage | GraphEdgeExplainedMessage | GraphRunsMessage | GraphShowTasksMessage | GraphAtomsMessage;
 
 type GraphReadyMessage = { readonly type: 'ready' };
 
@@ -118,6 +134,12 @@ type GraphStopTaskMessage = {
   readonly taskId: string;
 };
 
+/** The umbrellas a task layout shows; the host loads the Atomizer state of their packages. */
+export type GraphShownUmbrellasMessage = {
+  readonly type: 'shownUmbrellas';
+  readonly ids: string[];
+};
+
 /** Webview to host. The webview is a trust boundary: the host validates every message. */
 export type GraphWebviewMessage =
   | GraphReadyMessage
@@ -129,4 +151,5 @@ export type GraphWebviewMessage =
   | GraphOpenManifestMessage
   | GraphExportImageMessage
   | GraphRunTaskMessage
-  | GraphStopTaskMessage;
+  | GraphStopTaskMessage
+  | GraphShownUmbrellasMessage;

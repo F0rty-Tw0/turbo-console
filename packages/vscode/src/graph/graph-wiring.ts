@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 
 import type { GraphContext, GraphDetails, GraphWiring } from './common/graph-panel.type.ts';
+import type { GraphFeeds } from './common/graph.type.ts';
 import { editorGraphCommandPorts } from './data-access/graph-command-ports.ts';
 import { editorGraphHost } from './data-access/graph-ports.ts';
 import { GraphPanels } from './domain-logic/graph-panels.ts';
 import { registerGraph } from './feature/register-graph.ts';
 import type { PanelKey } from '../details/common/details.type.ts';
 import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
-import type { Runs } from '../run/common/run.type.ts';
 import { manifestFile, rootOf } from '../run/feature/register-pickers.ts';
 import type { Output } from '../shared/common/output.type.ts';
 
@@ -21,8 +21,8 @@ export const createGraph = (
   session: PanelRoots,
   details: GraphDetails,
   output: Output,
-  runs: Runs
-  // eslint-disable-next-line max-params -- the wiring inputs plus the run store `extension.ts` passes
+  feeds: GraphFeeds
+  // eslint-disable-next-line max-params -- the wiring inputs plus the run and atom stores `extension.ts` passes
 ): GraphWiring => {
   const setPanelVisible = (root: string, panelId: string, visible: boolean): void => {
     session.setPanelVisible(root, panelId, visible);
@@ -31,7 +31,7 @@ export const createGraph = (
     await details.open(key);
   };
   const host = editorGraphHost(context.extensionUri, output, context.workspaceState);
-  const panels = new GraphPanels({ roots: session.store, host, setPanelVisible, openDetails, runs });
+  const panels = new GraphPanels({ roots: session.store, host, setPanelVisible, openDetails, runs: feeds.runs, atoms: feeds.atoms });
   const ports = editorGraphCommandPorts(manifestFile, rootOf, output.error);
   const wiring: GraphWiring = {
     api: panels.api(),

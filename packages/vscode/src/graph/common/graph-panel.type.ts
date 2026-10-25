@@ -10,6 +10,7 @@ import type { PickItem } from '../../run/common/picker.type.ts';
 import type { Disposed, Runs } from '../../run/common/run.type.ts';
 import type { GraphApi } from '../../shared/common/api.type.ts';
 import type { EditorPanelView } from '../../shared/common/panel-view.type.ts';
+import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 
 /** The part of `vscode.Memento` the layout cache uses. */
 export type GraphStore = {
@@ -40,6 +41,7 @@ export type GraphPanelsDeps = {
   readonly setPanelVisible: (root: string, panelId: string, visible: boolean) => void;
   readonly openDetails: (key: PanelKey) => Promise<void>;
   readonly runs: Runs;
+  readonly atoms: SharedAtoms;
 };
 
 /** What the registry and the test API ask of a panel's `GraphSession`. */

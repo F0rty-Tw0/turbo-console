@@ -12,7 +12,8 @@ const REQUEST_TYPES: Readonly<Record<GraphRequestMessage['type'], true>> = {
   reload: true,
   openDetails: true,
   runTask: true,
-  stopTask: true
+  stopTask: true,
+  shownUmbrellas: true
 };
 
 export function isRequestMessage(message: GraphWebviewMessage): message is GraphRequestMessage {
@@ -51,9 +52,23 @@ async function openDetailsOf(
   return true;
 }
 
+/** `false` unless the state is a graph; each package that holds a listed umbrella among `ids` is asked to load once, and other ids are ignored. */
+function shownUmbrellasOf(ids: string[], state: GraphState, root: string, atoms: RequestContext['atoms']): boolean {
+  if (state.kind !== 'graph') return false;
+
+  const umbrellaIds = new Set(state.atomGroups.map((group) => group.umbrellaId));
+  const named = new Set(ids);
+  const shown = state.tasks.filter((task) => named.has(task.id) && umbrellaIds.has(task.id));
+  const packageNames = new Set(shown.map((task) => task.packageName));
+
+  for (const packageName of packageNames) atoms.childrenRequested(root, packageName);
+
+  return true;
+}
+
 /** `false` when the page asked for something the state does not allow; the session logs and drops that message. */
 export async function requestHandledOf(message: GraphRequestMessage, context: RequestContext): Promise<boolean> {
-  const { state, root, coordinator, ports } = context;
+  const { state, root, coordinator, ports, atoms } = context;
 
   switch (message.type) {
     case 'reload':
@@ -63,5 +78,7 @@ export async function requestHandledOf(message: GraphRequestMessage, context: Re
     case 'runTask':
     case 'stopTask':
       return routeRun(message, state, ports, root);
+    case 'shownUmbrellas':
+      return shownUmbrellasOf(message.ids, state, root, atoms);
   }
 }

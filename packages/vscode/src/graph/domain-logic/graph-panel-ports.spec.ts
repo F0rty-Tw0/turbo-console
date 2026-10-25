@@ -7,6 +7,7 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import type { ViewFake } from '../../shared/test/common/panel-fakes.type.ts';
 import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
+import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphPanelsDeps } from '../common/graph-panel.type.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
@@ -35,7 +36,14 @@ describe('FEATURE: the ports of one graph panel', () => {
     setPanelVisible = vi.fn<GraphPanelsDeps['setPanelVisible']>();
     openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
 
-    const deps: GraphPanelsDeps = { roots: new RootStore(), host: fakes.host, setPanelVisible, openDetails, runs: new RunStore() };
+    const deps: GraphPanelsDeps = {
+      roots: new RootStore(),
+      host: fakes.host,
+      setPanelVisible,
+      openDetails,
+      runs: new RunStore(),
+      atoms: SHARED_ATOMS_STUB
+    };
 
     ports = graphPortsOf(deps, '/ws', posted, view.view);
   });

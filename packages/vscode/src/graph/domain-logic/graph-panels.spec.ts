@@ -9,6 +9,7 @@ import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { POSTED_MAX } from '../../shared/common/panel.const.ts';
 import type { ViewFake } from '../../shared/test/common/panel-fakes.type.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
+import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphPanelsDeps } from '../common/graph-panel.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
 import { graphHostMock } from '../test/mocks/graph-host.mock.ts';
@@ -42,7 +43,14 @@ describe('FEATURE: graph panel registry', () => {
     setPanelVisible = vi.fn<GraphPanelsDeps['setPanelVisible']>();
     const openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
 
-    panels = new GraphPanels({ roots: store, host: fakes.host, setPanelVisible, openDetails, runs: new RunStore() });
+    panels = new GraphPanels({
+      roots: store,
+      host: fakes.host,
+      setPanelVisible,
+      openDetails,
+      runs: new RunStore(),
+      atoms: SHARED_ATOMS_STUB
+    });
   });
 
   describe('GIVEN a loaded root', () => {

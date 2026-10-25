@@ -1,5 +1,7 @@
-import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
+import type { AtomFile, AtomGroup, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 
+import type { AtomLookup, AtomView } from '../../../tree/common/atom-view.type.ts';
+import { ATOM_RESULT_STUB } from '../../../tree/test/stubs/atom-load.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
 
 const PLAIN_ATOM: NonNullable<TaskNode['atom']> = { group: 'e2e-ci', isLive: false };
@@ -71,3 +73,27 @@ export const GRAPH_ATOM_MODEL_STUB: WorkspaceModel = {
   ...WORKSPACE_MODEL_STUB,
   packages: [ATOM_E2E_PACKAGE_STUB, APP_PACKAGE, ROOT_PACKAGE]
 };
+
+/** The core group of `GRAPH_ATOM_MODEL_STUB`: the umbrella and its two files in spec path order. */
+const GRAPH_ATOM_FILES: AtomFile[] = [
+  { task: ATOM_FILE_A_TASK_STUB, specPath: 'tests/a.spec.ts', isLive: false },
+  { task: ATOM_FILE_B_TASK_STUB, specPath: 'tests/b fails.spec.ts', isLive: true }
+];
+
+export const GRAPH_ATOM_GROUP_STUB: AtomGroup = {
+  packageName: ATOM_E2E_PACKAGE_STUB.name,
+  umbrella: ATOM_UMBRELLA_TASK_STUB,
+  files: GRAPH_ATOM_FILES
+};
+
+/** The group loaded: file A is a dry-run HIT and passed, file B is unknown. */
+export const GRAPH_ATOM_VIEW_STUB: AtomView = {
+  groups: [GRAPH_ATOM_GROUP_STUB],
+  dryRun: new Map([[ATOM_FILE_A_TASK_STUB.id, 'HIT']]),
+  results: new Map([[ATOM_FILE_A_TASK_STUB.id, ATOM_RESULT_STUB]])
+};
+
+/** The group known from the model alone: no load has settled. */
+export const GRAPH_ATOM_UNLOADED_VIEW_STUB: AtomView = { groups: [GRAPH_ATOM_GROUP_STUB], dryRun: null, results: null };
+
+export const GRAPH_ATOM_LOOKUP_STUB: AtomLookup = () => GRAPH_ATOM_VIEW_STUB;

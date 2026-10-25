@@ -23,10 +23,14 @@ export type {
 
 export type {
   EdgeExplainResult,
+  GraphAtomGroupState,
+  GraphAtomOutcome,
+  GraphAtomsMessage,
   GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphRunsMessage,
   GraphShowTasksMessage,
+  GraphShownUmbrellasMessage,
   GraphStateMessage,
   GraphWebviewMessage,
   LayoutGrouping,
