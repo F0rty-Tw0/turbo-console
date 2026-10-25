@@ -19,6 +19,7 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "bench": "playwright test --config playwright.bench.config.ts",
+    "stretch": "playwright test --config playwright.stretch.config.ts",
     "screenshots": "playwright test --config playwright.screenshot.config.ts"
   },
   "dependencies": {

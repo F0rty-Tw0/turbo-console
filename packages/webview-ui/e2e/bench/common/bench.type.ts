@@ -75,6 +75,12 @@ export type ColdOpen = {
   readonly positions: Positions;
 };
 
+/** One L stretch session: the median pan frame time and the heap in use after a forced collection. */
+export type LargeSample = {
+  readonly frameMs: number;
+  readonly heapMb: number;
+};
+
 export type PanSample = {
   readonly cpuMs: number;
   readonly p95Ms: number;
