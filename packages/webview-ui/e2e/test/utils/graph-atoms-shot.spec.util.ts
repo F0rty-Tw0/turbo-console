@@ -20,7 +20,7 @@ const ATOMS_SHOT_FILES: GraphAtomGroupState['files'] = {
 };
 
 export const ATOMS_SHOT_STATE: GraphAtomGroupState = {
-  counts: '10 files · 2 passed · 2 failed · 1 cached',
+  counts: '10 files · 1 cached · 2 failed',
   files: ATOMS_SHOT_FILES
 };
 

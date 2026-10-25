@@ -22,7 +22,7 @@ const [LIVE_FILE = '', FAILED_FILE = '', CACHED_FILE = '', RUNNING_FILE = ''] = 
 
 const OUTCOME_FILES = { [LIVE_FILE]: 'passed', [FAILED_FILE]: 'failed', [CACHED_FILE]: 'cached' } as const;
 
-const OUTCOME_STATE = { counts: '10 files · 1 passed · 1 failed · 1 cached', files: OUTCOME_FILES } as const;
+const OUTCOME_STATE = { counts: '10 files · 1 cached · 1 failed', files: OUTCOME_FILES } as const;
 
 const OUTCOME_GROUPS = { [TARGET_LIKE_UMBRELLA]: OUTCOME_STATE } as const;
 
