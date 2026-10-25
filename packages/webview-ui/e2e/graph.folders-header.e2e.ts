@@ -173,13 +173,16 @@ test.describe('FEATURE: folder header toggle', () => {
   test(
     'GIVEN more than 300 packages and nothing saved, the graph opens grouped with every folder collapsed and in view',
     { annotation: C4 },
-    async ({ graphGrouping, graphHost, graphPage }): Promise<void> => {
+    async ({ graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND a 301-package graph is sent', async (): Promise<void> =>
         graphHost.sendState(largeState(LARGE_PACKAGE_COUNT + 1)));
 
-      await test.step('THEN Group by folder is checked', async (): Promise<void> => graphGrouping.expectGrouped(true));
+      await test.step('THEN the graph is laid out, by ELK or by the fallback on a slow runner', async (): Promise<void> =>
+        graphProbe.expectLayoutSettled());
+
+      await test.step('AND Group by folder is checked', async (): Promise<void> => graphGrouping.expectGrouped(true));
 
       await test.step('AND all 30 folders are collapsed', async (): Promise<void> => {
         await graphGrouping.expectFolderKeys(GROUP_FOLDERS);
