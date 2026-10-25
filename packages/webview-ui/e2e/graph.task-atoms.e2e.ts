@@ -18,7 +18,7 @@ const AC3 = { description: 'M5-2 AC3', type: 'requirement' };
 
 const FILE_IDS = targetLikeFileIds();
 
-const [LIVE_FILE = '', FAILED_FILE = '', CACHED_FILE = '', RUNNING_FILE = ''] = FILE_IDS;
+const [LIVE_FILE = '', FAILED_FILE = '', CACHED_FILE = '', RUNNING_FILE = '', NO_OUTCOME_FILE = ''] = FILE_IDS;
 
 const OUTCOME_FILES = { [LIVE_FILE]: 'passed', [FAILED_FILE]: 'failed', [CACHED_FILE]: 'cached' } as const;
 
@@ -30,6 +30,8 @@ const OUTCOME_GROUPS = { [TARGET_LIKE_UMBRELLA]: OUTCOME_STATE } as const;
 const FAILED_OUTCOME = { width: 2, colour: 'rgb(244, 135, 113)' };
 
 const CACHED_OUTCOME = { width: 2, colour: 'rgb(177, 128, 215)' };
+
+const PASSED_OUTCOME = { width: 2, colour: 'rgb(115, 201, 145)' };
 
 /** The high contrast stub's `--vscode-charts-yellow`, the running outline. */
 const RUNNING_OUTLINE = { width: 3, colour: 'rgb(255, 211, 112)' };
@@ -183,7 +185,7 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
   );
 
   test(
-    'GIVEN the umbrella chosen and atoms with a failed, a cached and a passed file, the expanded files take their outcome outlines and the live file a dashed border',
+    'GIVEN the umbrella chosen and atoms with a failed, a cached and a passed file, the expanded files take their outcome outlines, a file with no outcome none, and the live file a dashed border',
     { annotation: AC3 },
     async ({ graphAtoms, graphLook, graphTaskHost, graphTaskProbe, openUmbrella }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
@@ -199,6 +201,12 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
 
       await test.step('AND the cached file has a 2 wide outline in the cached colour', async (): Promise<void> =>
         graphTaskProbe.expectRunOutline(CACHED_FILE, CACHED_OUTCOME));
+
+      await test.step('AND the passed file has a 2 wide outline in the passed colour', async (): Promise<void> =>
+        graphTaskProbe.expectRunOutline(LIVE_FILE, PASSED_OUTCOME));
+
+      await test.step('AND a file with no outcome has no outline', async (): Promise<void> =>
+        graphTaskProbe.expectRunOutline(NO_OUTCOME_FILE, null));
 
       await test.step('AND the live file has a dashed border and the others a solid one', async (): Promise<void> => {
         await graphAtoms.expectBorderStyle(LIVE_FILE, 'dashed');
