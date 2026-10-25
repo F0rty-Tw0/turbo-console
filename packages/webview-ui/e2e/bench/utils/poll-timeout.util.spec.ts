@@ -36,6 +36,18 @@ describe('FEATURE: poll timeout', () => {
     });
   });
 
+  describe('GIVEN the error of a test that ran out of time', () => {
+    it('WHEN it is checked THEN it is not a poll timeout', () => {
+      expect(isPollTimeout(new Error('Test timeout of 30000ms exceeded.'))).toBe(false);
+    });
+  });
+
+  describe('GIVEN the error of a locator action that ran out of time', () => {
+    it('WHEN it is checked THEN it is not a poll timeout', () => {
+      expect(isPollTimeout(new Error('Timeout 5000ms exceeded.'))).toBe(false);
+    });
+  });
+
   describe('GIVEN a value that is not an error', () => {
     it('WHEN it is checked THEN it is not a poll timeout', () => {
       expect(isPollTimeout('exceeded while waiting on the predicate')).toBe(false);
