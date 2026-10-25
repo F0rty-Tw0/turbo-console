@@ -31,6 +31,17 @@ export const pidIn = (file: string): number | null => {
 
 const devTerminals = (): vscode.Terminal[] => vscode.window.terminals.filter((candidate) => candidate.name.includes(DEV_TASK_ID));
 
+/**
+ * The terminals `read` lists once it lists one. The extension host can learn of a task's terminal after the task's
+ * process start event (a probe saw 0 terminals at the start, 1 by the pid file), so a read right after either can see
+ * none. Waiting for one and then asserting the count keeps "exactly one" meaningful.
+ */
+export const awaitTerminals = async (name: string, read: () => vscode.Terminal[]): Promise<vscode.Terminal[]> => {
+  await waitFor(`terminal of ${name}`, () => read().length > 0);
+
+  return read();
+};
+
 const isRunning = (api: TurboConsoleApi, node: TreeNode): boolean => api.runs.get(node.root, node.key)?.state === 'running';
 
 export const isAlive = (pid: number): boolean => {
@@ -68,7 +79,7 @@ const readyRun = async (api: TurboConsoleApi, node: TreeNode, launchedAt: number
   await waitFor('process started', hasStarted);
   await waitFor('dev script started', () => pidIn(pidFile) !== null);
 
-  const terminals = devTerminals();
+  const terminals = await awaitTerminals(DEV_TASK_ID, devTerminals);
   const pid = pidIn(pidFile) ?? Number.NaN;
   const [terminal] = terminals;
 

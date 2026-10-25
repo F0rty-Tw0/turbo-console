@@ -6,7 +6,7 @@ import { packageDirOf } from './package-edit.spec.util.ts';
 import { startRun } from './run-wait.spec.util.ts';
 import { scriptTerminals } from './scripts-shell.spec.util.ts';
 import { waitFor } from './suite-env.spec.util.ts';
-import { isAlive, pidIn, stopRun } from './tree-polish-live.spec.util.ts';
+import { awaitTerminals, isAlive, pidIn, stopRun } from './tree-polish-live.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
 import { LONG_PID_PATH } from '../common/scripts.const.ts';
@@ -22,7 +22,7 @@ const readyRun = async (api: TurboConsoleApi, node: TreeNode, launchedAt: number
   await waitFor('process started', hasStarted);
   await waitFor('script started', () => pidIn(pidFile) !== null);
 
-  const terminals = scriptTerminals(node.key);
+  const terminals = await awaitTerminals(node.key, () => scriptTerminals(node.key));
   const pid = pidIn(pidFile) ?? Number.NaN;
   const [terminal] = terminals;
 
