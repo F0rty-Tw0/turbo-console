@@ -180,11 +180,12 @@ describe('FEATURE: atom tree', () => {
       expect(fire).toHaveBeenCalledExactlyOnceWith([UMBRELLA_TREE_NODE_STUB]);
     });
 
-    it('WHEN the tree is disposed THEN a later load change fires no node', async () => {
+    it('WHEN the tree is disposed THEN a later request starts no dry run and fires no node', async () => {
       atoms.dispose();
       shared.childrenRequested(ROOT, PKG);
-      await settleOk(h, 1);
+      await flush();
 
+      expect(h.dryRun).toHaveBeenCalledOnce();
       expect(fire).not.toHaveBeenCalled();
     });
   });

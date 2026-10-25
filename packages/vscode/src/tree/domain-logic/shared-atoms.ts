@@ -9,10 +9,12 @@ import type { AtomView } from '../common/atom-view.type.ts';
 /**
  * One `AtomLoads` over `ports` and the models of `roots` (spec 3.2): every load change reaches each subscribed listener.
  * The loads' rules are its own; this only fans out `changed`. A throwing listener is logged, so the ones after it still
- * hear the change and the throw never rejects the load's settle callback.
+ * hear the change and the throw never rejects the load's settle callback. After `dispose` a request starts no load: the
+ * tree and the graph share one `dispose`, and `AtomLoads` would start a dry run nobody aborts.
  */
 export const sharedAtomsOf = (roots: Roots, ports: AtomHostPorts): SharedAtoms => {
   const listeners = new Set<AtomListener>();
+  let isDisposed = false;
   const tell = (listener: AtomListener, root: string, packageName: string): void => {
     try {
       listener(root, packageName);
@@ -29,6 +31,8 @@ export const sharedAtomsOf = (roots: Roots, ports: AtomHostPorts): SharedAtoms =
   const loads = new AtomLoads({ ...ports, changed }, modelOf);
   const view = (root: string, packageName: string): AtomView => loads.view(root, packageName);
   const childrenRequested = (root: string, packageName: string): void => {
+    if (isDisposed) return;
+
     loads.childrenRequested(root, packageName);
   };
   const runEnded = (root: string, packageName: string): void => {
@@ -44,6 +48,7 @@ export const sharedAtomsOf = (roots: Roots, ports: AtomHostPorts): SharedAtoms =
     loads.rootsKept(kept);
   };
   const dispose = (): void => {
+    isDisposed = true;
     listeners.clear();
     loads.dispose();
   };
