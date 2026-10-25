@@ -64,6 +64,13 @@ export class GraphTaskDetails {
     await expect(state).toHaveText(word);
   }
 
+  /** The icon of the `state` run state line is painted in `colour`, as the browser computes it. */
+  public async expectStateIconColour(state: string, colour: string): Promise<void> {
+    const icon = this.panel.locator(`.task-run-state[data-state='${state}'] .codicon`);
+
+    await expect(icon).toHaveCSS('color', colour);
+  }
+
   /** The panel shows no task: the Details heading, the empty lead and no button. */
   public async expectEmpty(): Promise<void> {
     await expect(this.panel.getByRole('heading', { level: 2 })).toHaveText(DETAILS_LABEL);

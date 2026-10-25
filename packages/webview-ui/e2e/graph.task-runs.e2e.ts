@@ -108,6 +108,23 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
       );
     }
 
+    for (const { name, stub, stopped } of STOPPED_THEMES) {
+      test(
+        `the panel of a stopped app#build paints its icon in the ${name} theme description colour`,
+        { annotation: RUNS },
+        async ({ graphCanvas, graphLook, graphTaskDetails, graphTaskHost }): Promise<void> => {
+          await test.step(`WHEN the ${name} theme applies and app#build stopped and is tapped`, async (): Promise<void> => {
+            await graphLook.applyTheme(stub);
+            await graphTaskHost.sendRuns({ 'app#build': 'stopped' });
+            await graphCanvas.tapNode('app#build');
+          });
+
+          await test.step('THEN the run state icon has the description colour', async (): Promise<void> =>
+            graphTaskDetails.expectStateIconColour('stopped', stopped));
+        }
+      );
+    }
+
     test(
       'the panel of app#build posts Run, Run without cache and, once running, Stop, and a dependency button selects lib#build',
       { annotation: RUNS },
