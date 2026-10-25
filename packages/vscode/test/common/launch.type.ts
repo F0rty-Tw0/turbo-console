@@ -85,8 +85,8 @@ export type TurboRun = {
 };
 
 /**
- * `count` is the turbo spawns since the last `reset`, `--version` calls left out. `turboMs` is how long turbo processes
- * ran inside `window`, `--version` calls included and overlapping processes counted once; a process still running is
+ * `count` is the turbo spawns since the last `reset`, `--version` calls left out. `turboMs` is how long this thread sat
+ * idle while turbo processes ran inside `window` (see `idleMs`), `--version` calls included; a process still running is
  * left out.
  */
 export type SpawnCounter = {

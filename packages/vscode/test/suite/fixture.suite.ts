@@ -45,8 +45,9 @@ const EXPAND_BUDGET_MS = 50;
 
 /**
  * Spec §5.3 case 9 cold: reveals the view between two runs of the cpu probe and measures the tree-visible span less the
- * time turbo processes ran inside it (the override's `--version` call and the query). That turbo time is turbo's own
- * work, so it is logged, not budgeted; case 7-cold counts the query spawns. The rest is this extension's own work, and
+ * time this thread sat idle inside it while turbo processes ran (the override's `--version` call and the query; see
+ * `countTurboSpawns`). That idle time is the wait on turbo's own work, so it is logged, not budgeted; case 7-cold counts
+ * the query spawns. The rest is this extension's own work, time it kept this thread busy while turbo ran included, and
  * its slack is `TREE_VISIBLE_SLACK_MS` scaled by how much slower than `PROBE_REFERENCE_MS` the probe ran, so a loaded
  * machine widens it as much as it slows the same thread.
  */
@@ -66,7 +67,7 @@ const revealCold = async (api: TurboConsoleApi, root: string, counter: SpawnCoun
   const cold: ColdTree = { ownMs: visible - turbo, slackMs: TREE_VISIBLE_SLACK_MS * slowdown };
 
   log(`timing cpu probe: median ${probe.toFixed(1)} ms of ${probeText}, slack scaled ${slowdown.toFixed(2)}x`);
-  log(`timing tree visible cold: ${visible.toFixed(1)} ms, turbo ${turbo.toFixed(1)} ms of it (not budgeted)`);
+  log(`timing tree visible cold: ${visible.toFixed(1)} ms, turbo wait ${turbo.toFixed(1)} ms of it (not budgeted)`);
 
   return cold;
 };
