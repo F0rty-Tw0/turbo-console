@@ -10,6 +10,8 @@ export type GraphOptions = {
   readonly inlineScript?: boolean;
   /** `true` makes canvas `measureText` throw, so laying out any graph fails before it is drawn. */
   readonly isMeasureBroken?: boolean;
+  /** `true` answers `codicon.ttf` only after three times the page's font wait, so the page starts without glyphs. */
+  readonly isCodiconHeld?: boolean;
   /** The webview state VS Code kept, as `getState` hands it to the page; any value, valid or not. */
   readonly savedState?: unknown;
   readonly workers?: WorkerStub;

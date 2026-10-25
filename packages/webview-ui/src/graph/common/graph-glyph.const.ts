@@ -12,5 +12,7 @@ export const GLYPH_CODE_POINTS = {
 export const CODICON_WAIT_MS = 1000;
 
 /** The font the glyph wait loads and the glyph sizer measures. */
-// eslint-disable-next-line local/no-unused-exports -- Task 2.5 wires the font wait and the glyph sizer to it.
 export const CODICON_FONT = '13px codicon';
+
+/** What the page logs once when the codicon font missed the wait, so task states show without glyphs. */
+export const GLYPH_FALLBACK_WARNING = `graph page: the codicon font did not load in ${CODICON_WAIT_MS / 1000} s, so task states show without glyphs`;

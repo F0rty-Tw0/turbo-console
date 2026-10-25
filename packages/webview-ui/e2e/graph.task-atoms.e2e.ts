@@ -4,6 +4,7 @@ import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import type { GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../src/bridge/common/graph-state.type.ts';
+import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../src/graph/common/graph-probe.type.ts';
 import type { NodeSize } from '../src/graph/common/node-size.type.ts';
 
@@ -51,9 +52,9 @@ const extraOf = (umbrella: ProbeNode): NodeSize => {
   return extra;
 };
 
-const COLLAPSED_TEXT = 'e2e-ci\n10 files';
+const COLLAPSED_TEXT = `${GLYPH_CODE_POINTS.blank} e2e-ci\n10 files`;
 
-const COUNTED_TEXT = 'e2e-ci\n10 files · 3 cached · 1 failed';
+const COUNTED_TEXT = `${GLYPH_CODE_POINTS.blank} e2e-ci\n10 files · 3 cached · 1 failed`;
 
 const COUNTED: GraphAtomGroupState = { counts: '10 files · 3 cached · 1 failed', files: {} };
 

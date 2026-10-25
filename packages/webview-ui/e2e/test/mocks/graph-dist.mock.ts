@@ -1,14 +1,21 @@
 import { randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 import type { Route } from '@playwright/test';
 
+import { CODICON_WAIT_MS } from '../../../src/graph/common/graph-glyph.const.ts';
 import { graphCsp, renderWebviewHtml } from '../../../src/shell/utils/webview-html.util.ts';
 import { GRAPH_DIST_DIR } from '../../common/graph.const.ts';
 import type { GraphOptions } from '../../common/graph.type.ts';
 import type { RouteHandler } from '../../common/playwright.type.ts';
 import { SHELL_ORIGIN, UNNONCED_SCRIPT } from '../../common/shell.const.ts';
+
+const CODICON_FILE = 'codicon.ttf';
+
+/** Long enough that the page's font wait ends first, short enough that the late face still arrives inside a test. */
+const CODICON_HOLD_MS = 3 * CODICON_WAIT_MS;
 
 const withUnnoncedScript = (html: string): string => html.replace('</body>', `${UNNONCED_SCRIPT}</body>`);
 
@@ -30,6 +37,8 @@ export const graphDistMock = (options: GraphOptions = {}): RouteHandler => {
     const fileName = url.pathname.slice(1);
 
     if (fileName === 'index.html') return fulfillGraphHtml(route, options);
+
+    if (fileName === CODICON_FILE && options.isCodiconHeld === true) await sleep(CODICON_HOLD_MS);
 
     await route.fulfill({ path: join(GRAPH_DIST_DIR, fileName) });
   };
