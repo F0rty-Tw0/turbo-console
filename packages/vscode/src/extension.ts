@@ -32,6 +32,7 @@ import { editorOpenSpecPorts } from './tree/data-access/open-spec-ports.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
 import { tickerPortsOf } from './tree/data-access/ticker-ports.ts';
 import { ElapsedTicker } from './tree/domain-logic/elapsed-ticker.ts';
+import { sharedAtomsOf } from './tree/domain-logic/shared-atoms.ts';
 import { TreeVisibility } from './tree/domain-logic/tree-visibility.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
 import { registerOpenSpec } from './tree/feature/open-spec.ts';
@@ -133,7 +134,8 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
   const scripts = new ScriptsToggle(editorScriptsTogglePorts(context.workspaceState, output));
-  const treeDeps = treeDepsOf(runSession.runs, timings, scripts, editorAtomPorts(session.store, output));
+  const atoms = sharedAtomsOf(session.store, editorAtomPorts(session.store, output));
+  const treeDeps = treeDepsOf(runSession.runs, timings, scripts, atoms);
   const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDeps);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);

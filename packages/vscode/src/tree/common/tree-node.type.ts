@@ -1,6 +1,6 @@
 import type { Event, TreeItem } from 'vscode';
 
-import type { AtomHostPorts } from './atom-load.type.ts';
+import type { SharedAtoms } from './atom-load.type.ts';
 import type { AtomLookup } from './atom-view.type.ts';
 import type { ModelViewsOf } from './model-view.type.ts';
 import type { IconsMode, TreeMode, TreeRow } from './tree-row.type.ts';
@@ -57,7 +57,7 @@ export type RunningTasks = ReadonlyMap<string, ReadonlySet<string>>;
 /**
  * `treeVisible` gets one span per root: its first `getChildren`, ended when it first returns package or folder rows.
  * `now` is the span clock (`performance.now()`); `wallNow` is the wall clock (`Date.now()`) the rows count elapsed time on.
- * `atom` loads the dry-run states and results of a package's Atomizer groups.
+ * `atom` is the window's shared Atomizer loads: the dry-run states and results of a package's Atomizer groups.
  */
 export type TreePorts = {
   readonly runs: RunLookup;
@@ -67,7 +67,7 @@ export type TreePorts = {
   readonly treeVisible: Map<string, Span>;
   readonly now: () => number;
   readonly wallNow: () => number;
-  readonly atom: AtomHostPorts;
+  readonly atom: SharedAtoms;
 };
 
 /** The public face of `PackagesTreeProvider`, so `common/` can name it without importing the feature. */
@@ -91,11 +91,11 @@ type TreeRuns = Pick<Runs, 'get' | 'runningIds'>;
 
 /**
  * What `PackagesTreeProvider` is built from beside the roots and the mode: the runs, the first-children spans, the scripts
- * toggle and the Atomizer load ports.
+ * toggle and the window's shared Atomizer loads.
  */
 export type TreeProviderDeps = {
   readonly runs: TreeRuns;
   readonly treeVisible: Map<string, Span>;
   readonly scripts: ScriptsToggleApi;
-  readonly atom: AtomHostPorts;
+  readonly atom: SharedAtoms;
 };

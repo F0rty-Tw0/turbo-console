@@ -5,6 +5,7 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { AtomHostPorts } from '../common/atom-load.type.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
+import { sharedAtomsOf } from '../domain-logic/shared-atoms.ts';
 import { BASE_SPEC_PATHS, FILE_A, ROOT } from '../test/common/atom-load.const.ts';
 import type { ChildrenOf, LoadsHarness } from '../test/common/atom-load.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
@@ -36,7 +37,8 @@ describe('FEATURE: packages provider Atomizer loads', () => {
       h = loadsHarness();
 
       const store = new RootStore();
-      const atom: AtomHostPorts = { binaryOf: h.binaryOf, dryRun: h.dryRun, results: h.results, log: h.log };
+      const host: AtomHostPorts = { binaryOf: h.binaryOf, dryRun: h.dryRun, results: h.results, log: h.log };
+      const atom = sharedAtomsOf(store, host);
       const base = providerDepsOf();
       const deps: TreeProviderDeps = { ...base, atom };
       const children: ChildrenOf = async (node) => provider.getChildren(node);
