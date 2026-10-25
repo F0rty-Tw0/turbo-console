@@ -9,7 +9,7 @@ export type IconSpec = {
 
 export type RowCommand = {
   readonly command: string;
-  readonly args: string[];
+  readonly args: unknown[];
 };
 
 export type TreeMode = 'folders' | 'list';

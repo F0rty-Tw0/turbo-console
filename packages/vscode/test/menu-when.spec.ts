@@ -33,6 +33,7 @@ const FORCE = ['turboConsole.runTaskWithoutCache 1_run@1'];
 const FORCE_INLINE = ['turboConsole.runTaskWithoutCache inline@3'];
 const COPY = ['turboConsole.copyCommand inline@1', 'turboConsole.copyCommand 3_copy'];
 const OPEN_JSON = ['turboConsole.openPackageJson inline@2', 'turboConsole.openPackageJson 2_open@1'];
+const OPEN_SPEC = ['turboConsole.openSpec inline@4'];
 
 const PACKAGE_ITEMS = [
   'turboConsole.openPackageDetails inline@0',
@@ -61,6 +62,9 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     ['turboScript.running', [...STOP, ...COPY, ...OPEN_JSON]],
     ['turboScript.x', [...RUN, ...COPY, ...OPEN_JSON]],
     ['turboTask.running.x', [...STOP, ...COPY, ...OPEN_JSON]],
+    ['turboTask.atomFile', [...RUN, ...FORCE, ...COPY, ...OPEN_JSON, ...OPEN_SPEC]],
+    ['turboTask.cached.atomFile', [...RUN, ...FORCE, ...FORCE_INLINE, ...COPY, ...OPEN_JSON, ...OPEN_SPEC]],
+    ['turboTask.running.atomFile', [...STOP, ...COPY, ...OPEN_JSON, ...OPEN_SPEC]],
     ['turboTask.cached.x', [...RUN, ...FORCE, ...FORCE_INLINE, ...COPY, ...OPEN_JSON]],
     ['xturboTask', []],
     ['xturboScript', []],
@@ -133,12 +137,15 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
   });
 
-  it.each(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask', 'turboConsole.copyCommand'])(
-    'GIVEN the row command %s WHEN the command palette is read THEN it is hidden there',
-    (command) => {
-      const entries = MENUS.commandPalette.filter((entry) => entry.command === command);
+  it.each([
+    'turboConsole.runTask',
+    'turboConsole.runTaskWithoutCache',
+    'turboConsole.stopTask',
+    'turboConsole.copyCommand',
+    'turboConsole.openSpec'
+  ])('GIVEN the row command %s WHEN the command palette is read THEN it is hidden there', (command) => {
+    const entries = MENUS.commandPalette.filter((entry) => entry.command === command);
 
-      expect(entries).toStrictEqual([{ command, when: 'false' }]);
-    }
-  );
+    expect(entries).toStrictEqual([{ command, when: 'false' }]);
+  });
 });

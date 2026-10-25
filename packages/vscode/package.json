@@ -198,6 +198,12 @@
         "icon": "$(go-to-file)"
       },
       {
+        "command": "turboConsole.openSpec",
+        "title": "Open Spec",
+        "category": "Turbo Console",
+        "icon": "$(file-code)"
+      },
+      {
         "command": "turboConsole.revealInExplorer",
         "title": "Reveal in Explorer",
         "category": "Turbo Console"
@@ -301,6 +307,11 @@
           "command": "turboConsole.runTaskWithoutCache",
           "when": "view == turboConsole.tree && viewItem =~ /^turboTask\\.cached/",
           "group": "inline@3"
+        },
+        {
+          "command": "turboConsole.openSpec",
+          "when": "view == turboConsole.tree && viewItem =~ /\\.atomFile$/",
+          "group": "inline@4"
         },
         {
           "command": "turboConsole.openPackageDetails",
@@ -416,6 +427,10 @@
         },
         {
           "command": "turboConsole.openPackageJson",
+          "when": "false"
+        },
+        {
+          "command": "turboConsole.openSpec",
           "when": "false"
         },
         {

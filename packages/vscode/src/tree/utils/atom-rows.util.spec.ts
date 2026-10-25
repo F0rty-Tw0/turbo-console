@@ -66,12 +66,13 @@ describe('FEATURE: atom umbrella row', () => {
     it('WHEN the row is built THEN it reads only the file count and is collapsed', () => {
       const row = umbrellaRow(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, ATOM_GROUP_STUB, atomContextOf(ATOM_VIEW_STUB));
 
-      expect([row.kind, row.key, row.description, row.collapsible, row.contextValue]).toStrictEqual([
+      expect([row.kind, row.key, row.description, row.collapsible, row.contextValue, row.command]).toStrictEqual([
         'task',
         'e2e#e2e-ci',
         '3 files',
         'collapsed',
-        'turboTask'
+        'turboTask',
+        null
       ]);
     });
   });

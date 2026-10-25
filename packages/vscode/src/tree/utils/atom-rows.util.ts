@@ -7,9 +7,18 @@ import { taskRow } from './task-row.util.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
+import { OPEN_SPEC_COMMAND } from '../common/atom.const.ts';
 import { FAILED_ICON, PASSED_ICON, SPEC_FILE_ICON } from '../common/icon.const.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
-import type { AtomFileContextValue, IconSpec, RowScope, TaskContextValue, TaskDisplay, TreeRow } from '../common/tree-row.type.ts';
+import type {
+  AtomFileContextValue,
+  IconSpec,
+  RowCommand,
+  RowScope,
+  TaskContextValue,
+  TaskDisplay,
+  TreeRow
+} from '../common/tree-row.type.ts';
 
 const PLAIN_FILE_CONTEXT: AtomFileContextValue = 'turboTask.atomFile';
 
@@ -63,6 +72,14 @@ const shownOf = (file: AtomFile, result: AtomResult | undefined, entry: RunEntry
   return shown;
 };
 
+/** A click opens the spec; its argument holds the row's node fields, the shape every task command reads a row by. */
+const openSpecCommandOf = (id: string, root: string, key: string, packageName: string): RowCommand => {
+  const node = { kind: 'task', id, root, key, packageName };
+  const command: RowCommand = { command: OPEN_SPEC_COMMAND, args: [node] };
+
+  return command;
+};
+
 export const fileRow = (scope: RowScope, pkg: PackageNode, file: AtomFile, context: RowContext): TreeRow => {
   const { root } = scope;
   const { task } = file;
@@ -73,8 +90,10 @@ export const fileRow = (scope: RowScope, pkg: PackageNode, file: AtomFile, conte
   const shown = shownOf(file, result, entry, display);
   const cache = view.dryRun?.get(task.id);
   const tooltip = fileTooltip(file, result, cache);
+  const id = rowIdOf('task', root, task.id);
+  const command = openSpecCommandOf(id, root, task.id, pkg.name);
   const row: TreeRow = {
-    id: rowIdOf('task', root, task.id),
+    id,
     kind: 'task',
     root,
     key: task.id,
@@ -85,7 +104,7 @@ export const fileRow = (scope: RowScope, pkg: PackageNode, file: AtomFile, conte
     contextValue: ATOM_FILE_CONTEXTS[shown.contextValue] ?? PLAIN_FILE_CONTEXT,
     collapsible: 'none',
     tooltip,
-    command: null
+    command
   };
 
   return row;
