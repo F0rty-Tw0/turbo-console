@@ -1,6 +1,7 @@
 import { ATOM_OUTCOMES, RUN_STATES, TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { isString } from '../../bridge/utils/string.util.ts';
+import { ATOM_COUNTS_TEXT_MAX } from '../common/graph-atom.const.ts';
 
 const isStringList = (value: unknown): boolean => Array.isArray(value) && value.every(isString);
 
@@ -47,26 +48,50 @@ const isAtomGroup = (value: unknown): boolean => {
   return isString(umbrellaId) && hasFiles;
 };
 
-/** A graph state's `atomGroups`: an array of groups with a string umbrella id and at most `TASK_COUNT_MAX` files of string id, string spec path and boolean `isLive`. */
-export const isAtomGroupList = (value: unknown): boolean => Array.isArray(value) && value.every(isAtomGroup);
+const umbrellaIdOf = (group: unknown): unknown => (isRecord(group) ? group['umbrellaId'] : undefined);
+
+const hasDistinctUmbrellas = (groups: unknown[]): boolean => {
+  const ids = groups.map(umbrellaIdOf);
+
+  return new Set(ids).size === ids.length;
+};
+
+/**
+ * A graph state's `atomGroups`: at most `TASK_COUNT_MAX` groups with distinct string umbrella ids, each with at most
+ * `TASK_COUNT_MAX` files of string id, string spec path and boolean `isLive`.
+ */
+export const isAtomGroupList = (value: unknown): boolean => {
+  if (!Array.isArray(value)) return false;
+
+  const isCapped = value.length <= TASK_COUNT_MAX;
+
+  return isCapped && value.every(isAtomGroup) && hasDistinctUmbrellas(value);
+};
 
 const isAtomOutcome = (value: unknown): boolean => ATOM_OUTCOMES.some((outcome) => outcome === value);
 
 const isAtomOutcomeRecord = (value: unknown): boolean => {
   if (!isRecord(value) || Array.isArray(value)) return false;
 
-  return Object.values(value).every(isAtomOutcome);
+  const isCapped = Object.keys(value).length <= TASK_COUNT_MAX;
+
+  return isCapped && Object.values(value).every(isAtomOutcome);
 };
+
+const isCountsLine = (value: unknown): boolean => isString(value) && value.length <= ATOM_COUNTS_TEXT_MAX && !value.includes('\n');
 
 const isAtomState = (value: unknown): boolean => {
   if (!isRecord(value)) return false;
 
   const { counts, files } = value;
 
-  return isString(counts) && isAtomOutcomeRecord(files);
+  return isCountsLine(counts) && isAtomOutcomeRecord(files);
 };
 
-/** An `atoms` message's `groups`: umbrella ids to a string counts line and file ids to the four outcome words. */
+/**
+ * An `atoms` message's `groups`: umbrella ids to a one-line counts string of at most `ATOM_COUNTS_TEXT_MAX` characters
+ * and at most `TASK_COUNT_MAX` file ids to the four outcome words.
+ */
 export const isAtomStateRecord = (value: unknown): boolean => {
   if (!isRecord(value) || Array.isArray(value)) return false;
 

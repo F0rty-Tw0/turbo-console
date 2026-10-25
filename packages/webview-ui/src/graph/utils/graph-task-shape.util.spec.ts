@@ -108,6 +108,27 @@ const ONE_BAD_RECORD = { ...GOOD_RECORD, b: BAD_COUNTS_STATE };
 
 const EVERY_OUTCOME = { w: 'passed', x: 'failed', y: 'cached', z: 'none' };
 
+const LIMIT = 100_000;
+
+/** `count` groups of no files, each with its own umbrella id. */
+const groupsOf = (count: number): unknown[] => {
+  const groupAt = (_value: unknown, index: number): unknown => {
+    const group = { umbrellaId: `app#${index}`, files: [] };
+
+    return group;
+  };
+
+  return Array.from({ length: count }, groupAt);
+};
+
+/** `count` file ids, each with the outcome `passed`. */
+const outcomesOf = (count: number): Record<string, string> => {
+  const entryAt = (_value: unknown, index: number): [string, string] => [`f${index}`, 'passed'];
+  const entries = Array.from({ length: count }, entryAt);
+
+  return Object.fromEntries(entries);
+};
+
 describe('FEATURE: atom group list shape', () => {
   it.each([
     ['an empty list', []],
@@ -129,9 +150,18 @@ describe('FEATURE: atom group list shape', () => {
     ['a numeric specPath', groupsWithFile({ specPath: 1 })],
     ['a file with no isLive', groupsWithFiles([FILE_WITH_NO_IS_LIVE])],
     ['a string isLive', groupsWithFile({ isLive: 'no' })],
-    ['one bad group after a good one', [GROUP, { ...GROUP, umbrellaId: 1 }]]
+    ['one bad group after a good one', [GROUP, { ...GROUP, umbrellaId: 1 }]],
+    ['two groups of one umbrella id', [GROUP, { ...GROUP, files: [] }]]
   ])('GIVEN %s WHEN checked THEN it is not a group list', (_label, value) => {
     expect(isAtomGroupList(value)).toBe(false);
+  });
+
+  it('GIVEN 100 000 groups WHEN checked THEN it is a group list', () => {
+    expect(isAtomGroupList(groupsOf(LIMIT))).toBe(true);
+  });
+
+  it('GIVEN 100 001 groups WHEN checked THEN it is not a group list', () => {
+    expect(isAtomGroupList(groupsOf(LIMIT + 1))).toBe(false);
   });
 
   it('GIVEN a group of 100 001 files WHEN checked THEN it is not a group list', () => {
@@ -146,7 +176,9 @@ describe('FEATURE: atom state record shape', () => {
   it.each([
     ['an empty record', {}],
     ['a group with every outcome', recordWith({ counts: '4 files', files: EVERY_OUTCOME })],
-    ['a group with no files', recordWith({ counts: '0 files', files: {} })]
+    ['a group with no files', recordWith({ counts: '0 files', files: {} })],
+    ['counts of 200 characters', recordWith({ counts: 'c'.repeat(200) })],
+    ['100 000 files', recordWith({ files: outcomesOf(LIMIT) })]
   ])('GIVEN %s WHEN checked THEN it is an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(true);
   });
@@ -161,7 +193,10 @@ describe('FEATURE: atom state record shape', () => {
     ['a null files record', recordWith({ files: null })],
     ['an unknown outcome', recordWith({ files: SKIPPED_FILES })],
     ['a numeric outcome', recordWith({ files: NUMERIC_FILES })],
-    ['one bad group after a good one', ONE_BAD_RECORD]
+    ['one bad group after a good one', ONE_BAD_RECORD],
+    ['counts of 201 characters', recordWith({ counts: 'c'.repeat(201) })],
+    ['counts with a line break', recordWith({ counts: '1 files\n2 cached' })],
+    ['100 001 files', recordWith({ files: outcomesOf(LIMIT + 1) })]
   ])('GIVEN %s WHEN checked THEN it is not an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(false);
   });
