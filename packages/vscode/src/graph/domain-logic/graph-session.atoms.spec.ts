@@ -76,6 +76,12 @@ describe('FEATURE: graph session atoms feed', () => {
 
       expect(fake.childrenRequested).toHaveBeenCalledExactlyOnceWith('/ws', '@fx/e2e');
     });
+
+    it('WHEN the session is disposed THEN the atoms listener is removed', () => {
+      session.dispose();
+
+      expect(fake.listenerCount()).toBe(0);
+    });
   });
 
   describe('GIVEN a shown session on a root without atom groups', () => {
