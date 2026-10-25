@@ -77,6 +77,13 @@ export type TimeRange = {
   readonly end: number;
 };
 
+/** One turbo process: its spawn-to-close range, and the cpu time this thread used over that range, in ms. */
+export type TurboRun = {
+  readonly start: number;
+  readonly end: number;
+  readonly busyMs: number;
+};
+
 /**
  * `count` is the turbo spawns since the last `reset`, `--version` calls left out. `turboMs` is how long turbo processes
  * ran inside `window`, `--version` calls included and overlapping processes counted once; a process still running is
