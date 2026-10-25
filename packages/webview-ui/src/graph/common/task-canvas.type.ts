@@ -1,8 +1,8 @@
-import type { AtomBoxSpec } from './atom-layout.type.ts';
+import type { AtomDrawSpec } from './atom-layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
-import type { GraphAtomFile, GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
 
 /**
  * What task mode draws: the shown tasks, their centres, the node sizer for their names, the size of each umbrella that
@@ -37,17 +37,16 @@ export type TaskCanvas = {
 
 /**
  * The Atomizer groups on the task canvas: an expanded group is the box `atom:<umbrellaId>` inside the umbrella's package
- * box, holding the umbrella and a node per file. The groups' other rules (which are open, where nodes sit) are
- * `GraphAtomGroups`'s; a call for a group the canvas does not draw does nothing.
+ * box, holding the umbrella, a node per drawn file and a count node for the files not drawn. The groups' other rules (which
+ * are open, where nodes sit) are `GraphAtomGroups`'s; a call for a group the canvas does not draw does nothing.
  */
 export type AtomCanvas = {
-  /** Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node per file whose id is free, outlined by its outcome; whether it drew, since nothing is drawn if the umbrella is not drawn or the box's id is taken. */
-  readonly expand: (
-    spec: AtomBoxSpec,
-    pkgBoxId: string,
-    files: GraphAtomFile[],
-    outcomes: Record<string, GraphAtomOutcome>
-  ) => boolean;
+  /**
+   * Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node for each of its drawn files whose
+   * id is free, outlined by its outcome, and a count node when files are hidden. Whether it drew, since nothing is drawn if the
+   * umbrella is not drawn or the box's id is taken.
+   */
+  readonly expand: (spec: AtomDrawSpec, pkgBoxId: string, outcomes: Record<string, GraphAtomOutcome>) => boolean;
   /** Moves the umbrella back into `pkgBoxId` and removes its files and box; a node of the box's id that is not a box stays. */
   readonly collapse: (umbrellaId: string, pkgBoxId: string) => void;
   /** Moves each drawn node in `positions` to its centre; an id not drawn is skipped. */

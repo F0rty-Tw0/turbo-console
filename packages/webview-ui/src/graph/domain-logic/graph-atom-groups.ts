@@ -2,21 +2,21 @@ import { GraphAtomExpansion } from './graph-atom-expansion.ts';
 import { GraphAtomTiming } from './graph-atom-timing.ts';
 import type { GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup, GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
-import { ATOM_BOX_PREFIX } from '../common/graph-atom.const.ts';
+import { ATOM_BOX_PREFIX, ATOM_MORE_PREFIX } from '../common/graph-atom.const.ts';
 import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import { atomSpecOf } from '../utils/atom-spec.util.ts';
+import { atomSpecOf, outcomesOf } from '../utils/atom-spec.util.ts';
 import { taskBoxIdOf } from '../utils/elk-task-graph.util.ts';
 
 const pkgBoxEntryOf = (task: GraphTask): [string, string] => [task.id, taskBoxIdOf(task.packageName)];
 
-/** The umbrella id behind an `atom:` box id; any other id as it is. */
-const umbrellaOfBox = (nodeId: string): string => {
-  const isBox = nodeId.startsWith(ATOM_BOX_PREFIX);
+/** The umbrella id behind a box id (`atom:`) or a count node id (`atom-more:`), by its `prefix`; any other id as it is. */
+const umbrellaOfPrefixed = (nodeId: string, prefix: string): string => {
+  const isPrefixed = nodeId.startsWith(prefix);
 
-  if (!isBox) return nodeId;
+  if (!isPrefixed) return nodeId;
 
-  return nodeId.slice(ATOM_BOX_PREFIX.length);
+  return nodeId.slice(prefix.length);
 };
 
 /**
@@ -41,7 +41,8 @@ export class GraphAtomGroups {
 
   /**
    * Keeps the state's groups by umbrella id; the counts and outcomes of an umbrella no group names are forgotten. While a
-   * layout is kept, the expanded groups follow: one that left collapses, one with another file list is drawn again.
+   * layout is kept, the expanded groups follow: one that left collapses, one whose drawn files or hidden count changed is
+   * drawn again.
    */
   public received(groups: GraphAtomGroup[]): void {
     const entryOf = (group: GraphAtomGroup): [string, GraphAtomGroup] => [group.umbrellaId, group];
@@ -61,7 +62,7 @@ export class GraphAtomGroups {
 
   /**
    * Keeps the counts and file outcomes of the known umbrellas in `groups`, then writes the counts of the placed umbrellas
-   * and the outcomes of the expanded ones to the canvas.
+   * to the canvas, draws again each expanded group whose drawn files the outcomes changed, and writes their outcomes.
    */
   public states(groups: Record<string, GraphAtomGroupState>): void {
     const isKnown = ([id]: [string, GraphAtomGroupState]): boolean => this.groups.has(id);
@@ -76,6 +77,7 @@ export class GraphAtomGroups {
     if (this.placement === null) return;
 
     this.deps.view.tasks.setCounts(this.drawnLabels(this.placement));
+    this.sync();
     this.expansion.outcomes(this.outcomes);
   }
 
@@ -176,8 +178,8 @@ export class GraphAtomGroups {
   }
 
   /**
-   * The umbrella id of the group a node belongs to: the umbrella itself, its `atom:` box or one of its files. A task that
-   * merely shares the id of a box or file belongs to none.
+   * The umbrella id of the group a node belongs to: the umbrella itself, its `atom:` box, its `atom-more:` count node or one
+   * of its files. A task that merely shares the id of a box or file belongs to none.
    */
   private groupOf(nodeId: string): string | null {
     const isUmbrella = this.groups.has(nodeId);
@@ -188,10 +190,15 @@ export class GraphAtomGroups {
 
     if (!isAtomNode) return null;
 
-    const umbrellaId = umbrellaOfBox(nodeId);
+    const umbrellaId = umbrellaOfPrefixed(nodeId, ATOM_BOX_PREFIX);
     const isBox = this.groups.has(umbrellaId);
 
     if (isBox) return umbrellaId;
+
+    const moreUmbrellaId = umbrellaOfPrefixed(nodeId, ATOM_MORE_PREFIX);
+    const isMore = this.groups.has(moreUmbrellaId);
+
+    if (isMore) return moreUmbrellaId;
 
     const hasFile = (group: GraphAtomGroup): boolean => group.files.some((file) => file.id === nodeId);
     const values = this.groups.values();
@@ -208,7 +215,7 @@ export class GraphAtomGroups {
 
     if (group === undefined || placement === null) return false;
 
-    return atomSpecOf(group, placement) !== null;
+    return atomSpecOf(group, placement, outcomesOf(this.outcomes, umbrellaId)) !== null;
   }
 
   /** Makes the canvas match the expanded set against the kept layout; nothing before a layout is placed. */

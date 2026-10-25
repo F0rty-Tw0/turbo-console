@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { GraphAtomGroups } from './graph-atom-groups.ts';
 import type { GraphAtomGroupState } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
+import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
 import { BASE, E2E_CI, SIZE, SIZES, TASKS, atomRigOf, groupOf } from '../test/utils/graph-atom-groups.spec.util.ts';
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
@@ -14,8 +14,9 @@ const SHOWN = new Set([UMBRELLA]);
 
 const fileIdsOf = (group: GraphAtomGroup): string[] => group.files.map((file) => file.id);
 
-const specOf = (group: GraphAtomGroup): AtomBoxSpec => {
-  const spec: AtomBoxSpec = { umbrellaId: group.umbrellaId, umbrellaSize: SIZE, fileIds: fileIdsOf(group) };
+const specOf = (group: GraphAtomGroup): AtomDrawSpec => {
+  const fileIds = fileIdsOf(group);
+  const spec: AtomDrawSpec = { umbrellaId: group.umbrellaId, umbrellaSize: SIZE, fileIds, files: group.files, hidden: 0 };
 
   return spec;
 };
@@ -62,7 +63,7 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
     it('WHEN the umbrella is toggled THEN its files are drawn in its package box with the files placed', () => {
       groups.toggle(UMBRELLA);
 
-      expect(rig.atoms.expand).toHaveBeenCalledExactlyOnceWith(specOf(E2E_CI), 'pkg:app', E2E_CI.files, {});
+      expect(rig.atoms.expand).toHaveBeenCalledExactlyOnceWith(specOf(E2E_CI), 'pkg:app', {});
       expect(rig.atoms.setPositions).toHaveBeenLastCalledWith(expandedPositionsOf(E2E_CI, BASE));
     });
 
@@ -120,7 +121,7 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
 
       groups.toggle(SPACED_FILE);
 
-      expect(rig.atoms.expand).toHaveBeenCalledExactlyOnceWith(specOf(SPACED_GROUP), 'pkg:app', SPACED_GROUP.files, {});
+      expect(rig.atoms.expand).toHaveBeenCalledExactlyOnceWith(specOf(SPACED_GROUP), 'pkg:app', {});
     });
 
     it('WHEN atoms arrived with outcomes before it THEN the files are drawn with them', () => {
@@ -128,7 +129,7 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
 
       groups.toggle(UMBRELLA);
 
-      expect(rig.atoms.expand).toHaveBeenCalledWith(specOf(E2E_CI), 'pkg:app', E2E_CI.files, OUTCOME_STATE[UMBRELLA]?.files);
+      expect(rig.atoms.expand).toHaveBeenCalledWith(specOf(E2E_CI), 'pkg:app', OUTCOME_STATE[UMBRELLA]?.files);
     });
 
     it('WHEN a file has the id of a task THEN the group is drawn without that file in its spec', () => {
@@ -187,7 +188,7 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
       groups.received([replaced]);
 
       expect(rig.atoms.collapse).toHaveBeenCalledExactlyOnceWith(UMBRELLA, 'pkg:app');
-      expect(rig.atoms.expand).toHaveBeenCalledExactlyOnceWith(specOf(replaced), 'pkg:app', replaced.files, {});
+      expect(rig.atoms.expand).toHaveBeenCalledExactlyOnceWith(specOf(replaced), 'pkg:app', {});
       expect(rig.atoms.setPositions).toHaveBeenLastCalledWith(expandedPositionsOf(replaced, BASE));
     });
 

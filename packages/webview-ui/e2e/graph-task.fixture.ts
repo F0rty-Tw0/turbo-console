@@ -1,4 +1,5 @@
 import { test as graphTest } from './graph.fixture.ts';
+import { GraphAtomCap } from './pages/graph-atom-cap.po.ts';
 import { GraphAtoms } from './pages/graph-atoms.po.ts';
 import { GraphFlowPage } from './pages/graph-flow.po.ts';
 import { GraphHover } from './pages/graph-hover.po.ts';
@@ -23,10 +24,11 @@ const UMBRELLA_SHOWN = [
   'util-b#build'
 ];
 
-/** Opens the page in task mode with the target-like state sent and its Atomizer umbrella chosen and drawn. */
-type OpenUmbrella = () => Promise<void>;
+/** Opens the page in task mode with the target-like state of `fileCount` files sent and its Atomizer umbrella chosen and drawn. */
+type OpenUmbrella = (fileCount?: number) => Promise<void>;
 
 type GraphTaskFixtures = {
+  readonly graphAtomCap: GraphAtomCap;
   readonly graphAtoms: GraphAtoms;
   readonly graphFlow: GraphFlowPage;
   readonly graphHover: GraphHover;
@@ -38,6 +40,9 @@ type GraphTaskFixtures = {
 
 /** The graph fixtures plus task mode's page parts; `graph.fixture.ts` is at its line cap. */
 export const test = graphTest.extend<GraphTaskFixtures>({
+  graphAtomCap: async ({ page }, use): Promise<void> => {
+    await use(new GraphAtomCap(page));
+  },
   graphAtoms: async ({ page }, use): Promise<void> => {
     await use(new GraphAtoms(page));
   },
@@ -57,9 +62,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
     await use(new GraphTaskNarrow(page));
   },
   openUmbrella: async ({ graphHost, graphPage, graphTaskProbe }, use): Promise<void> => {
-    const open = async (): Promise<void> => {
+    const open = async (fileCount?: number): Promise<void> => {
       await graphPage.open({ savedState: taskSavedState(TARGET_LIKE_HASH, { chosen: [TARGET_LIKE_UMBRELLA] }) });
-      await graphHost.sendState(targetLikeTasksState());
+      await graphHost.sendState(targetLikeTasksState(fileCount));
       await graphTaskProbe.expectTaskIds(UMBRELLA_SHOWN);
     };
 
