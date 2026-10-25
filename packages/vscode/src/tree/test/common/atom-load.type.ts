@@ -50,3 +50,9 @@ export type RunCase = {
   readonly patch: Partial<RunEntry>;
   readonly calls: number;
 };
+
+/** One `childrenRequested` case: the node whose children are requested. */
+export type NodeCase = {
+  readonly when: string;
+  readonly node: TreeNode;
+};
