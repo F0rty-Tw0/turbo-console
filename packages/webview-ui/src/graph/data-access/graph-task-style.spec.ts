@@ -149,6 +149,18 @@ describe('FEATURE: taskRulesOf Atomizer files and boxes in graphStyleOf', () => 
     expect(file.style('border-style')).toBe('dashed');
   });
 
+  it('GIVEN a live atom file with an outcome THEN its outline is dashed too, so the outline does not hide the dashed border', () => {
+    const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
+
+    file.addClass('atom-passed');
+
+    expect(file.style('outline-style')).toBe('solid');
+
+    file.addClass('atom-live');
+
+    expect(file.style('outline-style')).toBe('dashed');
+  });
+
   it('GIVEN an atom box THEN it pads its content 12 px, sizes without its descendants’ labels and draws no label', () => {
     const box = cy.getElementById('atom:web#e2e-ci');
 

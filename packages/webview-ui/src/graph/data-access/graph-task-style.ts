@@ -27,7 +27,8 @@ const ATOM_FILE = { label: 'data(label)', 'text-wrap': 'ellipsis', 'text-max-wid
 /** An expanded group's box pads its content and sizes from the nodes, not from their labels. */
 const ATOM_BOX = { padding: `${ATOM_BOX_PADDING_PX}px`, 'compound-sizing-wrt-labels': 'exclude' } as const;
 
-const ATOM_LIVE = { 'border-style': 'dashed' } as const;
+/** A live file's border and outline are dashed; a solid outcome outline would hide a dashed border alone. */
+const ATOM_LIVE = { 'border-style': 'dashed', 'outline-style': 'dashed' } as const;
 
 /** A file's outcome as a 2 px outline; a run outline after it wins for a running file. */
 const outcomeRuleOf = (className: string, color: string): StylesheetJsonBlock => {
