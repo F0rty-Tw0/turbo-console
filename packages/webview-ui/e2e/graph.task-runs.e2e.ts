@@ -23,11 +23,11 @@ const LIB_SET = ['app#build', 'lib#build', 'lib#test', 'ui#build'];
 const FAILED_RGB = 'rgb(244, 135, 113)';
 
 /**
- * Each stub's `--vscode-descriptionForeground` as Cytoscape reports it. The dark and high contrast stubs' old
- * `--vscode-disabledForeground` differs; the light one reads the same once Cytoscape drops its alpha.
+ * Each stub's `--vscode-descriptionForeground` as Cytoscape reports it, each apart from the stub's old
+ * `--vscode-disabledForeground`, so a row fails if a stopped run goes back to it.
  */
 const STOPPED_THEMES = [
-  { name: 'light', stub: THEME_LIGHT_STUB, stopped: 'rgb(97, 97, 97)' },
+  { name: 'light', stub: THEME_LIGHT_STUB, stopped: 'rgb(59, 59, 59)' },
   { name: 'dark', stub: THEME_DARK_STUB, stopped: 'rgb(157, 157, 157)' },
   { name: 'high contrast', stub: THEME_HC_STUB, stopped: 'rgb(255, 255, 255)' }
 ];
