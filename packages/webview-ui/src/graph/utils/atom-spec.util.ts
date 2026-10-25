@@ -19,15 +19,26 @@ const drawnFilesOf = (free: GraphAtomFile[], outcomes: Record<string, GraphAtomO
   return ranked.slice(0, ATOM_FILE_CAP);
 };
 
+/** The id of the count node of the group `umbrellaId`: `atom-more:<umbrellaId>`. */
+export const moreIdOf = (umbrellaId: string): string => `${ATOM_MORE_PREFIX}${umbrellaId}`;
+
+/** The file outcomes kept for `umbrellaId`; none while the host has sent none. */
+export const outcomesOf = (
+  byUmbrella: ReadonlyMap<string, Record<string, GraphAtomOutcome>>,
+  umbrellaId: string
+): Record<string, GraphAtomOutcome> => {
+  const none: Record<string, GraphAtomOutcome> = {};
+
+  return byUmbrella.get(umbrellaId) ?? none;
+};
+
 /** The ids the grid places: the drawn files, then the count node's when files are hidden. */
 const gridIdsOf = (drawn: GraphAtomFile[], hidden: number, umbrellaId: string): string[] => {
   const ids = drawn.map((file) => file.id);
 
   if (hidden === 0) return ids;
 
-  const moreId = `${ATOM_MORE_PREFIX}${umbrellaId}`;
-
-  return [...ids, moreId];
+  return [...ids, moreIdOf(umbrellaId)];
 };
 
 /**
