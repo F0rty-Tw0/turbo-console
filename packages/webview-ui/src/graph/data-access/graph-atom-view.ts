@@ -63,19 +63,38 @@ const boxDefinitionOf = (boxId: string, pkgBoxId: string): ElementDefinition => 
   return definition;
 };
 
+/** Gives each drawn file in `outcomes` the class of its outcome in place of the one it had; any other id is skipped. */
+const setFileOutcomes = (cy: Core, outcomes: Record<string, GraphAtomOutcome>): void => {
+  const markFile = ([id, outcome]: [string, GraphAtomOutcome]): void => {
+    const node: NodeSingular = cy.getElementById(id);
+    const isFile = node.hasClass(ATOM_FILE_CLASS);
+
+    if (!isFile) return;
+
+    node.removeClass(OUTCOME_CLASSES).addClass(outcomeClassOf(outcome));
+  };
+
+  cy.batch((): void => Object.entries(outcomes).forEach(markFile));
+};
+
 /**
  * The Atomizer groups on `cy`, the core the task canvas shares. Elements are found by `getElementById`, never a `#id`
  * selector, since a file id holds spaces and slashes. `autoungrabify` is the core's own, so package mode shares it.
  */
 export const createAtomCanvas = (cy: Core): AtomCanvas => {
-  const expand = (spec: AtomBoxSpec, pkgBoxId: string, files: GraphAtomFile[], outcomes: Record<string, GraphAtomOutcome>): void => {
+  const expand = (
+    spec: AtomBoxSpec,
+    pkgBoxId: string,
+    files: GraphAtomFile[],
+    outcomes: Record<string, GraphAtomOutcome>
+  ): boolean => {
     const umbrella = cy.getElementById(spec.umbrellaId);
     const boxId = `${ATOM_BOX_PREFIX}${spec.umbrellaId}`;
     const isMissing = umbrella.empty();
     const isTaken = cy.getElementById(boxId).nonempty();
     const isUnusable = isMissing || isTaken;
 
-    if (isUnusable) return;
+    if (isUnusable) return false;
 
     const fileNodes = files.map((file) => fileDefinitionOf(file, boxId, outcomes));
 
@@ -84,6 +103,8 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
       umbrella.move({ parent: boxId });
       cy.add(fileNodes);
     });
+
+    return true;
   };
   const collapse = (umbrellaId: string, pkgBoxId: string): void => {
     const box = cy.getElementById(`${ATOM_BOX_PREFIX}${umbrellaId}`);
@@ -107,18 +128,7 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
 
     cy.batch((): void => Object.entries(positions).forEach(moveNode));
   };
-  const setOutcomes = (outcomes: Record<string, GraphAtomOutcome>): void => {
-    const markFile = ([id, outcome]: [string, GraphAtomOutcome]): void => {
-      const node: NodeSingular = cy.getElementById(id);
-      const isFile = node.hasClass(ATOM_FILE_CLASS);
-
-      if (!isFile) return;
-
-      node.removeClass(OUTCOME_CLASSES).addClass(outcomeClassOf(outcome));
-    };
-
-    cy.batch((): void => Object.entries(outcomes).forEach(markFile));
-  };
+  const setOutcomes = (outcomes: Record<string, GraphAtomOutcome>): void => setFileOutcomes(cy, outcomes);
   const setGrabbable = (isGrabbable: boolean): void => void cy.autoungrabify(!isGrabbable);
   const isAtomNode = (id: string): boolean => {
     const node = cy.getElementById(id);

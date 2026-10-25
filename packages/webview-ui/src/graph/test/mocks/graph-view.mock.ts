@@ -27,7 +27,7 @@ export const taskCanvasMock = (): Mocked<TaskCanvas> => {
 
 export const atomCanvasMock = (): Mocked<AtomCanvas> => {
   const canvas: Mocked<AtomCanvas> = {
-    expand: vi.fn<AtomCanvas['expand']>(),
+    expand: vi.fn<AtomCanvas['expand']>(() => true),
     collapse: vi.fn<AtomCanvas['collapse']>(),
     setPositions: vi.fn<AtomCanvas['setPositions']>(),
     setOutcomes: vi.fn<AtomCanvas['setOutcomes']>(),

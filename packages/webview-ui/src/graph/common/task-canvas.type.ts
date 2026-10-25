@@ -41,8 +41,13 @@ export type TaskCanvas = {
  * `GraphAtomGroups`'s; a call for a group the canvas does not draw does nothing.
  */
 export type AtomCanvas = {
-  /** Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node per file whose id is free, outlined by its outcome; nothing is drawn if the box's id is taken. */
-  readonly expand: (spec: AtomBoxSpec, pkgBoxId: string, files: GraphAtomFile[], outcomes: Record<string, GraphAtomOutcome>) => void;
+  /** Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node per file whose id is free, outlined by its outcome; whether it drew, since nothing is drawn if the umbrella is not drawn or the box's id is taken. */
+  readonly expand: (
+    spec: AtomBoxSpec,
+    pkgBoxId: string,
+    files: GraphAtomFile[],
+    outcomes: Record<string, GraphAtomOutcome>
+  ) => boolean;
   /** Moves the umbrella back into `pkgBoxId` and removes its files and box; a node of the box's id that is not a box stays. */
   readonly collapse: (umbrellaId: string, pkgBoxId: string) => void;
   /** Moves each drawn node in `positions` to its centre; an id not drawn is skipped. */

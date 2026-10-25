@@ -173,6 +173,22 @@ describe('FEATURE: createAtomCanvas', () => {
     });
   });
 
+  describe('GIVEN a group is asked to expand', () => {
+    it('WHEN its umbrella is drawn and its box id is free THEN expand reports it drew', () => {
+      expect(atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES)).toBe(true);
+    });
+
+    it('WHEN its umbrella is not drawn THEN expand reports it drew nothing', () => {
+      expect(atoms.expand(GHOST_SPEC, 'pkg:ghost', FILES, OUTCOMES)).toBe(false);
+    });
+
+    it('WHEN a task has the id of its box THEN expand reports it drew nothing', () => {
+      cy.add(boxTaskOf());
+
+      expect(atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES)).toBe(false);
+    });
+  });
+
   describe('GIVEN a node of the canvas already holds an id the group needs', () => {
     it('WHEN a task has the id of the box THEN expanding draws nothing and throws nothing', () => {
       cy.add(boxTaskOf());
