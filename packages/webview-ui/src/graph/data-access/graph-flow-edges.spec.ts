@@ -27,7 +27,13 @@ const POSITIONS: Positions = { 'api#build': API_AT, 'web#build': WEB_AT };
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
-const DRAWING: TaskDrawing = { tasks: TASKS, positions: POSITIONS, sizeOf: (): NodeSize => NODE_SIZE };
+const DRAWING: TaskDrawing = {
+  tasks: TASKS,
+  positions: POSITIONS,
+  sizeOf: (): NodeSize => NODE_SIZE,
+  sizes: new Map(),
+  labels: new Map()
+};
 
 /** A headless core draws no edge, so each edge's ends are its nodes' centres. */
 const centredEdgeOf = (edge: EdgeSingular): FlowEdgeSource => {

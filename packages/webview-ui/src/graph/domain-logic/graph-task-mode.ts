@@ -53,25 +53,28 @@ export class GraphTaskMode {
   }
 
   /**
-   * Keeps the state's tasks; while active, shows the graph view once and draws the shown tasks when their key changed. A
-   * same key, never an empty set's, still refreshes the selected task's panel and the banner, since commands and hidden
-   * tasks are not in the key.
+   * Keeps the state's tasks and Atomizer groups; while active, shows the graph view once and draws the shown tasks when
+   * their key changed. A same key, never an empty set's, still refreshes the selected task's panel and the banner, since
+   * commands and hidden tasks are not in the key, and reports the shown umbrellas again, since a changed file list may
+   * have dropped a load the host must request anew.
    */
   public received(state: GraphReady, at: number): void {
     this.memory.keep(state);
+    this.layout.atoms.received(state.atomGroups);
 
     if (!this.isActive()) return;
 
     this.enter();
 
     const shownSet = this.memory.shownSet();
-    const request = requestOf(this.memory.tasks(), shownSet);
+    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.deps.sizeOf);
     const shownKey = this.layout.key();
 
     this.selection.setShown(request.tasks);
 
     if (request.key === shownKey) {
       this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount });
+      this.layout.atoms.reshown();
 
       return;
     }
@@ -148,7 +151,7 @@ export class GraphTaskMode {
   /** The notice, prompt, banner and rows of the shown set, then its layout; an empty set empties the canvas. */
   private render(at: number | null, notice: string | null): void {
     const shownSet = this.memory.shownSet();
-    const request = requestOf(this.memory.tasks(), shownSet);
+    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.deps.sizeOf);
     const isEmpty = request.tasks.length === 0;
 
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));

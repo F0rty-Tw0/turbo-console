@@ -25,7 +25,26 @@ const TASKS: GraphTask[] = [taskOf('api#build', []), taskOf('web#build', ['api#b
 
 const POSITIONS: Positions = { 'api#build': API_AT, 'web#build': WEB_AT };
 
-const DRAWING: TaskDrawing = { tasks: TASKS, positions: POSITIONS, sizeOf: (): NodeSize => NODE_SIZE };
+const NO_SIZES = new Map<string, NodeSize>();
+
+const NO_LABELS = new Map<string, string>();
+
+const DRAWING: TaskDrawing = {
+  tasks: TASKS,
+  positions: POSITIONS,
+  sizeOf: (): NodeSize => NODE_SIZE,
+  sizes: NO_SIZES,
+  labels: NO_LABELS
+};
+
+const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };
+
+/** `web#build` drawn as an umbrella of its own size with a counts line. */
+const UMBRELLA_DRAWING: TaskDrawing = {
+  ...DRAWING,
+  sizes: new Map([['web#build', UMBRELLA_SIZE]]),
+  labels: new Map([['web#build', '10 files']])
+};
 
 const PAINT_TASKS: GraphTask[] = [...TASKS, taskOf('ui#lint', [])];
 
@@ -120,6 +139,42 @@ describe('FEATURE: createTaskCanvas', () => {
 
       expect(edge.source().id()).toBe('web#build');
       expect(edge.target().id()).toBe('api#build');
+    });
+  });
+
+  describe('GIVEN an umbrella is drawn', () => {
+    beforeEach(() => {
+      canvas.show(UMBRELLA_DRAWING);
+    });
+
+    it('WHEN shown THEN it is classed atom-umbrella besides task and a plain task is not', () => {
+      const web = cy.getElementById('web#build');
+
+      expect(web.hasClass('task')).toBe(true);
+      expect(web.hasClass('atom-umbrella')).toBe(true);
+      expect(cy.getElementById('api#build').hasClass('atom-umbrella')).toBe(false);
+    });
+
+    it('WHEN shown THEN it has the size of its own and a plain task the sizer’s', () => {
+      expect(cy.getElementById('web#build').data()).toMatchObject(UMBRELLA_SIZE);
+      expect(cy.getElementById('api#build').data()).toMatchObject(NODE_SIZE);
+    });
+
+    it('WHEN shown THEN its label is the name over its counts line', () => {
+      expect(cy.getElementById('web#build').data('label')).toBe('build\n10 files');
+    });
+
+    it('WHEN setCounts names it THEN its label is the name over the new counts and no node moves', () => {
+      canvas.setCounts(new Map([['web#build', '10 files · 3 cached']]));
+
+      expect(cy.getElementById('web#build').data('label')).toBe('build\n10 files · 3 cached');
+      expect(canvas.positions()).toStrictEqual(POSITIONS);
+    });
+
+    it('WHEN setCounts names a task that is not drawn THEN nothing is added and nothing throws', () => {
+      canvas.setCounts(new Map([['gone#build', '1 files']]));
+
+      expect(nodeIdsOf(cy)).toStrictEqual(['api#build', 'pkg:api', 'pkg:web', 'web#build']);
     });
   });
 
