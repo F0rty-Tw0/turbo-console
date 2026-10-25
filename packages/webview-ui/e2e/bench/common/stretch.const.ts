@@ -4,15 +4,16 @@ import { WIDGET_BUTTON_PX } from '../../../src/graph/common/graph.const.ts';
 type StretchRowKey = 'smallOpen' | 'smallPan' | 'mediumPan' | 'mediumToggle' | 'largePan';
 
 const SMALL_OPEN: BenchRowDef = { name: 'graph stretch S task open', gate: false, samples: 3 };
-const SMALL_PAN: BenchRowDef = { name: 'graph stretch S pan frame', gate: false, samples: 3 };
-const MEDIUM_PAN: BenchRowDef = { name: 'graph stretch M pan frame', gate: false, samples: 3 };
+const SMALL_PAN: BenchRowDef = { name: 'graph stretch S pan p95 frame', gate: false, samples: 3 };
+const MEDIUM_PAN: BenchRowDef = { name: 'graph stretch M pan p95 frame', gate: false, samples: 3 };
 const MEDIUM_TOGGLE: BenchRowDef = { name: 'graph stretch M toggle', gate: false, samples: 3 };
-const LARGE_PAN: BenchRowDef = { name: 'graph stretch L pan frame', gate: false, samples: 3 };
+const LARGE_PAN: BenchRowDef = { name: 'graph stretch L pan p95 frame', gate: false, samples: 3 };
 
 /**
  * The stretch rows of spec 5: 300 packages, 1500 tasks, 20 groups of 200 files; S has every group collapsed, M five expanded, L all 20.
  * They record without gating and run only under `playwright.stretch.config.ts`, so the CI bench job never sees them.
- * Open and toggle rows are ms; the pan rows are the median frame time in ms (FPS = 1000 / ms).
+ * Open and toggle rows are ms; the pan rows are the p95 frame time in ms (FPS = 1000 / ms), since the median of a vsync-bound
+ * pan reads 16.7 ms however slow the graph is.
  */
 export const STRETCH_ROWS: Readonly<Record<StretchRowKey, BenchRowDef>> = {
   smallOpen: SMALL_OPEN,

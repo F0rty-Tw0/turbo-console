@@ -1,21 +1,29 @@
 import { test } from '@playwright/test';
 import type { Browser } from '@playwright/test';
 
-import { collectSamples, expectRecorded } from './bench/bench-record.ts';
+import { collectSamples, expectRecorded, recordNote } from './bench/bench-record.ts';
 import { stretchLarge, stretchOpen, stretchPan, stretchToggleMs } from './bench/bench-stretch.ts';
 import { MEDIUM_EXPANDED, STRETCH_ROWS } from './bench/common/stretch.const.ts';
-import { noteAnnotation } from './bench/utils/bench-results.util.ts';
+import { heapNoteOf, panNoteOf } from './bench/utils/stretch-note.util.ts';
 import { fitNoteOf } from './bench/utils/stretch-view.util.ts';
 import { STRETCH_UMBRELLAS } from './test/utils/graph-stretch.spec.util.ts';
 
 /** The first frame of one cold open; its Fit is noted for the report. */
 const openedFirstFrameMs = async (browser: Browser): Promise<number> => {
   const sample = await stretchOpen(browser);
-  const note = noteAnnotation(fitNoteOf(sample.fit));
 
-  test.info().annotations.push(note);
+  recordNote(fitNoteOf(sample.fit));
 
   return sample.firstFrameMs;
+};
+
+/** The p95 frame time of one pan sample; its longest long task is noted for the report. */
+const pannedP95Ms = async (browser: Browser, size: string, expandCount: number): Promise<number> => {
+  const pan = await stretchPan(browser, expandCount);
+
+  recordNote(panNoteOf(size, pan));
+
+  return pan.p95Ms;
 };
 
 test.describe('FEATURE: graph stretch', () => {
@@ -30,10 +38,10 @@ test.describe('FEATURE: graph stretch', () => {
     await test.step('THEN every sample is recorded', (): void => expectRecorded(STRETCH_ROWS.smallOpen));
   });
 
-  test('GIVEN the stretch state with every group collapsed, a 2 s pan records the median frame time of every sample', async ({
+  test('GIVEN the stretch state with every group collapsed, a 2 s pan records the p95 frame time of every sample', async ({
     browser
   }): Promise<void> => {
-    const measure = async (): Promise<number> => stretchPan(browser, 0);
+    const measure = async (): Promise<number> => pannedP95Ms(browser, 'S', 0);
 
     await test.step('WHEN it is framed by Fit and panned once per sample', async (): Promise<number[]> =>
       collectSamples(STRETCH_ROWS.smallPan, measure));
@@ -41,10 +49,10 @@ test.describe('FEATURE: graph stretch', () => {
     await test.step('THEN every sample is recorded', (): void => expectRecorded(STRETCH_ROWS.smallPan));
   });
 
-  test('GIVEN the stretch state with five groups expanded, a 2 s pan records the median frame time of every sample', async ({
+  test('GIVEN the stretch state with five groups expanded, a 2 s pan records the p95 frame time of every sample', async ({
     browser
   }): Promise<void> => {
-    const measure = async (): Promise<number> => stretchPan(browser, MEDIUM_EXPANDED);
+    const measure = async (): Promise<number> => pannedP95Ms(browser, 'M', MEDIUM_EXPANDED);
 
     await test.step('WHEN five groups are expanded, Fit frames the graph and it is panned once per sample', async (): Promise<
       number[]
@@ -64,16 +72,16 @@ test.describe('FEATURE: graph stretch', () => {
     await test.step('THEN every sample is recorded', (): void => expectRecorded(STRETCH_ROWS.mediumToggle));
   });
 
-  test('GIVEN the stretch state with all groups expanded, a 2 s pan records the median frame time and the heap of every sample', async ({
+  test('GIVEN the stretch state with all groups expanded, a 2 s pan records the p95 frame time and the main JS heap of every sample', async ({
     browser
   }): Promise<void> => {
     const measure = async (): Promise<number> => {
       const sample = await stretchLarge(browser);
-      const note = noteAnnotation(`stretch L heap ${sample.heapMb.toFixed(1)} MB`);
 
-      test.info().annotations.push(note);
+      recordNote(panNoteOf('L', sample.pan));
+      recordNote(heapNoteOf(sample.heapMb));
 
-      return sample.frameMs;
+      return sample.pan.p95Ms;
     };
 
     await test.step(`WHEN all ${STRETCH_UMBRELLAS.length} groups are expanded, Fit frames the graph and it is panned once per sample`, async (): Promise<

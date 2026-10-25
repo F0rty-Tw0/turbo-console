@@ -1,7 +1,7 @@
 import { PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
-import type { BenchSession, CanvasReading, StretchFit } from './common/bench.type.ts';
+import type { BenchSession, CanvasReading, StretchFit, StretchPan } from './common/bench.type.ts';
 import { MAX_TAP_ATTEMPTS, MIN_TAP_PX, TAP_SETTLE_MS } from './common/stretch.const.ts';
-import { median } from './utils/bench-stats.util.ts';
+import { stretchPanOf } from './utils/pan-trace.util.ts';
 import { dragRegionOf, extentOf, isCentred, isPointInside, nodeNamed, offsetToCentre, panStepOf } from './utils/stretch-view.util.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
@@ -200,8 +200,8 @@ export const expanded = async (session: BenchSession, ids: string[]): Promise<vo
   for (const id of ids) await toggledAt(session, id, true);
 };
 
-/** Frames the graph, pans it for 2 s after the warm-up, and returns the median frame time inside the pan window. */
-export const panFrameMs = async (session: BenchSession): Promise<number> => {
+/** Frames the graph, pans it for 2 s after the warm-up, and returns the p95 frame time and longest long task inside the pan window. */
+export const panned = async (session: BenchSession): Promise<StretchPan> => {
   const { canvas, recorder } = session;
   const markOn = async (): Promise<void> => recorder.markOn();
 
@@ -216,5 +216,5 @@ export const panFrameMs = async (session: BenchSession): Promise<number> => {
 
   const trace = await recorder.read();
 
-  return median(trace.frameDeltasMs);
+  return stretchPanOf(trace);
 };

@@ -77,9 +77,15 @@ export type ColdOpen = {
   readonly positions: Positions;
 };
 
-/** One L stretch session: the median pan frame time and the heap in use after a forced collection. */
+/** One stretch pan: the p95 frame time inside the pan window (FPS = 1000 / ms) and the longest long task in it. */
+export type StretchPan = {
+  readonly p95Ms: number;
+  readonly longestLongTaskMs: number;
+};
+
+/** One L stretch session: its pan and the main JS heap in use after a forced collection. */
 export type LargeSample = {
-  readonly frameMs: number;
+  readonly pan: StretchPan;
   readonly heapMb: number;
 };
 

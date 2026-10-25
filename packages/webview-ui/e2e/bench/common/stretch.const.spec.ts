@@ -15,10 +15,10 @@ describe('FEATURE: stretch bench rows', () => {
 
       expect(names).toStrictEqual([
         'graph stretch S task open',
-        'graph stretch S pan frame',
-        'graph stretch M pan frame',
+        'graph stretch S pan p95 frame',
+        'graph stretch M pan p95 frame',
         'graph stretch M toggle',
-        'graph stretch L pan frame'
+        'graph stretch L pan p95 frame'
       ]);
     });
 
