@@ -77,6 +77,7 @@ class GraphPageController {
       firstFrameMs: (): number | null => this.frames.firstFrameMs(),
       layoutEngine: (): LayoutEngine | null => this.engine(),
       grouped: (): boolean => layouts.mode() === 'folders',
+      atomToggleMs: (): number | null => this.tasks.layout.atoms.toggleMs(),
       ...filteringFacts
     };
 

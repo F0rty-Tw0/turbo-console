@@ -33,9 +33,19 @@ type HandledSelection = {
   readonly rendered: () => void;
 };
 
+type HandledAtoms = {
+  readonly toggle: (nodeId: string) => void;
+  readonly rendered: () => void;
+};
+
+type HandledLayout = {
+  readonly atoms: HandledAtoms;
+};
+
 type HandledTasks = {
   readonly isActive: () => boolean;
   readonly selection: HandledSelection;
+  readonly layout: HandledLayout;
   readonly dragged: () => void;
   readonly saveCamera: () => void;
   readonly hover: (id: string | null) => void;
@@ -53,6 +63,11 @@ type ViewHandlerTargets = {
 const BACKGROUND: InspectionInput = { kind: 'background' };
 
 const NOTHING = (): void => undefined;
+
+const tasksRendered = (tasks: HandledTasks): void => {
+  tasks.selection.rendered();
+  tasks.layout.atoms.rendered();
+};
 
 /**
  * Routes each Cytoscape event by mode: in package mode to the inspection, the folders or the layouts; in task mode a
@@ -78,6 +93,8 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
     (): void => filtering().inspection.saveViewport(),
     (): void => tasks().saveCamera()
   );
+  const openDetails = (name: string): void => filtering().inspection.openDetailsOf(name);
+  const toggleAtoms = (id: string): void => tasks().layout.atoms.toggle(id);
   const handlers: GraphViewHandlers = {
     onTapNode: byMode(
       (name: string): void => filtering().inspection.tapNode(name),
@@ -89,7 +106,7 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
       (): void => tasks().selection.clear()
     ),
     onTapFolder: byMode((folder: string): void => filtering().inspection.tapFolder(folder)),
-    onDoubleTapNode: byMode((name: string): void => filtering().inspection.openDetailsOf(name)),
+    onDoubleTapNode: byMode(openDetails, toggleAtoms),
     onDoubleTapFolder: byMode((folder: string): void => filtering().folders.toggle(folder)),
     onDragEnd: byMode(
       (positions: Positions): void => layouts().dragged(positions),
@@ -105,7 +122,7 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
 
       frames.mark();
 
-      if (isTaskMode) tasks().selection.rendered();
+      if (isTaskMode) tasksRendered(tasks());
       else filtering().rendered();
     }
   };

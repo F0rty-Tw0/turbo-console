@@ -28,6 +28,7 @@ describe('FEATURE: viewHandlersOf', () => {
     let selectTask: Mock<(id: string) => void>;
     let clearTask: Mock<() => void>;
     let hoverTask: Mock<(id: string | null) => void>;
+    let toggleAtoms: Mock<(nodeId: string) => void>;
     let isTaskMode: boolean;
     let handlers: GraphViewHandlers;
 
@@ -46,6 +47,7 @@ describe('FEATURE: viewHandlersOf', () => {
       selectTask = vi.fn<(id: string) => void>();
       clearTask = vi.fn<() => void>();
       hoverTask = vi.fn<(id: string | null) => void>();
+      toggleAtoms = vi.fn<(nodeId: string) => void>();
       isTaskMode = false;
       const mark = (): void => {
         calls.push('mark');
@@ -62,7 +64,12 @@ describe('FEATURE: viewHandlersOf', () => {
         calls.push('task rendered');
       };
       const selection = { tapNode: selectTask, clear: clearTask, rendered: taskRendered };
-      const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera, hover: hoverTask, selection };
+      const atomsRendered = (): void => {
+        calls.push('atoms rendered');
+      };
+      const atoms = { toggle: toggleAtoms, rendered: atomsRendered };
+      const layout = { atoms };
+      const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera, hover: hoverTask, selection, layout };
 
       const viewportChanged = (): void => {
         calls.push('flow cleared');
@@ -106,6 +113,12 @@ describe('FEATURE: viewHandlersOf', () => {
       handlers.onDoubleTapNode('web');
 
       expect(openDetailsOf).toHaveBeenCalledExactlyOnceWith('web');
+    });
+
+    it('WHEN a node is double-tapped in package mode THEN no Atomizer group toggles', () => {
+      handlers.onDoubleTapNode('web');
+
+      expect(toggleAtoms).not.toHaveBeenCalled();
     });
 
     it('WHEN a folder is double-tapped THEN it toggles', () => {
@@ -184,6 +197,12 @@ describe('FEATURE: viewHandlersOf', () => {
         expect(clearTask).not.toHaveBeenCalled();
       });
 
+      it('WHEN a node is double-tapped THEN the Atomizer groups toggle it', () => {
+        handlers.onDoubleTapNode('web#e2e-ci--tests/b fails.spec.ts');
+
+        expect(toggleAtoms).toHaveBeenCalledExactlyOnceWith('web#e2e-ci--tests/b fails.spec.ts');
+      });
+
       it('WHEN a drag ends THEN task mode keeps it and the layouts hear nothing', () => {
         handlers.onDragEnd(POSITIONS);
 
@@ -204,10 +223,10 @@ describe('FEATURE: viewHandlersOf', () => {
         expect(calls).toStrictEqual(['flow cleared']);
       });
 
-      it('WHEN a frame renders THEN the frame clock is marked before the task selection hears of it', () => {
+      it('WHEN a frame renders THEN the frame clock is marked, then the task selection and the group clock hear of it', () => {
         handlers.onRender();
 
-        expect(calls).toStrictEqual(['mark', 'task rendered']);
+        expect(calls).toStrictEqual(['mark', 'task rendered', 'atoms rendered']);
       });
     });
   });

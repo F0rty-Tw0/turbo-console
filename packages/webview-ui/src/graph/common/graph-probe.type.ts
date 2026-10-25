@@ -98,6 +98,8 @@ export type GraphProbe = {
   readonly folderLinks: () => ProbeFolderLink[];
   /** From the latest collapse or expand to the first frame drawn after it; `null` until that frame. */
   readonly toggleMs: () => number | null;
+  /** From the latest expand or collapse of an Atomizer group to the first frame drawn after it; `null` until that frame. */
+  readonly atomToggleMs: () => number | null;
   /** From the latest `graph` state's message event to its controls panel built and restored; `null` until then. */
   readonly controlsBuiltMs: () => number | null;
   /** From the latest filter input to the return of the fit after it; `null` until an input changed the visible set. */
@@ -126,6 +128,7 @@ export type ProbeFacts = Pick<
   | 'pickingBuiltMs'
   | 'traceMs'
   | 'toggleMs'
+  | 'atomToggleMs'
 >;
 
 /** The probe facts the controls, the inspection and the folders know. */

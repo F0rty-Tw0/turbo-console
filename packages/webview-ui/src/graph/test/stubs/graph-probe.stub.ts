@@ -19,6 +19,7 @@ export const GRAPH_PROBE_STUB: GraphProbe = {
   folders: () => [],
   folderLinks: () => [],
   toggleMs: () => null,
+  atomToggleMs: () => null,
   controlsBuiltMs: () => null,
   filterAppliedMs: () => null,
   inspection: () => NO_INSPECTION,
