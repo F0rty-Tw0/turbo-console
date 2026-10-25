@@ -1,11 +1,19 @@
-import { recordNote } from './bench-record.ts';
+import { tappedUntil } from './bench-stretch-tap.ts';
 import { PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
 import type { BenchSession, CanvasReading, StretchFit, StretchPan } from './common/bench.type.ts';
-import { MAX_TAP_ATTEMPTS, MIN_TAP_PX, TAP_SETTLE_MS } from './common/stretch.const.ts';
+import { MIN_TAP_PX } from './common/stretch.const.ts';
 import { stretchPanOf } from './utils/pan-trace.util.ts';
-import { isPollTimeout } from './utils/poll-timeout.util.ts';
-import { tapNoteOf } from './utils/stretch-note.util.ts';
-import { dragRegionOf, extentOf, isCentred, isPointInside, nodeNamed, offsetToCentre, panStepOf } from './utils/stretch-view.util.ts';
+import {
+  dragRegionOf,
+  extentOf,
+  hasPanMoved,
+  isCentred,
+  isPointInside,
+  nodeNamed,
+  offsetToCentre,
+  panStepOf
+} from './utils/stretch-view.util.ts';
+import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
@@ -159,40 +167,6 @@ const expectCentreInside = async (session: BenchSession, id: string): Promise<vo
   if (!isInContainer) throw new Error(`bench stretch: ${id} centre ${centre.x},${centre.y} is outside the container`);
 };
 
-/** The group's box is `isDrawn` within `TAP_SETTLE_MS`; any error other than that poll timing out is rethrown. */
-const hasSettledAs = async (atoms: GraphAtoms, id: string, isDrawn: boolean): Promise<boolean> => {
-  try {
-    await atoms.expectBoxDrawn(id, isDrawn, TAP_SETTLE_MS);
-  } catch (error) {
-    const isTimeout = isPollTimeout(error);
-
-    if (isTimeout) return false;
-
-    throw error;
-  }
-
-  return true;
-};
-
-/** Double taps the umbrella until its box is `isDrawn`, up to `MAX_TAP_ATTEMPTS` times, noting how many it took; a tap pair Cytoscape dropped toggles nothing. */
-const tappedUntil = async (session: BenchSession, id: string, isDrawn: boolean): Promise<void> => {
-  const atoms = new GraphAtoms(session.page);
-
-  for (let attempt = 0; attempt < MAX_TAP_ATTEMPTS; attempt += 1) {
-    await atoms.toggle(id);
-
-    const isSettled = await hasSettledAs(atoms, id, isDrawn);
-
-    if (isSettled) {
-      recordNote(tapNoteOf(id, attempt + 1));
-
-      return;
-    }
-  }
-
-  throw new Error(`bench stretch: ${MAX_TAP_ATTEMPTS} double taps left the box of ${id} ${isDrawn ? 'undrawn' : 'drawn'}`);
-};
-
 /**
  * Frames the graph, drags the umbrella to the container centre (Fit may leave it off screen), zooms onto it when it is
  * too small to tap, and double taps it until its box is `isDrawn`.
@@ -211,6 +185,14 @@ export const expanded = async (session: BenchSession, ids: string[]): Promise<vo
   for (const id of ids) await toggledAt(session, id, true);
 };
 
+/** The scripted pan moved the viewport away from `before`; a drag that grabbed nothing would time a still canvas. */
+const expectPanMoved = async (session: BenchSession, before: Position | null): Promise<void> => {
+  const after = await session.probe.pan();
+  const hasMoved = hasPanMoved(before, after);
+
+  if (!hasMoved) throw new Error(`bench stretch: the scripted pan left the viewport at ${JSON.stringify(after)}`);
+};
+
 /** Frames the graph, pans it for 2 s after the warm-up, and returns the p95 frame time and longest long task inside the pan window. */
 export const panned = async (session: BenchSession): Promise<StretchPan> => {
   const { canvas, recorder } = session;
@@ -222,8 +204,11 @@ export const panned = async (session: BenchSession): Promise<StretchPan> => {
   const reading = await readingOf(session);
   const spot = dragSpotOf(reading, PAN_STEP);
 
+  const panBefore = await session.probe.pan();
+
   await canvas.scriptedPan(WARM_UP_FRAMES, PAN_FRAMES, spot, markOn);
   await recorder.markOff();
+  await expectPanMoved(session, panBefore);
 
   const trace = await recorder.read();
 

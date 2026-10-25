@@ -1,3 +1,4 @@
+import type { Position } from '../../../src/bridge/common/graph-state.type.ts';
 import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import type { ElementRect, ViewportPoint } from '../../common/playwright.type.ts';
 import type { StretchExtent, StretchFit } from '../common/bench.type.ts';
@@ -78,4 +79,11 @@ export const isPointInside = (point: ViewportPoint, container: ElementRect): boo
   const isDown = point.y >= container.top && point.y <= container.top + container.height;
 
   return isAcross && isDown;
+};
+
+/** The viewport pan read after a scripted pan differs from the one read before it; a missing reading counts as not moved. */
+export const hasPanMoved = (before: Position | null, after: Position | null): boolean => {
+  if (before === null || after === null) return false;
+
+  return before.x !== after.x || before.y !== after.y;
 };

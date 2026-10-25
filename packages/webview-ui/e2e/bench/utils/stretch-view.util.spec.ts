@@ -4,6 +4,7 @@ import {
   dragRegionOf,
   extentOf,
   fitNoteOf,
+  hasPanMoved,
   isCentred,
   isPointInside,
   nodeNamed,
@@ -136,6 +137,22 @@ describe('FEATURE: stretch view geometry', () => {
       const flags = insideFlagsOf(CONTAINER, nodes, 1);
 
       expect(flags).toStrictEqual([true, false]);
+    });
+  });
+
+  describe('GIVEN the viewport pan before and after a scripted pan', () => {
+    it('WHEN either axis changed THEN the pan moved', () => {
+      expect(hasPanMoved({ x: 0, y: 0 }, { x: 120, y: 0 })).toBe(true);
+      expect(hasPanMoved({ x: 0, y: 0 }, { x: 0, y: -120 })).toBe(true);
+    });
+
+    it('WHEN neither axis changed THEN the pan did not move', () => {
+      expect(hasPanMoved({ x: 5, y: 7 }, { x: 5, y: 7 })).toBe(false);
+    });
+
+    it('WHEN a reading is missing THEN the pan did not move', () => {
+      expect(hasPanMoved(null, { x: 1, y: 1 })).toBe(false);
+      expect(hasPanMoved({ x: 1, y: 1 }, null)).toBe(false);
     });
   });
 });
