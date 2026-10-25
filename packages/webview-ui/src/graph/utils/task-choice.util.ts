@@ -52,11 +52,14 @@ export const requestOf = (
 ): TaskLayoutRequest => {
   const shown = new Set(shownSet.ids);
   const drawn = tasks.filter((task) => shown.has(task.id));
-  const umbrellas = drawn.filter((task) => fileCounts.has(task.id));
-  const sizeEntryOf = (task: GraphTask): [string, NodeSize] => {
-    return [task.id, umbrellaSizeOf(sizeOf, task.name, fileCounts.get(task.id) ?? 0)];
-  };
-  const sizes = new Map(umbrellas.map(sizeEntryOf));
+  const sizes = new Map<string, NodeSize>();
+
+  for (const task of drawn) {
+    const fileCount = fileCounts.get(task.id);
+
+    if (fileCount !== undefined) sizes.set(task.id, umbrellaSizeOf(sizeOf, task.name, fileCount));
+  }
+
   const key = taskLayoutKeyOf(drawn, shown, fileCounts);
   const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes };
 
