@@ -33,6 +33,8 @@ const UMBRELLA_STATE: GraphReady = { ...TASK_STATE_STUB, atomGroups: UMBRELLA_GR
 
 const UMBRELLA_KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, new Map([['web#build', 2]]));
 
+const PLAIN_KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, new Map());
+
 describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
   let rig: TaskModeRig;
   let mode: GraphTaskMode;
@@ -96,10 +98,21 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       });
     });
 
-    it('WHEN the state arrives with the group gone THEN the umbrella is a plain task laid out afresh', () => {
-      mode.received(TASK_STATE_STUB, 9);
+    describe('WHEN the state arrives with the group gone', () => {
+      beforeEach(async () => {
+        mode.received(TASK_STATE_STUB, 9);
+        await rig.runs.settle(1, resultOf(PLAIN_KEY, POSITIONS));
+      });
 
-      expect(rig.runs.count()).toBe(2);
+      it('THEN the umbrella is a plain task laid out afresh', () => {
+        expect(rig.runs.count()).toBe(2);
+      });
+
+      it('THEN the layout is drawn with no umbrella sizes', () => {
+        const drawing = rig.view.tasks.show.mock.lastCall?.[0];
+
+        expect(drawing?.sizes).toStrictEqual(new Map());
+      });
     });
   });
 });
