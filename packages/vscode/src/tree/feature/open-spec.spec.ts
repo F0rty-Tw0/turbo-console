@@ -12,7 +12,7 @@ import type { CommandRegistry, Disposed } from '../../run/common/run.type.ts';
 import { OPEN_SPEC_COMMAND } from '../common/atom.const.ts';
 import type { OpenSpecPorts } from '../common/open-spec.type.ts';
 import type { TreeNode } from '../common/tree-node.type.ts';
-import { FILE_B, PKG, ROOT } from '../test/common/atom-load.const.ts';
+import { BASE_SPEC_PATHS, FILE_B, PKG, ROOT } from '../test/common/atom-load.const.ts';
 import { FILE_TREE_NODE_STUB, UMBRELLA_TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
 
@@ -105,6 +105,21 @@ describe('FEATURE: Open Spec command', () => {
 
       expect(open).not.toHaveBeenCalled();
       expect(error).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a root loaded with a spec file that is gone from disk', () => {
+    beforeEach(() => {
+      loadSpecPaths(BASE_SPEC_PATHS);
+      open.mockRejectedValue(new Error('ENOENT'));
+    });
+
+    it('WHEN it is invoked on that file row THEN the missing-file error shows once and the handler does not throw', async () => {
+      await invoke({ ...FILE_TREE_NODE_STUB, id: `task:${ROOT}\0${FILE_B}`, key: FILE_B });
+
+      expect(error).toHaveBeenCalledExactlyOnceWith(
+        `Spec file not found: ${join('/ws', 'packages', 'e2e', 'tests', 'b fails.spec.ts')}`
+      );
     });
   });
 

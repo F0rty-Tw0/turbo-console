@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { refusedSpecText, specPathOf } from './spec-path.util.ts';
+import { missingSpecText, refusedSpecText, specPathOf } from './spec-path.util.ts';
 
 const PKG_DIR = join('/ws', 'packages', 'e2e');
 
@@ -34,6 +34,14 @@ describe('FEATURE: spec path', () => {
       const text = refusedSpecText('../../etc/passwd');
 
       expect(text).toBe('Refused to open "../../etc/passwd": it leaves the package directory.');
+    });
+  });
+
+  describe('GIVEN a spec file that is gone from disk', () => {
+    it('WHEN the error is worded THEN it says the spec file was not found and names the path', () => {
+      const text = missingSpecText('/ws/packages/e2e/tests/a.spec.ts');
+
+      expect(text).toBe('Spec file not found: /ws/packages/e2e/tests/a.spec.ts');
     });
   });
 });
