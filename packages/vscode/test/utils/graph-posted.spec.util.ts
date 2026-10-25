@@ -1,4 +1,10 @@
-import type { GraphEdgeExplainedMessage, GraphReady, GraphRunsMessage, GraphShowTasksMessage } from '@turbo-console/webview-ui';
+import type {
+  GraphAtomsMessage,
+  GraphEdgeExplainedMessage,
+  GraphReady,
+  GraphRunsMessage,
+  GraphShowTasksMessage
+} from '@turbo-console/webview-ui';
 
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 
@@ -57,4 +63,16 @@ export const postedRuns = (api: TurboConsoleApi, root: string): GraphRunsMessage
   }
 
   return maps;
+};
+
+/** The `atoms` posts to the panel of `root`, oldest first. */
+export const postedAtoms = (api: TurboConsoleApi, root: string): GraphAtomsMessage[] => {
+  const posted = api.graph.posted(root);
+  const messages: GraphAtomsMessage[] = [];
+
+  for (const message of posted) {
+    if (message.type === 'atoms') messages.push(message);
+  }
+
+  return messages;
 };

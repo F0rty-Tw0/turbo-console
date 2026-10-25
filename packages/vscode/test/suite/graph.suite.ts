@@ -1,4 +1,5 @@
 import type { GraphScene } from '../common/graph.type.ts';
+import { atomGroupCase } from '../utils/graph-atom-cases.spec.util.ts';
 import { cacheCase, detailsCase, openCase, runRepaintCase, taskGraphCase } from '../utils/graph-cases.spec.util.ts';
 import { explainCase, openManifestCase } from '../utils/graph-explain-cases.spec.util.ts';
 import { detailsTaskGraphCase } from '../utils/graph-task-cases.spec.util.ts';
@@ -26,6 +27,7 @@ export const run = async (): Promise<void> => {
   await detailsCase(scene);
   await taskGraphCase(scene);
   await runRepaintCase(scene);
+  await atomGroupCase(scene);
   await detailsTaskGraphCase(scene);
   await markDone(env);
 };
