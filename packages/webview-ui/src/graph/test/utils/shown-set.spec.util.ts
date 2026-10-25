@@ -41,6 +41,68 @@ export const depsOf = (hop1: number, hop2: number): GraphTask[] => {
   return tasks;
 };
 
+type CountedMethod = typeof Symbol.iterator | 'concat' | 'slice';
+
+const replaceArrayMethod = (key: CountedMethod, value: unknown): void => {
+  const original = Object.getOwnPropertyDescriptor(Array.prototype, key);
+
+  Object.defineProperty(Array.prototype, key, { ...original, value });
+};
+
+/**
+ * How many array elements `run` reads through the array iterator, which every spread, `for…of`,
+ * destructure, and `new Set(array)` goes through, plus every element `concat` or `slice` copies.
+ * Copying an n-long list once per push reads n²/2 here.
+ *
+ * Redefining the iterator turns off V8's fast array iteration for the rest of the test process, so
+ * never use this in a timing test or in a spec file that has timing rows.
+ */
+export const arrayReadsOf = (run: () => void): number => {
+  const iterate = Array.prototype[Symbol.iterator];
+  const { concat, slice } = Array.prototype;
+  let reads = 0;
+
+  function* counted(this: unknown[]): Generator<unknown> {
+    const values = iterate.call(this);
+
+    for (let step = values.next(); step.done !== true; step = values.next()) {
+      reads += 1;
+
+      yield step.value;
+    }
+  }
+
+  function countedConcat(this: unknown[], ...items: unknown[]): unknown[] {
+    const copy = concat.apply(this, items);
+
+    reads += copy.length;
+
+    return copy;
+  }
+
+  function countedSlice(this: unknown[], ...range: [start?: number, end?: number]): unknown[] {
+    const copy = slice.apply(this, range);
+
+    reads += copy.length;
+
+    return copy;
+  }
+
+  replaceArrayMethod(Symbol.iterator, counted);
+  replaceArrayMethod('concat', countedConcat);
+  replaceArrayMethod('slice', countedSlice);
+
+  try {
+    run();
+  } finally {
+    replaceArrayMethod(Symbol.iterator, iterate);
+    replaceArrayMethod('concat', concat);
+    replaceArrayMethod('slice', slice);
+  }
+
+  return reads;
+};
+
 /** `root#t` with `dependencies` dependencies and `dependents` dependents, all at hop 1. */
 export const mixOf = (dependencies: number, dependents: number): GraphTask[] => {
   const below = idsOf('u-', dependencies);

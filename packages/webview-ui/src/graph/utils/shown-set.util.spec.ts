@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { shownSetOf } from './shown-set.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import { depsOf, fanOf, mixOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
+import { arrayReadsOf, depsOf, fanOf, mixOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const DIAMOND: GraphTask[] = [
   taskOf('a#build', ['b#build', 'c#build']),
@@ -103,11 +103,13 @@ describe('FEATURE: shownSetOf', () => {
       expect(shown.ids).toHaveLength(306);
     });
 
-    // A dependents index that copies its list per push takes about 8 s here; one that pushes in place about 0.1 s.
-    it('WHEN 50000 dependents at hop 1 THEN all of them are cut within 3 s', { timeout: 3000 }, () => {
-      const shown = shownSetOf({ tasks: fanOf(50_000, 0), chosen: ['root#t'], depth: 1, capLifted: false });
+    // Counts reads, not wall time: a dependents index that copies its list per push reads about 2000 per task here.
+    it('WHEN 4000 dependents at hop 1 THEN each task is read fewer than 100 times', () => {
+      const tasks = fanOf(4000, 0);
 
-      expect(shown).toStrictEqual({ ids: ['root#t'], hiddenCount: 50_000, droppedIds: [] });
+      const reads = arrayReadsOf(() => shownSetOf({ tasks, chosen: ['root#t'], depth: 1, capLifted: false }));
+
+      expect(reads).toBeLessThan(100 * tasks.length);
     });
 
     it('WHEN 299 dependencies and 1 dependent make 301 THEN the dependent is cut', () => {
