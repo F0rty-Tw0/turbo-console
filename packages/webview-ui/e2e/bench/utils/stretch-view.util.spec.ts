@@ -112,6 +112,21 @@ describe('FEATURE: stretch view geometry', () => {
     it('WHEN it lies below the container THEN it is not inside', () => {
       expect(isPointInside({ x: 640, y: 721 }, CONTAINER)).toBe(false);
     });
+
+    it('WHEN it lies on the top or left edge THEN it is inside', () => {
+      expect(isPointInside({ x: 0, y: 360 }, CONTAINER)).toBe(true);
+      expect(isPointInside({ x: 640, y: 0 }, CONTAINER)).toBe(true);
+    });
+
+    it('WHEN it lies on the bottom or right edge THEN it is inside', () => {
+      expect(isPointInside({ x: 1280, y: 360 }, CONTAINER)).toBe(true);
+      expect(isPointInside({ x: 640, y: 720 }, CONTAINER)).toBe(true);
+    });
+
+    it('WHEN it lies right of or above the container THEN it is not inside', () => {
+      expect(isPointInside({ x: 1281, y: 360 }, CONTAINER)).toBe(false);
+      expect(isPointInside({ x: 640, y: -1 }, CONTAINER)).toBe(false);
+    });
   });
 
   describe('GIVEN one node wholly in the container and one half out of it', () => {
