@@ -30,7 +30,7 @@ describe('FEATURE: spec path', () => {
   });
 
   describe('GIVEN a refused spec path', () => {
-    it('WHEN the refusal is worded THEN it names the path and the package directory', () => {
+    it('WHEN the refusal is worded THEN it quotes the path and says it leaves the package directory', () => {
       const text = refusedSpecText('../../etc/passwd');
 
       expect(text).toBe('Refused to open "../../etc/passwd": it leaves the package directory.');
