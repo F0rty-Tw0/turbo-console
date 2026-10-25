@@ -69,7 +69,6 @@ describe('FEATURE: atom file row', () => {
   describe('GIVEN a file row', () => {
     it('WHEN the row is built THEN a click opens the spec with the row as the argument', () => {
       const row = rowOf(SPACED_FILE_STUB);
-
       const node = { kind: 'task', id: row.id, root: '/ws', key: SPACED_FILE_STUB.task.id, packageName: 'e2e' };
 
       expect(row.command).toStrictEqual({ command: OPEN_SPEC_COMMAND, args: [node] });
