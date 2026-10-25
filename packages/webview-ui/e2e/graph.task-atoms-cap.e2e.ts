@@ -135,6 +135,9 @@ test.describe('FEATURE: graph task mode with a capped Atomizer group', () => {
 
       await test.step('AND the tenth file is gone', async (): Promise<void> => graphAtomCap.expectDrawnOf(FILE_IDS, CAPPED_DRAWN));
 
+      await test.step('AND the failed file sits in the first slot', async (): Promise<void> =>
+        graphAtomCap.expectInSlotOf(FAILED_FILE, before, FILE_IDS[0] ?? ''));
+
       await test.step('AND no node but the files and the count node moved', async (): Promise<void> =>
         graphAtomCap.expectNodesStayed(before, ATOM_NODE_IDS));
     }

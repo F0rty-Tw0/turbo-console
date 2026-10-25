@@ -37,4 +37,11 @@ export class GraphAtomCap {
 
     expect(stayingOf(now, movable)).toEqual(stayingOf(before, movable));
   }
+
+  /** The node `id` sits where `before` has the node `slotId`: it took that node's slot in the grid. */
+  public async expectInSlotOf(id: string, before: Positions, slotId: string): Promise<void> {
+    const now = await this.tasks.taskPositions();
+
+    expect(now[id], `${id} sits in the slot of ${slotId}`).toEqual(before[slotId]);
+  }
 }
