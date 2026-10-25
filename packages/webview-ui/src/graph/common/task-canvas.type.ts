@@ -31,7 +31,7 @@ export type TaskCanvas = {
   readonly runStates: (runs: TaskRuns) => void;
   /** Sets the label of each umbrella in `labels` to its name and counts line; a task not drawn is skipped, no node moves. */
   readonly setCounts: (labels: ReadonlyMap<string, string>) => void;
-  /** Marks the tasks and the Atomizer file nodes again with the kept runs map; an expand adds file nodes the last mark never saw. */
+  /** Marks the tasks and the Atomizer file nodes again with the kept runs map and paints the kept target again; an expand adds nodes the last mark and paint never saw. */
   readonly remark: () => void;
 };
 

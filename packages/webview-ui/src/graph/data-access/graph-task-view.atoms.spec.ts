@@ -29,6 +29,16 @@ const DRAWING: TaskDrawing = {
   labels: new Map()
 };
 
+const SIBLING_AT: Position = { x: 180, y: 300 };
+
+const SIBLING_POSITIONS: Positions = { ...POSITIONS, 'web#build': SIBLING_AT };
+
+const SIBLING_DRAWING: TaskDrawing = {
+  ...DRAWING,
+  tasks: [...DRAWING.tasks, taskOf('web#build', [])],
+  positions: SIBLING_POSITIONS
+};
+
 const SPACED = 'web#e2e-ci--tests/b fails.spec.ts';
 
 const FILES: GraphAtomFile[] = [{ id: SPACED, specPath: 'tests/b fails.spec.ts', isLive: false }];
@@ -100,6 +110,21 @@ describe('FEATURE: the task canvas with an expanded Atomizer group', () => {
       tasks.paint('web#e2e-ci');
 
       expect(cy.getElementById(SPACED).hasClass('selected')).toBe(false);
+    });
+  });
+
+  describe('GIVEN a sibling of the umbrella in its package is selected', () => {
+    beforeEach(() => {
+      tasks.show(SIBLING_DRAWING);
+      tasks.paint('web#build');
+    });
+
+    it('WHEN the group expands and the canvas is marked again THEN its box is dimmed with the umbrella inside', () => {
+      atoms.expand(SPEC, 'pkg:web', FILES, {});
+      tasks.remark();
+
+      expect(probeStateOf(cy.getElementById('atom:web#e2e-ci'))).toBe('dimmed');
+      expect(probeStateOf(cy.getElementById('pkg:web'))).not.toBe('dimmed');
     });
   });
 });

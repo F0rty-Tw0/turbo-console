@@ -172,7 +172,10 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
   };
   const clear = (): void => void cy.elements().remove();
   const setCounts = (labels: ReadonlyMap<string, string>): void => setCountLabels(cy, labels);
-  const remark = (): void => markRuns(cy, runs);
+  const remark = (): void => {
+    paintTasks(cy, target);
+    markRuns(cy, runs);
+  };
   const canvas: TaskCanvas = { show, clear, setPositions, positions, paint, runStates, setCounts, remark };
 
   return canvas;
