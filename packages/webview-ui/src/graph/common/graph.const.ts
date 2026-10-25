@@ -59,7 +59,7 @@ export const RELOAD_LABEL = 'Reload';
 /** The graph container's accessible name, also the page's readiness marker for the e2e tests. */
 export const GRAPH_LABEL = 'Package graph';
 
-/** Light Modern `--vscode-descriptionForeground`, shared by the edge and the stopped run, which both read that variable. */
+/** The Light+ default `--vscode-descriptionForeground` (Light Modern sets `#3B3B3B`), shared by the edge and the stopped run, which both read that variable. */
 const FALLBACK_DESCRIPTION = '#717171';
 
 /** Light Modern run colours; stopped shares the description fallback. */

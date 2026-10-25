@@ -119,15 +119,19 @@ describe('FEATURE: themeColorsOf', () => {
     expect(colors.runs.stopped).toBe(colors.edge);
   });
 
-  /** `descriptionForeground` is `transparent(foreground, 0.7)` in hcLight, foreground `#292929`: 0.7 * 41 + 0.3 * 255 = 105 = 0x69 over white. Source: https://github.com/microsoft/vscode/blob/8d97209dc20dfbd60430243dbeac80149f87087a/src/vs/platform/theme/common/colors/baseColors.ts */
-  const HC_LIGHT_DESCRIPTION = '#696969';
+  /** `descriptionForeground` is `transparent(foreground, 0.7)` in both high contrast themes, which set none. contrastRatioOf ignores alpha, so each is blended over its background first. Source: https://github.com/microsoft/vscode/blob/8d97209dc20dfbd60430243dbeac80149f87087a/src/vs/platform/theme/common/colors/baseColors.ts */
+  const HC_DESCRIPTION = '#b3b3b3'; // foreground #FFFFFF: 0.7 * 255 + 0.3 * 0 = 178.5 over black
+  const HC_LIGHT_DESCRIPTION = '#696969'; // foreground #292929: 0.7 * 41 + 0.3 * 255 = 105 over white
 
+  /** Values from the VS Code 1.141 theme-defaults themes (descriptionForeground on editor.background, following `include`); High Contrast and High Contrast Light set neither descriptionForeground nor, for the latter, editor.background, so they take the baseColors defaults. */
   it.each([
-    ['Light Modern', '#616161', '#ffffff'],
+    ['Light Modern', '#3b3b3b', '#ffffff'],
     ['Dark Modern', '#9d9d9d', '#1f1f1f'],
-    ['High Contrast', '#ffffff', '#000000'],
+    ['High Contrast', HC_DESCRIPTION, '#000000'],
     ['High Contrast Light', HC_LIGHT_DESCRIPTION, '#ffffff'],
-    ['fallback', '#717171', '#ffffff']
+    ['Dark 2026', '#8c8c8c', '#121314'],
+    ['Light 2026', '#606060', '#ffffff'],
+    ['fallback (Light+ default)', '#717171', '#ffffff']
   ])('GIVEN %s, stopped (descriptionForeground) on the editor background is at least 3:1', (_, foreground, background) => {
     expect(contrastRatioOf(foreground, background)).toBeGreaterThanOrEqual(3);
   });
