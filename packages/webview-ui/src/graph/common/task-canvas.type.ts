@@ -1,6 +1,8 @@
+import type { AtomBoxSpec } from './atom-layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
-import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomFile, GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
 
 /**
  * What task mode draws: the shown tasks, their centres, the node sizer for their names, the size of each umbrella that
@@ -29,4 +31,24 @@ export type TaskCanvas = {
   readonly runStates: (runs: TaskRuns) => void;
   /** Sets the label of each umbrella in `labels` to its name and counts line; a task not drawn is skipped, no node moves. */
   readonly setCounts: (labels: ReadonlyMap<string, string>) => void;
+  /** Marks the tasks and the Atomizer file nodes again with the kept runs map; an expand adds file nodes the last mark never saw. */
+  readonly remark: () => void;
+};
+
+/**
+ * The Atomizer groups on the task canvas: an expanded group is the box `atom:<umbrellaId>` inside the umbrella's package
+ * box, holding the umbrella and a node per file. The groups' other rules (which are open, where nodes sit) are
+ * `GraphAtomGroups`'s; a call for a group the canvas does not draw does nothing.
+ */
+export type AtomCanvas = {
+  /** Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node per file, outlined by its outcome. */
+  readonly expand: (spec: AtomBoxSpec, pkgBoxId: string, files: GraphAtomFile[], outcomes: Record<string, GraphAtomOutcome>) => void;
+  /** Moves the umbrella back into `pkgBoxId` and removes its files and box. */
+  readonly collapse: (umbrellaId: string, pkgBoxId: string) => void;
+  /** Moves each drawn node in `positions` to its centre; an id not drawn is skipped. */
+  readonly setPositions: (positions: Positions) => void;
+  /** Gives each drawn file in `outcomes` the class of its outcome in place of the one it had. */
+  readonly setOutcomes: (outcomes: Record<string, GraphAtomOutcome>) => void;
+  /** Whether the canvas lets the user drag nodes: it does not while any group is expanded. */
+  readonly setGrabbable: (isGrabbable: boolean) => void;
 };

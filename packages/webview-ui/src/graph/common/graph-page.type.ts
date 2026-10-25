@@ -12,7 +12,7 @@ import type { AnchorBox } from './keep-clear.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { Paint } from './paint.type.ts';
-import type { TaskCanvas } from './task-canvas.type.ts';
+import type { AtomCanvas, TaskCanvas } from './task-canvas.type.ts';
 import type { TaskControlsViews } from './task-controls.type.ts';
 import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
@@ -162,6 +162,8 @@ export type GraphView = {
   readonly cy: () => Core;
   /** The task graph on the same core; task mode draws here, and package mode never draws at once. */
   readonly tasks: TaskCanvas;
+  /** The Atomizer groups on the task graph: an expanded umbrella's box and file nodes. */
+  readonly atoms: AtomCanvas;
 };
 
 export type GraphViewFactory = (container: HTMLElement, handlers: GraphViewHandlers) => GraphView;

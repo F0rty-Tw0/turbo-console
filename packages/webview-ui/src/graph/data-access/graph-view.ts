@@ -1,6 +1,7 @@
 import cytoscape from 'cytoscape';
 import type { Core, ElementDefinition } from 'cytoscape';
 
+import { createAtomCanvas } from './graph-atom-view.ts';
 import { setBoxes } from './graph-boxes.ts';
 import { anchorBoxOf, panBy } from './graph-camera.ts';
 import { exportPngOf } from './graph-export.ts';
@@ -93,11 +94,17 @@ const viewportOf = (cy: Core): Viewport => {
   return current;
 };
 
+const setViewportOn = (cy: Core, zoom: number, pan: Position): void => {
+  cy.resize();
+  cy.viewport({ zoom, pan });
+};
+
 /** The page's canvas view: Cytoscape, the folder pass over it and the canvas events reported to `handlers`. */
 export const createGraphView = (container: HTMLElement, handlers: GraphViewHandlers, fontFamily: string): GraphView => {
   const cy = cytoscapeOn(container);
   const folders = createFoldersView(cy);
   const tasks = createTaskCanvas(cy);
+  const atoms = createAtomCanvas(cy);
   const setGraph = (packages: string[], edges: GraphEdge[], placed: Positions, sizeOf: NodeSizer): void => {
     const nodes = nodeDefinitionsOf(packages, placed, sizeOf);
 
@@ -106,10 +113,6 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
   const fit = (): void => {
     cy.resize();
     fitVisible(cy, FIT_PADDING_PX);
-  };
-  const setViewport = (zoom: number, pan: Position): void => {
-    cy.resize();
-    cy.viewport({ zoom, pan });
   };
   const paint = (next: Paint): void => {
     applyPaint(cy, next);
@@ -130,7 +133,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     anchorBox: (names: string[]): AnchorBox | null => anchorBoxOf(cy, names),
     panBy: (dx: number): void => panBy(cy, dx),
     viewport: (): Viewport => viewportOf(cy),
-    setViewport,
+    setViewport: (zoom: number, pan: Position): void => setViewportOn(cy, zoom, pan),
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
     setPositions,
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
@@ -139,7 +142,8 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     exportPng: (bg: string): string => exportPngOf(cy, bg, window.devicePixelRatio),
     flowEdges: (): FlowEdgeGeometry[] => flowEdgesOf(cy),
     cy: (): Core => cy,
-    tasks
+    tasks,
+    atoms
   };
 
   listen(cy, handlers);

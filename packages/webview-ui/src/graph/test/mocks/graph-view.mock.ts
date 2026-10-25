@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 
 import type { Positions } from '../../../bridge/common/graph-state.type.ts';
 import type { GraphView, Viewport } from '../../common/graph-page.type.ts';
-import type { TaskCanvas } from '../../common/task-canvas.type.ts';
+import type { AtomCanvas, TaskCanvas } from '../../common/task-canvas.type.ts';
 
 export const taskCanvasMock = (): Mocked<TaskCanvas> => {
   const none = (): Positions => {
@@ -18,7 +18,20 @@ export const taskCanvasMock = (): Mocked<TaskCanvas> => {
     positions: vi.fn<TaskCanvas['positions']>(none),
     paint: vi.fn<TaskCanvas['paint']>(),
     runStates: vi.fn<TaskCanvas['runStates']>(),
-    setCounts: vi.fn<TaskCanvas['setCounts']>()
+    setCounts: vi.fn<TaskCanvas['setCounts']>(),
+    remark: vi.fn<TaskCanvas['remark']>()
+  };
+
+  return canvas;
+};
+
+export const atomCanvasMock = (): Mocked<AtomCanvas> => {
+  const canvas: Mocked<AtomCanvas> = {
+    expand: vi.fn<AtomCanvas['expand']>(),
+    collapse: vi.fn<AtomCanvas['collapse']>(),
+    setPositions: vi.fn<AtomCanvas['setPositions']>(),
+    setOutcomes: vi.fn<AtomCanvas['setOutcomes']>(),
+    setGrabbable: vi.fn<AtomCanvas['setGrabbable']>()
   };
 
   return canvas;
@@ -46,7 +59,8 @@ export const graphViewMock = (camera: Viewport): Mocked<GraphView> => {
     exportPng: vi.fn<GraphView['exportPng']>(() => ''),
     flowEdges: vi.fn<GraphView['flowEdges']>(() => []),
     cy: vi.fn<GraphView['cy']>(),
-    tasks: taskCanvasMock()
+    tasks: taskCanvasMock(),
+    atoms: atomCanvasMock()
   };
 
   return view;

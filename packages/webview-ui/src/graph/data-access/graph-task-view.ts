@@ -1,10 +1,11 @@
 import type { Core, EdgeCollection, EdgeSingular, ElementDefinition, NodeCollection, NodeSingular } from 'cytoscape';
 
+import { labelOf, setCountLabels, taskClassesOf } from './graph-atom-view.ts';
 import { positionOf } from './graph-place.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
-import { ATOM_UMBRELLA_CLASS } from '../common/graph-atom.const.ts';
+import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
 import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { DIMMED_BOX_CLASS, STATE_CLASSES } from '../common/graph.const.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
@@ -20,6 +21,8 @@ const RUN_CLASSES = RUN_STATES.map((state) => `${RUN_CLASS_PREFIX}${state}`).joi
 const BOX_STATE_CLASSES = `${STATE_CLASSES} ${DIMMED_BOX_CLASS}`;
 
 const taskNodes = (cy: Core): NodeCollection => cy.nodes(`.${TASK_NODE_CLASS}`);
+
+const runNodes = (cy: Core): NodeCollection => cy.nodes(`.${TASK_NODE_CLASS}, .${ATOM_FILE_CLASS}`);
 
 const endsOf = (edge: EdgeSingular): GraphEdge => {
   const source = edge.source().id();
@@ -57,7 +60,7 @@ const paintTasks = (cy: Core, target: string | null): void => {
     edge.removeClass(STATE_CLASSES).addClass(state);
   };
   const classBox = (box: NodeSingular): void => {
-    const lit = box.children('.selected, .highlighted');
+    const lit = box.descendants('.selected, .highlighted');
     const isUnlit = lit.empty();
     const isDimmed = target !== null && isUnlit;
 
@@ -69,11 +72,11 @@ const paintTasks = (cy: Core, target: string | null): void => {
   cy.batch((): void => {
     tasks.forEach(classTask);
     links.forEach(classLink);
-    tasks.parent().forEach(classBox);
+    tasks.ancestors().forEach(classBox);
   });
 };
 
-/** One `run-<state>` class per task in `runs`, none on the rest. */
+/** One `run-<state>` class per task and Atomizer file in `runs`, none on the rest. */
 const markRuns = (cy: Core, runs: TaskRuns): void => {
   const markTask = (node: NodeSingular): void => {
     const state = runStateOf(runs, node.id());
@@ -83,9 +86,7 @@ const markRuns = (cy: Core, runs: TaskRuns): void => {
     if (state !== null) node.addClass(`${RUN_CLASS_PREFIX}${state}`);
   };
 
-  cy.batch((): void => {
-    taskNodes(cy).forEach(markTask);
-  });
+  cy.batch((): void => void runNodes(cy).forEach(markTask));
 };
 
 const boxDefinitionOf = (packageName: string): ElementDefinition => {
@@ -95,16 +96,13 @@ const boxDefinitionOf = (packageName: string): ElementDefinition => {
   return definition;
 };
 
-const labelOf = (name: string, counts: string | undefined): string => (counts === undefined ? name : `${name}\n${counts}`);
-
 const taskDefinitionOf = (task: GraphTask, drawing: TaskDrawing): ElementDefinition => {
   const { width, height } = drawing.sizes.get(task.id) ?? drawing.sizeOf(task.name);
   const label = labelOf(task.name, drawing.labels.get(task.id));
   const parent = taskBoxIdOf(task.packageName);
   const data = { id: task.id, name: task.name, label, parent, width, height };
   const position = positionOf(drawing.positions, task.id);
-  const isUmbrella = drawing.sizes.has(task.id);
-  const classes = isUmbrella ? `${TASK_NODE_CLASS} ${ATOM_UMBRELLA_CLASS}` : TASK_NODE_CLASS;
+  const classes = taskClassesOf(drawing.sizes.has(task.id));
   const definition: ElementDefinition = { data, position, classes };
 
   return definition;
@@ -173,17 +171,9 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     return Object.fromEntries(entries);
   };
   const clear = (): void => void cy.elements().remove();
-  const setCounts = (labels: ReadonlyMap<string, string>): void => {
-    const countNode = (counts: string, id: string): void => {
-      const node = cy.getElementById(id);
-      const name: unknown = node.data('name');
-
-      node.data('label', labelOf(String(name), counts));
-    };
-
-    cy.batch((): void => labels.forEach(countNode));
-  };
-  const canvas: TaskCanvas = { show, clear, setPositions, positions, paint, runStates, setCounts };
+  const setCounts = (labels: ReadonlyMap<string, string>): void => setCountLabels(cy, labels);
+  const remark = (): void => markRuns(cy, runs);
+  const canvas: TaskCanvas = { show, clear, setPositions, positions, paint, runStates, setCounts, remark };
 
   return canvas;
 };
