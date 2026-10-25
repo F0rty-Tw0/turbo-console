@@ -1,4 +1,4 @@
-import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
+import type { Core, ElementDefinition, EventObjectNode, NodeSingular } from 'cytoscape';
 
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
@@ -46,7 +46,7 @@ const fileNameOf = (specPath: string): string => specPath.slice(specPath.lastInd
 
 const fileDefinitionOf = (file: GraphAtomFile, boxId: string, outcomes: Record<string, GraphAtomOutcome>): ElementDefinition => {
   const { width, height } = ATOM_FILE_SIZE;
-  const data = { id: file.id, label: fileNameOf(file.specPath), parent: boxId, width, height };
+  const data = { id: file.id, label: fileNameOf(file.specPath), specPath: file.specPath, parent: boxId, width, height };
   const liveClass = file.isLive ? ATOM_LIVE_CLASS : '';
   const outcome = Object.hasOwn(outcomes, file.id) ? outcomes[file.id] : undefined;
   const classNames = [ATOM_FILE_CLASS, outcomeClassOf(outcome), liveClass];
@@ -75,6 +75,29 @@ const setFileOutcomes = (cy: Core, outcomes: Record<string, GraphAtomOutcome>): 
   };
 
   cy.batch((): void => Object.entries(outcomes).forEach(markFile));
+};
+
+/**
+ * Shows the whole spec path of a hovered file, whose label is cut short, as the container's native tooltip. Leaving the
+ * file or the canvas, or the file's removal on a collapse or redraw, takes the tooltip away so none stays stale.
+ */
+const titleFilesOn = (cy: Core): void => {
+  const fileSelector = `node.${ATOM_FILE_CLASS}`;
+  const showTitle = (event: EventObjectNode): void => {
+    const specPath: unknown = event.target.data('specPath');
+    const container = cy.container();
+
+    container?.setAttribute('title', String(specPath));
+  };
+  const clearTitle = (): void => {
+    const container = cy.container();
+
+    container?.removeAttribute('title');
+  };
+
+  cy.on('mouseover', fileSelector, showTitle);
+  cy.on('mouseout', clearTitle);
+  cy.on('remove', fileSelector, clearTitle);
 };
 
 /**
@@ -136,6 +159,8 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
     return node.hasClass(ATOM_BOX_CLASS) || node.hasClass(ATOM_FILE_CLASS);
   };
   const canvas: AtomCanvas = { expand, collapse, setPositions, setOutcomes, setGrabbable, isAtomNode };
+
+  titleFilesOn(cy);
 
   return canvas;
 };

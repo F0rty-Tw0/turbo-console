@@ -119,6 +119,15 @@ export class GraphAtoms {
     await expect.poll(async (): Promise<boolean> => this.isBoxDrawn(umbrellaId)).toBe(isDrawn);
   }
 
+  /** The canvas container's native tooltip reads `title`, or it has none for `null`. */
+  public async expectCanvasTitle(title: string | null): Promise<void> {
+    const assertion = expect(this.canvas.container);
+
+    if (title === null) return assertion.not.toHaveAttribute('title');
+
+    return assertion.toHaveAttribute('title', title);
+  }
+
   /** The node's border is drawn in `style`. */
   public async expectBorderStyle(id: string, style: string): Promise<void> {
     await expect.poll(async (): Promise<string | null> => this.borderStyleOf(id)).toEqual(style);

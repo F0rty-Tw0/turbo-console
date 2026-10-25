@@ -21,6 +21,8 @@ const FILE_IDS = targetLikeFileIds();
 
 const [LIVE_FILE = '', FAILED_FILE = '', CACHED_FILE = '', RUNNING_FILE = '', NO_OUTCOME_FILE = ''] = FILE_IDS;
 
+const LIVE_SPEC_PATH = 'tests/spec-001.live.spec.ts';
+
 const OUTCOME_FILES = { [LIVE_FILE]: 'passed', [FAILED_FILE]: 'failed', [CACHED_FILE]: 'cached' } as const;
 
 const OUTCOME_STATE = { counts: '10 files · 1 cached · 1 failed', files: OUTCOME_FILES } as const;
@@ -160,6 +162,28 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
 
       await test.step('AND only the nodes right of or below the umbrella moved by the extra width and height of the box', async (): Promise<void> =>
         graphAtoms.expectNeighboursShifted(before, [TARGET_LIKE_UMBRELLA, ...FILE_IDS], umbrella, extraOf(umbrella)));
+    }
+  );
+
+  test(
+    'GIVEN the umbrella chosen and its group expanded, hovering a file shows its whole spec path as the canvas tooltip until the pointer leaves it',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, graphHover, openUmbrella }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND the group is expanded', async (): Promise<void> => {
+        await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
+        await graphAtoms.expectFilesDrawn(FILE_IDS, true);
+      });
+
+      await test.step('AND the live file is hovered', async (): Promise<void> => graphHover.overNode(LIVE_FILE));
+
+      await test.step('THEN the canvas title is its spec path', async (): Promise<void> =>
+        graphAtoms.expectCanvasTitle(LIVE_SPEC_PATH));
+
+      await test.step('WHEN the empty canvas is hovered', async (): Promise<void> => graphHover.overBackground());
+
+      await test.step('THEN the canvas has no title', async (): Promise<void> => graphAtoms.expectCanvasTitle(null));
     }
   );
 

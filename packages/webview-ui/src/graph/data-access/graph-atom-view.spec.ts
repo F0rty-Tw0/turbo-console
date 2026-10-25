@@ -1,6 +1,6 @@
 import cytoscape from 'cytoscape';
 import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
@@ -9,6 +9,7 @@ import type { GraphAtomFile, Position, Positions } from '../../bridge/common/gra
 import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA_SIZE: NodeSize = { width: 160, height: 52 };
@@ -211,6 +212,45 @@ describe('FEATURE: createAtomCanvas', () => {
       atoms.expand(CONSTRUCTOR_SPEC, 'pkg:web', [fileOf('constructor')], {});
 
       expect(cy.getElementById('constructor').classes()).toStrictEqual(['atom-file']);
+    });
+  });
+
+  describe('GIVEN the group is expanded on a canvas with a container', () => {
+    let container: HTMLElement;
+
+    beforeEach(() => {
+      vi.stubGlobal('document', fakeDocumentMock());
+      container = document.createElement('div');
+      vi.spyOn(cy, 'container').mockReturnValue(container);
+      atoms.expand(SPEC, 'pkg:web', FILES, OUTCOMES);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    });
+
+    it('WHEN the pointer enters a file THEN the container title is its spec path', () => {
+      cy.getElementById(FILE_IDS[0] ?? '').emit('mouseover');
+
+      expect(container.getAttribute('title')).toBe('tests/spec-001.live.spec.ts');
+    });
+
+    it.each([
+      ['the pointer leaves the file', (): void => void cy.getElementById(SPACED).emit('mouseout')],
+      ['the pointer leaves the canvas from the file', (): void => void cy.emit('mouseout')],
+      ['the group collapses', (): void => atoms.collapse('web#e2e-ci', 'pkg:web')]
+    ])('WHEN a file is hovered and %s THEN the container has no title', (_name, leave) => {
+      cy.getElementById(SPACED).emit('mouseover');
+      leave();
+
+      expect(container.getAttribute('title')).toBeNull();
+    });
+
+    it('WHEN the pointer enters the umbrella THEN the container has no title', () => {
+      cy.getElementById('web#e2e-ci').emit('mouseover');
+
+      expect(container.getAttribute('title')).toBeNull();
     });
   });
 
