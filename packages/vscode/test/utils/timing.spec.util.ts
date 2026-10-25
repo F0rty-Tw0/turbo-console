@@ -24,7 +24,8 @@ export const coveredMs = (ranges: TimeRange[], window: TimeRange): number => {
  * so time this thread spent blocked while turbo ran is not counted as turbo's. A run the window clips counts its idle
  * share of the part inside, which assumes the busy time is spread evenly over the run. Runs are summed, which assumes
  * they never overlap (core awaits `--version` before it spawns the query); `coveredMs` caps the sum, so overlapping runs
- * never count more than the time they cover.
+ * never count more than the time they cover. Windows reads thread time in ~15.6 ms ticks, so a short run can report
+ * more busy time than its length; its idle share floors at 0.
  */
 export const idleMs = (runs: TurboRun[], window: TimeRange): number => {
   const idleOf = (run: TurboRun): number => {
@@ -33,7 +34,7 @@ export const idleMs = (runs: TurboRun[], window: TimeRange): number => {
 
     if (inside === 0) return 0;
 
-    const idleShare = 1 - run.busyMs / length;
+    const idleShare = Math.max(0, 1 - run.busyMs / length);
 
     return inside * idleShare;
   };

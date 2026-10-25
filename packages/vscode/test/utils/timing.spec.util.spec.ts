@@ -139,6 +139,14 @@ describe('FEATURE: idleMs', () => {
 
       expect(idle).toBe(0);
     });
+
+    it('WHEN a coarse clock reports more busy time than its length THEN nothing counts', () => {
+      const runs: TurboRun[] = [{ start: 120, end: 130, busyMs: 15.6 }];
+
+      const idle = idleMs(runs, WINDOW);
+
+      expect(idle).toBe(0);
+    });
   });
 
   describe('GIVEN two runs', () => {
