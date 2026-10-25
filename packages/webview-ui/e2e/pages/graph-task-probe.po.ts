@@ -106,6 +106,21 @@ export class GraphTaskProbe {
     return Object.fromEntries(entries);
   }
 
+  /** Every task node sits at `positions`. */
+  public async expectTaskPositions(positions: Positions): Promise<void> {
+    const now = await this.taskPositions();
+
+    expect(now).toEqual(positions);
+  }
+
+  /** No task node is an aggregate: none has an id ending in `--all`. */
+  public async expectNoAggregate(): Promise<void> {
+    const ids = await this.taskIds();
+    const aggregates = ids.filter((id) => id.endsWith('--all'));
+
+    expect(aggregates).toEqual([]);
+  }
+
   /** The `pkg:` compound ids, as `pkg:<package name>`. */
   public async expectBoxIds(ids: string[]): Promise<void> {
     const sorted = sortedNames(ids);
