@@ -65,6 +65,12 @@ export type RunScratch = {
   readonly dispose: () => Promise<void>;
 };
 
+/** A closed span of `performance.now()` times, in ms. */
+export type TimeRange = {
+  readonly start: number;
+  readonly end: number;
+};
+
 export type SpawnCounter = {
   readonly count: () => number;
   readonly reset: () => void;
