@@ -1,7 +1,10 @@
 import type { NodeSize } from './node-size.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 
-/** One group to expand: its umbrella's id and size, and its file ids in the order they fill the grid. */
+/**
+ * One group to expand: its umbrella's id and size, and the ids that fill the grid in order: its drawn files, then the count
+ * node's id when files are hidden.
+ */
 export type AtomBoxSpec = {
   readonly umbrellaId: string;
   readonly umbrellaSize: NodeSize;
