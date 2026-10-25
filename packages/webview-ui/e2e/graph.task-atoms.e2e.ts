@@ -3,6 +3,8 @@ import { THEME_HC_STUB } from './test/stubs/graph-theme.stub.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import type { GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../src/bridge/common/graph-state.type.ts';
+import type { ProbeNode } from '../src/graph/common/graph-probe.type.ts';
+import type { NodeSize } from '../src/graph/common/node-size.type.ts';
 
 const SPEC_3_3 = { description: 'M5-2 spec 3.3', type: 'requirement' };
 
@@ -36,6 +38,13 @@ const RUNNING_OUTLINE = { width: 3, colour: 'rgb(255, 211, 112)' };
 const BOX_WIDTH = 432;
 
 const BOX_EXTRA_HEIGHT = 108;
+
+/** What the box adds to the umbrella it opens around: its width less the umbrella's, and the files' rows. */
+const extraOf = (umbrella: ProbeNode): NodeSize => {
+  const extra: NodeSize = { width: BOX_WIDTH - umbrella.width, height: BOX_EXTRA_HEIGHT };
+
+  return extra;
+};
 
 const COLLAPSED_TEXT = 'e2e-ci\n10 files';
 
@@ -144,8 +153,8 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
         });
       });
 
-      await test.step('AND only the nodes right of or below the umbrella moved', async (): Promise<void> =>
-        graphAtoms.expectNeighboursShifted(before, [TARGET_LIKE_UMBRELLA, ...FILE_IDS], umbrella));
+      await test.step('AND only the nodes right of or below the umbrella moved by the extra width and height of the box', async (): Promise<void> =>
+        graphAtoms.expectNeighboursShifted(before, [TARGET_LIKE_UMBRELLA, ...FILE_IDS], umbrella, extraOf(umbrella)));
     }
   );
 

@@ -8,6 +8,7 @@ import type { Position, Positions } from '../../src/bridge/common/graph-state.ty
 import type { BoxBounds } from '../../src/graph/common/atom-layout.type.ts';
 import { ATOM_BOX_PADDING_PX, ATOM_BOX_PREFIX } from '../../src/graph/common/graph-atom.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
+import type { NodeSize } from '../../src/graph/common/node-size.type.ts';
 import { expectMinUnder } from '../test/utils/graph-min-under.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 
@@ -32,10 +33,16 @@ type Shift = {
   readonly now: ProbeNode | undefined;
 };
 
-/** A node on the shifted side of the umbrella moved by `delta`, any other stayed. */
-const expectShift = (id: string, delta: number, isShifted: boolean): void => {
-  if (isShifted) expect(delta, `${id} moved`).toBeGreaterThan(0);
-  else expect(delta, `${id} stayed`).toBe(0);
+/** How far a node at `at` moves on an axis: `extra` when it sat past `edge`, not at all when it did not. */
+const shiftPast = (at: number, edge: number, extra: number): number => {
+  if (at > edge) return extra;
+
+  return 0;
+};
+
+/** The node moved by `expected` on an axis, to the model's precision. */
+const expectShift = (id: string, moved: number, expected: number): void => {
+  expect(moved, `${id} moved by ${expected}`).toBeCloseTo(expected, 1);
 };
 
 /** The Atomizer groups of the task graph: toggling one with a double tap, its file nodes and box, and how long a toggle took. */
@@ -104,7 +111,7 @@ export class GraphAtoms {
 
   /** The box `atom:<umbrellaId>` is drawn for `isDrawn`, or gone. */
   public async expectBoxDrawn(umbrellaId: string, isDrawn: boolean): Promise<void> {
-    await expect.poll(async (): Promise<boolean> => (await this.boxOf(umbrellaId)) !== null).toBe(isDrawn);
+    await expect.poll(async (): Promise<boolean> => this.isBoxDrawn(umbrellaId)).toBe(isDrawn);
   }
 
   /** The node's border is drawn in `style`. */
@@ -113,10 +120,10 @@ export class GraphAtoms {
   }
 
   /**
-   * Every node of `before` outside `ownIds` moved right if it sat right of the collapsed `umbrella`, down if it sat below
-   * it, and not at all on an axis where it was neither.
+   * Every node of `before` outside `ownIds` moved right by `extra.width` if it sat right of the collapsed `umbrella`, down by
+   * `extra.height` if it sat below it, and not at all on an axis where it was neither.
    */
-  public async expectNeighboursShifted(before: Positions, ownIds: string[], umbrella: ProbeNode): Promise<void> {
+  public async expectNeighboursShifted(before: Positions, ownIds: string[], umbrella: ProbeNode, extra: NodeSize): Promise<void> {
     const nodes = await this.probe.nodes();
     const rightEdge = umbrella.x + umbrella.width / 2;
     const bottomEdge = umbrella.y + umbrella.height / 2;
@@ -135,8 +142,8 @@ export class GraphAtoms {
 
       if (was === undefined || now === undefined) continue;
 
-      expectShift(id, now.x - was.x, was.x > rightEdge);
-      expectShift(id, now.y - was.y, was.y > bottomEdge);
+      expectShift(id, now.x - was.x, shiftPast(was.x, rightEdge, extra.width));
+      expectShift(id, now.y - was.y, shiftPast(was.y, bottomEdge, extra.height));
     }
   }
 
@@ -144,6 +151,12 @@ export class GraphAtoms {
     const drawn = await this.probe.nodeIds();
 
     return sortedNames(drawn.filter((id) => ids.includes(id)));
+  }
+
+  private async isBoxDrawn(umbrellaId: string): Promise<boolean> {
+    const box = await this.boxOf(umbrellaId);
+
+    return box !== null;
   }
 
   private async boxOf(umbrellaId: string): Promise<BoxBounds | null> {

@@ -8,15 +8,15 @@ import type { TaskShotSetup } from '../../common/graph-shots.type.ts';
 /** The ten files of the umbrella, in the order the group lists them. */
 export const ATOMS_SHOT_FILE_IDS = targetLikeFileIds();
 
-const [LIVE, PASSED, FAILED, CACHED, SECOND_FAILED] = ATOMS_SHOT_FILE_IDS;
+const [LIVE = '', PASSED = '', FAILED = '', CACHED = '', SECOND_FAILED = ''] = ATOMS_SHOT_FILE_IDS;
 
 /** A passed, a failed and a cached file besides the live one, so every outline colour and the dashed border are in the shot. */
 const ATOMS_SHOT_FILES: GraphAtomGroupState['files'] = {
-  [LIVE ?? '']: 'passed',
-  [PASSED ?? '']: 'passed',
-  [FAILED ?? '']: 'failed',
-  [SECOND_FAILED ?? '']: 'failed',
-  [CACHED ?? '']: 'cached'
+  [LIVE]: 'passed',
+  [PASSED]: 'passed',
+  [FAILED]: 'failed',
+  [SECOND_FAILED]: 'failed',
+  [CACHED]: 'cached'
 };
 
 export const ATOMS_SHOT_STATE: GraphAtomGroupState = {
