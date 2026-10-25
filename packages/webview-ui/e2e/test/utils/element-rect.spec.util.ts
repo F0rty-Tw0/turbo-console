@@ -9,7 +9,7 @@ export const readRect = (element: Element): ElementRect => {
 };
 
 /**
- * Runs in the page through `evaluateAll`: the rects of every match, read in one call. A count followed by per-match
+ * Runs in the page through `evaluateAll`: the rects of every match, with no per-match wait. A count followed by per-match
  * reads can wait forever when a match hides between them, since an `nth` locator then matches nothing. Only its own
  * source reaches the page, so it repeats `readRect`'s body rather than calling it.
  */
