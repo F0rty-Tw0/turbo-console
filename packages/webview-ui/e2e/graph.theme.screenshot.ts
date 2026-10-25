@@ -3,9 +3,11 @@ import { expect, test } from './graph.fixture.ts';
 import { GraphShots } from './pages/graph-shots.po.ts';
 import { FOLDERS_SHOT_COLLAPSED } from './test/common/graph-shots.const.ts';
 import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
+import { ATOMS_SHOT_FILE_IDS, ATOMS_SHOT_GROUPS, atomsShotSetup } from './test/utils/graph-atoms-shot.spec.util.ts';
 import { collapsedSavedState } from './test/utils/graph-folder-states.spec.util.ts';
 import { foldersShotState } from './test/utils/graph-folders-shot.spec.util.ts';
 import { closedPanelsSavedState } from './test/utils/graph-shot-state.spec.util.ts';
+import { TARGET_LIKE_UMBRELLA } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 import { taskShotSetup } from './test/utils/graph-task-shot.spec.util.ts';
 
@@ -26,6 +28,8 @@ const TARGET_LIKE: ShotSetup = {
 };
 
 const TASK_SETUP = taskShotSetup();
+
+const ATOMS_SETUP = atomsShotSetup();
 
 const FOLDERS_SETUP: ShotSetup = {
   state: FOLDERS,
@@ -66,6 +70,19 @@ test.describe('FEATURE: theme screenshots', () => {
 
       await test.step(`THEN the page matches task-graph-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`task-graph-${name}.png`));
+    });
+
+    test(`GIVEN the ${name} theme, the expanded Atomizer group matches task-atoms-${name}.png`, async ({ page }): Promise<void> => {
+      const shots = new GraphShots(page);
+
+      await test.step('WHEN the umbrella is laid out in task mode with its selection restored', async (): Promise<void> =>
+        shots.openTasks(ATOMS_SETUP, theme));
+
+      await test.step('AND atoms with outcomes arrive and the umbrella is expanded', async (): Promise<void> =>
+        shots.expandAtoms(TARGET_LIKE_UMBRELLA, ATOMS_SHOT_FILE_IDS, ATOMS_SHOT_GROUPS));
+
+      await test.step(`THEN the page matches task-atoms-${name}.png`, async (): Promise<void> =>
+        expect(page).toHaveScreenshot(`task-atoms-${name}.png`));
     });
 
     test(`GIVEN the ${name} theme, the grouped folders match folders-${name}.png`, async ({ page }): Promise<void> => {

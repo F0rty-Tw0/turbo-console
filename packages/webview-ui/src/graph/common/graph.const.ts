@@ -68,7 +68,7 @@ const FALLBACK_RUN_COLORS: ThemeColors['runs'] = {
   'failed-to-start': '#f85149'
 };
 
-/** Light Modern values, for a page with no `--vscode-*` variables (a plain browser). */
+/** Light Modern values (`--vscode-charts-purple` for `cached`), for a page with no `--vscode-*` variables (a plain browser). */
 export const FALLBACK_COLORS: ThemeColors = {
   background: '#ffffff',
   label: '#3b3b3b',
@@ -76,6 +76,7 @@ export const FALLBACK_COLORS: ThemeColors = {
   selected: '#005fb8',
   highlighted: '#1a85ff',
   frame: '#e5e5e5',
+  cached: '#652d90',
   runs: FALLBACK_RUN_COLORS,
   dimmedOpacity: 0.25
 };

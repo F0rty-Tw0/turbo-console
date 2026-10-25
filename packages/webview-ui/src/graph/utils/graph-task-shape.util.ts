@@ -36,7 +36,7 @@ const isAtomFile = (value: unknown): boolean => {
 
   const { id, specPath, isLive } = value;
 
-  return isString(id) && isString(specPath) && typeof isLive === 'boolean';
+  return isString(id) && id !== '' && isString(specPath) && typeof isLive === 'boolean';
 };
 
 const isAtomGroup = (value: unknown): boolean => {
@@ -58,7 +58,7 @@ const hasDistinctUmbrellas = (groups: unknown[]): boolean => {
 
 /**
  * A graph state's `atomGroups`: at most `TASK_COUNT_MAX` groups with distinct string umbrella ids, each with at most
- * `TASK_COUNT_MAX` files of string id, string spec path and boolean `isLive`.
+ * `TASK_COUNT_MAX` files of non-empty string id, string spec path and boolean `isLive`.
  */
 export const isAtomGroupList = (value: unknown): boolean => {
   if (!Array.isArray(value)) return false;

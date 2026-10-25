@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { GraphAtoms } from './graph-atoms.po.ts';
 import { GraphControlsPage } from './graph-controls.po.ts';
 import { GraphDetailsPage } from './graph-details.po.ts';
 import { GraphGroupingPage } from './graph-grouping.po.ts';
@@ -8,9 +9,11 @@ import { GraphHost } from './graph-host.po.ts';
 import { GraphLook } from './graph-look.po.ts';
 import { GraphPackageList } from './graph-package-list.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
+import { GraphTaskHost } from './graph-task-host.po.ts';
 import { GraphToolbar } from './graph-toolbar.po.ts';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { GraphPage } from './graph.po.ts';
+import type { GraphAtomGroupState } from '../../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { ShotSetup, TaskShotSetup } from '../common/graph-shots.type.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
@@ -22,8 +25,10 @@ const PARKED_MOUSE = { x: 1279, y: 799 };
 
 /** Opens the graph page into the exact settled state a theme shot compares: every pixel a function of the state and the theme. */
 export class GraphShots {
+  private readonly atoms: GraphAtoms;
   private readonly controls: GraphControlsPage;
   private readonly details: GraphDetailsPage;
+  private readonly taskHost: GraphTaskHost;
   private readonly grouping: GraphGroupingPage;
   private readonly host: GraphHost;
   private readonly look: GraphLook;
@@ -36,6 +41,8 @@ export class GraphShots {
 
   public constructor(page: Page) {
     this.page = page;
+    this.atoms = new GraphAtoms(page);
+    this.taskHost = new GraphTaskHost(page);
     this.controls = new GraphControlsPage(page);
     this.details = new GraphDetailsPage(page);
     this.grouping = new GraphGroupingPage(page);
@@ -70,6 +77,18 @@ export class GraphShots {
     await this.host.sendState(setup.state);
     await this.probe.expectLayoutEngine('elk');
     await this.expectTaskSelected(setup.saved.task?.selected ?? null);
+    await this.settle();
+  }
+
+  /** Atoms arrive, then the umbrella's group expands and its files are drawn; settled. */
+  public async expandAtoms(
+    umbrellaId: string,
+    fileIds: string[],
+    groups: Readonly<Record<string, GraphAtomGroupState>>
+  ): Promise<void> {
+    await this.taskHost.sendAtoms(groups);
+    await this.atoms.toggle(umbrellaId);
+    await this.atoms.expectFilesDrawn(fileIds, true);
     await this.settle();
   }
 

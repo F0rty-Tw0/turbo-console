@@ -147,6 +147,7 @@ describe('FEATURE: atom group list shape', () => {
     ['files that are no array', groupsWithFiles(FILE)],
     ['a non-record file', groupsWithFiles(['a.spec.ts'])],
     ['a numeric file id', groupsWithFile({ id: 1 })],
+    ['an empty file id', groupsWithFile({ id: '' })],
     ['a numeric specPath', groupsWithFile({ specPath: 1 })],
     ['a file with no isLive', groupsWithFiles([FILE_WITH_NO_IS_LIVE])],
     ['a string isLive', groupsWithFile({ isLive: 'no' })],

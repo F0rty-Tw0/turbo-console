@@ -71,6 +71,7 @@ export class GraphTaskLayout {
     const moved: LayoutResult = { ...placed, positions };
 
     this.placed = moved;
+    this.atoms.rebased(positions);
     this.remember(moved);
   }
 
@@ -143,7 +144,7 @@ export class GraphTaskLayout {
       labels: this.atoms.labels()
     });
     this.placed = result;
-    this.atoms.placed(request.shown, result.positions, request.sizes);
+    this.atoms.placed(request.shown, result.positions, request.sizes, request.tasks);
     screen.showNotice(engineNoticeOf(result.engine));
 
     if (isSavedCamera) view.setViewport(saved.zoom, saved.pan);

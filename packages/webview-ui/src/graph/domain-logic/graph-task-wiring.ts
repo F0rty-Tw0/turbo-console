@@ -49,6 +49,7 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
     sizeOf,
     bridge,
     screen,
+    now: deps.now,
     panelOf,
     controlsOf,
     detailsOf,

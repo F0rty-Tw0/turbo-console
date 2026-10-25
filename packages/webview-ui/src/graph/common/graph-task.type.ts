@@ -45,7 +45,7 @@ export type PackageSideHooks = {
 };
 
 /** The canvas calls task mode makes: the task canvas, the camera and a re-measure after a panel change. */
-export type TaskView = Pick<GraphView, 'tasks' | 'fit' | 'setViewport' | 'viewport' | 'resize' | 'flowEdges'>;
+export type TaskView = Pick<GraphView, 'tasks' | 'atoms' | 'fit' | 'setViewport' | 'viewport' | 'resize' | 'flowEdges'>;
 
 /** The task mode lines above the canvas, built once by `buildPage`, all hidden in package mode. */
 export type TaskScreenElements = {
@@ -101,6 +101,8 @@ export type TaskModeDeps = {
   readonly widgetsOf: () => TaskWidgets;
   /** The flow overlay, stopped as a layout is placed or the task canvas empties. */
   readonly flow: Pick<FlowControl, 'stop'>;
+  /** The clock, for the time a group toggle takes. */
+  readonly now: () => number;
   /** After each task canvas paint and each placed task layout: tells the flow overlay how many task edges the painted target highlights. */
   readonly onHighlight: (litEdgeCount: number) => void;
 };

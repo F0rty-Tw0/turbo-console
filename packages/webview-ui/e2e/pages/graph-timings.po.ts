@@ -46,6 +46,10 @@ export class GraphTimings {
     return this.page.evaluate((): number | null => window.__tcGraphProbe?.toggleMs() ?? null);
   }
 
+  public async atomToggleMs(): Promise<number | null> {
+    return this.page.evaluate((): number | null => window.__tcGraphProbe?.atomToggleMs() ?? null);
+  }
+
   public async traceMs(): Promise<number | null> {
     return this.page.evaluate((): number | null => window.__tcGraphProbe?.traceMs() ?? null);
   }
@@ -58,5 +62,10 @@ export class GraphTimings {
   /** Polls until the last folder toggle is measured, then returns it. */
   public async measuredToggleMs(): Promise<number> {
     return measuredOf(async (): Promise<number | null> => this.toggleMs(), 'the folder toggle');
+  }
+
+  /** Polls until the last Atomizer group toggle is measured, then returns it. */
+  public async measuredAtomToggleMs(): Promise<number> {
+    return measuredOf(async (): Promise<number | null> => this.atomToggleMs(), 'the Atomizer group toggle');
   }
 }

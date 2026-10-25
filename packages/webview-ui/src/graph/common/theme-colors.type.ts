@@ -8,6 +8,8 @@ export type ThemeColors = {
   readonly selected: string;
   readonly highlighted: string;
   readonly frame: string;
+  /** The outline of an Atomizer file node whose test result came from the cache. */
+  readonly cached: string;
   /** The outline of a task node in each run state. */
   readonly runs: Readonly<Record<GraphRunState, string>>;
   /** The opacity of a dimmed node, edge or box: 0.25, raised in a high contrast theme so it keeps 3:1. */
