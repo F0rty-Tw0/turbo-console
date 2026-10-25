@@ -2,6 +2,7 @@ import type { AtomResult, DryRunRequest, DryRunState, TurboBinary, WorkspaceMode
 import type { Mock } from 'vitest';
 
 import type { AtomLoadPorts } from '../../common/atom-load.type.ts';
+import type { TreeNode } from '../../common/tree-node.type.ts';
 
 /** One `dryRun` port call that stays pending until the spec settles it. */
 export type DeferredDryRun = {
@@ -38,3 +39,6 @@ export type LoadsHarness = {
   readonly noBinary: () => void;
   readonly binary: () => void;
 };
+
+/** What lists a node's children: `PackagesTree.children` or the provider's `getChildren`; no node lists the top level. */
+export type ChildrenOf = (node?: TreeNode) => Promise<TreeNode[]>;

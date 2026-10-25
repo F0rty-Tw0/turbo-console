@@ -26,8 +26,8 @@ import { editorScriptsTogglePorts } from './shared/data-access/scripts-toggle-po
 import { ScriptsToggle } from './shared/domain-logic/scripts-toggle.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
 import type { TreeContext } from './tree/common/tree-context.type.ts';
-import type { TreeProviderDeps } from './tree/common/tree-node.type.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
+import { editorAtomPorts } from './tree/data-access/atom-ports.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
 import { tickerPortsOf } from './tree/data-access/ticker-ports.ts';
 import { ElapsedTicker } from './tree/domain-logic/elapsed-ticker.ts';
@@ -36,6 +36,7 @@ import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-view
 import { registerPackageActions } from './tree/feature/package-actions.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
 import { currentIcons, currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
+import { treeDepsOf } from './tree/feature/tree-deps.ts';
 import type { RootWatchers } from './watch/common/watch.type.ts';
 import { watchRoot } from './watch/data-access/root-watchers.ts';
 import { registerWatchers } from './watch/feature/register-watchers.ts';
@@ -80,13 +81,6 @@ const startTimings = (): TimingsStart => {
   const started: TimingsStart = { start, timings };
 
   return started;
-};
-
-/** What the tree provider is built from: the run lookup, the first-children spans and the scripts toggle. */
-const treeDepsOf = (runSession: RunSession, timings: Timings, scripts: ScriptsToggleApi): TreeProviderDeps => {
-  const deps: TreeProviderDeps = { runs: runSession.runs, treeVisible: timings.treeVisible, scripts };
-
-  return deps;
 };
 
 /** What `registerTree` reads of the extension context, with the scripts toggle beside it. */
@@ -136,7 +130,8 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
   const scripts = new ScriptsToggle(editorScriptsTogglePorts(context.workspaceState, output));
-  const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDepsOf(runSession, timings, scripts));
+  const treeDeps = treeDepsOf(runSession.runs, timings, scripts, editorAtomPorts(session.store, output));
+  const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDeps);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, { runs: runSession.runs, scripts }, output);
