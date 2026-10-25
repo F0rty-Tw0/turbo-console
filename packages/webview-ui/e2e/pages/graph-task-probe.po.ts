@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
+import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { FOLDER_PADDING_PX } from '../../src/graph/common/graph.const.ts';
 import type { ColourInkInput, RunOutline } from '../common/graph.type.ts';
@@ -91,6 +92,27 @@ export class GraphTaskProbe {
     await expect.poll(async (): Promise<string[]> => this.taskIds()).toEqual(sorted);
   }
 
+  /** The text drawn on the task node `id` is `text`. */
+  public async expectText(id: string, text: string): Promise<void> {
+    await expect.poll(async (): Promise<string | null> => this.textOf(id)).toEqual(text);
+  }
+
+  /** The centre of each task node, by id. */
+  public async taskPositions(): Promise<Positions> {
+    const nodes = await this.probe.nodes();
+    const tasks = nodes.filter((node) => isTaskId(node.id));
+    const entries = tasks.map((node): [string, Position] => [node.id, { x: node.x, y: node.y }]);
+
+    return Object.fromEntries(entries);
+  }
+
+  /** Every task node sits at `positions`. */
+  public async expectTaskPositions(positions: Positions): Promise<void> {
+    const now = await this.taskPositions();
+
+    expect(now).toEqual(positions);
+  }
+
   /** The `pkg:` compound ids, as `pkg:<package name>`. */
   public async expectBoxIds(ids: string[]): Promise<void> {
     const sorted = sortedNames(ids);
@@ -116,6 +138,13 @@ export class GraphTaskProbe {
     const expected = comparableOf(outline);
 
     await expect.poll(async (): Promise<RunOutline | null> => this.outlineOf(id)).toEqual(expected);
+  }
+
+  private async textOf(id: string): Promise<string | null> {
+    const nodes = await this.probe.nodes();
+    const node = nodes.find((candidate) => candidate.id === id);
+
+    return node?.text ?? null;
   }
 
   private async outlineOf(id: string): Promise<RunOutline | null> {

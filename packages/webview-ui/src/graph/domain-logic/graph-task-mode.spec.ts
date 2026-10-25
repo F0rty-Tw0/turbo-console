@@ -22,6 +22,8 @@ import { TASK_CAMERA, taskModeRigOf, taskSavedOf } from '../test/utils/graph-tas
 import { taskLayoutKeyOf } from '../utils/elk-task-graph.util.ts';
 import { droppedTasksText } from '../utils/task-text.util.ts';
 
+const NO_COUNTS = new Map<string, number>();
+
 const API_AT: Position = { x: 10, y: 20 };
 
 const WEB_AT: Position = { x: 10, y: 120 };
@@ -37,10 +39,10 @@ const SHOWN = new Set(['api#build', 'web#build']);
 
 const CHAIN: GraphTask[] = TASK_CHAIN_STUB.filter((task) => SHOWN.has(task.id));
 
-const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN);
+const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, NO_COUNTS);
 
 /** The chain and `web#test`, the one dependent hop of `web#build`. */
-const MORE_KEY = taskLayoutKeyOf(MORE_TASKS_STATE_STUB.tasks, new Set([...SHOWN, 'web#test']));
+const MORE_KEY = taskLayoutKeyOf(MORE_TASKS_STATE_STUB.tasks, new Set([...SHOWN, 'web#test']), NO_COUNTS);
 
 const SAVED_PAN: Position = { x: -40, y: 60 };
 

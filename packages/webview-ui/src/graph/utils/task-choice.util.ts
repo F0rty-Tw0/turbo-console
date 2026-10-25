@@ -1,8 +1,11 @@
+import { umbrellaSizeOf } from './atom-size.util.ts';
 import { taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import { droppedTasksText } from './task-text.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
+import type { NodeSizer } from '../common/graph-page.type.ts';
 import { MAX_TASK_DEPTH, MIN_TASK_DEPTH } from '../common/graph-task.const.ts';
 import type { TaskChoice, TaskLayoutRequest } from '../common/graph-task.type.ts';
+import type { NodeSize } from '../common/node-size.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 
 const WHOLE_DIGITS = /^\d+$/;
@@ -37,11 +40,28 @@ export const matchesTaskSearch = (task: GraphTask, search: string): boolean => {
   return fields.some((field) => field.toLowerCase().includes(needle));
 };
 
-/** The tasks the shown set draws, in the order given, and the key of their layout. */
-export const requestOf = (tasks: GraphTask[], shownSet: ShownSet): TaskLayoutRequest => {
+/**
+ * The tasks the shown set draws, in the order given, the key of their layout and the size of each drawn umbrella (a task
+ * with a file count in `fileCounts`); the key holds those counts, so a changed file count lays out afresh.
+ */
+export const requestOf = (
+  tasks: GraphTask[],
+  shownSet: ShownSet,
+  fileCounts: ReadonlyMap<string, number>,
+  sizeOf: NodeSizer
+): TaskLayoutRequest => {
   const shown = new Set(shownSet.ids);
   const drawn = tasks.filter((task) => shown.has(task.id));
-  const request: TaskLayoutRequest = { tasks: drawn, shown, key: taskLayoutKeyOf(drawn, shown) };
+  const sizes = new Map<string, NodeSize>();
+
+  for (const task of drawn) {
+    const fileCount = fileCounts.get(task.id);
+
+    if (fileCount !== undefined) sizes.set(task.id, umbrellaSizeOf(sizeOf, task.name, fileCount));
+  }
+
+  const key = taskLayoutKeyOf(drawn, shown, fileCounts);
+  const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes };
 
   return request;
 };

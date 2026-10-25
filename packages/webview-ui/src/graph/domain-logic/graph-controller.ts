@@ -67,6 +67,7 @@ class GraphPageController {
     else if (message.type === 'showTasks') this.tasks.showTasks(message.taskIds, at);
     else if (message.type === 'edgeExplained') this.packages.filtering.inspection.explained(message);
     else if (message.type === 'runs') this.tasks.selection.runs(message.runs);
+    else this.tasks.layout.atoms.states(message.groups);
   }
 
   public facts(): ProbeFacts {

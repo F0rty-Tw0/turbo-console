@@ -1,3 +1,4 @@
+import { GraphAtomGroups } from './graph-atom-groups.ts';
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.type.ts';
@@ -8,9 +9,12 @@ import { engineNoticeOf } from '../utils/layout-plan.util.ts';
 /**
  * The task graph's layout: the key asked for, the layout on screen, and the last `TASK_LAYOUT_MEMORY` layouts shown by
  * key in page memory, a drag included. Runs share the package runner, latest wins; a task layout never posts `positions`
- * or `layoutDone`. A layout that throws while still asked for empties the canvas and goes to `onFailure`.
+ * or `layoutDone`, only `shownUmbrellas` through `atoms`. A layout that throws while still asked for empties the canvas and goes to `onFailure`.
  */
 export class GraphTaskLayout {
+  /** The Atomizer groups drawn as umbrellas: their counts, and the shown ones the host loads. */
+  public readonly atoms: GraphAtomGroups;
+
   private readonly deps: TaskLayoutDeps;
   private readonly memory = new Map<string, LayoutResult>();
   private wanted: TaskLayoutRequest | null = null;
@@ -18,6 +22,7 @@ export class GraphTaskLayout {
 
   public constructor(deps: TaskLayoutDeps) {
     this.deps = deps;
+    this.atoms = new GraphAtomGroups(deps);
   }
 
   /** The key of the layout asked for last, on screen or in flight. */
@@ -51,6 +56,7 @@ export class GraphTaskLayout {
   public clear(): void {
     this.wanted = null;
     this.placed = null;
+    this.atoms.clear();
     this.deps.flow.stop();
     this.deps.view.tasks.clear();
   }
@@ -105,7 +111,7 @@ export class GraphTaskLayout {
   }
 
   private async layOut(request: TaskLayoutRequest, canRestore: boolean): Promise<void> {
-    const graph = elkTaskGraphOf(request.tasks, request.shown, this.deps.sizeOf);
+    const graph = elkTaskGraphOf(request.tasks, request.shown, this.deps.sizeOf, request.sizes);
     const result = await this.deps.runner.run(request.key, graph);
     const wantedKey = this.key();
 
@@ -129,8 +135,15 @@ export class GraphTaskLayout {
     const isSavedCamera = canRestore && saved?.layoutKey === request.key;
 
     flow.stop();
-    view.tasks.show({ tasks: request.tasks, positions: result.positions, sizeOf });
+    view.tasks.show({
+      tasks: request.tasks,
+      positions: result.positions,
+      sizeOf,
+      sizes: request.sizes,
+      labels: this.atoms.labels()
+    });
     this.placed = result;
+    this.atoms.placed(request.shown, result.positions, request.sizes);
     screen.showNotice(engineNoticeOf(result.engine));
 
     if (isSavedCamera) view.setViewport(saved.zoom, saved.pan);

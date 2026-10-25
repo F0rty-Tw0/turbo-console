@@ -14,8 +14,10 @@ import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.u
 import { fanOf } from '../test/utils/shown-set.spec.util.ts';
 import { taskLayoutKeyOf } from '../utils/elk-task-graph.util.ts';
 
+const NO_COUNTS = new Map<string, number>();
+
 /** `web#build` chosen at depth 1: itself and the `api#build` it needs. */
-const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, new Set(['api#build', 'web#build']));
+const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, new Set(['api#build', 'web#build']), NO_COUNTS);
 
 const API_AT: Position = { x: 10, y: 20 };
 

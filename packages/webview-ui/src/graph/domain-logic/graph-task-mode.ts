@@ -1,20 +1,18 @@
 import { GraphTaskLayout } from './graph-task-layout.ts';
+import { GraphTaskMemory } from './graph-task-memory.ts';
 import { savePanelToggle } from './graph-task-panel.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
-import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
+import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskModeDeps, TaskPanel } from '../common/graph-task.type.ts';
-import type { ShownSet } from '../common/shown-set.type.ts';
 import type { TaskControls } from '../common/task-controls.type.ts';
-import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
-import { shownSetOf } from '../utils/shown-set.util.ts';
 import { choiceOf, droppedNoticeOf, packageTaskIdsOf, requestOf } from '../utils/task-choice.util.ts';
 
 /**
- * Task mode's state and routing: whether it is active, the host's latest tasks and hash, and the task view it saves.
- * Its layout lives in `GraphTaskLayout`, its selected task and side panel in `GraphTaskSelection`, its page parts in the
- * task panel and Controls; the package graph is parked meanwhile.
+ * Task mode's routing: whether it is active and what the user does in it. Its tasks, hash and saved view live in
+ * `GraphTaskMemory`, its layout in `GraphTaskLayout`, its selected task and side panel in `GraphTaskSelection`, its page
+ * parts in the task panel and Controls; the package graph is parked meanwhile.
  */
 export class GraphTaskMode {
   public readonly selection: GraphTaskSelection;
@@ -24,12 +22,12 @@ export class GraphTaskMode {
   private readonly deps: TaskModeDeps;
   private readonly panel: TaskPanel;
   private readonly controls: TaskControls;
-  private tasks: GraphTask[] = [];
-  private hash = '';
+  private readonly memory: GraphTaskMemory;
   private hasEntered = false;
 
   public constructor(deps: TaskModeDeps) {
     this.deps = deps;
+    this.memory = new GraphTaskMemory(deps.modes);
     this.layout = new GraphTaskLayout({
       ...deps,
       saved: (): TaskViewState | null => deps.modes.task(),
@@ -38,12 +36,12 @@ export class GraphTaskMode {
     });
     this.selection = new GraphTaskSelection({
       ...deps,
-      task: (): TaskViewState => this.view(),
-      save: (edit: Partial<TaskViewState>): void => this.saveView(edit)
+      task: (): TaskViewState => this.memory.view(),
+      save: (edit: Partial<TaskViewState>): void => this.memory.save(edit)
     });
     this.panel = deps.panelOf({ onShowAll: (): void => this.choose({ capLifted: true }, null) });
     this.controls = deps.controlsOf({
-      onSearch: (search: string): void => this.saveView({ search }),
+      onSearch: (search: string): void => this.memory.save({ search }),
       onDepth: (depth: number): void => this.choose({ depth }, null),
       onPick: (id: string): void => this.selection.select(id),
       onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen })
@@ -55,26 +53,28 @@ export class GraphTaskMode {
   }
 
   /**
-   * Keeps the state's tasks; while active, shows the graph view once and draws the shown tasks when their key changed. A
-   * same key, never an empty set's, still refreshes the selected task's panel and the banner, since commands and hidden
-   * tasks are not in the key.
+   * Keeps the state's tasks and Atomizer groups; while active, shows the graph view once and draws the shown tasks when
+   * their key changed. A same key, never an empty set's, still refreshes the selected task's panel and the banner, since
+   * commands and hidden tasks are not in the key, and reports the shown umbrellas again, since a changed file list may
+   * have dropped a load the host must request anew.
    */
   public received(state: GraphReady, at: number): void {
-    this.tasks = state.tasks;
-    this.hash = state.hash;
+    this.memory.keep(state);
+    this.layout.atoms.received(state.atomGroups);
 
     if (!this.isActive()) return;
 
     this.enter();
 
-    const shownSet = this.shownSet();
-    const request = requestOf(this.tasks, shownSet);
+    const shownSet = this.memory.shownSet();
+    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.deps.sizeOf);
     const shownKey = this.layout.key();
 
     this.selection.setShown(request.tasks);
 
     if (request.key === shownKey) {
       this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount });
+      this.layout.atoms.reshown();
 
       return;
     }
@@ -95,14 +95,14 @@ export class GraphTaskMode {
       return;
     }
 
-    this.deps.modes.setMode('tasks', this.hash);
+    this.deps.modes.setMode('tasks', this.memory.hash());
     this.enter();
     this.render(at, null);
   }
 
   /** Chooses the known ones of `taskIds` from either mode; with none known the page stays as it is and says so. */
   public showTasks(taskIds: string[], at: number): void {
-    const { chosen, dropped } = choiceOf(this.tasks, taskIds);
+    const { chosen, dropped } = choiceOf(this.memory.tasks(), taskIds);
 
     if (chosen.length === 0) {
       this.panel.notice(UNKNOWN_TASKS_TEXT);
@@ -115,7 +115,7 @@ export class GraphTaskMode {
 
   /** The ids of package `name`'s tasks in the latest state, which Show tasks chooses. */
   public packageTaskIds(name: string): string[] {
-    return packageTaskIdsOf(this.tasks, name);
+    return packageTaskIdsOf(this.memory.tasks(), name);
   }
 
   /** Saves the camera on screen and the key of the layout under it; nothing before a task layout is placed. */
@@ -126,7 +126,7 @@ export class GraphTaskMode {
 
     const { zoom, pan } = this.deps.view.viewport();
 
-    this.saveView({ zoom, pan, layoutKey });
+    this.memory.save({ zoom, pan, layoutKey });
   }
 
   /** The pointer entered a task or left it (`null`); the canvas lights its chain without selecting it. */
@@ -139,36 +139,19 @@ export class GraphTaskMode {
     this.layout.dragged();
   }
 
-  private view(): TaskViewState {
-    return this.deps.modes.task() ?? freshTaskViewOf();
-  }
-
-  private shownSet(): ShownSet {
-    const { chosen, depth, capLifted } = this.view();
-
-    return shownSetOf({ tasks: this.tasks, chosen, depth, capLifted });
-  }
-
-  private saveView(edit: Partial<TaskViewState>): void {
-    const last = this.view();
-    const view: TaskViewState = { ...last, ...edit };
-
-    this.deps.modes.saveTask(view, this.hash);
-  }
-
   /** A new choice, depth or cap, saved with no layout key so the camera fits the new set; it turns task mode on. */
   private choose(edit: Partial<TaskViewState>, at: number | null, notice: string | null = null): void {
     const unplaced: Partial<TaskViewState> = { ...edit, layoutKey: '' };
 
-    this.saveView(unplaced);
+    this.memory.save(unplaced);
     this.enter();
     this.render(at, notice);
   }
 
   /** The notice, prompt, banner and rows of the shown set, then its layout; an empty set empties the canvas. */
   private render(at: number | null, notice: string | null): void {
-    const shownSet = this.shownSet();
-    const request = requestOf(this.tasks, shownSet);
+    const shownSet = this.memory.shownSet();
+    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.deps.sizeOf);
     const isEmpty = request.tasks.length === 0;
 
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));
@@ -197,14 +180,14 @@ export class GraphTaskMode {
     this.hasEntered = true;
     this.deps.screen.showGraph(this.layout.engine() === 'fallback');
     this.panel.enter();
-    this.controls.enter(this.view(), current?.controlsOpen ?? true);
+    this.controls.enter(this.memory.view(), current?.controlsOpen ?? true);
     this.selection.enter(current?.detailsOpen ?? true);
   }
 
   /** Saves the task camera, empties the canvas and hands the page back to the package graph. */
   private leave(): void {
     this.saveCamera();
-    this.deps.modes.setMode('packages', this.hash);
+    this.deps.modes.setMode('packages', this.memory.hash());
     this.layout.clear();
     this.hasEntered = false;
     this.panel.exit();

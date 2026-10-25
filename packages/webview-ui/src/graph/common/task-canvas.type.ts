@@ -2,11 +2,16 @@ import type { NodeSize } from './node-size.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
 
-/** What task mode draws: the shown tasks, their centres and the node sizer for their names. */
+/**
+ * What task mode draws: the shown tasks, their centres, the node sizer for their names, the size of each umbrella that
+ * has one of its own, and the label of each umbrella that has a counts line.
+ */
 export type TaskDrawing = {
   readonly tasks: GraphTask[];
   readonly positions: Positions;
   readonly sizeOf: (name: string) => NodeSize;
+  readonly sizes: ReadonlyMap<string, NodeSize>;
+  readonly labels: ReadonlyMap<string, string>;
 };
 
 /** The task graph on the one Cytoscape core: package compounds `pkg:<name>` holding `task` nodes, links task to dependency. */
@@ -22,4 +27,6 @@ export type TaskCanvas = {
   readonly paint: (target: string | null) => void;
   /** Replaces every task's `run-<state>` class with the one `runs` names. */
   readonly runStates: (runs: TaskRuns) => void;
+  /** Sets the label of each umbrella in `labels` to its name and counts line; a task not drawn is skipped, no node moves. */
+  readonly setCounts: (labels: ReadonlyMap<string, string>) => void;
 };

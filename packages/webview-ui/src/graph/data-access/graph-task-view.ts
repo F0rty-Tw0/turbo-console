@@ -4,6 +4,7 @@ import { positionOf } from './graph-place.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
+import { ATOM_UMBRELLA_CLASS } from '../common/graph-atom.const.ts';
 import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { DIMMED_BOX_CLASS, STATE_CLASSES } from '../common/graph.const.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
@@ -94,11 +95,17 @@ const boxDefinitionOf = (packageName: string): ElementDefinition => {
   return definition;
 };
 
+const labelOf = (name: string, counts: string | undefined): string => (counts === undefined ? name : `${name}\n${counts}`);
+
 const taskDefinitionOf = (task: GraphTask, drawing: TaskDrawing): ElementDefinition => {
-  const { width, height } = drawing.sizeOf(task.name);
-  const data = { id: task.id, label: task.name, parent: taskBoxIdOf(task.packageName), width, height };
+  const { width, height } = drawing.sizes.get(task.id) ?? drawing.sizeOf(task.name);
+  const label = labelOf(task.name, drawing.labels.get(task.id));
+  const parent = taskBoxIdOf(task.packageName);
+  const data = { id: task.id, name: task.name, label, parent, width, height };
   const position = positionOf(drawing.positions, task.id);
-  const definition: ElementDefinition = { data, position, classes: TASK_NODE_CLASS };
+  const isUmbrella = drawing.sizes.has(task.id);
+  const classes = isUmbrella ? `${TASK_NODE_CLASS} ${ATOM_UMBRELLA_CLASS}` : TASK_NODE_CLASS;
+  const definition: ElementDefinition = { data, position, classes };
 
   return definition;
 };
@@ -166,7 +173,17 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     return Object.fromEntries(entries);
   };
   const clear = (): void => void cy.elements().remove();
-  const canvas: TaskCanvas = { show, clear, setPositions, positions, paint, runStates };
+  const setCounts = (labels: ReadonlyMap<string, string>): void => {
+    const countNode = (counts: string, id: string): void => {
+      const node = cy.getElementById(id);
+      const name: unknown = node.data('name');
+
+      node.data('label', labelOf(String(name), counts));
+    };
+
+    cy.batch((): void => labels.forEach(countNode));
+  };
+  const canvas: TaskCanvas = { show, clear, setPositions, positions, paint, runStates, setCounts };
 
   return canvas;
 };

@@ -1,12 +1,14 @@
+import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { ViewStateModes } from './view-state-modes.ts';
-import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
+import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
@@ -20,11 +22,25 @@ const SHOWN = new Set(['api#build']);
 
 const PLACE_FAILED = new Error('cannot draw');
 
-const requestOf = (key: string): TaskLayoutRequest => {
-  const request: TaskLayoutRequest = { tasks: TASK_CHAIN_STUB, shown: SHOWN, key };
+const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };
+
+const firstCompoundOf = (graph: ElkNode): ElkNode | undefined => graph.children?.[0];
+
+const firstLeafOf = (compound: ElkNode | undefined): ElkNode | undefined => compound?.children?.[0];
+
+const UMBRELLA_FILES = [{ id: 'api#build--a.spec.ts', specPath: 'a.spec.ts', isLive: false }];
+
+const UMBRELLA_GROUP: GraphAtomGroup = { umbrellaId: 'api#build', files: UMBRELLA_FILES };
+
+const NO_SIZES: ReadonlyMap<string, NodeSize> = new Map();
+
+const sizedRequestOf = (key: string, sizes: ReadonlyMap<string, NodeSize>): TaskLayoutRequest => {
+  const request: TaskLayoutRequest = { tasks: TASK_CHAIN_STUB, shown: SHOWN, key, sizes };
 
   return request;
 };
+
+const requestOf = (key: string): TaskLayoutRequest => sizedRequestOf(key, NO_SIZES);
 
 const throwPlace = (): never => {
   throw PLACE_FAILED;
@@ -36,12 +52,14 @@ describe('FEATURE: GraphTaskLayout', () => {
   let onDrawn: Mock<() => void>;
 
   /** Shows the layout of `key` and lands it as the latest run. */
-  const land = async (key: string): Promise<void> => {
-    const shown = layout.show(requestOf(key));
+  const landWith = async (key: string, sizes: ReadonlyMap<string, NodeSize>): Promise<void> => {
+    const shown = layout.show(sizedRequestOf(key, sizes));
 
     await rig.runs.settle(rig.runs.count() - 1, resultOf(key, POSITIONS));
     await shown;
   };
+
+  const land = async (key: string): Promise<void> => landWith(key, NO_SIZES);
 
   /** Lands `count` layouts, keys `k0` to `k<count - 1>`, oldest first. */
   const landEach = async (count: number): Promise<void> => {
@@ -80,6 +98,45 @@ describe('FEATURE: GraphTaskLayout', () => {
       layout.clear();
 
       expect(rig.flow.stop).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN api#build is an umbrella of one file', () => {
+    const sizes = new Map([['api#build', UMBRELLA_SIZE]]);
+
+    beforeEach(() => {
+      layout.atoms.received([UMBRELLA_GROUP]);
+    });
+
+    it('WHEN a layout is laid out THEN ELK gets the umbrella at its own size', async () => {
+      await landWith('k0', sizes);
+
+      const compound = firstCompoundOf(rig.runs.graphOf(0));
+      const leaf = firstLeafOf(compound);
+
+      expect(leaf).toMatchObject({ id: 'api#build', ...UMBRELLA_SIZE });
+    });
+
+    it('WHEN a layout lands THEN the canvas draws the sizes and the counts lines', async () => {
+      await landWith('k0', sizes);
+
+      expect(rig.view.tasks.show).toHaveBeenCalledWith(
+        expect.objectContaining({ sizes, labels: new Map([['api#build', '1 files']]) })
+      );
+    });
+
+    it('WHEN a layout lands THEN the umbrella is reported to the host', async () => {
+      await landWith('k0', sizes);
+
+      expect(rig.posts()).toStrictEqual([{ type: 'shownUmbrellas', ids: ['api#build'] }]);
+    });
+
+    it('WHEN the task canvas is cleared THEN the placement is forgotten', async () => {
+      await landWith('k0', sizes);
+      layout.clear();
+      layout.atoms.reshown();
+
+      expect(rig.posts()).toHaveLength(1);
     });
   });
 

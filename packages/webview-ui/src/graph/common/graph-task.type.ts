@@ -4,6 +4,7 @@ import type { GraphInspectionDeps } from './graph-inspection.type.ts';
 import type { LayoutScreen } from './graph-layouts.type.ts';
 import type { GraphView, NodeSizer, PackageSaver } from './graph-page.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
+import type { NodeSize } from './node-size.type.ts';
 import type { TaskControls, TaskControlsActions } from './task-controls.type.ts';
 import type { TaskDetails, TaskDetailsActions, TaskWidgets } from './task-details.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -137,11 +138,12 @@ export type TaskChoice = {
   readonly dropped: number;
 };
 
-/** One task layout: the shown tasks, their ids and their layout key. */
+/** One task layout: the shown tasks, their ids, their layout key and the size of each umbrella among them. */
 export type TaskLayoutRequest = {
   readonly tasks: GraphTask[];
   readonly shown: ReadonlySet<string>;
   readonly key: string;
+  readonly sizes: ReadonlyMap<string, NodeSize>;
 };
 
 /** What `GraphTaskLayout` adds: the saved task view for its camera rule, and hooks after each placement. */

@@ -101,6 +101,18 @@ describe('FEATURE: taskRulesOf task nodes in graphStyleOf', () => {
     expect(cy.getElementById('web#build').style('label')).toBe('build');
   });
 
+  it('GIVEN a plain task THEN its label does not wrap', () => {
+    expect(cy.getElementById('web#build').style('text-wrap')).not.toBe('wrap');
+  });
+
+  it('GIVEN an umbrella node THEN its label wraps so the counts line sits under the name', () => {
+    const node = cy.getElementById('web#build');
+
+    node.addClass('atom-umbrella');
+
+    expect(node.style('text-wrap')).toBe('wrap');
+  });
+
   it('GIVEN a task with no run class THEN it has no outline', () => {
     expect(cy.getElementById('web#build').numericStyle('outline-width')).toBe(0);
   });
