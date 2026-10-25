@@ -20,9 +20,14 @@ const hasSettledAs = async (atoms: GraphAtoms, id: string, isDrawn: boolean): Pr
   return true;
 };
 
-/** Double taps the umbrella until its box is `isDrawn`, up to `MAX_TAP_ATTEMPTS` times, noting how many it took; a tap pair Cytoscape dropped toggles nothing. */
+/**
+ * Double taps the umbrella until its box is `isDrawn`, up to `MAX_TAP_ATTEMPTS` times, noting how many it took; a tap
+ * pair Cytoscape dropped toggles nothing. The box must start the other way, so no tap undoes a toggle already made.
+ */
 export const tappedUntil = async (session: BenchSession, id: string, isDrawn: boolean): Promise<void> => {
   const atoms = new GraphAtoms(session.page);
+
+  await atoms.expectBoxDrawn(id, !isDrawn);
 
   for (let attempt = 0; attempt < MAX_TAP_ATTEMPTS; attempt += 1) {
     await atoms.toggle(id);
