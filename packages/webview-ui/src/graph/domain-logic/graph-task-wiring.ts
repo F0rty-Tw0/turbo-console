@@ -27,7 +27,7 @@ export const onTaskKey = (event: Pick<KeyboardEvent, 'key' | 'repeat'>, mode: Ta
 
 /** Task mode over the real view (never the parked one) and the runner the package graph shares; the Task mode toggle flips it. */
 export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: TaskModeHooks): GraphTaskMode => {
-  const { runner, sizeOf, bridge, page, taskViews, taskDetailsViews, widgetViews, overlay } = deps;
+  const { runner, bridge, page, taskViews, taskDetailsViews, widgetViews, overlay } = deps;
   const panelOf = (actions: TaskPanelActions): TaskPanel => taskPanelOf(page, actions);
   const controlsOf = (actions: TaskControlsActions): TaskControls => new GraphTaskControls({ page, views: taskViews, actions });
   const isActive = (): boolean => hooks.modes.mode() === 'tasks';
@@ -46,7 +46,8 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
     ...hooks,
     view,
     runner,
-    sizeOf,
+    sizeOf: deps.taskSizeOf,
+    textSizeOf: deps.sizeOf,
     bridge,
     screen,
     now: deps.now,

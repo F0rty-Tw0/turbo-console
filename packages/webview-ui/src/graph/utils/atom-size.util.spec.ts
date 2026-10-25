@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { umbrellaSizeOf, widestCountsOf } from './atom-size.util.ts';
+import { ATOM_COUNTS_LINE_PX } from '../common/graph-atom.const.ts';
 import type { NodeSizer } from '../common/graph-page.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 
@@ -19,15 +20,51 @@ describe('FEATURE: umbrella size', () => {
 
   describe('GIVEN a sizer that makes a character 10 px wide', () => {
     it('WHEN the counts text is wider than the name THEN the umbrella is that wide and one counts line taller', () => {
-      const size = umbrellaSizeOf(sizer, 'e2e-ci', 200);
+      const size = umbrellaSizeOf({ name: sizer, counts: sizer }, 'e2e-ci', 200);
 
       expect(size).toStrictEqual({ width: 350, height: 48 });
     });
 
     it('WHEN the name is wider than the counts text THEN the umbrella keeps the name width', () => {
-      const size = umbrellaSizeOf(sizer, 'a-very-long-umbrella-task-name-here', 1);
+      const size = umbrellaSizeOf({ name: sizer, counts: sizer }, 'a-very-long-umbrella-task-name-here', 1);
 
       expect(size.width).toBe(350);
+    });
+  });
+
+  describe('GIVEN a name sizer and a counts sizer that measure differently', () => {
+    it('WHEN the counts sizer is wider THEN the width and the counts line come from each its own sizer', () => {
+      const name: NodeSizer = () => {
+        const size: NodeSize = { width: 60, height: 30 };
+
+        return size;
+      };
+      const counts: NodeSizer = () => {
+        const size: NodeSize = { width: 90, height: 20 };
+
+        return size;
+      };
+
+      const size = umbrellaSizeOf({ name, counts }, 'build', 2);
+
+      expect(size).toStrictEqual({ width: 90, height: 30 + ATOM_COUNTS_LINE_PX });
+    });
+
+    it('WHEN the name sizer is wider THEN the height is the name sizer height plus one counts line', () => {
+      const name: NodeSizer = () => {
+        const size: NodeSize = { width: 120, height: 30 };
+
+        return size;
+      };
+      const counts: NodeSizer = () => {
+        const size: NodeSize = { width: 80, height: 20 };
+
+        return size;
+      };
+
+      const size = umbrellaSizeOf({ name, counts }, 'build', 2);
+
+      expect(size).toStrictEqual({ width: 120, height: 30 + ATOM_COUNTS_LINE_PX });
     });
   });
 });

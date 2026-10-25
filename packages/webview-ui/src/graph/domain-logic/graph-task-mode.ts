@@ -4,6 +4,7 @@ import { savePanelToggle } from './graph-task-panel.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskModeDeps, TaskPanel } from '../common/graph-task.type.ts';
 import type { TaskControls } from '../common/task-controls.type.ts';
@@ -67,7 +68,7 @@ export class GraphTaskMode {
     this.enter();
 
     const shownSet = this.memory.shownSet();
-    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.deps.sizeOf);
+    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.umbrellaSizers());
     const shownKey = this.layout.key();
 
     this.selection.setShown(request.tasks);
@@ -148,10 +149,16 @@ export class GraphTaskMode {
     this.render(at, notice);
   }
 
+  private umbrellaSizers(): UmbrellaSizers {
+    const sizers: UmbrellaSizers = { name: this.deps.sizeOf, counts: this.deps.textSizeOf };
+
+    return sizers;
+  }
+
   /** The notice, prompt, banner and rows of the shown set, then its layout; an empty set empties the canvas. */
   private render(at: number | null, notice: string | null): void {
     const shownSet = this.memory.shownSet();
-    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.deps.sizeOf);
+    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.umbrellaSizers());
     const isEmpty = request.tasks.length === 0;
 
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));

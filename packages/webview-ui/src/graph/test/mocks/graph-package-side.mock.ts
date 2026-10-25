@@ -87,6 +87,7 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
     runner: runs.runner,
     saver,
     sizeOf: (): NodeSize => NODE_SIZE,
+    taskSizeOf: (): NodeSize => NODE_SIZE,
     measure: (text: string): number => text.length,
     now: (): number => 0,
     build: buildControls,

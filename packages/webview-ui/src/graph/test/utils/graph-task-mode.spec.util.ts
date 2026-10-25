@@ -96,6 +96,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     view,
     runner: runs.runner,
     sizeOf,
+    textSizeOf: sizeOf,
     bridge,
     screen,
     modes,

@@ -4,7 +4,9 @@ import { GraphTaskMode } from './graph-task-mode.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphAtomGroup, GraphReady, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { ViewStateSaver } from '../common/graph-page.type.ts';
+import { ATOM_COUNTS_LINE_PX } from '../common/graph-atom.const.ts';
+import type { NodeSizer, ViewStateSaver } from '../common/graph-page.type.ts';
+import type { TaskModeDeps } from '../common/graph-task.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { TASK_CHAIN_STUB, TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
@@ -42,11 +44,11 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
   const shownUmbrellaPosts = (): unknown[] => rig.posts().filter((message) => message.type === 'shownUmbrellas');
 
   /** A task mode over a real `ViewStateModes` that starts from `saved`. */
-  const open = (saved: GraphViewState): void => {
+  const open = (saved: GraphViewState, sizers: Partial<Pick<TaskModeDeps, 'sizeOf' | 'textSizeOf'>> = {}): void => {
     const saver: ViewStateSaver = { schedule: vi.fn(), flush: vi.fn() };
 
     rig = taskModeRigOf(new ViewStateModes(saver, saved));
-    mode = new GraphTaskMode(rig.deps);
+    mode = new GraphTaskMode({ ...rig.deps, ...sizers });
   };
 
   describe('GIVEN a state with a group lands in package mode', () => {
@@ -59,11 +61,29 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       mode.toggle(8);
       await rig.runs.settle(0, resultOf(UMBRELLA_KEY, POSITIONS));
 
-      const size = umbrellaSizeOf(rig.deps.sizeOf, 'build', 2);
+      const size = umbrellaSizeOf({ name: rig.deps.sizeOf, counts: rig.deps.textSizeOf }, 'build', 2);
 
       expect(rig.view.tasks.show).toHaveBeenCalledWith(
         expect.objectContaining({ sizes: new Map([['web#build', size]]), labels: new Map([['web#build', '2 files']]) })
       );
+    });
+
+    it.each([
+      ['counts', { width: 150, height: 20 }, { width: 100, height: 30 }, 150],
+      ['name', { width: 150, height: 20 }, { width: 200, height: 30 }, 200]
+    ])('WHEN the %s line is wider THEN the umbrella takes its width and the name height', async (_wider, counts, name, width) => {
+      const sizeOf: NodeSizer = () => name;
+      const textSizeOf: NodeSizer = () => counts;
+
+      open(taskSavedOf({}, 'packages'), { sizeOf, textSizeOf });
+      mode.received(UMBRELLA_STATE, 7);
+
+      mode.toggle(8);
+      await rig.runs.settle(0, resultOf(UMBRELLA_KEY, POSITIONS));
+
+      const sizes = new Map([['web#build', { width, height: 30 + ATOM_COUNTS_LINE_PX }]]);
+
+      expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ sizes }));
     });
 
     it('WHEN task mode is then entered THEN the umbrella is posted in shownUmbrellas', async () => {
