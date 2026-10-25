@@ -106,4 +106,13 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
 
     expect([positionsOf(cy), cy.autoungrabify()]).toStrictEqual([positionsBefore, false]);
   });
+
+  it('WHEN the umbrella is double tapped twice THEN its refused group still moves no node and leaves the canvas grabbable', () => {
+    const positionsBefore = positionsOf(cy);
+
+    groups.toggle(UMBRELLA);
+    groups.toggle(UMBRELLA);
+
+    expect([positionsOf(cy), cy.autoungrabify()]).toStrictEqual([positionsBefore, false]);
+  });
 });
