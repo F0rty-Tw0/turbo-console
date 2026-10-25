@@ -7,9 +7,18 @@ export type IconSpec = {
   readonly color: string | null;
 };
 
+/** The node fields a task command reads its row by. */
+export type TaskRowArg = {
+  readonly kind: 'task';
+  readonly id: string;
+  readonly root: string;
+  readonly key: string;
+  readonly packageName: string;
+};
+
 export type RowCommand = {
   readonly command: string;
-  readonly args: string[];
+  readonly args: (string | TaskRowArg)[];
 };
 
 export type TreeMode = 'folders' | 'list';

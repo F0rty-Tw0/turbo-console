@@ -28,11 +28,13 @@ import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
 import type { TreeContext } from './tree/common/tree-context.type.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
 import { editorAtomPorts } from './tree/data-access/atom-ports.ts';
+import { editorOpenSpecPorts } from './tree/data-access/open-spec-ports.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
 import { tickerPortsOf } from './tree/data-access/ticker-ports.ts';
 import { ElapsedTicker } from './tree/domain-logic/elapsed-ticker.ts';
 import { TreeVisibility } from './tree/domain-logic/tree-visibility.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
+import { registerOpenSpec } from './tree/feature/open-spec.ts';
 import { registerPackageActions } from './tree/feature/package-actions.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
 import { currentIcons, currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
@@ -41,13 +43,14 @@ import type { RootWatchers } from './watch/common/watch.type.ts';
 import { watchRoot } from './watch/data-access/root-watchers.ts';
 import { registerWatchers } from './watch/feature/register-watchers.ts';
 
-/** The side panel's fixed views and the commands of its rows' inline and context menus (copy, open, reveal). */
+/** The side panel's fixed views and the commands of its rows' inline and context menus (copy, open, reveal, open spec). */
 const registerPanel = (roots: Roots, commands: FixedViewProvider, help: FixedViewProvider): vscode.Disposable => {
   const views = registerFixedViews(commands, help);
   const copy = registerCopy(roots, editorCopyPorts(), vscode.commands.registerCommand);
   const packageActions = registerPackageActions(roots, editorPackageActionPorts(), vscode.commands.registerCommand);
+  const openSpec = registerOpenSpec(roots, editorOpenSpecPorts(), vscode.commands.registerCommand);
 
-  return vscode.Disposable.from(views, copy, packageActions);
+  return vscode.Disposable.from(views, copy, packageActions, openSpec);
 };
 
 const createSession = (context: vscode.ExtensionContext, output: Output): RootsSession => {

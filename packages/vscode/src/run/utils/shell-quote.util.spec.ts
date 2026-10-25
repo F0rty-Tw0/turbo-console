@@ -146,6 +146,16 @@ describe('FEATURE: shell quoting', () => {
       expect(text).toBe(expected);
     });
 
+    it.each<[ShellKind, string]>([
+      ['posix', "turbo run 'e2e-ci--tests/b fails.spec.ts' --filter=@fx/e2e"],
+      ['pwsh', "turbo run 'e2e-ci--tests/b fails.spec.ts' --filter=@fx/e2e"],
+      ['cmd', 'turbo run "e2e-ci--tests/b fails.spec.ts" --filter=@fx/e2e']
+    ])('GIVEN the %s shell WHEN a file task name holds a space THEN the name is quoted', (kind, expected) => {
+      const task = { ...TASK_NODE_STUB, name: 'e2e-ci--tests/b fails.spec.ts' };
+
+      expect(copyText(task, '@fx/e2e', kind)).toBe(expected);
+    });
+
     it.each<ShellKind>(['posix', 'pwsh', 'cmd'])(
       'GIVEN singlePackage WHEN copied for %s THEN --single-package ends the command',
       (kind) => {

@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { step } from './suite-env.spec.util.ts';
 import { manifestTree } from './tree-walk.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
+import { OPEN_SPEC_COMMAND } from '../../src/tree/common/atom.const.ts';
 import type { FixedItem } from '../../src/tree/common/fixed-view.type.ts';
 import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
 import type { ShownManifest } from '../common/launch.type.ts';
@@ -62,6 +63,15 @@ export const fixedViewsCase = async (scene: ParityScene): Promise<void> => {
     for (const item of [...commands, ...help]) {
       assert.ok(registered.includes(item.command.command), `${item.id} runs ${item.command.command}, which is not registered`);
     }
+  });
+};
+
+/** Spec §5.3 case 8: the Open Spec command, the click of an Atomizer file row, is registered by the extension. */
+export const openSpecRegisteredCase = async (): Promise<void> => {
+  await step('8: the Open Spec command of the Atomizer file rows is registered', async () => {
+    const registered = await vscode.commands.getCommands(true);
+
+    assert.ok(registered.includes(OPEN_SPEC_COMMAND), `${OPEN_SPEC_COMMAND} is not registered`);
   });
 };
 

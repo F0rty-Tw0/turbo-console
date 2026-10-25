@@ -5,6 +5,7 @@ import { fileRow } from './atom-rows.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { AtomCache, AtomView } from '../common/atom-view.type.ts';
+import { OPEN_SPEC_COMMAND } from '../common/atom.const.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
 import { ATOM_VIEW_STUB, A_FILE_STUB, E2E_PACKAGE_STUB, LIVE_FILE_STUB, SPACED_FILE_STUB } from '../test/stubs/atom-view.stub.ts';
 import { ROW_SCOPE_STUB } from '../test/stubs/workspace-model.stub.ts';
@@ -52,17 +53,25 @@ const runIn = (overrides: Partial<RunEntry>): RunEntry => {
 
 describe('FEATURE: atom file row', () => {
   describe('GIVEN a file with no result and no run', () => {
-    it('WHEN the row is built THEN it is a bare, plain, unclickable file row', () => {
+    it('WHEN the row is built THEN it is a bare, plain file row', () => {
       const row = rowOf(A_FILE_STUB);
 
-      expect([row.kind, row.description, row.icon, row.contextValue, row.collapsible, row.command]).toStrictEqual([
+      expect([row.kind, row.description, row.icon, row.contextValue, row.collapsible]).toStrictEqual([
         'task',
         '',
         { id: 'file', color: null },
         'turboTask.atomFile',
-        'none',
-        null
+        'none'
       ]);
+    });
+  });
+
+  describe('GIVEN a file row', () => {
+    it('WHEN the row is built THEN a click opens the spec with the row as the argument', () => {
+      const row = rowOf(SPACED_FILE_STUB);
+      const node = { kind: 'task', id: row.id, root: '/ws', key: SPACED_FILE_STUB.task.id, packageName: 'e2e' };
+
+      expect(row.command).toStrictEqual({ command: OPEN_SPEC_COMMAND, args: [node] });
     });
   });
 
