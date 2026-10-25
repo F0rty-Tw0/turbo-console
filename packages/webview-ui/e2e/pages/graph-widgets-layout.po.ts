@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import { WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
-import { readRect } from '../test/utils/element-rect.spec.util.ts';
+import { readRect, readRects } from '../test/utils/element-rect.spec.util.ts';
 import {
   ellipsisNameOf,
   fractionalPlacementsOf,
@@ -207,8 +207,7 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
 
   private async coveredCount(): Promise<number> {
     const aside = await this.aside.evaluate(readRect);
-    const buttons = await this.layer.locator('.widget-button:visible').all();
-    const rects = await Promise.all(buttons.map(rectOf));
+    const rects = await this.layer.locator('.widget-button:visible').evaluateAll(readRects);
     const covered = rects.filter((rect): boolean => rect.left + rect.width > aside.left);
 
     return covered.length;
