@@ -41,13 +41,25 @@ export const depsOf = (hop1: number, hop2: number): GraphTask[] => {
   return tasks;
 };
 
+type CountedMethod = typeof Symbol.iterator | 'concat' | 'slice';
+
+const replaceArrayMethod = (key: CountedMethod, value: unknown): void => {
+  const original = Object.getOwnPropertyDescriptor(Array.prototype, key);
+
+  Object.defineProperty(Array.prototype, key, { ...original, value });
+};
+
 /**
  * How many array elements `run` reads through the array iterator, which every spread, `for…of`,
- * destructure, and `new Set(array)` goes through. Copying an n-long list once per push reads n²/2 here.
+ * destructure, and `new Set(array)` goes through, plus every element `concat` or `slice` copies.
+ * Copying an n-long list once per push reads n²/2 here.
+ *
+ * Redefining the iterator turns off V8's fast array iteration for the rest of the test process, so
+ * never use this in a timing test or in a spec file that has timing rows.
  */
 export const arrayReadsOf = (run: () => void): number => {
-  const original = Object.getOwnPropertyDescriptor(Array.prototype, Symbol.iterator);
   const iterate = Array.prototype[Symbol.iterator];
+  const { concat, slice } = Array.prototype;
   let reads = 0;
 
   function* counted(this: unknown[]): Generator<unknown> {
@@ -60,12 +72,32 @@ export const arrayReadsOf = (run: () => void): number => {
     }
   }
 
-  Object.defineProperty(Array.prototype, Symbol.iterator, { ...original, value: counted });
+  function countedConcat(this: unknown[], ...items: unknown[]): unknown[] {
+    const copy = concat.apply(this, items);
+
+    reads += copy.length;
+
+    return copy;
+  }
+
+  function countedSlice(this: unknown[], ...range: [start?: number, end?: number]): unknown[] {
+    const copy = slice.apply(this, range);
+
+    reads += copy.length;
+
+    return copy;
+  }
+
+  replaceArrayMethod(Symbol.iterator, counted);
+  replaceArrayMethod('concat', countedConcat);
+  replaceArrayMethod('slice', countedSlice);
 
   try {
     run();
   } finally {
-    Object.defineProperty(Array.prototype, Symbol.iterator, { ...original, value: iterate });
+    replaceArrayMethod(Symbol.iterator, iterate);
+    replaceArrayMethod('concat', concat);
+    replaceArrayMethod('slice', slice);
   }
 
   return reads;
