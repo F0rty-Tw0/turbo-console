@@ -62,6 +62,34 @@ describe('FEATURE: shared atoms', () => {
       await commitDryRun(1);
 
       expect(first).not.toHaveBeenCalled();
+      expect(second).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a first listener that throws and a second listener', () => {
+    let second: Mock<AtomListener>;
+
+    beforeEach(() => {
+      const first = vi.fn<AtomListener>(() => {
+        throw new Error('listener broke');
+      });
+
+      second = vi.fn<AtomListener>();
+      atoms.onDidChange(first);
+      atoms.onDidChange(second);
+      atoms.childrenRequested(ROOT, PKG);
+    });
+
+    it('WHEN a load of the package commits THEN the second listener hears (root, package) once', async () => {
+      await commitDryRun(0);
+
+      expect(second).toHaveBeenCalledExactlyOnceWith(ROOT, PKG);
+    });
+
+    it('WHEN a load of the package commits THEN the log names the failed listener and its error', async () => {
+      await commitDryRun(0);
+
+      expect(h.log).toHaveBeenCalledExactlyOnceWith(`atoms ${ROOT} ${PKG}: listener failed: listener broke`);
     });
   });
 
