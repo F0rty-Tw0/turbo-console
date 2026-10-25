@@ -17,7 +17,10 @@ const outcomesOf = (group: GraphAtomGroup, view: AtomView): Record<string, Graph
   return Object.fromEntries(entries);
 };
 
-/** `null` unless `state` is a graph holding atom groups; a group whose umbrella is not a listed task has no package and is left out. */
+/**
+ * `null` unless `state` is a graph holding atom groups; a group whose umbrella is not a listed task has no package and is
+ * left out, and `null` again when every group is.
+ */
 export const atomsMessageOf = (root: string, state: GraphState, view: AtomLookup): GraphAtomsMessage | null => {
   if (state.kind !== 'graph' || state.atomGroups.length === 0) return null;
 
@@ -32,6 +35,10 @@ export const atomsMessageOf = (root: string, state: GraphState, view: AtomLookup
 
     groups[group.umbrellaId] = { counts: countsOf(group, packageView), files: outcomesOf(group, packageView) };
   }
+
+  const isEmpty = Object.keys(groups).length === 0;
+
+  if (isEmpty) return null;
 
   const message: GraphAtomsMessage = { type: 'atoms', groups };
 

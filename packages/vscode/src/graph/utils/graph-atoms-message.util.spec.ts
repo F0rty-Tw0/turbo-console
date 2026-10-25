@@ -75,12 +75,10 @@ describe('FEATURE: atoms message of a graph state', () => {
   });
 
   describe('GIVEN an atom group whose umbrella is not a listed task', () => {
-    it('WHEN the message is built THEN that group is left out', () => {
+    it('WHEN the message is built THEN there is none', () => {
       const unlisted = { ...ATOM_STATE, tasks: GRAPH_STATE_STUB.tasks };
 
-      const noGroups = {};
-
-      expect(atomsMessageOf(ROOT, unlisted, GRAPH_ATOM_LOOKUP_STUB)).toStrictEqual({ type: 'atoms', groups: noGroups });
+      expect(atomsMessageOf(ROOT, unlisted, GRAPH_ATOM_LOOKUP_STUB)).toBeNull();
     });
   });
 });
