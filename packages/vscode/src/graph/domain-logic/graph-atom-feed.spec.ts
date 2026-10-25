@@ -76,15 +76,26 @@ describe('FEATURE: graph atom feed', () => {
       expect(postedAtomsOf(ports)).toStrictEqual([]);
     });
 
-    it('WHEN the page cannot take posts THEN a change posts nothing and arms no timer', () => {
-      const { feed, fake, ports, canPost } = feedAt(ATOM_STATE);
+    describe('WHEN the page cannot take posts and a change lands', () => {
+      it('THEN no timer is armed', () => {
+        const { feed, fake, canPost } = feedAt(ATOM_STATE);
 
-      canPost.mockReturnValue(false);
-      feed.start();
-      fake.changed('/ws', '@fx/e2e');
+        canPost.mockReturnValue(false);
+        feed.start();
+        fake.changed('/ws', '@fx/e2e');
 
-      expect(vi.getTimerCount()).toBe(0);
-      expect(postedAtomsOf(ports)).toStrictEqual([]);
+        expect(vi.getTimerCount()).toBe(0);
+      });
+
+      it('THEN nothing is posted', () => {
+        const { feed, fake, ports, canPost } = feedAt(ATOM_STATE);
+
+        canPost.mockReturnValue(false);
+        feed.start();
+        fake.changed('/ws', '@fx/e2e');
+
+        expect(postedAtomsOf(ports)).toStrictEqual([]);
+      });
     });
 
     it('WHEN the gate closes before the timer fires THEN nothing is posted', () => {
@@ -118,16 +129,27 @@ describe('FEATURE: graph atom feed', () => {
       expect(fake.listenerCount()).toBe(1);
     });
 
-    it('WHEN it is stopped THEN it unsubscribes and a pending timer posts nothing', () => {
-      const { feed, fake, ports } = feedAt(ATOM_STATE);
+    describe('WHEN it is stopped with a change pending', () => {
+      it('THEN it unsubscribes', () => {
+        const { feed, fake } = feedAt(ATOM_STATE);
 
-      feed.start();
-      fake.changed('/ws', '@fx/e2e');
-      feed.stop();
-      vi.advanceTimersByTime(RUNS_COALESCE_MS);
+        feed.start();
+        fake.changed('/ws', '@fx/e2e');
+        feed.stop();
 
-      expect(fake.listenerCount()).toBe(0);
-      expect(postedAtomsOf(ports)).toStrictEqual([]);
+        expect(fake.listenerCount()).toBe(0);
+      });
+
+      it('THEN the pending timer posts nothing', () => {
+        const { feed, fake, ports } = feedAt(ATOM_STATE);
+
+        feed.start();
+        fake.changed('/ws', '@fx/e2e');
+        feed.stop();
+        vi.advanceTimersByTime(RUNS_COALESCE_MS);
+
+        expect(postedAtomsOf(ports)).toStrictEqual([]);
+      });
     });
   });
 
