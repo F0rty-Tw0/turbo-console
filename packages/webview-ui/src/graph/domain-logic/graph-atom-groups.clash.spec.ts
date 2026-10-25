@@ -50,6 +50,13 @@ const parentIdsOf = (cy: Core, id: string): string[] => {
   return parents.map(idOf);
 };
 
+const positionsOf = (cy: Core): Positions => {
+  const entryOf = (node: NodeSingular): [string, Position] => [node.id(), node.position()];
+  const entries = cy.nodes().map(entryOf);
+
+  return Object.fromEntries(entries);
+};
+
 describe('FEATURE: Atomizer groups on a canvas where a task is named like the box of an umbrella', () => {
   let cy: Core;
   let tasks: TaskCanvas;
@@ -90,5 +97,13 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
     tasks.setPositions({ 'api#build': apiAt });
 
     expect(cy.getElementById('api#build').position()).toStrictEqual(apiAt);
+  });
+
+  it('WHEN the umbrella is double tapped THEN its refused group moves no node and leaves the canvas grabbable', () => {
+    const positionsBefore = positionsOf(cy);
+
+    groups.toggle(UMBRELLA);
+
+    expect([positionsOf(cy), cy.autoungrabify()]).toStrictEqual([positionsBefore, false]);
   });
 });

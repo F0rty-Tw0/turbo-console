@@ -19,7 +19,8 @@ const keyOfMaybe = (group: GraphAtomGroup | undefined): string | null => {
 
 /**
  * The umbrellas open on the canvas and the groups drawn for them. `apply` makes the canvas match: a group that closed,
- * left the layout or got another file list is collapsed, one newly open is drawn, and every position is set from the base.
+ * left the layout or got another file list is collapsed, one newly open is drawn (or closed again if the canvas refuses
+ * it), and every position is set from the base.
  */
 export class GraphAtomExpansion {
   private readonly view: AtomGroupsDeps['view'];
@@ -70,8 +71,7 @@ export class GraphAtomExpansion {
     const collapsed = this.collapseStale(groups);
     const isFresh = (spec: AtomBoxSpec): boolean => this.open.has(spec.umbrellaId) && !this.drawn.has(spec.umbrellaId);
     const fresh = specs.filter(isFresh);
-
-    for (const spec of fresh) this.draw(spec, groups, outcomes, placement);
+    const hasDrawn = this.drawFresh(fresh, groups, outcomes, placement);
 
     if (this.open.size > 0 || collapsed) {
       const { positions } = atomPositionsOf(placement.base, specs, this.open);
@@ -79,7 +79,7 @@ export class GraphAtomExpansion {
       this.view.atoms.setPositions(positions);
     }
 
-    if (fresh.length > 0) this.view.tasks.remark();
+    if (hasDrawn) this.view.tasks.remark();
 
     this.view.atoms.setGrabbable(this.open.size === 0);
   }
@@ -124,18 +124,42 @@ export class GraphAtomExpansion {
     return hasCollapsed;
   }
 
+  /** Draws each newly open group; one the canvas refuses is closed again, so it moves no node and keeps grabbing. Whether any was drawn. */
+  private drawFresh(
+    fresh: AtomBoxSpec[],
+    groups: ReadonlyMap<string, GraphAtomGroup>,
+    outcomes: ReadonlyMap<string, Outcomes>,
+    placement: AtomPlacement
+  ): boolean {
+    let hasDrawn = false;
+
+    for (const spec of fresh) {
+      const isDrawn = this.draw(spec, groups, outcomes, placement);
+
+      if (isDrawn) hasDrawn = true;
+      else this.open.delete(spec.umbrellaId);
+    }
+
+    return hasDrawn;
+  }
+
+  /** Expands the group and records it as drawn; whether the canvas drew it. */
   private draw(
     spec: AtomBoxSpec,
     groups: ReadonlyMap<string, GraphAtomGroup>,
     outcomes: ReadonlyMap<string, Outcomes>,
     placement: AtomPlacement
-  ): void {
+  ): boolean {
     const group = groups.get(spec.umbrellaId);
     const pkgBoxId = placement.pkgBoxes.get(spec.umbrellaId);
 
-    if (group === undefined || pkgBoxId === undefined) return;
+    if (group === undefined || pkgBoxId === undefined) return false;
 
-    this.view.atoms.expand(spec, pkgBoxId, group.files, outcomes.get(spec.umbrellaId) ?? {});
-    this.drawn.set(spec.umbrellaId, { key: keyOf(group), pkgBoxId });
+    const fileOutcomes = outcomes.get(spec.umbrellaId) ?? {};
+    const isDrawn = this.view.atoms.expand(spec, pkgBoxId, group.files, fileOutcomes);
+
+    if (isDrawn) this.drawn.set(spec.umbrellaId, { key: keyOf(group), pkgBoxId });
+
+    return isDrawn;
   }
 }
