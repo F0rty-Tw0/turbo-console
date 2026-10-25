@@ -36,3 +36,9 @@ export type LiveRun = {
   readonly pid: number;
   readonly terminal: vscode.Terminal;
 };
+
+/** A run just started: when, and the terminals that were already listed before it, which are not its terminal. */
+export type Launch = {
+  readonly launchedAt: number;
+  readonly stale: vscode.Terminal[];
+};

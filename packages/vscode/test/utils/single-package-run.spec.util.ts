@@ -28,7 +28,7 @@ export const runCase = async (api: TurboConsoleApi, root: string): Promise<void>
     assert.ok(Number.isFinite(match.durationMs));
     assert.ok(match.durationMs >= 0);
     assert.ok(isCacheKnown, `cache status ${String(match.cache)}`);
-    assertTerminalKept(ROOT_BUILD_ID);
+    await assertTerminalKept(ROOT_BUILD_ID);
     await whenQuiet(api, root);
   });
 };

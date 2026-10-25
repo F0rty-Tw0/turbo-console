@@ -68,7 +68,7 @@ const passCase = async (scene: RunScene): Promise<void> => {
     assert.equal(entry.state, 'passed');
     assert.match(description, PASSED_DESCRIPTION);
     assert.ok(fired.includes(node), 'the run redrew its cached task node');
-    assertTerminalKept(task.fullName);
+    await assertTerminalKept(task.fullName);
   });
   // The first run in a window waits for VS Code to create its terminal (0.3–2 s on CI, outside the extension), so the
   // budget gates a second run on the reused terminal and the first run's start is only logged.
@@ -128,9 +128,9 @@ export const runCases = async (api: TurboConsoleApi, root: string, manifest: Sho
   }
 
   await overlapCase(api, root, x, y);
-  await step('3: each task kept one terminal across its runs', () => {
-    assertOneTerminal(x.fullName);
-    assertOneTerminal(y.fullName);
+  await step('3: each task kept one terminal across its runs', async () => {
+    await assertOneTerminal(x.fullName);
+    await assertOneTerminal(y.fullName);
   });
   logRunStarts(api);
 };
