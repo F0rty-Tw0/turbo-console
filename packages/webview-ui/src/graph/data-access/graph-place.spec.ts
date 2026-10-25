@@ -71,5 +71,13 @@ describe('FEATURE: positionOf', () => {
     it('WHEN a placed name is read THEN its position returns', () => {
       expect(positionOf(PLACED, 'b')).toStrictEqual(B_AT);
     });
+
+    it('WHEN a placed name is read THEN the position is a copy the canvas can move in place', () => {
+      expect(positionOf(PLACED, 'b')).not.toBe(B_AT);
+    });
+
+    it('WHEN an unplaced name is read twice THEN each origin is its own object', () => {
+      expect(positionOf(PLACED, 'missing')).not.toBe(positionOf(PLACED, 'missing'));
+    });
   });
 });
