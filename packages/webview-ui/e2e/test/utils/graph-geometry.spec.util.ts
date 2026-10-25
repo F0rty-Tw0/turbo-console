@@ -1,3 +1,4 @@
+import { isInside } from './element-rect.spec.util.ts';
 import type { ProbeEdge, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import { EDGE_CLEARANCE_PX } from '../../common/graph.const.ts';
 import type { ElementRect, ViewportPoint } from '../../common/playwright.type.ts';
@@ -15,6 +16,13 @@ export const nodeBoxOf = (node: ProbeNode, zoom: number): ElementRect => {
   const box: ElementRect = { left: node.renderedX - width / 2, top: node.renderedY - height / 2, width, height };
 
   return box;
+};
+
+/** Per node: its box at `zoom` lies wholly inside the container. */
+export const insideFlagsOf = (container: ElementRect, nodes: ProbeNode[], zoom: number): boolean[] => {
+  const isNodeInside = (node: ProbeNode): boolean => isInside(nodeBoxOf(node, zoom), container);
+
+  return nodes.map(isNodeInside);
 };
 
 /** A plain node the probe would report at the rendered centre `(renderedX, renderedY)`. */

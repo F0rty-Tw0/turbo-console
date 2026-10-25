@@ -7,10 +7,10 @@ import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
 import type { CpuSteps, DragRecord } from '../common/graph.type.ts';
-import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
-import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+import type { ViewportPoint } from '../common/playwright.type.ts';
+import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { dragError, isWithinTolerance } from '../test/utils/graph-drag-error.spec.util.ts';
-import { emptySpotOf, nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
+import { emptySpotOf, insideFlagsOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 import { dragPerFrame } from '../test/utils/graph-scripted-pan.spec.util.ts';
 import { cpuStepsOf, recordPanCpu } from '../test/utils/graph-thread-time.spec.util.ts';
@@ -175,8 +175,8 @@ export class GraphCanvas {
     const container = await this.container.evaluate(readRect);
     const zoom = await this.probe.zoom();
     const nodes = await this.drawn();
-    const boxes = nodes.map((node): ElementRect => nodeBoxOf(node, zoom));
-    const outside = boxes.filter((box): boolean => !isInside(box, container));
+    const flags = insideFlagsOf(container, nodes, zoom);
+    const outside = flags.filter((isNodeInside): boolean => !isNodeInside);
 
     return outside.length;
   }
