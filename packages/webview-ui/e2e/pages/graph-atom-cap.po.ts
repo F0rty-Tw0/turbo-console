@@ -2,43 +2,39 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
-import { ATOM_BOX_PADDING_PX, ATOM_BOX_PREFIX } from '../../src/graph/common/graph-atom.const.ts';
+import { GraphTaskProbe } from './graph-task-probe.po.ts';
+import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
+import { drawnIdsOf } from '../test/utils/graph-atom-nodes.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 
-/** The file nodes and the box of an expanded Atomizer group that is capped, read through the probe. */
+const stayingOf = (positions: Positions, movable: string[]): Positions => {
+  const isStaying = ([id]: [string, Position]): boolean => !movable.includes(id);
+  const entries = Object.entries(positions).filter(isStaying);
+
+  return Object.fromEntries(entries);
+};
+
+/** The file nodes of an expanded Atomizer group that is capped, read through the probe. */
 export class GraphAtomCap {
   private readonly probe: GraphProbePage;
+  private readonly tasks: GraphTaskProbe;
 
   public constructor(page: Page) {
     this.probe = new GraphProbePage(page);
+    this.tasks = new GraphTaskProbe(page);
   }
 
   /** Of `ids`, exactly `expected` are drawn. */
   public async expectDrawnOf(ids: string[], expected: string[]): Promise<void> {
     const sorted = sortedNames(expected);
 
-    await expect.poll(async (): Promise<string[]> => this.drawnOf(ids)).toEqual(sorted);
+    await expect.poll(async (): Promise<string[]> => drawnIdsOf(this.probe, ids)).toEqual(sorted);
   }
 
-  /** The box `atom:<umbrellaId>` is drawn and at least `minWidth` wide, its padding counted. */
-  public async expectBoxWidthAtLeast(umbrellaId: string, minWidth: number): Promise<void> {
-    await expect.poll(async (): Promise<number> => this.boxWidthOf(umbrellaId)).toBeGreaterThanOrEqual(minWidth);
-  }
+  /** Every node but `movable` sits where `before` has it. */
+  public async expectNodesStayed(before: Positions, movable: string[]): Promise<void> {
+    const now = await this.tasks.taskPositions();
 
-  private async drawnOf(ids: string[]): Promise<string[]> {
-    const drawn = await this.probe.nodeIds();
-
-    return sortedNames(drawn.filter((id) => ids.includes(id)));
-  }
-
-  /** The drawn box's width with its padding; `0` while it is not drawn. */
-  private async boxWidthOf(umbrellaId: string): Promise<number> {
-    const boxId = `${ATOM_BOX_PREFIX}${umbrellaId}`;
-    const nodes = await this.probe.nodes();
-    const box = nodes.find((node) => node.id === boxId);
-
-    if (box === undefined) return 0;
-
-    return box.width + 2 * ATOM_BOX_PADDING_PX;
+    expect(stayingOf(now, movable)).toEqual(stayingOf(before, movable));
   }
 }

@@ -9,6 +9,7 @@ import type { BoxBounds } from '../../src/graph/common/atom-layout.type.ts';
 import { ATOM_BOX_PADDING_PX, ATOM_BOX_PREFIX } from '../../src/graph/common/graph-atom.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import type { NodeSize } from '../../src/graph/common/node-size.type.ts';
+import { drawnIdsOf } from '../test/utils/graph-atom-nodes.spec.util.ts';
 import { expectMinUnder } from '../test/utils/graph-min-under.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 
@@ -107,7 +108,7 @@ export class GraphAtoms {
     const none: string[] = [];
     const expected = isDrawn ? sorted : none;
 
-    await expect.poll(async (): Promise<string[]> => this.drawnOf(ids)).toEqual(expected);
+    await expect.poll(async (): Promise<string[]> => drawnIdsOf(this.probe, ids)).toEqual(expected);
   }
 
   /** The box `atom:<umbrellaId>` is drawn, every side within `BOX_TOLERANCE_PX` of `bounds`. */
@@ -162,12 +163,6 @@ export class GraphAtoms {
       expectShift(id, now.x - was.x, shiftPast(was.x, rightEdge, extra.width));
       expectShift(id, now.y - was.y, shiftPast(was.y, bottomEdge, extra.height));
     }
-  }
-
-  private async drawnOf(ids: string[]): Promise<string[]> {
-    const drawn = await this.probe.nodeIds();
-
-    return sortedNames(drawn.filter((id) => ids.includes(id)));
   }
 
   private async isBoxDrawn(umbrellaId: string): Promise<boolean> {
