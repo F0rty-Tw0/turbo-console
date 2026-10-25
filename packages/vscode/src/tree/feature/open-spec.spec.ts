@@ -20,14 +20,18 @@ const FOLDER: RootFolder = { root: ROOT, name: 'ws' };
 
 const ESCAPING_PATHS = ['../../etc/passwd', '/etc/passwd'];
 
-const GONE_FILE_ID = `${PKG}#e2e-ci--tests/gone.spec.ts`;
-
 const fileNodeOf = (specPath: string): TreeNode => {
   const key = `${PKG}#e2e-ci--${specPath}`;
   const node: TreeNode = { ...FILE_TREE_NODE_STUB, id: `task:${ROOT}\0${key}`, key };
 
   return node;
 };
+
+const PACKAGE_ROW: TreeNode = { ...UMBRELLA_TREE_NODE_STUB, kind: 'pkg', key: PKG };
+
+const GONE_PACKAGE_FILE_ROW: TreeNode = { ...FILE_TREE_NODE_STUB, packageName: 'gone' };
+
+const OTHER_ROOT_FILE_ROW: TreeNode = { ...FILE_TREE_NODE_STUB, root: '/other' };
 
 describe('FEATURE: Open Spec command', () => {
   let open: Mock<(file: string) => Promise<void>>;
@@ -90,11 +94,11 @@ describe('FEATURE: Open Spec command', () => {
     });
 
     it.each<[string, unknown]>([
-      ['a package row', { ...UMBRELLA_TREE_NODE_STUB, kind: 'pkg', key: PKG }],
+      ['a package row', PACKAGE_ROW],
       ['the umbrella row, which is no file', UMBRELLA_TREE_NODE_STUB],
       ['a file row the model no longer holds', fileNodeOf('tests/gone.spec.ts')],
-      ['a file row of a package the model does not hold', { ...FILE_TREE_NODE_STUB, packageName: 'gone' }],
-      ['a root the store does not hold', { ...FILE_TREE_NODE_STUB, root: '/other' }],
+      ['a file row of a package the model does not hold', GONE_PACKAGE_FILE_ROW],
+      ['a root the store does not hold', OTHER_ROOT_FILE_ROW],
       ['no argument (the command palette)', undefined]
     ])('WHEN it is invoked on %s THEN nothing opens and no error shows', async (_name, arg) => {
       await invoke(arg);
@@ -119,7 +123,7 @@ describe('FEATURE: Open Spec command', () => {
 
   describe('GIVEN a root with no loaded model', () => {
     it('WHEN it is invoked on a file row THEN nothing opens and no error shows', async () => {
-      await invoke({ ...FILE_TREE_NODE_STUB, id: `task:${ROOT}\0${GONE_FILE_ID}`, key: GONE_FILE_ID });
+      await invoke(fileNodeOf('tests/gone.spec.ts'));
 
       expect(open).not.toHaveBeenCalled();
       expect(error).not.toHaveBeenCalled();
