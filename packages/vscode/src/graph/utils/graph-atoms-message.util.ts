@@ -24,7 +24,7 @@ const outcomesOf = (group: GraphAtomGroup, view: AtomView): Record<string, Graph
 export const atomsMessageOf = (root: string, state: GraphState, view: AtomLookup): GraphAtomsMessage | null => {
   if (state.kind !== 'graph' || state.atomGroups.length === 0) return null;
 
-  const groups: Record<string, GraphAtomGroupState> = {};
+  const entries: [string, GraphAtomGroupState][] = [];
 
   for (const group of state.atomGroups) {
     const umbrella = state.tasks.find((task) => task.id === group.umbrellaId);
@@ -32,14 +32,14 @@ export const atomsMessageOf = (root: string, state: GraphState, view: AtomLookup
     if (umbrella === undefined) continue;
 
     const packageView = view(root, umbrella.packageName);
+    const groupState: GraphAtomGroupState = { counts: countsOf(group, packageView), files: outcomesOf(group, packageView) };
 
-    groups[group.umbrellaId] = { counts: countsOf(group, packageView), files: outcomesOf(group, packageView) };
+    entries.push([group.umbrellaId, groupState]);
   }
 
-  const isEmpty = Object.keys(groups).length === 0;
+  if (entries.length === 0) return null;
 
-  if (isEmpty) return null;
-
+  const groups = Object.fromEntries(entries);
   const message: GraphAtomsMessage = { type: 'atoms', groups };
 
   return message;

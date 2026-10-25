@@ -1,4 +1,4 @@
-import type { GraphAtomGroup, GraphReady, GraphState } from '@turbo-console/webview-ui';
+import type { GraphAtomGroup, GraphReady, GraphState, GraphTask } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { atomsMessageOf } from './graph-atoms-message.util.ts';
@@ -35,6 +35,15 @@ const UNLOADED_GROUP = { counts: '2 files', files: UNLOADED_FILES };
 const UNLOADED_GROUPS = { [UMBRELLA_ID]: UNLOADED_GROUP };
 const UNLOADED_MESSAGE = { type: 'atoms', groups: UNLOADED_GROUPS };
 const LOADED_FILES = { [FILE_A]: 'passed', [FILE_B]: 'none' };
+const PROTO_ID = '__proto__';
+const PROTO_UMBRELLA: GraphTask = {
+  id: PROTO_ID,
+  packageName: '@fx/e2e',
+  name: 'e2e-ci',
+  command: null,
+  isRunnable: false,
+  dependencies: []
+};
 
 describe('FEATURE: atoms message of a graph state', () => {
   describe('GIVEN a state without atom groups', () => {
@@ -94,6 +103,19 @@ describe('FEATURE: atoms message of a graph state', () => {
       const unlisted = { ...ATOM_STATE, tasks: GRAPH_STATE_STUB.tasks };
 
       expect(atomsMessageOf(ROOT, unlisted, GRAPH_ATOM_LOOKUP_STUB)).toBeNull();
+    });
+  });
+
+  describe('GIVEN a listed umbrella whose id is __proto__', () => {
+    it('WHEN the message is built THEN it holds that group as an own key', () => {
+      const protoGroup: GraphAtomGroup = { umbrellaId: PROTO_ID, files: [] };
+      const state: GraphReady = { ...ATOM_STATE, tasks: [PROTO_UMBRELLA], atomGroups: [protoGroup] };
+      const group = { counts: '0 files', files: {} };
+      const groups = { [PROTO_ID]: group };
+
+      const message = atomsMessageOf(ROOT, state, GRAPH_ATOM_LOOKUP_STUB);
+
+      expect(message).toStrictEqual({ type: 'atoms', groups });
     });
   });
 });
