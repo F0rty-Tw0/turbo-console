@@ -2,7 +2,8 @@ import { ChildProcess } from 'node:child_process';
 import { subscribe, unsubscribe } from 'node:diagnostics_channel';
 import { basename } from 'node:path';
 
-import type { SpawnCounter } from '../common/launch.type.ts';
+import { coveredMs } from './timing.spec.util.ts';
+import type { SpawnCounter, TimeRange } from '../common/launch.type.ts';
 
 const CHANNEL = 'child_process';
 
@@ -26,9 +27,11 @@ const isSpawnMessage = (message: unknown): message is SpawnMessage => {
  * spawns of `turboPath` count (VS Code's own git spawns arrive too), and never a `--version` call (the override's
  * once-per-process resolution). Node publishes before it sets `spawnfile` and `spawnargs` (observed on Linux), so each
  * message is read on the next tick. With `turboPath` `null` (the setting is unset), any binary named `turbo` counts.
+ * Each turbo process, `--version` calls included, is also timed from its spawn until it closes, for `turboMs`.
  */
 export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
   let count = 0;
+  const runs: TimeRange[] = [];
 
   const isTurboFile = (file: string): boolean => {
     if (turboPath === null) return TURBO_FILE_NAMES.has(basename(file));
@@ -36,23 +39,35 @@ export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
     return file === turboPath;
   };
 
-  const read = (child: ChildProcess): void => {
+  const read = (child: ChildProcess, start: number): void => {
     const isTurbo = isTurboFile(child.spawnfile);
     const isVersion = child.spawnargs.includes(VERSION_ARG);
+    const onClose = (): void => {
+      const end = performance.now();
 
-    if (isTurbo && !isVersion) count += 1;
+      runs.push({ start, end });
+    };
+
+    if (!isTurbo) return;
+
+    child.once('close', onClose);
+
+    if (!isVersion) count += 1;
   };
 
   const onMessage = (message: unknown): void => {
     if (!isSpawnMessage(message)) return;
 
-    process.nextTick(read, message.process);
+    const start = performance.now();
+
+    process.nextTick(read, message.process, start);
   };
 
   subscribe(CHANNEL, onMessage);
 
   const counter: SpawnCounter = {
     count: () => count,
+    turboMs: (window) => coveredMs(runs, window),
     reset: () => {
       count = 0;
     },

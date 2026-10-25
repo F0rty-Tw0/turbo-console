@@ -7,7 +7,7 @@ import type { LoadRecord } from '../../src/roots/common/coordinator.type.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { Span } from '../../src/shared/common/span.type.ts';
 import { EXTENSION_ID } from '../common/launch.const.ts';
-import type { SuiteEnv } from '../common/launch.type.ts';
+import type { SuiteEnv, TimeRange } from '../common/launch.type.ts';
 
 const POLL_MS = 10;
 
@@ -55,10 +55,19 @@ export const loadsOf = (api: TurboConsoleApi, root: string): LoadRecord[] => {
   return records;
 };
 
-export const spanMs = (name: string, span: Span | undefined): number => {
+/** `span` as a closed range; throws with `name` when it was never opened or never closed. */
+export const rangeOf = (name: string, span: Span | undefined): TimeRange => {
   if (span?.end === undefined || span.end === null) throw new Error(`${name}: span not closed`);
 
-  return span.end - span.start;
+  const range: TimeRange = { start: span.start, end: span.end };
+
+  return range;
+};
+
+export const spanMs = (name: string, span: Span | undefined): number => {
+  const range = rangeOf(name, span);
+
+  return range.end - range.start;
 };
 
 /** Polls `isDone` until it holds; throws with `name` after `limitMs` (30 s by default). */
