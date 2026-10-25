@@ -1,4 +1,4 @@
-import type { GraphHostMessage, GraphState, GraphTask, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphState, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
@@ -68,11 +68,11 @@ export type ExplainContext = {
   readonly canPost: () => boolean;
 };
 
-/** `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now and `tasks` its task list alone. */
+/** `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now and `runIds` the ids a run can report, without the rest of the state. */
 export type TaskFeedGate = {
   readonly canPost: () => boolean;
   readonly state: () => GraphState;
-  readonly tasks: () => GraphTask[];
+  readonly runIds: () => string[];
 };
 
 /** The tree command a graph run request maps to, with the tree-row argument it takes. */

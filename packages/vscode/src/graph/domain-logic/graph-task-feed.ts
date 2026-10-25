@@ -1,12 +1,10 @@
-import type { GraphRunsMessage, GraphState, GraphTask } from '@turbo-console/webview-ui';
+import type { GraphRunsMessage, GraphState } from '@turbo-console/webview-ui';
 
 import type { RunEntry, Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
-import { runsMapOf } from '../utils/graph-tasks.util.ts';
-
-const NO_TASKS: GraphTask[] = [];
+import { runIdsOf, runsMapOf } from '../utils/graph-tasks.util.ts';
 
 type TaskFeedDeps = {
   readonly root: string;
@@ -14,8 +12,6 @@ type TaskFeedDeps = {
   readonly ports: Pick<GraphPorts, 'post' | 'log'>;
   readonly gate: TaskFeedGate;
 };
-
-const tasksOf = (state: GraphState): GraphTask[] => (state.kind === 'graph' ? state.tasks : NO_TASKS);
 
 /**
  * What a graph panel is told about tasks besides its state: the run states of its root, coalesced so a burst of task
@@ -49,7 +45,7 @@ export class GraphTaskFeed {
 
   public flush(state: GraphState): void {
     this.cancelTimer();
-    this.postRuns(tasksOf(state));
+    this.postRuns(runIdsOf(state));
     this.postHeld(state);
   }
 
@@ -111,7 +107,7 @@ export class GraphTaskFeed {
 
     if (!canPost) return;
 
-    this.postRuns(this.deps.gate.tasks());
+    this.postRuns(this.deps.gate.runIds());
   }
 
   private cancelTimer(): void {
@@ -120,9 +116,9 @@ export class GraphTaskFeed {
     this.timer = null;
   }
 
-  private postRuns(tasks: GraphTask[]): void {
+  private postRuns(ids: string[]): void {
     const { root, runs, ports } = this.deps;
-    const map = runsMapOf(root, tasks, runs.get);
+    const map = runsMapOf(root, ids, runs.get);
     const message: GraphRunsMessage = { type: 'runs', runs: map };
 
     ports.post(message);

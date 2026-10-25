@@ -31,7 +31,8 @@ export const PROTO_DETAILS_STUB: GraphReady = {
   edges: PROTO_EDGES,
   positions: PROTO_POSITIONS,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 export const LONG_NAME_STUB: string = 'a-very-long-package-name-that-keeps-going-and-going-and-going';
@@ -68,7 +69,8 @@ export const LONG_PATH_STUB: GraphReady = {
   edges: LONG_EDGES,
   positions: LONG_POSITIONS,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 export const UNBROKEN_NAME_STUB: string = 'n'.repeat(70);
@@ -95,5 +97,6 @@ export const UNBROKEN_PATH_STUB: GraphReady = {
   edges: UNBROKEN_EDGES,
   positions: UNBROKEN_POSITIONS,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };

@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphSession } from './graph-session.ts';
+import type { LoadedModel } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { LOADED_MODEL_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
+import { ATOM_FILE_A_TASK_STUB, GRAPH_ATOM_MODEL_STUB } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
 import { A_BUILD_DEFINITION_STUB, RUN_A_BUILD_STUB } from '../test/stubs/graph-run.stub.ts';
 import { postedRunsOf, postedTypesOf } from '../test/utils/graph-session-runs.spec.util.ts';
@@ -17,11 +20,11 @@ type ShownSession = {
   readonly ports: GraphPorts;
 };
 
-const loadedStore = (): RootStore => {
+const loadedStore = (loaded: LoadedModel = GRAPH_LOADED_STUB): RootStore => {
   const store = new RootStore();
 
   store.set([ROOT_FOLDER_STUB], () => coordinatorMock());
-  store.apply('/ws', GRAPH_LOADED_STUB);
+  store.apply('/ws', loaded);
 
   return store;
 };
@@ -96,6 +99,18 @@ describe('FEATURE: graph session runs feed', () => {
       vi.advanceTimersByTime(100);
 
       expect(postedRunsOf(ports)).toStrictEqual([{}, { 'a#build': 'passed' }]);
+    });
+
+    it('WHEN a file of an atom group runs THEN the posted map reports the file id', async () => {
+      const atomStore = loadedStore({ ...LOADED_MODEL_STUB, model: GRAPH_ATOM_MODEL_STUB });
+      const { session, runs, ports } = shownSession(atomStore);
+      const fileRun = { ...RUN_A_BUILD_STUB, packageName: '@fx/e2e', task: ATOM_FILE_A_TASK_STUB };
+
+      await session.receive({ type: 'ready' });
+      runs.tryStart(fileRun, 1000);
+      vi.advanceTimersByTime(50);
+
+      expect(postedRunsOf(ports)).toStrictEqual([{}, { [ATOM_FILE_A_TASK_STUB.id]: 'running' }]);
     });
 
     it('WHEN a second change lands 60 ms after the first post THEN a second post follows', async () => {

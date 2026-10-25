@@ -15,6 +15,8 @@ import type {
   DetailsState,
   DryRunPhase,
   EdgeExplainResult,
+  GraphAtomFile,
+  GraphAtomGroup,
   GraphEdge,
   GraphEdgeExplainedMessage,
   GraphHostMessage,
@@ -62,6 +64,8 @@ type ExpectedTask = {
   readonly isRunnable: boolean;
   readonly dependencies: string[];
 };
+type ExpectedAtomFile = { readonly id: string; readonly specPath: string; readonly isLive: boolean };
+type ExpectedAtomGroup = { readonly umbrellaId: string; readonly files: GraphAtomFile[] };
 type ExpectedPosition = { readonly x: number; readonly y: number };
 type ExpectedTaskView = {
   readonly chosen: string[];
@@ -171,6 +175,9 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphTask>().toEqualTypeOf<ExpectedTask>();
       expectTypeOf<GraphRunState>().toEqualTypeOf<'running' | 'passed' | 'failed' | 'stopped' | 'failed-to-start'>();
       expectTypeOf<GraphReady['tasks']>().toEqualTypeOf<GraphTask[]>();
+      expectTypeOf<GraphReady['atomGroups']>().toEqualTypeOf<GraphAtomGroup[]>();
+      expectTypeOf<GraphAtomGroup>().toEqualTypeOf<ExpectedAtomGroup>();
+      expectTypeOf<GraphAtomFile>().toEqualTypeOf<ExpectedAtomFile>();
       expectTypeOf<GraphHostMessage>().toEqualTypeOf<
         ExpectedStateMessage | ExpectedExplainedMessage | GraphRunsMessage | GraphShowTasksMessage
       >();

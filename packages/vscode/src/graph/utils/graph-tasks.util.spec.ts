@@ -2,10 +2,18 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import type { GraphTask } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { graphTasksOf, runsMapOf } from './graph-tasks.util.ts';
+import { graphListingOf, graphTasksOf, runsMapOf } from './graph-tasks.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import {
+  ATOM_AGGREGATE_TASK_STUB,
+  ATOM_E2E_PACKAGE_STUB,
+  ATOM_FILE_A_TASK_STUB,
+  ATOM_FILE_B_TASK_STUB,
+  ATOM_UMBRELLA_TASK_STUB,
+  GRAPH_ATOM_MODEL_STUB
+} from '../test/stubs/graph-atom-model.stub.ts';
 
 const P_BUILD: TaskNode = { ...TASK_NODE_STUB, id: 'p#build', dependencies: ['p#dev', 'p#f'] };
 const P_DEV: TaskNode = { ...TASK_NODE_STUB, id: 'p#dev', name: 'dev', command: 'vite', isTurboTask: false };
@@ -48,7 +56,27 @@ const A_BUILD: GraphTask = {
   isRunnable: true,
   dependencies: []
 };
-const LISTED: GraphTask[] = [A_BUILD];
+const LISTED: string[] = [A_BUILD.id];
+const UMBRELLA_ID = ATOM_UMBRELLA_TASK_STUB.id;
+const FILE_A = ATOM_FILE_A_TASK_STUB.id;
+const FILE_B = ATOM_FILE_B_TASK_STUB.id;
+const SMOKE_ATOM: NonNullable<TaskNode['atom']> = { group: 'smoke', isLive: false };
+const SMOKE_UMBRELLA: TaskNode = {
+  ...TASK_NODE_STUB,
+  id: '@fx/a#smoke',
+  name: 'smoke',
+  kind: 'atom-umbrella',
+  atom: SMOKE_ATOM
+};
+const SMOKE_FILE: TaskNode = {
+  ...TASK_NODE_STUB,
+  id: '@fx/a#smoke--x.spec.ts',
+  name: 'smoke--x.spec.ts',
+  kind: 'atom-file',
+  atom: SMOKE_ATOM
+};
+
+const taskNamed = (tasks: GraphTask[], id: string): GraphTask | undefined => tasks.find((task) => task.id === id);
 
 describe('FEATURE: graph task list', () => {
   describe('GIVEN a package with a turbo task, two scripts and an atom-file task', () => {
@@ -105,7 +133,71 @@ describe('FEATURE: graph task list', () => {
   });
 });
 
+describe('FEATURE: graph listing of atom groups', () => {
+  describe('GIVEN a model with one Atomizer group', () => {
+    const listing = graphListingOf(GRAPH_ATOM_MODEL_STUB);
+
+    it('WHEN listed THEN the aggregate and files are absent and the umbrella is', () => {
+      expect(idsOf(listing.tasks)).toStrictEqual(['//#all-e2e', '@fx/app#build', UMBRELLA_ID]);
+    });
+
+    it('WHEN listed THEN the umbrella depends on what its files depend on, never on itself', () => {
+      expect(taskNamed(listing.tasks, UMBRELLA_ID)?.dependencies).toStrictEqual(['@fx/app#build']);
+    });
+
+    it('WHEN a task depends on the hidden aggregate THEN it depends on the umbrella', () => {
+      expect(taskNamed(listing.tasks, '//#all-e2e')?.dependencies).toStrictEqual([UMBRELLA_ID]);
+    });
+
+    it('WHEN listed THEN atomGroups holds the group, files in specPath order', () => {
+      const files = [
+        { id: FILE_A, specPath: 'tests/a.spec.ts', isLive: false },
+        { id: FILE_B, specPath: 'tests/b fails.spec.ts', isLive: true }
+      ];
+
+      expect(listing.atomGroups).toStrictEqual([{ umbrellaId: UMBRELLA_ID, files }]);
+    });
+
+    it('WHEN graphTasksOf is asked THEN it is the listing tasks', () => {
+      expect(graphTasksOf(GRAPH_ATOM_MODEL_STUB)).toStrictEqual(listing.tasks);
+    });
+  });
+
+  describe('GIVEN an umbrella with no file tasks', () => {
+    const pkg = packageOf('@fx/e2e', [ATOM_UMBRELLA_TASK_STUB, ATOM_AGGREGATE_TASK_STUB]);
+    const listing = graphListingOf(modelOf(pkg));
+
+    it('WHEN listed THEN its aggregate stays listed', () => {
+      expect(idsOf(listing.tasks)).toStrictEqual([UMBRELLA_ID, ATOM_AGGREGATE_TASK_STUB.id]);
+    });
+
+    it('WHEN listed THEN atomGroups is empty', () => {
+      expect(listing.atomGroups).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN two groups in two packages', () => {
+    it('WHEN listed THEN atomGroups is sorted by umbrella id', () => {
+      const smoke = packageOf('@fx/a', [SMOKE_UMBRELLA, SMOKE_FILE]);
+
+      const listing = graphListingOf(modelOf(ATOM_E2E_PACKAGE_STUB, smoke));
+
+      expect(listing.atomGroups.map((group) => group.umbrellaId)).toStrictEqual([SMOKE_UMBRELLA.id, UMBRELLA_ID]);
+    });
+  });
+});
+
 describe('FEATURE: graph runs map', () => {
+  describe('GIVEN a run of a file of a listed group', () => {
+    it('WHEN the map is built over the run ids THEN it holds that state by file id', () => {
+      const get = lookupOf(runOf(ROOT, FILE_A, 'passed'));
+
+      const runs = runsMapOf(ROOT, [...LISTED, FILE_A], get);
+
+      expect(runs).toStrictEqual({ [FILE_A]: 'passed' });
+    });
+  });
+
   describe('GIVEN a run of a listed task under the root', () => {
     it('WHEN the map is built THEN it holds that state by id', () => {
       const get = lookupOf(runOf(ROOT, 'a#build', 'running'));

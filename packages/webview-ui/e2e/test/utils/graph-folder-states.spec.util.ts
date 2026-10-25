@@ -46,7 +46,8 @@ export const ghostFolderState = (): GraphReady => {
       ['a', 0, 0],
       ['m', 0, 200],
       ['b', 0, 400]
-    ])
+    ]),
+    atomGroups: []
   };
 
   return state;
@@ -76,7 +77,8 @@ export const awkwardNamesState = (): GraphReady => {
       ['x', 300, 0],
       ['a', 0, 300],
       ['constructor', 300, 300]
-    ])
+    ]),
+    atomGroups: []
   };
 
   return state;
@@ -107,7 +109,8 @@ export const wideRowFolderState = (): GraphReady => {
       ['a', 0, 0],
       ['m', 400, 0],
       ['b', 800, 0]
-    ])
+    ]),
+    atomGroups: []
   };
 
   return state;
@@ -125,7 +128,8 @@ export const longTitleState = (): GraphReady => {
     packages: [packageOf('pkg', `${LONG_FOLDER}/pkg`)],
     edges: [],
     positions: null,
-    folderPositions: positionsOf([['pkg', 0, 0]])
+    folderPositions: positionsOf([['pkg', 0, 0]]),
+    atomGroups: []
   };
 
   return state;

@@ -45,7 +45,8 @@ export const overCapTasksState = (): GraphReady => {
     edges: LEAF_NEEDS_ROOT,
     positions: null,
     folderPositions: null,
-    tasks: [ROOT, ...dependents]
+    tasks: [ROOT, ...dependents],
+    atomGroups: []
   };
 
   return state;

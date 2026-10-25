@@ -27,8 +27,8 @@ const feedAt = (state: GraphState): FeedFixture => {
   const ports = graphPortsMock();
   const canPost = vi.fn<TaskFeedGate['canPost']>().mockReturnValue(true);
   const stateOf = vi.fn<TaskFeedGate['state']>().mockReturnValue(state);
-  const tasks = vi.fn<TaskFeedGate['tasks']>().mockReturnValue(GRAPH_TASKS_STUB);
-  const gate: TaskFeedGate = { canPost, state: stateOf, tasks };
+  const runIds = vi.fn<TaskFeedGate['runIds']>().mockReturnValue(GRAPH_TASKS_STUB.map((task) => task.id));
+  const gate: TaskFeedGate = { canPost, state: stateOf, runIds };
   const feed = new GraphTaskFeed({ root: '/ws', runs, ports, gate });
   const fixture: FeedFixture = { feed, runs, ports, gate };
 
@@ -62,14 +62,14 @@ describe('FEATURE: graph task feed', () => {
       expect(postedShowTasksOf(ports)).toStrictEqual([SHOW_A_BUILD]);
     });
 
-    it('WHEN a run starts THEN the timer reads the tasks from the gate', () => {
+    it('WHEN a run starts THEN the timer reads the run ids from the gate', () => {
       const { feed, runs, gate } = feedAt(GRAPH_STATE_STUB);
 
       feed.start();
       runs.tryStart(RUN_A_BUILD_STUB, 1000);
       vi.advanceTimersByTime(50);
 
-      expect(gate.tasks).toHaveBeenCalledOnce();
+      expect(gate.runIds).toHaveBeenCalledOnce();
     });
 
     it('WHEN a run starts THEN the timer does not build the state', () => {

@@ -76,13 +76,38 @@ const TASK = {
 
 const TASKS = [TASK, { id: 'core#build', packageName: 'core', name: 'build', command: null, isRunnable: false, dependencies: [] }];
 
-const GRAPH = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, folderPositions: null, tasks: [] };
+const GRAPH = {
+  kind: 'graph',
+  hash: 'h',
+  packages: PACKAGES,
+  edges: EDGES,
+  positions: null,
+  folderPositions: null,
+  tasks: [],
+  atomGroups: []
+};
 
 const CACHED_GRAPH = { ...GRAPH, positions: POSITIONS };
 
-const WITHOUT_FOLDER_POSITIONS = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, tasks: [] };
+const WITHOUT_FOLDER_POSITIONS = {
+  kind: 'graph',
+  hash: 'h',
+  packages: PACKAGES,
+  edges: EDGES,
+  positions: null,
+  tasks: [],
+  atomGroups: []
+};
 
-const WITHOUT_TASKS = { kind: 'graph', hash: 'h', packages: PACKAGES, edges: EDGES, positions: null, folderPositions: null };
+const WITHOUT_TASKS = {
+  kind: 'graph',
+  hash: 'h',
+  packages: PACKAGES,
+  edges: EDGES,
+  positions: null,
+  folderPositions: null,
+  atomGroups: []
+};
 
 const LOADING = { kind: 'loading' };
 

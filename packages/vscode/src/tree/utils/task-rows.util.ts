@@ -29,7 +29,7 @@ const fileOf = (groups: AtomGroup[], task: TaskNode): AtomFile | undefined => {
 };
 
 /** The aggregate of a group is replaced by its umbrella; one whose group the package does not hold stays a plain task. */
-const isHiddenAggregate = (task: TaskNode, groups: AtomGroup[]): boolean => {
+export const isHiddenAggregate = (task: TaskNode, groups: AtomGroup[]): boolean => {
   const { atom } = task;
 
   if (task.kind !== 'atom-aggregate' || atom === null) return false;

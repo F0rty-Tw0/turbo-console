@@ -36,6 +36,8 @@ export type {
 } from './bridge/common/graph-message.type.ts';
 
 export type {
+  GraphAtomFile,
+  GraphAtomGroup,
   GraphEdge,
   GraphPackage,
   GraphReady,

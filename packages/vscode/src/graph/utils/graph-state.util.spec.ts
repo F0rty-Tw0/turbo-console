@@ -3,7 +3,8 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import type { GraphEdge, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { graphHashOf, graphStateOf, graphStateOfRoot, graphTasksOfRoot } from './graph-state.util.ts';
+import { graphHashOf, graphStateOf, graphStateOfRoot, runIdsOfRoot } from './graph-state.util.ts';
+import { runIdsOf } from './graph-tasks.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
@@ -266,7 +267,7 @@ describe('FEATURE: graph state of a root', () => {
   });
 });
 
-describe('FEATURE: graph tasks of a root', () => {
+describe('FEATURE: run ids of a root', () => {
   it.each([
     ['a graph', stateOf({ model: GRAPH_MODEL_STUB })],
     ['a single-package model', stateOf({ model: SINGLE_PACKAGE_MODEL })],
@@ -274,13 +275,13 @@ describe('FEATURE: graph tasks of a root', () => {
     ['a load failure with no model', stateOf({ model: null, error: LOAD_FAILURE })],
     ['no model and no error', stateOf({ model: null })],
     ['no state', undefined]
-  ])('GIVEN %s WHEN the tasks are read THEN they are those of the state', (_label, root) => {
+  ])('GIVEN %s WHEN the run ids are read THEN they are those of the state', (_label, root) => {
     const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB);
 
-    expect(graphTasksOfRoot(root)).toStrictEqual(tasksOf(state));
+    expect(runIdsOfRoot(root)).toStrictEqual(runIdsOf(state));
   });
 
-  it('GIVEN a graph WHEN the tasks are read THEN they are listed', () => {
-    expect(graphTasksOfRoot(stateOf({ model: GRAPH_MODEL_STUB }))).not.toStrictEqual([]);
+  it('GIVEN a graph WHEN the run ids are read THEN they are listed', () => {
+    expect(runIdsOfRoot(stateOf({ model: GRAPH_MODEL_STUB }))).not.toStrictEqual([]);
   });
 });

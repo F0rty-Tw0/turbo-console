@@ -8,9 +8,11 @@ import type { Coordinator, Roots } from '../../roots/common/coordinator.type.ts'
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { LOADED_MODEL_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphOpener, OpenGraphPanel, RootPickPorts } from '../common/graph-panel.type.ts';
+import { GRAPH_ATOM_MODEL_STUB } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
@@ -121,6 +123,16 @@ describe('FEATURE: the Show Task Graph command', () => {
 
       expect(fixture.pickMany).toHaveBeenCalledExactlyOnceWith(TASK_ITEMS, PLACEHOLDER);
       expect(fixture.coordinators.get('/ws')?.ensureLoaded).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the model holds an atom group THEN the picker has the umbrella and no aggregate or file item', async () => {
+      fixture.store.apply('/ws', { ...LOADED_MODEL_STUB, model: GRAPH_ATOM_MODEL_STUB });
+
+      await runWith(undefined, fixture);
+
+      const items = fixture.pickMany.mock.calls[0]?.[0] ?? [];
+
+      expect(items.map((item) => item.value)).toStrictEqual(['//#all-e2e', '@fx/app#build', '@fx/e2e#e2e-ci']);
     });
 
     it('WHEN the user cancels THEN nothing opens', async () => {

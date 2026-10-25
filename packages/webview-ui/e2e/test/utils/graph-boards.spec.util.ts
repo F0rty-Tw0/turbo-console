@@ -57,7 +57,8 @@ export const boardsState = (): GraphReady => {
     edges: BOARDS_EDGES,
     positions: null,
     folderPositions: null,
-    tasks: []
+    tasks: [],
+    atomGroups: []
   };
 
   return state;
@@ -105,7 +106,8 @@ export const rootFoldersState = (): GraphReady => {
       ['r', 0, 0],
       ['p', 200, 0],
       ['b', 100, 300]
-    ])
+    ]),
+    atomGroups: []
   };
 
   return state;
@@ -128,7 +130,8 @@ export const protoFolderState = (): GraphReady => {
       ['a', 0, 0],
       ['b', 0, 300],
       ['constructor', 200, 300]
-    ])
+    ]),
+    atomGroups: []
   };
 
   return state;
@@ -153,7 +156,8 @@ export const threeFoldersState = (): GraphReady => {
       ['c', 200, 0],
       ['b', 100, 300],
       ['d', 100, 600]
-    ])
+    ]),
+    atomGroups: []
   };
 
   return state;
