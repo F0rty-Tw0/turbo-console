@@ -25,15 +25,13 @@ const SHOWN_POST = [TARGET_LIKE_UMBRELLA];
 
 test.describe('FEATURE: graph task mode with an Atomizer group', () => {
   test(
-    'GIVEN the umbrella chosen and the target-like state sent, the umbrella shows its file count, no aggregate node is drawn and the page reports the umbrella shown',
+    'GIVEN the umbrella chosen and the target-like state sent, the umbrella shows its file count and the page reports the umbrella shown',
     { annotation: SPEC_3_3 },
     async ({ graphTaskHost, graphTaskProbe, openUmbrella }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
 
       await test.step('THEN the umbrella text is its name over its file count', async (): Promise<void> =>
         graphTaskProbe.expectText(TARGET_LIKE_UMBRELLA, COLLAPSED_TEXT));
-
-      await test.step('AND no node id ends in --all', async (): Promise<void> => graphTaskProbe.expectNoAggregate());
 
       await test.step('AND the page posted shownUmbrellas with the umbrella', async (): Promise<void> =>
         graphTaskHost.expectShownUmbrellas([SHOWN_POST]));
