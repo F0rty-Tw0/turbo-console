@@ -74,15 +74,20 @@ export class GraphAtoms {
     await this.canvas.doubleTapNode(id);
   }
 
-  /** Expands the group `times` and collapses it `times`, alternating, keeping the probe's `atomToggleMs` after every toggle. */
+  /**
+   * Expands the group `times` and collapses it `times`, alternating, keeping the probe's `atomToggleMs` after every toggle.
+   * Each toggle must have drawn or removed the box first, so a dropped tap fails instead of keeping the previous timing.
+   */
   public async collectToggleMs(umbrellaId: string, times: number): Promise<void> {
     this.expandSamples = [];
     this.collapseSamples = [];
 
     for (let count = 0; count < times; count += 1) {
       await this.toggle(umbrellaId);
+      await this.expectBoxDrawn(umbrellaId, true);
       this.expandSamples.push(await this.timings.measuredAtomToggleMs());
       await this.toggle(umbrellaId);
+      await this.expectBoxDrawn(umbrellaId, false);
       this.collapseSamples.push(await this.timings.measuredAtomToggleMs());
     }
   }
