@@ -142,7 +142,7 @@ describe('FEATURE: task item display of a turbo task', () => {
   });
 
   describe('GIVEN a task the user stopped', () => {
-    it('WHEN it has an end time THEN it shows the dimmed stop icon and stopped with the time from click to end', () => {
+    it('WHEN it has an end time THEN it shows the stop icon and stopped with the time from click to end', () => {
       const entry = entryIn({
         state: 'stopped',
         stopRequested: true,
