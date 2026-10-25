@@ -173,6 +173,45 @@ describe('FEATURE: graph listing of atom groups', () => {
       expect(listing.atomGroups.map((group) => group.umbrellaId)).toStrictEqual([SMOKE_UMBRELLA.id, UMBRELLA_ID]);
     });
   });
+
+  describe('GIVEN two groups in one package, each with its own aggregate', () => {
+    const [umbrella, file] = smokeGroupTasksOf(ATOM_E2E_PACKAGE_STUB.name);
+    const smokeAggregate: TaskNode = {
+      ...TASK_NODE_STUB,
+      id: `${ATOM_E2E_PACKAGE_STUB.name}#smoke--all`,
+      name: 'smoke--all',
+      kind: 'atom-aggregate',
+      atom: umbrella.atom,
+      dependencies: [file.id]
+    };
+    const smokeUmbrella: TaskNode = { ...umbrella, dependencies: [smokeAggregate.id] };
+    const tasks = [...ATOM_E2E_PACKAGE_STUB.tasks, smokeUmbrella, file, smokeAggregate];
+    const listing = graphListingOf(modelOf(packageOf(ATOM_E2E_PACKAGE_STUB.name, tasks)));
+
+    it('WHEN listed THEN both aggregates are absent and both umbrellas are', () => {
+      expect(idsOf(listing.tasks)).toStrictEqual([UMBRELLA_ID, smokeUmbrella.id]);
+    });
+
+    it('WHEN listed THEN the second umbrella folds only its own aggregate', () => {
+      expect(taskNamed(listing.tasks, smokeUmbrella.id)?.dependencies).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN a file that depends on an outside task which depends on another file of the group', () => {
+    const fileG: TaskNode = { ...ATOM_FILE_A_TASK_STUB, dependencies: [] };
+    const outside: TaskNode = { ...TASK_NODE_STUB, id: '@fx/app#serve', name: 'serve', dependencies: [fileG.id] };
+    const fileF: TaskNode = { ...ATOM_FILE_B_TASK_STUB, dependencies: [outside.id] };
+    const e2e = packageOf(ATOM_E2E_PACKAGE_STUB.name, [ATOM_UMBRELLA_TASK_STUB, ATOM_AGGREGATE_TASK_STUB, fileG, fileF]);
+    const listing = graphListingOf(modelOf(e2e, packageOf('@fx/app', [outside])));
+
+    it('WHEN listed THEN the umbrella depends on the outside task only', () => {
+      expect(taskNamed(listing.tasks, UMBRELLA_ID)?.dependencies).toStrictEqual([outside.id]);
+    });
+
+    it('WHEN listed THEN the outside task depends on the umbrella only', () => {
+      expect(taskNamed(listing.tasks, outside.id)?.dependencies).toStrictEqual([UMBRELLA_ID]);
+    });
+  });
 });
 
 describe('FEATURE: graph runs map', () => {
