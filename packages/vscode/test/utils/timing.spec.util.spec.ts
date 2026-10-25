@@ -75,6 +75,20 @@ describe('FEATURE: coveredMs', () => {
     });
   });
 
+  describe('GIVEN three ranges', () => {
+    it('WHEN the second ends inside the first THEN the third counts only past the first', () => {
+      const ranges: TimeRange[] = [
+        { start: 110, end: 170 },
+        { start: 120, end: 130 },
+        { start: 150, end: 180 }
+      ];
+
+      const covered = coveredMs(ranges, WINDOW);
+
+      expect(covered).toBe(70);
+    });
+  });
+
   describe('GIVEN no ranges', () => {
     it('WHEN the window is measured THEN nothing counts', () => {
       const covered = coveredMs([], WINDOW);
@@ -90,6 +104,12 @@ describe('FEATURE: medianOf', () => {
       const median = medianOf([9, 1, 5]);
 
       expect(median).toBe(5);
+    });
+
+    it('WHEN they have different digit counts THEN they are ordered by value, not as text', () => {
+      const median = medianOf([10, 9, 2]);
+
+      expect(median).toBe(9);
     });
   });
 
