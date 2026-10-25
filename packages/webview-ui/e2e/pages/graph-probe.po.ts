@@ -121,8 +121,10 @@ export class GraphProbePage {
     await expect.poll(async (): Promise<string | null> => this.selected()).toBe(name);
   }
 
-  /** Waits past the page's own ELK timeout: an uncached layout settles as `elk` or `fallback` only within it. */
-  /** A layout of either engine is on screen: on a slow runner a fresh ELK worker can miss the page's timeout (C52). */
+  /**
+   * A layout of either engine is on screen; waits past the page's own ELK timeout, since a fresh worker on a slow runner can miss it (C52).
+   * After a fresh open only: across a grouping switch the old mode's engine is still on screen, so use `expectLayoutEngine`.
+   */
   public async expectLayoutSettled(): Promise<void> {
     const isSettled = async (): Promise<boolean> => (await this.layoutEngine()) !== null;
 

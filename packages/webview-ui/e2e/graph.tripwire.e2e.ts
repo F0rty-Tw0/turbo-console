@@ -292,13 +292,16 @@ test.describe('FEATURE: graph tripwires', () => {
   test(
     'GIVEN 301 packages and no saved state, the page opens grouped with all 30 folders collapsed',
     { annotation: C4 },
-    async ({ graphFolders, graphGrouping, graphHost, graphPage }): Promise<void> => {
+    async ({ graphFolders, graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND a 301-package state is sent', async (): Promise<void> =>
         graphHost.sendState(largeState(LARGE_PACKAGE_COUNT + 1)));
 
-      await test.step('THEN Group by folder is checked', async (): Promise<void> => graphGrouping.expectGrouped(true));
+      await test.step('THEN the graph is laid out, by ELK or by the fallback on a slow runner', async (): Promise<void> =>
+        graphProbe.expectLayoutSettled());
+
+      await test.step('AND Group by folder is checked', async (): Promise<void> => graphGrouping.expectGrouped(true));
 
       await test.step('AND 30 folders are drawn, all collapsed', async (): Promise<void> => {
         await graphGrouping.expectFolderCount(GROUP_COUNT);
