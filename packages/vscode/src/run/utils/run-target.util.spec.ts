@@ -55,6 +55,18 @@ describe('FEATURE: run targets', () => {
       expect(target).toStrictEqual(TARGET);
     });
 
+    it('WHEN it is a file task node whose id holds a space THEN the id and package pass through unchanged', () => {
+      const id = '@fx/e2e#e2e-ci--tests/b fails.spec.ts';
+      const node = { kind: 'task', id: `task:/ws\0${id}`, root: '/ws', key: id, packageName: '@fx/e2e' };
+
+      const definition: RunDefinition = { root: '/ws', id };
+      const expected: TaskTarget = { definition, packageName: '@fx/e2e' };
+
+      const target = taskTargetOf(node);
+
+      expect(target).toStrictEqual(expected);
+    });
+
     it.each<[string, unknown]>([
       ['a package node', TREE_NODE_STUB],
       ['missing', undefined],
