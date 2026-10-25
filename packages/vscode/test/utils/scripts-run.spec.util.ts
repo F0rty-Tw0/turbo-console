@@ -3,26 +3,25 @@ import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { packageDirOf } from './package-edit.spec.util.ts';
-import { startRun } from './run-wait.spec.util.ts';
 import { scriptTerminals } from './scripts-shell.spec.util.ts';
 import { waitFor } from './suite-env.spec.util.ts';
-import { isAlive, pidIn, stopRun } from './tree-polish-live.spec.util.ts';
+import { awaitTerminals, isAlive, launchRun, pidIn, stopRun } from './tree-polish-live.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
 import { LONG_PID_PATH } from '../common/scripts.const.ts';
-import type { LiveRun } from '../common/tree-polish.type.ts';
+import type { Launch, LiveRun } from '../common/tree-polish.type.ts';
 
 const isRunning = (api: TurboConsoleApi, node: TreeNode): boolean => api.runs.get(node.root, node.key)?.state === 'running';
 
 /** Waits until the script wrote its pid (so its process runs) and the run holds exactly one task terminal. */
-const readyRun = async (api: TurboConsoleApi, node: TreeNode, launchedAt: number, pidFile: string): Promise<LiveRun> => {
+const readyRun = async (api: TurboConsoleApi, node: TreeNode, launch: Launch, pidFile: string): Promise<LiveRun> => {
   const startedAt = (): number | null => api.runs.get(node.root, node.key)?.processStartedAt ?? null;
   const hasStarted = (): boolean => startedAt() !== null;
 
   await waitFor('process started', hasStarted);
   await waitFor('script started', () => pidIn(pidFile) !== null);
 
-  const terminals = scriptTerminals(node.key);
+  const terminals = await awaitTerminals(node.key, () => scriptTerminals(node.key), launch.stale);
   const pid = pidIn(pidFile) ?? Number.NaN;
   const [terminal] = terminals;
 
@@ -30,7 +29,7 @@ const readyRun = async (api: TurboConsoleApi, node: TreeNode, launchedAt: number
 
   if (terminal === undefined) throw new Error(`no terminal of ${node.key}`);
 
-  const live: LiveRun = { launchedAt, pid, terminal };
+  const live: LiveRun = { launchedAt: launch.launchedAt, pid, terminal };
 
   return live;
 };
@@ -63,10 +62,11 @@ export const withScriptRun = async (api: TurboConsoleApi, node: TreeNode, body: 
 
   await rm(pidFile, { force: true });
 
-  const launchedAt = await startRun(api, node);
+  const launch = await launchRun(api, node);
+  const { launchedAt } = launch;
 
   try {
-    live = await readyRun(api, node, launchedAt, pidFile);
+    live = await readyRun(api, node, launch, pidFile);
     await body(live);
   } finally {
     await cleanUp(api, node, live, launchedAt);
