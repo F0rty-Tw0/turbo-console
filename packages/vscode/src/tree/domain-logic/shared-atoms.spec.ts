@@ -56,10 +56,18 @@ describe('FEATURE: shared atoms', () => {
       expect(second).toHaveBeenCalledExactlyOnceWith(ROOT, PKG);
     });
 
-    it('WHEN disposed THEN a later commit reaches no listener', async () => {
+    it('WHEN disposed THEN a later request starts no dry run', async () => {
       atoms.dispose();
       atoms.childrenRequested(ROOT, PKG);
-      await commitDryRun(1);
+      await flush();
+
+      expect(h.dryRun).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN disposed THEN the aborted load reaches no listener', async () => {
+      atoms.dispose();
+      atoms.childrenRequested(ROOT, PKG);
+      await commitDryRun(0);
 
       expect(first).not.toHaveBeenCalled();
       expect(second).not.toHaveBeenCalled();

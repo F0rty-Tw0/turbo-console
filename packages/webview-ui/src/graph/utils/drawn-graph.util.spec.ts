@@ -19,7 +19,8 @@ const STATE: GraphReady = {
   edges: [KEPT_EDGE, DANGLING_EDGE],
   positions: null,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 describe('FEATURE: drawnGraphOf', () => {

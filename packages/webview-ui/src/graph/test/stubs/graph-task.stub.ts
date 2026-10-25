@@ -33,7 +33,8 @@ export const TASK_STATE_STUB: GraphReady = {
   edges: [],
   positions: null,
   folderPositions: null,
-  tasks: TASK_CHAIN_STUB
+  tasks: TASK_CHAIN_STUB,
+  atomGroups: []
 };
 
 /** `TASK_STATE_STUB` with `web#test`, a dependent of `web#build`. */

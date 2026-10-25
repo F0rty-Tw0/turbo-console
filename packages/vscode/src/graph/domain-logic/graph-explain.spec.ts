@@ -31,7 +31,8 @@ const READY: GraphReady = {
   edges: EDGES,
   positions: null,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 const LOADING: GraphState = { kind: 'loading' };

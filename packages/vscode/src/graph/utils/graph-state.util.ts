@@ -1,9 +1,9 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphPackage, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphState, Positions } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
 import { packageNamesOf } from './graph-package.util.ts';
-import { graphTasksOf } from './graph-tasks.util.ts';
+import { graphListingOf, runIdsOfListing } from './graph-tasks.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
@@ -16,7 +16,7 @@ const KEY_SEPARATOR = '\0';
 const SINGLE_PACKAGE: GraphState = { kind: 'singlePackage' };
 const LOAD_KIND = 'load-no-model';
 const LOADING: GraphState = { kind: 'loading' };
-const NO_TASKS: GraphTask[] = [];
+const NO_IDS: string[] = [];
 
 const compareText = (left: string, right: string): number => {
   if (left < right) return -1;
@@ -85,8 +85,8 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches): 
   const names = packageNamesOf(packages);
   const positions = cachedPositionsOf(caches.flat, hash, names);
   const folderPositions = cachedPositionsOf(caches.folders, hash, names);
-  const tasks = graphTasksOf(model);
-  const state: GraphState = { kind: 'graph', hash, packages, edges, positions, folderPositions, tasks };
+  const { tasks, atomGroups } = graphListingOf(model);
+  const state: GraphState = { kind: 'graph', hash, packages, edges, positions, folderPositions, tasks, atomGroups };
 
   return state;
 };
@@ -109,13 +109,13 @@ export const graphStateOfRoot = (state: RootState | undefined, caches: GraphLayo
   return failed;
 };
 
-/** What `graphStateOfRoot(state, ...)` lists as tasks, without building the rest of the state: none unless the root shows a multi-package graph. */
-export const graphTasksOfRoot = (state: RootState | undefined): GraphTask[] => {
-  if (state === undefined) return NO_TASKS;
+/** The ids `graphStateOfRoot(state, ...)` lists as tasks and group files, without building the rest of the state: none unless the root shows a multi-package graph. */
+export const runIdsOfRoot = (state: RootState | undefined): string[] => {
+  if (state === undefined) return NO_IDS;
 
   const model = shownModelOf(state);
 
-  if (model === null || model.singlePackage) return NO_TASKS;
+  if (model === null || model.singlePackage) return NO_IDS;
 
-  return graphTasksOf(model);
+  return runIdsOfListing(graphListingOf(model));
 };

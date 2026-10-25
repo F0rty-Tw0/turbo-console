@@ -1,7 +1,9 @@
-import type { GraphHostMessage, GraphState, GraphTask, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphState, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
+import type { Runs } from '../../run/common/run.type.ts';
+import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 
 /**
  * Editor effects of one graph panel. `openDetails` and `openAt` may reject; `readText` rejects on a file it cannot open and gives
@@ -37,9 +39,9 @@ type UncheckedPositionsMessage = {
 /** A message that passed `graphMessageSchema`: a `positions` record is still unread. */
 export type SchemaGraphMessage = Exclude<GraphWebviewMessage, PositionsTag> | UncheckedPositionsMessage;
 
-type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' };
+type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' | 'shownUmbrellas' };
 
-/** A page request the session answers from the state it builds now: a reload, a package's details or a task run or stop. */
+/** A page request the session answers from the state it builds now: a reload, a package's details, a task run or stop or the umbrellas now shown. */
 export type GraphRequestMessage = Extract<GraphWebviewMessage, RequestTag>;
 
 type RunTag = { readonly type: 'runTask' | 'stopTask' };
@@ -47,12 +49,13 @@ type RunTag = { readonly type: 'runTask' | 'stopTask' };
 /** A page request to run or stop one task of the graph. */
 export type GraphRunRequest = Extract<GraphWebviewMessage, RunTag>;
 
-/** What a request is judged against: the state built now, the root, its coordinator and the ports a request may use. */
+/** What a request is judged against: the state built now, the root, its coordinator, the ports a request may use and the atoms it may ask to load. */
 export type RequestContext = {
   readonly state: GraphState;
   readonly root: string;
   readonly coordinator: Pick<Coordinator, 'request'> | undefined;
   readonly ports: Pick<GraphPorts, 'openDetails' | 'log' | 'executeCommand'>;
+  readonly atoms: Pick<SharedAtoms, 'childrenRequested'>;
 };
 
 type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };
@@ -68,15 +71,21 @@ export type ExplainContext = {
   readonly canPost: () => boolean;
 };
 
-/** `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now and `tasks` its task list alone. */
+/** `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now and `runIds` the ids a run can report, without the rest of the state. */
 export type TaskFeedGate = {
   readonly canPost: () => boolean;
   readonly state: () => GraphState;
-  readonly tasks: () => GraphTask[];
+  readonly runIds: () => string[];
 };
 
 /** The tree command a graph run request maps to, with the tree-row argument it takes. */
 export type GraphRunCommand = {
   readonly command: string;
   readonly arg: unknown;
+};
+
+/** The two stores a panel's feeds read: the run states of its root and the Atomizer loads shared with the tree. */
+export type GraphFeeds = {
+  readonly runs: Runs;
+  readonly atoms: SharedAtoms;
 };

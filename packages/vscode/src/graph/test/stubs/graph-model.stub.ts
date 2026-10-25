@@ -69,7 +69,8 @@ export const GRAPH_STATE_STUB: GraphReady = {
   edges: [A_X, WEB_X, WEB_A],
   positions: null,
   folderPositions: null,
-  tasks: GRAPH_TASKS_STUB
+  tasks: GRAPH_TASKS_STUB,
+  atomGroups: []
 };
 
 const X_POINT: Position = { x: 0, y: 0 };

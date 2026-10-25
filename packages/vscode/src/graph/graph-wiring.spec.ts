@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import type { GraphContext, GraphDetails, GraphWiring } from './common/graph-panel.type.ts';
 import { createGraph } from './graph-wiring.ts';
 import { GRAPH_LOADED_STUB } from './test/stubs/graph-model.stub.ts';
+import { feedsOf } from './test/utils/graph-feeds.spec.util.ts';
 import { copyGraphPageRoot } from './test/utils/page-root.spec.util.ts';
 import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
 import { RootStore } from '../roots/domain-logic/root-store.ts';
@@ -121,7 +122,7 @@ describe('FEATURE: the graph wiring', () => {
     editor.createWebviewPanel.mockImplementation(createPanel);
     editor.showErrorMessage.mockReset();
     editor.showErrorMessage.mockResolvedValue(undefined);
-    graph = createGraph(contextOf(page), session, details, output, new RunStore());
+    graph = createGraph(contextOf(page), session, details, output, feedsOf(new RunStore()));
   });
 
   afterEach(() => {

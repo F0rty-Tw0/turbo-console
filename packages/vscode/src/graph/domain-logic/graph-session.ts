@@ -1,4 +1,4 @@
-import type { GraphState, GraphTask, GraphWebviewMessage } from '@turbo-console/webview-ui';
+import type { GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import { answerRequest } from './graph-explain.ts';
 import { GraphImageSaver } from './graph-image-saver.ts';
@@ -7,11 +7,10 @@ import { isRequestMessage, requestHandledOf } from './graph-requests.ts';
 import { GraphTaskFeed } from './graph-task-feed.ts';
 import { LatestWins } from './latest-wins.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
-import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { ExplainContext, ExplainRequest, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
+import type { ExplainContext, ExplainRequest, GraphFeeds, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
-import { graphStateOfRoot, graphTasksOfRoot } from '../utils/graph-state.util.ts';
+import { graphStateOfRoot, runIdsOfRoot } from '../utils/graph-state.util.ts';
 
 type ExplainJob = {
   readonly request: ExplainRequest;
@@ -22,8 +21,8 @@ type ExplainJob = {
  * The host side of one Package Graph panel. Each state is built from the store and the layout cache when it is posted
  * or a message is checked, so a message is always judged against the graph as it is now. Nothing is posted before the
  * page's `ready` or while hidden; hiding resets `ready` because the page is rebuilt on show. Every state post is followed
- * by the run states of its tasks and a held `showTasks`, through the `GraphTaskFeed`. An edge explanation is posted only if
- * the panel is still shown and ready after its read.
+ * by the run states of its tasks, the Atomizer counts of its groups and a held `showTasks`, through the `GraphTaskFeed`. An
+ * edge explanation is posted only if the panel is still shown and ready after its read.
  * One `explainEdge` is answered at a time; the one waiting behind it is replaced by each newer request, so a page that floods them costs one read in flight and one waiting.
  */
 export class GraphSession {
@@ -37,20 +36,22 @@ export class GraphSession {
   private readonly explains = new LatestWins<ExplainJob>();
   private readonly images: GraphImageSaver;
   private readonly feed: GraphTaskFeed;
+  private readonly atoms: GraphFeeds['atoms'];
 
-  public constructor(root: string, roots: Roots, ports: GraphPorts, runs: Runs) {
+  public constructor(root: string, roots: Roots, ports: GraphPorts, feeds: GraphFeeds) {
     this.root = root;
     this.roots = roots;
     this.ports = ports;
+    this.atoms = feeds.atoms;
     this.images = new GraphImageSaver(root, ports);
 
     const gate: TaskFeedGate = {
       canPost: (): boolean => this.canPost(),
       state: (): GraphState => this.stateNow(),
-      tasks: (): GraphTask[] => graphTasksOfRoot(this.roots.get(this.root)?.state)
+      runIds: (): string[] => runIdsOfRoot(this.roots.get(this.root)?.state)
     };
 
-    this.feed = new GraphTaskFeed({ root, runs, ports, gate });
+    this.feed = new GraphTaskFeed({ root, runs: feeds.runs, ports, gate, atoms: feeds.atoms });
   }
 
   public start(): void {
@@ -108,7 +109,10 @@ export class GraphSession {
     if (this.isVisible) this.ports.setPanelVisible(false);
   }
 
-  /** Posts the current state, then its run states and any held `showTasks`, when the panel is shown and its page is ready. */
+  /**
+   * Posts the current state, then its run states, its atom counts and any held `showTasks`, when the panel is shown and its
+   * page is ready.
+   */
   private publish(): void {
     if (!this.canPost()) return;
 
@@ -181,7 +185,7 @@ export class GraphSession {
 
   private requestContext(): RequestContext {
     const coordinator = this.roots.get(this.root)?.coordinator;
-    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports };
+    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, atoms: this.atoms };
 
     return context;
   }

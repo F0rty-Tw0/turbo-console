@@ -35,6 +35,19 @@ export type Position = {
 /** Node centres by package name (Cytoscape `preset` convention). */
 export type Positions = Readonly<Record<string, Position>>;
 
+/** One spec file of an Atomizer group; `isLive` marks a file whose run keeps going. */
+export type GraphAtomFile = {
+  readonly id: string;
+  readonly specPath: string;
+  readonly isLive: boolean;
+};
+
+/** An Atomizer umbrella task and its files, sorted by spec path; the files are never in `GraphReady.tasks`. */
+export type GraphAtomGroup = {
+  readonly umbrellaId: string;
+  readonly files: GraphAtomFile[];
+};
+
 type GraphLoading = { readonly kind: 'loading' };
 
 type GraphError = {
@@ -52,6 +65,8 @@ export type GraphReady = {
   readonly positions: Positions | null;
   readonly folderPositions: Positions | null;
   readonly tasks: GraphTask[];
+  /** Sorted by umbrella id; not part of the layout hash. */
+  readonly atomGroups: GraphAtomGroup[];
 };
 
 export type GraphState = GraphLoading | GraphError | GraphSinglePackage | GraphReady;

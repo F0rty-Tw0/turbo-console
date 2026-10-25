@@ -30,7 +30,8 @@ export const TASK_MODE_STATE_STUB: GraphReady = {
   edges: EDGES,
   positions: null,
   folderPositions: null,
-  tasks: TASKS
+  tasks: TASKS,
+  atomGroups: []
 };
 
 /** The same tasks under hash `7a5c0002`, with one more package, `docs`. */

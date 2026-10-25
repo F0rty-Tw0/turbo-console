@@ -2,6 +2,7 @@ import type { GraphHostMessage, Positions } from '@turbo-console/webview-ui';
 import type { Mock } from 'vitest';
 
 import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
+import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphHost } from '../../common/graph-panel.type.ts';
 
@@ -28,4 +29,12 @@ export type GraphHostFakes = {
   readonly showInfo: Mock<GraphHost['showInfo']>;
   readonly showError: Mock<GraphHost['showError']>;
   readonly executeCommand: Mock<GraphHost['executeCommand']>;
+};
+
+export type AtomsFake = {
+  readonly atoms: SharedAtoms;
+  readonly childrenRequested: Mock<SharedAtoms['childrenRequested']>;
+  /** Tells every subscribed listener that the view of one package changed. */
+  readonly changed: AtomListener;
+  readonly listenerCount: () => number;
 };

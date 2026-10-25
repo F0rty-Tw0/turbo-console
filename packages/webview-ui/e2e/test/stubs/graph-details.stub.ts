@@ -58,7 +58,8 @@ export const DETAILS_STUB: GraphReady = {
   edges: DETAILS_EDGES,
   positions: DETAILS_POSITIONS_STUB,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 const RECOUNTED_PACKAGES: GraphPackage[] = [

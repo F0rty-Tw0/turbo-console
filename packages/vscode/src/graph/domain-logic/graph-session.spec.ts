@@ -16,6 +16,7 @@ import {
   GROWN_LOADED_STUB,
   POSITIONS_STUB
 } from '../test/stubs/graph-model.stub.ts';
+import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { lastStateOf, portsWith, postedOf, postedStatesOf } from '../test/utils/graph-session.spec.util.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
@@ -47,7 +48,7 @@ const loadedStore = (): RootStore => {
 /** A started, shown session on `/ws`; `cached` seeds its layout cache. */
 const shownSession = (cached: GraphLayoutCacheEntry | null = null, store: RootStore = loadedStore()): ShownSession => {
   const ports = portsWith(cached);
-  const session = new GraphSession('/ws', store, ports, new RunStore());
+  const session = new GraphSession('/ws', store, ports, feedsOf(new RunStore()));
 
   session.setVisible(true);
   session.start();
@@ -260,7 +261,7 @@ describe('FEATURE: graph session', () => {
       it('THEN it does not subscribe to the store', () => {
         const store = loadedStore();
         const { ports } = shownSession(null, store);
-        const session = new GraphSession('/ws', store, ports, new RunStore());
+        const session = new GraphSession('/ws', store, ports, feedsOf(new RunStore()));
         const onDidChange = vi.spyOn(store, 'onDidChange');
 
         session.dispose();
@@ -274,7 +275,7 @@ describe('FEATURE: graph session', () => {
       it('THEN it does not report the panel', () => {
         const store = loadedStore();
         const { ports } = shownSession(null, store);
-        const session = new GraphSession('/ws', store, ports, new RunStore());
+        const session = new GraphSession('/ws', store, ports, feedsOf(new RunStore()));
 
         session.dispose();
         vi.mocked(ports.setPanelVisible).mockClear();

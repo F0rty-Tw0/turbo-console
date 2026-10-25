@@ -51,7 +51,8 @@ export const breadcrumbState = (): GraphReady => {
       ['c-pkg', 400, 250],
       ['d-pkg', 600, 250],
       ['e-pkg', 800, 250]
-    ])
+    ]),
+    atomGroups: []
   };
 
   return state;

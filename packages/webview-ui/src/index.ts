@@ -23,10 +23,14 @@ export type {
 
 export type {
   EdgeExplainResult,
+  GraphAtomGroupState,
+  GraphAtomOutcome,
+  GraphAtomsMessage,
   GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphRunsMessage,
   GraphShowTasksMessage,
+  GraphShownUmbrellasMessage,
   GraphStateMessage,
   GraphWebviewMessage,
   LayoutGrouping,
@@ -36,6 +40,8 @@ export type {
 } from './bridge/common/graph-message.type.ts';
 
 export type {
+  GraphAtomFile,
+  GraphAtomGroup,
   GraphEdge,
   GraphPackage,
   GraphReady,

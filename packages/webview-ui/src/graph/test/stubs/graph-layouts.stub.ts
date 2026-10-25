@@ -40,7 +40,8 @@ export const STATE_STUB: GraphReady = {
   edges: EDGES,
   positions: FLAT_POSITIONS_STUB,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 const FRESH: GraphViewState = freshViewStateOf('h1');

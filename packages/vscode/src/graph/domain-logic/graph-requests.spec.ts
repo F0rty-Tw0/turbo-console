@@ -1,11 +1,24 @@
+import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 import type { GraphState } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
 import { isRequestMessage, requestHandledOf } from './graph-requests.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphRequestMessage, RequestContext } from '../common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
-import { GRAPH_STATE_STUB } from '../test/stubs/graph-model.stub.ts';
+import {
+  APP_BUILD_TASK_STUB,
+  ATOM_E2E_PACKAGE_STUB,
+  ATOM_FILE_A_TASK_STUB,
+  ATOM_UMBRELLA_TASK_STUB,
+  GRAPH_ATOM_MODEL_STUB,
+  GRAPH_ATOM_UNLOADED_VIEW_STUB
+} from '../test/stubs/graph-atom-model.stub.ts';
+import { GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
+import { atomsFake } from '../test/utils/graph-feeds.spec.util.ts';
+import { smokeGroupTasksOf } from '../test/utils/graph-model.spec.util.ts';
+import { graphStateOf } from '../utils/graph-state.util.ts';
 
 const ERROR_STATE: GraphState = { kind: 'error', message: 'failed' };
 const LOADING_STATE: GraphState = { kind: 'loading' };
@@ -15,18 +28,34 @@ const OPEN_WEB: GraphRequestMessage = { type: 'openDetails', packageName: 'web' 
 const OPEN_GONE: GraphRequestMessage = { type: 'openDetails', packageName: 'gone' };
 const RUN_A_BUILD: GraphRequestMessage = { type: 'runTask', taskId: 'a#build', noCache: false };
 const STOP_A_BUILD: GraphRequestMessage = { type: 'stopTask', taskId: 'a#build' };
+const SMOKE_TASKS = smokeGroupTasksOf(ATOM_E2E_PACKAGE_STUB.name);
+const [SMOKE_UMBRELLA] = SMOKE_TASKS;
+const TWO_GROUP_PACKAGE: PackageNode = {
+  ...ATOM_E2E_PACKAGE_STUB,
+  tasks: [...ATOM_E2E_PACKAGE_STUB.tasks, ...SMOKE_TASKS]
+};
+const [, ...OTHER_PACKAGES] = GRAPH_ATOM_MODEL_STUB.packages;
+const TWO_GROUP_MODEL: WorkspaceModel = { ...GRAPH_ATOM_MODEL_STUB, packages: [TWO_GROUP_PACKAGE, ...OTHER_PACKAGES] };
+const TWO_GROUP_STATE = graphStateOf(TWO_GROUP_MODEL, NO_LAYOUT_CACHES_STUB);
+const SHOWN_UMBRELLAS: GraphRequestMessage = {
+  type: 'shownUmbrellas',
+  ids: [ATOM_UMBRELLA_TASK_STUB.id, SMOKE_UMBRELLA.id, 'gone#nothing', ATOM_FILE_A_TASK_STUB.id, APP_BUILD_TASK_STUB.id]
+};
 
-const contextOf = (state: GraphState): RequestContext => {
-  const context: RequestContext = { state, root: '/ws', coordinator: coordinatorMock(), ports: graphPortsMock() };
+const contextOf = (state: GraphState, atoms: RequestContext['atoms'] = SHARED_ATOMS_STUB): RequestContext => {
+  const context: RequestContext = { state, root: '/ws', coordinator: coordinatorMock(), ports: graphPortsMock(), atoms };
 
   return context;
 };
 
 describe('FEATURE: graph request messages', () => {
   describe('GIVEN a message type', () => {
-    it.each([[RELOAD], [OPEN_WEB], [RUN_A_BUILD], [STOP_A_BUILD]])('WHEN it is %j THEN it is a request', (message) => {
-      expect(isRequestMessage(message)).toBe(true);
-    });
+    it.each([[RELOAD], [OPEN_WEB], [RUN_A_BUILD], [STOP_A_BUILD], [SHOWN_UMBRELLAS]])(
+      'WHEN it is %j THEN it is a request',
+      (message) => {
+        expect(isRequestMessage(message)).toBe(true);
+      }
+    );
 
     it.each([[{ type: 'ready' }], [{ type: 'layoutDone', engine: 'elk', ms: 1 }]] as const)(
       'WHEN it is %j THEN it is not a request',
@@ -150,6 +179,40 @@ describe('FEATURE: graph request handling', () => {
 
     it('WHEN runTask is handled on a loading state THEN false is returned', async () => {
       const isHandled = await requestHandledOf(RUN_A_BUILD, contextOf(LOADING_STATE));
+
+      expect(isHandled).toBe(false);
+    });
+  });
+});
+
+describe('FEATURE: graph shownUmbrellas request', () => {
+  describe('GIVEN a graph state with two umbrellas of one package', () => {
+    it('WHEN it names both, a file, a listed build and an unknown id THEN childrenRequested(root, package) runs once', async () => {
+      const { atoms, childrenRequested } = atomsFake(() => GRAPH_ATOM_UNLOADED_VIEW_STUB);
+
+      await requestHandledOf(SHOWN_UMBRELLAS, contextOf(TWO_GROUP_STATE, atoms));
+
+      expect(childrenRequested).toHaveBeenCalledExactlyOnceWith('/ws', '@fx/e2e');
+    });
+
+    it('WHEN it names both THEN the message is handled', async () => {
+      const isHandled = await requestHandledOf(SHOWN_UMBRELLAS, contextOf(TWO_GROUP_STATE));
+
+      expect(isHandled).toBe(true);
+    });
+
+    it('WHEN it names only unknown ids THEN nothing is requested', async () => {
+      const { atoms, childrenRequested } = atomsFake(() => GRAPH_ATOM_UNLOADED_VIEW_STUB);
+
+      await requestHandledOf({ type: 'shownUmbrellas', ids: ['gone#nothing'] }, contextOf(TWO_GROUP_STATE, atoms));
+
+      expect(childrenRequested).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a state that is not a graph', () => {
+    it('WHEN it names an umbrella THEN the message is not handled', async () => {
+      const isHandled = await requestHandledOf(SHOWN_UMBRELLAS, contextOf(LOADING_STATE));
 
       expect(isHandled).toBe(false);
     });

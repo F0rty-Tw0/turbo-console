@@ -47,7 +47,8 @@ export const DIAMOND_CHAIN_STUB: GraphReady = {
   edges: DIAMOND_CHAIN_EDGES,
   positions: null,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 export const DIAMOND_CHAIN_CACHED_STUB: GraphReady = { ...DIAMOND_CHAIN_STUB, positions: DIAMOND_CHAIN_POSITIONS_STUB };
@@ -93,7 +94,8 @@ export const OBJECT_MEMBER_NAMES_STUB: GraphReady = {
   edges: OBJECT_MEMBER_EDGES,
   positions: null,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 const ARROW_NAME_EDGES: GraphEdge[] = [
@@ -110,7 +112,8 @@ export const ARROW_NAMES_STUB: GraphReady = {
   edges: ARROW_NAME_EDGES,
   positions: null,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };
 
 export const LOADING_STUB: GraphState = { kind: 'loading' };

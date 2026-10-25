@@ -13,5 +13,6 @@ export const WIDE_TITLE_STUB: GraphReady = {
   edges: [],
   positions: null,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  atomGroups: []
 };

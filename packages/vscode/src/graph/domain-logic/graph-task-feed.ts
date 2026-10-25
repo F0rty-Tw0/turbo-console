@@ -1,38 +1,46 @@
-import type { GraphRunsMessage, GraphState, GraphTask } from '@turbo-console/webview-ui';
+import type { GraphRunsMessage, GraphState } from '@turbo-console/webview-ui';
 
+import { Coalescer } from './coalescer.ts';
+import { GraphAtomFeed } from './graph-atom-feed.ts';
 import type { RunEntry, Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
-import { runsMapOf } from '../utils/graph-tasks.util.ts';
-
-const NO_TASKS: GraphTask[] = [];
+import { runIdsOf, runsMapOf } from '../utils/graph-tasks.util.ts';
 
 type TaskFeedDeps = {
   readonly root: string;
   readonly runs: Pick<Runs, 'get' | 'onDidChange'>;
   readonly ports: Pick<GraphPorts, 'post' | 'log'>;
   readonly gate: TaskFeedGate;
+  readonly atoms: Pick<SharedAtoms, 'onDidChange' | 'view'>;
 };
-
-const tasksOf = (state: GraphState): GraphTask[] => (state.kind === 'graph' ? state.tasks : NO_TASKS);
 
 /**
  * What a graph panel is told about tasks besides its state: the run states of its root, coalesced so a burst of task
- * events is one post, and the one `showTasks` request held until the page can take it. `showTasks` is never posted before
- * a `graph` state: `flush` is the one point that posts the full map and the held request, right after a state is posted.
+ * events is one post, the Atomizer counts of its groups (a `GraphAtomFeed`) and the one `showTasks` request held until the
+ * page can take it. `showTasks` is never posted before a `graph` state: `flush` is the one point that posts the full runs
+ * map, the atoms and the held request, in that order, right after a state is posted.
  */
 export class GraphTaskFeed {
   private readonly deps: TaskFeedDeps;
   private unsubscribe: (() => void) | null = null;
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private readonly coalescer: Coalescer;
   private held: string[] | null = null;
+  private readonly atomFeed: GraphAtomFeed;
 
   public constructor(deps: TaskFeedDeps) {
     this.deps = deps;
+    this.coalescer = new Coalescer(RUNS_COALESCE_MS, () => {
+      this.fire();
+    });
+    this.atomFeed = new GraphAtomFeed({ root: deps.root, atoms: deps.atoms, ports: deps.ports, gate: deps.gate });
   }
 
   public start(): void {
+    this.atomFeed.start();
+
     if (this.unsubscribe !== null) return;
 
     this.unsubscribe = this.deps.runs.onDidChange((entry) => {
@@ -41,15 +49,17 @@ export class GraphTaskFeed {
   }
 
   public stop(): void {
+    this.atomFeed.stop();
     this.unsubscribe?.();
     this.unsubscribe = null;
-    this.cancelTimer();
+    this.coalescer.cancel();
     this.held = null;
   }
 
   public flush(state: GraphState): void {
-    this.cancelTimer();
-    this.postRuns(tasksOf(state));
+    this.coalescer.cancel();
+    this.postRuns(runIdsOf(state));
+    this.atomFeed.flush(state);
     this.postHeld(state);
   }
 
@@ -91,38 +101,22 @@ export class GraphTaskFeed {
   private changed(entry: RunEntry): void {
     if (entry.root !== this.deps.root) return;
 
-    this.armTimer();
-  }
-
-  private armTimer(): void {
     const canPost = this.deps.gate.canPost();
 
-    if (!canPost || this.timer !== null) return;
-
-    this.timer = setTimeout(() => {
-      this.fire();
-    }, RUNS_COALESCE_MS);
+    if (canPost) this.coalescer.arm();
   }
 
   private fire(): void {
-    this.timer = null;
-
     const canPost = this.deps.gate.canPost();
 
     if (!canPost) return;
 
-    this.postRuns(this.deps.gate.tasks());
+    this.postRuns(this.deps.gate.runIds());
   }
 
-  private cancelTimer(): void {
-    if (this.timer !== null) clearTimeout(this.timer);
-
-    this.timer = null;
-  }
-
-  private postRuns(tasks: GraphTask[]): void {
+  private postRuns(ids: string[]): void {
     const { root, runs, ports } = this.deps;
-    const map = runsMapOf(root, tasks, runs.get);
+    const map = runsMapOf(root, ids, runs.get);
     const message: GraphRunsMessage = { type: 'runs', runs: map };
 
     ports.post(message);
