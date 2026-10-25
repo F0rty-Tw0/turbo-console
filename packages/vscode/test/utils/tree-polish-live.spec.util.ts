@@ -78,7 +78,12 @@ export const stopRun = async (api: TurboConsoleApi, node: TreeNode, launchedAt: 
   return endedRun(api, node, launchedAt);
 };
 
-/** Starts a run of `node`, noting the terminals listed first: a disposed one stays listed until the host's close round trip. */
+/**
+ * Starts a run of `node`, noting the terminals listed first: a disposed one stays listed until the host's close round trip.
+ * The task's terminal is dedicated, so a run reuses one left open by an earlier run of the same task, and `awaitTerminals`
+ * then never sees a fresh one: dispose a task's terminals before its next wrapper run, as `withLiveRun` and
+ * `withScriptRun` do on their way out.
+ */
 export const launchRun = async (api: TurboConsoleApi, node: TreeNode): Promise<Launch> => {
   const stale = [...vscode.window.terminals];
   const launchedAt = await startRun(api, node);

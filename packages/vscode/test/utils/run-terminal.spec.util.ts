@@ -14,11 +14,12 @@ const terminalsOf = async (taskId: string): Promise<string[]> => {
   return terminals.map((terminal) => terminal.name);
 };
 
-/** The run's dedicated terminal, named after its task id, is still open after the run ended, its output kept. */
+/**
+ * The run's dedicated terminal, named after its task id, is still open after the run ended, its output kept. The wait in
+ * `terminalsOf` throws when none opens.
+ */
 export const assertTerminalKept = async (taskId: string): Promise<void> => {
-  const terminals = await terminalsOf(taskId);
-
-  assert.ok(terminals.length > 0, `no terminal of ${taskId} is open`);
+  await terminalsOf(taskId);
 };
 
 /**
