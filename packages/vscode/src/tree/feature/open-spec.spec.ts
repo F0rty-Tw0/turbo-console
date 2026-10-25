@@ -146,11 +146,11 @@ describe('FEATURE: Open Spec command', () => {
       open.mockRejectedValue(new Error('ENOENT'));
     });
 
-    it('WHEN it is invoked on that file row THEN the missing-file error shows once and the handler does not throw', async () => {
+    it('WHEN it is invoked on that file row THEN the could-not-open error shows once and the handler does not throw', async () => {
       await invoke({ ...FILE_TREE_NODE_STUB, id: `task:${ROOT}\0${FILE_B}`, key: FILE_B });
 
       expect(error).toHaveBeenCalledExactlyOnceWith(
-        `Spec file not found: ${join('/ws', 'packages', 'e2e', 'tests', 'b fails.spec.ts')}`
+        `Could not open the spec file ${join('/ws', 'packages', 'e2e', 'tests', 'b fails.spec.ts')}.`
       );
     });
   });

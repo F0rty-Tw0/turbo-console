@@ -7,7 +7,7 @@ import { taskTargetOf } from '../../run/utils/run-target.util.ts';
 import { OPEN_SPEC_COMMAND } from '../common/atom.const.ts';
 import type { OpenSpecPorts } from '../common/open-spec.type.ts';
 import { packageDirOf } from '../utils/package-target.util.ts';
-import { missingSpecText, refusedSpecText, specPathOf } from '../utils/spec-path.util.ts';
+import { openFailedSpecText, refusedSpecText, specPathOf } from '../utils/spec-path.util.ts';
 
 /** The file task `target` names in the Atomizer groups of `model`; `undefined` when it is gone. Task ids hold the package name, so they are unique across packages. */
 const fileOf = (model: WorkspaceModel, target: TaskTarget): AtomFile | undefined => {
@@ -16,7 +16,7 @@ const fileOf = (model: WorkspaceModel, target: TaskTarget): AtomFile | undefined
   return files.find((file) => file.task.id === target.definition.id);
 };
 
-/** Opens the spec file of a file row, refusing a spec path that leaves its package and reporting a file that is gone; any other argument does nothing. */
+/** Opens the spec file of a file row, refusing a spec path that leaves its package and reporting a file the editor could not open; any other argument does nothing. */
 const openSpec = async (roots: Roots, ports: OpenSpecPorts, arg: unknown): Promise<void> => {
   const target = taskTargetOf(arg);
 
@@ -44,7 +44,7 @@ const openSpec = async (roots: Roots, ports: OpenSpecPorts, arg: unknown): Promi
   try {
     await ports.open(path);
   } catch {
-    ports.error(missingSpecText(path));
+    ports.error(openFailedSpecText(path));
   }
 };
 

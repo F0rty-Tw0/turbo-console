@@ -36,5 +36,5 @@ export const specPathOf = (packageDir: string, specPath: string): string | null 
 /** The error text of a refused spec path. */
 export const refusedSpecText = (specPath: string): string => `Refused to open "${specPath}": it leaves the package directory.`;
 
-/** The error text of a spec file that is gone from disk, e.g. deleted since the last sync. */
-export const missingSpecText = (path: string): string => `Spec file not found: ${path}`;
+/** The error text of a spec file the editor could not open: gone since the last sync, a directory, unreadable, or refused by VS Code. */
+export const openFailedSpecText = (path: string): string => `Could not open the spec file ${path}.`;

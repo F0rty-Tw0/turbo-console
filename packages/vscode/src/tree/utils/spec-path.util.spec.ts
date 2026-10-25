@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { missingSpecText, refusedSpecText, specPathOf } from './spec-path.util.ts';
+import { openFailedSpecText, refusedSpecText, specPathOf } from './spec-path.util.ts';
 
 const PKG_DIR = join('/ws', 'packages', 'e2e');
 
@@ -37,11 +37,11 @@ describe('FEATURE: spec path', () => {
     });
   });
 
-  describe('GIVEN a spec file that is gone from disk', () => {
-    it('WHEN the error is worded THEN it says the spec file was not found and names the path', () => {
-      const text = missingSpecText('/ws/packages/e2e/tests/a.spec.ts');
+  describe('GIVEN a spec file the editor could not open', () => {
+    it('WHEN the error is worded THEN it says the spec file could not be opened and names the path', () => {
+      const text = openFailedSpecText('/ws/packages/e2e/tests/a.spec.ts');
 
-      expect(text).toBe('Spec file not found: /ws/packages/e2e/tests/a.spec.ts');
+      expect(text).toBe('Could not open the spec file /ws/packages/e2e/tests/a.spec.ts.');
     });
   });
 });
