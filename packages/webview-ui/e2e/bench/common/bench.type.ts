@@ -3,6 +3,8 @@
 import type { Page } from '@playwright/test';
 
 import type { Positions } from '../../../src/bridge/common/graph-state.type.ts';
+import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
+import type { ElementRect } from '../../common/playwright.type.ts';
 import type { GraphCanvas } from '../../pages/graph-canvas.po.ts';
 import type { GraphFoldersPage } from '../../pages/graph-folders.po.ts';
 import type { GraphGroupingPage } from '../../pages/graph-grouping.po.ts';
@@ -73,6 +75,43 @@ export type BenchSession = {
 export type ColdOpen = {
   readonly firstFrameMs: number;
   readonly positions: Positions;
+};
+
+/** One stretch pan: the p95 frame time inside the pan window (FPS = 1000 / ms) and the longest long task in it. */
+export type StretchPan = {
+  readonly p95Ms: number;
+  readonly longestLongTaskMs: number;
+};
+
+/** One L stretch session: its pan and the main JS heap in use after a forced collection. */
+export type LargeSample = {
+  readonly pan: StretchPan;
+  readonly heapMb: number;
+};
+
+/** The container, every drawn node and the zoom, read together so a decision uses one picture of the canvas. */
+export type CanvasReading = {
+  readonly container: ElementRect;
+  readonly nodes: ProbeNode[];
+  readonly zoom: number;
+};
+
+/** The model-space size of the drawn nodes' centres. */
+export type StretchExtent = {
+  readonly width: number;
+  readonly height: number;
+};
+
+/** What Fit made of the stretch graph: the zoom it settled at and the model extent it had to frame. */
+export type StretchFit = {
+  readonly zoom: number;
+  readonly extent: StretchExtent;
+};
+
+/** One S open session: the first frame in ms, and the Fit it was framed by. */
+export type OpenSample = {
+  readonly firstFrameMs: number;
+  readonly fit: StretchFit;
 };
 
 export type PanSample = {

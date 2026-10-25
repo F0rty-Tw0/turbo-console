@@ -1,4 +1,5 @@
-import type { LongTask } from '../common/bench.type.ts';
+import { p95 } from './bench-stats.util.ts';
+import type { LongTask, PanTrace, StretchPan } from '../common/bench.type.ts';
 
 const isWithin = (time: number, tOn: number, tOff: number): boolean => tOn <= time && time <= tOff;
 
@@ -15,4 +16,11 @@ export const longestWithin = (tasks: LongTask[], tOn: number, tOff: number): num
   const durations = inside.map((task): number => task.duration);
 
   return Math.max(0, ...durations);
+};
+
+/** The p95 frame time and the longest long task of a trace; the median frame time of a vsync-bound pan is 16.7 ms whatever the graph. */
+export const stretchPanOf = (trace: PanTrace): StretchPan => {
+  const pan: StretchPan = { p95Ms: p95(trace.frameDeltasMs), longestLongTaskMs: trace.longestLongTaskMs };
+
+  return pan;
 };

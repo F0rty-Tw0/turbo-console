@@ -1,10 +1,17 @@
 import { expect, test } from '@playwright/test';
 
 import type { BenchRowDef } from './common/bench.type.ts';
-import { sampleAnnotation, sampleOf } from './utils/bench-results.util.ts';
+import { noteAnnotation, sampleAnnotation, sampleOf } from './utils/bench-results.util.ts';
 
 export const recordSample = (row: BenchRowDef, ms: number): void => {
   const annotation = sampleAnnotation({ name: row.name, ms, gate: row.gate });
+
+  test.info().annotations.push(annotation);
+};
+
+/** Prints `text` after the rows; the running test keeps it as a finding, not a sample. */
+export const recordNote = (text: string): void => {
+  const annotation = noteAnnotation(text);
 
   test.info().annotations.push(annotation);
 };

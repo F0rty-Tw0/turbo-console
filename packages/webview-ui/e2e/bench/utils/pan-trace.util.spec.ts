@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { deltasOf, longestWithin } from './pan-trace.util.ts';
+import { deltasOf, longestWithin, stretchPanOf } from './pan-trace.util.ts';
+import type { PanTrace } from '../common/bench.type.ts';
 
 describe('FEATURE: pan trace', () => {
   describe('GIVEN frames 10, 30, 50, 70, 90 and a window 30 to 70', () => {
@@ -41,6 +42,19 @@ describe('FEATURE: pan trace', () => {
       const result = longestWithin([{ startTime: 5, duration: 90 }], 10, 100);
 
       expect(result).toBe(0);
+    });
+  });
+
+  describe('GIVEN a pan of 100 vsync frames and 10 slow ones', () => {
+    it('WHEN the pan is taken THEN the p95 is the slow frame, though the median is the vsync one, and the long task rides along', () => {
+      const vsync = Array.from({ length: 100 }, () => 16.7);
+      const slow = Array.from({ length: 10 }, () => 50);
+      const frameDeltasMs = [...vsync, ...slow];
+      const trace: PanTrace = { frameDeltasMs, longestLongTaskMs: 83 };
+
+      const pan = stretchPanOf(trace);
+
+      expect(pan).toStrictEqual({ p95Ms: 50, longestLongTaskMs: 83 });
     });
   });
 });
