@@ -22,8 +22,8 @@ import { diffModels } from '../utils/model-diff.util.ts';
 import { nodeFor } from '../utils/node-cache.util.ts';
 import { currentRowOf } from '../utils/node-rows.util.ts';
 import { rowScopeOf } from '../utils/row-scope.util.ts';
-import { isVisibleTurboTask } from '../utils/script-task.util.ts';
-import { taskRowOf } from '../utils/task-rows.util.ts';
+import { staticAtomLookup } from '../utils/static-atoms.util.ts';
+import { isListedTurboTask, taskRowOf } from '../utils/task-rows.util.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
@@ -70,7 +70,8 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsS
       scriptsShown,
       live: NOTHING_LIVE,
       now: 0,
-      tools
+      tools,
+      atoms: staticAtomLookup(() => model)
     };
 
     return allRows(state, context);
@@ -114,13 +115,15 @@ const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntr
 
 /**
  * The first `TICKED_TASKS` visible turbo tasks of the shown packages in model order (packages, then `tasks` order),
- * running. Turbo tasks only, so the ticked set stays the same as scripts become runnable in later slices.
+ * running. Scripts and an Atomizer group's aggregate are not ticked: the tree lists no row for them (the umbrella stands in).
  */
 const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
+  const atoms = staticAtomLookup(() => model);
   const entries: RunEntry[] = [];
 
   for (const pkg of view.packages.values()) {
-    const runnable = pkg.tasks.filter(isVisibleTurboTask);
+    const { groups } = atoms(model.root, pkg.name);
+    const runnable = pkg.tasks.filter((task) => isListedTurboTask(task, groups));
 
     for (const task of runnable) entries.push(runningEntryOf(model.root, pkg, task));
 
@@ -173,7 +176,8 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
     scriptsShown: false,
     live: runningIds,
     now: TICK_NOW,
-    tools
+    tools,
+    atoms: staticAtomLookup(() => model)
   };
   const cache = new Map<string, TreeNode>();
   const nodes = entries.map((entry) => nodeFor(cache, entryRowOf(model, entry, context)));

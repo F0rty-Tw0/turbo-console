@@ -8,8 +8,10 @@ import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeRow } from '../common/tree-row.type.ts';
+import { ATOM_MODEL_STUB, ATOM_VIEW_STUB } from '../test/stubs/atom-view.stub.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
+import { atomContextOf } from '../test/utils/atom-context.spec.util.ts';
 import { liveIdsOf } from '../test/utils/live-ids.spec.util.ts';
 import { ROW_NOW, rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
@@ -161,6 +163,36 @@ describe('FEATURE: every row of a root', () => {
       const rows = allRows(state, rowContextOf('folders'));
 
       expect(sortedIds(rows)).toStrictEqual(['msg:/ws\0loading']);
+    });
+  });
+});
+
+describe('FEATURE: every row of a root holding Atomizer groups', () => {
+  describe('GIVEN package e2e with a group of three files', () => {
+    const state: RootState = { ...ROOT_STATE_STUB, model: ATOM_MODEL_STUB };
+
+    it('WHEN listed THEN each file row is there', () => {
+      const rows = allRows(state, atomContextOf(ATOM_VIEW_STUB));
+
+      expect(sortedIds(rows)).toStrictEqual(
+        expect.arrayContaining([
+          'task:/ws\0e2e#e2e-ci--tests/a.spec.ts',
+          'task:/ws\0e2e#e2e-ci--tests/b fails.spec.ts',
+          'task:/ws\0e2e#e2e-ci--tests/live.spec.ts'
+        ])
+      );
+    });
+
+    it('WHEN listed THEN the aggregate is not', () => {
+      const rows = allRows(state, atomContextOf(ATOM_VIEW_STUB));
+
+      expect(sortedIds(rows)).not.toContain('task:/ws\0e2e#e2e-ci--all');
+    });
+
+    it('WHEN listed THEN no id repeats', () => {
+      const ids = sortedIds(allRows(state, atomContextOf(ATOM_VIEW_STUB)));
+
+      expect(new Set(ids).size).toBe(ids.length);
     });
   });
 });

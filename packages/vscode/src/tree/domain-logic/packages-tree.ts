@@ -4,12 +4,14 @@ import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
+import type { AtomLookup } from '../common/atom-view.type.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { IconsMode, TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { nodesOf } from '../utils/node-cache.util.ts';
 import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts';
 import { rootRowOf, rootRows } from '../utils/root-rows.util.ts';
+import { staticAtomLookup } from '../utils/static-atoms.util.ts';
 import { markAsked, markShown } from '../utils/tree-visible-span.util.ts';
 
 /**
@@ -24,6 +26,7 @@ export class PackagesTree {
   private readonly views = new ModelViews(resolveTool);
   private readonly viewOf: ModelViewsOf = (model, scriptsShown, live) => this.views.of(model, scriptsShown, live);
   private readonly toolOfCommand: ToolLookup = (pkg, singlePackage, command) => this.views.toolOf(pkg, singlePackage, command);
+  private readonly atomsOf: AtomLookup = staticAtomLookup((root) => this.store.get(root)?.state.model ?? null);
   private readonly refresher: TreeRefresher;
   private mode: TreeMode;
   private icons: IconsMode;
@@ -123,7 +126,8 @@ export class PackagesTree {
       scriptsShown: scriptsShown(),
       live: runningIds,
       now: wallNow(),
-      tools: this.toolOfCommand
+      tools: this.toolOfCommand,
+      atoms: this.atomsOf
     };
 
     return context;

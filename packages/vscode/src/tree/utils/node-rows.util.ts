@@ -5,7 +5,7 @@ import { liveOf } from './live-of.util.ts';
 import { rootRowOf, rootRows, shownModelOf } from './root-rows.util.ts';
 import { rowScopeOf } from './row-scope.util.ts';
 import { groupRowOf, scriptRows } from './script-rows.util.ts';
-import { taskRowOf, taskRows } from './task-rows.util.ts';
+import { taskChildRows, taskRowOf, taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
@@ -48,6 +48,8 @@ const modelChildren = (root: string, model: WorkspaceModel, node: TreeNode, cont
   if (node.kind === 'pkg' && pkg !== undefined) return taskRows(scope, pkg, context);
 
   if (node.kind === 'scripts' && pkg !== undefined) return scriptRows(scope, pkg, context);
+
+  if (node.kind === 'task' && pkg !== undefined) return taskChildRows(scope, pkg, node.key, context);
 
   const dir = dirOf(view, node);
 

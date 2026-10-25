@@ -25,7 +25,7 @@ const CACHE_LINES: Readonly<Record<NonNullable<RunMatch['cache']>, string>> = {
 
 const FORCED_CACHE_LINE = 'Cache: skipped (Run Without Cache)';
 
-const lineOf = (line: string | null): string[] => {
+export const lineOf = (line: string | null): string[] => {
   if (line === null) return [];
 
   return [line];
@@ -37,7 +37,7 @@ const labelled = (label: string, value: string | number | null): string | null =
   return `${label}: ${value}`;
 };
 
-const timeLine = (label: string, at: number | null): string | null => {
+export const timeLine = (label: string, at: number | null): string | null => {
   if (at === null) return null;
 
   return labelled(label, new Date(at).toISOString());

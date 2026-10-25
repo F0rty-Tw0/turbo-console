@@ -33,3 +33,6 @@ export const LOADING_ICON: IconSpec = { id: 'loading~spin', color: null };
 
 /** Spec 1c-b §4.6: the Scripts group of a package. */
 export const SCRIPTS_ICON: IconSpec = { id: 'symbol-namespace', color: null };
+
+/** Spec 5 M5-1: an Atomizer file row that has no result yet. */
+export const SPEC_FILE_ICON: IconSpec = { id: 'file', color: null };
