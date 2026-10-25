@@ -59,12 +59,15 @@ export const RELOAD_LABEL = 'Reload';
 /** The graph container's accessible name, also the page's readiness marker for the e2e tests. */
 export const GRAPH_LABEL = 'Package graph';
 
-/** Light Modern run colours; `--vscode-disabledForeground` is `#61616180`, written as the `rgba` Cytoscape parses. */
+/** Light Modern `--vscode-descriptionForeground`, shared by the edge and the stopped run, which both read that variable. */
+const FALLBACK_DESCRIPTION = '#717171';
+
+/** Light Modern run colours; stopped shares the description fallback. */
 const FALLBACK_RUN_COLORS: ThemeColors['runs'] = {
   running: '#bf8803',
   passed: '#388a34',
   failed: '#f14c4c',
-  stopped: 'rgba(97, 97, 97, 0.5)',
+  stopped: FALLBACK_DESCRIPTION,
   'failed-to-start': '#f85149'
 };
 
@@ -72,7 +75,7 @@ const FALLBACK_RUN_COLORS: ThemeColors['runs'] = {
 export const FALLBACK_COLORS: ThemeColors = {
   background: '#ffffff',
   label: '#3b3b3b',
-  edge: '#717171',
+  edge: FALLBACK_DESCRIPTION,
   selected: '#005fb8',
   highlighted: '#1a85ff',
   frame: '#e5e5e5',

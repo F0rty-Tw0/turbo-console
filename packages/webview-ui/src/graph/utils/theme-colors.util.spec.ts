@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { contrastRatioOf } from './contrast.util.ts';
 import { themeColorsOf } from './theme-colors.util.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
@@ -16,7 +17,6 @@ const DARK: Record<string, string> = {
   '--vscode-charts-yellow': '#cca700',
   '--vscode-testing-iconPassed': '#73c991',
   '--vscode-testing-iconFailed': '#f14c4c',
-  '--vscode-disabledForeground': '#cccccc',
   '--vscode-errorForeground': '#f85149',
   '--vscode-charts-purple': '#b180d7'
 };
@@ -34,7 +34,7 @@ const DARK_RUNS: ThemeColors['runs'] = {
   running: '#cca700',
   passed: '#73c991',
   failed: '#f14c4c',
-  stopped: '#cccccc',
+  stopped: '#9d9d9d',
   'failed-to-start': '#f85149'
 };
 
@@ -58,7 +58,7 @@ describe('FEATURE: themeColorsOf', () => {
       expect(colors).toStrictEqual(DARK_COLORS);
     });
 
-    it('WHEN the colours are read THEN only the thirteen theme variables are read', () => {
+    it('WHEN the colours are read THEN only the twelve theme variables are read', () => {
       const read: string[] = [];
 
       themeColorsOf(cssVariableReaderMock(DARK, read));
@@ -102,14 +102,34 @@ describe('FEATURE: themeColorsOf', () => {
   });
 
   it.each([
-    ['#cccccc80', 'rgba(204, 204, 204, 0.5)'],
+    ['#9d9d9d80', 'rgba(157, 157, 157, 0.5)'],
     ['#ccc8', 'rgba(204, 204, 204, 0.53)']
   ])('GIVEN the stopped colour %s with alpha WHEN the colours are read THEN it reads as %s, which Cytoscape parses', (hex, rgba) => {
-    const translucent = { ...DARK, '--vscode-disabledForeground': hex };
+    const translucent = { ...DARK, '--vscode-descriptionForeground': hex };
 
     const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
     expect(colors.runs.stopped).toBe(rgba);
+  });
+
+  it('GIVEN every variable blank WHEN the colours are read THEN stopped is the description fallback, as the edge is', () => {
+    const colors = themeColorsOf(cssVariableReaderMock({}));
+
+    expect(colors.runs.stopped).toBe('#717171');
+    expect(colors.runs.stopped).toBe(colors.edge);
+  });
+
+  /** `descriptionForeground` is `transparent(foreground, 0.7)` in hcLight, foreground `#292929`: 0.7 * 41 + 0.3 * 255 = 105 = 0x69 over white. Source: https://github.com/microsoft/vscode/blob/8d97209dc20dfbd60430243dbeac80149f87087a/src/vs/platform/theme/common/colors/baseColors.ts */
+  const HC_LIGHT_DESCRIPTION = '#696969';
+
+  it.each([
+    ['Light Modern', '#616161', '#ffffff'],
+    ['Dark Modern', '#9d9d9d', '#1f1f1f'],
+    ['High Contrast', '#ffffff', '#000000'],
+    ['High Contrast Light', HC_LIGHT_DESCRIPTION, '#ffffff'],
+    ['fallback', '#717171', '#ffffff']
+  ])('GIVEN %s, stopped (descriptionForeground) on the editor background is at least 3:1', (_, foreground, background) => {
+    expect(contrastRatioOf(foreground, background)).toBeGreaterThanOrEqual(3);
   });
 
   it('GIVEN a value with surrounding spaces WHEN the colours are read THEN it is trimmed', () => {

@@ -39,7 +39,7 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
     running: valueOf('--vscode-charts-yellow', fallbackRuns.running),
     passed: valueOf('--vscode-testing-iconPassed', fallbackRuns.passed),
     failed: valueOf('--vscode-testing-iconFailed', fallbackRuns.failed),
-    stopped: valueOf('--vscode-disabledForeground', fallbackRuns.stopped),
+    stopped: valueOf('--vscode-descriptionForeground', fallbackRuns.stopped),
     'failed-to-start': valueOf('--vscode-errorForeground', fallbackRuns['failed-to-start'])
   };
   const background = valueOf('--vscode-editor-background', FALLBACK_COLORS.background);
