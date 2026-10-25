@@ -111,6 +111,20 @@ describe('FEATURE: stretch task state', () => {
       expect(file?.id).toBe('pkg-000#e2e-ci--tests/spec-001.spec.ts');
     });
 
+    it('WHEN a test, a lint and a typecheck are read THEN test and typecheck need the build of their package and lint needs nothing', () => {
+      const state = stretchTasksState();
+      const dependenciesOf = (id: string): string[] | undefined => state.tasks.find((task) => task.id === id)?.dependencies;
+
+      expect(dependenciesOf('pkg-001#test')).toStrictEqual(['pkg-001#build']);
+      expect(dependenciesOf('pkg-001#typecheck')).toStrictEqual(['pkg-001#build']);
+      expect(dependenciesOf('pkg-001#lint')).toStrictEqual([]);
+    });
+
+    it('WHEN its positions are read THEN it has none, though the large state has them', () => {
+      expect(stretchTasksState().positions).toBeNull();
+      expect(largeState().positions).not.toBeNull();
+    });
+
     it('WHEN its hash is read THEN it differs from the large state', () => {
       expect(stretchTasksState().hash).not.toBe(largeState().hash);
     });
