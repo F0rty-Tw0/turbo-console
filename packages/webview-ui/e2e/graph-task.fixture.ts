@@ -1,4 +1,5 @@
 import { test as graphTest } from './graph.fixture.ts';
+import { GraphAtoms } from './pages/graph-atoms.po.ts';
 import { GraphFlowPage } from './pages/graph-flow.po.ts';
 import { GraphHover } from './pages/graph-hover.po.ts';
 import { GraphTaskDetails } from './pages/graph-task-details.po.ts';
@@ -26,6 +27,7 @@ const UMBRELLA_SHOWN = [
 type OpenUmbrella = () => Promise<void>;
 
 type GraphTaskFixtures = {
+  readonly graphAtoms: GraphAtoms;
   readonly graphFlow: GraphFlowPage;
   readonly graphHover: GraphHover;
   readonly graphTask: GraphTask;
@@ -36,6 +38,9 @@ type GraphTaskFixtures = {
 
 /** The graph fixtures plus task mode's page parts; `graph.fixture.ts` is at its line cap. */
 export const test = graphTest.extend<GraphTaskFixtures>({
+  graphAtoms: async ({ page }, use): Promise<void> => {
+    await use(new GraphAtoms(page));
+  },
   graphFlow: async ({ page }, use): Promise<void> => {
     await use(new GraphFlowPage(page));
   },

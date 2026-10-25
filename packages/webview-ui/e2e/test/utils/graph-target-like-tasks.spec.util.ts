@@ -127,6 +127,13 @@ const umbrellaGroupOf = (fileCount: number): GraphAtomGroup => {
   return group;
 };
 
+/** The task ids of the umbrella's first `fileCount` files, the first the live one. */
+export const targetLikeFileIds = (fileCount = 10): string[] => {
+  const group = umbrellaGroupOf(fileCount);
+
+  return group.files.map((file) => file.id);
+};
+
 /**
  * `targetLikeState` with 99 tasks (`build`, `test`, `lint`, `typecheck`, `docs`, `pack`, `e2e` per package, and the
  * umbrella `app-1#e2e-ci`), hash `7a7a7a7b`, and the umbrella's group of `fileCount` files, the first live.

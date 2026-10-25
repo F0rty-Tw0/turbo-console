@@ -3,6 +3,7 @@ import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
+import { ATOM_BOX_PREFIX } from '../../src/graph/common/graph-atom.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { FOLDER_PADDING_PX } from '../../src/graph/common/graph.const.ts';
 import type { ColourInkInput, RunOutline } from '../common/graph.type.ts';
@@ -14,7 +15,9 @@ const BOX_PREFIX = 'pkg:';
 
 const isBoxId = (id: string): boolean => id.startsWith(BOX_PREFIX);
 
-const isTaskId = (id: string): boolean => !isBoxId(id);
+const isAtomBoxId = (id: string): boolean => id.startsWith(ATOM_BOX_PREFIX);
+
+const isTaskId = (id: string): boolean => !isBoxId(id) && !isAtomBoxId(id);
 
 const isBox = (node: ProbeNode): boolean => isBoxId(node.id);
 
