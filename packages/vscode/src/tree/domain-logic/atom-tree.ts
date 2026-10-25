@@ -3,7 +3,7 @@ import type { AtomGroup } from '@turbo-console/core';
 import type { RootChange, RootEntry, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { SharedAtoms } from '../common/atom-load.type.ts';
-import type { AtomLookup, AtomView } from '../common/atom-view.type.ts';
+import type { AtomLookup } from '../common/atom-view.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
 
@@ -27,7 +27,7 @@ export class AtomTree {
     this.cache = cache;
     this.fire = ports.fire;
     this.loads = ports.atom;
-    this.view = (root: string, packageName: string): AtomView => this.loads.view(root, packageName);
+    this.view = this.loads.view;
     this.loads.onDidChange((root, packageName) => {
       this.changed(root, packageName);
     });
