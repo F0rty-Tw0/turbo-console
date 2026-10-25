@@ -82,8 +82,8 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
           await graphTaskHost.sendRuns({ 'app#build': 'failed' });
         });
 
-        await test.step('THEN app#build has a 3 wide outline in the failed colour', async (): Promise<void> =>
-          graphTaskProbe.expectRunOutline('app#build', { width: 3, colour: FAILED_RGB }));
+        await test.step('THEN app#build has a 2 wide outline in the failed colour', async (): Promise<void> =>
+          graphTaskProbe.expectRunOutline('app#build', { width: 2, colour: FAILED_RGB }));
 
         await test.step('WHEN an empty runs map arrives', async (): Promise<void> => graphTaskHost.sendRuns({}));
 
@@ -102,8 +102,8 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
             await graphTaskHost.sendRuns({ 'app#build': 'stopped' });
           });
 
-          await test.step('THEN app#build has a 3 wide outline in the description colour', async (): Promise<void> =>
-            graphTaskProbe.expectRunOutline('app#build', { width: 3, colour: stopped }));
+          await test.step('THEN app#build has a 2 wide outline in the description colour', async (): Promise<void> =>
+            graphTaskProbe.expectRunOutline('app#build', { width: 2, colour: stopped }));
         }
       );
     }
