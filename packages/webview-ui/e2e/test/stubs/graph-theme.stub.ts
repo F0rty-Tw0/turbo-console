@@ -10,7 +10,8 @@ const DARK_VARS: Readonly<Record<string, string>> = {
   '--vscode-testing-iconPassed': '#73c991',
   '--vscode-testing-iconFailed': '#f14c4c',
   '--vscode-disabledForeground': '#cccccc80',
-  '--vscode-errorForeground': '#f85149'
+  '--vscode-errorForeground': '#f85149',
+  '--vscode-charts-purple': '#b180d7'
 };
 
 const DARK_COLORS: ExpectedThemeColors = {
@@ -33,7 +34,8 @@ const LIGHT_VARS: Readonly<Record<string, string>> = {
   '--vscode-testing-iconPassed': '#388a34',
   '--vscode-testing-iconFailed': '#f14c4c',
   '--vscode-disabledForeground': '#61616180',
-  '--vscode-errorForeground': '#f85149'
+  '--vscode-errorForeground': '#f85149',
+  '--vscode-charts-purple': '#652d90'
 };
 
 const LIGHT_COLORS: ExpectedThemeColors = {
@@ -58,7 +60,8 @@ const HC_VARS: Readonly<Record<string, string>> = {
   '--vscode-testing-iconPassed': '#73c991',
   '--vscode-testing-iconFailed': '#f48771',
   '--vscode-disabledForeground': '#a5a5a5',
-  '--vscode-errorForeground': '#f48771'
+  '--vscode-errorForeground': '#f48771',
+  '--vscode-charts-purple': '#b180d7'
 };
 
 const HC_COLORS: ExpectedThemeColors = {

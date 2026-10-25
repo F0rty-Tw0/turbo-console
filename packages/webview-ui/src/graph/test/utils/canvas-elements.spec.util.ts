@@ -20,6 +20,7 @@ export const CANVAS_COLORS: ThemeColors = {
   selected: '#f00',
   highlighted: '#0f0',
   frame: '#444',
+  cached: '#a0f',
   runs: CANVAS_RUN_COLORS,
   dimmedOpacity: 0.25
 };

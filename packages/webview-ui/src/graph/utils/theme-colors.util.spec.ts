@@ -17,7 +17,8 @@ const DARK: Record<string, string> = {
   '--vscode-testing-iconPassed': '#73c991',
   '--vscode-testing-iconFailed': '#f14c4c',
   '--vscode-disabledForeground': '#cccccc',
-  '--vscode-errorForeground': '#f85149'
+  '--vscode-errorForeground': '#f85149',
+  '--vscode-charts-purple': '#b180d7'
 };
 
 /** `THEME_HC_STUB`'s colours over the dark rows: white label and edges, the `#6fc3df` contrast border, a black editor. */
@@ -44,6 +45,7 @@ const DARK_COLORS: ThemeColors = {
   selected: '#0078d4',
   highlighted: '#3794ff',
   frame: '#2b2b2b',
+  cached: '#b180d7',
   runs: DARK_RUNS,
   dimmedOpacity: 0.25
 };
@@ -56,7 +58,7 @@ describe('FEATURE: themeColorsOf', () => {
       expect(colors).toStrictEqual(DARK_COLORS);
     });
 
-    it('WHEN the colours are read THEN only the twelve theme variables are read', () => {
+    it('WHEN the colours are read THEN only the thirteen theme variables are read', () => {
       const read: string[] = [];
 
       themeColorsOf(cssVariableReaderMock(DARK, read));

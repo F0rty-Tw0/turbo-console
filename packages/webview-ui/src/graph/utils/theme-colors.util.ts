@@ -21,7 +21,7 @@ const cytoscapeColourOf = (value: string): string => {
  * The graph colours from the theme variables, each trimmed (`getPropertyValue` keeps the leading space), a blank one
  * replaced by its `FALLBACK_COLORS` entry. VS Code sets `--vscode-contrastBorder` only in high contrast themes, so the
  * node frame takes it there and `--vscode-panel-border` everywhere else, and dimmed elements rise from 0.25 until they keep
- * 3:1 against the background there. Run outlines take the Tasks tree's status colours.
+ * 3:1 against the background there. Run outlines take the Tasks tree's status colours; a cached Atomizer file takes the chart purple.
  */
 export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const valueOf = (name: string, fallback: string): string => {
@@ -54,6 +54,7 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
     selected: valueOf('--vscode-focusBorder', FALLBACK_COLORS.selected),
     highlighted: valueOf('--vscode-charts-blue', FALLBACK_COLORS.highlighted),
     frame,
+    cached: valueOf('--vscode-charts-purple', FALLBACK_COLORS.cached),
     runs,
     dimmedOpacity
   };
