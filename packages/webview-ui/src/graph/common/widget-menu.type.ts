@@ -2,6 +2,8 @@
 export type MenuItem = {
   readonly kind: 'item';
   readonly label: string;
+  /** The hover text when it says more than the label; the label otherwise. */
+  readonly title?: string;
   readonly role: 'menuitem' | 'menuitemcheckbox';
   readonly checked: 'true' | 'false' | 'mixed' | null;
   /** Still focusable (`aria-disabled`); the menu never runs it. */

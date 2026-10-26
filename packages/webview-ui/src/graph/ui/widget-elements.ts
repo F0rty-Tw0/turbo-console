@@ -2,16 +2,17 @@ import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import type { FolderRowElements, RowKind } from '../common/widget.type.ts';
+import { setButtonLabel } from '../utils/button-title.util.ts';
 import { folderActionsLabelOf, packageActionsLabelOf } from '../utils/controls-text.util.ts';
 import { pluralOf } from '../utils/plural.util.ts';
 
-/** A 24 px icon button; the aria-label is its accessible name. */
+/** A 24 px icon button; the aria-label is its accessible name and its hover title. */
 const widgetButton = (id: GraphIconId, label: string): HTMLButtonElement => {
   const button = textElement('button', 'widget-button', '');
   const icon = graphIcon(id);
 
   button.type = 'button';
-  button.setAttribute('aria-label', label);
+  setButtonLabel(button, label);
   button.append(icon);
 
   return button;

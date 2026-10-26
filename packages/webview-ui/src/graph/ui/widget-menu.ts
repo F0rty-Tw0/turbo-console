@@ -27,6 +27,7 @@ const itemElementOf = (item: MenuItem): HTMLElement => {
 
   button.type = 'button';
   button.tabIndex = -1;
+  button.title = item.title ?? item.label;
   button.setAttribute('role', item.role);
 
   if (item.checked !== null) button.setAttribute('aria-checked', item.checked);
