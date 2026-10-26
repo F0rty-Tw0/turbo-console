@@ -52,5 +52,14 @@ describe('FEATURE: linkView', () => {
     it('WHEN built THEN the heading is "Dependency"', () => {
       expect(view.heading.textContent).toBe('Dependency');
     });
+
+    it('WHEN built THEN the heading is described by the lead line that names the two ends', () => {
+      const describedBy = view.heading.getAttribute('aria-describedby');
+      const children = Array.from(view.root.children);
+      const described = children.find((child) => child.id === describedBy);
+
+      expect(described).toBe(leadOf(view));
+      expect(textsOf(described)).toStrictEqual(['@acme/web', ' depends on ', '@acme/ui']);
+    });
   });
 });
