@@ -39,6 +39,7 @@ export const nodeAt = (id: string, renderedX: number, renderedY: number): ProbeN
     frame: '',
     label: '',
     text: id,
+    textMaxWidth: 0,
     fill: '',
     isGhost: false,
     borderStyle: 'solid',

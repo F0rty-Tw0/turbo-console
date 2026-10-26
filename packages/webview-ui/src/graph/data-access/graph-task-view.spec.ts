@@ -34,7 +34,8 @@ const DRAWING: TaskDrawing = {
   positions: POSITIONS,
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: NO_SIZES,
-  labels: NO_LABELS
+  labels: NO_LABELS,
+  titleWidths: new Map()
 };
 
 const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };

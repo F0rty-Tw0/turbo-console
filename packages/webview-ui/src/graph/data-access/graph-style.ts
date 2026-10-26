@@ -105,8 +105,19 @@ const edgeStyleOf = (colors: ThemeColors): Css.Edge => {
 /** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
 const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
 
-/** A box's width without its padding, so its title ends a padding short of each side of the frame. */
-const titleWidthOf = (box: NodeSingular): string => `${box.width()}px`;
+/** A task box's `data(minWidth)`, its title width; 0 for a box without one. */
+const minWidthOf = (box: NodeSingular): number => {
+  const value: unknown = box.data('minWidth');
+
+  return typeof value === 'number' ? value : 0;
+};
+
+/**
+ * A box's width without its padding, so its title ends a padding short of each side of the frame. Cytoscape resolves
+ * `text-max-width` before `min-width`, so on the first style apply `box.width()` is still its children's; the task box's
+ * `minWidth` is the width it is about to take.
+ */
+const titleWidthOf = (box: NodeSingular): string => `${Math.max(box.width(), minWidthOf(box))}px`;
 
 /**
  * A box's title centred in the top padding band, inside the frame, cut with an ellipsis when wider than the box. A folder

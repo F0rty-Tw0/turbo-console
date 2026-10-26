@@ -26,7 +26,8 @@ const DRAWING: TaskDrawing = {
   positions: POSITIONS,
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map([['web#e2e-ci', UMBRELLA_SIZE]]),
-  labels: new Map()
+  labels: new Map(),
+  titleWidths: new Map()
 };
 
 const SIBLING_AT: Position = { x: 180, y: 300 };

@@ -23,6 +23,8 @@ export type ProbeNode = {
   readonly label: string;
   /** The label text drawn on the page: a package's name, a task box's package name, empty for a box with none. */
   readonly text: string;
+  /** The resolved `text-max-width` in px: how wide the label may draw before its ellipsis. */
+  readonly textMaxWidth: number;
   readonly fill: string;
   readonly isGhost: boolean;
   readonly borderStyle: string;

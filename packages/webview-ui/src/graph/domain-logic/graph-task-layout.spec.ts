@@ -36,8 +36,16 @@ const UMBRELLA_GROUP: GraphAtomGroup = { umbrellaId: 'api#build', files: UMBRELL
 
 const NO_SIZES: ReadonlyMap<string, NodeSize> = new Map();
 
-const sizedRequestOf = (key: string, sizes: ReadonlyMap<string, NodeSize>): TaskLayoutRequest => {
-  const request: TaskLayoutRequest = { tasks: TASK_CHAIN_STUB, shown: SHOWN, key, sizes };
+const NO_TITLES: ReadonlyMap<string, number> = new Map();
+
+const TITLES: ReadonlyMap<string, number> = new Map([['api', 130]]);
+
+const sizedRequestOf = (
+  key: string,
+  sizes: ReadonlyMap<string, NodeSize>,
+  titleWidths: ReadonlyMap<string, number> = NO_TITLES
+): TaskLayoutRequest => {
+  const request: TaskLayoutRequest = { tasks: TASK_CHAIN_STUB, shown: SHOWN, key, sizes, titleWidths };
 
   return request;
 };
@@ -54,8 +62,12 @@ describe('FEATURE: GraphTaskLayout', () => {
   let onDrawn: Mock<() => void>;
 
   /** Shows the layout of `key` and lands it as the latest run. */
-  const landWith = async (key: string, sizes: ReadonlyMap<string, NodeSize>): Promise<void> => {
-    const shown = layout.show(sizedRequestOf(key, sizes));
+  const landWith = async (
+    key: string,
+    sizes: ReadonlyMap<string, NodeSize>,
+    titleWidths: ReadonlyMap<string, number> = NO_TITLES
+  ): Promise<void> => {
+    const shown = layout.show(sizedRequestOf(key, sizes, titleWidths));
 
     await rig.runs.settle(rig.runs.count() - 1, resultOf(key, POSITIONS));
     await shown;
@@ -101,6 +113,12 @@ describe('FEATURE: GraphTaskLayout', () => {
 
       expect(rig.flow.stop).toHaveBeenCalledOnce();
     });
+  });
+
+  it('GIVEN a request with title widths WHEN a layout lands THEN the canvas gets the request title widths', async () => {
+    await landWith('k0', NO_SIZES, TITLES);
+
+    expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ titleWidths: TITLES }));
   });
 
   describe('GIVEN api#build is an umbrella of one file', () => {

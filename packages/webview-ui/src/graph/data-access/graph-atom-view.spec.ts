@@ -54,7 +54,8 @@ const DRAWING: TaskDrawing = {
   positions: DRAWN_AT,
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map([['web#e2e-ci', UMBRELLA_SIZE]]),
-  labels: new Map([['web#e2e-ci', '3 files']])
+  labels: new Map([['web#e2e-ci', '3 files']]),
+  titleWidths: new Map()
 };
 
 const idOf = (node: NodeSingular): string => node.id();

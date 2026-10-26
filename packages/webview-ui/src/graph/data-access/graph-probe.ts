@@ -76,6 +76,7 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     frame,
     label,
     text: styleText(node, 'label'),
+    textMaxWidth: styleNumber(node, 'text-max-width'),
     fill,
     isGhost: node.hasClass(GHOST_CLASS),
     borderStyle: styleText(node, 'border-style'),

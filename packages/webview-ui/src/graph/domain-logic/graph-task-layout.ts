@@ -112,7 +112,7 @@ export class GraphTaskLayout {
   }
 
   private async layOut(request: TaskLayoutRequest, canRestore: boolean): Promise<void> {
-    const graph = elkTaskGraphOf(request.tasks, request.shown, this.deps.sizeOf, request.sizes);
+    const graph = elkTaskGraphOf(request, this.deps.sizeOf);
     const result = await this.deps.runner.run(request.key, graph);
     const wantedKey = this.key();
 
@@ -141,7 +141,8 @@ export class GraphTaskLayout {
       positions: result.positions,
       sizeOf,
       sizes: request.sizes,
-      labels: this.atoms.labels()
+      labels: this.atoms.labels(),
+      titleWidths: request.titleWidths
     });
     this.placed = result;
     this.atoms.placed(request.shown, result.positions, request.sizes, request.tasks);
