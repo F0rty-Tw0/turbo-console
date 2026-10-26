@@ -20,6 +20,20 @@ export const field = (text: string, input: HTMLInputElement): HTMLElement => {
   return label;
 };
 
+/** `field` plus a hint below it; the hint sits outside the `<label>` so the input keeps the caption as its name and the hint as its description. */
+export const hintedField = (text: string, input: HTMLInputElement, hint: string, hintId: string): HTMLElement => {
+  const group = textElement('div', 'controls-field-group', '');
+  const label = field(text, input);
+  const note = textElement('span', 'controls-hint', hint);
+
+  note.id = hintId;
+  label.title = hint;
+  input.setAttribute('aria-describedby', hintId);
+  group.append(label, note);
+
+  return group;
+};
+
 export const searchInput = (): HTMLInputElement => {
   const search = document.createElement('input');
 

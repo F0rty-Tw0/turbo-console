@@ -202,6 +202,10 @@ export const SEARCH_LABEL = 'Search packages';
 
 export const DEPTH_LABEL = 'Focus depth';
 
+export const DEPTH_HINT = 'How many links away from the focus target stay visible.';
+
+export const DEPTH_HINT_ID = 'graph-depth-hint';
+
 export const GROUP_BY_FOLDER_LABEL = 'Group by folder';
 
 export const TAGS_LABEL = 'Tags';
