@@ -16,6 +16,9 @@ const STEP_COUNT = 60;
 
 const SEEDS = [{ seed: 1234 }, { seed: 98765 }];
 
+/** Each seed builds 61 styled Cytoscapes: under 1 s alone, but over the 5 s default on a CI runner busy with the whole suite. */
+const SEED_TIMEOUT_MS = 30_000;
+
 const labelOf = (folder: string): string => `L:${folder}`;
 
 /** Places the packages, shows only the visible ones, draws the ghosts and runs the folder pass, as the page does. */
@@ -69,7 +72,8 @@ describe('FEATURE: createFoldersView history', () => {
         const live = liveSnapshotsOf(steps);
 
         expect(live).toStrictEqual(fresh);
-      }
+      },
+      SEED_TIMEOUT_MS
     );
   });
 });
