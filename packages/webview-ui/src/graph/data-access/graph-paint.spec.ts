@@ -67,7 +67,7 @@ describe('FEATURE: applyPaint', () => {
 
       applyPaint(cy, FIRST_PAINT);
 
-      expect(cy.getElementById('a').numericStyle('border-width')).toBe(3);
+      expect(cy.getElementById('a').numericStyle('border-width')).toBe(2);
     });
   });
 

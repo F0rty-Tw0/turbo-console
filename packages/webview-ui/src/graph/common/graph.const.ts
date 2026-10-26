@@ -145,6 +145,9 @@ export const EXPORTING_CLASS = 'exporting';
 /** The border of a package, folder box or collapsed node while neither selected nor highlighted, in px. */
 export const NODE_BORDER_PX = 1;
 
+/** The border of a selected node and the width of a selected edge, in px, drawn centred on the node's edge. */
+export const SELECTED_BORDER_PX = 2;
+
 /** The grouped root: the same layered options, with edges between packages of different folders laid out together. */
 export const ELK_GROUPED_ROOT_OPTIONS: Readonly<Record<string, string>> = {
   ...ELK_OPTIONS,
