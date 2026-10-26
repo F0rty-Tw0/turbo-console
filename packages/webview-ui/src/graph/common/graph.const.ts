@@ -221,7 +221,7 @@ export const BREADCRUMB_LABEL = 'Folder focus';
 
 export const ALL_FOLDERS_LABEL = 'All folders';
 
-/** The class the graph container wears while the pointer is over a clickable node or edge: its cursor is a pointer. */
+/** The class the graph container wears over a node or edge that is not a ghost or a folder link: a pointer cursor. */
 export const OVER_ELEMENT_CLASS = 'over-element';
 
 /**
