@@ -32,8 +32,11 @@ describe('FEATURE: traceView', () => {
   });
 
   describe('GIVEN a forward trace of three steps', () => {
-    it('WHEN built THEN the heading is "Trace" and the lead names no package', () => {
+    it('WHEN built THEN the heading is "Trace"', () => {
       expect(view.heading.textContent).toBe('Trace');
+    });
+
+    it('WHEN built THEN the lead counts the path and names no package', () => {
       expect(view.lead.textContent).toBe('3 packages on the shortest path.');
     });
 

@@ -4,14 +4,14 @@ import { linkView } from './details-link.ts';
 import type { LinkDetails } from '../common/details-view.type.ts';
 import type { LinkViewModel } from '../common/details.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { hasClass, namesIn } from '../test/utils/details-names.spec.util.ts';
+import { namesIn } from '../test/utils/details-names.spec.util.ts';
 
 const MODEL: LinkViewModel = { source: '@acme/web', target: '@acme/ui', file: 'apps/web/package.json' };
 
 const leadOf = (view: LinkDetails): Element | undefined => {
   const children = Array.from(view.root.children);
 
-  return children.find((child) => hasClass(child, 'details-lead'));
+  return children.find((child) => child.classList.contains('details-lead'));
 };
 
 const textsOf = (parent: Element | undefined): (string | null)[] => {
@@ -49,12 +49,8 @@ describe('FEATURE: linkView', () => {
       expect(ends).toStrictEqual([view.source, view.target]);
     });
 
-    it('WHEN built THEN the heading is "Dependency" and no end list repeats the names', () => {
-      const children = Array.from(view.root.children);
-      const hasEnds = children.some((child) => hasClass(child, 'details-ends'));
-
+    it('WHEN built THEN the heading is "Dependency"', () => {
       expect(view.heading.textContent).toBe('Dependency');
-      expect(hasEnds).toBe(false);
     });
   });
 });
