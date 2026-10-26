@@ -45,6 +45,8 @@ export const EXCLUDE_FOLDER_LABEL = 'Exclude folder';
 
 export const START_TRACE_LABEL = 'Start trace';
 
+export const START_TRACE_TITLE = 'Pick a second package to highlight every dependency path between the two';
+
 export const EXPLAIN_LABEL = 'Explain';
 
 export const HIDDEN_TEXT = 'hidden';

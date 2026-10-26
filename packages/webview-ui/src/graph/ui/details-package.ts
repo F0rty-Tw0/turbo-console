@@ -9,7 +9,8 @@ import {
   FOCUS_LABEL,
   NONE_TEXT,
   NO_TAGS_TEXT,
-  START_TRACE_LABEL
+  START_TRACE_LABEL,
+  START_TRACE_TITLE
 } from '../common/details.const.ts';
 import type { NeighbourModel, PackageViewModel } from '../common/details.type.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
@@ -71,6 +72,8 @@ const actionsOf = (model: PackageViewModel): PackageActions => {
   const startTrace = actionButton(START_TRACE_LABEL);
   const showTasks = actionButton(SHOW_TASKS_LABEL);
   const row = textElement('div', 'details-row', '');
+
+  startTrace.title = START_TRACE_TITLE;
 
   if (model.isFocused) exclude.setAttribute('aria-disabled', 'true');
 
