@@ -7,13 +7,14 @@ import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
 import { GLYPH_CODE_POINTS } from '../common/graph-glyph.const.ts';
 import { RUN_CLASS_PREFIX, RUN_STATE_ICONS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { SELECTED_BORDER_PX } from '../common/graph.const.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { classedNodeOf, outlineWidthOf, ringOf } from '../test/utils/task-ring.spec.util.ts';
 
 const TASK_ID = 'web#build';
 const FILE_ID = 'web#build--a.ts';
 const RUNNING = `${RUN_CLASS_PREFIX}running`;
-const SELECTED_RING = [0, 2, 'rgb(255,0,0)'];
+const SELECTED_RING = [0, SELECTED_BORDER_PX, 'rgb(255,0,0)'];
 
 describe('FEATURE: a selected task drops its run outline in graphStyleOf', () => {
   describe('GIVEN a task node and an atom file with the task mode stylesheet', () => {
@@ -35,7 +36,7 @@ describe('FEATURE: a selected task drops its run outline in graphStyleOf', () =>
       cy.destroy();
     });
 
-    it.each(RUN_STATES)('WHEN the task is selected and classed run-%s THEN no outline and the 2 wide selected border', (state) => {
+    it.each(RUN_STATES)('WHEN the task is selected and classed run-%s THEN no outline and the selected border', (state) => {
       task.addClass(`selected ${RUN_CLASS_PREFIX}${state}`);
 
       expect(ringOf(task)).toStrictEqual(SELECTED_RING);

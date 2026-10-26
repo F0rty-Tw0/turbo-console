@@ -3,8 +3,15 @@ import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
-import { FOLDER_NODE_CLASS } from '../common/graph.const.ts';
-import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
+import {
+  EDGE_WIDTH,
+  FOLDER_NODE_CLASS,
+  HIGHLIGHTED_EDGE_WIDTH,
+  NODE_BORDER_PX,
+  SELECTED_BORDER_PX,
+  SELECTED_EDGE_WIDTH
+} from '../common/graph.const.ts';
+import { CANVAS_COLORS, CANVAS_ELEMENTS, canvasEdgeOf } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
 const AB = edgeIdOf({ source: 'a', target: 'b' });
@@ -24,11 +31,11 @@ describe('FEATURE: graphStyleOf edge states', () => {
   });
 
   describe('GIVEN the edge a>b has the selected class', () => {
-    it('THEN it is 2 wide while a plain edge stays 1', () => {
+    it('THEN it is 1.5 wide while a plain edge stays 0.75', () => {
       cy.getElementById(AB).addClass('selected');
 
-      expect(cy.getElementById(AB).numericStyle('width')).toBe(2);
-      expect(cy.getElementById(BC).numericStyle('width')).toBe(1);
+      expect(cy.getElementById(AB).numericStyle('width')).toBe(1.5);
+      expect(cy.getElementById(BC).numericStyle('width')).toBe(0.75);
     });
 
     it('THEN its line colour is the selected colour a selected node frames with, not the plain edge colour', () => {
@@ -56,10 +63,10 @@ describe('FEATURE: graphStyleOf edge states', () => {
   });
 
   describe('GIVEN the edge b>c has the highlighted class', () => {
-    it('THEN it is 1.5 wide', () => {
+    it('THEN it is 1.25 wide', () => {
       cy.getElementById(BC).addClass('highlighted');
 
-      expect(cy.getElementById(BC).numericStyle('width')).toBe(1.5);
+      expect(cy.getElementById(BC).numericStyle('width')).toBe(1.25);
     });
   });
 
@@ -274,6 +281,37 @@ describe('FEATURE: graphStyleOf corners and arrows', () => {
     }
   );
 
+  it('GIVEN an edge in each state THEN plain is 0.75, highlighted 1.25, selected 1.5 and the arrow scale stays 0.8', () => {
+    cy.add(canvasEdgeOf('c', 'a'));
+    const plain = cy.getElementById(AB);
+    const lit = cy.getElementById(BC);
+    const picked = cy.getElementById(edgeIdOf({ source: 'c', target: 'a' }));
+
+    lit.addClass('highlighted');
+    picked.addClass('selected');
+
+    expect([plain.numericStyle('width'), lit.numericStyle('width'), picked.numericStyle('width')]).toStrictEqual([
+      EDGE_WIDTH,
+      HIGHLIGHTED_EDGE_WIDTH,
+      SELECTED_EDGE_WIDTH
+    ]);
+    expect([EDGE_WIDTH, HIGHLIGHTED_EDGE_WIDTH, SELECTED_EDGE_WIDTH]).toStrictEqual([0.75, 1.25, 1.5]);
+    expect(plain.numericStyle('arrow-scale')).toBe(0.8);
+  });
+
+  it('GIVEN a selected node THEN its border is 1.5 and a plain node keeps 1', () => {
+    const picked = cy.getElementById('a');
+    const plain = cy.getElementById('b');
+
+    picked.addClass('selected');
+
+    expect([picked.numericStyle('border-width'), plain.numericStyle('border-width')]).toStrictEqual([
+      SELECTED_BORDER_PX,
+      NODE_BORDER_PX
+    ]);
+    expect([SELECTED_BORDER_PX, NODE_BORDER_PX]).toStrictEqual([1.5, 1]);
+  });
+
   it('GIVEN another theme applied again THEN the corners and the selected width are unchanged', () => {
     const node = cy.getElementById('a');
     const edge = cy.getElementById(AB);
@@ -283,7 +321,7 @@ describe('FEATURE: graphStyleOf corners and arrows', () => {
     edge.addClass('selected');
 
     expect([node.numericStyle('corner-radius'), node.numericStyle('border-width'), edge.numericStyle('width')]).toStrictEqual([
-      6, 2, 2
+      6, 1.5, 1.5
     ]);
   });
 });

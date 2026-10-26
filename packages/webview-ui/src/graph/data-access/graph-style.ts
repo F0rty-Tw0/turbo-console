@@ -4,15 +4,18 @@ import { taskRulesOf } from './graph-task-style.ts';
 import {
   COLLAPSED_LABEL_MAX_PX,
   DIMMED_BOX_CLASS,
+  EDGE_WIDTH,
   EXPORTING_CLASS,
   FOLDER_HIDDEN_CLASS,
   FOLDER_LINK_CLASS,
   FOLDER_NODE_CLASS,
   FOLDER_PADDING_PX,
+  HIGHLIGHTED_EDGE_WIDTH,
   NODE_BORDER_PX,
   NODE_FONT_SIZE,
   ROW_LESS_CLASS,
-  SELECTED_BORDER_PX
+  SELECTED_BORDER_PX,
+  SELECTED_EDGE_WIDTH
 } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 
@@ -95,7 +98,7 @@ const edgeStyleOf = (colors: ThemeColors): Css.Edge => {
   const edge = {
     ...EDGE_ARROW,
     'curve-style': 'bezier',
-    width: 1,
+    width: EDGE_WIDTH,
     'line-color': colors.edge,
     'target-arrow-color': colors.edge
   } as const;
@@ -161,8 +164,12 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
   } as const;
   const selectedNode = { 'border-width': SELECTED_BORDER_PX, 'border-color': colors.selected };
   const highlightedNode = { 'border-width': NODE_BORDER_PX, 'border-color': colors.highlighted };
-  const highlightedEdge = { width: 1.5, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
-  const selectedEdge = { width: SELECTED_BORDER_PX, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
+  const highlightedEdge = {
+    width: HIGHLIGHTED_EDGE_WIDTH,
+    'line-color': colors.highlighted,
+    'target-arrow-color': colors.highlighted
+  };
+  const selectedEdge = { width: SELECTED_EDGE_WIDTH, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
   const dimmed = { opacity: colors.dimmedOpacity };
   const glyphFamily = glyphs ? `codicon, ${fontFamily}` : null;
   const taskRules = taskRulesOf(colors, BOX_TITLE, glyphFamily);

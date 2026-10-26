@@ -159,8 +159,17 @@ export const EXPORTING_CLASS = 'exporting';
 /** The border of a package, folder box or collapsed node while not selected, highlighted ones included, in px. */
 export const NODE_BORDER_PX = 1;
 
-/** The border of a selected node and the width of a selected edge, in px, drawn centred on the node's edge. */
-export const SELECTED_BORDER_PX = 2;
+/** The border of a selected node, in px, drawn centred on the node's edge. */
+export const SELECTED_BORDER_PX = 1.5;
+
+/** The width of a plain edge: a model width in px that scales with zoom. */
+export const EDGE_WIDTH = 0.75;
+
+/** The width of a highlighted edge: a model width in px that scales with zoom. */
+export const HIGHLIGHTED_EDGE_WIDTH = 1.25;
+
+/** The width of a selected edge: a model width in px that scales with zoom. */
+export const SELECTED_EDGE_WIDTH = 1.5;
 
 /** The grouped root: the same layered options, with edges between packages of different folders laid out together. */
 export const ELK_GROUPED_ROOT_OPTIONS: Readonly<Record<string, string>> = {

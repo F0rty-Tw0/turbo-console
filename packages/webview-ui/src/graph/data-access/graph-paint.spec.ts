@@ -7,6 +7,7 @@ import { applyPaint } from './graph-paint.ts';
 import { graphStyleOf } from './graph-style.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
+import { SELECTED_BORDER_PX } from '../common/graph.const.ts';
 import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
@@ -80,7 +81,7 @@ describe('FEATURE: applyPaint', () => {
 
       applyPaint(cy, FIRST_PAINT);
 
-      expect(cy.getElementById('a').numericStyle('border-width')).toBe(2);
+      expect(cy.getElementById('a').numericStyle('border-width')).toBe(SELECTED_BORDER_PX);
     });
   });
 
