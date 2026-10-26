@@ -1,10 +1,10 @@
 import { actionButton, leadOf, markOf, nameButton, viewBase } from './details-parts.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { TraceDetails } from '../common/details-view.type.ts';
-import { CLEAR_TRACE_LABEL, DEPENDS_ON_TEXT, SHOW_LABEL, SWAP_ENDS_LABEL } from '../common/details.const.ts';
+import { CLEAR_TRACE_LABEL, DEPENDS_ON_TEXT, SHOW_LABEL, SWAP_ENDS_LABEL, TRACE_HEADING_TEXT } from '../common/details.const.ts';
 import type { TraceStepModel, TraceViewModel } from '../common/details.type.ts';
 import { showLabelOf } from '../utils/controls-text.util.ts';
-import { traceSummaryOf, traceTitleOf } from '../utils/details-text.util.ts';
+import { traceSummaryOf } from '../utils/details-text.util.ts';
 
 /** A ghost: the hidden package's name, its hidden mark, and Show when the filters can bring it back. */
 const ghostRow = (row: HTMLElement, step: TraceStepModel): void => {
@@ -68,8 +68,7 @@ export const stepItems = (steps: TraceStepModel[]): HTMLLIElement[] => steps.map
 
 /** A trace: its summary, the steps from dependent to dependency, then Clear trace and Swap ends. */
 export const traceView = (model: TraceViewModel, isOverlay: boolean): TraceDetails => {
-  const title = traceTitleOf(model.start, model.end);
-  const base = viewBase('trace', title, isOverlay);
+  const base = viewBase('trace', TRACE_HEADING_TEXT, isOverlay);
   const summary = traceSummaryOf(model.start, model.end, model.direction, model.steps.length);
   const lead = leadOf(summary);
   const steps = textElement('ol', 'trace-steps', '');

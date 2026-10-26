@@ -2,17 +2,15 @@ import { explainView } from './details-explain.ts';
 import { leadOf, nameButton, viewBase } from './details-parts.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { LinkDetails } from '../common/details-view.type.ts';
+import { DEPENDS_ON_TEXT, LINK_HEADING_TEXT } from '../common/details.const.ts';
 import type { ExplainState, LinkViewModel } from '../common/details.type.ts';
-import { dependsTextOf, linkTitleOf } from '../utils/details-text.util.ts';
 
-/** A link's ends and the explain slot, which starts out reading the dependent's manifest. */
+/** One line, "[source] depends on [target]", with each end a name button, then the explain slot, which starts out reading the dependent's manifest. */
 export const linkView = (model: LinkViewModel, isOverlay: boolean): LinkDetails => {
-  const title = linkTitleOf(model.source, model.target);
-  const base = viewBase('link', title, isOverlay);
-  const leadText = dependsTextOf(model.source, model.target);
-  const lead = leadOf(leadText);
-  const ends = textElement('div', 'details-ends', '');
+  const base = viewBase('link', LINK_HEADING_TEXT, isOverlay);
+  const lead = leadOf('');
   const source = nameButton(model.source);
+  const dependsOn = textElement('span', '', ` ${DEPENDS_ON_TEXT} `);
   const target = nameButton(model.target);
   const explain = textElement('section', 'details-section details-explain', '');
   const reading: ExplainState = { kind: 'reading', file: model.file };
@@ -20,8 +18,8 @@ export const linkView = (model: LinkViewModel, isOverlay: boolean): LinkDetails 
 
   explain.setAttribute('aria-live', 'polite');
   explain.append(readingView.root);
-  ends.append(source, target);
-  base.root.append(lead, ends, explain);
+  lead.append(source, dependsOn, target);
+  base.root.append(lead, explain);
 
   const view: LinkDetails = { ...base, kind: 'link', source, target, explain };
 

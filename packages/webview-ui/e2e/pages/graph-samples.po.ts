@@ -15,6 +15,8 @@ const FAR_NAME = 'pkg-299';
 
 const EMPTY_TITLE = 'Details';
 
+const TRACE_TITLE = 'Trace';
+
 const readFresh = async (read: () => Promise<number | null>): Promise<number> => {
   const sample = await read();
 
@@ -129,7 +131,7 @@ export class GraphSamples {
     const build = async (): Promise<number> => {
       await this.details.startTrace();
       await this.list.pick(HUB_NAME);
-      await this.details.expectHeading(`Trace: ${FAR_NAME} → ${HUB_NAME}`);
+      await this.details.expectHeading(TRACE_TITLE);
 
       return readFresh(async (): Promise<number | null> => this.timings.traceMs());
     };

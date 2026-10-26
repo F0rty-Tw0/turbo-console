@@ -275,7 +275,7 @@ test.describe('FEATURE: graph trace exits', () => {
 
       await test.step('AND Swap ends is pressed', async (): Promise<void> => graphTrace.swapEnds());
 
-      await test.step('THEN the trace view is titled core to web and says web depends on core', async (): Promise<void> =>
+      await test.step('THEN the trace view lists web, data and core, dependent first', async (): Promise<void> =>
         graphTrace.expectTrace(CORE_TO_WEB_FACTS_STUB));
 
       await test.step('AND the status reads core to web', async (): Promise<void> =>

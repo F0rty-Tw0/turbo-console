@@ -881,12 +881,6 @@ button.details-explain[aria-disabled='true'] {
   gap: var(--space-1);
 }
 
-.details-ends {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
 .details-explain-body {
   display: flex;
   flex-direction: column;

@@ -37,8 +37,6 @@ export const dependentsTitleOf = (count: number): string => `Direct dependents (
 /** A link always reads dependent → dependency. */
 export const linkTitleOf = (source: string, target: string): string => `${source} → ${target}`;
 
-export const dependsTextOf = (source: string, target: string): string => `${source} depends on ${target}.`;
-
 export const explainLabelOf = (source: string, target: string): string => {
   const link = linkTitleOf(source, target);
 
@@ -64,12 +62,6 @@ export const openManifestLabelOf = (entry: EntryName): string => {
 
 export const pickingTitleOf = (start: string): string => `Trace from ${start}`;
 
-export const traceTitleOf = (start: string, end: string): string => {
-  const link = linkTitleOf(start, end);
-
-  return `Trace: ${link}`;
-};
-
 /** A candidate group's title; `total` counts the group before the filter. */
 export const candidateTitleOf = (key: CandidateKey, start: string, total: number): string => {
   switch (key) {
@@ -84,15 +76,14 @@ export const candidateTitleOf = (key: CandidateKey, start: string, total: number
 
 export const stepsTextOf = (steps: number): string => pluralOf(steps, 'link', 'links');
 
-/** The trace lead names the dependent first, whichever end it is; `count` is the packages on the path. */
+/** The trace lead counts the packages on the path; the rail below names each one, dependent first. */
 export const traceSummaryOf = (start: string, end: string, direction: TraceDirection, count: number): string => {
   const packages = pluralOf(count, 'package', 'packages');
 
   switch (direction) {
     case 'forward':
-      return `${start} depends on ${end}: ${packages} on the shortest path.`;
     case 'backward':
-      return `${end} depends on ${start}: ${packages} on the shortest path.`;
+      return `${packages} on the shortest path.`;
     case 'none':
       return `No dependency path between ${start} and ${end}.`;
   }

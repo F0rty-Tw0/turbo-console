@@ -73,6 +73,10 @@ export const SHOW_LABEL = 'Show';
 
 export const DEPENDS_ON_TEXT = 'depends on';
 
+export const LINK_HEADING_TEXT = 'Dependency';
+
+export const TRACE_HEADING_TEXT = 'Trace';
+
 export const CLOSE_DETAILS_LABEL = 'Close details';
 
 export const HINT_NUDGE_TEXT = 'Pick a package to end the trace';

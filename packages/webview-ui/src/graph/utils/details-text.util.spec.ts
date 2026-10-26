@@ -4,7 +4,6 @@ import {
   candidateTitleOf,
   dependenciesTitleOf,
   dependentsTitleOf,
-  dependsTextOf,
   entryLabelOf,
   entryRowTextOf,
   explainLabelOf,
@@ -20,7 +19,6 @@ import {
   readingTextOf,
   stepsTextOf,
   traceSummaryOf,
-  traceTitleOf,
   unreadableTextOf
 } from './details-text.util.ts';
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
@@ -39,8 +37,8 @@ type SummaryRow = {
 };
 
 const SUMMARY_ROWS: SummaryRow[] = [
-  { title: 'forward', direction: 'forward', count: 3, expected: 'web depends on ui: 3 packages on the shortest path.' },
-  { title: 'backward', direction: 'backward', count: 2, expected: 'ui depends on web: 2 packages on the shortest path.' },
+  { title: 'forward', direction: 'forward', count: 3, expected: '3 packages on the shortest path.' },
+  { title: 'backward', direction: 'backward', count: 2, expected: '2 packages on the shortest path.' },
   { title: 'none', direction: 'none', count: 0, expected: 'No dependency path between web and ui.' }
 ];
 
@@ -101,12 +99,6 @@ describe('FEATURE: details text', () => {
       const title = linkTitleOf(source, target);
 
       expect(title).toBe(expected);
-    });
-
-    it('WHEN its lead is built THEN it says the source depends on the target', () => {
-      const text = dependsTextOf('web', '@acme/ui');
-
-      expect(text).toBe('web depends on @acme/ui.');
     });
 
     it('WHEN its explain label is built THEN it names both ends in order', () => {
@@ -171,17 +163,14 @@ describe('FEATURE: details text', () => {
       expect(title).toBe('Trace from web');
     });
 
-    it('WHEN it ends at ui THEN the title names both ends', () => {
-      const title = traceTitleOf('web', 'ui');
+    it.each(SUMMARY_ROWS)(
+      'WHEN the $title trace to ui is summed up THEN the lead counts the path, or names both ends when there is none',
+      (row) => {
+        const text = traceSummaryOf('web', 'ui', row.direction, row.count);
 
-      expect(title).toBe('Trace: web → ui');
-    });
-
-    it.each(SUMMARY_ROWS)('WHEN the $title trace to ui is summed up THEN the lead reads in dependency order', (row) => {
-      const text = traceSummaryOf('web', 'ui', row.direction, row.count);
-
-      expect(text).toBe(row.expected);
-    });
+        expect(text).toBe(row.expected);
+      }
+    );
   });
 
   describe('GIVEN the candidate groups of a trace from docs', () => {
