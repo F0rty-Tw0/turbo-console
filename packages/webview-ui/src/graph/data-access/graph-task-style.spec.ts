@@ -107,13 +107,13 @@ describe('FEATURE: taskRulesOf Atomizer files and boxes in graphStyleOf', () => 
     cy.destroy();
   });
 
-  it('GIVEN an atom file THEN its label is its data label, cut with an ellipsis at 76 px, clear of both 10 px pill ends', () => {
+  it('GIVEN an atom file THEN its label is its data label, cut with an ellipsis at 88 px, clear of both round pill ends', () => {
     const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
 
     expect([file.style('label'), file.style('text-wrap'), file.numericStyle('text-max-width')]).toStrictEqual([
       'c.spec.ts',
       'ellipsis',
-      76
+      88
     ]);
   });
 
