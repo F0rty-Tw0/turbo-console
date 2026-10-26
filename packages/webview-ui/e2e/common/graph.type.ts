@@ -188,6 +188,12 @@ export type TitleBandInk = {
   readonly nearSides: number;
 };
 
+/** Two base64 PNGs of the same clip: before a press and while its button is held. */
+export type PressPngs = {
+  readonly before: string;
+  readonly during: string;
+};
+
 /** A base64 PNG and the `rgb(...)` background its pixels' contrast is read against. */
 export type ContrastInput = {
   readonly png: string;

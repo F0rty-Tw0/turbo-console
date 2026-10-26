@@ -3,16 +3,18 @@ import { expect, test } from '@playwright/test';
 
 import { GraphHover } from './graph-hover.po.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
+import type { PressPngs } from '../common/graph.type.ts';
 import type { ScreenClip, ViewportPoint } from '../common/playwright.type.ts';
+import { maxChannelDeltaOf } from '../test/utils/graph-press-delta.spec.util.ts';
 
 /** Half the side, in px, of the square around the pointer that a press must leave unchanged. */
 const PRESS_HALF_PX = 60;
 
-/** The shot around the pointer before a press and while its button is held. */
-type PressShots = {
-  readonly before: Buffer;
-  readonly during: Buffer;
-};
+/**
+ * The largest channel change a press may leave: macOS CI moves a few anti-aliased link pixels by 1 level on a press,
+ * while Cytoscape's press overlay moves a channel by 64 and its background circle by 38 (measured on Linux).
+ */
+const PRESS_NOISE_LEVELS = 4;
 
 const cursorAt = ({ x, y }: ViewportPoint): string => {
   const element = document.elementFromPoint(x, y);
@@ -22,29 +24,31 @@ const cursorAt = ({ x, y }: ViewportPoint): string => {
   return getComputedStyle(element).cursor;
 };
 
-const attachShots = async ({ before, during }: PressShots): Promise<void> => {
-  await test.info().attach('press-before', { body: before, contentType: 'image/png' });
-  await test.info().attach('press-during', { body: during, contentType: 'image/png' });
+const attachPngs = async ({ before, during }: PressPngs): Promise<void> => {
+  await test.info().attach('press-before', { body: Buffer.from(before, 'base64'), contentType: 'image/png' });
+  await test.info().attach('press-during', { body: Buffer.from(during, 'base64'), contentType: 'image/png' });
 };
 
 /** `GraphHover`, plus what the page shows where the pointer rests: its cursor, and what a press there draws. */
 export class GraphPointer extends GraphHover {
-  private shots: PressShots | null;
+  private pressDelta: number | null;
 
   public constructor(page: Page) {
     super(page);
-    this.shots = null;
+    this.pressDelta = null;
   }
 
   /**
-   * Presses and releases the mouse where the pointer rests, keeping a shot of the square around it from before the
-   * press and from while the button is held. The before shot waits for two shots in a row to match, so a slow runner's
-   * late paint (a texture redraw, a glyph) is not read as the press; differing shots are attached to the test.
+   * Presses and releases the mouse where the pointer rests, keeping the largest channel change between a shot of the
+   * square around it from before the press and one from while the button is held. Shots past the noise are attached.
    */
   public async press(): Promise<void> {
     const point = this.restingPoint();
     const clip = this.clipAround(point);
-    const before = await this.settledShot(clip);
+
+    await this.page.evaluate(NEXT_FRAME);
+
+    const before = await this.page.screenshot({ clip });
 
     await this.page.mouse.down();
 
@@ -52,27 +56,24 @@ export class GraphPointer extends GraphHover {
       await this.page.evaluate(NEXT_FRAME);
 
       const during = await this.page.screenshot({ clip });
-      const shots: PressShots = { before, during };
+      const pngs: PressPngs = { before: before.toString('base64'), during: during.toString('base64') };
+      const delta = await this.page.evaluate(maxChannelDeltaOf, pngs);
 
-      const isUnchanged = during.equals(before);
+      this.pressDelta = delta;
 
-      this.shots = shots;
-
-      if (!isUnchanged) await attachShots(shots);
+      if (delta > PRESS_NOISE_LEVELS) await attachPngs(pngs);
     } finally {
       await this.page.mouse.up();
     }
   }
 
-  /** The last `press` changed no pixel within 60 px of the pointer; throws when none ran. */
+  /** The last `press` moved no channel of any pixel within 60 px of the pointer past the noise; throws when none ran. */
   public expectPressDrewNothing(): void {
-    const { shots } = this;
+    const { pressDelta } = this;
 
-    if (shots === null) throw new Error('graph e2e: no press was recorded');
+    if (pressDelta === null) throw new Error('graph e2e: no press was recorded');
 
-    const isUnchanged = shots.during.equals(shots.before);
-
-    expect(isUnchanged).toBe(true);
+    expect(pressDelta).toBeLessThanOrEqual(PRESS_NOISE_LEVELS);
   }
 
   /** The element where the pointer rests shows `cursor`. */
@@ -96,25 +97,6 @@ export class GraphPointer extends GraphHover {
   /** The graph container draws its focus outline. */
   public async expectContainerRing(): Promise<void> {
     await expect(this.container).toHaveCSS('outline-style', 'solid');
-  }
-
-  /** A shot of `clip` once the next one, a frame later, matches it. */
-  private async settledShot(clip: ScreenClip): Promise<Buffer> {
-    let last: Buffer = Buffer.alloc(0);
-    const isSettled = async (): Promise<boolean> => {
-      await this.page.evaluate(NEXT_FRAME);
-
-      const next = await this.page.screenshot({ clip });
-      const isSame = next.equals(last);
-
-      last = next;
-
-      return isSame;
-    };
-
-    await expect.poll(isSettled).toBe(true);
-
-    return last;
   }
 
   private clipAround(point: ViewportPoint): ScreenClip {
