@@ -1,7 +1,6 @@
 import { umbrellaSizeOf } from './atom-size.util.ts';
 import { taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import { droppedTasksText } from './task-text.util.ts';
-import { titleWidthsOf } from './task-title-width.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import { MAX_TASK_DEPTH, MIN_TASK_DEPTH } from '../common/graph-task.const.ts';
@@ -42,9 +41,8 @@ export const matchesTaskSearch = (task: GraphTask, search: string): boolean => {
 };
 
 /**
- * The tasks the shown set draws, in the order given, the key of their layout, the size of each drawn umbrella (a task
- * with a file count in `fileCounts`) and the title width of each drawn package, measured by the plain-text `counts`
- * sizer; the key holds those counts, so a changed file count lays out afresh.
+ * The tasks the shown set draws, in the order given, the key of their layout and the size of each drawn umbrella (a task
+ * with a file count in `fileCounts`); the key holds those counts, so a changed file count lays out afresh.
  */
 export const requestOf = (
   tasks: GraphTask[],
@@ -63,8 +61,7 @@ export const requestOf = (
   }
 
   const key = taskLayoutKeyOf(drawn, shown, fileCounts);
-  const titleWidths = titleWidthsOf(drawn, sizers.counts);
-  const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes, titleWidths };
+  const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes };
 
   return request;
 };

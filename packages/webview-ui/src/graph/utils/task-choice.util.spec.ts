@@ -108,17 +108,6 @@ describe('FEATURE: task choice rules', () => {
 
       expect(request.sizes.size).toBe(0);
     });
-
-    it('WHEN the request is made THEN titleWidths comes from the counts sizer less the node padding, one per shown package', () => {
-      const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, NO_COUNTS, SIZERS);
-
-      expect(request.titleWidths).toStrictEqual(
-        new Map([
-          ['api', 6],
-          ['web', 6]
-        ])
-      );
-    });
   });
 
   describe('GIVEN the chain api#build, web#build and web#lint by package', () => {

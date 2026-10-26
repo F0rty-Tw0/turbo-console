@@ -9,6 +9,7 @@ import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
+import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -36,16 +37,15 @@ const UMBRELLA_GROUP: GraphAtomGroup = { umbrellaId: 'api#build', files: UMBRELL
 
 const NO_SIZES: ReadonlyMap<string, NodeSize> = new Map();
 
-const NO_TITLES: ReadonlyMap<string, number> = new Map();
+const TITLE_SIZE: NodeSize = { width: 150, height: 20 };
 
-const TITLES: ReadonlyMap<string, number> = new Map([['api', 130]]);
+const TITLES = new Map([
+  ['api', 126],
+  ['web', 126]
+]);
 
-const sizedRequestOf = (
-  key: string,
-  sizes: ReadonlyMap<string, NodeSize>,
-  titleWidths: ReadonlyMap<string, number> = NO_TITLES
-): TaskLayoutRequest => {
-  const request: TaskLayoutRequest = { tasks: TASK_CHAIN_STUB, shown: SHOWN, key, sizes, titleWidths };
+const sizedRequestOf = (key: string, sizes: ReadonlyMap<string, NodeSize>): TaskLayoutRequest => {
+  const request: TaskLayoutRequest = { tasks: TASK_CHAIN_STUB, shown: SHOWN, key, sizes };
 
   return request;
 };
@@ -56,18 +56,16 @@ const throwPlace = (): never => {
   throw PLACE_FAILED;
 };
 
+const titleSizeOf = (): NodeSize => TITLE_SIZE;
+
 describe('FEATURE: GraphTaskLayout', () => {
   let rig: TaskModeRig;
   let layout: GraphTaskLayout;
   let onDrawn: Mock<() => void>;
 
   /** Shows the layout of `key` and lands it as the latest run. */
-  const landWith = async (
-    key: string,
-    sizes: ReadonlyMap<string, NodeSize>,
-    titleWidths: ReadonlyMap<string, number> = NO_TITLES
-  ): Promise<void> => {
-    const shown = layout.show(sizedRequestOf(key, sizes, titleWidths));
+  const landWith = async (key: string, sizes: ReadonlyMap<string, NodeSize>): Promise<void> => {
+    const shown = layout.show(sizedRequestOf(key, sizes));
 
     await rig.runs.settle(rig.runs.count() - 1, resultOf(key, POSITIONS));
     await shown;
@@ -115,10 +113,23 @@ describe('FEATURE: GraphTaskLayout', () => {
     });
   });
 
-  it('GIVEN a request with title widths WHEN a layout lands THEN the canvas gets the request title widths', async () => {
-    await landWith('k0', NO_SIZES, TITLES);
+  it('GIVEN a 150 px text sizer WHEN a layout lands THEN ELK asks each box for its 126 px title plus padding, as does the canvas', async () => {
+    layout = new GraphTaskLayout({ ...rig.deps, textSizeOf: titleSizeOf, saved: (): null => null, onPlaced: vi.fn(), onDrawn });
+    await land('k0');
 
+    const compound = firstCompoundOf(rig.runs.graphOf(0));
+
+    expect(compound?.layoutOptions?.['elk.nodeSize.minimum']).toBe(`(0, ${126 + 2 * FOLDER_PADDING_PX})`);
     expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ titleWidths: TITLES }));
+  });
+
+  it('GIVEN a text sizer that throws WHEN a layout is shown THEN it fails through onFailure and no run starts', async () => {
+    layout = new GraphTaskLayout({ ...rig.deps, textSizeOf: throwPlace, saved: (): null => null, onPlaced: vi.fn(), onDrawn });
+
+    await layout.show(requestOf('k0'));
+
+    expect(rig.onFailure).toHaveBeenCalledExactlyOnceWith(PLACE_FAILED);
+    expect(rig.runs.count()).toBe(0);
   });
 
   describe('GIVEN api#build is an umbrella of one file', () => {

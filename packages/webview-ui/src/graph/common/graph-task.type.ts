@@ -142,16 +142,12 @@ export type TaskChoice = {
   readonly dropped: number;
 };
 
-/**
- * One task layout: the shown tasks, their ids, their layout key, the size of each umbrella among them and the title text
- * width of each package.
- */
+/** One task layout: the shown tasks, their ids, their layout key and the size of each umbrella among them. */
 export type TaskLayoutRequest = {
   readonly tasks: GraphTask[];
   readonly shown: ReadonlySet<string>;
   readonly key: string;
   readonly sizes: ReadonlyMap<string, NodeSize>;
-  readonly titleWidths: ReadonlyMap<string, number>;
 };
 
 /** What `GraphTaskLayout` adds: the saved task view for its camera rule, and hooks after each placement. */

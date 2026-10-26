@@ -5,11 +5,13 @@ import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.typ
 import type { LayoutResult } from '../common/layout.type.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
 import { engineNoticeOf } from '../utils/layout-plan.util.ts';
+import { titleWidthsOf } from '../utils/task-title-width.util.ts';
 
 /**
  * The task graph's layout: the key asked for, the layout on screen, and the last `TASK_LAYOUT_MEMORY` layouts shown by
  * key in page memory, a drag included. Runs share the package runner, latest wins; a task layout never posts `positions`
- * or `layoutDone`, only `shownUmbrellas` through `atoms`. A layout that throws while still asked for empties the canvas and goes to `onFailure`.
+ * or `layoutDone`, only `shownUmbrellas` through `atoms`. A layout that throws while still asked for empties the canvas and goes to `onFailure`;
+ * package titles are measured inside that guard, so a text sizer that throws fails the layout too.
  */
 export class GraphTaskLayout {
   /** The Atomizer groups drawn as umbrellas: their counts, and the shown ones the host loads. */
@@ -112,7 +114,9 @@ export class GraphTaskLayout {
   }
 
   private async layOut(request: TaskLayoutRequest, canRestore: boolean): Promise<void> {
-    const graph = elkTaskGraphOf(request, this.deps.sizeOf);
+    const titleWidths = titleWidthsOf(request.tasks, this.deps.textSizeOf);
+    const input = { ...request, titleWidths };
+    const graph = elkTaskGraphOf(input, this.deps.sizeOf);
     const result = await this.deps.runner.run(request.key, graph);
     const wantedKey = this.key();
 
@@ -131,7 +135,8 @@ export class GraphTaskLayout {
    * clock, then hands the drawn highlight back to the flow.
    */
   private place(request: TaskLayoutRequest, result: LayoutResult, canRestore: boolean): void {
-    const { view, screen, frames, sizeOf, flow } = this.deps;
+    const { view, screen, frames, sizeOf, textSizeOf, flow } = this.deps;
+    const titleWidths = titleWidthsOf(request.tasks, textSizeOf);
     const saved = this.deps.saved();
     const isSavedCamera = canRestore && saved?.layoutKey === request.key;
 
@@ -142,7 +147,7 @@ export class GraphTaskLayout {
       sizeOf,
       sizes: request.sizes,
       labels: this.atoms.labels(),
-      titleWidths: request.titleWidths
+      titleWidths
     });
     this.placed = result;
     this.atoms.placed(request.shown, result.positions, request.sizes, request.tasks);
