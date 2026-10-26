@@ -223,3 +223,6 @@ export const ALL_FOLDERS_LABEL = 'All folders';
 
 /** The class the graph container wears while the pointer is over a node or an edge, so its cursor is a pointer. */
 export const OVER_ELEMENT_CLASS = 'over-element';
+
+/** The class the graph container wears from a pointer press until the next key press, so a script focus draws no ring. */
+export const POINTER_FOCUS_CLASS = 'pointer-focus';

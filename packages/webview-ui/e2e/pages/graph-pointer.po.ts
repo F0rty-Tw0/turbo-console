@@ -87,6 +87,17 @@ export class GraphPointer {
     await expect(this.container).toHaveCSS('cursor', cursor);
   }
 
+  public async expectContainerFocused(): Promise<void> {
+    await expect(this.container).toBeFocused();
+  }
+
+  /** The graph container draws its focus outline, or draws none. */
+  public async expectContainerRing(isRing: boolean): Promise<void> {
+    const style = isRing ? 'solid' : 'none';
+
+    await expect(this.container).toHaveCSS('outline-style', style);
+  }
+
   /** Pressing the mouse at the pointer changes no pixel within 60 px of it. */
   public async expectPressDrawsNothing(): Promise<void> {
     const clip = this.clipAround();
