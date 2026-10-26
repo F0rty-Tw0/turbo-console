@@ -82,6 +82,7 @@ export type GraphProbe = {
   readonly edges: () => ProbeEdge[];
   /** The first edge's `line-color`, `''` when there is no edge. */
   readonly edgeColor: () => string;
+  /** The selected task id (`app#build`) while task mode is on, else the selected package name; `null` when nothing is. */
   readonly selected: () => string | null;
   readonly zoom: () => number;
   readonly pan: () => Position;

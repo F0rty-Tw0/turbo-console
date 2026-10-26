@@ -19,6 +19,8 @@ const SHOW_TASKS = { description: 'M4-5a spec 3.2.1, slice 2 review note 4', typ
 
 const STATUS = { description: 'M4-5a slice 2 proof Obs 2', type: 'requirement' };
 
+const PROBE = { description: 'U1 3.4 probe selected() follows task selection', type: 'requirement' };
+
 const PACKAGES = ['app', 'lib', 'ui'];
 
 const CHAIN = ['app#build', 'lib#build', 'ui#build'];
@@ -220,6 +222,30 @@ test.describe('FEATURE: the package status line in task mode', () => {
 
       await test.step('THEN the status line says the export failed', async (): Promise<void> =>
         expect(graphPage.status).toHaveText(EXPORT_FAILED_TEXT));
+    }
+  );
+});
+
+test.describe('FEATURE: the probe selection in task mode', () => {
+  test(
+    'GIVEN app selected, then app#build tapped in task mode, the probe reads the task id as selected',
+    { annotation: PROBE },
+    async ({ graphCanvas, graphHost, graphPage, graphProbe, graphTaskHost, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN the package graph is drawn and app is tapped', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphProbe.expectNodeIds(PACKAGES);
+        await graphCanvas.tapNode('app');
+        await graphProbe.expectSelected('app');
+      });
+
+      await test.step('AND showTasks names app#build and app#build is tapped', async (): Promise<void> => {
+        await graphTaskHost.sendShowTasks(['app#build']);
+        await graphTaskProbe.expectTaskIds(CHAIN);
+        await graphCanvas.tapNode('app#build');
+      });
+
+      await test.step('THEN the probe reads app#build as selected', async (): Promise<void> => graphProbe.expectSelected('app#build'));
     }
   );
 });
