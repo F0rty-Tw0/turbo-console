@@ -52,6 +52,18 @@ export class GraphMenuPaths extends GraphMenusPage {
     await expect(this.widgets.ellipsisOf(folder)).not.toBeFocused();
   }
 
+  /** No menu is open and the folder's "…" holds no focus and draws no ring: a pointer closed the menu. */
+  public async expectFocusLeftEllipsis(folder: string): Promise<void> {
+    await this.expectNoMenu();
+    await expect(this.widgets.ellipsisOf(folder)).not.toBeFocused();
+    await expect(this.widgets.ellipsisOf(folder)).toHaveCSS('outline-style', 'none');
+  }
+
+  /** The folder's "…" draws its focus ring. */
+  public async expectEllipsisRing(folder: string): Promise<void> {
+    await expect(this.widgets.ellipsisOf(folder)).toHaveCSS('outline-style', 'solid');
+  }
+
   /** At least one `contextmenu` fired since `recordContextMenus`, and none was prevented, so the native menu may open. */
   public async expectNativeContextMenuAllowed(): Promise<void> {
     await expect.poll(async (): Promise<boolean[]> => this.contextMenus()).not.toHaveLength(0);
