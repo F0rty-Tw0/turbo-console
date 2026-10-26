@@ -19,6 +19,12 @@ export const TASK_BOX_PREFIX = 'pkg:';
 /** The class of every package compound of the task graph, which draws its package name on the page; folder boxes have DOM header rows instead. */
 export const TASK_BOX_CLASS = 'task-box';
 
+/**
+ * The px a task box title takes past its rounded-up text width: Cytoscape keeps an ellipsis label whole only while its
+ * rounded-up width is under `text-max-width`.
+ */
+export const TITLE_WHOLE_SLACK_PX = 1;
+
 /** A task-mode package box's frame dashes: 4 px on, 4 px off. */
 export const TASK_BOX_DASH_PX: number[] = [4, 4];
 

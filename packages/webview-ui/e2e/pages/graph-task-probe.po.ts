@@ -130,7 +130,10 @@ export class GraphTaskProbe {
     await expect.poll(async (): Promise<number[]> => this.titleInks('left')).not.toContain(0);
   }
 
-  /** Each box titled one of `titles` is as wide as its title, and its title may draw that wide before an ellipsis. */
+  /**
+   * Each box titled one of `titles` is as wide as its title, and its title draws whole: Cytoscape cuts an ellipsis label
+   * unless its rounded-up width is under `text-max-width`.
+   */
   public async expectBoxTitlesUncut(titles: string[]): Promise<void> {
     const boxes = await this.boxes();
     const widths = await measuredWidthsOf(this.page, titles);
@@ -139,7 +142,7 @@ export class GraphTaskProbe {
       const box = boxes.find((node) => node.text === title);
       const measured = widths.get(title) ?? Number.NaN;
 
-      expect(box?.textMaxWidth, title).toBeGreaterThanOrEqual(measured);
+      expect(box?.textMaxWidth, title).toBeGreaterThan(Math.ceil(measured));
       expect(box?.width, title).toBeGreaterThanOrEqual(measured);
     }
   }

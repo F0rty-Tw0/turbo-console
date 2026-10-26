@@ -14,13 +14,13 @@ const TASKS: GraphTask[] = [taskOf('@acme/web#build', []), taskOf('@acme/web#lin
 
 describe('FEATURE: titleWidthsOf', () => {
   describe('GIVEN tasks of two packages', () => {
-    it('WHEN measured THEN one title width per package: the sizer width minus the node padding', () => {
+    it('WHEN measured THEN one title width per package: the sizer width minus the node padding, plus 1 px', () => {
       const widths = titleWidthsOf(TASKS, SIZER);
 
       expect(widths).toStrictEqual(
         new Map([
-          ['@acme/web', 90],
-          ['ui', 20]
+          ['@acme/web', 91],
+          ['ui', 21]
         ])
       );
     });
@@ -33,10 +33,10 @@ describe('FEATURE: titleWidthsOf', () => {
       expect(sizer.mock.calls).toStrictEqual([['@acme/web'], ['ui']]);
     });
 
-    it('WHEN the measure is fractional THEN the width is rounded up', () => {
+    it('WHEN the measure is fractional THEN the width is rounded up, plus 1 px', () => {
       const widths = titleWidthsOf(TASKS, FRACTIONAL);
 
-      expect(widths.get('ui')).toBe(21);
+      expect(widths.get('ui')).toBe(22);
     });
   });
 });

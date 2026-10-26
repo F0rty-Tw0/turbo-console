@@ -29,8 +29,8 @@ const MEASURE_FAILED = new Error('cannot measure');
 const TITLE_SIZE: NodeSize = { width: 150, height: 20 };
 
 const TITLES = new Map([
-  ['api', 126],
-  ['web', 126]
+  ['api', 127],
+  ['web', 127]
 ]);
 
 const firstCompoundOf = (graph: ElkNode): ElkNode | undefined => graph.children?.[0];
@@ -75,13 +75,13 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
         await land(layout);
       });
 
-      it('THEN ELK asks each box for its 126 px title plus padding', () => {
+      it('THEN ELK asks each box for its 127 px title plus padding', () => {
         const compound = firstCompoundOf(rig.runs.graphOf(0));
 
-        expect(compound?.layoutOptions?.['elk.nodeSize.minimum']).toBe(`(0, ${126 + 2 * FOLDER_PADDING_PX})`);
+        expect(compound?.layoutOptions?.['elk.nodeSize.minimum']).toBe(`(0, ${127 + 2 * FOLDER_PADDING_PX})`);
       });
 
-      it('THEN the canvas draws each box with its 126 px title width', () => {
+      it('THEN the canvas draws each box with its 127 px title width', () => {
         expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ titleWidths: TITLES }));
       });
 
