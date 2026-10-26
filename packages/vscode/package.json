@@ -228,12 +228,12 @@
         },
         {
           "command": "turboConsole.showScripts",
-          "when": "view == turboConsole.tree && !turboConsole.scriptsShown",
+          "when": "view == turboConsole.tree && turboConsole.hasScripts && !turboConsole.scriptsShown",
           "group": "navigation@1"
         },
         {
           "command": "turboConsole.hideScripts",
-          "when": "view == turboConsole.tree && turboConsole.scriptsShown",
+          "when": "view == turboConsole.tree && turboConsole.hasScripts && turboConsole.scriptsShown",
           "group": "navigation@1"
         },
         {
@@ -375,11 +375,11 @@
         },
         {
           "command": "turboConsole.showScripts",
-          "when": "turboConsole.active && !turboConsole.scriptsShown"
+          "when": "turboConsole.active && turboConsole.hasScripts && !turboConsole.scriptsShown"
         },
         {
           "command": "turboConsole.hideScripts",
-          "when": "turboConsole.active && turboConsole.scriptsShown"
+          "when": "turboConsole.active && turboConsole.hasScripts && turboConsole.scriptsShown"
         },
         {
           "command": "turboConsole.showOutput",

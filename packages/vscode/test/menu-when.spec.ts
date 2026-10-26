@@ -89,6 +89,7 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     (scopeShown, scriptsShown, scopeToggle, scriptsToggle) => {
       const keys = {
         view: TREE_VIEW,
+        'turboConsole.hasScripts': true,
         'turboConsole.scopeShown': scopeShown,
         'turboConsole.scriptsShown': scriptsShown,
         'config.turboConsole.treeMode': 'list'
@@ -111,11 +112,29 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     [false, 'turboConsole.showScripts'],
     [true, 'turboConsole.hideScripts']
   ])('GIVEN scripts shown is %s WHEN the command palette is read THEN only %s is there of the pair', (scriptsShown, command) => {
-    const keys = { 'turboConsole.active': true, 'turboConsole.scriptsShown': scriptsShown };
+    const keys = { 'turboConsole.active': true, 'turboConsole.hasScripts': true, 'turboConsole.scriptsShown': scriptsShown };
     const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('Scripts') && whenMatches(entry.when, keys));
 
     expect(shown.map((entry) => entry.command)).toStrictEqual([command]);
   });
+
+  it.each([[false], [true]])(
+    'GIVEN the workspace has no scripts and scripts shown is %s WHEN the view title and the palette are read THEN neither Scripts command is there',
+    (scriptsShown) => {
+      const keys = {
+        view: TREE_VIEW,
+        'turboConsole.active': true,
+        'turboConsole.hasScripts': false,
+        'turboConsole.scriptsShown': scriptsShown,
+        'config.turboConsole.treeMode': 'list'
+      };
+      const title = shownIn(MENUS['view/title'], keys).filter((placement) => placement.includes('Scripts'));
+      const palette = MENUS.commandPalette.filter((entry) => entry.command.endsWith('Scripts') && whenMatches(entry.when, keys));
+
+      expect(title).toStrictEqual([]);
+      expect(palette).toStrictEqual([]);
+    }
+  );
 
   it.each([
     [true, ['turboConsole.openPackageGraph']],
