@@ -1,5 +1,11 @@
 import { test } from './graph.fixture.ts';
-import { LONG_FOLDER, collapsedSavedState, longTitleState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
+import {
+  LONG_FOLDER,
+  collapsedSavedState,
+  deepFolderState,
+  longTitleState,
+  placedBoardsState
+} from './test/utils/graph-folder-states.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import type { Position } from '../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
@@ -19,6 +25,32 @@ const NODE_MIN_ZOOM = 0.667;
 
 /** The node's body is drawn 117 px wide, under the minimum, but its 2 px selected border draws its bounds 120.3 px wide; only zooms 0.6522–0.6557 straddle 120 px this way. */
 const SELECTED_BORDER_ZOOM = 0.654;
+
+const DEEP = deepFolderState();
+
+/** Keeps the `deep` box's top band and both ends on the canvas at both zooms below. */
+const DEEP_PAN: Position = { x: 400, y: 150 };
+
+/**
+ * The `deep` box is 113.5 px wide at zoom 1 and its row is box width · zoom − 16 px at zoom 0.875 and up (`widget-geometry.util.ts`); the
+ * row bands below catch drift in it. Zoom (106 + 16) / 113.5 gives a 106 px row, near the 104 px floor of a 120 px box.
+ */
+const DEEP_NARROW_ZOOM = 1.075;
+
+/** Zoom (145 + 16) / 113.5: a 145 px row, over the 140 px glyph line. */
+const DEEP_WIDE_ZOOM = 1.4185;
+
+/**
+ * The narrow row lies in 104 to 110 px. The title's 3ch floor (19.5 px in the e2e font) still fits a 2-digit row down to
+ * 104.5 px, so dropping the floor under 140 px only matters for a 3-digit count, which no row here draws.
+ */
+const NARROW_ROW_MIN_PX = 104;
+
+const NARROW_ROW_MAX_PX = 110;
+
+const WIDE_ROW_MIN_PX = 140;
+
+const WIDE_ROW_MAX_PX = 150;
 
 const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => savedWith(BOARDS.hash, overrides);
 
@@ -117,6 +149,44 @@ test.describe('FEATURE: folder header rows in the box band', () => {
       await test.step('THEN it is selected and still shows no header button', async (): Promise<void> => {
         await graphFolderInspect.expectFolderState(LONG_FOLDER, 'selected');
         await graphWidgets.expectHeaderStaysHidden(LONG_FOLDER);
+      });
+    }
+  );
+
+  test(
+    'GIVEN 12 packages in one folder at a 106 px row, the glyph hides and the 2-digit badge stays whole in the row',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the folder opens at zoom 1.075', async (): Promise<void> =>
+        graphFolderInspect.open(savedWith(DEEP.hash, { zoom: DEEP_NARROW_ZOOM, pan: DEEP_PAN }), DEEP));
+
+      await test.step('THEN its row is 104 to 110 px wide', async (): Promise<void> =>
+        graphWidgets.expectRowWidthIn('deep', NARROW_ROW_MIN_PX, NARROW_ROW_MAX_PX));
+
+      await test.step('AND the glyph is hidden, the badge is whole and reachable by a pointer, and the buttons sit on the box', async (): Promise<void> => {
+        await graphWidgets.expectGlyphShown('deep', false);
+        await graphWidgets.expectBadgeWhole('deep');
+        await graphWidgets.expectBadgeHittable('deep');
+        await graphWidgets.expectRowFollowsBox('deep');
+      });
+    }
+  );
+
+  test(
+    'GIVEN 12 packages in one folder at a 145 px row, the glyph shows and the badge stays whole in the row',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the folder opens at zoom 1.4185', async (): Promise<void> =>
+        graphFolderInspect.open(savedWith(DEEP.hash, { zoom: DEEP_WIDE_ZOOM, pan: DEEP_PAN }), DEEP));
+
+      await test.step('THEN its row is 140 to 150 px wide', async (): Promise<void> =>
+        graphWidgets.expectRowWidthIn('deep', WIDE_ROW_MIN_PX, WIDE_ROW_MAX_PX));
+
+      await test.step('AND the glyph shows, the badge is whole and reachable by a pointer, and the buttons sit on the box', async (): Promise<void> => {
+        await graphWidgets.expectGlyphShown('deep', true);
+        await graphWidgets.expectBadgeWhole('deep');
+        await graphWidgets.expectBadgeHittable('deep');
+        await graphWidgets.expectRowFollowsBox('deep');
       });
     }
   );

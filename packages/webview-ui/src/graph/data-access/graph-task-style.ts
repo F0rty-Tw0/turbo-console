@@ -12,7 +12,7 @@ import {
   ATOM_OUTCOME_CLASSES,
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
-import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_BOX_DASH_PX, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { glyphOf } from '../utils/glyph.util.ts';
@@ -71,14 +71,20 @@ const runRuleOf = (colors: ThemeColors, state: GraphRunState): StylesheetJsonBlo
 /**
  * The task mode rules: a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the name,
  * an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a file (dashed
- * border when `atom-live`), a `run-<state>` class outlines a task or file after them, and a `task-box` draws `boxTitle` on the page and in exports, left-aligned one padding
+ * border when `atom-live`), a `run-<state>` class outlines a task or file after them, and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned one padding
  * in from the frame so a link entering at the top centre misses it. `left-inside` starts a compound's label two paddings
  * in, so the margin takes one back. They come after the `exporting` rule, so an exported task box keeps this alignment.
  * With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name in that font list; an
  * `atom-more` node carries only its own class, so it keeps the plain file rule.
  */
 export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily: string | null): StylesheetJsonBlock[] => {
-  const taskBox = { ...boxTitle, 'text-halign': 'left-inside', 'text-margin-x': -FOLDER_PADDING_PX } as const;
+  const taskBox = {
+    ...boxTitle,
+    'text-halign': 'left-inside',
+    'text-margin-x': -FOLDER_PADDING_PX,
+    'border-style': 'dashed',
+    'border-dash-pattern': TASK_BOX_DASH_PX
+  } as const;
   const runRules = RUN_STATES.map((state) => runRuleOf(colors, state));
   const outcomeRules = [
     outcomeRuleOf(ATOM_OUTCOME_CLASSES.passed, colors.runs.passed),

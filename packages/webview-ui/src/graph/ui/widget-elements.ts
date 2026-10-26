@@ -38,21 +38,36 @@ const chevronOf = (kind: RowKind, title: string): HTMLButtonElement => {
   return chevron;
 };
 
-/** A box's title, cut on screen with "…" while its `title` attribute keeps it whole, and its muted package count. */
+/** A package count as a pill: the number is drawn, screen readers and the tooltip get "12 packages". */
+const countBadge = (count: number): HTMLElement => {
+  const label = pluralOf(count, 'package', 'packages');
+  const badge = textElement('span', 'widget-count', '');
+  const number = textElement('span', '', String(count));
+  const spoken = textElement('span', 'visually-hidden', label);
+
+  number.setAttribute('aria-hidden', 'true');
+  badge.setAttribute('title', label);
+  badge.append(number, spoken);
+
+  return badge;
+};
+
+/** A box's folder glyph, its title cut on screen with "…" while its `title` attribute keeps it whole, and its package count badge. */
 const titleParts = (kind: RowKind, title: string, count: number): HTMLElement[] => {
   if (kind === 'collapsed') return [];
 
+  const glyph = graphIcon('folder-opened');
   const text = textElement('span', 'widget-title', title);
-  const countText = pluralOf(count, 'package', 'packages');
-  const counter = textElement('span', 'widget-count', countText);
+  const badge = countBadge(count);
 
+  glyph.classList.add('widget-glyph');
   text.setAttribute('title', title);
 
-  return [text, counter];
+  return [glyph, text, badge];
 };
 
 /**
- * A folder's header row: the chevron, then for a box its title and package count, then the "…". A collapsed node
+ * A folder's header row: the chevron, then for a box its folder glyph, title and package count badge, then the "…". A collapsed node
  * shows its title and count in its canvas label, so its row holds the two buttons only.
  */
 export const buildFolderRow = (kind: RowKind, title: string, count: number): FolderRowElements => {

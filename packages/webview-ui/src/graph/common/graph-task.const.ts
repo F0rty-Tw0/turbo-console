@@ -19,6 +19,9 @@ export const TASK_BOX_PREFIX = 'pkg:';
 /** The class of every package compound of the task graph, which draws its package name on the page; folder boxes have DOM header rows instead. */
 export const TASK_BOX_CLASS = 'task-box';
 
+/** A task-mode package box's frame dashes: 4 px on, 4 px off. */
+export const TASK_BOX_DASH_PX: number[] = [4, 4];
+
 /** The class of every task node, so a walk of the task graph skips the package compounds. */
 export const TASK_NODE_CLASS = 'task';
 

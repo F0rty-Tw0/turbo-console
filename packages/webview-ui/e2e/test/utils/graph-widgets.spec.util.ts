@@ -136,6 +136,14 @@ export const layerFaultsOf = async (layer: Locator, container: Locator): Promise
 /** Runs in the page through `evaluate`: the text is cut off by its own width. */
 export const isCutText = (element: Element): boolean => element.scrollWidth > element.clientWidth;
 
+/** Runs in the page through `evaluate`: the topmost element at the centre of this one is it or a descendant, so a pointer reaches it. */
+export const isHitAtCentre = (element: Element): boolean => {
+  const box = element.getBoundingClientRect();
+  const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+
+  return hit !== null && element.contains(hit);
+};
+
 const faultIf = (isFault: boolean, text: string): string[] => {
   if (!isFault) return [];
 

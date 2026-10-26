@@ -1,9 +1,11 @@
+import type { Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphWidgetsLayout } from './graph-widgets-layout.po.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
+import { isInside } from '../test/utils/element-rect.spec.util.ts';
 import { bandFaultsOf, labelFaultsOf } from '../test/utils/graph-widget-band.spec.util.ts';
-import { rectOf } from '../test/utils/graph-widgets.spec.util.ts';
+import { isCutText, isHitAtCentre, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** How far inside a node's top-left corner `tapNodeCorner` clicks, in CSS px. */
 const CORNER_INSET_PX = 2;
@@ -14,6 +16,9 @@ const ZOOM_IN_NOTCH = -100;
 
 /** Resolves after two frames. */
 const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
+
+/** Runs in the page through `evaluate`: the element's layout width, untouched by the row's scale transform. */
+const layoutWidthOf = (element: HTMLElement): number => element.offsetWidth;
 
 /** How the header rows fit the box band as the camera zooms, and stay clear of a collapsed node's title. */
 export class GraphWidgetsBand extends GraphWidgetsLayout {
@@ -58,6 +63,51 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
   /** The collapsed node's chevron and "…" lie left and right of the widest title it can draw. */
   public async expectCollapsedClearOfLabel(folder: string): Promise<void> {
     await expect.poll(async (): Promise<string[]> => this.labelFaults(folder)).toEqual([]);
+  }
+
+  /** The folder glyph shows when `shown`, else it is hidden. */
+  public async expectGlyphShown(folder: string, shown: boolean): Promise<void> {
+    const glyph = this.rowOf(folder).locator('.widget-glyph');
+
+    await expect(glyph).toBeVisible({ visible: shown });
+  }
+
+  /** The count badge is not cut and lies inside the folder's row. */
+  public async expectBadgeWhole(folder: string): Promise<void> {
+    const badge = this.badgeOf(folder);
+
+    await expect(badge).toBeVisible();
+    await expect.poll(async (): Promise<boolean> => badge.evaluate(isCutText)).toBe(false);
+    await expect.poll(async (): Promise<boolean> => this.isBadgeInRow(folder)).toBe(true);
+  }
+
+  /** A pointer at the badge's centre reaches the badge, which its tooltip needs. */
+  public async expectBadgeHittable(folder: string): Promise<void> {
+    const badge = this.badgeOf(folder);
+
+    await expect.poll(async (): Promise<boolean> => badge.evaluate(isHitAtCentre)).toBe(true);
+  }
+
+  /** The folder's row width in CSS px, as laid out (the box width times the zoom, less the 16 px of insets), is `min` to `max`. */
+  public async expectRowWidthIn(folder: string, min: number, max: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.rowWidthOf(folder)).toBeGreaterThanOrEqual(min);
+    await expect.poll(async (): Promise<number> => this.rowWidthOf(folder)).toBeLessThanOrEqual(max);
+  }
+
+  /** The folder's row width in CSS px, as laid out. */
+  private async rowWidthOf(folder: string): Promise<number> {
+    return this.rowOf(folder).evaluate(layoutWidthOf);
+  }
+
+  private badgeOf(folder: string): Locator {
+    return this.rowOf(folder).locator('.widget-count');
+  }
+
+  private async isBadgeInRow(folder: string): Promise<boolean> {
+    const badge = await rectOf(this.badgeOf(folder));
+    const row = await rectOf(this.rowOf(folder));
+
+    return isInside(badge, row);
   }
 
   private async buttonsOf(folder: string, isExpanded: boolean): Promise<ElementRect[]> {

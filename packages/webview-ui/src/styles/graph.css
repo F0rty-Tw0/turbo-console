@@ -240,7 +240,7 @@ p {
   pointer-events: none;
 }
 
-/* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons take pointer events. */
+/* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons and the count badge take pointer events. */
 .graph-widgets {
   position: absolute;
   z-index: 1;
@@ -303,8 +303,9 @@ p {
 }
 
 /*
- * The title takes the room the count leaves (basis 0) and is cut first, down to a 3ch floor; only then the count is
- * cut too, so the 24 px buttons stay inside a 120 px box.
+ * The title takes the room the count leaves (basis 0) and is cut first, down to a 3ch floor. Under a 140 px row the
+ * glyph hides first, then the title shrinks past its floor; the badge never cuts, so the 24 px buttons stay inside a
+ * 120 px box.
  */
 .widget-title {
   flex: 1 1 0;
@@ -315,13 +316,49 @@ p {
   text-overflow: ellipsis;
 }
 
-.widget-count {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
+.widget-glyph {
+  flex: none;
   color: var(--tc-muted);
+}
+
+.widget-count {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid var(--vscode-contrastBorder, transparent);
+  border-radius: 9px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
   white-space: nowrap;
-  text-overflow: ellipsis;
+  pointer-events: auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.widget-row-box {
+  container-type: inline-size;
+}
+
+@container (width < 140px) {
+  .widget-row-box > .codicon.widget-glyph {
+    display: none;
+  }
+
+  .widget-row-box > .widget-title {
+    min-width: 0;
+  }
 }
 
 /* A folder or package menu, placed from script; above the rows and the breadcrumb. */
