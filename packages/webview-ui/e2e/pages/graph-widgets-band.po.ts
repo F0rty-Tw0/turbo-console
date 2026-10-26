@@ -1,10 +1,11 @@
+import type { Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphWidgetsLayout } from './graph-widgets-layout.po.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside } from '../test/utils/element-rect.spec.util.ts';
 import { bandFaultsOf, labelFaultsOf } from '../test/utils/graph-widget-band.spec.util.ts';
-import { isCutText, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
+import { isCutText, isHitAtCentre, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** How far inside a node's top-left corner `tapNodeCorner` clicks, in CSS px. */
 const CORNER_INSET_PX = 2;
@@ -74,11 +75,18 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
 
   /** The count badge is not cut and lies inside the folder's row. */
   public async expectBadgeWhole(folder: string): Promise<void> {
-    const badge = this.rowOf(folder).locator('.widget-count');
+    const badge = this.badgeOf(folder);
 
     await expect(badge).toBeVisible();
     await expect.poll(async (): Promise<boolean> => badge.evaluate(isCutText)).toBe(false);
     await expect.poll(async (): Promise<boolean> => this.isBadgeInRow(folder)).toBe(true);
+  }
+
+  /** A pointer at the badge's centre reaches the badge, which its tooltip needs. */
+  public async expectBadgeHittable(folder: string): Promise<void> {
+    const badge = this.badgeOf(folder);
+
+    await expect.poll(async (): Promise<boolean> => badge.evaluate(isHitAtCentre)).toBe(true);
   }
 
   /** The folder's row width in CSS px, as laid out (the box width times the zoom, less the 16 px of insets), is `min` to `max`. */
@@ -92,8 +100,12 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
     return this.rowOf(folder).evaluate(layoutWidthOf);
   }
 
+  private badgeOf(folder: string): Locator {
+    return this.rowOf(folder).locator('.widget-count');
+  }
+
   private async isBadgeInRow(folder: string): Promise<boolean> {
-    const badge = await rectOf(this.rowOf(folder).locator('.widget-count'));
+    const badge = await rectOf(this.badgeOf(folder));
     const row = await rectOf(this.rowOf(folder));
 
     return isInside(badge, row);

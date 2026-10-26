@@ -165,9 +165,10 @@ test.describe('FEATURE: the folder header fits a narrow box', () => {
       await test.step('THEN its row is 104 to 110 px wide', async (): Promise<void> =>
         graphWidgets.expectRowWidthIn('deep', NARROW_ROW_MIN_PX, NARROW_ROW_MAX_PX));
 
-      await test.step('AND the glyph is hidden, the badge is whole and the buttons sit on the box', async (): Promise<void> => {
+      await test.step('AND the glyph is hidden, the badge is whole and reachable by a pointer, and the buttons sit on the box', async (): Promise<void> => {
         await graphWidgets.expectGlyphShown('deep', false);
         await graphWidgets.expectBadgeWhole('deep');
+        await graphWidgets.expectBadgeHittable('deep');
         await graphWidgets.expectRowFollowsBox('deep');
       });
     }
@@ -183,9 +184,10 @@ test.describe('FEATURE: the folder header fits a narrow box', () => {
       await test.step('THEN its row is 140 to 150 px wide', async (): Promise<void> =>
         graphWidgets.expectRowWidthIn('deep', WIDE_ROW_MIN_PX, WIDE_ROW_MAX_PX));
 
-      await test.step('AND the glyph shows, the badge is whole and the buttons sit on the box', async (): Promise<void> => {
+      await test.step('AND the glyph shows, the badge is whole and reachable by a pointer, and the buttons sit on the box', async (): Promise<void> => {
         await graphWidgets.expectGlyphShown('deep', true);
         await graphWidgets.expectBadgeWhole('deep');
+        await graphWidgets.expectBadgeHittable('deep');
         await graphWidgets.expectRowFollowsBox('deep');
       });
     }

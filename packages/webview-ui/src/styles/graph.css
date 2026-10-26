@@ -335,6 +335,7 @@ p {
   line-height: 16px;
   text-align: center;
   white-space: nowrap;
+  pointer-events: auto;
 }
 
 .visually-hidden {
