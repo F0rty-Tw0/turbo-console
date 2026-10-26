@@ -99,6 +99,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
 
       expect(editor.showQuickPick).toHaveBeenCalledExactlyOnceWith(TASK_ITEMS, {
         canPickMany: true,
+        matchOnDescription: true,
         placeHolder: 'Choose tasks to show'
       });
     });

@@ -18,7 +18,7 @@ const pickRoot = async (folders: RootFolder[]): Promise<string | undefined> => {
 };
 
 const pickTasks = async (items: PickItem[], placeHolder: string): Promise<string[] | undefined> => {
-  const picked = await vscode.window.showQuickPick(items, { canPickMany: true, placeHolder });
+  const picked = await vscode.window.showQuickPick(items, { canPickMany: true, matchOnDescription: true, placeHolder });
 
   return picked?.map((item) => item.value);
 };
