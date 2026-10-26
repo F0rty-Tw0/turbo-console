@@ -11,7 +11,7 @@ import type { ScreenClip } from '../common/playwright.type.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
-import { measuredWidthOf } from '../test/utils/graph-title-measure.spec.util.ts';
+import { measuredWidthsOf } from '../test/utils/graph-title-measure.spec.util.ts';
 
 const BOX_PREFIX = 'pkg:';
 
@@ -133,10 +133,11 @@ export class GraphTaskProbe {
   /** Each box titled one of `titles` is as wide as its title, and its title may draw that wide before an ellipsis. */
   public async expectBoxTitlesUncut(titles: string[]): Promise<void> {
     const boxes = await this.boxes();
+    const widths = await measuredWidthsOf(this.page, titles);
 
     for (const title of titles) {
       const box = boxes.find((node) => node.text === title);
-      const measured = await measuredWidthOf(this.page, title);
+      const measured = widths.get(title) ?? Number.NaN;
 
       expect(box?.textMaxWidth, title).toBeGreaterThanOrEqual(measured);
       expect(box?.width, title).toBeGreaterThanOrEqual(measured);
