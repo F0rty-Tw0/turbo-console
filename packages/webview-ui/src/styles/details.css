@@ -250,8 +250,6 @@ ul {
 
 .section-title {
   padding-bottom: var(--space-1);
-  border-bottom: 1px solid;
-  border-bottom-color: var(--frame);
   font-size: 1em;
   font-weight: 600;
 }
@@ -271,7 +269,7 @@ ul {
 /* Task card */
 
 /*
- * Every frame (this one, .page-header, .chip, .section-title) sets width and style apart from colour: an unset colour
+ * Every frame (this one, .page-header, .chip) sets width and style apart from colour: an unset colour
  * variable inside a `border` shorthand drops the whole border, but as a lone `border-color` it falls back to
  * currentColor and keeps it, so a status change never changes a width or shifts the layout.
  */
