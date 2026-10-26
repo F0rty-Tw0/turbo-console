@@ -31,6 +31,7 @@ export const THEME_VAR_NAMES = [
   '--vscode-foreground',
   '--vscode-panel-border',
   '--vscode-contrastBorder',
+  '--vscode-widget-border',
   '--vscode-descriptionForeground',
   '--vscode-focusBorder'
 ];

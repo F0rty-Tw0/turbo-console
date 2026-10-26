@@ -288,8 +288,8 @@ p {
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
-  border-radius: var(--radius);
+  border: 1px solid var(--vscode-widget-border, var(--vscode-contrastBorder, rgba(128, 128, 128, 0.35)));
+  border-radius: 50%;
   /* An opaque base under the secondary colour, which Dark Modern makes transparent and High Contrast leaves unset. */
   --tc-widget-fill: var(--vscode-button-secondaryBackground, transparent);
 
