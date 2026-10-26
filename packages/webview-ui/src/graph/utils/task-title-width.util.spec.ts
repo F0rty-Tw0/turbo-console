@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { nodeSizeOf } from './node-size.util.ts';
 import { titleWidthsOf } from './task-title-width.util.ts';
@@ -23,6 +23,14 @@ describe('FEATURE: titleWidthsOf', () => {
           ['ui', 20]
         ])
       );
+    });
+
+    it('WHEN measured THEN each package is measured once', () => {
+      const sizer = vi.fn(SIZER);
+
+      titleWidthsOf(TASKS, sizer);
+
+      expect(sizer.mock.calls).toStrictEqual([['@acme/web'], ['ui']]);
     });
 
     it('WHEN the measure is fractional THEN the width is rounded up', () => {

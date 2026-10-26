@@ -98,8 +98,10 @@ export class GraphTaskLayout {
       return;
     }
 
+    const titleWidths = titleWidthsOf(request.tasks, this.deps.textSizeOf);
+
     this.remember(kept);
-    this.place(request, kept, true);
+    this.place(request, kept, titleWidths, true);
   }
 
   /** Keeps `result` as the layout shown last, forgetting the one shown least recently past `TASK_LAYOUT_MEMORY`. */
@@ -127,16 +129,15 @@ export class GraphTaskLayout {
     if (isSuperseded) return;
 
     this.remember(result);
-    this.place(request, result, canRestore);
+    this.place(request, result, titleWidths, canRestore);
   }
 
   /**
    * Stops the flow, draws the layout, restores the saved camera when its key is this one (else fits), arms the frame
-   * clock, then hands the drawn highlight back to the flow.
+   * clock, then hands the drawn highlight back to the flow. `titleWidths` are the ones its layout was measured with.
    */
-  private place(request: TaskLayoutRequest, result: LayoutResult, canRestore: boolean): void {
-    const { view, screen, frames, sizeOf, textSizeOf, flow } = this.deps;
-    const titleWidths = titleWidthsOf(request.tasks, textSizeOf);
+  private place(request: TaskLayoutRequest, result: LayoutResult, titleWidths: Map<string, number>, canRestore: boolean): void {
+    const { view, screen, frames, sizeOf, flow } = this.deps;
     const saved = this.deps.saved();
     const isSavedCamera = canRestore && saved?.layoutKey === request.key;
 
