@@ -7,11 +7,9 @@ import type { NodeSizer } from '../common/graph-page.type.ts';
 import { TASK_BOX_PREFIX } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
 import { ELK_GROUPED_ROOT_OPTIONS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import type { TaskDrawing } from '../common/task-canvas.type.ts';
 
-/** The title text width of each package, which its box is at least as wide as. */
-type TitleWidths = { readonly titleWidths: ReadonlyMap<string, number> };
-
-type TaskGraphInput = Pick<TaskLayoutRequest, 'tasks' | 'shown' | 'sizes'> & TitleWidths;
+type TaskGraphInput = Pick<TaskLayoutRequest, 'tasks' | 'shown' | 'sizes'> & Pick<TaskDrawing, 'titleWidths'>;
 
 /** The compound id of a task's package; the root package `//` gives `pkg://`. */
 export const taskBoxIdOf = (packageName: string): string => `${TASK_BOX_PREFIX}${packageName}`;

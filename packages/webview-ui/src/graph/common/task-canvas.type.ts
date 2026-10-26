@@ -14,6 +14,7 @@ export type TaskDrawing = {
   readonly sizeOf: (name: string) => NodeSize;
   readonly sizes: ReadonlyMap<string, NodeSize>;
   readonly labels: ReadonlyMap<string, string>;
+  /** The title text width of each package, which its box is at least as wide as. */
   readonly titleWidths: ReadonlyMap<string, number>;
 };
 
