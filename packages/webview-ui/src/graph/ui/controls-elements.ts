@@ -4,6 +4,7 @@ import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import { CONTROLS_ID, DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common/graph.const.ts';
+import { setButtonLabel } from '../utils/button-title.util.ts';
 import {
   countTextOf,
   focusLabelOf,
@@ -30,6 +31,7 @@ const listButton = (className: string, text: string): HTMLButtonElement => {
   const button = textElement('button', className, text);
 
   button.type = 'button';
+  button.title = text;
   button.tabIndex = -1;
 
   return button;
@@ -63,7 +65,7 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
   const line = gridLine('controls-row', cells);
 
   pick.title = name;
-  focus.setAttribute('aria-label', focusLabelOf(name));
+  setButtonLabel(focus, focusLabelOf(name));
 
   const row: ControlsRow = { name, line, check, pick, focus };
 
@@ -90,7 +92,7 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
 
   toggle.hidden = true;
   focus.hidden = true;
-  focus.setAttribute('aria-label', folderFocusLabelOf(title));
+  setButtonLabel(focus, folderFocusLabelOf(title));
 
   text.setAttribute('aria-hidden', 'true');
 
@@ -120,6 +122,7 @@ const showAllButton = (): HTMLButtonElement => {
   const button = textElement('button', 'text-button', SHOW_ALL_LABEL);
 
   button.type = 'button';
+  button.title = SHOW_ALL_LABEL;
   button.setAttribute('aria-disabled', 'true');
 
   return button;

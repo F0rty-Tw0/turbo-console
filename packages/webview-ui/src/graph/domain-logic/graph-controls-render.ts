@@ -2,6 +2,7 @@ import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { ControlsView } from '../common/graph-controls.type.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
+import { setButtonLabel } from '../utils/button-title.util.ts';
 import { groupStateOf, isFiltered, isGroupLocked, rowViewOf } from '../utils/controls-rules.util.ts';
 import {
   controlsLabelOf,
@@ -36,7 +37,7 @@ const renderToggle = (group: ControlsGroup, view: ControlsView): void => {
 
   toggle.hidden = !view.grouped;
   toggle.textContent = folderToggleTextOf(isCollapsed);
-  toggle.setAttribute('aria-label', folderToggleLabelOf(title, isCollapsed));
+  setButtonLabel(toggle, folderToggleLabelOf(title, isCollapsed));
   toggle.setAttribute('aria-expanded', String(!isCollapsed));
 };
 

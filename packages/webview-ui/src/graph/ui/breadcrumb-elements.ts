@@ -15,6 +15,7 @@ export const buildBreadcrumb = (): BreadcrumbElements => {
   nav.hidden = true;
   nav.setAttribute('aria-label', BREADCRUMB_LABEL);
   allFolders.type = 'button';
+  allFolders.title = ALL_FOLDERS_LABEL;
   allFolders.append(graphIcon('chevron-left'), backText);
   title.setAttribute('aria-current', 'page');
   nav.append(allFolders, title, lines);

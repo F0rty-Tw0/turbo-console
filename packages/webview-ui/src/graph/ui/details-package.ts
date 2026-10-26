@@ -14,6 +14,7 @@ import {
 import type { NeighbourModel, PackageViewModel } from '../common/details.type.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import { TAGS_LABEL } from '../common/graph.const.ts';
+import { setButtonLabel } from '../utils/button-title.util.ts';
 import { dependenciesTitleOf, dependentsTitleOf, explainLabelOf, openDetailsLabelOf, pathTextOf } from '../utils/details-text.util.ts';
 
 /** The accessible name of a neighbour's Explain button, its link named dependent first. */
@@ -48,11 +49,12 @@ const tagsOf = (tags: string[]): HTMLElement => {
   return list;
 };
 
-const openButton = (label: HTMLElement): HTMLButtonElement => {
+const openButton = (label: HTMLElement, title: string): HTMLButtonElement => {
   const button = textElement('button', 'primary-button', '');
   const icon = graphIcon('file-text');
 
   button.type = 'button';
+  button.title = title;
   button.append(icon, label);
 
   return button;
@@ -62,7 +64,7 @@ const actionsOf = (model: PackageViewModel): PackageActions => {
   const actions = textElement('div', 'details-actions', '');
   const openText = openDetailsLabelOf(model.taskCount);
   const openLabel = textElement('span', '', openText);
-  const openDetails = openButton(openLabel);
+  const openDetails = openButton(openLabel, openText);
   const focusText = model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_LABEL;
   const focus = actionButton(focusText);
   const exclude = actionButton(EXCLUDE_LABEL);
@@ -89,7 +91,7 @@ const neighbourItem = (list: HTMLUListElement, neighbour: NeighbourModel, explai
 
   explain.type = 'button';
   explain.dataset['name'] = neighbour.name;
-  explain.setAttribute('aria-label', explainLabel);
+  setButtonLabel(explain, explainLabel);
   mark.hidden = neighbour.isVisible;
   li.append(pick, mark, explain);
   list.append(li);
