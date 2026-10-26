@@ -3,6 +3,7 @@ import type { Locator } from '@playwright/test';
 import { isInside, readRect } from './element-rect.spec.util.ts';
 import { nodeBoxOf } from './graph-geometry.spec.util.ts';
 import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
+import { SELECTED_BORDER_PX } from '../../../src/graph/common/graph.const.ts';
 import { folderTitleOf } from '../../../src/graph/utils/controls-text.util.ts';
 import type { RowFrame } from '../../common/graph-folders.type.ts';
 import { WIDGET_BUTTON_PX, WIDGET_INSET_PX } from '../../common/graph.const.ts';
@@ -14,8 +15,8 @@ const PLACE_TOLERANCE_PX = 1;
 /** Half the 24 px package "…". */
 const HALF_BUTTON_PX = WIDGET_BUTTON_PX / 2;
 
-/** The selected node's border in model px (`graph-style.ts`), drawn centred on the node's edge. */
-const SELECTED_BORDER_PX = 3;
+/** Cytoscape pads every node's bounding box by 1 model px "for browser dimension inaccuracies", and the "…" centres on that box. */
+const BOUNDS_PAD_PX = 1;
 
 /** The height of a box's header band: its top 32 px. */
 const BAND_PX = 32;
@@ -106,11 +107,11 @@ export const ellipsisFaultsOf = (box: ElementRect, ellipsis: ElementRect, frame:
   return [...right, ...top, ...width];
 };
 
-/** The package "…" is centred on the node's drawn top-right corner, which the selected border puts half its width outside the node. */
+/** The package "…" is centred on the node's bounding-box top-right corner, which the selected border and Cytoscape's pad put outside the node. */
 export const cornerFaultsOf = (node: ElementRect, button: ElementRect, zoom: number): string[] => {
-  const border = (SELECTED_BORDER_PX / 2) * zoom;
-  const x = offFaultsOf('"…" centre x', button.left + HALF_BUTTON_PX, node.left + node.width + border);
-  const y = offFaultsOf('"…" centre y', button.top + HALF_BUTTON_PX, node.top - border);
+  const outset = (SELECTED_BORDER_PX / 2 + BOUNDS_PAD_PX) * zoom;
+  const x = offFaultsOf('"…" centre x', button.left + HALF_BUTTON_PX, node.left + node.width + outset);
+  const y = offFaultsOf('"…" centre y', button.top + HALF_BUTTON_PX, node.top - outset);
 
   return [...x, ...y];
 };

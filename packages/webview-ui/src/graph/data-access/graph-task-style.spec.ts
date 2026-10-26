@@ -107,13 +107,13 @@ describe('FEATURE: taskRulesOf Atomizer files and boxes in graphStyleOf', () => 
     cy.destroy();
   });
 
-  it('GIVEN an atom file THEN its label is its data label, cut with an ellipsis at 96 px', () => {
+  it('GIVEN an atom file THEN its label is its data label, cut with an ellipsis at 88 px, clear of both round pill ends', () => {
     const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
 
     expect([file.style('label'), file.style('text-wrap'), file.numericStyle('text-max-width')]).toStrictEqual([
       'c.spec.ts',
       'ellipsis',
-      96
+      88
     ]);
   });
 
@@ -231,6 +231,39 @@ const GLYPH_ELEMENTS = [
   glyphElementOf('web#build--more', '+3 more', 'atom-more'),
   glyphElementOf('pkg:web', 'web', '')
 ];
+
+const CORNER_RADII: [string, number][] = [
+  ['atom-file', 10],
+  ['atom-more', 10],
+  ['task', 6],
+  ['task atom-umbrella', 6]
+];
+
+const cornerElementOf = (classes: string): ElementDefinition => {
+  const data = { id: classes };
+  const definition: ElementDefinition = { data, classes };
+
+  return definition;
+};
+
+describe('FEATURE: taskRulesOf corners in graphStyleOf', () => {
+  let cy: Core;
+
+  beforeEach(() => {
+    const elements = CORNER_RADII.map(([classes]): ElementDefinition => cornerElementOf(classes));
+
+    cy = cytoscape({ headless: true, styleEnabled: true, elements });
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  it.each(CORNER_RADII)('GIVEN a node classed "%s" THEN its corners are %d px round', (classes, radius) => {
+    expect(cy.getElementById(classes).numericStyle('corner-radius')).toBe(radius);
+  });
+});
 
 describe('FEATURE: taskRulesOf glyph labels in graphStyleOf with glyphs on', () => {
   let cy: Core;

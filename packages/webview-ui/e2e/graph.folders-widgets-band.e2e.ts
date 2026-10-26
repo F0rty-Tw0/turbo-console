@@ -17,8 +17,8 @@ const LONG_PAN: Position = { x: 400, y: 300 };
 /** Zoom 120/180: the 180 px collapsed node is drawn at the 120 px minimum, its row at scale 0.667. */
 const NODE_MIN_ZOOM = 0.667;
 
-/** The node's body is drawn 117 px wide, under the minimum, but its 3 px selected border draws its bounds 120.6 px wide. */
-const SELECTED_BORDER_ZOOM = 0.652;
+/** The node's body is drawn 117 px wide, under the minimum, but its 2 px selected border draws its bounds 120.3 px wide; only zooms 0.6522–0.6557 straddle 120 px this way. */
+const SELECTED_BORDER_ZOOM = 0.654;
 
 const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => savedWith(BOARDS.hash, overrides);
 
@@ -74,8 +74,8 @@ test.describe('FEATURE: folder header rows in the box band', () => {
         await graphFolderInspect.tapFolder('apps');
       });
 
-      await test.step('THEN the apps chevron is at least 3 px times the zoom below the box top', async (): Promise<void> =>
-        graphWidgets.expectChevronBelowTop('apps', 3));
+      await test.step('THEN the apps chevron is at least 2 px times the zoom below the box top', async (): Promise<void> =>
+        graphWidgets.expectChevronBelowTop('apps', 2));
 
       await test.step('AND the row is centred in the band', async (): Promise<void> => graphWidgets.expectRowFollowsBox('apps'));
     }
@@ -104,10 +104,10 @@ test.describe('FEATURE: folder header rows in the box band', () => {
   );
 
   test(
-    'GIVEN a collapsed node drawn under 120 px wide at zoom 0.652, selecting it and thickening its border shows no buttons',
+    'GIVEN a collapsed node drawn under 120 px wide at zoom 0.654, selecting it and thickening its border shows no buttons',
     { annotation: C9 },
     async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
-      await test.step('WHEN the page opens with the node collapsed at zoom 0.652', async (): Promise<void> =>
+      await test.step('WHEN the page opens with the node collapsed at zoom 0.654', async (): Promise<void> =>
         graphFolderInspect.open(longCollapsedAt(SELECTED_BORDER_ZOOM), LONG));
 
       await test.step('THEN it shows no header button', async (): Promise<void> => graphWidgets.expectHeaderHidden(LONG_FOLDER));

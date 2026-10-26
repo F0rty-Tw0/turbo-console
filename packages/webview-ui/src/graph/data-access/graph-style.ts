@@ -10,7 +10,8 @@ import {
   FOLDER_NODE_CLASS,
   FOLDER_PADDING_PX,
   NODE_BORDER_PX,
-  NODE_FONT_SIZE
+  NODE_FONT_SIZE,
+  SELECTED_BORDER_PX
 } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 
@@ -29,7 +30,8 @@ const boxStyleOf = (colors: ThemeColors): Css.Node => {
     height: 1,
     'border-width': NODE_BORDER_PX,
     'border-color': colors.frame,
-    'background-color': colors.background
+    'background-color': colors.background,
+    'corner-radius': '8px'
   } as const;
 
   return box;
@@ -61,7 +63,17 @@ const HIDDEN = { display: 'none' } as const;
 
 const GHOST_NODE = { 'border-style': 'dashed', 'text-opacity': 0.75 } as const;
 
+/** A collapsed folder: its label wrapped, its corners as round as a box's. */
+const FOLDER_NODE = {
+  label: 'data(label)',
+  'text-wrap': 'wrap',
+  'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px`,
+  'corner-radius': '8px'
+} as const;
+
 const GHOST_EDGE = { 'line-style': 'dashed' } as const;
+
+const EDGE_ARROW = { 'target-arrow-shape': 'triangle', 'arrow-scale': 0.8, 'target-distance-from-node': 3 } as const;
 
 /** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
 const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
@@ -104,21 +116,21 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     color: colors.label,
     'background-color': colors.background,
     'border-width': NODE_BORDER_PX,
-    'border-color': colors.frame
+    'border-color': colors.frame,
+    'corner-radius': '6px'
   } as const;
   const edge = {
+    ...EDGE_ARROW,
     'curve-style': 'bezier',
-    'target-arrow-shape': 'triangle',
     width: 1,
     'line-color': colors.edge,
     'target-arrow-color': colors.edge
   } as const;
-  const selectedNode = { 'border-width': 3, 'border-color': colors.selected };
-  const highlightedNode = { 'border-width': 2, 'border-color': colors.highlighted };
-  const highlightedEdge = { width: 2, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
-  const selectedEdge = { width: 3, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
+  const selectedNode = { 'border-width': SELECTED_BORDER_PX, 'border-color': colors.selected };
+  const highlightedNode = { 'border-width': NODE_BORDER_PX, 'border-color': colors.highlighted };
+  const highlightedEdge = { width: 1.5, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
+  const selectedEdge = { width: SELECTED_BORDER_PX, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
   const dimmed = { opacity: colors.dimmedOpacity };
-  const folderNode = { label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px` } as const;
   const glyphFamily = glyphs ? `codicon, ${fontFamily}` : null;
   const taskRules = taskRulesOf(colors, BOX_TITLE, glyphFamily);
   const style: StylesheetJson = [
@@ -134,7 +146,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     { selector: 'node.ghost', style: GHOST_NODE },
     { selector: 'edge.ghost', style: GHOST_EDGE },
     { selector: '.dimmed', style: dimmed },
-    { selector: `node.${FOLDER_NODE_CLASS}`, style: folderNode },
+    { selector: `node.${FOLDER_NODE_CLASS}`, style: FOLDER_NODE },
     { selector: `edge.${FOLDER_LINK_CLASS}`, style: folderLinkStyleOf(colors, fontFamily) },
     { selector: `node.${DIMMED_BOX_CLASS}`, style: dimmedBoxStyleOf(colors) },
     { selector: `.${FOLDER_HIDDEN_CLASS}`, style: HIDDEN }

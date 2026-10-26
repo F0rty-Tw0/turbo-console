@@ -59,14 +59,23 @@ describe('FEATURE: widgetRectsOf', () => {
       expect(width).toBe(rect.x2 - rect.x1);
     });
 
-    it.each(['selected', 'highlighted'])('WHEN the apps box is painted %s THEN its rect widens but its width stays', (state) => {
+    it('WHEN the apps box is painted selected THEN its rect widens but its width stays', () => {
       const before = appsOf(cy);
 
-      cy.getElementById(folderIdOf('apps')).addClass(state);
+      cy.getElementById(folderIdOf('apps')).addClass('selected');
       const after = appsOf(cy);
 
       expect(after.rect.x2).toBeGreaterThan(before.rect.x2);
       expect(after.width).toBe(before.width);
+    });
+
+    it('WHEN the apps box is painted highlighted THEN its rect and width stay, the border being the plain one', () => {
+      const before = appsOf(cy);
+
+      cy.getElementById(folderIdOf('apps')).addClass('highlighted');
+      const after = appsOf(cy);
+
+      expect(after).toStrictEqual(before);
     });
 
     it('WHEN read THEN the rects carry the camera zoom they were read at', () => {
