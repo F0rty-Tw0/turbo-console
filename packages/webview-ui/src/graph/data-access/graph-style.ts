@@ -15,12 +15,15 @@ import {
 } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 
-/** No press feedback: Cytoscape's default dims a pressed node or edge with a black overlay, and a press on the background with a circle. */
 /** Typed loosely: cytoscape's `Css.Core` demands every core property, and this sets one. */
 const NO_PRESS_CIRCLE: Record<string, number> = { 'active-bg-opacity': 0 };
 
 const NO_PRESS_OVERLAY = { 'overlay-opacity': 0 } as const;
 
+/**
+ * No press feedback: Cytoscape's default dims a pressed node or edge with a black overlay, and a press on the
+ * background with a circle.
+ */
 const NO_PRESS_RULES: StylesheetJson = [
   { selector: 'core', style: NO_PRESS_CIRCLE },
   { selector: 'node:active', style: NO_PRESS_OVERLAY },
@@ -120,11 +123,12 @@ const BOX_TITLE = {
 } as const;
 
 /**
- * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with
- * a triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies;
- * `ghost` (dashed) is the one `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the background; `taskRulesOf` adds the task mode rules. The folder pass draws `folder-node` (a collapsed folder, its
- * label wrapped) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it.
- * Every colour comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font
+ * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with a
+ * triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost`
+ * (dashed) is the one `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
+ * background; `taskRulesOf` adds the task mode rules. The folder pass draws `folder-node` (a collapsed folder, its
+ * label wrapped) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows
+ * it. Every colour comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font
  * before their name; the base node rule keeps `fontFamily`.
  */
 export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: boolean): StylesheetJson => {
