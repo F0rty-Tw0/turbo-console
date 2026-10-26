@@ -46,7 +46,7 @@ export class GraphWidgets {
     this.rows.restoreFocus();
   }
 
-  /** One pass: the rendered rects, the plan, then the style writes that changed. */
+  /** One pass: the rendered rects, the plan, then the style writes that changed and the collapsed labels of rows not shown. */
   public position(): void {
     const rowCount = this.rows.size();
     const isEmpty = rowCount === 0 && this.button === null;
@@ -59,6 +59,7 @@ export class GraphWidgets {
 
     this.plan = widgetPlanOf(input);
     this.rows.place(this.plan.rows);
+    this.deps.view.markRowLess(this.plan.rows);
     this.placeButton(this.plan.packageButton);
   }
 

@@ -52,7 +52,7 @@ const countBadge = (count: number): HTMLElement => {
   return badge;
 };
 
-/** A box's folder glyph, its title cut on screen with "…" while its `title` attribute keeps it whole, and its package count badge. */
+/** A row's folder glyph, its title cut on screen with "…" while its `title` attribute keeps it whole, and its package count badge. */
 const titleParts = (title: string, count: number): HTMLElement[] => {
   const glyph = graphIcon('folder-opened');
   const text = textElement('span', 'widget-title', title);

@@ -33,15 +33,6 @@ const COLLAPSED_ROW: RowPlacement = { x: 108, y: 58, width: 284, scale: 1 };
 /** The docked 960 px editor's Fit zoom. */
 const FIT_ZOOM = 0.658;
 
-/** Half the widest collapsed-node label, 116 px, centred on the node. */
-const HALF_LABEL_PX = 58;
-
-/** Room for float error where the row's corner exactly meets the widest label. */
-const FLOAT_EPSILON = 1e-9;
-
-/** NaN edges in place of a missing row, so every clearance check fails. */
-const NO_ROW: RowPlacement = { x: Number.NaN, y: Number.NaN, width: Number.NaN, scale: 1 };
-
 /** A collapsed node 180 px wide in graph px, as drawn at `zoom`. */
 const collapsedAt = (zoom: number): FolderRect => folderOf(rectOf(100, 50, 100 + 180 * zoom, 50 + 56 * zoom));
 
@@ -109,20 +100,12 @@ describe('FEATURE: rowPlacementOf', () => {
     });
   });
 
-  describe('GIVEN a collapsed node 180 px wide whose 116 px widest label is centred on it at the camera zoom', () => {
-    it.each([2, 1, 0.8, 0.667])(
-      'WHEN the zoom is %s THEN its chevron ends left of the label and its "…" starts right of it',
-      (zoom) => {
-        const node = collapsedAt(zoom);
-        const centre = (node.rect.x1 + node.rect.x2) / 2;
-        const row = rowPlacementOf(node, 'collapsed', zoom) ?? NO_ROW;
+  describe('GIVEN a collapsed node 180 px wide drawn at the camera zoom', () => {
+    it.each([2, 1, 0.8, 0.667])('WHEN the zoom is %s THEN it has a row, so the canvas draws no label under it', (zoom) => {
+      const placement = rowPlacementOf(collapsedAt(zoom), 'collapsed', zoom);
 
-        const { chevron, ellipsis } = buttonRectsOf(row);
-
-        expect(chevron.x2).toBeLessThanOrEqual(centre - HALF_LABEL_PX * zoom + FLOAT_EPSILON);
-        expect(ellipsis.x1).toBeGreaterThanOrEqual(centre + HALF_LABEL_PX * zoom - FLOAT_EPSILON);
-      }
-    );
+      expect(placement).not.toBeNull();
+    });
 
     it('WHEN the zoom is 0.66, drawing it under 120 px THEN it has no row', () => {
       const placement = rowPlacementOf(collapsedAt(0.66), 'collapsed', 0.66);

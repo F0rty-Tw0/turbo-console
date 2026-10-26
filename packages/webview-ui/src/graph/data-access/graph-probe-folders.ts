@@ -1,6 +1,6 @@
 import type { BoundingBox12, Core, EdgeSingular, NodeSingular } from 'cytoscape';
 
-import { probeStateOf } from './graph-probe-state.ts';
+import { probeStateOf, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeFolder, ProbeFolderLink } from '../common/graph-probe.type.ts';
 import { BOX_COLLAPSED_CLASS, FOLDER_HIDDEN_CLASS, FOLDER_ID_PREFIX, FOLDER_LINK_CLASS } from '../common/graph.const.ts';
@@ -22,8 +22,8 @@ const rectOf = (node: NodeSingular): BoundingBox12 => {
 };
 
 /**
- * `box` as its folder key, state, centre and size in page CSS pixels (`origin` is the container's top left corner) and
- * packages; a collapsed folder reads its collapsed node, which is missing while the folder is not shown.
+ * `box` as its folder key, state, centre and size in page CSS pixels (`origin` is the container's top left corner), drawn
+ * label and packages; a collapsed folder reads its collapsed node, which is missing while the folder is not shown.
  */
 const probeFolderOf = (cy: Core, box: NodeSingular, origin: Position): ProbeFolder => {
   const folder = box.id().slice(FOLDER_ID_PREFIX.length);
@@ -44,6 +44,7 @@ const probeFolderOf = (cy: Core, box: NodeSingular, origin: Position): ProbeFold
     renderedY: origin.y + (y1 + y2) / 2,
     renderedWidth: x2 - x1,
     renderedHeight: y2 - y1,
+    text: styleText(shown, 'label'),
     packages
   };
 

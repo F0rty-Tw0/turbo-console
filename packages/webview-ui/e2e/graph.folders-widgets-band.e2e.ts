@@ -28,6 +28,9 @@ const NODE_MIN_ZOOM = 0.667;
 /** The node's body is drawn 117 px wide, under the minimum, but its 2 px selected border draws its bounds 120.3 px wide; only zooms 0.6522–0.6557 straddle 120 px this way. */
 const SELECTED_BORDER_ZOOM = 0.654;
 
+/** Zoom 0.5: the 180 px collapsed node is drawn 90 px wide, under the 120 px minimum, so it has no row. */
+const ROW_LESS_ZOOM = 0.5;
+
 const DEEP = deepFolderState();
 
 /** Keeps the `deep` box's top band and both ends on the canvas at both zooms below. */
@@ -116,23 +119,23 @@ test.describe('FEATURE: folder header rows in the box band', () => {
   );
 
   test(
-    'GIVEN a collapsed node with a long title, its buttons show on it clear of the widest title at zoom 0.667 and at zoom 2',
+    'GIVEN a collapsed node with a long title, its buttons show on it clear of its title and badge at zoom 0.667 and at zoom 2',
     { annotation: C9 },
     async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
       await test.step('WHEN the page opens with the node collapsed at zoom 0.667, drawn 120 px wide', async (): Promise<void> =>
         graphFolderInspect.open(longCollapsedAt(NODE_MIN_ZOOM), LONG));
 
-      await test.step('THEN its chevron and "…" sit on the node at that scale, clear of the widest title', async (): Promise<void> => {
+      await test.step('THEN its chevron and "…" sit on the node at that scale, clear of the title and badge', async (): Promise<void> => {
         await graphWidgets.expectCollapsedRow(LONG_FOLDER);
-        await graphWidgets.expectCollapsedClearOfLabel(LONG_FOLDER);
+        await graphWidgets.expectButtonsClearOfHeader(LONG_FOLDER);
       });
 
       await test.step('WHEN the page opens with the node collapsed at zoom 2', async (): Promise<void> =>
         graphFolderInspect.open(longCollapsedAt(2), LONG));
 
-      await test.step('THEN its chevron and "…" sit on the node full size, clear of the widest title', async (): Promise<void> => {
+      await test.step('THEN its chevron and "…" sit on the node full size, clear of the title and badge', async (): Promise<void> => {
         await graphWidgets.expectCollapsedRow(LONG_FOLDER);
-        await graphWidgets.expectCollapsedClearOfLabel(LONG_FOLDER);
+        await graphWidgets.expectButtonsClearOfHeader(LONG_FOLDER);
       });
     }
   );
@@ -162,8 +165,29 @@ test.describe('FEATURE: folder header rows in the box band', () => {
         await graphWidgets.expectCollapsedRow(LONG_FOLDER);
         await graphWidgets.expectTitleEllipsis(LONG_FOLDER);
         await graphWidgets.expectBadgeWhole(LONG_FOLDER);
-        await graphWidgets.expectCollapsedClearOfLabel(LONG_FOLDER);
+        await graphWidgets.expectButtonsClearOfHeader(LONG_FOLDER);
       });
+    }
+  );
+
+  test(
+    'GIVEN a collapsed folder with a long title, the canvas draws its label only while its row is hidden',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the page opens with the node collapsed at zoom 0.5, drawn 90 px wide', async (): Promise<void> =>
+        graphFolderInspect.open(longCollapsedAt(ROW_LESS_ZOOM), LONG));
+
+      await test.step('THEN it shows no header button', async (): Promise<void> => graphWidgets.expectHeaderHidden(LONG_FOLDER));
+
+      await test.step('AND the canvas draws its cut title over "1 package"', async (): Promise<void> =>
+        graphWidgets.expectCanvasLabel(LONG_FOLDER, 1));
+
+      await test.step('WHEN the page opens with the node collapsed at zoom 1', async (): Promise<void> =>
+        graphFolderInspect.open(longCollapsedAt(1), LONG));
+
+      await test.step('THEN its row shows on the node', async (): Promise<void> => graphWidgets.expectCollapsedRow(LONG_FOLDER));
+
+      await test.step('AND the canvas draws no label on it', async (): Promise<void> => graphWidgets.expectNoCanvasLabel(LONG_FOLDER));
     }
   );
 

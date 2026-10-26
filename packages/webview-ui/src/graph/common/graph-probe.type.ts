@@ -60,6 +60,8 @@ export type ProbeFolder = {
   readonly renderedY: number;
   readonly renderedWidth: number;
   readonly renderedHeight: number;
+  /** The label drawn on the canvas: `''` on a box and on a collapsed node showing its header row. */
+  readonly text: string;
   readonly packages: string[];
 };
 

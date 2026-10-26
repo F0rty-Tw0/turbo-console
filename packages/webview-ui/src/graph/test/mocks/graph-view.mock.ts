@@ -57,6 +57,7 @@ export const graphViewMock = (camera: Viewport): Mocked<GraphView> => {
     showFolders: vi.fn<GraphView['showFolders']>(),
     applyTheme: vi.fn<GraphView['applyTheme']>(),
     widgetRects: vi.fn<GraphView['widgetRects']>(),
+    markRowLess: vi.fn<GraphView['markRowLess']>(),
     exportPng: vi.fn<GraphView['exportPng']>(() => ''),
     flowEdges: vi.fn<GraphView['flowEdges']>(() => []),
     cy: vi.fn<GraphView['cy']>(),

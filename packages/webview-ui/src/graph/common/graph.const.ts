@@ -121,11 +121,14 @@ export const COLLAPSED_NODE_WIDTH = 180;
 
 export const COLLAPSED_NODE_HEIGHT = 56;
 
-/** Widest a collapsed node's title may be, in raw text px, before it is cut with an ellipsis. */
+/** Widest a collapsed node's canvas label title may be, in raw text px, before it is cut with an ellipsis; its DOM row cuts its own. */
 export const COLLAPSED_LABEL_MAX_PX = 116;
 
 /** The node drawn in place of a collapsed folder's box and packages. */
 export const FOLDER_NODE_CLASS = 'folder-node';
+
+/** A collapsed node whose header row the widget pass hides, drawn too narrow for one or off screen: the canvas draws its label. */
+export const ROW_LESS_CLASS = 'row-less';
 
 /** The edge drawn for the package links between a collapsed folder and another drawn end, merged. */
 export const FOLDER_LINK_CLASS = 'folder-link';
