@@ -6,7 +6,7 @@ import { POINTER_FOCUS_CLASS } from '../common/graph.const.ts';
  * so the class lets the CSS drop that ring until a key is pressed. Capture phase, so a handler that stops the event
  * cannot hide the press.
  */
-export const trackPointerFocus = (container: HTMLElement, doc: Document = document): void => {
+export const trackPointerFocus = (container: HTMLElement, doc: EventTarget = document): void => {
   doc.addEventListener('pointerdown', (): void => container.classList.add(POINTER_FOCUS_CLASS), true);
   doc.addEventListener('keydown', (): void => container.classList.remove(POINTER_FOCUS_CLASS), true);
 };
