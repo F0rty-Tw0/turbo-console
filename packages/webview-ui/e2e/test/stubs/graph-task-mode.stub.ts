@@ -56,11 +56,16 @@ export const TASK_MODE_DOCS_TASK_STUB: GraphReady = {
 
 const LONG_NAMES_EDGES: GraphEdge[] = [{ source: '@company/web', target: '@company/api-client' }];
 
+const LONG_NAMES_TASKS: GraphTask[] = [
+  taskOf('@company/api-client', 'build', []),
+  taskOf('@company/web', 'build', ['@company/api-client#build'])
+];
+
 /** `@company/web#build` needs `@company/api-client#build`: package names wider than their one task, hash `7a5c0010`. */
 export const TASK_LONG_NAMES_STUB: GraphReady = {
   ...TASK_MODE_STATE_STUB,
   hash: '7a5c0010',
   packages: packagesOf(['@company/api-client', '@company/web']),
   edges: LONG_NAMES_EDGES,
-  tasks: [taskOf('@company/api-client', 'build', []), taskOf('@company/web', 'build', ['@company/api-client#build'])]
+  tasks: LONG_NAMES_TASKS
 };
