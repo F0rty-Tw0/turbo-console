@@ -28,10 +28,7 @@ const MEASURE_FAILED = new Error('cannot measure');
 
 const TITLE_SIZE: NodeSize = { width: 150, height: 20 };
 
-const TITLES = new Map([
-  ['api', 127],
-  ['web', 127]
-]);
+const TITLES = new Map([['api', 127]]);
 
 const firstCompoundOf = (graph: ElkNode): ElkNode | undefined => graph.children?.[0];
 
@@ -85,8 +82,8 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
         expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ titleWidths: TITLES }));
       });
 
-      it('THEN each package is measured once', () => {
-        expect(textSizeOf.mock.calls).toStrictEqual([['api'], ['web']]);
+      it('THEN only the package with a shown task is measured', () => {
+        expect(textSizeOf.mock.calls).toStrictEqual([['api']]);
       });
     });
 
