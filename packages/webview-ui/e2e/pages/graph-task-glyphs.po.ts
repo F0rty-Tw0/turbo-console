@@ -8,12 +8,12 @@ import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNIN
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
 import { TASK_MODE_STATE_STUB } from '../test/stubs/graph-task-mode.stub.ts';
-import { readyPostedAt } from '../test/utils/graph-posted.spec.util.ts';
+import { fontWaitOf } from '../test/utils/graph-font-wait.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeTasksState } from '../test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from '../test/utils/graph-task-saved.spec.util.ts';
 
-/** The font wait plus room for a slow runner's start, still under the mock's 3 s font hold: a page that waits for the held font misses it. */
-const READY_BUDGET_MS = CODICON_WAIT_MS + 1500;
+/** From the codicon.ttf request to `ready`: the font wait plus room for a slow runner, far under the mock's 3 s font hold. */
+const READY_BUDGET_MS = CODICON_WAIT_MS + 500;
 
 /** Every character the codicon font covers: Cytoscape draws a state glyph from it. */
 const CODICON_RANGE = /[\uea60-\uf102]/u;
@@ -149,13 +149,13 @@ export class GraphTaskGlyphs {
     expect(widths).toEqual(glyphs.map((): number | undefined => blankWidth));
   }
 
-  /** The page posted `ready` within the font wait and its start margin of navigation, not when the held font came. */
+  /** The page posted `ready` within the font wait of asking for codicon.ttf, not when the held font came. */
   public async expectReadyWithinFontWait(): Promise<void> {
-    await expect.poll(async (): Promise<number | null> => this.page.evaluate(readyPostedAt)).not.toBeNull();
+    await expect.poll(async (): Promise<number | null> => fontWaitOf(this.page)).not.toBeNull();
 
-    const readyAt = await this.page.evaluate(readyPostedAt);
+    const waited = await fontWaitOf(this.page);
 
-    expect(readyAt).toBeLessThan(READY_BUDGET_MS);
+    expect(waited).toBeLessThan(READY_BUDGET_MS);
   }
 
   /** The font the page gave up on has come: the load the page asked for resolves with a face. */
