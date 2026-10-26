@@ -20,7 +20,7 @@ const borderWidthOf = (node: NodeSingular): number => {
   return typeof width === 'number' ? width : 0;
 };
 
-/** The rendered rect, and its width at the plain border, so a `selected` or `highlighted` border leaves the width alone. */
+/** The rendered rect, and its width at the plain border, so a `selected` border leaves the width alone. */
 const folderRectOf = (node: NodeSingular): FolderRect => {
   const rect = renderedRectOf(node);
   const extraBorder = (borderWidthOf(node) - NODE_BORDER_PX) * node.cy().zoom();

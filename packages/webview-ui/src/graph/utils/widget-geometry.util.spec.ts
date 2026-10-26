@@ -144,7 +144,7 @@ describe('FEATURE: rowPlacementOf', () => {
     });
   });
 
-  describe('GIVEN a folder drawn selected at zoom 0.655, its 3 px border widening its 119.9 px plain-border width to a 121.2 px rect', () => {
+  describe('GIVEN a folder drawn selected at zoom 0.655, its selected border widening its 119.9 px plain-border width to a 121.2 px rect', () => {
     const selected = folderOf(rectOf(100, 50, 100 + 185 * 0.655, 50 + 61 * 0.655), 183 * 0.655);
 
     it.each(['box' as const, 'collapsed' as const])('WHEN the row kind is %s THEN it has no row', (kind) => {
