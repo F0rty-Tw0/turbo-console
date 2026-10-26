@@ -109,9 +109,9 @@ export const ellipsisFaultsOf = (box: ElementRect, ellipsis: ElementRect, frame:
 
 /** The package "…" is centred on the node's bounding-box top-right corner, which the selected border and Cytoscape's pad put outside the node. */
 export const cornerFaultsOf = (node: ElementRect, button: ElementRect, zoom: number): string[] => {
-  const border = (SELECTED_BORDER_PX / 2 + BOUNDS_PAD_PX) * zoom;
-  const x = offFaultsOf('"…" centre x', button.left + HALF_BUTTON_PX, node.left + node.width + border);
-  const y = offFaultsOf('"…" centre y', button.top + HALF_BUTTON_PX, node.top - border);
+  const outset = (SELECTED_BORDER_PX / 2 + BOUNDS_PAD_PX) * zoom;
+  const x = offFaultsOf('"…" centre x', button.left + HALF_BUTTON_PX, node.left + node.width + outset);
+  const y = offFaultsOf('"…" centre y', button.top + HALF_BUTTON_PX, node.top - outset);
 
   return [...x, ...y];
 };

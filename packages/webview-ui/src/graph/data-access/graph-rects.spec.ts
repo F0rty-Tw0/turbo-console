@@ -73,8 +73,9 @@ describe('FEATURE: widgetRectsOf', () => {
       const before = appsOf(cy);
 
       cy.getElementById(folderIdOf('apps')).addClass('highlighted');
+      const after = appsOf(cy);
 
-      expect(appsOf(cy)).toStrictEqual(before);
+      expect(after).toStrictEqual(before);
     });
 
     it('WHEN read THEN the rects carry the camera zoom they were read at', () => {

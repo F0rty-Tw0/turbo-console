@@ -232,30 +232,36 @@ const GLYPH_ELEMENTS = [
   glyphElementOf('pkg:web', 'web', '')
 ];
 
-/** A node of the id and classes, to read its corners. */
-const cornerNodeOf = (id: string, classes: string): ElementDefinition => {
-  const data = { id };
+const CORNER_RADII: [string, number][] = [
+  ['atom-file', 10],
+  ['atom-more', 10],
+  ['task', 6],
+  ['task atom-umbrella', 6]
+];
+
+const cornerElementOf = (classes: string): ElementDefinition => {
+  const data = { id: classes };
   const definition: ElementDefinition = { data, classes };
 
   return definition;
 };
 
-const CORNER_RADII: [string, number, string][] = [
-  ['an atom file', 10, 'atom-file'],
-  ['an atom-more', 10, 'atom-more'],
-  ['a task', 6, 'task'],
-  ['an umbrella', 6, 'task atom-umbrella']
-];
-
 describe('FEATURE: taskRulesOf corners in graphStyleOf', () => {
-  it.each(CORNER_RADII)('GIVEN %s THEN its corners are %d px round', (_title, radius, classes) => {
-    const cy = cytoscape({ headless: true, styleEnabled: true, elements: [cornerNodeOf('n', classes)] });
+  let cy: Core;
 
+  beforeEach(() => {
+    const elements = CORNER_RADII.map(([classes]): ElementDefinition => cornerElementOf(classes));
+
+    cy = cytoscape({ headless: true, styleEnabled: true, elements });
     cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+  });
 
-    expect(cy.getElementById('n').numericStyle('corner-radius')).toBe(radius);
-
+  afterEach(() => {
     cy.destroy();
+  });
+
+  it.each(CORNER_RADII)('GIVEN a node classed "%s" THEN its corners are %d px round', (classes, radius) => {
+    expect(cy.getElementById(classes).numericStyle('corner-radius')).toBe(radius);
   });
 });
 

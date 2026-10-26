@@ -73,7 +73,6 @@ const FOLDER_NODE = {
 
 const GHOST_EDGE = { 'line-style': 'dashed' } as const;
 
-/** A triangle at 0.8 scale whose tip stops 3 px short of the node. */
 const EDGE_ARROW = { 'target-arrow-shape': 'triangle', 'arrow-scale': 0.8, 'target-distance-from-node': 3 } as const;
 
 /** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
@@ -128,7 +127,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     'target-arrow-color': colors.edge
   } as const;
   const selectedNode = { 'border-width': SELECTED_BORDER_PX, 'border-color': colors.selected };
-  const highlightedNode = { 'border-width': 1, 'border-color': colors.highlighted };
+  const highlightedNode = { 'border-width': NODE_BORDER_PX, 'border-color': colors.highlighted };
   const highlightedEdge = { width: 1.5, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
   const selectedEdge = { width: SELECTED_BORDER_PX, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
   const dimmed = { opacity: colors.dimmedOpacity };
