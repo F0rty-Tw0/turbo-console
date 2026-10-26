@@ -84,7 +84,8 @@ const selectedRunRuleOf = (state: GraphRunState): StylesheetJsonBlock => {
  * name, an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a
  * file (dashed border when `atom-live`), a `run-<state>` class outlines a task or file after them (a selected task
  * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned
- * one padding in from the frame so a link entering at the top centre misses it. `left-inside` starts a compound's label
+ * one padding in from the frame so a link entering at the top centre misses it, at least `data(minWidth)` wide inside
+ * its padding, the extra width on the right so its tasks keep their place. `left-inside` starts a compound's label
  * two paddings in, so the margin takes one back. They come after the `exporting` rule, so an exported task box keeps
  * this alignment. With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name in that
  * font list; an `atom-more` node carries only its own class, so it keeps the plain file rule.
@@ -95,7 +96,10 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
     'text-halign': 'left-inside',
     'text-margin-x': -FOLDER_PADDING_PX,
     'border-style': 'dashed',
-    'border-dash-pattern': TASK_BOX_DASH_PX
+    'border-dash-pattern': TASK_BOX_DASH_PX,
+    'min-width': 'data(minWidth)',
+    'min-width-bias-left': '0%',
+    'min-width-bias-right': '100%'
   } as const;
   const runRules = RUN_STATES.map((state) => runRuleOf(colors, state));
   const selectedRunRules = RUN_STATES.map(selectedRunRuleOf);

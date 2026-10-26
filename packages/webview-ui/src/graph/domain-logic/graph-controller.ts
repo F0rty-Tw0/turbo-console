@@ -7,7 +7,7 @@ import { viewHandlersOf } from './graph-view-handlers.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { FlowControl } from '../common/flow.type.ts';
 import type { GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
-import type { LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
+import type { FilteringFacts, LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { readGraphViewState } from '../utils/graph-view-state.util.ts';
 
@@ -78,7 +78,8 @@ class GraphPageController {
       layoutEngine: (): LayoutEngine | null => this.engine(),
       grouped: (): boolean => layouts.mode() === 'folders',
       atomToggleMs: (): number | null => this.tasks.layout.atoms.toggleMs(),
-      ...filteringFacts
+      ...filteringFacts,
+      selected: (): string | null => this.selected(filteringFacts)
     };
 
     return facts;
@@ -95,6 +96,15 @@ class GraphPageController {
     }
 
     void this.packages.guard(async (): Promise<void> => this.packages.layouts.relayout());
+  }
+
+  /** The task mode's selected task while it is on, else the package the inspection holds. */
+  private selected(filteringFacts: FilteringFacts): string | null {
+    const isTaskMode = this.tasks.isActive();
+
+    if (isTaskMode) return this.tasks.selection.selected();
+
+    return filteringFacts.selected();
   }
 
   private engine(): LayoutEngine | null {

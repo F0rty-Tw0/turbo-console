@@ -1,11 +1,11 @@
 import type { Core, NodeSingular } from 'cytoscape';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
-import { widgetRectsOf } from './graph-rects.ts';
+import { markRowLess, widgetRectsOf } from './graph-rects.ts';
 import { showOnly } from './graph-visibility.ts';
-import { FOLDER_HIDDEN_CLASS, FOLDER_NODE_CLASS } from '../common/graph.const.ts';
-import type { FolderRect, RectPx } from '../common/widget.type.ts';
+import { FOLDER_HIDDEN_CLASS, FOLDER_NODE_CLASS, ROW_LESS_CLASS } from '../common/graph.const.ts';
+import type { FolderRect, RectPx, RowKind, RowPlacement, RowPlan } from '../common/widget.type.ts';
 import { boardsCyMock, groupedCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { PROTO_EDGES_STUB, PROTO_GROUPS_STUB, PROTO_POSITIONS_STUB } from '../test/stubs/folder-boards.stub.ts';
@@ -33,6 +33,16 @@ const NO_RECT: RectPx = { x1: Number.NaN, y1: Number.NaN, x2: Number.NaN, y2: Nu
 const NO_FOLDER: FolderRect = { rect: NO_RECT, width: Number.NaN };
 
 const appsOf = (cy: Core): FolderRect => widgetRectsOf(cy, null).boxes.get('apps') ?? NO_FOLDER;
+
+const ROW_PLACEMENT: RowPlacement = { x: 108, y: 58, width: 164, scale: 1 };
+
+const rowOf = (folder: string, kind: RowKind): RowPlan => {
+  const row: RowPlan = { folder, kind, placement: ROW_PLACEMENT, isChevronShown: true, isEllipsisShown: true };
+
+  return row;
+};
+
+const isRowLess = (cy: Core, folder: string): boolean => cy.getElementById(collapsedIdOf(folder)).hasClass(ROW_LESS_CLASS);
 
 const collapsedPackagesOf = (cy: Core): FolderRect => widgetRectsOf(cy, null).collapsed.get('packages') ?? NO_FOLDER;
 
@@ -182,6 +192,55 @@ describe('FEATURE: widgetRectsOf', () => {
       const rects = widgetRectsOf(cy, 'constructor');
 
       expect(rects.selected).toStrictEqual(expected);
+    });
+  });
+});
+
+describe('FEATURE: markRowLess', () => {
+  describe('GIVEN the boards with apps and packages drawn as collapsed nodes', () => {
+    let cy: Core;
+
+    beforeEach(() => {
+      cy = boardsCyMock();
+      addCollapsed(cy, 'apps');
+      addCollapsed(cy, 'packages');
+    });
+
+    it('WHEN only apps has a collapsed row THEN packages is row-less', () => {
+      markRowLess(cy, [rowOf('apps', 'collapsed')]);
+
+      expect(isRowLess(cy, 'packages')).toBe(true);
+    });
+
+    it('WHEN only apps has a collapsed row THEN apps is not row-less', () => {
+      markRowLess(cy, [rowOf('apps', 'collapsed')]);
+
+      expect(isRowLess(cy, 'apps')).toBe(false);
+    });
+
+    it('WHEN packages gets its row back THEN it is no longer row-less', () => {
+      markRowLess(cy, []);
+
+      markRowLess(cy, [rowOf('packages', 'collapsed')]);
+
+      expect(isRowLess(cy, 'packages')).toBe(false);
+    });
+
+    it('WHEN the only row for apps is a box row THEN its collapsed node is row-less', () => {
+      markRowLess(cy, [rowOf('apps', 'box')]);
+
+      expect(isRowLess(cy, 'apps')).toBe(true);
+    });
+
+    it('WHEN marked again with the same rows THEN no node emits a class event, so the redraw does not loop', () => {
+      const onClass = vi.fn<() => void>();
+
+      markRowLess(cy, [rowOf('apps', 'collapsed')]);
+      cy.on('class', onClass);
+
+      markRowLess(cy, [rowOf('apps', 'collapsed')]);
+
+      expect(onClass).not.toHaveBeenCalled();
     });
   });
 });

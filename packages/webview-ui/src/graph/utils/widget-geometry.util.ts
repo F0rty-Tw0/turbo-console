@@ -39,8 +39,7 @@ const boxRowOf = (box: RectPx, zoom: number): RowPlacement | null => {
 
 /**
  * The collapsed row, scaled with the zoom up to full size and 8 px in at that scale; `null` under `MIN_ROW_SCALE`. The
- * node keeps `(COLLAPSED_NODE_WIDTH − COLLAPSED_LABEL_MAX_PX) / 2 · zoom` = `32 · zoom` px beside its widest label, never
- * less than the row's `(8 + 24) · scale`, so the buttons never meet the label.
+ * canvas draws the node's label only while it has no row (`markRowLess`), so the buttons never meet that label.
  */
 const collapsedRowOf = (box: RectPx, zoom: number): RowPlacement | null => {
   const scale = Math.min(1, zoom);

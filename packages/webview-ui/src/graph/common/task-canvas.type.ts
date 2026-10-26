@@ -6,7 +6,7 @@ import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.
 
 /**
  * What task mode draws: the shown tasks, their centres, the node sizer for their names, the size of each umbrella that
- * has one of its own, and the label of each umbrella that has a counts line.
+ * has one of its own, the label of each umbrella that has a counts line, and the title text width of each package.
  */
 export type TaskDrawing = {
   readonly tasks: GraphTask[];
@@ -14,6 +14,8 @@ export type TaskDrawing = {
   readonly sizeOf: (name: string) => NodeSize;
   readonly sizes: ReadonlyMap<string, NodeSize>;
   readonly labels: ReadonlyMap<string, string>;
+  /** The width each package's title needs to draw whole, which its box is at least as wide as. */
+  readonly titleWidths: ReadonlyMap<string, number>;
 };
 
 /** The task graph on the one Cytoscape core: package compounds `pkg:<name>` holding `task` nodes, links task to dependency. */

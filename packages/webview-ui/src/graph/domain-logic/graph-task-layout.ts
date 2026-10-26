@@ -5,11 +5,13 @@ import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.typ
 import type { LayoutResult } from '../common/layout.type.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
 import { engineNoticeOf } from '../utils/layout-plan.util.ts';
+import { titleWidthsOf } from '../utils/task-title-width.util.ts';
 
 /**
  * The task graph's layout: the key asked for, the layout on screen, and the last `TASK_LAYOUT_MEMORY` layouts shown by
  * key in page memory, a drag included. Runs share the package runner, latest wins; a task layout never posts `positions`
- * or `layoutDone`, only `shownUmbrellas` through `atoms`. A layout that throws while still asked for empties the canvas and goes to `onFailure`.
+ * or `layoutDone`, only `shownUmbrellas` through `atoms`. A layout that throws while still asked for empties the canvas and goes to `onFailure`;
+ * package titles are measured inside that guard, so a text sizer that throws fails the layout too.
  */
 export class GraphTaskLayout {
   /** The Atomizer groups drawn as umbrellas: their counts, and the shown ones the host loads. */
@@ -96,8 +98,10 @@ export class GraphTaskLayout {
       return;
     }
 
+    const titleWidths = titleWidthsOf(request, this.deps.textSizeOf);
+
     this.remember(kept);
-    this.place(request, kept, true);
+    this.place(request, kept, titleWidths, true);
   }
 
   /** Keeps `result` as the layout shown last, forgetting the one shown least recently past `TASK_LAYOUT_MEMORY`. */
@@ -112,7 +116,9 @@ export class GraphTaskLayout {
   }
 
   private async layOut(request: TaskLayoutRequest, canRestore: boolean): Promise<void> {
-    const graph = elkTaskGraphOf(request.tasks, request.shown, this.deps.sizeOf, request.sizes);
+    const titleWidths = titleWidthsOf(request, this.deps.textSizeOf);
+    const input = { ...request, titleWidths };
+    const graph = elkTaskGraphOf(input, this.deps.sizeOf);
     const result = await this.deps.runner.run(request.key, graph);
     const wantedKey = this.key();
 
@@ -123,14 +129,14 @@ export class GraphTaskLayout {
     if (isSuperseded) return;
 
     this.remember(result);
-    this.place(request, result, canRestore);
+    this.place(request, result, titleWidths, canRestore);
   }
 
   /**
    * Stops the flow, draws the layout, restores the saved camera when its key is this one (else fits), arms the frame
-   * clock, then hands the drawn highlight back to the flow.
+   * clock, then hands the drawn highlight back to the flow. `titleWidths` are the ones its layout was measured with.
    */
-  private place(request: TaskLayoutRequest, result: LayoutResult, canRestore: boolean): void {
+  private place(request: TaskLayoutRequest, result: LayoutResult, titleWidths: Map<string, number>, canRestore: boolean): void {
     const { view, screen, frames, sizeOf, flow } = this.deps;
     const saved = this.deps.saved();
     const isSavedCamera = canRestore && saved?.layoutKey === request.key;
@@ -141,7 +147,8 @@ export class GraphTaskLayout {
       positions: result.positions,
       sizeOf,
       sizes: request.sizes,
-      labels: this.atoms.labels()
+      labels: this.atoms.labels(),
+      titleWidths
     });
     this.placed = result;
     this.atoms.placed(request.shown, result.positions, request.sizes, request.tasks);

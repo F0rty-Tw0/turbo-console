@@ -1,4 +1,5 @@
-import type { AddedListener, FakeEvent, FakeListener, FakeRect } from '../common/fake-document.type.ts';
+import { fakeClassListMock } from './fake-class-list.mock.ts';
+import type { AddedListener, FakeClassList, FakeEvent, FakeListener, FakeRect } from '../common/fake-document.type.ts';
 
 type FakeFocus = {
   element: FakeElement | null;
@@ -40,28 +41,7 @@ class FakeElement {
   public readonly dataset: Record<string, string> = {};
   public parent: FakeElement | null = null;
   public readonly scrollIntoView = ignore;
-  public readonly classList = {
-    add: (...names: string[]): void => {
-      const all = [this.className, ...names];
-      const joined = all.join(' ');
-
-      this.className = joined.trim();
-    },
-    remove: (...names: string[]): void => {
-      const all = this.className.split(' ');
-      const kept = all.filter((each) => each !== '' && !names.includes(each));
-
-      this.className = kept.join(' ');
-    },
-    toggle: (name: string, force: boolean): void => {
-      const names = this.className.split(' ');
-      const others = names.filter((each) => each !== '' && each !== name);
-      const withName = [...others, name];
-      const kept = force ? withName : others;
-
-      this.className = kept.join(' ');
-    }
-  };
+  public readonly classList: FakeClassList = fakeClassListMock(this);
 
   private readonly attributes = new Map<string, string>();
   private readonly listeners: AddedListener[] = [];

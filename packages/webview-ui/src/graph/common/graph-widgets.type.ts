@@ -19,7 +19,7 @@ export type WidgetState = {
 export type GraphWidgetsDeps = {
   readonly page: PageElements;
   /** `viewport` is for the menus, which close when the camera moves. */
-  readonly view: Pick<GraphView, 'widgetRects' | 'viewport'>;
+  readonly view: Pick<GraphView, 'widgetRects' | 'markRowLess' | 'viewport'>;
   readonly widgetViews: WidgetViews;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
   readonly overlay: MediaQueryList;

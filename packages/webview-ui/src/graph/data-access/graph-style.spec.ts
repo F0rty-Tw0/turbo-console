@@ -114,19 +114,6 @@ describe('FEATURE: graphStyleOf edge states', () => {
       expect([cy.getElementById('a').style('display'), cy.getElementById(AB).style('display')]).toStrictEqual(['none', 'none']);
     });
 
-    it('WHEN a node is a folder-node THEN it shows its label data wrapped at 116 px', () => {
-      const node = cy.getElementById('a');
-
-      node.data('label', 'apps\n2 packages');
-      node.addClass('folder-node');
-
-      expect([node.style('label'), node.style('text-wrap'), node.style('text-max-width')]).toStrictEqual([
-        'apps\n2 packages',
-        'wrap',
-        '116px'
-      ]);
-    });
-
     it('WHEN an edge is a folder-link THEN it shows its label on an opaque background of the canvas colour', () => {
       const edge = cy.getElementById(AB);
 

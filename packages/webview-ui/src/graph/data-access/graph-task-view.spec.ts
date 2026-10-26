@@ -34,8 +34,14 @@ const DRAWING: TaskDrawing = {
   positions: POSITIONS,
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: NO_SIZES,
-  labels: NO_LABELS
+  labels: NO_LABELS,
+  titleWidths: new Map()
 };
+
+const WEB_TITLE_WIDTHS = new Map([['web', 130]]);
+
+/** `DRAWING` with a title width for `web` only. */
+const TITLED_DRAWING: TaskDrawing = { ...DRAWING, titleWidths: WEB_TITLE_WIDTHS };
 
 const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };
 
@@ -103,6 +109,18 @@ describe('FEATURE: createTaskCanvas', () => {
       canvas.show(DRAWING);
 
       expect(cy.getElementById('pkg:web').data('title')).toBe('web');
+    });
+
+    it('WHEN shown with a title width for web THEN its compound carries it as data(minWidth)', () => {
+      canvas.show(TITLED_DRAWING);
+
+      expect(cy.getElementById('pkg:web').data('minWidth')).toBe(130);
+    });
+
+    it('WHEN shown with no title width for api THEN its compound carries 0 as data(minWidth)', () => {
+      canvas.show(TITLED_DRAWING);
+
+      expect(cy.getElementById('pkg:api').data('minWidth')).toBe(0);
     });
 
     it('WHEN shown THEN each compound is classed task-box, so its title is drawn on the page', () => {

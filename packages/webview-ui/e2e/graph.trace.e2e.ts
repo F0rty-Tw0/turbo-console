@@ -91,7 +91,7 @@ test.describe('FEATURE: graph trace view', () => {
 
       await test.step('AND web is picked in the list', async (): Promise<void> => graphList.pick('web'));
 
-      await test.step('THEN the trace view is titled core to web and says web depends on core', async (): Promise<void> =>
+      await test.step('THEN the trace view lists web, data and core, dependent first', async (): Promise<void> =>
         graphTrace.expectTrace(CORE_TO_WEB_FACTS_STUB));
 
       await test.step('AND the status reads start to end', async (): Promise<void> =>

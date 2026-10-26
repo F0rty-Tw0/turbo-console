@@ -237,9 +237,9 @@ test.describe('FEATURE: graph task flow', () => {
         await graphFlow.tick(100);
       });
 
-      await test.step('THEN the overlay is clear while the package graph is still drawn', async (): Promise<void> => {
+      await test.step('THEN the overlay is clear and the probe already reads the saved task as selected', async (): Promise<void> => {
         await graphFlow.expectInked(false);
-        await graphProbe.expectSelected('lib-3');
+        await graphProbe.expectSelected(LEAF);
       });
 
       await test.step('WHEN the worker is released and the task layout lands', async (): Promise<void> => {

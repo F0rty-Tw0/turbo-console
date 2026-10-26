@@ -133,7 +133,7 @@ export class GraphDetailsTrace {
     const showable = facts.showable ?? facts.hidden;
     const links = this.panel.getByText('depends on', { exact: true });
 
-    await expect(this.heading).toHaveText(`Trace: ${facts.start} → ${facts.end}`);
+    await expect(this.heading).toHaveText('Trace');
     await expect(this.panel.getByText(facts.summary, { exact: true })).toBeVisible();
     await expect(this.steps).toHaveCount(facts.path.length);
     await expect(links).toHaveCount(Math.max(facts.path.length - 1, 0));

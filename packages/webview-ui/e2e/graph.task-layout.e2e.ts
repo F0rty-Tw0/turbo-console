@@ -1,6 +1,11 @@
 import type { PngBounds } from './common/graph.type.ts';
 import { test } from './graph-task.fixture.ts';
-import { TASK_MODE_MORE_TASKS_STUB, TASK_MODE_NEW_HASH_STUB, TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
+import {
+  TASK_LONG_NAMES_STUB,
+  TASK_MODE_MORE_TASKS_STUB,
+  TASK_MODE_NEW_HASH_STUB,
+  TASK_MODE_STATE_STUB
+} from './test/stubs/graph-task-mode.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import { TASK_MODE_LABEL } from '../src/graph/common/graph-task.const.ts';
 import { FIT_LABEL, RELAYOUT_LABEL } from '../src/graph/common/graph.const.ts';
@@ -15,6 +20,8 @@ const CHAIN = ['app#build', 'lib#build', 'ui#build'];
 const LIB_SET = ['app#build', 'lib#build', 'lib#test', 'ui#build'];
 
 const SAVED_TASK_VIEW = taskSavedState('7a5c0001', { chosen: ['app#build'] });
+
+const LONG_NAMES_VIEW = taskSavedState('7a5c0010', { chosen: ['@company/web#build'] });
 
 test.describe('FEATURE: graph task layout', () => {
   test(
@@ -143,6 +150,23 @@ test.describe('FEATURE: graph task layout', () => {
 
       await test.step('THEN each box is titled by its package, inked left of the middle strip and not in it', async (): Promise<void> =>
         graphTaskProbe.expectBoxTitlesDrawn(['app', 'lib', 'ui']));
+    }
+  );
+
+  test(
+    'GIVEN packages with long names, each box is at least as wide as its title',
+    { annotation: RF3 },
+    async ({ graphHost, graphPage, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN the page opens with @company/web#build chosen', async (): Promise<void> =>
+        graphPage.open({ savedState: LONG_NAMES_VIEW }));
+
+      await test.step('AND the long-names state is sent', async (): Promise<void> => graphHost.sendState(TASK_LONG_NAMES_STUB));
+
+      await test.step('AND both package boxes are drawn', async (): Promise<void> =>
+        graphTaskProbe.expectBoxIds(['pkg:@company/api-client', 'pkg:@company/web']));
+
+      await test.step('THEN each box and its title room are at least as wide as its title', async (): Promise<void> =>
+        graphTaskProbe.expectBoxTitlesUncut(['@company/api-client', '@company/web']));
     }
   );
 

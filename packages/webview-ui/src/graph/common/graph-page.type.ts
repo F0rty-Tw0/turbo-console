@@ -16,7 +16,7 @@ import type { AtomCanvas, TaskCanvas } from './task-canvas.type.ts';
 import type { TaskControlsViews } from './task-controls.type.ts';
 import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
-import type { WidgetRects, WidgetViews } from './widget.type.ts';
+import type { RowPlan, WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -160,6 +160,8 @@ export type GraphView = {
   readonly applyTheme: (colors: ThemeColors) => void;
   /** The drawn folder boxes and collapsed nodes, and the `selected` package while drawn, in container px. */
   readonly widgetRects: (selected: string | null) => WidgetRects;
+  /** Draws the canvas label on each collapsed folder with no row in `rows`, and clears it from the rest. */
+  readonly markRowLess: (rows: RowPlan[]) => void;
   /** The whole graph as a PNG, base64 with no data-URI prefix, folder titles drawn on the boxes; throws when the canvas cannot render it. */
   readonly exportPng: (bg: string) => string;
   /** The highlighted task edges drawn now, in model coordinates, for the flow overlay; never a package graph edge. */

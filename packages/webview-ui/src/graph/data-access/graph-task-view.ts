@@ -89,8 +89,10 @@ const markRuns = (cy: Core, runs: TaskRuns): void => {
   cy.batch((): void => void runNodes(cy).forEach(markTask));
 };
 
-const boxDefinitionOf = (packageName: string): ElementDefinition => {
-  const data = { id: taskBoxIdOf(packageName), title: packageName };
+/** A package box; its `minWidth` is its title width (0 when unknown), so the box is never narrower than its title. */
+const boxDefinitionOf = (packageName: string, drawing: TaskDrawing): ElementDefinition => {
+  const minWidth = drawing.titleWidths.get(packageName) ?? 0;
+  const data = { id: taskBoxIdOf(packageName), title: packageName, minWidth };
   const definition: ElementDefinition = { data, classes: TASK_BOX_CLASS };
 
   return definition;
@@ -121,7 +123,7 @@ const elementsOf = (drawing: TaskDrawing): ElementDefinition[] => {
   const ids = new Set(tasks.map((task) => task.id));
   const packages = new Set(tasks.map((task) => task.packageName));
   const names = [...packages];
-  const boxes = names.map(boxDefinitionOf);
+  const boxes = names.map((name) => boxDefinitionOf(name, drawing));
   const nodes = tasks.map((task) => taskDefinitionOf(task, drawing));
   const edges = taskEdgesOf(tasks, ids);
   const links = edges.map(edgeDefinitionOf);

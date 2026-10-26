@@ -75,12 +75,12 @@ export class GraphDetailsLink {
     await this.explain.getByRole('button', { name: 'Open package.json', exact: true }).click();
   }
 
-  /** The title and lead name the link dependent first, and both ends are buttons. */
+  /** The title reads "Dependency", the one lead line names the link dependent first, and both ends are buttons, each named once. */
   public async expectLink(source: string, target: string): Promise<void> {
     const ends = this.panel.getByRole('button', { name: new RegExp(`^(${source}|${target})$`) });
 
-    await expect(this.panel.getByRole('heading', { level: 2 })).toHaveText(`${source} → ${target}`);
-    await expect(this.panel.getByText(`${source} depends on ${target}.`, { exact: true })).toBeVisible();
+    await expect(this.panel.getByRole('heading', { level: 2 })).toHaveText('Dependency');
+    await expect(this.panel.locator('.details-lead')).toHaveText(`${source} depends on ${target}`);
     await expect(ends).toHaveText([source, target]);
   }
 

@@ -11,6 +11,7 @@ import type { ScreenClip } from '../common/playwright.type.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
+import { measuredWidthsOf } from '../test/utils/graph-title-measure.spec.util.ts';
 
 const BOX_PREFIX = 'pkg:';
 
@@ -127,6 +128,23 @@ export class GraphTaskProbe {
     await expect.poll(async (): Promise<string[]> => this.boxTitles()).toEqual(sorted);
     await expect.poll(async (): Promise<number[]> => this.titleInks('centre')).toEqual(noInk);
     await expect.poll(async (): Promise<number[]> => this.titleInks('left')).not.toContain(0);
+  }
+
+  /**
+   * Each box titled one of `titles` is as wide as its title, and its title draws whole: Cytoscape cuts an ellipsis label
+   * unless its rounded-up width is under `text-max-width`.
+   */
+  public async expectBoxTitlesUncut(titles: string[]): Promise<void> {
+    const boxes = await this.boxes();
+    const widths = await measuredWidthsOf(this.page, titles);
+
+    for (const title of titles) {
+      const box = boxes.find((node) => node.text === title);
+      const measured = widths.get(title) ?? Number.NaN;
+
+      expect(box?.textMaxWidth, title).toBeGreaterThan(Math.ceil(measured));
+      expect(box?.width, title).toBeGreaterThanOrEqual(measured);
+    }
   }
 
   /** The task's outline is `outline` (its colour compared without spaces), or it has none for `null`. */

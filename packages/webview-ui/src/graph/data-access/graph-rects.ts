@@ -1,7 +1,7 @@
 import type { Core, NodeCollection, NodeSingular } from 'cytoscape';
 
-import { FOLDER_NODE_CLASS, NODE_BORDER_PX } from '../common/graph.const.ts';
-import type { FolderRect, RectPx, WidgetRects } from '../common/widget.type.ts';
+import { COLLAPSED_ID_PREFIX, FOLDER_NODE_CLASS, NODE_BORDER_PX, ROW_LESS_CLASS } from '../common/graph.const.ts';
+import type { FolderRect, RectPx, RowPlan, WidgetRects } from '../common/widget.type.ts';
 import { folderOfElementId } from '../utils/folder-id.util.ts';
 
 const RENDERED_BOX = { includeLabels: false, includeOverlays: false };
@@ -70,4 +70,25 @@ export const widgetRectsOf = (cy: Core, selected: string | null): WidgetRects =>
   const rects: WidgetRects = { boxes, collapsed, selected: selectedRect, zoom: cy.zoom() };
 
   return rects;
+};
+
+const isCollapsedRow = (row: RowPlan): boolean => row.kind === 'collapsed';
+
+const folderOfRow = (row: RowPlan): string => row.folder;
+
+/**
+ * Gives each collapsed node with no row in `rows` the `row-less` class, so the canvas draws its label, and takes it from
+ * the rest. Only a node whose class is stale is toggled: Cytoscape restyles and redraws every node a `toggleClass(c, on)`
+ * touches, changed or not, and the redraw runs the widget pass that called this again.
+ */
+export const markRowLess = (cy: Core, rows: RowPlan[]): void => {
+  const rowFolders = new Set(rows.filter(isCollapsedRow).map(folderOfRow));
+  const isStale = (node: NodeSingular): boolean => {
+    const hasRow = rowFolders.has(node.id().slice(COLLAPSED_ID_PREFIX.length));
+
+    return node.hasClass(ROW_LESS_CLASS) === hasRow;
+  };
+  const stale = cy.nodes(`.${FOLDER_NODE_CLASS}`).filter(isStale);
+
+  stale.toggleClass(ROW_LESS_CLASS);
 };

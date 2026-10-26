@@ -64,7 +64,14 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
 
   beforeEach(() => {
     const layout = { name: 'preset', fit: false };
-    const drawing = { tasks: TASKS, positions: POSITIONS, sizeOf: (): NodeSize => NODE_SIZE, sizes: SIZES, labels: new Map() };
+    const drawing = {
+      tasks: TASKS,
+      positions: POSITIONS,
+      sizeOf: (): NodeSize => NODE_SIZE,
+      sizes: SIZES,
+      labels: new Map(),
+      titleWidths: new Map()
+    };
 
     cy = cytoscape({ headless: true, layout });
     tasks = createTaskCanvas(cy);
