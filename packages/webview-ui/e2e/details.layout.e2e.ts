@@ -234,10 +234,17 @@ test.describe('FEATURE: package details page, layout and theme', () => {
     await test.step('THEN the page header has a 1px bottom edge', async (): Promise<void> =>
       pageLayout.expectBorderWidth('.page-header', 'bottom', '1px'));
 
-    await test.step('AND the section title has a 1px bottom edge', async (): Promise<void> =>
-      pageLayout.expectBorderWidth('.section-title', 'bottom', '1px'));
-
     await test.step('AND the chip has a 1px frame', async (): Promise<void> => pageLayout.expectBorderWidth('.chip', 'top', '1px'));
+  });
+
+  test('GIVEN turbo and script cards, neither section heading draws a divider', async ({ detailsPage, pageLayout }): Promise<void> => {
+    await test.step('WHEN the page shows a turbo card and a script card', async (): Promise<void> => detailsPage.open(CODE_STATE));
+
+    await test.step('THEN the Turbo tasks heading has no bottom edge', async (): Promise<void> =>
+      pageLayout.expectBorderWidth('.section-title:has-text("Turbo tasks")', 'bottom', '0px'));
+
+    await test.step('AND the Scripts heading has no bottom edge', async (): Promise<void> =>
+      pageLayout.expectBorderWidth('.section-title:has-text("Scripts")', 'bottom', '0px'));
   });
 
   test('GIVEN a passed run, the card start edge takes the status colour', async ({ detailsPage, pageLayout }): Promise<void> => {
