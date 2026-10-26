@@ -7,6 +7,8 @@ import { groupStateOf, isFiltered, isGroupLocked, rowViewOf } from '../utils/con
 import {
   controlsLabelOf,
   countTextOf,
+  folderClearFocusLabelOf,
+  folderFocusLabelOf,
   folderFocusTextOf,
   folderTitleOf,
   folderToggleLabelOf,
@@ -44,9 +46,14 @@ const renderToggle = (group: ControlsGroup, view: ControlsView): void => {
 const renderFocus = (group: ControlsGroup, view: ControlsView): void => {
   const { focus, folder } = group;
   const isFocus = focusFolderOf(view.filters) === folder;
+  const title = folderTitleOf(folder);
+  const clearLabel = folderClearFocusLabelOf(title);
+  const focusLabel = folderFocusLabelOf(title);
+  const label = isFocus ? clearLabel : focusLabel;
 
   focus.hidden = !view.grouped;
   focus.textContent = folderFocusTextOf(isFocus);
+  setButtonLabel(focus, label);
 };
 
 const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
@@ -65,7 +72,7 @@ const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
 
 /**
  * Paints the attributes only, never rebuilds. An indeterminate group box is unchecked, so activating it checks all.
- * A folder header's buttons read Expand or Collapse and Focus or Clear focus, and are hidden while flat.
+ * A folder header's buttons read Expand or Collapse and Focus or Clear focus, each name and hover title following its text, and are hidden while flat.
  * `toggles` are the toolbar's Controls button, which shows the panel's openness, and its "filters on" mark.
  */
 export const renderControls = (

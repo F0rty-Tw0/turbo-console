@@ -5,6 +5,7 @@ import {
   controlsLabelOf,
   countTextOf,
   focusLabelOf,
+  folderClearFocusLabelOf,
   folderFocusLabelOf,
   folderFocusTextOf,
   folderTitleOf,
@@ -138,6 +139,15 @@ describe('FEATURE: controls text', () => {
       ['./(root)', 'Focus folder ./(root)']
     ])('WHEN the title is %s THEN the label is %s', (title, expected) => {
       const label = folderFocusLabelOf(title);
+
+      expect(label).toBe(expected);
+    });
+
+    it.each([
+      ['apps', 'Clear focus on folder apps'],
+      ['./(root)', 'Clear focus on folder ./(root)']
+    ])('WHEN the title is %s THEN the clearing label is %s', (title, expected) => {
+      const label = folderClearFocusLabelOf(title);
 
       expect(label).toBe(expected);
     });

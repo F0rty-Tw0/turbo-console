@@ -33,6 +33,8 @@ export const folderFocusTextOf = (isFocus: boolean): string => (isFocus ? 'Clear
 
 export const folderFocusLabelOf = (title: string): string => `Focus folder ${title}`;
 
+export const folderClearFocusLabelOf = (title: string): string => `Clear focus on folder ${title}`;
+
 export const folderActionsLabelOf = (title: string): string => `Actions for folder ${title}`;
 
 export const packageActionsLabelOf = (name: string): string => `Actions for ${name}`;
