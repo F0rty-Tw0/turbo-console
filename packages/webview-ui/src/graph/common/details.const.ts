@@ -80,6 +80,9 @@ export const TRACE_HEADING_TEXT = 'Trace';
 /** The id of the link view's lead, which describes its heading so a screen reader hears the two ends. */
 export const LINK_LEAD_ID = 'details-link-lead';
 
+/** The id of the trace view's lead, which describes its heading so a screen reader hears the path's length. */
+export const TRACE_LEAD_ID = 'details-trace-lead';
+
 export const CLOSE_DETAILS_LABEL = 'Close details';
 
 export const HINT_NUDGE_TEXT = 'Pick a package to end the trace';

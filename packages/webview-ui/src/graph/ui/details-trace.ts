@@ -1,7 +1,14 @@
 import { actionButton, leadOf, markOf, nameButton, viewBase } from './details-parts.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { TraceDetails } from '../common/details-view.type.ts';
-import { CLEAR_TRACE_LABEL, DEPENDS_ON_TEXT, SHOW_LABEL, SWAP_ENDS_LABEL, TRACE_HEADING_TEXT } from '../common/details.const.ts';
+import {
+  CLEAR_TRACE_LABEL,
+  DEPENDS_ON_TEXT,
+  SHOW_LABEL,
+  SWAP_ENDS_LABEL,
+  TRACE_HEADING_TEXT,
+  TRACE_LEAD_ID
+} from '../common/details.const.ts';
 import type { TraceStepModel, TraceViewModel } from '../common/details.type.ts';
 import { showLabelOf } from '../utils/controls-text.util.ts';
 import { traceSummaryOf } from '../utils/details-text.util.ts';
@@ -66,7 +73,7 @@ const stepItem = (step: TraceStepModel, index: number, steps: TraceStepModel[]):
 /** The trace's step rows; also used to rebuild the list in place when a ghost is shown. */
 export const stepItems = (steps: TraceStepModel[]): HTMLLIElement[] => steps.map(stepItem);
 
-/** A trace: its summary, the steps from dependent to dependency, then Clear trace and Swap ends. */
+/** A trace: its summary, which describes the heading, the steps from dependent to dependency, then Clear trace and Swap ends. */
 export const traceView = (model: TraceViewModel, isOverlay: boolean): TraceDetails => {
   const base = viewBase('trace', TRACE_HEADING_TEXT, isOverlay);
   const summary = traceSummaryOf(model.start, model.end, model.direction, model.steps.length);
@@ -77,6 +84,8 @@ export const traceView = (model: TraceViewModel, isOverlay: boolean): TraceDetai
   const clear = actionButton(CLEAR_TRACE_LABEL);
   const swap = actionButton(SWAP_ENDS_LABEL);
 
+  lead.id = TRACE_LEAD_ID;
+  base.heading.setAttribute('aria-describedby', TRACE_LEAD_ID);
   steps.append(...items);
   actions.append(clear, swap);
   base.root.append(lead, steps, actions);

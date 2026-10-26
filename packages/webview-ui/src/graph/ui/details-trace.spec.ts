@@ -40,6 +40,14 @@ describe('FEATURE: traceView', () => {
       expect(view.lead.textContent).toBe('3 packages on the shortest path.');
     });
 
+    it('WHEN built THEN the heading is described by the lead', () => {
+      const describedBy = view.heading.getAttribute('aria-describedby');
+      const children = Array.from(view.root.children);
+      const described = children.find((child) => child.id === describedBy);
+
+      expect(described?.textContent).toBe('3 packages on the shortest path.');
+    });
+
     it('WHEN built THEN each package name appears once, in the rail', () => {
       const names = namesIn(view.root);
 
