@@ -146,6 +146,15 @@ describe('FEATURE: createFoldersView', () => {
       expect(cy.getElementById(WEB_TO_UI).visible()).toBe(true);
     });
 
+    it('WHEN apps opens with none of its packages shown THEN its box is only hidden, no longer classed collapsed', () => {
+      const packagesOnly = [CONFIG, UI, UTILS];
+
+      showOnly(cy, new Set(packagesOnly));
+      view.show(boardsSceneOf([], packagesOnly), labelOf);
+
+      expect(cy.getElementById(folderIdOf('apps')).classes()).toStrictEqual(['folder-hidden']);
+    });
+
     it('WHEN docs moves to 0, 200 and the view re-centres THEN the collapsed node is at 60, 100', () => {
       cy.getElementById('docs').position({ x: 0, y: 200 });
 
