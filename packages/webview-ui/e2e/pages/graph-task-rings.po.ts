@@ -4,18 +4,12 @@ import { expect } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import type { ColourInkInput } from '../common/graph.type.ts';
+import type { ScreenClip } from '../common/playwright.type.ts';
+import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 
 /** Screen px kept around a node, so its outline and border are inside the shot. */
 const RING_MARGIN_PX = 4;
-
-/** A page area in CSS pixels, as `page.screenshot` clips it. */
-type ScreenClip = {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-};
 
 /** The ring colour a shot of a node must show and the one it must not. */
 type RingColours = {
@@ -23,10 +17,12 @@ type RingColours = {
   readonly absent: string;
 };
 
+/** The node's box at `zoom`, grown by the ring margin on every side. */
 const clipOf = (node: ProbeNode, zoom: number): ScreenClip => {
-  const width = node.width * zoom + 2 * RING_MARGIN_PX;
-  const height = node.height * zoom + 2 * RING_MARGIN_PX;
-  const clip: ScreenClip = { x: node.renderedX - width / 2, y: node.renderedY - height / 2, width, height };
+  const box = nodeBoxOf(node, zoom);
+  const width = box.width + 2 * RING_MARGIN_PX;
+  const height = box.height + 2 * RING_MARGIN_PX;
+  const clip: ScreenClip = { x: box.left - RING_MARGIN_PX, y: box.top - RING_MARGIN_PX, width, height };
 
   return clip;
 };
@@ -49,12 +45,13 @@ export class GraphTaskRings {
   /** Whether `colours.drawn` shows at all, and how many pixels `colours.absent` has. */
   private async ringsOf(id: string, colours: RingColours): Promise<[boolean, number]> {
     const nodes = await this.probe.nodes();
-    const node = nodes.find((candidate) => candidate.id === id);
+    const node = nodes.find((candidate): boolean => candidate.id === id);
 
     if (node === undefined) return [false, -1];
 
     const zoom = await this.probe.zoom();
-    const shot = await this.page.screenshot({ clip: clipOf(node, zoom) });
+    const clip = clipOf(node, zoom);
+    const shot = await this.page.screenshot({ clip });
     const png = shot.toString('base64');
     const drawn: ColourInkInput = { png, colour: colours.drawn };
     const absent: ColourInkInput = { png, colour: colours.absent };

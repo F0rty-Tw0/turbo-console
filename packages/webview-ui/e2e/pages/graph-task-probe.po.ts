@@ -7,6 +7,7 @@ import { ATOM_BOX_PREFIX } from '../../src/graph/common/graph-atom.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { FOLDER_PADDING_PX } from '../../src/graph/common/graph.const.ts';
 import type { ColourInkInput, RunOutline } from '../common/graph.type.ts';
+import type { ScreenClip } from '../common/playwright.type.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
@@ -22,14 +23,6 @@ const isTaskId = (id: string): boolean => !isBoxId(id) && !isAtomBoxId(id);
 const isBox = (node: ProbeNode): boolean => isBoxId(node.id);
 
 const textOf = (node: ProbeNode): string => node.text;
-
-/** A page area in CSS pixels, as `page.screenshot` clips it. */
-type ScreenClip = {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-};
 
 /** Model px kept off the frame line above the band and off the run outline that reaches into it from below. */
 const BAND_INSET = { top: 2, bottom: 6 } as const;
