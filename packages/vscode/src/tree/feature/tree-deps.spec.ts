@@ -47,4 +47,15 @@ describe('FEATURE: tree provider deps', () => {
       expect(executeCommand).toHaveBeenCalledWith('setContext', 'turboConsole.hasScripts', true);
     });
   });
+
+  describe('GIVEN setContext rejects', () => {
+    it('WHEN setHasScripts sends THEN its promise rejects with that error', async () => {
+      const error = new Error('setContext failed');
+
+      executeCommand.mockRejectedValueOnce(error);
+      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
+
+      await expect(deps.setHasScripts(true)).rejects.toBe(error);
+    });
+  });
 });
