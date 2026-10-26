@@ -53,9 +53,7 @@ const countBadge = (count: number): HTMLElement => {
 };
 
 /** A box's folder glyph, its title cut on screen with "…" while its `title` attribute keeps it whole, and its package count badge. */
-const titleParts = (kind: RowKind, title: string, count: number): HTMLElement[] => {
-  if (kind === 'collapsed') return [];
-
+const titleParts = (title: string, count: number): HTMLElement[] => {
   const glyph = graphIcon('folder-opened');
   const text = textElement('span', 'widget-title', title);
   const badge = countBadge(count);
@@ -66,15 +64,12 @@ const titleParts = (kind: RowKind, title: string, count: number): HTMLElement[] 
   return [glyph, text, badge];
 };
 
-/**
- * A folder's header row: the chevron, then for a box its folder glyph, title and package count badge, then the "…". A collapsed node
- * shows its title and count in its canvas label, so its row holds the two buttons only.
- */
+/** A folder's header row, on a box or a collapsed node: the chevron, the folder glyph, title and package count badge, then the "…". */
 export const buildFolderRow = (kind: RowKind, title: string, count: number): FolderRowElements => {
   const root = textElement('div', `widget-row widget-row-${kind}`, '');
   const chevron = chevronOf(kind, title);
   const ellipsis = menuButton(folderActionsLabelOf(title));
-  const middle = titleParts(kind, title, count);
+  const middle = titleParts(title, count);
   const row: FolderRowElements = { root, chevron, ellipsis };
 
   root.hidden = true;

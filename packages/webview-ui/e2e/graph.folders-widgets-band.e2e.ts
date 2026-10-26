@@ -15,6 +15,8 @@ const C9 = { description: 'M4-4 C9', type: 'requirement' };
 
 const BOARDS = placedBoardsState();
 
+const APPS_COLLAPSED = collapsedSavedState(BOARDS.hash, ['apps']);
+
 const LONG = longTitleState();
 
 /** Puts the long-title node, placed at the origin, in the canvas middle at any zoom. */
@@ -130,6 +132,36 @@ test.describe('FEATURE: folder header rows in the box band', () => {
 
       await test.step('THEN its chevron and "…" sit on the node full size, clear of the widest title', async (): Promise<void> => {
         await graphWidgets.expectCollapsedRow(LONG_FOLDER);
+        await graphWidgets.expectCollapsedClearOfLabel(LONG_FOLDER);
+      });
+    }
+  );
+
+  test(
+    'GIVEN a collapsed folder, its row shows glyph, title and count badge',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the boards open with apps collapsed', async (): Promise<void> =>
+        graphFolderInspect.open(APPS_COLLAPSED, BOARDS));
+
+      await test.step('THEN its row holds the chevron and "…" on the node, with the glyph, the whole title and the badge between', async (): Promise<void> => {
+        await graphWidgets.expectCollapsedRow('apps');
+        await graphWidgets.expectCollapsedHeader('apps');
+      });
+    }
+  );
+
+  test(
+    'GIVEN a collapsed folder with a 40+ character path, the title is cut in the row, the badge is whole and the buttons stay inside the node',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
+      await test.step('WHEN the page opens with the node collapsed at zoom 1', async (): Promise<void> =>
+        graphFolderInspect.open(longCollapsedAt(1), LONG));
+
+      await test.step('THEN the title ends in "…", the badge is whole, and the chevron and "…" sit on the node', async (): Promise<void> => {
+        await graphWidgets.expectCollapsedRow(LONG_FOLDER);
+        await graphWidgets.expectTitleEllipsis(LONG_FOLDER);
+        await graphWidgets.expectBadgeWhole(LONG_FOLDER);
         await graphWidgets.expectCollapsedClearOfLabel(LONG_FOLDER);
       });
     }

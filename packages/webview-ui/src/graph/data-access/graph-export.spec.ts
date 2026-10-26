@@ -102,6 +102,24 @@ describe('FEATURE: exportPngOf', () => {
       expect(callOf(seen, 0).options).toStrictEqual({ output: 'base64', full: true, scale: 2, bg: BG });
     });
 
+    it('WHEN a collapsed folder node is exported THEN its label is drawn during the call and blank again after', () => {
+      const position = { x: 0, y: 0 };
+      const data = { id: 'libs', label: 'libs\n4 packages', width: 180, height: 56 };
+      const drawn: string[] = [];
+      const png = (): string => {
+        drawn.push(labelOf(cy, 'libs'));
+
+        return 'AAAA';
+      };
+
+      cy.add({ group: 'nodes', data, classes: 'folder-node', position });
+      Object.assign(cy, { png });
+      exportPngOf(cy, BG, 1);
+
+      expect(drawn).toStrictEqual(['libs\n4 packages']);
+      expect(labelOf(cy, 'libs')).toBe('');
+    });
+
     it('WHEN cy.png returns a string THEN exportPngOf returns it unchanged', () => {
       stubPng(cy, 'iVBORw0KGgo=');
 

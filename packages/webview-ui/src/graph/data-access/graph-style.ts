@@ -78,13 +78,11 @@ const HIDDEN = { display: 'none' } as const;
 
 const GHOST_NODE = { 'border-style': 'dashed', 'text-opacity': 0.75 } as const;
 
-/** A collapsed folder: its label wrapped, its corners as round as a box's. */
-const FOLDER_NODE = {
-  label: 'data(label)',
-  'text-wrap': 'wrap',
-  'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px`,
-  'corner-radius': '8px'
-} as const;
+/** A collapsed folder: no label, since the page shows its DOM header row instead; its corners as round as a box's. */
+const FOLDER_NODE = { label: '', 'corner-radius': '8px' } as const;
+
+/** A collapsed folder while `exportPngOf` runs: the image has no header row, so its label is drawn, wrapped. */
+const FOLDER_NODE_EXPORTING = { label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': `${COLLAPSED_LABEL_MAX_PX}px` } as const;
 
 const GHOST_EDGE = { 'line-style': 'dashed' } as const;
 
@@ -138,7 +136,7 @@ const BOX_TITLE = {
  * triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost`
  * (dashed) is the one `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
  * background; `taskRulesOf` adds the task mode rules. The folder pass draws `folder-node` (a collapsed folder, its
- * label wrapped) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows
+ * label wrapped only while exporting) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows
  * it. Every colour comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font
  * before their name; the base node rule keeps `fontFamily`.
  */
@@ -180,6 +178,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     { selector: 'edge.ghost', style: GHOST_EDGE },
     { selector: '.dimmed', style: dimmed },
     { selector: `node.${FOLDER_NODE_CLASS}`, style: FOLDER_NODE },
+    { selector: `node.${FOLDER_NODE_CLASS}.${EXPORTING_CLASS}`, style: FOLDER_NODE_EXPORTING },
     { selector: `edge.${FOLDER_LINK_CLASS}`, style: folderLinkStyleOf(colors, fontFamily) },
     { selector: `node.${DIMMED_BOX_CLASS}`, style: dimmedBoxStyleOf(colors) },
     { selector: `.${FOLDER_HIDDEN_CLASS}`, style: HIDDEN }

@@ -274,7 +274,7 @@ p {
   pointer-events: none;
 }
 
-/* Keeps the "…" at the row's right end, also on a collapsed row with no title and when the chevron is hidden. */
+/* Keeps the "…" at the row's right end, also when the chevron is hidden. */
 .widget-row > .widget-button:last-child {
   margin-left: auto;
 }

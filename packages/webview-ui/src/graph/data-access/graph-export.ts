@@ -1,6 +1,6 @@
 import type { Core } from 'cytoscape';
 
-import { EXPORTING_CLASS } from '../common/graph.const.ts';
+import { EXPORTING_CLASS, FOLDER_NODE_CLASS } from '../common/graph.const.ts';
 
 /** Longest side of an exported image, in px. */
 const EXPORT_MAX_PX = 4096;
@@ -16,9 +16,9 @@ const scaleOf = (cy: Core, pixelRatio: number): number => {
   return limit / pixelRatio;
 };
 
-/** The visible graph as base64 PNG at `pixelRatio`-corrected scale, folder titles drawn; a throw from `cy.png` reaches the caller, the class is removed either way. */
+/** The visible graph as base64 PNG at `pixelRatio`-corrected scale, folder titles and collapsed folder labels drawn; a throw from `cy.png` reaches the caller, the class is removed either way. */
 export const exportPngOf = (cy: Core, bg: string, pixelRatio: number): string => {
-  const boxes = cy.nodes(':parent');
+  const boxes = cy.nodes(`:parent, .${FOLDER_NODE_CLASS}`);
 
   boxes.addClass(EXPORTING_CLASS);
 

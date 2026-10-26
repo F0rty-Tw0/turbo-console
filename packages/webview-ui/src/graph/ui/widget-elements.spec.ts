@@ -126,12 +126,31 @@ describe('FEATURE: buildFolderRow', () => {
     });
   });
 
-  describe('GIVEN a collapsed folder', () => {
-    it('WHEN its children are read THEN they are the chevron and the "…" only', () => {
-      const row = buildFolderRow('collapsed', 'apps', 12);
+  describe('GIVEN a collapsed folder with 12 packages', () => {
+    let row: FolderRowElements;
+
+    beforeEach((): void => {
+      row = buildFolderRow('collapsed', 'apps', 12);
+    });
+
+    it('WHEN its children are read THEN they are the chevron, the folder glyph, the title, the count badge and the "…"', () => {
       const classes = classesOf(row.root);
 
-      expect(classes).toStrictEqual(['widget-button', 'widget-button']);
+      expect(classes).toStrictEqual([
+        'widget-button',
+        'codicon codicon-folder-opened widget-glyph',
+        'widget-title',
+        'widget-count',
+        'widget-button'
+      ]);
+    });
+
+    it('WHEN the title and badge are read THEN the title attribute keeps the whole name and the badge says "12 packages"', () => {
+      const [, , titleAttribute] = attributesOf(row.root, 'title');
+      const badgeTitle = badgeOf(row).getAttribute('title');
+
+      expect(titleAttribute).toBe('apps');
+      expect(badgeTitle).toBe('12 packages');
     });
   });
 });

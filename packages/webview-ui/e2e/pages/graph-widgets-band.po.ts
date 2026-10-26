@@ -2,6 +2,7 @@ import type { Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphWidgetsLayout } from './graph-widgets-layout.po.ts';
+import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside } from '../test/utils/element-rect.spec.util.ts';
 import { bandFaultsOf, labelFaultsOf } from '../test/utils/graph-widget-band.spec.util.ts';
@@ -63,6 +64,16 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
   /** The collapsed node's chevron and "…" lie left and right of the widest title it can draw. */
   public async expectCollapsedClearOfLabel(folder: string): Promise<void> {
     await expect.poll(async (): Promise<string[]> => this.labelFaults(folder)).toEqual([]);
+  }
+
+  /** The collapsed node's row shows the folder glyph, the whole folder title with that title as its tooltip, and a whole badge. */
+  public async expectCollapsedHeader(folder: string): Promise<void> {
+    const title = this.rowOf(folder).locator('.widget-title');
+
+    await this.expectGlyphShown(folder, true);
+    await expect(title).toHaveText(folderTitleOf(folder));
+    await expect(title).toHaveAttribute('title', folderTitleOf(folder));
+    await this.expectBadgeWhole(folder);
   }
 
   /** The folder glyph shows when `shown`, else it is hidden. */
