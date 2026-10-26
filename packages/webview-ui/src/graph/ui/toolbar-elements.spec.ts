@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildToolbar } from './toolbar-elements.ts';
 import type { ToolbarElements } from '../common/graph-page.type.ts';
-import { MODE_LABEL, TASK_MODE_LABEL } from '../common/graph-task.const.ts';
+import { MODE_LABEL, TASK_MODE_LABEL, TASK_MODE_TITLE } from '../common/graph-task.const.ts';
+import { CLEAR_TITLE, CONTROLS_TITLE, DETAILS_TITLE, EXPORT_TITLE, FIT_TITLE, RELAYOUT_TITLE } from '../common/graph.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 describe('FEATURE: buildToolbar', () => {
@@ -31,6 +32,22 @@ describe('FEATURE: buildToolbar', () => {
       expect(taskMode.getAttribute('aria-pressed')).toBe('false');
       expect(taskMode.disabled).toBe(true);
       expect(taskMode.children[1]?.textContent).toBe(TASK_MODE_LABEL);
+    });
+
+    it('WHEN each button is read THEN it has its spec title', () => {
+      const { taskMode, controls, details, fit, relayout, exportImage, clear } = elements;
+      const buttons = [taskMode, controls, details, fit, relayout, exportImage, clear];
+      const titles = buttons.map((button): string => button.title);
+
+      expect(titles).toStrictEqual([
+        TASK_MODE_TITLE,
+        CONTROLS_TITLE,
+        DETAILS_TITLE,
+        FIT_TITLE,
+        RELAYOUT_TITLE,
+        EXPORT_TITLE,
+        CLEAR_TITLE
+      ]);
     });
 
     it('WHEN its second part is read THEN it is a separator', () => {

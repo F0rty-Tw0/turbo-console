@@ -47,6 +47,8 @@ export const MODE_LABEL = 'Mode';
 
 export const TASK_MODE_LABEL = 'Task mode';
 
+export const TASK_MODE_TITLE = 'Switch between the package graph and the task graph';
+
 export const SHOW_ALL_TASKS_LABEL = 'Show all tasks';
 
 export const SEARCH_TASKS_LABEL = 'Search tasks';

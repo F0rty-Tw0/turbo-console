@@ -49,11 +49,19 @@ export const FALLBACK_NOTICE: LayoutNotice = { kind: 'fallback' };
 
 export const FIT_LABEL = 'Fit';
 
+export const FIT_TITLE = 'Zoom to fit the whole graph';
+
 export const RELAYOUT_LABEL = 'Re-layout';
+
+export const RELAYOUT_TITLE = 'Lay the graph out again';
 
 export const EXPORT_LABEL = 'Export image';
 
+export const EXPORT_TITLE = 'Save the graph as a PNG image';
+
 export const CLEAR_LABEL = 'Clear selection';
+
+export const CLEAR_TITLE = 'Deselect and clear the details panel';
 
 export const RETRY_LABEL = 'Retry';
 
@@ -171,9 +179,14 @@ export const DETAILS_ID = 'graph-details';
 
 export const CONTROLS_LABEL = 'Controls';
 
+/** The hover title of the Controls button, whichever name its "filters on" state gives it. */
+export const CONTROLS_TITLE = 'Show or hide the Controls panel (search, depth, package list)';
+
 export const CONTROLS_FILTERED_LABEL = 'Controls (filters on)';
 
 export const DETAILS_LABEL = 'Details';
+
+export const DETAILS_TITLE = 'Show or hide the Details panel for the selection';
 
 export const PANELS_LABEL = 'Panels';
 
