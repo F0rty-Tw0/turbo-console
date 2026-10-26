@@ -25,5 +25,6 @@ export const GRAPH_ICON_IDS = [
   'sync',
   'pass',
   'error',
-  'debug-stop'
+  'debug-stop',
+  'folder-opened'
 ] as const;

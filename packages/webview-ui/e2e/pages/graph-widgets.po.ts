@@ -100,7 +100,7 @@ export class GraphWidgetsPage {
     await expect(this.chevronOf(folder, true)).toHaveAttribute('aria-expanded', 'true');
     await expect(row.locator('.widget-title')).toHaveText(title);
     await expect(row.locator('.widget-title')).toHaveAttribute('title', title);
-    await expect(row.locator('.widget-count')).toHaveText(count);
+    await expect(row.locator('.widget-count')).toHaveAttribute('title', count);
   }
 
   /** The chevron sits 8 px in from the box's left edge, centred in the band at the box's top. */
