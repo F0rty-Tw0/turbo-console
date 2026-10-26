@@ -1,32 +1,31 @@
-import type { Core, EdgeSingular, ElementDefinition, NodeSingular } from 'cytoscape';
+import type { Core, EdgeSingular, NodeSingular, SingularElementArgument } from 'cytoscape';
 
 import { packageEdges } from './graph-boxes.ts';
-import type { Position } from '../../bridge/common/graph-state.type.ts';
+import { setClassesAmong } from './graph-classes.ts';
+import { centreOf, syncCollapsedNodes, syncFolderLinks } from './graph-folder-elements.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 import type { FoldersView } from '../common/graph-page.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
 import {
   BOX_COLLAPSED_CLASS,
   COLLAPSED_ID_PREFIX,
-  COLLAPSED_NODE_HEIGHT,
-  COLLAPSED_NODE_WIDTH,
   DIMMED_BOX_CLASS,
   FOLDER_HIDDEN_CLASS,
   FOLDER_ID_PREFIX,
   FOLDER_LINK_CLASS,
   FOLDER_NODE_CLASS,
-  STATE_CLASSES
+  STATE_CLASS_NAMES
 } from '../common/graph.const.ts';
 import type { Paint } from '../common/paint.type.ts';
-import { collapsedCentreOf } from '../utils/collapsed-centre.util.ts';
-import { collapsedIdOf, folderIdOf, folderLinkIdOf } from '../utils/folder-id.util.ts';
-import { pluralOf } from '../utils/plural.util.ts';
+import { folderIdOf } from '../utils/folder-id.util.ts';
 
 type LabelOf = (folder: string) => string;
 
-const PASS_CLASSES = `${FOLDER_HIDDEN_CLASS} ${BOX_COLLAPSED_CLASS}`;
+const PASS_CLASSES: string[] = [FOLDER_HIDDEN_CLASS, BOX_COLLAPSED_CLASS];
 
-const BOX_STATE_CLASSES = `${STATE_CLASSES} ${DIMMED_BOX_CLASS}`;
+const HIDDEN_CLASSES: string[] = [FOLDER_HIDDEN_CLASS];
+
+const BOX_STATE_CLASS_NAMES: string[] = [...STATE_CLASS_NAMES, DIMMED_BOX_CLASS];
 
 const isBoxNode = (node: NodeSingular): boolean => node.id().startsWith(FOLDER_ID_PREFIX);
 
@@ -38,24 +37,18 @@ const isInCollapsed = (name: string, scene: FolderScene): boolean => {
   return scene.collapsed.has(folder);
 };
 
-/** The centre of the members' current positions as a fresh object: `collapsedCentreOf` shares its empty-folder result. */
-const centreOf = (cy: Core, members: string[]): Position => {
-  const positionOf = (name: string): Position => cy.getElementById(name).position();
-  const { x, y } = collapsedCentreOf(members, positionOf);
-  const centre: Position = { x, y };
+/** The pass classes by element id: each box whose folder is collapsed or has nothing drawn, and each package link with an end in a collapsed folder. */
+const passClassesOf = (cy: Core, scene: FolderScene | null): Map<string, string[]> => {
+  const wanted = new Map<string, string[]>();
 
-  return centre;
-};
+  if (scene === null) return wanted;
 
-/** Hides each box whose folder is collapsed or has nothing drawn, and each package link with an end in a collapsed folder. */
-const classScene = (cy: Core, scene: FolderScene): void => {
   for (const folder of scene.members.keys()) {
-    const box = cy.getElementById(folderIdOf(folder));
     const isCollapsed = scene.collapsed.has(folder);
     const isShown = scene.shown.has(folder);
 
-    if (isCollapsed) box.addClass(PASS_CLASSES);
-    else if (!isShown) box.addClass(FOLDER_HIDDEN_CLASS);
+    if (isCollapsed) wanted.set(folderIdOf(folder), PASS_CLASSES);
+    else if (!isShown) wanted.set(folderIdOf(folder), HIDDEN_CLASSES);
   }
 
   const touchesCollapsed = (edge: EdgeSingular): boolean => {
@@ -65,28 +58,22 @@ const classScene = (cy: Core, scene: FolderScene): void => {
   };
 
   // Insurance: each such link has an end in a hidden box, which already hides it in Cytoscape.
-  packageEdges(cy).filter(touchesCollapsed).addClass(FOLDER_HIDDEN_CLASS);
+  for (const edge of packageEdges(cy).filter(touchesCollapsed)) wanted.set(edge.id(), HIDDEN_CLASSES);
+
+  return wanted;
 };
 
-const addCollapsedNode = (cy: Core, scene: FolderScene, folder: string, labelOf: LabelOf): void => {
-  const members = scene.members.get(folder) ?? [];
-  const data = { id: collapsedIdOf(folder), width: COLLAPSED_NODE_WIDTH, height: COLLAPSED_NODE_HEIGHT, label: labelOf(folder) };
-  const position = centreOf(cy, members);
-  const definition: ElementDefinition = { data, position, classes: FOLDER_NODE_CLASS, grabbable: false };
+/** Gives each element of `wanted` its pass classes and takes them from the rest, writing only the elements that change. */
+const classScene = (cy: Core, wanted: ReadonlyMap<string, string[]>): void => {
+  const unclass = (element: SingularElementArgument): void => {
+    const isWanted = wanted.has(element.id());
 
-  cy.add(definition);
-};
+    if (!isWanted) element.removeClass(PASS_CLASSES);
+  };
 
-const addFolderLink = (cy: Core, link: FolderLink): string => {
-  const count = link.links.length;
-  const label = pluralOf(count, 'link', 'links');
-  const id = folderLinkIdOf(link.source, link.target);
-  const data = { id, source: link.source, target: link.target, label, count };
-  const definition: ElementDefinition = { data, classes: FOLDER_LINK_CLASS };
+  cy.elements(`.${FOLDER_HIDDEN_CLASS}, .${BOX_COLLAPSED_CLASS}`).forEach(unclass);
 
-  cy.add(definition);
-
-  return id;
+  for (const [id, classes] of wanted) setClassesAmong(cy.getElementById(id), PASS_CLASSES, classes);
 };
 
 const boxClassOf = (state: ProbeState): string => (state === 'dimmed' ? DIMMED_BOX_CLASS : state);
@@ -95,18 +82,23 @@ const boxClassOf = (state: ProbeState): string => (state === 'dimmed' ? DIMMED_B
 const paintFolders = (cy: Core, links: ReadonlyMap<string, FolderLink>, paint: Paint): void => {
   const classBox = (box: NodeSingular): void => {
     const state = paint.boxState(box.id().slice(FOLDER_ID_PREFIX.length));
+    const boxClass = boxClassOf(state);
 
-    box.removeClass(BOX_STATE_CLASSES).addClass(boxClassOf(state));
+    setClassesAmong(box, BOX_STATE_CLASS_NAMES, [boxClass]);
   };
   const classCollapsed = (node: NodeSingular): void => {
     const state = paint.collapsedState(node.id().slice(COLLAPSED_ID_PREFIX.length));
 
-    node.removeClass(STATE_CLASSES).addClass(state);
+    setClassesAmong(node, STATE_CLASS_NAMES, [state]);
   };
   const classLink = (edge: EdgeSingular): void => {
     const link = links.get(edge.id());
 
-    if (link !== undefined) edge.removeClass(STATE_CLASSES).addClass(paint.folderLinkState(link));
+    if (link === undefined) return;
+
+    const state = paint.folderLinkState(link);
+
+    setClassesAmong(edge, STATE_CLASS_NAMES, [state]);
   };
 
   cy.batch((): void => {
@@ -129,25 +121,14 @@ export const createFoldersView = (cy: Core): FoldersView => {
     lastPaint = next;
     paintFolders(cy, links, next);
   };
-  const draw = (scene: FolderScene, labelOf: LabelOf): void => {
-    classScene(cy, scene);
-
-    for (const folder of scene.collapsed) {
-      const isShown = scene.shown.has(folder);
-
-      if (isShown) addCollapsedNode(cy, scene, folder, labelOf);
-    }
-
-    for (const link of scene.links) links.set(addFolderLink(cy, link), link);
-  };
   const show = (scene: FolderScene | null, labelOf: LabelOf): void => {
     cy.batch((): void => {
-      cy.remove(`.${FOLDER_NODE_CLASS}, .${FOLDER_LINK_CLASS}`);
-      cy.elements(`.${FOLDER_HIDDEN_CLASS}, .${BOX_COLLAPSED_CLASS}`).removeClass(PASS_CLASSES);
-      links.clear();
-      members = scene?.members ?? new Map();
+      const wanted = passClassesOf(cy, scene);
 
-      if (scene !== null) draw(scene, labelOf);
+      classScene(cy, wanted);
+      syncCollapsedNodes(cy, scene, labelOf);
+      syncFolderLinks(cy, scene, links);
+      members = scene?.members ?? new Map();
     });
 
     if (lastPaint !== null) paint(lastPaint);

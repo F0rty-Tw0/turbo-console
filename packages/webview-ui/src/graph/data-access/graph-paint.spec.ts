@@ -62,6 +62,19 @@ describe('FEATURE: applyPaint', () => {
       expect(classes).toStrictEqual([['selected'], ['highlighted'], ['dimmed'], ['normal']]);
     });
 
+    it('WHEN it is applied a second time THEN no class event fires, so no package or link is restyled', () => {
+      let classEvents = 0;
+
+      applyPaint(cy, FIRST_PAINT);
+      cy.on('class', (): void => {
+        classEvents += 1;
+      });
+
+      applyPaint(cy, FIRST_PAINT);
+
+      expect(classEvents).toBe(0);
+    });
+
     it('WHEN it is applied THEN the selected style still applies to the node', () => {
       cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
 

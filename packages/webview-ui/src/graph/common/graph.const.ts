@@ -10,7 +10,10 @@ export const NODE_PADDING_X = 24;
 export const NODE_FONT_SIZE = 13;
 
 /** The four state classes `GraphView.paint` gives; an element has exactly one of them once painted. */
-export const STATE_CLASSES = 'selected highlighted dimmed normal';
+export const STATE_CLASS_NAMES: string[] = ['selected', 'highlighted', 'dimmed', 'normal'];
+
+/** `STATE_CLASS_NAMES` as one class string. */
+export const STATE_CLASSES = STATE_CLASS_NAMES.join(' ');
 
 /** The class `GraphView.setGhosts` gives a trace's hidden path packages and their path links. */
 export const GHOST_CLASS = 'ghost';
