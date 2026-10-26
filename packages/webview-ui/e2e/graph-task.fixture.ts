@@ -2,6 +2,7 @@ import { test as graphTest } from './graph.fixture.ts';
 import { GraphAtomCap } from './pages/graph-atom-cap.po.ts';
 import { GraphAtoms } from './pages/graph-atoms.po.ts';
 import { GraphButtonTitles } from './pages/graph-button-titles.po.ts';
+import { GraphDepthHints } from './pages/graph-depth-hints.po.ts';
 import { GraphFlowPage } from './pages/graph-flow.po.ts';
 import { GraphHover } from './pages/graph-hover.po.ts';
 import { GraphPointer } from './pages/graph-pointer.po.ts';
@@ -35,6 +36,7 @@ type GraphTaskFixtures = {
   readonly graphAtomCap: GraphAtomCap;
   readonly graphAtoms: GraphAtoms;
   readonly graphButtonTitles: GraphButtonTitles;
+  readonly graphDepthHints: GraphDepthHints;
   readonly graphFlow: GraphFlowPage;
   readonly graphGlyphs: GraphTaskGlyphs;
   readonly graphHover: GraphHover;
@@ -58,6 +60,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   },
   graphButtonTitles: async ({ page }, use): Promise<void> => {
     await use(new GraphButtonTitles(page));
+  },
+  graphDepthHints: async ({ page }, use): Promise<void> => {
+    await use(new GraphDepthHints(page));
   },
   graphFlow: async ({ page }, use): Promise<void> => {
     await use(new GraphFlowPage(page));

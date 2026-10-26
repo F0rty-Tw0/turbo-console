@@ -1,9 +1,17 @@
-import { checkbox, depthInput, field, groupingField, searchInput } from './controls-fields.ts';
+import { checkbox, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
-import { CONTROLS_ID, DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common/graph.const.ts';
+import {
+  CONTROLS_ID,
+  DEPTH_HINT,
+  DEPTH_HINT_ID,
+  DEPTH_LABEL,
+  SEARCH_LABEL,
+  SHOW_ALL_LABEL,
+  TAGS_LABEL
+} from '../common/graph.const.ts';
 import { setButtonLabel } from '../utils/button-title.util.ts';
 import {
   countTextOf,
@@ -175,7 +183,7 @@ export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsEl
   const panel = textElement('aside', 'graph-controls', '');
 
   panel.id = CONTROLS_ID;
-  panel.append(field(SEARCH_LABEL, search), field(DEPTH_LABEL, depth), groupingField(grouping));
+  panel.append(field(SEARCH_LABEL, search), hintedField(DEPTH_LABEL, depth, DEPTH_HINT, DEPTH_HINT_ID), groupingField(grouping));
 
   if (tagBoxes.size > 0) panel.append(tagFieldset(tagBoxes));
 

@@ -55,6 +55,10 @@ export const SEARCH_TASKS_LABEL = 'Search tasks';
 
 export const DEPENDENTS_DEPTH_LABEL = 'Dependents depth';
 
+export const DEPENDENTS_DEPTH_HINT = 'How many levels of tasks that depend on the chosen tasks are shown.';
+
+export const DEPENDENTS_DEPTH_HINT_ID = 'graph-task-depth-hint';
+
 /** The package action that opens task mode on a package's tasks. */
 export const SHOW_TASKS_LABEL = 'Show tasks';
 
