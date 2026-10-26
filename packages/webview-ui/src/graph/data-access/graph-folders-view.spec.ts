@@ -1,4 +1,4 @@
-import type { Core } from 'cytoscape';
+import type { Core, EventObject } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createFoldersView } from './graph-folders-view.ts';
@@ -118,6 +118,18 @@ describe('FEATURE: createFoldersView', () => {
       expect(webToUi.hasClass('folder-hidden')).toBe(true);
       expect(webToUi.visible()).toBe(false);
       expect(cy.getElementById(UI_TO_UTILS).visible()).toBe(true);
+    });
+
+    it('WHEN the pass runs again THEN no element is added, removed or reclassed, so Cytoscape restyles none', () => {
+      const events: string[] = [];
+
+      cy.on('add remove class', (event: EventObject): void => {
+        events.push(event.type);
+      });
+
+      view.show(boardsSceneOf(['apps']), labelOf);
+
+      expect(events).toStrictEqual([]);
     });
 
     it('WHEN nothing is collapsed any more THEN the collapsed node, folder links and classes are gone', () => {
@@ -248,6 +260,18 @@ describe('FEATURE: createFoldersView', () => {
       const lit = FOLDER_IDS.map((id: string): boolean => cy.getElementById(id).hasClass('highlighted'));
 
       expect(lit).toStrictEqual([true, true, true]);
+    });
+
+    it('WHEN the same paint is applied again THEN no box, collapsed node or folder link is reclassed', () => {
+      let classEvents = 0;
+
+      cy.on('class', (): void => {
+        classEvents += 1;
+      });
+
+      view.paint(LIT_PAINT);
+
+      expect(classEvents).toBe(0);
     });
 
     it('WHEN a normal paint follows THEN the box loses dimmed-box and the collapsed node is normal', () => {
