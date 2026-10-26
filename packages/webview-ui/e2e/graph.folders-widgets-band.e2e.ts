@@ -33,15 +33,17 @@ const DEEP_PAN: Position = { x: 400, y: 150 };
 
 /**
  * The `deep` box is 113.5 px wide at zoom 1 and its row box width · zoom − 16 px at zoom 0.875 and up (`widget-geometry.util.ts`); the
- * row bands below catch drift in it. Zoom (106 + 16) / 113.5 gives a 106 px row, the narrowest a 2-digit badge row gets, so the
- * title's 3ch floor must drop too.
+ * row bands below catch drift in it. Zoom (106 + 16) / 113.5 gives a 106 px row, near the 104 px floor of a 120 px box.
  */
 const DEEP_NARROW_ZOOM = 1.075;
 
 /** Zoom (145 + 16) / 113.5: a 145 px row, over the 140 px glyph line. */
 const DEEP_WIDE_ZOOM = 1.4185;
 
-/** The narrow row lies in 104 to 110 px: a 2-digit row needs about 108 px with the 3ch title floor, so only a title that drops it fits. */
+/**
+ * The narrow row lies in 104 to 110 px. The title's 3ch floor (19.5 px) still fits a 2-digit row down to 104.5 px, so dropping
+ * the floor under 140 px only matters for a 3-digit count, which no row here draws.
+ */
 const NARROW_ROW_MIN_PX = 104;
 
 const NARROW_ROW_MAX_PX = 110;
