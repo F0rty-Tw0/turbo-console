@@ -23,11 +23,11 @@ const TASK_NODE = { label: 'data(label)' } as const;
 /** An umbrella's label holds a line break: its name over its counts. */
 const UMBRELLA_NODE = { 'text-wrap': 'wrap' } as const;
 
-/** A file node reads its file name, one line cut with an ellipsis at the node's width; its corners are half its 20 px height, a pill. */
+/** A file node is a pill: its corners are half its 20 px height. It reads its file name, one line cut with an ellipsis 10 px short of each round end. */
 const ATOM_FILE = {
   label: 'data(label)',
   'text-wrap': 'ellipsis',
-  'text-max-width': `${ATOM_FILE_SIZE.width}px`,
+  'text-max-width': `${ATOM_FILE_SIZE.width - 20}px`,
   'corner-radius': '10px'
 } as const;
 
