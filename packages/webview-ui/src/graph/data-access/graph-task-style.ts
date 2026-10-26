@@ -71,9 +71,9 @@ const runRuleOf = (colors: ThemeColors, state: GraphRunState): StylesheetJsonBlo
 /**
  * The task mode rules: a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the name,
  * an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a file (dashed
- * border when `atom-live`), a `run-<state>` class outlines a task or file after them, and a `task-box` draws `boxTitle` on the page and in exports, left-aligned one padding
+ * border when `atom-live`), a `run-<state>` class outlines a task or file after them, and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned one padding
  * in from the frame so a link entering at the top centre misses it. `left-inside` starts a compound's label two paddings
- * in, so the margin takes one back. A `task-box` also draws a dashed frame. They come after the `exporting` rule, so an exported task box keeps this alignment.
+ * in, so the margin takes one back. They come after the `exporting` rule, so an exported task box keeps this alignment.
  * With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name in that font list; an
  * `atom-more` node carries only its own class, so it keeps the plain file rule.
  */

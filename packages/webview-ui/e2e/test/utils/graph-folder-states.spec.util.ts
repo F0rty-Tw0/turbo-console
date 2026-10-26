@@ -146,14 +146,16 @@ const deepRowOf = (name: string, index: number): PositionRow => [name, 0, index 
 
 /** One folder `deep` of 12 packages in a single column, so its box is narrow and its count has 2 digits. */
 export const deepFolderState = (): GraphReady => {
+  const packages = DEEP_NAMES.map((name): GraphPackage => packageOf(name, `deep/${name}`));
+  const folderPositions = positionsOf(DEEP_NAMES.map(deepRowOf));
   const state: GraphReady = {
     kind: 'graph',
     tasks: [],
     hash: 'f01d0006',
-    packages: DEEP_NAMES.map((name): GraphPackage => packageOf(name, `deep/${name}`)),
+    packages,
     edges: [],
     positions: null,
-    folderPositions: positionsOf(DEEP_NAMES.map(deepRowOf)),
+    folderPositions,
     atomGroups: []
   };
 

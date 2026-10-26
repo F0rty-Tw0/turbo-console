@@ -69,8 +69,7 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
   public async expectGlyphShown(folder: string, shown: boolean): Promise<void> {
     const glyph = this.rowOf(folder).locator('.widget-glyph');
 
-    if (shown) await expect(glyph).toBeVisible();
-    else await expect(glyph).toBeHidden();
+    await expect(glyph).toBeVisible({ visible: shown });
   }
 
   /** The count badge is not cut and lies inside the folder's row. */
@@ -96,7 +95,7 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
   }
 
   /** The folder's row width in CSS px, as laid out. */
-  public async rowWidthOf(folder: string): Promise<number> {
+  private async rowWidthOf(folder: string): Promise<number> {
     return this.rowOf(folder).evaluate(layoutWidthOf);
   }
 

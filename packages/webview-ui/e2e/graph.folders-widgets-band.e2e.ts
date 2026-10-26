@@ -32,7 +32,7 @@ const DEEP = deepFolderState();
 const DEEP_PAN: Position = { x: 400, y: 150 };
 
 /**
- * The `deep` box is 113.5 px wide at zoom 1 and its row box width · zoom − 16 px at zoom 0.875 and up (`widget-geometry.util.ts`); the
+ * The `deep` box is 113.5 px wide at zoom 1 and its row is box width · zoom − 16 px at zoom 0.875 and up (`widget-geometry.util.ts`); the
  * row bands below catch drift in it. Zoom (106 + 16) / 113.5 gives a 106 px row, near the 104 px floor of a 120 px box.
  */
 const DEEP_NARROW_ZOOM = 1.075;
@@ -41,8 +41,8 @@ const DEEP_NARROW_ZOOM = 1.075;
 const DEEP_WIDE_ZOOM = 1.4185;
 
 /**
- * The narrow row lies in 104 to 110 px. The title's 3ch floor (19.5 px) still fits a 2-digit row down to 104.5 px, so dropping
- * the floor under 140 px only matters for a 3-digit count, which no row here draws.
+ * The narrow row lies in 104 to 110 px. The title's 3ch floor (19.5 px in the e2e font) still fits a 2-digit row down to
+ * 104.5 px, so dropping the floor under 140 px only matters for a 3-digit count, which no row here draws.
  */
 const NARROW_ROW_MIN_PX = 104;
 
@@ -152,9 +152,7 @@ test.describe('FEATURE: folder header rows in the box band', () => {
       });
     }
   );
-});
 
-test.describe('FEATURE: the folder header fits a narrow box', () => {
   test(
     'GIVEN 12 packages in one folder at a 106 px row, the glyph hides and the 2-digit badge stays whole in the row',
     { annotation: C9 },

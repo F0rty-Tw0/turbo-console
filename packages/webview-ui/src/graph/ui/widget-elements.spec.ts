@@ -4,12 +4,23 @@ import { buildFolderRow } from './widget-elements.ts';
 import type { FolderRowElements } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
-const classesOf = (parent: Element): string[] => Array.from(parent.children, (child) => child.className);
+const classesOf = (parent: Element): string[] => {
+  return Array.from(parent.children, (child): string => {
+    return child.className;
+  });
+};
 
-const textsOf = (parent: Element): (string | null)[] => Array.from(parent.children, (child) => child.textContent);
+const textsOf = (parent: Element): (string | null)[] => {
+  return Array.from(parent.children, (child): string | null => {
+    return child.textContent;
+  });
+};
 
-const attributesOf = (parent: Element, name: string): (string | null)[] =>
-  Array.from(parent.children, (child) => child.getAttribute(name));
+const attributesOf = (parent: Element, name: string): (string | null)[] => {
+  return Array.from(parent.children, (child): string | null => {
+    return child.getAttribute(name);
+  });
+};
 
 /** The count badge: the fourth child of a box row. */
 const badgeOf = (row: FolderRowElements): Element => {
@@ -21,18 +32,18 @@ const badgeOf = (row: FolderRowElements): Element => {
 };
 
 describe('FEATURE: buildFolderRow', () => {
-  beforeEach(() => {
+  beforeEach((): void => {
     vi.stubGlobal('document', fakeDocumentMock());
   });
 
-  afterEach(() => {
+  afterEach((): void => {
     vi.unstubAllGlobals();
   });
 
   describe('GIVEN an expanded folder with 12 packages', () => {
     let row: FolderRowElements;
 
-    beforeEach(() => {
+    beforeEach((): void => {
       row = buildFolderRow('box', 'apps', 12);
     });
 
@@ -54,34 +65,64 @@ describe('FEATURE: buildFolderRow', () => {
       expect(hidden[1]).toBe('true');
     });
 
-    it('WHEN the badge number is read THEN it shows 12 and screen readers skip it', () => {
+    it('WHEN the badge number is read THEN it shows 12', () => {
       const badge = badgeOf(row);
 
-      expect(textsOf(badge)[0]).toBe('12');
-      expect(attributesOf(badge, 'aria-hidden')[0]).toBe('true');
+      const [numberText] = textsOf(badge);
+
+      expect(numberText).toBe('12');
     });
 
-    it('WHEN the badge plural is read THEN it is visually hidden text reading 12 packages', () => {
+    it('WHEN the badge number is read THEN screen readers skip it', () => {
       const badge = badgeOf(row);
 
-      expect(classesOf(badge)[1]).toBe('visually-hidden');
-      expect(textsOf(badge)[1]).toBe('12 packages');
+      const [numberHidden] = attributesOf(badge, 'aria-hidden');
+
+      expect(numberHidden).toBe('true');
+    });
+
+    it('WHEN the badge plural is read THEN it is visually hidden', () => {
+      const badge = badgeOf(row);
+
+      const [, pluralClass] = classesOf(badge);
+
+      expect(pluralClass).toBe('visually-hidden');
+    });
+
+    it('WHEN the badge plural is read THEN it reads 12 packages', () => {
+      const badge = badgeOf(row);
+
+      const [, pluralText] = textsOf(badge);
+
+      expect(pluralText).toBe('12 packages');
     });
 
     it('WHEN the badge title is read THEN it holds the plural for the tooltip', () => {
       const badge = badgeOf(row);
 
-      expect(badge.getAttribute('title')).toBe('12 packages');
+      const title = badge.getAttribute('title');
+
+      expect(title).toBe('12 packages');
     });
   });
 
   describe('GIVEN an expanded folder with 1 package', () => {
-    it('WHEN the badge is read THEN the number is 1 and the plural and tooltip are singular', () => {
+    it('WHEN the badge is read THEN the number is 1 and the plural is singular', () => {
       const row = buildFolderRow('box', 'apps', 1);
       const badge = badgeOf(row);
 
-      expect(textsOf(badge)).toStrictEqual(['1', '1 package']);
-      expect(badge.getAttribute('title')).toBe('1 package');
+      const texts = textsOf(badge);
+
+      expect(texts).toStrictEqual(['1', '1 package']);
+    });
+
+    it('WHEN the badge is read THEN its tooltip is singular', () => {
+      const row = buildFolderRow('box', 'apps', 1);
+      const badge = badgeOf(row);
+
+      const title = badge.getAttribute('title');
+
+      expect(title).toBe('1 package');
     });
   });
 

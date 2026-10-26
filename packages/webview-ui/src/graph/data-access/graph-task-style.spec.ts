@@ -98,14 +98,28 @@ describe('FEATURE: taskRulesOf box frames in graphStyleOf', () => {
     cy.destroy();
   });
 
-  it('GIVEN a task-box THEN its frame is dashed 4 px on, 4 px off', () => {
+  it('GIVEN a task-box THEN its frame is dashed', () => {
     const box = cy.getElementById('pkg:web');
 
-    expect([box.style('border-style'), box.numericStyle('border-dash-pattern')]).toStrictEqual(['dashed', [4, 4]]);
+    const borderStyle: unknown = box.style('border-style');
+
+    expect(borderStyle).toBe('dashed');
+  });
+
+  it('GIVEN a task-box THEN its dashes are 4 px on, 4 px off', () => {
+    const box = cy.getElementById('pkg:web');
+
+    const dashPattern: unknown = box.numericStyle('border-dash-pattern');
+
+    expect(dashPattern).toStrictEqual([4, 4]);
   });
 
   it('GIVEN an atom-box THEN its frame stays solid', () => {
-    expect(cy.getElementById('atom:web#e2e-ci').style('border-style')).toBe('solid');
+    const box = cy.getElementById('atom:web#e2e-ci');
+
+    const borderStyle: unknown = box.style('border-style');
+
+    expect(borderStyle).toBe('solid');
   });
 });
 
