@@ -174,7 +174,7 @@ test.describe('FEATURE: folder header toggle', () => {
     'GIVEN more than 300 packages and nothing saved, the graph opens grouped with every folder collapsed and in view',
     { annotation: C4 },
     async ({ graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
-      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open({ savedState: null }));
 
       await test.step('AND a 301-package graph is sent', async (): Promise<void> =>
         graphHost.sendState(largeState(LARGE_PACKAGE_COUNT + 1)));
@@ -196,26 +196,26 @@ test.describe('FEATURE: folder header toggle', () => {
   );
 
   test(
-    'GIVEN exactly 300 packages and nothing saved, the graph opens flat',
+    'GIVEN exactly 300 packages and nothing saved, the graph opens grouped with every folder expanded',
     { annotation: C4 },
-    async ({ graphGrouping, graphHost, graphPage }): Promise<void> => {
-      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+    async ({ graphFolders, graphGrouping, graphHost, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open({ savedState: null }));
 
       await test.step('AND a 300-package graph is sent', async (): Promise<void> =>
         graphHost.sendState(largeState(LARGE_PACKAGE_COUNT)));
 
-      await test.step('THEN Group by folder is unchecked and no box is drawn', async (): Promise<void> => {
-        await graphGrouping.expectGrouped(false);
-        await graphGrouping.expectFolderCount(0);
+      await test.step('THEN Group by folder is checked and no folder is collapsed', async (): Promise<void> => {
+        await graphGrouping.expectGrouped(true);
+        await graphFolders.expectAllCollapsed(false);
       });
     }
   );
 
   test(
-    'GIVEN a 300-package graph still laying out, a 301-package graph sent next opens flat',
+    'GIVEN a 300-package graph still laying out, a 301-package graph sent next opens grouped with every folder expanded',
     { annotation: C4 },
-    async ({ graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
-      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+    async ({ graphFolders, graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open({ savedState: null }));
 
       await test.step('AND two graphs with no cached layout are sent back to back', async (): Promise<void> =>
         graphHost.sendStates([UNCACHED_300, UNCACHED_301]));
@@ -223,9 +223,9 @@ test.describe('FEATURE: folder header toggle', () => {
       await test.step('THEN the second one is laid out, by ELK or by the fallback on a slow runner', async (): Promise<void> =>
         graphProbe.expectLayoutSettled());
 
-      await test.step('AND Group by folder is unchecked and no box is drawn', async (): Promise<void> => {
-        await graphGrouping.expectGrouped(false);
-        await graphGrouping.expectFolderCount(0);
+      await test.step('AND Group by folder is checked and no folder is collapsed', async (): Promise<void> => {
+        await graphGrouping.expectGrouped(true);
+        await graphFolders.expectAllCollapsed(false);
       });
     }
   );

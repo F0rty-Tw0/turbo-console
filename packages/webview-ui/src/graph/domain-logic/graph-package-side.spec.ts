@@ -9,7 +9,7 @@ import type { GraphViewState } from '../../bridge/common/graph-view-state.type.t
 import { LAYOUT_FAILED_TEXT } from '../common/graph.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
-import { SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import { SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { isGroupedGraph } from '../test/utils/graph-layouts.spec.util.ts';
 import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
@@ -121,7 +121,7 @@ describe('FEATURE: GraphPackageSide', () => {
 
   describe('GIVEN h1 drawn with web selected and no task in web', () => {
     beforeEach(async () => {
-      rig = rigOf(null);
+      rig = rigOf(SAVED_FLAT_STUB);
       rig.side.show(STATE_STUB, 1);
       await settled();
       rig.side.filtering.inspection.select('web');
@@ -152,7 +152,7 @@ describe('FEATURE: GraphPackageSide parked by task mode', () => {
 
   beforeEach(async () => {
     stubPackageSideGlobals();
-    rig = rigOf(null);
+    rig = rigOf(SAVED_FLAT_STUB);
     rig.side.show(STATE_STUB, 1);
     await settled();
     rig.side.filtering.inspection.select('web');

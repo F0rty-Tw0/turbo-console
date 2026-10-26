@@ -46,4 +46,6 @@ export const STATE_STUB: GraphReady = {
 
 const FRESH: GraphViewState = freshViewStateOf('h1');
 
+export const SAVED_FLAT_STUB: GraphViewState = { ...FRESH, grouped: false };
+
 export const SAVED_GROUPED_STUB: GraphViewState = { ...FRESH, grouped: true };

@@ -61,7 +61,7 @@ const DEFAULTED: GraphViewState = {
   link: null,
   trace: null,
   folder: null,
-  grouped: false,
+  grouped: true,
   collapsed: [],
   mode: 'packages',
   task: null
@@ -158,9 +158,9 @@ describe('FEATURE: readGraphViewState', () => {
     it.each([
       ['true', true, { grouped: true }],
       ['false', false, { grouped: false }],
-      ['missing', false, {}],
-      ["the string 'true'", false, { grouped: 'true' }],
-      ['the number 1', false, { grouped: 1 }]
+      ['missing', true, {}],
+      ["the string 'true'", true, { grouped: 'true' }],
+      ['the number 1', true, { grouped: 1 }]
     ])('WHEN it is %s THEN grouped reads %s', (_name, expected, saved) => {
       const state = readGraphViewState({ ...CAMERA, ...saved });
 

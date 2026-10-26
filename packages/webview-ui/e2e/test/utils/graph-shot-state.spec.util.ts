@@ -16,10 +16,10 @@ export const cachedShotState = (setup: ShotSetup, positions: Positions): GraphRe
   return grouped;
 };
 
-/** A fresh view of `hash` with the Controls and Details panels closed: a fresh view opens both. */
+/** A flat fresh view of `hash` with the Controls and Details panels closed: a fresh view opens both. */
 export const closedPanelsSavedState = (hash: string): GraphViewState => {
   const fresh = freshViewStateOf(hash);
-  const state: GraphViewState = { ...fresh, controlsOpen: false, detailsOpen: false };
+  const state: GraphViewState = { ...fresh, grouped: false, controlsOpen: false, detailsOpen: false };
 
   return state;
 };

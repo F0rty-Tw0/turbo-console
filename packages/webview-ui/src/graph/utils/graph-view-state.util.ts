@@ -94,7 +94,7 @@ const readDetailsOpen = (value: unknown): boolean => (typeof value === 'boolean'
 
 const readFolder = (value: unknown): string | null => (typeof value === 'string' ? value : null);
 
-const readGrouped = (value: unknown): boolean => (typeof value === 'boolean' ? value : false);
+const readGrouped = (value: unknown): boolean => (typeof value === 'boolean' ? value : true);
 
 const readLink = (value: unknown): GraphLinkRef | null => {
   if (!isRecord(value)) return null;
