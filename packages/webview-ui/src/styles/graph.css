@@ -240,7 +240,7 @@ p {
   pointer-events: none;
 }
 
-/* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons take pointer events. */
+/* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons and the count badge take pointer events. */
 .graph-widgets {
   position: absolute;
   z-index: 1;
