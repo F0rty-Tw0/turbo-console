@@ -75,3 +75,13 @@ export const hasLayoutDone = (): boolean => {
 
   return posted.some((message: GraphWebviewMessage): boolean => message.type === 'layoutDone');
 };
+
+/** Runs in the page: the `performance.now()` at which the page posted `ready`, `null` before it did. */
+export const readyPostedAt = (): number | null => {
+  const posted = window.__posted ?? [];
+  const index = posted.findIndex((message: GraphWebviewMessage): boolean => message.type === 'ready');
+
+  if (index === -1) return null;
+
+  return window.__postedAt?.[index] ?? null;
+};

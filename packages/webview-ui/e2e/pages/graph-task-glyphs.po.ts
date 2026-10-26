@@ -4,12 +4,16 @@ import { expect } from '@playwright/test';
 import { GraphHost } from './graph-host.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphPage } from './graph.po.ts';
-import { CODICON_FONT, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from '../../src/graph/common/graph-glyph.const.ts';
+import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from '../../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
 import { TASK_MODE_STATE_STUB } from '../test/stubs/graph-task-mode.stub.ts';
+import { readyPostedAt } from '../test/utils/graph-posted.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeTasksState } from '../test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from '../test/utils/graph-task-saved.spec.util.ts';
+
+/** The font wait plus room for a slow runner's start, still under the mock's 3 s font hold: a page that waits for the held font misses it. */
+const READY_BUDGET_MS = CODICON_WAIT_MS + 1500;
 
 /** Every character the codicon font covers: Cytoscape draws a state glyph from it. */
 const CODICON_RANGE = /[\uea60-\uf102]/u;
@@ -32,6 +36,23 @@ const loadedFaceCount = async ({ font, text }: FontRequest): Promise<number> => 
   const faces = await document.fonts.load(font, text);
 
   return faces.length;
+};
+
+/** The glyphs to measure, in the font the glyph sizer measures. */
+type GlyphMeasure = {
+  readonly font: string;
+  readonly glyphs: string[];
+};
+
+/** Runs in the page: the canvas advance of each glyph in `font`; empty when the page has no 2d context. */
+const glyphWidths = ({ font, glyphs }: GlyphMeasure): number[] => {
+  const context = document.createElement('canvas').getContext('2d');
+
+  if (context === null) return [];
+
+  context.font = font;
+
+  return glyphs.map((glyph: string): number => context.measureText(glyph).width);
 };
 
 /** The widths of the two nodes the sizer wiring decides. */
@@ -117,6 +138,24 @@ export class GraphTaskGlyphs {
     const glyphed = nodes.filter(hasGlyph).map((node) => node.id);
 
     expect(glyphed).toEqual([]);
+  }
+
+  /** After the font arrived: every state glyph is as wide as the blank glyph, so the slot the sizer measures fits each state. */
+  public async expectGlyphsAsWideAsBlank(): Promise<void> {
+    const glyphs: string[] = Object.values(GLYPH_CODE_POINTS);
+    const widths = await this.page.evaluate(glyphWidths, { font: CODICON_FONT, glyphs });
+    const blankWidth = widths[glyphs.indexOf(GLYPH_CODE_POINTS.blank)];
+
+    expect(widths).toEqual(glyphs.map((): number | undefined => blankWidth));
+  }
+
+  /** The page posted `ready` within the font wait and its start margin of navigation, not when the held font came. */
+  public async expectReadyWithinFontWait(): Promise<void> {
+    await expect.poll(async (): Promise<number | null> => this.page.evaluate(readyPostedAt)).not.toBeNull();
+
+    const readyAt = await this.page.evaluate(readyPostedAt);
+
+    expect(readyAt).toBeLessThan(READY_BUDGET_MS);
   }
 
   /** The font the page gave up on has come: the load the page asked for resolves with a face. */

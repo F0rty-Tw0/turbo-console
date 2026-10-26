@@ -35,13 +35,17 @@ window.clearInterval = (id) => {
 };`;
 
 /**
- * Init script: stands in for the VS Code host, recording every posted message in `window.__posted` and keeping the
- * `setState` value in `window.__state` for `getState`. It leaves `window.__state` alone, so an earlier init script can
- * stand in for a state VS Code kept.
+ * Init script: stands in for the VS Code host, recording every posted message in `window.__posted`, its
+ * `performance.now()` in `window.__postedAt`, and keeping the `setState` value in `window.__state` for `getState`. It
+ * leaves `window.__state` alone, so an earlier init script can stand in for a state VS Code kept.
  */
 export const HOST_API_STUB = `window.__posted = [];
+window.__postedAt = [];
 window.acquireVsCodeApi = () => ({
-  postMessage: (message) => window.__posted.push(message),
+  postMessage: (message) => {
+    window.__posted.push(message);
+    window.__postedAt.push(performance.now());
+  },
   getState: () => window.__state,
   setState: (state) => { window.__state = state; }
 });`;

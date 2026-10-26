@@ -55,6 +55,19 @@ test.describe('FEATURE: graph task state glyphs', () => {
   );
 
   test(
+    'GIVEN the task graph open with the codicon font loaded, every state glyph is as wide as the blank glyph the sizer measures',
+    { annotation: SIZING },
+    async ({ graphGlyphs }): Promise<void> => {
+      await test.step('WHEN the page is opened and the task state is sent', async (): Promise<void> => graphGlyphs.openChosen());
+
+      await test.step('AND the codicon font has loaded', async (): Promise<void> => graphGlyphs.expectFontArrived());
+
+      await test.step('THEN each state glyph is as wide as the blank glyph', async (): Promise<void> =>
+        graphGlyphs.expectGlyphsAsWideAsBlank());
+    }
+  );
+
+  test(
     'GIVEN codicon.ttf held past the font wait, the task graph draws plain labels, warns once, and keeps them when the font arrives',
     { annotation: D12 },
     async ({ graphGlyphs }): Promise<void> => {
@@ -63,7 +76,10 @@ test.describe('FEATURE: graph task state glyphs', () => {
       await test.step('AND the page is opened with the font held', async (): Promise<void> =>
         graphGlyphs.open({ isCodiconHeld: true }));
 
-      await test.step('THEN the umbrella graph draws with no codicon character in any label', async (): Promise<void> =>
+      await test.step('THEN the page told the host it was ready within the font wait, before the held font came', async (): Promise<void> =>
+        graphGlyphs.expectReadyWithinFontWait());
+
+      await test.step('AND the umbrella graph draws with no codicon character in any label', async (): Promise<void> =>
         graphGlyphs.expectPlainLabels());
 
       await test.step('AND the page warned once about the font', (): void => graphGlyphs.expectWarnedOnce());

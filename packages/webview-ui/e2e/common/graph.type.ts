@@ -212,6 +212,8 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- only an interface merges into Window
   interface Window {
     __posted?: GraphWebviewMessage[];
+    /** `performance.now()` of each message in `__posted`, same order. */
+    readonly __postedAt?: number[];
     readonly __workers?: number;
     readonly __terminated?: number;
     readonly __workerMessages?: number;
