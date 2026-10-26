@@ -82,6 +82,33 @@ describe('FEATURE: taskRulesOf task boxes in graphStyleOf', () => {
   });
 });
 
+describe('FEATURE: taskRulesOf box frames in graphStyleOf', () => {
+  let cy: Core;
+
+  beforeEach(() => {
+    const atomBoxData = { id: 'atom:web#e2e-ci', parent: 'pkg:web' };
+    const atomBox: ElementDefinition = { data: atomBoxData, classes: 'atom-box' };
+    const elements = [boxOf('pkg:web', 'web'), atomBox, childOf('web#e2e-ci--a.ts', 'atom:web#e2e-ci')];
+
+    cy = cytoscape({ headless: true, styleEnabled: true, elements });
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  it('GIVEN a task-box THEN its frame is dashed 4 px on, 4 px off', () => {
+    const box = cy.getElementById('pkg:web');
+
+    expect([box.style('border-style'), box.numericStyle('border-dash-pattern')]).toStrictEqual(['dashed', [4, 4]]);
+  });
+
+  it('GIVEN an atom-box THEN its frame stays solid', () => {
+    expect(cy.getElementById('atom:web#e2e-ci').style('border-style')).toBe('solid');
+  });
+});
+
 const ATOM_OUTLINES: [string, string][] = [
   ['atom-passed', 'rgb(0,255,17)'],
   ['atom-failed', 'rgb(255,0,17)'],
