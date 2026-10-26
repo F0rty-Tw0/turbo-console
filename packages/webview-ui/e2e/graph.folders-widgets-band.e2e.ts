@@ -17,7 +17,7 @@ const LONG_PAN: Position = { x: 400, y: 300 };
 /** Zoom 120/180: the 180 px collapsed node is drawn at the 120 px minimum, its row at scale 0.667. */
 const NODE_MIN_ZOOM = 0.667;
 
-/** The node's body is drawn 117 px wide, under the minimum, but its 2 px selected border draws its bounds 120.3 px wide. */
+/** The node's body is drawn 117 px wide, under the minimum, but its 2 px selected border draws its bounds 120.3 px wide; only zooms 0.6522–0.6557 straddle 120 px this way. */
 const SELECTED_BORDER_ZOOM = 0.654;
 
 const grouped = (overrides: Partial<GraphViewState> = {}): GraphViewState => savedWith(BOARDS.hash, overrides);
