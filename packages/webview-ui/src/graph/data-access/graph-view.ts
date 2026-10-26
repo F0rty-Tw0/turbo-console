@@ -99,8 +99,18 @@ const setViewportOn = (cy: Core, zoom: number, pan: Position): void => {
   cy.viewport({ zoom, pan });
 };
 
+const fitOn = (cy: Core): void => {
+  cy.resize();
+  fitVisible(cy, FIT_PADDING_PX);
+};
+
 /** The page's canvas view: Cytoscape, the folder pass over it and the canvas events reported to `handlers`. */
-export const createGraphView = (container: HTMLElement, handlers: GraphViewHandlers, fontFamily: string): GraphView => {
+export const createGraphView = (
+  container: HTMLElement,
+  handlers: GraphViewHandlers,
+  fontFamily: string,
+  glyphs: boolean
+): GraphView => {
   const cy = cytoscapeOn(container);
   const folders = createFoldersView(cy);
   const tasks = createTaskCanvas(cy);
@@ -109,10 +119,6 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     const nodes = nodeDefinitionsOf(packages, placed, sizeOf);
 
     drawGraph(cy, nodes, edges);
-  };
-  const fit = (): void => {
-    cy.resize();
-    fitVisible(cy, FIT_PADDING_PX);
   };
   const paint = (next: Paint): void => {
     applyPaint(cy, next);
@@ -125,7 +131,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
   const view: GraphView = {
     setGraph,
     paint,
-    fit,
+    fit: (): void => fitOn(cy),
     setVisible: (visible: ReadonlySet<string>): void => showOnly(cy, visible),
     setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>): void => setGhosts(cy, marks, visible),
     resize: (): void => void cy.resize(),
@@ -137,7 +143,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
     setPositions,
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
-    applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily)),
+    applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily, glyphs)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),
     exportPng: (bg: string): string => exportPngOf(cy, bg, window.devicePixelRatio),
     flowEdges: (): FlowEdgeGeometry[] => flowEdgesOf(cy),

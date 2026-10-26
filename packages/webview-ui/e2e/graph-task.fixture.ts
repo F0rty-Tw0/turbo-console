@@ -4,6 +4,7 @@ import { GraphAtoms } from './pages/graph-atoms.po.ts';
 import { GraphFlowPage } from './pages/graph-flow.po.ts';
 import { GraphHover } from './pages/graph-hover.po.ts';
 import { GraphTaskDetails } from './pages/graph-task-details.po.ts';
+import { GraphTaskGlyphs } from './pages/graph-task-glyphs.po.ts';
 import { GraphTaskNarrow } from './pages/graph-task-narrow.po.ts';
 import { GraphTask } from './pages/graph-task.po.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
@@ -31,10 +32,13 @@ type GraphTaskFixtures = {
   readonly graphAtomCap: GraphAtomCap;
   readonly graphAtoms: GraphAtoms;
   readonly graphFlow: GraphFlowPage;
+  readonly graphGlyphs: GraphTaskGlyphs;
   readonly graphHover: GraphHover;
   readonly graphTask: GraphTask;
   readonly graphTaskDetails: GraphTaskDetails;
   readonly graphTaskNarrow: GraphTaskNarrow;
+  /** The same graph page in a second tab of the context, for a comparison against `graphGlyphs`. */
+  readonly secondGlyphs: GraphTaskGlyphs;
   readonly openUmbrella: OpenUmbrella;
 };
 
@@ -49,6 +53,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   graphFlow: async ({ page }, use): Promise<void> => {
     await use(new GraphFlowPage(page));
   },
+  graphGlyphs: async ({ page }, use): Promise<void> => {
+    await use(new GraphTaskGlyphs(page));
+  },
   graphHover: async ({ page }, use): Promise<void> => {
     await use(new GraphHover(page));
   },
@@ -60,6 +67,11 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   },
   graphTaskNarrow: async ({ page }, use): Promise<void> => {
     await use(new GraphTaskNarrow(page));
+  },
+  secondGlyphs: async ({ context }, use): Promise<void> => {
+    const second = await context.newPage();
+
+    await use(new GraphTaskGlyphs(second));
   },
   openUmbrella: async ({ graphHost, graphPage, graphTaskProbe }, use): Promise<void> => {
     const open = async (fileCount?: number): Promise<void> => {

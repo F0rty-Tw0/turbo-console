@@ -28,7 +28,7 @@ const LIGHT_VARS: Readonly<Record<string, string>> = {
   '--vscode-editor-background': '#ffffff',
   '--vscode-foreground': '#3b3b3b',
   '--vscode-panel-border': '#e5e5e5',
-  '--vscode-descriptionForeground': '#616161',
+  '--vscode-descriptionForeground': '#3b3b3b',
   '--vscode-focusBorder': '#005fb8',
   '--vscode-charts-yellow': '#bf8803',
   '--vscode-testing-iconPassed': '#388a34',
@@ -42,7 +42,7 @@ const LIGHT_COLORS: ExpectedThemeColors = {
   fill: 'rgb(255, 255, 255)',
   label: 'rgb(59, 59, 59)',
   frame: 'rgb(229, 229, 229)',
-  edge: 'rgb(97, 97, 97)',
+  edge: 'rgb(59, 59, 59)',
   selected: 'rgb(0, 95, 184)'
 };
 

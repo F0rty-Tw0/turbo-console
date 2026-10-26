@@ -63,7 +63,7 @@ describe('FEATURE: applyPaint', () => {
     });
 
     it('WHEN it is applied THEN the selected style still applies to the node', () => {
-      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
 
       applyPaint(cy, FIRST_PAINT);
 

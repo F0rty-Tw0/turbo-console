@@ -10,6 +10,8 @@ export type GraphOptions = {
   readonly inlineScript?: boolean;
   /** `true` makes canvas `measureText` throw, so laying out any graph fails before it is drawn. */
   readonly isMeasureBroken?: boolean;
+  /** `true` answers `codicon.ttf` only after three times the page's font wait, so the page starts without glyphs. */
+  readonly isCodiconHeld?: boolean;
   /** The webview state VS Code kept, as `getState` hands it to the page; any value, valid or not. */
   readonly savedState?: unknown;
   readonly workers?: WorkerStub;
@@ -210,6 +212,8 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- only an interface merges into Window
   interface Window {
     __posted?: GraphWebviewMessage[];
+    /** `performance.now()` of each message in `__posted`, same order. */
+    readonly __postedAt?: number[];
     readonly __workers?: number;
     readonly __terminated?: number;
     readonly __workerMessages?: number;

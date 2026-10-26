@@ -48,7 +48,7 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
     cy.getElementById('b').addClass(GHOST_CLASSES);
     cy.getElementById('b').connectedEdges().addClass(GHOST_CLASSES);
 

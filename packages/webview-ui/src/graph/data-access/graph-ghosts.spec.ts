@@ -74,7 +74,7 @@ describe('FEATURE: setGhosts', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
     showOnly(cy, V1);
   });
 
@@ -150,7 +150,7 @@ describe('FEATURE: setGhosts', () => {
     it('WHEN the style is set again and everything is painted normal THEN b is still a shown ghost and d>b stays hidden', () => {
       setGhosts(cy, MARKS_B, V1);
 
-      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
       applyPaint(cy, PLAIN_PAINT);
 
       expect(visibleNodes(cy)).toContain('b');

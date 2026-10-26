@@ -1,4 +1,4 @@
-import type { GraphIconId } from './graph-icon.type.ts';
+import type { RunStateIconId } from './graph-icon.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 
 /** The most tasks task mode draws before it cuts dependent and dependency hops. */
@@ -87,7 +87,7 @@ export const RUN_STATE_TEXT: Readonly<Record<GraphRunState, string>> = {
 };
 
 /** The Codicon of each run state, as the Tasks tree draws it. */
-export const RUN_STATE_ICONS: Readonly<Record<GraphRunState, GraphIconId>> = {
+export const RUN_STATE_ICONS: Readonly<Record<GraphRunState, RunStateIconId>> = {
   running: 'sync',
   passed: 'pass',
   failed: 'error',

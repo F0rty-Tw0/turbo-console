@@ -34,7 +34,7 @@ export const groupedCyMock = (groups: FolderGroup[], edges: GraphEdge[], positio
   const elements = [...nodes, ...links];
   const cy = cytoscape({ headless: true, styleEnabled: true, layout, elements });
 
-  cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+  cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
   setBoxes(cy, groups);
 
   return cy;

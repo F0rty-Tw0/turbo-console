@@ -1,4 +1,4 @@
-import type { Css, StylesheetJsonBlock } from 'cytoscape';
+import type { Css, NodeSingular, StylesheetJsonBlock } from 'cytoscape';
 
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
@@ -15,6 +15,7 @@ import {
 import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { glyphOf } from '../utils/glyph.util.ts';
 
 /** A task node shows its task name; its id is `package#name`. */
 const TASK_NODE = { label: 'data(label)' } as const;
@@ -30,6 +31,18 @@ const ATOM_BOX = { padding: `${ATOM_BOX_PADDING_PX}px`, 'compound-sizing-wrt-lab
 
 /** A live file's border and outline are dashed; a solid outcome outline would hide a dashed border alone. */
 const ATOM_LIVE = { 'border-style': 'dashed', 'outline-style': 'dashed' } as const;
+
+/** A node's state glyph, a space and its name; an umbrella's counts line stays under it. */
+const glyphLabelOf = (node: NodeSingular): string => `${glyphOf(node.classes())} ${node.data('label')}`;
+
+/** With a glyph font family a task or file node draws its state glyph before its name; without one its style is unchanged. */
+const glyphedOf = (style: Css.Node, glyphFamily: string | null): Css.Node => {
+  if (glyphFamily === null) return style;
+
+  const glyphed: Css.Node = { ...style, label: glyphLabelOf, 'font-family': glyphFamily };
+
+  return glyphed;
+};
 
 /** A file's outcome as a 2 px outline; a run outline after it wins for a running file. */
 const outcomeRuleOf = (className: string, color: string): StylesheetJsonBlock => {
@@ -53,8 +66,10 @@ const runRuleOf = (colors: ThemeColors, state: GraphRunState): StylesheetJsonBlo
  * border when `atom-live`), a `run-<state>` class outlines a task or file after them, and a `task-box` draws `boxTitle` on the page and in exports, left-aligned one padding
  * in from the frame so a link entering at the top centre misses it. `left-inside` starts a compound's label two paddings
  * in, so the margin takes one back. They come after the `exporting` rule, so an exported task box keeps this alignment.
+ * With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name in that font list; an
+ * `atom-more` node carries only its own class, so it keeps the plain file rule.
  */
-export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node): StylesheetJsonBlock[] => {
+export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily: string | null): StylesheetJsonBlock[] => {
   const taskBox = { ...boxTitle, 'text-halign': 'left-inside', 'text-margin-x': -FOLDER_PADDING_PX } as const;
   const runRules = RUN_STATES.map((state) => runRuleOf(colors, state));
   const outcomeRules = [
@@ -62,11 +77,13 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node): Stylesheet
     outcomeRuleOf(ATOM_OUTCOME_CLASSES.failed, colors.runs.failed),
     outcomeRuleOf(ATOM_OUTCOME_CLASSES.cached, colors.cached)
   ];
+  const taskNode = glyphedOf(TASK_NODE, glyphFamily);
+  const atomFile = glyphedOf(ATOM_FILE, glyphFamily);
   const rules: StylesheetJsonBlock[] = [
-    { selector: `node.${TASK_NODE_CLASS}`, style: TASK_NODE },
+    { selector: `node.${TASK_NODE_CLASS}`, style: taskNode },
     { selector: `node.${ATOM_UMBRELLA_CLASS}`, style: UMBRELLA_NODE },
     { selector: `node:parent.${TASK_BOX_CLASS}`, style: taskBox },
-    { selector: `node.${ATOM_FILE_CLASS}`, style: ATOM_FILE },
+    { selector: `node.${ATOM_FILE_CLASS}`, style: atomFile },
     { selector: `node.${ATOM_MORE_CLASS}`, style: ATOM_FILE },
     { selector: `node:parent.${ATOM_BOX_CLASS}`, style: ATOM_BOX },
     ...outcomeRules,

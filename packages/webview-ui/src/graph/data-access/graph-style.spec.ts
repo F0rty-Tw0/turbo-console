@@ -15,7 +15,7 @@ describe('FEATURE: graphStyleOf edge states', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: CANVAS_ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
   });
 
   afterEach(() => {
@@ -168,7 +168,7 @@ describe('FEATURE: graphStyleOf folder boxes', () => {
     const elements = [FOLDER_BOX, FOLDER_CHILD];
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif'));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
   });
 
   afterEach(() => {
@@ -203,7 +203,7 @@ describe('FEATURE: graphStyleOf dimmed opacity', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: CANVAS_ELEMENTS });
-    cy.style(graphStyleOf(RAISED_DIM_COLORS, 'sans-serif'));
+    cy.style(graphStyleOf(RAISED_DIM_COLORS, 'sans-serif', false));
   });
 
   afterEach(() => {
