@@ -1,6 +1,7 @@
 import type { Core, EventObject, EventObjectEdge, EventObjectNode, NodeSingular } from 'cytoscape';
 
 import { packageNodes } from './graph-boxes.ts';
+import { containerPainterOf, listenCursor } from './graph-cursor.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
 import { FOLDER_LINK_ID_PREFIX, GHOST_CLASS } from '../common/graph.const.ts';
@@ -137,6 +138,7 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   cy.on('tap', 'edge', onEdge);
   cy.on('tap', onBackground);
   listenHover(cy, handlers);
+  listenCursor(cy, containerPainterOf(cy));
   cy.on('dragfreeon', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
   cy.on('viewport', handlers.onViewport);
   cy.on('render', handlers.onRender);

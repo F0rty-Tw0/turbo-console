@@ -214,6 +214,11 @@ p {
 .graph-container {
   flex: 1;
   min-height: 0;
+  cursor: default;
+}
+
+.graph-container.over-element {
+  cursor: pointer;
 }
 
 .graph-container:focus-visible {

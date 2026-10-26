@@ -220,3 +220,6 @@ export const SHOW_PACKAGE_LABEL = 'Show package';
 export const BREADCRUMB_LABEL = 'Folder focus';
 
 export const ALL_FOLDERS_LABEL = 'All folders';
+
+/** The class the graph container wears while the pointer is over a node or an edge, so its cursor is a pointer. */
+export const OVER_ELEMENT_CLASS = 'over-element';
