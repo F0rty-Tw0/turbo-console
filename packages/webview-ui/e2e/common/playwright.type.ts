@@ -17,6 +17,14 @@ export type SyntheticMove = {
   readonly amount: number;
 };
 
+/** A page area in CSS pixels, as `page.screenshot` clips it. */
+export type ScreenClip = {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+};
+
 /** An element's box from `getBoundingClientRect`. */
 export type ElementRect = {
   readonly top: number;

@@ -69,13 +69,25 @@ const runRuleOf = (colors: ThemeColors, state: GraphRunState): StylesheetJsonBlo
 };
 
 /**
- * The task mode rules: a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the name,
- * an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a file (dashed
- * border when `atom-live`), a `run-<state>` class outlines a task or file after them, and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned one padding
- * in from the frame so a link entering at the top centre misses it. `left-inside` starts a compound's label two paddings
- * in, so the margin takes one back. They come after the `exporting` rule, so an exported task box keeps this alignment.
- * With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name in that font list; an
- * `atom-more` node carries only its own class, so it keeps the plain file rule.
+ * A selected task keeps its selection border alone: its run outline would draw a second ring, and its glyph still names
+ * the run state.
+ */
+const selectedRunRuleOf = (state: GraphRunState): StylesheetJsonBlock => {
+  const style = { 'outline-width': 0 };
+  const rule: StylesheetJsonBlock = { selector: `node.${TASK_NODE_CLASS}.selected.${RUN_CLASS_PREFIX}${state}`, style };
+
+  return rule;
+};
+
+/**
+ * The task mode rules: a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the
+ * name, an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a
+ * file (dashed border when `atom-live`), a `run-<state>` class outlines a task or file after them (a selected task
+ * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned
+ * one padding in from the frame so a link entering at the top centre misses it. `left-inside` starts a compound's label
+ * two paddings in, so the margin takes one back. They come after the `exporting` rule, so an exported task box keeps
+ * this alignment. With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name in that
+ * font list; an `atom-more` node carries only its own class, so it keeps the plain file rule.
  */
 export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily: string | null): StylesheetJsonBlock[] => {
   const taskBox = {
@@ -86,6 +98,7 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
     'border-dash-pattern': TASK_BOX_DASH_PX
   } as const;
   const runRules = RUN_STATES.map((state) => runRuleOf(colors, state));
+  const selectedRunRules = RUN_STATES.map(selectedRunRuleOf);
   const outcomeRules = [
     outcomeRuleOf(ATOM_OUTCOME_CLASSES.passed, colors.runs.passed),
     outcomeRuleOf(ATOM_OUTCOME_CLASSES.failed, colors.runs.failed),
@@ -102,7 +115,8 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
     { selector: `node:parent.${ATOM_BOX_CLASS}`, style: ATOM_BOX },
     ...outcomeRules,
     { selector: `node.${ATOM_LIVE_CLASS}`, style: ATOM_LIVE },
-    ...runRules
+    ...runRules,
+    ...selectedRunRules
   ];
 
   return rules;

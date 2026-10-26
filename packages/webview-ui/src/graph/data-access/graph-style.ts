@@ -15,6 +15,21 @@ import {
 } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 
+/** Typed loosely: cytoscape's `Css.Core` demands every core property, and this sets one. */
+const NO_PRESS_CIRCLE: Record<string, number> = { 'active-bg-opacity': 0 };
+
+const NO_PRESS_OVERLAY = { 'overlay-opacity': 0 } as const;
+
+/**
+ * No press feedback: Cytoscape's default dims a pressed node or edge with a black overlay, and a press on the
+ * background with a circle.
+ */
+const NO_PRESS_RULES: StylesheetJson = [
+  { selector: 'core', style: NO_PRESS_CIRCLE },
+  { selector: 'node:active', style: NO_PRESS_OVERLAY },
+  { selector: 'edge:active', style: NO_PRESS_OVERLAY }
+];
+
 /**
  * A box with packages (`node:parent`): padding, no label, no overlay, a fixed size the compound ignores for its
  * children's bounds, the frame and the editor background. A childless box matches only `node`, so its size comes from
@@ -75,6 +90,18 @@ const GHOST_EDGE = { 'line-style': 'dashed' } as const;
 
 const EDGE_ARROW = { 'target-arrow-shape': 'triangle', 'arrow-scale': 0.8, 'target-distance-from-node': 3 } as const;
 
+const edgeStyleOf = (colors: ThemeColors): Css.Edge => {
+  const edge = {
+    ...EDGE_ARROW,
+    'curve-style': 'bezier',
+    width: 1,
+    'line-color': colors.edge,
+    'target-arrow-color': colors.edge
+  } as const;
+
+  return edge;
+};
+
 /** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
 const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
 
@@ -96,11 +123,12 @@ const BOX_TITLE = {
 } as const;
 
 /**
- * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with
- * a triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies;
- * `ghost` (dashed) is the one `GraphView.setGhosts` applies; `taskRulesOf` adds the task mode rules. The folder pass draws `folder-node` (a collapsed folder, its
- * label wrapped) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it.
- * Every colour comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font
+ * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with a
+ * triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost`
+ * (dashed) is the one `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
+ * background; `taskRulesOf` adds the task mode rules. The folder pass draws `folder-node` (a collapsed folder, its
+ * label wrapped) and `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows
+ * it. Every colour comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font
  * before their name; the base node rule keeps `fontFamily`.
  */
 export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: boolean): StylesheetJson => {
@@ -119,13 +147,6 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     'border-color': colors.frame,
     'corner-radius': '6px'
   } as const;
-  const edge = {
-    ...EDGE_ARROW,
-    'curve-style': 'bezier',
-    width: 1,
-    'line-color': colors.edge,
-    'target-arrow-color': colors.edge
-  } as const;
   const selectedNode = { 'border-width': SELECTED_BORDER_PX, 'border-color': colors.selected };
   const highlightedNode = { 'border-width': NODE_BORDER_PX, 'border-color': colors.highlighted };
   const highlightedEdge = { width: 1.5, 'line-color': colors.highlighted, 'target-arrow-color': colors.highlighted };
@@ -138,7 +159,8 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     { selector: 'node:parent', style: boxStyleOf(colors) },
     { selector: `node:parent.${EXPORTING_CLASS}`, style: BOX_TITLE },
     ...taskRules,
-    { selector: 'edge', style: edge },
+    { selector: 'edge', style: edgeStyleOf(colors) },
+    ...NO_PRESS_RULES,
     { selector: 'node.selected', style: selectedNode },
     { selector: 'node.highlighted', style: highlightedNode },
     { selector: 'edge.highlighted', style: highlightedEdge },

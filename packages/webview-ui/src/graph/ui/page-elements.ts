@@ -1,4 +1,5 @@
 import { buildFlowCanvas } from './flow-canvas.ts';
+import { trackPointerFocus } from './pointer-focus.ts';
 import { buildToolbar } from './toolbar-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
@@ -21,6 +22,7 @@ const graphContainer = (): HTMLElement => {
   container.tabIndex = 0;
   container.setAttribute('role', 'application');
   container.setAttribute('aria-label', GRAPH_LABEL);
+  trackPointerFocus(container);
 
   return container;
 };

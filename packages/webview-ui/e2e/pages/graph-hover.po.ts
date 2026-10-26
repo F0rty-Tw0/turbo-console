@@ -10,7 +10,7 @@ import { ONE_FRAME } from '../common/graph.const.ts';
 import type { CpuSteps } from '../common/graph.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { emptySpotOf } from '../test/utils/graph-geometry.spec.util.ts';
+import { edgeMidpointOf, emptySpotOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { recordHoverCpu } from '../test/utils/graph-hover-cpu.spec.util.ts';
 import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
 
@@ -25,16 +25,18 @@ const LEAVE_GAP_PX = 4;
 
 /** The pointer resting on the drawn graph, aimed through the probe's rendered node centres. */
 export class GraphHover {
-  private readonly page: Page;
+  protected readonly page: Page;
+  protected readonly container: Locator;
   private readonly probe: GraphProbePage;
-  private readonly container: Locator;
   private hoverCpu: CpuSteps | null;
   private hoverRenders: number | null;
+  private point: ViewportPoint | null;
 
   public constructor(page: Page) {
     this.page = page;
     this.hoverCpu = null;
     this.hoverRenders = null;
+    this.point = null;
     this.probe = new GraphProbePage(page);
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
   }
@@ -42,9 +44,19 @@ export class GraphHover {
   /** Moves the pointer onto node `id` and lets a frame draw; the pointer stays there. */
   public async overNode(id: string): Promise<void> {
     const node = await this.nodeOf(id);
+    const centre: ViewportPoint = { x: node.renderedX, y: node.renderedY };
 
-    await this.page.mouse.move(node.renderedX, node.renderedY);
-    await this.page.evaluate(ONE_FRAME);
+    await this.moveTo(centre);
+  }
+
+  /** Moves the pointer onto the middle of the `source` to `target` link and lets a frame draw. */
+  public async overLink(source: string, target: string): Promise<void> {
+    await this.probe.waitForNodes();
+
+    const nodes = await this.probe.nodes();
+    const midpoint = edgeMidpointOf(nodes, source, target);
+
+    await this.moveTo(midpoint);
   }
 
   /** Moves the pointer to an empty spot of the canvas, off every node and link, and lets a frame draw. */
@@ -55,8 +67,7 @@ export class GraphHover {
     const edges = await this.probe.edges();
     const spot: ViewportPoint = emptySpotOf(container, nodes, edges, zoom);
 
-    await this.page.mouse.move(spot.x, spot.y);
-    await this.page.evaluate(ONE_FRAME);
+    await this.moveTo(spot);
   }
 
   /** Moves the pointer just above the canvas's box, off the container, and lets a frame draw. */
@@ -64,9 +75,18 @@ export class GraphHover {
     const container = await this.container.evaluate(readRect);
     const x = container.left + container.width / 2;
     const y = container.top - LEAVE_GAP_PX;
+    const above: ViewportPoint = { x, y };
 
-    await this.page.mouse.move(x, y);
-    await this.page.evaluate(ONE_FRAME);
+    await this.moveTo(above);
+  }
+
+  /** Where the last `over*` or `leaveCanvas` left the pointer; throws before the first. */
+  protected restingPoint(): ViewportPoint {
+    const { point } = this;
+
+    if (point === null) throw new Error('graph e2e: the pointer has not been moved');
+
+    return point;
   }
 
   /**
@@ -137,6 +157,12 @@ export class GraphHover {
     };
 
     await expect.poll(litCount).toBeGreaterThan(0);
+  }
+
+  private async moveTo(point: ViewportPoint): Promise<void> {
+    await this.page.mouse.move(point.x, point.y);
+    await this.page.evaluate(ONE_FRAME);
+    this.point = point;
   }
 
   /** The Cytoscape `render` events since the page opened. */

@@ -47,6 +47,12 @@ class FakeElement {
 
       this.className = joined.trim();
     },
+    remove: (...names: string[]): void => {
+      const all = this.className.split(' ');
+      const kept = all.filter((each) => each !== '' && !names.includes(each));
+
+      this.className = kept.join(' ');
+    },
     toggle: (name: string, force: boolean): void => {
       const names = this.className.split(' ');
       const others = names.filter((each) => each !== '' && each !== name);

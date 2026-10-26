@@ -1,4 +1,4 @@
-import { isFocusAway, isOwnPress, refocusIfLost } from './widget-menu-focus.ts';
+import { isFocusAway, isOwnPress } from './widget-menu-focus.ts';
 import type { Viewport } from '../common/graph-page.type.ts';
 import type { GraphWidgetMenusDeps } from '../common/graph-widgets.type.ts';
 import type { MenuItem } from '../common/widget-menu.type.ts';
@@ -21,10 +21,10 @@ type OpenMenu = {
 
 /**
  * The folder and package menus over the canvas, at most one open. An item runs, then the menu closes; a close returns
- * focus to the target's shown "…", else to the container, and only when the focus was inside the menu. A click
- * outside keeps that return only when it lands on nothing focusable; a focusable control it lands on keeps the focus.
- * A click on the menu's own "…" closes it, focus leaving it for another control closes it there, and a camera move
- * closes it like any other close.
+ * focus to the target's shown "…", else to the container, and only when the focus was inside the menu. A press
+ * outside closes the menu and leaves the focus to the press, so a pointer user keeps no keyboard ring on the "…";
+ * a keyboard close (Escape, an item) returns to it. A click on the menu's own "…" closes it, focus leaving it for
+ * another control closes it there, and a camera move closes it like any other close.
  */
 export class GraphWidgetMenus {
   private readonly deps: GraphWidgetMenusDeps;
@@ -174,18 +174,10 @@ export class GraphWidgetMenus {
     if (open === null) return;
 
     const isOwn = isOwnPress(event, open.menu, this.openerOf(open));
-    const hadFocus = open.menu.contains(document.activeElement);
 
     if (isOwn) return;
 
-    this.close();
-
-    const returnTo = document.activeElement;
-    const isElement = returnTo instanceof HTMLElement;
-
-    if (!hadFocus || !isElement) return;
-
-    document.addEventListener('pointerup', (): void => refocusIfLost(returnTo), { capture: true, once: true });
+    this.remove();
   }
 
   /** Focus moved to a control outside the menu other than its "…": the menu closes and the focus stays there. */

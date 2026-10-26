@@ -220,3 +220,12 @@ export const SHOW_PACKAGE_LABEL = 'Show package';
 export const BREADCRUMB_LABEL = 'Folder focus';
 
 export const ALL_FOLDERS_LABEL = 'All folders';
+
+/** The class the graph container wears over a node or edge that is not a ghost or a folder link: a pointer cursor. */
+export const OVER_ELEMENT_CLASS = 'over-element';
+
+/**
+ * The class the graph container wears from a pointer press until the next key press, so a script focus draws no
+ * ring.
+ */
+export const POINTER_FOCUS_CLASS = 'pointer-focus';

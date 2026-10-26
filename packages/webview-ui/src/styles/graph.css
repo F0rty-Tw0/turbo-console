@@ -214,10 +214,23 @@ p {
 .graph-container {
   flex: 1;
   min-height: 0;
+  cursor: default;
+}
+
+.graph-container.over-element {
+  cursor: pointer;
 }
 
 .graph-container:focus-visible {
   outline-offset: -1px;
+}
+
+/*
+ * A tap focuses the container from script, which the browser still treats as keyboard focus; no ring until a key is
+ * pressed.
+ */
+.graph-container.pointer-focus:focus-visible {
+  outline: none;
 }
 
 /* Controls panel */

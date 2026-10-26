@@ -1,6 +1,7 @@
 import { IS_SHIFT_F10_SILENT, SHIFT_F10_SILENT_REASON } from './common/graph.const.ts';
 import type { GraphOptions } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
+import { THEME_DARK_STUB } from './test/stubs/graph-theme.stub.ts';
 import { ghostFolderState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import type { GraphTraceRef, GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
@@ -78,39 +79,41 @@ test.describe('FEATURE: folder widget menus', () => {
   );
 
   test(
-    'GIVEN the apps "…" menu, the arrow keys move between its items, and Escape or a click on empty canvas closes it onto the "…"',
+    'GIVEN the apps "…" menu, the arrow keys move between its items, and Escape closes it onto the "…" with its ring, and a click on empty canvas closes it without giving the "…" focus',
     { annotation: C9 },
-    async ({ graphCanvas, graphFolderInspect, graphMenus }): Promise<void> => {
-      await test.step('WHEN the grouped boards open and the apps "…" is pressed', async (): Promise<void> => {
-        await graphFolderInspect.open(grouped(), BOARDS);
-        await graphMenus.openFolderMenu('apps');
-      });
+    async ({ graphCanvas, graphFolderInspect, graphLook, graphMenus }): Promise<void> => {
+      await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => graphFolderInspect.open(grouped(), BOARDS));
 
-      await test.step('THEN the menu is named for apps and lists Collapse, Focus folder and Show folder, with Collapse focused', async (): Promise<void> => {
-        await graphMenus.expectFolderMenuNamed('apps');
-        await graphMenus.expectItems(FOLDER_ITEMS);
-        await graphMenus.expectFocusedItem('Collapse');
-      });
+      await test.step('AND the dark theme is applied', async (): Promise<void> => graphLook.applyTheme(THEME_DARK_STUB));
+
+      await test.step('AND the apps "…" is pressed', async (): Promise<void> => graphMenus.openFolderMenu('apps'));
+
+      await test.step('THEN the menu is named for apps', async (): Promise<void> => graphMenus.expectFolderMenuNamed('apps'));
+
+      await test.step('AND it lists Collapse, Focus folder and Show folder', async (): Promise<void> =>
+        graphMenus.expectItems(FOLDER_ITEMS));
+
+      await test.step('AND Collapse is focused', async (): Promise<void> => graphMenus.expectFocusedItem('Collapse'));
 
       for (const [key, item] of KEY_STEPS) {
-        await test.step(`WHEN ${key} is pressed THEN ${item} is focused`, async (): Promise<void> => {
-          await graphMenus.pressKey(key);
-          await graphMenus.expectFocusedItem(item);
-        });
+        await test.step(`WHEN ${key} is pressed`, async (): Promise<void> => graphMenus.pressKey(key));
+
+        await test.step(`THEN ${item} is focused`, async (): Promise<void> => graphMenus.expectFocusedItem(item));
       }
 
-      await test.step('WHEN Escape is pressed THEN the menu is gone and focus is on the apps "…"', async (): Promise<void> => {
-        await graphMenus.pressKey('Escape');
-        await graphMenus.expectFocusOnEllipsis('apps');
-      });
+      await test.step('WHEN Escape is pressed', async (): Promise<void> => graphMenus.pressKey('Escape'));
 
-      await test.step('WHEN the menu opens again and the canvas background is clicked', async (): Promise<void> => {
-        await graphMenus.openFolderMenu('apps');
-        await graphCanvas.tapBackground();
-      });
-
-      await test.step('THEN the menu is gone and focus is back on the apps "…"', async (): Promise<void> =>
+      await test.step('THEN the menu is gone and focus is on the apps "…"', async (): Promise<void> =>
         graphMenus.expectFocusOnEllipsis('apps'));
+
+      await test.step('AND the apps "…" draws its ring', async (): Promise<void> => graphMenus.expectEllipsisRing('apps'));
+
+      await test.step('WHEN the apps "…" is pressed again', async (): Promise<void> => graphMenus.openFolderMenu('apps'));
+
+      await test.step('AND the canvas background is clicked', async (): Promise<void> => graphCanvas.tapBackground());
+
+      await test.step('THEN the menu is gone, the apps "…" holds no focus and draws no ring', async (): Promise<void> =>
+        graphMenus.expectFocusLeftEllipsis('apps'));
     }
   );
 
