@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Disposable } from 'vscode';
 
 import { registerRoots } from './register-roots.ts';
+import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { loadedWith, scriptPackageNamed } from '../../tree/test/utils/tree-model.spec.util.ts';
 import type { Session } from '../common/coordinator.type.ts';
 import type { RootFolder } from '../common/root.type.ts';
@@ -39,12 +40,18 @@ vi.mock('vscode', () => {
   return module;
 });
 
-const WS: RootFolder = { root: '/ws', name: 'ws' };
+const ROOT = ROOT_FOLDER_STUB.root;
+
+const isHasScriptsCall = ([command, key]: SetContextCall): boolean => command === 'setContext' && key === 'turboConsole.hasScripts';
 
 const keySent = (): boolean[] => {
-  const calls = editor.calls.filter(([command, key]) => command === 'setContext' && key === 'turboConsole.hasScripts');
+  const calls = editor.calls.filter(isHasScriptsCall);
 
   return calls.map(([, , value]) => value);
+};
+
+const disposeAll = (subscriptions: Disposable[]): void => {
+  for (const subscription of subscriptions) subscription.dispose();
 };
 
 describe('FEATURE: registerRoots has-scripts key', () => {
@@ -56,7 +63,7 @@ describe('FEATURE: registerRoots has-scripts key', () => {
     editor.calls.length = 0;
     editor.listeners.length = 0;
     store = new RootStore();
-    current = [WS];
+    current = [ROOT_FOLDER_STUB];
     const setWorkspaceFolders = vi.fn(async (): Promise<RootFolder[]> => {
       store.set(current, coordinatorMock);
 
@@ -66,37 +73,42 @@ describe('FEATURE: registerRoots has-scripts key', () => {
     session = { store, setWorkspaceFolders, setVisible: vi.fn(), setPanelVisible: vi.fn(), request: vi.fn(), changed: vi.fn() };
   });
 
-  it('WHEN registered THEN the key is sent false first', async () => {
-    await registerRoots({ subscriptions: [] }, session, vi.fn(), vi.fn());
+  describe('GIVEN one workspace folder whose root has no model yet', () => {
+    it('WHEN registered THEN the key is sent false first', async () => {
+      await registerRoots({ subscriptions: [] }, session, vi.fn(), vi.fn());
 
-    expect(keySent()).toStrictEqual([false]);
-  });
-
-  it('WHEN the root then loads a model with a script THEN true follows', async () => {
-    await registerRoots({ subscriptions: [] }, session, vi.fn(), vi.fn());
-
-    store.apply('/ws', loadedWith([scriptPackageNamed('s')]));
-
-    expect(keySent()).toStrictEqual([false, true]);
-  });
-
-  it('WHEN the workspace folder with the scripts is removed THEN false follows', async () => {
-    await registerRoots({ subscriptions: [] }, session, vi.fn(), vi.fn());
-    store.apply('/ws', loadedWith([scriptPackageNamed('s')]));
-
-    current = [];
-    editor.listeners[0]?.();
-
-    await vi.waitFor(() => {
-      expect(keySent()).toStrictEqual([false, true, false]);
+      expect(keySent()).toStrictEqual([false]);
     });
-  });
 
-  it('WHEN registered THEN the tracker is disposable through context.subscriptions', async () => {
-    const subscriptions: Disposable[] = [];
+    it('WHEN the root then loads a model with a script THEN true follows', async () => {
+      await registerRoots({ subscriptions: [] }, session, vi.fn(), vi.fn());
 
-    await registerRoots({ subscriptions }, session, vi.fn(), vi.fn());
+      store.apply(ROOT, loadedWith([scriptPackageNamed('s')]));
 
-    expect(subscriptions).toHaveLength(2);
+      expect(keySent()).toStrictEqual([false, true]);
+    });
+
+    it('WHEN the workspace folder with the scripts is removed THEN false follows', async () => {
+      await registerRoots({ subscriptions: [] }, session, vi.fn(), vi.fn());
+      store.apply(ROOT, loadedWith([scriptPackageNamed('s')]));
+
+      current = [];
+      editor.listeners[0]?.();
+
+      await vi.waitFor(() => {
+        expect(keySent()).toStrictEqual([false, true, false]);
+      });
+    });
+
+    it('WHEN its subscriptions are disposed THEN a later load sends nothing', async () => {
+      const subscriptions: Disposable[] = [];
+
+      await registerRoots({ subscriptions }, session, vi.fn(), vi.fn());
+
+      disposeAll(subscriptions);
+      store.apply(ROOT, loadedWith([scriptPackageNamed('s')]));
+
+      expect(keySent()).toStrictEqual([false]);
+    });
   });
 });

@@ -25,30 +25,38 @@ const entryOf = (packages: PackageNode[]): RootEntry => {
 const ATOM_FILE_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [ATOM_FILE_TASK] };
 
 describe('FEATURE: hasScriptsOf (spec 1c-b §4.1 toggle visibility)', () => {
-  it.each([
-    ['only turbo tasks', [packageNamed('a')], false],
-    ['one script package', [packageNamed('a'), scriptPackageNamed('s')], true],
-    ['only an atom-file task', [ATOM_FILE_PACKAGE], false],
-    ['no packages', [], false]
-  ])('GIVEN a model with %s WHEN hasScriptsOf reads it THEN it answers the row flag', (_name, packages, expected) => {
-    const entries = [entryOf(packages)];
+  describe('GIVEN one root with a loaded model', () => {
+    it.each([
+      ['only turbo tasks', [packageNamed('a')], false],
+      ['one script package', [packageNamed('a'), scriptPackageNamed('s')], true],
+      ['only an atom-file task', [ATOM_FILE_PACKAGE], false],
+      ['no packages', [], false]
+    ])('WHEN the model holds %s THEN %s', (_name, packages, expected) => {
+      const entries = [entryOf(packages)];
 
-    expect(hasScriptsOf(entries)).toBe(expected);
+      expect(hasScriptsOf(entries)).toBe(expected);
+    });
   });
 
-  it('GIVEN a root with no model WHEN hasScriptsOf reads it THEN false', () => {
-    const entries = [entryWith({ ...ROOT_STATE_STUB, model: null })];
+  describe('GIVEN a root with no model', () => {
+    it('WHEN hasScriptsOf reads it THEN false', () => {
+      const entries = [entryWith({ ...ROOT_STATE_STUB, model: null })];
 
-    expect(hasScriptsOf(entries)).toBe(false);
+      expect(hasScriptsOf(entries)).toBe(false);
+    });
   });
 
-  it('GIVEN two roots and scripts only in the second WHEN read THEN true', () => {
-    const entries = [entryOf([packageNamed('a')]), entryOf([scriptPackageNamed('s')])];
+  describe('GIVEN two roots and scripts only in the second', () => {
+    it('WHEN hasScriptsOf reads them THEN true', () => {
+      const entries = [entryOf([packageNamed('a')]), entryOf([scriptPackageNamed('s')])];
 
-    expect(hasScriptsOf(entries)).toBe(true);
+      expect(hasScriptsOf(entries)).toBe(true);
+    });
   });
 
-  it('GIVEN no roots WHEN read THEN false', () => {
-    expect(hasScriptsOf([])).toBe(false);
+  describe('GIVEN no roots', () => {
+    it('WHEN hasScriptsOf reads them THEN false', () => {
+      expect(hasScriptsOf([])).toBe(false);
+    });
   });
 });
