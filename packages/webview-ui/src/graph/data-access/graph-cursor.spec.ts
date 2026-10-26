@@ -1,12 +1,18 @@
 import cytoscape from 'cytoscape';
-import type { Core } from 'cytoscape';
+import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { listenCursor } from './graph-cursor.ts';
+import { GHOST_CLASS } from '../common/graph.const.ts';
 import { CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
+import { folderLinkIdOf } from '../utils/folder-id.util.ts';
 
 const AB = edgeIdOf({ source: 'a', target: 'b' });
+
+const FOLDER_LINK_DATA = { id: folderLinkIdOf('a', 'c'), source: 'a', target: 'c' };
+
+const FOLDER_LINK: ElementDefinition = { data: FOLDER_LINK_DATA };
 
 describe('FEATURE: listenCursor', () => {
   let cy: Core;
@@ -66,6 +72,37 @@ describe('FEATURE: listenCursor', () => {
       cy.getElementById('a').emit('mousemove');
 
       expect(paint.mock.calls).toStrictEqual([[true], [false], [true]]);
+    });
+  });
+
+  describe('GIVEN the pointer enters an element whose tap does nothing', () => {
+    it('WHEN it enters and moves on a ghost node THEN paint hears nothing', () => {
+      const node = cy.getElementById('a');
+
+      node.addClass(GHOST_CLASS);
+      node.emit('mouseover');
+      node.emit('mousemove');
+
+      expect(paint).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it enters and moves on a ghost edge THEN paint hears nothing', () => {
+      const edge = cy.getElementById(AB);
+
+      edge.addClass(GHOST_CLASS);
+      edge.emit('mouseover');
+      edge.emit('mousemove');
+
+      expect(paint).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it enters and moves on a folder link THEN paint hears nothing', () => {
+      const link = cy.add(FOLDER_LINK);
+
+      link.emit('mouseover');
+      link.emit('mousemove');
+
+      expect(paint).not.toHaveBeenCalled();
     });
   });
 });
