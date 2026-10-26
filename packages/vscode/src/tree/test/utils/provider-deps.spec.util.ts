@@ -10,7 +10,8 @@ const NOTHING_LIVE: LiveIds = () => new Set();
 
 /**
  * The provider's deps with every run lookup answering `get`, the running ids `runningIds` answers (none unless given), an
- * empty span map, the scripts toggle (hidden unless given) and idle shared Atomizer loads.
+ * empty span map, the scripts toggle (hidden unless given), idle shared Atomizer loads and a has-scripts send that
+ * always resolves.
  */
 export const providerDepsOf = (
   get: RunLookup = NEVER_RAN,
@@ -18,7 +19,15 @@ export const providerDepsOf = (
   runningIds: LiveIds = NOTHING_LIVE
 ): TreeProviderDeps => {
   const runs: TreeProviderDeps['runs'] = { get, runningIds };
-  const deps: TreeProviderDeps = { runs, treeVisible: new Map(), scripts, atom: SHARED_ATOMS_STUB };
+  const setHasScripts = async (): Promise<void> => Promise.resolve();
+  const deps: TreeProviderDeps = {
+    runs,
+    treeVisible: new Map(),
+    scripts,
+    atom: SHARED_ATOMS_STUB,
+    setHasScripts,
+    log: () => undefined
+  };
 
   return deps;
 };
