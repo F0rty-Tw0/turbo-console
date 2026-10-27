@@ -61,7 +61,7 @@ const failedText = (entry: RunEntry): string => {
   return match === null ? exit : `${exit} · ${durationText(match.durationMs)}`;
 };
 
-/** A stopped run is never matched: its length is click to end. */
+/** A stopped run's length is click to end; the match of a run turbo was interrupted in (B2-1) is not shown. */
 const stoppedText = (entry: RunEntry): string => {
   const duration = durationOf(entry);
 
