@@ -81,7 +81,10 @@ export class PackagesTree {
     this.redraw();
   }
 
+  /** `watchIcons` sets the mode on every resolve; only a change redraws. */
   public setIcons(icons: IconsMode): void {
+    if (icons === this.icons) return;
+
     this.icons = icons;
     this.redraw();
   }
