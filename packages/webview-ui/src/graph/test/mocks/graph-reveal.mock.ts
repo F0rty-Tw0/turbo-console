@@ -22,7 +22,7 @@ export const revealDepsMock = (graph: DrawnGraph, applied: GraphFilters): Reveal
   const camera: Viewport = { zoom: 1, pan: ORIGIN };
   const tasks: Mocked<RevealTaskMode> = {
     isActive: vi.fn<RevealTaskMode['isActive']>(() => false),
-    toggle: vi.fn<RevealTaskMode['toggle']>(() => void log.push('toggle'))
+    leave: vi.fn<RevealTaskMode['leave']>(() => void log.push('leave'))
   };
   const layouts: Mocked<RevealLayouts> = {
     isPlacing: vi.fn<RevealLayouts['isPlacing']>(() => false),

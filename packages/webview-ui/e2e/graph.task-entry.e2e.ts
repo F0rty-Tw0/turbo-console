@@ -6,7 +6,7 @@ import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import type { GraphWebviewMessage } from '../src/bridge/common/graph-message.type.ts';
 import { START_TRACE_LABEL } from '../src/graph/common/details.const.ts';
-import { SHOW_TASKS_LABEL, TASK_MODE_LABEL } from '../src/graph/common/graph-task.const.ts';
+import { PACKAGES_MODE_LABEL, SHOW_TASKS_LABEL } from '../src/graph/common/graph-task.const.ts';
 
 const SHOW_TASKS = { description: 'M4-5a spec 3.2.1', type: 'requirement' };
 
@@ -28,7 +28,7 @@ type ToggleExit = {
   readonly leave: (toggle: Locator) => Promise<void>;
 };
 
-/** The two ways off the Task mode toggle: a pointer click and Enter with the toggle focused. */
+/** The two ways off Tasks: a pointer click and Enter with Packages focused. */
 const TOGGLE_EXITS: ToggleExit[] = [
   { way: 'a click', leave: async (toggle): Promise<void> => toggle.click() },
   { way: 'Enter', leave: async (toggle): Promise<void> => toggle.press('Enter') }
@@ -151,15 +151,14 @@ test.describe('FEATURE: the task "…" menu and leaving a cold task mode', () =>
 
   for (const { way, leave } of TOGGLE_EXITS) {
     test(
-      `${way} on Task mode leaves it and gives focus back to the toggle once the package graph shows`,
+      `${way} on Packages leaves task mode and gives it focus once the package graph shows`,
       { annotation: FOCUS },
       async ({ graphPage, graphProbe, graphTask }): Promise<void> => {
-        await test.step(`WHEN Task mode gets ${way}`, async (): Promise<void> => leave(graphTask.toggleButton));
+        await test.step(`WHEN Packages gets ${way}`, async (): Promise<void> => leave(graphTask.packagesButton));
 
         await test.step('THEN the package nodes are drawn', async (): Promise<void> => graphProbe.expectNodeIds(PACKAGES));
 
-        await test.step('AND the Task mode toggle has focus', async (): Promise<void> =>
-          graphPage.expectButtonFocused(TASK_MODE_LABEL));
+        await test.step('AND Packages has focus', async (): Promise<void> => graphPage.expectButtonFocused(PACKAGES_MODE_LABEL));
       }
     );
   }

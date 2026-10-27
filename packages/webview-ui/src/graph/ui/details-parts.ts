@@ -1,4 +1,5 @@
 import { graphIcon } from './graph-icon.ts';
+import { iconButton } from './icon-button.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { DetailsViewBase, DetailsViewKind } from '../common/details-view.type.ts';
 import { CLOSE_DETAILS_LABEL, HIDDEN_TEXT } from '../common/details.const.ts';
@@ -7,15 +8,11 @@ import { DETAILS_ID } from '../common/graph.const.ts';
 import { keyedPartsOf } from '../utils/keyed-text.util.ts';
 
 const closeButton = (isOverlay: boolean): HTMLButtonElement => {
-  const button = textElement('button', 'icon-button details-close', '');
-  const icon = graphIcon('close');
+  const button = iconButton('close', CLOSE_DETAILS_LABEL, CLOSE_DETAILS_LABEL);
 
-  button.type = 'button';
+  button.classList.add('details-close');
   button.hidden = !isOverlay;
-  button.title = CLOSE_DETAILS_LABEL;
-  button.setAttribute('aria-label', CLOSE_DETAILS_LABEL);
   button.setAttribute('aria-controls', DETAILS_ID);
-  button.append(icon);
 
   return button;
 };

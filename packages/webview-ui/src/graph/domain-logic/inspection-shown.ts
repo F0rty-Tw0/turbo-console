@@ -1,3 +1,4 @@
+import { showDetailsBar } from './details-bar-shown.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { DetailsContext } from '../common/graph-details.type.ts';
 import type { CanvasShown, GraphInspectionDeps, ShownParts } from '../common/graph-inspection.type.ts';
@@ -32,7 +33,10 @@ export const shownPartsOf = (deps: GraphInspectionDeps, next: Inspection, isRebu
   return parts;
 };
 
-/** Shows `inspection` on the toolbar's status line and Clear selection, only while the package graph owns the canvas: task mode owns both meanwhile. */
+/**
+ * Shows `inspection` on the toolbar's status line and in the Details bar, only while the package graph owns the canvas:
+ * task mode owns both meanwhile. The bar and its Clear selection show while something is selected.
+ */
 export const showInspectionBar = (
   deps: Pick<GraphInspectionDeps, 'page' | 'isPackageMode'>,
   inspection: Inspection,
@@ -43,7 +47,8 @@ export const showInspectionBar = (
   if (!isPackageMode) return;
 
   deps.page.status.textContent = status;
-  deps.page.clear.disabled = inspection.kind === 'none';
+  deps.page.detailsSummary.textContent = status;
+  showDetailsBar(deps.page, inspection.kind !== 'none');
 };
 
 /** `current` kept, narrowed or dropped for a new visible set; `null` while the page shows no graph. */

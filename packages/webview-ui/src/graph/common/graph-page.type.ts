@@ -25,7 +25,9 @@ import type { GraphViewState, PackageViewState } from '../../bridge/common/graph
 export type PageElements = {
   readonly root: HTMLElement;
   readonly toolbar: HTMLElement;
-  /** The Task mode toggle, first in the toolbar; `aria-pressed` while task mode is on. */
+  /** The Packages button, first in the toolbar; `aria-pressed` while the package graph shows. */
+  readonly packagesMode: HTMLButtonElement;
+  /** The Tasks button, after Packages; `aria-pressed` while task mode is on. */
   readonly taskMode: HTMLButtonElement;
   /**
    * Toggles the controls panel `aside#graph-controls`; `GraphControls` keeps its label and `aria-expanded` current. In task
@@ -40,8 +42,14 @@ export type PageElements = {
   readonly relayout: HTMLButtonElement;
   /** Enabled exactly when `fit` is: both need a visible package. */
   readonly exportImage: HTMLButtonElement;
+  /** Clear selection: the icon-only button in `detailsBar`, disabled while nothing is selected. */
   readonly clear: HTMLButtonElement;
+  /** The toolbar's visually hidden live region, which reads the package selection out. */
   readonly status: HTMLElement;
+  /** `div.details-bar`: the summary and `clear`, first in the mounted Details aside; `hidden` while nothing is selected. */
+  readonly detailsBar: HTMLDivElement;
+  /** `p.details-summary`: the package selection's text, as `status` reads it; empty in task mode. */
+  readonly detailsSummary: HTMLElement;
   readonly notice: HTMLElement;
   /** The `p` inside the notice: the simplified-layout copy, or a mode switch's progress text. */
   readonly noticeText: HTMLElement;
@@ -59,12 +67,6 @@ export type PageElements = {
   /** `div.graph-widgets`: the canvas widgets' layer over the container, its DOM sibling right after it. */
   readonly widgets: HTMLElement;
 };
-
-/** What `buildToolbar` builds: the toolbar and the parts of it the page drives. */
-export type ToolbarElements = Pick<
-  PageElements,
-  'toolbar' | 'taskMode' | 'controls' | 'details' | 'fit' | 'relayout' | 'exportImage' | 'clear' | 'status' | 'filtersOn'
->;
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
 export type ControlsViewFields = Pick<

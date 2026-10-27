@@ -45,9 +45,13 @@ export const TASK_CONTROLS_ID = 'graph-task-controls';
 
 export const MODE_LABEL = 'Mode';
 
-export const TASK_MODE_LABEL = 'Task mode';
+export const PACKAGES_MODE_LABEL = 'Packages';
 
-export const TASK_MODE_TITLE = 'Switch between the package graph and the task graph';
+export const PACKAGES_MODE_TITLE = 'Show the package graph';
+
+export const TASKS_MODE_LABEL = 'Tasks';
+
+export const TASKS_MODE_TITLE = 'Show the task graph';
 
 export const SHOW_ALL_TASKS_LABEL = 'Show all tasks';
 
@@ -67,6 +71,9 @@ export const UNKNOWN_TASKS_TEXT = 'Those tasks are not in this workspace';
 
 /** How long a task notice shown in package mode stays, since no task render comes to replace it. */
 export const PACKAGE_NOTICE_MS = 8000;
+
+/** How long the notice line is shown empty before its text is written, so a screen reader has the `role=status` line in the accessibility tree and announces the text as a change. */
+export const NOTICE_TEXT_DELAY_MS = 100;
 
 /** The prompt while nothing is chosen. */
 export const EMPTY_TASKS_TEXT =

@@ -1,3 +1,4 @@
+import type { DetailsElements } from './details-view.type.ts';
 import type { GraphView, PageElements } from './graph-page.type.ts';
 import type { WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -36,11 +37,16 @@ export type TaskDetailsView = {
   readonly stop: HTMLButtonElement;
 };
 
+/** What the panel shows while no task is selected; its heading takes focus when Clear selection had it. */
+export type TaskDetailsEmpty = {
+  readonly root: HTMLElement;
+  readonly heading: HTMLElement;
+};
+
 export type TaskDetailsViews = {
-  /** The empty, hidden `aside#graph-task-details`. */
-  readonly panel: () => HTMLElement;
-  /** What the panel shows while no task is selected. */
-  readonly empty: () => HTMLElement;
+  /** The hidden `aside#graph-task-details` and its empty `div.details-content`, which holds the panel's shown view. */
+  readonly panel: () => DetailsElements;
+  readonly empty: () => TaskDetailsEmpty;
   readonly view: (model: TaskDetailsModel) => TaskDetailsView;
 };
 
@@ -59,7 +65,7 @@ export type TaskDetails = {
 };
 
 export type TaskDetailsDeps = {
-  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'taskMode'>;
+  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'detailsBar' | 'packagesMode'>;
   readonly views: TaskDetailsViews;
   readonly bridge: Bridge;
   readonly actions: TaskDetailsActions;

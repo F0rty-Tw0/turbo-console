@@ -16,3 +16,12 @@ export const stubPackageSideGlobals = (): void => {
   for (const name of ['ResizeObserver', 'MutationObserver', 'Node', 'Element', 'HTMLElement', 'HTMLButtonElement'])
     vi.stubGlobal(name, NoDomClass);
 };
+
+/** Resolves after the timers queued so far: the package side's first draw has settled. */
+export const settled = async (): Promise<void> => {
+  const wait = (resolve: () => void): void => {
+    setTimeout(resolve, 0);
+  };
+
+  return new Promise(wait);
+};

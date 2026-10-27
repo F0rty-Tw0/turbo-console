@@ -71,6 +71,11 @@ export class GraphTaskDetails {
     await expect(icon).toHaveCSS('color', colour);
   }
 
+  /** The shown view's `h2`, the task name or the empty view's Details, holds focus. */
+  public async expectHeadingFocused(): Promise<void> {
+    await expect(this.panel.getByRole('heading', { level: 2 })).toBeFocused();
+  }
+
   /** The panel shows no task: the Details heading, the empty lead and no button. */
   public async expectEmpty(): Promise<void> {
     await expect(this.panel.getByRole('heading', { level: 2 })).toHaveText(DETAILS_LABEL);

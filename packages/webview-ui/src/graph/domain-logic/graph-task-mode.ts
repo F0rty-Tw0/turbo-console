@@ -65,7 +65,7 @@ export class GraphTaskMode {
 
     if (!this.isActive()) return;
 
-    this.enter();
+    this.showPage();
 
     const shownSet = this.memory.shownSet();
     const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.umbrellaSizers());
@@ -88,17 +88,20 @@ export class GraphTaskMode {
     this.hasEntered = false;
   }
 
-  /** Package mode → task mode with the saved choice, or the prompt; task mode → package mode with the task camera saved. */
-  public toggle(at: number): void {
-    if (this.isActive()) {
-      this.leave();
-
-      return;
-    }
+  /** Package mode → task mode with the saved choice, or the prompt; in task mode it does nothing. */
+  public enter(at: number): void {
+    if (this.isActive()) return;
 
     this.deps.modes.setMode('tasks', this.memory.hash());
-    this.enter();
+    this.showPage();
     this.render(at, null);
+  }
+
+  /** Task mode → package mode with the task camera saved; in package mode it does nothing. */
+  public leave(): void {
+    const isActive = this.isActive();
+
+    if (isActive) this.hidePage();
   }
 
   /** Chooses the known ones of `taskIds` from either mode; with none known the page stays as it is and says so. */
@@ -112,6 +115,11 @@ export class GraphTaskMode {
     }
 
     this.choose({ chosen, capLifted: false, selected: null }, at, droppedNoticeOf(dropped));
+  }
+
+  /** Shows `text` on the notice line from either mode, or hides it for `null`; the next task render replaces it. */
+  public notice(text: string | null): void {
+    this.panel.notice(text);
   }
 
   /** The ids of package `name`'s tasks in the latest state, which Show tasks chooses. */
@@ -145,7 +153,7 @@ export class GraphTaskMode {
     const unplaced: Partial<TaskViewState> = { ...edit, layoutKey: '' };
 
     this.memory.save(unplaced);
-    this.enter();
+    this.showPage();
     this.render(at, notice);
   }
 
@@ -179,7 +187,7 @@ export class GraphTaskMode {
   }
 
   /** The toolbar, the body, the task panel and Controls show once per visit, before any task layout lands. */
-  private enter(): void {
+  private showPage(): void {
     if (this.hasEntered) return;
 
     const current = this.deps.modes.current();
@@ -192,7 +200,7 @@ export class GraphTaskMode {
   }
 
   /** Saves the task camera, empties the canvas and hands the page back to the package graph. */
-  private leave(): void {
+  private hidePage(): void {
     this.saveCamera();
     this.deps.modes.setMode('packages', this.memory.hash());
     this.layout.clear();

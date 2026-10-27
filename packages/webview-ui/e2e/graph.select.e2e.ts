@@ -1,5 +1,5 @@
 import type { EdgeStates, NodeStates } from './common/graph.type.ts';
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { DIAMOND_CHAIN_CACHED_STUB } from './test/stubs/graph-state.stub.ts';
 
 const AC2 = { description: 'M4-1 AC2', type: 'requirement' };
@@ -125,6 +125,7 @@ test.describe('FEATURE: graph selection', () => {
 
   test('GIVEN a selected package, Escape on the container clears it', async ({
     graphCanvas,
+    graphDetailsBar,
     graphHost,
     graphPage,
     graphProbe
@@ -143,7 +144,8 @@ test.describe('FEATURE: graph selection', () => {
 
     await test.step('THEN nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
 
-    await test.step('AND Clear selection is disabled', async (): Promise<void> => graphPage.expectDisabled('Clear selection'));
+    await test.step('AND the Details bar is hidden and Clear selection disabled', async (): Promise<void> =>
+      graphDetailsBar.expectClearHidden());
   });
 
   test('GIVEN a selected package, tapping the background clears it', async ({

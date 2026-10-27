@@ -1,4 +1,4 @@
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { PROTO_DETAILS_STUB } from './test/stubs/graph-details-edge.stub.ts';
 import { DETAILS_RECOUNT_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import {
@@ -27,7 +27,7 @@ test.describe('FEATURE: graph link explain', () => {
   test(
     'GIVEN the details graph, tapping a link inspects it, selects its edge and clears the package selection',
     { annotation: AC1 },
-    async ({ graphDetails, graphHost, graphLink, graphList, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphDetails, graphDetailsBar, graphHost, graphLink, graphList, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
@@ -42,7 +42,8 @@ test.describe('FEATURE: graph link explain', () => {
       await test.step('AND the status line says web depends on ui', async (): Promise<void> =>
         graphPage.expectStatus('web depends on ui'));
 
-      await test.step('AND Clear selection is enabled', async (): Promise<void> => graphPage.expectEnabled('Clear selection'));
+      await test.step('AND the Details bar shows Clear selection enabled', async (): Promise<void> =>
+        graphDetailsBar.expectClearShown());
 
       await test.step('AND the two ends are highlighted, the rest dimmed', async (): Promise<void> =>
         graphProbe.expectNodeStates(WEB_UI_NODES_STUB));

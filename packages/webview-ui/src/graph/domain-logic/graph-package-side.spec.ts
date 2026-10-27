@@ -8,10 +8,11 @@ import type { GraphPackage, GraphReady, GraphState } from '../../bridge/common/g
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { LAYOUT_FAILED_TEXT } from '../common/graph.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
+import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { LARGE_STATE_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { isGroupedGraph } from '../test/utils/graph-layouts.spec.util.ts';
-import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
 type PackageSideParts = {
   readonly side: GraphPackageSide;
@@ -52,14 +53,6 @@ const rigOf = (saved: GraphViewState | null, hasGrouping?: boolean): PackageSide
   const rig: PackageSideRig = { ...mock, side, modes, hasTasks };
 
   return rig;
-};
-
-const settled = async (): Promise<void> => {
-  const wait = (resolve: () => void): void => {
-    setTimeout(resolve, 0);
-  };
-
-  return new Promise(wait);
 };
 
 describe('FEATURE: GraphPackageSide', () => {
@@ -205,28 +198,50 @@ describe('FEATURE: GraphPackageSide parked by task mode', () => {
       expect(rig.onMessage).not.toHaveBeenCalled();
     });
 
-    it('WHEN h1 arrives again with new task counts THEN the status line and Clear selection stay as task mode left them', () => {
+    it('WHEN h1 arrives again with new task counts THEN the status line, the Details bar and Clear selection stay as task mode left them', () => {
       rig.page.status.textContent = '';
+      rig.page.detailsSummary.textContent = '';
       rig.page.clear.disabled = true;
+      rig.page.detailsBar.hidden = true;
       rig.side.show(RECOUNTED, 2);
 
       expect(rig.page.status.textContent).toBe('');
+      expect(rig.page.detailsSummary.textContent).toBe('');
       expect(rig.page.clear.disabled).toBe(true);
+      expect(rig.page.detailsBar.hidden).toBe(true);
     });
 
-    it('WHEN task mode is left and h1 drawn again THEN the status line names web again', async () => {
+    it('WHEN task mode is left and h1 drawn again THEN the status line and the shown Details bar name web again', async () => {
       rig.page.status.textContent = '';
+      rig.page.detailsSummary.textContent = '';
+      rig.page.detailsBar.hidden = true;
       rig.modes.setMode('packages', 'h1');
       rig.side.redraw();
       await settled();
 
       expect(rig.page.status.textContent).toMatch(/^web · /u);
+      expect(rig.page.detailsSummary.textContent).toBe(rig.page.status.textContent);
+      expect(rig.page.detailsBar.hidden).toBe(false);
     });
 
     it('WHEN Clear selection is clicked THEN web stays selected', () => {
       rig.page.clear.click();
 
       expect(rig.side.filtering.inspection.selected()).toBe('web');
+    });
+
+    it('WHEN web was cleared first, a task shows the bar and task mode is left THEN the bar hides and Clear is disabled', async () => {
+      rig.modes.setMode('packages', 'h1');
+      rig.page.clear.click();
+      rig.modes.setMode('tasks', 'h1');
+      rig.page.detailsBar.hidden = false;
+      rig.page.clear.disabled = false;
+      rig.modes.setMode('packages', 'h1');
+      rig.side.redraw();
+      await settled();
+
+      expect(rig.page.detailsBar.hidden).toBe(true);
+      expect(rig.page.clear.disabled).toBe(true);
     });
 
     it('WHEN Controls is clicked THEN the package Controls neither re-measure the canvas nor save', () => {
@@ -247,4 +262,38 @@ describe('FEATURE: GraphPackageSide parked by task mode', () => {
       expect(rig.modes.current()).toBe(before);
     });
   });
+});
+
+describe('FEATURE: GraphPackageSide mode button focus', () => {
+  let rig: PackageSideRig;
+  let doc: Pick<Document, 'activeElement'>;
+
+  /** Focus is on `key` when task mode is left; a loading screen drops it (the new fake document has none), then the next graph shows. */
+  const leaveWithFocusOn = async (key: 'packagesMode' | 'taskMode'): Promise<void> => {
+    rig.page[key].focus();
+    rig.side.keepModeFocus();
+    rig.page.details.focus();
+    vi.stubGlobal('document', fakeDocumentMock());
+    rig.side.show(STATE_STUB, 1);
+    await settled();
+  };
+
+  beforeEach(() => {
+    stubPackageSideGlobals();
+    doc = document;
+    rig = rigOf(SAVED_FLAT_STUB);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.each(['packagesMode', 'taskMode'] as const)(
+    'GIVEN focus on %s WHEN the graph shows again THEN Packages has focus',
+    async (key) => {
+      await leaveWithFocusOn(key);
+
+      expect(doc.activeElement).toBe(rig.page.packagesMode);
+    }
+  );
 });

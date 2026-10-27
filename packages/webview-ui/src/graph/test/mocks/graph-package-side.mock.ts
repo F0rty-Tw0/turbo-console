@@ -58,7 +58,11 @@ const WIDGET_VIEWS: WidgetViews = {
 
 const TASK_VIEWS: TaskControlsViews = { build: buildTaskControls, row: buildTaskRow };
 
-const TASK_DETAILS_VIEWS: TaskDetailsViews = { panel: buildTaskDetailsPanel, empty: buildTaskDetailsEmpty, view: buildTaskDetails };
+const TASK_DETAILS_VIEWS: TaskDetailsViews = {
+  panel: buildTaskDetailsPanel,
+  empty: buildTaskDetailsEmpty,
+  view: buildTaskDetails
+};
 
 /**
  * The deps of a `GraphPackageSide` over the real page and panel builders, for the spec's fake `document`, with the view

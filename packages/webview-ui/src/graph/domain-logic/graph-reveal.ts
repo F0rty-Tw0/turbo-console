@@ -19,14 +19,14 @@ export class PackageReveal {
   }
 
   /** Holds `name` in place of any held before; task mode is left first, and the package graph it shows places later. */
-  public request(name: string, at: number): void {
+  public request(name: string): void {
     const { tasks } = this.deps;
     const isTaskMode = tasks.isActive();
 
     this.pending = name;
 
     if (isTaskMode) {
-      tasks.toggle(at);
+      tasks.leave();
 
       return;
     }

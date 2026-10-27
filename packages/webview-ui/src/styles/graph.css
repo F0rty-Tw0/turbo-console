@@ -56,14 +56,6 @@ p {
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
-.graph-status {
-  flex: 1 1 auto;
-  min-width: 0;
-  color: var(--vscode-descriptionForeground);
-  text-align: end;
-  overflow-wrap: anywhere;
-}
-
 .text-button {
   display: inline-flex;
   align-items: center;
@@ -86,7 +78,7 @@ p {
   cursor: default;
 }
 
-/* An open panel's toggle and the pressed Task mode toggle; after the hover rule, which has the same specificity, so the pressed look wins. */
+/* An open panel's toggle and the pressed mode button; after the hover rule, which has the same specificity, so the pressed look wins. */
 .graph-toolbar .text-button[aria-expanded='true'],
 .graph-toolbar .text-button[aria-pressed='true'] {
   border-color: var(--vscode-inputOption-activeBorder, transparent);
@@ -136,6 +128,13 @@ p {
   border: 1px solid var(--vscode-inputValidation-warningBorder);
   border-radius: var(--radius);
   background: var(--vscode-inputValidation-warningBackground);
+}
+
+/* The task notice is shown empty for a moment before its text arrives, so a screen reader announces it; empty, it draws nothing. */
+.graph-task-notice:empty {
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .graph-notice-text,
@@ -700,6 +699,26 @@ kbd {
 
 /* Details panel views */
 
+/* The global `[hidden]` rule beats this display while nothing is selected. */
+.details-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.details-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: var(--tc-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Each view stays a flex child of the aside, spaced by its gap like the Details bar. */
+.details-content {
+  display: contents;
+}
+
 .details-view {
   display: flex;
   flex-direction: column;
@@ -781,8 +800,13 @@ kbd {
   cursor: pointer;
 }
 
-.icon-button:hover {
+.icon-button:hover:not(:disabled) {
   background: var(--vscode-toolbar-hoverBackground);
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .details-guide {

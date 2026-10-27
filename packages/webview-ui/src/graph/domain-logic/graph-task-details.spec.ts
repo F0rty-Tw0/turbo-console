@@ -40,13 +40,22 @@ const shownTextOf = (element: Element): string[] => {
   return all.filter((text) => text !== '');
 };
 
+/** The children of the panel's content, its second child after the Details bar. */
+const contentOf = (panel: HTMLElement): Element[] => Array.from(panel.children[1]?.children ?? []);
+
 const rigOf = (): DetailsRig => {
   const posted: Posted[] = [];
   const post = (message: Posted): void => {
     posted.push(message);
   };
   const bridge: Bridge = { ready: vi.fn(), post, onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
-  const page = { body: document.createElement('div'), details: button(), clear: button(), taskMode: button() };
+  const page = {
+    body: document.createElement('div'),
+    details: button(),
+    clear: button(),
+    detailsBar: document.createElement('div'),
+    packagesMode: button()
+  };
   const { views, panel, built } = taskDetailsViewsMock();
   const onSelect = vi.fn<(id: string) => void>();
   const onClear = vi.fn<() => void>();
@@ -97,6 +106,7 @@ describe('FEATURE: GraphTaskDetails', () => {
       rig.deps.page.clear.click();
 
       expect(rig.deps.page.clear.disabled).toBe(false);
+      expect(rig.deps.page.detailsBar.hidden).toBe(false);
       expect(rig.onClear).toHaveBeenCalledTimes(1);
     });
 
@@ -117,12 +127,12 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(rig.onClear).not.toHaveBeenCalled();
     });
 
-    it('WHEN task mode is left with focus in the panel THEN the Task mode toggle takes focus', () => {
+    it('WHEN task mode is left with focus in the panel THEN Packages takes focus', () => {
       details.show(RUNNING);
       rig.built[0]?.heading.focus();
       details.exit();
 
-      expect(document.activeElement).toBe(rig.deps.page.taskMode);
+      expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
   });
 
@@ -201,11 +211,11 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(document.activeElement).toBe(rig.built[1]?.run);
     });
 
-    it('WHEN Run has focus and the selection is cleared THEN the Details button takes focus', () => {
+    it('WHEN Run has focus and the selection is cleared THEN the empty view heading takes focus', () => {
       view?.run.focus();
       details.show(null);
 
-      expect(document.activeElement).toBe(rig.deps.page.details);
+      expect(document.activeElement).toMatchObject({ tagName: 'H2', textContent: 'Details' });
     });
 
     it('WHEN Stop has focus and the task stops running THEN the heading takes focus', () => {
@@ -213,6 +223,42 @@ describe('FEATURE: GraphTaskDetails', () => {
       details.show(PASSED);
 
       expect(document.activeElement?.tagName).toBe('H2');
+    });
+  });
+
+  describe('GIVEN the Details bar with Clear selection first in the panel and a#build shown', () => {
+    beforeEach(() => {
+      rig.deps.page.detailsBar.append(rig.deps.page.clear);
+      rig.panel.prepend(rig.deps.page.detailsBar);
+      details.enter(true);
+      details.show(RUNNING);
+    });
+
+    it('WHEN the task is shown again THEN the bar stays first and only the content holds the new view', () => {
+      details.show(PASSED);
+
+      expect([rig.panel.children.length, rig.panel.children[0]]).toStrictEqual([2, rig.deps.page.detailsBar]);
+      expect(contentOf(rig.panel)).toStrictEqual([rig.built[1]?.root]);
+    });
+
+    it('WHEN the selection is cleared THEN the bar hides', () => {
+      details.show(null);
+
+      expect(rig.deps.page.detailsBar.hidden).toBe(true);
+    });
+
+    it('WHEN Clear selection has focus and the task is shown again THEN Clear keeps focus', () => {
+      rig.deps.page.clear.focus();
+      details.show(PASSED);
+
+      expect(document.activeElement).toBe(rig.deps.page.clear);
+    });
+
+    it('WHEN Clear selection has focus and the selection is cleared THEN the empty view heading takes focus', () => {
+      rig.deps.page.clear.focus();
+      details.show(null);
+
+      expect(document.activeElement).toMatchObject({ tagName: 'H2', textContent: 'Details' });
     });
   });
 });

@@ -67,8 +67,9 @@ class GraphPageController {
       view: this.view
     });
     const relayout = (): void => this.relayout();
+    const showNotice = (text: string | null): void => this.tasks.notice(text);
 
-    wireToolbar({ page, view: this.view, bridge, background: deps.background, relayout });
+    wireToolbar({ page, view: this.view, bridge, background: deps.background, relayout, showNotice });
   }
 
   public receive(message: unknown): void {
@@ -84,7 +85,7 @@ class GraphPageController {
         this.tasks.showTasks(message.taskIds, at);
         break;
       case 'showPackage':
-        this.reveal.request(message.name, at);
+        this.reveal.request(message.name);
         break;
       case 'edgeExplained':
         this.packages.filtering.inspection.explained(message);

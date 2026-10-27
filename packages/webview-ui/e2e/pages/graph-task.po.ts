@@ -8,11 +8,13 @@ import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import {
   DEPENDENTS_DEPTH_LABEL,
   EMPTY_TASKS_TEXT,
+  MODE_LABEL,
+  PACKAGES_MODE_LABEL,
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
   SHOW_TASKS_LABEL,
-  TASK_CONTROLS_ID,
-  TASK_MODE_LABEL
+  TASKS_MODE_LABEL,
+  TASK_CONTROLS_ID
 } from '../../src/graph/common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
@@ -21,9 +23,10 @@ import { nodeRectNamed, rectOf } from '../test/utils/graph-widgets.spec.util.ts'
 
 const titlesOf = (buttons: HTMLElement[]): string[] => buttons.map((button) => button.title);
 
-/** Task mode's page parts: the Task mode toggle, the prompt, the cap banner, the notice and the task Controls panel. */
+/** Task mode's page parts: the Packages and Tasks buttons, the prompt, the cap banner, the notice and the task Controls panel. */
 export class GraphTask {
-  public readonly toggleButton: Locator;
+  public readonly packagesButton: Locator;
+  public readonly tasksButton: Locator;
   public readonly showTasksButton: Locator;
 
   private readonly page: Page;
@@ -39,7 +42,10 @@ export class GraphTask {
   public constructor(page: Page) {
     this.page = page;
     this.probe = new GraphProbePage(page);
-    this.toggleButton = page.getByRole('button', { name: TASK_MODE_LABEL, exact: true });
+    const modeGroup = page.getByRole('group', { name: MODE_LABEL, exact: true });
+
+    this.packagesButton = modeGroup.getByRole('button', { name: PACKAGES_MODE_LABEL, exact: true });
+    this.tasksButton = modeGroup.getByRole('button', { name: TASKS_MODE_LABEL, exact: true });
     this.prompt = page.getByText(EMPTY_TASKS_TEXT, { exact: true });
     this.bannerText = page.getByRole('status').and(page.locator('.graph-task-banner-text'));
     this.showAll = page.getByRole('button', { name: SHOW_ALL_TASKS_LABEL, exact: true });
@@ -66,12 +72,20 @@ export class GraphTask {
     await expect.poll(async (): Promise<boolean> => this.isOnCorner(id)).toBe(true);
   }
 
-  public async toggle(): Promise<void> {
-    await this.toggleButton.click();
+  /** Presses Tasks. */
+  public async enter(): Promise<void> {
+    await this.tasksButton.click();
   }
 
-  public async expectPressed(isPressed: boolean): Promise<void> {
-    await expect(this.toggleButton).toHaveAttribute('aria-pressed', String(isPressed));
+  /** Presses Packages. */
+  public async leave(): Promise<void> {
+    await this.packagesButton.click();
+  }
+
+  /** Exactly one mode button is pressed: Tasks in task mode, Packages in package mode. */
+  public async expectPressed(isTaskMode: boolean): Promise<void> {
+    await expect(this.packagesButton).toHaveAttribute('aria-pressed', String(!isTaskMode));
+    await expect(this.tasksButton).toHaveAttribute('aria-pressed', String(isTaskMode));
   }
 
   /** The prompt reads the exact copy and shows, or is hidden. */

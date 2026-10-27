@@ -70,6 +70,7 @@ const showGraphView = (page: PageElements, isFallback: boolean): void => {
   page.toolbar.hidden = false;
   page.body.hidden = false;
   showLayoutNotice(page, notice);
+  page.packagesMode.disabled = false;
   page.taskMode.disabled = false;
   page.controls.disabled = false;
   page.details.disabled = false;

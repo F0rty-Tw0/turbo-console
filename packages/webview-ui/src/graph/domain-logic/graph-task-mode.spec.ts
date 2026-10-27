@@ -213,6 +213,13 @@ describe('FEATURE: GraphTaskMode', () => {
       expect(rig.runs.count()).toBe(0);
       expect(rig.screen.showGraph).not.toHaveBeenCalled();
     });
+
+    it('WHEN a notice is shown THEN the notice line shows it and task mode stays off', () => {
+      mode.notice('Could not export the image');
+
+      expect(rig.panel.notice).toHaveBeenCalledExactlyOnceWith('Could not export the image');
+      expect(mode.isActive()).toBe(false);
+    });
   });
 
   describe('GIVEN package mode with nothing saved and a state received', () => {
@@ -220,10 +227,10 @@ describe('FEATURE: GraphTaskMode', () => {
       rig = rigOf(null);
       mode = new GraphTaskMode(rig.deps);
       mode.received(TASK_STATE_STUB, 7);
-      mode.toggle(8);
+      mode.enter(8);
     });
 
-    it('WHEN the toggle is pressed THEN task mode shows the prompt and lays nothing out', () => {
+    it('WHEN Tasks is pressed THEN task mode shows the prompt and lays nothing out', () => {
       expect(mode.isActive()).toBe(true);
       expect(rig.panel.enter).toHaveBeenCalledOnce();
       expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: true, hiddenCount: 0 });
@@ -244,8 +251,8 @@ describe('FEATURE: GraphTaskMode', () => {
       mode.received(TASK_STATE_STUB, 7);
     });
 
-    it('WHEN the toggle is pressed THEN the chain runs and lands with the saved task camera', async () => {
-      mode.toggle(8);
+    it('WHEN Tasks is pressed THEN the chain runs and lands with the saved task camera', async () => {
+      mode.enter(8);
       await rig.runs.settle(0, resultOf(KEY, POSITIONS));
 
       expect(rig.frames.start).toHaveBeenCalledExactlyOnceWith(8);
@@ -268,17 +275,17 @@ describe('FEATURE: GraphTaskMode', () => {
     });
   });
 
-  describe('GIVEN the chain placed after a toggle', () => {
+  describe('GIVEN the chain placed after Tasks was pressed', () => {
     beforeEach(async () => {
       rig = rigOf(taskSavedOf({}, 'packages'));
       mode = new GraphTaskMode(rig.deps);
       mode.received(TASK_STATE_STUB, 7);
-      mode.toggle(8);
+      mode.enter(8);
       await rig.runs.settle(0, resultOf(KEY, POSITIONS));
     });
 
-    it('WHEN the toggle is pressed again THEN the task camera is saved, the canvas emptied and package mode shown again', () => {
-      mode.toggle(9);
+    it('WHEN Packages is pressed THEN the task camera is saved, the canvas emptied and package mode shown again', () => {
+      mode.leave();
 
       expect(rig.modes.mode()).toBe('packages');
       expect(rig.modes.task()).toMatchObject({ layoutKey: KEY, ...TASK_CAMERA });
@@ -356,8 +363,8 @@ describe('FEATURE: GraphTaskMode', () => {
       expect(rig.modes.task()).toMatchObject({ chosen: ['web#build'], selected: null });
     });
 
-    it('WHEN the toggle is pressed THEN the task details exit', () => {
-      mode.toggle(9);
+    it('WHEN Packages is pressed THEN the task details exit', () => {
+      mode.leave();
 
       expect(rig.details.exit).toHaveBeenCalledOnce();
     });

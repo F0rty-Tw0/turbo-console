@@ -26,11 +26,19 @@ describe('FEATURE: task details elements', () => {
   });
 
   it('GIVEN buildTaskDetailsPanel WHEN built THEN it is the hidden aside #graph-task-details labelled Details', () => {
-    const panel = buildTaskDetailsPanel();
+    const { panel } = buildTaskDetailsPanel();
 
     expect(panel).toMatchObject({ tagName: 'ASIDE', id: TASK_DETAILS_ID, hidden: true });
     expect(panel.className).toBe('graph-details graph-task-details');
     expect(panel.getAttribute('aria-label')).toBe(DETAILS_LABEL);
+  });
+
+  it('GIVEN buildTaskDetailsPanel WHEN built THEN the aside holds only its empty content', () => {
+    const { panel, content } = buildTaskDetailsPanel();
+
+    expect(panel.children).toStrictEqual([content]);
+    expect(content.className).toBe('details-content');
+    expect(content.children).toStrictEqual([]);
   });
 
   it('GIVEN a task with a null command and isRunnable false THEN No command shows and Run is absent', () => {

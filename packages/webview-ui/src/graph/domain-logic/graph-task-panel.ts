@@ -1,10 +1,20 @@
 import type { PageElements } from '../common/graph-page.type.ts';
-import { PACKAGE_NOTICE_MS, TASK_MODE_CLASS } from '../common/graph-task.const.ts';
-import type { PanelToggleDeps, TaskPanel, TaskPanelActions, TaskPanelView, TaskPanelsOpen } from '../common/graph-task.type.ts';
+import { NOTICE_TEXT_DELAY_MS, PACKAGE_NOTICE_MS, TASK_MODE_CLASS } from '../common/graph-task.const.ts';
+import type {
+  PanelToggleDeps,
+  TaskPanel,
+  TaskPanelActions,
+  TaskPanelAsides,
+  TaskPanelView,
+  TaskPanelsOpen
+} from '../common/graph-task.type.ts';
 import type { TaskWidgets } from '../common/task-details.type.ts';
 import { tasksHiddenText } from '../utils/task-text.util.ts';
 
-type TaskPanelPage = Pick<PageElements, 'root' | 'taskMode' | 'taskScreen' | 'container' | 'status'>;
+type TaskPanelPage = Pick<
+  PageElements,
+  'root' | 'packagesMode' | 'taskMode' | 'taskScreen' | 'container' | 'status' | 'detailsBar' | 'detailsSummary'
+>;
 
 /** A task Controls or Details panel opened or closed: the canvas re-measures and the open state is saved. */
 export const savePanelToggle = (deps: PanelToggleDeps, panels: TaskPanelsOpen): void => {
@@ -20,20 +30,60 @@ export const saveDetailsToggle = (deps: PanelToggleDeps, widgets: Pick<TaskWidge
 };
 
 /**
+ * Writes the notice line: `null` hides and empties it. A hidden line is shown empty first and gets its text
+ * `NOTICE_TEXT_DELAY_MS` later, since a `role=status` line that appears with its text inside is not reliably announced;
+ * a line already shown takes the text at once. A newer notice or a hide cancels a pending write.
+ */
+const noticeLineOf = (notice: HTMLElement): ((text: string | null) => void) => {
+  let cancelWrite = (): void => undefined;
+
+  const showNotice = (text: string | null): void => {
+    cancelWrite();
+
+    if (text === null) {
+      notice.hidden = true;
+      notice.textContent = '';
+
+      return;
+    }
+
+    const wasHidden = notice.hidden;
+
+    notice.hidden = false;
+
+    if (!wasHidden) {
+      notice.textContent = text;
+
+      return;
+    }
+
+    const write = setTimeout((): void => {
+      notice.textContent = text;
+    }, NOTICE_TEXT_DELAY_MS);
+
+    cancelWrite = (): void => clearTimeout(write);
+  };
+
+  return showNotice;
+};
+
+/**
  * Task mode's page-level parts: the `task-mode` class on the page, which hides the package Controls panel and widgets,
- * the pressed toggle, the prompt, the cap banner and its Show all tasks button, and the notice line. Entering empties
- * the package selection's status line, which the package inspection writes again once its graph shows. Show all tasks
+ * the pressed mode button, the prompt, the cap banner and its Show all tasks button, and the notice line. Entering moves the
+ * Details bar into the task aside and empties the package selection's status line and summary, which the package
+ * inspection writes again once its graph shows; leaving moves the bar back into the package aside, once it exists. Show all tasks
  * hides itself with the banner, so it hands focus to the canvas. A notice shown in package mode, where no task render
  * replaces it, hides after `PACKAGE_NOTICE_MS`. The banner and its `role=status` text are written only when they change,
  * so a same-key state re-posted by the host does not make a screen reader announce the banner again.
  */
-export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions): TaskPanel => {
+export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions, asides: TaskPanelAsides): TaskPanel => {
   const { prompt, banner, bannerText, showAll, notice } = page.taskScreen;
   let isTaskMode = false;
   let cancelTimer = (): void => undefined;
   const setOn = (isOn: boolean): void => {
     isTaskMode = isOn;
     page.root.classList.toggle(TASK_MODE_CLASS, isOn);
+    page.packagesMode.setAttribute('aria-pressed', String(!isOn));
     page.taskMode.setAttribute('aria-pressed', String(isOn));
   };
   const show = (view: TaskPanelView): void => {
@@ -46,10 +96,7 @@ export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions): Tas
 
     if (bannerText.textContent !== text) bannerText.textContent = text;
   };
-  const showNotice = (text: string | null): void => {
-    notice.hidden = text === null;
-    notice.textContent = text ?? '';
-  };
+  const showNotice = noticeLineOf(notice);
   const noticeFor = (text: string | null): void => {
     cancelTimer();
     showNotice(text);
@@ -62,10 +109,13 @@ export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions): Tas
   };
   const enter = (): void => {
     setOn(true);
+    asides.task.prepend(page.detailsBar);
     page.status.textContent = '';
+    page.detailsSummary.textContent = '';
   };
   const exit = (): void => {
     setOn(false);
+    asides.package()?.prepend(page.detailsBar);
     prompt.hidden = true;
     banner.hidden = true;
     noticeFor(null);

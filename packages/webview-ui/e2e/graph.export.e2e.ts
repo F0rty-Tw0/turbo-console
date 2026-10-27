@@ -1,5 +1,5 @@
 import type { PngBounds } from './common/graph.type.ts';
-import { test } from './graph.fixture.ts';
+import { expect, test } from './graph-task.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { WIDE_TITLE_STUB } from './test/stubs/graph-export.stub.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
@@ -8,6 +8,10 @@ import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 import { EXPORT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const AC5 = { description: 'M4-6 AC5', type: 'requirement' };
+
+const U3A_S2 = { description: 'U3a review S2', type: 'requirement' };
+
+const EXPORT_FAILED_TEXT = 'Could not export the image';
 
 const ANY_SIDE: PngBounds = { minWidth: 1, maxWidth: 4096, minHeight: 1, maxHeight: 4096 };
 
@@ -157,6 +161,30 @@ test.describe('FEATURE: graph export image', () => {
 
       await test.step('THEN one exportImage is posted, a PNG with each side 1 to 4096 px', async (): Promise<void> =>
         graphExport.expectOnePng(ANY_SIDE));
+    }
+  );
+
+  test(
+    'GIVEN the target-like graph and failing canvas reads, WHEN Export image is pressed, THEN the notice line says so and the status line does not',
+    { annotation: U3A_S2 },
+    async ({ graphExport, graphHost, graphPage, graphProbe, graphTask }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the target-like state is sent', async (): Promise<void> => graphHost.sendState(targetLikeState()));
+
+      await test.step('AND the layout has finished', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
+
+      await test.step('AND canvas reads fail', async (): Promise<void> => graphExport.breakCanvasReads());
+
+      await test.step('AND Export image is pressed', async (): Promise<void> => graphExport.press());
+
+      await test.step('THEN the notice line shows the export failed', async (): Promise<void> =>
+        graphTask.expectNotice(EXPORT_FAILED_TEXT));
+
+      await test.step('AND the status line does not say it', async (): Promise<void> =>
+        expect(graphPage.status).not.toHaveText(EXPORT_FAILED_TEXT));
+
+      await test.step('AND nothing was posted', async (): Promise<void> => graphExport.expectNonePosted());
     }
   );
 });

@@ -176,8 +176,8 @@ test.describe('FEATURE: graph view state', () => {
         await graphTaskProbe.expectTaskIds(CHAIN);
       });
 
-      await test.step('AND Task mode is pressed to leave', async (): Promise<void> => {
-        await graphTask.toggle();
+      await test.step('AND Packages is pressed to leave', async (): Promise<void> => {
+        await graphTask.leave();
         await graphProbe.expectNodeIds(['app', 'lib', 'ui']);
       });
 

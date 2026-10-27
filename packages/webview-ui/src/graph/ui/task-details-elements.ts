@@ -1,7 +1,9 @@
+import { buildDetailsContent } from './details-elements.ts';
 import { actionButton, leadOf, lineOf, sectionOf } from './details-parts.ts';
 import { graphIcon } from './graph-icon.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
+import type { DetailsElements } from '../common/details-view.type.ts';
 import {
   DEPENDENCIES_LABEL,
   NO_COMMAND_TEXT,
@@ -14,7 +16,7 @@ import {
   TASK_EMPTY_LEAD_TEXT
 } from '../common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../common/graph.const.ts';
-import type { TaskDependencyButton, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
+import type { TaskDependencyButton, TaskDetailsEmpty, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
 
 /** A button whose `data-focus` key names its twin in the next view built. */
 const focusButton = (button: HTMLButtonElement, key: string): HTMLButtonElement => {
@@ -52,19 +54,23 @@ const dependencyButton = (task: GraphTask): TaskDependencyButton => {
   return dependency;
 };
 
-/** The empty, hidden task side panel; `GraphTaskDetails` fills it with one view at a time. */
-export const buildTaskDetailsPanel = (): HTMLElement => {
+/** The hidden task side panel and its empty content, as `buildDetails`; `GraphTaskDetails` fills the content with one view at a time. */
+export const buildTaskDetailsPanel = (): DetailsElements => {
   const panel = textElement('aside', 'graph-details graph-task-details', '');
+  const content = buildDetailsContent();
 
   panel.id = TASK_DETAILS_ID;
   panel.hidden = true;
   panel.setAttribute('aria-label', DETAILS_LABEL);
+  panel.append(content);
 
-  return panel;
+  const elements: DetailsElements = { panel, content };
+
+  return elements;
 };
 
 /** What the task side panel shows with no task selected: the Details heading and what selecting a task shows here. */
-export const buildTaskDetailsEmpty = (): HTMLElement => {
+export const buildTaskDetailsEmpty = (): TaskDetailsEmpty => {
   const root = textElement('section', 'details-view', '');
   const row = textElement('div', 'details-title', '');
   const heading = textElement('h2', 'details-heading', DETAILS_LABEL);
@@ -74,7 +80,9 @@ export const buildTaskDetailsEmpty = (): HTMLElement => {
   row.append(heading);
   root.append(row, lead);
 
-  return root;
+  const empty: TaskDetailsEmpty = { root, heading };
+
+  return empty;
 };
 
 const dependencySection = (dependencies: TaskDependencyButton[]): HTMLElement => {

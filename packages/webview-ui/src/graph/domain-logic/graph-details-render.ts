@@ -117,17 +117,28 @@ export const updateView = (
   }
 };
 
-/** The `data-name` of the element in `aside` that has focus, read before a list is rebuilt under it. */
-export const focusedNameOf = (aside: HTMLElement): string | null => {
+/** The `data-name` of the element in `content` that has focus, read before a list is rebuilt under it. */
+export const focusedNameOf = (content: HTMLElement): string | null => {
   const active = document.activeElement;
 
   if (!(active instanceof HTMLElement)) return null;
 
-  const isInside = aside.contains(active);
+  const isInside = content.contains(active);
 
   if (!isInside) return null;
 
   return active.dataset['name'] ?? null;
+};
+
+/**
+ * Whether a view built for `inspection` takes focus: focus is in `content`, or on Clear selection while nothing is shown,
+ * since the Details bar hides with it. Other focus in the bar stays.
+ */
+export const hadFocusOf = (content: HTMLElement, clear: HTMLElement, inspection: ShownInspection): boolean => {
+  const active = document.activeElement;
+  const isClearHiding = inspection.kind === 'none' && active === clear;
+
+  return content.contains(active) || isClearHiding;
 };
 
 /** The removed-focus rule: after a list was rebuilt, the item of the same name, else the heading, takes focus back. */

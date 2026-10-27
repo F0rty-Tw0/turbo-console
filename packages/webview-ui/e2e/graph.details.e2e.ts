@@ -1,5 +1,5 @@
 import type { PackageFacts, WidthChange } from './common/graph.type.ts';
-import { expect, test } from './graph.fixture.ts';
+import { expect, test } from './graph-task.fixture.ts';
 import { DETAILS_RECOUNT_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { packageInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
@@ -48,7 +48,7 @@ test.describe('FEATURE: graph details panel', () => {
   test(
     'GIVEN the details graph, the panel opens empty with nothing inspected under the CSP',
     { annotation: AC1 },
-    async ({ graphDetails, graphHost, graphPage }): Promise<void> => {
+    async ({ graphDetails, graphDetailsBar, graphHost, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
@@ -61,7 +61,8 @@ test.describe('FEATURE: graph details panel', () => {
 
       await test.step('AND nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
-      await test.step('AND Clear selection is disabled', async (): Promise<void> => graphPage.expectDisabled('Clear selection'));
+      await test.step('AND the Details bar is hidden and Clear selection disabled', async (): Promise<void> =>
+        graphDetailsBar.expectClearHidden());
 
       await test.step('AND no CSP violation was reported', async (): Promise<void> => graphPage.expectNoViolations());
 

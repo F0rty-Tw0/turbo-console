@@ -1,4 +1,4 @@
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { WEB_TO_CORE_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { packageInspection, pickingInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
@@ -158,7 +158,7 @@ test.describe('FEATURE: graph trace by keyboard', () => {
   test(
     'GIVEN web selected by keyboard, Escape on the graph clears it and Clear selection clears what a search selected',
     { annotation: AC1 },
-    async ({ graphDetails, graphHost, graphKeys, graphPage }): Promise<void> => {
+    async ({ graphDetails, graphDetailsBar, graphHost, graphKeys, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
@@ -183,13 +183,14 @@ test.describe('FEATURE: graph trace by keyboard', () => {
 
       await test.step('THEN web is inspected', async (): Promise<void> => graphDetails.expectInspection(packageInspection('web')));
 
-      await test.step('WHEN Shift+Tab reaches Clear selection', async (): Promise<void> => graphKeys.shiftTabTo('Clear selection'));
+      await test.step('WHEN Tab reaches Clear selection', async (): Promise<void> => graphKeys.tabTo('Clear selection'));
 
       await test.step('AND Enter is pressed', async (): Promise<void> => graphPage.pressKey('Enter'));
 
       await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
-      await test.step('AND Clear selection is disabled', async (): Promise<void> => graphPage.expectDisabled('Clear selection'));
+      await test.step('AND the Details bar is hidden and Clear selection disabled', async (): Promise<void> =>
+        graphDetailsBar.expectClearHidden());
     }
   );
 

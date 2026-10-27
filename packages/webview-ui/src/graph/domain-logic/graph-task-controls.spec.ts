@@ -27,7 +27,7 @@ const rigOf = (): ControlsRig => {
   const page = {
     body: document.createElement('div'),
     controls: document.createElement('button'),
-    taskMode: document.createElement('button')
+    packagesMode: document.createElement('button')
   };
   const actions: Mocked<TaskControlsActions> = { onSearch: vi.fn(), onDepth: vi.fn(), onPick: vi.fn(), onToggle: vi.fn() };
   const deps: TaskControlsDeps = { page, views, actions };
@@ -147,13 +147,13 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(rig.actions.onToggle).toHaveBeenCalledExactlyOnceWith(false);
     });
 
-    it('WHEN task mode is left with focus on a row THEN the panel hides, Controls points back and the toggle takes focus', () => {
+    it('WHEN task mode is left with focus on a row THEN the panel hides, Controls points back and Packages takes focus', () => {
       rig.rows[0]?.pick.focus();
       controls.exit();
 
       expect(rig.elements.panel.hidden).toBe(true);
       expect(rig.deps.page.controls.getAttribute('aria-controls')).toBe(CONTROLS_ID);
-      expect(document.activeElement).toBe(rig.deps.page.taskMode);
+      expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
 
     describe('WHEN web#build has focus and the rows are listed again', () => {
@@ -172,10 +172,10 @@ describe('FEATURE: GraphTaskControls', () => {
     });
 
     it('WHEN nothing in the list has focus and the rows are listed again THEN focus stays where it was', () => {
-      rig.deps.page.taskMode.focus();
+      rig.deps.page.packagesMode.focus();
       controls.setRows(WEB_TASKS);
 
-      expect(document.activeElement).toBe(rig.deps.page.taskMode);
+      expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
   });
 });

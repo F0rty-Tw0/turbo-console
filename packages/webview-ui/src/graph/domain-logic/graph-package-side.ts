@@ -17,7 +17,7 @@ import { groupingOf } from '../utils/layout-plan.util.ts';
 /**
  * The package graph: shows the host's states, hands a graph state to the layouts, which draw it and post its layout back.
  * It draws through a view parked while task mode owns the canvas, and its folder and key actions wait for package mode.
- * Leaving task mode from the Task mode toggle gives the toggle its focus back once the graph shows again.
+ * Leaving task mode from a mode button gives Packages the focus once the graph shows again.
  */
 export class GraphPackageSide {
   public readonly filtering: GraphFiltering;
@@ -30,7 +30,7 @@ export class GraphPackageSide {
   private readonly onMessage: () => void;
   private drawn: DrawnGraph | null = null;
   private opening: GraphViewState | null = null;
-  private isToggleFocusKept = false;
+  private isModeFocusKept = false;
 
   public constructor(deps: GraphControllerDeps, screenView: GraphView, hooks: PackageSideHooks) {
     const { frames, modes } = hooks;
@@ -107,9 +107,12 @@ export class GraphPackageSide {
     void this.guard(async (): Promise<void> => this.layouts.redraw(saved));
   }
 
-  /** Task mode is being left: a toggle with focus gets it back once the package graph shows, as the loading screen drops it. */
-  public keepToggleFocus(): void {
-    this.isToggleFocusKept = document.activeElement === this.deps.page.taskMode;
+  /** Task mode is being left: a mode button with focus hands it to Packages once the package graph shows, as the loading screen drops it. */
+  public keepModeFocus(): void {
+    const { activeElement } = document;
+    const { packagesMode, taskMode } = this.deps.page;
+
+    this.isModeFocusKept = activeElement === packagesMode || activeElement === taskMode;
   }
 
   /**
@@ -160,12 +163,12 @@ export class GraphPackageSide {
   private showScreenGraph(screen: LayoutScreen, isFallback: boolean): void {
     const { activeElement, body } = document;
     const isFocusLost = activeElement === null || activeElement === body;
-    const isRefocus = this.isToggleFocusKept && isFocusLost;
+    const isRefocus = this.isModeFocusKept && isFocusLost;
 
     screen.showGraph(isFallback);
-    this.isToggleFocusKept = false;
+    this.isModeFocusKept = false;
 
-    if (isRefocus) this.deps.page.taskMode.focus();
+    if (isRefocus) this.deps.page.packagesMode.focus();
   }
 
   private afterDraw(saved: GraphViewState | null): void {

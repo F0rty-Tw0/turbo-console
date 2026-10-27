@@ -1,11 +1,16 @@
 import { graphIcon } from './graph-icon.ts';
+import { iconButton } from './icon-button.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
-import type { ToolbarElements } from '../common/graph-page.type.ts';
-import { MODE_LABEL, TASK_MODE_LABEL, TASK_MODE_TITLE } from '../common/graph-task.const.ts';
 import {
-  CLEAR_LABEL,
-  CLEAR_TITLE,
+  MODE_LABEL,
+  PACKAGES_MODE_LABEL,
+  PACKAGES_MODE_TITLE,
+  TASKS_MODE_LABEL,
+  TASKS_MODE_TITLE
+} from '../common/graph-task.const.ts';
+import type { ToolbarElements } from '../common/graph-toolbar.type.ts';
+import {
   CONTROLS_ID,
   CONTROLS_LABEL,
   CONTROLS_TITLE,
@@ -24,7 +29,7 @@ import {
 } from '../common/graph.const.ts';
 
 /** A disabled toolbar button: its icon, then its label, whose text is the accessible name; `title` is its hover text. */
-const iconButton = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
+const labelledButton = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
   const button = textElement('button', 'text-button', '');
   const icon = graphIcon(id);
   const text = textElement('span', 'button-label', label);
@@ -37,9 +42,18 @@ const iconButton = (id: GraphIconId, label: string, title: string): HTMLButtonEl
   return button;
 };
 
+/** A disabled icon-only View action. */
+const viewAction = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
+  const button = iconButton(id, label, title);
+
+  button.disabled = true;
+
+  return button;
+};
+
 /** A collapsed panel toggle; the panel `aside#<panelId>` arrives with the first graph. */
 const panelToggle = (id: GraphIconId, label: string, title: string, panelId: string): HTMLButtonElement => {
-  const button = iconButton(id, label, title);
+  const button = labelledButton(id, label, title);
 
   button.setAttribute('aria-controls', panelId);
   button.setAttribute('aria-expanded', 'false');
@@ -47,11 +61,11 @@ const panelToggle = (id: GraphIconId, label: string, title: string, panelId: str
   return button;
 };
 
-/** An unpressed toggle button; task mode sets `aria-pressed` while it is on. */
-const pressToggle = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
-  const button = iconButton(id, label, title);
+/** A toggle button with its `aria-pressed` set; the task panel flips it as the mode changes. */
+const pressToggle = (id: GraphIconId, label: string, title: string, isPressed: boolean): HTMLButtonElement => {
+  const button = labelledButton(id, label, title);
 
-  button.setAttribute('aria-pressed', 'false');
+  button.setAttribute('aria-pressed', String(isPressed));
 
   return button;
 };
@@ -86,8 +100,9 @@ const separator = (): HTMLElement => {
   return line;
 };
 
+/** The selection's live region: read out, never drawn; the Details bar shows the same text. */
 const statusLine = (): HTMLElement => {
-  const status = textElement('p', 'graph-status', '');
+  const status = textElement('p', 'graph-status visually-hidden', '');
 
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
@@ -96,31 +111,41 @@ const statusLine = (): HTMLElement => {
 };
 
 /**
- * The toolbar in its pre-state, every button disabled: the Mode group (Task mode), the Panels group (Controls, Details),
- * the View group (Fit, Re-layout, Export image), Clear selection, then the status line. DOM order is the Tab order.
+ * The toolbar in its pre-state, every button disabled: the Mode group (Packages, Tasks), the Panels group (Controls, Details),
+ * the View group (Fit, Re-layout, Export image), then the hidden status line. DOM order is the Tab order.
  */
 export const buildToolbar = (): ToolbarElements => {
-  const taskMode = pressToggle('tasklist', TASK_MODE_LABEL, TASK_MODE_TITLE);
+  const packagesMode = pressToggle('type-hierarchy', PACKAGES_MODE_LABEL, PACKAGES_MODE_TITLE, true);
+  const taskMode = pressToggle('tasklist', TASKS_MODE_LABEL, TASKS_MODE_TITLE, false);
   const controls = panelToggle('layout-sidebar-left', CONTROLS_LABEL, CONTROLS_TITLE, CONTROLS_ID);
   const filtersOn = filtersOnMark();
   const details = panelToggle('layout-sidebar-right', DETAILS_LABEL, DETAILS_TITLE, DETAILS_ID);
-  const fit = iconButton('screen-full', FIT_LABEL, FIT_TITLE);
-  const relayout = iconButton('refresh', RELAYOUT_LABEL, RELAYOUT_TITLE);
-  const exportImage = iconButton('desktop-download', EXPORT_LABEL, EXPORT_TITLE);
-  const clear = iconButton('close', CLEAR_LABEL, CLEAR_TITLE);
+  const fit = viewAction('screen-full', FIT_LABEL, FIT_TITLE);
+  const relayout = viewAction('refresh', RELAYOUT_LABEL, RELAYOUT_TITLE);
+  const exportImage = viewAction('desktop-download', EXPORT_LABEL, EXPORT_TITLE);
   const status = statusLine();
-  const mode = toolbarGroup(MODE_LABEL, taskMode);
+  const mode = toolbarGroup(MODE_LABEL, packagesMode, taskMode);
   const modeEnd = separator();
   const panels = toolbarGroup(PANELS_LABEL, controls, details);
   const panelsEnd = separator();
   const view = toolbarGroup(VIEW_LABEL, fit, relayout, exportImage);
-  const viewEnd = separator();
   const toolbar = textElement('header', 'graph-toolbar', '');
 
   controls.append(filtersOn);
-  toolbar.append(mode, modeEnd, panels, panelsEnd, view, viewEnd, clear, status);
+  toolbar.append(mode, modeEnd, panels, panelsEnd, view, status);
 
-  const elements: ToolbarElements = { toolbar, taskMode, controls, details, fit, relayout, exportImage, clear, status, filtersOn };
+  const elements: ToolbarElements = {
+    toolbar,
+    packagesMode,
+    taskMode,
+    controls,
+    details,
+    fit,
+    relayout,
+    exportImage,
+    status,
+    filtersOn
+  };
 
   return elements;
 };

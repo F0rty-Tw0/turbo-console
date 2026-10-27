@@ -3,9 +3,8 @@ import { join } from 'node:path';
 import type { WorkerStub } from './graph.type.ts';
 import { HELD_WORKER } from './held-worker.const.ts';
 import { COUNTERS } from './worker-counters.const.ts';
-import { TASK_MODE_LABEL } from '../../src/graph/common/graph-task.const.ts';
+import { PACKAGES_MODE_LABEL, TASKS_MODE_LABEL } from '../../src/graph/common/graph-task.const.ts';
 import {
-  CLEAR_LABEL,
   CONTROLS_LABEL,
   DETAILS_LABEL,
   EXPORT_LABEL,
@@ -16,8 +15,10 @@ import {
 
 export const GRAPH_DIST_DIR = join(import.meta.dirname, '../../dist/graph');
 
+const MODE_LABELS = [PACKAGES_MODE_LABEL, TASKS_MODE_LABEL];
+
 /** Every toolbar button's accessible name, in DOM order. */
-export const TOOLBAR_LABELS = [TASK_MODE_LABEL, CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, EXPORT_LABEL, CLEAR_LABEL];
+export const TOOLBAR_LABELS = [...MODE_LABELS, CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, EXPORT_LABEL];
 
 /** How far from an edge's drawn segment a click must land to miss it, in CSS pixels. */
 export const EDGE_CLEARANCE_PX = 14;

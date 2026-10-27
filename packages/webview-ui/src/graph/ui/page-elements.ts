@@ -1,3 +1,4 @@
+import { buildDetailsBar } from './details-bar.ts';
 import { buildFlowCanvas } from './flow-canvas.ts';
 import { trackPointerFocus } from './pointer-focus.ts';
 import { buildToolbar } from './toolbar-elements.ts';
@@ -77,11 +78,12 @@ const graphBody = (container: HTMLElement, flow: HTMLCanvasElement, widgets: HTM
 
 /**
  * The page in its pre-state: toolbar and the body with the empty container shown, every toolbar button disabled, the
- * notice, task mode's lines and the message block hidden. DOM order is the Tab order: toolbar, notice, task notice,
- * cap banner, prompt, message, then the body.
+ * notice, task mode's lines, the message block and the Details bar hidden. DOM order is the Tab order: toolbar, notice,
+ * task notice, cap banner, prompt, message, then the body. The Details bar joins the DOM with the first Details aside.
  */
 export const buildPage = (): PageElements => {
   const tools = buildToolbar();
+  const { bar, summary, clear } = buildDetailsBar();
   const retry = textButton(RETRY_LABEL);
   const noticeText = textElement('p', 'graph-notice-text', FALLBACK_NOTICE_TEXT);
   const notice = textBlock('graph-notice', noticeText, retry);
@@ -99,6 +101,9 @@ export const buildPage = (): PageElements => {
 
   const page: PageElements = {
     ...tools,
+    clear,
+    detailsBar: bar,
+    detailsSummary: summary,
     root,
     notice,
     noticeText,

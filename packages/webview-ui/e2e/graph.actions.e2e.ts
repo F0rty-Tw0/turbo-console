@@ -1,5 +1,5 @@
 import type { ElementRect, ViewportPoint } from './common/playwright.type.ts';
-import { expect, test } from './graph.fixture.ts';
+import { expect, test } from './graph-task.fixture.ts';
 import { DETAILS_NAMES_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { without } from './test/utils/graph-controls.spec.util.ts';
 import { emptySpotOf, nodeAt } from './test/utils/graph-geometry.spec.util.ts';
@@ -81,7 +81,7 @@ test.describe('FEATURE: graph details actions', () => {
   test(
     'GIVEN a tapped package, Exclude unticks it, empties the panel and puts focus on its heading',
     { annotation: AC1 },
-    async ({ graphCamera, graphCanvas, graphDetails, graphHost, graphList, graphPage }): Promise<void> => {
+    async ({ graphCamera, graphCanvas, graphDetails, graphDetailsBar, graphHost, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
@@ -103,7 +103,8 @@ test.describe('FEATURE: graph details actions', () => {
 
       await test.step('AND the status line is empty', async (): Promise<void> => graphPage.expectStatus(''));
 
-      await test.step('AND Clear selection is disabled', async (): Promise<void> => graphPage.expectDisabled('Clear selection'));
+      await test.step('AND the Details bar is hidden and Clear selection disabled', async (): Promise<void> =>
+        graphDetailsBar.expectClearHidden());
 
       await test.step('WHEN the web row is ticked again', async (): Promise<void> => graphList.toggleRow('web'));
 

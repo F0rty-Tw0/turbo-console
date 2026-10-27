@@ -71,10 +71,10 @@ export type TaskPanelView = {
   readonly hiddenCount: number;
 };
 
-/** The page-level task mode parts: the `task-mode` class, the pressed toggle, the prompt, the banner and the notice. */
+/** The page-level task mode parts: the `task-mode` class, the pressed mode button, the prompt, the banner and the notice. */
 export type TaskPanel = {
   readonly enter: () => void;
-  /** Leaves package mode's look back: no class, the toggle unpressed, every task line hidden. */
+  /** Leaves package mode's look back: no class, Packages pressed, every task line hidden. */
   readonly exit: () => void;
   readonly show: (view: TaskPanelView) => void;
   /** Shows `text` in the notice line, or hides it for `null`; one shown in package mode hides after `PACKAGE_NOTICE_MS`. */
@@ -83,6 +83,12 @@ export type TaskPanel = {
 
 export type TaskPanelActions = {
   readonly onShowAll: () => void;
+};
+
+/** The two Details asides the Details bar moves between; the package one is built with the first package graph, so it may not exist yet. */
+export type TaskPanelAsides = {
+  readonly package: () => HTMLElement | null;
+  readonly task: HTMLElement;
 };
 
 export type TaskModeDeps = {

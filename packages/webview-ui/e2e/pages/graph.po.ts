@@ -34,7 +34,7 @@ export class GraphPage {
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
     this.loading = page.getByText(LOADING_TEXT, { exact: true });
     this.notice = page.getByText(FALLBACK_NOTICE_TEXT);
-    this.status = page.getByRole('status').filter({ hasNotText: /^Showing/ });
+    this.status = page.getByRole('status').and(page.locator('.graph-status'));
   }
 
   /** Opens the real graph page under the graph CSP; every option is applied before the page loads. */

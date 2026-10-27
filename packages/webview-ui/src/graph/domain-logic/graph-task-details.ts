@@ -1,3 +1,4 @@
+import { showDetailsBar } from './details-bar-shown.ts';
 import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskDetailsDeps, TaskDetailsModel, TaskDetailsView, TaskRunAction } from '../common/task-details.type.ts';
@@ -30,14 +31,19 @@ const refocus = (view: TaskDetailsView, key: string): void => {
 export class GraphTaskDetails {
   private readonly deps: TaskDetailsDeps;
   private readonly panel: HTMLElement;
+  /** The panel's `div.details-content`, after the Details bar while task mode holds it; each view replaces its child. */
+  private readonly content: HTMLElement;
   private model: TaskDetailsModel | null = null;
   private isActive = false;
   private isOpen = true;
 
   public constructor(deps: TaskDetailsDeps) {
+    const { panel, content } = deps.views.panel();
+
     this.deps = deps;
-    this.panel = deps.views.panel();
-    this.panel.replaceChildren(deps.views.empty());
+    this.panel = panel;
+    this.content = content;
+    content.replaceChildren(deps.views.empty().root);
     deps.page.details.addEventListener('click', (): void => this.toggleOpen());
     deps.page.clear.addEventListener('click', (): void => this.cleared());
   }
@@ -61,20 +67,28 @@ export class GraphTaskDetails {
     this.panel.hidden = true;
     this.deps.page.details.setAttribute('aria-controls', DETAILS_ID);
 
-    if (hadFocus) this.deps.page.taskMode.focus();
+    if (hadFocus) this.deps.page.packagesMode.focus();
   }
 
-  /** Shows `model`, or the empty lead; focus inside the panel moves to the new view's twin of the focused button. */
+  /**
+   * Shows `model`, or the empty lead; focus in the content moves to the new view's twin of the focused button. The empty
+   * view's heading takes focus from the content, or from Clear selection, which hides with it; other focus in the Details
+   * bar stays.
+   */
   public show(model: TaskDetailsModel | null): void {
     const key = this.focusedKey();
+    const isClearHiding = model === null && document.activeElement === this.deps.page.clear;
 
     this.model = model;
-    this.renderClear();
+    this.renderBar();
 
     if (model === null) {
-      this.panel.replaceChildren(this.deps.views.empty());
+      const empty = this.deps.views.empty();
+      const isRefocused = key !== null || isClearHiding;
 
-      if (key !== null) this.deps.page.details.focus();
+      this.content.replaceChildren(empty.root);
+
+      if (isRefocused) empty.heading.focus();
 
       return;
     }
@@ -82,7 +96,7 @@ export class GraphTaskDetails {
     const view = this.deps.views.view(model);
 
     this.wire(view, model);
-    this.panel.replaceChildren(view.root);
+    this.content.replaceChildren(view.root);
 
     if (key !== null) refocus(view, key);
   }
@@ -120,7 +134,7 @@ export class GraphTaskDetails {
 
   private focusedKey(): string | null {
     const active = document.activeElement;
-    const isInside = this.panel.contains(active);
+    const isInside = this.content.contains(active);
     const key = active?.getAttribute('data-focus') ?? HEADING_KEY;
 
     return isInside ? key : null;
@@ -141,10 +155,10 @@ export class GraphTaskDetails {
   private render(): void {
     this.panel.hidden = !this.isOpen;
     this.deps.page.details.setAttribute('aria-expanded', String(this.isOpen));
-    this.renderClear();
+    this.renderBar();
   }
 
-  private renderClear(): void {
-    if (this.isActive) this.deps.page.clear.disabled = this.model === null;
+  private renderBar(): void {
+    if (this.isActive) showDetailsBar(this.deps.page, this.model !== null);
   }
 }
