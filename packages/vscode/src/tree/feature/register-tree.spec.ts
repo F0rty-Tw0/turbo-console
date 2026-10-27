@@ -72,6 +72,13 @@ vi.mock('vscode', () => {
   return module;
 });
 
+/** `watchIcons` has its own spec; here the editor's extension host and icon theme are out of reach. */
+vi.mock('./icons-setting.ts', () => {
+  const module = { currentIconsSetting: vi.fn(() => 'auto'), watchIcons: vi.fn() };
+
+  return module;
+});
+
 describe('FEATURE: registerTree scope toggle', () => {
   let calls: string[];
   let disposed: string[];

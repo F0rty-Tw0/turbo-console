@@ -26,6 +26,9 @@ export type TreeMode = 'folders' | 'list';
 /** Whether folder and package rows take the file icon theme's folder icon, or Turbo Console's own codicons. */
 export type IconsMode = 'theme' | 'builtin';
 
+/** The `turboConsole.icons` setting: `auto` is `theme` when the file icon theme has folder icons, else `builtin`. */
+export type IconsSetting = 'auto' | 'theme' | 'builtin';
+
 export type RowKind = 'root' | 'dir' | 'pkg' | 'scripts' | 'task' | 'msg';
 
 type Collapsible = 'none' | 'collapsed' | 'expanded';
