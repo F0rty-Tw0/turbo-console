@@ -9,7 +9,7 @@ import type { GraphViewState } from '../../bridge/common/graph-view-state.type.t
 import { LAYOUT_FAILED_TEXT } from '../common/graph.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
-import { SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import { LARGE_STATE_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { isGroupedGraph } from '../test/utils/graph-layouts.spec.util.ts';
 import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
@@ -36,17 +36,6 @@ const PACKAGES: GraphPackage[] = STATE_STUB.packages.map(countOf);
 
 /** `h1` again, every package with three tasks more. */
 const RECOUNTED: GraphReady = { ...STATE_STUB, packages: PACKAGES };
-
-const appOf = (_slot: unknown, index: number): GraphPackage => {
-  const pkg: GraphPackage = { name: `app${index}`, path: `apps/app${index}`, tags: [], taskCount: 0 };
-
-  return pkg;
-};
-
-const LARGE_PACKAGES: GraphPackage[] = Array.from({ length: 301 }, appOf);
-
-/** 301 packages in `apps` with no layout cached: a large graph. */
-const LARGE: GraphReady = { ...STATE_STUB, packages: LARGE_PACKAGES, edges: [], positions: null };
 
 /**
  * A `GraphPackageSide` over the mocked deps, its view modes starting at `saved` (with a grouping choice unless
@@ -162,9 +151,16 @@ describe('FEATURE: GraphPackageSide', () => {
 
   it('GIVEN a flat view saved before folders existed WHEN a large graph arrives THEN the grouped layout runs', () => {
     rig = rigOf(SAVED_FLAT_STUB, false);
-    rig.side.show(LARGE, 1);
+    rig.side.show(LARGE_STATE_STUB, 1);
 
     expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(true);
+  });
+
+  it('GIVEN a flat view saved with its grouping choice WHEN a large graph arrives THEN the flat layout runs', () => {
+    rig = rigOf(SAVED_FLAT_STUB);
+    rig.side.show(LARGE_STATE_STUB, 1);
+
+    expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(false);
   });
 });
 
