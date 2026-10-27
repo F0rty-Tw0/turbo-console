@@ -18,6 +18,9 @@ export const STATE_CLASSES = STATE_CLASS_NAMES.join(' ');
 /** The class `GraphView.setGhosts` gives a trace's hidden path packages and their path links. */
 export const GHOST_CLASS = 'ghost';
 
+/** The class `GraphView.setFocusTarget` gives the focused package, whose label the stylesheet draws bold. */
+export const FOCUS_TARGET_CLASS = 'focus-target';
+
 export const VIEW_STATE_DEBOUNCE_MS = 250;
 
 /** Two taps on the same package this close together are a double tap; Cytoscape's own `dbltap` window. */

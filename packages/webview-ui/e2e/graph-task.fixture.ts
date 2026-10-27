@@ -6,6 +6,7 @@ import { GraphDepthHints } from './pages/graph-depth-hints.po.ts';
 import { GraphFlowPage } from './pages/graph-flow.po.ts';
 import { GraphHover } from './pages/graph-hover.po.ts';
 import { GraphPointer } from './pages/graph-pointer.po.ts';
+import { GraphSelection } from './pages/graph-selection.po.ts';
 import { GraphTaskDetails } from './pages/graph-task-details.po.ts';
 import { GraphTaskGlyphs } from './pages/graph-task-glyphs.po.ts';
 import { GraphTaskNarrow } from './pages/graph-task-narrow.po.ts';
@@ -41,6 +42,7 @@ type GraphTaskFixtures = {
   readonly graphGlyphs: GraphTaskGlyphs;
   readonly graphHover: GraphHover;
   readonly graphPointer: GraphPointer;
+  readonly graphSelection: GraphSelection;
   readonly graphTask: GraphTask;
   readonly graphTaskDetails: GraphTaskDetails;
   readonly graphTaskNarrow: GraphTaskNarrow;
@@ -75,6 +77,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   },
   graphPointer: async ({ page }, use): Promise<void> => {
     await use(new GraphPointer(page));
+  },
+  graphSelection: async ({ page }, use): Promise<void> => {
+    await use(new GraphSelection(page));
   },
   graphTask: async ({ page }, use): Promise<void> => {
     await use(new GraphTask(page));

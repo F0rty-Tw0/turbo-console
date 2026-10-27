@@ -33,7 +33,9 @@ export const THEME_VAR_NAMES = [
   '--vscode-contrastBorder',
   '--vscode-widget-border',
   '--vscode-descriptionForeground',
-  '--vscode-focusBorder'
+  '--vscode-focusBorder',
+  '--vscode-list-activeSelectionBackground',
+  '--vscode-list-activeSelectionForeground'
 ];
 
 /** Init script: opts the page into exposing `window.__tcGraphProbe`. */

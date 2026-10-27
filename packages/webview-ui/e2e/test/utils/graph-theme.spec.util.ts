@@ -1,4 +1,4 @@
-import type { ThemeSwitch } from '../../common/graph.type.ts';
+import type { ThemeSwitch } from '../../common/graph-theme.type.ts';
 
 /**
  * Runs in the page through `evaluate`, so it reads only its argument. Clears every theme variable, sets the theme's

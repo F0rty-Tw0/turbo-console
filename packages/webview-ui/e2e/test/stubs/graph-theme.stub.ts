@@ -1,4 +1,4 @@
-import type { ExpectedThemeColors, ThemeStub } from '../../common/graph.type.ts';
+import type { ExpectedThemeColors, ThemeStub } from '../../common/graph-theme.type.ts';
 
 const DARK_VARS: Readonly<Record<string, string>> = {
   '--vscode-editor-background': '#1f1f1f',
@@ -14,7 +14,9 @@ const DARK_VARS: Readonly<Record<string, string>> = {
   '--vscode-errorForeground': '#f85149',
   '--vscode-charts-purple': '#b180d7',
   '--vscode-badge-background': '#616161',
-  '--vscode-badge-foreground': '#f8f8f8'
+  '--vscode-badge-foreground': '#f8f8f8',
+  '--vscode-list-activeSelectionBackground': '#04395e',
+  '--vscode-list-activeSelectionForeground': '#ffffff'
 };
 
 const DARK_COLORS: ExpectedThemeColors = {
@@ -22,7 +24,8 @@ const DARK_COLORS: ExpectedThemeColors = {
   label: 'rgb(204, 204, 204)',
   frame: 'rgb(43, 43, 43)',
   edge: 'rgb(157, 157, 157)',
-  selected: 'rgb(0, 120, 212)'
+  selected: 'rgb(0, 120, 212)',
+  selectedFill: 'rgb(4, 57, 94)'
 };
 
 export const THEME_DARK_STUB: ThemeStub = { bodyClass: 'vscode-dark', vars: DARK_VARS, expected: DARK_COLORS };
@@ -41,7 +44,9 @@ const LIGHT_VARS: Readonly<Record<string, string>> = {
   '--vscode-errorForeground': '#f85149',
   '--vscode-charts-purple': '#652d90',
   '--vscode-badge-background': '#cccccc',
-  '--vscode-badge-foreground': '#3b3b3b'
+  '--vscode-badge-foreground': '#3b3b3b',
+  '--vscode-list-activeSelectionBackground': '#e8e8e8',
+  '--vscode-list-activeSelectionForeground': '#000000'
 };
 
 const LIGHT_COLORS: ExpectedThemeColors = {
@@ -49,12 +54,13 @@ const LIGHT_COLORS: ExpectedThemeColors = {
   label: 'rgb(59, 59, 59)',
   frame: 'rgb(229, 229, 229)',
   edge: 'rgb(59, 59, 59)',
-  selected: 'rgb(0, 95, 184)'
+  selected: 'rgb(0, 95, 184)',
+  selectedFill: 'rgb(232, 232, 232)'
 };
 
 export const THEME_LIGHT_STUB: ThemeStub = { bodyClass: 'vscode-light', vars: LIGHT_VARS, expected: LIGHT_COLORS };
 
-/** `--vscode-panel-border` is set too, and must lose to `--vscode-contrastBorder`. */
+/** `--vscode-panel-border` is set too, and must lose to `--vscode-contrastBorder`; no list selection colours, as VS Code's High Contrast sets none. */
 const HC_VARS: Readonly<Record<string, string>> = {
   '--vscode-editor-background': '#000000',
   '--vscode-foreground': '#ffffff',
@@ -77,7 +83,8 @@ const HC_COLORS: ExpectedThemeColors = {
   label: 'rgb(255, 255, 255)',
   frame: 'rgb(111, 195, 223)',
   edge: 'rgb(255, 255, 255)',
-  selected: 'rgb(243, 133, 24)'
+  selected: 'rgb(243, 133, 24)',
+  selectedFill: 'rgb(0, 0, 0)'
 };
 
 export const THEME_HC_STUB: ThemeStub = { bodyClass: 'vscode-high-contrast', vars: HC_VARS, expected: HC_COLORS };

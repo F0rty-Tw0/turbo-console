@@ -21,33 +21,10 @@ export type GraphOptions = {
   readonly probe?: boolean;
 };
 
-type CssVars = Readonly<Record<string, string>>;
-
-/** Cytoscape-resolved colours as `rgb(r, g, b)`; compared with whitespace stripped. */
-export type ExpectedThemeColors = {
-  readonly fill: string;
-  readonly label: string;
-  readonly frame: string;
-  readonly edge: string;
-  readonly selected: string;
-};
-
 /** A task node's run outline: its width and its colour as `rgb(r, g, b)`. */
 export type RunOutline = {
   readonly width: number;
   readonly colour: string;
-};
-
-export type ThemeStub = {
-  readonly bodyClass: string;
-  readonly vars: CssVars;
-  readonly expected: ExpectedThemeColors;
-};
-
-/** The names the in-page theme switch clears, then the variables and body class it sets. */
-export type ThemeSwitch = {
-  readonly names: string[];
-  readonly theme: ThemeStub;
 };
 
 /** What a viewer sees of the graph: how far it is zoomed and where it is panned. */
@@ -204,6 +181,8 @@ export type ContrastInput = {
 export type ColourInkInput = {
   readonly png: string;
   readonly colour: string;
+  /** How far each channel may be from `colour`; 24 when unset. */
+  readonly tolerance?: number;
 };
 
 /** The hash and the sorted package names of a `positions` message; `hash` is `undefined` before one is posted. */
