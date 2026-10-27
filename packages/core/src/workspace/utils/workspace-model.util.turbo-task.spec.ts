@@ -154,6 +154,21 @@ describe('FEATURE: workspace model turbo tasks', () => {
     });
   });
 
+  describe('GIVEN a single-package source whose root config also keys //#dev and //#format, which turbo rejects there', () => {
+    const tasks: Record<string, TaskPresence> = { build: 'defined', dev: 'defined', '//#dev': 'defined', '//#format': 'defined' };
+    const persistent: Record<string, boolean> = { dev: false, '//#dev': true };
+    const config = configOf('turbo.json', tasks, []);
+    const model = buildSingle(ROOT_PACKAGE, [{ ...config, persistent }]);
+
+    it('WHEN built THEN format, keyed only as //#format, stays a script', () => {
+      expect(isTurboTaskOf(model, '//#format')).toBe(false);
+    });
+
+    it('WHEN built THEN dev reads persistent from the bare dev key, not from //#dev', () => {
+      expect(persistentOf(model, '//#dev')).toBe(false);
+    });
+  });
+
   describe('GIVEN a single-package source whose root config did not parse', () => {
     const model = buildSingle(ROOT_PACKAGE, [configError('turbo.json')]);
 

@@ -45,11 +45,13 @@ const entryEffectOf = (config: TurboConfigOk, key: string): FieldEffect => {
 
 /**
  * Spec §4.2 step 3: the target's `<pkg>#<task>` root key replaces the bare key as a whole; `//` reads only its own,
- * unless it is the only package (`singlePackage`), where the bare key applies to it too.
+ * unless it is the only package (`singlePackage`), where only the bare key applies: turbo 2.11.7 rejects
+ * `<pkg>#<task>` keys there.
  */
 const rootEffectOf = (root: TurboConfigOk, packageName: string, task: string, singlePackage: boolean): FieldEffect => {
   const ownKey = `${packageName}#${task}`;
-  const hasOwnKey = Object.hasOwn(root.tasks, ownKey);
+  const isKeyed = Object.hasOwn(root.tasks, ownKey);
+  const hasOwnKey = !singlePackage && isKeyed;
 
   if (hasOwnKey) return entryEffectOf(root, ownKey);
 
