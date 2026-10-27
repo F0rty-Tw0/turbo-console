@@ -45,7 +45,8 @@ export class GraphPointer extends GraphHover {
   /**
    * Presses and releases the mouse where the pointer rests, keeping the largest channel change between a shot of the
    * square around it from before the press and one from while the button is held, both of a quiet canvas, and the
-   * renders after the press's own frame. Shots past the noise are attached.
+   * renders after the press's own frame. Shots past the noise are attached; throws when the canvas drew during the
+   * first shot.
    */
   public async press(): Promise<void> {
     const point = this.restingPoint();
@@ -54,7 +55,11 @@ export class GraphPointer extends GraphHover {
     await this.waitForQuietCanvas();
     await this.page.evaluate(NEXT_FRAME);
 
+    const rendersBefore = await this.renderCount();
     const before = await this.page.screenshot({ clip });
+    const rendersAtDown = await this.renderCount();
+
+    if (rendersAtDown !== rendersBefore) throw new Error('graph e2e: the canvas drew during the shot before a press');
 
     await this.page.mouse.down();
 

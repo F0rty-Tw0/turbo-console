@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe under this exact name on window */
-
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
@@ -12,6 +10,7 @@ import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { edgeMidpointOf, emptySpotOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { recordHoverCpu } from '../test/utils/graph-hover-cpu.spec.util.ts';
+import { rendersSoFar } from '../test/utils/graph-quiet-canvas.spec.util.ts';
 import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
 
 /** The span one step stands for when `hoverFlowCpu` sizes a run; a step takes about two frames, so it is not a frame. */
@@ -165,9 +164,9 @@ export class GraphHover {
     this.point = point;
   }
 
-  /** The Cytoscape `render` events since the page opened. */
+  /** The Cytoscape `render` events since the page opened; throws when the page exposes no probe. */
   protected async renderCount(): Promise<number> {
-    return this.page.evaluate((): number => window.__tcGraphProbe?.renderCount() ?? 0);
+    return this.page.evaluate(rendersSoFar);
   }
 
   private async nodeOf(id: string): Promise<ProbeNode> {
