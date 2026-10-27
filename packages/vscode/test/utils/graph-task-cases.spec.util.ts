@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import * as vscode from 'vscode';
 
 import { packageStates } from './details-posted.spec.util.ts';
-import { lastGraphState, postedShowTasks } from './graph-posted.spec.util.ts';
+import { lastGraphState, postedShowPackages, postedShowTasks } from './graph-posted.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { GraphPanelInfo, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { OPEN_COMMAND } from '../common/details.const.ts';
-import { TASK_ID } from '../common/graph.const.ts';
+import { FOCUS_COMMAND, TASK_ID } from '../common/graph.const.ts';
 import type { GraphScene } from '../common/graph.type.ts';
 
 const showTasksCountOf = (api: TurboConsoleApi, root: string): number => {
@@ -51,5 +51,28 @@ export const detailsTaskGraphCase = async (scene: GraphScene): Promise<void> => 
 
     assert.deepEqual(postedShowTasks(api, root), { type: 'showTasks', taskIds: [TASK_ID] });
     assert.ok(api.graph.panels().some(isGraphOfRoot), 'no graph panel for the root');
+  });
+};
+
+/** `Focus on graph` in the Details header asks that root's graph panel to show that package. */
+export const detailsFocusGraphCase = async (scene: GraphScene): Promise<void> => {
+  const { api, root } = scene;
+
+  await step('L13-10: Focus on graph in the Details header posts showPackage for that package', async () => {
+    const packageName = taskPackageOf(scene);
+    const before = postedShowPackages(api, root).length;
+
+    await vscode.commands.executeCommand(OPEN_COMMAND, { kind: 'pkg', root, packageName });
+    await waitFor('package state', () => packageStates(api, root, packageName).length > 0);
+    await api.details.whenIdle(root, packageName);
+    await api.details.receive(root, packageName, { type: 'focusInGraph' });
+    await waitFor('showPackage post', () => postedShowPackages(api, root).length > before);
+
+    const isGraphOfRoot = (panel: GraphPanelInfo): boolean => panel.root === root;
+    const commands = await vscode.commands.getCommands(true);
+
+    assert.deepEqual(postedShowPackages(api, root).at(-1), { type: 'showPackage', name: packageName });
+    assert.ok(api.graph.panels().some(isGraphOfRoot), 'no graph panel for the root');
+    assert.ok(commands.includes(FOCUS_COMMAND), `${FOCUS_COMMAND} is not registered`);
   });
 };
