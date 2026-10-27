@@ -1,8 +1,10 @@
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ConfigurationChangeEvent, Disposable } from 'vscode';
 
 import { watchIcons } from './icons-setting.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import type { IconThemeProbe } from '../common/icon-theme.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
@@ -64,8 +66,8 @@ describe('FEATURE: watchIcons', () => {
   let tree: PackagesTreeApi;
   let output: Output;
   let subscriptions: Disposable[];
-  let has: ReturnType<typeof vi.fn<IconThemeProbe['has']>>;
-  let clear: ReturnType<typeof vi.fn<IconThemeProbe['clear']>>;
+  let has: Mock<IconThemeProbe['has']>;
+  let clear: Mock<IconThemeProbe['clear']>;
 
   const fireSettings = (changed: string): void => {
     const listener = editor.onDidChangeConfiguration.mock.calls.at(0)?.[0];
@@ -91,7 +93,7 @@ describe('FEATURE: watchIcons', () => {
     editor.onDidChangeExtensions.mockReset();
     editor.onDidChangeExtensions.mockImplementation(disposableFake);
     tree = packagesTreeApiMock();
-    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    output = outputMock();
     subscriptions = [];
     has = vi.fn<IconThemeProbe['has']>(async () => Promise.resolve(false));
     clear = vi.fn<IconThemeProbe['clear']>();
@@ -177,13 +179,22 @@ describe('FEATURE: watchIcons', () => {
     });
   });
 
-  describe('GIVEN the icons setting is theme', () => {
-    it('WHEN the theme has no folders THEN the tree still gets theme', async () => {
-      editor.settings.set('icons', 'theme');
+  describe.each(['theme', 'builtin'])('GIVEN the icons setting is %s', (setting) => {
+    beforeEach(async () => {
+      editor.settings.set('icons', setting);
       watch();
       await flush();
+    });
 
-      expect(setIconsCalls()).toStrictEqual(['theme']);
+    it('WHEN watching starts THEN the tree gets that mode', () => {
+      expect(setIconsCalls()).toStrictEqual([setting]);
+    });
+
+    it('WHEN workbench.iconTheme changes THEN the theme file is never asked about', async () => {
+      fireSettings('workbench.iconTheme');
+      await flush();
+
+      expect(has).not.toHaveBeenCalled();
     });
   });
 

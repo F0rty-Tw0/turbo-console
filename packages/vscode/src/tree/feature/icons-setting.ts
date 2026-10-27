@@ -18,8 +18,8 @@ export const currentIconsSetting = (): IconsSetting => {
 /**
  * Keeps the tree's icons mode in step with `turboConsole.icons` and the file icon theme (spec D9, decision Dc3). It
  * resolves once now and again when the setting or `workbench.iconTheme` changes; an extension install or removal drops
- * the cached answer first. A resolve that a newer one overtook is dropped, and a rejected `has()` is logged and draws
- * as an unknown theme, so no listener throws.
+ * the cached answer first. Only `auto` asks `folders` about the theme. A resolve that a newer one overtook is dropped,
+ * and a rejected `has()` is logged and draws as an unknown theme, so no listener throws.
  */
 export const watchIcons = (
   tree: Pick<PackagesTreeApi, 'setIcons'>,
@@ -33,15 +33,21 @@ export const watchIcons = (
 
     return null;
   };
+  const themeFoldersFor = async (setting: IconsSetting): Promise<boolean | null> => {
+    if (setting !== 'auto') return null;
+
+    return folders.has().catch(logAsUnknown);
+  };
   const resolve = async (): Promise<void> => {
     latest += 1;
 
     const mine = latest;
-    const found = await folders.has().catch(logAsUnknown);
+    const setting = currentIconsSetting();
+    const found = await themeFoldersFor(setting);
 
     if (mine !== latest) return;
 
-    tree.setIcons(iconModeOf(currentIconsSetting(), found));
+    tree.setIcons(iconModeOf(setting, found));
   };
   const onSettings = (event: vscode.ConfigurationChangeEvent): void => {
     const isThemeChanged = event.affectsConfiguration('workbench.iconTheme');
