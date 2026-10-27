@@ -156,7 +156,7 @@ describe('FEATURE: workspace model turbo tasks', () => {
 
   describe('GIVEN a single-package source whose root config also keys //#dev and //#format, which turbo rejects there', () => {
     const tasks: Record<string, TaskPresence> = { build: 'defined', dev: 'defined', '//#dev': 'defined', '//#format': 'defined' };
-    const persistent: Record<string, boolean> = { dev: false, '//#dev': true };
+    const persistent: Record<string, boolean> = { dev: true, '//#dev': false };
     const config = configOf('turbo.json', tasks, []);
     const model = buildSingle(ROOT_PACKAGE, [{ ...config, persistent }]);
 
@@ -165,7 +165,7 @@ describe('FEATURE: workspace model turbo tasks', () => {
     });
 
     it('WHEN built THEN dev reads persistent from the bare dev key, not from //#dev', () => {
-      expect(persistentOf(model, '//#dev')).toBe(false);
+      expect(persistentOf(model, '//#dev')).toBe(true);
     });
   });
 
