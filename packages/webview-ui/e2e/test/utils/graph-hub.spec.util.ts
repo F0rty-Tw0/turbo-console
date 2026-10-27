@@ -29,6 +29,8 @@ export const hubGraphState = (count = LARGE_PACKAGE_COUNT): GraphReady => {
   const positions: Positions = Object.fromEntries(indexes.map(largeEntryOf));
   const state: GraphReady = {
     kind: 'graph',
+    singlePackage: false,
+    rootLabel: null,
     hash: hashOf(count),
     packages,
     edges,

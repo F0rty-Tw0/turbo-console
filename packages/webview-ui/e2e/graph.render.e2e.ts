@@ -9,8 +9,7 @@ import {
   LOADING_STUB,
   MONOREPO_ROOT_STUB,
   NO_EDGES_STUB,
-  OBJECT_MEMBER_NAMES_STUB,
-  SINGLE_PACKAGE_STUB
+  OBJECT_MEMBER_NAMES_STUB
 } from './test/stubs/graph-state.stub.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 
@@ -91,25 +90,6 @@ test.describe('FEATURE: graph render', () => {
 
     await test.step('THEN the host received ready, then reload', async (): Promise<void> =>
       graphHost.expectPosted([{ type: 'ready' }, { type: 'reload' }]));
-  });
-
-  test('GIVEN a drawn graph, a single-package state replaces it with the no-graph text', async ({
-    graphHost,
-    graphPage,
-    graphProbe
-  }): Promise<void> => {
-    await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
-
-    await test.step('AND a cached graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_CACHED_STUB));
-
-    await test.step('THEN seven nodes are drawn', async (): Promise<void> => graphProbe.expectNodeCount(7));
-
-    await test.step('WHEN the single-package state is sent', async (): Promise<void> => graphHost.sendState(SINGLE_PACKAGE_STUB));
-
-    await test.step('THEN the page says it is a single-package repo', async (): Promise<void> =>
-      graphPage.expectText('This is a single-package repo, so there is no package graph'));
-
-    await test.step('AND the graph container and the toolbar are hidden', async (): Promise<void> => graphPage.expectGraphHidden());
   });
 
   test('GIVEN a zoomed-in graph, Fit shows every node inside the container', async ({

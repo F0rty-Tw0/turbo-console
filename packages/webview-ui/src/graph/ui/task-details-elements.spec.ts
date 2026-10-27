@@ -6,15 +6,17 @@ import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../common/graph.const.ts';
 import type { TaskDetailsModel } from '../common/task-details.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { API_BUILD_STUB, GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
+import { API_BUILD_STUB, GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 
 const TASK_NO_COMMAND: GraphTask = { ...GRAPH_TASK_STUB, command: null, isRunnable: false };
 
-const STOPPED_NO_COMMAND: TaskDetailsModel = { task: TASK_NO_COMMAND, state: 'stopped', dependencies: [] };
+const STOPPED_NO_COMMAND: TaskDetailsModel = { task: TASK_NO_COMMAND, state: 'stopped', dependencies: [], rootLabel: null };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [API_BUILD_STUB] };
+const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [API_BUILD_STUB], rootLabel: null };
 
 const NEVER_RUN: TaskDetailsModel = { ...RUNNING, state: null };
+
+const ROOT_BUILD: TaskDetailsModel = { task: ROOT_BUILD_STUB, state: null, dependencies: [], rootLabel: 'single-app' };
 
 describe('FEATURE: task details elements', () => {
   beforeEach(() => {
@@ -89,5 +91,21 @@ describe('FEATURE: task details elements', () => {
 
     expect(els.state.hidden).toBe(true);
     expect(els.stop.hidden).toBe(true);
+  });
+
+  describe('GIVEN the task //#build', () => {
+    it('WHEN the root label is single-app THEN the owner line reads single-app', () => {
+      const els = buildTaskDetails(ROOT_BUILD);
+      const owner = els.root.children[1]?.children[0];
+
+      expect(owner?.textContent).toBe('single-app');
+    });
+
+    it('WHEN there is no root label THEN the owner line reads //', () => {
+      const els = buildTaskDetails({ ...ROOT_BUILD, rootLabel: null });
+      const owner = els.root.children[1]?.children[0];
+
+      expect(owner?.textContent).toBe('//');
+    });
   });
 });

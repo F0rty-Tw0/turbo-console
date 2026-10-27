@@ -84,7 +84,9 @@ const GRAPH = {
   positions: null,
   folderPositions: null,
   tasks: [],
-  atomGroups: []
+  atomGroups: [],
+  singlePackage: false,
+  rootLabel: null
 };
 
 const CACHED_GRAPH = { ...GRAPH, positions: POSITIONS };
@@ -96,7 +98,9 @@ const WITHOUT_FOLDER_POSITIONS = {
   edges: EDGES,
   positions: null,
   tasks: [],
-  atomGroups: []
+  atomGroups: [],
+  singlePackage: false,
+  rootLabel: null
 };
 
 const WITHOUT_TASKS = {
@@ -106,7 +110,9 @@ const WITHOUT_TASKS = {
   edges: EDGES,
   positions: null,
   folderPositions: null,
-  atomGroups: []
+  atomGroups: [],
+  singlePackage: false,
+  rootLabel: null
 };
 
 const WITHOUT_ATOM_GROUPS = {
@@ -116,7 +122,9 @@ const WITHOUT_ATOM_GROUPS = {
   edges: EDGES,
   positions: null,
   folderPositions: null,
-  tasks: []
+  tasks: [],
+  singlePackage: false,
+  rootLabel: null
 };
 
 const ATOM_FILE = { id: 'app#e2e-ci--a.spec.ts', specPath: 'a.spec.ts', isLive: true };
@@ -145,12 +153,16 @@ const LOADING = { kind: 'loading' };
 
 const ERROR = { kind: 'error', message: 'x' };
 
-const SINGLE_PACKAGE = { kind: 'singlePackage' };
-
 const stateMessageOf = (state: unknown): unknown => {
   const message = { type: 'state', state };
 
   return message;
+};
+
+const without = (state: object, key: string): object => {
+  const kept = Object.entries(state).filter(([name]) => name !== key);
+
+  return Object.fromEntries(kept);
 };
 
 const graphWithTaskOf = (change: object): unknown => {
@@ -171,8 +183,8 @@ describe('FEATURE: isGraphHostMessage', () => {
     it.each([
       ['loading', LOADING],
       ['error', ERROR],
-      ['singlePackage', SINGLE_PACKAGE],
       ['graph with no positions', GRAPH],
+      ['graph of a single-package root', { ...GRAPH, singlePackage: true, rootLabel: 'single-app' }],
       ['graph with cached positions', CACHED_GRAPH],
       ['graph with cached folder positions', { ...GRAPH, folderPositions: POSITIONS }],
       ['graph whose packages are named like Object members', { ...GRAPH, packages: OBJECT_NAMES }],
@@ -279,6 +291,11 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with string positions', stateMessageOf({ ...GRAPH, positions: 'x' })],
       ['a graph with string folder positions', stateMessageOf({ ...GRAPH, folderPositions: 'x' })],
       ['a graph with no folderPositions key', stateMessageOf(WITHOUT_FOLDER_POSITIONS)],
+      ['a graph with no singlePackage', stateMessageOf(without(GRAPH, 'singlePackage'))],
+      ['a graph with string singlePackage', stateMessageOf({ ...GRAPH, singlePackage: 'yes' })],
+      ['a graph with no rootLabel', stateMessageOf(without(GRAPH, 'rootLabel'))],
+      ['a graph with numeric rootLabel', stateMessageOf({ ...GRAPH, rootLabel: 3 })],
+      ['a state of kind singlePackage', stateMessageOf({ kind: 'singlePackage' })],
       ['a graph with no tasks key', stateMessageOf(WITHOUT_TASKS)],
       ['a graph with no atomGroups key', stateMessageOf(WITHOUT_ATOM_GROUPS)],
       ['a graph with string atomGroups', stateMessageOf({ ...GRAPH, atomGroups: 'x' })],

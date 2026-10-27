@@ -35,6 +35,8 @@ export const OTHER_POSITIONS_STUB: Positions = positionsOf(30);
 /** `web` in `apps`, `ui` and `core` in `packages`; the flat layout cached, the grouped one not. */
 export const STATE_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'h1',
   packages: PACKAGES,
   edges: EDGES,

@@ -9,6 +9,15 @@ import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
 import { runIdsOf, runsMapOf } from '../utils/graph-tasks.util.ts';
 
+const isSinglePackageState = (state: GraphState): boolean => state.kind === 'graph' && state.singlePackage;
+
+/** A single-package root has a task graph but no package graph, so only `showPackage` is refused there. */
+const isRefused = (request: GraphShowRequest, state: GraphState): boolean => {
+  const isSingle = isSinglePackageState(state);
+
+  return request.type === 'showPackage' && isSingle;
+};
+
 type TaskFeedDeps = {
   readonly root: string;
   readonly runs: Pick<Runs, 'get' | 'onDidChange'>;
@@ -65,14 +74,16 @@ export class GraphTaskFeed {
 
   /**
    * The latest request wins while the page cannot take it, which is until a `graph` state has been posted; a hold while the
-   * state is not `graph` is logged, so a root stuck in `error` leaves a trace. A single-package root has no task graph to show.
+   * state is not `graph` is logged, so a root stuck in `error` leaves a trace. A `showPackage` on a single-package root is dropped, as it has no package graph.
    */
   public show(request: GraphShowRequest): void {
     const { gate, ports } = this.deps;
     const state = gate.state();
 
-    if (state.kind === 'singlePackage') {
-      this.ignoreSinglePackage(request);
+    const refused = isRefused(request, state);
+
+    if (refused) {
+      this.ignoreSinglePackage();
 
       return;
     }
@@ -122,10 +133,8 @@ export class GraphTaskFeed {
     ports.post(message);
   }
 
-  private ignoreSinglePackage(request: GraphShowRequest): void {
-    const graph = request.type === 'showTasks' ? 'task' : 'package';
-
-    this.deps.ports.log(logTextOf(`Ignored ${request.type}: a single-package root has no ${graph} graph`));
+  private ignoreSinglePackage(): void {
+    this.deps.ports.log(logTextOf('Ignored showPackage: a single-package root has no package graph'));
   }
 
   private postHeld(state: GraphState): void {
@@ -133,9 +142,11 @@ export class GraphTaskFeed {
 
     if (request === null) return;
 
-    if (state.kind === 'singlePackage') {
+    const refused = isRefused(request, state);
+
+    if (refused) {
       this.held = null;
-      this.ignoreSinglePackage(request);
+      this.ignoreSinglePackage();
 
       return;
     }

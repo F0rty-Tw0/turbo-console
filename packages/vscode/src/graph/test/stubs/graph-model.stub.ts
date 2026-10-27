@@ -70,7 +70,9 @@ export const GRAPH_STATE_STUB: GraphReady = {
   positions: null,
   folderPositions: null,
   tasks: GRAPH_TASKS_STUB,
-  atomGroups: []
+  atomGroups: [],
+  singlePackage: false,
+  rootLabel: null
 };
 
 const X_POINT: Position = { x: 0, y: 0 };

@@ -16,6 +16,8 @@ export type TaskDrawing = {
   readonly labels: ReadonlyMap<string, string>;
   /** The width each package's title needs to draw whole, which its box is at least as wide as. */
   readonly titleWidths: ReadonlyMap<string, number>;
+  /** The label a single-package root's box is titled with in place of `//`; `null` titles it with the package name. */
+  readonly rootLabel: string | null;
 };
 
 /** The task graph on the one Cytoscape core: package compounds `pkg:<name>` holding `task` nodes, links task to dependency. */

@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 
 import type { TaskKind } from '@turbo-console/repo-gen';
-import type { GraphEdge, GraphPackage, GraphReady, GraphRunState } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphReady } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
-import { lastGraphState, postedRuns, postedShowTasks } from './graph-posted.spec.util.ts';
+import { lastGraphState, postedShowTasks, runStatesOf } from './graph-posted.spec.util.ts';
 import { endedRun, startGraphRun, taskNodeNamed } from './run-wait.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
-import type { PanelInfo, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
+import type { PanelInfo } from '../../src/shared/common/api.type.ts';
 import {
   GRAPH_COMMAND,
   HASH_PATTERN,
@@ -176,19 +176,6 @@ export const taskGraphCase = async (scene: GraphScene): Promise<void> => {
 
     assert.deepEqual(postedShowTasks(api, root), { type: 'showTasks', taskIds: [TASK_ID] });
   });
-};
-
-/** The run states `id` went through in the `runs` maps posted to the panel of `root`, oldest first; a map without `id` adds none. */
-const runStatesOf = (api: TurboConsoleApi, root: string, id: string): GraphRunState[] => {
-  const states: GraphRunState[] = [];
-
-  for (const message of postedRuns(api, root)) {
-    const state = message.runs[id];
-
-    if (state !== undefined) states.push(state);
-  }
-
-  return states;
 };
 
 /** Running the task from the graph page repaints the graph: its `runs` entry goes `running`, then `passed`. */

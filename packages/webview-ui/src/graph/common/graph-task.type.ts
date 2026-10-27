@@ -91,6 +91,13 @@ export type TaskPanelAsides = {
   readonly task: HTMLElement;
 };
 
+/** What the task layout and selection read of task mode's memory: the task view, the root label and a view save. */
+export type TaskMemoryPort = {
+  readonly view: () => TaskViewState;
+  readonly rootLabel: () => string | null;
+  readonly save: (edit: Partial<TaskViewState>) => void;
+};
+
 export type TaskModeDeps = {
   readonly view: TaskView;
   readonly runner: LayoutRunner;
@@ -165,6 +172,7 @@ export type TaskLayoutRequest = {
 /** What `GraphTaskLayout` adds: the saved task view for its camera rule, and hooks after each placement. */
 type TaskLayoutHooks = {
   readonly saved: () => TaskViewState | null;
+  readonly rootLabel: () => string | null;
   readonly onPlaced: () => void;
   /** After `onPlaced`: the drawn layout's highlight goes back to the flow overlay the placement stopped. */
   readonly onDrawn: () => void;

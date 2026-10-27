@@ -2,6 +2,7 @@ import type {
   GraphAtomsMessage,
   GraphEdgeExplainedMessage,
   GraphReady,
+  GraphRunState,
   GraphRunsMessage,
   GraphShowPackageMessage,
   GraphShowTasksMessage
@@ -88,4 +89,17 @@ export const postedAtoms = (api: TurboConsoleApi, root: string): GraphAtomsMessa
   }
 
   return messages;
+};
+
+/** The run states `id` went through in the `runs` maps posted to the panel of `root`, oldest first; a map without `id` adds none. */
+export const runStatesOf = (api: TurboConsoleApi, root: string, id: string): GraphRunState[] => {
+  const states: GraphRunState[] = [];
+
+  for (const message of postedRuns(api, root)) {
+    const state = message.runs[id];
+
+    if (state !== undefined) states.push(state);
+  }
+
+  return states;
 };

@@ -13,7 +13,7 @@ import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-c
 const FNV_OFFSET = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
 const KEY_SEPARATOR = '\0';
-const SINGLE_PACKAGE: GraphState = { kind: 'singlePackage' };
+const ROOT_PACKAGE = '//';
 const LOAD_KIND = 'load-no-model';
 const LOADING: GraphState = { kind: 'loading' };
 const NO_IDS: string[] = [];
@@ -76,9 +76,16 @@ const cachedPositionsOf = (cache: GraphLayoutCacheEntry | null, hash: string, pa
   return coversExactly(cache.positions, packages) ? cache.positions : null;
 };
 
-export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches): GraphState => {
-  if (model.singlePackage) return SINGLE_PACKAGE;
+/** The `//` package's label of a single-package model; `null` for a monorepo or when the root has no label. */
+export const rootLabelOf = (model: WorkspaceModel): string | null => {
+  if (!model.singlePackage) return null;
 
+  const root = model.packages.find((node) => node.name === ROOT_PACKAGE);
+
+  return root?.label ?? null;
+};
+
+export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches): GraphState => {
   const packages = model.packages.map(packageOf).toSorted(comparePackages);
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
@@ -86,7 +93,20 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches): 
   const positions = cachedPositionsOf(caches.flat, hash, names);
   const folderPositions = cachedPositionsOf(caches.folders, hash, names);
   const { tasks, atomGroups } = graphListingOf(model);
-  const state: GraphState = { kind: 'graph', hash, packages, edges, positions, folderPositions, tasks, atomGroups };
+  const { singlePackage } = model;
+  const rootLabel = rootLabelOf(model);
+  const state: GraphState = {
+    kind: 'graph',
+    hash,
+    packages,
+    edges,
+    positions,
+    folderPositions,
+    tasks,
+    atomGroups,
+    singlePackage,
+    rootLabel
+  };
 
   return state;
 };
@@ -109,13 +129,13 @@ export const graphStateOfRoot = (state: RootState | undefined, caches: GraphLayo
   return failed;
 };
 
-/** The ids `graphStateOfRoot(state, ...)` lists as tasks and group files, without building the rest of the state: none unless the root shows a multi-package graph. */
+/** The ids `graphStateOfRoot(state, ...)` lists as tasks and group files, without building the rest of the state: none unless the root shows a model. */
 export const runIdsOfRoot = (state: RootState | undefined): string[] => {
   if (state === undefined) return NO_IDS;
 
   const model = shownModelOf(state);
 
-  if (model === null || model.singlePackage) return NO_IDS;
+  if (model === null) return NO_IDS;
 
   return runIdsOfListing(graphListingOf(model));
 };

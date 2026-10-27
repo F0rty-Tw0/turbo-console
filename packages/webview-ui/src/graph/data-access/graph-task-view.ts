@@ -14,6 +14,7 @@ import { closureOf } from '../utils/closure.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { taskBoxIdOf, taskEdgesOf } from '../utils/elk-task-graph.util.ts';
 import { edgeStateOf, nodeStateOf } from '../utils/highlight.util.ts';
+import { ownerTextOf } from '../utils/owner-text.util.ts';
 import { runStateOf } from '../utils/task-run.util.ts';
 
 const RUN_CLASSES = RUN_STATES.map((state) => `${RUN_CLASS_PREFIX}${state}`).join(' ');
@@ -92,7 +93,7 @@ const markRuns = (cy: Core, runs: TaskRuns): void => {
 /** A package box; its `minWidth` is its title width (0 when unknown), so the box is never narrower than its title. */
 const boxDefinitionOf = (packageName: string, drawing: TaskDrawing): ElementDefinition => {
   const minWidth = drawing.titleWidths.get(packageName) ?? 0;
-  const data = { id: taskBoxIdOf(packageName), title: packageName, minWidth };
+  const data = { id: taskBoxIdOf(packageName), title: ownerTextOf(packageName, drawing.rootLabel), minWidth };
   const definition: ElementDefinition = { data, classes: TASK_BOX_CLASS };
 
   return definition;

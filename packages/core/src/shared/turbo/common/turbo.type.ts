@@ -54,8 +54,13 @@ type QueryVariables = {
   readonly variables?: Record<string, string> | undefined;
 };
 
-/** `variables` go to a `-V` JSON file; the rest is passed to `runTurbo`. */
-export type QueryTurboOptions = RunTurboOptions & QueryVariables;
+type QueryFlags = {
+  /** `--single-package`: under `--skip-infer` turbo stays in monorepo mode without it, and the root `//` tasks lose their dependencies. */
+  readonly singlePackage?: boolean | undefined;
+};
+
+/** `variables` go to a `-V` JSON file, `singlePackage` becomes a flag; the rest is passed to `runTurbo`. */
+export type QueryTurboOptions = RunTurboOptions & QueryVariables & QueryFlags;
 
 type RssExec = (
   file: string,

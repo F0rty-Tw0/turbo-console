@@ -6,15 +6,29 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { packageGraphSchema } from './common/package-graph.schema.ts';
 import { PACKAGE_GRAPH_QUERY } from './common/turbo-query.const.ts';
-import type { GraphTask, PackageGraph } from './common/turbo.type.ts';
+import type { GraphTask, PackageGraph, QueryTurboOptions } from './common/turbo.type.ts';
 import { queryTurbo } from './data-access/query-turbo.ts';
 import { devTurboPath } from './test/utils/dev-turbo.spec.util.ts';
-import { writeEmptyWorkspaceFixture, writeSinglePackageFixture } from '../../workspace/test/utils/single-package-fixture.spec.util.ts';
+import {
+  writeEdgesFixture,
+  writeEmptyWorkspaceFixture,
+  writeSinglePackageFixture
+} from '../../workspace/test/utils/single-package-fixture.spec.util.ts';
 
 const fullNameOf = (task: GraphTask): string => task.fullName;
 
-const queryGraph = async (root: string): Promise<PackageGraph> => {
-  const result = await queryTurbo(devTurboPath(), PACKAGE_GRAPH_QUERY, root);
+type TaskRef = { readonly fullName: string };
+
+const refNameOf = (ref: TaskRef): string => ref.fullName;
+
+const depsOf = (graph: PackageGraph, id: string): string[] | undefined => {
+  const task = graph.data.root?.tasks.items.find((item) => item.fullName === id);
+
+  return task?.directDependencies.items.map(refNameOf).toSorted();
+};
+
+const queryGraph = async (root: string, options: QueryTurboOptions = {}): Promise<PackageGraph> => {
+  const result = await queryTurbo(devTurboPath(), PACKAGE_GRAPH_QUERY, root, options);
   const json: unknown = JSON.parse(result.stdout);
 
   return packageGraphSchema.parse(json);
@@ -62,6 +76,26 @@ describe('FEATURE: turbo package graph query on single-package shapes', () => {
 
       expect(graph.data.packageGraph.nodes.items).toStrictEqual([]);
       expect(names).toStrictEqual(['//#build', '//#lint']);
+    });
+  });
+
+  describe('GIVEN the edges fixture', () => {
+    let root = '';
+
+    beforeAll(async () => {
+      root = await writeEdgesFixture(tempDir);
+    });
+
+    it('WHEN queried without the option THEN //#build has no dependencies (the bug)', async () => {
+      const plain = await queryGraph(root);
+
+      expect(depsOf(plain, '//#build')).toStrictEqual([]);
+    });
+
+    it('WHEN queried with singlePackage THEN //#build lists format lint typecheck', async () => {
+      const single = await queryGraph(root, { singlePackage: true });
+
+      expect(depsOf(single, '//#build')).toStrictEqual(['//#format', '//#lint', '//#typecheck']);
     });
   });
 });

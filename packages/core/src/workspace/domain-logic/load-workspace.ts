@@ -1,5 +1,7 @@
 import * as nodePath from 'node:path';
 
+import type { ZodMiniType } from 'zod/mini';
+
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../../binary/common/index.ts';
 import { ROOT_KEYED_FILES } from '../../cache/common/cache.const.ts';
@@ -15,7 +17,7 @@ import { absolutePath } from '../../shared/fs/utils/input-path.util.ts';
 import { packageGraphSchema } from '../../shared/turbo/common/package-graph.schema.ts';
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
 import { PACKAGE_GRAPH_QUERY } from '../../shared/turbo/common/turbo-query.const.ts';
-import type { GraphPackage, PackageGraph, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import type { GraphPackage, PackageGraph, QueryTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import { lazyCompiled } from '../../shared/turbo/data-access/compiled-schema.ts';
 import { queryTurbo } from '../../shared/turbo/data-access/query-turbo.ts';
 import { abortError } from '../../shared/turbo/data-access/run-turbo.ts';
@@ -101,8 +103,24 @@ const modeOf = async (graph: PackageGraph, detected: DetectedRoot, root: string,
 };
 
 /**
- * Spec §4.4: one `packageGraph` spawn (30 s budget, 128 MiB stdout cap), the `packageManager` field,
- * `devEngines.packageManager`, `name` and `workspaces` of the root `package.json`, read once after the root hash (a
+ * The graph of a single-package repo: a second `packageGraph` spawn with `--single-package`, the only mode in which turbo
+ * gives the `//` tasks their dependencies; the first spawn stays in monorepo mode to decide the mode.
+ */
+const singleGraphOf = async (
+  binary: TurboBinary,
+  queryOptions: QueryTurboOptions,
+  graphSchema: ZodMiniType<PackageGraph>
+): Promise<PackageGraph> => {
+  const options = { ...queryOptions, singlePackage: true };
+  const run = async (): Promise<TurboResult> => queryTurbo(binary.path, PACKAGE_GRAPH_QUERY, binary.root, options);
+  const graph = await runTurboJson(run, COMMAND, graphSchema);
+
+  return singlePackageGraphOf(graph);
+};
+
+/**
+ * Spec §4.4: one `packageGraph` spawn (30 s budget, 128 MiB stdout cap), two in a single-package repo (up to 60 s), the
+ * `packageManager` field, `devEngines.packageManager`, `name` and `workspaces` of the root `package.json`, read once after the root hash (a
  * missing, oversized or malformed one never fails the load: the root lockfiles in that hash decide), the `turbo.json(c)`
  * of the root and of every graph package (hidden ones included), the pure model build, then the model keyed and kept in
  * memory, and written to `cacheDir` when one is given. The mode is a file rule, never a spawn (`modeOf`): an empty
@@ -141,8 +159,10 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
     const graph = await runTurboJson(run, COMMAND, graphSchema);
     const packages = graph.data.packageGraph.nodes.items;
     const isSingle = await modeOf(graph, detected, binary.root, signal);
-    const singleGraph = singlePackageGraphOf(graph);
-    const modelGraph = isSingle ? singleGraph : graph;
+    let modelGraph = graph;
+
+    if (isSingle) modelGraph = await singleGraphOf(binary, queryOptions, graphSchema);
+
     const dirs = packages.map(configDirOf);
     const readConfigs = async (): Promise<TurboConfigFile[]> => readTurboConfigs(binary.root, dirs, signal);
     const configs = await untilAborted(readConfigs, signal);

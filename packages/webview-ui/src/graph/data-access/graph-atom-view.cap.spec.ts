@@ -40,7 +40,8 @@ const DRAWING: TaskDrawing = {
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: SIZES,
   labels: new Map([['web#e2e-ci', '2 files']]),
-  titleWidths: new Map()
+  titleWidths: new Map(),
+  rootLabel: null
 };
 
 const PKG_BOXES = new Map([

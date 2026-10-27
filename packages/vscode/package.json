@@ -265,7 +265,7 @@
         },
         {
           "command": "turboConsole.openPackageGraph",
-          "when": "view == turboConsole.tree",
+          "when": "view == turboConsole.tree && !turboConsole.singlePackage",
           "group": "navigation@4"
         },
         {

@@ -4,6 +4,7 @@ import { TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { CONTROLS_ID } from '../common/graph.const.ts';
 import type { CellAt, ListLine } from '../common/roving.type.ts';
 import type { TaskControlsDeps, TaskControlsElements, TaskControlsRow } from '../common/task-controls.type.ts';
+import { modeFocusOf } from '../utils/mode-focus.util.ts';
 import { nextCell } from '../utils/roving.util.ts';
 import { matchesTaskSearch, taskDepthOf } from '../utils/task-choice.util.ts';
 
@@ -18,6 +19,7 @@ export class GraphTaskControls {
   private readonly deps: TaskControlsDeps;
   private readonly elements: TaskControlsElements;
   private rows: TaskControlsRow[] = [];
+  private rootLabel: string | null = null;
   private isActive = false;
   private isOpen = true;
 
@@ -55,19 +57,21 @@ export class GraphTaskControls {
     panel.hidden = true;
     this.deps.page.controls.setAttribute('aria-controls', CONTROLS_ID);
 
-    if (hadFocus) this.deps.page.packagesMode.focus();
+    if (hadFocus) modeFocusOf(this.deps.page).focus();
   }
 
-  /** Lists `tasks`; a row with focus hands it, and the Tab stop, to its twin among the new rows. */
-  public setRows(tasks: GraphTask[]): void {
+  /** Lists `tasks` with a single-package root printed as `rootLabel`; a row with focus hands it, and the Tab stop, to its twin among the new rows. */
+  public setRows(tasks: GraphTask[], rootLabel: string | null): void {
     const focusedId = this.focusedId();
-    const rows = tasks.map(this.deps.views.row);
+    const rowOf = (task: GraphTask): TaskControlsRow => this.deps.views.row(task, rootLabel);
+    const rows = tasks.map(rowOf);
     const lines = rows.map((row) => row.line);
     const { onPick } = this.deps.actions;
 
     for (const { task, pick } of rows) pick.addEventListener('click', (): void => onPick(task.id));
 
     this.rows = rows;
+    this.rootLabel = rootLabel;
     this.elements.list.replaceChildren(...lines);
     this.filter();
     this.refocus(focusedId);
@@ -101,7 +105,7 @@ export class GraphTaskControls {
   private filter(): void {
     const search = this.elements.search.value;
 
-    for (const row of this.rows) row.line.hidden = !matchesTaskSearch(row.task, search);
+    for (const row of this.rows) row.line.hidden = !matchesTaskSearch(row.task, search, this.rootLabel);
 
     this.rove(this.shownRows().at(0));
   }

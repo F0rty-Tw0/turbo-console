@@ -35,7 +35,8 @@ const DRAWING: TaskDrawing = {
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: NO_SIZES,
   labels: NO_LABELS,
-  titleWidths: new Map()
+  titleWidths: new Map(),
+  rootLabel: null
 };
 
 const WEB_TITLE_WIDTHS = new Map([['web', 130]]);
@@ -136,6 +137,18 @@ describe('FEATURE: createTaskCanvas', () => {
       canvas.show(rootDrawing);
 
       expect(cy.getElementById('pkg://').data('title')).toBe('//');
+    });
+
+    it('WHEN a root task is shown with the label single-app THEN the compound is titled single-app and keeps its pkg:// id', () => {
+      const tasks = [taskOf('//#build', [])];
+      const rootDrawing: TaskDrawing = { ...DRAWING, tasks, rootLabel: 'single-app' };
+
+      canvas.show(rootDrawing);
+
+      const parentIds = cy.getElementById('//#build').parent().map(idOf);
+
+      expect(cy.getElementById('pkg://').data('title')).toBe('single-app');
+      expect(parentIds).toStrictEqual(['pkg://']);
     });
 
     it('WHEN shown THEN each task sits in its package compound, classed task and labelled by its name', () => {

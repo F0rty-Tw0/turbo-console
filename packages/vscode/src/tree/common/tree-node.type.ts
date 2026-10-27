@@ -91,7 +91,8 @@ type TreeRuns = Pick<Runs, 'get' | 'runningIds'>;
 
 /**
  * What `PackagesTreeProvider` is built from beside the roots and the mode: the runs, the first-children spans, the scripts
- * toggle, the window's shared Atomizer loads, the send of the `turboConsole.hasScripts` key and where a failed send is logged.
+ * toggle, the window's shared Atomizer loads, the sends of the `turboConsole.hasScripts` and `turboConsole.singlePackage` keys
+ * and where a failed send is logged.
  */
 export type TreeProviderDeps = {
   readonly runs: TreeRuns;
@@ -99,5 +100,6 @@ export type TreeProviderDeps = {
   readonly scripts: ScriptsToggleApi;
   readonly atom: SharedAtoms;
   readonly setHasScripts: (value: boolean) => Thenable<void>;
+  readonly setSinglePackage: (value: boolean) => Thenable<void>;
   readonly log: (line: string) => void;
 };

@@ -26,6 +26,8 @@ const PROTO_POSITIONS: Positions = positionsOf(PROTO_ROWS);
 /** Packages, a tag and link ends named like `Object` members, cached; own keys even for `__proto__`. */
 export const PROTO_DETAILS_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'f2f2f2f2',
   packages: PROTO_PACKAGES,
   edges: PROTO_EDGES,
@@ -64,6 +66,8 @@ const LONG_POSITIONS: Positions = positionsOf(LONG_ROWS);
 /** A package whose name, path and tag are each far wider than the panel. */
 export const LONG_PATH_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: '1e9a0001',
   packages: LONG_PACKAGES,
   edges: LONG_EDGES,
@@ -92,6 +96,8 @@ const UNBROKEN_POSITIONS: Positions = positionsOf(UNBROKEN_ROWS);
 /** A package whose name, path segment and tag are runs of letters with no hyphen, slash or space to break at. */
 export const UNBROKEN_PATH_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: '1e9a0002',
   packages: UNBROKEN_PACKAGES,
   edges: UNBROKEN_EDGES,

@@ -1,5 +1,6 @@
 import { umbrellaSizeOf } from './atom-size.util.ts';
 import { taskLayoutKeyOf } from './elk-task-graph.util.ts';
+import { ownerTextOf } from './owner-text.util.ts';
 import { droppedTasksText } from './task-text.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { UmbrellaSizers } from '../common/graph-page.type.ts';
@@ -32,10 +33,11 @@ export const taskDepthOf = (text: string): number | null => {
   return isInRange ? depth : null;
 };
 
-/** Whether the task's name, package or id holds `search`, ignoring case; an empty search matches every task. */
-export const matchesTaskSearch = (task: GraphTask, search: string): boolean => {
+/** Whether the task's name, package, printed owner text or id holds `search`, ignoring case; an empty search matches every task. */
+export const matchesTaskSearch = (task: GraphTask, search: string, rootLabel: string | null): boolean => {
   const needle = search.toLowerCase();
-  const fields = [task.name, task.packageName, task.id];
+  const owner = ownerTextOf(task.packageName, rootLabel);
+  const fields = [task.name, task.packageName, owner, task.id];
 
   return fields.some((field) => field.toLowerCase().includes(needle));
 };

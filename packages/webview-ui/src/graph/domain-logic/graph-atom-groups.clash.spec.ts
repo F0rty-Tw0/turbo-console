@@ -70,7 +70,8 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
       sizeOf: (): NodeSize => NODE_SIZE,
       sizes: SIZES,
       labels: new Map(),
-      titleWidths: new Map()
+      titleWidths: new Map(),
+      rootLabel: null
     };
 
     cy = cytoscape({ headless: true, layout });

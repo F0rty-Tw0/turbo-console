@@ -32,7 +32,9 @@ const READY: GraphReady = {
   positions: null,
   folderPositions: null,
   tasks: [],
-  atomGroups: []
+  atomGroups: [],
+  singlePackage: false,
+  rootLabel: null
 };
 
 const LOADING: GraphState = { kind: 'loading' };

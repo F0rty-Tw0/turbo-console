@@ -48,6 +48,12 @@ describe('FEATURE: buildToolbar', () => {
       expect([first?.children[0], first?.children[1]]).toStrictEqual([elements.packagesMode, elements.taskMode]);
     });
 
+    it('WHEN the toolbar is built THEN modeGroup is its first child and modeEnd its second', () => {
+      const firstTwo = [elements.toolbar.children[0], elements.toolbar.children[1]];
+
+      expect(firstTwo).toStrictEqual([elements.modeGroup, elements.modeEnd]);
+    });
+
     describe('WHEN a mode button is read THEN it is disabled, named and pressed or not', () => {
       const rows = [
         ['packagesMode', PACKAGES_MODE_LABEL, 'true'],

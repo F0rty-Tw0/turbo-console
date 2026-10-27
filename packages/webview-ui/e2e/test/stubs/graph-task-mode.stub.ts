@@ -25,6 +25,8 @@ const EDGES: GraphEdge[] = [
 /** Six tasks in packages `app`, `lib` and `ui`, hash `7a5c0001`, no cached positions. */
 export const TASK_MODE_STATE_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: '7a5c0001',
   packages: packagesOf(['app', 'lib', 'ui']),
   edges: EDGES,

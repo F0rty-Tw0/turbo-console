@@ -131,7 +131,7 @@ export class GraphTaskSelection {
 
     if (task === undefined) return null;
 
-    return taskDetailsModelOf(task, this.shown, this.latestRuns);
+    return taskDetailsModelOf(task, this.shown, this.latestRuns, this.deps.rootLabel());
   }
 
   private repaint(): void {

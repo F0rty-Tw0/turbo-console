@@ -17,7 +17,7 @@ const idOf = (card: TaskCard): string => card.taskId;
 
 const manifestOf = (root: string): string => join(root, 'package.json');
 
-/** The heading facts and the four turbo task cards of the root package (scripts hidden), every card with its definition and cache status, and no task graph. */
+/** The heading facts and the four turbo task cards of the root package (scripts hidden), every card with its definition and cache status, and the task graph. */
 const assertDetailsState = (state: PackageDetails): void => {
   const cardIds = state.tasks.map(idOf).sort();
   const unresolved = state.tasks.filter(isUnresolved).map(idOf);
@@ -26,7 +26,7 @@ const assertDetailsState = (state: PackageDetails): void => {
   assert.equal(state.label, SINGLE_APP_NAME);
   assert.equal(state.path, '.');
   assert.equal(state.dryRun, 'ready');
-  assert.equal(state.taskGraph, false);
+  assert.equal(state.taskGraph, true);
   assert.deepEqual(cardIds, SINGLE_TASK_IDS);
   assert.deepEqual(unresolved, []);
 };

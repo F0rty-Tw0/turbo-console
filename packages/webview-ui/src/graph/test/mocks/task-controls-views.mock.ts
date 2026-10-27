@@ -7,8 +7,8 @@ import type { TaskControlsViewsMock } from '../common/graph-task-mode.type.ts';
 export const taskControlsViewsMock = (): TaskControlsViewsMock => {
   const elements = buildTaskControls();
   const rows: TaskControlsRow[] = [];
-  const row = (task: GraphTask): TaskControlsRow => {
-    const built = buildTaskRow(task);
+  const row = (task: GraphTask, rootLabel: string | null): TaskControlsRow => {
+    const built = buildTaskRow(task, rootLabel);
 
     rows.push(built);
 

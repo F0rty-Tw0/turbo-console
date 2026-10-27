@@ -8,7 +8,7 @@ import { CONTROLS_ID } from '../common/graph.const.ts';
 import type { TaskControlsActions, TaskControlsDeps, TaskControlsElements, TaskControlsRow } from '../common/task-controls.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskControlsViewsMock } from '../test/mocks/task-controls-views.mock.ts';
-import { TASK_CHAIN_STUB, TASK_VIEW_STUB, WEB_BUILD_STUB, WEB_LINT_STUB } from '../test/stubs/graph-task.stub.ts';
+import { ROOT_BUILD_STUB, TASK_CHAIN_STUB, TASK_VIEW_STUB, WEB_BUILD_STUB, WEB_LINT_STUB } from '../test/stubs/graph-task.stub.ts';
 import { pressKey } from '../test/utils/key-events.spec.util.ts';
 
 type ControlsRig = {
@@ -27,7 +27,8 @@ const rigOf = (): ControlsRig => {
   const page = {
     body: document.createElement('div'),
     controls: document.createElement('button'),
-    packagesMode: document.createElement('button')
+    packagesMode: document.createElement('button'),
+    modeGroup: document.createElement('div')
   };
   const actions: Mocked<TaskControlsActions> = { onSearch: vi.fn(), onDepth: vi.fn(), onPick: vi.fn(), onToggle: vi.fn() };
   const deps: TaskControlsDeps = { page, views, actions };
@@ -74,10 +75,27 @@ describe('FEATURE: GraphTaskControls', () => {
     expect(rig.actions.onToggle).not.toHaveBeenCalled();
   });
 
+  describe('GIVEN task mode entered with //#build listed under the root label single-app', () => {
+    beforeEach(() => {
+      controls.enter(TASK_VIEW_STUB, true);
+      controls.setRows([ROOT_BUILD_STUB], 'single-app');
+    });
+
+    it('WHEN listed THEN the row description reads single-app', () => {
+      expect(rig.rows[0]?.pick.children[1]?.textContent).toBe('single-app');
+    });
+
+    it('WHEN single is searched THEN the //#build row shows', () => {
+      typeInto(rig.elements.search, 'single');
+
+      expect(rig.rows[0]?.line.hidden).toBe(false);
+    });
+  });
+
   describe('GIVEN task mode entered open with the chain listed', () => {
     beforeEach(() => {
       controls.enter(TASK_VIEW_STUB, true);
-      controls.setRows(TASK_CHAIN_STUB);
+      controls.setRows(TASK_CHAIN_STUB, null);
     });
 
     it('WHEN entered THEN the shown panel is mounted and Controls points at it, expanded', () => {
@@ -156,10 +174,20 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
 
+    describe('AND the mode group hidden', () => {
+      it('WHEN task mode is left with focus on a row THEN Controls takes focus', () => {
+        rig.deps.page.modeGroup.hidden = true;
+        rig.rows[0]?.pick.focus();
+        controls.exit();
+
+        expect(document.activeElement).toBe(rig.deps.page.controls);
+      });
+    });
+
     describe('WHEN web#build has focus and the rows are listed again', () => {
       beforeEach(() => {
         rig.rows[1]?.pick.focus();
-        controls.setRows(WEB_TASKS);
+        controls.setRows(WEB_TASKS, null);
       });
 
       it('THEN the new web#build row takes focus', () => {
@@ -173,7 +201,7 @@ describe('FEATURE: GraphTaskControls', () => {
 
     it('WHEN nothing in the list has focus and the rows are listed again THEN focus stays where it was', () => {
       rig.deps.page.packagesMode.focus();
-      controls.setRows(WEB_TASKS);
+      controls.setRows(WEB_TASKS, null);
 
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });

@@ -5,18 +5,26 @@ import { join } from 'node:path';
 
 import { PRESETS } from '@turbo-console/repo-gen';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { array, object, string } from 'zod/mini';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { loadWorkspace, readDryRun, resolveTurbo } from '../index.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
-import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '../index.ts';
-import { writeEmptyWorkspaceFixture, writeSinglePackageFixture } from './test/utils/single-package-fixture.spec.util.ts';
+import type { CachedWorkspace, TaskNode, TurboBinary, WorkspaceModel } from '../index.ts';
+import {
+  writeEdgesFixture,
+  writeEmptyWorkspaceFixture,
+  writeSinglePackageFixture
+} from './test/utils/single-package-fixture.spec.util.ts';
+import { runTurbo } from '../shared/turbo/data-access/run-turbo.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
 
 type CacheReader = (root: string, cacheDir: string) => Promise<CachedWorkspace | null>;
 
 type TaskRow = [id: string, isTurboTask: boolean, persistent: boolean];
+
+type DryTask = { readonly taskId: string; readonly dependencies: string[] };
 
 const spawns = vi.hoisted(() => {
   const files: string[] = [];
@@ -42,6 +50,17 @@ const TRUSTED = { trusted: true } as const;
 /** The four scripts the fixture's `turbo.json` keys; `format` is the one it does not. */
 const KEYED_FOUR = ['build', 'dev', 'lint', 'test:unit'];
 
+const DRY_TASKS_SCHEMA = object({ tasks: array(object({ taskId: string(), dependencies: array(string()) })) });
+
+/** The fixture's `turbo.json` edges, `format` the unkeyed script `build` still waits for. */
+const EXPECTED_EDGES = {
+  '//#build': ['//#format', '//#lint', '//#typecheck'],
+  '//#dev': ['//#build'],
+  '//#format': [],
+  '//#lint': [],
+  '//#typecheck': ['//#lint']
+};
+
 const turboSpawns = (binary: TurboBinary): number => spawns.files.filter((file) => file === binary.path).length;
 
 /** Resolves the dev turbo for `root`, then clears the spawn record its `--version` left: that spawn is not a load spawn. */
@@ -66,7 +85,7 @@ const isTurboRow = ([, isTurboTask]: TaskRow): boolean => isTurboTask;
 
 const rowsOf = (model: WorkspaceModel): TaskRow[] => {
   const tasks = model.packages[0]?.tasks ?? [];
-  const toRow = (task: WorkspaceModel['packages'][number]['tasks'][number]): TaskRow => [task.id, task.isTurboTask, task.persistent];
+  const toRow = (task: TaskNode): TaskRow => [task.id, task.isTurboTask, task.persistent];
 
   return tasks.map(toRow);
 };
@@ -119,8 +138,8 @@ describe('FEATURE: load a workspace from a real turbo in each repo shape', () =>
       ]);
     });
 
-    it('THEN loading spawned turbo once: the query only, whatever the repo shape', () => {
-      expect(loadSpawns).toBe(1);
+    it('THEN loading a single-package repo spawned turbo twice: the query, then the query with --single-package', () => {
+      expect(loadSpawns).toBe(2);
     });
 
     it('THEN the turbo tasks and their persistent flags equal a --single-package dry run of the four keyed ones', async () => {
@@ -177,6 +196,37 @@ describe('FEATURE: load a workspace from a real turbo in each repo shape', () =>
 
     it('THEN loading spawned turbo once, as before this feature', () => {
       expect(loadSpawns).toBe(1);
+    });
+  });
+
+  describe('GIVEN the edges fixture', () => {
+    let root = '';
+    let binary: TurboBinary;
+    let model: WorkspaceModel;
+
+    beforeAll(async () => {
+      root = await writeEdgesFixture(tempDir);
+      binary = await binaryFor(root);
+      model = await loadWorkspace(binary, { cacheDir: newCacheDir() });
+    });
+
+    it('THEN every task dependencies equal the turbo.json edges, the script //#format kept in //#build', () => {
+      const tasks = model.packages[0]?.tasks ?? [];
+      const toEntry = (task: TaskNode): [string, string[]] => [task.id, task.dependencies];
+
+      expect(Object.fromEntries(tasks.map(toEntry))).toStrictEqual(EXPECTED_EDGES);
+    });
+
+    it('THEN they equal a --single-package --dry=json of dev build, ids prefixed //#', async () => {
+      const run = await runTurbo(binary.path, ['run', 'dev', 'build', '--single-package', '--dry=json'], root);
+      const dry = DRY_TASKS_SCHEMA.parse(JSON.parse(run.stdout)).tasks;
+      const toEntry = (task: DryTask): [string, string[]] => {
+        const dependencies = task.dependencies.map((dep) => `//#${dep}`).toSorted();
+
+        return [`//#${task.taskId}`, dependencies];
+      };
+
+      expect(Object.fromEntries(dry.map(toEntry))).toStrictEqual(EXPECTED_EDGES);
     });
   });
 });

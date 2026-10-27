@@ -30,13 +30,13 @@ describe('FEATURE: the task graph flag in the details state', () => {
   });
 
   describe('GIVEN the single-package // node', () => {
-    it('WHEN the state builds THEN taskGraph is false', () => {
+    it('WHEN the state builds THEN taskGraph is true', () => {
       const root: PackageNode = { ...A_PACKAGE_STUB, name: '//', path: '', label: 'single-app' };
       const model: WorkspaceModel = { ...DETAILS_MODEL_STUB, singlePackage: true, packages: [root] };
 
       const state = packageOf(toDetailsState(inputFor(model, '//')));
 
-      expect(state.taskGraph).toBe(false);
+      expect(state.taskGraph).toBe(true);
     });
   });
 });

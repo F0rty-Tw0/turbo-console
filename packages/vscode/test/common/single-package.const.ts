@@ -6,6 +6,8 @@ export const ROOT_PACKAGE = '//';
 
 export const ROOT_BUILD_ID = '//#build';
 
+export const ROOT_LINT_ID = '//#lint';
+
 /** The one persistent task of the fixture. */
 export const PERSISTENT_ROOT_ID = '//#dev';
 

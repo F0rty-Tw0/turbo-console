@@ -13,6 +13,7 @@ import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { openingStateOf } from '../utils/grouping-open.util.ts';
 import { groupingOf } from '../utils/layout-plan.util.ts';
+import { modeFocusOf } from '../utils/mode-focus.util.ts';
 
 /**
  * The package graph: shows the host's states, hands a graph state to the layouts, which draw it and post its layout back.
@@ -107,7 +108,7 @@ export class GraphPackageSide {
     void this.guard(async (): Promise<void> => this.layouts.redraw(saved));
   }
 
-  /** Task mode is being left: a mode button with focus hands it to Packages once the package graph shows, as the loading screen drops it. */
+  /** Task mode is being left: a mode button with focus hands it to `modeFocusOf` once the package graph shows, as the loading screen drops it. */
   public keepModeFocus(): void {
     const { activeElement } = document;
     const { packagesMode, taskMode } = this.deps.page;
@@ -168,7 +169,7 @@ export class GraphPackageSide {
     screen.showGraph(isFallback);
     this.isModeFocusKept = false;
 
-    if (isRefocus) this.deps.page.packagesMode.focus();
+    if (isRefocus) modeFocusOf(this.deps.page).focus();
   }
 
   private afterDraw(saved: GraphViewState | null): void {

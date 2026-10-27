@@ -1,5 +1,6 @@
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { GraphTaskMemory } from './graph-task-memory.ts';
+import { layoutDepsOf, selectionDepsOf } from './graph-task-mode-deps.ts';
 import { savePanelToggle } from './graph-task-panel.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
@@ -29,17 +30,10 @@ export class GraphTaskMode {
   public constructor(deps: TaskModeDeps) {
     this.deps = deps;
     this.memory = new GraphTaskMemory(deps.modes);
-    this.layout = new GraphTaskLayout({
-      ...deps,
-      saved: (): TaskViewState | null => deps.modes.task(),
-      onPlaced: (): void => this.saveCamera(),
-      onDrawn: (): void => this.selection.placed()
-    });
-    this.selection = new GraphTaskSelection({
-      ...deps,
-      task: (): TaskViewState => this.memory.view(),
-      save: (edit: Partial<TaskViewState>): void => this.memory.save(edit)
-    });
+    const hooks = { onPlaced: (): void => this.saveCamera(), onDrawn: (): void => this.selection.placed() };
+
+    this.layout = new GraphTaskLayout(layoutDepsOf(deps, this.memory, hooks));
+    this.selection = new GraphTaskSelection(selectionDepsOf(deps, this.memory));
     this.panel = deps.panelOf({ onShowAll: (): void => this.choose({ capLifted: true }, null) });
     this.controls = deps.controlsOf({
       onSearch: (search: string): void => this.memory.save({ search }),
@@ -55,11 +49,14 @@ export class GraphTaskMode {
 
   /**
    * Keeps the state's tasks and Atomizer groups; while active, shows the graph view once and draws the shown tasks when
-   * their key changed. A same key, never an empty set's, still refreshes the selected task's panel and the banner, since
-   * commands and hidden tasks are not in the key, and reports the shown umbrellas again, since a changed file list may
-   * have dropped a load the host must request anew.
+   * their key changed or the root label did, since the key holds no label. A same key and label, never an empty set's,
+   * still refreshes the selected task's panel and the banner, since commands and hidden tasks are not in the key, and
+   * reports the shown umbrellas again, since a changed file list may have dropped a load the host must request anew.
    */
   public received(state: GraphReady, at: number): void {
+    const shownLabel = this.memory.rootLabel();
+    const isRelabelled = shownLabel !== state.rootLabel;
+
     this.memory.keep(state);
     this.layout.atoms.received(state.atomGroups);
 
@@ -73,7 +70,7 @@ export class GraphTaskMode {
 
     this.selection.setShown(request.tasks);
 
-    if (request.key === shownKey) {
+    if (request.key === shownKey && !isRelabelled) {
       this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount });
       this.layout.atoms.reshown();
 
@@ -171,7 +168,7 @@ export class GraphTaskMode {
 
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));
     this.panel.show({ isEmpty, hiddenCount: shownSet.hiddenCount });
-    this.controls.setRows(request.tasks);
+    this.controls.setRows(request.tasks, this.memory.rootLabel());
     this.selection.setShown(request.tasks);
     this.deps.view.resize();
 

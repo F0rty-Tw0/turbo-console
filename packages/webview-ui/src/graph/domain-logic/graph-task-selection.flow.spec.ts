@@ -38,6 +38,7 @@ describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
       detailsOf: taskDetailsMock,
       widgetsOf: taskWidgetsMock,
       task: (): TaskViewState => saved,
+      rootLabel: (): null => null,
       save,
       onHighlight
     });

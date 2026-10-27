@@ -18,7 +18,6 @@ const ROOT = '/ws';
 const PICK_TASKS = 'Pick tasks…';
 const SHOW_ALL_301 = 'Show all 301';
 const WARNING_301 = 'This workspace has 301 tasks. Drawing more than 300 can be slow.';
-const SINGLE_PACKAGE_TEXT = 'This is a single-package repo, so there is no task graph';
 
 type Fixture = {
   readonly deps: ShowTaskGraphDeps;
@@ -94,7 +93,7 @@ describe('FEATURE: the Show All Task Graphs command', () => {
 
   describe('GIVEN a model', () => {
     it('WHEN the command runs THEN the ids shown equal the picker item values, in order', async () => {
-      const items = taskGraphItemsOf(graphTasksOf(GRAPH_MODEL_STUB), ROOT);
+      const items = taskGraphItemsOf(graphTasksOf(GRAPH_MODEL_STUB), ROOT, null);
       const values = items.map((item) => item.value);
 
       await showAllTaskGraphs(fixture.deps);
@@ -146,7 +145,7 @@ describe('FEATURE: the Show All Task Graphs command', () => {
     });
 
     it('WHEN the answer is Pick tasks… THEN the picker opens with the same items and its picks are shown', async () => {
-      const items = taskGraphItemsOf(graphTasksOf(modelOf(301)), ROOT);
+      const items = taskGraphItemsOf(graphTasksOf(modelOf(301)), ROOT, null);
 
       fixture.warn.mockResolvedValue(PICK_TASKS);
       fixture.pickMany.mockResolvedValue(['p#t5']);
@@ -167,15 +166,18 @@ describe('FEATURE: the Show All Task Graphs command', () => {
   });
 
   describe('GIVEN a single-package root', () => {
-    it('WHEN the command runs THEN the user is told and nothing opens', async () => {
-      const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true };
+    it('WHEN the command runs THEN the panel opens on its // tasks and no info is shown', async () => {
+      const buildTask: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
+      const rootPackage: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [buildTask] };
+      const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [rootPackage] };
 
       fixture.store.apply(ROOT, { ...GRAPH_LOADED_STUB, model });
 
       await showAllTaskGraphs(fixture.deps);
 
-      expect(fixture.info).toHaveBeenCalledExactlyOnceWith(SINGLE_PACKAGE_TEXT);
-      expect(fixture.open).not.toHaveBeenCalled();
+      expect(fixture.open).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: ['//#build'] });
+      expect(fixture.info).not.toHaveBeenCalled();
     });
   });
 

@@ -28,6 +28,8 @@ export const TASK_CHAIN_STUB: GraphTask[] = [API_BUILD_STUB, WEB_BUILD_STUB, WEB
 /** A graph state of hash `h1` with `TASK_CHAIN_STUB` and no package. */
 export const TASK_STATE_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'h1',
   packages: [],
   edges: [],
@@ -39,6 +41,19 @@ export const TASK_STATE_STUB: GraphReady = {
 
 /** `TASK_STATE_STUB` with `web#test`, a dependent of `web#build`. */
 export const MORE_TASKS_STATE_STUB: GraphReady = { ...TASK_STATE_STUB, tasks: [...TASK_CHAIN_STUB, WEB_TEST] };
+
+/** `//#build`, a task of a single-package root. */
+export const ROOT_BUILD_STUB: GraphTask = { ...GRAPH_TASK_STUB, id: '//#build', packageName: '//' };
+
+const ROOT_LINT: GraphTask = { ...GRAPH_TASK_STUB, id: '//#lint', packageName: '//', name: 'lint' };
+
+/** A single-package root `single-app` of hash `h1`: `//#build` and `//#lint`, no dependency between them. */
+export const SINGLE_TASK_STATE_STUB: GraphReady = {
+  ...TASK_STATE_STUB,
+  singlePackage: true,
+  rootLabel: 'single-app',
+  tasks: [ROOT_BUILD_STUB, ROOT_LINT]
+};
 
 /** A task view with `web#build` chosen, one dependent hop, the camera at zoom 1 and no layout yet. */
 const ORIGIN: Position = { x: 0, y: 0 };

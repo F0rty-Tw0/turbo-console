@@ -30,6 +30,8 @@ const CONTROLS_PACKAGES: GraphPackage[] = [
 /** Three folder groups: the root `docs`, `apps` (admin, web) and `packages` (base, config, core, data, ui); tags app, lib, ui. */
 export const CONTROLS_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'c0a1b2c3',
   packages: CONTROLS_PACKAGES,
   edges: CONTROLS_EDGES,
@@ -71,6 +73,8 @@ const PROTO_POSITIONS: Positions = gridPositionsOf(['app', 'constructor', '__pro
 /** Packages and tags named like `Object` members, cached: no filter, group or tag may resolve to an inherited member. */
 export const PROTO_CONTROLS_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'f1f1f1f1',
   packages: PROTO_PACKAGES,
   edges: PROTO_EDGES,

@@ -33,7 +33,8 @@ const DRAWING: TaskDrawing = {
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),
   labels: new Map(),
-  titleWidths: new Map()
+  titleWidths: new Map(),
+  rootLabel: null
 };
 
 /** A headless core draws no edge, so each edge's ends are its nodes' centres. */

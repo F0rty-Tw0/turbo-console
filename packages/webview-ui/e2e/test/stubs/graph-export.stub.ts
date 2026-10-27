@@ -8,6 +8,8 @@ const WIDE_PACKAGES: GraphPackage[] = [packageOf('x', `${WIDE_FOLDER}/x`), packa
 /** One folder whose title is far wider than its box of two small packages, laid out by ELK. */
 export const WIDE_TITLE_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'e1d2c3b4',
   packages: WIDE_PACKAGES,
   edges: [],

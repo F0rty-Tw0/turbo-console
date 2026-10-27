@@ -10,7 +10,7 @@ import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
-import { TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
+import { ROOT_BUILD_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
 
@@ -41,8 +41,18 @@ const throwMeasure = (): never => {
 describe('FEATURE: GraphTaskLayout box titles', () => {
   let rig: TaskModeRig;
 
-  const layoutWith = (textSizeOf: NodeSizer): GraphTaskLayout =>
-    new GraphTaskLayout({ ...rig.deps, textSizeOf, saved: (): null => null, onPlaced: vi.fn(), onDrawn: vi.fn() });
+  const layoutWith = (textSizeOf: NodeSizer, rootLabel: string | null = null): GraphTaskLayout => {
+    const deps = {
+      ...rig.deps,
+      textSizeOf,
+      saved: (): null => null,
+      rootLabel: (): string | null => rootLabel,
+      onPlaced: vi.fn(),
+      onDrawn: vi.fn()
+    };
+
+    return new GraphTaskLayout(deps);
+  };
 
   /** Shows `REQUEST` and lands it as the latest run. */
   const land = async (layout: GraphTaskLayout): Promise<void> => {
@@ -94,6 +104,40 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
       await layout.show(REQUEST);
 
       expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ titleWidths: TITLES }));
+    });
+  });
+
+  describe('GIVEN a root task shown under the label single-app', () => {
+    const rootRequest: TaskLayoutRequest = { ...REQUEST, tasks: [ROOT_BUILD_STUB], shown: new Set(['//#build']) };
+    let textSizeOf: Mock<NodeSizer>;
+    let layout: GraphTaskLayout;
+
+    beforeEach(async () => {
+      textSizeOf = vi.fn<NodeSizer>(titleSizeOf);
+      layout = layoutWith(textSizeOf, 'single-app');
+
+      const shown = layout.show(rootRequest);
+
+      await rig.runs.settle(rig.runs.count() - 1, resultOf(rootRequest.key, {}));
+      await shown;
+    });
+
+    it('WHEN a layout lands THEN each title is measured as single-app', () => {
+      expect(textSizeOf.mock.calls).toStrictEqual([['single-app']]);
+    });
+
+    it('WHEN the layout is shown again from memory THEN each title is measured as single-app again', async () => {
+      await layout.show(rootRequest);
+
+      expect(textSizeOf.mock.calls).toStrictEqual([['single-app'], ['single-app']]);
+    });
+
+    it('WHEN the layout is shown again from memory THEN the canvas draws with the // title width and the label', async () => {
+      await layout.show(rootRequest);
+
+      expect(rig.view.tasks.show).toHaveBeenCalledWith(
+        expect.objectContaining({ titleWidths: new Map([['//', 127]]), rootLabel: 'single-app' })
+      );
     });
   });
 

@@ -7,7 +7,7 @@ import { API_BUILD_STUB, GRAPH_TASK_STUB, TASK_CHAIN_STUB, WEB_BUILD_STUB, WEB_L
 
 const RUNS: TaskRuns = { 'a#build': 'running', 'api#build': 'failed' };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [] };
+const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], rootLabel: null };
 
 const PASSED: TaskDetailsModel = { ...RUNNING, state: 'passed' };
 
@@ -52,10 +52,10 @@ describe('FEATURE: task runs', () => {
 
   describe('GIVEN taskDetailsModelOf', () => {
     it('WHEN web#build is shown with api#build THEN its dependency and run state are read', () => {
-      const model = taskDetailsModelOf(WEB_BUILD_STUB, TASK_CHAIN_STUB, RUNS);
+      const model = taskDetailsModelOf(WEB_BUILD_STUB, TASK_CHAIN_STUB, RUNS, null);
 
       const dependencies = [API_BUILD_STUB];
-      const expected: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, dependencies };
+      const expected: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, dependencies, rootLabel: null };
 
       expect(model).toStrictEqual(expected);
     });
@@ -63,7 +63,7 @@ describe('FEATURE: task runs', () => {
     it('WHEN api#build is not shown THEN web#build lists no dependency', () => {
       const shown = [WEB_BUILD_STUB, WEB_LINT_STUB];
 
-      const model = taskDetailsModelOf(WEB_BUILD_STUB, shown, RUNS);
+      const model = taskDetailsModelOf(WEB_BUILD_STUB, shown, RUNS, null);
 
       expect(model.dependencies).toStrictEqual([]);
     });

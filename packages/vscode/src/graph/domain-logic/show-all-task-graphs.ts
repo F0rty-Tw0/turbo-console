@@ -29,7 +29,7 @@ const allChoiceOf = (ports: RootPickPorts): TaskChoice => {
 };
 
 /**
- * `turboConsole.showAllTaskGraphs`: opens the resolved root's graph on every task, with the single-package, no-model and
+ * `turboConsole.showAllTaskGraphs`: opens the resolved root's graph on every task, with the no-model and
  * no-root outcomes of Show Task Graph (`chosenRequestOf`).
  */
 export const showAllTaskGraphs = async (deps: ShowTaskGraphDeps): Promise<void> => {

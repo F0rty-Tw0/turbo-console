@@ -3,14 +3,14 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import type { GraphEdge, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { graphHashOf, graphStateOf, graphStateOfRoot, runIdsOfRoot } from './graph-state.util.ts';
+import { graphHashOf, graphStateOf, graphStateOfRoot, rootLabelOf, runIdsOfRoot } from './graph-state.util.ts';
 import { runIdsOf } from './graph-tasks.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
-import { TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
 import {
   GRAPH_HASH_STUB,
@@ -37,6 +37,10 @@ const STALE: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: POSITIONS_ST
 const GHOST_POINT = { x: 1, y: 1 };
 const GHOST_POSITIONS = { ...POSITIONS_STUB, ghost: GHOST_POINT };
 const GHOSTED: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: GHOST_POSITIONS };
+const ROOT_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
+const ROOT_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [ROOT_TASK] };
+const ROOT_INFOS = [{ name: '//', path: '' }];
+const SINGLE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [ROOT_NODE] };
 const GROWN_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, rootNode('new')] };
 
 const FLAT_ONLY: GraphLayoutCaches = { flat: CACHE, folders: null };
@@ -137,10 +141,34 @@ describe('FEATURE: graph state builder', () => {
   });
 
   describe('GIVEN a single-package model', () => {
-    it('WHEN the state is built THEN it is singlePackage', () => {
-      const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true };
+    it('WHEN the state is built THEN it is a graph with singlePackage and the root label', () => {
+      const state = graphStateOf(SINGLE_MODEL, NO_LAYOUT_CACHES_STUB);
 
-      expect(graphStateOf(model, NO_LAYOUT_CACHES_STUB)).toStrictEqual({ kind: 'singlePackage' });
+      expect(state).toMatchObject({ kind: 'graph', singlePackage: true, rootLabel: 'single-app', packages: ROOT_INFOS });
+    });
+
+    it('WHEN its root package has no label THEN rootLabel is null', () => {
+      const unlabelled: PackageNode = { ...ROOT_NODE, label: null };
+      const model: WorkspaceModel = { ...SINGLE_MODEL, packages: [unlabelled] };
+
+      expect(graphStateOf(model, NO_LAYOUT_CACHES_STUB)).toMatchObject({ singlePackage: true, rootLabel: null });
+    });
+
+    it('WHEN the root label is read THEN it is the // package label', () => {
+      expect(rootLabelOf(SINGLE_MODEL)).toBe('single-app');
+    });
+  });
+
+  describe('GIVEN a monorepo model whose // package has a label', () => {
+    const labelledRoot: PackageNode = { ...ROOT_NODE, label: 'labelled' };
+    const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [labelledRoot] };
+
+    it('WHEN the state is built THEN rootLabel is null', () => {
+      expect(graphStateOf(model, NO_LAYOUT_CACHES_STUB)).toMatchObject({ singlePackage: false, rootLabel: null });
+    });
+
+    it('WHEN the root label is read THEN it is null', () => {
+      expect(rootLabelOf(model)).toBeNull();
     });
   });
 
@@ -231,7 +259,6 @@ const stateOf = (fields: Partial<RootState>): RootState => {
 };
 const LOAD_FAILURE = loadFailureOf('load', new TurboException('failed', 'bad json'));
 const LOADING: GraphState = { kind: 'loading' };
-const SINGLE_PACKAGE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true };
 
 describe('FEATURE: graph state of a root', () => {
   it('GIVEN no state WHEN built THEN it is loading', () => {
@@ -270,7 +297,7 @@ describe('FEATURE: graph state of a root', () => {
 describe('FEATURE: run ids of a root', () => {
   it.each([
     ['a graph', stateOf({ model: GRAPH_MODEL_STUB })],
-    ['a single-package model', stateOf({ model: SINGLE_PACKAGE_MODEL })],
+    ['a single-package model', stateOf({ model: SINGLE_MODEL })],
     ['a binary failure over a model', stateOf({ model: GRAPH_MODEL_STUB, error: LOAD_FAILURE_STUB })],
     ['a load failure with no model', stateOf({ model: null, error: LOAD_FAILURE })],
     ['no model and no error', stateOf({ model: null })],
@@ -283,5 +310,9 @@ describe('FEATURE: run ids of a root', () => {
 
   it('GIVEN a graph WHEN the run ids are read THEN they are listed', () => {
     expect(runIdsOfRoot(stateOf({ model: GRAPH_MODEL_STUB }))).not.toStrictEqual([]);
+  });
+
+  it('GIVEN a single-package model WHEN the run ids are read THEN they list the // tasks', () => {
+    expect(runIdsOfRoot(stateOf({ model: SINGLE_MODEL }))).not.toStrictEqual([]);
   });
 });

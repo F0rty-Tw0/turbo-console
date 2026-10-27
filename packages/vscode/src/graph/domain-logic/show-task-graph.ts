@@ -1,10 +1,9 @@
-import type { WorkspaceModel } from '@turbo-console/core';
-
 import { graphRootOf } from './graph-root.ts';
 import { taskTargetOf } from '../../run/utils/run-target.util.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { RootPickPorts, ShowTaskGraphDeps, TaskChoice, TaskGraphRequest } from '../common/graph-panel.type.ts';
-import { GRAPH_OPEN_FAILED_TEXT, SINGLE_PACKAGE_TASKS_TEXT, TASK_PICK_PLACEHOLDER } from '../common/graph.const.ts';
+import { GRAPH_OPEN_FAILED_TEXT, TASK_PICK_PLACEHOLDER } from '../common/graph.const.ts';
+import { rootLabelOf } from '../utils/graph-state.util.ts';
 import { taskGraphItemsOf } from '../utils/graph-task-items.util.ts';
 import { graphTasksOf } from '../utils/graph-tasks.util.ts';
 
@@ -18,15 +17,6 @@ const rowRequestOf = (arg: unknown): TaskGraphRequest | null => {
   return request;
 };
 
-/** A single-package model has no task graph: the user is told so, and nothing opens. */
-const refusesSinglePackage = (model: WorkspaceModel | null | undefined, ports: RootPickPorts): boolean => {
-  const isSinglePackage = model?.singlePackage === true;
-
-  if (isSinglePackage) ports.info(SINGLE_PACKAGE_TASKS_TEXT);
-
-  return isSinglePackage;
-};
-
 const pickChoiceOf = (ports: RootPickPorts): TaskChoice => {
   const choose: TaskChoice = async (items) => ports.pickMany(items, TASK_PICK_PLACEHOLDER);
 
@@ -35,7 +25,7 @@ const pickChoiceOf = (ports: RootPickPorts): TaskChoice => {
 
 /**
  * The request of a command that asks for tasks: the resolved root, its model loaded, then `choose` over the task items.
- * No model opens the panel alone; a single-package root, a cancelled or an empty choice opens nothing (`null`).
+ * No model opens the panel alone; a cancelled or an empty choice opens nothing (`null`).
  */
 export const chosenRequestOf = async ({ roots, ports }: ShowTaskGraphDeps, choose: TaskChoice): Promise<TaskGraphRequest | null> => {
   const root = await graphRootOf(roots, ports);
@@ -52,11 +42,9 @@ export const chosenRequestOf = async ({ roots, ports }: ShowTaskGraphDeps, choos
     return panelOnly;
   }
 
-  const isRefused = refusesSinglePackage(model, ports);
-
-  if (isRefused) return null;
-
-  const items = taskGraphItemsOf(graphTasksOf(model), root);
+  const tasks = graphTasksOf(model);
+  const rootLabel = rootLabelOf(model);
+  const items = taskGraphItemsOf(tasks, root, rootLabel);
   const taskIds = await choose(items);
 
   if (taskIds === undefined || taskIds.length === 0) return null;
@@ -79,9 +67,8 @@ export const openWith = ({ root, taskIds }: TaskGraphRequest, { panels, ports }:
 
 /**
  * `turboConsole.showTaskGraph`: a task row opens its root's graph on that task with no question; otherwise the user picks
- * tasks of the resolved root. A single-package root, a task row's included, is told it has no task graph and opens
- * nothing; a cancelled or empty pick opens nothing, and a root with no model opens the panel alone so its error screen
- * shows. A panel that cannot be opened is logged and the user told to see Output.
+ * tasks of the resolved root, a single-package root included. A cancelled or empty pick opens nothing, and a root with no
+ * model opens the panel alone so its error screen shows. A panel that cannot be opened is logged and the user told to see Output.
  */
 export const showTaskGraph = async (arg: unknown, deps: ShowTaskGraphDeps): Promise<void> => {
   const row = rowRequestOf(arg);
@@ -94,8 +81,5 @@ export const showTaskGraph = async (arg: unknown, deps: ShowTaskGraphDeps): Prom
     return;
   }
 
-  const model = deps.roots.get(row.root)?.state.model;
-  const isRefused = refusesSinglePackage(model, deps.ports);
-
-  if (!isRefused) openWith(row, deps);
+  openWith(row, deps);
 };

@@ -45,9 +45,9 @@ const LEFT_RECT: RectPx = { x1: 100, y1: 50, x2: 180, y2: 80 };
 /** `a#build` drawn across the panel's left edge: its "…" under it. */
 const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [] };
+const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], rootLabel: null };
 
-const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [] };
+const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], rootLabel: null };
 
 const setSize = (element: HTMLElement, left: number, width: number): void => {
   Object.defineProperty(element, 'offsetLeft', { value: left });

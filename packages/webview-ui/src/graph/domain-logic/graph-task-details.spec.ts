@@ -25,7 +25,7 @@ type DetailsRig = {
   readonly built: TaskDetailsView[];
 };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [API_BUILD_STUB] };
+const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [API_BUILD_STUB], rootLabel: null };
 
 const PASSED: TaskDetailsModel = { ...RUNNING, state: 'passed' };
 
@@ -54,7 +54,9 @@ const rigOf = (): DetailsRig => {
     details: button(),
     clear: button(),
     detailsBar: document.createElement('div'),
-    packagesMode: button()
+    packagesMode: button(),
+    controls: button(),
+    modeGroup: document.createElement('div')
   };
   const { views, panel, built } = taskDetailsViewsMock();
   const onSelect = vi.fn<(id: string) => void>();
@@ -133,6 +135,17 @@ describe('FEATURE: GraphTaskDetails', () => {
       details.exit();
 
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
+    });
+
+    describe('AND the mode group hidden', () => {
+      it('WHEN task mode is left with focus in the panel THEN Controls takes focus', () => {
+        rig.deps.page.modeGroup.hidden = true;
+        details.show(RUNNING);
+        rig.built[0]?.heading.focus();
+        details.exit();
+
+        expect(document.activeElement).toBe(rig.deps.page.controls);
+      });
     });
   });
 

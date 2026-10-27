@@ -14,6 +14,8 @@ export type TaskDetailsModel = {
   readonly state: GraphRunState | null;
   /** The task's direct dependencies that are in the shown set, in its dependency order. */
   readonly dependencies: GraphTask[];
+  /** The label a single-package root's owner line prints in place of `//`; `null` prints the package name. */
+  readonly rootLabel: string | null;
 };
 
 /** The panel's three run buttons. */
@@ -65,7 +67,7 @@ export type TaskDetails = {
 };
 
 export type TaskDetailsDeps = {
-  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'detailsBar' | 'packagesMode'>;
+  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'detailsBar' | 'packagesMode' | 'modeGroup' | 'controls'>;
   readonly views: TaskDetailsViews;
   readonly bridge: Bridge;
   readonly actions: TaskDetailsActions;
@@ -111,5 +113,6 @@ export type TaskSelectionDeps = {
   readonly detailsOf: (actions: TaskDetailsActions) => TaskDetails;
   readonly widgetsOf: () => TaskWidgets;
   readonly task: () => TaskViewState;
+  readonly rootLabel: () => string | null;
   readonly save: (edit: Partial<TaskViewState>) => void;
 };

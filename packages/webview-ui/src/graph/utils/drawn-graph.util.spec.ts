@@ -14,6 +14,8 @@ const DANGLING_EDGE: GraphEdge = { source: 'web', target: 'ghost' };
 
 const STATE: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'h',
   packages: PACKAGES,
   edges: [KEPT_EDGE, DANGLING_EDGE],

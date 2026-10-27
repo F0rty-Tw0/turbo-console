@@ -12,6 +12,7 @@ import {
   TASK_CONTROLS_ID
 } from '../common/graph-task.const.ts';
 import type { TaskControlsElements, TaskControlsRow } from '../common/task-controls.type.ts';
+import { ownerTextOf } from '../utils/owner-text.util.ts';
 
 const taskDepthInput = (): HTMLInputElement => {
   const depth = document.createElement('input');
@@ -31,10 +32,10 @@ const taskDepthInput = (): HTMLInputElement => {
  * The task's button: its name names it, and its package, hidden from the name, describes it. The `title` keeps the full
  * id when CSS cuts the name.
  */
-const taskPick = (task: GraphTask): HTMLButtonElement => {
+const taskPick = (task: GraphTask, rootLabel: string | null): HTMLButtonElement => {
   const pick = textElement('button', 'controls-name', '');
   const name = textElement('span', 'controls-task-name', task.name);
-  const description = textElement('span', 'controls-task-package', task.packageName);
+  const description = textElement('span', 'controls-task-package', ownerTextOf(task.packageName, rootLabel));
 
   description.id = `${TASK_CONTROLS_ID}-${task.id}`;
   description.setAttribute('aria-hidden', 'true');
@@ -48,8 +49,8 @@ const taskPick = (task: GraphTask): HTMLButtonElement => {
 };
 
 /** One task list row: a grid row of one cell holding the task's button, out of the Tab order. */
-export const buildTaskRow = (task: GraphTask): TaskControlsRow => {
-  const pick = taskPick(task);
+export const buildTaskRow = (task: GraphTask, rootLabel: string | null): TaskControlsRow => {
+  const pick = taskPick(task, rootLabel);
   const cell = textElement('div', 'controls-cell', '');
   const line = textElement('div', 'controls-row', '');
 
