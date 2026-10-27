@@ -3,6 +3,10 @@
   "monorepo": true,
   "execution": {
     "command": "turbo run e2e-ci --filter=@fx/e2e",
+    "attempted": 9,
+    "success": 3,
+    "failed": 0,
+    "cached": 6,
     "startTime": 1792868587624,
     "endTime": 1792868588777,
     "exitCode": 0

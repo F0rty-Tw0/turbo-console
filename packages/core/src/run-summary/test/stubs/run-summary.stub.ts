@@ -2,7 +2,9 @@ import type { RunSummary } from '../../../shared/turbo/common/turbo.type.ts';
 
 const EXECUTION = { startTime: 1_760_000_000_000, endTime: 1_760_000_004_000, exitCode: 0 };
 
-const RUN_EXECUTION = { command: 'turbo run build --filter=web', ...EXECUTION };
+const COUNTS = { attempted: 1, success: 1, failed: 0, cached: 0 };
+
+const RUN_EXECUTION = { command: 'turbo run build --filter=web', ...COUNTS, ...EXECUTION };
 
 const CACHE = { status: 'MISS' } as const;
 
