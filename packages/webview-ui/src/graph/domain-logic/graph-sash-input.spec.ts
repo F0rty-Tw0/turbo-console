@@ -100,6 +100,26 @@ describe('FEATURE: wireSashInput', () => {
     });
   });
 
+  describe('GIVEN a press 2px right of where the panel edge is', () => {
+    it('WHEN the pointer moves THEN the panel keeps that 2px and does not jump to the pointer', () => {
+      sash.dispatchEvent(pointerOf('pointerdown', { button: 0, clientX: 262 }));
+      sash.dispatchEvent(pointerOf('pointermove', { clientX: 300 }));
+
+      expect(page.resize).toHaveBeenCalledWith('controls', 298);
+    });
+  });
+
+  describe('GIVEN a press that never moves', () => {
+    it('WHEN the sash loses the pointer THEN the classes are gone and nothing is saved', () => {
+      sash.dispatchEvent(pointerOf('pointerdown', { button: 0, clientX: 260 }));
+      held.clear();
+      sash.dispatchEvent(pointerOf('lostpointercapture', {}));
+
+      expect(body.classList.contains(SASHING_CLASS)).toBe(false);
+      expect(page.commit).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a press with the secondary button', () => {
     it('WHEN it lands THEN the sash does not hold the pointer and sets no class', () => {
       sash.dispatchEvent(pointerOf('pointerdown', { button: 2, clientX: 260 }));

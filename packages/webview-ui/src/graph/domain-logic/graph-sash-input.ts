@@ -6,18 +6,30 @@ import { sashDragWidthOf, sashKeyWidthOf } from '../utils/sash-input.util.ts';
 const PRIMARY_BUTTON = 0;
 
 /**
- * Wires one sash to its panel: a pointer drag resizes while the sash holds the pointer and saves when it lets go of it, a double
- * click resets, and the arrow, Home and End keys resize and save. Any other key is left alone so Tab still moves on.
+ * Wires one sash to its panel: a pointer drag resizes from where the sash was grabbed while it holds the pointer and
+ * saves when it lets go of it after a move, a double click resets, and the arrow, Home and End keys resize and save.
+ * Any other key is left alone so Tab still moves on.
  */
 export const wireSashInput = (side: PanelSide, sash: HTMLElement, sashes: SashResizer, body: HTMLElement): void => {
+  let grabOffset = 0;
+  let isMoved = false;
+
+  const gripWidthOf = (event: PointerEvent): number => sashDragWidthOf(side, event.clientX, body.getBoundingClientRect());
+
   const dragEnded = (): void => {
     sash.classList.remove(SASH_DRAGGING_CLASS);
     body.classList.remove(SASHING_CLASS);
-    sashes.commit();
+
+    if (isMoved) sashes.commit();
+
+    isMoved = false;
   };
   const onPointerDown = (event: PointerEvent): void => {
     if (event.button !== PRIMARY_BUTTON) return;
 
+    const gripWidth = gripWidthOf(event);
+
+    grabOffset = sashes.widthOf(side) - gripWidth;
     sash.setPointerCapture(event.pointerId);
     sash.classList.add(SASH_DRAGGING_CLASS);
     body.classList.add(SASHING_CLASS);
@@ -27,9 +39,10 @@ export const wireSashInput = (side: PanelSide, sash: HTMLElement, sashes: SashRe
 
     if (!isDragging) return;
 
-    const px = sashDragWidthOf(side, event.clientX, body.getBoundingClientRect());
+    const gripWidth = gripWidthOf(event);
 
-    sashes.resize(side, px);
+    isMoved = true;
+    sashes.resize(side, gripWidth + grabOffset);
   };
   const onKeyDown = (event: KeyboardEvent): void => {
     const next = sashKeyWidthOf(side, event.key, sashes.widthOf(side), sashes.maxOf(side));
