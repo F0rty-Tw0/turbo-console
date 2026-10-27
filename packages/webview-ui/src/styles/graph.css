@@ -105,6 +105,74 @@ p {
   background: var(--vscode-panel-border);
 }
 
+/* Legend popover: no display here, which would override the closed popover's display: none. Without anchor support the UA centres it. */
+
+.graph-legend {
+  box-sizing: border-box;
+  max-width: min(360px, calc(100vw - 2 * var(--space-3)));
+  max-height: 70vh;
+  overflow: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--vscode-menu-border, var(--vscode-contrastBorder, var(--vscode-panel-border)));
+  border-radius: var(--radius);
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  background: var(--vscode-menu-background);
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+}
+
+@supports (anchor-name: --graph-legend) {
+  .legend-button {
+    anchor-name: --graph-legend;
+  }
+
+  .graph-legend {
+    position-anchor: --graph-legend;
+    inset: auto;
+    margin: 0;
+    top: calc(anchor(bottom) + var(--space-1));
+    left: anchor(left);
+    position-try-fallbacks: flip-inline;
+  }
+}
+
+.graph-legend-heading {
+  margin: 0 0 var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.legend-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.legend-row dt {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+}
+
+.legend-row dd {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  line-height: 0;
+}
+
+.graph-page.task-mode .legend-packages,
+.graph-page:not(.task-mode) .legend-tasks {
+  display: none;
+}
+
 .filters-on {
   display: inline-flex;
   gap: var(--space-1);
