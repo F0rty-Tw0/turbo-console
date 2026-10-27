@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { modeFocusOf } from './mode-focus.ts';
+import { modeFocusOf } from './mode-focus.util.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
@@ -22,13 +22,17 @@ describe('FEATURE: modeFocusOf', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN the mode group hidden WHEN the fallback is read THEN it is Controls', () => {
-    page.modeGroup.hidden = true;
+  describe('GIVEN the mode group hidden', () => {
+    it('WHEN the fallback is read THEN it is Controls', () => {
+      page.modeGroup.hidden = true;
 
-    expect(modeFocusOf(page)).toBe(page.controls);
+      expect(modeFocusOf(page)).toBe(page.controls);
+    });
   });
 
-  it('GIVEN the mode group shown WHEN the fallback is read THEN it is Packages', () => {
-    expect(modeFocusOf(page)).toBe(page.packagesMode);
+  describe('GIVEN the mode group shown', () => {
+    it('WHEN the fallback is read THEN it is Packages', () => {
+      expect(modeFocusOf(page)).toBe(page.packagesMode);
+    });
   });
 });

@@ -2,7 +2,6 @@ import { GraphFiltering } from './graph-filtering.ts';
 import { GraphLayouts } from './graph-layouts.ts';
 import { refreshedDrawn, restoreAfterDraw } from './graph-package-draw.ts';
 import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
-import { modeFocusOf } from './mode-focus.ts';
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
@@ -14,6 +13,7 @@ import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { openingStateOf } from '../utils/grouping-open.util.ts';
 import { groupingOf } from '../utils/layout-plan.util.ts';
+import { modeFocusOf } from '../utils/mode-focus.util.ts';
 
 /**
  * The package graph: shows the host's states, hands a graph state to the layouts, which draw it and post its layout back.

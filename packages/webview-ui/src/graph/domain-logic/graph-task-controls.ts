@@ -1,10 +1,10 @@
-import { modeFocusOf } from './mode-focus.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { CONTROLS_ID } from '../common/graph.const.ts';
 import type { CellAt, ListLine } from '../common/roving.type.ts';
 import type { TaskControlsDeps, TaskControlsElements, TaskControlsRow } from '../common/task-controls.type.ts';
+import { modeFocusOf } from '../utils/mode-focus.util.ts';
 import { nextCell } from '../utils/roving.util.ts';
 import { matchesTaskSearch, taskDepthOf } from '../utils/task-choice.util.ts';
 

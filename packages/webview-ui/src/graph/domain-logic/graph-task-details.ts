@@ -1,8 +1,8 @@
 import { showDetailsBar } from './details-bar-shown.ts';
-import { modeFocusOf } from './mode-focus.ts';
 import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskDetailsDeps, TaskDetailsModel, TaskDetailsView, TaskRunAction } from '../common/task-details.type.ts';
+import { modeFocusOf } from '../utils/mode-focus.util.ts';
 import { runMessageOf } from '../utils/task-run.util.ts';
 
 /** The focus key of a focused element with no `data-focus`: the new view's heading takes focus. */
