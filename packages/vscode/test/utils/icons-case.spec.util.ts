@@ -21,7 +21,7 @@ const ICON_THEME_KEY = 'iconTheme';
 /**
  * Spec 2026-10-20 theme icons and D9: with `turboConsole.icons` unset a package row follows the file icon theme. Seti has no
  * folder icons, so it keeps the `package` codicon with no resource uri; Minimal has them, so the row takes the theme folder over
- * its directory. `theme` does the same under Seti. Puts both settings back to their defaults before it returns, whatever
+ * its directory, and back on Seti the row drops it again. `theme` does the same under Seti. Puts both settings back to their defaults before it returns, whatever
  * failed, so the L2 suite starts clean.
  */
 export const iconsCase = async (api: TurboConsoleApi, root: string, manifest: ShownManifest): Promise<void> => {
@@ -32,6 +32,7 @@ export const iconsCase = async (api: TurboConsoleApi, root: string, manifest: Sh
   const node = await packageNodeNamed(api, name);
   const itemNow = (): vscode.TreeItem => api.tree.getTreeItem(node);
   const themeFolderNow = (): boolean => iconIdOf(itemNow()) === 'folder';
+  const packageCodiconNow = (): boolean => iconIdOf(itemNow()) === 'package' && itemNow().resourceUri === undefined;
   const assertThemeFolder = (): void => {
     const uri = itemNow().resourceUri;
 
@@ -45,15 +46,18 @@ export const iconsCase = async (api: TurboConsoleApi, root: string, manifest: Sh
     await step('icons: unset with the Seti icon theme, a package row keeps the package codicon with no resource uri', async () => {
       await config.update('icons', undefined, vscode.ConfigurationTarget.Global);
       await workbench.update(ICON_THEME_KEY, 'vs-seti', vscode.ConfigurationTarget.Global);
-      await waitFor('package codicon', () => iconIdOf(itemNow()) === 'package' && itemNow().resourceUri === undefined);
+      await waitFor('package codicon', packageCodiconNow);
     });
     await step('icons: unset with the Minimal icon theme, a package row takes the theme folder over its directory', async () => {
       await workbench.update(ICON_THEME_KEY, 'vs-minimal', vscode.ConfigurationTarget.Global);
       await waitFor('theme folder icon under Minimal', themeFolderNow);
       assertThemeFolder();
     });
-    await step('icons: theme gives a package row the theme folder over its directory', async () => {
+    await step('icons: unset, back from Minimal to Seti, a package row goes back to the package codicon', async () => {
       await workbench.update(ICON_THEME_KEY, 'vs-seti', vscode.ConfigurationTarget.Global);
+      await waitFor('package codicon after Minimal', packageCodiconNow);
+    });
+    await step('icons: theme gives a package row the theme folder over its directory', async () => {
       await config.update('icons', 'theme', vscode.ConfigurationTarget.Global);
       await waitFor('theme folder icon', themeFolderNow);
       assertThemeFolder();

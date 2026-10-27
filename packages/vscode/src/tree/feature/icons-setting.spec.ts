@@ -119,6 +119,16 @@ describe('FEATURE: watchIcons', () => {
       expect(setIconsCalls()).toStrictEqual(['builtin', 'theme']);
     });
 
+    it('WHEN workbench.iconTheme changes to a theme without folders THEN the tree goes back to builtin', async () => {
+      has.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+      watch();
+      await flush();
+      fireSettings('workbench.iconTheme');
+      await flush();
+
+      expect(setIconsCalls()).toStrictEqual(['theme', 'builtin']);
+    });
+
     it('WHEN turboConsole.icons changes THEN the folders are resolved again with the new setting', async () => {
       has.mockResolvedValue(true);
       watch();
