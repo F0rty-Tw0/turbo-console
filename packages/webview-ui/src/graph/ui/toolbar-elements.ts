@@ -1,5 +1,6 @@
 import { graphIcon } from './graph-icon.ts';
 import { iconButton } from './icon-button.ts';
+import { buildLegend } from './legend-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import {
@@ -112,7 +113,8 @@ const statusLine = (): HTMLElement => {
 
 /**
  * The toolbar in its pre-state, every button disabled: the Mode group (Packages, Tasks), the Panels group (Controls, Details),
- * the View group (Fit, Re-layout, Export image), then the hidden status line. DOM order is the Tab order.
+ * the View group (Fit, Re-layout, Export image, Legend), the hidden status line, then the closed Legend popover. DOM order
+ * is the Tab order.
  */
 export const buildToolbar = (): ToolbarElements => {
   const packagesMode = pressToggle('type-hierarchy', PACKAGES_MODE_LABEL, PACKAGES_MODE_TITLE, true);
@@ -124,15 +126,16 @@ export const buildToolbar = (): ToolbarElements => {
   const relayout = viewAction('refresh', RELAYOUT_LABEL, RELAYOUT_TITLE);
   const exportImage = viewAction('desktop-download', EXPORT_LABEL, EXPORT_TITLE);
   const status = statusLine();
+  const legend = buildLegend();
   const mode = toolbarGroup(MODE_LABEL, packagesMode, taskMode);
   const modeEnd = separator();
   const panels = toolbarGroup(PANELS_LABEL, controls, details);
   const panelsEnd = separator();
-  const view = toolbarGroup(VIEW_LABEL, fit, relayout, exportImage);
+  const view = toolbarGroup(VIEW_LABEL, fit, relayout, exportImage, legend.legend);
   const toolbar = textElement('header', 'graph-toolbar', '');
 
   controls.append(filtersOn);
-  toolbar.append(mode, modeEnd, panels, panelsEnd, view, status);
+  toolbar.append(mode, modeEnd, panels, panelsEnd, view, status, legend.legendPanel);
 
   const elements: ToolbarElements = {
     toolbar,
@@ -144,7 +147,8 @@ export const buildToolbar = (): ToolbarElements => {
     relayout,
     exportImage,
     status,
-    filtersOn
+    filtersOn,
+    ...legend
   };
 
   return elements;

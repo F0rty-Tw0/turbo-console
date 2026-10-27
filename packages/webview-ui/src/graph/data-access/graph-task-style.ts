@@ -13,7 +13,7 @@ import {
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
 import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_BOX_DASH_PX, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
-import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { DASHED_BORDER_PX, FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { glyphOf } from '../utils/glyph.util.ts';
 
@@ -38,7 +38,7 @@ const ATOM_FILE = {
 const ATOM_BOX = { padding: `${ATOM_BOX_PADDING_PX}px`, 'compound-sizing-wrt-labels': 'exclude' } as const;
 
 /** A live file's border and outline are dashed; a solid outcome outline would hide a dashed border alone. */
-const ATOM_LIVE = { 'border-style': 'dashed', 'outline-style': 'dashed' } as const;
+const ATOM_LIVE = { 'border-style': 'dashed', 'border-dash-pattern': DASHED_BORDER_PX, 'outline-style': 'dashed' } as const;
 
 /** A node's state glyph, a space and its name; an umbrella's counts line stays under it. */
 const glyphLabelOf = (node: NodeSingular): string => `${glyphOf(node.classes())} ${node.data('label')}`;

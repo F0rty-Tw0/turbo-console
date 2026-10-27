@@ -167,6 +167,57 @@ describe('FEATURE: graph.css', () => {
     });
   });
 
+  describe('GIVEN the legend panel rule', () => {
+    const declarations = declarationsOf(css, '.graph-legend');
+
+    it.each([
+      'background: var(--vscode-menu-background)',
+      'color: var(--vscode-menu-foreground, var(--vscode-foreground))',
+      'box-shadow: 0 2px 8px var(--vscode-widget-shadow)',
+      'max-height: 70vh',
+      'overflow: auto'
+    ])('WHEN it is read THEN it holds %s', (expected) => {
+      expect(declarations).toContain(expected);
+    });
+
+    it('WHEN it is read THEN it sets no display, which would show the closed popover', () => {
+      expect(declarations).not.toContain('display');
+    });
+  });
+
+  describe('GIVEN the @supports anchor block', () => {
+    const start = css.indexOf('@supports (anchor-name: --graph-legend)');
+    const anchored = css.slice(start);
+
+    it('WHEN the css is searched THEN the block exists', () => {
+      expect(start).toBeGreaterThan(-1);
+    });
+
+    it('WHEN its button rule is read THEN it names the anchor', () => {
+      const declarations = declarationsOf(anchored, '.legend-button');
+
+      expect(declarations).toContain('anchor-name: --graph-legend');
+    });
+
+    it.each(['position-anchor: --graph-legend', 'top: calc(anchor(bottom) + var(--space-1))', 'position-try-fallbacks: flip-inline'])(
+      'WHEN its panel rule is read THEN it holds %s',
+      (expected) => {
+        const declarations = declarationsOf(anchored, '.graph-legend');
+
+        expect(declarations).toContain(expected);
+      }
+    );
+  });
+
+  it.each(['.graph-page.task-mode .legend-packages', '.graph-page:not(.task-mode) .legend-tasks'])(
+    'GIVEN the mode rule WHEN %s is read THEN that list is hidden',
+    (selector) => {
+      const declarations = declarationsOf(css, selector);
+
+      expect(declarations).toContain('display: none');
+    }
+  );
+
   describe('GIVEN the empty task notice rule', () => {
     const declarations = declarationsOf(css, '.graph-task-notice:empty');
 

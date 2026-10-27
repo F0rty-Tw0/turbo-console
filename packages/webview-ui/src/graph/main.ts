@@ -26,6 +26,7 @@ import { GraphFlow } from './domain-logic/graph-flow.ts';
 import { buildControls } from './ui/controls-elements.ts';
 import { fitFlowCanvas } from './ui/flow-canvas.ts';
 import { detailsViews, taskDetailsViews, taskViews, widgetViews } from './ui/graph-views.ts';
+import { renderLegend } from './ui/legend-elements.ts';
 import { buildPage } from './ui/page-elements.ts';
 import { codiconReadyOf } from './utils/codicon-ready.util.ts';
 import { themeColorsOf } from './utils/theme-colors.util.ts';
@@ -113,6 +114,7 @@ const applyThemeTo = (controller: GraphController): void => {
 
   controller.view.applyTheme(colors);
   controller.flow.setColor(colors.background);
+  renderLegend(page, colors);
 };
 
 const flushWhenHidden = (): void => {

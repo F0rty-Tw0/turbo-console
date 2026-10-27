@@ -4,6 +4,8 @@ import { selectionRulesOf } from './graph-selection-style.ts';
 import { taskRulesOf } from './graph-task-style.ts';
 import {
   COLLAPSED_LABEL_MAX_PX,
+  DASHED_BORDER_PX,
+  DASHED_LINE_PX,
   DIMMED_BOX_CLASS,
   EDGE_WIDTH,
   EXPORTING_CLASS,
@@ -80,7 +82,7 @@ const folderLinkStyleOf = (colors: ThemeColors, fontFamily: string): Css.Edge =>
 
 const HIDDEN = { display: 'none' } as const;
 
-const GHOST_NODE = { 'border-style': 'dashed', 'text-opacity': 0.75 } as const;
+const GHOST_NODE = { 'border-style': 'dashed', 'border-dash-pattern': DASHED_BORDER_PX, 'text-opacity': 0.75 } as const;
 
 /** A collapsed folder: no label, since its DOM header row shows the title; its corners as round as a box's. */
 const FOLDER_NODE = { label: '', 'corner-radius': '8px' } as const;
@@ -90,7 +92,7 @@ const FOLDER_NODE_LABELLED = { label: 'data(label)', 'text-wrap': 'wrap', 'text-
 
 const FOLDER_NODE_LABELLED_SELECTOR = `node.${FOLDER_NODE_CLASS}.${EXPORTING_CLASS}, node.${FOLDER_NODE_CLASS}.${ROW_LESS_CLASS}`;
 
-const GHOST_EDGE = { 'line-style': 'dashed' } as const;
+const GHOST_EDGE = { 'line-style': 'dashed', 'line-dash-pattern': DASHED_LINE_PX } as const;
 
 const EDGE_ARROW = { 'target-arrow-shape': 'triangle', 'arrow-scale': 0.8, 'target-distance-from-node': 3 } as const;
 
