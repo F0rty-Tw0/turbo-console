@@ -42,7 +42,7 @@ const INTERRUPTIONS: Interruption[] = [
 test.describe('FEATURE: task mode across a state with no graph', () => {
   for (const { kind, state, text } of INTERRUPTIONS) {
     test(
-      `GIVEN task mode on, ${kind} state then the graph again shows the toolbar and the chain, and the toggle still leaves task mode`,
+      `GIVEN task mode on, ${kind} state then the graph again shows the toolbar and the chain, and Packages still leaves task mode`,
       { annotation: STATES },
       async ({ graphHost, graphPage, graphProbe, graphTask, graphTaskProbe, graphToolbar }): Promise<void> => {
         await test.step('WHEN the page opens cold in task mode with app#build chosen', async (): Promise<void> => {
@@ -64,7 +64,7 @@ test.describe('FEATURE: task mode across a state with no graph', () => {
           await graphTask.expectPressed(true);
         });
 
-        await test.step('WHEN the Task mode toggle is pressed', async (): Promise<void> => graphTask.toggle());
+        await test.step('WHEN Packages is pressed', async (): Promise<void> => graphTask.leave());
 
         await test.step('THEN the package graph is drawn', async (): Promise<void> => {
           await graphTask.expectPressed(false);
@@ -167,7 +167,7 @@ test.describe('FEATURE: task panels across a same-hash refresh', () => {
       });
 
       await test.step('AND task mode is on with Controls closed', async (): Promise<void> => {
-        await graphTask.toggle();
+        await graphTask.enter();
         await graphPage.pressButton(CONTROLS_LABEL);
         await graphTaskHost.expectSaved({ controlsOpen: false });
       });
@@ -198,11 +198,11 @@ test.describe('FEATURE: the package status line in task mode', () => {
     'GIVEN app picked, task mode empties the status line and leaving it names app again',
     { annotation: STATUS },
     async ({ graphPage, graphTask }): Promise<void> => {
-      await test.step('WHEN the Task mode toggle is pressed', async (): Promise<void> => graphTask.toggle());
+      await test.step('WHEN Tasks is pressed', async (): Promise<void> => graphTask.enter());
 
       await test.step('THEN the status line is empty', async (): Promise<void> => expect(graphPage.status).toHaveText(''));
 
-      await test.step('WHEN the Task mode toggle is pressed again', async (): Promise<void> => graphTask.toggle());
+      await test.step('WHEN Packages is pressed', async (): Promise<void> => graphTask.leave());
 
       await test.step('THEN the status line names app again', async (): Promise<void> =>
         expect(graphPage.status).toHaveText(/^app · /u));
@@ -213,8 +213,8 @@ test.describe('FEATURE: the package status line in task mode', () => {
     'GIVEN app picked and task mode on, a failed export still says so on the status line',
     { annotation: STATUS },
     async ({ graphExport, graphPage, graphTask }): Promise<void> => {
-      await test.step('WHEN the Task mode toggle is pressed and canvas reads fail', async (): Promise<void> => {
-        await graphTask.toggle();
+      await test.step('WHEN Tasks is pressed and canvas reads fail', async (): Promise<void> => {
+        await graphTask.enter();
         await graphExport.breakCanvasReads();
       });
 

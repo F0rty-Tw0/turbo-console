@@ -57,7 +57,7 @@ describe('FEATURE: GraphTaskMode across page states', () => {
     beforeEach(() => {
       open(taskSavedOf({}, 'packages'));
       mode.received(TASK_STATE_STUB, 7);
-      mode.toggle(8);
+      mode.enter(8);
     });
 
     describe('WHEN a message replaces the page and the same state arrives again', () => {
@@ -87,8 +87,16 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       expect(rig.screen.showGraph).toHaveBeenCalledOnce();
     });
 
+    it('WHEN enter is called while task mode is on THEN no run starts, the page is not shown again and nothing exits', () => {
+      mode.enter(9);
+
+      expect(rig.runs.count()).toBe(1);
+      expect(rig.screen.showGraph).toHaveBeenCalledOnce();
+      expect(rig.onExit).not.toHaveBeenCalled();
+    });
+
     it('WHEN task mode is left and the chain run lands THEN nothing is drawn', async () => {
-      mode.toggle(9);
+      mode.leave(9);
       await rig.runs.settle(0, resultOf(KEY, POSITIONS));
 
       expect(rig.view.tasks.show).not.toHaveBeenCalled();
@@ -116,7 +124,7 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       open(taskSavedOf({ selected: 'web#build' }, 'packages'));
       rig.view.flowEdges.mockReturnValue([LIT_EDGE]);
       mode.received(TASK_STATE_STUB, 7);
-      mode.toggle(8);
+      mode.enter(8);
       rig.flow.highlightChanged.mockClear();
     });
 
@@ -128,6 +136,20 @@ describe('FEATURE: GraphTaskMode across page states', () => {
 
       expect(rig.flow.highlightChanged).toHaveBeenLastCalledWith(1);
       expect(stoppedAt).toBeLessThan(heardAt);
+    });
+  });
+
+  describe('GIVEN package mode', () => {
+    beforeEach(() => {
+      open(taskSavedOf({}, 'packages'));
+      mode.received(TASK_STATE_STUB, 7);
+    });
+
+    it('WHEN leave is called THEN onExit is not called and the panel does not exit', () => {
+      mode.leave(9);
+
+      expect(rig.onExit).not.toHaveBeenCalled();
+      expect(rig.panel.exit).not.toHaveBeenCalled();
     });
   });
 

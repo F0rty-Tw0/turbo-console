@@ -4,7 +4,7 @@ import type { PanelToggleDeps, TaskPanel, TaskPanelActions, TaskPanelView, TaskP
 import type { TaskWidgets } from '../common/task-details.type.ts';
 import { tasksHiddenText } from '../utils/task-text.util.ts';
 
-type TaskPanelPage = Pick<PageElements, 'root' | 'taskMode' | 'taskScreen' | 'container' | 'status'>;
+type TaskPanelPage = Pick<PageElements, 'root' | 'packagesMode' | 'taskMode' | 'taskScreen' | 'container' | 'status'>;
 
 /** A task Controls or Details panel opened or closed: the canvas re-measures and the open state is saved. */
 export const savePanelToggle = (deps: PanelToggleDeps, panels: TaskPanelsOpen): void => {
@@ -34,6 +34,7 @@ export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions): Tas
   const setOn = (isOn: boolean): void => {
     isTaskMode = isOn;
     page.root.classList.toggle(TASK_MODE_CLASS, isOn);
+    page.packagesMode.setAttribute('aria-pressed', String(!isOn));
     page.taskMode.setAttribute('aria-pressed', String(isOn));
   };
   const show = (view: TaskPanelView): void => {

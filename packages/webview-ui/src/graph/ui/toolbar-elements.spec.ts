@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildToolbar } from './toolbar-elements.ts';
-import type { ToolbarElements } from '../common/graph-page.type.ts';
-import { MODE_LABEL, TASK_MODE_LABEL, TASK_MODE_TITLE } from '../common/graph-task.const.ts';
+import {
+  MODE_LABEL,
+  PACKAGES_MODE_LABEL,
+  PACKAGES_MODE_TITLE,
+  TASKS_MODE_LABEL,
+  TASKS_MODE_TITLE
+} from '../common/graph-task.const.ts';
+import type { ToolbarElements } from '../common/graph-toolbar.type.ts';
 import {
   CLEAR_TITLE,
   CONTROLS_TITLE,
@@ -29,28 +35,43 @@ describe('FEATURE: buildToolbar', () => {
   });
 
   describe('GIVEN the toolbar in its pre-state', () => {
-    it('WHEN its first part is read THEN it is the Mode group holding the Task mode toggle', () => {
+    it('WHEN its first part is read THEN it is the Mode group', () => {
       const first = elements.toolbar.children[0];
 
       expect(first?.getAttribute('aria-label')).toBe(MODE_LABEL);
-      expect(first?.children[0]).toBe(elements.taskMode);
     });
 
-    it('WHEN the Task mode toggle is read THEN it is unpressed, disabled and named Task mode', () => {
-      const { taskMode } = elements;
+    it('WHEN the Mode group is read THEN it holds Packages, then Tasks', () => {
+      const first = elements.toolbar.children[0];
 
-      expect(taskMode.getAttribute('aria-pressed')).toBe('false');
-      expect(taskMode.disabled).toBe(true);
-      expect(taskMode.children[1]?.textContent).toBe(TASK_MODE_LABEL);
+      expect([first?.children[0], first?.children[1]]).toStrictEqual([elements.packagesMode, elements.taskMode]);
+    });
+
+    describe('WHEN a mode button is read THEN it is disabled, named and pressed or not', () => {
+      const rows = [
+        ['packagesMode', PACKAGES_MODE_LABEL, 'true'],
+        ['taskMode', TASKS_MODE_LABEL, 'false']
+      ] as const;
+
+      it.each(rows)('THEN %s is disabled, named %s and has aria-pressed %s', (key, label, pressed) => {
+        const button = elements[key];
+
+        expect([button.disabled, button.children[1]?.textContent, button.getAttribute('aria-pressed')]).toStrictEqual([
+          true,
+          label,
+          pressed
+        ]);
+      });
     });
 
     it('WHEN each button is read THEN it has its spec title', () => {
-      const { taskMode, controls, details, fit, relayout, exportImage, clear } = elements;
-      const buttons = [taskMode, controls, details, fit, relayout, exportImage, clear];
+      const { packagesMode, taskMode, controls, details, fit, relayout, exportImage, clear } = elements;
+      const buttons = [packagesMode, taskMode, controls, details, fit, relayout, exportImage, clear];
       const titles = buttons.map((button): string => button.title);
 
       expect(titles).toStrictEqual([
-        TASK_MODE_TITLE,
+        PACKAGES_MODE_TITLE,
+        TASKS_MODE_TITLE,
         CONTROLS_TITLE,
         DETAILS_TITLE,
         FIT_TITLE,

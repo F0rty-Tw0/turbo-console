@@ -6,11 +6,14 @@ import {
   EMPTY_TASKS_TEXT,
   MAX_TASK_DEPTH,
   MIN_TASK_DEPTH,
+  PACKAGES_MODE_LABEL,
+  PACKAGES_MODE_TITLE,
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
   SHOW_TASKS_LABEL,
+  TASKS_MODE_LABEL,
+  TASKS_MODE_TITLE,
   TASK_CAP,
-  TASK_MODE_LABEL,
   UNKNOWN_TASKS_TEXT
 } from './graph-task.const.ts';
 
@@ -25,7 +28,10 @@ describe('FEATURE: graph task constants', () => {
   });
 
   it.each([
-    ['the toggle', TASK_MODE_LABEL, 'Task mode'],
+    ['the Packages button', PACKAGES_MODE_LABEL, 'Packages'],
+    ['the Packages button hover text', PACKAGES_MODE_TITLE, 'Show the package graph'],
+    ['the Tasks button', TASKS_MODE_LABEL, 'Tasks'],
+    ['the Tasks button hover text', TASKS_MODE_TITLE, 'Show the task graph'],
     ['the banner button', SHOW_ALL_TASKS_LABEL, 'Show all tasks'],
     ['the search field', SEARCH_TASKS_LABEL, 'Search tasks'],
     ['the depth field', DEPENDENTS_DEPTH_LABEL, 'Dependents depth'],

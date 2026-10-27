@@ -231,9 +231,9 @@ test.describe('FEATURE: graph task flow', () => {
         await graphProbe.expectSelected('lib-3');
       });
 
-      await test.step('AND the worker is held, Task mode is pressed and 100 ms pass', async (): Promise<void> => {
+      await test.step('AND the worker is held, Tasks is pressed and 100 ms pass', async (): Promise<void> => {
         await graphGrouping.holdWorker();
-        await graphTask.toggleButton.dispatchEvent('click');
+        await graphTask.tasksButton.dispatchEvent('click');
         await graphFlow.tick(100);
       });
 

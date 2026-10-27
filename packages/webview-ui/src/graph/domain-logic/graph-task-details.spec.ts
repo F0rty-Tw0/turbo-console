@@ -46,7 +46,7 @@ const rigOf = (): DetailsRig => {
     posted.push(message);
   };
   const bridge: Bridge = { ready: vi.fn(), post, onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
-  const page = { body: document.createElement('div'), details: button(), clear: button(), taskMode: button() };
+  const page = { body: document.createElement('div'), details: button(), clear: button(), packagesMode: button() };
   const { views, panel, built } = taskDetailsViewsMock();
   const onSelect = vi.fn<(id: string) => void>();
   const onClear = vi.fn<() => void>();
@@ -122,7 +122,7 @@ describe('FEATURE: GraphTaskDetails', () => {
       rig.built[0]?.heading.focus();
       details.exit();
 
-      expect(document.activeElement).toBe(rig.deps.page.taskMode);
+      expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
   });
 

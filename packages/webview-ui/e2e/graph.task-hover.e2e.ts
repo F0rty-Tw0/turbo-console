@@ -117,7 +117,7 @@ test.describe('FEATURE: graph task hover', () => {
     );
 
     test(
-      'a hover does not outlive task mode: lib-3#test hovered, Task mode toggled off and on by keyboard, leaves every node normal',
+      'a hover does not outlive task mode: lib-3#test hovered, Packages then Tasks pressed by keyboard, leaves every node normal',
       { annotation: S1 },
       async ({ graphHover, graphProbe, graphTask }): Promise<void> => {
         await test.step('WHEN lib-3#test is hovered', async (): Promise<void> => {
@@ -125,10 +125,10 @@ test.describe('FEATURE: graph task hover', () => {
           await graphProbe.expectNodeStates(targetLikeLitStatesOf('lib-3#test'));
         });
 
-        await test.step('AND Task mode is toggled off and on by keyboard', async (): Promise<void> => {
-          await graphTask.toggleButton.press('Enter');
+        await test.step('AND Packages then Tasks is pressed by keyboard', async (): Promise<void> => {
+          await graphTask.packagesButton.press('Enter');
           await graphTask.expectPressed(false);
-          await graphTask.toggleButton.press('Enter');
+          await graphTask.tasksButton.press('Enter');
           await graphTask.expectPressed(true);
         });
 

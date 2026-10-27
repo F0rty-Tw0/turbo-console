@@ -25,7 +25,9 @@ import type { GraphViewState, PackageViewState } from '../../bridge/common/graph
 export type PageElements = {
   readonly root: HTMLElement;
   readonly toolbar: HTMLElement;
-  /** The Task mode toggle, first in the toolbar; `aria-pressed` while task mode is on. */
+  /** The Packages button, first in the toolbar; `aria-pressed` while the package graph shows. */
+  readonly packagesMode: HTMLButtonElement;
+  /** The Tasks button, after Packages; `aria-pressed` while task mode is on. */
   readonly taskMode: HTMLButtonElement;
   /**
    * Toggles the controls panel `aside#graph-controls`; `GraphControls` keeps its label and `aria-expanded` current. In task
@@ -59,12 +61,6 @@ export type PageElements = {
   /** `div.graph-widgets`: the canvas widgets' layer over the container, its DOM sibling right after it. */
   readonly widgets: HTMLElement;
 };
-
-/** What `buildToolbar` builds: the toolbar and the parts of it the page drives. */
-export type ToolbarElements = Pick<
-  PageElements,
-  'toolbar' | 'taskMode' | 'controls' | 'details' | 'fit' | 'relayout' | 'exportImage' | 'clear' | 'status' | 'filtersOn'
->;
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
 export type ControlsViewFields = Pick<

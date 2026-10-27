@@ -107,8 +107,8 @@ describe('FEATURE: PackageReveal', () => {
     });
 
     it('WHEN web is revealed THEN task mode is left at the message time and nothing is selected yet', () => {
-      expect(rig.tasks.toggle).toHaveBeenCalledWith(7);
-      expect(rig.log).toStrictEqual(['toggle']);
+      expect(rig.tasks.leave).toHaveBeenCalledWith(7);
+      expect(rig.log).toStrictEqual(['leave']);
     });
 
     it('WHEN the package graph places THEN web is selected', async () => {
@@ -117,7 +117,7 @@ describe('FEATURE: PackageReveal', () => {
       reveal.placed();
       await flush();
 
-      expect(rig.log).toStrictEqual(['toggle', 'select web']);
+      expect(rig.log).toStrictEqual(['leave', 'select web']);
     });
   });
 
@@ -135,7 +135,7 @@ describe('FEATURE: PackageReveal', () => {
       reveal.placed();
       await flush();
 
-      expect(rig.log).toStrictEqual(['toggle', 'select web']);
+      expect(rig.log).toStrictEqual(['leave', 'select web']);
     });
   });
 
@@ -276,7 +276,7 @@ describe('FEATURE: PackageReveal', () => {
     it('WHEN the package graph places THEN task mode is left, the filters edited, apps expanded and web selected, in order', async () => {
       await flush();
 
-      expect(rig.log).toStrictEqual(['toggle', 'edit', 'expand apps', 'select web']);
+      expect(rig.log).toStrictEqual(['leave', 'edit', 'expand apps', 'select web']);
     });
 
     it('WHEN the package graph places THEN the one edit ticks web again', async () => {

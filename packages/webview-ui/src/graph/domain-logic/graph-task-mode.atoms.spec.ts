@@ -58,7 +58,7 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
     });
 
     it('WHEN task mode is then entered THEN the umbrella is sized and labelled when its layout lands', async () => {
-      mode.toggle(8);
+      mode.enter(8);
       await rig.runs.settle(0, resultOf(UMBRELLA_KEY, POSITIONS));
 
       const size = umbrellaSizeOf({ name: rig.deps.sizeOf, counts: rig.deps.textSizeOf }, 'build', 2);
@@ -78,7 +78,7 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       open(taskSavedOf({}, 'packages'), { sizeOf, textSizeOf });
       mode.received(UMBRELLA_STATE, 7);
 
-      mode.toggle(8);
+      mode.enter(8);
       await rig.runs.settle(0, resultOf(UMBRELLA_KEY, POSITIONS));
 
       const sizes = new Map([['web#build', { width, height: 30 + ATOM_COUNTS_LINE_PX }]]);
@@ -87,7 +87,7 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
     });
 
     it('WHEN task mode is then entered THEN the umbrella is posted in shownUmbrellas', async () => {
-      mode.toggle(8);
+      mode.enter(8);
       await rig.runs.settle(0, resultOf(UMBRELLA_KEY, POSITIONS));
 
       expect(shownUmbrellaPosts()).toStrictEqual([{ type: 'shownUmbrellas', ids: ['web#build'] }]);
@@ -140,15 +140,15 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       });
 
       it('THEN leaving task mode collapses it and lets the canvas grab again', () => {
-        mode.toggle(9);
+        mode.leave(9);
 
         expect(rig.view.atoms.collapse).toHaveBeenCalledExactlyOnceWith('web#build', 'pkg:web');
         expect(rig.view.atoms.setGrabbable).toHaveBeenLastCalledWith(true);
       });
 
       it('THEN entering task mode again draws the group collapsed', async () => {
-        mode.toggle(9);
-        mode.toggle(10);
+        mode.leave(9);
+        mode.enter(10);
         await Promise.resolve();
 
         expect(rig.view.tasks.show).toHaveBeenCalledTimes(2);

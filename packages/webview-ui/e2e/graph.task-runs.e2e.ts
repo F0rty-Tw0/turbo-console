@@ -166,8 +166,8 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
       'the keyboard alone selects lib#build from the task list and runs it',
       { annotation: KEYBOARD },
       async ({ graphKeys, graphPage, graphTaskHost }): Promise<void> => {
-        await test.step('WHEN Tab reaches the task list from Task mode', async (): Promise<void> => {
-          await graphPage.focusButton('Task mode');
+        await test.step('WHEN Tab reaches the task list from Tasks', async (): Promise<void> => {
+          await graphPage.focusButton('Tasks');
           await graphKeys.tabTo('build');
         });
 

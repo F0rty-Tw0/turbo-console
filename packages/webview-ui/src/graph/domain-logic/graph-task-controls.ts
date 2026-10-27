@@ -55,7 +55,7 @@ export class GraphTaskControls {
     panel.hidden = true;
     this.deps.page.controls.setAttribute('aria-controls', CONTROLS_ID);
 
-    if (hadFocus) this.deps.page.taskMode.focus();
+    if (hadFocus) this.deps.page.packagesMode.focus();
   }
 
   /** Lists `tasks`; a row with focus hands it, and the Tab stop, to its twin among the new rows. */

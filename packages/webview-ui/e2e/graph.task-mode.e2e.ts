@@ -4,7 +4,7 @@ import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { tabStopsOf } from './test/utils/graph-focus-steps.spec.util.ts';
 import { OVER_CAP_ROOT_TASK, overCapTaskIds, overCapTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
-import { TASK_MODE_LABEL, UNKNOWN_TASKS_TEXT } from '../src/graph/common/graph-task.const.ts';
+import { PACKAGES_MODE_LABEL, UNKNOWN_TASKS_TEXT } from '../src/graph/common/graph-task.const.ts';
 import { CONTROLS_LABEL, GRAPH_LABEL, RELAYOUT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const TOGGLE = { description: 'M4-5a spec 3.2, 3.6', type: 'requirement' };
@@ -25,7 +25,7 @@ const CHAIN = ['app#build', 'lib#build', 'ui#build'];
 /** `lib#build` at depth 1: the `ui#build` it needs and its dependents `app#build` and `lib#test`, in the state's task order. */
 const LIB_SET = ['app#build', 'lib#build', 'lib#test', 'ui#build'];
 
-/** From Task mode with the chain shown: the toolbar, the task Controls (never the package ones), then the canvas. */
+/** From Tasks with the chain shown: the toolbar, the task Controls (never the package ones), then the canvas. */
 const TASK_STOPS: FocusStep[] = tabStopsOf([
   'Controls',
   'Details',
@@ -48,15 +48,15 @@ test.describe('FEATURE: graph task mode', () => {
   });
 
   test(
-    'GIVEN nothing chosen, the Task mode toggle turns task mode on with the prompt and nothing laid out',
+    'GIVEN nothing chosen, the Tasks button turns task mode on with the prompt and nothing laid out',
     { annotation: TOGGLE },
     async ({ graphPage, graphTask, graphTaskProbe }): Promise<void> => {
-      await test.step('THEN the toggle is enabled and unpressed', async (): Promise<void> => {
-        await graphPage.expectEnabled('Task mode');
+      await test.step('THEN Tasks is enabled and unpressed', async (): Promise<void> => {
+        await graphPage.expectEnabled('Tasks');
         await graphTask.expectPressed(false);
       });
 
-      await test.step('WHEN Task mode is pressed', async (): Promise<void> => graphTask.toggle());
+      await test.step('WHEN Tasks is pressed', async (): Promise<void> => graphTask.enter());
 
       await test.step('THEN it reads pressed', async (): Promise<void> => graphTask.expectPressed(true));
 
@@ -129,14 +129,14 @@ test.describe('FEATURE: graph task mode', () => {
   );
 
   test(
-    'GIVEN the chain shown, Tab from Task mode walks the task Controls and never the package Controls',
+    'GIVEN the chain shown, Tab from Tasks walks the task Controls and never the package Controls',
     { annotation: CONTROLS },
     async ({ graphKeys, graphPage, graphTaskHost, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN showTasks names app#build', async (): Promise<void> => graphTaskHost.sendShowTasks(['app#build']));
 
       await test.step('AND the chain is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(CHAIN));
 
-      await test.step('AND Task mode is focused', async (): Promise<void> => graphPage.focusButton('Task mode'));
+      await test.step('AND Tasks is focused', async (): Promise<void> => graphPage.focusButton('Tasks'));
 
       const walked = await test.step('WHEN Tab is pressed nine times', async (): Promise<FocusStep[]> => graphKeys.walk(TASK_STOPS));
 
@@ -175,7 +175,7 @@ test.describe('FEATURE: graph task mode', () => {
 
       await test.step('AND the chain is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(CHAIN));
 
-      await test.step('AND Task mode is pressed', async (): Promise<void> => graphTask.toggle());
+      await test.step('AND Packages is pressed', async (): Promise<void> => graphTask.leave());
 
       await test.step('THEN task mode is off and the package nodes are back', async (): Promise<void> => {
         await graphTask.expectPressed(false);
@@ -187,7 +187,7 @@ test.describe('FEATURE: graph task mode', () => {
   );
 
   test(
-    'GIVEN the chain shown after the package graph with focus in Search tasks, leaving task mode without focusing the toggle hands focus to it',
+    'GIVEN the chain shown after the package graph with focus in Search tasks, leaving task mode without focusing Packages hands focus to it',
     { annotation: CONTROLS },
     async ({ graphHost, graphPage, graphTask, graphTaskHost, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the package layout is posted and showTasks draws the chain', async (): Promise<void> => {
@@ -198,10 +198,11 @@ test.describe('FEATURE: graph task mode', () => {
 
       await test.step('AND Search tasks has focus', async (): Promise<void> => graphTask.search(''));
 
-      await test.step('AND a click event leaves task mode', async (): Promise<void> => graphTask.toggleButton.dispatchEvent('click'));
+      await test.step('AND a click event leaves task mode', async (): Promise<void> =>
+        graphTask.packagesButton.dispatchEvent('click'));
 
-      await test.step('THEN the Task mode toggle has focus', async (): Promise<void> =>
-        graphPage.expectButtonFocused(TASK_MODE_LABEL));
+      await test.step('THEN the Packages button has focus', async (): Promise<void> =>
+        graphPage.expectButtonFocused(PACKAGES_MODE_LABEL));
     }
   );
 });
@@ -218,11 +219,11 @@ test.describe('FEATURE: graph task mode, own openings', () => {
 
       await test.step('AND the chain is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(CHAIN));
 
-      await test.step('AND Task mode is pressed', async (): Promise<void> => graphTask.toggle());
+      await test.step('AND Packages is pressed', async (): Promise<void> => graphTask.leave());
 
       await test.step('THEN the package nodes are drawn', async (): Promise<void> => graphProbe.expectNodeIds(PACKAGES));
 
-      await test.step('AND the toggle reads unpressed', async (): Promise<void> => graphTask.expectPressed(false));
+      await test.step('AND Packages reads pressed', async (): Promise<void> => graphTask.expectPressed(false));
     }
   );
 
@@ -247,17 +248,17 @@ test.describe('FEATURE: graph task mode, own openings', () => {
         await graphProbe.expectNodeIds(PACKAGES);
       });
 
-      await test.step('AND the chain is shown, then Task mode is pressed', async (): Promise<void> => {
+      await test.step('AND the chain is shown, then Packages is pressed', async (): Promise<void> => {
         await graphTaskHost.sendShowTasks(['app#build']);
         await graphTaskProbe.expectTaskIds(CHAIN);
-        await graphTask.toggle();
+        await graphTask.leave();
         await graphProbe.expectNodeIds(PACKAGES);
       });
 
-      await test.step('AND the worker is held, Re-layout is pressed and Task mode pressed again', async (): Promise<void> => {
+      await test.step('AND the worker is held, Re-layout is pressed and Tasks pressed again', async (): Promise<void> => {
         await graphGrouping.holdWorker();
         await graphPage.pressButton(RELAYOUT_LABEL);
-        await graphTask.toggle();
+        await graphTask.enter();
       });
 
       await test.step('AND the chain is back and panned, and the camera remembered', async (): Promise<void> => {
@@ -309,14 +310,14 @@ test.describe('FEATURE: graph task mode, own openings', () => {
       });
 
       await test.step('AND in package mode the worker is held and Re-layout pressed', async (): Promise<void> => {
-        await graphTask.toggle();
+        await graphTask.leave();
         await graphProbe.expectNodeIds(PACKAGES);
         await graphGrouping.holdWorker();
         await graphPage.pressButton(RELAYOUT_LABEL);
       });
 
-      await test.step('AND Task mode is pressed and the chain is back', async (): Promise<void> => {
-        await graphTask.toggle();
+      await test.step('AND Tasks is pressed and the chain is back', async (): Promise<void> => {
+        await graphTask.enter();
         await graphTaskProbe.expectTaskIds(CHAIN);
       });
 
@@ -325,7 +326,7 @@ test.describe('FEATURE: graph task mode, own openings', () => {
 
       await test.step('THEN no notice paints over the task graph', async (): Promise<void> => graphPage.expectNoNotice());
 
-      await test.step('WHEN Task mode is pressed again', async (): Promise<void> => graphTask.toggle());
+      await test.step('WHEN Packages is pressed again', async (): Promise<void> => graphTask.leave());
 
       await test.step('THEN the package graph shows its fallback notice', async (): Promise<void> => graphPage.expectFallbackNotice());
     }

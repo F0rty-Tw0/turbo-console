@@ -320,7 +320,7 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
 
       await test.step('AND its files are drawn', async (): Promise<void> => graphAtoms.expectFilesDrawn(FILE_IDS, true));
 
-      await test.step('AND Task mode is pressed', async (): Promise<void> => graphTask.toggle());
+      await test.step('AND Packages is pressed', async (): Promise<void> => graphTask.leave());
 
       await test.step('AND the package nodes are drawn', async (): Promise<void> => graphProbe.expectNodeIds(PACKAGE_NAMES));
 

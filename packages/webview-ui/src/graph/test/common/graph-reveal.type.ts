@@ -5,7 +5,7 @@ import type { GraphView } from '../../common/graph-page.type.ts';
 import type { RevealDeps, RevealFolders, RevealInspection, RevealLayouts, RevealTaskMode } from '../../common/graph-reveal.type.ts';
 
 /**
- * The deps of a `PackageReveal` under test, each fake also reachable on its own; `log` records, in call order, `toggle`,
+ * The deps of a `PackageReveal` under test, each fake also reachable on its own; `log` records, in call order, `leave`,
  * `edit`, `expand <folders>`, `setViewport <zoom>` and `select <name>`.
  */
 export type RevealDepsMock = {

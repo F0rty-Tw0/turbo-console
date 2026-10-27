@@ -7,7 +7,7 @@ import {
   TASK_MODE_STATE_STUB
 } from './test/stubs/graph-task-mode.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
-import { TASK_MODE_LABEL } from '../src/graph/common/graph-task.const.ts';
+import { TASKS_MODE_LABEL } from '../src/graph/common/graph-task.const.ts';
 import { FIT_LABEL, RELAYOUT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const RF3 = { description: 'M4-5a RF3', type: 'requirement' };
@@ -206,8 +206,8 @@ test.describe('FEATURE: graph task layout', () => {
         await graphPage.expectEnabled(RELAYOUT_LABEL);
       });
 
-      await test.step('AND the Task mode toggle is enabled and pressed', async (): Promise<void> => {
-        await graphPage.expectEnabled(TASK_MODE_LABEL);
+      await test.step('AND Tasks is enabled and pressed', async (): Promise<void> => {
+        await graphPage.expectEnabled(TASKS_MODE_LABEL);
         await graphTask.expectPressed(true);
       });
     }

@@ -15,6 +15,8 @@ type PanelRig = {
   readonly banner: HTMLElement;
   /** The cap banner's `role=status` line. */
   readonly bannerText: HTMLElement;
+  readonly packagesMode: HTMLButtonElement;
+  readonly taskMode: HTMLButtonElement;
 };
 
 const line = (): HTMLElement => document.createElement('p');
@@ -31,9 +33,11 @@ const rigOf = (): PanelRig => {
     notice
   };
   const status = line();
-  const page = { root: line(), taskMode: document.createElement('button'), taskScreen, container: line(), status };
+  const packagesMode = document.createElement('button');
+  const taskMode = document.createElement('button');
+  const page = { root: line(), packagesMode, taskMode, taskScreen, container: line(), status };
   const panel = taskPanelOf(page, { onShowAll: vi.fn() });
-  const rig: PanelRig = { panel, notice, status, banner, bannerText };
+  const rig: PanelRig = { panel, notice, status, banner, bannerText, packagesMode, taskMode };
 
   return rig;
 };
@@ -112,6 +116,40 @@ describe('FEATURE: taskPanelOf notice', () => {
     panel.enter();
 
     expect(status.textContent).toBe('');
+  });
+});
+
+/** The `aria-pressed` of Packages, then Tasks. */
+const pressedOf = (rig: PanelRig): (string | null)[] => {
+  const buttons = [rig.packagesMode, rig.taskMode];
+  const pressed = buttons.map((button): string | null => button.getAttribute('aria-pressed'));
+
+  return pressed;
+};
+
+describe('FEATURE: taskPanelOf mode buttons', () => {
+  let rig: PanelRig;
+
+  beforeEach(() => {
+    vi.stubGlobal('document', fakeDocumentMock());
+    rig = rigOf();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('GIVEN package mode WHEN task mode is entered THEN Tasks is pressed and Packages is not', () => {
+    rig.panel.enter();
+
+    expect(pressedOf(rig)).toStrictEqual(['false', 'true']);
+  });
+
+  it('GIVEN task mode WHEN it is exited THEN Packages is pressed and Tasks is not', () => {
+    rig.panel.enter();
+    rig.panel.exit();
+
+    expect(pressedOf(rig)).toStrictEqual(['true', 'false']);
   });
 });
 

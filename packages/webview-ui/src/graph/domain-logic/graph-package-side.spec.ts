@@ -8,6 +8,7 @@ import type { GraphPackage, GraphReady, GraphState } from '../../bridge/common/g
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { LAYOUT_FAILED_TEXT } from '../common/graph.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
+import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { LARGE_STATE_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { isGroupedGraph } from '../test/utils/graph-layouts.spec.util.ts';
@@ -247,4 +248,38 @@ describe('FEATURE: GraphPackageSide parked by task mode', () => {
       expect(rig.modes.current()).toBe(before);
     });
   });
+});
+
+describe('FEATURE: GraphPackageSide mode button focus', () => {
+  let rig: PackageSideRig;
+  let doc: Pick<Document, 'activeElement'>;
+
+  /** Focus is on `key` when task mode is left; a loading screen drops it (the new fake document has none), then the next graph shows. */
+  const leaveWithFocusOn = async (key: 'packagesMode' | 'taskMode'): Promise<void> => {
+    rig.page[key].focus();
+    rig.side.keepToggleFocus();
+    rig.page.details.focus();
+    vi.stubGlobal('document', fakeDocumentMock());
+    rig.side.show(STATE_STUB, 1);
+    await settled();
+  };
+
+  beforeEach(() => {
+    stubPackageSideGlobals();
+    doc = document;
+    rig = rigOf(SAVED_FLAT_STUB);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.each(['packagesMode', 'taskMode'] as const)(
+    'GIVEN focus on %s WHEN the graph shows again THEN Packages has focus',
+    async (key) => {
+      await leaveWithFocusOn(key);
+
+      expect(doc.activeElement).toBe(rig.page.packagesMode);
+    }
+  );
 });

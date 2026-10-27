@@ -61,7 +61,7 @@ export class GraphTaskDetails {
     this.panel.hidden = true;
     this.deps.page.details.setAttribute('aria-controls', DETAILS_ID);
 
-    if (hadFocus) this.deps.page.taskMode.focus();
+    if (hadFocus) this.deps.page.packagesMode.focus();
   }
 
   /** Shows `model`, or the empty lead; focus inside the panel moves to the new view's twin of the focused button. */

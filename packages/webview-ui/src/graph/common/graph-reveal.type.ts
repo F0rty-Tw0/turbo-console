@@ -2,10 +2,10 @@ import type { ControlsRowsHost } from './graph-controls.type.ts';
 import type { DrawnGraph, GraphView } from './graph-page.type.ts';
 import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 
-/** What a reveal asks of task mode: whether it owns the canvas, and the toggle that leaves it. */
+/** What a reveal asks of task mode: whether it owns the canvas, and the leave that hands it back. */
 export type RevealTaskMode = {
   readonly isActive: () => boolean;
-  readonly toggle: (at: number) => void;
+  readonly leave: (at: number) => void;
 };
 
 /** What a reveal asks of the package layouts: the checkbox's mode and whether a layout of it is in flight. */

@@ -26,7 +26,7 @@ export class PackageReveal {
     this.pending = name;
 
     if (isTaskMode) {
-      tasks.toggle(at);
+      tasks.leave(at);
 
       return;
     }

@@ -6,7 +6,7 @@ const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
 
 const AC7 = { description: 'M4-3 AC7', type: 'requirement' };
 
-const MODE: ToolbarGroup = { name: 'Mode', buttons: ['Task mode'] };
+const MODE: ToolbarGroup = { name: 'Mode', buttons: ['Packages', 'Tasks'] };
 
 const PANELS: ToolbarGroup = { name: 'Panels', buttons: ['Controls', 'Details'] };
 
@@ -32,8 +32,10 @@ test.describe('FEATURE: graph toolbar', () => {
 
       await test.step('AND three separators divide the four parts', async (): Promise<void> => graphToolbar.expectSeparators(3));
 
-      await test.step('AND Task mode draws a tasklist icon', async (): Promise<void> =>
-        graphToolbar.expectIcon('Task mode', 'tasklist'));
+      await test.step('AND Packages draws a type-hierarchy icon', async (): Promise<void> =>
+        graphToolbar.expectIcon('Packages', 'type-hierarchy'));
+
+      await test.step('AND Tasks draws a tasklist icon', async (): Promise<void> => graphToolbar.expectIcon('Tasks', 'tasklist'));
 
       await test.step('AND Controls draws a left sidebar icon', async (): Promise<void> =>
         graphToolbar.expectIcon('Controls', 'layout-sidebar-left'));

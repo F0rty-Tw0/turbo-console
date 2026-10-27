@@ -59,7 +59,7 @@ export type TaskDetails = {
 };
 
 export type TaskDetailsDeps = {
-  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'taskMode'>;
+  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'packagesMode'>;
   readonly views: TaskDetailsViews;
   readonly bridge: Bridge;
   readonly actions: TaskDetailsActions;

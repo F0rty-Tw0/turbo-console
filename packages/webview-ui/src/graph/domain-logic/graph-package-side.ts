@@ -107,9 +107,12 @@ export class GraphPackageSide {
     void this.guard(async (): Promise<void> => this.layouts.redraw(saved));
   }
 
-  /** Task mode is being left: a toggle with focus gets it back once the package graph shows, as the loading screen drops it. */
+  /** Task mode is being left: a mode button with focus hands it to Packages once the package graph shows, as the loading screen drops it. */
   public keepToggleFocus(): void {
-    this.isToggleFocusKept = document.activeElement === this.deps.page.taskMode;
+    const { activeElement } = document;
+    const { packagesMode, taskMode } = this.deps.page;
+
+    this.isToggleFocusKept = activeElement === packagesMode || activeElement === taskMode;
   }
 
   /**
@@ -165,7 +168,7 @@ export class GraphPackageSide {
     screen.showGraph(isFallback);
     this.isToggleFocusKept = false;
 
-    if (isRefocus) this.deps.page.taskMode.focus();
+    if (isRefocus) this.deps.page.packagesMode.focus();
   }
 
   private afterDraw(saved: GraphViewState | null): void {
