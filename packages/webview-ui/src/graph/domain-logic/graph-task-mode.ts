@@ -116,6 +116,11 @@ export class GraphTaskMode {
     this.choose({ chosen, capLifted: false, selected: null }, at, droppedNoticeOf(dropped));
   }
 
+  /** Shows `text` on the notice line from either mode, or hides it for `null`; the next task render replaces it. */
+  public notice(text: string | null): void {
+    this.panel.notice(text);
+  }
+
   /** The ids of package `name`'s tasks in the latest state, which Show tasks chooses. */
   public packageTaskIds(name: string): string[] {
     return packageTaskIdsOf(this.memory.tasks(), name);

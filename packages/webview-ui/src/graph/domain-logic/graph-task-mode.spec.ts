@@ -213,6 +213,13 @@ describe('FEATURE: GraphTaskMode', () => {
       expect(rig.runs.count()).toBe(0);
       expect(rig.screen.showGraph).not.toHaveBeenCalled();
     });
+
+    it('WHEN a notice is shown THEN the notice line shows it and task mode stays off', () => {
+      mode.notice('Could not export the image');
+
+      expect(rig.panel.notice).toHaveBeenCalledExactlyOnceWith('Could not export the image');
+      expect(mode.isActive()).toBe(false);
+    });
   });
 
   describe('GIVEN package mode with nothing saved and a state received', () => {

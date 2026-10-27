@@ -19,6 +19,8 @@ const SHOW_TASKS = { description: 'M4-5a spec 3.2.1, slice 2 review note 4', typ
 
 const STATUS = { description: 'M4-5a slice 2 proof Obs 2', type: 'requirement' };
 
+const EXPORT_FAILED = { description: 'M4-5a slice 2 proof Obs 2, U3a review S2', type: 'requirement' };
+
 const PROBE = { description: 'U1 3.4 probe selected() follows task selection', type: 'requirement' };
 
 const PACKAGES = ['app', 'lib', 'ui'];
@@ -210,8 +212,8 @@ test.describe('FEATURE: the package status line in task mode', () => {
   );
 
   test(
-    'GIVEN app picked and task mode on, a failed export still says so on the status line',
-    { annotation: STATUS },
+    'GIVEN app picked and task mode on, a failed export says so on the notice line and the status line',
+    { annotation: EXPORT_FAILED },
     async ({ graphExport, graphPage, graphTask }): Promise<void> => {
       await test.step('WHEN Tasks is pressed and canvas reads fail', async (): Promise<void> => {
         await graphTask.enter();
@@ -220,7 +222,10 @@ test.describe('FEATURE: the package status line in task mode', () => {
 
       await test.step('AND Export image is pressed', async (): Promise<void> => graphExport.press());
 
-      await test.step('THEN the status line says the export failed', async (): Promise<void> =>
+      await test.step('THEN the notice line shows the export failed', async (): Promise<void> =>
+        graphTask.expectNotice(EXPORT_FAILED_TEXT));
+
+      await test.step('AND the status line says it too', async (): Promise<void> =>
         expect(graphPage.status).toHaveText(EXPORT_FAILED_TEXT));
     }
   );

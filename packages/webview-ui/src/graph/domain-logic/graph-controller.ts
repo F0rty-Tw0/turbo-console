@@ -67,8 +67,9 @@ class GraphPageController {
       view: this.view
     });
     const relayout = (): void => this.relayout();
+    const showNotice = (text: string | null): void => this.tasks.notice(text);
 
-    wireToolbar({ page, view: this.view, bridge, background: deps.background, relayout });
+    wireToolbar({ page, view: this.view, bridge, background: deps.background, relayout, showNotice });
   }
 
   public receive(message: unknown): void {
