@@ -7,6 +7,8 @@ export const GRAPH_COMMAND = 'turboConsole.openPackageGraph';
 
 export const SHOW_TASK_GRAPH_COMMAND = 'turboConsole.showTaskGraph';
 
+export const FOCUS_PACKAGE_COMMAND = 'turboConsole.focusPackageInGraph';
+
 export const GRAPH_CACHE_KEY_PREFIX = 'turboConsole.graphLayout:';
 
 export const GRAPH_FOLDERS_CACHE_KEY_PREFIX = 'turboConsole.graphLayout.folders:';

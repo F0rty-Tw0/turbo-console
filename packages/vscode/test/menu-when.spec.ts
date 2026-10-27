@@ -173,7 +173,8 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     'turboConsole.runTaskWithoutCache',
     'turboConsole.stopTask',
     'turboConsole.copyCommand',
-    'turboConsole.openSpec'
+    'turboConsole.openSpec',
+    'turboConsole.focusPackageInGraph'
   ])('GIVEN the row command %s WHEN the command palette is read THEN it is hidden there', (command) => {
     const entries = MENUS.commandPalette.filter((entry) => entry.command === command);
 

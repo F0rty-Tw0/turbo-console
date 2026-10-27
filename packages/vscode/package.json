@@ -192,6 +192,12 @@
         "category": "Turbo Console"
       },
       {
+        "command": "turboConsole.focusPackageInGraph",
+        "title": "Focus on Graph",
+        "category": "Turbo Console",
+        "icon": "$(target)"
+      },
+      {
         "command": "turboConsole.openPackageJson",
         "title": "Open package.json",
         "category": "Turbo Console",
@@ -431,6 +437,10 @@
         },
         {
           "command": "turboConsole.openSpec",
+          "when": "false"
+        },
+        {
+          "command": "turboConsole.focusPackageInGraph",
           "when": "false"
         },
         {
