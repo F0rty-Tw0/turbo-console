@@ -186,7 +186,7 @@ describe('FEATURE: graph session showTasks', () => {
   });
 
   describe('GIVEN a shown session on a single-package root', () => {
-    it('WHEN showTasks is called THEN nothing is posted or held and the request is logged once', async () => {
+    it('WHEN showTasks is called THEN it is posted after the ready state and not logged as ignored', async () => {
       const store = loadedStore();
       const singleModel = { ...GRAPH_LOADED_STUB.model, singlePackage: true };
 
@@ -196,10 +196,9 @@ describe('FEATURE: graph session showTasks', () => {
 
       session.show(SHOW_A_BUILD);
       await session.receive({ type: 'ready' });
-      await session.receive({ type: 'ready' });
 
-      expect(postedShowTasksOf(ports)).toStrictEqual([]);
-      expect(ports.log).toHaveBeenCalledOnce();
+      expect(postedShowTasksOf(ports)).toStrictEqual([SHOW_A_BUILD]);
+      expect(ports.log).not.toHaveBeenCalled();
     });
 
     it('WHEN showPackage is called THEN nothing is posted and the drop is logged once as a package graph drop', async () => {

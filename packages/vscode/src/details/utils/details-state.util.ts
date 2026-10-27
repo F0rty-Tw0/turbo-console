@@ -108,7 +108,7 @@ const toPackageDetails = (pkg: PackageNode, model: WorkspaceModel, input: Detail
     reloadError: reloadErrorOf(input.state),
     scriptsShown: input.scriptsShown,
     hiddenScriptCount,
-    taskGraph: !model.singlePackage
+    taskGraph: true
   };
 
   return details;

@@ -1,4 +1,4 @@
-import type { WorkspaceModel } from '@turbo-console/core';
+import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import type { GraphHostMessage } from '@turbo-console/webview-ui';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
@@ -11,15 +11,17 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOADED_MODEL_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
+import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphOpener, OpenGraphPanel, RootPickPorts } from '../common/graph-panel.type.ts';
 import { GRAPH_ATOM_MODEL_STUB } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
-const SINGLE_PACKAGE_TEXT = 'This is a single-package repo, so there is no task graph';
 const OPEN_FAILED_TEXT = 'Could not open the Package Graph. See Output.';
 const PLACEHOLDER = 'Choose tasks to show';
-const SINGLE_PACKAGE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true };
+const ROOT_BUILD_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
+const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [ROOT_BUILD_TASK] };
+const SINGLE_PACKAGE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [ROOT_PACKAGE] };
 const TASK_ITEMS = [
   { label: 'build', description: '@org/x', root: '/ws', value: '@org/x#build' },
   { label: 'build', description: 'a', root: '/ws', value: 'a#build' },
@@ -166,20 +168,21 @@ describe('FEATURE: the Show Task Graph command', () => {
       fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SINGLE_PACKAGE_MODEL });
     });
 
-    it('WHEN the command runs THEN the user is told and nothing opens', async () => {
+    it('WHEN the command runs THEN the picker lists the tasks with the label and no info is shown', async () => {
       await runWith(undefined, fixture);
 
-      expect(fixture.ports.info).toHaveBeenCalledExactlyOnceWith(SINGLE_PACKAGE_TEXT);
-      expect(fixture.pickMany).not.toHaveBeenCalled();
-      expect(fixture.open).not.toHaveBeenCalled();
+      expect(fixture.pickMany).toHaveBeenCalledWith(
+        [{ label: 'build', description: 'single-app', root: '/ws', value: '//#build' }],
+        PLACEHOLDER
+      );
+      expect(fixture.ports.info).not.toHaveBeenCalled();
     });
 
-    it('WHEN the command runs from one of its task rows THEN the user is told and nothing opens', async () => {
-      await runWith({ ...TASK_ROW, root: '/ws' }, fixture);
+    it('WHEN the command runs from a // task row THEN the panel opens on that task', async () => {
+      await runWith({ ...TASK_ROW, root: '/ws', key: '//#build', packageName: '//' }, fixture);
 
-      expect(fixture.ports.info).toHaveBeenCalledExactlyOnceWith(SINGLE_PACKAGE_TEXT);
-      expect(fixture.open).not.toHaveBeenCalled();
-      expect(fixture.show).not.toHaveBeenCalled();
+      expect(fixture.open).toHaveBeenCalledExactlyOnceWith('/ws');
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: ['//#build'] });
     });
   });
 

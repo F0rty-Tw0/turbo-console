@@ -53,7 +53,7 @@ export type DryRunPhase = 'loading' | 'ready' | 'failed';
 /**
  * `reloadError` is the banner text when the root's last reload failed and the store kept the previous model, else `null`.
  * `hiddenScriptCount` is the runnable scripts left out while `scriptsShown` is false (refused names not counted), `0` while shown.
- * `taskGraph` is whether the task graph exists for this root: `false` on a single-package root, where the cards hide Show in task graph.
+ * `taskGraph` is whether the task graph exists for this root: `true` for every root the host sends, a single-package one included.
  * `label` is the heading text: `packageName` when the package has no label, full text with no scope rule. `path` is `.` for the repo root.
  */
 export type PackageDetails = {
