@@ -94,7 +94,9 @@ class GraphPanelSashes {
   private isPainted(box: BodyBox): boolean {
     const { painted } = this;
 
-    return painted?.width === box.width && painted.isOverlay === box.isOverlay;
+    if (painted === null) return false;
+
+    return painted.width === box.width && painted.isOverlay === box.isOverlay;
   }
 
   private paint(drawn: PanelWidths, box: BodyBox): void {
