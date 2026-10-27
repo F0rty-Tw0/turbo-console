@@ -36,6 +36,17 @@ describe('FEATURE: scriptSelectionOf', () => {
       expect(selection).toStrictEqual(expected);
     });
 
+    it('WHEN the script is declared twice THEN the selection is the last one, the one npm runs', () => {
+      const lines = ['{', '  "scripts": {', '    "build": "a",', '    "build": "b"', '  }', '}'];
+      const text = lines.join('\n');
+
+      const selection = scriptSelectionOf(text, 'build');
+
+      const expected = selectionOnLine(3, 4, 16);
+
+      expect(selection).toStrictEqual(expected);
+    });
+
     it.each<[string, string, string]>([
       ['a script it does not hold', MANIFEST, 'lint'],
       ['no scripts object', '{ "name": "a" }', 'build'],

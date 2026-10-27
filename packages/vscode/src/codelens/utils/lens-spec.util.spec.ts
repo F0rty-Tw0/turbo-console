@@ -164,6 +164,10 @@ describe('FEATURE: lens spec of a package.json (spec 1c-b §4.11)', () => {
       expect(lineOf('{\n  "x": {\n    "scripts": {}\n  }\n}\n')).toBe(0);
     });
 
+    it('WHEN "scripts" is repeated THEN the lens sits on the last one, the one npm reads', () => {
+      expect(lineOf('{\n  "scripts": {},\n  "scripts": {}\n}\n')).toBe(2);
+    });
+
     it('WHEN the text has a trailing comma THEN the lens still sits on the "scripts" key line', () => {
       expect(lineOf('{\n  "scripts": {\n    "build": "tsc",\n  },\n}\n')).toBe(1);
     });

@@ -48,6 +48,32 @@ describe('FEATURE: jsonPropertyAt', () => {
     });
   });
 
+  describe('GIVEN a text that repeats a key', () => {
+    it('WHEN the repeated script is looked up THEN the last property is found, the one JSON.parse and npm keep', () => {
+      const text = '{ "scripts": { "build": "first", "test": "x", "build": "last" } }';
+
+      const found = propertyTextAt(text, ['scripts', 'build']);
+
+      expect(found).toBe('"build": "last"');
+    });
+
+    it('WHEN the scripts key is repeated THEN the script is looked up in the last scripts object', () => {
+      const text = '{ "scripts": { "build": "old" }, "scripts": { "build": "new" } }';
+
+      const found = propertyTextAt(text, ['scripts', 'build']);
+
+      expect(found).toBe('"build": "new"');
+    });
+
+    it('WHEN the last scripts object lacks the script THEN it is null, as npm would not run the first one', () => {
+      const text = '{ "scripts": { "build": "old" }, "scripts": { "test": "new" } }';
+
+      const property = jsonPropertyAt(text, ['scripts', 'build']);
+
+      expect(property).toBeNull();
+    });
+  });
+
   describe('GIVEN a lookup that finds no property', () => {
     it.each<[string, string, string[]]>([
       ['an absent script', MANIFEST, ['scripts', 'lint']],
