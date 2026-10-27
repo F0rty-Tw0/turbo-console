@@ -70,6 +70,7 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsS
       scriptsShown,
       live: NOTHING_LIVE,
       now: 0,
+      countsMemo: new WeakMap(),
       tools,
       atoms: staticAtomLookup(() => model)
     };
@@ -176,6 +177,7 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
     scriptsShown: false,
     live: runningIds,
     now: TICK_NOW,
+    countsMemo: new WeakMap(),
     tools,
     atoms: staticAtomLookup(() => model)
   };

@@ -43,17 +43,32 @@ const countDir = (dir: FolderDir, packages: ReadonlyMap<string, number>, dirs: M
   return count;
 };
 
-/**
- * UB5a §3.3: the running runs of `root` per package and per folder of `view`. Folders count by tree membership, never by
- * path prefix, so folder `a` never counts `ab/x`. Reads `context.live`, not the view's live ids: runs count with scripts shown too.
- */
-export const runningCountsOf = (root: string, view: ModelView, context: RowContext): RunningCounts => {
+const computeRunningCounts = (root: string, view: ModelView, context: RowContext): RunningCounts => {
   const packages = packageCountsOf(root, context);
   const dirs = new Map<string, number>();
 
   for (const dir of view.folders.dirs) countDir(dir, packages, dirs);
 
   const counts: RunningCounts = { packages, dirs };
+
+  return counts;
+};
+
+/**
+ * UB5a §3.3: the running runs of `root` per package and per folder of `view`. Folders count by tree membership, never by
+ * path prefix, so folder `a` never counts `ab/x`. Reads `context.live`, not the view's live ids: runs count with scripts shown too.
+ * A redraw asks once per package and folder row, so `context.countsMemo` keeps the counts of a view while `context.live`
+ * answers the same Set: the run store builds a new one on every change of a run, and a run's package name is fixed at its launch.
+ */
+export const runningCountsOf = (root: string, view: ModelView, context: RowContext): RunningCounts => {
+  const live = context.live(root);
+  const memo = context.countsMemo.get(view);
+
+  if (memo?.live === live) return memo.counts;
+
+  const counts = computeRunningCounts(root, view, context);
+
+  context.countsMemo.set(view, { live, counts });
 
   return counts;
 };

@@ -113,6 +113,49 @@ describe('FEATURE: running counts of package and folder rows', () => {
   });
 });
 
+/** A context whose `live` answers `held` as the run store does: the same Set object until the running ids change. */
+const contextHolding = (held: ReadonlySet<string>, entries: RunEntry[]): RowContext => {
+  const runs: RunLookup = (root, taskId) => entries.find((entry) => entry.root === root && entry.taskId === taskId);
+  const live: LiveIds = () => held;
+
+  return rowContextOf('folders', runs, false, { scriptsShown: false, live });
+};
+
+describe('FEATURE: running counts memoized per view and live set', () => {
+  const HELD = new Set([APP_BUILD.taskId]);
+  const context = contextHolding(HELD, [APP_BUILD]);
+
+  describe('GIVEN the same view and the same live Set', () => {
+    it('WHEN counted twice THEN both answers are the one counts object', () => {
+      const first = runningCountsOf('/ws', VIEW, context);
+      const second = runningCountsOf('/ws', VIEW, context);
+
+      expect(second).toBe(first);
+    });
+  });
+
+  describe('GIVEN the same view and a new live Set', () => {
+    it('WHEN counted again THEN the counts are recomputed from the new Set', () => {
+      const before = runningCountsOf('/ws', VIEW, context);
+      const grown = contextHolding(new Set([APP_BUILD.taskId, APP_TEST.taskId]), [APP_BUILD, APP_TEST]);
+      const next: RowContext = { ...grown, countsMemo: context.countsMemo };
+      const after = runningCountsOf('/ws', VIEW, next);
+
+      expect([after === before, before.packages.get('app'), after.packages.get('app')]).toStrictEqual([false, 1, 2]);
+    });
+  });
+
+  describe('GIVEN another view and the same live Set', () => {
+    it('WHEN counted THEN the counts are recomputed for that view', () => {
+      const other = modelViewWith([packageAt('app', 'packages/app')]);
+      const first = runningCountsOf('/ws', VIEW, context);
+      const second = runningCountsOf('/ws', other, context);
+
+      expect(second).not.toBe(first);
+    });
+  });
+});
+
 describe('FEATURE: running suffix of a row description', () => {
   it.each([
     ['packages/app', 2, 'packages/app · 2 running'],

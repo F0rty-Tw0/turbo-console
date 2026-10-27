@@ -7,7 +7,7 @@ import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
-import type { IconsMode, TreeMode, TreeRow } from '../common/tree-row.type.ts';
+import type { IconsMode, RunningCountsMemo, TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { nodesOf } from '../utils/node-cache.util.ts';
 import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts';
 import { rootRowOf, rootRows } from '../utils/root-rows.util.ts';
@@ -23,6 +23,7 @@ export class PackagesTree {
   private readonly ports: TreePorts;
   private readonly cache = new Map<string, TreeNode>();
   private readonly views = new ModelViews(resolveTool);
+  private readonly countsMemo: RunningCountsMemo = new WeakMap();
   private readonly viewOf: ModelViewsOf = (model, scriptsShown, live) => this.views.of(model, scriptsShown, live);
   private readonly toolOfCommand: ToolLookup = (pkg, singlePackage, command) => this.views.toolOf(pkg, singlePackage, command);
   private readonly refresher: TreeRefresher;
@@ -144,6 +145,7 @@ export class PackagesTree {
       scriptsShown: scriptsShown(),
       live: runningIds,
       now: wallNow(),
+      countsMemo: this.countsMemo,
       tools: this.toolOfCommand,
       atoms: this.atoms.view
     };

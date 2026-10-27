@@ -1,5 +1,6 @@
 import type { PackageManager } from '@turbo-console/core';
 
+import type { ModelView } from './model-view.type.ts';
 import type { RunState } from '../../run/common/run.type.ts';
 
 export type IconSpec = {
@@ -91,6 +92,17 @@ export type RunningCounts = {
   readonly packages: ReadonlyMap<string, number>;
   readonly dirs: ReadonlyMap<string, number>;
 };
+
+type RunningCountsOfLive = {
+  readonly live: ReadonlySet<string>;
+  readonly counts: RunningCounts;
+};
+
+/**
+ * The running counts of the latest `live` Set seen per view: while a root's run store answers the same Set (it builds a
+ * new one on every change of a run), the counts of a view are not computed again.
+ */
+export type RunningCountsMemo = WeakMap<ModelView, RunningCountsOfLive>;
 
 /** What package and folder rows read beside the view: whether full names show, and the running counts of their root. */
 export type RowInputs = {

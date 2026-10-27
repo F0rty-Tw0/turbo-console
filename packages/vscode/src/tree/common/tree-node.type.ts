@@ -3,7 +3,7 @@ import type { Event, TreeItem } from 'vscode';
 import type { SharedAtoms } from './atom-load.type.ts';
 import type { AtomLookup } from './atom-view.type.ts';
 import type { ModelViewsOf } from './model-view.type.ts';
-import type { IconsMode, TreeMode, TreeRow } from './tree-row.type.ts';
+import type { IconsMode, RunningCountsMemo, TreeMode, TreeRow } from './tree-row.type.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { LiveIds, RunEntry, RunLookup, Runs } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
@@ -27,7 +27,7 @@ export type TreeNode = {
  * What a node's rows are read with: the view mode, the runs, the model's view (built once per model), whether
  * package rows read their full names (`scopeShown`) or their bare labels, whether scripts are listed (`scriptsShown`),
  * the running task ids per folder root (`live`), the wall-clock time (`now`, the base of `RunEntry.launchedAt`) a
- * running task's elapsed time is counted to, the tool a task's command runs (`tools`), and the Atomizer groups, dry-run
+ * running task's elapsed time is counted to, the running counts kept per view (`countsMemo`), the tool a task's command runs (`tools`), and the Atomizer groups, dry-run
  * states and results of a package (`atoms`).
  */
 export type RowContext = {
@@ -38,6 +38,7 @@ export type RowContext = {
   readonly scriptsShown: boolean;
   readonly live: LiveIds;
   readonly now: number;
+  readonly countsMemo: RunningCountsMemo;
   readonly tools: ToolLookup;
   readonly atoms: AtomLookup;
 };
