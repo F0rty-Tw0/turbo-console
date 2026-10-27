@@ -9,6 +9,7 @@ import { GraphHover } from './pages/graph-hover.po.ts';
 import { GraphLegend } from './pages/graph-legend.po.ts';
 import { GraphPointer } from './pages/graph-pointer.po.ts';
 import { GraphReveal } from './pages/graph-reveal.po.ts';
+import { GraphSashes } from './pages/graph-sashes.po.ts';
 import { GraphSelection } from './pages/graph-selection.po.ts';
 import { GraphTaskDetails } from './pages/graph-task-details.po.ts';
 import { GraphTaskGlyphs } from './pages/graph-task-glyphs.po.ts';
@@ -48,6 +49,7 @@ type GraphTaskFixtures = {
   readonly graphLegend: GraphLegend;
   readonly graphPointer: GraphPointer;
   readonly graphReveal: GraphReveal;
+  readonly graphSashes: GraphSashes;
   readonly graphSelection: GraphSelection;
   readonly graphTask: GraphTask;
   readonly graphTaskDetails: GraphTaskDetails;
@@ -92,6 +94,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   },
   graphReveal: async ({ page }, use): Promise<void> => {
     await use(new GraphReveal(page));
+  },
+  graphSashes: async ({ page }, use): Promise<void> => {
+    await use(new GraphSashes(page));
   },
   graphSelection: async ({ page }, use): Promise<void> => {
     await use(new GraphSelection(page));

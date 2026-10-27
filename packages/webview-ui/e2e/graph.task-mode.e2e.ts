@@ -25,7 +25,7 @@ const CHAIN = ['app#build', 'lib#build', 'ui#build'];
 /** `lib#build` at depth 1: the `ui#build` it needs and its dependents `app#build` and `lib#test`, in the state's task order. */
 const LIB_SET = ['app#build', 'lib#build', 'lib#test', 'ui#build'];
 
-/** From Tasks with the chain shown: the toolbar, the task Controls (never the package ones), then the canvas. */
+/** From Tasks with the chain shown: the toolbar, the task Controls (never the package ones), its sash, then the canvas. */
 const TASK_STOPS: FocusStep[] = tabStopsOf([
   'Controls',
   'Details',
@@ -36,6 +36,7 @@ const TASK_STOPS: FocusStep[] = tabStopsOf([
   'Search tasks',
   'Dependents depth',
   'build',
+  'Resize Controls',
   'Package graph'
 ]);
 
@@ -139,7 +140,7 @@ test.describe('FEATURE: graph task mode', () => {
 
       await test.step('AND Tasks is focused', async (): Promise<void> => graphPage.focusButton('Tasks'));
 
-      const walked = await test.step('WHEN Tab is pressed ten times', async (): Promise<FocusStep[]> => graphKeys.walk(TASK_STOPS));
+      const walked = await test.step('WHEN Tab is pressed eleven times', async (): Promise<FocusStep[]> => graphKeys.walk(TASK_STOPS));
 
       await test.step('THEN focus visited the task stops only', (): void => expect(walked).toEqual(TASK_STOPS));
     }

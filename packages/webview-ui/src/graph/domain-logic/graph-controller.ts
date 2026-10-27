@@ -1,5 +1,6 @@
 import { GraphFrames } from './graph-frames.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
+import { wirePanelSashes } from './graph-panel-sashes.ts';
 import { PackageReveal } from './graph-reveal.ts';
 import { GraphStateRouting } from './graph-state-routing.ts';
 import { packageTasksOf, taskModeOf } from './graph-task-wiring.ts';
@@ -70,6 +71,7 @@ class GraphPageController {
     const showNotice = (text: string | null): void => this.tasks.notice(text);
 
     wireToolbar({ page, view: this.view, bridge, background: deps.background, relayout, showNotice });
+    wirePanelSashes({ root: page.root, body: page.body, sashes: page.sashes, overlay: deps.overlay, store: modes });
   }
 
   public receive(message: unknown): void {

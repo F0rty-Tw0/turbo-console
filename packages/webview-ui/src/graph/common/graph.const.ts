@@ -1,4 +1,5 @@
 import type { LayoutNotice } from './graph-layouts.type.ts';
+import type { PanelSide } from './graph-page.type.ts';
 import type { Column } from './roving.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
@@ -229,6 +230,9 @@ const CONTROLS_WIDTH_PX = 260;
 const DETAILS_WIDTH_PX = 280;
 
 export const DEFAULT_PANEL_WIDTHS: PanelWidths = { controls: CONTROLS_WIDTH_PX, details: DETAILS_WIDTH_PX };
+
+/** Each sash's accessible name. */
+export const RESIZE_LABELS: Readonly<Record<PanelSide, string>> = { controls: 'Resize Controls', details: 'Resize Details' };
 
 export const SEARCH_LABEL = 'Search packages';
 

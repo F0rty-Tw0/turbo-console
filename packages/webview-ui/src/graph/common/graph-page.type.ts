@@ -13,6 +13,7 @@ import type { LayoutRunner } from './layout.type.ts';
 import type { LegendElements } from './legend.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { Paint } from './paint.type.ts';
+import type { PanelSashes } from './panel-sash.type.ts';
 import type { AtomCanvas, TaskCanvas } from './task-canvas.type.ts';
 import type { TaskControlsViews } from './task-controls.type.ts';
 import type { TaskDetailsViews } from './task-details.type.ts';
@@ -60,13 +61,17 @@ type PageParts = {
   readonly message: HTMLElement;
   readonly messageText: HTMLElement;
   readonly reload: HTMLButtonElement;
-  /** `div.graph-body`: the controls panel, once a graph shows, the container, the flow overlay, the widget layer, then the details panel. */
+  /**
+   * `div.graph-body`: the controls panel, once a graph shows, the Controls sash, the container, the flow overlay, the widget
+   * layer, the Details sash, then the details panel.
+   */
   readonly body: HTMLElement;
   readonly container: HTMLElement;
   /** `canvas.graph-flow`: the moving dashes over the highlighted task edges, under the widget layer; `aria-hidden`. */
   readonly flow: HTMLCanvasElement;
   /** `div.graph-widgets`: the canvas widgets' layer over the container, its DOM sibling right after it. */
   readonly widgets: HTMLElement;
+  readonly sashes: PanelSashes;
 };
 
 /** The graph page's elements, built once by `buildPage`; DOM order is the Tab order (toolbar, then the body). */

@@ -1,5 +1,6 @@
 import { buildDetailsBar } from './details-bar.ts';
 import { buildFlowCanvas } from './flow-canvas.ts';
+import { buildPanelSashes } from './panel-sash.ts';
 import { trackPointerFocus } from './pointer-focus.ts';
 import { buildToolbar } from './toolbar-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
@@ -7,6 +8,7 @@ import type { PageElements } from '../common/graph-page.type.ts';
 import { EMPTY_TASKS_TEXT, SHOW_ALL_TASKS_LABEL } from '../common/graph-task.const.ts';
 import type { TaskScreenElements } from '../common/graph-task.type.ts';
 import { FALLBACK_NOTICE_TEXT, GRAPH_LABEL, RELOAD_LABEL, RETRY_LABEL } from '../common/graph.const.ts';
+import type { PanelSashes } from '../common/panel-sash.type.ts';
 
 /** A text button: its visible text is its accessible name and its hover title. */
 const textButton = (label: string): HTMLButtonElement => {
@@ -66,11 +68,14 @@ const taskScreen = (): TaskScreenElements => {
   return screen;
 };
 
-/** The row that holds the controls panel, once a graph shows, the container, then the flow overlay and the widget layer over it. */
-const graphBody = (container: HTMLElement, flow: HTMLCanvasElement, widgets: HTMLElement): HTMLElement => {
+/**
+ * The row of the Controls sash, the container, the flow overlay and the widget layer over it, then the Details sash. The
+ * panels, once a graph shows, are prepended and appended around them, so the widget layer stays right after the container.
+ */
+const graphBody = (sashes: PanelSashes, container: HTMLElement, flow: HTMLCanvasElement, widgets: HTMLElement): HTMLElement => {
   const body = textElement('div', 'graph-body', '');
 
-  body.append(container, flow, widgets);
+  body.append(sashes.controls, container, flow, widgets, sashes.details);
   trackPointerFocus(body);
 
   return body;
@@ -94,7 +99,8 @@ export const buildPage = (): PageElements => {
   const container = graphContainer();
   const flow = buildFlowCanvas();
   const widgets = textElement('div', 'graph-widgets', '');
-  const body = graphBody(container, flow, widgets);
+  const sashes = buildPanelSashes();
+  const body = graphBody(sashes, container, flow, widgets);
   const root = textElement('main', 'graph-page', '');
 
   root.append(tools.toolbar, notice, tasks.notice, tasks.banner, tasks.prompt, message, body);
@@ -115,7 +121,8 @@ export const buildPage = (): PageElements => {
     body,
     container,
     flow,
-    widgets
+    widgets,
+    sashes
   };
 
   return page;
