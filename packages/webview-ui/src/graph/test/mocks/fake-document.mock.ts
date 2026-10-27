@@ -179,13 +179,16 @@ type FakeDocument = {
   /** An SVG element: a fake element like any other; any other namespace throws. */
   readonly createElementNS: (namespace: string, tag: string) => FakeElement;
   readonly activeElement: FakeElement | null;
+  /** The element a `focus()` on the body moves focus to; it holds no children. */
+  readonly body: FakeElement;
   /** Document listeners never run: no spec dispatches on the document. */
   readonly addEventListener: () => void;
 };
 
-/** A `document` for `vi.stubGlobal('document', …)`: `createElement`, `createElementNS` and the element `focus()` last moved to. */
+/** A `document` for `vi.stubGlobal('document', …)`: `createElement`, `createElementNS`, a `body` and the element `focus()` last moved to. */
 export const fakeDocumentMock = (): FakeDocument => {
   const focus: FakeFocus = { element: null };
+  const body = new FakeElement('body', focus);
   const fake: FakeDocument = {
     createElement: (tag: string): FakeElement => new FakeElement(tag, focus),
     createElementNS: (namespace: string, tag: string): FakeElement => {
@@ -193,6 +196,7 @@ export const fakeDocumentMock = (): FakeDocument => {
 
       return new FakeElement(tag, focus);
     },
+    body,
     addEventListener: (): void => undefined,
     get activeElement(): FakeElement | null {
       return focus.element;

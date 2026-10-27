@@ -93,6 +93,14 @@ describe('FEATURE: buildLegend', () => {
       expect(document.activeElement).toBe(elements.legend);
     });
 
+    it('WHEN the panel closes with focus dropped to the body THEN the Legend button takes focus', () => {
+      elements.legendPanel.dispatchEvent(toggleOf('open'));
+      document.body.focus();
+      elements.legendPanel.dispatchEvent(toggleOf('closed'));
+
+      expect(document.activeElement).toBe(elements.legend);
+    });
+
     it('WHEN the panel closes with focus elsewhere THEN focus stays there', () => {
       const elsewhere = document.createElement('button');
 
