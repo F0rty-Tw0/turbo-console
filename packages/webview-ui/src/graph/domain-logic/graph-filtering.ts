@@ -94,9 +94,7 @@ export class GraphFiltering {
 
     const visible = this.controls.visible();
 
-    this.deps.view.setVisible(visible);
-    this.markFocusTarget();
-    this.folders.redraw();
+    this.drawVisible(visible);
     setFitAndExportDisabled(this.deps.page, visible.size === 0);
 
     return visible;
@@ -173,13 +171,18 @@ export class GraphFiltering {
     this.deps.view.setFocusTarget(focus);
   }
 
+  /** Shows `visible`, then marks the focus target and redraws the folders over it. */
+  private drawVisible(visible: ReadonlySet<string>): void {
+    this.deps.view.setVisible(visible);
+    this.markFocusTarget();
+    this.folders.redraw();
+  }
+
   private showVisible(visible: ReadonlySet<string>): void {
     const { view, page, now } = this.deps;
     const isAny = visible.size > 0;
 
-    view.setVisible(visible);
-    this.markFocusTarget();
-    this.folders.redraw();
+    this.drawVisible(visible);
     this.inspection.recheck(visible);
     setFitAndExportDisabled(page, !isAny);
 
