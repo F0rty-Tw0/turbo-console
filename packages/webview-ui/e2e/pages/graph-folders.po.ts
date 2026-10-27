@@ -92,14 +92,21 @@ export class GraphFoldersPage {
     await this.list.pressFolderToggle(toggleNameOf(folder, isCollapsing));
   }
 
-  /** Collapses each folder in turn, then expands each, keeping the probe's `toggleMs` after every press. */
-  public async collectToggleMs(folders: string[]): Promise<void> {
-    this.collapseSamples = await this.toggleEach(folders, true);
-    this.expandSamples = await this.toggleEach(folders, false);
+  /** Per round, collapses each folder in turn, then expands each, keeping the probe's `toggleMs` after every press. */
+  public async collectToggleMs(folders: string[], rounds: number): Promise<void> {
+    this.collapseSamples = [];
+    this.expandSamples = [];
+
+    for (let round = 0; round < rounds; round += 1) {
+      await this.toggleEach(folders, true, this.collapseSamples);
+      await this.toggleEach(folders, false, this.expandSamples);
+    }
   }
 
-  /** The fastest collapse and the fastest expand were each under `ms`. */
-  public expectToggleMinUnder(ms: number): void {
+  /** There were `count` collapses and `count` expands, and the fastest of each was under `ms`. */
+  public expectToggleMinUnder(ms: number, count: number): void {
+    expect(this.collapseSamples).toHaveLength(count);
+    expect(this.expandSamples).toHaveLength(count);
     expectMinUnder('collapse-ms', this.collapseSamples, ms);
     expectMinUnder('expand-ms', this.expandSamples, ms);
   }
@@ -139,9 +146,7 @@ export class GraphFoldersPage {
     await expect.poll(async (): Promise<string[]> => this.outOfView(keys)).toEqual([]);
   }
 
-  private async toggleEach(folders: string[], isCollapsing: boolean): Promise<number[]> {
-    const samples: number[] = [];
-
+  private async toggleEach(folders: string[], isCollapsing: boolean, samples: number[]): Promise<void> {
     for (const folder of folders) {
       await this.toggleInList(folder, isCollapsing);
       await expect.poll(async (): Promise<number | null> => this.timings.toggleMs()).not.toBeNull();
@@ -150,8 +155,6 @@ export class GraphFoldersPage {
 
       samples.push(sample ?? Number.NaN);
     }
-
-    return samples;
   }
 
   private async folderFacts(): Promise<FolderFacts[]> {

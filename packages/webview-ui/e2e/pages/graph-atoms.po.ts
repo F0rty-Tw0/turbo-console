@@ -96,8 +96,10 @@ export class GraphAtoms {
     }
   }
 
-  /** The fastest expand and the fastest collapse were each under `ms`. */
-  public expectToggleMinUnder(ms: number): void {
+  /** There were `count` expands and `count` collapses, and the fastest of each was under `ms`. */
+  public expectToggleMinUnder(ms: number, count: number): void {
+    expect(this.expandSamples).toHaveLength(count);
+    expect(this.collapseSamples).toHaveLength(count);
     expectMinUnder('expand-ms', this.expandSamples, ms);
     expectMinUnder('collapse-ms', this.collapseSamples, ms);
   }

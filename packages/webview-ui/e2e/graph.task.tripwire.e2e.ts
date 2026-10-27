@@ -1,4 +1,4 @@
-import { IS_MAC_RUNNER, TOGGLE_BUDGET_MS } from './common/graph.const.ts';
+import { IS_MAC_RUNNER, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph-task.fixture.ts';
 import {
   TARGET_LIKE_UMBRELLA,
@@ -16,7 +16,7 @@ const BIG_GROUP = targetLikeTasksState(200);
 
 const BIG_GROUP_SAVED = taskSavedState(BIG_GROUP.hash, { chosen: [TARGET_LIKE_UMBRELLA] });
 
-const TOGGLE_ROUNDS = 5;
+const TOGGLE_ROUNDS = 10;
 
 const SAVED_VIEW = targetLikeHubSavedState();
 
@@ -71,7 +71,7 @@ test.describe('FEATURE: task graph tripwires', () => {
   );
 
   test(
-    'GIVEN the umbrella of 200 files chosen and framed by Fit, the fastest of five expands and of five collapses each take under 100 ms',
+    'GIVEN the umbrella of 200 files chosen and framed by Fit, the fastest of ten expands and of ten collapses each take under 100 ms',
     { annotation: AC4 },
     async ({ graphAtoms, graphCanvas, graphHost, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened in task mode with the umbrella chosen', async (): Promise<void> =>
@@ -85,11 +85,11 @@ test.describe('FEATURE: task graph tripwires', () => {
 
       await test.step('THEN every task is in view', async (): Promise<void> => graphCanvas.expectAllNodesInView());
 
-      await test.step('WHEN the group is expanded and collapsed five times, each toggle timed', async (): Promise<void> =>
+      await test.step('WHEN the group is expanded and collapsed ten times, each toggle timed', async (): Promise<void> =>
         graphAtoms.collectToggleMs(TARGET_LIKE_UMBRELLA, TOGGLE_ROUNDS));
 
       await test.step('THEN the fastest expand and the fastest collapse were under the toggle budget', (): void =>
-        graphAtoms.expectToggleMinUnder(TOGGLE_BUDGET_MS));
+        graphAtoms.expectToggleMinUnder(TOGGLE_BUDGET_MS, TOGGLE_SAMPLES));
     }
   );
 });

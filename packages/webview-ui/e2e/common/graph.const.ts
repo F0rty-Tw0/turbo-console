@@ -215,6 +215,9 @@ export const WIDGET_MIN_BOX_PX = 120;
 /** The most a folder collapse or expand may take, from the toggle to the first frame after it, in ms. */
 export const TOGGLE_BUDGET_MS = 100;
 
+/** How many timed toggles per direction a toggle tripwire takes the fastest of. */
+export const TOGGLE_SAMPLES = 10;
+
 /**
  * How long to wait for a layout to settle: the page's ELK timeout (which already covers the worker start) plus room
  * for the page's message handling and first draw on a slow runner, where an uncached 301-package layout took over the

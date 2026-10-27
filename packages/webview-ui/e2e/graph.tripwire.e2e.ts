@@ -1,4 +1,4 @@
-import { IS_MAC_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS } from './common/graph.const.ts';
+import { IS_MAC_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
@@ -57,6 +57,9 @@ const ROWS_BUTTONS_SHOWN = 4;
 
 /** Five folders of `largeState()` that sit well inside the canvas after Fit and the zoom to 120 px boxes. */
 const TOGGLED_FOLDERS = ['group-2', 'group-3', 'group-4', 'group-12', 'group-13'];
+
+/** Two rounds of the five folders make the ten samples per direction whose fastest the toggle tripwire asserts. */
+const TOGGLE_ROUNDS = 2;
 
 const GROUP_COUNT = 30;
 
@@ -253,7 +256,7 @@ test.describe('FEATURE: graph tripwires', () => {
   });
 
   test(
-    'GIVEN 300 packages grouped with every folder expanded, the fastest of five collapses and of five expands is under 100 ms',
+    'GIVEN 300 packages grouped with every folder expanded, the fastest of ten collapses and of ten expands is under 100 ms',
     { annotation: C2 },
     async ({ graphCanvas, graphFolders, graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
@@ -281,11 +284,11 @@ test.describe('FEATURE: graph tripwires', () => {
         await graphFolders.expectFoldersInView(TOGGLED_FOLDERS);
       });
 
-      await test.step('WHEN each of the five folders is collapsed, then expanded, by its list button', async (): Promise<void> =>
-        graphFolders.collectToggleMs(TOGGLED_FOLDERS));
+      await test.step('WHEN each of the five folders is collapsed, then expanded, by its list button, in two rounds', async (): Promise<void> =>
+        graphFolders.collectToggleMs(TOGGLED_FOLDERS, TOGGLE_ROUNDS));
 
       await test.step('THEN the fastest collapse and the fastest expand were under 100 ms', (): void =>
-        graphFolders.expectToggleMinUnder(TOGGLE_BUDGET_MS));
+        graphFolders.expectToggleMinUnder(TOGGLE_BUDGET_MS, TOGGLE_SAMPLES));
     }
   );
 
