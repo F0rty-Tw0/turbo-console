@@ -512,14 +512,16 @@
         "turboConsole.icons": {
           "type": "string",
           "enum": [
-            "builtin",
-            "theme"
+            "auto",
+            "theme",
+            "builtin"
           ],
           "enumDescriptions": [
-            "Turbo Console's own icons.",
-            "Folder and package rows use your file icon theme. Needs a theme with folder icons, such as Material Icon Theme or vscode-icons; Seti has none."
+            "Your file icon theme's folder icons when it has them (Material Icon Theme, vscode-icons, Minimal), else Turbo Console's own.",
+            "Folder and package rows always use your file icon theme. Needs a theme with folder icons; Seti has none.",
+            "Turbo Console's own icons."
           ],
-          "default": "builtin",
+          "default": "auto",
           "description": "Which icons the Packages view shows for folder and package rows."
         }
       }
