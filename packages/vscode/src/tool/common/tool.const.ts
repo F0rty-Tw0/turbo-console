@@ -22,12 +22,10 @@ const SVELTE_GLYPH: ToolGlyph = { slug: 'svelte', char: 0xe00f, attribution: nul
 const TYPESCRIPT_GLYPH: ToolGlyph = { slug: 'typescript', char: 0xe010, attribution: null };
 const VITE_GLYPH: ToolGlyph = { slug: 'vite', char: 0xe011, attribution: null };
 const VITEST_GLYPH: ToolGlyph = { slug: 'vitest', char: 0xe012, attribution: null };
+const NODE_GLYPH: ToolGlyph = { slug: 'nodedotjs', char: 0xe013, attribution: null };
+const NPM_GLYPH: ToolGlyph = { slug: 'npm', char: 0xe014, attribution: null };
 
-/**
- * Spec 1c-c §4.1: the single source for detection, the icon font, `contributes.icons` and the notice. Ids and code
- * points are append-only (a removed tool leaves a gap); every bin appears once.
- */
-export const TOOLS: ToolSpec[] = [
+const KNOWN_TOOLS: ToolSpec[] = [
   { id: 'angular', title: 'Angular', bins: ['ng'], glyph: ANGULAR_GLYPH },
   { id: 'astro', title: 'Astro', bins: ['astro'], glyph: ASTRO_GLYPH },
   { id: 'biome', title: 'Biome', bins: ['biome'], glyph: BIOME_GLYPH },
@@ -49,7 +47,25 @@ export const TOOLS: ToolSpec[] = [
   { id: 'playwright', title: 'Playwright', bins: ['playwright'], glyph: null }
 ];
 
-const TOOL_BIN_ENTRIES: [string, ToolSpec][] = TOOLS.flatMap((tool) => tool.bins.map((bin): [string, ToolSpec] => [bin, tool]));
+/** The runtime and the manager that run other tools, highest rank first: a command shows one only when it reaches no known tool. */
+export const FALLBACK_TOOLS: ToolSpec[] = [
+  { id: 'node', title: 'Node.js', bins: ['node'], glyph: NODE_GLYPH },
+  { id: 'npm', title: 'npm', bins: ['npm'], glyph: NPM_GLYPH }
+];
 
-/** A binary name → its tool row. */
+/**
+ * Spec 1c-c §4.1: the single source for detection, the icon font, `contributes.icons` and the notice. Ids and code
+ * points are append-only (a removed tool leaves a gap); every bin appears once.
+ */
+export const TOOLS: ToolSpec[] = [...KNOWN_TOOLS, ...FALLBACK_TOOLS];
+
+const TOOL_BIN_ENTRIES: [string, ToolSpec][] = KNOWN_TOOLS.flatMap((tool) => tool.bins.map((bin): [string, ToolSpec] => [bin, tool]));
+const FALLBACK_BIN_ENTRIES: [string, ToolSpec][] = FALLBACK_TOOLS.flatMap((tool) =>
+  tool.bins.map((bin): [string, ToolSpec] => [bin, tool])
+);
+
+/** A binary name → its known tool row. */
 export const TOOL_BY_BIN: ReadonlyMap<string, ToolSpec> = new Map(TOOL_BIN_ENTRIES);
+
+/** A binary name → its fallback tool row (`node`, `npm`). */
+export const FALLBACK_TOOL_BY_BIN: ReadonlyMap<string, ToolSpec> = new Map(FALLBACK_BIN_ENTRIES);

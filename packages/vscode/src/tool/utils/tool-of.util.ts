@@ -1,7 +1,7 @@
 import { TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 
 import { binOf, delegationOf } from './delegation.util.ts';
-import { TOOL_BY_BIN } from '../common/tool.const.ts';
+import { FALLBACK_TOOLS, FALLBACK_TOOL_BY_BIN, TOOL_BY_BIN } from '../common/tool.const.ts';
 import type { PackageScripts, ToolMatch, ToolResolver, ToolSpec } from '../common/tool.type.ts';
 
 const SEGMENT_END = /&&|\||;/;
@@ -37,9 +37,9 @@ const MAX_DELEGATIONS = 5;
  */
 const MAX_EXPANSIONS = 256;
 
-/** The expansions a call may still spend; one is created per call. */
-// eslint-disable-next-line local/readonly-type-properties -- one counter shared by every recursive call of a resolve
-type Budget = { left: number };
+/** The expansions a call may still spend, its best fallback tool so far, and how many delegations the depth cap cut. */
+// eslint-disable-next-line local/readonly-type-properties -- one state shared by every recursive call of a resolve
+type Walk = { left: number; fallback: ToolMatch | null; cuts: number };
 
 const candidateIndexOf = (tokens: string[]): number => {
   let index = 0;
@@ -63,57 +63,107 @@ const segmentsOf = (command: string): string[] => {
   return trimmed.filter((part) => part !== '');
 };
 
-/** What a segment runs: a tool directly, the name of a script it delegates to, or nothing. */
-type Step = ToolMatch | string | null;
+/** What a segment runs: a known tool directly, the name of a script it delegates to, or nothing. */
+type Target = ToolMatch | string | null;
+
+/** A segment's target, and the fallback tool (`node`, `npm`) it runs when its target reaches no known tool. */
+type Step = { readonly target: Target; readonly fallback: ToolSpec | null };
+
+const NO_STEP: Step = { target: null, fallback: null };
 
 const stepOf = (segment: string, scripts: PackageScripts): Step => {
   const tokens = segment.split(WHITESPACE);
   const index = candidateIndexOf(tokens);
 
-  if (index === NO_CANDIDATE) return null;
+  if (index === NO_CANDIDATE) return NO_STEP;
 
-  const tool = TOOL_BY_BIN.get(binOf(tokens[index] ?? ''));
+  const bin = binOf(tokens[index] ?? '');
+  const tool = TOOL_BY_BIN.get(bin);
+  const fallback = FALLBACK_TOOL_BY_BIN.get(bin) ?? null;
 
   if (tool !== undefined) {
-    const direct: ToolMatch = { tool, via: [] };
+    const match: ToolMatch = { tool, via: [] };
+    const direct: Step = { target: match, fallback };
 
     return direct;
   }
 
-  return delegationOf(tokens, index, scripts);
+  const name = delegationOf(tokens, index, scripts);
+  const delegated: Step = { target: name, fallback };
+
+  return delegated;
 };
 
-/** A delegation to `name` may be followed unless `name` repeats on the path or the path already holds 5 names. */
-const canFollow = (name: string, path: string[]): boolean => {
-  const isOnPath = path.includes(name);
+const isNewName = (target: Target, path: string[]): target is string => typeof target === 'string' && !path.includes(target);
+
+/** A delegation to a script name may be followed unless the name repeats on the path or the path already holds 5 names. */
+const canFollow = (target: Target, path: string[]): target is string => {
+  const isNew = isNewName(target, path);
   const isTooDeep = path.length >= MAX_DELEGATIONS;
 
-  return !isOnPath && !isTooDeep;
+  return isNew && !isTooDeep;
 };
 
-const resolveIn = (command: string, scripts: PackageScripts, path: string[], budget: Budget): ToolMatch | null => {
+/** A new name the path is too deep to follow: the chain goes on past what is read, unlike a cycle, which ends. */
+const isCutByDepth = (target: Target, path: string[]): boolean => {
+  const isNew = isNewName(target, path);
+  const isTooDeep = path.length >= MAX_DELEGATIONS;
+
+  return isNew && isTooDeep;
+};
+
+/** A fallback's rank, 0 the highest: `FALLBACK_TOOLS` is ordered so `node` outranks `npm`. */
+const rankOf = (tool: ToolSpec): number => FALLBACK_TOOLS.indexOf(tool);
+
+/** Keeps the highest-ranked fallback met, the first of equal rank; a segment notes its own after its delegation, so a deeper one wins. */
+const noteFallback = (fallback: ToolSpec | null, path: string[], walk: Walk): void => {
+  if (fallback === null) return;
+
+  const best = walk.fallback;
+  const note: ToolMatch = { tool: fallback, via: path };
+
+  if (best === null) {
+    walk.fallback = note;
+
+    return;
+  }
+
+  const newRank = rankOf(fallback);
+  const bestRank = rankOf(best.tool);
+
+  if (newRank < bestRank) walk.fallback = note;
+};
+
+const resolveIn = (command: string, scripts: PackageScripts, path: string[], walk: Walk): ToolMatch | null => {
   for (const segment of segmentsOf(command)) {
-    const step = stepOf(segment, scripts);
+    const { target, fallback } = stepOf(segment, scripts);
+    const isDirect = target !== null && typeof target !== 'string';
 
-    if (step === null) continue;
+    if (isDirect) return target;
 
-    if (typeof step !== 'string') return step;
+    const isFollowable = canFollow(target, path);
+    const isDepthCut = isCutByDepth(target, path);
+    const cutsBefore = walk.cuts;
 
-    const isFollowable = canFollow(step, path);
+    if (isDepthCut) walk.cuts += 1;
 
-    if (!isFollowable) continue;
+    if (isFollowable) {
+      walk.left -= 1;
 
-    budget.left -= 1;
+      if (walk.left < 0) return null;
 
-    if (budget.left < 0) return null;
+      const inner = resolveIn(scripts.bodies.get(target) ?? '', scripts, [...path, target], walk);
 
-    const inner = resolveIn(scripts.bodies.get(step) ?? '', scripts, [...path, step], budget);
+      if (inner !== null) {
+        const match: ToolMatch = { tool: inner.tool, via: [target, ...inner.via] };
 
-    if (inner === null) continue;
+        return match;
+      }
+    }
 
-    const match: ToolMatch = { tool: inner.tool, via: [step, ...inner.via] };
+    const isCut = walk.cuts > cutsBefore;
 
-    return match;
+    if (!isCut) noteFallback(fallback, path, walk);
   }
 
   return null;
@@ -121,18 +171,21 @@ const resolveIn = (command: string, scripts: PackageScripts, path: string[], bud
 
 /**
  * Spec runner-chains §Behavior: the first command segment that resolves to a well-known tool, directly or through
- * same-package script delegations (at most 5, no repeats, at most 256 body expansions). Total and pure.
+ * same-package script delegations (at most 5, no repeats, at most 256 body expansions). With none, the highest-ranked
+ * fallback tool met (Node.js over npm; of equal rank the first, deepest first): `npm start` running `node x.js` and
+ * `npm ci && node x.js` are Node.js, `npm publish` is npm. A segment whose delegation the depth cap cut notes no
+ * fallback, so a chain cut before any tool is unknown; a cycle is not a cut and still shows its manager. Total and pure.
  */
 export const resolveTool: ToolResolver = (command, scripts) => {
   if (command === null) return null;
 
-  const budget: Budget = { left: MAX_EXPANSIONS };
-  const match = resolveIn(command, scripts, [], budget);
-  const isOverBudget = budget.left < 0;
+  const walk: Walk = { left: MAX_EXPANSIONS, fallback: null, cuts: 0 };
+  const match = resolveIn(command, scripts, [], walk);
+  const isOverBudget = walk.left < 0;
 
   if (isOverBudget) return null;
 
-  return match;
+  return match ?? walk.fallback;
 };
 
 /** The codicon id of the tool's logo, or `null` for a tool without a glyph. */

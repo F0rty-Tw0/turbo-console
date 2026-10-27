@@ -17,7 +17,7 @@ describe('FEATURE: tool detection without a delegation form', () => {
     it.each<[string, string | null]>([
       ['vitest', 'vitest'],
       ['rm -rf dist && tsc', 'typescript'],
-      ['node x.js', null],
+      ['node x.js', 'node'],
       ['echo done; NODE_ENV=test npx jest', 'jest'],
       ['pnpm exec eslint .', 'eslint']
     ])('WHEN %j is resolved THEN it is %s without reading the scripts', (command, id) => {

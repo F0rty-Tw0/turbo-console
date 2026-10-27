@@ -179,7 +179,7 @@ describe('FEATURE: task rows of a package', () => {
     it('WHEN listed THEN it is an idle wrench row with no text that offers Run and Copy', () => {
       const row = taskRowOf(
         ROW_SCOPE_STUB,
-        packageWith([taskOf({ isTurboTask: false, command: 'node build.js' })]),
+        packageWith([taskOf({ isTurboTask: false, command: 'make build' })]),
         'a#build',
         rowContextOf('list')
       );

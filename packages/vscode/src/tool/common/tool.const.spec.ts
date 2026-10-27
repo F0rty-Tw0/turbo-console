@@ -1,7 +1,8 @@
 import { ICON_ID_PATTERN, TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { TOOLS, TOOL_BY_BIN } from './tool.const.ts';
+import { FALLBACK_TOOL_BY_BIN, TOOLS, TOOL_BY_BIN } from './tool.const.ts';
+import type { ToolSpec } from './tool.type.ts';
 
 const GLYPH_CHARS: [string, number][] = [
   ['angular', 0xe001],
@@ -21,7 +22,9 @@ const GLYPH_CHARS: [string, number][] = [
   ['svelte', 0xe00f],
   ['typescript', 0xe010],
   ['vite', 0xe011],
-  ['vitest', 0xe012]
+  ['vitest', 0xe012],
+  ['node', 0xe013],
+  ['npm', 0xe014]
 ];
 
 const GLYPH_SLUGS: [string, string][] = [
@@ -42,7 +45,9 @@ const GLYPH_SLUGS: [string, string][] = [
   ['svelte', 'svelte'],
   ['typescript', 'typescript'],
   ['vite', 'vite'],
-  ['vitest', 'vitest']
+  ['vitest', 'vitest'],
+  ['node', 'nodedotjs'],
+  ['npm', 'npm']
 ];
 
 const ANGULAR_ATTRIBUTION =
@@ -51,11 +56,11 @@ const STORYBOOK_ATTRIBUTION = '"Storybook" logo, Copyright (c) 2017 Storybooks (
 
 describe('FEATURE: tool table', () => {
   describe('GIVEN the table rows', () => {
-    it('WHEN the ids are read THEN there are 19 unique ids', () => {
+    it('WHEN the ids are read THEN there are 21 unique ids', () => {
       const ids = TOOLS.map((tool) => tool.id);
 
-      expect(ids).toHaveLength(19);
-      expect(new Set(ids).size).toBe(19);
+      expect(ids).toHaveLength(21);
+      expect(new Set(ids).size).toBe(21);
     });
 
     it('WHEN the bins are read THEN each is lower-case letters, digits and dashes, and none repeats across the table', () => {
@@ -84,7 +89,7 @@ describe('FEATURE: tool table', () => {
       const slugs = glyphTools.map((tool) => tool.glyph?.slug ?? '');
       const unsafe = slugs.filter((slug) => !/^[a-z0-9]+$/.test(slug));
 
-      expect(slugs).toHaveLength(18);
+      expect(slugs).toHaveLength(20);
       expect(unsafe).toStrictEqual([]);
     });
 
@@ -107,18 +112,29 @@ describe('FEATURE: tool table', () => {
     it('WHEN each glyph id is prefixed THEN it matches the webview icon-id pattern', () => {
       const ids = TOOLS.filter((tool) => tool.glyph !== null).map((tool) => TOOL_ICON_PREFIX + tool.id);
 
-      expect(ids).toHaveLength(18);
+      expect(ids).toHaveLength(20);
       expect(ids.every((id) => ICON_ID_PATTERN.test(id))).toBe(true);
     });
   });
 
-  describe('GIVEN the bin lookup', () => {
-    it('WHEN it is read THEN it holds every bin and maps each to its row', () => {
+  describe('GIVEN the bin lookups', () => {
+    it('WHEN they are read THEN together they hold every bin and map each to its row', () => {
       const binTotal = TOOLS.reduce((total, tool) => total + tool.bins.length, 0);
+      const lookupOf = (bin: string): ToolSpec | undefined => TOOL_BY_BIN.get(bin) ?? FALLBACK_TOOL_BY_BIN.get(bin);
 
-      expect(TOOL_BY_BIN.size).toBe(binTotal);
-      expect(binTotal).toBe(25);
-      TOOLS.forEach((tool) => tool.bins.forEach((bin) => expect(TOOL_BY_BIN.get(bin)).toBe(tool)));
+      expect(TOOL_BY_BIN.size + FALLBACK_TOOL_BY_BIN.size).toBe(binTotal);
+      expect(binTotal).toBe(27);
+      TOOLS.forEach((tool) => tool.bins.forEach((bin) => expect(lookupOf(bin)).toBe(tool)));
+    });
+
+    it('WHEN the fallback lookup is read THEN it holds only node and npm', () => {
+      const entries = [...FALLBACK_TOOL_BY_BIN];
+      const fallbacks = entries.map(([bin, tool]) => [bin, tool.id, tool.title]);
+
+      expect(fallbacks).toStrictEqual([
+        ['node', 'node', 'Node.js'],
+        ['npm', 'npm', 'npm']
+      ]);
     });
   });
 });

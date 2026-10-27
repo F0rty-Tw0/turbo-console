@@ -129,11 +129,11 @@ describe('FEATURE: buildToolIcons', () => {
       expect(files.toSorted()).toStrictEqual(FILE_NAMES);
     });
 
-    it('WHEN the TTF is read THEN it has 1000 units per em and at least 18 glyphs', async () => {
+    it('WHEN the TTF is read THEN it has 1000 units per em and at least 20 glyphs', async () => {
       const view = await ttfOf(await builtDir());
 
       expect(unitsPerEmOf(view)).toBe(1000);
-      expect(numGlyphsOf(view)).toBeGreaterThanOrEqual(18);
+      expect(numGlyphsOf(view)).toBeGreaterThanOrEqual(20);
     });
 
     it('WHEN each code point is looked up in the cmap THEN it maps to a glyph with an outline', async () => {
@@ -148,13 +148,13 @@ describe('FEATURE: buildToolIcons', () => {
       expect(empty).toStrictEqual([]);
     });
 
-    it('WHEN the 18 code points are looked up THEN they map to 18 distinct glyphs', async () => {
+    it('WHEN the 20 code points are looked up THEN they map to 20 distinct glyphs', async () => {
       const view = await ttfOf(await builtDir());
 
       const ids = GLYPHS.map((glyph) => glyphIdOf(view, glyph.char));
 
-      expect(GLYPHS).toHaveLength(18);
-      expect(new Set(ids).size).toBe(18);
+      expect(GLYPHS).toHaveLength(20);
+      expect(new Set(ids).size).toBe(20);
     });
 
     it('WHEN the glyph headers are read THEN no glyph reaches the padded edge of the em', async () => {
@@ -190,7 +190,7 @@ describe('FEATURE: buildToolIcons', () => {
       expect(faces).toHaveLength(1);
       expect(css).toContain("src: url('tool-icons.ttf') format('truetype');");
       expect(missing).toStrictEqual([]);
-      expect(css.match(/:before \{/g)).toHaveLength(18);
+      expect(css.match(/:before \{/g)).toHaveLength(20);
     });
   });
 
@@ -219,7 +219,7 @@ describe('FEATURE: buildToolIcons', () => {
       const lines = GLYPH_TOOLS.flatMap(guidelineLineOf);
       const missing = lines.filter((line) => !notice.includes(line));
 
-      expect(lines).toHaveLength(4);
+      expect(lines).toHaveLength(6);
       expect(missing).toStrictEqual([]);
     });
 

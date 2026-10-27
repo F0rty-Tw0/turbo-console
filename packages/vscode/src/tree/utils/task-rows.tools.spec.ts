@@ -55,10 +55,19 @@ describe('FEATURE: tool icon and tooltip line on a task row', () => {
       expect(id).toBe('turbo-console-eslint');
     });
 
+    it.each([
+      ['node scripts/x.js', 'turbo-console-node'],
+      ['npm publish', 'turbo-console-npm']
+    ])('WHEN it is a script running %j THEN the row takes the %s glyph icon', (command, iconId) => {
+      const id = iconIdOf(scriptOf(command));
+
+      expect(id).toBe(iconId);
+    });
+
     it('WHEN the swap happens THEN id, description and context value stay what a plain idle row has', () => {
-      const plain = rowOf(taskOf({ command: 'node x.js' }));
+      const plain = rowOf(taskOf({ command: 'make x' }));
       const turbo = rowOf(taskOf({ command: 'vitest' }));
-      const plainScript = rowOf(scriptOf('node x.js'));
+      const plainScript = rowOf(scriptOf('make x'));
       const script = rowOf(scriptOf('eslint .'));
 
       expect(turbo).toMatchObject({ id: plain.id, description: plain.description, contextValue: 'turboTask' });
@@ -80,7 +89,7 @@ describe('FEATURE: tool icon and tooltip line on a task row', () => {
     });
 
     it('WHEN no tool is detected THEN the wrench stays', () => {
-      const id = iconIdOf(taskOf({ command: 'node x.js' }));
+      const id = iconIdOf(taskOf({ command: 'make x' }));
 
       expect(id).toBe('tools');
     });
@@ -160,9 +169,9 @@ describe('FEATURE: tool icon and tooltip line on a task row', () => {
 
   describe('GIVEN no detected tool', () => {
     it('WHEN the command runs a plain script THEN there is no Tool line', () => {
-      const lines = tooltipOf(taskOf({ command: 'node x.js' }));
+      const lines = tooltipOf(taskOf({ command: 'make x' }));
 
-      expect(lines).toStrictEqual(['Command: node x.js', 'Kind: task']);
+      expect(lines).toStrictEqual(['Command: make x', 'Kind: task']);
     });
   });
 
