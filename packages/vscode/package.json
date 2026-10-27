@@ -192,6 +192,12 @@
         "category": "Turbo Console"
       },
       {
+        "command": "turboConsole.showAllTaskGraphs",
+        "title": "Show All Task Graphs",
+        "category": "Turbo Console",
+        "icon": "$(tasklist)"
+      },
+      {
         "command": "turboConsole.focusPackageInGraph",
         "title": "Focus on Graph",
         "category": "Turbo Console",
@@ -261,6 +267,11 @@
           "command": "turboConsole.openPackageGraph",
           "when": "view == turboConsole.tree",
           "group": "navigation@4"
+        },
+        {
+          "command": "turboConsole.showAllTaskGraphs",
+          "when": "view == turboConsole.tree",
+          "group": "navigation@5"
         }
       ],
       "view/item/context": [
@@ -361,6 +372,10 @@
         },
         {
           "command": "turboConsole.showTaskGraph",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.showAllTaskGraphs",
           "when": "turboConsole.active"
         },
         {

@@ -68,6 +68,7 @@ vi.mock('vscode', () => {
 
 const COMMAND = 'turboConsole.openPackageGraph';
 const TASK_COMMAND = 'turboConsole.showTaskGraph';
+const ALL_TASKS_COMMAND = 'turboConsole.showAllTaskGraphs';
 const FOCUS_COMMAND = 'turboConsole.focusPackageInGraph';
 const PACKAGE_ROW = { kind: 'pkg', root: '/ws', packageName: 'web' };
 const TASK_ROW = { kind: 'task', root: '/ws', key: 'web#build', packageName: 'web' };
@@ -139,12 +140,12 @@ describe('FEATURE: the graph wiring', () => {
   });
 
   describe('GIVEN the graph is registered', () => {
-    it('WHEN it registers THEN Show Package Graph, Show Task Graph and Focus on Graph are registered', () => {
+    it('WHEN it registers THEN Show Package Graph, Show Task Graph, Show All Task Graphs and Focus on Graph are registered', () => {
       graph.register();
 
       const commands = editor.registerCommand.mock.calls.map(([command]) => command);
 
-      expect(commands).toStrictEqual([COMMAND, TASK_COMMAND, FOCUS_COMMAND]);
+      expect(commands).toStrictEqual([COMMAND, TASK_COMMAND, ALL_TASKS_COMMAND, FOCUS_COMMAND]);
     });
 
     it('WHEN the registration is disposed THEN every command is unregistered', () => {
@@ -152,13 +153,21 @@ describe('FEATURE: the graph wiring', () => {
 
       registered.dispose();
 
-      expect(unregister).toHaveBeenCalledTimes(3);
+      expect(unregister).toHaveBeenCalledTimes(4);
     });
 
     it('WHEN Show Task Graph runs on a task row THEN the panel of its root opens', async () => {
       graph.register();
 
       await callbackOf(TASK_COMMAND)(TASK_ROW);
+
+      expect(graph.api.panels()).toHaveLength(1);
+    });
+
+    it('WHEN Show All Task Graphs runs THEN the panel of the active root opens', async () => {
+      graph.register();
+
+      await callbackOf(ALL_TASKS_COMMAND)(undefined);
 
       expect(graph.api.panels()).toHaveLength(1);
     });
