@@ -11,11 +11,12 @@ const NOW = 1_000_000;
 
 const CONTINUOUS: TaskNode = { ...TASK_NODE_STUB, persistent: true };
 const SCRIPT: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+const CONTINUOUS_SCRIPT: TaskNode = { ...CONTINUOUS, isTurboTask: false };
 
 const CONTINUOUS_IDLE_ICON: IconSpec = { id: 'server-process', color: null };
-const CONTINUOUS_RUNNING_ICON: IconSpec = { id: 'pulse', color: null };
+const CONTINUOUS_RUNNING_ICON: IconSpec = { id: 'pulse', color: 'charts.green' };
 const IDLE_ICON: IconSpec = { id: 'tools', color: null };
-const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
+const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: 'charts.yellow' };
 const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 const FAILED_ICON: IconSpec = { id: 'error', color: 'testing.iconFailed' };
 const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'descriptionForeground' };
@@ -134,6 +135,20 @@ describe('FEATURE: task item display of continuous tasks and scripts', () => {
       const display = taskDisplay(SCRIPT, entry, NOW);
 
       expect(display).toStrictEqual({ icon: FAILED_ICON, description: 'failed to start', contextValue: 'turboScript' });
+    });
+  });
+
+  describe('GIVEN a continuous task launched without turbo', () => {
+    it('WHEN its run is live THEN it shows the pulse, continuous with the time since the click, and offers Stop', () => {
+      const entry = entryIn({ task: CONTINUOUS_SCRIPT, state: 'running', launchedAt: NOW - 12_345 });
+
+      const display = taskDisplay(CONTINUOUS, entry, NOW);
+
+      expect(display).toStrictEqual({
+        icon: CONTINUOUS_RUNNING_ICON,
+        description: 'continuous · 12s',
+        contextValue: 'turboScript.running'
+      });
     });
   });
 
