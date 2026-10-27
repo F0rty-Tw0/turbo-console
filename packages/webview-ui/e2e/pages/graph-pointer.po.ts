@@ -2,17 +2,19 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 import { GraphHover } from './graph-hover.po.ts';
-import { NEXT_FRAME } from '../common/graph.const.ts';
-import type { PressPngs } from '../common/graph.type.ts';
+import { CANVAS_QUIET_MS, CANVAS_QUIET_TIMEOUT_MS, NEXT_FRAME } from '../common/graph.const.ts';
+import type { PressPngs, QuietWindow } from '../common/graph.type.ts';
 import type { ScreenClip, ViewportPoint } from '../common/playwright.type.ts';
 import { maxChannelDeltaOf } from '../test/utils/graph-press-delta.spec.util.ts';
+import { settlesQuiet } from '../test/utils/graph-quiet-canvas.spec.util.ts';
 
 /** Half the side, in px, of the square around the pointer that a press must leave unchanged. */
 const PRESS_HALF_PX = 60;
 
 /**
  * The largest channel change a press may leave: macOS CI moves a few anti-aliased link pixels by 1 level on a press,
- * while Cytoscape's press overlay moves a channel by 64 and its background circle by 38 (measured on Linux).
+ * while Cytoscape's press overlay moves a channel by 64 and its background circle by 38 (measured on Linux). The
+ * budget only holds once the canvas is quiet: a late redraw between the two shots re-rasterises labels by up to 8.
  */
 const PRESS_NOISE_LEVELS = 4;
 
@@ -46,6 +48,7 @@ export class GraphPointer extends GraphHover {
     const point = this.restingPoint();
     const clip = this.clipAround(point);
 
+    await this.waitForQuietCanvas();
     await this.page.evaluate(NEXT_FRAME);
 
     const before = await this.page.screenshot({ clip });
@@ -97,6 +100,13 @@ export class GraphPointer extends GraphHover {
   /** The graph container draws its focus outline. */
   public async expectContainerRing(): Promise<void> {
     await expect(this.container).toHaveCSS('outline-style', 'solid');
+  }
+
+  private async waitForQuietCanvas(): Promise<void> {
+    const quietWindow: QuietWindow = { quietMs: CANVAS_QUIET_MS, timeoutMs: CANVAS_QUIET_TIMEOUT_MS };
+    const isQuiet = await this.page.evaluate(settlesQuiet, quietWindow);
+
+    if (!isQuiet) throw new Error(`graph e2e: the canvas kept rendering for ${CANVAS_QUIET_TIMEOUT_MS} ms before a press`);
   }
 
   private clipAround(point: ViewportPoint): ScreenClip {
