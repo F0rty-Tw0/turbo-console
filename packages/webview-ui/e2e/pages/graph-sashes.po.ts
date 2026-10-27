@@ -111,6 +111,7 @@ export class GraphSashes {
   public async expectTaskEllipsisShown(id: string, isShown: boolean): Promise<void> {
     const ellipsis = this.page.getByRole('button', { name: `Actions for ${id}`, exact: true, includeHidden: true });
 
+    await expect(ellipsis).toBeAttached();
     await expect(ellipsis).toBeVisible({ visible: isShown });
   }
 
