@@ -13,7 +13,8 @@ const editor = vi.hoisted(() => {
   const spies = {
     showQuickPick: vi.fn<ShowQuickPick>(),
     showInformationMessage: vi.fn<(text: string) => Promise<undefined>>(),
-    showErrorMessage: vi.fn<(text: string) => Promise<undefined>>()
+    showErrorMessage: vi.fn<(text: string) => Promise<undefined>>(),
+    showWarningMessage: vi.fn<(text: string, ...actions: string[]) => Promise<string | undefined>>()
   };
 
   return spies;
@@ -23,7 +24,8 @@ vi.mock('vscode', () => {
   const window = {
     showQuickPick: editor.showQuickPick,
     showInformationMessage: editor.showInformationMessage,
-    showErrorMessage: editor.showErrorMessage
+    showErrorMessage: editor.showErrorMessage,
+    showWarningMessage: editor.showWarningMessage
   };
   const module = { window };
 
@@ -141,6 +143,27 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
       ports.error('Could not open the Package Graph. See Output.');
 
       expect(editor.showErrorMessage).toHaveBeenCalledExactlyOnceWith('Could not open the Package Graph. See Output.');
+    });
+  });
+
+  describe('GIVEN a warning with buttons', () => {
+    it('WHEN the user presses the second THEN the result is its label and the warning got the text and both labels', async () => {
+      editor.showWarningMessage.mockResolvedValue('Pick tasks…');
+      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn());
+
+      const answer = await ports.warn('Many tasks', ['Show all 301', 'Pick tasks…']);
+
+      expect(answer).toBe('Pick tasks…');
+      expect(editor.showWarningMessage).toHaveBeenCalledExactlyOnceWith('Many tasks', 'Show all 301', 'Pick tasks…');
+    });
+
+    it('WHEN the user dismisses it THEN the result is undefined', async () => {
+      editor.showWarningMessage.mockResolvedValue(undefined);
+      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn());
+
+      const answer = await ports.warn('Many tasks', ['Show all 301']);
+
+      expect(answer).toBeUndefined();
     });
   });
 

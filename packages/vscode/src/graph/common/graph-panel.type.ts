@@ -67,7 +67,8 @@ export type GraphOpener = {
 
 /**
  * What the Show Package Graph and Show Task Graph commands ask of the editor: the active file, the folder holding a file, a folder pick, an
- * info and an error message, and the output log. `pickMany` resolves the values of the ticked rows, `undefined` when cancelled. `info`, `error` and `log` never throw.
+ * info and an error message, a warning with buttons, and the output log. `pickMany` resolves the values of the ticked rows, `undefined` when cancelled.
+ * `warn` resolves the button pressed, `undefined` when dismissed. `info`, `error` and `log` never throw.
  */
 export type RootPickPorts = {
   readonly activeFile: () => string | null;
@@ -76,8 +77,25 @@ export type RootPickPorts = {
   readonly pickMany: (items: PickItem[], placeHolder: string) => Promise<string[] | undefined>;
   readonly info: (text: string) => void;
   readonly error: (text: string) => void;
+  readonly warn: (text: string, actions: string[]) => Promise<string | undefined>;
   readonly log: (text: string) => void;
 };
+
+/** What the task graph commands ask of the host: the roots, the editor and the panel registry. */
+export type ShowTaskGraphDeps = {
+  readonly roots: Roots;
+  readonly ports: RootPickPorts;
+  readonly panels: Pick<GraphOpener, 'open'>;
+};
+
+/** The panel to open and the tasks to ask it for; no `taskIds` opens the panel alone. */
+export type TaskGraphRequest = {
+  readonly root: string;
+  readonly taskIds: string[];
+};
+
+/** Which of a root's task items to draw: their values, `undefined` when nothing is chosen. */
+export type TaskChoice = (items: PickItem[]) => Promise<string[] | undefined>;
 
 /** What `createGraph` reads of the Details registry: opening a package's panel. */
 export type GraphDetails = {

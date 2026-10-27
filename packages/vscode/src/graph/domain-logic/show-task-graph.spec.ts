@@ -46,6 +46,7 @@ const portsOf = (pickMany: Mock<RootPickPorts['pickMany']>): RootPickPorts => {
     pickMany,
     info: vi.fn(),
     error: vi.fn(),
+    warn: vi.fn(),
     log: vi.fn()
   };
 

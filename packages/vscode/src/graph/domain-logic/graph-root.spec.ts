@@ -27,6 +27,7 @@ const portsMock = (activeFile: string | null, rootOf: string | null, picked: str
     pickMany: vi.fn(),
     info,
     error: vi.fn(),
+    warn: vi.fn(),
     log: vi.fn()
   };
   const spies: PortSpies = { ports, pick, info };
