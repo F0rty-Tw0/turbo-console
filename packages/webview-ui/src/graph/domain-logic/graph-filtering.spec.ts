@@ -7,7 +7,7 @@ import type { GraphFocus, GraphViewState } from '../../bridge/common/graph-view-
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { SAVED_FLAT_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
-import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
 type DrawnSide = {
   readonly side: GraphPackageSide;
@@ -29,10 +29,9 @@ const drawnRigOf = async (saved: GraphViewState): Promise<FilteringRig> => {
   const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced };
   const side = new GraphPackageSide(mock.deps, mock.view, hooks);
   const rig: FilteringRig = { ...mock, side };
-  const settled = (resolve: () => void): void => void setTimeout(resolve, 0);
 
   side.show(STATE_STUB, 1);
-  await new Promise<void>(settled);
+  await settled();
 
   return rig;
 };

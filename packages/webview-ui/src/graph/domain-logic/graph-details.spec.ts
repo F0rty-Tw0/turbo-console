@@ -7,7 +7,7 @@ import { DETAILS_ID } from '../common/graph.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { SAVED_FLAT_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
-import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
 type PackageSideParts = {
   readonly side: GraphPackageSide;
@@ -31,14 +31,6 @@ const rigOf = (): DetailsRig => {
 
 /** The ids of the page body's children: the details panel's once it is built. */
 const bodyIdsOf = (rig: DetailsRig): string[] => Array.from(rig.page.body.children, (child) => child.id);
-
-const settled = async (): Promise<void> => {
-  const wait = (resolve: () => void): void => {
-    setTimeout(resolve, 0);
-  };
-
-  return new Promise(wait);
-};
 
 describe('FEATURE: GraphDetails mount', () => {
   let rig: DetailsRig;

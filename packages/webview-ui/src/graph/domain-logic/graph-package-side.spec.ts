@@ -12,7 +12,7 @@ import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { LARGE_STATE_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { isGroupedGraph } from '../test/utils/graph-layouts.spec.util.ts';
-import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
 type PackageSideParts = {
   readonly side: GraphPackageSide;
@@ -53,14 +53,6 @@ const rigOf = (saved: GraphViewState | null, hasGrouping?: boolean): PackageSide
   const rig: PackageSideRig = { ...mock, side, modes, hasTasks };
 
   return rig;
-};
-
-const settled = async (): Promise<void> => {
-  const wait = (resolve: () => void): void => {
-    setTimeout(resolve, 0);
-  };
-
-  return new Promise(wait);
 };
 
 describe('FEATURE: GraphPackageSide', () => {
