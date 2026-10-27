@@ -17,6 +17,43 @@ import { isMenuOpenKey } from '../utils/menu-keys.util.ts';
 
 const DETAILS_SELECTOR = `#${DETAILS_ID}`;
 
+/**
+ * Re-reads the layer's bounds when the container or the Details aside resizes. The aside mounts with the first graph, so
+ * it is looked up on every refresh and observed the first time it exists; a Details drag over the canvas moves the aside's
+ * left edge without resizing the container.
+ */
+class BoundsWatch {
+  private readonly body: HTMLElement;
+  private readonly widgets: GraphWidgets;
+  private readonly resizes = new ResizeObserver((): void => this.refresh());
+  private observed: Element | null = null;
+
+  public constructor(body: HTMLElement, widgets: GraphWidgets) {
+    this.body = body;
+    this.widgets = widgets;
+  }
+
+  public observe(container: HTMLElement): void {
+    this.resizes.observe(container);
+  }
+
+  /** The aside is a direct child of the body; `children` is what the specs' fake elements answer. */
+  public observeAside(): void {
+    const children = Array.from(this.body.children);
+    const aside = children.find((child) => child.id === DETAILS_ID);
+
+    if (aside === undefined || aside === this.observed) return;
+
+    this.resizes.observe(aside);
+    this.observed = aside;
+  }
+
+  public refresh(): void {
+    this.observeAside();
+    this.widgets.refreshBounds();
+  }
+}
+
 /** A record that can move the container or the overlay: a direct child of the body shown or hidden. */
 const isBodyRecord = (record: MutationRecord, body: HTMLElement): boolean => record.target.parentNode === body;
 
@@ -58,7 +95,8 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
   const { page, overlay } = deps;
   const { body, container, widgets: layer } = page;
   const { widgets, menus, breadcrumb } = new WidgetParts(deps);
-  const refreshBounds = (): void => widgets.refreshBounds();
+  const bounds = new BoundsWatch(body, widgets);
+  const refreshBounds = (): void => bounds.refresh();
   const onMutations = (records: MutationRecord[]): void => {
     const isBodyChange = records.some((record) => isBodyRecord(record, body));
 
@@ -78,6 +116,7 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
   };
   const wiring: WidgetWiring = {
     refresh: (): void => {
+      bounds.observeAside();
       widgets.refresh();
       breadcrumb.update();
     },
@@ -92,7 +131,7 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
     }
   };
 
-  new ResizeObserver(refreshBounds).observe(container);
+  bounds.observe(container);
   new MutationObserver(onMutations).observe(body, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
   overlay.addEventListener('change', refreshBounds);
   container.addEventListener('keydown', onMenuKey);

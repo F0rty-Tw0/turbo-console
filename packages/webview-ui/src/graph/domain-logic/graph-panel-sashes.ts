@@ -1,3 +1,4 @@
+import { wireSashInput } from './graph-sash-input.ts';
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
 import type { PanelSide } from '../common/graph-page.type.ts';
 import { TASK_CONTROLS_ID, TASK_DETAILS_ID, TASK_MODE_CLASS } from '../common/graph-task.const.ts';
@@ -14,15 +15,17 @@ const SIDES: PanelSide[] = ['controls', 'details'];
 /**
  * Draws the panels at their preferred widths clamped to the body: the `--tc-controls-width` and `--tc-details-width`
  * variables `graph.css` sizes the panels and places the sashes by, and on each sash its value, its max and the panel of
- * the mode on screen it controls.
+ * the mode on screen it controls. A drag or key changes the preferred width of its side only.
  */
 class GraphPanelSashes {
   private readonly deps: PanelSashDeps;
-  private readonly preferred: PanelWidths;
+  private preferred: PanelWidths;
+  private drawn: PanelWidths;
 
   public constructor(deps: PanelSashDeps) {
     this.deps = deps;
     this.preferred = deps.store.panelWidths() ?? DEFAULT_PANEL_WIDTHS;
+    this.drawn = this.preferred;
   }
 
   /** Never saves: the drawn widths follow the body, the saved ones change only on a resize by the user. */
@@ -31,15 +34,48 @@ class GraphPanelSashes {
     const drawn = clampedWidthsOf(this.preferred, body.clientWidth, overlay.matches, null);
 
     this.paint(drawn);
+  }
 
-    for (const side of SIDES) this.describe(side, drawn);
+  /** The width `side`'s panel is drawn at. */
+  public widthOf(side: PanelSide): number {
+    return this.drawn[side];
+  }
+
+  /** The widest `side` goes to, the other side giving way first. */
+  public maxOf(side: PanelSide): number {
+    const { body, overlay } = this.deps;
+
+    return maxWidthOf(side, this.preferred, body.clientWidth, overlay.matches);
+  }
+
+  /** Sets `side`'s preferred width to what fits and draws it, the other side shrinking first; saves nothing. */
+  public resize(side: PanelSide, px: number): void {
+    const { body, overlay } = this.deps;
+    const wanted: PanelWidths = { ...this.preferred, [side]: px };
+    const drawn = clampedWidthsOf(wanted, body.clientWidth, overlay.matches, side);
+
+    this.preferred = { ...this.preferred, [side]: drawn[side] };
+    this.paint(drawn);
+  }
+
+  /** Saves the preferred widths: a side squeezed by the other keeps what it was. */
+  public commit(): void {
+    this.deps.store.savePanelWidths(this.preferred);
+  }
+
+  public reset(side: PanelSide): void {
+    this.resize(side, DEFAULT_PANEL_WIDTHS[side]);
+    this.commit();
   }
 
   private paint(drawn: PanelWidths): void {
     const { style } = this.deps.body;
 
+    this.drawn = drawn;
     style.setProperty('--tc-controls-width', `${drawn.controls}px`);
     style.setProperty('--tc-details-width', `${drawn.details}px`);
+
+    for (const side of SIDES) this.describe(side, drawn);
   }
 
   private describe(side: PanelSide, drawn: PanelWidths): void {
@@ -57,7 +93,7 @@ class GraphPanelSashes {
 
 /** Draws the sashes once, then again when the body resizes, the overlay query flips or a mode switch moves `aria-controls`. */
 export const wirePanelSashes = (deps: PanelSashDeps): GraphPanelSashes => {
-  const { root, body, overlay } = deps;
+  const { root, body, overlay, sashes: elements } = deps;
   const sashes = new GraphPanelSashes(deps);
   const render = (): void => sashes.render();
 
@@ -65,6 +101,8 @@ export const wirePanelSashes = (deps: PanelSashDeps): GraphPanelSashes => {
   new ResizeObserver(render).observe(body);
   overlay.addEventListener('change', render);
   new MutationObserver(render).observe(root, { attributes: true, attributeFilter: ['class'] });
+
+  for (const side of SIDES) wireSashInput(side, elements[side], sashes, body);
 
   return sashes;
 };

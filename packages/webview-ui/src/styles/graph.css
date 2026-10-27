@@ -805,6 +805,10 @@ kbd {
   outline: none;
 }
 
+.graph-body.is-sashing {
+  user-select: none;
+}
+
 .graph-page:not(.task-mode) .graph-body:has(> #graph-controls:not([hidden])) > .graph-sash-controls,
 .graph-page.task-mode .graph-body:has(> #graph-task-controls:not([hidden])) > .graph-sash-controls,
 .graph-page:not(.task-mode) .graph-body:has(> #graph-details:not([hidden])) > .graph-sash-details,
