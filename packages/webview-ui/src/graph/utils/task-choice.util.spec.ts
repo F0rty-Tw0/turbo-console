@@ -69,8 +69,11 @@ describe('FEATURE: task choice rules', () => {
   });
 
   describe('GIVEN the task //#build of a root labelled single-app', () => {
-    it('WHEN the search is single THEN it matches the label, and without the label it does not', () => {
+    it('WHEN the search is single THEN it matches the label', () => {
       expect(matchesTaskSearch(ROOT_BUILD_STUB, 'single', 'single-app')).toBe(true);
+    });
+
+    it('WHEN the search is single and the root has no label THEN it does not match', () => {
       expect(matchesTaskSearch(ROOT_BUILD_STUB, 'single', null)).toBe(false);
     });
 
