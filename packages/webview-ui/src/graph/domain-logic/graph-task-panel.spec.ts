@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { saveDetailsToggle, taskPanelOf } from './graph-task-panel.ts';
-import { PACKAGE_NOTICE_MS, UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
+import { NOTICE_TEXT_DELAY_MS, PACKAGE_NOTICE_MS, UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskPanel, TaskPanelAsides, TaskScreenElements } from '../common/graph-task.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskWidgetsMock } from '../test/mocks/graph-task-mode.mock.ts';
@@ -27,6 +27,9 @@ const line = (): HTMLElement => document.createElement('p');
 /** The panel over a fresh page; `packageAside` is what the package Details aside lookup answers, none by default. */
 const rigOf = (packageAside: HTMLElement | null = null): PanelRig => {
   const notice = line();
+
+  notice.hidden = true;
+
   const banner = line();
   const bannerText = line();
   const taskScreen: TaskScreenElements = {
@@ -86,8 +89,36 @@ describe('FEATURE: taskPanelOf notice', () => {
       panel.notice(UNKNOWN_TASKS_TEXT);
     });
 
-    it('WHEN the unknown tasks notice shows THEN it reads that text', () => {
+    it('WHEN the unknown tasks notice shows THEN it is shown without text yet', () => {
+      expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: false, text: '' });
+    });
+
+    it('WHEN just under the text delay passes THEN it still has no text', () => {
+      vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS - 1);
+
+      expect(notice.textContent).toBe('');
+    });
+
+    it('WHEN the text delay passes THEN it reads that text', () => {
+      vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
+
       expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: false, text: UNKNOWN_TASKS_TEXT });
+    });
+
+    it('WHEN it is hidden before the text delay passes THEN no text is written later', () => {
+      panel.notice(null);
+      vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
+
+      expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: true, text: '' });
+    });
+
+    it('WHEN a newer notice shows before the text delay passes THEN it reads the newer text at once and the older never lands', () => {
+      panel.notice(droppedTasksText(1));
+      const textAtOnce = notice.textContent;
+
+      vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
+
+      expect({ textAtOnce, text: notice.textContent }).toStrictEqual({ textAtOnce: droppedTasksText(1), text: droppedTasksText(1) });
     });
 
     it('WHEN just under the notice time passes THEN it still shows', () => {

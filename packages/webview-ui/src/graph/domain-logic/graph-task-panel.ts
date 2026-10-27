@@ -1,5 +1,5 @@
 import type { PageElements } from '../common/graph-page.type.ts';
-import { PACKAGE_NOTICE_MS, TASK_MODE_CLASS } from '../common/graph-task.const.ts';
+import { NOTICE_TEXT_DELAY_MS, PACKAGE_NOTICE_MS, TASK_MODE_CLASS } from '../common/graph-task.const.ts';
 import type {
   PanelToggleDeps,
   TaskPanel,
@@ -27,6 +27,44 @@ export const saveDetailsToggle = (deps: PanelToggleDeps, widgets: Pick<TaskWidge
   savePanelToggle(deps, { detailsOpen });
 
   if (detailsOpen) widgets.keepClear();
+};
+
+/**
+ * Writes the notice line: `null` hides and empties it. A hidden line is shown empty first and gets its text
+ * `NOTICE_TEXT_DELAY_MS` later, since a `role=status` line that appears with its text inside is not reliably announced;
+ * a line already shown takes the text at once. A newer notice or a hide cancels a pending write.
+ */
+const noticeLineOf = (notice: HTMLElement): ((text: string | null) => void) => {
+  let cancelWrite = (): void => undefined;
+
+  const showNotice = (text: string | null): void => {
+    cancelWrite();
+
+    if (text === null) {
+      notice.hidden = true;
+      notice.textContent = '';
+
+      return;
+    }
+
+    const wasHidden = notice.hidden;
+
+    notice.hidden = false;
+
+    if (!wasHidden) {
+      notice.textContent = text;
+
+      return;
+    }
+
+    const write = setTimeout((): void => {
+      notice.textContent = text;
+    }, NOTICE_TEXT_DELAY_MS);
+
+    cancelWrite = (): void => clearTimeout(write);
+  };
+
+  return showNotice;
 };
 
 /**
@@ -58,10 +96,7 @@ export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions, asid
 
     if (bannerText.textContent !== text) bannerText.textContent = text;
   };
-  const showNotice = (text: string | null): void => {
-    notice.hidden = text === null;
-    notice.textContent = text ?? '';
-  };
+  const showNotice = noticeLineOf(notice);
   const noticeFor = (text: string | null): void => {
     cancelTimer();
     showNotice(text);

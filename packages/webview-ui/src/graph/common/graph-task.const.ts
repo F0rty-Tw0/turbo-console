@@ -72,6 +72,9 @@ export const UNKNOWN_TASKS_TEXT = 'Those tasks are not in this workspace';
 /** How long a task notice shown in package mode stays, since no task render comes to replace it. */
 export const PACKAGE_NOTICE_MS = 8000;
 
+/** How long the notice line is shown empty before its text is written, so a screen reader has the `role=status` line in the accessibility tree and announces the text as a change. */
+export const NOTICE_TEXT_DELAY_MS = 100;
+
 /** The prompt while nothing is chosen. */
 export const EMPTY_TASKS_TEXT =
   'Choose tasks to show: select a package and pick Show tasks, use Show in task graph on the details page, or run Turbo Console: Show Task Graph…';
