@@ -226,6 +226,12 @@ describe('FEATURE: isGraphHostMessage', () => {
     });
   });
 
+  it('GIVEN a showPackage message WHEN it names a package THEN it is accepted', () => {
+    const isMessage = isGraphHostMessage({ type: 'showPackage', name: 'web' });
+
+    expect(isMessage).toBe(true);
+  });
+
   describe('GIVEN an atoms message', () => {
     it.each([
       ['no groups', {}],
@@ -293,7 +299,9 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a runs message with a numeric run state', runsMessageOf({ 'app#build': 5 })],
       ['a showTasks message with a string taskIds', { type: 'showTasks', taskIds: 'a' }],
       ['a showTasks message with a numeric task id', { type: 'showTasks', taskIds: [1] }],
-      ['a showTasks message with no taskIds', { type: 'showTasks' }]
+      ['a showTasks message with no taskIds', { type: 'showTasks' }],
+      ['a showPackage message with no name', { type: 'showPackage' }],
+      ['a showPackage message with a numeric name', { type: 'showPackage', name: 7 }]
     ])('WHEN it is %s THEN it is rejected', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 
