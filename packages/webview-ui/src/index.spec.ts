@@ -15,6 +15,7 @@ import type {
   DetailsState,
   DryRunPhase,
   EdgeExplainResult,
+  FocusInGraphMessage,
   GraphAtomFile,
   GraphAtomGroup,
   GraphAtomGroupState,
@@ -27,6 +28,8 @@ import type {
   GraphReady,
   GraphRunState,
   GraphRunsMessage,
+  GraphShowPackageMessage,
+  GraphShowRequest,
   GraphShowTasksMessage,
   GraphShownUmbrellasMessage,
   GraphState,
@@ -84,6 +87,7 @@ type ExpectedTaskView = {
   readonly pan: ExpectedPosition;
   readonly layoutKey: string;
 };
+type ExpectedShowPackageMessage = { readonly type: 'showPackage'; readonly name: string };
 type ExpectedStateMessage = { readonly type: 'state'; readonly state: GraphState };
 type ExpectedContext = { readonly before?: string; readonly after?: string };
 type ExpectedEntry = {
@@ -109,7 +113,7 @@ type PositionsKey = { readonly type: 'positions' };
 type ExportImageKey = { readonly type: 'exportImage' };
 type RunTaskKey = { readonly type: 'runTask' };
 
-/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern and tool-icon prefix constants; everything else is wire-contract types. The webview-only bridge stays internal. */
+/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix and task cap constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
   'ENTRY_TEXT_MAX',
   'ICON_ID_PATTERN',
@@ -117,6 +121,7 @@ const RUNTIME_EXPORTS = [
   'MANIFEST_FIELDS',
   'MANIFEST_FILE_MAX',
   'MANIFEST_LINE_MAX',
+  'TASK_CAP',
   'TASK_COUNT_MAX',
   'TOOL_ICON_PREFIX',
   'durationText',
@@ -140,6 +145,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.MANIFEST_ENTRIES_MAX).toBe(8);
       expect(entry.MANIFEST_FILE_MAX).toBe(1_024);
       expect(entry.MANIFEST_LINE_MAX).toBe(1_000_000);
+      expect(entry.TASK_CAP).toBe(300);
       expect(entry.TASK_COUNT_MAX).toBe(100_000);
       expect(entry.MANIFEST_FIELDS).toStrictEqual(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']);
       expect(entry.ICON_ID_PATTERN).toBe(ICON_ID_PATTERN);
@@ -152,8 +158,9 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.webviewCsp).toBe(webviewCsp);
       expectTypeOf<WebviewSlots>().toEqualTypeOf<Readonly<Record<string, string>>>();
       expectTypeOf<WebviewMessage>().toEqualTypeOf<
-        ReadyMessage | TaskMessage | OpenPackageJsonMessage | RefreshMessage | ShowOutputMessage
+        ReadyMessage | TaskMessage | OpenPackageJsonMessage | FocusInGraphMessage | RefreshMessage | ShowOutputMessage
       >();
+      expectTypeOf<FocusInGraphMessage['type']>().toEqualTypeOf<'focusInGraph'>();
       expectTypeOf<HostMessage>().toEqualTypeOf<StateMessage | RunStateMessage>();
       expectTypeOf<TaskMessage['type']>().toEqualTypeOf<'run' | 'stop' | 'copy' | 'showInTaskGraph'>();
       expectTypeOf<RefreshMessage['scope']>().toEqualTypeOf<'dryRun' | 'root'>();
@@ -185,8 +192,15 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphReady['atomGroups']>().toEqualTypeOf<GraphAtomGroup[]>();
       expectTypeOf<GraphAtomGroup>().toEqualTypeOf<ExpectedAtomGroup>();
       expectTypeOf<GraphAtomFile>().toEqualTypeOf<ExpectedAtomFile>();
+      expectTypeOf<GraphShowPackageMessage>().toEqualTypeOf<ExpectedShowPackageMessage>();
+      expectTypeOf<GraphShowRequest>().toEqualTypeOf<GraphShowTasksMessage | GraphShowPackageMessage>();
       expectTypeOf<GraphHostMessage>().toEqualTypeOf<
-        ExpectedStateMessage | ExpectedExplainedMessage | GraphRunsMessage | GraphShowTasksMessage | GraphAtomsMessage
+        | ExpectedStateMessage
+        | ExpectedExplainedMessage
+        | GraphRunsMessage
+        | GraphShowTasksMessage
+        | ExpectedShowPackageMessage
+        | GraphAtomsMessage
       >();
       expectTypeOf<GraphAtomOutcome>().toEqualTypeOf<'passed' | 'failed' | 'cached' | 'none'>();
       expectTypeOf<GraphAtomGroupState>().toEqualTypeOf<ExpectedAtomGroupState>();

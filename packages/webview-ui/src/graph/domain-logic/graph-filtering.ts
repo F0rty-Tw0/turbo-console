@@ -22,15 +22,15 @@ const CLEAR: InspectionInput = { kind: 'clear' };
 
 /**
  * The controls panel, the inspection it drives, the collapsed folders and the widget layer over them; the only place
- * that knows `GraphControls`, `GraphInspection` and `GraphFolders`. A visible set the controls report is shown, runs the folder pass, re-checks the
+ * that builds `GraphControls`, `GraphInspection` and `GraphFolders`. A visible set the controls report is shown, runs the folder pass, re-checks the
  * inspection, refits and keeps the inspection clear of the details overlay; the restored one is shown without a fit or a pan.
  */
 export class GraphFiltering {
   public readonly inspection: GraphInspection;
   public readonly folders: GraphFolders;
+  public readonly controls: GraphControls;
 
   private readonly deps: GraphFilteringDeps;
-  private readonly controls: GraphControls;
   private readonly widgets: WidgetWiring;
   private builtMs: number | null = null;
   private appliedMs: number | null = null;

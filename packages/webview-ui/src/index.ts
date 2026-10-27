@@ -1,5 +1,6 @@
 // The host gets the wire contract only: `bridge.type.ts` declares the webview-only `acquireVsCodeApi` global.
 export type {
+  FocusInGraphMessage,
   HostMessage,
   OpenPackageJsonMessage,
   ReadyMessage,
@@ -29,6 +30,8 @@ export type {
   GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphRunsMessage,
+  GraphShowPackageMessage,
+  GraphShowRequest,
   GraphShowTasksMessage,
   GraphShownUmbrellasMessage,
   GraphStateMessage,
@@ -64,6 +67,8 @@ export {
   MANIFEST_LINE_MAX,
   TASK_COUNT_MAX
 } from './bridge/common/graph-message.const.ts';
+
+export { TASK_CAP } from './graph/common/graph-task.const.ts';
 
 export { ICON_ID_PATTERN, TOOL_ICON_PREFIX } from './details/common/run-view.const.ts';
 

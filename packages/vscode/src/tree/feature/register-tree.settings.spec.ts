@@ -1,13 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ConfigurationChangeEvent, Disposable } from 'vscode';
 
+import { watchIcons } from './icons-setting.ts';
 import { registerTree } from './register-tree.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
+import type { IconThemeProbe } from '../common/icon-theme.type.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
+import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
 
 type SettingsListener = (event: ConfigurationChangeEvent) => void;
@@ -45,6 +49,13 @@ vi.mock('vscode', () => {
   return module;
 });
 
+/** `watchIcons` has its own spec; here the editor's extension host and icon theme are out of reach. */
+vi.mock('./icons-setting.ts', () => {
+  const module = { currentIconsSetting: vi.fn(() => 'auto'), watchIcons: vi.fn() };
+
+  return module;
+});
+
 const eventFor = (changed: string): ConfigurationChangeEvent => {
   const event: ConfigurationChangeEvent = { affectsConfiguration: (section) => section === changed };
 
@@ -53,6 +64,9 @@ const eventFor = (changed: string): ConfigurationChangeEvent => {
 
 describe('FEATURE: registerTree settings', () => {
   let tree: PackagesTreeApi;
+  let subscriptions: Disposable[];
+  let output: Output;
+  let iconTheme: IconThemeProbe;
 
   const changeSetting = (key: string, value: unknown): void => {
     const listener = editor.onDidChangeConfiguration.mock.calls.at(0)?.[0];
@@ -62,8 +76,10 @@ describe('FEATURE: registerTree settings', () => {
   };
 
   beforeEach(() => {
+    subscriptions = [];
+    iconTheme = iconThemeProbeMock();
     const workspaceState: ScopeStore = { get: (): unknown => undefined, update: async (): Promise<void> => Promise.resolve() };
-    const context: TreeContext = { subscriptions: [], workspaceState, scripts: scriptsToggleMock() };
+    const context: TreeContext = { subscriptions, workspaceState, scripts: scriptsToggleMock(), iconTheme };
     const session: Session = {
       store: new RootStore(),
       setWorkspaceFolders: vi.fn(async () => Promise.resolve([])),
@@ -72,8 +88,10 @@ describe('FEATURE: registerTree settings', () => {
       request: vi.fn(),
       changed: vi.fn()
     };
-    const output: Output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
 
+    output = outputMock();
+
+    vi.mocked(watchIcons).mockClear();
     editor.settings.clear();
     editor.onDidChangeConfiguration.mockReset();
     editor.onDidChangeConfiguration.mockImplementation(disposableFake);
@@ -82,16 +100,14 @@ describe('FEATURE: registerTree settings', () => {
   });
 
   describe('GIVEN a registered tree', () => {
-    it('WHEN turboConsole.icons changes to theme THEN the tree gets the theme mode', () => {
-      changeSetting('icons', 'theme');
-
-      expect(tree.setIcons).toHaveBeenCalledExactlyOnceWith('theme');
+    it('WHEN it is registered THEN the icons are watched with the tree, the subscriptions, the output and the icon theme probe', () => {
+      expect(watchIcons).toHaveBeenCalledExactlyOnceWith(tree, subscriptions, output, iconTheme);
     });
 
-    it('WHEN turboConsole.icons changes to an unknown value THEN the tree gets the builtin mode', () => {
-      changeSetting('icons', 'x');
+    it('WHEN turboConsole.icons changes THEN the settings listener leaves the icons to watchIcons', () => {
+      changeSetting('icons', 'theme');
 
-      expect(tree.setIcons).toHaveBeenCalledExactlyOnceWith('builtin');
+      expect(tree.setIcons).not.toHaveBeenCalled();
     });
 
     it('WHEN only turboConsole.treeMode changes THEN the icons mode is left alone', () => {

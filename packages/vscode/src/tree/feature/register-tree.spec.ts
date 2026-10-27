@@ -6,9 +6,11 @@ import { registerTree } from './register-tree.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
+import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
 
 type CommandCallback = () => unknown;
@@ -72,6 +74,13 @@ vi.mock('vscode', () => {
   return module;
 });
 
+/** `watchIcons` has its own spec; here the editor's extension host and icon theme are out of reach. */
+vi.mock('./icons-setting.ts', () => {
+  const module = { currentIconsSetting: vi.fn(() => 'auto'), watchIcons: vi.fn() };
+
+  return module;
+});
+
 describe('FEATURE: registerTree scope toggle', () => {
   let calls: string[];
   let disposed: string[];
@@ -112,7 +121,7 @@ describe('FEATURE: registerTree scope toggle', () => {
       }
     };
 
-    context = { subscriptions: [], workspaceState, scripts: scriptsToggleMock() };
+    context = { subscriptions: [], workspaceState, scripts: scriptsToggleMock(), iconTheme: iconThemeProbeMock() };
     session = {
       store: new RootStore(),
       setWorkspaceFolders: vi.fn(async () => Promise.resolve([])),
@@ -121,7 +130,7 @@ describe('FEATURE: registerTree scope toggle', () => {
       request: vi.fn(),
       changed: vi.fn()
     };
-    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    output = outputMock();
 
     editor.createTreeView.mockReset();
     editor.registerCommand.mockReset();

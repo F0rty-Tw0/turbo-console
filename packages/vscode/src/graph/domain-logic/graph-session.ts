@@ -1,4 +1,4 @@
-import type { GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
+import type { GraphShowRequest, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import { answerRequest } from './graph-explain.ts';
 import { GraphImageSaver } from './graph-image-saver.ts';
@@ -21,8 +21,8 @@ type ExplainJob = {
  * The host side of one Package Graph panel. Each state is built from the store and the layout cache when it is posted
  * or a message is checked, so a message is always judged against the graph as it is now. Nothing is posted before the
  * page's `ready` or while hidden; hiding resets `ready` because the page is rebuilt on show. Every state post is followed
- * by the run states of its tasks, the Atomizer counts of its groups and a held `showTasks`, through the `GraphTaskFeed`. An
- * edge explanation is posted only if the panel is still shown and ready after its read.
+ * by the run states of its tasks, the Atomizer counts of its groups and a held `showTasks` or `showPackage`, through the
+ * `GraphTaskFeed`. An edge explanation is posted only if the panel is still shown and ready after its read.
  * One `explainEdge` is answered at a time; the one waiting behind it is replaced by each newer request, so a page that floods them costs one read in flight and one waiting.
  */
 export class GraphSession {
@@ -80,11 +80,11 @@ export class GraphSession {
     await this.handle(message, value);
   }
 
-  /** Asks the page to show these tasks: at once when it can take them, else once it is ready; the latest request wins. */
-  public showTasks(taskIds: string[]): void {
+  /** Asks the page to show tasks or focus a package: at once when it can, else once it is ready; the latest request wins. */
+  public show(request: GraphShowRequest): void {
     if (this.isDisposed) return;
 
-    this.feed.showTasks(taskIds);
+    this.feed.show(request);
   }
 
   public setVisible(visible: boolean): void {
@@ -110,8 +110,8 @@ export class GraphSession {
   }
 
   /**
-   * Posts the current state, then its run states, its atom counts and any held `showTasks`, when the panel is shown and its
-   * page is ready.
+   * Posts the current state, then its run states, its atom counts and any held `showTasks` or `showPackage`, when the panel
+   * is shown and its page is ready.
    */
   private publish(): void {
     if (!this.canPost()) return;

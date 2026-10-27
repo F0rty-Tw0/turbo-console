@@ -10,8 +10,10 @@ import type { Output } from '../../shared/common/output.type.ts';
 import type { ToggleStore } from '../../shared/common/scripts-toggle.type.ts';
 import { ScriptsToggle } from '../../shared/domain-logic/scripts-toggle.ts';
 import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
+import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
+import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
 
 type CommandCallback = () => unknown;
@@ -55,6 +57,13 @@ vi.mock('vscode', () => {
   return module;
 });
 
+/** `watchIcons` has its own spec; here the editor's extension host and icon theme are out of reach. */
+vi.mock('./icons-setting.ts', () => {
+  const module = { currentIconsSetting: vi.fn(() => 'auto'), watchIcons: vi.fn() };
+
+  return module;
+});
+
 describe('FEATURE: registerTree scripts toggle', () => {
   let commands: Map<string, CommandCallback>;
   let disposed: string[];
@@ -77,7 +86,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
     const workspaceState: ScopeStore = { get: (): unknown => undefined, update: async (): Promise<void> => Promise.resolve() };
 
     provider = new PackagesTreeProvider(session.store, 'list', 'builtin', deps);
-    context = { subscriptions: [], workspaceState, scripts: toggle };
+    context = { subscriptions: [], workspaceState, scripts: toggle, iconTheme: iconThemeProbeMock() };
   };
 
   beforeEach(() => {
@@ -93,7 +102,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
       request: vi.fn(),
       changed: vi.fn()
     };
-    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    output = outputMock();
 
     editor.createTreeView.mockReset();
     editor.registerCommand.mockReset();

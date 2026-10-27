@@ -113,7 +113,8 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
         scriptsToggle,
         'turboConsole.refresh navigation@3',
         'turboConsole.showFolders navigation@2',
-        'turboConsole.openPackageGraph navigation@4'
+        'turboConsole.openPackageGraph navigation@4',
+        'turboConsole.showAllTaskGraphs navigation@5'
       ];
 
       expect(items).toStrictEqual(expected.toSorted());
@@ -169,11 +170,22 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
   });
 
   it.each([
+    [true, ['turboConsole.showAllTaskGraphs']],
+    [false, []]
+  ])('GIVEN the extension active is %s WHEN the command palette is read THEN Show All Task Graphs shows as %j', (active, expected) => {
+    const keys = { 'turboConsole.active': active };
+    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('AllTaskGraphs') && whenMatches(entry.when, keys));
+
+    expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+  });
+
+  it.each([
     'turboConsole.runTask',
     'turboConsole.runTaskWithoutCache',
     'turboConsole.stopTask',
     'turboConsole.copyCommand',
-    'turboConsole.openSpec'
+    'turboConsole.openSpec',
+    'turboConsole.focusPackageInGraph'
   ])('GIVEN the row command %s WHEN the command palette is read THEN it is hidden there', (command) => {
     const entries = MENUS.commandPalette.filter((entry) => entry.command === command);
 

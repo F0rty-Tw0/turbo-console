@@ -1,4 +1,4 @@
-import type { GraphState } from '@turbo-console/webview-ui';
+import type { GraphShowRequest, GraphState } from '@turbo-console/webview-ui';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphTaskFeed } from './graph-task-feed.ts';
@@ -20,7 +20,8 @@ type FeedFixture = {
 const LOADING: GraphState = { kind: 'loading' };
 const ERROR: GraphState = { kind: 'error', message: 'failed' };
 const SINGLE_PACKAGE: GraphState = { kind: 'singlePackage' };
-const SHOW_A_BUILD = { type: 'showTasks', taskIds: ['a#build'] };
+const SHOW_WEB: GraphShowRequest = { type: 'showPackage', name: 'web' };
+const SHOW_A_BUILD: GraphShowRequest = { type: 'showTasks', taskIds: ['a#build'] };
 
 /** A feed on `/ws` over a real `RunStore` and spy ports; its gate is open and shows `state`. */
 const feedAt = (state: GraphState): FeedFixture => {
@@ -49,7 +50,7 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN showTasks is called THEN the request is posted at once', () => {
       const { feed, ports } = feedAt(GRAPH_STATE_STUB);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
 
       expect(postedShowTasksOf(ports)).toStrictEqual([SHOW_A_BUILD]);
     });
@@ -57,7 +58,7 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN a request was posted at once and a state is flushed THEN it is not posted again', () => {
       const { feed, ports } = feedAt(GRAPH_STATE_STUB);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
       feed.flush(GRAPH_STATE_STUB);
 
       expect(postedShowTasksOf(ports)).toStrictEqual([SHOW_A_BUILD]);
@@ -101,7 +102,7 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN showTasks is called THEN nothing is posted', () => {
       const { feed, ports } = feedAt(state);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
 
       expect(postedShowTasksOf(ports)).toStrictEqual([]);
     });
@@ -109,7 +110,7 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN showTasks is called THEN the hold is logged once with the root and the state kind', () => {
       const { feed, ports } = feedAt(state);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
 
       expect(ports.log).toHaveBeenCalledExactlyOnceWith(`Holding showTasks for /ws until the graph loads: state is ${state.kind}`);
     });
@@ -117,7 +118,7 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN showTasks is called and the graph state is flushed THEN the request follows the runs', () => {
       const { feed, ports } = feedAt(state);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
       feed.flush(GRAPH_STATE_STUB);
 
       expect(postedTypesOf(ports)).toStrictEqual(['runs', 'showTasks']);
@@ -126,7 +127,7 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN showTasks is called and this state is flushed THEN the request stays held', () => {
       const { feed, ports } = feedAt(state);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
       feed.flush(state);
       feed.flush(GRAPH_STATE_STUB);
 
@@ -136,10 +137,29 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN this state is flushed with the request held THEN no showTasks is posted yet', () => {
       const { feed, ports } = feedAt(state);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
       feed.flush(state);
 
       expect(postedShowTasksOf(ports)).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN an open gate on a loading state with a showPackage request', () => {
+    it('WHEN showPackage is called THEN the hold is logged with the request type', () => {
+      const { feed, ports } = feedAt(LOADING);
+
+      feed.show(SHOW_WEB);
+
+      expect(ports.log).toHaveBeenCalledExactlyOnceWith('Holding showPackage for /ws until the graph loads: state is loading');
+    });
+
+    it('WHEN the graph state is flushed THEN the request follows the runs', () => {
+      const { feed, ports } = feedAt(LOADING);
+
+      feed.show(SHOW_WEB);
+      feed.flush(GRAPH_STATE_STUB);
+
+      expect(postedTypesOf(ports)).toStrictEqual(['runs', 'showPackage']);
     });
   });
 
@@ -148,8 +168,8 @@ describe('FEATURE: graph task feed', () => {
       const { feed, ports, gate } = feedAt(GRAPH_STATE_STUB);
 
       vi.mocked(gate.canPost).mockReturnValue(false);
-      feed.showTasks(['a#build']);
-      feed.showTasks(['web#build']);
+      feed.show(SHOW_A_BUILD);
+      feed.show({ type: 'showTasks', taskIds: ['web#build'] });
       feed.flush(GRAPH_STATE_STUB);
 
       expect(postedShowTasksOf(ports)).toStrictEqual([{ type: 'showTasks', taskIds: ['web#build'] }]);
@@ -159,7 +179,7 @@ describe('FEATURE: graph task feed', () => {
       const { feed, ports, gate } = feedAt(LOADING);
 
       vi.mocked(gate.canPost).mockReturnValue(false);
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
       feed.flush(SINGLE_PACKAGE);
 
       expect(postedShowTasksOf(ports)).toStrictEqual([]);
@@ -169,7 +189,7 @@ describe('FEATURE: graph task feed', () => {
       const { feed, ports, gate } = feedAt(LOADING);
 
       vi.mocked(gate.canPost).mockReturnValue(false);
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
       feed.flush(SINGLE_PACKAGE);
 
       expect(vi.mocked(ports.log).mock.calls).toStrictEqual([
@@ -182,7 +202,7 @@ describe('FEATURE: graph task feed', () => {
       const { feed, ports, gate } = feedAt(LOADING);
 
       vi.mocked(gate.canPost).mockReturnValue(false);
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
       feed.flush(SINGLE_PACKAGE);
       feed.flush(GRAPH_STATE_STUB);
 
@@ -204,7 +224,7 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN showTasks is called THEN nothing is posted', () => {
       const { feed, ports } = feedAt(SINGLE_PACKAGE);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
 
       expect(postedShowTasksOf(ports)).toStrictEqual([]);
     });
@@ -212,9 +232,17 @@ describe('FEATURE: graph task feed', () => {
     it('WHEN showTasks is called THEN the request is logged once', () => {
       const { feed, ports } = feedAt(SINGLE_PACKAGE);
 
-      feed.showTasks(['a#build']);
+      feed.show(SHOW_A_BUILD);
 
       expect(ports.log).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN showPackage is called THEN it is dropped with the package graph wording', () => {
+      const { feed, ports } = feedAt(SINGLE_PACKAGE);
+
+      feed.show(SHOW_WEB);
+
+      expect(ports.log).toHaveBeenCalledExactlyOnceWith('Ignored showPackage: a single-package root has no package graph');
     });
   });
 

@@ -46,6 +46,8 @@ export type PackageSideHooks = {
   readonly tasks: PackageTasks;
   /** The page now shows a message instead of the graph: task mode shows its graph again with the next graph state. */
   readonly onMessage: () => void;
+  /** A package layout was placed, after the package side's own folder pass; the layouts fit next, unless it was a first draw. */
+  readonly onPlaced: () => void;
 };
 
 /** The canvas calls task mode makes: the task canvas, the camera and a re-measure after a panel change. */

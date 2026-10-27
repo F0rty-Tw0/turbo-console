@@ -56,7 +56,7 @@ describe('FEATURE: graph session atoms feed', () => {
     });
 
     it('WHEN a showTasks request is held until the page is ready THEN it is posted after the atoms', async () => {
-      session.showTasks([ATOM_UMBRELLA_TASK_STUB.id]);
+      session.show({ type: 'showTasks', taskIds: [ATOM_UMBRELLA_TASK_STUB.id] });
       await session.receive({ type: 'ready' });
 
       expect(postedTypesOf(ports)).toStrictEqual(['state', 'runs', 'atoms', 'showTasks']);

@@ -1,12 +1,18 @@
 import type { TaskMessage } from '@turbo-console/webview-ui';
 
+import { FOCUS_PACKAGE_COMMAND, SHOW_TASK_GRAPH_COMMAND } from '../../graph/common/graph.const.ts';
 import type { CommandMessage, DetailsCommand, PanelKey } from '../common/details.type.ts';
 
 const TASK_COMMANDS: Readonly<Record<TaskMessage['type'], string>> = {
   run: 'turboConsole.runTask',
   stop: 'turboConsole.stopTask',
   copy: 'turboConsole.copyCommand',
-  showInTaskGraph: 'turboConsole.showTaskGraph'
+  showInTaskGraph: SHOW_TASK_GRAPH_COMMAND
+};
+
+const PACKAGE_COMMANDS: Readonly<Record<'openPackageJson' | 'focusInGraph', string>> = {
+  openPackageJson: 'turboConsole.openPackageJson',
+  focusInGraph: FOCUS_PACKAGE_COMMAND
 };
 
 /**
@@ -20,11 +26,11 @@ export const commandOf = (message: CommandMessage, key: PanelKey): DetailsComman
     return show;
   }
 
-  if (message.type === 'openPackageJson') {
+  if (message.type === 'openPackageJson' || message.type === 'focusInGraph') {
     const packageRow = { kind: 'pkg', root: key.root, packageName: key.packageName };
-    const open: DetailsCommand = { command: 'turboConsole.openPackageJson', arg: packageRow };
+    const packageCommand: DetailsCommand = { command: PACKAGE_COMMANDS[message.type], arg: packageRow };
 
-    return open;
+    return packageCommand;
   }
 
   const taskRow = { kind: 'task', root: key.root, key: message.taskId, packageName: key.packageName };

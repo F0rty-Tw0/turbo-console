@@ -3,6 +3,7 @@ import type {
   GraphEdgeExplainedMessage,
   GraphReady,
   GraphRunsMessage,
+  GraphShowPackageMessage,
   GraphShowTasksMessage
 } from '@turbo-console/webview-ui';
 
@@ -51,6 +52,18 @@ export const postedShowTasks = (api: TurboConsoleApi, root: string): GraphShowTa
   }
 
   return newest;
+};
+
+/** The `showPackage` requests posted to the panel of `root`, oldest first. */
+export const postedShowPackages = (api: TurboConsoleApi, root: string): GraphShowPackageMessage[] => {
+  const posted = api.graph.posted(root);
+  const requests: GraphShowPackageMessage[] = [];
+
+  for (const message of posted) {
+    if (message.type === 'showPackage') requests.push(message);
+  }
+
+  return requests;
 };
 
 /** The `runs` maps posted to the panel of `root`, oldest first. */

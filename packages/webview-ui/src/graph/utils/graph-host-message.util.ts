@@ -62,8 +62,8 @@ const isGraphState = (state: unknown): boolean => {
 /**
  * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, path, tags and task
  * count, each edge end, each task's fields and each atom group's files; to an `edgeExplained` message by its names and
- * result; to a `runs` message by its run states; to a `showTasks` message by its task ids; or to an `atoms` message by its
- * counts lines and the four outcome words. Anything else is ignored. The payload itself comes from the extension host,
+ * result; to a `runs` message by its run states; to a `showTasks` message by its task ids; to a `showPackage` message by
+ * its package name; or to an `atoms` message by its counts lines and the four outcome words. Anything else is ignored. The payload itself comes from the extension host,
  * which builds it.
  */
 export const isGraphHostMessage = (value: unknown): value is GraphHostMessage => {
@@ -78,6 +78,8 @@ export const isGraphHostMessage = (value: unknown): value is GraphHostMessage =>
       return isRunsRecord(value['runs']);
     case 'showTasks':
       return isTaskIdList(value['taskIds']);
+    case 'showPackage':
+      return isString(value['name']);
     case 'atoms':
       return isAtomStateRecord(value['groups']);
     default:

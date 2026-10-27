@@ -126,6 +126,16 @@ describe('FEATURE: shownSetOf', () => {
       expect(shown.ids).toHaveLength(300);
     });
 
+    it('WHEN every task is chosen and the cap is not lifted THEN every task is drawn and none is cut', () => {
+      const tasks = fanOf(400, 0);
+      const chosen = tasks.map((task) => task.id);
+      const ids = chosen.toSorted();
+
+      const shown = shownSetOf({ tasks, chosen, depth: 1, capLifted: false });
+
+      expect(shown).toStrictEqual({ ids, hiddenCount: 0, droppedIds: [] });
+    });
+
     it('WHEN the cap is lifted THEN nothing is cut', () => {
       const shown = shownSetOf({ tasks: fanOf(400, 0), chosen: ['root#t'], depth: 1, capLifted: true });
 

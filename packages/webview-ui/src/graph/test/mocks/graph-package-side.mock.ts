@@ -99,7 +99,8 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
     background: (): string => ''
   };
   const onMessage = vi.fn<PackageSideHooks['onMessage']>();
-  const mock: PackageSideDepsMock = { deps, page, view, runs, saver, onMessage, packageViews };
+  const onPlaced = vi.fn<PackageSideHooks['onPlaced']>();
+  const mock: PackageSideDepsMock = { deps, page, view, runs, saver, onMessage, onPlaced, packageViews };
 
   return mock;
 };

@@ -13,6 +13,8 @@ export const NO_COMMAND_TEXT = 'No command (runs its dependencies)';
 
 export const MISSING_PACKAGE_TEXT = 'Package no longer in the workspace';
 
+export const FOCUS_IN_GRAPH_LABEL = 'Focus on graph';
+
 /** Spec 1c-a §4.5, §4.7 and §4.10 texts, verbatim. */
 export const NO_TASK_CARDS_TEXT = 'No tasks in this package.';
 

@@ -33,7 +33,7 @@ type Fixture = {
   readonly pickMany: Mock<RootPickPorts['pickMany']>;
   readonly panels: Pick<GraphOpener, 'open'>;
   readonly open: Mock<GraphOpener['open']>;
-  readonly showTasks: Mock<OpenGraphPanel['session']['showTasks']>;
+  readonly show: Mock<OpenGraphPanel['session']['show']>;
   readonly coordinators: Map<string, Coordinator>;
   readonly store: RootStore;
 };
@@ -46,14 +46,15 @@ const portsOf = (pickMany: Mock<RootPickPorts['pickMany']>): RootPickPorts => {
     pickMany,
     info: vi.fn(),
     error: vi.fn(),
+    warn: vi.fn(),
     log: vi.fn()
   };
 
   return ports;
 };
 
-const panelOf = (showTasks: Mock<OpenGraphPanel['session']['showTasks']>): OpenGraphPanel => {
-  const session: OpenGraphPanel['session'] = { receive: vi.fn(), showTasks, dispose: vi.fn() };
+const panelOf = (show: Mock<OpenGraphPanel['session']['show']>): OpenGraphPanel => {
+  const session: OpenGraphPanel['session'] = { receive: vi.fn(), show, dispose: vi.fn() };
   const { view } = viewMock<GraphHostMessage>(true);
   const panel: OpenGraphPanel = { root: '/ws', view, session, posted: [] };
 
@@ -71,15 +72,15 @@ const fixtureOf = (): Fixture => {
     return coordinator;
   };
   const pickMany = vi.fn<RootPickPorts['pickMany']>().mockResolvedValue(undefined);
-  const showTasks = vi.fn<OpenGraphPanel['session']['showTasks']>();
-  const open = vi.fn<GraphOpener['open']>().mockReturnValue(panelOf(showTasks));
+  const show = vi.fn<OpenGraphPanel['session']['show']>();
+  const open = vi.fn<GraphOpener['open']>().mockReturnValue(panelOf(show));
 
   store.set([ROOT_FOLDER_STUB, OTHER_FOLDER], make);
   store.apply('/ws', GRAPH_LOADED_STUB);
   store.apply('/other', GRAPH_LOADED_STUB);
 
   const panels: Fixture['panels'] = { open };
-  const fixture: Fixture = { ports: portsOf(pickMany), pickMany, panels, open, showTasks, coordinators, store };
+  const fixture: Fixture = { ports: portsOf(pickMany), pickMany, panels, open, show, coordinators, store };
 
   return fixture;
 };
@@ -107,7 +108,7 @@ describe('FEATURE: the Show Task Graph command', () => {
 
       await runWith(undefined, fixture);
 
-      expect(fixture.showTasks).toHaveBeenCalledExactlyOnceWith(['web#build', 'a#build']);
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: ['web#build', 'a#build'] });
     });
 
     it('WHEN the picks are made THEN the panel opens for the active root', async () => {
@@ -156,7 +157,7 @@ describe('FEATURE: the Show Task Graph command', () => {
 
       expect(fixture.pickMany).not.toHaveBeenCalled();
       expect(fixture.open).toHaveBeenCalledExactlyOnceWith('/other');
-      expect(fixture.showTasks).toHaveBeenCalledExactlyOnceWith(['web#build']);
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: ['web#build'] });
     });
   });
 
@@ -178,7 +179,7 @@ describe('FEATURE: the Show Task Graph command', () => {
 
       expect(fixture.ports.info).toHaveBeenCalledExactlyOnceWith(SINGLE_PACKAGE_TEXT);
       expect(fixture.open).not.toHaveBeenCalled();
-      expect(fixture.showTasks).not.toHaveBeenCalled();
+      expect(fixture.show).not.toHaveBeenCalled();
     });
   });
 
@@ -191,7 +192,7 @@ describe('FEATURE: the Show Task Graph command', () => {
       await runWith({ ...TASK_ROW, root: '/ws' }, fixture, failed);
 
       expect(fixture.open).toHaveBeenCalledExactlyOnceWith('/ws');
-      expect(fixture.showTasks).toHaveBeenCalledExactlyOnceWith(['web#build']);
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: ['web#build'] });
     });
   });
 
@@ -205,7 +206,7 @@ describe('FEATURE: the Show Task Graph command', () => {
 
       expect(fixture.open).toHaveBeenCalledExactlyOnceWith('/ws');
       expect(fixture.pickMany).not.toHaveBeenCalled();
-      expect(fixture.showTasks).not.toHaveBeenCalled();
+      expect(fixture.show).not.toHaveBeenCalled();
     });
   });
 
@@ -228,7 +229,7 @@ describe('FEATURE: the Show Task Graph command', () => {
 
       await runWith(undefined, fixture);
 
-      expect(fixture.showTasks).not.toHaveBeenCalled();
+      expect(fixture.show).not.toHaveBeenCalled();
     });
   });
 

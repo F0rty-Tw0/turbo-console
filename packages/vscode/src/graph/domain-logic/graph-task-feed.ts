@@ -1,4 +1,4 @@
-import type { GraphRunsMessage, GraphState } from '@turbo-console/webview-ui';
+import type { GraphRunsMessage, GraphShowRequest, GraphState } from '@turbo-console/webview-ui';
 
 import { Coalescer } from './coalescer.ts';
 import { GraphAtomFeed } from './graph-atom-feed.ts';
@@ -19,15 +19,15 @@ type TaskFeedDeps = {
 
 /**
  * What a graph panel is told about tasks besides its state: the run states of its root, coalesced so a burst of task
- * events is one post, the Atomizer counts of its groups (a `GraphAtomFeed`) and the one `showTasks` request held until the
- * page can take it. `showTasks` is never posted before a `graph` state: `flush` is the one point that posts the full runs
+ * events is one post, the Atomizer counts of its groups (a `GraphAtomFeed`) and the one `showTasks` or `showPackage` request
+ * held until the page can take it. A request is never posted before a `graph` state: `flush` is the one point that posts the full runs
  * map, the atoms and the held request, in that order, right after a state is posted.
  */
 export class GraphTaskFeed {
   private readonly deps: TaskFeedDeps;
   private unsubscribe: (() => void) | null = null;
   private readonly coalescer: Coalescer;
-  private held: string[] | null = null;
+  private held: GraphShowRequest | null = null;
   private readonly atomFeed: GraphAtomFeed;
 
   public constructor(deps: TaskFeedDeps) {
@@ -67,12 +67,12 @@ export class GraphTaskFeed {
    * The latest request wins while the page cannot take it, which is until a `graph` state has been posted; a hold while the
    * state is not `graph` is logged, so a root stuck in `error` leaves a trace. A single-package root has no task graph to show.
    */
-  public showTasks(taskIds: string[]): void {
+  public show(request: GraphShowRequest): void {
     const { gate, ports } = this.deps;
     const state = gate.state();
 
     if (state.kind === 'singlePackage') {
-      this.ignoreSinglePackage();
+      this.ignoreSinglePackage(request);
 
       return;
     }
@@ -80,20 +80,20 @@ export class GraphTaskFeed {
     const canPost = gate.canPost();
 
     if (!canPost || state.kind !== 'graph') {
-      this.hold(taskIds, state);
+      this.hold(request, state);
 
       return;
     }
 
-    ports.post({ type: 'showTasks', taskIds });
+    ports.post(request);
   }
 
-  private hold(taskIds: string[], state: GraphState): void {
-    this.held = taskIds;
+  private hold(request: GraphShowRequest, state: GraphState): void {
+    this.held = request;
 
     if (state.kind === 'graph') return;
 
-    const text = `Holding showTasks for ${this.deps.root} until the graph loads: state is ${state.kind}`;
+    const text = `Holding ${request.type} for ${this.deps.root} until the graph loads: state is ${state.kind}`;
 
     this.deps.ports.log(logTextOf(text));
   }
@@ -122,25 +122,27 @@ export class GraphTaskFeed {
     ports.post(message);
   }
 
-  private ignoreSinglePackage(): void {
-    this.deps.ports.log(logTextOf('Ignored showTasks: a single-package root has no task graph'));
+  private ignoreSinglePackage(request: GraphShowRequest): void {
+    const graph = request.type === 'showTasks' ? 'task' : 'package';
+
+    this.deps.ports.log(logTextOf(`Ignored ${request.type}: a single-package root has no ${graph} graph`));
   }
 
   private postHeld(state: GraphState): void {
-    if (this.held === null) return;
+    const request = this.held;
+
+    if (request === null) return;
 
     if (state.kind === 'singlePackage') {
       this.held = null;
-      this.ignoreSinglePackage();
+      this.ignoreSinglePackage(request);
 
       return;
     }
 
     if (state.kind !== 'graph') return;
 
-    const taskIds = this.held;
-
     this.held = null;
-    this.deps.ports.post({ type: 'showTasks', taskIds });
+    this.deps.ports.post(request);
   }
 }

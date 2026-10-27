@@ -26,7 +26,7 @@ const drawnRigOf = async (saved: GraphViewState): Promise<FilteringRig> => {
   const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
   const modes = new ViewStateModes(mock.saver, saved);
   const frames = new GraphFrames(mock.deps.now);
-  const hooks = { frames, modes, tasks, onMessage: mock.onMessage };
+  const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced };
   const side = new GraphPackageSide(mock.deps, mock.view, hooks);
   const rig: FilteringRig = { ...mock, side };
   const settled = (resolve: () => void): void => void setTimeout(resolve, 0);

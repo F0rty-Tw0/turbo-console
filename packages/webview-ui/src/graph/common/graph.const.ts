@@ -262,3 +262,8 @@ export const OVER_ELEMENT_CLASS = 'over-element';
  * ring.
  */
 export const POINTER_FOCUS_CLASS = 'pointer-focus';
+
+/** A package the host reveals below this zoom is first zoomed to `REVEAL_ZOOM`, so its label reads. */
+export const REVEAL_ZOOM_MIN = 0.75;
+
+export const REVEAL_ZOOM = 1;
