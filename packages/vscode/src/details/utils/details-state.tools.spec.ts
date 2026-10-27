@@ -81,6 +81,12 @@ describe('FEATURE: the tool of a task card', () => {
       expect(card.tool).toStrictEqual({ title: 'Vitest', iconId: 'turbo-console-vitest' });
     });
 
+    it('WHEN its command runs node THEN the card names Node.js with its glyph icon id', () => {
+      const card = cardOf(taskWith({ command: 'node --import tsx src/main.ts' }));
+
+      expect(card.tool).toStrictEqual({ title: 'Node.js', iconId: 'turbo-console-node' });
+    });
+
     it('WHEN its tool has no glyph THEN the card names it with a null icon id', () => {
       const card = cardOf(taskWith({ command: 'playwright test' }));
 
@@ -88,7 +94,7 @@ describe('FEATURE: the tool of a task card', () => {
     });
 
     it('WHEN its command runs no known tool THEN the tool is null', () => {
-      const card = cardOf(taskWith({ command: 'node x.js' }));
+      const card = cardOf(taskWith({ command: 'make x' }));
 
       expect(card.tool).toBeNull();
     });

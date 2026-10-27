@@ -652,6 +652,20 @@
           "fontPath": "./dist/webview/details/tool-icons.ttf",
           "fontCharacter": "\\E012"
         }
+      },
+      "turbo-console-node": {
+        "description": "Node.js",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E013"
+        }
+      },
+      "turbo-console-npm": {
+        "description": "npm",
+        "default": {
+          "fontPath": "./dist/webview/details/tool-icons.ttf",
+          "fontCharacter": "\\E014"
+        }
       }
     }
   },

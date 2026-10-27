@@ -10,7 +10,7 @@ import { liveIdsOf } from '../test/utils/live-ids.spec.util.ts';
 import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const scriptOf = (name: string, overrides: Partial<TaskNode> = {}): TaskNode => {
-  const script: TaskNode = { ...TASK_NODE_STUB, id: `a#${name}`, name, command: `node ${name}.js`, isTurboTask: false, ...overrides };
+  const script: TaskNode = { ...TASK_NODE_STUB, id: `a#${name}`, name, command: `make ${name}`, isTurboTask: false, ...overrides };
 
   return script;
 };
@@ -108,7 +108,7 @@ describe('FEATURE: the Scripts group of a package', () => {
     it('WHEN a script has a refused name THEN its row stays and its tooltip names no run command', () => {
       const row = scriptRows(ROW_SCOPE_STUB, MIXED, SHOWN).find((each) => each.key === 'a#bad name');
 
-      expect(row?.tooltip).toStrictEqual(['Script: node bad name.js', 'Kind: task']);
+      expect(row?.tooltip).toStrictEqual(['Script: make bad name', 'Kind: task']);
     });
 
     it('WHEN its rows are listed THEN the run store is not asked and the rows are unchanged', () => {
