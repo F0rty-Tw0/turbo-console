@@ -45,6 +45,10 @@ export class GraphPackageSide {
     };
     const isGrouped = (): boolean => isPackageMode() && this.layouts.drawnMode() === 'folders';
     const canAct = (): boolean => isGrouped() && this.layouts.mode() === 'folders';
+    const onPlaced = (): void => {
+      this.filtering.placed();
+      hooks.onPlaced();
+    };
 
     this.deps = deps;
     this.view = view;
@@ -68,10 +72,7 @@ export class GraphPackageSide {
       view,
       drawn: (): DrawnGraph | null => this.drawn,
       onDrawn: (saved: GraphViewState | null): void => this.afterDraw(saved),
-      onPlaced: (): void => {
-        this.filtering.placed();
-        hooks.onPlaced();
-      },
+      onPlaced,
       onGroupingOff: (): void => this.filtering.groupingOff()
     });
   }
