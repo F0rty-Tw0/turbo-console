@@ -40,29 +40,49 @@ const isCandidate = (summary: RunSummary, run: RunToMatch): boolean => {
   return isInWindow && isSameCommand && isSameExit;
 };
 
+/** B2-1: turbo attempted a task it never saw end, as after Ctrl+C in its terminal (exit 0, the task left out). */
+const hasUnendedTasks = (summary: RunSummary): boolean => {
+  const { attempted, success, failed, cached } = summary.execution;
+  const ended = success + failed + cached;
+
+  return attempted > ended;
+};
+
+/** The whole summary as the data of a run: no cache status, the summary's span. */
+const wholeRunOf = (summary: RunSummary, interrupted: boolean): RunMatch => {
+  const match: RunMatch = { cache: null, durationMs: spanOf(summary.execution), interrupted };
+
+  return match;
+};
+
 const dataOf = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
   const hasNoEntry = ENTRYLESS_KINDS.includes(run.task.kind);
+  const isUserEnd = summary.execution.exitCode === 0;
+  const hasCutTask = hasUnendedTasks(summary);
+  const isCutByUser = isUserEnd && hasCutTask;
 
-  if (hasNoEntry) {
-    const own: RunMatch = { cache: null, durationMs: spanOf(summary.execution) };
-
-    return own;
-  }
+  if (hasNoEntry || isCutByUser) return wholeRunOf(summary, isCutByUser);
 
   const entry = summary.tasks.find((task) => task.taskId === run.task.id);
+  const isCutBeforeAnyTask = isUserEnd && entry === undefined && summary.tasks.length === 0;
+
+  if (isCutBeforeAnyTask) return wholeRunOf(summary, true);
 
   if (entry === undefined) return null;
 
-  const match: RunMatch = { cache: entry.cache.status, durationMs: spanOf(entry.execution) };
+  const match: RunMatch = { cache: entry.cache.status, durationMs: spanOf(entry.execution), interrupted: false };
 
   return match;
 };
 
 /**
  * Spec §4.1.2: the data `summary` gives `run` when it fits: it started within `[launchedAt, endedAt]`, ran the same
- * command and ended with the same exit code, and, for a task with its own entry, lists that entry. The duration comes
- * from that entry, or from the whole summary for an umbrella or aggregate (`cache: null`). `null` when it does not fit
- * or the duration is not finite or is negative.
+ * command and ended with the same exit code, and, for a task with its own entry, lists that entry. The duration and
+ * cache status come from that entry, or from the whole summary (`cache: null`) for an umbrella or aggregate. B2-1: a run
+ * that exited 0 is `interrupted` when turbo attempted more tasks than it saw end, or, for a task with its own entry, the
+ * summary lists no task at all (Ctrl+C before turbo attempted one); the data is then the whole summary's. A failed run
+ * is never `interrupted`: turbo cuts siblings off after a failure itself. `null` when it does not fit or the duration
+ * is not finite or is negative.
  */
 export const matchSummary = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
   const isRunCandidate = isCandidate(summary, run);

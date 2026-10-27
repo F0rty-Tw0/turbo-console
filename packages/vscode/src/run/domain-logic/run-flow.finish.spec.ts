@@ -9,7 +9,7 @@ import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
-const MATCH: RunMatch = { cache: 'MISS', durationMs: 2500 };
+const MATCH: RunMatch = { cache: 'MISS', durationMs: 2500, interrupted: false };
 
 const endedEntry = (store: RunStore, exitCode: number | undefined): RunEntry => {
   const ended = store.processEnded(RUN, exitCode, 4000);

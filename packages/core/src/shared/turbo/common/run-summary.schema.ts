@@ -2,9 +2,16 @@ import { array, boolean, number, object, string, enum as zodEnum } from 'zod/min
 
 const executionSchema = object({ startTime: number(), endTime: number(), exitCode: number() });
 
-/** The summary-level execution; unlike a task's, turbo also records the `command` line it ran. */
+/**
+ * The summary-level execution; unlike a task's, turbo also records the `command` line it ran and how many tasks it
+ * `attempted` and saw end as `success`, `failed` or `cached`.
+ */
 const runExecutionSchema = object({
   command: string(),
+  attempted: number(),
+  success: number(),
+  failed: number(),
+  cached: number(),
   startTime: number(),
   endTime: number(),
   exitCode: number()

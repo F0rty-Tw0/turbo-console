@@ -129,7 +129,11 @@ export class RunStore {
     return this.update(slot, { state, endedAt: at });
   }
 
-  /** Settles the run launched at `launchedAt` while it waits for its match; ignored for any other entry. */
+  /**
+   * Settles the run launched at `launchedAt` while it waits for its match; ignored for any other entry. B2-1: a passed
+   * run whose match is `interrupted` was cut off (Ctrl+C in its terminal exits 0), so it is stopped; a failed one stays
+   * failed.
+   */
   public setMatch(definition: RunDefinition, launchedAt: number, match: RunMatch | null): void {
     const slot = this.slots.get(runKeyOf(definition.root, definition.id));
 
@@ -137,7 +141,10 @@ export class RunStore {
 
     if (slot.entry.launchedAt !== launchedAt) return;
 
-    this.update(slot, { match, matching: false });
+    const isCutOff = slot.entry.state === 'passed' && match?.interrupted === true;
+    const state = isCutOff ? 'stopped' : slot.entry.state;
+
+    this.update(slot, { state, match, matching: false });
   }
 
   /** Drops the ended entries of `root` whose task is gone; a running entry stays until it ends. */

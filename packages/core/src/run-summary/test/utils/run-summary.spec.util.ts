@@ -40,9 +40,20 @@ export const taskEntry = (taskId: string, span: RunWindow, status: 'HIT' | 'MISS
   return entry;
 };
 
+/** The counts turbo writes for a run that saw every task in `tasks` end: a cache HIT counts as cached, not success. */
+const countsOf = (tasks: RunSummary['tasks']): Pick<RunSummary['execution'], 'attempted' | 'success' | 'failed' | 'cached'> => {
+  const cached = tasks.filter((task) => task.cache.status === 'HIT').length;
+  const failed = tasks.filter((task) => task.cache.status === 'MISS' && task.execution.exitCode !== 0).length;
+  const success = tasks.length - cached - failed;
+  const counts = { attempted: tasks.length, success, failed, cached };
+
+  return counts;
+};
+
 /** A summary of the turbo process `command`, which ran over `window` and ended with `exitCode`, listing `tasks`. */
 export const summaryOf = (command: string, window: RunWindow, exitCode: number, tasks: RunSummary['tasks']): RunSummary => {
-  const execution = { command, ...window, exitCode };
+  const counts = countsOf(tasks);
+  const execution = { command, ...counts, ...window, exitCode };
   const summary: RunSummary = { ...RUN_SUMMARY_STUB, execution, tasks };
 
   return summary;

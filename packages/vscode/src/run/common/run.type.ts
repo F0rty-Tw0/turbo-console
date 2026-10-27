@@ -7,6 +7,7 @@ export type RunState = 'running' | 'passed' | 'failed' | 'stopped' | 'failed-to-
 /**
  * One run of one task. `matching` is true from the process end until `finishRun` settles (match found, none found or a
  * match error), so a reader never sees a half-finished result: while it is true the display shows the not-matched text.
+ * A passed run whose match is `interrupted` turns `stopped` when it settles (B2-1).
  */
 export type RunEntry = {
   readonly root: string;

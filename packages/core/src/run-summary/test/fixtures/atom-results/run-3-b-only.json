@@ -3,6 +3,10 @@
   "monorepo": true,
   "execution": {
     "command": "turbo run e2e-ci--tests/b fails.spec.ts --filter=@fx/e2e",
+    "attempted": 3,
+    "success": 0,
+    "failed": 1,
+    "cached": 2,
     "startTime": 1792868567038,
     "endTime": 1792868568133,
     "exitCode": 1

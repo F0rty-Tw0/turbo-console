@@ -7,7 +7,7 @@ import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 const OTHER_ROOT: RunRequest = { ...RUN_REQUEST_STUB, root: '/other' };
-const MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
+const MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };
 
 const entryOf = (store: RunStore, definition: RunDefinition): RunEntry => {
   const entry = store.get(definition.root, definition.id);

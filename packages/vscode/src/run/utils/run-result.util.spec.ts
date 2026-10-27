@@ -4,7 +4,7 @@ import { settledMatchOf } from './run-result.util.ts';
 import type { RunEntry } from '../common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../test/stubs/run.stub.ts';
 
-const MATCH = { cache: 'HIT' as const, durationMs: 3200 };
+const MATCH = { cache: 'HIT' as const, durationMs: 3200, interrupted: false };
 
 describe('FEATURE: settled match of a run', () => {
   describe('GIVEN a run whose match is set', () => {

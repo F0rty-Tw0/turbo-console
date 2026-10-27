@@ -76,7 +76,7 @@ describe('FEATURE: match a run to its summary while files vanish', () => {
 
       listing.afterList = async (): Promise<void> => rm(gone);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual({ cache: 'HIT', durationMs: 4000 });
+      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual({ cache: 'HIT', durationMs: 4000, interrupted: false });
     });
   });
 });

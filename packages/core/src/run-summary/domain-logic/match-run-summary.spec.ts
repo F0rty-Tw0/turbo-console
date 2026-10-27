@@ -43,7 +43,7 @@ const MATCHING = summaryJson(COMMAND, WINDOW, 0, [taskEntry('web#build', WINDOW,
 
 const OTHER = summaryJson('turbo run test --filter=web', WINDOW, 0, []);
 
-const EXPECTED = { cache: 'HIT', durationMs: 4000 };
+const EXPECTED = { cache: 'HIT', durationMs: 4000, interrupted: false };
 
 /** `count` mtimes after `OLDEST`, half a second apart, all within the window of `RUN`. */
 const newerTimes = (count: number): number[] => Array.from({ length: count }, (_, index) => OLDEST + (index + 1) / 2);
@@ -132,11 +132,11 @@ describe('FEATURE: match a run to its summary', () => {
     });
 
     it('WHEN the app run is matched THEN it gets the app summary data', async () => {
-      await expect(matchRunSummary(root, appRun)).resolves.toStrictEqual({ cache: 'MISS', durationMs: 100 });
+      await expect(matchRunSummary(root, appRun)).resolves.toStrictEqual({ cache: 'MISS', durationMs: 100, interrupted: false });
     });
 
     it('WHEN the lib run is matched THEN it gets the lib summary data, not the dependency entry of the app one', async () => {
-      await expect(matchRunSummary(root, libRun)).resolves.toStrictEqual({ cache: 'MISS', durationMs: 700 });
+      await expect(matchRunSummary(root, libRun)).resolves.toStrictEqual({ cache: 'MISS', durationMs: 700, interrupted: false });
     });
   });
 
