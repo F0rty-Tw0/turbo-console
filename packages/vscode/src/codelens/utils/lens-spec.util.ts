@@ -1,46 +1,24 @@
-import { findNodeAtLocation, parseTree } from 'jsonc-parser';
-
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { TaskOffer } from '../../run/common/picker.type.ts';
 import { packageForManifest, relativePathOf } from '../../run/utils/package-lookup.util.ts';
 import { taskItemsOf } from '../../run/utils/picker-items.util.ts';
+import { jsonPropertyAt } from '../../shared/utils/json-property.util.ts';
 import { lineAt } from '../../shared/utils/text-line.util.ts';
 import { LENS_NAMES_MAX, LENS_TEXT_MAX } from '../common/codelens.const.ts';
 import type { LensSpec } from '../common/codelens.type.ts';
 
-/**
- * `findNodeAtLocation` returns the key's value, so the key is the first child of that value's property node. A parse
- * error still leaves a tree.
- */
-const parsedScriptsLineOf = (text: string): number => {
-  const tree = parseTree(text);
-
-  if (tree === undefined) return 0;
-
-  const value = findNodeAtLocation(tree, ['scripts']);
-  const key = value?.parent?.children?.[0];
-
-  if (key === undefined) return 0;
-
-  return lineAt(text, key.offset);
-};
-
-/**
- * The line of the top-level `"scripts"` key, 0 without one. A text over `LENS_TEXT_MAX` is not parsed and gives 0. The
- * parser recurses once per nesting level, so a text nested deep enough to overflow the stack gives 0 instead of throwing.
- */
+/** The line of the top-level `"scripts"` key, 0 without one. A text over `LENS_TEXT_MAX` is not parsed and gives 0. */
 const scriptsLineOf = (text: string): number => {
   const isTooLarge = text.length > LENS_TEXT_MAX;
 
   if (isTooLarge) return 0;
 
-  try {
-    return parsedScriptsLineOf(text);
-  } catch (error) {
-    if (error instanceof RangeError) return 0;
+  const property = jsonPropertyAt(text, ['scripts']);
+  const key = property?.children?.[0];
 
-    throw error;
-  }
+  if (key === undefined) return 0;
+
+  return lineAt(text, key.offset);
 };
 
 const titleOf = (labels: string[]): string => {

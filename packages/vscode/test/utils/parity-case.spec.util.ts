@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import * as vscode from 'vscode';
@@ -74,6 +75,39 @@ const openCase = async (scene: ParityScene): Promise<void> => {
   });
 };
 
+const BUILD_SCRIPT_LINE = /^\s*"build":/;
+
+/** The editor selection, as the text of the selected range and the line it starts on. */
+const selectedScriptOf = (editor: vscode.TextEditor | undefined): string | null => {
+  if (editor === undefined) return null;
+
+  const { selection, document } = editor;
+
+  if (selection.isEmpty) return null;
+
+  const selected = document.getText(selection);
+
+  return `${selection.start.line}:${selected}`;
+};
+
+const openScriptCase = async (scene: ParityScene): Promise<void> => {
+  const { api, pair, root } = scene;
+
+  await step('8: Open package.json on a task row selects that task script line', async () => {
+    const file = manifestFileOf(root, pair.leaf);
+    const text = await readFile(file, 'utf8');
+    const line = text.split(/\r?\n/).findIndex((row) => BUILD_SCRIPT_LINE.test(row));
+    const node = await taskNodeNamed(api, pair.leaf.name, buildId(pair.leaf));
+    const isSelected = (): boolean => selectedScriptOf(vscode.window.activeTextEditor)?.startsWith(`${line}:"build":`) === true;
+
+    assert.notEqual(line, -1, `${file} has no build script line`);
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    await vscode.commands.executeCommand('turboConsole.openPackageJson', node);
+    await waitFor(`the build script of ${file} selected`, isSelected, OPEN_LIMIT_MS * scene.budgetFactor);
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+  });
+};
+
 const copyCase = async (scene: ParityScene): Promise<void> => {
   const { api, pair } = scene;
 
@@ -106,6 +140,7 @@ export const parityCase = async (api: TurboConsoleApi, root: string, manifest: S
   await pickerCase(scene);
   await packageJsonCase(scene);
   await openCase(scene);
+  await openScriptCase(scene);
   await copyCase(scene);
   await everywhereCase(scene);
   await affectedCase(scene);

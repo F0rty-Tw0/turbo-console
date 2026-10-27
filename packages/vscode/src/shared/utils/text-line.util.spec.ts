@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { lineAt, linesOf } from './text-line.util.ts';
+import { lineAt, linesOf, positionAt } from './text-line.util.ts';
 
 describe('FEATURE: lineAt', () => {
   describe('GIVEN a text with line breaks', () => {
@@ -51,6 +51,25 @@ describe('FEATURE: linesOf', () => {
       const lines = linesOf(text);
 
       expect(lines).toStrictEqual(expected);
+    });
+  });
+});
+
+describe('FEATURE: positionAt', () => {
+  describe('GIVEN a text with line breaks', () => {
+    it.each([
+      ['offset 0', 'ab\ncd', 0, { line: 0, character: 0 }],
+      ['inside the first line', 'ab\ncd', 1, { line: 0, character: 1 }],
+      ['the start of the second line', 'ab\ncd', 3, { line: 1, character: 0 }],
+      ['inside the second line', 'ab\ncd', 4, { line: 1, character: 1 }],
+      ['after CR LF, counted once', 'ab\r\ncd', 5, { line: 1, character: 1 }],
+      ['after a lone CR', 'ab\rcd', 4, { line: 1, character: 1 }],
+      ['after an empty line', 'a\n\nbc', 4, { line: 2, character: 1 }],
+      ['an offset past the end', 'a\nbc', 99, { line: 1, character: 2 }]
+    ])('WHEN the position of %s is read THEN it is the editor line and character', (_label, text, offset, expected) => {
+      const position = positionAt(text, offset);
+
+      expect(position).toStrictEqual(expected);
     });
   });
 });
