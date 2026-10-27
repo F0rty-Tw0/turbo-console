@@ -96,7 +96,7 @@ export class GraphAtoms {
     }
   }
 
-  /** The fastest expand and the fastest collapse were each under `ms`. */
+  /** The fastest of all the expands and the fastest of all the collapses were each under `ms`. */
   public expectToggleMinUnder(ms: number): void {
     expectMinUnder('expand-ms', this.expandSamples, ms);
     expectMinUnder('collapse-ms', this.collapseSamples, ms);
