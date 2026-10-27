@@ -38,11 +38,12 @@ export class GraphTaskDetails {
   private isOpen = true;
 
   public constructor(deps: TaskDetailsDeps) {
+    const { panel, content } = deps.views.panel();
+
     this.deps = deps;
-    this.panel = deps.views.panel();
-    this.content = deps.views.content();
-    this.content.replaceChildren(deps.views.empty().root);
-    this.panel.append(this.content);
+    this.panel = panel;
+    this.content = content;
+    content.replaceChildren(deps.views.empty().root);
     deps.page.details.addEventListener('click', (): void => this.toggleOpen());
     deps.page.clear.addEventListener('click', (): void => this.cleared());
   }

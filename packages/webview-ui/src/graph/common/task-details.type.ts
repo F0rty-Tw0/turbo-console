@@ -1,3 +1,4 @@
+import type { DetailsElements } from './details-view.type.ts';
 import type { GraphView, PageElements } from './graph-page.type.ts';
 import type { WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -43,10 +44,8 @@ export type TaskDetailsEmpty = {
 };
 
 export type TaskDetailsViews = {
-  /** The empty, hidden `aside#graph-task-details`. */
-  readonly panel: () => HTMLElement;
-  /** An empty `div.details-content`, which holds the panel's shown view. */
-  readonly content: () => HTMLElement;
+  /** The hidden `aside#graph-task-details` and its empty `div.details-content`, which holds the panel's shown view. */
+  readonly panel: () => DetailsElements;
   readonly empty: () => TaskDetailsEmpty;
   readonly view: (model: TaskDetailsModel) => TaskDetailsView;
 };

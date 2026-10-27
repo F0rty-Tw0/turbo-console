@@ -4,6 +4,7 @@ import { GraphTaskDetails } from './graph-task-details.ts';
 import { GraphTaskMode } from './graph-task-mode.ts';
 import { saveDetailsToggle, taskPanelOf } from './graph-task-panel.ts';
 import { GraphTaskWidgets } from './graph-task-widgets.ts';
+import type { DetailsElements } from '../common/details-view.type.ts';
 import type { GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type {
   PackageTasks,
@@ -30,14 +31,15 @@ export const onTaskKey = (event: Pick<KeyboardEvent, 'key' | 'repeat'>, mode: Ta
 /** Task mode over the real view (never the parked one) and the runner the package graph shares; the Task mode toggle flips it. */
 export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: TaskModeHooks): GraphTaskMode => {
   const { runner, bridge, page, taskViews, taskDetailsViews, widgetViews, overlay } = deps;
-  const aside = taskDetailsViews.panel();
+  const elements = taskDetailsViews.panel();
+  const aside = elements.panel;
   const asides: TaskPanelAsides = { package: (): HTMLElement | null => document.getElementById(DETAILS_ID), task: aside };
   const panelOf = (actions: TaskPanelActions): TaskPanel => taskPanelOf(page, actions, asides);
   const controlsOf = (actions: TaskControlsActions): TaskControls => new GraphTaskControls({ page, views: taskViews, actions });
   const isActive = (): boolean => hooks.modes.mode() === 'tasks';
   const widgets = new GraphTaskWidgets({ page, view, views: widgetViews, bridge, isActive, overlay, aside: (): HTMLElement => aside });
   const onToggle = (detailsOpen: boolean): void => saveDetailsToggle({ view, modes: hooks.modes }, widgets, detailsOpen);
-  const views = { ...taskDetailsViews, panel: (): HTMLElement => aside };
+  const views = { ...taskDetailsViews, panel: (): DetailsElements => elements };
   const detailsOf = (actions: TaskDetailsActions): TaskDetails => new GraphTaskDetails({ page, views, bridge, actions, onToggle });
   const widgetsOf = (): TaskWidgets => widgets;
   const screen = layoutScreenOf(page);
