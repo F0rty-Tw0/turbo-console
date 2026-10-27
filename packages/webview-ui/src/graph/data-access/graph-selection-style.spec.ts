@@ -27,44 +27,50 @@ describe('FEATURE: graphStyleOf selected fill and focus target', () => {
     cy.destroy();
   });
 
-  it('GIVEN a selected package THEN the selection fill, the selection label colour, bold, border 1.5', () => {
-    node.addClass('selected');
+  describe('GIVEN a package in a theme with selection colours', () => {
+    it('WHEN it is selected THEN it takes the selection fill, the selection label colour, bold and border 1.5', () => {
+      node.addClass('selected');
 
-    const look = [node.style('background-color'), node.style('color'), node.style('font-weight'), node.numericStyle('border-width')];
+      const look = [node.style('background-color'), node.style('color'), node.style('font-weight'), node.numericStyle('border-width')];
 
-    expect(look).toStrictEqual([SELECTION_FILL, 'rgb(255,255,0)', 'bold', 1.5]);
+      expect(look).toStrictEqual([SELECTION_FILL, 'rgb(255,255,0)', 'bold', 1.5]);
+    });
+
+    it('WHEN it is selected and deselected THEN the editor fill and the normal weight return', () => {
+      node.addClass('selected').removeClass('selected');
+
+      expect([node.style('background-color'), node.style('font-weight')]).toStrictEqual([EDITOR_FILL, 'normal']);
+    });
+
+    it('WHEN it becomes the focus target THEN its label is bold while it is not selected and another stays normal', () => {
+      node.addClass(FOCUS_TARGET_CLASS);
+
+      expect([node.style('font-weight'), cy.getElementById('c').style('font-weight')]).toStrictEqual(['bold', 'normal']);
+    });
   });
 
-  it('GIVEN a theme with no selection colours THEN a selected package keeps the editor fill and is bold', () => {
-    const noSelection = { ...CANVAS_COLORS, selection: null };
+  describe('GIVEN a theme with no selection colours', () => {
+    it('WHEN a package is selected THEN it keeps the editor fill and is bold', () => {
+      const noSelection = { ...CANVAS_COLORS, selection: null };
 
-    cy.style(graphStyleOf(noSelection, 'sans-serif', false));
-    node.addClass('selected');
+      cy.style(graphStyleOf(noSelection, 'sans-serif', false));
+      node.addClass('selected');
 
-    expect([node.style('background-color'), node.style('font-weight')]).toStrictEqual([EDITOR_FILL, 'bold']);
+      expect([node.style('background-color'), node.style('font-weight')]).toStrictEqual([EDITOR_FILL, 'bold']);
+    });
   });
 
-  it('GIVEN a selected expanded folder box THEN it keeps the editor fill', () => {
-    const box = cy.getElementById('apps').addClass('selected');
+  describe('GIVEN a folder', () => {
+    it('WHEN its expanded box is selected THEN it keeps the editor fill', () => {
+      const box = cy.getElementById('apps').addClass('selected');
 
-    expect(box.style('background-color')).toBe(EDITOR_FILL);
-  });
+      expect(box.style('background-color')).toBe(EDITOR_FILL);
+    });
 
-  it('GIVEN a selected collapsed folder node THEN it gets the selection fill', () => {
-    const folder = cy.getElementById('b').addClass(`${FOLDER_NODE_CLASS} selected`);
+    it('WHEN its collapsed node is selected THEN it gets the selection fill', () => {
+      const folder = cy.getElementById('b').addClass(`${FOLDER_NODE_CLASS} selected`);
 
-    expect(folder.style('background-color')).toBe(SELECTION_FILL);
-  });
-
-  it('GIVEN the focus target THEN its label is bold while not selected', () => {
-    node.addClass(FOCUS_TARGET_CLASS);
-
-    expect([node.style('font-weight'), cy.getElementById('c').style('font-weight')]).toStrictEqual(['bold', 'normal']);
-  });
-
-  it('GIVEN a selected package deselected THEN the editor fill and the normal weight return', () => {
-    node.addClass('selected').removeClass('selected');
-
-    expect([node.style('background-color'), node.style('font-weight')]).toStrictEqual([EDITOR_FILL, 'normal']);
+      expect(folder.style('background-color')).toBe(SELECTION_FILL);
+    });
   });
 });

@@ -205,10 +205,12 @@ describe('FEATURE: applyFocusTarget', () => {
     cy.destroy();
   });
 
-  it('GIVEN no focus target WHEN b becomes it THEN b alone has the focus-target class', () => {
-    applyFocusTarget(cy, 'b');
+  describe('GIVEN no focus target', () => {
+    it('WHEN b becomes it THEN b alone has the focus-target class', () => {
+      applyFocusTarget(cy, 'b');
 
-    expect(targetIds()).toStrictEqual(['b']);
+      expect(targetIds()).toStrictEqual(['b']);
+    });
   });
 
   describe('GIVEN b is the focus target', () => {

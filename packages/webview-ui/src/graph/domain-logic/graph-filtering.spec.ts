@@ -54,10 +54,12 @@ describe('FEATURE: GraphFiltering focus target', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN a saved view focused on web WHEN h1 is drawn THEN web is the focus target', async () => {
-    rig = await drawnRigOf(SAVED_WEB_FOCUS);
+  describe('GIVEN a saved view focused on web', () => {
+    it('WHEN h1 is drawn THEN web is the focus target', async () => {
+      rig = await drawnRigOf(SAVED_WEB_FOCUS);
 
-    expect(rig.view.setFocusTarget).toHaveBeenLastCalledWith('web');
+      expect(rig.view.setFocusTarget).toHaveBeenLastCalledWith('web');
+    });
   });
 
   describe('GIVEN h1 drawn with no focus', () => {
