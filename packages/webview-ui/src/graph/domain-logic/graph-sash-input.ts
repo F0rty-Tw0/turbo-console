@@ -6,16 +6,11 @@ import { sashDragWidthOf, sashKeyWidthOf } from '../utils/sash-input.util.ts';
 const PRIMARY_BUTTON = 0;
 
 /**
- * Wires one sash to its panel: a pointer drag resizes while the sash holds the pointer and saves on release, a double
+ * Wires one sash to its panel: a pointer drag resizes while the sash holds the pointer and saves when it lets go of it, a double
  * click resets, and the arrow, Home and End keys resize and save. Any other key is left alone so Tab still moves on.
  */
 export const wireSashInput = (side: PanelSide, sash: HTMLElement, sashes: SashResizer, body: HTMLElement): void => {
-  const dragEnded = (event: PointerEvent): void => {
-    const isDragging = sash.hasPointerCapture(event.pointerId);
-
-    if (!isDragging) return;
-
-    sash.releasePointerCapture(event.pointerId);
+  const dragEnded = (): void => {
     sash.classList.remove(SASH_DRAGGING_CLASS);
     body.classList.remove(SASHING_CLASS);
     sashes.commit();
@@ -48,8 +43,7 @@ export const wireSashInput = (side: PanelSide, sash: HTMLElement, sashes: SashRe
 
   sash.addEventListener('pointerdown', onPointerDown);
   sash.addEventListener('pointermove', onPointerMove);
-  sash.addEventListener('pointerup', dragEnded);
-  sash.addEventListener('pointercancel', dragEnded);
+  sash.addEventListener('lostpointercapture', dragEnded);
   sash.addEventListener('dblclick', (): void => sashes.reset(side));
   sash.addEventListener('keydown', onKeyDown);
 };
