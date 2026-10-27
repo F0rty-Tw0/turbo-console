@@ -148,12 +148,18 @@ describe('FEATURE: themeColorsOf', () => {
     expect(contrastRatioOf(foreground, background)).toBeGreaterThanOrEqual(3);
   });
 
-  it('GIVEN a selection fill with alpha WHEN the colours are read THEN the fill reads as rgba, which Cytoscape parses', () => {
-    const translucent = { ...DARK, '--vscode-list-activeSelectionBackground': '#04395e80' };
+  describe('GIVEN a selection fill with alpha', () => {
+    it.each([
+      ['Dark 2026', '#FFFFFF22', '#121314', 'rgb(50, 50, 51)'],
+      ['Light 2026', '#00000025', '#ffffff', 'rgb(218, 218, 218)'],
+      ['Dark 2026 as VS Code hands it to a webview', 'rgba(255, 255, 255, 0.13)', '#121314', 'rgb(49, 50, 51)']
+    ])('WHEN the %s fill %s over %s is read THEN it is the opaque %s', (_, fill, background, expected) => {
+      const translucent = { ...DARK, '--vscode-list-activeSelectionBackground': fill, '--vscode-editor-background': background };
 
-    const colors = themeColorsOf(cssVariableReaderMock(translucent));
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
-    expect(colors.selection).toStrictEqual({ fill: 'rgba(4, 57, 94, 0.5)', label: '#ffffff' });
+      expect(colors.selection?.fill).toBe(expected);
+    });
   });
 
   it.each([

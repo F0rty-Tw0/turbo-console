@@ -1,4 +1,4 @@
-import { dimmedOpacityOf, hexChannelsOf } from './contrast.util.ts';
+import { dimmedOpacityOf, hexChannelsOf, opaqueColourOf } from './contrast.util.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
 import type { CssVariableReader, SelectionColors, ThemeColors } from '../common/theme-colors.type.ts';
 
@@ -17,13 +17,17 @@ const cytoscapeColourOf = (value: string): string => {
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 };
 
-/** The list's active selection as a selected node's fill and label; `null` unless the theme sets both. */
-const selectionOf = (fill: string, label: string): SelectionColors | null => {
+/**
+ * The list's active selection as a selected node's fill and label; `null` unless the theme sets both. A fill with alpha,
+ * as Dark 2026 and Light 2026 set, is laid over `background` first, since Cytoscape would paint it opaque.
+ */
+const selectionOf = (fill: string, label: string, background: string): SelectionColors | null => {
   const isUnset = fill === '' || label === '';
 
   if (isUnset) return null;
 
-  const selection: SelectionColors = { fill, label };
+  const opaqueFill = opaqueColourOf(fill, background);
+  const selection: SelectionColors = { fill: cytoscapeColourOf(opaqueFill), label };
 
   return selection;
 };
@@ -33,7 +37,8 @@ const selectionOf = (fill: string, label: string): SelectionColors | null => {
  * replaced by its `FALLBACK_COLORS` entry. VS Code sets `--vscode-contrastBorder` only in high contrast themes, so the
  * node frame takes it there and `--vscode-panel-border` everywhere else, and dimmed elements rise from 0.25 until they keep
  * 3:1 against the background there. Run outlines take the Tasks tree's status colours; a cached Atomizer file takes the chart purple.
- * A selected node takes the list's active selection colours when the theme sets both, as high contrast themes do not.
+ * A selected node takes the list's active selection colours when the theme sets both, as high contrast themes do not;
+ * the fill is read unrounded, so its alpha blends over the editor background at full precision.
  */
 export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const valueOf = (name: string, fallback: string): string => {
@@ -59,9 +64,9 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const edge = valueOf('--vscode-descriptionForeground', FALLBACK_COLORS.edge);
   const highContrastDim = dimmedOpacityOf(background, [label, edge, frame]);
   const dimmedOpacity = contrastBorder === '' ? FALLBACK_COLORS.dimmedOpacity : highContrastDim;
-  const selectionFill = valueOf('--vscode-list-activeSelectionBackground', '');
+  const selectionFill = read('--vscode-list-activeSelectionBackground').trim();
   const selectionLabel = valueOf('--vscode-list-activeSelectionForeground', '');
-  const selection = selectionOf(selectionFill, selectionLabel);
+  const selection = selectionOf(selectionFill, selectionLabel, background);
   const colors: ThemeColors = {
     background,
     label,
