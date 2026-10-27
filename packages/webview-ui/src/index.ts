@@ -68,6 +68,8 @@ export {
   TASK_COUNT_MAX
 } from './bridge/common/graph-message.const.ts';
 
+export { TASK_CAP } from './graph/common/graph-task.const.ts';
+
 export { ICON_ID_PATTERN, TOOL_ICON_PREFIX } from './details/common/run-view.const.ts';
 
 export { durationText, elapsedText } from './bridge/utils/duration-text.util.ts';
