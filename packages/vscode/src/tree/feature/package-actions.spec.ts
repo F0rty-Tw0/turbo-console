@@ -26,6 +26,8 @@ const MANIFEST = MANIFEST_LINES.join('\n');
 
 const BUILD_SELECTION = selectionOnLine(2, 4, 18);
 
+const TOP_SELECTION = selectionOnLine(0, 0, 0);
+
 const PREFIXED_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'a#build' };
 
 const PREFIXED_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [PREFIXED_TASK] };
@@ -107,13 +109,16 @@ describe('FEATURE: package actions', () => {
       ['a manifest without that script', '{ "scripts": { "test": "vitest" } }'],
       ['a manifest that is not JSON', 'not json'],
       ['a manifest that cannot be read', null]
-    ])('WHEN the task row is opened on %s THEN the file opens with no selection', async (_name, text) => {
-      read.mockResolvedValue(text);
+    ])(
+      'WHEN the task row is opened on %s THEN the file opens with an empty selection at the top, clearing any old one',
+      async (_name, text) => {
+        read.mockResolvedValue(text);
 
-      await invoke('turboConsole.openPackageJson', TASK_TREE_NODE_STUB);
+        await invoke('turboConsole.openPackageJson', TASK_TREE_NODE_STUB);
 
-      expect(open).toHaveBeenCalledExactlyOnceWith(manifestFile, null);
-    });
+        expect(open).toHaveBeenCalledExactlyOnceWith(manifestFile, TOP_SELECTION);
+      }
+    );
 
     it('WHEN Reveal in Explorer is invoked on a package row THEN the package directory is revealed', async () => {
       await invoke('turboConsole.revealInExplorer', TREE_NODE_STUB);

@@ -14,7 +14,7 @@ export type TextSelection = {
 
 /**
  * Editor effects of the package actions: read a file as the editor holds it (`null` when it cannot be read), open a file
- * with `selection` selected and revealed (`null` for the top), reveal a directory in the Explorer, copy text.
+ * with `selection` selected and revealed (`null` leaves the editor's own state), reveal a directory in the Explorer, copy text.
  */
 export type PackageActionPorts = {
   readonly read: (file: string) => Promise<string | null>;

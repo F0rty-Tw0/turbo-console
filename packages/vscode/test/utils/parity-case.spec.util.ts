@@ -1,6 +1,4 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 
 import * as vscode from 'vscode';
 
@@ -8,6 +6,7 @@ import { leafPair } from './parity-affected.spec.util.ts';
 import { affectedCase, everywhereCase } from './parity-all.spec.util.ts';
 import { buildId, buildStepOf, packagesWith, runPicked, taskNamesOf } from './parity-pick.spec.util.ts';
 import { settledRunSince } from './parity-run.spec.util.ts';
+import { manifestFileOf, openScriptCase } from './parity-script.spec.util.ts';
 import { fixedViewsCase, foldersCase, openSpecRegisteredCase } from './parity-views.spec.util.ts';
 import { taskNodeNamed } from './run-wait.spec.util.ts';
 import { log, step, waitFor } from './suite-env.spec.util.ts';
@@ -19,8 +18,6 @@ import { BUILD_TASK } from '../common/parity.const.ts';
 import type { ParityScene, PickStep } from '../common/parity.type.ts';
 
 const OPEN_LIMIT_MS = 10_000;
-
-const manifestFileOf = (root: string, pkg: ShownPackage): string => join(root, pkg.path, 'package.json');
 
 /** Drives `command`'s quick picks, then returns the settled run of `pkg`'s `build` that it launched. */
 const pickedRun = async (scene: ParityScene, command: string, pkg: ShownPackage, steps: PickStep[]): Promise<RunEntry> => {
@@ -71,39 +68,6 @@ const openCase = async (scene: ParityScene): Promise<void> => {
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
     await vscode.commands.executeCommand('turboConsole.openPackageJson', node);
     await waitFor(`the editor of ${expected}`, isShown, OPEN_LIMIT_MS * scene.budgetFactor);
-    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-  });
-};
-
-const BUILD_SCRIPT_LINE = /^\s*"build":/;
-
-/** The editor selection, as the text of the selected range and the line it starts on. */
-const selectedScriptOf = (editor: vscode.TextEditor | undefined): string | null => {
-  if (editor === undefined) return null;
-
-  const { selection, document } = editor;
-
-  if (selection.isEmpty) return null;
-
-  const selected = document.getText(selection);
-
-  return `${selection.start.line}:${selected}`;
-};
-
-const openScriptCase = async (scene: ParityScene): Promise<void> => {
-  const { api, pair, root } = scene;
-
-  await step('8: Open package.json on a task row selects that task script line', async () => {
-    const file = manifestFileOf(root, pair.leaf);
-    const text = await readFile(file, 'utf8');
-    const line = text.split(/\r?\n/).findIndex((row) => BUILD_SCRIPT_LINE.test(row));
-    const node = await taskNodeNamed(api, pair.leaf.name, buildId(pair.leaf));
-    const isSelected = (): boolean => selectedScriptOf(vscode.window.activeTextEditor)?.startsWith(`${line}:"build":`) === true;
-
-    assert.notEqual(line, -1, `${file} has no build script line`);
-    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-    await vscode.commands.executeCommand('turboConsole.openPackageJson', node);
-    await waitFor(`the build script of ${file} selected`, isSelected, OPEN_LIMIT_MS * scene.budgetFactor);
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
   });
 };

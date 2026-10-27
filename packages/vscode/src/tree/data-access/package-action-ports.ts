@@ -9,7 +9,7 @@ const rangeOf = (selection: TextSelection): vscode.Range => {
   return range;
 };
 
-/** `showTextDocument` options: the selection is selected and revealed, centered when it is outside the viewport. */
+/** `showTextDocument` options: the selection is selected and revealed. The API sets no reveal type, so the editor centers it (`revealRangeInCenter`, even inside the viewport; a range near the top stays at the top); no selection leaves the editor's own state. */
 const optionsOf = (selection: TextSelection | null): vscode.TextDocumentShowOptions => {
   const options: vscode.TextDocumentShowOptions = {};
 
