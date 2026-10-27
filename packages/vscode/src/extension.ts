@@ -10,7 +10,7 @@ import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
 import { editorCopyPorts } from './run/data-access/copy-ports.ts';
-import { editorRunAllPorts, editorRunPorts } from './run/data-access/run-ports.ts';
+import { editorRunAllPorts, editorRunPorts, showInfo } from './run/data-access/run-ports.ts';
 import { forwardRunAllEvents, forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
 import { RunSession } from './run/domain-logic/run-session.ts';
 import { registerCopy } from './run/feature/register-copy.ts';
@@ -71,7 +71,7 @@ const createSession = (context: vscode.ExtensionContext, output: Output): RootsS
 /** The run, pick and run-all commands, the forwarding of turbo task events and the package.json CodeLens. */
 const registerRunCommands = (session: RootsSession, runSession: RunSession, ui: RunCommandsUi, output: Output): vscode.Disposable => {
   const register = vscode.commands.registerCommand;
-  const runs = registerRuns(runSession, ui.tree, session.store, register);
+  const runs = registerRuns(runSession, ui.tree, session.store, register, showInfo);
   const pickers = registerPickers(runSession, session.store, register, () => ui.scripts.isShown());
   const runAllPorts = editorRunAllPorts(session.store, output);
   const runAll = registerRunAll(session.store, runAllPorts, forwardRunAllEvents, register);

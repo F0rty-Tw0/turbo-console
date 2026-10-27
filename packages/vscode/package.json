@@ -137,6 +137,12 @@
         "icon": "$(debug-rerun)"
       },
       {
+        "command": "turboConsole.runTaskWithoutTurbo",
+        "title": "Run Without Turbo",
+        "category": "Turbo Console",
+        "icon": "$(terminal)"
+      },
+      {
         "command": "turboConsole.stopTask",
         "title": "Stop Task",
         "category": "Turbo Console",
@@ -296,6 +302,11 @@
           "group": "1_run@1"
         },
         {
+          "command": "turboConsole.runTaskWithoutTurbo",
+          "when": "view == turboConsole.tree && viewItem =~ /^turboTask(\\.cached)?$/",
+          "group": "1_run@2"
+        },
+        {
           "command": "turboConsole.stopTask",
           "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)\\.running/",
           "group": "1_run@0"
@@ -412,6 +423,10 @@
         },
         {
           "command": "turboConsole.runTaskWithoutCache",
+          "when": "false"
+        },
+        {
+          "command": "turboConsole.runTaskWithoutTurbo",
           "when": "false"
         },
         {

@@ -14,6 +14,11 @@ const after = (delayMs: number, action: () => void): void => {
   setTimeout(action, delayMs);
 };
 
+/** An information toast; nothing waits on its dismissal. */
+export const showInfo = (text: string): void => {
+  void vscode.window.showInformationMessage(text);
+};
+
 const showError: ShowError = (text, action) => vscode.window.showErrorMessage(text, action);
 
 /** The editor effects of the run flow; logs go to the output channel, which the failed to start notice offers to show. */
@@ -27,9 +32,7 @@ export const editorRunPorts = (output: Output): RunPorts => {
     after,
     match: matchRunSummary,
     notifyFailedToStart,
-    info: (text) => {
-      void vscode.window.showInformationMessage(text);
-    },
+    info: showInfo,
     log: output.error,
     now: () => Date.now()
   };
@@ -50,9 +53,7 @@ export const editorRunAllPorts = (roots: Roots, output: Output): RunAllPorts => 
       await roots.get(root)?.coordinator.ensureLoaded();
     },
     pick: quickPick,
-    info: (text) => {
-      void vscode.window.showInformationMessage(text);
-    },
+    info: showInfo,
     execute: executeRunAllTask,
     after,
     log: output.error,

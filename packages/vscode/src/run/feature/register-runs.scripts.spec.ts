@@ -46,7 +46,7 @@ describe('FEATURE: run commands on a script', () => {
 
     roots.set([FOLDER], coordinatorMock);
     roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
-    registerRuns(new RunSession(ports, []), { runChanged: vi.fn() }, roots, register);
+    registerRuns(new RunSession(ports, []), { runChanged: vi.fn() }, roots, register, vi.fn());
   });
 
   it('GIVEN a script row WHEN Run Task is invoked THEN the script launches in its package and turbo does not', async () => {

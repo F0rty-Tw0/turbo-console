@@ -23,6 +23,7 @@ import type {
 import { RunSession } from '../domain-logic/run-session.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
+import { noScriptText, unsafeScriptText } from '../utils/run-text.util.ts';
 
 const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
 
@@ -31,6 +32,10 @@ const REQUEST: RunRequest = { ...RUN_REQUEST_STUB, binaryPath: TURBO_BINARY_STUB
 const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
 const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [SCRIPT_TASK] };
+
+const UNSAFE_TASK: TaskNode = { ...TASK_NODE_STUB, name: 'a b' };
+
+const UNSAFE_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [UNSAFE_TASK] };
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 
@@ -44,6 +49,7 @@ describe('FEATURE: run commands', () => {
   let session: RunSession;
   let roots: RootStore;
   let runChanged: Mock<(entry: RunEntry) => void>;
+  let info: Mock<(text: string) => void>;
   let commands: Map<string, (arg: unknown) => unknown>;
   let unregister: Mock<() => void>;
   let registered: Disposed;
@@ -59,6 +65,7 @@ describe('FEATURE: run commands', () => {
     roots = new RootStore();
     roots.set([FOLDER], coordinatorMock);
     runChanged = vi.fn<(entry: RunEntry) => void>();
+    info = vi.fn<(text: string) => void>();
     commands = new Map();
     unregister = vi.fn<() => void>();
 
@@ -70,13 +77,19 @@ describe('FEATURE: run commands', () => {
       return disposed;
     };
 
-    registered = registerRuns(session, { runChanged }, roots, register);
+    registered = registerRuns(session, { runChanged }, roots, register, info);
   });
 
-  it('GIVEN the run commands WHEN they are registered THEN Run, Run Without Cache and Stop Task are registered', () => {
+  it('GIVEN the run commands WHEN they are registered THEN Run, Run Without Cache, Run Without Turbo and Stop Task are registered', () => {
     const names = commands.keys();
+    const expected = [
+      'turboConsole.runTask',
+      'turboConsole.runTaskWithoutCache',
+      'turboConsole.runTaskWithoutTurbo',
+      'turboConsole.stopTask'
+    ];
 
-    expect([...names]).toStrictEqual(['turboConsole.runTask', 'turboConsole.runTaskWithoutCache', 'turboConsole.stopTask']);
+    expect([...names]).toStrictEqual(expected);
   });
 
   describe('GIVEN a cached model published before the binary resolved', () => {
@@ -193,11 +206,77 @@ describe('FEATURE: run commands', () => {
     it.each<[string, unknown]>([
       ['a package row', TREE_NODE_STUB],
       ['no argument (the command palette)', undefined]
-    ])('WHEN Run Task or Run Task Without Cache is invoked on %s THEN nothing runs', async (_name, arg) => {
+    ])('WHEN Run Task, Run Task Without Cache or Run Without Turbo is invoked on %s THEN nothing runs', async (_name, arg) => {
       await command('turboConsole.runTask', arg);
       await command('turboConsole.runTaskWithoutCache', arg);
+      await command('turboConsole.runTaskWithoutTurbo', arg);
 
       expect(ports.execute).not.toHaveBeenCalled();
+      expect(ports.executeScript).not.toHaveBeenCalled();
+    });
+
+    it('WHEN Run Without Turbo is invoked on the task row THEN the package manager runs its script, not turbo', async () => {
+      await command('turboConsole.runTaskWithoutTurbo', TASK_TREE_NODE_STUB);
+
+      expect(ports.executeScript).toHaveBeenCalledExactlyOnceWith({ ...REQUEST, task: SCRIPT_TASK }, 1000);
+      expect(ports.execute).not.toHaveBeenCalled();
+    });
+
+    it('WHEN Run Without Turbo is invoked THEN the task row shows the running entry, not forced', async () => {
+      await command('turboConsole.runTaskWithoutTurbo', TASK_TREE_NODE_STUB);
+
+      expect(session.runs.get('/ws', 'build')).toMatchObject({ state: 'running', force: false });
+    });
+
+    const NO_SCRIPT_BODIES: [string, string | null][] = [
+      ['no command', null],
+      ['a whitespace-only command', '  ']
+    ];
+
+    const runWithoutTurboOnBody = async (body: string | null): Promise<void> => {
+      const task: TaskNode = { ...TASK_NODE_STUB, command: body };
+      const pkg: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [task] };
+
+      roots.apply('/ws', loadedWith([pkg]));
+      await command('turboConsole.runTaskWithoutTurbo', TASK_TREE_NODE_STUB);
+    };
+
+    it.each(NO_SCRIPT_BODIES)('WHEN Run Without Turbo is invoked on a task with %s THEN it says so', async (_name, body) => {
+      await runWithoutTurboOnBody(body);
+
+      expect(info).toHaveBeenCalledExactlyOnceWith(noScriptText('build'));
+    });
+
+    it.each(NO_SCRIPT_BODIES)('WHEN Run Without Turbo is invoked on a task with %s THEN nothing runs', async (_name, body) => {
+      await runWithoutTurboOnBody(body);
+
+      expect(ports.executeScript).not.toHaveBeenCalled();
+      expect(ports.execute).not.toHaveBeenCalled();
+    });
+
+    it('WHEN Run Without Turbo is invoked on a task whose name needs quoting THEN it is refused', async () => {
+      roots.apply('/ws', loadedWith([UNSAFE_PACKAGE]));
+
+      await command('turboConsole.runTaskWithoutTurbo', TASK_TREE_NODE_STUB);
+
+      expect(ports.info).toHaveBeenCalledExactlyOnceWith(unsafeScriptText('a b'));
+    });
+
+    it('WHEN Run Without Turbo is invoked on a task whose name needs quoting THEN nothing runs', async () => {
+      roots.apply('/ws', loadedWith([UNSAFE_PACKAGE]));
+
+      await command('turboConsole.runTaskWithoutTurbo', TASK_TREE_NODE_STUB);
+
+      expect(ports.executeScript).not.toHaveBeenCalled();
+    });
+
+    it('WHEN Run Without Turbo is invoked while the task runs THEN it is refused', async () => {
+      await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
+
+      await command('turboConsole.runTaskWithoutTurbo', TASK_TREE_NODE_STUB);
+
+      expect(ports.info).toHaveBeenCalledExactlyOnceWith('Already running.');
+      expect(ports.executeScript).not.toHaveBeenCalled();
     });
 
     it('WHEN Run Task is invoked on a task the model no longer holds THEN nothing runs', async () => {
@@ -265,7 +344,7 @@ describe('FEATURE: run commands', () => {
     });
 
     it('WHEN they are disposed THEN every command is unregistered', () => {
-      expect(unregister).toHaveBeenCalledTimes(3);
+      expect(unregister).toHaveBeenCalledTimes(4);
     });
 
     it('WHEN a task runs THEN the tree is not told', async () => {
