@@ -11,8 +11,8 @@ export type RunToMatch = {
 
 /**
  * What the run summary of one run says: `cache` is null for a task turbo never records on its own and for an
- * `interrupted` run. `interrupted`: turbo did not see every task it attempted end, or never listed the launched task
- * (Ctrl+C in its terminal: turbo exits 0 with the task missing); the duration is then the whole summary's.
+ * `interrupted` run. `interrupted`: turbo did not see every task it attempted end, or listed no task at all (Ctrl+C in
+ * its terminal: turbo exits 0 with the task missing); the duration is then the whole summary's.
  */
 export type RunMatch = {
   readonly cache: 'HIT' | 'MISS' | null;

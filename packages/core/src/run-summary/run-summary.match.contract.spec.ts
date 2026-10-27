@@ -186,13 +186,13 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
       expect(failingMatch).toMatchObject({ cache: 'MISS', interrupted: false });
     });
 
-    it(`THEN the ${DEPENDENT_NAME} run fails in its dependency, whose summary has no entry for it, so it is interrupted`, () => {
+    it(`THEN the ${DEPENDENT_NAME} run fails in its dependency, whose summary has no entry for it, so it is unmatched`, () => {
       const taskIds = dependentSummary?.tasks.map((task) => task.taskId);
 
       expect(dependentExit).not.toBe(0);
       expect(dependentSummary?.execution.command).toBe(dependentCommand);
       expect(taskIds).not.toContain(dependentId);
-      expect(dependentMatch).toMatchObject({ cache: null, interrupted: true });
+      expect(dependentMatch).toBeNull();
     });
   });
 

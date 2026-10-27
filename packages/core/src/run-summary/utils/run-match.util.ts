@@ -14,8 +14,7 @@ const ENTRYLESS_KINDS: TaskNodeKind[] = ['atom-aggregate', 'atom-umbrella'];
 
 /**
  * The command turbo records for `run`. Names are written verbatim, never quoted, so two different (task, package) pairs
- * can give the same string: only the time window tells them apart, since a summary missing a task's entry still fits as
- * an interrupted run (B2-1).
+ * can give the same string: `taskId` tells them apart for a task with its own entry, the time window for the rest.
  */
 export const runCommandOf = (run: RunToMatch): string => `turbo run ${run.task.name} --filter=${run.packageName}`;
 
@@ -56,16 +55,18 @@ const wholeRunOf = (summary: RunSummary, interrupted: boolean): RunMatch => {
   return match;
 };
 
-const dataOf = (summary: RunSummary, run: RunToMatch): RunMatch => {
+const dataOf = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
   const hasNoEntry = ENTRYLESS_KINDS.includes(run.task.kind);
   const hasUnended = hasUnendedTasks(summary);
 
-  if (hasNoEntry) return wholeRunOf(summary, hasUnended);
+  if (hasNoEntry || hasUnended) return wholeRunOf(summary, hasUnended);
 
   const entry = summary.tasks.find((task) => task.taskId === run.task.id);
-  const isInterrupted = entry === undefined || hasUnended;
+  const isCutBeforeAnyTask = entry === undefined && summary.tasks.length === 0;
 
-  if (isInterrupted) return wholeRunOf(summary, true);
+  if (isCutBeforeAnyTask) return wholeRunOf(summary, true);
+
+  if (entry === undefined) return null;
 
   const match: RunMatch = { cache: entry.cache.status, durationMs: spanOf(entry.execution), interrupted: false };
 
@@ -74,10 +75,11 @@ const dataOf = (summary: RunSummary, run: RunToMatch): RunMatch => {
 
 /**
  * Spec §4.1.2: the data `summary` gives `run` when it fits: it started within `[launchedAt, endedAt]`, ran the same
- * command and ended with the same exit code. The duration and cache status come from the entry of a task with its own
- * entry, or from the whole summary (`cache: null`) for an umbrella or aggregate. B2-1: the run is `interrupted` when
- * turbo attempted more tasks than it saw end, or a task with its own entry is not listed; the data is then the whole
- * summary's. `null` when it does not fit or the duration is not finite or is negative.
+ * command and ended with the same exit code, and, for a task with its own entry, lists that entry. The duration and
+ * cache status come from that entry, or from the whole summary (`cache: null`) for an umbrella or aggregate. B2-1: the
+ * run is `interrupted` when turbo attempted more tasks than it saw end, or, for a task with its own entry, the summary
+ * lists no task at all (Ctrl+C before turbo attempted one); the data is then the whole summary's. `null` when it does
+ * not fit or the duration is not finite or is negative.
  */
 export const matchSummary = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
   const isRunCandidate = isCandidate(summary, run);
@@ -85,6 +87,9 @@ export const matchSummary = (summary: RunSummary, run: RunToMatch): RunMatch | n
   if (!isRunCandidate) return null;
 
   const match = dataOf(summary, run);
+
+  if (match === null) return null;
+
   const hasRealDuration = isRealDuration(match.durationMs);
 
   return hasRealDuration ? match : null;

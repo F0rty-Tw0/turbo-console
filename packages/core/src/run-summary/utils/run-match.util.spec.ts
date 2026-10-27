@@ -114,11 +114,17 @@ describe('FEATURE: run match', () => {
 
       expect(matchSummary(summary, RUN)).toBeNull();
     });
+
+    it('WHEN it lists other entries but none for the task, and every attempted task ended, THEN there is no match', () => {
+      const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY]);
+
+      expect(matchSummary(summary, RUN)).toBeNull();
+    });
   });
 
   describe('GIVEN a fitting summary of a run turbo was interrupted in', () => {
-    it('WHEN it lists no entry for the task THEN it matches as interrupted with the whole summary span', () => {
-      const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY]);
+    it('WHEN it lists no task, attempted 0 (Ctrl+C before turbo attempted one) THEN it matches as interrupted', () => {
+      const summary = summaryOf(COMMAND, WINDOW, 0, []);
 
       expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
     });
