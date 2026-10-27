@@ -1,21 +1,22 @@
-import type { Roots } from '../../roots/common/coordinator.type.ts';
+import type { RootEntry, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { hasScriptsOf } from '../utils/has-scripts.util.ts';
 
-type HasScriptsKey = {
+type ContextKeyTracker = {
   readonly refresh: () => void;
   readonly dispose: () => void;
 };
 
 /**
- * Sends whether the roots hold a script once now and again each time the answer changes, after every root change and
+ * Sends what `valueOf` says of the roots once now and again each time the answer changes, after every root change and
  * every `refresh`. A rejected send is logged and forgotten, so the next `refresh` sends again. `dispose` stops it all.
  */
-export const trackHasScripts = (
+export const trackRootsKey = (
   roots: Roots,
+  valueOf: (entries: RootEntry[]) => boolean,
   setKey: (value: boolean) => Thenable<void>,
   log: (line: string) => void
-): HasScriptsKey => {
+): ContextKeyTracker => {
   let sent: boolean | null = null;
   let isDisposed = false;
 
@@ -26,7 +27,7 @@ export const trackHasScripts = (
   const refresh = (): void => {
     if (isDisposed) return;
 
-    const value = hasScriptsOf(roots.all());
+    const value = valueOf(roots.all());
 
     if (value === sent) return;
 
@@ -38,9 +39,20 @@ export const trackHasScripts = (
     isDisposed = true;
     unsubscribe();
   };
-  const tracker: HasScriptsKey = { refresh, dispose };
+  const tracker: ContextKeyTracker = { refresh, dispose };
 
   refresh();
+
+  return tracker;
+};
+
+/** Sends whether the roots hold a script, the key the Show/Hide Scripts commands read. */
+export const trackHasScripts = (
+  roots: Roots,
+  setKey: (value: boolean) => Thenable<void>,
+  log: (line: string) => void
+): ContextKeyTracker => {
+  const tracker = trackRootsKey(roots, hasScriptsOf, setKey, log);
 
   return tracker;
 };

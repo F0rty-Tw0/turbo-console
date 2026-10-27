@@ -6,14 +6,16 @@ import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { PackagesTreeApi, RunningTasks, TreeNode, TreePorts, TreeProviderDeps, TreeRefresh } from '../common/tree-node.type.ts';
 import type { IconsMode, TreeMode } from '../common/tree-row.type.ts';
-import { trackHasScripts } from '../domain-logic/has-scripts-key.ts';
+import { trackHasScripts, trackRootsKey } from '../domain-logic/has-scripts-key.ts';
 import { PackagesTree } from '../domain-logic/packages-tree.ts';
+import { isSinglePackageWindow } from '../utils/single-package-key.util.ts';
 
 /**
  * The Packages view's data provider: `PackagesTree` decides the nodes, their rows and what to refresh; this class turns
  * rows into items and refreshes into `onDidChangeTreeData` events. `deps.runs` is the one run lookup every row reads; a
  * change of `deps.scripts` redraws the tree. It also sends `turboConsole.hasScripts` (it shows the Scripts toggle) through
- * `deps.setHasScripts` now, after every model change and after every `rootsChanged`.
+ * `deps.setHasScripts` and `turboConsole.singlePackage` (it hides Show Package Graph) through `deps.setSinglePackage`, now,
+ * after every model change and after every `rootsChanged`.
  */
 export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, PackagesTreeApi, vscode.Disposable {
   public readonly onDidChangeTreeData: vscode.Event<TreeRefresh>;
@@ -22,12 +24,13 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
   private readonly scripts: ScriptsToggleApi;
   private readonly unsubscribe: () => void;
   private readonly hasScripts: ReturnType<typeof trackHasScripts>;
+  private readonly singlePackage: ReturnType<typeof trackRootsKey>;
 
   public constructor(store: Roots, mode: TreeMode, icons: IconsMode, deps: TreeProviderDeps) {
     const fire = (refresh: TreeRefresh): void => {
       this.emitter.fire(refresh);
     };
-    const { runs, treeVisible, scripts, atom, setHasScripts, log } = deps;
+    const { runs, treeVisible, scripts, atom, setHasScripts, setSinglePackage, log } = deps;
     const scriptsShown = (): boolean => scripts.isShown();
     const ports: TreePorts = {
       runs: runs.get,
@@ -47,6 +50,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
       this.tree.scriptsChanged();
     });
     this.hasScripts = trackHasScripts(store, setHasScripts, log);
+    this.singlePackage = trackRootsKey(store, isSinglePackageWindow, setSinglePackage, log);
   }
 
   public async getChildren(node?: TreeNode): Promise<TreeNode[]> {
@@ -93,6 +97,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
 
   public rootsChanged(): void {
     this.hasScripts.refresh();
+    this.singlePackage.refresh();
     this.tree.rootsChanged();
   }
 
@@ -104,6 +109,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
     this.tree.dispose();
     this.unsubscribe();
     this.hasScripts.dispose();
+    this.singlePackage.dispose();
     this.emitter.dispose();
   }
 }

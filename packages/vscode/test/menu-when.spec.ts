@@ -6,6 +6,7 @@ import { array, object, omit, optional, string } from 'zod/mini';
 import type { output } from 'zod/mini';
 
 import { whenMatches } from './utils/when-clause.spec.util.ts';
+import { SINGLE_PACKAGE_KEY } from '../src/tree/common/single-package-key.const.ts';
 
 const optionalGroupSchema = optional(string());
 
@@ -157,6 +158,23 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('PackageGraph') && whenMatches(entry.when, keys));
 
     expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+  });
+
+  it.each([
+    [true, ['turboConsole.showAllTaskGraphs navigation@5']],
+    [false, ['turboConsole.openPackageGraph navigation@4', 'turboConsole.showAllTaskGraphs navigation@5']]
+  ])('GIVEN singlePackage is %s WHEN the view title is read THEN the graph icons are %j', (singlePackage, expected) => {
+    const keys = { view: TREE_VIEW, [SINGLE_PACKAGE_KEY]: singlePackage };
+    const graphs = shownIn(MENUS['view/title'], keys).filter((placement) => placement.includes('Graph'));
+
+    expect(graphs).toStrictEqual(expected.toSorted());
+  });
+
+  it('GIVEN the window is single-package and the extension active WHEN the command palette is read THEN Show Package Graph stays there', () => {
+    const keys = { 'turboConsole.active': true, [SINGLE_PACKAGE_KEY]: true };
+    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('PackageGraph') && whenMatches(entry.when, keys));
+
+    expect(shown.map((entry) => entry.command)).toStrictEqual(['turboConsole.openPackageGraph']);
   });
 
   it.each([

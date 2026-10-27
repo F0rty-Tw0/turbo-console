@@ -7,7 +7,7 @@ import type { TreeProviderDeps } from '../common/tree-node.type.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { TIMINGS_STUB } from '../test/stubs/timings.stub.ts';
 
-/** The `executeCommand` the hoisted `vscode` mock hands out, so a case reads what the has-scripts send asked for. */
+/** The `executeCommand` the hoisted `vscode` mock hands out, so a case reads what the context-key sends asked for. */
 const executeCommand = vi.hoisted(() => vi.fn(async (): Promise<void> => Promise.resolve()));
 
 vi.mock('vscode', () => {
@@ -35,6 +35,7 @@ describe('FEATURE: tree provider deps', () => {
         scripts,
         atom: SHARED_ATOMS_STUB,
         setHasScripts: deps.setHasScripts,
+        setSinglePackage: deps.setSinglePackage,
         log
       });
     });
@@ -46,6 +47,14 @@ describe('FEATURE: tree provider deps', () => {
 
       expect(executeCommand).toHaveBeenCalledWith('setContext', 'turboConsole.hasScripts', true);
     });
+
+    it('WHEN setSinglePackage sends true THEN the turboConsole.singlePackage context key is set to true', async () => {
+      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
+
+      await deps.setSinglePackage(true);
+
+      expect(executeCommand).toHaveBeenCalledWith('setContext', 'turboConsole.singlePackage', true);
+    });
   });
 
   describe('GIVEN setContext rejects', () => {
@@ -56,6 +65,15 @@ describe('FEATURE: tree provider deps', () => {
       const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
 
       await expect(deps.setHasScripts(true)).rejects.toBe(error);
+    });
+
+    it('WHEN setSinglePackage sends THEN its promise rejects with that error', async () => {
+      const error = new Error('setContext failed');
+
+      executeCommand.mockRejectedValueOnce(error);
+      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
+
+      await expect(deps.setSinglePackage(true)).rejects.toBe(error);
     });
   });
 });
