@@ -65,7 +65,6 @@ const listedIdsOf = (rig: TaskModeRig): string[] | undefined => {
 /** The single-package root after its package.json `name` changed: the same tasks, so the same layout key. */
 const RENAMED_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, rootLabel: 'renamed-app' };
 
-/** Every task of the single-package root. */
 const ALL_IDS = ['//#build', '//#lint'];
 
 describe('FEATURE: GraphTaskMode across page states', () => {
@@ -193,11 +192,11 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       expect(rig.onExit).not.toHaveBeenCalled();
     });
 
-    it('WHEN the same state arrives again in task mode THEN panel.exit and onExit stay uncalled', () => {
+    it('WHEN the same state arrives again in task mode THEN the shown tasks are not laid out again', () => {
       mode.received(SINGLE_TASK_STATE_STUB, 9);
 
-      expect(rig.panel.exit).not.toHaveBeenCalled();
-      expect(rig.onExit).not.toHaveBeenCalled();
+      expect(rig.runs.count()).toBe(1);
+      expect(rig.controls.setRows).toHaveBeenCalledOnce();
     });
   });
 
