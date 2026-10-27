@@ -53,7 +53,11 @@ const fixtureOf = (packageJSON: unknown = MANIFEST, themeId: string | null = 'th
   return fixture;
 };
 
-const foldersOf = async (fixture: Fixture): Promise<boolean | null> => new IconThemeFolders(fixture.ports).has();
+const foldersOf = async (fixture: Fixture): Promise<boolean | null> => {
+  const facts = await new IconThemeFolders(fixture.ports).facts();
+
+  return facts.folders;
+};
 
 describe('FEATURE: icon theme folders', () => {
   describe('GIVEN an extension contributing the theme in use', () => {
@@ -65,7 +69,7 @@ describe('FEATURE: icon theme folders', () => {
       ['a missing comma', null, '{"file":"_file" "folder":"_folder"}'],
       ['a JSON array', false, '[]'],
       ['a JSON null', false, 'null']
-    ])('WHEN the theme file has %s THEN has() is %s', async (_name, expected, text) => {
+    ])('WHEN the theme file has %s THEN folders is %s', async (_name, expected, text) => {
       const fixture = fixtureOf();
 
       fixture.files.set(THEME_FILE, text);
@@ -75,7 +79,7 @@ describe('FEATURE: icon theme folders', () => {
       expect(folders).toBe(expected);
     });
 
-    it('WHEN the theme path leaves the extension folder THEN has() is null and nothing is read', async () => {
+    it('WHEN the theme path leaves the extension folder THEN folders is null and nothing is read', async () => {
       const fixture = fixtureOf(themeEntryOf('../../etc/x.json'));
 
       fixture.files.set('/etc/x.json', MINIMAL_JSON);
@@ -87,7 +91,7 @@ describe('FEATURE: icon theme folders', () => {
       expect(fixture.read).not.toHaveBeenCalled();
     });
 
-    it('WHEN the theme path is absolute THEN has() is null and nothing is read', async () => {
+    it('WHEN the theme path is absolute THEN folders is null and nothing is read', async () => {
       const fixture = fixtureOf(themeEntryOf('/etc/x.json'));
 
       const folders = await foldersOf(fixture);
@@ -96,7 +100,7 @@ describe('FEATURE: icon theme folders', () => {
       expect(fixture.read).not.toHaveBeenCalled();
     });
 
-    it('WHEN the theme file is over 8 MB THEN has() is null and nothing is read', async () => {
+    it('WHEN the theme file is over 8 MB THEN folders is null and nothing is read', async () => {
       const fixture = fixtureOf();
 
       fixture.files.set(THEME_FILE, MINIMAL_JSON);
@@ -108,7 +112,7 @@ describe('FEATURE: icon theme folders', () => {
       expect(fixture.read).not.toHaveBeenCalled();
     });
 
-    it('WHEN the theme file is missing and read rejects THEN has() is null', async () => {
+    it('WHEN the theme file is missing and read rejects THEN folders is null', async () => {
       const fixture = fixtureOf();
 
       const folders = await foldersOf(fixture);
@@ -126,7 +130,7 @@ describe('FEATURE: icon theme folders', () => {
       ['an entry of null', manifestOf(null)],
       ['an entry without a path', manifestOf({ id: 'theme-a' })],
       ['an entry whose path is a number', manifestOf({ id: 'theme-a', path: 7 })]
-    ])('WHEN it is %s THEN has() is null', async (_name, packageJSON) => {
+    ])('WHEN it is %s THEN folders is null', async (_name, packageJSON) => {
       const fixture = fixtureOf(packageJSON);
 
       const folders = await foldersOf(fixture);
@@ -139,7 +143,7 @@ describe('FEATURE: icon theme folders', () => {
     it.each([
       ['the theme id is unknown', 'theme-b'],
       ['no icon theme is set', null]
-    ])('WHEN %s THEN has() is null', async (_name, themeId) => {
+    ])('WHEN %s THEN folders is null', async (_name, themeId) => {
       const fixture = fixtureOf(MANIFEST, themeId);
 
       fixture.files.set(THEME_FILE, MINIMAL_JSON);
@@ -151,32 +155,32 @@ describe('FEATURE: icon theme folders', () => {
   });
 
   describe('GIVEN the answer is cached by theme id', () => {
-    it('WHEN has() runs twice for one theme THEN the file is read once', async () => {
+    it('WHEN facts() runs twice for one theme THEN the file is read once', async () => {
       const fixture = fixtureOf();
       const folders = new IconThemeFolders(fixture.ports);
 
       fixture.files.set(THEME_FILE, MINIMAL_JSON);
-      await folders.has();
+      await folders.facts();
 
-      await folders.has();
+      await folders.facts();
 
       expect(fixture.read).toHaveBeenCalledTimes(1);
     });
 
-    it('WHEN has() runs again after clear() THEN the file is read again', async () => {
+    it('WHEN facts() runs again after clear() THEN the file is read again', async () => {
       const fixture = fixtureOf();
       const folders = new IconThemeFolders(fixture.ports);
 
       fixture.files.set(THEME_FILE, MINIMAL_JSON);
-      await folders.has();
+      await folders.facts();
       folders.clear();
 
-      await folders.has();
+      await folders.facts();
 
       expect(fixture.read).toHaveBeenCalledTimes(2);
     });
 
-    it('WHEN the theme switches from one with no folders to one with THEN has() is false and then true', async () => {
+    it('WHEN the theme switches from one with no folders to one with THEN folders is false and then true', async () => {
       const files = new Map([
         [resolve('/seti', 's.json'), SETI_JSON],
         [resolve('/minimal', 'm.json'), MINIMAL_JSON]
@@ -195,13 +199,13 @@ describe('FEATURE: icon theme folders', () => {
       };
       const folders = new IconThemeFolders(ports);
 
-      const seti = await folders.has();
+      const seti = await folders.facts();
 
       themeId = 'vs-minimal';
 
-      const minimal = await folders.has();
+      const minimal = await folders.facts();
 
-      expect([seti, minimal]).toStrictEqual([false, true]);
+      expect([seti.folders, minimal.folders]).toStrictEqual([false, true]);
     });
 
     it('WHEN clear() runs while a read is in flight THEN that read answer is not cached', async () => {
@@ -219,16 +223,16 @@ describe('FEATURE: icon theme folders', () => {
 
       fixture.files.set(THEME_FILE, SETI_JSON);
 
-      const inFlight = folders.has();
+      const inFlight = folders.facts();
 
       folders.clear();
       release();
       await inFlight;
       fixture.files.set(THEME_FILE, MINIMAL_JSON);
 
-      const after = await folders.has();
+      const after = await folders.facts();
 
-      expect(after).toBe(true);
+      expect(after.folders).toBe(true);
     });
   });
 });

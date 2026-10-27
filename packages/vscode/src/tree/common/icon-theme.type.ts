@@ -12,8 +12,14 @@ export type IconThemePorts = {
   readonly read: (path: string) => Promise<Uint8Array>;
 };
 
-/** What `watchIcons` asks of the folder probe: whether the file icon theme has folder icons now, and a way to forget the answer. */
+/** What the file icon theme says: whether it has folder icons (`null` when unknown) and the lowercased top-level `fileNames` keys it names. */
+export type IconThemeFacts = {
+  readonly folders: boolean | null;
+  readonly fileNames: ReadonlySet<string>;
+};
+
+/** What `watchIcons` asks of the theme probe: the facts of the file icon theme now, and a way to forget the answer. */
 export type IconThemeProbe = {
-  readonly has: () => Promise<boolean | null>;
+  readonly facts: () => Promise<IconThemeFacts>;
   readonly clear: () => void;
 };

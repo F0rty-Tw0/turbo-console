@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 
 import type { Output } from '../../shared/common/output.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { IconThemeProbe } from '../common/icon-theme.type.ts';
+import { UNKNOWN_FACTS } from '../common/icon-theme.const.ts';
+import type { IconThemeFacts, IconThemeProbe } from '../common/icon-theme.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import type { IconsSetting } from '../common/tree-row.type.ts';
 import { iconModeOf, iconsSettingOf } from '../utils/icons-mode.util.ts';
@@ -19,7 +20,7 @@ export const currentIconsSetting = (): IconsSetting => {
  * Keeps the tree's icons mode in step with `turboConsole.icons` and the file icon theme (spec D9, decision Dc3). It
  * resolves once now and again when the setting or `workbench.iconTheme` changes; an extension install or removal drops
  * the cached answer first. Only `auto` asks `folders` about the theme. A resolve that a newer one overtook is dropped,
- * and a rejected `has()` is logged and draws as an unknown theme, so no listener throws.
+ * and a rejected `facts()` is logged and draws as an unknown theme, so no listener throws.
  */
 export const watchIcons = (
   tree: Pick<PackagesTreeApi, 'setIcons'>,
@@ -28,15 +29,17 @@ export const watchIcons = (
   folders: IconThemeProbe
 ): void => {
   let latest = 0;
-  const logAsUnknown = (error: unknown): null => {
+  const logAsUnknown = (error: unknown): IconThemeFacts => {
     output.error(logTextOf(error));
 
-    return null;
+    return UNKNOWN_FACTS;
   };
   const themeFoldersFor = async (setting: IconsSetting): Promise<boolean | null> => {
     if (setting !== 'auto') return null;
 
-    return folders.has().catch(logAsUnknown);
+    const facts = await folders.facts().catch(logAsUnknown);
+
+    return facts.folders;
   };
   const resolve = async (): Promise<void> => {
     latest += 1;

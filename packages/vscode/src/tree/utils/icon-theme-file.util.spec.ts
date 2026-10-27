@@ -2,7 +2,8 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { hasFolderKey, themeFileOf } from './icon-theme-file.util.ts';
+import { fileNamesOf, hasFolderKey, themeFileOf } from './icon-theme-file.util.ts';
+import { NO_FILE_NAMES } from '../common/icon-theme.const.ts';
 import type { ThemeExtension } from '../common/icon-theme.type.ts';
 
 const EXTENSION = '/ext/theme';
@@ -21,6 +22,10 @@ const extensionOf = (path: string, extensionPath = EXTENSION): ThemeExtension =>
 
   return extension;
 };
+
+const NAMES = { 'a.json': '_a' };
+const LIGHT_NAMES = { fileNames: NAMES };
+const LIGHT_ONLY = { light: LIGHT_NAMES };
 
 describe('FEATURE: icon theme file', () => {
   describe('GIVEN one extension contributing theme-a', () => {
@@ -67,6 +72,30 @@ describe('FEATURE: icon theme file', () => {
       const hasFolder = hasFolderKey(parsed);
 
       expect(hasFolder).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a parsed theme file read for file names', () => {
+    it('WHEN fileNames has mixed-case keys THEN fileNamesOf holds them lowercased', () => {
+      const fileNames = { 'Vitest.Config.TS': '_v', 'angular.json': '_a' };
+      const parsed = { fileNames };
+
+      const names = fileNamesOf(parsed);
+
+      expect([...names]).toStrictEqual(['vitest.config.ts', 'angular.json']);
+    });
+
+    it.each([
+      ['an object without fileNames', { folder: '_f' }],
+      ['fileNames an array', { fileNames: ['a.json'] }],
+      ['fileNames null', { fileNames: null }],
+      ['names only under light', LIGHT_ONLY],
+      ['an array', ['fileNames']],
+      ['null', null]
+    ])('WHEN it is %s THEN fileNamesOf is the shared empty set', (_name, parsed) => {
+      const names = fileNamesOf(parsed);
+
+      expect(names).toBe(NO_FILE_NAMES);
     });
   });
 });
