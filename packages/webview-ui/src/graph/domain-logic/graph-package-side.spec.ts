@@ -230,6 +230,20 @@ describe('FEATURE: GraphPackageSide parked by task mode', () => {
       expect(rig.side.filtering.inspection.selected()).toBe('web');
     });
 
+    it('WHEN web was cleared first, a task shows the bar and task mode is left THEN the bar hides and Clear is disabled', async () => {
+      rig.modes.setMode('packages', 'h1');
+      rig.page.clear.click();
+      rig.modes.setMode('tasks', 'h1');
+      rig.page.detailsBar.hidden = false;
+      rig.page.clear.disabled = false;
+      rig.modes.setMode('packages', 'h1');
+      rig.side.redraw();
+      await settled();
+
+      expect(rig.page.detailsBar.hidden).toBe(true);
+      expect(rig.page.clear.disabled).toBe(true);
+    });
+
     it('WHEN Controls is clicked THEN the package Controls neither re-measure the canvas nor save', () => {
       const before = rig.modes.current();
 
