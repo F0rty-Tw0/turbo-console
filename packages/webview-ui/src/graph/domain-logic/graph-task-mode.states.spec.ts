@@ -62,6 +62,9 @@ const listedIdsOf = (rig: TaskModeRig): string[] | undefined => {
   return rows?.map((task) => task.id);
 };
 
+/** The single-package root after its package.json `name` changed: the same tasks, so the same layout key. */
+const RENAMED_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, rootLabel: 'renamed-app' };
+
 /** Every task of the single-package root. */
 const ALL_IDS = ['//#build', '//#lint'];
 
@@ -233,6 +236,19 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       await rig.runs.settle(0, resultOf(SINGLE_KEY, SINGLE_POSITIONS));
 
       expect(drawnOf(rig)?.rootLabel).toBe('single-app');
+    });
+
+    it('WHEN the same tasks arrive under a renamed root THEN Controls gets the new label', () => {
+      mode.received(RENAMED_STATE, 8);
+
+      expect(rig.controls.setRows).toHaveBeenLastCalledWith(RENAMED_STATE.tasks, 'renamed-app');
+    });
+
+    it('WHEN the same tasks arrive under a renamed root after the layout landed THEN the canvas draws with the new label', async () => {
+      await rig.runs.settle(0, resultOf(SINGLE_KEY, SINGLE_POSITIONS));
+      mode.received(RENAMED_STATE, 8);
+
+      expect(drawnOf(rig)?.rootLabel).toBe('renamed-app');
     });
 
     it('WHEN a row is picked THEN the side panel model carries the root label', () => {

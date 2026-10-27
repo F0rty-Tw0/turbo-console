@@ -49,11 +49,14 @@ export class GraphTaskMode {
 
   /**
    * Keeps the state's tasks and Atomizer groups; while active, shows the graph view once and draws the shown tasks when
-   * their key changed. A same key, never an empty set's, still refreshes the selected task's panel and the banner, since
-   * commands and hidden tasks are not in the key, and reports the shown umbrellas again, since a changed file list may
-   * have dropped a load the host must request anew.
+   * their key changed or the root label did, since the key holds no label. A same key and label, never an empty set's,
+   * still refreshes the selected task's panel and the banner, since commands and hidden tasks are not in the key, and
+   * reports the shown umbrellas again, since a changed file list may have dropped a load the host must request anew.
    */
   public received(state: GraphReady, at: number): void {
+    const shownLabel = this.memory.rootLabel();
+    const isRelabelled = shownLabel !== state.rootLabel;
+
     this.memory.keep(state);
     this.layout.atoms.received(state.atomGroups);
 
@@ -67,7 +70,7 @@ export class GraphTaskMode {
 
     this.selection.setShown(request.tasks);
 
-    if (request.key === shownKey) {
+    if (request.key === shownKey && !isRelabelled) {
       this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount });
       this.layout.atoms.reshown();
 
