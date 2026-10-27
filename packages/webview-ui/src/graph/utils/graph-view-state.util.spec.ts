@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { hasSavedGrouping, readGraphViewState } from './graph-view-state.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphFocus, GraphViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphFocus, GraphViewState, PanelWidths, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 const PAN: Position = { x: -10, y: 20 };
 
@@ -26,6 +26,8 @@ const PROTO_LINK_REF = { source: '__proto__', target: 'constructor' };
 
 const CORE_FOCUS: GraphFocus = { kind: 'package', name: 'core' };
 
+const PANEL_WIDTHS: PanelWidths = { controls: 320, details: 300 };
+
 const VALID: GraphViewState = {
   hash: 'h',
   zoom: 1.5,
@@ -44,7 +46,8 @@ const VALID: GraphViewState = {
   grouped: true,
   collapsed: ['apps', '__proto__'],
   mode: 'packages',
-  task: null
+  task: null,
+  panelWidths: PANEL_WIDTHS
 };
 
 const CAMERA = { hash: 'h', zoom: 1.5, pan: PAN, selected: 'web' };
@@ -64,7 +67,8 @@ const DEFAULTED: GraphViewState = {
   grouped: true,
   collapsed: [],
   mode: 'packages',
-  task: null
+  task: null,
+  panelWidths: null
 };
 
 const ORIGIN: Position = { x: 0, y: 0 };

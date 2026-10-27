@@ -55,7 +55,8 @@ const STATE: GraphViewState = {
   grouped: false,
   collapsed: [],
   mode: 'packages',
-  task: null
+  task: null,
+  panelWidths: null
 };
 
 describe('FEATURE: restoredFilters', () => {

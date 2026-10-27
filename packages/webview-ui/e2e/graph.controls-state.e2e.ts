@@ -44,7 +44,8 @@ const M4_1_RESTORED: GraphViewState = {
   folder: null,
   collapsed: [],
   mode: 'packages',
-  task: null
+  task: null,
+  panelWidths: null
 };
 
 const PROTO_SAVED = {

@@ -29,7 +29,8 @@ export const SAVED_BASE_STUB: GraphViewState = {
   focus: null,
   collapsed: [],
   mode: 'packages',
-  task: null
+  task: null,
+  panelWidths: null
 };
 
 export const WEB_FACTS_STUB: PackageFacts = { path: 'apps/web', tags: ['app', 'ui'], button: 'View Package Details · 5 tasks' };

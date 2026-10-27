@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ViewStateModes } from './view-state-modes.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewState, PackageViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphViewState, PackageViewState, PanelWidths, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
@@ -45,9 +45,11 @@ const NEXT_TASK: TaskViewState = { ...TASK, chosen: ['web#build', 'ui#test'], la
 
 const FRESH_H2: GraphViewState = freshViewStateOf('h2');
 
-const PACKAGE_SAVED: GraphViewState = { ...PACKAGE_STATE, mode: 'packages', task: TASK };
+const WIDTHS: PanelWidths = { controls: 320, details: 300 };
 
-const TASK_SAVED: GraphViewState = { ...PACKAGE_STATE, mode: 'tasks', task: TASK };
+const PACKAGE_SAVED: GraphViewState = { ...PACKAGE_STATE, mode: 'packages', task: TASK, panelWidths: null };
+
+const TASK_SAVED: GraphViewState = { ...PACKAGE_STATE, mode: 'tasks', task: TASK, panelWidths: null };
 
 describe('FEATURE: ViewStateModes', () => {
   let saver: Mocked<ViewStateSaver>;
@@ -92,7 +94,7 @@ describe('FEATURE: ViewStateModes', () => {
 
       modes.packages.schedule(PACKAGE_STATE);
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, mode: 'packages', task: null });
+      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, mode: 'packages', task: null, panelWidths: null });
     });
   });
 
@@ -128,7 +130,7 @@ describe('FEATURE: ViewStateModes', () => {
 
       modes.packages.schedule({ ...PACKAGE_STATE, zoom: 2 });
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, zoom: 2, mode: 'packages', task: TASK });
+      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, zoom: 2, mode: 'packages', task: TASK, panelWidths: null });
     });
 
     it('WHEN a package save for a new hash arrives THEN the task carries across', () => {
@@ -136,7 +138,13 @@ describe('FEATURE: ViewStateModes', () => {
 
       modes.packages.schedule({ ...PACKAGE_STATE, hash: 'h2' });
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, hash: 'h2', mode: 'packages', task: TASK });
+      expect(saver.schedule).toHaveBeenLastCalledWith({
+        ...PACKAGE_STATE,
+        hash: 'h2',
+        mode: 'packages',
+        task: TASK,
+        panelWidths: null
+      });
     });
 
     it('WHEN the mode is set to tasks THEN the last state is written in task mode', () => {
@@ -152,7 +160,7 @@ describe('FEATURE: ViewStateModes', () => {
 
       modes.saveTask(NEXT_TASK, 'h1');
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, mode: 'tasks', task: NEXT_TASK });
+      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, mode: 'tasks', task: NEXT_TASK, panelWidths: null });
     });
 
     it('WHEN the packages are flushed THEN the saver flushes', () => {
@@ -212,6 +220,59 @@ describe('FEATURE: ViewStateModes', () => {
       modes.saveTask(NEXT_TASK, 'h1');
 
       expect([modes.mode(), modes.task()]).toStrictEqual(['tasks', NEXT_TASK]);
+    });
+  });
+
+  describe('GIVEN saved panel widths', () => {
+    it('WHEN built THEN panelWidths() returns them', () => {
+      const modes = new ViewStateModes(saver, { ...FRESH_H2, panelWidths: WIDTHS });
+
+      expect(modes.panelWidths()).toStrictEqual(WIDTHS);
+    });
+
+    it('WHEN a package save runs THEN the written state carries them', () => {
+      const modes = new ViewStateModes(saver, { ...FRESH_H2, panelWidths: WIDTHS });
+
+      modes.packages.schedule(PACKAGE_STATE);
+
+      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, mode: 'packages', task: null, panelWidths: WIDTHS });
+    });
+
+    it('WHEN the next package save is for another hash THEN it still carries them', () => {
+      const modes = new ViewStateModes(saver, { ...FRESH_H2, panelWidths: WIDTHS });
+
+      modes.packages.schedule({ ...PACKAGE_STATE, hash: 'h9' });
+
+      expect(saver.schedule).toHaveBeenLastCalledWith(expect.objectContaining({ hash: 'h9', panelWidths: WIDTHS }));
+    });
+  });
+
+  describe('GIVEN a saved state', () => {
+    it('WHEN savePanelWidths runs THEN it writes the state with them', () => {
+      const modes = new ViewStateModes(saver, FRESH_H2);
+
+      modes.savePanelWidths(WIDTHS);
+
+      expect(saver.schedule).toHaveBeenLastCalledWith({ ...FRESH_H2, panelWidths: WIDTHS });
+    });
+  });
+
+  describe('GIVEN nothing saved and widths dragged', () => {
+    it('WHEN savePanelWidths runs THEN nothing is written yet', () => {
+      const modes = new ViewStateModes(saver, null);
+
+      modes.savePanelWidths(WIDTHS);
+
+      expect(saver.schedule).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the next write runs THEN it carries them', () => {
+      const modes = new ViewStateModes(saver, null);
+
+      modes.savePanelWidths(WIDTHS);
+      modes.setMode('tasks', 'h1');
+
+      expect(modes.current()?.panelWidths).toStrictEqual(WIDTHS);
     });
   });
 });

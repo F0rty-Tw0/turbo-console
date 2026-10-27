@@ -28,6 +28,9 @@ export type TaskViewState = {
   readonly layoutKey: string;
 };
 
+/** The drawn widths in px of the Controls and Details panels. */
+export type PanelWidths = { readonly controls: number; readonly details: number };
+
 /** What the graph page keeps in the webview state: the camera, the selection, the controls panel and the inspection for one graph hash. */
 export type GraphViewState = {
   readonly hash: string;
@@ -54,7 +57,9 @@ export type GraphViewState = {
   readonly mode: GraphViewMode;
   /** The last task view; kept across package saves and hash changes, `null` until task mode saves one. */
   readonly task: TaskViewState | null;
+  /** The panel widths the user dragged to, once per page; `null` until a drag saves them. */
+  readonly panelWidths: PanelWidths | null;
 };
 
-/** The view state the package graph saves: everything but the mode and the task view, which `ViewStateModes` adds. */
-export type PackageViewState = Omit<GraphViewState, 'mode' | 'task'>;
+/** The view state the package graph saves: everything but the mode, the task view and the panel widths, which `ViewStateModes` adds. */
+export type PackageViewState = Omit<GraphViewState, 'mode' | 'task' | 'panelWidths'>;
