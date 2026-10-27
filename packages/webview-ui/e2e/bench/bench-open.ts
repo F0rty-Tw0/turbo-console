@@ -2,11 +2,13 @@ import type { Browser } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { withSession } from './bench-session.ts';
+import { NOTHING_SAVED } from './common/bench.const.ts';
 import type { BenchSession, ColdOpen } from './common/bench.type.ts';
 import type { GraphReady, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 import { targetLikeHubSavedState, targetLikeTasksState } from '../test/utils/graph-target-like-tasks.spec.util.ts';
+import { targetLikeState } from '../test/utils/graph-target-like.spec.util.ts';
 
 const lastPositionsOf = async (session: BenchSession): Promise<Positions> => {
   const posted = async (): Promise<Positions | null> => lastPositionsPosted(await readPosted(session.page));
@@ -37,6 +39,21 @@ export const coldFirstFrameMs = async (browser: Browser, state: GraphReady, opti
 
   return opened.firstFrameMs;
 };
+
+/** The first frame is read before the grouping is checked, so the check stays out of the timed span. */
+const defaultOpened = async (session: BenchSession): Promise<number> => {
+  await session.host.sendState(targetLikeState());
+  await session.probe.expectLayoutEngine('elk');
+
+  const firstFrameMs = await session.timings.measuredFirstFrameMs();
+
+  await session.grouping.expectGrouped(true);
+
+  return firstFrameMs;
+};
+
+/** First frame of the target-like graph's cold ELK layout opened with nothing saved, so grouped. */
+export const targetLikeDefaultOpen = async (browser: Browser): Promise<number> => withSession(browser, NOTHING_SAVED, defaultOpened);
 
 /** `state` carrying the positions its cold ELK layout posted, so `cachedOpen` takes the layout from the cache. */
 export const cachedState = async (browser: Browser, state: GraphReady): Promise<GraphReady> => {
