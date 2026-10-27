@@ -115,6 +115,23 @@ export class GraphSashes {
     await expect(ellipsis).toBeVisible({ visible: isShown });
   }
 
+  /** Each action button in the package Details rows is wide enough for its label: none clips or spills its text. */
+  public async expectDetailsButtonsFit(): Promise<void> {
+    const buttons = this.page.locator('#graph-details .details-row button');
+    const overflowingOf = async (): Promise<string[]> => {
+      const labels = await buttons.evaluateAll((elements): string[] => {
+        const overflowing = elements.filter((element) => element.scrollWidth > element.clientWidth);
+
+        return overflowing.map((element) => element.textContent);
+      });
+
+      return labels;
+    };
+
+    await expect(buttons.first()).toBeVisible();
+    await expect.poll(overflowingOf).toEqual([]);
+  }
+
   public async expectPanelWidth(id: string, px: number): Promise<void> {
     const panel = this.page.locator(`#${id}`);
     const widthOf = async (): Promise<number> => panel.evaluate((element): number => element.getBoundingClientRect().width);

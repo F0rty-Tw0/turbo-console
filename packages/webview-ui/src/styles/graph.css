@@ -745,6 +745,7 @@ kbd {
 .graph-details {
   --tc-details-width: inherit;
 
+  container-type: inline-size;
   display: flex;
   flex: 0 0 var(--tc-details-width);
   box-sizing: border-box;
@@ -1015,6 +1016,13 @@ kbd {
   justify-content: center;
   padding-inline: var(--space-1);
   white-space: nowrap;
+}
+
+/* A Details panel sashed towards its 200px minimum has no room for three labels such as "Start trace" a row. */
+@container (width < 240px) {
+  .details-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .primary-button {

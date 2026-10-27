@@ -157,10 +157,11 @@ test.describe('FEATURE: graph panel sashes', () => {
   test(
     'GIVEN the wide editor, the arrow, Home and End keys resize a sash and every other key leaves it alone',
     { annotation: AC2 },
-    async ({ graphHost, graphPage, graphSashes }): Promise<void> => {
-      await test.step('GIVEN the page opened on the details graph', async (): Promise<void> => {
+    async ({ graphCanvas, graphHost, graphPage, graphSashes }): Promise<void> => {
+      await test.step('GIVEN the page opened on the details graph with web selected', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(DETAILS_STUB);
+        await graphCanvas.tapNode('web');
       });
 
       await test.step('WHEN Details gets ArrowLeft, ArrowRight and ArrowUp', async (): Promise<void> => {
@@ -177,6 +178,9 @@ test.describe('FEATURE: graph panel sashes', () => {
       await test.step('WHEN Details gets Home', async (): Promise<void> => graphSashes.press('details', 'Home'));
 
       await test.step('THEN Details is 200px wide', async (): Promise<void> => graphSashes.expectPanelWidth('graph-details', 200));
+
+      await test.step('AND every Details action button still fits its label', async (): Promise<void> =>
+        graphSashes.expectDetailsButtonsFit());
 
       await test.step('WHEN Controls gets ArrowRight, ArrowLeft and ArrowDown', async (): Promise<void> => {
         await graphSashes.press('controls', 'ArrowRight');
