@@ -136,6 +136,23 @@ describe('FEATURE: swatchPartsOf', () => {
     });
   });
 
+  describe('GIVEN the selection label', () => {
+    const selected = boxOf({ fill: 'selectionFill' });
+
+    it('WHEN the theme sets one THEN the sample text of a selected box takes it', () => {
+      const text = textPartOf(partsOf(selected));
+
+      expect(text.attrs['fill']).toBe(SELECTION.label);
+    });
+
+    it('WHEN it is unset (high contrast) THEN the sample text falls back to the label colour', () => {
+      const noSelection: ThemeColors = { ...COLORS, selection: null };
+      const text = textPartOf(partsOf(selected, noSelection));
+
+      expect(text.attrs['fill']).toBe(COLORS.label);
+    });
+  });
+
   it('GIVEN a pill swatch WHEN it is read THEN the rect is 10 high with 5 px corners', () => {
     const rect = partAt(partsOf(PILL_SWATCH), 0);
 

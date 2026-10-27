@@ -3,8 +3,8 @@ import type { ThemeColors } from '../common/theme-colors.type.ts';
 
 type Attrs = Readonly<Record<string, string>>;
 
-/** Every colour a swatch names, plus `label` for its sample text. */
-type Palette = Readonly<Record<LegendColour | 'label', string>>;
+/** Every colour a swatch names, plus `label` and `selectionLabel` for its sample text. */
+type Palette = Readonly<Record<LegendColour | 'label' | 'selectionLabel', string>>;
 
 /** A swatch rect in viewBox units. */
 type FrameBox = {
@@ -44,6 +44,7 @@ const partOf = (tag: SvgPart['tag'], attrs: Attrs, text = ''): SvgPart => {
 
 const paletteOf = (colors: ThemeColors): Palette => {
   const selectionFill = colors.selection?.fill ?? colors.background;
+  const selectionLabel = colors.selection?.label ?? colors.label;
   const { runs } = colors;
   const palette: Palette = {
     frame: colors.frame,
@@ -54,6 +55,7 @@ const paletteOf = (colors: ThemeColors): Palette => {
     cached: colors.cached,
     label: colors.label,
     selectionFill,
+    selectionLabel,
     'run-running': runs.running,
     'run-passed': runs.passed,
     'run-failed': runs.failed,
@@ -116,7 +118,8 @@ const innerPartOf = (swatch: LegendSwatch, palette: Palette): SvgPart => {
   if (swatch.isNested) return partOf('rect', { ...NESTED, stroke: palette.frame, fill: palette.background });
 
   const weight = swatch.isBold ? 'bold' : 'normal';
-  const attrs: Attrs = { ...SAMPLE, fill: palette.label, 'font-weight': weight };
+  const fill = swatch.fill === 'selectionFill' ? palette.selectionLabel : palette.label;
+  const attrs: Attrs = { ...SAMPLE, fill, 'font-weight': weight };
 
   return partOf('text', attrs, 'Aa');
 };
