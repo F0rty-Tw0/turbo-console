@@ -2,7 +2,6 @@ import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import type { FolderRowElements, RowKind } from '../common/widget.type.ts';
-import { setButtonLabel } from '../utils/button-title.util.ts';
 import { folderActionsLabelOf, packageActionsLabelOf } from '../utils/controls-text.util.ts';
 import { pluralOf } from '../utils/plural.util.ts';
 
@@ -12,7 +11,8 @@ const widgetButton = (id: GraphIconId, label: string): HTMLButtonElement => {
   const icon = graphIcon(id);
 
   button.type = 'button';
-  setButtonLabel(button, label);
+  button.title = label;
+  button.setAttribute('aria-label', label);
   button.append(icon);
 
   return button;

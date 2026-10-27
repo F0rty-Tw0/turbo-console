@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { setButtonLabel, setButtonText } from './button-title.util.ts';
+import { setButtonLabel, setButtonText } from './button-title.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 describe('FEATURE: button titles', () => {

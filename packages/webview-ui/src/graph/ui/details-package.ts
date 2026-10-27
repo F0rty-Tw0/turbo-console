@@ -15,7 +15,6 @@ import {
 import type { NeighbourModel, PackageViewModel } from '../common/details.type.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import { TAGS_LABEL } from '../common/graph.const.ts';
-import { setButtonLabel } from '../utils/button-title.util.ts';
 import { dependenciesTitleOf, dependentsTitleOf, explainLabelOf, openDetailsLabelOf, pathTextOf } from '../utils/details-text.util.ts';
 
 /** The accessible name of a neighbour's Explain button, its link named dependent first. */
@@ -94,7 +93,8 @@ const neighbourItem = (list: HTMLUListElement, neighbour: NeighbourModel, explai
 
   explain.type = 'button';
   explain.dataset['name'] = neighbour.name;
-  setButtonLabel(explain, explainLabel);
+  explain.title = explainLabel;
+  explain.setAttribute('aria-label', explainLabel);
   mark.hidden = neighbour.isVisible;
   li.append(pick, mark, explain);
   list.append(li);

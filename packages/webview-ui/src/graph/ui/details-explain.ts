@@ -13,7 +13,6 @@ import type {
   UnreadableExplain
 } from '../common/details.type.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
-import { setButtonLabel } from '../utils/button-title.util.ts';
 import {
   entryLabelOf,
   missingTextOf,
@@ -65,7 +64,8 @@ const entryOf = (list: HTMLElement, entry: ManifestEntry): ExplainEntry => {
   const open = actionButton(openText);
   const openLabel = openManifestLabelOf(entry);
 
-  setButtonLabel(open, openLabel);
+  open.title = openLabel;
+  open.setAttribute('aria-label', openLabel);
   li.append(label, excerpt, open);
   list.append(li);
 

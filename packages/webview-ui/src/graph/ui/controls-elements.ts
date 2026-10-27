@@ -12,7 +12,6 @@ import {
   SHOW_ALL_LABEL,
   TAGS_LABEL
 } from '../common/graph.const.ts';
-import { setButtonLabel } from '../utils/button-title.util.ts';
 import {
   countTextOf,
   focusLabelOf,
@@ -69,11 +68,12 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
   const check = listCheck(showLabelOf(name));
   const pick = listButton('controls-name', name);
   const focus = listButton('controls-focus', folderFocusTextOf(false));
+  const focusLabel = focusLabelOf(name);
   const cells = [gridCell(check), gridCell(pick), gridCell(focus)];
   const line = gridLine('controls-row', cells);
 
-  pick.title = name;
-  setButtonLabel(focus, focusLabelOf(name));
+  focus.title = focusLabel;
+  focus.setAttribute('aria-label', focusLabel);
 
   const row: ControlsRow = { name, line, check, pick, focus };
 
@@ -93,6 +93,7 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   const text = textElement('span', 'controls-folder', label);
   const toggle = listButton('controls-toggle', folderToggleTextOf(false));
   const focus = listButton('controls-focus', 'Focus');
+  const focusLabel = folderFocusLabelOf(title);
   const cells = [gridCell(check, text), gridCell(toggle), gridCell(focus)];
   const line = gridLine('controls-header', cells);
   const rows = packages.map(packageRow);
@@ -100,7 +101,8 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
 
   toggle.hidden = true;
   focus.hidden = true;
-  setButtonLabel(focus, folderFocusLabelOf(title));
+  focus.title = focusLabel;
+  focus.setAttribute('aria-label', focusLabel);
 
   text.setAttribute('aria-hidden', 'true');
 
