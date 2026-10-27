@@ -1,3 +1,6 @@
+import { parse } from 'jsonc-parser';
+import type { ParseError } from 'jsonc-parser';
+
 import { ICON_THEME_BYTES_MAX } from '../common/icon-theme.const.ts';
 import type { IconThemePorts, IconThemeProbe } from '../common/icon-theme.type.ts';
 import { hasFolderKey, themeFileOf } from '../utils/icon-theme-file.util.ts';
@@ -5,7 +8,8 @@ import { hasFolderKey, themeFileOf } from '../utils/icon-theme-file.util.ts';
 /**
  * Whether the file icon theme in use defines folder icons, read from the theme file its extension contributes. The file is
  * outside input, so any failure (no theme, no extension, a path leaving the extension, a big or broken file) is `null`,
- * never a throw. One read per theme id until `clear()`; a `clear()` during a read keeps that read's answer out of the cache.
+ * never a throw. The file is read as VS Code reads it: comments and trailing commas pass, any other parse error is a broken
+ * file. One read per theme id until `clear()`; a `clear()` during a read keeps that read's answer out of the cache.
  */
 export class IconThemeFolders implements IconThemeProbe {
   private readonly ports: IconThemePorts;
@@ -50,8 +54,12 @@ export class IconThemeFolders implements IconThemeProbe {
 
       const bytes = await this.ports.read(file);
       const text = new TextDecoder().decode(bytes);
+      const errors: ParseError[] = [];
+      const parsed: unknown = parse(text, errors, { allowTrailingComma: true });
 
-      return hasFolderKey(JSON.parse(text));
+      if (errors.length > 0) return null;
+
+      return hasFolderKey(parsed);
     } catch {
       return null;
     }

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
 import { IconThemeFolders } from './icon-theme-folders.ts';
@@ -10,11 +11,12 @@ const EXTENSION = '/ext/theme';
 const THEME_FILE = join(EXTENSION, 'icons/theme.json');
 const MINIMAL_JSON = '{"iconDefinitions":{},"folder":"_folder","file":"_file"}';
 const SETI_JSON = '{"iconDefinitions":{},"file":"_file"}';
+const COMMENTED_JSON = '// Minimal\n{"iconDefinitions":{},/* folders */"folder":"_folder",}';
 
 type Fixture = {
   readonly ports: IconThemePorts;
-  readonly read: ReturnType<typeof vi.fn<IconThemePorts['read']>>;
-  readonly size: ReturnType<typeof vi.fn<IconThemePorts['size']>>;
+  readonly read: Mock<IconThemePorts['read']>;
+  readonly size: Mock<IconThemePorts['size']>;
   readonly files: Map<string, string>;
 };
 
@@ -56,12 +58,14 @@ const foldersOf = async (fixture: Fixture): Promise<boolean | null> => new IconT
 describe('FEATURE: icon theme folders', () => {
   describe('GIVEN an extension contributing the theme in use', () => {
     it.each([
-      ['a folder key', MINIMAL_JSON, true],
-      ['no folder key', SETI_JSON, false],
-      ['invalid JSON', '{', null],
-      ['a JSON array', '[]', false],
-      ['a JSON null', 'null', false]
-    ])('WHEN the theme file has %s THEN has() is %s', async (_name, text, expected) => {
+      ['a folder key', true, MINIMAL_JSON],
+      ['no folder key', false, SETI_JSON],
+      ['comments and a trailing comma', true, COMMENTED_JSON],
+      ['invalid JSON', null, '{'],
+      ['a missing comma', null, '{"file":"_file" "folder":"_folder"}'],
+      ['a JSON array', false, '[]'],
+      ['a JSON null', false, 'null']
+    ])('WHEN the theme file has %s THEN has() is %s', async (_name, expected, text) => {
       const fixture = fixtureOf();
 
       fixture.files.set(THEME_FILE, text);
@@ -147,17 +151,26 @@ describe('FEATURE: icon theme folders', () => {
   });
 
   describe('GIVEN the answer is cached by theme id', () => {
-    it('WHEN has() runs twice for one theme THEN the file is read once, and again after clear()', async () => {
+    it('WHEN has() runs twice for one theme THEN the file is read once', async () => {
       const fixture = fixtureOf();
       const folders = new IconThemeFolders(fixture.ports);
 
       fixture.files.set(THEME_FILE, MINIMAL_JSON);
       await folders.has();
+
       await folders.has();
 
       expect(fixture.read).toHaveBeenCalledTimes(1);
+    });
 
+    it('WHEN has() runs again after clear() THEN the file is read again', async () => {
+      const fixture = fixtureOf();
+      const folders = new IconThemeFolders(fixture.ports);
+
+      fixture.files.set(THEME_FILE, MINIMAL_JSON);
+      await folders.has();
       folders.clear();
+
       await folders.has();
 
       expect(fixture.read).toHaveBeenCalledTimes(2);
