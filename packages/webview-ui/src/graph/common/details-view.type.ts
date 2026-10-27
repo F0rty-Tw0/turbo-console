@@ -2,6 +2,13 @@ export type DetailsElements = {
   readonly panel: HTMLElement;
 };
 
+/** `div.details-bar`: the selection summary and Clear selection, at the top of the mounted Details aside; `hidden` while nothing is selected. */
+export type DetailsBarElements = {
+  readonly bar: HTMLDivElement;
+  readonly summary: HTMLElement;
+  readonly clear: HTMLButtonElement;
+};
+
 /** The `data-view` of a view's root section. */
 export type DetailsViewKind = 'empty' | 'package' | 'link' | 'picking' | 'trace' | 'folder';
 
