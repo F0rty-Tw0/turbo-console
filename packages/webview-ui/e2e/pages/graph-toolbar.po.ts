@@ -9,6 +9,19 @@ import { setInputOptionVars } from '../test/utils/graph-details.spec.util.ts';
 
 const CONTROLS_BUTTON = /^Controls/;
 
+/** A button's name as the View group shows it: its `aria-label` when it has one (icon-only), else its rendered text. */
+const accessibleNamesOf = (buttons: Element[]): string[] => {
+  const names = buttons.map((button): string => {
+    const label = button.getAttribute('aria-label');
+    const isElement = button instanceof HTMLElement;
+    const text = isElement ? button.innerText : '';
+
+    return label ?? text.trim();
+  });
+
+  return names;
+};
+
 /** The toolbar's structure and look: groups, separators, icons, the pressed toggles and the "filters on" mark. */
 export class GraphToolbar {
   public readonly controlsButton: Locator;
@@ -88,6 +101,6 @@ export class GraphToolbar {
   private async expectGroup(group: ToolbarGroup): Promise<void> {
     const buttons = this.page.getByRole('group', { name: group.name, exact: true }).getByRole('button');
 
-    await expect(buttons).toHaveText(group.buttons, { useInnerText: true });
+    await expect.poll(async () => buttons.evaluateAll(accessibleNamesOf)).toStrictEqual(group.buttons);
   }
 }

@@ -1,4 +1,5 @@
 import { graphIcon } from './graph-icon.ts';
+import { iconButton } from './icon-button.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import type { ToolbarElements } from '../common/graph-page.type.ts';
@@ -24,7 +25,7 @@ import {
 } from '../common/graph.const.ts';
 
 /** A disabled toolbar button: its icon, then its label, whose text is the accessible name; `title` is its hover text. */
-const iconButton = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
+const labelledButton = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
   const button = textElement('button', 'text-button', '');
   const icon = graphIcon(id);
   const text = textElement('span', 'button-label', label);
@@ -37,9 +38,18 @@ const iconButton = (id: GraphIconId, label: string, title: string): HTMLButtonEl
   return button;
 };
 
+/** A disabled icon-only View action. */
+const viewAction = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
+  const button = iconButton(id, label, title);
+
+  button.disabled = true;
+
+  return button;
+};
+
 /** A collapsed panel toggle; the panel `aside#<panelId>` arrives with the first graph. */
 const panelToggle = (id: GraphIconId, label: string, title: string, panelId: string): HTMLButtonElement => {
-  const button = iconButton(id, label, title);
+  const button = labelledButton(id, label, title);
 
   button.setAttribute('aria-controls', panelId);
   button.setAttribute('aria-expanded', 'false');
@@ -49,7 +59,7 @@ const panelToggle = (id: GraphIconId, label: string, title: string, panelId: str
 
 /** An unpressed toggle button; task mode sets `aria-pressed` while it is on. */
 const pressToggle = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
-  const button = iconButton(id, label, title);
+  const button = labelledButton(id, label, title);
 
   button.setAttribute('aria-pressed', 'false');
 
@@ -104,10 +114,10 @@ export const buildToolbar = (): ToolbarElements => {
   const controls = panelToggle('layout-sidebar-left', CONTROLS_LABEL, CONTROLS_TITLE, CONTROLS_ID);
   const filtersOn = filtersOnMark();
   const details = panelToggle('layout-sidebar-right', DETAILS_LABEL, DETAILS_TITLE, DETAILS_ID);
-  const fit = iconButton('screen-full', FIT_LABEL, FIT_TITLE);
-  const relayout = iconButton('refresh', RELAYOUT_LABEL, RELAYOUT_TITLE);
-  const exportImage = iconButton('desktop-download', EXPORT_LABEL, EXPORT_TITLE);
-  const clear = iconButton('close', CLEAR_LABEL, CLEAR_TITLE);
+  const fit = viewAction('screen-full', FIT_LABEL, FIT_TITLE);
+  const relayout = viewAction('refresh', RELAYOUT_LABEL, RELAYOUT_TITLE);
+  const exportImage = viewAction('desktop-download', EXPORT_LABEL, EXPORT_TITLE);
+  const clear = labelledButton('close', CLEAR_LABEL, CLEAR_TITLE);
   const status = statusLine();
   const mode = toolbarGroup(MODE_LABEL, taskMode);
   const modeEnd = separator();

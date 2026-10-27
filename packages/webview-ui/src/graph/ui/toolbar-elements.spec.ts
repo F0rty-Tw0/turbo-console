@@ -3,7 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildToolbar } from './toolbar-elements.ts';
 import type { ToolbarElements } from '../common/graph-page.type.ts';
 import { MODE_LABEL, TASK_MODE_LABEL, TASK_MODE_TITLE } from '../common/graph-task.const.ts';
-import { CLEAR_TITLE, CONTROLS_TITLE, DETAILS_TITLE, EXPORT_TITLE, FIT_TITLE, RELAYOUT_TITLE } from '../common/graph.const.ts';
+import {
+  CLEAR_TITLE,
+  CONTROLS_TITLE,
+  DETAILS_TITLE,
+  EXPORT_LABEL,
+  EXPORT_TITLE,
+  FIT_LABEL,
+  FIT_TITLE,
+  RELAYOUT_LABEL,
+  RELAYOUT_TITLE
+} from '../common/graph.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 describe('FEATURE: buildToolbar', () => {
@@ -48,6 +58,26 @@ describe('FEATURE: buildToolbar', () => {
         EXPORT_TITLE,
         CLEAR_TITLE
       ]);
+    });
+
+    describe('WHEN a View action is read THEN it is a disabled icon-only button', () => {
+      const rows = [
+        ['fit', FIT_LABEL, FIT_TITLE],
+        ['relayout', RELAYOUT_LABEL, RELAYOUT_TITLE],
+        ['exportImage', EXPORT_LABEL, EXPORT_TITLE]
+      ] as const;
+
+      it.each(rows)('THEN %s is an icon-button with one child, its aria-label, its title and disabled', (key, label, title) => {
+        const button = elements[key];
+
+        expect([
+          button.className,
+          button.children.length,
+          button.getAttribute('aria-label'),
+          button.title,
+          button.disabled
+        ]).toStrictEqual(['icon-button', 1, label, title, true]);
+      });
     });
 
     it('WHEN its second part is read THEN it is a separator', () => {
