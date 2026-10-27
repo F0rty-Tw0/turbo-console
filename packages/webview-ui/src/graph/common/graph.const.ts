@@ -1,6 +1,7 @@
 import type { LayoutNotice } from './graph-layouts.type.ts';
 import type { Column } from './roving.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
+import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
 
 export const NODE_HEIGHT = 32;
 
@@ -216,6 +217,18 @@ export const FILTERS_ON_TEXT = 'filters on';
 
 /** Below this width the details panel overlays the canvas instead of docking beside it; `graph.css` repeats the literal. */
 export const OVERLAY_MEDIA_QUERY = '(width < 960px)';
+
+/** The least a panel is drawn at, in px. */
+export const PANEL_MIN_PX = 200;
+
+/** The least the canvas keeps beside the docked panels, in px. */
+export const CANVAS_MIN_PX = 420;
+
+const CONTROLS_WIDTH_PX = 260;
+
+const DETAILS_WIDTH_PX = 280;
+
+export const DEFAULT_PANEL_WIDTHS: PanelWidths = { controls: CONTROLS_WIDTH_PX, details: DETAILS_WIDTH_PX };
 
 export const SEARCH_LABEL = 'Search packages';
 
