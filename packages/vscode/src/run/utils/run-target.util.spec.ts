@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { PackageManager, PackageManagerSource, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { modelTaskOf, runRequestOf, taskIdsOf, taskTargetOf } from './run-target.util.ts';
+import { directRequestOf, modelTaskOf, runRequestOf, taskIdsOf, taskTargetOf } from './run-target.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
@@ -15,6 +15,7 @@ import {
   WORKSPACE_MODEL_STUB
 } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { RunDefinition, RunRequest, TaskTarget } from '../common/run.type.ts';
+import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 
@@ -172,6 +173,17 @@ describe('FEATURE: run targets', () => {
       const request = runRequestOf(TARGET, state, false);
 
       expect(request).toBeNull();
+    });
+  });
+
+  describe('GIVEN the forced run request of a turbo task', () => {
+    it('WHEN it is made a run without turbo THEN it runs the task as an unforced script', () => {
+      const forced: RunRequest = { ...RUN_REQUEST_STUB, force: true };
+      const scriptTask: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+      const request = directRequestOf(forced);
+
+      expect(request).toStrictEqual({ ...RUN_REQUEST_STUB, task: scriptTask, force: false });
     });
   });
 

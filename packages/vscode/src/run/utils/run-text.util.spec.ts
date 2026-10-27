@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { failedToStartText, startTimeoutText, startWaitText, unsafeScriptText } from './run-text.util.ts';
+import { failedToStartText, noScriptText, startTimeoutText, startWaitText, unsafeScriptText } from './run-text.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 
 describe('FEATURE: run texts', () => {
@@ -40,6 +40,24 @@ describe('FEATURE: run texts', () => {
       const text = unsafeScriptText('x'.repeat(LABEL_MAX * 2));
 
       expect(text).toBe(`Turbo Console can't run a script named \`${'x'.repeat(LABEL_MAX - 1)}…\` safely.`);
+    });
+  });
+
+  describe('GIVEN a task with no package.json script', () => {
+    it('WHEN the no-script text is made THEN it says the task runs only through turbo', () => {
+      expect(noScriptText('build')).toBe('`build` has no package.json script, so it runs only through turbo.');
+    });
+
+    it('WHEN the name is markdown link syntax THEN the text holds no link', () => {
+      const text = noScriptText('[x](command:workbench.action.showCommands)');
+
+      expect(text).toBe('`[x] (command:workbench.action.showCommands)` has no package.json script, so it runs only through turbo.');
+    });
+
+    it('WHEN the name is longer than a label THEN the text cuts it', () => {
+      const text = noScriptText('x'.repeat(LABEL_MAX * 2));
+
+      expect(text).toBe(`\`${'x'.repeat(LABEL_MAX - 1)}…\` has no package.json script, so it runs only through turbo.`);
     });
   });
 });
