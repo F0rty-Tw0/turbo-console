@@ -98,6 +98,24 @@ const blendOf = (foreground: Rgba, background: Rgba, opacity: number): Rgba => {
   return blended;
 };
 
+const byteOf = (unit: number): number => Math.round(unit * 255);
+
+/**
+ * `colour` laid over the opaque `background` as an opaque `rgb()`, since Cytoscape drops a fill's own alpha; an opaque
+ * colour, or a pair that does not parse, is kept as given.
+ */
+export const opaqueColourOf = (colour: string, background: string): string => {
+  const foreground = rgbaOf(colour);
+  const base = rgbaOf(background);
+
+  if (foreground === null || base === null || foreground[3] === 1) return colour;
+
+  const blended = blendOf(foreground, base, 1);
+  const bytes = blended.slice(0, 3).map(byteOf);
+
+  return `rgb(${bytes.join(', ')})`;
+};
+
 /**
  * The WCAG contrast ratio of two colours (`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`), 1 to 21 to two places,
  * alpha not counted; 1, no contrast, when either does not parse.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { contrastRatioOf, dimmedOpacityOf } from './contrast.util.ts';
+import { contrastRatioOf, dimmedOpacityOf, opaqueColourOf } from './contrast.util.ts';
 
 describe('FEATURE: contrastRatioOf', () => {
   it.each([
@@ -41,5 +41,27 @@ describe('FEATURE: dimmedOpacityOf', () => {
     ['transparent', ['#ffffff']]
   ])('GIVEN %s behind %j, one not a colour, WHEN the opacity is chosen THEN it is 0.25', (background, foregrounds) => {
     expect(dimmedOpacityOf(background, foregrounds)).toBe(0.25);
+  });
+});
+
+describe('FEATURE: opaqueColourOf', () => {
+  describe('GIVEN a colour with alpha over an opaque background', () => {
+    it.each([
+      ['#FFFFFF22', '#121314', 'rgb(50, 50, 51)'],
+      ['#00000025', '#ffffff', 'rgb(218, 218, 218)'],
+      ['rgba(255, 255, 255, 0.13)', '#121314', 'rgb(49, 50, 51)']
+    ])('WHEN %s is laid over %s THEN it is %s', (colour, background, expected) => {
+      expect(opaqueColourOf(colour, background)).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a colour the blend keeps', () => {
+    it.each([
+      ['an opaque colour', '#04395e', '#121314'],
+      ['a colour that does not parse', 'not-a-colour', '#121314'],
+      ['a background that does not parse', '#FFFFFF22', 'not-a-colour']
+    ])('WHEN %s is laid over the background THEN it is kept as given', (_, colour, background) => {
+      expect(opaqueColourOf(colour, background)).toBe(colour);
+    });
   });
 });
