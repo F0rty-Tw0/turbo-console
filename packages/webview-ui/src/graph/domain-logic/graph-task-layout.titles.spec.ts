@@ -108,20 +108,33 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
   });
 
   describe('GIVEN a root task shown under the label single-app', () => {
-    it('WHEN a layout lands and is shown again from memory THEN each title is measured as single-app, keyed by //, and drawn with the label', async () => {
-      const textSizeOf = vi.fn<NodeSizer>(titleSizeOf);
-      const rootRequest: TaskLayoutRequest = { ...REQUEST, tasks: [ROOT_BUILD_STUB], shown: new Set(['//#build']) };
-      const layout = layoutWith(textSizeOf, 'single-app');
+    const rootRequest: TaskLayoutRequest = { ...REQUEST, tasks: [ROOT_BUILD_STUB], shown: new Set(['//#build']) };
+    let textSizeOf: Mock<NodeSizer>;
+    let layout: GraphTaskLayout;
+
+    beforeEach(async () => {
+      textSizeOf = vi.fn<NodeSizer>(titleSizeOf);
+      layout = layoutWith(textSizeOf, 'single-app');
+
       const shown = layout.show(rootRequest);
 
       await rig.runs.settle(rig.runs.count() - 1, resultOf(rootRequest.key, {}));
       await shown;
+    });
 
+    it('WHEN a layout lands THEN each title is measured as single-app', () => {
       expect(textSizeOf.mock.calls).toStrictEqual([['single-app']]);
+    });
 
+    it('WHEN the layout is shown again from memory THEN each title is measured as single-app again', async () => {
       await layout.show(rootRequest);
 
       expect(textSizeOf.mock.calls).toStrictEqual([['single-app'], ['single-app']]);
+    });
+
+    it('WHEN the layout is shown again from memory THEN the canvas draws with the // title width and the label', async () => {
+      await layout.show(rootRequest);
+
       expect(rig.view.tasks.show).toHaveBeenCalledWith(
         expect.objectContaining({ titleWidths: new Map([['//', 127]]), rootLabel: 'single-app' })
       );
