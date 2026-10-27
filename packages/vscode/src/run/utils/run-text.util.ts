@@ -25,6 +25,13 @@ export const unsafeScriptText = (name: string): string => {
   return `Turbo Console can't run a script named \`${shown}\` safely.`;
 };
 
+/** The notice of Run Without Turbo on a task with no script body: nothing to run outside turbo. Name as in `unsafeScriptText`. */
+export const noScriptText = (name: string): string => {
+  const shown = toastText(name, LABEL_MAX);
+
+  return `\`${shown}\` has no package.json script, so it runs only through turbo.`;
+};
+
 /** The hedged Output line of a script that ended 127 or 9009: the missing command may be one the script itself runs. */
 export const notFoundText = (packageManager: PackageManager, exitCode: number): string => {
   const runner = `${packageManager.name} ${sourceText(packageManager.source)}`;
