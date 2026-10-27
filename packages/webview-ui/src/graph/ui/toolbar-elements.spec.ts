@@ -19,6 +19,7 @@ import {
   RELAYOUT_LABEL,
   RELAYOUT_TITLE
 } from '../common/graph.const.ts';
+import { LEGEND_TITLE } from '../common/legend.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 describe('FEATURE: buildToolbar', () => {
@@ -64,8 +65,8 @@ describe('FEATURE: buildToolbar', () => {
     });
 
     it('WHEN each button is read THEN it has its spec title', () => {
-      const { packagesMode, taskMode, controls, details, fit, relayout, exportImage } = elements;
-      const buttons = [packagesMode, taskMode, controls, details, fit, relayout, exportImage];
+      const { packagesMode, taskMode, controls, details, fit, relayout, exportImage, legend } = elements;
+      const buttons = [packagesMode, taskMode, controls, details, fit, relayout, exportImage, legend];
       const titles = buttons.map((button): string => button.title);
 
       expect(titles).toStrictEqual([
@@ -75,7 +76,8 @@ describe('FEATURE: buildToolbar', () => {
         DETAILS_TITLE,
         FIT_TITLE,
         RELAYOUT_TITLE,
-        EXPORT_TITLE
+        EXPORT_TITLE,
+        LEGEND_TITLE
       ]);
     });
 
@@ -120,11 +122,24 @@ describe('FEATURE: buildToolbar', () => {
       expect(separators).toHaveLength(2);
     });
 
-    it('WHEN the status line is read THEN it is last and visually hidden', () => {
+    it('WHEN the status line is read THEN it is second to last and visually hidden', () => {
+      const secondToLast = elements.toolbar.children[elements.toolbar.children.length - 2];
+
+      expect(secondToLast).toBe(elements.status);
+      expect(elements.status.className).toBe('graph-status visually-hidden');
+    });
+
+    it('WHEN its last part is read THEN it is the Legend popover', () => {
       const last = elements.toolbar.children[elements.toolbar.children.length - 1];
 
-      expect(last).toBe(elements.status);
-      expect(elements.status.className).toBe('graph-status visually-hidden');
+      expect(last).toBe(elements.legendPanel);
+    });
+
+    it('WHEN the View group is read THEN Legend is its last button', () => {
+      const view = elements.toolbar.children[4];
+      const lastButton = view?.children[view.children.length - 1];
+
+      expect(lastButton).toBe(elements.legend);
     });
   });
 });

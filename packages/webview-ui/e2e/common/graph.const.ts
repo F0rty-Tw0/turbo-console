@@ -12,13 +12,14 @@ import {
   FIT_LABEL,
   RELAYOUT_LABEL
 } from '../../src/graph/common/graph.const.ts';
+import { LEGEND_LABEL } from '../../src/graph/common/legend.const.ts';
 
 export const GRAPH_DIST_DIR = join(import.meta.dirname, '../../dist/graph');
 
 const MODE_LABELS = [PACKAGES_MODE_LABEL, TASKS_MODE_LABEL];
 
 /** Every toolbar button's accessible name, in DOM order. */
-export const TOOLBAR_LABELS = [...MODE_LABELS, CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, EXPORT_LABEL];
+export const TOOLBAR_LABELS = [...MODE_LABELS, CONTROLS_LABEL, DETAILS_LABEL, FIT_LABEL, RELAYOUT_LABEL, EXPORT_LABEL, LEGEND_LABEL];
 
 /** How far from an edge's drawn segment a click must land to miss it, in CSS pixels. */
 export const EDGE_CLEARANCE_PX = 14;

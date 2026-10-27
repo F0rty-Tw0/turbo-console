@@ -21,7 +21,7 @@ test.describe('FEATURE: every graph button has a hover title', () => {
   test(
     'GIVEN the flat details graph, the toolbar, the Controls panel and the package details buttons all have a title',
     { annotation: D2 },
-    async ({ graphButtonTitles, graphCanvas, graphControls, graphHost, graphPage }): Promise<void> => {
+    async ({ graphButtonTitles, graphCanvas, graphControls, graphHost, graphLegend, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened and the details graph is sent', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(DETAILS_STUB);
@@ -43,6 +43,11 @@ test.describe('FEATURE: every graph button has a hover title', () => {
 
       await test.step('THEN the Open details button title shows the new count', async (): Promise<void> =>
         graphButtonTitles.expectTitledAs('View Package Details · 2 tasks'));
+
+      await test.step('WHEN the Legend is opened', async (): Promise<void> => graphLegend.open());
+
+      await test.step('THEN every visible button still has a title', async (): Promise<void> =>
+        graphButtonTitles.expectAllTitled('flat, Legend open'));
     }
   );
 

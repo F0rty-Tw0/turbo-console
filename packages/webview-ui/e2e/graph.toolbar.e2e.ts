@@ -10,7 +10,7 @@ const MODE: ToolbarGroup = { name: 'Mode', buttons: ['Packages', 'Tasks'] };
 
 const PANELS: ToolbarGroup = { name: 'Panels', buttons: ['Controls', 'Details'] };
 
-const VIEW: ToolbarGroup = { name: 'View', buttons: ['Fit', 'Re-layout', 'Export image'] };
+const VIEW: ToolbarGroup = { name: 'View', buttons: ['Fit', 'Re-layout', 'Export image', 'Legend'] };
 
 const GROUPS: ToolbarGroup[] = [MODE, PANELS, VIEW];
 
@@ -50,6 +50,8 @@ test.describe('FEATURE: graph toolbar', () => {
 
       await test.step('AND Export image draws a desktop-download icon', async (): Promise<void> =>
         graphToolbar.expectIcon('Export image', 'desktop-download'));
+
+      await test.step('AND Legend draws an info icon', async (): Promise<void> => graphToolbar.expectIcon('Legend', 'info'));
 
       await test.step('AND Clear selection draws a clear-all icon', async (): Promise<void> =>
         graphDetailsBar.expectClearIcon('clear-all'));

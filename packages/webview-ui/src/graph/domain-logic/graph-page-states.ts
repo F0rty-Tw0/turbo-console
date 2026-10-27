@@ -62,7 +62,7 @@ export const setFitAndExportDisabled = (page: Pick<PageElements, 'fit' | 'export
   page.exportImage.disabled = isDisabled;
 };
 
-/** Toolbar and body shown with Task mode, Controls, Details, Fit, Re-layout and Export image enabled; the notice only for a fallback layout. */
+/** Toolbar and body shown with the mode buttons, Controls, Details, Fit, Re-layout, Export image and Legend enabled; the notice only for a fallback layout. */
 const showGraphView = (page: PageElements, isFallback: boolean): void => {
   const notice: LayoutNotice = isFallback ? FALLBACK_NOTICE : NO_NOTICE;
 
@@ -76,6 +76,7 @@ const showGraphView = (page: PageElements, isFallback: boolean): void => {
   page.details.disabled = false;
   setFitAndExportDisabled(page, false);
   page.relayout.disabled = false;
+  page.legend.disabled = false;
 };
 
 /** What the layouts drive on the page: Loading, the graph view, the notice line. */

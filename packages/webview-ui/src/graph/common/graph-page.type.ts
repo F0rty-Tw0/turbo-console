@@ -10,6 +10,7 @@ import type { ProbeFacts } from './graph-probe.type.ts';
 import type { TaskScreenElements } from './graph-task.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
+import type { LegendElements } from './legend.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { Paint } from './paint.type.ts';
 import type { AtomCanvas, TaskCanvas } from './task-canvas.type.ts';
@@ -21,8 +22,8 @@ import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
 
-/** The graph page's elements, built once by `buildPage`; DOM order is the Tab order (toolbar, then the body). */
-export type PageElements = {
+/** The page's parts other than the Legend's. */
+type PageParts = {
   readonly root: HTMLElement;
   readonly toolbar: HTMLElement;
   /** The Packages button, first in the toolbar; `aria-pressed` while the package graph shows. */
@@ -67,6 +68,9 @@ export type PageElements = {
   /** `div.graph-widgets`: the canvas widgets' layer over the container, its DOM sibling right after it. */
   readonly widgets: HTMLElement;
 };
+
+/** The graph page's elements, built once by `buildPage`; DOM order is the Tab order (toolbar, then the body). */
+export type PageElements = PageParts & LegendElements;
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
 export type ControlsViewFields = Pick<

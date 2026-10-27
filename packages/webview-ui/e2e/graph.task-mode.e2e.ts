@@ -32,6 +32,7 @@ const TASK_STOPS: FocusStep[] = tabStopsOf([
   'Fit',
   'Re-layout',
   'Export image',
+  'Legend',
   'Search tasks',
   'Dependents depth',
   'build',
@@ -138,7 +139,7 @@ test.describe('FEATURE: graph task mode', () => {
 
       await test.step('AND Tasks is focused', async (): Promise<void> => graphPage.focusButton('Tasks'));
 
-      const walked = await test.step('WHEN Tab is pressed nine times', async (): Promise<FocusStep[]> => graphKeys.walk(TASK_STOPS));
+      const walked = await test.step('WHEN Tab is pressed ten times', async (): Promise<FocusStep[]> => graphKeys.walk(TASK_STOPS));
 
       await test.step('THEN focus visited the task stops only', (): void => expect(walked).toEqual(TASK_STOPS));
     }
