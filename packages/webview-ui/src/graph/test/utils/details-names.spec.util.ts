@@ -16,3 +16,12 @@ export const namesIn = (root: Element): (string | null)[] => {
 
   return names.map(textOf);
 };
+
+const isHtmlElement = (element: Element): element is HTMLElement => 'dataset' in element;
+
+/** Every element in `root` or under it whose `data-action` is `action`, in document order. */
+export const actionElementsIn = (root: Element, action: string): HTMLElement[] => {
+  const elements = selfAndBelowOf(root).filter(isHtmlElement);
+
+  return elements.filter((element) => element.dataset['action'] === action);
+};

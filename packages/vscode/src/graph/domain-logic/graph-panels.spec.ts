@@ -111,12 +111,12 @@ describe('FEATURE: graph panel registry', () => {
 
     it('WHEN the cached hash is read before and after an accepted positions message THEN it is null, then the state hash', async () => {
       panels.open('/ws');
-      const before = panels.api().cachedHash('/ws');
+      const before = panels.api().cachedHash('/ws', 'flat');
 
       await panels.api().receive('/ws', { type: 'positions', hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, grouping: 'flat' });
 
       expect(before).toBeNull();
-      expect(panels.api().cachedHash('/ws')).toBe(GRAPH_HASH_STUB);
+      expect(panels.api().cachedHash('/ws', 'flat')).toBe(GRAPH_HASH_STUB);
     });
   });
 

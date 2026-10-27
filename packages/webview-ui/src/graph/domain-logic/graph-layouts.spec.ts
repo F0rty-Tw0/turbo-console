@@ -12,6 +12,7 @@ import {
   FLAT_POSITIONS_STUB,
   GROUPED_POSITIONS_STUB,
   OTHER_POSITIONS_STUB,
+  SAVED_FLAT_STUB,
   SAVED_GROUPED_STUB,
   STATE_STUB
 } from '../test/stubs/graph-layouts.stub.ts';
@@ -36,7 +37,7 @@ const NAMES: string[] = ['web', 'ui', 'core'];
 const layoutsHarness = (): LayoutsHarness => {
   const rig = layoutsRigOf();
   const layouts = new GraphLayouts(rig.deps);
-  const open = (state: GraphReady = STATE_STUB, saved: GraphViewState | null = null): void => {
+  const open = (state: GraphReady = STATE_STUB, saved: GraphViewState | null = SAVED_FLAT_STUB): void => {
     rig.setDrawn(state);
     void layouts.show(state, saved);
   };
@@ -61,7 +62,7 @@ describe('FEATURE: GraphLayouts', () => {
   });
 
   it('GIVEN the grouped layout is pending WHEN the reader toggles flat, grouped, flat, grouped THEN one grouped run lays out and lands once', async () => {
-    harness.open(STATE_STUB, null);
+    harness.open(STATE_STUB, SAVED_FLAT_STUB);
     void harness.layouts.switchTo('folders');
     void harness.layouts.switchTo('flat');
     void harness.layouts.switchTo('folders');
@@ -75,19 +76,19 @@ describe('FEATURE: GraphLayouts', () => {
 
   describe('GIVEN a new hash', () => {
     it('WHEN it opens with the flat layout cached THEN the cached layout draws at once', () => {
-      harness.open(STATE_STUB, null);
+      harness.open(STATE_STUB, SAVED_FLAT_STUB);
 
       expect(harness.screen.showGraph).toHaveBeenCalledExactlyOnceWith(false);
       expect(harness.view.setGraph).toHaveBeenCalledExactlyOnceWith(NAMES, STATE_STUB.edges, FLAT_POSITIONS_STUB, harness.deps.sizeOf);
       expect(harness.runs.count()).toBe(0);
       expect(harness.layouts.engine()).toBe('cache');
-      expect(harness.onDrawn).toHaveBeenCalledExactlyOnceWith(null);
+      expect(harness.onDrawn).toHaveBeenCalledExactlyOnceWith(SAVED_FLAT_STUB);
       expect(harness.onPlaced).toHaveBeenCalledExactlyOnceWith('flat');
       expect(harness.onDrawn).toHaveBeenCalledBefore(harness.onPlaced);
     });
 
     it('WHEN it opens with no positions THEN Loading shows, a flat run lays out, draws and posts', async () => {
-      harness.open(UNCACHED, null);
+      harness.open(UNCACHED, SAVED_FLAT_STUB);
       await harness.runs.settle(0, resultOf('h1', FLAT_POSITIONS_STUB));
 
       expect(harness.screen.showLoading).toHaveBeenCalledOnce();
@@ -125,7 +126,7 @@ describe('FEATURE: GraphLayouts', () => {
 
   describe('GIVEN both layouts cached and flat dragged', () => {
     it('WHEN the reader switches to grouped and back THEN each switch places its snapshot, runs the folder pass and then fits', () => {
-      harness.open(CACHED_BOTH, null);
+      harness.open(CACHED_BOTH, SAVED_FLAT_STUB);
       harness.layouts.dragged(DRAGGED_POSITIONS_STUB);
       harness.onPlaced.mockClear();
 
@@ -142,7 +143,7 @@ describe('FEATURE: GraphLayouts', () => {
 
   describe('GIVEN flat drawn and the grouped layout not cached', () => {
     beforeEach(() => {
-      harness.open(STATE_STUB, null);
+      harness.open(STATE_STUB, SAVED_FLAT_STUB);
       void harness.layouts.switchTo('folders');
     });
 
@@ -186,7 +187,7 @@ describe('FEATURE: GraphLayouts', () => {
     });
 
     it('WHEN a new hash opens flat from its cache and the reader switches to grouped THEN a grouped run starts for it', () => {
-      harness.open({ ...STATE_STUB, hash: 'h2' }, null);
+      harness.open({ ...STATE_STUB, hash: 'h2' }, SAVED_FLAT_STUB);
 
       void harness.layouts.switchTo('folders');
 
@@ -197,7 +198,7 @@ describe('FEATURE: GraphLayouts', () => {
 
   describe('GIVEN the grouped layout lands after the reader switched back to flat', () => {
     beforeEach(async () => {
-      harness.open(STATE_STUB, null);
+      harness.open(STATE_STUB, SAVED_FLAT_STUB);
       void harness.layouts.switchTo('folders');
       void harness.layouts.switchTo('flat');
       await harness.runs.settle(0, resultOf('h1', GROUPED_POSITIONS_STUB));
@@ -233,7 +234,7 @@ describe('FEATURE: GraphLayouts', () => {
 
   describe('GIVEN the grouped layout fell back while flat came from the cache', () => {
     beforeEach(async () => {
-      harness.open(STATE_STUB, null);
+      harness.open(STATE_STUB, SAVED_FLAT_STUB);
       void harness.layouts.switchTo('folders');
       await harness.runs.settle(0, resultOf('h1', GROUPED_POSITIONS_STUB, 'fallback'));
     });
@@ -261,7 +262,7 @@ describe('FEATURE: GraphLayouts', () => {
 
   describe('GIVEN Re-layout pressed while the switch to grouped is pending (review 2)', () => {
     beforeEach(async () => {
-      harness.open(STATE_STUB, null);
+      harness.open(STATE_STUB, SAVED_FLAT_STUB);
       void harness.layouts.switchTo('folders');
       void harness.layouts.relayout();
       await harness.runs.settle(0, null);
@@ -322,7 +323,7 @@ describe('FEATURE: GraphLayouts', () => {
       const next: GraphReady = { ...STATE_STUB, hash: 'h2', positions: null, folderPositions: OTHER_POSITIONS_STUB };
 
       beforeEach(() => {
-        harness.open(next, null);
+        harness.open(next, SAVED_FLAT_STUB);
       });
 
       it('THEN Loading shows and a flat run starts', () => {
@@ -351,11 +352,11 @@ describe('FEATURE: GraphLayouts', () => {
 
   describe('GIVEN a layout in flight for an uncached graph', () => {
     beforeEach(() => {
-      harness.open(UNCACHED, null);
+      harness.open(UNCACHED, SAVED_FLAT_STUB);
     });
 
     it('WHEN another hash opens before it lands THEN its result places and posts nothing', async () => {
-      harness.open({ ...UNCACHED, hash: 'h2' }, null);
+      harness.open({ ...UNCACHED, hash: 'h2' }, SAVED_FLAT_STUB);
       await harness.runs.settle(0, resultOf('h1', FLAT_POSITIONS_STUB));
 
       expect(harness.view.setGraph).not.toHaveBeenCalled();

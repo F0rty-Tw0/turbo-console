@@ -64,6 +64,7 @@ const entryOf = (list: HTMLElement, entry: ManifestEntry): ExplainEntry => {
   const open = actionButton(openText);
   const openLabel = openManifestLabelOf(entry);
 
+  open.title = openLabel;
   open.setAttribute('aria-label', openLabel);
   li.append(label, excerpt, open);
   list.append(li);

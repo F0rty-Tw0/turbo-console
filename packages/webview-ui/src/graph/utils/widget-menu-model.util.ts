@@ -2,7 +2,14 @@ import { focusNameOf, rowViewOf } from './controls-rules.util.ts';
 import { folderToggleTextOf } from './controls-text.util.ts';
 import { focusFolderOf } from './folder-rules.util.ts';
 import { showFolderOf } from './show-folder.util.ts';
-import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL, FOCUS_LABEL, OPEN_DETAILS_LABEL, START_TRACE_LABEL } from '../common/details.const.ts';
+import {
+  CLEAR_FOCUS_LABEL,
+  FOCUS_FOLDER_LABEL,
+  FOCUS_LABEL,
+  OPEN_DETAILS_LABEL,
+  START_TRACE_LABEL,
+  START_TRACE_TITLE
+} from '../common/details.const.ts';
 import type { FolderActions } from '../common/folder-actions.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
@@ -17,10 +24,14 @@ const SEPARATOR: MenuItemModel = { kind: 'separator' };
 
 const NO_ITEMS: MenuItemModel[] = [];
 
-export const itemOf = (label: string, run: () => void): MenuItem => {
+export const itemOf = (label: string, run: () => void, title?: string): MenuItem => {
   const item: MenuItem = { kind: 'item', label, role: 'menuitem', checked: null, isDisabled: false, run };
 
-  return item;
+  if (title === undefined) return item;
+
+  const titled: MenuItem = { ...item, title };
+
+  return titled;
 };
 
 const checkItemOf = (label: string, checked: MenuItem['checked'], isDisabled: boolean, run: () => void): MenuItem => {
@@ -54,7 +65,7 @@ export const packageMenuOf = (name: string, state: PackageMenuState, actions: Pa
   const clear = itemOf(CLEAR_FOCUS_LABEL, (): void => actions.clearFocus());
   const focusOn = itemOf(FOCUS_LABEL, (): void => actions.focus(name));
   const focus = state.isFocus ? clear : focusOn;
-  const trace = itemOf(START_TRACE_LABEL, (): void => actions.startTrace());
+  const trace = itemOf(START_TRACE_LABEL, (): void => actions.startTrace(), START_TRACE_TITLE);
   const showTasks = itemOf(SHOW_TASKS_LABEL, (): void => actions.showTasks(name));
   const taskItems: MenuItemModel[] = [showTasks];
   const tasks = state.hasTasks ? taskItems : NO_ITEMS;

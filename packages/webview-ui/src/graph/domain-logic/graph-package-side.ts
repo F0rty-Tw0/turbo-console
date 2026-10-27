@@ -30,7 +30,6 @@ export class GraphPackageSide {
   private readonly onMessage: () => void;
   private drawn: DrawnGraph | null = null;
   private opening: GraphViewState | null = null;
-  private hasShownGraph = false;
   private isToggleFocusKept = false;
 
   public constructor(deps: GraphControllerDeps, screenView: GraphView, hooks: PackageSideHooks) {
@@ -140,10 +139,9 @@ export class GraphPackageSide {
 
     const read = this.modes.current();
     const folders = folderKeysOf(state.packages);
-    const saved = openingStateOf(read, state.hash, folders, state.packages.length, this.hasShownGraph);
+    const saved = openingStateOf(read, state.hash, folders, state.packages.length, this.modes.isGroupingSaved());
 
     this.opening = saved === read ? null : saved;
-    this.hasShownGraph = true;
     this.drawn = drawnGraphOf(state);
     this.frames.start(at);
     this.filtering.inspection.reset();

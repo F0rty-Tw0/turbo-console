@@ -22,7 +22,7 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
     link: null,
     trace: null,
     folder: null,
-    grouped: false,
+    grouped: true,
     collapsed: [],
     mode: 'packages',
     task: null

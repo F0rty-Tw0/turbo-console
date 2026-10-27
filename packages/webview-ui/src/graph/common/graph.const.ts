@@ -18,6 +18,9 @@ export const STATE_CLASSES = STATE_CLASS_NAMES.join(' ');
 /** The class `GraphView.setGhosts` gives a trace's hidden path packages and their path links. */
 export const GHOST_CLASS = 'ghost';
 
+/** The class `GraphView.setFocusTarget` gives the focused package, whose label the stylesheet draws bold. */
+export const FOCUS_TARGET_CLASS = 'focus-target';
+
 export const VIEW_STATE_DEBOUNCE_MS = 250;
 
 /** Two taps on the same package this close together are a double tap; Cytoscape's own `dbltap` window. */
@@ -49,11 +52,19 @@ export const FALLBACK_NOTICE: LayoutNotice = { kind: 'fallback' };
 
 export const FIT_LABEL = 'Fit';
 
+export const FIT_TITLE = 'Zoom to fit the whole graph';
+
 export const RELAYOUT_LABEL = 'Re-layout';
+
+export const RELAYOUT_TITLE = 'Lay the graph out again';
 
 export const EXPORT_LABEL = 'Export image';
 
+export const EXPORT_TITLE = 'Save the graph as a PNG image';
+
 export const CLEAR_LABEL = 'Clear selection';
+
+export const CLEAR_TITLE = 'Deselect and clear the details panel';
 
 export const RETRY_LABEL = 'Retry';
 
@@ -84,6 +95,7 @@ export const FALLBACK_COLORS: ThemeColors = {
   frame: '#e5e5e5',
   cached: '#652d90',
   runs: FALLBACK_RUN_COLORS,
+  selection: null,
   dimmedOpacity: 0.25
 };
 
@@ -151,8 +163,17 @@ export const EXPORTING_CLASS = 'exporting';
 /** The border of a package, folder box or collapsed node while not selected, highlighted ones included, in px. */
 export const NODE_BORDER_PX = 1;
 
-/** The border of a selected node and the width of a selected edge, in px, drawn centred on the node's edge. */
-export const SELECTED_BORDER_PX = 2;
+/** The border of a selected node, in px, drawn centred on the node's edge. */
+export const SELECTED_BORDER_PX = 1.5;
+
+/** The width of a plain edge: a model width in px that scales with zoom. */
+export const EDGE_WIDTH = 0.75;
+
+/** The width of a highlighted edge: a model width in px that scales with zoom. */
+export const HIGHLIGHTED_EDGE_WIDTH = 1.25;
+
+/** The width of a selected edge: a model width in px that scales with zoom. */
+export const SELECTED_EDGE_WIDTH = 1.5;
 
 /** The grouped root: the same layered options, with edges between packages of different folders laid out together. */
 export const ELK_GROUPED_ROOT_OPTIONS: Readonly<Record<string, string>> = {
@@ -171,9 +192,14 @@ export const DETAILS_ID = 'graph-details';
 
 export const CONTROLS_LABEL = 'Controls';
 
+/** The hover title of the Controls button, whichever name its "filters on" state gives it. */
+export const CONTROLS_TITLE = 'Show or hide the Controls panel (search, depth, package list)';
+
 export const CONTROLS_FILTERED_LABEL = 'Controls (filters on)';
 
 export const DETAILS_LABEL = 'Details';
+
+export const DETAILS_TITLE = 'Show or hide the Details panel for the selection';
 
 export const PANELS_LABEL = 'Panels';
 
@@ -188,6 +214,10 @@ export const OVERLAY_MEDIA_QUERY = '(width < 960px)';
 export const SEARCH_LABEL = 'Search packages';
 
 export const DEPTH_LABEL = 'Focus depth';
+
+export const DEPTH_HINT = 'How many links away from the focus target stay visible.';
+
+export const DEPTH_HINT_ID = 'graph-depth-hint';
 
 export const GROUP_BY_FOLDER_LABEL = 'Group by folder';
 

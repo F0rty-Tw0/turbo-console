@@ -9,7 +9,8 @@ import {
   FOCUS_LABEL,
   NONE_TEXT,
   NO_TAGS_TEXT,
-  START_TRACE_LABEL
+  START_TRACE_LABEL,
+  START_TRACE_TITLE
 } from '../common/details.const.ts';
 import type { NeighbourModel, PackageViewModel } from '../common/details.type.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
@@ -48,11 +49,12 @@ const tagsOf = (tags: string[]): HTMLElement => {
   return list;
 };
 
-const openButton = (label: HTMLElement): HTMLButtonElement => {
+const openButton = (label: HTMLElement, title: string): HTMLButtonElement => {
   const button = textElement('button', 'primary-button', '');
   const icon = graphIcon('file-text');
 
   button.type = 'button';
+  button.title = title;
   button.append(icon, label);
 
   return button;
@@ -62,13 +64,15 @@ const actionsOf = (model: PackageViewModel): PackageActions => {
   const actions = textElement('div', 'details-actions', '');
   const openText = openDetailsLabelOf(model.taskCount);
   const openLabel = textElement('span', '', openText);
-  const openDetails = openButton(openLabel);
+  const openDetails = openButton(openLabel, openText);
   const focusText = model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_LABEL;
   const focus = actionButton(focusText);
   const exclude = actionButton(EXCLUDE_LABEL);
   const startTrace = actionButton(START_TRACE_LABEL);
   const showTasks = actionButton(SHOW_TASKS_LABEL);
   const row = textElement('div', 'details-row', '');
+
+  startTrace.title = START_TRACE_TITLE;
 
   if (model.isFocused) exclude.setAttribute('aria-disabled', 'true');
 
@@ -89,6 +93,7 @@ const neighbourItem = (list: HTMLUListElement, neighbour: NeighbourModel, explai
 
   explain.type = 'button';
   explain.dataset['name'] = neighbour.name;
+  explain.title = explainLabel;
   explain.setAttribute('aria-label', explainLabel);
   mark.hidden = neighbour.isVisible;
   li.append(pick, mark, explain);

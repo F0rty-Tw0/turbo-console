@@ -27,6 +27,7 @@ const ghostRow = (row: HTMLElement, step: TraceStepModel): void => {
 
   show.dataset['name'] = step.name;
   show.dataset['action'] = 'show';
+  show.title = showLabel;
   show.setAttribute('aria-label', showLabel);
   row.append(show);
 };

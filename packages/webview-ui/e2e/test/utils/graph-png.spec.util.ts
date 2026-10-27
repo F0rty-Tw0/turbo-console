@@ -67,11 +67,11 @@ export const titleBandInkOf = async (png: string): Promise<TitleBandInk> => {
 };
 
 /**
- * Runs in the page: decodes a base64 PNG and counts its pixels within 24 of `colour` in every channel. Anti-aliased
- * lines of a lighter colour fade toward the background, so they never come that close to a darker label colour.
+ * Runs in the page: decodes a base64 PNG and counts its pixels within `tolerance` (24 by default) of `colour` in every
+ * channel. Anti-aliased lines of a lighter colour fade toward the background, so they never come that close to a darker
+ * label colour.
  */
-export const colourInkOf = async ({ png, colour }: ColourInkInput): Promise<number> => {
-  const TOLERANCE = 24;
+export const colourInkOf = async ({ png, colour, tolerance = 24 }: ColourInkInput): Promise<number> => {
   const CHANNELS = [0, 1, 2];
   const channelTexts = colour.match(/\d+/g) ?? [];
   const rgb = channelTexts.map(Number);
@@ -89,7 +89,7 @@ export const colourInkOf = async ({ png, colour }: ColourInkInput): Promise<numb
   const { data } = context.getImageData(0, 0, image.width, image.height);
   const pixels = Array.from({ length: data.length / 4 }, (_, index: number): number => index * 4);
   const isNear = (offset: number, channel: number): boolean =>
-    Math.abs((data[offset + channel] ?? 0) - (rgb[channel] ?? 0)) <= TOLERANCE;
+    Math.abs((data[offset + channel] ?? 0) - (rgb[channel] ?? 0)) <= tolerance;
   const isInk = (offset: number): boolean => CHANNELS.every((channel: number): boolean => isNear(offset, channel));
 
   return pixels.filter(isInk).length;

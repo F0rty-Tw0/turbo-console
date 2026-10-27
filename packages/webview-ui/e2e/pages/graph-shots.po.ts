@@ -16,8 +16,8 @@ import { GraphPage } from './graph.po.ts';
 import type { GraphAtomGroupState } from '../../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { ShotSetup, TaskShotSetup } from '../common/graph-shots.type.ts';
+import type { ThemeStub } from '../common/graph-theme.type.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
-import type { ThemeStub } from '../common/graph.type.ts';
 import { cachedShotState } from '../test/utils/graph-shot-state.spec.util.ts';
 
 /** The bottom-right pixel of the 1280 x 800 viewport, where no graph, box or button sits. */

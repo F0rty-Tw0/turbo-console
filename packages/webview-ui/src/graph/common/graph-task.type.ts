@@ -25,11 +25,15 @@ export type TaskModes = {
   readonly savePanels: (panels: TaskPanelsOpen) => void;
 };
 
-/** What the package side reads of `ViewStateModes`: its saver, the mode, which parks it in task mode, and the state it redraws with. */
+/**
+ * What the package side reads of `ViewStateModes`: its saver, the mode, which parks it in task mode, the state it redraws
+ * with, and whether that state holds a grouping choice.
+ */
 export type PackageModes = {
   readonly packages: PackageSaver;
   readonly mode: () => GraphViewMode;
   readonly current: () => GraphViewState | null;
+  readonly isGroupingSaved: () => boolean;
 };
 
 /** The package graph's way into task mode: Show tasks chooses every task of the package the host sent. */

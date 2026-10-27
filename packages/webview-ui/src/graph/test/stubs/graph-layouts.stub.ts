@@ -46,4 +46,17 @@ export const STATE_STUB: GraphReady = {
 
 const FRESH: GraphViewState = freshViewStateOf('h1');
 
+export const SAVED_FLAT_STUB: GraphViewState = { ...FRESH, grouped: false };
+
 export const SAVED_GROUPED_STUB: GraphViewState = { ...FRESH, grouped: true };
+
+const appOf = (_slot: unknown, index: number): GraphPackage => {
+  const app = packageOf(`app${index}`, `apps/app${index}`);
+
+  return app;
+};
+
+const LARGE_PACKAGES: GraphPackage[] = Array.from({ length: 301 }, appOf);
+
+/** 301 packages in `apps` with no layout cached: a large graph. */
+export const LARGE_STATE_STUB: GraphReady = { ...STATE_STUB, packages: LARGE_PACKAGES, edges: [], positions: null };

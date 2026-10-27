@@ -3,10 +3,11 @@ import type { Core, EdgeSingular, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
-import { applyPaint } from './graph-paint.ts';
+import { applyFocusTarget, applyPaint } from './graph-paint.ts';
 import { graphStyleOf } from './graph-style.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
+import { FOCUS_TARGET_CLASS, SELECTED_BORDER_PX } from '../common/graph.const.ts';
 import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
@@ -80,7 +81,7 @@ describe('FEATURE: applyPaint', () => {
 
       applyPaint(cy, FIRST_PAINT);
 
-      expect(cy.getElementById('a').numericStyle('border-width')).toBe(2);
+      expect(cy.getElementById('a').numericStyle('border-width')).toBe(SELECTED_BORDER_PX);
     });
   });
 
@@ -187,6 +188,57 @@ describe('FEATURE: applyPaint with folder boxes', () => {
       applyPaint(cy, paintOfStates(stateOfName, edgeState));
 
       expect(edgeState).toHaveBeenCalledTimes(2);
+    });
+  });
+});
+
+describe('FEATURE: applyFocusTarget', () => {
+  let cy: Core;
+
+  const targetIds = (): string[] => cy.nodes(`.${FOCUS_TARGET_CLASS}`).map((node: NodeSingular): string => node.id());
+
+  beforeEach(() => {
+    cy = cytoscape({ headless: true, styleEnabled: true, elements: CANVAS_ELEMENTS });
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  describe('GIVEN no focus target', () => {
+    it('WHEN b becomes it THEN b alone has the focus-target class', () => {
+      applyFocusTarget(cy, 'b');
+
+      expect(targetIds()).toStrictEqual(['b']);
+    });
+  });
+
+  describe('GIVEN b is the focus target', () => {
+    beforeEach(() => {
+      applyFocusTarget(cy, 'b');
+    });
+
+    it('WHEN c becomes it THEN c alone has the class', () => {
+      applyFocusTarget(cy, 'c');
+
+      expect(targetIds()).toStrictEqual(['c']);
+    });
+
+    it('WHEN the focus clears THEN no package has the class', () => {
+      applyFocusTarget(cy, null);
+
+      expect(targetIds()).toStrictEqual([]);
+    });
+
+    it('WHEN b is set again THEN no class event fires, so no package is restyled', () => {
+      let classEvents = 0;
+
+      cy.on('class', (): void => {
+        classEvents += 1;
+      });
+      applyFocusTarget(cy, 'b');
+
+      expect(classEvents).toBe(0);
     });
   });
 });

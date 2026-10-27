@@ -59,6 +59,10 @@ describe('FEATURE: buildFolderRow', () => {
       ]);
     });
 
+    it('WHEN the chevron is read THEN its aria-label is also its title', () => {
+      expect(row.chevron.title).toBe('Collapse apps');
+    });
+
     it('WHEN the glyph is read THEN screen readers skip it', () => {
       const hidden = attributesOf(row.root, 'aria-hidden');
 

@@ -24,11 +24,11 @@ describe('FEATURE: graphStyleOf edge states', () => {
   });
 
   describe('GIVEN the edge a>b has the selected class', () => {
-    it('THEN it is 2 wide while a plain edge stays 1', () => {
+    it('THEN it is 1.5 wide while a plain edge stays 0.75', () => {
       cy.getElementById(AB).addClass('selected');
 
-      expect(cy.getElementById(AB).numericStyle('width')).toBe(2);
-      expect(cy.getElementById(BC).numericStyle('width')).toBe(1);
+      expect(cy.getElementById(AB).numericStyle('width')).toBe(1.5);
+      expect(cy.getElementById(BC).numericStyle('width')).toBe(0.75);
     });
 
     it('THEN its line colour is the selected colour a selected node frames with, not the plain edge colour', () => {
@@ -56,10 +56,10 @@ describe('FEATURE: graphStyleOf edge states', () => {
   });
 
   describe('GIVEN the edge b>c has the highlighted class', () => {
-    it('THEN it is 1.5 wide', () => {
+    it('THEN it is 1.25 wide', () => {
       cy.getElementById(BC).addClass('highlighted');
 
-      expect(cy.getElementById(BC).numericStyle('width')).toBe(1.5);
+      expect(cy.getElementById(BC).numericStyle('width')).toBe(1.25);
     });
   });
 
@@ -283,7 +283,7 @@ describe('FEATURE: graphStyleOf corners and arrows', () => {
     edge.addClass('selected');
 
     expect([node.numericStyle('corner-radius'), node.numericStyle('border-width'), edge.numericStyle('width')]).toStrictEqual([
-      6, 2, 2
+      6, 1.5, 1.5
     ]);
   });
 });

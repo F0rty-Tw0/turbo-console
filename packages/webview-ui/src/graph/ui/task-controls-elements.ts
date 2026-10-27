@@ -1,8 +1,10 @@
-import { field, searchInput } from './controls-fields.ts';
+import { field, hintedField, searchInput } from './controls-fields.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import {
   DEFAULT_TASK_DEPTH,
+  DEPENDENTS_DEPTH_HINT,
+  DEPENDENTS_DEPTH_HINT_ID,
   DEPENDENTS_DEPTH_LABEL,
   MAX_TASK_DEPTH,
   MIN_TASK_DEPTH,
@@ -65,6 +67,7 @@ export const buildTaskRow = (task: GraphTask): TaskControlsRow => {
 export const buildTaskControls = (): TaskControlsElements => {
   const search = searchInput();
   const depth = taskDepthInput();
+  const depthField = hintedField(DEPENDENTS_DEPTH_LABEL, depth, DEPENDENTS_DEPTH_HINT, DEPENDENTS_DEPTH_HINT_ID);
   const list = textElement('div', 'controls-list', '');
   const panel = textElement('aside', 'graph-controls graph-task-controls', '');
 
@@ -72,7 +75,7 @@ export const buildTaskControls = (): TaskControlsElements => {
   list.setAttribute('role', 'grid');
   panel.id = TASK_CONTROLS_ID;
   panel.hidden = true;
-  panel.append(field(SEARCH_TASKS_LABEL, search), field(DEPENDENTS_DEPTH_LABEL, depth), list);
+  panel.append(field(SEARCH_TASKS_LABEL, search), depthField, list);
 
   const elements: TaskControlsElements = { panel, search, depth, list };
 

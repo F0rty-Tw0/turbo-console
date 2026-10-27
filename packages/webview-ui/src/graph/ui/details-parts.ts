@@ -12,6 +12,7 @@ const closeButton = (isOverlay: boolean): HTMLButtonElement => {
 
   button.type = 'button';
   button.hidden = !isOverlay;
+  button.title = CLOSE_DETAILS_LABEL;
   button.setAttribute('aria-label', CLOSE_DETAILS_LABEL);
   button.setAttribute('aria-controls', DETAILS_ID);
   button.append(icon);
@@ -47,6 +48,7 @@ export const actionButton = (label: string): HTMLButtonElement => {
   const button = textElement('button', 'text-button', label);
 
   button.type = 'button';
+  button.title = label;
 
   return button;
 };

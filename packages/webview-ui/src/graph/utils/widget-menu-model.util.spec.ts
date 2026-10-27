@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from './widget-menu-model.util.ts';
 import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
+import { START_TRACE_LABEL, START_TRACE_TITLE } from '../common/details.const.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { MenuTarget, ShowFolderState } from '../common/widget.type.ts';
@@ -104,6 +105,12 @@ describe('FEATURE: folderMenuOf', () => {
 describe('FEATURE: packageMenuOf', () => {
   describe('GIVEN a package, not the focus, its checkbox ticked', () => {
     const model = packageMenuOf('web', packageStateOf(), packageActionsMock());
+
+    it('WHEN it is listed THEN Start trace carries the trace title', () => {
+      const startTrace = itemLabelled(model, START_TRACE_LABEL);
+
+      expect(startTrace.title).toBe(START_TRACE_TITLE);
+    });
 
     it('WHEN it is listed THEN it reads View Package Details, Focus, Start trace, a separator and Show package', () => {
       const labels = labelsOf(model);

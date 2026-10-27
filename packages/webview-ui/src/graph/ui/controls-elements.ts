@@ -1,9 +1,17 @@
-import { checkbox, depthInput, field, groupingField, searchInput } from './controls-fields.ts';
+import { checkbox, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
-import { CONTROLS_ID, DEPTH_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../common/graph.const.ts';
+import {
+  CONTROLS_ID,
+  DEPTH_HINT,
+  DEPTH_HINT_ID,
+  DEPTH_LABEL,
+  SEARCH_LABEL,
+  SHOW_ALL_LABEL,
+  TAGS_LABEL
+} from '../common/graph.const.ts';
 import {
   countTextOf,
   focusLabelOf,
@@ -30,6 +38,7 @@ const listButton = (className: string, text: string): HTMLButtonElement => {
   const button = textElement('button', className, text);
 
   button.type = 'button';
+  button.title = text;
   button.tabIndex = -1;
 
   return button;
@@ -59,11 +68,12 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
   const check = listCheck(showLabelOf(name));
   const pick = listButton('controls-name', name);
   const focus = listButton('controls-focus', folderFocusTextOf(false));
+  const focusLabel = focusLabelOf(name);
   const cells = [gridCell(check), gridCell(pick), gridCell(focus)];
   const line = gridLine('controls-row', cells);
 
-  pick.title = name;
-  focus.setAttribute('aria-label', focusLabelOf(name));
+  focus.title = focusLabel;
+  focus.setAttribute('aria-label', focusLabel);
 
   const row: ControlsRow = { name, line, check, pick, focus };
 
@@ -83,6 +93,7 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   const text = textElement('span', 'controls-folder', label);
   const toggle = listButton('controls-toggle', folderToggleTextOf(false));
   const focus = listButton('controls-focus', 'Focus');
+  const focusLabel = folderFocusLabelOf(title);
   const cells = [gridCell(check, text), gridCell(toggle), gridCell(focus)];
   const line = gridLine('controls-header', cells);
   const rows = packages.map(packageRow);
@@ -90,7 +101,8 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
 
   toggle.hidden = true;
   focus.hidden = true;
-  focus.setAttribute('aria-label', folderFocusLabelOf(title));
+  focus.title = focusLabel;
+  focus.setAttribute('aria-label', focusLabel);
 
   text.setAttribute('aria-hidden', 'true');
 
@@ -120,6 +132,7 @@ const showAllButton = (): HTMLButtonElement => {
   const button = textElement('button', 'text-button', SHOW_ALL_LABEL);
 
   button.type = 'button';
+  button.title = SHOW_ALL_LABEL;
   button.setAttribute('aria-disabled', 'true');
 
   return button;
@@ -161,6 +174,7 @@ const packageGrid = (groups: ControlsGroup[]): HTMLElement => {
 export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsElements => {
   const search = searchInput();
   const depth = depthInput();
+  const depthField = hintedField(DEPTH_LABEL, depth, DEPTH_HINT, DEPTH_HINT_ID);
   const grouping = checkbox('controls-check');
   const tagEntries = tags.map(tagEntry);
   const tagBoxes = new Map(tagEntries);
@@ -172,7 +186,7 @@ export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsEl
   const panel = textElement('aside', 'graph-controls', '');
 
   panel.id = CONTROLS_ID;
-  panel.append(field(SEARCH_LABEL, search), field(DEPTH_LABEL, depth), groupingField(grouping));
+  panel.append(field(SEARCH_LABEL, search), depthField, groupingField(grouping));
 
   if (tagBoxes.size > 0) panel.append(tagFieldset(tagBoxes));
 

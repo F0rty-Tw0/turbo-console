@@ -1,3 +1,4 @@
+import { setButtonLabel } from './button-title.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { ControlsView } from '../common/graph-controls.type.ts';
@@ -6,6 +7,8 @@ import { groupStateOf, isFiltered, isGroupLocked, rowViewOf } from '../utils/con
 import {
   controlsLabelOf,
   countTextOf,
+  folderClearFocusLabelOf,
+  folderFocusLabelOf,
   folderFocusTextOf,
   folderTitleOf,
   folderToggleLabelOf,
@@ -36,16 +39,21 @@ const renderToggle = (group: ControlsGroup, view: ControlsView): void => {
 
   toggle.hidden = !view.grouped;
   toggle.textContent = folderToggleTextOf(isCollapsed);
-  toggle.setAttribute('aria-label', folderToggleLabelOf(title, isCollapsed));
+  setButtonLabel(toggle, folderToggleLabelOf(title, isCollapsed));
   toggle.setAttribute('aria-expanded', String(!isCollapsed));
 };
 
 const renderFocus = (group: ControlsGroup, view: ControlsView): void => {
   const { focus, folder } = group;
   const isFocus = focusFolderOf(view.filters) === folder;
+  const title = folderTitleOf(folder);
+  const clearLabel = folderClearFocusLabelOf(title);
+  const focusLabel = folderFocusLabelOf(title);
+  const label = isFocus ? clearLabel : focusLabel;
 
   focus.hidden = !view.grouped;
   focus.textContent = folderFocusTextOf(isFocus);
+  setButtonLabel(focus, label);
 };
 
 const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
@@ -64,7 +72,7 @@ const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
 
 /**
  * Paints the attributes only, never rebuilds. An indeterminate group box is unchecked, so activating it checks all.
- * A folder header's buttons read Expand or Collapse and Focus or Clear focus, and are hidden while flat.
+ * A folder header's buttons read Expand or Collapse and Focus or Clear focus, each name and hover title following its text, and are hidden while flat.
  * `toggles` are the toolbar's Controls button, which shows the panel's openness, and its "filters on" mark.
  */
 export const renderControls = (

@@ -7,11 +7,12 @@ import { EMPTY_TASKS_TEXT, SHOW_ALL_TASKS_LABEL } from '../common/graph-task.con
 import type { TaskScreenElements } from '../common/graph-task.type.ts';
 import { FALLBACK_NOTICE_TEXT, GRAPH_LABEL, RELOAD_LABEL, RETRY_LABEL } from '../common/graph.const.ts';
 
-/** A text button: its visible text is its accessible name. */
+/** A text button: its visible text is its accessible name and its hover title. */
 const textButton = (label: string): HTMLButtonElement => {
   const button = textElement('button', 'text-button', label);
 
   button.type = 'button';
+  button.title = label;
 
   return button;
 };

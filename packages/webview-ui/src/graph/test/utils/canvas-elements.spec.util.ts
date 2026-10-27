@@ -1,7 +1,7 @@
 import type { ElementDefinition } from 'cytoscape';
 
 import type { GraphEdge } from '../../../bridge/common/graph-state.type.ts';
-import type { ThemeColors } from '../../common/theme-colors.type.ts';
+import type { SelectionColors, ThemeColors } from '../../common/theme-colors.type.ts';
 import { edgeIdOf } from '../../utils/edge-id.util.ts';
 
 /** One distinct colour per run state. */
@@ -13,6 +13,8 @@ export const CANVAS_RUN_COLORS: ThemeColors['runs'] = {
   'failed-to-start': '#f02'
 };
 
+const CANVAS_SELECTION: SelectionColors = { fill: '#00f', label: '#ff0' };
+
 export const CANVAS_COLORS: ThemeColors = {
   background: '#111',
   label: '#eee',
@@ -22,6 +24,7 @@ export const CANVAS_COLORS: ThemeColors = {
   frame: '#444',
   cached: '#a0f',
   runs: CANVAS_RUN_COLORS,
+  selection: CANVAS_SELECTION,
   dimmedOpacity: 0.25
 };
 

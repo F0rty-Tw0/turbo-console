@@ -88,7 +88,7 @@ export const awkwardNamesState = (): GraphReady => {
 /** A saved flat view of `hash` with exactly these folders collapsed, so Group by folder collapses them on arrival. */
 export const flatCollapsedSavedState = (hash: string, collapsed: string[]): GraphViewState => {
   const fresh = freshViewStateOf(hash);
-  const state: GraphViewState = { ...fresh, collapsed };
+  const state: GraphViewState = { ...fresh, grouped: false, collapsed };
 
   return state;
 };

@@ -1,3 +1,4 @@
+import { setButtonLabel, setButtonText } from './button-title.ts';
 import { renderPicking } from './graph-details-picking.ts';
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { ExplainDetails, ExplainEntry, NeighbourItem, PackageDetails } from '../common/details-view.type.ts';
@@ -38,8 +39,11 @@ const updatePackage = (view: PackageDetails, name: string, context: DetailsConte
 
   if (model === null) return false;
 
-  view.openLabel.textContent = openDetailsLabelOf(model.taskCount);
-  view.focus.textContent = model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_LABEL;
+  const openText = openDetailsLabelOf(model.taskCount);
+
+  view.openLabel.textContent = openText;
+  view.openDetails.title = openText;
+  setButtonText(view.focus, model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_LABEL);
   setDisabled(view.exclude, model.isFocused);
   view.showTasks.hidden = !hasTasks(name);
 
@@ -55,8 +59,8 @@ const updateFolder = (view: DetailsView, folder: string, context: DetailsContext
   if (view.kind !== 'folder' || model === null) return false;
 
   view.summary.textContent = model.summary;
-  view.toggle.textContent = folderToggleTextOf(model.isCollapsed);
-  view.focus.textContent = model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_FOLDER_LABEL;
+  setButtonText(view.toggle, folderToggleTextOf(model.isCollapsed));
+  setButtonText(view.focus, model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_FOLDER_LABEL);
 
   const visibleByName = new Map(model.members.map((member) => [member.name, member.isVisible]));
 
@@ -158,7 +162,7 @@ const updateEntry = (parts: ExplainEntry, entry: ManifestEntry): void => {
     elements.row.classList.toggle('is-entry', row.isEntry);
   });
   setText(parts.open, openAtLabelOf(entry.line));
-  parts.open.setAttribute('aria-label', openManifestLabelOf(entry));
+  setButtonLabel(parts.open, openManifestLabelOf(entry));
 };
 
 const updateFound = (details: ExplainDetails, state: FoundExplain): void => {

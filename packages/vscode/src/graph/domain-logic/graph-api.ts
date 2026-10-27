@@ -1,4 +1,4 @@
-import type { GraphHostMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 
 import type { GraphApi, GraphPanelInfo } from '../../shared/common/api.type.ts';
 import type { GraphHost, OpenGraphPanel } from '../common/graph-panel.type.ts';
@@ -27,7 +27,7 @@ export const graphApiOf = (panels: ReadonlyMap<string, OpenGraphPanel>, readCach
 
     await panel.session.receive(message);
   };
-  const cachedHash = (root: string): string | null => readCache(root, 'flat')?.hash ?? null;
+  const cachedHash = (root: string, grouping: LayoutGrouping): string | null => readCache(root, grouping)?.hash ?? null;
   const api: GraphApi = { panels: list, posted, receive, cachedHash };
 
   return api;

@@ -9,7 +9,7 @@ import { flowEdgesOf } from './graph-flow-edges.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
-import { applyPaint } from './graph-paint.ts';
+import { applyFocusTarget, applyPaint } from './graph-paint.ts';
 import { placeNodes, positionOf } from './graph-place.ts';
 import { markRowLess, widgetRectsOf } from './graph-rects.ts';
 import { graphStyleOf } from './graph-style.ts';
@@ -20,7 +20,7 @@ import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
-import type { GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
+import type { FoldersView, GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
@@ -104,6 +104,12 @@ const fitOn = (cy: Core): void => {
   fitVisible(cy, FIT_PADDING_PX);
 };
 
+/** Places the packages, then re-centres the collapsed folders on them. */
+const placeOn = (cy: Core, folders: FoldersView, placed: Positions): void => {
+  placeNodes(cy, placed);
+  folders.recentre();
+};
+
 /** The page's canvas view: Cytoscape, the folder pass over it and the canvas events reported to `handlers`. */
 export const createGraphView = (
   container: HTMLElement,
@@ -124,15 +130,12 @@ export const createGraphView = (
     applyPaint(cy, next);
     folders.paint(next);
   };
-  const setPositions = (placed: Positions): void => {
-    placeNodes(cy, placed);
-    folders.recentre();
-  };
   const view: GraphView = {
     setGraph,
     paint,
     fit: (): void => fitOn(cy),
     setVisible: (visible: ReadonlySet<string>): void => showOnly(cy, visible),
+    setFocusTarget: (name: string | null): void => applyFocusTarget(cy, name),
     setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>): void => setGhosts(cy, marks, visible),
     resize: (): void => void cy.resize(),
     centreOn: (name: string): void => centreOnNode(cy, name),
@@ -141,7 +144,7 @@ export const createGraphView = (
     viewport: (): Viewport => viewportOf(cy),
     setViewport: (zoom: number, pan: Position): void => setViewportOn(cy, zoom, pan),
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
-    setPositions,
+    setPositions: (placed: Positions): void => placeOn(cy, folders, placed),
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily, glyphs)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),

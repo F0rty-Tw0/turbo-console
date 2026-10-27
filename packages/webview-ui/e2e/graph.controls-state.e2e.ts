@@ -36,6 +36,7 @@ const M4_1_VIEW = { hash: 'c0a1b2c3', zoom: 2, pan: M4_1_PAN, selected: 'core' }
 const M4_1_RESTORED: GraphViewState = {
   ...M4_1_VIEW,
   ...DEFAULT_CONTROLS,
+  grouped: true,
   focus: null,
   detailsOpen: true,
   link: null,
@@ -182,7 +183,7 @@ test.describe('FEATURE: graph controls saved state', () => {
       await test.step('THEN the saved camera and selection are shown', async (): Promise<void> => graphLook.expectView(M4_1_RESTORED));
 
       await test.step('AND the controls are the defaults', async (): Promise<void> =>
-        graphLook.expectControlsFields(DEFAULT_CONTROLS));
+        graphLook.expectControlsFields({ ...DEFAULT_CONTROLS, grouped: true }));
 
       await test.step('AND every package is visible', async (): Promise<void> => graphCamera.expectVisible(ALL));
     }
@@ -315,7 +316,7 @@ test.describe('FEATURE: graph controls saved state', () => {
       await test.step('THEN the saved camera is shown', async (): Promise<void> => graphLook.expectView(BAD_FIELDS_RESTORED));
 
       await test.step('AND the controls are the defaults', async (): Promise<void> =>
-        graphLook.expectControlsFields(DEFAULT_CONTROLS));
+        graphLook.expectControlsFields({ ...DEFAULT_CONTROLS, grouped: true }));
 
       await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }

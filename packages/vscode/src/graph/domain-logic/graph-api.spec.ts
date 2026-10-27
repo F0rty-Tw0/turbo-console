@@ -85,22 +85,22 @@ describe('FEATURE: the graph test API', () => {
   });
 
   describe('GIVEN the layout cache', () => {
-    it('WHEN a root has an entry THEN its cached hash is the entry hash', () => {
-      const api = graphApiOf(panelsOf([]), readCacheOf({ [cacheKeyOf('/ws', 'flat')]: ENTRY }));
+    it.each<LayoutGrouping>(['flat', 'folders'])('WHEN a root has a %s entry THEN that cached hash is the entry hash', (grouping) => {
+      const api = graphApiOf(panelsOf([]), readCacheOf({ [cacheKeyOf('/ws', grouping)]: ENTRY }));
 
-      expect(api.cachedHash('/ws')).toBe(GRAPH_HASH_STUB);
+      expect(api.cachedHash('/ws', grouping)).toBe(GRAPH_HASH_STUB);
     });
 
-    it('WHEN a root has only a folders entry THEN its cached hash is null', () => {
+    it('WHEN a root has only a folders entry THEN its flat cached hash is null', () => {
       const api = graphApiOf(panelsOf([]), readCacheOf({ [cacheKeyOf('/ws', 'folders')]: ENTRY }));
 
-      expect(api.cachedHash('/ws')).toBeNull();
+      expect(api.cachedHash('/ws', 'flat')).toBeNull();
     });
 
     it('WHEN a root has no entry THEN its cached hash is null', () => {
       const api = graphApiOf(panelsOf([]), noCache);
 
-      expect(api.cachedHash('/ws')).toBeNull();
+      expect(api.cachedHash('/ws', 'flat')).toBeNull();
     });
   });
 });

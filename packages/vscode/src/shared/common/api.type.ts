@@ -1,4 +1,4 @@
-import type { GraphHostMessage, HostMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, HostMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 
 import type { ScriptsToggleApi } from './scripts-toggle.type.ts';
 import type { Span } from './span.type.ts';
@@ -62,14 +62,14 @@ export type GraphPanelInfo = {
 
 /**
  * The open Package Graph panels, for the integration tests. `posted` holds the last 100 messages sent to the panel of
- * `root`; `receive` rejects for a root with no open panel. `cachedHash` is the hash of the layout cached for `root`, `null`
- * for none.
+ * `root`; `receive` rejects for a root with no open panel. `cachedHash` is the hash of the layout cached for `root`
+ * under `grouping`, `null` for none.
  */
 export type GraphApi = {
   readonly panels: () => GraphPanelInfo[];
   readonly posted: (root: string) => GraphHostMessage[];
   readonly receive: (root: string, message: unknown) => Promise<void>;
-  readonly cachedHash: (root: string) => string | null;
+  readonly cachedHash: (root: string, grouping: LayoutGrouping) => string | null;
 };
 
 /** What the run commands and the CodeLens read of the UI: the tree's run redraw and the scripts toggle, typed by their APIs. */

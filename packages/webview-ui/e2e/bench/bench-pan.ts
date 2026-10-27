@@ -1,7 +1,7 @@
 import type { Browser } from '@playwright/test';
 
 import { withSession } from './bench-session.ts';
-import { PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
+import { NOTHING_SAVED, PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
 import type { BenchSession, PanSample } from './common/bench.type.ts';
 import { p95 } from './utils/bench-stats.util.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
@@ -45,3 +45,25 @@ const taskPannedCpu = async (session: BenchSession): Promise<number> => {
 /** Main-thread CPU of a scripted 2 s pan over the target-like task graph with the hub task chosen, framed by Fit first. */
 export const taskPan = async (browser: Browser): Promise<number> =>
   withSession(browser, { savedState: targetLikeHubSavedState() }, taskPannedCpu);
+
+const defaultPannedCpu = async (session: BenchSession): Promise<number> => {
+  const { canvas, graphPage, grouping, host, probe } = session;
+
+  await host.sendState(targetLikeState());
+  await probe.expectLayoutEngine('elk');
+  await host.expectLayoutDone('elk');
+  await grouping.expectGrouped(true);
+  await graphPage.pressButton(FIT_LABEL);
+  await canvas.expectAllNodesInView();
+
+  const spot = await grouping.freeSpot();
+
+  await canvas.scriptedPan(WARM_UP_FRAMES, PAN_FRAMES, spot);
+
+  const cpu = canvas.measuredPanCpu();
+
+  return cpu.totalMs;
+};
+
+/** Main-thread CPU of a scripted 2 s pan over the target-like graph opened with nothing saved, so grouped, framed by Fit first. */
+export const targetLikeDefaultPan = async (browser: Browser): Promise<number> => withSession(browser, NOTHING_SAVED, defaultPannedCpu);

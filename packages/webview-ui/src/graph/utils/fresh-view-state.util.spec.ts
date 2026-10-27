@@ -6,7 +6,7 @@ const ORIGIN = { x: 0, y: 0 };
 
 describe('FEATURE: freshViewStateOf', () => {
   describe('GIVEN a graph hash with no saved state', () => {
-    it('WHEN a fresh state is made THEN it holds the hash, the default camera, no selection, the default controls, no grouping, no collapsed folders and package mode with no task', () => {
+    it('WHEN a fresh state is made THEN it holds the hash, the default camera, no selection, the default controls, grouping on, no collapsed folders and package mode with no task', () => {
       const state = freshViewStateOf('h');
 
       expect(state).toStrictEqual({
@@ -24,7 +24,7 @@ describe('FEATURE: freshViewStateOf', () => {
         link: null,
         trace: null,
         folder: null,
-        grouped: false,
+        grouped: true,
         collapsed: [],
         mode: 'packages',
         task: null

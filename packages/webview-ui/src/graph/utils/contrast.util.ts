@@ -1,11 +1,6 @@
+import { isRgba, rgbaOf } from './colour-parse.util.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
-
-/** Red, green and blue as sRGB 0 to 1, then alpha 0 to 1. */
-type Rgba = readonly [number, number, number, number];
-
-const HEX = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/iu;
-
-const RGB_FUNCTION = /^rgba?\(([^)]*)\)$/iu;
+import type { Rgba } from '../common/theme-colors.type.ts';
 
 /** The 3:1 WCAG floor for non-text contrast, with a margin for anti-aliasing and rounding. */
 const DIMMED_MIN_RATIO = 3.3;
@@ -14,59 +9,6 @@ const DIMMED_MIN_RATIO = 3.3;
 const DIMMED_STEPS = Array.from({ length: 12 }, (_, step: number): number => (25 + step * 5) / 100);
 
 const DIMMED_MAX = 0.8;
-
-/** A hex colour's channels, 0 to 255: three for `#rgb` and `#rrggbb`, four with an alpha digit pair or digit. */
-export const hexChannelsOf = (hex: string): number[] => {
-  const digits = hex.slice(1);
-  const width = digits.length > 4 ? 2 : 1;
-  const count = digits.length / width;
-  const channelOf = (index: number): number => {
-    const part = digits.slice(index * width, (index + 1) * width);
-    const full = width === 1 ? `${part}${part}` : part;
-
-    return Number.parseInt(full, 16);
-  };
-
-  return Array.from({ length: count }, (_, index: number): number => channelOf(index));
-};
-
-const rgbaFrom = (bytes: number[], alpha: number): Rgba => {
-  const [red = 0, green = 0, blue = 0] = bytes;
-  const rgba: Rgba = [red / 255, green / 255, blue / 255, alpha];
-
-  return rgba;
-};
-
-/** `rgb(r, g, b)` or `rgba(r, g, b, a)` with plain numbers; `null` for any other shape. */
-const functionRgbaOf = (body: string): Rgba | null => {
-  const texts = body.split(',');
-  const isNumberText = (text: string): boolean => text.trim() !== '' && Number.isFinite(Number(text));
-  const hasThreeOrFour = texts.length === 3 || texts.length === 4;
-  const isWellFormed = hasThreeOrFour && texts.every(isNumberText);
-
-  if (!isWellFormed) return null;
-
-  const [red = 0, green = 0, blue = 0, alpha = 1] = texts.map(Number);
-
-  return rgbaFrom([red, green, blue], alpha);
-};
-
-const rgbaOf = (colour: string): Rgba | null => {
-  const trimmed = colour.trim();
-  const match = RGB_FUNCTION.exec(trimmed);
-  const body = match?.[1];
-  const isHex = HEX.test(trimmed);
-
-  if (body !== undefined) return functionRgbaOf(body);
-
-  if (!isHex) return null;
-
-  const [red = 0, green = 0, blue = 0, alpha = 255] = hexChannelsOf(trimmed);
-
-  return rgbaFrom([red, green, blue], alpha / 255);
-};
-
-const isRgba = (value: Rgba | null): value is Rgba => value !== null;
 
 const linearOf = (channel: number): number => {
   if (channel <= 0.04045) return channel / 12.92;
@@ -89,13 +31,32 @@ const ratioOf = (first: Rgba, second: Rgba): number => {
   return Math.round(ratio * 100) / 100;
 };
 
-/** `foreground` drawn at `opacity`, its own alpha included, over the opaque `background`. */
+/** `foreground` drawn at `opacity`, its own alpha clamped to 0 to 1 included, over the opaque `background`. */
 const blendOf = (foreground: Rgba, background: Rgba, opacity: number): Rgba => {
-  const alpha = opacity * foreground[3];
+  const ownAlpha = Math.min(Math.max(foreground[3], 0), 1);
+  const alpha = opacity * ownAlpha;
   const mix = (index: 0 | 1 | 2): number => alpha * foreground[index] + (1 - alpha) * background[index];
   const blended: Rgba = [mix(0), mix(1), mix(2), 1];
 
   return blended;
+};
+
+const byteOf = (unit: number): number => Math.round(unit * 255);
+
+/**
+ * `colour` laid over the opaque `background` as an opaque `rgb()`, since Cytoscape drops a fill's own alpha; an opaque
+ * colour, or a pair that does not parse, is kept as given.
+ */
+export const opaqueColourOf = (colour: string, background: string): string => {
+  const foreground = rgbaOf(colour);
+  const base = rgbaOf(background);
+
+  if (foreground === null || base === null || foreground[3] === 1) return colour;
+
+  const blended = blendOf(foreground, base, 1);
+  const bytes = blended.slice(0, 3).map(byteOf);
+
+  return `rgb(${bytes.join(', ')})`;
 };
 
 /**

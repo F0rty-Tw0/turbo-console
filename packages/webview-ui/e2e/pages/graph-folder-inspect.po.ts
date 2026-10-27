@@ -114,6 +114,14 @@ export class GraphFolderInspect {
     await expect.poll(async (): Promise<(string | null)[]> => buttons.evaluateAll(ariaLabelsOf)).toEqual(labels);
   }
 
+  /** The header Focus button of the folder titled `title` has `label` as its accessible name and its hover title. */
+  public async expectHeaderFocusLabel(title: string, label: string): Promise<void> {
+    const button = this.headerFocus(title);
+
+    await expect(button).toHaveAccessibleName(label);
+    await expect(button).toHaveAttribute('title', label);
+  }
+
   /** The header Focus button of the folder titled `title` reads `Focus` or `Clear focus`, in regular weight like Collapse. */
   public async expectHeaderFocusText(title: string, text: 'Focus' | 'Clear focus'): Promise<void> {
     await expect(this.headerFocus(title)).toHaveText(text);
@@ -141,8 +149,13 @@ export class GraphFolderInspect {
     return this.grid.getByRole('row').filter({ has: collapse.or(expand) });
   }
 
+  /** The header Focus button, named for focusing or, while its folder is the focus, for clearing it. */
   private headerFocus(title: string): Locator {
-    return this.headerOf(title).getByRole('button', { name: `Focus folder ${title}`, exact: true });
+    const header = this.headerOf(title);
+    const focus = header.getByRole('button', { name: `Focus folder ${title}`, exact: true });
+    const clear = header.getByRole('button', { name: `Clear focus on folder ${title}`, exact: true });
+
+    return focus.or(clear);
   }
 
   private async stateOf(folder: string): Promise<ProbeState | undefined> {

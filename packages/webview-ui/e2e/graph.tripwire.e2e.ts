@@ -293,7 +293,7 @@ test.describe('FEATURE: graph tripwires', () => {
     'GIVEN 301 packages and no saved state, the page opens grouped with all 30 folders collapsed',
     { annotation: C4 },
     async ({ graphFolders, graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
-      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open({ savedState: null }));
 
       await test.step('AND a 301-package state is sent', async (): Promise<void> =>
         graphHost.sendState(largeState(LARGE_PACKAGE_COUNT + 1)));
@@ -311,16 +311,16 @@ test.describe('FEATURE: graph tripwires', () => {
   );
 
   test(
-    'GIVEN 300 packages and no saved state, the page opens flat',
+    'GIVEN 300 packages and no saved state, the page opens grouped with every folder expanded',
     { annotation: C4 },
     async ({ graphFolders, graphGrouping, graphHost, graphPage }): Promise<void> => {
-      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open({ savedState: null }));
 
       await test.step('AND a 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
 
-      await test.step('THEN Group by folder is unchecked', async (): Promise<void> => graphGrouping.expectGrouped(false));
+      await test.step('THEN Group by folder is checked', async (): Promise<void> => graphGrouping.expectGrouped(true));
 
-      await test.step('AND no folder is drawn', async (): Promise<void> => graphFolders.expectFolders([]));
+      await test.step('AND no folder is collapsed', async (): Promise<void> => graphFolders.expectAllCollapsed(false));
     }
   );
 

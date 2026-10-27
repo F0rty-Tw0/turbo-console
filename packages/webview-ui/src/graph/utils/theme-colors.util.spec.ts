@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { contrastRatioOf } from './contrast.util.ts';
 import { themeColorsOf } from './theme-colors.util.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
-import type { ThemeColors } from '../common/theme-colors.type.ts';
+import type { SelectionColors, ThemeColors } from '../common/theme-colors.type.ts';
 import { cssVariableReaderMock } from '../test/mocks/css-variable-reader.mock.ts';
 
 const DARK: Record<string, string> = {
@@ -18,7 +18,9 @@ const DARK: Record<string, string> = {
   '--vscode-testing-iconPassed': '#73c991',
   '--vscode-testing-iconFailed': '#f14c4c',
   '--vscode-errorForeground': '#f85149',
-  '--vscode-charts-purple': '#b180d7'
+  '--vscode-charts-purple': '#b180d7',
+  '--vscode-list-activeSelectionBackground': '#04395e',
+  '--vscode-list-activeSelectionForeground': '#ffffff'
 };
 
 /** `THEME_HC_STUB`'s colours over the dark rows: white label and edges, the `#6fc3df` contrast border, a black editor. */
@@ -30,6 +32,13 @@ const HC_STUB: Record<string, string> = {
   '--vscode-contrastBorder': '#6fc3df'
 };
 
+/** `HC_STUB` as VS Code's High Contrast theme leaves it: no list selection colours. */
+const HC_STUB_UNSELECTED: Record<string, string> = {
+  ...HC_STUB,
+  '--vscode-list-activeSelectionBackground': '',
+  '--vscode-list-activeSelectionForeground': ''
+};
+
 const DARK_RUNS: ThemeColors['runs'] = {
   running: '#cca700',
   passed: '#73c991',
@@ -37,6 +46,8 @@ const DARK_RUNS: ThemeColors['runs'] = {
   stopped: '#9d9d9d',
   'failed-to-start': '#f85149'
 };
+
+const DARK_SELECTION: SelectionColors = { fill: '#04395e', label: '#ffffff' };
 
 const DARK_COLORS: ThemeColors = {
   background: '#1f1f1f',
@@ -47,6 +58,7 @@ const DARK_COLORS: ThemeColors = {
   frame: '#2b2b2b',
   cached: '#b180d7',
   runs: DARK_RUNS,
+  selection: DARK_SELECTION,
   dimmedOpacity: 0.25
 };
 
@@ -58,7 +70,7 @@ describe('FEATURE: themeColorsOf', () => {
       expect(colors).toStrictEqual(DARK_COLORS);
     });
 
-    it('WHEN the colours are read THEN only the twelve theme variables are read', () => {
+    it('WHEN the colours are read THEN only the fourteen theme variables are read', () => {
       const read: string[] = [];
 
       themeColorsOf(cssVariableReaderMock(DARK, read));
@@ -134,6 +146,37 @@ describe('FEATURE: themeColorsOf', () => {
     ['fallback (Light+ default)', '#717171', '#ffffff']
   ])('GIVEN %s, stopped (descriptionForeground) on the editor background is at least 3:1', (_, foreground, background) => {
     expect(contrastRatioOf(foreground, background)).toBeGreaterThanOrEqual(3);
+  });
+
+  describe('GIVEN a selection fill with alpha', () => {
+    it.each([
+      ['Dark 2026', '#FFFFFF22', '#121314', 'rgb(50, 50, 51)'],
+      ['Light 2026', '#00000025', '#ffffff', 'rgb(218, 218, 218)'],
+      ['Dark 2026 as VS Code hands it to a webview', 'rgba(255, 255, 255, 0.13)', '#121314', 'rgb(49, 50, 51)']
+    ])('WHEN the %s fill %s over %s is read THEN it is the opaque %s', (_, fill, background, expected) => {
+      const translucent = { ...DARK, '--vscode-list-activeSelectionBackground': fill, '--vscode-editor-background': background };
+
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.selection?.fill).toBe(expected);
+    });
+  });
+
+  it.each([
+    ['the fill', '--vscode-list-activeSelectionBackground'],
+    ['the label', '--vscode-list-activeSelectionForeground']
+  ])('GIVEN only %s of the selection blank WHEN the colours are read THEN there is no selection colour', (_, name) => {
+    const halfSet = { ...DARK, [name]: '' };
+
+    const colors = themeColorsOf(cssVariableReaderMock(halfSet));
+
+    expect(colors.selection).toBeNull();
+  });
+
+  it('GIVEN both selection colours blank WHEN the colours are read THEN there is no selection colour', () => {
+    const colors = themeColorsOf(cssVariableReaderMock(HC_STUB_UNSELECTED));
+
+    expect(colors.selection).toBeNull();
   });
 
   it('GIVEN a value with surrounding spaces WHEN the colours are read THEN it is trimmed', () => {

@@ -8,7 +8,7 @@ type OpenCase = {
   readonly title: string;
   readonly saved: GraphViewState | null;
   readonly count: number;
-  readonly hasShown: boolean;
+  readonly isGroupingSaved: boolean;
   readonly expected: GraphViewState | null;
 };
 
@@ -18,31 +18,44 @@ const FRESH = freshViewStateOf('h');
 
 const SAVED_FLAT: GraphViewState = { ...FRESH, grouped: false, zoom: 2 };
 
+/** A state saved before folders existed, as the reader rebuilds it: grouped by default, nothing collapsed. */
+const SAVED_BEFORE_FOLDERS: GraphViewState = { ...FRESH, zoom: 2, hidden: ['web'] };
+
 const GROUPED_OPEN: GraphViewState = { ...FRESH, grouped: true, collapsed: FOLDERS };
 
+/** `SAVED_BEFORE_FOLDERS` opened large: its camera and hidden packages kept, every folder collapsed. */
+const COLLAPSED_BEFORE_FOLDERS: GraphViewState = { ...SAVED_BEFORE_FOLDERS, collapsed: FOLDERS };
+
 const CASES: OpenCase[] = [
-  { title: '301 packages, nothing saved, no graph shown yet', saved: null, count: 301, hasShown: false, expected: GROUPED_OPEN },
-  { title: '300 packages, nothing saved, no graph shown yet', saved: null, count: 300, hasShown: false, expected: null },
-  { title: '301 packages, nothing saved, a graph shown already', saved: null, count: 301, hasShown: true, expected: null },
+  { title: '301 packages and nothing saved', saved: null, count: 301, isGroupingSaved: false, expected: GROUPED_OPEN },
+  { title: '300 packages and nothing saved', saved: null, count: 300, isGroupingSaved: false, expected: null },
+  { title: '301 packages and a flat saved state', saved: SAVED_FLAT, count: 301, isGroupingSaved: true, expected: SAVED_FLAT },
   {
-    title: '301 packages, a flat saved state, no graph shown yet',
-    saved: SAVED_FLAT,
+    title: '301 packages and a state saved before folders existed',
+    saved: SAVED_BEFORE_FOLDERS,
     count: 301,
-    hasShown: false,
-    expected: SAVED_FLAT
+    isGroupingSaved: false,
+    expected: COLLAPSED_BEFORE_FOLDERS
+  },
+  {
+    title: '300 packages and a state saved before folders existed',
+    saved: SAVED_BEFORE_FOLDERS,
+    count: 300,
+    isGroupingSaved: false,
+    expected: SAVED_BEFORE_FOLDERS
   }
 ];
 
 describe('FEATURE: openingStateOf', () => {
   describe('GIVEN the folders of a graph', () => {
-    it.each(CASES)('WHEN it has $title THEN the opening state is as expected', ({ saved, count, hasShown, expected }) => {
-      const state = openingStateOf(saved, 'h', FOLDERS, count, hasShown);
+    it.each(CASES)('WHEN it has $title THEN the opening state is as expected', ({ saved, count, isGroupingSaved, expected }) => {
+      const state = openingStateOf(saved, 'h', FOLDERS, count, isGroupingSaved);
 
       expect(state).toStrictEqual(expected);
     });
 
     it('WHEN a flat saved state opens a graph of 301 packages THEN it is the same object', () => {
-      const state = openingStateOf(SAVED_FLAT, 'h', FOLDERS, 301, false);
+      const state = openingStateOf(SAVED_FLAT, 'h', FOLDERS, 301, true);
 
       expect(state).toBe(SAVED_FLAT);
     });

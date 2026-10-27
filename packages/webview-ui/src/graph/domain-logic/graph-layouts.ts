@@ -10,6 +10,7 @@ import type { DrawnGraph } from '../common/graph-page.type.ts';
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
 import { modeGroupsOf } from '../utils/folder-group.util.ts';
+import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 import { arrivalOf, engineNoticeOf, progressNoticeOf, switchPlanOf } from '../utils/layout-plan.util.ts';
 
 /**
@@ -47,7 +48,8 @@ export class GraphLayouts {
 
   /** A hash not on screen: the saved mode draws from its cache at once, or lays out behind Loading. */
   public async show(state: GraphReady, saved: GraphViewState | null): Promise<void> {
-    const mode: LayoutGrouping = saved?.grouped === true ? 'folders' : 'flat';
+    const view = saved ?? freshViewStateOf(state.hash);
+    const mode: LayoutGrouping = view.grouped ? 'folders' : 'flat';
 
     this.reset();
     this.snapshots.seed('flat', state.positions);
