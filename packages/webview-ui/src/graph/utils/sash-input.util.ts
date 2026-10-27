@@ -1,5 +1,5 @@
-import type { PanelSide } from '../common/graph-page.type.ts';
 import { PANEL_KEY_STEP_PX, PANEL_MIN_PX } from '../common/graph.const.ts';
+import type { PanelSide } from '../common/panel-sash.type.ts';
 
 /** The key that widens each panel: the graph page is LTR, so Controls (left) grows rightwards and Details (right) leftwards. */
 const GROW_KEYS: Readonly<Record<PanelSide, string>> = { controls: 'ArrowRight', details: 'ArrowLeft' };

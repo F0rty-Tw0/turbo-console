@@ -1,5 +1,5 @@
 import type { LayoutNotice } from './graph-layouts.type.ts';
-import type { PanelSide } from './graph-page.type.ts';
+import type { PanelSide } from './panel-sash.type.ts';
 import type { Column } from './roving.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';

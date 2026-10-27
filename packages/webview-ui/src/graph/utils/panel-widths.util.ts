@@ -1,6 +1,6 @@
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
-import type { PanelSide } from '../common/graph-page.type.ts';
 import { CANVAS_MIN_PX, PANEL_MIN_PX } from '../common/graph.const.ts';
+import type { PanelSide } from '../common/panel-sash.type.ts';
 
 type SidePair = { readonly first: number; readonly other: number };
 

@@ -2,9 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { wireSashInput } from './graph-sash-input.ts';
-import type { PanelSide } from '../common/graph-page.type.ts';
 import { SASHING_CLASS, SASH_DRAGGING_CLASS } from '../common/graph.const.ts';
-import type { SashResizer } from '../common/panel-sash.type.ts';
+import type { PanelSide, SashResizer } from '../common/panel-sash.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 const POINTER_ID = 7;

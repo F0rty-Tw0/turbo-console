@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { clampedWidthsOf, maxWidthOf } from './panel-widths.util.ts';
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
-import type { PanelSide } from '../common/graph-page.type.ts';
 import { DEFAULT_PANEL_WIDTHS } from '../common/graph.const.ts';
+import type { PanelSide } from '../common/panel-sash.type.ts';
 
 type Case = [preferred: PanelWidths, body: number, isOverlay: boolean, dragged: PanelSide | null, expected: PanelWidths];
 

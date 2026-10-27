@@ -1,9 +1,8 @@
 import { wireSashInput } from './graph-sash-input.ts';
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
-import type { PanelSide } from '../common/graph-page.type.ts';
 import { TASK_CONTROLS_ID, TASK_DETAILS_ID, TASK_MODE_CLASS } from '../common/graph-task.const.ts';
 import { CONTROLS_ID, DEFAULT_PANEL_WIDTHS, DETAILS_ID } from '../common/graph.const.ts';
-import type { PanelSashDeps } from '../common/panel-sash.type.ts';
+import type { PanelSashDeps, PanelSide } from '../common/panel-sash.type.ts';
 import { clampedWidthsOf, maxWidthOf } from '../utils/panel-widths.util.ts';
 
 const PACKAGE_PANEL_IDS: Readonly<Record<PanelSide, string>> = { controls: CONTROLS_ID, details: DETAILS_ID };
@@ -51,12 +50,10 @@ class GraphPanelSashes {
     for (const side of SIDES) this.describe(side, this.drawn, box);
   }
 
-  /** The width `side`'s panel is drawn at. */
   public widthOf(side: PanelSide): number {
     return this.drawn[side];
   }
 
-  /** The widest `side` goes to, the other side giving way first. */
   public maxOf(side: PanelSide): number {
     const box = this.boxNow();
 
@@ -127,7 +124,7 @@ class GraphPanelSashes {
  * Draws the sashes once, then again when the body's width changes or the overlay query flips; a mode switch only moves
  * `aria-controls`, so a drag's squeezed pair stays as drawn.
  */
-export const wirePanelSashes = (deps: PanelSashDeps): GraphPanelSashes => {
+export const wirePanelSashes = (deps: PanelSashDeps): void => {
   const { root, body, overlay, sashes: elements } = deps;
   const sashes = new GraphPanelSashes(deps);
   const render = (): void => sashes.render();
@@ -138,6 +135,4 @@ export const wirePanelSashes = (deps: PanelSashDeps): GraphPanelSashes => {
   new MutationObserver((): void => sashes.describeAll()).observe(root, { attributes: true, attributeFilter: ['class'] });
 
   for (const side of SIDES) wireSashInput(side, elements[side], sashes, body);
-
-  return sashes;
 };

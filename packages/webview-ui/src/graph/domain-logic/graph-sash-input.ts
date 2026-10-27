@@ -1,6 +1,5 @@
-import type { PanelSide } from '../common/graph-page.type.ts';
 import { SASHING_CLASS, SASH_DRAGGING_CLASS } from '../common/graph.const.ts';
-import type { SashResizer } from '../common/panel-sash.type.ts';
+import type { PanelSide, SashResizer } from '../common/panel-sash.type.ts';
 import { sashDragWidthOf, sashKeyWidthOf } from '../utils/sash-input.util.ts';
 
 const PRIMARY_BUTTON = 0;

@@ -1,5 +1,7 @@
-import type { PanelSide } from './graph-page.type.ts';
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
+
+/** The panel a sash resizes. */
+export type PanelSide = 'controls' | 'details';
 
 /** The two sashes `buildPanelSashes` makes: the Controls one sits on the Controls panel's inner edge, the Details one on the Details panel's. */
 export type PanelSashes = {

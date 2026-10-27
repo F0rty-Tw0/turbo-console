@@ -15,7 +15,13 @@ import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds } from '../common/widget.type.ts';
 import { isMenuOpenKey } from '../utils/menu-keys.util.ts';
 
-const DETAILS_SELECTOR = `#${DETAILS_ID}`;
+/** The Details aside, a direct child of the body; `children` is what the specs' fake elements answer. */
+const asideOf = (body: HTMLElement): HTMLElement | null => {
+  const children = Array.from(body.children);
+  const aside = children.find((child) => child.id === DETAILS_ID);
+
+  return aside instanceof HTMLElement ? aside : null;
+};
 
 /**
  * Re-reads the layer's bounds when the container or the Details aside resizes. The aside mounts with the first graph, so
@@ -37,12 +43,10 @@ class BoundsWatch {
     this.resizes.observe(container);
   }
 
-  /** The aside is a direct child of the body; `children` is what the specs' fake elements answer. */
   public observeAside(): void {
-    const children = Array.from(this.body.children);
-    const aside = children.find((child) => child.id === DETAILS_ID);
+    const aside = asideOf(this.body);
 
-    if (aside === undefined || aside === this.observed) return;
+    if (aside === null || aside === this.observed) return;
 
     this.resizes.observe(aside);
     this.observed = aside;
@@ -67,7 +71,7 @@ class WidgetParts {
     const { page, widgetViews, canAct } = deps;
     const layerDeps: GraphWidgetsDeps = {
       ...deps,
-      aside: (): HTMLElement | null => page.body.querySelector<HTMLElement>(DETAILS_SELECTOR),
+      aside: (): HTMLElement | null => asideOf(page.body),
       isActive: canAct,
       onMenu: (target, opener): void => this.menus.open(target, opener)
     };
@@ -87,7 +91,8 @@ class WidgetParts {
 /**
  * Builds the widget layer, its menus and the breadcrumb, and re-reads the layer's bounds when the container resizes, the
  * overlay query flips, or a panel of the body opens or closes; a `hidden` flip deeper in the body (a list row) costs
- * nothing. The details panel mounts with the first graph, which also shows the container, so the resize covers it.
+ * nothing. The details panel mounts with the first graph, so the Details aside is looked up on every refresh and watched from
+ * then on: a sash drag moves its left edge over the canvas without resizing the container.
  * Shift+F10 or the ContextMenu key on the canvas or the layer opens the selection's menu, and the browser's own context
  * menu never opens over them.
  */

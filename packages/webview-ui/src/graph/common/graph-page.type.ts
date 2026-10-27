@@ -89,9 +89,6 @@ export type ViewStateSaver = {
   readonly flush: () => void;
 };
 
-/** The panel a sash resizes. */
-export type PanelSide = 'controls' | 'details';
-
 /** The package graph's saver: `ViewStateModes` adds the mode, the task view and the panel widths to each state before it is saved. */
 export type PackageSaver = {
   readonly schedule: (state: PackageViewState) => void;

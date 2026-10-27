@@ -4,8 +4,8 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import type { PanelWidths } from '../../src/bridge/common/graph-view-state.type.ts';
-import type { PanelSide } from '../../src/graph/common/graph-page.type.ts';
 import { RESIZE_LABELS } from '../../src/graph/common/graph.const.ts';
+import type { PanelSide } from '../../src/graph/common/panel-sash.type.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { ellipsisNameOf } from '../test/utils/graph-widgets.spec.util.ts';
 
