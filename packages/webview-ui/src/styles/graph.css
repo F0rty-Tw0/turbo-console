@@ -550,7 +550,7 @@ p {
 
 .graph-controls {
   display: flex;
-  flex: 0 0 260px;
+  flex: 0 0 var(--tc-controls-width, 260px);
   box-sizing: border-box;
   flex-direction: column;
   gap: var(--space-2);
@@ -742,7 +742,7 @@ kbd {
 
 .graph-details {
   display: flex;
-  flex: 0 0 280px;
+  flex: 0 0 var(--tc-details-width, 280px);
   box-sizing: border-box;
   flex-direction: column;
   gap: var(--space-2);
@@ -758,11 +758,58 @@ kbd {
   .graph-details {
     position: absolute;
     z-index: 2;
-    width: 280px;
+    width: var(--tc-details-width, 280px);
     inset-block: 0;
     inset-inline-end: 0;
     box-shadow: -2px 0 8px var(--vscode-widget-shadow);
   }
+}
+
+/*
+ * Panel sashes: a 4px grip centred on each panel's inner edge, placed by the width variables GraphPanelSashes writes on
+ * the body, over the Details overlay. Each shows only while its panel of the mode on screen shows.
+ */
+.graph-sash {
+  position: absolute;
+  inset-block: 0;
+  z-index: 3;
+  display: none;
+  width: 4px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.graph-sash-controls {
+  inset-inline-start: calc(var(--tc-controls-width, 260px) - 2px);
+}
+
+.graph-sash-details {
+  inset-inline-end: calc(var(--tc-details-width, 280px) - 2px);
+}
+
+.graph-sash::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 1px;
+  width: 1px;
+}
+
+.graph-sash:hover::after,
+.graph-sash:focus-visible::after,
+.graph-sash.is-dragging::after {
+  background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+.graph-sash:focus-visible {
+  outline: none;
+}
+
+.graph-page:not(.task-mode) .graph-body:has(> #graph-controls:not([hidden])) > .graph-sash-controls,
+.graph-page.task-mode .graph-body:has(> #graph-task-controls:not([hidden])) > .graph-sash-controls,
+.graph-page:not(.task-mode) .graph-body:has(> #graph-details:not([hidden])) > .graph-sash-details,
+.graph-page.task-mode .graph-body:has(> #graph-task-details:not([hidden])) > .graph-sash-details {
+  display: block;
 }
 
 /* Details panel views */

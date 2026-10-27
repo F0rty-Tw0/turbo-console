@@ -71,22 +71,35 @@ describe('FEATURE: graph.css', () => {
   describe('GIVEN the controls panel rule', () => {
     const declarations = declarationsOf(css, '.graph-controls');
 
-    it.each(['flex: 0 0 260px', 'box-sizing: border-box'])('WHEN it is read THEN it holds %s', (expected) => {
-      expect(declarations).toContain(expected);
-    });
+    it.each(['flex: 0 0 var(--tc-controls-width, 260px)', 'box-sizing: border-box'])(
+      'WHEN it is read THEN it holds %s',
+      (expected) => {
+        expect(declarations).toContain(expected);
+      }
+    );
   });
 
   describe('GIVEN the details panel rule', () => {
     const declarations = declarationsOf(css, '.graph-details');
 
     it.each([
-      'flex: 0 0 280px',
+      'flex: 0 0 var(--tc-details-width, 280px)',
       'box-sizing: border-box',
       'var(--vscode-sideBar-background)',
       'var(--vscode-sideBar-foreground)',
       'border-inline-start: 1px solid var(--vscode-panel-border)'
     ])('WHEN it is read THEN it holds %s', (expected) => {
       expect(declarations).toContain(expected);
+    });
+  });
+
+  describe('GIVEN the sash rules', () => {
+    it.each(['cursor: col-resize', 'z-index: 3', 'display: none'])('WHEN .graph-sash is read THEN it holds %s', (expected) => {
+      expect(declarationsOf(css, '.graph-sash')).toContain(expected);
+    });
+
+    it('WHEN the hover line is read THEN it uses sash.hoverBorder with the focus border fallback', () => {
+      expect(declarationsOf(css, '.graph-sash:hover::after')).toContain('var(--vscode-sash-hoverBorder, var(--vscode-focusBorder))');
     });
   });
 
@@ -99,7 +112,7 @@ describe('FEATURE: graph.css', () => {
       expect(start).toBeGreaterThan(-1);
     });
 
-    it.each(['position: absolute', 'width: 280px', 'var(--vscode-widget-shadow)'])(
+    it.each(['position: absolute', 'width: var(--tc-details-width, 280px)', 'var(--vscode-widget-shadow)'])(
       'WHEN its details rule is read THEN it holds %s',
       (expected) => {
         expect(declarations).toContain(expected);
