@@ -24,6 +24,7 @@ const COLORS: ThemeColors = {
   frame: '#444',
   cached: '#a0f',
   runs: CANVAS_RUN_COLORS,
+  selection: null,
   dimmedOpacity: 0.25
 };
 

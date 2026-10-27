@@ -1,6 +1,6 @@
 import { dimmedOpacityOf, hexChannelsOf } from './contrast.util.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
-import type { CssVariableReader, ThemeColors } from '../common/theme-colors.type.ts';
+import type { CssVariableReader, SelectionColors, ThemeColors } from '../common/theme-colors.type.ts';
 
 /** `#rgba` or `#rrggbbaa`: a hex colour with alpha, which Cytoscape rejects. */
 const ALPHA_HEX = /^#(?:[\da-f]{4}|[\da-f]{8})$/iu;
@@ -17,11 +17,23 @@ const cytoscapeColourOf = (value: string): string => {
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 };
 
+/** The list's active selection as a selected node's fill and label; `null` unless the theme sets both. */
+const selectionOf = (fill: string, label: string): SelectionColors | null => {
+  const isUnset = fill === '' || label === '';
+
+  if (isUnset) return null;
+
+  const selection: SelectionColors = { fill, label };
+
+  return selection;
+};
+
 /**
  * The graph colours from the theme variables, each trimmed (`getPropertyValue` keeps the leading space), a blank one
  * replaced by its `FALLBACK_COLORS` entry. VS Code sets `--vscode-contrastBorder` only in high contrast themes, so the
  * node frame takes it there and `--vscode-panel-border` everywhere else, and dimmed elements rise from 0.25 until they keep
  * 3:1 against the background there. Run outlines take the Tasks tree's status colours; a cached Atomizer file takes the chart purple.
+ * A selected node takes the list's active selection colours when the theme sets both, as high contrast themes do not.
  */
 export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const valueOf = (name: string, fallback: string): string => {
@@ -47,6 +59,9 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const edge = valueOf('--vscode-descriptionForeground', FALLBACK_COLORS.edge);
   const highContrastDim = dimmedOpacityOf(background, [label, edge, frame]);
   const dimmedOpacity = contrastBorder === '' ? FALLBACK_COLORS.dimmedOpacity : highContrastDim;
+  const selectionFill = valueOf('--vscode-list-activeSelectionBackground', '');
+  const selectionLabel = valueOf('--vscode-list-activeSelectionForeground', '');
+  const selection = selectionOf(selectionFill, selectionLabel);
   const colors: ThemeColors = {
     background,
     label,
@@ -56,6 +71,7 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
     frame,
     cached: valueOf('--vscode-charts-purple', FALLBACK_COLORS.cached),
     runs,
+    selection,
     dimmedOpacity
   };
 

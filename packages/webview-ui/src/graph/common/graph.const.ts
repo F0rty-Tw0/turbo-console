@@ -92,6 +92,7 @@ export const FALLBACK_COLORS: ThemeColors = {
   frame: '#e5e5e5',
   cached: '#652d90',
   runs: FALLBACK_RUN_COLORS,
+  selection: null,
   dimmedOpacity: 0.25
 };
 
