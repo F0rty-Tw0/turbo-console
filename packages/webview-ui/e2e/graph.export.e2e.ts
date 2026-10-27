@@ -1,5 +1,5 @@
 import type { PngBounds } from './common/graph.type.ts';
-import { test } from './graph-task.fixture.ts';
+import { expect, test } from './graph-task.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { WIDE_TITLE_STUB } from './test/stubs/graph-export.stub.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
@@ -165,7 +165,7 @@ test.describe('FEATURE: graph export image', () => {
   );
 
   test(
-    'GIVEN the target-like graph and failing canvas reads, WHEN Export image is pressed, THEN the notice line and the status line say so',
+    'GIVEN the target-like graph and failing canvas reads, WHEN Export image is pressed, THEN the notice line says so and the status line does not',
     { annotation: U3A_S2 },
     async ({ graphExport, graphHost, graphPage, graphProbe, graphTask }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -181,7 +181,8 @@ test.describe('FEATURE: graph export image', () => {
       await test.step('THEN the notice line shows the export failed', async (): Promise<void> =>
         graphTask.expectNotice(EXPORT_FAILED_TEXT));
 
-      await test.step('AND the status line says it too', async (): Promise<void> => graphPage.expectStatus(EXPORT_FAILED_TEXT));
+      await test.step('AND the status line does not say it', async (): Promise<void> =>
+        expect(graphPage.status).not.toHaveText(EXPORT_FAILED_TEXT));
 
       await test.step('AND nothing was posted', async (): Promise<void> => graphExport.expectNonePosted());
     }

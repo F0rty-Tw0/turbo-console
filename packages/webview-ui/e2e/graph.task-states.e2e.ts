@@ -212,7 +212,7 @@ test.describe('FEATURE: the package status line in task mode', () => {
   );
 
   test(
-    'GIVEN app picked and task mode on, a failed export says so on the notice line and the status line',
+    'GIVEN app picked and task mode on, a failed export says so on the notice line, not the status line',
     { annotation: EXPORT_FAILED },
     async ({ graphExport, graphPage, graphTask }): Promise<void> => {
       await test.step('WHEN Tasks is pressed and canvas reads fail', async (): Promise<void> => {
@@ -225,8 +225,7 @@ test.describe('FEATURE: the package status line in task mode', () => {
       await test.step('THEN the notice line shows the export failed', async (): Promise<void> =>
         graphTask.expectNotice(EXPORT_FAILED_TEXT));
 
-      await test.step('AND the status line says it too', async (): Promise<void> =>
-        expect(graphPage.status).toHaveText(EXPORT_FAILED_TEXT));
+      await test.step('AND the status line stays empty', async (): Promise<void> => graphPage.expectStatus(''));
     }
   );
 });
