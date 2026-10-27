@@ -36,13 +36,18 @@ export type TaskDetailsView = {
   readonly stop: HTMLButtonElement;
 };
 
+/** What the panel shows while no task is selected; its heading takes focus when Clear selection had it. */
+export type TaskDetailsEmpty = {
+  readonly root: HTMLElement;
+  readonly heading: HTMLElement;
+};
+
 export type TaskDetailsViews = {
   /** The empty, hidden `aside#graph-task-details`. */
   readonly panel: () => HTMLElement;
   /** An empty `div.details-content`, which holds the panel's shown view. */
   readonly content: () => HTMLElement;
-  /** What the panel shows while no task is selected. */
-  readonly empty: () => HTMLElement;
+  readonly empty: () => TaskDetailsEmpty;
   readonly view: (model: TaskDetailsModel) => TaskDetailsView;
 };
 

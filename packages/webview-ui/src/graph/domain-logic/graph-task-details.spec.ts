@@ -211,11 +211,11 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(document.activeElement).toBe(rig.built[1]?.run);
     });
 
-    it('WHEN Run has focus and the selection is cleared THEN the Details button takes focus', () => {
+    it('WHEN Run has focus and the selection is cleared THEN the empty view heading takes focus', () => {
       view?.run.focus();
       details.show(null);
 
-      expect(document.activeElement).toBe(rig.deps.page.details);
+      expect(document.activeElement).toMatchObject({ tagName: 'H2', textContent: 'Details' });
     });
 
     it('WHEN Stop has focus and the task stops running THEN the heading takes focus', () => {
@@ -226,8 +226,9 @@ describe('FEATURE: GraphTaskDetails', () => {
     });
   });
 
-  describe('GIVEN the Details bar first in the panel and a#build shown', () => {
+  describe('GIVEN the Details bar with Clear selection first in the panel and a#build shown', () => {
     beforeEach(() => {
+      rig.deps.page.detailsBar.append(rig.deps.page.clear);
       rig.panel.prepend(rig.deps.page.detailsBar);
       details.enter(true);
       details.show(RUNNING);
@@ -244,6 +245,20 @@ describe('FEATURE: GraphTaskDetails', () => {
       details.show(null);
 
       expect(rig.deps.page.detailsBar.hidden).toBe(true);
+    });
+
+    it('WHEN Clear selection has focus and the task is shown again THEN Clear keeps focus', () => {
+      rig.deps.page.clear.focus();
+      details.show(PASSED);
+
+      expect(document.activeElement).toBe(rig.deps.page.clear);
+    });
+
+    it('WHEN Clear selection has focus and the selection is cleared THEN the empty view heading takes focus', () => {
+      rig.deps.page.clear.focus();
+      details.show(null);
+
+      expect(document.activeElement).toMatchObject({ tagName: 'H2', textContent: 'Details' });
     });
   });
 });

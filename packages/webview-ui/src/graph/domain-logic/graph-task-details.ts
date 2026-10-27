@@ -41,7 +41,7 @@ export class GraphTaskDetails {
     this.deps = deps;
     this.panel = deps.views.panel();
     this.content = deps.views.content();
-    this.content.replaceChildren(deps.views.empty());
+    this.content.replaceChildren(deps.views.empty().root);
     this.panel.append(this.content);
     deps.page.details.addEventListener('click', (): void => this.toggleOpen());
     deps.page.clear.addEventListener('click', (): void => this.cleared());
@@ -69,17 +69,25 @@ export class GraphTaskDetails {
     if (hadFocus) this.deps.page.packagesMode.focus();
   }
 
-  /** Shows `model`, or the empty lead; focus inside the panel moves to the new view's twin of the focused button. */
+  /**
+   * Shows `model`, or the empty lead; focus in the content moves to the new view's twin of the focused button. The empty
+   * view's heading takes focus from the content, or from Clear selection, which hides with it; other focus in the Details
+   * bar stays.
+   */
   public show(model: TaskDetailsModel | null): void {
     const key = this.focusedKey();
+    const isClearHiding = model === null && document.activeElement === this.deps.page.clear;
 
     this.model = model;
     this.renderClear();
 
     if (model === null) {
-      this.content.replaceChildren(this.deps.views.empty());
+      const empty = this.deps.views.empty();
+      const isRefocused = key !== null || isClearHiding;
 
-      if (key !== null) this.deps.page.details.focus();
+      this.content.replaceChildren(empty.root);
+
+      if (isRefocused) empty.heading.focus();
 
       return;
     }
@@ -125,7 +133,7 @@ export class GraphTaskDetails {
 
   private focusedKey(): string | null {
     const active = document.activeElement;
-    const isInside = this.panel.contains(active);
+    const isInside = this.content.contains(active);
     const key = active?.getAttribute('data-focus') ?? HEADING_KEY;
 
     return isInside ? key : null;

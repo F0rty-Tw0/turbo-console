@@ -1,5 +1,5 @@
 import { shownHintOf } from './graph-details-picking.ts';
-import { focusedNameOf, refocusList, updateExplain, updateView } from './graph-details-render.ts';
+import { focusedNameOf, hadFocusOf, refocusList, updateExplain, updateView } from './graph-details-render.ts';
 import { emptyOf, wireExplain, wiredViewOf } from './graph-details-wire.ts';
 import { onPanelKey } from './graph-inspection-details.ts';
 import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
@@ -68,13 +68,13 @@ export class GraphDetails {
   }
 
   public show(inspection: ShownInspection, context: DetailsContext): void {
-    const { aside, content } = this;
+    const { content } = this;
 
-    if (aside === null || content === null) return;
+    if (content === null) return;
 
     const plan = detailsPlanOf(this.shown, inspection, context.isRebuild);
-    const hadFocus = aside.contains(document.activeElement);
-    const focused = focusedNameOf(aside);
+    const hadFocus = hadFocusOf(content, this.deps.page.clear, inspection);
+    const focused = focusedNameOf(content);
     const isUpdated = this.updated(plan, inspection, context, focused);
 
     if (!isUpdated) this.build(content, inspection, context, hadFocus);
@@ -157,7 +157,7 @@ export class GraphDetails {
     return true;
   }
 
-  /** A view built while the panel held focus takes focus to its heading (spec §4.5); the Details bar above stays. */
+  /** A view built with `hadFocus` (see `hadFocusOf`) takes focus to its heading (spec §4.5). */
   private build(content: HTMLElement, inspection: ShownInspection, context: DetailsContext, hadFocus: boolean): void {
     const view = wiredViewOf(inspection, context, this.envOf());
 

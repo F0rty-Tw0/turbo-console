@@ -33,6 +33,20 @@ export class GraphDetailsBar {
     await this.clear.click();
   }
 
+  /** Moves keyboard focus to Clear selection without pressing it. */
+  public async focusClear(): Promise<void> {
+    await this.clear.focus();
+  }
+
+  /** Enter on Clear selection: a keyboard press, so focus starts on the button. */
+  public async pressClearByKey(): Promise<void> {
+    await this.clear.press('Enter');
+  }
+
+  public async expectClearFocused(): Promise<void> {
+    await expect(this.clear).toBeFocused();
+  }
+
   /** Nothing selected: the bar is hidden and Clear selection is disabled. */
   public async expectClearHidden(): Promise<void> {
     await expect(this.bar).toBeHidden();

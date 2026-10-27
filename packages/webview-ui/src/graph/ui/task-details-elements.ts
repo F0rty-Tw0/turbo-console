@@ -14,7 +14,7 @@ import {
   TASK_EMPTY_LEAD_TEXT
 } from '../common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../common/graph.const.ts';
-import type { TaskDependencyButton, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
+import type { TaskDependencyButton, TaskDetailsEmpty, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
 
 /** A button whose `data-focus` key names its twin in the next view built. */
 const focusButton = (button: HTMLButtonElement, key: string): HTMLButtonElement => {
@@ -64,7 +64,7 @@ export const buildTaskDetailsPanel = (): HTMLElement => {
 };
 
 /** What the task side panel shows with no task selected: the Details heading and what selecting a task shows here. */
-export const buildTaskDetailsEmpty = (): HTMLElement => {
+export const buildTaskDetailsEmpty = (): TaskDetailsEmpty => {
   const root = textElement('section', 'details-view', '');
   const row = textElement('div', 'details-title', '');
   const heading = textElement('h2', 'details-heading', DETAILS_LABEL);
@@ -74,7 +74,9 @@ export const buildTaskDetailsEmpty = (): HTMLElement => {
   row.append(heading);
   root.append(row, lead);
 
-  return root;
+  const empty: TaskDetailsEmpty = { root, heading };
+
+  return empty;
 };
 
 const dependencySection = (dependencies: TaskDependencyButton[]): HTMLElement => {
