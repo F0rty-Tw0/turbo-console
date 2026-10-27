@@ -29,6 +29,8 @@ export type {
   GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphRunsMessage,
+  GraphShowPackageMessage,
+  GraphShowRequest,
   GraphShowTasksMessage,
   GraphShownUmbrellasMessage,
   GraphStateMessage,

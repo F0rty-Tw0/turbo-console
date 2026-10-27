@@ -60,6 +60,15 @@ export type GraphShowTasksMessage = {
   readonly taskIds: string[];
 };
 
+/** Asks the page to focus this package on the graph. */
+export type GraphShowPackageMessage = {
+  readonly type: 'showPackage';
+  readonly name: string;
+};
+
+/** The one request a graph panel holds until its page can take it: the latest of either kind wins. */
+export type GraphShowRequest = GraphShowTasksMessage | GraphShowPackageMessage;
+
 /** What a file of an Atomizer group last did, or `none` when nothing is known of it. */
 export type GraphAtomOutcome = 'passed' | 'failed' | 'cached' | 'none';
 
@@ -77,7 +86,12 @@ export type GraphAtomsMessage = {
 
 /** Host to webview. */
 export type GraphHostMessage =
-  GraphStateMessage | GraphEdgeExplainedMessage | GraphRunsMessage | GraphShowTasksMessage | GraphAtomsMessage;
+  | GraphStateMessage
+  | GraphEdgeExplainedMessage
+  | GraphRunsMessage
+  | GraphShowTasksMessage
+  | GraphShowPackageMessage
+  | GraphAtomsMessage;
 
 type GraphReadyMessage = { readonly type: 'ready' };
 

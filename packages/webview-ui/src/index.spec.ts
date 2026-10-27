@@ -27,6 +27,8 @@ import type {
   GraphReady,
   GraphRunState,
   GraphRunsMessage,
+  GraphShowPackageMessage,
+  GraphShowRequest,
   GraphShowTasksMessage,
   GraphShownUmbrellasMessage,
   GraphState,
@@ -84,6 +86,7 @@ type ExpectedTaskView = {
   readonly pan: ExpectedPosition;
   readonly layoutKey: string;
 };
+type ExpectedShowPackageMessage = { readonly type: 'showPackage'; readonly name: string };
 type ExpectedStateMessage = { readonly type: 'state'; readonly state: GraphState };
 type ExpectedContext = { readonly before?: string; readonly after?: string };
 type ExpectedEntry = {
@@ -185,8 +188,15 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphReady['atomGroups']>().toEqualTypeOf<GraphAtomGroup[]>();
       expectTypeOf<GraphAtomGroup>().toEqualTypeOf<ExpectedAtomGroup>();
       expectTypeOf<GraphAtomFile>().toEqualTypeOf<ExpectedAtomFile>();
+      expectTypeOf<GraphShowPackageMessage>().toEqualTypeOf<ExpectedShowPackageMessage>();
+      expectTypeOf<GraphShowRequest>().toEqualTypeOf<GraphShowTasksMessage | GraphShowPackageMessage>();
       expectTypeOf<GraphHostMessage>().toEqualTypeOf<
-        ExpectedStateMessage | ExpectedExplainedMessage | GraphRunsMessage | GraphShowTasksMessage | GraphAtomsMessage
+        | ExpectedStateMessage
+        | ExpectedExplainedMessage
+        | GraphRunsMessage
+        | GraphShowTasksMessage
+        | ExpectedShowPackageMessage
+        | GraphAtomsMessage
       >();
       expectTypeOf<GraphAtomOutcome>().toEqualTypeOf<'passed' | 'failed' | 'cached' | 'none'>();
       expectTypeOf<GraphAtomGroupState>().toEqualTypeOf<ExpectedAtomGroupState>();
