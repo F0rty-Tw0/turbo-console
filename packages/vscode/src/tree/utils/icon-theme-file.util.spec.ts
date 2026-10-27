@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
@@ -25,8 +25,8 @@ const extensionOf = (path: string, extensionPath = EXTENSION): ThemeExtension =>
 describe('FEATURE: icon theme file', () => {
   describe('GIVEN one extension contributing theme-a', () => {
     it.each([
-      ['a file inside the extension folder', join(EXTENSION, 'icons/theme.json'), './icons/theme.json'],
-      ['a folder named ..x inside the extension folder', join(EXTENSION, '..x/theme.json'), '..x/theme.json'],
+      ['a file inside the extension folder', resolve(EXTENSION, 'icons/theme.json'), './icons/theme.json'],
+      ['a folder named ..x inside the extension folder', resolve(EXTENSION, '..x/theme.json'), '..x/theme.json'],
       ['a path leaving the extension folder', null, '../other/theme.json'],
       ['the parent of the extension folder', null, '..'],
       ['an absolute path', null, '/etc/theme.json']
@@ -53,7 +53,7 @@ describe('FEATURE: icon theme file', () => {
 
     const file = themeFileOf(extensions, 'theme-a');
 
-    expect(file).toBe(join('/ext/second', 'a.json'));
+    expect(file).toBe(resolve('/ext/second', 'a.json'));
   });
 
   describe('GIVEN a parsed theme file', () => {

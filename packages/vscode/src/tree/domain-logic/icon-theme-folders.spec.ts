@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 
 import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
@@ -8,7 +8,7 @@ import { ICON_THEME_BYTES_MAX } from '../common/icon-theme.const.ts';
 import type { IconThemePorts, ThemeExtension } from '../common/icon-theme.type.ts';
 
 const EXTENSION = '/ext/theme';
-const THEME_FILE = join(EXTENSION, 'icons/theme.json');
+const THEME_FILE = resolve(EXTENSION, 'icons/theme.json');
 const MINIMAL_JSON = '{"iconDefinitions":{},"folder":"_folder","file":"_file"}';
 const SETI_JSON = '{"iconDefinitions":{},"file":"_file"}';
 const COMMENTED_JSON = '// Minimal\n{"iconDefinitions":{},/* folders */"folder":"_folder",}';
@@ -178,8 +178,8 @@ describe('FEATURE: icon theme folders', () => {
 
     it('WHEN the theme switches from one with no folders to one with THEN has() is false and then true', async () => {
       const files = new Map([
-        ['/seti/s.json', SETI_JSON],
-        ['/minimal/m.json', MINIMAL_JSON]
+        [resolve('/seti', 's.json'), SETI_JSON],
+        [resolve('/minimal', 'm.json'), MINIMAL_JSON]
       ]);
       const manifestFor = (id: string, path: string): unknown => manifestOf({ id, path });
       const extensions: ThemeExtension[] = [
@@ -207,8 +207,8 @@ describe('FEATURE: icon theme folders', () => {
     it('WHEN clear() runs while a read is in flight THEN that read answer is not cached', async () => {
       const fixture = fixtureOf();
       let release: () => void = () => undefined;
-      const held = new Promise<void>((resolve) => {
-        release = resolve;
+      const held = new Promise<void>((done) => {
+        release = done;
       });
       const heldRead: IconThemePorts['read'] = async (path) => {
         await held;
