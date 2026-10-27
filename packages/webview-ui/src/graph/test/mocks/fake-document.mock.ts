@@ -7,6 +7,8 @@ type FakeFocus = {
 
 const ignore = (): void => undefined;
 
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
 /** What an element's `ownerDocument` answers: the element focused last. */
 type FakeOwner = {
   readonly activeElement: FakeElement | null;
@@ -160,16 +162,23 @@ class FakeElement {
 
 type FakeDocument = {
   readonly createElement: (tag: string) => FakeElement;
+  /** An SVG element: a fake element like any other; any other namespace throws. */
+  readonly createElementNS: (namespace: string, tag: string) => FakeElement;
   readonly activeElement: FakeElement | null;
   /** Document listeners never run: no spec dispatches on the document. */
   readonly addEventListener: () => void;
 };
 
-/** A `document` for `vi.stubGlobal('document', …)`: `createElement` and the element `focus()` last moved to. */
+/** A `document` for `vi.stubGlobal('document', …)`: `createElement`, `createElementNS` and the element `focus()` last moved to. */
 export const fakeDocumentMock = (): FakeDocument => {
   const focus: FakeFocus = { element: null };
   const fake: FakeDocument = {
     createElement: (tag: string): FakeElement => new FakeElement(tag, focus),
+    createElementNS: (namespace: string, tag: string): FakeElement => {
+      if (namespace !== SVG_NAMESPACE) throw new Error(`fake document: no ${namespace} elements`);
+
+      return new FakeElement(tag, focus);
+    },
     addEventListener: (): void => undefined,
     get activeElement(): FakeElement | null {
       return focus.element;
