@@ -192,7 +192,7 @@ describe('FEATURE: tool detection', () => {
     ['npm run b', { a: 'npm run b', b: 'npm run a' }, true, ['npm', ['b', 'a']]],
     ['npm run a', { a: 'npm run a' }, true, ['npm', ['a']]],
     ['npm run d1', chainOf(5), true, ['vitest', ['d1', 'd2', 'd3', 'd4', 'd5']]],
-    ['npm run d1', chainOf(6), true, ['npm', ['d1', 'd2', 'd3', 'd4', 'd5']]],
+    ['npm run d1', chainOf(6), true, [null, []]],
     ['cross-env CI=1 npm run t', { t: 'playwright test' }, true, ['playwright', ['t']]],
     ['npm run e', { e: '' }, true, ['npm', []]],
     ['npm run e', { e: '   ' }, true, ['npm', []]],

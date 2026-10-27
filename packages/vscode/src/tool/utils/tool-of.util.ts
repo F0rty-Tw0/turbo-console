@@ -1,7 +1,7 @@
 import { TOOL_ICON_PREFIX } from '@turbo-console/webview-ui';
 
 import { binOf, delegationOf } from './delegation.util.ts';
-import { FALLBACK_TOOL_BY_BIN, TOOL_BY_BIN } from '../common/tool.const.ts';
+import { FALLBACK_TOOLS, FALLBACK_TOOL_BY_BIN, TOOL_BY_BIN } from '../common/tool.const.ts';
 import type { PackageScripts, ToolMatch, ToolResolver, ToolSpec } from '../common/tool.type.ts';
 
 const SEGMENT_END = /&&|\||;/;
@@ -37,9 +37,9 @@ const MAX_DELEGATIONS = 5;
  */
 const MAX_EXPANSIONS = 256;
 
-/** The expansions a call may still spend, and the first fallback tool it met; one is created per call. */
+/** The expansions a call may still spend, its best fallback tool so far, and how many delegations the depth cap cut. */
 // eslint-disable-next-line local/readonly-type-properties -- one state shared by every recursive call of a resolve
-type Walk = { left: number; fallback: ToolMatch | null };
+type Walk = { left: number; fallback: ToolMatch | null; cuts: number };
 
 const candidateIndexOf = (tokens: string[]): number => {
   let index = 0;
@@ -94,21 +94,44 @@ const stepOf = (segment: string, scripts: PackageScripts): Step => {
   return delegated;
 };
 
+const isNewName = (target: Target, path: string[]): target is string => typeof target === 'string' && !path.includes(target);
+
 /** A delegation to a script name may be followed unless the name repeats on the path or the path already holds 5 names. */
 const canFollow = (target: Target, path: string[]): target is string => {
-  if (typeof target !== 'string') return false;
-
-  const isOnPath = path.includes(target);
+  const isNew = isNewName(target, path);
   const isTooDeep = path.length >= MAX_DELEGATIONS;
 
-  return !isOnPath && !isTooDeep;
+  return isNew && !isTooDeep;
 };
 
-/** Keeps the first fallback met; a segment notes its own after its delegation, so a deeper one wins. */
-const noteFallback = (fallback: ToolSpec | null, path: string[], walk: Walk): void => {
-  const isFirst = walk.fallback === null;
+/** A new name the path is too deep to follow: the chain goes on past what is read, unlike a cycle, which ends. */
+const isCutByDepth = (target: Target, path: string[]): boolean => {
+  const isNew = isNewName(target, path);
+  const isTooDeep = path.length >= MAX_DELEGATIONS;
 
-  if (fallback !== null && isFirst) walk.fallback = { tool: fallback, via: path };
+  return isNew && isTooDeep;
+};
+
+/** A fallback's rank, 0 the highest: `FALLBACK_TOOLS` is ordered so `node` outranks `npm`. */
+const rankOf = (tool: ToolSpec): number => FALLBACK_TOOLS.indexOf(tool);
+
+/** Keeps the highest-ranked fallback met, the first of equal rank; a segment notes its own after its delegation, so a deeper one wins. */
+const noteFallback = (fallback: ToolSpec | null, path: string[], walk: Walk): void => {
+  if (fallback === null) return;
+
+  const best = walk.fallback;
+  const note: ToolMatch = { tool: fallback, via: path };
+
+  if (best === null) {
+    walk.fallback = note;
+
+    return;
+  }
+
+  const newRank = rankOf(fallback);
+  const bestRank = rankOf(best.tool);
+
+  if (newRank < bestRank) walk.fallback = note;
 };
 
 const resolveIn = (command: string, scripts: PackageScripts, path: string[], walk: Walk): ToolMatch | null => {
@@ -119,6 +142,10 @@ const resolveIn = (command: string, scripts: PackageScripts, path: string[], wal
     if (isDirect) return target;
 
     const isFollowable = canFollow(target, path);
+    const isDepthCut = isCutByDepth(target, path);
+    const cutsBefore = walk.cuts;
+
+    if (isDepthCut) walk.cuts += 1;
 
     if (isFollowable) {
       walk.left -= 1;
@@ -134,7 +161,9 @@ const resolveIn = (command: string, scripts: PackageScripts, path: string[], wal
       }
     }
 
-    noteFallback(fallback, path, walk);
+    const isCut = walk.cuts > cutsBefore;
+
+    if (!isCut) noteFallback(fallback, path, walk);
   }
 
   return null;
@@ -142,13 +171,15 @@ const resolveIn = (command: string, scripts: PackageScripts, path: string[], wal
 
 /**
  * Spec runner-chains §Behavior: the first command segment that resolves to a well-known tool, directly or through
- * same-package script delegations (at most 5, no repeats, at most 256 body expansions). With none, the first fallback
- * tool met, deepest first: `npm start` running `node x.js` is Node.js, `npm publish` is npm. Total and pure.
+ * same-package script delegations (at most 5, no repeats, at most 256 body expansions). With none, the highest-ranked
+ * fallback tool met (Node.js over npm; of equal rank the first, deepest first): `npm start` running `node x.js` and
+ * `npm ci && node x.js` are Node.js, `npm publish` is npm. A segment whose delegation the depth cap cut notes no
+ * fallback, so a chain cut before any tool is unknown; a cycle is not a cut and still shows its manager. Total and pure.
  */
 export const resolveTool: ToolResolver = (command, scripts) => {
   if (command === null) return null;
 
-  const walk: Walk = { left: MAX_EXPANSIONS, fallback: null };
+  const walk: Walk = { left: MAX_EXPANSIONS, fallback: null, cuts: 0 };
   const match = resolveIn(command, scripts, [], walk);
   const isOverBudget = walk.left < 0;
 

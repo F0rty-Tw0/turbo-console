@@ -47,8 +47,8 @@ const KNOWN_TOOLS: ToolSpec[] = [
   { id: 'playwright', title: 'Playwright', bins: ['playwright'], glyph: null }
 ];
 
-/** The runtime and the manager that run other tools: a command shows one only when it reaches no known tool. */
-const FALLBACK_TOOLS: ToolSpec[] = [
+/** The runtime and the manager that run other tools, highest rank first: a command shows one only when it reaches no known tool. */
+export const FALLBACK_TOOLS: ToolSpec[] = [
   { id: 'node', title: 'Node.js', bins: ['node'], glyph: NODE_GLYPH },
   { id: 'npm', title: 'npm', bins: ['npm'], glyph: NPM_GLYPH }
 ];

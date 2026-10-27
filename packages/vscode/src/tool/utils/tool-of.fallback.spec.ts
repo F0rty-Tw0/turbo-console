@@ -5,6 +5,14 @@ import type { PackageScripts } from '../common/tool.type.ts';
 
 type Outcome = [string | null, string[]];
 const NO_OUTCOME: Outcome = [null, []];
+const SIX_DEEP: Record<string, string> = {
+  d1: 'npm run d2',
+  d2: 'npm run d3',
+  d3: 'npm run d4',
+  d4: 'npm run d5',
+  d5: 'npm run d6',
+  d6: 'vitest'
+};
 
 const outcomeOf = (command: string, bodies: Record<string, string>): Outcome => {
   const scripts: PackageScripts = { bodies: new Map(Object.entries(bodies)), followTurbo: true };
@@ -53,6 +61,32 @@ describe('FEATURE: Node.js and npm as fallback tools', () => {
     ])('WHEN %j is resolved with scripts %j THEN it is %j', (command, bodies, expected) => {
       expect(outcomeOf(command, bodies)).toStrictEqual(expected);
     });
+  });
+
+  describe('GIVEN a command that reaches both node and npm', () => {
+    it.each<[string, Record<string, string>, Outcome]>([
+      ['npm run clean && node server.js', { clean: 'echo hi' }, ['node', []]],
+      ['npm ci && node x.js', {}, ['node', []]],
+      ['node a.js && npm publish', {}, ['node', []]],
+      ['npm ci && npm run s', { s: 'node x.js' }, ['node', ['s']]],
+      ['node a.js && npm run s', { s: 'npm ci' }, ['node', []]]
+    ])('WHEN %j is resolved with scripts %j THEN node outranks npm: %j', (command, bodies, expected) => {
+      expect(outcomeOf(command, bodies)).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a chain the depth cap cuts before any tool', () => {
+    it.each<[string, Record<string, string>, Outcome]>([
+      ['npm run d1', SIX_DEEP, NO_OUTCOME],
+      ['npm run d1 && node x.js', SIX_DEEP, ['node', []]],
+      ['npm run d1 && npm ci', SIX_DEEP, ['npm', []]],
+      ['npm run a', { a: 'npm run a' }, ['npm', ['a']]]
+    ])(
+      'WHEN %j is resolved with scripts %j THEN only a segment the cap did not cut gives a fallback: %j',
+      (command, bodies, expected) => {
+        expect(outcomeOf(command, bodies)).toStrictEqual(expected);
+      }
+    );
   });
 
   describe('GIVEN a command that runs neither node nor npm as its binary', () => {
