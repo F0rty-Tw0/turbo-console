@@ -139,6 +139,8 @@ export type GraphView = {
   readonly fit: () => void;
   /** Shows exactly these package names; the rest are hidden, not moved. */
   readonly setVisible: (visible: ReadonlySet<string>) => void;
+  /** Draws the focused package's label bold; `null` (no focus, or a folder focus) draws none bold. */
+  readonly setFocusTarget: (name: string | null) => void;
   /** Draws the trace's hidden path packages as ghosts; empty marks clear them. Call after every `setVisible`, which hides a ghost again. */
   readonly setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>) => void;
   /** Re-measures the container, keeping zoom and pan. */

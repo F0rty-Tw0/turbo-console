@@ -37,6 +37,7 @@ const MUTATIONS: [Mutator, Call][] = [
   ['paint', (view: GraphView): void => view.paint(PLAIN_PAINT)],
   ['fit', (view: GraphView): void => view.fit()],
   ['setVisible', (view: GraphView): void => view.setVisible(NO_NAMES)],
+  ['setFocusTarget', (view: GraphView): void => view.setFocusTarget('web')],
   ['setGhosts', (view: GraphView): void => view.setGhosts({ nodes: [], edges: [] }, NO_NAMES)],
   ['centreOn', (view: GraphView): void => view.centreOn('web')],
   ['panBy', (view: GraphView): void => view.panBy(5)],

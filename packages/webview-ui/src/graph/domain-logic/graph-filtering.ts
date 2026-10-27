@@ -39,7 +39,7 @@ export class GraphFiltering {
     const controlsDeps: GraphControlsDeps = {
       ...deps,
       onVisibleChange: (visible): void => this.showVisible(visible),
-      onSameVisible: (): void => this.recheckFolder(),
+      onSameVisible: (): void => this.sameVisible(),
       onSelect: (name): void => this.inspection.select(name),
       onFocusToggle: (name, setFilters): void => this.inspection.focused(name, setFilters),
       onOpenDetails: (): void => this.inspection.openDetails(),
@@ -95,6 +95,7 @@ export class GraphFiltering {
     const visible = this.controls.visible();
 
     this.deps.view.setVisible(visible);
+    this.markFocusTarget();
     this.folders.redraw();
     setFitAndExportDisabled(this.deps.page, visible.size === 0);
 
@@ -159,11 +160,25 @@ export class GraphFiltering {
     if (isFolder) this.inspection.recheck(this.controls.visible());
   }
 
+  /** A filter change that kept the visible set: the focus may still have moved to a package already shown. */
+  private sameVisible(): void {
+    this.markFocusTarget();
+    this.recheckFolder();
+  }
+
+  /** The focused package's label draws bold; a folder focus or none leaves every label regular. */
+  private markFocusTarget(): void {
+    const focus = focusNameOf(this.controls.applied);
+
+    this.deps.view.setFocusTarget(focus);
+  }
+
   private showVisible(visible: ReadonlySet<string>): void {
     const { view, page, now } = this.deps;
     const isAny = visible.size > 0;
 
     view.setVisible(visible);
+    this.markFocusTarget();
     this.folders.redraw();
     this.inspection.recheck(visible);
     setFitAndExportDisabled(page, !isAny);
