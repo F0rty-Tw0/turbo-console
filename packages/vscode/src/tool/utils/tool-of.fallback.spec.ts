@@ -13,6 +13,13 @@ const SIX_DEEP: Record<string, string> = {
   d5: 'npm run d6',
   d6: 'vitest'
 };
+const FIVE_CYCLE: Record<string, string> = {
+  d1: 'npm run d2',
+  d2: 'npm run d3',
+  d3: 'npm run d4',
+  d4: 'npm run d5',
+  d5: 'npm run d1'
+};
 
 const outcomeOf = (command: string, bodies: Record<string, string>): Outcome => {
   const scripts: PackageScripts = { bodies: new Map(Object.entries(bodies)), followTurbo: true };
@@ -80,7 +87,8 @@ describe('FEATURE: Node.js and npm as fallback tools', () => {
       ['npm run d1', SIX_DEEP, NO_OUTCOME],
       ['npm run d1 && node x.js', SIX_DEEP, ['node', []]],
       ['npm run d1 && npm ci', SIX_DEEP, ['npm', []]],
-      ['npm run a', { a: 'npm run a' }, ['npm', ['a']]]
+      ['npm run a', { a: 'npm run a' }, ['npm', ['a']]],
+      ['npm run d1', FIVE_CYCLE, ['npm', ['d1', 'd2', 'd3', 'd4', 'd5']]]
     ])(
       'WHEN %j is resolved with scripts %j THEN only a segment the cap did not cut gives a fallback: %j',
       (command, bodies, expected) => {
