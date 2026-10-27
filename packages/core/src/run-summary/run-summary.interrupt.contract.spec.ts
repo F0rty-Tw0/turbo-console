@@ -11,7 +11,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RunMatch, RunToMatch } from './common/run-match.type.ts';
 import { matchRunSummary } from './domain-logic/match-run-summary.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
-import { INTERRUPT_FIXTURE_FILES_STUB, INTERRUPT_PACKAGE_STUB, SLOW_READY_STUB } from './test/stubs/interrupt-fixture.stub.ts';
+import {
+  INTERRUPT_FIXTURE_FILES_STUB,
+  INTERRUPT_PACKAGE_STUB,
+  SLOW_READY_STUB,
+  SLOW_SCRIPT_STUB
+} from './test/stubs/interrupt-fixture.stub.ts';
 import { TASK_NODE_STUB } from './test/stubs/task-node.stub.ts';
 import { turboRunArgs } from '../run-args/utils/run-args.util.ts';
 import type { RunSummary } from '../shared/turbo/common/turbo.type.ts';
@@ -21,7 +26,7 @@ import type { TaskNode } from '../workspace/common/workspace-model.type.ts';
 
 const TURBO = devTurboPath();
 
-const SLOW: TaskNode = { ...TASK_NODE_STUB, id: `${INTERRUPT_PACKAGE_STUB}#slow`, name: 'slow', command: null };
+const SLOW: TaskNode = { ...TASK_NODE_STUB, id: `${INTERRUPT_PACKAGE_STUB}#slow`, name: 'slow', command: SLOW_SCRIPT_STUB };
 
 /** Resolves once `child` has printed `text` on stdout; rejects when it exits first. */
 const printed = async (child: ChildProcess, text: string): Promise<void> => {

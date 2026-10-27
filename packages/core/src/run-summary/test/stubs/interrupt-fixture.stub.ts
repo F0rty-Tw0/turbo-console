@@ -11,7 +11,7 @@ export const INTERRUPT_PACKAGE_STUB: string = '@acme/a';
 export const SLOW_READY_STUB: string = 'slow-ready';
 
 /** Prints `SLOW_READY_STUB`, then waits a minute: long past any interrupt. */
-const SLOW_SCRIPT = `node -e "console.log('slow'+'-ready');setTimeout(()=>{},60000)"`;
+export const SLOW_SCRIPT_STUB: string = `node -e "console.log('slow'+'-ready');setTimeout(()=>{},60000)"`;
 
 const fileOf = (path: string, content: string): FixtureFile => {
   const file: FixtureFile = { path, content };
@@ -19,7 +19,7 @@ const fileOf = (path: string, content: string): FixtureFile => {
   return file;
 };
 
-const SCRIPTS = { slow: SLOW_SCRIPT };
+const SCRIPTS = { slow: SLOW_SCRIPT_STUB };
 
 const PACKAGE_MANIFEST = JSON.stringify({ name: INTERRUPT_PACKAGE_STUB, scripts: SCRIPTS });
 
