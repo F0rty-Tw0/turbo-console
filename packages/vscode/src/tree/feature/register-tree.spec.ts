@@ -6,6 +6,7 @@ import { registerTree } from './register-tree.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
@@ -128,7 +129,7 @@ describe('FEATURE: registerTree scope toggle', () => {
       request: vi.fn(),
       changed: vi.fn()
     };
-    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    output = outputMock();
 
     editor.createTreeView.mockReset();
     editor.registerCommand.mockReset();

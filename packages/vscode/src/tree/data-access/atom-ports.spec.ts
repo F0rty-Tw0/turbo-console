@@ -6,6 +6,7 @@ import type { RootEntry, RootState, Roots } from '../../roots/common/coordinator
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
 
 const DRY_RUN_REQUEST: DryRunRequest = { tasks: ['e2e-ci'], packages: ['@fx/e2e'], singlePackage: false };
@@ -22,7 +23,7 @@ describe('FEATURE: editor Atomizer ports', () => {
       const entries = new Map([['/ws', entry]]);
 
       roots = { get: (root: string): RootEntry | undefined => entries.get(root), all: vi.fn(), onDidChange: vi.fn() };
-      output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+      output = outputMock();
     });
 
     it('WHEN the binary of that root is read THEN it is the turbo the root loaded with', () => {

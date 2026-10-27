@@ -10,6 +10,7 @@ import type { Output } from '../../shared/common/output.type.ts';
 import type { ToggleStore } from '../../shared/common/scripts-toggle.type.ts';
 import { ScriptsToggle } from '../../shared/domain-logic/scripts-toggle.ts';
 import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
+import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
 import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
@@ -100,7 +101,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
       request: vi.fn(),
       changed: vi.fn()
     };
-    output = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), show: vi.fn(), dispose: vi.fn() };
+    output = outputMock();
 
     editor.createTreeView.mockReset();
     editor.registerCommand.mockReset();
