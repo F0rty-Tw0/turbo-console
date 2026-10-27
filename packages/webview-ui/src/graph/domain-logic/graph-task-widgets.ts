@@ -21,8 +21,8 @@ type TaskButton = {
  * The selected task's "…" over the canvas and its menu: Run and Run without cache for a runnable task, Stop while it
  * runs, and no "…" while the menu would be empty. An item posts what the task panel's button posts for the task shown
  * when it runs, so a stale item posts nothing. Shift+F10 opens nothing in task mode. While the task details panel
- * overlays the canvas, the "…" hides under it and the menu opens left of it; when it turns to overlay, the selected
- * task pans clear of it.
+ * overlays the canvas, the "…" hides under it and the menu opens left of it, following the panel as its sash drags it
+ * wider or narrower; when it turns to overlay, the selected task pans clear of it.
  */
 export class GraphTaskWidgets {
   private readonly deps: TaskWidgetsDeps;
@@ -50,6 +50,7 @@ export class GraphTaskWidgets {
       selection: (): MenuTarget | null => null
     });
     deps.overlay.addEventListener('change', (): void => this.relayout());
+    new ResizeObserver((): void => this.place()).observe(deps.aside());
   }
 
   /** The "…" beside the selected task of `model`; none for `null`, outside task mode, or while its menu would be empty. */

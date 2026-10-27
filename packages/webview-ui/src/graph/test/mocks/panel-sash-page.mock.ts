@@ -2,30 +2,11 @@ import { vi } from 'vitest';
 
 import { fakeDocumentMock } from './fake-document.mock.ts';
 import { switchableMediaQueryMock } from './media-query.mock.ts';
+import { tickObserverMock } from './tick-observer.mock.ts';
 import type { PanelWidths } from '../../../bridge/common/graph-view-state.type.ts';
 import type { PanelSashDeps, PanelSashes } from '../../common/panel-sash.type.ts';
 import type { PanelSashPageMock } from '../common/panel-sash-page.type.ts';
-
-type TickRunner = () => void;
-
-const ignore = (): void => undefined;
-
-type ObserverSurface = { readonly observe: () => void };
-
-type TickObserverClass = new (callback: TickRunner) => ObserverSurface;
-
-/** An observer class that keeps its callback in `ticks` and observes nothing else. */
-const observerClassOf = (ticks: TickRunner[]): TickObserverClass => {
-  class TickObserver {
-    public constructor(callback: TickRunner) {
-      ticks.push(callback);
-    }
-
-    public readonly observe = ignore;
-  }
-
-  return TickObserver;
-};
+import type { TickRunner } from '../common/tick-observer.type.ts';
 
 /**
  * Stubs `document`, `ResizeObserver` and `MutationObserver` and returns the sash page on fake elements, the body `width` px
@@ -41,8 +22,8 @@ export const panelSashPageMock = (width: number, saved: PanelWidths | null): Pan
   const savePanelWidths = vi.fn<(widths: PanelWidths) => void>();
 
   vi.stubGlobal('document', fakeDocumentMock());
-  vi.stubGlobal('ResizeObserver', observerClassOf(resizes));
-  vi.stubGlobal('MutationObserver', observerClassOf(mutations));
+  vi.stubGlobal('ResizeObserver', tickObserverMock(resizes));
+  vi.stubGlobal('MutationObserver', tickObserverMock(mutations));
 
   const setProperty = (name: string, value: string): void => {
     written[name] = value;
