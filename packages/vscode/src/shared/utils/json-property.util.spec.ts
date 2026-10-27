@@ -72,6 +72,14 @@ describe('FEATURE: jsonPropertyAt', () => {
 
       expect(property).toBeNull();
     });
+
+    it('WHEN the last repeat has no value THEN the last one with a value is found', () => {
+      const text = '{ "scripts": { "build": "a", "build": } }';
+
+      const found = propertyTextAt(text, ['scripts', 'build']);
+
+      expect(found).toBe('"build": "a"');
+    });
   });
 
   describe('GIVEN a lookup that finds no property', () => {
@@ -79,6 +87,7 @@ describe('FEATURE: jsonPropertyAt', () => {
       ['an absent script', MANIFEST, ['scripts', 'lint']],
       ['no scripts object', '{ "name": "a" }', ['scripts', 'build']],
       ['a scripts value that is not an object', '{ "scripts": "build" }', ['scripts', 'build']],
+      ['a script key with no value', '{ "scripts": { "build": } }', ['scripts', 'build']],
       ['an empty text', '', ['scripts']],
       ['a root that is an array', '[1, 2]', ['scripts']]
     ])('WHEN the text has %s THEN it is null', (_name, text, path) => {
