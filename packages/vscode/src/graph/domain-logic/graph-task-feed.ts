@@ -9,6 +9,9 @@ import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
 import { runIdsOf, runsMapOf } from '../utils/graph-tasks.util.ts';
 
+/** Behaviour for a single-package root stays until it gets its own graph: the feed ignores its requests. */
+const isSinglePackageState = (state: GraphState): boolean => state.kind === 'graph' && state.singlePackage;
+
 type TaskFeedDeps = {
   readonly root: string;
   readonly runs: Pick<Runs, 'get' | 'onDidChange'>;
@@ -71,7 +74,9 @@ export class GraphTaskFeed {
     const { gate, ports } = this.deps;
     const state = gate.state();
 
-    if (state.kind === 'singlePackage') {
+    const isSingle = isSinglePackageState(state);
+
+    if (isSingle) {
       this.ignoreSinglePackage(request);
 
       return;
@@ -133,7 +138,9 @@ export class GraphTaskFeed {
 
     if (request === null) return;
 
-    if (state.kind === 'singlePackage') {
+    const isSingle = isSinglePackageState(state);
+
+    if (isSingle) {
       this.held = null;
       this.ignoreSinglePackage(request);
 

@@ -26,6 +26,8 @@ const GHOST_POSITIONS: Positions = positionsOf(NEAR_ROWS);
 /** A trace `site → store` runs through `bridge`; unticking `bridge` makes it a ghost. */
 export const GHOST_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: '9a05a001',
   packages: GHOST_PACKAGES,
   edges: GHOST_EDGES,

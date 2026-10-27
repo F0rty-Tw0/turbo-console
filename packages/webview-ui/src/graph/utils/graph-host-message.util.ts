@@ -32,6 +32,14 @@ const hasCachesOf = (state: UnknownRecord): boolean => {
   return hasPositions && hasFolderPositions;
 };
 
+const hasSinglePackageOf = (state: UnknownRecord): boolean => {
+  const { singlePackage, rootLabel } = state;
+  const hasFlag = typeof singlePackage === 'boolean';
+  const hasLabel = rootLabel === null || typeof rootLabel === 'string';
+
+  return hasFlag && hasLabel;
+};
+
 const isGraphShape = (state: UnknownRecord): boolean => {
   const { hash, packages, edges, tasks, atomGroups } = state;
   const hasHash = typeof hash === 'string';
@@ -40,7 +48,7 @@ const isGraphShape = (state: UnknownRecord): boolean => {
   const hasGraph = hasHash && hasPackages && hasEdges;
   const hasTaskParts = isGraphTaskList(tasks) && isAtomGroupList(atomGroups);
 
-  return hasGraph && hasCachesOf(state) && hasTaskParts;
+  return hasGraph && hasCachesOf(state) && hasTaskParts && hasSinglePackageOf(state);
 };
 
 const isGraphState = (state: unknown): boolean => {
@@ -48,7 +56,6 @@ const isGraphState = (state: unknown): boolean => {
 
   switch (state['kind']) {
     case 'loading':
-    case 'singlePackage':
       return true;
     case 'error':
       return typeof state['message'] === 'string';

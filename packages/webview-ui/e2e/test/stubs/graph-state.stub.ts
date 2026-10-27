@@ -42,6 +42,8 @@ const DANGLING_EDGES: GraphEdge[] = [...DIAMOND_CHAIN_EDGES, GHOST_EDGE];
 
 export const DIAMOND_CHAIN_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'a1b2c3d4',
   packages: packagesOf(['base', 'config', 'core', 'data', 'docs', 'ui', 'web']),
   edges: DIAMOND_CHAIN_EDGES,
@@ -89,6 +91,8 @@ const OBJECT_MEMBER_EDGES: GraphEdge[] = [
 /** Packages named like `Object` members, laid out by ELK: no position may resolve to an inherited member. */
 export const OBJECT_MEMBER_NAMES_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'f00dface',
   packages: packagesOf(['__proto__', 'app', 'constructor', 'toString']),
   edges: OBJECT_MEMBER_EDGES,
@@ -107,6 +111,8 @@ const ARROW_NAME_EDGES: GraphEdge[] = [
 /** Package names that hold `>`: an edge id built as `source>target` would be a package name, or another edge's id. */
 export const ARROW_NAMES_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'a0b0c0d0',
   packages: packagesOf(['a', 'a>b', 'b', 'b>c', 'c']),
   edges: ARROW_NAME_EDGES,
@@ -119,5 +125,3 @@ export const ARROW_NAMES_STUB: GraphReady = {
 export const LOADING_STUB: GraphState = { kind: 'loading' };
 
 export const ERROR_STUB: GraphState = { kind: 'error', message: 'turbo exited with code 1' };
-
-export const SINGLE_PACKAGE_STUB: GraphState = { kind: 'singlePackage' };

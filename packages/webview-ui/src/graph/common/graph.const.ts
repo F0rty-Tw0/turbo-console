@@ -38,8 +38,6 @@ export const LOADING_TEXT = 'Loading packages…';
 
 export const LAYOUT_FAILED_TEXT = 'The package graph could not be drawn';
 
-export const SINGLE_PACKAGE_TEXT = 'This is a single-package repo, so there is no package graph';
-
 export const FALLBACK_NOTICE_TEXT = 'Simplified layout: the layout worker failed';
 
 /** The notice while the first grouped layout runs and the flat graph stays on screen. */

@@ -28,6 +28,8 @@ export const TASK_CHAIN_STUB: GraphTask[] = [API_BUILD_STUB, WEB_BUILD_STUB, WEB
 /** A graph state of hash `h1` with `TASK_CHAIN_STUB` and no package. */
 export const TASK_STATE_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'h1',
   packages: [],
   edges: [],

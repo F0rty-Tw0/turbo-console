@@ -77,6 +77,8 @@ export const targetLikeState = (): GraphReady => {
   const edges = [...libLinks, ...featLinks, ...appLinks];
   const state: GraphReady = {
     kind: 'graph',
+    singlePackage: false,
+    rootLabel: null,
     hash: '7a7a7a7a',
     packages,
     edges,

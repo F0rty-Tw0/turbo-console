@@ -35,8 +35,7 @@ describe('FEATURE: accepted positions', () => {
 
   it.each<[string, GraphState]>([
     ['loading', { kind: 'loading' }],
-    ['error', { kind: 'error', message: 'x' }],
-    ['singlePackage', { kind: 'singlePackage' }]
+    ['error', { kind: 'error', message: 'x' }]
   ])('GIVEN a %s state WHEN checked THEN it is null', (_name, state) => {
     expect(acceptedPositions(state, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB })).toBeNull();
   });

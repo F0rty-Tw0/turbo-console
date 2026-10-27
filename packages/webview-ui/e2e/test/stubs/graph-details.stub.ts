@@ -53,6 +53,8 @@ export const DETAILS_POSITIONS_STUB: Positions = positionsOf([...KEPT_ROWS, SOLO
 /** Nine packages in four folders, cached; tags app, lib, ui. */
 export const DETAILS_STUB: GraphReady = {
   kind: 'graph',
+  singlePackage: false,
+  rootLabel: null,
   hash: 'd3a11001',
   packages: DETAILS_PACKAGES,
   edges: DETAILS_EDGES,

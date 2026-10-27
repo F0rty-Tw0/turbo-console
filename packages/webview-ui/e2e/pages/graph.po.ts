@@ -110,13 +110,6 @@ export class GraphPage {
     await expect(this.loading).toBeHidden();
   }
 
-  /** The graph container and every toolbar button are hidden. */
-  public async expectGraphHidden(): Promise<void> {
-    await expect(this.container).toBeHidden();
-
-    for (const label of TOOLBAR_LABELS) await expect(this.buttonOf(label)).toBeHidden();
-  }
-
   /** Under the graph CSP, a second `tc-elk` policy, a `default` policy and a worker from a raw blob URL string all throw. */
   public async expectTrustedTypesLocked(): Promise<void> {
     const outcomes = await this.page.evaluate(trustedTypesEscapes);

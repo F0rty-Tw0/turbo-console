@@ -15,6 +15,8 @@ const EDGES: GraphEdge[] = [
 export const foldersShotState = (): GraphReady => {
   const state: GraphReady = {
     kind: 'graph',
+    singlePackage: false,
+    rootLabel: null,
     hash: '5407d001',
     packages: [
       packageOf('web', 'apps/web'),

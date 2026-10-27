@@ -40,6 +40,8 @@ export const overCapTasksState = (): GraphReady => {
   const dependents = slots.map((_slot, index) => dependentOf(index));
   const state: GraphReady = {
     kind: 'graph',
+    singlePackage: false,
+    rootLabel: null,
     hash: '7a5c0400',
     packages: packagesOf(['leaf', 'root']),
     edges: LEAF_NEEDS_ROOT,

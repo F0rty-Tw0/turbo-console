@@ -55,8 +55,6 @@ type GraphError = {
   readonly message: string;
 };
 
-type GraphSinglePackage = { readonly kind: 'singlePackage' };
-
 export type GraphReady = {
   readonly kind: 'graph';
   readonly hash: string;
@@ -67,6 +65,10 @@ export type GraphReady = {
   readonly tasks: GraphTask[];
   /** Sorted by umbrella id; not part of the layout hash. */
   readonly atomGroups: GraphAtomGroup[];
+  /** Whether the root is a single-package turbo repo, whose one package is `//`. */
+  readonly singlePackage: boolean;
+  /** The `//` package's label when `singlePackage`, else `null`; `null` too when that package has no label. */
+  readonly rootLabel: string | null;
 };
 
-export type GraphState = GraphLoading | GraphError | GraphSinglePackage | GraphReady;
+export type GraphState = GraphLoading | GraphError | GraphReady;

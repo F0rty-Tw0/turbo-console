@@ -19,7 +19,7 @@ type FeedFixture = {
 
 const LOADING: GraphState = { kind: 'loading' };
 const ERROR: GraphState = { kind: 'error', message: 'failed' };
-const SINGLE_PACKAGE: GraphState = { kind: 'singlePackage' };
+const SINGLE_PACKAGE: GraphState = { ...GRAPH_STATE_STUB, singlePackage: true, rootLabel: 'single-app' };
 const SHOW_WEB: GraphShowRequest = { type: 'showPackage', name: 'web' };
 const SHOW_A_BUILD: GraphShowRequest = { type: 'showTasks', taskIds: ['a#build'] };
 
