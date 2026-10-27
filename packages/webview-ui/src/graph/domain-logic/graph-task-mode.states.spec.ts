@@ -200,11 +200,13 @@ describe('FEATURE: GraphTaskMode across page states', () => {
     });
   });
 
-  it('GIVEN task mode with only ids that no longer exist chosen WHEN the single-package state arrives THEN every task is listed', () => {
-    open(taskSavedOf({ chosen: ['//#gone'] }));
-    mode.received(SINGLE_TASK_STATE_STUB, 7);
+  describe('GIVEN task mode with only ids that no longer exist chosen', () => {
+    it('WHEN the single-package state arrives THEN every task is listed', () => {
+      open(taskSavedOf({ chosen: ['//#gone'] }));
+      mode.received(SINGLE_TASK_STATE_STUB, 7);
 
-    expect(listedIdsOf(rig)).toStrictEqual(ALL_IDS);
+      expect(listedIdsOf(rig)).toStrictEqual(ALL_IDS);
+    });
   });
 
   describe('GIVEN root#t chosen over the cap and in flight', () => {
@@ -257,10 +259,12 @@ describe('FEATURE: GraphTaskMode across page states', () => {
     });
   });
 
-  it('GIVEN a monorepo state WHEN task mode lists its rows THEN Controls gets no root label', () => {
-    open(taskSavedOf({}));
-    mode.received(TASK_STATE_STUB, 7);
+  describe('GIVEN a monorepo state', () => {
+    it('WHEN task mode lists its rows THEN Controls gets no root label', () => {
+      open(taskSavedOf({}));
+      mode.received(TASK_STATE_STUB, 7);
 
-    expect(rig.controls.setRows).toHaveBeenLastCalledWith(expect.any(Array), null);
+      expect(rig.controls.setRows).toHaveBeenLastCalledWith(expect.any(Array), null);
+    });
   });
 });

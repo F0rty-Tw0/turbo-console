@@ -137,13 +137,15 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
 
-    it('GIVEN the mode group hidden WHEN task mode is left with focus in the panel THEN Controls takes focus', () => {
-      rig.deps.page.modeGroup.hidden = true;
-      details.show(RUNNING);
-      rig.built[0]?.heading.focus();
-      details.exit();
+    describe('AND the mode group hidden', () => {
+      it('WHEN task mode is left with focus in the panel THEN Controls takes focus', () => {
+        rig.deps.page.modeGroup.hidden = true;
+        details.show(RUNNING);
+        rig.built[0]?.heading.focus();
+        details.exit();
 
-      expect(document.activeElement).toBe(rig.deps.page.controls);
+        expect(document.activeElement).toBe(rig.deps.page.controls);
+      });
     });
   });
 

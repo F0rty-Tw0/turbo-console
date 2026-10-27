@@ -174,12 +174,14 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
 
-    it('GIVEN the mode group hidden WHEN task mode is left with focus on a row THEN Controls takes focus', () => {
-      rig.deps.page.modeGroup.hidden = true;
-      rig.rows[0]?.pick.focus();
-      controls.exit();
+    describe('AND the mode group hidden', () => {
+      it('WHEN task mode is left with focus on a row THEN Controls takes focus', () => {
+        rig.deps.page.modeGroup.hidden = true;
+        rig.rows[0]?.pick.focus();
+        controls.exit();
 
-      expect(document.activeElement).toBe(rig.deps.page.controls);
+        expect(document.activeElement).toBe(rig.deps.page.controls);
+      });
     });
 
     describe('WHEN web#build has focus and the rows are listed again', () => {

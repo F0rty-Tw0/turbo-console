@@ -91,42 +91,48 @@ describe('FEATURE: task mode memory', () => {
   });
 
   describe('GIVEN a state of //#build and //#lint', () => {
-    it.each([
+    describe.each([
       ['single-package', [], ['//#build', '//#lint'], true],
       ['single-package', ['//#gone'], ['//#build', '//#lint'], true],
       ['single-package', ['//#gone', '//#lint'], ['//#lint'], true],
       ['monorepo', [], [], false]
-    ])('GIVEN %s with %j chosen WHEN the shown set is read THEN it lists %j', (_kind, chosen, ids, singlePackage) => {
-      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
-      const memory = new GraphTaskMemory(modesOf(saved));
-      const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage };
+    ])('AND %s with %j chosen', (_kind, chosen, ids, singlePackage) => {
+      it('WHEN the shown set is read THEN it lists the expected ids', () => {
+        const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
+        const memory = new GraphTaskMemory(modesOf(saved));
+        const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage };
 
-      memory.keep(state);
+        memory.keep(state);
 
-      expect(memory.shownSet().ids).toStrictEqual(ids);
+        expect(memory.shownSet().ids).toStrictEqual(ids);
+      });
     });
 
-    it('GIVEN single-package with nothing chosen WHEN the shown set is read twice THEN nothing is saved', () => {
-      const modes = modesOf(null);
-      const memory = new GraphTaskMemory(modes);
+    describe('AND single-package with nothing chosen', () => {
+      it('WHEN the shown set is read twice THEN nothing is saved', () => {
+        const modes = modesOf(null);
+        const memory = new GraphTaskMemory(modes);
 
-      memory.keep(SINGLE_TASK_STATE_STUB);
-      memory.shownSet();
-      memory.shownSet();
+        memory.keep(SINGLE_TASK_STATE_STUB);
+        memory.shownSet();
+        memory.shownSet();
 
-      expect(modes.saveTask).not.toHaveBeenCalled();
+        expect(modes.saveTask).not.toHaveBeenCalled();
+      });
     });
 
-    it.each([
+    describe.each([
       [true, 'single-app'],
       [false, null]
-    ])('GIVEN singlePackage %s WHEN the root label is read THEN it is %j', (singlePackage, label) => {
-      const memory = new GraphTaskMemory(modesOf(null));
-      const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage, rootLabel: label };
+    ])('AND singlePackage %s', (singlePackage, label) => {
+      it('WHEN the root label is read THEN it is the state’s label', () => {
+        const memory = new GraphTaskMemory(modesOf(null));
+        const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage, rootLabel: label };
 
-      memory.keep(state);
+        memory.keep(state);
 
-      expect(memory.rootLabel()).toBe(label);
+        expect(memory.rootLabel()).toBe(label);
+      });
     });
   });
 });
