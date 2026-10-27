@@ -1,17 +1,18 @@
 import type { TaskMessage } from '@turbo-console/webview-ui';
 
+import { FOCUS_PACKAGE_COMMAND, SHOW_TASK_GRAPH_COMMAND } from '../../graph/common/graph.const.ts';
 import type { CommandMessage, DetailsCommand, PanelKey } from '../common/details.type.ts';
 
 const TASK_COMMANDS: Readonly<Record<TaskMessage['type'], string>> = {
   run: 'turboConsole.runTask',
   stop: 'turboConsole.stopTask',
   copy: 'turboConsole.copyCommand',
-  showInTaskGraph: 'turboConsole.showTaskGraph'
+  showInTaskGraph: SHOW_TASK_GRAPH_COMMAND
 };
 
 const PACKAGE_COMMANDS: Readonly<Record<'openPackageJson' | 'focusInGraph', string>> = {
   openPackageJson: 'turboConsole.openPackageJson',
-  focusInGraph: 'turboConsole.focusPackageInGraph'
+  focusInGraph: FOCUS_PACKAGE_COMMAND
 };
 
 /**
