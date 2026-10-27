@@ -5,7 +5,7 @@ import { DEFAULT_DEPTH } from '../common/graph.const.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
 
-/** The view state of a graph with nothing saved: the default camera, no selection, the controls' defaults, no inspection, package mode and no task view. */
+/** The view state of a graph with nothing saved: the default camera, no selection, the controls' defaults, no inspection, package mode, no task view and no panel widths. */
 export const freshViewStateOf = (hash: string): GraphViewState => {
   const state: GraphViewState = {
     hash,
@@ -25,7 +25,8 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
     grouped: true,
     collapsed: [],
     mode: 'packages',
-    task: null
+    task: null,
+    panelWidths: null
   };
 
   return state;

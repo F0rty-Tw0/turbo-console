@@ -1,6 +1,8 @@
 import type { LayoutNotice } from './graph-layouts.type.ts';
+import type { PanelSide } from './panel-sash.type.ts';
 import type { Column } from './roving.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
+import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
 
 export const NODE_HEIGHT = 32;
 
@@ -216,6 +218,30 @@ export const FILTERS_ON_TEXT = 'filters on';
 
 /** Below this width the details panel overlays the canvas instead of docking beside it; `graph.css` repeats the literal. */
 export const OVERLAY_MEDIA_QUERY = '(width < 960px)';
+
+/** The least a panel is drawn at, in px. */
+export const PANEL_MIN_PX = 200;
+
+/** The least the canvas keeps beside the docked panels, in px. */
+export const CANVAS_MIN_PX = 420;
+
+const CONTROLS_WIDTH_PX = 260;
+
+const DETAILS_WIDTH_PX = 280;
+
+export const DEFAULT_PANEL_WIDTHS: PanelWidths = { controls: CONTROLS_WIDTH_PX, details: DETAILS_WIDTH_PX };
+
+/** What an arrow key on a sash adds to or takes off its panel's width, in px. */
+export const PANEL_KEY_STEP_PX = 16;
+
+/** The class on the body while a sash drag runs, so the drag selects no text. */
+export const SASHING_CLASS = 'is-sashing';
+
+/** The class on the sash being dragged, which keeps its grip lit; `graph.css` styles it. */
+export const SASH_DRAGGING_CLASS = 'is-dragging';
+
+/** Each sash's accessible name. */
+export const RESIZE_LABELS: Readonly<Record<PanelSide, string>> = { controls: 'Resize Controls', details: 'Resize Details' };
 
 export const SEARCH_LABEL = 'Search packages';
 

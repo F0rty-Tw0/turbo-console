@@ -5,6 +5,7 @@ import type {
   GraphTraceRef,
   GraphViewMode,
   GraphViewState,
+  PanelWidths,
   TaskViewState
 } from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
@@ -146,10 +147,25 @@ const readMode = (value: unknown, task: TaskViewState | null): GraphViewMode => 
   return isTaskMode ? 'tasks' : 'packages';
 };
 
+const isPositiveNumber = (value: unknown): value is number => isFiniteNumber(value) && value > 0;
+
+/** The saved panel widths; `null` unless both sides are finite numbers above zero. */
+const readPanelWidths = (raw: unknown): PanelWidths | null => {
+  if (!isRecord(raw)) return null;
+
+  const { controls, details } = raw;
+
+  if (!isPositiveNumber(controls) || !isPositiveNumber(details)) return null;
+
+  const widths: PanelWidths = { controls, details };
+
+  return widths;
+};
+
 /** Whether `raw` holds a grouping choice; a state saved before folders existed has none, and reads as grouped. */
 export const hasSavedGrouping = (raw: unknown): boolean => isRecord(raw) && typeof raw['grouped'] === 'boolean';
 
-/** The saved camera, selection, controls, inspection, mode and task view, rebuilt field by field; `null` when the camera or selection is off, a bad controls, inspection or task field takes its default. */
+/** The saved camera, selection, controls, inspection, mode, task view and panel widths, rebuilt field by field; `null` when the camera or selection is off, a bad controls, inspection or task field takes its default. */
 export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   if (!isRecord(raw)) return null;
 
@@ -179,7 +195,8 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
     grouped: readGrouped(raw['grouped']),
     collapsed: readNames(raw['collapsed']),
     mode: readMode(raw['mode'], task),
-    task
+    task,
+    panelWidths: readPanelWidths(raw['panelWidths'])
   };
 
   return state;

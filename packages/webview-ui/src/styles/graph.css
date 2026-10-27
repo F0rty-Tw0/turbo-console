@@ -549,8 +549,10 @@ p {
 }
 
 .graph-controls {
+  --tc-controls-width: inherit;
+
   display: flex;
-  flex: 0 0 260px;
+  flex: 0 0 var(--tc-controls-width);
   box-sizing: border-box;
   flex-direction: column;
   gap: var(--space-2);
@@ -741,8 +743,11 @@ kbd {
 /* Details panel: docked beside the canvas, or over it in a narrow editor. */
 
 .graph-details {
+  --tc-details-width: inherit;
+
+  container-type: inline-size;
   display: flex;
-  flex: 0 0 280px;
+  flex: 0 0 var(--tc-details-width);
   box-sizing: border-box;
   flex-direction: column;
   gap: var(--space-2);
@@ -758,11 +763,93 @@ kbd {
   .graph-details {
     position: absolute;
     z-index: 2;
-    width: 280px;
+    width: var(--tc-details-width);
     inset-block: 0;
     inset-inline-end: 0;
     box-shadow: -2px 0 8px var(--vscode-widget-shadow);
   }
+}
+
+/*
+ * The panel widths GraphPanelSashes writes on the body. They do not inherit, so a drag restyles only the four elements that
+ * pull the value in with `inherit`, not the whole graph under the body. The initial values are the default widths.
+ */
+@property --tc-controls-width {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 260px;
+}
+
+@property --tc-details-width {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 280px;
+}
+
+/*
+ * Panel sashes: a 4px grip centred on each panel's inner edge, placed by the width variables GraphPanelSashes writes on
+ * the body, over the Details overlay. Each shows only while its panel of the mode on screen shows.
+ */
+.graph-sash {
+  position: absolute;
+  inset-block: 0;
+  z-index: 3;
+  display: none;
+  width: 4px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.graph-sash-controls {
+  --tc-controls-width: inherit;
+
+  inset-inline-start: calc(var(--tc-controls-width) - 2px);
+}
+
+.graph-sash-details {
+  --tc-details-width: inherit;
+
+  inset-inline-end: calc(var(--tc-details-width) - 2px);
+}
+
+.graph-sash::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 1px;
+  width: 1px;
+}
+
+.graph-sash:hover::after,
+.graph-sash.is-dragging::after {
+  background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+/* The keyboard focus line is 2px, centred in the 4px grip, so it is a visible indicator and not a hairline. */
+.graph-sash:focus-visible::after {
+  width: 2px;
+  background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+.graph-sash:focus-visible {
+  outline: none;
+}
+
+.vscode-high-contrast .graph-sash:focus-visible,
+.vscode-high-contrast-light .graph-sash:focus-visible {
+  outline: 1px solid var(--vscode-contrastActiveBorder);
+}
+
+.graph-body.is-sashing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.graph-page:not(.task-mode) .graph-body:has(> #graph-controls:not([hidden])) > .graph-sash-controls,
+.graph-page.task-mode .graph-body:has(> #graph-task-controls:not([hidden])) > .graph-sash-controls,
+.graph-page:not(.task-mode) .graph-body:has(> #graph-details:not([hidden])) > .graph-sash-details,
+.graph-page.task-mode .graph-body:has(> #graph-task-details:not([hidden])) > .graph-sash-details {
+  display: block;
 }
 
 /* Details panel views */
@@ -925,10 +1012,25 @@ kbd {
   gap: var(--space-2);
 }
 
+/*
+ * A label wider than its column ("Exclude folder" in a wide UI font) wraps between its words instead of spilling. A
+ * single word too wide still spills (no `anywhere` break from `.details-view`), so the e2e fit check can see it.
+ */
 .details-row .text-button {
   justify-content: center;
   padding-inline: var(--space-1);
-  white-space: nowrap;
+  text-align: center;
+  overflow-wrap: normal;
+}
+
+/*
+ * A Details panel sashed towards its 200px minimum has no room for three labels such as "Start trace" a row. At the
+ * default 280px (255px of content) three package labels still fit in common UI fonts.
+ */
+@container (width < 240px) {
+  .details-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .primary-button {

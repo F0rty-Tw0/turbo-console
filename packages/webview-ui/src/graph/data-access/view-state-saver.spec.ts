@@ -26,7 +26,8 @@ const FIRST: GraphViewState = {
   grouped: false,
   collapsed: [],
   mode: 'packages',
-  task: null
+  task: null,
+  panelWidths: null
 };
 
 const SECOND: GraphViewState = { ...FIRST, zoom: 2 };

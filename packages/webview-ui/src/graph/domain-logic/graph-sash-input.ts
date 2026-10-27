@@ -1,0 +1,66 @@
+import { SASHING_CLASS, SASH_DRAGGING_CLASS } from '../common/graph.const.ts';
+import type { PanelSide, SashResizer } from '../common/panel-sash.type.ts';
+import { sashDragWidthOf, sashKeyWidthOf } from '../utils/sash-input.util.ts';
+
+const PRIMARY_BUTTON = 0;
+
+/**
+ * Wires one sash to its panel: a pointer drag resizes from where the sash was grabbed while it holds the pointer and
+ * saves when it lets go of it after a move, a double click resets, and the arrow, Home and End keys resize and save.
+ * Any other key, and any key with a modifier held, is left alone so Tab and the
+ * browser's shortcuts still work.
+ */
+export const wireSashInput = (side: PanelSide, sash: HTMLElement, sashes: SashResizer, body: HTMLElement): void => {
+  let grabOffset = 0;
+  let isMoved = false;
+
+  const gripWidthOf = (event: PointerEvent): number => sashDragWidthOf(side, event.clientX, body.getBoundingClientRect());
+
+  const dragEnded = (): void => {
+    sash.classList.remove(SASH_DRAGGING_CLASS);
+    body.classList.remove(SASHING_CLASS);
+
+    if (isMoved) sashes.commit();
+
+    isMoved = false;
+  };
+  const onPointerDown = (event: PointerEvent): void => {
+    if (event.button !== PRIMARY_BUTTON) return;
+
+    const gripWidth = gripWidthOf(event);
+
+    grabOffset = sashes.widthOf(side) - gripWidth;
+    sash.setPointerCapture(event.pointerId);
+    sash.classList.add(SASH_DRAGGING_CLASS);
+    body.classList.add(SASHING_CLASS);
+  };
+  const onPointerMove = (event: PointerEvent): void => {
+    const isDragging = sash.hasPointerCapture(event.pointerId);
+
+    if (!isDragging) return;
+
+    const gripWidth = gripWidthOf(event);
+
+    isMoved = true;
+    sashes.resize(side, gripWidth + grabOffset);
+  };
+  const onKeyDown = (event: KeyboardEvent): void => {
+    const hasModifier = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
+
+    if (hasModifier) return;
+
+    const next = sashKeyWidthOf(side, event.key, sashes.widthOf(side), sashes.maxOf(side));
+
+    if (next === null) return;
+
+    event.preventDefault();
+    sashes.resize(side, next);
+    sashes.commit();
+  };
+
+  sash.addEventListener('pointerdown', onPointerDown);
+  sash.addEventListener('pointermove', onPointerMove);
+  sash.addEventListener('lostpointercapture', dragEnded);
+  sash.addEventListener('dblclick', (): void => sashes.reset(side));
+  sash.addEventListener('keydown', onKeyDown);
+};

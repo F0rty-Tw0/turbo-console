@@ -27,7 +27,8 @@ describe('FEATURE: freshViewStateOf', () => {
         grouped: true,
         collapsed: [],
         mode: 'packages',
-        task: null
+        task: null,
+        panelWidths: null
       });
     });
   });

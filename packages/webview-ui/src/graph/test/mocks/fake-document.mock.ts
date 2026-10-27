@@ -1,4 +1,5 @@
 import { fakeClassListMock } from './fake-class-list.mock.ts';
+import { fakeStyleMock } from './fake-style.mock.ts';
 import type { AddedListener, FakeClassList, FakeEvent, FakeListener, FakeRect } from '../common/fake-document.type.ts';
 
 type FakeFocus = {
@@ -39,7 +40,7 @@ class FakeElement {
   public offsetTop = 0;
   public offsetWidth = 0;
   public offsetHeight = 0;
-  public readonly style: Record<string, string> = {};
+  public readonly style: Record<string, string> = fakeStyleMock();
   public readonly dataset: Record<string, string> = {};
   public parent: FakeElement | null = null;
   public readonly scrollIntoView = ignore;

@@ -8,10 +8,12 @@ import { TASK_WIDGET_CLASS } from '../common/graph-task.const.ts';
 import type { TaskDetailsModel, TaskWidgetsDeps } from '../common/task-details.type.ts';
 import type { MenuElements } from '../common/widget-menu.type.ts';
 import type { RectPx, WidgetRects } from '../common/widget.type.ts';
+import type { TickRunner } from '../test/common/tick-observer.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { graphViewMock } from '../test/mocks/graph-view.mock.ts';
 import { switchableMediaQueryMock } from '../test/mocks/media-query.mock.ts';
 import { taskWidgetViewsMock } from '../test/mocks/task-widget-views.mock.ts';
+import { tickObserverMock } from '../test/mocks/tick-observer.mock.ts';
 import { API_BUILD_STUB, GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
 import { HOME_CAMERA_STUB } from '../test/stubs/layout.stub.ts';
 
@@ -29,6 +31,8 @@ type WidgetsRig = {
   /** Flips the overlay media query, running its `change` listeners. */
   readonly flipOverlay: (isOverlay: boolean) => void;
   readonly setActive: (isActive: boolean) => void;
+  /** Runs the aside's ResizeObserver callbacks, as a drag of its sash does. */
+  readonly resizeAside: () => void;
 };
 
 const CANVAS_WIDTH = 400;
@@ -58,6 +62,10 @@ const rectsOf = (selected: RectPx): WidgetRects => {
 };
 
 const rigOf = (): WidgetsRig => {
+  const asideResizes: TickRunner[] = [];
+
+  vi.stubGlobal('ResizeObserver', tickObserverMock(asideResizes));
+
   const { page, views, buttons, menus } = taskWidgetViewsMock();
   const view = graphViewMock(HOME_CAMERA_STUB);
   const bridge: Mocked<Bridge> = { ready: vi.fn(), post: vi.fn(), onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
@@ -83,11 +91,13 @@ const rigOf = (): WidgetsRig => {
     return new GraphTaskWidgets(deps);
   };
 
+  const resizeAside = (): void => asideResizes.forEach((tick) => tick());
+
   setSize(page.container, 0, CANVAS_WIDTH);
   setSize(aside, PANEL_LEFT, 100);
   view.widgetRects.mockReturnValue(rectsOf(LEFT_RECT));
 
-  const rig: WidgetsRig = { page, view, bridge, aside, buttons, menus, widgetsOf, flipOverlay: overlay.flip, setActive };
+  const rig: WidgetsRig = { page, view, bridge, aside, buttons, menus, widgetsOf, flipOverlay: overlay.flip, setActive, resizeAside };
 
   return rig;
 };
@@ -245,6 +255,15 @@ describe('FEATURE: GraphTaskWidgets', () => {
       widgets.rendered();
 
       expect(taskButtonsOf(rig)[0]?.hidden).toBe(true);
+    });
+
+    it('WHEN a#build is drawn across the panel edge and the panel then narrows THEN its "…" shows', () => {
+      rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
+      widgets.rendered();
+      setSize(rig.aside, CANVAS_WIDTH - 20, 100);
+      rig.resizeAside();
+
+      expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
     });
 
     describe('WHEN a#build is drawn across the panel edge and the selection keeps clear', () => {
