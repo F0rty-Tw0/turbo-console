@@ -17,7 +17,7 @@ import {
 
 const fullNameOf = (task: GraphTask): string => task.fullName;
 
-type TaskRef = GraphTask['directDependencies']['items'][number];
+type TaskRef = { readonly fullName: string };
 
 const refNameOf = (ref: TaskRef): string => ref.fullName;
 

@@ -10,7 +10,7 @@ import { array, object, string } from 'zod/mini';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { loadWorkspace, readDryRun, resolveTurbo } from '../index.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
-import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '../index.ts';
+import type { CachedWorkspace, TaskNode, TurboBinary, WorkspaceModel } from '../index.ts';
 import {
   writeEdgesFixture,
   writeEmptyWorkspaceFixture,
@@ -23,6 +23,8 @@ import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.t
 type CacheReader = (root: string, cacheDir: string) => Promise<CachedWorkspace | null>;
 
 type TaskRow = [id: string, isTurboTask: boolean, persistent: boolean];
+
+type DryTask = { readonly taskId: string; readonly dependencies: string[] };
 
 const spawns = vi.hoisted(() => {
   const files: string[] = [];
@@ -83,7 +85,7 @@ const isTurboRow = ([, isTurboTask]: TaskRow): boolean => isTurboTask;
 
 const rowsOf = (model: WorkspaceModel): TaskRow[] => {
   const tasks = model.packages[0]?.tasks ?? [];
-  const toRow = (task: WorkspaceModel['packages'][number]['tasks'][number]): TaskRow => [task.id, task.isTurboTask, task.persistent];
+  const toRow = (task: TaskNode): TaskRow => [task.id, task.isTurboTask, task.persistent];
 
   return tasks.map(toRow);
 };
@@ -210,7 +212,7 @@ describe('FEATURE: load a workspace from a real turbo in each repo shape', () =>
 
     it('THEN every task dependencies equal the turbo.json edges, the script //#format kept in //#build', () => {
       const tasks = model.packages[0]?.tasks ?? [];
-      const toEntry = (task: (typeof tasks)[number]): [string, string[]] => [task.id, task.dependencies];
+      const toEntry = (task: TaskNode): [string, string[]] => [task.id, task.dependencies];
 
       expect(Object.fromEntries(tasks.map(toEntry))).toStrictEqual(EXPECTED_EDGES);
     });
@@ -218,7 +220,7 @@ describe('FEATURE: load a workspace from a real turbo in each repo shape', () =>
     it('THEN they equal a --single-package --dry=json of dev build, ids prefixed //#', async () => {
       const run = await runTurbo(binary.path, ['run', 'dev', 'build', '--single-package', '--dry=json'], root);
       const dry = DRY_TASKS_SCHEMA.parse(JSON.parse(run.stdout)).tasks;
-      const toEntry = (task: (typeof dry)[number]): [string, string[]] => {
+      const toEntry = (task: DryTask): [string, string[]] => {
         const dependencies = task.dependencies.map((dep) => `//#${dep}`).toSorted();
 
         return [`//#${task.taskId}`, dependencies];
