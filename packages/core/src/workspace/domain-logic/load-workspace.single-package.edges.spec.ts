@@ -7,7 +7,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { loadWorkspace } from './load-workspace.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import { TurboBinary } from '../../binary/common/index.ts';
-import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
 import { PACKAGE_GRAPH_QUERY } from '../../shared/turbo/common/turbo-query.const.ts';
 import type { GraphTask, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import type { TurboConfigFile } from '../common/turbo-config.type.ts';
@@ -104,7 +103,14 @@ const depsOf = (model: WorkspaceModel, id: string): string[] | undefined =>
 
 const queryTextOf = (call: unknown[] | undefined): unknown => call?.[1];
 
-const optionsOf = (call: unknown[] | undefined): unknown => call?.[3];
+const optionsOf = (call: unknown[]): object => {
+  const options = call[3];
+  const none = {};
+
+  if (typeof options === 'object' && options !== null) return options;
+
+  return none;
+};
 
 describe('FEATURE: load a single-package workspace with its task edges', () => {
   let tempDir = '';
@@ -136,13 +142,15 @@ describe('FEATURE: load a single-package workspace with its task edges', () => {
     it('WHEN loaded THEN turbo is queried twice with the same query and only the second adds singlePackage', async () => {
       turbo.stdouts.push(JSON.stringify(FIRST), JSON.stringify(SECOND));
 
-      await loadWorkspace(pnpmRoot);
+      await loadWorkspace(pnpmRoot, { signal: new AbortController().signal });
 
       const [first, second] = turbo.queryArgs.map(optionsOf);
 
       expect(turbo.queryArgs.map(queryTextOf)).toStrictEqual([PACKAGE_GRAPH_QUERY, PACKAGE_GRAPH_QUERY]);
       expect(first).not.toHaveProperty('singlePackage');
-      expect(second).toMatchObject({ singlePackage: true, timeoutMs: TURBO_BUDGET_MS.query });
+      expect(first).toHaveProperty('signal');
+      expect(first).toHaveProperty('maxBuffer');
+      expect(second).toStrictEqual({ ...first, singlePackage: true });
     });
 
     it('WHEN loaded THEN //#build depends on the second graph edges, the script //#format kept', async () => {
