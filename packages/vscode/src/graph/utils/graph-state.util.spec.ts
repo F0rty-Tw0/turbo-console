@@ -159,12 +159,15 @@ describe('FEATURE: graph state builder', () => {
     });
   });
 
-  describe('GIVEN a monorepo model', () => {
-    it('WHEN the state is built THEN rootLabel is null even if a package has a label', () => {
-      const labelled: PackageNode = { ...PACKAGE_NODE_STUB, label: 'labelled' };
-      const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [labelled] };
+  describe('GIVEN a monorepo model whose // package has a label', () => {
+    const labelledRoot: PackageNode = { ...ROOT_NODE, label: 'labelled' };
+    const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [labelledRoot] };
 
+    it('WHEN the state is built THEN rootLabel is null', () => {
       expect(graphStateOf(model, NO_LAYOUT_CACHES_STUB)).toMatchObject({ singlePackage: false, rootLabel: null });
+    });
+
+    it('WHEN the root label is read THEN it is null', () => {
       expect(rootLabelOf(model)).toBeNull();
     });
   });
