@@ -26,7 +26,7 @@ const FOLDER_SWATCH: LegendSwatch = { ...BOX_SWATCH, radiusPx: 8, isNested: true
 
 const COLLAPSED_FOLDER_SWATCH: LegendSwatch = { ...BOX_SWATCH, radiusPx: 8 };
 
-const FOLDER_LINK_SWATCH: LegendSwatch = { ...LINE_SWATCH, hasPlate: true };
+const FOLDER_LINK_SWATCH: LegendSwatch = { ...LINE_SWATCH, isArrow: true, hasPlate: true };
 
 /** The package graph's legend rows, in the order the popover lists them. */
 export const PACKAGE_LEGEND_ROWS: LegendRow[] = [

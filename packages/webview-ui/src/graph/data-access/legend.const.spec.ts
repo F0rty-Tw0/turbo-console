@@ -122,8 +122,15 @@ const packageOf = (row: LegendRow): Expected => {
   return style;
 };
 
+const weightOf = (row: LegendRow): Expected => {
+  const weight = { 'font-weight': row.swatch.isBold ? 'bold' : 'normal' };
+
+  return weight;
+};
+
 const boldFillOf = (row: LegendRow): Expected => {
-  const style = { 'font-weight': 'bold', 'background-color': fillOf(row) };
+  const weight = weightOf(row);
+  const style = { ...weight, 'background-color': fillOf(row) };
 
   return style;
 };
@@ -136,7 +143,7 @@ const lineOf = (row: LegendRow): Expected => {
 
 const edgeOf = (row: LegendRow): Expected => {
   const line = lineOf(row);
-  const edge = { ...line, 'target-arrow-shape': 'triangle' };
+  const edge = { ...line, 'target-arrow-shape': row.swatch.isArrow ? 'triangle' : 'none' };
 
   return edge;
 };
@@ -167,17 +174,18 @@ const dashedBorderOf = (row: LegendRow): Expected => {
   return dashed;
 };
 
-const BOLD: Expected = { 'font-weight': 'bold' };
+const dimmedOf = (row: LegendRow): Expected => {
+  const dimmed = { opacity: row.swatch.isDimmed ? COLORS.dimmedOpacity : 1 };
 
-const DIMMED: Expected = { opacity: COLORS.dimmedOpacity };
+  return dimmed;
+};
 
-const FOLDER_LINK: Expected = { label: 'data(label)', 'text-background-color': COLORS.background };
+const plateOf = (row: LegendRow): Expected => {
+  const isPlated = row.swatch.hasPlate;
+  const plate = { label: isPlated ? 'data(label)' : '', 'text-background-color': isPlated ? COLORS.background : 'none' };
 
-const boldOf = (): Expected => BOLD;
-
-const dimmedOf = (): Expected => DIMMED;
-
-const folderLinkOf = (): Expected => FOLDER_LINK;
+  return plate;
+};
 
 const RUN_PINS: Pin[] = RUN_STATES.map((state): Pin => [`run-${state}`, `node.run-${state}`, outlineStyleOf]);
 
@@ -185,15 +193,17 @@ const PINS: Pin[] = [
   ['package', 'node', packageOf],
   ['selected', 'node.selected', borderOf],
   ['selected', 'node.selected:childless', boldFillOf],
-  ['focus-target', 'node.focus-target', boldOf],
+  ['focus-target', 'node.focus-target', weightOf],
   ['highlighted', 'node.highlighted', borderOf],
   ['dimmed', '.dimmed', dimmedOf],
   ['edge', 'edge', edgeOf],
   ['ghost-node', 'node.ghost', dashedBorderOf],
+  ['ghost-edge', 'edge', edgeOf],
   ['ghost-edge', 'edge.ghost', ghostEdgeOf],
   ['folder', 'node:parent', folderOf],
   ['folder-collapsed', 'node.folder-node', cornerOf],
-  ['folder-link', 'edge.folder-link', folderLinkOf],
+  ['folder-link', 'edge', edgeOf],
+  ['folder-link', 'edge.folder-link', plateOf],
   ['task-box', 'node:parent.task-box', dashedBorderOf],
   ['task-box', 'node:parent', cornerOf],
   ['flow', 'edge.highlighted', lineOf],
