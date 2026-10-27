@@ -127,7 +127,7 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(rig.onClear).not.toHaveBeenCalled();
     });
 
-    it('WHEN task mode is left with focus in the panel THEN the Task mode toggle takes focus', () => {
+    it('WHEN task mode is left with focus in the panel THEN Packages takes focus', () => {
       details.show(RUNNING);
       rig.built[0]?.heading.focus();
       details.exit();

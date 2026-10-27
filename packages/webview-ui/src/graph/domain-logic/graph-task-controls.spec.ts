@@ -147,7 +147,7 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(rig.actions.onToggle).toHaveBeenCalledExactlyOnceWith(false);
     });
 
-    it('WHEN task mode is left with focus on a row THEN the panel hides, Controls points back and the toggle takes focus', () => {
+    it('WHEN task mode is left with focus on a row THEN the panel hides, Controls points back and Packages takes focus', () => {
       rig.rows[0]?.pick.focus();
       controls.exit();
 

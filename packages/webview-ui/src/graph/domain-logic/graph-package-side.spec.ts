@@ -265,7 +265,7 @@ describe('FEATURE: GraphPackageSide mode button focus', () => {
   /** Focus is on `key` when task mode is left; a loading screen drops it (the new fake document has none), then the next graph shows. */
   const leaveWithFocusOn = async (key: 'packagesMode' | 'taskMode'): Promise<void> => {
     rig.page[key].focus();
-    rig.side.keepToggleFocus();
+    rig.side.keepModeFocus();
     rig.page.details.focus();
     vi.stubGlobal('document', fakeDocumentMock());
     rig.side.show(STATE_STUB, 1);

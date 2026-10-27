@@ -78,7 +78,7 @@ p {
   cursor: default;
 }
 
-/* An open panel's toggle and the pressed Task mode toggle; after the hover rule, which has the same specificity, so the pressed look wins. */
+/* An open panel's toggle and the pressed mode button; after the hover rule, which has the same specificity, so the pressed look wins. */
 .graph-toolbar .text-button[aria-expanded='true'],
 .graph-toolbar .text-button[aria-pressed='true'] {
   border-color: var(--vscode-inputOption-activeBorder, transparent);

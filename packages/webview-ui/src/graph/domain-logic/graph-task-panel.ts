@@ -31,7 +31,7 @@ export const saveDetailsToggle = (deps: PanelToggleDeps, widgets: Pick<TaskWidge
 
 /**
  * Task mode's page-level parts: the `task-mode` class on the page, which hides the package Controls panel and widgets,
- * the pressed toggle, the prompt, the cap banner and its Show all tasks button, and the notice line. Entering moves the
+ * the pressed mode button, the prompt, the cap banner and its Show all tasks button, and the notice line. Entering moves the
  * Details bar into the task aside and empties the package selection's status line and summary, which the package
  * inspection writes again once its graph shows; leaving moves the bar back into the package aside, once it exists. Show all tasks
  * hides itself with the banner, so it hands focus to the canvas. A notice shown in package mode, where no task render

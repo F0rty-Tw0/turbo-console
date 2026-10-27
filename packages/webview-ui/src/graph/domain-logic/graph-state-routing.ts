@@ -41,7 +41,7 @@ export class GraphStateRouting {
     const { packages } = this.deps;
 
     this.pending = null;
-    packages.keepToggleFocus();
+    packages.keepModeFocus();
 
     if (pending !== null) packages.show(pending, this.deps.now());
     else packages.redraw();

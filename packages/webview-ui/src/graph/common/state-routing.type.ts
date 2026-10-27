@@ -13,8 +13,8 @@ export type RoutedPackageSide = {
   readonly drawnHash: () => string | null;
   /** Draws the package graph drawn before again, with the saved package view. */
   readonly redraw: () => void;
-  /** Task mode is being left: a toggle with focus gets it back once the package graph shows. */
-  readonly keepToggleFocus: () => void;
+  /** Task mode is being left: a mode button with focus hands it to Packages once the package graph shows. */
+  readonly keepModeFocus: () => void;
 };
 
 export type StateRoutingDeps = {

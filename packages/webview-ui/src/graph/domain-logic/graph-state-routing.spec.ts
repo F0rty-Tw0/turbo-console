@@ -27,7 +27,7 @@ const rigOf = (isTaskMode: boolean): RoutingRig => {
     show: vi.fn(),
     drawnHash: vi.fn(() => 'h1'),
     redraw: vi.fn(),
-    keepToggleFocus: vi.fn()
+    keepModeFocus: vi.fn()
   };
   const routing = new GraphStateRouting({ tasks, packages, now: (): number => EXIT_AT });
   const rig: RoutingRig = { routing, tasks, packages };
@@ -69,10 +69,10 @@ describe('FEATURE: GraphStateRouting', () => {
       expect(rig.packages.show).toHaveBeenCalledExactlyOnceWith(TASK_STATE_STUB, 7);
     });
 
-    it('WHEN task mode exits with nothing held THEN the toggle focus is kept and the package graph is drawn again', () => {
+    it('WHEN task mode exits with nothing held THEN the mode button focus is kept and the package graph is drawn again', () => {
       rig.routing.exitTasks();
 
-      expect(rig.packages.keepToggleFocus).toHaveBeenCalledOnce();
+      expect(rig.packages.keepModeFocus).toHaveBeenCalledOnce();
       expect(rig.packages.redraw).toHaveBeenCalledOnce();
     });
 
