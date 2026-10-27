@@ -96,7 +96,7 @@ describe('FEATURE: GraphTaskMode across page states', () => {
     });
 
     it('WHEN task mode is left and the chain run lands THEN nothing is drawn', async () => {
-      mode.leave(9);
+      mode.leave();
       await rig.runs.settle(0, resultOf(KEY, POSITIONS));
 
       expect(rig.view.tasks.show).not.toHaveBeenCalled();
@@ -146,7 +146,7 @@ describe('FEATURE: GraphTaskMode across page states', () => {
     });
 
     it('WHEN leave is called THEN onExit is not called and the panel does not exit', () => {
-      mode.leave(9);
+      mode.leave();
 
       expect(rig.onExit).not.toHaveBeenCalled();
       expect(rig.panel.exit).not.toHaveBeenCalled();

@@ -63,7 +63,7 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
   };
   const mode = new GraphTaskMode(taskDeps);
 
-  page.packagesMode.addEventListener('click', (): void => mode.leave(deps.now()));
+  page.packagesMode.addEventListener('click', (): void => mode.leave());
   page.taskMode.addEventListener('click', (): void => mode.enter(deps.now()));
   page.container.addEventListener('keydown', (event: KeyboardEvent): void => onTaskKey(event, mode));
 

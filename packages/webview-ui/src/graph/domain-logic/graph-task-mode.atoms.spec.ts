@@ -140,14 +140,14 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       });
 
       it('THEN leaving task mode collapses it and lets the canvas grab again', () => {
-        mode.leave(9);
+        mode.leave();
 
         expect(rig.view.atoms.collapse).toHaveBeenCalledExactlyOnceWith('web#build', 'pkg:web');
         expect(rig.view.atoms.setGrabbable).toHaveBeenLastCalledWith(true);
       });
 
       it('THEN entering task mode again draws the group collapsed', async () => {
-        mode.leave(9);
+        mode.leave();
         mode.enter(10);
         await Promise.resolve();
 

@@ -51,7 +51,7 @@ describe('FEATURE: PackageReveal', () => {
 
   describe('GIVEN package mode with the graph placed and no layout in flight', () => {
     it('WHEN web, which the filters show, is revealed THEN it is selected with no filter edit and no zoom', () => {
-      reveal.request('web', 1);
+      reveal.request('web');
 
       expect(rig.log).toStrictEqual(['select web']);
     });
@@ -59,7 +59,7 @@ describe('FEATURE: PackageReveal', () => {
     it('WHEN web is revealed at zoom 0.5 THEN the camera zooms to 1 at its pan before the select', () => {
       rig.view.viewport.mockReturnValue(cameraAt(0.5));
 
-      reveal.request('web', 1);
+      reveal.request('web');
 
       expect(rig.view.setViewport).toHaveBeenCalledWith(1, PAN);
       expect(rig.log).toStrictEqual(['setViewport 1', 'select web']);
@@ -68,7 +68,7 @@ describe('FEATURE: PackageReveal', () => {
     it('WHEN web is revealed at zoom 0.75 THEN the camera keeps its zoom', () => {
       rig.view.viewport.mockReturnValue(cameraAt(0.75));
 
-      reveal.request('web', 1);
+      reveal.request('web');
 
       expect(rig.view.setViewport).not.toHaveBeenCalled();
     });
@@ -76,7 +76,7 @@ describe('FEATURE: PackageReveal', () => {
     it('WHEN a name the graph lacks is revealed THEN nothing is edited, opened, zoomed or selected', () => {
       rig.view.viewport.mockReturnValue(cameraAt(0.5));
 
-      reveal.request('zzz', 1);
+      reveal.request('zzz');
 
       expect(rig.log).toStrictEqual([]);
     });
@@ -84,7 +84,7 @@ describe('FEATURE: PackageReveal', () => {
     it('WHEN a name the graph lacks is revealed and a graph with it places later THEN it was dropped', async () => {
       const withZzz: DrawnGraph = { ...GRAPH, packages: ['web', 'api', 'zzz'] };
 
-      reveal.request('zzz', 1);
+      reveal.request('zzz');
       rig.drawn.mockReturnValue(withZzz);
       reveal.placed();
       await flush();
@@ -103,11 +103,11 @@ describe('FEATURE: PackageReveal', () => {
   describe('GIVEN task mode on', () => {
     beforeEach(() => {
       rig.tasks.isActive.mockReturnValue(true);
-      reveal.request('web', 7);
+      reveal.request('web');
     });
 
-    it('WHEN web is revealed THEN task mode is left at the message time and nothing is selected yet', () => {
-      expect(rig.tasks.leave).toHaveBeenCalledWith(7);
+    it('WHEN web is revealed THEN task mode is left and nothing is selected yet', () => {
+      expect(rig.tasks.leave).toHaveBeenCalledOnce();
       expect(rig.log).toStrictEqual(['leave']);
     });
 
@@ -125,7 +125,7 @@ describe('FEATURE: PackageReveal', () => {
     beforeEach(() => {
       rig.tasks.isActive.mockReturnValue(true);
       rig.drawn.mockReturnValue(null);
-      reveal.request('web', 1);
+      reveal.request('web');
     });
 
     it('WHEN web is revealed THEN it is held, not dropped, until the held graph places', async () => {
@@ -142,7 +142,7 @@ describe('FEATURE: PackageReveal', () => {
   describe('GIVEN package mode with no package graph drawn yet', () => {
     beforeEach(() => {
       rig.drawn.mockReturnValue(null);
-      reveal.request('web', 1);
+      reveal.request('web');
     });
 
     it('WHEN web is revealed THEN nothing happens yet', () => {
@@ -165,7 +165,7 @@ describe('FEATURE: PackageReveal', () => {
     });
 
     it('WHEN web is revealed THEN nothing happens yet', () => {
-      reveal.request('web', 1);
+      reveal.request('web');
 
       expect(rig.log).toStrictEqual([]);
     });
@@ -177,7 +177,7 @@ describe('FEATURE: PackageReveal', () => {
         rig.log.push('fit');
       };
 
-      reveal.request('web', 1);
+      reveal.request('web');
       place();
       await flush();
 
@@ -185,7 +185,7 @@ describe('FEATURE: PackageReveal', () => {
     });
 
     it('WHEN web is revealed and a new hash without web places THEN it is dropped', async () => {
-      reveal.request('web', 1);
+      reveal.request('web');
       rig.layouts.isPlacing.mockReturnValue(false);
       rig.drawn.mockReturnValue(NO_WEB);
 
@@ -196,8 +196,8 @@ describe('FEATURE: PackageReveal', () => {
     });
 
     it('WHEN web and then api are revealed and the layout places THEN only api is selected', async () => {
-      reveal.request('web', 1);
-      reveal.request('api', 2);
+      reveal.request('web');
+      reveal.request('api');
       rig.layouts.isPlacing.mockReturnValue(false);
 
       reveal.placed();
@@ -220,20 +220,20 @@ describe('FEATURE: PackageReveal', () => {
     });
 
     it('WHEN web is revealed THEN apps expands before the select', () => {
-      reveal.request('web', 1);
+      reveal.request('web');
 
       expect(rig.log).toStrictEqual(['expand apps', 'select web']);
     });
 
     it('WHEN api is revealed THEN apps stays collapsed', () => {
-      reveal.request('api', 1);
+      reveal.request('api');
 
       expect(rig.folders.expand).not.toHaveBeenCalled();
     });
 
     it('WHEN the expand starts a layout THEN web is selected once, after that layout places', async () => {
       rig.folders.expand.mockImplementation(startLayout);
-      reveal.request('web', 1);
+      reveal.request('web');
       rig.layouts.isPlacing.mockReturnValue(false);
 
       reveal.placed();
@@ -245,7 +245,7 @@ describe('FEATURE: PackageReveal', () => {
     it('WHEN the expand starts a layout THEN nothing is selected before it places', () => {
       rig.folders.expand.mockImplementation(startLayout);
 
-      reveal.request('web', 1);
+      reveal.request('web');
 
       expect(rig.inspection.select).not.toHaveBeenCalled();
     });
@@ -255,7 +255,7 @@ describe('FEATURE: PackageReveal', () => {
     it('WHEN web is revealed THEN no folder expands', () => {
       rig.collapsed.add('apps');
 
-      reveal.request('web', 1);
+      reveal.request('web');
 
       expect(rig.folders.expand).not.toHaveBeenCalled();
     });
@@ -268,7 +268,7 @@ describe('FEATURE: PackageReveal', () => {
       rig.tasks.isActive.mockReturnValue(true);
       rig.layouts.mode.mockReturnValue('folders');
       rig.collapsed.add('apps');
-      reveal.request('web', 1);
+      reveal.request('web');
       rig.tasks.isActive.mockReturnValue(false);
       reveal.placed();
     });

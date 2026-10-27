@@ -98,9 +98,10 @@ export class GraphTaskMode {
   }
 
   /** Task mode → package mode with the task camera saved; in package mode it does nothing. */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- one signature with `enter`; the host's reveal passes its message time
-  public leave(_at: number): void {
-    if (this.isActive()) this.hidePage();
+  public leave(): void {
+    const isActive = this.isActive();
+
+    if (isActive) this.hidePage();
   }
 
   /** Chooses the known ones of `taskIds` from either mode; with none known the page stays as it is and says so. */

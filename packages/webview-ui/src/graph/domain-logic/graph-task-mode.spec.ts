@@ -285,7 +285,7 @@ describe('FEATURE: GraphTaskMode', () => {
     });
 
     it('WHEN Packages is pressed THEN the task camera is saved, the canvas emptied and package mode shown again', () => {
-      mode.leave(9);
+      mode.leave();
 
       expect(rig.modes.mode()).toBe('packages');
       expect(rig.modes.task()).toMatchObject({ layoutKey: KEY, ...TASK_CAMERA });
@@ -364,7 +364,7 @@ describe('FEATURE: GraphTaskMode', () => {
     });
 
     it('WHEN Packages is pressed THEN the task details exit', () => {
-      mode.leave(9);
+      mode.leave();
 
       expect(rig.details.exit).toHaveBeenCalledOnce();
     });

@@ -5,7 +5,7 @@ import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 /** What a reveal asks of task mode: whether it owns the canvas, and the leave that hands it back. */
 export type RevealTaskMode = {
   readonly isActive: () => boolean;
-  readonly leave: (at: number) => void;
+  readonly leave: () => void;
 };
 
 /** What a reveal asks of the package layouts: the checkbox's mode and whether a layout of it is in flight. */

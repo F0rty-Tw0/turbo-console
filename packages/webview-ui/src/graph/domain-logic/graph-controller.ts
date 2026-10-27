@@ -85,7 +85,7 @@ class GraphPageController {
         this.tasks.showTasks(message.taskIds, at);
         break;
       case 'showPackage':
-        this.reveal.request(message.name, at);
+        this.reveal.request(message.name);
         break;
       case 'edgeExplained':
         this.packages.filtering.inspection.explained(message);
