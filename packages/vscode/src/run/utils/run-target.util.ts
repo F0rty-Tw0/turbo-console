@@ -74,6 +74,14 @@ export const runRequestOf = (target: TaskTarget, state: RootState | undefined, f
   return request;
 };
 
+/** Run Without Turbo: `request` with its task launched as a package script, so the package manager runs it in a terminal. */
+export const directRequestOf = (request: RunRequest): RunRequest => {
+  const task: TaskNode = { ...request.task, isTurboTask: false };
+  const direct: RunRequest = { ...request, task, force: false };
+
+  return direct;
+};
+
 export const taskIdsOf = (model: WorkspaceModel | null): Set<string> => {
   const packages = model?.packages ?? [];
   const ids = packages.flatMap((pkg) => pkg.tasks.map((task) => task.id));
