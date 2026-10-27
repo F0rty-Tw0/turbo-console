@@ -86,6 +86,18 @@ export type RowScope = {
   readonly singlePackage: boolean;
 };
 
+/** UB5a §3.3: the running runs of one root per package name and per folder path (folder-tree membership, any depth). */
+export type RunningCounts = {
+  readonly packages: ReadonlyMap<string, number>;
+  readonly dirs: ReadonlyMap<string, number>;
+};
+
+/** What package and folder rows read beside the view: whether full names show, and the running counts of their root. */
+export type RowInputs = {
+  readonly scopeShown: boolean;
+  readonly running: RunningCounts;
+};
+
 export type EndedState = Exclude<RunState, 'running'>;
 
 /** The icon and the description prefix of a running task: `running` or `continuous`. */

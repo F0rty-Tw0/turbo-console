@@ -21,6 +21,12 @@ const NOBODY: ReadonlySet<string> = new Set();
 
 const OTHER_ROOT_ID = rowIdOf('root', '/other', '/other');
 
+const S_PACKAGE_ID = rowIdOf('pkg', '/ws', 's');
+
+const A_PACKAGE_ID = rowIdOf('pkg', '/ws', 'a');
+
+const PACKAGES_DIR_ID = rowIdOf('dir', '/ws', 'packages');
+
 /** A refresher over the fixture that reseeds on every toggle change, as `PackagesTree.scriptsChanged` does. */
 const refresherOf = (fixture: RefresherFixture): TreeRefresher => {
   const refresher = new TreeRefresher(fixture.deps);
@@ -108,30 +114,69 @@ describe('FEATURE: tree refresh on a run change', () => {
       fixture.show();
     });
 
-    it.each([
-      ['starts running', RUNNING],
-      ['has its process start', PROCESS_STARTED],
-      ['has a stop requested', STOP_REQUESTED],
-      ['ends', STOPPED]
-    ])('WHEN the script %s THEN only its task node is redrawn', (_title, entry) => {
-      refresher.runChanged(entry);
+    it('WHEN the script starts running THEN its task node, then its package node, are redrawn', () => {
+      refresher.runChanged(RUNNING);
+
+      expect(fixture.fire.mock.calls).toStrictEqual([[fixture.cache.get(SCRIPT_ID)], [[fixture.cache.get(S_PACKAGE_ID)]]]);
+    });
+
+    it('WHEN a run never seen running ends THEN only its task node is redrawn', () => {
+      refresher.runChanged(STOPPED);
 
       expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(fixture.cache.get(SCRIPT_ID));
+    });
+
+    describe('WHEN the script runs', () => {
+      beforeEach(() => {
+        refresher.runChanged(RUNNING);
+        fixture.fire.mockClear();
+      });
+
+      it.each([
+        ['has its process start', PROCESS_STARTED],
+        ['has a stop requested', STOP_REQUESTED]
+      ])('THEN a change that %s redraws only its task node', (_title, entry) => {
+        refresher.runChanged(entry);
+
+        expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(fixture.cache.get(SCRIPT_ID));
+      });
+
+      it('THEN its end redraws its task node, then its package node', () => {
+        refresher.runChanged(STOPPED);
+
+        expect(fixture.fire.mock.calls).toStrictEqual([[fixture.cache.get(SCRIPT_ID)], [[fixture.cache.get(S_PACKAGE_ID)]]]);
+      });
     });
   });
 
   describe('GIVEN scripts hidden and a turbo task a#build in the tree', () => {
-    it('WHEN it starts and ends THEN each change redraws only its task node', () => {
+    it('WHEN it starts and ends THEN each change redraws its task node, then its package node', () => {
       const turbo = taskRunOf('/ws', 'a#build', 'a');
 
       fixture.show();
 
       const taskNode = fixture.cache.get(rowIdOf('task', '/ws', 'a#build'));
+      const packageNode = fixture.cache.get(A_PACKAGE_ID);
 
       refresher.runChanged(turbo);
       refresher.runChanged({ ...turbo, state: 'passed', endedAt: 2000 });
 
-      expect(fixture.fire.mock.calls).toStrictEqual([[taskNode], [taskNode]]);
+      expect(fixture.fire.mock.calls).toStrictEqual([[taskNode], [[packageNode]], [taskNode], [[packageNode]]]);
+    });
+  });
+
+  describe('GIVEN the folders view and a turbo task a#build in the tree', () => {
+    it('WHEN it starts THEN its task node, then its package and folder nodes in one fire, are redrawn', () => {
+      const folders = refresherFixtureOf(false, 'folders');
+      const foldersRefresher = new TreeRefresher(folders.deps);
+
+      folders.show();
+      foldersRefresher.runChanged(taskRunOf('/ws', 'a#build', 'a'));
+
+      expect(folders.fire.mock.calls).toStrictEqual([
+        [folders.cache.get(rowIdOf('task', '/ws', 'a#build'))],
+        [[folders.cache.get(A_PACKAGE_ID), folders.cache.get(PACKAGES_DIR_ID)]]
+      ]);
     });
   });
 
@@ -232,6 +277,19 @@ describe('FEATURE: tree refresh on a run change', () => {
       twoRefresher.runChanged(scriptRunOf('/other', { state: 'stopped', endedAt: 2000 }));
 
       expect(two.fire).toHaveBeenCalledExactlyOnceWith(two.cache.get(OTHER_ROOT_ID));
+    });
+
+    it('WHEN the turbo task a#build of /other starts THEN its task node, then its package and root nodes, are redrawn', () => {
+      const two = refresherFixtureOf(true);
+      const twoRefresher = new TreeRefresher(two.deps);
+
+      two.show();
+      twoRefresher.runChanged(taskRunOf('/other', 'a#build', 'a'));
+
+      expect(two.fire.mock.calls).toStrictEqual([
+        [two.cache.get(rowIdOf('task', '/other', 'a#build'))],
+        [[two.cache.get(rowIdOf('pkg', '/other', 'a')), two.cache.get(OTHER_ROOT_ID)]]
+      ]);
     });
   });
 });

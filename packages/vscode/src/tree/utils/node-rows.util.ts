@@ -4,6 +4,7 @@ import { dirRow, dirRows, packageRow } from './dir-rows.util.ts';
 import { liveOf } from './live-of.util.ts';
 import { rootRowOf, rootRows, shownModelOf } from './root-rows.util.ts';
 import { rowScopeOf } from './row-scope.util.ts';
+import { rowInputsOf, runningCountsOf } from './running-count.util.ts';
 import { groupRowOf, scriptRows } from './script-rows.util.ts';
 import { taskChildRows, taskRowOf, taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
@@ -55,7 +56,9 @@ const modelChildren = (root: string, model: WorkspaceModel, node: TreeNode, cont
 
   if (dir === undefined) return [];
 
-  return dirRows(root, dir, view, context.scopeShown);
+  const inputs = rowInputsOf(root, view, context);
+
+  return dirRows(root, dir, view, inputs);
 };
 
 /** The rows under `node` in the root's current state: a root's top level, a folder's level or a package's tasks. */
@@ -85,17 +88,30 @@ export const goneRowOf = (node: TreeNode): TreeRow => {
   return row;
 };
 
+const dirRowOf = (root: string, dir: FolderDir, view: ModelView, context: RowContext): TreeRow => {
+  const running = runningCountsOf(root, view, context);
+
+  return dirRow(root, dir, view, running);
+};
+
+const packageRowOf = (root: string, pkg: PackageNode, view: ModelView, context: RowContext): TreeRow => {
+  const inputs = rowInputsOf(root, view, context);
+
+  return packageRow(root, pkg, view, inputs);
+};
+
+/** Only a folder or package row reads the running counts, so the 1 s tick of a task row never walks them. */
 const modelRow = (root: string, model: WorkspaceModel, node: TreeNode, context: RowContext): TreeRow | undefined => {
   const view = context.views(model, context.scriptsShown, liveOf(context, root));
   const dir = dirOf(view, node);
 
-  if (dir !== undefined) return dirRow(root, dir, view);
+  if (dir !== undefined) return dirRowOf(root, dir, view, context);
 
   const pkg = packageOf(view, node.packageName);
 
   if (pkg === undefined) return undefined;
 
-  if (node.kind === 'pkg') return packageRow(root, pkg, view, context.scopeShown);
+  if (node.kind === 'pkg') return packageRowOf(root, pkg, view, context);
 
   const scope = rowScopeOf(root, model);
 

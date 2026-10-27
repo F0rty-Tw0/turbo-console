@@ -7,6 +7,7 @@ import { currentTaskOf } from '../utils/current-task.util.ts';
 import { pruneNodes } from '../utils/node-cache.util.ts';
 import { refreshTarget } from '../utils/refresh-target.util.ts';
 import { rowIdOf } from '../utils/row-id.util.ts';
+import { parentDirsOf } from '../utils/running-count.util.ts';
 import { isVisibleScript } from '../utils/script-task.util.ts';
 
 /** What to fire after a change, and which cached nodes outlive it: the refresh half of `PackagesTree`. */
@@ -28,7 +29,8 @@ export class TreeRefresher {
 
   /**
    * Spec 1c-b §4.7: with scripts hidden, a script run entering or leaving `running` adds or drops its package row, so the
-   * root redraws (and prunes); every other change fires the task node. `stored` is the `running` ids this class last saw.
+   * root redraws (and prunes); every other change fires the task node, and a run entering or leaving `running` also
+   * fires the rows that count it (UB5a §3.5). `stored` is the `running` ids this class last saw.
    */
   public runChanged(entry: RunEntry): void {
     const { root, taskId } = entry;
@@ -40,14 +42,16 @@ export class TreeRefresher {
 
     this.remember(root, taskId, isMember);
 
-    if (!isRootFire) {
-      this.refreshTask(root, taskId);
+    if (isRootFire) {
+      this.fireTarget(root, 'root');
+      this.prune(root);
 
       return;
     }
 
-    this.fireTarget(root, 'root');
-    this.prune(root);
+    this.refreshTask(root, taskId);
+
+    if (isFlip) this.refreshCounts(root, entry.packageName);
   }
 
   /**
@@ -96,6 +100,34 @@ export class TreeRefresher {
     const node = this.deps.cache.get(id);
 
     if (node !== undefined) this.deps.fire(node);
+  }
+
+  /**
+   * UB5a §3.5: one fire of the cached package node, folder nodes and (multi-root) root node whose ` · N running` a run
+   * entering or leaving `running` changes; nodes never shown are skipped, and nothing fires when none is cached.
+   */
+  private refreshCounts(root: string, packageName: string): void {
+    const packageId = rowIdOf('pkg', root, packageName);
+    const dirIds = this.dirIdsOf(root, packageName);
+    const ids = [packageId, ...dirIds];
+    const cached = ids.map((id) => this.deps.cache.get(id));
+    const rootNode = this.rootNodeOf(root);
+    const candidates = [...cached, rootNode];
+    const nodes = candidates.filter((node) => node !== undefined);
+
+    if (nodes.length > 0) this.deps.fire(nodes);
+  }
+
+  /** The folder row ids above the package in the model now; none once the package or the model is gone. */
+  private dirIdsOf(root: string, packageName: string): string[] {
+    const model = this.deps.store.get(root)?.state.model ?? null;
+    const pkg = model?.packages.find((candidate) => candidate.name === packageName);
+
+    if (pkg === undefined) return [];
+
+    const paths = parentDirsOf(pkg.path);
+
+    return paths.map((path) => rowIdOf('dir', root, path));
   }
 
   private remember(root: string, taskId: string, isMember: boolean): void {

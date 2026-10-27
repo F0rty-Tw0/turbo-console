@@ -4,6 +4,7 @@ import { dirRows, packageRow } from './dir-rows.util.ts';
 import { packageList } from './folder-tree.util.ts';
 import { liveOf } from './live-of.util.ts';
 import { rowIdOf } from './row-id.util.ts';
+import { rowInputsOf, withRunningSuffix } from './running-count.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -12,7 +13,7 @@ import { ROOT_FOLDER_ICON } from '../common/icon.const.ts';
 import { MESSAGE_ICONS, MESSAGE_TEXTS, SHOW_OUTPUT_COMMAND } from '../common/message.const.ts';
 import type { ModelView } from '../common/model-view.type.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
-import type { MessageKind, TreeRow } from '../common/tree-row.type.ts';
+import type { MessageKind, RowInputs, TreeRow } from '../common/tree-row.type.ts';
 
 const messageRow = (root: string, kind: MessageKind): TreeRow => {
   const row: TreeRow = {
@@ -46,11 +47,11 @@ export const binaryMessageOf = (kind: TurboErrorKind): MessageKind => {
 };
 
 /** The list rows of a view: its shown packages, sorted by full name whatever the labels read (spec §4.8). */
-const listRowsOf = (root: string, view: ModelView, scopeShown: boolean): TreeRow[] => {
+const listRowsOf = (root: string, view: ModelView, inputs: RowInputs): TreeRow[] => {
   const shown = Array.from(view.packages.values());
   const names = packageList(shown);
   const listed = names.map((name) => view.packages.get(name)).filter((pkg) => pkg !== undefined);
-  const rowOf = (pkg: PackageNode): TreeRow => packageRow(root, pkg, view, scopeShown);
+  const rowOf = (pkg: PackageNode): TreeRow => packageRow(root, pkg, view, inputs);
 
   return listed.map(rowOf);
 };
@@ -74,9 +75,11 @@ const packageRowsOf = (root: string, model: WorkspaceModel, context: RowContext)
 
   if (view.packages.size === 0) return messageRows(root, emptyKindOf(model, context, live));
 
-  if (context.mode === 'folders') return dirRows(root, view.folders, view, context.scopeShown);
+  const inputs = rowInputsOf(root, view, context);
 
-  return listRowsOf(root, view, context.scopeShown);
+  if (context.mode === 'folders') return dirRows(root, view.folders, view, inputs);
+
+  return listRowsOf(root, view, inputs);
 };
 
 /**
@@ -109,10 +112,12 @@ const countLines = (view: ModelView | null): string[] => {
 
 /**
  * The folder node of a multi-root window: its key is the root path, so its id is `root:<root>`. Spec §4.9: the tooltip
- * holds the root path and its shown package count; a `null` view (no model yet) leaves the count out.
+ * holds the root path and its shown package count; a `null` view (no model yet) leaves the count out. UB5a §3.3: the
+ * description counts the root's `running` runs.
  */
-export const rootNodeRow = (folder: RootFolder, view: ModelView | null): TreeRow => {
+export const rootNodeRow = (folder: RootFolder, view: ModelView | null, running: number): TreeRow => {
   const counted = countLines(view);
+  const description = withRunningSuffix('', running);
   const row: TreeRow = {
     id: rowIdOf('root', folder.root, folder.root),
     kind: 'root',
@@ -120,7 +125,7 @@ export const rootNodeRow = (folder: RootFolder, view: ModelView | null): TreeRow
     key: folder.root,
     packageName: null,
     label: cleanText(folder.name, LABEL_MAX),
-    description: '',
+    description,
     icon: ROOT_FOLDER_ICON,
     contextValue: 'turboRoot',
     collapsible: 'expanded',
@@ -138,13 +143,18 @@ export const shownModelOf = (state: RootState): WorkspaceModel | null => {
   return state.model;
 };
 
-/** A root's folder row read from its state: the view of its shown model, or none while it has none. */
+/**
+ * A root's folder row read from its state: the view of its shown model, or none while it has none. It counts every
+ * `running` run of the root, a run whose task left the model too, as the view badge does.
+ */
 export const rootRowOf = (state: RootState, context: RowContext): TreeRow => {
+  const { root } = state.folder;
   const model = shownModelOf(state);
+  const running = context.live(root).size;
 
-  if (model === null) return rootNodeRow(state.folder, null);
+  if (model === null) return rootNodeRow(state.folder, null, running);
 
-  const view = context.views(model, context.scriptsShown, liveOf(context, state.folder.root));
+  const view = context.views(model, context.scriptsShown, liveOf(context, root));
 
-  return rootNodeRow(state.folder, view);
+  return rootNodeRow(state.folder, view, running);
 };

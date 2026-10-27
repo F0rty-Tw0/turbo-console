@@ -57,6 +57,7 @@ const named = (nodes: TreeNode[], key: string): TreeNode => {
 describe('FEATURE: packages tree node cache', () => {
   describe('GIVEN the list view showing the tasks of package b', () => {
     let fixture: Fixture;
+    let pkg: TreeNode;
     let task: TreeNode;
 
     beforeEach(async () => {
@@ -64,17 +65,20 @@ describe('FEATURE: packages tree node cache', () => {
       fixture.store.apply('/ws', loadedWith([A, B]));
 
       const shown = await fixture.tree.children();
-      const tasks = await fixture.tree.children(named(shown, 'b'));
+
+      pkg = named(shown, 'b');
+
+      const tasks = await fixture.tree.children(pkg);
 
       task = named(tasks, 'b#build');
       fixture.store.apply('/ws', loadedWith([A_CHANGED, B]));
       vi.mocked(fixture.fire).mockClear();
     });
 
-    it('WHEN only package a changed THEN a run change of a task of b fires the node shown before', () => {
+    it('WHEN only package a changed THEN a run start of a task of b fires the task and package nodes shown before', () => {
       fixture.tree.runChanged(B_BUILD_RUN);
 
-      expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(task);
+      expect(vi.mocked(fixture.fire).mock.calls).toStrictEqual([[task], [[pkg]]]);
     });
   });
 
@@ -103,10 +107,10 @@ describe('FEATURE: packages tree node cache', () => {
       vi.mocked(fixture.fire).mockClear();
     });
 
-    it('WHEN only package a changed THEN a run change of a task of b fires the node shown before', () => {
+    it('WHEN only package a changed THEN a run start of a task of b fires the task, package and folder nodes shown before', () => {
       fixture.tree.runChanged(B_BUILD_RUN);
 
-      expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(task);
+      expect(vi.mocked(fixture.fire).mock.calls).toStrictEqual([[task], [[pkg, dir]]]);
     });
 
     it('WHEN only package a changed THEN package b keeps its node object', async () => {
