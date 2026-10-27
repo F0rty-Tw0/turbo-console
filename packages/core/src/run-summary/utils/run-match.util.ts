@@ -57,12 +57,14 @@ const wholeRunOf = (summary: RunSummary, interrupted: boolean): RunMatch => {
 
 const dataOf = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
   const hasNoEntry = ENTRYLESS_KINDS.includes(run.task.kind);
-  const hasUnended = hasUnendedTasks(summary);
+  const isUserEnd = summary.execution.exitCode === 0;
+  const hasCutTask = hasUnendedTasks(summary);
+  const isCutByUser = isUserEnd && hasCutTask;
 
-  if (hasNoEntry || hasUnended) return wholeRunOf(summary, hasUnended);
+  if (hasNoEntry || isCutByUser) return wholeRunOf(summary, isCutByUser);
 
   const entry = summary.tasks.find((task) => task.taskId === run.task.id);
-  const isCutBeforeAnyTask = entry === undefined && summary.tasks.length === 0;
+  const isCutBeforeAnyTask = isUserEnd && entry === undefined && summary.tasks.length === 0;
 
   if (isCutBeforeAnyTask) return wholeRunOf(summary, true);
 
@@ -76,10 +78,11 @@ const dataOf = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
 /**
  * Spec §4.1.2: the data `summary` gives `run` when it fits: it started within `[launchedAt, endedAt]`, ran the same
  * command and ended with the same exit code, and, for a task with its own entry, lists that entry. The duration and
- * cache status come from that entry, or from the whole summary (`cache: null`) for an umbrella or aggregate. B2-1: the
- * run is `interrupted` when turbo attempted more tasks than it saw end, or, for a task with its own entry, the summary
- * lists no task at all (Ctrl+C before turbo attempted one); the data is then the whole summary's. `null` when it does
- * not fit or the duration is not finite or is negative.
+ * cache status come from that entry, or from the whole summary (`cache: null`) for an umbrella or aggregate. B2-1: a run
+ * that exited 0 is `interrupted` when turbo attempted more tasks than it saw end, or, for a task with its own entry, the
+ * summary lists no task at all (Ctrl+C before turbo attempted one); the data is then the whole summary's. A failed run
+ * is never `interrupted`: turbo cuts siblings off after a failure itself. `null` when it does not fit or the duration
+ * is not finite or is negative.
  */
 export const matchSummary = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
   const isRunCandidate = isCandidate(summary, run);

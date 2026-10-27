@@ -148,6 +148,28 @@ describe('FEATURE: run match', () => {
     });
   });
 
+  describe('GIVEN a fitting summary of a failed run (exit 1) in which turbo cut a task off', () => {
+    const failedRun: RunToMatch = { ...RUN, exitCode: 1 };
+
+    it('WHEN it lists the task THEN the entry gives the data and the run is not interrupted', () => {
+      const summary = cutShort(summaryOf(COMMAND, WINDOW, 1, [OWN_ENTRY]));
+
+      expect(matchSummary(summary, failedRun)).toStrictEqual(OWN_MATCH);
+    });
+
+    it('WHEN it lists another entry but none for the task (a failed dependency) THEN there is no match', () => {
+      const summary = cutShort(summaryOf(COMMAND, WINDOW, 1, [DEPENDENCY_ENTRY]));
+
+      expect(matchSummary(summary, failedRun)).toBeNull();
+    });
+
+    it('WHEN it lists no task THEN there is no match', () => {
+      const summary = summaryOf(COMMAND, WINDOW, 1, []);
+
+      expect(matchSummary(summary, failedRun)).toBeNull();
+    });
+  });
+
   describe('GIVEN a fitting summary whose task entry has a bad duration', () => {
     it('WHEN the entry ends before it starts THEN there is no match', () => {
       const backwards = taskEntry('web#build', { startTime: TASK_SPAN.endTime, endTime: TASK_SPAN.startTime }, 'MISS');
