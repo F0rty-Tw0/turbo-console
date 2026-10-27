@@ -53,6 +53,22 @@ describe('FEATURE: details panel commands', () => {
     });
   });
 
+  describe('GIVEN focusInGraph', () => {
+    it('WHEN mapped THEN it focuses the panel package row on the graph', () => {
+      const arg = { kind: 'pkg', root: '/ws', packageName: 'a' };
+
+      expect(commandOf({ type: 'focusInGraph' }, KEY)).toStrictEqual({ command: 'turboConsole.focusPackageInGraph', arg });
+    });
+
+    it('WHEN mapped THEN the package action reads the panel package from its argument', () => {
+      const { arg } = commandOf({ type: 'focusInGraph' }, KEY);
+
+      const target = packageTargetOf(arg);
+
+      expect(target).toStrictEqual(PACKAGE_TARGET);
+    });
+  });
+
   it('GIVEN showOutput WHEN mapped THEN it shows the output with no argument', () => {
     expect(commandOf({ type: 'showOutput' }, KEY)).toStrictEqual({ command: 'turboConsole.showOutput', arg: undefined });
   });

@@ -9,6 +9,11 @@ const TASK_COMMANDS: Readonly<Record<TaskMessage['type'], string>> = {
   showInTaskGraph: 'turboConsole.showTaskGraph'
 };
 
+const PACKAGE_COMMANDS: Readonly<Record<'openPackageJson' | 'focusInGraph', string>> = {
+  openPackageJson: 'turboConsole.openPackageJson',
+  focusInGraph: 'turboConsole.focusPackageInGraph'
+};
+
 /**
  * The tree's command for a panel button, with the tree-row argument it takes. `root` and
  * `packageName` come from the panel key only; a task message adds only its `taskId`.
@@ -20,11 +25,11 @@ export const commandOf = (message: CommandMessage, key: PanelKey): DetailsComman
     return show;
   }
 
-  if (message.type === 'openPackageJson') {
+  if (message.type === 'openPackageJson' || message.type === 'focusInGraph') {
     const packageRow = { kind: 'pkg', root: key.root, packageName: key.packageName };
-    const open: DetailsCommand = { command: 'turboConsole.openPackageJson', arg: packageRow };
+    const packageCommand: DetailsCommand = { command: PACKAGE_COMMANDS[message.type], arg: packageRow };
 
-    return open;
+    return packageCommand;
   }
 
   const taskRow = { kind: 'task', root: key.root, key: message.taskId, packageName: key.packageName };
