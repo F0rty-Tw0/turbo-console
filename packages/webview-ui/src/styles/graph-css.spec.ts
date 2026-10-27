@@ -176,6 +176,7 @@ describe('FEATURE: graph.css', () => {
       ['.graph-flow', 'position: absolute'],
       ['.graph-flow', 'z-index: 1'],
       ['.graph-flow', 'pointer-events: none'],
+      ['.widget-button', 'var(--vscode-contrastBorder, color-mix(in srgb, var(--vscode-foreground) 35%, transparent))'],
       ['.widget-button', 'background-color: var(--vscode-editor-background)'],
       ['.widget-button', 'background-image: linear-gradient(var(--tc-widget-fill), var(--tc-widget-fill))'],
       ['.widget-button', '--tc-widget-fill: var(--vscode-button-secondaryBackground, transparent)'],
