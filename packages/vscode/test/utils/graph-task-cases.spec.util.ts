@@ -7,7 +7,7 @@ import { lastGraphState, postedShowPackages, postedShowTasks } from './graph-pos
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { GraphPanelInfo, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { OPEN_COMMAND } from '../common/details.const.ts';
-import { FOCUS_COMMAND, TASK_ID } from '../common/graph.const.ts';
+import { ALL_TASKS_COMMAND, FOCUS_COMMAND, TASK_ID } from '../common/graph.const.ts';
 import type { GraphScene } from '../common/graph.type.ts';
 
 const showTasksCountOf = (api: TurboConsoleApi, root: string): number => {
@@ -74,5 +74,24 @@ export const detailsFocusGraphCase = async (scene: GraphScene): Promise<void> =>
     assert.deepEqual(postedShowPackages(api, root).at(-1), { type: 'showPackage', name: packageName });
     assert.ok(api.graph.panels().some(isGraphOfRoot), 'no graph panel for the root');
     assert.ok(commands.includes(FOCUS_COMMAND), `${FOCUS_COMMAND} is not registered`);
+  });
+};
+
+/** `Show All Task Graphs` asks that root's graph panel to show every task of its graph state. */
+export const showAllTaskGraphsCase = async (scene: GraphScene): Promise<void> => {
+  const { api, root } = scene;
+
+  await step('L13-11: Show All Task Graphs posts showTasks for every task of the root', async () => {
+    const before = showTasksCountOf(api, root);
+    const state = lastGraphState(api, root);
+    const expected = state?.tasks.map((task): string => task.id).toSorted() ?? [];
+
+    await vscode.commands.executeCommand(ALL_TASKS_COMMAND);
+    await waitFor('showTasks post', () => showTasksCountOf(api, root) > before);
+
+    const posted = postedShowTasks(api, root);
+
+    assert.ok(expected.length > 0, 'the graph state has no tasks');
+    assert.deepEqual(posted?.taskIds.toSorted(), expected);
   });
 };
