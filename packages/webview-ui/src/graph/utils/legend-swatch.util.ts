@@ -1,3 +1,4 @@
+import { NODE_HEIGHT } from '../common/graph.const.ts';
 import type { LegendColour, LegendSwatch, SvgPart } from '../common/legend.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 
@@ -18,9 +19,6 @@ type FrameBox = {
 const BOX: FrameBox = { x: 3, y: 3, width: 34, height: 14, rx: 0 };
 
 const PILL: FrameBox = { x: 3, y: 5, width: 34, height: 10, rx: 5 };
-
-/** Half the box height, so 8 px corners still leave a straight side. */
-const MAX_BOX_RX = 7;
 
 const NO_ATTRS: Attrs = {};
 
@@ -77,7 +75,7 @@ const dashOf = (dashPx: number[] | null): Attrs => {
 const boxOf = (swatch: LegendSwatch): FrameBox => {
   if (swatch.shape === 'pill') return PILL;
 
-  const rx = Math.min(swatch.radiusPx, MAX_BOX_RX);
+  const rx = (swatch.radiusPx * BOX.height) / NODE_HEIGHT;
   const box: FrameBox = { ...BOX, rx };
 
   return box;

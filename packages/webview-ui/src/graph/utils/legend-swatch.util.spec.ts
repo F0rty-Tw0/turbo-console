@@ -59,10 +59,15 @@ describe('FEATURE: swatchPartsOf', () => {
       expect(rect.attrs['stroke-dasharray']).toBe('4 2');
     });
 
-    it('WHEN its corners are wider than the box allows THEN rx is capped at 7', () => {
-      const rect = partAt(partsOf(boxOf({ radiusPx: 8 })), 0);
+    it('WHEN the corners are 6 and 8 px on a 32 px node THEN the rx scale to the 14 high rect and stay under half of it', () => {
+      const pkg = partAt(partsOf(BOX_SWATCH), 0);
+      const folder = partAt(partsOf(boxOf({ radiusPx: 8 })), 0);
+      const packageRx = Number(pkg.attrs['rx']);
+      const folderRx = Number(folder.attrs['rx']);
+      const halfHeight = Number(folder.attrs['height']) / 2;
 
-      expect(rect.attrs['rx']).toBe('7');
+      expect(packageRx).toBeLessThan(folderRx);
+      expect(folderRx).toBeLessThan(halfHeight);
     });
 
     it('WHEN it has no fill THEN the rect is not filled', () => {
