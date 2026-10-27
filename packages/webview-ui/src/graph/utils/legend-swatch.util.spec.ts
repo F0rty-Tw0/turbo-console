@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { swatchPartsOf } from './legend-swatch.util.ts';
-import { FALLBACK_COLORS } from '../common/graph.const.ts';
 import { BOX_SWATCH, LINE_SWATCH, PILL_SWATCH } from '../common/legend-swatch.const.ts';
 import type { LegendOutline, LegendSwatch, SvgPart } from '../common/legend.type.ts';
-import type { SelectionColors, ThemeColors } from '../common/theme-colors.type.ts';
+import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { SELECTION_COLORS_STUB, THEME_COLORS_STUB } from '../test/stubs/theme-colors.stub.ts';
 
-const SELECTION: SelectionColors = { fill: '#04395e', label: '#ffffff' };
+const SELECTION = SELECTION_COLORS_STUB;
 
-const COLORS: ThemeColors = { ...FALLBACK_COLORS, selection: SELECTION };
+const COLORS = THEME_COLORS_STUB;
 
 const FAILED_OUTLINE: LegendOutline = { colour: 'run-failed', px: 2 };
 

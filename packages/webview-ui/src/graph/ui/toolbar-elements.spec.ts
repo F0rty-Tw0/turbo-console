@@ -17,7 +17,8 @@ import {
   FIT_LABEL,
   FIT_TITLE,
   RELAYOUT_LABEL,
-  RELAYOUT_TITLE
+  RELAYOUT_TITLE,
+  VIEW_LABEL
 } from '../common/graph.const.ts';
 import { LEGEND_TITLE } from '../common/legend.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
@@ -136,7 +137,8 @@ describe('FEATURE: buildToolbar', () => {
     });
 
     it('WHEN the View group is read THEN Legend is its last button', () => {
-      const view = elements.toolbar.children[4];
+      const groups = Array.from(elements.toolbar.children);
+      const view = groups.find((group): boolean => group.getAttribute('aria-label') === VIEW_LABEL);
       const lastButton = view?.children[view.children.length - 1];
 
       expect(lastButton).toBe(elements.legend);

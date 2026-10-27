@@ -1,4 +1,4 @@
-import { NODE_HEIGHT } from '../common/graph.const.ts';
+import { NODE_BORDER_PX, NODE_HEIGHT } from '../common/graph.const.ts';
 import type { LegendColour, LegendSwatch, SvgPart } from '../common/legend.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 
@@ -26,7 +26,7 @@ const LINE: Attrs = { x1: '2', y1: '10', x2: '34', y2: '10' };
 
 const ARROW_HEAD = 'M38 10 L32 7 L32 13 Z';
 
-const NESTED: Attrs = { x: '9', y: '7', width: '22', height: '6', rx: '3', 'stroke-width': '1' };
+const NESTED: Attrs = { x: '9', y: '7', width: '22', height: '6', rx: '3', 'stroke-width': String(NODE_BORDER_PX) };
 
 const PLATE: Attrs = { x: '14', y: '6', width: '12', height: '8' };
 

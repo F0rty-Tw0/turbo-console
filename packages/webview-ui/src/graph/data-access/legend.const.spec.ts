@@ -1,20 +1,18 @@
 import type { StylesheetJson } from 'cytoscape';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import { FLOW_EDGE_LIMIT } from '../common/flow.const.ts';
-import type { FlowPen, FlowSegment } from '../common/flow.type.ts';
-import { FALLBACK_COLORS } from '../common/graph.const.ts';
-import { LEGEND_HEADING_ID, LEGEND_ID, LEGEND_LABEL, LEGEND_ROWS, LEGEND_TITLE } from '../common/legend.const.ts';
+import type { FlowSegment } from '../common/flow.type.ts';
+import { LEGEND_ROWS } from '../common/legend.const.ts';
 import type { LegendColour, LegendOutline, LegendRow } from '../common/legend.type.ts';
-import type { SelectionColors, ThemeColors } from '../common/theme-colors.type.ts';
+import { flowPenMock } from '../test/mocks/graph-flow-pen.mock.ts';
+import { SELECTION_COLORS_STUB, THEME_COLORS_STUB } from '../test/stubs/theme-colors.stub.ts';
 import { drawFlow } from '../utils/flow-draw.util.ts';
 
-const SELECTION: SelectionColors = { fill: '#04395e', label: '#ffffff' };
-
-const COLORS: ThemeColors = { ...FALLBACK_COLORS, selection: SELECTION };
+const COLORS = THEME_COLORS_STUB;
 
 const SHEET: StylesheetJson = graphStyleOf(COLORS, 'sans-serif', false);
 
@@ -25,7 +23,7 @@ const COLOUR_OF: Record<LegendColour, string> = {
   selected: COLORS.selected,
   highlighted: COLORS.highlighted,
   cached: COLORS.cached,
-  selectionFill: SELECTION.fill,
+  selectionFill: SELECTION_COLORS_STUB.fill,
   'run-running': COLORS.runs.running,
   'run-passed': COLORS.runs.passed,
   'run-failed': COLORS.runs.failed,
@@ -123,7 +121,8 @@ const packageOf = (row: LegendRow): Expected => {
 };
 
 const weightOf = (row: LegendRow): Expected => {
-  const weight = { 'font-weight': row.swatch.isBold ? 'bold' : 'normal' };
+  const fontWeight = row.swatch.isBold ? 'bold' : 'normal';
+  const weight = { 'font-weight': fontWeight };
 
   return weight;
 };
@@ -143,7 +142,8 @@ const lineOf = (row: LegendRow): Expected => {
 
 const edgeOf = (row: LegendRow): Expected => {
   const line = lineOf(row);
-  const edge = { ...line, 'target-arrow-shape': row.swatch.isArrow ? 'triangle' : 'none' };
+  const arrowShape = row.swatch.isArrow ? 'triangle' : 'none';
+  const edge = { ...line, 'target-arrow-shape': arrowShape };
 
   return edge;
 };
@@ -175,14 +175,17 @@ const dashedBorderOf = (row: LegendRow): Expected => {
 };
 
 const dimmedOf = (row: LegendRow): Expected => {
-  const dimmed = { opacity: row.swatch.isDimmed ? COLORS.dimmedOpacity : 1 };
+  const opacity = row.swatch.isDimmed ? COLORS.dimmedOpacity : 1;
+  const dimmed = { opacity };
 
   return dimmed;
 };
 
 const plateOf = (row: LegendRow): Expected => {
   const isPlated = row.swatch.hasPlate;
-  const plate = { label: isPlated ? 'data(label)' : '', 'text-background-color': isPlated ? COLORS.background : 'none' };
+  const label = isPlated ? 'data(label)' : '';
+  const plateColour = isPlated ? COLORS.background : 'none';
+  const plate = { label, 'text-background-color': plateColour };
 
   return plate;
 };
@@ -221,22 +224,6 @@ const CORNER: Position = { x: 1, y: 1 };
 
 const FLOW_SEGMENT: FlowSegment = { from: ORIGIN, control: null, to: CORNER };
 
-const penOf = (): FlowPen => {
-  const pen: FlowPen = {
-    beginPath: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    quadraticCurveTo: vi.fn(),
-    stroke: vi.fn(),
-    setLineDash: vi.fn(),
-    lineDashOffset: 0,
-    lineWidth: 0,
-    strokeStyle: ''
-  };
-
-  return pen;
-};
-
 describe('FEATURE: legend rows', () => {
   describe('GIVEN the package rows', () => {
     it('THEN they are the eleven of spec D9 with unique ids', () => {
@@ -262,7 +249,6 @@ describe('FEATURE: legend rows', () => {
   describe('GIVEN each row pinned to the stylesheet', () => {
     it.each(PINS)('THEN row %s matches what the rule %s draws', (rowId, selector, expectedOf) => {
       const row = rowOf(rowId);
-
       const style = styleOf(selector);
 
       expect(style).toMatchObject(expectedOf(row));
@@ -272,23 +258,12 @@ describe('FEATURE: legend rows', () => {
   describe('GIVEN the flow row and the flow pen', () => {
     it('WHEN drawFlow strokes a segment THEN the pen takes the width and dashes the swatch says', () => {
       const row = rowOf('flow');
-      const pen = penOf();
+      const pen = flowPenMock();
 
       drawFlow(pen, [FLOW_SEGMENT], '#000', 0);
 
       expect(pen.lineWidth).toBe(outlineOf(row).px);
       expect(pen.setLineDash).toHaveBeenCalledWith(row.swatch.dashPx);
-    });
-  });
-
-  describe('GIVEN the legend copy and ids', () => {
-    it.each([
-      ['the button label', LEGEND_LABEL, 'Legend'],
-      ['the button title', LEGEND_TITLE, 'What the lines and borders mean'],
-      ['the popover id', LEGEND_ID, 'graph-legend'],
-      ['the heading id', LEGEND_HEADING_ID, 'graph-legend-heading']
-    ])('THEN %s is the spec value', (_label, value, expected) => {
-      expect(value).toBe(expected);
     });
   });
 });

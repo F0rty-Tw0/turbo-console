@@ -38,12 +38,16 @@ export class GraphLegend {
 
   /** The one dashed `tag` part of the term's swatch; strict, so a second dashed part fails the read. */
   public dashOf(term: string, tag: 'rect' | 'line'): Locator {
-    return this.swatchOf(term).locator(`${tag}[stroke-dasharray]`);
+    const swatch = this.swatchOf(term);
+
+    return swatch.locator(`${tag}[stroke-dasharray]`);
   }
 
   /** The frame of a box swatch with no outline and no nested box: its only rect. */
   public frameOf(term: string): Locator {
-    return this.swatchOf(term).locator('rect');
+    const swatch = this.swatchOf(term);
+
+    return swatch.locator('rect');
   }
 
   public async expectHeadingFocused(): Promise<void> {
