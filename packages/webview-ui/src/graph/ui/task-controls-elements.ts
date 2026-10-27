@@ -67,6 +67,7 @@ export const buildTaskRow = (task: GraphTask): TaskControlsRow => {
 export const buildTaskControls = (): TaskControlsElements => {
   const search = searchInput();
   const depth = taskDepthInput();
+  const depthField = hintedField(DEPENDENTS_DEPTH_LABEL, depth, DEPENDENTS_DEPTH_HINT, DEPENDENTS_DEPTH_HINT_ID);
   const list = textElement('div', 'controls-list', '');
   const panel = textElement('aside', 'graph-controls graph-task-controls', '');
 
@@ -74,8 +75,6 @@ export const buildTaskControls = (): TaskControlsElements => {
   list.setAttribute('role', 'grid');
   panel.id = TASK_CONTROLS_ID;
   panel.hidden = true;
-  const depthField = hintedField(DEPENDENTS_DEPTH_LABEL, depth, DEPENDENTS_DEPTH_HINT, DEPENDENTS_DEPTH_HINT_ID);
-
   panel.append(field(SEARCH_TASKS_LABEL, search), depthField, list);
 
   const elements: TaskControlsElements = { panel, search, depth, list };

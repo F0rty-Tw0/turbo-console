@@ -174,6 +174,7 @@ const packageGrid = (groups: ControlsGroup[]): HTMLElement => {
 export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsElements => {
   const search = searchInput();
   const depth = depthInput();
+  const depthField = hintedField(DEPTH_LABEL, depth, DEPTH_HINT, DEPTH_HINT_ID);
   const grouping = checkbox('controls-check');
   const tagEntries = tags.map(tagEntry);
   const tagBoxes = new Map(tagEntries);
@@ -185,7 +186,7 @@ export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsEl
   const panel = textElement('aside', 'graph-controls', '');
 
   panel.id = CONTROLS_ID;
-  panel.append(field(SEARCH_LABEL, search), hintedField(DEPTH_LABEL, depth, DEPTH_HINT, DEPTH_HINT_ID), groupingField(grouping));
+  panel.append(field(SEARCH_LABEL, search), depthField, groupingField(grouping));
 
   if (tagBoxes.size > 0) panel.append(tagFieldset(tagBoxes));
 
