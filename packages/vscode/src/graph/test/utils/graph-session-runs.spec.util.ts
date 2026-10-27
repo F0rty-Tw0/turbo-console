@@ -15,8 +15,9 @@ const isAtoms = (message: GraphHostMessage): message is GraphAtomsMessage => mes
 
 const isShowTasks = (message: GraphHostMessage): message is GraphShowTasksMessage => message.type === 'showTasks';
 
-const isShow = (message: GraphHostMessage): message is GraphShowRequest =>
-  message.type === 'showTasks' || message.type === 'showPackage';
+const isShow = (message: GraphHostMessage): message is GraphShowRequest => {
+  return message.type === 'showTasks' || message.type === 'showPackage';
+};
 
 /** The `runs` maps posted so far, in order. */
 export const postedRunsOf = (ports: GraphPorts): GraphRunsMessage['runs'][] => {
