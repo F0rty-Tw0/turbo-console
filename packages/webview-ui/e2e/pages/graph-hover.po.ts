@@ -26,7 +26,7 @@ const LEAVE_GAP_PX = 4;
 export class GraphHover {
   protected readonly page: Page;
   protected readonly container: Locator;
-  private readonly probe: GraphProbePage;
+  protected readonly probe: GraphProbePage;
   private hoverCpu: CpuSteps | null;
   private hoverRenders: number | null;
   private point: ViewportPoint | null;

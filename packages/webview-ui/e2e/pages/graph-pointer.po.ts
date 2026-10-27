@@ -88,10 +88,12 @@ export class GraphPointer extends GraphHover {
   }
 
   /**
-   * Waits until Cytoscape draws nothing for a while, so the next input starts from a settled canvas; a freshly drawn
-   * graph still refines its textures, which a slow runner draws after the input.
+   * Waits for the drawn nodes, then until Cytoscape draws nothing for a while, so the next input starts from a settled
+   * canvas; a freshly drawn graph still refines its textures, which a slow runner draws after the input.
    */
   public async waitForQuietCanvas(): Promise<void> {
+    await this.probe.waitForNodes();
+
     const quietWindow: QuietWindow = { quietMs: CANVAS_QUIET_MS, timeoutMs: CANVAS_QUIET_TIMEOUT_MS };
     const isQuiet = await this.page.evaluate(settlesQuiet, quietWindow);
 

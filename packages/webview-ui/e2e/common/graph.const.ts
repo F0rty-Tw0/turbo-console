@@ -64,8 +64,8 @@ export const SHIFT_F10_SILENT_REASON = 'Chromium on macOS fires no contextmenu e
 export const BLANK_PAGE = 'data:text/html,<p>blank</p>';
 
 /**
- * Cytoscape's texture caches redraw late: the layered cache refines 50 ms after a render, then batches its redraw for
- * 100 ms more, so 250 ms of no render, with a margin for slow frames, means the chain ran out.
+ * Cytoscape's texture caches redraw late: the layered cache refines 50 ms after a render, then the element cache batches
+ * its redraw for 100 ms more, so 250 ms of no render, with a margin for slow frames, means the chain ran out.
  */
 export const CANVAS_QUIET_MS = 250;
 
