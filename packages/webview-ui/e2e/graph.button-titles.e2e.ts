@@ -49,7 +49,7 @@ test.describe('FEATURE: every graph button has a hover title', () => {
   test(
     'GIVEN the grouped boards, the folder and package menus and the folder details buttons all have a title',
     { annotation: D2 },
-    async ({ graphButtonTitles, graphFolderInspect, graphList, graphMenus }): Promise<void> => {
+    async ({ graphButtonTitles, graphFolderInspect, graphFolders, graphList, graphMenus }): Promise<void> => {
       await test.step('WHEN the grouped boards open and the apps menu opens', async (): Promise<void> => {
         await graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS);
         await graphMenus.openFolderMenu('apps');
@@ -80,6 +80,12 @@ test.describe('FEATURE: every graph button has a hover title', () => {
 
       await test.step('THEN the button reads Expand and its title is Expand', async (): Promise<void> =>
         graphButtonTitles.expectTitledAs('Expand'));
+
+      await test.step('WHEN the Controls Expand button of the apps folder is pressed', async (): Promise<void> =>
+        graphFolders.toggleInList('apps', false));
+
+      await test.step('THEN its name and title both say Collapse folder apps', async (): Promise<void> =>
+        graphButtonTitles.expectTitledAs('Collapse folder apps'));
 
       await test.step('WHEN the Controls Focus button of the packages folder is pressed', async (): Promise<void> =>
         graphFolderInspect.pressHeaderFocus('packages'));
