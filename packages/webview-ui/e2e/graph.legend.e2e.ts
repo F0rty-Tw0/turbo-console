@@ -1,5 +1,6 @@
 import { expect, test } from './graph-task.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
+import { LOADING_STUB } from './test/stubs/graph-state.stub.ts';
 import { THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
 import { LEGEND_TITLE } from '../src/graph/common/legend.const.ts';
 
@@ -112,6 +113,26 @@ test.describe('FEATURE: graph legend', () => {
         graphPage.pressOnButton('Legend', 'Enter'));
 
       await test.step('THEN the popover is open', async (): Promise<void> => graphLegend.expectOpen(true));
+    }
+  );
+
+  test(
+    'GIVEN the open Legend, a loading state closes it, so the graph returns with the Legend closed',
+    { annotation: D9 },
+    async ({ graphHost, graphLegend, graphPage }): Promise<void> => {
+      await test.step('WHEN the details graph is shown and the Legend is opened', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(DETAILS_STUB);
+        await graphLegend.open();
+        await graphLegend.expectOpen(true);
+      });
+
+      await test.step('AND the loading state and then the details graph are sent', async (): Promise<void> => {
+        await graphHost.sendState(LOADING_STUB);
+        await graphHost.sendState(DETAILS_STUB);
+      });
+
+      await test.step('THEN the popover is closed', async (): Promise<void> => graphLegend.expectOpen(false));
     }
   );
 

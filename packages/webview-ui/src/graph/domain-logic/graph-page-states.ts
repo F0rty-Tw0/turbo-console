@@ -23,8 +23,9 @@ const messageTextOf = (state: MessageState): string => {
   }
 };
 
-/** Toolbar, notice and body hidden, `text` shown; Reload only when `canReload`. */
+/** Toolbar, notice and body hidden, `text` shown; Reload only when `canReload`. An open Legend closes, or it would reappear open with the graph. */
 const showMessage = (page: PageElements, text: string, canReload: boolean): void => {
+  page.legendPanel.hidePopover();
   page.toolbar.hidden = true;
   page.body.hidden = true;
   page.notice.hidden = true;

@@ -16,7 +16,7 @@ type FakeOwner = {
 
 /**
  * The few DOM calls the graph's element builders make, for specs that run without a DOM: attributes, classes,
- * children, plain properties, listeners by event type and focus. An input's `value` follows `defaultValue` until it is set.
+ * children, plain properties, listeners by event type, focus and the popover open state. An input's `value` follows `defaultValue` until it is set.
  */
 class FakeElement {
   public readonly tagName: string;
@@ -49,6 +49,7 @@ class FakeElement {
   private readonly listeners: AddedListener[] = [];
   private readonly focused: FakeFocus;
   private typed: string | null = null;
+  private isPopoverOpen = false;
 
   public constructor(tag: string, focus: FakeFocus) {
     this.tagName = tag.toUpperCase();
@@ -157,6 +158,19 @@ class FakeElement {
 
   public focus(): void {
     this.focused.element = this;
+  }
+
+  public showPopover(): void {
+    this.isPopoverOpen = true;
+  }
+
+  public hidePopover(): void {
+    this.isPopoverOpen = false;
+  }
+
+  /** Answers only `:popover-open`, from `showPopover` and `hidePopover`; any other selector is false. */
+  public matches(selector: string): boolean {
+    return selector === ':popover-open' && this.isPopoverOpen;
   }
 }
 
