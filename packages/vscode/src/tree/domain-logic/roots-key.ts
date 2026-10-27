@@ -1,11 +1,6 @@
 import type { RootEntry, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import { hasScriptsOf } from '../utils/has-scripts.util.ts';
-
-type ContextKeyTracker = {
-  readonly refresh: () => void;
-  readonly dispose: () => void;
-};
+import type { ContextKeyTracker } from '../common/context-key.type.ts';
 
 /**
  * Sends what `valueOf` says of the roots once now and again each time the answer changes, after every root change and
@@ -42,17 +37,6 @@ export const trackRootsKey = (
   const tracker: ContextKeyTracker = { refresh, dispose };
 
   refresh();
-
-  return tracker;
-};
-
-/** Sends whether the roots hold a script, the key the Show/Hide Scripts commands read. */
-export const trackHasScripts = (
-  roots: Roots,
-  setKey: (value: boolean) => Thenable<void>,
-  log: (line: string) => void
-): ContextKeyTracker => {
-  const tracker = trackRootsKey(roots, hasScriptsOf, setKey, log);
 
   return tracker;
 };

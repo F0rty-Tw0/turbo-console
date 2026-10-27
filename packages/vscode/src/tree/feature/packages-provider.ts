@@ -4,10 +4,12 @@ import { toTreeItem } from './tree-item.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
+import type { ContextKeyTracker } from '../common/context-key.type.ts';
 import type { PackagesTreeApi, RunningTasks, TreeNode, TreePorts, TreeProviderDeps, TreeRefresh } from '../common/tree-node.type.ts';
 import type { IconsMode, TreeMode } from '../common/tree-row.type.ts';
-import { trackHasScripts, trackRootsKey } from '../domain-logic/has-scripts-key.ts';
 import { PackagesTree } from '../domain-logic/packages-tree.ts';
+import { trackRootsKey } from '../domain-logic/roots-key.ts';
+import { hasScriptsOf } from '../utils/has-scripts.util.ts';
 import { isSinglePackageWindow } from '../utils/single-package-key.util.ts';
 
 /**
@@ -23,8 +25,8 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
   private readonly tree: PackagesTree;
   private readonly scripts: ScriptsToggleApi;
   private readonly unsubscribe: () => void;
-  private readonly hasScripts: ReturnType<typeof trackHasScripts>;
-  private readonly singlePackage: ReturnType<typeof trackRootsKey>;
+  private readonly hasScripts: ContextKeyTracker;
+  private readonly singlePackage: ContextKeyTracker;
 
   public constructor(store: Roots, mode: TreeMode, icons: IconsMode, deps: TreeProviderDeps) {
     const fire = (refresh: TreeRefresh): void => {
@@ -49,7 +51,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
     this.unsubscribe = scripts.onDidChange(() => {
       this.tree.scriptsChanged();
     });
-    this.hasScripts = trackHasScripts(store, setHasScripts, log);
+    this.hasScripts = trackRootsKey(store, hasScriptsOf, setHasScripts, log);
     this.singlePackage = trackRootsKey(store, isSinglePackageWindow, setSinglePackage, log);
   }
 
