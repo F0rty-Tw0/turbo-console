@@ -11,6 +11,7 @@ import { GraphPointer } from './pages/graph-pointer.po.ts';
 import { GraphReveal } from './pages/graph-reveal.po.ts';
 import { GraphSashes } from './pages/graph-sashes.po.ts';
 import { GraphSelection } from './pages/graph-selection.po.ts';
+import { GraphSinglePackage } from './pages/graph-single-package.po.ts';
 import { GraphTaskDetails } from './pages/graph-task-details.po.ts';
 import { GraphTaskGlyphs } from './pages/graph-task-glyphs.po.ts';
 import { GraphTaskNarrow } from './pages/graph-task-narrow.po.ts';
@@ -51,6 +52,7 @@ type GraphTaskFixtures = {
   readonly graphReveal: GraphReveal;
   readonly graphSashes: GraphSashes;
   readonly graphSelection: GraphSelection;
+  readonly graphSinglePackage: GraphSinglePackage;
   readonly graphTask: GraphTask;
   readonly graphTaskDetails: GraphTaskDetails;
   readonly graphTaskNarrow: GraphTaskNarrow;
@@ -100,6 +102,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   },
   graphSelection: async ({ page }, use): Promise<void> => {
     await use(new GraphSelection(page));
+  },
+  graphSinglePackage: async ({ page }, use): Promise<void> => {
+    await use(new GraphSinglePackage(page));
   },
   graphTask: async ({ page }, use): Promise<void> => {
     await use(new GraphTask(page));
