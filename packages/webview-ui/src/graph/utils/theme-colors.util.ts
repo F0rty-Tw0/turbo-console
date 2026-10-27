@@ -1,4 +1,5 @@
-import { dimmedOpacityOf, hexChannelsOf, opaqueColourOf } from './contrast.util.ts';
+import { hexChannelsOf } from './colour-parse.util.ts';
+import { dimmedOpacityOf, opaqueColourOf } from './contrast.util.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
 import type { CssVariableReader, SelectionColors, ThemeColors } from '../common/theme-colors.type.ts';
 
