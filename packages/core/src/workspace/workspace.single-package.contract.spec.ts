@@ -39,7 +39,8 @@ const CACHED_ROOT_ROW = { label: 'single-app' };
 
 const TRUSTED = { trusted: true } as const;
 
-const ALL_FIVE = ['build', 'dev', 'format', 'lint', 'test:unit'];
+/** The four scripts the fixture's `turbo.json` keys; `format` is the one it does not. */
+const KEYED_FOUR = ['build', 'dev', 'lint', 'test:unit'];
 
 const turboSpawns = (binary: TurboBinary): number => spawns.files.filter((file) => file === binary.path).length;
 
@@ -60,6 +61,8 @@ const freshReader = async (): Promise<CacheReader> => {
 
   return fresh.readCachedWorkspace;
 };
+
+const isTurboRow = ([, isTurboTask]: TaskRow): boolean => isTurboTask;
 
 const rowsOf = (model: WorkspaceModel): TaskRow[] => {
   const tasks = model.packages[0]?.tasks ?? [];
@@ -106,11 +109,11 @@ describe('FEATURE: load a workspace from a real turbo in each repo shape', () =>
       expect(model).toMatchObject({ singlePackage: true, packages: [ROOT_ROW] });
     });
 
-    it('THEN build dev format lint test:unit are all turbo tasks and only dev is persistent', () => {
+    it('THEN the keyed build dev lint test:unit are turbo tasks, the unkeyed format a script, and only dev is persistent', () => {
       expect(rowsOf(model)).toStrictEqual([
         ['//#build', true, false],
         ['//#dev', true, true],
-        ['//#format', true, false],
+        ['//#format', false, false],
         ['//#lint', true, false],
         ['//#test:unit', true, false]
       ]);
@@ -120,10 +123,17 @@ describe('FEATURE: load a workspace from a real turbo in each repo shape', () =>
       expect(loadSpawns).toBe(1);
     });
 
-    it('THEN the turbo tasks and their persistent flags equal a --single-package dry run of all five filtered to //', async () => {
-      const states = await readDryRun(binary, { tasks: ALL_FIVE, packages: ['//'], singlePackage: true });
+    it('THEN the turbo tasks and their persistent flags equal a --single-package dry run of the four keyed ones', async () => {
+      const states = await readDryRun(binary, { tasks: KEYED_FOUR, packages: ['//'], singlePackage: true });
+      const turboRows = rowsOf(model).filter(isTurboRow);
 
-      expect(rowsOf(model)).toStrictEqual(states.map((state) => [state.id, true, state.definition.persistent]));
+      expect(turboRows).toStrictEqual(states.map((state) => [state.id, true, state.definition.persistent]));
+    });
+
+    it('THEN a --single-package dry run of the unkeyed format still plans it: turbo runs it, the model shows a script', async () => {
+      const states = await readDryRun(binary, { tasks: ['format'], packages: ['//'], singlePackage: true });
+
+      expect(states.map((state) => state.id)).toStrictEqual(['//#format']);
     });
 
     it('WHEN read back from a fresh module graph THEN the cached model is single-package and no turbo is spawned', async () => {

@@ -274,6 +274,29 @@ describe('FEATURE: copy command', () => {
     });
   });
 
+  describe('GIVEN a single-package root whose // package holds the unkeyed format script', () => {
+    beforeEach(() => {
+      const format: TaskNode = { ...TASK_NODE_STUB, id: '//#format', name: 'format', isTurboTask: false };
+      const holder = packageHolding('//', format);
+      const loaded = loadedWith([{ ...holder, path: '' }]);
+      const model = { ...loaded.model, singlePackage: true };
+
+      roots.apply('/ws', { ...loaded, model });
+    });
+
+    it('WHEN Copy Command is invoked on its row THEN the package manager command is copied', async () => {
+      await copy(taskRowOf('//', '//#format'));
+
+      expect(write).toHaveBeenCalledExactlyOnceWith('pnpm run format');
+    });
+
+    it('WHEN Copy Command is invoked on its row THEN it says to run it in the repo root', async () => {
+      await copy(taskRowOf('//', '//#format'));
+
+      expect(info).toHaveBeenCalledExactlyOnceWith('Copied. Run it in the repo root.');
+    });
+  });
+
   it('GIVEN the copy command WHEN it is disposed THEN its command is unregistered', () => {
     registered.dispose();
 

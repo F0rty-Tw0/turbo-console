@@ -45,22 +45,14 @@ const isRootConfig = (config: TurboConfigFile): boolean => ROOT_CONFIG_PATHS.inc
 const isText = (warning: string | null): warning is string => warning !== null;
 
 /**
- * `null` tasks mean the configs cannot tell: every task then counts as a turbo task, and none as persistent. In a
- * single-package repo a script no config keys is a turbo task all the same (`turbo run` of its name runs it), and not
- * persistent; a monorepo package's own unkeyed script is not one.
+ * `null` tasks mean the configs cannot tell: every task then counts as a turbo task, and none as persistent. A script
+ * no config keys is no turbo task, in a single-package repo too: turbo 2.11.7 runs one there (`turbo run` of its name
+ * exits 0, uncached), but it shows as a script like a monorepo package's own unkeyed script.
  */
-const factsOf = (
-  turboTasks: ReadonlyMap<string, TurboTaskFacts> | null,
-  name: string,
-  singlePackage: boolean
-): TurboTaskFacts | undefined => {
+const factsOf = (turboTasks: ReadonlyMap<string, TurboTaskFacts> | null, name: string): TurboTaskFacts | undefined => {
   if (turboTasks === null) return UNKNOWN_FACTS;
 
-  const facts = turboTasks.get(name);
-
-  if (facts === undefined && singlePackage) return UNKNOWN_FACTS;
-
-  return facts;
+  return turboTasks.get(name);
 };
 
 /** Cut before `plainLine` walks it; a cut through a surrogate pair leaves U+FFFD, never half a character. */
@@ -99,7 +91,7 @@ const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): Package
 
   const toNode = (task: ClassifiedTask): TaskNode => {
     const description = descriptionOf(context.configs, path, task.id, task.name);
-    const facts = factsOf(turboTasks, task.name, context.lookup.singlePackage);
+    const facts = factsOf(turboTasks, task.name);
 
     return toTaskNode(task, context.visibleIds, description, facts);
   };

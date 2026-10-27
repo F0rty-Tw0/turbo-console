@@ -9,8 +9,11 @@ export const ROOT_BUILD_ID = '//#build';
 /** The one persistent task of the fixture. */
 export const PERSISTENT_ROOT_ID = '//#dev';
 
-/** Every task of the fixture, sorted: `format` has no `turbo.json` key, so its place here shows a script is a turbo task. */
-export const SINGLE_TASK_IDS: string[] = ['//#build', '//#dev', '//#format', '//#lint', '//#test:unit'];
+/** Every turbo task of the fixture, sorted: the scripts its `turbo.json` keys. */
+export const SINGLE_TASK_IDS: string[] = ['//#build', '//#dev', '//#lint', '//#test:unit'];
+
+/** The fixture's one script `turbo.json` does not key: a script, though a single-package turbo would run it. */
+export const SINGLE_SCRIPT_IDS: string[] = ['//#format'];
 
 /** `git init` on a loaded Windows runner takes well over Vitest's 5s default. Matches repo-gen. */
 export const GIT_SPAWN_TIMEOUT_MS = 60_000;

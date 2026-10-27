@@ -1,7 +1,7 @@
 import { detailsCase, lensCase } from '../utils/single-package-details.spec.util.ts';
 import { flagCase } from '../utils/single-package-flag.spec.util.ts';
 import { runCase } from '../utils/single-package-run.spec.util.ts';
-import { rowAndTasksCase, themeIconCase } from '../utils/single-package-tree.spec.util.ts';
+import { rowAndTasksCase, scriptsCase, themeIconCase } from '../utils/single-package-tree.spec.util.ts';
 import { markDone, revealTree, rootAt, step, turboApi } from '../utils/suite-env.spec.util.ts';
 import { readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 
@@ -16,6 +16,7 @@ export const run = async (): Promise<void> => {
 
   await step('reveal the view', async () => revealTree(api, root));
   await rowAndTasksCase(api);
+  await scriptsCase(api);
   await runCase(api, root);
   await detailsCase(api, root);
   await lensCase(root);

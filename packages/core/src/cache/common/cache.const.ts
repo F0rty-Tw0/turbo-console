@@ -1,7 +1,7 @@
 import type { LockfileName } from '../../workspace/common/workspace-model.type.ts';
 
 /** A cache file of any other `formatVersion` is a miss. */
-export const CACHE_FORMAT_VERSION = 6;
+export const CACHE_FORMAT_VERSION = 7;
 
 /** The lockfiles turbo supports: each is hashed up to `MAX_LOCKFILE_BYTES`, wherever it sits. */
 export const LOCKFILE_NAMES = Object.freeze<LockfileName[]>([

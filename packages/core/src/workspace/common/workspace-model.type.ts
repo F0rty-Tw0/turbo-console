@@ -34,8 +34,8 @@ export type AffectedMode = 'package' | 'task';
 
 /**
  * A visible task; `dependencies` hold only visible task ids, sorted. `isTurboTask` is false for a package script no
- * turbo config defines for its package: `turbo query` lists it, but `turbo run` does not run it. `persistent` is turbo's
- * resolved value (a continuous task, run until stopped); `false` for no turbo task, or when the configs cannot tell.
+ * turbo config defines for its package: `turbo query` lists it, but `turbo run` does not run it (a single-package turbo
+ * runs it uncached, yet it stays a script). `persistent` is turbo's resolved value (a continuous task, run until stopped); `false` for no turbo task, or when the configs cannot tell.
  */
 export type TaskNode = {
   readonly id: string;
