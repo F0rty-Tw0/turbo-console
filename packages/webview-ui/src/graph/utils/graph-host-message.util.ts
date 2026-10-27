@@ -47,8 +47,11 @@ const isGraphShape = (state: UnknownRecord): boolean => {
   const hasEdges = Array.isArray(edges) && edges.every(isEdge);
   const hasGraph = hasHash && hasPackages && hasEdges;
   const hasTaskParts = isGraphTaskList(tasks) && isAtomGroupList(atomGroups);
+  const hasCaches = hasCachesOf(state);
+  const hasSinglePackage = hasSinglePackageOf(state);
+  const hasHostFields = hasCaches && hasSinglePackage;
 
-  return hasGraph && hasCachesOf(state) && hasTaskParts && hasSinglePackageOf(state);
+  return hasGraph && hasTaskParts && hasHostFields;
 };
 
 const isGraphState = (state: unknown): boolean => {
