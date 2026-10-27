@@ -30,7 +30,8 @@ class GraphPageController {
     const frames = new GraphFrames(deps.now);
     const raw = bridge.savedState();
     const saved = readGraphViewState(raw);
-    const modes = new ViewStateModes(deps.saver, saved, hasSavedGrouping(raw));
+    const isGroupingSaved = saved !== null && hasSavedGrouping(raw);
+    const modes = new ViewStateModes(deps.saver, saved, isGroupingSaved);
     const handlers = viewHandlersOf({
       frames,
       filtering: () => this.packages.filtering,

@@ -14,7 +14,7 @@ export class ViewStateModes {
   private last: GraphViewState | null;
   private hasGrouping: boolean;
 
-  /** `hasGrouping` is false when the host kept no grouping choice, as in a state saved before folders existed. */
+  /** `hasGrouping` is false when no grouping choice is kept: a state saved before folders existed, or one dropped as invalid. */
   public constructor(saver: ViewStateSaver, saved: GraphViewState | null, hasGrouping = saved !== null) {
     this.saver = saver;
     this.last = saved;
