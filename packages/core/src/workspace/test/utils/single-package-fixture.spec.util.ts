@@ -14,6 +14,14 @@ const SINGLE_MANIFEST =
 const SINGLE_TURBO =
   '{"tasks":{"build":{"outputs":["dist/**"]},"lint":{},"dev":{"persistent":true,"cache":false},"test:unit":{"dependsOn":["build"]}}}';
 
+const EDGES_MANIFEST =
+  '{"name":"single-app","version":"1.0.0","packageManager":"pnpm@10.0.0","scripts":{"build":"echo build","lint":"echo lint",' +
+  '"typecheck":"echo types","format":"echo fmt","dev":"echo dev"}}';
+
+const EDGES_TURBO =
+  '{"tasks":{"build":{"dependsOn":["lint","typecheck","format"]},"lint":{},"typecheck":{"dependsOn":["lint"]},' +
+  '"dev":{"persistent":true,"dependsOn":["build"]}}}';
+
 const EMPTY_MANIFEST =
   '{"name":"empty-ws","version":"1.0.0","packageManager":"pnpm@10.0.0","scripts":{"build":"echo build","lint":"echo lint"}}';
 
@@ -24,6 +32,12 @@ const EMPTY_WORKSPACE_YAML = 'packages:\n  - "packages/*"\n';
 const SINGLE_FILES: FixtureFile[] = [
   { path: 'package.json', content: SINGLE_MANIFEST },
   { path: 'turbo.json', content: SINGLE_TURBO },
+  { path: 'pnpm-lock.yaml', content: '' }
+];
+
+const EDGES_FILES: FixtureFile[] = [
+  { path: 'package.json', content: EDGES_MANIFEST },
+  { path: 'turbo.json', content: EDGES_TURBO },
   { path: 'pnpm-lock.yaml', content: '' }
 ];
 
@@ -51,3 +65,9 @@ export const writeSinglePackageFixture = async (parent: string): Promise<string>
 
 /** A new uncommitted pnpm repo under `parent` whose `pnpm-workspace.yaml` lists `packages/*`, none present (spec §2.6). */
 export const writeEmptyWorkspaceFixture = async (parent: string): Promise<string> => writeFixture(parent, EMPTY_WORKSPACE_FILES);
+
+/**
+ * A new uncommitted single-package pnpm repo under `parent` whose tasks depend on each other: `build` on `lint`,
+ * `typecheck` and the unkeyed script `format`, `typecheck` on `lint`, persistent `dev` on `build`.
+ */
+export const writeEdgesFixture = async (parent: string): Promise<string> => writeFixture(parent, EDGES_FILES);

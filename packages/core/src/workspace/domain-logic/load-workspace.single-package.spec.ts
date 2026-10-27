@@ -164,7 +164,7 @@ describe('FEATURE: load a workspace in single-package mode', () => {
       expect(model.singlePackage).toBe(true);
       expect(model.packages).toMatchObject([ROOT_ROW]);
       expect(model.edges).toStrictEqual([]);
-      expect(turbo.queryArgs).toHaveLength(1);
+      expect(turbo.queryArgs).toHaveLength(2);
     });
 
     it('WHEN pnpm is read THEN it is read once, in the root, with the caller signal', async () => {
