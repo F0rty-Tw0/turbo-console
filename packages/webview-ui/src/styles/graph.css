@@ -820,8 +820,13 @@ kbd {
 }
 
 .graph-sash:hover::after,
-.graph-sash:focus-visible::after,
 .graph-sash.is-dragging::after {
+  background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+/* The keyboard focus line is 2px, centred in the 4px grip, so it is a visible indicator and not a hairline. */
+.graph-sash:focus-visible::after {
+  width: 2px;
   background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
 }
 
@@ -829,7 +834,13 @@ kbd {
   outline: none;
 }
 
+.vscode-high-contrast .graph-sash:focus-visible,
+.vscode-high-contrast-light .graph-sash:focus-visible {
+  outline: 1px solid var(--vscode-contrastActiveBorder);
+}
+
 .graph-body.is-sashing {
+  cursor: col-resize;
   user-select: none;
 }
 

@@ -110,6 +110,14 @@ describe('FEATURE: graph.css', () => {
       expect(declarationsOf(css, '.graph-sash')).toContain(expected);
     });
 
+    it.each([
+      ['.graph-sash:focus-visible::after', 'width: 2px'],
+      ['.vscode-high-contrast .graph-sash:focus-visible', 'outline: 1px solid var(--vscode-contrastActiveBorder)'],
+      ['.graph-body.is-sashing', 'cursor: col-resize']
+    ])('WHEN %s is read THEN it holds %s', (selector, expected) => {
+      expect(declarationsOf(css, selector)).toContain(expected);
+    });
+
     it('WHEN the hover line is read THEN it uses sash.hoverBorder with the focus border fallback', () => {
       expect(declarationsOf(css, '.graph-sash:hover::after')).toContain('var(--vscode-sash-hoverBorder, var(--vscode-focusBorder))');
     });
