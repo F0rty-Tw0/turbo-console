@@ -44,14 +44,16 @@ describe.skipIf(process.platform === 'win32')('FEATURE: queryTurbo', () => {
       expect(argvOf(stdout)).toStrictEqual([SKIP_INFER, 'query', 'q', SINGLE_PACKAGE]);
     });
 
-    it('WHEN singlePackage is absent or false THEN the argv has no flag', async () => {
-      const absent = await queryTurbo(join(stubDir, 'echo.sh'), 'q', stubDir);
-      const off = await queryTurbo(join(stubDir, 'echo.sh'), 'q', stubDir, { singlePackage: false });
+    it('WHEN singlePackage is absent THEN the argv has no flag', async () => {
+      const { stdout } = await queryTurbo(join(stubDir, 'echo.sh'), 'q', stubDir);
 
-      expect([argvOf(absent.stdout), argvOf(off.stdout)]).toStrictEqual([
-        [SKIP_INFER, 'query', 'q'],
-        [SKIP_INFER, 'query', 'q']
-      ]);
+      expect(argvOf(stdout)).toStrictEqual([SKIP_INFER, 'query', 'q']);
+    });
+
+    it('WHEN singlePackage is false THEN the argv has no flag', async () => {
+      const { stdout } = await queryTurbo(join(stubDir, 'echo.sh'), 'q', stubDir, { singlePackage: false });
+
+      expect(argvOf(stdout)).toStrictEqual([SKIP_INFER, 'query', 'q']);
     });
 
     it('WHEN variables and singlePackage are both set THEN the flag follows -V <file>', async () => {
