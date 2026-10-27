@@ -226,6 +226,11 @@ test.describe('FEATURE: graph panel sashes', () => {
       await test.step('AND the "…" no longer sits under the overlay and shows', async (): Promise<void> =>
         graphSashes.expectEllipsisShown('apps'));
 
+      await test.step('AND with apps inspected every folder action button still fits its label', async (): Promise<void> => {
+        await graphFolderInspect.tapFolder('apps');
+        await graphSashes.expectDetailsButtonsFit();
+      });
+
       await test.step('WHEN Details gets ArrowLeft', async (): Promise<void> => graphSashes.press('details', 'ArrowLeft'));
 
       await test.step('THEN Details is 216px wide', async (): Promise<void> => graphSashes.expectPanelWidth('graph-details', 216));

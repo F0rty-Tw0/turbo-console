@@ -115,7 +115,7 @@ export class GraphSashes {
     await expect(ellipsis).toBeVisible({ visible: isShown });
   }
 
-  /** Each action button in the package Details rows is wide enough for its label: none clips or spills its text. */
+  /** Each action button in the package or folder Details row holds its label: none clips or spills its text. */
   public async expectDetailsButtonsFit(): Promise<void> {
     const buttons = this.page.locator('#graph-details .details-row button');
     const overflowingOf = async (): Promise<string[]> => {
