@@ -87,8 +87,8 @@ export type ControlsViewFields = Pick<
 >;
 
 /** Debounces view-state saves; `flush` saves a pending state at once. */
-export type ViewStateSaver<State = GraphViewState> = {
-  readonly schedule: (state: State) => void;
+export type ViewStateSaver<TState = GraphViewState> = {
+  readonly schedule: (state: TState) => void;
   readonly flush: () => void;
 };
 
