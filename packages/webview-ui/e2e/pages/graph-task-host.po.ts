@@ -7,6 +7,7 @@ import type {
   GraphAtomGroupState,
   GraphAtomsMessage,
   GraphRunsMessage,
+  GraphShowPackageMessage,
   GraphShowTasksMessage,
   GraphWebviewMessage
 } from '../../src/bridge/common/graph-message.type.ts';
@@ -19,7 +20,7 @@ import { explainEdgePosted, readPosted, shownUmbrellasPosted } from '../test/uti
 
 const isRunPost = (message: GraphWebviewMessage): boolean => message.type === 'runTask' || message.type === 'stopTask';
 
-/** The host stand-in's task side: the `runs` and `showTasks` messages the page gets, and any raw message a test wants it to survive. */
+/** The host stand-in's task side: the `runs`, `showTasks` and `showPackage` messages the page gets, and any raw message a test wants it to survive. */
 export class GraphTaskHost {
   private readonly page: Page;
 
@@ -41,6 +42,12 @@ export class GraphTaskHost {
 
   public async sendShowTasks(taskIds: string[]): Promise<void> {
     const message: GraphShowTasksMessage = { type: 'showTasks', taskIds };
+
+    await this.sendRaw(message);
+  }
+
+  public async sendShowPackage(name: string): Promise<void> {
+    const message: GraphShowPackageMessage = { type: 'showPackage', name };
 
     await this.sendRaw(message);
   }

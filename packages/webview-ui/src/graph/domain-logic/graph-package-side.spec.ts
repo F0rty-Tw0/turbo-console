@@ -47,7 +47,7 @@ const rigOf = (saved: GraphViewState | null, hasGrouping?: boolean): PackageSide
   const tasks = { onShowTasks: vi.fn(), hasTasks };
   const modes = new ViewStateModes(mock.saver, saved, hasGrouping);
   const frames = new GraphFrames(mock.deps.now);
-  const hooks = { frames, modes, tasks, onMessage: mock.onMessage };
+  const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced };
   const side = new GraphPackageSide(mock.deps, mock.view, hooks);
   const rig: PackageSideRig = { ...mock, side, modes, hasTasks };
 
@@ -83,6 +83,16 @@ describe('FEATURE: GraphPackageSide', () => {
 
       expect(rig.runs.count()).toBe(1);
       expect(rig.side.drawnHash()).toBe('h1');
+    });
+
+    it('WHEN a graph state with no layout cached arrives THEN no place is reported while its layout runs', () => {
+      rig.side.show(UNCACHED, 1);
+
+      expect(rig.onPlaced).not.toHaveBeenCalled();
+    });
+
+    it('WHEN nothing has arrived THEN no package graph is drawn', () => {
+      expect(rig.side.drawnGraph()).toBeNull();
     });
 
     describe('WHEN an error state follows a graph', () => {
@@ -132,6 +142,14 @@ describe('FEATURE: GraphPackageSide', () => {
 
     it('WHEN nothing else happens THEN the details panel offers no Show tasks', () => {
       expect(rig.packageViews.at(-1)?.showTasks.hidden).toBe(true);
+    });
+
+    it('WHEN nothing else happens THEN the first draw reported its place once', () => {
+      expect(rig.onPlaced).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN nothing else happens THEN the package graph is h1', () => {
+      expect(rig.side.drawnGraph()?.hash).toBe('h1');
     });
 
     it('WHEN h1 arrives again with web given its first tasks THEN the details panel offers Show tasks', () => {

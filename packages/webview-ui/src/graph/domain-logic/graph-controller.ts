@@ -1,12 +1,13 @@
 import { GraphFrames } from './graph-frames.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
+import { PackageReveal } from './graph-reveal.ts';
 import { GraphStateRouting } from './graph-state-routing.ts';
 import { packageTasksOf, taskModeOf } from './graph-task-wiring.ts';
 import { wireToolbar } from './graph-toolbar-actions.ts';
 import { viewHandlersOf } from './graph-view-handlers.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { FlowControl } from '../common/flow.type.ts';
-import type { GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
+import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { FilteringFacts, LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { hasSavedGrouping, readGraphViewState } from '../utils/graph-view-state.util.ts';
@@ -24,6 +25,7 @@ class GraphPageController {
   private readonly packages: GraphPackageSide;
   private readonly tasks: ReturnType<typeof taskModeOf>;
   private readonly routing: GraphStateRouting;
+  private readonly reveal: PackageReveal;
 
   public constructor(deps: GraphControllerDeps) {
     const { bridge, page } = deps;
@@ -41,12 +43,13 @@ class GraphPageController {
     });
     const tasks = packageTasksOf((): ReturnType<typeof taskModeOf> => this.tasks, deps.now);
     const onMessage = (): void => this.tasks.suspend();
+    const onPlaced = (): void => this.reveal.placed();
 
     this.deps = deps;
     this.frames = frames;
     this.view = deps.createView(page.container, handlers);
     this.flow = deps.createFlow(this.view);
-    this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks, onMessage });
+    this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks, onMessage, onPlaced });
     this.tasks = taskModeOf(deps, this.view, {
       modes,
       frames,
@@ -55,6 +58,14 @@ class GraphPageController {
       flow: this.flow
     });
     this.routing = new GraphStateRouting({ tasks: this.tasks, packages: this.packages, now: deps.now });
+    this.reveal = new PackageReveal({
+      tasks: this.tasks,
+      layouts: this.packages.layouts,
+      drawn: (): DrawnGraph | null => this.packages.drawnGraph(),
+      filtering: this.packages.filtering,
+      inspection: this.packages.filtering.inspection,
+      view: this.view
+    });
     const relayout = (): void => this.relayout();
 
     wireToolbar({ page, view: this.view, bridge, background: deps.background, relayout });
@@ -65,11 +76,26 @@ class GraphPageController {
 
     if (!isGraphHostMessage(message)) return;
 
-    if (message.type === 'state') this.routing.show(message.state, at);
-    else if (message.type === 'showTasks') this.tasks.showTasks(message.taskIds, at);
-    else if (message.type === 'edgeExplained') this.packages.filtering.inspection.explained(message);
-    else if (message.type === 'runs') this.tasks.selection.runs(message.runs);
-    else if (message.type === 'atoms') this.tasks.layout.atoms.states(message.groups);
+    switch (message.type) {
+      case 'state':
+        this.routing.show(message.state, at);
+        break;
+      case 'showTasks':
+        this.tasks.showTasks(message.taskIds, at);
+        break;
+      case 'showPackage':
+        this.reveal.request(message.name, at);
+        break;
+      case 'edgeExplained':
+        this.packages.filtering.inspection.explained(message);
+        break;
+      case 'runs':
+        this.tasks.selection.runs(message.runs);
+        break;
+      case 'atoms':
+        this.tasks.layout.atoms.states(message.groups);
+        break;
+    }
   }
 
   public facts(): ProbeFacts {

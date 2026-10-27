@@ -41,6 +41,11 @@ export class GraphLayouts {
     return this.onScreen;
   }
 
+  /** A layout of the checkbox's mode is in flight, so a place, and its fit, is still to come. */
+  public isPlacing(): boolean {
+    return this.runs.isRunning(this.checked);
+  }
+
   /** The engine of the layout on screen. */
   public engine(): LayoutEngine | null {
     return this.snapshots.engineOf(this.onScreen);

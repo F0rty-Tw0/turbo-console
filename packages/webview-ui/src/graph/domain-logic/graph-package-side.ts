@@ -68,7 +68,10 @@ export class GraphPackageSide {
       view,
       drawn: (): DrawnGraph | null => this.drawn,
       onDrawn: (saved: GraphViewState | null): void => this.afterDraw(saved),
-      onPlaced: (): void => this.filtering.placed(),
+      onPlaced: (): void => {
+        this.filtering.placed();
+        hooks.onPlaced();
+      },
       onGroupingOff: (): void => this.filtering.groupingOff()
     });
   }
@@ -89,6 +92,11 @@ export class GraphPackageSide {
   /** The hash of the package graph shown or being laid out; `null` while none is. */
   public drawnHash(): string | null {
     return this.drawn?.hash ?? null;
+  }
+
+  /** The package graph shown or being laid out; `null` while none is. */
+  public drawnGraph(): DrawnGraph | null {
+    return this.drawn;
   }
 
   /** Task mode was left: the package graph drawn before is drawn again with the saved package view. */
