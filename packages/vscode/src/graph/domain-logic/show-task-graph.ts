@@ -73,7 +73,7 @@ const openWith = ({ root, taskIds }: TaskGraphRequest, { panels, ports }: ShowTa
   try {
     const panel = panels.open(root);
 
-    if (taskIds.length > 0) panel?.session.showTasks(taskIds);
+    if (taskIds.length > 0) panel?.session.show({ type: 'showTasks', taskIds });
   } catch (error: unknown) {
     ports.log(logTextOf(error));
     ports.error(GRAPH_OPEN_FAILED_TEXT);

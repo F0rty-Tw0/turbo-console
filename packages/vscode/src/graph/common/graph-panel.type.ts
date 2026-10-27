@@ -1,4 +1,4 @@
-import type { GraphHostMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphShowRequest } from '@turbo-console/webview-ui';
 import type * as vscode from 'vscode';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
@@ -47,7 +47,7 @@ export type GraphPanelsDeps = {
 /** What the registry and the test API ask of a panel's `GraphSession`. */
 type GraphPanelSession = {
   readonly receive: (value: unknown) => Promise<void>;
-  readonly showTasks: (taskIds: string[]) => void;
+  readonly show: (request: GraphShowRequest) => void;
   readonly dispose: () => void;
 };
 
