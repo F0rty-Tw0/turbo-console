@@ -103,8 +103,10 @@ export class GraphFoldersPage {
     }
   }
 
-  /** The fastest of all the collapses and the fastest of all the expands were each under `ms`. */
-  public expectToggleMinUnder(ms: number): void {
+  /** There were `count` collapses and `count` expands, and the fastest of each was under `ms`. */
+  public expectToggleMinUnder(ms: number, count: number): void {
+    expect(this.collapseSamples).toHaveLength(count);
+    expect(this.expandSamples).toHaveLength(count);
     expectMinUnder('collapse-ms', this.collapseSamples, ms);
     expectMinUnder('expand-ms', this.expandSamples, ms);
   }

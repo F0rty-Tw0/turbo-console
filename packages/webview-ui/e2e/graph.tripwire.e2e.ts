@@ -1,4 +1,4 @@
-import { IS_MAC_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS } from './common/graph.const.ts';
+import { IS_MAC_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
@@ -288,7 +288,7 @@ test.describe('FEATURE: graph tripwires', () => {
         graphFolders.collectToggleMs(TOGGLED_FOLDERS, TOGGLE_ROUNDS));
 
       await test.step('THEN the fastest collapse and the fastest expand were under 100 ms', (): void =>
-        graphFolders.expectToggleMinUnder(TOGGLE_BUDGET_MS));
+        graphFolders.expectToggleMinUnder(TOGGLE_BUDGET_MS, TOGGLE_SAMPLES));
     }
   );
 

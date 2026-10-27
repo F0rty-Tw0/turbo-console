@@ -1,4 +1,4 @@
-import { IS_MAC_RUNNER, TOGGLE_BUDGET_MS } from './common/graph.const.ts';
+import { IS_MAC_RUNNER, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph-task.fixture.ts';
 import {
   TARGET_LIKE_UMBRELLA,
@@ -89,7 +89,7 @@ test.describe('FEATURE: task graph tripwires', () => {
         graphAtoms.collectToggleMs(TARGET_LIKE_UMBRELLA, TOGGLE_ROUNDS));
 
       await test.step('THEN the fastest expand and the fastest collapse were under the toggle budget', (): void =>
-        graphAtoms.expectToggleMinUnder(TOGGLE_BUDGET_MS));
+        graphAtoms.expectToggleMinUnder(TOGGLE_BUDGET_MS, TOGGLE_SAMPLES));
     }
   );
 });
