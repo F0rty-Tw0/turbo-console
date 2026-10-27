@@ -19,6 +19,7 @@ const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false
 
 const CONTINUOUS: TaskNode = { ...TASK_NODE_STUB, persistent: true };
 const NOT_TURBO: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+const CONTINUOUS_SCRIPT: TaskNode = { ...CONTINUOUS, isTurboTask: false };
 const KINDS: TaskNode[] = [TASK_NODE_STUB, CONTINUOUS, NOT_TURBO];
 
 const entryIn = (overrides: Partial<RunEntry>): RunEntry => {
@@ -131,6 +132,14 @@ describe('FEATURE: run view of a task', () => {
         isSpinning: false,
         isIdle: false
       });
+    });
+
+    it('WHEN it was launched without turbo THEN the icon is still the pulse with no color', () => {
+      const entry = entryIn({ task: CONTINUOUS_SCRIPT, state: 'running', launchedAt: NOW - 12_345 });
+
+      const view = toRunView(CONTINUOUS, entry, NOW);
+
+      expect([view.iconId, view.colorVar, view.text]).toStrictEqual(['pulse', null, 'continuous']);
     });
   });
 

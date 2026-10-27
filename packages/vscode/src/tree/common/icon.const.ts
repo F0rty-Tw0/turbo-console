@@ -9,7 +9,7 @@ export const PACKAGE_ICON: IconSpec = { id: 'package', color: null };
 /** Spec §4.7 task icons: Nx's wrench when idle, then one per run state. */
 export const IDLE_ICON: IconSpec = { id: 'tools', color: null };
 
-export const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
+export const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: 'charts.yellow' };
 
 export const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 
@@ -20,7 +20,7 @@ export const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'descriptionFor
 /** Spec 1c-a §4.5 task-kind icons: below every run-state icon, above the idle wrench. */
 export const CONTINUOUS_IDLE_ICON: IconSpec = { id: 'server-process', color: null };
 
-export const CONTINUOUS_RUNNING_ICON: IconSpec = { id: 'pulse', color: null };
+export const CONTINUOUS_RUNNING_ICON: IconSpec = { id: 'pulse', color: 'charts.green' };
 
 /** Spec §4.7 message icons, and the spinner of the §4.3 placeholder. */
 export const ERROR_ICON: IconSpec = { id: 'error', color: 'errorForeground' };

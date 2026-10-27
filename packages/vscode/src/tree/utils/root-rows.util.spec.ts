@@ -275,7 +275,7 @@ describe('FEATURE: rows of a root', () => {
 describe('FEATURE: row of a workspace folder', () => {
   describe('GIVEN a folder of a multi-root window', () => {
     it('WHEN built with no model THEN it is an expanded root-folder row whose tooltip is its path', () => {
-      const row = rootNodeRow(ROOT_FOLDER_STUB, null);
+      const row = rootNodeRow(ROOT_FOLDER_STUB, null, 0);
 
       expect(row).toStrictEqual({
         id: 'root:/ws',
@@ -296,13 +296,13 @@ describe('FEATURE: row of a workspace folder', () => {
     it('WHEN the folder name holds a bidi control THEN the label is cleaned and the key keeps the path', () => {
       const root = `/w${BIDI}s`;
 
-      const row = rootNodeRow({ root, name: `w${BIDI}s` }, null);
+      const row = rootNodeRow({ root, name: `w${BIDI}s` }, null, 0);
 
       expect(row).toMatchObject({ id: `root:${root}`, key: root, label: 'ws' });
     });
 
     it('WHEN built THEN it has no folder, so it keeps its root-folder icon in every icons mode', () => {
-      const row = rootNodeRow(ROOT_FOLDER_STUB, null);
+      const row = rootNodeRow(ROOT_FOLDER_STUB, null, 0);
 
       expect('folder' in row).toBe(false);
     });

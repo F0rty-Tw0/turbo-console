@@ -40,6 +40,7 @@ export const rowContextOf = (
     scriptsShown,
     live,
     now: ROW_NOW,
+    countsMemo: new WeakMap(),
     tools: resolveLookupMock(),
     atoms: NO_ATOMS_LOOKUP
   };

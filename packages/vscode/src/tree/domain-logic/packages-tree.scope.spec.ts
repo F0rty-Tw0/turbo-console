@@ -117,10 +117,10 @@ describe('FEATURE: package scopes in the packages tree', () => {
       expect(fixture.fire).not.toHaveBeenCalled();
     });
 
-    it('WHEN b is hidden and the task of the shown package runs THEN its kept node fires', () => {
+    it('WHEN b is hidden and the task of the shown package runs THEN its kept task node fires, then its package node', () => {
       fixture.tree.runChanged(taskRunOf('/ws', '@s/a#build', '@s/a'));
 
-      expect(fixture.fire).toHaveBeenCalledOnce();
+      expect(fixture.fire).toHaveBeenCalledTimes(2);
     });
   });
 });

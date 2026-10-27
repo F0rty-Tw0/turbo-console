@@ -16,7 +16,7 @@ const entryIn = (overrides: Partial<RunEntry>): RunEntry => {
 };
 
 const IDLE_ICON: IconSpec = { id: 'tools', color: null };
-const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
+const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: 'charts.yellow' };
 const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 const FAILED_ICON: IconSpec = { id: 'error', color: 'testing.iconFailed' };
 const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'descriptionForeground' };

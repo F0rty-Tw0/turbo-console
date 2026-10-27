@@ -3,6 +3,7 @@ import { dirRows } from './dir-rows.util.ts';
 import { liveOf } from './live-of.util.ts';
 import { rootRows } from './root-rows.util.ts';
 import { rowScopeOf } from './row-scope.util.ts';
+import { rowInputsOf } from './running-count.util.ts';
 import { scriptRows } from './script-rows.util.ts';
 import { taskRows } from './task-rows.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
@@ -39,7 +40,8 @@ export const allRows = (state: RootState, context: RowContext): TreeRow[] => {
   const scope = rowScopeOf(root, model);
   const view = context.views(model, context.scriptsShown, liveOf(context, root));
   const dirs = dirsBelow(view.folders, context.mode);
-  const dirChildren = dirs.flatMap((dir) => dirRows(root, dir, view, context.scopeShown));
+  const inputs = rowInputsOf(root, view, context);
+  const dirChildren = dirs.flatMap((dir) => dirRows(root, dir, view, inputs));
   const shown = Array.from(view.packages.values());
   const tasks = shown.flatMap((pkg) => taskRows(scope, pkg, context));
   const files = shown.flatMap((pkg) => packageFileRows(scope, pkg, context));

@@ -11,6 +11,7 @@ import { RUN_ENTRY_STUB } from '../../../run/test/stubs/run.stub.ts';
 import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { RowContext, TreeNode } from '../../common/tree-node.type.ts';
 import type { RefreshDeps } from '../../common/tree-refresh.type.ts';
+import type { TreeMode } from '../../common/tree-row.type.ts';
 import { allRows } from '../../utils/all-rows.util.ts';
 import { nodesOf } from '../../utils/node-cache.util.ts';
 import { rootRowOf } from '../../utils/root-rows.util.ts';
@@ -59,9 +60,10 @@ const rootsOf = (entries: RootEntry[]): Roots => {
 
 /**
  * Roots `/ws` and, with `multi`, `/other`; each holds package `a` (turbo task `a#build`, script `a#lint`) and package `s`
- * with the script `s#lint` and the atom-file task `s#gen`. `entries` is the window's root list: a spec removes or re-adds a root by changing it.
+ * with the script `s#lint` and the atom-file task `s#gen`, both under folder `packages`. `entries` is the window's root list: a
+ * spec removes or re-adds a root by changing it. `mode` is the view `show` caches the rows of.
  */
-export const refresherFixtureOf = (multi = false): RefresherFixture => {
+export const refresherFixtureOf = (multi = false, mode: TreeMode = 'list'): RefresherFixture => {
   const folders: RootFolder[] = [{ root: '/ws', name: 'ws' }];
 
   if (multi) folders.push({ root: '/other', name: 'other' });
@@ -73,7 +75,7 @@ export const refresherFixtureOf = (multi = false): RefresherFixture => {
   const toggle = scriptsToggleMock(false);
   const fire = vi.fn<RefreshDeps['fire']>();
   const liveOf: LiveIds = (root) => live.get(root) ?? NOBODY;
-  const rowContext = (): RowContext => rowContextOf('list', undefined, false, { scriptsShown: toggle.isShown(), live: liveOf });
+  const rowContext = (): RowContext => rowContextOf(mode, undefined, false, { scriptsShown: toggle.isShown(), live: liveOf });
   const show = (): void => {
     for (const entry of store.all()) {
       nodesOf(cache, allRows(entry.state, rowContext()));

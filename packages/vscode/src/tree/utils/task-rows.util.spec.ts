@@ -15,7 +15,7 @@ const ENDED_AT = 1_700_000_000_000;
 
 const IDLE_ICON: IconSpec = { id: 'tools', color: null };
 const TYPESCRIPT_ICON: IconSpec = { id: 'turbo-console-typescript', color: null };
-const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
+const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: 'charts.yellow' };
 const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 
 const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };

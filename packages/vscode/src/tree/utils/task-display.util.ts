@@ -86,11 +86,11 @@ const idleDisplayOf = (task: TaskNode): TaskDisplay => {
 };
 
 /**
- * A script run is never continuous. For a turbo run the current kind decides; a node that turned non-turbo mid-run has
- * no running kind, so the launch node decides.
+ * A script launch is continuous only when its launch node is persistent (Run Without Turbo of a persistent task). For a
+ * turbo run the current kind decides; a node that turned non-turbo mid-run has no running kind, so the launch node decides.
  */
 export const runningKindOf = (task: TaskNode, entry: RunEntry): RunningKind => {
-  if (!entry.task.isTurboTask) return TURBO_RUNNING;
+  if (!entry.task.isTurboTask) return entry.task.persistent ? CONTINUOUS_RUNNING : TURBO_RUNNING;
 
   const isContinuous = task.isTurboTask ? task.persistent : entry.task.persistent;
 

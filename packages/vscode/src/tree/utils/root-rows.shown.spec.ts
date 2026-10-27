@@ -152,7 +152,7 @@ describe('FEATURE: shown packages of a root', () => {
     it('WHEN its multi-root row is built THEN the tooltip is the root path and the shown package count', () => {
       const view = modelViewWith(state.model?.packages ?? []);
 
-      const row = rootNodeRow(ROOT_FOLDER_STUB, view);
+      const row = rootNodeRow(ROOT_FOLDER_STUB, view, 0);
 
       expect(row.tooltip).toStrictEqual(['/ws', 'Packages: 4']);
     });

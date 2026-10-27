@@ -129,16 +129,16 @@ describe('FEATURE: packages tree', () => {
         task = named(tasks, 'a#build');
       });
 
-      it('THEN a run change of that task fires exactly its node', () => {
+      it('THEN a run start of that task fires its node, then the node of package a', () => {
         fixture.tree.runChanged(taskRunOf('/ws', 'a#build', 'a'));
 
-        expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(task);
+        expect(vi.mocked(fixture.fire).mock.calls).toStrictEqual([[task], [[named(shown, 'a')]]]);
       });
 
-      it('THEN a run change of a task never shown fires nothing', () => {
+      it('THEN a run start of a task never shown fires only the node of its package b', () => {
         fixture.tree.runChanged(taskRunOf('/ws', 'b#build', 'b'));
 
-        expect(fixture.fire).not.toHaveBeenCalled();
+        expect(fixture.fire).toHaveBeenCalledExactlyOnceWith([named(shown, 'b')]);
       });
 
       it("THEN the task's current row is built from the model", () => {
