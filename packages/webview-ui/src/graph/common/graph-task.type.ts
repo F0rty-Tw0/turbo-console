@@ -85,6 +85,12 @@ export type TaskPanelActions = {
   readonly onShowAll: () => void;
 };
 
+/** The two Details asides the Details bar moves between; the package one is built with the first package graph, so it may not exist yet. */
+export type TaskPanelAsides = {
+  readonly package: () => HTMLElement | null;
+  readonly task: HTMLElement;
+};
+
 export type TaskModeDeps = {
   readonly view: TaskView;
   readonly runner: LayoutRunner;

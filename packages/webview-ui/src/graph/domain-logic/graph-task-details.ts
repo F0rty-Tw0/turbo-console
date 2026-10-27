@@ -1,3 +1,4 @@
+import { setClearEnabled } from './details-bar.ts';
 import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskDetailsDeps, TaskDetailsModel, TaskDetailsView, TaskRunAction } from '../common/task-details.type.ts';
@@ -30,6 +31,8 @@ const refocus = (view: TaskDetailsView, key: string): void => {
 export class GraphTaskDetails {
   private readonly deps: TaskDetailsDeps;
   private readonly panel: HTMLElement;
+  /** The panel's `div.details-content`, after the Details bar while task mode holds it; each view replaces its child. */
+  private readonly content: HTMLElement;
   private model: TaskDetailsModel | null = null;
   private isActive = false;
   private isOpen = true;
@@ -37,7 +40,9 @@ export class GraphTaskDetails {
   public constructor(deps: TaskDetailsDeps) {
     this.deps = deps;
     this.panel = deps.views.panel();
-    this.panel.replaceChildren(deps.views.empty());
+    this.content = deps.views.content();
+    this.content.replaceChildren(deps.views.empty());
+    this.panel.append(this.content);
     deps.page.details.addEventListener('click', (): void => this.toggleOpen());
     deps.page.clear.addEventListener('click', (): void => this.cleared());
   }
@@ -72,7 +77,7 @@ export class GraphTaskDetails {
     this.renderClear();
 
     if (model === null) {
-      this.panel.replaceChildren(this.deps.views.empty());
+      this.content.replaceChildren(this.deps.views.empty());
 
       if (key !== null) this.deps.page.details.focus();
 
@@ -82,7 +87,7 @@ export class GraphTaskDetails {
     const view = this.deps.views.view(model);
 
     this.wire(view, model);
-    this.panel.replaceChildren(view.root);
+    this.content.replaceChildren(view.root);
 
     if (key !== null) refocus(view, key);
   }
@@ -145,6 +150,6 @@ export class GraphTaskDetails {
   }
 
   private renderClear(): void {
-    if (this.isActive) this.deps.page.clear.disabled = this.model === null;
+    if (this.isActive) setClearEnabled(this.deps.page, this.model !== null);
   }
 }

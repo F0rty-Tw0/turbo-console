@@ -1,4 +1,4 @@
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import {
   DIMMED_EDGES_STUB,
@@ -15,7 +15,7 @@ test.describe('FEATURE: graph trace picking', () => {
   test(
     'GIVEN a selected package, Start trace lists the candidates, lights them on the canvas and hints at the end',
     { annotation: AC1 },
-    async ({ graphCanvas, graphDetails, graphHost, graphPage, graphProbe, graphTrace }): Promise<void> => {
+    async ({ graphCanvas, graphDetails, graphDetailsBar, graphHost, graphPage, graphProbe, graphTrace }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
@@ -53,7 +53,8 @@ test.describe('FEATURE: graph trace picking', () => {
 
       await test.step('AND the probe reports no selected package', async (): Promise<void> => graphProbe.expectSelected(null));
 
-      await test.step('AND Clear selection is enabled', async (): Promise<void> => graphPage.expectEnabled('Clear selection'));
+      await test.step('AND the Details bar shows Clear selection enabled', async (): Promise<void> =>
+        graphDetailsBar.expectClearShown());
 
       await test.step('AND the canvas hint names the start', async (): Promise<void> =>
         graphTrace.expectHint('Pick the end of the trace from web'));

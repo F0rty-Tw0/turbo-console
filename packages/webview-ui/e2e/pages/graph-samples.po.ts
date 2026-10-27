@@ -1,10 +1,10 @@
 import type { Page } from '@playwright/test';
 
+import { GraphDetailsBar } from './graph-details-bar.po.ts';
 import { GraphDetailsTrace } from './graph-details-trace.po.ts';
 import { GraphDetailsPage } from './graph-details.po.ts';
 import { GraphPackageList } from './graph-package-list.po.ts';
 import { GraphTimings } from './graph-timings.po.ts';
-import { GraphPage } from './graph.po.ts';
 import { postStates } from '../test/utils/graph-host-state.spec.util.ts';
 import { largeState } from '../test/utils/graph-large.spec.util.ts';
 import { expectMinUnder } from '../test/utils/graph-min-under.spec.util.ts';
@@ -41,7 +41,7 @@ const sampleEach = async (repeats: number, build: () => Promise<number>, reset: 
 /** Wall-time samples of the probe's timing facts, one per forced repeat of the step. */
 export class GraphSamples {
   private readonly details: GraphDetailsPage;
-  private readonly graph: GraphPage;
+  private readonly detailsBar: GraphDetailsBar;
   private readonly list: GraphPackageList;
   private readonly page: Page;
   private readonly timings: GraphTimings;
@@ -55,7 +55,7 @@ export class GraphSamples {
   public constructor(page: Page) {
     this.page = page;
     this.details = new GraphDetailsPage(page);
-    this.graph = new GraphPage(page);
+    this.detailsBar = new GraphDetailsBar(page);
     this.list = new GraphPackageList(page);
     this.timings = new GraphTimings(page);
     this.trace = new GraphDetailsTrace(page);
@@ -100,7 +100,7 @@ export class GraphSamples {
       return readFresh(async (): Promise<number | null> => this.timings.detailsBuiltMs());
     };
     const reset = async (): Promise<void> => {
-      await this.graph.pressButton('Clear selection');
+      await this.detailsBar.pressClear();
       await this.details.expectHeading(EMPTY_TITLE);
     };
 

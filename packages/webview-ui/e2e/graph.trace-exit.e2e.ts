@@ -1,4 +1,4 @@
-import { expect, test } from './graph.fixture.ts';
+import { expect, test } from './graph-task.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { CORE_TO_WEB_FACTS_STUB, WEB_TO_CORE_FOCUSED_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { FOCUS_UI_PICKING_NODES_STUB } from './test/stubs/graph-trace-states.stub.ts';
@@ -159,7 +159,7 @@ test.describe('FEATURE: graph trace exits', () => {
   test(
     'GIVEN a trace being picked, the background tap and Clear selection each end at nothing',
     { annotation: AC1 },
-    async ({ graphCamera, graphCanvas, graphDetails, graphHost, graphLink, graphList, graphPage }): Promise<void> => {
+    async ({ graphCamera, graphCanvas, graphDetails, graphDetailsBar, graphHost, graphLink, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
@@ -191,7 +191,7 @@ test.describe('FEATURE: graph trace exits', () => {
 
       await test.step('AND the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
 
-      await test.step('AND Clear selection is pressed', async (): Promise<void> => graphPage.pressButton('Clear selection'));
+      await test.step('AND Clear selection is pressed', async (): Promise<void> => graphDetailsBar.pressClear());
 
       await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 

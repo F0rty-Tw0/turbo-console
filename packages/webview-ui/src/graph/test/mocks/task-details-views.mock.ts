@@ -1,4 +1,5 @@
 import type { TaskDetailsModel, TaskDetailsView } from '../../common/task-details.type.ts';
+import { buildDetailsContent } from '../../ui/details-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from '../../ui/task-details-elements.ts';
 import type { TaskDetailsViewsMock } from '../common/graph-task-mode.type.ts';
 
@@ -13,7 +14,7 @@ export const taskDetailsViewsMock = (): TaskDetailsViewsMock => {
 
     return shown;
   };
-  const views = { panel: (): HTMLElement => panel, empty: buildTaskDetailsEmpty, view };
+  const views = { panel: (): HTMLElement => panel, content: buildDetailsContent, empty: buildTaskDetailsEmpty, view };
   const mock: TaskDetailsViewsMock = { views, panel, built };
 
   return mock;

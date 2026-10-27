@@ -11,8 +11,10 @@ import type {
   TaskModeDeps,
   TaskModeHooks,
   TaskPanel,
-  TaskPanelActions
+  TaskPanelActions,
+  TaskPanelAsides
 } from '../common/graph-task.type.ts';
+import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskControls, TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskDetails, TaskDetailsActions, TaskWidgets } from '../common/task-details.type.ts';
 
@@ -28,10 +30,11 @@ export const onTaskKey = (event: Pick<KeyboardEvent, 'key' | 'repeat'>, mode: Ta
 /** Task mode over the real view (never the parked one) and the runner the package graph shares; the Task mode toggle flips it. */
 export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: TaskModeHooks): GraphTaskMode => {
   const { runner, bridge, page, taskViews, taskDetailsViews, widgetViews, overlay } = deps;
-  const panelOf = (actions: TaskPanelActions): TaskPanel => taskPanelOf(page, actions);
+  const aside = taskDetailsViews.panel();
+  const asides: TaskPanelAsides = { package: (): HTMLElement | null => document.getElementById(DETAILS_ID), task: aside };
+  const panelOf = (actions: TaskPanelActions): TaskPanel => taskPanelOf(page, actions, asides);
   const controlsOf = (actions: TaskControlsActions): TaskControls => new GraphTaskControls({ page, views: taskViews, actions });
   const isActive = (): boolean => hooks.modes.mode() === 'tasks';
-  const aside = taskDetailsViews.panel();
   const widgets = new GraphTaskWidgets({ page, view, views: widgetViews, bridge, isActive, overlay, aside: (): HTMLElement => aside });
   const onToggle = (detailsOpen: boolean): void => saveDetailsToggle({ view, modes: hooks.modes }, widgets, detailsOpen);
   const views = { ...taskDetailsViews, panel: (): HTMLElement => aside };

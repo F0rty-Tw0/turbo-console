@@ -1,5 +1,5 @@
 import type { ToolbarGroup, WidthChange } from './common/graph.type.ts';
-import { expect, test } from './graph.fixture.ts';
+import { expect, test } from './graph-task.fixture.ts';
 import { DETAILS_STUB, INPUT_OPTION_STUB } from './test/stubs/graph-details.stub.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
@@ -20,17 +20,17 @@ const DETAILS_WIDTH_PX = 280;
 
 test.describe('FEATURE: graph toolbar', () => {
   test(
-    'GIVEN the details graph, the toolbar has a Mode group, a Panels group, a View group, three separators and a lone Clear selection, each with its icon',
+    'GIVEN the details graph, the toolbar has a Mode group, a Panels group, a View group and two separators, each button with its icon, and Clear selection draws clear-all in the Details bar',
     { annotation: AC1 },
-    async ({ graphHost, graphPage, graphToolbar }): Promise<void> => {
+    async ({ graphDetailsBar, graphHost, graphPage, graphToolbar }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
 
-      await test.step('THEN the Mode, Panels and View groups hold their buttons and Clear selection stands alone', async (): Promise<void> =>
+      await test.step('THEN the Mode, Panels and View groups hold their buttons and no button stands outside them', async (): Promise<void> =>
         graphToolbar.expectGroups(GROUPS));
 
-      await test.step('AND three separators divide the four parts', async (): Promise<void> => graphToolbar.expectSeparators(3));
+      await test.step('AND two separators divide the three groups', async (): Promise<void> => graphToolbar.expectSeparators(2));
 
       await test.step('AND Packages draws a type-hierarchy icon', async (): Promise<void> =>
         graphToolbar.expectIcon('Packages', 'type-hierarchy'));
@@ -51,8 +51,8 @@ test.describe('FEATURE: graph toolbar', () => {
       await test.step('AND Export image draws a desktop-download icon', async (): Promise<void> =>
         graphToolbar.expectIcon('Export image', 'desktop-download'));
 
-      await test.step('AND Clear selection draws a close icon', async (): Promise<void> =>
-        graphToolbar.expectIcon('Clear selection', 'close'));
+      await test.step('AND Clear selection draws a clear-all icon', async (): Promise<void> =>
+        graphDetailsBar.expectClearIcon('clear-all'));
     }
   );
 

@@ -39,6 +39,8 @@ export type TaskDetailsView = {
 export type TaskDetailsViews = {
   /** The empty, hidden `aside#graph-task-details`. */
   readonly panel: () => HTMLElement;
+  /** An empty `div.details-content`, which holds the panel's shown view. */
+  readonly content: () => HTMLElement;
   /** What the panel shows while no task is selected. */
   readonly empty: () => HTMLElement;
   readonly view: (model: TaskDetailsModel) => TaskDetailsView;
@@ -59,7 +61,7 @@ export type TaskDetails = {
 };
 
 export type TaskDetailsDeps = {
-  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'packagesMode'>;
+  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'detailsBar' | 'packagesMode'>;
   readonly views: TaskDetailsViews;
   readonly bridge: Bridge;
   readonly actions: TaskDetailsActions;

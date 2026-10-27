@@ -1,4 +1,4 @@
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { packageInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
@@ -76,7 +76,7 @@ test.describe('FEATURE: graph inspection transitions', () => {
   test(
     'GIVEN a tapped link or package, the background, Escape and Clear selection each empty the panel',
     { annotation: AC1 },
-    async ({ graphCanvas, graphDetails, graphHost, graphLink, graphPage }): Promise<void> => {
+    async ({ graphCanvas, graphDetails, graphDetailsBar, graphHost, graphLink, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
@@ -97,13 +97,14 @@ test.describe('FEATURE: graph inspection transitions', () => {
 
       await test.step('WHEN core is tapped', async (): Promise<void> => graphCanvas.tapNode('core'));
 
-      await test.step('AND Clear selection is pressed', async (): Promise<void> => graphPage.pressButton('Clear selection'));
+      await test.step('AND Clear selection is pressed', async (): Promise<void> => graphDetailsBar.pressClear());
 
       await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection(NO_INSPECTION));
 
       await test.step('AND the panel is empty', async (): Promise<void> => graphDetails.expectEmpty());
 
-      await test.step('AND Clear selection is disabled', async (): Promise<void> => graphPage.expectDisabled('Clear selection'));
+      await test.step('AND the Details bar is hidden and Clear selection disabled', async (): Promise<void> =>
+        graphDetailsBar.expectClearHidden());
 
       await test.step('AND the status line is empty', async (): Promise<void> => graphPage.expectStatus(''));
     }

@@ -1,5 +1,5 @@
 import { breadcrumbLine, buildBreadcrumb } from './breadcrumb-elements.ts';
-import { buildDetails } from './details-elements.ts';
+import { buildDetails, buildDetailsContent } from './details-elements.ts';
 import { emptyView } from './details-empty.ts';
 import { explainView } from './details-explain.ts';
 import { folderView } from './details-folder.ts';
@@ -44,6 +44,7 @@ export const taskViews: TaskControlsViews = { build: buildTaskControls, row: bui
 
 export const taskDetailsViews: TaskDetailsViews = {
   panel: buildTaskDetailsPanel,
+  content: buildDetailsContent,
   empty: buildTaskDetailsEmpty,
   view: buildTaskDetails
 };

@@ -10,7 +10,6 @@ import {
 } from '../common/graph-task.const.ts';
 import type { ToolbarElements } from '../common/graph-toolbar.type.ts';
 import {
-  CLEAR_TITLE,
   CONTROLS_TITLE,
   DETAILS_TITLE,
   EXPORT_LABEL,
@@ -65,8 +64,8 @@ describe('FEATURE: buildToolbar', () => {
     });
 
     it('WHEN each button is read THEN it has its spec title', () => {
-      const { packagesMode, taskMode, controls, details, fit, relayout, exportImage, clear } = elements;
-      const buttons = [packagesMode, taskMode, controls, details, fit, relayout, exportImage, clear];
+      const { packagesMode, taskMode, controls, details, fit, relayout, exportImage } = elements;
+      const buttons = [packagesMode, taskMode, controls, details, fit, relayout, exportImage];
       const titles = buttons.map((button): string => button.title);
 
       expect(titles).toStrictEqual([
@@ -76,8 +75,7 @@ describe('FEATURE: buildToolbar', () => {
         DETAILS_TITLE,
         FIT_TITLE,
         RELAYOUT_TITLE,
-        EXPORT_TITLE,
-        CLEAR_TITLE
+        EXPORT_TITLE
       ]);
     });
 
@@ -106,6 +104,27 @@ describe('FEATURE: buildToolbar', () => {
 
       expect(second?.className).toBe('toolbar-separator');
       expect(second?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('WHEN its own children are read THEN none is a button, so Clear selection is not in it', () => {
+      const children = Array.from(elements.toolbar.children);
+      const tags = children.map((child): string => child.tagName);
+
+      expect(tags).not.toContain('BUTTON');
+    });
+
+    it('WHEN its own children are read THEN exactly two are separators', () => {
+      const children = Array.from(elements.toolbar.children);
+      const separators = children.filter((child): boolean => child.className === 'toolbar-separator');
+
+      expect(separators).toHaveLength(2);
+    });
+
+    it('WHEN the status line is read THEN it is last and visually hidden', () => {
+      const last = elements.toolbar.children[elements.toolbar.children.length - 1];
+
+      expect(last).toBe(elements.status);
+      expect(elements.status.className).toBe('graph-status visually-hidden');
     });
   });
 });

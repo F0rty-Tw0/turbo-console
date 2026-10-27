@@ -11,8 +11,6 @@ import {
 } from '../common/graph-task.const.ts';
 import type { ToolbarElements } from '../common/graph-toolbar.type.ts';
 import {
-  CLEAR_LABEL,
-  CLEAR_TITLE,
   CONTROLS_ID,
   CONTROLS_LABEL,
   CONTROLS_TITLE,
@@ -102,8 +100,9 @@ const separator = (): HTMLElement => {
   return line;
 };
 
+/** The selection's live region: read out, never drawn; the Details bar shows the same text. */
 const statusLine = (): HTMLElement => {
-  const status = textElement('p', 'graph-status', '');
+  const status = textElement('p', 'graph-status visually-hidden', '');
 
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
@@ -113,7 +112,7 @@ const statusLine = (): HTMLElement => {
 
 /**
  * The toolbar in its pre-state, every button disabled: the Mode group (Packages, Tasks), the Panels group (Controls, Details),
- * the View group (Fit, Re-layout, Export image), Clear selection, then the status line. DOM order is the Tab order.
+ * the View group (Fit, Re-layout, Export image), then the hidden status line. DOM order is the Tab order.
  */
 export const buildToolbar = (): ToolbarElements => {
   const packagesMode = pressToggle('type-hierarchy', PACKAGES_MODE_LABEL, PACKAGES_MODE_TITLE, true);
@@ -124,18 +123,16 @@ export const buildToolbar = (): ToolbarElements => {
   const fit = viewAction('screen-full', FIT_LABEL, FIT_TITLE);
   const relayout = viewAction('refresh', RELAYOUT_LABEL, RELAYOUT_TITLE);
   const exportImage = viewAction('desktop-download', EXPORT_LABEL, EXPORT_TITLE);
-  const clear = labelledButton('close', CLEAR_LABEL, CLEAR_TITLE);
   const status = statusLine();
   const mode = toolbarGroup(MODE_LABEL, packagesMode, taskMode);
   const modeEnd = separator();
   const panels = toolbarGroup(PANELS_LABEL, controls, details);
   const panelsEnd = separator();
   const view = toolbarGroup(VIEW_LABEL, fit, relayout, exportImage);
-  const viewEnd = separator();
   const toolbar = textElement('header', 'graph-toolbar', '');
 
   controls.append(filtersOn);
-  toolbar.append(mode, modeEnd, panels, panelsEnd, view, viewEnd, clear, status);
+  toolbar.append(mode, modeEnd, panels, panelsEnd, view, status);
 
   const elements: ToolbarElements = {
     toolbar,
@@ -146,7 +143,6 @@ export const buildToolbar = (): ToolbarElements => {
     fit,
     relayout,
     exportImage,
-    clear,
     status,
     filtersOn
   };

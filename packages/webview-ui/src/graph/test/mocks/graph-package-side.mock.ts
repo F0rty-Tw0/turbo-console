@@ -15,7 +15,7 @@ import type { TaskDetailsViews } from '../../common/task-details.type.ts';
 import type { WidgetViews } from '../../common/widget.type.ts';
 import { breadcrumbLine, buildBreadcrumb } from '../../ui/breadcrumb-elements.ts';
 import { buildControls } from '../../ui/controls-elements.ts';
-import { buildDetails } from '../../ui/details-elements.ts';
+import { buildDetails, buildDetailsContent } from '../../ui/details-elements.ts';
 import { emptyView } from '../../ui/details-empty.ts';
 import { explainView } from '../../ui/details-explain.ts';
 import { folderView } from '../../ui/details-folder.ts';
@@ -58,7 +58,12 @@ const WIDGET_VIEWS: WidgetViews = {
 
 const TASK_VIEWS: TaskControlsViews = { build: buildTaskControls, row: buildTaskRow };
 
-const TASK_DETAILS_VIEWS: TaskDetailsViews = { panel: buildTaskDetailsPanel, empty: buildTaskDetailsEmpty, view: buildTaskDetails };
+const TASK_DETAILS_VIEWS: TaskDetailsViews = {
+  panel: buildTaskDetailsPanel,
+  content: buildDetailsContent,
+  empty: buildTaskDetailsEmpty,
+  view: buildTaskDetails
+};
 
 /**
  * The deps of a `GraphPackageSide` over the real page and panel builders, for the spec's fake `document`, with the view

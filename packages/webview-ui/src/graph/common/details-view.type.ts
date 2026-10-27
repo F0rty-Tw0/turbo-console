@@ -1,5 +1,7 @@
+/** A Details aside and its `div.details-content`, which holds the shown view; the Details bar sits before it. */
 export type DetailsElements = {
   readonly panel: HTMLElement;
+  readonly content: HTMLElement;
 };
 
 /** `div.details-bar`: the selection summary and Clear selection, at the top of the mounted Details aside; `hidden` while nothing is selected. */

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { saveDetailsToggle, taskPanelOf } from './graph-task-panel.ts';
 import { PACKAGE_NOTICE_MS, UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
-import type { TaskPanel, TaskScreenElements } from '../common/graph-task.type.ts';
+import type { TaskPanel, TaskPanelAsides, TaskScreenElements } from '../common/graph-task.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskWidgetsMock } from '../test/mocks/graph-task-mode.mock.ts';
 import { droppedTasksText, tasksHiddenText } from '../utils/task-text.util.ts';
@@ -17,11 +17,15 @@ type PanelRig = {
   readonly bannerText: HTMLElement;
   readonly packagesMode: HTMLButtonElement;
   readonly taskMode: HTMLButtonElement;
+  readonly detailsBar: HTMLDivElement;
+  readonly detailsSummary: HTMLElement;
+  readonly taskAside: HTMLElement;
 };
 
 const line = (): HTMLElement => document.createElement('p');
 
-const rigOf = (): PanelRig => {
+/** The panel over a fresh page; `packageAside` is what the package Details aside lookup answers, none by default. */
+const rigOf = (packageAside: HTMLElement | null = null): PanelRig => {
   const notice = line();
   const banner = line();
   const bannerText = line();
@@ -35,9 +39,13 @@ const rigOf = (): PanelRig => {
   const status = line();
   const packagesMode = document.createElement('button');
   const taskMode = document.createElement('button');
-  const page = { root: line(), packagesMode, taskMode, taskScreen, container: line(), status };
-  const panel = taskPanelOf(page, { onShowAll: vi.fn() });
-  const rig: PanelRig = { panel, notice, status, banner, bannerText, packagesMode, taskMode };
+  const detailsBar = document.createElement('div');
+  const detailsSummary = line();
+  const taskAside = document.createElement('aside');
+  const page = { root: line(), packagesMode, taskMode, taskScreen, container: line(), status, detailsBar, detailsSummary };
+  const asides: TaskPanelAsides = { package: (): HTMLElement | null => packageAside, task: taskAside };
+  const panel = taskPanelOf(page, { onShowAll: vi.fn() }, asides);
+  const rig: PanelRig = { panel, notice, status, banner, bannerText, packagesMode, taskMode, detailsBar, detailsSummary, taskAside };
 
   return rig;
 };
@@ -150,6 +158,57 @@ describe('FEATURE: taskPanelOf mode buttons', () => {
     rig.panel.exit();
 
     expect(pressedOf(rig)).toStrictEqual(['true', 'false']);
+  });
+});
+
+describe('FEATURE: taskPanelOf Details bar', () => {
+  beforeEach(() => {
+    vi.stubGlobal('document', fakeDocumentMock());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN package mode with the summary naming web', () => {
+    let rig: PanelRig;
+
+    beforeEach(() => {
+      rig = rigOf();
+      rig.detailsSummary.textContent = 'web · 1 dependency';
+    });
+
+    it('WHEN task mode is entered THEN the bar is the first child of the task aside', () => {
+      rig.panel.enter();
+
+      expect(rig.taskAside.children[0]).toBe(rig.detailsBar);
+    });
+
+    it('WHEN task mode is entered THEN the summary empties', () => {
+      rig.panel.enter();
+
+      expect(rig.detailsSummary.textContent).toBe('');
+    });
+  });
+
+  it('GIVEN task mode and a package aside WHEN task mode is left THEN the bar is the first child of the package aside', () => {
+    const packageAside = document.createElement('aside');
+    const rig = rigOf(packageAside);
+
+    packageAside.append(document.createElement('div'));
+    rig.panel.enter();
+    rig.panel.exit();
+
+    expect(packageAside.children[0]).toBe(rig.detailsBar);
+  });
+
+  it('GIVEN task mode and no package aside yet WHEN task mode is left THEN the bar stays in the task aside', () => {
+    const rig = rigOf();
+
+    rig.panel.enter();
+    rig.panel.exit();
+
+    expect(rig.taskAside.children[0]).toBe(rig.detailsBar);
   });
 });
 

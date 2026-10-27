@@ -40,13 +40,22 @@ const shownTextOf = (element: Element): string[] => {
   return all.filter((text) => text !== '');
 };
 
+/** The children of the panel's content, its second child after the Details bar. */
+const contentOf = (panel: HTMLElement): Element[] => Array.from(panel.children[1]?.children ?? []);
+
 const rigOf = (): DetailsRig => {
   const posted: Posted[] = [];
   const post = (message: Posted): void => {
     posted.push(message);
   };
   const bridge: Bridge = { ready: vi.fn(), post, onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
-  const page = { body: document.createElement('div'), details: button(), clear: button(), packagesMode: button() };
+  const page = {
+    body: document.createElement('div'),
+    details: button(),
+    clear: button(),
+    detailsBar: document.createElement('div'),
+    packagesMode: button()
+  };
   const { views, panel, built } = taskDetailsViewsMock();
   const onSelect = vi.fn<(id: string) => void>();
   const onClear = vi.fn<() => void>();
@@ -97,6 +106,7 @@ describe('FEATURE: GraphTaskDetails', () => {
       rig.deps.page.clear.click();
 
       expect(rig.deps.page.clear.disabled).toBe(false);
+      expect(rig.deps.page.detailsBar.hidden).toBe(false);
       expect(rig.onClear).toHaveBeenCalledTimes(1);
     });
 
@@ -213,6 +223,27 @@ describe('FEATURE: GraphTaskDetails', () => {
       details.show(PASSED);
 
       expect(document.activeElement?.tagName).toBe('H2');
+    });
+  });
+
+  describe('GIVEN the Details bar first in the panel and a#build shown', () => {
+    beforeEach(() => {
+      rig.panel.prepend(rig.deps.page.detailsBar);
+      details.enter(true);
+      details.show(RUNNING);
+    });
+
+    it('WHEN the task is shown again THEN the bar stays first and only the content holds the new view', () => {
+      details.show(PASSED);
+
+      expect([rig.panel.children.length, rig.panel.children[0]]).toStrictEqual([2, rig.deps.page.detailsBar]);
+      expect(contentOf(rig.panel)).toStrictEqual([rig.built[1]?.root]);
+    });
+
+    it('WHEN the selection is cleared THEN the bar hides', () => {
+      details.show(null);
+
+      expect(rig.deps.page.detailsBar.hidden).toBe(true);
     });
   });
 });

@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
-import { CLEAR_LABEL, CONTROLS_LABEL, FILTERS_ON_TEXT, PANELS_LABEL } from '../../src/graph/common/graph.const.ts';
+import { CONTROLS_LABEL, FILTERS_ON_TEXT, PANELS_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { InputOptionColors, ToolbarGroup } from '../common/graph.type.ts';
 import { CODICON_LOADED } from '../common/shell.const.ts';
 import { setInputOptionVars } from '../test/utils/graph-details.spec.util.ts';
@@ -45,11 +45,27 @@ export class GraphToolbar {
     await this.page.evaluate(setInputOptionVars, colors);
   }
 
-  /** Each group by its accessible name holds exactly these buttons, in order; "Clear selection" sits in neither. */
+  /** Each group by its accessible name holds exactly these buttons, in order, and no button stands outside them. */
   public async expectGroups(groups: ToolbarGroup[]): Promise<void> {
     for (const group of groups) await this.expectGroup(group);
 
-    await expect(this.toolbar.locator(':scope > button')).toHaveText([CLEAR_LABEL]);
+    await this.expectNoLoneButton();
+  }
+
+  /** No button is the toolbar's own child: Clear selection lives in the Details bar. */
+  public async expectNoLoneButton(): Promise<void> {
+    await expect(this.toolbar.locator(':scope > button')).toHaveCount(0);
+  }
+
+  /** The status line is visually hidden, a 1 px box, while screen readers still read it. */
+  public async expectStatusHidden(): Promise<void> {
+    const status = this.toolbar.locator('.graph-status');
+
+    await expect(status).toHaveClass(/\bvisually-hidden\b/);
+
+    const box = await status.boundingBox();
+
+    expect([box?.width, box?.height]).toStrictEqual([1, 1]);
   }
 
   /** The toolbar's own `aria-hidden` spans that are not icons. */

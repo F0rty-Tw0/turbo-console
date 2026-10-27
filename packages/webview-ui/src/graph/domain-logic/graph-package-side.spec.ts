@@ -206,22 +206,30 @@ describe('FEATURE: GraphPackageSide parked by task mode', () => {
       expect(rig.onMessage).not.toHaveBeenCalled();
     });
 
-    it('WHEN h1 arrives again with new task counts THEN the status line and Clear selection stay as task mode left them', () => {
+    it('WHEN h1 arrives again with new task counts THEN the status line, the Details bar and Clear selection stay as task mode left them', () => {
       rig.page.status.textContent = '';
+      rig.page.detailsSummary.textContent = '';
       rig.page.clear.disabled = true;
+      rig.page.detailsBar.hidden = true;
       rig.side.show(RECOUNTED, 2);
 
       expect(rig.page.status.textContent).toBe('');
+      expect(rig.page.detailsSummary.textContent).toBe('');
       expect(rig.page.clear.disabled).toBe(true);
+      expect(rig.page.detailsBar.hidden).toBe(true);
     });
 
-    it('WHEN task mode is left and h1 drawn again THEN the status line names web again', async () => {
+    it('WHEN task mode is left and h1 drawn again THEN the status line and the shown Details bar name web again', async () => {
       rig.page.status.textContent = '';
+      rig.page.detailsSummary.textContent = '';
+      rig.page.detailsBar.hidden = true;
       rig.modes.setMode('packages', 'h1');
       rig.side.redraw();
       await settled();
 
       expect(rig.page.status.textContent).toMatch(/^web · /u);
+      expect(rig.page.detailsSummary.textContent).toBe(rig.page.status.textContent);
+      expect(rig.page.detailsBar.hidden).toBe(false);
     });
 
     it('WHEN Clear selection is clicked THEN web stays selected', () => {

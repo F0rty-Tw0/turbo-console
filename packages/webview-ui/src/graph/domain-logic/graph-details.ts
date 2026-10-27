@@ -26,6 +26,7 @@ const NOTHING_SHOWN: ShownInspection = { kind: 'none' };
 export class GraphDetails {
   private readonly deps: GraphDetailsDeps;
   private aside: HTMLElement | null = null;
+  private content: HTMLElement | null = null;
   private view: DetailsView | null = null;
   private shown: ShownInspection | null = null;
   private context: DetailsContext | null = null;
@@ -39,18 +40,26 @@ export class GraphDetails {
     deps.overlay.addEventListener('change', (): void => this.relayout());
   }
 
-  /** The first call builds the panel after the container and shows the Empty view; every call sets openness, quietly. */
+  /**
+   * The first call builds the panel after the container and shows the Empty view, under the Details bar only in package
+   * mode: task mode holds the bar in its own panel and hands it over as it ends. Every call sets openness, quietly.
+   */
   public mount(body: HTMLElement, open: boolean): void {
     this.open = open;
 
     if (this.aside === null) {
-      const aside = this.deps.views.build().panel;
+      const { panel, content } = this.deps.views.build();
       const view = emptyOf(this.envOf());
+      const isPackageMode = this.deps.isPackageMode();
 
-      aside.addEventListener('keydown', (event): void => onPanelKey(event, this.deps));
-      aside.replaceChildren(view.root);
-      body.append(aside);
-      this.aside = aside;
+      panel.addEventListener('keydown', (event): void => onPanelKey(event, this.deps));
+      content.replaceChildren(view.root);
+
+      if (isPackageMode) panel.prepend(this.deps.page.detailsBar);
+
+      body.append(panel);
+      this.aside = panel;
+      this.content = content;
       this.view = view;
       this.shown = NOTHING_SHOWN;
     }
@@ -59,16 +68,16 @@ export class GraphDetails {
   }
 
   public show(inspection: ShownInspection, context: DetailsContext): void {
-    const { aside } = this;
+    const { aside, content } = this;
 
-    if (aside === null) return;
+    if (aside === null || content === null) return;
 
     const plan = detailsPlanOf(this.shown, inspection, context.isRebuild);
     const hadFocus = aside.contains(document.activeElement);
     const focused = focusedNameOf(aside);
     const isUpdated = this.updated(plan, inspection, context, focused);
 
-    if (!isUpdated) this.build(aside, inspection, context, hadFocus);
+    if (!isUpdated) this.build(content, inspection, context, hadFocus);
 
     this.hint = shownHintOf(this.hint, inspection, this.deps);
     this.shown = inspection;
@@ -148,11 +157,11 @@ export class GraphDetails {
     return true;
   }
 
-  /** A view built while the panel held focus takes focus to its heading (spec §4.5). */
-  private build(aside: HTMLElement, inspection: ShownInspection, context: DetailsContext, hadFocus: boolean): void {
+  /** A view built while the panel held focus takes focus to its heading (spec §4.5); the Details bar above stays. */
+  private build(content: HTMLElement, inspection: ShownInspection, context: DetailsContext, hadFocus: boolean): void {
     const view = wiredViewOf(inspection, context, this.envOf());
 
-    aside.replaceChildren(view.root);
+    content.replaceChildren(view.root);
     this.view = view;
     this.explain = null;
 

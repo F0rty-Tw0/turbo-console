@@ -42,8 +42,14 @@ export type PageElements = {
   readonly relayout: HTMLButtonElement;
   /** Enabled exactly when `fit` is: both need a visible package. */
   readonly exportImage: HTMLButtonElement;
+  /** Clear selection: the icon-only button in `detailsBar`, disabled while nothing is selected. */
   readonly clear: HTMLButtonElement;
+  /** The toolbar's visually hidden live region, which reads the package selection out. */
   readonly status: HTMLElement;
+  /** `div.details-bar`: the summary and `clear`, first in the mounted Details aside; `hidden` while nothing is selected. */
+  readonly detailsBar: HTMLDivElement;
+  /** `p.details-summary`: the package selection's text, as `status` reads it; empty in task mode. */
+  readonly detailsSummary: HTMLElement;
   readonly notice: HTMLElement;
   /** The `p` inside the notice: the simplified-layout copy, or a mode switch's progress text. */
   readonly noticeText: HTMLElement;
