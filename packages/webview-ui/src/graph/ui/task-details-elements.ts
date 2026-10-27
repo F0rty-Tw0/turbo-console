@@ -17,6 +17,7 @@ import {
 } from '../common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../common/graph.const.ts';
 import type { TaskDependencyButton, TaskDetailsEmpty, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
+import { ownerTextOf } from '../utils/owner-text.util.ts';
 
 /** A button whose `data-focus` key names its twin in the next view built. */
 const focusButton = (button: HTMLButtonElement, key: string): HTMLButtonElement => {
@@ -105,7 +106,7 @@ export const buildTaskDetails = (model: TaskDetailsModel): TaskDetailsView => {
   const root = textElement('section', 'details-view', '');
   const heading = textElement('h2', 'details-heading', task.name);
   const main = sectionOf();
-  const owner = lineOf(task.packageName);
+  const owner = lineOf(ownerTextOf(task.packageName, model.rootLabel));
   const command = textElement('code', 'details-code', task.command ?? NO_COMMAND_TEXT);
   const state = stateLine(model.state);
   const actions = textElement('div', 'details-actions', '');

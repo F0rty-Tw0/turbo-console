@@ -6,6 +6,7 @@ import type { GraphReady, GraphTask, Position, Positions } from '../../bridge/co
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
+import type { TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import {
@@ -45,6 +46,12 @@ const fanStateOf = (count: number): GraphReady => {
 
   return state;
 };
+
+const SINGLE_KEY = taskLayoutKeyOf(SINGLE_TASK_STATE_STUB.tasks, new Set(['//#build', '//#lint']), NO_COUNTS);
+
+const SINGLE_POSITIONS: Positions = { '//#build': API_AT, '//#lint': WEB_AT };
+
+const drawnOf = (rig: TaskModeRig): TaskDrawing | undefined => rig.view.tasks.show.mock.lastCall?.[0];
 
 const controlsActionsOf = (rig: TaskModeRig): TaskControlsActions | undefined => rig.controlsOf.mock.lastCall?.[0];
 
@@ -210,5 +217,35 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       expect(rig.runs.count()).toBe(1);
       expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 301 });
     });
+  });
+
+  describe('GIVEN task mode entered on the single-package root single-app', () => {
+    beforeEach(() => {
+      open(taskSavedOf({ chosen: [] }));
+      mode.received(SINGLE_TASK_STATE_STUB, 7);
+    });
+
+    it('WHEN the rows are listed THEN Controls gets the root label', () => {
+      expect(rig.controls.setRows).toHaveBeenLastCalledWith(SINGLE_TASK_STATE_STUB.tasks, 'single-app');
+    });
+
+    it('WHEN the layout lands THEN the canvas draws with the root label', async () => {
+      await rig.runs.settle(0, resultOf(SINGLE_KEY, SINGLE_POSITIONS));
+
+      expect(drawnOf(rig)?.rootLabel).toBe('single-app');
+    });
+
+    it('WHEN a row is picked THEN the side panel model carries the root label', () => {
+      controlsActionsOf(rig)?.onPick('//#build');
+
+      expect(rig.details.show).toHaveBeenLastCalledWith(expect.objectContaining({ rootLabel: 'single-app' }));
+    });
+  });
+
+  it('GIVEN a monorepo state WHEN task mode lists its rows THEN Controls gets no root label', () => {
+    open(taskSavedOf({}));
+    mode.received(TASK_STATE_STUB, 7);
+
+    expect(rig.controls.setRows).toHaveBeenLastCalledWith(expect.any(Array), null);
   });
 });

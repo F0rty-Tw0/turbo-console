@@ -21,7 +21,7 @@ export type TaskControlsRow = {
 /** The task Controls builders, handed in because `domain-logic` may not import `ui`. */
 export type TaskControlsViews = {
   readonly build: () => TaskControlsElements;
-  readonly row: (task: GraphTask) => TaskControlsRow;
+  readonly row: (task: GraphTask, rootLabel: string | null) => TaskControlsRow;
 };
 
 /** What the task Controls report: a new search text, a valid Dependents depth, a picked row and a panel opened or closed. */
@@ -37,8 +37,8 @@ export type TaskControls = {
   /** Shows the panel, open when `isOpen`, with the task view's search and depth. */
   readonly enter: (task: TaskViewState, isOpen: boolean) => void;
   readonly exit: () => void;
-  /** Lists the shown tasks; the search narrows the rows only. */
-  readonly setRows: (tasks: GraphTask[]) => void;
+  /** Lists the shown tasks, a single-package root's owner printed as `rootLabel`; the search narrows the rows only. */
+  readonly setRows: (tasks: GraphTask[], rootLabel: string | null) => void;
 };
 
 /** What `GraphTaskControls` builds its panel with and reports to. */

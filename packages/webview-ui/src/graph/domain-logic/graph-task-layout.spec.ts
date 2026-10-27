@@ -73,7 +73,7 @@ describe('FEATURE: GraphTaskLayout', () => {
 
     rig = taskModeRigOf(new ViewStateModes(saver, taskSavedOf({})));
     onDrawn = vi.fn<() => void>();
-    layout = new GraphTaskLayout({ ...rig.deps, saved: (): null => null, onPlaced: vi.fn(), onDrawn });
+    layout = new GraphTaskLayout({ ...rig.deps, saved: (): null => null, rootLabel: (): null => null, onPlaced: vi.fn(), onDrawn });
   });
 
   describe('GIVEN the flow overlay', () => {

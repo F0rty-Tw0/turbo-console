@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTaskControls, buildTaskRow } from './task-controls-elements.ts';
 import { SEARCH_TASKS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
+import { GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 
 describe('FEATURE: task controls elements', () => {
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe('FEATURE: task controls elements', () => {
 
   describe('GIVEN buildTaskRow of a#build', () => {
     it('WHEN built THEN its button reads the task name, then the package as a description', () => {
-      const row = buildTaskRow(GRAPH_TASK_STUB);
+      const row = buildTaskRow(GRAPH_TASK_STUB, null);
       const [name, description] = row.pick.children;
 
       expect(name?.textContent).toBe('build');
@@ -41,10 +41,27 @@ describe('FEATURE: task controls elements', () => {
     });
 
     it('WHEN built THEN its button is out of the Tab order, so the list is one Tab stop', () => {
-      const row = buildTaskRow(GRAPH_TASK_STUB);
+      const row = buildTaskRow(GRAPH_TASK_STUB, null);
 
       expect(row.pick.tabIndex).toBe(-1);
       expect(row.line.getAttribute('role')).toBe('row');
+    });
+  });
+
+  describe('GIVEN buildTaskRow of //#build', () => {
+    it('WHEN the root label is single-app THEN its description reads single-app and its title stays //#build', () => {
+      const row = buildTaskRow(ROOT_BUILD_STUB, 'single-app');
+      const [, description] = row.pick.children;
+
+      expect(description?.textContent).toBe('single-app');
+      expect(row.pick.title).toBe('//#build');
+    });
+
+    it('WHEN there is no root label THEN its description reads //', () => {
+      const row = buildTaskRow(ROOT_BUILD_STUB, null);
+      const [, description] = row.pick.children;
+
+      expect(description?.textContent).toBe('//');
     });
   });
 });

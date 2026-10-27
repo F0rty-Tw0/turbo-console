@@ -6,7 +6,7 @@ import { choiceOf, droppedNoticeOf, matchesTaskSearch, packageTaskIdsOf, request
 import type { NodeSizer, UmbrellaSizers } from '../common/graph-page.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
-import { GRAPH_TASK_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
+import { GRAPH_TASK_STUB, ROOT_BUILD_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
 
 /** `web#build` and the `api#build` it needs, listed in the reverse of the stub's order. */
 const SHOWN_SET: ShownSet = { ids: ['web#build', 'api#build'], hiddenCount: 0, droppedIds: [] };
@@ -60,11 +60,22 @@ describe('FEATURE: task choice rules', () => {
 
   describe('GIVEN the task a#build', () => {
     it.each(['BUI', 'a#b', ''])('WHEN the search is "%s" THEN it matches', (search) => {
-      expect(matchesTaskSearch(GRAPH_TASK_STUB, search)).toBe(true);
+      expect(matchesTaskSearch(GRAPH_TASK_STUB, search, null)).toBe(true);
     });
 
     it('WHEN the search is lint THEN it does not match', () => {
-      expect(matchesTaskSearch(GRAPH_TASK_STUB, 'lint')).toBe(false);
+      expect(matchesTaskSearch(GRAPH_TASK_STUB, 'lint', null)).toBe(false);
+    });
+  });
+
+  describe('GIVEN the task //#build of a root labelled single-app', () => {
+    it('WHEN the search is single THEN it matches the label, and without the label it does not', () => {
+      expect(matchesTaskSearch(ROOT_BUILD_STUB, 'single', 'single-app')).toBe(true);
+      expect(matchesTaskSearch(ROOT_BUILD_STUB, 'single', null)).toBe(false);
+    });
+
+    it('WHEN the search is // THEN it still matches through the id', () => {
+      expect(matchesTaskSearch(ROOT_BUILD_STUB, '//', 'single-app')).toBe(true);
     });
   });
 

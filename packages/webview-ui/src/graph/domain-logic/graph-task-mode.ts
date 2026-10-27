@@ -1,5 +1,6 @@
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { GraphTaskMemory } from './graph-task-memory.ts';
+import { layoutDepsOf, selectionDepsOf } from './graph-task-mode-deps.ts';
 import { savePanelToggle } from './graph-task-panel.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
@@ -29,17 +30,10 @@ export class GraphTaskMode {
   public constructor(deps: TaskModeDeps) {
     this.deps = deps;
     this.memory = new GraphTaskMemory(deps.modes);
-    this.layout = new GraphTaskLayout({
-      ...deps,
-      saved: (): TaskViewState | null => deps.modes.task(),
-      onPlaced: (): void => this.saveCamera(),
-      onDrawn: (): void => this.selection.placed()
-    });
-    this.selection = new GraphTaskSelection({
-      ...deps,
-      task: (): TaskViewState => this.memory.view(),
-      save: (edit: Partial<TaskViewState>): void => this.memory.save(edit)
-    });
+    const hooks = { onPlaced: (): void => this.saveCamera(), onDrawn: (): void => this.selection.placed() };
+
+    this.layout = new GraphTaskLayout(layoutDepsOf(deps, this.memory, hooks));
+    this.selection = new GraphTaskSelection(selectionDepsOf(deps, this.memory));
     this.panel = deps.panelOf({ onShowAll: (): void => this.choose({ capLifted: true }, null) });
     this.controls = deps.controlsOf({
       onSearch: (search: string): void => this.memory.save({ search }),
@@ -171,7 +165,7 @@ export class GraphTaskMode {
 
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));
     this.panel.show({ isEmpty, hiddenCount: shownSet.hiddenCount });
-    this.controls.setRows(request.tasks);
+    this.controls.setRows(request.tasks, this.memory.rootLabel());
     this.selection.setShown(request.tasks);
     this.deps.view.resize();
 

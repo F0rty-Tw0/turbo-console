@@ -18,7 +18,7 @@ type SelectionRig = {
   readonly view: () => TaskViewState;
 };
 
-const WEB_BUILD_MODEL: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, dependencies: [API_BUILD_STUB] };
+const WEB_BUILD_MODEL: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, dependencies: [API_BUILD_STUB], rootLabel: null };
 
 const rigOf = (): SelectionRig => {
   const canvas = taskCanvasMock();
@@ -54,6 +54,7 @@ describe('FEATURE: GraphTaskSelection', () => {
       },
       widgetsOf: (): TaskWidgets => rig.widgets,
       task: rig.view,
+      rootLabel: (): null => null,
       save: rig.save,
       onHighlight: vi.fn<(litEdgeCount: number) => void>()
     });

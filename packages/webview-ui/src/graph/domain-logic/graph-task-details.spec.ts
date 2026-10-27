@@ -25,7 +25,7 @@ type DetailsRig = {
   readonly built: TaskDetailsView[];
 };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [API_BUILD_STUB] };
+const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [API_BUILD_STUB], rootLabel: null };
 
 const PASSED: TaskDetailsModel = { ...RUNNING, state: 'passed' };
 
