@@ -1,5 +1,6 @@
 // The host gets the wire contract only: `bridge.type.ts` declares the webview-only `acquireVsCodeApi` global.
 export type {
+  FocusInGraphMessage,
   HostMessage,
   OpenPackageJsonMessage,
   ReadyMessage,

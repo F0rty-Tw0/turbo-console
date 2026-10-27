@@ -15,6 +15,7 @@ import type {
   DetailsState,
   DryRunPhase,
   EdgeExplainResult,
+  FocusInGraphMessage,
   GraphAtomFile,
   GraphAtomGroup,
   GraphAtomGroupState,
@@ -155,8 +156,9 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.webviewCsp).toBe(webviewCsp);
       expectTypeOf<WebviewSlots>().toEqualTypeOf<Readonly<Record<string, string>>>();
       expectTypeOf<WebviewMessage>().toEqualTypeOf<
-        ReadyMessage | TaskMessage | OpenPackageJsonMessage | RefreshMessage | ShowOutputMessage
+        ReadyMessage | TaskMessage | OpenPackageJsonMessage | FocusInGraphMessage | RefreshMessage | ShowOutputMessage
       >();
+      expectTypeOf<FocusInGraphMessage['type']>().toEqualTypeOf<'focusInGraph'>();
       expectTypeOf<HostMessage>().toEqualTypeOf<StateMessage | RunStateMessage>();
       expectTypeOf<TaskMessage['type']>().toEqualTypeOf<'run' | 'stop' | 'copy' | 'showInTaskGraph'>();
       expectTypeOf<RefreshMessage['scope']>().toEqualTypeOf<'dryRun' | 'root'>();
