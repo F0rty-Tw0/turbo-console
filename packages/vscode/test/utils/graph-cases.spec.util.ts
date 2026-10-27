@@ -51,10 +51,11 @@ const requireState = (scene: GraphScene): GraphReady => {
   return state;
 };
 
+/** The packages with a cached folder-layout position; a fresh page opens grouped, so it caches the folders layout. */
 const positionedNamesOf = (state: GraphReady): string[] => {
-  if (state.positions === null) return [];
+  if (state.folderPositions === null) return [];
 
-  return Object.keys(state.positions);
+  return Object.keys(state.folderPositions);
 };
 
 const taskCountOf = (pkg: GraphPackage): number => pkg.taskCount;
@@ -127,10 +128,10 @@ export const cacheCase = async (scene: GraphScene): Promise<void> => {
     const hasPositions = (): boolean => {
       const last = lastGraphState(api, root);
 
-      return last !== null && last.positions !== null;
+      return last !== null && last.folderPositions !== null;
     };
 
-    await waitFor('cached hash', () => api.graph.cachedHash(root) === firstHash);
+    await waitFor('cached hash', () => api.graph.cachedHash(root, 'folders') === firstHash);
     await vscode.commands.executeCommand(CLOSE_EDITOR_COMMAND);
     await waitFor('panel closed', () => api.graph.panels().length === 0);
     await vscode.commands.executeCommand(GRAPH_COMMAND);
