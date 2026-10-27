@@ -37,12 +37,26 @@ const PACKAGES: GraphPackage[] = STATE_STUB.packages.map(countOf);
 /** `h1` again, every package with three tasks more. */
 const RECOUNTED: GraphReady = { ...STATE_STUB, packages: PACKAGES };
 
-/** A `GraphPackageSide` over the mocked deps, its view modes starting at `saved`, in a project with no task until `hasTasks` says so. */
-const rigOf = (saved: GraphViewState | null): PackageSideRig => {
+const appOf = (_slot: unknown, index: number): GraphPackage => {
+  const pkg: GraphPackage = { name: `app${index}`, path: `apps/app${index}`, tags: [], taskCount: 0 };
+
+  return pkg;
+};
+
+const LARGE_PACKAGES: GraphPackage[] = Array.from({ length: 301 }, appOf);
+
+/** 301 packages in `apps` with no layout cached: a large graph. */
+const LARGE: GraphReady = { ...STATE_STUB, packages: LARGE_PACKAGES, edges: [], positions: null };
+
+/**
+ * A `GraphPackageSide` over the mocked deps, its view modes starting at `saved` (with a grouping choice unless
+ * `hasGrouping` is false), in a project with no task until `hasTasks` says so.
+ */
+const rigOf = (saved: GraphViewState | null, hasGrouping?: boolean): PackageSideRig => {
   const mock = packageSideDepsMock();
   const hasTasks = vi.fn<(name: string) => boolean>(() => false);
   const tasks = { onShowTasks: vi.fn(), hasTasks };
-  const modes = new ViewStateModes(mock.saver, saved);
+  const modes = new ViewStateModes(mock.saver, saved, hasGrouping);
   const frames = new GraphFrames(mock.deps.now);
   const hooks = { frames, modes, tasks, onMessage: mock.onMessage };
   const side = new GraphPackageSide(mock.deps, mock.view, hooks);
@@ -142,6 +156,13 @@ describe('FEATURE: GraphPackageSide', () => {
   it('GIVEN the view modes hold a grouped view the host never saved WHEN h1 arrives THEN the grouped layout runs', () => {
     rig = rigOf(SAVED_GROUPED_STUB);
     rig.side.show(STATE_STUB, 1);
+
+    expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(true);
+  });
+
+  it('GIVEN a flat view saved before folders existed WHEN a large graph arrives THEN the grouped layout runs', () => {
+    rig = rigOf(SAVED_FLAT_STUB, false);
+    rig.side.show(LARGE, 1);
 
     expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(true);
   });

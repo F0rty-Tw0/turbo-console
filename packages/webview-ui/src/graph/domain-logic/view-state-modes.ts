@@ -12,10 +12,13 @@ export class ViewStateModes {
 
   private readonly saver: ViewStateSaver;
   private last: GraphViewState | null;
+  private hasGrouping: boolean;
 
-  public constructor(saver: ViewStateSaver, saved: GraphViewState | null) {
+  /** `hasGrouping` is false when the host kept no grouping choice, as in a state saved before folders existed. */
+  public constructor(saver: ViewStateSaver, saved: GraphViewState | null, hasGrouping = saved !== null) {
     this.saver = saver;
     this.last = saved;
+    this.hasGrouping = hasGrouping;
     this.packages = {
       schedule: (state: PackageViewState): void => this.schedulePackages(state),
       flush: (): void => saver.flush()
@@ -32,6 +35,11 @@ export class ViewStateModes {
 
   public current(): GraphViewState | null {
     return this.last;
+  }
+
+  /** Whether a grouping choice is saved: the host kept one, or this page wrote a state, which always holds one. */
+  public isGroupingSaved(): boolean {
+    return this.hasGrouping;
   }
 
   /** Writes the last state, or the fresh state of `hash` with nothing saved, in `mode`. */
@@ -75,6 +83,7 @@ export class ViewStateModes {
 
   private write(state: GraphViewState): void {
     this.last = state;
+    this.hasGrouping = true;
     this.saver.schedule(state);
   }
 }

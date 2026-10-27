@@ -16,6 +16,11 @@ const UNCACHED_300: GraphReady = { ...LARGE_300, positions: null };
 
 const UNCACHED_301: GraphReady = { ...LARGE_301, positions: null };
 
+const ORIGIN = { x: 0, y: 0 };
+
+/** A camera saved for `LARGE_301` by a build before folders existed: no `grouped` or `collapsed` field. */
+const SAVED_BEFORE_FOLDERS = { hash: LARGE_301.hash, zoom: 1, pan: ORIGIN, selected: null };
+
 const GROUP_COUNT = 30;
 
 const GROUP_FOLDERS = Array.from({ length: GROUP_COUNT }, (_, index): string => `group-${index}`);
@@ -212,7 +217,7 @@ test.describe('FEATURE: folder header toggle', () => {
   );
 
   test(
-    'GIVEN a 300-package graph still laying out, a 301-package graph sent next opens grouped with every folder expanded',
+    'GIVEN a 300-package graph still laying out with nothing saved, a 301-package graph sent next opens with every folder collapsed',
     { annotation: C4 },
     async ({ graphFolders, graphGrouping, graphHost, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open({ savedState: null }));
@@ -223,9 +228,25 @@ test.describe('FEATURE: folder header toggle', () => {
       await test.step('THEN the second one is laid out, by ELK or by the fallback on a slow runner', async (): Promise<void> =>
         graphProbe.expectLayoutSettled());
 
-      await test.step('AND Group by folder is checked and no folder is collapsed', async (): Promise<void> => {
+      await test.step('AND Group by folder is checked and every folder is collapsed', async (): Promise<void> => {
         await graphGrouping.expectGrouped(true);
-        await graphFolders.expectAllCollapsed(false);
+        await graphFolders.expectAllCollapsed(true);
+      });
+    }
+  );
+
+  test(
+    'GIVEN a view saved before folders existed, a 301-package graph opens grouped with every folder collapsed',
+    { annotation: C4 },
+    async ({ graphFolders, graphGrouping, graphHost, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened on a saved camera with no grouping choice', async (): Promise<void> =>
+        graphPage.open({ savedState: SAVED_BEFORE_FOLDERS }));
+
+      await test.step('AND a 301-package graph is sent', async (): Promise<void> => graphHost.sendState(LARGE_301));
+
+      await test.step('THEN Group by folder is checked and every folder is collapsed', async (): Promise<void> => {
+        await graphGrouping.expectGrouped(true);
+        await graphFolders.expectAllCollapsed(true);
       });
     }
   );

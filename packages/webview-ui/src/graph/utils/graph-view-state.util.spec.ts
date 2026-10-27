@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { readGraphViewState } from './graph-view-state.util.ts';
+import { hasSavedGrouping, readGraphViewState } from './graph-view-state.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphFocus, GraphViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 
@@ -165,6 +165,17 @@ describe('FEATURE: readGraphViewState', () => {
       const state = readGraphViewState({ ...CAMERA, ...saved });
 
       expect(state?.grouped).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a raw saved state for hasSavedGrouping', () => {
+    it.each([
+      ['a boolean grouped value', true, { ...CAMERA, grouped: false }],
+      ['no grouped value, as saved before folders existed', false, CAMERA],
+      ["the string 'true'", false, { ...CAMERA, grouped: 'true' }],
+      ['nothing', false, undefined]
+    ])('WHEN it holds %s THEN a grouping choice is saved: %s', (_name, expected, raw) => {
+      expect(hasSavedGrouping(raw)).toBe(expected);
     });
   });
 

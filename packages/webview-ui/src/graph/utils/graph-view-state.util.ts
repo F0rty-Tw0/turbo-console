@@ -146,6 +146,9 @@ const readMode = (value: unknown, task: TaskViewState | null): GraphViewMode => 
   return isTaskMode ? 'tasks' : 'packages';
 };
 
+/** Whether `raw` holds a grouping choice; a state saved before folders existed has none, and reads as grouped. */
+export const hasSavedGrouping = (raw: unknown): boolean => isRecord(raw) && typeof raw['grouped'] === 'boolean';
+
 /** The saved camera, selection, controls, inspection, mode and task view, rebuilt field by field; `null` when the camera or selection is off, a bad controls, inspection or task field takes its default. */
 export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   if (!isRecord(raw)) return null;

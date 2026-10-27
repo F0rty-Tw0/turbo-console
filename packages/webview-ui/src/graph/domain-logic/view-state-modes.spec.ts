@@ -96,6 +96,26 @@ describe('FEATURE: ViewStateModes', () => {
     });
   });
 
+  describe('GIVEN the grouping choice the host kept', () => {
+    it.each([
+      ['nothing saved', false, null, undefined],
+      ['a saved state', true, PACKAGE_SAVED, undefined],
+      ['a state saved before folders existed', false, PACKAGE_SAVED, false]
+    ])('WHEN modes start from %s THEN a grouping choice is saved: %s', (_name, expected, saved, hasGrouping) => {
+      const modes = new ViewStateModes(saver, saved, hasGrouping);
+
+      expect(modes.isGroupingSaved()).toBe(expected);
+    });
+
+    it('WHEN a state saved before folders existed is followed by a package save THEN a grouping choice is saved', () => {
+      const modes = new ViewStateModes(saver, PACKAGE_SAVED, false);
+
+      modes.packages.schedule(PACKAGE_STATE);
+
+      expect(modes.isGroupingSaved()).toBe(true);
+    });
+  });
+
   describe('GIVEN a saved task in package mode', () => {
     it('WHEN read THEN mode is packages and the task is the saved one', () => {
       const modes = new ViewStateModes(saver, PACKAGE_SAVED);

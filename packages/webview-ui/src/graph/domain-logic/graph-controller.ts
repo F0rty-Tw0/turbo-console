@@ -9,7 +9,7 @@ import type { FlowControl } from '../common/flow.type.ts';
 import type { GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { FilteringFacts, LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
-import { readGraphViewState } from '../utils/graph-view-state.util.ts';
+import { hasSavedGrouping, readGraphViewState } from '../utils/graph-view-state.util.ts';
 
 /**
  * Routes the host's messages and the view's events by mode: the package side shows the states and draws the package
@@ -28,8 +28,9 @@ class GraphPageController {
   public constructor(deps: GraphControllerDeps) {
     const { bridge, page } = deps;
     const frames = new GraphFrames(deps.now);
-    const saved = readGraphViewState(bridge.savedState());
-    const modes = new ViewStateModes(deps.saver, saved);
+    const raw = bridge.savedState();
+    const saved = readGraphViewState(raw);
+    const modes = new ViewStateModes(deps.saver, saved, hasSavedGrouping(raw));
     const handlers = viewHandlersOf({
       frames,
       filtering: () => this.packages.filtering,
