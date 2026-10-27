@@ -27,8 +27,8 @@ const GREEN = 'rgb(0, 255, 0)';
 
 const PASSED_COLOR = 'rgb(0, 128, 0)';
 
-/** Copy and Show in task graph sit beside Run on every card; Refresh and Open package.json sit in the page header. */
-const ICON_BUTTON_LABELS = ['Copy command for build', 'Show in task graph: build', 'Refresh', 'Open package.json'];
+/** Copy and Show in task graph sit beside Run on every card; Refresh, Open package.json and Focus on graph sit in the page header. */
+const ICON_BUTTON_LABELS = ['Copy command for build', 'Show in task graph: build', 'Refresh', 'Open package.json', 'Focus on graph'];
 
 const LONG_TITLE = 'a-thirty-character-task-name-x';
 

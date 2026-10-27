@@ -5,7 +5,7 @@ import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { DetailsState, MissingPackage, PackageDetails } from '../../bridge/common/details-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { CardIndex, CardRefs, FocusTargets, RenderContext, RenderedPage, RunTexts } from '../common/details-page.type.ts';
-import { MISSING_PACKAGE_TEXT, SCRIPTS_TITLE, TURBO_TASKS_TITLE } from '../common/field-text.const.ts';
+import { FOCUS_IN_GRAPH_LABEL, MISSING_PACKAGE_TEXT, SCRIPTS_TITLE, TURBO_TASKS_TITLE } from '../common/field-text.const.ts';
 import { noCardsText } from '../utils/field-text.util.ts';
 
 /** The page title takes focus only from `refocus`, when the focused control is gone after a re-render. */
@@ -24,6 +24,7 @@ const pageHeader = (state: PackageDetails, context: RenderContext): HTMLElement 
   const title = pageTitle(state.label, focusTargets);
   const refresh = iconButton('refresh', 'Refresh', (): void => bridge.post({ type: 'refresh', scope: 'dryRun' }));
   const open = iconButton('go-to-file', 'Open package.json', (): void => bridge.post({ type: 'openPackageJson' }));
+  const focus = iconButton('target', FOCUS_IN_GRAPH_LABEL, (): void => bridge.post({ type: 'focusInGraph' }));
   const actions = textElement('span', 'page-actions', '');
   const path = textElement('p', 'package-path', state.path);
   const tags = textElement('ul', 'tags', '');
@@ -32,7 +33,8 @@ const pageHeader = (state: PackageDetails, context: RenderContext): HTMLElement 
 
   focusTargets.set('refresh', refresh);
   focusTargets.set('open', open);
-  actions.append(refresh, open);
+  focusTargets.set('focusInGraph', focus);
+  actions.append(refresh, open, focus);
   header.append(title, actions, path, tags);
 
   return header;
