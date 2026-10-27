@@ -53,6 +53,22 @@ const printed = async (child: ChildProcess, text: string): Promise<void> => {
   }
 };
 
+/**
+ * Signals the process group `child` leads (it was spawned `detached`), as Ctrl+C in a terminal signals the foreground
+ * group: turbo and the task's script both get it. On macOS turbo alone waits for the script to end on its own.
+ */
+const signalGroup = (child: ChildProcess, signal: NodeJS.Signals): void => {
+  const { pid } = child;
+
+  if (pid === undefined) return;
+
+  try {
+    process.kill(-pid, signal);
+  } catch {
+    // The group has already exited.
+  }
+};
+
 /** The exit code of `child`, which has exited; throws when a signal killed it, so there is no code. */
 const exitCodeOf = (child: ChildProcess): number => {
   if (child.exitCode === null) throw new Error(`turbo was killed by ${child.signalCode}`);
@@ -73,11 +89,11 @@ describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run inter
 
     const launchedAt = Date.now();
 
-    child = spawn(TURBO, turboRunArgs(SLOW, INTERRUPT_PACKAGE_STUB), { cwd: dir, env: turboEnv(process.env) });
+    child = spawn(TURBO, turboRunArgs(SLOW, INTERRUPT_PACKAGE_STUB), { cwd: dir, env: turboEnv(process.env), detached: true });
     const exited = once(child, 'exit');
 
     await printed(child, SLOW_READY_STUB);
-    child.kill('SIGINT');
+    signalGroup(child, 'SIGINT');
     await exited;
 
     const exitCode = exitCodeOf(child);
@@ -88,7 +104,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run inter
   });
 
   afterAll(async () => {
-    child?.kill('SIGKILL');
+    if (child !== null) signalGroup(child, 'SIGKILL');
     await rm(dir, { recursive: true, force: true, maxRetries: 5 });
   });
 
