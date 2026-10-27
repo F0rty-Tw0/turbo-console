@@ -1,3 +1,4 @@
+import { modeFocusOf } from './mode-focus.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
@@ -55,7 +56,7 @@ export class GraphTaskControls {
     panel.hidden = true;
     this.deps.page.controls.setAttribute('aria-controls', CONTROLS_ID);
 
-    if (hadFocus) this.deps.page.packagesMode.focus();
+    if (hadFocus) modeFocusOf(this.deps.page).focus();
   }
 
   /** Lists `tasks`; a row with focus hands it, and the Tab stop, to its twin among the new rows. */

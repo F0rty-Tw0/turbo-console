@@ -8,7 +8,14 @@ import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
-import { API_BUILD_STUB, TASK_CHAIN_STUB, TASK_STATE_STUB, WEB_BUILD_STUB, WEB_LINT_STUB } from '../test/stubs/graph-task.stub.ts';
+import {
+  API_BUILD_STUB,
+  SINGLE_TASK_STATE_STUB,
+  TASK_CHAIN_STUB,
+  TASK_STATE_STUB,
+  WEB_BUILD_STUB,
+  WEB_LINT_STUB
+} from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
 import { fanOf } from '../test/utils/shown-set.spec.util.ts';
@@ -40,6 +47,16 @@ const fanStateOf = (count: number): GraphReady => {
 };
 
 const controlsActionsOf = (rig: TaskModeRig): TaskControlsActions | undefined => rig.controlsOf.mock.lastCall?.[0];
+
+/** The ids of the rows Controls listed last. */
+const listedIdsOf = (rig: TaskModeRig): string[] | undefined => {
+  const rows = rig.controls.setRows.mock.lastCall?.[0];
+
+  return rows?.map((task) => task.id);
+};
+
+/** Every task of the single-package root. */
+const ALL_IDS = ['//#build', '//#lint'];
 
 describe('FEATURE: GraphTaskMode across page states', () => {
   let rig: TaskModeRig;
@@ -151,6 +168,34 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       expect(rig.onExit).not.toHaveBeenCalled();
       expect(rig.panel.exit).not.toHaveBeenCalled();
     });
+  });
+
+  describe('GIVEN a restored panel whose saved view says packages, with web#build chosen', () => {
+    beforeEach(() => {
+      open(taskSavedOf({}, 'packages'));
+      mode.received(SINGLE_TASK_STATE_STUB, 7);
+      mode.enter(8);
+    });
+
+    it('WHEN a single-package state is received and entered THEN every task is listed and nothing leaves task mode', () => {
+      expect(listedIdsOf(rig)).toStrictEqual(ALL_IDS);
+      expect(rig.panel.exit).not.toHaveBeenCalled();
+      expect(rig.onExit).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the same state arrives again in task mode THEN panel.exit and onExit stay uncalled', () => {
+      mode.received(SINGLE_TASK_STATE_STUB, 9);
+
+      expect(rig.panel.exit).not.toHaveBeenCalled();
+      expect(rig.onExit).not.toHaveBeenCalled();
+    });
+  });
+
+  it('GIVEN task mode with only ids that no longer exist chosen WHEN the single-package state arrives THEN every task is listed', () => {
+    open(taskSavedOf({ chosen: ['//#gone'] }));
+    mode.received(SINGLE_TASK_STATE_STUB, 7);
+
+    expect(listedIdsOf(rig)).toStrictEqual(ALL_IDS);
   });
 
   describe('GIVEN root#t chosen over the cap and in flight', () => {

@@ -1,4 +1,4 @@
-import type { GraphState } from '../../bridge/common/graph-state.type.ts';
+import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { StateRoutingDeps } from '../common/state-routing.type.ts';
 
 /**
@@ -14,12 +14,15 @@ export class GraphStateRouting {
     this.deps = deps;
   }
 
-  /** Task mode reads every graph state first; in task mode a new package hash is held, so the task canvas stays; any other state drops the one held. */
+  /**
+   * Task mode reads every graph state first, and a single-package root's turns it on, with the mode group hidden; in
+   * task mode a new package hash is held, so the task canvas stays; any other state drops the one held.
+   */
   public show(state: GraphState, at: number): void {
     const { tasks, packages } = this.deps;
     const isGraph = state.kind === 'graph';
 
-    if (isGraph) tasks.received(state, at);
+    if (isGraph) this.receive(state, at);
 
     const isTaskMode = tasks.isActive();
     const drawnHash = packages.drawnHash();
@@ -45,5 +48,18 @@ export class GraphStateRouting {
 
     if (pending !== null) packages.show(pending, this.deps.now());
     else packages.redraw();
+  }
+
+  /** Task mode reads the state; a single-package root hides the mode group and turns task mode on, never off. */
+  private receive(state: GraphReady, at: number): void {
+    const { tasks } = this.deps;
+
+    tasks.received(state, at);
+    this.deps.hideModes(state.singlePackage);
+
+    const isTaskMode = tasks.isActive();
+    const isEntering = state.singlePackage && !isTaskMode;
+
+    if (isEntering) tasks.enter(at);
   }
 }

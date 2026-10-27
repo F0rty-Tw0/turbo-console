@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { GraphTaskMemory } from './graph-task-memory.ts';
+import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { TaskModes } from '../common/graph-task.type.ts';
-import { TASK_STATE_STUB, TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
+import { SINGLE_TASK_STATE_STUB, TASK_STATE_STUB, TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 
 type MemoryModes = Pick<TaskModes, 'task' | 'saveTask'>;
@@ -86,6 +87,46 @@ describe('FEATURE: task mode memory', () => {
       memory.keep(TASK_STATE_STUB);
 
       expect(memory.shownSet().ids).toStrictEqual(['api#build', 'web#build']);
+    });
+  });
+
+  describe('GIVEN a state of //#build and //#lint', () => {
+    it.each([
+      ['single-package', [], ['//#build', '//#lint'], true],
+      ['single-package', ['//#gone'], ['//#build', '//#lint'], true],
+      ['single-package', ['//#gone', '//#lint'], ['//#lint'], true],
+      ['monorepo', [], [], false]
+    ])('GIVEN %s with %j chosen WHEN the shown set is read THEN it lists %j', (_kind, chosen, ids, singlePackage) => {
+      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
+      const memory = new GraphTaskMemory(modesOf(saved));
+      const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage };
+
+      memory.keep(state);
+
+      expect(memory.shownSet().ids).toStrictEqual(ids);
+    });
+
+    it('GIVEN single-package with nothing chosen WHEN the shown set is read twice THEN nothing is saved', () => {
+      const modes = modesOf(null);
+      const memory = new GraphTaskMemory(modes);
+
+      memory.keep(SINGLE_TASK_STATE_STUB);
+      memory.shownSet();
+      memory.shownSet();
+
+      expect(modes.saveTask).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      [true, 'single-app'],
+      [false, null]
+    ])('GIVEN singlePackage %s WHEN the root label is read THEN it is %j', (singlePackage, label) => {
+      const memory = new GraphTaskMemory(modesOf(null));
+      const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage, rootLabel: label };
+
+      memory.keep(state);
+
+      expect(memory.rootLabel()).toBe(label);
     });
   });
 });

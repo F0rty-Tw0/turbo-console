@@ -27,7 +27,8 @@ const rigOf = (): ControlsRig => {
   const page = {
     body: document.createElement('div'),
     controls: document.createElement('button'),
-    packagesMode: document.createElement('button')
+    packagesMode: document.createElement('button'),
+    modeGroup: document.createElement('div')
   };
   const actions: Mocked<TaskControlsActions> = { onSearch: vi.fn(), onDepth: vi.fn(), onPick: vi.fn(), onToggle: vi.fn() };
   const deps: TaskControlsDeps = { page, views, actions };
@@ -154,6 +155,14 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(rig.elements.panel.hidden).toBe(true);
       expect(rig.deps.page.controls.getAttribute('aria-controls')).toBe(CONTROLS_ID);
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
+    });
+
+    it('GIVEN the mode group hidden WHEN task mode is left with focus on a row THEN Controls takes focus', () => {
+      rig.deps.page.modeGroup.hidden = true;
+      rig.rows[0]?.pick.focus();
+      controls.exit();
+
+      expect(document.activeElement).toBe(rig.deps.page.controls);
     });
 
     describe('WHEN web#build has focus and the rows are listed again', () => {

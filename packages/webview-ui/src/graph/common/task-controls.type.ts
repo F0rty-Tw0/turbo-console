@@ -43,7 +43,7 @@ export type TaskControls = {
 
 /** What `GraphTaskControls` builds its panel with and reports to. */
 export type TaskControlsDeps = {
-  readonly page: Pick<PageElements, 'body' | 'controls' | 'packagesMode'>;
+  readonly page: Pick<PageElements, 'body' | 'controls' | 'packagesMode' | 'modeGroup'>;
   readonly views: TaskControlsViews;
   readonly actions: TaskControlsActions;
 };

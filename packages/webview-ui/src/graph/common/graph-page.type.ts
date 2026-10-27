@@ -27,6 +27,9 @@ import type { GraphViewState, PackageViewState } from '../../bridge/common/graph
 type PageParts = {
   readonly root: HTMLElement;
   readonly toolbar: HTMLElement;
+  /** The Packages/Tasks group and its separator; hidden for a single-package root. */
+  readonly modeGroup: HTMLElement;
+  readonly modeEnd: HTMLElement;
   /** The Packages button, first in the toolbar; `aria-pressed` while the package graph shows. */
   readonly packagesMode: HTMLButtonElement;
   /** The Tasks button, after Packages; `aria-pressed` while task mode is on. */
@@ -84,16 +87,13 @@ export type ControlsViewFields = Pick<
 >;
 
 /** Debounces view-state saves; `flush` saves a pending state at once. */
-export type ViewStateSaver = {
-  readonly schedule: (state: GraphViewState) => void;
+export type ViewStateSaver<State = GraphViewState> = {
+  readonly schedule: (state: State) => void;
   readonly flush: () => void;
 };
 
 /** The package graph's saver: `ViewStateModes` adds the mode, the task view and the panel widths to each state before it is saved. */
-export type PackageSaver = {
-  readonly schedule: (state: PackageViewState) => void;
-  readonly flush: () => void;
-};
+export type PackageSaver = ViewStateSaver<PackageViewState>;
 
 export type NodeSizer = (name: string) => NodeSize;
 

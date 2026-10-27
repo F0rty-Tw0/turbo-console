@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Mocked } from 'vitest';
+import type { Mock, Mocked } from 'vitest';
 
 import { GraphStateRouting } from './graph-state-routing.ts';
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
@@ -10,6 +10,7 @@ type RoutingRig = {
   readonly routing: GraphStateRouting;
   readonly tasks: Mocked<RoutedTaskMode>;
   readonly packages: Mocked<RoutedPackageSide>;
+  readonly hideModes: Mock<(isHidden: boolean) => void>;
 };
 
 /** When task mode exits, the clock reads this. */
@@ -20,17 +21,28 @@ const NEW_HASH: GraphReady = { ...TASK_STATE_STUB, hash: 'h2' };
 
 const LOADING: GraphState = { kind: 'loading' };
 
-/** The routing over task mode in `isTaskMode` and a package side with `h1` drawn. */
+/** A single-package root's state, under a hash no package graph drew: task mode opens on it straight away. */
+const SINGLE: GraphReady = { ...NEW_HASH, singlePackage: true, rootLabel: 'single-app' };
+
+/** The routing over task mode in `isTaskMode`, which `enter` turns on, and a package side with `h1` drawn. */
 const rigOf = (isTaskMode: boolean): RoutingRig => {
-  const tasks: Mocked<RoutedTaskMode> = { received: vi.fn(), isActive: vi.fn(() => isTaskMode) };
+  let isActive = isTaskMode;
+  const tasks: Mocked<RoutedTaskMode> = {
+    received: vi.fn(),
+    isActive: vi.fn(() => isActive),
+    enter: vi.fn(() => {
+      isActive = true;
+    })
+  };
   const packages: Mocked<RoutedPackageSide> = {
     show: vi.fn(),
     drawnHash: vi.fn(() => 'h1'),
     redraw: vi.fn(),
     keepModeFocus: vi.fn()
   };
-  const routing = new GraphStateRouting({ tasks, packages, now: (): number => EXIT_AT });
-  const rig: RoutingRig = { routing, tasks, packages };
+  const hideModes = vi.fn<(isHidden: boolean) => void>();
+  const routing = new GraphStateRouting({ tasks, packages, hideModes, now: (): number => EXIT_AT });
+  const rig: RoutingRig = { routing, tasks, packages, hideModes };
 
   return rig;
 };
@@ -50,17 +62,52 @@ describe('FEATURE: GraphStateRouting', () => {
       expect(rig.packages.show).toHaveBeenCalledExactlyOnceWith(NEW_HASH, 7);
     });
 
-    it('WHEN loading arrives THEN only the package side shows it', () => {
+    it('WHEN loading arrives THEN only the package side shows it, and neither the mode group nor task mode is touched', () => {
       rig.routing.show(LOADING, 7);
 
       expect(rig.tasks.received).not.toHaveBeenCalled();
       expect(rig.packages.show).toHaveBeenCalledExactlyOnceWith(LOADING, 7);
+      expect(rig.hideModes).not.toHaveBeenCalled();
+      expect(rig.tasks.enter).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a monorepo state arrives THEN task mode is not entered and the package side shows it', () => {
+      rig.routing.show(NEW_HASH, 7);
+
+      expect(rig.tasks.enter).not.toHaveBeenCalled();
+      expect(rig.packages.show).toHaveBeenCalledExactlyOnceWith(NEW_HASH, 7);
+    });
+
+    it('WHEN a single-package state arrives THEN task mode is entered at its arrival and the package graph is never drawn', () => {
+      rig.routing.show(SINGLE, 7);
+
+      const receivedAt = rig.tasks.received.mock.invocationCallOrder[0] ?? Number.NaN;
+      const enteredAt = rig.tasks.enter.mock.invocationCallOrder[0] ?? Number.NaN;
+
+      expect(rig.tasks.received).toHaveBeenCalledExactlyOnceWith(SINGLE, 7);
+      expect(rig.tasks.enter).toHaveBeenCalledExactlyOnceWith(7);
+      expect(receivedAt).toBeLessThan(enteredAt);
+      expect(rig.packages.show).not.toHaveBeenCalled();
+    });
+
+    it.each([[true], [false]])('WHEN a graph state with singlePackage %s arrives THEN the mode group is hidden to match', (flag) => {
+      const state: GraphReady = { ...TASK_STATE_STUB, singlePackage: flag, rootLabel: null };
+
+      rig.routing.show(state, 7);
+
+      expect(rig.hideModes).toHaveBeenLastCalledWith(flag);
     });
   });
 
   describe('GIVEN task mode over the drawn h1', () => {
     beforeEach(() => {
       rig = rigOf(true);
+    });
+
+    it('WHEN a single-package state arrives THEN task mode is not entered again', () => {
+      rig.routing.show(SINGLE, 7);
+
+      expect(rig.tasks.enter).not.toHaveBeenCalled();
     });
 
     it('WHEN a state of h1 arrives THEN the package side refreshes with it', () => {

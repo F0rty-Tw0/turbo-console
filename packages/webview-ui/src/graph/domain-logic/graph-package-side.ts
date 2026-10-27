@@ -2,6 +2,7 @@ import { GraphFiltering } from './graph-filtering.ts';
 import { GraphLayouts } from './graph-layouts.ts';
 import { refreshedDrawn, restoreAfterDraw } from './graph-package-draw.ts';
 import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
+import { modeFocusOf } from './mode-focus.ts';
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
@@ -107,7 +108,7 @@ export class GraphPackageSide {
     void this.guard(async (): Promise<void> => this.layouts.redraw(saved));
   }
 
-  /** Task mode is being left: a mode button with focus hands it to Packages once the package graph shows, as the loading screen drops it. */
+  /** Task mode is being left: a mode button with focus hands it to `modeFocusOf` once the package graph shows, as the loading screen drops it. */
   public keepModeFocus(): void {
     const { activeElement } = document;
     const { packagesMode, taskMode } = this.deps.page;
@@ -168,7 +169,7 @@ export class GraphPackageSide {
     screen.showGraph(isFallback);
     this.isModeFocusKept = false;
 
-    if (isRefocus) this.deps.page.packagesMode.focus();
+    if (isRefocus) modeFocusOf(this.deps.page).focus();
   }
 
   private afterDraw(saved: GraphViewState | null): void {

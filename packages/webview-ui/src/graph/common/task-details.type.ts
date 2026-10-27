@@ -65,7 +65,7 @@ export type TaskDetails = {
 };
 
 export type TaskDetailsDeps = {
-  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'detailsBar' | 'packagesMode'>;
+  readonly page: Pick<PageElements, 'body' | 'details' | 'clear' | 'detailsBar' | 'packagesMode' | 'modeGroup' | 'controls'>;
   readonly views: TaskDetailsViews;
   readonly bridge: Bridge;
   readonly actions: TaskDetailsActions;

@@ -296,4 +296,11 @@ describe('FEATURE: GraphPackageSide mode button focus', () => {
       expect(doc.activeElement).toBe(rig.page.packagesMode);
     }
   );
+
+  it('GIVEN the mode group hidden and focus on Tasks WHEN the graph shows again THEN Controls has focus', async () => {
+    rig.page.modeGroup.hidden = true;
+    await leaveWithFocusOn('taskMode');
+
+    expect(doc.activeElement).toBe(rig.page.controls);
+  });
 });

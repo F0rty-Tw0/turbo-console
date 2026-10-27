@@ -1,4 +1,5 @@
 import { showDetailsBar } from './details-bar-shown.ts';
+import { modeFocusOf } from './mode-focus.ts';
 import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskDetailsDeps, TaskDetailsModel, TaskDetailsView, TaskRunAction } from '../common/task-details.type.ts';
@@ -67,7 +68,7 @@ export class GraphTaskDetails {
     this.panel.hidden = true;
     this.deps.page.details.setAttribute('aria-controls', DETAILS_ID);
 
-    if (hadFocus) this.deps.page.packagesMode.focus();
+    if (hadFocus) modeFocusOf(this.deps.page).focus();
   }
 
   /**

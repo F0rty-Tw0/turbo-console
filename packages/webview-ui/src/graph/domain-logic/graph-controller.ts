@@ -58,7 +58,12 @@ class GraphPageController {
       onExit: (): void => this.routing.exitTasks(),
       flow: this.flow
     });
-    this.routing = new GraphStateRouting({ tasks: this.tasks, packages: this.packages, now: deps.now });
+    const hideModes = (isHidden: boolean): void => {
+      page.modeGroup.hidden = isHidden;
+      page.modeEnd.hidden = isHidden;
+    };
+
+    this.routing = new GraphStateRouting({ tasks: this.tasks, packages: this.packages, hideModes, now: deps.now });
     this.reveal = new PackageReveal({
       tasks: this.tasks,
       layouts: this.packages.layouts,

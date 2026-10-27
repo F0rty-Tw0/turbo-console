@@ -127,7 +127,7 @@ export const buildToolbar = (): ToolbarElements => {
   const exportImage = viewAction('desktop-download', EXPORT_LABEL, EXPORT_TITLE);
   const status = statusLine();
   const legend = buildLegend();
-  const mode = toolbarGroup(MODE_LABEL, packagesMode, taskMode);
+  const modeGroup = toolbarGroup(MODE_LABEL, packagesMode, taskMode);
   const modeEnd = separator();
   const panels = toolbarGroup(PANELS_LABEL, controls, details);
   const panelsEnd = separator();
@@ -135,10 +135,12 @@ export const buildToolbar = (): ToolbarElements => {
   const toolbar = textElement('header', 'graph-toolbar', '');
 
   controls.append(filtersOn);
-  toolbar.append(mode, modeEnd, panels, panelsEnd, view, status, legend.legendPanel);
+  toolbar.append(modeGroup, modeEnd, panels, panelsEnd, view, status, legend.legendPanel);
 
   const elements: ToolbarElements = {
     toolbar,
+    modeGroup,
+    modeEnd,
     packagesMode,
     taskMode,
     controls,
