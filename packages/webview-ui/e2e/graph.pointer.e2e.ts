@@ -12,6 +12,8 @@ test.describe('FEATURE: graph pointer', () => {
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
 
+      await test.step('AND the canvas is quiet', async (): Promise<void> => graphPointer.waitForQuietCanvas());
+
       await test.step('AND the pointer rests on web', async (): Promise<void> => graphPointer.overNode('web'));
 
       await test.step('THEN the cursor there is a pointer', async (): Promise<void> => graphPointer.expectCursor('pointer'));
