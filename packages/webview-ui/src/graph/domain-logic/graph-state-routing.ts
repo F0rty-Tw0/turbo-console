@@ -15,8 +15,8 @@ export class GraphStateRouting {
   }
 
   /**
-   * Task mode reads every graph state first, and a single-package root's turns it on, with the mode group hidden; in
-   * task mode a new package hash is held, so the task canvas stays; any other state drops the one held.
+   * Task mode reads every graph state first; a single-package state also hides the mode group and turns task mode on.
+   * In task mode a new package hash is held, so the task canvas stays; any other state drops the one held.
    */
   public show(state: GraphState, at: number): void {
     const { tasks, packages } = this.deps;
@@ -50,7 +50,7 @@ export class GraphStateRouting {
     else packages.redraw();
   }
 
-  /** Task mode reads the state; a single-package root hides the mode group and turns task mode on, never off. */
+  /** Task mode reads the state; the mode group is hidden exactly for a single-package state, which also turns task mode on, never off. */
   private receive(state: GraphReady, at: number): void {
     const { tasks } = this.deps;
 
