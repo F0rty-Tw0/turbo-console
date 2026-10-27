@@ -26,5 +26,7 @@ export const GRAPH_ICON_IDS = [
   'pass',
   'error',
   'debug-stop',
-  'folder-opened'
+  'folder-opened',
+  'type-hierarchy',
+  'clear-all'
 ] as const;

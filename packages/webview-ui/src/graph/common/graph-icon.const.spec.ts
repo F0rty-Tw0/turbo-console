@@ -10,16 +10,22 @@ const CODICON_CSS_PATH = join(import.meta.dirname, '../../../node_modules/@vscod
 
 describe('FEATURE: graph icon ids', () => {
   describe('GIVEN the icon id list', () => {
-    it('WHEN it is counted THEN it holds 27 ids: the 18 spec ids, the menu check and dash, the export download, the task mode toggle and the four run state icons, and the folder glyph', () => {
+    it('WHEN it is counted THEN it holds 29 ids: the 18 spec ids, the menu check and dash, the export download, the task mode toggle and the four run state icons, the folder glyph, and the Packages mode and Clear selection icons', () => {
       const count = GRAPH_ICON_IDS.length;
 
-      expect(count).toBe(27);
+      expect(count).toBe(29);
     });
 
     it('WHEN eye-closed is looked up THEN it is in the list', () => {
       const hasEyeClosed = GRAPH_ICON_IDS.includes('eye-closed');
 
       expect(hasEyeClosed).toBe(true);
+    });
+
+    it.each(['type-hierarchy', 'clear-all'] as const)('WHEN %s, a U3 toolbar icon, is looked up THEN it is in the list', (id) => {
+      const hasId = GRAPH_ICON_IDS.includes(id);
+
+      expect(hasId).toBe(true);
     });
 
     it('WHEN tasklist, the Task mode icon, is looked up THEN it is in the list', () => {
