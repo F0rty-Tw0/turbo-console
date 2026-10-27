@@ -163,6 +163,12 @@ export const EXPORTING_CLASS = 'exporting';
 /** The border of a package, folder box or collapsed node while not selected, highlighted ones included, in px. */
 export const NODE_BORDER_PX = 1;
 
+/** A dashed package or file border's dash and gap in px: Cytoscape's own default, written out so the legend draws the same. */
+export const DASHED_BORDER_PX: number[] = [4, 2];
+
+/** A dashed line's dash and gap in px: Cytoscape's own default, written out so the legend draws the same. */
+export const DASHED_LINE_PX: number[] = [6, 3];
+
 /** The border of a selected node, in px, drawn centred on the node's edge. */
 export const SELECTED_BORDER_PX = 1.5;
 
