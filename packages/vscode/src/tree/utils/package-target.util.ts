@@ -29,3 +29,17 @@ export const packageDirOf = (target: PackageTarget, state: RootState | undefined
 
   return join(target.root, pkg.path);
 };
+
+/** The name of the task `value` is a row of, in the package `target` names; `null` for a package row or a task the model does not hold. */
+export const taskNameOf = (value: unknown, target: PackageTarget, state: RootState | undefined): string | null => {
+  if (!isFields(value)) return null;
+
+  const { kind, key } = value;
+
+  if (kind !== 'task' || typeof key !== 'string') return null;
+
+  const pkg = state?.model?.packages.find((node) => node.name === target.packageName);
+  const task = pkg?.tasks.find((node) => node.id === key);
+
+  return task?.name ?? null;
+};

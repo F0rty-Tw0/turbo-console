@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { join } from 'node:path';
 
 import * as vscode from 'vscode';
 
@@ -7,6 +6,7 @@ import { leafPair } from './parity-affected.spec.util.ts';
 import { affectedCase, everywhereCase } from './parity-all.spec.util.ts';
 import { buildId, buildStepOf, packagesWith, runPicked, taskNamesOf } from './parity-pick.spec.util.ts';
 import { settledRunSince } from './parity-run.spec.util.ts';
+import { manifestFileOf, openScriptCase } from './parity-script.spec.util.ts';
 import { fixedViewsCase, foldersCase, openSpecRegisteredCase } from './parity-views.spec.util.ts';
 import { taskNodeNamed } from './run-wait.spec.util.ts';
 import { log, step, waitFor } from './suite-env.spec.util.ts';
@@ -18,8 +18,6 @@ import { BUILD_TASK } from '../common/parity.const.ts';
 import type { ParityScene, PickStep } from '../common/parity.type.ts';
 
 const OPEN_LIMIT_MS = 10_000;
-
-const manifestFileOf = (root: string, pkg: ShownPackage): string => join(root, pkg.path, 'package.json');
 
 /** Drives `command`'s quick picks, then returns the settled run of `pkg`'s `build` that it launched. */
 const pickedRun = async (scene: ParityScene, command: string, pkg: ShownPackage, steps: PickStep[]): Promise<RunEntry> => {
@@ -106,6 +104,7 @@ export const parityCase = async (api: TurboConsoleApi, root: string, manifest: S
   await pickerCase(scene);
   await packageJsonCase(scene);
   await openCase(scene);
+  await openScriptCase(scene);
   await copyCase(scene);
   await everywhereCase(scene);
   await affectedCase(scene);

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { packageDirOf, packageTargetOf } from './package-target.util.ts';
+import { packageDirOf, packageTargetOf, taskNameOf } from './package-target.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { PackageTarget } from '../common/package-action.type.ts';
 import { ROOT_STATE_STUB } from '../test/stubs/root-state.stub.ts';
@@ -67,6 +67,28 @@ describe('FEATURE: package targets', () => {
       const directory = packageDirOf(gone, ROOT_STATE_STUB);
 
       expect(directory).toBeNull();
+    });
+  });
+
+  describe('GIVEN package a, which holds the task build', () => {
+    const SCRIPT_NODE = { ...TASK_TREE_NODE_STUB, key: 'a#lint' };
+
+    it('WHEN the argument is its task row THEN the name is the task name, not its id', () => {
+      const name = taskNameOf(TASK_TREE_NODE_STUB, TARGET, ROOT_STATE_STUB);
+
+      expect(name).toBe('build');
+    });
+
+    it.each<[string, unknown, RootState | undefined]>([
+      ['a package row', TREE_NODE_STUB, ROOT_STATE_STUB],
+      ['a task row the package does not hold', SCRIPT_NODE, ROOT_STATE_STUB],
+      ['a task row whose key is not a string', { ...TASK_TREE_NODE_STUB, key: 3 }, ROOT_STATE_STUB],
+      ['a task row while its root is gone', TASK_TREE_NODE_STUB, undefined],
+      ['a task row while its root has no model', TASK_TREE_NODE_STUB, NO_MODEL]
+    ])('WHEN the argument is %s THEN there is no task name', (_name, value, state) => {
+      const name = taskNameOf(value, TARGET, state);
+
+      expect(name).toBeNull();
     });
   });
 });
