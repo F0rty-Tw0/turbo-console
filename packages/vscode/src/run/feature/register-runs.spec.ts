@@ -155,6 +155,22 @@ describe('FEATURE: run commands', () => {
       });
     });
 
+    describe('WHEN Run Without Turbo is invoked and the load then settles with the binary', () => {
+      beforeEach(async () => {
+        whenSettled.mockImplementation(async () => {
+          roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
+          await Promise.resolve();
+        });
+
+        await command('turboConsole.runTaskWithoutTurbo', TASK_TREE_NODE_STUB);
+      });
+
+      it('THEN it waited for the settle and the package manager runs its script', () => {
+        expect(whenSettled).toHaveBeenCalledOnce();
+        expect(ports.executeScript).toHaveBeenCalledExactlyOnceWith({ ...REQUEST, task: SCRIPT_TASK }, 1000);
+      });
+    });
+
     describe('WHEN Run Task is invoked and the load settles without a binary', () => {
       beforeEach(async () => {
         await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
