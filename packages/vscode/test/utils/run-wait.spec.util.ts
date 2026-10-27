@@ -103,7 +103,7 @@ export const summaryMatch = async (root: string, before: string[], command: stri
   if (entry === undefined) throw new Error(`the summary of ${command} lists no ${taskId}`);
 
   const { startTime, endTime } = entry.execution;
-  const match: RunMatch = { cache: entry.cache.status, durationMs: endTime - startTime };
+  const match: RunMatch = { cache: entry.cache.status, durationMs: endTime - startTime, interrupted: false };
 
   return match;
 };

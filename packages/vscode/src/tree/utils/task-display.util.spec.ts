@@ -21,10 +21,10 @@ const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 const FAILED_ICON: IconSpec = { id: 'error', color: 'testing.iconFailed' };
 const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'descriptionForeground' };
 
-const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
-const MISS_MATCH: RunMatch = { cache: 'MISS', durationMs: 3200 };
-const SHORT_MISS_MATCH: RunMatch = { cache: 'MISS', durationMs: 400 };
-const NO_CACHE_MATCH: RunMatch = { cache: null, durationMs: 1234 };
+const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };
+const MISS_MATCH: RunMatch = { cache: 'MISS', durationMs: 3200, interrupted: false };
+const SHORT_MISS_MATCH: RunMatch = { cache: 'MISS', durationMs: 400, interrupted: false };
+const NO_CACHE_MATCH: RunMatch = { cache: null, durationMs: 1234, interrupted: false };
 
 describe('FEATURE: task item display of a turbo task', () => {
   describe('GIVEN a task that never ran', () => {

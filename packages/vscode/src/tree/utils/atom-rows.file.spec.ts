@@ -148,7 +148,7 @@ describe('FEATURE: atom file row', () => {
     });
 
     it('WHEN the run ended as a cache hit and the result failed THEN the context is cached and the text is the result', () => {
-      const match: RunMatch = { cache: 'HIT', durationMs: 100 };
+      const match: RunMatch = { cache: 'HIT', durationMs: 100, interrupted: false };
       const ended = runIn({ state: 'passed', exitCode: 0, endedAt: ROW_NOW, match });
       const row = rowOf(A_FILE_STUB, resultOf(A_FILE_STUB, FAILED_7900), ended);
 

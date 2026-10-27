@@ -10,7 +10,7 @@ import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 
-const MATCH: RunMatch = { cache: 'MISS', durationMs: 2000 };
+const MATCH: RunMatch = { cache: 'MISS', durationMs: 2000, interrupted: false };
 
 const THIS_RUN: RunEvent = { definition: RUN, launchedAt: 1000 };
 

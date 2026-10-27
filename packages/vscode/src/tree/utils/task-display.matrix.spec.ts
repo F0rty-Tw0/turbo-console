@@ -20,7 +20,7 @@ const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 const FAILED_ICON: IconSpec = { id: 'error', color: 'testing.iconFailed' };
 const STOPPED_ICON: IconSpec = { id: 'debug-stop', color: 'descriptionForeground' };
 
-const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
+const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };
 
 const entryIn = (overrides: Partial<RunEntry>): RunEntry => {
   const entry: RunEntry = { ...RUN_ENTRY_STUB, ...overrides };

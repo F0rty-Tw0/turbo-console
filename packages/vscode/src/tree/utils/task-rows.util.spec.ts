@@ -18,7 +18,7 @@ const TYPESCRIPT_ICON: IconSpec = { id: 'turbo-console-typescript', color: null 
 const RUNNING_ICON: IconSpec = { id: 'sync~spin', color: null };
 const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 
-const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
+const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };
 
 const taskOf = (overrides: Partial<TaskNode>): TaskNode => {
   const task: TaskNode = { ...TASK_NODE_STUB, id: 'a#build', ...overrides };

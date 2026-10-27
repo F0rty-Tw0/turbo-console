@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { isNearRun, matchSummary, runCommandOf } from './run-match.util.ts';
+import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
 import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
 import type { RunToMatch } from '../common/run-match.type.ts';
 import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
@@ -25,7 +26,18 @@ const OWN_ENTRY = taskEntry('web#build', TASK_SPAN, 'MISS');
 
 const DEPENDENCY_ENTRY = taskEntry('ui#build', WINDOW, 'HIT');
 
-const OWN_MATCH = { cache: 'MISS', durationMs: 500 };
+const OWN_MATCH = { cache: 'MISS', durationMs: 500, interrupted: false };
+
+/** The whole summary, `WINDOW`, cut short: turbo exits 0 on Ctrl+C with no cache status for the run. */
+const INTERRUPTED_MATCH = { cache: null, durationMs: 4000, interrupted: true };
+
+/** `summary` with `attempted` raised past the tasks it saw end: a Ctrl+C cut one of them off. */
+const cutShort = (summary: RunSummary): RunSummary => {
+  const execution = { ...summary.execution, attempted: summary.execution.attempted + 1 };
+  const cut: RunSummary = { ...summary, execution };
+
+  return cut;
+};
 
 const fileAt = (mtimeMs: number): RunSummaryFile => {
   const file: RunSummaryFile = { name: 'a.json', mtimeMs };
@@ -102,9 +114,29 @@ describe('FEATURE: run match', () => {
 
       expect(matchSummary(summary, RUN)).toBeNull();
     });
+  });
 
-    it('WHEN it lists no entry for the task THEN there is no match', () => {
+  describe('GIVEN a fitting summary of a run turbo was interrupted in', () => {
+    it('WHEN it lists no entry for the task THEN it matches as interrupted with the whole summary span', () => {
       const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY]);
+
+      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+    });
+
+    it('WHEN it lists no task, attempted 1 (turbo 2.11.7 after Ctrl+C) THEN it matches as interrupted', () => {
+      const summary = cutShort(summaryOf(COMMAND, WINDOW, 0, []));
+
+      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+    });
+
+    it('WHEN it lists the task but attempted more tasks than ended THEN it matches as interrupted', () => {
+      const summary = cutShort(summaryOf(COMMAND, WINDOW, 0, [OWN_ENTRY]));
+
+      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+    });
+
+    it('WHEN its span is broken THEN there is no match', () => {
+      const summary = summaryOf(COMMAND, { startTime: WINDOW.startTime, endTime: LAUNCHED_AT }, 0, []);
 
       expect(matchSummary(summary, RUN)).toBeNull();
     });
@@ -134,7 +166,13 @@ describe('FEATURE: run match', () => {
     it('WHEN an umbrella run is matched THEN there is no cache and the duration is the summary span', () => {
       const summary = summaryOf(umbrellaCommand, WINDOW, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task: umbrella })).toStrictEqual({ cache: null, durationMs: 4000 });
+      expect(matchSummary(summary, { ...RUN, task: umbrella })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
+    });
+
+    it('WHEN the umbrella run attempted more tasks than ended THEN it matches as interrupted', () => {
+      const summary = cutShort(summaryOf(umbrellaCommand, WINDOW, 0, [fileEntry]));
+
+      expect(matchSummary(summary, { ...RUN, task: umbrella })).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN the umbrella summary ends before it starts THEN there is no match', () => {
@@ -147,7 +185,7 @@ describe('FEATURE: run match', () => {
       const task: TaskNode = { ...TASK_NODE_STUB, id: 'web#e2e-ci--all', name: 'e2e-ci--all', kind: 'atom-aggregate' };
       const summary = summaryOf('turbo run e2e-ci--all --filter=web', WINDOW, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task })).toStrictEqual({ cache: null, durationMs: 4000 });
+      expect(matchSummary(summary, { ...RUN, task })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
     });
 
     it('WHEN an atom file run is matched THEN it has its own entry, so the entry gives the data', () => {

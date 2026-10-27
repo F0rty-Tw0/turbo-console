@@ -1,0 +1,36 @@
+import { FIXTURE_PACKAGE_MANAGER, renderLockfile } from '@turbo-console/repo-gen';
+import type { FixtureFile } from '@turbo-console/repo-gen';
+
+/** The one package of the interrupt fixture. */
+export const INTERRUPT_PACKAGE_STUB: string = '@acme/a';
+
+/**
+ * What the `slow` script prints once it runs, so a test interrupts turbo mid-task. The script builds it from two halves:
+ * the package manager echoes the script line before running it, and that echo must not hold the whole text.
+ */
+export const SLOW_READY_STUB: string = 'slow-ready';
+
+/** Prints `SLOW_READY_STUB`, then waits a minute: long past any interrupt. */
+const SLOW_SCRIPT = `node -e "console.log('slow'+'-ready');setTimeout(()=>{},60000)"`;
+
+const fileOf = (path: string, content: string): FixtureFile => {
+  const file: FixtureFile = { path, content };
+
+  return file;
+};
+
+const SCRIPTS = { slow: SLOW_SCRIPT };
+
+const PACKAGE_MANIFEST = JSON.stringify({ name: INTERRUPT_PACKAGE_STUB, scripts: SCRIPTS });
+
+const ROOT_MANIFEST = JSON.stringify({ name: 'root', private: true, packageManager: FIXTURE_PACKAGE_MANAGER });
+
+/** A one-package repo whose uncached `slow` task runs until it is interrupted. */
+export const INTERRUPT_FIXTURE_FILES_STUB: FixtureFile[] = [
+  fileOf('package.json', ROOT_MANIFEST),
+  renderLockfile([{ name: INTERRUPT_PACKAGE_STUB, path: 'packages/a', dependencies: [] }]),
+  fileOf('pnpm-workspace.yaml', 'packages:\n  - packages/*\n'),
+  fileOf('turbo.json', '{"tasks":{"slow":{"cache":false}}}'),
+  fileOf('.gitignore', '.turbo\nnode_modules\n'),
+  fileOf('packages/a/package.json', PACKAGE_MANIFEST)
+];

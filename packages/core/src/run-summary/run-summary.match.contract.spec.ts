@@ -127,12 +127,12 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
     });
 
     it('THEN the first run is a cache MISS with a duration', () => {
-      expect(first).toMatchObject({ cache: 'MISS' });
+      expect(first).toMatchObject({ cache: 'MISS', interrupted: false });
       expect(first?.durationMs).toBeGreaterThanOrEqual(0);
     });
 
     it('THEN the same run again is a cache HIT, matched apart from the first summary', () => {
-      expect(second).toMatchObject({ cache: 'HIT' });
+      expect(second).toMatchObject({ cache: 'HIT', interrupted: false });
       expect(second?.durationMs).toBeGreaterThanOrEqual(0);
     });
   });
@@ -148,7 +148,7 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
     });
 
     it('THEN turbo writes the name verbatim into the summary command, so the run matches', () => {
-      expect(match).toMatchObject({ cache: 'MISS' });
+      expect(match).toMatchObject({ cache: 'MISS', interrupted: false });
     });
   });
 
@@ -183,16 +183,16 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
 
     it(`THEN the ${FAILING_NAME} run ends with exit 3 and matches its summary as a cache MISS`, () => {
       expect(failingExit).toBe(3);
-      expect(failingMatch).toMatchObject({ cache: 'MISS' });
+      expect(failingMatch).toMatchObject({ cache: 'MISS', interrupted: false });
     });
 
-    it(`THEN the ${DEPENDENT_NAME} run fails in its dependency, whose summary has no entry for it, so it is unmatched`, () => {
+    it(`THEN the ${DEPENDENT_NAME} run fails in its dependency, whose summary has no entry for it, so it is interrupted`, () => {
       const taskIds = dependentSummary?.tasks.map((task) => task.taskId);
 
       expect(dependentExit).not.toBe(0);
       expect(dependentSummary?.execution.command).toBe(dependentCommand);
       expect(taskIds).not.toContain(dependentId);
-      expect(dependentMatch).toBeNull();
+      expect(dependentMatch).toMatchObject({ cache: null, interrupted: true });
     });
   });
 
@@ -204,7 +204,7 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
     });
 
     it('THEN its own entry gives the match a cache status', () => {
-      expect(match).toMatchObject({ cache: 'MISS' });
+      expect(match).toMatchObject({ cache: 'MISS', interrupted: false });
       expect(match?.durationMs).toBeGreaterThanOrEqual(0);
     });
   });
@@ -217,7 +217,7 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
     });
 
     it('THEN the match has no cache status, since turbo records no entry of its own for it', () => {
-      expect(match).toMatchObject({ cache: null });
+      expect(match).toMatchObject({ cache: null, interrupted: false });
       expect(match?.durationMs).toBeGreaterThanOrEqual(0);
     });
   });
@@ -230,7 +230,7 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
     });
 
     it('THEN the match has no cache status, since turbo records no entry of its own for it', () => {
-      expect(match).toMatchObject({ cache: null });
+      expect(match).toMatchObject({ cache: null, interrupted: false });
       expect(match?.durationMs).toBeGreaterThanOrEqual(0);
     });
   });

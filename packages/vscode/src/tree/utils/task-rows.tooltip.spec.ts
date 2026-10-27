@@ -12,9 +12,9 @@ const STARTED = 'Started: 2023-11-14T22:13:10.000Z';
 const ENDED_AT = 1_700_000_000_000;
 const ENDED = 'Ended: 2023-11-14T22:13:20.000Z';
 
-const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
-const MISS_MATCH: RunMatch = { cache: 'MISS', durationMs: 3200 };
-const NO_CACHE_MATCH: RunMatch = { cache: null, durationMs: 1200 };
+const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };
+const MISS_MATCH: RunMatch = { cache: 'MISS', durationMs: 3200, interrupted: false };
+const NO_CACHE_MATCH: RunMatch = { cache: null, durationMs: 1200, interrupted: false };
 
 const taskOf = (overrides: Partial<TaskNode>): TaskNode => {
   const task: TaskNode = { ...TASK_NODE_STUB, id: 'a#build', command: null, ...overrides };

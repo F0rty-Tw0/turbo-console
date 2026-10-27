@@ -6,8 +6,8 @@ import type { RunDefinition, Terminable } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
-const FIRST_MATCH: RunMatch = { cache: 'HIT', durationMs: 9999 };
-const SECOND_MATCH: RunMatch = { cache: 'MISS', durationMs: 1200 };
+const FIRST_MATCH: RunMatch = { cache: 'HIT', durationMs: 9999, interrupted: false };
+const SECOND_MATCH: RunMatch = { cache: 'MISS', durationMs: 1200, interrupted: false };
 
 const terminable = (): Terminable => {
   const execution: Terminable = { terminate: vi.fn() };

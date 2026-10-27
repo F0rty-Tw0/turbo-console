@@ -15,7 +15,7 @@ const COLOR_VAR_PATTERN = /^--vscode-[A-Za-z0-9-]+$/;
 
 const NOW = 1_000_000;
 
-const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200 };
+const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };
 
 const CONTINUOUS: TaskNode = { ...TASK_NODE_STUB, persistent: true };
 const NOT_TURBO: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
