@@ -231,6 +231,9 @@ const DETAILS_WIDTH_PX = 280;
 
 export const DEFAULT_PANEL_WIDTHS: PanelWidths = { controls: CONTROLS_WIDTH_PX, details: DETAILS_WIDTH_PX };
 
+/** What an arrow key on a sash adds to or takes off its panel's width, in px. */
+export const PANEL_KEY_STEP_PX = 16;
+
 /** Each sash's accessible name. */
 export const RESIZE_LABELS: Readonly<Record<PanelSide, string>> = { controls: 'Resize Controls', details: 'Resize Details' };
 
