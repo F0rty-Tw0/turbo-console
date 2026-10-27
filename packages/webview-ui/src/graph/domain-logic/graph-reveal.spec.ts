@@ -50,10 +50,10 @@ describe('FEATURE: PackageReveal', () => {
   });
 
   describe('GIVEN package mode with the graph placed and no layout in flight', () => {
-    it('WHEN web is revealed THEN its filters are edited and it is selected, with no zoom', () => {
+    it('WHEN web, which the filters show, is revealed THEN it is selected with no filter edit and no zoom', () => {
       reveal.request('web', 1);
 
-      expect(rig.log).toStrictEqual(['edit', 'select web']);
+      expect(rig.log).toStrictEqual(['select web']);
     });
 
     it('WHEN web is revealed at zoom 0.5 THEN the camera zooms to 1 at its pan before the select', () => {
@@ -62,7 +62,7 @@ describe('FEATURE: PackageReveal', () => {
       reveal.request('web', 1);
 
       expect(rig.view.setViewport).toHaveBeenCalledWith(1, PAN);
-      expect(rig.log).toStrictEqual(['edit', 'setViewport 1', 'select web']);
+      expect(rig.log).toStrictEqual(['setViewport 1', 'select web']);
     });
 
     it('WHEN web is revealed at zoom 0.75 THEN the camera keeps its zoom', () => {
@@ -108,13 +108,13 @@ describe('FEATURE: PackageReveal', () => {
       expect(rig.log).toStrictEqual(['toggle']);
     });
 
-    it('WHEN the package graph places THEN the filters are edited and web is selected', async () => {
+    it('WHEN the package graph places THEN web is selected', async () => {
       rig.tasks.isActive.mockReturnValue(false);
 
       reveal.placed();
       await flush();
 
-      expect(rig.log).toStrictEqual(['toggle', 'edit', 'select web']);
+      expect(rig.log).toStrictEqual(['toggle', 'select web']);
     });
   });
 
@@ -132,7 +132,7 @@ describe('FEATURE: PackageReveal', () => {
       reveal.placed();
       await flush();
 
-      expect(rig.log).toStrictEqual(['toggle', 'edit', 'select web']);
+      expect(rig.log).toStrictEqual(['toggle', 'select web']);
     });
   });
 
@@ -152,7 +152,7 @@ describe('FEATURE: PackageReveal', () => {
       reveal.placed();
       await flush();
 
-      expect(rig.log).toStrictEqual(['edit', 'select web']);
+      expect(rig.log).toStrictEqual(['select web']);
     });
   });
 
@@ -178,7 +178,7 @@ describe('FEATURE: PackageReveal', () => {
       place();
       await flush();
 
-      expect(rig.log).toStrictEqual(['fit', 'edit', 'select web']);
+      expect(rig.log).toStrictEqual(['fit', 'select web']);
     });
 
     it('WHEN web is revealed and a new hash without web places THEN it is dropped', async () => {
@@ -219,7 +219,7 @@ describe('FEATURE: PackageReveal', () => {
     it('WHEN web is revealed THEN apps expands before the select', () => {
       reveal.request('web', 1);
 
-      expect(rig.log).toStrictEqual(['edit', 'expand apps', 'select web']);
+      expect(rig.log).toStrictEqual(['expand apps', 'select web']);
     });
 
     it('WHEN api is revealed THEN apps stays collapsed', () => {

@@ -64,11 +64,16 @@ export class PackageReveal {
     if (!isLayingOut) this.finish(pending);
   }
 
+  /** Filters that already show the package are not edited, as an edit of the same filters still repaints the panel. */
   private unhide(name: string): void {
     const { controls } = this.deps.filtering;
     const { mounted, applied } = controls;
 
-    if (mounted !== null) controls.edit(mounted, revealFiltersOf(applied, mounted.graph, name));
+    if (mounted === null) return;
+
+    const next = revealFiltersOf(applied, mounted.graph, name);
+
+    if (next !== applied) controls.edit(mounted, next);
   }
 
   /** Grouped by folder, the package's collapsed folder expands; a flat page keeps its collapsed set as it is. */
