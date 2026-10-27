@@ -110,6 +110,12 @@ describe('FEATURE: GraphStateRouting', () => {
       expect(rig.tasks.enter).not.toHaveBeenCalled();
     });
 
+    it('WHEN a single-package state arrives THEN the package side is not shown it', () => {
+      rig.routing.show(SINGLE, 7);
+
+      expect(rig.packages.show).not.toHaveBeenCalled();
+    });
+
     it('WHEN a state of h1 arrives THEN the package side refreshes with it', () => {
       rig.routing.show(TASK_STATE_STUB, 7);
 
