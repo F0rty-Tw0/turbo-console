@@ -89,9 +89,10 @@ const ratioOf = (first: Rgba, second: Rgba): number => {
   return Math.round(ratio * 100) / 100;
 };
 
-/** `foreground` drawn at `opacity`, its own alpha included, over the opaque `background`. */
+/** `foreground` drawn at `opacity`, its own alpha clamped to 0 to 1 included, over the opaque `background`. */
 const blendOf = (foreground: Rgba, background: Rgba, opacity: number): Rgba => {
-  const alpha = opacity * foreground[3];
+  const ownAlpha = Math.min(Math.max(foreground[3], 0), 1);
+  const alpha = opacity * ownAlpha;
   const mix = (index: 0 | 1 | 2): number => alpha * foreground[index] + (1 - alpha) * background[index];
   const blended: Rgba = [mix(0), mix(1), mix(2), 1];
 

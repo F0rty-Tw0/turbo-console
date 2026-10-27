@@ -22,7 +22,7 @@ describe('FEATURE: dimmedOpacityOf', () => {
   /**
    * Oracles worked out apart from the source: white over black reads 3.01:1 at 0.35 and 3.66 at 0.4; `#6fc3df` over
    * black 3.13 at 0.5 and 3.60 at 0.55; black over white 2.85 at 0.4 and 3.35 at 0.45; half-alpha white over black
-   * 3.01 at 0.7 (0.35 in all) and 3.32 at 0.75; `#222222` never reaches 3.3.
+   * 3.01 at 0.7 (0.35 in all) and 3.32 at 0.75; `#222222` never reaches 3.3; an alpha of 1.5 counts as 1.
    */
   it.each([
     ['#000000', ['#ffffff'], 0.4],
@@ -30,6 +30,7 @@ describe('FEATURE: dimmedOpacityOf', () => {
     ['#ffffff', ['#000000'], 0.45],
     ['#000000', ['rgba(255, 255, 255, 0.5)'], 0.75],
     ['#000000', ['#222222'], 0.8],
+    ['#000000', ['rgba(255, 255, 255, 1.5)'], 0.4],
     ['#000000', [], 0.25]
   ])('GIVEN %s behind %j WHEN the opacity is chosen THEN it is %d', (background, foregrounds, opacity) => {
     expect(dimmedOpacityOf(background, foregrounds)).toBe(opacity);
@@ -49,7 +50,9 @@ describe('FEATURE: opaqueColourOf', () => {
     it.each([
       ['#FFFFFF22', '#121314', 'rgb(50, 50, 51)'],
       ['#00000025', '#ffffff', 'rgb(218, 218, 218)'],
-      ['rgba(255, 255, 255, 0.13)', '#121314', 'rgb(49, 50, 51)']
+      ['rgba(255, 255, 255, 0.13)', '#121314', 'rgb(49, 50, 51)'],
+      ['rgba(255, 255, 255, 1.5)', '#121314', 'rgb(255, 255, 255)'],
+      ['rgba(255, 255, 255, -0.5)', '#121314', 'rgb(18, 19, 20)']
     ])('WHEN %s is laid over %s THEN it is %s', (colour, background, expected) => {
       expect(opaqueColourOf(colour, background)).toBe(expected);
     });
