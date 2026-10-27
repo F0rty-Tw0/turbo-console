@@ -134,8 +134,10 @@ test.describe('FEATURE: graph panel sashes', () => {
         await graphHost.sendState(DETAILS_STUB);
       });
 
-      await test.step('THEN the Controls panel is still 320px wide', async (): Promise<void> =>
-        graphSashes.expectPanelWidth('graph-controls', 320));
+      await test.step('THEN both panels are still 320px wide', async (): Promise<void> => {
+        await graphSashes.expectPanelWidth('graph-controls', 320);
+        await graphSashes.expectPanelWidth('graph-details', 320);
+      });
 
       await test.step('WHEN both sashes are double-clicked', async (): Promise<void> => {
         await graphSashes.doubleClick('controls');
@@ -247,6 +249,8 @@ test.describe('FEATURE: graph panel sashes', () => {
         await graphSashes.expectPanelWidth('graph-details', 340);
       });
 
+      await test.step('AND the saved 400 and 400 are untouched', async (): Promise<void> => graphSashes.expectStillSaved(WIDE_WIDTHS));
+
       await test.step('WHEN the editor narrows to 959px, the Details overlay', async (): Promise<void> =>
         graphNarrow.setWidth(OVERLAY_WIDTH_PX));
 
@@ -262,6 +266,9 @@ test.describe('FEATURE: graph panel sashes', () => {
         await graphSashes.expectPanelWidth('graph-details', 350);
       });
 
+      await test.step('AND the saved 400 and 400 are still untouched', async (): Promise<void> =>
+        graphSashes.expectStillSaved(WIDE_WIDTHS));
+
       await test.step('WHEN Details gets ArrowRight', async (): Promise<void> => graphSashes.press('details', 'ArrowRight'));
 
       await test.step('THEN Details 334 is saved and the squeezed Controls keeps its 400', async (): Promise<void> =>
@@ -269,7 +276,10 @@ test.describe('FEATURE: graph panel sashes', () => {
 
       await test.step('WHEN the Controls sash is double-clicked', async (): Promise<void> => graphSashes.doubleClick('controls'));
 
-      await test.step('AND the editor widens back to 1280px', async (): Promise<void> => graphNarrow.setWidth(1280));
+      await test.step('THEN the reset Controls 260 is saved beside Details 334', async (): Promise<void> =>
+        graphSashes.expectSaved({ controls: 260, details: 334 }));
+
+      await test.step('WHEN the editor widens back to 1280px', async (): Promise<void> => graphNarrow.setWidth(1280));
 
       await test.step('THEN the panels are drawn at the saved 260 and 334', async (): Promise<void> => {
         await graphSashes.expectPanelWidth('graph-controls', 260);

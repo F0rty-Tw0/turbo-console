@@ -4,13 +4,16 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import type { PanelWidths } from '../../src/bridge/common/graph-view-state.type.ts';
-import { RESIZE_LABELS } from '../../src/graph/common/graph.const.ts';
+import { RESIZE_LABELS, VIEW_STATE_DEBOUNCE_MS } from '../../src/graph/common/graph.const.ts';
 import type { PanelSide } from '../../src/graph/common/panel-sash.type.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { ellipsisNameOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** How many pointer moves a drag takes to get from the grip to its target. */
 const DRAG_STEPS = 5;
+
+/** Runs in the page: resolves after `ms` ms of its own clock. */
+const waitInPage = async (ms: number): Promise<void> => new Promise((done): void => void setTimeout(done, ms));
 
 /** A sash's `aria-valuenow`, `aria-valuemax` and `aria-valuemin`; a field left out is not checked. */
 type SashValue = {
@@ -91,11 +94,24 @@ export class GraphSashes {
     await expect.poll(savedWidths).toEqual(widths);
   }
 
+  /** The save debounce has run out twice over with nothing new saved: the saved view state still carries exactly these widths. */
+  public async expectStillSaved(widths: PanelWidths): Promise<void> {
+    await this.page.evaluate(waitInPage, VIEW_STATE_DEBOUNCE_MS * 2);
+    await this.expectSaved(widths);
+  }
+
   /** The folder's "…" button shows: nothing covers it. */
   public async expectEllipsisShown(folder: string): Promise<void> {
     const ellipsis = this.page.getByRole('button', { name: ellipsisNameOf(folder), exact: true });
 
     await expect(ellipsis).toBeVisible();
+  }
+
+  /** The task's "…" is on the layer; it shows, or is hidden under the overlaid task Details panel. */
+  public async expectTaskEllipsisShown(id: string, isShown: boolean): Promise<void> {
+    const ellipsis = this.page.getByRole('button', { name: `Actions for ${id}`, exact: true, includeHidden: true });
+
+    await expect(ellipsis).toBeVisible({ visible: isShown });
   }
 
   public async expectPanelWidth(id: string, px: number): Promise<void> {
