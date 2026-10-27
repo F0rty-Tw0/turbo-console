@@ -85,7 +85,7 @@ export const TASK_DETAILS_ID = 'graph-task-details';
 /** The task details panel's lead while no task is selected. */
 export const TASK_EMPTY_LEAD_TEXT = 'Select a task to see its command, dependencies and run actions here.';
 
-/** Starts each run state class on a task node: `run-running`, `run-passed`, `run-failed`, `run-stopped`, `run-failed-to-start`. */
+/** Starts each run state class on a task node: `run-running`, `run-continuous`, `run-passed`, `run-failed`, `run-stopped`, `run-failed-to-start`. */
 export const RUN_CLASS_PREFIX = 'run-';
 
 export const RUN_LABEL = 'Run';
@@ -102,6 +102,7 @@ export const NO_COMMAND_TEXT = 'No command';
 /** The word the task panel shows beside each run state's icon. */
 export const RUN_STATE_TEXT: Readonly<Record<GraphRunState, string>> = {
   running: 'Running',
+  continuous: 'Continuous',
   passed: 'Passed',
   failed: 'Failed',
   stopped: 'Stopped',
@@ -111,6 +112,7 @@ export const RUN_STATE_TEXT: Readonly<Record<GraphRunState, string>> = {
 /** The Codicon of each run state, as the Tasks tree draws it. */
 export const RUN_STATE_ICONS: Readonly<Record<GraphRunState, RunStateIconId>> = {
   running: 'sync',
+  continuous: 'pulse',
   passed: 'pass',
   failed: 'error',
   stopped: 'debug-stop',

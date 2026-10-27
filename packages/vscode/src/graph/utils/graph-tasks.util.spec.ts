@@ -235,6 +235,37 @@ describe('FEATURE: graph runs map', () => {
     });
   });
 
+  describe('GIVEN a run entry whose launch node is persistent', () => {
+    it.each([
+      { title: 'a running turbo task', isTurboTask: true, state: 'running', expected: 'continuous' },
+      { title: 'a running script launch', isTurboTask: false, state: 'running', expected: 'continuous' },
+      { title: 'a passed task', isTurboTask: true, state: 'passed', expected: 'passed' },
+      { title: 'a failed task', isTurboTask: true, state: 'failed', expected: 'failed' },
+      { title: 'a stopped task', isTurboTask: true, state: 'stopped', expected: 'stopped' },
+      { title: 'a task that failed to start', isTurboTask: true, state: 'failed-to-start', expected: 'failed-to-start' }
+    ] as const)('WHEN $title is mapped THEN its word is $expected', ({ isTurboTask, state, expected }) => {
+      const task: TaskNode = { ...TASK_NODE_STUB, id: 'a#build', persistent: true, isTurboTask };
+      const launched = runOf(ROOT, 'a#build', state);
+      const entry: RunEntry = { ...launched, task };
+
+      const runs = runsMapOf(ROOT, LISTED, lookupOf(entry));
+
+      expect(runs).toStrictEqual({ 'a#build': expected });
+    });
+  });
+
+  describe('GIVEN a run entry whose launch node is not persistent', () => {
+    it('WHEN it is running THEN its word is running', () => {
+      const task: TaskNode = { ...TASK_NODE_STUB, id: 'a#build', persistent: false };
+      const launched = runOf(ROOT, 'a#build', 'running');
+      const entry: RunEntry = { ...launched, task };
+
+      const runs = runsMapOf(ROOT, LISTED, lookupOf(entry));
+
+      expect(runs).toStrictEqual({ 'a#build': 'running' });
+    });
+  });
+
   describe('GIVEN a run of the same id under another root', () => {
     it('WHEN the map is built THEN it is empty', () => {
       const get = lookupOf(runOf('/other', 'a#build', 'running'));

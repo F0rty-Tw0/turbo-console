@@ -20,7 +20,7 @@ export const MANIFEST_FILE_MAX = 1_024;
 export const TASK_COUNT_MAX = 100_000;
 
 /** The words of `GraphRunState` the page accepts in a `runs` message. */
-export const RUN_STATES: GraphRunState[] = ['running', 'passed', 'failed', 'stopped', 'failed-to-start'];
+export const RUN_STATES: GraphRunState[] = ['running', 'continuous', 'passed', 'failed', 'stopped', 'failed-to-start'];
 
 /** The words of `GraphAtomOutcome` the page accepts in an `atoms` message. */
 export const ATOM_OUTCOMES: GraphAtomOutcome[] = ['passed', 'failed', 'cached', 'none'];

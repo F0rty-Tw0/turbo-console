@@ -55,6 +55,7 @@ const paletteOf = (colors: ThemeColors): Palette => {
     selectionFill,
     selectionLabel,
     'run-running': runs.running,
+    'run-continuous': runs.continuous,
     'run-passed': runs.passed,
     'run-failed': runs.failed,
     'run-stopped': runs.stopped,

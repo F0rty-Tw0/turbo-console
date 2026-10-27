@@ -55,6 +55,7 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const fallbackRuns = FALLBACK_COLORS.runs;
   const runs: ThemeColors['runs'] = {
     running: valueOf('--vscode-charts-yellow', fallbackRuns.running),
+    continuous: valueOf('--vscode-charts-green', fallbackRuns.continuous),
     passed: valueOf('--vscode-testing-iconPassed', fallbackRuns.passed),
     failed: valueOf('--vscode-testing-iconFailed', fallbackRuns.failed),
     stopped: valueOf('--vscode-descriptionForeground', fallbackRuns.stopped),

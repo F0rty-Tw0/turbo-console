@@ -15,6 +15,7 @@ const DARK: Record<string, string> = {
   '--vscode-contrastBorder': '',
   '--vscode-panel-border': '#2b2b2b',
   '--vscode-charts-yellow': '#cca700',
+  '--vscode-charts-green': '#89d185',
   '--vscode-testing-iconPassed': '#73c991',
   '--vscode-testing-iconFailed': '#f14c4c',
   '--vscode-errorForeground': '#f85149',
@@ -41,6 +42,7 @@ const HC_STUB_UNSELECTED: Record<string, string> = {
 
 const DARK_RUNS: ThemeColors['runs'] = {
   running: '#cca700',
+  continuous: '#89d185',
   passed: '#73c991',
   failed: '#f14c4c',
   stopped: '#9d9d9d',
@@ -70,7 +72,7 @@ describe('FEATURE: themeColorsOf', () => {
       expect(colors).toStrictEqual(DARK_COLORS);
     });
 
-    it('WHEN the colours are read THEN only the fourteen theme variables are read', () => {
+    it('WHEN the colours are read THEN only the fifteen theme variables are read', () => {
       const read: string[] = [];
 
       themeColorsOf(cssVariableReaderMock(DARK, read));
@@ -122,6 +124,12 @@ describe('FEATURE: themeColorsOf', () => {
     const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
     expect(colors.runs.stopped).toBe(rgba);
+  });
+
+  it('GIVEN every variable blank WHEN the colours are read THEN continuous is the Light Modern charts green', () => {
+    const colors = themeColorsOf(cssVariableReaderMock({}));
+
+    expect(colors.runs.continuous).toBe('#388a34');
   });
 
   it('GIVEN every variable blank WHEN the colours are read THEN stopped is the description fallback, as the edge is', () => {

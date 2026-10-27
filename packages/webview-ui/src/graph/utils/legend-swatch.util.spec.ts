@@ -94,6 +94,14 @@ describe('FEATURE: swatchPartsOf', () => {
       expect(partAt(parts, 1).attrs['stroke']).toBe(COLORS.frame);
     });
 
+    it('WHEN its outline is the continuous run colour THEN the outline rect strokes in it', () => {
+      const continuous: LegendOutline = { colour: 'run-continuous', px: 2 };
+
+      const parts = partsOf(boxOf({ outline: continuous }));
+
+      expect(partAt(parts, 0).attrs['stroke']).toBe(COLORS.runs.continuous);
+    });
+
     it('WHEN it has an outline THEN the outline rect is grown by half the frame and outline widths on each side', () => {
       const outline = partAt(partsOf(boxOf({ outline: CACHED_OUTLINE })), 0);
 

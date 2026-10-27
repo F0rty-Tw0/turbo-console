@@ -24,7 +24,7 @@ export type GraphTask = {
 };
 
 /** The state of each task the host has run in this panel's root, by task id. */
-export type GraphRunState = 'running' | 'passed' | 'failed' | 'stopped' | 'failed-to-start';
+export type GraphRunState = 'running' | 'continuous' | 'passed' | 'failed' | 'stopped' | 'failed-to-start';
 
 /** Where a node centre sits. */
 export type Position = {

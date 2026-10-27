@@ -32,6 +32,7 @@ const TASK_TERMS = [
   TASK_BOX_TERM,
   FLOW_TERM,
   'Task running',
+  'Task continuous',
   'Task passed',
   'Task failed',
   'Task stopped',

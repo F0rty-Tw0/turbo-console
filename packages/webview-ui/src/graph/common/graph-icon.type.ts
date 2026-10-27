@@ -4,4 +4,4 @@ import type { GRAPH_ICON_IDS } from './graph-icon.const.ts';
 export type GraphIconId = (typeof GRAPH_ICON_IDS)[number];
 
 /** The ids of the Codicons that mark a task's run state. */
-export type RunStateIconId = Extract<GraphIconId, 'sync' | 'pass' | 'error' | 'debug-stop'>;
+export type RunStateIconId = Extract<GraphIconId, 'sync' | 'pulse' | 'pass' | 'error' | 'debug-stop'>;

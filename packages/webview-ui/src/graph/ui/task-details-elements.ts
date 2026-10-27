@@ -18,6 +18,7 @@ import {
 import { DETAILS_LABEL } from '../common/graph.const.ts';
 import type { TaskDependencyButton, TaskDetailsEmpty, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
 import { ownerTextOf } from '../utils/owner-text.util.ts';
+import { isLiveRun } from '../utils/task-run.util.ts';
 
 /** A button whose `data-focus` key names its twin in the next view built. */
 const focusButton = (button: HTMLButtonElement, key: string): HTMLButtonElement => {
@@ -109,6 +110,7 @@ export const buildTaskDetails = (model: TaskDetailsModel): TaskDetailsView => {
   const owner = lineOf(ownerTextOf(task.packageName, model.rootLabel));
   const command = textElement('code', 'details-code', task.command ?? NO_COMMAND_TEXT);
   const state = stateLine(model.state);
+  const isLive = isLiveRun(model.state);
   const actions = textElement('div', 'details-actions', '');
   const run = focusButton(actionButton(RUN_LABEL), 'run');
   const runNoCache = focusButton(actionButton(RUN_NO_CACHE_LABEL), 'runNoCache');
@@ -119,7 +121,7 @@ export const buildTaskDetails = (model: TaskDetailsModel): TaskDetailsView => {
   heading.tabIndex = -1;
   run.hidden = !task.isRunnable;
   runNoCache.hidden = !task.isRunnable;
-  stop.hidden = model.state !== 'running';
+  stop.hidden = !isLive;
   actions.append(run, runNoCache, stop);
   main.append(owner, command, state, actions);
   root.append(heading, main, needs);

@@ -9,6 +9,7 @@ import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 /** Each run state and its `CANVAS_RUN_COLORS` entry as Cytoscape reports it. */
 const RUN_OUTLINES: [GraphRunState, string][] = [
   ['running', 'rgb(255,255,0)'],
+  ['continuous', 'rgb(0,255,34)'],
   ['passed', 'rgb(0,255,17)'],
   ['failed', 'rgb(255,0,17)'],
   ['stopped', 'rgb(119,119,119)'],

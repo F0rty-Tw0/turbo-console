@@ -25,6 +25,7 @@ const COLOUR_OF: Record<LegendColour, string> = {
   cached: COLORS.cached,
   selectionFill: SELECTION_COLORS_STUB.fill,
   'run-running': COLORS.runs.running,
+  'run-continuous': COLORS.runs.continuous,
   'run-passed': COLORS.runs.passed,
   'run-failed': COLORS.runs.failed,
   'run-stopped': COLORS.runs.stopped,
@@ -49,6 +50,7 @@ const TASK_IDS = [
   'task-box',
   'flow',
   'run-running',
+  'run-continuous',
   'run-passed',
   'run-failed',
   'run-stopped',
@@ -232,8 +234,16 @@ describe('FEATURE: legend rows', () => {
   });
 
   describe('GIVEN the task rows', () => {
-    it('THEN they are the eleven of spec D9 with unique ids', () => {
+    it('THEN they are the twelve of spec D9 and UB5b with unique ids', () => {
       expect(LEGEND_ROWS.tasks.map((row) => row.id)).toStrictEqual(TASK_IDS);
+    });
+
+    it('THEN the continuous row follows the running row and reads Task continuous', () => {
+      const ids = LEGEND_ROWS.tasks.map((row) => row.id);
+      const { text } = rowOf('run-continuous');
+
+      expect(ids.indexOf('run-continuous')).toBe(ids.indexOf('run-running') + 1);
+      expect(text).toBe('Task continuous');
     });
   });
 

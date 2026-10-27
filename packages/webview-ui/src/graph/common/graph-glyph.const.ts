@@ -1,6 +1,7 @@
 /** The Codicon private-use character of each glyph a task or file node can show; `blank` holds the slot when there is no state. */
 export const GLYPH_CODE_POINTS = {
   sync: '\uea77',
+  pulse: '\ueb31',
   pass: '\ueba4',
   error: '\uea87',
   'debug-stop': '\uead7',

@@ -246,6 +246,10 @@ p {
   color: var(--vscode-charts-yellow);
 }
 
+.task-run-state[data-state='continuous'] .codicon {
+  color: var(--vscode-charts-green);
+}
+
 .task-run-state[data-state='passed'] .codicon {
   color: var(--vscode-testing-iconPassed);
 }
