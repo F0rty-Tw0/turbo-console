@@ -6,6 +6,8 @@ const taskSchema = object({ type: zodEnum(['run', 'stop', 'copy', 'showInTaskGra
 
 const openPackageJsonSchema = object({ type: literal('openPackageJson') });
 
+const focusInGraphSchema = object({ type: literal('focusInGraph') });
+
 const refreshSchema = object({ type: literal('refresh'), scope: zodEnum(['dryRun', 'root']) });
 
 const showOutputSchema = object({ type: literal('showOutput') });
@@ -18,6 +20,7 @@ export const webviewMessageSchema = discriminatedUnion('type', [
   readySchema,
   taskSchema,
   openPackageJsonSchema,
+  focusInGraphSchema,
   refreshSchema,
   showOutputSchema
 ]);
