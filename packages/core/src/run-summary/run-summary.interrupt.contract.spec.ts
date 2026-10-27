@@ -15,6 +15,7 @@ import {
   INTERRUPT_FIXTURE_FILES_STUB,
   INTERRUPT_PACKAGE_STUB,
   SLOW_READY_STUB,
+  SLOW_SCRIPT_MS_STUB,
   SLOW_SCRIPT_STUB
 } from './test/stubs/interrupt-fixture.stub.ts';
 import { TASK_NODE_STUB } from './test/stubs/task-node.stub.ts';
@@ -55,7 +56,7 @@ const printed = async (child: ChildProcess, text: string): Promise<void> => {
 
 /**
  * Signals the process group `child` leads (it was spawned `detached`), as Ctrl+C in a terminal signals the foreground
- * group: turbo and the task's script both get it. On macOS turbo alone waits for the script to end on its own.
+ * group. Turbo runs the package manager in a group of its own and relays the signal to it, so the script ends as well.
  */
 const signalGroup = (child: ChildProcess, signal: NodeJS.Signals): void => {
   const { pid } = child;
@@ -89,7 +90,12 @@ describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run inter
 
     const launchedAt = Date.now();
 
-    child = spawn(TURBO, turboRunArgs(SLOW, INTERRUPT_PACKAGE_STUB), { cwd: dir, env: turboEnv(process.env), detached: true });
+    // Under GITHUB_ACTIONS turbo holds a task's output until the task ends; streaming prints `slow-ready` while it runs.
+    const env = turboEnv(process.env);
+
+    env['TURBO_LOG_ORDER'] = 'stream';
+
+    child = spawn(TURBO, turboRunArgs(SLOW, INTERRUPT_PACKAGE_STUB), { cwd: dir, env, detached: true });
     const exited = once(child, 'exit');
 
     await printed(child, SLOW_READY_STUB);
@@ -109,6 +115,10 @@ describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run inter
   });
 
   describe('GIVEN a slow task interrupted once its script printed', () => {
+    it('THEN turbo ended long before the script would have: the signal came mid-task', () => {
+      expect(run.endedAt - run.launchedAt).toBeLessThan(SLOW_SCRIPT_MS_STUB / 2);
+    });
+
     it('THEN turbo exits 0, as for a passed run', () => {
       expect(run.exitCode).toBe(0);
     });

@@ -10,8 +10,11 @@ export const INTERRUPT_PACKAGE_STUB: string = '@acme/a';
  */
 export const SLOW_READY_STUB: string = 'slow-ready';
 
-/** Prints `SLOW_READY_STUB`, then waits a minute: long past any interrupt. */
-export const SLOW_SCRIPT_STUB: string = `node -e "console.log('slow'+'-ready');setTimeout(()=>{},60000)"`;
+/** How long the `slow` script waits after it prints: long past any interrupt. */
+export const SLOW_SCRIPT_MS_STUB: number = 60_000;
+
+/** Prints `SLOW_READY_STUB`, then waits `SLOW_SCRIPT_MS_STUB`. */
+export const SLOW_SCRIPT_STUB: string = `node -e "console.log('slow'+'-ready');setTimeout(()=>{},${SLOW_SCRIPT_MS_STUB})"`;
 
 const fileOf = (path: string, content: string): FixtureFile => {
   const file: FixtureFile = { path, content };
