@@ -2,17 +2,19 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 import { GraphHover } from './graph-hover.po.ts';
-import { NEXT_FRAME } from '../common/graph.const.ts';
-import type { PressPngs } from '../common/graph.type.ts';
+import { CANVAS_QUIET_MS, CANVAS_QUIET_TIMEOUT_MS, NEXT_FRAME } from '../common/graph.const.ts';
+import type { PressPngs, QuietWindow } from '../common/graph.type.ts';
 import type { ScreenClip, ViewportPoint } from '../common/playwright.type.ts';
 import { maxChannelDeltaOf } from '../test/utils/graph-press-delta.spec.util.ts';
+import { settlesQuiet } from '../test/utils/graph-quiet-canvas.spec.util.ts';
 
 /** Half the side, in px, of the square around the pointer that a press must leave unchanged. */
 const PRESS_HALF_PX = 60;
 
 /**
  * The largest channel change a press may leave: macOS CI moves a few anti-aliased link pixels by 1 level on a press,
- * while Cytoscape's press overlay moves a channel by 64 and its background circle by 38 (measured on Linux).
+ * while Cytoscape's press overlay moves a channel by 64 and its background circle by 38 (measured on Linux). The
+ * budget only holds between quiet frames: a late redraw re-rasterises labels by up to 8.
  */
 const PRESS_NOISE_LEVELS = 4;
 
@@ -32,28 +34,37 @@ const attachPngs = async ({ before, during }: PressPngs): Promise<void> => {
 /** `GraphHover`, plus what the page shows where the pointer rests: its cursor, and what a press there draws. */
 export class GraphPointer extends GraphHover {
   private pressDelta: number | null;
+  private lateRenders: number | null;
 
   public constructor(page: Page) {
     super(page);
     this.pressDelta = null;
+    this.lateRenders = null;
   }
 
   /**
    * Presses and releases the mouse where the pointer rests, keeping the largest channel change between a shot of the
-   * square around it from before the press and one from while the button is held. Shots past the noise are attached.
+   * square around it from before the press and one from while the button is held, both of a quiet canvas, and the
+   * renders after the press's own frame. Shots past the noise are attached; throws when the canvas drew during the
+   * first shot.
    */
   public async press(): Promise<void> {
     const point = this.restingPoint();
     const clip = this.clipAround(point);
 
+    await this.waitForQuietCanvas();
     await this.page.evaluate(NEXT_FRAME);
 
+    const rendersBefore = await this.renderCount();
     const before = await this.page.screenshot({ clip });
+    const rendersAtDown = await this.renderCount();
+
+    if (rendersAtDown !== rendersBefore) throw new Error('graph e2e: the canvas drew during the shot before a press');
 
     await this.page.mouse.down();
 
     try {
-      await this.page.evaluate(NEXT_FRAME);
+      this.lateRenders = await this.rendersUntilQuiet();
 
       const during = await this.page.screenshot({ clip });
       const pngs: PressPngs = { before: before.toString('base64'), during: during.toString('base64') };
@@ -74,6 +85,33 @@ export class GraphPointer extends GraphHover {
     if (pressDelta === null) throw new Error('graph e2e: no press was recorded');
 
     expect(pressDelta).toBeLessThanOrEqual(PRESS_NOISE_LEVELS);
+  }
+
+  /**
+   * Waits for the drawn nodes, then until Cytoscape draws nothing for a while, so the next input starts from a settled
+   * canvas; a freshly drawn graph still refines its textures, which a slow runner draws after the input.
+   */
+  public async waitForQuietCanvas(): Promise<void> {
+    await this.probe.waitForNodes();
+
+    const quietWindow: QuietWindow = { quietMs: CANVAS_QUIET_MS, timeoutMs: CANVAS_QUIET_TIMEOUT_MS };
+    const isQuiet = await this.page.evaluate(settlesQuiet, quietWindow);
+
+    if (!isQuiet) throw new Error(`graph e2e: the canvas kept rendering for ${CANVAS_QUIET_TIMEOUT_MS} ms`);
+  }
+
+  /** Waits two frames after the last input, then counts the renders until the canvas goes quiet. */
+  public async settle(): Promise<void> {
+    this.lateRenders = await this.rendersUntilQuiet();
+  }
+
+  /** The last `press` or `settle` saw no render after the input's own frame; throws when neither ran. */
+  public expectNoLateRender(): void {
+    const { lateRenders } = this;
+
+    if (lateRenders === null) throw new Error('graph e2e: no press or settle was recorded');
+
+    expect(lateRenders).toBe(0);
   }
 
   /** The element where the pointer rests shows `cursor`. */
@@ -97,6 +135,19 @@ export class GraphPointer extends GraphHover {
   /** The graph container draws its focus outline. */
   public async expectContainerRing(): Promise<void> {
     await expect(this.container).toHaveCSS('outline-style', 'solid');
+  }
+
+  /** The renders from two frames after the last input, when its own frame has drawn, until the canvas goes quiet. */
+  private async rendersUntilQuiet(): Promise<number> {
+    await this.page.evaluate(NEXT_FRAME);
+
+    const rendersBefore = await this.renderCount();
+
+    await this.waitForQuietCanvas();
+
+    const rendersAfter = await this.renderCount();
+
+    return rendersAfter - rendersBefore;
   }
 
   private clipAround(point: ViewportPoint): ScreenClip {

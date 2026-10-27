@@ -23,7 +23,6 @@ const graphContainer = (): HTMLElement => {
   container.tabIndex = 0;
   container.setAttribute('role', 'application');
   container.setAttribute('aria-label', GRAPH_LABEL);
-  trackPointerFocus(container);
 
   return container;
 };
@@ -71,6 +70,7 @@ const graphBody = (container: HTMLElement, flow: HTMLCanvasElement, widgets: HTM
   const body = textElement('div', 'graph-body', '');
 
   body.append(container, flow, widgets);
+  trackPointerFocus(body);
 
   return body;
 };

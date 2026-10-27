@@ -63,6 +63,15 @@ export const SHIFT_F10_SILENT_REASON = 'Chromium on macOS fires no contextmenu e
 /** An empty page, so the renderer that loads it has run almost nothing before a CPU read. */
 export const BLANK_PAGE = 'data:text/html,<p>blank</p>';
 
+/**
+ * Cytoscape's texture caches redraw late: the layered cache refines 50 ms after a render, then the element cache batches
+ * its redraw for 100 ms more, so 250 ms of no render, with a margin for slow frames, means the chain ran out.
+ */
+export const CANVAS_QUIET_MS = 250;
+
+/** The longest a canvas is given to go quiet. */
+export const CANVAS_QUIET_TIMEOUT_MS = 3000;
+
 /** Resolves after two frames, so the effects of the last input have run. */
 export const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))';
 

@@ -31,10 +31,13 @@ export const listenCursor = (cy: Core, paint: CursorPaint): void => {
   cy.on('mouseout viewport', onLeave);
 };
 
-/** The painter that marks the Cytoscape container; nothing while headless. */
+/**
+ * The painter that marks the element holding the Cytoscape container; nothing while headless. Not the container itself:
+ * Cytoscape redraws the whole canvas 100 ms after any attribute change on its container.
+ */
 export const containerPainterOf = (cy: Core): CursorPaint => {
   const paint = (isOver: boolean): void => {
-    cy.container()?.classList.toggle(OVER_ELEMENT_CLASS, isOver);
+    cy.container()?.parentElement?.classList.toggle(OVER_ELEMENT_CLASS, isOver);
   };
 
   return paint;

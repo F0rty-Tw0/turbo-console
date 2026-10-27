@@ -165,6 +165,12 @@ export type TitleBandInk = {
   readonly nearSides: number;
 };
 
+/** How long the canvas must draw nothing, and how long to wait for that, in ms. */
+export type QuietWindow = {
+  readonly quietMs: number;
+  readonly timeoutMs: number;
+};
+
 /** Two base64 PNGs of the same clip: before a press and while its button is held. */
 export type PressPngs = {
   readonly before: string;
