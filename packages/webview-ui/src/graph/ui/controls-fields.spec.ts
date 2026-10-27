@@ -4,12 +4,12 @@ import { depthInput, hintedField } from './controls-fields.ts';
 import { DEPTH_HINT, DEPTH_HINT_ID, DEPTH_LABEL } from '../common/graph.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
-const titleOf = (element: Element): string => String(Reflect.get(element, 'title'));
+const isHtmlElement = (element: Element | undefined): element is HTMLElement => element !== undefined && 'title' in element;
 
-const childOf = (parent: Element, index: number): Element => {
+const childOf = (parent: Element, index: number): HTMLElement => {
   const child = parent.children[index];
 
-  if (child === undefined) throw new Error(`no child ${index}`);
+  if (!isHtmlElement(child)) throw new Error(`no element child ${index}`);
 
   return child;
 };
@@ -31,7 +31,7 @@ describe('FEATURE: hinted controls field', () => {
       const hint = childOf(group, 1);
       const caption = childOf(label, 0);
 
-      expect([input.getAttribute('aria-describedby'), hint.id, hint.textContent, titleOf(label), caption.textContent]).toStrictEqual([
+      expect([input.getAttribute('aria-describedby'), hint.id, hint.textContent, label.title, caption.textContent]).toStrictEqual([
         DEPTH_HINT_ID,
         DEPTH_HINT_ID,
         DEPTH_HINT,
