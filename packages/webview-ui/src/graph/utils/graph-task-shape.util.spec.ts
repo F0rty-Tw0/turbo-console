@@ -34,7 +34,7 @@ describe('FEATURE: graph task list shape', () => {
 describe('FEATURE: runs record shape', () => {
   it.each([
     ['an empty record', {}],
-    ['every run state', { a: 'running', b: 'passed', c: 'failed', d: 'stopped', e: 'failed-to-start' }]
+    ['every run state', { a: 'running', b: 'passed', c: 'failed', d: 'stopped', e: 'failed-to-start', f: 'continuous' }]
   ])('GIVEN %s WHEN checked THEN it is a runs record', (_label, value) => {
     expect(isRunsRecord(value)).toBe(true);
   });

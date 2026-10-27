@@ -7,6 +7,7 @@ import { edgeIdOf } from '../../utils/edge-id.util.ts';
 /** One distinct colour per run state. */
 export const CANVAS_RUN_COLORS: ThemeColors['runs'] = {
   running: '#ff0',
+  continuous: '#0f2',
   passed: '#0f1',
   failed: '#f01',
   stopped: '#777',

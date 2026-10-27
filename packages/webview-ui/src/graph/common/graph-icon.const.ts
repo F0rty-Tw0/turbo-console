@@ -23,6 +23,7 @@ export const GRAPH_ICON_IDS = [
   'desktop-download',
   'tasklist',
   'sync',
+  'pulse',
   'pass',
   'error',
   'debug-stop',

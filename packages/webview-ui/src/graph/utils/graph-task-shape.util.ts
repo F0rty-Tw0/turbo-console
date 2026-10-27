@@ -21,7 +21,7 @@ export const isGraphTaskList = (value: unknown): boolean => Array.isArray(value)
 
 const isRunState = (value: unknown): boolean => RUN_STATES.some((state) => state === value);
 
-/** A `runs` message's record: task ids to the five run-state words. */
+/** A `runs` message's record: task ids to the six run-state words. */
 export const isRunsRecord = (value: unknown): boolean => {
   if (!isRecord(value) || Array.isArray(value)) return false;
 

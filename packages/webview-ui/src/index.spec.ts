@@ -189,7 +189,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphEdgeExplainedMessage>().toEqualTypeOf<ExpectedExplainedMessage>();
       expectTypeOf<GraphStateMessage>().toEqualTypeOf<ExpectedStateMessage>();
       expectTypeOf<GraphTask>().toEqualTypeOf<ExpectedTask>();
-      expectTypeOf<GraphRunState>().toEqualTypeOf<'running' | 'passed' | 'failed' | 'stopped' | 'failed-to-start'>();
+      expectTypeOf<GraphRunState>().toEqualTypeOf<'running' | 'continuous' | 'passed' | 'failed' | 'stopped' | 'failed-to-start'>();
       expectTypeOf<GraphReady['tasks']>().toEqualTypeOf<GraphTask[]>();
       expectTypeOf<GraphReady['atomGroups']>().toEqualTypeOf<GraphAtomGroup[]>();
       expectTypeOf<GraphAtomGroup>().toEqualTypeOf<ExpectedAtomGroup>();

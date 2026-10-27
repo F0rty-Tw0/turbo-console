@@ -1,3 +1,4 @@
+import { isLiveRun } from './task-run.util.ts';
 import { itemOf } from './widget-menu-model.util.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { RUN_LABEL, RUN_NO_CACHE_LABEL, STOP_LABEL } from '../common/graph-task.const.ts';
@@ -15,7 +16,8 @@ export const taskMenuOf = (task: GraphTask, state: GraphRunState | null, actions
   const runItems: MenuItemModel[] = [run, runNoCache];
   const stopItems: MenuItemModel[] = [stop];
   const runs = task.isRunnable ? runItems : NO_ITEMS;
-  const stops = state === 'running' ? stopItems : NO_ITEMS;
+  const isLive = isLiveRun(state);
+  const stops = isLive ? stopItems : NO_ITEMS;
   const model: MenuItemModel[] = [...runs, ...stops];
 
   return model;

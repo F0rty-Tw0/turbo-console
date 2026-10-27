@@ -102,6 +102,7 @@ export const NO_COMMAND_TEXT = 'No command';
 /** The word the task panel shows beside each run state's icon. */
 export const RUN_STATE_TEXT: Readonly<Record<GraphRunState, string>> = {
   running: 'Running',
+  continuous: 'Continuous',
   passed: 'Passed',
   failed: 'Failed',
   stopped: 'Stopped',
@@ -111,6 +112,7 @@ export const RUN_STATE_TEXT: Readonly<Record<GraphRunState, string>> = {
 /** The Codicon of each run state, as the Tasks tree draws it. */
 export const RUN_STATE_ICONS: Readonly<Record<GraphRunState, RunStateIconId>> = {
   running: 'sync',
+  continuous: 'pulse',
   passed: 'pass',
   failed: 'error',
   stopped: 'debug-stop',

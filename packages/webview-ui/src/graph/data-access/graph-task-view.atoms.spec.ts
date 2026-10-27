@@ -97,6 +97,24 @@ describe('FEATURE: the task canvas with an expanded Atomizer group', () => {
     });
   });
 
+  describe('GIVEN only the umbrella is continuous before its group expands', () => {
+    it('WHEN the group expands and the runs are marked again THEN the file takes no run class', () => {
+      tasks.runStates({ 'web#e2e-ci': 'continuous' });
+      atoms.expand(SPEC, 'pkg:web', {});
+      tasks.remark();
+
+      expect(cy.getElementById(SPACED).hasClass('run-continuous')).toBe(false);
+    });
+
+    it('WHEN the file has its own continuous entry THEN it takes run-continuous', () => {
+      tasks.runStates({ [SPACED]: 'continuous' });
+      atoms.expand(SPEC, 'pkg:web', {});
+      tasks.remark();
+
+      expect(cy.getElementById(SPACED).hasClass('run-continuous')).toBe(true);
+    });
+  });
+
   describe('GIVEN the group is expanded and a task is selected', () => {
     beforeEach(() => {
       atoms.expand(SPEC, 'pkg:web', {});

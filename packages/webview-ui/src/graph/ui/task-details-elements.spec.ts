@@ -14,6 +14,8 @@ const STOPPED_NO_COMMAND: TaskDetailsModel = { task: TASK_NO_COMMAND, state: 'st
 
 const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [API_BUILD_STUB], rootLabel: null };
 
+const CONTINUOUS: TaskDetailsModel = { ...RUNNING, state: 'continuous' };
+
 const NEVER_RUN: TaskDetailsModel = { ...RUNNING, state: null };
 
 const ROOT_BUILD: TaskDetailsModel = { task: ROOT_BUILD_STUB, state: null, dependencies: [], rootLabel: 'single-app' };
@@ -84,6 +86,14 @@ describe('FEATURE: task details elements', () => {
       expect(dependency?.task).toBe(API_BUILD_STUB);
       expect(dependency?.button.textContent).toBe('api#build');
     });
+  });
+
+  it('GIVEN a continuous task WHEN built THEN the state reads Continuous and Stop is shown', () => {
+    const els = buildTaskDetails(CONTINUOUS);
+
+    expect(els.state).toMatchObject({ textContent: 'Continuous', hidden: false });
+    expect(els.state.getAttribute('data-state')).toBe('continuous');
+    expect(els.stop.hidden).toBe(false);
   });
 
   it('GIVEN a task that never ran WHEN built THEN the state line is hidden and Stop too', () => {

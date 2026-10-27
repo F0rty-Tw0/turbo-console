@@ -19,6 +19,12 @@ describe('FEATURE: taskMenuOf', () => {
     { title: 'a runnable task, idle', task: GRAPH_TASK_STUB, state: null, expected: ['Run', 'Run without cache'] },
     { title: 'a runnable task that passed', task: GRAPH_TASK_STUB, state: 'passed', expected: ['Run', 'Run without cache'] },
     { title: 'a runnable task, running', task: GRAPH_TASK_STUB, state: 'running', expected: ['Run', 'Run without cache', 'Stop'] },
+    {
+      title: 'a runnable task, continuous',
+      task: GRAPH_TASK_STUB,
+      state: 'continuous',
+      expected: ['Run', 'Run without cache', 'Stop']
+    },
     { title: 'a task that is not runnable, idle', task: NOT_RUNNABLE, state: null, expected: [] },
     { title: 'a task that is not runnable, running', task: NOT_RUNNABLE, state: 'running', expected: ['Stop'] }
   ] as const)('GIVEN $title WHEN its menu is listed THEN it reads $expected', ({ task, state, expected }) => {

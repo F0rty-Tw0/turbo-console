@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { runMessageOf, runStateOf, taskDetailsModelOf, taskWithId } from './task-run.util.ts';
+import { isLiveRun, runMessageOf, runStateOf, taskDetailsModelOf, taskWithId } from './task-run.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskDetailsModel, TaskRuns } from '../common/task-details.type.ts';
 import { API_BUILD_STUB, GRAPH_TASK_STUB, TASK_CHAIN_STUB, WEB_BUILD_STUB, WEB_LINT_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -10,6 +10,8 @@ const RUNS: TaskRuns = { 'a#build': 'running', 'api#build': 'failed' };
 const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], rootLabel: null };
 
 const PASSED: TaskDetailsModel = { ...RUNNING, state: 'passed' };
+
+const CONTINUOUS: TaskDetailsModel = { ...RUNNING, state: 'continuous' };
 
 const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
 
@@ -33,6 +35,22 @@ describe('FEATURE: task runs', () => {
       const state = runStateOf(RUNS, 'toString');
 
       expect(state).toBeNull();
+    });
+  });
+
+  describe('GIVEN isLiveRun', () => {
+    it.each([
+      { state: 'running', expected: true },
+      { state: 'continuous', expected: true },
+      { state: 'passed', expected: false },
+      { state: 'failed', expected: false },
+      { state: 'stopped', expected: false },
+      { state: 'failed-to-start', expected: false },
+      { state: null, expected: false }
+    ] as const)('WHEN the state is $state THEN it is live: $expected', ({ state, expected }) => {
+      const isLive = isLiveRun(state);
+
+      expect(isLive).toBe(expected);
     });
   });
 
@@ -87,6 +105,12 @@ describe('FEATURE: task runs', () => {
 
       expect(message).toStrictEqual({ type: 'stopTask', taskId: 'a#build' });
     });
+  });
+
+  it('GIVEN a continuous task WHEN Stop is asked THEN stopTask is the message', () => {
+    const message = runMessageOf(CONTINUOUS, 'stop');
+
+    expect(message).toStrictEqual({ type: 'stopTask', taskId: 'a#build' });
   });
 
   it('GIVEN a passed task WHEN Stop is asked THEN there is no message', () => {

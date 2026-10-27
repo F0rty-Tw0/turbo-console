@@ -29,8 +29,13 @@ export const taskDetailsModelOf = (
   return model;
 };
 
+/** Whether a run is still going: a one-shot `running` or a persistent `continuous` one. */
+export const isLiveRun = (state: GraphRunState | null): boolean => state === 'running' || state === 'continuous';
+
 const stopMessageOf = (model: TaskDetailsModel): GraphWebviewMessage | null => {
-  if (model.state !== 'running') return null;
+  const isLive = isLiveRun(model.state);
+
+  if (!isLive) return null;
 
   const message: GraphWebviewMessage = { type: 'stopTask', taskId: model.task.id };
 

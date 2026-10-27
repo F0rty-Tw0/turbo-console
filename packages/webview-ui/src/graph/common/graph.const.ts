@@ -79,6 +79,7 @@ const FALLBACK_DESCRIPTION = '#717171';
 /** Light Modern run colours; stopped shares the description fallback. */
 const FALLBACK_RUN_COLORS: ThemeColors['runs'] = {
   running: '#bf8803',
+  continuous: '#388a34',
   passed: '#388a34',
   failed: '#f14c4c',
   stopped: FALLBACK_DESCRIPTION,

@@ -6,6 +6,7 @@ describe('FEATURE: node glyph', () => {
   describe('GIVEN the classes of a task or file node', () => {
     it.each([
       [['task', 'run-running'], '\uea77'],
+      [['task', 'run-continuous'], '\ueb31'],
       [['task', 'run-passed'], '\ueba4'],
       [['task', 'run-failed'], '\uea87'],
       [['task', 'run-failed-to-start'], '\uea87'],
