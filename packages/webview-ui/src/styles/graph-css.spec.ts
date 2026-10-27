@@ -167,6 +167,14 @@ describe('FEATURE: graph.css', () => {
     });
   });
 
+  describe('GIVEN the empty task notice rule', () => {
+    const declarations = declarationsOf(css, '.graph-task-notice:empty');
+
+    it.each(['margin: 0', 'padding: 0', 'border: 0'])('WHEN it is read THEN it holds %s', (expected) => {
+      expect(declarations).toContain(expected);
+    });
+  });
+
   it('GIVEN the filters-on rule WHEN it is read THEN it uses the info foreground', () => {
     const declarations = declarationsOf(css, '.filters-on');
 

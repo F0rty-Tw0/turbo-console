@@ -130,6 +130,13 @@ p {
   background: var(--vscode-inputValidation-warningBackground);
 }
 
+/* The task notice is shown empty for a moment before its text arrives, so a screen reader announces it; empty, it draws nothing. */
+.graph-task-notice:empty {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .graph-notice-text,
 .graph-task-banner-text {
   flex: 1 1 auto;
