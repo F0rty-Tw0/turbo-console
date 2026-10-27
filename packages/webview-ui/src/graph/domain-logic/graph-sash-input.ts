@@ -8,7 +8,8 @@ const PRIMARY_BUTTON = 0;
 /**
  * Wires one sash to its panel: a pointer drag resizes from where the sash was grabbed while it holds the pointer and
  * saves when it lets go of it after a move, a double click resets, and the arrow, Home and End keys resize and save.
- * Any other key is left alone so Tab still moves on.
+ * Any other key, and any key with a modifier held, is left alone so Tab and the
+ * browser's shortcuts still work.
  */
 export const wireSashInput = (side: PanelSide, sash: HTMLElement, sashes: SashResizer, body: HTMLElement): void => {
   let grabOffset = 0;
@@ -45,6 +46,10 @@ export const wireSashInput = (side: PanelSide, sash: HTMLElement, sashes: SashRe
     sashes.resize(side, gripWidth + grabOffset);
   };
   const onKeyDown = (event: KeyboardEvent): void => {
+    const hasModifier = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
+
+    if (hasModifier) return;
+
     const next = sashKeyWidthOf(side, event.key, sashes.widthOf(side), sashes.maxOf(side));
 
     if (next === null) return;

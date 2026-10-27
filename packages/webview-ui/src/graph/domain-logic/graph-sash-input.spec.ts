@@ -158,6 +158,15 @@ describe('FEATURE: wireSashInput', () => {
       expect(event.defaultPrevented).toBe(false);
     });
 
+    it.each(['ctrlKey', 'altKey', 'metaKey', 'shiftKey'])('WHEN an arrow key comes with %s held THEN it is left alone', (modifier) => {
+      const event = keyOf('ArrowRight', { [modifier]: true });
+
+      sash.dispatchEvent(event);
+
+      expect(page.resize).not.toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(false);
+    });
+
     it('WHEN the sash is double-clicked THEN its side is reset', () => {
       sash.dispatchEvent(new Event('dblclick'));
 
