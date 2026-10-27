@@ -81,12 +81,15 @@ describe('FEATURE: PackageReveal', () => {
       expect(rig.log).toStrictEqual([]);
     });
 
-    it('WHEN a name the graph lacks is revealed and a layout places later THEN it was dropped', async () => {
+    it('WHEN a name the graph lacks is revealed and a graph with it places later THEN it was dropped', async () => {
+      const withZzz: DrawnGraph = { ...GRAPH, packages: ['web', 'api', 'zzz'] };
+
       reveal.request('zzz', 1);
+      rig.drawn.mockReturnValue(withZzz);
       reveal.placed();
       await flush();
 
-      expect(rig.log).toStrictEqual([]);
+      expect(rig.inspection.select).not.toHaveBeenCalled();
     });
 
     it('WHEN a layout places with nothing revealed THEN nothing happens', async () => {
@@ -248,12 +251,14 @@ describe('FEATURE: PackageReveal', () => {
     });
   });
 
-  it('GIVEN flat with apps in the collapsed set WHEN web is revealed THEN no folder expands', () => {
-    rig.collapsed.add('apps');
+  describe('GIVEN flat with apps in the collapsed set', () => {
+    it('WHEN web is revealed THEN no folder expands', () => {
+      rig.collapsed.add('apps');
 
-    reveal.request('web', 1);
+      reveal.request('web', 1);
 
-    expect(rig.folders.expand).not.toHaveBeenCalled();
+      expect(rig.folders.expand).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN task mode on, web excluded and apps collapsed while grouped', () => {
