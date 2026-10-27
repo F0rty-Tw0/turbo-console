@@ -17,7 +17,7 @@ Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 ## Good to know
 
 - A run from a task row or from Run Turbo Task… passes `--summarize`, so turbo adds one file per run to `.turbo/runs` in your workspace. Turbo never prunes that folder and the extension never deletes it. Run Task in All Packages… and Run Affected… do not write a summary.
-- Turbo's default `stream` UI never passes what you type to a task, and shows a line of output only once that line is complete. For a script that prompts or streams output, use Run Without Turbo. Turbo Console's runs pass no `--ui`, so a `"ui"` set in your `turbo.json` applies; turbo's `tui` passes input only to tasks marked `interactive` and `persistent`.
+- Turbo's default `stream` UI never passes what you type to a task, and shows a line of output only once that line is complete. For a script that prompts or streams output, use Run Without Turbo. Turbo Console's runs pass no `--ui`, so a `"ui"` set in your `turbo.json` applies; turbo's `tui` passes input only to a task marked `interactive`, once you focus it.
 - Run Affected… needs a git repository, because turbo works out what changed from git.
 - `turboConsole.turboPath` is machine-scoped: set it in your user settings. A workspace's `.vscode/settings.json` cannot change which turbo binary runs.
 
