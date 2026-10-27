@@ -182,6 +182,9 @@ test.describe('FEATURE: graph panel sashes', () => {
       await test.step('AND every Details action button still fits its label', async (): Promise<void> =>
         graphSashes.expectDetailsButtonsFit());
 
+      await test.step('AND every Details action label sits on one line', async (): Promise<void> =>
+        graphSashes.expectDetailsLabelsOnOneLine());
+
       await test.step('WHEN Controls gets ArrowRight, ArrowLeft and ArrowDown', async (): Promise<void> => {
         await graphSashes.press('controls', 'ArrowRight');
         await graphSashes.expectPanelWidth('graph-controls', 276);
@@ -226,10 +229,10 @@ test.describe('FEATURE: graph panel sashes', () => {
       await test.step('AND the "…" no longer sits under the overlay and shows', async (): Promise<void> =>
         graphSashes.expectEllipsisShown('apps'));
 
-      await test.step('AND with apps inspected every folder action button still fits its label', async (): Promise<void> => {
-        await graphFolderInspect.tapFolder('apps');
-        await graphSashes.expectDetailsButtonsFit();
-      });
+      await test.step('WHEN the apps box is tapped', async (): Promise<void> => graphFolderInspect.tapFolder('apps'));
+
+      await test.step('THEN every folder action button still fits its label', async (): Promise<void> =>
+        graphSashes.expectDetailsButtonsFit());
 
       await test.step('WHEN Details gets ArrowLeft', async (): Promise<void> => graphSashes.press('details', 'ArrowLeft'));
 

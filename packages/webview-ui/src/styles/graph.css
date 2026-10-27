@@ -1012,16 +1012,20 @@ kbd {
   gap: var(--space-2);
 }
 
-/* A label wider than its column ("Exclude folder" in a wide UI font) wraps onto a second line instead of spilling. */
+/*
+ * A label wider than its column ("Exclude folder" in a wide UI font) wraps between its words instead of spilling. A
+ * single word too wide still spills (no `anywhere` break from `.details-view`), so the e2e fit check can see it.
+ */
 .details-row .text-button {
   justify-content: center;
   padding-inline: var(--space-1);
   text-align: center;
+  overflow-wrap: normal;
 }
 
 /*
  * A Details panel sashed towards its 200px minimum has no room for three labels such as "Start trace" a row. At the
- * default 280px (255px of content) three still fit, with little to spare.
+ * default 280px (255px of content) three package labels still fit in common UI fonts.
  */
 @container (width < 240px) {
   .details-row {

@@ -132,6 +132,32 @@ export class GraphSashes {
     await expect.poll(overflowingOf).toEqual([]);
   }
 
+  /** Each action button label in the Details row sits on one line: the row has enough columns for its labels. */
+  public async expectDetailsLabelsOnOneLine(): Promise<void> {
+    const buttons = this.page.locator('#graph-details .details-row button');
+    const wrappedOf = async (): Promise<string[]> => {
+      const labels = await buttons.evaluateAll((elements): string[] => {
+        const linesOf = (element: Element): number => {
+          const range = document.createRange();
+
+          range.selectNodeContents(element);
+
+          const rects = Array.from(range.getClientRects());
+          const tops = rects.map((rect) => Math.round(rect.top));
+
+          return new Set(tops).size;
+        };
+
+        return elements.filter((element) => linesOf(element) > 1).map((element) => element.textContent);
+      });
+
+      return labels;
+    };
+
+    await expect(buttons.first()).toBeVisible();
+    await expect.poll(wrappedOf).toEqual([]);
+  }
+
   public async expectPanelWidth(id: string, px: number): Promise<void> {
     const panel = this.page.locator(`#${id}`);
     const widthOf = async (): Promise<number> => panel.evaluate((element): number => element.getBoundingClientRect().width);
