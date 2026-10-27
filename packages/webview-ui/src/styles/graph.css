@@ -549,8 +549,10 @@ p {
 }
 
 .graph-controls {
+  --tc-controls-width: inherit;
+
   display: flex;
-  flex: 0 0 var(--tc-controls-width, 260px);
+  flex: 0 0 var(--tc-controls-width);
   box-sizing: border-box;
   flex-direction: column;
   gap: var(--space-2);
@@ -741,8 +743,10 @@ kbd {
 /* Details panel: docked beside the canvas, or over it in a narrow editor. */
 
 .graph-details {
+  --tc-details-width: inherit;
+
   display: flex;
-  flex: 0 0 var(--tc-details-width, 280px);
+  flex: 0 0 var(--tc-details-width);
   box-sizing: border-box;
   flex-direction: column;
   gap: var(--space-2);
@@ -758,11 +762,27 @@ kbd {
   .graph-details {
     position: absolute;
     z-index: 2;
-    width: var(--tc-details-width, 280px);
+    width: var(--tc-details-width);
     inset-block: 0;
     inset-inline-end: 0;
     box-shadow: -2px 0 8px var(--vscode-widget-shadow);
   }
+}
+
+/*
+ * The panel widths GraphPanelSashes writes on the body. They do not inherit, so a drag restyles only the four elements that
+ * pull the value in with `inherit`, not the whole graph under the body. The initial values are the default widths.
+ */
+@property --tc-controls-width {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 260px;
+}
+
+@property --tc-details-width {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 280px;
 }
 
 /*
@@ -780,11 +800,15 @@ kbd {
 }
 
 .graph-sash-controls {
-  inset-inline-start: calc(var(--tc-controls-width, 260px) - 2px);
+  --tc-controls-width: inherit;
+
+  inset-inline-start: calc(var(--tc-controls-width) - 2px);
 }
 
 .graph-sash-details {
-  inset-inline-end: calc(var(--tc-details-width, 280px) - 2px);
+  --tc-details-width: inherit;
+
+  inset-inline-end: calc(var(--tc-details-width) - 2px);
 }
 
 .graph-sash::after {

@@ -71,25 +71,37 @@ describe('FEATURE: graph.css', () => {
   describe('GIVEN the controls panel rule', () => {
     const declarations = declarationsOf(css, '.graph-controls');
 
-    it.each(['flex: 0 0 var(--tc-controls-width, 260px)', 'box-sizing: border-box'])(
-      'WHEN it is read THEN it holds %s',
-      (expected) => {
-        expect(declarations).toContain(expected);
-      }
-    );
+    it.each(['flex: 0 0 var(--tc-controls-width)', 'box-sizing: border-box'])('WHEN it is read THEN it holds %s', (expected) => {
+      expect(declarations).toContain(expected);
+    });
   });
 
   describe('GIVEN the details panel rule', () => {
     const declarations = declarationsOf(css, '.graph-details');
 
     it.each([
-      'flex: 0 0 var(--tc-details-width, 280px)',
+      'flex: 0 0 var(--tc-details-width)',
       'box-sizing: border-box',
       'var(--vscode-sideBar-background)',
       'var(--vscode-sideBar-foreground)',
       'border-inline-start: 1px solid var(--vscode-panel-border)'
     ])('WHEN it is read THEN it holds %s', (expected) => {
       expect(declarations).toContain(expected);
+    });
+  });
+
+  describe('GIVEN the panel width variables', () => {
+    it.each([
+      ['@property --tc-controls-width', 'initial-value: 260px'],
+      ['@property --tc-details-width', 'initial-value: 280px'],
+      ['@property --tc-controls-width', 'inherits: false'],
+      ['@property --tc-details-width', 'inherits: false'],
+      ['.graph-controls', '--tc-controls-width: inherit'],
+      ['.graph-details', '--tc-details-width: inherit'],
+      ['.graph-sash-controls', '--tc-controls-width: inherit'],
+      ['.graph-sash-details', '--tc-details-width: inherit']
+    ])('WHEN %s is read THEN it holds %s', (selector, expected) => {
+      expect(declarationsOf(css, selector)).toContain(expected);
     });
   });
 
@@ -112,7 +124,7 @@ describe('FEATURE: graph.css', () => {
       expect(start).toBeGreaterThan(-1);
     });
 
-    it.each(['position: absolute', 'width: var(--tc-details-width, 280px)', 'var(--vscode-widget-shadow)'])(
+    it.each(['position: absolute', 'width: var(--tc-details-width)', 'var(--vscode-widget-shadow)'])(
       'WHEN its details rule is read THEN it holds %s',
       (expected) => {
         expect(declarations).toContain(expected);
