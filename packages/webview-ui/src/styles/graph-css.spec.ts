@@ -133,7 +133,7 @@ describe('FEATURE: graph.css', () => {
     });
   });
 
-  describe('GIVEN the pressed toggle rule', () => {
+  describe('GIVEN the pressed mode button rule', () => {
     it.each(['activeForeground', 'activeBackground', 'activeBorder'])('WHEN it is read THEN it uses inputOption-%s', (name) => {
       const declarations = declarationsOf(css, PRESSED_SELECTOR);
 
