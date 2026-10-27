@@ -166,7 +166,7 @@ export class GraphHover {
   }
 
   /** The Cytoscape `render` events since the page opened. */
-  private async renderCount(): Promise<number> {
+  protected async renderCount(): Promise<number> {
     return this.page.evaluate((): number => window.__tcGraphProbe?.renderCount() ?? 0);
   }
 

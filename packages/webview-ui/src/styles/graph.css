@@ -217,7 +217,11 @@ p {
   cursor: default;
 }
 
-.graph-container.over-element {
+/*
+ * The pointer classes go on the body, not the container: Cytoscape redraws the whole canvas 100 ms after any attribute
+ * change on its container.
+ */
+.graph-body.over-element > .graph-container {
   cursor: pointer;
 }
 
@@ -229,7 +233,7 @@ p {
  * A tap focuses the container from script, which the browser still treats as keyboard focus; no ring until a key is
  * pressed.
  */
-.graph-container.pointer-focus:focus-visible {
+.graph-body.pointer-focus > .graph-container:focus-visible {
   outline: none;
 }
 

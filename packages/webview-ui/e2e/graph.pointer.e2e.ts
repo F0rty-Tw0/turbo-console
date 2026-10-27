@@ -16,9 +16,17 @@ test.describe('FEATURE: graph pointer', () => {
 
       await test.step('THEN the cursor there is a pointer', async (): Promise<void> => graphPointer.expectCursor('pointer'));
 
+      await test.step('WHEN the canvas settles', async (): Promise<void> => graphPointer.settle());
+
+      await test.step('THEN it drew no frame after the hover', (): void => graphPointer.expectNoLateRender());
+
       await test.step('WHEN the pointer moves onto the web to ui link', async (): Promise<void> => graphPointer.overLink('web', 'ui'));
 
       await test.step('THEN the cursor there is a pointer', async (): Promise<void> => graphPointer.expectCursor('pointer'));
+
+      await test.step('WHEN the canvas settles', async (): Promise<void> => graphPointer.settle());
+
+      await test.step('THEN it drew no frame after the hover', (): void => graphPointer.expectNoLateRender());
 
       await test.step('WHEN the pointer moves to empty canvas', async (): Promise<void> => graphPointer.overBackground());
 
@@ -47,17 +55,23 @@ test.describe('FEATURE: graph pointer', () => {
 
       await test.step('THEN no pixel around web changed', (): void => graphPointer.expectPressDrewNothing());
 
+      await test.step('AND the canvas drew no frame after the press', (): void => graphPointer.expectNoLateRender());
+
       await test.step('WHEN the pointer moves onto the web to ui link', async (): Promise<void> => graphPointer.overLink('web', 'ui'));
 
       await test.step('AND the mouse is pressed there', async (): Promise<void> => graphPointer.press());
 
       await test.step('THEN no pixel around the link changed', (): void => graphPointer.expectPressDrewNothing());
 
+      await test.step('AND the canvas drew no frame after the press', (): void => graphPointer.expectNoLateRender());
+
       await test.step('WHEN the pointer moves to empty canvas', async (): Promise<void> => graphPointer.overBackground());
 
       await test.step('AND the mouse is pressed there', async (): Promise<void> => graphPointer.press());
 
       await test.step('THEN no pixel around the pointer changed', (): void => graphPointer.expectPressDrewNothing());
+
+      await test.step('AND the canvas drew no frame after the press', (): void => graphPointer.expectNoLateRender());
     }
   );
 });
