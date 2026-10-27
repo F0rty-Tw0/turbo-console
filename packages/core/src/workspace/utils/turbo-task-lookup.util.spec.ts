@@ -14,6 +14,13 @@ const KEYS: KeyRow[] = [
   { title: 'a bare key of // in single-package mode', key: 'build', packageName: '//', singlePackage: true, expected: 'build' },
   { title: 'a bare key of // in a monorepo', key: 'build', packageName: '//', singlePackage: false, expected: null },
   { title: 'an own qualified key of //', key: '//#lint', packageName: '//', singlePackage: false, expected: 'lint' },
+  {
+    title: 'an own qualified key of // in single-package mode',
+    key: '//#lint',
+    packageName: '//',
+    singlePackage: true,
+    expected: null
+  },
   { title: 'a key of another package, single-package', key: 'web#build', packageName: '//', singlePackage: true, expected: null },
   { title: 'a bare key of a package', key: 'build', packageName: 'web', singlePackage: false, expected: 'build' }
 ];
