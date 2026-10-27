@@ -136,6 +136,17 @@ describe('FEATURE: renderLegend', () => {
     expect([svg.getAttribute('viewBox'), svg.getAttribute('aria-hidden')]).toStrictEqual(['0 0 40 20', 'true']);
   });
 
+  it.each([
+    ['dimmed', FALLBACK_COLORS.dimmedOpacity],
+    ['package', 1]
+  ])('WHEN the %s row is read THEN its svg root has opacity %s', (rowId, opacity) => {
+    const index = LEGEND_ROWS.packages.findIndex((row): boolean => row.id === rowId);
+    const row = childOf(elements.legendLists.packages, index);
+    const svg = childOf(childOf(row, 1), 0);
+
+    expect(svg.getAttribute('opacity')).toBe(String(opacity));
+  });
+
   it('WHEN it renders again THEN the rows are replaced, not added', () => {
     renderLegend(elements, FALLBACK_COLORS);
 

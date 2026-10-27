@@ -14,14 +14,15 @@ const svgPartOf = (part: SvgPart): SVGElement => {
   return element;
 };
 
-/** A 40 x 20 swatch of `parts`, hidden from assistive tech: the row's term already says what it shows. */
-export const legendSvgOf = (parts: SvgPart[]): SVGSVGElement => {
+/** A 40 x 20 swatch of `parts` at `opacity`, hidden from assistive tech: the row's term already says what it shows. */
+export const legendSvgOf = (parts: SvgPart[], opacity: number): SVGSVGElement => {
   const svg = document.createElementNS(SVG_NS, 'svg');
   const children = parts.map(svgPartOf);
 
   svg.setAttribute('viewBox', '0 0 40 20');
   svg.setAttribute('width', '40');
   svg.setAttribute('height', '20');
+  svg.setAttribute('opacity', String(opacity));
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
   svg.append(...children);

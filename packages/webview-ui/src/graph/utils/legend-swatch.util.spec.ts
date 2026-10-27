@@ -42,8 +42,6 @@ const tagsOf = (parts: SvgPart[]): string[] => parts.map((part): string => part.
 
 const textPartOf = (parts: SvgPart[]): SvgPart => parts.find((part): boolean => part.tag === 'text') ?? NO_PART;
 
-const opacitiesOf = (parts: SvgPart[]): (string | undefined)[] => parts.map((part): string | undefined => part.attrs['opacity']);
-
 describe('FEATURE: swatchPartsOf', () => {
   describe('GIVEN a box swatch', () => {
     it('WHEN it is solid THEN its rect carries the frame, the width and the fill, and no dash', () => {
@@ -90,18 +88,6 @@ describe('FEATURE: swatchPartsOf', () => {
       const text = textPartOf(partsOf(boxOf({ isBold })));
 
       expect(text.attrs['font-weight']).toBe(weight);
-    });
-
-    it('WHEN it is dimmed THEN every part has the dimmed opacity', () => {
-      const opacities = opacitiesOf(partsOf(boxOf({ isDimmed: true })));
-
-      expect(opacities).toStrictEqual([String(COLORS.dimmedOpacity), String(COLORS.dimmedOpacity)]);
-    });
-
-    it('WHEN it is not dimmed THEN no part has an opacity', () => {
-      const opacities = opacitiesOf(partsOf(BOX_SWATCH));
-
-      expect(opacities).toStrictEqual([undefined, undefined]);
     });
 
     it('WHEN it has an outline THEN a transparent rect in the outline colour and width comes first', () => {

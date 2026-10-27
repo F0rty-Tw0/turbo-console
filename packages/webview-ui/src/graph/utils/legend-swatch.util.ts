@@ -178,15 +178,10 @@ const shapePartsOf = (swatch: LegendSwatch, palette: Palette): SvgPart[] => {
   return boxPartsOf(swatch, palette);
 };
 
-/** The SVG parts of one legend swatch in a 40 x 20 viewBox, in `colors`; a dimmed swatch fades every part. */
+/** The SVG parts of one legend swatch in a 40 x 20 viewBox, in `colors`. */
 export const swatchPartsOf = (swatch: LegendSwatch, colors: ThemeColors): SvgPart[] => {
   const palette = paletteOf(colors);
   const parts = shapePartsOf(swatch, palette);
 
-  if (!swatch.isDimmed) return parts;
-
-  const opacity = String(colors.dimmedOpacity);
-  const dimmedOf = (part: SvgPart): SvgPart => partOf(part.tag, { ...part.attrs, opacity }, part.text);
-
-  return parts.map(dimmedOf);
+  return parts;
 };

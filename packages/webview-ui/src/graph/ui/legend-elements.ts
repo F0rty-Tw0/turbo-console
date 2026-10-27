@@ -73,7 +73,8 @@ const legendRowOf = (row: LegendRow, colors: ThemeColors): HTMLElement => {
   const term = textElement('dt', '', row.text);
   const swatch = textElement('dd', '', '');
   const parts = swatchPartsOf(row.swatch, colors);
-  const svg = legendSvgOf(parts);
+  const opacity = row.swatch.isDimmed ? colors.dimmedOpacity : 1;
+  const svg = legendSvgOf(parts, opacity);
 
   swatch.append(svg);
   element.append(term, swatch);
