@@ -1,4 +1,4 @@
-import { setClearEnabled } from './details-bar.ts';
+import { showDetailsBar } from './details-bar-shown.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { DetailsContext } from '../common/graph-details.type.ts';
 import type { CanvasShown, GraphInspectionDeps, ShownParts } from '../common/graph-inspection.type.ts';
@@ -48,7 +48,7 @@ export const showInspectionBar = (
 
   deps.page.status.textContent = status;
   deps.page.detailsSummary.textContent = status;
-  setClearEnabled(deps.page, inspection.kind !== 'none');
+  showDetailsBar(deps.page, inspection.kind !== 'none');
 };
 
 /** `current` kept, narrowed or dropped for a new visible set; `null` while the page shows no graph. */

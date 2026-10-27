@@ -1,4 +1,4 @@
-import { setClearEnabled } from './details-bar.ts';
+import { showDetailsBar } from './details-bar-shown.ts';
 import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskDetailsDeps, TaskDetailsModel, TaskDetailsView, TaskRunAction } from '../common/task-details.type.ts';
@@ -80,7 +80,7 @@ export class GraphTaskDetails {
     const isClearHiding = model === null && document.activeElement === this.deps.page.clear;
 
     this.model = model;
-    this.renderClear();
+    this.renderBar();
 
     if (model === null) {
       const empty = this.deps.views.empty();
@@ -155,10 +155,10 @@ export class GraphTaskDetails {
   private render(): void {
     this.panel.hidden = !this.isOpen;
     this.deps.page.details.setAttribute('aria-expanded', String(this.isOpen));
-    this.renderClear();
+    this.renderBar();
   }
 
-  private renderClear(): void {
-    if (this.isActive) setClearEnabled(this.deps.page, this.model !== null);
+  private renderBar(): void {
+    if (this.isActive) showDetailsBar(this.deps.page, this.model !== null);
   }
 }
