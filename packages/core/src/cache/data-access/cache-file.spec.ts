@@ -58,10 +58,11 @@ const ROUND_TRIPS: [string, CacheEntry][] = [
 ];
 
 /**
- * Every format before `singlePackage` and `label` (v6): 1 before the task-name fix, 2 before `isTurboTask`, 3 before
- * `persistent`, 4 before `packageManager`, 5 before `singlePackage` and `label`.
+ * Every format before single-package scripts (v7): 1 before the task-name fix, 2 before `isTurboTask`, 3 before
+ * `persistent`, 4 before `packageManager`, 5 before `singlePackage` and `label`, 6 while every single-package script
+ * was a turbo task.
  */
-const OLD_VERSIONS = [1, 2, 3, 4, 5];
+const OLD_VERSIONS = [1, 2, 3, 4, 5, 6];
 
 /** One package manager per source kind a cache file can hold. */
 const PACKAGE_MANAGERS: [string, PackageManager][] = [
