@@ -2,12 +2,19 @@ import assert from 'node:assert/strict';
 
 import * as vscode from 'vscode';
 
+import { scriptKeysOf } from './scripts-tree.spec.util.ts';
 import { step } from './suite-env.spec.util.ts';
 import { packageNodes, tooltipLinesOf } from './tree-polish-tree.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { CONTINUOUS_KIND_LINES } from '../../src/tree/common/task-text.const.ts';
 import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
-import { PERSISTENT_ROOT_ID, ROOT_PACKAGE, SINGLE_APP_NAME, SINGLE_TASK_IDS } from '../common/single-package.const.ts';
+import {
+  PERSISTENT_ROOT_ID,
+  ROOT_PACKAGE,
+  SINGLE_APP_NAME,
+  SINGLE_SCRIPT_IDS,
+  SINGLE_TASK_IDS
+} from '../common/single-package.const.ts';
 
 const isTask = (node: TreeNode): boolean => node.kind === 'task';
 
@@ -26,11 +33,11 @@ const showsContinuous = (api: TurboConsoleApi): ((node: TreeNode) => boolean) =>
 
 /**
  * L11-1 (spec §2.1, §2.4): the single-package root shows as one package row, `single-app` at `.`, and its children are
- * the five task rows keyed `//#<name>`, only `//#dev` marked continuous. `format` has no `turbo.json` key, so its row
- * here proves a script is a turbo task.
+ * the four task rows keyed `//#<name>`, only `//#dev` marked continuous. `format` has no `turbo.json` key, so it is a
+ * script, hidden by default.
  */
 export const rowAndTasksCase = async (api: TurboConsoleApi): Promise<void> => {
-  await step('L11-1: one single-app package row at ., five task rows, only dev continuous', async () => {
+  await step('L11-1: one single-app package row at ., four task rows, only dev continuous', async () => {
     const packages = await packageNodes(api);
     const [pkg] = packages;
 
@@ -67,5 +74,24 @@ export const themeIconCase = async (api: TurboConsoleApi, root: string): Promise
     assert.ok(icon instanceof vscode.ThemeIcon, 'the // row has no ThemeIcon');
     assert.equal(icon.id, 'folder');
     assert.equal(item.resourceUri?.fsPath, root);
+  });
+};
+
+/**
+ * L11-7 (B2-6): Show Scripts puts the unkeyed `format` under a Scripts group of the `//` row, as for a monorepo package;
+ * Hide Scripts takes it away again, so the later cases see the default.
+ */
+export const scriptsCase = async (api: TurboConsoleApi): Promise<void> => {
+  await step('L11-7: Show Scripts lists the unkeyed format under the // Scripts group', async () => {
+    await vscode.commands.executeCommand('turboConsole.showScripts');
+
+    const shown = await scriptKeysOf(api, ROOT_PACKAGE);
+
+    await vscode.commands.executeCommand('turboConsole.hideScripts');
+
+    const hidden = await scriptKeysOf(api, ROOT_PACKAGE);
+
+    assert.deepEqual(shown, SINGLE_SCRIPT_IDS);
+    assert.deepEqual(hidden, []);
   });
 };

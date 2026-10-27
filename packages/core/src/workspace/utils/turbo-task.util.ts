@@ -142,8 +142,8 @@ const applyTasks = (tasks: Map<string, TurboTaskFacts>, config: TurboConfigOk): 
  * bare and `<pkg>#<task>` keys, then the parent chain of `chainOf`; an entry of exactly `{ "extends": false }` drops
  * the task. So a parent's exclusion hides only a task another parent package defines, never a root task. Applied
  * last-wins from the lowest priority up. `turbo query` lists a package script with no such key all the same, and
- * `turbo run` of a name no config defines exits 1. `null` when it cannot tell: no parsed root config, or a chain
- * `chainOf` cannot build.
+ * `turbo run` of a name no config defines exits 1 (a single-package turbo runs it uncached). `null` when it cannot tell:
+ * no parsed root config, or a chain `chainOf` cannot build.
  *
  * Runs once per package, so a package with no config and no `<pkg>#` root key gets the root index's shared `bareTasks`,
  * never a copy. The root package never does: its dir `.` always holds the root config.

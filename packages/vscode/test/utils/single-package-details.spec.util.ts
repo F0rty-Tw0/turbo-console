@@ -17,7 +17,7 @@ const idOf = (card: TaskCard): string => card.taskId;
 
 const manifestOf = (root: string): string => join(root, 'package.json');
 
-/** The heading facts and the five cards of the root package, every card with its definition and cache status, and no task graph. */
+/** The heading facts and the four turbo task cards of the root package (scripts hidden), every card with its definition and cache status, and no task graph. */
 const assertDetailsState = (state: PackageDetails): void => {
   const cardIds = state.tasks.map(idOf).sort();
   const unresolved = state.tasks.filter(isUnresolved).map(idOf);
@@ -55,9 +55,9 @@ export const detailsCase = async (api: TurboConsoleApi, root: string): Promise<v
   });
 };
 
-/** L11-4 (spec §2.4): the root `package.json` holds one Tasks lens counting the five tasks, `build` among them. */
+/** L11-4 (spec §2.4): the root `package.json` holds one Tasks lens counting the four turbo tasks (scripts hidden), `build` among them. */
 export const lensCase = async (root: string): Promise<void> => {
-  await step('L11-4: the root package.json holds one Tasks lens of five', async () => {
+  await step('L11-4: the root package.json holds one Tasks lens of four', async () => {
     const titles = await lensTitlesOf(manifestOf(root));
     const [title] = titles;
 
