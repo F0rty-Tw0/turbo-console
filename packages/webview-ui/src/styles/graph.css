@@ -781,8 +781,13 @@ kbd {
   cursor: pointer;
 }
 
-.icon-button:hover {
+.icon-button:hover:not(:disabled) {
   background: var(--vscode-toolbar-hoverBackground);
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .details-guide {

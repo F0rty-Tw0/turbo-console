@@ -113,6 +113,26 @@ describe('FEATURE: graph.css', () => {
     });
   });
 
+  describe('GIVEN the icon button rules', () => {
+    it('WHEN the disabled rule is read THEN it dims the button', () => {
+      const declarations = declarationsOf(css, '.icon-button:disabled');
+
+      expect(declarations).toContain('opacity: 0.5');
+    });
+
+    it('WHEN the hover rule is read THEN it is gated on enabled and uses toolbar-hoverBackground', () => {
+      const declarations = declarationsOf(css, '.icon-button:hover:not(:disabled)');
+
+      expect(declarations).toContain('toolbar-hoverBackground');
+    });
+
+    it('WHEN the ungated hover selector is looked up THEN no rule has it', () => {
+      const ungatedStart = ruleStartOf('.icon-button:hover');
+
+      expect(ungatedStart).toBe(-1);
+    });
+  });
+
   describe('GIVEN the pressed toggle rule', () => {
     it.each(['activeForeground', 'activeBackground', 'activeBorder'])('WHEN it is read THEN it uses inputOption-%s', (name) => {
       const declarations = declarationsOf(css, PRESSED_SELECTOR);
