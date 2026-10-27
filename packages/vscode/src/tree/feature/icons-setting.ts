@@ -1,13 +1,10 @@
-import { readFile, stat } from 'node:fs/promises';
-
 import * as vscode from 'vscode';
 
 import type { Output } from '../../shared/common/output.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { IconThemePorts, IconThemeProbe } from '../common/icon-theme.type.ts';
+import type { IconThemeProbe } from '../common/icon-theme.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import type { IconsSetting } from '../common/tree-row.type.ts';
-import { IconThemeFolders } from '../domain-logic/icon-theme-folders.ts';
 import { iconModeOf, iconsSettingOf } from '../utils/icons-mode.util.ts';
 
 /** The `turboConsole.icons` setting now. */
@@ -16,28 +13,6 @@ export const currentIconsSetting = (): IconsSetting => {
   const value = settings.get<unknown>('icons');
 
   return iconsSettingOf(value);
-};
-
-const editorIconThemePorts = (): IconThemePorts => {
-  const ports: IconThemePorts = {
-    themeId: () => {
-      const workbench = vscode.workspace.getConfiguration('workbench');
-      const id = workbench.get<unknown>('iconTheme');
-
-      if (typeof id === 'string') return id;
-
-      return null;
-    },
-    extensions: () => [...vscode.extensions.all],
-    size: async (path) => {
-      const stats = await stat(path);
-
-      return stats.size;
-    },
-    read: async (path) => readFile(path)
-  };
-
-  return ports;
 };
 
 /**
@@ -50,7 +25,7 @@ export const watchIcons = (
   tree: Pick<PackagesTreeApi, 'setIcons'>,
   subscriptions: vscode.Disposable[],
   output: Output,
-  folders: IconThemeProbe = new IconThemeFolders(editorIconThemePorts())
+  folders: IconThemeProbe
 ): void => {
   let latest = 0;
   const logAsUnknown = (error: unknown): null => {

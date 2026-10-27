@@ -8,8 +8,10 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
+import type { IconThemeProbe } from '../common/icon-theme.type.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
+import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
 
 type SettingsListener = (event: ConfigurationChangeEvent) => void;
@@ -64,6 +66,7 @@ describe('FEATURE: registerTree settings', () => {
   let tree: PackagesTreeApi;
   let subscriptions: Disposable[];
   let output: Output;
+  let iconTheme: IconThemeProbe;
 
   const changeSetting = (key: string, value: unknown): void => {
     const listener = editor.onDidChangeConfiguration.mock.calls.at(0)?.[0];
@@ -74,8 +77,9 @@ describe('FEATURE: registerTree settings', () => {
 
   beforeEach(() => {
     subscriptions = [];
+    iconTheme = iconThemeProbeMock();
     const workspaceState: ScopeStore = { get: (): unknown => undefined, update: async (): Promise<void> => Promise.resolve() };
-    const context: TreeContext = { subscriptions, workspaceState, scripts: scriptsToggleMock() };
+    const context: TreeContext = { subscriptions, workspaceState, scripts: scriptsToggleMock(), iconTheme };
     const session: Session = {
       store: new RootStore(),
       setWorkspaceFolders: vi.fn(async () => Promise.resolve([])),
@@ -96,8 +100,8 @@ describe('FEATURE: registerTree settings', () => {
   });
 
   describe('GIVEN a registered tree', () => {
-    it('WHEN it is registered THEN the icons are watched with the tree, the subscriptions and the output', () => {
-      expect(watchIcons).toHaveBeenCalledExactlyOnceWith(tree, subscriptions, output);
+    it('WHEN it is registered THEN the icons are watched with the tree, the subscriptions, the output and the icon theme probe', () => {
+      expect(watchIcons).toHaveBeenCalledExactlyOnceWith(tree, subscriptions, output, iconTheme);
     });
 
     it('WHEN turboConsole.icons changes THEN the settings listener leaves the icons to watchIcons', () => {

@@ -28,10 +28,12 @@ import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
 import type { TreeContext } from './tree/common/tree-context.type.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
 import { editorAtomPorts } from './tree/data-access/atom-ports.ts';
+import { editorIconThemePorts } from './tree/data-access/icon-theme-ports.ts';
 import { editorOpenSpecPorts } from './tree/data-access/open-spec-ports.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
 import { tickerPortsOf } from './tree/data-access/ticker-ports.ts';
 import { ElapsedTicker } from './tree/domain-logic/elapsed-ticker.ts';
+import { IconThemeFolders } from './tree/domain-logic/icon-theme-folders.ts';
 import { sharedAtomsOf } from './tree/domain-logic/shared-atoms.ts';
 import { TreeVisibility } from './tree/domain-logic/tree-visibility.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
@@ -87,10 +89,10 @@ const startTimings = (): TimingsStart => {
   return started;
 };
 
-/** What `registerTree` reads of the extension context, with the scripts toggle beside it. */
+/** What `registerTree` reads of the extension context, with the scripts toggle and the icon theme's folder probe beside it. */
 const contextOf = (context: vscode.ExtensionContext, scripts: ScriptsToggleApi): TreeContext => {
   const { subscriptions, workspaceState } = context;
-  const treeContext: TreeContext = { subscriptions, workspaceState, scripts };
+  const treeContext: TreeContext = { subscriptions, workspaceState, scripts, iconTheme: new IconThemeFolders(editorIconThemePorts()) };
 
   return treeContext;
 };

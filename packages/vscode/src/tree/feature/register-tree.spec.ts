@@ -10,6 +10,7 @@ import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
+import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
 
 type CommandCallback = () => unknown;
@@ -120,7 +121,7 @@ describe('FEATURE: registerTree scope toggle', () => {
       }
     };
 
-    context = { subscriptions: [], workspaceState, scripts: scriptsToggleMock() };
+    context = { subscriptions: [], workspaceState, scripts: scriptsToggleMock(), iconTheme: iconThemeProbeMock() };
     session = {
       store: new RootStore(),
       setWorkspaceFolders: vi.fn(async () => Promise.resolve([])),

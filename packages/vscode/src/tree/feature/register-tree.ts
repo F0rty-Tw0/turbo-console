@@ -150,7 +150,7 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
   });
 
   session.setVisible(view.visible);
-  watchIcons(tree, context.subscriptions, output);
+  watchIcons(tree, context.subscriptions, output, context.iconTheme);
   context.subscriptions.push(
     view,
     { dispose: unsubscribe },
