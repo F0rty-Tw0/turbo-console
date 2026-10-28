@@ -359,14 +359,16 @@ describe('FEATURE: taskPanelOf prompt', () => {
     expect(document.activeElement).toBe(rig.container);
   });
 
-  it('GIVEN a new shown set WHEN the panel shows it THEN onShown fires once, after the prompt is written', () => {
-    rig.actions.onShown.mockImplementation((): void => {
-      expect(rig.showEvery.textContent).toBe(showEveryTextOf(4));
+  describe('GIVEN a new shown set', () => {
+    it('WHEN the panel shows it THEN onShown fires once, after the prompt is written', () => {
+      rig.actions.onShown.mockImplementation((): void => {
+        expect(rig.showEvery.textContent).toBe(showEveryTextOf(4));
+      });
+
+      rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount: 4 });
+
+      expect(rig.actions.onShown).toHaveBeenCalledOnce();
     });
-
-    rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount: 4 });
-
-    expect(rig.actions.onShown).toHaveBeenCalledOnce();
   });
 });
 
