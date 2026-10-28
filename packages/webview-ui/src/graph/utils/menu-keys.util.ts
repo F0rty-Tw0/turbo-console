@@ -24,17 +24,25 @@ export const menuIndexOf = (key: string, index: number, count: number): number |
   }
 };
 
-const TOOLBAR_KEYS: ReadonlyMap<string, string> = new Map([
-  ['ArrowRight', 'ArrowDown'],
-  ['ArrowLeft', 'ArrowUp'],
-  ['Home', 'Home'],
-  ['End', 'End']
-]);
+const mappedKeyOf = (key: string): string | null => {
+  switch (key) {
+    case 'ArrowRight':
+      return 'ArrowDown';
+    case 'ArrowLeft':
+      return 'ArrowUp';
+    case 'Home':
+    case 'End':
+      return key;
+    default:
+      return null;
+  }
+};
 
 /** A toolbar's Left/Right/Home/End, wrapping, as `menuIndexOf` does for a menu; `null`: the key moves nothing. */
 export const toolbarIndexOf = (key: string, index: number, count: number): number | null => {
-  const mapped = TOOLBAR_KEYS.get(key);
-  if (mapped === undefined) return null;
+  const mapped = mappedKeyOf(key);
+
+  if (mapped === null) return null;
 
   return menuIndexOf(mapped, index, count);
 };
