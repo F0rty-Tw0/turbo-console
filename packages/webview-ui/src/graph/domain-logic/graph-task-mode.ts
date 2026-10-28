@@ -70,7 +70,7 @@ export class GraphTaskMode {
     const shownSet = this.memory.shownSet();
     const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.umbrellaSizers());
     const shownKey = this.layout.key();
-    const knownCount = state.tasks.length;
+    const knownCount = this.memory.tasks().length;
 
     this.selection.setShown(request.tasks);
 
