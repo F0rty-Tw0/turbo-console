@@ -40,7 +40,9 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
   const widgets = new GraphTaskWidgets({ page, view, views: widgetViews, bridge, isActive, overlay, aside: (): HTMLElement => aside });
   const onToggle = (detailsOpen: boolean): void => saveDetailsToggle({ view, modes: hooks.modes }, widgets, detailsOpen);
   const views = { ...taskDetailsViews, panel: (): DetailsElements => elements };
-  const detailsOf = (actions: TaskDetailsActions): TaskDetails => new GraphTaskDetails({ page, views, bridge, actions, onToggle });
+  const onShowPackage = hooks.showPackage;
+  const detailsOf = (actions: TaskDetailsActions): TaskDetails =>
+    new GraphTaskDetails({ page, views, bridge, actions, onToggle, onShowPackage });
   const widgetsOf = (): TaskWidgets => widgets;
   const screen = layoutScreenOf(page);
   const onFailure = (error: unknown): void => {

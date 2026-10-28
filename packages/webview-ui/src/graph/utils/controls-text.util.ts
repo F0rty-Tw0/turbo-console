@@ -31,6 +31,9 @@ export const showLabelOf = (name: string): string => `Show ${name}`;
 
 export const focusLabelOf = (name: string): string => `Focus ${name}`;
 
+/** The task details owner button's name: it shows the task's package in the package graph. */
+export const showPackageLabelOf = (name: string): string => `Show package ${name}`;
+
 export const folderToggleTextOf = (isCollapsed: boolean): string => (isCollapsed ? 'Expand' : 'Collapse');
 
 export const folderToggleLabelOf = (title: string, isCollapsed: boolean): string =>

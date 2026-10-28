@@ -3,11 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { isLiveRun, runMessageOf, runStateOf, taskDetailsModelOf, taskWithId } from './task-run.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskDetailsModel, TaskRuns } from '../common/task-details.type.ts';
-import { API_BUILD_STUB, GRAPH_TASK_STUB, TASK_CHAIN_STUB, WEB_BUILD_STUB, WEB_LINT_STUB } from '../test/stubs/graph-task.stub.ts';
+import {
+  API_BUILD_STUB,
+  GRAPH_TASK_STUB,
+  MORE_TASKS_STATE_STUB,
+  TASK_CHAIN_STUB,
+  WEB_BUILD_STUB,
+  WEB_LINT_STUB
+} from '../test/stubs/graph-task.stub.ts';
 
 const RUNS: TaskRuns = { 'a#build': 'running', 'api#build': 'failed' };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], rootLabel: null };
+const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
 
 const PASSED: TaskDetailsModel = { ...RUNNING, state: 'passed' };
 
@@ -16,6 +23,12 @@ const CONTINUOUS: TaskDetailsModel = { ...RUNNING, state: 'continuous' };
 const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
 
 const NOT_RUNNABLE: TaskDetailsModel = { ...RUNNING, task: NOT_RUNNABLE_TASK };
+
+/** `api#test`, a second direct dependent of `api#build`. */
+const API_TEST: GraphTask = { ...API_BUILD_STUB, id: 'api#test', name: 'test', dependencies: ['api#build'] };
+
+/** `api#test` first, then api#build, web#build → api#build, web#lint and web#test → web#build. */
+const SHOWN_WITH_TESTS: GraphTask[] = [API_TEST, ...MORE_TASKS_STATE_STUB.tasks];
 
 describe('FEATURE: task runs', () => {
   describe('GIVEN runStateOf over a runs map', () => {
@@ -73,7 +86,7 @@ describe('FEATURE: task runs', () => {
       const model = taskDetailsModelOf(WEB_BUILD_STUB, TASK_CHAIN_STUB, RUNS, null);
 
       const dependencies = [API_BUILD_STUB];
-      const expected: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, dependencies, rootLabel: null };
+      const expected: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, dependencies, dependents: [], rootLabel: null };
 
       expect(model).toStrictEqual(expected);
     });
@@ -84,6 +97,27 @@ describe('FEATURE: task runs', () => {
       const model = taskDetailsModelOf(WEB_BUILD_STUB, shown, RUNS, null);
 
       expect(model.dependencies).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN taskDetailsModelOf over api#test, the chain and web#test', () => {
+    it.each([
+      { id: 'api#build', expected: ['api#test', 'web#build'] },
+      { id: 'web#build', expected: ['web#test'] },
+      { id: 'web#test', expected: [] }
+    ])('WHEN $id is modelled THEN its direct shown dependents are $expected in shown order', ({ id, expected }) => {
+      const task = taskWithId(SHOWN_WITH_TESTS, id) ?? GRAPH_TASK_STUB;
+      const model = taskDetailsModelOf(task, SHOWN_WITH_TESTS, RUNS, null);
+
+      expect(model.dependents.map((dependent) => dependent.id)).toStrictEqual(expected);
+    });
+
+    it('WHEN web#test is not shown THEN web#build lists no dependent', () => {
+      const shown = SHOWN_WITH_TESTS.filter((task) => task.id !== 'web#test');
+
+      const model = taskDetailsModelOf(WEB_BUILD_STUB, shown, RUNS, null);
+
+      expect(model.dependents).toStrictEqual([]);
     });
   });
 

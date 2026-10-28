@@ -9,8 +9,10 @@ import { runMessageOf } from '../utils/task-run.util.ts';
 const HEADING_KEY = 'heading';
 
 const buttonsOf = (view: TaskDetailsView): HTMLButtonElement[] => {
-  const dependencies = view.dependencies.map((dependency) => dependency.button);
-  const buttons = [view.run, view.runNoCache, view.stop, ...dependencies];
+  const tasks = [...view.dependencies, ...view.dependents];
+  const named = tasks.map((dependency) => dependency.button);
+  const slots = [view.owner, view.run, view.runNoCache, view.stop, ...named];
+  const buttons = slots.filter((button) => button !== null);
 
   return buttons;
 };
@@ -109,7 +111,18 @@ export class GraphTaskDetails {
     view.runNoCache.addEventListener('click', (): void => act('runNoCache'));
     view.stop.addEventListener('click', (): void => act('stop'));
 
-    for (const { task, button } of view.dependencies) button.addEventListener('click', (): void => this.pick(model, task.id));
+    view.owner?.addEventListener('click', (): void => this.showPackage(model));
+
+    const tasks = [...view.dependencies, ...view.dependents];
+
+    for (const { task, button } of tasks) button.addEventListener('click', (): void => this.pick(model, task.id));
+  }
+
+  /** Shows the task's package in the package graph, only from a click on the view of the task shown now, in task mode. */
+  private showPackage(model: TaskDetailsModel): void {
+    const isShown = this.isShown(model);
+
+    if (isShown) this.deps.onShowPackage(model.task.packageName);
   }
 
   /** Posts the button's message, only from a click on the view of the task shown now, in task mode. */

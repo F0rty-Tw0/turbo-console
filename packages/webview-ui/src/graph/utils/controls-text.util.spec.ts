@@ -11,7 +11,8 @@ import {
   folderToggleTextOf,
   groupLabelOf,
   showAllTextOf,
-  showLabelOf
+  showLabelOf,
+  showPackageLabelOf
 } from './controls-text.util.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
 
@@ -83,6 +84,12 @@ describe('FEATURE: controls text', () => {
       const label = focusLabelOf('web');
 
       expect(label).toBe('Focus web');
+    });
+
+    it('WHEN its show package label is built THEN it reads Show package web', () => {
+      const label = showPackageLabelOf('web');
+
+      expect(label).toBe('Show package web');
     });
   });
 

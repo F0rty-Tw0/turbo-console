@@ -10,7 +10,7 @@ import { DETAILS_ID } from '../common/graph.const.ts';
 import type { TaskDetailsActions, TaskDetailsDeps, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskDetailsViewsMock } from '../test/mocks/task-details-views.mock.ts';
-import { API_BUILD_STUB, GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
+import { API_BUILD_STUB, GRAPH_TASK_STUB, WEB_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 
 type Posted = WebviewMessage | GraphWebviewMessage;
 
@@ -20,12 +20,22 @@ type DetailsRig = {
   readonly onSelect: Mock<(id: string) => void>;
   readonly onClear: Mock<() => void>;
   readonly onToggle: Mock<(isOpen: boolean) => void>;
+  readonly onShowPackage: Mock<(name: string) => void>;
   readonly panel: HTMLElement;
   /** The views built so far, the latest last. */
   readonly built: TaskDetailsView[];
 };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [API_BUILD_STUB], rootLabel: null };
+const RUNNING: TaskDetailsModel = {
+  task: GRAPH_TASK_STUB,
+  state: 'running',
+  dependencies: [API_BUILD_STUB],
+  dependents: [],
+  rootLabel: null
+};
+
+/** `a#build` with `web#build` shown as its dependent. */
+const NEEDED_BY_WEB: TaskDetailsModel = { ...RUNNING, dependents: [WEB_BUILD_STUB] };
 
 const PASSED: TaskDetailsModel = { ...RUNNING, state: 'passed' };
 
@@ -62,9 +72,10 @@ const rigOf = (): DetailsRig => {
   const onSelect = vi.fn<(id: string) => void>();
   const onClear = vi.fn<() => void>();
   const onToggle = vi.fn<(isOpen: boolean) => void>();
+  const onShowPackage = vi.fn<(name: string) => void>();
   const actions: TaskDetailsActions = { onSelect, onClear };
-  const deps: TaskDetailsDeps = { page, views, bridge, actions, onToggle };
-  const rig: DetailsRig = { deps, posted, onSelect, onClear, onToggle, panel, built };
+  const deps: TaskDetailsDeps = { page, views, bridge, actions, onToggle, onShowPackage };
+  const rig: DetailsRig = { deps, posted, onSelect, onClear, onToggle, onShowPackage, panel, built };
 
   return rig;
 };
@@ -236,6 +247,48 @@ describe('FEATURE: GraphTaskDetails', () => {
       details.show(PASSED);
 
       expect(document.activeElement?.tagName).toBe('H2');
+    });
+  });
+
+  describe('GIVEN a#build of package a is shown with web#build as its dependent', () => {
+    let view: TaskDetailsView | undefined;
+
+    beforeEach(() => {
+      details.enter(true);
+      details.show(NEEDED_BY_WEB);
+      [view] = rig.built;
+    });
+
+    it('WHEN the owner button is clicked THEN package a is shown', () => {
+      view?.owner?.click();
+
+      expect(rig.onShowPackage).toHaveBeenCalledExactlyOnceWith('a');
+    });
+
+    it('WHEN task mode is left THEN the stale owner button shows nothing', () => {
+      details.exit();
+      view?.owner?.click();
+
+      expect(rig.onShowPackage).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the web#build dependent button is clicked THEN web#build is asked for', () => {
+      view?.dependents[0]?.button.click();
+
+      expect(rig.onSelect).toHaveBeenCalledExactlyOnceWith('web#build');
+    });
+
+    it.each([
+      {
+        name: 'the web#build dependent button',
+        focused: (shown?: TaskDetailsView): HTMLButtonElement | null | undefined => shown?.dependents[0]?.button
+      },
+      { name: 'the owner button', focused: (shown?: TaskDetailsView): HTMLButtonElement | null | undefined => shown?.owner }
+    ])('WHEN $name has focus and the task is shown again THEN its new twin takes focus', ({ focused }) => {
+      focused(view)?.focus();
+      details.show({ ...NEEDED_BY_WEB, state: 'passed' });
+
+      expect(document.activeElement).toBe(focused(rig.built[1]));
     });
   });
 

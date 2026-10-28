@@ -3,16 +3,19 @@ import type { Locator } from '@playwright/test';
 import { expect, test } from './graph-task.fixture.ts';
 import { TASK_MODE_NEW_HASH_STUB, TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
+import { overCapTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import type { GraphWebviewMessage } from '../src/bridge/common/graph-message.type.ts';
 import { START_TRACE_LABEL } from '../src/graph/common/details.const.ts';
-import { PACKAGES_MODE_LABEL, SHOW_TASKS_LABEL } from '../src/graph/common/graph-task.const.ts';
+import { PACKAGES_MODE_LABEL, SHOW_TASKS_LABEL, SLOW_TASKS_TEXT } from '../src/graph/common/graph-task.const.ts';
 
 const SHOW_TASKS = { description: 'M4-5a spec 3.2.1', type: 'requirement' };
 
 const TASK_MENU = { description: 'M4-5a spec 3.2 side panel, 6.4', type: 'requirement' };
 
 const FOCUS = { description: 'M4-5a spec 9a.6, WCAG 2.4.3', type: 'requirement' };
+
+const U3_T5 = { description: 'U3 spec D8, T5', type: 'requirement' };
 
 const PACKAGES = ['app', 'lib', 'ui'];
 
@@ -162,4 +165,129 @@ test.describe('FEATURE: the task "…" menu and leaving a cold task mode', () =>
       }
     );
   }
+});
+
+test.describe('FEATURE: the Tasks button entry (T5)', () => {
+  test(
+    'GIVEN app selected in the package graph, Tasks draws its tasks and their chain',
+    { annotation: U3_T5 },
+    async ({ graphHost, graphList, graphPage, graphProbe, graphTask, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN the package graph is drawn and app is picked', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphProbe.expectNodeIds(PACKAGES);
+        await graphList.pick('app');
+      });
+
+      await test.step('AND Tasks is pressed', async (): Promise<void> => graphTask.enter());
+
+      await test.step("THEN app's tasks and their chain are drawn", async (): Promise<void> => graphTaskProbe.expectTaskIds(APP_SET));
+
+      await test.step('AND Tasks is shown pressed', async (): Promise<void> => graphTask.expectPressed(true));
+
+      await test.step('AND the prompt is hidden', async (): Promise<void> => graphTask.expectPrompt(false));
+    }
+  );
+
+  test(
+    'GIVEN app’s tasks entered and lib#build selected, Packages then Tasks with app still selected keeps lib#build selected',
+    { annotation: U3_T5 },
+    async ({ graphCanvas, graphHost, graphList, graphPage, graphProbe, graphTask, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN app is picked, Tasks is pressed and lib#build is tapped', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphProbe.expectNodeIds(PACKAGES);
+        await graphList.pick('app');
+        await graphTask.enter();
+        await graphTaskProbe.expectTaskIds(APP_SET);
+        await graphCanvas.tapNode('lib#build');
+        await graphProbe.expectSelected('lib#build');
+      });
+
+      await test.step('AND Packages is pressed with app still selected', async (): Promise<void> => {
+        await graphTask.leave();
+        await graphProbe.expectSelected('app');
+      });
+
+      await test.step('AND Tasks is pressed again', async (): Promise<void> => graphTask.enter());
+
+      await test.step("THEN app's tasks are drawn again", async (): Promise<void> => graphTaskProbe.expectTaskIds(APP_SET));
+
+      await test.step('AND lib#build is still selected', async (): Promise<void> => graphProbe.expectSelected('lib#build'));
+    }
+  );
+
+  test(
+    'GIVEN ui#test saved and app selected after leaving, Tasks draws app’s tasks instead of the saved choice',
+    { annotation: U3_T5 },
+    async ({ graphHost, graphList, graphPage, graphTask, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN a cold open in task mode draws the saved ui#test', async (): Promise<void> => {
+        await graphPage.open({ savedState: taskSavedState('7a5c0001', { chosen: ['ui#test'] }) });
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphTaskProbe.expectTaskIds(['ui#build', 'ui#test']);
+      });
+
+      await test.step('AND Packages is pressed, app is picked and Tasks is pressed', async (): Promise<void> => {
+        await graphTask.leave();
+        await graphList.pick('app');
+        await graphTask.enter();
+      });
+
+      await test.step("THEN app's tasks and their chain are drawn", async (): Promise<void> => graphTaskProbe.expectTaskIds(APP_SET));
+    }
+  );
+
+  test(
+    'GIVEN nothing selected and nothing saved, Tasks shows the prompt with Show every task (6) and no slow line',
+    { annotation: U3_T5 },
+    async ({ graphHost, graphPage, graphTask }): Promise<void> => {
+      await test.step('WHEN the package graph is drawn and Tasks is pressed', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphTask.enter();
+      });
+
+      await test.step('THEN the prompt shows', async (): Promise<void> => graphTask.expectPrompt());
+
+      await test.step('AND it offers Show every task (6)', async (): Promise<void> =>
+        graphTask.expectShowEvery('Show every task (6)'));
+
+      await test.step('AND the slow line is hidden', async (): Promise<void> => graphTask.expectSlowHidden());
+    }
+  );
+
+  test(
+    'GIVEN the prompt, Show every task draws all six tasks and hides the prompt',
+    { annotation: U3_T5 },
+    async ({ graphHost, graphPage, graphTask, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN the prompt shows and Show every task is pressed', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphTask.enter();
+        await graphTask.clickShowEvery();
+      });
+
+      await test.step('THEN all six tasks are drawn', async (): Promise<void> =>
+        graphTaskProbe.expectTaskIds(['app#build', 'app#lint', 'lib#build', 'lib#test', 'ui#build', 'ui#test']));
+
+      await test.step('AND the prompt is hidden', async (): Promise<void> => graphTask.expectPrompt(false));
+    }
+  );
+
+  test(
+    'GIVEN 401 tasks and nothing chosen, the prompt offers Show every task (401) and warns it can be slow',
+    { annotation: U3_T5 },
+    async ({ graphHost, graphPage, graphTask }): Promise<void> => {
+      await test.step('WHEN the over-cap graph is drawn and Tasks is pressed', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(overCapTasksState());
+        await graphTask.enter();
+      });
+
+      await test.step('THEN it offers Show every task (401)', async (): Promise<void> =>
+        graphTask.expectShowEvery('Show every task (401)'));
+
+      await test.step('AND the slow line shows', async (): Promise<void> => graphTask.expectSlowText(SLOW_TASKS_TEXT));
+    }
+  );
 });

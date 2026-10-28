@@ -79,6 +79,12 @@ export const NOTICE_TEXT_DELAY_MS = 100;
 export const EMPTY_TASKS_TEXT =
   'Choose tasks to show: select a package and pick Show tasks, use Show in task graph on the details page, or run Turbo Console: Show Task Graph…';
 
+/** The prompt button that chooses every known task; its text ends with their count. */
+export const SHOW_EVERY_TASK_LABEL = 'Show every task';
+
+/** The prompt line under Show every task while more than `TASK_CAP` tasks are known. */
+export const SLOW_TASKS_TEXT = `Drawing more than ${TASK_CAP} tasks can be slow.`;
+
 /** The id of the task details panel, which the Details button points at while task mode is on. */
 export const TASK_DETAILS_ID = 'graph-task-details';
 
@@ -95,6 +101,14 @@ export const RUN_NO_CACHE_LABEL = 'Run without cache';
 export const STOP_LABEL = 'Stop';
 
 export const DEPENDENCIES_LABEL = 'Dependencies';
+
+export const DEPENDENTS_LABEL = 'Dependents';
+
+/** The Dependents section's line while no shown task depends on the selected one. */
+export const NONE_SHOWN_TEXT = 'None shown';
+
+/** The package of a task of the workspace root, which the package graph never draws. */
+export const ROOT_TASK_PACKAGE = '//';
 
 /** The command line of a task whose package script is missing. */
 export const NO_COMMAND_TEXT = 'No command';

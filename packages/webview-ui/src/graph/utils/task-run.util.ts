@@ -13,7 +13,10 @@ export const runStateOf = (runs: TaskRuns, id: string): GraphRunState | null => 
 
 export const taskWithId = (tasks: GraphTask[], id: string | null): GraphTask | undefined => tasks.find((task) => task.id === id);
 
-/** The panel model of `task`: its run state, its direct dependencies that are in `shown`, in its dependency order, and the root label. */
+/**
+ * The panel model of `task`: its run state, its direct dependencies that are in `shown`, in its dependency order, the
+ * shown tasks that directly depend on it, in the shown order, and the root label.
+ */
 export const taskDetailsModelOf = (
   task: GraphTask,
   shown: GraphTask[],
@@ -23,8 +26,9 @@ export const taskDetailsModelOf = (
   const shownOf = (id: string): GraphTask | undefined => taskWithId(shown, id);
   const found = task.dependencies.map(shownOf);
   const dependencies = found.filter((dependency) => dependency !== undefined);
+  const dependents = shown.filter((other) => other.dependencies.includes(task.id));
   const state = runStateOf(runs, task.id);
-  const model: TaskDetailsModel = { task, state, dependencies, rootLabel };
+  const model: TaskDetailsModel = { task, state, dependencies, dependents, rootLabel };
 
   return model;
 };

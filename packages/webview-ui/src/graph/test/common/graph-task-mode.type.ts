@@ -35,6 +35,8 @@ export type TaskModeRig = {
   readonly onFailure: Mock<(error: unknown) => void>;
   /** The flow overlay; `deps.onHighlight` is its `highlightChanged`. */
   readonly flow: Mocked<FlowControl>;
+  /** The package selected in the package graph, which Tasks opens on; none by default. */
+  readonly selectedPackage: Mock<TaskModeDeps['selectedPackage']>;
   /** Called once by task mode with the panel's actions. */
   readonly panelOf: Mock<TaskModeDeps['panelOf']>;
   /** Called once by task mode with the Controls' actions. */

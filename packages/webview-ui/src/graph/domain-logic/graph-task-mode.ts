@@ -9,7 +9,7 @@ import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskModeDeps, TaskPanel } from '../common/graph-task.type.ts';
 import type { TaskControls } from '../common/task-controls.type.ts';
-import { choiceOf, droppedNoticeOf, packageTaskIdsOf, requestOf } from '../utils/task-choice.util.ts';
+import { choiceOf, droppedNoticeOf, entryTaskIdsOf, packageTaskIdsOf, requestOf, taskIdsOf } from '../utils/task-choice.util.ts';
 
 /**
  * Task mode's routing: whether it is active and what the user does in it. Its tasks, hash and saved view live in
@@ -34,7 +34,10 @@ export class GraphTaskMode {
 
     this.layout = new GraphTaskLayout(layoutDepsOf(deps, this.memory, hooks));
     this.selection = new GraphTaskSelection(selectionDepsOf(deps, this.memory));
-    this.panel = deps.panelOf({ onShowAll: (): void => this.choose({ capLifted: true }, null) });
+    this.panel = deps.panelOf({
+      onShowAll: (): void => this.choose({ capLifted: true }, null),
+      onShowEvery: (at: number): void => this.showTasks(taskIdsOf(this.memory.tasks()), at)
+    });
     this.controls = deps.controlsOf({
       onSearch: (search: string): void => this.memory.save({ search }),
       onDepth: (depth: number): void => this.choose({ depth }, null),
@@ -67,11 +70,12 @@ export class GraphTaskMode {
     const shownSet = this.memory.shownSet();
     const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.umbrellaSizers());
     const shownKey = this.layout.key();
+    const knownCount = this.memory.tasks().length;
 
     this.selection.setShown(request.tasks);
 
     if (request.key === shownKey && !isRelabelled) {
-      this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount });
+      this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount, knownCount });
       this.layout.atoms.reshown();
 
       return;
@@ -85,9 +89,20 @@ export class GraphTaskMode {
     this.hasEntered = false;
   }
 
-  /** Package mode → task mode with the saved choice, or the prompt; in task mode it does nothing. */
+  /**
+   * Package mode → task mode on the selected package's tasks, which replace the saved choice; with no package selected, one
+   * without tasks or one whose tasks are the saved choice, on the saved view or the prompt. In task mode it does nothing.
+   */
   public enter(at: number): void {
     if (this.isActive()) return;
+
+    const entryIds = entryTaskIdsOf(this.memory.tasks(), this.deps.selectedPackage(), this.memory.view().chosen);
+
+    if (entryIds !== null) {
+      this.showTasks(entryIds, at);
+
+      return;
+    }
 
     this.deps.modes.setMode('tasks', this.memory.hash());
     this.showPage();
@@ -136,16 +151,6 @@ export class GraphTaskMode {
     this.memory.save({ zoom, pan, fitted, layoutKey });
   }
 
-  /** The pointer entered a task or left it (`null`); the canvas lights its chain without selecting it. */
-  public hover(id: string | null): void {
-    this.selection.hover(id);
-  }
-
-  /** A drag only moves the layout kept in page memory; nothing is posted. */
-  public dragged(): void {
-    this.layout.dragged();
-  }
-
   /** A new choice, depth or cap, saved with no layout key so the camera fits the new set; it turns task mode on. */
   private choose(edit: Partial<TaskViewState>, at: number | null, notice: string | null = null): void {
     const unplaced: Partial<TaskViewState> = { ...edit, layoutKey: '' };
@@ -166,9 +171,10 @@ export class GraphTaskMode {
     const shownSet = this.memory.shownSet();
     const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.umbrellaSizers());
     const isEmpty = request.tasks.length === 0;
+    const knownCount = this.memory.tasks().length;
 
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));
-    this.panel.show({ isEmpty, hiddenCount: shownSet.hiddenCount });
+    this.panel.show({ isEmpty, hiddenCount: shownSet.hiddenCount, knownCount });
     this.controls.setRows(request.tasks, this.memory.rootLabel());
     this.selection.setShown(request.tasks);
     this.deps.view.resize();
