@@ -11,9 +11,8 @@ const HEADING_KEY = 'heading';
 const buttonsOf = (view: TaskDetailsView): HTMLButtonElement[] => {
   const tasks = [...view.dependencies, ...view.dependents];
   const named = tasks.map((dependency) => dependency.button);
-  const ownerSlots = [view.owner];
-  const owners = ownerSlots.filter((button) => button !== null);
-  const buttons = [...owners, view.run, view.runNoCache, view.stop, ...named];
+  const slots = [view.owner, view.run, view.runNoCache, view.stop, ...named];
+  const buttons = slots.filter((button) => button !== null);
 
   return buttons;
 };
