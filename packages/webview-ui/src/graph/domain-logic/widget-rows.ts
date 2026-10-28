@@ -150,7 +150,7 @@ export class WidgetRows {
     for (const [folder, entry] of this.rows) {
       const kind = kindOf(entry.elements, focused);
 
-      if (kind !== undefined) this.refocus ??= { folder, kind };
+      if (kind !== undefined) this.refocus = { folder, kind };
     }
   }
 

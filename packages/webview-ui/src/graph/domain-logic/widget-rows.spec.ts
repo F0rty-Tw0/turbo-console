@@ -98,4 +98,22 @@ describe('FEATURE: WidgetRows.restoreFocus', () => {
       expect(document.activeElement).toBe(elsewhere);
     });
   });
+
+  describe('GIVEN a request for apps while focus sits in a packages button when the rows reorder', () => {
+    it('WHEN focus is restored THEN the packages button, which holds focus now, gets it', () => {
+      const scene = boardsSceneOf([]);
+      const reordered = { ...scene, shown: new Set(['packages', 'apps']) };
+      const plans = [planOf('apps', 'box'), planOf('packages', 'box')];
+
+      rebuiltWithLostFocus(rig);
+      rig.built[1]?.chevron.focus();
+      rig.rows.sync(reordered, null, null);
+      loseFocus();
+      rig.rows.place(plans);
+
+      rig.rows.restoreFocus();
+
+      expect(document.activeElement).toBe(rig.built[1]?.chevron);
+    });
+  });
 });
