@@ -1,6 +1,7 @@
 import { fakeClassListMock } from './fake-class-list.mock.ts';
 import { fakeStyleMock } from './fake-style.mock.ts';
 import type { AddedListener, FakeClassList, FakeEvent, FakeListener, FakeRect } from '../common/fake-document.type.ts';
+import { FakeNode } from '../utils/fake-node.spec.util.ts';
 
 type FakeFocus = {
   element: FakeElement | null;
@@ -16,12 +17,11 @@ type FakeOwner = {
 };
 
 /**
- * The few DOM calls the graph's element builders make, for specs that run without a DOM: attributes, classes,
- * children, plain properties, listeners by event type, focus and the popover open state. An input's `value` follows `defaultValue` until it is set.
+ * The few DOM calls the graph's element builders make, for specs that run without a DOM: the tree and attributes of
+ * `FakeNode`, classes, plain properties, listeners by event type, focus and the popover open state. An input's `value` follows `defaultValue` until it is set.
  */
-class FakeElement {
+class FakeElement extends FakeNode {
   public readonly tagName: string;
-  public readonly children: FakeElement[] = [];
   public className = '';
   public textContent = '';
   public id = '';
@@ -42,17 +42,16 @@ class FakeElement {
   public offsetHeight = 0;
   public readonly style: Record<string, string> = fakeStyleMock();
   public readonly dataset: Record<string, string> = {};
-  public parent: FakeElement | null = null;
   public readonly scrollIntoView = ignore;
   public readonly classList: FakeClassList = fakeClassListMock(this);
 
-  private readonly attributes = new Map<string, string>();
   private readonly listeners: AddedListener[] = [];
   private readonly focused: FakeFocus;
   private typed: string | null = null;
   private isPopoverOpen = false;
 
   public constructor(tag: string, focus: FakeFocus) {
+    super();
     this.tagName = tag.toUpperCase();
     this.focused = focus;
   }
@@ -69,49 +68,6 @@ class FakeElement {
     const owner: FakeOwner = { activeElement: this.focused.element };
 
     return owner;
-  }
-
-  public get isConnected(): boolean {
-    return this.parent !== null;
-  }
-
-  public setAttribute(name: string, value: string): void {
-    this.attributes.set(name, value);
-  }
-
-  public removeAttribute(name: string): void {
-    this.attributes.delete(name);
-  }
-
-  public getAttribute(name: string): string | null {
-    return this.attributes.get(name) ?? null;
-  }
-
-  public append(...nodes: FakeElement[]): void {
-    for (const node of nodes) node.parent = this;
-
-    this.children.push(...nodes);
-  }
-
-  public prepend(...nodes: FakeElement[]): void {
-    for (const node of nodes) node.parent = this;
-
-    this.children.unshift(...nodes);
-  }
-
-  public replaceChildren(...nodes: FakeElement[]): void {
-    for (const child of this.children) child.parent = null;
-
-    this.children.length = 0;
-    this.append(...nodes);
-  }
-
-  public contains(node: FakeElement | null): boolean {
-    if (node === null) return false;
-
-    if (node === this) return true;
-
-    return this.contains(node.parent);
   }
 
   public addEventListener(type: string, listener: FakeListener): void {
@@ -131,30 +87,10 @@ class FakeElement {
     this.dispatchEvent({ type: 'click' });
   }
 
-  public remove(): void {
-    const { parent } = this;
-
-    if (parent === null) return;
-
-    const kept = parent.children.filter((child) => child !== this);
-
-    parent.replaceChildren(...kept);
-  }
-
   public getBoundingClientRect(): FakeRect {
     const rect: FakeRect = { left: this.offsetLeft, top: this.offsetTop, width: this.offsetWidth, height: this.offsetHeight };
 
     return rect;
-  }
-
-  public replaceWith(node: FakeElement): void {
-    const { parent } = this;
-
-    if (parent === null) return;
-
-    const swapped = parent.children.map((child) => (child === this ? node : child));
-
-    parent.replaceChildren(...swapped);
   }
 
   public focus(): void {
