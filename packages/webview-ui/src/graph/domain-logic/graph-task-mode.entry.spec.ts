@@ -8,7 +8,7 @@ import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { TaskPanelActions } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
-import { TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
+import { SINGLE_TASK_STATE_STUB, TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
 
 /** Package mode with `api#build` chosen under a placed layout's key. */
@@ -141,6 +141,16 @@ describe('FEATURE: GraphTaskMode Tasks entry', () => {
       shownSet.mockRestore();
 
       expect(builds).toBe(0);
+    });
+
+    it('WHEN a single-package state is followed by a monorepo one THEN the location facts read a single package only in between', () => {
+      mode.received(SINGLE_TASK_STATE_STUB, 8);
+
+      const isSingleBetween = mode.locationFacts().isSinglePackage;
+
+      mode.received(TASK_STATE_STUB, 9);
+
+      expect([isSingleBetween, mode.locationFacts().isSinglePackage]).toStrictEqual([true, false]);
     });
 
     it('WHEN the panel reports a shown set THEN the location bar reads again', () => {
