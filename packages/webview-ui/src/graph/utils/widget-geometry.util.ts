@@ -1,4 +1,4 @@
-import { FOLDER_PADDING_PX, WIDGET_BUTTON_PX, WIDGET_INSET_PX, WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
+import { FOLDER_PADDING_PX, WIDGET_BUTTON_PX, WIDGET_GAP_PX, WIDGET_INSET_PX, WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
 import type { FolderRect, LayerBounds, RectPx, RowButtonRects, RowKind, RowPlacement } from '../common/widget.type.ts';
 
 /** The room a box row keeps above and below its buttons inside the band, in px. */
@@ -66,12 +66,13 @@ export const rowPlacementOf = (folder: FolderRect, kind: RowKind, zoom: number):
   return collapsedRowOf(folder.rect, zoom);
 };
 
-/** The chevron at the row's left end and the "…" at its right end, as drawn at the row's scale. */
+/** The chevron at the row's left end, the "…" at its right end and Focus folder one button and gap left of the "…", as drawn at the row's scale. */
 export const buttonRectsOf = (row: RowPlacement): RowButtonRects => {
   const side = WIDGET_BUTTON_PX * row.scale;
   const chevron = squareAt(row.x, row.y, side);
   const ellipsis = squareAt(row.x + row.width * row.scale - side, row.y, side);
-  const rects: RowButtonRects = { chevron, ellipsis };
+  const focus = squareAt(ellipsis.x1 - (WIDGET_BUTTON_PX + WIDGET_GAP_PX) * row.scale, row.y, side);
+  const rects: RowButtonRects = { chevron, focus, ellipsis };
 
   return rects;
 };

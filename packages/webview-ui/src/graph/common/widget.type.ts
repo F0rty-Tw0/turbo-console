@@ -63,6 +63,7 @@ export type PackageMenuState = {
 
 export type RowButtonRects = {
   readonly chevron: RectPx;
+  readonly focus: RectPx;
   readonly ellipsis: RectPx;
 };
 
@@ -100,6 +101,7 @@ export type RowPlan = {
   readonly kind: RowKind;
   readonly placement: RowPlacement;
   readonly isChevronShown: boolean;
+  readonly isFocusShown: boolean;
   readonly isEllipsisShown: boolean;
 };
 

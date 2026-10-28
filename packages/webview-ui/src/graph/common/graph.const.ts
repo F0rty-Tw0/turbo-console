@@ -280,6 +280,12 @@ export const WIDGET_BUTTON_PX = 24;
 
 export const WIDGET_INSET_PX = 8;
 
+/** The gap between a row's children (`.widget-row { gap }` in graph.css). */
+export const WIDGET_GAP_PX = 4;
+
+/** The narrowest row, in CSS px before its scale, that shows Focus folder. */
+export const ROW_FOCUS_MIN_PX = 160;
+
 /** Header widgets hide while the box or collapsed node is under this many px wide on screen. */
 export const WIDGET_MIN_BOX_PX = 120;
 

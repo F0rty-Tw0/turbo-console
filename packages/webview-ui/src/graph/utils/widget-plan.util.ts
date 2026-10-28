@@ -1,4 +1,5 @@
 import { buttonRectsOf, isWidgetShown, packageButtonRectOf, rowPlacementOf } from './widget-geometry.util.ts';
+import { ROW_FOCUS_MIN_PX } from '../common/graph.const.ts';
 import type { FolderRect, RectPx, RowKind, RowPlan, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
 
 /** The row of a box or collapsed node wide enough for one, with at least one button shown; else `null`. */
@@ -10,11 +11,12 @@ const rowPlanOf = (folder: string, rect: FolderRect, kind: RowKind, input: Widge
 
   const buttons = buttonRectsOf(placement);
   const isChevronShown = isWidgetShown(buttons.chevron, bounds);
+  const isFocusShown = placement.width >= ROW_FOCUS_MIN_PX && isWidgetShown(buttons.focus, bounds);
   const isEllipsisShown = isWidgetShown(buttons.ellipsis, bounds);
 
   if (!isChevronShown && !isEllipsisShown) return null;
 
-  const row: RowPlan = { folder, kind, placement, isChevronShown, isEllipsisShown };
+  const row: RowPlan = { folder, kind, placement, isChevronShown, isFocusShown, isEllipsisShown };
 
   return row;
 };

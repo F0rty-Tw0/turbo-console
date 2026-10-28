@@ -34,7 +34,7 @@ const inputOf = (rects: Partial<WidgetRects>, overrides: Partial<WidgetPlanInput
 
 const boxRowOf = (folder: string, x: number): RowPlan => {
   const placement = { x, y: 54, width: 284, scale: 1 };
-  const row: RowPlan = { folder, kind: 'box', placement, isChevronShown: true, isEllipsisShown: true };
+  const row: RowPlan = { folder, kind: 'box', placement, isChevronShown: true, isFocusShown: true, isEllipsisShown: true };
 
   return row;
 };
@@ -71,6 +71,19 @@ describe('FEATURE: widgetPlanOf', () => {
     });
   });
 
+  describe('GIVEN a box row near the Focus folder minimum', () => {
+    it.each([
+      { boxWidth: 175, isShown: false },
+      { boxWidth: 176, isShown: true }
+    ])('GIVEN a box row $boxWidth px wide WHEN planned THEN Focus folder shows is $isShown', ({ boxWidth, isShown }) => {
+      const boxes = new Map([['apps', folderOf(100, 50, 100 + boxWidth, 300)]]);
+
+      const plan = widgetPlanOf(inputOf({ boxes }));
+
+      expect(plan.rows[0]?.isFocusShown).toBe(isShown);
+    });
+  });
+
   describe('GIVEN boxes the layer cannot show a row for', () => {
     it('WHEN a box is 119 px wide THEN it gets no row', () => {
       const boxes = new Map([['apps', folderOf(100, 50, 219, 300)]]);
@@ -87,6 +100,15 @@ describe('FEATURE: widgetPlanOf', () => {
 
       expect(plan.rows).toStrictEqual([]);
     });
+  });
+
+  it('GIVEN apps WHEN the overlay starts at x = 350 THEN Focus folder (340-364) is hidden while the chevron shows', () => {
+    const boxes = new Map([['apps', APPS]]);
+    const bounds: LayerBounds = { ...BOUNDS, overlayLeft: 350 };
+
+    const plan = widgetPlanOf(inputOf({ boxes }, { bounds }));
+
+    expect(plan.rows[0]).toMatchObject({ isChevronShown: true, isFocusShown: false });
   });
 
   it('GIVEN the box apps at zoom 0.49, where its row would be under half size WHEN planned THEN it gets no row', () => {
