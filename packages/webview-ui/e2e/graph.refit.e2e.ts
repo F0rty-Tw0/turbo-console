@@ -13,6 +13,8 @@ const SHRINK_PX = 220;
 
 const CHAIN = ['app#build', 'lib#build', 'ui#build'];
 
+const LONG_WEB = '@company/web';
+
 const OFF_SCREEN = { x: 900, y: 900 };
 
 const savedAtCorner = (fitted: boolean): GraphViewState => {
@@ -294,6 +296,53 @@ test.describe('FEATURE: graph camera re-fit', () => {
       });
 
       await test.step('AND the view is saved fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: true }));
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
+    }
+  );
+
+  test(
+    'GIVEN a narrow editor and a two-package graph fitted at the maximum zoom and panned clear of the Details overlay, a wheel-in notch keeps it fitted and a shrink re-fits it',
+    { annotation: T3 },
+    async ({ graphCamera, graphCanvas, graphDetails, graphHost, graphNarrow, graphPage, graphTaskHost }): Promise<void> => {
+      await test.step('WHEN the editor is narrowed to 959 px and the two-package graph is sent', async (): Promise<void> => {
+        await graphNarrow.setWidth(OVERLAY_WIDTH_PX);
+        await graphPage.open();
+        await graphHost.sendState(TASK_LONG_NAMES_STUB);
+        await graphNarrow.expectOverlay();
+        await graphTaskHost.expectSaved({ fitted: true });
+      });
+
+      await test.step('AND the camera is remembered, the overlay closed, web tapped and the overlay opened again', async (): Promise<void> => {
+        await graphCamera.rememberCamera();
+        await graphDetails.toggle();
+        await graphCanvas.tapNode(LONG_WEB);
+        await graphDetails.toggle();
+      });
+
+      await test.step('THEN the camera moved, web is clear of the overlay and the view is saved fitted', async (): Promise<void> => {
+        await graphCamera.expectCameraMoved();
+        await graphNarrow.expectAnchorsClear([LONG_WEB]);
+        await graphTaskHost.expectSaved({ fitted: true });
+      });
+
+      await test.step('WHEN the camera is remembered and the wheel turns in one notch', async (): Promise<void> => {
+        await graphCamera.rememberCamera();
+        await graphCanvas.zoomBy(-100);
+        await graphPage.waitFrames();
+      });
+
+      await test.step('THEN the clamped zoom left the camera unchanged and the view saved fitted', async (): Promise<void> => {
+        await graphCamera.expectCameraUnchanged();
+        await graphTaskHost.expectSaved({ fitted: true });
+      });
+
+      await test.step('WHEN the page is made shorter', async (): Promise<void> => graphCamera.shrinkHeightBy(SHRINK_PX));
+
+      await test.step('THEN the camera moved and web is clear of the overlay', async (): Promise<void> => {
+        await graphCamera.expectCameraMoved();
+        await graphNarrow.expectAnchorsClear([LONG_WEB]);
+      });
 
       await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
