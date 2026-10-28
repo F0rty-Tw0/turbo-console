@@ -84,6 +84,19 @@ describe('FEATURE: buildFolderRow', () => {
       expect(shape).toStrictEqual(['Focus folder apps', 'Focus folder', 'false', 'codicon codicon-target']);
     });
 
+    it('WHEN the row is read THEN it is a toolbar named by the folder title', () => {
+      const shape = [row.root.getAttribute('role'), row.root.getAttribute('aria-label')];
+
+      expect(shape).toStrictEqual(['toolbar', 'apps']);
+    });
+
+    it("WHEN its buttons' tabIndex are read THEN only the chevron is a Tab stop", () => {
+      const buttons = [row.chevron, row.title, row.focus, row.ellipsis];
+      const tabIndexes = buttons.map((button): number => button.tabIndex);
+
+      expect(tabIndexes).toStrictEqual([0, -1, -1, -1]);
+    });
+
     it('WHEN the chevron is read THEN its aria-label is also its title', () => {
       expect(row.chevron.title).toBe('Collapse apps');
     });

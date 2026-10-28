@@ -1,4 +1,5 @@
-import type { RowEntry, RowPlan } from '../common/widget.type.ts';
+import type { FolderRowElements, RowButtonKind, RowEntry, RowPlan } from '../common/widget.type.ts';
+import { rowStopOf, shownKindsOf } from '../utils/row-stop.util.ts';
 
 type StyleKey = 'transform' | 'width';
 
@@ -19,7 +20,19 @@ export const translateOf = (x: number, y: number): string => {
   return `translate(${left}px, ${top}px)`;
 };
 
-/** Shows and places a row from its plan, on whole px and at its scale; without one, or with one of the other kind, the row is hidden. The chevron, Focus folder and "…" hide as the plan says. */
+/** Makes `stop` the row's one Tab stop: tabIndex 0 on it, -1 on the other buttons, each write skipped when unchanged. */
+export const writeRowStop = (elements: FolderRowElements, stop: RowButtonKind): void => {
+  const { chevron, title, focus, ellipsis } = elements;
+  const stopButton = elements[stop];
+
+  for (const button of [chevron, title, focus, ellipsis]) {
+    const tabIndex = button === stopButton ? 0 : -1;
+
+    if (button.tabIndex !== tabIndex) button.tabIndex = tabIndex;
+  }
+};
+
+/** Shows and places a row from its plan, on whole px and at its scale; without one, or with one of the other kind, the row is hidden. The chevron, Focus folder and "…" hide as the plan says, and the Tab stop moves off a hidden button. */
 export const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
   const { root, chevron, focus, ellipsis } = entry.elements;
   const isPlaced = plan?.kind === entry.kind;
@@ -40,4 +53,9 @@ export const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
   setHidden(chevron, !plan.isChevronShown);
   setHidden(focus, !plan.isFocusShown);
   setHidden(ellipsis, !plan.isEllipsisShown);
+  entry.shown = shownKindsOf(plan);
+
+  const stop = rowStopOf(entry.preferred, entry.shown);
+
+  writeRowStop(entry.elements, stop);
 };

@@ -19,6 +19,7 @@ import { GraphTaskNarrow } from './pages/graph-task-narrow.po.ts';
 import { GraphTaskRings } from './pages/graph-task-rings.po.ts';
 import { GraphTask } from './pages/graph-task.po.ts';
 import { GraphWidgetInput } from './pages/graph-widget-input.po.ts';
+import { GraphWidgetKeys } from './pages/graph-widget-keys.po.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 
@@ -61,6 +62,7 @@ type GraphTaskFixtures = {
   readonly graphTaskNarrow: GraphTaskNarrow;
   readonly graphTaskRings: GraphTaskRings;
   readonly graphWidgetInput: GraphWidgetInput;
+  readonly graphWidgetKeys: GraphWidgetKeys;
   /** The same graph page in a second tab of the context, for a comparison against `graphGlyphs`. */
   readonly secondGlyphs: GraphTaskGlyphs;
   readonly openUmbrella: OpenUmbrella;
@@ -127,6 +129,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   },
   graphWidgetInput: async ({ page }, use): Promise<void> => {
     await use(new GraphWidgetInput(page));
+  },
+  graphWidgetKeys: async ({ page }, use): Promise<void> => {
+    await use(new GraphWidgetKeys(page));
   },
   secondGlyphs: async ({ context }, use): Promise<void> => {
     const second = await context.newPage();

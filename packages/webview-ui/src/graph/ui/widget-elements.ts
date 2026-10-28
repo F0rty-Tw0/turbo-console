@@ -74,7 +74,7 @@ const titleButtonOf = (title: string): HTMLButtonElement => {
   return button;
 };
 
-/** A folder's header row, on a box or a collapsed node: the chevron, the folder glyph, title and package count badge, then Focus folder and the "…". */
+/** A folder's header row, on a box or a collapsed node: the chevron, the folder glyph, title and package count badge, then Focus folder and the "…". The row is a toolbar named by its title, with the chevron its one Tab stop until the layer moves the stop. */
 export const buildFolderRow = (kind: RowKind, title: string, count: number): FolderRowElements => {
   const root = textElement('div', `widget-row widget-row-${kind}`, '');
   const chevron = chevronOf(kind, title);
@@ -87,6 +87,11 @@ export const buildFolderRow = (kind: RowKind, title: string, count: number): Fol
 
   focus.title = FOCUS_FOLDER_LABEL;
   focus.setAttribute('aria-pressed', 'false');
+  titleButton.tabIndex = -1;
+  focus.tabIndex = -1;
+  ellipsis.tabIndex = -1;
+  root.setAttribute('role', 'toolbar');
+  root.setAttribute('aria-label', title);
   root.hidden = true;
   root.append(chevron, glyph, titleButton, badge, focus, ellipsis);
 

@@ -129,6 +129,10 @@ export type RowEntry = {
   /** The package count the row was built with. */
   readonly count: number;
   readonly elements: FolderRowElements;
+  /** The buttons the last placement showed, in DOM order. */
+  shown: RowButtonKind[];
+  /** The Tab stop an arrow key last moved to; the chevron until one does. */
+  preferred: RowButtonKind;
 };
 
 /** The widget builders, handed in because `domain-logic` may not import `ui`. */
