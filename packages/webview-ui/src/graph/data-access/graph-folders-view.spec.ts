@@ -93,12 +93,12 @@ describe('FEATURE: createFoldersView', () => {
       expect(shown).toStrictEqual([false, false, true, true, true]);
     });
 
-    it("THEN a collapsed node sits on the packages' centre, labelled, 180 by 56 and not grabbable", () => {
+    it("THEN a collapsed node sits on the packages' centre, labelled, 220 by 56 and not grabbable", () => {
       const node = cy.getElementById(APPS_NODE);
 
       expect(node.position()).toStrictEqual({ x: 60, y: 0 });
       expect(node.data('label')).toBe('L:apps');
-      expect([node.width(), node.height()]).toStrictEqual([180, 56]);
+      expect([node.width(), node.height()]).toStrictEqual([220, 56]);
       expect(node.grabbable()).toBe(false);
       expect(node.hasClass('folder-node')).toBe(true);
     });

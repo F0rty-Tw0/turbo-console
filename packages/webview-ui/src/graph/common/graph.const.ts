@@ -130,7 +130,7 @@ export const COLLAPSED_ID_PREFIX = '\u0002';
 /** Starts every folder link id; package names never start with U+0003. */
 export const FOLDER_LINK_ID_PREFIX = '\u0003';
 
-export const COLLAPSED_NODE_WIDTH = 180;
+export const COLLAPSED_NODE_WIDTH = 220;
 
 export const COLLAPSED_NODE_HEIGHT = 56;
 
@@ -279,6 +279,12 @@ export const LARGE_GRAPH_PACKAGES = 300;
 export const WIDGET_BUTTON_PX = 24;
 
 export const WIDGET_INSET_PX = 8;
+
+/** The gap between a row's children (`.widget-row { gap }` in graph.css). */
+export const WIDGET_GAP_PX = 4;
+
+/** The narrowest row, in CSS px before its scale, that shows Focus folder: a 3-digit count fills a 160 px row exactly in Chromium's Linux font, so 8 px spare keeps the "…" inside under wider fonts. */
+export const ROW_FOCUS_MIN_PX = 168;
 
 /** Header widgets hide while the box or collapsed node is under this many px wide on screen. */
 export const WIDGET_MIN_BOX_PX = 120;

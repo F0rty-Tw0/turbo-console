@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buttonRectsOf, isWidgetShown, overlayLeftOf, packageButtonRectOf, rowPlacementOf } from './widget-geometry.util.ts';
+import { COLLAPSED_NODE_WIDTH } from '../common/graph.const.ts';
 import type { FolderRect, LayerBounds, RectPx, RowButtonRects, RowPlacement } from '../common/widget.type.ts';
 
 const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
@@ -33,8 +34,8 @@ const COLLAPSED_ROW: RowPlacement = { x: 108, y: 58, width: 284, scale: 1 };
 /** The docked 960 px editor's Fit zoom. */
 const FIT_ZOOM = 0.658;
 
-/** A collapsed node 180 px wide in graph px, as drawn at `zoom`. */
-const collapsedAt = (zoom: number): FolderRect => folderOf(rectOf(100, 50, 100 + 180 * zoom, 50 + 56 * zoom));
+/** A collapsed node `COLLAPSED_NODE_WIDTH` px wide in graph px, as drawn at `zoom`. */
+const collapsedAt = (zoom: number): FolderRect => folderOf(rectOf(100, 50, 100 + COLLAPSED_NODE_WIDTH * zoom, 50 + 56 * zoom));
 
 describe('FEATURE: rowPlacementOf', () => {
   describe('GIVEN a folder box 300 px wide', () => {
@@ -100,15 +101,15 @@ describe('FEATURE: rowPlacementOf', () => {
     });
   });
 
-  describe('GIVEN a collapsed node 180 px wide drawn at the camera zoom', () => {
-    it.each([2, 1, 0.8, 0.667])('WHEN the zoom is %s THEN it has a row, so the canvas draws no label under it', (zoom) => {
+  describe('GIVEN a collapsed node COLLAPSED_NODE_WIDTH px wide drawn at the camera zoom', () => {
+    it.each([2, 1, 0.8, 0.546])('WHEN the zoom is %s THEN it has a row, so the canvas draws no label under it', (zoom) => {
       const placement = rowPlacementOf(collapsedAt(zoom), 'collapsed', zoom);
 
       expect(placement).not.toBeNull();
     });
 
-    it('WHEN the zoom is 0.66, drawing it under 120 px THEN it has no row', () => {
-      const placement = rowPlacementOf(collapsedAt(0.66), 'collapsed', 0.66);
+    it('WHEN the zoom is 0.545, drawing it under 120 px THEN it has no row', () => {
+      const placement = rowPlacementOf(collapsedAt(0.545), 'collapsed', 0.545);
 
       expect(placement).toBeNull();
     });
@@ -151,7 +152,11 @@ describe('FEATURE: rowPlacementOf', () => {
 describe('FEATURE: buttonRectsOf', () => {
   describe('GIVEN the row placed at x 108, y 54, 284 px wide', () => {
     it('WHEN the buttons are placed THEN the chevron starts the row and the ellipsis ends it', () => {
-      const expected: RowButtonRects = { chevron: rectOf(108, 54, 132, 78), ellipsis: rectOf(368, 54, 392, 78) };
+      const expected: RowButtonRects = {
+        chevron: rectOf(108, 54, 132, 78),
+        focus: rectOf(340, 54, 364, 78),
+        ellipsis: rectOf(368, 54, 392, 78)
+      };
 
       const rects = buttonRectsOf(BOX_ROW);
 
@@ -162,7 +167,11 @@ describe('FEATURE: buttonRectsOf', () => {
   describe('GIVEN the row at x 100, y 50, 200 px wide drawn at scale 0.5', () => {
     it('WHEN the buttons are placed THEN they are 12 px squares at the ends of its 100 px drawn width', () => {
       const row: RowPlacement = { x: 100, y: 50, width: 200, scale: 0.5 };
-      const expected: RowButtonRects = { chevron: rectOf(100, 50, 112, 62), ellipsis: rectOf(188, 50, 200, 62) };
+      const expected: RowButtonRects = {
+        chevron: rectOf(100, 50, 112, 62),
+        focus: rectOf(174, 50, 186, 62),
+        ellipsis: rectOf(188, 50, 200, 62)
+      };
 
       const rects = buttonRectsOf(row);
 

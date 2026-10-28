@@ -1,3 +1,5 @@
+import { setFocusToggle } from './button-title.ts';
+import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { WidgetRowsDeps } from '../common/graph-widgets.type.ts';
 import type { FolderRowElements, MenuTarget, RowKind, RowPlan } from '../common/widget.type.ts';
@@ -30,9 +32,9 @@ export const translateOf = (x: number, y: number): string => {
   return `translate(${left}px, ${top}px)`;
 };
 
-/** Shows and places a row from its plan, on whole px and at its scale; without one, or with one of the other kind, the row is hidden. */
+/** Shows and places a row from its plan, on whole px and at its scale; without one, or with one of the other kind, the row is hidden. The chevron, Focus folder and "…" hide as the plan says. */
 const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
-  const { root, chevron, ellipsis } = entry.elements;
+  const { root, chevron, focus, ellipsis } = entry.elements;
   const isPlaced = plan?.kind === entry.kind;
 
   setHidden(root, !isPlaced);
@@ -49,6 +51,7 @@ const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
   writeStyle(root, 'transform', transform);
   writeStyle(root, 'width', `${(right - left) / scale}px`);
   setHidden(chevron, !plan.isChevronShown);
+  setHidden(focus, !plan.isFocusShown);
   setHidden(ellipsis, !plan.isEllipsisShown);
 };
 
@@ -78,8 +81,8 @@ export class WidgetRows {
     return entry?.elements.ellipsis ?? null;
   }
 
-  /** Drops the rows of folders that left the scene and builds the missing ones; new rows go before `before`. */
-  public sync(scene: FolderScene | null, before: HTMLElement | null): void {
+  /** Drops the rows of folders that left the scene and builds the missing ones; new rows go before `before`. Each Focus folder reads pressed when its folder is `focusedFolder`. */
+  public sync(scene: FolderScene | null, before: HTMLElement | null, focusedFolder: string | null): void {
     const folders = shownOf(scene);
     const kept = new Set(folders);
 
@@ -97,6 +100,8 @@ export class WidgetRows {
     for (const folder of folders) this.syncRow(folder, scene, before);
 
     this.order(folders, before);
+
+    for (const [folder, entry] of this.rows) setFocusToggle(entry.elements.focus, folder === focusedFolder, FOCUS_FOLDER_LABEL);
   }
 
   /** Shows and places each row of the plan; a row without one, or of the other kind, is hidden. */
@@ -126,12 +131,13 @@ export class WidgetRows {
 
     if (isCurrent) return;
 
-    const { views, onToggle, onTitle, onMenu } = this.deps;
+    const { views, onToggle, onTitle, onFocus, onMenu } = this.deps;
     const elements = views.row(kind, folderTitleOf(folder), count);
     const target: MenuTarget = { kind: 'folder', folder };
 
     elements.chevron.addEventListener('click', (): void => onToggle(folder));
     elements.title.addEventListener('click', (event): void => onTitle(folder, event));
+    elements.focus.addEventListener('click', (): void => onFocus(folder));
     elements.ellipsis.addEventListener('click', (): void => onMenu(target, elements.ellipsis));
     this.rows.set(folder, { kind, count, elements });
 

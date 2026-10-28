@@ -34,7 +34,7 @@ const inputOf = (rects: Partial<WidgetRects>, overrides: Partial<WidgetPlanInput
 
 const boxRowOf = (folder: string, x: number): RowPlan => {
   const placement = { x, y: 54, width: 284, scale: 1 };
-  const row: RowPlan = { folder, kind: 'box', placement, isChevronShown: true, isEllipsisShown: true };
+  const row: RowPlan = { folder, kind: 'box', placement, isChevronShown: true, isFocusShown: true, isEllipsisShown: true };
 
   return row;
 };
@@ -71,6 +71,19 @@ describe('FEATURE: widgetPlanOf', () => {
     });
   });
 
+  describe('GIVEN a box row near the Focus folder minimum', () => {
+    it.each([
+      { boxWidth: 183, isShown: false },
+      { boxWidth: 184, isShown: true }
+    ])('WHEN a box row $boxWidth px wide is planned THEN Focus folder shown is $isShown', ({ boxWidth, isShown }) => {
+      const boxes = new Map([['apps', folderOf(100, 50, 100 + boxWidth, 300)]]);
+
+      const plan = widgetPlanOf(inputOf({ boxes }));
+
+      expect(plan.rows[0]?.isFocusShown).toBe(isShown);
+    });
+  });
+
   describe('GIVEN boxes the layer cannot show a row for', () => {
     it('WHEN a box is 119 px wide THEN it gets no row', () => {
       const boxes = new Map([['apps', folderOf(100, 50, 219, 300)]]);
@@ -86,6 +99,26 @@ describe('FEATURE: widgetPlanOf', () => {
       const plan = widgetPlanOf(inputOf({ boxes }));
 
       expect(plan.rows).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN apps', () => {
+    it('WHEN the overlay starts at x = 350 THEN Focus folder (340-364) is hidden while the chevron shows', () => {
+      const boxes = new Map([['apps', APPS]]);
+      const bounds: LayerBounds = { ...BOUNDS, overlayLeft: 350 };
+
+      const plan = widgetPlanOf(inputOf({ boxes }, { bounds }));
+
+      expect(plan.rows[0]).toMatchObject({ isChevronShown: true, isFocusShown: false });
+    });
+
+    it('WHEN the overlay starts at x = 380 THEN Focus folder hides with the "…"', () => {
+      const boxes = new Map([['apps', APPS]]);
+      const bounds: LayerBounds = { ...BOUNDS, overlayLeft: 380 };
+
+      const plan = widgetPlanOf(inputOf({ boxes }, { bounds }));
+
+      expect(plan.rows[0]).toMatchObject({ isFocusShown: false, isEllipsisShown: false });
     });
   });
 

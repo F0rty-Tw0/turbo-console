@@ -37,7 +37,7 @@ const appsOf = (cy: Core): FolderRect => widgetRectsOf(cy, null).boxes.get('apps
 const ROW_PLACEMENT: RowPlacement = { x: 108, y: 58, width: 164, scale: 1 };
 
 const rowOf = (folder: string, kind: RowKind): RowPlan => {
-  const row: RowPlan = { folder, kind, placement: ROW_PLACEMENT, isChevronShown: true, isEllipsisShown: true };
+  const row: RowPlan = { folder, kind, placement: ROW_PLACEMENT, isChevronShown: true, isFocusShown: true, isEllipsisShown: true };
 
   return row;
 };

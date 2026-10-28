@@ -1,7 +1,7 @@
-import { setButtonIcon, setButtonLabel, setButtonText } from './button-title.ts';
+import { setButtonIcon, setButtonLabel, setButtonText, setFocusToggle } from './button-title.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
-import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
+import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { ControlsView } from '../common/graph-controls.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
@@ -12,14 +12,6 @@ import { matchesSearch } from '../utils/search.util.ts';
 
 const setDisabled = (element: HTMLElement, isDisabled: boolean): void => {
   element.setAttribute('aria-disabled', String(isDisabled));
-};
-
-/** A Focus toggle shows its state by `aria-pressed` under a constant name; its hover title says what a press does. */
-const setFocusToggle = (button: HTMLButtonElement, isFocus: boolean, focusTitle: string): void => {
-  const title = isFocus ? CLEAR_FOCUS_LABEL : focusTitle;
-
-  button.setAttribute('aria-pressed', String(isFocus));
-  button.title = title;
 };
 
 const renderRow = (row: ControlsRow, view: ControlsView): void => {

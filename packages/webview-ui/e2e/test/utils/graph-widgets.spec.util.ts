@@ -4,7 +4,7 @@ import { isInside, readRect } from './element-rect.spec.util.ts';
 import { nodeBoxOf } from './graph-geometry.spec.util.ts';
 import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import { SELECTED_BORDER_PX } from '../../../src/graph/common/graph.const.ts';
-import { folderTitleOf } from '../../../src/graph/utils/controls-text.util.ts';
+import { folderFocusLabelOf, folderTitleOf } from '../../../src/graph/utils/controls-text.util.ts';
 import type { RowFrame } from '../../common/graph-folders.type.ts';
 import { WIDGET_BUTTON_PX, WIDGET_INSET_PX } from '../../common/graph.const.ts';
 import type { ElementRect, ViewportPoint } from '../../common/playwright.type.ts';
@@ -75,6 +75,9 @@ export const isNextSiblingOf = (element: Element, className: string): boolean =>
 
 /** The accessible name of a folder's "…". */
 export const ellipsisNameOf = (folder: string): string => `Actions for folder ${folderTitleOf(folder)}`;
+
+/** The accessible name of a folder row's Focus folder button. */
+export const focusFolderNameOf = (folder: string): string => folderFocusLabelOf(folderTitleOf(folder));
 
 const NO_RECT: ElementRect = { left: Number.NaN, top: Number.NaN, width: Number.NaN, height: Number.NaN };
 

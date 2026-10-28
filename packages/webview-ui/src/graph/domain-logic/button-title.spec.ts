@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { setButtonIcon, setButtonLabel, setButtonText, setFocusButton, setIconTextButton } from './button-title.ts';
+import { setButtonIcon, setButtonLabel, setButtonText, setFocusButton, setFocusToggle, setIconTextButton } from './button-title.ts';
+import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { faceOf, iconTextButtonOf } from '../test/utils/button-face.spec.util.ts';
 
@@ -66,6 +67,43 @@ describe('FEATURE: button titles', () => {
       const face = faceOf(button);
 
       expect([...face, button.title]).toStrictEqual([icon, text, text]);
+    });
+  });
+
+  describe('GIVEN an icon-only Focus toggle', () => {
+    it('WHEN it is set pressed THEN aria-pressed is true and its title is Clear focus', () => {
+      const button = document.createElement('button');
+
+      setFocusToggle(button, true, FOCUS_FOLDER_LABEL);
+
+      expect([button.getAttribute('aria-pressed'), button.title]).toStrictEqual(['true', 'Clear focus']);
+    });
+
+    it('WHEN it is set unpressed with the Focus folder label THEN aria-pressed is false and its title is Focus folder', () => {
+      const button = document.createElement('button');
+
+      setFocusToggle(button, false, FOCUS_FOLDER_LABEL);
+
+      expect([button.getAttribute('aria-pressed'), button.title]).toStrictEqual(['false', 'Focus folder']);
+    });
+
+    it('WHEN it is set to the state it already has THEN neither aria-pressed nor the title is written again', () => {
+      const button = document.createElement('button');
+      const writes: string[] = [];
+
+      setFocusToggle(button, true, FOCUS_FOLDER_LABEL);
+      vi.spyOn(button, 'setAttribute').mockImplementation((name: string): void => {
+        writes.push(name);
+      });
+      Object.defineProperty(button, 'title', {
+        get: (): string => CLEAR_FOCUS_LABEL,
+        set: (): void => {
+          writes.push('title');
+        }
+      });
+      setFocusToggle(button, true, FOCUS_FOLDER_LABEL);
+
+      expect(writes).toStrictEqual([]);
     });
   });
 

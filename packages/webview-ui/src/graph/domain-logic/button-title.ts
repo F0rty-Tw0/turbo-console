@@ -1,3 +1,4 @@
+import { CLEAR_FOCUS_LABEL } from '../common/details.const.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import { focusFaceOf } from '../utils/details-text.util.ts';
 
@@ -35,4 +36,15 @@ export const setFocusButton = (button: HTMLButtonElement, isFocused: boolean): v
   const face = focusFaceOf(isFocused);
 
   setIconTextButton(button, face.icon, face.text);
+};
+
+/** A Focus toggle shows its state by `aria-pressed` under a constant name; its hover title says what a press does. */
+export const setFocusToggle = (button: HTMLButtonElement, isFocus: boolean, focusTitle: string): void => {
+  const title = isFocus ? CLEAR_FOCUS_LABEL : focusTitle;
+  const pressed = String(isFocus);
+  const wasPressed = button.getAttribute('aria-pressed');
+
+  if (wasPressed !== pressed) button.setAttribute('aria-pressed', pressed);
+
+  if (button.title !== title) button.title = title;
 };

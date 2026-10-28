@@ -92,7 +92,9 @@ p {
 .vscode-high-contrast .graph-toolbar .text-button[aria-pressed='true'],
 .vscode-high-contrast-light .graph-toolbar .text-button[aria-pressed='true'],
 .vscode-high-contrast .icon-button[aria-pressed='true'],
-.vscode-high-contrast-light .icon-button[aria-pressed='true'] {
+.vscode-high-contrast-light .icon-button[aria-pressed='true'],
+.vscode-high-contrast .widget-button[aria-pressed='true'],
+.vscode-high-contrast-light .widget-button[aria-pressed='true'] {
   box-shadow: inset 0 0 0 1px var(--vscode-inputOption-activeBorder);
 }
 
@@ -373,9 +375,12 @@ p {
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid
-    var(--vscode-widget-border, var(--vscode-contrastBorder, color-mix(in srgb, var(--vscode-foreground) 35%, transparent)));
+  border: 1px solid var(--tc-widget-border);
   border-radius: 50%;
+  --tc-widget-border: var(
+    --vscode-widget-border,
+    var(--vscode-contrastBorder, color-mix(in srgb, var(--vscode-foreground) 35%, transparent))
+  );
   /* An opaque base under the secondary colour, which Dark Modern makes transparent and High Contrast leaves unset. */
   --tc-widget-fill: var(--vscode-button-secondaryBackground, transparent);
 
@@ -388,6 +393,14 @@ p {
 
 .widget-button:hover {
   --tc-widget-fill: var(--vscode-button-secondaryHoverBackground, transparent);
+}
+
+/* After the hover rule, which has the same specificity, so the pressed look wins; sets no background shorthand, so the opaque base stays under the fill. */
+.widget-button[aria-pressed='true'] {
+  border-color: var(--vscode-inputOption-activeBorder, var(--tc-widget-border));
+  --tc-widget-fill: var(--vscode-inputOption-activeBackground, transparent);
+
+  color: var(--vscode-inputOption-activeForeground, var(--vscode-button-secondaryForeground));
 }
 
 .widget-button:focus-visible,

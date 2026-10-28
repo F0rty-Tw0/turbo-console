@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
-import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
+import { folderFocusLabelOf, folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import { WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
 import { readRect, readRects } from '../test/utils/element-rect.spec.util.ts';
 import {
@@ -158,10 +158,10 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
     await this.expectEllipsisOnBox(folder);
   }
 
-  /** The folder has no shown header button: neither chevron nor "…". */
+  /** The folder has no shown header button: no chevron, Focus folder or "…". */
   public async expectHeaderHidden(folder: string): Promise<void> {
     const title = folderTitleOf(folder);
-    const names = [`Collapse ${title}`, `Expand ${title}`, `Actions for folder ${title}`];
+    const names = [`Collapse ${title}`, `Expand ${title}`, `Actions for folder ${title}`, folderFocusLabelOf(title)];
 
     for (const name of names) await expect(this.layer.getByRole('button', { name, exact: true })).toHaveCount(0);
   }

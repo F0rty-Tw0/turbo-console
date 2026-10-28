@@ -14,6 +14,7 @@ import type {
 } from '../common/graph-widgets.type.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
+import { focusFolderOf } from '../utils/folder-rules.util.ts';
 import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from '../utils/widget-menu-model.util.ts';
 
 type FolderSource = Pick<WidgetSources, 'scene'>;
@@ -65,7 +66,12 @@ export const widgetsOf = (
 ): WidgetWiring => {
   const { page, view, widgetViews, overlay, isGrouped, canAct, onLocation } = deps;
   const state = (): WidgetState => {
-    const current: WidgetState = { isGrouped: isGrouped(), scene: folders.scene(), selectedPackage: inspection.selected() };
+    const current: WidgetState = {
+      isGrouped: isGrouped(),
+      scene: folders.scene(),
+      selectedPackage: inspection.selected(),
+      focusedFolder: focusFolderOf(controls.applied)
+    };
 
     return current;
   };
