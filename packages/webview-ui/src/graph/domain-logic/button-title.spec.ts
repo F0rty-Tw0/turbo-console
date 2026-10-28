@@ -69,6 +69,20 @@ describe('FEATURE: button titles', () => {
     });
   });
 
+  describe('GIVEN a button with only an icon', () => {
+    it('WHEN setIconTextButton runs THEN the icon and the title follow and no label is added', () => {
+      const button = document.createElement('button');
+      const icon = document.createElement('span');
+
+      button.append(icon);
+      setIconTextButton(button, 'close', 'Clear focus');
+
+      const drawn = [icon.className, button.title, button.children.length];
+
+      expect(drawn).toStrictEqual(['codicon codicon-close', 'Clear focus', 1]);
+    });
+  });
+
   describe('GIVEN a button with no children', () => {
     it('WHEN setButtonIcon runs THEN it adds nothing', () => {
       const button = document.createElement('button');
