@@ -186,6 +186,34 @@ test.describe('FEATURE: the Tasks button entry (T5)', () => {
   );
 
   test(
+    'GIVEN app’s tasks entered and lib#build selected, Packages then Tasks with app still selected keeps lib#build selected',
+    { annotation: U3_T5 },
+    async ({ graphCanvas, graphHost, graphList, graphPage, graphProbe, graphTask, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN app is picked, Tasks is pressed and lib#build is tapped', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphProbe.expectNodeIds(PACKAGES);
+        await graphList.pick('app');
+        await graphTask.enter();
+        await graphTaskProbe.expectTaskIds(APP_SET);
+        await graphCanvas.tapNode('lib#build');
+        await graphProbe.expectSelected('lib#build');
+      });
+
+      await test.step('AND Packages is pressed with app still selected', async (): Promise<void> => {
+        await graphTask.leave();
+        await graphProbe.expectSelected('app');
+      });
+
+      await test.step('AND Tasks is pressed again', async (): Promise<void> => graphTask.enter());
+
+      await test.step("THEN app's tasks are drawn again", async (): Promise<void> => graphTaskProbe.expectTaskIds(APP_SET));
+
+      await test.step('AND lib#build is still selected', async (): Promise<void> => graphProbe.expectSelected('lib#build'));
+    }
+  );
+
+  test(
     'GIVEN ui#test saved and app selected after leaving, Tasks draws app’s tasks instead of the saved choice',
     { annotation: U3_T5 },
     async ({ graphHost, graphList, graphPage, graphTask, graphTaskProbe }): Promise<void> => {

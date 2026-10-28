@@ -152,7 +152,17 @@ describe('FEATURE: task choice rules', () => {
       { selected: 'docs', expected: null },
       { selected: null, expected: null }
     ])('WHEN the selected package is $selected THEN the entry ids are $expected', ({ selected, expected }) => {
-      const ids = entryTaskIdsOf(TASK_CHAIN_STUB, selected);
+      const ids = entryTaskIdsOf(TASK_CHAIN_STUB, selected, ['api#build']);
+
+      expect(ids).toStrictEqual(expected);
+    });
+
+    it.each([
+      { chosen: ['web#lint', 'web#build'], expected: null },
+      { chosen: ['web#build'], expected: ['web#build', 'web#lint'] },
+      { chosen: ['web#build', 'web#lint', 'api#build'], expected: ['web#build', 'web#lint'] }
+    ])('WHEN web is selected and $chosen is chosen THEN the entry ids are $expected', ({ chosen, expected }) => {
+      const ids = entryTaskIdsOf(TASK_CHAIN_STUB, 'web', chosen);
 
       expect(ids).toStrictEqual(expected);
     });

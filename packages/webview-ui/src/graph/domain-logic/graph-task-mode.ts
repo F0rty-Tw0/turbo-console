@@ -90,13 +90,13 @@ export class GraphTaskMode {
   }
 
   /**
-   * Package mode → task mode on the selected package's tasks, which replace the saved choice; with no package selected or
-   * one without tasks, on the saved choice or the prompt. In task mode it does nothing.
+   * Package mode → task mode on the selected package's tasks, which replace the saved choice; with no package selected, one
+   * without tasks or one whose tasks are the saved choice, on the saved view or the prompt. In task mode it does nothing.
    */
   public enter(at: number): void {
     if (this.isActive()) return;
 
-    const entryIds = entryTaskIdsOf(this.memory.tasks(), this.deps.selectedPackage());
+    const entryIds = entryTaskIdsOf(this.memory.tasks(), this.deps.selectedPackage(), this.memory.view().chosen);
 
     if (entryIds !== null) {
       this.showTasks(entryIds, at);

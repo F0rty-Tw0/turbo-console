@@ -78,13 +78,18 @@ export const packageTaskIdsOf = (tasks: GraphTask[], name: string): string[] => 
 /** The ids of every task, in the task list order, which Show every task chooses. */
 export const taskIdsOf = (tasks: GraphTask[]): string[] => tasks.map((task) => task.id);
 
-/** The ids of the selected package's tasks, which Tasks opens on; `null` with no package selected or one without tasks. */
-export const entryTaskIdsOf = (tasks: GraphTask[], selected: string | null): string[] | null => {
+/**
+ * The ids of the selected package's tasks, which Tasks opens on; `null` with no package selected, one without tasks, or
+ * one whose tasks are already the `chosen` set, so the saved view is kept.
+ */
+export const entryTaskIdsOf = (tasks: GraphTask[], selected: string | null, chosen: string[]): string[] | null => {
   if (selected === null) return null;
 
   const owned = packageTaskIdsOf(tasks, selected);
+  const chosenIds = new Set(chosen);
+  const isChosen = chosenIds.size === owned.length && owned.every((id) => chosenIds.has(id));
 
-  return owned.length > 0 ? owned : null;
+  return owned.length > 0 && !isChosen ? owned : null;
 };
 
 /** The notice for `dropped` chosen ids that match no task; none for 0. */

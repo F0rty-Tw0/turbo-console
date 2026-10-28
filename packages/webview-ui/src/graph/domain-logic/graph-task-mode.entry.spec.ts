@@ -86,6 +86,17 @@ describe('FEATURE: GraphTaskMode Tasks entry', () => {
     );
   });
 
+  describe('GIVEN package mode with web’s tasks saved under a placed layout and web#lint selected', () => {
+    it('WHEN Tasks is pressed with web selected THEN the saved layout key and selected task are kept', () => {
+      const saved = taskSavedOf({ chosen: ['web#lint', 'web#build'], selected: 'web#lint', layoutKey: 'web-key' }, 'packages');
+
+      open(saved, 'web');
+      mode.enter(8);
+
+      expect(rig.modes.task()).toMatchObject({ layoutKey: 'web-key', selected: 'web#lint' });
+    });
+  });
+
   describe('GIVEN task mode with api#build chosen and laid out', () => {
     beforeEach(() => {
       open(taskSavedOf({ chosen: ['api#build'] }), 'web');
