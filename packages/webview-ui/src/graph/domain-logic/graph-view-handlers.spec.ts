@@ -21,6 +21,8 @@ describe('FEATURE: viewHandlersOf', () => {
     let tapFolder: Mock<(folder: string) => void>;
     let openDetailsOf: Mock<(name: string) => void>;
     let saveViewport: Mock<() => void>;
+    let keepClearPackage: Mock<() => void>;
+    let keepClearTask: Mock<() => void>;
     let toggle: Mock<(folder: string) => void>;
     let dragged: Mock<(positions: Positions) => void>;
     let taskDragged: Mock<() => void>;
@@ -40,6 +42,8 @@ describe('FEATURE: viewHandlersOf', () => {
       tapFolder = vi.fn<(folder: string) => void>();
       openDetailsOf = vi.fn<(name: string) => void>();
       saveViewport = vi.fn<() => void>();
+      keepClearPackage = vi.fn<() => void>();
+      keepClearTask = vi.fn<() => void>();
       toggle = vi.fn<(folder: string) => void>();
       dragged = vi.fn<(positions: Positions) => void>();
       taskDragged = vi.fn<() => void>();
@@ -55,7 +59,7 @@ describe('FEATURE: viewHandlersOf', () => {
       const rendered = (): void => {
         calls.push('rendered');
       };
-      const inspection = { tapNode, tapEdge, input, tapFolder, openDetailsOf, saveViewport };
+      const inspection = { tapNode, tapEdge, input, tapFolder, openDetailsOf, saveViewport, keepClear: keepClearPackage };
       const folders = { toggle };
       const filtering = { inspection, folders, rendered };
       const layouts = { dragged };
@@ -63,7 +67,7 @@ describe('FEATURE: viewHandlersOf', () => {
       const taskRendered = (): void => {
         calls.push('task rendered');
       };
-      const selection = { tapNode: selectTask, clear: clearTask, rendered: taskRendered };
+      const selection = { tapNode: selectTask, clear: clearTask, rendered: taskRendered, keepClear: keepClearTask };
       const atomsRendered = (): void => {
         calls.push('atoms rendered');
       };
@@ -145,6 +149,13 @@ describe('FEATURE: viewHandlersOf', () => {
       expect(calls).toStrictEqual(['flow cleared']);
     });
 
+    it('WHEN the canvas re-fits THEN the inspection keeps clear and task mode hears nothing', () => {
+      handlers.onRefit();
+
+      expect(keepClearPackage).toHaveBeenCalledOnce();
+      expect(keepClearTask).not.toHaveBeenCalled();
+    });
+
     it('WHEN a node is hovered in package mode THEN task mode hears nothing', () => {
       handlers.onHoverNode('web');
 
@@ -221,6 +232,13 @@ describe('FEATURE: viewHandlersOf', () => {
         handlers.onViewport();
 
         expect(calls).toStrictEqual(['flow cleared']);
+      });
+
+      it('WHEN the canvas re-fits THEN the task selection keeps clear and the inspection hears nothing', () => {
+        handlers.onRefit();
+
+        expect(keepClearTask).toHaveBeenCalledOnce();
+        expect(keepClearPackage).not.toHaveBeenCalled();
       });
 
       it('WHEN a frame renders THEN the frame clock is marked, then the task selection and the group clock hear of it', () => {

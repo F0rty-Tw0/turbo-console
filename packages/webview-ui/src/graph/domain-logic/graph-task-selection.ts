@@ -106,6 +106,11 @@ export class GraphTaskSelection {
     this.widgets.rendered();
   }
 
+  /** After the canvas re-fit: the selected task's "…" and card keep clear of the panel overlaying the canvas. */
+  public keepClear(): void {
+    this.widgets.keepClear();
+  }
+
   /**
    * After a task layout is placed, which draws the kept paint and stops the flow: the flow hears of the painted target
    * again, so a restored selection's flow starts as a fresh tap's does.
