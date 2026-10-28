@@ -140,6 +140,11 @@ export class GraphFolderInspect {
     await expect(this.headerFocus(title).locator('span').first()).toHaveClass(codiconClassOf('target'));
   }
 
+  /** The header row of the folder titled `title` is `px` tall, not counting its top margin. */
+  public async expectHeaderHeight(title: string, px: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.headerHeight(title)).toBe(px);
+  }
+
   /** The folder's frame ends left of the details overlay with the keep-clear margin to spare. */
   public async expectFolderClear(folder: string): Promise<void> {
     await expect.poll(async (): Promise<boolean> => this.isClearOfOverlay(folder)).toBe(true);
@@ -152,6 +157,12 @@ export class GraphFolderInspect {
     const box: AnchorBox = { x1: rect.left, x2: rect.left + rect.width };
 
     return isClearOf(box, overlay.left);
+  }
+
+  private async headerHeight(title: string): Promise<number> {
+    const rect = await this.headerOf(title).evaluate(readRect);
+
+    return rect.height;
   }
 
   private headerOf(title: string): Locator {

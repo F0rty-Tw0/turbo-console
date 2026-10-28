@@ -694,6 +694,11 @@ p {
   border-radius: var(--radius);
 }
 
+/* A 24 px icon button sets the line's height on its own; block padding around it would space the lines 28 px apart. */
+.controls-cell:has(> .icon-button) {
+  padding-block: 0;
+}
+
 .controls-row .controls-cell:nth-child(2),
 .controls-header .controls-cell:first-child {
   flex: 1;

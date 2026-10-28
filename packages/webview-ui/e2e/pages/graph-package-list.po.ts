@@ -4,6 +4,7 @@ import { expect } from '@playwright/test';
 import { CLEAR_FOCUS_LABEL } from '../../src/graph/common/details.const.ts';
 import { FOCUS_PACKAGE_TITLE } from '../../src/graph/common/graph.const.ts';
 import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
+import { readRect } from '../test/utils/element-rect.spec.util.ts';
 
 /** A name button's accessible name is the package name; the focus button's starts with `Focus `, a header's with `Expand folder ` or `Collapse folder `. */
 const NAME_BUTTON = /^(?!Focus |Expand folder |Collapse folder )/;
@@ -192,6 +193,17 @@ export class GraphPackageList {
 
   private groupCheck(label: string): Locator {
     return this.grid.getByRole('checkbox', { name: label, exact: true });
+  }
+
+  /** The row of `name` is `px` tall, so rows sit `px` apart. */
+  public async expectRowHeight(name: string, px: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.rowHeight(name)).toBe(px);
+  }
+
+  private async rowHeight(name: string): Promise<number> {
+    const rect = await this.rowOf(name).evaluate(readRect);
+
+    return rect.height;
   }
 
   private nameButton(name: string): Locator {

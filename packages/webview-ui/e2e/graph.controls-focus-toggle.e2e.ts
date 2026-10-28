@@ -6,6 +6,9 @@ import { THEME_HC_STUB } from './test/stubs/graph-theme.stub.ts';
 
 const D4 = { description: '2026-10-27-u3-controls-nav D4', type: 'requirement' };
 
+/** A list line's pitch: the height of its icon buttons, with no block padding around them. */
+const ROW_PX = 24;
+
 const TO_FOCUS_DOCS: FocusStep[] = [
   { key: 'ArrowDown', focus: 'docs' },
   { key: 'ArrowRight', focus: 'Focus docs' }
@@ -182,6 +185,25 @@ test.describe('FEATURE: graph controls sections and Focus toggles', () => {
         await graphFolderInspect.expectHeaderFocusText('apps', 'Clear focus');
         await graphFolderInspect.expectHeaderFocusTitled('apps', 'Clear focus');
       });
+    }
+  );
+
+  test(
+    'GIVEN the grouped controls graph, package rows and folder headers are as tall as their 24 px icon buttons',
+    { annotation: D4 },
+    async ({ graphFolderInspect, graphGrouping, graphHost, graphList, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('AND Group by folder is checked', async (): Promise<void> => graphGrouping.setGrouped(true));
+
+      await test.step('AND the folder layout is drawn', async (): Promise<void> => graphGrouping.expectBoxesInView(3));
+
+      await test.step('THEN the web row is 24 px tall', async (): Promise<void> => graphList.expectRowHeight('web', ROW_PX));
+
+      await test.step('AND the apps header is 24 px tall', async (): Promise<void> =>
+        graphFolderInspect.expectHeaderHeight('apps', ROW_PX));
     }
   );
 
