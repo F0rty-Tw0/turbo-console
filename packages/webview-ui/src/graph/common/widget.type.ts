@@ -120,7 +120,7 @@ export type FolderRowElements = {
   readonly ellipsis: HTMLButtonElement;
 };
 
-/** The four buttons of a row, in DOM order; the glyph and badge are not buttons. */
+/** The four buttons of a row; the glyph and badge are not buttons. */
 export type RowButtonKind = Exclude<keyof FolderRowElements, 'root'>;
 
 /** A built row as the layer keeps it. */
