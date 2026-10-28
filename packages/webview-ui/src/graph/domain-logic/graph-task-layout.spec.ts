@@ -19,6 +19,8 @@ import { atomPositionsOf } from '../utils/atom-positions.util.ts';
 
 const API_AT: Position = { x: 10, y: 20 };
 
+const SAVED_ZOOM = 1.25;
+
 const POSITIONS: Positions = { 'api#build': API_AT };
 
 const SHOWN = new Set(['api#build']);
@@ -198,12 +200,12 @@ describe('FEATURE: GraphTaskLayout', () => {
 
   describe('GIVEN a saved task camera for the key', () => {
     it.each([
-      { fitted: true, called: 'fit', skipped: 'setViewport' },
-      { fitted: false, called: 'setViewport', skipped: 'fit' }
+      { fitted: true, called: 'fit', args: [], skipped: 'setViewport' },
+      { fitted: false, called: 'setViewport', args: [SAVED_ZOOM, API_AT], skipped: 'fit' }
     ] as const)(
-      'WHEN it was fitted: $fitted and the layout lands THEN the camera uses $called',
-      async ({ fitted, called, skipped }) => {
-        const task = taskSavedOf({ layoutKey: 'k0', fitted, zoom: 1.25, pan: API_AT }).task;
+      'WHEN it was fitted: $fitted and the layout lands THEN the camera uses $called with the saved camera',
+      async ({ fitted, called, args, skipped }) => {
+        const task = taskSavedOf({ layoutKey: 'k0', fitted, zoom: SAVED_ZOOM, pan: API_AT }).task;
 
         layout = new GraphTaskLayout({
           ...rig.deps,
@@ -215,7 +217,7 @@ describe('FEATURE: GraphTaskLayout', () => {
 
         await land('k0');
 
-        expect(rig.view[called]).toHaveBeenCalledOnce();
+        expect(rig.view[called]).toHaveBeenCalledExactlyOnceWith(...args);
         expect(rig.view[skipped]).not.toHaveBeenCalled();
       }
     );
