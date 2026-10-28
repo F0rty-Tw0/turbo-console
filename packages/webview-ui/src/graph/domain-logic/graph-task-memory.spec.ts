@@ -153,13 +153,15 @@ describe('FEATURE: task mode memory', () => {
   });
 
   describe.each(FACTS_ROWS)('GIVEN %s chosen', (_title, state, chosen, facts) => {
-    it('WHEN the location facts are read THEN they name the one package, count the shown tasks and flag a single package', () => {
+    it('WHEN the location facts are read with the shown set’s count THEN they name the one package, carry the count and flag a single package', () => {
       const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
       const memory = new GraphTaskMemory(modesOf(saved));
 
       memory.keep(state);
 
-      expect(memory.locationFacts()).toStrictEqual(facts);
+      const { ids } = memory.shownSet();
+
+      expect(memory.locationFacts(ids.length)).toStrictEqual(facts);
     });
   });
 });

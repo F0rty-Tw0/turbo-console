@@ -26,6 +26,7 @@ export class GraphTaskMode {
   private readonly panel: TaskPanel;
   private readonly controls: TaskControls;
   private hasEntered = false;
+  private shownCount = 0;
 
   public constructor(deps: TaskModeDeps) {
     this.deps = deps;
@@ -76,6 +77,7 @@ export class GraphTaskMode {
     this.selection.setShown(request.tasks);
 
     if (request.key === shownKey && !isRelabelled) {
+      this.shownCount = shownSet.ids.length;
       this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount, knownCount });
       this.layout.atoms.reshown();
 
@@ -140,9 +142,9 @@ export class GraphTaskMode {
     return packageTaskIdsOf(this.memory.tasks(), name);
   }
 
-  /** What the location bar reads of the shown tasks. */
+  /** What the location bar reads of the shown tasks, counted from the shown set the last render or state drew. */
   public locationFacts(): LocationFacts {
-    return this.memory.locationFacts();
+    return this.memory.locationFacts(this.shownCount);
   }
 
   /** Saves the camera on screen and the key of the layout under it; nothing before a task layout is placed. */
@@ -173,6 +175,7 @@ export class GraphTaskMode {
     const isEmpty = request.tasks.length === 0;
     const knownCount = this.memory.tasks().length;
 
+    this.shownCount = shownSet.ids.length;
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));
     this.panel.show({ isEmpty, hiddenCount: shownSet.hiddenCount, knownCount });
     this.controls.setRows(request.tasks, this.memory.rootLabel());

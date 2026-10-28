@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { GraphTaskMemory } from './graph-task-memory.ts';
 import { GraphTaskMode } from './graph-task-mode.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -128,6 +129,18 @@ describe('FEATURE: GraphTaskMode Tasks entry', () => {
       const facts: LocationFacts = { taskPackage: 'api', taskCount: 2, isSinglePackage: false };
 
       expect(mode.locationFacts()).toStrictEqual(facts);
+    });
+
+    it('WHEN the location facts are read THEN the shown set the render drew is not built again', () => {
+      const shownSet = vi.spyOn(GraphTaskMemory.prototype, 'shownSet');
+
+      mode.locationFacts();
+
+      const builds = shownSet.mock.calls.length;
+
+      shownSet.mockRestore();
+
+      expect(builds).toBe(0);
     });
 
     it('WHEN the panel reports a shown set THEN the location bar reads again', () => {
