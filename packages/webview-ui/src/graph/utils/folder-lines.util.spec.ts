@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { breadcrumbLinesOf } from './breadcrumb.util.ts';
+import { folderLinesOf } from './folder-lines.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 
 const pkgOf = (name: string, path: string): GraphPackage => {
@@ -23,7 +23,7 @@ const FIVE_FOLDER_KEYS = ['a', 'b', 'c', 'd', 'e'];
 
 const FIVE_FOLDERS: GraphPackage[] = FIVE_FOLDER_KEYS.map(outsideOf);
 
-describe('FEATURE: breadcrumbLinesOf', () => {
+describe('FEATURE: folderLinesOf', () => {
   describe('GIVEN a focused folder core and links to five other folders', () => {
     const infos = [...CORE, ...FIVE_FOLDERS];
     const edges = [
@@ -40,7 +40,7 @@ describe('FEATURE: breadcrumbLinesOf', () => {
     ];
 
     it('WHEN the lines are built THEN they are by count, then title, with the cap and the rest counted', () => {
-      const lines = breadcrumbLinesOf('core', infos, edges);
+      const lines = folderLinesOf('core', infos, edges);
 
       expect(lines).toStrictEqual([
         '3 links with a not shown',
@@ -63,7 +63,7 @@ describe('FEATURE: breadcrumbLinesOf', () => {
       const others = folders.map(outsideOf);
       const edges = folders.map((folder) => edge('k1', `${folder}1`));
 
-      const lines = breadcrumbLinesOf('core', [...CORE, ...others], edges);
+      const lines = folderLinesOf('core', [...CORE, ...others], edges);
 
       expect(lines).toStrictEqual(expected);
     });
@@ -78,7 +78,7 @@ describe('FEATURE: breadcrumbLinesOf', () => {
     ])('WHEN there is $title THEN there are no lines', ({ edges }) => {
       const infos = [...CORE, outsideOf('a'), outsideOf('b')];
 
-      const lines = breadcrumbLinesOf('core', infos, edges);
+      const lines = folderLinesOf('core', infos, edges);
 
       expect(lines).toStrictEqual([]);
     });
@@ -89,7 +89,7 @@ describe('FEATURE: breadcrumbLinesOf', () => {
       const infos = [...CORE, outsideOf('a'), outsideOf('B')];
       const edges = [edge('k1', 'a1'), edge('k1', 'B1')];
 
-      const lines = breadcrumbLinesOf('core', infos, edges);
+      const lines = folderLinesOf('core', infos, edges);
 
       expect(lines).toStrictEqual(['1 link with B not shown', '1 link with a not shown']);
     });
@@ -100,7 +100,7 @@ describe('FEATURE: breadcrumbLinesOf', () => {
       const infos = [...CORE, pkgOf('top', 'top'), pkgOf('named', '(root)/named')];
       const edges = [edge('k1', 'top'), edge('k1', 'named')];
 
-      const lines = breadcrumbLinesOf('core', infos, edges);
+      const lines = folderLinesOf('core', infos, edges);
 
       expect(lines).toStrictEqual(['1 link with (root) not shown', '1 link with ./(root) not shown']);
     });
@@ -111,7 +111,7 @@ describe('FEATURE: breadcrumbLinesOf', () => {
       const infos = [pkgOf('a', '__proto__/a'), pkgOf('constructor', 'x/constructor')];
       const edges = [edge('a', 'constructor')];
 
-      const lines = breadcrumbLinesOf('__proto__', infos, edges);
+      const lines = folderLinesOf('__proto__', infos, edges);
 
       expect(lines).toStrictEqual(['1 link with x not shown']);
     });

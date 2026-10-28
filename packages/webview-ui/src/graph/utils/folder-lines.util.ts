@@ -2,7 +2,7 @@ import { folderTitleOf } from './controls-text.util.ts';
 import { byCodeUnit, folderOf } from './folder-group.util.ts';
 import { pluralOf } from './plural.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
-import { BREADCRUMB_MAX_LINES } from '../common/graph.const.ts';
+import { LOCATION_MAX_LINES } from '../common/graph.const.ts';
 
 type FolderLinkCount = {
   readonly title: string;
@@ -52,16 +52,16 @@ const rowOf = ([folder, count]: [string, number]): FolderLinkCount => {
 const lineOf = (row: FolderLinkCount): string => `${pluralOf(row.count, 'link', 'links')} with ${row.title} not shown`;
 
 /** One line per other folder linked with `focused` in either direction, whatever the links' visibility: count descending, then title by code unit; the first lines, then `and <k> more folder(s)`. */
-export const breadcrumbLinesOf = (focused: string, infos: GraphPackage[], edges: GraphEdge[]): string[] => {
+export const folderLinesOf = (focused: string, infos: GraphPackage[], edges: GraphEdge[]): string[] => {
   const counts = countsOf(focused, infos, edges);
   const entries = [...counts];
   const rows = entries.map(rowOf);
 
   rows.sort(byCountThenTitle);
 
-  const shown = rows.slice(0, BREADCRUMB_MAX_LINES);
+  const shown = rows.slice(0, LOCATION_MAX_LINES);
   const lines = shown.map(lineOf);
-  const hiddenCount = rows.length - BREADCRUMB_MAX_LINES;
+  const hiddenCount = rows.length - LOCATION_MAX_LINES;
 
   const rest = pluralOf(hiddenCount, 'more folder', 'more folders');
 

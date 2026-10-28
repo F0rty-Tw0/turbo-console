@@ -284,7 +284,7 @@ export const WIDGET_INSET_PX = 8;
 export const WIDGET_MIN_BOX_PX = 120;
 
 /** The location bar shows at most this many folder focus info lines, then one line counting the folders left. */
-export const BREADCRUMB_MAX_LINES = 3;
+export const LOCATION_MAX_LINES = 3;
 
 /**
  * The class the graph body wears while the pointer is over a node or edge that is not a ghost or a folder link: a

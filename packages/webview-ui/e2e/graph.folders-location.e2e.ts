@@ -1,5 +1,5 @@
 import { expect, test } from './graph-task.fixture.ts';
-import { breadcrumbState, fewerLinksState } from './test/utils/graph-breadcrumb.spec.util.ts';
+import { fewerLinksState, folderLocationState } from './test/utils/graph-folder-location.spec.util.ts';
 import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
@@ -8,7 +8,7 @@ const C9 = { description: 'M4-4 C9', type: 'requirement' };
 
 const BOARDS = placedBoardsState();
 
-const CRUMBS = breadcrumbState();
+const CRUMBS = folderLocationState();
 
 const CORE_PACKAGES = ['core-1', 'core-2', 'core-3'];
 

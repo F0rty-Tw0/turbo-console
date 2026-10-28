@@ -1,6 +1,6 @@
 import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
-import { BREADCRUMB_MAX_LINES } from '../common/graph.const.ts';
+import { LOCATION_MAX_LINES } from '../common/graph.const.ts';
 import { LOCATION_LABEL } from '../common/location.const.ts';
 import type { LocationBarElements, LocationCrumb, LocationPress } from '../common/location.type.ts';
 
@@ -60,7 +60,7 @@ const locationLine = (text: string, index: number): HTMLElement => {
   const line = textElement('li', 'location-line', '');
   const label = textElement('span', '', text);
 
-  if (index < BREADCRUMB_MAX_LINES) line.append(graphIcon('info'));
+  if (index < LOCATION_MAX_LINES) line.append(graphIcon('info'));
 
   line.append(label);
 

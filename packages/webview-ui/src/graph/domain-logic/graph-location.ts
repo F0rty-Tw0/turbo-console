@@ -7,7 +7,7 @@ import type {
   LocationPress,
   LocationState
 } from '../common/location.type.ts';
-import { breadcrumbLinesOf } from '../utils/breadcrumb.util.ts';
+import { folderLinesOf } from '../utils/folder-lines.util.ts';
 import { locationCrumbsOf } from '../utils/location.util.ts';
 
 const NO_TASK_FACTS: LocationFacts = { taskPackage: null, taskCount: 0, isSinglePackage: false };
@@ -35,7 +35,7 @@ const linesOf = (deps: GraphLocationDeps, state: LocationState): string[] => {
 
   const drawn = deps.packages.drawnGraph();
 
-  return breadcrumbLinesOf(state.folder, drawn?.infos ?? [], drawn?.edges ?? []);
+  return folderLinesOf(state.folder, drawn?.infos ?? [], drawn?.edges ?? []);
 };
 
 /** "Packages" clears a folder focus in package mode and leaves task mode in task mode; a package crumb reveals the package. */
