@@ -59,6 +59,21 @@ describe('FEATURE: buildFolderRow', () => {
       ]);
     });
 
+    it('WHEN the title is read THEN it is the third child, a type=button button with the full title and no aria-label', () => {
+      const [, , third] = Array.from(row.root.children);
+      const shape = [
+        row.title.tagName,
+        row.title.type,
+        row.title.className,
+        row.title.textContent,
+        row.title.getAttribute('title'),
+        row.title.getAttribute('aria-label')
+      ];
+
+      expect(third).toBe(row.title);
+      expect(shape).toStrictEqual(['BUTTON', 'button', 'widget-title', 'apps', 'apps', null]);
+    });
+
     it('WHEN the chevron is read THEN its aria-label is also its title', () => {
       expect(row.chevron.title).toBe('Collapse apps');
     });
