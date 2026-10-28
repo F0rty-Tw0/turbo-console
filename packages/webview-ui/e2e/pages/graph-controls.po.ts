@@ -97,9 +97,10 @@ export class GraphControlsPage {
     await expect(this.tags.locator('label')).toHaveText(tags);
   }
 
-  /** Show all is hidden while nothing is filtered (`isDisabled`), and shown once a filter is on. */
+  /** Show all is in the page but hidden while nothing is filtered (`isDisabled`), and shown once a filter is on. */
   public async expectShowAllDisabled(isDisabled: boolean): Promise<void> {
-    await expect(this.showAllButton).toBeVisible({ visible: !isDisabled });
+    if (isDisabled) await this.expectShowAllHidden();
+    else await expect(this.showAllButton).toBeVisible();
   }
 
   /** Show all is shown and reads `text`, its name and its hover title. */
@@ -137,6 +138,12 @@ export class GraphControlsPage {
 
   public async expectGroupedFact(isOn: boolean): Promise<void> {
     await expect.poll(async (): Promise<boolean | null> => this.groupedFact()).toBe(isOn);
+  }
+
+  /** Exactly one Show all exists, so a renamed or missing button fails, and it is hidden. */
+  private async expectShowAllHidden(): Promise<void> {
+    await expect(this.showAllInDom).toHaveCount(1);
+    await expect(this.showAllInDom).toBeHidden();
   }
 
   private async groupedFact(): Promise<boolean | null> {
