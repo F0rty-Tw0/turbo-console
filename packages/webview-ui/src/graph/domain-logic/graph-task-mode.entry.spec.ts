@@ -5,6 +5,7 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { TaskPanelActions } from '../common/graph-task.type.ts';
+import type { LocationFacts } from '../common/location.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
@@ -121,6 +122,12 @@ describe('FEATURE: GraphTaskMode Tasks entry', () => {
       mode.leave();
 
       expect(order).toStrictEqual(['exit', 'location in packages']);
+    });
+
+    it('WHEN the location facts are read THEN they name api and count api#build and its dependent web#build', () => {
+      const facts: LocationFacts = { taskPackage: 'api', taskCount: 2, isSinglePackage: false };
+
+      expect(mode.locationFacts()).toStrictEqual(facts);
     });
 
     it('WHEN the panel reports a shown set THEN the location bar reads again', () => {

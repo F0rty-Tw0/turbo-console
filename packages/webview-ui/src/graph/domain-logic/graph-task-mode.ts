@@ -7,6 +7,7 @@ import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskModeDeps, TaskPanel } from '../common/graph-task.type.ts';
+import type { LocationFacts } from '../common/location.type.ts';
 import type { TaskControls } from '../common/task-controls.type.ts';
 import { choiceOf, droppedNoticeOf, entryTaskIdsOf, packageTaskIdsOf, requestOf, taskIdsOf } from '../utils/task-choice.util.ts';
 
@@ -19,10 +20,9 @@ export class GraphTaskMode {
   public readonly selection: GraphTaskSelection;
   /** The task layout, which Re-layout, Retry and the probe's engine read act on. */
   public readonly layout: GraphTaskLayout;
-  /** The latest tasks and the saved task view, which the location bar reads. */
-  public readonly memory: GraphTaskMemory;
 
   private readonly deps: TaskModeDeps;
+  private readonly memory: GraphTaskMemory;
   private readonly panel: TaskPanel;
   private readonly controls: TaskControls;
   private hasEntered = false;
@@ -138,6 +138,11 @@ export class GraphTaskMode {
   /** The ids of package `name`'s tasks in the latest state, which Show tasks chooses. */
   public packageTaskIds(name: string): string[] {
     return packageTaskIdsOf(this.memory.tasks(), name);
+  }
+
+  /** What the location bar reads of the shown tasks. */
+  public locationFacts(): LocationFacts {
+    return this.memory.locationFacts();
   }
 
   /** Saves the camera on screen and the key of the layout under it; nothing before a task layout is placed. */

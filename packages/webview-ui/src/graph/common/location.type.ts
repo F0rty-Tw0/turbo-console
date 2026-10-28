@@ -68,13 +68,9 @@ type LocationPackages = {
   readonly drawnGraph: () => DrawnGraph | null;
 };
 
-type LocationMemory = {
-  readonly locationFacts: () => LocationFacts;
-};
-
 /** Task mode as the bar reads it: the facts of the shown tasks, and the way back to package mode. */
 type LocationTasks = {
-  readonly memory: LocationMemory;
+  readonly locationFacts: () => LocationFacts;
   readonly leave: () => void;
 };
 

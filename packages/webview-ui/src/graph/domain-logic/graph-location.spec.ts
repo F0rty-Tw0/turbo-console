@@ -68,8 +68,7 @@ const depsOf = (state: RigState, spies: LocationSpies): GraphLocationDeps => {
   const controls = { focusedFolder: (): string | null => state.folder, clearFocus };
   const filtering = { controls };
   const packages = { filtering, drawnGraph: (): DrawnGraph => DRAWN };
-  const memory = { locationFacts };
-  const tasks = { memory, leave };
+  const tasks = { locationFacts, leave };
   const reveal = { request };
   const deps: GraphLocationDeps = { page, widgetViews, modes, packages, tasks, reveal };
 

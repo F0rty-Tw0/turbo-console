@@ -16,7 +16,7 @@ const NO_TASK_FACTS: LocationFacts = { taskPackage: null, taskCount: 0, isSingle
 const factsOf = (deps: GraphLocationDeps, mode: GraphViewMode): LocationFacts => {
   if (mode === 'packages') return NO_TASK_FACTS;
 
-  return deps.tasks.memory.locationFacts();
+  return deps.tasks.locationFacts();
 };
 
 /** The mode, the folder focus and the task facts. */
