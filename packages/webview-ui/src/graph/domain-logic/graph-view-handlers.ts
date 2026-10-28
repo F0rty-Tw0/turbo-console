@@ -33,6 +33,7 @@ type HandledSelection = {
   readonly clear: () => void;
   readonly rendered: () => void;
   readonly keepClear: () => void;
+  readonly hover: (id: string | null) => void;
 };
 
 type HandledAtoms = {
@@ -42,15 +43,14 @@ type HandledAtoms = {
 
 type HandledLayout = {
   readonly atoms: HandledAtoms;
+  readonly dragged: () => void;
 };
 
 type HandledTasks = {
   readonly isActive: () => boolean;
   readonly selection: HandledSelection;
   readonly layout: HandledLayout;
-  readonly dragged: () => void;
   readonly saveCamera: () => void;
-  readonly hover: (id: string | null) => void;
 };
 
 /** What the view's events reach; the targets are read per event, since the view is built before them. */
@@ -123,7 +123,7 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
     onDoubleTapFolder: byMode((folder: string): void => filtering().folders.toggle(folder)),
     onDragEnd: byMode(
       (positions: Positions): void => layouts().dragged(positions),
-      (): void => tasks().dragged()
+      (): void => tasks().layout.dragged()
     ),
     onViewport: (): void => {
       flow().viewportChanged();
@@ -133,7 +133,7 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
       (): void => filtering().inspection.keepClear(),
       (): void => tasks().selection.keepClear()
     ),
-    onHoverNode: byMode<[string | null]>(NOTHING, (id: string | null): void => tasks().hover(id)),
+    onHoverNode: byMode<[string | null]>(NOTHING, (id: string | null): void => tasks().selection.hover(id)),
     onRender: (): void => {
       const isTaskMode = tasks().isActive();
 

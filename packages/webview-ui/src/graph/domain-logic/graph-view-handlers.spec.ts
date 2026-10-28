@@ -67,13 +67,13 @@ describe('FEATURE: viewHandlersOf', () => {
       const taskRendered = (): void => {
         calls.push('task rendered');
       };
-      const selection = { tapNode: selectTask, clear: clearTask, rendered: taskRendered, keepClear: keepClearTask };
+      const selection = { tapNode: selectTask, clear: clearTask, rendered: taskRendered, keepClear: keepClearTask, hover: hoverTask };
       const atomsRendered = (): void => {
         calls.push('atoms rendered');
       };
       const atoms = { toggle: toggleAtoms, rendered: atomsRendered };
-      const layout = { atoms };
-      const tasks = { isActive: (): boolean => isTaskMode, dragged: taskDragged, saveCamera, hover: hoverTask, selection, layout };
+      const layout = { atoms, dragged: taskDragged };
+      const tasks = { isActive: (): boolean => isTaskMode, saveCamera, selection, layout };
 
       const viewportChanged = (): void => {
         calls.push('flow cleared');
