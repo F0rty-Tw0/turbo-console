@@ -213,20 +213,14 @@ test.describe('FEATURE: graph controls keyboard activation', () => {
   );
 
   test(
-    'GIVEN nothing filtered, Space on Show all changes nothing and Space on a locked row checkbox is ignored',
+    'GIVEN nothing filtered, Show all is hidden and Space on a locked row checkbox is ignored',
     { annotation: AC1 },
     async ({ graphControls, graphHost, graphKeys, graphList, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
-      await test.step('AND Show all is reached by Tab', async (): Promise<void> => graphKeys.tabTo('Show all'));
-
-      await test.step('AND Space is pressed', async (): Promise<void> => graphPage.pressKey('Space'));
-
-      await test.step('THEN Show all is still disabled', async (): Promise<void> => graphControls.expectShowAllDisabled(true));
-
-      await test.step('AND Show all still holds focus', async (): Promise<void> => graphKeys.expectFocusedName('Show all'));
+      await test.step('THEN Show all is hidden', async (): Promise<void> => graphControls.expectShowAllDisabled(true));
 
       await test.step('AND all eight packages are counted as visible', async (): Promise<void> => graphControls.expectCount(8, 8));
 

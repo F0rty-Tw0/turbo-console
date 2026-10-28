@@ -151,4 +151,37 @@ test.describe('FEATURE: graph controls sections and Focus toggles', () => {
         graphControls.expectSectionTitles(['Search', 'View', 'Packages']));
     }
   );
+
+  test(
+    'GIVEN the controls graph, Show all is hidden until a filter is on, counts what it brings back and hands focus to the list once pressed',
+    { annotation: D4 },
+    async ({ graphControls, graphHost, graphKeys, graphList, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+
+      await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
+
+      await test.step('THEN Show all is hidden', async (): Promise<void> => graphControls.expectShowAllDisabled(true));
+
+      await test.step('WHEN docs is unticked', async (): Promise<void> => graphList.uncheckWithoutFocus('docs'));
+
+      await test.step('THEN Show all reads Show all (1 hidden)', async (): Promise<void> =>
+        graphControls.expectShowAllText('Show all (1 hidden)'));
+
+      await test.step('WHEN web is unticked too', async (): Promise<void> => graphList.uncheckWithoutFocus('web'));
+
+      await test.step('THEN Show all reads Show all (2 hidden)', async (): Promise<void> =>
+        graphControls.expectShowAllText('Show all (2 hidden)'));
+
+      await test.step('WHEN Show all is reached by Tab', async (): Promise<void> => graphKeys.tabTo('Show all (2 hidden)'));
+
+      await test.step('AND Space is pressed', async (): Promise<void> => graphPage.pressKey('Space'));
+
+      await test.step('THEN the first group checkbox of the list holds focus', async (): Promise<void> =>
+        graphKeys.expectFocusedName('(root) (1)'));
+
+      await test.step('AND the list is still a single Tab stop', async (): Promise<void> => graphKeys.expectListTabStops(1));
+
+      await test.step('AND Show all is hidden again', async (): Promise<void> => graphControls.expectShowAllDisabled(true));
+    }
+  );
 });

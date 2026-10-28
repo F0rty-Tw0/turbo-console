@@ -1,4 +1,4 @@
-import { setButtonIcon, setButtonLabel } from './button-title.ts';
+import { setButtonIcon, setButtonLabel, setButtonText } from './button-title.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
@@ -6,7 +6,7 @@ import type { ControlsView } from '../common/graph-controls.type.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import { focusNameOf, groupStateOf, isFiltered, isGroupLocked, rowViewOf } from '../utils/controls-rules.util.ts';
-import { controlsLabelOf, countTextOf, folderTitleOf, folderToggleLabelOf } from '../utils/controls-text.util.ts';
+import { controlsLabelOf, countTextOf, folderTitleOf, folderToggleLabelOf, showAllTextOf } from '../utils/controls-text.util.ts';
 import { focusFolderOf } from '../utils/folder-rules.util.ts';
 import { matchesSearch } from '../utils/search.util.ts';
 
@@ -74,6 +74,7 @@ const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
  * A folder header's toggle draws a down chevron while expanded and a right one while collapsed, named and titled Collapse or Expand folder;
  * its Focus toggle, like each row's, keeps its name, reads `aria-pressed` while its folder is the focus and is then titled Clear focus.
  * Both header buttons are hidden while flat.
+ * Show all is hidden while nothing is filtered, else names how many packages the filters hide.
  * `toggles` are the toolbar's Controls button, which shows the panel's openness, and its "filters on" mark.
  */
 export const renderControls = (
@@ -82,10 +83,12 @@ export const renderControls = (
   view: ControlsView
 ): void => {
   const isOn = isFiltered(view.filters);
+  const hiddenCount = Math.max(0, view.total - view.visible.size);
 
   elements.panel.hidden = !view.isOpen;
   elements.count.textContent = countTextOf(view.visible.size, view.total);
-  setDisabled(elements.showAll, !isOn);
+  elements.showAll.hidden = !isOn;
+  setButtonText(elements.showAll, showAllTextOf(hiddenCount));
   toggles.controls.setAttribute('aria-label', controlsLabelOf(isOn));
   toggles.controls.setAttribute('aria-expanded', String(view.isOpen));
   toggles.filtersOn.hidden = !isOn;

@@ -94,6 +94,15 @@ describe('FEATURE: buildControls', () => {
     });
   });
 
+  describe('GIVEN nothing filtered yet', () => {
+    it('WHEN built THEN Show all reads Show all and starts hidden, never aria-disabled', () => {
+      const { showAll } = buildControls(BOARDS_GROUPS_STUB, ['app']);
+
+      expect(showAll).toMatchObject({ textContent: 'Show all', title: 'Show all', hidden: true });
+      expect(showAll.getAttribute('aria-disabled')).toBeNull();
+    });
+  });
+
   describe('GIVEN no tags', () => {
     it('WHEN built THEN Packages holds Show all, the count line and the grid after its heading', () => {
       const { panel, showAll, count, list } = buildControls(BOARDS_GROUPS_STUB, []);

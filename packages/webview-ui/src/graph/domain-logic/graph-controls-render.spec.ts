@@ -102,4 +102,25 @@ describe('FEATURE: renderControls', () => {
       expect(button.textContent).toBe('');
     });
   });
+
+  describe.each([
+    { title: 'nothing filtered', hidden: [], focus: null, shown: ALL, isHidden: true, text: 'Show all' },
+    {
+      title: 'docs and web unticked',
+      hidden: ['docs', 'web'],
+      focus: null,
+      shown: ALL.slice(2),
+      isHidden: false,
+      text: 'Show all (2 hidden)'
+    },
+    { title: 'a focus that hides nothing', hidden: [], focus: WEB_FOCUS, shown: ALL, isHidden: false, text: 'Show all' }
+  ])('GIVEN $title', ({ hidden, focus, shown, isHidden, text }) => {
+    it(`WHEN rendered THEN Show all is hidden=${isHidden}, reads ${text} and is titled the same`, () => {
+      const filters = menuFiltersOf(hidden, focus);
+      const { showAll } = rendered(viewOf({ filters, visible: new Set(shown) }));
+
+      expect(showAll).toMatchObject({ hidden: isHidden, textContent: text, title: text });
+      expect(showAll.getAttribute('aria-disabled')).toBeNull();
+    });
+  });
 });

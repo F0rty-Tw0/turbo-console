@@ -96,13 +96,13 @@ const tagFieldset = (tags: Map<string, HTMLInputElement>): HTMLElement => {
   return fieldset;
 };
 
-/** Nothing is filtered yet, so Show all starts dimmed; `aria-disabled` keeps it a Tab stop. */
+/** Nothing is filtered yet, so Show all starts hidden; `renderControls` shows it with its count once a filter is on. */
 const showAllButton = (): HTMLButtonElement => {
   const button = textElement('button', 'text-button', SHOW_ALL_LABEL);
 
   button.type = 'button';
   button.title = SHOW_ALL_LABEL;
-  button.setAttribute('aria-disabled', 'true');
+  button.hidden = true;
 
   return button;
 };

@@ -1,4 +1,4 @@
-import { CONTROLS_FILTERED_LABEL, CONTROLS_LABEL, ROOT_FOLDER } from '../common/graph.const.ts';
+import { CONTROLS_FILTERED_LABEL, CONTROLS_LABEL, ROOT_FOLDER, SHOW_ALL_LABEL } from '../common/graph.const.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
 
 /** The folder as a group title; `''` is the root folder, and a real folder named like it gets `./` so the two differ. */
@@ -18,6 +18,13 @@ export const controlsLabelOf = (isFiltered: boolean): string => {
   if (isFiltered) return CONTROLS_FILTERED_LABEL;
 
   return CONTROLS_LABEL;
+};
+
+/** Show all with how many packages it brings back; a filter that hides none, like a focus on a lone package, reads plain Show all. */
+export const showAllTextOf = (hiddenCount: number): string => {
+  if (hiddenCount === 0) return SHOW_ALL_LABEL;
+
+  return `${SHOW_ALL_LABEL} (${hiddenCount} hidden)`;
 };
 
 export const showLabelOf = (name: string): string => `Show ${name}`;

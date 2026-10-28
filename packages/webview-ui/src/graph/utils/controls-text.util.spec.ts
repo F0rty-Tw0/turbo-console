@@ -10,6 +10,7 @@ import {
   folderToggleLabelOf,
   folderToggleTextOf,
   groupLabelOf,
+  showAllTextOf,
   showLabelOf
 } from './controls-text.util.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
@@ -140,6 +141,18 @@ describe('FEATURE: controls text', () => {
       const label = folderFocusLabelOf(title);
 
       expect(label).toBe(expected);
+    });
+  });
+
+  describe('GIVEN the Show all button', () => {
+    it.each([
+      [0, 'Show all'],
+      [1, 'Show all (1 hidden)'],
+      [12, 'Show all (12 hidden)']
+    ])('WHEN %i packages are hidden THEN it reads %s', (hiddenCount, expected) => {
+      const text = showAllTextOf(hiddenCount);
+
+      expect(text).toBe(expected);
     });
   });
 

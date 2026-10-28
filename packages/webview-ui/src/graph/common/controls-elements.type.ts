@@ -29,7 +29,7 @@ export type ControlsElements = {
   readonly grouping: HTMLInputElement;
   /** One checkbox per tag; empty when no package has tags, and then the panel has no tag fieldset. */
   readonly tags: Map<string, HTMLInputElement>;
-  /** Dimmed with `aria-disabled`, never `disabled`, so it stays a Tab stop. */
+  /** Hidden while nothing is filtered, else reads `Show all (n hidden)`. */
   readonly showAll: HTMLButtonElement;
   /** The count line: `role=status`, `aria-live=polite`. */
   readonly count: HTMLElement;
