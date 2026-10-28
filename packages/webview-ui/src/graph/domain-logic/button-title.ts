@@ -42,8 +42,9 @@ export const setFocusButton = (button: HTMLButtonElement, isFocused: boolean): v
 export const setFocusToggle = (button: HTMLButtonElement, isFocus: boolean, focusTitle: string): void => {
   const title = isFocus ? CLEAR_FOCUS_LABEL : focusTitle;
   const pressed = String(isFocus);
+  const wasPressed = button.getAttribute('aria-pressed');
 
-  if (button.getAttribute('aria-pressed') !== pressed) button.setAttribute('aria-pressed', pressed);
+  if (wasPressed !== pressed) button.setAttribute('aria-pressed', pressed);
 
   if (button.title !== title) button.title = title;
 };
