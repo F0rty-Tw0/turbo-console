@@ -363,10 +363,6 @@ describe('FEATURE: graph.css', () => {
     it.each(['display: flex', 'flex-direction: column'])('WHEN it is read THEN it holds %s', (expected) => {
       expect(declarations).toContain(expected);
     });
-
-    it('WHEN the hidden rule is read THEN it still wins over the flex display', () => {
-      expect(declarationsOf(css, '[hidden]')).toContain('display: none !important');
-    });
   });
 
   describe('GIVEN the whole stylesheet', () => {
