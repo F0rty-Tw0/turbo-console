@@ -81,12 +81,14 @@ describe('FEATURE: folderMenuOf', () => {
     expect(item.isDisabled).toBe(false);
   });
 
-  it('GIVEN a folder whose group checkbox is locked WHEN Exclude folder is read THEN it is disabled', () => {
-    const state = folderStateOf({ show: SHOW_LOCKED });
+  describe('GIVEN a folder whose group checkbox is locked', () => {
+    it('WHEN Exclude folder is read THEN it is disabled', () => {
+      const state = folderStateOf({ show: SHOW_LOCKED });
 
-    const item = itemLabelled(folderMenuOf('apps', state, folderActionsMock()), 'Exclude folder');
+      const item = itemLabelled(folderMenuOf('apps', state, folderActionsMock()), 'Exclude folder');
 
-    expect(item.isDisabled).toBe(true);
+      expect(item.isDisabled).toBe(true);
+    });
   });
 
   describe.each(['apps', '', '__proto__'])('GIVEN the folder %j', (folder) => {

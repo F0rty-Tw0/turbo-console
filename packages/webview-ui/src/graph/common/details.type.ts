@@ -54,7 +54,7 @@ export type FocusFace = {
   readonly text: string;
 };
 
-/** A link:`source` depends on `target`, whose entry is looked up in `file`. */
+/** A link: `source` depends on `target`, whose entry is looked up in `file`. */
 export type LinkViewModel = {
   readonly source: string;
   readonly target: string;
