@@ -5,8 +5,9 @@ import { GraphFoldersPage } from './graph-folders.po.ts';
 import { GraphMenusPage } from './graph-menus.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
-import type { ViewportPoint } from '../common/playwright.type.ts';
+import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../../src/graph/common/details.const.ts';
 import { folderFocusLabelOf, folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
+import type { ViewportPoint } from '../common/playwright.type.ts';
 import { endCentreOf, linkPointAtY } from '../test/utils/graph-folder-points.spec.util.ts';
 import { isHitAtCentre, isHitWithin } from '../test/utils/graph-widgets.spec.util.ts';
 
@@ -78,6 +79,36 @@ export class GraphWidgetInput extends GraphMenusPage {
 
   public async expectFocusFolderFocused(folder: string): Promise<void> {
     await expect(this.focusFolderOf(folder)).toBeFocused();
+  }
+
+  public async clickFocusFolder(folder: string): Promise<void> {
+    await this.focusFolderOf(folder).click();
+  }
+
+  /** Focuses the button, then presses Space with the keyboard; no pointer is involved. */
+  public async pressSpaceOnFocusFolder(folder: string): Promise<void> {
+    await this.focusFolderOf(folder).focus();
+    await this.page.keyboard.press('Space');
+  }
+
+  /** The button is pressed and titled `Clear focus`, or unpressed and titled `Focus folder`. */
+  public async expectFocusFolderPressed(folder: string, isPressed: boolean): Promise<void> {
+    const title = isPressed ? CLEAR_FOCUS_LABEL : FOCUS_FOLDER_LABEL;
+
+    await expect(this.focusFolderOf(folder)).toHaveAttribute('aria-pressed', String(isPressed));
+    await expect(this.focusFolderOf(folder)).toHaveAttribute('title', title);
+  }
+
+  /** The row has a Focus folder button, and it is hidden. */
+  public async expectFocusFolderHidden(folder: string): Promise<void> {
+    const button = this.widgets.layer.getByRole('button', {
+      name: folderFocusLabelOf(folderTitleOf(folder)),
+      exact: true,
+      includeHidden: true
+    });
+
+    await expect(button).toHaveCount(1);
+    await expect(button).toBeHidden();
   }
 
   public async expectTitleFocused(folder: string): Promise<void> {

@@ -15,6 +15,8 @@ export type WidgetState = {
   readonly isGrouped: boolean;
   readonly scene: FolderScene | null;
   readonly selectedPackage: string | null;
+  /** The folder the filters focus, whose Focus folder button is pressed; `null` for a package focus or none. */
+  readonly focusedFolder: string | null;
 };
 
 export type GraphWidgetsDeps = {
@@ -105,11 +107,12 @@ export type MenuAnchor = {
   readonly opener: HTMLButtonElement | null;
 };
 
-/** What the header rows need: the layer, the builders and the three clicks, already guarded. */
+/** What the header rows need: the layer, the builders and the four clicks, already guarded. */
 export type WidgetRowsDeps = {
   readonly layer: HTMLElement;
   readonly views: WidgetViews;
   readonly onToggle: (folder: string) => void;
   readonly onTitle: (folder: string, event: MouseEvent) => void;
+  readonly onFocus: (folder: string) => void;
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
 };

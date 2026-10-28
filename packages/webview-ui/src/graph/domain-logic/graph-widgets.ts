@@ -14,7 +14,7 @@ type PackageEntry = {
 const NO_PLAN: WidgetPlan = { rows: [], packageButton: null };
 
 /**
- * The folder header rows and the selected package's "…" over the canvas: `refresh` rebuilds them from the scene and the
+ * The folder header rows, with their Focus folder toggle, and the selected package's "…" over the canvas: `refresh` rebuilds them from the scene and the
  * selection, `position` places them from the rendered rects without reading DOM layout, `refreshBounds` re-reads the
  * container and the overlay edge. Every click acts only while the checkbox's mode is the mode on screen.
  */
@@ -34,17 +34,18 @@ export class GraphWidgets {
       views: deps.widgetViews,
       onToggle: (folder): void => this.act((): void => deps.actions.toggle(folder)),
       onTitle: (folder, event): void => this.onTitle(folder, event),
+      onFocus: (folder): void => this.act((): void => deps.actions.focusFolder(folder)),
       onMenu: (target, opener): void => this.act((): void => deps.onMenu(target, opener))
     });
   }
 
   public refresh(): void {
-    const { isGrouped, scene, selectedPackage } = this.deps.state();
+    const { isGrouped, scene, selectedPackage, focusedFolder } = this.deps.state();
     const name = isGrouped ? selectedPackage : null;
 
     this.isGrouped = isGrouped;
     this.syncButton(name);
-    this.rows.sync(scene, this.button?.button ?? null);
+    this.rows.sync(scene, this.button?.button ?? null, focusedFolder);
     this.position();
     this.rows.restoreFocus();
   }
