@@ -100,16 +100,18 @@ const shownLabels = (rig: LocationRig): string[] => {
   return crumbs.map(labelOf);
 };
 
-/** Presses the crumb labelled `label` of the last render. */
+/** Presses the crumb labelled `label` of the last render; throws when the bar never rendered or shows no such crumb. */
 const press = (rig: LocationRig, label: string): void => {
   const call = rig.render.mock.lastCall;
 
-  if (call === undefined) return;
+  if (call === undefined) throw new Error('The bar never rendered');
 
   const [, crumbs, , onPress] = call;
   const crumb = crumbs.find((each) => each.label === label);
 
-  if (crumb !== undefined) onPress(crumb);
+  if (crumb === undefined) throw new Error(`The bar shows no crumb labelled ${label}`);
+
+  onPress(crumb);
 };
 
 describe('FEATURE: graphLocationOf', () => {
