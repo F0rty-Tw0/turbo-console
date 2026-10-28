@@ -323,7 +323,7 @@ test.describe('FEATURE: graph camera re-fit', () => {
       await test.step('THEN the camera moved, web is clear of the overlay and the view is saved fitted', async (): Promise<void> => {
         await graphCamera.expectCameraMoved();
         await graphNarrow.expectAnchorsClear([LONG_WEB]);
-        await graphTaskHost.expectSaved({ fitted: true });
+        await graphTaskHost.expectStillSaved({ fitted: true });
       });
 
       await test.step('WHEN the camera is remembered and the wheel turns in one notch', async (): Promise<void> => {
@@ -334,7 +334,7 @@ test.describe('FEATURE: graph camera re-fit', () => {
 
       await test.step('THEN the clamped zoom left the camera unchanged and the view saved fitted', async (): Promise<void> => {
         await graphCamera.expectCameraUnchanged();
-        await graphTaskHost.expectSaved({ fitted: true });
+        await graphTaskHost.expectStillSaved({ fitted: true });
       });
 
       await test.step('WHEN the page is made shorter', async (): Promise<void> => graphCamera.shrinkHeightBy(SHRINK_PX));

@@ -58,7 +58,7 @@ test.describe('FEATURE: graph camera in a narrow editor', () => {
       await test.step('THEN the camera moved', async (): Promise<void> => graphCamera.expectCameraMoved());
 
       await test.step('AND the keep-clear pan left the view fitted', async (): Promise<void> =>
-        graphTaskHost.expectSaved({ fitted: true }));
+        graphTaskHost.expectStillSaved({ fitted: true }));
 
       await test.step('AND docs is clear of the overlay', async (): Promise<void> => graphNarrow.expectAnchorsClear(['docs']));
 
