@@ -8,12 +8,10 @@ import { RESIZE_LABELS, VIEW_STATE_DEBOUNCE_MS } from '../../src/graph/common/gr
 import type { PanelSide } from '../../src/graph/common/panel-sash.type.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { ellipsisNameOf } from '../test/utils/graph-widgets.spec.util.ts';
+import { waitInPage } from '../test/utils/page-wait.spec.util.ts';
 
 /** How many pointer moves a drag takes to get from the grip to its target. */
 const DRAG_STEPS = 5;
-
-/** Runs in the page: resolves after `ms` ms of its own clock. */
-const waitInPage = async (ms: number): Promise<void> => new Promise((done): void => void setTimeout(done, ms));
 
 /** A sash's `aria-valuenow`, `aria-valuemax` and `aria-valuemin`; a field left out is not checked. */
 type SashValue = {

@@ -33,8 +33,12 @@ const PAN: Position = { x: 1, y: 2 };
 
 const CAMERA: Viewport = { zoom: 2, pan: PAN };
 
+const UNFITTED: Pick<PackageViewState, 'zoom' | 'pan' | 'fitted'> = { ...CAMERA, fitted: false };
+
+const FITTED: Pick<PackageViewState, 'zoom' | 'pan' | 'fitted'> = { ...CAMERA, fitted: true };
+
 const stateOf = (fields: InspectionFields, detailsOpen: boolean): PackageViewState => {
-  const state: PackageViewState = { hash: 'h1', zoom: 2, pan: PAN, ...C, ...fields, detailsOpen };
+  const state: PackageViewState = { hash: 'h1', zoom: 2, pan: PAN, fitted: false, ...C, ...fields, detailsOpen };
 
   return state;
 };
@@ -81,7 +85,17 @@ describe('FEATURE: viewStateOf', () => {
       const shown: InspectionSave = { inspection, detailsOpen };
       const expected = stateOf(fields, detailsOpen);
 
-      const state = viewStateOf('h1', CAMERA, C, shown);
+      const state = viewStateOf('h1', UNFITTED, C, shown);
+
+      expect(state).toStrictEqual(expected);
+    });
+
+    it('WHEN the camera is fitted THEN the saved state says fitted', () => {
+      const shown: InspectionSave = { inspection: pkg('web'), detailsOpen: true };
+      const unfitted = stateOf(WEB_FIELDS, true);
+      const expected: PackageViewState = { ...unfitted, fitted: true };
+
+      const state = viewStateOf('h1', FITTED, C, shown);
 
       expect(state).toStrictEqual(expected);
     });

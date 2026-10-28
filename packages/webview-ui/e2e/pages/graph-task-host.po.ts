@@ -13,10 +13,12 @@ import type {
 } from '../../src/bridge/common/graph-message.type.ts';
 import type { GraphRunState } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState, TaskViewState } from '../../src/bridge/common/graph-view-state.type.ts';
+import { VIEW_STATE_DEBOUNCE_MS } from '../../src/graph/common/graph.const.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
 import { postReply } from '../test/utils/graph-host-state.spec.util.ts';
 import { explainEdgePosted, readPosted, shownUmbrellasPosted } from '../test/utils/graph-posted.spec.util.ts';
+import { waitInPage } from '../test/utils/page-wait.spec.util.ts';
 
 const isRunPost = (message: GraphWebviewMessage): boolean => message.type === 'runTask' || message.type === 'stopTask';
 
@@ -60,6 +62,12 @@ export class GraphTaskHost {
   /** Polls until the last saved view state has these fields. */
   public async expectSaved(expected: Partial<GraphViewState>): Promise<void> {
     await expect.poll(async (): Promise<GraphViewState | null> => this.saved()).toMatchObject(expected);
+  }
+
+  /** The save debounce has run out twice over: the last saved view state, not an earlier one, has these fields. */
+  public async expectStillSaved(expected: Partial<GraphViewState>): Promise<void> {
+    await this.page.evaluate(waitInPage, VIEW_STATE_DEBOUNCE_MS * 2);
+    await this.expectSaved(expected);
   }
 
   /** Polls until the page's `runTask` and `stopTask` posts, in order, are `expected`. */

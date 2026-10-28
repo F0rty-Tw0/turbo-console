@@ -41,6 +41,7 @@ const STATE: GraphViewState = {
   hash: 'h',
   zoom: 1,
   pan: ORIGIN,
+  fitted: false,
   selected: null,
   controlsOpen: false,
   search: 'we',

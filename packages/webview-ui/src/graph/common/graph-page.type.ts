@@ -125,6 +125,8 @@ export type GraphViewHandlers = {
   /** Every node's current centre, after the user dropped a dragged node. */
   readonly onDragEnd: (positions: Positions) => void;
   readonly onViewport: () => void;
+  /** After a container resize re-fitted the camera; the panels overlaying the canvas keep clear again. */
+  readonly onRefit: () => void;
   /** The pointer entered a node (`name` its id) or left it (`null`); only task mode paints it. */
   readonly onHoverNode: (name: string | null) => void;
   /** Each Cytoscape `render` event (a drawn frame). */
@@ -148,6 +150,8 @@ export type GraphView = {
   readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */
   readonly fit: () => void;
+  /** Whether the camera is where `fit` left it: a gesture that moved it, `setViewport` and `centreOn` clear it, a keep-clear `panBy` does not. */
+  readonly isFitted: () => boolean;
   /** Shows exactly these package names; the rest are hidden, not moved. */
   readonly setVisible: (visible: ReadonlySet<string>) => void;
   /** Draws the focused package's label bold; `null` (no focus, or a folder focus) draws none bold. */

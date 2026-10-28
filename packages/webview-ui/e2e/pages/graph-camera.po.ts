@@ -53,6 +53,15 @@ export class GraphCamera {
     return this.canvas.evaluate(toggleControlsMeasured);
   }
 
+  /** Makes the page `px` shorter; the container fills the page height, so the canvas shrinks with it. */
+  public async shrinkHeightBy(px: number): Promise<void> {
+    const size = this.page.viewportSize();
+
+    if (size === null) throw new Error('graph e2e: the page has no viewport size');
+
+    await this.page.setViewportSize({ width: size.width, height: size.height - px });
+  }
+
   /** Polls until zoom and pan match the remembered camera within GraphLook's tolerances. */
   public async expectCameraUnchanged(): Promise<void> {
     const camera = this.rememberedCamera();

@@ -3,8 +3,9 @@ import type { Core, ElementDefinition } from 'cytoscape';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
 import { setBoxes } from './graph-boxes.ts';
-import { anchorBoxOf, panBy } from './graph-camera.ts';
+import { anchorBoxOf, viewportOf } from './graph-camera.ts';
 import { exportPngOf } from './graph-export.ts';
+import { createFittedCamera } from './graph-fitted.ts';
 import { flowEdgesOf } from './graph-flow-edges.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { setGhosts } from './graph-ghosts.ts';
@@ -14,8 +15,8 @@ import { placeNodes, positionOf } from './graph-place.ts';
 import { markRowLess, widgetRectsOf } from './graph-rects.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
-import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
-import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import { showOnly } from './graph-visibility.ts';
+import type { GraphEdge, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -26,8 +27,6 @@ import type { Paint } from '../common/paint.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import type { RowPlan, WidgetRects } from '../common/widget.type.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
-
-const FIT_PADDING_PX = 24;
 
 /** Bounds for fit and wheel zoom, so a two-node graph is not fitted to a giant scale. */
 const MIN_ZOOM = 0.05;
@@ -64,7 +63,8 @@ const drawGraph = (cy: Core, nodes: ElementDefinition[], edges: GraphEdge[]): vo
 
 /**
  * Cytoscape on `container` with the preset layout (positions are node centres) and the canvas renderer. Its own resize
- * is debounced 100 ms, so until then a tap after the toolbar wraps lands where the canvas was; a resize per change ends that.
+ * is debounced 100 ms, so until then a tap after the toolbar wraps lands where the canvas was; the camera's container
+ * observer resizes in the callback of each change and ends that.
  */
 const cytoscapeOn = (container: HTMLElement): Core => {
   const layout = { name: 'preset' };
@@ -78,30 +78,8 @@ const cytoscapeOn = (container: HTMLElement): Core => {
     autounselectify: true,
     boxSelectionEnabled: false
   };
-  const cy = cytoscape(options);
 
-  new ResizeObserver((): void => void cy.resize()).observe(container);
-
-  return cy;
-};
-
-/** A copy of the camera: `cy.pan()` is Cytoscape's own object, which a later pan changes in place. */
-const viewportOf = (cy: Core): Viewport => {
-  const { x, y } = cy.pan();
-  const pan: Position = { x, y };
-  const current: Viewport = { zoom: cy.zoom(), pan };
-
-  return current;
-};
-
-const setViewportOn = (cy: Core, zoom: number, pan: Position): void => {
-  cy.resize();
-  cy.viewport({ zoom, pan });
-};
-
-const fitOn = (cy: Core): void => {
-  cy.resize();
-  fitVisible(cy, FIT_PADDING_PX);
+  return cytoscape(options);
 };
 
 /** Places the packages, then re-centres the collapsed folders on them. */
@@ -118,6 +96,7 @@ export const createGraphView = (
   glyphs: boolean
 ): GraphView => {
   const cy = cytoscapeOn(container);
+  const camera = createFittedCamera(cy, handlers);
   const folders = createFoldersView(cy);
   const tasks = createTaskCanvas(cy);
   const atoms = createAtomCanvas(cy);
@@ -133,16 +112,17 @@ export const createGraphView = (
   const view: GraphView = {
     setGraph,
     paint,
-    fit: (): void => fitOn(cy),
+    fit: camera.fit,
+    isFitted: camera.isFitted,
     setVisible: (visible: ReadonlySet<string>): void => showOnly(cy, visible),
     setFocusTarget: (name: string | null): void => applyFocusTarget(cy, name),
     setGhosts: (marks: GhostMarks, visible: ReadonlySet<string>): void => setGhosts(cy, marks, visible),
     resize: (): void => void cy.resize(),
-    centreOn: (name: string): void => centreOnNode(cy, name),
+    centreOn: camera.centreOn,
     anchorBox: (names: string[]): AnchorBox | null => anchorBoxOf(cy, names),
-    panBy: (dx: number): void => panBy(cy, dx),
+    panBy: camera.panBy,
     viewport: (): Viewport => viewportOf(cy),
-    setViewport: (zoom: number, pan: Position): void => setViewportOn(cy, zoom, pan),
+    setViewport: camera.setViewport,
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
     setPositions: (placed: Positions): void => placeOn(cy, folders, placed),
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
@@ -156,6 +136,7 @@ export const createGraphView = (
     atoms
   };
 
+  new ResizeObserver(camera.resized).observe(container);
   listen(cy, handlers);
   cy.on('dragfreeon', 'node', (): void => folders.recentre());
 

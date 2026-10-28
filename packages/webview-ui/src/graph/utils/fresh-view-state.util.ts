@@ -11,6 +11,7 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
     hash,
     zoom: 1,
     pan: ORIGIN,
+    fitted: false,
     selected: null,
     controlsOpen: true,
     search: '',
@@ -42,6 +43,7 @@ export const freshTaskViewOf = (): TaskViewState => {
     search: '',
     zoom: 1,
     pan: ORIGIN,
+    fitted: false,
     layoutKey: ''
   };
 

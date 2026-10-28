@@ -1,5 +1,7 @@
 import type { CollectionReturnValue, Core } from 'cytoscape';
 
+import type { Position } from '../../bridge/common/graph-state.type.ts';
+import type { Viewport } from '../common/graph-page.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 
 const BOX_OPTIONS = { includeLabels: false, includeOverlays: false };
@@ -32,4 +34,13 @@ export const anchorBoxOf = (cy: Core, names: string[]): AnchorBox | null => {
 /** Pans horizontally by `dx` rendered px, with no animation and the zoom unchanged. */
 export const panBy = (cy: Core, dx: number): void => {
   cy.panBy({ x: dx, y: 0 });
+};
+
+/** A copy of the camera: `cy.pan()` is Cytoscape's own object, which a later pan changes in place. */
+export const viewportOf = (cy: Core): Viewport => {
+  const { x, y } = cy.pan();
+  const pan: Position = { x, y };
+  const current: Viewport = { zoom: cy.zoom(), pan };
+
+  return current;
 };

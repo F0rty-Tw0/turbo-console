@@ -66,5 +66,6 @@ export const TASK_VIEW_STUB: TaskViewState = {
   search: '',
   zoom: 1,
   pan: ORIGIN,
+  fitted: false,
   layoutKey: ''
 };

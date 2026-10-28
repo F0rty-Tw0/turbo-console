@@ -1,7 +1,7 @@
 import type { ConsoleMessage, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { STRING_SINK_PROBE, VIOLATION_RECORDER } from '../common/shell.const.ts';
+import { ERROR_EVENT_RECORDER, STRING_SINK_PROBE, VIOLATION_RECORDER } from '../common/shell.const.ts';
 
 /** What went wrong in the page: console errors, uncaught exceptions and CSP violations. */
 export class PageDiagnostics {
@@ -13,10 +13,11 @@ export class PageDiagnostics {
     this.errors = [];
   }
 
-  /** Before the page loads: starts recording errors and, through an init script, CSP violations. */
+  /** Before the page loads: starts recording errors, and through init scripts error events and CSP violations. */
   public async attach(): Promise<void> {
     this.page.on('console', (consoleMessage: ConsoleMessage): void => this.recordConsoleError(consoleMessage));
     this.page.on('pageerror', (error: Error): void => this.recordPageError(error));
+    await this.page.addInitScript({ content: ERROR_EVENT_RECORDER });
     await this.page.addInitScript({ content: VIOLATION_RECORDER });
   }
 

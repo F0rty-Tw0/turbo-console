@@ -13,6 +13,7 @@ export const handlersMock = (): GraphViewHandlers => {
     onDoubleTapFolder: vi.fn(),
     onDragEnd: vi.fn(),
     onViewport: vi.fn(),
+    onRefit: vi.fn(),
     onHoverNode: vi.fn(),
     onRender: vi.fn()
   };

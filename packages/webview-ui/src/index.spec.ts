@@ -85,6 +85,7 @@ type ExpectedTaskView = {
   readonly search: string;
   readonly zoom: number;
   readonly pan: ExpectedPosition;
+  readonly fitted: boolean;
   readonly layoutKey: string;
 };
 type ExpectedShowPackageMessage = { readonly type: 'showPackage'; readonly name: string };

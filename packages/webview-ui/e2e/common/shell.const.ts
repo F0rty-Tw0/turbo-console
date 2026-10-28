@@ -20,6 +20,14 @@ export const STRING_SINK_PROBE = `(() => {
 export const VIOLATION_RECORDER = `window.__violations = [];
 document.addEventListener('securitypolicyviolation', (event) => window.__violations.push(event.violatedDirective));`;
 
+/**
+ * Init script: logs an `error` event that carries no exception, such as "ResizeObserver loop completed with undelivered
+ * notifications", to the console; Playwright's `pageerror` reports only uncaught exceptions.
+ */
+export const ERROR_EVENT_RECORDER = `window.addEventListener('error', (event) => {
+  if (event.error == null) console.error(event.message);
+});`;
+
 /** Init script, after `page.clock.install`: keeps the ids of the page's live `setInterval` timers in `window.__intervals`. */
 export const INTERVAL_RECORDER = `window.__intervals = new Set();
 const setTimer = window.setInterval;

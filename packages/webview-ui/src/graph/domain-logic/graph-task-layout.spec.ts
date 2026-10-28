@@ -5,6 +5,7 @@ import type { Mock } from 'vitest';
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
@@ -17,6 +18,8 @@ import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.u
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
 
 const API_AT: Position = { x: 10, y: 20 };
+
+const SAVED_ZOOM = 1.25;
 
 const POSITIONS: Positions = { 'api#build': API_AT };
 
@@ -193,6 +196,31 @@ describe('FEATURE: GraphTaskLayout', () => {
 
       expect(rig.view.atoms.setPositions).toHaveBeenLastCalledWith(positions);
     });
+  });
+
+  describe('GIVEN a saved task camera for the key', () => {
+    it.each([
+      { fitted: true, called: 'fit', args: [], skipped: 'setViewport' },
+      { fitted: false, called: 'setViewport', args: [SAVED_ZOOM, API_AT], skipped: 'fit' }
+    ] as const)(
+      'WHEN it was fitted: $fitted and the layout lands THEN the camera uses $called with the saved camera',
+      async ({ fitted, called, args, skipped }) => {
+        const task = taskSavedOf({ layoutKey: 'k0', fitted, zoom: SAVED_ZOOM, pan: API_AT }).task;
+
+        layout = new GraphTaskLayout({
+          ...rig.deps,
+          saved: (): TaskViewState | null => task,
+          rootLabel: (): null => null,
+          onPlaced: vi.fn(),
+          onDrawn
+        });
+
+        await land('k0');
+
+        expect(rig.view[called]).toHaveBeenCalledExactlyOnceWith(...args);
+        expect(rig.view[skipped]).not.toHaveBeenCalled();
+      }
+    );
   });
 
   describe('GIVEN as many layouts landed as page memory keeps', () => {

@@ -139,7 +139,7 @@ export class GraphTaskLayout {
   private place(request: TaskLayoutRequest, result: LayoutResult, titleWidths: Map<string, number>, canRestore: boolean): void {
     const { view, screen, frames, sizeOf, flow } = this.deps;
     const saved = this.deps.saved();
-    const isSavedCamera = canRestore && saved?.layoutKey === request.key;
+    const isSavedCamera = canRestore && saved?.layoutKey === request.key && !saved.fitted;
 
     flow.stop();
     view.tasks.show({

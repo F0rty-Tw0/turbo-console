@@ -14,6 +14,7 @@ export const taskViewOf = (overrides: Partial<TaskViewState>): TaskViewState => 
     search: '',
     zoom: 1,
     pan: ORIGIN,
+    fitted: false,
     layoutKey: '',
     ...overrides
   };

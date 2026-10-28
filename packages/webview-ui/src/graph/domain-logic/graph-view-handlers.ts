@@ -11,6 +11,7 @@ type HandledInspection = {
   readonly tapFolder: (folder: string) => void;
   readonly openDetailsOf: (name: string) => void;
   readonly saveViewport: () => void;
+  readonly keepClear: () => void;
 };
 
 type HandledFolders = {
@@ -31,6 +32,7 @@ type HandledSelection = {
   readonly tapNode: (id: string) => void;
   readonly clear: () => void;
   readonly rendered: () => void;
+  readonly keepClear: () => void;
 };
 
 type HandledAtoms = {
@@ -69,14 +71,13 @@ const tasksRendered = (tasks: HandledTasks): void => {
   tasks.layout.atoms.rendered();
 };
 
-/**
- * Routes each Cytoscape event by mode: in package mode to the inspection, the folders or the layouts; in task mode a
- * drag, a camera move, a node tap, a background tap and a frame to task mode, and every other tap to nothing. Every frame
- * marks the frame clock first; every camera move clears the flow overlay first.
- */
-export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers => {
-  const { frames, filtering, layouts, tasks, flow } = targets;
-  const byMode = <Args extends unknown[]>(
+type ByMode = <Args extends unknown[]>(
+  onPackages: (...args: Args) => void,
+  onTasks?: (...args: Args) => void
+) => (...args: Args) => void;
+
+const byModeOf = (tasks: () => HandledTasks): ByMode => {
+  const byMode: ByMode = <Args extends unknown[]>(
     onPackages: (...args: Args) => void,
     onTasks: (...args: Args) => void = NOTHING
   ): ((...args: Args) => void) => {
@@ -89,6 +90,18 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
 
     return handle;
   };
+
+  return byMode;
+};
+
+/**
+ * Routes each Cytoscape event by mode: in package mode to the inspection, the folders or the layouts; in task mode a
+ * drag, a camera move, a node tap, a background tap and a frame to task mode, and every other tap to nothing. Every frame
+ * marks the frame clock first; every camera move clears the flow overlay first.
+ */
+export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers => {
+  const { frames, filtering, layouts, tasks, flow } = targets;
+  const byMode = byModeOf(tasks);
   const saveViewport = byMode(
     (): void => filtering().inspection.saveViewport(),
     (): void => tasks().saveCamera()
@@ -116,6 +129,10 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
       flow().viewportChanged();
       saveViewport();
     },
+    onRefit: byMode(
+      (): void => filtering().inspection.keepClear(),
+      (): void => tasks().selection.keepClear()
+    ),
     onHoverNode: byMode<[string | null]>(NOTHING, (id: string | null): void => tasks().hover(id)),
     onRender: (): void => {
       const isTaskMode = tasks().isActive();

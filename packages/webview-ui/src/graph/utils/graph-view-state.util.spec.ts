@@ -32,6 +32,7 @@ const VALID: GraphViewState = {
   hash: 'h',
   zoom: 1.5,
   pan: PAN,
+  fitted: false,
   selected: 'web',
   controlsOpen: false,
   search: 'ui',
@@ -54,6 +55,7 @@ const CAMERA = { hash: 'h', zoom: 1.5, pan: PAN, selected: 'web' };
 
 const DEFAULTED: GraphViewState = {
   ...CAMERA,
+  fitted: false,
   controlsOpen: true,
   search: '',
   depth: 1,
@@ -87,6 +89,7 @@ const TASK: TaskViewState = {
   search: '',
   zoom: 1,
   pan: ORIGIN,
+  fitted: false,
   layoutKey: 'k1'
 };
 

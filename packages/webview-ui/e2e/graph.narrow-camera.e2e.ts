@@ -40,7 +40,7 @@ test.describe('FEATURE: graph camera in a narrow editor', () => {
   test(
     'GIVEN a closed overlay, opening the panel or tapping a package at the right edge pans it clear of the overlay',
     { annotation: C8 },
-    async ({ graphCamera, graphCanvas, graphDetails, graphHost, graphNarrow, graphPage }): Promise<void> => {
+    async ({ graphCamera, graphCanvas, graphDetails, graphHost, graphNarrow, graphPage, graphTaskHost }): Promise<void> => {
       await test.step('WHEN the editor is narrowed to 959 px', async (): Promise<void> => graphNarrow.setWidth(OVERLAY_WIDTH_PX));
 
       await test.step('AND the page is opened', async (): Promise<void> => graphPage.open());
@@ -56,6 +56,9 @@ test.describe('FEATURE: graph camera in a narrow editor', () => {
       await test.step('WHEN the Details toggle is pressed again', async (): Promise<void> => graphDetails.toggle());
 
       await test.step('THEN the camera moved', async (): Promise<void> => graphCamera.expectCameraMoved());
+
+      await test.step('AND the keep-clear pan left the view fitted', async (): Promise<void> =>
+        graphTaskHost.expectStillSaved({ fitted: true }));
 
       await test.step('AND docs is clear of the overlay', async (): Promise<void> => graphNarrow.expectAnchorsClear(['docs']));
 

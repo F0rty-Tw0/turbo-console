@@ -15,6 +15,7 @@ const PACKAGE_STATE: PackageViewState = {
   hash: 'h1',
   zoom: 1.5,
   pan: PAN,
+  fitted: false,
   selected: 'web',
   controlsOpen: true,
   search: 'we',
@@ -38,6 +39,7 @@ const TASK: TaskViewState = {
   search: '',
   zoom: 1,
   pan: ORIGIN,
+  fitted: false,
   layoutKey: 'k1'
 };
 
