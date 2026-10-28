@@ -66,6 +66,17 @@ describe('FEATURE: GraphPanelSashes', () => {
         expect(page.written).toStrictEqual({ '--tc-controls-width': '280px', '--tc-details-width': '400px' });
       });
 
+      it('THEN Loading hiding the body and showing it at the same width keeps the drawn pair', () => {
+        const page = squeezedPage();
+
+        page.setWidth(0);
+        page.resizeBody();
+        page.setWidth(1000);
+        page.resizeBody();
+
+        expect(page.written).toStrictEqual({ '--tc-controls-width': '380px', '--tc-details-width': '200px' });
+      });
+
       it('THEN the overlay flipping re-clamps with Details floating', () => {
         const page = squeezedPage();
 
@@ -137,6 +148,15 @@ describe('FEATURE: GraphPanelSashes', () => {
       page.mutateRoot();
 
       expect(page.deps.sashes.controls.getAttribute('aria-valuemax')).toBe('640');
+    });
+
+    it('WHEN the body shows only 1px wide THEN the pair clamps to the minimum', () => {
+      const page = hiddenPage();
+
+      page.setWidth(1);
+      page.resizeBody();
+
+      expect(page.written).toStrictEqual({ '--tc-controls-width': '200px', '--tc-details-width': '200px' });
     });
   });
 });
