@@ -1,4 +1,5 @@
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import type { TaskLayoutDeps, TaskMemoryPort, TaskModeDeps } from '../common/graph-task.type.ts';
 import type { TaskSelectionDeps } from '../common/task-details.type.ts';
 
@@ -26,4 +27,11 @@ export const selectionDepsOf = (deps: TaskModeDeps, memory: TaskMemoryPort): Tas
   };
 
   return selectionDeps;
+};
+
+/** How task mode measures an umbrella's name and file counts. */
+export const umbrellaSizersOf = (deps: TaskModeDeps): UmbrellaSizers => {
+  const sizers: UmbrellaSizers = { name: deps.sizeOf, counts: deps.textSizeOf };
+
+  return sizers;
 };
