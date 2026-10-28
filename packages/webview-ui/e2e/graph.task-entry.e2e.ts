@@ -182,6 +182,10 @@ test.describe('FEATURE: the Tasks button entry (T5)', () => {
       await test.step('AND Tasks is pressed', async (): Promise<void> => graphTask.enter());
 
       await test.step("THEN app's tasks and their chain are drawn", async (): Promise<void> => graphTaskProbe.expectTaskIds(APP_SET));
+
+      await test.step('AND Tasks is shown pressed', async (): Promise<void> => graphTask.expectPressed(true));
+
+      await test.step('AND the prompt is hidden', async (): Promise<void> => graphTask.expectPrompt(false));
     }
   );
 
