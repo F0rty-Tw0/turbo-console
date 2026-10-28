@@ -4,10 +4,21 @@ import { GraphTaskMemory } from './graph-task-memory.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { TaskModes } from '../common/graph-task.type.ts';
-import { SINGLE_TASK_STATE_STUB, TASK_STATE_STUB, TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
+import type { LocationFacts } from '../common/location.type.ts';
+import { MORE_TASKS_STATE_STUB, SINGLE_TASK_STATE_STUB, TASK_STATE_STUB, TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 
 type MemoryModes = Pick<TaskModes, 'task' | 'saveTask'>;
+
+type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: LocationFacts];
+
+const FACTS_ROWS: FactsRow[] = [
+  ['one package, its chain pulled in', TASK_STATE_STUB, ['web#build', 'web#lint'], { taskPackage: 'web', taskCount: 3 }],
+  ['two packages', TASK_STATE_STUB, ['web#build', 'api#build'], { taskPackage: null, taskCount: 2 }],
+  ['none', TASK_STATE_STUB, [], { taskPackage: null, taskCount: 0 }],
+  ['one package, a dependent shown', MORE_TASKS_STATE_STUB, ['web#build'], { taskPackage: 'web', taskCount: 3 }],
+  ['an unknown id beside a known one', TASK_STATE_STUB, ['web#build', 'gone#build'], { taskPackage: 'web', taskCount: 2 }]
+];
 
 const modesOf = (saved: TaskViewState | null): MemoryModes => {
   const modes: MemoryModes = { task: vi.fn(() => saved), saveTask: vi.fn() };
@@ -133,6 +144,17 @@ describe('FEATURE: task mode memory', () => {
 
         expect(memory.rootLabel()).toBe(label);
       });
+    });
+  });
+
+  describe.each(FACTS_ROWS)('GIVEN %s chosen', (_title, state, chosen, facts) => {
+    it('WHEN the location facts are read THEN they name the one package and count the shown tasks', () => {
+      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
+      const memory = new GraphTaskMemory(modesOf(saved));
+
+      memory.keep(state);
+
+      expect(memory.locationFacts()).toStrictEqual(facts);
     });
   });
 });

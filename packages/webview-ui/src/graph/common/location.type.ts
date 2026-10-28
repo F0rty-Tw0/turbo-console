@@ -17,3 +17,6 @@ export type LocationState = {
   readonly taskPackage: string | null;
   readonly taskCount: number;
 };
+
+/** What task mode adds to the location: the one package every chosen task belongs to, `null` for none or several, and the shown count. */
+export type LocationFacts = Pick<LocationState, 'taskPackage' | 'taskCount'>;
