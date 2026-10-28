@@ -59,3 +59,14 @@ export const breadcrumbState = (): GraphReady => {
 
   return state;
 };
+
+const isKept = (edge: GraphEdge): boolean => edge.source !== 'a-pkg' || edge.target !== 'core-3';
+
+/** `breadcrumbState` under a new hash without the `a-pkg -> core-3` link: the same folders, so the same crumbs of a `core` focus, with `a` linked twice. */
+export const fewerLinksState = (): GraphReady => {
+  const crumbs = breadcrumbState();
+  const edges = crumbs.edges.filter(isKept);
+  const state: GraphReady = { ...crumbs, hash: 'f01d0005', edges };
+
+  return state;
+};

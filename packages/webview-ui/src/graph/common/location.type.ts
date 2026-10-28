@@ -42,9 +42,11 @@ export type LocationBarElements = {
 /** A crumb button was pressed. */
 export type LocationPress = (crumb: LocationCrumb) => void;
 
-/** The location bar renderer, handed in because `domain-logic` may not import `ui`. */
+/** The location bar renderers, handed in because `domain-logic` may not import `ui`. */
 export type LocationViews = {
   readonly render: (elements: LocationBarElements, crumbs: LocationCrumb[], lines: string[], press: LocationPress) => void;
+  /** Replaces the info lines only, leaving the crumbs and any focus on them. */
+  readonly renderLines: (elements: LocationBarElements, lines: string[]) => void;
 };
 
 /** The location bar as the controller and its hooks call it: `update` reads the mode, the folder focus and the task facts again. */

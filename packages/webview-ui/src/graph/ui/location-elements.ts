@@ -67,6 +67,14 @@ const locationLine = (text: string, index: number): HTMLElement => {
   return line;
 };
 
+/** Rebuilds the info lines only, hiding the list when there are none; the crumbs and any focus on them stay. */
+export const renderLocationLines = (elements: LocationBarElements, lines: string[]): void => {
+  const lineItems = lines.map(locationLine);
+
+  elements.lines.replaceChildren(...lineItems);
+  elements.lines.hidden = lines.length === 0;
+};
+
 /**
  * Rebuilds the crumbs and the info lines. Focus inside the bar moves to the new current crumb, since the button it was on
  * is gone; focus elsewhere is left alone.
@@ -80,13 +88,11 @@ export const renderLocation = (
   const hadFocus = elements.nav.contains(document.activeElement);
   const children = crumbs.map((crumb) => crumbChild(crumb, press));
   const items = children.map(listItem);
-  const lineItems = lines.map(locationLine);
   const currentIndex = crumbs.findIndex((crumb) => crumb.isCurrent);
   const current = children[currentIndex];
 
   elements.crumbs.replaceChildren(...items);
-  elements.lines.replaceChildren(...lineItems);
-  elements.lines.hidden = lines.length === 0;
+  renderLocationLines(elements, lines);
 
   if (hadFocus) current?.focus();
 };

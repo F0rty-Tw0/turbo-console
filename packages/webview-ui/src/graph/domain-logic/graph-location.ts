@@ -64,22 +64,34 @@ const pressOf = (deps: GraphLocationDeps): LocationPress => {
 };
 
 /**
- * The location bar over the page, read when `update` runs: once now, then on each hook. A bar with the same crumbs and
- * lines is not rebuilt, so a redraw never moves focus off a crumb.
+ * The location bar over the page, read when `update` runs: once now, then on each hook. A bar with the same crumbs is
+ * not rebuilt; changed info lines replace the lines list alone, so a redraw never moves focus off a crumb.
  */
 export const graphLocationOf = (deps: GraphLocationDeps): GraphLocation => {
   const press = pressOf(deps);
-  let shownKey: string | null = null;
+  const views = deps.widgetViews.location;
+  let shownCrumbs: string | null = null;
+  let shownLines: string | null = null;
   const update = (): void => {
     const state = stateOf(deps);
     const crumbs = locationCrumbsOf(state);
     const lines = linesOf(deps, state);
-    const key = JSON.stringify([crumbs, lines]);
+    const crumbsKey = JSON.stringify(crumbs);
+    const linesKey = JSON.stringify(lines);
+    const isSameCrumbs = crumbsKey === shownCrumbs;
 
-    if (key === shownKey) return;
+    if (isSameCrumbs && linesKey === shownLines) return;
 
-    shownKey = key;
-    deps.widgetViews.location.render(deps.page.location, crumbs, lines, press);
+    shownLines = linesKey;
+
+    if (isSameCrumbs) {
+      views.renderLines(deps.page.location, lines);
+
+      return;
+    }
+
+    shownCrumbs = crumbsKey;
+    views.render(deps.page.location, crumbs, lines, press);
   };
   const location: GraphLocation = { update };
 

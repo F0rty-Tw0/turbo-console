@@ -11,6 +11,7 @@ import { pageMock } from '../test/mocks/page.mock.ts';
 
 type LocationSpies = {
   readonly render: Mock<LocationViews['render']>;
+  readonly renderLines: Mock<LocationViews['renderLines']>;
   readonly clearFocus: Mock<() => void>;
   readonly leave: Mock<() => void>;
   readonly request: Mock<(name: string) => void>;
@@ -58,6 +59,7 @@ const TWO_LINK_DRAWN: DrawnGraph = { ...DRAWN, edges: TWO_LINK_EDGES };
 const spiesOf = (): LocationSpies => {
   const spies: LocationSpies = {
     render: vi.fn<LocationViews['render']>(),
+    renderLines: vi.fn<LocationViews['renderLines']>(),
     clearFocus: vi.fn<() => void>(),
     leave: vi.fn<() => void>(),
     request: vi.fn<(name: string) => void>(),
@@ -69,9 +71,9 @@ const spiesOf = (): LocationSpies => {
 
 /** The bar's deps over the spec's page, `state` and `spies`; `app`'s tasks are the task facts. */
 const depsOf = (state: RigState, spies: LocationSpies): GraphLocationDeps => {
-  const { render, clearFocus, leave, request, locationFacts } = spies;
+  const { render, renderLines, clearFocus, leave, request, locationFacts } = spies;
   const page = pageMock();
-  const locationViews = { render };
+  const locationViews = { render, renderLines };
   const widgetViews = { location: locationViews };
   const modes = { mode: (): GraphViewMode => state.mode };
   const controls = { focusedFolder: (): string | null => state.folder, clearFocus };
@@ -150,6 +152,7 @@ describe('FEATURE: graphLocationOf', () => {
       rig.location.update();
 
       expect(rig.render).toHaveBeenCalledOnce();
+      expect(rig.renderLines).not.toHaveBeenCalled();
     });
   });
 
@@ -170,14 +173,25 @@ describe('FEATURE: graphLocationOf', () => {
       expect(rig.leave).not.toHaveBeenCalled();
     });
 
-    it('WHEN the folder’s links change under the same crumbs and the bar updates THEN the new info lines are shown', () => {
+    it('WHEN the folder’s links change under the same crumbs and the bar updates THEN only the info lines are replaced', () => {
       const rig = rigOf('packages', 'core');
 
       rig.setDrawn(TWO_LINK_DRAWN);
       rig.location.update();
 
-      expect(rig.render).toHaveBeenCalledTimes(2);
-      expect(rig.render.mock.lastCall?.[2]).toStrictEqual(['2 links with a not shown']);
+      expect(rig.render).toHaveBeenCalledOnce();
+      expect(rig.renderLines.mock.lastCall?.[1]).toStrictEqual(['2 links with a not shown']);
+    });
+
+    it('WHEN the bar updates again after the lines were replaced THEN nothing is redrawn', () => {
+      const rig = rigOf('packages', 'core');
+
+      rig.setDrawn(TWO_LINK_DRAWN);
+      rig.location.update();
+      rig.location.update();
+
+      expect(rig.render).toHaveBeenCalledOnce();
+      expect(rig.renderLines).toHaveBeenCalledOnce();
     });
 
     it('WHEN grouping turns off, clearing the focus, and the bar updates THEN the folder crumb is gone and Packages remains', () => {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildLocation, renderLocation } from './location-elements.ts';
+import { buildLocation, renderLocation, renderLocationLines } from './location-elements.ts';
 import type { LocationBarElements, LocationCrumb } from '../common/location.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
@@ -107,6 +107,31 @@ describe('FEATURE: location bar elements', () => {
       renderLocation(elements, [crumbOf('packages', 'Packages', true)], [], vi.fn());
 
       expect(document.activeElement).toBe(crumbAt(elements, 0));
+    });
+  });
+
+  describe('GIVEN focus on a crumb button over four lines', () => {
+    beforeEach((): void => {
+      renderLocation(elements, [PACKAGES, TASKS], FOUR_LINES, vi.fn());
+      crumbAt(elements, 0)?.focus();
+    });
+
+    it('WHEN only the lines are replaced THEN the same crumb keeps focus and the new line shows', () => {
+      const focused = crumbAt(elements, 0);
+
+      renderLocationLines(elements, ['1 link with a not shown']);
+
+      const texts = Array.from(elements.lines.children, lastTextOf);
+
+      expect(crumbAt(elements, 0)).toBe(focused);
+      expect(document.activeElement).toBe(focused);
+      expect(texts).toStrictEqual(['1 link with a not shown']);
+    });
+
+    it('WHEN the lines are replaced by none THEN the lines list is hidden and empty', () => {
+      renderLocationLines(elements, []);
+
+      expect(elements.lines).toMatchObject({ hidden: true, children: [] });
     });
   });
 

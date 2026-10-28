@@ -1,5 +1,5 @@
-import { test } from './graph-task.fixture.ts';
-import { breadcrumbState } from './test/utils/graph-breadcrumb.spec.util.ts';
+import { expect, test } from './graph-task.fixture.ts';
+import { breadcrumbState, fewerLinksState } from './test/utils/graph-breadcrumb.spec.util.ts';
 import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
@@ -13,6 +13,10 @@ const CRUMBS = breadcrumbState();
 const CORE_PACKAGES = ['core-1', 'core-2', 'core-3'];
 
 const CORE_LINES = ['3 links with a not shown', '3 links with b not shown', '2 links with c not shown', 'and 2 more folders'];
+
+const FEWER_A_LINKS = fewerLinksState();
+
+const FEWER_A_LINES = ['3 links with b not shown', '2 links with a not shown', '2 links with c not shown', 'and 2 more folders'];
 
 test.describe('FEATURE: folder focus in the location bar', () => {
   test(
@@ -70,6 +74,28 @@ test.describe('FEATURE: folder focus in the location bar', () => {
         await graphLocation.expectCrumbs(['Packages'], 'Packages');
         await graphLocation.expectLines([]);
       });
+    }
+  );
+
+  test(
+    'GIVEN the core folder focused and focus on the Packages crumb, a state with other links replaces the lines and keeps the crumb focused',
+    { annotation: C9 },
+    async ({ graphFolderInspect, graphHost, graphLocation, graphMenus }): Promise<void> => {
+      await test.step('WHEN the grouped page opens, Focus folder is chosen from the core menu and the Packages crumb is focused', async (): Promise<void> => {
+        await graphFolderInspect.open(savedWith(CRUMBS.hash, {}), CRUMBS);
+        await graphMenus.openFolderMenu('core');
+        await graphMenus.item('Focus folder').click();
+        await graphLocation.expectLines(CORE_LINES);
+        await graphLocation.crumb('Packages').focus();
+      });
+
+      await test.step('AND a state without the a-pkg -> core-3 link arrives', async (): Promise<void> =>
+        graphHost.sendState(FEWER_A_LINKS));
+
+      await test.step('THEN the lines count 2 links with a', async (): Promise<void> => graphLocation.expectLines(FEWER_A_LINES));
+
+      await test.step('AND the Packages crumb still has focus', async (): Promise<void> =>
+        expect(graphLocation.crumb('Packages')).toBeFocused());
     }
   );
 

@@ -7,7 +7,7 @@ import { linkView } from './details-link.ts';
 import { packageView } from './details-package.ts';
 import { candidateItems, pickingView } from './details-picking.ts';
 import { stepItems, traceView } from './details-trace.ts';
-import { renderLocation } from './location-elements.ts';
+import { renderLocation, renderLocationLines } from './location-elements.ts';
 import { buildTaskControls, buildTaskRow } from './task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from './task-details-elements.ts';
 import { buildFolderRow, buildPackageButton } from './widget-elements.ts';
@@ -33,7 +33,7 @@ export const detailsViews: DetailsViews = {
   stepItems
 };
 
-const locationViews: LocationViews = { render: renderLocation };
+const locationViews: LocationViews = { render: renderLocation, renderLines: renderLocationLines };
 
 export const widgetViews: WidgetViews = {
   row: buildFolderRow,
