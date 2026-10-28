@@ -77,7 +77,6 @@ export class GraphTaskMode {
     this.selection.setShown(request.tasks);
 
     if (request.key === shownKey && !isRelabelled) {
-      this.shownCount = shownSet.ids.length;
       this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount, knownCount });
       this.layout.atoms.reshown();
 
