@@ -79,6 +79,12 @@ export const NOTICE_TEXT_DELAY_MS = 100;
 export const EMPTY_TASKS_TEXT =
   'Choose tasks to show: select a package and pick Show tasks, use Show in task graph on the details page, or run Turbo Console: Show Task Graph…';
 
+/** The prompt button that chooses every known task; its text ends with their count. */
+export const SHOW_EVERY_TASK_LABEL = 'Show every task';
+
+/** The prompt line under Show every task while more than `TASK_CAP` tasks are known. */
+export const SLOW_TASKS_TEXT = `Drawing more than ${TASK_CAP} tasks can be slow.`;
+
 /** The id of the task details panel, which the Details button points at while task mode is on. */
 export const TASK_DETAILS_ID = 'graph-task-details';
 

@@ -10,7 +10,9 @@ import {
   PACKAGES_MODE_TITLE,
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
+  SHOW_EVERY_TASK_LABEL,
   SHOW_TASKS_LABEL,
+  SLOW_TASKS_TEXT,
   TASKS_MODE_LABEL,
   TASKS_MODE_TITLE,
   TASK_CAP,
@@ -37,6 +39,8 @@ describe('FEATURE: graph task constants', () => {
     ['the depth field', DEPENDENTS_DEPTH_LABEL, 'Dependents depth'],
     ['the package action', SHOW_TASKS_LABEL, 'Show tasks'],
     ['the invalid request notice', UNKNOWN_TASKS_TEXT, 'Those tasks are not in this workspace'],
+    ['the prompt button', SHOW_EVERY_TASK_LABEL, 'Show every task'],
+    ['the over-cap warning', SLOW_TASKS_TEXT, 'Drawing more than 300 tasks can be slow.'],
     [
       'the empty prompt',
       EMPTY_TASKS_TEXT,
