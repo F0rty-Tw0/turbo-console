@@ -28,8 +28,9 @@ const toggleFolderFocus = (deps: GraphInspectionDeps, folder: string): void => {
 };
 
 /** A folder's actions over the same calls as the details panel's folder buttons and the list's folder header. */
-export const folderActionsOf = (deps: GraphInspectionDeps): FolderActions => {
+export const folderActionsOf = (deps: GraphInspectionDeps, onInput: (input: InspectionInput) => void): FolderActions => {
   const actions: FolderActions = {
+    select: (folder): void => onInput({ kind: 'selectFolder', folder }),
     toggle: (folder): void => deps.folders.toggle(folder),
     focusFolder: (folder): void => toggleFolderFocus(deps, folder),
     clearFocus: (): void => deps.onClearFocus(),
@@ -42,7 +43,7 @@ export const folderActionsOf = (deps: GraphInspectionDeps): FolderActions => {
 /** The details panel's deps: its inputs and Package Details requests go to `actions`, explain and Open to the bridge, its list and folder actions to the controls and the folders. */
 export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActions): GraphDetailsDeps => {
   const { bridge, page, view, views, overlay } = deps;
-  const folderActions = folderActionsOf(deps);
+  const folderActions = folderActionsOf(deps, (input): void => actions.input(input));
   const detailsDeps: GraphDetailsDeps = {
     page,
     views,

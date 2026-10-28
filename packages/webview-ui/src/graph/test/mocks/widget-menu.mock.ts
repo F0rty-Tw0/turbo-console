@@ -4,7 +4,7 @@ import type { FolderActions } from '../../common/folder-actions.type.ts';
 import type { PackageActions, PackageActionsDeps, PackageInspectionActions } from '../../common/package-actions.type.ts';
 
 export const folderActionsMock = (): FolderActions => {
-  const actions: FolderActions = { toggle: vi.fn(), focusFolder: vi.fn(), clearFocus: vi.fn(), showFolder: vi.fn() };
+  const actions: FolderActions = { select: vi.fn(), toggle: vi.fn(), focusFolder: vi.fn(), clearFocus: vi.fn(), showFolder: vi.fn() };
 
   return actions;
 };
