@@ -1,3 +1,4 @@
+import { OVERLAY_WIDTH_PX } from './common/graph.const.ts';
 import { test } from './graph-task.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { SAVED_BASE_STUB } from './test/stubs/graph-saved.stub.ts';
@@ -211,6 +212,68 @@ test.describe('FEATURE: graph camera re-fit', () => {
 
       await test.step('THEN the task camera is saved not fitted', async (): Promise<void> =>
         graphTaskHost.expectSavedTask({ fitted: false }));
+    }
+  );
+
+  test(
+    'GIVEN task mode and a fitted task camera, shrinking the page re-fits it and saves it fitted',
+    { annotation: T3 },
+    async ({ graphCamera, graphCanvas, graphHost, graphPage, graphTaskHost, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN the page opens cold in task mode with app#build chosen', async (): Promise<void> => {
+        await graphPage.open({ savedState: taskSavedState('7a5c0001', { chosen: ['app#build'] }) });
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphTaskProbe.expectTaskIds(CHAIN);
+      });
+
+      await test.step('AND the task camera is saved fitted and remembered', async (): Promise<void> => {
+        await graphTaskHost.expectSavedTask({ fitted: true });
+        await graphCamera.rememberCamera();
+      });
+
+      await test.step('AND the page is made shorter', async (): Promise<void> => graphCamera.shrinkHeightBy(SHRINK_PX));
+
+      await test.step('THEN the camera moved and every node is in view', async (): Promise<void> => {
+        await graphCamera.expectCameraMoved();
+        await graphCanvas.expectAllNodesInView();
+      });
+
+      await test.step('AND the task camera is saved fitted', async (): Promise<void> =>
+        graphTaskHost.expectSavedTask({ fitted: true }));
+    }
+  );
+
+  test(
+    'GIVEN a narrow editor with the Details overlay open and docs selected, shrinking the page re-fits and keeps docs clear',
+    { annotation: T3 },
+    async ({ graphCamera, graphCanvas, graphDetails, graphHost, graphNarrow, graphPage, graphTaskHost }): Promise<void> => {
+      await test.step('WHEN the editor is narrowed to 959 px and the details graph is sent', async (): Promise<void> => {
+        await graphNarrow.setWidth(OVERLAY_WIDTH_PX);
+        await graphPage.open();
+        await graphHost.sendState(DETAILS_STUB);
+        await graphNarrow.expectOverlay();
+      });
+
+      await test.step('AND the overlay is closed, docs is tapped and the overlay is opened again', async (): Promise<void> => {
+        await graphDetails.toggle();
+        await graphCanvas.tapNode('docs');
+        await graphDetails.toggle();
+      });
+
+      await test.step('AND docs is clear of the overlay and the view is saved fitted', async (): Promise<void> => {
+        await graphNarrow.expectAnchorsClear(['docs']);
+        await graphTaskHost.expectSaved({ fitted: true });
+      });
+
+      await test.step('AND the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
+
+      await test.step('AND the page is made shorter', async (): Promise<void> => graphCamera.shrinkHeightBy(SHRINK_PX));
+
+      await test.step('THEN the camera moved and docs is clear of the overlay', async (): Promise<void> => {
+        await graphCamera.expectCameraMoved();
+        await graphNarrow.expectAnchorsClear(['docs']);
+      });
+
+      await test.step('AND the view is saved fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: true }));
     }
   );
 });
