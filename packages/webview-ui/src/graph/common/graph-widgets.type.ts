@@ -69,7 +69,7 @@ export type WidgetSources = {
 /** The inspection as the widget layer and its menus read and call it. */
 export type WidgetInspection = Pick<WidgetSources, 'current' | 'selected' | 'folderActions'> & PackageInspectionActions;
 
-/** The controls' filters, read when a menu opens. */
+/** The controls' filters, read when a menu opens and on every widget state read, which takes the focused folder from them. */
 export type WidgetFilters = {
   readonly applied: GraphFilters;
 };

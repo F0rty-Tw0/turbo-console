@@ -14,9 +14,10 @@ type PackageEntry = {
 const NO_PLAN: WidgetPlan = { rows: [], packageButton: null };
 
 /**
- * The folder header rows, with their Focus folder toggle, and the selected package's "…" over the canvas: `refresh` rebuilds them from the scene and the
- * selection, `position` places them from the rendered rects without reading DOM layout, `refreshBounds` re-reads the
- * container and the overlay edge. Every click acts only while the checkbox's mode is the mode on screen.
+ * The folder header rows, with their Focus folder toggle, and the selected package's "…" over the canvas:
+ * `refresh` rebuilds them from the scene and the selection, `position` places them from the rendered rects without
+ * reading DOM layout, `refreshBounds` re-reads the container and the overlay edge. Every click acts only while the
+ * checkbox's mode is the mode on screen.
  */
 export class GraphWidgets {
   private readonly deps: GraphWidgetsDeps;

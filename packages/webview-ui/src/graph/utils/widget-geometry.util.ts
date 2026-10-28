@@ -71,7 +71,8 @@ export const buttonRectsOf = (row: RowPlacement): RowButtonRects => {
   const side = WIDGET_BUTTON_PX * row.scale;
   const chevron = squareAt(row.x, row.y, side);
   const ellipsis = squareAt(row.x + row.width * row.scale - side, row.y, side);
-  const focus = squareAt(ellipsis.x1 - (WIDGET_BUTTON_PX + WIDGET_GAP_PX) * row.scale, row.y, side);
+  const focusOffset = (WIDGET_BUTTON_PX + WIDGET_GAP_PX) * row.scale;
+  const focus = squareAt(ellipsis.x1 - focusOffset, row.y, side);
   const rects: RowButtonRects = { chevron, focus, ellipsis };
 
   return rects;
