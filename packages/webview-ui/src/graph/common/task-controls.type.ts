@@ -1,4 +1,4 @@
-import type { PageElements } from './graph-page.type.ts';
+import type { PageElements } from './page-elements.type.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { showInspectionBar } from './inspection-shown.ts';
-import type { PageElements } from '../common/graph-page.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
+import type { PageElements } from '../common/page-elements.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { pageMock } from '../test/mocks/page.mock.ts';
 

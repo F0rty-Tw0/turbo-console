@@ -1,5 +1,5 @@
 import type { ControlsElements } from '../../common/controls-elements.type.ts';
-import type { PageElements } from '../../common/graph-page.type.ts';
+import type { PageElements } from '../../common/page-elements.type.ts';
 import { buildControls } from '../../ui/controls-elements.ts';
 import { BOARDS_GROUPS_STUB } from '../stubs/folder-boards.stub.ts';
 

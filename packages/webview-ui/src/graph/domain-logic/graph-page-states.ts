@@ -1,7 +1,7 @@
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { LayoutNotice, LayoutScreen } from '../common/graph-layouts.type.ts';
-import type { PageElements } from '../common/graph-page.type.ts';
 import { FALLBACK_NOTICE, FALLBACK_NOTICE_TEXT, LAYOUT_FAILED_TEXT, LOADING_TEXT, NO_NOTICE } from '../common/graph.const.ts';
+import type { PageElements } from '../common/page-elements.type.ts';
 
 type MessageState = Exclude<GraphState, GraphReady>;
 

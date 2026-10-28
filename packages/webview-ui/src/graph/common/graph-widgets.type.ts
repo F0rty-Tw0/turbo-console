@@ -1,10 +1,11 @@
 import type { FolderActions } from './folder-actions.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
 import type { GraphFilters } from './graph-filters.type.ts';
-import type { DrawnGraph, GraphView, PageElements } from './graph-page.type.ts';
+import type { DrawnGraph, GraphView } from './graph-page.type.ts';
 import type { Inspection } from './inspection.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { PackageInspectionActions } from './package-actions.type.ts';
+import type { PageElements } from './page-elements.type.ts';
 import type { MenuItemModel } from './widget-menu.type.ts';
 import type { LayerBounds, MenuTarget, RectPx, WidgetViews } from './widget.type.ts';
 

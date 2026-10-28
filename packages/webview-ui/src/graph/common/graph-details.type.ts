@@ -9,8 +9,9 @@ import type {
 } from './details-view.type.ts';
 import type { DetailsViews, ExplainState } from './details.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
-import type { DrawnGraph, PageElements } from './graph-page.type.ts';
+import type { DrawnGraph } from './graph-page.type.ts';
 import type { Inspection, InspectionInput, PickingInspection, TraceInspection } from './inspection.type.ts';
+import type { PageElements } from './page-elements.type.ts';
 import type { TraceCandidates, TraceResult } from './trace.type.ts';
 
 /** How `show` changes the panel: a new view, the shown view updated in place, or the same view built again. */

@@ -4,10 +4,10 @@ import { buildPanelSashes } from './panel-sash.ts';
 import { trackPointerFocus } from './pointer-focus.ts';
 import { buildToolbar } from './toolbar-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
-import type { PageElements } from '../common/graph-page.type.ts';
 import { EMPTY_TASKS_TEXT, SHOW_ALL_TASKS_LABEL, SLOW_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskScreenElements } from '../common/graph-task.type.ts';
 import { FALLBACK_NOTICE_TEXT, GRAPH_LABEL, RELOAD_LABEL, RETRY_LABEL } from '../common/graph.const.ts';
+import type { PageElements } from '../common/page-elements.type.ts';
 import type { PanelSashes } from '../common/panel-sash.type.ts';
 
 /** A text button: its visible text is its accessible name and its hover title. */

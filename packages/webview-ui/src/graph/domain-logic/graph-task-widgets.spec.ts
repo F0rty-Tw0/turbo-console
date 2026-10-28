@@ -3,8 +3,9 @@ import type { Mocked } from 'vitest';
 
 import { GraphTaskWidgets } from './graph-task-widgets.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
-import type { GraphView, PageElements } from '../common/graph-page.type.ts';
+import type { GraphView } from '../common/graph-page.type.ts';
 import { TASK_WIDGET_CLASS } from '../common/graph-task.const.ts';
+import type { PageElements } from '../common/page-elements.type.ts';
 import type { TaskDetailsModel, TaskWidgetsDeps } from '../common/task-details.type.ts';
 import type { MenuElements } from '../common/widget-menu.type.ts';
 import type { RectPx, WidgetRects } from '../common/widget.type.ts';

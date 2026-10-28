@@ -1,5 +1,4 @@
 import { setButtonText } from './button-title.ts';
-import type { PageElements } from '../common/graph-page.type.ts';
 import { NOTICE_TEXT_DELAY_MS, PACKAGE_NOTICE_MS, TASK_CAP, TASK_MODE_CLASS } from '../common/graph-task.const.ts';
 import type {
   PanelToggleDeps,
@@ -10,6 +9,7 @@ import type {
   TaskPanelsOpen,
   TaskScreenElements
 } from '../common/graph-task.type.ts';
+import type { PageElements } from '../common/page-elements.type.ts';
 import type { TaskWidgets } from '../common/task-details.type.ts';
 import { showEveryTextOf, tasksHiddenText } from '../utils/task-text.util.ts';
 

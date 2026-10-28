@@ -1,5 +1,6 @@
-import type { GraphView, PageElements } from './graph-page.type.ts';
+import type { GraphView } from './graph-page.type.ts';
 import type { TaskPanel } from './graph-task.type.ts';
+import type { PageElements } from './page-elements.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 
 /**
