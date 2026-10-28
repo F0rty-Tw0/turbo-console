@@ -123,6 +123,14 @@ export type FolderRowElements = {
 /** The four buttons of a row, in DOM order; the glyph and badge are not buttons. */
 export type RowButtonKind = Exclude<keyof FolderRowElements, 'root'>;
 
+/** A built row as the layer keeps it. */
+export type RowEntry = {
+  readonly kind: RowKind;
+  /** The package count the row was built with. */
+  readonly count: number;
+  readonly elements: FolderRowElements;
+};
+
 /** The widget builders, handed in because `domain-logic` may not import `ui`. */
 export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */

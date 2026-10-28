@@ -1,4 +1,5 @@
-import { WidgetRows, setHidden, translateOf, writeStyle } from './widget-rows.ts';
+import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
+import { WidgetRows } from './widget-rows.ts';
 import type { GraphWidgetsDeps, MenuAnchor } from '../common/graph-widgets.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds, MenuTarget, RectPx, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
