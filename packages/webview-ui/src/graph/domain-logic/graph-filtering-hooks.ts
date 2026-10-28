@@ -30,7 +30,7 @@ export const inspectionFoldersOf = (folders: () => GraphInspectionDeps['folders'
   return hooks;
 };
 
-/** A menu's items from the filters, the scene, the visible set and the tasks as they are when it opens. */
+/** A menu's items from the filters, the scene and the tasks as they are when it opens. */
 const menuOfFrom = (
   deps: WidgetHostDeps,
   inspection: WidgetInspection,
@@ -43,7 +43,7 @@ const menuOfFrom = (
 
     if (target.kind === 'package') {
       const hasTasks = deps.hasTasks(target.name);
-      const state = packageMenuStateOf(target.name, filters, deps.visible(), hasTasks);
+      const state = packageMenuStateOf(target.name, filters, hasTasks);
 
       return packageMenuOf(target.name, state, packageActions);
     }

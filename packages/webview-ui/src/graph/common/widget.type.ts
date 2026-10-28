@@ -54,10 +54,9 @@ export type FolderMenuState = {
   readonly show: ShowFolderState;
 };
 
-/** What a package's menu reads: whether it is the focus, whether its list checkbox is ticked, and whether it has a visible task. */
+/** What a package's menu reads: whether it is the focus and whether it has a visible task. */
 export type PackageMenuState = {
   readonly isFocus: boolean;
-  readonly isShown: boolean;
   readonly hasTasks: boolean;
 };
 

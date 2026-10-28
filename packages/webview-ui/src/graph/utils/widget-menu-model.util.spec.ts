@@ -9,7 +9,7 @@ import type { MenuTarget, ShowFolderState } from '../common/widget.type.ts';
 import { graphIconConstMock } from '../test/mocks/graph-icon-const.mock.ts';
 import { folderActionsMock, packageActionsMock } from '../test/mocks/widget-menu.mock.ts';
 import { SWAPPED_ACTION_ICONS_STUB as SWAPPED } from '../test/stubs/action-icons.stub.ts';
-import { BOARDS_NAMES, boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
+import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 import {
   callCountOf,
@@ -24,8 +24,6 @@ import {
 const APPS_FOCUS: GraphFocus = { kind: 'folder', folder: 'apps' };
 
 const WEB_FOCUS: GraphFocus = { kind: 'package', name: 'web' };
-
-const ALL_VISIBLE: ReadonlySet<string> = new Set(BOARDS_NAMES);
 
 const APPS_TARGET: MenuTarget = { kind: 'folder', folder: 'apps' };
 
@@ -243,20 +241,19 @@ describe('FEATURE: packageMenuStateOf', () => {
   describe('GIVEN every boards package visible', () => {
     it.each([
       { title: 'web ticked, no focus', name: 'web', hidden: [], focus: null, expected: packageStateOf() },
-      { title: 'web unticked', name: 'web', hidden: ['web'], focus: null, expected: packageStateOf({ isShown: false }) },
       { title: 'web focused', name: 'web', hidden: [], focus: WEB_FOCUS, expected: packageStateOf({ isFocus: true }) },
       { title: 'docs while web is focused', name: 'docs', hidden: [], focus: WEB_FOCUS, expected: packageStateOf() },
       { title: 'web while apps is focused', name: 'web', hidden: [], focus: APPS_FOCUS, expected: packageStateOf() }
     ])('WHEN $title THEN the state is $expected', ({ name, hidden, focus, expected }) => {
       const filters = menuFiltersOf(hidden, focus);
 
-      const state = packageMenuStateOf(name, filters, ALL_VISIBLE, false);
+      const state = packageMenuStateOf(name, filters, false);
 
       expect(state).toStrictEqual(expected);
     });
 
     it('WHEN web has a visible task THEN the state says so', () => {
-      const state = packageMenuStateOf('web', menuFiltersOf([], null), ALL_VISIBLE, true);
+      const state = packageMenuStateOf('web', menuFiltersOf([], null), true);
 
       expect(state).toStrictEqual(packageStateOf({ hasTasks: true }));
     });

@@ -1,4 +1,4 @@
-import { focusNameOf, rowViewOf } from './controls-rules.util.ts';
+import { focusNameOf } from './controls-rules.util.ts';
 import { folderToggleTextOf } from './controls-text.util.ts';
 import { focusFolderOf } from './folder-rules.util.ts';
 import { showFolderChecksOf, showFolderOf } from './show-folder.util.ts';
@@ -92,16 +92,10 @@ export const folderMenuStateOf = (folder: string, scene: FolderScene | null, fil
   return state;
 };
 
-/** A package's menu state: the package focus, whether its list checkbox is ticked, and whether it has a visible task. */
-export const packageMenuStateOf = (
-  name: string,
-  filters: GraphFilters,
-  visible: ReadonlySet<string>,
-  hasTasks: boolean
-): PackageMenuState => {
+/** A package's menu state: the package focus and whether it has a visible task. */
+export const packageMenuStateOf = (name: string, filters: GraphFilters, hasTasks: boolean): PackageMenuState => {
   const isFocus = focusNameOf(filters) === name;
-  const { isChecked } = rowViewOf(filters, visible, name);
-  const state: PackageMenuState = { isFocus, isShown: isChecked, hasTasks };
+  const state: PackageMenuState = { isFocus, hasTasks };
 
   return state;
 };
