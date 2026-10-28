@@ -95,12 +95,13 @@ const noticeLineOf = (notice: HTMLElement): ((text: string | null) => void) => {
 
 /**
  * Task mode's page-level parts: the `task-mode` class on the page, which hides the package Controls panel and widgets,
- * the pressed mode button, the prompt and its Show every task button, the cap banner and its Show all tasks button, and the notice line. Entering moves the
- * Details bar into the task aside and empties the package selection's status line and summary, which the package
- * inspection writes again once its graph shows; leaving moves the bar back into the package aside, once it exists. Show all tasks
- * and Show every task hide themselves with the banner and the prompt, so each hands focus to the canvas (`wireShowButtons`). A notice shown in package mode, where no task render
- * replaces it, hides after `PACKAGE_NOTICE_MS`. The banner and its `role=status` text are written only when they change,
- * so a same-key state re-posted by the host does not make a screen reader announce the banner again.
+ * the pressed mode button, the prompt and its Show every task button, the cap banner and its Show all tasks button, and
+ * the notice line. Entering moves the Details bar into the task aside and empties the package selection's status line
+ * and summary, which the package inspection writes again once its graph shows; leaving moves the bar back into the
+ * package aside, once it exists. Show all tasks and Show every task hide themselves with the banner and the prompt, so
+ * each hands focus to the canvas (`wireShowButtons`). A notice shown in package mode, where no task render replaces it,
+ * hides after `PACKAGE_NOTICE_MS`. The banner and its `role=status` text are written only when they change, so a
+ * same-key state re-posted by the host does not make a screen reader announce the banner again.
  */
 export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions, asides: TaskPanelAsides): TaskPanel => {
   const { prompt, banner, bannerText, notice } = page.taskScreen;

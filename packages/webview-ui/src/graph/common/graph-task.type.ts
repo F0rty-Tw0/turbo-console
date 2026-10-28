@@ -163,6 +163,7 @@ export type TaskModeHooks = {
   readonly onMessage: () => void;
   /** The controller-built flow overlay. */
   readonly flow: FlowControl;
+  /** The package selected in the package graph, whose tasks Tasks opens on; `null` with none selected. */
   readonly selectedPackage: () => string | null;
   /** The task details owner button: leaves task mode and shows package `name` in the package graph. */
   readonly showPackage: (name: string) => void;
