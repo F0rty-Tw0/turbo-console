@@ -76,7 +76,7 @@ export class GraphToolbar {
 
   /** The button holds an `aria-hidden` icon span with the id's Codicon class. */
   public async expectIcon(button: string, iconId: GraphIconId): Promise<void> {
-    const icon = this.page.getByRole('button', { name: button, exact: true }).locator('span').first();
+    const icon = this.toolbar.getByRole('button', { name: button, exact: true }).locator('span').first();
 
     await expect(icon).toHaveClass(codiconClassOf(iconId));
     await expect(icon).toHaveAttribute('aria-hidden', 'true');
@@ -89,7 +89,7 @@ export class GraphToolbar {
   /** A pressed toggle is drawn in the three input-option colours; a collapsed one in none of them. */
   public async expectPressed(button: string, isPressed: boolean): Promise<void> {
     const colors = this.inputColors();
-    const toggle = this.page.getByRole('button', { name: button, exact: true });
+    const toggle = this.toolbar.getByRole('button', { name: button, exact: true });
     const looks: [string, string][] = [
       ['background-color', colors.background],
       ['border-color', colors.border],

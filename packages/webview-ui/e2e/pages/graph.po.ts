@@ -18,6 +18,9 @@ import { FLAT_SAVED_STUB } from '../test/stubs/graph-saved.stub.ts';
 import { savedStateScript } from '../test/utils/graph-saved-state.spec.util.ts';
 import { pollutedBuiltins, trustedTypesEscapes } from '../test/utils/graph-trusted-types.spec.util.ts';
 
+/** Where the page's own buttons live, so a location crumb with a toolbar button's name never matches. */
+const BUTTON_HOSTS = 'header.graph-toolbar, .graph-notice, .graph-message';
+
 /** The graph page's DOM: toolbar, status line, notice and container, and the keys and themes that act on them. */
 export class GraphPage {
   public readonly container: Locator;
@@ -197,6 +200,6 @@ export class GraphPage {
   }
 
   private buttonOf(label: string): Locator {
-    return this.page.getByRole('button', { name: label, exact: true });
+    return this.page.locator(BUTTON_HOSTS).getByRole('button', { name: label, exact: true });
   }
 }
