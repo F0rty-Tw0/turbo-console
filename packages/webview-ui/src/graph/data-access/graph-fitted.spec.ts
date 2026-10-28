@@ -10,17 +10,10 @@ type FittedHandlers = Pick<GraphViewHandlers, 'onViewport' | 'onRefit'>;
 
 describe('FEATURE: createFittedCamera', () => {
   let cy: Core;
-  let frames: (() => void)[];
   let events: string[];
   let fittedAtViewport: boolean[];
   let handlers: FittedHandlers;
   let camera: FittedCamera;
-
-  const flush = (): void => {
-    const pending = frames.splice(0);
-
-    pending.forEach((run: () => void): void => run());
-  };
 
   beforeEach(() => {
     const ids = ['a', 'b'];
@@ -33,7 +26,6 @@ describe('FEATURE: createFittedCamera', () => {
     const elements = ids.map(elementOf);
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements });
-    frames = [];
     events = [];
     fittedAtViewport = [];
     vi.spyOn(cy, 'fit').mockImplementation((): Core => {
@@ -47,7 +39,7 @@ describe('FEATURE: createFittedCamera', () => {
       onViewport: vi.fn((): void => void fittedAtViewport.push(camera.isFitted())),
       onRefit: vi.fn((): void => void events.push('refit'))
     };
-    camera = createFittedCamera(cy, handlers, (run: () => void): void => void frames.push(run));
+    camera = createFittedCamera(cy, handlers);
   });
 
   afterEach(() => {
@@ -76,9 +68,8 @@ describe('FEATURE: createFittedCamera', () => {
       expect(handlers.onViewport).not.toHaveBeenCalled();
     });
 
-    it('WHEN the container resizes THEN only resize runs', () => {
+    it('WHEN the container resizes THEN only resize runs, at once', () => {
       camera.resized();
-      flush();
 
       expect(events).toStrictEqual(['resize']);
       expect(handlers.onRefit).not.toHaveBeenCalled();
@@ -127,43 +118,19 @@ describe('FEATURE: createFittedCamera', () => {
       expect(camera.isFitted()).toBe(true);
     });
 
-    describe('WHEN the container resizes', () => {
-      it('THEN nothing runs before the frame, then resize, fit, refit in that order', () => {
-        camera.resized();
+    it('WHEN the container resizes THEN resize, fit and refit run at once, in that order, and it stays fitted', () => {
+      camera.resized();
 
-        expect(events).toStrictEqual([]);
+      expect(events).toStrictEqual(['resize', 'fit', 'refit']);
+      expect(camera.isFitted()).toBe(true);
+    });
 
-        flush();
+    it('WHEN the user pans and then the container resizes THEN only resize runs', () => {
+      cy.emit('dragpan');
+      camera.resized();
 
-        expect(events).toStrictEqual(['resize', 'fit', 'refit']);
-        expect(camera.isFitted()).toBe(true);
-      });
-
-      it('THEN three resizes in one frame run once, and the next resize runs again', () => {
-        camera.resized();
-        camera.resized();
-        camera.resized();
-
-        expect(frames).toHaveLength(1);
-
-        flush();
-
-        expect(handlers.onRefit).toHaveBeenCalledOnce();
-
-        camera.resized();
-        flush();
-
-        expect(handlers.onRefit).toHaveBeenCalledTimes(2);
-      });
-
-      it('THEN a pan before the frame stops the re-fit', () => {
-        camera.resized();
-        cy.emit('dragpan');
-        flush();
-
-        expect(events).toStrictEqual(['resize']);
-        expect(handlers.onRefit).not.toHaveBeenCalled();
-      });
+      expect(events).toStrictEqual(['resize']);
+      expect(handlers.onRefit).not.toHaveBeenCalled();
     });
   });
 });

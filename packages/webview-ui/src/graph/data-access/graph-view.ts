@@ -64,7 +64,7 @@ const drawGraph = (cy: Core, nodes: ElementDefinition[], edges: GraphEdge[]): vo
 /**
  * Cytoscape on `container` with the preset layout (positions are node centres) and the canvas renderer. Its own resize
  * is debounced 100 ms, so until then a tap after the toolbar wraps lands where the canvas was; the camera's container
- * observer resizes per change and ends that.
+ * observer resizes in the callback of each change and ends that.
  */
 const cytoscapeOn = (container: HTMLElement): Core => {
   const layout = { name: 'preset' };

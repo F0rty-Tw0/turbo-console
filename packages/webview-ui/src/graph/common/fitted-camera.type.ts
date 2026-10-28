@@ -1,10 +1,7 @@
 import type { GraphView } from './graph-page.type.ts';
 
-/** Runs `run` at the next animation frame. */
-export type FrameRequest = (run: () => void) => void;
-
 type ContainerResize = {
-  /** The container resized: one frame later `cy.resize()`, and while fitted fit again, then `onRefit`. */
+  /** The container resized: `cy.resize()` at once, and while fitted fit again, then `onRefit`. */
   readonly resized: () => void;
 };
 
