@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setButtonIcon, setButtonLabel, setButtonText, setFocusButton, setFocusToggle, setIconTextButton } from './button-title.ts';
-import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
+import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { faceOf, iconTextButtonOf } from '../test/utils/button-face.spec.util.ts';
 
@@ -96,7 +96,7 @@ describe('FEATURE: button titles', () => {
         writes.push(name);
       });
       Object.defineProperty(button, 'title', {
-        get: (): string => 'Clear focus',
+        get: (): string => CLEAR_FOCUS_LABEL,
         set: (): void => {
           writes.push('title');
         }

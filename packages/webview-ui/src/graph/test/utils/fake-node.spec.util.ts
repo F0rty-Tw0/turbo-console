@@ -33,10 +33,15 @@ export class FakeNode {
     this.children.unshift(...nodes);
   }
 
-  /** Inserts `node` before `before`, or at the end when `before` is `null`. */
+  /** Moves `node` before `before`, or to the end when `before` is `null`; throws, as the DOM does, when `before` is not a child. */
   public insertBefore(node: FakeNode, before: FakeNode | null): void {
+    node.remove();
+
     const found = this.children.findIndex((child) => child === before);
-    const at = found === -1 ? this.children.length : found;
+
+    if (before !== null && found === -1) throw new Error('NotFoundError: before is not a child');
+
+    const at = before === null ? this.children.length : found;
 
     node.parent = this;
     this.children.splice(at, 0, node);
