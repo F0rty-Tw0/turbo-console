@@ -66,3 +66,13 @@ export const groupingField = (input: HTMLInputElement): HTMLElement => {
 
   return label;
 };
+
+/** One titled part of the panel: `section.controls-section` headed by an `h3`, then `children`. */
+export const controlsSection = (title: string, ...children: HTMLElement[]): HTMLElement => {
+  const section = textElement('section', 'controls-section', '');
+  const heading = textElement('h3', 'controls-heading', title);
+
+  section.append(heading, ...children);
+
+  return section;
+};

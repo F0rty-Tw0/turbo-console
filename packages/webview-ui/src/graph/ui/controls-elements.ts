@@ -1,4 +1,4 @@
-import { checkbox, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
+import { checkbox, controlsSection, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
 import { gridCell, gridLine, listButton, listCheck } from './controls-list-parts.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
@@ -9,9 +9,12 @@ import {
   DEPTH_HINT,
   DEPTH_HINT_ID,
   DEPTH_LABEL,
+  PACKAGES_SECTION_TITLE,
   SEARCH_LABEL,
+  SEARCH_SECTION_TITLE,
   SHOW_ALL_LABEL,
-  TAGS_LABEL
+  TAGS_LABEL,
+  VIEW_SECTION_TITLE
 } from '../common/graph.const.ts';
 import {
   countTextOf,
@@ -130,8 +133,9 @@ const packageGrid = (groups: ControlsGroup[]): HTMLElement => {
 };
 
 /**
- * The controls panel `aside#graph-controls`, unwired: search, depth, Group by folder, the tag fieldset (only when tags exist), Show all,
- * the count line and the package grid, in that DOM order. Groups and rows keep the order given.
+ * The controls panel `aside#graph-controls`, unwired, in three titled sections: Search (the search field), View (depth, then
+ * Group by folder) and Packages (the tag fieldset only when tags exist, Show all, the count line and the package grid), in that
+ * DOM order. Groups and rows keep the order given.
  */
 export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsElements => {
   const search = searchInput();
@@ -145,14 +149,16 @@ export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsEl
   const count = countLine(total);
   const controlsGroups = groups.map(folderGroup);
   const list = packageGrid(controlsGroups);
+  const searchSection = controlsSection(SEARCH_SECTION_TITLE, field(SEARCH_LABEL, search));
+  const viewSection = controlsSection(VIEW_SECTION_TITLE, depthField, groupingField(grouping));
+  const packagesSection = controlsSection(PACKAGES_SECTION_TITLE);
   const panel = textElement('aside', 'graph-controls', '');
 
+  if (tagBoxes.size > 0) packagesSection.append(tagFieldset(tagBoxes));
+
+  packagesSection.append(showAll, count, list);
   panel.id = CONTROLS_ID;
-  panel.append(field(SEARCH_LABEL, search), depthField, groupingField(grouping));
-
-  if (tagBoxes.size > 0) panel.append(tagFieldset(tagBoxes));
-
-  panel.append(showAll, count, list);
+  panel.append(searchSection, viewSection, packagesSection);
 
   const controls: ControlsElements = { panel, search, depth, grouping, tags: tagBoxes, showAll, count, list, groups: controlsGroups };
 

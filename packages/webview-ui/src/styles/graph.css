@@ -569,6 +569,19 @@ p {
   border-inline-end: 1px solid var(--vscode-panel-border);
 }
 
+.controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.controls-heading {
+  margin: 0;
+  color: var(--tc-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .controls-field {
   display: flex;
   flex-direction: column;
@@ -650,7 +663,7 @@ p {
   border-bottom: 2px solid var(--vscode-checkbox-foreground, currentColor);
 }
 
-.graph-controls > .text-button {
+.controls-section > .text-button {
   align-self: flex-start;
 }
 

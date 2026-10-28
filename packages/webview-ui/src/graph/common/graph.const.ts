@@ -242,6 +242,13 @@ export const SASH_DRAGGING_CLASS = 'is-dragging';
 /** Each sash's accessible name. */
 export const RESIZE_LABELS: Readonly<Record<PanelSide, string>> = { controls: 'Resize Controls', details: 'Resize Details' };
 
+/** The Controls panel's section headings, in panel order. */
+export const SEARCH_SECTION_TITLE = 'Search';
+
+export const VIEW_SECTION_TITLE = 'View';
+
+export const PACKAGES_SECTION_TITLE = 'Packages';
+
 export const SEARCH_LABEL = 'Search packages';
 
 export const DEPTH_LABEL = 'Focus depth';

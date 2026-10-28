@@ -96,6 +96,11 @@ export class GraphControlsPage {
     await expect(this.showAllButton).toHaveAttribute('aria-disabled', String(isDisabled));
   }
 
+  /** The panel's section headings, in DOM order. */
+  public async expectSectionTitles(titles: string[]): Promise<void> {
+    await expect(this.panel.getByRole('heading', { level: 3 })).toHaveText(titles);
+  }
+
   public async expectDepthValue(text: string): Promise<void> {
     await expect(this.depth).toHaveValue(text);
   }
