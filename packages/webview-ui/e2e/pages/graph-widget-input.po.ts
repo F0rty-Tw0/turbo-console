@@ -1,9 +1,11 @@
+import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { GraphMenusPage } from './graph-menus.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
+import { isHitAtCentre } from '../test/utils/graph-widgets.spec.util.ts';
 
 const centreOf = async (target: Locator): Promise<ViewportPoint> => {
   await target.waitFor();
@@ -31,6 +33,36 @@ export class GraphWidgetInput extends GraphMenusPage {
     const centre = await centreOf(this.widgets.ellipsisOf(folder));
 
     return centre;
+  }
+
+  /** The folder row's title button. */
+  public titleOf(folder: string): Locator {
+    return this.widgets.rowOf(folder).locator('.widget-title');
+  }
+
+  public async clickTitle(folder: string): Promise<void> {
+    await this.titleOf(folder).click();
+  }
+
+  /** A real double click: two trusted clicks, the second with `detail` 2. */
+  public async dblclickTitle(folder: string): Promise<void> {
+    await this.titleOf(folder).dblclick();
+  }
+
+  /** Focuses the title, then presses Enter twice with the keyboard; no pointer is involved. */
+  public async pressEnterTwiceOnTitle(folder: string): Promise<void> {
+    await this.titleOf(folder).focus();
+    await this.page.keyboard.press('Enter');
+    await this.page.keyboard.press('Enter');
+  }
+
+  /** The topmost element at the title's centre is the title, so a pointer reaches it. */
+  public async expectTitleHit(folder: string): Promise<void> {
+    await expect.poll(async (): Promise<boolean> => this.titleOf(folder).evaluate(isHitAtCentre)).toBe(true);
+  }
+
+  public async expectTitleFocused(folder: string): Promise<void> {
+    await expect(this.titleOf(folder)).toBeFocused();
   }
 
   /** Moves the real mouse to the centre of `target`, then turns its wheel by `deltaY`. */

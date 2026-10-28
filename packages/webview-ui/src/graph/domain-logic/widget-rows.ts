@@ -126,11 +126,12 @@ export class WidgetRows {
 
     if (isCurrent) return;
 
-    const { views, onToggle, onMenu } = this.deps;
+    const { views, onToggle, onTitle, onMenu } = this.deps;
     const elements = views.row(kind, folderTitleOf(folder), count);
     const target: MenuTarget = { kind: 'folder', folder };
 
     elements.chevron.addEventListener('click', (): void => onToggle(folder));
+    elements.title.addEventListener('click', (event): void => onTitle(folder, event));
     elements.ellipsis.addEventListener('click', (): void => onMenu(target, elements.ellipsis));
     this.rows.set(folder, { kind, count, elements });
 

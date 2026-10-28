@@ -124,8 +124,8 @@ test.describe('FEATURE: folder rules', () => {
 
       await test.step('THEN config is selected', async (): Promise<void> => graphProbe.expectSelected('@acme/config'));
 
-      await test.step('WHEN the apps to utils link is tapped over the top padding of the packages box', async (): Promise<void> =>
-        graphFolders.tapFolderLink('apps', '@acme/utils', 0.893));
+      await test.step('WHEN the apps to utils link is tapped over the packages box, just below its header row', async (): Promise<void> =>
+        graphFolders.tapFolderLink('apps', '@acme/utils', 0.93));
 
       await test.step('THEN nothing is selected, nothing is inspected and the status line is empty', async (): Promise<void> => {
         await graphProbe.expectSelected(null);

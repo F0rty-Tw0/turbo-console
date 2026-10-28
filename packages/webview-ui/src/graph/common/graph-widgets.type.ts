@@ -105,10 +105,11 @@ export type MenuAnchor = {
   readonly opener: HTMLButtonElement | null;
 };
 
-/** What the header rows need: the layer, the builders and the two clicks, already guarded. */
+/** What the header rows need: the layer, the builders and the three clicks, already guarded. */
 export type WidgetRowsDeps = {
   readonly layer: HTMLElement;
   readonly views: WidgetViews;
   readonly onToggle: (folder: string) => void;
+  readonly onTitle: (folder: string, event: MouseEvent) => void;
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
 };
