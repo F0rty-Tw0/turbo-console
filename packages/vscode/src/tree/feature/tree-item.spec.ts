@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
 
 import { toTreeItem } from './tree-item.ts';
-import type { IconsState, RowKind, TreeRow } from '../common/tree-row.type.ts';
+import type { IconSpec, IconsState, RowKind, TreeRow } from '../common/tree-row.type.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { TREE_ROW_STUB } from '../test/stubs/tree-row.stub.ts';
 
@@ -20,6 +20,7 @@ vi.mock('vscode', () => {
 
   class ThemeIcon {
     public static readonly Folder = new ThemeIcon('folder');
+    public static readonly File = new ThemeIcon('file');
     public readonly id: string;
 
     public constructor(id: string) {
@@ -44,13 +45,20 @@ vi.mock('vscode', () => {
   }
   const collapsibleStates = { None: 0, Collapsed: 1, Expanded: 2 };
 
-  type FileUri = { readonly fsPath: string };
+  type FileUri = { readonly scheme?: string; readonly fsPath: string; readonly path: string };
   const fileUri = (fsPath: string): FileUri => {
-    const uri: FileUri = { fsPath };
+    const uri: FileUri = { fsPath, path: fsPath };
 
     return uri;
   };
-  const uriModule = { file: fileUri };
+
+  type UriParts = { readonly scheme: string; readonly path: string };
+  const fromParts = ({ scheme, path }: UriParts): FileUri => {
+    const uri: FileUri = { scheme, fsPath: path, path };
+
+    return uri;
+  };
+  const uriModule = { file: fileUri, from: fromParts };
   const module = { TreeItem, ThemeIcon, ThemeColor, MarkdownString, Uri: uriModule, TreeItemCollapsibleState: collapsibleStates };
 
   return module;
@@ -100,6 +108,84 @@ const idOf = (iconPath: vscode.TreeItem['iconPath']): string | undefined => {
 };
 
 const THEME_ICONS_STATE: IconsState = { ...ICONS_STATE_STUB, mode: 'theme' };
+
+const NAMES = new Set(['vitest.config.js', 'tsconfig.json']);
+const THEME_NAMES_STATE: IconsState = { mode: 'theme', fileNames: NAMES };
+const BUILTIN_NAMES_STATE: IconsState = { mode: 'builtin', fileNames: NAMES };
+
+const VITEST_ICON: IconSpec = { id: 'turbo-console-vitest', color: null };
+
+const BARE_TOOL_ROW: TreeRow = { ...TREE_ROW_STUB, kind: 'task', icon: VITEST_ICON };
+
+const toolRowOf = (themeFiles: string[]): TreeRow => {
+  const row: TreeRow = { ...BARE_TOOL_ROW, themeFiles };
+
+  return row;
+};
+
+describe('FEATURE: tree item theme file icons', () => {
+  describe('GIVEN an idle tool row naming two config files', () => {
+    const row = toolRowOf(['vitest.config.ts', 'vitest.config.js']);
+
+    it('WHEN the theme names only the second THEN the icon is the theme file icon over that name', () => {
+      const item = toTreeItem(row, THEME_NAMES_STATE);
+
+      expect(item.iconPath).toBe(vscode.ThemeIcon.File);
+      expect(item.resourceUri?.path).toBe('/vitest.config.js');
+      expect(item.resourceUri?.scheme).toBe('turbo-console-icon');
+    });
+
+    it('WHEN the theme names the first too THEN the first wins', () => {
+      const names = new Set(['vitest.config.js', 'vitest.config.ts']);
+
+      const item = toTreeItem(row, { mode: 'theme', fileNames: names });
+
+      expect(item.resourceUri?.path).toBe('/vitest.config.ts');
+    });
+
+    it('WHEN the theme names neither THEN the glyph stays and there is no resource uri', () => {
+      const item = toTreeItem(row, { mode: 'theme', fileNames: new Set(['angular.json']) });
+
+      expect(idOf(item.iconPath)).toBe('turbo-console-vitest');
+      expect(item.resourceUri).toBeUndefined();
+    });
+
+    it('WHEN the mode is builtin THEN the glyph stays whatever the names are', () => {
+      const item = toTreeItem(row, BUILTIN_NAMES_STATE);
+
+      expect(idOf(item.iconPath)).toBe('turbo-console-vitest');
+      expect(item.resourceUri).toBeUndefined();
+    });
+
+    it('WHEN the theme icon is drawn THEN the tooltip is still the row markdown', () => {
+      const tooltipRow: TreeRow = { ...row, tooltip: TOOLTIP_LINES };
+
+      const { tooltip } = toTreeItem(tooltipRow, THEME_NAMES_STATE);
+
+      expect(tooltip).toMatchObject({ value: TOOLTIP_MARKDOWN });
+    });
+  });
+
+  describe('GIVEN a task row without themeFiles', () => {
+    it('WHEN built in theme mode THEN the glyph stays', () => {
+      const item = toTreeItem(BARE_TOOL_ROW, THEME_NAMES_STATE);
+
+      expect(idOf(item.iconPath)).toBe('turbo-console-vitest');
+      expect(item.resourceUri).toBeUndefined();
+    });
+  });
+
+  describe('GIVEN a folder row that also carries themeFiles', () => {
+    it('WHEN built in theme mode THEN the folder icon wins', () => {
+      const folderRow = folderRowOf('pkg');
+      const row: TreeRow = { ...folderRow, themeFiles: ['tsconfig.json'] };
+
+      const item = toTreeItem(row, THEME_NAMES_STATE);
+
+      expect(item.iconPath).toBe(vscode.ThemeIcon.Folder);
+    });
+  });
+});
 
 describe('FEATURE: tree item icons', () => {
   describe.each<RowKind>(['dir', 'pkg'])('GIVEN a %s row with a folder', (kind) => {

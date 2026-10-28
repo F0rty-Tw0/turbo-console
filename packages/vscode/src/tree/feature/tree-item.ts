@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import * as vscode from 'vscode';
 
 import { tooltipMarkdownOf } from '../../shared/utils/tooltip.util.ts';
+import { THEME_ICON_SCHEME } from '../common/icon-theme.const.ts';
 import type { IconsState, RowCommand, TreeRow } from '../common/tree-row.type.ts';
+import { themeFileNameOf } from '../utils/theme-file-name.util.ts';
 
 const COLLAPSIBLE_STATES: Readonly<Record<TreeRow['collapsible'], vscode.TreeItemCollapsibleState>> = {
   none: vscode.TreeItemCollapsibleState.None,
@@ -31,11 +33,23 @@ const tooltipFor = (row: TreeRow): vscode.MarkdownString => {
   return new vscode.MarkdownString(markdown);
 };
 
-/** In theme mode a row with a folder takes the theme's folder icon, drawn from `resourceUri`; every other row keeps its own codicon. */
+/**
+ * In theme mode a row with a folder takes the theme's folder icon, and a tool row whose config file the theme names takes
+ * that file's icon, both drawn from `resourceUri`; every other row keeps its own codicon.
+ */
 const applyIcon = (item: vscode.TreeItem, row: TreeRow, icons: IconsState): void => {
   if (icons.mode === 'theme' && row.folder !== undefined) {
     item.iconPath = vscode.ThemeIcon.Folder;
     item.resourceUri = vscode.Uri.file(join(row.root, row.folder));
+
+    return;
+  }
+
+  const fileName = themeFileNameOf(row, icons);
+
+  if (fileName !== null) {
+    item.iconPath = vscode.ThemeIcon.File;
+    item.resourceUri = vscode.Uri.from({ scheme: THEME_ICON_SCHEME, path: `/${fileName}` });
 
     return;
   }
