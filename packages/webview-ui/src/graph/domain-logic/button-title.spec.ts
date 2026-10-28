@@ -2,23 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setButtonIcon, setButtonLabel, setButtonText, setFocusButton, setIconTextButton } from './button-title.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { faceOf, iconTextButtonOf } from '../test/utils/button-face.spec.util.ts';
 
 const FOCUS_CASES = [
   { title: 'focused', isFocused: true, icon: 'codicon codicon-close', text: 'Clear focus' },
   { title: 'unfocused', isFocused: false, icon: 'codicon codicon-target', text: 'Focus' }
 ];
-
-/** A button drawn like a Details action: its icon, then its label. */
-const iconTextButtonOf = (iconClass: string): HTMLButtonElement => {
-  const button = document.createElement('button');
-  const icon = document.createElement('span');
-  const label = document.createElement('span');
-
-  icon.className = iconClass;
-  button.append(icon, label);
-
-  return button;
-};
 
 describe('FEATURE: button titles', () => {
   beforeEach((): void => {
@@ -66,19 +55,18 @@ describe('FEATURE: button titles', () => {
         [icon, label]
       ]);
     });
+  });
 
-    it.each(FOCUS_CASES)(
-      'GIVEN $title WHEN setFocusButton runs THEN the icon and the text are $icon / $text',
-      ({ isFocused, icon, text }) => {
-        const button = iconTextButtonOf('codicon codicon-file-text');
+  describe.each(FOCUS_CASES)('GIVEN a $title package Focus button', ({ isFocused, icon, text }) => {
+    it(`WHEN setFocusButton runs THEN the icon and the text are ${icon} / ${text}`, () => {
+      const button = iconTextButtonOf('codicon codicon-file-text');
 
-        setFocusButton(button, isFocused);
+      setFocusButton(button, isFocused);
 
-        const [iconChild, labelChild] = Array.from(button.children);
+      const face = faceOf(button);
 
-        expect([iconChild?.className, labelChild?.textContent, button.title]).toStrictEqual([icon, text, text]);
-      }
-    );
+      expect([...face, button.title]).toStrictEqual([icon, text, text]);
+    });
   });
 
   describe('GIVEN a button with no children', () => {
