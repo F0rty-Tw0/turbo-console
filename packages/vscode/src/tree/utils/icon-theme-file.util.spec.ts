@@ -85,6 +85,19 @@ describe('FEATURE: icon theme file', () => {
       expect([...names]).toStrictEqual(['vitest.config.ts', 'angular.json']);
     });
 
+    it('WHEN light and highContrast sections also have fileNames THEN fileNamesOf holds only the top-level keys', () => {
+      const top = { 'a.json': '_a' };
+      const lightNames = { 'b.json': '_b' };
+      const highContrastNames = { 'c.json': '_c' };
+      const light = { fileNames: lightNames };
+      const highContrast = { fileNames: highContrastNames };
+      const parsed = { fileNames: top, light, highContrast };
+
+      const names = fileNamesOf(parsed);
+
+      expect([...names]).toStrictEqual(['a.json']);
+    });
+
     it.each([
       ['an object without fileNames', { folder: '_f' }],
       ['fileNames an array', { fileNames: ['a.json'] }],

@@ -45,6 +45,15 @@ describe('FEATURE: icon theme file names', () => {
       expect(facts.folders).toBe(true);
       expect(facts.fileNames.has('angular.json')).toBe(true);
     });
+
+    it('WHEN light and highContrast sections also have fileNames THEN fileNames holds only the top-level keys', async () => {
+      const text = '{"fileNames":{"a.json":"_a"},"light":{"fileNames":{"b.json":"_b"}},"highContrast":{"fileNames":{"c.json":"_c"}}}';
+      const probe = new IconThemeFolders(portsOf(text));
+
+      const facts = await probe.facts();
+
+      expect([...facts.fileNames]).toStrictEqual(['a.json']);
+    });
   });
 
   describe('GIVEN a theme file without usable top-level fileNames', () => {
