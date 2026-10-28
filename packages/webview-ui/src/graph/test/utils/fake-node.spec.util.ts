@@ -33,6 +33,14 @@ export class FakeNode {
     this.children.unshift(...nodes);
   }
 
+  /** Inserts `node` before `before`, or at the end when `before` is `null`. */
+  public insertBefore(node: FakeNode, before: FakeNode | null): void {
+    const at = before === null ? this.children.length : this.children.indexOf(before);
+
+    node.parent = this;
+    this.children.splice(at, 0, node);
+  }
+
   public replaceChildren(...nodes: FakeNode[]): void {
     for (const child of this.children) child.parent = null;
 

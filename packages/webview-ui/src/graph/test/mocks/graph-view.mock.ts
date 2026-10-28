@@ -4,6 +4,14 @@ import { vi } from 'vitest';
 import type { Positions } from '../../../bridge/common/graph-state.type.ts';
 import type { GraphView, Viewport } from '../../common/graph-page.type.ts';
 import type { AtomCanvas, TaskCanvas } from '../../common/task-canvas.type.ts';
+import type { WidgetRects } from '../../common/widget.type.ts';
+
+/** Rects of a canvas that drew no folder: the rows exist but no plan places one. */
+const noRects = (): WidgetRects => {
+  const rects: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected: null, zoom: 1 };
+
+  return rects;
+};
 
 export const taskCanvasMock = (): Mocked<TaskCanvas> => {
   const none = (): Positions => {
@@ -58,7 +66,7 @@ export const graphViewMock = (camera: Viewport): Mocked<GraphView> => {
     setPositions: vi.fn<GraphView['setPositions']>(),
     showFolders: vi.fn<GraphView['showFolders']>(),
     applyTheme: vi.fn<GraphView['applyTheme']>(),
-    widgetRects: vi.fn<GraphView['widgetRects']>(),
+    widgetRects: vi.fn<GraphView['widgetRects']>(noRects),
     markRowLess: vi.fn<GraphView['markRowLess']>(),
     exportPng: vi.fn<GraphView['exportPng']>(() => ''),
     flowEdges: vi.fn<GraphView['flowEdges']>(() => []),

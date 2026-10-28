@@ -105,10 +105,8 @@ describe('FEATURE: GraphFiltering focus target', () => {
 describe('FEATURE: GraphFiltering location updates', () => {
   let rig: FilteringRig;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     stubPackageSideGlobals();
-    rig = await drawnRigOf(SAVED_FLAT_STUB);
-    rig.onLocation.mockClear();
   });
 
   afterEach(() => {
@@ -116,6 +114,11 @@ describe('FEATURE: GraphFiltering location updates', () => {
   });
 
   describe('GIVEN h1 drawn', () => {
+    beforeEach(async () => {
+      rig = await drawnRigOf(SAVED_FLAT_STUB);
+      rig.onLocation.mockClear();
+    });
+
     it('WHEN grouping turns off THEN the location bar reads the cleared focus once', () => {
       rig.side.filtering.groupingOff();
 
@@ -137,17 +140,20 @@ describe('FEATURE: GraphFiltering location updates', () => {
       rig.onLocation.mockClear();
     });
 
-    it('WHEN the folder apps is focused, which keeps the shown set, THEN the last widget refresh reads apps as the focus', () => {
-      const { controls } = rig.side.filtering;
-      const read: (string | null)[] = [];
-
-      rig.onLocation.mockImplementation((): void => {
-        read.push(controls.focusedFolder());
+    describe('WHEN the folder apps is focused, which keeps the shown set', () => {
+      beforeEach(() => {
+        rig.side.filtering.inspection.folderActions().focusFolder('apps');
       });
-      rig.side.filtering.inspection.folderActions().focusFolder('apps');
 
-      expect(rig.view.setVisible).not.toHaveBeenCalled();
-      expect(read.at(-1)).toBe('apps');
+      it('THEN the shown set is not redrawn', () => {
+        expect(rig.view.setVisible).not.toHaveBeenCalled();
+      });
+
+      it('THEN the apps row Focus folder reads pressed', () => {
+        const button = rig.page.widgets.querySelector('[aria-label="Focus folder apps"]');
+
+        expect(button?.getAttribute('aria-pressed')).toBe('true');
+      });
     });
   });
 });
