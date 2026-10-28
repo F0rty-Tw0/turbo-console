@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildControls } from './controls-elements.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { BOARDS_GROUPS_STUB } from '../test/stubs/folder-boards.stub.ts';
+import { groupOf, iconClassOf } from '../test/utils/controls-elements.spec.util.ts';
 
 const sectionsOf = (panel: HTMLElement): Element[] => Array.from(panel.children);
 
@@ -49,6 +50,18 @@ describe('FEATURE: buildControls', () => {
 
       expect(fieldset?.contains(tagBox)).toBe(true);
       expect(rest).toStrictEqual([showAll, count, list]);
+    });
+  });
+
+  describe('GIVEN the apps folder header', () => {
+    it('WHEN built THEN its toggle is a hidden chevron-down icon button named and titled Collapse folder apps, out of the Tab order', () => {
+      const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
+      const { toggle } = groupOf(elements, 'apps');
+
+      expect(toggle.className).toBe('icon-button controls-toggle');
+      expect(iconClassOf(toggle)).toBe('codicon codicon-chevron-down');
+      expect(toggle.getAttribute('aria-label')).toBe('Collapse folder apps');
+      expect(toggle).toMatchObject({ title: 'Collapse folder apps', hidden: true, tabIndex: -1, textContent: '' });
     });
   });
 

@@ -701,8 +701,7 @@ p {
 }
 
 .controls-name,
-.controls-focus,
-.controls-toggle {
+.controls-focus {
   padding: 0;
   border: 0;
   color: inherit;
@@ -719,8 +718,7 @@ p {
   white-space: nowrap;
 }
 
-.controls-focus,
-.controls-toggle {
+.controls-focus {
   color: var(--vscode-textLink-foreground);
   font-weight: 400;
 }

@@ -1,6 +1,8 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
+
 /** A name button's accessible name is the package name; the focus button's starts with `Focus `, a header's with `Expand folder ` or `Collapse folder `. */
 const NAME_BUTTON = /^(?!Focus |Expand folder |Collapse folder )/;
 
@@ -70,9 +72,12 @@ export class GraphPackageList {
     await this.folderToggle(name).click();
   }
 
-  /** The header button named `name` shows `text` and reports `isExpanded`. */
-  public async expectFolderToggle(name: string, text: string, isExpanded: boolean): Promise<void> {
-    await expect(this.folderToggle(name)).toHaveText(text);
+  /** The header button named `name` draws the chevron of `text`, down for Collapse and right for Expand, and reports `isExpanded`. */
+  public async expectFolderToggle(name: string, text: 'Collapse' | 'Expand', isExpanded: boolean): Promise<void> {
+    const icon = text === 'Collapse' ? 'chevron-down' : 'chevron-right';
+    const glyph = this.folderToggle(name).locator('span').first();
+
+    await expect(glyph).toHaveClass(codiconClassOf(icon));
     await expect(this.folderToggle(name)).toHaveAttribute('aria-expanded', String(isExpanded));
   }
 

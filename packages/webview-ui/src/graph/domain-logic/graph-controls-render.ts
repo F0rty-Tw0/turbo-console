@@ -1,4 +1,4 @@
-import { setButtonLabel } from './button-title.ts';
+import { setButtonIcon, setButtonLabel } from './button-title.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import type { ControlsView } from '../common/graph-controls.type.ts';
@@ -11,8 +11,7 @@ import {
   folderFocusLabelOf,
   folderFocusTextOf,
   folderTitleOf,
-  folderToggleLabelOf,
-  folderToggleTextOf
+  folderToggleLabelOf
 } from '../utils/controls-text.util.ts';
 import { focusFolderOf } from '../utils/folder-rules.util.ts';
 import { matchesSearch } from '../utils/search.util.ts';
@@ -36,9 +35,10 @@ const renderToggle = (group: ControlsGroup, view: ControlsView): void => {
   const { toggle, folder } = group;
   const isCollapsed = view.collapsed.has(folder);
   const title = folderTitleOf(folder);
+  const icon = isCollapsed ? 'chevron-right' : 'chevron-down';
 
   toggle.hidden = !view.grouped;
-  toggle.textContent = folderToggleTextOf(isCollapsed);
+  setButtonIcon(toggle, icon);
   setButtonLabel(toggle, folderToggleLabelOf(title, isCollapsed));
   toggle.setAttribute('aria-expanded', String(!isCollapsed));
 };
@@ -72,7 +72,8 @@ const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
 
 /**
  * Paints the attributes only, never rebuilds. An indeterminate group box is unchecked, so activating it checks all.
- * A folder header's buttons read Expand or Collapse and Focus or Clear focus, each name and hover title following its text, and are hidden while flat.
+ * A folder header's toggle draws a down chevron while expanded and a right one while collapsed, named and titled Collapse or Expand folder;
+ * its Focus button reads Focus or Clear focus, its name and hover title following its text. Both are hidden while flat.
  * `toggles` are the toolbar's Controls button, which shows the panel's openness, and its "filters on" mark.
  */
 export const renderControls = (

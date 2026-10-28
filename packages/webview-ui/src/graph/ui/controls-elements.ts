@@ -1,5 +1,5 @@
 import { checkbox, controlsSection, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
-import { gridCell, gridLine, listButton, listCheck } from './controls-list-parts.ts';
+import { gridCell, gridLine, listButton, listCheck, listIconButton } from './controls-list-parts.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
@@ -22,7 +22,7 @@ import {
   folderFocusLabelOf,
   folderFocusTextOf,
   folderTitleOf,
-  folderToggleTextOf,
+  folderToggleLabelOf,
   groupLabelOf,
   showLabelOf
 } from '../utils/controls-text.util.ts';
@@ -48,7 +48,7 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
 /**
  * One header: a cell with the group checkbox and the folder title with its total package count, then a cell with the
  * Expand or Collapse button and one with the Focus button. The title repeats the checkbox's name, so it is hidden from
- * the accessibility tree and the row is named once. `renderControls` sets the buttons' text, labels and `hidden`.
+ * the accessibility tree and the row is named once. `renderControls` sets the toggle's chevron, the buttons' labels and `hidden`.
  */
 const folderGroup = (group: FolderGroup): ControlsGroup => {
   const { folder, packages } = group;
@@ -56,7 +56,8 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   const label = groupLabelOf(title, packages.length);
   const check = listCheck(label);
   const text = textElement('span', 'controls-folder', label);
-  const toggle = listButton('controls-toggle', folderToggleTextOf(false));
+  const toggleLabel = folderToggleLabelOf(title, false);
+  const toggle = listIconButton('controls-toggle', 'chevron-down', toggleLabel, toggleLabel);
   const focus = listButton('controls-focus', 'Focus');
   const focusLabel = folderFocusLabelOf(title);
   const cells = [gridCell(check, text), gridCell(toggle), gridCell(focus)];
