@@ -12,6 +12,75 @@ const sectionsOf = (panel: HTMLElement): Element[] => Array.from(panel.children)
 
 const childrenOf = (element: Element | undefined): Element[] => Array.from(element?.children ?? []);
 
+/** A section's tag and class, then its heading's tag and text. */
+const shapeOf = (section: Element): (string | null | undefined)[] => {
+  const heading = section.children[0];
+  const shape = [section.tagName, section.className, heading?.tagName, heading?.textContent];
+
+  return shape;
+};
+
+type FieldValue = string | boolean | number | null | undefined;
+
+/** What a Controls icon button is built with: class, icon, name, pressed state, title, hidden, Tab index and text. */
+type ButtonFields = {
+  readonly className: string;
+  readonly icon: FieldValue;
+  readonly label: string | null;
+  readonly pressed: string | null;
+  readonly title: string;
+  readonly hidden: HTMLButtonElement['hidden'];
+  readonly tabIndex: number;
+  readonly textContent: string | null;
+};
+
+type FieldRow = [keyof ButtonFields, FieldValue];
+
+const fieldsOf = (button: HTMLButtonElement): ButtonFields => {
+  const fields: ButtonFields = {
+    className: button.className,
+    icon: iconClassOf(button),
+    label: button.getAttribute('aria-label'),
+    pressed: button.getAttribute('aria-pressed'),
+    title: button.title,
+    hidden: button.hidden,
+    tabIndex: button.tabIndex,
+    textContent: button.textContent
+  };
+
+  return fields;
+};
+
+const TOGGLE_ROWS: FieldRow[] = [
+  ['className', 'icon-button controls-toggle'],
+  ['icon', 'codicon codicon-chevron-down'],
+  ['label', 'Collapse folder apps'],
+  ['title', 'Collapse folder apps'],
+  ['hidden', true],
+  ['tabIndex', -1],
+  ['textContent', '']
+];
+
+const ROW_FOCUS_ROWS: FieldRow[] = [
+  ['className', 'icon-button controls-focus'],
+  ['icon', 'codicon codicon-target'],
+  ['label', 'Focus web'],
+  ['pressed', 'false'],
+  ['title', FOCUS_PACKAGE_TITLE],
+  ['tabIndex', -1],
+  ['textContent', '']
+];
+
+const HEADER_FOCUS_ROWS: FieldRow[] = [
+  ['className', 'icon-button controls-focus'],
+  ['icon', 'codicon codicon-target'],
+  ['label', 'Focus folder apps'],
+  ['pressed', 'false'],
+  ['hidden', true],
+  ['tabIndex', -1],
+  ['textContent', '']
+];
+
 describe('FEATURE: buildControls', () => {
   beforeEach((): void => {
     vi.stubGlobal('document', fakeDocumentMock());
@@ -25,11 +94,7 @@ describe('FEATURE: buildControls', () => {
     it('WHEN built THEN the panel holds the Search, View and Packages sections, each headed by its title', () => {
       const { panel } = buildControls(BOARDS_GROUPS_STUB, ['app']);
       const sections = sectionsOf(panel);
-      const shapes = sections.map((section): (string | null | undefined)[] => {
-        const heading = section.children[0];
-
-        return [section.tagName, section.className, heading?.tagName, heading?.textContent];
-      });
+      const shapes = sections.map(shapeOf);
 
       expect(shapes).toStrictEqual([
         ['SECTION', 'controls-section', 'H3', 'Search'],
@@ -57,41 +122,37 @@ describe('FEATURE: buildControls', () => {
   });
 
   describe('GIVEN the apps folder header', () => {
-    it('WHEN built THEN its toggle is a hidden chevron-down icon button named and titled Collapse folder apps, out of the Tab order', () => {
-      const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
-      const { toggle } = groupOf(elements, 'apps');
+    it.each(TOGGLE_ROWS)(
+      'WHEN built THEN its Collapse toggle, a hidden chevron icon button out of the Tab order, has %s %j',
+      (field, expected) => {
+        const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
+        const { toggle } = groupOf(elements, 'apps');
 
-      expect(toggle.className).toBe('icon-button controls-toggle');
-      expect(iconClassOf(toggle)).toBe('codicon codicon-chevron-down');
-      expect(toggle.getAttribute('aria-label')).toBe('Collapse folder apps');
-      expect(toggle).toMatchObject({ title: 'Collapse folder apps', hidden: true, tabIndex: -1, textContent: '' });
-    });
+        expect(fieldsOf(toggle)[field]).toBe(expected);
+      }
+    );
+
+    it.each(HEADER_FOCUS_ROWS)(
+      'WHEN built THEN its Focus, a hidden unpressed target icon button out of the Tab order, has %s %j',
+      (field, expected) => {
+        const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
+        const { focus } = groupOf(elements, 'apps');
+
+        expect(fieldsOf(focus)[field]).toBe(expected);
+      }
+    );
   });
 
   describe('GIVEN the web row', () => {
-    it('WHEN built THEN its Focus is an unpressed target icon button named Focus web, titled for focusing, out of the Tab order', () => {
-      const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
-      const { focus } = rowOf(elements, 'web');
+    it.each(ROW_FOCUS_ROWS)(
+      'WHEN built THEN its Focus, an unpressed target icon button out of the Tab order, has %s %j',
+      (field, expected) => {
+        const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
+        const { focus } = rowOf(elements, 'web');
 
-      expect(focus.className).toBe('icon-button controls-focus');
-      expect(iconClassOf(focus)).toBe('codicon codicon-target');
-      expect(focus.getAttribute('aria-label')).toBe('Focus web');
-      expect(focus.getAttribute('aria-pressed')).toBe('false');
-      expect(focus).toMatchObject({ title: FOCUS_PACKAGE_TITLE, tabIndex: -1, textContent: '' });
-    });
-  });
-
-  describe('GIVEN the apps folder header Focus', () => {
-    it('WHEN built THEN it is a hidden, unpressed target icon button named Focus folder apps, out of the Tab order', () => {
-      const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
-      const { focus } = groupOf(elements, 'apps');
-
-      expect(focus.className).toBe('icon-button controls-focus');
-      expect(iconClassOf(focus)).toBe('codicon codicon-target');
-      expect(focus.getAttribute('aria-label')).toBe('Focus folder apps');
-      expect(focus.getAttribute('aria-pressed')).toBe('false');
-      expect(focus).toMatchObject({ hidden: true, tabIndex: -1, textContent: '' });
-    });
+        expect(fieldsOf(focus)[field]).toBe(expected);
+      }
+    );
   });
 
   describe('GIVEN nothing filtered yet', () => {
