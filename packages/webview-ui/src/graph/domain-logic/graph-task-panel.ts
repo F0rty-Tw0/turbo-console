@@ -32,7 +32,7 @@ export const saveDetailsToggle = (deps: PanelToggleDeps, widgets: Pick<TaskWidge
 };
 
 /** The prompt's Show every task, with the known count, while any task is known, and its slow line past `TASK_CAP`. */
-const showPrompt = (screen: Pick<TaskScreenElements, 'showEvery' | 'slow'>, knownCount: number): void => {
+const writeShowEvery = (screen: Pick<TaskScreenElements, 'showEvery' | 'slow'>, knownCount: number): void => {
   const text = showEveryTextOf(knownCount);
 
   screen.showEvery.hidden = knownCount === 0;
@@ -117,7 +117,7 @@ export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions, asid
     const text = tasksHiddenText(view.hiddenCount);
 
     prompt.hidden = !view.isEmpty;
-    showPrompt(page.taskScreen, view.knownCount);
+    writeShowEvery(page.taskScreen, view.knownCount);
 
     if (banner.hidden !== isBannerHidden) banner.hidden = isBannerHidden;
 
