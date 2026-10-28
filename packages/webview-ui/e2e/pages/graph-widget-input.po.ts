@@ -6,6 +6,7 @@ import { GraphMenusPage } from './graph-menus.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
+import { folderFocusLabelOf, folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import { endCentreOf, linkPointAtY } from '../test/utils/graph-folder-points.spec.util.ts';
 import { isHitAtCentre, isHitWithin } from '../test/utils/graph-widgets.spec.util.ts';
 
@@ -66,6 +67,17 @@ export class GraphWidgetInput extends GraphMenusPage {
   /** The topmost element at the title's centre is the title, so a pointer reaches it. */
   public async expectTitleHit(folder: string): Promise<void> {
     await expect.poll(async (): Promise<boolean> => this.titleOf(folder).evaluate(isHitAtCentre)).toBe(true);
+  }
+
+  /** The folder row's Focus folder button, found inside the widget layer so the Controls header's is not matched. */
+  public focusFolderOf(folder: string): Locator {
+    const name = folderFocusLabelOf(folderTitleOf(folder));
+
+    return this.widgets.layer.getByRole('button', { name, exact: true });
+  }
+
+  public async expectFocusFolderFocused(folder: string): Promise<void> {
+    await expect(this.focusFolderOf(folder)).toBeFocused();
   }
 
   public async expectTitleFocused(folder: string): Promise<void> {

@@ -219,7 +219,7 @@ test.describe('FEATURE: folder widget placement', () => {
   );
 
   test(
-    'GIVEN the boards grouped, Tab reaches the first chevron, Enter collapses it, Tab passes the title, and Tab then Enter opens the "…" menu',
+    'GIVEN the boards grouped, Tab reaches the first chevron, Enter collapses it, Tab passes the title and Focus folder, and Tab then Enter opens the "…" menu',
     { annotation: C9 },
     async ({ graphFolderInspect, graphGrouping, graphMenus, graphWidgetInput, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened and the graph container has focus', async (): Promise<void> => {
@@ -241,6 +241,11 @@ test.describe('FEATURE: folder widget placement', () => {
       await test.step('WHEN Tab is pressed', async (): Promise<void> => graphMenus.pressKey('Tab'));
 
       await test.step('THEN the apps title has focus', async (): Promise<void> => graphWidgetInput.expectTitleFocused('apps'));
+
+      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphMenus.pressKey('Tab'));
+
+      await test.step('THEN the apps Focus folder has focus', async (): Promise<void> =>
+        graphWidgetInput.expectFocusFolderFocused('apps'));
 
       await test.step('WHEN Tab is pressed', async (): Promise<void> => graphMenus.pressKey('Tab'));
 

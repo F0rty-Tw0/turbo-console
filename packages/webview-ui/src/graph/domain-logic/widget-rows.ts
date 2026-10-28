@@ -30,9 +30,9 @@ export const translateOf = (x: number, y: number): string => {
   return `translate(${left}px, ${top}px)`;
 };
 
-/** Shows and places a row from its plan, on whole px and at its scale; without one, or with one of the other kind, the row is hidden. */
+/** Shows and places a row from its plan, on whole px and at its scale; without one, or with one of the other kind, the row is hidden. The chevron, Focus folder and "…" hide as the plan says. */
 const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
-  const { root, chevron, ellipsis } = entry.elements;
+  const { root, chevron, focus, ellipsis } = entry.elements;
   const isPlaced = plan?.kind === entry.kind;
 
   setHidden(root, !isPlaced);
@@ -49,6 +49,7 @@ const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
   writeStyle(root, 'transform', transform);
   writeStyle(root, 'width', `${(right - left) / scale}px`);
   setHidden(chevron, !plan.isChevronShown);
+  setHidden(focus, !plan.isFocusShown);
   setHidden(ellipsis, !plan.isEllipsisShown);
 };
 

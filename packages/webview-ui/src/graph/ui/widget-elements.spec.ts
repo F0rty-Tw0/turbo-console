@@ -47,7 +47,7 @@ describe('FEATURE: buildFolderRow', () => {
       row = buildFolderRow('box', 'apps', 12);
     });
 
-    it('WHEN its children are read THEN they are the chevron, the folder glyph, the title, the count badge and the "…"', () => {
+    it('WHEN its children are read THEN they are the chevron, the folder glyph, the title, the count badge, Focus folder and the "…"', () => {
       const classes = classesOf(row.root);
 
       expect(classes).toStrictEqual([
@@ -55,6 +55,7 @@ describe('FEATURE: buildFolderRow', () => {
         'codicon codicon-folder-opened widget-glyph',
         'widget-title',
         'widget-count',
+        'widget-button',
         'widget-button'
       ]);
     });
@@ -72,6 +73,15 @@ describe('FEATURE: buildFolderRow', () => {
 
       expect(third).toBe(row.title);
       expect(shape).toStrictEqual(['BUTTON', 'button', 'widget-title', 'apps', 'apps', null]);
+    });
+
+    it('WHEN Focus folder is read THEN it is the fifth child, labelled Focus folder apps, unpressed, drawing the target icon', () => {
+      const [, , , , fifth] = Array.from(row.root.children);
+      const [icon] = Array.from(row.focus.children);
+      const shape = [row.focus.getAttribute('aria-label'), row.focus.title, row.focus.getAttribute('aria-pressed'), icon?.className];
+
+      expect(fifth).toBe(row.focus);
+      expect(shape).toStrictEqual(['Focus folder apps', 'Focus folder', 'false', 'codicon codicon-target']);
     });
 
     it('WHEN the chevron is read THEN its aria-label is also its title', () => {
@@ -152,7 +162,7 @@ describe('FEATURE: buildFolderRow', () => {
       row = buildFolderRow('collapsed', 'apps', 12);
     });
 
-    it('WHEN its children are read THEN they are the chevron, the folder glyph, the title, the count badge and the "…"', () => {
+    it('WHEN its children are read THEN they are the chevron, the folder glyph, the title, the count badge, Focus folder and the "…"', () => {
       const classes = classesOf(row.root);
 
       expect(classes).toStrictEqual([
@@ -160,6 +170,7 @@ describe('FEATURE: buildFolderRow', () => {
         'codicon codicon-folder-opened widget-glyph',
         'widget-title',
         'widget-count',
+        'widget-button',
         'widget-button'
       ]);
     });

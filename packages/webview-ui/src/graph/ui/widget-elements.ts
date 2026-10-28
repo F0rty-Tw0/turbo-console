@@ -1,8 +1,10 @@
 import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
+import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import type { FolderRowElements, RowKind } from '../common/widget.type.ts';
-import { folderActionsLabelOf, packageActionsLabelOf } from '../utils/controls-text.util.ts';
+import { folderActionsLabelOf, folderFocusLabelOf, packageActionsLabelOf } from '../utils/controls-text.util.ts';
 import { pluralOf } from '../utils/plural.util.ts';
 
 /** A 24 px icon button; the aria-label is its accessible name and its hover title. */
@@ -72,7 +74,7 @@ const titleButtonOf = (title: string): HTMLButtonElement => {
   return button;
 };
 
-/** A folder's header row, on a box or a collapsed node: the chevron, the folder glyph, title and package count badge, then the "…". */
+/** A folder's header row, on a box or a collapsed node: the chevron, the folder glyph, title and package count badge, then Focus folder and the "…". */
 export const buildFolderRow = (kind: RowKind, title: string, count: number): FolderRowElements => {
   const root = textElement('div', `widget-row widget-row-${kind}`, '');
   const chevron = chevronOf(kind, title);
@@ -80,10 +82,13 @@ export const buildFolderRow = (kind: RowKind, title: string, count: number): Fol
   const glyph = glyphOf();
   const titleButton = titleButtonOf(title);
   const badge = countBadge(count);
-  const row: FolderRowElements = { root, chevron, title: titleButton, ellipsis };
+  const focus = widgetButton(ACTION_ICONS.focus, folderFocusLabelOf(title));
+  const row: FolderRowElements = { root, chevron, title: titleButton, focus, ellipsis };
 
+  focus.title = FOCUS_FOLDER_LABEL;
+  focus.setAttribute('aria-pressed', 'false');
   root.hidden = true;
-  root.append(chevron, glyph, titleButton, badge, ellipsis);
+  root.append(chevron, glyph, titleButton, badge, focus, ellipsis);
 
   return row;
 };
