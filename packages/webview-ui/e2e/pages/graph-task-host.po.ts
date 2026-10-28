@@ -18,10 +18,9 @@ import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.
 import { NEXT_FRAME } from '../common/graph.const.ts';
 import { postReply } from '../test/utils/graph-host-state.spec.util.ts';
 import { explainEdgePosted, readPosted, shownUmbrellasPosted } from '../test/utils/graph-posted.spec.util.ts';
+import { waitInPage } from '../test/utils/page-wait.spec.util.ts';
 
 const isRunPost = (message: GraphWebviewMessage): boolean => message.type === 'runTask' || message.type === 'stopTask';
-
-const waitInPage = async (ms: number): Promise<void> => new Promise((done): void => void setTimeout(done, ms));
 
 /** The host stand-in's task side: the `runs`, `showTasks` and `showPackage` messages the page gets, and any raw message a test wants it to survive. */
 export class GraphTaskHost {
