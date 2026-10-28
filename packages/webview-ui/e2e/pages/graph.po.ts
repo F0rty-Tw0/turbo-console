@@ -19,7 +19,7 @@ import { savedStateScript } from '../test/utils/graph-saved-state.spec.util.ts';
 import { pollutedBuiltins, trustedTypesEscapes } from '../test/utils/graph-trusted-types.spec.util.ts';
 
 /** Where the page's own buttons live, so a location crumb with a toolbar button's name never matches. */
-const BUTTON_HOSTS = 'header.graph-toolbar, .graph-notice, .graph-message';
+const BUTTON_HOSTS = 'header.graph-toolbar, .details-bar, .graph-notice, .graph-message';
 
 /** The graph page's DOM: toolbar, status line, notice and container, and the keys and themes that act on them. */
 export class GraphPage {
