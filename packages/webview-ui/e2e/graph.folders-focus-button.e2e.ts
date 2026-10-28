@@ -22,11 +22,11 @@ const PRESSED_THEME_VARS = { '--vscode-inputOption-activeBackground': PRESSED_FI
 /** Keeps the `deep` box's top band and both ends on the canvas at both zooms below. */
 const DEEP_PAN: Position = { x: 400, y: 150 };
 
-/** The `deep` row is 145 px wide here, under the 160 px Focus folder needs. */
+/** The `deep` row is 145 px wide here, under the 168 px Focus folder needs. */
 const DEEP_NARROW_ZOOM = 1.4185;
 
-/** The `deep` row is 165.6 px wide here. */
-const DEEP_WIDE_ZOOM = 1.6;
+/** The `deep` row is 171.3 px wide here. */
+const DEEP_WIDE_ZOOM = 1.65;
 
 test.describe('FEATURE: the folder row Focus folder button', () => {
   test(
@@ -112,10 +112,10 @@ test.describe('FEATURE: the folder row Focus folder button', () => {
   );
 
   test(
-    'GIVEN a 165.6 px deep row, its Focus folder shows',
+    'GIVEN a 171.3 px deep row, its Focus folder shows',
     { annotation: U4B },
     async ({ graphFolderInspect, graphWidgetInput, graphWidgets }): Promise<void> => {
-      await test.step('WHEN the deep folder opens at zoom 1.6', async (): Promise<void> =>
+      await test.step('WHEN the deep folder opens at zoom 1.65', async (): Promise<void> =>
         graphFolderInspect.open(savedWith(DEEP.hash, { zoom: DEEP_WIDE_ZOOM, pan: DEEP_PAN }), DEEP));
 
       await test.step('THEN its row sits on the box', async (): Promise<void> => graphWidgets.expectRowFollowsBox('deep'));

@@ -73,8 +73,8 @@ describe('FEATURE: widgetPlanOf', () => {
 
   describe('GIVEN a box row near the Focus folder minimum', () => {
     it.each([
-      { boxWidth: 175, isShown: false },
-      { boxWidth: 176, isShown: true }
+      { boxWidth: 183, isShown: false },
+      { boxWidth: 184, isShown: true }
     ])('WHEN a box row $boxWidth px wide is planned THEN Focus folder shown is $isShown', ({ boxWidth, isShown }) => {
       const boxes = new Map([['apps', folderOf(100, 50, 100 + boxWidth, 300)]]);
 
