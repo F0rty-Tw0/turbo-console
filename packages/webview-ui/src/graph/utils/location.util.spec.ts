@@ -6,8 +6,18 @@ import type { LocationCrumb, LocationState } from '../common/location.type.ts';
 type Row = [title: string, state: LocationState, labels: string[], current: string];
 
 const ROWS: Row[] = [
-  ['package mode', { mode: 'packages', folder: null, taskPackage: null, taskCount: 0, isSinglePackage: false }, ['Packages'], 'Packages'],
-  ['folder focus', { mode: 'packages', folder: 'libs', taskPackage: null, taskCount: 0, isSinglePackage: false }, ['Packages', 'libs'], 'libs'],
+  [
+    'package mode',
+    { mode: 'packages', folder: null, taskPackage: null, taskCount: 0, isSinglePackage: false },
+    ['Packages'],
+    'Packages'
+  ],
+  [
+    'folder focus',
+    { mode: 'packages', folder: 'libs', taskPackage: null, taskCount: 0, isSinglePackage: false },
+    ['Packages', 'libs'],
+    'libs'
+  ],
   [
     'task mode, one package',
     { mode: 'tasks', folder: null, taskPackage: 'app', taskCount: 4, isSinglePackage: false },

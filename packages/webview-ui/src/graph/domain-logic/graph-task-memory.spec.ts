@@ -16,12 +16,32 @@ const ROOT_TASKS_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage:
 type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: LocationFacts];
 
 const FACTS_ROWS: FactsRow[] = [
-  ['one package, its chain pulled in', TASK_STATE_STUB, ['web#build', 'web#lint'], { taskPackage: 'web', taskCount: 3, isSinglePackage: false }],
+  [
+    'one package, its chain pulled in',
+    TASK_STATE_STUB,
+    ['web#build', 'web#lint'],
+    { taskPackage: 'web', taskCount: 3, isSinglePackage: false }
+  ],
   ['two packages', TASK_STATE_STUB, ['web#build', 'api#build'], { taskPackage: null, taskCount: 2, isSinglePackage: false }],
   ['none', TASK_STATE_STUB, [], { taskPackage: null, taskCount: 0, isSinglePackage: false }],
-  ['one package, a dependent shown', MORE_TASKS_STATE_STUB, ['web#build'], { taskPackage: 'web', taskCount: 3, isSinglePackage: false }],
-  ['an unknown id beside a known one', TASK_STATE_STUB, ['web#build', 'gone#build'], { taskPackage: 'web', taskCount: 2, isSinglePackage: false }],
-  ['only workspace root tasks', ROOT_TASKS_STATE, ['//#build', '//#lint'], { taskPackage: null, taskCount: 2, isSinglePackage: false }],
+  [
+    'one package, a dependent shown',
+    MORE_TASKS_STATE_STUB,
+    ['web#build'],
+    { taskPackage: 'web', taskCount: 3, isSinglePackage: false }
+  ],
+  [
+    'an unknown id beside a known one',
+    TASK_STATE_STUB,
+    ['web#build', 'gone#build'],
+    { taskPackage: 'web', taskCount: 2, isSinglePackage: false }
+  ],
+  [
+    'only workspace root tasks',
+    ROOT_TASKS_STATE,
+    ['//#build', '//#lint'],
+    { taskPackage: null, taskCount: 2, isSinglePackage: false }
+  ],
   ['nothing, in a single package', SINGLE_TASK_STATE_STUB, [], { taskPackage: null, taskCount: 2, isSinglePackage: true }]
 ];
 
