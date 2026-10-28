@@ -7,6 +7,8 @@ const U4B = { description: 'U4b D7 Focus folder', type: 'requirement' };
 
 const BOARDS = placedBoardsState();
 
+const BOARDS_SAVED = savedWith(BOARDS.hash, {});
+
 const APPS_COLLAPSED = savedWith(BOARDS.hash, { collapsed: ['apps'] });
 
 const DEEP = deepFolderState();
@@ -31,10 +33,9 @@ test.describe('FEATURE: the folder row Focus folder button', () => {
     'GIVEN the grouped boards, a click on the apps Focus folder presses it and a second click unpresses it',
     { annotation: U4B },
     async ({ graphFolderInspect, graphWidgetInput }): Promise<void> => {
-      await test.step('GIVEN the grouped boards open', async (): Promise<void> =>
-        graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS));
+      await test.step('WHEN the grouped boards open', async (): Promise<void> => graphFolderInspect.open(BOARDS_SAVED, BOARDS));
 
-      await test.step('WHEN the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
+      await test.step('AND the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
 
       await test.step('THEN it is pressed, titled Clear focus, and the Controls header agrees', async (): Promise<void> => {
         await graphWidgetInput.expectFocusFolderPressed('apps', true);
@@ -54,13 +55,12 @@ test.describe('FEATURE: the folder row Focus folder button', () => {
     'GIVEN theme vars, a click on the apps Focus folder fills it in the active option colour over the opaque editor base',
     { annotation: U4B },
     async ({ graphFolderInspect, graphWidgetInput, graphWidgets }): Promise<void> => {
-      await test.step('GIVEN the grouped boards open', async (): Promise<void> =>
-        graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS));
+      await test.step('WHEN the grouped boards open', async (): Promise<void> => graphFolderInspect.open(BOARDS_SAVED, BOARDS));
 
       await test.step(`AND the theme sets inputOption-activeBackground ${PRESSED_FILL} and editor-background ${EDITOR_BASE}`, async (): Promise<void> =>
         graphWidgets.setThemeVars(PRESSED_THEME_VARS));
 
-      await test.step('WHEN the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
+      await test.step('AND the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
 
       await test.step(`THEN it fills ${PRESSED_FILL} over ${EDITOR_BASE}`, async (): Promise<void> =>
         graphWidgetInput.expectFocusFolderFill('apps', PRESSED_FILL, EDITOR_BASE));
@@ -71,10 +71,10 @@ test.describe('FEATURE: the folder row Focus folder button', () => {
     'GIVEN apps collapsed, a click on its Focus folder expands it and the new row shows the button pressed',
     { annotation: U4B },
     async ({ graphFolderInspect, graphGrouping, graphWidgetInput }): Promise<void> => {
-      await test.step('GIVEN the boards open with apps collapsed', async (): Promise<void> =>
+      await test.step('WHEN the boards open with apps collapsed', async (): Promise<void> =>
         graphFolderInspect.open(APPS_COLLAPSED, BOARDS));
 
-      await test.step('WHEN the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
+      await test.step('AND the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
 
       await test.step('THEN apps is expanded', async (): Promise<void> => graphGrouping.expectFolderCollapsed('apps', false));
 
@@ -87,10 +87,9 @@ test.describe('FEATURE: the folder row Focus folder button', () => {
     'GIVEN the apps Focus folder has focus, Space presses it and focus stays on it',
     { annotation: U4B },
     async ({ graphFolderInspect, graphWidgetInput }): Promise<void> => {
-      await test.step('GIVEN the grouped boards open', async (): Promise<void> =>
-        graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS));
+      await test.step('WHEN the grouped boards open', async (): Promise<void> => graphFolderInspect.open(BOARDS_SAVED, BOARDS));
 
-      await test.step('WHEN Space is pressed on the apps Focus folder', async (): Promise<void> =>
+      await test.step('AND Space is pressed on the apps Focus folder', async (): Promise<void> =>
         graphWidgetInput.pressSpaceOnFocusFolder('apps'));
 
       await test.step('THEN it is pressed', async (): Promise<void> => graphWidgetInput.expectFocusFolderPressed('apps', true));
@@ -130,15 +129,14 @@ test.describe('FEATURE: the folder row Focus folder button', () => {
     'GIVEN packages excluded, a click on the apps Focus folder presses it though the visible set stays',
     { annotation: U4B },
     async ({ graphFolderInspect, graphMenus, graphWidgetInput }): Promise<void> => {
-      await test.step('GIVEN the grouped boards open', async (): Promise<void> =>
-        graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS));
+      await test.step('WHEN the grouped boards open', async (): Promise<void> => graphFolderInspect.open(BOARDS_SAVED, BOARDS));
 
       await test.step('AND the packages folder is excluded from its menu', async (): Promise<void> => {
         await graphMenus.openFolderMenu('packages');
         await graphMenus.item('Exclude folder').click();
       });
 
-      await test.step('WHEN the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
+      await test.step('AND the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
 
       await test.step('THEN it is pressed', async (): Promise<void> => graphWidgetInput.expectFocusFolderPressed('apps', true));
     }

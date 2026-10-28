@@ -70,11 +70,11 @@ export class GraphWidgetInput extends GraphMenusPage {
     await expect.poll(async (): Promise<boolean> => this.titleOf(folder).evaluate(isHitAtCentre)).toBe(true);
   }
 
-  /** The folder row's Focus folder button, found inside the widget layer so the Controls header's is not matched. */
-  public focusFolderOf(folder: string): Locator {
+  /** The folder row's Focus folder button, found inside the widget layer so the Controls header's is not matched; `includeHidden` also matches it while hidden. */
+  public focusFolderOf(folder: string, includeHidden = false): Locator {
     const name = folderFocusLabelOf(folderTitleOf(folder));
 
-    return this.widgets.layer.getByRole('button', { name, exact: true });
+    return this.widgets.layer.getByRole('button', { name, exact: true, includeHidden });
   }
 
   public async expectFocusFolderFocused(folder: string): Promise<void> {
@@ -107,11 +107,7 @@ export class GraphWidgetInput extends GraphMenusPage {
 
   /** The row has a Focus folder button, and it is hidden. */
   public async expectFocusFolderHidden(folder: string): Promise<void> {
-    const button = this.widgets.layer.getByRole('button', {
-      name: folderFocusLabelOf(folderTitleOf(folder)),
-      exact: true,
-      includeHidden: true
-    });
+    const button = this.focusFolderOf(folder, true);
 
     await expect(button).toHaveCount(1);
     await expect(button).toBeHidden();
