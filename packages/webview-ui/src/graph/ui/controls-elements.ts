@@ -3,12 +3,15 @@ import { gridCell, gridLine, listButton, listCheck, listIconButton } from './con
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
+import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import {
   CONTROLS_ID,
   DEPTH_HINT,
   DEPTH_HINT_ID,
   DEPTH_LABEL,
+  FOCUS_PACKAGE_TITLE,
   PACKAGES_SECTION_TITLE,
   SEARCH_LABEL,
   SEARCH_SECTION_TITLE,
@@ -20,26 +23,29 @@ import {
   countTextOf,
   focusLabelOf,
   folderFocusLabelOf,
-  folderFocusTextOf,
   folderTitleOf,
   folderToggleLabelOf,
   groupLabelOf,
   showLabelOf
 } from '../utils/controls-text.util.ts';
 
+/** A Focus toggle: the action table's focus icon, unpressed until `renderControls` reads the focus; `label` names it for good. */
+const focusToggle = (label: string, title: string): HTMLButtonElement => {
+  const focus = listIconButton('controls-focus', ACTION_ICONS.focus, label, title);
+
+  focus.setAttribute('aria-pressed', 'false');
+
+  return focus;
+};
+
 /** Check, name and focus cells; the name button's `title` keeps the full name when CSS cuts it. */
 const packageRow = (pkg: GraphPackage): ControlsRow => {
   const { name } = pkg;
   const check = listCheck(showLabelOf(name));
   const pick = listButton('controls-name', name);
-  const focus = listButton('controls-focus', folderFocusTextOf(false));
-  const focusLabel = focusLabelOf(name);
+  const focus = focusToggle(focusLabelOf(name), FOCUS_PACKAGE_TITLE);
   const cells = [gridCell(check), gridCell(pick), gridCell(focus)];
   const line = gridLine('controls-row', cells);
-
-  focus.title = focusLabel;
-  focus.setAttribute('aria-label', focusLabel);
-
   const row: ControlsRow = { name, line, check, pick, focus };
 
   return row;
@@ -48,7 +54,7 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
 /**
  * One header: a cell with the group checkbox and the folder title with its total package count, then a cell with the
  * Expand or Collapse button and one with the Focus button. The title repeats the checkbox's name, so it is hidden from
- * the accessibility tree and the row is named once. `renderControls` sets the toggle's chevron, the buttons' labels and `hidden`.
+ * the accessibility tree and the row is named once. `renderControls` sets the toggle's chevron and label, the Focus `aria-pressed` and title, and both `hidden`.
  */
 const folderGroup = (group: FolderGroup): ControlsGroup => {
   const { folder, packages } = group;
@@ -58,8 +64,7 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   const text = textElement('span', 'controls-folder', label);
   const toggleLabel = folderToggleLabelOf(title, false);
   const toggle = listIconButton('controls-toggle', 'chevron-down', toggleLabel, toggleLabel);
-  const focus = listButton('controls-focus', 'Focus');
-  const focusLabel = folderFocusLabelOf(title);
+  const focus = focusToggle(folderFocusLabelOf(title), FOCUS_FOLDER_LABEL);
   const cells = [gridCell(check, text), gridCell(toggle), gridCell(focus)];
   const line = gridLine('controls-header', cells);
   const rows = packages.map(packageRow);
@@ -67,8 +72,6 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
 
   toggle.hidden = true;
   focus.hidden = true;
-  focus.title = focusLabel;
-  focus.setAttribute('aria-label', focusLabel);
 
   text.setAttribute('aria-hidden', 'true');
 

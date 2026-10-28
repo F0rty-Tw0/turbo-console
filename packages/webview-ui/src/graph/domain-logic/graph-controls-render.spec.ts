@@ -1,14 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderControls } from './graph-controls-render.ts';
+import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
 import type { ControlsElements } from '../common/controls-elements.type.ts';
+import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { ControlsView } from '../common/graph-controls.type.ts';
+import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import { boardsControlsMock, controlsTogglesMock } from '../test/mocks/boards-controls.mock.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { groupOf, iconClassOf } from '../test/utils/controls-elements.spec.util.ts';
+import { groupOf, iconClassOf, rowOf } from '../test/utils/controls-elements.spec.util.ts';
 import { menuFiltersOf } from '../test/utils/widget-menu.spec.util.ts';
 
 const ALL = ['docs', 'web', '@acme/config', '@acme/ui', '@acme/utils'];
+
+const WEB_FOCUS: GraphFocus = { kind: 'package', name: 'web' };
+
+const APPS_FOCUS: GraphFocus = { kind: 'folder', folder: 'apps' };
+
+const PACKAGES_FOCUS: GraphFocus = { kind: 'folder', folder: 'packages' };
 
 /** Every boards package visible, nothing filtered, the panel open and grouped, no folder collapsed, with `overrides` on top. */
 const viewOf = (overrides: Partial<ControlsView>): ControlsView => {
@@ -58,6 +67,39 @@ describe('FEATURE: renderControls', () => {
       expect(toggle.title).toBe(label);
       expect(toggle.getAttribute('aria-expanded')).toBe(expanded);
       expect(toggle.textContent).toBe('');
+    });
+  });
+
+  describe.each([
+    { title: 'no focus', focus: null, pressed: ['false', 'false'], titles: [FOCUS_PACKAGE_TITLE, FOCUS_PACKAGE_TITLE] },
+    { title: 'web focused', focus: WEB_FOCUS, pressed: ['true', 'false'], titles: [CLEAR_FOCUS_LABEL, FOCUS_PACKAGE_TITLE] }
+  ])('GIVEN $title', ({ focus, pressed, titles }) => {
+    it(`WHEN rendered THEN the web and docs row Focus buttons read aria-pressed ${pressed.join(', ')} and keep their names`, () => {
+      const filters = menuFiltersOf([], focus);
+      const elements = rendered(viewOf({ filters }));
+      const buttons = [rowOf(elements, 'web').focus, rowOf(elements, 'docs').focus];
+      const states = buttons.map((button) => [button.getAttribute('aria-pressed'), button.title, button.getAttribute('aria-label')]);
+
+      expect(states).toStrictEqual([
+        [pressed[0], titles[0], 'Focus web'],
+        [pressed[1], titles[1], 'Focus docs']
+      ]);
+    });
+  });
+
+  describe.each([
+    { title: 'apps focused', focus: APPS_FOCUS, pressed: 'true', hoverTitle: CLEAR_FOCUS_LABEL },
+    { title: 'packages focused', focus: PACKAGES_FOCUS, pressed: 'false', hoverTitle: FOCUS_FOLDER_LABEL },
+    { title: 'no focus', focus: null, pressed: 'false', hoverTitle: FOCUS_FOLDER_LABEL }
+  ])('GIVEN $title', ({ focus, pressed, hoverTitle }) => {
+    it(`WHEN rendered THEN the apps header Focus reads aria-pressed ${pressed}, is titled ${hoverTitle} and keeps its name`, () => {
+      const filters = menuFiltersOf([], focus);
+      const { focus: button } = groupOf(rendered(viewOf({ filters })), 'apps');
+
+      expect(button.getAttribute('aria-pressed')).toBe(pressed);
+      expect(button.title).toBe(hoverTitle);
+      expect(button.getAttribute('aria-label')).toBe('Focus folder apps');
+      expect(button.textContent).toBe('');
     });
   });
 });

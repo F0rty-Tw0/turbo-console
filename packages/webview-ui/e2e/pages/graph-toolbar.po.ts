@@ -88,10 +88,7 @@ export class GraphToolbar {
 
   /** A pressed toggle is drawn in the three input-option colours; a collapsed one in none of them. */
   public async expectPressed(button: string, isPressed: boolean): Promise<void> {
-    const colors = this.colors;
-
-    if (colors === null) throw new Error('graph e2e: setInputOptionVars must run first');
-
+    const colors = this.inputColors();
     const toggle = this.page.getByRole('button', { name: button, exact: true });
     const looks: [string, string][] = [
       ['background-color', colors.background],
@@ -105,6 +102,23 @@ export class GraphToolbar {
     for (const [property, value] of looks) await assertion.toHaveCSS(property, value);
   }
 
+  /** A pressed icon toggle has the input-option fill and foreground; an unpressed one another fill. Icon buttons have no border. */
+  public async expectIconPressed(toggle: Locator, isPressed: boolean): Promise<void> {
+    const colors = this.inputColors();
+
+    if (!isPressed) return expect(toggle).not.toHaveCSS('background-color', colors.background);
+
+    await expect(toggle).toHaveCSS('background-color', colors.background);
+    await expect(toggle).toHaveCSS('color', colors.foreground);
+  }
+
+  /** A pressed icon toggle under a high contrast theme, which gives it no fill: the input-option border as a 1 px inner ring. */
+  public async expectIconRing(toggle: Locator): Promise<void> {
+    const colors = this.inputColors();
+
+    await expect(toggle).toHaveCSS('box-shadow', `${colors.border} 0px 0px 0px 1px inset`);
+  }
+
   /** The Controls button reads "filters on" with a `filter` icon and is named "Controls (filters on)", or shows none of it. */
   public async expectFiltersOn(isOn: boolean): Promise<void> {
     const name = isOn ? `${CONTROLS_LABEL} (${FILTERS_ON_TEXT})` : CONTROLS_LABEL;
@@ -113,6 +127,14 @@ export class GraphToolbar {
     await expect(this.filtersOn).toBeVisible({ visible: isOn });
     await expect(this.filtersOn.locator('span').first()).toHaveClass(codiconClassOf('filter'));
     await expect(this.page.locator('.has-filters')).toHaveCount(0);
+  }
+
+  private inputColors(): InputOptionColors {
+    const colors = this.colors;
+
+    if (colors === null) throw new Error('graph e2e: setInputOptionVars must run first');
+
+    return colors;
   }
 
   private async expectGroup(group: ToolbarGroup): Promise<void> {

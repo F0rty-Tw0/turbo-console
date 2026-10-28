@@ -263,6 +263,9 @@ export const TAGS_LABEL = 'Tags';
 
 export const SHOW_ALL_LABEL = 'Show all';
 
+/** The hover title of an unpressed package Focus toggle; pressed, it reads Clear focus. */
+export const FOCUS_PACKAGE_TITLE = 'Show only this package and its links up to Focus depth';
+
 /** A package row's cells, left to right; the list keys move through them in this order. */
 export const COLUMNS: Column[] = ['check', 'name', 'focus'];
 

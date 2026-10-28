@@ -700,8 +700,7 @@ p {
   min-width: 0;
 }
 
-.controls-name,
-.controls-focus {
+.controls-name {
   padding: 0;
   border: 0;
   color: inherit;
@@ -718,9 +717,17 @@ p {
   white-space: nowrap;
 }
 
+/* A Focus toggle stays a roving grid cell, so it is only see-through at rest: its row's hover or keyboard focus shows it, and so does a press. */
 .controls-focus {
-  color: var(--vscode-textLink-foreground);
-  font-weight: 400;
+  opacity: 0;
+}
+
+.controls-row:hover .controls-focus,
+.controls-row:focus-within .controls-focus,
+.controls-header:hover .controls-focus,
+.controls-header:focus-within .controls-focus,
+.controls-focus[aria-pressed='true'] {
+  opacity: 1;
 }
 
 .controls-folder {
