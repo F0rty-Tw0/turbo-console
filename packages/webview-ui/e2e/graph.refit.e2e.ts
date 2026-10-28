@@ -44,6 +44,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
       });
 
       await test.step('AND the view is saved fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: true }));
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -72,6 +74,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
         await graphCamera.expectCameraUnchanged();
         await graphTaskHost.expectSaved({ fitted: false });
       });
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -96,6 +100,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
       });
 
       await test.step('THEN the camera moved', async (): Promise<void> => graphCamera.expectCameraMoved());
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -116,6 +122,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
       await test.step('AND the wheel turns one notch', async (): Promise<void> => graphCanvas.zoomBy(-100));
 
       await test.step('THEN the view is saved not fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: false }));
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -150,6 +158,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
       });
 
       await test.step('AND the view is saved fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: true }));
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -166,6 +176,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
       await test.step('AND web is picked from the list', async (): Promise<void> => graphList.pick('web'));
 
       await test.step('THEN the view is saved not fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: false }));
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -179,6 +191,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
       });
 
       await test.step('THEN every node is in view', async (): Promise<void> => graphCanvas.expectAllNodesInView());
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -192,6 +206,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
       });
 
       await test.step('THEN a node is out of view', async (): Promise<void> => graphCanvas.expectNodeOutOfView());
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -212,6 +228,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
 
       await test.step('THEN the task camera is saved not fitted', async (): Promise<void> =>
         graphTaskHost.expectSavedTask({ fitted: false }));
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -239,6 +257,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
 
       await test.step('AND the task camera is saved fitted', async (): Promise<void> =>
         graphTaskHost.expectSavedTask({ fitted: true }));
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 
@@ -274,6 +294,8 @@ test.describe('FEATURE: graph camera re-fit', () => {
       });
 
       await test.step('AND the view is saved fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: true }));
+
+      await test.step('AND the page raised no errors', (): void => graphPage.expectNoErrors());
     }
   );
 });
