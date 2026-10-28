@@ -26,12 +26,12 @@ const centreOf = async (target: Locator): Promise<ViewportPoint> => {
 
 /** Real mouse and keyboard input on the widget layer's buttons, titles and menus. */
 export class GraphWidgetInput extends GraphMenusPage {
-  private readonly boxes: GraphFoldersPage;
+  private readonly foldersPage: GraphFoldersPage;
   private readonly probe: GraphProbePage;
 
   public constructor(page: Page) {
     super(page);
-    this.boxes = new GraphFoldersPage(page);
+    this.foldersPage = new GraphFoldersPage(page);
     this.probe = new GraphProbePage(page);
   }
 
@@ -78,7 +78,7 @@ export class GraphWidgetInput extends GraphMenusPage {
 
     if (row === null) throw new Error(`the ${folder} header row has no box`);
 
-    const folders = await this.boxes.folders();
+    const folders = await this.foldersPage.folders();
     const nodes = await this.probe.nodes();
     const from = endCentreOf(source, folders, nodes);
     const to = endCentreOf(target, folders, nodes);
