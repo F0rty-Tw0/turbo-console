@@ -6,10 +6,9 @@ import { GraphMenusPage } from './graph-menus.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../../src/graph/common/details.const.ts';
-import { folderFocusLabelOf, folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { endCentreOf, linkPointAtY } from '../test/utils/graph-folder-points.spec.util.ts';
-import { isHitAtCentre, isHitWithin } from '../test/utils/graph-widgets.spec.util.ts';
+import { focusFolderNameOf, isHitAtCentre, isHitWithin } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** How far below a header row's bottom edge a tap lands: clear of the row, still inside its box. */
 const BELOW_ROW_PX = 3;
@@ -72,7 +71,7 @@ export class GraphWidgetInput extends GraphMenusPage {
 
   /** The folder row's Focus folder button, found inside the widget layer so the Controls header's is not matched; `includeHidden` also matches it while hidden. */
   public focusFolderOf(folder: string, includeHidden = false): Locator {
-    const name = folderFocusLabelOf(folderTitleOf(folder));
+    const name = focusFolderNameOf(folder);
 
     return this.widgets.layer.getByRole('button', { name, exact: true, includeHidden });
   }

@@ -2,13 +2,13 @@ import type { Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphWidgetsLayout } from './graph-widgets-layout.po.ts';
-import { folderFocusLabelOf, folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
+import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside, overlaps } from '../test/utils/element-rect.spec.util.ts';
 import { collapsedLabelIn } from '../test/utils/graph-collapsed-label.spec.util.ts';
 import { folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
 import { bandFaultsOf } from '../test/utils/graph-widget-band.spec.util.ts';
-import { isCutText, isHitAtCentre, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
+import { focusFolderNameOf, isCutText, isHitAtCentre, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** How far inside a node's top-left corner `tapNodeCorner` clicks, in CSS px. */
 const CORNER_INSET_PX = 2;
@@ -181,7 +181,7 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
 
   /** Matches the row's Focus folder button only while it is shown: the role query leaves hidden elements out. */
   private focusFolderIn(folder: string): Locator {
-    const name = folderFocusLabelOf(folderTitleOf(folder));
+    const name = focusFolderNameOf(folder);
 
     return this.rowOf(folder).getByRole('button', { name, exact: true });
   }
