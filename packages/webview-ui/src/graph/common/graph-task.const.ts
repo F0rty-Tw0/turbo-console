@@ -102,6 +102,14 @@ export const STOP_LABEL = 'Stop';
 
 export const DEPENDENCIES_LABEL = 'Dependencies';
 
+export const DEPENDENTS_LABEL = 'Dependents';
+
+/** The Dependents section's line while no shown task depends on the selected one. */
+export const NONE_SHOWN_TEXT = 'None shown';
+
+/** The package of a task of the workspace root, which the package graph never draws. */
+export const ROOT_TASK_PACKAGE = '//';
+
 /** The command line of a task whose package script is missing. */
 export const NO_COMMAND_TEXT = 'No command';
 
