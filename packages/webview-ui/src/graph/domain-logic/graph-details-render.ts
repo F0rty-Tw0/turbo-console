@@ -1,8 +1,8 @@
-import { setButtonLabel, setButtonText } from './button-title.ts';
+import { setButtonLabel, setButtonText, setFocusButton } from './button-title.ts';
 import { renderPicking } from './graph-details-picking.ts';
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { ExplainDetails, ExplainEntry, NeighbourItem, PackageDetails } from '../common/details-view.type.ts';
-import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL, FOCUS_LABEL } from '../common/details.const.ts';
+import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { DetailsViews, ExplainState, FoundExplain } from '../common/details.type.ts';
 import type { DetailsContext, DetailsView, GraphDetailsDeps, ShownInspection, ShownTrace } from '../common/graph-details.type.ts';
 import { folderToggleTextOf } from '../utils/controls-text.util.ts';
@@ -43,7 +43,7 @@ const updatePackage = (view: PackageDetails, name: string, context: DetailsConte
 
   view.openLabel.textContent = openText;
   view.openDetails.title = openText;
-  setButtonText(view.focus, model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_LABEL);
+  setFocusButton(view.focus, model.isFocused);
   setDisabled(view.exclude, model.isFocused);
   view.showTasks.hidden = !hasTasks(name);
 

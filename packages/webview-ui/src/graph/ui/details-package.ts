@@ -1,5 +1,6 @@
-import { actionButton, lineOf, markOf, nameButton, sectionOf, viewBase } from './details-parts.ts';
+import { lineOf, markOf, nameButton, sectionOf, viewBase } from './details-parts.ts';
 import { graphIcon } from './graph-icon.ts';
+import { iconTextButton } from './icon-button.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { NeighbourItem, PackageDetails } from '../common/details-view.type.ts';
 import {
@@ -13,6 +14,7 @@ import {
   START_TRACE_TITLE
 } from '../common/details.const.ts';
 import type { NeighbourModel, PackageViewModel } from '../common/details.type.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import { TAGS_LABEL } from '../common/graph.const.ts';
 import { dependenciesTitleOf, dependentsTitleOf, explainLabelOf, openDetailsLabelOf, pathTextOf } from '../utils/details-text.util.ts';
@@ -51,7 +53,7 @@ const tagsOf = (tags: string[]): HTMLElement => {
 
 const openButton = (label: HTMLElement, title: string): HTMLButtonElement => {
   const button = textElement('button', 'primary-button', '');
-  const icon = graphIcon('file-text');
+  const icon = graphIcon(ACTION_ICONS.openDetails);
 
   button.type = 'button';
   button.title = title;
@@ -65,14 +67,13 @@ const actionsOf = (model: PackageViewModel): PackageActions => {
   const openText = openDetailsLabelOf(model.taskCount);
   const openLabel = textElement('span', '', openText);
   const openDetails = openButton(openLabel, openText);
+  const focusIcon = model.isFocused ? ACTION_ICONS.clearFocus : ACTION_ICONS.focus;
   const focusText = model.isFocused ? CLEAR_FOCUS_LABEL : FOCUS_LABEL;
-  const focus = actionButton(focusText);
-  const exclude = actionButton(EXCLUDE_LABEL);
-  const startTrace = actionButton(START_TRACE_LABEL);
-  const showTasks = actionButton(SHOW_TASKS_LABEL);
+  const focus = iconTextButton(focusIcon, focusText, focusText);
+  const exclude = iconTextButton(ACTION_ICONS.exclude, EXCLUDE_LABEL, EXCLUDE_LABEL);
+  const startTrace = iconTextButton(ACTION_ICONS.startTrace, START_TRACE_LABEL, START_TRACE_TITLE);
+  const showTasks = iconTextButton(ACTION_ICONS.showTasks, SHOW_TASKS_LABEL, SHOW_TASKS_LABEL);
   const row = textElement('div', 'details-row', '');
-
-  startTrace.title = START_TRACE_TITLE;
 
   if (model.isFocused) exclude.setAttribute('aria-disabled', 'true');
 
