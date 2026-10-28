@@ -47,7 +47,7 @@ export type ShowFolderState = {
   readonly isDisabled: boolean;
 };
 
-/** What a folder's menu reads: its collapse, whether it is the focus, and its "Show folder" state. */
+/** What a folder's menu reads: its collapse, whether it is the focus, and its packages' group checkbox state. */
 export type FolderMenuState = {
   readonly isCollapsed: boolean;
   readonly isFocus: boolean;

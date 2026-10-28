@@ -81,7 +81,7 @@ export const packageMenuOf = (name: string, state: PackageMenuState, actions: Pa
   return model;
 };
 
-/** A folder's menu state: collapsed in the scene, the folder focus, and "Show folder" from its packages' group checkbox. */
+/** A folder's menu state: collapsed in the scene, the folder focus, and its packages' group checkbox state. */
 export const folderMenuStateOf = (folder: string, scene: FolderScene | null, filters: GraphFilters): FolderMenuState => {
   const isCollapsed = scene?.collapsed.has(folder) ?? false;
   const isFocus = focusFolderOf(filters) === folder;
@@ -92,7 +92,7 @@ export const folderMenuStateOf = (folder: string, scene: FolderScene | null, fil
   return state;
 };
 
-/** A package's menu state: the package focus, "Show package" from its list checkbox, and whether it has a visible task. */
+/** A package's menu state: the package focus, whether its list checkbox is ticked, and whether it has a visible task. */
 export const packageMenuStateOf = (
   name: string,
   filters: GraphFilters,

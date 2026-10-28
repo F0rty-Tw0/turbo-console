@@ -9,7 +9,7 @@ const CHECKED_OF: Record<GroupState, ShowFolderState['checked']> = {
   mixed: 'mixed'
 };
 
-/** The "Show folder" menu item: `aria-checked` and `aria-disabled` from the group checkbox's own rules. */
+/** A folder's group checkbox state and lock, by its own rules: they pick Show all in folder or Exclude folder and lock it. */
 export const showFolderOf = (filters: GraphFilters, names: string[]): ShowFolderState => {
   const group = groupStateOf(filters, names);
   const isDisabled = isGroupLocked(filters, names);

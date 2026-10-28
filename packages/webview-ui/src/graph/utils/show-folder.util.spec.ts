@@ -71,7 +71,7 @@ describe('FEATURE: showFolderOf', () => {
 });
 
 describe('FEATURE: showFolderChecksOf', () => {
-  describe('GIVEN a Show folder state', () => {
+  describe('GIVEN a folder group checkbox state', () => {
     it.each([
       { checked: 'mixed' as const, expected: true },
       { checked: 'false' as const, expected: true },
