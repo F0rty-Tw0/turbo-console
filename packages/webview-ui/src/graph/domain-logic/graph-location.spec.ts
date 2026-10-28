@@ -21,12 +21,14 @@ type LocationSpies = {
 type RigState = {
   readonly mode: GraphViewMode;
   readonly folder: string | null;
+  readonly drawn: DrawnGraph;
 };
 
 type RigControls = {
   readonly location: GraphLocation;
   readonly setMode: (mode: GraphViewMode) => void;
   readonly setFolder: (folder: string | null) => void;
+  readonly setDrawn: (drawn: DrawnGraph) => void;
 };
 
 type LocationRig = LocationSpies & RigControls;
@@ -45,6 +47,13 @@ const EDGES: GraphEdge[] = [{ source: 'a-pkg', target: 'core-1' }];
 
 /** Folder `core` linked with `a` once. */
 const DRAWN: DrawnGraph = { hash: 'h1', packages: ['core-1', 'a-pkg'], infos: INFOS, edges: EDGES };
+
+const BACK_EDGE: GraphEdge = { source: 'core-1', target: 'a-pkg' };
+
+const TWO_LINK_EDGES: GraphEdge[] = [...EDGES, BACK_EDGE];
+
+/** Folder `core` linked with `a` twice: the same crumbs as `DRAWN`, another info line. */
+const TWO_LINK_DRAWN: DrawnGraph = { ...DRAWN, edges: TWO_LINK_EDGES };
 
 const spiesOf = (): LocationSpies => {
   const spies: LocationSpies = {
@@ -67,7 +76,7 @@ const depsOf = (state: RigState, spies: LocationSpies): GraphLocationDeps => {
   const modes = { mode: (): GraphViewMode => state.mode };
   const controls = { focusedFolder: (): string | null => state.folder, clearFocus };
   const filtering = { controls };
-  const packages = { filtering, drawnGraph: (): DrawnGraph => DRAWN };
+  const packages = { filtering, drawnGraph: (): DrawnGraph => state.drawn };
   const tasks = { locationFacts, leave };
   const reveal = { request };
   const deps: GraphLocationDeps = { page, widgetViews, modes, packages, tasks, reveal };
@@ -77,7 +86,7 @@ const depsOf = (state: RigState, spies: LocationSpies): GraphLocationDeps => {
 
 /** A bar over spies, built in `mode` with `folder` focused. */
 const rigOf = (mode: GraphViewMode, folder: string | null): LocationRig => {
-  const state = { mode, folder };
+  const state = { mode, folder, drawn: DRAWN };
   const spies = spiesOf();
   const location = graphLocationOf(depsOf(state, spies));
   const setMode = (next: GraphViewMode): void => {
@@ -86,7 +95,10 @@ const rigOf = (mode: GraphViewMode, folder: string | null): LocationRig => {
   const setFolder = (next: string | null): void => {
     state.folder = next;
   };
-  const rig: LocationRig = { ...spies, location, setMode, setFolder };
+  const setDrawn = (next: DrawnGraph): void => {
+    state.drawn = next;
+  };
+  const rig: LocationRig = { ...spies, location, setMode, setFolder, setDrawn };
 
   return rig;
 };
@@ -156,6 +168,16 @@ describe('FEATURE: graphLocationOf', () => {
 
       expect(rig.clearFocus).toHaveBeenCalledOnce();
       expect(rig.leave).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the folder’s links change under the same crumbs and the bar updates THEN the new info lines are shown', () => {
+      const rig = rigOf('packages', 'core');
+
+      rig.setDrawn(TWO_LINK_DRAWN);
+      rig.location.update();
+
+      expect(rig.render).toHaveBeenCalledTimes(2);
+      expect(rig.render.mock.lastCall?.[2]).toStrictEqual(['2 links with a not shown']);
     });
 
     it('WHEN grouping turns off, clearing the focus, and the bar updates THEN the folder crumb is gone and Packages remains', () => {
