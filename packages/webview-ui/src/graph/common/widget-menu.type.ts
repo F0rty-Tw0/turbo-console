@@ -1,11 +1,12 @@
-/** A menu entry: focusable, activated by click, Enter or Space; `checked` is a `menuitemcheckbox`'s `aria-checked`, else `null`. */
+import type { GraphIconId } from './graph-icon.type.ts';
+
+/** A menu entry: focusable, activated by click, Enter or Space; `icon` is its leading Codicon, `null` for none. */
 export type MenuItem = {
   readonly kind: 'item';
   readonly label: string;
   /** The hover text when it says more than the label; the label otherwise. */
   readonly title?: string;
-  readonly role: 'menuitem' | 'menuitemcheckbox';
-  readonly checked: 'true' | 'false' | 'mixed' | null;
+  readonly icon: GraphIconId | null;
   /** Still focusable (`aria-disabled`); the menu never runs it. */
   readonly isDisabled: boolean;
   readonly run: () => void;

@@ -20,8 +20,6 @@ export const GRAPH_ICON_IDS = [
   'chevron-right',
   'chevron-left',
   'ellipsis',
-  'check',
-  'dash',
   'desktop-download',
   'tasklist',
   'sync',

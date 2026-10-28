@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from './widget-menu-model.util.ts';
 import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
 import { START_TRACE_LABEL, START_TRACE_TITLE } from '../common/details.const.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { MenuTarget, ShowFolderState } from '../common/widget.type.ts';
@@ -12,6 +13,7 @@ import { folderInspection, link, pick, pkg, trace } from '../test/utils/inspecti
 import {
   callCountOf,
   folderStateOf,
+  iconsOf,
   itemLabelled,
   labelsOf,
   menuFiltersOf,
@@ -37,48 +39,53 @@ const SHOW_NONE: ShowFolderState = { checked: 'false', isDisabled: false };
 const SHOW_LOCKED: ShowFolderState = { checked: 'true', isDisabled: true };
 
 describe('FEATURE: folderMenuOf', () => {
-  describe('GIVEN an expanded folder, not the focus, all shown', () => {
-    const model = folderMenuOf('apps', folderStateOf(), folderActionsMock());
+  it.each([
+    {
+      title: 'expanded, not the focus, all shown',
+      state: folderStateOf(),
+      labels: ['Collapse', 'Focus folder', '---', 'Exclude folder'],
+      icons: ['fold', 'target', '---', 'eye-closed']
+    },
+    {
+      title: 'collapsed, the focus, all shown',
+      state: folderStateOf({ isCollapsed: true, isFocus: true }),
+      labels: ['Expand', 'Clear focus', '---', 'Exclude folder'],
+      icons: ['unfold', 'close', '---', 'eye-closed']
+    },
+    {
+      title: 'partly shown',
+      state: folderStateOf({ show: SHOW_SOME }),
+      labels: ['Collapse', 'Focus folder', '---', 'Show all in folder'],
+      icons: ['fold', 'target', '---', 'eye']
+    },
+    {
+      title: 'with none shown',
+      state: folderStateOf({ show: SHOW_NONE }),
+      labels: ['Collapse', 'Focus folder', '---', 'Show all in folder'],
+      icons: ['fold', 'target', '---', 'eye']
+    }
+  ])('GIVEN a folder $title WHEN it is listed THEN it reads $labels with the icons $icons', ({ state, labels, icons }) => {
+    const model = folderMenuOf('apps', state, folderActionsMock());
 
-    it('WHEN it is listed THEN it reads Collapse, Focus folder, a separator and Show folder', () => {
-      const labels = labelsOf(model);
+    const listed = [labelsOf(model), iconsOf(model)];
 
-      expect(labels).toStrictEqual(['Collapse', 'Focus folder', '---', 'Show folder']);
-    });
-
-    it('WHEN Show folder is read THEN it is a checked, enabled menuitemcheckbox', () => {
-      const { role, checked, isDisabled } = itemLabelled(model, 'Show folder');
-
-      expect({ role, checked, isDisabled }).toStrictEqual({ role: 'menuitemcheckbox', checked: 'true', isDisabled: false });
-    });
-
-    it('WHEN Collapse is read THEN it is a plain enabled menuitem', () => {
-      const { role, checked, isDisabled } = itemLabelled(model, 'Collapse');
-
-      expect({ role, checked, isDisabled }).toStrictEqual({ role: 'menuitem', checked: null, isDisabled: false });
-    });
+    expect(listed).toStrictEqual([labels, icons]);
   });
 
-  it('GIVEN a collapsed folder that is the focus WHEN it is listed THEN it reads Expand and Clear focus', () => {
-    const state = folderStateOf({ isCollapsed: true, isFocus: true });
+  it.each([
+    { label: 'Collapse', state: folderStateOf() },
+    { label: 'Exclude folder', state: folderStateOf() },
+    { label: 'Show all in folder', state: folderStateOf({ show: SHOW_SOME }) }
+  ])('GIVEN a folder whose group checkbox is free WHEN $label is read THEN it is enabled', ({ label, state }) => {
+    const item = itemLabelled(folderMenuOf('apps', state, folderActionsMock()), label);
 
-    const labels = labelsOf(folderMenuOf('apps', state, folderActionsMock()));
-
-    expect(labels).toStrictEqual(['Expand', 'Clear focus', '---', 'Show folder']);
+    expect(item.isDisabled).toBe(false);
   });
 
-  it('GIVEN a folder partly shown WHEN Show folder is read THEN it is mixed', () => {
-    const state = folderStateOf({ show: SHOW_SOME });
-
-    const item = itemLabelled(folderMenuOf('apps', state, folderActionsMock()), 'Show folder');
-
-    expect(item.checked).toBe('mixed');
-  });
-
-  it('GIVEN a folder whose group checkbox is locked WHEN Show folder is read THEN it is disabled', () => {
+  it('GIVEN a folder whose group checkbox is locked WHEN Exclude folder is read THEN it is disabled', () => {
     const state = folderStateOf({ show: SHOW_LOCKED });
 
-    const item = itemLabelled(folderMenuOf('apps', state, folderActionsMock()), 'Show folder');
+    const item = itemLabelled(folderMenuOf('apps', state, folderActionsMock()), 'Exclude folder');
 
     expect(item.isDisabled).toBe(true);
   });
@@ -89,7 +96,8 @@ describe('FEATURE: folderMenuOf', () => {
       { label: 'Expand', state: folderStateOf({ isCollapsed: true }), action: 'toggle', args: [folder] },
       { label: 'Focus folder', state: folderStateOf(), action: 'focusFolder', args: [folder] },
       { label: 'Clear focus', state: folderStateOf({ isFocus: true }), action: 'clearFocus', args: [] },
-      { label: 'Show folder', state: folderStateOf(), action: 'showFolder', args: [folder] }
+      { label: 'Exclude folder', state: folderStateOf(), action: 'showFolder', args: [folder] },
+      { label: 'Show all in folder', state: folderStateOf({ show: SHOW_SOME }), action: 'showFolder', args: [folder] }
     ] as const)('WHEN $label runs THEN only $action is called', ({ label, state, action, args }) => {
       const actions = folderActionsMock();
       const model: MenuItemModel[] = folderMenuOf(folder, state, actions);
@@ -103,8 +111,8 @@ describe('FEATURE: folderMenuOf', () => {
 });
 
 describe('FEATURE: packageMenuOf', () => {
-  describe('GIVEN a package, not the focus, its checkbox ticked', () => {
-    const model = packageMenuOf('web', packageStateOf(), packageActionsMock());
+  describe('GIVEN a package with a visible task, not the focus', () => {
+    const model = packageMenuOf('web', packageStateOf({ hasTasks: true }), packageActionsMock());
 
     it('WHEN it is listed THEN Start trace carries the trace title', () => {
       const startTrace = itemLabelled(model, START_TRACE_LABEL);
@@ -112,16 +120,35 @@ describe('FEATURE: packageMenuOf', () => {
       expect(startTrace.title).toBe(START_TRACE_TITLE);
     });
 
-    it('WHEN it is listed THEN it reads View Package Details, Focus, Start trace, a separator and Show package', () => {
+    it('WHEN it is listed THEN it reads View Package Details, Focus, Start trace, Show tasks, a separator and Exclude', () => {
       const labels = labelsOf(model);
 
-      expect(labels).toStrictEqual(['View Package Details', 'Focus', 'Start trace', '---', 'Show package']);
+      expect(labels).toStrictEqual(['View Package Details', 'Focus', 'Start trace', 'Show tasks', '---', 'Exclude']);
     });
 
-    it('WHEN Show package is read THEN it is a checked, enabled menuitemcheckbox', () => {
-      const { role, checked, isDisabled } = itemLabelled(model, 'Show package');
+    it('WHEN its icons are read THEN they follow spec D6', () => {
+      const icons = iconsOf(model);
 
-      expect({ role, checked, isDisabled }).toStrictEqual({ role: 'menuitemcheckbox', checked: 'true', isDisabled: false });
+      expect(icons).toStrictEqual(['file-text', 'target', 'git-commit', 'tasklist', '---', 'eye-closed']);
+    });
+
+    it('WHEN its icons are read THEN each comes from the action icon table', () => {
+      const icons = iconsOf(model);
+
+      expect(icons).toStrictEqual([
+        ACTION_ICONS.openDetails,
+        ACTION_ICONS.focus,
+        ACTION_ICONS.startTrace,
+        ACTION_ICONS.showTasks,
+        '---',
+        ACTION_ICONS.exclude
+      ]);
+    });
+
+    it('WHEN Exclude is read THEN it is enabled', () => {
+      const item = itemLabelled(model, 'Exclude');
+
+      expect(item.isDisabled).toBe(false);
     });
   });
 
@@ -131,33 +158,33 @@ describe('FEATURE: packageMenuOf', () => {
     it('WHEN it is listed THEN Focus reads Clear focus', () => {
       const labels = labelsOf(model);
 
-      expect(labels).toStrictEqual(['View Package Details', 'Clear focus', 'Start trace', '---', 'Show package']);
+      expect(labels).toStrictEqual(['View Package Details', 'Clear focus', 'Start trace', '---', 'Exclude']);
     });
 
-    it('WHEN Show package is read THEN it is disabled', () => {
-      const item = itemLabelled(model, 'Show package');
+    it('WHEN Clear focus is read THEN it draws the clear focus icon', () => {
+      const item = itemLabelled(model, 'Clear focus');
+
+      expect(item.icon).toBe('close');
+    });
+
+    it('WHEN Exclude is read THEN it is disabled', () => {
+      const item = itemLabelled(model, 'Exclude');
 
       expect(item.isDisabled).toBe(true);
     });
   });
 
   it.each([
-    { title: 'no visible task', hasTasks: false, expected: ['View Package Details', 'Focus', 'Start trace', '---', 'Show package'] },
+    { title: 'no visible task', hasTasks: false, expected: ['View Package Details', 'Focus', 'Start trace', '---', 'Exclude'] },
     {
       title: 'a visible task',
       hasTasks: true,
-      expected: ['View Package Details', 'Focus', 'Start trace', 'Show tasks', '---', 'Show package']
+      expected: ['View Package Details', 'Focus', 'Start trace', 'Show tasks', '---', 'Exclude']
     }
   ])('GIVEN a package with $title WHEN it is listed THEN it reads $expected', ({ hasTasks, expected }) => {
     const labels = labelsOf(packageMenuOf('web', packageStateOf({ hasTasks }), packageActionsMock()));
 
     expect(labels).toStrictEqual(expected);
-  });
-
-  it('GIVEN a package whose checkbox is unticked WHEN Show package is read THEN it is unchecked', () => {
-    const item = itemLabelled(packageMenuOf('web', packageStateOf({ isShown: false }), packageActionsMock()), 'Show package');
-
-    expect(item.checked).toBe('false');
   });
 
   describe.each(['web', 'constructor', '__proto__'])('GIVEN the package %j', (name) => {
@@ -166,8 +193,7 @@ describe('FEATURE: packageMenuOf', () => {
       { label: 'Focus', state: packageStateOf(), action: 'focus', args: [name] },
       { label: 'Clear focus', state: packageStateOf({ isFocus: true }), action: 'clearFocus', args: [] },
       { label: 'Start trace', state: packageStateOf(), action: 'startTrace', args: [] },
-      { label: 'Show package', state: packageStateOf({ isShown: false }), action: 'setShown', args: [name, true] },
-      { label: 'Show package', state: packageStateOf(), action: 'setShown', args: [name, false] },
+      { label: 'Exclude', state: packageStateOf(), action: 'setShown', args: [name, false] },
       { label: 'Show tasks', state: packageStateOf({ hasTasks: true }), action: 'showTasks', args: [name] }
     ] as const)('WHEN $label runs from $state THEN only $action is called with $args', ({ label, state, action, args }) => {
       const actions = packageActionsMock();

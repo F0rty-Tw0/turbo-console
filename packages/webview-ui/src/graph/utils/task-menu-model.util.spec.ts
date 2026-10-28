@@ -4,7 +4,7 @@ import { taskMenuOf } from './task-menu-model.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskMenuActions } from '../common/task-details.type.ts';
 import { GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
-import { itemLabelled, labelsOf } from '../test/utils/widget-menu.spec.util.ts';
+import { iconsOf, itemLabelled, labelsOf } from '../test/utils/widget-menu.spec.util.ts';
 
 const NOT_RUNNABLE: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
 
@@ -46,10 +46,16 @@ describe('FEATURE: taskMenuOf', () => {
       expect(actions.act).toHaveBeenCalledExactlyOnceWith('a#build', action);
     });
 
-    it('WHEN Run is read THEN it is a plain enabled menuitem', () => {
-      const { role, checked, isDisabled } = itemLabelled(taskMenuOf(GRAPH_TASK_STUB, 'running', actionsMock()), 'Run');
+    it('WHEN Run is read THEN it is an enabled item with the run icon', () => {
+      const { icon, isDisabled } = itemLabelled(taskMenuOf(GRAPH_TASK_STUB, 'running', actionsMock()), 'Run');
 
-      expect({ role, checked, isDisabled }).toStrictEqual({ role: 'menuitem', checked: null, isDisabled: false });
+      expect({ icon, isDisabled }).toStrictEqual({ icon: 'play', isDisabled: false });
+    });
+
+    it('WHEN its icons are read THEN Run, Run without cache and Stop draw play, debug-rerun and debug-stop', () => {
+      const icons = iconsOf(taskMenuOf(GRAPH_TASK_STUB, 'running', actionsMock()));
+
+      expect(icons).toStrictEqual(['play', 'debug-rerun', 'debug-stop']);
     });
   });
 });

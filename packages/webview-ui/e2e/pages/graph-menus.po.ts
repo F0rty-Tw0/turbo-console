@@ -3,6 +3,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
+import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
 import {
   ALL_FOLDERS_LABEL,
   BREADCRUMB_LABEL,
@@ -12,8 +13,6 @@ import {
 } from '../../src/graph/common/graph.const.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { menuFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
-
-type CheckedState = 'true' | 'false' | 'mixed';
 
 /** How far from the container's top left the breadcrumb may sit, in px. */
 const CORNER_REACH_PX = 16;
@@ -69,12 +68,9 @@ export class GraphMenusPage {
     await this.page.keyboard.press(key);
   }
 
-  /** The open menu's item named exactly `name`, a plain item or a checkbox item. */
+  /** The open menu's item named exactly `name`. */
   public item(name: string): Locator {
-    const plain = this.menu.getByRole('menuitem', { name, exact: true });
-    const checkbox = this.menu.getByRole('menuitemcheckbox', { name, exact: true });
-
-    return plain.or(checkbox);
+    return this.menu.getByRole('menuitem', { name, exact: true });
   }
 
   /** Forced: an `aria-disabled` item still receives a real click, and must do nothing with it. */
@@ -114,8 +110,13 @@ export class GraphMenusPage {
     await expect(this.menu.locator('.widget-menu-item')).toHaveText(labels);
   }
 
-  public async expectItemChecked(name: string, state: CheckedState): Promise<void> {
-    await expect(this.item(name)).toHaveAttribute('aria-checked', state);
+  /** The item's leading Codicon is `id`. */
+  public async expectItemIcon(name: string, id: GraphIconId): Promise<void> {
+    await expect(this.item(name).locator('.codicon')).toHaveClass(new RegExp(`codicon-${id}`));
+  }
+
+  public async expectNoCheckboxItems(): Promise<void> {
+    await expect(this.menu.getByRole('menuitemcheckbox')).toHaveCount(0);
   }
 
   public async expectItemDisabled(name: string, isDisabled: boolean): Promise<void> {

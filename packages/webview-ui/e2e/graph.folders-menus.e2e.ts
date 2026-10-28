@@ -15,17 +15,17 @@ const HELD: GraphOptions = { workers: 'held' };
 
 const GHOSTS = ghostFolderState();
 
-const FOLDER_ITEMS = ['Collapse', 'Focus folder', 'Show folder'];
+const FOLDER_ITEMS = ['Collapse', 'Focus folder', 'Exclude folder'];
 
 const TRACE_THROUGH_MID: GraphTraceRef = { start: 'a', end: 'b' };
 
 const KEY_STEPS: [string, string][] = [
   ['ArrowDown', 'Focus folder'],
-  ['ArrowDown', 'Show folder'],
+  ['ArrowDown', 'Exclude folder'],
   ['ArrowDown', 'Collapse'],
-  ['ArrowUp', 'Show folder'],
+  ['ArrowUp', 'Exclude folder'],
   ['Home', 'Collapse'],
-  ['End', 'Show folder']
+  ['End', 'Exclude folder']
 ];
 
 const APPS_PACKAGES = ['docs', 'web'];
@@ -90,7 +90,7 @@ test.describe('FEATURE: folder widget menus', () => {
 
       await test.step('THEN the menu is named for apps', async (): Promise<void> => graphMenus.expectFolderMenuNamed('apps'));
 
-      await test.step('AND it lists Collapse, Focus folder and Show folder', async (): Promise<void> =>
+      await test.step('AND it lists Collapse, Focus folder and Exclude folder', async (): Promise<void> =>
         graphMenus.expectItems(FOLDER_ITEMS));
 
       await test.step('AND Collapse is focused', async (): Promise<void> => graphMenus.expectFocusedItem('Collapse'));
@@ -183,7 +183,7 @@ test.describe('FEATURE: folder widget menus', () => {
 
       await test.step('AND the apps menu now offers Clear focus in place of Focus folder', async (): Promise<void> => {
         await graphMenus.openFolderMenu('apps');
-        await graphMenus.expectItems(['Collapse', 'Clear focus', 'Show folder']);
+        await graphMenus.expectItems(['Collapse', 'Clear focus', 'Exclude folder']);
       });
 
       await test.step('WHEN Clear focus is chosen', async (): Promise<void> => graphMenus.item('Clear focus').click());
@@ -200,7 +200,7 @@ test.describe('FEATURE: folder widget menus', () => {
   );
 
   test(
-    'GIVEN the apps menu, Show folder is checked, then mixed after docs is unticked in the list, and from mixed it checks every package',
+    'GIVEN the apps menu, Exclude folder, then Show all in folder after docs is unticked in the list, and choosing it ticks every package',
     { annotation: C9 },
     async ({ graphFolderInspect, graphList, graphMenus }): Promise<void> => {
       await test.step('WHEN the grouped boards open and the apps menu opens', async (): Promise<void> => {
@@ -208,8 +208,8 @@ test.describe('FEATURE: folder widget menus', () => {
         await graphMenus.openFolderMenu('apps');
       });
 
-      await test.step('THEN Show folder is checked, as the apps group checkbox is', async (): Promise<void> => {
-        await graphMenus.expectItemChecked('Show folder', 'true');
+      await test.step('THEN Exclude folder shows the eye-closed icon, as the apps group checkbox is checked', async (): Promise<void> => {
+        await graphMenus.expectItemIcon('Exclude folder', 'eye-closed');
         await graphList.expectGroupChecked('apps (2)', true);
       });
 
@@ -219,12 +219,12 @@ test.describe('FEATURE: folder widget menus', () => {
         await graphMenus.openFolderMenu('apps');
       });
 
-      await test.step('THEN Show folder is mixed, as the apps group checkbox is', async (): Promise<void> => {
-        await graphMenus.expectItemChecked('Show folder', 'mixed');
+      await test.step('THEN Show all in folder shows the eye icon, as the apps group checkbox is mixed', async (): Promise<void> => {
+        await graphMenus.expectItemIcon('Show all in folder', 'eye');
         await graphList.expectGroupMixed('apps (2)');
       });
 
-      await test.step('WHEN Show folder is chosen', async (): Promise<void> => graphMenus.item('Show folder').click());
+      await test.step('WHEN Show all in folder is chosen', async (): Promise<void> => graphMenus.item('Show all in folder').click());
 
       await test.step('THEN docs is ticked again and the group checkbox is checked', async (): Promise<void> => {
         await graphList.expectRowChecked('docs', true);
@@ -234,7 +234,7 @@ test.describe('FEATURE: folder widget menus', () => {
   );
 
   test(
-    'GIVEN a folder held by a trace ghost with its only package unticked, Show folder is unchecked, as its group checkbox is',
+    'GIVEN a folder held by a trace ghost with its only package unticked, the menu offers Show all in folder, as its group checkbox is unchecked',
     { annotation: C9 },
     async ({ graphCanvas, graphFolderInspect, graphList, graphMenus, graphPage }): Promise<void> => {
       const saved = savedWith(GHOSTS.hash, { hidden: ['m'], trace: TRACE_THROUGH_MID });
@@ -249,19 +249,19 @@ test.describe('FEATURE: folder widget menus', () => {
 
       await test.step('AND the mid menu opens', async (): Promise<void> => graphMenus.openFolderMenu('mid'));
 
-      await test.step('THEN Show folder is unchecked, as the mid group checkbox is', async (): Promise<void> => {
-        await graphMenus.expectItemChecked('Show folder', 'false');
+      await test.step('THEN Show all in folder is offered, as the mid group checkbox is unchecked', async (): Promise<void> => {
+        await graphMenus.expectItems(['Collapse', 'Focus folder', 'Show all in folder']);
         await graphList.expectGroupChecked('mid (1)', false);
       });
 
-      await test.step('WHEN Show folder is chosen', async (): Promise<void> => graphMenus.item('Show folder').click());
+      await test.step('WHEN Show all in folder is chosen', async (): Promise<void> => graphMenus.item('Show all in folder').click());
 
       await test.step('THEN m is ticked', async (): Promise<void> => graphList.expectRowChecked('m', true));
     }
   );
 
   test(
-    'GIVEN a folder whose only package is focused, Show folder is disabled and does nothing, as its group checkbox is',
+    'GIVEN a folder whose only package is focused, Exclude folder is disabled and does nothing, as its group checkbox is',
     { annotation: C9 },
     async ({ graphCanvas, graphFolderInspect, graphList, graphMenus, graphPage }): Promise<void> => {
       await test.step('WHEN the page opens grouped and Fit widens the lone-package boxes past 120 px', async (): Promise<void> => {
@@ -277,22 +277,20 @@ test.describe('FEATURE: folder widget menus', () => {
 
       await test.step('WHEN the x menu opens', async (): Promise<void> => graphMenus.openFolderMenu('x'));
 
-      await test.step('THEN Show folder is disabled but checked', async (): Promise<void> => {
-        await graphMenus.expectItemDisabled('Show folder', true);
-        await graphMenus.expectItemChecked('Show folder', 'true');
-      });
+      await test.step('THEN Exclude folder is disabled', async (): Promise<void> =>
+        graphMenus.expectItemDisabled('Exclude folder', true));
 
-      await test.step('WHEN Show folder is pressed', async (): Promise<void> => graphMenus.pressDisabledItem('Show folder'));
+      await test.step('WHEN Exclude folder is pressed', async (): Promise<void> => graphMenus.pressDisabledItem('Exclude folder'));
 
       await test.step('THEN a stays ticked and the menu stays open', async (): Promise<void> => {
         await graphList.expectRowChecked('a', true);
-        await graphMenus.expectItemDisabled('Show folder', true);
+        await graphMenus.expectItemDisabled('Exclude folder', true);
       });
     }
   );
 
   test(
-    'GIVEN a picked package, its "…" menu opens details, starts a trace and unticks it as the panel and list do',
+    'GIVEN a picked package, its "…" menu opens details, starts a trace and excludes it as the panel and list do',
     { annotation: C9 },
     async ({ graphDetails, graphFolderInspect, graphHost, graphList, graphMenus, graphTrace }): Promise<void> => {
       await test.step('WHEN the grouped boards open, web is picked and its "…" is pressed', async (): Promise<void> => {
@@ -301,10 +299,9 @@ test.describe('FEATURE: folder widget menus', () => {
         await graphMenus.openPackageMenu('web');
       });
 
-      await test.step('THEN the menu is named for web and lists View Package Details, Focus, Start trace and Show package', async (): Promise<void> => {
+      await test.step('THEN the menu is named for web and lists View Package Details, Focus, Start trace and Exclude', async (): Promise<void> => {
         await graphMenus.expectPackageMenuNamed('web');
-        await graphMenus.expectItems(['View Package Details', 'Focus', 'Start trace', 'Show package']);
-        await graphMenus.expectItemChecked('Show package', 'true');
+        await graphMenus.expectItems(['View Package Details', 'Focus', 'Start trace', 'Exclude']);
       });
 
       await test.step('WHEN View Package Details is chosen', async (): Promise<void> =>
@@ -326,10 +323,10 @@ test.describe('FEATURE: folder widget menus', () => {
 
       await test.step('THEN picking starts from web the same way', async (): Promise<void> => graphTrace.expectPicking('web'));
 
-      await test.step('WHEN picking is cancelled and Show package is chosen from the menu', async (): Promise<void> => {
+      await test.step('WHEN picking is cancelled and Exclude is chosen from the menu', async (): Promise<void> => {
         await graphTrace.cancel();
         await graphMenus.openPackageMenu('web');
-        await graphMenus.item('Show package').click();
+        await graphMenus.item('Exclude').click();
       });
 
       await test.step('THEN web is unticked in the list', async (): Promise<void> => graphList.expectRowChecked('web', false));
