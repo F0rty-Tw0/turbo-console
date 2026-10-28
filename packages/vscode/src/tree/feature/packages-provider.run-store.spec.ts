@@ -7,6 +7,7 @@ import type { RunDefinition, RunRequest } from '../../run/common/run.type.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { RUN_REQUEST_STUB } from '../../run/test/stubs/run.stub.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
 import { loadedWith, packageNamed, scriptPackageNamed, scriptTaskNamed } from '../test/utils/tree-model.spec.util.ts';
@@ -38,7 +39,7 @@ const runStoreFixtureOf = (): RunStoreFixture => {
   const runs = new RunStore();
   const store = new RootStore();
   const deps = providerDepsOf(runs.get, scriptsToggleMock(), runs.runningIds);
-  const provider = new PackagesTreeProvider(store, 'list', 'builtin', deps);
+  const provider = new PackagesTreeProvider(store, 'list', ICONS_STATE_STUB, deps);
   const request: RunRequest = { ...RUN_REQUEST_STUB, root: ROOT_FOLDER_STUB.root, task: S_TASK };
   const definition: RunDefinition = { root: ROOT_FOLDER_STUB.root, id: S_TASK.id };
 

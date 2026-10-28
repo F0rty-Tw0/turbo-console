@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import * as vscode from 'vscode';
 
 import { tooltipMarkdownOf } from '../../shared/utils/tooltip.util.ts';
-import type { IconsMode, RowCommand, TreeRow } from '../common/tree-row.type.ts';
+import type { IconsState, RowCommand, TreeRow } from '../common/tree-row.type.ts';
 
 const COLLAPSIBLE_STATES: Readonly<Record<TreeRow['collapsible'], vscode.TreeItemCollapsibleState>> = {
   none: vscode.TreeItemCollapsibleState.None,
@@ -32,8 +32,8 @@ const tooltipFor = (row: TreeRow): vscode.MarkdownString => {
 };
 
 /** In theme mode a row with a folder takes the theme's folder icon, drawn from `resourceUri`; every other row keeps its own codicon. */
-const applyIcon = (item: vscode.TreeItem, row: TreeRow, icons: IconsMode): void => {
-  if (icons === 'theme' && row.folder !== undefined) {
+const applyIcon = (item: vscode.TreeItem, row: TreeRow, icons: IconsState): void => {
+  if (icons.mode === 'theme' && row.folder !== undefined) {
     item.iconPath = vscode.ThemeIcon.Folder;
     item.resourceUri = vscode.Uri.file(join(row.root, row.folder));
 
@@ -49,7 +49,7 @@ const applyIcon = (item: vscode.TreeItem, row: TreeRow, icons: IconsMode): void 
  * A row as VS Code's item. Without tooltip lines the tooltip stays unset, so VS Code shows the label on hover (an empty
  * string would show nothing, and a cut-off message label could not be read); otherwise one cleaned line per line.
  */
-export const toTreeItem = (row: TreeRow, icons: IconsMode): vscode.TreeItem => {
+export const toTreeItem = (row: TreeRow, icons: IconsState): vscode.TreeItem => {
   const item = new vscode.TreeItem(row.label, COLLAPSIBLE_STATES[row.collapsible]);
   const tooltip = tooltipFor(row);
 

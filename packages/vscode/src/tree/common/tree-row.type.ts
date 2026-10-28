@@ -27,6 +27,12 @@ export type TreeMode = 'folders' | 'list';
 /** Whether folder and package rows take the file icon theme's folder icon, or Turbo Console's own codicons. */
 export type IconsMode = 'theme' | 'builtin';
 
+/** What the tree draws icons from: the mode, and the file names the file icon theme names (always empty outside `theme`). */
+export type IconsState = {
+  readonly mode: IconsMode;
+  readonly fileNames: ReadonlySet<string>;
+};
+
 /** The `turboConsole.icons` setting: `auto` is `theme` when the file icon theme has folder icons, else `builtin`. */
 export type IconsSetting = 'auto' | 'theme' | 'builtin';
 

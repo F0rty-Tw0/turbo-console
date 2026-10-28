@@ -3,7 +3,7 @@ import type { Event, TreeItem } from 'vscode';
 import type { SharedAtoms } from './atom-load.type.ts';
 import type { AtomLookup } from './atom-view.type.ts';
 import type { ModelViewsOf } from './model-view.type.ts';
-import type { IconsMode, RunningCountsMemo, TreeMode, TreeRow } from './tree-row.type.ts';
+import type { IconsState, RunningCountsMemo, TreeMode, TreeRow } from './tree-row.type.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { LiveIds, RunEntry, RunLookup, Runs } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
@@ -78,7 +78,7 @@ export type PackagesTreeApi = {
   readonly getTreeItem: (node: TreeNode) => TreeItem;
   readonly refreshFor: (change: RootChange) => void;
   readonly setMode: (mode: TreeMode) => void;
-  readonly setIcons: (icons: IconsMode) => void;
+  readonly setIcons: (icons: IconsState) => void;
   readonly runChanged: (entry: RunEntry) => void;
   readonly refreshTasks: (running: RunningTasks) => void;
   readonly setScopeShown: (value: boolean) => void;

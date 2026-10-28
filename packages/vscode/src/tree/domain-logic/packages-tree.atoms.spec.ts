@@ -11,6 +11,7 @@ import type { AtomHostPorts } from '../common/atom-load.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { BASE_SPEC_PATHS, ENDED_MATCHED, FILE_A, PKG, ROOT, UMBRELLA_TICK } from '../test/common/atom-load.const.ts';
 import type { ChildrenOf, LoadsHarness } from '../test/common/atom-load.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { dryRunAt, dryStateOf, flush, loadsHarness, settleFailed, settleOk } from '../test/utils/atom-load.spec.util.ts';
@@ -39,7 +40,7 @@ describe('FEATURE: packages tree Atomizer loads', () => {
       wallNow: () => 7
     };
 
-    tree = new PackagesTree(store, 'list', 'builtin', ports);
+    tree = new PackagesTree(store, 'list', ICONS_STATE_STUB, ports);
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
     store.apply(ROOT, loaded);
   };

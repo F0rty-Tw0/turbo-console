@@ -6,6 +6,7 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { ATOM_MODEL_STUB, A_FILE_STUB, LIVE_FILE_STUB, SPACED_FILE_STUB } from '../test/stubs/atom-view.stub.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith } from '../test/utils/tree-model.spec.util.ts';
 import { ATOM_IDLE_PORTS } from '../test/utils/tree-ports.spec.util.ts';
@@ -42,7 +43,7 @@ describe('FEATURE: packages tree Atomizer rows', () => {
       const base = loadedWith([]);
       const loaded = { ...base, model: ATOM_MODEL_STUB };
 
-      tree = new PackagesTree(store, 'list', 'builtin', ports);
+      tree = new PackagesTree(store, 'list', ICONS_STATE_STUB, ports);
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
       store.apply('/ws', loaded);
     });

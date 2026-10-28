@@ -6,7 +6,7 @@ import type { RunEntry } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { ContextKeyTracker } from '../common/context-key.type.ts';
 import type { PackagesTreeApi, RunningTasks, TreeNode, TreePorts, TreeProviderDeps, TreeRefresh } from '../common/tree-node.type.ts';
-import type { IconsMode, TreeMode } from '../common/tree-row.type.ts';
+import type { IconsState, TreeMode } from '../common/tree-row.type.ts';
 import { PackagesTree } from '../domain-logic/packages-tree.ts';
 import { trackRootsKey } from '../domain-logic/roots-key.ts';
 import { hasScriptsOf } from '../utils/has-scripts.util.ts';
@@ -28,7 +28,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
   private readonly hasScripts: ContextKeyTracker;
   private readonly singlePackage: ContextKeyTracker;
 
-  public constructor(store: Roots, mode: TreeMode, icons: IconsMode, deps: TreeProviderDeps) {
+  public constructor(store: Roots, mode: TreeMode, icons: IconsState, deps: TreeProviderDeps) {
     const fire = (refresh: TreeRefresh): void => {
       this.emitter.fire(refresh);
     };
@@ -62,7 +62,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
   public getTreeItem(node: TreeNode): vscode.TreeItem {
     const row = this.tree.rowOf(node);
 
-    return toTreeItem(row, this.tree.iconsMode());
+    return toTreeItem(row, this.tree.iconsState());
   }
 
   public refreshFor(change: RootChange): void {
@@ -73,7 +73,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
     this.tree.setMode(mode);
   }
 
-  public setIcons(icons: IconsMode): void {
+  public setIcons(icons: IconsState): void {
     this.tree.setIcons(icons);
   }
 

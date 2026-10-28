@@ -6,6 +6,7 @@ import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
@@ -51,7 +52,7 @@ describe('FEATURE: packages tree tick refresh', () => {
       };
 
       fire = vi.mocked(ports.fire);
-      tree = new PackagesTree(store, 'list', 'builtin', ports);
+      tree = new PackagesTree(store, 'list', ICONS_STATE_STUB, ports);
       store.set([ROOT_FOLDER_STUB, OTHER_FOLDER], coordinatorMock);
       store.apply('/ws', loadedWith([packageNamed('a'), packageNamed('b')]));
       store.apply('/other', loadedWith([packageNamed('a'), packageNamed('b')]));

@@ -8,6 +8,7 @@ import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { NO_FILE_NAMES } from '../common/icon-theme.const.ts';
 import type { IconThemeFacts, IconThemeProbe } from '../common/icon-theme.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
+import type { IconsState } from '../common/tree-row.type.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
 
 type SettingsListener = (event: ConfigurationChangeEvent) => void;
@@ -51,8 +52,10 @@ const flush = async (): Promise<void> => {
   });
 };
 
-const factsOf = (folders: boolean | null): IconThemeFacts => {
-  const facts: IconThemeFacts = { folders, fileNames: NO_FILE_NAMES };
+const NAMES = new Set(['vitest.config.ts']);
+
+const factsOf = (folders: boolean | null, fileNames: ReadonlySet<string> = NO_FILE_NAMES): IconThemeFacts => {
+  const facts: IconThemeFacts = { folders, fileNames };
 
   return facts;
 };
@@ -88,7 +91,8 @@ describe('FEATURE: watchIcons', () => {
 
     listener?.();
   };
-  const setIconsCalls = (): unknown[] => vi.mocked(tree.setIcons).mock.calls.map((call) => call[0]);
+  const setIconsStates = (): IconsState[] => vi.mocked(tree.setIcons).mock.calls.map((call) => call[0]);
+  const setIconsCalls = (): unknown[] => setIconsStates().map((state) => state.mode);
   const watch = (): void => {
     const folders: IconThemeProbe = { facts, clear };
 
@@ -198,22 +202,76 @@ describe('FEATURE: watchIcons', () => {
     });
   });
 
-  describe.each(['theme', 'builtin'])('GIVEN the icons setting is %s', (setting) => {
+  describe('GIVEN the icons setting is theme', () => {
+    beforeEach(() => {
+      editor.settings.set('icons', 'theme');
+    });
+
+    it('WHEN watching starts THEN the theme is asked once and the tree gets theme with its file names', async () => {
+      facts.mockResolvedValue(factsOf(false, NAMES));
+      watch();
+      await flush();
+
+      expect(facts).toHaveBeenCalledTimes(1);
+      expect(setIconsCalls()).toStrictEqual(['theme']);
+      expect(setIconsStates().at(0)?.fileNames).toBe(NAMES);
+    });
+
+    it('WHEN workbench.iconTheme changes THEN the theme is asked again', async () => {
+      watch();
+      await flush();
+      fireSettings('workbench.iconTheme');
+      await flush();
+
+      expect(facts).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN facts() rejects THEN the error is logged once and the tree gets theme with no file names', async () => {
+      facts.mockRejectedValue(new Error('boom'));
+      watch();
+      await flush();
+
+      expect(output.error).toHaveBeenCalledTimes(1);
+      expect(setIconsStates()).toStrictEqual([{ mode: 'theme', fileNames: NO_FILE_NAMES }]);
+    });
+  });
+
+  describe('GIVEN the icons setting is builtin', () => {
     beforeEach(async () => {
-      editor.settings.set('icons', setting);
+      editor.settings.set('icons', 'builtin');
       watch();
       await flush();
     });
 
-    it('WHEN watching starts THEN the tree gets that mode', () => {
-      expect(setIconsCalls()).toStrictEqual([setting]);
+    it('WHEN watching starts THEN the tree gets builtin with no file names and the theme is not asked', () => {
+      expect(setIconsStates()).toStrictEqual([{ mode: 'builtin', fileNames: NO_FILE_NAMES }]);
+      expect(facts).not.toHaveBeenCalled();
     });
 
-    it('WHEN workbench.iconTheme changes THEN the theme file is never asked about', async () => {
+    it('WHEN workbench.iconTheme changes THEN the theme is still not asked', async () => {
       fireSettings('workbench.iconTheme');
       await flush();
 
       expect(facts).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN the icons setting is auto', () => {
+    it('WHEN the theme has folders THEN the tree gets theme with the probe file names', async () => {
+      facts.mockResolvedValue(factsOf(true, NAMES));
+      watch();
+      await flush();
+
+      expect(setIconsCalls()).toStrictEqual(['theme']);
+      expect(setIconsStates().at(0)?.fileNames).toBe(NAMES);
+    });
+
+    it('WHEN the theme has no folders but names files THEN the tree gets builtin with no file names', async () => {
+      facts.mockResolvedValue(factsOf(false, NAMES));
+      watch();
+      await flush();
+
+      expect(setIconsStates()).toStrictEqual([{ mode: 'builtin', fileNames: NO_FILE_NAMES }]);
     });
   });
 

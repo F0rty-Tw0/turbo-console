@@ -8,6 +8,7 @@ import type { TreeProviderDeps } from '../common/tree-node.type.ts';
 import { sharedAtomsOf } from '../domain-logic/shared-atoms.ts';
 import { BASE_SPEC_PATHS, FILE_A, ROOT } from '../test/common/atom-load.const.ts';
 import type { ChildrenOf, LoadsHarness } from '../test/common/atom-load.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { dryRunAt, dryStateOf, flush, loadsHarness, scanAt } from '../test/utils/atom-load.spec.util.ts';
 import { atomModelOf } from '../test/utils/atom-model.spec.util.ts';
@@ -43,7 +44,7 @@ describe('FEATURE: packages provider Atomizer loads', () => {
       const deps: TreeProviderDeps = { ...base, atom };
       const children: ChildrenOf = async (node) => provider.getChildren(node);
 
-      provider = new PackagesTreeProvider(store, 'list', 'builtin', deps);
+      provider = new PackagesTreeProvider(store, 'list', ICONS_STATE_STUB, deps);
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
       store.apply(ROOT, loadedOf(atomModelOf(BASE_SPEC_PATHS)));
       await provider.getChildren(await umbrellaNodeOf(children));

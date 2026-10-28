@@ -5,6 +5,7 @@ import { PackagesTree } from './packages-tree.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
@@ -41,7 +42,7 @@ const fixtureOf = (): Fixture => {
     now: () => 7,
     wallNow: () => 7
   };
-  const tree = new PackagesTree(store, 'list', 'builtin', ports);
+  const tree = new PackagesTree(store, 'list', ICONS_STATE_STUB, ports);
 
   store.set([ROOT_FOLDER_STUB], coordinatorMock);
   store.onDidChange((change) => {

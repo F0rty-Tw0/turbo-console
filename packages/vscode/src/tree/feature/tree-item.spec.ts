@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
 
 import { toTreeItem } from './tree-item.ts';
-import type { RowKind, TreeRow } from '../common/tree-row.type.ts';
+import type { IconsState, RowKind, TreeRow } from '../common/tree-row.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { TREE_ROW_STUB } from '../test/stubs/tree-row.stub.ts';
 
 /** `vscode` exists only inside the editor, so the module is replaced here by the classes `tree-item.ts` builds. */
@@ -68,7 +69,7 @@ const rowOf = (kind: RowKind, tooltip: string[]): TreeRow => {
 describe('FEATURE: tree item tooltip', () => {
   describe.each(MARKDOWN_KINDS)('GIVEN a %s row with tooltip lines', (kind) => {
     it('WHEN built THEN the tooltip is markdown reading the lines, so VS Code keeps label and description as its aria label', () => {
-      const { tooltip } = toTreeItem(rowOf(kind, TOOLTIP_LINES), 'builtin');
+      const { tooltip } = toTreeItem(rowOf(kind, TOOLTIP_LINES), ICONS_STATE_STUB);
 
       expect(tooltip).toBeInstanceOf(vscode.MarkdownString);
       expect(tooltip).toHaveProperty('value', TOOLTIP_MARKDOWN);
@@ -77,7 +78,7 @@ describe('FEATURE: tree item tooltip', () => {
 
   describe('GIVEN a row with no tooltip lines', () => {
     it('WHEN built THEN the tooltip stays unset', () => {
-      expect(toTreeItem(rowOf('pkg', []), 'builtin').tooltip).toBeUndefined();
+      expect(toTreeItem(rowOf('pkg', []), ICONS_STATE_STUB).tooltip).toBeUndefined();
     });
   });
 });
@@ -98,10 +99,12 @@ const idOf = (iconPath: vscode.TreeItem['iconPath']): string | undefined => {
   return undefined;
 };
 
+const THEME_ICONS_STATE: IconsState = { ...ICONS_STATE_STUB, mode: 'theme' };
+
 describe('FEATURE: tree item icons', () => {
   describe.each<RowKind>(['dir', 'pkg'])('GIVEN a %s row with a folder', (kind) => {
     it('WHEN built in theme mode THEN the icon is the theme folder over that directory', () => {
-      const item = toTreeItem(folderRowOf(kind), 'theme');
+      const item = toTreeItem(folderRowOf(kind), THEME_ICONS_STATE);
 
       expect(item.iconPath).toBe(vscode.ThemeIcon.Folder);
       expect(item.resourceUri?.fsPath).toBe(join('/ws', FOLDER));
@@ -110,7 +113,7 @@ describe('FEATURE: tree item icons', () => {
 
   describe('GIVEN the root package // whose folder is the root itself', () => {
     it('WHEN built in theme mode THEN the resource uri is the root, with no trailing separator', () => {
-      const item = toTreeItem(folderRowOf('pkg', ''), 'theme');
+      const item = toTreeItem(folderRowOf('pkg', ''), THEME_ICONS_STATE);
 
       expect(item.resourceUri?.fsPath).toBe(join('/ws', ''));
     });
@@ -120,13 +123,13 @@ describe('FEATURE: tree item icons', () => {
     it('WHEN built in builtin mode THEN a folder changes nothing', () => {
       const plain: TreeRow = { ...TREE_ROW_STUB, kind };
 
-      expect(toTreeItem(folderRowOf(kind), 'builtin')).toStrictEqual(toTreeItem(plain, 'builtin'));
+      expect(toTreeItem(folderRowOf(kind), ICONS_STATE_STUB)).toStrictEqual(toTreeItem(plain, ICONS_STATE_STUB));
     });
   });
 
   describe('GIVEN a pkg row with a folder', () => {
     it('WHEN built in builtin mode THEN the icon is the codicon and there is no resource uri', () => {
-      const item = toTreeItem(folderRowOf('pkg'), 'builtin');
+      const item = toTreeItem(folderRowOf('pkg'), ICONS_STATE_STUB);
 
       expect(idOf(item.iconPath)).toBe('package');
       expect(item.resourceUri).toBeUndefined();
@@ -136,8 +139,8 @@ describe('FEATURE: tree item icons', () => {
   describe.each<RowKind>(['root', 'task'])('GIVEN a %s row with no folder', (kind) => {
     it('WHEN built in theme mode THEN the item matches the builtin one', () => {
       const row: TreeRow = { ...TREE_ROW_STUB, kind };
-      const themed = toTreeItem(row, 'theme');
-      const builtin = toTreeItem(row, 'builtin');
+      const themed = toTreeItem(row, THEME_ICONS_STATE);
+      const builtin = toTreeItem(row, ICONS_STATE_STUB);
 
       expect(idOf(themed.iconPath)).toBe(idOf(builtin.iconPath));
       expect(themed.resourceUri).toBeUndefined();
