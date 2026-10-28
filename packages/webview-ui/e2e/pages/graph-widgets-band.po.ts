@@ -2,7 +2,7 @@ import type { Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphWidgetsLayout } from './graph-widgets-layout.po.ts';
-import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
+import { folderFocusLabelOf, folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside, overlaps } from '../test/utils/element-rect.spec.util.ts';
 import { collapsedLabelIn } from '../test/utils/graph-collapsed-label.spec.util.ts';
@@ -23,26 +23,32 @@ const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => request
 /** Runs in the page through `evaluate`: the element's layout width, untouched by the row's scale transform. */
 const layoutWidthOf = (element: HTMLElement): number => element.offsetWidth;
 
-/** How the header rows fit the box band as the camera zooms, and what a collapsed node shows with and without its row. */
 /** The rects of every element `rows` matches. */
 const rectsOf = async (rows: Locator): Promise<ElementRect[]> => {
   const all = await rows.all();
-  const rects = await Promise.all(all.map(rectOf));
+  const reads = all.map(rectOf);
+  const rects = await Promise.all(reads);
 
   return rects;
 };
 
-/** How many pairs of `rects` overlap. */
-const clashCountOf = (rects: ElementRect[]): number => {
-  const pairs = rects.flatMap((rect, index): boolean[] => {
-    const rest = rects.slice(index + 1);
+/** How many of `others` the rect overlaps. */
+const overlapCountOf = (rect: ElementRect, others: ElementRect[]): number => {
+  const clashes = others.filter((other): boolean => overlaps(rect, other));
 
-    return rest.map((other): boolean => overlaps(rect, other));
-  });
-
-  return pairs.filter(Boolean).length;
+  return clashes.length;
 };
 
+/** How many pairs of `rects` overlap. */
+const clashCountOf = (rects: ElementRect[]): number => {
+  let count = 0;
+
+  for (const [index, rect] of rects.entries()) count += overlapCountOf(rect, rects.slice(index + 1));
+
+  return count;
+};
+
+/** How the header rows fit the box band as the camera zooms, and what a collapsed node shows with and without its row. */
 export class GraphWidgetsBand extends GraphWidgetsLayout {
   /** Wheels in one notch at a time, at most 60, until some header button shows. */
   public async zoomUntilRowsShown(): Promise<void> {
@@ -164,11 +170,20 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
     return isInside(badge, row);
   }
 
+  /** The folder row's chevron, its Focus folder while shown, and its "…", left to right. */
   private async buttonsOf(folder: string, isExpanded: boolean): Promise<ElementRect[]> {
     const chevron = await rectOf(this.chevronOf(folder, isExpanded));
+    const focus = await rectsOf(this.focusFolderIn(folder));
     const ellipsis = await rectOf(this.ellipsisOf(folder));
 
-    return [chevron, ellipsis];
+    return [chevron, ...focus, ellipsis];
+  }
+
+  /** Matches the row's Focus folder button only while it is shown: the role query leaves hidden elements out. */
+  private focusFolderIn(folder: string): Locator {
+    const name = folderFocusLabelOf(folderTitleOf(folder));
+
+    return this.rowOf(folder).getByRole('button', { name, exact: true });
   }
 
   private async bandFaults(folder: string): Promise<string[]> {
@@ -185,9 +200,12 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
     const buttons = await this.buttonsOf(folder, false);
     const title = await rectOf(row.locator('.widget-title'));
     const badge = await rectOf(this.badgeOf(folder));
-    const pairs = buttons.flatMap((button): boolean[] => [overlaps(button, title), overlaps(button, badge)]);
+    const parts = [title, badge];
+    let count = 0;
 
-    return pairs.filter(Boolean).length;
+    for (const button of buttons) count += overlapCountOf(button, parts);
+
+    return count;
   }
 
   private async canvasLabelOf(folder: string): Promise<string> {
