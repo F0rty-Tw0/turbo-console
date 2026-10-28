@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isMenuOpenKey, menuIndexOf } from './menu-keys.util.ts';
+import { isMenuOpenKey, menuIndexOf, toolbarIndexOf } from './menu-keys.util.ts';
 
 describe('FEATURE: menuIndexOf', () => {
   describe('GIVEN a menu of 4 items', () => {
@@ -44,5 +44,36 @@ describe('FEATURE: isMenuOpenKey', () => {
     const isOpen = isMenuOpenKey(key, isShift);
 
     expect(isOpen).toBe(expected);
+  });
+});
+
+describe('FEATURE: toolbarIndexOf', () => {
+  describe('GIVEN a toolbar of 4 buttons', () => {
+    it.each([
+      { key: 'ArrowRight', from: 0, expected: 1 },
+      { key: 'ArrowRight', from: 3, expected: 0 },
+      { key: 'ArrowLeft', from: 2, expected: 1 },
+      { key: 'ArrowLeft', from: 0, expected: 3 },
+      { key: 'Home', from: 2, expected: 0 },
+      { key: 'End', from: 1, expected: 3 },
+      { key: 'ArrowRight', from: -1, expected: 0 },
+      { key: 'ArrowLeft', from: -1, expected: 3 }
+    ])('WHEN $key is pressed on button $from THEN button $expected is next', ({ key, from, expected }) => {
+      const next = toolbarIndexOf(key, from, 4);
+
+      expect(next).toBe(expected);
+    });
+
+    it.each(['ArrowDown', 'ArrowUp', 'Tab', 'Enter'])('WHEN %s is pressed THEN it moves nothing', (key) => {
+      const next = toolbarIndexOf(key, 1, 4);
+
+      expect(next).toBeNull();
+    });
+  });
+
+  it('GIVEN a toolbar with no buttons WHEN ArrowRight is pressed THEN it moves nothing', () => {
+    const next = toolbarIndexOf('ArrowRight', -1, 0);
+
+    expect(next).toBeNull();
   });
 });

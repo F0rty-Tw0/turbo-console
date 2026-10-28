@@ -1,58 +1,18 @@
 import { setFocusToggle } from './button-title.ts';
+import { placeRow, writeRowStop } from './widget-row-place.ts';
 import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { WidgetRowsDeps } from '../common/graph-widgets.type.ts';
-import type { FolderRowElements, MenuTarget, RowKind, RowPlan } from '../common/widget.type.ts';
+import type { FolderRowElements, MenuTarget, RowButtonKind, RowEntry, RowKind, RowPlan } from '../common/widget.type.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
+import { toolbarIndexOf } from '../utils/menu-keys.util.ts';
+import { kindOf, rowStopOf } from '../utils/row-stop.util.ts';
 import { sameOrder } from '../utils/same-order.util.ts';
 
-type RowEntry = {
-  readonly kind: RowKind;
-  /** The package count the row was built with. */
-  readonly count: number;
-  readonly elements: FolderRowElements;
-};
-
-type StyleKey = 'transform' | 'width';
-
-/** A CSSOM write, skipped when the element already has the value. */
-export const writeStyle = (element: HTMLElement, key: StyleKey, value: string): void => {
-  if (element.style[key] !== value) element.style[key] = value;
-};
-
-export const setHidden = (element: HTMLElement, isHidden: boolean): void => {
-  if (element.hidden !== isHidden) element.hidden = isHidden;
-};
-
-/** Whole CSS px, so a 1 px border is not blurred over two device pixels. */
-export const translateOf = (x: number, y: number): string => {
-  const left = Math.round(x);
-  const top = Math.round(y);
-
-  return `translate(${left}px, ${top}px)`;
-};
-
-/** Shows and places a row from its plan, on whole px and at its scale; without one, or with one of the other kind, the row is hidden. The chevron, Focus folder and "…" hide as the plan says. */
-const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
-  const { root, chevron, focus, ellipsis } = entry.elements;
-  const isPlaced = plan?.kind === entry.kind;
-
-  setHidden(root, !isPlaced);
-
-  if (!isPlaced) return;
-
-  const { x, y, width, scale } = plan.placement;
-  const right = Math.round(x + width * scale);
-  const left = Math.round(x);
-  const translate = translateOf(x, y);
-  const scaled = `${translate} scale(${scale})`;
-  const transform = scale === 1 ? translate : scaled;
-
-  writeStyle(root, 'transform', transform);
-  writeStyle(root, 'width', `${(right - left) / scale}px`);
-  setHidden(chevron, !plan.isChevronShown);
-  setHidden(focus, !plan.isFocusShown);
-  setHidden(ellipsis, !plan.isEllipsisShown);
+/** The row button to give focus back to once the pass placed its row. */
+type RowFocus = {
+  readonly folder: string;
+  readonly kind: RowButtonKind;
 };
 
 const shownOf = (scene: FolderScene | null): string[] => {
@@ -65,7 +25,7 @@ const shownOf = (scene: FolderScene | null): string[] => {
 export class WidgetRows {
   private readonly deps: WidgetRowsDeps;
   private readonly rows = new Map<string, RowEntry>();
-  private refocus: HTMLButtonElement | null = null;
+  private refocus: RowFocus | null = null;
 
   public constructor(deps: WidgetRowsDeps) {
     this.deps = deps;
@@ -113,12 +73,34 @@ export class WidgetRows {
     for (const [folder, entry] of this.rows) placeRow(entry, byFolder.get(folder));
   }
 
-  /** Focus that sat in a rebuilt row goes to its new chevron, and focus in a row that moved stays on its button, once the pass placed it. */
+  /** Focus that sat in a rebuilt or moved row goes back to the same kind of button once a pass placed the row; when that kind is hidden now, to the row's Tab stop. A row the pass left hidden (a rebuilt box waits for its layout) keeps the request for a later `refresh` while focus is still lost. Once focus is anywhere else (the user clicked, typed or tabbed away) the request is dropped, never to take focus back. */
   public restoreFocus(): void {
     const target = this.refocus;
 
+    if (target === null) return;
+
+    const entry = this.rows.get(target.folder);
+    const { activeElement, body } = this.deps.layer.ownerDocument;
+    const isFocusLost = activeElement === null || activeElement === body;
+    const isWaiting = entry?.elements.root.hidden === true;
+
+    if (!isFocusLost) {
+      this.refocus = null;
+
+      return;
+    }
+
+    if (isWaiting) return;
+
     this.refocus = null;
-    target?.focus();
+
+    if (entry === undefined) return;
+
+    const isShown = entry.shown.includes(target.kind);
+    const stop = rowStopOf(entry.preferred, entry.shown);
+    const kind = isShown ? target.kind : stop;
+
+    entry.elements[kind].focus();
   }
 
   /** Builds a folder's row, or builds it again when the folder collapsed or expanded or its package count changed. */
@@ -139,31 +121,60 @@ export class WidgetRows {
     elements.title.addEventListener('click', (event): void => onTitle(folder, event));
     elements.focus.addEventListener('click', (): void => onFocus(folder));
     elements.ellipsis.addEventListener('click', (): void => onMenu(target, elements.ellipsis));
-    this.rows.set(folder, { kind, count, elements });
+    elements.root.addEventListener('keydown', (event): void => this.onRowKey(folder, event));
+
+    const preferred = entry?.preferred ?? 'chevron';
+
+    this.rows.set(folder, { kind, count, elements, shown: [], preferred });
 
     if (entry === undefined) this.deps.layer.insertBefore(elements.root, before);
-    else this.replace(entry, elements);
+    else this.replace(folder, entry, elements);
   }
 
-  /** Swaps a row in place; focus inside the old row moves to the new chevron. */
-  private replace(entry: RowEntry, elements: FolderRowElements): void {
+  /** Swaps a row in place; focus on a button of the old row goes to the same kind of button in the new one (`restoreFocus`). */
+  private replace(folder: string, entry: RowEntry, elements: FolderRowElements): void {
     const { root } = entry.elements;
     const focused = root.ownerDocument.activeElement;
     const hadFocus = root.contains(focused);
+    const kind = kindOf(entry.elements, focused) ?? 'chevron';
 
     root.replaceWith(elements.root);
 
-    if (hadFocus) this.refocus = elements.chevron;
+    if (hadFocus) this.refocus = { folder, kind };
   }
 
   /** A row button with focus is blurred when its row moves in the DOM, so `restoreFocus` gives it back after the pass. */
   private keepFocus(): void {
     const focused = this.deps.layer.ownerDocument.activeElement;
-    const entries = this.rows.values();
-    const rows = [...entries];
-    const isInRow = rows.some((entry) => entry.elements.root.contains(focused));
 
-    if (isInRow && focused instanceof HTMLButtonElement) this.refocus ??= focused;
+    for (const [folder, entry] of this.rows) {
+      const kind = kindOf(entry.elements, focused);
+
+      if (kind !== undefined) this.refocus = { folder, kind };
+    }
+  }
+
+  /** Left/Right/Home/End move focus and the Tab stop across the row's shown buttons; other keys pass through (Shift+F10 reaches the layer). */
+  private onRowKey(folder: string, event: KeyboardEvent): void {
+    const entry = this.rows.get(folder);
+
+    if (entry === undefined) return;
+
+    const { elements, shown } = entry;
+    const kind = kindOf(elements, event.target);
+    const index = shown.findIndex((shownKind) => shownKind === kind);
+    const next = toolbarIndexOf(event.key, index, shown.length);
+
+    if (next === null) return;
+
+    const nextKind = shown[next];
+
+    if (nextKind === undefined) return;
+
+    event.preventDefault();
+    entry.preferred = nextKind;
+    writeRowStop(elements, nextKind);
+    elements[nextKind].focus();
   }
 
   /** Puts the rows in the scene's order, in the map and in the DOM (the Tab order); a no-op while it holds. */

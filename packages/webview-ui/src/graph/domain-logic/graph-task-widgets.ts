@@ -1,6 +1,6 @@
 import { keepBoxClear } from './graph-keep-clear.ts';
 import { GraphWidgetMenus } from './graph-widget-menus.ts';
-import { setHidden, translateOf, writeStyle } from './widget-rows.ts';
+import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
 import { TASK_WIDGET_CLASS } from '../common/graph-task.const.ts';
 import type { MenuAnchor } from '../common/graph-widgets.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';

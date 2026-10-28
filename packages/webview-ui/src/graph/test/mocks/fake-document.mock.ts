@@ -5,15 +5,17 @@ import { FakeNode } from '../utils/fake-node.spec.util.ts';
 
 type FakeFocus = {
   element: FakeElement | null;
+  body: FakeElement | null;
 };
 
 const ignore = (): void => undefined;
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
-/** What an element's `ownerDocument` answers: the element focused last. */
+/** What an element's `ownerDocument` answers: the element focused last, and the body that holds focus once an element loses it. */
 type FakeOwner = {
   readonly activeElement: FakeElement | null;
+  readonly body: FakeElement | null;
 };
 
 /**
@@ -65,7 +67,7 @@ class FakeElement extends FakeNode {
   }
 
   public get ownerDocument(): FakeOwner {
-    const owner: FakeOwner = { activeElement: this.focused.element };
+    const owner: FakeOwner = { activeElement: this.focused.element, body: this.focused.body };
 
     return owner;
   }
@@ -124,8 +126,10 @@ type FakeDocument = {
 
 /** A `document` for `vi.stubGlobal('document', …)`: `createElement`, `createElementNS`, a `body` and the element `focus()` last moved to. */
 export const fakeDocumentMock = (): FakeDocument => {
-  const focus: FakeFocus = { element: null };
+  const focus: FakeFocus = { element: null, body: null };
   const body = new FakeElement('body', focus);
+
+  focus.body = body;
   const fake: FakeDocument = {
     createElement: (tag: string): FakeElement => new FakeElement(tag, focus),
     createElementNS: (namespace: string, tag: string): FakeElement => {
