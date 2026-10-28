@@ -144,12 +144,12 @@ export class GraphControls {
     this.deps.onSave();
   }
 
-  /** The folder headers' buttons follow `collapsed`; the caller owns the set. */
   /** A layout placed: a folder layout now on screen shows the header toggles. */
   public placed(): void {
     this.render();
   }
 
+  /** The folder headers' buttons follow `collapsed`; the caller owns the set. */
   public setCollapsed(collapsed: ReadonlySet<string>): void {
     this.collapsed = collapsed;
     this.render();
