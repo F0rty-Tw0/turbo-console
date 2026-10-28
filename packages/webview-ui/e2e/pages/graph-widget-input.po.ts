@@ -99,6 +99,12 @@ export class GraphWidgetInput extends GraphMenusPage {
     await expect(this.focusFolderOf(folder)).toHaveAttribute('title', title);
   }
 
+  /** The folder's Focus folder paints `color` as one flat layer over the opaque `base` background colour. */
+  public async expectFocusFolderFill(folder: string, color: string, base: string): Promise<void> {
+    await expect(this.focusFolderOf(folder)).toHaveCSS('background-image', `linear-gradient(${color}, ${color})`);
+    await expect(this.focusFolderOf(folder)).toHaveCSS('background-color', base);
+  }
+
   /** The row has a Focus folder button, and it is hidden. */
   public async expectFocusFolderHidden(folder: string): Promise<void> {
     const button = this.widgets.layer.getByRole('button', {

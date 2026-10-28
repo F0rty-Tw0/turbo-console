@@ -11,6 +11,12 @@ const APPS_COLLAPSED = savedWith(BOARDS.hash, { collapsed: ['apps'] });
 
 const DEEP = deepFolderState();
 
+const PRESSED_FILL = 'rgb(1, 2, 3)';
+
+const EDITOR_BASE = 'rgb(10, 20, 30)';
+
+const PRESSED_THEME_VARS = { '--vscode-inputOption-activeBackground': PRESSED_FILL, '--vscode-editor-background': EDITOR_BASE };
+
 /** Keeps the `deep` box's top band and both ends on the canvas at both zooms below. */
 const DEEP_PAN: Position = { x: 400, y: 150 };
 
@@ -41,6 +47,23 @@ test.describe('FEATURE: the folder row Focus folder button', () => {
         await graphWidgetInput.expectFocusFolderPressed('apps', false);
         await graphFolderInspect.expectHeaderFocusText('apps', 'Focus');
       });
+    }
+  );
+
+  test(
+    'GIVEN theme vars, a click on the apps Focus folder fills it in the active option colour over the opaque editor base',
+    { annotation: U4B },
+    async ({ graphFolderInspect, graphWidgetInput, graphWidgets }): Promise<void> => {
+      await test.step('GIVEN the grouped boards open', async (): Promise<void> =>
+        graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS));
+
+      await test.step(`AND the theme sets inputOption-activeBackground ${PRESSED_FILL} and editor-background ${EDITOR_BASE}`, async (): Promise<void> =>
+        graphWidgets.setThemeVars(PRESSED_THEME_VARS));
+
+      await test.step('WHEN the apps Focus folder is clicked', async (): Promise<void> => graphWidgetInput.clickFocusFolder('apps'));
+
+      await test.step(`THEN it fills ${PRESSED_FILL} over ${EDITOR_BASE}`, async (): Promise<void> =>
+        graphWidgetInput.expectFocusFolderFill('apps', PRESSED_FILL, EDITOR_BASE));
     }
   );
 
