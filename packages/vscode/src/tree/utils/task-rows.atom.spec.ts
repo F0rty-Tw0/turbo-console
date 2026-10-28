@@ -59,6 +59,14 @@ describe('FEATURE: task rows of a package with Atomizer groups', () => {
       ]);
     });
 
+    it('WHEN the umbrella runs tsc THEN its row carries the typescript config name', () => {
+      const rows = taskRows(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, CONTEXT);
+
+      const umbrella = rows.find((row) => row.key === UMBRELLA_ID);
+
+      expect(umbrella?.themeFiles).toStrictEqual(['tsconfig.json']);
+    });
+
     it('WHEN the aggregate names another group THEN it stays', () => {
       const pkg = packageWithAggregate(OTHER_GROUP);
 

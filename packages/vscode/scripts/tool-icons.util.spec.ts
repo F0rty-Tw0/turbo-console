@@ -94,7 +94,7 @@ const ttfOf = async (dir: string): Promise<DataView> => {
 };
 
 const rowOf = (id: string, glyph: ToolGlyph): ToolSpec => {
-  const row: ToolSpec = { id, title: id, bins: [id], glyph };
+  const row: ToolSpec = { id, title: id, bins: [id], glyph, configFiles: [] };
 
   return row;
 };

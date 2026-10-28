@@ -72,7 +72,8 @@ describe('FEATURE: task rows of a package', () => {
           contextValue: 'turboTask',
           collapsible: 'none',
           tooltip: ['Command: tsc', 'Tool: TypeScript', 'Kind: task'],
-          command: null
+          command: null,
+          themeFiles: ['tsconfig.json']
         }
       ]);
     });

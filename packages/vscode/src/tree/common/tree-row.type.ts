@@ -74,6 +74,11 @@ export type TreeRow = {
    * rows have one. It stays relative so a row costs no path join unless theme icons are on.
    */
   readonly folder?: string;
+  /**
+   * The config file names of the tool an idle task row runs, in priority order, for a file icon theme: in theme mode the
+   * first one the theme names gives the row its icon. Absent on every other row and when the tool has none.
+   */
+  readonly themeFiles?: string[];
 };
 
 /** A kind token (`turboTask`, `turboScript`), then at most one state token; menus match them by prefix (spec 1c-a §4.12). */
