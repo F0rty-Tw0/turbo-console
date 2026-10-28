@@ -41,7 +41,9 @@ export const setFocusButton = (button: HTMLButtonElement, isFocused: boolean): v
 /** A Focus toggle shows its state by `aria-pressed` under a constant name; its hover title says what a press does. */
 export const setFocusToggle = (button: HTMLButtonElement, isFocus: boolean, focusTitle: string): void => {
   const title = isFocus ? CLEAR_FOCUS_LABEL : focusTitle;
+  const pressed = String(isFocus);
 
-  button.setAttribute('aria-pressed', String(isFocus));
-  button.title = title;
+  if (button.getAttribute('aria-pressed') !== pressed) button.setAttribute('aria-pressed', pressed);
+
+  if (button.title !== title) button.title = title;
 };

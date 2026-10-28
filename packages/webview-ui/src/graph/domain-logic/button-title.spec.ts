@@ -86,6 +86,25 @@ describe('FEATURE: button titles', () => {
 
       expect([button.getAttribute('aria-pressed'), button.title]).toStrictEqual(['false', 'Focus folder']);
     });
+
+    it('WHEN it is set to the state it already has THEN neither aria-pressed nor the title is written again', () => {
+      const button = document.createElement('button');
+      const writes: string[] = [];
+
+      setFocusToggle(button, true, FOCUS_FOLDER_LABEL);
+      vi.spyOn(button, 'setAttribute').mockImplementation((name: string): void => {
+        writes.push(name);
+      });
+      Object.defineProperty(button, 'title', {
+        get: (): string => 'Clear focus',
+        set: (): void => {
+          writes.push('title');
+        }
+      });
+      setFocusToggle(button, true, FOCUS_FOLDER_LABEL);
+
+      expect(writes).toStrictEqual([]);
+    });
   });
 
   describe('GIVEN a button with only an icon', () => {
