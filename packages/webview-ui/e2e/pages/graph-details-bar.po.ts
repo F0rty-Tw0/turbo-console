@@ -3,6 +3,7 @@ import { expect } from '@playwright/test';
 
 import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
 import { CLEAR_LABEL } from '../../src/graph/common/graph.const.ts';
+import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
 
 /** Where the bar sits: the id of its parent aside, and whether it is that aside's first child. */
 type BarPlace = {
@@ -63,7 +64,7 @@ export class GraphDetailsBar {
   public async expectClearIcon(iconId: GraphIconId): Promise<void> {
     const icon = this.clear.locator('span').first();
 
-    await expect(icon).toHaveClass(new RegExp(`codicon-${iconId}`));
+    await expect(icon).toHaveClass(codiconClassOf(iconId));
     await expect(icon).toHaveAttribute('aria-hidden', 'true');
     await expect(this.clear).toHaveText('');
   }

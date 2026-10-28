@@ -1,7 +1,16 @@
 import { pluralOf } from './plural.util.ts';
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
-import { HINT_NUDGE_TEXT, MANIFEST_NAME, OPEN_DETAILS_LABEL, OPEN_MANIFEST_LABEL, ROOT_PATH_TEXT } from '../common/details.const.ts';
-import type { CandidateKey } from '../common/details.type.ts';
+import {
+  CLEAR_FOCUS_LABEL,
+  FOCUS_LABEL,
+  HINT_NUDGE_TEXT,
+  MANIFEST_NAME,
+  OPEN_DETAILS_LABEL,
+  OPEN_MANIFEST_LABEL,
+  ROOT_PATH_TEXT
+} from '../common/details.const.ts';
+import type { CandidateKey, FocusFace } from '../common/details.type.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { TraceDirection } from '../common/trace.type.ts';
 
 type EntryPlace = Pick<ManifestEntry, 'field' | 'line'>;
@@ -28,6 +37,19 @@ export const openDetailsLabelOf = (taskCount: number): string => {
   const tasks = pluralOf(taskCount, 'task', 'tasks');
 
   return `${OPEN_DETAILS_LABEL} · ${tasks}`;
+};
+
+/** A package's Focus button reads Clear focus while the package is the focus, else Focus, each with its action icon. */
+export const focusFaceOf = (isFocused: boolean): FocusFace => {
+  if (isFocused) {
+    const clear: FocusFace = { icon: ACTION_ICONS.clearFocus, text: CLEAR_FOCUS_LABEL };
+
+    return clear;
+  }
+
+  const focus: FocusFace = { icon: ACTION_ICONS.focus, text: FOCUS_LABEL };
+
+  return focus;
 };
 
 export const dependenciesTitleOf = (count: number): string => `Direct dependencies (${count})`;

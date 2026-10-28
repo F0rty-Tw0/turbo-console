@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 
 import type { GraphFocus } from '../../../bridge/common/graph-view-state.type.ts';
 import type { GraphFilters } from '../../common/graph-filters.type.ts';
+import type { GraphIconId } from '../../common/graph-icon.type.ts';
 import type { MenuItem, MenuItemModel } from '../../common/widget-menu.type.ts';
 import type { FolderMenuState, PackageMenuState, ShowFolderState } from '../../common/widget.type.ts';
 
@@ -11,6 +12,10 @@ const SHOWN: ShowFolderState = { checked: 'true', isDisabled: false };
 /** The labels of the model's items, a separator as `'---'`. */
 export const labelsOf = (model: MenuItemModel[]): string[] =>
   model.map((entry): string => (entry.kind === 'item' ? entry.label : '---'));
+
+/** The icons of the model's items, a separator as `'---'`. */
+export const iconsOf = (model: MenuItemModel[]): (GraphIconId | '---' | null)[] =>
+  model.map((entry): GraphIconId | '---' | null => (entry.kind === 'item' ? entry.icon : '---'));
 
 /** The item labelled `label`; throws when the model has none. */
 export const itemLabelled = (model: MenuItemModel[], label: string): MenuItem => {
@@ -30,7 +35,7 @@ export const folderStateOf = (overrides: Partial<FolderMenuState> = {}): FolderM
 
 /** An unfocused package with no visible task whose list checkbox is ticked, with `overrides` on top. */
 export const packageStateOf = (overrides: Partial<PackageMenuState> = {}): PackageMenuState => {
-  const state: PackageMenuState = { isFocus: false, isShown: true, hasTasks: false, ...overrides };
+  const state: PackageMenuState = { isFocus: false, hasTasks: false, ...overrides };
 
   return state;
 };

@@ -90,7 +90,9 @@ p {
 .vscode-high-contrast .graph-toolbar .text-button[aria-expanded='true'],
 .vscode-high-contrast-light .graph-toolbar .text-button[aria-expanded='true'],
 .vscode-high-contrast .graph-toolbar .text-button[aria-pressed='true'],
-.vscode-high-contrast-light .graph-toolbar .text-button[aria-pressed='true'] {
+.vscode-high-contrast-light .graph-toolbar .text-button[aria-pressed='true'],
+.vscode-high-contrast .icon-button[aria-pressed='true'],
+.vscode-high-contrast-light .icon-button[aria-pressed='true'] {
   box-shadow: inset 0 0 0 1px var(--vscode-inputOption-activeBorder);
 }
 
@@ -501,7 +503,7 @@ p {
   cursor: default;
 }
 
-.widget-menu-check {
+.widget-menu-icon {
   display: inline-flex;
   flex: none;
   width: 16px;
@@ -963,6 +965,12 @@ kbd {
   background: var(--vscode-toolbar-hoverBackground);
 }
 
+/* After the hover rule, which has the same specificity, so the pressed look wins. */
+.icon-button[aria-pressed='true']:not(:disabled) {
+  color: var(--vscode-inputOption-activeForeground);
+  background: var(--vscode-inputOption-activeBackground);
+}
+
 .icon-button:disabled {
   opacity: 0.5;
   cursor: default;
@@ -1016,6 +1024,16 @@ kbd {
   gap: var(--space-2);
 }
 
+/* A package's icon and label buttons take two columns, so each label keeps room beside its icon. */
+.details-view[data-view='package'] .details-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* The last shown button on an odd place spans the row; `of S` skips a hidden Show tasks, which `:last-child` would count. */
+.details-view[data-view='package'] .details-row > :nth-last-child(1 of :not([hidden])):nth-child(odd of :not([hidden])) {
+  grid-column: 1 / -1;
+}
+
 /*
  * A label wider than its column ("Exclude folder" in a wide UI font) wraps between its words instead of spilling. A
  * single word too wide still spills (no `anywhere` break from `.details-view`), so the e2e fit check can see it.
@@ -1028,12 +1046,17 @@ kbd {
 }
 
 /*
- * A Details panel sashed towards its 200px minimum has no room for three labels such as "Start trace" a row. At the
- * default 280px (255px of content) three package labels still fit in common UI fonts.
+ * A Details panel sashed towards its 200px minimum has no room for three folder labels a row, nor for an icon beside a
+ * package label such as "Start trace": the icons go and the labels keep the word wrap above. At the default 280px
+ * (255px of content) three folder labels and a package icon with its label still fit in common UI fonts.
  */
 @container (width < 240px) {
   .details-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .details-view[data-view='package'] .details-row .codicon {
+    display: none;
   }
 }
 

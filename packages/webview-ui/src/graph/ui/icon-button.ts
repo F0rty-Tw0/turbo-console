@@ -14,3 +14,16 @@ export const iconButton = (icon: GraphIconId, label: string, title: string): HTM
 
   return button;
 };
+
+/** A `text-button` with its icon, then its label, whose text is the accessible name; `title` is its hover text. */
+export const iconTextButton = (icon: GraphIconId, label: string, title: string): HTMLButtonElement => {
+  const button = textElement('button', 'text-button', '');
+  const glyph = graphIcon(icon);
+  const text = textElement('span', 'button-label', label);
+
+  button.type = 'button';
+  button.title = title;
+  button.append(glyph, text);
+
+  return button;
+};

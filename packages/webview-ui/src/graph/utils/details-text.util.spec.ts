@@ -7,6 +7,7 @@ import {
   entryLabelOf,
   entryRowTextOf,
   explainLabelOf,
+  focusFaceOf,
   hintTextOf,
   linkTitleOf,
   manifestFileOf,
@@ -201,6 +202,17 @@ describe('FEATURE: details text', () => {
       const text = hintTextOf('docs', true);
 
       expect(text).toBe('Pick a package to end the trace');
+    });
+  });
+
+  describe('GIVEN a package Focus button', () => {
+    it.each([
+      { title: 'focused', isFocused: true, icon: 'close', text: 'Clear focus' },
+      { title: 'unfocused', isFocused: false, icon: 'target', text: 'Focus' }
+    ])('WHEN it is $title THEN it draws $icon and reads $text', ({ isFocused, icon, text }) => {
+      const face = focusFaceOf(isFocused);
+
+      expect(face).toStrictEqual({ icon, text });
     });
   });
 });

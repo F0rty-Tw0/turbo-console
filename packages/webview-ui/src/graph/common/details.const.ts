@@ -43,6 +43,8 @@ export const FOCUS_FOLDER_LABEL = 'Focus folder';
 
 export const EXCLUDE_FOLDER_LABEL = 'Exclude folder';
 
+export const SHOW_ALL_IN_FOLDER_LABEL = 'Show all in folder';
+
 export const START_TRACE_LABEL = 'Start trace';
 
 export const START_TRACE_TITLE = 'Pick a second package to highlight every dependency path between the two';

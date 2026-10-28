@@ -1,5 +1,5 @@
 import { graphIcon } from './graph-icon.ts';
-import { iconButton } from './icon-button.ts';
+import { iconButton, iconTextButton } from './icon-button.ts';
 import { buildLegend } from './legend-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
@@ -29,16 +29,11 @@ import {
   VIEW_LABEL
 } from '../common/graph.const.ts';
 
-/** A disabled toolbar button: its icon, then its label, whose text is the accessible name; `title` is its hover text. */
+/** A disabled toolbar button: its icon, then its label. */
 const labelledButton = (id: GraphIconId, label: string, title: string): HTMLButtonElement => {
-  const button = textElement('button', 'text-button', '');
-  const icon = graphIcon(id);
-  const text = textElement('span', 'button-label', label);
+  const button = iconTextButton(id, label, title);
 
-  button.type = 'button';
-  button.title = title;
   button.disabled = true;
-  button.append(icon, text);
 
   return button;
 };

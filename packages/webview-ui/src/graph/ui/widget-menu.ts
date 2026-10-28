@@ -3,16 +3,9 @@ import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import type { MenuElements, MenuItem, MenuItemModel } from '../common/widget-menu.type.ts';
 
-const CHECK_ICONS: Record<NonNullable<MenuItem['checked']>, GraphIconId | null> = {
-  true: 'check',
-  mixed: 'dash',
-  false: null
-};
-
-/** The leading column every item keeps, so labels line up: a check, a dash for mixed, or nothing. */
-const checkColumnOf = (checked: MenuItem['checked']): HTMLElement => {
-  const column = textElement('span', 'widget-menu-check', '');
-  const id = checked === null ? null : CHECK_ICONS[checked];
+/** The leading column every item keeps, so labels line up: the item's icon, or nothing. */
+const iconColumnOf = (id: GraphIconId | null): HTMLElement => {
+  const column = textElement('span', 'widget-menu-icon', '');
 
   if (id !== null) column.append(graphIcon(id));
 
@@ -23,18 +16,16 @@ const checkColumnOf = (checked: MenuItem['checked']): HTMLElement => {
 const itemElementOf = (item: MenuItem): HTMLElement => {
   const button = textElement('button', 'widget-menu-item', '');
   const label = textElement('span', 'widget-menu-label', item.label);
-  const check = checkColumnOf(item.checked);
+  const icon = iconColumnOf(item.icon);
 
   button.type = 'button';
   button.tabIndex = -1;
   button.title = item.title ?? item.label;
-  button.setAttribute('role', item.role);
-
-  if (item.checked !== null) button.setAttribute('aria-checked', item.checked);
+  button.setAttribute('role', 'menuitem');
 
   if (item.isDisabled) button.setAttribute('aria-disabled', 'true');
 
-  button.append(check, label);
+  button.append(icon, label);
 
   return button;
 };

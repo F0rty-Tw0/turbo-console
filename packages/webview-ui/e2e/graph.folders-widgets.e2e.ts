@@ -245,7 +245,7 @@ test.describe('FEATURE: folder widget placement', () => {
       await test.step('WHEN Enter is pressed', async (): Promise<void> => graphMenus.pressKey('Enter'));
 
       await test.step('THEN the apps menu opens', async (): Promise<void> =>
-        graphMenus.expectItems(['Expand', 'Focus folder', 'Show folder']));
+        graphMenus.expectItems(['Expand', 'Focus folder', 'Exclude folder']));
     }
   );
 

@@ -5,6 +5,7 @@ import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
 import { CONTROLS_LABEL, FILTERS_ON_TEXT, PANELS_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { InputOptionColors, ToolbarGroup } from '../common/graph.type.ts';
 import { CODICON_LOADED } from '../common/shell.const.ts';
+import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
 import { setInputOptionVars } from '../test/utils/graph-details.spec.util.ts';
 
 const CONTROLS_BUTTON = /^Controls/;
@@ -77,7 +78,7 @@ export class GraphToolbar {
   public async expectIcon(button: string, iconId: GraphIconId): Promise<void> {
     const icon = this.page.getByRole('button', { name: button, exact: true }).locator('span').first();
 
-    await expect(icon).toHaveClass(new RegExp(`codicon-${iconId}`));
+    await expect(icon).toHaveClass(codiconClassOf(iconId));
     await expect(icon).toHaveAttribute('aria-hidden', 'true');
   }
 
@@ -110,7 +111,7 @@ export class GraphToolbar {
 
     await expect(this.controlsButton).toHaveAccessibleName(name);
     await expect(this.filtersOn).toBeVisible({ visible: isOn });
-    await expect(this.filtersOn.locator('span').first()).toHaveClass(/codicon-filter/);
+    await expect(this.filtersOn.locator('span').first()).toHaveClass(codiconClassOf('filter'));
     await expect(this.page.locator('.has-filters')).toHaveCount(0);
   }
 

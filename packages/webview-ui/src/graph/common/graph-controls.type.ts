@@ -72,7 +72,7 @@ export type GraphFilteringDeps = Pick<
 
 /** What the widget layer reads besides the filtering deps: the inspection's list and focus hooks, as the details panel calls them. */
 export type WidgetHostDeps = GraphFilteringDeps &
-  Pick<GraphInspectionDeps, 'focus' | 'focusedFolder' | 'onFocusOn' | 'onExclude' | 'onShow' | 'onClearFocus' | 'visible'>;
+  Pick<GraphInspectionDeps, 'focus' | 'focusedFolder' | 'onFocusOn' | 'onExclude' | 'onShow' | 'onClearFocus'>;
 
 /** The controls panel built for one graph. */
 export type ControlsMounted = {

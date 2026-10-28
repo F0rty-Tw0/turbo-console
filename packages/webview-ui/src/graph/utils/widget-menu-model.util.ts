@@ -1,20 +1,24 @@
-import { focusNameOf, rowViewOf } from './controls-rules.util.ts';
+import { focusNameOf } from './controls-rules.util.ts';
 import { folderToggleTextOf } from './controls-text.util.ts';
 import { focusFolderOf } from './folder-rules.util.ts';
-import { showFolderOf } from './show-folder.util.ts';
+import { showFolderChecksOf, showFolderOf } from './show-folder.util.ts';
 import {
   CLEAR_FOCUS_LABEL,
+  EXCLUDE_FOLDER_LABEL,
+  EXCLUDE_LABEL,
   FOCUS_FOLDER_LABEL,
   FOCUS_LABEL,
   OPEN_DETAILS_LABEL,
+  SHOW_ALL_IN_FOLDER_LABEL,
   START_TRACE_LABEL,
   START_TRACE_TITLE
 } from '../common/details.const.ts';
 import type { FolderActions } from '../common/folder-actions.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
+import type { GraphIconId } from '../common/graph-icon.type.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
-import { SHOW_FOLDER_LABEL, SHOW_PACKAGE_LABEL } from '../common/graph.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { PackageActions } from '../common/package-actions.type.ts';
 import type { MenuItem, MenuItemModel } from '../common/widget-menu.type.ts';
@@ -24,8 +28,8 @@ const SEPARATOR: MenuItemModel = { kind: 'separator' };
 
 const NO_ITEMS: MenuItemModel[] = [];
 
-export const itemOf = (label: string, run: () => void, title?: string): MenuItem => {
-  const item: MenuItem = { kind: 'item', label, role: 'menuitem', checked: null, isDisabled: false, run };
+export const itemOf = (label: string, icon: GraphIconId | null, run: () => void, title?: string): MenuItem => {
+  const item: MenuItem = { kind: 'item', label, icon, isDisabled: false, run };
 
   if (title === undefined) return item;
 
@@ -34,23 +38,24 @@ export const itemOf = (label: string, run: () => void, title?: string): MenuItem
   return titled;
 };
 
-const checkItemOf = (label: string, checked: MenuItem['checked'], isDisabled: boolean, run: () => void): MenuItem => {
-  const item: MenuItem = { kind: 'item', label, role: 'menuitemcheckbox', checked, isDisabled, run };
-
-  return item;
-};
-
 export const isMenuItem = (entry: MenuItemModel): entry is MenuItem => entry.kind === 'item';
 
-/** Expand or Collapse · Focus folder or Clear focus · separator · Show folder, the group checkbox's twin. */
+/**
+ * Expand or Collapse · Focus folder or Clear focus · separator · Exclude folder, or Show all in folder while a package
+ * of it is hidden: the group checkbox's click, locked with it.
+ */
 export const folderMenuOf = (folder: string, state: FolderMenuState, actions: FolderActions): MenuItemModel[] => {
   const toggleLabel = folderToggleTextOf(state.isCollapsed);
-  const toggle = itemOf(toggleLabel, (): void => actions.toggle(folder));
-  const clear = itemOf(CLEAR_FOCUS_LABEL, (): void => actions.clearFocus());
-  const focusOn = itemOf(FOCUS_FOLDER_LABEL, (): void => actions.focusFolder(folder));
+  const toggleIcon = state.isCollapsed ? ACTION_ICONS.expand : ACTION_ICONS.collapse;
+  const toggle = itemOf(toggleLabel, toggleIcon, (): void => actions.toggle(folder));
+  const clear = itemOf(CLEAR_FOCUS_LABEL, ACTION_ICONS.clearFocus, (): void => actions.clearFocus());
+  const focusOn = itemOf(FOCUS_FOLDER_LABEL, ACTION_ICONS.focus, (): void => actions.focusFolder(folder));
   const focus = state.isFocus ? clear : focusOn;
-  const { checked, isDisabled } = state.show;
-  const show = checkItemOf(SHOW_FOLDER_LABEL, checked, isDisabled, (): void => actions.showFolder(folder));
+  const runShow = (): void => actions.showFolder(folder);
+  const showAll = itemOf(SHOW_ALL_IN_FOLDER_LABEL, ACTION_ICONS.showAll, runShow);
+  const exclude = itemOf(EXCLUDE_FOLDER_LABEL, ACTION_ICONS.exclude, runShow);
+  const showItem = showFolderChecksOf(state.show) ? showAll : exclude;
+  const show: MenuItem = { ...showItem, isDisabled: state.show.isDisabled };
   const model: MenuItemModel[] = [toggle, focus, SEPARATOR, show];
 
   return model;
@@ -58,25 +63,25 @@ export const folderMenuOf = (folder: string, state: FolderMenuState, actions: Fo
 
 /**
  * View Package Details · Focus or Clear focus · Start trace · Show tasks, for a package with a visible task · separator
- * · Show package, the list checkbox's twin, locked while focused.
+ * · Exclude, the list checkbox's untick, locked while focused.
  */
 export const packageMenuOf = (name: string, state: PackageMenuState, actions: PackageActions): MenuItemModel[] => {
-  const details = itemOf(OPEN_DETAILS_LABEL, (): void => actions.openDetails(name));
-  const clear = itemOf(CLEAR_FOCUS_LABEL, (): void => actions.clearFocus());
-  const focusOn = itemOf(FOCUS_LABEL, (): void => actions.focus(name));
+  const details = itemOf(OPEN_DETAILS_LABEL, ACTION_ICONS.openDetails, (): void => actions.openDetails(name));
+  const clear = itemOf(CLEAR_FOCUS_LABEL, ACTION_ICONS.clearFocus, (): void => actions.clearFocus());
+  const focusOn = itemOf(FOCUS_LABEL, ACTION_ICONS.focus, (): void => actions.focus(name));
   const focus = state.isFocus ? clear : focusOn;
-  const trace = itemOf(START_TRACE_LABEL, (): void => actions.startTrace(), START_TRACE_TITLE);
-  const showTasks = itemOf(SHOW_TASKS_LABEL, (): void => actions.showTasks(name));
+  const trace = itemOf(START_TRACE_LABEL, ACTION_ICONS.startTrace, (): void => actions.startTrace(), START_TRACE_TITLE);
+  const showTasks = itemOf(SHOW_TASKS_LABEL, ACTION_ICONS.showTasks, (): void => actions.showTasks(name));
   const taskItems: MenuItemModel[] = [showTasks];
   const tasks = state.hasTasks ? taskItems : NO_ITEMS;
-  const checked = state.isShown ? 'true' : 'false';
-  const show = checkItemOf(SHOW_PACKAGE_LABEL, checked, state.isFocus, (): void => actions.setShown(name, !state.isShown));
-  const model: MenuItemModel[] = [details, focus, trace, ...tasks, SEPARATOR, show];
+  const excludeItem = itemOf(EXCLUDE_LABEL, ACTION_ICONS.exclude, (): void => actions.setShown(name, false));
+  const exclude: MenuItem = { ...excludeItem, isDisabled: state.isFocus };
+  const model: MenuItemModel[] = [details, focus, trace, ...tasks, SEPARATOR, exclude];
 
   return model;
 };
 
-/** A folder's menu state: collapsed in the scene, the folder focus, and "Show folder" from its packages' group checkbox. */
+/** A folder's menu state: collapsed in the scene, the folder focus, and its packages' group checkbox state. */
 export const folderMenuStateOf = (folder: string, scene: FolderScene | null, filters: GraphFilters): FolderMenuState => {
   const isCollapsed = scene?.collapsed.has(folder) ?? false;
   const isFocus = focusFolderOf(filters) === folder;
@@ -87,16 +92,10 @@ export const folderMenuStateOf = (folder: string, scene: FolderScene | null, fil
   return state;
 };
 
-/** A package's menu state: the package focus, "Show package" from its list checkbox, and whether it has a visible task. */
-export const packageMenuStateOf = (
-  name: string,
-  filters: GraphFilters,
-  visible: ReadonlySet<string>,
-  hasTasks: boolean
-): PackageMenuState => {
+/** A package's menu state: the package focus and whether it has a visible task. */
+export const packageMenuStateOf = (name: string, filters: GraphFilters, hasTasks: boolean): PackageMenuState => {
   const isFocus = focusNameOf(filters) === name;
-  const { isChecked } = rowViewOf(filters, visible, name);
-  const state: PackageMenuState = { isFocus, isShown: isChecked, hasTasks };
+  const state: PackageMenuState = { isFocus, hasTasks };
 
   return state;
 };

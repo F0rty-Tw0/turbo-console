@@ -136,11 +136,14 @@ export class GraphDetailsPage {
     if (hasTags) await expect(tagList.getByRole('listitem')).toHaveText(facts.tags);
   }
 
+  /** The package Focus button reads `label` and draws its icon: `target` for Focus, `close` for Clear focus. */
   public async expectFocusLabel(label: 'Focus' | 'Clear focus'): Promise<void> {
     const other = label === 'Focus' ? 'Clear focus' : 'Focus';
+    const icon = label === 'Focus' ? 'codicon codicon-target' : 'codicon codicon-close';
 
     await expect(this.buttonOf(label)).toBeVisible();
     await expect(this.buttonOf(other)).toHaveCount(0);
+    await expect(this.buttonOf(label).locator('.codicon')).toHaveClass(icon);
   }
 
   public async expectExcludeDisabled(isDisabled: boolean): Promise<void> {

@@ -276,10 +276,6 @@ export const WIDGET_MIN_BOX_PX = 120;
 /** The breadcrumb shows at most this many link lines, then one line counting the folders left. */
 export const BREADCRUMB_MAX_LINES = 3;
 
-export const SHOW_FOLDER_LABEL = 'Show folder';
-
-export const SHOW_PACKAGE_LABEL = 'Show package';
-
 /** The breadcrumb's accessible name and its way back out of a folder focus. */
 export const BREADCRUMB_LABEL = 'Folder focus';
 

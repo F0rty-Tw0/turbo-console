@@ -5,6 +5,7 @@ import { GraphProbePage } from './graph-probe.po.ts';
 import type { ManifestEntry } from '../../src/bridge/common/graph-message.type.ts';
 import type { ExcerptRow } from '../../src/graph/common/details.type.ts';
 import { DETAILS_LABEL, DOUBLE_TAP_MS } from '../../src/graph/common/graph.const.ts';
+import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
 import { expectExcerptRow } from '../test/utils/graph-excerpt.spec.util.ts';
 import { edgeMidpointOf } from '../test/utils/graph-geometry.spec.util.ts';
 
@@ -146,7 +147,7 @@ export class GraphDetailsLink {
   private async expectStatus(word: string, icon: 'info' | 'warning'): Promise<void> {
     const status = this.explain.getByText(word, { exact: true }).locator('..');
 
-    await expect(status.locator('span').first()).toHaveClass(new RegExp(`codicon-${icon}`));
+    await expect(status.locator('span').first()).toHaveClass(codiconClassOf(icon));
   }
 
   private openButton(field: string, key: string): Locator {
