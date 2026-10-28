@@ -24,5 +24,20 @@ export const menuIndexOf = (key: string, index: number, count: number): number |
   }
 };
 
+const TOOLBAR_KEYS: ReadonlyMap<string, string> = new Map([
+  ['ArrowRight', 'ArrowDown'],
+  ['ArrowLeft', 'ArrowUp'],
+  ['Home', 'Home'],
+  ['End', 'End']
+]);
+
+/** A toolbar's Left/Right/Home/End, wrapping, as `menuIndexOf` does for a menu; `null`: the key moves nothing. */
+export const toolbarIndexOf = (key: string, index: number, count: number): number | null => {
+  const mapped = TOOLBAR_KEYS.get(key);
+  if (mapped === undefined) return null;
+
+  return menuIndexOf(mapped, index, count);
+};
+
 /** Shift+F10 or the ContextMenu key: open the menu of what is selected. */
 export const isMenuOpenKey = (key: string, isShift: boolean): boolean => key === 'ContextMenu' || (isShift && key === 'F10');
