@@ -40,8 +40,9 @@ const renderToggle = (group: ControlsGroup, view: ControlsView): void => {
   const isCollapsed = view.collapsed.has(folder);
   const title = folderTitleOf(folder);
   const icon = isCollapsed ? 'chevron-right' : 'chevron-down';
+  const isShown = view.grouped && view.canToggle;
 
-  toggle.hidden = !view.grouped;
+  toggle.hidden = !isShown;
   setButtonIcon(toggle, icon);
   setButtonLabel(toggle, folderToggleLabelOf(title, isCollapsed));
   toggle.setAttribute('aria-expanded', String(!isCollapsed));
@@ -73,7 +74,7 @@ const renderGroup = (group: ControlsGroup, view: ControlsView): void => {
  * Paints the attributes only, never rebuilds. An indeterminate group box is unchecked, so activating it checks all.
  * A folder header's toggle draws a down chevron while expanded and a right one while collapsed, named and titled Collapse or Expand folder;
  * its Focus toggle, like each row's, keeps its name, reads `aria-pressed` while its folder is the focus and is then titled Clear focus.
- * Both header buttons are hidden while flat.
+ * Both header buttons are hidden while flat, and the toggle until the folder layout is drawn, since a press before then is dropped.
  * Show all is hidden while nothing is filtered, else names how many packages the filters hide.
  * `toggles` are the toolbar's Controls button, which shows the panel's openness, and its "filters on" mark.
  */

@@ -78,6 +78,15 @@ export class GraphFolderInspect {
     await this.headerFocus(title).click();
   }
 
+  public async hoverHeader(title: string): Promise<void> {
+    await this.headerOf(title).hover();
+  }
+
+  /** The header Focus toggle is drawn at `opacity`: `0` at rest, `1` on header hover, keyboard focus or while pressed. */
+  public async expectHeaderFocusOpacity(title: string, opacity: '0' | '1'): Promise<void> {
+    await expect(this.headerFocus(title)).toHaveCSS('opacity', opacity);
+  }
+
   public async expectFolderState(folder: string, state: ProbeState): Promise<void> {
     await expect.poll(async (): Promise<ProbeState | undefined> => this.stateOf(folder)).toBe(state);
   }

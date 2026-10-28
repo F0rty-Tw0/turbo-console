@@ -29,6 +29,7 @@ const viewOf = (overrides: Partial<ControlsView>): ControlsView => {
     selected: null,
     isOpen: true,
     grouped: true,
+    canToggle: true,
     collapsed: new Set(),
     ...overrides
   };
@@ -67,6 +68,25 @@ describe('FEATURE: renderControls', () => {
       expect(toggle.title).toBe(label);
       expect(toggle.getAttribute('aria-expanded')).toBe(expanded);
       expect(toggle.textContent).toBe('');
+    });
+  });
+
+  describe.each([
+    { title: 'flat', grouped: false, canToggle: false, isToggleHidden: true, isFocusHidden: true },
+    {
+      title: 'grouped before the folder layout is drawn',
+      grouped: true,
+      canToggle: false,
+      isToggleHidden: true,
+      isFocusHidden: false
+    },
+    { title: 'grouped with the folder layout drawn', grouped: true, canToggle: true, isToggleHidden: false, isFocusHidden: false }
+  ])('GIVEN the page $title', ({ grouped, canToggle, isToggleHidden, isFocusHidden }) => {
+    it(`WHEN rendered THEN the apps header toggle is hidden=${isToggleHidden} and its Focus hidden=${isFocusHidden}`, () => {
+      const elements = rendered(viewOf({ grouped, canToggle }));
+      const { toggle, focus } = groupOf(elements, 'apps');
+
+      expect([toggle.hidden, focus.hidden]).toStrictEqual([isToggleHidden, isFocusHidden]);
     });
   });
 

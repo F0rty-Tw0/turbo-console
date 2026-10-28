@@ -11,6 +11,11 @@ const TO_FOCUS_DOCS: FocusStep[] = [
   { key: 'ArrowRight', focus: 'Focus docs' }
 ];
 
+const TO_FOCUS_APPS: FocusStep[] = [
+  { key: 'ArrowRight', focus: 'Collapse folder apps' },
+  { key: 'ArrowRight', focus: 'Focus folder apps' }
+];
+
 test.describe('FEATURE: graph controls sections and Focus toggles', () => {
   test(
     'GIVEN the controls graph, a row Focus toggle is see-through, unpressed and titled for focusing at rest',
@@ -118,16 +123,57 @@ test.describe('FEATURE: graph controls sections and Focus toggles', () => {
   );
 
   test(
-    'GIVEN the grouped controls graph, a folder header Focus toggle is pressed under a constant name',
+    'GIVEN the grouped controls graph, the folder header chevron waits for the folder layout and the header Focus toggle shows on hover or keyboard focus and is pressed under a constant name',
     { annotation: D4 },
-    async ({ graphFolderInspect, graphGrouping, graphHost, graphPage }): Promise<void> => {
-      await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
+    async ({ graphFolderInspect, graphFolders, graphGrouping, graphHost, graphKeys, graphList, graphPage }): Promise<void> => {
+      await test.step('WHEN the page is opened with held workers', async (): Promise<void> => graphPage.open({ workers: 'held' }));
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
       await test.step('AND Group by folder is checked', async (): Promise<void> => graphGrouping.setGrouped(true));
 
-      await test.step('THEN Focus folder apps is unpressed', async (): Promise<void> =>
+      await test.step('THEN no header shows Collapse or Expand while the folder layout runs', async (): Promise<void> =>
+        graphList.expectNoFolderToggles());
+
+      await test.step('WHEN the held worker is released', async (): Promise<void> => graphGrouping.releaseWorker());
+
+      await test.step('AND the folder layout is drawn', async (): Promise<void> => graphGrouping.expectBoxesInView(3));
+
+      await test.step('THEN Focus folder apps is see-through and unpressed', async (): Promise<void> => {
+        await graphFolderInspect.expectHeaderFocusOpacity('apps', '0');
+        await graphFolderInspect.expectHeaderFocusText('apps', 'Focus');
+      });
+
+      await test.step('WHEN the apps header is hovered', async (): Promise<void> => graphFolderInspect.hoverHeader('apps'));
+
+      await test.step('THEN Focus folder apps is shown', async (): Promise<void> =>
+        graphFolderInspect.expectHeaderFocusOpacity('apps', '1'));
+
+      await test.step('WHEN the pointer moves away', async (): Promise<void> => graphList.moveMouseAway());
+
+      await test.step('THEN Focus folder apps is see-through again', async (): Promise<void> =>
+        graphFolderInspect.expectHeaderFocusOpacity('apps', '0'));
+
+      const walked = await test.step('WHEN the apps header is reached by Tab and Down, then Right twice', async (): Promise<
+        FocusStep[]
+      > => {
+        await graphKeys.tabTo('(root) (1)');
+        await graphKeys.arrowTo('apps (2)');
+
+        return graphKeys.walk(TO_FOCUS_APPS);
+      });
+
+      await test.step('THEN focus reaches Focus folder apps', (): void => expect(walked).toEqual(TO_FOCUS_APPS));
+
+      await test.step('AND Focus folder apps is shown', async (): Promise<void> =>
+        graphFolderInspect.expectHeaderFocusOpacity('apps', '1'));
+
+      await test.step('WHEN Collapse folder apps is pressed', async (): Promise<void> => graphFolders.toggleInList('apps', true));
+
+      await test.step('THEN the header reads Expand folder apps with the right chevron', async (): Promise<void> =>
+        graphFolders.expectListToggle('apps', false));
+
+      await test.step('AND Focus folder apps is still unpressed', async (): Promise<void> =>
         graphFolderInspect.expectHeaderFocusText('apps', 'Focus'));
 
       await test.step('WHEN Focus folder apps is pressed', async (): Promise<void> => graphFolderInspect.pressHeaderFocus('apps'));

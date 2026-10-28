@@ -144,6 +144,11 @@ export class GraphControls {
   }
 
   /** The folder headers' buttons follow `collapsed`; the caller owns the set. */
+  /** A layout placed: a folder layout now on screen shows the header toggles. */
+  public placed(): void {
+    this.render();
+  }
+
   public setCollapsed(collapsed: ReadonlySet<string>): void {
     this.collapsed = collapsed;
     this.render();
@@ -173,7 +178,8 @@ export class GraphControls {
     if (mounted === null) return;
 
     const total = mounted.graph.infos.length;
-    const view: ControlsView = { filters: applied, visible: shown, total, selected, isOpen, grouped: isGrouped, collapsed };
+    const canToggle = this.deps.canAct();
+    const view: ControlsView = { filters: applied, visible: shown, total, selected, isOpen, grouped: isGrouped, canToggle, collapsed };
 
     renderControls(mounted.elements, this.deps.page, view);
   }

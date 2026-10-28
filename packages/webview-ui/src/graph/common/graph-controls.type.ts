@@ -29,6 +29,8 @@ export type ControlsView = {
   readonly selected: string | null;
   readonly isOpen: boolean;
   readonly grouped: boolean;
+  /** The folder layout is on screen, so a header's Collapse or Expand press acts; before then the toggles stay hidden. */
+  readonly canToggle: boolean;
   readonly collapsed: ReadonlySet<string>;
 };
 
@@ -59,6 +61,8 @@ export type GraphControlsDeps = {
   readonly onResize: () => void;
   /** The Controls button opens and closes this panel only while the package graph owns the canvas. */
   readonly isPackageMode: () => boolean;
+  /** The folder layout is on screen: a folder toggle acts only then. */
+  readonly canAct: () => boolean;
 };
 
 /** What `GraphFiltering` needs to own the inspection, the controls and the folders: their deps it cannot build itself. */
