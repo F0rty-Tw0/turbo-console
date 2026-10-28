@@ -24,6 +24,25 @@ const NEXT_FRAME = 'new Promise((resolve) => requestAnimationFrame(() => request
 const layoutWidthOf = (element: HTMLElement): number => element.offsetWidth;
 
 /** How the header rows fit the box band as the camera zooms, and what a collapsed node shows with and without its row. */
+/** The rects of every element `rows` matches. */
+const rectsOf = async (rows: Locator): Promise<ElementRect[]> => {
+  const all = await rows.all();
+  const rects = await Promise.all(all.map(rectOf));
+
+  return rects;
+};
+
+/** How many pairs of `rects` overlap. */
+const clashCountOf = (rects: ElementRect[]): number => {
+  const pairs = rects.flatMap((rect, index): boolean[] => {
+    const rest = rects.slice(index + 1);
+
+    return rest.map((other): boolean => overlaps(rect, other));
+  });
+
+  return pairs.filter(Boolean).length;
+};
+
 export class GraphWidgetsBand extends GraphWidgetsLayout {
   /** Wheels in one notch at a time, at most 60, until some header button shows. */
   public async zoomUntilRowsShown(): Promise<void> {
@@ -61,6 +80,14 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
   public async expectHeaderStaysHidden(folder: string): Promise<void> {
     await this.page.evaluate(NEXT_FRAME);
     await this.expectHeaderHidden(folder);
+  }
+
+  /** `count` header rows show, and no two of them overlap. */
+  public async expectRowsApart(count: number): Promise<void> {
+    const rows = this.layer.locator('.widget-row:visible');
+
+    await expect(rows).toHaveCount(count);
+    await expect.poll(async (): Promise<number> => clashCountOf(await rectsOf(rows))).toBe(0);
   }
 
   /** The collapsed row's title and count badge show, and its chevron and "…" overlap neither. */

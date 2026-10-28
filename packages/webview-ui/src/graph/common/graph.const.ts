@@ -130,7 +130,7 @@ export const COLLAPSED_ID_PREFIX = '\u0002';
 /** Starts every folder link id; package names never start with U+0003. */
 export const FOLDER_LINK_ID_PREFIX = '\u0003';
 
-export const COLLAPSED_NODE_WIDTH = 180;
+export const COLLAPSED_NODE_WIDTH = 220;
 
 export const COLLAPSED_NODE_HEIGHT = 56;
 
