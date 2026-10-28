@@ -338,7 +338,7 @@ p {
   pointer-events: none;
 }
 
-/* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons and the count badge take pointer events. */
+/* Folder widgets: an HTML layer over the canvas, sized to the container from script; only its buttons, the folder titles and the count badge take pointer events. */
 .graph-widgets {
   position: absolute;
   z-index: 1;
@@ -390,7 +390,8 @@ p {
   --tc-widget-fill: var(--vscode-button-secondaryHoverBackground, transparent);
 }
 
-.widget-button:focus-visible {
+.widget-button:focus-visible,
+.widget-title:focus-visible {
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: 1px;
 }
@@ -410,9 +411,17 @@ p {
   flex: 1 1 0;
   min-width: 3ch;
   overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--vscode-foreground);
+  font: inherit;
+  text-align: start;
   white-space: nowrap;
   text-overflow: ellipsis;
+  appearance: none;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .widget-glyph {
