@@ -133,16 +133,16 @@ type OwnerLine = {
 /** The owner line: a root task's plain owner text, any other task's owner button. */
 const ownerLineOf = (model: TaskDetailsModel): OwnerLine => {
   const { packageName } = model.task;
-  const isRoot = packageName === ROOT_TASK_PACKAGE;
-  const text = ownerTextOf(packageName, model.rootLabel);
-  const line = lineOf(isRoot ? text : '');
 
-  if (isRoot) {
-    const plain: OwnerLine = { line, owner: null };
+  if (packageName === ROOT_TASK_PACKAGE) {
+    const text = ownerTextOf(packageName, model.rootLabel);
+    const textLine = lineOf(text);
+    const plain: OwnerLine = { line: textLine, owner: null };
 
     return plain;
   }
 
+  const line = lineOf('');
   const owner = ownerButton(packageName);
   const linked: OwnerLine = { line, owner };
 
