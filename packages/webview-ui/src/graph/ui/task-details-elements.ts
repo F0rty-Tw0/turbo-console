@@ -49,7 +49,7 @@ const stateLine = (state: GraphRunState | null): HTMLElement => {
 };
 
 /** A task named by its id; its focus key is `kind:<id>`, `dep` in Dependencies and `dependent` in Dependents. */
-const dependencyButton = (task: GraphTask, kind: string): TaskDependencyButton => {
+const dependencyButton = (task: GraphTask, kind: 'dep' | 'dependent'): TaskDependencyButton => {
   const named = textElement('button', 'details-name', task.id);
   const button = focusButton(named, `${kind}:${task.id}`);
 
