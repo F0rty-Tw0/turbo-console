@@ -31,21 +31,24 @@ class GraphPanelSashes {
     this.drawn = this.preferred;
   }
 
-  /** Never saves: the drawn widths follow the body, the saved ones change only on a resize by the user. */
+  /**
+   * Never saves: the drawn widths follow the body, the saved ones change only on a resize by the user. A hidden body is 0px
+   * wide, so it keeps the drawn pair: clamped to 0, the panels would show at the minimum until the next tick after Loading.
+   */
   public render(): void {
     const box = this.boxNow();
     const isPainted = this.isPainted(box);
 
-    if (isPainted) return;
+    if (box.width === 0 || isPainted) return;
 
     const drawn = clampedWidthsOf(this.preferred, box.width, box.isOverlay, null);
 
     this.paint(drawn, box);
   }
 
-  /** Keeps each sash's value, max and panel current for the drawn pair; clamps nothing. */
+  /** Keeps each sash's value, max and panel current for the drawn pair and the body it was drawn in; clamps nothing. */
   public describeAll(): void {
-    const box = this.boxNow();
+    const box = this.painted ?? this.boxNow();
 
     for (const side of SIDES) this.describe(side, this.drawn, box);
   }

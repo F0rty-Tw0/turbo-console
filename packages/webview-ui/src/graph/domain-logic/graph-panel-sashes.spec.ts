@@ -113,4 +113,30 @@ describe('FEATURE: GraphPanelSashes', () => {
       expect(page.saved).not.toHaveBeenCalled();
     });
   });
+
+  describe('GIVEN the defaults drawn in a 1280px body that Loading then hides', () => {
+    const hiddenPage = (): PanelSashPageMock => {
+      const page = panelSashPageMock(1280, null);
+
+      wirePanelSashes(page.deps);
+      page.setWidth(0);
+      page.resizeBody();
+
+      return page;
+    };
+
+    it('WHEN the hidden body ticks THEN the drawn pair stays', () => {
+      const page = hiddenPage();
+
+      expect(page.written).toStrictEqual({ '--tc-controls-width': '260px', '--tc-details-width': '280px' });
+    });
+
+    it('WHEN the root class changes while hidden THEN the sash max stays the one for the drawn body', () => {
+      const page = hiddenPage();
+
+      page.mutateRoot();
+
+      expect(page.deps.sashes.controls.getAttribute('aria-valuemax')).toBe('640');
+    });
+  });
 });
