@@ -32,7 +32,7 @@ class GraphPageController {
   private readonly location: GraphLocation;
 
   public constructor(deps: GraphControllerDeps) {
-    const { bridge, page } = deps;
+    const { bridge, page, widgetViews } = deps;
     const frames = new GraphFrames(deps.now);
     const raw = bridge.savedState();
     const saved = readGraphViewState(raw);
@@ -72,14 +72,7 @@ class GraphPageController {
 
     this.routing = new GraphStateRouting({ tasks: this.tasks, packages: this.packages, hideModes, now: deps.now });
     this.reveal = this.revealOf();
-    this.location = graphLocationOf({
-      page,
-      views: deps.widgetViews,
-      modes,
-      packages: this.packages,
-      tasks: this.tasks,
-      reveal: this.reveal
-    });
+    this.location = graphLocationOf({ page, widgetViews, modes, packages: this.packages, tasks: this.tasks, reveal: this.reveal });
     const relayout = (): void => this.relayout();
     const showNotice = (text: string | null): void => this.tasks.notice(text);
 

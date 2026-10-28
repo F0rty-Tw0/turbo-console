@@ -79,7 +79,7 @@ export const graphLocationOf = (deps: GraphLocationDeps): GraphLocation => {
     if (key === shownKey) return;
 
     shownKey = key;
-    deps.views.location.render(deps.page.location, crumbs, lines, press);
+    deps.widgetViews.location.render(deps.page.location, crumbs, lines, press);
   };
   const location: GraphLocation = { update };
 

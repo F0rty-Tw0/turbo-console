@@ -63,7 +63,7 @@ const depsOf = (state: RigState, spies: LocationSpies): GraphLocationDeps => {
   const { render, clearFocus, leave, request, locationFacts } = spies;
   const page = pageMock();
   const locationViews = { render };
-  const views = { location: locationViews };
+  const widgetViews = { location: locationViews };
   const modes = { mode: (): GraphViewMode => state.mode };
   const controls = { focusedFolder: (): string | null => state.folder, clearFocus };
   const filtering = { controls };
@@ -71,7 +71,7 @@ const depsOf = (state: RigState, spies: LocationSpies): GraphLocationDeps => {
   const memory = { locationFacts };
   const tasks = { memory, leave };
   const reveal = { request };
-  const deps: GraphLocationDeps = { page, views, modes, packages, tasks, reveal };
+  const deps: GraphLocationDeps = { page, widgetViews, modes, packages, tasks, reveal };
 
   return deps;
 };

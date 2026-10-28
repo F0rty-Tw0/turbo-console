@@ -78,7 +78,7 @@ type LocationReveal = {
 /** What `graphLocationOf` reads when the bar updates and calls when a crumb is pressed. */
 export type GraphLocationDeps = {
   readonly page: Pick<PageElements, 'location'>;
-  readonly views: Pick<WidgetViews, 'location'>;
+  readonly widgetViews: Pick<WidgetViews, 'location'>;
   readonly modes: Pick<TaskModes, 'mode'>;
   readonly packages: LocationPackages;
   readonly tasks: LocationTasks;
