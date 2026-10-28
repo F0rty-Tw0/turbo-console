@@ -3,10 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GraphFrames } from './graph-frames.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { ViewStateModes } from './view-state-modes.ts';
+import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { GraphFocus, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
-import { SAVED_FLAT_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import { GROUPED_POSITIONS_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
 type DrawnSide = {
@@ -20,8 +21,11 @@ const WEB_FOCUS: GraphFocus = { kind: 'package', name: 'web' };
 /** `SAVED_FLAT_STUB` with `web` focused. */
 const SAVED_WEB_FOCUS: GraphViewState = { ...SAVED_FLAT_STUB, focus: WEB_FOCUS };
 
+/** `STATE_STUB` with the grouped layout cached, so a grouped view draws at once. */
+const GROUPED_STATE: GraphReady = { ...STATE_STUB, folderPositions: GROUPED_POSITIONS_STUB };
+
 /** A `GraphPackageSide` over the mocked deps with h1 drawn from `saved`: `web` (in `apps`) > `ui` > `core`. */
-const drawnRigOf = async (saved: GraphViewState): Promise<FilteringRig> => {
+const drawnRigOf = async (saved: GraphViewState, state: GraphReady = STATE_STUB): Promise<FilteringRig> => {
   const mock = packageSideDepsMock();
   const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
   const modes = new ViewStateModes(mock.saver, saved);
@@ -30,7 +34,7 @@ const drawnRigOf = async (saved: GraphViewState): Promise<FilteringRig> => {
   const side = new GraphPackageSide(mock.deps, mock.view, hooks);
   const rig: FilteringRig = { ...mock, side };
 
-  side.show(STATE_STUB, 1);
+  side.show(state, 1);
   await settled();
 
   return rig;
@@ -122,6 +126,28 @@ describe('FEATURE: GraphFiltering location updates', () => {
       rig.side.filtering.folders.redraw();
 
       expect(rig.onLocation).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN h1 drawn grouped with the packages folder excluded', () => {
+    beforeEach(async () => {
+      rig = await drawnRigOf(SAVED_GROUPED_STUB, GROUPED_STATE);
+      rig.side.filtering.controls.excludeFolder('packages');
+      rig.view.setVisible.mockClear();
+      rig.onLocation.mockClear();
+    });
+
+    it('WHEN the folder apps is focused, which keeps the shown set, THEN the last widget refresh reads apps as the focus', () => {
+      const { controls } = rig.side.filtering;
+      const read: (string | null)[] = [];
+
+      rig.onLocation.mockImplementation((): void => {
+        read.push(controls.focusedFolder());
+      });
+      rig.side.filtering.inspection.folderActions().focusFolder('apps');
+
+      expect(rig.view.setVisible).not.toHaveBeenCalled();
+      expect(read.at(-1)).toBe('apps');
     });
   });
 });

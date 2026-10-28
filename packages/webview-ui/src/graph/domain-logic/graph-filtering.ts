@@ -159,10 +159,11 @@ export class GraphFiltering {
     if (isFolder) this.inspection.recheck(this.controls.visible());
   }
 
-  /** A filter change that kept the visible set: the focus may still have moved to a package already shown. */
+  /** A filter change that kept the visible set: the focus may still have moved to a package or folder already shown, and the widget layer and location bar read it. */
   private sameVisible(): void {
     this.markFocusTarget();
     this.recheckFolder();
+    this.widgets.refresh();
   }
 
   /** The focused package's label draws bold; a folder focus or none leaves every label regular. */
