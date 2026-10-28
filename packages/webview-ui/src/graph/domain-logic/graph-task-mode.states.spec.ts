@@ -223,6 +223,23 @@ describe('FEATURE: GraphTaskMode across page states', () => {
     });
   });
 
+  describe('GIVEN the prompt over 401 tasks with nothing chosen', () => {
+    beforeEach(() => {
+      open(taskSavedOf({ chosen: [] }, 'packages'));
+      mode.received(fanStateOf(400), 7);
+      mode.enter(8);
+    });
+
+    it('WHEN Show every task is pressed THEN all 401 tasks are listed and the banner stays hidden', () => {
+      const actions = rig.panelOf.mock.lastCall?.[0];
+
+      actions?.onShowEvery(9);
+
+      expect(listedIdsOf(rig)).toHaveLength(401);
+      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 0, knownCount: 401 });
+    });
+  });
+
   describe('GIVEN task mode entered on the single-package root single-app', () => {
     beforeEach(() => {
       open(taskSavedOf({ chosen: [] }));
