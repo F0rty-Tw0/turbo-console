@@ -559,6 +559,11 @@ p {
   overflow-wrap: anywhere;
 }
 
+.location-crumbs .details-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .location-lines {
   flex-direction: column;
 }
