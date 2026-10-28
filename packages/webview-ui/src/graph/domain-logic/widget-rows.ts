@@ -73,7 +73,7 @@ export class WidgetRows {
     for (const [folder, entry] of this.rows) placeRow(entry, byFolder.get(folder));
   }
 
-  /** Focus that sat in a rebuilt or moved row goes back to the same kind of button once a pass placed the row; when that kind is hidden now, to the row's Tab stop. A row the pass left hidden (a rebuilt box waits for its layout) keeps the request for a later pass while focus is still lost. */
+  /** Focus that sat in a rebuilt or moved row goes back to the same kind of button once a pass placed the row; when that kind is hidden now, to the row's Tab stop. A row the pass left hidden (a rebuilt box waits for its layout) keeps the request for a later `refresh` while focus is still lost. Once focus is anywhere else (the user clicked, typed or tabbed away) the request is dropped, never to take focus back. */
   public restoreFocus(): void {
     const target = this.refocus;
 
@@ -84,11 +84,17 @@ export class WidgetRows {
     const isFocusLost = activeElement === null || activeElement === body;
     const isWaiting = entry?.elements.root.hidden === true;
 
-    if (isWaiting && isFocusLost) return;
+    if (!isFocusLost) {
+      this.refocus = null;
+
+      return;
+    }
+
+    if (isWaiting) return;
 
     this.refocus = null;
 
-    if (entry === undefined || isWaiting) return;
+    if (entry === undefined) return;
 
     const isShown = entry.shown.includes(target.kind);
     const stop = rowStopOf(entry.preferred, entry.shown);
