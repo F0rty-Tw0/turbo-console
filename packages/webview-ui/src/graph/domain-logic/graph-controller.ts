@@ -57,7 +57,8 @@ class GraphPageController {
       onMessage,
       onExit: (): void => this.routing.exitTasks(),
       flow: this.flow,
-      selectedPackage: (): string | null => this.packages.filtering.inspection.selected()
+      selectedPackage: (): string | null => this.packages.filtering.inspection.selected(),
+      showPackage: (name: string): void => this.reveal.request(name)
     });
     const hideModes = (isHidden: boolean): void => {
       page.modeGroup.hidden = isHidden;

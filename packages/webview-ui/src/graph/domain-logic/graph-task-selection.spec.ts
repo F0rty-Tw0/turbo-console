@@ -18,7 +18,13 @@ type SelectionRig = {
   readonly view: () => TaskViewState;
 };
 
-const WEB_BUILD_MODEL: TaskDetailsModel = { task: WEB_BUILD_STUB, state: null, dependencies: [API_BUILD_STUB], rootLabel: null };
+const WEB_BUILD_MODEL: TaskDetailsModel = {
+  task: WEB_BUILD_STUB,
+  state: null,
+  dependencies: [API_BUILD_STUB],
+  dependents: [],
+  rootLabel: null
+};
 
 const rigOf = (): SelectionRig => {
   const canvas = taskCanvasMock();

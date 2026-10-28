@@ -14,6 +14,8 @@ export type TaskDetailsModel = {
   readonly state: GraphRunState | null;
   /** The task's direct dependencies that are in the shown set, in its dependency order. */
   readonly dependencies: GraphTask[];
+  /** The shown tasks that directly depend on the task, in the shown order. */
+  readonly dependents: GraphTask[];
   /** The label a single-package root's owner line prints in place of `//`; `null` prints the package name. */
   readonly rootLabel: string | null;
 };
@@ -34,6 +36,9 @@ export type TaskDetailsView = {
   /** The run state as icon + word, hidden while the task has no state. */
   readonly state: HTMLElement;
   readonly dependencies: TaskDependencyButton[];
+  readonly dependents: TaskDependencyButton[];
+  /** Shows the task's package in the package graph; `null` for a root task, whose package the graph never draws. */
+  readonly owner: HTMLButtonElement | null;
   readonly run: HTMLButtonElement;
   readonly runNoCache: HTMLButtonElement;
   readonly stop: HTMLButtonElement;
@@ -73,6 +78,8 @@ export type TaskDetailsDeps = {
   readonly actions: TaskDetailsActions;
   /** The panel was opened or closed: the canvas re-measures and the open state is saved. */
   readonly onToggle: (isOpen: boolean) => void;
+  /** The owner button was clicked at `at`: the package graph shows package `name`. */
+  readonly onShowPackage: (name: string, at: number) => void;
 };
 
 /** What the task "…" menu's items call: the panel's run button `action` for the task `id`. */

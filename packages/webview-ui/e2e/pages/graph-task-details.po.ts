@@ -3,6 +3,8 @@ import { expect } from '@playwright/test';
 
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import {
+  DEPENDENTS_LABEL,
+  NONE_SHOWN_TEXT,
   RUN_LABEL,
   RUN_NO_CACHE_LABEL,
   STOP_LABEL,
@@ -10,6 +12,7 @@ import {
   TASK_EMPTY_LEAD_TEXT
 } from '../../src/graph/common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
+import { showPackageLabelOf } from '../../src/graph/utils/controls-text.util.ts';
 
 /** The task side panel `#graph-task-details`: the selected task's name, command, run state, dependencies and run buttons. */
 export class GraphTaskDetails {
@@ -18,8 +21,11 @@ export class GraphTaskDetails {
   public readonly runWithoutCache: Locator;
   public readonly stop: Locator;
 
+  private readonly dependents: Locator;
+
   public constructor(page: Page) {
     this.panel = page.locator(`#${TASK_DETAILS_ID}`);
+    this.dependents = this.panel.getByRole('heading', { name: DEPENDENTS_LABEL, exact: true }).locator('xpath=..');
     this.run = this.panel.getByRole('button', { name: RUN_LABEL, exact: true });
     this.runWithoutCache = this.panel.getByRole('button', { name: RUN_NO_CACHE_LABEL, exact: true });
     this.stop = this.panel.getByRole('button', { name: STOP_LABEL, exact: true });
@@ -28,6 +34,25 @@ export class GraphTaskDetails {
   /** Clicks the dependency button named by its task id. */
   public async pickDependency(taskId: string): Promise<void> {
     await this.panel.getByRole('button', { name: taskId, exact: true }).click();
+  }
+
+  /** Clicks the owner link, `Show package <packageName>`. */
+  public async clickOwner(packageName: string): Promise<void> {
+    await this.panel.getByRole('button', { name: showPackageLabelOf(packageName), exact: true }).click();
+  }
+
+  /** The Dependents section's buttons read `taskIds` in order; for none it shows `NONE_SHOWN_TEXT` and no button. */
+  public async expectDependents(taskIds: string[]): Promise<void> {
+    await expect(this.panel.locator("[data-focus^='dependent:']")).toHaveText(taskIds);
+
+    if (taskIds.length > 0) return;
+
+    await expect(this.dependents.locator('.details-line')).toHaveText(NONE_SHOWN_TEXT);
+  }
+
+  /** The panel has no owner link. */
+  public async expectNoOwnerLink(): Promise<void> {
+    await expect(this.panel.locator("[data-focus='owner']")).toHaveCount(0);
   }
 
   /** Run is on screen; its centre in page pixels. */
