@@ -112,10 +112,11 @@ test.describe('FEATURE: folder row keys', () => {
       await test.step('WHEN the grouped boards open and apps is panned so its chevron lies past the left edge', async (): Promise<void> => {
         await graphFolderInspect.open(BOARDS_SAVED, BOARDS);
         await graphWidgetKeys.panChevronOffLeft('apps');
-        await graphWidgets.expectEllipsisShown('apps');
       });
 
-      await test.step('AND Tab is pressed from the container', async (): Promise<void> => {
+      await test.step('THEN the apps "…" shows', async (): Promise<void> => graphWidgets.expectEllipsisShown('apps'));
+
+      await test.step('WHEN Tab is pressed from the container', async (): Promise<void> => {
         await graphWidgets.focusContainer();
         await graphMenus.pressKey('Tab');
       });
