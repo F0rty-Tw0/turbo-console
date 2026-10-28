@@ -114,7 +114,7 @@ export class GraphInspection {
 
   /** The folder actions for widgets and menus, over the same calls as the details panel's folder buttons. */
   public folderActions(): FolderActions {
-    return folderActionsOf(this.deps);
+    return folderActionsOf(this.deps, (input): void => this.input(input));
   }
 
   /**

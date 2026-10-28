@@ -2,6 +2,7 @@ import { WidgetRows, setHidden, translateOf, writeStyle } from './widget-rows.ts
 import type { GraphWidgetsDeps, MenuAnchor } from '../common/graph-widgets.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds, MenuTarget, RectPx, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
+import { tapPairOf } from '../utils/tap-pair.util.ts';
 import { buttonRectsOf, overlayLeftOf, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
 import { widgetPlanOf } from '../utils/widget-plan.util.ts';
 
@@ -20,6 +21,7 @@ const NO_PLAN: WidgetPlan = { rows: [], packageButton: null };
 export class GraphWidgets {
   private readonly deps: GraphWidgetsDeps;
   private readonly rows: WidgetRows;
+  private readonly noteTitleTap = tapPairOf();
   private button: PackageEntry | null = null;
   private bounds: LayerBounds = { width: 0, height: 0, overlayLeft: null };
   private plan: WidgetPlan = NO_PLAN;
@@ -31,6 +33,7 @@ export class GraphWidgets {
       layer: deps.page.widgets,
       views: deps.widgetViews,
       onToggle: (folder): void => this.act((): void => deps.actions.toggle(folder)),
+      onTitle: (folder, event): void => this.onTitle(folder, event),
       onMenu: (target, opener): void => this.act((): void => deps.onMenu(target, opener))
     });
   }
@@ -121,6 +124,28 @@ export class GraphWidgets {
     const anchor: MenuAnchor = { rect, opener: button.button };
 
     return anchor;
+  }
+
+  /**
+   * A click on a folder title selects the folder, while the checkbox's mode is the mode on screen. A pointer click
+   * (`detail` > 0) then focuses the graph, as a tap on the canvas does, even while the mode is switching, since the
+   * browser has already focused the title and nothing else would move it. Only the second pointer click on the same
+   * title within `DOUBLE_TAP_MS` toggles it, and only while the mode is on screen. Enter and Space (`detail` 0) only
+   * select: focus stays on the title and a held key never pairs (plan index.md, "Changed vs spec").
+   */
+  private onTitle(folder: string, event: MouseEvent): void {
+    this.act((): void => this.deps.actions.select(folder));
+
+    if (event.detail === 0) return;
+
+    this.deps.page.container.focus();
+    this.act((): void => this.toggleOnSecondTap(folder, event));
+  }
+
+  private toggleOnSecondTap(folder: string, event: MouseEvent): void {
+    const isDouble = this.noteTitleTap(folder, event.timeStamp);
+
+    if (isDouble) this.deps.actions.toggle(folder);
   }
 
   private act(action: () => void): void {

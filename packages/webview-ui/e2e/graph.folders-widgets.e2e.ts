@@ -1,5 +1,5 @@
 import { DOCKED_WIDTH_PX, OVERLAY_WIDTH_PX, WIDGET_MIN_BOX_PX } from './common/graph.const.ts';
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { LONG_FOLDER, ghostFolderState, longTitleState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { packageOf } from './test/utils/graph-package.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
@@ -219,9 +219,9 @@ test.describe('FEATURE: folder widget placement', () => {
   );
 
   test(
-    'GIVEN the boards grouped, Tab reaches the first chevron, Enter collapses it, and Tab then Enter opens the "…" menu',
+    'GIVEN the boards grouped, Tab reaches the first chevron, Enter collapses it, Tab passes the title, and Tab then Enter opens the "…" menu',
     { annotation: C9 },
-    async ({ graphFolderInspect, graphGrouping, graphMenus, graphWidgets }): Promise<void> => {
+    async ({ graphFolderInspect, graphGrouping, graphMenus, graphWidgetInput, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened and the graph container has focus', async (): Promise<void> => {
         await graphFolderInspect.open(grouped(), BOARDS);
         await graphWidgets.focusContainer();
@@ -237,6 +237,10 @@ test.describe('FEATURE: folder widget placement', () => {
         await graphGrouping.expectFolderCollapsed('apps', true);
         await graphWidgets.expectChevronFocused('apps', false);
       });
+
+      await test.step('WHEN Tab is pressed', async (): Promise<void> => graphMenus.pressKey('Tab'));
+
+      await test.step('THEN the apps title has focus', async (): Promise<void> => graphWidgetInput.expectTitleFocused('apps'));
 
       await test.step('WHEN Tab is pressed', async (): Promise<void> => graphMenus.pressKey('Tab'));
 

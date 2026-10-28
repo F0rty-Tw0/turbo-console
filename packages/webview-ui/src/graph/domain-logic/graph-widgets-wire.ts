@@ -12,6 +12,7 @@ import { DETAILS_ID } from '../common/graph.const.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds } from '../common/widget.type.ts';
 import { isMenuOpenKey } from '../utils/menu-keys.util.ts';
+import { wheelInitOf } from '../utils/wheel-init.util.ts';
 
 /** The Details aside, a direct child of the body; `children` is what the specs' fake elements answer. */
 const asideOf = (body: HTMLElement): HTMLElement | null => {
@@ -83,13 +84,39 @@ class WidgetParts {
   }
 }
 
+/** Whether the wheel was aimed at an open widget menu, which keeps it for itself. */
+const isWheelOverMenu = (event: WheelEvent): boolean => {
+  const { target } = event;
+
+  if (!(target instanceof Element)) return false;
+
+  const menu = target.closest('.widget-menu');
+
+  return menu !== null;
+};
+
+/** A wheel over a widget zooms the canvas through a copy on the container; over an open menu it does nothing. */
+const widgetWheelOf = (container: HTMLElement): ((event: WheelEvent) => void) => {
+  const onWheel = (event: WheelEvent): void => {
+    event.preventDefault();
+
+    const isOverMenu = isWheelOverMenu(event);
+
+    if (isOverMenu) return;
+
+    container.dispatchEvent(new WheelEvent('wheel', wheelInitOf(event)));
+  };
+
+  return onWheel;
+};
+
 /**
  * Builds the widget layer and its menus, and re-reads the layer's bounds when the container resizes, the
  * overlay query flips, or a panel of the body opens or closes; a `hidden` flip deeper in the body (a list row) costs
  * nothing. The details panel mounts with the first graph, so the Details aside is looked up on every refresh and watched from
  * then on: a sash drag moves its left edge over the canvas without resizing the container.
  * Shift+F10 or the ContextMenu key on the canvas or the layer opens the selection's menu, and the browser's own context
- * menu never opens over them.
+ * menu never opens over them. A wheel over a widget zooms the canvas, one over an open menu does nothing.
  */
 export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
   const { page, overlay } = deps;
@@ -136,6 +163,7 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
   overlay.addEventListener('change', refreshBounds);
   container.addEventListener('keydown', onMenuKey);
   layer.addEventListener('keydown', onMenuKey);
+  layer.addEventListener('wheel', widgetWheelOf(container), { passive: false });
   document.addEventListener('contextmenu', onContextMenu);
 
   return wiring;

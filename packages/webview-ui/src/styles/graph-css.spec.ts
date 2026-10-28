@@ -1,13 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
+import { RULE_PATTERN, bodyOf, css, declarationsOf, rawCss, ruleOf, selectorOf } from './test/utils/graph-css-rules.spec.util.ts';
 import { OVERLAY_MEDIA_QUERY } from '../graph/common/graph.const.ts';
-
-const RULE_PATTERN = /([^{}]+)\{([^{}]*)\}/g;
-
-const COMMENT_PATTERN = /\/\*[\s\S]*?\*\//g;
 
 const COLOUR_LITERAL_PATTERN = /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i;
 
@@ -27,41 +21,6 @@ const PACKAGE_ROW_SELECTOR = ".details-view[data-view='package'] .details-row";
 const ORPHAN_SELECTOR = `${PACKAGE_ROW_SELECTOR} > :nth-last-child(1 of :not([hidden])):nth-child(odd of :not([hidden]))`;
 
 const NARROW_ICON_SELECTOR = `${PACKAGE_ROW_SELECTOR} .codicon`;
-
-const rawCss = readFileSync(join(import.meta.dirname, 'graph.css'), 'utf8');
-
-const css = rawCss.replace(COMMENT_PATTERN, '');
-
-const selectorOf = (match: RegExpExecArray): string => {
-  const selector = match[1] ?? '';
-
-  return selector.trim().replace(/\s+/g, ' ');
-};
-
-const bodyOf = (match: RegExpExecArray): string => match[2] ?? '';
-
-const hasSelector = (rule: RegExpExecArray, selector: string): boolean => {
-  const list = selectorOf(rule);
-  const selectors = list.split(/\s*,\s*/);
-
-  return selectors.includes(selector);
-};
-
-/** The first rule whose selector list holds exactly `selector`, ignoring whitespace. */
-const ruleOf = (text: string, selector: string): RegExpExecArray | undefined => {
-  const matches = text.matchAll(RULE_PATTERN);
-  const rules = Array.from(matches);
-
-  return rules.find((rule) => hasSelector(rule, selector));
-};
-
-const declarationsOf = (text: string, selector: string): string => {
-  const rule = ruleOf(text, selector);
-
-  if (rule === undefined) return '';
-
-  return bodyOf(rule);
-};
 
 const ruleStartOf = (selector: string): number => ruleOf(css, selector)?.index ?? -1;
 
@@ -370,6 +329,25 @@ describe('FEATURE: graph.css', () => {
 
     it('WHEN it is read THEN a long name wraps anywhere', () => {
       expect(declarations).toContain('overflow-wrap: anywhere');
+    });
+  });
+
+  describe('GIVEN the widget title rule', () => {
+    const declarations = declarationsOf(css, '.widget-title');
+
+    it('WHEN it is read THEN the title takes the pointer and shows the pointer cursor', () => {
+      expect(declarations).toContain('pointer-events: auto');
+      expect(declarations).toContain('cursor: pointer');
+    });
+
+    it('WHEN it is read THEN the button look is reset', () => {
+      const resets = ['padding: 0', 'border: 0', 'background: none', 'font: inherit', 'text-align: start', 'appearance: none'];
+
+      resets.forEach((reset): void => expect(declarations).toContain(reset));
+    });
+
+    it('WHEN the focus-visible rule is read THEN its selector list holds the title beside the widget buttons', () => {
+      expect(declarationsOf(css, '.widget-title:focus-visible')).toContain('outline: 1px solid var(--vscode-focusBorder)');
     });
   });
 

@@ -1,5 +1,5 @@
 import type { FolderLinkFacts } from './common/graph-folders.type.ts';
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { collapsedSavedState, ghostFolderState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
@@ -108,7 +108,7 @@ test.describe('FEATURE: folder rules', () => {
   test(
     'GIVEN a folder link crossing a box, tapping it over the box clears the selection like a background tap',
     { annotation: C6 },
-    async ({ graphCanvas, graphDetails, graphFolders, graphHost, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphCanvas, graphDetails, graphHost, graphPage, graphProbe, graphWidgetInput }): Promise<void> => {
       const opened = collapsedSavedState(BOARDS.hash, ['apps']);
       const saved = { ...opened, selected: '@acme/config' };
 
@@ -124,8 +124,8 @@ test.describe('FEATURE: folder rules', () => {
 
       await test.step('THEN config is selected', async (): Promise<void> => graphProbe.expectSelected('@acme/config'));
 
-      await test.step('WHEN the apps to utils link is tapped over the top padding of the packages box', async (): Promise<void> =>
-        graphFolders.tapFolderLink('apps', '@acme/utils', 0.893));
+      await test.step('WHEN the apps to utils link is tapped over the packages box, just below the packages header row', async (): Promise<void> =>
+        graphWidgetInput.tapLinkBelowRow('apps', '@acme/utils', 'packages'));
 
       await test.step('THEN nothing is selected, nothing is inspected and the status line is empty', async (): Promise<void> => {
         await graphProbe.expectSelected(null);

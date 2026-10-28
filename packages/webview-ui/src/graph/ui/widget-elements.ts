@@ -53,16 +53,23 @@ const countBadge = (count: number): HTMLElement => {
   return badge;
 };
 
-/** A row's folder glyph, its title cut on screen with "…" while its `title` attribute keeps it whole, and its package count badge. */
-const titleParts = (title: string, count: number): HTMLElement[] => {
+/** The folder codicon, which a container query hides on a narrow box. */
+const glyphOf = (): HTMLElement => {
   const glyph = graphIcon('folder-opened');
-  const text = textElement('span', 'widget-title', title);
-  const badge = countBadge(count);
 
   glyph.classList.add('widget-glyph');
-  text.setAttribute('title', title);
 
-  return [glyph, text, badge];
+  return glyph;
+};
+
+/** A row's title button: cut on screen with "…", while its `title` shows the whole name on hover. */
+const titleButtonOf = (title: string): HTMLButtonElement => {
+  const button = textElement('button', 'widget-title', title);
+
+  button.type = 'button';
+  button.setAttribute('title', title);
+
+  return button;
 };
 
 /** A folder's header row, on a box or a collapsed node: the chevron, the folder glyph, title and package count badge, then the "…". */
@@ -70,11 +77,13 @@ export const buildFolderRow = (kind: RowKind, title: string, count: number): Fol
   const root = textElement('div', `widget-row widget-row-${kind}`, '');
   const chevron = chevronOf(kind, title);
   const ellipsis = menuButton(folderActionsLabelOf(title));
-  const middle = titleParts(title, count);
-  const row: FolderRowElements = { root, chevron, ellipsis };
+  const glyph = glyphOf();
+  const titleButton = titleButtonOf(title);
+  const badge = countBadge(count);
+  const row: FolderRowElements = { root, chevron, title: titleButton, ellipsis };
 
   root.hidden = true;
-  root.append(chevron, ...middle, ellipsis);
+  root.append(chevron, glyph, titleButton, badge, ellipsis);
 
   return row;
 };
