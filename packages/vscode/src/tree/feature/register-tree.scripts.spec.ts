@@ -14,6 +14,7 @@ import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
 
 type CommandCallback = () => unknown;
@@ -85,7 +86,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
     const deps = providerDepsOf(undefined, toggle);
     const workspaceState: ScopeStore = { get: (): unknown => undefined, update: async (): Promise<void> => Promise.resolve() };
 
-    provider = new PackagesTreeProvider(session.store, 'list', 'builtin', deps);
+    provider = new PackagesTreeProvider(session.store, 'list', ICONS_STATE_STUB, deps);
     context = { subscriptions: [], workspaceState, scripts: toggle, iconTheme: iconThemeProbeMock() };
   };
 

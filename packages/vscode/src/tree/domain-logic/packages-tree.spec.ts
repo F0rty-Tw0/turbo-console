@@ -7,7 +7,8 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { Span } from '../../shared/common/span.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
-import type { TreeMode } from '../common/tree-row.type.ts';
+import type { IconsState, TreeMode } from '../common/tree-row.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
@@ -34,7 +35,7 @@ const fixtureOf = (folders: RootFolder[], mode: TreeMode, make: (folder: RootFol
   const fire = vi.fn();
   const treeVisible = new Map<string, Span>();
   const ports: TreePorts = { runs: () => undefined, ...SCRIPTS_HIDDEN_PORTS, fire, treeVisible, now: () => 7, wallNow: () => 7 };
-  const tree = new PackagesTree(store, mode, 'builtin', ports);
+  const tree = new PackagesTree(store, mode, ICONS_STATE_STUB, ports);
 
   store.set(folders, make);
   store.onDidChange((change) => {
@@ -53,6 +54,8 @@ const named = (nodes: TreeNode[], key: string): TreeNode => {
 
   return found;
 };
+
+const THEME_ICONS_STATE: IconsState = { ...ICONS_STATE_STUB, mode: 'theme' };
 
 describe('FEATURE: packages tree', () => {
   describe('GIVEN a single root listing packages a and b', () => {
@@ -150,15 +153,15 @@ describe('FEATURE: packages tree', () => {
 
     describe('WHEN the icons mode changes to theme', () => {
       beforeEach(() => {
-        fixture.tree.setIcons('theme');
+        fixture.tree.setIcons(THEME_ICONS_STATE);
       });
 
       it('THEN the whole tree fires', () => {
         expect(fixture.fire).toHaveBeenCalledExactlyOnceWith(undefined);
       });
 
-      it('THEN the icons mode reads theme', () => {
-        expect(fixture.tree.iconsMode()).toBe('theme');
+      it('THEN the icons state reads the theme state', () => {
+        expect(fixture.tree.iconsState()).toBe(THEME_ICONS_STATE);
       });
     });
 
@@ -226,7 +229,7 @@ describe('FEATURE: packages tree', () => {
         now: () => 7,
         wallNow: () => 7
       };
-      const tree = new PackagesTree(store, 'list', 'builtin', ports);
+      const tree = new PackagesTree(store, 'list', ICONS_STATE_STUB, ports);
       const answering = (): Coordinator => {
         const base = coordinatorMock();
         const firstChildren = async (): Promise<void> => {

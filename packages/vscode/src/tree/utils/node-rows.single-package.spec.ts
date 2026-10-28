@@ -38,6 +38,18 @@ describe('FEATURE: the tool line of a // task row follows the model', () => {
       expect(row?.tooltip).toContain('Tool: Vitest (via test)');
     });
 
+    it('WHEN the model is a single package THEN the row carries the vitest config names', () => {
+      const row = checkRowOf(true);
+
+      expect(row?.themeFiles).toStrictEqual(['vitest.config.ts', 'vitest.config.js']);
+    });
+
+    it('WHEN the model is a monorepo THEN the row has no themeFiles', () => {
+      const row = checkRowOf(false);
+
+      expect(row).not.toHaveProperty('themeFiles');
+    });
+
     it('WHEN the model is a monorepo THEN the row has no Tool line', () => {
       const row = checkRowOf(false);
 

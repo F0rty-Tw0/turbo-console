@@ -26,31 +26,73 @@ const NODE_GLYPH: ToolGlyph = { slug: 'nodedotjs', char: 0xe013, attribution: nu
 const NPM_GLYPH: ToolGlyph = { slug: 'npm', char: 0xe014, attribution: null };
 
 const KNOWN_TOOLS: ToolSpec[] = [
-  { id: 'angular', title: 'Angular', bins: ['ng'], glyph: ANGULAR_GLYPH },
-  { id: 'astro', title: 'Astro', bins: ['astro'], glyph: ASTRO_GLYPH },
-  { id: 'biome', title: 'Biome', bins: ['biome'], glyph: BIOME_GLYPH },
-  { id: 'cypress', title: 'Cypress', bins: ['cypress'], glyph: CYPRESS_GLYPH },
-  { id: 'docker', title: 'Docker', bins: ['docker', 'docker-compose'], glyph: DOCKER_GLYPH },
-  { id: 'esbuild', title: 'esbuild', bins: ['esbuild'], glyph: ESBUILD_GLYPH },
-  { id: 'eslint', title: 'ESLint', bins: ['eslint'], glyph: ESLINT_GLYPH },
-  { id: 'jest', title: 'Jest', bins: ['jest'], glyph: JEST_GLYPH },
-  { id: 'mocha', title: 'Mocha', bins: ['mocha'], glyph: MOCHA_GLYPH },
-  { id: 'next', title: 'Next.js', bins: ['next'], glyph: NEXT_GLYPH },
-  { id: 'nuxt', title: 'Nuxt', bins: ['nuxt', 'nuxi'], glyph: NUXT_GLYPH },
-  { id: 'prettier', title: 'Prettier', bins: ['prettier'], glyph: PRETTIER_GLYPH },
-  { id: 'rollup', title: 'Rollup', bins: ['rollup'], glyph: ROLLUP_GLYPH },
-  { id: 'storybook', title: 'Storybook', bins: ['storybook', 'start-storybook', 'build-storybook'], glyph: STORYBOOK_GLYPH },
-  { id: 'svelte', title: 'Svelte', bins: ['svelte-kit', 'svelte-check'], glyph: SVELTE_GLYPH },
-  { id: 'typescript', title: 'TypeScript', bins: ['tsc', 'vue-tsc'], glyph: TYPESCRIPT_GLYPH },
-  { id: 'vite', title: 'Vite', bins: ['vite'], glyph: VITE_GLYPH },
-  { id: 'vitest', title: 'Vitest', bins: ['vitest'], glyph: VITEST_GLYPH },
-  { id: 'playwright', title: 'Playwright', bins: ['playwright'], glyph: null }
+  { id: 'angular', title: 'Angular', bins: ['ng'], glyph: ANGULAR_GLYPH, configFiles: ['angular.json'] },
+  { id: 'astro', title: 'Astro', bins: ['astro'], glyph: ASTRO_GLYPH, configFiles: ['astro.config.mjs', 'astro.config.ts'] },
+  { id: 'biome', title: 'Biome', bins: ['biome'], glyph: BIOME_GLYPH, configFiles: ['biome.json'] },
+  {
+    id: 'cypress',
+    title: 'Cypress',
+    bins: ['cypress'],
+    glyph: CYPRESS_GLYPH,
+    configFiles: ['cypress.config.ts', 'cypress.config.js']
+  },
+  {
+    id: 'docker',
+    title: 'Docker',
+    bins: ['docker', 'docker-compose'],
+    glyph: DOCKER_GLYPH,
+    configFiles: ['docker-compose.yml', 'compose.yaml', 'dockerfile']
+  },
+  {
+    id: 'esbuild',
+    title: 'esbuild',
+    bins: ['esbuild'],
+    glyph: ESBUILD_GLYPH,
+    configFiles: ['esbuild.config.js', 'esbuild.config.mjs', 'esbuild.config.ts']
+  },
+  {
+    id: 'eslint',
+    title: 'ESLint',
+    bins: ['eslint'],
+    glyph: ESLINT_GLYPH,
+    configFiles: ['eslint.config.js', 'eslint.config.mjs', '.eslintrc.json']
+  },
+  { id: 'jest', title: 'Jest', bins: ['jest'], glyph: JEST_GLYPH, configFiles: ['jest.config.ts', 'jest.config.js'] },
+  { id: 'mocha', title: 'Mocha', bins: ['mocha'], glyph: MOCHA_GLYPH, configFiles: ['.mocharc.json'] },
+  {
+    id: 'next',
+    title: 'Next.js',
+    bins: ['next'],
+    glyph: NEXT_GLYPH,
+    configFiles: ['next.config.js', 'next.config.mjs', 'next.config.ts']
+  },
+  { id: 'nuxt', title: 'Nuxt', bins: ['nuxt', 'nuxi'], glyph: NUXT_GLYPH, configFiles: ['nuxt.config.ts'] },
+  { id: 'prettier', title: 'Prettier', bins: ['prettier'], glyph: PRETTIER_GLYPH, configFiles: ['.prettierrc', 'prettier.config.js'] },
+  { id: 'rollup', title: 'Rollup', bins: ['rollup'], glyph: ROLLUP_GLYPH, configFiles: ['rollup.config.js', 'rollup.config.mjs'] },
+  {
+    id: 'storybook',
+    title: 'Storybook',
+    bins: ['storybook', 'start-storybook', 'build-storybook'],
+    glyph: STORYBOOK_GLYPH,
+    configFiles: []
+  },
+  { id: 'svelte', title: 'Svelte', bins: ['svelte-kit', 'svelte-check'], glyph: SVELTE_GLYPH, configFiles: ['svelte.config.js'] },
+  { id: 'typescript', title: 'TypeScript', bins: ['tsc', 'vue-tsc'], glyph: TYPESCRIPT_GLYPH, configFiles: ['tsconfig.json'] },
+  { id: 'vite', title: 'Vite', bins: ['vite'], glyph: VITE_GLYPH, configFiles: ['vite.config.ts', 'vite.config.js'] },
+  { id: 'vitest', title: 'Vitest', bins: ['vitest'], glyph: VITEST_GLYPH, configFiles: ['vitest.config.ts', 'vitest.config.js'] },
+  {
+    id: 'playwright',
+    title: 'Playwright',
+    bins: ['playwright'],
+    glyph: null,
+    configFiles: ['playwright.config.ts', 'playwright.config.js']
+  }
 ];
 
 /** The runtime and the manager that run other tools, highest rank first: a command shows one only when it reaches no known tool. */
 export const FALLBACK_TOOLS: ToolSpec[] = [
-  { id: 'node', title: 'Node.js', bins: ['node'], glyph: NODE_GLYPH },
-  { id: 'npm', title: 'npm', bins: ['npm'], glyph: NPM_GLYPH }
+  { id: 'node', title: 'Node.js', bins: ['node'], glyph: NODE_GLYPH, configFiles: [] },
+  { id: 'npm', title: 'npm', bins: ['npm'], glyph: NPM_GLYPH, configFiles: [] }
 ];
 
 /**

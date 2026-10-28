@@ -3,6 +3,7 @@ import { durationText } from '@turbo-console/webview-ui';
 
 import { rowIdOf } from './row-id.util.ts';
 import { taskDisplay } from './task-display.util.ts';
+import { themeFilesOf, toolIcon } from './tool-icon.util.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { settledMatchOf } from '../../run/utils/run-result.util.ts';
 import { scriptCommandOf } from '../../run/utils/script-name.util.ts';
@@ -10,11 +11,9 @@ import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { ToolMatch } from '../../tool/common/tool.type.ts';
 import { toolTitleOf } from '../../tool/utils/package-scripts.util.ts';
-import { toolIconIdOf } from '../../tool/utils/tool-of.util.ts';
-import { IDLE_ICON } from '../common/icon.const.ts';
 import { CONTINUOUS_KIND_LINES } from '../common/task-text.const.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
-import type { IconSpec, RowScope, TaskDisplay, TreeRow } from '../common/tree-row.type.ts';
+import type { RowScope, TreeRow } from '../common/tree-row.type.ts';
 
 const NO_LINES: string[] = [];
 
@@ -121,24 +120,6 @@ const runLines = (entry: RunEntry | undefined): string[] => {
   return lines.flatMap(lineOf);
 };
 
-const iconIdOfTool = (match: ToolMatch | null): string | null => {
-  if (match === null) return null;
-
-  return toolIconIdOf(match.tool);
-};
-
-/** Spec 1c-c §4.6: the lowest rung. Only the idle wrench gives way to the tool's logo; run state and kind icons win. */
-const toolIcon = (display: TaskDisplay, entry: RunEntry | undefined, match: ToolMatch | null): IconSpec => {
-  const iconId = iconIdOfTool(match);
-  const isIdleWrench = entry === undefined && display.icon.id === IDLE_ICON.id;
-
-  if (!isIdleWrench || iconId === null) return display.icon;
-
-  const icon: IconSpec = { id: iconId, color: null };
-
-  return icon;
-};
-
 /** Tooltip lines are raw text: `tooltipMarkdownOf` cleans them. The description is built from numbers and fixed words, but is cleaned like every label. */
 export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, context: RowContext): TreeRow => {
   const { root, packageManager, singlePackage } = scope;
@@ -149,6 +130,7 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
   const facts = taskFactLines(task, packageManager.name, match);
   const ran = runLines(entry);
   const tooltip = [...kind, ...facts, ...ran];
+  const themed = themeFilesOf(display, entry, match);
   const row: TreeRow = {
     id: rowIdOf('task', root, task.id),
     kind: 'task',
@@ -161,7 +143,8 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
     contextValue: display.contextValue,
     collapsible: 'none',
     tooltip,
-    command: null
+    command: null,
+    ...themed
   };
 
   return row;

@@ -6,6 +6,7 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
@@ -40,7 +41,7 @@ describe('FEATURE: packages tree clock', () => {
         now: () => 5,
         wallNow: () => WALL_NOW
       };
-      const tree = new PackagesTree(store, 'list', 'builtin', ports);
+      const tree = new PackagesTree(store, 'list', ICONS_STATE_STUB, ports);
 
       store.set([ROOT_FOLDER_STUB], coordinatorMock);
       store.apply(ROOT_FOLDER_STUB.root, loadedWith([packageNamed('a')]));

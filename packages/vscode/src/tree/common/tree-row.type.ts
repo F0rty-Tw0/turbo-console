@@ -27,6 +27,12 @@ export type TreeMode = 'folders' | 'list';
 /** Whether folder and package rows take the file icon theme's folder icon, or Turbo Console's own codicons. */
 export type IconsMode = 'theme' | 'builtin';
 
+/** What the tree draws icons from: the mode, and the file names the file icon theme names (always empty outside `theme`). */
+export type IconsState = {
+  readonly mode: IconsMode;
+  readonly fileNames: ReadonlySet<string>;
+};
+
 /** The `turboConsole.icons` setting: `auto` is `theme` when the file icon theme has folder icons, else `builtin`. */
 export type IconsSetting = 'auto' | 'theme' | 'builtin';
 
@@ -68,6 +74,11 @@ export type TreeRow = {
    * rows have one. It stays relative so a row costs no path join unless theme icons are on.
    */
   readonly folder?: string;
+  /**
+   * The config file names of the tool an idle task row runs, in priority order, for a file icon theme: in theme mode the
+   * first one the theme names gives the row its icon. Absent on every other row and when the tool has none.
+   */
+  readonly themeFiles?: string[];
 };
 
 /** A kind token (`turboTask`, `turboScript`), then at most one state token; menus match them by prefix (spec 1c-a §4.12). */

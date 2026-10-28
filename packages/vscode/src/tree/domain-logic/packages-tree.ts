@@ -7,7 +7,7 @@ import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { RowContext, RunningTasks, TreeNode, TreePorts } from '../common/tree-node.type.ts';
-import type { IconsMode, RunningCountsMemo, TreeMode, TreeRow } from '../common/tree-row.type.ts';
+import type { IconsState, RunningCountsMemo, TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { nodesOf } from '../utils/node-cache.util.ts';
 import { childRowsOf, currentRowOf, goneRowOf } from '../utils/node-rows.util.ts';
 import { rootRowOf, rootRows } from '../utils/root-rows.util.ts';
@@ -29,10 +29,10 @@ export class PackagesTree {
   private readonly refresher: TreeRefresher;
   private readonly atoms: AtomTree;
   private mode: TreeMode;
-  private icons: IconsMode;
+  private icons: IconsState;
   private scopeShown = false;
 
-  public constructor(store: Roots, mode: TreeMode, icons: IconsMode, ports: TreePorts) {
+  public constructor(store: Roots, mode: TreeMode, icons: IconsState, ports: TreePorts) {
     this.store = store;
     this.mode = mode;
     this.icons = icons;
@@ -82,15 +82,18 @@ export class PackagesTree {
     this.redraw();
   }
 
-  /** `watchIcons` sets the mode on every resolve; only a change redraws. */
-  public setIcons(icons: IconsMode): void {
-    if (icons === this.icons) return;
+  /** `watchIcons` sends a state on every resolve; only another mode or another file name set (a new probe answer) redraws. */
+  public setIcons(icons: IconsState): void {
+    const isSameMode = icons.mode === this.icons.mode;
+    const isSameNames = icons.fileNames === this.icons.fileNames;
+
+    if (isSameMode && isSameNames) return;
 
     this.icons = icons;
     this.redraw();
   }
 
-  public iconsMode(): IconsMode {
+  public iconsState(): IconsState {
     return this.icons;
   }
 

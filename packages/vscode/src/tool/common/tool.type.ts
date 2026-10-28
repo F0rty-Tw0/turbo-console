@@ -20,6 +20,8 @@ export type ToolSpec = {
   readonly bins: string[];
   /** `null`: detected and named in text, but no logo. */
   readonly glyph: ToolGlyph | null;
+  /** The lower-case config file names a file icon theme may list in `fileNames`, in priority order; empty when none applies. */
+  readonly configFiles: string[];
 };
 
 /** The tool a task's command runs in `pkg`, with the scripts it went through, or `null`; `singlePackage` is the model's mode. */

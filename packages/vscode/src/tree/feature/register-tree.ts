@@ -4,10 +4,11 @@ import { currentIconsSetting, watchIcons } from './icons-setting.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import { NO_FILE_NAMES } from '../common/icon-theme.const.ts';
 import type { SettingLevel } from '../common/setting.type.ts';
 import type { TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
-import type { IconsMode, TreeMode } from '../common/tree-row.type.ts';
+import type { IconsState, TreeMode } from '../common/tree-row.type.ts';
 import type { VisibleView } from '../common/visible-view.type.ts';
 import { iconModeOf } from '../utils/icons-mode.util.ts';
 import { settingLevelOf } from '../utils/setting-level.util.ts';
@@ -24,8 +25,13 @@ export const currentTreeMode = (): TreeMode => {
   return treeModeOf(value);
 };
 
-/** The icons mode for the first draw: the theme's folders are not known yet, so `auto` is `builtin` until `watchIcons` resolves. */
-export const currentIcons = (): IconsMode => iconModeOf(currentIconsSetting(), null);
+/** The icons state for the first draw: the theme is not known yet, so `auto` is `builtin` and no file names are named until `watchIcons` resolves. */
+export const currentIcons = (): IconsState => {
+  const mode = iconModeOf(currentIconsSetting(), null);
+  const state: IconsState = { mode, fileNames: NO_FILE_NAMES };
+
+  return state;
+};
 
 const configurationTargetOf = (level: SettingLevel): vscode.ConfigurationTarget => {
   switch (level) {

@@ -95,6 +95,47 @@ describe('FEATURE: tool icon and tooltip line on a task row', () => {
     });
   });
 
+  describe('GIVEN an idle task whose command runs a tool with config files', () => {
+    it('WHEN it runs vitest THEN themeFiles are the vitest config names and the glyph icon stays', () => {
+      const row = rowOf(taskOf({ command: 'vitest' }));
+
+      expect(row.themeFiles).toStrictEqual(['vitest.config.ts', 'vitest.config.js']);
+      expect(row.icon.id).toBe('turbo-console-vitest');
+    });
+
+    it('WHEN it runs playwright THEN themeFiles are the playwright config names and the wrench stays', () => {
+      const row = rowOf(taskOf({ command: 'playwright test' }));
+
+      expect(row.themeFiles).toStrictEqual(['playwright.config.ts', 'playwright.config.js']);
+      expect(row.icon.id).toBe('tools');
+    });
+
+    it.each([
+      ['storybook dev', 'a tool with no config file'],
+      ['node scripts/x.js', 'the node fallback'],
+      ['npm publish', 'the npm fallback'],
+      ['make x', 'no tool']
+    ])('WHEN the command is %j (%s) THEN the row has no themeFiles', (command) => {
+      const row = rowOf(taskOf({ command }));
+
+      expect(row).not.toHaveProperty('themeFiles');
+    });
+  });
+
+  describe('GIVEN a vitest task on a rung above the idle wrench', () => {
+    it.each(['running', 'passed', 'failed'] as const)('WHEN it is %s THEN the row has no themeFiles', (state) => {
+      const row = rowOf(taskOf({ command: 'vitest' }), entryIn({ state }));
+
+      expect(row).not.toHaveProperty('themeFiles');
+    });
+
+    it('WHEN it is continuous and idle THEN the server icon row has no themeFiles', () => {
+      const row = rowOf(taskOf({ persistent: true, command: 'vitest' }));
+
+      expect(row).not.toHaveProperty('themeFiles');
+    });
+  });
+
   describe('GIVEN a vitest task with a run entry', () => {
     it.each([
       ['running', 'sync~spin'],

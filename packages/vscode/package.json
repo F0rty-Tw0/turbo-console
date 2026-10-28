@@ -532,12 +532,12 @@
             "builtin"
           ],
           "enumDescriptions": [
-            "Your file icon theme's folder icons when it has them (Material Icon Theme, vscode-icons, Minimal), else Turbo Console's own.",
-            "Folder and package rows always use your file icon theme. Needs a theme with folder icons; Seti has none.",
+            "Your file icon theme's icons when it has folder icons (Material Icon Theme, vscode-icons, Minimal), else Turbo Console's own. With theme icons, an idle tool row takes the theme's icon for the tool's config file when the theme names that file.",
+            "Always your file icon theme: folder and package rows, and an idle tool row takes the theme's icon for the tool's config file when the theme names that file.",
             "Turbo Console's own icons."
           ],
           "default": "auto",
-          "description": "Which icons the Packages view shows for folder and package rows."
+          "description": "Which icons the Packages view shows for folder, package and idle tool rows."
         }
       }
     },

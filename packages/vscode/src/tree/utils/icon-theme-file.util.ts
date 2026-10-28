@@ -1,5 +1,6 @@
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 
+import { NO_FILE_NAMES } from '../common/icon-theme.const.ts';
 import type { ThemeExtension } from '../common/icon-theme.type.ts';
 
 const isObject = (value: unknown): value is object => typeof value === 'object' && value !== null;
@@ -66,3 +67,17 @@ export const themeFileOf = (extensions: ThemeExtension[], themeId: string): stri
 
 /** Whether a parsed icon theme file defines a `folder` icon. */
 export const hasFolderKey = (parsed: unknown): boolean => isObject(parsed) && 'folder' in parsed;
+
+/** The top-level `fileNames` keys of a parsed icon theme file, lowercased (VS Code matches names case-insensitively); `light` and `highContrast` sections are not read. */
+export const fileNamesOf = (parsed: unknown): ReadonlySet<string> => {
+  if (!isObject(parsed) || !('fileNames' in parsed)) return NO_FILE_NAMES;
+
+  const { fileNames } = parsed;
+
+  if (!isObject(fileNames) || Array.isArray(fileNames)) return NO_FILE_NAMES;
+
+  const keys = Object.keys(fileNames);
+  const lowered = keys.map((key) => key.toLowerCase());
+
+  return new Set(lowered);
+};

@@ -8,6 +8,7 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { Span } from '../../shared/common/span.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { TreeMode } from '../common/tree-row.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
@@ -34,7 +35,7 @@ const fixtureOf = (folders: RootFolder[], mode: TreeMode, make: (folder: RootFol
   const fire = vi.fn();
   const treeVisible = new Map<string, Span>();
   const ports: TreePorts = { runs: () => undefined, ...SCRIPTS_HIDDEN_PORTS, fire, treeVisible, now: () => 7, wallNow: () => 7 };
-  const tree = new PackagesTree(store, mode, 'builtin', ports);
+  const tree = new PackagesTree(store, mode, ICONS_STATE_STUB, ports);
 
   store.set(folders, make);
   store.onDidChange((change) => {

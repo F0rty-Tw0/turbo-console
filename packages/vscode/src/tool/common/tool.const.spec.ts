@@ -54,6 +54,30 @@ const ANGULAR_ATTRIBUTION =
   '"Angular" logo by Google, from https://angular.dev/press-kit (via Simple Icons), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Modified: single-colour version, converted to a font glyph.';
 const STORYBOOK_ATTRIBUTION = '"Storybook" logo, Copyright (c) 2017 Storybooks (https://github.com/storybookjs/brand), MIT License';
 
+const CONFIG_FILES: [string, string[]][] = [
+  ['angular', ['angular.json']],
+  ['astro', ['astro.config.mjs', 'astro.config.ts']],
+  ['biome', ['biome.json']],
+  ['cypress', ['cypress.config.ts', 'cypress.config.js']],
+  ['docker', ['docker-compose.yml', 'compose.yaml', 'dockerfile']],
+  ['esbuild', ['esbuild.config.js', 'esbuild.config.mjs', 'esbuild.config.ts']],
+  ['eslint', ['eslint.config.js', 'eslint.config.mjs', '.eslintrc.json']],
+  ['jest', ['jest.config.ts', 'jest.config.js']],
+  ['mocha', ['.mocharc.json']],
+  ['next', ['next.config.js', 'next.config.mjs', 'next.config.ts']],
+  ['nuxt', ['nuxt.config.ts']],
+  ['prettier', ['.prettierrc', 'prettier.config.js']],
+  ['rollup', ['rollup.config.js', 'rollup.config.mjs']],
+  ['storybook', []],
+  ['svelte', ['svelte.config.js']],
+  ['typescript', ['tsconfig.json']],
+  ['vite', ['vite.config.ts', 'vite.config.js']],
+  ['vitest', ['vitest.config.ts', 'vitest.config.js']],
+  ['playwright', ['playwright.config.ts', 'playwright.config.js']],
+  ['node', []],
+  ['npm', []]
+];
+
 describe('FEATURE: tool table', () => {
   describe('GIVEN the table rows', () => {
     it('WHEN the ids are read THEN there are 21 unique ids', () => {
@@ -114,6 +138,21 @@ describe('FEATURE: tool table', () => {
 
       expect(ids).toHaveLength(20);
       expect(ids.every((id) => ICON_ID_PATTERN.test(id))).toBe(true);
+    });
+  });
+
+  describe('GIVEN the config file names', () => {
+    it('WHEN every tool is read THEN its configFiles are the pinned names in priority order', () => {
+      const pairs = TOOLS.map((tool) => [tool.id, tool.configFiles]);
+
+      expect(pairs).toStrictEqual(CONFIG_FILES);
+    });
+
+    it('WHEN the names are read THEN each is lower-case, so it matches a theme key whatever its case', () => {
+      const names = TOOLS.flatMap((tool) => tool.configFiles);
+      const mixed = names.filter((name) => name !== name.toLowerCase());
+
+      expect(mixed).toStrictEqual([]);
     });
   });
 

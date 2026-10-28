@@ -7,6 +7,7 @@ import type { LoadedModel, RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
+import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { WORKSPACE_MODEL_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
@@ -54,7 +55,7 @@ describe('FEATURE: packages provider single-package key', () => {
     const base = providerDepsOf();
     const deps: TreeProviderDeps = { ...base, setSinglePackage };
 
-    provider = new PackagesTreeProvider(store, 'list', 'builtin', deps);
+    provider = new PackagesTreeProvider(store, 'list', ICONS_STATE_STUB, deps);
   });
 
   describe('GIVEN a provider over one root with no model yet', () => {

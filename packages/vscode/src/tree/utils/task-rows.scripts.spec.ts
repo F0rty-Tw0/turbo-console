@@ -105,6 +105,14 @@ describe('FEATURE: the Scripts group of a package', () => {
       });
     });
 
+    it('WHEN a script runs vitest THEN its row carries the vitest config names', () => {
+      const pkg = packageWith([scriptOf('test', { command: 'vitest run' })]);
+
+      const [row] = scriptRows(ROW_SCOPE_STUB, pkg, SHOWN);
+
+      expect(row?.themeFiles).toStrictEqual(['vitest.config.ts', 'vitest.config.js']);
+    });
+
     it('WHEN a script has a refused name THEN its row stays and its tooltip names no run command', () => {
       const row = scriptRows(ROW_SCOPE_STUB, MIXED, SHOWN).find((each) => each.key === 'a#bad name');
 
