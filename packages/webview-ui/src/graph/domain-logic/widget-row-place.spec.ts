@@ -56,7 +56,10 @@ describe('FEATURE: placeRow Tab stop', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN every button shown and the stop on the chevron WHEN the row is placed THEN only the chevron is a Tab stop', () => {
+  it('GIVEN every button shown, the stop on the chevron and the tab index left on Focus folder WHEN the row is placed THEN only the chevron is a Tab stop', () => {
+    elements.chevron.tabIndex = -1;
+    elements.focus.tabIndex = 0;
+
     placeRow(entryOf(elements, 'chevron'), planOf(ALL_SHOWN));
 
     expect(tabIndexesOf(elements)).toStrictEqual([0, -1, -1, -1]);
