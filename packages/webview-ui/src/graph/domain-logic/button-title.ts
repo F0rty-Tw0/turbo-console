@@ -1,6 +1,5 @@
-import { CLEAR_FOCUS_LABEL, FOCUS_LABEL } from '../common/details.const.ts';
-import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
+import { focusFaceOf } from '../utils/details-text.util.ts';
 
 /** Sets a button's text and its hover title together, so the title never keeps an old label. */
 export const setButtonText = (button: HTMLButtonElement, text: string): void => {
@@ -33,6 +32,7 @@ export const setIconTextButton = (button: HTMLButtonElement, id: GraphIconId, te
 
 /** Draws a package's Focus button as Clear focus while it is the focus, else as Focus. */
 export const setFocusButton = (button: HTMLButtonElement, isFocused: boolean): void => {
-  if (isFocused) setIconTextButton(button, ACTION_ICONS.clearFocus, CLEAR_FOCUS_LABEL);
-  else setIconTextButton(button, ACTION_ICONS.focus, FOCUS_LABEL);
+  const face = focusFaceOf(isFocused);
+
+  setIconTextButton(button, face.icon, face.text);
 };

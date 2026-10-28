@@ -48,7 +48,13 @@ export type PackageViewModel = {
   readonly dependents: NeighbourModel[];
 };
 
-/** A link: `source` depends on `target`, whose entry is looked up in `file`. */
+/** What a package's Focus button draws: its icon and its label text. */
+export type FocusFace = {
+  readonly icon: GraphIconId;
+  readonly text: string;
+};
+
+/** A link:`source` depends on `target`, whose entry is looked up in `file`. */
 export type LinkViewModel = {
   readonly source: string;
   readonly target: string;
