@@ -46,9 +46,18 @@ export class GraphPackageList {
     await this.grid.getByRole('button', { name: `Focus ${name}`, exact: true }).click();
   }
 
-  /** Forced: a name button outside the visible set is `aria-disabled`, and a real click still lands on it. */
+  /**
+   * Forced: a name button outside the visible set is `aria-disabled`, and a real click still lands on it. A forced click
+   * skips the stable check and lands on a row that moved under it, so `hover`, which skips only the enabled check, waits
+   * for the button to settle and take the pointer first. A pressed button takes focus, so a click that still lands on
+   * another row fails here, naming `name`.
+   */
   public async pick(name: string): Promise<void> {
-    await this.nameButton(name).click({ force: true });
+    const button = this.nameButton(name);
+
+    await button.hover();
+    await button.click({ force: true });
+    await expect(button).toBeFocused();
   }
 
   /** Moves keyboard focus to the name button without pressing it. */
