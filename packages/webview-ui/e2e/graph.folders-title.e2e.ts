@@ -87,6 +87,23 @@ test.describe('FEATURE: the folder title button', () => {
   );
 
   test(
+    'GIVEN a switch to flat still laying out, a click on the apps title inspects nothing and the graph has focus',
+    { annotation: U4A },
+    async ({ graphDetails, graphFolderInspect, graphGrouping, graphWidgetInput }): Promise<void> => {
+      await test.step('GIVEN the grouped boards open with the flat layout held and Group by folder is unchecked', async (): Promise<void> => {
+        await graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS, { workers: 'held' });
+        await graphGrouping.setGrouped(false);
+      });
+
+      await test.step('WHEN the apps title, still drawn, is clicked', async (): Promise<void> => graphWidgetInput.clickTitle('apps'));
+
+      await test.step('THEN no folder is inspected', async (): Promise<void> => graphDetails.expectInspection({ kind: 'none' }));
+
+      await test.step('AND the graph has focus', async (): Promise<void> => graphWidgetInput.expectFocusOnContainer());
+    }
+  );
+
+  test(
     'GIVEN apps collapsed, a tap on its node centre inspects the folder and the graph has focus',
     { annotation: U4A },
     async ({ graphDetails, graphFolderInspect, graphFolders, graphWidgetInput }): Promise<void> => {
