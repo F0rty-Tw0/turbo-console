@@ -75,7 +75,7 @@ describe('FEATURE: widgetPlanOf', () => {
     it.each([
       { boxWidth: 175, isShown: false },
       { boxWidth: 176, isShown: true }
-    ])('GIVEN a box row $boxWidth px wide WHEN planned THEN Focus folder shows is $isShown', ({ boxWidth, isShown }) => {
+    ])('WHEN a box row $boxWidth px wide is planned THEN Focus folder shown is $isShown', ({ boxWidth, isShown }) => {
       const boxes = new Map([['apps', folderOf(100, 50, 100 + boxWidth, 300)]]);
 
       const plan = widgetPlanOf(inputOf({ boxes }));
@@ -102,13 +102,24 @@ describe('FEATURE: widgetPlanOf', () => {
     });
   });
 
-  it('GIVEN apps WHEN the overlay starts at x = 350 THEN Focus folder (340-364) is hidden while the chevron shows', () => {
-    const boxes = new Map([['apps', APPS]]);
-    const bounds: LayerBounds = { ...BOUNDS, overlayLeft: 350 };
+  describe('GIVEN apps', () => {
+    it('WHEN the overlay starts at x = 350 THEN Focus folder (340-364) is hidden while the chevron shows', () => {
+      const boxes = new Map([['apps', APPS]]);
+      const bounds: LayerBounds = { ...BOUNDS, overlayLeft: 350 };
 
-    const plan = widgetPlanOf(inputOf({ boxes }, { bounds }));
+      const plan = widgetPlanOf(inputOf({ boxes }, { bounds }));
 
-    expect(plan.rows[0]).toMatchObject({ isChevronShown: true, isFocusShown: false });
+      expect(plan.rows[0]).toMatchObject({ isChevronShown: true, isFocusShown: false });
+    });
+
+    it('WHEN the overlay starts at x = 380 THEN Focus folder hides with the "…"', () => {
+      const boxes = new Map([['apps', APPS]]);
+      const bounds: LayerBounds = { ...BOUNDS, overlayLeft: 380 };
+
+      const plan = widgetPlanOf(inputOf({ boxes }, { bounds }));
+
+      expect(plan.rows[0]).toMatchObject({ isFocusShown: false, isEllipsisShown: false });
+    });
   });
 
   it('GIVEN the box apps at zoom 0.49, where its row would be under half size WHEN planned THEN it gets no row', () => {

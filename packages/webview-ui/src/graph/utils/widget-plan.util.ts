@@ -11,8 +11,8 @@ const rowPlanOf = (folder: string, rect: FolderRect, kind: RowKind, input: Widge
 
   const buttons = buttonRectsOf(placement);
   const isChevronShown = isWidgetShown(buttons.chevron, bounds);
-  const isFocusShown = placement.width >= ROW_FOCUS_MIN_PX && isWidgetShown(buttons.focus, bounds);
   const isEllipsisShown = isWidgetShown(buttons.ellipsis, bounds);
+  const isFocusShown = isEllipsisShown && placement.width >= ROW_FOCUS_MIN_PX && isWidgetShown(buttons.focus, bounds);
 
   if (!isChevronShown && !isEllipsisShown) return null;
 
