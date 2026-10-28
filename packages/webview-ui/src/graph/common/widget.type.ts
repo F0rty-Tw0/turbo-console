@@ -93,6 +93,8 @@ export type WidgetPlanInput = {
   readonly rects: WidgetRects;
   readonly bounds: LayerBounds;
   readonly isGrouped: boolean;
+  /** The buttons the full node toolbar shows. */
+  readonly toolbarCount: number;
 };
 
 /** A header row with at least one shown button. */
@@ -105,10 +107,11 @@ export type RowPlan = {
   readonly isEllipsisShown: boolean;
 };
 
-/** One positioning pass: the rows to show and the shown package "…", `null` when none. */
+/** One positioning pass: the rows to show and the shown node toolbar, `null` when none. */
 export type WidgetPlan = {
   readonly rows: RowPlan[];
-  readonly packageButton: RectPx | null;
+  /** The shown node toolbar's rect. */
+  readonly nodeToolbar: RectPx | null;
 };
 
 /** One folder's header row: the chevron, title button, Focus folder and "…"; the glyph and count badge sit between them. */

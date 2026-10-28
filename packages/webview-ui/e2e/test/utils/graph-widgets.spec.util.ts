@@ -3,19 +3,16 @@ import type { Locator } from '@playwright/test';
 import { isInside, readRect } from './element-rect.spec.util.ts';
 import { nodeBoxOf } from './graph-geometry.spec.util.ts';
 import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
-import { SELECTED_BORDER_PX } from '../../../src/graph/common/graph.const.ts';
+import { NODE_TOOLBAR_GAP_PX, SELECTED_BORDER_PX } from '../../../src/graph/common/graph.const.ts';
 import { folderFocusLabelOf, folderTitleOf } from '../../../src/graph/utils/controls-text.util.ts';
-import type { RowFrame } from '../../common/graph-folders.type.ts';
+import type { NodeToolbarSide, RowFrame } from '../../common/graph-folders.type.ts';
 import { WIDGET_BUTTON_PX, WIDGET_INSET_PX } from '../../common/graph.const.ts';
 import type { ElementRect, ViewportPoint } from '../../common/playwright.type.ts';
 
 /** How far a widget may sit from where the layer should put it, in CSS pixels. */
 const PLACE_TOLERANCE_PX = 1;
 
-/** Half the 24 px package "…". */
-const HALF_BUTTON_PX = WIDGET_BUTTON_PX / 2;
-
-/** Cytoscape pads every node's bounding box by 1 model px "for browser dimension inaccuracies", and the "…" centres on that box. */
+/** Cytoscape pads every node's bounding box by 1 model px "for browser dimension inaccuracies". */
 const BOUNDS_PAD_PX = 1;
 
 /** The height of a box's header band: its top 32 px. */
@@ -110,13 +107,23 @@ export const ellipsisFaultsOf = (box: ElementRect, ellipsis: ElementRect, frame:
   return [...right, ...top, ...width];
 };
 
-/** The package "…" is centred on the node's bounding-box top-right corner, which the selected border and Cytoscape's pad put outside the node. */
-export const cornerFaultsOf = (node: ElementRect, button: ElementRect, zoom: number): string[] => {
+/**
+ * The node toolbar's right edge is on the node's bounding-box right edge and its near edge `NODE_TOOLBAR_GAP_PX` off the
+ * box's top (`above`) or bottom (`below`); the selected border and Cytoscape's pad put that box `outset` outside the node.
+ */
+export const nodeToolbarFaultsOf = (node: ElementRect, toolbar: ElementRect, zoom: number, side: NodeToolbarSide): string[] => {
   const outset = (SELECTED_BORDER_PX / 2 + BOUNDS_PAD_PX) * zoom;
-  const x = offFaultsOf('"…" centre x', button.left + HALF_BUTTON_PX, node.left + node.width + outset);
-  const y = offFaultsOf('"…" centre y', button.top + HALF_BUTTON_PX, node.top - outset);
+  const right = offFaultsOf('toolbar right', toolbar.left + toolbar.width, node.left + node.width + outset);
 
-  return [...x, ...y];
+  if (side === 'above') {
+    const bottom = offFaultsOf('toolbar bottom', toolbar.top + toolbar.height, node.top - outset - NODE_TOOLBAR_GAP_PX);
+
+    return [...right, ...bottom];
+  }
+
+  const top = offFaultsOf('toolbar top', toolbar.top, node.top + node.height + outset + NODE_TOOLBAR_GAP_PX);
+
+  return [...right, ...top];
 };
 
 /** The drawn rect of the node `name` in page px; throws when it is not drawn. */

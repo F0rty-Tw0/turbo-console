@@ -8,6 +8,7 @@ import { GraphFlowPage } from './pages/graph-flow.po.ts';
 import { GraphHover } from './pages/graph-hover.po.ts';
 import { GraphLegend } from './pages/graph-legend.po.ts';
 import { GraphLocation } from './pages/graph-location.po.ts';
+import { GraphNodeToolbar } from './pages/graph-node-toolbar.po.ts';
 import { GraphPointer } from './pages/graph-pointer.po.ts';
 import { GraphReveal } from './pages/graph-reveal.po.ts';
 import { GraphSashes } from './pages/graph-sashes.po.ts';
@@ -52,6 +53,7 @@ type GraphTaskFixtures = {
   readonly graphHover: GraphHover;
   readonly graphLegend: GraphLegend;
   readonly graphLocation: GraphLocation;
+  readonly graphNodeToolbar: GraphNodeToolbar;
   readonly graphPointer: GraphPointer;
   readonly graphReveal: GraphReveal;
   readonly graphSashes: GraphSashes;
@@ -99,6 +101,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   },
   graphLocation: async ({ page }, use): Promise<void> => {
     await use(new GraphLocation(page));
+  },
+  graphNodeToolbar: async ({ page }, use): Promise<void> => {
+    await use(new GraphNodeToolbar(page));
   },
   graphPointer: async ({ page }, use): Promise<void> => {
     await use(new GraphPointer(page));

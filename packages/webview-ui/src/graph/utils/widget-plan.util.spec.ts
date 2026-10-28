@@ -27,7 +27,7 @@ const NO_RECTS: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected
 
 const inputOf = (rects: Partial<WidgetRects>, overrides: Partial<WidgetPlanInput> = {}): WidgetPlanInput => {
   const full: WidgetRects = { ...NO_RECTS, ...rects };
-  const input: WidgetPlanInput = { rects: full, bounds: BOUNDS, isGrouped: true, ...overrides };
+  const input: WidgetPlanInput = { rects: full, bounds: BOUNDS, isGrouped: true, toolbarCount: 1, ...overrides };
 
   return input;
 };
@@ -153,30 +153,68 @@ describe('FEATURE: widgetPlanOf', () => {
   describe('GIVEN a selected package drawn at {120, 80, 200, 110}', () => {
     const selected = rectOf(120, 80, 200, 110);
 
-    it('WHEN grouped THEN the package "…" is centred on its top-right corner', () => {
+    it('WHEN grouped THEN its node toolbar sits 4 px above its top-right, right edges level', () => {
       const plan = widgetPlanOf(inputOf({ selected }));
 
-      expect(plan.packageButton).toStrictEqual(rectOf(188, 68, 212, 92));
+      expect(plan.nodeToolbar).toStrictEqual(rectOf(176, 52, 200, 76));
     });
 
-    it('WHEN flat THEN there is no package "…"', () => {
+    it('WHEN flat THEN there is no node toolbar', () => {
       const plan = widgetPlanOf(inputOf({ selected }, { isGrouped: false }));
 
-      expect(plan.packageButton).toBeNull();
+      expect(plan.nodeToolbar).toBeNull();
     });
 
-    it('WHEN the overlay starts left of its corner THEN there is no package "…"', () => {
+    it('WHEN the overlay starts at 150, left of its right edge THEN there is no node toolbar', () => {
       const bounds: LayerBounds = { ...BOUNDS, overlayLeft: 150 };
 
       const plan = widgetPlanOf(inputOf({ selected }, { bounds }));
 
-      expect(plan.packageButton).toBeNull();
+      expect(plan.nodeToolbar).toBeNull();
+    });
+
+    it.each([
+      { zoom: 0.49, expected: rectOf(176, 52, 200, 76) },
+      { zoom: 0.5, expected: rectOf(92, 52, 200, 76) }
+    ])('WHEN the full toolbar has 4 buttons, at zoom $zoom THEN its node toolbar is $expected', ({ zoom, expected }) => {
+      const plan = widgetPlanOf(inputOf({ selected, zoom }, { toolbarCount: 4 }));
+
+      expect(plan.nodeToolbar).toStrictEqual(expected);
     });
   });
 
-  it('GIVEN no selected package WHEN grouped THEN there is no package "…"', () => {
+  describe('GIVEN the apps box at zoom 1, its row at y 54-78', () => {
+    const boxes = new Map([['apps', APPS]]);
+
+    it('WHEN a package in its top row, {120, 82, 200, 114}, is selected THEN its node toolbar flips 4 px under it', () => {
+      const selected = rectOf(120, 82, 200, 114);
+
+      const plan = widgetPlanOf(inputOf({ boxes, selected }));
+
+      expect(plan.nodeToolbar).toStrictEqual(rectOf(176, 118, 200, 142));
+    });
+
+    it('WHEN a package lower in the box, {120, 160, 200, 192}, is selected THEN its node toolbar stays above it', () => {
+      const selected = rectOf(120, 160, 200, 192);
+
+      const plan = widgetPlanOf(inputOf({ boxes, selected }));
+
+      expect(plan.nodeToolbar).toStrictEqual(rectOf(176, 132, 200, 156));
+    });
+  });
+
+  it('GIVEN the collapsed node {100, 40, 280, 96}, its row at y 48-72, WHEN the package {150, 96, 230, 126} under it is selected THEN its node toolbar flips under it', () => {
+    const collapsed = new Map([['core', folderOf(100, 40, 280, 96)]]);
+    const selected = rectOf(150, 96, 230, 126);
+
+    const plan = widgetPlanOf(inputOf({ collapsed, selected }));
+
+    expect(plan.nodeToolbar).toStrictEqual(rectOf(206, 130, 230, 154));
+  });
+
+  it('GIVEN no selected package WHEN grouped THEN there is no node toolbar', () => {
     const plan = widgetPlanOf(inputOf({}));
 
-    expect(plan.packageButton).toBeNull();
+    expect(plan.nodeToolbar).toBeNull();
   });
 });

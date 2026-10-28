@@ -256,7 +256,7 @@ test.describe('FEATURE: folder widget placement', () => {
   test(
     'GIVEN the boards grouped with nothing selected there is no package "…", and a flat page has neither a header row nor one',
     { annotation: C9 },
-    async ({ graphFolderInspect, graphGrouping, graphList, graphWidgets }): Promise<void> => {
+    async ({ graphFolderInspect, graphGrouping, graphList, graphNodeToolbar, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards open with nothing selected', async (): Promise<void> =>
         graphFolderInspect.open(grouped(), BOARDS));
 
@@ -267,7 +267,8 @@ test.describe('FEATURE: folder widget placement', () => {
 
       await test.step('WHEN web is picked', async (): Promise<void> => graphList.pick('web'));
 
-      await test.step('THEN web has the one package "…"', async (): Promise<void> => graphWidgets.expectPackageButtonOn('web'));
+      await test.step('THEN web has the one package "…", 4 px under it', async (): Promise<void> =>
+        graphNodeToolbar.expectNodeToolbarOn('web', 'below'));
 
       await test.step('WHEN Group by folder is unchecked', async (): Promise<void> => graphGrouping.setGrouped(false));
 

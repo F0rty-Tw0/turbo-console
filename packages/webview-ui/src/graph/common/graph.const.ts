@@ -292,6 +292,9 @@ export const WIDGET_MIN_BOX_PX = 120;
 /** The gap between a node and its toolbar, above or below it, in px. */
 export const NODE_TOOLBAR_GAP_PX = 4;
 
+/** Under this drawn node height (`NODE_HEIGHT * zoom`) a node toolbar shows only its "…"; 16 is zoom 0.5, the row floor. */
+export const NODE_TOOLBAR_MIN_PX = 16;
+
 /** The location bar shows at most this many folder focus info lines, then one line counting the folders left. */
 export const LOCATION_MAX_LINES = 3;
 

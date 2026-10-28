@@ -1,6 +1,6 @@
 import { OVERLAY_WIDTH_PX } from './common/graph.const.ts';
 import type { GraphOptions } from './common/graph.type.ts';
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
@@ -50,15 +50,15 @@ test.describe('FEATURE: folder widget layer', () => {
   test(
     'GIVEN the boards grouped, a package picked in the list gets one "…" until grouping is turned off',
     { annotation: C9 },
-    async ({ graphFolderInspect, graphGrouping, graphList, graphWidgets }): Promise<void> => {
+    async ({ graphFolderInspect, graphGrouping, graphList, graphNodeToolbar, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => graphFolderInspect.open(grouped(), BOARDS));
 
       await test.step('THEN no package has a "…"', async (): Promise<void> => graphWidgets.expectNoPackageButton());
 
       await test.step('WHEN web is picked in the list', async (): Promise<void> => graphList.pick('web'));
 
-      await test.step('THEN one "…" sits centred on web\'s top-right corner', async (): Promise<void> =>
-        graphWidgets.expectPackageButtonOn('web'));
+      await test.step('THEN one "…" sits 4 px under web, right edges level', async (): Promise<void> =>
+        graphNodeToolbar.expectNodeToolbarOn('web', 'below'));
 
       await test.step('WHEN grouping is turned off', async (): Promise<void> => graphGrouping.setGrouped(false));
 
