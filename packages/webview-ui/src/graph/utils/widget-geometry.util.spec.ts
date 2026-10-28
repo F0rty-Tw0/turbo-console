@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { buttonRectsOf, isWidgetShown, overlayLeftOf, packageButtonRectOf, rowPlacementOf } from './widget-geometry.util.ts';
+import {
+  buttonRectsOf,
+  isWidgetShown,
+  nodeToolbarRectOf,
+  overlayLeftOf,
+  packageButtonRectOf,
+  rowPlacementOf,
+  rowRectOf
+} from './widget-geometry.util.ts';
 import { COLLAPSED_NODE_WIDTH } from '../common/graph.const.ts';
 import type { FolderRect, LayerBounds, RectPx, RowButtonRects, RowPlacement } from '../common/widget.type.ts';
 
@@ -188,6 +196,72 @@ describe('FEATURE: packageButtonRectOf', () => {
       const rect = packageButtonRectOf(box);
 
       expect(rect).toStrictEqual(rectOf(98, 8, 122, 32));
+    });
+  });
+});
+
+describe('FEATURE: nodeToolbarRectOf', () => {
+  describe('GIVEN the node 100, 100 to 180, 132', () => {
+    const node = rectOf(100, 100, 180, 132);
+
+    it.each([
+      { title: 'one button, no rows: right edges level, 4 px above', count: 1, rows: [], expected: rectOf(156, 72, 180, 96) },
+      { title: 'four buttons: 108 px wide', count: 4, rows: [], expected: rectOf(72, 72, 180, 96) },
+      {
+        title: 'a row meets the above-rect: flips below',
+        count: 1,
+        rows: [rectOf(50, 80, 250, 98)],
+        expected: rectOf(156, 136, 180, 160)
+      },
+      {
+        title: 'a row bottom touches the above-rect top: stays above',
+        count: 1,
+        rows: [rectOf(50, 48, 250, 72)],
+        expected: rectOf(156, 72, 180, 96)
+      },
+      {
+        title: 'a row ends exactly at the toolbar left: stays above',
+        count: 1,
+        rows: [rectOf(50, 72, 156, 96)],
+        expected: rectOf(156, 72, 180, 96)
+      },
+      {
+        title: 'the below-rect meets a row too: one flip only, stays below',
+        count: 1,
+        rows: [rectOf(50, 80, 250, 98), rectOf(50, 140, 250, 164)],
+        expected: rectOf(156, 136, 180, 160)
+      }
+    ])('WHEN $title THEN $expected', ({ count, rows, expected }) => {
+      const rect = nodeToolbarRectOf(node, count, rows);
+
+      expect(rect).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a node near the layer top', () => {
+    it.each([
+      { title: 'above-rect top at -8: flips below', node: rectOf(100, 20, 180, 52), expected: rectOf(156, 56, 180, 80) },
+      { title: 'above-rect top exactly 0: stays above', node: rectOf(100, 28, 180, 60), expected: rectOf(156, 0, 180, 24) }
+    ])('WHEN $title THEN $expected', ({ node, expected }) => {
+      const rect = nodeToolbarRectOf(node, 1, []);
+
+      expect(rect).toStrictEqual(expected);
+    });
+  });
+});
+
+describe('FEATURE: rowRectOf', () => {
+  describe('GIVEN a placed row', () => {
+    const full: RowPlacement = { x: 108, y: 54, width: 284, scale: 1 };
+    const half: RowPlacement = { x: 100, y: 50, width: 200, scale: 0.5 };
+
+    it.each([
+      { title: 'scale 1', row: full, expected: rectOf(108, 54, 392, 78) },
+      { title: 'scale 0.5', row: half, expected: rectOf(100, 50, 200, 62) }
+    ])('WHEN $title THEN $expected', ({ row, expected }) => {
+      const rect = rowRectOf(row);
+
+      expect(rect).toStrictEqual(expected);
     });
   });
 });

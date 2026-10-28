@@ -289,6 +289,9 @@ export const ROW_FOCUS_MIN_PX = 168;
 /** Header widgets hide while the box or collapsed node is under this many px wide on screen. */
 export const WIDGET_MIN_BOX_PX = 120;
 
+/** The gap between a node and its toolbar, above or below it, in px. */
+export const NODE_TOOLBAR_GAP_PX = 4;
+
 /** The location bar shows at most this many folder focus info lines, then one line counting the folders left. */
 export const LOCATION_MAX_LINES = 3;
 
