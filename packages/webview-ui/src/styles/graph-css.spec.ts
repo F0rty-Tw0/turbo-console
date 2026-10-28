@@ -17,6 +17,10 @@ const PRESSED_SELECTOR = ".graph-toolbar .text-button[aria-expanded='true']";
 
 const HOVER_SELECTOR = '.text-button:hover:not(:disabled)';
 
+const ICON_PRESSED_SELECTOR = ".icon-button[aria-pressed='true']:not(:disabled)";
+
+const ICON_HOVER_SELECTOR = '.icon-button:hover:not(:disabled)';
+
 const rawCss = readFileSync(join(import.meta.dirname, 'graph.css'), 'utf8');
 
 const css = rawCss.replace(COMMENT_PATTERN, '');
@@ -190,6 +194,32 @@ describe('FEATURE: graph.css', () => {
       expect(hoverStart).toBeGreaterThan(-1);
       expect(pressedStart).toBeGreaterThan(hoverStart);
     });
+  });
+
+  describe('GIVEN the pressed icon button rule', () => {
+    it.each(['activeForeground', 'activeBackground'])('WHEN it is read THEN it uses inputOption-%s', (name) => {
+      const declarations = declarationsOf(css, ICON_PRESSED_SELECTOR);
+
+      expect(declarations).toContain(`var(--vscode-inputOption-${name}`);
+    });
+
+    it('WHEN its place is compared with the gated hover rule THEN it comes later and wins', () => {
+      const hoverStart = ruleStartOf(ICON_HOVER_SELECTOR);
+
+      const pressedStart = ruleStartOf(ICON_PRESSED_SELECTOR);
+
+      expect(hoverStart).toBeGreaterThan(-1);
+      expect(pressedStart).toBeGreaterThan(hoverStart);
+    });
+
+    it.each(['.vscode-high-contrast', '.vscode-high-contrast-light'])(
+      'WHEN the %s rule is read THEN an inner activeBorder ring marks it',
+      (themeClass) => {
+        const declarations = declarationsOf(css, `${themeClass} .icon-button[aria-pressed='true']`);
+
+        expect(declarations).toContain('box-shadow: inset 0 0 0 1px var(--vscode-inputOption-activeBorder)');
+      }
+    );
   });
 
   describe('GIVEN the toolbar separator rule', () => {
