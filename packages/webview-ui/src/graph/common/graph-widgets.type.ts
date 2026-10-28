@@ -1,10 +1,11 @@
 import type { FolderActions } from './folder-actions.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
 import type { GraphFilters } from './graph-filters.type.ts';
-import type { DrawnGraph, GraphView, PageElements } from './graph-page.type.ts';
+import type { GraphView } from './graph-page.type.ts';
 import type { Inspection } from './inspection.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { PackageInspectionActions } from './package-actions.type.ts';
+import type { PageElements } from './page-elements.type.ts';
 import type { MenuItemModel } from './widget-menu.type.ts';
 import type { LayerBounds, MenuTarget, RectPx, WidgetViews } from './widget.type.ts';
 
@@ -37,19 +38,23 @@ type CanAct = {
   readonly canAct: () => boolean;
 };
 
-/** What the menus and the breadcrumb read and call, from the inspection, the controls and the folders. */
+/** What the menus read and call, from the inspection, the controls and the folders. */
 export type MenuSources = {
   readonly menuOf: (target: MenuTarget) => MenuItemModel[];
   /** What Shift+F10 opens a menu for: the inspected folder or package, `null` for neither. */
   readonly selection: () => MenuTarget | null;
-  readonly focusedFolder: () => string | null;
-  readonly drawn: () => DrawnGraph | null;
-  /** Clears a folder focus only. */
-  readonly clearFocus: () => void;
 };
 
-/** What `wireWidgets` needs: the layer's deps, with `canAct` as the layer's `isActive` and the menus as its `onMenu`; it finds the details panel itself. */
-export type WidgetWireDeps = Omit<GraphWidgetsDeps, 'aside' | 'isActive' | 'onMenu'> & CanAct & MenuSources;
+type LocationHook = {
+  /** The folder scene was redrawn or grouping turned off: the location bar reads the folder focus again. */
+  readonly onLocation: () => void;
+};
+
+/**
+ * What `wireWidgets` needs: the layer's deps, with `canAct` as the layer's `isActive` and the menus as its `onMenu`; it
+ * finds the details panel itself.
+ */
+export type WidgetWireDeps = Omit<GraphWidgetsDeps, 'aside' | 'isActive' | 'onMenu'> & CanAct & MenuSources & LocationHook;
 
 /** Where the layer's state comes from: `GraphFolders` gives the scene, `GraphInspection` the inspection, the selection and the folder actions. */
 export type WidgetSources = {
@@ -72,7 +77,7 @@ export type WidgetWiring = {
   readonly refresh: () => void;
   readonly position: () => void;
   readonly buttonBox: () => AnchorBox | null;
-  /** Grouping was turned off: an open menu closes and the breadcrumb follows the cleared focus. */
+  /** Grouping was turned off: an open menu closes and the location bar follows the cleared focus. */
   readonly groupingOff: () => void;
 };
 
@@ -93,13 +98,6 @@ type MenuHost = {
 };
 
 export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & MenuHost;
-
-type BreadcrumbHost = {
-  readonly layer: HTMLElement;
-  readonly views: Pick<WidgetViews, 'breadcrumb' | 'breadcrumbLine'>;
-};
-
-export type GraphBreadcrumbDeps = Pick<MenuSources, 'focusedFolder' | 'drawn' | 'clearFocus'> & BreadcrumbHost;
 
 /** Where a menu opens from: the "…" rect in container px and its button, `null` while hidden. */
 export type MenuAnchor = {

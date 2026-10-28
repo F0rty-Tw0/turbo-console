@@ -54,7 +54,7 @@ test.describe('FEATURE: every graph button has a hover title', () => {
   test(
     'GIVEN the grouped boards, the folder and package menus and the folder details buttons all have a title',
     { annotation: D2 },
-    async ({ graphButtonTitles, graphFolderInspect, graphFolders, graphList, graphMenus }): Promise<void> => {
+    async ({ graphButtonTitles, graphFolderInspect, graphFolders, graphList, graphLocation, graphMenus }): Promise<void> => {
       await test.step('WHEN the grouped boards open and the apps menu opens', async (): Promise<void> => {
         await graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS);
         await graphMenus.openFolderMenu('apps');
@@ -97,6 +97,9 @@ test.describe('FEATURE: every graph button has a hover title', () => {
 
       await test.step('THEN its name stays Focus folder packages and its title reads Clear focus', async (): Promise<void> =>
         graphFolderInspect.expectHeaderFocusTitled('packages', 'Clear focus'));
+
+      await test.step('AND the location bar shows Packages › packages, Packages as a button', async (): Promise<void> =>
+        graphLocation.expectCrumbs(['Packages', 'packages'], 'packages'));
 
       await test.step('AND every visible button has a title', async (): Promise<void> =>
         graphButtonTitles.expectAllTitled('grouped, folder focused'));
@@ -144,13 +147,16 @@ test.describe('FEATURE: every graph button has a hover title', () => {
   test(
     'GIVEN task mode, a tapped task and then the cap banner have buttons that all have a title',
     { annotation: D2 },
-    async ({ graphButtonTitles, graphCanvas, graphHost, graphTaskHost, graphTask, openUmbrella }): Promise<void> => {
+    async ({ graphButtonTitles, graphCanvas, graphHost, graphLocation, graphTaskHost, graphTask, openUmbrella }): Promise<void> => {
       await test.step('WHEN the umbrella task is chosen and tapped', async (): Promise<void> => {
         await openUmbrella();
         await graphCanvas.tapNode(TARGET_LIKE_UMBRELLA);
       });
 
-      await test.step('THEN every visible button has a title', async (): Promise<void> =>
+      await test.step('THEN the location bar shows Packages › app-1 › Tasks (9), the first two as buttons', async (): Promise<void> =>
+        graphLocation.expectCrumbs(['Packages', 'app-1', 'Tasks (9)'], 'Tasks (9)'));
+
+      await test.step('AND every visible button has a title', async (): Promise<void> =>
         graphButtonTitles.expectAllTitled('task mode, task tapped'));
 
       await test.step('WHEN an over-cap state arrives and showTasks names its root', async (): Promise<void> => {

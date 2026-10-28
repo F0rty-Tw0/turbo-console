@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { modeFocusOf } from './mode-focus.util.ts';
-import type { PageElements } from '../common/graph-page.type.ts';
+import type { PageElements } from '../common/page-elements.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 type ModePage = Pick<PageElements, 'modeGroup' | 'controls' | 'packagesMode'>;

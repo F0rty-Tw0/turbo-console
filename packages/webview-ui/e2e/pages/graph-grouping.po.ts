@@ -25,10 +25,13 @@ export class GraphGroupingPage extends GraphBoxesPage {
   public readonly checkbox: Locator;
   public readonly notice: Locator;
 
+  private readonly toolbar: Locator;
+
   public constructor(page: Page) {
     super(page);
     this.checkbox = page.getByRole('checkbox', { name: GROUP_BY_FOLDER_LABEL, exact: true });
     this.notice = page.locator('.graph-notice-text');
+    this.toolbar = page.locator('header.graph-toolbar');
   }
 
   public async setGrouped(isOn: boolean): Promise<void> {
@@ -115,7 +118,7 @@ export class GraphGroupingPage extends GraphBoxesPage {
     await expect(this.container).toBeVisible();
     await expect(this.page.getByText(LOADING_TEXT, { exact: true })).toBeHidden();
 
-    for (const label of TOOLBAR_LABELS) await expect(this.page.getByRole('button', { name: label, exact: true })).toBeVisible();
+    for (const label of TOOLBAR_LABELS) await expect(this.toolbar.getByRole('button', { name: label, exact: true })).toBeVisible();
   }
 
   /** The last `positions` message the page posted is for `grouping`. */

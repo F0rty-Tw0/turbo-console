@@ -357,7 +357,29 @@ describe('FEATURE: graph.css', () => {
     });
   });
 
+  describe('GIVEN the location bar rule', () => {
+    const declarations = declarationsOf(css, '.graph-location');
+
+    it.each(['display: flex', 'flex-direction: column'])('WHEN it is read THEN it holds %s', (expected) => {
+      expect(declarations).toContain(expected);
+    });
+  });
+
+  describe('GIVEN the location crumb button rule', () => {
+    const declarations = declarationsOf(css, '.location-crumbs .details-name');
+
+    it('WHEN it is read THEN a long name wraps anywhere', () => {
+      expect(declarations).toContain('overflow-wrap: anywhere');
+    });
+  });
+
   describe('GIVEN the whole stylesheet', () => {
+    it('WHEN it is searched THEN the floating breadcrumb and its task mode hide rule are gone', () => {
+      const hasBreadcrumb = rawCss.includes('breadcrumb');
+
+      expect(hasBreadcrumb).toBe(false);
+    });
+
     it('WHEN it is searched THEN the old filters dot is gone', () => {
       const hasDot = rawCss.includes('has-filters');
 

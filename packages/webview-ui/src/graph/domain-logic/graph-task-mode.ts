@@ -1,13 +1,13 @@
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { GraphTaskMemory } from './graph-task-memory.ts';
-import { layoutDepsOf, selectionDepsOf } from './graph-task-mode-deps.ts';
+import { layoutDepsOf, selectionDepsOf, umbrellaSizersOf } from './graph-task-mode-deps.ts';
 import { savePanelToggle } from './graph-task-panel.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskModeDeps, TaskPanel } from '../common/graph-task.type.ts';
+import type { LocationFacts } from '../common/location.type.ts';
 import type { TaskControls } from '../common/task-controls.type.ts';
 import { choiceOf, droppedNoticeOf, entryTaskIdsOf, packageTaskIdsOf, requestOf, taskIdsOf } from '../utils/task-choice.util.ts';
 
@@ -22,10 +22,11 @@ export class GraphTaskMode {
   public readonly layout: GraphTaskLayout;
 
   private readonly deps: TaskModeDeps;
+  private readonly memory: GraphTaskMemory;
   private readonly panel: TaskPanel;
   private readonly controls: TaskControls;
-  private readonly memory: GraphTaskMemory;
   private hasEntered = false;
+  private shownCount = 0;
 
   public constructor(deps: TaskModeDeps) {
     this.deps = deps;
@@ -36,7 +37,8 @@ export class GraphTaskMode {
     this.selection = new GraphTaskSelection(selectionDepsOf(deps, this.memory));
     this.panel = deps.panelOf({
       onShowAll: (): void => this.choose({ capLifted: true }, null),
-      onShowEvery: (at: number): void => this.showTasks(taskIdsOf(this.memory.tasks()), at)
+      onShowEvery: (at: number): void => this.showTasks(taskIdsOf(this.memory.tasks()), at),
+      onShown: deps.onLocation
     });
     this.controls = deps.controlsOf({
       onSearch: (search: string): void => this.memory.save({ search }),
@@ -68,7 +70,7 @@ export class GraphTaskMode {
     this.showPage();
 
     const shownSet = this.memory.shownSet();
-    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.umbrellaSizers());
+    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), umbrellaSizersOf(this.deps));
     const shownKey = this.layout.key();
     const knownCount = this.memory.tasks().length;
 
@@ -139,6 +141,11 @@ export class GraphTaskMode {
     return packageTaskIdsOf(this.memory.tasks(), name);
   }
 
+  /** What the location bar reads of the shown tasks, counted from the shown set the last render or state drew. */
+  public locationFacts(): LocationFacts {
+    return this.memory.locationFacts(this.shownCount);
+  }
+
   /** Saves the camera on screen and the key of the layout under it; nothing before a task layout is placed. */
   public saveCamera(): void {
     const layoutKey = this.layout.placedKey();
@@ -160,19 +167,14 @@ export class GraphTaskMode {
     this.render(at, notice);
   }
 
-  private umbrellaSizers(): UmbrellaSizers {
-    const sizers: UmbrellaSizers = { name: this.deps.sizeOf, counts: this.deps.textSizeOf };
-
-    return sizers;
-  }
-
   /** The notice, prompt, banner and rows of the shown set, then its layout; an empty set empties the canvas. */
   private render(at: number | null, notice: string | null): void {
     const shownSet = this.memory.shownSet();
-    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), this.umbrellaSizers());
+    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), umbrellaSizersOf(this.deps));
     const isEmpty = request.tasks.length === 0;
     const knownCount = this.memory.tasks().length;
 
+    this.shownCount = shownSet.ids.length;
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));
     this.panel.show({ isEmpty, hiddenCount: shownSet.hiddenCount, knownCount });
     this.controls.setRows(request.tasks, this.memory.rootLabel());
@@ -214,5 +216,6 @@ export class GraphTaskMode {
     this.selection.exit();
     this.deps.view.resize();
     this.deps.onExit();
+    this.deps.onLocation();
   }
 }

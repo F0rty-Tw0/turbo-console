@@ -10,9 +10,9 @@ const linkOf = (source: string, target: string): GraphEdge => {
 
 /**
  * Folder `core` (three packages) linked with `a` three times, `b` three times (one of them `b -> core`), `c` twice, `d`
- * and `e` once each, plus one link inside `core`: the breadcrumb of a `core` focus names `a`, `b`, `c` and counts 2 more.
+ * and `e` once each, plus one link inside `core`: the location bar of a `core` focus names `a`, `b`, `c` and counts 2 more.
  */
-export const breadcrumbState = (): GraphReady => {
+export const folderLocationState = (): GraphReady => {
   const edges: GraphEdge[] = [
     linkOf('a-pkg', 'core-1'),
     linkOf('a-pkg', 'core-2'),
@@ -56,6 +56,17 @@ export const breadcrumbState = (): GraphReady => {
     ]),
     atomGroups: []
   };
+
+  return state;
+};
+
+const isKept = (edge: GraphEdge): boolean => edge.source !== 'a-pkg' || edge.target !== 'core-3';
+
+/** `folderLocationState` under a new hash without the `a-pkg -> core-3` link: the same folders, so the same crumbs of a `core` focus, with `a` linked twice. */
+export const fewerLinksState = (): GraphReady => {
+  const crumbs = folderLocationState();
+  const edges = crumbs.edges.filter(isKept);
+  const state: GraphReady = { ...crumbs, hash: 'f01d0005', edges };
 
   return state;
 };

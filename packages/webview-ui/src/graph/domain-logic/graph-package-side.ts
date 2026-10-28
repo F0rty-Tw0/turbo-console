@@ -65,7 +65,8 @@ export class GraphPackageSide {
       onGrouping: (grouped: boolean): void => this.switchGrouping(grouped),
       isPackageMode,
       isGrouped,
-      canAct
+      canAct,
+      onLocation: hooks.onLocation
     });
     this.layouts = new GraphLayouts({
       ...deps,

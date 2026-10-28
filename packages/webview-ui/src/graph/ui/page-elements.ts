@@ -1,13 +1,14 @@
 import { buildDetailsBar } from './details-bar.ts';
 import { buildFlowCanvas } from './flow-canvas.ts';
+import { buildLocation } from './location-elements.ts';
 import { buildPanelSashes } from './panel-sash.ts';
 import { trackPointerFocus } from './pointer-focus.ts';
 import { buildToolbar } from './toolbar-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
-import type { PageElements } from '../common/graph-page.type.ts';
 import { EMPTY_TASKS_TEXT, SHOW_ALL_TASKS_LABEL, SLOW_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskScreenElements } from '../common/graph-task.type.ts';
 import { FALLBACK_NOTICE_TEXT, GRAPH_LABEL, RELOAD_LABEL, RETRY_LABEL } from '../common/graph.const.ts';
+import type { PageElements } from '../common/page-elements.type.ts';
 import type { PanelSashes } from '../common/panel-sash.type.ts';
 
 /** A text button: its visible text is its accessible name and its hover title. */
@@ -95,8 +96,9 @@ const graphBody = (sashes: PanelSashes, container: HTMLElement, flow: HTMLCanvas
 
 /**
  * The page in its pre-state: toolbar and the body with the empty container shown, every toolbar button disabled, the
- * notice, task mode's lines, the message block and the Details bar hidden. DOM order is the Tab order: toolbar, notice,
- * task notice, cap banner, prompt, message, then the body. The Details bar joins the DOM with the first Details aside.
+ * notice, task mode's lines, the message block, the location bar and the Details bar hidden. DOM order is the Tab order:
+ * toolbar, notice, task notice, cap banner, prompt, message, location bar, then the body. The Details bar joins the DOM
+ * with the first Details aside.
  */
 export const buildPage = (): PageElements => {
   const tools = buildToolbar();
@@ -108,6 +110,7 @@ export const buildPage = (): PageElements => {
   const messageText = textElement('p', 'graph-message-text', '');
   const message = textBlock('graph-message', messageText, reload);
   const tasks = taskScreen();
+  const location = buildLocation();
   const container = graphContainer();
   const flow = buildFlowCanvas();
   const widgets = textElement('div', 'graph-widgets', '');
@@ -115,7 +118,7 @@ export const buildPage = (): PageElements => {
   const body = graphBody(sashes, container, flow, widgets);
   const root = textElement('main', 'graph-page', '');
 
-  root.append(tools.toolbar, notice, tasks.notice, tasks.banner, tasks.prompt, message, body);
+  root.append(tools.toolbar, notice, tasks.notice, tasks.banner, tasks.prompt, message, location.nav, body);
 
   const page: PageElements = {
     ...tools,
@@ -130,6 +133,7 @@ export const buildPage = (): PageElements => {
     message,
     messageText,
     reload,
+    location,
     body,
     container,
     flow,

@@ -1,6 +1,8 @@
 import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 import type { TaskModes } from '../common/graph-task.type.ts';
+import type { LocationFacts } from '../common/location.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 import { shownSetOf } from '../utils/shown-set.util.ts';
@@ -50,6 +52,23 @@ export class GraphTaskMemory {
     const effective = this.effectiveChosen(chosen);
 
     return shownSetOf({ tasks, chosen: effective, depth, capLifted });
+  }
+
+  /**
+   * The one package of the chosen tasks the state knows, `null` for none, several or the workspace root, which the package
+   * graph never draws; the `taskCount` shown, which the caller counted from the shown set it drew; and whether the state
+   * is a single package.
+   */
+  public locationFacts(taskCount: number): LocationFacts {
+    const chosen = new Set(this.view().chosen);
+    const known = this.latestTasks.filter((task) => chosen.has(task.id));
+    const packages = new Set(known.map((task) => task.packageName));
+    const [only] = packages;
+    const isOneDrawnPackage = packages.size === 1 && only !== undefined && only !== ROOT_TASK_PACKAGE;
+    const taskPackage = isOneDrawnPackage ? only : null;
+    const facts: LocationFacts = { taskPackage, taskCount, isSinglePackage: this.isSinglePackage };
+
+    return facts;
   }
 
   public save(edit: Partial<TaskViewState>): void {

@@ -1,4 +1,5 @@
 import { GraphFrames } from './graph-frames.ts';
+import { graphLocationOf } from './graph-location.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { wirePanelSashes } from './graph-panel-sashes.ts';
 import { PackageReveal } from './graph-reveal.ts';
@@ -10,6 +11,7 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { FlowControl } from '../common/flow.type.ts';
 import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { FilteringFacts, LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
+import type { GraphLocation } from '../common/location.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { hasSavedGrouping, readGraphViewState } from '../utils/graph-view-state.util.ts';
 
@@ -27,9 +29,10 @@ class GraphPageController {
   private readonly tasks: ReturnType<typeof taskModeOf>;
   private readonly routing: GraphStateRouting;
   private readonly reveal: PackageReveal;
+  private readonly location: GraphLocation;
 
   public constructor(deps: GraphControllerDeps) {
-    const { bridge, page } = deps;
+    const { bridge, page, widgetViews } = deps;
     const frames = new GraphFrames(deps.now);
     const raw = bridge.savedState();
     const saved = readGraphViewState(raw);
@@ -45,17 +48,19 @@ class GraphPageController {
     const tasks = packageTasksOf((): ReturnType<typeof taskModeOf> => this.tasks, deps.now);
     const onMessage = (): void => this.tasks.suspend();
     const onPlaced = (): void => this.reveal.placed();
+    const onLocation = (): void => this.location.update();
 
     this.deps = deps;
     this.frames = frames;
     this.view = deps.createView(page.container, handlers);
     this.flow = deps.createFlow(this.view);
-    this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks, onMessage, onPlaced });
+    this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks, onMessage, onPlaced, onLocation });
     this.tasks = taskModeOf(deps, this.view, {
       modes,
       frames,
       onMessage,
       onExit: (): void => this.routing.exitTasks(),
+      onLocation,
       flow: this.flow,
       selectedPackage: (): string | null => this.packages.filtering.inspection.selected(),
       showPackage: (name: string): void => this.reveal.request(name)
@@ -66,14 +71,8 @@ class GraphPageController {
     };
 
     this.routing = new GraphStateRouting({ tasks: this.tasks, packages: this.packages, hideModes, now: deps.now });
-    this.reveal = new PackageReveal({
-      tasks: this.tasks,
-      layouts: this.packages.layouts,
-      drawn: (): DrawnGraph | null => this.packages.drawnGraph(),
-      filtering: this.packages.filtering,
-      inspection: this.packages.filtering.inspection,
-      view: this.view
-    });
+    this.reveal = this.revealOf();
+    this.location = graphLocationOf({ page, widgetViews, modes, packages: this.packages, tasks: this.tasks, reveal: this.reveal });
     const relayout = (): void => this.relayout();
     const showNotice = (text: string | null): void => this.tasks.notice(text);
 
@@ -121,6 +120,20 @@ class GraphPageController {
     };
 
     return facts;
+  }
+
+  /** The package reveal the host's `showPackage`, the task owner button and the location bar's package crumb call. */
+  private revealOf(): PackageReveal {
+    const reveal = new PackageReveal({
+      tasks: this.tasks,
+      layouts: this.packages.layouts,
+      drawn: (): DrawnGraph | null => this.packages.drawnGraph(),
+      filtering: this.packages.filtering,
+      inspection: this.packages.filtering.inspection,
+      view: this.view
+    });
+
+    return reveal;
   }
 
   /** Re-layout and Retry act on the graph of the mode on screen. */

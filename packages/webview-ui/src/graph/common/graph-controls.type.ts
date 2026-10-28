@@ -3,8 +3,9 @@ import type { FolderGroup } from './folder-group.type.ts';
 import type { GraphFilters } from './graph-filters.type.ts';
 import type { GraphFoldersDeps } from './graph-folders.type.ts';
 import type { GraphInspectionDeps } from './graph-inspection.type.ts';
-import type { DrawnGraph, PageElements } from './graph-page.type.ts';
+import type { DrawnGraph } from './graph-page.type.ts';
 import type { WidgetWireDeps } from './graph-widgets.type.ts';
+import type { PageElements } from './page-elements.type.ts';
 
 /** What `restoredFilters` rebuilds from a saved state: the filters (the depth with them), the search text, whether the panel opens and whether it is grouped. */
 export type RestoredControls = {
@@ -72,11 +73,10 @@ export type GraphFilteringDeps = Pick<
 > &
   Pick<GraphControlsDeps, 'build' | 'onGrouping'> &
   Pick<GraphFoldersDeps, 'measure' | 'isGrouped' | 'canAct'> &
-  Pick<WidgetWireDeps, 'widgetViews'>;
+  Pick<WidgetWireDeps, 'widgetViews' | 'onLocation'>;
 
 /** What the widget layer reads besides the filtering deps: the inspection's list and focus hooks, as the details panel calls them. */
-export type WidgetHostDeps = GraphFilteringDeps &
-  Pick<GraphInspectionDeps, 'focus' | 'focusedFolder' | 'onFocusOn' | 'onExclude' | 'onShow' | 'onClearFocus'>;
+export type WidgetHostDeps = GraphFilteringDeps & Pick<GraphInspectionDeps, 'focus' | 'onFocusOn' | 'onExclude' | 'onShow'>;
 
 /** The controls panel built for one graph. */
 export type ControlsMounted = {

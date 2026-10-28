@@ -58,7 +58,7 @@ const rigOf = (packageAside: HTMLElement | null = null): PanelRig => {
   const container = line();
   const page = { root: line(), packagesMode, taskMode, taskScreen, container, status, detailsBar, detailsSummary };
   const asides: TaskPanelAsides = { package: (): HTMLElement | null => packageAside, task: taskAside };
-  const actions: Mocked<TaskPanelActions> = { onShowAll: vi.fn(), onShowEvery: vi.fn() };
+  const actions: Mocked<TaskPanelActions> = { onShowAll: vi.fn(), onShowEvery: vi.fn(), onShown: vi.fn() };
   const panel = taskPanelOf(page, actions, asides);
   const parts = { showEvery, slow, container, actions };
   const rig: PanelRig = {
@@ -357,6 +357,18 @@ describe('FEATURE: taskPanelOf prompt', () => {
 
     expect(rig.actions.onShowEvery).toHaveBeenCalledExactlyOnceWith(click.timeStamp);
     expect(document.activeElement).toBe(rig.container);
+  });
+
+  describe('GIVEN a new shown set', () => {
+    it('WHEN the panel shows it THEN onShown fires once, after the prompt is written', () => {
+      rig.actions.onShown.mockImplementation((): void => {
+        expect(rig.showEvery.textContent).toBe(showEveryTextOf(4));
+      });
+
+      rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount: 4 });
+
+      expect(rig.actions.onShown).toHaveBeenCalledOnce();
+    });
   });
 });
 

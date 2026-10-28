@@ -1,5 +1,6 @@
 import type { DetailsElements } from './details-view.type.ts';
-import type { GraphView, PageElements } from './graph-page.type.ts';
+import type { GraphView } from './graph-page.type.ts';
+import type { PageElements } from './page-elements.type.ts';
 import type { WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';

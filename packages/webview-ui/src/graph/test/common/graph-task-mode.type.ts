@@ -6,8 +6,8 @@ import type { GraphWebviewMessage } from '../../../bridge/common/graph-message.t
 import type { FlowControl } from '../../common/flow.type.ts';
 import type { FrameClock } from '../../common/frame-clock.type.ts';
 import type { LayoutScreen } from '../../common/graph-layouts.type.ts';
-import type { PageElements } from '../../common/graph-page.type.ts';
 import type { TaskModeDeps, TaskModes, TaskPanel, TaskView } from '../../common/graph-task.type.ts';
+import type { PageElements } from '../../common/page-elements.type.ts';
 import type { AtomCanvas, TaskCanvas } from '../../common/task-canvas.type.ts';
 import type { TaskControls, TaskControlsElements, TaskControlsRow, TaskControlsViews } from '../../common/task-controls.type.ts';
 import type { TaskDetails, TaskDetailsView, TaskDetailsViews } from '../../common/task-details.type.ts';
@@ -32,6 +32,8 @@ export type TaskModeRig = {
   readonly controls: Mocked<TaskControls>;
   readonly details: Mocked<TaskDetails>;
   readonly onExit: Mock<() => void>;
+  /** Called after each panel write of a shown set and after leaving, so the location bar reads again. */
+  readonly onLocation: Mock<() => void>;
   readonly onFailure: Mock<(error: unknown) => void>;
   /** The flow overlay; `deps.onHighlight` is its `highlightChanged`. */
   readonly flow: Mocked<FlowControl>;

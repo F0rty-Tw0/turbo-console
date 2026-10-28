@@ -283,13 +283,8 @@ export const WIDGET_INSET_PX = 8;
 /** Header widgets hide while the box or collapsed node is under this many px wide on screen. */
 export const WIDGET_MIN_BOX_PX = 120;
 
-/** The breadcrumb shows at most this many link lines, then one line counting the folders left. */
-export const BREADCRUMB_MAX_LINES = 3;
-
-/** The breadcrumb's accessible name and its way back out of a folder focus. */
-export const BREADCRUMB_LABEL = 'Folder focus';
-
-export const ALL_FOLDERS_LABEL = 'All folders';
+/** The location bar shows at most this many folder focus info lines, then one line counting the folders left. */
+export const LOCATION_MAX_LINES = 3;
 
 /**
  * The class the graph body wears while the pointer is over a node or edge that is not a ghost or a folder link: a

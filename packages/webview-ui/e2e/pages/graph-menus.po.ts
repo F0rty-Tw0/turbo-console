@@ -4,19 +4,10 @@ import { expect } from '@playwright/test';
 
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
-import {
-  ALL_FOLDERS_LABEL,
-  BREADCRUMB_LABEL,
-  DETAILS_LABEL,
-  GRAPH_LABEL,
-  GROUP_BY_FOLDER_LABEL
-} from '../../src/graph/common/graph.const.ts';
+import { DETAILS_LABEL, GRAPH_LABEL, GROUP_BY_FOLDER_LABEL } from '../../src/graph/common/graph.const.ts';
 import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { menuFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
-
-/** How far from the container's top left the breadcrumb may sit, in px. */
-const CORNER_REACH_PX = 16;
 
 const recordContextMenus = (): void => {
   window.__contextMenus = [];
@@ -25,9 +16,8 @@ const recordContextMenus = (): void => {
   });
 };
 
-/** The widget menus a "…" or Shift+F10 opens over the canvas, and the folder focus breadcrumb. */
+/** The widget menus a "…" or Shift+F10 opens over the canvas. */
 export class GraphMenusPage {
-  public readonly breadcrumb: Locator;
   public readonly menu: Locator;
 
   protected readonly container: Locator;
@@ -41,7 +31,6 @@ export class GraphMenusPage {
     this.page = page;
     this.widgets = new GraphWidgetsPage(page);
     this.menu = page.getByRole('menu');
-    this.breadcrumb = page.getByRole('navigation', { name: BREADCRUMB_LABEL, exact: true });
     this.aside = page.getByRole('complementary', { name: DETAILS_LABEL, exact: true });
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
     this.grouping = page.getByRole('checkbox', { name: GROUP_BY_FOLDER_LABEL, exact: true });
@@ -77,11 +66,6 @@ export class GraphMenusPage {
   /** Forced: an `aria-disabled` item still receives a real click, and must do nothing with it. */
   public async pressDisabledItem(name: string): Promise<void> {
     await this.item(name).click({ force: true });
-  }
-
-  /** Presses "All folders" in the breadcrumb. */
-  public async clickAllFolders(): Promise<void> {
-    await this.breadcrumb.getByRole('button', { name: ALL_FOLDERS_LABEL, exact: true }).click();
   }
 
   /**
@@ -157,24 +141,6 @@ export class GraphMenusPage {
     await expect(this.menu).toHaveCount(1);
   }
 
-  /** The breadcrumb shows the folder's title as the current page, its "All folders" button, and sits at the canvas top left. */
-  public async expectBreadcrumbShown(title: string): Promise<void> {
-    const current = this.breadcrumb.locator('[aria-current="page"]');
-
-    await expect(this.breadcrumb).toBeVisible();
-    await expect(this.breadcrumb.getByRole('button', { name: ALL_FOLDERS_LABEL, exact: true })).toBeVisible();
-    await expect(current).toHaveText(title);
-    await expect.poll(async (): Promise<number> => this.cornerReach()).toBeLessThanOrEqual(CORNER_REACH_PX);
-  }
-
-  public async expectBreadcrumbHidden(): Promise<void> {
-    await expect(this.breadcrumb).toBeHidden();
-  }
-
-  public async expectBreadcrumbLines(lines: string[]): Promise<void> {
-    await expect(this.breadcrumb.locator('.breadcrumb-line')).toHaveText(lines);
-  }
-
   protected async contextMenus(): Promise<boolean[]> {
     return this.page.evaluate((): boolean[] => window.__contextMenus ?? []);
   }
@@ -185,18 +151,5 @@ export class GraphMenusPage {
     const aside = await this.aside.evaluate(readRect);
 
     return menuFaultsOf(menu, container, Math.min(aside.left, container.left + container.width));
-  }
-
-  /** How far the breadcrumb's top left sits from the container's, the larger of the two offsets; far or negative offsets read large. */
-  private async cornerReach(): Promise<number> {
-    const nav = await this.breadcrumb.evaluate(readRect);
-    const container = await this.container.evaluate(readRect);
-    const across = nav.left - container.left;
-    const down = nav.top - container.top;
-    const isInside = across >= 0 && down >= 0;
-
-    if (!isInside) return Number.POSITIVE_INFINITY;
-
-    return Math.max(across, down);
   }
 }

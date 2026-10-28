@@ -1,8 +1,6 @@
-import { GraphBreadcrumb } from './graph-breadcrumb.ts';
 import { GraphWidgetMenus } from './graph-widget-menus.ts';
 import { GraphWidgets } from './graph-widgets.ts';
 import type {
-  GraphBreadcrumbDeps,
   GraphWidgetMenusDeps,
   GraphWidgetsDeps,
   MenuAnchor,
@@ -61,11 +59,10 @@ class BoundsWatch {
 /** A record that can move the container or the overlay: a direct child of the body shown or hidden. */
 const isBodyRecord = (record: MutationRecord, body: HTMLElement): boolean => record.target.parentNode === body;
 
-/** The layer, its menus and the breadcrumb, built together: a "…" click opens a menu, and a menu reads its anchor off the layer. */
+/** The layer and its menus, built together: a "…" click opens a menu, and a menu reads its anchor off the layer. */
 class WidgetParts {
   public readonly widgets: GraphWidgets;
   public readonly menus: GraphWidgetMenus;
-  public readonly breadcrumb: GraphBreadcrumb;
 
   public constructor(deps: WidgetWireDeps) {
     const { page, widgetViews, canAct } = deps;
@@ -80,16 +77,14 @@ class WidgetParts {
       layerBounds: (): LayerBounds => this.widgets.layerBounds()
     };
     const menusDeps: GraphWidgetMenusDeps = { ...deps, anchors, build: widgetViews.menu, isActive: canAct };
-    const breadcrumbDeps: GraphBreadcrumbDeps = { ...deps, layer: page.widgets, views: widgetViews };
 
     this.widgets = new GraphWidgets(layerDeps);
     this.menus = new GraphWidgetMenus(menusDeps);
-    this.breadcrumb = new GraphBreadcrumb(breadcrumbDeps);
   }
 }
 
 /**
- * Builds the widget layer, its menus and the breadcrumb, and re-reads the layer's bounds when the container resizes, the
+ * Builds the widget layer and its menus, and re-reads the layer's bounds when the container resizes, the
  * overlay query flips, or a panel of the body opens or closes; a `hidden` flip deeper in the body (a list row) costs
  * nothing. The details panel mounts with the first graph, so the Details aside is looked up on every refresh and watched from
  * then on: a sash drag moves its left edge over the canvas without resizing the container.
@@ -99,7 +94,7 @@ class WidgetParts {
 export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
   const { page, overlay } = deps;
   const { body, container, widgets: layer } = page;
-  const { widgets, menus, breadcrumb } = new WidgetParts(deps);
+  const { widgets, menus } = new WidgetParts(deps);
   const bounds = new BoundsWatch(body, widgets);
   const refreshBounds = (): void => bounds.refresh();
   const onMutations = (records: MutationRecord[]): void => {
@@ -123,7 +118,7 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
     refresh: (): void => {
       bounds.observeAside();
       widgets.refresh();
-      breadcrumb.update();
+      deps.onLocation();
     },
     position: (): void => {
       widgets.position();
@@ -132,7 +127,7 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
     buttonBox: (): AnchorBox | null => widgets.packageButtonBox(),
     groupingOff: (): void => {
       menus.drop();
-      breadcrumb.update();
+      deps.onLocation();
     }
   };
 

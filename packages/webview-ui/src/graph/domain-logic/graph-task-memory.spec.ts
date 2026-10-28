@@ -4,10 +4,46 @@ import { GraphTaskMemory } from './graph-task-memory.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { TaskModes } from '../common/graph-task.type.ts';
-import { SINGLE_TASK_STATE_STUB, TASK_STATE_STUB, TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
+import type { LocationFacts } from '../common/location.type.ts';
+import { MORE_TASKS_STATE_STUB, SINGLE_TASK_STATE_STUB, TASK_STATE_STUB, TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 
 type MemoryModes = Pick<TaskModes, 'task' | 'saveTask'>;
+
+/** A monorepo state whose only tasks are the workspace root's. */
+const ROOT_TASKS_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage: false };
+
+type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: LocationFacts];
+
+const FACTS_ROWS: FactsRow[] = [
+  [
+    'one package, its chain pulled in',
+    TASK_STATE_STUB,
+    ['web#build', 'web#lint'],
+    { taskPackage: 'web', taskCount: 3, isSinglePackage: false }
+  ],
+  ['two packages', TASK_STATE_STUB, ['web#build', 'api#build'], { taskPackage: null, taskCount: 2, isSinglePackage: false }],
+  ['none', TASK_STATE_STUB, [], { taskPackage: null, taskCount: 0, isSinglePackage: false }],
+  [
+    'one package, a dependent shown',
+    MORE_TASKS_STATE_STUB,
+    ['web#build'],
+    { taskPackage: 'web', taskCount: 3, isSinglePackage: false }
+  ],
+  [
+    'an unknown id beside a known one',
+    TASK_STATE_STUB,
+    ['web#build', 'gone#build'],
+    { taskPackage: 'web', taskCount: 2, isSinglePackage: false }
+  ],
+  [
+    'only workspace root tasks',
+    ROOT_TASKS_STATE,
+    ['//#build', '//#lint'],
+    { taskPackage: null, taskCount: 2, isSinglePackage: false }
+  ],
+  ['nothing, in a single package', SINGLE_TASK_STATE_STUB, [], { taskPackage: null, taskCount: 2, isSinglePackage: true }]
+];
 
 const modesOf = (saved: TaskViewState | null): MemoryModes => {
   const modes: MemoryModes = { task: vi.fn(() => saved), saveTask: vi.fn() };
@@ -133,6 +169,19 @@ describe('FEATURE: task mode memory', () => {
 
         expect(memory.rootLabel()).toBe(label);
       });
+    });
+  });
+
+  describe.each(FACTS_ROWS)('GIVEN %s chosen', (_title, state, chosen, facts) => {
+    it('WHEN the location facts are read with the shown set’s count THEN they name the one package, carry the count and flag a single package', () => {
+      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
+      const memory = new GraphTaskMemory(modesOf(saved));
+
+      memory.keep(state);
+
+      const { ids } = memory.shownSet();
+
+      expect(memory.locationFacts(ids.length)).toStrictEqual(facts);
     });
   });
 });

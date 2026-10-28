@@ -94,6 +94,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const onFailure = vi.fn<(error: unknown) => void>();
   const flow = flowControlMock();
   const selectedPackage = vi.fn<TaskModeDeps['selectedPackage']>(() => null);
+  const doubles = { onExit, onLocation: vi.fn<() => void>(), onFailure, flow, selectedPackage };
   const deps: TaskModeDeps = {
     view,
     runner: runs.runner,
@@ -104,6 +105,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     modes,
     frames,
     onExit,
+    onLocation: doubles.onLocation,
     onFailure,
     panelOf,
     controlsOf,
@@ -117,7 +119,6 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const calls = (): string[] => [...called];
 
-  const doubles = { onExit, onFailure, flow, selectedPackage };
   const rig: TaskModeRig = { ...parts, ...doubles, deps, view, runs, screen, frames, modes, posts, calls };
 
   return rig;

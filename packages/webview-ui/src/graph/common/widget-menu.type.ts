@@ -23,11 +23,3 @@ export type MenuElements = {
   readonly menu: HTMLElement;
   readonly items: HTMLElement[];
 };
-
-/** The folder focus breadcrumb: the way back, the focused folder's title and the list its info lines fill. */
-export type BreadcrumbElements = {
-  readonly nav: HTMLElement;
-  readonly allFolders: HTMLButtonElement;
-  readonly title: HTMLElement;
-  readonly lines: HTMLElement;
-};

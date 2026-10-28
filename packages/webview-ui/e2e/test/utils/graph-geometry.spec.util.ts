@@ -131,15 +131,29 @@ const candidatesOf = (container: ElementRect): ViewportPoint[] => {
   return candidates;
 };
 
+const BOX_GROWTH = 2;
+
+const isPointInGrownBox = (point: ViewportPoint, box: ElementRect): boolean => {
+  const grown: ElementRect = {
+    left: box.left - BOX_GROWTH,
+    top: box.top - BOX_GROWTH,
+    width: box.width + 2 * BOX_GROWTH,
+    height: box.height + 2 * BOX_GROWTH
+  };
+
+  return isInsideBox(point, grown);
+};
+
 /**
- * The first of the container's four inset corners, then its four side midpoints, that lies outside every node box and
- * farther than `EDGE_CLEARANCE_PX` from every drawn edge segment; throws when none does.
+ * The first of the container's four inset corners, then its four side midpoints, that lies outside every node box grown
+ * by 2 px, since a tap on a node's border still hits it, and farther than `EDGE_CLEARANCE_PX` from every drawn edge
+ * segment; throws when none does.
  */
 export const emptySpotOf = (container: ElementRect, nodes: ProbeNode[], edges: ProbeEdge[], zoom: number): ViewportPoint => {
   const boxes = nodes.map((node): ElementRect => nodeBoxOf(node, zoom));
   const segments = edges.map((edge): ViewportPoint[] | null => segmentOf(nodes, edge));
   const isEmpty = (point: ViewportPoint): boolean => {
-    const isOutsideNodes = !boxes.some((box): boolean => isInsideBox(point, box));
+    const isOutsideNodes = !boxes.some((box): boolean => isPointInGrownBox(point, box));
     const isOutsideEdges = segments.every((segment): boolean => isClearOfSegment(point, segment));
 
     return isOutsideNodes && isOutsideEdges;
@@ -154,19 +168,6 @@ export const emptySpotOf = (container: ElementRect, nodes: ProbeNode[], edges: P
 const GRID_STEP = 20;
 
 const GRID_EDGE_INSET = 2;
-
-const BOX_GROWTH = 2;
-
-const isPointInGrownBox = (point: ViewportPoint, box: ElementRect): boolean => {
-  const grown: ElementRect = {
-    left: box.left - BOX_GROWTH,
-    top: box.top - BOX_GROWTH,
-    width: box.width + 2 * BOX_GROWTH,
-    height: box.height + 2 * BOX_GROWTH
-  };
-
-  return isInsideBox(point, grown);
-};
 
 /** `start`, `start + step`, ... while below `limit`. */
 const stepsOf = (start: number, limit: number): number[] => {

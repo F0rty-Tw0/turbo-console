@@ -14,7 +14,7 @@ test.describe('FEATURE: the task graph of a single-package repo', () => {
   test(
     'GIVEN a single-package state, the page opens in task mode on every task with no mode buttons',
     { annotation: SINGLE },
-    async ({ graphHost, graphPage, graphSinglePackage, graphTask, graphTaskProbe }): Promise<void> => {
+    async ({ graphHost, graphLocation, graphPage, graphSinglePackage, graphTask, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the page is opened and the state is sent', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(SINGLE_PACKAGE_TASKS_STUB);
@@ -34,6 +34,9 @@ test.describe('FEATURE: the task graph of a single-package repo', () => {
 
       await test.step('AND the box is titled single-app', async (): Promise<void> =>
         graphTaskProbe.expectBoxTitlesDrawn(['single-app']));
+
+      await test.step('AND the location bar shows only Tasks (3), with no crumb back to package mode', async (): Promise<void> =>
+        graphLocation.expectCrumbs(['Tasks (3)'], 'Tasks (3)'));
     }
   );
 

@@ -56,14 +56,14 @@ const menuOfFrom = (
   return menuOf;
 };
 
-/** The wired layer, its menus and the breadcrumb, reading the mode on screen, the folder scene, the selection and the filters when used. */
+/** The wired layer and its menus, reading the mode on screen, the folder scene, the selection and the filters when used. */
 export const widgetsOf = (
   deps: WidgetHostDeps,
   inspection: WidgetInspection,
   folders: FolderSource,
   controls: WidgetFilters
 ): WidgetWiring => {
-  const { page, view, widgetViews, overlay, isGrouped, canAct, drawn, focusedFolder, onClearFocus } = deps;
+  const { page, view, widgetViews, overlay, isGrouped, canAct, onLocation } = deps;
   const state = (): WidgetState => {
     const current: WidgetState = { isGrouped: isGrouped(), scene: folders.scene(), selectedPackage: inspection.selected() };
 
@@ -79,9 +79,7 @@ export const widgetsOf = (
     canAct,
     menuOf: menuOfFrom(deps, inspection, folders, controls),
     selection: (): MenuTarget | null => menuTargetOf(inspection.current()),
-    focusedFolder,
-    drawn,
-    clearFocus: onClearFocus
+    onLocation
   };
 
   return wireWidgets(wireDeps);
