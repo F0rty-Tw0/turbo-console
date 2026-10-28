@@ -20,7 +20,7 @@ type DetailsRig = {
   readonly onSelect: Mock<(id: string) => void>;
   readonly onClear: Mock<() => void>;
   readonly onToggle: Mock<(isOpen: boolean) => void>;
-  readonly onShowPackage: Mock<(name: string, at: number) => void>;
+  readonly onShowPackage: Mock<(name: string) => void>;
   readonly panel: HTMLElement;
   /** The views built so far, the latest last. */
   readonly built: TaskDetailsView[];
@@ -72,7 +72,7 @@ const rigOf = (): DetailsRig => {
   const onSelect = vi.fn<(id: string) => void>();
   const onClear = vi.fn<() => void>();
   const onToggle = vi.fn<(isOpen: boolean) => void>();
-  const onShowPackage = vi.fn<(name: string, at: number) => void>();
+  const onShowPackage = vi.fn<(name: string) => void>();
   const actions: TaskDetailsActions = { onSelect, onClear };
   const deps: TaskDetailsDeps = { page, views, bridge, actions, onToggle, onShowPackage };
   const rig: DetailsRig = { deps, posted, onSelect, onClear, onToggle, onShowPackage, panel, built };
@@ -259,12 +259,10 @@ describe('FEATURE: GraphTaskDetails', () => {
       [view] = rig.built;
     });
 
-    it('WHEN the owner button is clicked THEN package a is shown from the click time', () => {
-      const click = new Event('click');
+    it('WHEN the owner button is clicked THEN package a is shown', () => {
+      view?.owner?.click();
 
-      view?.owner?.dispatchEvent(click);
-
-      expect(rig.onShowPackage).toHaveBeenCalledExactlyOnceWith('a', click.timeStamp);
+      expect(rig.onShowPackage).toHaveBeenCalledExactlyOnceWith('a');
     });
 
     it('WHEN task mode is left THEN the stale owner button shows nothing', () => {

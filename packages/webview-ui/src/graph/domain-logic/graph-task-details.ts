@@ -112,7 +112,7 @@ export class GraphTaskDetails {
     view.runNoCache.addEventListener('click', (): void => act('runNoCache'));
     view.stop.addEventListener('click', (): void => act('stop'));
 
-    view.owner?.addEventListener('click', (event: MouseEvent): void => this.showPackage(model, event.timeStamp));
+    view.owner?.addEventListener('click', (): void => this.showPackage(model));
 
     const tasks = [...view.dependencies, ...view.dependents];
 
@@ -120,10 +120,10 @@ export class GraphTaskDetails {
   }
 
   /** Shows the task's package in the package graph, only from a click on the view of the task shown now, in task mode. */
-  private showPackage(model: TaskDetailsModel, at: number): void {
+  private showPackage(model: TaskDetailsModel): void {
     const isShown = this.isShown(model);
 
-    if (isShown) this.deps.onShowPackage(model.task.packageName, at);
+    if (isShown) this.deps.onShowPackage(model.task.packageName);
   }
 
   /** Posts the button's message, only from a click on the view of the task shown now, in task mode. */

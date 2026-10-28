@@ -78,8 +78,8 @@ export type TaskDetailsDeps = {
   readonly actions: TaskDetailsActions;
   /** The panel was opened or closed: the canvas re-measures and the open state is saved. */
   readonly onToggle: (isOpen: boolean) => void;
-  /** The owner button was clicked at `at`: the package graph shows package `name`. */
-  readonly onShowPackage: (name: string, at: number) => void;
+  /** The owner button was clicked: the package graph shows package `name`. */
+  readonly onShowPackage: (name: string) => void;
 };
 
 /** What the task "…" menu's items call: the panel's run button `action` for the task `id`. */

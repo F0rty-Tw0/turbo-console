@@ -165,7 +165,7 @@ export type TaskModeHooks = {
   readonly flow: FlowControl;
   readonly selectedPackage: () => string | null;
   /** The task details owner button: leaves task mode and shows package `name` in the package graph. */
-  readonly showPackage: (name: string, at: number) => void;
+  readonly showPackage: (name: string) => void;
 };
 
 /** The asked-for ids that match a task, once each in the order asked, and how many matched none. */
