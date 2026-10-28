@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { umbrellaSizeOf } from './atom-size.util.ts';
 import { taskLayoutKeyOf } from './elk-task-graph.util.ts';
-import { choiceOf, droppedNoticeOf, matchesTaskSearch, packageTaskIdsOf, requestOf, taskDepthOf } from './task-choice.util.ts';
+import {
+  choiceOf,
+  droppedNoticeOf,
+  entryTaskIdsOf,
+  matchesTaskSearch,
+  packageTaskIdsOf,
+  requestOf,
+  taskDepthOf,
+  taskIdsOf
+} from './task-choice.util.ts';
 import type { NodeSizer, UmbrellaSizers } from '../common/graph-page.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
@@ -134,6 +143,22 @@ describe('FEATURE: task choice rules', () => {
       const ids = packageTaskIdsOf(TASK_CHAIN_STUB, name);
 
       expect(ids).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN the chain api#build, web#build and web#lint as the Tasks entry', () => {
+    it.each([
+      { selected: 'web', expected: ['web#build', 'web#lint'] },
+      { selected: 'docs', expected: null },
+      { selected: null, expected: null }
+    ])('WHEN the selected package is $selected THEN the entry ids are $expected', ({ selected, expected }) => {
+      const ids = entryTaskIdsOf(TASK_CHAIN_STUB, selected);
+
+      expect(ids).toStrictEqual(expected);
+    });
+
+    it('WHEN every task id is read THEN each id is listed in the task list order', () => {
+      expect(taskIdsOf(TASK_CHAIN_STUB)).toStrictEqual(['api#build', 'web#build', 'web#lint']);
     });
   });
 
