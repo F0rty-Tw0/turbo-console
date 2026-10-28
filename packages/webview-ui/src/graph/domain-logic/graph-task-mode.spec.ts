@@ -176,7 +176,7 @@ describe('FEATURE: GraphTaskMode', () => {
 
     it('WHEN a task is dragged, another graph shown and the chain again THEN the dragged centres return with no run', async () => {
       rig.view.tasks.positions.mockReturnValue(DRAGGED);
-      mode.dragged();
+      mode.layout.dragged();
       mode.received(MORE_TASKS_STATE_STUB, 9);
       await rig.runs.settle(1, resultOf(MORE_KEY, POSITIONS));
       mode.received(TASK_STATE_STUB, 11);
@@ -233,7 +233,7 @@ describe('FEATURE: GraphTaskMode', () => {
     it('WHEN Tasks is pressed THEN task mode shows the prompt and lays nothing out', () => {
       expect(mode.isActive()).toBe(true);
       expect(rig.panel.enter).toHaveBeenCalledOnce();
-      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: true, hiddenCount: 0 });
+      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: true, hiddenCount: 0, knownCount: 3 });
       expect(rig.runs.count()).toBe(0);
     });
 
@@ -321,7 +321,7 @@ describe('FEATURE: GraphTaskMode', () => {
       panelActionsOf(rig)?.onShowAll();
 
       expect(rig.modes.task()).toMatchObject({ chosen: ['web#build'], capLifted: true });
-      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 0 });
+      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 0, knownCount: 3 });
     });
 
     it('WHEN a search is typed THEN it is saved and nothing lays out again', () => {

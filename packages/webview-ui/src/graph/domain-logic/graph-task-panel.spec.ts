@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mocked } from 'vitest';
 
 import { saveDetailsToggle, taskPanelOf } from './graph-task-panel.ts';
 import { NOTICE_TEXT_DELAY_MS, PACKAGE_NOTICE_MS, UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
-import type { TaskPanel, TaskPanelAsides, TaskScreenElements } from '../common/graph-task.type.ts';
+import type { TaskPanel, TaskPanelActions, TaskPanelAsides, TaskScreenElements } from '../common/graph-task.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskWidgetsMock } from '../test/mocks/graph-task-mode.mock.ts';
-import { droppedTasksText, tasksHiddenText } from '../utils/task-text.util.ts';
+import { droppedTasksText, showEveryTextOf, tasksHiddenText } from '../utils/task-text.util.ts';
 
 type PanelRig = {
   readonly panel: TaskPanel;
@@ -20,6 +21,11 @@ type PanelRig = {
   readonly detailsBar: HTMLDivElement;
   readonly detailsSummary: HTMLElement;
   readonly taskAside: HTMLElement;
+  readonly showEvery: HTMLButtonElement;
+  /** The prompt's over-cap line. */
+  readonly slow: HTMLElement;
+  readonly container: HTMLElement;
+  readonly actions: Mocked<TaskPanelActions>;
 };
 
 const line = (): HTMLElement => document.createElement('p');
@@ -32,8 +38,12 @@ const rigOf = (packageAside: HTMLElement | null = null): PanelRig => {
 
   const banner = line();
   const bannerText = line();
+  const showEvery = document.createElement('button');
+  const slow = line();
   const taskScreen: TaskScreenElements = {
     prompt: line(),
+    showEvery,
+    slow,
     banner,
     bannerText,
     showAll: document.createElement('button'),
@@ -45,10 +55,25 @@ const rigOf = (packageAside: HTMLElement | null = null): PanelRig => {
   const detailsBar = document.createElement('div');
   const detailsSummary = line();
   const taskAside = document.createElement('aside');
-  const page = { root: line(), packagesMode, taskMode, taskScreen, container: line(), status, detailsBar, detailsSummary };
+  const container = line();
+  const page = { root: line(), packagesMode, taskMode, taskScreen, container, status, detailsBar, detailsSummary };
   const asides: TaskPanelAsides = { package: (): HTMLElement | null => packageAside, task: taskAside };
-  const panel = taskPanelOf(page, { onShowAll: vi.fn() }, asides);
-  const rig: PanelRig = { panel, notice, status, banner, bannerText, packagesMode, taskMode, detailsBar, detailsSummary, taskAside };
+  const actions: Mocked<TaskPanelActions> = { onShowAll: vi.fn(), onShowEvery: vi.fn() };
+  const panel = taskPanelOf(page, actions, asides);
+  const parts = { showEvery, slow, container, actions };
+  const rig: PanelRig = {
+    panel,
+    notice,
+    status,
+    banner,
+    bannerText,
+    packagesMode,
+    taskMode,
+    detailsBar,
+    detailsSummary,
+    taskAside,
+    ...parts
+  };
 
   return rig;
 };
@@ -251,7 +276,7 @@ describe('FEATURE: taskPanelOf banner', () => {
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
     ({ panel, banner, bannerText } = rigOf());
-    panel.show({ isEmpty: false, hiddenCount: 2 });
+    panel.show({ isEmpty: false, hiddenCount: 2, knownCount: 4 });
   });
 
   afterEach(() => {
@@ -262,7 +287,7 @@ describe('FEATURE: taskPanelOf banner', () => {
     it('WHEN the same count shows again THEN its status text is not written again', () => {
       const writes = writesOf(bannerText, 'textContent');
 
-      panel.show({ isEmpty: false, hiddenCount: 2 });
+      panel.show({ isEmpty: false, hiddenCount: 2, knownCount: 4 });
 
       expect({ writes, text: bannerText.textContent }).toStrictEqual({ writes: [], text: tasksHiddenText(2) });
     });
@@ -270,7 +295,7 @@ describe('FEATURE: taskPanelOf banner', () => {
     it('WHEN the same count shows again THEN the banner is not hidden or shown again', () => {
       const writes = writesOf(banner, 'hidden');
 
-      panel.show({ isEmpty: false, hiddenCount: 2 });
+      panel.show({ isEmpty: false, hiddenCount: 2, knownCount: 4 });
 
       expect({ writes, hidden: banner.hidden }).toStrictEqual({ writes: [], hidden: false });
     });
@@ -278,7 +303,7 @@ describe('FEATURE: taskPanelOf banner', () => {
     it('WHEN a new count shows THEN its status text is written once', () => {
       const writes = writesOf(bannerText, 'textContent');
 
-      panel.show({ isEmpty: false, hiddenCount: 3 });
+      panel.show({ isEmpty: false, hiddenCount: 3, knownCount: 4 });
 
       expect(writes).toStrictEqual([tasksHiddenText(3)]);
     });
@@ -286,10 +311,52 @@ describe('FEATURE: taskPanelOf banner', () => {
     it('WHEN no task is hidden THEN the banner is hidden once', () => {
       const writes = writesOf(banner, 'hidden');
 
-      panel.show({ isEmpty: false, hiddenCount: 0 });
+      panel.show({ isEmpty: false, hiddenCount: 0, knownCount: 4 });
 
       expect(writes).toStrictEqual([true]);
     });
+  });
+});
+
+describe('FEATURE: taskPanelOf prompt', () => {
+  let rig: PanelRig;
+
+  beforeEach(() => {
+    vi.stubGlobal('document', fakeDocumentMock());
+    rig = rigOf();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.each([
+    { knownCount: 0, isEveryHidden: true, isSlowHidden: true },
+    { knownCount: 4, isEveryHidden: false, isSlowHidden: true },
+    { knownCount: 300, isEveryHidden: false, isSlowHidden: true },
+    { knownCount: 301, isEveryHidden: false, isSlowHidden: false }
+  ])(
+    'GIVEN $knownCount known tasks WHEN the prompt shows THEN Show every task hidden is $isEveryHidden and the slow line hidden is $isSlowHidden',
+    ({ knownCount, isEveryHidden, isSlowHidden }) => {
+      rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount });
+
+      expect([rig.showEvery.hidden, rig.slow.hidden]).toStrictEqual([isEveryHidden, isSlowHidden]);
+    }
+  );
+
+  it('GIVEN 4 known tasks WHEN the prompt shows THEN Show every task reads and is titled with the count', () => {
+    rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount: 4 });
+
+    expect([rig.showEvery.textContent, rig.showEvery.title]).toStrictEqual([showEveryTextOf(4), showEveryTextOf(4)]);
+  });
+
+  it('GIVEN the prompt WHEN Show every task is clicked THEN onShowEvery gets the click time and the canvas takes focus', () => {
+    const click = new Event('click');
+
+    rig.showEvery.dispatchEvent(click);
+
+    expect(rig.actions.onShowEvery).toHaveBeenCalledExactlyOnceWith(click.timeStamp);
+    expect(document.activeElement).toBe(rig.container);
   });
 });
 

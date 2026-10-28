@@ -12,6 +12,7 @@ import {
   PACKAGES_MODE_LABEL,
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
+  SHOW_EVERY_TASK_LABEL,
   SHOW_TASKS_LABEL,
   TASKS_MODE_LABEL,
   TASK_CONTROLS_ID
@@ -34,6 +35,8 @@ export class GraphTask {
   private readonly menuList: Locator;
   private readonly probe: GraphProbePage;
   private readonly prompt: Locator;
+  private readonly showEvery: Locator;
+  private readonly slow: Locator;
   private readonly bannerText: Locator;
   private readonly showAll: Locator;
   private readonly notice: Locator;
@@ -47,6 +50,8 @@ export class GraphTask {
     this.packagesButton = modeGroup.getByRole('button', { name: PACKAGES_MODE_LABEL, exact: true });
     this.tasksButton = modeGroup.getByRole('button', { name: TASKS_MODE_LABEL, exact: true });
     this.prompt = page.getByText(EMPTY_TASKS_TEXT, { exact: true });
+    this.showEvery = page.getByRole('button', { name: SHOW_EVERY_TASK_LABEL });
+    this.slow = page.locator('p.graph-task-slow');
     this.bannerText = page.getByRole('status').and(page.locator('.graph-task-banner-text'));
     this.showAll = page.getByRole('button', { name: SHOW_ALL_TASKS_LABEL, exact: true });
     this.notice = page.locator('.graph-task-notice');
@@ -91,6 +96,25 @@ export class GraphTask {
   /** The prompt reads the exact copy and shows, or is hidden. */
   public async expectPrompt(isShown = true): Promise<void> {
     await expect(this.prompt).toBeVisible({ visible: isShown });
+  }
+
+  /** The prompt's Show every task is shown and named exactly `text`. */
+  public async expectShowEvery(text: string): Promise<void> {
+    await expect(this.page.getByRole('button', { name: text, exact: true })).toBeVisible();
+  }
+
+  public async clickShowEvery(): Promise<void> {
+    await this.showEvery.click();
+  }
+
+  public async expectSlowHidden(): Promise<void> {
+    await expect(this.slow).toBeHidden();
+  }
+
+  /** The prompt's slow line reads `text` and shows. */
+  public async expectSlowText(text: string): Promise<void> {
+    await expect(this.slow).toHaveText(text);
+    await expect(this.slow).toBeVisible();
   }
 
   /** The cap banner reads `<hidden> tasks hidden` with Show all tasks, or is hidden for `null`. */

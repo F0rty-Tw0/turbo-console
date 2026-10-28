@@ -93,6 +93,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const onExit = vi.fn<() => void>();
   const onFailure = vi.fn<(error: unknown) => void>();
   const flow = flowControlMock();
+  const selectedPackage = vi.fn<TaskModeDeps['selectedPackage']>(() => null);
   const deps: TaskModeDeps = {
     view,
     runner: runs.runner,
@@ -110,12 +111,14 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     widgetsOf: taskWidgetsMock,
     flow,
     now: (): number => 0,
-    onHighlight: flow.highlightChanged
+    onHighlight: flow.highlightChanged,
+    selectedPackage
   };
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const calls = (): string[] => [...called];
 
-  const rig: TaskModeRig = { ...parts, deps, view, runs, screen, frames, modes, posts, calls, onExit, onFailure, flow };
+  const doubles = { onExit, onFailure, flow, selectedPackage };
+  const rig: TaskModeRig = { ...parts, ...doubles, deps, view, runs, screen, frames, modes, posts, calls };
 
   return rig;
 };

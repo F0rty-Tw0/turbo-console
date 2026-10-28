@@ -5,7 +5,7 @@ import { trackPointerFocus } from './pointer-focus.ts';
 import { buildToolbar } from './toolbar-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { PageElements } from '../common/graph-page.type.ts';
-import { EMPTY_TASKS_TEXT, SHOW_ALL_TASKS_LABEL } from '../common/graph-task.const.ts';
+import { EMPTY_TASKS_TEXT, SHOW_ALL_TASKS_LABEL, SLOW_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskScreenElements } from '../common/graph-task.type.ts';
 import { FALLBACK_NOTICE_TEXT, GRAPH_LABEL, RELOAD_LABEL, RETRY_LABEL } from '../common/graph.const.ts';
 import type { PanelSashes } from '../common/panel-sash.type.ts';
@@ -51,6 +51,16 @@ const hiddenLine = (className: string, text: string, isStatus: boolean): HTMLEle
   return line;
 };
 
+/** The prompt block: its text, then Show every task, whose text the task panel writes, then the hidden slow line. */
+const promptBlock = (showEvery: HTMLButtonElement, slow: HTMLElement): HTMLElement => {
+  const text = textElement('p', 'graph-task-prompt-text', EMPTY_TASKS_TEXT);
+  const block = textBlock('graph-task-prompt', text, showEvery);
+
+  block.append(slow);
+
+  return block;
+};
+
 /**
  * Task mode's lines above the canvas, all hidden in package mode: the notice, the cap banner and the prompt. The notice
  * and the banner's count are status lines, announced when their text changes.
@@ -60,8 +70,10 @@ const taskScreen = (): TaskScreenElements => {
   const bannerText = textElement('p', 'graph-task-banner-text', '');
   const showAll = textButton(SHOW_ALL_TASKS_LABEL);
   const banner = textBlock('graph-notice graph-task-banner', bannerText, showAll);
-  const prompt = hiddenLine('graph-task-prompt', EMPTY_TASKS_TEXT, false);
-  const screen: TaskScreenElements = { prompt, banner, bannerText, showAll, notice };
+  const showEvery = textButton('');
+  const slow = hiddenLine('graph-task-slow', SLOW_TASKS_TEXT, false);
+  const prompt = promptBlock(showEvery, slow);
+  const screen: TaskScreenElements = { prompt, showEvery, slow, banner, bannerText, showAll, notice };
 
   bannerText.setAttribute('role', 'status');
 

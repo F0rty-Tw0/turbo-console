@@ -219,7 +219,7 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       mode.received(fanStateOf(301), 8);
 
       expect(rig.runs.count()).toBe(1);
-      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 301 });
+      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 301, knownCount: 302 });
     });
   });
 

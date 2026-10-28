@@ -55,8 +55,12 @@ export type TaskView = Pick<GraphView, 'tasks' | 'atoms' | 'fit' | 'isFitted' | 
 
 /** The task mode lines above the canvas, built once by `buildPage`, all hidden in package mode. */
 export type TaskScreenElements = {
-  /** `EMPTY_TASKS_TEXT`, shown while nothing is chosen. */
+  /** The prompt block, shown while nothing is chosen: `EMPTY_TASKS_TEXT`, Show every task and the slow line. */
   readonly prompt: HTMLElement;
+  /** Chooses every known task; hidden while none is known. */
+  readonly showEvery: HTMLButtonElement;
+  /** `SLOW_TASKS_TEXT`, shown while more than `TASK_CAP` tasks are known. */
+  readonly slow: HTMLElement;
   /** The cap banner: `bannerText` and the Show all tasks button. */
   readonly banner: HTMLElement;
   readonly bannerText: HTMLElement;
@@ -69,6 +73,8 @@ export type TaskScreenElements = {
 export type TaskPanelView = {
   readonly isEmpty: boolean;
   readonly hiddenCount: number;
+  /** How many tasks the latest state holds, which Show every task chooses. */
+  readonly knownCount: number;
 };
 
 /** The page-level task mode parts: the `task-mode` class, the pressed mode button, the prompt, the banner and the notice. */
@@ -83,6 +89,8 @@ export type TaskPanel = {
 
 export type TaskPanelActions = {
   readonly onShowAll: () => void;
+  /** Show every task was pressed at `at`. */
+  readonly onShowEvery: (at: number) => void;
 };
 
 /** The two Details asides the Details bar moves between; the package one is built with the first package graph, so it may not exist yet. */
@@ -126,6 +134,8 @@ export type TaskModeDeps = {
   readonly now: () => number;
   /** After each task canvas paint and each placed task layout: tells the flow overlay how many task edges the painted target highlights. */
   readonly onHighlight: (litEdgeCount: number) => void;
+  /** The package selected in the package graph, whose tasks Tasks opens on. */
+  readonly selectedPackage: () => string | null;
 };
 
 /** What a task panel's open or close touches: the canvas, re-measured, and the saved open state. */
@@ -153,6 +163,7 @@ export type TaskModeHooks = {
   readonly onMessage: () => void;
   /** The controller-built flow overlay. */
   readonly flow: FlowControl;
+  readonly selectedPackage: () => string | null;
 };
 
 /** The asked-for ids that match a task, once each in the order asked, and how many matched none. */

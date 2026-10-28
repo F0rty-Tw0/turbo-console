@@ -37,6 +37,9 @@ const NO_BOUNDS: ElementRect = { left: Number.NaN, top: Number.NaN, width: 0, he
 
 const LEAF_SELECTED_SAVED = taskSavedState(TARGET_LIKE_HASH, { chosen: [TARGET_LIKE_CHOSEN_TASK], selected: LEAF });
 
+/** Every task of package `lib-3`, in the task list order: what Tasks chooses with lib-3 selected. */
+const LIB_3_TASKS = ['lib-3#build', 'lib-3#test', 'lib-3#lint', 'lib-3#typecheck', 'lib-3#docs', 'lib-3#pack', 'lib-3#e2e'];
+
 /** Package mode, with lib-3#build chosen and lib-3#test selected for task mode. */
 const PACKAGE_MODE_SAVED: GraphViewState = { ...LEAF_SELECTED_SAVED, mode: 'packages' };
 
@@ -218,9 +221,9 @@ test.describe('FEATURE: graph task flow', () => {
   );
 
   test(
-    'GIVEN lib-3 selected in package mode, entering task mode draws no flow until the task layout lands, then the saved selection flows',
+    'GIVEN lib-3 selected in package mode, Tasks chooses its tasks with nothing selected and no flow, then a tapped lib-3 task flows',
     { annotation: FLOW },
-    async ({ graphFlow, graphGrouping, graphHost, graphPage, graphProbe, graphTask, pageClock }): Promise<void> => {
+    async ({ graphFlow, graphGrouping, graphHost, graphPage, graphProbe, graphTask, graphTaskHost, pageClock }): Promise<void> => {
       await test.step('WHEN the package graph is laid out and lib-3 is selected', async (): Promise<void> => {
         await pageClock.install();
         await graphPage.open({ savedState: PACKAGE_MODE_SAVED, workers: 'held' });
@@ -237,19 +240,26 @@ test.describe('FEATURE: graph task flow', () => {
         await graphFlow.tick(100);
       });
 
-      await test.step('THEN the overlay is clear and the probe already reads the saved task as selected', async (): Promise<void> => {
+      await test.step('THEN the overlay is clear and no task is selected', async (): Promise<void> => {
         await graphFlow.expectInked(false);
-        await graphProbe.expectSelected(LEAF);
+        await graphProbe.expectSelected(null);
       });
 
-      await test.step('WHEN the worker is released and the task layout lands', async (): Promise<void> => {
+      await test.step("AND lib-3's tasks replace the saved choice", async (): Promise<void> => {
+        await graphFlow.tick(VIEW_STATE_DEBOUNCE_MS);
+        await graphTaskHost.expectSavedTask({ chosen: LIB_3_TASKS, selected: null });
+      });
+
+      await test.step('WHEN the worker is released, the task layout lands and lib-3#test is tapped', async (): Promise<void> => {
         await graphGrouping.releaseWorker();
         await graphFlow.waitForNode(LEAF);
         await graphFlow.tick(32);
+        await graphFlow.tap(LEAF);
+        await graphFlow.tick(32);
       });
 
-      await test.step('THEN the saved selection reads lit and its flow is drawn', async (): Promise<void> => {
-        await graphProbe.expectNodeStates(targetLikeLitStatesOf(LEAF));
+      await test.step('THEN lib-3#test is selected and its flow is drawn', async (): Promise<void> => {
+        await graphProbe.expectSelected(LEAF);
         await graphFlow.expectInked(true);
       });
     }
