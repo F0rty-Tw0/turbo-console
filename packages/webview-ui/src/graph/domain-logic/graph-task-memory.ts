@@ -1,5 +1,6 @@
 import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 import type { TaskModes } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
@@ -53,13 +54,17 @@ export class GraphTaskMemory {
     return shownSetOf({ tasks, chosen: effective, depth, capLifted });
   }
 
-  /** The one package of the chosen tasks the state knows, `null` for none or several, and how many tasks are shown. */
+  /**
+   * The one package of the chosen tasks the state knows, `null` for none, several or the workspace root, which the package
+   * graph never draws; and how many tasks are shown.
+   */
   public locationFacts(): LocationFacts {
     const chosen = new Set(this.view().chosen);
     const known = this.latestTasks.filter((task) => chosen.has(task.id));
     const packages = new Set(known.map((task) => task.packageName));
     const [only] = packages;
-    const taskPackage = packages.size === 1 && only !== undefined ? only : null;
+    const isOneDrawnPackage = packages.size === 1 && only !== undefined && only !== ROOT_TASK_PACKAGE;
+    const taskPackage = isOneDrawnPackage ? only : null;
     const taskCount = this.shownSet().ids.length;
     const facts: LocationFacts = { taskPackage, taskCount };
 

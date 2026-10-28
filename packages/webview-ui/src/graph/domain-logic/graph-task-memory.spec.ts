@@ -10,6 +10,9 @@ import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 
 type MemoryModes = Pick<TaskModes, 'task' | 'saveTask'>;
 
+/** A monorepo state whose only tasks are the workspace root's. */
+const ROOT_TASKS_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage: false };
+
 type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: LocationFacts];
 
 const FACTS_ROWS: FactsRow[] = [
@@ -17,7 +20,8 @@ const FACTS_ROWS: FactsRow[] = [
   ['two packages', TASK_STATE_STUB, ['web#build', 'api#build'], { taskPackage: null, taskCount: 2 }],
   ['none', TASK_STATE_STUB, [], { taskPackage: null, taskCount: 0 }],
   ['one package, a dependent shown', MORE_TASKS_STATE_STUB, ['web#build'], { taskPackage: 'web', taskCount: 3 }],
-  ['an unknown id beside a known one', TASK_STATE_STUB, ['web#build', 'gone#build'], { taskPackage: 'web', taskCount: 2 }]
+  ['an unknown id beside a known one', TASK_STATE_STUB, ['web#build', 'gone#build'], { taskPackage: 'web', taskCount: 2 }],
+  ['only workspace root tasks', ROOT_TASKS_STATE, ['//#build', '//#lint'], { taskPackage: null, taskCount: 2 }]
 ];
 
 const modesOf = (saved: TaskViewState | null): MemoryModes => {
