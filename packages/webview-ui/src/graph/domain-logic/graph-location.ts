@@ -10,7 +10,7 @@ import type {
 import { breadcrumbLinesOf } from '../utils/breadcrumb.util.ts';
 import { locationCrumbsOf } from '../utils/location.util.ts';
 
-const NO_TASK_FACTS: LocationFacts = { taskPackage: null, taskCount: 0 };
+const NO_TASK_FACTS: LocationFacts = { taskPackage: null, taskCount: 0, isSinglePackage: false };
 
 /** The shown tasks' facts in task mode; package mode never reads them. */
 const factsOf = (deps: GraphLocationDeps, mode: GraphViewMode): LocationFacts => {

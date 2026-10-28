@@ -20,10 +20,16 @@ const packageTrailOf = (folder: string | null): LocationCrumb[] => {
   return [packages, focused];
 };
 
-/** "Packages", the one package of the chosen tasks when there is one, then "Tasks (n)"; a folder focus is not shown. */
-const taskTrailOf = (taskPackage: string | null, taskCount: number): LocationCrumb[] => {
+/**
+ * "Packages", the one package of the chosen tasks when there is one, then "Tasks (n)"; a folder focus is not shown. A
+ * single package has no package mode to go back to, so its trail is "Tasks (n)" alone.
+ */
+const taskTrailOf = (state: LocationState): LocationCrumb[] => {
+  const { taskPackage, taskCount, isSinglePackage } = state;
   const packages = crumbOf('packages', PACKAGES_CRUMB, '');
   const tasks = crumbOf('tasks', `${TASKS_CRUMB_STEM} (${taskCount})`, '');
+
+  if (isSinglePackage) return [tasks];
 
   if (taskPackage === null) return [packages, tasks];
 
@@ -33,7 +39,7 @@ const taskTrailOf = (taskPackage: string | null, taskCount: number): LocationCru
 };
 
 const trailOf = (state: LocationState): LocationCrumb[] => {
-  if (state.mode === 'tasks') return taskTrailOf(state.taskPackage, state.taskCount);
+  if (state.mode === 'tasks') return taskTrailOf(state);
 
   return packageTrailOf(state.folder);
 };

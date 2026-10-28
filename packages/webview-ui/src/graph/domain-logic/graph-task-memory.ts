@@ -56,7 +56,7 @@ export class GraphTaskMemory {
 
   /**
    * The one package of the chosen tasks the state knows, `null` for none, several or the workspace root, which the package
-   * graph never draws; and how many tasks are shown.
+   * graph never draws; how many tasks are shown; and whether the state is a single package.
    */
   public locationFacts(): LocationFacts {
     const chosen = new Set(this.view().chosen);
@@ -66,7 +66,7 @@ export class GraphTaskMemory {
     const isOneDrawnPackage = packages.size === 1 && only !== undefined && only !== ROOT_TASK_PACKAGE;
     const taskPackage = isOneDrawnPackage ? only : null;
     const taskCount = this.shownSet().ids.length;
-    const facts: LocationFacts = { taskPackage, taskCount };
+    const facts: LocationFacts = { taskPackage, taskCount, isSinglePackage: this.isSinglePackage };
 
     return facts;
   }

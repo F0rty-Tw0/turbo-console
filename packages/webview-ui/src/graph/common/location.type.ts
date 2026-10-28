@@ -14,16 +14,23 @@ export type LocationCrumb = {
   readonly isCurrent: boolean;
 };
 
-/** What the location bar shows: the mode, the focused folder, the one package of the chosen tasks and the shown task count. */
+/**
+ * What the location bar shows: the mode, the focused folder, the one package of the chosen tasks, the shown task count,
+ * and whether the repo is a single package, whose page never leaves task mode.
+ */
 export type LocationState = {
   readonly mode: GraphViewMode;
   readonly folder: string | null;
   readonly taskPackage: string | null;
   readonly taskCount: number;
+  readonly isSinglePackage: boolean;
 };
 
-/** What task mode adds to the location: the one package every chosen task belongs to, `null` for none or several, and the shown count. */
-export type LocationFacts = Pick<LocationState, 'taskPackage' | 'taskCount'>;
+/**
+ * What task mode adds to the location: the one package every chosen task belongs to, `null` for none or several, the
+ * shown count, and the single-package flag.
+ */
+export type LocationFacts = Pick<LocationState, 'taskPackage' | 'taskCount' | 'isSinglePackage'>;
 
 /** `nav.graph-location`, a page row directly before the body: the crumbs, then the folder focus info lines. */
 export type LocationBarElements = {
