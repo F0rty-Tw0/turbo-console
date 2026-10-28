@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { kindOf, rowStopOf, shownKindsOf } from './row-stop.util.ts';
-import type { FolderRowElements, RowButtonKind, RowPlan } from '../common/widget.type.ts';
+import type { RowButtonKind, RowPlan } from '../common/widget.type.ts';
 
 type StopRow = { preferred: RowButtonKind; shown: RowButtonKind[]; expected: RowButtonKind };
 
@@ -54,7 +54,7 @@ describe('FEATURE: rowStopOf', () => {
 });
 
 describe('FEATURE: kindOf', () => {
-  const elements = { root: {}, chevron: {}, title: {}, focus: {}, ellipsis: {} } as unknown as FolderRowElements;
+  const elements = { chevron: new EventTarget(), title: new EventTarget(), focus: new EventTarget(), ellipsis: new EventTarget() };
 
   it('GIVEN the Focus folder button WHEN its kind is read THEN it is focus', () => {
     const kind = kindOf(elements, elements.focus);

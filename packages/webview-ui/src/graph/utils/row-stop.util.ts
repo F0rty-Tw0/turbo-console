@@ -1,7 +1,7 @@
-import type { FolderRowElements, RowButtonKind, RowPlan } from '../common/widget.type.ts';
+import type { RowButtonKind, RowPlan } from '../common/widget.type.ts';
 
 /** A row's buttons in DOM order. */
-const ROW_ORDER: RowButtonKind[] = ['chevron', 'title', 'focus', 'ellipsis'];
+export const ROW_ORDER: RowButtonKind[] = ['chevron', 'title', 'focus', 'ellipsis'];
 
 /** The buttons a placed row shows, in DOM order; the title shows on every placed row. */
 export const shownKindsOf = (plan: RowPlan): RowButtonKind[] => {
@@ -25,5 +25,7 @@ export const rowStopOf = (preferred: RowButtonKind, shown: RowButtonKind[]): Row
 };
 
 /** The button of `elements` that `target` is, `undefined` when it is none of them. */
-export const kindOf = (elements: FolderRowElements, target: EventTarget | null): RowButtonKind | undefined =>
-  ROW_ORDER.find((kind) => elements[kind] === target);
+export const kindOf = (
+  elements: Readonly<Record<RowButtonKind, EventTarget>>,
+  target: EventTarget | null
+): RowButtonKind | undefined => ROW_ORDER.find((kind) => elements[kind] === target);
