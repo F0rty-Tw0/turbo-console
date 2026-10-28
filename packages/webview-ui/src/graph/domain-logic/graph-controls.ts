@@ -136,10 +136,11 @@ export class GraphControls {
     this.deps.onSave();
   }
 
+  /** Reports the switch before rendering, so the header toggles read the layout mode the switch has just set. */
   public setGrouping(isGrouped: boolean): void {
     this.isGrouped = isGrouped;
-    this.render();
     this.deps.onGrouping(isGrouped);
+    this.render();
     this.deps.onSave();
   }
 
