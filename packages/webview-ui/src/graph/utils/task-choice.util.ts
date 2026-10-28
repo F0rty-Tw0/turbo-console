@@ -86,7 +86,7 @@ export const entryTaskIdsOf = (tasks: GraphTask[], selected: string | null, chos
   if (selected === null) return null;
 
   const owned = packageTaskIdsOf(tasks, selected);
-  const chosenIds = new Set(chosen);
+  const chosenIds = new Set(choiceOf(tasks, chosen).chosen);
   const isChosen = chosenIds.size === owned.length && owned.every((id) => chosenIds.has(id));
 
   return owned.length > 0 && !isChosen ? owned : null;

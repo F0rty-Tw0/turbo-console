@@ -160,7 +160,9 @@ describe('FEATURE: task choice rules', () => {
     it.each([
       { chosen: ['web#lint', 'web#build'], expected: null },
       { chosen: ['web#build'], expected: ['web#build', 'web#lint'] },
-      { chosen: ['web#build', 'web#lint', 'api#build'], expected: ['web#build', 'web#lint'] }
+      { chosen: ['web#build', 'web#lint', 'api#build'], expected: ['web#build', 'web#lint'] },
+      { chosen: ['web#build', 'api#build'], expected: ['web#build', 'web#lint'] },
+      { chosen: ['web#build', 'web#lint', 'gone#build'], expected: null }
     ])('WHEN web is selected and $chosen is chosen THEN the entry ids are $expected', ({ chosen, expected }) => {
       const ids = entryTaskIdsOf(TASK_CHAIN_STUB, 'web', chosen);
 
