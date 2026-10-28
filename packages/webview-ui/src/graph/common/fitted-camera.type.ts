@@ -6,4 +6,4 @@ type ContainerResize = {
 };
 
 /** The camera of one page: it knows whether the user has left it where `fit` put it. */
-export type FittedCamera = Pick<GraphView, 'fit' | 'setViewport' | 'centreOn' | 'isFitted'> & ContainerResize;
+export type FittedCamera = Pick<GraphView, 'fit' | 'setViewport' | 'centreOn' | 'panBy' | 'isFitted'> & ContainerResize;

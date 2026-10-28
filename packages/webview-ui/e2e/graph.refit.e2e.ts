@@ -1,7 +1,7 @@
 import { test } from './graph-task.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { SAVED_BASE_STUB } from './test/stubs/graph-saved.stub.ts';
-import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
+import { TASK_LONG_NAMES_STUB, TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
@@ -115,6 +115,40 @@ test.describe('FEATURE: graph camera re-fit', () => {
       await test.step('AND the wheel turns one notch', async (): Promise<void> => graphCanvas.zoomBy(-100));
 
       await test.step('THEN the view is saved not fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: false }));
+    }
+  );
+
+  test(
+    'GIVEN a two-package graph fitted at the maximum zoom, a wheel-in notch moves nothing and a shrink still re-fits it',
+    { annotation: T3 },
+    async ({ graphCamera, graphCanvas, graphHost, graphPage, graphTaskHost }): Promise<void> => {
+      await test.step('WHEN the page is opened and the two-package graph is sent', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_LONG_NAMES_STUB);
+      });
+
+      await test.step('AND the view is fitted and saved so', async (): Promise<void> => {
+        await graphCanvas.expectAllNodesInView();
+        await graphTaskHost.expectSaved({ fitted: true });
+      });
+
+      await test.step('AND the camera is remembered and the wheel turns in one notch', async (): Promise<void> => {
+        await graphCamera.rememberCamera();
+        await graphCanvas.zoomBy(-100);
+        await graphPage.waitFrames();
+      });
+
+      await test.step('THEN the clamped zoom left the camera unchanged', async (): Promise<void> =>
+        graphCamera.expectCameraUnchanged());
+
+      await test.step('WHEN the page is made shorter', async (): Promise<void> => graphCamera.shrinkHeightBy(SHRINK_PX));
+
+      await test.step('THEN the camera moved and every node is in view', async (): Promise<void> => {
+        await graphCamera.expectCameraMoved();
+        await graphCanvas.expectAllNodesInView();
+      });
+
+      await test.step('AND the view is saved fitted', async (): Promise<void> => graphTaskHost.expectSaved({ fitted: true }));
     }
   );
 

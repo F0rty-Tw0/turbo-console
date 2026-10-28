@@ -3,7 +3,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
 import { setBoxes } from './graph-boxes.ts';
-import { anchorBoxOf, panBy } from './graph-camera.ts';
+import { anchorBoxOf, viewportOf } from './graph-camera.ts';
 import { exportPngOf } from './graph-export.ts';
 import { createFittedCamera } from './graph-fitted.ts';
 import { flowEdgesOf } from './graph-flow-edges.ts';
@@ -16,7 +16,7 @@ import { markRowLess, widgetRectsOf } from './graph-rects.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import { showOnly } from './graph-visibility.ts';
-import type { GraphEdge, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -82,15 +82,6 @@ const cytoscapeOn = (container: HTMLElement): Core => {
   return cytoscape(options);
 };
 
-/** A copy of the camera: `cy.pan()` is Cytoscape's own object, which a later pan changes in place. */
-const viewportOf = (cy: Core): Viewport => {
-  const { x, y } = cy.pan();
-  const pan: Position = { x, y };
-  const current: Viewport = { zoom: cy.zoom(), pan };
-
-  return current;
-};
-
 /** Places the packages, then re-centres the collapsed folders on them. */
 const placeOn = (cy: Core, folders: FoldersView, placed: Positions): void => {
   placeNodes(cy, placed);
@@ -129,7 +120,7 @@ export const createGraphView = (
     resize: (): void => void cy.resize(),
     centreOn: camera.centreOn,
     anchorBox: (names: string[]): AnchorBox | null => anchorBoxOf(cy, names),
-    panBy: (dx: number): void => panBy(cy, dx),
+    panBy: camera.panBy,
     viewport: (): Viewport => viewportOf(cy),
     setViewport: camera.setViewport,
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),

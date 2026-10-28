@@ -30,7 +30,7 @@ describe('FEATURE: createFittedCamera', () => {
     fittedAtViewport = [];
     vi.spyOn(cy, 'fit').mockImplementation((): Core => {
       events.push('fit');
-      cy.emit('viewport');
+      cy.zoom(cy.zoom() + 1);
 
       return cy;
     });
@@ -83,12 +83,23 @@ describe('FEATURE: createFittedCamera', () => {
     });
 
     it.each(['dragpan', 'scrollzoom', 'pinchzoom'])(
-      'WHEN %s fires THEN it is not fitted and onViewport hears it once, after the clear',
+      'WHEN the camera moves and %s fires THEN it is not fitted and onViewport hears it once, after the clear',
       (name: string) => {
+        cy.panBy({ x: 5, y: 0 });
         cy.emit(name);
 
         expect(camera.isFitted()).toBe(false);
         expect(fittedAtViewport).toStrictEqual([false]);
+      }
+    );
+
+    it.each(['dragpan', 'scrollzoom', 'pinchzoom'])(
+      'WHEN %s fires and the camera did not move, as at a clamped zoom, THEN it stays fitted and onViewport is not called',
+      (name: string) => {
+        cy.emit(name);
+
+        expect(camera.isFitted()).toBe(true);
+        expect(handlers.onViewport).not.toHaveBeenCalled();
       }
     );
 
@@ -112,8 +123,24 @@ describe('FEATURE: createFittedCamera', () => {
     });
 
     it('WHEN a keep-clear panBy and a programmatic pan zoom viewport emit THEN it stays fitted', () => {
-      cy.panBy({ x: 40, y: 0 });
+      camera.panBy(40);
       cy.emit('pan zoom viewport');
+
+      expect(camera.isFitted()).toBe(true);
+    });
+
+    it('WHEN a keep-clear panBy runs THEN it pans by dx, with the zoom unchanged', () => {
+      const zoom = cy.zoom();
+
+      camera.panBy(40);
+
+      expect(cy.pan()).toStrictEqual({ x: 40, y: 0 });
+      expect(cy.zoom()).toBe(zoom);
+    });
+
+    it('WHEN a keep-clear panBy runs and then a scrollzoom moves nothing THEN it stays fitted', () => {
+      camera.panBy(40);
+      cy.emit('scrollzoom');
 
       expect(camera.isFitted()).toBe(true);
     });
@@ -125,7 +152,15 @@ describe('FEATURE: createFittedCamera', () => {
       expect(camera.isFitted()).toBe(true);
     });
 
+    it('WHEN the container resizes and then a scrollzoom moves nothing THEN it stays fitted', () => {
+      camera.resized();
+      cy.emit('scrollzoom');
+
+      expect(camera.isFitted()).toBe(true);
+    });
+
     it('WHEN the user pans and then the container resizes THEN only resize runs', () => {
+      cy.panBy({ x: 5, y: 0 });
       cy.emit('dragpan');
       camera.resized();
 

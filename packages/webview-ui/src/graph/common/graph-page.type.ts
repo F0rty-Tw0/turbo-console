@@ -150,7 +150,7 @@ export type GraphView = {
   readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */
   readonly fit: () => void;
-  /** Whether the camera is where `fit` left it: a gesture, `setViewport` and `centreOn` clear it, a keep-clear `panBy` does not. */
+  /** Whether the camera is where `fit` left it: a gesture that moved it, `setViewport` and `centreOn` clear it, a keep-clear `panBy` does not. */
   readonly isFitted: () => boolean;
   /** Shows exactly these package names; the rest are hidden, not moved. */
   readonly setVisible: (visible: ReadonlySet<string>) => void;
