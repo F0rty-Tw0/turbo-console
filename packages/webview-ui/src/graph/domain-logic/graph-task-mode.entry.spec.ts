@@ -108,5 +108,26 @@ describe('FEATURE: GraphTaskMode Tasks entry', () => {
       expect(rig.modes.task()?.chosen).toStrictEqual(['api#build']);
       expect(rig.runs.count()).toBe(1);
     });
+
+    it('WHEN Packages is pressed THEN the location bar reads again once the page is back in package mode', () => {
+      const order: string[] = [];
+
+      rig.onExit.mockImplementation((): void => {
+        order.push('exit');
+      });
+      rig.onLocation.mockImplementation((): void => {
+        order.push(`location in ${rig.modes.mode()}`);
+      });
+      mode.leave();
+
+      expect(order).toStrictEqual(['exit', 'location in packages']);
+    });
+
+    it('WHEN the panel reports a shown set THEN the location bar reads again', () => {
+      rig.onLocation.mockClear();
+      panelActionsOf(rig)?.onShown();
+
+      expect(rig.onLocation).toHaveBeenCalledOnce();
+    });
   });
 });

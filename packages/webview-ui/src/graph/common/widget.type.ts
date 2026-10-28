@@ -1,4 +1,5 @@
-import type { BreadcrumbElements, MenuElements, MenuItemModel } from './widget-menu.type.ts';
+import type { LocationViews } from './location.type.ts';
+import type { MenuElements, MenuItemModel } from './widget-menu.type.ts';
 
 /** A rectangle in container px, as Cytoscape's `renderedBoundingBox`. */
 export type RectPx = {
@@ -122,7 +123,5 @@ export type WidgetViews = {
   readonly packageButton: (name: string) => HTMLButtonElement;
   /** `label` is the menu's accessible name, the one its "…" has. */
   readonly menu: (model: MenuItemModel[], label: string) => MenuElements;
-  readonly breadcrumb: () => BreadcrumbElements;
-  /** One muted breadcrumb line; `hasIcon` puts the `info` Codicon before it. */
-  readonly breadcrumbLine: (text: string, hasIcon: boolean) => HTMLElement;
+  readonly location: LocationViews;
 };

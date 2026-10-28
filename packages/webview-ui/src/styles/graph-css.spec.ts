@@ -357,7 +357,25 @@ describe('FEATURE: graph.css', () => {
     });
   });
 
+  describe('GIVEN the location bar rule', () => {
+    const declarations = declarationsOf(css, '.graph-location');
+
+    it.each(['display: flex', 'flex-direction: column'])('WHEN it is read THEN it holds %s', (expected) => {
+      expect(declarations).toContain(expected);
+    });
+
+    it('WHEN the hidden rule is read THEN it still wins over the flex display', () => {
+      expect(declarationsOf(css, '[hidden]')).toContain('display: none !important');
+    });
+  });
+
   describe('GIVEN the whole stylesheet', () => {
+    it('WHEN it is searched THEN the floating breadcrumb and its task mode hide rule are gone', () => {
+      const hasBreadcrumb = rawCss.includes('breadcrumb');
+
+      expect(hasBreadcrumb).toBe(false);
+    });
+
     it('WHEN it is searched THEN the old filters dot is gone', () => {
       const hasDot = rawCss.includes('has-filters');
 

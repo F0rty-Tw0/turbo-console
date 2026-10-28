@@ -232,7 +232,6 @@ p {
 .task-mode #graph-controls,
 .task-mode #graph-details,
 .task-mode .widget-row,
-.task-mode .graph-breadcrumb,
 .task-mode .widget-package-button:not(.task-widget-button) {
   display: none;
 }
@@ -461,7 +460,7 @@ p {
   }
 }
 
-/* A folder or package menu, placed from script; above the rows and the breadcrumb. */
+/* A folder or package menu, placed from script; above the rows. */
 .widget-menu {
   position: absolute;
   z-index: 2;
@@ -525,38 +524,46 @@ p {
   border-top: 1px solid var(--vscode-menu-separatorBackground, var(--vscode-panel-border));
 }
 
-/* The folder focus breadcrumb, at the layer's top left under any menu. */
-.graph-breadcrumb {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 1;
+/* The location bar: a page row right above the body, its crumbs on one line and the folder focus info lines under them. */
+.graph-location {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--space-1);
-  max-width: calc(100% - 16px);
-  box-sizing: border-box;
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-contrastBorder, transparent));
-  border-radius: var(--radius);
-  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
-  background: var(--vscode-editorWidget-background);
-  pointer-events: auto;
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--vscode-panel-border);
 }
 
-.breadcrumb-title {
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.breadcrumb-lines {
+.location-crumbs,
+.location-lines {
+  display: flex;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.breadcrumb-line {
+.location-crumbs {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* The separator is drawn with an empty alternative text, so a screen reader reads the list, not the arrows. */
+.location-crumbs li + li::before {
+  content: '\203A' / '';
+  margin-inline-end: var(--space-1);
+  color: var(--tc-muted);
+}
+
+.location-current {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.location-lines {
+  flex-direction: column;
+}
+
+.location-line {
   display: flex;
   align-items: center;
   gap: var(--space-1);

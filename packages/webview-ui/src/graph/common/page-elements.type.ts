@@ -1,5 +1,6 @@
 import type { TaskScreenElements } from './graph-task.type.ts';
 import type { LegendElements } from './legend.type.ts';
+import type { LocationBarElements } from './location.type.ts';
 import type { PanelSashes } from './panel-sash.type.ts';
 
 /** The page's parts other than the Legend's. */
@@ -43,6 +44,8 @@ type PageParts = {
   readonly message: HTMLElement;
   readonly messageText: HTMLElement;
   readonly reload: HTMLButtonElement;
+  /** `nav.graph-location`, directly before the body and shown with it: where the graph is, in both modes. */
+  readonly location: LocationBarElements;
   /**
    * `div.graph-body`: the controls panel, once a graph shows, the Controls sash, the container, the flow overlay, the widget
    * layer, the Details sash, then the details panel.

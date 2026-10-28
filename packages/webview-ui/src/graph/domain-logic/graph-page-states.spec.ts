@@ -41,5 +41,34 @@ describe('FEATURE: layoutScreenOf', () => {
 
       expect(page.legend.disabled).toBe(false);
     });
+
+    it('WHEN built THEN the location bar sits right before the body and is hidden', () => {
+      const children = Array.from(page.root.children);
+      const bodyIndex = children.indexOf(page.body);
+
+      expect(children[bodyIndex - 1]).toBe(page.location.nav);
+      expect(page.location.nav.hidden).toBe(true);
+    });
+
+    it('WHEN the graph shows THEN the location bar shows with the body', () => {
+      layoutScreenOf(page).showGraph(false);
+
+      expect([page.location.nav.hidden, page.body.hidden]).toStrictEqual([false, false]);
+    });
+  });
+
+  describe('GIVEN the graph shown', () => {
+    beforeEach(() => {
+      layoutScreenOf(page).showGraph(false);
+    });
+
+    it.each([
+      ['a loading state', (): void => showStateMessage(page, LOADING_STATE)],
+      ['a page failure', (): void => showFailure(page, new Error('boom'))]
+    ])('WHEN %s shows THEN the location bar hides with the body', (_label, show) => {
+      show();
+
+      expect([page.location.nav.hidden, page.body.hidden]).toStrictEqual([true, true]);
+    });
   });
 });

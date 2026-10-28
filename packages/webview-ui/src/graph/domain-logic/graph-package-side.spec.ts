@@ -48,7 +48,7 @@ const rigOf = (saved: GraphViewState | null, hasGrouping?: boolean): PackageSide
   const tasks = { onShowTasks: vi.fn(), hasTasks };
   const modes = new ViewStateModes(mock.saver, saved, hasGrouping);
   const frames = new GraphFrames(mock.deps.now);
-  const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced };
+  const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced, onLocation: mock.onLocation };
   const side = new GraphPackageSide(mock.deps, mock.view, hooks);
   const rig: PackageSideRig = { ...mock, side, modes, hasTasks };
 

@@ -14,10 +14,11 @@ const messageTextOf = (state: MessageState): string => {
   }
 };
 
-/** Toolbar, notice and body hidden, `text` shown; Reload only when `canReload`. An open Legend closes, or it would reappear open with the graph. */
+/** Toolbar, notice, location bar and body hidden, `text` shown; Reload only when `canReload`. An open Legend closes, or it would reappear open with the graph. */
 const showMessage = (page: PageElements, text: string, canReload: boolean): void => {
   page.legendPanel.hidePopover();
   page.toolbar.hidden = true;
+  page.location.nav.hidden = true;
   page.body.hidden = true;
   page.notice.hidden = true;
   page.message.hidden = false;
@@ -54,12 +55,13 @@ export const setFitAndExportDisabled = (page: Pick<PageElements, 'fit' | 'export
   page.exportImage.disabled = isDisabled;
 };
 
-/** Toolbar and body shown with the mode buttons, Controls, Details, Fit, Re-layout, Export image and Legend enabled; the notice only for a fallback layout. */
+/** Toolbar, location bar and body shown with the mode buttons, Controls, Details, Fit, Re-layout, Export image and Legend enabled; the notice only for a fallback layout. */
 const showGraphView = (page: PageElements, isFallback: boolean): void => {
   const notice: LayoutNotice = isFallback ? FALLBACK_NOTICE : NO_NOTICE;
 
   page.message.hidden = true;
   page.toolbar.hidden = false;
+  page.location.nav.hidden = false;
   page.body.hidden = false;
   showLayoutNotice(page, notice);
   page.packagesMode.disabled = false;

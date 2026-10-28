@@ -26,7 +26,7 @@ const drawnRigOf = async (saved: GraphViewState): Promise<FilteringRig> => {
   const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
   const modes = new ViewStateModes(mock.saver, saved);
   const frames = new GraphFrames(mock.deps.now);
-  const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced };
+  const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced, onLocation: mock.onLocation };
   const side = new GraphPackageSide(mock.deps, mock.view, hooks);
   const rig: FilteringRig = { ...mock, side };
 
@@ -94,6 +94,34 @@ describe('FEATURE: GraphFiltering focus target', () => {
       rig.side.filtering.inspection.folderActions().focusFolder('apps');
 
       expect(rig.view.setFocusTarget).toHaveBeenLastCalledWith(null);
+    });
+  });
+});
+
+describe('FEATURE: GraphFiltering location updates', () => {
+  let rig: FilteringRig;
+
+  beforeEach(async () => {
+    stubPackageSideGlobals();
+    rig = await drawnRigOf(SAVED_FLAT_STUB);
+    rig.onLocation.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN h1 drawn', () => {
+    it('WHEN grouping turns off THEN the location bar reads the cleared focus once', () => {
+      rig.side.filtering.groupingOff();
+
+      expect(rig.onLocation).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the folder scene is redrawn THEN the location bar reads again', () => {
+      rig.side.filtering.folders.redraw();
+
+      expect(rig.onLocation).toHaveBeenCalledOnce();
     });
   });
 });

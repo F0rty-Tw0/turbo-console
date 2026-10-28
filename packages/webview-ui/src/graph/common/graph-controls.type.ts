@@ -73,7 +73,7 @@ export type GraphFilteringDeps = Pick<
 > &
   Pick<GraphControlsDeps, 'build' | 'onGrouping'> &
   Pick<GraphFoldersDeps, 'measure' | 'isGrouped' | 'canAct'> &
-  Pick<WidgetWireDeps, 'widgetViews'>;
+  Pick<WidgetWireDeps, 'widgetViews' | 'onLocation'>;
 
 /** What the widget layer reads besides the filtering deps: the inspection's list and focus hooks, as the details panel calls them. */
 export type WidgetHostDeps = GraphFilteringDeps &

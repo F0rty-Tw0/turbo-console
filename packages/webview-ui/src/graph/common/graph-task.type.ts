@@ -48,6 +48,8 @@ export type PackageSideHooks = {
   readonly onMessage: () => void;
   /** A package layout was placed, after the package side's own folder pass; the layouts fit next, unless it was a first draw. */
   readonly onPlaced: () => void;
+  /** The folder focus or the drawn graph changed: the location bar reads them again. */
+  readonly onLocation: () => void;
 };
 
 /** The canvas calls task mode makes: the task canvas, the camera and a re-measure after a panel change. */
@@ -91,6 +93,8 @@ export type TaskPanelActions = {
   readonly onShowAll: () => void;
   /** Show every task was pressed at `at`. */
   readonly onShowEvery: (at: number) => void;
+  /** The prompt and the banner were written for a new shown set. */
+  readonly onShown: () => void;
 };
 
 /** The two Details asides the Details bar moves between; the package one is built with the first package graph, so it may not exist yet. */
@@ -118,6 +122,8 @@ export type TaskModeDeps = {
   readonly frames: Pick<FrameClock, 'start' | 'arm'>;
   /** Task mode was left: the controller shows the package graph again. */
   readonly onExit: () => void;
+  /** The shown tasks or the mode changed: the location bar reads them again. */
+  readonly onLocation: () => void;
   /** A task layout threw: the page shows the reason, and the next graph state shows the task graph afresh. */
   readonly onFailure: (error: unknown) => void;
   /** Builds the task panel over the page, its Show all tasks wired to `actions`. */
@@ -159,6 +165,7 @@ export type TaskModeHooks = {
   readonly modes: TaskModes;
   readonly frames: FrameClock;
   readonly onExit: () => void;
+  readonly onLocation: () => void;
   /** The page now shows a message instead of the graph, as `PackageSideHooks.onMessage`. */
   readonly onMessage: () => void;
   /** The controller-built flow overlay. */

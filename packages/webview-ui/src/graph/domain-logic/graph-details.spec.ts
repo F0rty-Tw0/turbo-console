@@ -22,7 +22,7 @@ const rigOf = (): DetailsRig => {
   const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
   const modes = new ViewStateModes(mock.saver, SAVED_FLAT_STUB);
   const frames = new GraphFrames(mock.deps.now);
-  const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced };
+  const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced, onLocation: mock.onLocation };
   const side = new GraphPackageSide(mock.deps, mock.view, hooks);
   const rig: DetailsRig = { ...mock, side, modes };
 

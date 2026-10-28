@@ -123,6 +123,8 @@ export const taskPanelOf = (page: TaskPanelPage, actions: TaskPanelActions, asid
     if (banner.hidden !== isBannerHidden) banner.hidden = isBannerHidden;
 
     if (bannerText.textContent !== text) bannerText.textContent = text;
+
+    actions.onShown();
   };
   const showNotice = noticeLineOf(notice);
   const noticeFor = (text: string | null): void => {

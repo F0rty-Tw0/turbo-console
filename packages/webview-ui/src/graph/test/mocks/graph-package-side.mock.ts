@@ -9,11 +9,11 @@ import type { PackageDetails } from '../../common/details-view.type.ts';
 import type { DetailsViews, PackageViewModel } from '../../common/details.type.ts';
 import type { GraphControllerDeps } from '../../common/graph-page.type.ts';
 import type { PackageSideHooks } from '../../common/graph-task.type.ts';
+import type { LocationViews } from '../../common/location.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import type { TaskControlsViews } from '../../common/task-controls.type.ts';
 import type { TaskDetailsViews } from '../../common/task-details.type.ts';
 import type { WidgetViews } from '../../common/widget.type.ts';
-import { breadcrumbLine, buildBreadcrumb } from '../../ui/breadcrumb-elements.ts';
 import { buildControls } from '../../ui/controls-elements.ts';
 import { buildDetails } from '../../ui/details-elements.ts';
 import { emptyView } from '../../ui/details-empty.ts';
@@ -24,6 +24,7 @@ import { linkView } from '../../ui/details-link.ts';
 import { packageView } from '../../ui/details-package.ts';
 import { candidateItems, pickingView } from '../../ui/details-picking.ts';
 import { stepItems, traceView } from '../../ui/details-trace.ts';
+import { renderLocation } from '../../ui/location-elements.ts';
 import { buildPage } from '../../ui/page-elements.ts';
 import { buildTaskControls, buildTaskRow } from '../../ui/task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from '../../ui/task-details-elements.ts';
@@ -48,12 +49,13 @@ const DETAILS_VIEWS: DetailsViews = {
   stepItems
 };
 
+const LOCATION_VIEWS: LocationViews = { render: renderLocation };
+
 const WIDGET_VIEWS: WidgetViews = {
   row: buildFolderRow,
   packageButton: buildPackageButton,
   menu: buildMenu,
-  breadcrumb: buildBreadcrumb,
-  breadcrumbLine
+  location: LOCATION_VIEWS
 };
 
 const TASK_VIEWS: TaskControlsViews = { build: buildTaskControls, row: buildTaskRow };
@@ -104,7 +106,8 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
   };
   const onMessage = vi.fn<PackageSideHooks['onMessage']>();
   const onPlaced = vi.fn<PackageSideHooks['onPlaced']>();
-  const mock: PackageSideDepsMock = { deps, page, view, runs, saver, onMessage, onPlaced, packageViews };
+  const onLocation = vi.fn<PackageSideHooks['onLocation']>();
+  const mock: PackageSideDepsMock = { deps, page, view, runs, saver, onMessage, onPlaced, onLocation, packageViews };
 
   return mock;
 };

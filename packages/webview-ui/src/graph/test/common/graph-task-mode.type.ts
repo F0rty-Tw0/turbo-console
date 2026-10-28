@@ -32,6 +32,8 @@ export type TaskModeRig = {
   readonly controls: Mocked<TaskControls>;
   readonly details: Mocked<TaskDetails>;
   readonly onExit: Mock<() => void>;
+  /** Called after each panel write of a shown set and after leaving, so the location bar reads again. */
+  readonly onLocation: Mock<() => void>;
   readonly onFailure: Mock<(error: unknown) => void>;
   /** The flow overlay; `deps.onHighlight` is its `highlightChanged`. */
   readonly flow: Mocked<FlowControl>;

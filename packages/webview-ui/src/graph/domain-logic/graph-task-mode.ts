@@ -20,11 +20,12 @@ export class GraphTaskMode {
   public readonly selection: GraphTaskSelection;
   /** The task layout, which Re-layout, Retry and the probe's engine read act on. */
   public readonly layout: GraphTaskLayout;
+  /** The latest tasks and the saved task view, which the location bar reads. */
+  public readonly memory: GraphTaskMemory;
 
   private readonly deps: TaskModeDeps;
   private readonly panel: TaskPanel;
   private readonly controls: TaskControls;
-  private readonly memory: GraphTaskMemory;
   private hasEntered = false;
 
   public constructor(deps: TaskModeDeps) {
@@ -36,7 +37,8 @@ export class GraphTaskMode {
     this.selection = new GraphTaskSelection(selectionDepsOf(deps, this.memory));
     this.panel = deps.panelOf({
       onShowAll: (): void => this.choose({ capLifted: true }, null),
-      onShowEvery: (at: number): void => this.showTasks(taskIdsOf(this.memory.tasks()), at)
+      onShowEvery: (at: number): void => this.showTasks(taskIdsOf(this.memory.tasks()), at),
+      onShown: deps.onLocation
     });
     this.controls = deps.controlsOf({
       onSearch: (search: string): void => this.memory.save({ search }),
@@ -214,5 +216,6 @@ export class GraphTaskMode {
     this.selection.exit();
     this.deps.view.resize();
     this.deps.onExit();
+    this.deps.onLocation();
   }
 }
