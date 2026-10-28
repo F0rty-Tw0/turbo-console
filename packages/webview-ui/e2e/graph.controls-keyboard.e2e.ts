@@ -46,18 +46,18 @@ const GRID_WALK: FocusStep[] = [
   { key: 'ArrowDown', focus: 'Focus base' }
 ];
 
-const TAB_TO_SHOW_ALL: FocusStep[] = [
+/** Show all is hidden while nothing is filtered, so the last tag's next Tab stop is the list. */
+const TAB_TO_TAGS: FocusStep[] = [
   { key: 'Tab', focus: 'Focus depth' },
   { key: 'Tab', focus: 'Group by folder' },
   { key: 'Tab', focus: 'app' },
   { key: 'Tab', focus: 'lib' },
-  { key: 'Tab', focus: 'ui' },
-  { key: 'Tab', focus: 'Show all' }
+  { key: 'Tab', focus: 'ui' }
 ];
 
-const TAB_PAST_DOCS_SEARCH: FocusStep[] = [...TAB_TO_SHOW_ALL, { key: 'Tab', focus: '(root) (1)' }];
+const TAB_PAST_DOCS_SEARCH: FocusStep[] = [...TAB_TO_TAGS, { key: 'Tab', focus: '(root) (1)' }];
 
-const TAB_PAST_CORE_SEARCH: FocusStep[] = [...TAB_TO_SHOW_ALL, { key: 'Tab', focus: 'packages (5)' }];
+const TAB_PAST_CORE_SEARCH: FocusStep[] = [...TAB_TO_TAGS, { key: 'Tab', focus: 'packages (5)' }];
 
 test.describe('FEATURE: graph controls keyboard', () => {
   test(
@@ -131,10 +131,10 @@ test.describe('FEATURE: graph controls keyboard', () => {
 
       await test.step('AND docs is typed', async (): Promise<void> => graphKeys.type('docs'));
 
-      const tabbed = await test.step('AND Tab is pressed seven times', async (): Promise<FocusStep[]> =>
+      const tabbed = await test.step('AND Tab is pressed six times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(TAB_PAST_DOCS_SEARCH));
 
-      await test.step('THEN Tab walks depth, Group by folder, tags and Show all, then enters the list at the first header checkbox', (): void =>
+      await test.step('THEN Tab walks depth, Group by folder and the tags, then enters the list at the first header checkbox', (): void =>
         expect(tabbed).toEqual(TAB_PAST_DOCS_SEARCH));
     }
   );
@@ -157,10 +157,10 @@ test.describe('FEATURE: graph controls keyboard', () => {
 
       await test.step('AND core is typed', async (): Promise<void> => graphKeys.type('core'));
 
-      const tabbed = await test.step('AND Tab is pressed seven times', async (): Promise<FocusStep[]> =>
+      const tabbed = await test.step('AND Tab is pressed six times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(TAB_PAST_CORE_SEARCH));
 
-      await test.step('THEN Tab walks depth, Group by folder, tags and Show all, then enters the list at the packages header checkbox', (): void =>
+      await test.step('THEN Tab walks depth, Group by folder and the tags, then enters the list at the packages header checkbox', (): void =>
         expect(tabbed).toEqual(TAB_PAST_CORE_SEARCH));
     }
   );

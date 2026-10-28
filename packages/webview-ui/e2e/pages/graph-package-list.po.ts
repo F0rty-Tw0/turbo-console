@@ -1,6 +1,11 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { CLEAR_FOCUS_LABEL } from '../../src/graph/common/details.const.ts';
+import { FOCUS_PACKAGE_TITLE } from '../../src/graph/common/graph.const.ts';
+import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
+import { readRect } from '../test/utils/element-rect.spec.util.ts';
+
 /** A name button's accessible name is the package name; the focus button's starts with `Focus `, a header's with `Expand folder ` or `Collapse folder `. */
 const NAME_BUTTON = /^(?!Focus |Expand folder |Collapse folder )/;
 
@@ -42,8 +47,26 @@ export class GraphPackageList {
     await this.groupCheck(label).click();
   }
 
+  /** The row's Focus toggle, named `Focus <name>` whether or not it is pressed. */
+  public focusButton(name: string): Locator {
+    return this.grid.getByRole('button', { name: `Focus ${name}`, exact: true });
+  }
+
   public async focusOn(name: string): Promise<void> {
-    await this.grid.getByRole('button', { name: `Focus ${name}`, exact: true }).click();
+    await this.focusButton(name).click();
+  }
+
+  public async hoverRow(name: string): Promise<void> {
+    await this.nameButton(name).hover();
+  }
+
+  public async hoverFocus(name: string): Promise<void> {
+    await this.focusButton(name).hover();
+  }
+
+  /** Moves the pointer to the page's top-left corner, off every row. */
+  public async moveMouseAway(): Promise<void> {
+    await this.page.mouse.move(0, 0);
   }
 
   /**
@@ -70,15 +93,31 @@ export class GraphPackageList {
     await this.folderToggle(name).click();
   }
 
-  /** The header button named `name` shows `text` and reports `isExpanded`. */
-  public async expectFolderToggle(name: string, text: string, isExpanded: boolean): Promise<void> {
-    await expect(this.folderToggle(name)).toHaveText(text);
+  /** The header button named `name` draws the chevron of `text`, down for Collapse and right for Expand, and reports `isExpanded`. */
+  public async expectFolderToggle(name: string, text: 'Collapse' | 'Expand', isExpanded: boolean): Promise<void> {
+    const icon = text === 'Collapse' ? 'chevron-down' : 'chevron-right';
+    const glyph = this.folderToggle(name).locator('span').first();
+
+    await expect(glyph).toHaveClass(codiconClassOf(icon));
     await expect(this.folderToggle(name)).toHaveAttribute('aria-expanded', String(isExpanded));
   }
 
   /** No header shows an Expand or Collapse button: the page is flat. */
   public async expectNoFolderToggles(): Promise<void> {
     await expect(this.grid.getByRole('button', { name: FOLDER_TOGGLE })).toHaveCount(0);
+  }
+
+  /** The row's Focus toggle reads `aria-pressed` `isPressed` and is titled Clear focus while pressed, else for focusing. */
+  public async expectFocusPressed(name: string, isPressed: boolean): Promise<void> {
+    const title = isPressed ? CLEAR_FOCUS_LABEL : FOCUS_PACKAGE_TITLE;
+
+    await expect(this.focusButton(name)).toHaveAttribute('aria-pressed', String(isPressed));
+    await expect(this.focusButton(name)).toHaveAttribute('title', title);
+  }
+
+  /** The row's Focus toggle is drawn at `opacity`: `0` at rest, `1` on hover, keyboard focus or while pressed. */
+  public async expectFocusOpacity(name: string, opacity: '0' | '1'): Promise<void> {
+    await expect(this.focusButton(name)).toHaveCSS('opacity', opacity);
   }
 
   public async expectRowChecked(name: string, isChecked: boolean): Promise<void> {
@@ -154,6 +193,17 @@ export class GraphPackageList {
 
   private groupCheck(label: string): Locator {
     return this.grid.getByRole('checkbox', { name: label, exact: true });
+  }
+
+  /** The row of `name` is `px` tall, so rows sit `px` apart. */
+  public async expectRowHeight(name: string, px: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.rowHeight(name)).toBe(px);
+  }
+
+  private async rowHeight(name: string): Promise<number> {
+    const rect = await this.rowOf(name).evaluate(readRect);
+
+    return rect.height;
   }
 
   private nameButton(name: string): Locator {

@@ -136,11 +136,17 @@ export class GraphControls {
     this.deps.onSave();
   }
 
+  /** Reports the switch before rendering, so the header toggles read the layout mode the switch has just set. */
   public setGrouping(isGrouped: boolean): void {
     this.isGrouped = isGrouped;
-    this.render();
     this.deps.onGrouping(isGrouped);
+    this.render();
     this.deps.onSave();
+  }
+
+  /** A layout placed: a folder layout now on screen shows the header toggles. */
+  public placed(): void {
+    this.render();
   }
 
   /** The folder headers' buttons follow `collapsed`; the caller owns the set. */
@@ -173,7 +179,8 @@ export class GraphControls {
     if (mounted === null) return;
 
     const total = mounted.graph.infos.length;
-    const view: ControlsView = { filters: applied, visible: shown, total, selected, isOpen, grouped: isGrouped, collapsed };
+    const canToggle = this.deps.canAct();
+    const view: ControlsView = { filters: applied, visible: shown, total, selected, isOpen, grouped: isGrouped, canToggle, collapsed };
 
     renderControls(mounted.elements, this.deps.page, view);
   }

@@ -95,8 +95,8 @@ test.describe('FEATURE: every graph button has a hover title', () => {
       await test.step('WHEN the Controls Focus button of the packages folder is pressed', async (): Promise<void> =>
         graphFolderInspect.pressHeaderFocus('packages'));
 
-      await test.step('THEN its name and title both say Clear focus on folder packages', async (): Promise<void> =>
-        graphFolderInspect.expectHeaderFocusLabel('packages', 'Clear focus on folder packages'));
+      await test.step('THEN its name stays Focus folder packages and its title reads Clear focus', async (): Promise<void> =>
+        graphFolderInspect.expectHeaderFocusTitled('packages', 'Clear focus'));
 
       await test.step('AND every visible button has a title', async (): Promise<void> =>
         graphButtonTitles.expectAllTitled('grouped, folder focused'));

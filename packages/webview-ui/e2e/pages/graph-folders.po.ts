@@ -111,7 +111,7 @@ export class GraphFoldersPage {
     expectMinUnder('expand-ms', this.expandSamples, ms);
   }
 
-  /** The folder's list header button reads `Collapse` while expanded and `Expand` while collapsed. */
+  /** The folder's list header button draws the Collapse chevron while expanded and the Expand chevron while collapsed. */
   public async expectListToggle(folder: string, isExpanded: boolean): Promise<void> {
     const text = isExpanded ? 'Collapse' : 'Expand';
 

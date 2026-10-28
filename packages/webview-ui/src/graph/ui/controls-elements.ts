@@ -1,65 +1,41 @@
-import { checkbox, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
+import { checkbox, controlsSection, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
+import { gridCell, gridLine, listButton, listCheck, listIconButton } from './controls-list-parts.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
+import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import {
   CONTROLS_ID,
   DEPTH_HINT,
   DEPTH_HINT_ID,
   DEPTH_LABEL,
+  FOCUS_PACKAGE_TITLE,
+  PACKAGES_SECTION_TITLE,
   SEARCH_LABEL,
+  SEARCH_SECTION_TITLE,
   SHOW_ALL_LABEL,
-  TAGS_LABEL
+  TAGS_LABEL,
+  VIEW_SECTION_TITLE
 } from '../common/graph.const.ts';
 import {
   countTextOf,
   focusLabelOf,
   folderFocusLabelOf,
-  folderFocusTextOf,
   folderTitleOf,
-  folderToggleTextOf,
+  folderToggleLabelOf,
   groupLabelOf,
   showLabelOf
 } from '../utils/controls-text.util.ts';
 
-/** A checked list checkbox, out of the Tab order: the list is one Tab stop with a roving focus. */
-const listCheck = (label: string): HTMLInputElement => {
-  const check = checkbox('controls-check');
+/** A Focus toggle: the action table's focus icon, unpressed until `renderControls` reads the focus; `label` names it for good. */
+const focusToggle = (label: string, title: string): HTMLButtonElement => {
+  const focus = listIconButton('controls-focus', ACTION_ICONS.focus, label, title);
 
-  check.checked = true;
-  check.tabIndex = -1;
-  check.setAttribute('aria-label', label);
+  focus.setAttribute('aria-pressed', 'false');
 
-  return check;
-};
-
-const listButton = (className: string, text: string): HTMLButtonElement => {
-  const button = textElement('button', className, text);
-
-  button.type = 'button';
-  button.title = text;
-  button.tabIndex = -1;
-
-  return button;
-};
-
-const gridCell = (...children: HTMLElement[]): HTMLElement => {
-  const cell = textElement('div', 'controls-cell', '');
-
-  cell.setAttribute('role', 'gridcell');
-  cell.append(...children);
-
-  return cell;
-};
-
-const gridLine = (className: string, cells: HTMLElement[]): HTMLElement => {
-  const line = textElement('div', className, '');
-
-  line.setAttribute('role', 'row');
-  line.append(...cells);
-
-  return line;
+  return focus;
 };
 
 /** Check, name and focus cells; the name button's `title` keeps the full name when CSS cuts it. */
@@ -67,14 +43,9 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
   const { name } = pkg;
   const check = listCheck(showLabelOf(name));
   const pick = listButton('controls-name', name);
-  const focus = listButton('controls-focus', folderFocusTextOf(false));
-  const focusLabel = focusLabelOf(name);
+  const focus = focusToggle(focusLabelOf(name), FOCUS_PACKAGE_TITLE);
   const cells = [gridCell(check), gridCell(pick), gridCell(focus)];
   const line = gridLine('controls-row', cells);
-
-  focus.title = focusLabel;
-  focus.setAttribute('aria-label', focusLabel);
-
   const row: ControlsRow = { name, line, check, pick, focus };
 
   return row;
@@ -83,7 +54,7 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
 /**
  * One header: a cell with the group checkbox and the folder title with its total package count, then a cell with the
  * Expand or Collapse button and one with the Focus button. The title repeats the checkbox's name, so it is hidden from
- * the accessibility tree and the row is named once. `renderControls` sets the buttons' text, labels and `hidden`.
+ * the accessibility tree and the row is named once. `renderControls` sets the toggle's chevron and label, the Focus `aria-pressed` and title, and both `hidden`.
  */
 const folderGroup = (group: FolderGroup): ControlsGroup => {
   const { folder, packages } = group;
@@ -91,9 +62,9 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   const label = groupLabelOf(title, packages.length);
   const check = listCheck(label);
   const text = textElement('span', 'controls-folder', label);
-  const toggle = listButton('controls-toggle', folderToggleTextOf(false));
-  const focus = listButton('controls-focus', 'Focus');
-  const focusLabel = folderFocusLabelOf(title);
+  const toggleLabel = folderToggleLabelOf(title, false);
+  const toggle = listIconButton('controls-toggle', 'chevron-down', toggleLabel, toggleLabel);
+  const focus = focusToggle(folderFocusLabelOf(title), FOCUS_FOLDER_LABEL);
   const cells = [gridCell(check, text), gridCell(toggle), gridCell(focus)];
   const line = gridLine('controls-header', cells);
   const rows = packages.map(packageRow);
@@ -101,8 +72,6 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
 
   toggle.hidden = true;
   focus.hidden = true;
-  focus.title = focusLabel;
-  focus.setAttribute('aria-label', focusLabel);
 
   text.setAttribute('aria-hidden', 'true');
 
@@ -127,13 +96,13 @@ const tagFieldset = (tags: Map<string, HTMLInputElement>): HTMLElement => {
   return fieldset;
 };
 
-/** Nothing is filtered yet, so Show all starts dimmed; `aria-disabled` keeps it a Tab stop. */
+/** Nothing is filtered yet, so Show all starts hidden; `renderControls` shows it with its count once a filter is on. */
 const showAllButton = (): HTMLButtonElement => {
   const button = textElement('button', 'text-button', SHOW_ALL_LABEL);
 
   button.type = 'button';
   button.title = SHOW_ALL_LABEL;
-  button.setAttribute('aria-disabled', 'true');
+  button.hidden = true;
 
   return button;
 };
@@ -168,8 +137,9 @@ const packageGrid = (groups: ControlsGroup[]): HTMLElement => {
 };
 
 /**
- * The controls panel `aside#graph-controls`, unwired: search, depth, Group by folder, the tag fieldset (only when tags exist), Show all,
- * the count line and the package grid, in that DOM order. Groups and rows keep the order given.
+ * The controls panel `aside#graph-controls`, unwired, in three titled sections: Search (the search field), View (depth, then
+ * Group by folder) and Packages (the tag fieldset only when tags exist, Show all, the count line and the package grid), in that
+ * DOM order. Groups and rows keep the order given.
  */
 export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsElements => {
   const search = searchInput();
@@ -183,14 +153,16 @@ export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsEl
   const count = countLine(total);
   const controlsGroups = groups.map(folderGroup);
   const list = packageGrid(controlsGroups);
+  const searchSection = controlsSection(SEARCH_SECTION_TITLE, field(SEARCH_LABEL, search));
+  const viewSection = controlsSection(VIEW_SECTION_TITLE, depthField, groupingField(grouping));
+  const packagesSection = controlsSection(PACKAGES_SECTION_TITLE);
   const panel = textElement('aside', 'graph-controls', '');
 
+  if (tagBoxes.size > 0) packagesSection.append(tagFieldset(tagBoxes));
+
+  packagesSection.append(showAll, count, list);
   panel.id = CONTROLS_ID;
-  panel.append(field(SEARCH_LABEL, search), depthField, groupingField(grouping));
-
-  if (tagBoxes.size > 0) panel.append(tagFieldset(tagBoxes));
-
-  panel.append(showAll, count, list);
+  panel.append(searchSection, viewSection, packagesSection);
 
   const controls: ControlsElements = { panel, search, depth, grouping, tags: tagBoxes, showAll, count, list, groups: controlsGroups };
 

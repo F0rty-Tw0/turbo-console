@@ -41,7 +41,7 @@ test.describe('FEATURE: graph controls panel', () => {
 
       await test.step('AND all eight packages are counted as visible', async (): Promise<void> => graphControls.expectCount(8, 8));
 
-      await test.step('AND Show all is disabled', async (): Promise<void> => graphControls.expectShowAllDisabled(true));
+      await test.step('AND Show all is hidden', async (): Promise<void> => graphControls.expectShowAllDisabled(true));
 
       await test.step('AND the depth is 1', async (): Promise<void> => graphControls.expectDepthValue('1'));
 

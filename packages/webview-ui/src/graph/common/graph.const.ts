@@ -242,6 +242,13 @@ export const SASH_DRAGGING_CLASS = 'is-dragging';
 /** Each sash's accessible name. */
 export const RESIZE_LABELS: Readonly<Record<PanelSide, string>> = { controls: 'Resize Controls', details: 'Resize Details' };
 
+/** The Controls panel's section headings, in panel order. */
+export const SEARCH_SECTION_TITLE = 'Search';
+
+export const VIEW_SECTION_TITLE = 'View';
+
+export const PACKAGES_SECTION_TITLE = 'Packages';
+
 export const SEARCH_LABEL = 'Search packages';
 
 export const DEPTH_LABEL = 'Focus depth';
@@ -255,6 +262,9 @@ export const GROUP_BY_FOLDER_LABEL = 'Group by folder';
 export const TAGS_LABEL = 'Tags';
 
 export const SHOW_ALL_LABEL = 'Show all';
+
+/** The hover title of an unpressed package Focus toggle; pressed, it reads Clear focus. */
+export const FOCUS_PACKAGE_TITLE = 'Show only this package and its links up to Focus depth';
 
 /** A package row's cells, left to right; the list keys move through them in this order. */
 export const COLUMNS: Column[] = ['check', 'name', 'focus'];

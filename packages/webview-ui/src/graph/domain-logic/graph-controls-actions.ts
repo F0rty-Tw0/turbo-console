@@ -7,10 +7,26 @@ const setDepth = (mounted: ControlsMounted, ops: ControlsOps, text: string): voi
   if (depth !== null) ops.change(mounted, withDepth(ops.applied, depth));
 };
 
+/**
+ * Clears every filter. Show all then hides, so when it held focus, focus moves to the package grid's one Tab stop,
+ * or to the search box when the search left no line to hold it.
+ */
 const showAll = (mounted: ControlsMounted, ops: ControlsOps): void => {
   const isOn = isFiltered(ops.applied);
 
-  if (isOn) ops.change(mounted, showAllOf(ops.applied));
+  if (!isOn) return;
+
+  const { showAll: button, list, search } = mounted.elements;
+  const hadFocus = button.ownerDocument.activeElement === button;
+
+  ops.change(mounted, showAllOf(ops.applied));
+
+  if (!hadFocus) return;
+
+  const stop = list.querySelector<HTMLElement>('[tabindex="0"]');
+  const target = stop ?? search;
+
+  target.focus();
 };
 
 /** A header's Focus button: focuses the folder, or clears the focus when the folder already is it. */

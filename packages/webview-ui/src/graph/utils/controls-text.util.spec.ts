@@ -5,13 +5,12 @@ import {
   controlsLabelOf,
   countTextOf,
   focusLabelOf,
-  folderClearFocusLabelOf,
   folderFocusLabelOf,
-  folderFocusTextOf,
   folderTitleOf,
   folderToggleLabelOf,
   folderToggleTextOf,
   groupLabelOf,
+  showAllTextOf,
   showLabelOf
 } from './controls-text.util.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
@@ -125,29 +124,11 @@ describe('FEATURE: controls text', () => {
 
   describe('GIVEN a folder header Focus button', () => {
     it.each([
-      ['its folder is the focus', 'Clear focus', true],
-      ['its folder is not the focus', 'Focus', false]
-    ])('WHEN %s THEN the text is %s', (_name, expected, isFocus) => {
-      const text = folderFocusTextOf(isFocus);
-
-      expect(text).toBe(expected);
-    });
-
-    it.each([
       ['apps', 'Focus folder apps'],
       ['(root)', 'Focus folder (root)'],
       ['./(root)', 'Focus folder ./(root)']
     ])('WHEN the title is %s THEN the label is %s', (title, expected) => {
       const label = folderFocusLabelOf(title);
-
-      expect(label).toBe(expected);
-    });
-
-    it.each([
-      ['apps', 'Clear focus on folder apps'],
-      ['./(root)', 'Clear focus on folder ./(root)']
-    ])('WHEN the title is %s THEN the clearing label is %s', (title, expected) => {
-      const label = folderClearFocusLabelOf(title);
 
       expect(label).toBe(expected);
     });
@@ -160,6 +141,18 @@ describe('FEATURE: controls text', () => {
       const label = folderFocusLabelOf(title);
 
       expect(label).toBe(expected);
+    });
+  });
+
+  describe('GIVEN the Show all button', () => {
+    it.each([
+      [0, 'Show all'],
+      [1, 'Show all (1 hidden)'],
+      [12, 'Show all (12 hidden)']
+    ])('WHEN %i packages are hidden THEN it reads %s', (hiddenCount, expected) => {
+      const text = showAllTextOf(hiddenCount);
+
+      expect(text).toBe(expected);
     });
   });
 

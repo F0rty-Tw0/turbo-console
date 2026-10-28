@@ -33,7 +33,7 @@ test.describe('FEATURE: graph filters', () => {
       await test.step('AND every node keeps its position', async (): Promise<void> =>
         graphProbe.expectNodesAt(CONTROLS_POSITIONS_STUB));
 
-      await test.step('AND Show all is enabled', async (): Promise<void> => graphControls.expectShowAllDisabled(false));
+      await test.step('AND Show all is shown', async (): Promise<void> => graphControls.expectShowAllDisabled(false));
 
       await test.step('AND no positions were posted', async (): Promise<void> => graphHost.expectNoPositionsPosted());
 

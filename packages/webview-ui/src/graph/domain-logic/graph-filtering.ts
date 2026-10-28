@@ -110,9 +110,10 @@ export class GraphFiltering {
     this.widgets.groupingOff();
   }
 
-  /** A layout placed, after the first draw's restore: the folder pass runs, then a grouped one reaches for the inspection. */
+  /** A layout placed, after the first draw's restore: the folder pass runs and the controls repaint, then a grouped one reaches for the inspection. */
   public placed(): void {
     this.folders.redraw();
+    this.controls.placed();
 
     const scene = this.folders.scene();
 

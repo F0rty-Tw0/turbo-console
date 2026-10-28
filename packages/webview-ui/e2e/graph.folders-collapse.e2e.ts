@@ -99,6 +99,29 @@ test.describe('FEATURE: folder collapse', () => {
     await test.step('AND no positions were posted for the toggles', async (): Promise<void> => graphHost.expectNoPositionsPosted());
   });
 
+  test('GIVEN the grouped boards with no flat layout cached, a quick uncheck and recheck of Group by folder keeps the list header toggles', async ({
+    graphFolders,
+    graphGrouping,
+    graphHost,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the boards open grouped with held workers', async (): Promise<void> =>
+      graphPage.open({ workers: 'held', savedState: groupedSavedState(BOARDS.hash) }));
+
+    await test.step('AND the boards state is sent with only its grouped layout cached', async (): Promise<void> =>
+      graphHost.sendState(BOARDS));
+
+    await test.step('THEN the apps header reads Collapse', async (): Promise<void> => graphFolders.expectListToggle('apps', true));
+
+    await test.step('WHEN Group by folder is unchecked and checked again before the flat layout lands', async (): Promise<void> => {
+      await graphGrouping.setGrouped(false);
+      await graphGrouping.setGrouped(true);
+    });
+
+    await test.step('THEN the apps header still reads Collapse', async (): Promise<void> =>
+      graphFolders.expectListToggle('apps', true));
+  });
+
   test('GIVEN apps collapsed, a double tap on its node expands it and a double tap on its box padding collapses it', async ({
     graphCanvas,
     graphFolders,

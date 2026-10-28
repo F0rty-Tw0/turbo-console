@@ -40,7 +40,7 @@ test.describe('FEATURE: graph focus', () => {
 
       await test.step('AND the docs row is dimmed', async (): Promise<void> => graphList.expectRowDimmed('docs'));
 
-      await test.step('AND Show all is enabled', async (): Promise<void> => graphControls.expectShowAllDisabled(false));
+      await test.step('AND Show all is shown', async (): Promise<void> => graphControls.expectShowAllDisabled(false));
     }
   );
 
@@ -201,7 +201,7 @@ test.describe('FEATURE: graph focus', () => {
 
       await test.step('THEN every package is visible', async (): Promise<void> => graphCamera.expectVisible(ALL));
 
-      await test.step('AND Show all is disabled', async (): Promise<void> => graphControls.expectShowAllDisabled(true));
+      await test.step('AND Show all is hidden', async (): Promise<void> => graphControls.expectShowAllDisabled(true));
 
       await test.step('AND ui is still selected', async (): Promise<void> => graphProbe.expectSelected('ui'));
 

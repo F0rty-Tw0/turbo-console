@@ -11,6 +11,7 @@ import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { AnchorBox } from '../../src/graph/common/keep-clear.type.ts';
 import type { FolderViewFacts } from '../common/graph-folders.type.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
+import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { folderPadTapOf } from '../test/utils/graph-folder-points.spec.util.ts';
 import { boxRectOf, folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
@@ -77,6 +78,15 @@ export class GraphFolderInspect {
     await this.headerFocus(title).click();
   }
 
+  public async hoverHeader(title: string): Promise<void> {
+    await this.headerOf(title).hover();
+  }
+
+  /** The header Focus toggle is drawn at `opacity`: `0` at rest, `1` on header hover, keyboard focus or while pressed. */
+  public async expectHeaderFocusOpacity(title: string, opacity: '0' | '1'): Promise<void> {
+    await expect(this.headerFocus(title)).toHaveCSS('opacity', opacity);
+  }
+
   public async expectFolderState(folder: string, state: ProbeState): Promise<void> {
     await expect.poll(async (): Promise<ProbeState | undefined> => this.stateOf(folder)).toBe(state);
   }
@@ -114,18 +124,25 @@ export class GraphFolderInspect {
     await expect.poll(async (): Promise<(string | null)[]> => buttons.evaluateAll(ariaLabelsOf)).toEqual(labels);
   }
 
-  /** The header Focus button of the folder titled `title` has `label` as its accessible name and its hover title. */
-  public async expectHeaderFocusLabel(title: string, label: string): Promise<void> {
+  /** The header Focus toggle of the folder titled `title` keeps the name `Focus folder <title>` and has `hoverTitle` as its hover title. */
+  public async expectHeaderFocusTitled(title: string, hoverTitle: string): Promise<void> {
     const button = this.headerFocus(title);
 
-    await expect(button).toHaveAccessibleName(label);
-    await expect(button).toHaveAttribute('title', label);
+    await expect(button).toHaveAccessibleName(`Focus folder ${title}`);
+    await expect(button).toHaveAttribute('title', hoverTitle);
   }
 
-  /** The header Focus button of the folder titled `title` reads `Focus` or `Clear focus`, in regular weight like Collapse. */
+  /** The header Focus toggle of the folder titled `title` draws the target icon and is pressed for `Clear focus`, unpressed for `Focus`. */
   public async expectHeaderFocusText(title: string, text: 'Focus' | 'Clear focus'): Promise<void> {
-    await expect(this.headerFocus(title)).toHaveText(text);
-    await expect(this.headerFocus(title)).toHaveCSS('font-weight', '400');
+    const isPressed = text === 'Clear focus';
+
+    await expect(this.headerFocus(title)).toHaveAttribute('aria-pressed', String(isPressed));
+    await expect(this.headerFocus(title).locator('span').first()).toHaveClass(codiconClassOf('target'));
+  }
+
+  /** The header row of the folder titled `title` is `px` tall, not counting its top margin. */
+  public async expectHeaderHeight(title: string, px: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.headerHeight(title)).toBe(px);
   }
 
   /** The folder's frame ends left of the details overlay with the keep-clear margin to spare. */
@@ -142,6 +159,12 @@ export class GraphFolderInspect {
     return isClearOf(box, overlay.left);
   }
 
+  private async headerHeight(title: string): Promise<number> {
+    const rect = await this.headerOf(title).evaluate(readRect);
+
+    return rect.height;
+  }
+
   private headerOf(title: string): Locator {
     const collapse = this.page.getByRole('button', { name: `Collapse folder ${title}`, exact: true });
     const expand = this.page.getByRole('button', { name: `Expand folder ${title}`, exact: true });
@@ -149,13 +172,9 @@ export class GraphFolderInspect {
     return this.grid.getByRole('row').filter({ has: collapse.or(expand) });
   }
 
-  /** The header Focus button, named for focusing or, while its folder is the focus, for clearing it. */
+  /** The header Focus toggle, named for focusing whether or not its folder is the focus. */
   private headerFocus(title: string): Locator {
-    const header = this.headerOf(title);
-    const focus = header.getByRole('button', { name: `Focus folder ${title}`, exact: true });
-    const clear = header.getByRole('button', { name: `Clear focus on folder ${title}`, exact: true });
-
-    return focus.or(clear);
+    return this.headerOf(title).getByRole('button', { name: `Focus folder ${title}`, exact: true });
   }
 
   private async stateOf(folder: string): Promise<ProbeState | undefined> {

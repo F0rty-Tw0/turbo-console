@@ -2,8 +2,11 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { DEPTH_LABEL, GROUP_BY_FOLDER_LABEL, SEARCH_LABEL, SHOW_ALL_LABEL, TAGS_LABEL } from '../../src/graph/common/graph.const.ts';
+import { DEPTH_LABEL, GROUP_BY_FOLDER_LABEL, SEARCH_LABEL, TAGS_LABEL } from '../../src/graph/common/graph.const.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
+
+/** Show all with or without the count of packages it brings back. */
+const SHOW_ALL_NAME = /^Show all( \(\d+ hidden\))?$/;
 
 /** The controls panel around the package grid: its toolbar toggle, search, depth, tags, Show all and count line. */
 export class GraphControlsPage {
@@ -17,6 +20,7 @@ export class GraphControlsPage {
   public readonly toggleButton: Locator;
 
   private readonly page: Page;
+  private readonly showAllInDom: Locator;
 
   public constructor(page: Page) {
     this.page = page;
@@ -29,7 +33,8 @@ export class GraphControlsPage {
     this.depth = page.getByRole('spinbutton', { name: DEPTH_LABEL, exact: true });
     this.grouping = page.getByRole('checkbox', { name: GROUP_BY_FOLDER_LABEL, exact: true });
     this.tags = page.getByRole('group', { name: TAGS_LABEL, exact: true });
-    this.showAllButton = page.getByRole('button', { name: SHOW_ALL_LABEL, exact: true });
+    this.showAllButton = page.getByRole('button', { name: SHOW_ALL_NAME });
+    this.showAllInDom = page.getByRole('button', { name: SHOW_ALL_NAME, includeHidden: true });
     this.count = page.getByRole('status').filter({ hasText: /^Showing/ });
   }
 
@@ -92,8 +97,21 @@ export class GraphControlsPage {
     await expect(this.tags.locator('label')).toHaveText(tags);
   }
 
+  /** Show all is in the page but hidden while nothing is filtered (`isDisabled`), and shown once a filter is on. */
   public async expectShowAllDisabled(isDisabled: boolean): Promise<void> {
-    await expect(this.showAllButton).toHaveAttribute('aria-disabled', String(isDisabled));
+    if (isDisabled) await this.expectShowAllHidden();
+    else await expect(this.showAllButton).toBeVisible();
+  }
+
+  /** Show all is shown and reads `text`, its name and its hover title. */
+  public async expectShowAllText(text: string): Promise<void> {
+    await expect(this.showAllButton).toHaveText(text);
+    await expect(this.showAllButton).toHaveAttribute('title', text);
+  }
+
+  /** The panel's section headings, in DOM order. */
+  public async expectSectionTitles(titles: string[]): Promise<void> {
+    await expect(this.panel.getByRole('heading', { level: 3 })).toHaveText(titles);
   }
 
   public async expectDepthValue(text: string): Promise<void> {
@@ -104,7 +122,7 @@ export class GraphControlsPage {
     await expect(this.searchBox).toHaveValue(text);
   }
 
-  /** Unchecked, under the depth field in the page and in the DOM, and before Show all. */
+  /** Unchecked, under the depth field in the page and in the DOM, and before Show all, which may be hidden. */
   public async expectGroupingBelowDepth(): Promise<void> {
     await expect(this.grouping).not.toBeChecked();
 
@@ -122,13 +140,19 @@ export class GraphControlsPage {
     await expect.poll(async (): Promise<boolean | null> => this.groupedFact()).toBe(isOn);
   }
 
+  /** Exactly one Show all exists, so a renamed or missing button fails, and it is hidden. */
+  private async expectShowAllHidden(): Promise<void> {
+    await expect(this.showAllInDom).toHaveCount(1);
+    await expect(this.showAllInDom).toBeHidden();
+  }
+
   private async groupedFact(): Promise<boolean | null> {
     return this.page.evaluate((): boolean | null => window.__tcGraphProbe?.grouped() ?? null);
   }
 
   private async isInDomOrder(): Promise<boolean> {
     const depth = await this.depth.elementHandle();
-    const showAll = await this.showAllButton.elementHandle();
+    const showAll = await this.showAllInDom.elementHandle();
 
     return this.grouping.evaluate(
       (grouping, { before, after }): boolean => {
