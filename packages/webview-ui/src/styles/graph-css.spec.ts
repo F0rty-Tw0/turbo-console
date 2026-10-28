@@ -347,10 +347,7 @@ describe('FEATURE: graph.css', () => {
     });
 
     it('WHEN the focus-visible rule is read THEN its selector list holds the title beside the widget buttons', () => {
-      const focusRule = ruleOf(css, '.widget-title:focus-visible');
-
-      expect(focusRule).toBeDefined();
-      expect(declarationsOf(css, '.widget-button:focus-visible')).toContain('outline: 1px solid var(--vscode-focusBorder)');
+      expect(declarationsOf(css, '.widget-title:focus-visible')).toContain('outline: 1px solid var(--vscode-focusBorder)');
     });
   });
 
