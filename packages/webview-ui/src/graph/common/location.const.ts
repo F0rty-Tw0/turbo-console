@@ -1,3 +1,6 @@
+/** The location bar's accessible name. */
+export const LOCATION_LABEL = 'Graph location';
+
 /** The first crumb in both modes: the package graph with no folder focus. */
 export const PACKAGES_CRUMB = 'Packages';
 

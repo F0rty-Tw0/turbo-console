@@ -20,3 +20,13 @@ export type LocationState = {
 
 /** What task mode adds to the location: the one package every chosen task belongs to, `null` for none or several, and the shown count. */
 export type LocationFacts = Pick<LocationState, 'taskPackage' | 'taskCount'>;
+
+/** `nav.graph-location`, a page row directly before the body: the crumbs, then the folder focus info lines. */
+export type LocationBarElements = {
+  readonly nav: HTMLElement;
+  readonly crumbs: HTMLOListElement;
+  readonly lines: HTMLUListElement;
+};
+
+/** A crumb button was pressed. */
+export type LocationPress = (crumb: LocationCrumb) => void;
