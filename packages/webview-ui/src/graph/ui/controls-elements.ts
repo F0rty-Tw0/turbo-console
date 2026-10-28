@@ -1,4 +1,5 @@
 import { checkbox, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
+import { gridCell, gridLine, listButton, listCheck } from './controls-list-parts.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
@@ -22,45 +23,6 @@ import {
   groupLabelOf,
   showLabelOf
 } from '../utils/controls-text.util.ts';
-
-/** A checked list checkbox, out of the Tab order: the list is one Tab stop with a roving focus. */
-const listCheck = (label: string): HTMLInputElement => {
-  const check = checkbox('controls-check');
-
-  check.checked = true;
-  check.tabIndex = -1;
-  check.setAttribute('aria-label', label);
-
-  return check;
-};
-
-const listButton = (className: string, text: string): HTMLButtonElement => {
-  const button = textElement('button', className, text);
-
-  button.type = 'button';
-  button.title = text;
-  button.tabIndex = -1;
-
-  return button;
-};
-
-const gridCell = (...children: HTMLElement[]): HTMLElement => {
-  const cell = textElement('div', 'controls-cell', '');
-
-  cell.setAttribute('role', 'gridcell');
-  cell.append(...children);
-
-  return cell;
-};
-
-const gridLine = (className: string, cells: HTMLElement[]): HTMLElement => {
-  const line = textElement('div', className, '');
-
-  line.setAttribute('role', 'row');
-  line.append(...cells);
-
-  return line;
-};
 
 /** Check, name and focus cells; the name button's `title` keeps the full name when CSS cuts it. */
 const packageRow = (pkg: GraphPackage): ControlsRow => {
