@@ -42,6 +42,8 @@ const readCamera = (zoom: unknown, rawPan: unknown): Viewport | null => {
   return camera;
 };
 
+const readFitted = (value: unknown): boolean => value === true;
+
 const depthWithin = (value: unknown, min: number, max: number): number | null => {
   const isInRange = typeof value === 'number' && value >= min && value <= max;
   const isWhole = Number.isInteger(value);
@@ -135,7 +137,8 @@ const readTask = (raw: unknown): TaskViewState | null => {
   if (!areFieldsValid || camera === null) return null;
 
   const depth = readTaskDepth(raw['depth']);
-  const task: TaskViewState = { chosen: [...chosen], capLifted, depth, selected, search, ...camera, layoutKey };
+  const fitted = readFitted(raw['fitted']);
+  const task: TaskViewState = { chosen: [...chosen], capLifted, depth, selected, search, ...camera, fitted, layoutKey };
 
   return task;
 };
@@ -181,6 +184,7 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   const state: GraphViewState = {
     hash,
     ...camera,
+    fitted: readFitted(raw['fitted']),
     selected,
     controlsOpen: readControlsOpen(raw['controlsOpen']),
     search: readString(raw['search']),

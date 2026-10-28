@@ -43,6 +43,7 @@ const taskViewMockOf = (noting: (name: string) => () => void): TaskViewMock => {
     tasks,
     atoms: atomCanvasMock(),
     fit: vi.fn<TaskView['fit']>(noting('fit')),
+    isFitted: vi.fn<TaskView['isFitted']>(() => false),
     setViewport: vi.fn<TaskView['setViewport']>(noting('setViewport')),
     viewport: vi.fn<TaskView['viewport']>(() => TASK_CAMERA),
     resize: vi.fn<TaskView['resize']>(),

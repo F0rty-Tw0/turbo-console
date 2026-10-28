@@ -131,8 +131,9 @@ export class GraphTaskMode {
     if (!this.isActive() || layoutKey === null) return;
 
     const { zoom, pan } = this.deps.view.viewport();
+    const fitted = this.deps.view.isFitted();
 
-    this.memory.save({ zoom, pan, layoutKey });
+    this.memory.save({ zoom, pan, fitted, layoutKey });
   }
 
   /** The pointer entered a task or left it (`null`); the canvas lights its chain without selecting it. */

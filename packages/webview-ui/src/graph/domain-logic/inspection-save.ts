@@ -9,7 +9,8 @@ export const scheduleSave = (deps: GraphInspectionDeps, shown: InspectionSave): 
 
   const viewport = deps.view.viewport();
   const controls = deps.controls();
-  const state = viewStateOf(drawn.hash, viewport, controls, shown);
+  const fitted = deps.view.isFitted();
+  const state = viewStateOf(drawn.hash, { ...viewport, fitted }, controls, shown);
 
   deps.saver.schedule(state);
 };

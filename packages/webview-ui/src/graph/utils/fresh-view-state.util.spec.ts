@@ -13,6 +13,7 @@ describe('FEATURE: freshViewStateOf', () => {
         hash: 'h',
         zoom: 1,
         pan: ORIGIN,
+        fitted: false,
         selected: null,
         controlsOpen: true,
         search: '',
@@ -44,6 +45,7 @@ describe('FEATURE: freshViewStateOf', () => {
       search: '',
       zoom: 1,
       pan: ORIGIN,
+      fitted: false,
       layoutKey: ''
     });
   });

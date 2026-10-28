@@ -25,6 +25,8 @@ export type TaskViewState = {
   readonly search: string;
   readonly zoom: number;
   readonly pan: Position;
+  /** Whether the camera is where a fit left it, so a restore fits the container it lands in; an old save reads `false`. */
+  readonly fitted: boolean;
   readonly layoutKey: string;
 };
 
@@ -36,6 +38,8 @@ export type GraphViewState = {
   readonly hash: string;
   readonly zoom: number;
   readonly pan: Position;
+  /** Whether the camera is where a fit left it, so a restore fits the container it lands in; an old save reads `false`. */
+  readonly fitted: boolean;
   readonly selected: string | null;
   readonly controlsOpen: boolean;
   readonly search: string;

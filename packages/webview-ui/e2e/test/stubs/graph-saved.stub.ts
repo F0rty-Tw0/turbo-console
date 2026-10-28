@@ -23,6 +23,7 @@ export const SAVED_BASE_STUB: GraphViewState = {
   hash: 'd3a11001',
   zoom: 1,
   pan: ORIGIN,
+  fitted: false,
   selected: null,
   ...DEFAULT_CONTROLS_STUB,
   ...DEFAULT_DETAILS_STUB,

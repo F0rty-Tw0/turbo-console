@@ -11,6 +11,7 @@ const SAVED: GraphViewState = {
   hash: 'h1',
   zoom: 1.5,
   pan: PAN,
+  fitted: false,
   selected: 'web',
   controlsOpen: true,
   search: '',
@@ -42,6 +43,14 @@ describe('FEATURE: restorePlanOf', () => {
     const expected: RestorePlan = { kind: 'restore', zoom: 1.5, pan: PAN };
 
     const plan = restorePlanOf(SAVED, 'h1');
+
+    expect(plan).toStrictEqual(expected);
+  });
+
+  it('GIVEN a same-hash save that was fitted WHEN a graph is placed THEN it is fitted again', () => {
+    const expected: RestorePlan = { kind: 'fit' };
+
+    const plan = restorePlanOf({ ...SAVED, fitted: true }, 'h1');
 
     expect(plan).toStrictEqual(expected);
   });

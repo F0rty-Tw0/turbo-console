@@ -12,6 +12,7 @@ const FIRST: GraphViewState = {
   hash: 'h',
   zoom: 1,
   pan: PAN,
+  fitted: false,
   selected: null,
   controlsOpen: true,
   search: '',

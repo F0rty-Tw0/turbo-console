@@ -284,6 +284,14 @@ describe('FEATURE: GraphTaskMode', () => {
       await rig.runs.settle(0, resultOf(KEY, POSITIONS));
     });
 
+    it.each([true, false])('WHEN the task camera is saved while isFitted is %s THEN the task view keeps it', (fitted: boolean) => {
+      rig.view.isFitted.mockReturnValue(fitted);
+
+      mode.saveCamera();
+
+      expect(rig.modes.task()).toMatchObject({ fitted });
+    });
+
     it('WHEN Packages is pressed THEN the task camera is saved, the canvas emptied and package mode shown again', () => {
       mode.leave();
 
