@@ -53,7 +53,7 @@ const countBadge = (count: number): HTMLElement => {
   return badge;
 };
 
-/** A row's folder glyph. */
+/** The folder codicon, which a container query hides on a narrow box. */
 const glyphOf = (): HTMLElement => {
   const glyph = graphIcon('folder-opened');
 

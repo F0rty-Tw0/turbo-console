@@ -109,7 +109,7 @@ export type WidgetPlan = {
   readonly packageButton: RectPx | null;
 };
 
-/** One folder's header row: the chevron, title button and "…", and for a box also its count. */
+/** One folder's header row: the chevron, title button and "…"; the glyph and count badge sit between them. */
 export type FolderRowElements = {
   readonly root: HTMLElement;
   readonly chevron: HTMLButtonElement;
