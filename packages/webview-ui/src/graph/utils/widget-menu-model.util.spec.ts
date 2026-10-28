@@ -1,13 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from './widget-menu-model.util.ts';
 import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
 import { START_TRACE_LABEL, START_TRACE_TITLE } from '../common/details.const.ts';
-import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { MenuTarget, ShowFolderState } from '../common/widget.type.ts';
+import { graphIconConstMock } from '../test/mocks/graph-icon-const.mock.ts';
 import { folderActionsMock, packageActionsMock } from '../test/mocks/widget-menu.mock.ts';
+import { SWAPPED_ACTION_ICONS_STUB as SWAPPED } from '../test/stubs/action-icons.stub.ts';
 import { BOARDS_NAMES, boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 import {
@@ -130,19 +131,6 @@ describe('FEATURE: packageMenuOf', () => {
       const icons = iconsOf(model);
 
       expect(icons).toStrictEqual(['file-text', 'target', 'git-commit', 'tasklist', '---', 'eye-closed']);
-    });
-
-    it('WHEN its icons are read THEN each comes from the action icon table', () => {
-      const icons = iconsOf(model);
-
-      expect(icons).toStrictEqual([
-        ACTION_ICONS.openDetails,
-        ACTION_ICONS.focus,
-        ACTION_ICONS.startTrace,
-        ACTION_ICONS.showTasks,
-        '---',
-        ACTION_ICONS.exclude
-      ]);
     });
 
     it('WHEN Exclude is read THEN it is enabled', () => {
@@ -287,5 +275,55 @@ describe('FEATURE: menuTargetOf', () => {
     const target = menuTargetOf(inspection);
 
     expect(target).toStrictEqual(expected);
+  });
+});
+
+describe('FEATURE: menu icons from the action icon table', () => {
+  beforeEach((): void => {
+    vi.resetModules();
+    vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
+  });
+
+  afterEach((): void => {
+    vi.doUnmock('../common/graph-icon.const.ts');
+    vi.resetModules();
+  });
+
+  describe('GIVEN a table where every action draws another icon', () => {
+    it.each([
+      {
+        title: 'with a visible task, not the focus',
+        state: packageStateOf({ hasTasks: true }),
+        icons: [SWAPPED.openDetails, SWAPPED.focus, SWAPPED.startTrace, SWAPPED.showTasks, '---', SWAPPED.exclude]
+      },
+      {
+        title: 'that is the focus',
+        state: packageStateOf({ isFocus: true }),
+        icons: [SWAPPED.openDetails, SWAPPED.clearFocus, SWAPPED.startTrace, '---', SWAPPED.exclude]
+      }
+    ])('WHEN the menu of a package $title is built THEN its icons follow the table', async ({ state, icons }) => {
+      const swapped = await import('./widget-menu-model.util.ts');
+      const model = swapped.packageMenuOf('web', state, packageActionsMock());
+
+      expect(iconsOf(model)).toStrictEqual(icons);
+    });
+
+    it.each([
+      {
+        title: 'expanded, not the focus, all shown',
+        state: folderStateOf(),
+        icons: [SWAPPED.collapse, SWAPPED.focus, '---', SWAPPED.exclude]
+      },
+      {
+        title: 'collapsed, the focus, partly shown',
+        state: folderStateOf({ isCollapsed: true, isFocus: true, show: SHOW_SOME }),
+        icons: [SWAPPED.expand, SWAPPED.clearFocus, '---', SWAPPED.showAll]
+      }
+    ])('WHEN the menu of a folder $title is built THEN its icons follow the table', async ({ state, icons }) => {
+      const swapped = await import('./widget-menu-model.util.ts');
+      const model = swapped.folderMenuOf('apps', state, folderActionsMock());
+
+      expect(iconsOf(model)).toStrictEqual(icons);
+    });
   });
 });
