@@ -368,8 +368,8 @@ describe('FEATURE: graph.css', () => {
   describe('GIVEN the location crumb button rule', () => {
     const declarations = declarationsOf(css, '.location-crumbs .details-name');
 
-    it.each(['min-width: 0', 'overflow-wrap: anywhere'])('WHEN it is read THEN a long name wraps with %s', (expected) => {
-      expect(declarations).toContain(expected);
+    it('WHEN it is read THEN a long name wraps anywhere', () => {
+      expect(declarations).toContain('overflow-wrap: anywhere');
     });
   });
 

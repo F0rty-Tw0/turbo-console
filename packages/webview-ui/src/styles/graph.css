@@ -560,7 +560,6 @@ p {
 }
 
 .location-crumbs .details-name {
-  min-width: 0;
   overflow-wrap: anywhere;
 }
 
