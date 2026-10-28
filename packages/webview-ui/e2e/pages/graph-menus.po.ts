@@ -11,6 +11,7 @@ import {
   GRAPH_LABEL,
   GROUP_BY_FOLDER_LABEL
 } from '../../src/graph/common/graph.const.ts';
+import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { menuFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
 
@@ -110,9 +111,9 @@ export class GraphMenusPage {
     await expect(this.menu.locator('.widget-menu-item')).toHaveText(labels);
   }
 
-  /** The item's leading Codicon is `id`. */
+  /** The item's leading Codicon is exactly `id`, so `eye` never passes for `eye-closed`. */
   public async expectItemIcon(name: string, id: GraphIconId): Promise<void> {
-    await expect(this.item(name).locator('.codicon')).toHaveClass(new RegExp(`codicon-${id}`));
+    await expect(this.item(name).locator('.codicon')).toHaveClass(codiconClassOf(id));
   }
 
   public async expectNoCheckboxItems(): Promise<void> {
