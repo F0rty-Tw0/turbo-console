@@ -208,6 +208,53 @@ describe('FEATURE: icon theme folders', () => {
       expect([seti.folders, minimal.folders]).toStrictEqual([false, true]);
     });
 
+    it('WHEN facts() runs twice before the first read ends THEN the file is read once and both answers are one object', async () => {
+      const fixture = fixtureOf();
+      const folders = new IconThemeFolders(fixture.ports);
+
+      fixture.files.set(THEME_FILE, MINIMAL_JSON);
+
+      const [first, second] = await Promise.all([folders.facts(), folders.facts()]);
+
+      expect(fixture.read).toHaveBeenCalledTimes(1);
+      expect(second).toBe(first);
+    });
+
+    it('WHEN clear() runs mid-read and facts() runs again THEN the later answer is the new read, kept for later callers', async () => {
+      const fixture = fixtureOf();
+      let release: () => void = () => undefined;
+      const held = new Promise<void>((done) => {
+        release = done;
+      });
+      const texts = [SETI_JSON, MINIMAL_JSON];
+      let reads = 0;
+      const heldRead = vi.fn<IconThemePorts['read']>(async () => {
+        const text = texts[reads] ?? '';
+
+        reads += 1;
+        await held;
+
+        return Promise.resolve(new TextEncoder().encode(text));
+      });
+      const ports: IconThemePorts = { ...fixture.ports, size: async () => Promise.resolve(1), read: heldRead };
+      const folders = new IconThemeFolders(ports);
+      const stale = folders.facts();
+
+      folders.clear();
+
+      const fresh = folders.facts();
+
+      release();
+
+      const [staleFacts, freshFacts] = await Promise.all([stale, fresh]);
+      const later = await folders.facts();
+
+      expect(staleFacts.folders).toBe(false);
+      expect(freshFacts.folders).toBe(true);
+      expect(later).toBe(freshFacts);
+      expect(heldRead).toHaveBeenCalledTimes(2);
+    });
+
     it('WHEN clear() runs while a read is in flight THEN that read answer is not cached', async () => {
       const fixture = fixtureOf();
       let release: () => void = () => undefined;
