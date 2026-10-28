@@ -1,11 +1,16 @@
 import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
+import { GraphFoldersPage } from './graph-folders.po.ts';
 import { GraphMenusPage } from './graph-menus.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
-import { isHitAtCentre } from '../test/utils/graph-widgets.spec.util.ts';
+import { endCentreOf, linkPointAtY } from '../test/utils/graph-folder-points.spec.util.ts';
+import { isHitAtCentre, isHitWithin } from '../test/utils/graph-widgets.spec.util.ts';
+
+/** How far below a header row's bottom edge a tap lands: clear of the row, still inside its box. */
+const BELOW_ROW_PX = 3;
 
 const centreOf = async (target: Locator): Promise<ViewportPoint> => {
   await target.waitFor();
@@ -21,10 +26,12 @@ const centreOf = async (target: Locator): Promise<ViewportPoint> => {
 
 /** Real mouse and keyboard input on the widget layer's buttons, titles and menus. */
 export class GraphWidgetInput extends GraphMenusPage {
+  private readonly boxes: GraphFoldersPage;
   private readonly probe: GraphProbePage;
 
   public constructor(page: Page) {
     super(page);
+    this.boxes = new GraphFoldersPage(page);
     this.probe = new GraphProbePage(page);
   }
 
@@ -63,6 +70,23 @@ export class GraphWidgetInput extends GraphMenusPage {
 
   public async expectTitleFocused(folder: string): Promise<void> {
     await expect(this.titleOf(folder)).toBeFocused();
+  }
+
+  /** Taps the link between two ends, `BELOW_ROW_PX` under the bottom of the folder's header row: over its box, clear of its widgets. */
+  public async tapLinkBelowRow(source: string, target: string, folder: string): Promise<void> {
+    const row = await this.widgets.rowOf(folder).boundingBox();
+
+    if (row === null) throw new Error(`the ${folder} header row has no box`);
+
+    const folders = await this.boxes.folders();
+    const nodes = await this.probe.nodes();
+    const from = endCentreOf(source, folders, nodes);
+    const to = endCentreOf(target, folders, nodes);
+    const point = linkPointAtY(from, to, row.y + row.height + BELOW_ROW_PX);
+    const isOnCanvas = await this.container.evaluate(isHitWithin, point);
+
+    expect(isOnCanvas, `the tap point (${point.x.toFixed(1)}, ${point.y.toFixed(1)}) lies on a widget, not on the canvas`).toBe(true);
+    await this.page.mouse.click(point.x, point.y);
   }
 
   /** Moves the real mouse to the centre of `target`, then turns its wheel by `deltaY`. */

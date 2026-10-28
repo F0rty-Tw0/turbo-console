@@ -7,7 +7,7 @@ import { SELECTED_BORDER_PX } from '../../../src/graph/common/graph.const.ts';
 import { folderTitleOf } from '../../../src/graph/utils/controls-text.util.ts';
 import type { RowFrame } from '../../common/graph-folders.type.ts';
 import { WIDGET_BUTTON_PX, WIDGET_INSET_PX } from '../../common/graph.const.ts';
-import type { ElementRect } from '../../common/playwright.type.ts';
+import type { ElementRect, ViewportPoint } from '../../common/playwright.type.ts';
 
 /** How far a widget may sit from where the layer should put it, in CSS pixels. */
 const PLACE_TOLERANCE_PX = 1;
@@ -142,6 +142,13 @@ export const isHitAtCentre = (element: Element): boolean => {
   const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
 
   return hit !== null && element.contains(hit);
+};
+
+/** Runs in the page through `evaluate`: the topmost element at `point` is this one or a descendant, so a tap there reaches the canvas. */
+export const isHitWithin = (container: Element, point: ViewportPoint): boolean => {
+  const hit = document.elementFromPoint(point.x, point.y);
+
+  return hit !== null && container.contains(hit);
 };
 
 const faultIf = (isFault: boolean, text: string): string[] => {

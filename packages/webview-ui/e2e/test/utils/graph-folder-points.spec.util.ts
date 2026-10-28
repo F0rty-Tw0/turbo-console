@@ -63,6 +63,17 @@ export const linkPointOf = (source: ViewportPoint, target: ViewportPoint, t: num
   return point;
 };
 
+/** The point of the link from `source` to `target` at height `y`: `t = (y - source.y) / (target.y - source.y)`, which must lie on the link. */
+export const linkPointAtY = (source: ViewportPoint, target: ViewportPoint, y: number): ViewportPoint => {
+  const t = (y - source.y) / (target.y - source.y);
+  const isReal = Number.isFinite(t);
+  const isOnLink = isReal && t >= 0 && t <= 1;
+
+  if (!isOnLink) throw new Error(`graph e2e: the link does not reach y=${y.toFixed(1)}, it runs from ${source.y} to ${target.y}`);
+
+  return linkPointOf(source, target, t);
+};
+
 /** The centre of the bounding box of the packages' rendered centres. */
 export const hullCentreOf = (nodes: ProbeNode[]): ViewportPoint => {
   const xs = nodes.map((node): number => node.renderedX);

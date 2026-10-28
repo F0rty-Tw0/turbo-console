@@ -3,7 +3,6 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphPackageList } from './graph-package-list.po.ts';
-import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphTimings } from './graph-timings.po.ts';
 import type { ProbeFolder, ProbeFolderLink } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
@@ -18,7 +17,7 @@ import {
   sortedFolders,
   sortedLinks
 } from '../test/utils/graph-folder-facts.spec.util.ts';
-import { boxCornerOf, endCentreOf, folderTapOf, linkPointOf } from '../test/utils/graph-folder-points.spec.util.ts';
+import { boxCornerOf, folderTapOf } from '../test/utils/graph-folder-points.spec.util.ts';
 import { folderKeyed, isFolderInView } from '../test/utils/graph-folders.spec.util.ts';
 import { expectMinUnder } from '../test/utils/graph-min-under.spec.util.ts';
 
@@ -33,7 +32,6 @@ const toggleNameOf = (folder: string, isCollapsing: boolean): string => {
 export class GraphFoldersPage {
   private readonly list: GraphPackageList;
   private readonly page: Page;
-  private readonly probe: GraphProbePage;
   private readonly timings: GraphTimings;
   private collapseSamples: number[] = [];
   private expandSamples: number[] = [];
@@ -41,7 +39,6 @@ export class GraphFoldersPage {
   public constructor(page: Page) {
     this.page = page;
     this.list = new GraphPackageList(page);
-    this.probe = new GraphProbePage(page);
     this.timings = new GraphTimings(page);
   }
 
@@ -74,17 +71,6 @@ export class GraphFoldersPage {
     const point = boxCornerOf(folderKeyed(folders, folder));
 
     await this.page.mouse.dblclick(point.x, point.y);
-  }
-
-  /** Taps `t` of the way along the link from its source end to its target end; an end is a collapsed folder key or a package name. */
-  public async tapFolderLink(source: string, target: string, t: number): Promise<void> {
-    const folders = await this.folders();
-    const nodes = await this.probe.nodes();
-    const from = endCentreOf(source, folders, nodes);
-    const to = endCentreOf(target, folders, nodes);
-    const point = linkPointOf(from, to, t);
-
-    await this.page.mouse.click(point.x, point.y);
   }
 
   /** Presses the folder's list header button: Collapse when `isCollapsing`, else Expand. */
