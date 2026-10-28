@@ -120,6 +120,9 @@ export type FolderRowElements = {
   readonly ellipsis: HTMLButtonElement;
 };
 
+/** The four buttons of a row, in DOM order; the glyph and badge are not buttons. */
+export type RowButtonKind = Exclude<keyof FolderRowElements, 'root'>;
+
 /** The widget builders, handed in because `domain-logic` may not import `ui`. */
 export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
