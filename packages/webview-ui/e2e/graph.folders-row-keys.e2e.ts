@@ -24,6 +24,9 @@ test.describe('FEATURE: folder row keys', () => {
 
       await test.step('THEN apps has one toolbar named apps', async (): Promise<void> => graphWidgetKeys.expectOneToolbar('apps'));
 
+      await test.step('AND packages has one toolbar named packages', async (): Promise<void> =>
+        graphWidgetKeys.expectOneToolbar('packages'));
+
       await test.step('WHEN Tab is pressed', async (): Promise<void> => graphMenus.pressKey('Tab'));
 
       await test.step('THEN the apps chevron has focus', async (): Promise<void> => graphWidgets.expectChevronFocused('apps', true));
@@ -39,14 +42,15 @@ test.describe('FEATURE: folder row keys', () => {
     'GIVEN the apps chevron focused, Right walks the row and wraps, Left wraps back, Home and End jump to the ends',
     { annotation: U4B },
     async ({ graphFolderInspect, graphMenus, graphWidgetInput, graphWidgets }): Promise<void> => {
-      await test.step('WHEN the grouped boards open and Tab moves from the container to the apps chevron', async (): Promise<void> => {
+      await test.step('WHEN the grouped boards open and Tab moves from the container to the apps row', async (): Promise<void> => {
         await graphFolderInspect.open(BOARDS_SAVED, BOARDS);
         await graphWidgets.focusContainer();
         await graphMenus.pressKey('Tab');
-        await graphWidgets.expectChevronFocused('apps', true);
       });
 
-      await test.step('AND Right is pressed', async (): Promise<void> => graphMenus.pressKey('ArrowRight'));
+      await test.step('THEN the apps chevron has focus', async (): Promise<void> => graphWidgets.expectChevronFocused('apps', true));
+
+      await test.step('WHEN Right is pressed', async (): Promise<void> => graphMenus.pressKey('ArrowRight'));
 
       await test.step('THEN the apps title has focus', async (): Promise<void> => graphWidgetInput.expectTitleFocused('apps'));
 
@@ -87,10 +91,11 @@ test.describe('FEATURE: folder row keys', () => {
         await graphWidgets.focusContainer();
         await graphMenus.pressKey('Tab');
         await graphMenus.pressKey('End');
-        await graphWidgets.expectEllipsisFocused('apps');
       });
 
-      await test.step('AND Shift+Tab is pressed', async (): Promise<void> => graphMenus.pressKey('Shift+Tab'));
+      await test.step('THEN the apps "…" has focus', async (): Promise<void> => graphWidgets.expectEllipsisFocused('apps'));
+
+      await test.step('WHEN Shift+Tab is pressed', async (): Promise<void> => graphMenus.pressKey('Shift+Tab'));
 
       await test.step('THEN the container has focus', async (): Promise<void> => graphMenus.expectFocusOnContainer());
 
@@ -131,17 +136,24 @@ test.describe('FEATURE: folder row keys', () => {
     'GIVEN apps collapsed and its Focus folder reached by keys, Space expands apps, focuses it and keeps focus on the new Focus folder',
     { annotation: U4B },
     async ({ graphFolderInspect, graphGrouping, graphMenus, graphWidgetInput, graphWidgets }): Promise<void> => {
-      await test.step('WHEN the boards open with apps collapsed, Tab reaches its chevron, then End and Left its Focus folder', async (): Promise<void> => {
+      await test.step('WHEN the boards open with apps collapsed and Tab reaches its row', async (): Promise<void> => {
         await graphFolderInspect.open(APPS_COLLAPSED, BOARDS);
         await graphWidgets.focusContainer();
         await graphMenus.pressKey('Tab');
-        await graphWidgets.expectChevronFocused('apps', false);
-        await graphMenus.pressKey('End');
-        await graphMenus.pressKey('ArrowLeft');
-        await graphWidgetInput.expectFocusFolderFocused('apps');
       });
 
-      await test.step('AND Space is pressed', async (): Promise<void> => graphMenus.pressKey('Space'));
+      await test.step('THEN the collapsed apps chevron has focus', async (): Promise<void> =>
+        graphWidgets.expectChevronFocused('apps', false));
+
+      await test.step('WHEN End and Left are pressed', async (): Promise<void> => {
+        await graphMenus.pressKey('End');
+        await graphMenus.pressKey('ArrowLeft');
+      });
+
+      await test.step('THEN the apps Focus folder has focus', async (): Promise<void> =>
+        graphWidgetInput.expectFocusFolderFocused('apps'));
+
+      await test.step('WHEN Space is pressed', async (): Promise<void> => graphMenus.pressKey('Space'));
 
       await test.step('THEN apps is expanded', async (): Promise<void> => graphGrouping.expectFolderCollapsed('apps', false));
 
@@ -161,10 +173,11 @@ test.describe('FEATURE: folder row keys', () => {
         await graphWidgetInput.clickTitle('apps');
         await graphWidgets.focusContainer();
         await graphMenus.pressKey('Tab');
-        await graphWidgets.expectChevronFocused('apps', true);
       });
 
-      await test.step('AND Shift+F10 is pressed', async (): Promise<void> => graphMenus.pressShiftF10());
+      await test.step('THEN the apps chevron has focus', async (): Promise<void> => graphWidgets.expectChevronFocused('apps', true));
+
+      await test.step('WHEN Shift+F10 is pressed', async (): Promise<void> => graphMenus.pressShiftF10());
 
       await test.step('THEN the apps folder menu opens', async (): Promise<void> => graphMenus.expectItems(APPS_ITEMS));
     }
