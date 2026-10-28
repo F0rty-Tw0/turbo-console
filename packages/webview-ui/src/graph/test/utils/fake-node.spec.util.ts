@@ -35,7 +35,8 @@ export class FakeNode {
 
   /** Inserts `node` before `before`, or at the end when `before` is `null`. */
   public insertBefore(node: FakeNode, before: FakeNode | null): void {
-    const at = before === null ? this.children.length : this.children.indexOf(before);
+    const found = this.children.findIndex((child) => child === before);
+    const at = found === -1 ? this.children.length : found;
 
     node.parent = this;
     this.children.splice(at, 0, node);
