@@ -4,13 +4,13 @@ import { TaskToolbar } from './task-toolbar.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskDetailsModel } from '../common/task-details.type.ts';
 import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
+import { AT_BUILD } from '../test/common/task-toolbar.const.ts';
 import type { TaskToolbarRig } from '../test/common/task-toolbar.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { API_BUILD_STUB, GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 import { TASK_DETAILS_STUB } from '../test/stubs/task-details.stub.ts';
 import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
 import { isShownButton, taskButtonsOf } from '../test/utils/node-toolbar.spec.util.ts';
-import { rectOf } from '../test/utils/rect.spec.util.ts';
 import { latestOf, stopsOf, taskToolbarRigOf } from '../test/utils/task-toolbar.spec.util.ts';
 
 type CountCase = {
@@ -26,8 +26,6 @@ const shownLabelsOf = (elements: TaskToolbarElements): (string | null)[] => {
 
   return shown.map((button): string | null => button.getAttribute('aria-label'));
 };
-
-const AT_BUILD = rectOf(156, 22, 180, 46);
 
 const COMPACT = 0.49;
 
@@ -98,10 +96,12 @@ describe('FEATURE: TaskToolbar', () => {
       rig.layer.append(document.createElement('div'));
       toolbar.sync(API_IDLE);
 
+      const id = toolbar.id();
+
       expect(Array.from(rig.layer.children)).not.toContain(old);
       expect(rig.layer.children).toHaveLength(2);
       expect(rig.layer.children[0]).toBe(latestOf(rig).root);
-      expect(toolbar.id()).toBe('api#build');
+      expect(id).toBe('api#build');
     });
 
     it('WHEN the old "…" was the Tab stop and the new toolbar is placed at zoom 1 THEN its Run is the Tab stop', () => {
@@ -127,8 +127,10 @@ describe('FEATURE: TaskToolbar', () => {
     it('WHEN the selection clears THEN the container has focus', () => {
       toolbar.sync(null);
 
+      const id = toolbar.id();
+
       expect(document.activeElement).toBe(rig.container);
-      expect(toolbar.id()).toBeNull();
+      expect(id).toBeNull();
     });
 
     it('WHEN the toolbar is placed at null THEN it hides and the container has focus', () => {

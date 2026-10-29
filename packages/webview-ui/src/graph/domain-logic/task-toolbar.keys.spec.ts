@@ -2,15 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TaskToolbar } from './task-toolbar.ts';
 import type { TaskDetailsModel } from '../common/task-details.type.ts';
+import { AT_BUILD } from '../test/common/task-toolbar.const.ts';
 import type { TaskToolbarRig } from '../test/common/task-toolbar.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 import { TASK_DETAILS_STUB } from '../test/stubs/task-details.stub.ts';
 import { pressKey } from '../test/utils/key-events.spec.util.ts';
-import { rectOf } from '../test/utils/rect.spec.util.ts';
 import { latestOf, stopsOf, taskToolbarRigOf } from '../test/utils/task-toolbar.spec.util.ts';
-
-const AT_BUILD = rectOf(156, 22, 180, 46);
 
 const IDLE = TASK_DETAILS_STUB;
 
