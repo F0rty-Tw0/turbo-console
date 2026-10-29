@@ -94,7 +94,7 @@ test.describe("FEATURE: the selected task's node toolbar", () => {
   test(
     'GIVEN app#build tapped, Show package lands in package mode with app selected',
     { annotation: D6 },
-    async ({ graphCanvas, graphDetails, graphNodeToolbar, graphProbe, graphTask, graphTaskToolbar }): Promise<void> => {
+    async ({ graphCanvas, graphDetails, graphNodeToolbar, graphPage, graphProbe, graphTask, graphTaskToolbar }): Promise<void> => {
       await test.step('WHEN app#build is tapped', async (): Promise<void> => graphCanvas.tapNode('app#build'));
 
       await test.step('AND Show package app is pressed', async (): Promise<void> =>
@@ -108,6 +108,8 @@ test.describe("FEATURE: the selected task's node toolbar", () => {
 
       await test.step('AND the package toolbar of app is in view', async (): Promise<void> =>
         graphNodeToolbar.expectNodeToolbarInView('app'));
+
+      await test.step('THEN the container has focus', async (): Promise<void> => graphPage.expectContainerFocused());
     }
   );
 

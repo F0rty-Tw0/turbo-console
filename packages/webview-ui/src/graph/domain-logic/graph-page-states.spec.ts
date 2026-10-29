@@ -71,4 +71,38 @@ describe('FEATURE: layoutScreenOf', () => {
       expect([page.location.nav.hidden, page.body.hidden]).toStrictEqual([true, true]);
     });
   });
+
+  describe('GIVEN the loading screen hid a body that held focus', () => {
+    beforeEach(() => {
+      const screen = layoutScreenOf(page);
+
+      page.container.focus();
+      screen.showLoading();
+      document.body.focus();
+    });
+
+    it('WHEN the graph shows THEN the container has focus', () => {
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(page.container);
+    });
+
+    it('WHEN focus moved to the Controls button before the graph shows THEN it stays there', () => {
+      page.controls.focus();
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(page.controls);
+    });
+  });
+
+  describe('GIVEN the loading screen hid a body that held no focus', () => {
+    it('WHEN the graph shows THEN focus stays on the body', () => {
+      page.details.focus();
+      layoutScreenOf(page).showLoading();
+      document.body.focus();
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+  });
 });

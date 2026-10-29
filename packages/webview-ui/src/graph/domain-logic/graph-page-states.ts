@@ -5,6 +5,9 @@ import type { PageElements } from '../common/page-elements.type.ts';
 
 type MessageState = Exclude<GraphState, GraphReady>;
 
+/** The bodies hidden while they held focus; `showGraphView` hands focus back to their container, as hiding dropped it to the document body. */
+const bodiesHidingFocus = new WeakSet<HTMLElement>();
+
 const messageTextOf = (state: MessageState): string => {
   switch (state.kind) {
     case 'error':
@@ -16,6 +19,11 @@ const messageTextOf = (state: MessageState): string => {
 
 /** Toolbar, notice, location bar and body hidden, `text` shown; Reload only when `canReload`. An open Legend closes, or it would reappear open with the graph. */
 const showMessage = (page: PageElements, text: string, canReload: boolean): void => {
+  const isBodyFocused = page.body.contains(document.activeElement);
+  const hasBodyFocus = !page.body.hidden && isBodyFocused;
+
+  if (hasBodyFocus) bodiesHidingFocus.add(page.body);
+
   page.legendPanel.hidePopover();
   page.toolbar.hidden = true;
   page.location.nav.hidden = true;
@@ -55,7 +63,16 @@ export const setFitAndExportDisabled = (page: Pick<PageElements, 'fit' | 'export
   page.exportImage.disabled = isDisabled;
 };
 
-/** Toolbar, location bar and body shown with the mode buttons, Controls, Details, Fit, Re-layout, Export image and Legend enabled; the notice only for a fallback layout. */
+/** Focus the body held when it hid goes to the container, unless it moved elsewhere meanwhile. */
+const restoreBodyFocus = (page: PageElements): void => {
+  const wasHidingFocus = bodiesHidingFocus.delete(page.body);
+  const { activeElement, body } = document;
+  const isFocusLost = activeElement === null || activeElement === body;
+
+  if (wasHidingFocus && isFocusLost) page.container.focus();
+};
+
+/** Toolbar, location bar and body shown with the mode buttons, Controls, Details, Fit, Re-layout, Export image and Legend enabled; the notice only for a fallback layout. Focus the body held when it hid returns to the container. */
 const showGraphView = (page: PageElements, isFallback: boolean): void => {
   const notice: LayoutNotice = isFallback ? FALLBACK_NOTICE : NO_NOTICE;
 
@@ -71,6 +88,7 @@ const showGraphView = (page: PageElements, isFallback: boolean): void => {
   setFitAndExportDisabled(page, false);
   page.relayout.disabled = false;
   page.legend.disabled = false;
+  restoreBodyFocus(page);
 };
 
 /** What the layouts drive on the page: Loading, the graph view, the notice line. */
