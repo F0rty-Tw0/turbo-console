@@ -194,7 +194,7 @@ describe('FEATURE: PackageToolbar', () => {
 
       expect(rig.layer.children).toHaveLength(1);
       expect(rig.layer.children[0]).not.toBe(first);
-      expect(rig.toolbars.at(-1)?.collapse).toBeNull();
+      expect(latestOf(rig).collapse).toBeNull();
     });
 
     it('WHEN the folder changes to the root folder THEN a new root is built', () => {
@@ -203,19 +203,18 @@ describe('FEATURE: PackageToolbar', () => {
       rig.toolbar.sync('web', '', WITH_TASKS);
 
       expect(rig.layer.children[0]).not.toBe(first);
-      expect(rig.toolbars.at(-1)?.collapse?.getAttribute('aria-label')).toBe('Collapse folder (root)');
-    });
-
-    it('WHEN its buttons are counted THEN Focus, Start trace, Show tasks, Collapse and the "…" make 5', () => {
-      expect(rig.toolbar.count()).toBe(5);
+      expect(latestOf(rig).collapse?.getAttribute('aria-label')).toBe('Collapse folder (root)');
     });
   });
 
   describe('GIVEN the web toolbar on a flat page without tasks', () => {
-    it('WHEN its buttons are counted THEN Focus, Start trace and the "…" make 3', () => {
+    it('WHEN web gains tasks THEN the count follows the new state from 3 to 4', () => {
       rig.toolbar.sync('web', null, NO_TASKS);
+      const before = rig.toolbar.count();
 
-      expect(rig.toolbar.count()).toBe(3);
+      rig.toolbar.sync('web', null, WITH_TASKS);
+
+      expect([before, rig.toolbar.count()]).toStrictEqual([3, 4]);
     });
   });
 
@@ -225,25 +224,25 @@ describe('FEATURE: PackageToolbar', () => {
     });
 
     it('WHEN Focus is clicked THEN onFocus is called with web', () => {
-      rig.toolbars[0]?.focus.click();
+      latestOf(rig).focus.click();
 
       expect(rig.deps.onFocus).toHaveBeenCalledWith('web');
     });
 
     it('WHEN Start trace is clicked THEN onStartTrace is called', () => {
-      rig.toolbars[0]?.startTrace.click();
+      latestOf(rig).startTrace.click();
 
       expect(rig.deps.onStartTrace).toHaveBeenCalledTimes(1);
     });
 
     it('WHEN Show tasks is clicked THEN onShowTasks is called with web', () => {
-      rig.toolbars[0]?.showTasks.click();
+      latestOf(rig).showTasks.click();
 
       expect(rig.deps.onShowTasks).toHaveBeenCalledWith('web');
     });
 
     it('WHEN Collapse is clicked THEN onCollapse is called with apps', () => {
-      rig.toolbars[0]?.collapse?.click();
+      latestOf(rig).collapse?.click();
 
       expect(rig.deps.onCollapse).toHaveBeenCalledWith('apps');
     });
@@ -253,7 +252,7 @@ describe('FEATURE: PackageToolbar', () => {
     it('WHEN Collapse is clicked THEN onCollapse is called with the empty folder name', () => {
       rig.toolbar.sync('web', '', WITH_TASKS);
 
-      rig.toolbars[0]?.collapse?.click();
+      latestOf(rig).collapse?.click();
 
       expect(rig.deps.onCollapse).toHaveBeenCalledWith('');
     });
