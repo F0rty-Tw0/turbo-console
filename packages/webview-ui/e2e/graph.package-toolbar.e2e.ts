@@ -56,4 +56,20 @@ test.describe('FEATURE: package node toolbar', () => {
         graphNodeToolbar.expectNodeToolbarOn('docs', 'above'));
     }
   );
+
+  test(
+    'GIVEN the boards flat with web picked, clicking its toolbar "…" opens the package menu',
+    { annotation: D5 },
+    async ({ graphFolderInspect, graphList, graphMenus, graphNodeToolbar }): Promise<void> => {
+      await test.step('WHEN the flat boards open and web is picked', async (): Promise<void> => {
+        await graphFolderInspect.open(savedWith(BOARDS.hash, { grouped: false }), BOARDS);
+        await graphList.pick('web');
+        await graphNodeToolbar.expectNodeInView('web');
+      });
+
+      await test.step('AND the toolbar "…" is clicked', async (): Promise<void> => graphMenus.openPackageMenu('web'));
+
+      await test.step('THEN the web menu lists its items', async (): Promise<void> => graphMenus.expectItems(WEB_ITEMS));
+    }
+  );
 });
