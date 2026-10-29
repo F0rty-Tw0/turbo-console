@@ -1,4 +1,5 @@
 import { packageOf } from './graph-package.spec.util.ts';
+import { positionsOf } from './graph-positions.spec.util.ts';
 import type { GraphEdge, GraphReady } from '../../../src/bridge/common/graph-state.type.ts';
 
 const EDGES: GraphEdge[] = [
@@ -33,6 +34,23 @@ export const foldersShotState = (): GraphReady => {
     tasks: [],
     atomGroups: []
   };
+
+  return state;
+};
+
+/** `foldersShotState()` with the seven packages at fixed centres, so a top-row package sits in its box's top row at any zoom. */
+export const placedFoldersShotState = (): GraphReady => {
+  const base = foldersShotState();
+  const folderPositions = positionsOf([
+    ['web', 0, 0],
+    ['docs', 200, 0],
+    ['ui', 0, 150],
+    ['core', 0, 270],
+    ['utils', 200, 270],
+    ['lint', 400, 150],
+    ['build', 400, 270]
+  ]);
+  const state: GraphReady = { ...base, folderPositions };
 
   return state;
 };
