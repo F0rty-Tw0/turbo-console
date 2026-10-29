@@ -17,5 +17,5 @@ export const PLAIN_INPUT_KINDS: ReadonlySet<string> = new Set(Object.keys(PLAIN_
 
 export const CLEAR_INPUT: InspectionInput = { kind: 'clear' };
 
-/** The kinds that exist only while grouped: Group by folder turning off clears them, a collapse or expand rechecks them. */
+/** The kinds that exist only while grouped: Group by folder turning off clears them, a collapse, an expand or a filter change that keeps the visible set rechecks them. */
 export const GROUPED_ONLY_KINDS: ReadonlySet<Inspection['kind']> = new Set<Inspection['kind']>(['folder', 'bundle']);
