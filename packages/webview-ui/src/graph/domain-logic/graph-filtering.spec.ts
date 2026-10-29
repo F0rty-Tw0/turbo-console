@@ -5,10 +5,13 @@ import { GraphPackageSide } from './graph-package-side.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { GraphFocus, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { GROUPED_POSITIONS_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { bundle } from '../test/utils/inspections.spec.util.ts';
+import { collapsedIdOf } from '../utils/folder-id.util.ts';
 
 type DrawnSide = {
   readonly side: GraphPackageSide;
@@ -154,6 +157,72 @@ describe('FEATURE: GraphFiltering location updates', () => {
 
         expect(button?.getAttribute('aria-pressed')).toBe('true');
       });
+    });
+  });
+});
+
+/** `SAVED_GROUPED_STUB` with the packages folder collapsed, so the one folder link is `web` to the collapsed packages. */
+const SAVED_COLLAPSED: GraphViewState = { ...SAVED_GROUPED_STUB, collapsed: ['packages'] };
+
+describe('FEATURE: GraphFiltering bundle inspection', () => {
+  let rig: FilteringRig;
+
+  beforeEach(async () => {
+    stubPackageSideGlobals();
+    rig = await drawnRigOf(SAVED_COLLAPSED, GROUPED_STATE);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN the packages folder collapsed with the link web to it tapped', () => {
+    beforeEach(() => {
+      rig.side.filtering.inspection.input({ kind: 'tapBundle', source: 'web', target: collapsedIdOf('packages') });
+    });
+
+    it('THEN the bundle is the inspection', () => {
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(bundle('web', collapsedIdOf('packages')));
+    });
+
+    it('THEN the packages folder is still collapsed', () => {
+      const live = rig.side.filtering.folders.collapsed();
+      const collapsed = [...live];
+
+      expect(collapsed).toContain('packages');
+    });
+
+    it('THEN the saved view state holds no inspection', () => {
+      const none = expect.objectContaining({ selected: null, link: null, trace: null, folder: null }) as unknown;
+
+      expect(rig.saver.schedule).toHaveBeenLastCalledWith(none);
+    });
+
+    it('WHEN the packages folder is expanded THEN no inspection is left', () => {
+      rig.side.filtering.folders.expand(['packages']);
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(NO_INSPECTION);
+    });
+
+    it('WHEN grouping turns off THEN no inspection is left', () => {
+      rig.side.filtering.groupingOff();
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(NO_INSPECTION);
+    });
+
+    it('WHEN the apps folder is excluded, which hides web, THEN no inspection is left', () => {
+      rig.side.filtering.controls.excludeFolder('apps');
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(NO_INSPECTION);
+    });
+  });
+
+  describe('GIVEN the apps folder inspected', () => {
+    it('WHEN grouping turns off THEN no inspection is left', () => {
+      rig.side.filtering.inspection.input({ kind: 'selectFolder', folder: 'apps' });
+      rig.side.filtering.groupingOff();
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(NO_INSPECTION);
     });
   });
 });
