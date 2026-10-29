@@ -8,6 +8,7 @@ import type { NodeToolbarSide } from '../common/graph-folders.type.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside, overlaps, readRect } from '../test/utils/element-rect.spec.util.ts';
+import { firstPackageClearOf } from '../test/utils/graph-toolbar-pan.spec.util.ts';
 import { nodeToolbarFaultsOf, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** The keep-clear margin left of the overlay, less a pixel of rounding. */
@@ -21,6 +22,9 @@ const SETTLE_FRAMES = 5;
 
 /** One wheel notch of the canvas's zoom. */
 const WHEEL_NOTCH_PX = 100;
+
+/** How far inside the container the tapped package sits, so the 120 px pan and the toolbar above its top-right stay in view. */
+const PAN_CLEAR_PX = 130;
 
 /** Runs in the page through `evaluateAll`: the accessible names the buttons were given as `aria-label`. */
 const ariaLabelsOf = (buttons: Element[]): (string | null)[] =>
@@ -102,6 +106,30 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     await expect.poll(async (): Promise<boolean> => this.isNodeInView(name)).toBe(true);
   }
 
+  /** The package toolbar is drawn and lies wholly inside the container, so a timing run pans a toolbar the user can see. */
+  public async expectNodeToolbarInView(name: string): Promise<void> {
+    await expect(this.toolbarOf(name)).toBeVisible();
+    await expect.poll(async (): Promise<boolean> => this.isToolbarInView(name)).toBe(true);
+  }
+
+  /** The first package drawn `PAN_CLEAR_PX` inside the container on every side; throws when none is. */
+  public async firstNodeInView(): Promise<string> {
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+    const container: ElementRect = await this.container.evaluate(readRect);
+
+    return firstPackageClearOf(nodes, zoom, container, PAN_CLEAR_PX);
+  }
+
+  /** Taps the first package in view and returns its name. */
+  public async tapFirstNodeInView(): Promise<string> {
+    const name = await this.firstNodeInView();
+
+    await this.canvas.tapNode(name);
+
+    return name;
+  }
+
   /** The package toolbar is drawn and shares no area with the folder's header row. */
   public async expectToolbarClearOfRow(name: string, folder: string): Promise<void> {
     await expect(this.rowOf(folder)).toBeVisible();
@@ -133,6 +161,13 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     const container: ElementRect = await this.container.evaluate(readRect);
 
     return isInside(node, container);
+  }
+
+  private async isToolbarInView(name: string): Promise<boolean> {
+    const toolbar = await rectOf(this.toolbarOf(name));
+    const container: ElementRect = await this.container.evaluate(readRect);
+
+    return isInside(toolbar, container);
   }
 
   private async isToolbarOnRow(name: string, folder: string): Promise<boolean> {
