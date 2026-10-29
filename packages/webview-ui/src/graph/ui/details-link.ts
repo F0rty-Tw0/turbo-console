@@ -1,8 +1,8 @@
 import { explainView } from './details-explain.ts';
-import { leadOf, nameButton, viewBase } from './details-parts.ts';
+import { endsLeadOf, nameButton, viewBase } from './details-parts.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { LinkDetails } from '../common/details-view.type.ts';
-import { DEPENDS_ON_TEXT, LINK_HEADING_TEXT, LINK_LEAD_ID } from '../common/details.const.ts';
+import { LINK_HEADING_TEXT, LINK_LEAD_ID } from '../common/details.const.ts';
 import type { ExplainState, LinkViewModel } from '../common/details.type.ts';
 
 /**
@@ -11,19 +11,15 @@ import type { ExplainState, LinkViewModel } from '../common/details.type.ts';
  */
 export const linkView = (model: LinkViewModel, isOverlay: boolean): LinkDetails => {
   const base = viewBase('link', LINK_HEADING_TEXT, isOverlay);
-  const lead = leadOf('');
   const source = nameButton(model.source);
-  const dependsOn = textElement('span', '', ` ${DEPENDS_ON_TEXT} `);
   const target = nameButton(model.target);
+  const lead = endsLeadOf(source, target, LINK_LEAD_ID, base.heading);
   const explain = textElement('section', 'details-section details-explain', '');
   const reading: ExplainState = { kind: 'reading', file: model.file };
   const readingView = explainView(reading);
 
-  lead.id = LINK_LEAD_ID;
-  base.heading.setAttribute('aria-describedby', LINK_LEAD_ID);
   explain.setAttribute('aria-live', 'polite');
   explain.append(readingView.root);
-  lead.append(source, dependsOn, target);
   base.root.append(lead, explain);
 
   const view: LinkDetails = { ...base, kind: 'link', source, target, explain };

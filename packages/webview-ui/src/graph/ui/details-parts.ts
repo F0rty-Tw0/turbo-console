@@ -2,7 +2,7 @@ import { graphIcon } from './graph-icon.ts';
 import { iconButton } from './icon-button.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { DetailsViewBase, DetailsViewKind } from '../common/details-view.type.ts';
-import { CLOSE_DETAILS_LABEL, EXPLAIN_LABEL, HIDDEN_TEXT } from '../common/details.const.ts';
+import { CLOSE_DETAILS_LABEL, DEPENDS_ON_TEXT, EXPLAIN_LABEL, HIDDEN_TEXT } from '../common/details.const.ts';
 import type { KeyedPart } from '../common/details.type.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import { keyedPartsOf } from '../utils/keyed-text.util.ts';
@@ -40,6 +40,20 @@ export const sectionOf = (): HTMLElement => textElement('section', 'details-sect
 export const lineOf = (text: string): HTMLElement => textElement('p', 'details-line', text);
 
 export const leadOf = (text: string): HTMLElement => textElement('p', 'details-lead', text);
+
+/** The " depends on " between two names, padded so the names read as separate words. */
+export const dependsOnOf = (): HTMLElement => textElement('span', '', ` ${DEPENDS_ON_TEXT} `);
+
+/** "[source] depends on [target]" as a lead, with its `id` set and described by `heading`. */
+export const endsLeadOf = (source: HTMLButtonElement, target: HTMLButtonElement, id: string, heading: HTMLElement): HTMLElement => {
+  const lead = leadOf('');
+
+  lead.id = id;
+  heading.setAttribute('aria-describedby', id);
+  lead.append(source, dependsOnOf(), target);
+
+  return lead;
+};
 
 export const actionButton = (label: string): HTMLButtonElement => {
   const button = textElement('button', 'text-button', label);
