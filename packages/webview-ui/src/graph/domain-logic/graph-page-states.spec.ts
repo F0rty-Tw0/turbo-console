@@ -138,6 +138,20 @@ describe('FEATURE: layoutScreenOf', () => {
     });
   });
 
+  describe('GIVEN the loading screen hid a body that held focus and the page lost focus before the graph shows', () => {
+    it('WHEN the graph shows THEN focus stays on the body', () => {
+      const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+
+      page.container.focus();
+      layoutScreenOf(page).showLoading();
+      document.body.focus();
+      hasFocus.mockReturnValue(false);
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+  });
+
   describe('GIVEN the loading screen hid a body that held no focus', () => {
     it('WHEN the graph shows THEN focus stays on the body', () => {
       page.details.focus();

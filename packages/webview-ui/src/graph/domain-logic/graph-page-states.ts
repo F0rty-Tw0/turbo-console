@@ -68,13 +68,14 @@ export const setFitAndExportDisabled = (page: Pick<PageElements, 'fit' | 'export
   page.exportImage.disabled = isDisabled;
 };
 
-/** Focus the body held when it hid goes to the container, unless it moved elsewhere meanwhile. */
+/** Focus the body held when it hid goes to the container, unless it moved elsewhere meanwhile or the page lost focus. */
 const restoreBodyFocus = (page: PageElements): void => {
   const wasHidingFocus = bodiesHidingFocus.delete(page.body);
   const { activeElement, body } = document;
   const isFocusLost = activeElement === null || activeElement === body;
+  const isPageFocused = document.hasFocus();
 
-  if (wasHidingFocus && isFocusLost) page.container.focus();
+  if (wasHidingFocus && isFocusLost && isPageFocused) page.container.focus();
 };
 
 /** Toolbar, location bar and body shown with the mode buttons, Controls, Details, Fit, Re-layout, Export image and Legend enabled; the notice only for a fallback layout. Focus the body held when it hid returns to the container. */
