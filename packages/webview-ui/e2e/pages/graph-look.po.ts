@@ -125,13 +125,18 @@ export class GraphLook {
     await expect.poll(async (): Promise<ControlsFields> => this.controlsFields()).toEqual(expected);
   }
 
-  /** Polls until the first frame is measured, checks it, and records it as a test annotation. */
+  /**
+   * Polls until the first frame is measured, checks it, and records it as a test annotation and one `first-frame-ms`
+   * stdout line, so the CI log carries the reading on a pass too.
+   */
   public async expectFirstFrameUnder(ms: number): Promise<void> {
     await expect.poll(async (): Promise<number | null> => this.timings.firstFrameMs()).not.toBeNull();
 
     const measured = await this.timings.firstFrameMs();
+    const info = test.info();
 
-    test.info().annotations.push({ type: 'first-frame-ms', description: String(measured) });
+    info.annotations.push({ type: 'first-frame-ms', description: String(measured) });
+    process.stdout.write(`first-frame-ms ms=${measured} budget=${ms} host=${process.platform}-${process.arch} ${info.title}\n`);
     expect(measured).toBeLessThan(ms);
   }
 
