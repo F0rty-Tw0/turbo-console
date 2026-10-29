@@ -6,7 +6,7 @@ import { focusLabelOf, packageToolbarLabelOf } from '../../src/graph/utils/contr
 import { isNodeToolbarCompact } from '../../src/graph/utils/widget-geometry.util.ts';
 import type { NodeToolbarSide } from '../common/graph-folders.type.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
-import type { ElementRect } from '../common/playwright.type.ts';
+import type { ElementRect, GraphView } from '../common/playwright.type.ts';
 import { isInside, overlaps, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { firstPackageClearOf, isPackageClearOf } from '../test/utils/graph-toolbar-pan.spec.util.ts';
 import { nodeToolbarFaultsOf, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
@@ -141,17 +141,22 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
 
   /** The first package drawn `PAN_CLEAR_PX` inside the container on every side; throws when none is. */
   private async firstNodeInView(): Promise<string> {
-    const nodes = await this.probe.nodes();
-    const zoom = await this.probe.zoom();
-    const container: ElementRect = await this.container.evaluate(readRect);
+    const { nodes, zoom, container } = await this.readView();
 
     return firstPackageClearOf(nodes, zoom, container, PAN_CLEAR_PX);
   }
 
-  private async isNodeClearForPan(name: string): Promise<boolean> {
+  private async readView(): Promise<GraphView> {
     const nodes = await this.probe.nodes();
     const zoom = await this.probe.zoom();
     const container: ElementRect = await this.container.evaluate(readRect);
+    const view: GraphView = { nodes, zoom, container };
+
+    return view;
+  }
+
+  private async isNodeClearForPan(name: string): Promise<boolean> {
+    const { nodes, zoom, container } = await this.readView();
     const node = nodes.find((candidate): boolean => candidate.id === name);
 
     return node !== undefined && isPackageClearOf(node, zoom, container, PAN_CLEAR_PX);
