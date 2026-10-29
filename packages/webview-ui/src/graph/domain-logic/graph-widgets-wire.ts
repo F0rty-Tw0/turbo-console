@@ -101,7 +101,7 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
   const bounds = watchLayerBounds(
     page,
     overlay,
-    () => asideOf(body),
+    (): HTMLElement | null => asideOf(body),
     (): void => widgets.refreshBounds()
   );
   const onMenuKey = (event: KeyboardEvent): void => {
