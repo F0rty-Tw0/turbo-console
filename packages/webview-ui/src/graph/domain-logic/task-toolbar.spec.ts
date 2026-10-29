@@ -212,6 +212,14 @@ describe('FEATURE: TaskToolbar', () => {
       expect(run.children[0]?.className).toBe('codicon codicon-play');
     });
 
+    it('WHEN it turns passed THEN the slot, already Run, is not written', () => {
+      const setAttribute = vi.spyOn(latestOf(rig).run, 'setAttribute');
+
+      toolbar.sync(PASSED);
+
+      expect(setAttribute).not.toHaveBeenCalled();
+    });
+
     it('WHEN Run has focus and the task turns running THEN the slot keeps focus', () => {
       toolbar.place(AT_BUILD, 1);
       latestOf(rig).run.focus();
@@ -301,6 +309,14 @@ describe('FEATURE: TaskToolbar', () => {
   });
 
   describe('GIVEN no toolbar', () => {
+    it('WHEN a#build is synced running THEN its new slot reads Stop a#build', () => {
+      toolbar.sync(RUNNING);
+
+      const label = latestOf(rig).run.getAttribute('aria-label');
+
+      expect(label).toBe('Stop a#build');
+    });
+
     it('WHEN it is placed THEN nothing happens', () => {
       const place = (): void => toolbar.place(AT_BUILD, 1);
 

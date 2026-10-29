@@ -110,6 +110,8 @@ type TaskToolbarFields = {
   readonly elements: TaskToolbarElements;
   /** The selected task's model; its state picks what the Run/Stop slot does. */
   model: TaskDetailsModel;
+  /** What the Run/Stop slot is drawn for; the builder draws Run. */
+  slotAction: RunSlotAction;
 };
 
 /** The task toolbar as it is kept. */
