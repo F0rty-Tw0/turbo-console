@@ -20,6 +20,11 @@ const DOCS_BUNDLE: BundleViewFacts = {
   rows: ['docs depends on @acme/ui', 'docs depends on @acme/utils']
 };
 
+/** Both panels at their 200 px minimum, the width a bundle row's text and Explain have to share. */
+const NARROW_WIDTHS = { controls: 200, details: 200 };
+
+const NARROW_SAVED = { ...SAVED, panelWidths: NARROW_WIDTHS };
+
 const DOCS_INSPECTION = bundleInspection('docs', collapsedIdOf('packages'));
 
 test.describe('FEATURE: folder link bundle', () => {
@@ -83,6 +88,30 @@ test.describe('FEATURE: folder link bundle', () => {
       graphDetails.expectInspection(linkInspection('docs', '@acme/ui')));
 
     await test.step('AND no folder is collapsed any more', async (): Promise<void> => graphFolders.expectFolderLinks([]));
+  });
+
+  test('GIVEN packages collapsed and the Details panel at its minimum width, every bundle row keeps Explain on one line', async ({
+    graphBundle,
+    graphDetails,
+    graphFolderInspect,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the boards open with both panels at 200 px', async (): Promise<void> =>
+      graphFolderInspect.open(NARROW_SAVED, BOARDS));
+
+    await test.step('AND Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> =>
+      graphPage.pressButton(FIT_LABEL));
+
+    await test.step('THEN both ends of the docs link are in view', async (): Promise<void> =>
+      graphBundle.expectEndsInView('docs', 'packages'));
+
+    await test.step('WHEN the docs link to packages is tapped', async (): Promise<void> =>
+      graphBundle.tapFolderLink('docs', 'packages'));
+
+    await test.step('THEN the bundle is inspected', async (): Promise<void> => graphDetails.expectInspection(DOCS_INSPECTION));
+
+    await test.step('AND both rows show Explain on one line', async (): Promise<void> =>
+      graphBundle.expectExplainOnOneLine(DOCS_BUNDLE.rows.length));
   });
 
   test('GIVEN packages collapsed, the folder end of a bundle selects the folder', async ({

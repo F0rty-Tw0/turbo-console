@@ -1178,6 +1178,11 @@ button.details-explain {
   min-width: 0;
 }
 
+/* Explain keeps its label on one line; the row's text shrinks instead. */
+.details-item > button.details-explain {
+  flex: none;
+}
+
 .details-name[aria-disabled='true'],
 button.details-explain[aria-disabled='true'] {
   cursor: default;

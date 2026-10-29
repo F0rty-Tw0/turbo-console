@@ -9,6 +9,7 @@ import { DETAILS_LABEL, GRAPH_LABEL } from '../../src/graph/common/graph.const.t
 import { explainLabelOf, folderEndLabelOf } from '../../src/graph/utils/details-text.util.ts';
 import type { BundleViewFacts } from '../common/graph-folders.type.ts';
 import type { LinkEnds } from '../common/playwright.type.ts';
+import { readLineCounts } from '../test/utils/element-lines.spec.util.ts';
 import { isInside, pointBoxOf, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { endCentreOf, linkPointOf } from '../test/utils/graph-folder-points.spec.util.ts';
 import { isHitWithin } from '../test/utils/graph-widgets.spec.util.ts';
@@ -20,6 +21,7 @@ const LINK_MIDPOINT = 0.5;
 export class GraphBundle {
   private readonly container: Locator;
   private readonly count: Locator;
+  private readonly explains: Locator;
   private readonly folders: GraphFoldersPage;
   private readonly heading: Locator;
   private readonly lead: Locator;
@@ -43,6 +45,7 @@ export class GraphBundle {
     this.lead = this.view.locator('.details-lead');
     this.count = this.view.locator('.details-muted');
     this.rows = this.view.locator('.details-list .details-item');
+    this.explains = this.rows.locator('button.details-explain');
     this.texts = this.rows.locator('.details-link-text');
   }
 
@@ -86,6 +89,15 @@ export class GraphBundle {
     await expect(this.lead).toHaveText(facts.lead);
     await expect(this.count).toHaveText(facts.count);
     await expect(this.texts).toHaveText(facts.rows);
+  }
+
+  /** Every row's Explain label sits on one line, so a narrow panel shrinks the row's text, not the button. */
+  public async expectExplainOnOneLine(rowCount: number): Promise<void> {
+    await expect(this.explains).toHaveCount(rowCount);
+
+    const lineCounts = await this.explains.evaluateAll(readLineCounts);
+
+    expect(lineCounts, 'the lines each Explain label wraps to, per row').toEqual(Array<number>(rowCount).fill(1));
   }
 
   private async endPointsOf(source: string, target: string): Promise<LinkEnds> {
