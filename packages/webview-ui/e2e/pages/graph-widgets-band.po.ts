@@ -13,8 +13,6 @@ import { focusFolderNameOf, isCutText, isHitAtCentre, rectOf } from '../test/uti
 /** How far inside a node's top-left corner `tapNodeCorner` clicks, in CSS px. */
 const CORNER_INSET_PX = 2;
 
-const MAX_ZOOM_NOTCHES = 60;
-
 const ZOOM_IN_NOTCH = -100;
 
 /** Resolves after two frames. */
@@ -50,15 +48,13 @@ const clashCountOf = (rects: ElementRect[]): number => {
 
 /** How the header rows fit the box band as the camera zooms, and what a collapsed node shows with and without its row. */
 export class GraphWidgetsBand extends GraphWidgetsLayout {
-  /** Wheels in one notch at a time, at most 60, until some header button shows. */
+  /** Wheels in one notch at a time until some header button shows. */
   public async zoomUntilRowsShown(): Promise<void> {
-    for (let notch = 0; notch < MAX_ZOOM_NOTCHES; notch += 1) {
+    await this.canvas.zoomUntil(ZOOM_IN_NOTCH, async (): Promise<boolean> => {
       const shown = await this.shownHeaderButtonCount();
 
-      if (shown > 0) return;
-
-      await this.zoomBy(ZOOM_IN_NOTCH);
-    }
+      return shown > 0;
+    });
   }
 
   /** Clicks 2 px inside the package's drawn top-left corner. */

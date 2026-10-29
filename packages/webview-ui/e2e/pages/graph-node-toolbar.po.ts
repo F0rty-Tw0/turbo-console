@@ -15,9 +15,8 @@ const CLEAR_MARGIN_PX = 15;
 /** How far the menu's left edge may sit from the "…"'s: a menu opened on the whole toolbar would sit a few buttons left. */
 const MENU_ANCHOR_SLACK_PX = 24;
 
-/** One wheel notch of the canvas's zoom, and how long a zoom to the compact rule may take. */
+/** One wheel notch of the canvas's zoom. */
 const WHEEL_NOTCH_PX = 100;
-const ZOOM_POLL = { intervals: [100], timeout: 15_000 };
 
 /** Runs in the page through `evaluateAll`: the accessible names the buttons were given as `aria-label`. */
 const ariaLabelsOf = (buttons: Element[]): (string | null)[] =>
@@ -68,14 +67,18 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     await expect.poll(async (): Promise<number> => this.menuGapTo(name)).toBeLessThanOrEqual(MENU_ANCHOR_SLACK_PX);
   }
 
-  /** Wheels out until the camera is under the compact rule, one notch a poll. */
+  /** Wheels out until the camera is under the compact rule. */
   public async zoomOutToCompact(): Promise<void> {
-    await expect.poll(async (): Promise<boolean> => this.isCompactAfter(WHEEL_NOTCH_PX), ZOOM_POLL).toBe(true);
+    await this.canvas.zoomUntil(WHEEL_NOTCH_PX, async (): Promise<boolean> => this.isCompact());
   }
 
-  /** Wheels in until the camera is back over the compact rule, one notch a poll. */
+  /** Wheels in until the camera is back over the compact rule. */
   public async zoomInToFull(): Promise<void> {
-    await expect.poll(async (): Promise<boolean> => this.isCompactAfter(-WHEEL_NOTCH_PX), ZOOM_POLL).toBe(false);
+    await this.canvas.zoomUntil(-WHEEL_NOTCH_PX, async (): Promise<boolean> => {
+      const isCompact = await this.isCompact();
+
+      return !isCompact;
+    });
   }
 
   /** The node lies wholly inside the container, so a position check below it reads a node the user can see. */
@@ -96,9 +99,7 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     await expect.poll(async (): Promise<number> => this.toolbarGap(name)).toBeGreaterThanOrEqual(CLEAR_MARGIN_PX);
   }
 
-  private async isCompactAfter(deltaY: number): Promise<boolean> {
-    await this.canvas.zoomBy(deltaY);
-
+  private async isCompact(): Promise<boolean> {
     const zoom = await this.probe.zoom();
 
     return isNodeToolbarCompact(zoom);

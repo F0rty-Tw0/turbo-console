@@ -14,8 +14,6 @@ import {
   titleFaultsOf
 } from '../test/utils/graph-widgets.spec.util.ts';
 
-const MAX_ZOOM_NOTCHES = 60;
-
 const ZOOM_OUT_NOTCH = 100;
 
 const ZOOM_IN_NOTCH = -100;
@@ -38,26 +36,22 @@ export class GraphWidgetsLayout extends GraphWidgetsPage {
     await this.canvas.zoomBy(deltaY);
   }
 
-  /** Wheels out one notch at a time, at most 60, until the folder's box is under `px` wide. */
+  /** Wheels out one notch at a time until the folder's box is under `px` wide. */
   public async zoomBoxUnder(folder: string, px: number): Promise<void> {
-    for (let notch = 0; notch < MAX_ZOOM_NOTCHES; notch += 1) {
+    await this.canvas.zoomUntil(ZOOM_OUT_NOTCH, async (): Promise<boolean> => {
       const width = await this.boxWidthOf(folder);
 
-      if (width < px) return;
-
-      await this.canvas.zoomBy(ZOOM_OUT_NOTCH);
-    }
+      return width < px;
+    });
   }
 
-  /** Wheels in one notch at a time, at most 60, until the folder's box is `px` wide or more. */
+  /** Wheels in one notch at a time until the folder's box is `px` wide or more. */
   public async zoomBoxOver(folder: string, px: number): Promise<void> {
-    for (let notch = 0; notch < MAX_ZOOM_NOTCHES; notch += 1) {
+    await this.canvas.zoomUntil(ZOOM_IN_NOTCH, async (): Promise<boolean> => {
       const width = await this.boxWidthOf(folder);
 
-      if (width >= px) return;
-
-      await this.canvas.zoomBy(ZOOM_IN_NOTCH);
-    }
+      return width >= px;
+    });
   }
 
   /** Pans the canvas so the box's right end, "…" included, sits under the open overlay while its chevron stays left of it. */

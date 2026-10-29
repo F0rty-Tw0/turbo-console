@@ -12,10 +12,9 @@ import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { dragError, isWithinTolerance } from '../test/utils/graph-drag-error.spec.util.ts';
 import { emptySpotOf, insideFlagsOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
-import { dragPerFrame } from '../test/utils/graph-scripted-pan.spec.util.ts';
+import { dragBy, dragPerFrame } from '../test/utils/graph-scripted-pan.spec.util.ts';
 import { cpuStepsOf, recordPanCpu } from '../test/utils/graph-thread-time.spec.util.ts';
-
-const DRAG_STEPS = 8;
+import { wheelUntil } from '../test/utils/graph-wheel-until.spec.util.ts';
 
 const WHEEL_NOTCH = 100;
 
@@ -61,7 +60,7 @@ export class GraphCanvas {
     const grab: ViewportPoint = { x: node.renderedX, y: node.renderedY };
 
     this.drag = { id, from, dx, dy, zoom };
-    await this.dragFrom(grab, dx, dy);
+    await dragBy(this.page, grab, dx, dy);
   }
 
   /**
@@ -80,10 +79,19 @@ export class GraphCanvas {
     for (let count = 0; count < notches; count += 1) await this.page.mouse.wheel(0, notch);
   }
 
+  /** Wheels one notch of `deltaY` at a time until `isReached` holds, within a bounded notch budget. */
+  public async zoomUntil(deltaY: number, isReached: () => Promise<boolean>): Promise<void> {
+    await wheelUntil(
+      async (): Promise<void> => this.zoomBy(deltaY),
+      isReached,
+      async (): Promise<number> => this.probe.zoom()
+    );
+  }
+
   public async panBy(dx: number, dy: number): Promise<void> {
     const spot = await this.emptySpot();
 
-    await this.dragFrom(spot, dx, dy);
+    await dragBy(this.page, spot, dx, dy);
   }
 
   /**
@@ -149,13 +157,6 @@ export class GraphCanvas {
     const ids = await this.probe.nodeIds();
 
     expect(names).toEqual(ids);
-  }
-
-  private async dragFrom(from: ViewportPoint, dx: number, dy: number): Promise<void> {
-    await this.page.mouse.move(from.x, from.y);
-    await this.page.mouse.down();
-    await this.page.mouse.move(from.x + dx, from.y + dy, { steps: DRAG_STEPS });
-    await this.page.mouse.up();
   }
 
   private async isDragPosted(drag: DragRecord): Promise<boolean> {
