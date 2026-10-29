@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buttonRectsOf,
+  ellipsisSlotOf,
+  isNodeToolbarCompact,
   isWidgetShown,
+  nodeToolbarCountAt,
   nodeToolbarRectOf,
   overlayLeftOf,
   packageButtonRectOf,
@@ -195,6 +198,25 @@ describe('FEATURE: packageButtonRectOf', () => {
   });
 });
 
+describe('FEATURE: isNodeToolbarCompact', () => {
+  it.each([
+    { zoom: 0.49, expected: true },
+    { zoom: 0.5, expected: false }
+  ])('GIVEN zoom $zoom THEN compact is $expected', ({ zoom, expected }) => {
+    expect(isNodeToolbarCompact(zoom)).toBe(expected);
+  });
+});
+
+describe('FEATURE: nodeToolbarCountAt', () => {
+  it.each([
+    { zoom: 0.49, fullCount: 4, expected: 1 },
+    { zoom: 0.5, fullCount: 4, expected: 4 },
+    { zoom: 1, fullCount: 2, expected: 2 }
+  ])('GIVEN zoom $zoom and a full toolbar of $fullCount THEN it shows $expected', ({ zoom, fullCount, expected }) => {
+    expect(nodeToolbarCountAt(zoom, fullCount)).toBe(expected);
+  });
+});
+
 describe('FEATURE: nodeToolbarRectOf', () => {
   describe('GIVEN the node 100, 100 to 180, 132', () => {
     const node = rectOf(100, 100, 180, 132);
@@ -318,5 +340,15 @@ describe('FEATURE: overlayLeftOf', () => {
 
   it('GIVEN no panel WHEN the overlay layout is on THEN there is no edge', () => {
     expect(overlayLeftOf(null, container, true)).toBeNull();
+  });
+});
+
+describe('FEATURE: ellipsisSlotOf', () => {
+  it('GIVEN a toolbar of several buttons WHEN the slot is taken THEN it is the last button width', () => {
+    expect(ellipsisSlotOf(rectOf(72, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+  });
+
+  it('GIVEN a one-button toolbar WHEN the slot is taken THEN it is the toolbar itself', () => {
+    expect(ellipsisSlotOf(rectOf(156, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
   });
 });

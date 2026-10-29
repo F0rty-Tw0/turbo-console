@@ -41,7 +41,7 @@ const SELECTION_STOPS: FocusStep[] = tabStopsOf([
   'packages (7)',
   'Resize Controls',
   'Package graph',
-  'Actions for core',
+  'Focus core',
   'Resize Details',
   'Clear selection',
   'View Package Details · 0 tasks',

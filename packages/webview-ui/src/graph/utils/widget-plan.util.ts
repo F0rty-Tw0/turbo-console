@@ -1,5 +1,12 @@
-import { buttonRectsOf, isWidgetShown, nodeToolbarRectOf, rowPlacementOf, rowRectOf } from './widget-geometry.util.ts';
-import { NODE_HEIGHT, NODE_TOOLBAR_MIN_PX, ROW_FOCUS_MIN_PX } from '../common/graph.const.ts';
+import {
+  buttonRectsOf,
+  isWidgetShown,
+  nodeToolbarCountAt,
+  nodeToolbarRectOf,
+  rowPlacementOf,
+  rowRectOf
+} from './widget-geometry.util.ts';
+import { ROW_FOCUS_MIN_PX } from '../common/graph.const.ts';
 import type { FolderRect, RectPx, RowKind, RowPlan, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
 
 /** The row of a box or collapsed node wide enough for one, with at least one button shown; else `null`. */
@@ -49,9 +56,7 @@ const nodeToolbarOf = (input: WidgetPlanInput, rows: RowPlan[]): RectPx | null =
 
   if (!isNodeShown) return null;
 
-  const isCompact = NODE_HEIGHT * zoom < NODE_TOOLBAR_MIN_PX;
-  const count = isCompact ? 1 : input.toolbarCount;
-
+  const count = nodeToolbarCountAt(zoom, input.toolbarCount);
   const rect = nodeToolbarRectOf(selected, count, rows.map(rowRectOfPlan));
   const isShown = isWidgetShown(rect, input.bounds);
 

@@ -13,8 +13,6 @@ import { boxRectOf, folderKeyed, holdsCentre, membershipFaultsOf, overlapFaultsO
 import { freeSpotOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 
-const MAX_ZOOM_NOTCHES = 60;
-
 const ZOOM_IN_NOTCH = -100;
 
 const NO_BOXES_FAULT = 'no folder box is drawn';
@@ -75,15 +73,13 @@ export class GraphBoxesPage {
     return this.page.evaluate((): string[] => window.__tcGraphProbe?.visibleIds() ?? []);
   }
 
-  /** Wheels in one notch at a time, at most 60, until the narrowest box is `minWidthPx` wide. */
+  /** Wheels in one notch at a time until the narrowest box is `minWidthPx` wide. */
   public async zoomBoxesTo(minWidthPx: number): Promise<void> {
-    for (let notch = 0; notch < MAX_ZOOM_NOTCHES; notch += 1) {
+    await this.canvas.zoomUntil(ZOOM_IN_NOTCH, async (): Promise<boolean> => {
       const narrowest = await this.narrowestBox();
 
-      if (narrowest >= minWidthPx) return;
-
-      await this.canvas.zoomBy(ZOOM_IN_NOTCH);
-    }
+      return narrowest >= minWidthPx;
+    });
   }
 
   /** The first grid point of the container that no box covers. */

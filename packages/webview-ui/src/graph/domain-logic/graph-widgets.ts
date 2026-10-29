@@ -1,14 +1,19 @@
 import { PackageToolbar } from './package-toolbar.ts';
 import { WidgetRows } from './widget-rows.ts';
+import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphWidgetsDeps, MenuAnchor } from '../common/graph-widgets.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds, MenuTarget, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
 import { tapPairOf } from '../utils/tap-pair.util.ts';
-import { buttonRectsOf, nodeToolbarRectOf, overlayLeftOf } from '../utils/widget-geometry.util.ts';
+import { buttonRectsOf, ellipsisSlotOf, nodeToolbarCountAt, nodeToolbarRectOf, overlayLeftOf } from '../utils/widget-geometry.util.ts';
 import { widgetPlanOf } from '../utils/widget-plan.util.ts';
 
-/** The package toolbar is the "…" alone so far. */
-const PACKAGE_TOOLBAR_COUNT = 1;
+/** The folder the selected package is drawn in; `null` when no folder scene is drawn (flat) or nothing is selected. */
+const folderOfSelected = (scene: FolderScene | null, selected: string | null): string | null => {
+  if (scene === null || selected === null) return null;
+
+  return scene.folderOf.get(selected) ?? null;
+};
 
 const NO_PLAN: WidgetPlan = { rows: [], nodeToolbar: null };
 
@@ -40,14 +45,19 @@ export class GraphWidgets {
       layer: deps.page.widgets,
       container: deps.page.container,
       views: deps.widgetViews,
-      onMenu: (target, opener): void => this.actOnPackage((): void => deps.onMenu(target, opener))
+      onMenu: (target, opener): void => this.actOnPackage((): void => deps.onMenu(target, opener)),
+      onFocus: (name): void => this.actOnPackage((): void => deps.packageActions.focus(name)),
+      onStartTrace: (): void => this.actOnPackage((): void => deps.packageActions.startTrace()),
+      onShowTasks: (name): void => this.actOnPackage((): void => deps.packageActions.showTasks(name)),
+      onCollapse: (folder): void => this.act((): void => deps.actions.toggle(folder))
     });
   }
 
   public refresh(): void {
-    const { scene, selectedPackage, focusedFolder } = this.deps.state();
+    const { scene, selectedPackage, focusedFolder, packageState } = this.deps.state();
+    const folder = folderOfSelected(scene, selectedPackage);
 
-    this.toolbar.sync(selectedPackage);
+    this.toolbar.sync(selectedPackage, folder, packageState);
     this.rows.sync(scene, focusedFolder);
     this.position();
     this.rows.restoreFocus();
@@ -65,13 +75,13 @@ export class GraphWidgets {
     const input: WidgetPlanInput = {
       rects,
       bounds: this.bounds,
-      toolbarCount: PACKAGE_TOOLBAR_COUNT
+      toolbarCount: this.toolbar.count()
     };
 
     this.plan = widgetPlanOf(input);
     this.rows.place(this.plan.rows);
     this.deps.view.markRowLess(this.plan.rows);
-    this.toolbar.place(this.plan.nodeToolbar);
+    this.toolbar.place(this.plan.nodeToolbar, rects.zoom);
   }
 
   public refreshBounds(): void {
@@ -90,19 +100,20 @@ export class GraphWidgets {
 
   /**
    * The package toolbar's x span at the camera of this call, shown or not, so a keep-clear pan brings it out from under
-   * the overlay; the flip moves only y, so keep-clear needs no rows. It also skips the compact rule (the "…" alone under
-   * `NODE_TOOLBAR_MIN_PX`), which is right only while the count is 1; U4d must apply it.
+   * the overlay: the "…" alone under `NODE_TOOLBAR_MIN_PX`, else every button it can show; the flip moves only y, so
+   * keep-clear needs no rows.
    */
   public packageToolbarBox(): AnchorBox | null {
     const name = this.toolbar.name();
 
     if (name === null) return null;
 
-    const { selected } = this.deps.view.widgetRects(name);
+    const { selected, zoom } = this.deps.view.widgetRects(name);
 
     if (selected === null) return null;
 
-    const rect = nodeToolbarRectOf(selected, PACKAGE_TOOLBAR_COUNT, []);
+    const count = nodeToolbarCountAt(zoom, this.toolbar.count());
+    const rect = nodeToolbarRectOf(selected, count, []);
     const box: AnchorBox = { x1: rect.x1, x2: rect.x2 };
 
     return box;
@@ -136,7 +147,8 @@ export class GraphWidgets {
     if (rect === null || selected !== name) return null;
 
     const opener = this.toolbar.ellipsis();
-    const anchor: MenuAnchor = { rect, opener };
+    const slot = ellipsisSlotOf(rect);
+    const anchor: MenuAnchor = { rect: slot, opener };
 
     return anchor;
   }

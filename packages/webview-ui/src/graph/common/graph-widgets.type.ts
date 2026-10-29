@@ -4,10 +4,10 @@ import type { GraphFilters } from './graph-filters.type.ts';
 import type { GraphView } from './graph-page.type.ts';
 import type { Inspection } from './inspection.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
-import type { PackageInspectionActions } from './package-actions.type.ts';
+import type { PackageActions, PackageInspectionActions } from './package-actions.type.ts';
 import type { PageElements } from './page-elements.type.ts';
 import type { MenuItemModel } from './widget-menu.type.ts';
-import type { LayerBounds, MenuTarget, RectPx, WidgetViews } from './widget.type.ts';
+import type { LayerBounds, MenuTarget, PackageMenuState, RectPx, WidgetViews } from './widget.type.ts';
 
 /** What the widget layer shows, read at each refresh. */
 export type WidgetState = {
@@ -15,6 +15,8 @@ export type WidgetState = {
   readonly selectedPackage: string | null;
   /** The folder the filters focus, whose Focus folder button is pressed; `null` for a package focus or none. */
   readonly focusedFolder: string | null;
+  /** What the selected package's toolbar reads: its Focus state and whether it has a visible task; `null` without a selection. */
+  readonly packageState: PackageMenuState | null;
 };
 
 export type GraphWidgetsDeps = {
@@ -28,6 +30,8 @@ export type GraphWidgetsDeps = {
   readonly aside: () => HTMLElement | null;
   readonly state: () => WidgetState;
   readonly actions: FolderActions;
+  /** What the package toolbar's Focus, Start trace and Show tasks call. */
+  readonly packageActions: PackageActions;
   /** The checkbox's mode and the mode on screen agree, so a widget may act. */
   readonly isActive: () => boolean;
   /** The mode on screen is the checkbox's mode and the package graph owns the canvas, flat or grouped: a package widget may act. */
@@ -117,12 +121,16 @@ export type MenuAnchor = {
   readonly opener: HTMLButtonElement | null;
 };
 
-/** What the package toolbar needs: the layer it leads, the container that takes focus it loses, the builder and the "…" click, already guarded. */
+/** What the package toolbar needs: the layer it leads, the container that takes focus it loses, the builder and the five clicks, already guarded. */
 export type PackageToolbarDeps = {
   readonly layer: HTMLElement;
   readonly container: HTMLElement;
   readonly views: WidgetViews;
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
+  readonly onFocus: (name: string) => void;
+  readonly onStartTrace: () => void;
+  readonly onShowTasks: (name: string) => void;
+  readonly onCollapse: (folder: string) => void;
 };
 
 /** What the header rows need: the layer, the builders and the four clicks, already guarded. */

@@ -61,6 +61,14 @@ export type PackageMenuState = {
   readonly hasTasks: boolean;
 };
 
+/** Which of the package toolbar's buttons show besides the "…", which always shows. */
+export type PackageToolbarShown = {
+  readonly focus: boolean;
+  readonly startTrace: boolean;
+  readonly showTasks: boolean;
+  readonly collapse: boolean;
+};
+
 export type RowButtonRects = {
   readonly chevron: RectPx;
   readonly focus: RectPx;
@@ -122,10 +130,22 @@ export type FolderRowElements = {
   readonly ellipsis: HTMLButtonElement;
 };
 
-/** The selected package's node toolbar: its root and the "…" it holds. */
+/** The selected package's node toolbar: its root and the buttons it holds, `collapse` only for a package in a folder. */
 export type PackageToolbarElements = {
   readonly root: HTMLElement;
+  readonly focus: HTMLButtonElement;
+  readonly startTrace: HTMLButtonElement;
+  readonly showTasks: HTMLButtonElement;
+  readonly collapse: HTMLButtonElement | null;
   readonly ellipsis: HTMLButtonElement;
+};
+
+/** The toolbar built for `name` in `folder` (`null` on a flat page), with the state it was last synced to. */
+export type ToolbarEntry = {
+  readonly name: string;
+  readonly folder: string | null;
+  readonly state: PackageMenuState;
+  readonly elements: PackageToolbarElements;
 };
 
 /** The four buttons of a row; the glyph and badge are not buttons. */
@@ -148,7 +168,8 @@ export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
   readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
   readonly packageButton: (name: string) => HTMLButtonElement;
-  readonly packageToolbar: (name: string) => PackageToolbarElements;
+  /** `folderTitle` is the shown title of the package's folder, `null` on a flat page. */
+  readonly packageToolbar: (name: string, folderTitle: string | null) => PackageToolbarElements;
   /** `label` is the menu's accessible name, the one its "…" has. */
   readonly menu: (model: MenuItemModel[], label: string) => MenuElements;
   readonly location: LocationViews;
