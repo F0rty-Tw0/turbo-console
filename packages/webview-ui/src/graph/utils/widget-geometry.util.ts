@@ -117,6 +117,13 @@ export const nodeToolbarRectOf = (node: RectPx, count: number, rows: RectPx[]): 
   return below;
 };
 
+/** The "…" slot of a node toolbar: its last button, where the "…" sits at every width. */
+export const ellipsisSlotOf = (toolbar: RectPx): RectPx => {
+  const slot: RectPx = { ...toolbar, x1: toolbar.x2 - WIDGET_BUTTON_PX };
+
+  return slot;
+};
+
 /** The task "…": centred on the node's top-right corner, so it overhangs the node on purpose. */
 export const packageButtonRectOf = (box: RectPx): RectPx => {
   const half = WIDGET_BUTTON_PX / 2;

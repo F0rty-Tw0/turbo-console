@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buttonRectsOf,
+  ellipsisSlotOf,
   isWidgetShown,
   nodeToolbarRectOf,
   overlayLeftOf,
@@ -318,5 +319,15 @@ describe('FEATURE: overlayLeftOf', () => {
 
   it('GIVEN no panel WHEN the overlay layout is on THEN there is no edge', () => {
     expect(overlayLeftOf(null, container, true)).toBeNull();
+  });
+});
+
+describe('FEATURE: ellipsisSlotOf', () => {
+  it('GIVEN a toolbar of several buttons WHEN the slot is taken THEN it is the last button width', () => {
+    expect(ellipsisSlotOf(rectOf(72, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+  });
+
+  it('GIVEN a one-button toolbar WHEN the slot is taken THEN it is the toolbar itself', () => {
+    expect(ellipsisSlotOf(rectOf(156, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
   });
 });
