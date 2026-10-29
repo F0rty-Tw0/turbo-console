@@ -3,3 +3,6 @@ export type TaskToolbarElements = {
   readonly root: HTMLElement;
   readonly ellipsis: HTMLButtonElement;
 };
+
+/** The buttons of the task toolbar. */
+export type TaskToolbarKind = 'run' | 'showPackage' | 'ellipsis';
