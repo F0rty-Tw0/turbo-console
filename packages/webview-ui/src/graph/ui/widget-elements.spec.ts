@@ -7,7 +7,7 @@ import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
 import type { FolderRowElements, PackageToolbarElements } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { toolbarButtonsOf } from '../test/utils/package-toolbar.spec.util.ts';
+import { packageButtonsOf, taskButtonsOf } from '../test/utils/node-toolbar.spec.util.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
 
 const classesOf = (parent: Element): string[] => {
@@ -232,7 +232,7 @@ describe('FEATURE: buildPackageToolbar', () => {
     it('WHEN its children are read THEN they are Focus, Start trace, Show tasks, Collapse folder and the "…"', () => {
       const children = Array.from(toolbar.root.children);
 
-      expect(children).toStrictEqual(toolbarButtonsOf(toolbar));
+      expect(children).toStrictEqual(packageButtonsOf(toolbar));
     });
 
     it('WHEN the buttons are read THEN each is named for its action', () => {
@@ -242,7 +242,7 @@ describe('FEATURE: buildPackageToolbar', () => {
     });
 
     it('WHEN the buttons are read THEN each hover title says what a press does', () => {
-      const buttons = toolbarButtonsOf(toolbar);
+      const buttons = packageButtonsOf(toolbar);
       const titles = buttons.map((button): string | undefined => button?.title);
 
       expect(titles).toStrictEqual([FOCUS_PACKAGE_TITLE, START_TRACE_TITLE, 'Show tasks', 'Collapse folder apps', 'Actions for web']);
@@ -269,7 +269,7 @@ describe('FEATURE: buildPackageToolbar', () => {
     });
 
     it('WHEN the tabIndex are read THEN only Focus is a Tab stop', () => {
-      const buttons = toolbarButtonsOf(toolbar);
+      const buttons = packageButtonsOf(toolbar);
       const stops = buttons.map((button): number | undefined => button?.tabIndex);
 
       expect(stops).toStrictEqual([0, -1, -1, -1, -1]);
@@ -306,13 +306,6 @@ describe('FEATURE: buildPackageToolbar', () => {
     });
   });
 });
-
-const taskButtonsOf = (toolbar: TaskToolbarElements): (HTMLButtonElement | null)[] => {
-  const { run, showPackage, ellipsis } = toolbar;
-  const buttons = [run, showPackage, ellipsis];
-
-  return buttons;
-};
 
 describe('FEATURE: buildTaskToolbar', () => {
   beforeEach((): void => {

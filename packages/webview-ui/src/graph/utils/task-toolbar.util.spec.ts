@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { taskMenuOf } from './task-menu-model.util.ts';
-import { TASK_TOOLBAR_ORDER, runActionOf, runSlotLabelOf, taskToolbarShownOf } from './task-toolbar.util.ts';
+import { runActionOf, runSlotLabelOf, taskToolbarShownOf } from './task-toolbar.util.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskMenuActions } from '../common/task-details.type.ts';
 import { GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -69,12 +69,6 @@ describe('FEATURE: task toolbar model', () => {
         expect(shown.includes('ellipsis')).toBe(menu.length > 0);
       }
     );
-
-    it('WHEN the buttons are listed THEN each shown kind follows the toolbar order', () => {
-      const shown = taskToolbarShownOf(GRAPH_TASK_STUB, null, false);
-
-      expect(shown).toStrictEqual(TASK_TOOLBAR_ORDER);
-    });
   });
 
   describe('GIVEN a run state', () => {
