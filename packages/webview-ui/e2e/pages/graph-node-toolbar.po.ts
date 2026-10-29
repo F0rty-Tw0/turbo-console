@@ -47,7 +47,11 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
   /** Presses the package's toolbar button, then waits `SETTLE_FRAMES` frames, so a check that nothing happened sees what the press would have done. */
   public async pressAndSettle(name: string, label: string): Promise<void> {
     await this.buttonOf(name, label).click();
+    await this.settle();
+  }
 
+  /** Waits `SETTLE_FRAMES` frames, so a check that nothing happened sees what the press would have done. */
+  public async settle(): Promise<void> {
     for (let frame = 0; frame < SETTLE_FRAMES; frame += 1) await this.page.evaluate(ONE_FRAME);
   }
 
