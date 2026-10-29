@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { litOf, selectedOf, shownOf } from './inspection-parts.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ShownInspection } from '../common/graph-details.type.ts';
@@ -39,7 +40,7 @@ describe('FEATURE: selectedOf', () => {
       { title: 'a link is inspected', inspection: link('web', 'ui'), expected: null },
       { title: 'an end is being picked', inspection: pick('web', false), expected: null },
       { title: 'a trace shows', inspection: trace('web', 'ui'), expected: null },
-      { title: 'a bundle is inspected', inspection: bundle('docs', 'packages'), expected: null }
+      { title: 'a bundle is inspected', inspection: bundle('docs', collapsedIdOf('packages')), expected: null }
     ])('WHEN $title THEN the selected name is $expected', ({ inspection, expected }) => {
       const name = selectedOf(inspection);
 
@@ -75,7 +76,7 @@ describe('FEATURE: shownOf', () => {
     });
 
     it('WHEN a bundle shows THEN it is the inspection itself', () => {
-      const inspection = bundle('docs', 'packages');
+      const inspection = bundle('docs', collapsedIdOf('packages'));
 
       const shown = shownOf(inspection, E, ALL);
 

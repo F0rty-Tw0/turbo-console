@@ -157,25 +157,27 @@ const sceneWithout = (hidden: string[]): FolderScene => {
 };
 
 describe('FEATURE: recheckInspection of a bundle', () => {
-  describe('GIVEN a filter change', () => {
+  describe('GIVEN a filter change that leaves a bundled link', () => {
     it.each([
-      { title: 'its link is still drawn', current: BUNDLE_DOCS, scene: PACKAGES_SCENE, isKept: true },
-      { title: 'the folder was expanded', current: BUNDLE_DOCS, scene: sceneOf(BOARDS_INFOS, BOARDS_EDGES, {}), isKept: false },
-      { title: 'the scene is null', current: BUNDLE_DOCS, scene: null, isKept: false },
-      { title: 'its source is hidden', current: BUNDLE_DOCS, scene: sceneWithout(['docs']), isKept: false },
-      {
-        title: 'a hidden middle package leaves another link of the bundle',
-        current: BUNDLE_DOCS,
-        scene: sceneWithout(['@acme/ui']),
-        isKept: true
-      },
-      { title: 'its ends are reversed', current: bundle(P, 'docs'), scene: PACKAGES_SCENE, isKept: false }
-    ])('WHEN $title THEN the bundle is kept or none', ({ current, scene, isKept }) => {
-      const expected = isKept ? current : NONE;
+      { title: 'its link is still drawn', scene: PACKAGES_SCENE },
+      { title: 'a hidden end of one bundled link leaves the other link', scene: sceneWithout(['@acme/ui']) }
+    ])('WHEN $title THEN the bundle is kept', ({ scene }) => {
+      const next = recheckInspection(BUNDLE_DOCS, ALL_BOARDS, BOARDS_EDGES, scene);
 
+      expect(next).toBe(BUNDLE_DOCS);
+    });
+  });
+
+  describe('GIVEN a filter change that takes the bundled link away', () => {
+    it.each([
+      { title: 'the folder was expanded', current: BUNDLE_DOCS, scene: sceneOf(BOARDS_INFOS, BOARDS_EDGES, {}) },
+      { title: 'the scene is null', current: BUNDLE_DOCS, scene: null },
+      { title: 'its source is hidden', current: BUNDLE_DOCS, scene: sceneWithout(['docs']) },
+      { title: 'its ends are reversed', current: bundle(P, 'docs'), scene: PACKAGES_SCENE }
+    ])('WHEN $title THEN the bundle is none', ({ current, scene }) => {
       const next = recheckInspection(current, ALL_BOARDS, BOARDS_EDGES, scene);
 
-      expect(next).toBe(expected);
+      expect(next).toBe(NONE);
     });
   });
 });

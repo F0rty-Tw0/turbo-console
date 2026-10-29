@@ -5,6 +5,7 @@ import { collapsedIdOf } from './folder-id.util.ts';
 import type { DetailsPlan } from '../common/graph-details.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
+import { bundle } from '../test/utils/inspections.spec.util.ts';
 
 const pkg = (name: string): Inspection => {
   const inspection: Inspection = { kind: 'package', name };
@@ -32,12 +33,6 @@ const trace = (start: string, end: string): Inspection => {
 
 const folder = (key: string): Inspection => {
   const inspection: Inspection = { kind: 'folder', folder: key };
-
-  return inspection;
-};
-
-const bundle = (source: string, target: string): Inspection => {
-  const inspection: Inspection = { kind: 'bundle', source, target };
 
   return inspection;
 };

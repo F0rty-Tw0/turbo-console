@@ -3,36 +3,26 @@ import { describe, expect, it } from 'vitest';
 import { collapsedIdOf } from './folder-id.util.ts';
 import { nextInspection } from './inspection.util.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
-import type { EscapeWhere, Inspection, InspectionInput, SelectVia } from '../common/inspection.type.ts';
+import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
+import {
+  BACKGROUND,
+  CANCEL,
+  CLEAR,
+  CLEAR_TRACE,
+  START_TRACE,
+  SWAP_ENDS,
+  escape,
+  explain,
+  pickInput,
+  select,
+  selectFolder,
+  tapLink
+} from '../test/utils/inspection-inputs.spec.util.ts';
 import { bundle, folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 
 const NONE: Inspection = NO_INSPECTION;
 
 const B: Inspection = bundle('docs', collapsedIdOf('packages'));
-
-const select = (name: string, via: SelectVia): InspectionInput => {
-  const built: InspectionInput = { kind: 'select', name, via };
-
-  return built;
-};
-
-const pickInput = (name: string): InspectionInput => {
-  const built: InspectionInput = { kind: 'pick', name };
-
-  return built;
-};
-
-const tapLink = (source: string, target: string): InspectionInput => {
-  const built: InspectionInput = { kind: 'tapLink', source, target };
-
-  return built;
-};
-
-const explain = (source: string, target: string): InspectionInput => {
-  const built: InspectionInput = { kind: 'explain', source, target };
-
-  return built;
-};
 
 const tapBundle = (source: string, target: string): InspectionInput => {
   const built: InspectionInput = { kind: 'tapBundle', source, target };
@@ -40,42 +30,18 @@ const tapBundle = (source: string, target: string): InspectionInput => {
   return built;
 };
 
-const escape = (where: EscapeWhere): InspectionInput => {
-  const built: InspectionInput = { kind: 'escape', where };
-
-  return built;
-};
-
-const selectFolder = (folder: string): InspectionInput => {
-  const built: InspectionInput = { kind: 'selectFolder', folder };
-
-  return built;
-};
-
-const BACKGROUND: InspectionInput = { kind: 'background' };
-
-const CLEAR: InspectionInput = { kind: 'clear' };
-
-const START_TRACE: InspectionInput = { kind: 'startTrace' };
-
-const CANCEL: InspectionInput = { kind: 'cancel' };
-
-const CLEAR_TRACE: InspectionInput = { kind: 'clearTrace' };
-
-const SWAP_ENDS: InspectionInput = { kind: 'swapEnds' };
-
 const TAP_B: InspectionInput = tapBundle('docs', collapsedIdOf('packages'));
 
 describe('FEATURE: nextInspection of a bundle', () => {
   describe('GIVEN a folder link is tapped', () => {
     it.each([
-      ['none', NONE],
-      ['a package', pkg('web')],
-      ['a link', link('web', 'ui')],
-      ['a folder', folderInspection('apps')],
-      ['a trace', trace('web', 'core')],
-      ['another bundle', bundle('web', collapsedIdOf('packages'))]
-    ])('WHEN from %s THEN it becomes the bundle', (_title, from) => {
+      { title: 'none', from: NONE },
+      { title: 'a package', from: pkg('web') },
+      { title: 'a link', from: link('web', 'ui') },
+      { title: 'a folder', from: folderInspection('apps') },
+      { title: 'a trace', from: trace('web', 'core') },
+      { title: 'another bundle', from: bundle('web', collapsedIdOf('packages')) }
+    ])('WHEN from $title THEN it becomes the bundle', ({ from }) => {
       const next = nextInspection(from, TAP_B);
 
       expect(next).toStrictEqual(B);
@@ -98,27 +64,27 @@ describe('FEATURE: nextInspection of a bundle', () => {
 
   describe('GIVEN a bundle is inspected', () => {
     it.each([
-      ['background', BACKGROUND, NONE],
-      ['clear', CLEAR, NONE],
-      ['Escape on the canvas', escape('canvas'), NONE],
-      ['a package via canvas', select('web', 'canvas'), pkg('web')],
-      ['a link tap', tapLink('web', 'ui'), link('web', 'ui')],
-      ['explain', explain('web', 'ui'), link('web', 'ui')],
-      ['a folder selection', selectFolder('apps'), folderInspection('apps')]
-    ])('WHEN %s THEN it is replaced', (_title, input, to) => {
+      { title: 'background', input: BACKGROUND, to: NONE },
+      { title: 'clear', input: CLEAR, to: NONE },
+      { title: 'Escape on the canvas', input: escape('canvas'), to: NONE },
+      { title: 'a package via canvas', input: select('web', 'canvas'), to: pkg('web') },
+      { title: 'a link tap', input: tapLink('web', 'ui'), to: link('web', 'ui') },
+      { title: 'explain', input: explain('web', 'ui'), to: link('web', 'ui') },
+      { title: 'a folder selection', input: selectFolder('apps'), to: folderInspection('apps') }
+    ])('WHEN $title THEN it is replaced', ({ input, to }) => {
       const next = nextInspection(B, input);
 
       expect(next).toStrictEqual(to);
     });
 
     it.each([
-      ['Escape in the panel', escape('panel')],
-      ['start trace', START_TRACE],
-      ['clear trace', CLEAR_TRACE],
-      ['swap ends', SWAP_ENDS],
-      ['cancel', CANCEL],
-      ['a pick', pickInput('web')]
-    ])('WHEN %s THEN nothing changes', (_title, input) => {
+      { title: 'Escape in the panel', input: escape('panel') },
+      { title: 'start trace', input: START_TRACE },
+      { title: 'clear trace', input: CLEAR_TRACE },
+      { title: 'swap ends', input: SWAP_ENDS },
+      { title: 'cancel', input: CANCEL },
+      { title: 'a pick', input: pickInput('web') }
+    ])('WHEN $title THEN nothing changes', ({ input }) => {
       const next = nextInspection(B, input);
 
       expect(next).toBe(B);

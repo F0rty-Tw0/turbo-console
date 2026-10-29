@@ -8,29 +8,16 @@ import type { ProbeState } from '../common/graph-probe.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { Paint } from '../common/paint.type.ts';
+import type { Letters } from '../test/common/paint-letters.type.ts';
 import { BOARDS_EDGES, BOARDS_INFOS, boardsSceneOf, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { bundle } from '../test/utils/inspections.spec.util.ts';
-
-const LETTERS = new Map<ProbeState, string>([
-  ['normal', 'n'],
-  ['selected', 's'],
-  ['highlighted', 'h'],
-  ['dimmed', 'd']
-]);
+import { lettersOf } from '../test/utils/paint-letters.spec.util.ts';
 
 const FOLDERS = ['apps', 'packages'];
 
 const PACKAGES = collapsedIdOf('packages');
 
 const APPS = collapsedIdOf('apps');
-
-type Letters = {
-  readonly nodes: string;
-  readonly links: string;
-  readonly boxes: string;
-  readonly collapsedNodes: string;
-  readonly folderLinks: string;
-};
 
 type BundleCase = {
   readonly title: string;
@@ -48,12 +35,6 @@ type NoLinkCase = {
 const PACKAGES_TO_APPS: GraphEdge = { source: '@acme/ui', target: 'docs' };
 
 const reverseSceneOf = (): FolderScene => sceneOf(BOARDS_INFOS, [...BOARDS_EDGES, PACKAGES_TO_APPS], { collapsed: FOLDERS });
-
-const lettersOf = (states: ProbeState[]): string => {
-  const letters = states.map((state: ProbeState): string => LETTERS.get(state) ?? '?');
-
-  return letters.join('');
-};
 
 const lettersAt = (paint: Paint, links: FolderLink[]): Letters => {
   const nodes = lettersOf(BOARDS_INFOS.map((info): ProbeState => paint.nodeState(info.name)));

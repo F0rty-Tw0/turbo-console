@@ -80,14 +80,6 @@ describe('FEATURE: foldersToExpandOf', () => {
         expected: ['apps', 'packages']
       },
       { title: 'a folder inspection', inspection: folderInspection('apps'), trace: null, scene: boardsOf(['apps']), expected: [] },
-      { title: 'a bundle', inspection: B, trace: null, scene: boardsOf(['packages']), expected: [] },
-      {
-        title: 'a bundle between two collapsed folders',
-        inspection: bundle(collapsedIdOf('apps'), collapsedIdOf('packages')),
-        trace: null,
-        scene: boardsOf(['apps', 'packages']),
-        expected: []
-      },
       { title: 'a package not in the scene', inspection: pkg('ghost'), trace: null, scene: boardsOf(['apps']), expected: [] },
       {
         title: 'a package in a __proto__ folder',

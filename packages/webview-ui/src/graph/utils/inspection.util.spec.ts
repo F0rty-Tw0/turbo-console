@@ -2,7 +2,21 @@ import { describe, expect, it } from 'vitest';
 
 import { nextInspection } from './inspection.util.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
-import type { EscapeWhere, Inspection, InspectionInput, SelectVia } from '../common/inspection.type.ts';
+import type { Inspection } from '../common/inspection.type.ts';
+import {
+  BACKGROUND,
+  CANCEL,
+  CLEAR,
+  CLEAR_TRACE,
+  START_TRACE,
+  SWAP_ENDS,
+  escape,
+  explain,
+  pickInput,
+  select,
+  selectFolder,
+  tapLink
+} from '../test/utils/inspection-inputs.spec.util.ts';
 
 const NONE: Inspection = NO_INSPECTION;
 
@@ -33,54 +47,6 @@ const EVERY_STATE: [string, Inspection][] = [
   ['a trace', TRACE],
   ['a folder', FOLDER_APPS]
 ];
-
-const select = (name: string, via: SelectVia): InspectionInput => {
-  const built: InspectionInput = { kind: 'select', name, via };
-
-  return built;
-};
-
-const pick = (name: string): InspectionInput => {
-  const built: InspectionInput = { kind: 'pick', name };
-
-  return built;
-};
-
-const tapLink = (source: string, target: string): InspectionInput => {
-  const built: InspectionInput = { kind: 'tapLink', source, target };
-
-  return built;
-};
-
-const explain = (source: string, target: string): InspectionInput => {
-  const built: InspectionInput = { kind: 'explain', source, target };
-
-  return built;
-};
-
-const escape = (where: EscapeWhere): InspectionInput => {
-  const built: InspectionInput = { kind: 'escape', where };
-
-  return built;
-};
-
-const selectFolder = (folder: string): InspectionInput => {
-  const built: InspectionInput = { kind: 'selectFolder', folder };
-
-  return built;
-};
-
-const BACKGROUND: InspectionInput = { kind: 'background' };
-
-const CLEAR: InspectionInput = { kind: 'clear' };
-
-const START_TRACE: InspectionInput = { kind: 'startTrace' };
-
-const CANCEL: InspectionInput = { kind: 'cancel' };
-
-const CLEAR_TRACE: InspectionInput = { kind: 'clearTrace' };
-
-const SWAP_ENDS: InspectionInput = { kind: 'swapEnds' };
 
 const pkg = (name: string): Inspection => {
   const built: Inspection = { kind: 'package', name };
@@ -140,16 +106,16 @@ describe('FEATURE: nextInspection', () => {
 
   describe('GIVEN a candidate is picked', () => {
     it.each([
-      ['ui from picking', PICKING, pick('ui'), trace('web', 'ui')],
-      ['ui from nudged picking', NUDGED, pick('ui'), trace('web', 'ui')],
-      ['the start from picking', PICKING, pick('web'), PICKING],
-      ['the start from nudged picking', NUDGED, pick('web'), NUDGED],
-      ['__proto__ from picking', PICKING, pick('__proto__'), trace('web', '__proto__')],
-      ['lonely, a no-path candidate', PICKING, pick('lonely'), trace('web', 'lonely')],
-      ['ui from none', NONE, pick('ui'), NONE],
-      ['ui from a package', PKG, pick('ui'), PKG],
-      ['ui from a link', LINK, pick('ui'), LINK],
-      ['ui from a trace', TRACE, pick('ui'), TRACE]
+      ['ui from picking', PICKING, pickInput('ui'), trace('web', 'ui')],
+      ['ui from nudged picking', NUDGED, pickInput('ui'), trace('web', 'ui')],
+      ['the start from picking', PICKING, pickInput('web'), PICKING],
+      ['the start from nudged picking', NUDGED, pickInput('web'), NUDGED],
+      ['__proto__ from picking', PICKING, pickInput('__proto__'), trace('web', '__proto__')],
+      ['lonely, a no-path candidate', PICKING, pickInput('lonely'), trace('web', 'lonely')],
+      ['ui from none', NONE, pickInput('ui'), NONE],
+      ['ui from a package', PKG, pickInput('ui'), PKG],
+      ['ui from a link', LINK, pickInput('ui'), LINK],
+      ['ui from a trace', TRACE, pickInput('ui'), TRACE]
     ])('WHEN %s THEN the trace is made or nothing changes', (_title, from, input, to) => {
       const next = nextInspection(from, input);
 
@@ -368,7 +334,7 @@ describe('FEATURE: nextInspection', () => {
       ['clearTrace', CLEAR_TRACE],
       ['swapEnds', SWAP_ENDS],
       ['cancel', CANCEL],
-      ['pick web', pick('web')]
+      ['pick web', pickInput('web')]
     ])('WHEN %s THEN the same folder stays', (_title, input) => {
       const next = nextInspection(FOLDER_APPS, input);
 

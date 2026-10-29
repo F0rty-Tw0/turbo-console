@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from './widget-menu-model.util.ts';
 import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
 import { START_TRACE_LABEL, START_TRACE_TITLE } from '../common/details.const.ts';
@@ -269,7 +270,7 @@ describe('FEATURE: menuTargetOf', () => {
     { title: 'a link', inspection: link('web', 'docs'), expected: null },
     { title: 'a picking', inspection: pick('web', false), expected: null },
     { title: 'a trace', inspection: trace('web', 'docs'), expected: null },
-    { title: 'a bundle', inspection: bundle('web', 'docs'), expected: null },
+    { title: 'a bundle', inspection: bundle('web', collapsedIdOf('packages')), expected: null },
     { title: 'nothing', inspection: NO_INSPECTION, expected: null }
   ])('GIVEN $title inspected WHEN its menu target is read THEN it is $expected', ({ inspection, expected }) => {
     const target = menuTargetOf(inspection);

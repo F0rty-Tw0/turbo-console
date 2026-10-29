@@ -165,10 +165,15 @@ describe('FEATURE: inputPlanOf', () => {
       expect(plan).toStrictEqual(expected);
     });
 
-    it('WHEN a folder link is tapped while nudged THEN the picking is kept and the camera stays', () => {
+    it('WHEN a folder link is tapped while nudged THEN the picking is kept', () => {
       const plan = inputPlanOf(NUDGED_WEB, TAP_BUNDLE);
 
       expect(plan.next).toBe(NUDGED_WEB);
+    });
+
+    it('WHEN a folder link is tapped while nudged THEN the camera stays', () => {
+      const plan = inputPlanOf(NUDGED_WEB, TAP_BUNDLE);
+
       expect(plan.isKeepClear).toBe(false);
     });
   });

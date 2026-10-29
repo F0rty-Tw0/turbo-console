@@ -193,9 +193,9 @@ describe('FEATURE: GraphFiltering bundle inspection', () => {
     });
 
     it('THEN the saved view state holds no inspection', () => {
-      const none = expect.objectContaining({ selected: null, link: null, trace: null, folder: null }) as unknown;
-
-      expect(rig.saver.schedule).toHaveBeenLastCalledWith(none);
+      expect(rig.saver.schedule).toHaveBeenLastCalledWith(
+        expect.objectContaining({ selected: null, link: null, trace: null, folder: null })
+      );
     });
 
     it('WHEN the packages folder is expanded THEN no inspection is left', () => {
