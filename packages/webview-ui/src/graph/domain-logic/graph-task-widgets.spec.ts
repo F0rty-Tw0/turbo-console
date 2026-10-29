@@ -95,7 +95,7 @@ describe('FEATURE: GraphTaskWidgets', () => {
       expect(after[0]).not.toBe(before);
     });
 
-    it('WHEN //#build, which shows no button, is shown and its hidden "…" is clicked THEN the menu opens below //#build, as no toolbar is placed', () => {
+    it('WHEN a toolbar with no shown button has its hidden "…" clicked THEN the menu is anchored below //#build, as no toolbar is placed', () => {
       widgets.show(ROOT_NOT_RUNNABLE_IDLE);
 
       rig.toolbars.at(-1)?.ellipsis.click();
