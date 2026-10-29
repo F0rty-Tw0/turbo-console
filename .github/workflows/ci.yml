@@ -101,7 +101,7 @@ jobs:
   bench:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     concurrency:
       group: bench-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -171,7 +171,10 @@ jobs:
       # packageManager bump) can carry the bench-baseline-broken label to compare without a baseline instead; labels come
       # from the triggering event, so push after adding it. Results are cleared before each run and copied only after a
       # successful one, so no stale file is counted.
-      - name: Bench base and head
+      # A process can settle in a fast or a slow mode up to 1.17x apart (see WARMUP in bench.const.ts), which is more than
+      # the gate allows, so three draws per side can fail unchanged code. A failed compare therefore runs rounds 4-6
+      # (H,B / B,H / H,B) and compares the fastest of all six; a real slowdown slows every draw and stays red.
+      - name: Bench and compare
         shell: bash
         env:
           BASELINE_BROKEN: ${{ contains(github.event.pull_request.labels.*.name, 'bench-baseline-broken') }}
@@ -202,12 +205,17 @@ jobs:
             done
           }
 
-          for i in 1 2 3; do
-            if [ "$i" = 2 ]; then order='head base'; else order='base head'; fi
-            for side in $order; do
-              bench_side "$side" "$i"
+          rounds() {
+            local i order side
+            for i in "$@"; do
+              if [ $((i % 2)) = 0 ]; then order='head base'; else order='base head'; fi
+              for side in $order; do
+                bench_side "$side" "$i"
+              done
             done
-          done
+          }
+
+          rounds 1 2 3
 
           if [ "$base_runs" = 0 ]; then
             dry_run_err=$(mktemp)
@@ -228,8 +236,11 @@ jobs:
             fi
           fi
 
-      - name: Compare
-        run: node head/tools/dist/bench-compare.js runs/base runs/head
+          if ! node head/tools/dist/bench-compare.js runs/base runs/head; then
+            echo "::warning::bench gate failed; confirming with three more rounds"
+            rounds 4 5 6
+            node head/tools/dist/bench-compare.js runs/base runs/head
+          fi
 
   screenshots:
     # A baseline run always passes, so it gets its own check name and never masks a red PR check on the same SHA.
