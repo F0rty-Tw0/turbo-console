@@ -213,6 +213,9 @@ test.describe('FEATURE: the root task node toolbar', () => {
 
       await test.step('THEN its toolbar holds Run and the "…"', async (): Promise<void> =>
         graphTaskToolbar.expectToolbarButtons('//#lint', ['Run //#lint', 'Actions for //#lint']));
+
+      await test.step('AND the toolbar, placed for those two, ends at the right edge of //#lint', async (): Promise<void> =>
+        graphTaskToolbar.expectNodeToolbarOn('//#lint', 'above'));
     }
   );
 });

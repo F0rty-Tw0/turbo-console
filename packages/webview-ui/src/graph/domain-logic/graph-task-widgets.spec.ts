@@ -95,6 +95,16 @@ describe('FEATURE: GraphTaskWidgets', () => {
       expect(after[0]).not.toBe(before);
     });
 
+    it('WHEN //#build, which shows no button, is shown and its hidden "…" is clicked THEN the menu opens below //#build, as no toolbar is placed', () => {
+      widgets.show(ROOT_NOT_RUNNABLE_IDLE);
+
+      rig.toolbars.at(-1)?.ellipsis.click();
+
+      const placed = rig.menus.map(({ menu }): string[] => [menu.style.left, menu.style.top]);
+
+      expect(placed).toStrictEqual([['100px', '80px']]);
+    });
+
     it('WHEN the selection clears THEN no task toolbar is left', () => {
       widgets.show(null);
 
