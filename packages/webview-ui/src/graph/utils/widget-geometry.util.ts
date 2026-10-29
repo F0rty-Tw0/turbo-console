@@ -92,7 +92,7 @@ export const rowRectOf = (row: RowPlacement): RectPx => {
   return rect;
 };
 
-/** Touching does not count, as `isWidgetShown`. */
+/** The two rects share area; touching does not count, as in `isWidgetShown`. */
 const isMeeting = (first: RectPx, second: RectPx): boolean => {
   const meetsX = first.x1 < second.x2 && second.x1 < first.x2;
   const meetsY = first.y1 < second.y2 && second.y1 < first.y2;

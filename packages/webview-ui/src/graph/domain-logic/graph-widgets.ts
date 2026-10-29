@@ -93,7 +93,8 @@ export class GraphWidgets {
 
   /**
    * The package "…" span at the camera of this call, shown or not, so a keep-clear pan brings it out from under the
-   * overlay; the flip moves only y, so keep-clear needs no rows.
+   * overlay; the flip moves only y, so keep-clear needs no rows. It also skips the compact rule (the "…" alone under
+   * `NODE_TOOLBAR_MIN_PX`), which is right only while the count is 1; U4d must apply it.
    */
   public packageButtonBox(): AnchorBox | null {
     if (this.button === null || !this.isGrouped) return null;

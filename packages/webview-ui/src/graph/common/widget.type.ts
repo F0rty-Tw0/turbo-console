@@ -93,7 +93,7 @@ export type WidgetPlanInput = {
   readonly rects: WidgetRects;
   readonly bounds: LayerBounds;
   readonly isGrouped: boolean;
-  /** The buttons the full node toolbar shows. */
+  /** How many buttons the full node toolbar shows. */
   readonly toolbarCount: number;
 };
 
