@@ -44,12 +44,13 @@ const nodeToolbarOf = (input: WidgetPlanInput, rows: RowPlan[]): RectPx | null =
   const { selected, zoom } = input.rects;
 
   if (!input.isGrouped || selected === null) return null;
-  if (!isWidgetShown(selected, input.bounds)) return null;
+
+  const isNodeShown = isWidgetShown(selected, input.bounds);
+
+  if (!isNodeShown) return null;
 
   const isCompact = NODE_HEIGHT * zoom < NODE_TOOLBAR_MIN_PX;
-  let count = input.toolbarCount;
-
-  if (isCompact) count = 1;
+  const count = isCompact ? 1 : input.toolbarCount;
 
   const rect = nodeToolbarRectOf(selected, count, rows.map(rowRectOfPlan));
   const isShown = isWidgetShown(rect, input.bounds);

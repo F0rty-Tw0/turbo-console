@@ -214,13 +214,16 @@ describe('FEATURE: widgetPlanOf', () => {
     });
   });
 
-  it('GIVEN the collapsed node {100, 40, 280, 96}, its row at y 48-72, WHEN the package {150, 96, 230, 126} under it is selected THEN its node toolbar flips under it', () => {
+  describe('GIVEN the collapsed node {100, 40, 280, 96}, its row at y 48-72', () => {
     const collapsed = new Map([['core', folderOf(100, 40, 280, 96)]]);
-    const selected = rectOf(150, 96, 230, 126);
 
-    const plan = widgetPlanOf(inputOf({ collapsed, selected }));
+    it('WHEN the package {150, 96, 230, 126} under it is selected THEN its node toolbar flips under it', () => {
+      const selected = rectOf(150, 96, 230, 126);
 
-    expect(plan.nodeToolbar).toStrictEqual(rectOf(206, 130, 230, 154));
+      const plan = widgetPlanOf(inputOf({ collapsed, selected }));
+
+      expect(plan.nodeToolbar).toStrictEqual(rectOf(206, 130, 230, 154));
+    });
   });
 
   it('GIVEN no selected package WHEN grouped THEN there is no node toolbar', () => {
