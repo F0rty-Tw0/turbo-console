@@ -242,13 +242,13 @@ test.describe('FEATURE: package node toolbar', () => {
 
       await test.step('AND Group by folder is unchecked', async (): Promise<void> => graphGrouping.setGrouped(false));
 
-      await test.step('AND the web toolbar Focus web, still drawn, is pressed', async (): Promise<void> =>
-        graphNodeToolbar.buttonOf('web', 'Focus web').click());
+      await test.step('AND the web toolbar Focus web, still drawn, is pressed and the frames after it pass', async (): Promise<void> =>
+        graphNodeToolbar.pressAndSettle('web', 'Focus web'));
 
-      await test.step('THEN the toolbar Focus stays unpressed', async (): Promise<void> =>
+      await test.step('THEN the list Focus stays unpressed', async (): Promise<void> => graphList.expectFocusPressed('web', false));
+
+      await test.step('AND the toolbar Focus stays unpressed', async (): Promise<void> =>
         graphNodeToolbar.expectFocusPressed('web', false));
-
-      await test.step('AND the list Focus stays unpressed', async (): Promise<void> => graphList.expectFocusPressed('web', false));
     }
   );
 

@@ -2,9 +2,10 @@ import type { Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
-import { packageToolbarLabelOf } from '../../src/graph/utils/controls-text.util.ts';
+import { focusLabelOf, packageToolbarLabelOf } from '../../src/graph/utils/controls-text.util.ts';
 import { isNodeToolbarCompact } from '../../src/graph/utils/package-toolbar.util.ts';
 import type { NodeToolbarSide } from '../common/graph-folders.type.ts';
+import { ONE_FRAME } from '../common/graph.const.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside, overlaps, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { nodeToolbarFaultsOf, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
@@ -14,6 +15,9 @@ const CLEAR_MARGIN_PX = 15;
 
 /** How far the menu's left edge may sit from the "…"'s: a menu opened on the whole toolbar would sit a few buttons left. */
 const MENU_ANCHOR_SLACK_PX = 24;
+
+/** Frames a press waits, so a late effect of it has been drawn before a check that something did not happen. */
+const SETTLE_FRAMES = 5;
 
 /** One wheel notch of the canvas's zoom. */
 const WHEEL_NOTCH_PX = 100;
@@ -31,6 +35,13 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
   /** One of the package's toolbar buttons, by its accessible name. */
   public buttonOf(name: string, label: string): Locator {
     return this.toolbarOf(name).getByRole('button', { name: label, exact: true });
+  }
+
+  /** Presses the package's toolbar button, then waits `SETTLE_FRAMES` frames, so a check that nothing happened sees what the press would have done. */
+  public async pressAndSettle(name: string, label: string): Promise<void> {
+    await this.buttonOf(name, label).click();
+
+    for (let frame = 0; frame < SETTLE_FRAMES; frame += 1) await this.page.evaluate(ONE_FRAME);
   }
 
   /** Exactly one package toolbar, its right edge on the selected package's, 4 px above or below the node's drawn box. */
@@ -53,7 +64,7 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
 
   /** The toolbar's Focus button reads `aria-pressed` `isPressed`. */
   public async expectFocusPressed(name: string, isPressed: boolean): Promise<void> {
-    await expect(this.buttonOf(name, `Focus ${name}`)).toHaveAttribute('aria-pressed', String(isPressed));
+    await expect(this.buttonOf(name, focusLabelOf(name))).toHaveAttribute('aria-pressed', String(isPressed));
   }
 
   /** The package toolbar's root is hidden: it stays in the DOM while task mode or a folder selection has no node to put it on. */
