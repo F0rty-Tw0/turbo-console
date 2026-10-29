@@ -56,38 +56,44 @@ describe('FEATURE: roving stop', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN the stop on the first button WHEN the stops are written for the third THEN only the third is the stop', () => {
-    writeStops(ORDER, rig.entry.elements, 'third');
+  describe('GIVEN the stop on the first button', () => {
+    it('WHEN the stops are written for the third THEN only the third is the stop', () => {
+      writeStops(ORDER, rig.entry.elements, 'third');
 
-    expect(stopsOf(rig.buttons)).toStrictEqual([-1, -1, 0]);
+      expect(stopsOf(rig.buttons)).toStrictEqual([-1, -1, 0]);
+    });
+
+    it('WHEN the third gains focus THEN it is preferred and the one stop', () => {
+      rig.buttons.third.focus();
+
+      expect(rig.entry.preferred).toBe('third');
+      expect(stopsOf(rig.buttons)).toStrictEqual([-1, -1, 0]);
+    });
   });
 
-  it('GIVEN the first button focused WHEN Right is pressed THEN the second has focus, is preferred and is the one stop', () => {
-    const isPrevented = pressKey(rig.root, 'ArrowRight', rig.buttons.first);
+  describe('GIVEN the first button focused', () => {
+    it('WHEN Right is pressed THEN the second has focus, is preferred and is the one stop', () => {
+      const isPrevented = pressKey(rig.root, 'ArrowRight', rig.buttons.first);
 
-    expect(isPrevented).toBe(true);
-    expect(document.activeElement).toBe(rig.buttons.second);
-    expect(rig.entry.preferred).toBe('second');
-    expect(stopsOf(rig.buttons)).toStrictEqual([-1, 0, -1]);
+      expect(isPrevented).toBe(true);
+      expect(document.activeElement).toBe(rig.buttons.second);
+      expect(rig.entry.preferred).toBe('second');
+      expect(stopsOf(rig.buttons)).toStrictEqual([-1, 0, -1]);
+    });
+
+    it('WHEN a is pressed THEN the stop stays and the key is not prevented', () => {
+      const isPrevented = pressKey(rig.root, 'a', rig.buttons.first);
+
+      expect(isPrevented).toBe(false);
+      expect(stopsOf(rig.buttons)).toStrictEqual([0, -1, -1]);
+    });
   });
 
-  it('GIVEN the third button focused WHEN Right is pressed THEN focus wraps to the first', () => {
-    pressKey(rig.root, 'ArrowRight', rig.buttons.third);
+  describe('GIVEN the third button focused', () => {
+    it('WHEN Right is pressed THEN focus wraps to the first', () => {
+      pressKey(rig.root, 'ArrowRight', rig.buttons.third);
 
-    expect(document.activeElement).toBe(rig.buttons.first);
-  });
-
-  it('GIVEN the stop on the first button WHEN the third gains focus THEN it is preferred and the one stop', () => {
-    rig.buttons.third.focus();
-
-    expect(rig.entry.preferred).toBe('third');
-    expect(stopsOf(rig.buttons)).toStrictEqual([-1, -1, 0]);
-  });
-
-  it('GIVEN the first button focused WHEN a is pressed THEN the stop stays and the key is not prevented', () => {
-    const isPrevented = pressKey(rig.root, 'a', rig.buttons.first);
-
-    expect(isPrevented).toBe(false);
-    expect(stopsOf(rig.buttons)).toStrictEqual([0, -1, -1]);
+      expect(document.activeElement).toBe(rig.buttons.first);
+    });
   });
 });

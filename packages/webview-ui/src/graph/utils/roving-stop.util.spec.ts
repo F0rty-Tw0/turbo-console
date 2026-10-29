@@ -15,31 +15,39 @@ const STOP_CASES: StopCase[] = [
 ];
 
 describe('FEATURE: stopOf', () => {
-  it.each(STOP_CASES)('GIVEN $name THEN the stop is $expected', ({ preferred, shown, expected }) => {
-    const stop = stopOf(preferred, shown, 'missing');
+  describe.each(STOP_CASES)('GIVEN $name', ({ preferred, shown, expected }) => {
+    it(`WHEN the stop is read THEN it is ${expected}`, () => {
+      const stop = stopOf(preferred, shown, 'missing');
 
-    expect(stop).toBe(expected);
+      expect(stop).toBe(expected);
+    });
   });
 });
 
 describe('FEATURE: kindIn', () => {
   const buttons = { first: new EventTarget(), second: new EventTarget(), missing: null };
 
-  it('GIVEN the second button WHEN its kind is read THEN it is second', () => {
-    const kind = kindIn(ORDER, buttons, buttons.second);
+  describe('GIVEN the second button', () => {
+    it('WHEN its kind is read THEN it is second', () => {
+      const kind = kindIn(ORDER, buttons, buttons.second);
 
-    expect(kind).toBe('second');
+      expect(kind).toBe('second');
+    });
   });
 
-  it('GIVEN a foreign target WHEN its kind is read THEN it is undefined', () => {
-    const kind = kindIn(ORDER, buttons, new EventTarget());
+  describe('GIVEN a foreign target', () => {
+    it('WHEN its kind is read THEN it is undefined', () => {
+      const kind = kindIn(ORDER, buttons, new EventTarget());
 
-    expect(kind).toBeUndefined();
+      expect(kind).toBeUndefined();
+    });
   });
 
-  it('GIVEN a null target and a missing button WHEN its kind is read THEN it is undefined', () => {
-    const kind = kindIn(ORDER, buttons, null);
+  describe('GIVEN a null target and a missing button', () => {
+    it('WHEN its kind is read THEN it is undefined', () => {
+      const kind = kindIn(ORDER, buttons, null);
 
-    expect(kind).toBeUndefined();
+      expect(kind).toBeUndefined();
+    });
   });
 });
