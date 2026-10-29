@@ -29,3 +29,9 @@ export const folderInspection = (folder: string): Inspection => {
 
   return inspection;
 };
+
+export const bundle = (source: string, target: string): Inspection => {
+  const inspection: Inspection = { kind: 'bundle', source, target };
+
+  return inspection;
+};

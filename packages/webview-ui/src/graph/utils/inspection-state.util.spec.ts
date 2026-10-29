@@ -89,6 +89,11 @@ describe('FEATURE: inspectionFieldsOf', () => {
         expected: fieldsOf({ selected: 'core', trace: SWAPPED_TRACE_REF })
       },
       { title: 'a folder saves only the folder', inspection: FOLDER_APPS, expected: fieldsOf({ folder: 'apps' }) },
+      {
+        title: 'a bundle saves as none',
+        inspection: { kind: 'bundle', source: 'docs', target: 'packages' } satisfies Inspection,
+        expected: fieldsOf({})
+      },
       { title: 'the root folder saves its empty key', inspection: FOLDER_ROOT, expected: fieldsOf({ folder: '' }) },
       {
         title: 'a __proto__ link saves only the link',

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { recheckInspection } from './inspection-recheck.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import type { FolderScene } from '../common/folder-scene.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import { BOARDS_EDGES, BOARDS_INFOS, BOARDS_NAMES, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
-import { folderInspection } from '../test/utils/inspections.spec.util.ts';
+import { bundle, folderInspection } from '../test/utils/inspections.spec.util.ts';
 
 const E: GraphEdge[] = [
   { source: 'web', target: 'ui' },
@@ -136,6 +138,42 @@ describe('FEATURE: recheckInspection of a folder', () => {
       const expected = isKept ? current : NONE;
 
       const next = recheckInspection(current, visible, BOARDS_EDGES, scene);
+
+      expect(next).toBe(expected);
+    });
+  });
+});
+
+const P = collapsedIdOf('packages');
+
+const BUNDLE_DOCS = bundle('docs', P);
+
+const PACKAGES_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'] });
+
+const withoutNames = (hidden: string[]): string[] => BOARDS_NAMES.filter((name: string): boolean => !hidden.includes(name));
+
+const sceneWithout = (hidden: string[]): FolderScene => {
+  return sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'], visible: withoutNames(hidden) });
+};
+
+describe('FEATURE: recheckInspection of a bundle', () => {
+  describe('GIVEN a filter change', () => {
+    it.each([
+      { title: 'its link is still drawn', current: BUNDLE_DOCS, scene: PACKAGES_SCENE, isKept: true },
+      { title: 'the folder was expanded', current: BUNDLE_DOCS, scene: sceneOf(BOARDS_INFOS, BOARDS_EDGES, {}), isKept: false },
+      { title: 'the scene is null', current: BUNDLE_DOCS, scene: null, isKept: false },
+      { title: 'its source is hidden', current: BUNDLE_DOCS, scene: sceneWithout(['docs']), isKept: false },
+      {
+        title: 'a hidden middle package leaves another link of the bundle',
+        current: BUNDLE_DOCS,
+        scene: sceneWithout(['@acme/ui']),
+        isKept: true
+      },
+      { title: 'its ends are reversed', current: bundle(P, 'docs'), scene: PACKAGES_SCENE, isKept: false }
+    ])('WHEN $title THEN the bundle is kept or none', ({ current, scene, isKept }) => {
+      const expected = isKept ? current : NONE;
+
+      const next = recheckInspection(current, ALL_BOARDS, BOARDS_EDGES, scene);
 
       expect(next).toBe(expected);
     });

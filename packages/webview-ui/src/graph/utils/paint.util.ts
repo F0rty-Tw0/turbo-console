@@ -77,6 +77,7 @@ const statePaintOf = (inspection: Inspection, edges: GraphEdge[], trace: TraceRe
     case 'link':
       return linkPaint(inspection);
     case 'folder':
+    case 'bundle':
       return everyState('normal');
     case 'picking':
       return pickingPaint(inspection.start, lit);

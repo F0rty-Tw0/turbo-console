@@ -32,6 +32,7 @@ export const shownOf = (inspection: Inspection, edges: GraphEdge[], visible: Rea
     case 'package':
     case 'link':
     case 'folder':
+    case 'bundle':
       return inspection;
   }
 };

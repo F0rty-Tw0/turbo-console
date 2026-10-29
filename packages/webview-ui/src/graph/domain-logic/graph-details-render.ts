@@ -101,6 +101,7 @@ export const updateView = (
 
   switch (inspection.kind) {
     case 'none':
+    case 'bundle':
       return view.kind === 'empty';
     case 'link':
       return view.kind === 'link';

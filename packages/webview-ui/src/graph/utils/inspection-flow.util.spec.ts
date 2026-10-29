@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { focusInputOf, inputPlanOf, sameHashPlanOf, shouldPan } from './inspection-flow.util.ts';
 import type { InputPlan, SameHashPlan } from '../common/graph-inspection.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, InspectionInput, LinkInspection, SelectVia } from '../common/inspection.type.ts';
-import { link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
+import { bundle, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 
 const sel = (name: string, via: SelectVia): InspectionInput => {
   const input: InspectionInput = { kind: 'select', name, via };
@@ -107,6 +108,8 @@ const CLEAR: InspectionInput = { kind: 'clear' };
 
 const CANVAS_ESCAPE: InspectionInput = { kind: 'escape', where: 'canvas' };
 
+const TAP_BUNDLE: InspectionInput = { kind: 'tapBundle', source: 'docs', target: collapsedIdOf('packages') };
+
 const planFor = (next: Inspection, centre: string | null, isKeepClear: boolean): InputPlan => {
   const plan: InputPlan = { next, centre, isKeepClear };
 
@@ -149,11 +152,24 @@ describe('FEATURE: inputPlanOf', () => {
         current: LINK_AB,
         input: CANVAS_ESCAPE,
         expected: planFor(NO_INSPECTION, null, true)
+      },
+      {
+        title: 'a folder link tap with nothing inspected',
+        current: NO_INSPECTION,
+        input: TAP_BUNDLE,
+        expected: planFor(bundle('docs', collapsedIdOf('packages')), null, true)
       }
     ] satisfies InputPlanRow[])('WHEN $title THEN the plan is exact', ({ current, input, expected }) => {
       const plan = inputPlanOf(current, input);
 
       expect(plan).toStrictEqual(expected);
+    });
+
+    it('WHEN a folder link is tapped while nudged THEN the picking is kept and the camera stays', () => {
+      const plan = inputPlanOf(NUDGED_WEB, TAP_BUNDLE);
+
+      expect(plan.next).toBe(NUDGED_WEB);
+      expect(plan.isKeepClear).toBe(false);
     });
   });
 });
@@ -167,7 +183,13 @@ describe('FEATURE: sameHashPlanOf', () => {
       { title: 'a package with changed counts', current: pkg('web'), isChanged: true, expected: planOf(true, null) },
       { title: 'a package with unchanged counts', current: pkg('web'), isChanged: false, expected: planOf(false, null) },
       { title: 'a trace with changed counts', current: trace('s', 'e'), isChanged: true, expected: planOf(false, null) },
-      { title: 'picking with changed counts', current: pick('s', false), isChanged: true, expected: planOf(false, null) }
+      { title: 'picking with changed counts', current: pick('s', false), isChanged: true, expected: planOf(false, null) },
+      {
+        title: 'a bundle with changed counts',
+        current: bundle('docs', collapsedIdOf('packages')),
+        isChanged: true,
+        expected: planOf(false, null)
+      }
     ])('WHEN $title THEN the plan is exact', ({ current, isChanged, expected }) => {
       const plan = sameHashPlanOf(current, isChanged);
 

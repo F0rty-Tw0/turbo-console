@@ -27,6 +27,7 @@ export const anchorsOf = (inspection: Inspection): string[] => {
     case 'package':
       return [inspection.name];
     case 'link':
+    case 'bundle':
       return [inspection.source, inspection.target];
     case 'folder':
       return [folderIdOf(inspection.folder), collapsedIdOf(inspection.folder)];

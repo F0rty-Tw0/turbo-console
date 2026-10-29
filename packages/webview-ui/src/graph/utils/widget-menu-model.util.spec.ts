@@ -10,7 +10,7 @@ import { graphIconConstMock } from '../test/mocks/graph-icon-const.mock.ts';
 import { folderActionsMock, packageActionsMock } from '../test/mocks/widget-menu.mock.ts';
 import { SWAPPED_ACTION_ICONS_STUB as SWAPPED } from '../test/stubs/action-icons.stub.ts';
 import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
-import { folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
+import { bundle, folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 import {
   callCountOf,
   folderStateOf,
@@ -269,6 +269,7 @@ describe('FEATURE: menuTargetOf', () => {
     { title: 'a link', inspection: link('web', 'docs'), expected: null },
     { title: 'a picking', inspection: pick('web', false), expected: null },
     { title: 'a trace', inspection: trace('web', 'docs'), expected: null },
+    { title: 'a bundle', inspection: bundle('web', 'docs'), expected: null },
     { title: 'nothing', inspection: NO_INSPECTION, expected: null }
   ])('GIVEN $title inspected WHEN its menu target is read THEN it is $expected', ({ inspection, expected }) => {
     const target = menuTargetOf(inspection);

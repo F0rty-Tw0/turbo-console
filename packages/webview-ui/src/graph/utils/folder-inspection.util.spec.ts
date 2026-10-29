@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { collapsedInspectionOf, foldersToExpandOf, shownFoldersOf } from './folder-inspection.util.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { TraceResult } from '../common/trace.type.ts';
 import { BOARDS_EDGES, BOARDS_INFOS, THREE, THREE_EDGES, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
-import { folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
+import { bundle, folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 
 const UI = '@acme/ui';
 
 const UT = '@acme/utils';
+
+const B = bundle('docs', collapsedIdOf('packages'));
 
 const BOARDS_NAMES = BOARDS_INFOS.map((info) => info.name);
 
@@ -77,6 +80,14 @@ describe('FEATURE: foldersToExpandOf', () => {
         expected: ['apps', 'packages']
       },
       { title: 'a folder inspection', inspection: folderInspection('apps'), trace: null, scene: boardsOf(['apps']), expected: [] },
+      { title: 'a bundle', inspection: B, trace: null, scene: boardsOf(['packages']), expected: [] },
+      {
+        title: 'a bundle between two collapsed folders',
+        inspection: bundle(collapsedIdOf('apps'), collapsedIdOf('packages')),
+        trace: null,
+        scene: boardsOf(['apps', 'packages']),
+        expected: []
+      },
       { title: 'a package not in the scene', inspection: pkg('ghost'), trace: null, scene: boardsOf(['apps']), expected: [] },
       {
         title: 'a package in a __proto__ folder',
@@ -177,7 +188,8 @@ describe('FEATURE: collapsedInspectionOf', () => {
 
     it.each([
       { title: 'a package outside', current: pkg('web'), folder: 'packages', scene: boardsOf(['packages']) },
-      { title: 'a folder of another name', current: folderInspection('apps'), folder: 'packages', scene: boardsOf(['packages']) }
+      { title: 'a folder of another name', current: folderInspection('apps'), folder: 'packages', scene: boardsOf(['packages']) },
+      { title: 'a bundle with an end inside', current: B, folder: 'apps', scene: boardsOf(['apps', 'packages']) }
     ])('WHEN the inspection is $title THEN it is returned itself', ({ current, folder, scene }) => {
       const next = collapsedInspectionOf(current, folder, scene);
 
