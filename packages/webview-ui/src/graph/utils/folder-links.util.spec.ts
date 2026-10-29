@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { folderOf } from './folder-group.util.ts';
-import { folderLinksOf } from './folder-links.util.ts';
+import { folderLinkOf, folderLinksOf } from './folder-links.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
-import { BOARDS_EDGES, BOARDS_INFOS } from '../test/utils/folder-boards.spec.util.ts';
+import { BOARDS_EDGES, BOARDS_INFOS, boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 
 const A = '\u0002apps';
 const P = '\u0002packages';
@@ -91,5 +91,41 @@ describe('FEATURE: folderLinksOf', () => {
 
       expect(rows).toStrictEqual([['\u0002__proto__', 'x', 1]]);
     });
+  });
+});
+
+describe('FEATURE: folderLinkOf', () => {
+  describe('GIVEN the boards fixture with packages collapsed', () => {
+    it('WHEN the drawn ends are asked in order THEN it is that link of the scene', () => {
+      const scene = boardsSceneOf(['packages']);
+
+      const link = folderLinkOf(scene, 'docs', P);
+
+      expect(link).toBe(scene.links[1]);
+    });
+
+    it('WHEN the drawn ends are asked reversed THEN it is null', () => {
+      const scene = boardsSceneOf(['packages']);
+
+      const link = folderLinkOf(scene, P, 'docs');
+
+      expect(link).toBeNull();
+    });
+  });
+
+  describe('GIVEN the boards fixture with no folder collapsed', () => {
+    it('WHEN a pair is asked THEN it is null', () => {
+      const scene = boardsSceneOf([]);
+
+      const link = folderLinkOf(scene, 'docs', P);
+
+      expect(link).toBeNull();
+    });
+  });
+
+  it('GIVEN no scene WHEN a pair is asked THEN it is null', () => {
+    const link = folderLinkOf(null, 'docs', P);
+
+    expect(link).toBeNull();
   });
 });

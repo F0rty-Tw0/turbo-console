@@ -1,6 +1,6 @@
 import { collapsedIdOf } from './folder-id.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
-import type { FolderLink } from '../common/folder-scene.type.ts';
+import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 
 type DrawnEnds = {
   readonly source: string;
@@ -74,4 +74,12 @@ export const folderLinksOf = (
   const links = byPair.values();
 
   return [...links];
+};
+
+/** The scene link drawn from `source` to `target`; `null` when there is no scene or no such link. */
+export const folderLinkOf = (scene: FolderScene | null, source: string, target: string): FolderLink | null => {
+  const links = scene?.links ?? [];
+  const link = links.find((candidate) => candidate.source === source && candidate.target === target);
+
+  return link ?? null;
 };
