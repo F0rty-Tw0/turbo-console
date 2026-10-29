@@ -1,8 +1,12 @@
 import { test } from './graph.fixture.ts';
-import { BOARD_FOLDER_KEYS, bothCachedBoardsState } from './test/utils/graph-boards.spec.util.ts';
+import { BOARD_FOLDER_KEYS, PACKAGES_FOLDER_MEMBERS, bothCachedBoardsState } from './test/utils/graph-boards.spec.util.ts';
+import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
+import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const BOTH_CACHED = bothCachedBoardsState();
+
+const BOARDS = placedBoardsState();
 
 test.describe('FEATURE: grouped graph boxes on the canvas', () => {
   test('GIVEN the grouped boards, dragging the three-package box posts its positions once', async ({
@@ -53,5 +57,30 @@ test.describe('FEATURE: grouped graph boxes on the canvas', () => {
 
     await test.step('THEN every box frame still lies inside the canvas', async (): Promise<void> =>
       graphGrouping.expectBoxesInsideCanvas());
+  });
+
+  test('GIVEN the grouped boards framed by Fit, a container resize in the middle of a box drag leaves the packages where the drag put them', async ({
+    graphCanvas,
+    graphFolderPackages,
+    graphHost,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the boards open grouped', async (): Promise<void> =>
+      graphPage.open({ savedState: groupedSavedState(BOARDS.hash) }));
+
+    await test.step('AND the boards state is sent', async (): Promise<void> => graphHost.sendState(BOARDS));
+
+    await test.step('AND Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> => {
+      await graphPage.pressButton(FIT_LABEL);
+      await graphCanvas.expectAllNodesInView();
+    });
+
+    await test.step('AND the packages box is dragged by 60 and 40 pixels, the container 1 px shorter halfway', async (): Promise<void> =>
+      graphFolderPackages.dragBoxShrinkingMidway('packages', 60, 40));
+
+    await test.step('THEN the three packages moved once, by the drag alone', async (): Promise<void> =>
+      graphFolderPackages.expectDragMoved(PACKAGES_FOLDER_MEMBERS));
+
+    await test.step('AND the apps packages stayed', async (): Promise<void> => graphFolderPackages.expectDragStill(['docs', 'web']));
   });
 });

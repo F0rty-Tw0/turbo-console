@@ -9,6 +9,7 @@ import { GROUP_BY_FOLDER_LABEL, LOADING_TEXT } from '../../src/graph/common/grap
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { ONE_FRAME, TOOLBAR_LABELS } from '../common/graph.const.ts';
 import type { PositionsMessage } from '../common/graph.type.ts';
+import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { boxGrabOf, clipFaultsOf, folderKeyed, inViewCountOf } from '../test/utils/graph-folders.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
@@ -49,14 +50,20 @@ export class GraphGroupingPage extends GraphBoxesPage {
 
   /** Drags the folder's box by `dx`, `dy` CSS pixels, held in its left padding band. */
   public async dragBox(folder: string, dx: number, dy: number): Promise<void> {
-    const folders = await this.folders();
-    const zoom = await this.probe.zoom();
-    const grab = boxGrabOf(folderKeyed(folders, folder), zoom);
+    const grab = await this.boxGrab(folder);
 
     await this.page.mouse.move(grab.x, grab.y);
     await this.page.mouse.down();
     await this.page.mouse.move(grab.x + dx, grab.y + dy, { steps: BOX_DRAG_STEPS });
     await this.page.mouse.up();
+  }
+
+  /** The viewport point a box drag holds the folder's box by: the middle of its left padding band. */
+  public async boxGrab(folder: string): Promise<ViewportPoint> {
+    const folders = await this.folders();
+    const zoom = await this.probe.zoom();
+
+    return boxGrabOf(folderKeyed(folders, folder), zoom);
   }
 
   /** The visible notice text, `null` while the notice is hidden. */
