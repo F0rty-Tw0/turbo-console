@@ -1,8 +1,10 @@
 import type { FolderLinkFacts } from './common/graph-folders.type.ts';
 import { test } from './graph-task.fixture.ts';
 import { collapsedSavedState, ghostFolderState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
+import { bundleInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
+import { collapsedIdOf } from '../src/graph/utils/folder-id.util.ts';
 
 const C6 = { description: 'M4-4 C6', type: 'requirement' };
 
@@ -106,7 +108,7 @@ test.describe('FEATURE: folder rules', () => {
   );
 
   test(
-    'GIVEN a folder link crossing a box, tapping it over the box clears the selection like a background tap',
+    'GIVEN a folder link crossing a box, tapping it over the box inspects the bundle, not the box',
     { annotation: C6 },
     async ({ graphCanvas, graphDetails, graphHost, graphPage, graphProbe, graphWidgetInput }): Promise<void> => {
       const opened = collapsedSavedState(BOARDS.hash, ['apps']);
@@ -127,10 +129,10 @@ test.describe('FEATURE: folder rules', () => {
       await test.step('WHEN the apps to utils link is tapped over the packages box, just below the packages header row', async (): Promise<void> =>
         graphWidgetInput.tapLinkBelowRow('apps', '@acme/utils', 'packages'));
 
-      await test.step('THEN nothing is selected, nothing is inspected and the status line is empty', async (): Promise<void> => {
+      await test.step('THEN nothing is selected, the bundle is inspected and the status line counts its link', async (): Promise<void> => {
         await graphProbe.expectSelected(null);
-        await graphDetails.expectInspection({ kind: 'none' });
-        await graphPage.expectStatus('');
+        await graphDetails.expectInspection(bundleInspection(collapsedIdOf('apps'), '@acme/utils'));
+        await graphPage.expectStatus('1 link: apps → @acme/utils');
       });
     }
   );

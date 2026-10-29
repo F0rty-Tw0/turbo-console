@@ -53,6 +53,13 @@ export type FolderViewFacts = {
   readonly packages: string[];
 };
 
+/** What the details panel's bundle view shows: its lead, its count line and the text of each link row, in order. */
+export type BundleViewFacts = {
+  readonly lead: string;
+  readonly count: string;
+  readonly rows: string[];
+};
+
 /** Which side of its node a node toolbar sits on. */
 export type NodeToolbarSide = 'above' | 'below';
 
