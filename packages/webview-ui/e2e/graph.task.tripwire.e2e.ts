@@ -19,6 +19,11 @@ const BIG_GROUP_SAVED = taskSavedState(BIG_GROUP.hash, { chosen: [TARGET_LIKE_UM
 
 const TOGGLE_ROUNDS = 10;
 
+/** The name and command of `TARGET_LIKE_HUB_TASK`, as the task details panel reads them. */
+const HUB_TASK_NAME = 'build';
+
+const HUB_TASK_COMMAND = 'build';
+
 const SAVED_VIEW = targetLikeHubSavedState();
 
 /**
@@ -50,7 +55,7 @@ test.describe('FEATURE: task graph tripwires', () => {
   test(
     'GIVEN one chosen task of a target-like state framed by Fit with the hub task selected, a scripted 2 s pan uses under 1.5 s of main-thread CPU (2.4 s on macOS) and no step over 50 ms (90 ms on macOS)',
     { annotation: AC8 },
-    async ({ graphCanvas, graphHost, graphPage, graphProbe, graphTaskNarrow }): Promise<void> => {
+    async ({ graphCamera, graphCanvas, graphHost, graphPage, graphProbe, graphTaskDetails, graphTaskNarrow }): Promise<void> => {
       await test.step('WHEN the page is opened in task mode with the hub task chosen', async (): Promise<void> =>
         graphPage.open({ savedState: SAVED_VIEW }));
 
@@ -65,20 +70,26 @@ test.describe('FEATURE: task graph tripwires', () => {
 
       await test.step('WHEN the hub task is tapped', async (): Promise<void> => graphCanvas.tapNode(TARGET_LIKE_HUB_TASK));
 
-      await test.step('AND Fit frames the graph again, the task details panel now open', async (): Promise<void> =>
+      await test.step('THEN the task details panel shows the hub task', async (): Promise<void> =>
+        graphTaskDetails.expectTask(HUB_TASK_NAME, HUB_TASK_COMMAND));
+
+      await test.step('WHEN Fit frames the graph again, the task details panel now open', async (): Promise<void> =>
         graphPage.pressButton(FIT_LABEL));
 
-      await test.step('THEN every task is in view with the details panel open', async (): Promise<void> =>
-        graphCanvas.expectAllNodesInView());
+      await test.step('THEN every task is in view', async (): Promise<void> => graphCanvas.expectAllNodesInView());
 
-      await test.step('AND the hub task "..." is on top in view', async (): Promise<void> =>
+      await test.step('AND the hub task "…" is on top in view', async (): Promise<void> =>
         graphTaskNarrow.expectMenuButtonOnTop(TARGET_LIKE_HUB_TASK));
 
-      await test.step('WHEN the graph is panned for 2 s after a 500 ms warm-up', async (): Promise<void> =>
+      await test.step('WHEN the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
+
+      await test.step('AND the graph is panned for 2 s after a 500 ms warm-up', async (): Promise<void> =>
         graphCanvas.scriptedPan(30, 120));
 
       await test.step('THEN the pan stayed under the CPU and step budgets', (): void =>
         graphCanvas.expectPanCpuUnder(TASK_PAN_MS, TASK_PAN_STEP_MS));
+
+      await test.step('AND the camera moved', async (): Promise<void> => graphCamera.expectCameraMoved());
     }
   );
 
