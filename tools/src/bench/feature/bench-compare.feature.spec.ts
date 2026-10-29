@@ -8,8 +8,8 @@ import { runBenchCompare } from './bench-compare.feature.ts';
 import type { BenchResult } from '../common/bench.type.ts';
 import { FS_SPEC_TIMEOUT_MS } from '../test/common/bench.const.ts';
 
-const writeRuns = async (runsDir: string, medianNs: number): Promise<void> => {
-  const results: BenchResult[] = [{ name: 'core/parse', medianNs, samples: 25, gate: true }];
+const writeRuns = async (runsDir: string, medianNs: number, name = 'core/parse'): Promise<void> => {
+  const results: BenchResult[] = [{ name, medianNs, samples: 25, gate: true }];
   const json = JSON.stringify(results);
 
   for (const run of ['1', '2', '3']) {
@@ -66,6 +66,17 @@ describe('FEATURE: bench-compare CLI', () => {
     });
   });
 
+  describe('GIVEN no gated base bench on head', () => {
+    it('WHEN compared THEN it resolves to 3', async () => {
+      await writeRuns(join(root, 'base'), 1_000_000);
+      await writeRuns(join(root, 'head'), 1_000_000, 'core/renamed');
+
+      const code = await runBenchCompare(join(root, 'base'), join(root, 'head'));
+
+      expect(code).toBe(3);
+    });
+  });
+
   describe('GIVEN an empty base dir', () => {
     beforeEach(async () => {
       await mkdir(join(root, 'base'));
@@ -92,10 +103,10 @@ describe('FEATURE: bench-compare CLI', () => {
       await writeRuns(join(root, 'head'), 1_000_000);
     });
 
-    it('WHEN compared THEN it resolves to 1', async () => {
+    it('WHEN compared THEN it resolves to 3', async () => {
       const code = await runBenchCompare(join(root, 'base'), join(root, 'head'));
 
-      expect(code).toBe(1);
+      expect(code).toBe(3);
     });
 
     it('WHEN compared THEN stderr names the file', async () => {
