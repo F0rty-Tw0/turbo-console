@@ -229,13 +229,17 @@ describe('FEATURE: buildPackageToolbar', () => {
       expect(children).toStrictEqual([toolbar.ellipsis]);
     });
 
-    it('WHEN the "…" is read THEN it opens a menu, is named Actions for web and is the one Tab stop', () => {
+    it('WHEN the "…" is read THEN it opens a menu, is named Actions for web and is not taken out of the Tab order', () => {
       const { ellipsis } = toolbar;
 
       expect(ellipsis.getAttribute('aria-label')).toBe('Actions for web');
       expect(ellipsis.title).toBe('Actions for web');
       expect(ellipsis.getAttribute('aria-haspopup')).toBe('menu');
       expect(ellipsis.tabIndex).toBe(0);
+    });
+
+    it('WHEN the root is read THEN it sets no tabindex, so the "…" is the one Tab stop', () => {
+      expect(toolbar.root.getAttribute('tabindex')).toBeNull();
     });
   });
 });
