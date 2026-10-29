@@ -34,3 +34,13 @@ export const moveStopOnKey = <TKind extends string>(entry: RovingEntry<TKind>, o
   writeStops(order, elements, nextKind);
   button.focus();
 };
+
+/** Focus landing on a button (a click, a menu handing it back, the "…" catching it from a hidden button) makes it the preferred Tab stop, so Shift+Tab leaves the widget. */
+export const followFocus = <TKind extends string>(entry: RovingEntry<TKind>, order: TKind[], event: FocusEvent): void => {
+  const kind = kindIn(order, entry.elements, event.target);
+
+  if (kind === undefined) return;
+
+  entry.preferred = kind;
+  writeStops(order, entry.elements, kind);
+};

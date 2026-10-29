@@ -31,6 +31,13 @@ const rigOf = (): RowsRig => {
   return rig;
 };
 
+/** The Tab stop of each button in DOM order: chevron, title, Focus folder, "…". */
+const stopsOf = ({ chevron, title, focus, ellipsis }: FolderRowElements): number[] => {
+  const buttons = [chevron, title, focus, ellipsis];
+
+  return buttons.map((button): number => button.tabIndex);
+};
+
 /** The browser blurs a focused element whose row left the DOM: focus falls to the body. */
 const loseFocus = (): void => document.body.focus();
 
@@ -47,6 +54,29 @@ const rebuiltWithLostFocus = (rig: RowsRig): void => {
   rows.place([planOf('packages', 'box')]);
   rows.restoreFocus();
 };
+
+describe('FEATURE: WidgetRows Tab stop', () => {
+  let rig: RowsRig;
+
+  beforeEach((): void => {
+    vi.stubGlobal('document', fakeDocumentMock());
+    rig = rigOf();
+  });
+
+  afterEach((): void => {
+    vi.unstubAllGlobals();
+  });
+
+  it('GIVEN the placed apps row, its chevron the Tab stop WHEN its title gains focus (a click) THEN the title is the one Tab stop', () => {
+    rig.rows.sync(boardsSceneOf([]), null);
+    rig.rows.place([planOf('apps', 'box')]);
+    rig.built[0]?.title.focus();
+
+    const [apps] = rig.built.map(stopsOf);
+
+    expect(apps).toStrictEqual([-1, 0, -1, -1]);
+  });
+});
 
 describe('FEATURE: WidgetRows.restoreFocus', () => {
   let rig: RowsRig;

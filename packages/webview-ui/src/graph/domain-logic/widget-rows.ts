@@ -1,5 +1,5 @@
 import { setFocusToggle } from './button-title.ts';
-import { moveStopOnKey } from './roving-stop.ts';
+import { followFocus, moveStopOnKey } from './roving-stop.ts';
 import { placeRow } from './widget-row-place.ts';
 import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -122,6 +122,7 @@ export class WidgetRows {
     elements.focus.addEventListener('click', (): void => onFocus(folder));
     elements.ellipsis.addEventListener('click', (): void => onMenu(target, elements.ellipsis));
     elements.root.addEventListener('keydown', (event): void => this.onRowKey(folder, event));
+    elements.root.addEventListener('focusin', (event): void => this.onRowFocus(folder, event));
 
     const preferred = entry?.preferred ?? 'chevron';
 
@@ -159,6 +160,13 @@ export class WidgetRows {
     const entry = this.rows.get(folder);
 
     if (entry !== undefined) moveStopOnKey(entry, ROW_ORDER, event);
+  }
+
+  /** Focus on a row button (a click, `restoreFocus`) makes it the row's Tab stop, so Shift+Tab leaves the row. */
+  private onRowFocus(folder: string, event: FocusEvent): void {
+    const entry = this.rows.get(folder);
+
+    if (entry !== undefined) followFocus(entry, ROW_ORDER, event);
   }
 
   /** Puts the rows in the scene's order, in the map and in the DOM (the Tab order); a no-op while it holds. */

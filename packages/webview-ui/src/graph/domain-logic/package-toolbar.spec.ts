@@ -330,13 +330,30 @@ describe('FEATURE: PackageToolbar', () => {
       expect(stopsOf(latestOf(rig))).toStrictEqual([-1, 0, -1, -1]);
     });
 
-    it('WHEN Right is pressed, the zoom goes compact and then full THEN the Tab stop returns to Start trace', () => {
+    it('WHEN Right is pressed, focus leaves the toolbar, the zoom goes compact and then full THEN the Tab stop returns to Start trace', () => {
       pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).focus);
+      rig.container.focus();
 
       rig.toolbar.place(AT_WEB, COMPACT_ZOOM);
       rig.toolbar.place(AT_WEB, 1);
 
       expect(stopsOf(latestOf(rig))).toStrictEqual([-1, 0, -1, -1]);
+    });
+
+    it('WHEN Right is pressed, the zoom goes compact and then full THEN the "…" keeps focus and is the Tab stop', () => {
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).focus);
+
+      rig.toolbar.place(AT_WEB, COMPACT_ZOOM);
+      rig.toolbar.place(AT_WEB, 1);
+
+      expect(document.activeElement).toBe(latestOf(rig).ellipsis);
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, -1, -1, 0]);
+    });
+
+    it('WHEN the "…" gains focus (a click) THEN it is the Tab stop', () => {
+      latestOf(rig).ellipsis.focus();
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, -1, -1, 0]);
     });
 
     it('WHEN the toolbar is rebuilt for docs after Right THEN the Tab stop is Focus again', () => {

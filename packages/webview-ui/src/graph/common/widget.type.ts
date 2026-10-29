@@ -151,7 +151,7 @@ export type ToolbarEntry = {
   readonly elements: PackageToolbarElements;
   /** The buttons the last placement showed, in DOM order. */
   shown: PackageToolbarKind[];
-  /** The Tab stop an arrow key last moved to; Focus until one does. */
+  /** The Tab stop an arrow key or focus last moved to; Focus until one does. */
   preferred: PackageToolbarKind;
 };
 
@@ -163,7 +163,7 @@ export type RovingEntry<TKind extends string> = {
   readonly elements: RovingButtons<TKind>;
   /** The buttons the last placement showed, in DOM order. */
   shown: TKind[];
-  /** The Tab stop an arrow key last moved to. */
+  /** The Tab stop an arrow key or focus last moved to. */
   preferred: TKind;
 };
 
@@ -178,7 +178,7 @@ export type RowEntry = {
   readonly elements: FolderRowElements;
   /** The buttons the last placement showed, in DOM order. */
   shown: RowButtonKind[];
-  /** The Tab stop an arrow key last moved to; the chevron until one does. */
+  /** The Tab stop an arrow key or focus last moved to; the chevron until one does. */
   preferred: RowButtonKind;
 };
 

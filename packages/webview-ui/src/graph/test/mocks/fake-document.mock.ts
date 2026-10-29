@@ -20,7 +20,7 @@ type FakeOwner = {
 
 /**
  * The few DOM calls the graph's element builders make, for specs that run without a DOM: the tree and attributes of
- * `FakeNode`, classes, plain properties, listeners by event type, focus and the popover open state. An input's `value` follows `defaultValue` until it is set.
+ * `FakeNode`, classes, plain properties, listeners by event type, focus with its bubbling `focusin` and the popover open state. An input's `value` follows `defaultValue` until it is set.
  */
 class FakeElement extends FakeNode {
   public readonly tagName: string;
@@ -95,8 +95,17 @@ class FakeElement extends FakeNode {
     return rect;
   }
 
+  /** Moves focus here and fires a `focusin` that bubbles up the ancestors, as the DOM does; none fires when focus is already here. */
   public focus(): void {
+    if (this.focused.element === this) return;
+
+    const event = { type: 'focusin', target: this };
+
     this.focused.element = this;
+
+    this.dispatchEvent(event);
+
+    for (let node = this.parent; node !== null; node = node.parent) if (node instanceof FakeElement) node.dispatchEvent(event);
   }
 
   public showPopover(): void {

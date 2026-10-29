@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { moveStopOnKey, writeStops } from './roving-stop.ts';
+import { followFocus, moveStopOnKey, writeStops } from './roving-stop.ts';
 import type { RovingButtons, RovingEntry } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { pressKey } from '../test/utils/key-events.spec.util.ts';
@@ -16,13 +16,13 @@ type Buttons = {
 type StopRig = {
   readonly entry: RovingEntry<Kind>;
   readonly buttons: Buttons;
-  /** Holds the keydown listener that moves the stop. */
+  /** Holds the buttons and the keydown and focusin listeners that move the stop. */
   readonly root: HTMLElement;
 };
 
 const ORDER: Kind[] = ['first', 'second', 'third', 'missing'];
 
-/** Three shown buttons and a kind without one, the Tab stop on the first. */
+/** Three shown buttons in a root and a kind without one, the Tab stop on the first. */
 const rigOf = (): StopRig => {
   const buttons: Buttons = {
     first: document.createElement('button'),
@@ -33,7 +33,9 @@ const rigOf = (): StopRig => {
   const entry: RovingEntry<Kind> = { elements, shown: ['first', 'second', 'third'], preferred: 'first' };
   const root = document.createElement('div');
 
+  root.append(buttons.first, buttons.second, buttons.third);
   root.addEventListener('keydown', (event: KeyboardEvent): void => moveStopOnKey(entry, ORDER, event));
+  root.addEventListener('focusin', (event: FocusEvent): void => followFocus(entry, ORDER, event));
   writeStops(ORDER, elements, 'first');
   const rig: StopRig = { entry, buttons, root };
 
@@ -73,6 +75,13 @@ describe('FEATURE: roving stop', () => {
     pressKey(rig.root, 'ArrowRight', rig.buttons.third);
 
     expect(document.activeElement).toBe(rig.buttons.first);
+  });
+
+  it('GIVEN the stop on the first button WHEN the third gains focus THEN it is preferred and the one stop', () => {
+    rig.buttons.third.focus();
+
+    expect(rig.entry.preferred).toBe('third');
+    expect(stopsOf(rig.buttons)).toStrictEqual([-1, -1, 0]);
   });
 
   it('GIVEN the first button focused WHEN a is pressed THEN the stop stays and the key is not prevented', () => {

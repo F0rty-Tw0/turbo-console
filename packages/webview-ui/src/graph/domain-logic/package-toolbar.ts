@@ -1,6 +1,6 @@
 import { setFocusToggle } from './button-title.ts';
 import { placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
-import { moveStopOnKey } from './roving-stop.ts';
+import { followFocus, moveStopOnKey } from './roving-stop.ts';
 import type { PackageToolbarDeps } from '../common/graph-widgets.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { MenuTarget, PackageMenuState, RectPx, ToolbarEntry } from '../common/widget.type.ts';
@@ -16,8 +16,9 @@ const folderTitleOrNull = (folder: string | null): string | null => {
 
 /**
  * The selected package's node toolbar: built again when the selection or its folder changes, first in the layer so it is
- * the Tab stop after the canvas; the preferred button (Focus until an arrow key moves it) is its one Tab stop. Focus inside it goes to the container when
- * it is removed or hidden, since the browser would drop it on the body, and to the "…" when left on a hidden button.
+ * the Tab stop after the canvas; the preferred button (Focus until an arrow key or focus moves it) is its one Tab stop.
+ * Focus inside it goes to the container when it is removed or hidden, since the browser would drop it on the body, and
+ * to the "…" when left on a hidden button.
  */
 export class PackageToolbar {
   private readonly deps: PackageToolbarDeps;
@@ -89,6 +90,7 @@ export class PackageToolbar {
 
     this.wire(entry);
     elements.root.addEventListener('keydown', (event: KeyboardEvent): void => this.onKey(event));
+    elements.root.addEventListener('focusin', (event: FocusEvent): void => this.onFocusIn(event));
     this.deps.layer.prepend(elements.root);
 
     return entry;
@@ -109,6 +111,10 @@ export class PackageToolbar {
 
   private onKey(event: KeyboardEvent): void {
     if (this.entry !== null) moveStopOnKey(this.entry, TOOLBAR_ORDER, event);
+  }
+
+  private onFocusIn(event: FocusEvent): void {
+    if (this.entry !== null) followFocus(this.entry, TOOLBAR_ORDER, event);
   }
 
   private removeEntry(): void {
