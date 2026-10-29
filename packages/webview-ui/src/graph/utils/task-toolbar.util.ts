@@ -2,13 +2,14 @@ import { runLabelOf, stopLabelOf } from './controls-text.util.ts';
 import { isLiveRun } from './task-run.util.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
+import type { RunSlotAction } from '../common/task-details.type.ts';
 import type { TaskToolbarKind } from '../common/task-toolbar.type.ts';
 
 /** The task toolbar's buttons, left to right. */
 export const TASK_TOOLBAR_ORDER: TaskToolbarKind[] = ['run', 'showPackage', 'ellipsis'];
 
 /** What the Run/Stop slot does now: Stop while the task is live, else Run. */
-export const runActionOf = (state: GraphRunState | null): 'run' | 'stop' => {
+export const runActionOf = (state: GraphRunState | null): RunSlotAction => {
   const isLive = isLiveRun(state);
 
   if (isLive) return 'stop';
@@ -17,7 +18,7 @@ export const runActionOf = (state: GraphRunState | null): 'run' | 'stop' => {
 };
 
 /** The Run/Stop slot's name for `action`: `Stop <id>` while it stops the task, else `Run <id>`. */
-export const runSlotLabelOf = (id: string, action: 'run' | 'stop'): string => {
+export const runSlotLabelOf = (id: string, action: RunSlotAction): string => {
   if (action === 'stop') return stopLabelOf(id);
 
   return runLabelOf(id);

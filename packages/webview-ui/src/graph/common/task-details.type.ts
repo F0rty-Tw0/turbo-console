@@ -25,6 +25,9 @@ export type TaskDetailsModel = {
 /** The panel's three run buttons. */
 export type TaskRunAction = 'run' | 'runNoCache' | 'stop';
 
+/** What the task toolbar's Run/Stop slot does. */
+export type RunSlotAction = Extract<TaskRunAction, 'run' | 'stop'>;
+
 export type TaskDependencyButton = {
   readonly task: GraphTask;
   readonly button: HTMLButtonElement;
@@ -119,7 +122,7 @@ export type TaskToolbarDeps = {
   readonly views: Pick<WidgetViews, 'taskToolbar'>;
   readonly onMenu: (opener: HTMLButtonElement) => void;
   /** The Run/Stop slot was clicked: `action` is what it showed then. */
-  readonly onRun: (id: string, action: 'run' | 'stop') => void;
+  readonly onRun: (id: string, action: RunSlotAction) => void;
   readonly onShowPackage: (packageName: string) => void;
 };
 
