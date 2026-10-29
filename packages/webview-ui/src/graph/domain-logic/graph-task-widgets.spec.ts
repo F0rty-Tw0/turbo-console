@@ -23,6 +23,10 @@ const ROOT_NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: ROOT_NOT_RU
 
 const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
 
+const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
+
+const NOT_RUNNABLE_CONTINUOUS: TaskDetailsModel = { ...RUNNING, task: NOT_RUNNABLE_TASK, state: 'continuous' };
+
 const widgetsOf = (rig: TaskWidgetsRig, isOverlay: boolean): GraphTaskWidgets => new GraphTaskWidgets(rig.depsOf(isOverlay));
 
 describe('FEATURE: GraphTaskWidgets', () => {
@@ -154,6 +158,28 @@ describe('FEATURE: GraphTaskWidgets', () => {
       widgets.keepClear();
 
       expect(rig.view.panBy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a#build, not runnable, shown continuous with its "…" menu open', () => {
+    let widgets: GraphTaskWidgets;
+
+    beforeEach(() => {
+      widgets = widgetsOf(rig, false);
+      widgets.show(NOT_RUNNABLE_CONTINUOUS);
+      rig.toolbars[0]?.ellipsis.click();
+    });
+
+    it('WHEN its run ends THEN the menu is gone', () => {
+      widgets.show({ ...NOT_RUNNABLE_CONTINUOUS, state: null });
+
+      expect(rig.menus[0]?.menu.isConnected).toBe(false);
+    });
+
+    it('WHEN its run ends THEN the container has focus', () => {
+      widgets.show({ ...NOT_RUNNABLE_CONTINUOUS, state: null });
+
+      expect(document.activeElement).toBe(rig.page.container);
     });
   });
 
