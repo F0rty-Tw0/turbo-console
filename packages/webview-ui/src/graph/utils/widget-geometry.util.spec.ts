@@ -356,7 +356,6 @@ describe('FEATURE: ellipsisSlotOf', () => {
 
 describe('FEATURE: shownNodeToolbarOf', () => {
   const bounds: LayerBounds = { width: 400, height: 300, overlayLeft: null };
-  const headerRow = rectOf(100, 260, 400, 288);
 
   it.each([
     { title: 'inside the layer', node: rectOf(100, 50, 180, 80), rows: [], expected: rectOf(156, 22, 180, 46) },
@@ -365,12 +364,10 @@ describe('FEATURE: shownNodeToolbarOf', () => {
     {
       title: 'at the layer bottom with a header row above it, so its toolbar flips out of the layer',
       node: rectOf(100, 290, 180, 320),
-      rows: [headerRow],
+      rows: [rectOf(100, 260, 400, 288)],
       expected: null
     }
   ])('GIVEN one button WHEN the node is $title THEN the toolbar rect is $expected', ({ node, rows, expected }) => {
-    const rect = shownNodeToolbarOf(node, 1, rows, bounds);
-
-    expect(rect).toStrictEqual(expected);
+    expect(shownNodeToolbarOf(node, 1, rows, bounds)).toStrictEqual(expected);
   });
 });
