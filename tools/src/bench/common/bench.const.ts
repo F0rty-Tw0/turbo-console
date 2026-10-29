@@ -6,7 +6,8 @@ import type { Warmup } from './bench.type.ts';
  * that process: 3 calls alone spread the median of a 0.2 ms tree bench 1.5-1.6x across fresh processes and failed the
  * CI gate on unchanged code; 300 ms keeps it within 1.1x (pinned probe, 2026-10-20). A 10 ms bench needs longer: after
  * 300 ms `parse-package-graph-stretch-300` still settled at 9.6 or 11.0 ms per process (1.17x apart), after 1000 ms within
- * 1.03x (12 fresh pinned processes each). A bench slower than ~330 ms stops after `calls`.
+ * 1.03x (12 fresh pinned processes each). That held locally only: on CI runners it still settled at 18.1 or 20.9 ms after
+ * 1000 ms (#200), which the bench job's confirm rounds absorb. A bench slower than ~330 ms stops after `calls`.
  */
 export const WARMUP: Warmup = { calls: 3, ms: 1000 };
 

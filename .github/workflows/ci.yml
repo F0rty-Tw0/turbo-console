@@ -101,7 +101,7 @@ jobs:
   bench:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     concurrency:
       group: bench-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -171,9 +171,11 @@ jobs:
       # packageManager bump) can carry the bench-baseline-broken label to compare without a baseline instead; labels come
       # from the triggering event, so push after adding it. Results are cleared before each run and copied only after a
       # successful one, so no stale file is counted.
-      # A process can settle in a fast or a slow mode up to 1.17x apart (see WARMUP in bench.const.ts), which is more than
-      # the gate allows, so three draws per side can fail unchanged code. A failed compare therefore runs rounds 4-6
-      # (H,B / B,H / H,B) and compares the fastest of all six; a real slowdown slows every draw and stays red.
+      # On CI runners a bench process still settles in a fast or a slow mode after the warmup (#200: 18.1 vs 20.9 ms for
+      # parse-package-graph-stretch-300), more than the gate allows, so three draws per side can fail unchanged code. When
+      # a gated bench regressed (compare exit 1), rounds 4-6 (H,B / B,H / H,B) run and the fastest of all six draws per
+      # side is compared again; a real slowdown slows every draw and stays red. Missing gated benches or a compare error
+      # (exit 3) fail at once, and so do rounds 4-6 without a single base run, since head would then get twice the draws.
       - name: Bench and compare
         shell: bash
         env:
@@ -236,10 +238,19 @@ jobs:
             fi
           fi
 
-          if ! node head/tools/dist/bench-compare.js runs/base runs/head; then
-            echo "::warning::bench gate failed; confirming with three more rounds"
+          compared=0
+          node head/tools/dist/bench-compare.js runs/base runs/head || compared=$?
+          if [ "$compared" = 1 ]; then
+            echo "::warning::a gated bench regressed; confirming with three more rounds"
+            first_base_runs=$base_runs
             rounds 4 5 6
+            if [ "$base_runs" = "$first_base_runs" ]; then
+              echo "::error::no base bench run succeeded in rounds 4-6; keeping the first compare"
+              exit 1
+            fi
             node head/tools/dist/bench-compare.js runs/base runs/head
+          elif [ "$compared" != 0 ]; then
+            exit "$compared"
           fi
 
   screenshots:
