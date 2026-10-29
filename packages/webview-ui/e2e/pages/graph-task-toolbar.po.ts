@@ -6,7 +6,7 @@ import { taskToolbarLabelOf } from '../../src/graph/utils/controls-text.util.ts'
 
 /** The selected task's node toolbar: the package toolbar's expectations, read from the task toolbar's root. */
 export class GraphTaskToolbar extends GraphNodeToolbar {
-  protected override readonly toolbarClass: string = '.widget-toolbar-task';
+  protected override readonly toolbarSelector: string = '.widget-toolbar-task';
 
   public override toolbarOf(id: string): Locator {
     return this.layer.getByRole('toolbar', { name: taskToolbarLabelOf(id), exact: true });
