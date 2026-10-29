@@ -4,7 +4,7 @@ import { textElement } from '../../shared/ui/text-element.ts';
 import type { BundleDetails } from '../common/details-view.type.ts';
 import { BUNDLE_HEADING_TEXT, BUNDLE_LEAD_ID } from '../common/details.const.ts';
 import type { BundleEndModel, BundleViewModel } from '../common/details.type.ts';
-import { explainLabelOf } from '../utils/details-text.util.ts';
+import { explainLabelOf, folderEndLabelOf } from '../utils/details-text.util.ts';
 
 /**
  * An end's name button; a folder end is named as a folder and carries no `data-name`, since a package can share its
@@ -15,7 +15,7 @@ const endButton = (end: BundleEndModel): HTMLButtonElement => {
 
   if (end.folder === null) return button;
 
-  const label = `Folder ${end.text}`;
+  const label = folderEndLabelOf(end.text);
 
   delete button.dataset['name'];
   button.setAttribute('aria-label', label);

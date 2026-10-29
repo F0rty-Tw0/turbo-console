@@ -65,6 +65,9 @@ export const explainLabelOf = (source: string, target: string): string => {
   return `Explain ${link}`;
 };
 
+/** A collapsed folder's end button reads as a folder, since a package can share its title. */
+export const folderEndLabelOf = (title: string): string => `Folder ${title}`;
+
 export const readingTextOf = (file: string): string => `Reading ${file}…`;
 
 export const missingTextOf = (file: string, target: string): string => `${file} has no entry naming ${target}.`;

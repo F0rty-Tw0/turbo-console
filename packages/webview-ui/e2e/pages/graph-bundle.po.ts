@@ -6,7 +6,7 @@ import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { BUNDLE_HEADING_TEXT } from '../../src/graph/common/details.const.ts';
 import { DETAILS_LABEL, GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
-import { explainLabelOf } from '../../src/graph/utils/details-text.util.ts';
+import { explainLabelOf, folderEndLabelOf } from '../../src/graph/utils/details-text.util.ts';
 import type { BundleViewFacts } from '../common/graph-folders.type.ts';
 import type { LinkEnds } from '../common/playwright.type.ts';
 import { isInside, pointBoxOf, readRect } from '../test/utils/element-rect.spec.util.ts';
@@ -73,9 +73,11 @@ export class GraphBundle {
     await this.rows.getByRole('button', { name, exact: true }).click();
   }
 
-  /** Presses the lead's end button of the collapsed folder `title`, which reads `Folder <title>`. */
+  /** Presses the lead's end button of the collapsed folder `title`. */
   public async pressFolderEnd(title: string): Promise<void> {
-    await this.lead.getByRole('button', { name: `Folder ${title}`, exact: true }).click();
+    const name = folderEndLabelOf(title);
+
+    await this.lead.getByRole('button', { name, exact: true }).click();
   }
 
   /** The bundle view's heading, lead, count line and link rows, in order; a row is read from its text span, not the `li`, which ends in `Explain`. */
