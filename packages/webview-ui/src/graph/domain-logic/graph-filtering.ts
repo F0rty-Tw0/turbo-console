@@ -143,7 +143,7 @@ export class GraphFiltering {
     return fields;
   }
 
-  /** A collapse or expand: the controls and the save follow, and an inspected folder's view relabels its Collapse or Expand and a bundle whose link went ends. */
+  /** A collapse or expand: the controls and the save follow, and an inspected folder's view relabels its Collapse or Expand; a bundle whose link went ends. */
   private foldersChanged(): void {
     this.controls.setCollapsed(this.folders.collapsed());
     this.inspection.saveViewport();
