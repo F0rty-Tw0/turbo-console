@@ -1,7 +1,9 @@
+import { folderTitleOf } from './controls-text.util.ts';
+import { folderOfElementId } from './folder-id.util.ts';
 import { pluralOf } from './plural.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { FolderCounts } from '../common/details.type.ts';
-import type { FolderScene } from '../common/folder-scene.type.ts';
+import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 
 /** Each package link once, however often `edges` repeats it. */
 const distinctOf = (edges: GraphEdge[]): GraphEdge[] => {
@@ -63,3 +65,21 @@ export const folderSummaryOf = (counts: FolderCounts): string => {
 };
 
 export const folderPackagesTitleOf = (count: number): string => `Packages (${count})`;
+
+/** A bundle end as the reader sees it: a package name, or the title of a collapsed folder. */
+export const bundleEndTextOf = (id: string): string => {
+  const folder = folderOfElementId(id);
+
+  if (folder === null) return id;
+
+  return folderTitleOf(folder);
+};
+
+/** The Details bar and status line of a bundle; the count is the canvas label's. */
+export const bundleSummaryOf = (link: FolderLink): string => {
+  const links = pluralOf(link.links.length, 'link', 'links');
+  const source = bundleEndTextOf(link.source);
+  const target = bundleEndTextOf(link.target);
+
+  return `${links}: ${source} → ${target}`;
+};

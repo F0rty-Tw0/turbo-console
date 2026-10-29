@@ -7,7 +7,7 @@ import type { FolderScene } from '../common/folder-scene.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { TraceResult } from '../common/trace.type.ts';
-import { BOARDS_EDGES, BOARDS_INFOS, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
+import { BOARDS_EDGES, BOARDS_INFOS, boardsSceneOf, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { bundle, folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 
 type TextRow = {
@@ -116,12 +116,28 @@ describe('FEATURE: inspectionTextOf', () => {
       },
       { title: 'a trace has no result yet', inspection: trace('web', 'core'), result: null, visible: ALL, scene: null, expected: '' },
       {
-        title: 'a bundle reads nothing until U4g writes its summary',
+        title: 'a bundle into a collapsed folder is inspected',
         inspection: bundle('docs', collapsedIdOf('packages')),
         result: null,
         visible: ALL,
-        scene: BOARDS_SCENE,
+        scene: boardsSceneOf(['packages']),
+        expected: '2 links: docs → packages'
+      },
+      {
+        title: 'a bundle has no link in the scene',
+        inspection: bundle('docs', collapsedIdOf('packages')),
+        result: null,
+        visible: ALL,
+        scene: boardsSceneOf([]),
         expected: ''
+      },
+      {
+        title: 'a bundle from a collapsed folder to a package is inspected',
+        inspection: bundle(collapsedIdOf('apps'), '@acme/utils'),
+        result: null,
+        visible: ALL,
+        scene: boardsSceneOf(['apps']),
+        expected: '1 link: apps → @acme/utils'
       },
       {
         title: 'a folder is inspected',
