@@ -1,3 +1,4 @@
+import { kindIn, stopOf } from './roving-stop.util.ts';
 import type { RowButtonKind, RowPlan } from '../common/widget.type.ts';
 
 /** A row's buttons in DOM order. */
@@ -16,16 +17,10 @@ export const shownKindsOf = (plan: RowPlan): RowButtonKind[] => {
 };
 
 /** The row's Tab stop: `preferred` while shown, else the first shown button (spec D9: the chevron, else the title). */
-export const rowStopOf = (preferred: RowButtonKind, shown: RowButtonKind[]): RowButtonKind => {
-  const isPreferredShown = shown.includes(preferred);
-
-  if (isPreferredShown) return preferred;
-
-  return shown[0] ?? 'title';
-};
+export const rowStopOf = (preferred: RowButtonKind, shown: RowButtonKind[]): RowButtonKind => stopOf(preferred, shown, 'title');
 
 /** The button of `elements` that `target` is, `undefined` when it is none of them. */
 export const kindOf = (
   elements: Readonly<Record<RowButtonKind, EventTarget>>,
   target: EventTarget | null
-): RowButtonKind | undefined => ROW_ORDER.find((kind) => elements[kind] === target);
+): RowButtonKind | undefined => kindIn(ROW_ORDER, elements, target);
