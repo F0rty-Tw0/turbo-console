@@ -13,18 +13,6 @@ import { focusFolderNameOf, isHitAtCentre, isHitWithin } from '../test/utils/gra
 /** How far below a header row's bottom edge a tap lands: clear of the row, still inside its box. */
 const BELOW_ROW_PX = 3;
 
-const centreOf = async (target: Locator): Promise<ViewportPoint> => {
-  await target.waitFor();
-
-  const box = await target.boundingBox();
-
-  if (box === null) throw new Error('the target has no box');
-
-  const centre: ViewportPoint = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-
-  return centre;
-};
-
 /** Real mouse and keyboard input on the widget layer's buttons, titles and menus. */
 export class GraphWidgetInput extends GraphMenusPage {
   private readonly foldersPage: GraphFoldersPage;
@@ -38,7 +26,7 @@ export class GraphWidgetInput extends GraphMenusPage {
 
   /** The viewport point at the centre of the folder's "…". */
   public async ellipsisCentre(folder: string): Promise<ViewportPoint> {
-    const centre = await centreOf(this.widgets.ellipsisOf(folder));
+    const centre = await this.centreOf(this.widgets.ellipsisOf(folder));
 
     return centre;
   }
@@ -118,7 +106,10 @@ export class GraphWidgetInput extends GraphMenusPage {
 
   /** Taps the link between two ends, `BELOW_ROW_PX` under the bottom of the folder's header row: over its box, clear of its widgets. */
   public async tapLinkBelowRow(source: string, target: string, folder: string): Promise<void> {
-    const row = await this.widgets.rowOf(folder).boundingBox();
+    const rowLocator = this.widgets.rowOf(folder);
+
+    await this.widgets.expectLayerSettledOn(rowLocator);
+    const row = await rowLocator.boundingBox();
 
     if (row === null) throw new Error(`the ${folder} header row has no box`);
 
@@ -135,7 +126,7 @@ export class GraphWidgetInput extends GraphMenusPage {
 
   /** Moves the real mouse to the centre of `target`, then turns its wheel by `deltaY`. */
   public async wheelOver(target: Locator, deltaY: number): Promise<void> {
-    const centre = await centreOf(target);
+    const centre = await this.centreOf(target);
 
     await this.page.mouse.move(centre.x, centre.y);
     await this.page.mouse.wheel(0, deltaY);
@@ -161,5 +152,17 @@ export class GraphWidgetInput extends GraphMenusPage {
     const model: Position = { x: (point.x - box.x - pan.x) / zoom, y: (point.y - box.y - pan.y) / zoom };
 
     return model;
+  }
+
+  /** The viewport point at the centre of `target`, read once the layer covers the container. */
+  private async centreOf(target: Locator): Promise<ViewportPoint> {
+    await this.widgets.expectLayerSettledOn(target);
+    const box = await target.boundingBox();
+
+    if (box === null) throw new Error('the target has no box');
+
+    const centre: ViewportPoint = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+
+    return centre;
   }
 }

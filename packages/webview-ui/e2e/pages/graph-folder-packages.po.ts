@@ -8,6 +8,7 @@ import type { Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import type { BoxDragRecord, PackageFlags } from '../common/graph-folders.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
+import { shrinkByOnePixel } from '../test/utils/graph-container-shrink.spec.util.ts';
 import { gapBetween, hullCentreOf, moveFaultsOf } from '../test/utils/graph-folder-points.spec.util.ts';
 import { folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
 
@@ -16,6 +17,9 @@ const DIMMED_OPACITY = 0.25;
 
 /** How far a collapsed node's centre may sit from the centre of its packages, in CSS pixels. */
 const CENTRE_TOLERANCE_PX = 1;
+
+/** Half of the grouping page's box drag steps, for each half of a drag interrupted midway. */
+const HALF_DRAG_STEPS = 4;
 
 const flagsOf = (node: ProbeNode): PackageFlags => {
   const { isVisible, isCollapsed } = node;
@@ -38,10 +42,12 @@ const opacityOf = (node: ProbeNode): number => {
 export class GraphFolderPackages {
   private readonly folderPage: GraphFoldersPage;
   private readonly grouping: GraphGroupingPage;
+  private readonly page: Page;
   private readonly probe: GraphProbePage;
   private drag: BoxDragRecord | null = null;
 
   public constructor(page: Page) {
+    this.page = page;
     this.folderPage = new GraphFoldersPage(page);
     this.grouping = new GraphGroupingPage(page);
     this.probe = new GraphProbePage(page);
@@ -49,11 +55,22 @@ export class GraphFolderPackages {
 
   /** Drags the box by `dx`, `dy` CSS pixels, noting where every package stood and the zoom before. */
   public async dragBox(folder: string, dx: number, dy: number): Promise<void> {
-    const before = await this.grouping.modelPositions();
-    const zoom = await this.probe.zoom();
-
-    this.drag = { before, dx, dy, zoom };
+    await this.rememberDrag(dx, dy);
     await this.grouping.dragBox(folder, dx, dy);
+  }
+
+  /** Drags the box as `dragBox` does, and halfway makes the canvas container 1 px shorter, as a panel or window resize would. */
+  public async dragBoxShrinkingMidway(folder: string, dx: number, dy: number): Promise<void> {
+    await this.rememberDrag(dx, dy);
+
+    const grab = await this.grouping.boxGrab(folder);
+
+    await this.page.mouse.move(grab.x, grab.y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(grab.x + dx / 2, grab.y + dy / 2, { steps: HALF_DRAG_STEPS });
+    await this.grouping.container.evaluate(shrinkByOnePixel);
+    await this.page.mouse.move(grab.x + dx, grab.y + dy, { steps: HALF_DRAG_STEPS });
+    await this.page.mouse.up();
   }
 
   /** Each of `names` stands where the last box drag put it: moved once by the drag. */
@@ -94,6 +111,13 @@ export class GraphFolderPackages {
   /** Every package in `names` reads `dimmed`. */
   public async expectDimmed(names: string[]): Promise<void> {
     await expect.poll(async (): Promise<string[]> => this.notDimmed(names)).toEqual([]);
+  }
+
+  private async rememberDrag(dx: number, dy: number): Promise<void> {
+    const before = await this.grouping.modelPositions();
+    const zoom = await this.probe.zoom();
+
+    this.drag = { before, dx, dy, zoom };
   }
 
   private async isLinkDrawn(source: string, target: string): Promise<boolean | null> {
