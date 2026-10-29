@@ -50,7 +50,10 @@ const bundleText = (inspection: BundleInspection, scene: FolderScene | null): st
   return bundleSummaryOf(link);
 };
 
-/** The toolbar status line for an inspection (spec §4.3); `''` for none, a trace not yet walked, and a folder or bundle with no scene link. */
+/**
+ * The toolbar status line for an inspection (spec §4.3); `''` for none, a trace not yet walked, a folder with no scene,
+ * and a bundle the scene does not draw.
+ */
 export const inspectionTextOf = (
   inspection: Inspection,
   edges: GraphEdge[],
