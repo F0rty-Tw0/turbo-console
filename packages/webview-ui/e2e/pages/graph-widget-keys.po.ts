@@ -18,13 +18,22 @@ export class GraphWidgetKeys extends GraphWidgetsPage {
     await expect(this.toolbarOf(folder)).toHaveCount(1);
   }
 
-  /** Pans the canvas left until the expanded folder's chevron lies a pixel past the container's left edge. */
+  /**
+   * Pans the canvas left until the expanded folder's chevron lies a pixel past the container's left edge. The layer
+   * takes the container's rect on the next ResizeObserver callback; a chevron read before that sits off by the
+   * container's left edge and flips the pan to the right (macOS CI).
+   */
   public async panChevronOffLeft(folder: string): Promise<void> {
+    await this.expectLayerAfterContainer();
     const chevron = await this.chevronOf(folder, true).evaluate(readRect);
     const container = await this.container.evaluate(readRect);
 
     this.pannedPx = -(chevron.left + chevron.width - container.left + 1);
     await this.canvas.panBy(this.pannedPx, 0);
+  }
+
+  public async expectChevronHidden(folder: string): Promise<void> {
+    await expect(this.chevronOf(folder, true)).toBeHidden();
   }
 
   /** Undoes the last `panChevronOffLeft`. */

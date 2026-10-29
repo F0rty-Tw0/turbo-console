@@ -114,7 +114,10 @@ test.describe('FEATURE: folder row keys', () => {
         await graphWidgetKeys.panChevronOffLeft('apps');
       });
 
-      await test.step('THEN the apps "…" shows', async (): Promise<void> => graphWidgets.expectEllipsisShown('apps'));
+      await test.step('THEN the apps chevron is hidden AND the apps "…" shows', async (): Promise<void> => {
+        await graphWidgetKeys.expectChevronHidden('apps');
+        await graphWidgets.expectEllipsisShown('apps');
+      });
 
       await test.step('WHEN Tab is pressed from the container', async (): Promise<void> => {
         await graphWidgets.focusContainer();
