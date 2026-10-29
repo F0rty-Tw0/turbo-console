@@ -196,7 +196,7 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     return overlaps(toolbar, row);
   }
 
-  private async nodeToolbarFaults(name: string, side: NodeToolbarSide): Promise<string[]> {
+  protected async nodeToolbarFaults(name: string, side: NodeToolbarSide): Promise<string[]> {
     const node = await this.nodeRectOf(name);
     const zoom = await this.probe.zoom();
     const toolbar = await rectOf(this.toolbarOf(name));

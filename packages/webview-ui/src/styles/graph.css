@@ -409,12 +409,6 @@ p {
   outline-offset: 1px;
 }
 
-.widget-package-button {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
 /* The selected node's toolbar; only its buttons take pointer events. */
 .widget-toolbar {
   position: absolute;

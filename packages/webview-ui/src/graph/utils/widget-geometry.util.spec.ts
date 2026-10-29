@@ -8,7 +8,6 @@ import {
   nodeToolbarCountAt,
   nodeToolbarRectOf,
   overlayLeftOf,
-  packageButtonRectOf,
   rowPlacementOf,
   rowRectOf,
   shownNodeToolbarOf
@@ -183,18 +182,6 @@ describe('FEATURE: buttonRectsOf', () => {
       const rects = buttonRectsOf(row);
 
       expect(rects).toStrictEqual(expected);
-    });
-  });
-});
-
-describe('FEATURE: packageButtonRectOf', () => {
-  describe('GIVEN a node box', () => {
-    it('WHEN the button is placed THEN it is a 24 px square centred on the top-right corner', () => {
-      const box = rectOf(10, 20, 110, 50);
-
-      const rect = packageButtonRectOf(box);
-
-      expect(rect).toStrictEqual(rectOf(98, 8, 122, 32));
     });
   });
 });

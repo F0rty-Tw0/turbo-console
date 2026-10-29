@@ -111,7 +111,7 @@ export type TaskToolbarDeps = {
 export type TaskWidgetsDeps = {
   readonly page: PageElements;
   readonly view: Pick<GraphView, 'widgetRects' | 'viewport' | 'anchorBox' | 'panBy'>;
-  readonly views: Pick<WidgetViews, 'packageButton' | 'menu'>;
+  readonly views: Pick<WidgetViews, 'taskToolbar' | 'menu'>;
   readonly bridge: Bridge;
   /** Task mode is on, so the "…" may open its menu. */
   readonly isActive: () => boolean;

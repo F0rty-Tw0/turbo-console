@@ -136,13 +136,6 @@ export const ellipsisSlotOf = (toolbar: RectPx): RectPx => {
   return slot;
 };
 
-/** The task "…": centred on the node's top-right corner, so it overhangs the node on purpose. */
-export const packageButtonRectOf = (box: RectPx): RectPx => {
-  const half = WIDGET_BUTTON_PX / 2;
-
-  return squareAt(box.x2 - half, box.y1 - half, WIDGET_BUTTON_PX);
-};
-
 /** The rect meets the layer (touching an edge does not count) and, with an overlay, ends at or left of where the overlay starts. */
 export const isWidgetShown = (rect: RectPx, bounds: LayerBounds): boolean => {
   const meetsWidth = rect.x2 > 0 && rect.x1 < bounds.width;

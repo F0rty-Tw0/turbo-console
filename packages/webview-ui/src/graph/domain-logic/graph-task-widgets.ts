@@ -1,48 +1,48 @@
 import { keepBoxClear } from './graph-keep-clear.ts';
+import { taskAnchorOf, taskToolbarBoxOf } from './graph-task-anchor.ts';
 import { GraphWidgetMenus } from './graph-widget-menus.ts';
 import { readLayerBounds, watchLayerBounds } from './layer-bounds-watch.ts';
-import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
-import { TASK_WIDGET_CLASS } from '../common/graph-task.const.ts';
+import { TaskToolbar } from './task-toolbar.ts';
 import type { MenuAnchor } from '../common/graph-widgets.type.ts';
-import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { TaskDetailsModel, TaskMenuActions, TaskRunAction, TaskWidgetsDeps } from '../common/task-details.type.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { LayerBounds, MenuTarget, RectPx } from '../common/widget.type.ts';
 import { joinedBoxOf } from '../utils/keep-clear.util.ts';
 import { taskMenuOf } from '../utils/task-menu-model.util.ts';
 import { runMessageOf } from '../utils/task-run.util.ts';
-import { isWidgetShown, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
-
-type TaskButton = {
-  readonly id: string;
-  readonly button: HTMLButtonElement;
-};
+import { shownNodeToolbarOf } from '../utils/widget-geometry.util.ts';
 
 /**
- * The selected task's "…" over the canvas and its menu: Run and Run without cache for a runnable task, Stop while it
- * runs, and no "…" while the menu would be empty. An item posts what the task panel's button posts for the task shown
- * when it runs, so a stale item posts nothing. Shift+F10 opens nothing in task mode. While the task details panel
- * overlays the canvas, the "…" hides under it and the menu opens left of it, following the panel as its sash drags it
- * wider or narrower; when it turns to overlay, the selected task pans clear of it. It reads the layer bounds only when the
- * layer-bounds watch fires, so a frame reads no layout.
+ * The selected task's node toolbar over the canvas and its menu: Run and Run without cache for a runnable task, Stop
+ * while it runs, and no toolbar while the menu would be empty. An item posts what the task panel's button posts for the
+ * task shown when it runs, so a stale item posts nothing. Shift+F10 opens nothing in task mode. While the task details
+ * panel overlays the canvas, the toolbar hides under it and the menu opens left of it, following the panel as its sash
+ * drags it wider or narrower; when it turns to overlay, the selected task pans clear of it. It reads the layer bounds
+ * only when the layer-bounds watch fires, so a frame reads no layout.
  */
 export class GraphTaskWidgets {
   private readonly deps: TaskWidgetsDeps;
   private readonly menus: GraphWidgetMenus;
   private readonly actions: TaskMenuActions;
+  private readonly toolbar: TaskToolbar;
   private model: TaskDetailsModel | null = null;
-  private button: TaskButton | null = null;
   private bounds: LayerBounds;
   private rect: RectPx | null = null;
 
   public constructor(deps: TaskWidgetsDeps) {
     const anchors = {
-      anchorOf: (target: MenuTarget): MenuAnchor | null => this.anchorOf(target),
+      anchorOf: (target: MenuTarget): MenuAnchor | null => taskAnchorOf(this.toolbar.id(), this.toolbar.ellipsis(), this.rect, target),
       layerBounds: (): LayerBounds => this.bounds
     };
 
     this.deps = deps;
     this.bounds = readLayerBounds(deps.page.container, deps.aside(), deps.overlay.matches);
+    this.toolbar = new TaskToolbar({
+      layer: deps.page.widgets,
+      container: deps.page.container,
+      views: deps.views,
+      onMenu: (opener: HTMLButtonElement): void => this.open(opener)
+    });
     this.actions = { act: (id: string, action: TaskRunAction): void => this.act(id, action) };
     this.menus = new GraphWidgetMenus({
       page: deps.page,
@@ -57,7 +57,7 @@ export class GraphTaskWidgets {
     deps.overlay.addEventListener('change', (): void => this.relayout());
   }
 
-  /** The "…" beside the selected task of `model`; none for `null`, outside task mode, or while its menu would be empty. */
+  /** The toolbar beside the selected task of `model`; none for `null`, outside task mode, or while its menu would be empty. */
   public show(model: TaskDetailsModel | null): void {
     const id = model?.task.id ?? null;
 
@@ -71,13 +71,13 @@ export class GraphTaskWidgets {
     this.place();
   }
 
-  /** After a frame: the "…" follows its task, and a camera move closes the menu. */
+  /** After a frame: the toolbar follows its task, and a camera move closes the menu. */
   public rendered(): void {
     this.place();
     this.menus.follow();
   }
 
-  /** Pans the selected task and its "…" clear of the task details panel while it overlays the canvas. */
+  /** Pans the selected task and its toolbar clear of the task details panel while it overlays the canvas. */
   public keepClear(): void {
     const id = this.model?.task.id ?? null;
     const aside = this.deps.aside();
@@ -86,12 +86,13 @@ export class GraphTaskWidgets {
     if (id === null || !isOverlaid) return;
 
     const { view, page } = this.deps;
-    const box = joinedBoxOf(view.anchorBox([id]), this.buttonBox(id));
+    const toolbarBox = taskToolbarBoxOf(view, this.toolbar.id());
+    const box = joinedBoxOf(view.anchorBox([id]), toolbarBox);
 
     keepBoxClear(view, page.container, aside, box);
   }
 
-  /** The watch fired: the bounds are read again, and in task mode the "…" is placed against them. */
+  /** The watch fired: the bounds are read again, and in task mode the toolbar is placed against them. */
   private refreshBounds(): void {
     const { page, aside, overlay } = this.deps;
     const isActive = this.deps.isActive();
@@ -114,74 +115,39 @@ export class GraphTaskWidgets {
     this.sync(null);
   }
 
-  /** Exactly one "…", built again when the selected task changes; the menu of the one before closes. */
+  /** Exactly one toolbar, built again when the selected task changes; the menu of the one before closes. */
   private sync(id: string | null): void {
-    const current = this.button?.id ?? null;
+    const current = this.toolbar.id();
 
     if (current === id) return;
 
     this.menus.drop();
-    this.button?.button.remove();
-    this.button = null;
+    this.toolbar.sync(id);
+  }
+
+  /** Opens the menu of the selected task on its "…" while task mode is on. */
+  private open(opener: HTMLButtonElement): void {
+    const id = this.toolbar.id();
+    const isActive = this.deps.isActive();
+
+    if (id === null || !isActive) return;
+
+    this.menus.open({ kind: 'package', name: id }, opener);
+  }
+
+  /** Above the task's top right corner, or below it where it would leave the layer; hidden while the task or the toolbar is not drawn inside the canvas. */
+  private place(): void {
+    const id = this.toolbar.id();
 
     if (id === null) return;
 
-    const button = this.deps.views.packageButton(id);
-    const target: MenuTarget = { kind: 'package', name: id };
-    const open = (): void => {
-      const isActive = this.deps.isActive();
-
-      if (isActive) this.menus.open(target, button);
-    };
-
-    button.classList.add(TASK_WIDGET_CLASS);
-    button.addEventListener('click', open);
-    this.deps.page.widgets.append(button);
-    this.button = { id, button };
-  }
-
-  /** At the task's top right corner, as the package "…" sits; hidden while the task is not drawn inside the canvas. */
-  private place(): void {
-    const { button } = this;
-
-    if (button === null) return;
-
-    const { selected } = this.deps.view.widgetRects(button.id);
-
-    this.rect = this.shownRectOf(selected);
-    setHidden(button.button, this.rect === null);
-
-    if (this.rect !== null) writeStyle(button.button, 'transform', translateOf(this.rect.x1, this.rect.y1));
-  }
-
-  /** The "…" rect beside the task's `selected` rect while it meets the canvas, else `null`. */
-  private shownRectOf(selected: RectPx | null): RectPx | null {
-    if (selected === null) return null;
-
-    const rect = packageButtonRectOf(selected);
-    const isShown = isWidgetShown(rect, this.bounds);
-
-    return isShown ? rect : null;
-  }
-
-  private anchorOf(target: MenuTarget): MenuAnchor | null {
-    const { button, rect } = this;
-    const id = target.kind === 'package' ? target.name : null;
-
-    if (button === null || rect === null || button.id !== id) return null;
-
-    const anchor: MenuAnchor = { rect, opener: button.button };
-
-    return anchor;
-  }
-
-  /** The "…" span of task `id` at the camera now, shown or not; `null` while it has none. */
-  private buttonBox(id: string): AnchorBox | null {
     const { selected } = this.deps.view.widgetRects(id);
 
-    if (this.button === null || selected === null) return null;
+    this.rect = null;
 
-    return packageButtonRectOf(selected);
+    if (selected !== null) this.rect = shownNodeToolbarOf(selected, 1, [], this.bounds);
+
+    this.toolbar.place(this.rect);
   }
 
   private menuOf(target: MenuTarget): MenuItemModel[] {

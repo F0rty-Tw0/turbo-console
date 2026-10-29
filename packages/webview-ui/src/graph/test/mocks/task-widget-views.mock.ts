@@ -1,17 +1,18 @@
+import type { TaskToolbarElements } from '../../common/task-toolbar.type.ts';
 import type { MenuElements, MenuItemModel } from '../../common/widget-menu.type.ts';
 import { buildPage } from '../../ui/page-elements.ts';
-import { buildPackageButton } from '../../ui/widget-elements.ts';
+import { buildTaskToolbar } from '../../ui/widget-elements.ts';
 import { buildMenu } from '../../ui/widget-menu.ts';
 import type { TaskWidgetViewsMock } from '../common/graph-task-mode.type.ts';
 
-/** The real page, "…" and menu builders, so a spec clicks the "…" and the menu items `GraphTaskWidgets` wires. */
+/** The real page, task toolbar and menu builders, so a spec clicks the toolbar's "…" and the menu items `GraphTaskWidgets` wires. */
 export const taskWidgetViewsMock = (): TaskWidgetViewsMock => {
-  const buttons: HTMLButtonElement[] = [];
+  const toolbars: TaskToolbarElements[] = [];
   const menus: MenuElements[] = [];
-  const packageButton = (name: string): HTMLButtonElement => {
-    const built = buildPackageButton(name);
+  const taskToolbar = (id: string): TaskToolbarElements => {
+    const built = buildTaskToolbar(id);
 
-    buttons.push(built);
+    toolbars.push(built);
 
     return built;
   };
@@ -23,8 +24,8 @@ export const taskWidgetViewsMock = (): TaskWidgetViewsMock => {
     return built;
   };
   const page = buildPage();
-  const views = { packageButton, menu };
-  const mock: TaskWidgetViewsMock = { page, views, buttons, menus };
+  const views = { taskToolbar, menu };
+  const mock: TaskWidgetViewsMock = { page, views, toolbars, menus };
 
   return mock;
 };

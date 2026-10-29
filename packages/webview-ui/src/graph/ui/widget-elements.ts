@@ -120,16 +120,6 @@ const nodeToolbarRootOf = (modifier: 'package' | 'task', label: string): HTMLEle
   return root;
 };
 
-/** The selected package's "…", hidden until the layer places it. */
-export const buildPackageButton = (name: string): HTMLButtonElement => {
-  const button = menuButton(packageActionsLabelOf(name));
-
-  button.classList.add('widget-package-button');
-  button.hidden = true;
-
-  return button;
-};
-
 /** The selected task's node toolbar, hidden until the layer places it; the "…" keeps the name it had as a lone button. */
 export const buildTaskToolbar = (id: string): TaskToolbarElements => {
   const root = nodeToolbarRootOf('task', taskToolbarLabelOf(id));
