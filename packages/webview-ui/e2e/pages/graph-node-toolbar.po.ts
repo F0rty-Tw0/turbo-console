@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { focusLabelOf, packageToolbarLabelOf } from '../../src/graph/utils/controls-text.util.ts';
-import { isNodeToolbarCompact } from '../../src/graph/utils/package-toolbar.util.ts';
+import { isNodeToolbarCompact } from '../../src/graph/utils/widget-geometry.util.ts';
 import type { NodeToolbarSide } from '../common/graph-folders.type.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
 import type { ElementRect } from '../common/playwright.type.ts';

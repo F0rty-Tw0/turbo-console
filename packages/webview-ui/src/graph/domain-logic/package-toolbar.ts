@@ -11,7 +11,8 @@ import type {
   ToolbarSlot
 } from '../common/widget.type.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
-import { isNodeToolbarCompact, packageToolbarCountOf, packageToolbarShownOf } from '../utils/package-toolbar.util.ts';
+import { packageToolbarCountOf, packageToolbarShownOf } from '../utils/package-toolbar.util.ts';
+import { isNodeToolbarCompact } from '../utils/widget-geometry.util.ts';
 
 type ToolbarEntry = {
   readonly name: string;

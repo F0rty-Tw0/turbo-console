@@ -4,9 +4,8 @@ import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphWidgetsDeps, MenuAnchor } from '../common/graph-widgets.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds, MenuTarget, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
-import { isNodeToolbarCompact } from '../utils/package-toolbar.util.ts';
 import { tapPairOf } from '../utils/tap-pair.util.ts';
-import { buttonRectsOf, ellipsisSlotOf, nodeToolbarRectOf, overlayLeftOf } from '../utils/widget-geometry.util.ts';
+import { buttonRectsOf, ellipsisSlotOf, nodeToolbarCountAt, nodeToolbarRectOf, overlayLeftOf } from '../utils/widget-geometry.util.ts';
 import { widgetPlanOf } from '../utils/widget-plan.util.ts';
 
 /** The folder the selected package is drawn in; `null` when no folder scene is drawn (flat) or nothing is selected. */
@@ -113,7 +112,7 @@ export class GraphWidgets {
 
     if (selected === null) return null;
 
-    const count = this.toolbarCountAt(zoom);
+    const count = nodeToolbarCountAt(zoom, this.toolbar.count());
     const rect = nodeToolbarRectOf(selected, count, []);
     const box: AnchorBox = { x1: rect.x1, x2: rect.x2 };
 
@@ -152,14 +151,6 @@ export class GraphWidgets {
     const anchor: MenuAnchor = { rect: slot, opener };
 
     return anchor;
-  }
-
-  private toolbarCountAt(zoom: number): number {
-    const isCompact = isNodeToolbarCompact(zoom);
-
-    if (isCompact) return 1;
-
-    return this.toolbar.count();
   }
 
   /**

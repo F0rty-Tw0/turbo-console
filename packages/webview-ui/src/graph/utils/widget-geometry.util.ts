@@ -1,6 +1,8 @@
 import {
   FOLDER_PADDING_PX,
+  NODE_HEIGHT,
   NODE_TOOLBAR_GAP_PX,
+  NODE_TOOLBAR_MIN_PX,
   WIDGET_BUTTON_PX,
   WIDGET_GAP_PX,
   WIDGET_INSET_PX,
@@ -98,6 +100,16 @@ const isMeeting = (first: RectPx, second: RectPx): boolean => {
   const meetsY = first.y1 < second.y2 && second.y1 < first.y2;
 
   return meetsX && meetsY;
+};
+
+/** Whether the node is too short on screen for its toolbar: only the "…" stays. */
+export const isNodeToolbarCompact = (zoom: number): boolean => NODE_HEIGHT * zoom < NODE_TOOLBAR_MIN_PX;
+
+/** The buttons a node toolbar of `fullCount` shows at `zoom`: the "…" alone while compact. */
+export const nodeToolbarCountAt = (zoom: number, fullCount: number): number => {
+  const isCompact = isNodeToolbarCompact(zoom);
+
+  return isCompact ? 1 : fullCount;
 };
 
 /** A node's toolbar: right edge on the node's, unscaled at every zoom; flips below once when it meets a header row or leaves the layer top; a below-rect that meets a row stays. */

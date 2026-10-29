@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isNodeToolbarCompact, packageToolbarCountOf, packageToolbarShownOf } from './package-toolbar.util.ts';
+import { packageToolbarCountOf, packageToolbarShownOf } from './package-toolbar.util.ts';
 import type { PackageMenuState, PackageToolbarShown } from '../common/widget.type.ts';
 
 const stateOf = (isFocus: boolean, hasTasks: boolean): PackageMenuState => {
@@ -49,14 +49,5 @@ describe('FEATURE: packageToolbarCountOf', () => {
     const count = packageToolbarCountOf(stateOf(false, hasTasks), hasFolder);
 
     expect(count).toBe(expected);
-  });
-});
-
-describe('FEATURE: isNodeToolbarCompact', () => {
-  it.each([
-    { zoom: 0.49, expected: true },
-    { zoom: 0.5, expected: false }
-  ])('GIVEN zoom $zoom THEN compact is $expected', ({ zoom, expected }) => {
-    expect(isNodeToolbarCompact(zoom)).toBe(expected);
   });
 });

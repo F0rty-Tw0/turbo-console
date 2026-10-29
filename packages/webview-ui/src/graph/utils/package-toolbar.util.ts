@@ -1,8 +1,4 @@
-import { NODE_HEIGHT, NODE_TOOLBAR_MIN_PX } from '../common/graph.const.ts';
 import type { PackageMenuState, PackageToolbarShown } from '../common/widget.type.ts';
-
-/** Whether the node is too short on screen for its toolbar: only the "…" stays. */
-export const isNodeToolbarCompact = (zoom: number): boolean => NODE_HEIGHT * zoom < NODE_TOOLBAR_MIN_PX;
 
 /** The buttons the package toolbar shows besides the "…", which always shows: none while compact. */
 export const packageToolbarShownOf = (state: PackageMenuState, hasFolder: boolean, isCompact: boolean): PackageToolbarShown => {

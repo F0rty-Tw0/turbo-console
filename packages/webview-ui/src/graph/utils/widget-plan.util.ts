@@ -1,5 +1,11 @@
-import { isNodeToolbarCompact } from './package-toolbar.util.ts';
-import { buttonRectsOf, isWidgetShown, nodeToolbarRectOf, rowPlacementOf, rowRectOf } from './widget-geometry.util.ts';
+import {
+  buttonRectsOf,
+  isWidgetShown,
+  nodeToolbarCountAt,
+  nodeToolbarRectOf,
+  rowPlacementOf,
+  rowRectOf
+} from './widget-geometry.util.ts';
 import { ROW_FOCUS_MIN_PX } from '../common/graph.const.ts';
 import type { FolderRect, RectPx, RowKind, RowPlan, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
 
@@ -50,9 +56,7 @@ const nodeToolbarOf = (input: WidgetPlanInput, rows: RowPlan[]): RectPx | null =
 
   if (!isNodeShown) return null;
 
-  const isCompact = isNodeToolbarCompact(zoom);
-  const count = isCompact ? 1 : input.toolbarCount;
-
+  const count = nodeToolbarCountAt(zoom, input.toolbarCount);
   const rect = nodeToolbarRectOf(selected, count, rows.map(rowRectOfPlan));
   const isShown = isWidgetShown(rect, input.bounds);
 
