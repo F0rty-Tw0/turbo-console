@@ -10,10 +10,13 @@ export type PickingInspection = { readonly kind: 'picking'; readonly start: stri
 
 export type FolderInspection = { readonly kind: 'folder'; readonly folder: string };
 
+export type BundleInspection = { readonly kind: 'bundle'; readonly source: string; readonly target: string };
+
 export type TraceInspection = { readonly kind: 'trace'; readonly start: string; readonly end: string };
 
-/** What the graph page is showing details of: nothing, a package, a link, a folder, a trace being picked, or a trace. */
-export type Inspection = NoInspection | PackageInspection | LinkInspection | FolderInspection | PickingInspection | TraceInspection;
+/** What the graph page is showing details of: nothing, a package, a link, a folder, a bundled folder link, a trace being picked, or a trace. */
+export type Inspection =
+  NoInspection | PackageInspection | LinkInspection | FolderInspection | BundleInspection | PickingInspection | TraceInspection;
 
 /**
  * Where a package was chosen: the list (its search's Enter included), the panel, the canvas, or a list Focus toggle.
@@ -42,11 +45,14 @@ export type PlainInput = { readonly kind: PlainInputKind };
 /** A folder chosen from a box, a collapsed node, a list header or a menu; ignored while picking. */
 type FolderInput = { readonly kind: 'selectFolder'; readonly folder: string };
 
+/** A bundled folder link tapped; its ends are drawn ids, a package name or `collapsedIdOf(folder)`. */
+type BundleInput = { readonly kind: 'tapBundle'; readonly source: string; readonly target: string };
+
 /** Escape pressed on the canvas or in the panel. */
 type EscapeInput = { readonly kind: 'escape'; readonly where: EscapeWhere };
 
 /** What the user did that can change the inspection. */
-export type InspectionInput = SelectInput | PickInput | LinkInput | FolderInput | PlainInput | EscapeInput;
+export type InspectionInput = SelectInput | PickInput | LinkInput | FolderInput | BundleInput | PlainInput | EscapeInput;
 
 /** The part of the saved view state that holds the inspection. */
 export type InspectionFields = Pick<GraphViewState, 'selected' | 'link' | 'trace' | 'folder'>;

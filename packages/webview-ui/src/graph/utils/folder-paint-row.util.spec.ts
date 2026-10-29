@@ -6,29 +6,10 @@ import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { SceneParts } from '../test/common/folder-boards.type.ts';
+import type { Letters } from '../test/common/paint-letters.type.ts';
 import { BOARDS_EDGES, BOARDS_INFOS, THREE, THREE_EDGES, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { folderInspection } from '../test/utils/inspections.spec.util.ts';
-
-const LETTERS = new Map<ProbeState, string>([
-  ['normal', 'n'],
-  ['selected', 's'],
-  ['highlighted', 'h'],
-  ['dimmed', 'd']
-]);
-
-const lettersOf = (states: ProbeState[]): string => {
-  const letters = states.map((state: ProbeState): string => LETTERS.get(state) ?? '?');
-
-  return letters.join('');
-};
-
-type Letters = {
-  readonly nodes: string;
-  readonly links: string;
-  readonly boxes: string;
-  readonly collapsedNodes: string;
-  readonly folderLinks: string;
-};
+import { lettersOf } from '../test/utils/paint-letters.spec.util.ts';
 
 const WEB_UI_EDGE: GraphEdge = { source: 'web', target: '@acme/ui' };
 

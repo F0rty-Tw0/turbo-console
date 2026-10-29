@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { inspectionFieldsOf, restoredInspection } from './inspection-state.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, InspectionFields } from '../common/inspection.type.ts';
+import { bundle } from '../test/utils/inspections.spec.util.ts';
 
 const fieldsOf = (parts: Partial<InspectionFields>): InspectionFields => {
   const fields: InspectionFields = { selected: null, link: null, trace: null, folder: null, ...parts };
@@ -89,6 +91,11 @@ describe('FEATURE: inspectionFieldsOf', () => {
         expected: fieldsOf({ selected: 'core', trace: SWAPPED_TRACE_REF })
       },
       { title: 'a folder saves only the folder', inspection: FOLDER_APPS, expected: fieldsOf({ folder: 'apps' }) },
+      {
+        title: 'a bundle saves as none',
+        inspection: bundle('docs', collapsedIdOf('packages')),
+        expected: fieldsOf({})
+      },
       { title: 'the root folder saves its empty key', inspection: FOLDER_ROOT, expected: fieldsOf({ folder: '' }) },
       {
         title: 'a __proto__ link saves only the link',

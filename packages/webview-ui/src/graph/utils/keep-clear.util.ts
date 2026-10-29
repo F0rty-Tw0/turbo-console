@@ -19,7 +19,7 @@ export const keepClearPanOf = (box: AnchorBox, containerWidth: number, overlayLe
   return limit - box.x2;
 };
 
-/** The element ids the camera keeps clear of the overlay for this inspection: package names, or a folder's box and collapsed node ids. */
+/** The element ids the camera keeps clear of the overlay for this inspection: package names or drawn ends (a bundle's collapsed end), or a folder's box and collapsed node ids. */
 export const anchorsOf = (inspection: Inspection): string[] => {
   switch (inspection.kind) {
     case 'none':
@@ -27,6 +27,7 @@ export const anchorsOf = (inspection: Inspection): string[] => {
     case 'package':
       return [inspection.name];
     case 'link':
+    case 'bundle':
       return [inspection.source, inspection.target];
     case 'folder':
       return [folderIdOf(inspection.folder), collapsedIdOf(inspection.folder)];

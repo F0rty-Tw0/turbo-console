@@ -9,6 +9,7 @@ const identityOf = (inspection: Inspection): string[] => {
     case 'package':
       return [inspection.kind, inspection.name];
     case 'link':
+    case 'bundle':
       return [inspection.kind, inspection.source, inspection.target];
     case 'folder':
       return [inspection.kind, inspection.folder];

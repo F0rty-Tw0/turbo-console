@@ -1,4 +1,6 @@
+import { edgeIdOf } from './edge-id.util.ts';
 import { folderOfElementId } from './folder-id.util.ts';
+import { folderLinkOf, hasEnds } from './folder-links.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
@@ -142,6 +144,37 @@ export const folderRowPaintOf = (folder: string, edges: GraphEdge[], scene: Fold
   };
   const boxState = selectedOr(folder, others.boxState);
   const collapsedState = selectedOr(folder, others.collapsedState);
+  const paint: Paint = { nodeState, edgeState, boxState, collapsedState, folderLinkState };
+
+  return paint;
+};
+
+/** The folder link with the bundle's exact ends reads `selected`; every other folder link `dimmed`. */
+const bundledLinkStateOf = (bundled: FolderLink): ((link: FolderLink) => ProbeState) => {
+  const stateOf = (link: FolderLink): ProbeState => {
+    const isBundled = hasEnds(link, bundled.source, bundled.target);
+
+    return isBundled ? 'selected' : 'dimmed';
+  };
+
+  return stateOf;
+};
+
+/**
+ * The paint for an inspected bundle (spec D10): the links inside it are `selected` and their ends `highlighted`, every
+ * other package, link and folder link is `dimmed`. A bundle whose folder link is not in the scene paints like none.
+ */
+export const bundlePaintOf = (source: string, target: string, scene: FolderScene | null): Paint => {
+  const bundled = folderLinkOf(scene, source, target);
+
+  if (bundled === null) return unscenedPaint;
+
+  const keys = new Set(bundled.links.map(edgeIdOf));
+  const ends = new Set(bundled.links.flatMap((edge: GraphEdge): string[] => [edge.source, edge.target]));
+  const nodeState = (name: string): ProbeState => (ends.has(name) ? 'highlighted' : 'dimmed');
+  const edgeState = (edge: GraphEdge): ProbeState => (keys.has(edgeIdOf(edge)) ? 'selected' : 'dimmed');
+  const { boxState, collapsedState } = folderPaintOf(nodeState, edgeState, scene);
+  const folderLinkState = bundledLinkStateOf(bundled);
   const paint: Paint = { nodeState, edgeState, boxState, collapsedState, folderLinkState };
 
   return paint;

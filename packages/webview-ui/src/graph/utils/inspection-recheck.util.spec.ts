@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { recheckInspection } from './inspection-recheck.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import type { FolderScene } from '../common/folder-scene.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import { BOARDS_EDGES, BOARDS_INFOS, BOARDS_NAMES, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
-import { folderInspection } from '../test/utils/inspections.spec.util.ts';
+import { bundle, folderInspection } from '../test/utils/inspections.spec.util.ts';
 
 const E: GraphEdge[] = [
   { source: 'web', target: 'ui' },
@@ -138,6 +140,44 @@ describe('FEATURE: recheckInspection of a folder', () => {
       const next = recheckInspection(current, visible, BOARDS_EDGES, scene);
 
       expect(next).toBe(expected);
+    });
+  });
+});
+
+const P = collapsedIdOf('packages');
+
+const BUNDLE_DOCS = bundle('docs', P);
+
+const PACKAGES_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'] });
+
+const withoutNames = (hidden: string[]): string[] => BOARDS_NAMES.filter((name: string): boolean => !hidden.includes(name));
+
+const sceneWithout = (hidden: string[]): FolderScene => {
+  return sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'], visible: withoutNames(hidden) });
+};
+
+describe('FEATURE: recheckInspection of a bundle', () => {
+  describe('GIVEN a scene that still draws the bundled link', () => {
+    it.each([
+      { title: 'its link is still drawn', scene: PACKAGES_SCENE },
+      { title: 'a hidden end of one bundled link leaves the other link', scene: sceneWithout(['@acme/ui']) }
+    ])('WHEN $title THEN the bundle is kept', ({ scene }) => {
+      const next = recheckInspection(BUNDLE_DOCS, ALL_BOARDS, BOARDS_EDGES, scene);
+
+      expect(next).toBe(BUNDLE_DOCS);
+    });
+  });
+
+  describe('GIVEN a scene without the bundled link', () => {
+    it.each([
+      { title: 'the folder was expanded', current: BUNDLE_DOCS, scene: sceneOf(BOARDS_INFOS, BOARDS_EDGES, {}) },
+      { title: 'the scene is null', current: BUNDLE_DOCS, scene: null },
+      { title: 'its source is hidden', current: BUNDLE_DOCS, scene: sceneWithout(['docs']) },
+      { title: 'its ends are reversed', current: bundle(P, 'docs'), scene: PACKAGES_SCENE }
+    ])('WHEN $title THEN the bundle is none', ({ current, scene }) => {
+      const next = recheckInspection(current, ALL_BOARDS, BOARDS_EDGES, scene);
+
+      expect(next).toBe(NONE);
     });
   });
 });

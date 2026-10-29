@@ -12,13 +12,11 @@ import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
 import type { ControlsViewFields, DrawnGraph } from '../common/graph-page.type.ts';
 import type { FilteringFacts, FilteringTimes } from '../common/graph-probe.type.ts';
 import type { WidgetWiring } from '../common/graph-widgets.type.ts';
-import type { InspectionInput } from '../common/inspection.type.ts';
+import { CLEAR_INPUT, GROUPED_ONLY_KINDS } from '../common/inspection.const.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import { focusNameOf } from '../utils/controls-rules.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
-
-const CLEAR: InspectionInput = { kind: 'clear' };
 
 /**
  * The controls panel, the inspection it drives, the collapsed folders and the widget layer over them; the only place
@@ -100,11 +98,11 @@ export class GraphFiltering {
     return visible;
   }
 
-  /** The Group by folder checkbox turned off, at the click: a folder inspection ends, a folder focus clears, then an open widget menu closes. */
+  /** The Group by folder checkbox turned off, at the click: a folder or bundle inspection ends, a folder focus clears, then an open widget menu closes. */
   public groupingOff(): void {
-    const isFolder = this.inspection.current().kind === 'folder';
+    const isGrouped = GROUPED_ONLY_KINDS.has(this.inspection.current().kind);
 
-    if (isFolder) this.inspection.input(CLEAR);
+    if (isGrouped) this.inspection.input(CLEAR_INPUT);
 
     this.controls.clearFocus();
     this.widgets.groupingOff();
@@ -145,24 +143,24 @@ export class GraphFiltering {
     return fields;
   }
 
-  /** A collapse or expand: the controls and the save follow, and an inspected folder's view relabels its Collapse or Expand. */
+  /** A collapse or expand: the controls and the save follow, and an inspected folder's view relabels its Collapse or Expand; a bundle whose link went ends. */
   private foldersChanged(): void {
     this.controls.setCollapsed(this.folders.collapsed());
     this.inspection.saveViewport();
-    this.recheckFolder();
+    this.recheckGrouped();
   }
 
-  /** An inspected folder's view shows its collapse and focus, so it is built again after either changes; others stay. */
-  private recheckFolder(): void {
-    const isFolder = this.inspection.current().kind === 'folder';
+  /** An inspected folder's view shows its collapse and focus, and a bundle needs its link, so either is checked again after a change; others stay. */
+  private recheckGrouped(): void {
+    const isGrouped = GROUPED_ONLY_KINDS.has(this.inspection.current().kind);
 
-    if (isFolder) this.inspection.recheck(this.controls.visible());
+    if (isGrouped) this.inspection.recheck(this.controls.visible());
   }
 
   /** A filter change that kept the visible set: the focus may still have moved to a package or folder already shown, and the widget layer and location bar read it. */
   private sameVisible(): void {
     this.markFocusTarget();
-    this.recheckFolder();
+    this.recheckGrouped();
     this.widgets.refresh();
   }
 

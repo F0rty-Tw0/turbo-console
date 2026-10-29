@@ -28,6 +28,7 @@ const traceFieldsOf = (inspection: TraceInspection): InspectionFields => {
 export const inspectionFieldsOf = (inspection: Inspection): InspectionFields => {
   switch (inspection.kind) {
     case 'none':
+    case 'bundle':
       return fieldsOf({});
     case 'package':
       return fieldsOf({ selected: inspection.name });

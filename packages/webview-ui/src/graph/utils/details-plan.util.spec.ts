@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { detailsPlanOf } from './details-plan.util.ts';
+import { collapsedIdOf } from './folder-id.util.ts';
 import type { DetailsPlan } from '../common/graph-details.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
+import { bundle } from '../test/utils/inspections.spec.util.ts';
 
 const pkg = (name: string): Inspection => {
   const inspection: Inspection = { kind: 'package', name };
@@ -34,6 +36,8 @@ const folder = (key: string): Inspection => {
 
   return inspection;
 };
+
+const B = bundle('docs', collapsedIdOf('packages'));
 
 const NUDGED: Inspection = { kind: 'picking', start: 'web', isNudged: true };
 
@@ -67,6 +71,28 @@ const PLAN_ROWS: PlanRow[] = [
     title: 'the root folder then a folder named (root)',
     previous: folder(''),
     next: folder('(root)'),
+    isRebuild: false,
+    expected: 'swap'
+  },
+  { title: 'the same bundle', previous: B, next: bundle('docs', collapsedIdOf('packages')), isRebuild: false, expected: 'update' },
+  {
+    title: 'the same bundle on a rebuild',
+    previous: B,
+    next: bundle('docs', collapsedIdOf('packages')),
+    isRebuild: true,
+    expected: 'rebuild'
+  },
+  {
+    title: 'a bundle of another source',
+    previous: B,
+    next: bundle('web', collapsedIdOf('packages')),
+    isRebuild: false,
+    expected: 'swap'
+  },
+  {
+    title: 'a bundle then the link of the same ends',
+    previous: B,
+    next: link('docs', collapsedIdOf('packages')),
     isRebuild: false,
     expected: 'swap'
   },

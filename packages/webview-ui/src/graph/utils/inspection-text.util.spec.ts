@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { inspectionTextOf } from './inspection-text.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -7,7 +8,7 @@ import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { TraceResult } from '../common/trace.type.ts';
 import { BOARDS_EDGES, BOARDS_INFOS, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
-import { folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
+import { bundle, folderInspection, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 
 type TextRow = {
   readonly title: string;
@@ -114,6 +115,14 @@ describe('FEATURE: inspectionTextOf', () => {
         expected: 'No dependency path between web and docs'
       },
       { title: 'a trace has no result yet', inspection: trace('web', 'core'), result: null, visible: ALL, scene: null, expected: '' },
+      {
+        title: 'a bundle reads nothing until U4g writes its summary',
+        inspection: bundle('docs', collapsedIdOf('packages')),
+        result: null,
+        visible: ALL,
+        scene: BOARDS_SCENE,
+        expected: ''
+      },
       {
         title: 'a folder is inspected',
         inspection: folderInspection('apps'),

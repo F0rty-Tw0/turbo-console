@@ -79,6 +79,7 @@ describe('FEATURE: anchorsOf', () => {
       ['a picking, nudged or not', { kind: 'picking', start: 'web', isNudged: true }, ['web']],
       ['a trace', { kind: 'trace', start: 'web', end: 'core' }, ['web', 'core']],
       ['a folder', { kind: 'folder', folder: 'apps' }, [folderIdOf('apps'), collapsedIdOf('apps')]],
+      ['a bundle', { kind: 'bundle', source: 'docs', target: collapsedIdOf('packages') }, ['docs', collapsedIdOf('packages')]],
       ['the root folder', { kind: 'folder', folder: '' }, ['\u0001', '\u0002']],
       [
         'a link between names like Object members',

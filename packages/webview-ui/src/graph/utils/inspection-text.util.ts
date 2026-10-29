@@ -52,6 +52,7 @@ export const inspectionTextOf = (
 ): string => {
   switch (inspection.kind) {
     case 'none':
+    case 'bundle':
       return '';
     case 'package':
       return packageText(inspection.name, edges);

@@ -171,6 +171,7 @@ const folderOf = (folder: string, context: DetailsContext, env: DetailsEnv): Det
 export const wiredViewOf = (inspection: ShownInspection, context: DetailsContext, env: DetailsEnv): DetailsView => {
   switch (inspection.kind) {
     case 'none':
+    case 'bundle':
       return emptyOf(env);
     case 'package':
       return packageOf(inspection.name, context, env);

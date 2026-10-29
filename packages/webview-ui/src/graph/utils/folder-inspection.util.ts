@@ -9,11 +9,12 @@ const traceMembersOf = (start: string, end: string, trace: TraceResult | null): 
   return [start, end, ...path];
 };
 
-/** The packages an inspection holds; a trace's path comes from `trace`, else only its two ends count. A folder holds none. */
+/** The packages an inspection holds; a trace's path comes from `trace`, else only its two ends count. A folder or a bundle holds none. */
 const packagesOf = (inspection: Inspection, trace: TraceResult | null): string[] => {
   switch (inspection.kind) {
     case 'none':
     case 'folder':
+    case 'bundle':
       return [];
     case 'package':
       return [inspection.name];

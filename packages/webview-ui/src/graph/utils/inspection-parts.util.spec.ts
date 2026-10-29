@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { litOf, selectedOf, shownOf } from './inspection-parts.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ShownInspection } from '../common/graph-details.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { TraceCandidate, TraceCandidates, TraceResult } from '../common/trace.type.ts';
-import { link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
+import { bundle, link, pick, pkg, trace } from '../test/utils/inspections.spec.util.ts';
 
 const E: GraphEdge[] = [
   { source: 'web', target: 'ui' },
@@ -38,7 +39,8 @@ describe('FEATURE: selectedOf', () => {
       { title: 'a package is inspected', inspection: pkg('web'), expected: 'web' },
       { title: 'a link is inspected', inspection: link('web', 'ui'), expected: null },
       { title: 'an end is being picked', inspection: pick('web', false), expected: null },
-      { title: 'a trace shows', inspection: trace('web', 'ui'), expected: null }
+      { title: 'a trace shows', inspection: trace('web', 'ui'), expected: null },
+      { title: 'a bundle is inspected', inspection: bundle('docs', collapsedIdOf('packages')), expected: null }
     ])('WHEN $title THEN the selected name is $expected', ({ inspection, expected }) => {
       const name = selectedOf(inspection);
 
@@ -67,6 +69,14 @@ describe('FEATURE: shownOf', () => {
 
     it('WHEN a package shows THEN it is the inspection itself', () => {
       const inspection = pkg('web');
+
+      const shown = shownOf(inspection, E, ALL);
+
+      expect(shown).toBe(inspection);
+    });
+
+    it('WHEN a bundle shows THEN it is the inspection itself', () => {
+      const inspection = bundle('docs', collapsedIdOf('packages'));
 
       const shown = shownOf(inspection, E, ALL);
 
