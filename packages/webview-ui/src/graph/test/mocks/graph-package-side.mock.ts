@@ -28,7 +28,7 @@ import { renderLocation, renderLocationLines } from '../../ui/location-elements.
 import { buildPage } from '../../ui/page-elements.ts';
 import { buildTaskControls, buildTaskRow } from '../../ui/task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from '../../ui/task-details-elements.ts';
-import { buildFolderRow, buildPackageButton } from '../../ui/widget-elements.ts';
+import { buildFolderRow, buildPackageButton, buildPackageToolbar } from '../../ui/widget-elements.ts';
 import { buildMenu } from '../../ui/widget-menu.ts';
 import type { PackageSideDepsMock } from '../common/graph-package-side.type.ts';
 import { HOME_CAMERA_STUB } from '../stubs/layout.stub.ts';
@@ -54,6 +54,7 @@ const LOCATION_VIEWS: LocationViews = { render: renderLocation, renderLines: ren
 const WIDGET_VIEWS: WidgetViews = {
   row: buildFolderRow,
   packageButton: buildPackageButton,
+  packageToolbar: buildPackageToolbar,
   menu: buildMenu,
   location: LOCATION_VIEWS
 };

@@ -92,7 +92,6 @@ export type MenuTarget = FolderMenuTarget | PackageMenuTarget;
 export type WidgetPlanInput = {
   readonly rects: WidgetRects;
   readonly bounds: LayerBounds;
-  readonly isGrouped: boolean;
   /** How many buttons the full node toolbar shows. */
   readonly toolbarCount: number;
 };
@@ -123,6 +122,12 @@ export type FolderRowElements = {
   readonly ellipsis: HTMLButtonElement;
 };
 
+/** The selected package's node toolbar: its root and the "…" it holds. */
+export type PackageToolbarElements = {
+  readonly root: HTMLElement;
+  readonly ellipsis: HTMLButtonElement;
+};
+
 /** The four buttons of a row; the glyph and badge are not buttons. */
 export type RowButtonKind = Exclude<keyof FolderRowElements, 'root'>;
 
@@ -143,6 +148,7 @@ export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
   readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
   readonly packageButton: (name: string) => HTMLButtonElement;
+  readonly packageToolbar: (name: string) => PackageToolbarElements;
   /** `label` is the menu's accessible name, the one its "…" has. */
   readonly menu: (model: MenuItemModel[], label: string) => MenuElements;
   readonly location: LocationViews;

@@ -3,8 +3,13 @@ import { textElement } from '../../shared/ui/text-element.ts';
 import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
-import type { FolderRowElements, RowKind } from '../common/widget.type.ts';
-import { folderActionsLabelOf, folderFocusLabelOf, packageActionsLabelOf } from '../utils/controls-text.util.ts';
+import type { FolderRowElements, PackageToolbarElements, RowKind } from '../common/widget.type.ts';
+import {
+  folderActionsLabelOf,
+  folderFocusLabelOf,
+  packageActionsLabelOf,
+  packageToolbarLabelOf
+} from '../utils/controls-text.util.ts';
 import { pluralOf } from '../utils/plural.util.ts';
 
 /** A 24 px icon button; the aria-label is its accessible name and its hover title. */
@@ -98,6 +103,17 @@ export const buildFolderRow = (kind: RowKind, title: string, count: number): Fol
   return row;
 };
 
+/** A node toolbar's hidden root: the toolbar of the selected node, named by `label`; only its buttons take pointer events. */
+const nodeToolbarRootOf = (modifier: 'package', label: string): HTMLElement => {
+  const root = textElement('div', `widget-toolbar widget-toolbar-${modifier}`, '');
+
+  root.setAttribute('role', 'toolbar');
+  root.setAttribute('aria-label', label);
+  root.hidden = true;
+
+  return root;
+};
+
 /** The selected package's "…", hidden until the layer places it. */
 export const buildPackageButton = (name: string): HTMLButtonElement => {
   const button = menuButton(packageActionsLabelOf(name));
@@ -106,4 +122,15 @@ export const buildPackageButton = (name: string): HTMLButtonElement => {
   button.hidden = true;
 
   return button;
+};
+
+/** The selected package's node toolbar, hidden until the layer places it: the "…" alone so far, which is its one Tab stop. */
+export const buildPackageToolbar = (name: string): PackageToolbarElements => {
+  const root = nodeToolbarRootOf('package', packageToolbarLabelOf(name));
+  const ellipsis = menuButton(packageActionsLabelOf(name));
+  const toolbar: PackageToolbarElements = { root, ellipsis };
+
+  root.append(ellipsis);
+
+  return toolbar;
 };

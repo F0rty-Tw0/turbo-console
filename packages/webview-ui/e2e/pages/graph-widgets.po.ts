@@ -28,10 +28,7 @@ type RowFrameOf = (zoom: number) => RowFrame;
 /** Where `panIntoOverlayMargin` leaves a node's right edge: inside the 16 px keep-clear margin left of the overlay. */
 const MARGIN_GAP_PX = 8;
 
-/** The keep-clear margin left of the overlay, less a pixel of rounding. */
-const CLEAR_MARGIN_PX = 15;
-
-/** The widget layer over the canvas: folder header rows, collapsed-node buttons and the selected package's "…". */
+/** The widget layer over the canvas: folder header rows, collapsed-node buttons and the selected package's node toolbar. */
 export class GraphWidgetsPage {
   public readonly layer: Locator;
 
@@ -135,16 +132,6 @@ export class GraphWidgetsPage {
     await expect(this.chevronOf(folder, isExpanded)).toBeFocused();
   }
 
-  /** The package "…" ends left of the open overlay with the keep-clear margin to spare. */
-  public async expectPackageButtonClear(name: string): Promise<void> {
-    await expect(this.packageButton(name)).toBeVisible();
-    await expect.poll(async (): Promise<number> => this.packageButtonGap(name)).toBeGreaterThanOrEqual(CLEAR_MARGIN_PX);
-  }
-
-  public async expectNoPackageButton(): Promise<void> {
-    await expect(this.layer.locator('.widget-package-button')).toHaveCount(0);
-  }
-
   public async expectNoRow(folder: string): Promise<void> {
     await expect(this.ellipsisOf(folder)).toHaveCount(0);
   }
@@ -180,13 +167,5 @@ export class GraphWidgetsPage {
     const zoom = await this.probe.zoom();
 
     return ellipsisFaultsOf(box, ellipsis, frameOf(zoom));
-  }
-
-  /** How far left of the overlay's left edge the package "…" ends. */
-  private async packageButtonGap(name: string): Promise<number> {
-    const button = await rectOf(this.packageButton(name));
-    const aside = await this.aside.evaluate(readRect);
-
-    return aside.left - (button.left + button.width);
   }
 }

@@ -41,6 +41,7 @@ const SELECTION_STOPS: FocusStep[] = tabStopsOf([
   'packages (7)',
   'Resize Controls',
   'Package graph',
+  'Actions for core',
   'Resize Details',
   'Clear selection',
   'View Package Details · 0 tasks',
@@ -169,7 +170,7 @@ test.describe('FEATURE: graph keyboard', () => {
   );
 
   test(
-    'GIVEN a selection made by tap and Fit focused, Tab walks the toolbar, the controls, the Controls sash, the container, the Details sash, then the details panel',
+    'GIVEN a selection made by tap and Fit focused, Tab walks the toolbar, the controls, the Controls sash, the container, the package toolbar, the Details sash, then the details panel',
     { annotation: AC7 },
     async ({ graphCanvas, graphHost, graphKeys, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -180,7 +181,7 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('AND the Fit button is focused', async (): Promise<void> => graphPage.focusButton('Fit'));
 
-      const walked = await test.step('WHEN Tab is pressed twenty-one times', async (): Promise<FocusStep[]> =>
+      const walked = await test.step('WHEN Tab is pressed twenty-two times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(SELECTION_STOPS));
 
       await test.step('THEN focus visited every stop in order', (): void => expect(walked).toEqual(SELECTION_STOPS));

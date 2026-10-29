@@ -27,7 +27,7 @@ const NO_RECTS: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected
 
 const inputOf = (rects: Partial<WidgetRects>, overrides: Partial<WidgetPlanInput> = {}): WidgetPlanInput => {
   const full: WidgetRects = { ...NO_RECTS, ...rects };
-  const input: WidgetPlanInput = { rects: full, bounds: BOUNDS, isGrouped: true, toolbarCount: 1, ...overrides };
+  const input: WidgetPlanInput = { rects: full, bounds: BOUNDS, toolbarCount: 1, ...overrides };
 
   return input;
 };
@@ -159,10 +159,10 @@ describe('FEATURE: widgetPlanOf', () => {
       expect(plan.nodeToolbar).toStrictEqual(rectOf(176, 52, 200, 76));
     });
 
-    it('WHEN flat THEN there is no node toolbar', () => {
-      const plan = widgetPlanOf(inputOf({ selected }, { isGrouped: false }));
+    it('WHEN flat, with no boxes, THEN its node toolbar sits 4 px above its top-right', () => {
+      const plan = widgetPlanOf(inputOf({ selected }));
 
-      expect(plan.nodeToolbar).toBeNull();
+      expect(plan.nodeToolbar).toStrictEqual(rectOf(176, 52, 200, 76));
     });
 
     it('WHEN the overlay starts at 150, left of its right edge THEN there is no node toolbar', () => {

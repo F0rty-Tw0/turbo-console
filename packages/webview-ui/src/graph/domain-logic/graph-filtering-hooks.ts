@@ -64,10 +64,9 @@ export const widgetsOf = (
   folders: FolderSource,
   controls: WidgetFilters
 ): WidgetWiring => {
-  const { page, view, widgetViews, overlay, isGrouped, canAct, canActOnPackage, onLocation } = deps;
+  const { page, view, widgetViews, overlay, canAct, canActOnPackage, onLocation } = deps;
   const state = (): WidgetState => {
     const current: WidgetState = {
-      isGrouped: isGrouped(),
       scene: folders.scene(),
       selectedPackage: inspection.selected(),
       focusedFolder: focusFolderOf(controls.applied)

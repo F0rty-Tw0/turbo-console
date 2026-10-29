@@ -11,8 +11,6 @@ import type { LayerBounds, MenuTarget, RectPx, WidgetViews } from './widget.type
 
 /** What the widget layer shows, read at each refresh. */
 export type WidgetState = {
-  /** The mode on screen is grouped. */
-  readonly isGrouped: boolean;
   readonly scene: FolderScene | null;
   readonly selectedPackage: string | null;
   /** The folder the filters focus, whose Focus folder button is pressed; `null` for a package focus or none. */
@@ -116,6 +114,14 @@ export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & M
 export type MenuAnchor = {
   readonly rect: RectPx;
   readonly opener: HTMLButtonElement | null;
+};
+
+/** What the package toolbar needs: the layer it leads, the container that takes focus it loses, the builder and the "…" click, already guarded. */
+export type PackageToolbarDeps = {
+  readonly layer: HTMLElement;
+  readonly container: HTMLElement;
+  readonly views: WidgetViews;
+  readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
 };
 
 /** What the header rows need: the layer, the builders and the four clicks, already guarded. */

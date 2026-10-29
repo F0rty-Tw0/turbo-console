@@ -10,7 +10,7 @@ import { stepItems, traceView } from './details-trace.ts';
 import { renderLocation, renderLocationLines } from './location-elements.ts';
 import { buildTaskControls, buildTaskRow } from './task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from './task-details-elements.ts';
-import { buildFolderRow, buildPackageButton } from './widget-elements.ts';
+import { buildFolderRow, buildPackageButton, buildPackageToolbar } from './widget-elements.ts';
 import { buildMenu } from './widget-menu.ts';
 import type { DetailsViews } from '../common/details.type.ts';
 import type { LocationViews } from '../common/location.type.ts';
@@ -38,6 +38,7 @@ const locationViews: LocationViews = { render: renderLocation, renderLines: rend
 export const widgetViews: WidgetViews = {
   row: buildFolderRow,
   packageButton: buildPackageButton,
+  packageToolbar: buildPackageToolbar,
   menu: buildMenu,
   location: locationViews
 };

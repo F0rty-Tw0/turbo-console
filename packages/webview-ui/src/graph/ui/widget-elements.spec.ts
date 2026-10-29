@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildFolderRow } from './widget-elements.ts';
-import type { FolderRowElements } from '../common/widget.type.ts';
+import { buildFolderRow, buildPackageToolbar } from './widget-elements.ts';
+import type { FolderRowElements, PackageToolbarElements } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 const classesOf = (parent: Element): string[] => {
@@ -194,6 +194,48 @@ describe('FEATURE: buildFolderRow', () => {
 
       expect(titleAttribute).toBe('apps');
       expect(badgeTitle).toBe('12 packages');
+    });
+  });
+});
+
+describe('FEATURE: buildPackageToolbar', () => {
+  beforeEach((): void => {
+    vi.stubGlobal('document', fakeDocumentMock());
+  });
+
+  afterEach((): void => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN the package toolbar of web', () => {
+    let toolbar: PackageToolbarElements;
+
+    beforeEach((): void => {
+      toolbar = buildPackageToolbar('web');
+    });
+
+    it('WHEN the root is read THEN it is a hidden toolbar named Package web', () => {
+      const { root } = toolbar;
+
+      expect(root.className).toBe('widget-toolbar widget-toolbar-package');
+      expect(root.getAttribute('role')).toBe('toolbar');
+      expect(root.getAttribute('aria-label')).toBe('Package web');
+      expect(root.hidden).toBe(true);
+    });
+
+    it('WHEN its children are read THEN they are the "…" alone', () => {
+      const children = Array.from(toolbar.root.children);
+
+      expect(children).toStrictEqual([toolbar.ellipsis]);
+    });
+
+    it('WHEN the "…" is read THEN it opens a menu, is named Actions for web and is the one Tab stop', () => {
+      const { ellipsis } = toolbar;
+
+      expect(ellipsis.getAttribute('aria-label')).toBe('Actions for web');
+      expect(ellipsis.title).toBe('Actions for web');
+      expect(ellipsis.getAttribute('aria-haspopup')).toBe('menu');
+      expect(ellipsis.tabIndex).toBe(0);
     });
   });
 });

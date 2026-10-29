@@ -234,7 +234,7 @@ p {
 .task-mode #graph-controls,
 .task-mode #graph-details,
 .task-mode .widget-row,
-.task-mode .widget-package-button:not(.task-widget-button) {
+.task-mode .widget-toolbar-package {
   display: none;
 }
 
@@ -413,6 +413,17 @@ p {
   position: absolute;
   top: 0;
   left: 0;
+}
+
+/* The selected node's toolbar; only its buttons take pointer events. */
+.widget-toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  gap: 4px;
+  height: 24px;
+  pointer-events: none;
 }
 
 /*

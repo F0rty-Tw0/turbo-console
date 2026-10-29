@@ -68,4 +68,21 @@ describe('FEATURE: graph.css widget rules', () => {
       }
     );
   });
+
+  describe('GIVEN the node toolbar rule', () => {
+    it.each(['position: absolute', 'display: flex', 'gap: 4px', 'pointer-events: none'])(
+      'WHEN it is read THEN it declares %s',
+      (expected) => {
+        const declarations = declarationsOf(css, '.widget-toolbar');
+
+        expect(declarations).toContain(expected);
+      }
+    );
+
+    it('WHEN the task-mode hiding rule is read THEN it lists the package toolbar', () => {
+      const declarations = declarationsOf(css, '.task-mode .widget-toolbar-package');
+
+      expect(declarations).toContain('display: none');
+    });
+  });
 });
