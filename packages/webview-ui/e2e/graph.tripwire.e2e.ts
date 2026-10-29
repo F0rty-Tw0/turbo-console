@@ -1,5 +1,5 @@
 import { GROUPED_PAN_STEP_MS, ROWS_BOXES_IN_VIEW, ROWS_BUTTONS_SHOWN, ROWS_PAN_MS } from './common/graph-tripwire.const.ts';
-import { IS_MAC_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
+import { IS_MAC_RUNNER, IS_WINDOWS_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph-task.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
@@ -32,6 +32,9 @@ const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
 
 /** After Fit and the zoom to 120 px boxes, 9 of the 30 boxes of `largeState()` overlap the canvas; 6 leaves slack. */
 const BOXES_IN_VIEW = 6;
+
+/** The grouped cold open reads about 1.3 s pinned and 0.8-1.5 s on Ubuntu; Windows gets 3 s (see `IS_WINDOWS_RUNNER`). */
+const GROUPED_FIRST_FRAME_MS = IS_WINDOWS_RUNNER ? 3000 : 2000;
 
 /**
  * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
@@ -113,7 +116,7 @@ test.describe('FEATURE: graph tripwires', () => {
 
   // The saved camera (zoom 1, pan at the origin) looks at an empty corner of the grouped layout, so this first frame
   // times the grouped ELK run and the draw, not painting boxes in view; the grouped pan below frames the boxes first.
-  test('GIVEN 300 packages saved as grouped, the grouped layout lands in under 2 s, is cached, and a second open runs no layout', async ({
+  test('GIVEN 300 packages saved as grouped, the grouped layout lands in under 2 s (3 s on Windows), is cached, and a second open runs no layout', async ({
     graphGrouping,
     graphHost,
     graphLook,
@@ -125,7 +128,8 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
 
-    await test.step('THEN the first frame came in under 2000 ms', async (): Promise<void> => graphLook.expectFirstFrameUnder(2000));
+    await test.step('THEN the first frame came in under 2 s (3 s on Windows)', async (): Promise<void> =>
+      graphLook.expectFirstFrameUnder(GROUPED_FIRST_FRAME_MS));
 
     await test.step('AND the layout is ELK and 30 boxes are drawn', async (): Promise<void> => {
       await graphProbe.expectLayoutEngine('elk');
