@@ -22,7 +22,7 @@ test.describe("FEATURE: the selected task's node toolbar", () => {
       await test.step('WHEN app#build is tapped', async (): Promise<void> => graphCanvas.tapNode('app#build'));
 
       await test.step('THEN its toolbar is above app#build', async (): Promise<void> =>
-        graphTaskToolbar.expectTaskToolbarOn('app#build', 'above'));
+        graphTaskToolbar.expectNodeToolbarOn('app#build', 'above'));
 
       await test.step('AND it holds only the "…"', async (): Promise<void> =>
         graphTaskToolbar.expectToolbarButtons('app#build', ['Actions for app#build']));
@@ -45,7 +45,7 @@ test.describe("FEATURE: the selected task's node toolbar", () => {
       await test.step('AND lib#build is tapped', async (): Promise<void> => graphCanvas.tapNode('lib#build'));
 
       await test.step('THEN the one task toolbar sits above lib#build', async (): Promise<void> =>
-        graphTaskToolbar.expectTaskToolbarOn('lib#build', 'above'));
+        graphTaskToolbar.expectNodeToolbarOn('lib#build', 'above'));
     }
   );
 });

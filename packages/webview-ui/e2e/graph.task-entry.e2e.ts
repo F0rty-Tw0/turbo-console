@@ -120,7 +120,7 @@ test.describe('FEATURE: the task "…" menu and leaving a cold task mode', () =>
       await test.step('WHEN app#build is tapped', async (): Promise<void> => graphCanvas.tapNode('app#build'));
 
       await test.step('THEN its toolbar sits above it', async (): Promise<void> =>
-        graphTaskToolbar.expectTaskToolbarOn('app#build', 'above'));
+        graphTaskToolbar.expectNodeToolbarOn('app#build', 'above'));
 
       await test.step('WHEN its "…" is pressed', async (): Promise<void> => graphTask.menu('app#build'));
 
