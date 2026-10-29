@@ -1,11 +1,12 @@
 import { GROUPED_PAN_STEP_MS, ROWS_BOXES_IN_VIEW, ROWS_BUTTONS_SHOWN, ROWS_PAN_MS } from './common/graph-tripwire.const.ts';
 import { IS_MAC_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
-import { test } from './graph.fixture.ts';
+import { test } from './graph-task.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
+import { groupedToolbarLabelsOf } from './test/utils/graph-toolbar-pan.spec.util.ts';
 import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
@@ -196,10 +197,11 @@ test.describe('FEATURE: graph tripwires', () => {
       graphCanvas.expectPanCpuUnder(GROUPED_PAN_MS, GROUPED_PAN_STEP_MS));
   });
 
-  test('GIVEN 300 packages grouped and zoomed until header rows show, a scripted 2 s pan uses under 2.4 s of main-thread CPU (4.8 s on macOS) and no step over 50 ms (90 ms on macOS)', async ({
+  test('GIVEN 300 packages grouped, zoomed until header rows show and one package selected with its full toolbar, a scripted 2 s pan uses under 2.4 s of main-thread CPU (4.8 s on macOS) and no step over 50 ms (90 ms on macOS)', async ({
     graphCanvas,
     graphGrouping,
     graphHost,
+    graphNodeToolbar,
     graphPage,
     graphProbe,
     graphWidgets
@@ -230,7 +232,25 @@ test.describe('FEATURE: graph tripwires', () => {
       await graphGrouping.expectBoxesInView(ROWS_BOXES_IN_VIEW);
     });
 
-    await test.step('AND it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
+    const name = await test.step('WHEN a package in view is tapped', async (): Promise<string> =>
+      graphNodeToolbar.tapFirstNodeInView());
+
+    const labels = groupedToolbarLabelsOf(largeState(), name);
+
+    await test.step('THEN its node is still 130 px inside the container, clear for the pan', async (): Promise<void> =>
+      graphNodeToolbar.expectNodeClearForPan(name));
+
+    await test.step('AND its toolbar is in view', async (): Promise<void> => graphNodeToolbar.expectNodeToolbarInView(name));
+
+    await test.step('AND its toolbar shows Focus, Start trace, Collapse folder and the "…"', async (): Promise<void> =>
+      graphNodeToolbar.expectToolbarButtons(name, labels));
+
+    await test.step('AND at least 4 header buttons and 2 boxes are still in view', async (): Promise<void> => {
+      await graphWidgets.expectHeaderButtonsShown(ROWS_BUTTONS_SHOWN);
+      await graphGrouping.expectBoxesInView(ROWS_BOXES_IN_VIEW);
+    });
+
+    await test.step('WHEN it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
       const spot = await graphGrouping.freeSpot();
 
       await graphCanvas.scriptedPan(30, 120, spot);
@@ -238,6 +258,8 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('THEN the pan used under its CPU and step budgets', (): void =>
       graphCanvas.expectPanCpuUnder(ROWS_PAN_MS, GROUPED_PAN_STEP_MS));
+
+    await test.step('AND its toolbar is still in view', async (): Promise<void> => graphNodeToolbar.expectNodeToolbarInView(name));
   });
 
   test(
