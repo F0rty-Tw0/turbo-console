@@ -157,7 +157,7 @@ const sceneWithout = (hidden: string[]): FolderScene => {
 };
 
 describe('FEATURE: recheckInspection of a bundle', () => {
-  describe('GIVEN a filter change that leaves a bundled link', () => {
+  describe('GIVEN a scene that still draws the bundled link', () => {
     it.each([
       { title: 'its link is still drawn', scene: PACKAGES_SCENE },
       { title: 'a hidden end of one bundled link leaves the other link', scene: sceneWithout(['@acme/ui']) }
@@ -168,7 +168,7 @@ describe('FEATURE: recheckInspection of a bundle', () => {
     });
   });
 
-  describe('GIVEN a filter change that takes the bundled link away', () => {
+  describe('GIVEN a scene without the bundled link', () => {
     it.each([
       { title: 'the folder was expanded', current: BUNDLE_DOCS, scene: sceneOf(BOARDS_INFOS, BOARDS_EDGES, {}) },
       { title: 'the scene is null', current: BUNDLE_DOCS, scene: null },
