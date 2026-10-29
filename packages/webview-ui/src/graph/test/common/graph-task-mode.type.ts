@@ -11,6 +11,7 @@ import type { PageElements } from '../../common/page-elements.type.ts';
 import type { AtomCanvas, TaskCanvas } from '../../common/task-canvas.type.ts';
 import type { TaskControls, TaskControlsElements, TaskControlsRow, TaskControlsViews } from '../../common/task-controls.type.ts';
 import type { TaskDetails, TaskDetailsView, TaskDetailsViews } from '../../common/task-details.type.ts';
+import type { TaskToolbarElements } from '../../common/task-toolbar.type.ts';
 import type { MenuElements } from '../../common/widget-menu.type.ts';
 import type { WidgetViews } from '../../common/widget.type.ts';
 
@@ -72,12 +73,12 @@ export type TaskControlsViewsMock = {
   readonly rows: TaskControlsRow[];
 };
 
-/** The real page and "…" builders, recording every button and menu they build. */
+/** The real page and task toolbar builders, recording every toolbar and menu they build. */
 export type TaskWidgetViewsMock = {
   readonly page: PageElements;
-  readonly views: Pick<WidgetViews, 'packageButton' | 'menu'>;
-  /** The "…" buttons built so far, the latest last. */
-  readonly buttons: HTMLButtonElement[];
+  readonly views: Pick<WidgetViews, 'taskToolbar' | 'menu'>;
+  /** The task toolbars built so far, the latest last. */
+  readonly toolbars: TaskToolbarElements[];
   /** The menus built so far, the latest last. */
   readonly menus: MenuElements[];
 };

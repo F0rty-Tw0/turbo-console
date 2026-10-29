@@ -191,13 +191,11 @@ export const menuFaultsOf = (menu: ElementRect, container: ElementRect, areaRigh
 };
 
 /**
- * Runs in the page through `evaluate`: each shown row, package "…" or node toolbar translated by, or an unscaled row as wide as, a
+ * Runs in the page through `evaluate`: each shown row or node toolbar translated by, or an unscaled row as wide as, a
  * fraction of a pixel; a scaled row's CSS width is whole only once scaled.
  */
 export const fractionalPlacementsOf = (layer: Element): string[] => {
-  const placed = layer.querySelectorAll<HTMLElement>(
-    '.widget-row:not([hidden]), .widget-package-button:not([hidden]), .widget-toolbar:not([hidden])'
-  );
+  const placed = layer.querySelectorAll<HTMLElement>('.widget-row:not([hidden]), .widget-toolbar:not([hidden])');
   const placementOf = (element: HTMLElement): string => {
     const { transform, width } = element.style;
     const isScaled = transform.includes('scale(');

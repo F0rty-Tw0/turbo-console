@@ -1,6 +1,6 @@
 import type { Locator } from '@playwright/test';
 
-import { expect, test } from './graph-task.fixture.ts';
+import { expect, test } from './graph-toolbar.fixture.ts';
 import { TASK_MODE_NEW_HASH_STUB, TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { overCapTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
@@ -116,11 +116,11 @@ test.describe('FEATURE: the task "…" menu and leaving a cold task mode', () =>
   test(
     'GIVEN app#build selected, Run in its "…" menu posts runTask',
     { annotation: TASK_MENU },
-    async ({ graphCanvas, graphMenus, graphTask, graphTaskHost }): Promise<void> => {
+    async ({ graphCanvas, graphMenus, graphTask, graphTaskHost, graphTaskToolbar }): Promise<void> => {
       await test.step('WHEN app#build is tapped', async (): Promise<void> => graphCanvas.tapNode('app#build'));
 
-      await test.step('THEN its "…" sits on its top-right corner', async (): Promise<void> =>
-        graphTask.expectMenuButtonOnCorner('app#build'));
+      await test.step('THEN its toolbar sits above it', async (): Promise<void> =>
+        graphTaskToolbar.expectNodeToolbarOn('app#build', 'above'));
 
       await test.step('WHEN its "…" is pressed', async (): Promise<void> => graphTask.menu('app#build'));
 

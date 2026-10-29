@@ -37,9 +37,6 @@ export const TASK_LINK_CLASS = 'task-link';
 /** The `main.graph-page` class while task mode is on; CSS hides the package Controls panel and the package widgets by it. */
 export const TASK_MODE_CLASS = 'task-mode';
 
-/** The class of the selected task's "…", which task mode keeps while it hides the package "…". */
-export const TASK_WIDGET_CLASS = 'task-widget-button';
-
 /** The id of the task mode Controls panel, which the Controls button points at while task mode is on. */
 export const TASK_CONTROLS_ID = 'graph-task-controls';
 

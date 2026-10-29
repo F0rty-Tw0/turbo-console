@@ -2,9 +2,9 @@ import {
   buttonRectsOf,
   isWidgetShown,
   nodeToolbarCountAt,
-  nodeToolbarRectOf,
   rowPlacementOf,
-  rowRectOf
+  rowRectOf,
+  shownNodeToolbarOf
 } from './widget-geometry.util.ts';
 import { ROW_FOCUS_MIN_PX } from '../common/graph.const.ts';
 import type { FolderRect, RectPx, RowKind, RowPlan, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
@@ -52,15 +52,10 @@ const nodeToolbarOf = (input: WidgetPlanInput, rows: RowPlan[]): RectPx | null =
 
   if (selected === null) return null;
 
-  const isNodeShown = isWidgetShown(selected, input.bounds);
-
-  if (!isNodeShown) return null;
-
   const count = nodeToolbarCountAt(zoom, input.toolbarCount);
-  const rect = nodeToolbarRectOf(selected, count, rows.map(rowRectOfPlan));
-  const isShown = isWidgetShown(rect, input.bounds);
+  const rowRects = rows.map(rowRectOfPlan);
 
-  return isShown ? rect : null;
+  return shownNodeToolbarOf(selected, count, rowRects, input.bounds);
 };
 
 /** One positioning pass: a row per box, then per collapsed node, that has a shown button, and the node toolbar. */

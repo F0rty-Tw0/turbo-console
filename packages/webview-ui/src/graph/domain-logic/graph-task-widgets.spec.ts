@@ -3,10 +3,11 @@ import type { Mocked } from 'vitest';
 
 import { GraphTaskWidgets } from './graph-task-widgets.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
+import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
-import { TASK_WIDGET_CLASS } from '../common/graph-task.const.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import type { TaskDetailsModel, TaskWidgetsDeps } from '../common/task-details.type.ts';
+import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
 import type { MenuElements } from '../common/widget-menu.type.ts';
 import type { RectPx, WidgetRects } from '../common/widget.type.ts';
 import type { TickRunner } from '../test/common/tick-observer.type.ts';
@@ -26,8 +27,8 @@ type WidgetsRig = {
   readonly bridge: Mocked<Bridge>;
   /** The task details panel, its left edge at `PANEL_LEFT`. */
   readonly aside: HTMLElement;
-  /** The "…" buttons built so far, the latest last. */
-  readonly buttons: HTMLButtonElement[];
+  /** The task toolbars built so far, the latest last. */
+  readonly toolbars: TaskToolbarElements[];
   /** The menus built so far, the latest last. */
   readonly menus: MenuElements[];
   readonly widgetsOf: (isOverlay: boolean) => GraphTaskWidgets;
@@ -44,13 +45,17 @@ const CANVAS_HEIGHT = 300;
 
 const PANEL_LEFT = 300;
 
-/** `a#build` drawn left of the panel: its "…" clear of it. */
+/** `a#build` drawn left of the panel: its toolbar clear of it. */
 const LEFT_RECT: RectPx = { x1: 100, y1: 50, x2: 180, y2: 80 };
 
-/** `a#build` drawn across the panel's left edge: its "…" under it. */
+/** `a#build` drawn across the panel's left edge: its toolbar under it. */
 const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
 
 const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
+
+const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
+
+const NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: NOT_RUNNABLE_TASK, state: null };
 
 const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
 
@@ -66,7 +71,7 @@ const rigOf = (): WidgetsRig => {
   vi.stubGlobal('ResizeObserver', tickObserverMock(asideResizes));
   vi.stubGlobal('MutationObserver', tickObserverMock([]));
 
-  const { page, views, buttons, menus } = taskWidgetViewsMock();
+  const { page, views, toolbars, menus } = taskWidgetViewsMock();
   const view = graphViewMock(HOME_CAMERA_STUB);
   const bridge: Mocked<Bridge> = { ready: vi.fn(), post: vi.fn(), onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
   const aside = document.createElement('aside');
@@ -97,20 +102,20 @@ const rigOf = (): WidgetsRig => {
   setBox(aside, PANEL_LEFT, 100, CANVAS_HEIGHT);
   view.widgetRects.mockReturnValue(rectsOf(LEFT_RECT));
 
-  const rig: WidgetsRig = { page, view, bridge, aside, buttons, menus, widgetsOf, flipOverlay: overlay.flip, setActive, resizeAside };
+  const rig: WidgetsRig = { page, view, bridge, aside, toolbars, menus, widgetsOf, flipOverlay: overlay.flip, setActive, resizeAside };
 
   return rig;
 };
 
-/** The task "…" buttons on the layer. */
-const taskButtonsOf = (rig: WidgetsRig): HTMLButtonElement[] =>
-  rig.buttons.filter((button) => button.isConnected && button.className.includes(TASK_WIDGET_CLASS));
+/** The task toolbars' roots on the layer. */
+const taskToolbarsOf = (rig: WidgetsRig): HTMLElement[] =>
+  rig.toolbars.map(({ root }): HTMLElement => root).filter((root): boolean => root.isConnected);
 
-/** Opens the menu of the shown task "…" and hands back its Stop item. */
+/** Opens the menu of the shown task toolbar's "…" and hands back its Stop item. */
 const stopItemOf = (rig: WidgetsRig): HTMLElement | undefined => {
-  const [button] = taskButtonsOf(rig);
+  const [toolbar] = rig.toolbars.filter(({ root }): boolean => root.isConnected);
 
-  button?.click();
+  toolbar?.ellipsis.click();
 
   const [menu] = rig.menus;
 
@@ -137,43 +142,63 @@ describe('FEATURE: GraphTaskWidgets', () => {
       widgets.show(RUNNING);
     });
 
-    it('WHEN a#build is shown running THEN one shown task "…" sits on the layer', () => {
-      const buttons = taskButtonsOf(rig);
+    it('WHEN a#build is shown running THEN one shown task toolbar sits on the layer', () => {
+      const toolbars = taskToolbarsOf(rig);
 
-      expect(buttons).toHaveLength(1);
-      expect(buttons[0]?.hidden).toBe(false);
+      expect(toolbars).toHaveLength(1);
+      expect(toolbars[0]?.hidden).toBe(false);
     });
 
-    it('WHEN a#build is shown again THEN its "…" is kept', () => {
-      const [before] = taskButtonsOf(rig);
+    it('WHEN a#build is drawn THEN its toolbar sits above its top-right corner', () => {
+      const [toolbar] = taskToolbarsOf(rig);
+
+      expect(toolbar?.style.transform).toBe('translate(156px, 22px)');
+    });
+
+    it('WHEN a#build is drawn near the layer top THEN its toolbar flips below it', () => {
+      rig.view.widgetRects.mockReturnValue(rectsOf({ x1: 100, y1: 10, x2: 180, y2: 40 }));
+      widgets.rendered();
+
+      expect(taskToolbarsOf(rig)[0]?.style.transform).toBe('translate(156px, 44px)');
+    });
+
+    it('WHEN a#build itself is drawn outside the layer THEN no toolbar shows', () => {
+      rig.view.widgetRects.mockReturnValue(rectsOf({ x1: 100, y1: 310, x2: 180, y2: 340 }));
+      widgets.rendered();
+
+      expect(taskToolbarsOf(rig)[0]?.hidden).toBe(true);
+    });
+
+    it('WHEN a#build is shown again THEN its toolbar is kept', () => {
+      const [before] = taskToolbarsOf(rig);
 
       widgets.show({ ...RUNNING, state: 'passed' });
 
-      expect(taskButtonsOf(rig)).toStrictEqual([before]);
+      expect(taskToolbarsOf(rig)).toStrictEqual([before]);
     });
 
-    it('WHEN api#build is shown instead THEN the a#build "…" goes and one other takes its place', () => {
-      const [before] = taskButtonsOf(rig);
+    it('WHEN api#build is shown instead THEN the a#build toolbar goes and one other takes its place', () => {
+      const [before] = taskToolbarsOf(rig);
 
       widgets.show(API_RUNNING);
 
-      const after = taskButtonsOf(rig);
+      const after = taskToolbarsOf(rig);
 
       expect(after).toHaveLength(1);
       expect(after[0]).not.toBe(before);
     });
 
-    it('WHEN the selection clears THEN no task "…" is left', () => {
+    it('WHEN the selection clears THEN no task toolbar is left', () => {
       widgets.show(null);
 
-      expect(taskButtonsOf(rig)).toHaveLength(0);
+      expect(taskToolbarsOf(rig)).toHaveLength(0);
     });
 
-    it('WHEN a#build is drawn across the panel edge THEN its "…" still shows', () => {
+    it('WHEN a#build is drawn across the panel edge THEN its toolbar still shows', () => {
       rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
       widgets.rendered();
 
-      expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
+      expect(taskToolbarsOf(rig)[0]?.hidden).toBe(false);
     });
 
     it('WHEN the a#build "…" opens its menu and Stop is clicked THEN stopTask is posted', () => {
@@ -220,16 +245,16 @@ describe('FEATURE: GraphTaskWidgets', () => {
       widgets.show(RUNNING);
     });
 
-    it('WHEN the panel turns to overlay THEN the camera pans a#build and its "…" left of the panel, by a margin', () => {
+    it('WHEN the panel turns to overlay THEN the camera pans a#build and its toolbar left of the panel, by a margin', () => {
       rig.flipOverlay(true);
 
-      expect(rig.view.panBy).toHaveBeenCalledExactlyOnceWith(PANEL_LEFT - 16 - (UNDER_RECT.x2 + 12));
+      expect(rig.view.panBy).toHaveBeenCalledExactlyOnceWith(PANEL_LEFT - 16 - UNDER_RECT.x2);
     });
 
-    it('WHEN the panel turns to overlay THEN the "…" hides under it until the camera moves', () => {
+    it('WHEN the panel turns to overlay THEN the toolbar hides under it until the camera moves', () => {
       rig.flipOverlay(true);
 
-      expect(taskButtonsOf(rig)[0]?.hidden).toBe(true);
+      expect(taskToolbarsOf(rig)[0]?.hidden).toBe(true);
     });
 
     it('WHEN task mode is left, entered again and the panel turns to overlay THEN the camera pans once', () => {
@@ -240,21 +265,21 @@ describe('FEATURE: GraphTaskWidgets', () => {
       expect(rig.view.panBy).toHaveBeenCalledOnce();
     });
 
-    it('WHEN task mode is off and the panel turns to overlay THEN the camera stays and the "…" is left as it was', () => {
+    it('WHEN task mode is off and the panel turns to overlay THEN the camera stays and the toolbar is left as it was', () => {
       rig.setActive(false);
       rig.flipOverlay(true);
 
       expect(rig.view.panBy).not.toHaveBeenCalled();
-      expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
+      expect(taskToolbarsOf(rig)[0]?.hidden).toBe(false);
     });
 
-    it('WHEN task mode is off, the panel turns to overlay and task mode is on again THEN the "…" hides on the next frame', () => {
+    it('WHEN task mode is off, the panel turns to overlay and task mode is on again THEN the toolbar hides on the next frame', () => {
       rig.setActive(false);
       rig.flipOverlay(true);
       rig.setActive(true);
       widgets.rendered();
 
-      expect(taskButtonsOf(rig)[0]?.hidden).toBe(true);
+      expect(taskToolbarsOf(rig)[0]?.hidden).toBe(true);
     });
   });
 
@@ -266,24 +291,24 @@ describe('FEATURE: GraphTaskWidgets', () => {
       widgets.show(RUNNING);
     });
 
-    it('WHEN a#build is drawn left of the panel THEN its "…" shows', () => {
-      expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
+    it('WHEN a#build is drawn left of the panel THEN its toolbar shows', () => {
+      expect(taskToolbarsOf(rig)[0]?.hidden).toBe(false);
     });
 
-    it('WHEN a#build is drawn across the panel edge THEN its "…" hides', () => {
+    it('WHEN a#build is drawn across the panel edge THEN its toolbar hides', () => {
       rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
       widgets.rendered();
 
-      expect(taskButtonsOf(rig)[0]?.hidden).toBe(true);
+      expect(taskToolbarsOf(rig)[0]?.hidden).toBe(true);
     });
 
-    it('WHEN a#build is drawn across the panel edge and the panel then narrows THEN its "…" shows', () => {
+    it('WHEN a#build is drawn across the panel edge and the panel then narrows THEN its toolbar shows', () => {
       rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
       widgets.rendered();
       setBox(rig.aside, CANVAS_WIDTH - 20, 100, CANVAS_HEIGHT);
       rig.resizeAside();
 
-      expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
+      expect(taskToolbarsOf(rig)[0]?.hidden).toBe(false);
     });
 
     describe('WHEN a#build is drawn across the panel edge and the selection keeps clear', () => {
@@ -293,15 +318,36 @@ describe('FEATURE: GraphTaskWidgets', () => {
         widgets.keepClear();
       });
 
-      it('THEN the camera pans a#build and its "…" left of the panel, by a margin', () => {
-        const buttonRight = UNDER_RECT.x2 + 12;
-
-        expect(rig.view.panBy).toHaveBeenCalledExactlyOnceWith(PANEL_LEFT - 16 - buttonRight);
+      it('THEN the camera pans a#build and its toolbar left of the panel, by a margin', () => {
+        expect(rig.view.panBy).toHaveBeenCalledExactlyOnceWith(PANEL_LEFT - 16 - UNDER_RECT.x2);
       });
 
       it('THEN the anchor read is a#build', () => {
         expect(rig.view.anchorBox).toHaveBeenCalledExactlyOnceWith(['a#build']);
       });
+    });
+
+    it('WHEN a#build fits beside the panel but its toolbar does not and the selection keeps clear THEN the camera stays', () => {
+      const narrow: RectPx = { x1: 40, y1: 50, x2: 60, y2: 80 };
+
+      setBox(rig.aside, 54, 100, CANVAS_HEIGHT);
+      rig.view.widgetRects.mockReturnValue(rectsOf(narrow));
+      rig.view.anchorBox.mockReturnValue({ x1: narrow.x1, x2: narrow.x2 });
+      widgets.keepClear();
+
+      expect(rig.view.panBy).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a#build has no toolbar, as its menu is empty, and the selection keeps clear THEN the camera pans a#build alone', () => {
+      const narrow: RectPx = { x1: 40, y1: 50, x2: 60, y2: 80 };
+
+      widgets.show(NOT_RUNNABLE_IDLE);
+      setBox(rig.aside, 54, 100, CANVAS_HEIGHT);
+      rig.view.widgetRects.mockReturnValue(rectsOf(narrow));
+      rig.view.anchorBox.mockReturnValue({ x1: narrow.x1, x2: narrow.x2 });
+      widgets.keepClear();
+
+      expect(rig.view.panBy).toHaveBeenCalledExactlyOnceWith(54 - 16 - narrow.x2);
     });
 
     it('WHEN the panel is closed and the selection keeps clear THEN the camera stays', () => {

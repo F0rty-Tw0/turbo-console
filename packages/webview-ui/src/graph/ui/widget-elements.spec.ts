@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildFolderRow, buildPackageToolbar } from './widget-elements.ts';
+import { buildFolderRow, buildPackageToolbar, buildTaskToolbar } from './widget-elements.ts';
 import { START_TRACE_TITLE } from '../common/details.const.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
+import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
 import type { FolderRowElements, PackageToolbarElements } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { toolbarButtonsOf } from '../test/utils/package-toolbar.spec.util.ts';
@@ -302,6 +303,48 @@ describe('FEATURE: buildPackageToolbar', () => {
       const toolbar = buildPackageToolbar('web', folderTitleOf(''));
 
       expect(toolbar.collapse?.getAttribute('aria-label')).toBe('Collapse folder (root)');
+    });
+  });
+});
+
+describe('FEATURE: buildTaskToolbar', () => {
+  beforeEach((): void => {
+    vi.stubGlobal('document', fakeDocumentMock());
+  });
+
+  afterEach((): void => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN the task toolbar of app#build', () => {
+    let toolbar: TaskToolbarElements;
+
+    beforeEach((): void => {
+      toolbar = buildTaskToolbar('app#build');
+    });
+
+    it('WHEN the root is read THEN it is a hidden toolbar named Task app#build', () => {
+      const { root } = toolbar;
+
+      expect(root.className).toBe('widget-toolbar widget-toolbar-task');
+      expect(root.getAttribute('role')).toBe('toolbar');
+      expect(root.getAttribute('aria-label')).toBe('Task app#build');
+      expect(root.hidden).toBe(true);
+    });
+
+    it('WHEN its children are read THEN they are the "…" alone', () => {
+      const children = Array.from(toolbar.root.children);
+
+      expect(children).toStrictEqual([toolbar.ellipsis]);
+    });
+
+    it('WHEN the "…" is read THEN it is named Actions for app#build and opens a menu', () => {
+      const { ellipsis } = toolbar;
+
+      expect(ellipsis.getAttribute('aria-label')).toBe('Actions for app#build');
+      expect(ellipsis.title).toBe('Actions for app#build');
+      expect(ellipsis.getAttribute('aria-haspopup')).toBe('menu');
+      expect(ellipsis.tabIndex).toBe(0);
     });
   });
 });

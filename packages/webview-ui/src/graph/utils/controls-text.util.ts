@@ -48,6 +48,9 @@ export const packageActionsLabelOf = (name: string): string => `Actions for ${na
 /** The accessible name of the selected package's node toolbar. */
 export const packageToolbarLabelOf = (name: string): string => `Package ${name}`;
 
+/** The accessible name of the selected task's node toolbar. */
+export const taskToolbarLabelOf = (id: string): string => `Task ${id}`;
+
 /** The accessible name of the target's "…" and of the menu it opens. */
 export const actionsLabelOf = (target: MenuTarget): string => {
   if (target.kind === 'package') return packageActionsLabelOf(target.name);

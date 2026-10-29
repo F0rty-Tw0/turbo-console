@@ -1,5 +1,6 @@
+import { placeToolbarRoot } from './node-toolbar-place.ts';
 import { writeStops } from './roving-stop.ts';
-import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
+import { setHidden } from './widget-row-place.ts';
 import type { PackageToolbarElements, PackageToolbarKind, RectPx, ToolbarEntry } from '../common/widget.type.ts';
 import {
   TOOLBAR_ORDER,
@@ -37,23 +38,11 @@ const placeButtons = (entry: ToolbarEntry, zoom: number): void => {
   if (isLostFocus) elements.ellipsis.focus();
 };
 
-/** Hands the focus to `container` when it is inside `root`, since the browser would drop it on the body once `root` goes. */
-export const releaseFocusOf = (root: HTMLElement, container: HTMLElement): void => {
-  const hasFocus = root.contains(root.ownerDocument.activeElement);
-
-  if (hasFocus) container.focus();
-};
-
 /** Shows the toolbar at `rect` on whole px with the buttons the zoom allows, or hides it for `null`; focus inside a toolbar that hides goes to `container`. */
 export const placeToolbar = (entry: ToolbarEntry, rect: RectPx | null, zoom: number, container: HTMLElement): void => {
-  const { root } = entry.elements;
-
-  if (rect === null) releaseFocusOf(root, container);
-
-  setHidden(root, rect === null);
+  placeToolbarRoot(entry.elements.root, rect, container);
 
   if (rect === null) return;
 
-  writeStyle(root, 'transform', translateOf(rect.x1, rect.y1));
   placeButtons(entry, zoom);
 };

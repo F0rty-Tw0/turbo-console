@@ -8,9 +8,9 @@ import {
   nodeToolbarCountAt,
   nodeToolbarRectOf,
   overlayLeftOf,
-  packageButtonRectOf,
   rowPlacementOf,
-  rowRectOf
+  rowRectOf,
+  shownNodeToolbarOf
 } from './widget-geometry.util.ts';
 import { COLLAPSED_NODE_WIDTH } from '../common/graph.const.ts';
 import type { FolderRect, LayerBounds, RectPx, RowButtonRects, RowPlacement } from '../common/widget.type.ts';
@@ -186,18 +186,6 @@ describe('FEATURE: buttonRectsOf', () => {
   });
 });
 
-describe('FEATURE: packageButtonRectOf', () => {
-  describe('GIVEN a node box', () => {
-    it('WHEN the button is placed THEN it is a 24 px square centred on the top-right corner', () => {
-      const box = rectOf(10, 20, 110, 50);
-
-      const rect = packageButtonRectOf(box);
-
-      expect(rect).toStrictEqual(rectOf(98, 8, 122, 32));
-    });
-  });
-});
-
 describe('FEATURE: isNodeToolbarCompact', () => {
   it.each([
     { zoom: 0.49, expected: true },
@@ -350,5 +338,23 @@ describe('FEATURE: ellipsisSlotOf', () => {
 
   it('GIVEN a one-button toolbar WHEN the slot is taken THEN it is the toolbar itself', () => {
     expect(ellipsisSlotOf(rectOf(156, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+  });
+});
+
+describe('FEATURE: shownNodeToolbarOf', () => {
+  const bounds: LayerBounds = { width: 400, height: 300, overlayLeft: null };
+
+  it.each([
+    { title: 'inside the layer', node: rectOf(100, 50, 180, 80), rows: [], expected: rectOf(156, 22, 180, 46) },
+    { title: 'outside the layer', node: rectOf(500, 50, 580, 80), rows: [], expected: null },
+    { title: 'below the layer', node: rectOf(100, 310, 180, 340), rows: [], expected: null },
+    {
+      title: 'at the layer bottom with a header row above it, so its toolbar flips out of the layer',
+      node: rectOf(100, 290, 180, 320),
+      rows: [rectOf(100, 260, 400, 288)],
+      expected: null
+    }
+  ])('GIVEN one button WHEN the node is $title THEN the toolbar rect is $expected', ({ node, rows, expected }): void => {
+    expect(shownNodeToolbarOf(node, 1, rows, bounds)).toStrictEqual(expected);
   });
 });

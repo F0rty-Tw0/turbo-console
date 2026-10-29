@@ -106,6 +106,7 @@ describe('FEATURE: PackageToolbar', () => {
   describe('GIVEN the "…" of the web toolbar has focus', () => {
     beforeEach((): void => {
       rig.toolbar.sync('web', null, NO_TASKS);
+      rig.toolbar.place(AT_WEB, 1);
       rig.toolbar.ellipsis()?.focus();
     });
 

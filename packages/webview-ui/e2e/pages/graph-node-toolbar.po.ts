@@ -32,6 +32,9 @@ const ariaLabelsOf = (buttons: Element[]): (string | null)[] =>
 
 /** The selected node's toolbar: where it sits beside its node. */
 export class GraphNodeToolbar extends GraphWidgetsPage {
+  /** The CSS selector of the toolbar root this page object reads. */
+  protected readonly toolbarSelector: string = '.widget-toolbar-package';
+
   public toolbarOf(name: string): Locator {
     return this.layer.getByRole('toolbar', { name: packageToolbarLabelOf(name), exact: true });
   }
@@ -48,13 +51,13 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     for (let frame = 0; frame < SETTLE_FRAMES; frame += 1) await this.page.evaluate(ONE_FRAME);
   }
 
-  /** Exactly one package toolbar, its right edge on the selected package's, 4 px above or below the node's drawn box. */
+  /** Exactly one toolbar of this kind, its right edge on the selected node's, 4 px above or below the node's drawn box. */
   public async expectNodeToolbarOn(name: string, side: NodeToolbarSide): Promise<void> {
-    await expect(this.layer.locator('.widget-toolbar-package')).toHaveCount(1);
+    await expect(this.layer.locator(this.toolbarSelector)).toHaveCount(1);
     await expect.poll(async (): Promise<string[]> => this.nodeToolbarFaults(name, side)).toEqual([]);
   }
 
-  /** No node toolbar is in the layer. */
+  /** No node toolbar of any kind, package or task, is in the layer. */
   public async expectNoNodeToolbar(): Promise<void> {
     await expect(this.layer.locator('.widget-toolbar')).toHaveCount(0);
   }
