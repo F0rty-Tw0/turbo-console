@@ -1,5 +1,5 @@
 import { keepBoxClear } from './graph-keep-clear.ts';
-import { taskAnchorOf, taskToolbarBoxOf } from './graph-task-anchor.ts';
+import { taskToolbarBoxOf } from './graph-task-toolbar-box.ts';
 import { GraphWidgetMenus } from './graph-widget-menus.ts';
 import { readLayerBounds, watchLayerBounds } from './layer-bounds-watch.ts';
 import { TaskToolbar } from './task-toolbar.ts';
@@ -8,6 +8,7 @@ import type { TaskDetailsModel, TaskMenuActions, TaskRunAction, TaskWidgetsDeps 
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { LayerBounds, MenuTarget, RectPx } from '../common/widget.type.ts';
 import { joinedBoxOf } from '../utils/keep-clear.util.ts';
+import { taskAnchorOf } from '../utils/task-anchor.util.ts';
 import { taskMenuOf } from '../utils/task-menu-model.util.ts';
 import { runMessageOf } from '../utils/task-run.util.ts';
 import { shownNodeToolbarOf } from '../utils/widget-geometry.util.ts';
