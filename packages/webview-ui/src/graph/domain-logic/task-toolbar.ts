@@ -1,5 +1,6 @@
 import { setButtonIcon, setButtonLabel } from './button-title.ts';
 import { placeToolbarRoot, removeToolbarRoot, writeShown } from './node-toolbar-place.ts';
+import { followFocus, moveStopOnKey } from './roving-stop.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { TaskDetailsModel, TaskToolbarDeps, TaskToolbarEntry } from '../common/task-details.type.ts';
 import type { TaskToolbarKind } from '../common/task-toolbar.type.ts';
@@ -110,9 +111,19 @@ export class TaskToolbar {
     ellipsis.addEventListener('click', (): void => this.deps.onMenu(ellipsis));
     run.addEventListener('click', (): void => this.onRun(entry));
     showPackage?.addEventListener('click', (): void => this.deps.onShowPackage(packageName));
+    elements.root.addEventListener('keydown', (event: KeyboardEvent): void => this.onKey(event));
+    elements.root.addEventListener('focusin', (event: FocusEvent): void => this.onFocusIn(event));
     this.deps.layer.prepend(elements.root);
 
     return entry;
+  }
+
+  private onKey(event: KeyboardEvent): void {
+    if (this.entry !== null) moveStopOnKey(this.entry, TASK_TOOLBAR_ORDER, event);
+  }
+
+  private onFocusIn(event: FocusEvent): void {
+    if (this.entry !== null) followFocus(this.entry, TASK_TOOLBAR_ORDER, event);
   }
 
   /** The slot does what it shows at click time: Stop while the task is live, else Run. */

@@ -8,6 +8,7 @@ import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskWidgetViewsMock } from '../test/mocks/task-widget-views.mock.ts';
 import { API_BUILD_STUB, GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
+import { pressKey } from '../test/utils/key-events.spec.util.ts';
 import { isShownButton } from '../test/utils/package-toolbar.spec.util.ts';
 import { rectOf } from '../test/utils/rect.spec.util.ts';
 
@@ -51,6 +52,15 @@ const shownLabelsOf = (elements: TaskToolbarElements): (string | null)[] => {
   const shown = buttons.filter(isShownButton);
 
   return shown.map((button): string | null => button.getAttribute('aria-label'));
+};
+
+/** The Tab stops (`tabIndex`) of the buttons that exist, in toolbar order. */
+const stopsOf = (elements: TaskToolbarElements): number[] => {
+  const { run, showPackage, ellipsis } = elements;
+  const buttons = [run, showPackage, ellipsis];
+  const present = buttons.filter((button): button is HTMLButtonElement => button !== null);
+
+  return present.map((button): number => button.tabIndex);
 };
 
 const AT_BUILD = rectOf(156, 22, 180, 46);
@@ -292,6 +302,77 @@ describe('FEATURE: TaskToolbar', () => {
       rig.toolbar.sync(ROOT_IDLE);
 
       expect(latestOf(rig).showPackage).toBeNull();
+    });
+  });
+
+  describe('GIVEN the toolbar of a#build, placed at full zoom with Run focused', () => {
+    beforeEach((): void => {
+      rig.toolbar.sync(IDLE);
+      rig.toolbar.place(AT_BUILD, 1);
+      latestOf(rig).run.focus();
+    });
+
+    it('WHEN Right is pressed THEN Show package has focus and is the one Tab stop', () => {
+      const { root, run, showPackage } = latestOf(rig);
+
+      const isPrevented = pressKey(root, 'ArrowRight', run);
+
+      expect(isPrevented).toBe(true);
+      expect(document.activeElement).toBe(showPackage);
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, 0, -1]);
+    });
+
+    it('WHEN Left is pressed THEN the "…" has focus, wrapping', () => {
+      pressKey(latestOf(rig).root, 'ArrowLeft', latestOf(rig).run);
+
+      expect(document.activeElement).toBe(latestOf(rig).ellipsis);
+    });
+
+    it('WHEN End is pressed THEN the "…" has focus', () => {
+      pressKey(latestOf(rig).root, 'End', latestOf(rig).run);
+
+      expect(document.activeElement).toBe(latestOf(rig).ellipsis);
+    });
+
+    it('WHEN Home is pressed on the "…" THEN Run has focus', () => {
+      const { root, run, ellipsis } = latestOf(rig);
+
+      ellipsis.focus();
+      pressKey(root, 'Home', ellipsis);
+
+      expect(document.activeElement).toBe(run);
+    });
+
+    it('WHEN a is pressed THEN focus and the Tab stop stay and the key is not prevented', () => {
+      const isPrevented = pressKey(latestOf(rig).root, 'a', latestOf(rig).run);
+
+      expect(isPrevented).toBe(false);
+      expect(document.activeElement).toBe(latestOf(rig).run);
+      expect(stopsOf(latestOf(rig))).toStrictEqual([0, -1, -1]);
+    });
+
+    it('WHEN Right is pressed and the toolbar is placed again THEN the Tab stop stays on Show package', () => {
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).run);
+      rig.toolbar.place(AT_BUILD, 1);
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, 0, -1]);
+    });
+
+    it('WHEN the "…" gains focus (a click) THEN it is the Tab stop', () => {
+      latestOf(rig).ellipsis.focus();
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, -1, 0]);
+    });
+  });
+
+  describe('GIVEN the toolbar of the root task //#build, placed with Run focused', () => {
+    it('WHEN Right is pressed THEN the "…" has focus, as there is no Show package', () => {
+      rig.toolbar.sync(ROOT_IDLE);
+      rig.toolbar.place(AT_BUILD, 1);
+      latestOf(rig).run.focus();
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).run);
+
+      expect(document.activeElement).toBe(latestOf(rig).ellipsis);
     });
   });
 
