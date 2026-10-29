@@ -5,12 +5,13 @@ import { GraphPackageSide } from './graph-package-side.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { GraphFocus, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { BundleDetails } from '../common/details-view.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { GROUPED_POSITIONS_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
-import { bundle } from '../test/utils/inspections.spec.util.ts';
+import { bundle, folderInspection, link, pkg } from '../test/utils/inspections.spec.util.ts';
 import { collapsedIdOf } from '../utils/folder-id.util.ts';
 
 type DrawnSide = {
@@ -164,6 +165,22 @@ describe('FEATURE: GraphFiltering location updates', () => {
 /** `SAVED_GROUPED_STUB` with the packages folder collapsed, so the one folder link is `web` to the collapsed packages. */
 const SAVED_COLLAPSED: GraphViewState = { ...SAVED_GROUPED_STUB, collapsed: ['packages'] };
 
+const lastBundleOf = (rig: FilteringRig): BundleDetails => {
+  const view = rig.bundleViews.at(-1);
+
+  if (view === undefined) throw new Error('no bundle view was built');
+
+  return view;
+};
+
+const firstRowOf = (rig: FilteringRig): BundleDetails['links'][number] => {
+  const [row] = lastBundleOf(rig).links;
+
+  if (row === undefined) throw new Error('the bundle view lists no row');
+
+  return row;
+};
+
 describe('FEATURE: GraphFiltering bundle inspection', () => {
   let rig: FilteringRig;
 
@@ -190,6 +207,67 @@ describe('FEATURE: GraphFiltering bundle inspection', () => {
       const collapsed = [...live];
 
       expect(collapsed).toContain('packages');
+    });
+
+    it('THEN one bundle view is built, listing the package link web to ui and its count', () => {
+      const view = lastBundleOf(rig);
+      const rows = view.links.map(({ source, target }) => [source, target]);
+
+      expect(rig.bundleViews).toHaveLength(1);
+      expect(rows).toStrictEqual([['web', 'ui']]);
+      expect(view.count.textContent).toBe('1 link');
+    });
+
+    it('THEN the Details bar and the status read the bundle summary', () => {
+      expect(rig.page.detailsSummary.textContent).toBe('1 link: web → packages');
+      expect(rig.page.status.textContent).toBe('1 link: web → packages');
+    });
+
+    it('WHEN the same bundle is tapped again THEN the view is updated in place, not built again', () => {
+      rig.side.filtering.inspection.input({ kind: 'tapBundle', source: 'web', target: collapsedIdOf('packages') });
+
+      expect(rig.bundleViews).toHaveLength(1);
+    });
+
+    it('WHEN the folder end is clicked THEN the packages folder is inspected and stays collapsed', () => {
+      lastBundleOf(rig).target.click();
+
+      const live = rig.side.filtering.folders.collapsed();
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(folderInspection('packages'));
+      expect([...live]).toContain('packages');
+    });
+
+    it('WHEN the package end is clicked THEN web is selected', () => {
+      lastBundleOf(rig).source.click();
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(pkg('web'));
+    });
+
+    it('WHEN Explain of the row is clicked THEN the link is explained and the packages folder is expanded', () => {
+      firstRowOf(rig).explain.click();
+
+      const live = rig.side.filtering.folders.collapsed();
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(link('web', 'ui'));
+      expect([...live]).not.toContain('packages');
+    });
+
+    it('WHEN the target name of the row is clicked THEN ui is selected and the packages folder is expanded', () => {
+      firstRowOf(rig).pickTarget.click();
+
+      const live = rig.side.filtering.folders.collapsed();
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(pkg('ui'));
+      expect([...live]).not.toContain('packages');
+    });
+
+    it('WHEN the source name of the row is clicked THEN that row source is selected', () => {
+      const row = firstRowOf(rig);
+
+      row.pickSource.click();
+
+      expect(rig.side.filtering.inspection.current()).toStrictEqual(pkg(row.source));
     });
 
     it('THEN the saved view state holds no inspection', () => {
