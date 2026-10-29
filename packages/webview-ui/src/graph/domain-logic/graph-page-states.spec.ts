@@ -71,4 +71,95 @@ describe('FEATURE: layoutScreenOf', () => {
       expect([page.location.nav.hidden, page.body.hidden]).toStrictEqual([true, true]);
     });
   });
+
+  describe('GIVEN the loading screen hid a body that held focus', () => {
+    beforeEach(() => {
+      const screen = layoutScreenOf(page);
+
+      page.container.focus();
+      screen.showLoading();
+      document.body.focus();
+    });
+
+    it('WHEN the graph shows THEN the container has focus', () => {
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(page.container);
+    });
+
+    it('WHEN focus moved to the Controls button before the graph shows THEN it stays there', () => {
+      page.controls.focus();
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(page.controls);
+    });
+
+    it('WHEN a page failure shows over it before the graph shows THEN the container has focus', () => {
+      showFailure(page, new Error('boom'));
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(page.container);
+    });
+
+    it('WHEN the graph shows, focus leaves for the body and loading hides it again THEN the next graph leaves focus on the body', () => {
+      const screen = layoutScreenOf(page);
+
+      screen.showGraph(false);
+      document.body.focus();
+      screen.showLoading();
+      screen.showGraph(false);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+  });
+
+  describe('GIVEN the loading screen hid a body that held focus while the page had none, as when the editor saves', () => {
+    it('WHEN the graph shows THEN focus stays on the body', () => {
+      vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+      page.container.focus();
+      layoutScreenOf(page).showLoading();
+      document.body.focus();
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+
+    it('WHEN the page gains focus and a page failure shows over the hidden body THEN the graph still leaves focus on the body', () => {
+      const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+
+      page.container.focus();
+      layoutScreenOf(page).showLoading();
+      hasFocus.mockReturnValue(true);
+      showFailure(page, new Error('boom'));
+      document.body.focus();
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+  });
+
+  describe('GIVEN the loading screen hid a body that held focus and the page lost focus before the graph shows', () => {
+    it('WHEN the graph shows THEN focus stays on the body', () => {
+      const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+
+      page.container.focus();
+      layoutScreenOf(page).showLoading();
+      document.body.focus();
+      hasFocus.mockReturnValue(false);
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+  });
+
+  describe('GIVEN the loading screen hid a body that held no focus', () => {
+    it('WHEN the graph shows THEN focus stays on the body', () => {
+      page.details.focus();
+      layoutScreenOf(page).showLoading();
+      document.body.focus();
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+  });
 });

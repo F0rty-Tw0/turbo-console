@@ -1,7 +1,8 @@
 import type { DetailsElements } from './details-view.type.ts';
 import type { GraphView } from './graph-page.type.ts';
 import type { PageElements } from './page-elements.type.ts';
-import type { WidgetViews } from './widget.type.ts';
+import type { TaskToolbarElements, TaskToolbarKind } from './task-toolbar.type.ts';
+import type { RovingEntry, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -23,6 +24,9 @@ export type TaskDetailsModel = {
 
 /** The panel's three run buttons. */
 export type TaskRunAction = 'run' | 'runNoCache' | 'stop';
+
+/** What the task toolbar's Run/Stop slot does. */
+export type RunSlotAction = Extract<TaskRunAction, 'run' | 'stop'>;
 
 export type TaskDependencyButton = {
   readonly task: GraphTask;
@@ -88,24 +92,40 @@ export type TaskMenuActions = {
   readonly act: (id: string, action: TaskRunAction) => void;
 };
 
-/** The selected task's "…" over the canvas and the menu it opens, which task mode shows while it is on. */
+/** The selected task's node toolbar over the canvas and the menu its "…" opens, which task mode shows while it is on. */
 export type TaskWidgets = {
-  /** The "…" beside the selected task of `model`; none for `null`, outside task mode, or while its menu would be empty. */
+  /** The toolbar of the selected task of `model`; none for `null` or outside task mode, hidden while it shows no button. */
   readonly show: (model: TaskDetailsModel | null) => void;
-  /** After a frame: the "…" follows its task, and a camera move closes the menu. */
+  /** After a frame: the toolbar follows its task, and a camera move closes the menu. */
   readonly rendered: () => void;
-  /** Task mode ends: the menu closes and the "…" goes. */
+  /** Task mode ends: the menu closes and the toolbar goes. */
   readonly exit: () => void;
-  /** The reader selected a task or opened the panel: the task and its "…" pan clear of the panel overlaying the canvas. */
+  /** The reader selected a task or opened the panel: the task and its toolbar pan clear of the panel overlaying the canvas. */
   readonly keepClear: () => void;
 };
 
-/** What the task toolbar needs: the layer it leads, the container that takes focus it loses, the builder and the "…" click, already guarded. */
+/** What the task toolbar keeps besides its roving state: the task `id` it was built for, its buttons, and the model it last synced. */
+type TaskToolbarFields = {
+  readonly id: string;
+  readonly elements: TaskToolbarElements;
+  /** The selected task's model; its state picks what the Run/Stop slot does. */
+  model: TaskDetailsModel;
+  /** What the Run/Stop slot is drawn for; `null` until the first sync draws it. */
+  slotAction: RunSlotAction | null;
+};
+
+/** The task toolbar as it is kept. */
+export type TaskToolbarEntry = RovingEntry<TaskToolbarKind> & TaskToolbarFields;
+
+/** What the task toolbar needs: the layer it leads, the container that takes focus it loses, the builder and its clicks, already guarded. */
 export type TaskToolbarDeps = {
   readonly layer: HTMLElement;
   readonly container: HTMLElement;
   readonly views: Pick<WidgetViews, 'taskToolbar'>;
   readonly onMenu: (opener: HTMLButtonElement) => void;
+  /** The Run/Stop slot was clicked: `action` is what it showed then. */
+  readonly onRun: (id: string, action: RunSlotAction) => void;
+  readonly onShowPackage: (packageName: string) => void;
 };
 
 export type TaskWidgetsDeps = {
@@ -113,11 +133,13 @@ export type TaskWidgetsDeps = {
   readonly view: Pick<GraphView, 'widgetRects' | 'viewport' | 'anchorBox' | 'panBy'>;
   readonly views: Pick<WidgetViews, 'taskToolbar' | 'menu'>;
   readonly bridge: Bridge;
-  /** Task mode is on, so the "…" may open its menu. */
+  /** Task mode is on, so the "…" may open its menu and Show package may act. */
   readonly isActive: () => boolean;
+  /** Show package was clicked: the package graph shows package `name`. */
+  readonly onShowPackage: (name: string) => void;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the task details panel overlays the canvas. */
   readonly overlay: MediaQueryList;
-  /** The task details panel; the "…" and its menu stay left of it while it overlays the canvas. */
+  /** The task details panel; while it overlays the canvas, the toolbar hides under it and the menu opens left of it. */
   readonly aside: () => HTMLElement;
 };
 

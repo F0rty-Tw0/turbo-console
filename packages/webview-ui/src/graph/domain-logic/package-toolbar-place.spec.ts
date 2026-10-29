@@ -5,7 +5,7 @@ import type { PackageMenuState, PackageToolbarElements, ToolbarEntry } from '../
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
 import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
-import { isShownButton, toolbarButtonsOf } from '../test/utils/package-toolbar.spec.util.ts';
+import { isShownButton, packageButtonsOf } from '../test/utils/node-toolbar.spec.util.ts';
 import { rectOf } from '../test/utils/rect.spec.util.ts';
 
 const WITH_TASKS: PackageMenuState = { isFocus: false, hasTasks: true };
@@ -21,7 +21,7 @@ const entryOf = (state: PackageMenuState): ToolbarEntry => {
 
 /** The buttons of the toolbar that are not hidden, by label. */
 const shownLabelsOf = (elements: PackageToolbarElements): (string | null)[] => {
-  const shown = toolbarButtonsOf(elements).filter(isShownButton);
+  const shown = packageButtonsOf(elements).filter(isShownButton);
 
   return shown.map((button): string | null => button.getAttribute('aria-label'));
 };
@@ -117,7 +117,7 @@ describe('FEATURE: placeToolbar', () => {
     it('WHEN it is placed again at the same rect and zoom THEN nothing is written and no layout is read', () => {
       placeToolbar(entry, AT_WEB, 1, container);
 
-      const buttons = toolbarButtonsOf(entry.elements);
+      const buttons = packageButtonsOf(entry.elements);
       const watched = [entry.elements.root, ...buttons];
       const log = accessLogOf(watched);
 

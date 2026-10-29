@@ -1,3 +1,4 @@
+import { RUN_LABEL, STOP_LABEL } from '../common/graph-task.const.ts';
 import { CONTROLS_FILTERED_LABEL, CONTROLS_LABEL, ROOT_FOLDER, SHOW_ALL_LABEL } from '../common/graph.const.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
 
@@ -47,6 +48,12 @@ export const packageActionsLabelOf = (name: string): string => `Actions for ${na
 
 /** The accessible name of the selected package's node toolbar. */
 export const packageToolbarLabelOf = (name: string): string => `Package ${name}`;
+
+/** The task toolbar's Run button name; the id tells one package's build from another's. */
+export const runLabelOf = (id: string): string => `${RUN_LABEL} ${id}`;
+
+/** The task toolbar's Stop button name, the Run slot while the task is live. */
+export const stopLabelOf = (id: string): string => `${STOP_LABEL} ${id}`;
 
 /** The accessible name of the selected task's node toolbar. */
 export const taskToolbarLabelOf = (id: string): string => `Task ${id}`;

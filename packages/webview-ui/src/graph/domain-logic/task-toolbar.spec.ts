@@ -1,99 +1,140 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TaskToolbar } from './task-toolbar.ts';
-import type { TaskToolbarDeps } from '../common/task-details.type.ts';
+import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
+import type { TaskDetailsModel } from '../common/task-details.type.ts';
 import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
+import { AT_BUILD } from '../test/common/task-toolbar.const.ts';
+import type { TaskToolbarRig } from '../test/common/task-toolbar.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { taskWidgetViewsMock } from '../test/mocks/task-widget-views.mock.ts';
+import { API_BUILD_STUB, GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
+import { TASK_DETAILS_STUB } from '../test/stubs/task-details.stub.ts';
 import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
-import { rectOf } from '../test/utils/rect.spec.util.ts';
+import { isShownButton, taskButtonsOf } from '../test/utils/node-toolbar.spec.util.ts';
+import { latestOf, stopsOf, taskToolbarRigOf } from '../test/utils/task-toolbar.spec.util.ts';
 
-type ToolbarRig = {
-  readonly toolbar: TaskToolbar;
-  readonly layer: HTMLElement;
-  readonly container: HTMLElement;
-  readonly deps: TaskToolbarDeps;
-  readonly built: TaskToolbarElements[];
+type CountCase = {
+  readonly title: string;
+  readonly model: TaskDetailsModel;
+  readonly zoom: number;
+  readonly expected: number;
 };
 
-const rigOf = (): ToolbarRig => {
-  const { page, views, toolbars: built } = taskWidgetViewsMock();
-  const { widgets: layer, container } = page;
-  const deps: TaskToolbarDeps = { layer, container, views, onMenu: vi.fn() };
-  const toolbar = new TaskToolbar(deps);
-  const rig: ToolbarRig = { toolbar, layer, container, deps, built };
+/** The labels of the toolbar's buttons that are not hidden. */
+const shownLabelsOf = (elements: TaskToolbarElements): (string | null)[] => {
+  const shown = taskButtonsOf(elements).filter(isShownButton);
 
-  return rig;
+  return shown.map((button): string | null => button.getAttribute('aria-label'));
 };
 
-const latestOf = (rig: ToolbarRig): TaskToolbarElements => {
-  const latest = rig.built.at(-1);
+const COMPACT = 0.49;
 
-  if (latest === undefined) throw new Error('no toolbar was built');
+const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
 
-  return latest;
-};
+const ROOT_NOT_RUNNABLE_TASK: GraphTask = { ...ROOT_BUILD_STUB, isRunnable: false };
 
-const AT_BUILD = rectOf(156, 22, 180, 46);
+const IDLE = TASK_DETAILS_STUB;
+
+const RUNNING: TaskDetailsModel = { ...IDLE, state: 'running' };
+
+const PASSED: TaskDetailsModel = { ...IDLE, state: 'passed' };
+
+const NOT_RUNNABLE: TaskDetailsModel = { ...IDLE, task: NOT_RUNNABLE_TASK };
+
+const NOT_RUNNABLE_CONTINUOUS: TaskDetailsModel = { ...NOT_RUNNABLE, state: 'continuous' };
+
+const ROOT_IDLE: TaskDetailsModel = { ...IDLE, task: ROOT_BUILD_STUB };
+
+const ROOT_NOT_RUNNABLE: TaskDetailsModel = { ...IDLE, task: ROOT_NOT_RUNNABLE_TASK };
+
+const API_IDLE: TaskDetailsModel = { ...IDLE, task: API_BUILD_STUB };
+
+const COUNT_CASES: CountCase[] = [
+  { title: 'a runnable task at zoom 1', model: IDLE, zoom: 1, expected: 3 },
+  { title: 'a task that is not runnable at zoom 1', model: NOT_RUNNABLE, zoom: 1, expected: 1 },
+  { title: 'a root task that is not runnable at zoom 1', model: ROOT_NOT_RUNNABLE, zoom: 1, expected: 0 },
+  { title: 'a runnable task at zoom 0.49', model: IDLE, zoom: COMPACT, expected: 1 },
+  { title: 'a task that is not runnable at zoom 0.49', model: NOT_RUNNABLE, zoom: COMPACT, expected: 0 }
+];
 
 describe('FEATURE: TaskToolbar', () => {
-  let rig: ToolbarRig;
+  let rig: TaskToolbarRig;
+  let toolbar: TaskToolbar;
 
   beforeEach((): void => {
     vi.stubGlobal('document', fakeDocumentMock());
-    rig = rigOf();
+    rig = taskToolbarRigOf();
+    toolbar = new TaskToolbar(rig.deps);
   });
 
   afterEach((): void => {
     vi.unstubAllGlobals();
   });
 
-  describe('GIVEN the app#build toolbar is synced twice', () => {
+  describe('GIVEN the a#build toolbar is synced twice', () => {
     it('WHEN the layer is read THEN it holds the one root, the same element', () => {
-      rig.toolbar.sync('app#build');
+      toolbar.sync(IDLE);
 
       const first = rig.layer.children[0];
 
-      rig.toolbar.sync('app#build');
+      toolbar.sync(IDLE);
+
+      const id = toolbar.id();
 
       expect(rig.layer.children).toHaveLength(1);
       expect(rig.layer.children[0]).toBe(first);
-      expect(rig.toolbar.id()).toBe('app#build');
+      expect(id).toBe('a#build');
     });
   });
 
-  describe('GIVEN the toolbar of app#build, then lib#build is selected', () => {
+  describe('GIVEN the toolbar of a#build, then api#build is selected', () => {
     it('WHEN the layer is read THEN the old root is gone and the one new root is first', () => {
-      rig.toolbar.sync('app#build');
+      toolbar.sync(IDLE);
 
       const old = latestOf(rig).root;
 
       rig.layer.append(document.createElement('div'));
-      rig.toolbar.sync('lib#build');
+      toolbar.sync(API_IDLE);
+
+      const id = toolbar.id();
 
       expect(Array.from(rig.layer.children)).not.toContain(old);
       expect(rig.layer.children).toHaveLength(2);
       expect(rig.layer.children[0]).toBe(latestOf(rig).root);
-      expect(rig.toolbar.id()).toBe('lib#build');
+      expect(id).toBe('api#build');
+    });
+
+    it('WHEN the old "…" was the Tab stop and the new toolbar is placed at zoom 1 THEN its Run is the Tab stop', () => {
+      toolbar.sync(IDLE);
+      toolbar.place(AT_BUILD, 1);
+      latestOf(rig).ellipsis.focus();
+      toolbar.sync(API_IDLE);
+      toolbar.place(AT_BUILD, 1);
+
+      const stops = stopsOf(latestOf(rig));
+
+      expect(stops).toStrictEqual([0, -1, -1]);
     });
   });
 
   describe('GIVEN focus on the "…" of the toolbar', () => {
     beforeEach((): void => {
-      rig.toolbar.sync('app#build');
-      rig.toolbar.place(AT_BUILD);
+      toolbar.sync(IDLE);
+      toolbar.place(AT_BUILD, 1);
       latestOf(rig).ellipsis.focus();
     });
 
     it('WHEN the selection clears THEN the container has focus', () => {
-      rig.toolbar.sync(null);
+      toolbar.sync(null);
+
+      const id = toolbar.id();
 
       expect(document.activeElement).toBe(rig.container);
-      expect(rig.toolbar.id()).toBeNull();
+      expect(id).toBeNull();
     });
 
     it('WHEN the toolbar is placed at null THEN it hides and the container has focus', () => {
-      rig.toolbar.place(null);
+      toolbar.place(null, 1);
 
       expect(latestOf(rig).root.hidden).toBe(true);
       expect(document.activeElement).toBe(rig.container);
@@ -104,29 +145,29 @@ describe('FEATURE: TaskToolbar', () => {
     it('WHEN the selection clears THEN focus stays there', () => {
       const other = document.createElement('button');
 
-      rig.toolbar.sync('app#build');
+      toolbar.sync(IDLE);
       other.focus();
-      rig.toolbar.sync(null);
+      toolbar.sync(null);
 
       expect(document.activeElement).toBe(other);
     });
   });
 
-  describe('GIVEN the toolbar of app#build', () => {
+  describe('GIVEN the toolbar of a#build, idle', () => {
     beforeEach((): void => {
-      rig.toolbar.sync('app#build');
+      toolbar.sync(IDLE);
     });
 
     it('WHEN it is placed at a rect THEN it shows there on whole px', () => {
-      rig.toolbar.place(AT_BUILD);
+      toolbar.place(AT_BUILD, 1);
 
       expect(latestOf(rig).root.hidden).toBe(false);
       expect(latestOf(rig).root.style.transform).toBe('translate(156px, 22px)');
     });
 
     it('WHEN it is placed at null THEN it is hidden', () => {
-      rig.toolbar.place(AT_BUILD);
-      rig.toolbar.place(null);
+      toolbar.place(AT_BUILD, 1);
+      toolbar.place(null, 1);
 
       expect(latestOf(rig).root.hidden).toBe(true);
     });
@@ -140,21 +181,181 @@ describe('FEATURE: TaskToolbar', () => {
     });
 
     it('WHEN it is placed twice at the same rect THEN the second pass writes and reads nothing', () => {
-      const { root, ellipsis } = latestOf(rig);
+      const { root, run, showPackage, ellipsis } = latestOf(rig);
 
-      rig.toolbar.place(AT_BUILD);
-      const log = accessLogOf([root, ellipsis]);
+      toolbar.place(AT_BUILD, 1);
+      const log = accessLogOf([root, run, showPackage, ellipsis]);
 
-      rig.toolbar.place(AT_BUILD);
+      toolbar.place(AT_BUILD, 1);
 
       expect(log).toStrictEqual([]);
+    });
+
+    it('WHEN it turns running THEN the same slot reads Stop a#build with the stop icon', () => {
+      const { root, run } = latestOf(rig);
+
+      toolbar.sync(RUNNING);
+
+      expect(latestOf(rig).root).toBe(root);
+      expect(latestOf(rig).run).toBe(run);
+      expect(run.getAttribute('aria-label')).toBe('Stop a#build');
+      expect(run.title).toBe('Stop a#build');
+      expect(run.children[0]?.className).toBe('codicon codicon-debug-stop');
+    });
+
+    it('WHEN it turns running, then passed THEN the same slot reads Run a#build with the play icon', () => {
+      const { run } = latestOf(rig);
+
+      toolbar.sync(RUNNING);
+      toolbar.sync(PASSED);
+
+      expect(latestOf(rig).run).toBe(run);
+      expect(run.getAttribute('aria-label')).toBe('Run a#build');
+      expect(run.children[0]?.className).toBe('codicon codicon-play');
+    });
+
+    it('WHEN it turns passed THEN the slot, already Run, is not written', () => {
+      const setAttribute = vi.spyOn(latestOf(rig).run, 'setAttribute');
+
+      toolbar.sync(PASSED);
+
+      expect(setAttribute).not.toHaveBeenCalled();
+    });
+
+    it('WHEN Run has focus and the task turns running THEN the slot keeps focus', () => {
+      toolbar.place(AT_BUILD, 1);
+      latestOf(rig).run.focus();
+      toolbar.sync(RUNNING);
+
+      expect(document.activeElement).toBe(latestOf(rig).run);
+    });
+
+    it('WHEN Run is clicked THEN the task is run', () => {
+      latestOf(rig).run.click();
+
+      expect(rig.deps.onRun).toHaveBeenCalledExactlyOnceWith('a#build', 'run');
+    });
+
+    it('WHEN the task turns running and the slot is clicked THEN the task is stopped', () => {
+      toolbar.sync(RUNNING);
+      latestOf(rig).run.click();
+
+      expect(rig.deps.onRun).toHaveBeenCalledExactlyOnceWith('a#build', 'stop');
+    });
+
+    it('WHEN Show package is clicked THEN the package a is shown', () => {
+      latestOf(rig).showPackage?.click();
+
+      expect(rig.deps.onShowPackage).toHaveBeenCalledExactlyOnceWith('a');
+    });
+
+    it('WHEN it is placed at zoom 0.49 THEN only the "…" shows, as the Tab stop', () => {
+      toolbar.place(AT_BUILD, COMPACT);
+
+      expect(shownLabelsOf(latestOf(rig))).toStrictEqual(['Actions for a#build']);
+      expect(latestOf(rig).ellipsis.tabIndex).toBe(0);
+    });
+
+    it('WHEN Run has focus and it is placed at zoom 0.49 THEN the "…" has focus', () => {
+      toolbar.place(AT_BUILD, 1);
+      latestOf(rig).run.focus();
+      toolbar.place(AT_BUILD, COMPACT);
+
+      expect(document.activeElement).toBe(latestOf(rig).ellipsis);
+    });
+  });
+
+  describe('GIVEN the toolbar of a#build, not runnable, with focus on Show package', () => {
+    beforeEach((): void => {
+      toolbar.sync(NOT_RUNNABLE);
+      toolbar.place(AT_BUILD, 1);
+      latestOf(rig).showPackage?.focus();
+    });
+
+    it('WHEN it is placed at zoom 0.49 THEN it hides and the container has focus', () => {
+      toolbar.place(AT_BUILD, COMPACT);
+
+      expect(latestOf(rig).root.hidden).toBe(true);
+      expect(document.activeElement).toBe(rig.container);
+    });
+  });
+
+  describe('GIVEN the toolbar of a#build, not runnable and continuous, with focus on its Stop', () => {
+    it('WHEN the run ends THEN Show package has focus', () => {
+      toolbar.sync(NOT_RUNNABLE_CONTINUOUS);
+      toolbar.place(AT_BUILD, 1);
+      latestOf(rig).run.focus();
+      toolbar.sync(NOT_RUNNABLE);
+      toolbar.place(AT_BUILD, 1);
+
+      expect(document.activeElement).toBe(latestOf(rig).showPackage);
+    });
+  });
+
+  describe('GIVEN the toolbar of the root task //#build', () => {
+    it('WHEN its buttons are read THEN it has no Show package', () => {
+      toolbar.sync(ROOT_IDLE);
+
+      expect(latestOf(rig).showPackage).toBeNull();
+    });
+  });
+
+  describe('GIVEN a toolbar synced for each case', () => {
+    it.each(COUNT_CASES)('WHEN $title is counted THEN it shows $expected buttons', ({ model, zoom, expected }) => {
+      toolbar.sync(model);
+
+      const count = toolbar.countAt(zoom);
+
+      expect(count).toBe(expected);
     });
   });
 
   describe('GIVEN no toolbar', () => {
-    it('WHEN it is placed THEN nothing happens and it has no "…"', () => {
-      expect(() => rig.toolbar.place(AT_BUILD)).not.toThrow();
-      expect(rig.toolbar.ellipsis()).toBeNull();
+    it('WHEN a#build is synced idle THEN its new slot is written once, as Run a#build', () => {
+      const { taskToolbar } = rig.deps.views;
+      const setAttributes: string[][] = [];
+      const buildSpied = (id: string, packageName: string): TaskToolbarElements => {
+        const built = taskToolbar(id, packageName);
+        const { setAttribute } = built.run;
+
+        vi.spyOn(built.run, 'setAttribute').mockImplementation((name, value): void => {
+          setAttributes.push([name, value]);
+          setAttribute.call(built.run, name, value);
+        });
+
+        return built;
+      };
+
+      vi.spyOn(rig.deps.views, 'taskToolbar').mockImplementation(buildSpied);
+      toolbar.sync(IDLE);
+
+      expect(setAttributes).toStrictEqual([['aria-label', 'Run a#build']]);
+    });
+
+    it('WHEN a#build is synced running THEN its new slot reads Stop a#build', () => {
+      toolbar.sync(RUNNING);
+
+      const label = latestOf(rig).run.getAttribute('aria-label');
+
+      expect(label).toBe('Stop a#build');
+    });
+
+    it('WHEN it is placed THEN nothing happens', () => {
+      const place = (): void => toolbar.place(AT_BUILD, 1);
+
+      expect(place).not.toThrow();
+    });
+
+    it('WHEN its "…" is read THEN there is none', () => {
+      const ellipsis = toolbar.ellipsis();
+
+      expect(ellipsis).toBeNull();
+    });
+
+    it('WHEN it is counted THEN it shows no button', () => {
+      const count = toolbar.countAt(1);
+
+      expect(count).toBe(0);
     });
   });
 });

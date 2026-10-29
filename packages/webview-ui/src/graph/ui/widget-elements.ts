@@ -3,7 +3,7 @@ import { textElement } from '../../shared/ui/text-element.ts';
 import { FOCUS_FOLDER_LABEL, START_TRACE_LABEL, START_TRACE_TITLE } from '../common/details.const.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
-import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
+import { ROOT_TASK_PACKAGE, SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
 import type { FolderRowElements, PackageToolbarElements, RowKind } from '../common/widget.type.ts';
@@ -14,6 +14,8 @@ import {
   folderToggleLabelOf,
   packageActionsLabelOf,
   packageToolbarLabelOf,
+  runLabelOf,
+  showPackageLabelOf,
   taskToolbarLabelOf
 } from '../utils/controls-text.util.ts';
 import { pluralOf } from '../utils/plural.util.ts';
@@ -120,14 +122,35 @@ const nodeToolbarRootOf = (modifier: 'package' | 'task', label: string): HTMLEle
   return root;
 };
 
-/** The selected task's node toolbar, hidden until the layer places it; the "…" keeps the name it had as a lone button. */
-export const buildTaskToolbar = (id: string): TaskToolbarElements => {
+/** Appends a node toolbar's Tab `stop`, then each of `others` that exists, out of the Tab order until the layer moves the stop. */
+const appendAfterStop = (root: HTMLElement, stop: HTMLButtonElement, others: (HTMLButtonElement | null)[]): void => {
+  root.append(stop);
+
+  for (const button of others) {
+    if (button === null) continue;
+
+    button.tabIndex = -1;
+    root.append(button);
+  }
+};
+
+/** The Show package button of a task in `packageName`; a root task has no package to show. */
+const showPackageOf = (packageName: string): HTMLButtonElement | null => {
+  if (packageName === ROOT_TASK_PACKAGE) return null;
+
+  return widgetButton(ACTION_ICONS.showPackage, showPackageLabelOf(packageName));
+};
+
+/** The selected task's node toolbar, hidden until the layer places it: Run, Show package (not for `//`) and the "…". Run is its one Tab stop until the layer moves it. */
+export const buildTaskToolbar = (id: string, packageName: string): TaskToolbarElements => {
   const root = nodeToolbarRootOf('task', taskToolbarLabelOf(id));
+  const run = widgetButton(ACTION_ICONS.run, runLabelOf(id));
+  const showPackage = showPackageOf(packageName);
   const ellipsis = menuButton(packageActionsLabelOf(id));
+  const toolbar: TaskToolbarElements = { root, run, showPackage, ellipsis };
+  const others = [showPackage, ellipsis];
 
-  const toolbar: TaskToolbarElements = { root, ellipsis };
-
-  root.append(ellipsis);
+  appendAfterStop(root, run, others);
 
   return toolbar;
 };
@@ -160,17 +183,10 @@ export const buildPackageToolbar = (name: string, folderTitle: string | null): P
   const collapse = collapseOf(folderTitle);
   const ellipsis = menuButton(packageActionsLabelOf(name));
   const toolbar: PackageToolbarElements = { root, focus, startTrace, showTasks, collapse, ellipsis };
-  const buttons = [startTrace, showTasks, collapse, ellipsis];
+  const others = [startTrace, showTasks, collapse, ellipsis];
 
   startTrace.title = START_TRACE_TITLE;
-  root.append(focus);
-
-  for (const button of buttons) {
-    if (button === null) continue;
-
-    button.tabIndex = -1;
-    root.append(button);
-  }
+  appendAfterStop(root, focus, others);
 
   return toolbar;
 };

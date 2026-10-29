@@ -51,5 +51,6 @@ export const ACTION_ICONS: Readonly<Record<ActionIconKey, GraphIconId>> = {
   expand: 'unfold',
   run: 'play',
   runNoCache: 'debug-rerun',
-  stop: 'debug-stop'
+  stop: 'debug-stop',
+  showPackage: 'package'
 };

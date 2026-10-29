@@ -1,5 +1,5 @@
-import { kindIn, stopOf } from './roving-stop.util.ts';
-import type { PackageMenuState, PackageToolbarElements, PackageToolbarKind, PackageToolbarShown } from '../common/widget.type.ts';
+import { stopOf } from './roving-stop.util.ts';
+import type { PackageMenuState, PackageToolbarKind, PackageToolbarShown } from '../common/widget.type.ts';
 
 /** The buttons the package toolbar shows besides the "…", which always shows: none while compact. */
 export const packageToolbarShownOf = (state: PackageMenuState, hasFolder: boolean, isCompact: boolean): PackageToolbarShown => {
@@ -34,7 +34,3 @@ export const toolbarShownKindsOf = (shown: PackageToolbarShown): PackageToolbarK
 /** The toolbar's Tab stop: `preferred` while shown, else the first shown button; the "…" when none is. */
 export const toolbarStopOf = (preferred: PackageToolbarKind, shown: PackageToolbarKind[]): PackageToolbarKind =>
   stopOf(preferred, shown, 'ellipsis');
-
-/** The button of `elements` that `target` is, `undefined` when it is none of them; a `null` target is none, though a flat page's Collapse is `null` too. */
-export const toolbarKindOf = (elements: PackageToolbarElements, target: EventTarget | null): PackageToolbarKind | undefined =>
-  kindIn(TOOLBAR_ORDER, elements, target);

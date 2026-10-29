@@ -51,7 +51,8 @@ describe('FEATURE: graph icon ids', () => {
         expand: 'unfold',
         run: 'play',
         runNoCache: 'debug-rerun',
-        stop: 'debug-stop'
+        stop: 'debug-stop',
+        showPackage: 'package'
       });
     });
 
