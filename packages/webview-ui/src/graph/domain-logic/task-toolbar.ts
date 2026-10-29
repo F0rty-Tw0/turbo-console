@@ -1,4 +1,4 @@
-import { placeToolbarRoot, releaseFocusOf } from './node-toolbar-place.ts';
+import { placeToolbarRoot, removeToolbarRoot } from './node-toolbar-place.ts';
 import type { TaskToolbarDeps } from '../common/task-details.type.ts';
 import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
 import type { RectPx } from '../common/widget.type.ts';
@@ -62,8 +62,7 @@ export class TaskToolbar {
 
     const { root } = this.entry.elements;
 
-    releaseFocusOf(root, this.deps.container);
-    root.remove();
+    removeToolbarRoot(root, this.deps.container);
     this.entry = null;
   }
 }

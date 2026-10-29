@@ -8,6 +8,12 @@ export const releaseFocusOf = (root: HTMLElement, container: HTMLElement): void 
   if (hasFocus) container.focus();
 };
 
+/** Removes a node toolbar's `root` from its layer; focus inside it goes to `container` first, since the browser would drop it on the body. */
+export const removeToolbarRoot = (root: HTMLElement, container: HTMLElement): void => {
+  releaseFocusOf(root, container);
+  root.remove();
+};
+
 /** Shows a node toolbar's root at `rect` on whole px, or hides it for `null`; focus inside a root that hides goes to `container`. */
 export const placeToolbarRoot = (root: HTMLElement, rect: RectPx | null, container: HTMLElement): void => {
   if (rect === null) releaseFocusOf(root, container);

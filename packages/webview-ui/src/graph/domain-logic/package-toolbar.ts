@@ -1,5 +1,5 @@
 import { setFocusToggle } from './button-title.ts';
-import { releaseFocusOf } from './node-toolbar-place.ts';
+import { removeToolbarRoot } from './node-toolbar-place.ts';
 import { placeToolbar } from './package-toolbar-place.ts';
 import { followFocus, moveStopOnKey } from './roving-stop.ts';
 import type { PackageToolbarDeps } from '../common/graph-widgets.type.ts';
@@ -123,8 +123,7 @@ export class PackageToolbar {
 
     const { root } = this.entry.elements;
 
-    releaseFocusOf(root, this.deps.container);
-    root.remove();
+    removeToolbarRoot(root, this.deps.container);
     this.entry = null;
   }
 }

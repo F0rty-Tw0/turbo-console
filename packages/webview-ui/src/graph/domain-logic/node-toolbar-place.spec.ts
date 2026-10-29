@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { placeToolbarRoot, releaseFocusOf } from './node-toolbar-place.ts';
+import { placeToolbarRoot, releaseFocusOf, removeToolbarRoot } from './node-toolbar-place.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
 import { rectOf } from '../test/utils/rect.spec.util.ts';
@@ -31,6 +31,48 @@ describe('FEATURE: releaseFocusOf', () => {
 
     other.focus();
     releaseFocusOf(root, container);
+
+    expect(document.activeElement).toBe(other);
+  });
+});
+
+describe('FEATURE: removeToolbarRoot', () => {
+  let layer: HTMLElement;
+  let root: HTMLElement;
+  let focus: HTMLButtonElement;
+  let container: HTMLElement;
+
+  beforeEach((): void => {
+    vi.stubGlobal('document', fakeDocumentMock());
+    ({ root, focus } = widgetRowViewsMock().views.packageToolbar('web', null));
+    layer = document.createElement('div');
+    container = document.createElement('div');
+    layer.append(root);
+  });
+
+  afterEach((): void => {
+    vi.unstubAllGlobals();
+  });
+
+  it('GIVEN a root on the layer WHEN it is removed THEN the layer no longer holds it', () => {
+    removeToolbarRoot(root, container);
+
+    expect(Array.from(layer.children)).not.toContain(root);
+  });
+
+  it('GIVEN focus on a button inside the root WHEN it is removed THEN the container has focus', () => {
+    focus.focus();
+
+    removeToolbarRoot(root, container);
+
+    expect(document.activeElement).toBe(container);
+  });
+
+  it('GIVEN focus elsewhere WHEN the root is removed THEN focus stays there', () => {
+    const other = document.createElement('button');
+
+    other.focus();
+    removeToolbarRoot(root, container);
 
     expect(document.activeElement).toBe(other);
   });
