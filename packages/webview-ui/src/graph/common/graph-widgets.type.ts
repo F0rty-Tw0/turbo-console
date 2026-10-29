@@ -127,11 +127,9 @@ export type PackageToolbarDeps = {
   readonly container: HTMLElement;
   readonly views: WidgetViews;
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
-  /** Focus toggles the package's focus. */
   readonly onFocus: (name: string) => void;
   readonly onStartTrace: () => void;
   readonly onShowTasks: (name: string) => void;
-  /** Collapse folder, with the package's folder. */
   readonly onCollapse: (folder: string) => void;
 };
 
