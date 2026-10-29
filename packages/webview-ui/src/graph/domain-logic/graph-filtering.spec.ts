@@ -229,6 +229,16 @@ describe('FEATURE: GraphFiltering bundle inspection', () => {
       expect(rig.bundleViews).toHaveLength(1);
     });
 
+    it('WHEN a row button has focus and a recheck keeps the rows THEN the focus stays on it and the view is not rebuilt', () => {
+      const { explain } = firstRowOf(rig);
+
+      explain.focus();
+      rig.side.filtering.inspection.recheck(rig.side.filtering.controls.visible());
+
+      expect(document.activeElement).toBe(explain);
+      expect(rig.bundleViews).toHaveLength(1);
+    });
+
     it('WHEN the folder end is clicked THEN the packages folder is inspected and stays collapsed', () => {
       lastBundleOf(rig).target.click();
 
@@ -292,6 +302,17 @@ describe('FEATURE: GraphFiltering bundle inspection', () => {
       rig.side.filtering.controls.excludeFolder('apps');
 
       expect(rig.side.filtering.inspection.current()).toStrictEqual(NO_INSPECTION);
+    });
+  });
+
+  describe('GIVEN a bundle between ends the scene draws no folder link for', () => {
+    it('WHEN web to ui, which is drawn as web to the collapsed packages, is tapped THEN the Empty view is shown, not a bundle', () => {
+      const empty = vi.spyOn(rig.deps.views, 'empty');
+
+      rig.side.filtering.inspection.input({ kind: 'tapBundle', source: 'web', target: 'ui' });
+
+      expect(rig.bundleViews).toHaveLength(0);
+      expect(empty).toHaveBeenCalledTimes(1);
     });
   });
 

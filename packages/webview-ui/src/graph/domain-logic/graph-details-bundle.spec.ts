@@ -20,6 +20,13 @@ const WITHOUT_UI = ['docs', 'web', '@acme/config', '@acme/utils'];
 
 const WITHOUT_UTILS = ['docs', 'web', '@acme/config', '@acme/ui'];
 
+const APPS_TO_UI: BundleInspection = { kind: 'bundle', source: collapsedIdOf('apps'), target: '@acme/ui' };
+
+/** The collapsed apps folder links to `@acme/ui` through `web` and `docs`; hiding one of them leaves one row from the other. */
+const WITHOUT_DOCS = ['web', '@acme/config', '@acme/ui', '@acme/utils'];
+
+const WITHOUT_WEB = ['docs', '@acme/config', '@acme/ui', '@acme/utils'];
+
 const contextOf = (scene: FolderScene): DetailsContext => {
   const context: DetailsContext = {
     drawn: BOARDS_DRAWN,
@@ -34,11 +41,11 @@ const contextOf = (scene: FolderScene): DetailsContext => {
   return context;
 };
 
-/** The bundle view of docs to the collapsed packages folder over `scene`. */
-const bundleViewOver = (scene: FolderScene): BundleDetails => {
-  const model = bundleModelOf('docs', PACKAGES_ID, contextOf(scene));
+/** The bundle view of `inspection`, docs to the collapsed packages folder unless given, over `scene`. */
+const bundleViewOver = (scene: FolderScene, inspection: BundleInspection = DOCS_TO_PACKAGES): BundleDetails => {
+  const model = bundleModelOf(inspection.source, inspection.target, contextOf(scene));
 
-  if (model === null) throw new Error('the fixture has a docs link to the packages folder');
+  if (model === null) throw new Error('the fixture has a folder link between the inspected ends');
 
   return detailsViewsMock().bundle(model, false);
 };
@@ -86,6 +93,15 @@ describe('FEATURE: isSameBundleView', () => {
       const context = contextOf(boardsSceneOf(['packages']));
 
       expect(isSameBundleView(empty, DOCS_TO_PACKAGES, context)).toBe(false);
+    });
+  });
+
+  describe('GIVEN the bundle view of the collapsed apps folder to @acme/ui, listing one row from docs', () => {
+    it('WHEN the scene has as many rows to the same target but from web THEN the view is not kept', () => {
+      const view = bundleViewOver(boardsSceneOf(['apps'], WITHOUT_WEB), APPS_TO_UI);
+      const context = contextOf(boardsSceneOf(['apps'], WITHOUT_DOCS));
+
+      expect(isSameBundleView(view, APPS_TO_UI, context)).toBe(false);
     });
   });
 });
