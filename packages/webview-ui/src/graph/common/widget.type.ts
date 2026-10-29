@@ -140,7 +140,7 @@ export type PackageToolbarElements = {
   readonly ellipsis: HTMLButtonElement;
 };
 
-/** The package toolbar's buttons, in DOM order; `collapse` has no button on a flat page. */
+/** The package toolbar's buttons; collapse has no button on a flat page. */
 export type PackageToolbarKind = Exclude<keyof PackageToolbarElements, 'root'>;
 
 /** The toolbar built for `name` in `folder` (`null` on a flat page), with the state it was last synced to. */
