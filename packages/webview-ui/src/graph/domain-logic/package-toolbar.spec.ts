@@ -307,15 +307,6 @@ describe('FEATURE: PackageToolbar', () => {
       expect(rig.deps.onShowTasks).toHaveBeenCalledWith('web');
     });
 
-    it('WHEN Show tasks is clicked with focus on it THEN the container has focus', () => {
-      const { showTasks } = latestOf(rig);
-
-      showTasks.focus();
-      showTasks.click();
-
-      expect(document.activeElement).toBe(rig.container);
-    });
-
     it('WHEN Collapse is clicked THEN onCollapse is called with apps', () => {
       rig.toolbars[0]?.collapse?.click();
 

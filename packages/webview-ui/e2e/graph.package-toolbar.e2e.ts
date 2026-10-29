@@ -161,7 +161,7 @@ test.describe('FEATURE: package node toolbar', () => {
   test(
     'GIVEN the flat task packages with app picked, its toolbar Show tasks draws app tasks and hides the toolbar',
     { annotation: D4 },
-    async ({ graphFolderInspect, graphList, graphNodeToolbar, graphTaskProbe }): Promise<void> => {
+    async ({ graphFolderInspect, graphList, graphNodeToolbar, graphPage, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the flat packages open and app is picked', async (): Promise<void> => {
         await graphFolderInspect.open(FLAT_TASKS, TASK_MODE_STATE_STUB);
         await graphList.pick('app');
@@ -173,6 +173,8 @@ test.describe('FEATURE: package node toolbar', () => {
       await test.step("THEN app's tasks and their chain are drawn", async (): Promise<void> => graphTaskProbe.expectTaskIds(APP_SET));
 
       await test.step('AND the package toolbar is hidden', async (): Promise<void> => graphNodeToolbar.expectToolbarHidden('app'));
+
+      await test.step('AND the graph container has focus', async (): Promise<void> => graphPage.expectContainerFocused());
     }
   );
 

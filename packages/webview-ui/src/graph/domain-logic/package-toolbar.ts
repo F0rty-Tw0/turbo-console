@@ -157,16 +157,13 @@ export class PackageToolbar {
 
   private wire(entry: ToolbarEntry): void {
     const { name, folder, elements } = entry;
-    const { root, focus, startTrace, showTasks, collapse, ellipsis } = elements;
+    const { focus, startTrace, showTasks, collapse, ellipsis } = elements;
     const target: MenuTarget = { kind: 'package', name };
 
     ellipsis.addEventListener('click', (): void => this.deps.onMenu(target, ellipsis));
     focus.addEventListener('click', (): void => this.deps.onFocus(name));
     startTrace.addEventListener('click', (): void => this.deps.onStartTrace());
-    showTasks.addEventListener('click', (): void => {
-      this.deps.onShowTasks(name);
-      this.releaseFocusOf(root);
-    });
+    showTasks.addEventListener('click', (): void => this.deps.onShowTasks(name));
 
     if (collapse !== null && folder !== null) collapse.addEventListener('click', (): void => this.deps.onCollapse(folder));
   }

@@ -25,3 +25,17 @@ export const packageActionsOf = (deps: PackageActionsDeps, actions: PackageInspe
 
   return packageActions;
 };
+
+/**
+ * The actions of the toolbar and the menu: Show tasks, once it ran, leaves focus on the container, since task mode hides
+ * the buttons and "…" that would hold it. A Show tasks the host refused leaves focus where it was.
+ */
+export const focusingShowTasksOf = (actions: PackageActions, container: HTMLElement): PackageActions => {
+  const showTasks = (name: string): void => {
+    actions.showTasks(name);
+    container.focus();
+  };
+  const focusing: PackageActions = { ...actions, showTasks };
+
+  return focusing;
+};
