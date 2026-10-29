@@ -155,6 +155,18 @@ export type ToolbarEntry = {
   preferred: PackageToolbarKind;
 };
 
+/** A widget's buttons by kind; a kind without a button is `null`. */
+export type RovingButtons<TKind extends string> = Readonly<Record<TKind, HTMLButtonElement | null>>;
+
+/** A widget with one Tab stop the arrow keys move: a toolbar entry or a row entry. */
+export type RovingEntry<TKind extends string> = {
+  readonly elements: RovingButtons<TKind>;
+  /** The buttons the last placement showed, in DOM order. */
+  shown: TKind[];
+  /** The Tab stop an arrow key last moved to. */
+  preferred: TKind;
+};
+
 /** The four buttons of a row; the glyph and badge are not buttons. */
 export type RowButtonKind = Exclude<keyof FolderRowElements, 'root'>;
 

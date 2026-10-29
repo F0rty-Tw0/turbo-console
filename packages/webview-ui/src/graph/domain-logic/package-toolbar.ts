@@ -1,10 +1,11 @@
 import { setFocusToggle } from './button-title.ts';
-import { moveInToolbar, placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
+import { placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
+import { moveStopOnKey } from './roving-stop.ts';
 import type { PackageToolbarDeps } from '../common/graph-widgets.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { MenuTarget, PackageMenuState, RectPx, ToolbarEntry } from '../common/widget.type.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
-import { packageToolbarCountOf } from '../utils/package-toolbar.util.ts';
+import { TOOLBAR_ORDER, packageToolbarCountOf } from '../utils/package-toolbar.util.ts';
 
 /** The folder's shown title, `null` on a flat page. */
 const folderTitleOrNull = (folder: string | null): string | null => {
@@ -107,7 +108,7 @@ export class PackageToolbar {
   }
 
   private onKey(event: KeyboardEvent): void {
-    if (this.entry !== null) moveInToolbar(this.entry, event);
+    if (this.entry !== null) moveStopOnKey(this.entry, TOOLBAR_ORDER, event);
   }
 
   private removeEntry(): void {

@@ -1,4 +1,5 @@
-import type { FolderRowElements, RowButtonKind, RowEntry, RowPlan } from '../common/widget.type.ts';
+import { writeStops } from './roving-stop.ts';
+import type { RowEntry, RowPlan } from '../common/widget.type.ts';
 import { ROW_ORDER, rowStopOf, shownKindsOf } from '../utils/row-stop.util.ts';
 
 type StyleKey = 'transform' | 'width';
@@ -18,16 +19,6 @@ export const translateOf = (x: number, y: number): string => {
   const top = Math.round(y);
 
   return `translate(${left}px, ${top}px)`;
-};
-
-/** Makes `stop` the row's one Tab stop: tabIndex 0 on it, -1 on the other buttons, each write skipped when unchanged. */
-export const writeRowStop = (elements: FolderRowElements, stop: RowButtonKind): void => {
-  for (const kind of ROW_ORDER) {
-    const button = elements[kind];
-    const tabIndex = kind === stop ? 0 : -1;
-
-    if (button.tabIndex !== tabIndex) button.tabIndex = tabIndex;
-  }
 };
 
 /** Shows and places a row from its plan, on whole px and at its scale; without one, or with one of the other kind, the row is hidden. The chevron, Focus folder and "…" hide as the plan says, and the Tab stop moves off a hidden button. */
@@ -55,5 +46,5 @@ export const placeRow = (entry: RowEntry, plan: RowPlan | undefined): void => {
 
   const stop = rowStopOf(entry.preferred, entry.shown);
 
-  writeRowStop(entry.elements, stop);
+  writeStops(ROW_ORDER, entry.elements, stop);
 };

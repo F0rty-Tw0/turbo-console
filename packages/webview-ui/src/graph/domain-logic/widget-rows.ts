@@ -1,12 +1,12 @@
 import { setFocusToggle } from './button-title.ts';
-import { placeRow, writeRowStop } from './widget-row-place.ts';
+import { moveStopOnKey } from './roving-stop.ts';
+import { placeRow } from './widget-row-place.ts';
 import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { WidgetRowsDeps } from '../common/graph-widgets.type.ts';
 import type { FolderRowElements, MenuTarget, RowButtonKind, RowEntry, RowKind, RowPlan } from '../common/widget.type.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
-import { toolbarIndexOf } from '../utils/menu-keys.util.ts';
-import { kindOf, rowStopOf } from '../utils/row-stop.util.ts';
+import { ROW_ORDER, kindOf, rowStopOf } from '../utils/row-stop.util.ts';
 import { sameOrder } from '../utils/same-order.util.ts';
 
 /** The row button to give focus back to once the pass placed its row. */
@@ -158,23 +158,7 @@ export class WidgetRows {
   private onRowKey(folder: string, event: KeyboardEvent): void {
     const entry = this.rows.get(folder);
 
-    if (entry === undefined) return;
-
-    const { elements, shown } = entry;
-    const kind = kindOf(elements, event.target);
-    const index = shown.findIndex((shownKind) => shownKind === kind);
-    const next = toolbarIndexOf(event.key, index, shown.length);
-
-    if (next === null) return;
-
-    const nextKind = shown[next];
-
-    if (nextKind === undefined) return;
-
-    event.preventDefault();
-    entry.preferred = nextKind;
-    writeRowStop(elements, nextKind);
-    elements[nextKind].focus();
+    if (entry !== undefined) moveStopOnKey(entry, ROW_ORDER, event);
   }
 
   /** Puts the rows in the scene's order, in the map and in the DOM (the Tab order); a no-op while it holds. */
