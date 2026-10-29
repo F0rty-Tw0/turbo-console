@@ -4,6 +4,7 @@ import { placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
 import type { PackageMenuState, PackageToolbarElements, ToolbarEntry } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
+import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
 import { isShownButton, toolbarButtonsOf } from '../test/utils/package-toolbar.spec.util.ts';
 import { rectOf } from '../test/utils/rect.spec.util.ts';
 
@@ -111,6 +112,18 @@ describe('FEATURE: placeToolbar', () => {
 
       expect(document.activeElement).toBe(ellipsis);
       expect(showTasks.hidden).toBe(true);
+    });
+
+    it('WHEN it is placed again at the same rect and zoom THEN nothing is written and no layout is read', () => {
+      placeToolbar(entry, AT_WEB, 1, container);
+
+      const buttons = toolbarButtonsOf(entry.elements);
+      const watched = [entry.elements.root, ...buttons];
+      const log = accessLogOf(watched);
+
+      placeToolbar(entry, AT_WEB, 1, container);
+
+      expect(log).toStrictEqual([]);
     });
 
     it('WHEN it is placed nowhere after it was placed THEN its root is hidden', () => {

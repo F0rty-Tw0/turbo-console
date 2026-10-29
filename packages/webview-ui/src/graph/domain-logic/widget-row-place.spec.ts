@@ -4,6 +4,7 @@ import { placeRow } from './widget-row-place.ts';
 import type { FolderRowElements, RowButtonKind, RowEntry, RowPlan } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
+import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
 import { ROW_ORDER } from '../utils/row-stop.util.ts';
 
 type PlanFlags = Pick<RowPlan, 'isChevronShown' | 'isFocusShown' | 'isEllipsisShown'>;
@@ -25,22 +26,6 @@ const entryOf = (elements: FolderRowElements, preferred: RowButtonKind): RowEntr
 
 /** The tabIndex of chevron, title, Focus folder and "…", in that order. */
 const tabIndexesOf = (elements: FolderRowElements): number[] => ROW_ORDER.map((kind) => elements[kind].tabIndex);
-
-/** Counts the writes to the button's tabIndex from now on. */
-const writesTo = (button: HTMLButtonElement): number[] => {
-  const writes: number[] = [];
-  let current = button.tabIndex;
-
-  Object.defineProperty(button, 'tabIndex', {
-    get: (): number => current,
-    set: (value: number): void => {
-      current = value;
-      writes.push(value);
-    }
-  });
-
-  return writes;
-};
 
 describe('FEATURE: placeRow Tab stop', () => {
   let elements: FolderRowElements;
@@ -77,16 +62,17 @@ describe('FEATURE: placeRow Tab stop', () => {
     expect(tabIndexesOf(elements)).toStrictEqual([-1, -1, 0, -1]);
   });
 
-  it('GIVEN a row placed once WHEN it is placed again with the same plan THEN no tabIndex is written', () => {
+  it('GIVEN a row placed once WHEN it is placed again with the same plan THEN nothing is written and no layout is read', () => {
     const entry = entryOf(elements, 'chevron');
     const plan = planOf({ ...ALL_SHOWN, isChevronShown: false });
 
     placeRow(entry, plan);
 
-    const writes = ROW_ORDER.map((kind) => writesTo(elements[kind]));
+    const buttons = ROW_ORDER.map((kind) => elements[kind]);
+    const log = accessLogOf([elements.root, ...buttons]);
 
     placeRow(entry, plan);
 
-    expect(writes.flat()).toStrictEqual([]);
+    expect(log).toStrictEqual([]);
   });
 });
