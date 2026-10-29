@@ -101,14 +101,11 @@ export class GraphTaskWidgets {
     if (isActive) this.place();
   }
 
-  /** The overlay media query flipped: in task mode, the "…" is placed against the new bounds and the selected task kept clear. */
+  /** The overlay media query flipped: in task mode, the selected task is kept clear of the panel. */
   private relayout(): void {
     const isActive = this.deps.isActive();
 
-    if (!isActive) return;
-
-    this.place();
-    this.keepClear();
+    if (isActive) this.keepClear();
   }
 
   public exit(): void {
