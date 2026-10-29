@@ -11,6 +11,7 @@ type RowsRig = {
   readonly rows: WidgetRows;
   /** The rows built so far, the latest last: apps collapsed, packages, then apps expanded. */
   readonly built: FolderRowElements[];
+  readonly layer: HTMLElement;
 };
 
 const planOf = (folder: string, kind: RowKind): RowPlan => {
@@ -25,7 +26,7 @@ const rigOf = (): RowsRig => {
   const layer = document.createElement('div');
   const deps: WidgetRowsDeps = { layer, views, onToggle: vi.fn(), onTitle: vi.fn(), onFocus: vi.fn(), onMenu: vi.fn() };
   const rows = new WidgetRows(deps);
-  const rig: RowsRig = { rows, built };
+  const rig: RowsRig = { rows, built, layer };
 
   return rig;
 };
@@ -114,6 +115,18 @@ describe('FEATURE: WidgetRows.restoreFocus', () => {
       rig.rows.restoreFocus();
 
       expect(document.activeElement).toBe(rig.built[1]?.chevron);
+    });
+  });
+
+  describe('GIVEN apps then packages shown', () => {
+    it('WHEN the shown order turns to packages then apps THEN the layer holds their rows in that order, once each', () => {
+      const scene = boardsSceneOf([]);
+      const reordered = { ...scene, shown: new Set(['packages', 'apps']) };
+
+      rebuiltWithLostFocus(rig);
+      rig.rows.sync(reordered, null);
+
+      expect([...rig.layer.children]).toStrictEqual([rig.built[1]?.root, rig.built[2]?.root]);
     });
   });
 });
