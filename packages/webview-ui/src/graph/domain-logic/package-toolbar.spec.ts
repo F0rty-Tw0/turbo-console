@@ -7,6 +7,7 @@ import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { MenuTarget, PackageMenuState, PackageToolbarElements } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
+import { pressKey } from '../test/utils/key-events.spec.util.ts';
 import { rectOf } from '../test/utils/rect.spec.util.ts';
 
 type ToolbarRig = {
@@ -41,6 +42,17 @@ const WITH_TASKS: PackageMenuState = { isFocus: false, hasTasks: true };
 const NO_TASKS: PackageMenuState = { isFocus: false, hasTasks: false };
 const FOCUSED: PackageMenuState = { isFocus: true, hasTasks: true };
 const AT_WEB = rectOf(100, 50, 124, 74);
+
+const COMPACT_ZOOM = 0.4;
+
+/** The Tab stop of each button in DOM order: Focus, Start trace, Show tasks, "…". */
+const stopsOf = (elements: PackageToolbarElements): number[] => {
+  const { focus, startTrace, showTasks, ellipsis } = elements;
+  const buttons = [focus, startTrace, showTasks, ellipsis];
+  const stops = buttons.map((button): number => button.tabIndex);
+
+  return stops;
+};
 
 const latestOf = (rig: ToolbarRig): PackageToolbarElements => {
   const latest = rig.toolbars.at(-1);
@@ -255,6 +267,98 @@ describe('FEATURE: PackageToolbar', () => {
       latestOf(rig).collapse?.click();
 
       expect(rig.deps.onCollapse).toHaveBeenCalledWith('');
+    });
+  });
+
+  describe('GIVEN the web toolbar with tasks, placed at full zoom with Focus focused', () => {
+    beforeEach((): void => {
+      rig.toolbar.sync('web', null, WITH_TASKS);
+      rig.toolbar.place(AT_WEB, 1);
+      latestOf(rig).focus.focus();
+    });
+
+    it('WHEN Right is pressed THEN Start trace has focus and is the one Tab stop', () => {
+      const { focus, startTrace } = latestOf(rig);
+
+      const isPrevented = pressKey(latestOf(rig).root, 'ArrowRight', focus);
+
+      expect(isPrevented).toBe(true);
+      expect(document.activeElement).toBe(startTrace);
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, 0, -1, -1]);
+    });
+
+    it('WHEN Left is pressed THEN the "…" has focus, wrapping', () => {
+      const { focus, ellipsis } = latestOf(rig);
+
+      pressKey(latestOf(rig).root, 'ArrowLeft', focus);
+
+      expect(document.activeElement).toBe(ellipsis);
+    });
+
+    it('WHEN End is pressed THEN the "…" has focus', () => {
+      const { focus, ellipsis } = latestOf(rig);
+
+      pressKey(latestOf(rig).root, 'End', focus);
+
+      expect(document.activeElement).toBe(ellipsis);
+    });
+
+    it('WHEN Home is pressed on Start trace THEN Focus has focus', () => {
+      const { focus, startTrace } = latestOf(rig);
+
+      startTrace.focus();
+      pressKey(latestOf(rig).root, 'Home', startTrace);
+
+      expect(document.activeElement).toBe(focus);
+    });
+
+    it('WHEN a is pressed THEN focus and the Tab stop stay and the key is not prevented', () => {
+      const { focus } = latestOf(rig);
+
+      const isPrevented = pressKey(latestOf(rig).root, 'a', focus);
+
+      expect(isPrevented).toBe(false);
+      expect(document.activeElement).toBe(focus);
+      expect(stopsOf(latestOf(rig))).toStrictEqual([0, -1, -1, -1]);
+    });
+
+    it('WHEN Right is pressed and the toolbar is placed again THEN the Tab stop stays on Start trace', () => {
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).focus);
+
+      rig.toolbar.place(AT_WEB, 1);
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, 0, -1, -1]);
+    });
+
+    it('WHEN Right is pressed, the zoom goes compact and then full THEN the Tab stop returns to Start trace', () => {
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).focus);
+
+      rig.toolbar.place(AT_WEB, COMPACT_ZOOM);
+      rig.toolbar.place(AT_WEB, 1);
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, 0, -1, -1]);
+    });
+
+    it('WHEN the toolbar is rebuilt for docs after Right THEN the Tab stop is Focus again', () => {
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).focus);
+
+      rig.toolbar.sync('docs', null, WITH_TASKS);
+      rig.toolbar.place(AT_WEB, 1);
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([0, -1, -1, -1]);
+    });
+  });
+
+  describe('GIVEN the web toolbar without tasks, placed at full zoom with Start trace focused', () => {
+    it('WHEN Right is pressed THEN the hidden Show tasks is skipped and the "…" has focus', () => {
+      rig.toolbar.sync('web', null, NO_TASKS);
+      rig.toolbar.place(AT_WEB, 1);
+      const { startTrace, ellipsis } = latestOf(rig);
+
+      startTrace.focus();
+      pressKey(latestOf(rig).root, 'ArrowRight', startTrace);
+
+      expect(document.activeElement).toBe(ellipsis);
     });
   });
 });

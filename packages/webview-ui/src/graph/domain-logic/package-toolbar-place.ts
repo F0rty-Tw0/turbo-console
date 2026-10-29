@@ -1,13 +1,14 @@
 import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
-import type { PackageToolbarElements, PackageToolbarShown, RectPx, ToolbarEntry } from '../common/widget.type.ts';
-import { packageToolbarShownOf } from '../utils/package-toolbar.util.ts';
+import type { PackageToolbarElements, PackageToolbarKind, RectPx, ToolbarEntry } from '../common/widget.type.ts';
+import { toolbarIndexOf } from '../utils/menu-keys.util.ts';
+import {
+  TOOLBAR_ORDER,
+  packageToolbarShownOf,
+  toolbarKindOf,
+  toolbarShownKindsOf,
+  toolbarStopOf
+} from '../utils/package-toolbar.util.ts';
 import { isNodeToolbarCompact } from '../utils/widget-geometry.util.ts';
-
-/** One button of the package toolbar and whether the latest pass shows it; a missing Collapse has no button. */
-type ToolbarSlot = {
-  readonly button: HTMLButtonElement | null;
-  readonly isShown: boolean;
-};
 
 /** Tab stop 0 on the one stop, -1 on the rest, a write skipped when unchanged. */
 const writeTabStop = (button: HTMLButtonElement, isStop: boolean): void => {
@@ -16,44 +17,60 @@ const writeTabStop = (button: HTMLButtonElement, isStop: boolean): void => {
   if (button.tabIndex !== tabIndex) button.tabIndex = tabIndex;
 };
 
-/** The toolbar's buttons in DOM order with what a pass shows of them. */
-const slotsOf = (elements: PackageToolbarElements, shown: PackageToolbarShown): ToolbarSlot[] => {
-  const slots: ToolbarSlot[] = [
-    { button: elements.focus, isShown: shown.focus },
-    { button: elements.startTrace, isShown: shown.startTrace },
-    { button: elements.showTasks, isShown: shown.showTasks },
-    { button: elements.collapse, isShown: shown.collapse },
-    { button: elements.ellipsis, isShown: true }
-  ];
+/** The Tab stop on the `stop` button and off the rest. */
+const writeStops = (elements: PackageToolbarElements, stop: PackageToolbarKind): void => {
+  for (const kind of TOOLBAR_ORDER) {
+    const button = elements[kind];
 
-  return slots;
+    if (button !== null) writeTabStop(button, kind === stop);
+  }
 };
 
-/** Whether the slot's button is hidden by this pass and holds the focus. */
-const isHiddenActive = (slot: ToolbarSlot, active: Element | null): boolean => {
-  const isHidden = !slot.isShown;
+/** Whether `active` is a toolbar button the pass hides. */
+const isHiddenActive = (elements: PackageToolbarElements, shown: PackageToolbarKind[], active: Element | null): boolean => {
+  const kind = toolbarKindOf(elements, active);
 
-  return isHidden && slot.button !== null && slot.button === active;
+  return kind !== undefined && !shown.includes(kind);
 };
 
-/** Shows the buttons the zoom and the state allow with the first shown as the Tab stop; focus left on a hidden one goes to the "…". */
+/** Shows the buttons the zoom and the state allow with `preferred` (else the first shown) as the Tab stop; focus left on a hidden one goes to the "…". */
 const placeButtons = (entry: ToolbarEntry, zoom: number): void => {
-  const { state, folder, elements } = entry;
-  const isCompact = isNodeToolbarCompact(zoom);
-  const shown = packageToolbarShownOf(state, folder !== null, isCompact);
-  const slots = slotsOf(elements, shown);
-  const stop = slots.find((slot) => slot.isShown);
+  const { state, folder, elements, preferred } = entry;
+  const flags = packageToolbarShownOf(state, folder !== null, isNodeToolbarCompact(zoom));
+  const shown = toolbarShownKindsOf(flags);
   const active = elements.root.ownerDocument.activeElement;
-  const isLostFocus = slots.some((slot): boolean => isHiddenActive(slot, active));
+  const isLostFocus = isHiddenActive(elements, shown, active);
 
-  for (const { button, isShown } of slots) {
-    if (button === null) continue;
+  for (const kind of TOOLBAR_ORDER) {
+    const button = elements[kind];
 
-    setHidden(button, !isShown);
-    writeTabStop(button, button === stop?.button);
+    if (button !== null) setHidden(button, !shown.includes(kind));
   }
 
+  entry.shown = shown;
+  writeStops(elements, toolbarStopOf(preferred, shown));
+
   if (isLostFocus) elements.ellipsis.focus();
+};
+
+/** Left/Right/Home/End move focus and the Tab stop across the shown buttons; other keys pass through (Shift+F10 reaches the layer). */
+export const moveInToolbar = (entry: ToolbarEntry, event: KeyboardEvent): void => {
+  const { elements, shown } = entry;
+  const kind = toolbarKindOf(elements, event.target);
+  const index = shown.findIndex((shownKind) => shownKind === kind);
+  const next = toolbarIndexOf(event.key, index, shown.length);
+
+  if (next === null) return;
+
+  const nextKind = shown[next];
+  const button = nextKind === undefined ? null : elements[nextKind];
+
+  if (nextKind === undefined || button === null) return;
+
+  event.preventDefault();
+  entry.preferred = nextKind;
+  writeStops(elements, nextKind);
+  button.focus();
 };
 
 /** Hands the focus to `container` when it is inside `root`, since the browser would drop it on the body once `root` goes. */

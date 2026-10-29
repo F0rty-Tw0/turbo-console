@@ -13,7 +13,7 @@ const AT_WEB = rectOf(100, 50, 124, 74);
 
 const entryOf = (state: PackageMenuState): ToolbarEntry => {
   const elements = widgetRowViewsMock().views.packageToolbar('web', 'apps');
-  const entry: ToolbarEntry = { name: 'web', folder: 'apps', state, elements };
+  const entry: ToolbarEntry = { name: 'web', folder: 'apps', state, elements, shown: [], preferred: 'focus' };
 
   return entry;
 };

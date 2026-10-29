@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { packageToolbarCountOf, packageToolbarShownOf } from './package-toolbar.util.ts';
-import type { PackageMenuState, PackageToolbarShown } from '../common/widget.type.ts';
+import { packageToolbarCountOf, packageToolbarShownOf, toolbarShownKindsOf, toolbarStopOf } from './package-toolbar.util.ts';
+import type { PackageMenuState, PackageToolbarKind, PackageToolbarShown } from '../common/widget.type.ts';
 
 const stateOf = (isFocus: boolean, hasTasks: boolean): PackageMenuState => {
   const state: PackageMenuState = { isFocus, hasTasks };
@@ -49,5 +49,41 @@ describe('FEATURE: packageToolbarCountOf', () => {
     const count = packageToolbarCountOf(stateOf(false, hasTasks), hasFolder);
 
     expect(count).toBe(expected);
+  });
+});
+
+describe('FEATURE: toolbarShownKindsOf', () => {
+  it.each([
+    { name: 'grouped with tasks', shown: GROUPED_TASKS, expected: ['focus', 'startTrace', 'showTasks', 'collapse', 'ellipsis'] },
+    { name: 'flat without tasks', shown: FLAT_PLAIN, expected: ['focus', 'startTrace', 'ellipsis'] },
+    { name: 'compact', shown: NONE, expected: ['ellipsis'] }
+  ])('GIVEN $name THEN the shown kinds are $expected in DOM order', ({ shown, expected }) => {
+    const kinds = toolbarShownKindsOf(shown);
+
+    expect(kinds).toStrictEqual(expected);
+  });
+});
+
+type StopCase = {
+  readonly name: string;
+  readonly preferred: PackageToolbarKind;
+  readonly shown: PackageToolbarKind[];
+  readonly expected: PackageToolbarKind;
+};
+
+const FLAT_KINDS: PackageToolbarKind[] = ['focus', 'startTrace', 'ellipsis'];
+
+const STOP_CASES: StopCase[] = [
+  { name: 'startTrace is preferred and shown', preferred: 'startTrace', shown: FLAT_KINDS, expected: 'startTrace' },
+  { name: 'showTasks is preferred and hidden', preferred: 'showTasks', shown: FLAT_KINDS, expected: 'focus' },
+  { name: 'startTrace is preferred and only the "…" shows', preferred: 'startTrace', shown: ['ellipsis'], expected: 'ellipsis' },
+  { name: 'nothing shows', preferred: 'focus', shown: [], expected: 'ellipsis' }
+];
+
+describe('FEATURE: toolbarStopOf', () => {
+  it.each(STOP_CASES)('GIVEN $name THEN the stop is $expected', ({ preferred, shown, expected }) => {
+    const stop = toolbarStopOf(preferred, shown);
+
+    expect(stop).toBe(expected);
   });
 });

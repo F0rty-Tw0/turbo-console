@@ -1,5 +1,5 @@
 import { setFocusToggle } from './button-title.ts';
-import { placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
+import { moveInToolbar, placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
 import type { PackageToolbarDeps } from '../common/graph-widgets.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { MenuTarget, PackageMenuState, RectPx, ToolbarEntry } from '../common/widget.type.ts';
@@ -15,7 +15,7 @@ const folderTitleOrNull = (folder: string | null): string | null => {
 
 /**
  * The selected package's node toolbar: built again when the selection or its folder changes, first in the layer so it is
- * the Tab stop after the canvas; the first shown button is its one Tab stop. Focus inside it goes to the container when
+ * the Tab stop after the canvas; the preferred button (Focus until an arrow key moves it) is its one Tab stop. Focus inside it goes to the container when
  * it is removed or hidden, since the browser would drop it on the body, and to the "…" when left on a hidden button.
  */
 export class PackageToolbar {
@@ -84,9 +84,10 @@ export class PackageToolbar {
   private build(name: string, folder: string | null, state: PackageMenuState): ToolbarEntry {
     const folderTitle = folderTitleOrNull(folder);
     const elements = this.deps.views.packageToolbar(name, folderTitle);
-    const entry: ToolbarEntry = { name, folder, state, elements };
+    const entry: ToolbarEntry = { name, folder, state, elements, shown: [], preferred: 'focus' };
 
     this.wire(entry);
+    elements.root.addEventListener('keydown', (event: KeyboardEvent): void => this.onKey(event));
     this.deps.layer.prepend(elements.root);
 
     return entry;
@@ -103,6 +104,10 @@ export class PackageToolbar {
     showTasks.addEventListener('click', (): void => this.deps.onShowTasks(name));
 
     if (collapse !== null && folder !== null) collapse.addEventListener('click', (): void => this.deps.onCollapse(folder));
+  }
+
+  private onKey(event: KeyboardEvent): void {
+    if (this.entry !== null) moveInToolbar(this.entry, event);
   }
 
   private removeEntry(): void {
