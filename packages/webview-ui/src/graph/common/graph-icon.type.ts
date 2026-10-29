@@ -19,4 +19,5 @@ export type ActionIconKey =
   | 'expand'
   | 'run'
   | 'runNoCache'
-  | 'stop';
+  | 'stop'
+  | 'showPackage';

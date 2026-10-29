@@ -11,9 +11,11 @@ import {
   folderToggleTextOf,
   groupLabelOf,
   packageToolbarLabelOf,
+  runLabelOf,
   showAllTextOf,
   showLabelOf,
   showPackageLabelOf,
+  stopLabelOf,
   taskToolbarLabelOf
 } from './controls-text.util.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
@@ -192,6 +194,18 @@ describe('FEATURE: controls text', () => {
       const label = taskToolbarLabelOf('app#build');
 
       expect(label).toBe('Task app#build');
+    });
+
+    it('WHEN its Run button is named THEN the name carries the task id', () => {
+      const label = runLabelOf('app#build');
+
+      expect(label).toBe('Run app#build');
+    });
+
+    it('WHEN its Stop button is named THEN the name carries the task id', () => {
+      const label = stopLabelOf('app#build');
+
+      expect(label).toBe('Stop app#build');
     });
   });
 });

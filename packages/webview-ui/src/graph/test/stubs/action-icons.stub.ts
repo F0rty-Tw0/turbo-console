@@ -13,5 +13,6 @@ export const SWAPPED_ACTION_ICONS_STUB: Readonly<Record<ActionIconKey, GraphIcon
   expand: 'fold',
   run: 'debug-rerun',
   runNoCache: 'play',
-  stop: 'error'
+  stop: 'error',
+  showPackage: 'tasklist'
 };
