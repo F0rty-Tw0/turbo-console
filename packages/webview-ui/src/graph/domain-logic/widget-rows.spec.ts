@@ -38,10 +38,10 @@ const rebuiltWithLostFocus = (rig: RowsRig): void => {
   const { rows, built } = rig;
   const collapsedPlans = [planOf('apps', 'collapsed'), planOf('packages', 'box')];
 
-  rows.sync(boardsSceneOf(['apps']), null, null);
+  rows.sync(boardsSceneOf(['apps']), null);
   rows.place(collapsedPlans);
   built[0]?.focus.focus();
-  rows.sync(boardsSceneOf([]), null, null);
+  rows.sync(boardsSceneOf([]), null);
   loseFocus();
   rows.place([planOf('packages', 'box')]);
   rows.restoreFocus();
@@ -61,10 +61,10 @@ describe('FEATURE: WidgetRows.restoreFocus', () => {
 
   describe('GIVEN a rebuilt row that is placed in the same pass', () => {
     it('WHEN focus is restored THEN the new row has focus on the same kind of button', () => {
-      rig.rows.sync(boardsSceneOf(['apps']), null, null);
+      rig.rows.sync(boardsSceneOf(['apps']), null);
       rig.rows.place([planOf('apps', 'collapsed')]);
       rig.built[0]?.focus.focus();
-      rig.rows.sync(boardsSceneOf([]), null, null);
+      rig.rows.sync(boardsSceneOf([]), null);
       loseFocus();
       rig.rows.place([planOf('apps', 'box')]);
 
@@ -107,7 +107,7 @@ describe('FEATURE: WidgetRows.restoreFocus', () => {
 
       rebuiltWithLostFocus(rig);
       rig.built[1]?.chevron.focus();
-      rig.rows.sync(reordered, null, null);
+      rig.rows.sync(reordered, null);
       loseFocus();
       rig.rows.place(plans);
 

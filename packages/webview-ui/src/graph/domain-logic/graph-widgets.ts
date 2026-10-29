@@ -48,7 +48,7 @@ export class GraphWidgets {
     const { scene, selectedPackage, focusedFolder } = this.deps.state();
 
     this.toolbar.sync(selectedPackage);
-    this.rows.sync(scene, null, focusedFolder);
+    this.rows.sync(scene, focusedFolder);
     this.position();
     this.rows.restoreFocus();
   }
