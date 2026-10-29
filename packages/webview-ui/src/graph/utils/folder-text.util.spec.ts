@@ -152,7 +152,7 @@ describe('FEATURE: folder text', () => {
   });
 
   describe('GIVEN a folder scene with collapsed folders', () => {
-    it('WHEN the link counts of apps and packages collapsed are built THEN they read 2 links and 1 link', () => {
+    it('WHEN the link counts with packages collapsed are built THEN they read 1 link and 2 links', () => {
       const scene = boardsSceneOf(['packages']);
 
       const counts = scene.links.map(folderLinkCountTextOf);
