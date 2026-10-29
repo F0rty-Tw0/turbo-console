@@ -226,6 +226,18 @@ describe('FEATURE: nodeToolbarRectOf', () => {
         expected: rectOf(156, 72, 180, 96)
       },
       {
+        title: 'a row starts exactly at the toolbar right: stays above',
+        count: 1,
+        rows: [rectOf(180, 72, 250, 96)],
+        expected: rectOf(156, 72, 180, 96)
+      },
+      {
+        title: 'a row top touches the above-rect bottom: stays above',
+        count: 1,
+        rows: [rectOf(50, 96, 250, 100)],
+        expected: rectOf(156, 72, 180, 96)
+      },
+      {
         title: 'the below-rect meets a row too: one flip only, stays below',
         count: 1,
         rows: [rectOf(50, 80, 250, 98), rectOf(50, 140, 250, 164)],
