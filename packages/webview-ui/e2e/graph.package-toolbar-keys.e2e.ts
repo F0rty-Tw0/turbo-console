@@ -36,18 +36,19 @@ test.describe('FEATURE: package node toolbar keys', () => {
       await test.step('THEN the "…" has focus', async (): Promise<void> =>
         graphNodeToolbar.expectButtonFocused('app', 'Actions for app'));
 
-      await test.step('WHEN Right is pressed again', async (): Promise<void> => graphKeys.press('ArrowRight'));
-
-      await test.step('THEN Focus app has focus, wrapping', async (): Promise<void> =>
-        graphNodeToolbar.expectButtonFocused('app', 'Focus app'));
-
       await test.step('WHEN Shift+Tab is pressed', async (): Promise<void> => graphKeys.press('Shift+Tab'));
 
-      await test.step('THEN the container has focus', async (): Promise<void> => graphPage.expectContainerFocused());
+      await test.step('THEN the container has focus: no other toolbar button is a Tab stop', async (): Promise<void> =>
+        graphPage.expectContainerFocused());
 
       await test.step('WHEN Tab is pressed again', async (): Promise<void> => graphKeys.press('Tab'));
 
-      await test.step('THEN Focus app has focus: the toolbar is one Tab stop', async (): Promise<void> =>
+      await test.step('THEN the "…" has focus: the toolbar is one Tab stop and keeps it', async (): Promise<void> =>
+        graphNodeToolbar.expectButtonFocused('app', 'Actions for app'));
+
+      await test.step('WHEN Right is pressed again', async (): Promise<void> => graphKeys.press('ArrowRight'));
+
+      await test.step('THEN Focus app has focus, wrapping', async (): Promise<void> =>
         graphNodeToolbar.expectButtonFocused('app', 'Focus app'));
     }
   );
