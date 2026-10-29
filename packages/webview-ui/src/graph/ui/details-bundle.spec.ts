@@ -5,6 +5,7 @@ import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { BundleDetails } from '../common/details-view.type.ts';
 import type { BundleEndModel, BundleViewModel } from '../common/details.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { textsOf } from '../test/utils/details-names.spec.util.ts';
 
 const SOURCE_END: BundleEndModel = { text: 'docs', folder: null };
 
@@ -23,12 +24,12 @@ const childOf = (view: BundleDetails, className: string): Element | undefined =>
   return children.find((child) => child.classList.contains(className));
 };
 
-const textsOf = (parent: Element | undefined): (string | null)[] => {
-  if (parent === undefined) return [];
+const ROW_INDEXES = [{ index: 0 }, { index: 1 }];
 
-  const children = Array.from(parent.children);
+const presentOf = <T>(value: T | undefined, what: string): T => {
+  if (value === undefined) throw new Error(`missing ${what}`);
 
-  return children.map((child): string | null => child.textContent);
+  return value;
 };
 
 const rowsOf = (view: BundleDetails): Element[] => {
@@ -57,10 +58,10 @@ describe('FEATURE: bundleView', () => {
 
     it('WHEN built THEN the lead reads [source] depends on [target] with the two ends as its buttons', () => {
       const lead = childOf(view, 'details-lead');
-      const ends = [lead?.children[0], lead?.children[2]];
 
       expect(textsOf(lead)).toStrictEqual(['docs', ' depends on ', 'packages']);
-      expect(ends).toStrictEqual([view.source, view.target]);
+      expect(lead?.children[0]).toBe(view.source);
+      expect(lead?.children[2]).toBe(view.target);
     });
 
     it('WHEN built THEN the heading is described by the lead', () => {
@@ -105,12 +106,23 @@ describe('FEATURE: bundleView', () => {
       expect(view.source.dataset['name']).toBe('docs');
     });
 
-    it('WHEN built THEN each row ends with its Explain button', () => {
-      const explains = view.links.map(({ explain }) => explain);
-      const lasts = rowsOf(view).map((row) => row.children[1]);
+    it.each(ROW_INDEXES)('WHEN built THEN row $index ends with its Explain button', ({ index }) => {
+      const row = presentOf(rowsOf(view)[index], 'row');
+      const item = presentOf(view.links[index], 'link item');
+      const children = Array.from(row.children);
 
-      expect(lasts).toStrictEqual(explains);
-      expect(explains.map((explain) => explain.textContent)).toStrictEqual(['Explain', 'Explain']);
+      expect(children.at(-1)).toBe(item.explain);
+      expect(item.explain.textContent).toBe('Explain');
+    });
+
+    it.each(ROW_INDEXES)('WHEN built THEN row $index puts its source and target buttons around the text', ({ index }) => {
+      const row = presentOf(rowsOf(view)[index], 'row');
+      const item = presentOf(view.links[index], 'link item');
+      const text = presentOf(row.children[0], 'text');
+
+      expect(text.className).toBe('details-link-text');
+      expect(text.children[0]).toBe(item.pickSource);
+      expect(text.children[2]).toBe(item.pickTarget);
     });
 
     it('WHEN built THEN each Explain names its link by aria-label and title', () => {

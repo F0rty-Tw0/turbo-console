@@ -25,3 +25,12 @@ export const actionElementsIn = (root: Element, action: string): HTMLElement[] =
 
   return elements.filter((element) => element.dataset['action'] === action);
 };
+
+/** The text of each child of `parent`, in order; `[]` when there is no `parent`. */
+export const textsOf = (parent: Element | undefined): (string | null)[] => {
+  if (parent === undefined) return [];
+
+  const children = Array.from(parent.children);
+
+  return children.map(textOf);
+};

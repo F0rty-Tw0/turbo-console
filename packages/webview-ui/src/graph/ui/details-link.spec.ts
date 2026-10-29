@@ -4,7 +4,7 @@ import { linkView } from './details-link.ts';
 import type { LinkDetails } from '../common/details-view.type.ts';
 import type { LinkViewModel } from '../common/details.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { namesIn } from '../test/utils/details-names.spec.util.ts';
+import { namesIn, textsOf } from '../test/utils/details-names.spec.util.ts';
 
 const MODEL: LinkViewModel = { source: '@acme/web', target: '@acme/ui', file: 'apps/web/package.json' };
 
@@ -12,14 +12,6 @@ const leadOf = (view: LinkDetails): Element | undefined => {
   const children = Array.from(view.root.children);
 
   return children.find((child) => child.classList.contains('details-lead'));
-};
-
-const textsOf = (parent: Element | undefined): (string | null)[] => {
-  if (parent === undefined) return [];
-
-  const children = Array.from(parent.children);
-
-  return children.map((child): string | null => child.textContent);
 };
 
 describe('FEATURE: linkView', () => {
