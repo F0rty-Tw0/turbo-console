@@ -5,8 +5,7 @@ import type { GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
 
 type HandledInspection = {
-  readonly tapNode: (name: string) => void;
-  readonly tapEdge: (source: string, target: string) => void;
+  readonly tap: (input: InspectionInput) => void;
   readonly input: (input: InspectionInput) => void;
   readonly tapFolder: (folder: string) => void;
   readonly openDetailsOf: (name: string) => void;
@@ -110,10 +109,11 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
   const toggleAtoms = (id: string): void => tasks().layout.atoms.toggle(id);
   const handlers: GraphViewHandlers = {
     onTapNode: byMode(
-      (name: string): void => filtering().inspection.tapNode(name),
+      (name: string): void => filtering().inspection.tap({ kind: 'select', name, via: 'canvas' }),
       (id: string): void => tasks().selection.tapNode(id)
     ),
-    onTapEdge: byMode((source: string, target: string): void => filtering().inspection.tapEdge(source, target)),
+    onTapEdge: byMode((source: string, target: string): void => filtering().inspection.tap({ kind: 'tapLink', source, target })),
+    onTapBundle: byMode((source: string, target: string): void => filtering().inspection.tap({ kind: 'tapBundle', source, target })),
     onTapBackground: byMode(
       (): void => filtering().inspection.input(BACKGROUND),
       (): void => tasks().selection.clear()

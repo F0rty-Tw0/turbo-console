@@ -5,6 +5,7 @@ import { viewHandlersOf } from './graph-view-handlers.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
+import { collapsedIdOf } from '../utils/folder-id.util.ts';
 
 const WEB_AT: Position = { x: 1, y: 2 };
 
@@ -15,8 +16,7 @@ const BACKGROUND: InspectionInput = { kind: 'background' };
 describe('FEATURE: viewHandlersOf', () => {
   describe('GIVEN handlers over fake targets', () => {
     let calls: string[];
-    let tapNode: Mock<(name: string) => void>;
-    let tapEdge: Mock<(source: string, target: string) => void>;
+    let tap: Mock<(input: InspectionInput) => void>;
     let input: Mock<(input: InspectionInput) => void>;
     let tapFolder: Mock<(folder: string) => void>;
     let openDetailsOf: Mock<(name: string) => void>;
@@ -36,8 +36,7 @@ describe('FEATURE: viewHandlersOf', () => {
 
     beforeEach((): void => {
       calls = [];
-      tapNode = vi.fn<(name: string) => void>();
-      tapEdge = vi.fn<(source: string, target: string) => void>();
+      tap = vi.fn<(input: InspectionInput) => void>();
       input = vi.fn<(input: InspectionInput) => void>();
       tapFolder = vi.fn<(folder: string) => void>();
       openDetailsOf = vi.fn<(name: string) => void>();
@@ -59,7 +58,7 @@ describe('FEATURE: viewHandlersOf', () => {
       const rendered = (): void => {
         calls.push('rendered');
       };
-      const inspection = { tapNode, tapEdge, input, tapFolder, openDetailsOf, saveViewport, keepClear: keepClearPackage };
+      const inspection = { tap, input, tapFolder, openDetailsOf, saveViewport, keepClear: keepClearPackage };
       const folders = { toggle };
       const filtering = { inspection, folders, rendered };
       const layouts = { dragged };
@@ -89,16 +88,22 @@ describe('FEATURE: viewHandlersOf', () => {
       expect(calls).toStrictEqual(['mark', 'rendered']);
     });
 
-    it('WHEN a node is tapped THEN the inspection taps it', () => {
+    it('WHEN a node is tapped THEN the inspection taps it from the canvas', () => {
       handlers.onTapNode('web');
 
-      expect(tapNode).toHaveBeenCalledExactlyOnceWith('web');
+      expect(tap).toHaveBeenCalledExactlyOnceWith({ kind: 'select', name: 'web', via: 'canvas' });
     });
 
     it('WHEN an edge is tapped THEN the inspection taps that link', () => {
       handlers.onTapEdge('web', 'ui');
 
-      expect(tapEdge).toHaveBeenCalledExactlyOnceWith('web', 'ui');
+      expect(tap).toHaveBeenCalledExactlyOnceWith({ kind: 'tapLink', source: 'web', target: 'ui' });
+    });
+
+    it('WHEN a folder link is tapped THEN the inspection taps that bundle', () => {
+      handlers.onTapBundle('web', collapsedIdOf('packages'));
+
+      expect(tap).toHaveBeenCalledExactlyOnceWith({ kind: 'tapBundle', source: 'web', target: collapsedIdOf('packages') });
     });
 
     it('WHEN the background is tapped THEN the inspection gets a background input', () => {
@@ -170,15 +175,16 @@ describe('FEATURE: viewHandlersOf', () => {
       it('WHEN nodes, links, the background and folders are tapped once or twice THEN the package side hears nothing', () => {
         handlers.onTapNode('web#build');
         handlers.onTapEdge('web#build', 'ui#build');
+        handlers.onTapBundle('web#build', collapsedIdOf('packages'));
         handlers.onTapBackground();
         handlers.onTapFolder('apps');
         handlers.onDoubleTapNode('web#build');
         handlers.onDoubleTapFolder('apps');
 
-        const spies = [tapNode, tapEdge, input, tapFolder, openDetailsOf, toggle];
+        const spies = [tap, input, tapFolder, openDetailsOf, toggle];
         const packageCalls = spies.map((spy) => spy.mock.calls.length);
 
-        expect(packageCalls).toStrictEqual([0, 0, 0, 0, 0, 0]);
+        expect(packageCalls).toStrictEqual([0, 0, 0, 0, 0]);
       });
 
       it('WHEN a task is tapped THEN task mode taps it', () => {
@@ -202,6 +208,7 @@ describe('FEATURE: viewHandlersOf', () => {
 
       it('WHEN a link is tapped or a task double-tapped THEN task mode selects nothing', () => {
         handlers.onTapEdge('web#build', 'ui#build');
+        handlers.onTapBundle('web#build', collapsedIdOf('packages'));
         handlers.onDoubleTapNode('web#build');
 
         expect(selectTask).not.toHaveBeenCalled();

@@ -74,13 +74,9 @@ export class GraphInspection {
     this.input({ kind: 'select', name, via: 'list' });
   }
 
-  public tapNode(name: string): void {
-    this.input({ kind: 'select', name, via: 'canvas' });
-    this.deps.page.container.focus();
-  }
-
-  public tapEdge(source: string, target: string): void {
-    this.input({ kind: 'tapLink', source, target });
+  /** An input from a canvas tap; the canvas takes focus. */
+  public tap(input: InspectionInput): void {
+    this.input(input);
     this.deps.page.container.focus();
   }
 

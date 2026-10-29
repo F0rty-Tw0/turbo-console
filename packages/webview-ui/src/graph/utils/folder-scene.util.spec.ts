@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { collapsedIdOf } from './folder-id.util.ts';
 import { folderSceneOf } from './folder-scene.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { BOARDS_EDGES, BOARDS_INFOS, boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
@@ -58,6 +59,13 @@ describe('FEATURE: folderSceneOf', () => {
       expect([...scene.shown]).toStrictEqual(['apps', 'packages']);
       expect([...scene.ghosts]).toStrictEqual(['@acme/ui']);
       expect([...scene.visible]).toStrictEqual(['docs', 'web']);
+    });
+
+    it("WHEN @acme/ui is a ghost THEN no folder link ends on it, so a bundle never outlives a trace's ghosts", () => {
+      const visible = ['docs', 'web', '@acme/config', '@acme/utils'];
+      const scene = boardsSceneOf(['apps'], visible, ['@acme/ui']);
+
+      expect(scene.links).toStrictEqual([{ source: collapsedIdOf('apps'), target: '@acme/utils', links: [BOARDS_EDGES[2]] }]);
     });
   });
 

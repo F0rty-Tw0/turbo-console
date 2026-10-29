@@ -57,6 +57,8 @@ export type GraphViewHandlers = {
   readonly onTapNode: (name: string) => void;
   /** A link tapped on the canvas; `source` depends on `target`. */
   readonly onTapEdge: (source: string, target: string) => void;
+  /** A tap on a folder link; its ends are drawn ids, a package name or a collapsed folder id. */
+  readonly onTapBundle: (source: string, target: string) => void;
   readonly onTapBackground: () => void;
   /** A tap on a folder box outside its packages or on a collapsed folder; `folder` is the key (`''` the root). */
   readonly onTapFolder: (folder: string) => void;
