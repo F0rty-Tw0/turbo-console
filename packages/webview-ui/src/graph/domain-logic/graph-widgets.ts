@@ -4,7 +4,7 @@ import type { GraphWidgetsDeps, MenuAnchor } from '../common/graph-widgets.type.
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds, MenuTarget, RectPx, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
 import { tapPairOf } from '../utils/tap-pair.util.ts';
-import { buttonRectsOf, overlayLeftOf, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
+import { buttonRectsOf, nodeToolbarRectOf, overlayLeftOf } from '../utils/widget-geometry.util.ts';
 import { widgetPlanOf } from '../utils/widget-plan.util.ts';
 
 type PackageEntry = {
@@ -12,7 +12,10 @@ type PackageEntry = {
   readonly button: HTMLButtonElement;
 };
 
-const NO_PLAN: WidgetPlan = { rows: [], packageButton: null };
+/** The package toolbar is the "…" alone so far. */
+const PACKAGE_TOOLBAR_COUNT = 1;
+
+const NO_PLAN: WidgetPlan = { rows: [], nodeToolbar: null };
 
 /**
  * The folder header rows, with their Focus folder toggle, and the selected package's "…" over the canvas:
@@ -61,12 +64,17 @@ export class GraphWidgets {
 
     const selected = this.button?.name ?? null;
     const rects = this.deps.view.widgetRects(selected);
-    const input: WidgetPlanInput = { rects, bounds: this.bounds, isGrouped: this.isGrouped };
+    const input: WidgetPlanInput = {
+      rects,
+      bounds: this.bounds,
+      isGrouped: this.isGrouped,
+      toolbarCount: PACKAGE_TOOLBAR_COUNT
+    };
 
     this.plan = widgetPlanOf(input);
     this.rows.place(this.plan.rows);
     this.deps.view.markRowLess(this.plan.rows);
-    this.placeButton(this.plan.packageButton);
+    this.placeButton(this.plan.nodeToolbar);
   }
 
   public refreshBounds(): void {
@@ -83,7 +91,11 @@ export class GraphWidgets {
     this.position();
   }
 
-  /** The package "…" span at the camera of this call, shown or not, so a keep-clear pan brings it out from under the overlay. */
+  /**
+   * The package "…" span at the camera of this call, shown or not, so a keep-clear pan brings it out from under the
+   * overlay; the flip moves only y, so keep-clear needs no rows. It also skips the compact rule (the "…" alone under
+   * `NODE_TOOLBAR_MIN_PX`), which is right only while the count is 1; U4d must apply it.
+   */
   public packageButtonBox(): AnchorBox | null {
     if (this.button === null || !this.isGrouped) return null;
 
@@ -91,7 +103,7 @@ export class GraphWidgets {
 
     if (selected === null) return null;
 
-    const rect = packageButtonRectOf(selected);
+    const rect = nodeToolbarRectOf(selected, PACKAGE_TOOLBAR_COUNT, []);
     const box: AnchorBox = { x1: rect.x1, x2: rect.x2 };
 
     return box;
@@ -120,7 +132,7 @@ export class GraphWidgets {
 
   private packageAnchor(name: string): MenuAnchor | null {
     const { button } = this;
-    const rect = this.plan.packageButton;
+    const rect = this.plan.nodeToolbar;
 
     if (rect === null || button?.name !== name) return null;
 

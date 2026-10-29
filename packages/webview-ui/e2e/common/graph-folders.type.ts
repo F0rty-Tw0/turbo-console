@@ -53,6 +53,9 @@ export type FolderViewFacts = {
   readonly packages: string[];
 };
 
+/** Which side of its node a node toolbar sits on. */
+export type NodeToolbarSide = 'above' | 'below';
+
 /** Where a header row's buttons sit on their box or node: `top` below its top, `inset` in from its sides, `side` px squares. */
 export type RowFrame = {
   readonly top: number;

@@ -14,7 +14,6 @@ import {
   boxRowFrameOf,
   chevronFaultsOf,
   collapsedRowFrameOf,
-  cornerFaultsOf,
   ellipsisFaultsOf,
   ellipsisNameOf,
   isNextSiblingOf,
@@ -136,12 +135,6 @@ export class GraphWidgetsPage {
     await expect(this.chevronOf(folder, isExpanded)).toBeFocused();
   }
 
-  /** Exactly one package "…", centred on the selected package's drawn top-right corner, its border included. */
-  public async expectPackageButtonOn(name: string): Promise<void> {
-    await expect(this.layer.locator('.widget-package-button')).toHaveCount(1);
-    await expect.poll(async (): Promise<string[]> => this.packageButtonFaults(name)).toEqual([]);
-  }
-
   /** The package "…" ends left of the open overlay with the keep-clear margin to spare. */
   public async expectPackageButtonClear(name: string): Promise<void> {
     await expect(this.packageButton(name)).toBeVisible();
@@ -187,14 +180,6 @@ export class GraphWidgetsPage {
     const zoom = await this.probe.zoom();
 
     return ellipsisFaultsOf(box, ellipsis, frameOf(zoom));
-  }
-
-  private async packageButtonFaults(name: string): Promise<string[]> {
-    const node = await this.nodeRectOf(name);
-    const zoom = await this.probe.zoom();
-    const button = await rectOf(this.packageButton(name));
-
-    return cornerFaultsOf(node, button, zoom);
   }
 
   /** How far left of the overlay's left edge the package "…" ends. */

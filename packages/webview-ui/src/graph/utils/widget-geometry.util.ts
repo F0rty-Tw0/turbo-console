@@ -1,4 +1,11 @@
-import { FOLDER_PADDING_PX, WIDGET_BUTTON_PX, WIDGET_GAP_PX, WIDGET_INSET_PX, WIDGET_MIN_BOX_PX } from '../common/graph.const.ts';
+import {
+  FOLDER_PADDING_PX,
+  NODE_TOOLBAR_GAP_PX,
+  WIDGET_BUTTON_PX,
+  WIDGET_GAP_PX,
+  WIDGET_INSET_PX,
+  WIDGET_MIN_BOX_PX
+} from '../common/graph.const.ts';
 import type { FolderRect, LayerBounds, RectPx, RowButtonRects, RowKind, RowPlacement } from '../common/widget.type.ts';
 
 /** The room a box row keeps above and below its buttons inside the band, in px. */
@@ -78,7 +85,39 @@ export const buttonRectsOf = (row: RowPlacement): RowButtonRects => {
   return rects;
 };
 
-/** The package "…": centred on the node's top-right corner, so it overhangs the node on purpose. */
+/** A placed row's drawn rect. */
+export const rowRectOf = (row: RowPlacement): RectPx => {
+  const rect: RectPx = { x1: row.x, y1: row.y, x2: row.x + row.width * row.scale, y2: row.y + WIDGET_BUTTON_PX * row.scale };
+
+  return rect;
+};
+
+/** The two rects share area; touching does not count, as in `isWidgetShown`. */
+const isMeeting = (first: RectPx, second: RectPx): boolean => {
+  const meetsX = first.x1 < second.x2 && second.x1 < first.x2;
+  const meetsY = first.y1 < second.y2 && second.y1 < first.y2;
+
+  return meetsX && meetsY;
+};
+
+/** A node's toolbar: right edge on the node's, unscaled at every zoom; flips below once when it meets a header row or leaves the layer top; a below-rect that meets a row stays. */
+export const nodeToolbarRectOf = (node: RectPx, count: number, rows: RectPx[]): RectPx => {
+  const width = count * WIDGET_BUTTON_PX + (count - 1) * WIDGET_GAP_PX;
+  const x1 = node.x2 - width;
+  const aboveY = node.y1 - NODE_TOOLBAR_GAP_PX - WIDGET_BUTTON_PX;
+  const above: RectPx = { x1, y1: aboveY, x2: node.x2, y2: aboveY + WIDGET_BUTTON_PX };
+  const meetsRow = rows.some((row) => isMeeting(above, row));
+  const isFlipped = above.y1 < 0 || meetsRow;
+
+  if (!isFlipped) return above;
+
+  const belowY = node.y2 + NODE_TOOLBAR_GAP_PX;
+  const below: RectPx = { x1, y1: belowY, x2: node.x2, y2: belowY + WIDGET_BUTTON_PX };
+
+  return below;
+};
+
+/** The task "…": centred on the node's top-right corner, so it overhangs the node on purpose. */
 export const packageButtonRectOf = (box: RectPx): RectPx => {
   const half = WIDGET_BUTTON_PX / 2;
 
