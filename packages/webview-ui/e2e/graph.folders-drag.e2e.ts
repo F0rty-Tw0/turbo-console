@@ -59,7 +59,7 @@ test.describe('FEATURE: grouped graph boxes on the canvas', () => {
       graphGrouping.expectBoxesInsideCanvas());
   });
 
-  test('GIVEN the grouped boards framed by Fit, a container resize in the middle of a box drag leaves the packages where the drag put them, and fits once at the drop', async ({
+  test('GIVEN the grouped boards framed by Fit, a container resize in the middle of a box drag leaves the packages where the drag put them, and fits at the drop', async ({
     graphCamera,
     graphCanvas,
     graphFolderPackages,
