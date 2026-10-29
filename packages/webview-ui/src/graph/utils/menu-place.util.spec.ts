@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { menuPlaceOf, targetRectOf, uncoveredAreaOf } from './menu-place.util.ts';
-import type { FolderRect, LayerBounds, MenuTarget, Point, RectPx, Size, WidgetRects } from '../common/widget.type.ts';
-
-const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
-  const rect: RectPx = { x1, y1, x2, y2 };
-
-  return rect;
-};
+import type { FolderRect, LayerBounds, MenuTarget, Point, Size, WidgetRects } from '../common/widget.type.ts';
+import { rectOf } from '../test/utils/rect.spec.util.ts';
 
 const sizeOf = (width: number, height: number): Size => {
   const size: Size = { width, height };

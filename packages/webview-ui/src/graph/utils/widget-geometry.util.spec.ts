@@ -11,12 +11,7 @@ import {
 } from './widget-geometry.util.ts';
 import { COLLAPSED_NODE_WIDTH } from '../common/graph.const.ts';
 import type { FolderRect, LayerBounds, RectPx, RowButtonRects, RowPlacement } from '../common/widget.type.ts';
-
-const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
-  const rect: RectPx = { x1, y1, x2, y2 };
-
-  return rect;
-};
+import { rectOf } from '../test/utils/rect.spec.util.ts';
 
 const boundsOf = (overlayLeft: number | null): LayerBounds => {
   const bounds: LayerBounds = { width: 800, height: 600, overlayLeft };

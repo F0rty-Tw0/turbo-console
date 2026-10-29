@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { widgetPlanOf } from './widget-plan.util.ts';
-import type { FolderRect, LayerBounds, RectPx, RowPlan, WidgetPlanInput, WidgetRects } from '../common/widget.type.ts';
-
-const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
-  const rect: RectPx = { x1, y1, x2, y2 };
-
-  return rect;
-};
+import type { FolderRect, LayerBounds, RowPlan, WidgetPlanInput, WidgetRects } from '../common/widget.type.ts';
+import { rectOf } from '../test/utils/rect.spec.util.ts';
 
 /** A drawn folder at `{x1, y1, x2, y2}`, its plain-border width its rect's. */
 const folderOf = (x1: number, y1: number, x2: number, y2: number): FolderRect => {

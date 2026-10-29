@@ -2,21 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PackageToolbar } from './package-toolbar.ts';
 import type { PackageToolbarDeps } from '../common/graph-widgets.type.ts';
-import type { MenuTarget, RectPx } from '../common/widget.type.ts';
+import type { MenuTarget } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
+import { rectOf } from '../test/utils/rect.spec.util.ts';
 
 type ToolbarRig = {
   readonly toolbar: PackageToolbar;
   readonly layer: HTMLElement;
   readonly container: HTMLElement;
   readonly onMenu: PackageToolbarDeps['onMenu'];
-};
-
-const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
-  const rect: RectPx = { x1, y1, x2, y2 };
-
-  return rect;
 };
 
 const rigOf = (): ToolbarRig => {
