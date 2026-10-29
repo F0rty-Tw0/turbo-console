@@ -61,6 +61,14 @@ export type PackageMenuState = {
   readonly hasTasks: boolean;
 };
 
+/** Which of the package toolbar's buttons show besides the "…", which always shows. */
+export type PackageToolbarShown = {
+  readonly focus: boolean;
+  readonly startTrace: boolean;
+  readonly showTasks: boolean;
+  readonly collapse: boolean;
+};
+
 export type RowButtonRects = {
   readonly chevron: RectPx;
   readonly focus: RectPx;
