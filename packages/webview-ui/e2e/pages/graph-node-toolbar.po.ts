@@ -8,7 +8,7 @@ import type { NodeToolbarSide } from '../common/graph-folders.type.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside, overlaps, readRect } from '../test/utils/element-rect.spec.util.ts';
-import { firstPackageClearOf } from '../test/utils/graph-toolbar-pan.spec.util.ts';
+import { firstPackageClearOf, isPackageClearOf } from '../test/utils/graph-toolbar-pan.spec.util.ts';
 import { nodeToolbarFaultsOf, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** The keep-clear margin left of the overlay, less a pixel of rounding. */
@@ -112,15 +112,6 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     await expect.poll(async (): Promise<boolean> => this.isToolbarInView(name)).toBe(true);
   }
 
-  /** The first package drawn `PAN_CLEAR_PX` inside the container on every side; throws when none is. */
-  public async firstNodeInView(): Promise<string> {
-    const nodes = await this.probe.nodes();
-    const zoom = await this.probe.zoom();
-    const container: ElementRect = await this.container.evaluate(readRect);
-
-    return firstPackageClearOf(nodes, zoom, container, PAN_CLEAR_PX);
-  }
-
   /** Taps the first package in view and returns its name. */
   public async tapFirstNodeInView(): Promise<string> {
     const name = await this.firstNodeInView();
@@ -128,6 +119,11 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     await this.canvas.tapNode(name);
 
     return name;
+  }
+
+  /** The package is drawn `PAN_CLEAR_PX` inside the container on every side, so a 120 px pan keeps it and its toolbar in view. */
+  public async expectNodeClearForPan(name: string): Promise<void> {
+    await expect.poll(async (): Promise<boolean> => this.isNodeClearForPan(name)).toBe(true);
   }
 
   /** The package toolbar is drawn and shares no area with the folder's header row. */
@@ -141,6 +137,24 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
   public async expectNodeToolbarClear(name: string): Promise<void> {
     await expect(this.toolbarOf(name)).toBeVisible();
     await expect.poll(async (): Promise<number> => this.toolbarGap(name)).toBeGreaterThanOrEqual(CLEAR_MARGIN_PX);
+  }
+
+  /** The first package drawn `PAN_CLEAR_PX` inside the container on every side; throws when none is. */
+  private async firstNodeInView(): Promise<string> {
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+    const container: ElementRect = await this.container.evaluate(readRect);
+
+    return firstPackageClearOf(nodes, zoom, container, PAN_CLEAR_PX);
+  }
+
+  private async isNodeClearForPan(name: string): Promise<boolean> {
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+    const container: ElementRect = await this.container.evaluate(readRect);
+    const node = nodes.find((candidate): boolean => candidate.id === name);
+
+    return node !== undefined && isPackageClearOf(node, zoom, container, PAN_CLEAR_PX);
   }
 
   private async isCompact(): Promise<boolean> {

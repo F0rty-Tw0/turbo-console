@@ -1,4 +1,4 @@
-import { GROUPED_PAN_STEP_MS, ROWS_PAN_MS } from './common/graph-tripwire.const.ts';
+import { GROUPED_PAN_STEP_MS, ROWS_BOXES_IN_VIEW, ROWS_BUTTONS_SHOWN, ROWS_PAN_MS } from './common/graph-tripwire.const.ts';
 import { test } from './graph-task.fixture.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
@@ -6,11 +6,6 @@ import { groupedToolbarLabelsOf } from './test/utils/graph-toolbar-pan.spec.util
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const LARGE = largeState();
-
-/** At the first zoom that shows header rows, 2 of the 30 boxes of `largeState()` overlap the canvas, each with its 2 buttons. */
-const ROWS_BOXES_IN_VIEW = 2;
-
-const ROWS_BUTTONS_SHOWN = 4;
 
 // Tracing snapshots the DOM on every mouse move, on the page's main thread, and that CPU lands inside the measured pan.
 test.use({ trace: 'off' });
@@ -57,7 +52,8 @@ test.describe('FEATURE: package toolbar tripwires', () => {
 
     const labels = groupedToolbarLabelsOf(LARGE, name);
 
-    await test.step('THEN its node is in view', async (): Promise<void> => graphNodeToolbar.expectNodeInView(name));
+    await test.step('THEN its node is still 130 px inside the container, clear for the pan', async (): Promise<void> =>
+      graphNodeToolbar.expectNodeClearForPan(name));
 
     await test.step('AND its toolbar is in view', async (): Promise<void> => graphNodeToolbar.expectNodeToolbarInView(name));
 
@@ -78,5 +74,7 @@ test.describe('FEATURE: package toolbar tripwires', () => {
 
     await test.step('THEN the pan used under its CPU and step budgets', (): void =>
       graphCanvas.expectPanCpuUnder(ROWS_PAN_MS, GROUPED_PAN_STEP_MS));
+
+    await test.step('AND its toolbar is still in view', async (): Promise<void> => graphNodeToolbar.expectNodeToolbarInView(name));
   });
 });

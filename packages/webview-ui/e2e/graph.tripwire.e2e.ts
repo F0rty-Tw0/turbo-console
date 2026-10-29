@@ -1,4 +1,4 @@
-import { GROUPED_PAN_STEP_MS, ROWS_PAN_MS } from './common/graph-tripwire.const.ts';
+import { GROUPED_PAN_STEP_MS, ROWS_BOXES_IN_VIEW, ROWS_BUTTONS_SHOWN, ROWS_PAN_MS } from './common/graph-tripwire.const.ts';
 import { IS_MAC_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
@@ -39,11 +39,6 @@ const BOXES_IN_VIEW = 6;
  * in this pan.
  */
 const GROUPED_PAN_MS = IS_MAC_RUNNER ? 2400 : 1100;
-
-/** At the first zoom that shows header rows, 2 of the 30 boxes of `largeState()` overlap the canvas, each with its 2 buttons. */
-const ROWS_BOXES_IN_VIEW = 2;
-
-const ROWS_BUTTONS_SHOWN = 4;
 
 /** Five folders of `largeState()` that sit well inside the canvas after Fit and the zoom to 120 px boxes. */
 const TOGGLED_FOLDERS = ['group-2', 'group-3', 'group-4', 'group-12', 'group-13'];

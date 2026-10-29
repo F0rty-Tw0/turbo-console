@@ -24,11 +24,17 @@ const shrunkBy = (container: ElementRect, margin: number): ElementRect => {
   return inner;
 };
 
+/** Whether `node` is a package node, not a folder box, whose drawn box lies wholly inside the container less `margin`. */
+export const isPackageClearOf = (node: ProbeNode, zoom: number, container: ElementRect, margin: number): boolean => {
+  const inner = shrunkBy(container, margin);
+  const isPackage = folderOfElementId(node.id) === null;
+
+  return isPackage && isInside(nodeBoxOf(node, zoom), inner);
+};
+
 /** The first package node, not a folder box, whose drawn box lies wholly inside the container less `margin`; throws when none does. */
 export const firstPackageClearOf = (nodes: ProbeNode[], zoom: number, container: ElementRect, margin: number): string => {
-  const inner = shrunkBy(container, margin);
-  const isClear = (node: ProbeNode): boolean => folderOfElementId(node.id) === null && isInside(nodeBoxOf(node, zoom), inner);
-  const found = nodes.find(isClear);
+  const found = nodes.find((node): boolean => isPackageClearOf(node, zoom, container, margin));
 
   if (found === undefined) throw new Error(`graph e2e: no package is drawn ${margin} px inside the container`);
 

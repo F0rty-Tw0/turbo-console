@@ -10,3 +10,9 @@ export const ROWS_PAN_MS = IS_MAC_RUNNER ? 4800 : 2400;
 
 /** The grouped pans' slowest step; macOS read up to 52 ms there (C58), so it gets about 1.7x, Linux and Windows the 50 ms long-task line. */
 export const GROUPED_PAN_STEP_MS = IS_MAC_RUNNER ? 90 : 50;
+
+/** At the first zoom that shows header rows, 2 of the 30 boxes of `largeState()` overlap the canvas, each with its 2 buttons. */
+export const ROWS_BOXES_IN_VIEW = 2;
+
+/** The header buttons those 2 boxes show. */
+export const ROWS_BUTTONS_SHOWN = 4;
