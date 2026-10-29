@@ -1,5 +1,6 @@
 import { keepBoxClear } from './graph-keep-clear.ts';
 import { GraphWidgetMenus } from './graph-widget-menus.ts';
+import { readLayerBounds, watchLayerBounds } from './layer-bounds-watch.ts';
 import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
 import { TASK_WIDGET_CLASS } from '../common/graph-task.const.ts';
 import type { MenuAnchor } from '../common/graph-widgets.type.ts';
@@ -10,7 +11,7 @@ import type { LayerBounds, MenuTarget, RectPx } from '../common/widget.type.ts';
 import { joinedBoxOf } from '../utils/keep-clear.util.ts';
 import { taskMenuOf } from '../utils/task-menu-model.util.ts';
 import { runMessageOf } from '../utils/task-run.util.ts';
-import { isWidgetShown, overlayLeftOf, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
+import { isWidgetShown, packageButtonRectOf } from '../utils/widget-geometry.util.ts';
 
 type TaskButton = {
   readonly id: string;
@@ -22,7 +23,8 @@ type TaskButton = {
  * runs, and no "…" while the menu would be empty. An item posts what the task panel's button posts for the task shown
  * when it runs, so a stale item posts nothing. Shift+F10 opens nothing in task mode. While the task details panel
  * overlays the canvas, the "…" hides under it and the menu opens left of it, following the panel as its sash drags it
- * wider or narrower; when it turns to overlay, the selected task pans clear of it.
+ * wider or narrower; when it turns to overlay, the selected task pans clear of it. It reads the layer bounds only when the
+ * layer-bounds watch fires, so a frame reads no layout.
  */
 export class GraphTaskWidgets {
   private readonly deps: TaskWidgetsDeps;
@@ -30,15 +32,17 @@ export class GraphTaskWidgets {
   private readonly actions: TaskMenuActions;
   private model: TaskDetailsModel | null = null;
   private button: TaskButton | null = null;
+  private bounds: LayerBounds;
   private rect: RectPx | null = null;
 
   public constructor(deps: TaskWidgetsDeps) {
     const anchors = {
       anchorOf: (target: MenuTarget): MenuAnchor | null => this.anchorOf(target),
-      layerBounds: (): LayerBounds => this.bounds()
+      layerBounds: (): LayerBounds => this.bounds
     };
 
     this.deps = deps;
+    this.bounds = readLayerBounds(deps.page.container, deps.aside(), deps.overlay.matches);
     this.actions = { act: (id: string, action: TaskRunAction): void => this.act(id, action) };
     this.menus = new GraphWidgetMenus({
       page: deps.page,
@@ -49,8 +53,8 @@ export class GraphTaskWidgets {
       menuOf: (target: MenuTarget): MenuItemModel[] => this.menuOf(target),
       selection: (): MenuTarget | null => null
     });
+    watchLayerBounds(deps.page, deps.overlay, deps.aside, (): void => this.refreshBounds());
     deps.overlay.addEventListener('change', (): void => this.relayout());
-    new ResizeObserver((): void => this.place()).observe(deps.aside());
   }
 
   /** The "…" beside the selected task of `model`; none for `null`, outside task mode, or while its menu would be empty. */
@@ -85,6 +89,16 @@ export class GraphTaskWidgets {
     const box = joinedBoxOf(view.anchorBox([id]), this.buttonBox(id));
 
     keepBoxClear(view, page.container, aside, box);
+  }
+
+  /** The watch fired: the bounds are read again, and in task mode the "…" is placed against them. */
+  private refreshBounds(): void {
+    const { page, aside, overlay } = this.deps;
+    const isActive = this.deps.isActive();
+
+    this.bounds = readLayerBounds(page.container, aside(), overlay.matches);
+
+    if (isActive) this.place();
   }
 
   /** The overlay media query flipped: in task mode, the "…" is placed against the new bounds and the selected task kept clear. */
@@ -148,8 +162,7 @@ export class GraphTaskWidgets {
     if (selected === null) return null;
 
     const rect = packageButtonRectOf(selected);
-    const bounds = this.bounds();
-    const isShown = isWidgetShown(rect, bounds);
+    const isShown = isWidgetShown(rect, this.bounds);
 
     return isShown ? rect : null;
   }
@@ -172,15 +185,6 @@ export class GraphTaskWidgets {
     if (this.button === null || selected === null) return null;
 
     return packageButtonRectOf(selected);
-  }
-
-  private bounds(): LayerBounds {
-    const { overlay, aside, page } = this.deps;
-    const { offsetWidth, offsetHeight } = page.container;
-    const overlayLeft = overlayLeftOf(aside(), page.container, overlay.matches);
-    const bounds: LayerBounds = { width: offsetWidth, height: offsetHeight, overlayLeft };
-
-    return bounds;
   }
 
   private menuOf(target: MenuTarget): MenuItemModel[] {
