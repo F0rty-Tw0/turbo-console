@@ -109,4 +109,15 @@ describe('FEATURE: placeToolbarRoot', () => {
     expect(root.hidden).toBe(true);
     expect(document.activeElement).toBe(container);
   });
+
+  it('GIVEN a root already hidden WHEN it is placed at null again THEN the focus is not read', () => {
+    const contains = vi.spyOn(root, 'contains');
+
+    placeToolbarRoot(root, null, container);
+    contains.mockClear();
+
+    placeToolbarRoot(root, null, container);
+
+    expect(contains).not.toHaveBeenCalled();
+  });
 });

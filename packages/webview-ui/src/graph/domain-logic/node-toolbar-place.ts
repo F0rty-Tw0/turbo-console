@@ -14,9 +14,9 @@ export const removeToolbarRoot = (root: HTMLElement, container: HTMLElement): vo
   root.remove();
 };
 
-/** Shows a node toolbar's root at `rect` on whole px, or hides it for `null`; focus inside a root that hides goes to `container`. */
+/** Shows a node toolbar's root at `rect` on whole px, or hides it for `null`; focus inside a root that hides goes to `container`, so a root already hidden reads no focus. */
 export const placeToolbarRoot = (root: HTMLElement, rect: RectPx | null, container: HTMLElement): void => {
-  if (rect === null) releaseFocusOf(root, container);
+  if (rect === null && !root.hidden) releaseFocusOf(root, container);
 
   setHidden(root, rect === null);
 

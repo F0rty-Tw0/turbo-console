@@ -80,6 +80,7 @@ describe('FEATURE: TaskToolbar', () => {
   describe('GIVEN focus on the "…" of the toolbar', () => {
     beforeEach((): void => {
       rig.toolbar.sync('app#build');
+      rig.toolbar.place(AT_BUILD);
       latestOf(rig).ellipsis.focus();
     });
 
