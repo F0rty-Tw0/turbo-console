@@ -5,7 +5,7 @@ import { kindIn } from '../utils/roving-stop.util.ts';
 
 /** Hands the focus to `container` when it is inside `root`, since the browser would drop it on the body once `root` goes. */
 export const releaseFocusOf = (root: HTMLElement, container: HTMLElement): void => {
-  const hasFocus = root.contains(root.ownerDocument.activeElement);
+  const hasFocus = root.contains(document.activeElement);
 
   if (hasFocus) container.focus();
 };
