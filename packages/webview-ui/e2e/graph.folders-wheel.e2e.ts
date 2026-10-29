@@ -20,8 +20,8 @@ test.describe('FEATURE: a wheel over a widget', () => {
       await test.step('GIVEN the grouped boards open', async (): Promise<void> =>
         graphFolderInspect.open(savedWith(BOARDS.hash, {}), BOARDS));
 
-      const zoomBefore = await graphProbe.zoom();
       const pointer = await graphWidgetInput.ellipsisCentre('apps');
+      const zoomBefore = await graphProbe.zoom();
       const before = await graphWidgetInput.modelPointUnder(pointer);
 
       await test.step('WHEN the wheel turns one notch out over the apps "…"', async (): Promise<void> =>
