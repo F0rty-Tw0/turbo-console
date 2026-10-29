@@ -167,5 +167,66 @@ describe('FEATURE: createFittedCamera', () => {
       expect(events).toStrictEqual(['resize']);
       expect(handlers.onRefit).not.toHaveBeenCalled();
     });
+
+    describe('AND a node is grabbed', () => {
+      beforeEach(() => {
+        cy.$('#a').emit('grab');
+      });
+
+      it('WHEN the container resizes THEN only resize runs and the viewport stays', () => {
+        const zoom = cy.zoom();
+        const pan = cy.pan();
+
+        camera.resized();
+
+        expect(events).toStrictEqual(['resize']);
+        expect(handlers.onRefit).not.toHaveBeenCalled();
+        expect(cy.zoom()).toBe(zoom);
+        expect(cy.pan()).toStrictEqual(pan);
+      });
+
+      it('WHEN the container resizes and every dragged node is freed THEN fit and refit run once, after the free', () => {
+        camera.resized();
+        const held = [...events];
+
+        cy.nodes().emit('free');
+
+        expect(held).toStrictEqual(['resize']);
+        expect(events).toStrictEqual(['resize', 'fit', 'refit']);
+        expect(camera.isFitted()).toBe(true);
+      });
+
+      it('WHEN the node is freed with no resize THEN nothing runs', () => {
+        cy.$('#a').emit('free');
+
+        expect(events).toStrictEqual([]);
+      });
+
+      it('WHEN the container resizes, the node is freed and the container resizes again THEN the second resize fits at once', () => {
+        camera.resized();
+        cy.$('#a').emit('free');
+        events.length = 0;
+        camera.resized();
+
+        expect(events).toStrictEqual(['resize', 'fit', 'refit']);
+      });
+
+      it('WHEN the container resizes and setViewport runs before the free THEN the free does not refit', () => {
+        camera.resized();
+        camera.setViewport(2, { x: 5, y: 6 });
+        cy.$('#a').emit('free');
+
+        expect(handlers.onRefit).not.toHaveBeenCalled();
+        expect(cy.pan()).toStrictEqual({ x: 5, y: 6 });
+      });
+
+      it('WHEN the container resizes and centreOn runs before the free THEN the free does not refit', () => {
+        camera.resized();
+        camera.centreOn('a');
+        cy.$('#a').emit('free');
+
+        expect(handlers.onRefit).not.toHaveBeenCalled();
+      });
+    });
   });
 });
