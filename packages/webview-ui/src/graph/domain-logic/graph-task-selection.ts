@@ -101,12 +101,12 @@ export class GraphTaskSelection {
     this.widgets.exit();
   }
 
-  /** After a frame: the selected task's "…" follows it. */
+  /** After a frame: the selected task's toolbar follows it. */
   public rendered(): void {
     this.widgets.rendered();
   }
 
-  /** After the canvas re-fit: the selected task's "…" and card keep clear of the panel overlaying the canvas. */
+  /** After the canvas re-fit: the selected task's toolbar and card keep clear of the panel overlaying the canvas. */
   public keepClear(): void {
     this.widgets.keepClear();
   }

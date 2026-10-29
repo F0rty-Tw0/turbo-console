@@ -104,7 +104,7 @@ export type TaskWidgets = {
   readonly keepClear: () => void;
 };
 
-/** What the task toolbar keeps besides its Tab stop: the task `id` it was built for, its buttons, and the model it last synced. */
+/** What the task toolbar keeps besides its roving state: the task `id` it was built for, its buttons, and the model it last synced. */
 type TaskToolbarFields = {
   readonly id: string;
   readonly elements: TaskToolbarElements;
@@ -133,13 +133,13 @@ export type TaskWidgetsDeps = {
   readonly view: Pick<GraphView, 'widgetRects' | 'viewport' | 'anchorBox' | 'panBy'>;
   readonly views: Pick<WidgetViews, 'taskToolbar' | 'menu'>;
   readonly bridge: Bridge;
-  /** Task mode is on, so the "…" may open its menu. */
+  /** Task mode is on, so the "…" may open its menu and Show package may act. */
   readonly isActive: () => boolean;
   /** Show package was clicked: the package graph shows package `name`. */
   readonly onShowPackage: (name: string) => void;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the task details panel overlays the canvas. */
   readonly overlay: MediaQueryList;
-  /** The task details panel; the "…" and its menu stay left of it while it overlays the canvas. */
+  /** The task details panel; while it overlays the canvas, the toolbar hides under it and the menu opens left of it. */
   readonly aside: () => HTMLElement;
 };
 

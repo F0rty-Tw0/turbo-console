@@ -17,10 +17,10 @@ import { shownNodeToolbarOf } from '../utils/widget-geometry.util.ts';
  * The selected task's node toolbar over the canvas and its "…" menu: Run and Run without cache for a runnable task, Stop
  * while it runs, and the toolbar hidden while it shows no button. The Run/Stop slot and an item post what the task
  * panel's button posts for the task shown when they run, so a stale item posts nothing; Show package acts in task mode
- * only. Shift+F10 opens nothing in task mode. While the task details
- * panel overlays the canvas, the toolbar hides under it and the menu opens left of it, following the panel as its sash
- * drags it wider or narrower; when it turns to overlay, the selected task pans clear of it. It reads the layer bounds
- * only when the layer-bounds watch fires, so a frame reads no layout.
+ * only. Shift+F10 opens nothing in task mode. While the task details panel overlays the canvas, the toolbar hides under
+ * it and the menu opens left of it, following the panel as its sash drags it wider or narrower; when it turns to
+ * overlay, the selected task pans clear of it. It reads the layer bounds only when the layer-bounds watch fires, so a
+ * frame reads no layout.
  */
 export class GraphTaskWidgets {
   private readonly deps: TaskWidgetsDeps;
