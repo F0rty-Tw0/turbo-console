@@ -59,7 +59,8 @@ test.describe('FEATURE: grouped graph boxes on the canvas', () => {
       graphGrouping.expectBoxesInsideCanvas());
   });
 
-  test('GIVEN the grouped boards framed by Fit, a container resize in the middle of a box drag leaves the packages where the drag put them', async ({
+  test('GIVEN the grouped boards framed by Fit, a container resize in the middle of a box drag leaves the packages where the drag put them, and fits once at the drop', async ({
+    graphCamera,
     graphCanvas,
     graphFolderPackages,
     graphHost,
@@ -73,6 +74,7 @@ test.describe('FEATURE: grouped graph boxes on the canvas', () => {
     await test.step('AND Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> => {
       await graphPage.pressButton(FIT_LABEL);
       await graphCanvas.expectAllNodesInView();
+      await graphCamera.rememberCamera();
     });
 
     await test.step('AND the packages box is dragged by 60 and 40 pixels, the container 1 px shorter halfway', async (): Promise<void> =>
@@ -82,5 +84,10 @@ test.describe('FEATURE: grouped graph boxes on the canvas', () => {
       graphFolderPackages.expectDragMoved(PACKAGES_FOLDER_MEMBERS));
 
     await test.step('AND the apps packages stayed', async (): Promise<void> => graphFolderPackages.expectDragStill(['docs', 'web']));
+
+    await test.step('AND the fit held during the drag ran at the drop, framing every package', async (): Promise<void> => {
+      await graphCamera.expectCameraMoved();
+      await graphCanvas.expectAllNodesInView();
+    });
   });
 });
