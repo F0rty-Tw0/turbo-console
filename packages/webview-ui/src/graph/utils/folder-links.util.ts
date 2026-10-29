@@ -76,10 +76,16 @@ export const folderLinksOf = (
   return [...links];
 };
 
+/** The folder link runs from `source` to `target`, matched by its ends, not by reference. */
+export const hasEnds = (link: FolderLink, source: string, target: string): boolean => {
+  return link.source === source && link.target === target;
+};
+
 /** The scene link drawn from `source` to `target`; `null` when there is no scene or no such link. */
 export const folderLinkOf = (scene: FolderScene | null, source: string, target: string): FolderLink | null => {
   const links = scene?.links ?? [];
-  const link = links.find((candidate) => candidate.source === source && candidate.target === target);
+  const isPair = (candidate: FolderLink): boolean => hasEnds(candidate, source, target);
+  const link = links.find(isPair);
 
   return link ?? null;
 };

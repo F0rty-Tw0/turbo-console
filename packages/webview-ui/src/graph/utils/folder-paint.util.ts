@@ -1,6 +1,6 @@
 import { edgeIdOf } from './edge-id.util.ts';
 import { folderOfElementId } from './folder-id.util.ts';
-import { folderLinkOf } from './folder-links.util.ts';
+import { folderLinkOf, hasEnds } from './folder-links.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
@@ -152,7 +152,7 @@ export const folderRowPaintOf = (folder: string, edges: GraphEdge[], scene: Fold
 /** The folder link with the bundle's exact ends reads `selected`; every other folder link `dimmed`. */
 const bundledLinkStateOf = (bundled: FolderLink): ((link: FolderLink) => ProbeState) => {
   const stateOf = (link: FolderLink): ProbeState => {
-    const isBundled = link.source === bundled.source && link.target === bundled.target;
+    const isBundled = hasEnds(link, bundled.source, bundled.target);
 
     return isBundled ? 'selected' : 'dimmed';
   };

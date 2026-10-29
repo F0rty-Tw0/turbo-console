@@ -123,9 +123,11 @@ describe('FEATURE: folderLinkOf', () => {
     });
   });
 
-  it('GIVEN no scene WHEN a pair is asked THEN it is null', () => {
-    const link = folderLinkOf(null, 'docs', P);
+  describe('GIVEN no scene', () => {
+    it('WHEN a pair is asked THEN it is null', () => {
+      const link = folderLinkOf(null, 'docs', P);
 
-    expect(link).toBeNull();
+      expect(link).toBeNull();
+    });
   });
 });
