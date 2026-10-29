@@ -13,7 +13,8 @@ import {
   packageToolbarLabelOf,
   showAllTextOf,
   showLabelOf,
-  showPackageLabelOf
+  showPackageLabelOf,
+  taskToolbarLabelOf
 } from './controls-text.util.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
 
@@ -183,6 +184,14 @@ describe('FEATURE: controls text', () => {
       const label = packageToolbarLabelOf('web');
 
       expect(label).toBe('Package web');
+    });
+  });
+
+  describe('GIVEN the task app#build selected', () => {
+    it('WHEN its toolbar label is built THEN it names the task', () => {
+      const label = taskToolbarLabelOf('app#build');
+
+      expect(label).toBe('Task app#build');
     });
   });
 });

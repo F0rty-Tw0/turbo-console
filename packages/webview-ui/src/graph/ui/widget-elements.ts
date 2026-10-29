@@ -5,6 +5,7 @@ import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
+import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
 import type { FolderRowElements, PackageToolbarElements, RowKind } from '../common/widget.type.ts';
 import {
   focusLabelOf,
@@ -12,7 +13,8 @@ import {
   folderFocusLabelOf,
   folderToggleLabelOf,
   packageActionsLabelOf,
-  packageToolbarLabelOf
+  packageToolbarLabelOf,
+  taskToolbarLabelOf
 } from '../utils/controls-text.util.ts';
 import { pluralOf } from '../utils/plural.util.ts';
 
@@ -108,7 +110,7 @@ export const buildFolderRow = (kind: RowKind, title: string, count: number): Fol
 };
 
 /** A node toolbar's hidden root: the toolbar of the selected node, named by `label`; only its buttons take pointer events. */
-const nodeToolbarRootOf = (modifier: 'package', label: string): HTMLElement => {
+const nodeToolbarRootOf = (modifier: 'package' | 'task', label: string): HTMLElement => {
   const root = textElement('div', `widget-toolbar widget-toolbar-${modifier}`, '');
 
   root.setAttribute('role', 'toolbar');
@@ -126,6 +128,18 @@ export const buildPackageButton = (name: string): HTMLButtonElement => {
   button.hidden = true;
 
   return button;
+};
+
+/** The selected task's node toolbar, hidden until the layer places it; the "…" keeps the name it had as a lone button. */
+export const buildTaskToolbar = (id: string): TaskToolbarElements => {
+  const root = nodeToolbarRootOf('task', taskToolbarLabelOf(id));
+  const ellipsis = menuButton(packageActionsLabelOf(id));
+
+  const toolbar: TaskToolbarElements = { root, ellipsis };
+
+  root.append(ellipsis);
+
+  return toolbar;
 };
 
 /** The Collapse folder button of a package in `folderTitle`; a flat page has none. */

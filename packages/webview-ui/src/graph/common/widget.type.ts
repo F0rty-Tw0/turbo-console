@@ -1,4 +1,5 @@
 import type { LocationViews } from './location.type.ts';
+import type { TaskToolbarElements } from './task-toolbar.type.ts';
 import type { MenuElements, MenuItemModel } from './widget-menu.type.ts';
 
 /** A rectangle in container px, as Cytoscape's `renderedBoundingBox`. */
@@ -187,6 +188,7 @@ export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
   readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
   readonly packageButton: (name: string) => HTMLButtonElement;
+  readonly taskToolbar: (id: string) => TaskToolbarElements;
   /** `folderTitle` is the shown title of the package's folder, `null` on a flat page. */
   readonly packageToolbar: (name: string, folderTitle: string | null) => PackageToolbarElements;
   /** `label` is the menu's accessible name, the one its "…" has. */
