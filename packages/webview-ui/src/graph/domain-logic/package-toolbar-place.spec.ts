@@ -128,6 +128,17 @@ describe('FEATURE: placeToolbar', () => {
       expect(document.activeElement).toBe(container);
     });
   });
+
+  describe('GIVEN the web toolbar on a flat page and nothing focused', () => {
+    it('WHEN it is placed at zoom 1 THEN nothing has focus', () => {
+      const elements = widgetRowViewsMock().views.packageToolbar('web', null);
+      const entry: ToolbarEntry = { name: 'web', folder: null, state: WITH_TASKS, elements, shown: [], preferred: 'focus' };
+
+      placeToolbar(entry, AT_WEB, 1, container);
+
+      expect(document.activeElement).toBeNull();
+    });
+  });
 });
 
 describe('FEATURE: releaseFocusOf', () => {

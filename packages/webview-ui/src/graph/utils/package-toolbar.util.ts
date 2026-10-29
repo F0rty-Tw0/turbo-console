@@ -39,6 +39,9 @@ export const toolbarStopOf = (preferred: PackageToolbarKind, shown: PackageToolb
   return shown[0] ?? 'ellipsis';
 };
 
-/** The button of `elements` that `target` is, `undefined` when it is none of them. */
-export const toolbarKindOf = (elements: PackageToolbarElements, target: EventTarget | null): PackageToolbarKind | undefined =>
-  TOOLBAR_ORDER.find((kind) => elements[kind] === target);
+/** The button of `elements` that `target` is, `undefined` when it is none of them; a `null` target is none, though a flat page's Collapse is `null` too. */
+export const toolbarKindOf = (elements: PackageToolbarElements, target: EventTarget | null): PackageToolbarKind | undefined => {
+  if (target === null) return undefined;
+
+  return TOOLBAR_ORDER.find((kind) => elements[kind] === target);
+};
