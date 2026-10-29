@@ -14,6 +14,26 @@ describe('FEATURE: createFittedCamera', () => {
   let fittedAtViewport: boolean[];
   let handlers: FittedHandlers;
   let camera: FittedCamera;
+  /**
+   * Sets the grab state that `:grabbed` reads, as Cytoscape's renderer does; a headless core has no renderer, and the
+   * state lives only in the untyped `_private`.
+   */
+  const setGrabbed = (id: string, isGrabbed: boolean): void => {
+    const state: unknown = Reflect.get(cy.$id(id)[0] ?? {}, '_private');
+
+    if (!(state instanceof Object)) throw new Error(`graph-fitted spec: node ${id} has no _private state`);
+
+    Reflect.set(state, 'grabbed', isGrabbed);
+  };
+  const grab = (id: string): void => {
+    setGrabbed(id, true);
+    cy.$id(id).emit('grab');
+  };
+  /** Frees every one of `ids` and then emits `free` on each, as Cytoscape's renderer does at a drop. */
+  const free = (ids: string[]): void => {
+    ids.forEach((id: string): void => setGrabbed(id, false));
+    ids.forEach((id: string): void => void cy.$id(id).emit('free'));
+  };
 
   beforeEach(() => {
     const ids = ['a', 'b'];
@@ -170,7 +190,7 @@ describe('FEATURE: createFittedCamera', () => {
 
     describe('AND a node is grabbed', () => {
       beforeEach(() => {
-        cy.$('#a').emit('grab');
+        grab('a');
       });
 
       it('WHEN the container resizes THEN only resize runs and the viewport stays', () => {
@@ -189,7 +209,7 @@ describe('FEATURE: createFittedCamera', () => {
         camera.resized();
         const held = [...events];
 
-        cy.nodes().emit('free');
+        free(['a', 'b']);
 
         expect(held).toStrictEqual(['resize']);
         expect(events).toStrictEqual(['resize', 'fit', 'refit']);
@@ -197,15 +217,22 @@ describe('FEATURE: createFittedCamera', () => {
       });
 
       it('WHEN the node is freed with no resize THEN nothing runs', () => {
-        cy.$('#a').emit('free');
+        free(['a']);
 
         expect(events).toStrictEqual([]);
       });
 
       it('WHEN the container resizes, the node is freed and the container resizes again THEN the second resize fits at once', () => {
         camera.resized();
-        cy.$('#a').emit('free');
+        free(['a']);
         events.length = 0;
+        camera.resized();
+
+        expect(events).toStrictEqual(['resize', 'fit', 'refit']);
+      });
+
+      it('WHEN the grab ends with no free, as a second finger ends a touch drag, and the container resizes THEN it fits at once', () => {
+        setGrabbed('a', false);
         camera.resized();
 
         expect(events).toStrictEqual(['resize', 'fit', 'refit']);
@@ -214,7 +241,7 @@ describe('FEATURE: createFittedCamera', () => {
       it('WHEN the container resizes and setViewport runs before the free THEN the free does not refit', () => {
         camera.resized();
         camera.setViewport(2, { x: 5, y: 6 });
-        cy.$('#a').emit('free');
+        free(['a']);
 
         expect(handlers.onRefit).not.toHaveBeenCalled();
         expect(cy.pan()).toStrictEqual({ x: 5, y: 6 });
@@ -223,7 +250,7 @@ describe('FEATURE: createFittedCamera', () => {
       it('WHEN the container resizes and centreOn runs before the free THEN the free does not refit', () => {
         camera.resized();
         camera.centreOn('a');
-        cy.$('#a').emit('free');
+        free(['a']);
 
         expect(handlers.onRefit).not.toHaveBeenCalled();
       });

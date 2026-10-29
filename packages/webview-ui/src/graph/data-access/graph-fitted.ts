@@ -18,26 +18,24 @@ const GESTURE_EVENTS = 'dragpan scrollzoom pinchzoom';
 /**
  * Returns a request that runs `refit` at once, or, while a node or box is grabbed, once at the `free`: Cytoscape keeps
  * the grabbed element under the pointer, so a refit mid-drag would drop it away from where the user let go. `free`
- * fires on every dragged element, a box's packages too, after all of them are released; the first one runs it.
+ * fires on every dragged element, a box's packages too, after all of them are released; the first one runs it. The
+ * grab is read from Cytoscape's own state, not from `grab` events: a second finger ends a touch drag with no `free`.
  */
 const holdWhileGrabbed = (cy: Core, refit: () => void): (() => void) => {
-  let isGrabbing = false;
   let isHeld = false;
   const freed = (): void => {
     const isDue = isHeld;
 
-    isGrabbing = false;
     isHeld = false;
 
     if (isDue) refit();
   };
   const request = (): void => {
-    if (isGrabbing) return void (isHeld = true);
+    isHeld = cy.nodes(':grabbed').nonempty();
 
-    refit();
+    if (!isHeld) refit();
   };
 
-  cy.on('grab', (): void => void (isGrabbing = true));
   cy.on('free', freed);
 
   return request;
