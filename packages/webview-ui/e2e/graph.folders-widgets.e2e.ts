@@ -274,8 +274,8 @@ test.describe('FEATURE: folder widget placement', () => {
 
       await test.step('THEN no header row is left', async (): Promise<void> => graphWidgets.expectNoRows());
 
-      await test.step('AND web keeps a toolbar with its "…"', async (): Promise<void> =>
-        graphNodeToolbar.expectToolbarButtons('web', ['Actions for web']));
+      await test.step('AND web keeps a toolbar with Focus, Start trace and its "…"', async (): Promise<void> =>
+        graphNodeToolbar.expectToolbarButtons('web', ['Focus web', 'Start trace', 'Actions for web']));
     }
   );
 

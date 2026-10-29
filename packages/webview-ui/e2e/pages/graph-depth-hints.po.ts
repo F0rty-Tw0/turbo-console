@@ -32,7 +32,8 @@ export class GraphDepthHints {
 
   /** The details panel Start trace button has the trace title. */
   public async expectButtonTitle(): Promise<void> {
-    const button = this.page.getByRole('button', { name: START_TRACE_LABEL, exact: true });
+    const details = this.page.locator('#graph-details');
+    const button = details.getByRole('button', { name: START_TRACE_LABEL, exact: true });
 
     await expect(button).toHaveAttribute('title', START_TRACE_TITLE);
   }

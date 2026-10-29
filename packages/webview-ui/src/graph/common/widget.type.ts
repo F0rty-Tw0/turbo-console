@@ -130,10 +130,20 @@ export type FolderRowElements = {
   readonly ellipsis: HTMLButtonElement;
 };
 
-/** The selected package's node toolbar: its root and the "…" it holds. */
+/** The selected package's node toolbar: its root and the buttons it holds, `collapse` only for a package in a folder. */
 export type PackageToolbarElements = {
   readonly root: HTMLElement;
+  readonly focus: HTMLButtonElement;
+  readonly startTrace: HTMLButtonElement;
+  readonly showTasks: HTMLButtonElement;
+  readonly collapse: HTMLButtonElement | null;
   readonly ellipsis: HTMLButtonElement;
+};
+
+/** One button of the package toolbar and whether the latest pass shows it; a missing Collapse has no button. */
+export type ToolbarSlot = {
+  readonly button: HTMLButtonElement | null;
+  readonly isShown: boolean;
 };
 
 /** The four buttons of a row; the glyph and badge are not buttons. */
@@ -156,7 +166,8 @@ export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
   readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
   readonly packageButton: (name: string) => HTMLButtonElement;
-  readonly packageToolbar: (name: string) => PackageToolbarElements;
+  /** `folderTitle` is the shown title of the package's folder, `null` on a flat page. */
+  readonly packageToolbar: (name: string, folderTitle: string | null) => PackageToolbarElements;
   /** `label` is the menu's accessible name, the one its "…" has. */
   readonly menu: (model: MenuItemModel[], label: string) => MenuElements;
   readonly location: LocationViews;

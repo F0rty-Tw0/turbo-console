@@ -2,6 +2,7 @@ import { wireWidgets } from './graph-widgets-wire.ts';
 import { packageActionsOf } from './package-actions.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { WidgetHostDeps } from '../common/graph-controls.type.ts';
+import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
 import type {
   MenuSources,
@@ -12,8 +13,9 @@ import type {
   WidgetWireDeps,
   WidgetWiring
 } from '../common/graph-widgets.type.ts';
+import type { PackageActions } from '../common/package-actions.type.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
-import type { MenuTarget } from '../common/widget.type.ts';
+import type { MenuTarget, PackageMenuState } from '../common/widget.type.ts';
 import { focusFolderOf } from '../utils/folder-rules.util.ts';
 import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from '../utils/widget-menu-model.util.ts';
 
@@ -31,6 +33,17 @@ export const inspectionFoldersOf = (folders: () => GraphInspectionDeps['folders'
   return hooks;
 };
 
+/** The package actions of a menu: Show tasks leaves focus on the container, since task mode hides the "…" the menu would return it to. */
+const menuActionsOf = (actions: PackageActions, container: HTMLElement): PackageActions => {
+  const showTasks = (name: string): void => {
+    actions.showTasks(name);
+    container.focus();
+  };
+  const menuActions: PackageActions = { ...actions, showTasks };
+
+  return menuActions;
+};
+
 /** A menu's items from the filters, the scene and the tasks as they are when it opens. */
 const menuOfFrom = (
   deps: WidgetHostDeps,
@@ -38,7 +51,7 @@ const menuOfFrom = (
   folders: FolderSource,
   controls: WidgetFilters
 ): MenuSources['menuOf'] => {
-  const packageActions = packageActionsOf(deps, inspection);
+  const packageActions = menuActionsOf(packageActionsOf(deps, inspection), deps.page.container);
   const menuOf = (target: MenuTarget): MenuItemModel[] => {
     const filters = controls.applied;
 
@@ -57,6 +70,13 @@ const menuOfFrom = (
   return menuOf;
 };
 
+/** What the selected package's toolbar reads, `null` without a selection. */
+const packageStateOf = (selected: string | null, filters: GraphFilters, deps: WidgetHostDeps): PackageMenuState | null => {
+  if (selected === null) return null;
+
+  return packageMenuStateOf(selected, filters, deps.hasTasks(selected));
+};
+
 /** The wired layer and its menus, reading the mode on screen, the folder scene, the selection and the filters when used. */
 export const widgetsOf = (
   deps: WidgetHostDeps,
@@ -69,7 +89,8 @@ export const widgetsOf = (
     const current: WidgetState = {
       scene: folders.scene(),
       selectedPackage: inspection.selected(),
-      focusedFolder: focusFolderOf(controls.applied)
+      focusedFolder: focusFolderOf(controls.applied),
+      packageState: packageStateOf(inspection.selected(), controls.applied, deps)
     };
 
     return current;
@@ -81,6 +102,7 @@ export const widgetsOf = (
     overlay,
     state,
     actions: inspection.folderActions(),
+    packageActions: packageActionsOf(deps, inspection),
     canAct,
     canActOnPackage,
     menuOf: menuOfFrom(deps, inspection, folders, controls),

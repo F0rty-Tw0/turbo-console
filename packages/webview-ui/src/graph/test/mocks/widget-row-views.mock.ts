@@ -1,10 +1,11 @@
-import type { FolderRowElements, RowKind, WidgetViews } from '../../common/widget.type.ts';
+import type { FolderRowElements, PackageToolbarElements, RowKind, WidgetViews } from '../../common/widget.type.ts';
 import { widgetViews } from '../../ui/graph-views.ts';
 import type { WidgetRowViewsMock } from '../common/widget-row-views.type.ts';
 
 /** The page's widget views with `row` recording what it builds, so a spec reaches each row's buttons. */
 export const widgetRowViewsMock = (): WidgetRowViewsMock => {
   const built: FolderRowElements[] = [];
+  const toolbars: PackageToolbarElements[] = [];
   const row = (kind: RowKind, title: string, count: number): FolderRowElements => {
     const elements = widgetViews.row(kind, title, count);
 
@@ -12,8 +13,15 @@ export const widgetRowViewsMock = (): WidgetRowViewsMock => {
 
     return elements;
   };
-  const views: WidgetViews = { ...widgetViews, row };
-  const mock: WidgetRowViewsMock = { views, built };
+  const packageToolbar = (name: string, folderTitle: string | null): PackageToolbarElements => {
+    const elements = widgetViews.packageToolbar(name, folderTitle);
+
+    toolbars.push(elements);
+
+    return elements;
+  };
+  const views: WidgetViews = { ...widgetViews, row, packageToolbar };
+  const mock: WidgetRowViewsMock = { views, built, toolbars };
 
   return mock;
 };

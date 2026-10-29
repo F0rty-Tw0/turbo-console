@@ -1,12 +1,16 @@
 import { graphIcon } from './graph-icon.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
-import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
+import { FOCUS_FOLDER_LABEL, START_TRACE_LABEL, START_TRACE_TITLE } from '../common/details.const.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
+import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
+import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { FolderRowElements, PackageToolbarElements, RowKind } from '../common/widget.type.ts';
 import {
+  focusLabelOf,
   folderActionsLabelOf,
   folderFocusLabelOf,
+  folderToggleLabelOf,
   packageActionsLabelOf,
   packageToolbarLabelOf
 } from '../utils/controls-text.util.ts';
@@ -124,13 +128,45 @@ export const buildPackageButton = (name: string): HTMLButtonElement => {
   return button;
 };
 
-/** The selected package's node toolbar, hidden until the layer places it: the "…" alone so far, which is its one Tab stop. */
-export const buildPackageToolbar = (name: string): PackageToolbarElements => {
-  const root = nodeToolbarRootOf('package', packageToolbarLabelOf(name));
-  const ellipsis = menuButton(packageActionsLabelOf(name));
-  const toolbar: PackageToolbarElements = { root, ellipsis };
+/** The Collapse folder button of a package in `folderTitle`; a flat page has none. */
+const collapseOf = (folderTitle: string | null): HTMLButtonElement | null => {
+  if (folderTitle === null) return null;
 
-  root.append(ellipsis);
+  const label = folderToggleLabelOf(folderTitle, false);
+
+  return widgetButton(ACTION_ICONS.collapse, label);
+};
+
+/** Focus under a constant name, its hover title saying what a press does; the toolbar's one Tab stop until the layer moves it. */
+const focusToggleOf = (name: string): HTMLButtonElement => {
+  const button = widgetButton(ACTION_ICONS.focus, focusLabelOf(name));
+
+  button.title = FOCUS_PACKAGE_TITLE;
+  button.setAttribute('aria-pressed', 'false');
+
+  return button;
+};
+
+/** The selected package's node toolbar, hidden until the layer places it: Focus, Start trace, Show tasks, Collapse folder (grouped) and the "…". Focus is its one Tab stop until the layer moves it. */
+export const buildPackageToolbar = (name: string, folderTitle: string | null): PackageToolbarElements => {
+  const root = nodeToolbarRootOf('package', packageToolbarLabelOf(name));
+  const focus = focusToggleOf(name);
+  const startTrace = widgetButton(ACTION_ICONS.startTrace, START_TRACE_LABEL);
+  const showTasks = widgetButton(ACTION_ICONS.showTasks, SHOW_TASKS_LABEL);
+  const collapse = collapseOf(folderTitle);
+  const ellipsis = menuButton(packageActionsLabelOf(name));
+  const toolbar: PackageToolbarElements = { root, focus, startTrace, showTasks, collapse, ellipsis };
+  const buttons = [startTrace, showTasks, collapse, ellipsis];
+
+  startTrace.title = START_TRACE_TITLE;
+  root.append(focus);
+
+  for (const button of buttons) {
+    if (button === null) continue;
+
+    button.tabIndex = -1;
+    root.append(button);
+  }
 
   return toolbar;
 };

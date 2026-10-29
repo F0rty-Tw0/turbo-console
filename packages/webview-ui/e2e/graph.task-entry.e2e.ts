@@ -97,6 +97,9 @@ test.describe('FEATURE: Show tasks from the package graph', () => {
       await test.step('THEN task mode is on', async (): Promise<void> => graphTask.expectPressed(true));
 
       await test.step("AND app's tasks and their chain are drawn", async (): Promise<void> => graphTaskProbe.expectTaskIds(APP_SET));
+
+      await test.step('AND the graph container has focus, the package toolbar being hidden in task mode', async (): Promise<void> =>
+        graphPage.expectContainerFocused());
     }
   );
 });

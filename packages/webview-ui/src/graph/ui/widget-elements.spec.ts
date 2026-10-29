@@ -1,8 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildFolderRow, buildPackageToolbar } from './widget-elements.ts';
+import { START_TRACE_TITLE } from '../common/details.const.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
+import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { FolderRowElements, PackageToolbarElements } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { folderTitleOf } from '../utils/controls-text.util.ts';
 
 const classesOf = (parent: Element): string[] => {
   return Array.from(parent.children, (child): string => {
@@ -207,11 +211,11 @@ describe('FEATURE: buildPackageToolbar', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('GIVEN the package toolbar of web', () => {
+  describe('GIVEN the package toolbar of web in the folder apps', () => {
     let toolbar: PackageToolbarElements;
 
     beforeEach((): void => {
-      toolbar = buildPackageToolbar('web');
+      toolbar = buildPackageToolbar('web', 'apps');
     });
 
     it('WHEN the root is read THEN it is a hidden toolbar named Package web', () => {
@@ -223,23 +227,83 @@ describe('FEATURE: buildPackageToolbar', () => {
       expect(root.hidden).toBe(true);
     });
 
-    it('WHEN its children are read THEN they are the "…" alone', () => {
-      const children = Array.from(toolbar.root.children);
+    it('WHEN its children are read THEN they are Focus, Start trace, Show tasks, Collapse folder and the "…"', () => {
+      const { root, focus, startTrace, showTasks, collapse, ellipsis } = toolbar;
+      const children = Array.from(root.children);
 
-      expect(children).toStrictEqual([toolbar.ellipsis]);
+      expect(children).toStrictEqual([focus, startTrace, showTasks, collapse, ellipsis]);
     });
 
-    it('WHEN the "…" is read THEN it opens a menu, is named Actions for web and is not taken out of the Tab order', () => {
-      const { ellipsis } = toolbar;
+    it('WHEN the buttons are read THEN each is named for its action', () => {
+      const labels = attributesOf(toolbar.root, 'aria-label');
 
-      expect(ellipsis.getAttribute('aria-label')).toBe('Actions for web');
-      expect(ellipsis.title).toBe('Actions for web');
-      expect(ellipsis.getAttribute('aria-haspopup')).toBe('menu');
-      expect(ellipsis.tabIndex).toBe(0);
+      expect(labels).toStrictEqual(['Focus web', 'Start trace', 'Show tasks', 'Collapse folder apps', 'Actions for web']);
     });
 
-    it('WHEN the root is read THEN it sets no tabindex, so the "…" is the one Tab stop', () => {
+    it('WHEN the buttons are read THEN each hover title says what a press does', () => {
+      const { focus, startTrace, showTasks, collapse, ellipsis } = toolbar;
+      const buttons = [focus, startTrace, showTasks, collapse, ellipsis];
+      const titles = buttons.map((button): string | undefined => button?.title);
+
+      expect(titles).toStrictEqual([FOCUS_PACKAGE_TITLE, START_TRACE_TITLE, 'Show tasks', 'Collapse folder apps', 'Actions for web']);
+    });
+
+    it('WHEN the icons are read THEN each button draws the icon of its action', () => {
+      const icons = Array.from(toolbar.root.children, (button): string | undefined => button.children[0]?.className);
+
+      expect(icons).toStrictEqual([
+        `codicon codicon-${ACTION_ICONS.focus}`,
+        `codicon codicon-${ACTION_ICONS.startTrace}`,
+        `codicon codicon-${ACTION_ICONS.showTasks}`,
+        `codicon codicon-${ACTION_ICONS.collapse}`,
+        'codicon codicon-ellipsis'
+      ]);
+    });
+
+    it('WHEN Focus is read THEN it is unpressed', () => {
+      expect(toolbar.focus.getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('WHEN the "…" is read THEN it opens a menu', () => {
+      expect(toolbar.ellipsis.getAttribute('aria-haspopup')).toBe('menu');
+    });
+
+    it('WHEN the tabIndex are read THEN only Focus is a Tab stop', () => {
+      const { focus, startTrace, showTasks, collapse, ellipsis } = toolbar;
+      const buttons = [focus, startTrace, showTasks, collapse, ellipsis];
+      const stops = buttons.map((button): number | undefined => button?.tabIndex);
+
+      expect(stops).toStrictEqual([0, -1, -1, -1, -1]);
+    });
+
+    it('WHEN the root is read THEN it sets no tabindex', () => {
       expect(toolbar.root.getAttribute('tabindex')).toBeNull();
+    });
+  });
+
+  describe('GIVEN the package toolbar of web on a flat page', () => {
+    let toolbar: PackageToolbarElements;
+
+    beforeEach((): void => {
+      toolbar = buildPackageToolbar('web', null);
+    });
+
+    it('WHEN its collapse button is read THEN there is none', () => {
+      expect(toolbar.collapse).toBeNull();
+    });
+
+    it('WHEN its children are read THEN they are Focus, Start trace, Show tasks and the "…"', () => {
+      const labels = attributesOf(toolbar.root, 'aria-label');
+
+      expect(labels).toStrictEqual(['Focus web', 'Start trace', 'Show tasks', 'Actions for web']);
+    });
+  });
+
+  describe('GIVEN the package toolbar of web in the root folder', () => {
+    it('WHEN its collapse button is read THEN it is named for the (root) folder', () => {
+      const toolbar = buildPackageToolbar('web', folderTitleOf(''));
+
+      expect(toolbar.collapse?.getAttribute('aria-label')).toBe('Collapse folder (root)');
     });
   });
 });
