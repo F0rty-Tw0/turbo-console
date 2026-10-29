@@ -1,25 +1,10 @@
 import { setFocusToggle } from './button-title.ts';
-import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
+import { placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
 import type { PackageToolbarDeps } from '../common/graph-widgets.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
-import type {
-  MenuTarget,
-  PackageMenuState,
-  PackageToolbarElements,
-  PackageToolbarShown,
-  RectPx,
-  ToolbarSlot
-} from '../common/widget.type.ts';
+import type { MenuTarget, PackageMenuState, RectPx, ToolbarEntry } from '../common/widget.type.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
-import { packageToolbarCountOf, packageToolbarShownOf } from '../utils/package-toolbar.util.ts';
-import { isNodeToolbarCompact } from '../utils/widget-geometry.util.ts';
-
-type ToolbarEntry = {
-  readonly name: string;
-  readonly folder: string | null;
-  readonly state: PackageMenuState;
-  readonly elements: PackageToolbarElements;
-};
+import { packageToolbarCountOf } from '../utils/package-toolbar.util.ts';
 
 /** The folder's shown title, `null` on a flat page. */
 const folderTitleOrNull = (folder: string | null): string | null => {
@@ -28,50 +13,10 @@ const folderTitleOrNull = (folder: string | null): string | null => {
   return folderTitleOf(folder);
 };
 
-/** Tab stop 0 on the one stop, -1 on the rest, a write skipped when unchanged. */
-const writeTabStop = (button: HTMLButtonElement, isStop: boolean): void => {
-  const tabIndex = isStop ? 0 : -1;
-
-  if (button.tabIndex !== tabIndex) button.tabIndex = tabIndex;
-};
-
-/** The toolbar's buttons in DOM order with what a pass shows of them. */
-const slotsOf = (elements: PackageToolbarElements, shown: PackageToolbarShown): ToolbarSlot[] => {
-  const slots: ToolbarSlot[] = [
-    { button: elements.focus, isShown: shown.focus },
-    { button: elements.startTrace, isShown: shown.startTrace },
-    { button: elements.showTasks, isShown: shown.showTasks },
-    { button: elements.collapse, isShown: shown.collapse },
-    { button: elements.ellipsis, isShown: true }
-  ];
-
-  return slots;
-};
-
-/** Shows the buttons the zoom and the state allow with the first shown as the Tab stop; focus left on a hidden one goes to the "…". */
-const placeButtons = (entry: ToolbarEntry, zoom: number): void => {
-  const { state, folder, elements } = entry;
-  const isCompact = isNodeToolbarCompact(zoom);
-  const shown = packageToolbarShownOf(state, folder !== null, isCompact);
-  const slots = slotsOf(elements, shown);
-  const stop = slots.find((slot) => slot.isShown);
-  const active = elements.root.ownerDocument.activeElement;
-  const isLostFocus = slots.some((slot) => !slot.isShown && slot.button !== null && slot.button === active);
-
-  for (const { button, isShown } of slots) {
-    if (button === null) continue;
-
-    setHidden(button, !isShown);
-    writeTabStop(button, button === stop?.button);
-  }
-
-  if (isLostFocus) elements.ellipsis.focus();
-};
-
 /**
  * The selected package's node toolbar: built again when the selection or its folder changes, first in the layer so it is
- * the Tab stop after the canvas; the first shown button is its one Tab stop, and focus inside it goes to the container
- * when it is removed, hidden or left on a hidden button, since the browser would drop it on the body.
+ * the Tab stop after the canvas; the first shown button is its one Tab stop. Focus inside it goes to the container when
+ * it is removed or hidden, since the browser would drop it on the body, and to the "…" when left on a hidden button.
  */
 export class PackageToolbar {
   private readonly deps: PackageToolbarDeps;
@@ -117,16 +62,7 @@ export class PackageToolbar {
   public place(rect: RectPx | null, zoom: number): void {
     if (this.entry === null) return;
 
-    const { root } = this.entry.elements;
-
-    if (rect === null) this.releaseFocusOf(root);
-
-    setHidden(root, rect === null);
-
-    if (rect === null) return;
-
-    writeStyle(root, 'transform', translateOf(rect.x1, rect.y1));
-    placeButtons(this.entry, zoom);
+    placeToolbar(this.entry, rect, zoom, this.deps.container);
   }
 
   /** The entry kept with the new `state` for the same name and folder, else a new one in place of the old. */
@@ -174,14 +110,8 @@ export class PackageToolbar {
 
     const { root } = this.entry.elements;
 
-    this.releaseFocusOf(root);
+    releaseFocusOf(root, this.deps.container);
     root.remove();
     this.entry = null;
-  }
-
-  private releaseFocusOf(root: HTMLElement): void {
-    const hasFocus = root.contains(root.ownerDocument.activeElement);
-
-    if (hasFocus) this.deps.container.focus();
   }
 }

@@ -140,10 +140,12 @@ export type PackageToolbarElements = {
   readonly ellipsis: HTMLButtonElement;
 };
 
-/** One button of the package toolbar and whether the latest pass shows it; a missing Collapse has no button. */
-export type ToolbarSlot = {
-  readonly button: HTMLButtonElement | null;
-  readonly isShown: boolean;
+/** The toolbar built for `name` in `folder` (`null` on a flat page), with the state it was last synced to. */
+export type ToolbarEntry = {
+  readonly name: string;
+  readonly folder: string | null;
+  readonly state: PackageMenuState;
+  readonly elements: PackageToolbarElements;
 };
 
 /** The four buttons of a row; the glyph and badge are not buttons. */

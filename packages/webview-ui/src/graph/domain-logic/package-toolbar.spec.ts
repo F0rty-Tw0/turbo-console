@@ -50,14 +50,6 @@ const latestOf = (rig: ToolbarRig): PackageToolbarElements => {
   return latest;
 };
 
-/** The buttons of the latest toolbar the rig built that are not hidden, by label. */
-const shownLabelsOf = (rig: ToolbarRig): (string | null)[] => {
-  const { focus, startTrace, showTasks, collapse, ellipsis } = latestOf(rig);
-  const buttons = [focus, startTrace, showTasks, collapse, ellipsis];
-
-  return buttons.filter((button) => button !== null && !button.hidden).map((button) => button?.getAttribute('aria-label') ?? null);
-};
-
 describe('FEATURE: PackageToolbar', () => {
   let rig: ToolbarRig;
 
@@ -230,63 +222,6 @@ describe('FEATURE: PackageToolbar', () => {
   describe('GIVEN the web toolbar in the folder apps with tasks', () => {
     beforeEach((): void => {
       rig.toolbar.sync('web', 'apps', WITH_TASKS);
-    });
-
-    it('WHEN it is placed at zoom 0.49 THEN only the "…" is shown', () => {
-      rig.toolbar.place(AT_WEB, 0.49);
-
-      expect(shownLabelsOf(rig)).toStrictEqual(['Actions for web']);
-    });
-
-    it('WHEN it is placed at zoom 1 THEN every button is shown', () => {
-      rig.toolbar.place(AT_WEB, 1);
-
-      expect(shownLabelsOf(rig)).toStrictEqual(['Focus web', 'Start trace', 'Show tasks', 'Collapse folder apps', 'Actions for web']);
-    });
-
-    it('WHEN it is placed at zoom 1 and then 0.49 THEN Focus is the Tab stop and then the "…" is', () => {
-      const { focus, ellipsis } = latestOf(rig);
-
-      rig.toolbar.place(AT_WEB, 1);
-      const atFull = [focus.tabIndex, ellipsis.tabIndex];
-
-      rig.toolbar.place(AT_WEB, 0.49);
-      const atCompact = [focus.tabIndex, ellipsis.tabIndex];
-
-      expect(atFull).toStrictEqual([0, -1]);
-      expect(atCompact).toStrictEqual([-1, 0]);
-    });
-
-    it('WHEN Focus has focus and it is placed at zoom 0.49 THEN the "…" has focus', () => {
-      const { focus, ellipsis } = latestOf(rig);
-
-      rig.toolbar.place(AT_WEB, 1);
-      focus.focus();
-      rig.toolbar.place(AT_WEB, 0.49);
-
-      expect(document.activeElement).toBe(ellipsis);
-    });
-
-    it('WHEN Focus has focus and it is placed at zoom 1 again THEN Focus keeps it', () => {
-      const { focus } = latestOf(rig);
-
-      rig.toolbar.place(AT_WEB, 1);
-      focus.focus();
-      rig.toolbar.place(AT_WEB, 1);
-
-      expect(document.activeElement).toBe(focus);
-    });
-
-    it('WHEN Show tasks has focus and web loses its tasks THEN the "…" has focus', () => {
-      const { showTasks, ellipsis } = latestOf(rig);
-
-      rig.toolbar.place(AT_WEB, 1);
-      showTasks.focus();
-      rig.toolbar.sync('web', 'apps', NO_TASKS);
-      rig.toolbar.place(AT_WEB, 1);
-
-      expect(document.activeElement).toBe(ellipsis);
-      expect(showTasks.hidden).toBe(true);
     });
 
     it('WHEN Focus is clicked THEN onFocus is called with web', () => {
