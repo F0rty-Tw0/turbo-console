@@ -2,7 +2,7 @@ import { graphIcon } from './graph-icon.ts';
 import { iconButton } from './icon-button.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { DetailsViewBase, DetailsViewKind } from '../common/details-view.type.ts';
-import { CLOSE_DETAILS_LABEL, HIDDEN_TEXT } from '../common/details.const.ts';
+import { CLOSE_DETAILS_LABEL, EXPLAIN_LABEL, HIDDEN_TEXT } from '../common/details.const.ts';
 import type { KeyedPart } from '../common/details.type.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import { keyedPartsOf } from '../utils/keyed-text.util.ts';
@@ -57,6 +57,17 @@ export const nameButton = (name: string): HTMLButtonElement => {
   button.type = 'button';
   button.title = name;
   button.dataset['name'] = name;
+
+  return button;
+};
+
+/** A row's Explain button; `label` is its accessible name. */
+export const explainButton = (label: string): HTMLButtonElement => {
+  const button = textElement('button', 'details-explain', EXPLAIN_LABEL);
+
+  button.type = 'button';
+  button.title = label;
+  button.setAttribute('aria-label', label);
 
   return button;
 };

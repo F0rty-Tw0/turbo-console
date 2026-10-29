@@ -1,4 +1,5 @@
 import type {
+  BundleDetails,
   DetailsElements,
   EmptyDetails,
   ExplainDetails,
@@ -149,6 +150,7 @@ export type DetailsViews = {
   readonly empty: (isOverlay: boolean) => EmptyDetails;
   readonly package: (model: PackageViewModel, isOverlay: boolean) => PackageDetails;
   readonly link: (model: LinkViewModel, isOverlay: boolean) => LinkDetails;
+  readonly bundle: (model: BundleViewModel, isOverlay: boolean) => BundleDetails;
   readonly explain: (state: ExplainState) => ExplainDetails;
   readonly picking: (model: PickingViewModel, isOverlay: boolean) => PickingDetails;
   readonly trace: (model: TraceViewModel, isOverlay: boolean) => TraceDetails;

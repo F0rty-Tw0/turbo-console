@@ -5,8 +5,8 @@ import { graphViewMock } from './graph-view.mock.ts';
 import { layoutRunsMock } from './layout-runner.mock.ts';
 import { mediaQueryMock } from './media-query.mock.ts';
 import type { Bridge } from '../../../bridge/common/bridge.type.ts';
-import type { PackageDetails } from '../../common/details-view.type.ts';
-import type { DetailsViews, PackageViewModel } from '../../common/details.type.ts';
+import type { BundleDetails, PackageDetails } from '../../common/details-view.type.ts';
+import type { BundleViewModel, DetailsViews, PackageViewModel } from '../../common/details.type.ts';
 import type { GraphControllerDeps } from '../../common/graph-page.type.ts';
 import type { PackageSideHooks } from '../../common/graph-task.type.ts';
 import type { LocationViews } from '../../common/location.type.ts';
@@ -15,6 +15,7 @@ import type { TaskControlsViews } from '../../common/task-controls.type.ts';
 import type { TaskDetailsViews } from '../../common/task-details.type.ts';
 import type { WidgetViews } from '../../common/widget.type.ts';
 import { buildControls } from '../../ui/controls-elements.ts';
+import { bundleView } from '../../ui/details-bundle.ts';
 import { buildDetails } from '../../ui/details-elements.ts';
 import { emptyView } from '../../ui/details-empty.ts';
 import { explainView } from '../../ui/details-explain.ts';
@@ -35,18 +36,24 @@ import { HOME_CAMERA_STUB } from '../stubs/layout.stub.ts';
 
 const NODE_SIZE: NodeSize = { width: 100, height: 32 };
 
-const DETAILS_VIEWS: DetailsViews = {
-  build: buildDetails,
-  empty: emptyView,
-  package: packageView,
-  link: linkView,
-  explain: explainView,
-  picking: pickingView,
-  trace: traceView,
-  folder: folderView,
-  hint: hintView,
-  candidateItems,
-  stepItems
+/** The real details view builders, for specs that build a `GraphDetails` without importing `ui/`. */
+export const detailsViewsMock = (): DetailsViews => {
+  const views: DetailsViews = {
+    build: buildDetails,
+    empty: emptyView,
+    package: packageView,
+    link: linkView,
+    bundle: bundleView,
+    explain: explainView,
+    picking: pickingView,
+    trace: traceView,
+    folder: folderView,
+    hint: hintView,
+    candidateItems,
+    stepItems
+  };
+
+  return views;
 };
 
 const LOCATION_VIEWS: LocationViews = { render: renderLocation, renderLines: renderLocationLines };
@@ -85,7 +92,16 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
 
     return built;
   };
-  const views: DetailsViews = { ...DETAILS_VIEWS, package: recordedPackageView };
+  const bundleViews: BundleDetails[] = [];
+  const recordedBundleView = (model: BundleViewModel, isOverlay: boolean): BundleDetails => {
+    const built = bundleView(model, isOverlay);
+
+    bundleViews.push(built);
+
+    return built;
+  };
+  const realViews = detailsViewsMock();
+  const views: DetailsViews = { ...realViews, package: recordedPackageView, bundle: recordedBundleView };
   const deps: GraphControllerDeps = {
     bridge,
     page,
@@ -108,7 +124,7 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
   const onMessage = vi.fn<PackageSideHooks['onMessage']>();
   const onPlaced = vi.fn<PackageSideHooks['onPlaced']>();
   const onLocation = vi.fn<PackageSideHooks['onLocation']>();
-  const mock: PackageSideDepsMock = { deps, page, view, runs, saver, onMessage, onPlaced, onLocation, packageViews };
+  const mock: PackageSideDepsMock = { deps, page, view, runs, saver, onMessage, onPlaced, onLocation, packageViews, bundleViews };
 
   return mock;
 };

@@ -1,0 +1,65 @@
+import { explainButton, leadOf, nameButton, viewBase } from './details-parts.ts';
+import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import { textElement } from '../../shared/ui/text-element.ts';
+import type { BundleDetails } from '../common/details-view.type.ts';
+import { BUNDLE_HEADING_TEXT, BUNDLE_LEAD_ID, DEPENDS_ON_TEXT } from '../common/details.const.ts';
+import type { BundleEndModel, BundleViewModel } from '../common/details.type.ts';
+import { explainLabelOf } from '../utils/details-text.util.ts';
+
+/** An end's name button; a folder end is named as a folder, since a package can share its name. */
+const endButton = (end: BundleEndModel): HTMLButtonElement => {
+  const button = nameButton(end.text);
+
+  if (end.folder === null) return button;
+
+  const label = `Folder ${end.text}`;
+
+  button.setAttribute('aria-label', label);
+  button.title = label;
+
+  return button;
+};
+
+const dependsOnOf = (): HTMLElement => textElement('span', '', ` ${DEPENDS_ON_TEXT} `);
+
+/** Appends a package link's row to `list`: its two names, then Explain. */
+const linkItem = (list: HTMLUListElement, edge: GraphEdge): BundleDetails['links'][number] => {
+  const li = textElement('li', 'details-item', '');
+  const text = textElement('span', 'details-link-text', '');
+  const pickSource = nameButton(edge.source);
+  const pickTarget = nameButton(edge.target);
+  const explainLabel = explainLabelOf(edge.source, edge.target);
+  const explain = explainButton(explainLabel);
+
+  text.append(pickSource, dependsOnOf(), pickTarget);
+  li.append(text, explain);
+  list.append(li);
+
+  const item: BundleDetails['links'][number] = { source: edge.source, target: edge.target, pickSource, pickTarget, explain };
+
+  return item;
+};
+
+/**
+ * A bundled folder link: its ends and link count, then one "[source] depends on [target]" row with Explain per package
+ * link; a collapsed end is its folder's title.
+ */
+export const bundleView = (model: BundleViewModel, isOverlay: boolean): BundleDetails => {
+  const base = viewBase('bundle', BUNDLE_HEADING_TEXT, isOverlay);
+  const lead = leadOf('');
+  const source = endButton(model.source);
+  const target = endButton(model.target);
+  const count = textElement('p', 'details-muted', model.countText);
+  const list = textElement('ul', 'details-list', '');
+  const itemOf = (edge: GraphEdge): BundleDetails['links'][number] => linkItem(list, edge);
+  const links = model.links.map(itemOf);
+
+  lead.id = BUNDLE_LEAD_ID;
+  base.heading.setAttribute('aria-describedby', BUNDLE_LEAD_ID);
+  lead.append(source, dependsOnOf(), target);
+  base.root.append(lead, count, list);
+
+  const view: BundleDetails = { ...base, kind: 'bundle', source, target, count, links };
+
+  return view;
+};

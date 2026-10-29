@@ -1,3 +1,4 @@
+import { bundleView } from './details-bundle.ts';
 import { buildDetails } from './details-elements.ts';
 import { emptyView } from './details-empty.ts';
 import { explainView } from './details-explain.ts';
@@ -24,6 +25,7 @@ export const detailsViews: DetailsViews = {
   empty: emptyView,
   package: packageView,
   link: linkView,
+  bundle: bundleView,
   explain: explainView,
   picking: pickingView,
   trace: traceView,

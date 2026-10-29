@@ -1172,6 +1172,12 @@ button.details-explain {
   min-width: 0;
 }
 
+/* A bundle row's link text takes the free width, so its two names keep their own width and Explain sits at the end. */
+.details-item > .details-link-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .details-name[aria-disabled='true'],
 button.details-explain[aria-disabled='true'] {
   cursor: default;
