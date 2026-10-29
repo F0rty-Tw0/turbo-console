@@ -131,9 +131,11 @@ type FakeDocument = {
   readonly body: FakeElement;
   /** Document listeners never run: no spec dispatches on the document. */
   readonly addEventListener: () => void;
+  /** Whether the page has focus: always `true`; a spec spies on it for an unfocused page. */
+  readonly hasFocus: () => boolean;
 };
 
-/** A `document` for `vi.stubGlobal('document', …)`: `createElement`, `createElementNS`, a `body` and the element `focus()` last moved to. */
+/** A `document` for `vi.stubGlobal('document', …)`: `createElement`, `createElementNS`, a `body`, the element `focus()` last moved to and `hasFocus`. */
 export const fakeDocumentMock = (): FakeDocument => {
   const focus: FakeFocus = { element: null, body: null };
   const body = new FakeElement('body', focus);
@@ -148,6 +150,7 @@ export const fakeDocumentMock = (): FakeDocument => {
     },
     body,
     addEventListener: (): void => undefined,
+    hasFocus: (): boolean => true,
     get activeElement(): FakeElement | null {
       return focus.element;
     }

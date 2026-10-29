@@ -17,10 +17,15 @@ const messageTextOf = (state: MessageState): string => {
   }
 };
 
-/** Toolbar, notice, location bar and body hidden, `text` shown; Reload only when `canReload`. An open Legend closes, or it would reappear open with the graph. */
+/**
+ * Toolbar, notice, location bar and body hidden, `text` shown; Reload only when `canReload`. An open Legend closes, or
+ * it would reappear open with the graph. The body is marked to get its focus back only while the page has focus: an
+ * unfocused webview keeps its last `activeElement`, and focusing it again would pull focus out of the editor.
+ */
 const showMessage = (page: PageElements, text: string, canReload: boolean): void => {
+  const isPageFocused = document.hasFocus();
   const isBodyFocused = page.body.contains(document.activeElement);
-  const hasBodyFocus = !page.body.hidden && isBodyFocused;
+  const hasBodyFocus = isPageFocused && !page.body.hidden && isBodyFocused;
 
   if (hasBodyFocus) bodiesHidingFocus.add(page.body);
 

@@ -95,6 +95,18 @@ describe('FEATURE: layoutScreenOf', () => {
     });
   });
 
+  describe('GIVEN the loading screen hid a body that held focus while the page had none, as when the editor saves', () => {
+    it('WHEN the graph shows THEN focus stays on the body', () => {
+      vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+      page.container.focus();
+      layoutScreenOf(page).showLoading();
+      document.body.focus();
+      layoutScreenOf(page).showGraph(false);
+
+      expect(document.activeElement).toBe(document.body);
+    });
+  });
+
   describe('GIVEN the loading screen hid a body that held no focus', () => {
     it('WHEN the graph shows THEN focus stays on the body', () => {
       page.details.focus();
