@@ -1,6 +1,6 @@
 import { closureOf } from './closure.util.ts';
 import { edgeIdOf } from './edge-id.util.ts';
-import { folderPaintOf, folderRowPaintOf } from './folder-paint.util.ts';
+import { bundlePaintOf, folderPaintOf, folderRowPaintOf } from './folder-paint.util.ts';
 import { edgeStateOf, nodeStateOf } from './highlight.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -100,6 +100,8 @@ export const paintOf = (
   // eslint-disable-next-line max-params -- five inputs, pinned by the plan's Cross-phase interfaces (Task 2.2)
 ): Paint => {
   if (inspection.kind === 'folder') return folderRowPaintOf(inspection.folder, edges, scene);
+
+  if (inspection.kind === 'bundle') return bundlePaintOf(inspection.source, inspection.target, scene);
 
   const paint = statePaintOf(inspection, edges, trace, lit);
 
