@@ -1,53 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Mock, Mocked } from 'vitest';
 
 import { GraphTaskWidgets } from './graph-task-widgets.ts';
-import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import type { GraphView } from '../common/graph-page.type.ts';
-import type { PageElements } from '../common/page-elements.type.ts';
-import type { TaskDetailsModel, TaskWidgetsDeps } from '../common/task-details.type.ts';
-import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
-import type { MenuElements } from '../common/widget-menu.type.ts';
-import type { RectPx, WidgetRects } from '../common/widget.type.ts';
-import type { TickRunner } from '../test/common/tick-observer.type.ts';
+import type { TaskDetailsModel } from '../common/task-details.type.ts';
+import type { RectPx } from '../common/widget.type.ts';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, PANEL_LEFT } from '../test/common/graph-task-widgets.const.ts';
+import type { TaskWidgetsRig } from '../test/common/graph-task-widgets.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { graphViewMock } from '../test/mocks/graph-view.mock.ts';
-import { switchableMediaQueryMock } from '../test/mocks/media-query.mock.ts';
-import { taskWidgetViewsMock } from '../test/mocks/task-widget-views.mock.ts';
-import { tickObserverMock } from '../test/mocks/tick-observer.mock.ts';
 import { API_BUILD_STUB, GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
-import { HOME_CAMERA_STUB } from '../test/stubs/layout.stub.ts';
 import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
 import { setBox } from '../test/utils/element-box.spec.util.ts';
-
-type WidgetsRig = {
-  readonly page: PageElements;
-  readonly view: Mocked<GraphView>;
-  readonly bridge: Mocked<Bridge>;
-  readonly onShowPackage: Mock<(name: string) => void>;
-  /** The task details panel, its left edge at `PANEL_LEFT`. */
-  readonly aside: HTMLElement;
-  /** The task toolbars built so far, the latest last. */
-  readonly toolbars: TaskToolbarElements[];
-  /** The menus built so far, the latest last. */
-  readonly menus: MenuElements[];
-  readonly widgetsOf: (isOverlay: boolean) => GraphTaskWidgets;
-  /** Flips the overlay media query, running its `change` listeners. */
-  readonly flipOverlay: (isOverlay: boolean) => void;
-  readonly setActive: (isActive: boolean) => void;
-  /** Runs the aside's ResizeObserver callbacks, as a drag of its sash does. */
-  readonly resizeAside: () => void;
-};
-
-const CANVAS_WIDTH = 400;
-
-const CANVAS_HEIGHT = 300;
-
-const PANEL_LEFT = 300;
-
-/** `a#build` drawn left of the panel: its toolbar clear of it. */
-const LEFT_RECT: RectPx = { x1: 100, y1: 50, x2: 180, y2: 80 };
+import { rectsOf, stopItemOf, taskToolbarsOf, taskWidgetsRigOf } from '../test/utils/graph-task-widgets.spec.util.ts';
 
 /** `a#build` drawn across the panel's left edge: its toolbar under it. */
 const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
@@ -60,90 +23,14 @@ const ROOT_NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: ROOT_NOT_RU
 
 const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
 
-const rectsOf = (selected: RectPx): WidgetRects => {
-  const rects: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected, zoom: 1 };
-
-  return rects;
-};
-
-const rigOf = (): WidgetsRig => {
-  const asideResizes: TickRunner[] = [];
-
-  vi.stubGlobal('ResizeObserver', tickObserverMock(asideResizes));
-  vi.stubGlobal('MutationObserver', tickObserverMock([]));
-
-  const { page, views, toolbars, menus } = taskWidgetViewsMock();
-  const view = graphViewMock(HOME_CAMERA_STUB);
-  const bridge: Mocked<Bridge> = { ready: vi.fn(), post: vi.fn(), onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
-  const aside = document.createElement('aside');
-  const onShowPackage = vi.fn<(name: string) => void>();
-  const overlay = switchableMediaQueryMock(false);
-  const activity = { isActive: true };
-  const setActive = (isActive: boolean): void => {
-    activity.isActive = isActive;
-  };
-  const widgetsOf = (isOverlay: boolean): GraphTaskWidgets => {
-    overlay.flip(isOverlay);
-
-    const deps: TaskWidgetsDeps = {
-      page,
-      view,
-      views,
-      bridge,
-      isActive: (): boolean => activity.isActive,
-      onShowPackage,
-      overlay: overlay.query,
-      aside: (): HTMLElement => aside
-    };
-
-    return new GraphTaskWidgets(deps);
-  };
-
-  const resizeAside = (): void => asideResizes.forEach((tick) => tick());
-
-  setBox(page.container, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  setBox(aside, PANEL_LEFT, 100, CANVAS_HEIGHT);
-  view.widgetRects.mockReturnValue(rectsOf(LEFT_RECT));
-
-  const flipOverlay = overlay.flip;
-  const rig: WidgetsRig = {
-    page,
-    view,
-    bridge,
-    onShowPackage,
-    aside,
-    toolbars,
-    menus,
-    widgetsOf,
-    flipOverlay,
-    setActive,
-    resizeAside
-  };
-
-  return rig;
-};
-
-/** The task toolbars' roots on the layer. */
-const taskToolbarsOf = (rig: WidgetsRig): HTMLElement[] =>
-  rig.toolbars.map(({ root }): HTMLElement => root).filter((root): boolean => root.isConnected);
-
-/** Opens the menu of the shown task toolbar's "…" and hands back its Stop item. */
-const stopItemOf = (rig: WidgetsRig): HTMLElement | undefined => {
-  const [toolbar] = rig.toolbars.filter(({ root }): boolean => root.isConnected);
-
-  toolbar?.ellipsis.click();
-
-  const [menu] = rig.menus;
-
-  return menu?.items[2];
-};
+const widgetsOf = (rig: TaskWidgetsRig, isOverlay: boolean): GraphTaskWidgets => new GraphTaskWidgets(rig.depsOf(isOverlay));
 
 describe('FEATURE: GraphTaskWidgets', () => {
-  let rig: WidgetsRig;
+  let rig: TaskWidgetsRig;
 
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
-    rig = rigOf();
+    rig = taskWidgetsRigOf();
   });
 
   afterEach(() => {
@@ -154,7 +41,7 @@ describe('FEATURE: GraphTaskWidgets', () => {
     let widgets: GraphTaskWidgets;
 
     beforeEach(() => {
-      widgets = rig.widgetsOf(false);
+      widgets = widgetsOf(rig, false);
       widgets.show(RUNNING);
     });
 
@@ -274,7 +161,7 @@ describe('FEATURE: GraphTaskWidgets', () => {
     let widgets: GraphTaskWidgets;
 
     beforeEach(() => {
-      widgets = rig.widgetsOf(false);
+      widgets = widgetsOf(rig, false);
       rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
       rig.view.anchorBox.mockReturnValue({ x1: UNDER_RECT.x1, x2: UNDER_RECT.x2 });
       widgets.show(RUNNING);
@@ -322,7 +209,7 @@ describe('FEATURE: GraphTaskWidgets', () => {
     let widgets: GraphTaskWidgets;
 
     beforeEach(() => {
-      widgets = rig.widgetsOf(true);
+      widgets = widgetsOf(rig, true);
       widgets.show(RUNNING);
     });
 
