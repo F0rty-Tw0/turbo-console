@@ -17,6 +17,8 @@ import { taskWidgetViewsMock } from '../test/mocks/task-widget-views.mock.ts';
 import { tickObserverMock } from '../test/mocks/tick-observer.mock.ts';
 import { API_BUILD_STUB, GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
 import { HOME_CAMERA_STUB } from '../test/stubs/layout.stub.ts';
+import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
+import { setBox } from '../test/utils/element-box.spec.util.ts';
 
 type WidgetsRig = {
   readonly page: PageElements;
@@ -38,6 +40,8 @@ type WidgetsRig = {
 
 const CANVAS_WIDTH = 400;
 
+const CANVAS_HEIGHT = 300;
+
 const PANEL_LEFT = 300;
 
 /** `a#build` drawn left of the panel: its "…" clear of it. */
@@ -50,12 +54,6 @@ const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dep
 
 const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
 
-const setSize = (element: HTMLElement, left: number, width: number): void => {
-  Object.defineProperty(element, 'offsetLeft', { value: left });
-  Object.defineProperty(element, 'offsetWidth', { value: width });
-  Object.defineProperty(element, 'offsetHeight', { value: 300 });
-};
-
 const rectsOf = (selected: RectPx): WidgetRects => {
   const rects: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected, zoom: 1 };
 
@@ -66,6 +64,7 @@ const rigOf = (): WidgetsRig => {
   const asideResizes: TickRunner[] = [];
 
   vi.stubGlobal('ResizeObserver', tickObserverMock(asideResizes));
+  vi.stubGlobal('MutationObserver', tickObserverMock([]));
 
   const { page, views, buttons, menus } = taskWidgetViewsMock();
   const view = graphViewMock(HOME_CAMERA_STUB);
@@ -94,8 +93,8 @@ const rigOf = (): WidgetsRig => {
 
   const resizeAside = (): void => asideResizes.forEach((tick) => tick());
 
-  setSize(page.container, 0, CANVAS_WIDTH);
-  setSize(aside, PANEL_LEFT, 100);
+  setBox(page.container, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  setBox(aside, PANEL_LEFT, 100, CANVAS_HEIGHT);
   view.widgetRects.mockReturnValue(rectsOf(LEFT_RECT));
 
   const rig: WidgetsRig = { page, view, bridge, aside, buttons, menus, widgetsOf, flipOverlay: overlay.flip, setActive, resizeAside };
@@ -192,6 +191,17 @@ describe('FEATURE: GraphTaskWidgets', () => {
       expect(rig.bridge.post).not.toHaveBeenCalled();
     });
 
+    it('WHEN a#build is shown running and two frames pass THEN no layout is read', () => {
+      const log = accessLogOf([rig.page.container, rig.aside]);
+
+      widgets.rendered();
+      widgets.rendered();
+
+      const reads = log.filter((entry) => entry.startsWith('read'));
+
+      expect(reads).toStrictEqual([]);
+    });
+
     it('WHEN the selection keeps clear THEN the camera stays', () => {
       rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
       widgets.keepClear();
@@ -237,6 +247,15 @@ describe('FEATURE: GraphTaskWidgets', () => {
       expect(rig.view.panBy).not.toHaveBeenCalled();
       expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);
     });
+
+    it('WHEN task mode is off, the panel turns to overlay and task mode is on again THEN the "…" hides on the next frame', () => {
+      rig.setActive(false);
+      rig.flipOverlay(true);
+      rig.setActive(true);
+      widgets.rendered();
+
+      expect(taskButtonsOf(rig)[0]?.hidden).toBe(true);
+    });
   });
 
   describe('GIVEN the details panel overlays the canvas', () => {
@@ -261,7 +280,7 @@ describe('FEATURE: GraphTaskWidgets', () => {
     it('WHEN a#build is drawn across the panel edge and the panel then narrows THEN its "…" shows', () => {
       rig.view.widgetRects.mockReturnValue(rectsOf(UNDER_RECT));
       widgets.rendered();
-      setSize(rig.aside, CANVAS_WIDTH - 20, 100);
+      setBox(rig.aside, CANVAS_WIDTH - 20, 100, CANVAS_HEIGHT);
       rig.resizeAside();
 
       expect(taskButtonsOf(rig)[0]?.hidden).toBe(false);

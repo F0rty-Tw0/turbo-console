@@ -1,15 +1,28 @@
-import type { TickObserverClass, TickRunner } from '../common/tick-observer.type.ts';
+import type { ObserveCall, TickObserverClass, TickRunner } from '../common/tick-observer.type.ts';
 
-const ignore = (): void => undefined;
+/** An `observe` that appends the arguments of each call to `calls`. */
+const recorderOf = (calls: ObserveCall[]): ((...call: ObserveCall) => void) => {
+  const record = (...call: ObserveCall): void => {
+    calls.push(call);
+  };
 
-/** An observer class that keeps each callback it is built with in `ticks`, for `vi.stubGlobal`, and observes nothing. */
-export const tickObserverMock = (ticks: TickRunner[]): TickObserverClass => {
+  return record;
+};
+
+/**
+ * An observer class that keeps each callback it is built with in `ticks` and each `observe` call in `observed`, for
+ * `vi.stubGlobal`, and observes nothing.
+ */
+export const tickObserverMock = <Args extends unknown[] = []>(
+  ticks: TickRunner<Args>[],
+  observed: ObserveCall[] = []
+): TickObserverClass<Args> => {
   class TickObserver {
-    public constructor(callback: TickRunner) {
+    public constructor(callback: TickRunner<Args>) {
       ticks.push(callback);
     }
 
-    public readonly observe = ignore;
+    public readonly observe = recorderOf(observed);
   }
 
   return TickObserver;
