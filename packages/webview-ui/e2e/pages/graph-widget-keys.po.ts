@@ -19,21 +19,30 @@ export class GraphWidgetKeys extends GraphWidgetsPage {
   }
 
   /**
-   * Pans the canvas left until the expanded folder's chevron lies a pixel past the container's left edge. The layer
-   * takes the container's rect on the next ResizeObserver callback; a chevron read before that sits off by the
-   * container's left edge and flips the pan to the right (macOS CI).
+   * Pans the canvas left until the expanded folder's chevron lies a pixel past the container's left edge. The panels
+   * that narrow the container mount with the graph state, and the layer takes the container's new rect one
+   * ResizeObserver callback later; a chevron read in between sits off by the container's left edge and flips the pan to
+   * the right (macOS CI). So the chevron must show first, then the layer must cover the container.
    */
   public async panChevronOffLeft(folder: string): Promise<void> {
+    const chevronLocator = this.chevronOf(folder, true);
+
+    await expect(chevronLocator).toBeVisible();
     await this.expectLayerAfterContainer();
-    const chevron = await this.chevronOf(folder, true).evaluate(readRect);
+    const chevron = await chevronLocator.evaluate(readRect);
     const container = await this.container.evaluate(readRect);
 
     this.pannedPx = -(chevron.left + chevron.width - container.left + 1);
     await this.canvas.panBy(this.pannedPx, 0);
   }
 
+  /** The expanded chevron is in the DOM but hidden, so a chevron that is gone or renamed by a collapse does not pass. */
   public async expectChevronHidden(folder: string): Promise<void> {
-    await expect(this.chevronOf(folder, true)).toBeHidden();
+    const name = `Collapse ${folderTitleOf(folder)}`;
+    const chevron = this.layer.getByRole('button', { name, exact: true, includeHidden: true });
+
+    await expect(chevron).toBeAttached();
+    await expect(chevron).toBeHidden();
   }
 
   /** Undoes the last `panChevronOffLeft`. */
