@@ -48,3 +48,9 @@ export const setFocusToggle = (button: HTMLButtonElement, isFocus: boolean, focu
 
   if (button.title !== title) button.title = title;
 };
+
+/** `aria-disabled`, never `disabled`, so a control the filters lock keeps its focus. */
+export const setDisabled = (button: HTMLButtonElement, isDisabled: boolean): void => {
+  if (isDisabled) button.setAttribute('aria-disabled', 'true');
+  else button.removeAttribute('aria-disabled');
+};
