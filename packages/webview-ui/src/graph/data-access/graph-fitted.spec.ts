@@ -238,6 +238,14 @@ describe('FEATURE: createFittedCamera', () => {
         expect(events).toStrictEqual(['resize', 'fit', 'refit']);
       });
 
+      it('WHEN the container resizes, the grab ends with no free and another node is freed later THEN that free runs the held fit', () => {
+        camera.resized();
+        setGrabbed('a', false);
+        free(['b']);
+
+        expect(events).toStrictEqual(['resize', 'fit', 'refit']);
+      });
+
       it('WHEN the container resizes and setViewport runs before the free THEN the free does not refit', () => {
         camera.resized();
         camera.setViewport(2, { x: 5, y: 6 });
