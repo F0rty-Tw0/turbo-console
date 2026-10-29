@@ -1,4 +1,5 @@
 import type {
+  BundleDetails,
   DetailsElements,
   EmptyDetails,
   ExplainDetails,
@@ -11,6 +12,7 @@ import type {
 import type { GraphIconId } from './graph-icon.type.ts';
 import type { TraceDirection } from './trace.type.ts';
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
+import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 
 /** One line of the empty view's guide: an icon, what can be selected, and how. */
 export type GuideItem = {
@@ -59,6 +61,20 @@ export type LinkViewModel = {
   readonly source: string;
   readonly target: string;
   readonly file: string;
+};
+
+/** A bundle end: a package (`folder` `null`, `text` its name) or a collapsed folder (`text` its title). */
+export type BundleEndModel = {
+  readonly text: string;
+  readonly folder: string | null;
+};
+
+/** A bundled folder link: its two drawn ends, its link count, and its package links in scene order. */
+export type BundleViewModel = {
+  readonly source: BundleEndModel;
+  readonly target: BundleEndModel;
+  readonly countText: string;
+  readonly links: GraphEdge[];
 };
 
 export type ReadingExplain = { readonly kind: 'reading'; readonly file: string };
@@ -134,6 +150,7 @@ export type DetailsViews = {
   readonly empty: (isOverlay: boolean) => EmptyDetails;
   readonly package: (model: PackageViewModel, isOverlay: boolean) => PackageDetails;
   readonly link: (model: LinkViewModel, isOverlay: boolean) => LinkDetails;
+  readonly bundle: (model: BundleViewModel, isOverlay: boolean) => BundleDetails;
   readonly explain: (state: ExplainState) => ExplainDetails;
   readonly picking: (model: PickingViewModel, isOverlay: boolean) => PickingDetails;
   readonly trace: (model: TraceViewModel, isOverlay: boolean) => TraceDetails;

@@ -5,7 +5,7 @@ import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 import { COLLAPSED_NODE_HEIGHT, COLLAPSED_NODE_WIDTH, FOLDER_LINK_CLASS, FOLDER_NODE_CLASS } from '../common/graph.const.ts';
 import { collapsedCentreOf } from '../utils/collapsed-centre.util.ts';
 import { collapsedIdOf, folderLinkIdOf } from '../utils/folder-id.util.ts';
-import { pluralOf } from '../utils/plural.util.ts';
+import { folderLinkCountTextOf } from '../utils/folder-text.util.ts';
 
 type LabelOf = (folder: string) => string;
 
@@ -63,7 +63,7 @@ const addFolderLink = (cy: Core, id: string, link: FolderLink, label: string): v
 const placeFolderLink = (cy: Core, id: string, link: FolderLink): void => {
   const edge = cy.getElementById(id);
   const count = link.links.length;
-  const label = pluralOf(count, 'link', 'links');
+  const label = folderLinkCountTextOf(link);
 
   const isNew = edge.empty();
 

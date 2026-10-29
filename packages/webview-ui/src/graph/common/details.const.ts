@@ -79,10 +79,15 @@ export const DEPENDS_ON_TEXT = 'depends on';
 
 export const LINK_HEADING_TEXT = 'Dependency';
 
+export const BUNDLE_HEADING_TEXT = 'Dependencies';
+
 export const TRACE_HEADING_TEXT = 'Trace';
 
 /** The id of the link view's lead, which describes its heading so a screen reader hears the two ends. */
 export const LINK_LEAD_ID = 'details-link-lead';
+
+/** The id of the bundle view's lead, which describes its heading so a screen reader hears the two ends. */
+export const BUNDLE_LEAD_ID = 'details-bundle-lead';
 
 /** The id of the trace view's lead, which describes its heading so a screen reader hears the path's length. */
 export const TRACE_LEAD_ID = 'details-trace-lead';

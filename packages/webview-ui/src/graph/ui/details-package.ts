@@ -1,16 +1,9 @@
-import { lineOf, markOf, nameButton, sectionOf, viewBase } from './details-parts.ts';
+import { explainButton, lineOf, markOf, nameButton, sectionOf, viewBase } from './details-parts.ts';
 import { graphIcon } from './graph-icon.ts';
 import { iconTextButton } from './icon-button.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { NeighbourItem, PackageDetails } from '../common/details-view.type.ts';
-import {
-  EXCLUDE_LABEL,
-  EXPLAIN_LABEL,
-  NONE_TEXT,
-  NO_TAGS_TEXT,
-  START_TRACE_LABEL,
-  START_TRACE_TITLE
-} from '../common/details.const.ts';
+import { EXCLUDE_LABEL, NONE_TEXT, NO_TAGS_TEXT, START_TRACE_LABEL, START_TRACE_TITLE } from '../common/details.const.ts';
 import type { NeighbourModel, PackageViewModel } from '../common/details.type.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
@@ -94,12 +87,9 @@ const neighbourItem = (list: HTMLUListElement, neighbour: NeighbourModel, explai
   const li = textElement('li', 'details-item', '');
   const pick = nameButton(neighbour.name);
   const mark = markOf();
-  const explain = textElement('button', 'details-explain', EXPLAIN_LABEL);
+  const explain = explainButton(explainLabel);
 
-  explain.type = 'button';
   explain.dataset['name'] = neighbour.name;
-  explain.title = explainLabel;
-  explain.setAttribute('aria-label', explainLabel);
   mark.hidden = neighbour.isVisible;
   li.append(pick, mark, explain);
   list.append(li);

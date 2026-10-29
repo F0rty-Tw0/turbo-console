@@ -1,8 +1,12 @@
 import { folderTitleOf } from './controls-text.util.ts';
 import { manifestFileOf } from './details-text.util.ts';
-import { folderCountsOf, folderPackagesTitleOf, folderSummaryOf } from './folder-text.util.ts';
+import { folderOfElementId } from './folder-id.util.ts';
+import { folderLinkOf } from './folder-links.util.ts';
+import { bundleEndTextOf, folderCountsOf, folderLinkCountTextOf, folderPackagesTitleOf, folderSummaryOf } from './folder-text.util.ts';
 import { neighboursOf } from './neighbours.util.ts';
 import type {
+  BundleEndModel,
+  BundleViewModel,
   CandidateGroupModel,
   CandidateModel,
   FolderViewModel,
@@ -50,6 +54,26 @@ export const linkModelOf = (source: string, target: string, context: DetailsCont
   const path = info?.path ?? '';
   const file = manifestFileOf(path);
   const model: LinkViewModel = { source, target, file };
+
+  return model;
+};
+
+const bundleEndOf = (id: string): BundleEndModel => {
+  const text = bundleEndTextOf(id);
+  const folder = folderOfElementId(id);
+  const end: BundleEndModel = { text, folder };
+
+  return end;
+};
+
+/** `null` when the scene has no link drawn from `source` to `target`; the links keep the scene link's own order. */
+export const bundleModelOf = (source: string, target: string, context: DetailsContext): BundleViewModel | null => {
+  const link = folderLinkOf(context.scene, source, target);
+
+  if (link === null) return null;
+
+  const countText = folderLinkCountTextOf(link);
+  const model: BundleViewModel = { source: bundleEndOf(source), target: bundleEndOf(target), countText, links: link.links };
 
   return model;
 };

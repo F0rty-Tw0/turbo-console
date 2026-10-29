@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
 import { folderTitleOf } from './controls-text.util.ts';
-import { folderCountsOf, folderPackagesTitleOf, folderStatusText, folderSummaryOf } from './folder-text.util.ts';
+import { collapsedIdOf } from './folder-id.util.ts';
+import {
+  bundleEndTextOf,
+  bundleSummaryOf,
+  folderCountsOf,
+  folderLinkCountTextOf,
+  folderPackagesTitleOf,
+  folderStatusText,
+  folderSummaryOf
+} from './folder-text.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderCounts } from '../common/details.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
-import { BOARDS_EDGES, BOARDS_INFOS, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
+import { BOARDS_EDGES, BOARDS_INFOS, boardsSceneOf, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
 
 type CountsRow = {
   readonly title: string;
@@ -24,6 +33,18 @@ type StatusRow = {
 type SummaryRow = {
   readonly counts: FolderCounts;
   readonly expected: string;
+};
+
+type EndRow = {
+  readonly title: string;
+  readonly id: string;
+  readonly expected: string;
+};
+
+type BundleRow = {
+  readonly title: string;
+  readonly scene: FolderScene;
+  readonly expected: string[];
 };
 
 const infoOf = (name: string, path: string): GraphPackage => {
@@ -115,6 +136,46 @@ describe('FEATURE: folder text', () => {
       const title = folderPackagesTitleOf(3);
 
       expect(title).toBe('Packages (3)');
+    });
+  });
+
+  describe('GIVEN a bundle end id', () => {
+    it.each([
+      { title: 'a package', id: 'docs', expected: 'docs' },
+      { title: 'a collapsed folder', id: collapsedIdOf('packages'), expected: 'packages' },
+      { title: 'the collapsed root folder', id: collapsedIdOf(''), expected: '(root)' }
+    ] satisfies EndRow[])('WHEN the end text of $title is built THEN it reads $expected', ({ id, expected }) => {
+      const text = bundleEndTextOf(id);
+
+      expect(text).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a folder scene with collapsed folders', () => {
+    it('WHEN the link counts with packages collapsed are built THEN they read 1 link and 2 links', () => {
+      const scene = boardsSceneOf(['packages']);
+
+      const counts = scene.links.map(folderLinkCountTextOf);
+
+      expect(counts).toStrictEqual(['1 link', '2 links']);
+    });
+
+    it.each([
+      {
+        title: 'packages collapsed',
+        scene: boardsSceneOf(['packages']),
+        expected: ['1 link: web → packages', '2 links: docs → packages']
+      },
+      {
+        title: 'apps collapsed',
+        scene: boardsSceneOf(['apps']),
+        expected: ['2 links: apps → @acme/ui', '1 link: apps → @acme/utils']
+      },
+      { title: 'both collapsed', scene: boardsSceneOf(['apps', 'packages']), expected: ['3 links: apps → packages'] }
+    ] satisfies BundleRow[])('WHEN the summaries of $title are built THEN they read $expected', ({ scene, expected }) => {
+      const summaries = scene.links.map(bundleSummaryOf);
+
+      expect(summaries).toStrictEqual(expected);
     });
   });
 });

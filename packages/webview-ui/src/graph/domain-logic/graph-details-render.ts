@@ -1,4 +1,4 @@
-import { setButtonLabel, setButtonText, setFocusButton } from './button-title.ts';
+import { setButtonLabel, setButtonText, setDisabled, setFocusButton } from './button-title.ts';
 import { renderPicking } from './graph-details-picking.ts';
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { ExplainDetails, ExplainEntry, NeighbourItem, PackageDetails } from '../common/details-view.type.ts';
@@ -19,12 +19,6 @@ import {
 } from '../utils/details-text.util.ts';
 import { excerptRowsOf } from '../utils/excerpt.util.ts';
 import { refocusOf } from '../utils/refocus.util.ts';
-
-/** `aria-disabled`, never `disabled`, so a control the filters lock keeps its focus. */
-const setDisabled = (button: HTMLButtonElement, isDisabled: boolean): void => {
-  if (isDisabled) button.setAttribute('aria-disabled', 'true');
-  else button.removeAttribute('aria-disabled');
-};
 
 const updateNeighbour = (item: NeighbourItem, visible: ReadonlySet<string>): void => {
   const isVisible = visible.has(item.name);

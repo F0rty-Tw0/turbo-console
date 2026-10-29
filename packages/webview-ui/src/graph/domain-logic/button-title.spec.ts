@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { setButtonIcon, setButtonLabel, setButtonText, setFocusButton, setFocusToggle, setIconTextButton } from './button-title.ts';
+import {
+  setButtonIcon,
+  setButtonLabel,
+  setButtonText,
+  setDisabled,
+  setFocusButton,
+  setFocusToggle,
+  setIconTextButton
+} from './button-title.ts';
 import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { faceOf, iconTextButtonOf } from '../test/utils/button-face.spec.util.ts';
@@ -67,6 +75,25 @@ describe('FEATURE: button titles', () => {
       const face = faceOf(button);
 
       expect([...face, button.title]).toStrictEqual([icon, text, text]);
+    });
+  });
+
+  describe('GIVEN a details button', () => {
+    it('WHEN setDisabled locks it THEN aria-disabled is true and the button is not disabled', () => {
+      const button = document.createElement('button');
+
+      setDisabled(button, true);
+
+      expect([button.getAttribute('aria-disabled'), button.disabled]).toStrictEqual(['true', false]);
+    });
+
+    it('WHEN setDisabled unlocks a locked button THEN it has no aria-disabled attribute', () => {
+      const button = document.createElement('button');
+
+      setDisabled(button, true);
+      setDisabled(button, false);
+
+      expect(button.getAttribute('aria-disabled')).toBeNull();
     });
   });
 

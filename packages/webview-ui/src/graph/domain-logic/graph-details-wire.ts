@@ -1,4 +1,5 @@
 import { namedButtonOf, wirePicking } from './graph-details-picking.ts';
+import { explainInput, onClick, selectInput, wired } from './graph-details-wire-parts.ts';
 import type {
   EmptyDetails,
   ExplainDetails,
@@ -27,34 +28,6 @@ const START_TRACE: InspectionInput = { kind: 'startTrace' };
 const CLEAR_TRACE: InspectionInput = { kind: 'clearTrace' };
 
 const SWAP_ENDS: InspectionInput = { kind: 'swapEnds' };
-
-const selectInput = (name: string): InspectionInput => {
-  const input: InspectionInput = { kind: 'select', name, via: 'panel' };
-
-  return input;
-};
-
-const explainInput = (source: string, target: string): InspectionInput => {
-  const input: InspectionInput = { kind: 'explain', source, target };
-
-  return input;
-};
-
-/** A click on an `aria-disabled` button does nothing; the attribute is read at click time, as updates move it. */
-const onClick = (button: HTMLButtonElement, act: () => void): void => {
-  button.addEventListener('click', (): void => {
-    const disabled = button.getAttribute('aria-disabled');
-    const isDisabled = disabled === 'true';
-
-    if (!isDisabled) act();
-  });
-};
-
-const wired = <View extends DetailsView>(view: View, env: DetailsEnv): View => {
-  onClick(view.close, env.onClose);
-
-  return view;
-};
 
 export const emptyOf = (env: DetailsEnv): EmptyDetails => wired(env.deps.views.empty(env.isOverlay), env);
 

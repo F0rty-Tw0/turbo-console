@@ -1,7 +1,7 @@
 import type { Mock, Mocked } from 'vitest';
 
 import type { LayoutRuns } from './graph-layouts.type.ts';
-import type { PackageDetails } from '../../common/details-view.type.ts';
+import type { BundleDetails, PackageDetails } from '../../common/details-view.type.ts';
 import type { GraphControllerDeps, GraphView, ViewStateSaver } from '../../common/graph-page.type.ts';
 import type { PackageSideHooks } from '../../common/graph-task.type.ts';
 import type { PageElements } from '../../common/page-elements.type.ts';
@@ -21,4 +21,6 @@ export type PackageSideDepsMock = {
   readonly onLocation: Mock<PackageSideHooks['onLocation']>;
   /** The package views built so far, the latest last. */
   readonly packageViews: PackageDetails[];
+  /** The bundle views built so far, the latest last. */
+  readonly bundleViews: BundleDetails[];
 };

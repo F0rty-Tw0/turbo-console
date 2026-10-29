@@ -1,4 +1,5 @@
 import type {
+  BundleDetails,
   EmptyDetails,
   ExplainDetails,
   FolderViewElements,
@@ -24,7 +25,8 @@ export type ExplainPlan = 'update' | 'rebuild';
 export type Refocus = 'item' | 'heading' | 'none';
 
 /** One view of the details panel. */
-export type DetailsView = EmptyDetails | PackageDetails | LinkDetails | PickingDetails | TraceDetails | FolderViewElements;
+export type DetailsView =
+  EmptyDetails | PackageDetails | LinkDetails | BundleDetails | PickingDetails | TraceDetails | FolderViewElements;
 
 type PickingParts = { readonly candidates: TraceCandidates };
 

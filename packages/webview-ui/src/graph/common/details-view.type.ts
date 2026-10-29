@@ -12,7 +12,7 @@ export type DetailsBarElements = {
 };
 
 /** The `data-view` of a view's root section. */
-export type DetailsViewKind = 'empty' | 'package' | 'link' | 'picking' | 'trace' | 'folder';
+export type DetailsViewKind = 'empty' | 'package' | 'link' | 'bundle' | 'picking' | 'trace' | 'folder';
 
 /** Every view's root and title row; `close` always exists and is `hidden` while the panel is docked. */
 export type DetailsViewBase = {
@@ -57,6 +57,25 @@ type LinkParts = {
 };
 
 export type LinkDetails = DetailsViewBase & LinkParts;
+
+/** A bundled package link's row: its two name buttons and its Explain. */
+type BundleLinkItem = {
+  readonly source: string;
+  readonly target: string;
+  readonly pickSource: HTMLButtonElement;
+  readonly pickTarget: HTMLButtonElement;
+  readonly explain: HTMLButtonElement;
+};
+
+type BundleParts = {
+  readonly kind: 'bundle';
+  readonly source: HTMLButtonElement;
+  readonly target: HTMLButtonElement;
+  readonly count: HTMLElement;
+  readonly links: BundleLinkItem[];
+};
+
+export type BundleDetails = DetailsViewBase & BundleParts;
 
 /** A candidate group; `empty` reads "None" or "No match" and is `hidden` while the list has items. */
 export type PickingGroup = {

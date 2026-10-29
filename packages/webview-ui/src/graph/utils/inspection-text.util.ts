@@ -1,13 +1,14 @@
 import { closureOf } from './closure.util.ts';
 import { folderTitleOf } from './controls-text.util.ts';
-import { folderStatusText } from './folder-text.util.ts';
+import { folderLinkOf } from './folder-links.util.ts';
+import { bundleSummaryOf, folderStatusText } from './folder-text.util.ts';
 import { neighboursOf } from './neighbours.util.ts';
 import { pluralOf } from './plural.util.ts';
 import { selectionText } from './selection-text.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import { HINT_NUDGE_TEXT } from '../common/details.const.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
-import type { Inspection, TraceInspection } from '../common/inspection.type.ts';
+import type { BundleInspection, Inspection, TraceInspection } from '../common/inspection.type.ts';
 import type { TraceResult } from '../common/trace.type.ts';
 
 const packageText = (name: string, edges: GraphEdge[]): string => {
@@ -41,7 +42,18 @@ const folderText = (folder: string, scene: FolderScene | null): string => {
   return folderStatusText(title, scene, folder);
 };
 
-/** The toolbar status line for an inspection (spec §4.3); `''` for none, a trace not yet walked, and a folder with no scene. */
+const bundleText = (inspection: BundleInspection, scene: FolderScene | null): string => {
+  const link = folderLinkOf(scene, inspection.source, inspection.target);
+
+  if (link === null) return '';
+
+  return bundleSummaryOf(link);
+};
+
+/**
+ * The toolbar status line for an inspection (spec §4.3); `''` for none, a trace not yet walked, a folder with no scene,
+ * and a bundle the scene does not draw.
+ */
 export const inspectionTextOf = (
   inspection: Inspection,
   edges: GraphEdge[],
@@ -52,8 +64,9 @@ export const inspectionTextOf = (
 ): string => {
   switch (inspection.kind) {
     case 'none':
-    case 'bundle':
       return '';
+    case 'bundle':
+      return bundleText(inspection, scene);
     case 'package':
       return packageText(inspection.name, edges);
     case 'link':
