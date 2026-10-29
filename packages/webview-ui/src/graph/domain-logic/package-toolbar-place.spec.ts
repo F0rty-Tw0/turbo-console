@@ -4,6 +4,7 @@ import { placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
 import type { PackageMenuState, PackageToolbarElements, ToolbarEntry } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
+import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
 import { isShownButton, toolbarButtonsOf } from '../test/utils/package-toolbar.spec.util.ts';
 import { rectOf } from '../test/utils/rect.spec.util.ts';
 
@@ -13,7 +14,7 @@ const AT_WEB = rectOf(100, 50, 124, 74);
 
 const entryOf = (state: PackageMenuState): ToolbarEntry => {
   const elements = widgetRowViewsMock().views.packageToolbar('web', 'apps');
-  const entry: ToolbarEntry = { name: 'web', folder: 'apps', state, elements };
+  const entry: ToolbarEntry = { name: 'web', folder: 'apps', state, elements, shown: [], preferred: 'focus' };
 
   return entry;
 };
@@ -113,6 +114,18 @@ describe('FEATURE: placeToolbar', () => {
       expect(showTasks.hidden).toBe(true);
     });
 
+    it('WHEN it is placed again at the same rect and zoom THEN nothing is written and no layout is read', () => {
+      placeToolbar(entry, AT_WEB, 1, container);
+
+      const buttons = toolbarButtonsOf(entry.elements);
+      const watched = [entry.elements.root, ...buttons];
+      const log = accessLogOf(watched);
+
+      placeToolbar(entry, AT_WEB, 1, container);
+
+      expect(log).toStrictEqual([]);
+    });
+
     it('WHEN it is placed nowhere after it was placed THEN its root is hidden', () => {
       placeToolbar(entry, AT_WEB, 1, container);
       placeToolbar(entry, null, 1, container);
@@ -126,6 +139,17 @@ describe('FEATURE: placeToolbar', () => {
       placeToolbar(entry, null, 1, container);
 
       expect(document.activeElement).toBe(container);
+    });
+  });
+
+  describe('GIVEN the web toolbar on a flat page and nothing focused', () => {
+    it('WHEN it is placed at zoom 1 THEN nothing has focus', () => {
+      const elements = widgetRowViewsMock().views.packageToolbar('web', null);
+      const entry: ToolbarEntry = { name: 'web', folder: null, state: WITH_TASKS, elements, shown: [], preferred: 'focus' };
+
+      placeToolbar(entry, AT_WEB, 1, container);
+
+      expect(document.activeElement).toBeNull();
     });
   });
 });

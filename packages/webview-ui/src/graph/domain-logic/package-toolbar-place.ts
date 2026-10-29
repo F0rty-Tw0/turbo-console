@@ -1,57 +1,38 @@
+import { writeStops } from './roving-stop.ts';
 import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
-import type { PackageToolbarElements, PackageToolbarShown, RectPx, ToolbarEntry } from '../common/widget.type.ts';
-import { packageToolbarShownOf } from '../utils/package-toolbar.util.ts';
+import type { PackageToolbarElements, PackageToolbarKind, RectPx, ToolbarEntry } from '../common/widget.type.ts';
+import {
+  TOOLBAR_ORDER,
+  packageToolbarShownOf,
+  toolbarKindOf,
+  toolbarShownKindsOf,
+  toolbarStopOf
+} from '../utils/package-toolbar.util.ts';
 import { isNodeToolbarCompact } from '../utils/widget-geometry.util.ts';
 
-/** One button of the package toolbar and whether the latest pass shows it; a missing Collapse has no button. */
-type ToolbarSlot = {
-  readonly button: HTMLButtonElement | null;
-  readonly isShown: boolean;
+/** Whether `active` is a toolbar button the pass hides. */
+const isHiddenActive = (elements: PackageToolbarElements, shown: PackageToolbarKind[], active: Element | null): boolean => {
+  const kind = toolbarKindOf(elements, active);
+
+  return kind !== undefined && !shown.includes(kind);
 };
 
-/** Tab stop 0 on the one stop, -1 on the rest, a write skipped when unchanged. */
-const writeTabStop = (button: HTMLButtonElement, isStop: boolean): void => {
-  const tabIndex = isStop ? 0 : -1;
-
-  if (button.tabIndex !== tabIndex) button.tabIndex = tabIndex;
-};
-
-/** The toolbar's buttons in DOM order with what a pass shows of them. */
-const slotsOf = (elements: PackageToolbarElements, shown: PackageToolbarShown): ToolbarSlot[] => {
-  const slots: ToolbarSlot[] = [
-    { button: elements.focus, isShown: shown.focus },
-    { button: elements.startTrace, isShown: shown.startTrace },
-    { button: elements.showTasks, isShown: shown.showTasks },
-    { button: elements.collapse, isShown: shown.collapse },
-    { button: elements.ellipsis, isShown: true }
-  ];
-
-  return slots;
-};
-
-/** Whether the slot's button is hidden by this pass and holds the focus. */
-const isHiddenActive = (slot: ToolbarSlot, active: Element | null): boolean => {
-  const isHidden = !slot.isShown;
-
-  return isHidden && slot.button !== null && slot.button === active;
-};
-
-/** Shows the buttons the zoom and the state allow with the first shown as the Tab stop; focus left on a hidden one goes to the "…". */
+/** Shows the buttons the zoom and the state allow with `preferred` (else the first shown) as the Tab stop; focus left on a hidden one goes to the "…". */
 const placeButtons = (entry: ToolbarEntry, zoom: number): void => {
-  const { state, folder, elements } = entry;
-  const isCompact = isNodeToolbarCompact(zoom);
-  const shown = packageToolbarShownOf(state, folder !== null, isCompact);
-  const slots = slotsOf(elements, shown);
-  const stop = slots.find((slot) => slot.isShown);
+  const { state, folder, elements, preferred } = entry;
+  const flags = packageToolbarShownOf(state, folder !== null, isNodeToolbarCompact(zoom));
+  const shown = toolbarShownKindsOf(flags);
   const active = elements.root.ownerDocument.activeElement;
-  const isLostFocus = slots.some((slot): boolean => isHiddenActive(slot, active));
+  const isLostFocus = isHiddenActive(elements, shown, active);
 
-  for (const { button, isShown } of slots) {
-    if (button === null) continue;
+  for (const kind of TOOLBAR_ORDER) {
+    const button = elements[kind];
 
-    setHidden(button, !isShown);
-    writeTabStop(button, button === stop?.button);
+    if (button !== null) setHidden(button, !shown.includes(kind));
   }
+
+  entry.shown = shown;
+  writeStops(TOOLBAR_ORDER, elements, toolbarStopOf(preferred, shown));
 
   if (isLostFocus) elements.ellipsis.focus();
 };

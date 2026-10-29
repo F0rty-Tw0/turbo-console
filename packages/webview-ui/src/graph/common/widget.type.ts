@@ -140,12 +140,31 @@ export type PackageToolbarElements = {
   readonly ellipsis: HTMLButtonElement;
 };
 
+/** The package toolbar's buttons; collapse has no button on a flat page. */
+export type PackageToolbarKind = Exclude<keyof PackageToolbarElements, 'root'>;
+
 /** The toolbar built for `name` in `folder` (`null` on a flat page), with the state it was last synced to. */
 export type ToolbarEntry = {
   readonly name: string;
   readonly folder: string | null;
   readonly state: PackageMenuState;
   readonly elements: PackageToolbarElements;
+  /** The buttons the last placement showed, in DOM order. */
+  shown: PackageToolbarKind[];
+  /** The Tab stop an arrow key or focus last moved to; Focus until one does. */
+  preferred: PackageToolbarKind;
+};
+
+/** A widget's buttons by kind; a kind without a button is `null`. */
+export type RovingButtons<TKind extends string> = Readonly<Record<TKind, HTMLButtonElement | null>>;
+
+/** A widget with one Tab stop the arrow keys move: a toolbar entry or a row entry. */
+export type RovingEntry<TKind extends string> = {
+  readonly elements: RovingButtons<TKind>;
+  /** The buttons the last placement showed, in DOM order. */
+  shown: TKind[];
+  /** The Tab stop the widget returns to while it shows. */
+  preferred: TKind;
 };
 
 /** The four buttons of a row; the glyph and badge are not buttons. */
