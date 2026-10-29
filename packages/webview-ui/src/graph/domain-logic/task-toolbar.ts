@@ -109,7 +109,7 @@ export class TaskToolbar {
   private build(model: TaskDetailsModel): TaskToolbarEntry {
     const { id, packageName } = model.task;
     const elements = this.deps.views.taskToolbar(id, packageName);
-    const entry: TaskToolbarEntry = { id, elements, model, slotAction: 'run', shown: [], preferred: 'run' };
+    const entry: TaskToolbarEntry = { id, elements, model, slotAction: null, shown: [], preferred: 'run' };
     const { run, showPackage, ellipsis } = elements;
 
     ellipsis.addEventListener('click', (): void => this.deps.onMenu(ellipsis));

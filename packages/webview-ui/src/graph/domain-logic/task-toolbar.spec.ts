@@ -309,6 +309,27 @@ describe('FEATURE: TaskToolbar', () => {
   });
 
   describe('GIVEN no toolbar', () => {
+    it('WHEN a#build is synced idle THEN its new slot is written once, as Run a#build', () => {
+      const { taskToolbar } = rig.deps.views;
+      const setAttributes: string[][] = [];
+      const buildSpied = (id: string, packageName: string): TaskToolbarElements => {
+        const built = taskToolbar(id, packageName);
+        const { setAttribute } = built.run;
+
+        vi.spyOn(built.run, 'setAttribute').mockImplementation((name, value): void => {
+          setAttributes.push([name, value]);
+          setAttribute.call(built.run, name, value);
+        });
+
+        return built;
+      };
+
+      vi.spyOn(rig.deps.views, 'taskToolbar').mockImplementation(buildSpied);
+      toolbar.sync(IDLE);
+
+      expect(setAttributes).toStrictEqual([['aria-label', 'Run a#build']]);
+    });
+
     it('WHEN a#build is synced running THEN its new slot reads Stop a#build', () => {
       toolbar.sync(RUNNING);
 
