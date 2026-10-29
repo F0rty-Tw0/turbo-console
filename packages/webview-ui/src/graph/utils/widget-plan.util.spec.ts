@@ -183,10 +183,10 @@ describe('FEATURE: widgetPlanOf', () => {
     });
   });
 
-  describe('GIVEN a selected package at the layer top', () => {
+  describe('GIVEN a selected package at a layer edge', () => {
     it.each([
       { name: 'its bottom edge 2 px above the layer top', selected: rectOf(120, -30, 200, -2) },
-      { name: 'wholly above the layer top', selected: rectOf(120, -60, 200, -30) }
+      { name: 'its top edge at the layer bottom', selected: rectOf(120, 600, 200, 630) }
     ])('WHEN $name THEN there is no node toolbar', ({ selected }) => {
       const plan = widgetPlanOf(inputOf({ selected }));
 

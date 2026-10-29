@@ -14,7 +14,7 @@ test.describe('FEATURE: node toolbar beside a package in a folder with a header 
       await test.step('WHEN the placed folders page is opened', async (): Promise<void> =>
         graphFolderInspect.open(savedWith(FOLDERS.hash, {}), FOLDERS));
 
-      await test.step('WHEN ui, in the libs top row, is tapped', async (): Promise<void> => graphCanvas.tapNode('ui'));
+      await test.step('AND ui, in the libs top row, is tapped', async (): Promise<void> => graphCanvas.tapNode('ui'));
 
       await test.step('THEN ui is in view', async (): Promise<void> => graphNodeToolbar.expectNodeInView('ui'));
 
@@ -35,7 +35,7 @@ test.describe('FEATURE: node toolbar beside a package in a folder with a header 
       await test.step('WHEN the placed folders page is opened', async (): Promise<void> =>
         graphFolderInspect.open(savedWith(FOLDERS.hash, {}), FOLDERS));
 
-      await test.step('WHEN core, lower in libs, is tapped', async (): Promise<void> => graphCanvas.tapNode('core'));
+      await test.step('AND core, lower in libs, is tapped', async (): Promise<void> => graphCanvas.tapNode('core'));
 
       await test.step('THEN core is in view', async (): Promise<void> => graphNodeToolbar.expectNodeInView('core'));
 
