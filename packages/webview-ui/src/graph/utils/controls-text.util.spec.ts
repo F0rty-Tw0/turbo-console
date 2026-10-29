@@ -10,6 +10,7 @@ import {
   folderToggleLabelOf,
   folderToggleTextOf,
   groupLabelOf,
+  packageToolbarLabelOf,
   showAllTextOf,
   showLabelOf,
   showPackageLabelOf
@@ -174,6 +175,14 @@ describe('FEATURE: controls text', () => {
       const label = focusLabelOf('constructor');
 
       expect(label).toBe('Focus constructor');
+    });
+  });
+
+  describe('GIVEN the package web selected', () => {
+    it('WHEN its toolbar label is built THEN it names the package', () => {
+      const label = packageToolbarLabelOf('web');
+
+      expect(label).toBe('Package web');
     });
   });
 });
