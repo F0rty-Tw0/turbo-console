@@ -90,7 +90,7 @@ export class GraphWidgetMenus {
     this.dismiss(opener);
   }
 
-  /** Grouping turned off: the rows are about to hide, so focus inside the menu goes to the container. */
+  /** Closes any open menu, a package menu too (a grouping switch calls it); focus inside it goes to the container. */
   public drop(): void {
     this.dismiss(null);
   }

@@ -89,11 +89,11 @@ export class GraphWidgets {
   }
 
   /**
-   * The package "…" span at the camera of this call, shown or not, so a keep-clear pan brings it out from under the
-   * overlay; the flip moves only y, so keep-clear needs no rows. It also skips the compact rule (the "…" alone under
+   * The package toolbar's x span at the camera of this call, shown or not, so a keep-clear pan brings it out from under
+   * the overlay; the flip moves only y, so keep-clear needs no rows. It also skips the compact rule (the "…" alone under
    * `NODE_TOOLBAR_MIN_PX`), which is right only while the count is 1; U4d must apply it.
    */
-  public packageButtonBox(): AnchorBox | null {
+  public packageToolbarBox(): AnchorBox | null {
     const name = this.toolbar.name();
 
     if (name === null) return null;
@@ -135,7 +135,8 @@ export class GraphWidgets {
 
     if (rect === null || selected !== name) return null;
 
-    const anchor: MenuAnchor = { rect, opener: this.toolbar.ellipsis() };
+    const opener = this.toolbar.ellipsis();
+    const anchor: MenuAnchor = { rect, opener };
 
     return anchor;
   }

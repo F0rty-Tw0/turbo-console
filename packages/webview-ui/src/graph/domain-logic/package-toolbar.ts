@@ -31,7 +31,9 @@ export class PackageToolbar {
 
   /** Exactly one toolbar for `name`, none for `null`; the same name keeps the element. */
   public sync(name: string | null): void {
-    if (this.name() === name) return;
+    const current = this.name();
+
+    if (current === name) return;
 
     this.removeEntry();
 

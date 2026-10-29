@@ -77,11 +77,11 @@ class WidgetParts {
   public readonly menus: GraphWidgetMenus;
 
   public constructor(deps: WidgetWireDeps) {
-    const { page, widgetViews, canActOnPackage } = deps;
+    const { page, widgetViews, canAct, canActOnPackage } = deps;
     const layerDeps: GraphWidgetsDeps = {
       ...deps,
       aside: (): HTMLElement | null => asideOf(page.body),
-      isActive: deps.canAct,
+      isActive: canAct,
       isPackageActive: canActOnPackage,
       onMenu: (target, opener): void => this.menus.open(target, opener)
     };
@@ -89,7 +89,8 @@ class WidgetParts {
       anchorOf: (target): MenuAnchor | null => this.widgets.anchorOf(target),
       layerBounds: (): LayerBounds => this.widgets.layerBounds()
     };
-    const menusDeps: GraphWidgetMenusDeps = { ...deps, anchors, build: widgetViews.menu, isActive: menuActiveOf(deps) };
+    const isMenuActive = menuActiveOf(deps);
+    const menusDeps: GraphWidgetMenusDeps = { ...deps, anchors, build: widgetViews.menu, isActive: isMenuActive };
 
     this.widgets = new GraphWidgets(layerDeps);
     this.menus = new GraphWidgetMenus(menusDeps);
@@ -163,7 +164,7 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
       widgets.position();
       menus.follow();
     },
-    buttonBox: (): AnchorBox | null => widgets.packageButtonBox(),
+    buttonBox: (): AnchorBox | null => widgets.packageToolbarBox(),
     groupingOff: (): void => {
       menus.drop();
       deps.onLocation();

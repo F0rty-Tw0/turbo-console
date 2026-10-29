@@ -58,8 +58,9 @@ type LocationHook = {
 };
 
 /**
- * What `wireWidgets` needs: the layer's deps, with `canAct` as the layer's `isActive` and the menus as its `onMenu`; it
- * finds the details panel itself.
+ * What `wireWidgets` needs: the layer's deps, with `canAct` as the layer's `isActive`, `canActOnPackage` as its
+ * `isPackageActive` and the menus as its `onMenu`; the menus check each target (a package against `canActOnPackage`, a
+ * folder against `canAct`). It finds the details panel itself.
  */
 export type WidgetWireDeps = Omit<GraphWidgetsDeps, 'aside' | 'isActive' | 'isPackageActive' | 'onMenu'> &
   CanAct &
