@@ -6,6 +6,7 @@ import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { FolderRowElements, PackageToolbarElements } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { toolbarButtonsOf } from '../test/utils/package-toolbar.spec.util.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
 
 const classesOf = (parent: Element): string[] => {
@@ -228,10 +229,9 @@ describe('FEATURE: buildPackageToolbar', () => {
     });
 
     it('WHEN its children are read THEN they are Focus, Start trace, Show tasks, Collapse folder and the "…"', () => {
-      const { root, focus, startTrace, showTasks, collapse, ellipsis } = toolbar;
-      const children = Array.from(root.children);
+      const children = Array.from(toolbar.root.children);
 
-      expect(children).toStrictEqual([focus, startTrace, showTasks, collapse, ellipsis]);
+      expect(children).toStrictEqual(toolbarButtonsOf(toolbar));
     });
 
     it('WHEN the buttons are read THEN each is named for its action', () => {
@@ -241,8 +241,7 @@ describe('FEATURE: buildPackageToolbar', () => {
     });
 
     it('WHEN the buttons are read THEN each hover title says what a press does', () => {
-      const { focus, startTrace, showTasks, collapse, ellipsis } = toolbar;
-      const buttons = [focus, startTrace, showTasks, collapse, ellipsis];
+      const buttons = toolbarButtonsOf(toolbar);
       const titles = buttons.map((button): string | undefined => button?.title);
 
       expect(titles).toStrictEqual([FOCUS_PACKAGE_TITLE, START_TRACE_TITLE, 'Show tasks', 'Collapse folder apps', 'Actions for web']);
@@ -269,8 +268,7 @@ describe('FEATURE: buildPackageToolbar', () => {
     });
 
     it('WHEN the tabIndex are read THEN only Focus is a Tab stop', () => {
-      const { focus, startTrace, showTasks, collapse, ellipsis } = toolbar;
-      const buttons = [focus, startTrace, showTasks, collapse, ellipsis];
+      const buttons = toolbarButtonsOf(toolbar);
       const stops = buttons.map((button): number | undefined => button?.tabIndex);
 
       expect(stops).toStrictEqual([0, -1, -1, -1, -1]);
