@@ -37,13 +37,14 @@ const rowsOf = (rects: ReadonlyMap<string, FolderRect>, kind: RowKind, input: Wi
 const rowRectOfPlan = (row: RowPlan): RectPx => rowRectOf(row.placement);
 
 /**
- * The selected package's node toolbar while grouped and shown: above the node, below it on a header row, the "…" alone
- * under `NODE_TOOLBAR_MIN_PX`. The flat view has none.
+ * The selected package's node toolbar while grouped and its node is shown: above the node, below it on a header row, the
+ * "…" alone under `NODE_TOOLBAR_MIN_PX`. The flat view has none.
  */
 const nodeToolbarOf = (input: WidgetPlanInput, rows: RowPlan[]): RectPx | null => {
   const { selected, zoom } = input.rects;
 
   if (!input.isGrouped || selected === null) return null;
+  if (!isWidgetShown(selected, input.bounds)) return null;
 
   const isCompact = NODE_HEIGHT * zoom < NODE_TOOLBAR_MIN_PX;
   let count = input.toolbarCount;

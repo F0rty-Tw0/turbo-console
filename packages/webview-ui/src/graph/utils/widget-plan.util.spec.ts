@@ -183,6 +183,17 @@ describe('FEATURE: widgetPlanOf', () => {
     });
   });
 
+  describe('GIVEN a selected package at the layer top', () => {
+    it.each([
+      { name: 'its bottom edge 2 px above the layer top', selected: rectOf(120, -30, 200, -2) },
+      { name: 'wholly above the layer top', selected: rectOf(120, -60, 200, -30) }
+    ])('WHEN $name THEN there is no node toolbar', ({ selected }) => {
+      const plan = widgetPlanOf(inputOf({ selected }));
+
+      expect(plan.nodeToolbar).toBeNull();
+    });
+  });
+
   describe('GIVEN the apps box at zoom 1, its row at y 54-78', () => {
     const boxes = new Map([['apps', APPS]]);
 
