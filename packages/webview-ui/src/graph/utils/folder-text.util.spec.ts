@@ -138,7 +138,7 @@ describe('FEATURE: folder text', () => {
     });
   });
 
-  describe('FEATURE: bundleEndTextOf', () => {
+  describe('GIVEN a bundle end id', () => {
     it.each([
       { title: 'a package', id: 'docs', expected: 'docs' },
       { title: 'a collapsed folder', id: collapsedIdOf('packages'), expected: 'packages' },
@@ -150,7 +150,7 @@ describe('FEATURE: folder text', () => {
     });
   });
 
-  describe('FEATURE: bundleSummaryOf', () => {
+  describe('GIVEN a folder scene with collapsed folders', () => {
     it.each([
       {
         title: 'packages collapsed',

@@ -87,6 +87,20 @@ const PROTO_CANDIDATES: TraceCandidates = { forward: [], backward: [], none: ['_
 
 const BOARDS_CTX: DetailsContext = { ...CTX, scene: sceneOf(BOARDS_INFOS, BOARDS_EDGES, {}) };
 
+const PACKAGES_ID = collapsedIdOf('packages');
+
+const APPS_ID = collapsedIdOf('apps');
+
+const BUNDLE_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'] });
+
+const BUNDLE_CTX: DetailsContext = { ...CTX, scene: BUNDLE_SCENE };
+
+const DOCS_END: BundleEndModel = { text: 'docs', folder: null };
+
+const APPS_END: BundleEndModel = { text: 'apps', folder: 'apps' };
+
+const PACKAGES_END: BundleEndModel = { text: 'packages', folder: 'packages' };
+
 const memberOf = (name: string, isVisible: boolean): NeighbourModel => {
   const member: NeighbourModel = { name, isVisible };
 
@@ -327,47 +341,37 @@ describe('FEATURE: details models', () => {
       expect(model?.title).toBe(expected);
     });
   });
-});
-
-describe('FEATURE: bundleModelOf', () => {
-  const packages = collapsedIdOf('packages');
-  const apps = collapsedIdOf('apps');
-  const scene = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'] });
-  const context: DetailsContext = { ...CTX, scene };
-  const docsEnd: BundleEndModel = { text: 'docs', folder: null };
-  const appsEnd: BundleEndModel = { text: 'apps', folder: 'apps' };
-  const packagesEnd: BundleEndModel = { text: 'packages', folder: 'packages' };
 
   describe('GIVEN docs bundled into the collapsed packages', () => {
     it('WHEN the bundle is modelled THEN the ends, the count and the links are exact', () => {
-      const model = bundleModelOf('docs', packages, context);
-
       const expected: BundleViewModel = {
-        source: docsEnd,
-        target: packagesEnd,
+        source: DOCS_END,
+        target: PACKAGES_END,
         countText: '2 links',
         links: BOARDS_EDGES.slice(1, 3)
       };
+
+      const model = bundleModelOf('docs', PACKAGES_ID, BUNDLE_CTX);
 
       expect(model).toStrictEqual(expected);
     });
 
     it('WHEN the bundle is modelled THEN its links are the scene link’s own array', () => {
-      const model = bundleModelOf('docs', packages, context);
+      const model = bundleModelOf('docs', PACKAGES_ID, BUNDLE_CTX);
 
-      expect(model?.links).toBe(scene.links[1]?.links);
+      expect(model?.links).toBe(BUNDLE_SCENE.links[1]?.links);
     });
   });
 
   describe('GIVEN no such link', () => {
     it('WHEN the ends are swapped THEN the model is null', () => {
-      const model = bundleModelOf(packages, 'docs', context);
+      const model = bundleModelOf(PACKAGES_ID, 'docs', BUNDLE_CTX);
 
       expect(model).toBeNull();
     });
 
     it('WHEN there is no scene THEN the model is null', () => {
-      const model = bundleModelOf('docs', packages, { ...CTX, scene: null });
+      const model = bundleModelOf('docs', PACKAGES_ID, { ...CTX, scene: null });
 
       expect(model).toBeNull();
     });
@@ -377,14 +381,14 @@ describe('FEATURE: bundleModelOf', () => {
     it('WHEN apps ⇒ packages is modelled THEN it counts 3 links and both ends are folders', () => {
       const both = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['apps', 'packages'] });
 
-      const model = bundleModelOf(apps, packages, { ...CTX, scene: both });
-
       const expected: BundleViewModel = {
-        source: appsEnd,
-        target: packagesEnd,
+        source: APPS_END,
+        target: PACKAGES_END,
         countText: '3 links',
         links: BOARDS_EDGES.slice(0, 3)
       };
+
+      const model = bundleModelOf(APPS_ID, PACKAGES_ID, { ...CTX, scene: both });
 
       expect(model).toStrictEqual(expected);
     });
