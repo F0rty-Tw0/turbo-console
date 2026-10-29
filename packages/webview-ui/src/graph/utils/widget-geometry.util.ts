@@ -153,6 +153,18 @@ export const isWidgetShown = (rect: RectPx, bounds: LayerBounds): boolean => {
   return bounds.overlayLeft === null || rect.x2 <= bounds.overlayLeft;
 };
 
+/** The toolbar rect of a node toolbar of `count` buttons, `null` while the node or the toolbar is not shown in the layer. */
+export const shownNodeToolbarOf = (node: RectPx, count: number, rows: RectPx[], bounds: LayerBounds): RectPx | null => {
+  const isNodeShown = isWidgetShown(node, bounds);
+
+  if (!isNodeShown) return null;
+
+  const rect = nodeToolbarRectOf(node, count, rows);
+  const isShown = isWidgetShown(rect, bounds);
+
+  return isShown ? rect : null;
+};
+
 /** A details panel's left edge in container px while it overlays the canvas, else `null`: closed, docked or not built. */
 export const overlayLeftOf = (
   panel: Pick<HTMLElement, 'hidden' | 'offsetLeft'> | null,

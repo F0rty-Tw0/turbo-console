@@ -1,5 +1,6 @@
 import { setFocusToggle } from './button-title.ts';
-import { placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
+import { releaseFocusOf } from './node-toolbar-place.ts';
+import { placeToolbar } from './package-toolbar-place.ts';
 import { followFocus, moveStopOnKey } from './roving-stop.ts';
 import type { PackageToolbarDeps } from '../common/graph-widgets.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';

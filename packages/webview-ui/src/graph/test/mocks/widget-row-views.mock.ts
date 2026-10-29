@@ -1,3 +1,4 @@
+import type { TaskToolbarElements } from '../../common/task-toolbar.type.ts';
 import type { FolderRowElements, PackageToolbarElements, RowKind, WidgetViews } from '../../common/widget.type.ts';
 import { widgetViews } from '../../ui/graph-views.ts';
 import type { WidgetRowViewsMock } from '../common/widget-row-views.type.ts';
@@ -6,6 +7,7 @@ import type { WidgetRowViewsMock } from '../common/widget-row-views.type.ts';
 export const widgetRowViewsMock = (): WidgetRowViewsMock => {
   const built: FolderRowElements[] = [];
   const toolbars: PackageToolbarElements[] = [];
+  const taskToolbars: TaskToolbarElements[] = [];
   const row = (kind: RowKind, title: string, count: number): FolderRowElements => {
     const elements = widgetViews.row(kind, title, count);
 
@@ -20,8 +22,15 @@ export const widgetRowViewsMock = (): WidgetRowViewsMock => {
 
     return elements;
   };
-  const views: WidgetViews = { ...widgetViews, row, packageToolbar };
-  const mock: WidgetRowViewsMock = { views, built, toolbars };
+  const taskToolbar = (id: string): TaskToolbarElements => {
+    const elements = widgetViews.taskToolbar(id);
+
+    taskToolbars.push(elements);
+
+    return elements;
+  };
+  const views: WidgetViews = { ...widgetViews, row, packageToolbar, taskToolbar };
+  const mock: WidgetRowViewsMock = { views, built, toolbars, taskToolbars };
 
   return mock;
 };

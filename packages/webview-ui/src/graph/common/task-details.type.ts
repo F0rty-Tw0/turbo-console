@@ -100,6 +100,14 @@ export type TaskWidgets = {
   readonly keepClear: () => void;
 };
 
+/** What the task toolbar needs: the layer it leads, the container that takes focus it loses, the builder and the "…" click, already guarded. */
+export type TaskToolbarDeps = {
+  readonly layer: HTMLElement;
+  readonly container: HTMLElement;
+  readonly views: Pick<WidgetViews, 'taskToolbar'>;
+  readonly onMenu: (opener: HTMLButtonElement) => void;
+};
+
 export type TaskWidgetsDeps = {
   readonly page: PageElements;
   readonly view: Pick<GraphView, 'widgetRects' | 'viewport' | 'anchorBox' | 'panBy'>;

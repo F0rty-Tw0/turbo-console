@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { placeToolbar, releaseFocusOf } from './package-toolbar-place.ts';
+import { placeToolbar } from './package-toolbar-place.ts';
 import type { PackageMenuState, PackageToolbarElements, ToolbarEntry } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
@@ -151,36 +151,5 @@ describe('FEATURE: placeToolbar', () => {
 
       expect(document.activeElement).toBeNull();
     });
-  });
-});
-
-describe('FEATURE: releaseFocusOf', () => {
-  beforeEach((): void => {
-    vi.stubGlobal('document', fakeDocumentMock());
-  });
-
-  afterEach((): void => {
-    vi.unstubAllGlobals();
-  });
-
-  it('GIVEN focus on a button inside the root WHEN it is released THEN the container has focus', () => {
-    const { root, focus } = widgetRowViewsMock().views.packageToolbar('web', null);
-    const container = document.createElement('div');
-
-    focus.focus();
-    releaseFocusOf(root, container);
-
-    expect(document.activeElement).toBe(container);
-  });
-
-  it('GIVEN focus elsewhere WHEN it is released THEN focus stays there', () => {
-    const { root } = widgetRowViewsMock().views.packageToolbar('web', null);
-    const container = document.createElement('div');
-    const other = document.createElement('button');
-
-    other.focus();
-    releaseFocusOf(root, container);
-
-    expect(document.activeElement).toBe(other);
   });
 });
