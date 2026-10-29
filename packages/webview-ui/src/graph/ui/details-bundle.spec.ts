@@ -100,6 +100,11 @@ describe('FEATURE: bundleView', () => {
       expect(view.source.getAttribute('aria-label')).toBeNull();
     });
 
+    it('WHEN built THEN the folder end has no data-name and the package end keeps its own', () => {
+      expect(view.target.dataset['name']).toBeUndefined();
+      expect(view.source.dataset['name']).toBe('docs');
+    });
+
     it('WHEN built THEN each row ends with its Explain button', () => {
       const explains = view.links.map(({ explain }) => explain);
       const lasts = rowsOf(view).map((row) => row.children[1]);

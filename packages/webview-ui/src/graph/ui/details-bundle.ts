@@ -6,7 +6,10 @@ import { BUNDLE_HEADING_TEXT, BUNDLE_LEAD_ID } from '../common/details.const.ts'
 import type { BundleEndModel, BundleViewModel } from '../common/details.type.ts';
 import { explainLabelOf } from '../utils/details-text.util.ts';
 
-/** An end's name button; a folder end is named as a folder, since a package can share its name. */
+/**
+ * An end's name button; a folder end is named as a folder and carries no `data-name`, since a package can share its
+ * title and `data-name` means "this is package X".
+ */
 const endButton = (end: BundleEndModel): HTMLButtonElement => {
   const button = nameButton(end.text);
 
@@ -14,6 +17,7 @@ const endButton = (end: BundleEndModel): HTMLButtonElement => {
 
   const label = `Folder ${end.text}`;
 
+  delete button.dataset['name'];
   button.setAttribute('aria-label', label);
   button.title = label;
 
