@@ -84,6 +84,17 @@ export class GraphWidgetsPage {
     await this.canvas.panBy(dx, 0);
   }
 
+  /**
+   * Waits until a rect read inside the layer is safe: `target` shows, then the layer covers the container. The graph
+   * state is handled after `open()` returns, and the panels it mounts narrow the container; the layer takes the new
+   * rect one ResizeObserver or MutationObserver callback later. Before the state lands both are full width, so the
+   * layer check alone passes too early; the target must show first.
+   */
+  public async expectLayerSettledOn(target: Locator): Promise<void> {
+    await expect(target).toBeVisible();
+    await this.expectLayerAfterContainer();
+  }
+
   /** The flow overlay is the container's next sibling, the layer is the overlay's, and the layer covers exactly the container's rect. */
   public async expectLayerAfterContainer(): Promise<void> {
     await expect(this.layer).toBeAttached();
