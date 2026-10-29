@@ -253,6 +253,29 @@ test.describe('FEATURE: package node toolbar', () => {
   );
 
   test(
+    'GIVEN the grouped task packages with a switch to flat still laying out, the toolbar Show tasks leaves focus and the mode alone',
+    { annotation: D4 },
+    async ({ graphFolderInspect, graphGrouping, graphList, graphNodeToolbar }): Promise<void> => {
+      await test.step('WHEN the grouped packages open with the flat layout held and app is picked', async (): Promise<void> => {
+        await graphFolderInspect.open(GROUPED_TASKS, TASK_MODE_STATE_STUB, HELD);
+        await graphList.pick('app');
+        await graphNodeToolbar.expectNodeInView('app');
+      });
+
+      await test.step('AND Group by folder is unchecked', async (): Promise<void> => graphGrouping.setGrouped(false));
+
+      await test.step('AND the app toolbar Show tasks, still drawn, is pressed and the frames after it pass', async (): Promise<void> =>
+        graphNodeToolbar.pressAndSettle('app', 'Show tasks'));
+
+      await test.step('THEN the package toolbar still shows its buttons, so the page is not in task mode', async (): Promise<void> =>
+        graphNodeToolbar.expectToolbarButtons('app', GROUPED_BUTTONS));
+
+      await test.step('AND focus stays on the toolbar Show tasks', async (): Promise<void> =>
+        graphNodeToolbar.expectButtonFocused('app', 'Show tasks'));
+    }
+  );
+
+  test(
     'GIVEN the grouped task packages with app picked, the toolbar "…" opens its menu at the "…", not at the toolbar',
     { annotation: D4 },
     async ({ graphFolderInspect, graphList, graphMenus, graphNodeToolbar }): Promise<void> => {

@@ -67,6 +67,11 @@ export class GraphNodeToolbar extends GraphWidgetsPage {
     await expect(this.buttonOf(name, focusLabelOf(name))).toHaveAttribute('aria-pressed', String(isPressed));
   }
 
+  /** The package toolbar's `label` button holds keyboard focus. */
+  public async expectButtonFocused(name: string, label: string): Promise<void> {
+    await expect(this.buttonOf(name, label)).toBeFocused();
+  }
+
   /** The package toolbar's root is hidden: it stays in the DOM while task mode or a folder selection has no node to put it on. */
   public async expectToolbarHidden(name: string): Promise<void> {
     await expect(this.toolbarOf(name)).toBeHidden();
