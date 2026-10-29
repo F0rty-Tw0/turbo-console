@@ -41,8 +41,8 @@ export class WidgetRows {
     return entry?.elements.ellipsis ?? null;
   }
 
-  /** Drops the rows of folders that left the scene and builds the missing ones; new rows go before `before`. Each Focus folder reads pressed when its folder is `focusedFolder`. */
-  public sync(scene: FolderScene | null, before: HTMLElement | null, focusedFolder: string | null): void {
+  /** Drops the rows of folders that left the scene and builds the missing ones. Each Focus folder reads pressed when its folder is `focusedFolder`. */
+  public sync(scene: FolderScene | null, focusedFolder: string | null): void {
     const folders = shownOf(scene);
     const kept = new Set(folders);
 
@@ -57,9 +57,9 @@ export class WidgetRows {
 
     if (scene === null) return;
 
-    for (const folder of folders) this.syncRow(folder, scene, before);
+    for (const folder of folders) this.syncRow(folder, scene);
 
-    this.order(folders, before);
+    this.order(folders);
 
     for (const [folder, entry] of this.rows) setFocusToggle(entry.elements.focus, folder === focusedFolder, FOCUS_FOLDER_LABEL);
   }
@@ -104,7 +104,7 @@ export class WidgetRows {
   }
 
   /** Builds a folder's row, or builds it again when the folder collapsed or expanded or its package count changed. */
-  private syncRow(folder: string, scene: FolderScene, before: HTMLElement | null): void {
+  private syncRow(folder: string, scene: FolderScene): void {
     const isCollapsed = scene.collapsed.has(folder);
     const kind: RowKind = isCollapsed ? 'collapsed' : 'box';
     const count = scene.members.get(folder)?.length ?? 0;
@@ -127,7 +127,7 @@ export class WidgetRows {
 
     this.rows.set(folder, { kind, count, elements, shown: [], preferred });
 
-    if (entry === undefined) this.deps.layer.insertBefore(elements.root, before);
+    if (entry === undefined) this.deps.layer.append(elements.root);
     else this.replace(folder, entry, elements);
   }
 
@@ -178,7 +178,7 @@ export class WidgetRows {
   }
 
   /** Puts the rows in the scene's order, in the map and in the DOM (the Tab order); a no-op while it holds. */
-  private order(folders: string[], before: HTMLElement | null): void {
+  private order(folders: string[]): void {
     const keys = this.rows.keys();
     const current = [...keys];
     const isSame = sameOrder(current, folders);
@@ -194,7 +194,7 @@ export class WidgetRows {
 
       this.rows.delete(folder);
       this.rows.set(folder, entry);
-      this.deps.layer.insertBefore(entry.elements.root, before);
+      this.deps.layer.append(entry.elements.root);
     }
   }
 }

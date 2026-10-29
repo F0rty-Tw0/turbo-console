@@ -11,8 +11,6 @@ import type { LayerBounds, MenuTarget, RectPx, WidgetViews } from './widget.type
 
 /** What the widget layer shows, read at each refresh. */
 export type WidgetState = {
-  /** The mode on screen is grouped. */
-  readonly isGrouped: boolean;
   readonly scene: FolderScene | null;
   readonly selectedPackage: string | null;
   /** The folder the filters focus, whose Focus folder button is pressed; `null` for a package focus or none. */
@@ -32,12 +30,19 @@ export type GraphWidgetsDeps = {
   readonly actions: FolderActions;
   /** The checkbox's mode and the mode on screen agree, so a widget may act. */
   readonly isActive: () => boolean;
+  /** The mode on screen is the checkbox's mode and the package graph owns the canvas, flat or grouped: a package widget may act. */
+  readonly isPackageActive: () => boolean;
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
 };
 
 type CanAct = {
   /** The checkbox's mode and the mode on screen are both grouped. */
   readonly canAct: () => boolean;
+};
+
+type CanActOnPackage = {
+  /** Package mode and the checkbox's mode is the one on screen: a package widget or menu may act, flat or grouped. */
+  readonly canActOnPackage: () => boolean;
 };
 
 /** What the menus read and call, from the inspection, the controls and the folders. */
@@ -53,10 +58,15 @@ type LocationHook = {
 };
 
 /**
- * What `wireWidgets` needs: the layer's deps, with `canAct` as the layer's `isActive` and the menus as its `onMenu`; it
- * finds the details panel itself.
+ * What `wireWidgets` needs: the layer's deps, with `canAct` as the layer's `isActive`, `canActOnPackage` as its
+ * `isPackageActive` and the menus as its `onMenu`; the menus check each target (a package against `canActOnPackage`, a
+ * folder against `canAct`). It finds the details panel itself.
  */
-export type WidgetWireDeps = Omit<GraphWidgetsDeps, 'aside' | 'isActive' | 'onMenu'> & CanAct & MenuSources & LocationHook;
+export type WidgetWireDeps = Omit<GraphWidgetsDeps, 'aside' | 'isActive' | 'isPackageActive' | 'onMenu'> &
+  CanAct &
+  CanActOnPackage &
+  MenuSources &
+  LocationHook;
 
 /** Where the layer's state comes from: `GraphFolders` gives the scene, `GraphInspection` the inspection, the selection and the folder actions. */
 export type WidgetSources = {
@@ -95,8 +105,8 @@ type MenuHost = {
   readonly view: Pick<GraphView, 'widgetRects' | 'viewport'>;
   readonly anchors: MenuAnchors;
   readonly build: WidgetViews['menu'];
-  /** The checkbox's mode and the mode on screen are both grouped, so Shift+F10 may open a menu. */
-  readonly isActive: () => boolean;
+  /** The target's widget may act, so Shift+F10 may open its menu. */
+  readonly isActive: (target: MenuTarget) => boolean;
 };
 
 export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & MenuHost;
@@ -105,6 +115,14 @@ export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & M
 export type MenuAnchor = {
   readonly rect: RectPx;
   readonly opener: HTMLButtonElement | null;
+};
+
+/** What the package toolbar needs: the layer it leads, the container that takes focus it loses, the builder and the "…" click, already guarded. */
+export type PackageToolbarDeps = {
+  readonly layer: HTMLElement;
+  readonly container: HTMLElement;
+  readonly views: WidgetViews;
+  readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
 };
 
 /** What the header rows need: the layer, the builders and the four clicks, already guarded. */

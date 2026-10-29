@@ -10,7 +10,7 @@ import type {
 } from '../common/graph-widgets.type.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
-import type { LayerBounds } from '../common/widget.type.ts';
+import type { LayerBounds, MenuTarget } from '../common/widget.type.ts';
 import { isMenuOpenKey } from '../utils/menu-keys.util.ts';
 import { wheelInitOf } from '../utils/wheel-init.util.ts';
 
@@ -60,24 +60,37 @@ class BoundsWatch {
 /** A record that can move the container or the overlay: a direct child of the body shown or hidden. */
 const isBodyRecord = (record: MutationRecord, body: HTMLElement): boolean => record.target.parentNode === body;
 
+/** Whether a target's widget may act: a package's in either mode, a folder's only grouped. */
+const menuActiveOf = (deps: WidgetWireDeps): ((target: MenuTarget) => boolean) => {
+  const isActive = (target: MenuTarget): boolean => {
+    if (target.kind === 'package') return deps.canActOnPackage();
+
+    return deps.canAct();
+  };
+
+  return isActive;
+};
+
 /** The layer and its menus, built together: a "…" click opens a menu, and a menu reads its anchor off the layer. */
 class WidgetParts {
   public readonly widgets: GraphWidgets;
   public readonly menus: GraphWidgetMenus;
 
   public constructor(deps: WidgetWireDeps) {
-    const { page, widgetViews, canAct } = deps;
+    const { page, widgetViews, canAct, canActOnPackage } = deps;
     const layerDeps: GraphWidgetsDeps = {
       ...deps,
       aside: (): HTMLElement | null => asideOf(page.body),
       isActive: canAct,
+      isPackageActive: canActOnPackage,
       onMenu: (target, opener): void => this.menus.open(target, opener)
     };
     const anchors: MenuAnchors = {
       anchorOf: (target): MenuAnchor | null => this.widgets.anchorOf(target),
       layerBounds: (): LayerBounds => this.widgets.layerBounds()
     };
-    const menusDeps: GraphWidgetMenusDeps = { ...deps, anchors, build: widgetViews.menu, isActive: canAct };
+    const isMenuActive = menuActiveOf(deps);
+    const menusDeps: GraphWidgetMenusDeps = { ...deps, anchors, build: widgetViews.menu, isActive: isMenuActive };
 
     this.widgets = new GraphWidgets(layerDeps);
     this.menus = new GraphWidgetMenus(menusDeps);
@@ -151,7 +164,7 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
       widgets.position();
       menus.follow();
     },
-    buttonBox: (): AnchorBox | null => widgets.packageButtonBox(),
+    buttonBox: (): AnchorBox | null => widgets.packageToolbarBox(),
     groupingOff: (): void => {
       menus.drop();
       deps.onLocation();

@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { widgetPlanOf } from './widget-plan.util.ts';
-import type { FolderRect, LayerBounds, RectPx, RowPlan, WidgetPlanInput, WidgetRects } from '../common/widget.type.ts';
-
-const rectOf = (x1: number, y1: number, x2: number, y2: number): RectPx => {
-  const rect: RectPx = { x1, y1, x2, y2 };
-
-  return rect;
-};
+import type { FolderRect, LayerBounds, RowPlan, WidgetPlanInput, WidgetRects } from '../common/widget.type.ts';
+import { rectOf } from '../test/utils/rect.spec.util.ts';
 
 /** A drawn folder at `{x1, y1, x2, y2}`, its plain-border width its rect's. */
 const folderOf = (x1: number, y1: number, x2: number, y2: number): FolderRect => {
@@ -27,7 +22,7 @@ const NO_RECTS: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected
 
 const inputOf = (rects: Partial<WidgetRects>, overrides: Partial<WidgetPlanInput> = {}): WidgetPlanInput => {
   const full: WidgetRects = { ...NO_RECTS, ...rects };
-  const input: WidgetPlanInput = { rects: full, bounds: BOUNDS, isGrouped: true, toolbarCount: 1, ...overrides };
+  const input: WidgetPlanInput = { rects: full, bounds: BOUNDS, toolbarCount: 1, ...overrides };
 
   return input;
 };
@@ -159,10 +154,10 @@ describe('FEATURE: widgetPlanOf', () => {
       expect(plan.nodeToolbar).toStrictEqual(rectOf(176, 52, 200, 76));
     });
 
-    it('WHEN flat THEN there is no node toolbar', () => {
-      const plan = widgetPlanOf(inputOf({ selected }, { isGrouped: false }));
+    it('WHEN flat, with no boxes, THEN its node toolbar sits 4 px above its top-right', () => {
+      const plan = widgetPlanOf(inputOf({ selected }));
 
-      expect(plan.nodeToolbar).toBeNull();
+      expect(plan.nodeToolbar).toStrictEqual(rectOf(176, 52, 200, 76));
     });
 
     it('WHEN the overlay starts at 150, left of its right edge THEN there is no node toolbar', () => {

@@ -48,23 +48,24 @@ test.describe('FEATURE: folder widget layer', () => {
   );
 
   test(
-    'GIVEN the boards grouped, a package picked in the list gets one "…" until grouping is turned off',
+    'GIVEN the boards grouped, a package picked in the list gets a toolbar, which stays when grouping is turned off',
     { annotation: C9 },
     async ({ graphFolderInspect, graphGrouping, graphList, graphNodeToolbar, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => graphFolderInspect.open(grouped(), BOARDS));
 
-      await test.step('THEN no package has a "…"', async (): Promise<void> => graphWidgets.expectNoPackageButton());
+      await test.step('THEN no package has a toolbar', async (): Promise<void> => graphNodeToolbar.expectNoNodeToolbar());
 
       await test.step('WHEN web is picked in the list', async (): Promise<void> => graphList.pick('web'));
 
-      await test.step('THEN one "…" sits 4 px under web, right edges level', async (): Promise<void> =>
+      await test.step('THEN one toolbar sits 4 px under web, right edges level', async (): Promise<void> =>
         graphNodeToolbar.expectNodeToolbarOn('web', 'below'));
 
       await test.step('WHEN grouping is turned off', async (): Promise<void> => graphGrouping.setGrouped(false));
 
       await test.step('THEN no header row is left', async (): Promise<void> => graphWidgets.expectNoRows());
 
-      await test.step('AND no package "…" is left', async (): Promise<void> => graphWidgets.expectNoPackageButton());
+      await test.step('AND web keeps a toolbar with its "…"', async (): Promise<void> =>
+        graphNodeToolbar.expectToolbarButtons('web', ['Actions for web']));
     }
   );
 
@@ -122,7 +123,7 @@ test.describe('FEATURE: folder widget layer', () => {
   test(
     'GIVEN a narrow editor, tapping a package in the overlay margin pans its "…" clear of the overlay',
     { annotation: C9 },
-    async ({ graphCanvas, graphFolderInspect, graphNarrow, graphWidgets }): Promise<void> => {
+    async ({ graphCanvas, graphFolderInspect, graphNarrow, graphNodeToolbar, graphWidgets }): Promise<void> => {
       await test.step('WHEN the editor is narrowed to 959 px and the grouped boards open', async (): Promise<void> => {
         await graphNarrow.setWidth(OVERLAY_WIDTH_PX);
         await graphFolderInspect.open(grouped(), BOARDS);
@@ -133,8 +134,8 @@ test.describe('FEATURE: folder widget layer', () => {
 
       await test.step('AND web is tapped', async (): Promise<void> => graphCanvas.tapNode('web'));
 
-      await test.step('THEN web\'s "…" ends left of the overlay with the margin to spare', async (): Promise<void> =>
-        graphWidgets.expectPackageButtonClear('web'));
+      await test.step("THEN web's toolbar ends left of the overlay with the margin to spare", async (): Promise<void> =>
+        graphNodeToolbar.expectNodeToolbarClear('web'));
     }
   );
 });

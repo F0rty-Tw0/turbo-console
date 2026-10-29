@@ -11,6 +11,7 @@ type RowsRig = {
   readonly rows: WidgetRows;
   /** The rows built so far, the latest last: apps collapsed, packages, then apps expanded. */
   readonly built: FolderRowElements[];
+  readonly layer: HTMLElement;
 };
 
 const planOf = (folder: string, kind: RowKind): RowPlan => {
@@ -25,7 +26,7 @@ const rigOf = (): RowsRig => {
   const layer = document.createElement('div');
   const deps: WidgetRowsDeps = { layer, views, onToggle: vi.fn(), onTitle: vi.fn(), onFocus: vi.fn(), onMenu: vi.fn() };
   const rows = new WidgetRows(deps);
-  const rig: RowsRig = { rows, built };
+  const rig: RowsRig = { rows, built, layer };
 
   return rig;
 };
@@ -38,10 +39,10 @@ const rebuiltWithLostFocus = (rig: RowsRig): void => {
   const { rows, built } = rig;
   const collapsedPlans = [planOf('apps', 'collapsed'), planOf('packages', 'box')];
 
-  rows.sync(boardsSceneOf(['apps']), null, null);
+  rows.sync(boardsSceneOf(['apps']), null);
   rows.place(collapsedPlans);
   built[0]?.focus.focus();
-  rows.sync(boardsSceneOf([]), null, null);
+  rows.sync(boardsSceneOf([]), null);
   loseFocus();
   rows.place([planOf('packages', 'box')]);
   rows.restoreFocus();
@@ -61,10 +62,10 @@ describe('FEATURE: WidgetRows.restoreFocus', () => {
 
   describe('GIVEN a rebuilt row that is placed in the same pass', () => {
     it('WHEN focus is restored THEN the new row has focus on the same kind of button', () => {
-      rig.rows.sync(boardsSceneOf(['apps']), null, null);
+      rig.rows.sync(boardsSceneOf(['apps']), null);
       rig.rows.place([planOf('apps', 'collapsed')]);
       rig.built[0]?.focus.focus();
-      rig.rows.sync(boardsSceneOf([]), null, null);
+      rig.rows.sync(boardsSceneOf([]), null);
       loseFocus();
       rig.rows.place([planOf('apps', 'box')]);
 
@@ -107,13 +108,25 @@ describe('FEATURE: WidgetRows.restoreFocus', () => {
 
       rebuiltWithLostFocus(rig);
       rig.built[1]?.chevron.focus();
-      rig.rows.sync(reordered, null, null);
+      rig.rows.sync(reordered, null);
       loseFocus();
       rig.rows.place(plans);
 
       rig.rows.restoreFocus();
 
       expect(document.activeElement).toBe(rig.built[1]?.chevron);
+    });
+  });
+
+  describe('GIVEN apps then packages shown', () => {
+    it('WHEN the shown order turns to packages then apps THEN the layer holds their rows in that order, once each', () => {
+      const scene = boardsSceneOf([]);
+      const reordered = { ...scene, shown: new Set(['packages', 'apps']) };
+
+      rebuiltWithLostFocus(rig);
+      rig.rows.sync(reordered, null);
+
+      expect([...rig.layer.children]).toStrictEqual([rig.built[1]?.root, rig.built[2]?.root]);
     });
   });
 });

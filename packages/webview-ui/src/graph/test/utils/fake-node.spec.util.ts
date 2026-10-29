@@ -21,16 +21,23 @@ export class FakeNode {
     return this.attributes.get(name) ?? null;
   }
 
+  /** Moves each node to the end, out of wherever it was, as the DOM does. */
   public append(...nodes: FakeNode[]): void {
-    for (const node of nodes) node.parent = this;
+    for (const node of nodes) this.adopt(node);
 
     this.children.push(...nodes);
   }
 
+  /** Moves each node to the start, out of wherever it was, as the DOM does. */
   public prepend(...nodes: FakeNode[]): void {
-    for (const node of nodes) node.parent = this;
+    for (const node of nodes) this.adopt(node);
 
     this.children.unshift(...nodes);
+  }
+
+  private adopt(node: FakeNode): void {
+    node.remove();
+    node.parent = this;
   }
 
   /** Moves `node` before `before`, or to the end when `before` is `null`; throws, as the DOM does, when `before` is not a child. */

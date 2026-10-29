@@ -254,28 +254,28 @@ test.describe('FEATURE: folder widget placement', () => {
   );
 
   test(
-    'GIVEN the boards grouped with nothing selected there is no package "…", and a flat page has neither a header row nor one',
+    "GIVEN the boards grouped with nothing selected there is no package toolbar, and a flat page keeps the picked package's toolbar and no header row",
     { annotation: C9 },
     async ({ graphFolderInspect, graphGrouping, graphList, graphNodeToolbar, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards open with nothing selected', async (): Promise<void> =>
         graphFolderInspect.open(grouped(), BOARDS));
 
-      await test.step('THEN apps has a row and no package has a "…"', async (): Promise<void> => {
+      await test.step('THEN apps has a row and no package has a toolbar', async (): Promise<void> => {
         await graphWidgets.expectBoxRow('apps', '2 packages');
-        await graphWidgets.expectNoPackageButton();
+        await graphNodeToolbar.expectNoNodeToolbar();
       });
 
       await test.step('WHEN web is picked', async (): Promise<void> => graphList.pick('web'));
 
-      await test.step('THEN web has the one package "…", 4 px under it', async (): Promise<void> =>
+      await test.step('THEN web has the one package toolbar, 4 px under it', async (): Promise<void> =>
         graphNodeToolbar.expectNodeToolbarOn('web', 'below'));
 
       await test.step('WHEN Group by folder is unchecked', async (): Promise<void> => graphGrouping.setGrouped(false));
 
-      await test.step('THEN no header row and no package "…" is left', async (): Promise<void> => {
-        await graphWidgets.expectNoRows();
-        await graphWidgets.expectNoPackageButton();
-      });
+      await test.step('THEN no header row is left', async (): Promise<void> => graphWidgets.expectNoRows());
+
+      await test.step('AND web keeps a toolbar with its "…"', async (): Promise<void> =>
+        graphNodeToolbar.expectToolbarButtons('web', ['Actions for web']));
     }
   );
 

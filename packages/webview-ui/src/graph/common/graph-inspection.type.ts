@@ -94,7 +94,7 @@ export type GraphInspectionDeps = {
   /** The package graph owns the canvas; in task mode the inspection keys do nothing. */
   readonly isPackageMode: () => boolean;
   readonly folders: CanvasFolders & InspectionFolders;
-  /** The selected package's "…" span in container px, `null` without one; the keep-clear pan clears it too. */
+  /** The selected package's node toolbar span in container px, `null` without one; the keep-clear pan clears it too. */
   readonly buttonBox: () => AnchorBox | null;
   /** Show tasks: task mode on every visible task of `name`. */
   readonly onShowTasks: (name: string) => void;

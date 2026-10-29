@@ -1,16 +1,11 @@
-import { setHidden, translateOf, writeStyle } from './widget-row-place.ts';
+import { PackageToolbar } from './package-toolbar.ts';
 import { WidgetRows } from './widget-rows.ts';
 import type { GraphWidgetsDeps, MenuAnchor } from '../common/graph-widgets.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
-import type { LayerBounds, MenuTarget, RectPx, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
+import type { LayerBounds, MenuTarget, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
 import { tapPairOf } from '../utils/tap-pair.util.ts';
 import { buttonRectsOf, nodeToolbarRectOf, overlayLeftOf } from '../utils/widget-geometry.util.ts';
 import { widgetPlanOf } from '../utils/widget-plan.util.ts';
-
-type PackageEntry = {
-  readonly name: string;
-  readonly button: HTMLButtonElement;
-};
 
 /** The package toolbar is the "…" alone so far. */
 const PACKAGE_TOOLBAR_COUNT = 1;
@@ -18,19 +13,18 @@ const PACKAGE_TOOLBAR_COUNT = 1;
 const NO_PLAN: WidgetPlan = { rows: [], nodeToolbar: null };
 
 /**
- * The folder header rows, with their Focus folder toggle, and the selected package's "…" over the canvas:
- * `refresh` rebuilds them from the scene and the selection, `position` places them from the rendered rects without
- * reading DOM layout, `refreshBounds` re-reads the container and the overlay edge. Every click acts only while the
- * checkbox's mode is the mode on screen.
+ * The folder header rows, with their Focus folder toggle, and the selected package's node toolbar, flat or grouped, over
+ * the canvas: `refresh` rebuilds them from the scene and the selection, `position` places them from the rendered rects
+ * without reading DOM layout, `refreshBounds` re-reads the container and the overlay edge. Every click acts only while
+ * the checkbox's mode is the mode on screen.
  */
 export class GraphWidgets {
   private readonly deps: GraphWidgetsDeps;
   private readonly rows: WidgetRows;
+  private readonly toolbar: PackageToolbar;
   private readonly noteTitleTap = tapPairOf();
-  private button: PackageEntry | null = null;
   private bounds: LayerBounds = { width: 0, height: 0, overlayLeft: null };
   private plan: WidgetPlan = NO_PLAN;
-  private isGrouped = false;
 
   public constructor(deps: GraphWidgetsDeps) {
     this.deps = deps;
@@ -42,15 +36,19 @@ export class GraphWidgets {
       onFocus: (folder): void => this.act((): void => deps.actions.focusFolder(folder)),
       onMenu: (target, opener): void => this.act((): void => deps.onMenu(target, opener))
     });
+    this.toolbar = new PackageToolbar({
+      layer: deps.page.widgets,
+      container: deps.page.container,
+      views: deps.widgetViews,
+      onMenu: (target, opener): void => this.actOnPackage((): void => deps.onMenu(target, opener))
+    });
   }
 
   public refresh(): void {
-    const { isGrouped, scene, selectedPackage, focusedFolder } = this.deps.state();
-    const name = isGrouped ? selectedPackage : null;
+    const { scene, selectedPackage, focusedFolder } = this.deps.state();
 
-    this.isGrouped = isGrouped;
-    this.syncButton(name);
-    this.rows.sync(scene, this.button?.button ?? null, focusedFolder);
+    this.toolbar.sync(selectedPackage);
+    this.rows.sync(scene, focusedFolder);
     this.position();
     this.rows.restoreFocus();
   }
@@ -58,23 +56,22 @@ export class GraphWidgets {
   /** One pass: the rendered rects, the plan, then the style writes that changed and the collapsed labels of rows not shown. */
   public position(): void {
     const rowCount = this.rows.size();
-    const isEmpty = rowCount === 0 && this.button === null;
+    const selected = this.toolbar.name();
+    const isEmpty = rowCount === 0 && selected === null;
 
     if (isEmpty) return;
 
-    const selected = this.button?.name ?? null;
     const rects = this.deps.view.widgetRects(selected);
     const input: WidgetPlanInput = {
       rects,
       bounds: this.bounds,
-      isGrouped: this.isGrouped,
       toolbarCount: PACKAGE_TOOLBAR_COUNT
     };
 
     this.plan = widgetPlanOf(input);
     this.rows.place(this.plan.rows);
     this.deps.view.markRowLess(this.plan.rows);
-    this.placeButton(this.plan.nodeToolbar);
+    this.toolbar.place(this.plan.nodeToolbar);
   }
 
   public refreshBounds(): void {
@@ -92,14 +89,16 @@ export class GraphWidgets {
   }
 
   /**
-   * The package "…" span at the camera of this call, shown or not, so a keep-clear pan brings it out from under the
-   * overlay; the flip moves only y, so keep-clear needs no rows. It also skips the compact rule (the "…" alone under
+   * The package toolbar's x span at the camera of this call, shown or not, so a keep-clear pan brings it out from under
+   * the overlay; the flip moves only y, so keep-clear needs no rows. It also skips the compact rule (the "…" alone under
    * `NODE_TOOLBAR_MIN_PX`), which is right only while the count is 1; U4d must apply it.
    */
-  public packageButtonBox(): AnchorBox | null {
-    if (this.button === null || !this.isGrouped) return null;
+  public packageToolbarBox(): AnchorBox | null {
+    const name = this.toolbar.name();
 
-    const { selected } = this.deps.view.widgetRects(this.button.name);
+    if (name === null) return null;
+
+    const { selected } = this.deps.view.widgetRects(name);
 
     if (selected === null) return null;
 
@@ -131,12 +130,13 @@ export class GraphWidgets {
   }
 
   private packageAnchor(name: string): MenuAnchor | null {
-    const { button } = this;
     const rect = this.plan.nodeToolbar;
+    const selected = this.toolbar.name();
 
-    if (rect === null || button?.name !== name) return null;
+    if (rect === null || selected !== name) return null;
 
-    const anchor: MenuAnchor = { rect, opener: button.button };
+    const opener = this.toolbar.ellipsis();
+    const anchor: MenuAnchor = { rect, opener };
 
     return anchor;
   }
@@ -169,32 +169,9 @@ export class GraphWidgets {
     if (isActive) action();
   }
 
-  /** Exactly one package "…", built again when the selection changes; none without a grouped selection. */
-  private syncButton(name: string | null): void {
-    const current = this.button?.name ?? null;
+  private actOnPackage(action: () => void): void {
+    const isActive = this.deps.isPackageActive();
 
-    if (current === name) return;
-
-    this.button?.button.remove();
-    this.button = null;
-
-    if (name === null) return;
-
-    const button = this.deps.widgetViews.packageButton(name);
-    const target: MenuTarget = { kind: 'package', name };
-
-    button.addEventListener('click', (): void => this.act((): void => this.deps.onMenu(target, button)));
-    this.deps.page.widgets.append(button);
-    this.button = { name, button };
-  }
-
-  private placeButton(rect: RectPx | null): void {
-    if (this.button === null) return;
-
-    const { button } = this.button;
-
-    setHidden(button, rect === null);
-
-    if (rect !== null) writeStyle(button, 'transform', translateOf(rect.x1, rect.y1));
+    if (isActive) action();
   }
 }
