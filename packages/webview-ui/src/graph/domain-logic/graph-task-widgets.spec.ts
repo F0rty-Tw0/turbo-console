@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Mocked } from 'vitest';
+import type { Mock, Mocked } from 'vitest';
 
 import { GraphTaskWidgets } from './graph-task-widgets.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -16,7 +16,7 @@ import { graphViewMock } from '../test/mocks/graph-view.mock.ts';
 import { switchableMediaQueryMock } from '../test/mocks/media-query.mock.ts';
 import { taskWidgetViewsMock } from '../test/mocks/task-widget-views.mock.ts';
 import { tickObserverMock } from '../test/mocks/tick-observer.mock.ts';
-import { API_BUILD_STUB, GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
+import { API_BUILD_STUB, GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 import { HOME_CAMERA_STUB } from '../test/stubs/layout.stub.ts';
 import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
 import { setBox } from '../test/utils/element-box.spec.util.ts';
@@ -25,6 +25,7 @@ type WidgetsRig = {
   readonly page: PageElements;
   readonly view: Mocked<GraphView>;
   readonly bridge: Mocked<Bridge>;
+  readonly onShowPackage: Mock<(name: string) => void>;
   /** The task details panel, its left edge at `PANEL_LEFT`. */
   readonly aside: HTMLElement;
   /** The task toolbars built so far, the latest last. */
@@ -53,9 +54,9 @@ const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
 
 const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
 
-const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
+const ROOT_NOT_RUNNABLE_TASK: GraphTask = { ...ROOT_BUILD_STUB, isRunnable: false };
 
-const NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: NOT_RUNNABLE_TASK, state: null };
+const ROOT_NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: ROOT_NOT_RUNNABLE_TASK, state: null };
 
 const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
 
@@ -75,6 +76,7 @@ const rigOf = (): WidgetsRig => {
   const view = graphViewMock(HOME_CAMERA_STUB);
   const bridge: Mocked<Bridge> = { ready: vi.fn(), post: vi.fn(), onMessage: vi.fn(), savedState: vi.fn(), saveState: vi.fn() };
   const aside = document.createElement('aside');
+  const onShowPackage = vi.fn<(name: string) => void>();
   const overlay = switchableMediaQueryMock(false);
   const activity = { isActive: true };
   const setActive = (isActive: boolean): void => {
@@ -89,6 +91,7 @@ const rigOf = (): WidgetsRig => {
       views,
       bridge,
       isActive: (): boolean => activity.isActive,
+      onShowPackage,
       overlay: overlay.query,
       aside: (): HTMLElement => aside
     };
@@ -102,7 +105,20 @@ const rigOf = (): WidgetsRig => {
   setBox(aside, PANEL_LEFT, 100, CANVAS_HEIGHT);
   view.widgetRects.mockReturnValue(rectsOf(LEFT_RECT));
 
-  const rig: WidgetsRig = { page, view, bridge, aside, toolbars, menus, widgetsOf, flipOverlay: overlay.flip, setActive, resizeAside };
+  const flipOverlay = overlay.flip;
+  const rig: WidgetsRig = {
+    page,
+    view,
+    bridge,
+    onShowPackage,
+    aside,
+    toolbars,
+    menus,
+    widgetsOf,
+    flipOverlay,
+    setActive,
+    resizeAside
+  };
 
   return rig;
 };
@@ -152,14 +168,14 @@ describe('FEATURE: GraphTaskWidgets', () => {
     it('WHEN a#build is drawn THEN its toolbar sits above its top-right corner', () => {
       const [toolbar] = taskToolbarsOf(rig);
 
-      expect(toolbar?.style.transform).toBe('translate(156px, 22px)');
+      expect(toolbar?.style.transform).toBe('translate(100px, 22px)');
     });
 
     it('WHEN a#build is drawn near the layer top THEN its toolbar flips below it', () => {
       rig.view.widgetRects.mockReturnValue(rectsOf({ x1: 100, y1: 10, x2: 180, y2: 40 }));
       widgets.rendered();
 
-      expect(taskToolbarsOf(rig)[0]?.style.transform).toBe('translate(156px, 44px)');
+      expect(taskToolbarsOf(rig)[0]?.style.transform).toBe('translate(100px, 44px)');
     });
 
     it('WHEN a#build itself is drawn outside the layer THEN no toolbar shows', () => {
@@ -205,6 +221,25 @@ describe('FEATURE: GraphTaskWidgets', () => {
       stopItemOf(rig)?.click();
 
       expect(rig.bridge.post).toHaveBeenCalledExactlyOnceWith({ type: 'stopTask', taskId: 'a#build' });
+    });
+
+    it('WHEN the a#build Stop slot is clicked THEN stopTask is posted', () => {
+      rig.toolbars[0]?.run.click();
+
+      expect(rig.bridge.post).toHaveBeenCalledExactlyOnceWith({ type: 'stopTask', taskId: 'a#build' });
+    });
+
+    it('WHEN Show package is clicked THEN the package graph shows the package a', () => {
+      rig.toolbars[0]?.showPackage?.click();
+
+      expect(rig.onShowPackage).toHaveBeenCalledExactlyOnceWith('a');
+    });
+
+    it('WHEN task mode is off and Show package is clicked THEN nothing is called', () => {
+      rig.setActive(false);
+      rig.toolbars[0]?.showPackage?.click();
+
+      expect(rig.onShowPackage).not.toHaveBeenCalled();
     });
 
     it('WHEN the menu opened, then api#build is shown, and the old Stop is clicked THEN nothing is posted', () => {
@@ -338,10 +373,10 @@ describe('FEATURE: GraphTaskWidgets', () => {
       expect(rig.view.panBy).not.toHaveBeenCalled();
     });
 
-    it('WHEN a#build has no toolbar, as its menu is empty, and the selection keeps clear THEN the camera pans a#build alone', () => {
+    it('WHEN //#build shows no button, as it cannot run, and the selection keeps clear THEN the camera pans //#build alone', () => {
       const narrow: RectPx = { x1: 40, y1: 50, x2: 60, y2: 80 };
 
-      widgets.show(NOT_RUNNABLE_IDLE);
+      widgets.show(ROOT_NOT_RUNNABLE_IDLE);
       setBox(rig.aside, 54, 100, CANVAS_HEIGHT);
       rig.view.widgetRects.mockReturnValue(rectsOf(narrow));
       rig.view.anchorBox.mockReturnValue({ x1: narrow.x1, x2: narrow.x2 });

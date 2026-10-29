@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { taskMenuOf } from './task-menu-model.util.ts';
-import { TASK_TOOLBAR_ORDER, runActionOf, taskToolbarShownOf } from './task-toolbar.util.ts';
+import { TASK_TOOLBAR_ORDER, runActionOf, runSlotLabelOf, taskToolbarShownOf } from './task-toolbar.util.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskMenuActions } from '../common/task-details.type.ts';
 import { GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -88,6 +88,17 @@ describe('FEATURE: task toolbar model', () => {
       const action = runActionOf(state);
 
       expect(action).toBe(expected);
+    });
+  });
+
+  describe('GIVEN the Run/Stop slot of app#build', () => {
+    it.each([
+      { action: 'run', expected: 'Run app#build' },
+      { action: 'stop', expected: 'Stop app#build' }
+    ] as const)('WHEN it does $action THEN it is named $expected', ({ action, expected }) => {
+      const label = runSlotLabelOf('app#build', action);
+
+      expect(label).toBe(expected);
     });
   });
 });

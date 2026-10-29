@@ -187,7 +187,7 @@ export type RowEntry = {
 export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
   readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
-  readonly taskToolbar: (id: string) => TaskToolbarElements;
+  readonly taskToolbar: (id: string, packageName: string) => TaskToolbarElements;
   /** `folderTitle` is the shown title of the package's folder, `null` on a flat page. */
   readonly packageToolbar: (name: string, folderTitle: string | null) => PackageToolbarElements;
   /** `label` is the menu's accessible name, the one its "…" has. */

@@ -307,6 +307,13 @@ describe('FEATURE: buildPackageToolbar', () => {
   });
 });
 
+const taskButtonsOf = (toolbar: TaskToolbarElements): (HTMLButtonElement | null)[] => {
+  const { run, showPackage, ellipsis } = toolbar;
+  const buttons = [run, showPackage, ellipsis];
+
+  return buttons;
+};
+
 describe('FEATURE: buildTaskToolbar', () => {
   beforeEach((): void => {
     vi.stubGlobal('document', fakeDocumentMock());
@@ -316,11 +323,11 @@ describe('FEATURE: buildTaskToolbar', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('GIVEN the task toolbar of app#build', () => {
+  describe('GIVEN the task toolbar of app#build in the package app', () => {
     let toolbar: TaskToolbarElements;
 
     beforeEach((): void => {
-      toolbar = buildTaskToolbar('app#build');
+      toolbar = buildTaskToolbar('app#build', 'app');
     });
 
     it('WHEN the root is read THEN it is a hidden toolbar named Task app#build', () => {
@@ -332,19 +339,62 @@ describe('FEATURE: buildTaskToolbar', () => {
       expect(root.hidden).toBe(true);
     });
 
-    it('WHEN its children are read THEN they are the "…" alone', () => {
+    it('WHEN its children are read THEN they are Run, Show package and the "…"', () => {
       const children = Array.from(toolbar.root.children);
 
-      expect(children).toStrictEqual([toolbar.ellipsis]);
+      expect(children).toStrictEqual([toolbar.run, toolbar.showPackage, toolbar.ellipsis]);
     });
 
-    it('WHEN the "…" is read THEN it is named Actions for app#build and opens a menu', () => {
-      const { ellipsis } = toolbar;
+    it('WHEN the buttons are read THEN each is named for its action', () => {
+      const labels = attributesOf(toolbar.root, 'aria-label');
 
-      expect(ellipsis.getAttribute('aria-label')).toBe('Actions for app#build');
-      expect(ellipsis.title).toBe('Actions for app#build');
-      expect(ellipsis.getAttribute('aria-haspopup')).toBe('menu');
-      expect(ellipsis.tabIndex).toBe(0);
+      expect(labels).toStrictEqual(['Run app#build', 'Show package app', 'Actions for app#build']);
+    });
+
+    it('WHEN the buttons are read THEN each hover title is its name', () => {
+      const buttons = taskButtonsOf(toolbar);
+      const titles = buttons.map((button): string | undefined => button?.title);
+
+      expect(titles).toStrictEqual(['Run app#build', 'Show package app', 'Actions for app#build']);
+    });
+
+    it('WHEN the icons are read THEN Run and Show package draw the icon of their action', () => {
+      const icons = Array.from(toolbar.root.children, (button): string | undefined => button.children[0]?.className);
+
+      expect(icons).toStrictEqual([
+        `codicon codicon-${ACTION_ICONS.run}`,
+        `codicon codicon-${ACTION_ICONS.showPackage}`,
+        'codicon codicon-ellipsis'
+      ]);
+    });
+
+    it('WHEN the "…" is read THEN it opens a menu', () => {
+      expect(toolbar.ellipsis.getAttribute('aria-haspopup')).toBe('menu');
+    });
+
+    it('WHEN the tabIndex are read THEN only Run is a Tab stop', () => {
+      const buttons = taskButtonsOf(toolbar);
+      const stops = buttons.map((button): number | undefined => button?.tabIndex);
+
+      expect(stops).toStrictEqual([0, -1, -1]);
+    });
+  });
+
+  describe('GIVEN the task toolbar of a root task', () => {
+    let toolbar: TaskToolbarElements;
+
+    beforeEach((): void => {
+      toolbar = buildTaskToolbar('//#lint', '//');
+    });
+
+    it('WHEN its Show package button is read THEN there is none', () => {
+      expect(toolbar.showPackage).toBeNull();
+    });
+
+    it('WHEN the buttons are read THEN they are Run and the "…"', () => {
+      const labels = attributesOf(toolbar.root, 'aria-label');
+
+      expect(labels).toStrictEqual(['Run //#lint', 'Actions for //#lint']);
     });
   });
 });

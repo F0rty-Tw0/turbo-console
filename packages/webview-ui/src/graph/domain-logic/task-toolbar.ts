@@ -1,18 +1,28 @@
-import { placeToolbarRoot, removeToolbarRoot } from './node-toolbar-place.ts';
-import type { TaskToolbarDeps } from '../common/task-details.type.ts';
-import type { TaskToolbarElements } from '../common/task-toolbar.type.ts';
+import { setButtonIcon, setButtonLabel } from './button-title.ts';
+import { placeToolbarRoot, removeToolbarRoot, writeShown } from './node-toolbar-place.ts';
+import { ACTION_ICONS } from '../common/graph-icon.const.ts';
+import type { TaskDetailsModel, TaskToolbarDeps, TaskToolbarEntry } from '../common/task-details.type.ts';
+import type { TaskToolbarKind } from '../common/task-toolbar.type.ts';
 import type { RectPx } from '../common/widget.type.ts';
+import { stopOf } from '../utils/roving-stop.util.ts';
+import { TASK_TOOLBAR_ORDER, runActionOf, runSlotLabelOf, taskToolbarShownOf } from '../utils/task-toolbar.util.ts';
+import { isNodeToolbarCompact } from '../utils/widget-geometry.util.ts';
 
-/** The task toolbar built for `id`. */
-type TaskToolbarEntry = {
-  readonly id: string;
-  readonly elements: TaskToolbarElements;
+/** Draws the Run/Stop slot for the task's state now, on the same element so focus stays on it. */
+const syncRun = (entry: TaskToolbarEntry): void => {
+  const { id, elements, model } = entry;
+  const action = runActionOf(model.state);
+  const label = runSlotLabelOf(id, action);
+
+  setButtonIcon(elements.run, ACTION_ICONS[action]);
+  setButtonLabel(elements.run, label);
 };
 
 /**
  * The selected task's node toolbar: built again when the selected task changes, first in the layer so it is the Tab
- * stop after the canvas; focus inside it goes to the container when it is removed or hidden, since the browser would
- * drop it on the body.
+ * stop after the canvas; the same task keeps the element and only the Run/Stop slot follows its state. Focus inside it
+ * goes to the container when it is removed or hidden, since the browser would drop it on the body, and to the new Tab
+ * stop when left on a hidden button.
  */
 export class TaskToolbar {
   private readonly deps: TaskToolbarDeps;
@@ -31,30 +41,85 @@ export class TaskToolbar {
     return this.entry?.elements.ellipsis ?? null;
   }
 
-  /** Exactly one toolbar for `id`, none for `null`; the same id keeps the element. */
-  public sync(id: string | null): void {
-    if (this.entry?.id === id) return;
+  /** The buttons the toolbar shows at `zoom`; 0 without a toolbar. */
+  public countAt(zoom: number): number {
+    const shown = this.shownAt(zoom);
+
+    return shown.length;
+  }
+
+  /** Exactly one toolbar for the task of `model`, none for `null`; the same task keeps the element. */
+  public sync(model: TaskDetailsModel | null): void {
+    if (model === null) {
+      this.removeEntry();
+
+      return;
+    }
+
+    const entry = this.entryFor(model);
+
+    entry.model = model;
+    this.entry = entry;
+    syncRun(entry);
+  }
+
+  /** Shows the toolbar at `rect` on whole px with the buttons the zoom and the state allow, or hides it for `null` or while none shows. */
+  public place(rect: RectPx | null, zoom: number): void {
+    if (this.entry === null) return;
+
+    const { elements, preferred } = this.entry;
+    const shown = this.shownAt(zoom);
+    const placed = shown.length === 0 ? null : rect;
+
+    placeToolbarRoot(elements.root, placed, this.deps.container);
+
+    if (placed === null) return;
+
+    const stop = stopOf(preferred, shown, 'ellipsis');
+    const isLostFocus = writeShown(this.entry, TASK_TOOLBAR_ORDER, shown, stop);
+
+    if (isLostFocus) elements[stop]?.focus();
+  }
+
+  private shownAt(zoom: number): TaskToolbarKind[] {
+    if (this.entry === null) return [];
+
+    const { task, state } = this.entry.model;
+    const isCompact = isNodeToolbarCompact(zoom);
+
+    return taskToolbarShownOf(task, state, isCompact);
+  }
+
+  /** The kept entry when it is for the task of `model`, else a new one in place of the old. */
+  private entryFor(model: TaskDetailsModel): TaskToolbarEntry {
+    const current = this.entry;
+
+    if (current?.id === model.task.id) return current;
 
     this.removeEntry();
 
-    if (id !== null) this.entry = this.build(id);
+    return this.build(model);
   }
 
-  /** Shows the toolbar at `rect` on whole px, or hides it for `null`; focus inside a toolbar that hides goes to the container. */
-  public place(rect: RectPx | null): void {
-    if (this.entry === null) return;
+  private build(model: TaskDetailsModel): TaskToolbarEntry {
+    const { id, packageName } = model.task;
+    const elements = this.deps.views.taskToolbar(id, packageName);
+    const entry: TaskToolbarEntry = { id, elements, model, shown: [], preferred: 'run' };
+    const { run, showPackage, ellipsis } = elements;
 
-    placeToolbarRoot(this.entry.elements.root, rect, this.deps.container);
-  }
-
-  private build(id: string): TaskToolbarEntry {
-    const elements = this.deps.views.taskToolbar(id);
-    const entry: TaskToolbarEntry = { id, elements };
-
-    elements.ellipsis.addEventListener('click', (): void => this.deps.onMenu(elements.ellipsis));
+    ellipsis.addEventListener('click', (): void => this.deps.onMenu(ellipsis));
+    run.addEventListener('click', (): void => this.onRun(entry));
+    showPackage?.addEventListener('click', (): void => this.deps.onShowPackage(packageName));
     this.deps.layer.prepend(elements.root);
 
     return entry;
+  }
+
+  /** The slot does what it shows at click time: Stop while the task is live, else Run. */
+  private onRun(entry: TaskToolbarEntry): void {
+    const action = runActionOf(entry.model.state);
+
+    this.deps.onRun(entry.id, action);
   }
 
   private removeEntry(): void {

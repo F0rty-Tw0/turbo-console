@@ -14,9 +14,10 @@ import { runMessageOf } from '../utils/task-run.util.ts';
 import { shownNodeToolbarOf } from '../utils/widget-geometry.util.ts';
 
 /**
- * The selected task's node toolbar over the canvas and its menu: Run and Run without cache for a runnable task, Stop
- * while it runs, and no toolbar while the menu would be empty. An item posts what the task panel's button posts for the
- * task shown when it runs, so a stale item posts nothing. Shift+F10 opens nothing in task mode. While the task details
+ * The selected task's node toolbar over the canvas and its "…" menu: Run and Run without cache for a runnable task, Stop
+ * while it runs, and the toolbar hidden while it shows no button. The Run/Stop slot and an item post what the task
+ * panel's button posts for the task shown when they run, so a stale item posts nothing; Show package acts in task mode
+ * only. Shift+F10 opens nothing in task mode. While the task details
  * panel overlays the canvas, the toolbar hides under it and the menu opens left of it, following the panel as its sash
  * drags it wider or narrower; when it turns to overlay, the selected task pans clear of it. It reads the layer bounds
  * only when the layer-bounds watch fires, so a frame reads no layout.
@@ -42,7 +43,9 @@ export class GraphTaskWidgets {
       layer: deps.page.widgets,
       container: deps.page.container,
       views: deps.views,
-      onMenu: (opener: HTMLButtonElement): void => this.open(opener)
+      onMenu: (opener: HTMLButtonElement): void => this.open(opener),
+      onRun: (id: string, action: TaskRunAction): void => this.act(id, action),
+      onShowPackage: (name: string): void => this.showPackage(name)
     });
     this.actions = { act: (id: string, action: TaskRunAction): void => this.act(id, action) };
     this.menus = new GraphWidgetMenus({
@@ -58,17 +61,18 @@ export class GraphTaskWidgets {
     deps.overlay.addEventListener('change', (): void => this.relayout());
   }
 
-  /** The toolbar beside the selected task of `model`; none for `null`, outside task mode, or while its menu would be empty. */
+  /** The toolbar of the selected task of `model`; none for `null` or outside task mode; the menu of a toolbar replaced or removed closes. */
   public show(model: TaskDetailsModel | null): void {
-    const id = model?.task.id ?? null;
+    const isActive = this.deps.isActive();
+    const shown = isActive ? model : null;
+    const shownId = shown?.task.id ?? null;
+    const toolbarId = this.toolbar.id();
 
     this.model = model;
 
-    const items = this.itemsOf(id);
-    const isActive = this.deps.isActive();
-    const isShown = items.length > 0 && isActive;
+    if (shownId !== toolbarId) this.menus.drop();
 
-    this.sync(isShown ? id : null);
+    this.toolbar.sync(shown);
     this.place();
   }
 
@@ -87,7 +91,9 @@ export class GraphTaskWidgets {
     if (id === null || !isOverlaid) return;
 
     const { view, page } = this.deps;
-    const toolbarBox = taskToolbarBoxOf(view, this.toolbar.id());
+    const toolbarId = this.toolbar.id();
+    const countAt = (zoom: number): number => this.toolbar.countAt(zoom);
+    const toolbarBox = taskToolbarBoxOf(view, toolbarId, countAt);
     const box = joinedBoxOf(view.anchorBox([id]), toolbarBox);
 
     keepBoxClear(view, page.container, aside, box);
@@ -113,17 +119,7 @@ export class GraphTaskWidgets {
   public exit(): void {
     this.model = null;
     this.menus.drop();
-    this.sync(null);
-  }
-
-  /** Exactly one toolbar, built again when the selected task changes; the menu of the one before closes. */
-  private sync(id: string | null): void {
-    const current = this.toolbar.id();
-
-    if (current === id) return;
-
-    this.menus.drop();
-    this.toolbar.sync(id);
+    this.toolbar.sync(null);
   }
 
   /** Opens the menu of the selected task on its "…" while task mode is on. */
@@ -136,7 +132,14 @@ export class GraphTaskWidgets {
     this.menus.open({ kind: 'package', name: id }, opener);
   }
 
-  /** Above the task's top right corner, or below it where it would leave the layer; hidden while the task or the toolbar is not drawn inside the canvas. */
+  /** Show package was clicked: the package graph shows package `name` while task mode is on. */
+  private showPackage(name: string): void {
+    const isActive = this.deps.isActive();
+
+    if (isActive) this.deps.onShowPackage(name);
+  }
+
+  /** Above the task's top right corner, or below it where it would leave the layer; hidden while the task or the toolbar is not drawn inside the canvas, or while it shows no button. */
   private place(): void {
     const id = this.toolbar.id();
 
@@ -144,11 +147,12 @@ export class GraphTaskWidgets {
 
     if (id === null) return;
 
-    const { selected } = this.deps.view.widgetRects(id);
+    const { selected, zoom } = this.deps.view.widgetRects(id);
+    const count = this.toolbar.countAt(zoom);
 
-    if (selected !== null) this.rect = shownNodeToolbarOf(selected, 1, [], this.bounds);
+    if (selected !== null && count > 0) this.rect = shownNodeToolbarOf(selected, count, [], this.bounds);
 
-    this.toolbar.place(this.rect);
+    this.toolbar.place(this.rect, zoom);
   }
 
   private menuOf(target: MenuTarget): MenuItemModel[] {

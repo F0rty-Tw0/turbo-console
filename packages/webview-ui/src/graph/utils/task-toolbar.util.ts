@@ -1,3 +1,4 @@
+import { runLabelOf, stopLabelOf } from './controls-text.util.ts';
 import { isLiveRun } from './task-run.util.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
@@ -13,6 +14,13 @@ export const runActionOf = (state: GraphRunState | null): 'run' | 'stop' => {
   if (isLive) return 'stop';
 
   return 'run';
+};
+
+/** The Run/Stop slot's name for `action`: `Stop <id>` while it stops the task, else `Run <id>`. */
+export const runSlotLabelOf = (id: string, action: 'run' | 'stop'): string => {
+  if (action === 'stop') return stopLabelOf(id);
+
+  return runLabelOf(id);
 };
 
 const isShownOf = (kind: TaskToolbarKind, task: GraphTask, state: GraphRunState | null, isCompact: boolean): boolean => {

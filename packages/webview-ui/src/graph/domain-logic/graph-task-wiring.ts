@@ -37,10 +37,11 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
   const panelOf = (actions: TaskPanelActions): TaskPanel => taskPanelOf(page, actions, asides);
   const controlsOf = (actions: TaskControlsActions): TaskControls => new GraphTaskControls({ page, views: taskViews, actions });
   const isActive = (): boolean => hooks.modes.mode() === 'tasks';
-  const widgets = new GraphTaskWidgets({ page, view, views: widgetViews, bridge, isActive, overlay, aside: (): HTMLElement => aside });
+  const onShowPackage = hooks.showPackage;
+  const widgetDeps = { page, view, views: widgetViews, bridge, isActive, onShowPackage, overlay, aside: (): HTMLElement => aside };
+  const widgets = new GraphTaskWidgets(widgetDeps);
   const onToggle = (detailsOpen: boolean): void => saveDetailsToggle({ view, modes: hooks.modes }, widgets, detailsOpen);
   const views = { ...taskDetailsViews, panel: (): DetailsElements => elements };
-  const onShowPackage = hooks.showPackage;
   const detailsOf = (actions: TaskDetailsActions): TaskDetails =>
     new GraphTaskDetails({ page, views, bridge, actions, onToggle, onShowPackage });
   const widgetsOf = (): TaskWidgets => widgets;

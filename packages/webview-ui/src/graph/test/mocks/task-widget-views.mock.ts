@@ -9,8 +9,8 @@ import type { TaskWidgetViewsMock } from '../common/graph-task-mode.type.ts';
 export const taskWidgetViewsMock = (): TaskWidgetViewsMock => {
   const toolbars: TaskToolbarElements[] = [];
   const menus: MenuElements[] = [];
-  const taskToolbar = (id: string): TaskToolbarElements => {
-    const built = buildTaskToolbar(id);
+  const taskToolbar = (id: string, packageName: string): TaskToolbarElements => {
+    const built = buildTaskToolbar(id, packageName);
 
     toolbars.push(built);
 

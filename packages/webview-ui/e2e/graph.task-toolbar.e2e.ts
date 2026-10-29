@@ -16,7 +16,7 @@ test.describe("FEATURE: the selected task's node toolbar", () => {
   });
 
   test(
-    'GIVEN app#build tapped, its toolbar sits above it with the "…" and opens the task menu from the "…"',
+    'GIVEN app#build tapped, its toolbar sits above it with Run, Show package and the "…", and opens the task menu from the "…"',
     { annotation: D6 },
     async ({ graphCanvas, graphMenus, graphTask, graphTaskToolbar }): Promise<void> => {
       await test.step('WHEN app#build is tapped', async (): Promise<void> => graphCanvas.tapNode('app#build'));
@@ -24,8 +24,8 @@ test.describe("FEATURE: the selected task's node toolbar", () => {
       await test.step('THEN its toolbar is above app#build', async (): Promise<void> =>
         graphTaskToolbar.expectNodeToolbarOn('app#build', 'above'));
 
-      await test.step('AND it holds only the "…"', async (): Promise<void> =>
-        graphTaskToolbar.expectToolbarButtons('app#build', ['Actions for app#build']));
+      await test.step('AND it holds Run, Show package and the "…"', async (): Promise<void> =>
+        graphTaskToolbar.expectToolbarButtons('app#build', ['Run app#build', 'Show package app', 'Actions for app#build']));
 
       await test.step('WHEN the "…" is pressed', async (): Promise<void> => graphTask.menu('app#build'));
 
