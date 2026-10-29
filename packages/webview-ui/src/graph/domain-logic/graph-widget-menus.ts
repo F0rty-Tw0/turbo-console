@@ -42,9 +42,12 @@ export class GraphWidgetMenus {
   /** Shift+F10: the menu of the inspected folder or package, from its "…" when shown, else from its drawn rect. */
   public openForSelection(): void {
     const target = this.deps.selection();
-    const isActive = this.deps.isActive();
 
-    if (target === null || !isActive) return;
+    if (target === null) return;
+
+    const isActive = this.deps.isActive(target);
+
+    if (!isActive) return;
 
     const opener = this.deps.anchors.anchorOf(target)?.opener ?? null;
 

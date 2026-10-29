@@ -169,6 +169,12 @@ export class GraphWidgets {
     if (isActive) action();
   }
 
+  private actOnPackage(action: () => void): void {
+    const isActive = this.deps.isPackageActive();
+
+    if (isActive) action();
+  }
+
   /** Exactly one package "…", built again when the selection changes; none without a grouped selection. */
   private syncButton(name: string | null): void {
     const current = this.button?.name ?? null;
@@ -183,7 +189,7 @@ export class GraphWidgets {
     const button = this.deps.widgetViews.packageButton(name);
     const target: MenuTarget = { kind: 'package', name };
 
-    button.addEventListener('click', (): void => this.act((): void => this.deps.onMenu(target, button)));
+    button.addEventListener('click', (): void => this.actOnPackage((): void => this.deps.onMenu(target, button)));
     this.deps.page.widgets.append(button);
     this.button = { name, button };
   }

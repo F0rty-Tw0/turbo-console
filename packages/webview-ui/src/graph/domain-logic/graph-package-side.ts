@@ -46,6 +46,7 @@ export class GraphPackageSide {
     };
     const isGrouped = (): boolean => isPackageMode() && this.layouts.drawnMode() === 'folders';
     const canAct = (): boolean => isGrouped() && this.layouts.mode() === 'folders';
+    const canActOnPackage = (): boolean => isPackageMode() && this.layouts.mode() === this.layouts.drawnMode();
     const onPlaced = (): void => {
       this.filtering.placed();
       hooks.onPlaced();
@@ -66,6 +67,7 @@ export class GraphPackageSide {
       isPackageMode,
       isGrouped,
       canAct,
+      canActOnPackage,
       onLocation: hooks.onLocation
     });
     this.layouts = new GraphLayouts({

@@ -64,7 +64,7 @@ export const widgetsOf = (
   folders: FolderSource,
   controls: WidgetFilters
 ): WidgetWiring => {
-  const { page, view, widgetViews, overlay, isGrouped, canAct, onLocation } = deps;
+  const { page, view, widgetViews, overlay, isGrouped, canAct, canActOnPackage, onLocation } = deps;
   const state = (): WidgetState => {
     const current: WidgetState = {
       isGrouped: isGrouped(),
@@ -83,6 +83,7 @@ export const widgetsOf = (
     state,
     actions: inspection.folderActions(),
     canAct,
+    canActOnPackage,
     menuOf: menuOfFrom(deps, inspection, folders, controls),
     selection: (): MenuTarget | null => menuTargetOf(inspection.current()),
     onLocation
