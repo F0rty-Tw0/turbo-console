@@ -356,6 +356,33 @@ describe('FEATURE: PackageToolbar', () => {
       expect(stopsOf(latestOf(rig))).toStrictEqual([-1, -1, -1, 0]);
     });
 
+    it('WHEN Right is pressed, web is synced again and the toolbar is placed THEN the Tab stop stays on Start trace', () => {
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).focus);
+      rig.toolbar.sync('web', null, FOCUSED);
+
+      rig.toolbar.place(AT_WEB, 1);
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, 0, -1, -1]);
+    });
+
+    it('WHEN Right is pressed, web is synced again and Right is pressed again THEN the Tab stop is Show tasks once placed', () => {
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).focus);
+      rig.toolbar.sync('web', null, FOCUSED);
+      pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).startTrace);
+
+      rig.toolbar.place(AT_WEB, 1);
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, -1, 0, -1]);
+    });
+
+    it('WHEN focus leaves the toolbar and the zoom goes compact THEN the "…" is the Tab stop', () => {
+      rig.container.focus();
+
+      rig.toolbar.place(AT_WEB, COMPACT_ZOOM);
+
+      expect(stopsOf(latestOf(rig))).toStrictEqual([-1, -1, -1, 0]);
+    });
+
     it('WHEN the toolbar is rebuilt for docs after Right THEN the Tab stop is Focus again', () => {
       pressKey(latestOf(rig).root, 'ArrowRight', latestOf(rig).focus);
 
