@@ -122,6 +122,18 @@ const nodeToolbarRootOf = (modifier: 'package' | 'task', label: string): HTMLEle
   return root;
 };
 
+/** Appends a node toolbar's Tab `stop`, then each of `others` that exists, out of the Tab order until the layer moves the stop. */
+const appendAfterStop = (root: HTMLElement, stop: HTMLButtonElement, others: (HTMLButtonElement | null)[]): void => {
+  root.append(stop);
+
+  for (const button of others) {
+    if (button === null) continue;
+
+    button.tabIndex = -1;
+    root.append(button);
+  }
+};
+
 /** The Show package button of a task in `packageName`; a root task has no package to show. */
 const showPackageOf = (packageName: string): HTMLButtonElement | null => {
   if (packageName === ROOT_TASK_PACKAGE) return null;
@@ -136,16 +148,9 @@ export const buildTaskToolbar = (id: string, packageName: string): TaskToolbarEl
   const showPackage = showPackageOf(packageName);
   const ellipsis = menuButton(packageActionsLabelOf(id));
   const toolbar: TaskToolbarElements = { root, run, showPackage, ellipsis };
-  const buttons = [showPackage, ellipsis];
+  const others = [showPackage, ellipsis];
 
-  root.append(run);
-
-  for (const button of buttons) {
-    if (button === null) continue;
-
-    button.tabIndex = -1;
-    root.append(button);
-  }
+  appendAfterStop(root, run, others);
 
   return toolbar;
 };
@@ -178,17 +183,10 @@ export const buildPackageToolbar = (name: string, folderTitle: string | null): P
   const collapse = collapseOf(folderTitle);
   const ellipsis = menuButton(packageActionsLabelOf(name));
   const toolbar: PackageToolbarElements = { root, focus, startTrace, showTasks, collapse, ellipsis };
-  const buttons = [startTrace, showTasks, collapse, ellipsis];
+  const others = [startTrace, showTasks, collapse, ellipsis];
 
   startTrace.title = START_TRACE_TITLE;
-  root.append(focus);
-
-  for (const button of buttons) {
-    if (button === null) continue;
-
-    button.tabIndex = -1;
-    root.append(button);
-  }
+  appendAfterStop(root, focus, others);
 
   return toolbar;
 };
