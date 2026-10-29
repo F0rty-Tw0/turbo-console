@@ -59,8 +59,8 @@ export const IS_MAC_RUNNER = process.platform === 'darwin';
 
 /**
  * Windows runners land in two speed modes (2026-10-25..29, the 300-package grouped open): the slow one reads the
- * grouped first frame at about 1.8-2.0 s, 1.45x Ubuntu's, and twice crossed 2000 ms (2011.6, 2022.4). Budgets that
- * time a cold open there sit 1.5x over that mode; Linux keeps the tight budget and catches a regression anyway.
+ * grouped first frame at about 1.8-2.0 s, 1.45x Ubuntu's, and twice crossed 2000 ms (2011.6, 2022.4). The grouped
+ * first-frame budget there sits 1.5x over that mode; Linux keeps the tight budget and catches a regression anyway.
  */
 export const IS_WINDOWS_RUNNER = process.platform === 'win32';
 
