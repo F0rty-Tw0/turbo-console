@@ -140,11 +140,11 @@ export class GraphTaskWidgets {
   private place(): void {
     const id = this.toolbar.id();
 
+    this.rect = null;
+
     if (id === null) return;
 
     const { selected } = this.deps.view.widgetRects(id);
-
-    this.rect = null;
 
     if (selected !== null) this.rect = shownNodeToolbarOf(selected, 1, [], this.bounds);
 

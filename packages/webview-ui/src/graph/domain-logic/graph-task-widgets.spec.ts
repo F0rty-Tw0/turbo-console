@@ -3,6 +3,7 @@ import type { Mocked } from 'vitest';
 
 import { GraphTaskWidgets } from './graph-task-widgets.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
+import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import type { TaskDetailsModel, TaskWidgetsDeps } from '../common/task-details.type.ts';
@@ -51,6 +52,10 @@ const LEFT_RECT: RectPx = { x1: 100, y1: 50, x2: 180, y2: 80 };
 const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
 
 const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
+
+const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
+
+const NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: NOT_RUNNABLE_TASK, state: null };
 
 const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
 
@@ -331,6 +336,18 @@ describe('FEATURE: GraphTaskWidgets', () => {
       widgets.keepClear();
 
       expect(rig.view.panBy).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a#build has no toolbar, as its menu is empty, and the selection keeps clear THEN the camera pans a#build alone', () => {
+      const narrow: RectPx = { x1: 40, y1: 50, x2: 60, y2: 80 };
+
+      widgets.show(NOT_RUNNABLE_IDLE);
+      setBox(rig.aside, 54, 100, CANVAS_HEIGHT);
+      rig.view.widgetRects.mockReturnValue(rectsOf(narrow));
+      rig.view.anchorBox.mockReturnValue({ x1: narrow.x1, x2: narrow.x2 });
+      widgets.keepClear();
+
+      expect(rig.view.panBy).toHaveBeenCalledExactlyOnceWith(54 - 16 - narrow.x2);
     });
 
     it('WHEN the panel is closed and the selection keeps clear THEN the camera stays', () => {
