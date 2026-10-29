@@ -1,5 +1,6 @@
 import { GraphWidgetMenus } from './graph-widget-menus.ts';
 import { GraphWidgets } from './graph-widgets.ts';
+import { watchLayerBounds } from './layer-bounds-watch.ts';
 import type {
   GraphWidgetMenusDeps,
   GraphWidgetsDeps,
@@ -21,44 +22,6 @@ const asideOf = (body: HTMLElement): HTMLElement | null => {
 
   return aside instanceof HTMLElement ? aside : null;
 };
-
-/**
- * Re-reads the layer's bounds when the container or the Details aside resizes. The aside mounts with the first graph, so
- * it is looked up on every refresh and observed the first time it exists; a Details drag over the canvas moves the aside's
- * left edge without resizing the container.
- */
-class BoundsWatch {
-  private readonly body: HTMLElement;
-  private readonly widgets: GraphWidgets;
-  private readonly resizes = new ResizeObserver((): void => this.refresh());
-  private observed: Element | null = null;
-
-  public constructor(body: HTMLElement, widgets: GraphWidgets) {
-    this.body = body;
-    this.widgets = widgets;
-  }
-
-  public observe(container: HTMLElement): void {
-    this.resizes.observe(container);
-  }
-
-  public observeAside(): void {
-    const aside = asideOf(this.body);
-
-    if (aside === null || aside === this.observed) return;
-
-    this.resizes.observe(aside);
-    this.observed = aside;
-  }
-
-  public refresh(): void {
-    this.observeAside();
-    this.widgets.refreshBounds();
-  }
-}
-
-/** A record that can move the container or the overlay: a direct child of the body shown or hidden. */
-const isBodyRecord = (record: MutationRecord, body: HTMLElement): boolean => record.target.parentNode === body;
 
 /** Whether a target's widget may act: a package's in either mode, a folder's only grouped. */
 const menuActiveOf = (deps: WidgetWireDeps): ((target: MenuTarget) => boolean) => {
@@ -135,13 +98,12 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
   const { page, overlay } = deps;
   const { body, container, widgets: layer } = page;
   const { widgets, menus } = new WidgetParts(deps);
-  const bounds = new BoundsWatch(body, widgets);
-  const refreshBounds = (): void => bounds.refresh();
-  const onMutations = (records: MutationRecord[]): void => {
-    const isBodyChange = records.some((record) => isBodyRecord(record, body));
-
-    if (isBodyChange) refreshBounds();
-  };
+  const bounds = watchLayerBounds(
+    page,
+    overlay,
+    () => asideOf(body),
+    (): void => widgets.refreshBounds()
+  );
   const onMenuKey = (event: KeyboardEvent): void => {
     const isOpenKey = isMenuOpenKey(event.key, event.shiftKey);
 
@@ -171,9 +133,6 @@ export const wireWidgets = (deps: WidgetWireDeps): WidgetWiring => {
     }
   };
 
-  bounds.observe(container);
-  new MutationObserver(onMutations).observe(body, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
-  overlay.addEventListener('change', refreshBounds);
   container.addEventListener('keydown', onMenuKey);
   layer.addEventListener('keydown', onMenuKey);
   layer.addEventListener('wheel', widgetWheelOf(container), { passive: false });

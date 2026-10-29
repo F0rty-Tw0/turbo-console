@@ -1,3 +1,4 @@
+import { readLayerBounds } from './layer-bounds-watch.ts';
 import { PackageToolbar } from './package-toolbar.ts';
 import { WidgetRows } from './widget-rows.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -5,7 +6,7 @@ import type { GraphWidgetsDeps, MenuAnchor } from '../common/graph-widgets.type.
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { LayerBounds, MenuTarget, WidgetPlan, WidgetPlanInput } from '../common/widget.type.ts';
 import { tapPairOf } from '../utils/tap-pair.util.ts';
-import { buttonRectsOf, ellipsisSlotOf, nodeToolbarCountAt, nodeToolbarRectOf, overlayLeftOf } from '../utils/widget-geometry.util.ts';
+import { buttonRectsOf, ellipsisSlotOf, nodeToolbarCountAt, nodeToolbarRectOf } from '../utils/widget-geometry.util.ts';
 import { widgetPlanOf } from '../utils/widget-plan.util.ts';
 
 /** The folder the selected package is drawn in; `null` when no folder scene is drawn (flat) or nothing is selected. */
@@ -87,14 +88,13 @@ export class GraphWidgets {
   public refreshBounds(): void {
     const { page, overlay, aside } = this.deps;
     const { container, widgets } = page;
-    const { offsetLeft, offsetTop, offsetWidth, offsetHeight } = container;
-    const overlayLeft = overlayLeftOf(aside(), container, overlay.matches);
+    const { offsetLeft, offsetTop } = container;
 
+    this.bounds = readLayerBounds(container, aside(), overlay.matches);
     widgets.style.left = `${offsetLeft}px`;
     widgets.style.top = `${offsetTop}px`;
-    widgets.style.width = `${offsetWidth}px`;
-    widgets.style.height = `${offsetHeight}px`;
-    this.bounds = { width: offsetWidth, height: offsetHeight, overlayLeft };
+    widgets.style.width = `${this.bounds.width}px`;
+    widgets.style.height = `${this.bounds.height}px`;
     this.position();
   }
 

@@ -97,6 +97,16 @@ export type WidgetWiring = {
   readonly groupingOff: () => void;
 };
 
+type ParentLink = { readonly parentNode: unknown };
+
+/** The part of a `MutationRecord` the layer's bounds watch reads: where the changed element sits. */
+export type BodyRecord = { readonly target: ParentLink };
+
+/** The watch on the layer's bounds: `observeAside` starts observing the Details aside once it exists, and only once per aside. */
+export type LayerBoundsWatch = {
+  readonly observeAside: () => void;
+};
+
 /** What a menu reads off the layer: where it opens from and the area it must stay in. */
 export type MenuAnchors = {
   readonly anchorOf: (target: MenuTarget) => MenuAnchor | null;
