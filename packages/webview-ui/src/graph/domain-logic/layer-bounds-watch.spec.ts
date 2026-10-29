@@ -72,14 +72,16 @@ describe('FEATURE: layer bounds watch', () => {
       watch = rig.watchWith(() => null);
     });
 
-    it('WHEN it is built THEN only the container is observed', () => {
-      expect(rig.observed).toStrictEqual([[rig.page.container]]);
-    });
+    describe('WHEN it is built', () => {
+      it('THEN only the container is observed', () => {
+        expect(rig.observed).toStrictEqual([[rig.page.container]]);
+      });
 
-    it('WHEN it is built THEN the body subtree is watched for hidden flips', () => {
-      const options = { subtree: true, attributes: true, attributeFilter: ['hidden'] };
+      it('THEN the body subtree is watched for hidden flips', () => {
+        const options = { subtree: true, attributes: true, attributeFilter: ['hidden'] };
 
-      expect(rig.bodyWatched).toStrictEqual([[rig.page.body, options]]);
+        expect(rig.bodyWatched).toStrictEqual([[rig.page.body, options]]);
+      });
     });
 
     it('WHEN the observed elements resize THEN onChange runs once', () => {
@@ -154,12 +156,14 @@ describe('FEATURE: layer bounds watch', () => {
       rig.watchWith(() => aside);
     });
 
-    it('WHEN it is built THEN the container and the aside are both observed', () => {
-      expect(rig.observed).toStrictEqual([[rig.page.container], [aside]]);
-    });
+    describe('WHEN it is built', () => {
+      it('THEN the container and the aside are both observed', () => {
+        expect(rig.observed).toStrictEqual([[rig.page.container], [aside]]);
+      });
 
-    it('WHEN it is built THEN onChange stays', () => {
-      expect(rig.onChange).not.toHaveBeenCalled();
+      it('THEN onChange stays', () => {
+        expect(rig.onChange).not.toHaveBeenCalled();
+      });
     });
   });
 
