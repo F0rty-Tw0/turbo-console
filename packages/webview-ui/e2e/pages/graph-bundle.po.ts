@@ -73,11 +73,6 @@ export class GraphBundle {
     await this.rows.getByRole('button', { name, exact: true }).click();
   }
 
-  /** Presses the lead's end button of the package `name`. */
-  public async pressPackageEnd(name: string): Promise<void> {
-    await this.lead.getByRole('button', { name, exact: true }).click();
-  }
-
   /** Presses the lead's end button of the collapsed folder `title`, which reads `Folder <title>`. */
   public async pressFolderEnd(title: string): Promise<void> {
     await this.lead.getByRole('button', { name: `Folder ${title}`, exact: true }).click();
