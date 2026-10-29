@@ -354,7 +354,7 @@ describe('FEATURE: shownNodeToolbarOf', () => {
       rows: [rectOf(100, 260, 400, 288)],
       expected: null
     }
-  ])('GIVEN one button WHEN the node is $title THEN the toolbar rect is $expected', ({ node, rows, expected }) => {
+  ])('GIVEN one button WHEN the node is $title THEN the toolbar rect is $expected', ({ node, rows, expected }): void => {
     expect(shownNodeToolbarOf(node, 1, rows, bounds)).toStrictEqual(expected);
   });
 });

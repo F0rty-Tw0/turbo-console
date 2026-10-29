@@ -109,11 +109,11 @@ const rigOf = (): WidgetsRig => {
 
 /** The task toolbars' roots on the layer. */
 const taskToolbarsOf = (rig: WidgetsRig): HTMLElement[] =>
-  rig.toolbars.map(({ root }) => root).filter((root) => root.isConnected && root.classList.contains('widget-toolbar-task'));
+  rig.toolbars.map(({ root }): HTMLElement => root).filter((root): boolean => root.isConnected);
 
 /** Opens the menu of the shown task toolbar's "…" and hands back its Stop item. */
 const stopItemOf = (rig: WidgetsRig): HTMLElement | undefined => {
-  const [toolbar] = rig.toolbars.filter(({ root }) => root.isConnected);
+  const [toolbar] = rig.toolbars.filter(({ root }): boolean => root.isConnected);
 
   toolbar?.ellipsis.click();
 
@@ -155,7 +155,7 @@ describe('FEATURE: GraphTaskWidgets', () => {
       expect(toolbar?.style.transform).toBe('translate(156px, 22px)');
     });
 
-    it('WHEN a#build is drawn left of the layer top THEN its toolbar flips below it', () => {
+    it('WHEN a#build is drawn near the layer top THEN its toolbar flips below it', () => {
       rig.view.widgetRects.mockReturnValue(rectsOf({ x1: 100, y1: 10, x2: 180, y2: 40 }));
       widgets.rendered();
 
