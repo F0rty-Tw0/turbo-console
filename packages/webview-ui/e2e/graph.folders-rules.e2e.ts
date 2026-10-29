@@ -129,11 +129,13 @@ test.describe('FEATURE: folder rules', () => {
       await test.step('WHEN the apps to utils link is tapped over the packages box, just below the packages header row', async (): Promise<void> =>
         graphWidgetInput.tapLinkBelowRow('apps', '@acme/utils', 'packages'));
 
-      await test.step('THEN nothing is selected, the bundle is inspected and the status line counts its link', async (): Promise<void> => {
-        await graphProbe.expectSelected(null);
-        await graphDetails.expectInspection(bundleInspection(collapsedIdOf('apps'), '@acme/utils'));
-        await graphPage.expectStatus('1 link: apps → @acme/utils');
-      });
+      await test.step('THEN nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
+
+      await test.step('AND the bundle is inspected', async (): Promise<void> =>
+        graphDetails.expectInspection(bundleInspection(collapsedIdOf('apps'), '@acme/utils')));
+
+      await test.step('AND the status line counts its link', async (): Promise<void> =>
+        graphPage.expectStatus('1 link: apps → @acme/utils'));
     }
   );
 });

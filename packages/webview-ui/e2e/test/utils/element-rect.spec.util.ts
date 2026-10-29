@@ -1,4 +1,11 @@
-import type { ElementRect } from '../../common/playwright.type.ts';
+import type { ElementRect, ViewportPoint } from '../../common/playwright.type.ts';
+
+/** A box of no size at `point`, so `isInside` asks whether the point lies in a rect. */
+export const pointBoxOf = (point: ViewportPoint): ElementRect => {
+  const box: ElementRect = { left: point.x, top: point.y, width: 0, height: 0 };
+
+  return box;
+};
 
 /** Runs in the page through `evaluate`, so it reads only its argument; a DOMRect serializes to `{}`, so the fields are copied. */
 export const readRect = (element: Element): ElementRect => {

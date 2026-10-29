@@ -28,13 +28,10 @@ test.describe('FEATURE: folder link bundle', () => {
     graphDetails,
     graphFolderInspect,
     graphFolders,
-    graphHost,
     graphPage
   }): Promise<void> => {
     await test.step('WHEN the boards open grouped with packages collapsed', async (): Promise<void> =>
-      graphPage.open({ savedState: SAVED }));
-
-    await test.step('AND the boards state is sent', async (): Promise<void> => graphHost.sendState(BOARDS));
+      graphFolderInspect.open(SAVED, BOARDS));
 
     await test.step('AND Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> =>
       graphPage.pressButton(FIT_LABEL));
@@ -61,14 +58,12 @@ test.describe('FEATURE: folder link bundle', () => {
   test('GIVEN packages collapsed, Explain on a bundle row opens that link and expands the folder', async ({
     graphBundle,
     graphDetails,
+    graphFolderInspect,
     graphFolders,
-    graphHost,
     graphPage
   }): Promise<void> => {
     await test.step('WHEN the boards open grouped with packages collapsed', async (): Promise<void> =>
-      graphPage.open({ savedState: SAVED }));
-
-    await test.step('AND the boards state is sent', async (): Promise<void> => graphHost.sendState(BOARDS));
+      graphFolderInspect.open(SAVED, BOARDS));
 
     await test.step('AND Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> =>
       graphPage.pressButton(FIT_LABEL));
@@ -93,13 +88,11 @@ test.describe('FEATURE: folder link bundle', () => {
   test('GIVEN packages collapsed, the folder end of a bundle selects the folder', async ({
     graphBundle,
     graphDetails,
-    graphHost,
+    graphFolderInspect,
     graphPage
   }): Promise<void> => {
     await test.step('WHEN the boards open grouped with packages collapsed', async (): Promise<void> =>
-      graphPage.open({ savedState: SAVED }));
-
-    await test.step('AND the boards state is sent', async (): Promise<void> => graphHost.sendState(BOARDS));
+      graphFolderInspect.open(SAVED, BOARDS));
 
     await test.step('AND Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> =>
       graphPage.pressButton(FIT_LABEL));
@@ -112,7 +105,7 @@ test.describe('FEATURE: folder link bundle', () => {
 
     await test.step('THEN the bundle is inspected', async (): Promise<void> => graphDetails.expectInspection(DOCS_INSPECTION));
 
-    await test.step('WHEN the packages end is pressed', async (): Promise<void> => graphBundle.pressEnd('packages'));
+    await test.step('WHEN the packages end is pressed', async (): Promise<void> => graphBundle.pressFolderEnd('packages'));
 
     await test.step('THEN the packages folder is inspected', async (): Promise<void> =>
       graphDetails.expectInspection(folderInspection('packages')));
@@ -121,13 +114,11 @@ test.describe('FEATURE: folder link bundle', () => {
   test('GIVEN packages collapsed, Escape on the canvas ends the bundle inspection', async ({
     graphBundle,
     graphDetails,
-    graphHost,
+    graphFolderInspect,
     graphPage
   }): Promise<void> => {
     await test.step('WHEN the boards open grouped with packages collapsed', async (): Promise<void> =>
-      graphPage.open({ savedState: SAVED }));
-
-    await test.step('AND the boards state is sent', async (): Promise<void> => graphHost.sendState(BOARDS));
+      graphFolderInspect.open(SAVED, BOARDS));
 
     await test.step('AND Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> =>
       graphPage.pressButton(FIT_LABEL));
@@ -142,9 +133,8 @@ test.describe('FEATURE: folder link bundle', () => {
 
     await test.step('WHEN Escape is pressed', async (): Promise<void> => graphPage.pressKey('Escape'));
 
-    await test.step('THEN nothing is inspected and the status line is empty', async (): Promise<void> => {
-      await graphDetails.expectInspection({ kind: 'none' });
-      await graphPage.expectStatus('');
-    });
+    await test.step('THEN nothing is inspected', async (): Promise<void> => graphDetails.expectInspection({ kind: 'none' }));
+
+    await test.step('AND the status line is empty', async (): Promise<void> => graphPage.expectStatus(''));
   });
 });

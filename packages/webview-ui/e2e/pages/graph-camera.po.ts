@@ -7,8 +7,8 @@ import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { Camera, WidthChange } from '../common/graph.type.ts';
-import type { ElementRect } from '../common/playwright.type.ts';
-import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
+import { isInside, pointBoxOf, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { isPanNear, isZoomNear } from '../test/utils/graph-camera.spec.util.ts';
 import { toggleControlsMeasured } from '../test/utils/graph-controls.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
@@ -18,9 +18,9 @@ const CENTRE_TOLERANCE_PX = 3;
 const WIDTH_TOLERANCE_PX = 1;
 
 const centreBoxOf = (node: ProbeNode): ElementRect => {
-  const box: ElementRect = { left: node.renderedX, top: node.renderedY, width: 0, height: 0 };
+  const centre: ViewportPoint = { x: node.renderedX, y: node.renderedY };
 
-  return box;
+  return pointBoxOf(centre);
 };
 
 /** What the camera shows: zoom and pan, which packages are visible, and where the container puts them. */

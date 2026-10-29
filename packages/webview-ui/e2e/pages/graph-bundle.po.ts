@@ -8,16 +8,13 @@ import { BUNDLE_HEADING_TEXT } from '../../src/graph/common/details.const.ts';
 import { DETAILS_LABEL, GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import { explainLabelOf } from '../../src/graph/utils/details-text.util.ts';
 import type { BundleViewFacts } from '../common/graph-folders.type.ts';
-import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
-import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+import type { LinkEnds } from '../common/playwright.type.ts';
+import { isInside, pointBoxOf, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { endCentreOf, linkPointOf } from '../test/utils/graph-folder-points.spec.util.ts';
 import { isHitWithin } from '../test/utils/graph-widgets.spec.util.ts';
 
-const boxOfPoint = (point: ViewportPoint): ElementRect => {
-  const box: ElementRect = { left: point.x, top: point.y, width: 0, height: 0 };
-
-  return box;
-};
+/** Half way from the source end to the target end: clear of both ends' nodes. */
+const LINK_MIDPOINT = 0.5;
 
 /** A tap on a folder link and the details panel's bundle view it opens. */
 export class GraphBundle {
@@ -55,17 +52,14 @@ export class GraphBundle {
   }
 
   /**
-   * Taps the link between two ends at `t` of the way from `source` to `target`, once the widget layer has settled, so a
-   * late relayout cannot move the link under the click. A collapsed end is named by its folder key.
+   * Taps the link between two ends half way from `source` to `target`, once the widget layer has settled, so a late
+   * relayout cannot move the link under the click. A collapsed end is named by its folder key.
    */
-  public async tapFolderLink(source: string, target: string, t = 0.5): Promise<void> {
+  public async tapFolderLink(source: string, target: string): Promise<void> {
     await this.widgets.expectLayerSettledOn(this.container);
 
-    const folders = await this.folders.folders();
-    const nodes = await this.probe.nodes();
-    const from = endCentreOf(source, folders, nodes);
-    const to = endCentreOf(target, folders, nodes);
-    const point = linkPointOf(from, to, t);
+    const { from, to } = await this.endPointsOf(source, target);
+    const point = linkPointOf(from, to, LINK_MIDPOINT);
     const isOnCanvas = await this.container.evaluate(isHitWithin, point);
 
     expect(isOnCanvas, `the tap point (${point.x.toFixed(1)}, ${point.y.toFixed(1)}) lies on a widget, not on the canvas`).toBe(true);
@@ -79,9 +73,14 @@ export class GraphBundle {
     await this.rows.getByRole('button', { name, exact: true }).click();
   }
 
-  /** Presses the lead's end button named `text`; not exact, so `Folder packages` matches `packages`. */
-  public async pressEnd(text: string): Promise<void> {
-    await this.lead.getByRole('button', { name: text }).click();
+  /** Presses the lead's end button of the package `name`. */
+  public async pressPackageEnd(name: string): Promise<void> {
+    await this.lead.getByRole('button', { name, exact: true }).click();
+  }
+
+  /** Presses the lead's end button of the collapsed folder `title`, which reads `Folder <title>`. */
+  public async pressFolderEnd(title: string): Promise<void> {
+    await this.lead.getByRole('button', { name: `Folder ${title}`, exact: true }).click();
   }
 
   /** The bundle view's heading, lead, count line and link rows, in order; a row is read from its text span, not the `li`, which ends in `Explain`. */
@@ -92,16 +91,21 @@ export class GraphBundle {
     await expect(this.texts).toHaveText(facts.rows);
   }
 
-  private async areEndsInView(source: string, target: string): Promise<boolean> {
-    const container = await this.container.evaluate(readRect);
+  private async endPointsOf(source: string, target: string): Promise<LinkEnds> {
     const folders = await this.folders.folders();
     const nodes = await this.probe.nodes();
     const from = endCentreOf(source, folders, nodes);
     const to = endCentreOf(target, folders, nodes);
-    const isEndInView = (point: ViewportPoint): boolean => isInside(boxOfPoint(point), container);
+    const ends: LinkEnds = { from, to };
 
-    const ends = [from, to];
+    return ends;
+  }
 
-    return ends.every(isEndInView);
+  private async areEndsInView(source: string, target: string): Promise<boolean> {
+    const container = await this.container.evaluate(readRect);
+    const { from, to } = await this.endPointsOf(source, target);
+    const boxes = [pointBoxOf(from), pointBoxOf(to)];
+
+    return boxes.every((box): boolean => isInside(box, container));
   }
 }

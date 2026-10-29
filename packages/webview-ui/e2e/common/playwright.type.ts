@@ -13,6 +13,12 @@ export type ViewportPoint = {
   readonly y: number;
 };
 
+/** Where the two ends of a link are drawn, as viewport points. */
+export type LinkEnds = {
+  readonly from: ViewportPoint;
+  readonly to: ViewportPoint;
+};
+
 /** A synthetic camera input at `point`: wheel lines to zoom by, or px to drag right by. */
 export type SyntheticMove = {
   readonly point: ViewportPoint;
