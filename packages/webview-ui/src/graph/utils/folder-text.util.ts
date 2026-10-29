@@ -75,9 +75,12 @@ export const bundleEndTextOf = (id: string): string => {
   return folderTitleOf(folder);
 };
 
+/** The canvas label, the count line and the summary of a folder link: how many package links it bundles. */
+export const folderLinkCountTextOf = (link: FolderLink): string => pluralOf(link.links.length, 'link', 'links');
+
 /** The Details bar and status line of a bundle; the count is the canvas label's. */
 export const bundleSummaryOf = (link: FolderLink): string => {
-  const links = pluralOf(link.links.length, 'link', 'links');
+  const links = folderLinkCountTextOf(link);
   const source = bundleEndTextOf(link.source);
   const target = bundleEndTextOf(link.target);
 

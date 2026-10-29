@@ -2,9 +2,8 @@ import { folderTitleOf } from './controls-text.util.ts';
 import { manifestFileOf } from './details-text.util.ts';
 import { folderOfElementId } from './folder-id.util.ts';
 import { folderLinkOf } from './folder-links.util.ts';
-import { bundleEndTextOf, folderCountsOf, folderPackagesTitleOf, folderSummaryOf } from './folder-text.util.ts';
+import { bundleEndTextOf, folderCountsOf, folderLinkCountTextOf, folderPackagesTitleOf, folderSummaryOf } from './folder-text.util.ts';
 import { neighboursOf } from './neighbours.util.ts';
-import { pluralOf } from './plural.util.ts';
 import type {
   BundleEndModel,
   BundleViewModel,
@@ -73,7 +72,7 @@ export const bundleModelOf = (source: string, target: string, context: DetailsCo
 
   if (link === null) return null;
 
-  const countText = pluralOf(link.links.length, 'link', 'links');
+  const countText = folderLinkCountTextOf(link);
   const model: BundleViewModel = { source: bundleEndOf(source), target: bundleEndOf(target), countText, links: link.links };
 
   return model;

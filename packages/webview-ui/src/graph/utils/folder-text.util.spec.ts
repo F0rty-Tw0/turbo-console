@@ -6,6 +6,7 @@ import {
   bundleEndTextOf,
   bundleSummaryOf,
   folderCountsOf,
+  folderLinkCountTextOf,
   folderPackagesTitleOf,
   folderStatusText,
   folderSummaryOf
@@ -151,6 +152,14 @@ describe('FEATURE: folder text', () => {
   });
 
   describe('GIVEN a folder scene with collapsed folders', () => {
+    it('WHEN the link counts of apps and packages collapsed are built THEN they read 2 links and 1 link', () => {
+      const scene = boardsSceneOf(['packages']);
+
+      const counts = scene.links.map(folderLinkCountTextOf);
+
+      expect(counts).toStrictEqual(['1 link', '2 links']);
+    });
+
     it.each([
       {
         title: 'packages collapsed',
