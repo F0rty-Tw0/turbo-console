@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import type * as vscode from 'vscode';
 
-import { treeDepsOf } from './tree-deps.ts';
+import { contextOf, treeDepsOf } from './tree-deps.ts';
 import type { Timings } from '../../shared/common/api.type.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
+import { UNKNOWN_FACTS } from '../common/icon-theme.const.ts';
+import type { IconThemeProbe } from '../common/icon-theme.type.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { TIMINGS_STUB } from '../test/stubs/timings.stub.ts';
@@ -74,6 +77,22 @@ describe('FEATURE: tree provider deps', () => {
       const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
 
       await expect(deps.setSinglePackage(true)).rejects.toBe(error);
+    });
+  });
+
+  describe('GIVEN an extension context, a scripts toggle and an icon theme probe', () => {
+    it('WHEN the tree context is built THEN it carries the subscriptions, the workspace state, the toggle and the probe', () => {
+      const subscriptions: vscode.Disposable[] = [];
+      const workspaceState: vscode.Memento = { get: vi.fn(), update: vi.fn(), keys: () => [] };
+      const scripts = scriptsToggleMock();
+      const iconTheme: IconThemeProbe = { facts: async () => Promise.resolve(UNKNOWN_FACTS), clear: vi.fn() };
+
+      const treeContext = contextOf({ subscriptions, workspaceState }, scripts, iconTheme);
+
+      expect(treeContext.subscriptions).toBe(subscriptions);
+      expect(treeContext.workspaceState).toBe(workspaceState);
+      expect(treeContext.scripts).toBe(scripts);
+      expect(treeContext.iconTheme).toBe(iconTheme);
     });
   });
 });

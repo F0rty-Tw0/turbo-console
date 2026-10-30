@@ -4,7 +4,9 @@ import type { Timings } from '../../shared/common/api.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { SharedAtoms } from '../common/atom-load.type.ts';
 import { HAS_SCRIPTS_KEY } from '../common/has-scripts.const.ts';
+import type { IconThemeProbe } from '../common/icon-theme.type.ts';
 import { SINGLE_PACKAGE_KEY } from '../common/single-package-key.const.ts';
+import type { TreeContext } from '../common/tree-context.type.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
 
 const setHasScripts = async (value: boolean): Promise<void> => {
@@ -38,4 +40,16 @@ export const treeDepsOf = (
   };
 
   return deps;
+};
+
+/** What `registerTree` reads of the extension context, with the scripts toggle and the icon theme's folder probe beside it. */
+export const contextOf = (
+  context: Pick<vscode.ExtensionContext, 'subscriptions' | 'workspaceState'>,
+  scripts: ScriptsToggleApi,
+  iconTheme: IconThemeProbe
+): TreeContext => {
+  const { subscriptions, workspaceState } = context;
+  const treeContext: TreeContext = { subscriptions, workspaceState, scripts, iconTheme };
+
+  return treeContext;
 };
