@@ -50,4 +50,27 @@ describe('FEATURE: workspace model phantom pass-through', () => {
       expect(model.rootPackage?.tasks).toStrictEqual([]);
     });
   });
+
+  describe('GIVEN a#self → a#p (phantom) → a#self', () => {
+    const self = graphTask('a#self', COMMAND, [], ['a#p']);
+    const phantom = graphTask('a#p', null, [], ['a#self']);
+    const pkg = graphPackage('a', 'packages/a', [], [self, phantom]);
+    const model = buildWorkspaceModel(packageGraph([pkg], []), [configOf({})], MODEL_SOURCE_STUB);
+
+    it('WHEN built THEN a#self does not depend on itself', () => {
+      expect(taskOf(model, 'a#self')?.dependencies).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN a#deploy → b#deploy (phantom) → //#fmt (a root task)', () => {
+    const fmt = graphTask('//#fmt', COMMAND, [], []);
+    const root = graphPackage('//', '', [], [fmt]);
+    const pkgA = graphPackage('a', 'packages/a', [], [graphTask('a#deploy', COMMAND, [], ['b#deploy'])]);
+    const pkgB = graphPackage('b', 'packages/b', [], [graphTask('b#deploy', null, [], ['//#fmt'])]);
+    const model = buildWorkspaceModel(packageGraph([pkgA, pkgB], [], root), [configOf({ '//#fmt': 'defined' })], MODEL_SOURCE_STUB);
+
+    it('WHEN built THEN a#deploy.dependencies is [//#fmt]', () => {
+      expect(taskOf(model, 'a#deploy')?.dependencies).toStrictEqual(['//#fmt']);
+    });
+  });
 });

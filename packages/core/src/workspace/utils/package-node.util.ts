@@ -46,7 +46,9 @@ export const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): 
   const toNode = (task: ClassifiedTask): TaskNode => {
     const description = descriptionOf(context.configs, path, task.id, task.name);
     const facts = factsOf(turboTasks, task.name);
-    const dependencies = dependenciesThroughOf(task.rawDependencies, context.phantoms, context.visibleIds);
+    const isOther = (id: string): boolean => id !== task.id;
+    const through = dependenciesThroughOf(task.rawDependencies, context.phantoms, context.visibleIds);
+    const dependencies = through.filter(isOther);
 
     return toTaskNode(task, dependencies, description, facts);
   };
