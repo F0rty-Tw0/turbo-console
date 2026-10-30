@@ -28,6 +28,8 @@ export type ClassifiedPackage = {
 
 export type ClassifyResult = {
   readonly packages: ClassifiedPackage[];
+  /** Every dropped phantom (a `task` with no command) by id, with its raw dependencies; carriers and hidden packages excluded. */
+  readonly phantoms: ReadonlyMap<string, string[]>;
   readonly warnings: string[];
 };
 
