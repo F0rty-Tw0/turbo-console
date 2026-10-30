@@ -1,3 +1,9 @@
+type RootTaskSpec = {
+  readonly name: string;
+  readonly command: string;
+  readonly dependsOn?: string[];
+};
+
 type AtomGroupsSpec = {
   readonly count: number;
   readonly filesPerGroup: number;
@@ -17,6 +23,8 @@ export type FixtureSpec = {
   readonly affectedUsingTaskInputs: boolean;
   /** Root task whose inputs add a JIT glob, so turbo 2.11.7 dry-runs report it with `hash: null`. */
   readonly nullHashTask?: string;
+  /** Root task: a `scripts.<name>` entry in the root package.json and a `//#<name>` task in the root turbo.json. No preset sets it. */
+  readonly rootTask?: RootTaskSpec;
 };
 
 type JitInput = {
