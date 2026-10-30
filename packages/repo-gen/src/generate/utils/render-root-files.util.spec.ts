@@ -69,4 +69,18 @@ describe('FEATURE: root file rendering', () => {
       });
     });
   });
+
+  describe('GIVEN a plan whose spec has the root task fmt', () => {
+    it('THEN package.json also holds scripts.fmt', () => {
+      const rootTask = { name: 'fmt', command: 'node -e 0' };
+      const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, rootTask };
+      const plan: FixturePlan = { spec, packages: [PACKAGE_PLAN_STUB], atomGroups: [] };
+
+      const file = renderRootFiles(plan).find((entry) => entry.path === 'package.json');
+
+      expect(file?.content).toBe(
+        '{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.11.2",\n  "scripts": {\n    "fmt": "node -e 0"\n  }\n}\n'
+      );
+    });
+  });
 });
