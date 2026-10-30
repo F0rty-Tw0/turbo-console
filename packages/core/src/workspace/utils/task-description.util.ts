@@ -47,6 +47,10 @@ export const descriptionOf = (
   return own ?? qualified ?? bare;
 };
 
+/** A monorepo root task takes only the root config's `//#<task>` description: turbo never applies a bare `<task>` key to `//`. */
+export const rootDescriptionOf = (configs: Map<string, TurboConfigOk>, id: string): string | null =>
+  ownDescription(configs.get('.'), id);
+
 /** `'task'` only for a parsed root config with `futureFlags.affectedUsingTaskInputs: true`. */
 export const affectedModeOf = (rootConfig: TurboConfigFile | null): AffectedMode => {
   if (rootConfig === null) return 'package';

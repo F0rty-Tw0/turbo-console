@@ -1,5 +1,5 @@
 import { dependenciesThroughOf } from './phantom-dependencies.util.ts';
-import { descriptionOf } from './task-description.util.ts';
+import { descriptionOf, rootDescriptionOf } from './task-description.util.ts';
 import { ROOT_NAME } from './turbo-task-lookup.util.ts';
 import { turboTasksOf } from './turbo-task.util.ts';
 import { compareText } from '../../shared/text/utils/compare-text.util.ts';
@@ -38,13 +38,21 @@ const toTaskNode = (
   return node;
 };
 
+/** Rule 5 for one task; a monorepo root's task reads the root's `//#<task>` key only. */
+const descriptionIn = (task: ClassifiedTask, path: string, context: PackageContext, isMonorepoRoot: boolean): string | null => {
+  if (isMonorepoRoot) return rootDescriptionOf(context.configs, task.id);
+
+  return descriptionOf(context.configs, path, task.id, task.name);
+};
+
 /** When the configs cannot tell which tasks turbo defines, every task counts as one, as before the check existed. */
 export const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): PackageNode => {
   const path = toPosixPath(pkg.path);
   const turboTasks = turboTasksOf(context.lookup, pkg);
-
+  const isRoot = pkg.name === ROOT_NAME;
+  const isMonorepoRoot = isRoot && !context.lookup.singlePackage;
   const toNode = (task: ClassifiedTask): TaskNode => {
-    const description = descriptionOf(context.configs, path, task.id, task.name);
+    const description = descriptionIn(task, path, context, isMonorepoRoot);
     const facts = factsOf(turboTasks, task.name);
     const isOther = (id: string): boolean => id !== task.id;
     const through = dependenciesThroughOf(task.rawDependencies, context.phantoms, context.visibleIds);
@@ -55,7 +63,7 @@ export const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): 
 
   const tasks = pkg.tasks.map(toNode).toSorted(byId);
   const tags = pkg.tags.toSorted();
-  const isLabelled = context.lookup.singlePackage && pkg.name === ROOT_NAME;
+  const isLabelled = isRoot && context.lookup.singlePackage;
   const label = isLabelled ? context.rootLabel : null;
   const node: PackageNode = { name: pkg.name, path, label, tags, tasks };
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildWorkspaceModel } from './workspace-model.util.ts';
 import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
-import type { TurboConfigFile } from '../common/turbo-config.type.ts';
+import type { TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
 import { MODEL_SOURCE_STUB } from '../test/stubs/model-source.stub.ts';
 import { configOf } from '../test/utils/config-ok.spec.util.ts';
@@ -25,6 +25,12 @@ const ROOT = graphPackage('//', '', ['root-tag'], [FMT, LINT]);
 const PKG_A = graphPackage('a', 'packages/a', [], [graphTask('a#build', COMMAND, [], ['//#fmt', '//#lint'])]);
 
 const PKG_B = graphPackage('b', 'packages/b', [], [graphTask('b#build', COMMAND, [], [])]);
+
+const describedConfig = (descriptions: Record<string, string>): TurboConfigOk => {
+  const config: TurboConfigOk = { ...ROOT_CONFIG, descriptions };
+
+  return config;
+};
 
 const build = (root: GraphPackage | null, configs: TurboConfigFile[]): WorkspaceModel => {
   const graph = packageGraph([PKG_A, PKG_B], [], root);
@@ -61,6 +67,26 @@ describe('FEATURE: workspace model root package', () => {
     });
   });
 
+  describe('GIVEN a monorepo whose root config describes the bare fmt and lint', () => {
+    const bareDescriptions = { fmt: 'Bare fmt', lint: 'Bare lint' };
+    const bare = describedConfig(bareDescriptions);
+
+    it('WHEN //#fmt has no //#fmt description THEN it has none: turbo never applies a bare key to //', () => {
+      const model = build(ROOT, [bare]);
+
+      expect(model.rootPackage?.tasks[0]?.description).toBeNull();
+    });
+
+    it('WHEN the config also describes //#fmt THEN that description is used', () => {
+      const qualifiedDescriptions = { ...bareDescriptions, '//#fmt': 'Root fmt' };
+      const qualified = describedConfig(qualifiedDescriptions);
+
+      const model = build(ROOT, [qualified]);
+
+      expect(model.rootPackage?.tasks[0]?.description).toBe('Root fmt');
+    });
+  });
+
   describe('GIVEN a monorepo whose root config cannot be read', () => {
     it('WHEN built THEN rootPackage.tasks is empty', () => {
       const model = build(ROOT, []);
@@ -87,6 +113,18 @@ describe('FEATURE: workspace model root package', () => {
 
     it('WHEN built THEN // is packages[0]', () => {
       expect(model.packages[0]?.name).toBe('//');
+    });
+  });
+
+  describe('GIVEN a single-package source whose config describes the bare lint', () => {
+    const graph = packageGraph([ROOT], [], ROOT);
+    const base = configOf({ lint: 'defined' });
+    const descriptions = { lint: 'Bare lint' };
+    const config: TurboConfigOk = { ...base, descriptions };
+    const model = buildWorkspaceModel(graph, [config], SINGLE_SOURCE);
+
+    it('WHEN built THEN //#lint takes the bare description', () => {
+      expect(taskOf(model, '//#lint')?.description).toBe('Bare lint');
     });
   });
 });
