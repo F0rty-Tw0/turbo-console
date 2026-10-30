@@ -82,7 +82,7 @@ export type ProbeFolderLink = {
   /** Cytoscape's `visible()`. */
   readonly isDrawn: boolean;
   readonly state: ProbeState;
-  /** The `<n> links` label's box, background included; all 0 while the link is not drawn. */
+  /** The `<n> links` label's box, background included; width and height 0 while the link is not drawn (left and top then equal the container origin). */
   readonly labelBox: ProbeRect;
 };
 
