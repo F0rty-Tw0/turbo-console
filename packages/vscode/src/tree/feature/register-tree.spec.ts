@@ -6,9 +6,10 @@ import { registerTree } from './register-tree.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import type { Output } from '../../shared/common/output.type.ts';
+import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
-import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
+import type { TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
@@ -20,32 +21,6 @@ type TreeViewFake = {
   readonly onDidChangeVisibility: Mock<() => Disposable>;
   readonly dispose: Mock<() => void>;
 };
-
-const SCOPE_KEY = 'turboConsole.scopeShown';
-
-/** One macrotask: every spy reached before it has run to its first await. */
-const flush = async (): Promise<void> => {
-  await new Promise((resolve) => {
-    setTimeout(resolve, 0);
-  });
-};
-
-type Gate = {
-  readonly promise: Promise<void>;
-  readonly open: () => void;
-};
-
-const gateOf = (): Gate => {
-  let open: () => void = () => undefined;
-  const promise = new Promise<void>((resolve) => {
-    open = resolve;
-  });
-  const gate: Gate = { promise, open };
-
-  return gate;
-};
-
-const firstOrderOf = (spy: Mock): number => spy.mock.invocationCallOrder.at(0) ?? Number.POSITIVE_INFINITY;
 
 const disposableFake = (): Disposable => {
   const disposable: Disposable = { dispose: vi.fn() };
@@ -84,10 +59,9 @@ vi.mock('./icons-setting.ts', () => {
 describe('FEATURE: registerTree scope toggle', () => {
   let calls: string[];
   let disposed: string[];
-  let updateGates: Promise<void>[];
-  let stored: Map<string, unknown>;
   let commands: Map<string, CommandCallback>;
   let tree: PackagesTreeApi;
+  let scope: ScriptsToggleFake;
   let context: TreeContext;
   let session: Session;
   let output: Output;
@@ -100,28 +74,28 @@ describe('FEATURE: registerTree scope toggle', () => {
     await commands.get(name)?.();
   };
 
+  const contextWith = (toggle: ScriptsToggleFake): TreeContext => {
+    const treeContext: TreeContext = {
+      subscriptions: [],
+      scope: toggle,
+      scripts: scriptsToggleMock(),
+      iconTheme: iconThemeProbeMock()
+    };
+
+    return treeContext;
+  };
+
   beforeEach(() => {
     calls = [];
     disposed = [];
-    updateGates = [];
-    stored = new Map();
     commands = new Map();
     tree = packagesTreeApiMock();
     vi.mocked(tree.setScopeShown).mockImplementation((value) => {
       calls.push(`setScopeShown:${String(value)}`);
     });
 
-    const workspaceState: ScopeStore = {
-      get: (key) => stored.get(key),
-      update: async (key, value) => {
-        await updateGates.shift();
-        await flush();
-        calls.push(`update:${String(value)}`);
-        stored.set(key, value);
-      }
-    };
-
-    context = { subscriptions: [], workspaceState, scripts: scriptsToggleMock(), iconTheme: iconThemeProbeMock() };
+    scope = scriptsToggleMock();
+    context = contextWith(scope);
     session = {
       store: new RootStore(),
       setWorkspaceFolders: vi.fn(async () => Promise.resolve([])),
@@ -155,58 +129,88 @@ describe('FEATURE: registerTree scope toggle', () => {
 
       return registration;
     });
-    editor.executeCommand.mockImplementation(async (command, key, value) => {
-      await Promise.resolve();
-      calls.push(`${command}:${key}:${String(value)}`);
-    });
+    editor.executeCommand.mockResolvedValue(undefined);
     editor.onDidChangeConfiguration.mockImplementation(disposableFake);
   });
 
-  describe.each([
-    { given: 'an empty workspaceState', stored: undefined, expected: false },
-    { given: 'a stored scopeShown of false', stored: false, expected: false },
-    { given: 'a stored scopeShown of true', stored: true, expected: true }
-  ])('GIVEN $given', ({ stored: value, expected }) => {
+  describe.each([[false], [true]])('GIVEN a scope toggle that starts %s', (shown) => {
     beforeEach(() => {
-      if (value !== undefined) stored.set(SCOPE_KEY, value);
-
-      registerWith();
+      scope = scriptsToggleMock(shown);
+      context = contextWith(scope);
     });
 
     it('WHEN the tree registers THEN the tree gets the choice before the view is created', () => {
-      expect(calls.slice(0, 2)).toStrictEqual([`setScopeShown:${String(expected)}`, 'createTreeView']);
-    });
+      registerWith();
 
-    it('WHEN the tree registers THEN the key is sent before the view is created', () => {
-      expect(editor.executeCommand).toHaveBeenCalledWith('setContext', SCOPE_KEY, expected);
-      expect(firstOrderOf(editor.executeCommand)).toBeLessThan(firstOrderOf(editor.createTreeView));
+      expect(calls.slice(0, 2)).toStrictEqual([`setScopeShown:${String(shown)}`, 'createTreeView']);
     });
   });
 
-  describe('GIVEN the editor rejects the startup key', () => {
-    it('WHEN the tree registers THEN the failure is logged', async () => {
-      editor.executeCommand.mockRejectedValueOnce(new Error('boom'));
-
+  describe('GIVEN a registered tree with scopes hidden', () => {
+    beforeEach(() => {
       registerWith();
+      calls.length = 0;
+    });
 
-      await vi.waitFor(() => {
-        expect(output.error).toHaveBeenCalledWith(expect.stringContaining('boom'));
+    it('WHEN showScope runs THEN scope.set(true) is called once', async () => {
+      await invoke('turboConsole.showScope');
+
+      expect(scope.set).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
+    it('WHEN showScope runs THEN nothing else writes the key', async () => {
+      await invoke('turboConsole.showScope');
+
+      expect(editor.executeCommand).not.toHaveBeenCalled();
+    });
+
+    it('WHEN showScope runs THEN the tree follows the toggle once', async () => {
+      await invoke('turboConsole.showScope');
+
+      expect(calls).toStrictEqual(['setScopeShown:true']);
+    });
+
+    it('WHEN hideScope runs on shown scopes THEN scope.set(false) is called once', async () => {
+      await scope.set(true);
+      scope.set.mockClear();
+
+      await invoke('turboConsole.hideScope');
+
+      expect(scope.set).toHaveBeenCalledExactlyOnceWith(false);
+    });
+
+    it('WHEN the scope toggle changes after register THEN the tree follows with the new value', async () => {
+      await scope.set(true);
+
+      expect(calls.at(-1)).toBe('setScopeShown:true');
+    });
+
+    it('WHEN scope.set rejects THEN the command rejects with it and adds no log', async () => {
+      scope.set.mockRejectedValueOnce(new Error('refused'));
+
+      await expect(invoke('turboConsole.showScope')).rejects.toThrow('refused');
+      expect(output.error).not.toHaveBeenCalled();
+    });
+
+    describe('WHEN the subscriptions are disposed', () => {
+      beforeEach(() => {
+        for (const subscription of context.subscriptions) subscription.dispose();
       });
-    });
-  });
 
-  describe('GIVEN a registered tree', () => {
-    it('WHEN the subscriptions are disposed THEN both scope commands are unregistered', () => {
-      registerWith();
+      it('THEN both scope commands are unregistered', () => {
+        expect(disposed).toStrictEqual(expect.arrayContaining(['turboConsole.showScope', 'turboConsole.hideScope']));
+      });
 
-      for (const subscription of context.subscriptions) subscription.dispose();
+      it('THEN the tree no longer follows the toggle', async () => {
+        calls.length = 0;
+        await scope.set(true);
 
-      expect(disposed).toStrictEqual(expect.arrayContaining(['turboConsole.showScope', 'turboConsole.hideScope']));
+        expect(calls).toStrictEqual([]);
+      });
     });
 
     describe('WHEN Refresh is invoked', () => {
       beforeEach(async () => {
-        registerWith();
         await invoke('turboConsole.refresh');
       });
 
@@ -217,74 +221,6 @@ describe('FEATURE: registerTree scope toggle', () => {
       it('THEN the tree reloads its Atomizer groups once', () => {
         expect(tree.refreshAtoms).toHaveBeenCalledOnce();
       });
-    });
-  });
-
-  describe('GIVEN a registered tree with scopes hidden', () => {
-    beforeEach(async () => {
-      registerWith();
-      await flush();
-      calls.length = 0;
-    });
-
-    it('WHEN showScope runs THEN it stores true, sets the key, then shows scopes once', async () => {
-      await invoke('turboConsole.showScope');
-
-      expect(calls).toStrictEqual(['update:true', `setContext:${SCOPE_KEY}:true`, 'setScopeShown:true']);
-      expect(stored.get(SCOPE_KEY)).toBe(true);
-    });
-
-    it('WHEN hideScope runs THEN it stores false, sets the key, then hides scopes once', async () => {
-      await invoke('turboConsole.hideScope');
-
-      expect(calls).toStrictEqual(['update:false', `setContext:${SCOPE_KEY}:false`, 'setScopeShown:false']);
-      expect(stored.get(SCOPE_KEY)).toBe(false);
-    });
-
-    it('WHEN the key cannot be set THEN the value stays stored, the tree is unchanged and the command rejects', async () => {
-      editor.executeCommand.mockRejectedValueOnce(new Error('refused'));
-
-      await expect(invoke('turboConsole.showScope')).rejects.toThrow('refused');
-
-      expect(stored.get(SCOPE_KEY)).toBe(true);
-      expect(calls).toStrictEqual(['update:true']);
-    });
-
-    it('WHEN a toggle fails THEN the failure is logged and the command still rejects', async () => {
-      editor.executeCommand.mockRejectedValueOnce(new Error('refused'));
-
-      await expect(invoke('turboConsole.showScope')).rejects.toThrow('refused');
-
-      expect(output.error).toHaveBeenCalledWith(expect.stringContaining('refused'));
-    });
-
-    it('WHEN showScope fails THEN the next command still runs', async () => {
-      editor.executeCommand.mockRejectedValueOnce(new Error('refused'));
-
-      await expect(invoke('turboConsole.showScope')).rejects.toThrow('refused');
-      await invoke('turboConsole.hideScope');
-
-      expect(stored.get(SCOPE_KEY)).toBe(false);
-      expect(calls.at(-1)).toBe('setScopeShown:false');
-    });
-
-    it('WHEN showScope is still storing and hideScope is invoked THEN the last command decides the final state', async () => {
-      const firstStore = gateOf();
-      const settledKeys = (): string[] => calls.filter((call) => call.startsWith('setContext'));
-
-      updateGates.push(firstStore.promise);
-
-      const showing = invoke('turboConsole.showScope');
-      const hiding = invoke('turboConsole.hideScope');
-
-      await flush();
-      await flush();
-      firstStore.open();
-      await Promise.all([showing, hiding]);
-
-      expect(stored.get(SCOPE_KEY)).toBe(false);
-      expect(settledKeys().at(-1)).toBe(`setContext:${SCOPE_KEY}:false`);
-      expect(calls.at(-1)).toBe('setScopeShown:false');
     });
   });
 });

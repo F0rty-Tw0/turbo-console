@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { currentIconsSetting, watchIcons } from './icons-setting.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import type { Output } from '../../shared/common/output.type.ts';
-import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import { NO_FILE_NAMES } from '../common/icon-theme.const.ts';
 import type { SettingLevel } from '../common/setting.type.ts';
 import type { TreeContext } from '../common/tree-context.type.ts';
@@ -15,7 +15,6 @@ import { settingLevelOf } from '../utils/setting-level.util.ts';
 import { treeModeOf } from '../utils/tree-mode.util.ts';
 
 const SECTION = 'turboConsole';
-const SCOPE_KEY = 'turboConsole.scopeShown';
 
 /** The `turboConsole.treeMode` setting now. */
 export const currentTreeMode = (): TreeMode => {
@@ -61,70 +60,36 @@ const onSettings = (event: vscode.ConfigurationChangeEvent, tree: PackagesTreeAp
   if (isPathChanged) session.request('setting');
 };
 
-const writeScopeShown = async (context: TreeContext, tree: PackagesTreeApi, value: boolean): Promise<void> => {
-  await context.workspaceState.update(SCOPE_KEY, value);
-  await vscode.commands.executeCommand('setContext', SCOPE_KEY, value);
-  tree.setScopeShown(value);
-};
-
 /**
- * The scope toggle (spec §4.8): restores the stored choice into the tree and the context key, then registers the two
- * view-title commands. The key is sent before `turboConsole.active` makes the view visible, so the view first draws with it
- * set and the title icon never shows the wrong state. A rejected send goes to the output channel. The commands write one
- * after another, so two clicks in flight cannot leave `workspaceState` and the tree on different choices. A write that
- * fails midway can: `workspaceState` keeps the value while the tree and the key keep the old one until the next toggle.
+ * A toggle's two view-title commands (spec §4.8, 1c-b). The toggle already restored the stored choice and sent its context
+ * key when it was built, before the view is visible, so the title icon never shows the wrong state; the commands only write
+ * through it. A rejected write reaches the caller; the toggle has logged it.
  */
-const registerScopeToggle = (context: TreeContext, tree: PackagesTreeApi, output: Output): vscode.Disposable => {
-  const stored = context.workspaceState.get(SCOPE_KEY) === true;
-
-  tree.setScopeShown(stored);
-  const setKey = vscode.commands.executeCommand('setContext', SCOPE_KEY, stored);
-
-  setKey.then(undefined, (error: unknown) => {
-    output.error(logTextOf(error));
-  });
-
-  let last: Promise<void> = Promise.resolve();
-  const logAndRethrow = (error: unknown): never => {
-    output.error(logTextOf(error));
-
-    throw error;
-  };
-  const queueWrite = async (value: boolean): Promise<void> => {
-    const run = last.then(async () => writeScopeShown(context, tree, value)).catch(logAndRethrow);
-
-    last = run.catch(() => undefined);
-
-    return run;
-  };
-  const showScope = vscode.commands.registerCommand('turboConsole.showScope', async () => queueWrite(true));
-  const hideScope = vscode.commands.registerCommand('turboConsole.hideScope', async () => queueWrite(false));
-  const toggle: vscode.Disposable = {
+const registerToggle = (toggle: ScriptsToggleApi, showId: string, hideId: string): vscode.Disposable => {
+  const show = vscode.commands.registerCommand(showId, async () => toggle.set(true));
+  const hide = vscode.commands.registerCommand(hideId, async () => toggle.set(false));
+  const registration: vscode.Disposable = {
     dispose: () => {
-      showScope.dispose();
-      hideScope.dispose();
+      show.dispose();
+      hide.dispose();
     }
   };
 
-  return toggle;
+  return registration;
 };
 
-/**
- * The scripts toggle's two view-title commands (spec 1c-b). `ScriptsToggle` already restored the stored choice and sent the
- * key when it was built, before the tree was; the commands only write through it, and the tree redraws on its change.
- */
-const registerScriptsToggle = (context: TreeContext): vscode.Disposable => {
-  const { scripts } = context;
-  const showScripts = vscode.commands.registerCommand('turboConsole.showScripts', async () => scripts.set(true));
-  const hideScripts = vscode.commands.registerCommand('turboConsole.hideScripts', async () => scripts.set(false));
-  const toggle: vscode.Disposable = {
-    dispose: () => {
-      showScripts.dispose();
-      hideScripts.dispose();
-    }
+/** Gives the tree the scope choice now, so its first draw keeps the stored one, and again on every change of the toggle. */
+const followScope = (scope: ScriptsToggleApi, tree: PackagesTreeApi): vscode.Disposable => {
+  const follow = (): void => {
+    tree.setScopeShown(scope.isShown());
   };
 
-  return toggle;
+  follow();
+
+  const unsubscribe = scope.onDidChange(follow);
+  const following: vscode.Disposable = { dispose: unsubscribe };
+
+  return following;
 };
 
 /**
@@ -133,8 +98,9 @@ const registerScriptsToggle = (context: TreeContext): vscode.Disposable => {
  * `TreeVisibility`.
  */
 export const registerTree = (context: TreeContext, session: Session, tree: PackagesTreeApi, output: Output): VisibleView => {
-  const scope = registerScopeToggle(context, tree, output);
-  const scripts = registerScriptsToggle(context);
+  const following = followScope(context.scope, tree);
+  const scope = registerToggle(context.scope, 'turboConsole.showScope', 'turboConsole.hideScope');
+  const scripts = registerToggle(context.scripts, 'turboConsole.showScripts', 'turboConsole.hideScripts');
   const view = vscode.window.createTreeView('turboConsole.tree', { treeDataProvider: tree, showCollapseAll: true });
   const unsubscribe = session.store.onDidChange((change) => {
     tree.refreshFor(change);
@@ -165,6 +131,7 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
     showFolders,
     showList,
     showOutput,
+    following,
     scope,
     scripts,
     settings

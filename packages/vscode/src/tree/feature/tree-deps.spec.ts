@@ -80,17 +80,17 @@ describe('FEATURE: tree provider deps', () => {
     });
   });
 
-  describe('GIVEN an extension context, a scripts toggle and an icon theme probe', () => {
-    it('WHEN the tree context is built THEN it carries the subscriptions, the workspace state, the toggle and the probe', () => {
+  describe('GIVEN an extension context, the scope and scripts toggles and an icon theme probe', () => {
+    it('WHEN the tree context is built THEN it carries the subscriptions, both toggles and the probe', () => {
       const subscriptions: vscode.Disposable[] = [];
-      const workspaceState: vscode.Memento = { get: vi.fn(), update: vi.fn(), keys: () => [] };
+      const scope = scriptsToggleMock();
       const scripts = scriptsToggleMock();
       const iconTheme: IconThemeProbe = { facts: async () => Promise.resolve(UNKNOWN_FACTS), clear: vi.fn() };
 
-      const treeContext = contextOf({ subscriptions, workspaceState }, scripts, iconTheme);
+      const treeContext = contextOf({ subscriptions }, { scope, scripts }, iconTheme);
 
       expect(treeContext.subscriptions).toBe(subscriptions);
-      expect(treeContext.workspaceState).toBe(workspaceState);
+      expect(treeContext.scope).toBe(scope);
       expect(treeContext.scripts).toBe(scripts);
       expect(treeContext.iconTheme).toBe(iconTheme);
     });

@@ -42,14 +42,15 @@ export const treeDepsOf = (
   return deps;
 };
 
-/** What `registerTree` reads of the extension context, with the scripts toggle and the icon theme's folder probe beside it. */
+/** What `registerTree` reads of the extension context, with the scope and scripts toggles and the icon theme's folder probe beside it. */
 export const contextOf = (
-  context: Pick<vscode.ExtensionContext, 'subscriptions' | 'workspaceState'>,
-  scripts: ScriptsToggleApi,
+  context: Pick<vscode.ExtensionContext, 'subscriptions'>,
+  toggles: Pick<TreeContext, 'scope' | 'scripts'>,
   iconTheme: IconThemeProbe
 ): TreeContext => {
-  const { subscriptions, workspaceState } = context;
-  const treeContext: TreeContext = { subscriptions, workspaceState, scripts, iconTheme };
+  const { subscriptions } = context;
+  const { scope, scripts } = toggles;
+  const treeContext: TreeContext = { subscriptions, scope, scripts, iconTheme };
 
   return treeContext;
 };
