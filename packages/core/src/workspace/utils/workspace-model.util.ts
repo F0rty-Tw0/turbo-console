@@ -1,13 +1,14 @@
 import { classifyPackages } from './classify-tasks.util.ts';
 import { toPackageNode } from './package-node.util.ts';
 import { affectedModeOf, okConfigsByDir } from './task-description.util.ts';
-import { turboTaskLookupOf } from './turbo-task.util.ts';
+import { turboTaskLookupOf, turboTasksOf } from './turbo-task.util.ts';
 import { plainLine } from '../../shared/errors/utils/plain-text.util.ts';
 import { compareText } from '../../shared/text/utils/compare-text.util.ts';
-import type { PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
-import type { TurboConfigFile } from '../common/turbo-config.type.ts';
+import type { GraphPackage, PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
+import type { TurboConfigFile, TurboTaskLookup } from '../common/turbo-config.type.ts';
 import type {
   ClassifiedPackage,
+  ClassifiedTask,
   ModelSource,
   PackageContext,
   PackageEdge,
@@ -77,18 +78,53 @@ const listedWarnings = (classifiedWarnings: string[], configs: TurboConfigFile[]
   return [...classifiedWarnings, ...fileWarnings];
 };
 
+/**
+ * The root's `//#<name>` turbo tasks as a classified package. `null` for a single-package repo (`//` is a node there),
+ * a graph with no root, or a root hidden by its tags. When the configs cannot tell, no script counts as a turbo task.
+ */
+const keptRootOf = (root: GraphPackage | null, lookup: TurboTaskLookup): ClassifiedPackage | null => {
+  if (root === null || lookup.singlePackage) return null;
+
+  const [classifiedRoot] = classifyPackages([root]).packages;
+
+  if (classifiedRoot === undefined) return null;
+
+  const turboTasks = turboTasksOf(lookup, classifiedRoot);
+  const isKept = (task: ClassifiedTask): boolean => turboTasks?.has(task.name) ?? false;
+  const tasks = classifiedRoot.tasks.filter(isKept);
+  const kept: ClassifiedPackage = { ...classifiedRoot, tasks };
+
+  return kept;
+};
+
+const rootIdsOf = (kept: ClassifiedPackage | null): string[] => {
+  if (kept === null) return [];
+
+  return taskIdsOf(kept);
+};
+
+const rootNodeOf = (kept: ClassifiedPackage | null, context: PackageContext): PackageNode | null => {
+  if (kept === null) return null;
+
+  return toPackageNode(kept, context);
+};
+
 /** Spec §4.4 rules 1–6: one deterministic model from one `packageGraph` and the configs read for it. */
 export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFile[], source: ModelSource): WorkspaceModel => {
   const { root, turboVersion, packageManager, singlePackage, rootLabel } = source;
   const { nodes, edges: graphEdges } = graph.data.packageGraph;
   const classified = classifyPackages(nodes.items);
-  const visibleIds = new Set(classified.packages.flatMap(taskIdsOf));
-  const visibleNames = new Set(classified.packages.map((pkg) => pkg.name));
   const byDir = okConfigsByDir(configs);
   const lookup = turboTaskLookupOf(configs, nodes.items, singlePackage);
+  const keptRoot = keptRootOf(graph.data.root, lookup);
+  const packageIds = classified.packages.flatMap(taskIdsOf);
+  const rootIds = rootIdsOf(keptRoot);
+  const visibleIds = new Set([...packageIds, ...rootIds]);
+  const visibleNames = new Set(classified.packages.map((pkg) => pkg.name));
   const context: PackageContext = { visibleIds, configs: byDir, lookup, rootLabel };
   const toNode = (pkg: ClassifiedPackage): PackageNode => toPackageNode(pkg, context);
   const packages = classified.packages.map(toNode).toSorted(byName);
+  const rootPackage = rootNodeOf(keptRoot, context);
   const isVisibleEdge = (edge: GraphEdge): boolean => visibleNames.has(edge.source) && visibleNames.has(edge.target);
   const edges = graphEdges.items.filter(isVisibleEdge).map(toEdge).toSorted(byEdge);
   const listed = listedWarnings(classified.warnings, configs);
@@ -102,6 +138,7 @@ export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFil
     affectedMode,
     singlePackage,
     packages,
+    rootPackage,
     edges,
     warnings
   };

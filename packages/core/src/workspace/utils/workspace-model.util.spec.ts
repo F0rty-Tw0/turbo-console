@@ -85,6 +85,7 @@ describe('FEATURE: workspace model build', () => {
         affectedMode: 'package',
         singlePackage: false,
         packages: [pkg],
+        rootPackage: null,
         edges: [],
         warnings: []
       };

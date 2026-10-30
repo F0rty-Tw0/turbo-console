@@ -73,6 +73,7 @@ const workspaceModelObject = object({
   affectedMode: affectedModeSchema,
   singlePackage: boolean(),
   packages: packageList,
+  rootPackage: nullable(packageSchema),
   edges: edgeList,
   warnings: stringList
 });

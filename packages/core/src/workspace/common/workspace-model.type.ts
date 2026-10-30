@@ -112,6 +112,11 @@ export type WorkspaceModel = {
   /** `true` when the `//` package is the only package (spec §1): a repo with no declared workspaces. */
   readonly singlePackage: boolean;
   readonly packages: PackageNode[];
+  /**
+   * The monorepo root `//` with only its `//#<name>` turbo tasks; `null` for a single-package repo (`//` is then
+   * `packages[0]`) or a graph with no root. Kept apart from `packages`, which feeds the tree and the run picker.
+   */
+  readonly rootPackage: PackageNode | null;
   readonly edges: PackageEdge[];
   readonly warnings: string[];
 };
