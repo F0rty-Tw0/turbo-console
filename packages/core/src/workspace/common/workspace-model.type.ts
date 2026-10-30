@@ -1,3 +1,5 @@
+import type { TurboConfigOk, TurboTaskLookup } from './turbo-config.type.ts';
+
 export type TaskNodeKind = 'atom-aggregate' | 'atom-file' | 'atom-umbrella' | 'task';
 
 /** Set for the three atom kinds: the Atomizer group, and whether the file task is live. */
@@ -60,6 +62,14 @@ export type PackageNode = {
   readonly label: string | null;
   readonly tags: string[];
   readonly tasks: TaskNode[];
+};
+
+/** What every package node reads besides its own package. */
+export type PackageContext = {
+  readonly visibleIds: Set<string>;
+  readonly configs: Map<string, TurboConfigOk>;
+  readonly lookup: TurboTaskLookup;
+  readonly rootLabel: string | null;
 };
 
 /** A turbo package edge between two visible packages; `kind` is turbo's `kind.kind`, verbatim. */
