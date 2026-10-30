@@ -74,9 +74,11 @@ const TASK_MODE_ROOT: TurboConfigOk = {
   affectedUsingTaskInputs: true
 };
 
+const MONOREPO_DESCRIPTIONS = { fmt: 'Bare', '//#fmt': 'Root' };
+
 const MONOREPO_ROOT: TurboConfigOk = {
   path: 'turbo.json',
-  descriptions: { fmt: 'Bare', '//#fmt': 'Root' },
+  descriptions: MONOREPO_DESCRIPTIONS,
   tasks: {},
   persistent: {},
   extends: [],
