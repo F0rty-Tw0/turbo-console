@@ -18,7 +18,7 @@ export class ScriptsToggle implements ScriptsToggleApi {
     this.ports = ports;
     this.shown = ports.store.get(SCRIPTS_KEY) === true;
 
-    ports.setKey(this.shown).then(undefined, (error: unknown) => {
+    ports.setKey(SCRIPTS_KEY, this.shown).then(undefined, (error: unknown) => {
       ports.log(logTextOf(error));
     });
   }
@@ -50,7 +50,7 @@ export class ScriptsToggle implements ScriptsToggleApi {
   /** Stores and sends the key even for an unchanged choice, which mends a write that failed midway; fires only on a change. */
   private async write(value: boolean): Promise<void> {
     await this.ports.store.update(SCRIPTS_KEY, value);
-    await this.ports.setKey(value);
+    await this.ports.setKey(SCRIPTS_KEY, value);
 
     const isChange = value !== this.shown;
 

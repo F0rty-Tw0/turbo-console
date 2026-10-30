@@ -178,7 +178,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
 
   describe('GIVEN a stored scriptsShown of true', () => {
     it('WHEN the first getChildren runs THEN the context key was sent before it', async () => {
-      const setKey: Mock<(value: boolean) => Promise<void>> = vi.fn(async () => Promise.resolve());
+      const setKey: Mock<(key: string, value: boolean) => Promise<void>> = vi.fn(async () => Promise.resolve());
       const store: ToggleStore = { get: (): unknown => true, update: async (): Promise<void> => Promise.resolve() };
       const toggle = new ScriptsToggle({ store, setKey, log: output.error });
 
@@ -189,7 +189,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
       registerWith();
       await provider.getChildren();
 
-      expect(setKey.mock.calls).toStrictEqual([[true]]);
+      expect(setKey.mock.calls).toStrictEqual([['turboConsole.scriptsShown', true]]);
       expect(setKey.mock.invocationCallOrder[0]).toBeLessThan(children.mock.invocationCallOrder[0] ?? 0);
     });
   });

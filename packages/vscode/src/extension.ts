@@ -21,7 +21,7 @@ import type { RunCommandsUi, Timings, TimingsStart, TurboConsoleApi } from './sh
 import type { Output } from './shared/common/output.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
-import { editorScriptsTogglePorts } from './shared/data-access/scripts-toggle-ports.ts';
+import { editorTogglePorts } from './shared/data-access/scripts-toggle-ports.ts';
 import { ScriptsToggle } from './shared/domain-logic/scripts-toggle.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
@@ -125,7 +125,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const output = createOutput();
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
-  const scripts = new ScriptsToggle(editorScriptsTogglePorts(context.workspaceState, output));
+  const scripts = new ScriptsToggle(editorTogglePorts(context.workspaceState, output));
   const atoms = sharedAtomsOf(session.store, editorAtomPorts(session.store, output));
   const treeDeps = treeDepsOf(runSession.runs, timings, scripts, atoms, output.error);
   const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDeps);

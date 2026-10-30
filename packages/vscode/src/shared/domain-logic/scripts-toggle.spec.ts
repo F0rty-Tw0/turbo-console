@@ -52,7 +52,7 @@ describe('FEATURE: ScriptsToggle', () => {
     stored = new Map();
     updateGates = [];
     updateFailures = [];
-    setKey = vi.fn(async (value: boolean): Promise<void> => {
+    setKey = vi.fn(async (_key: string, value: boolean): Promise<void> => {
       await flush();
       calls.push(`setKey:${String(value)}`);
     });
@@ -96,7 +96,7 @@ describe('FEATURE: ScriptsToggle', () => {
     it('WHEN the toggle is built THEN the key is sent once with the choice', () => {
       toggleOf();
 
-      expect(setKey.mock.calls).toStrictEqual([[expected]]);
+      expect(setKey.mock.calls).toStrictEqual([[KEY, expected]]);
     });
   });
 
