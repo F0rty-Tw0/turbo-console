@@ -9,6 +9,7 @@ import type { TurboConfigFile, TurboTaskLookup } from '../common/turbo-config.ty
 import type {
   ClassifiedPackage,
   ClassifiedTask,
+  ClassifyResult,
   ModelSource,
   PackageContext,
   PackageEdge,
@@ -78,14 +79,19 @@ const listedWarnings = (classifiedWarnings: string[], configs: TurboConfigFile[]
   return [...classifiedWarnings, ...fileWarnings];
 };
 
-/**
- * The root's `//#<name>` turbo tasks as a classified package. `null` for a single-package repo (`//` is a node there),
- * a graph with no root, or a root hidden by its tags. When the configs cannot tell, no script counts as a turbo task.
- */
-const keptRootOf = (root: GraphPackage | null, lookup: TurboTaskLookup): ClassifiedPackage | null => {
-  if (root === null || lookup.singlePackage) return null;
+/** The root classified apart from `nodes`; empty for a single-package repo (`//` is a node there) or a graph with no root. */
+const classifiedRootOf = (root: GraphPackage | null, lookup: TurboTaskLookup): ClassifyResult => {
+  if (root === null || lookup.singlePackage) return classifyPackages([]);
 
-  const [classifiedRoot] = classifyPackages([root]).packages;
+  return classifyPackages([root]);
+};
+
+/**
+ * The root's `//#<name>` turbo tasks as a classified package. `null` for no classified root (see `classifiedRootOf`)
+ * or a root hidden by its tags. When the configs cannot tell, no script counts as a turbo task.
+ */
+const keptRootOf = (classified: ClassifyResult, lookup: TurboTaskLookup): ClassifiedPackage | null => {
+  const [classifiedRoot] = classified.packages;
 
   if (classifiedRoot === undefined) return null;
 
@@ -116,12 +122,14 @@ export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFil
   const classified = classifyPackages(nodes.items);
   const byDir = okConfigsByDir(configs);
   const lookup = turboTaskLookupOf(configs, nodes.items, singlePackage);
-  const keptRoot = keptRootOf(graph.data.root, lookup);
+  const classifiedRoot = classifiedRootOf(graph.data.root, lookup);
+  const keptRoot = keptRootOf(classifiedRoot, lookup);
+  const phantoms = new Map([...classified.phantoms, ...classifiedRoot.phantoms]);
   const packageIds = classified.packages.flatMap(taskIdsOf);
   const rootIds = rootIdsOf(keptRoot);
   const visibleIds = new Set([...packageIds, ...rootIds]);
   const visibleNames = new Set(classified.packages.map((pkg) => pkg.name));
-  const context: PackageContext = { visibleIds, configs: byDir, lookup, rootLabel };
+  const context: PackageContext = { visibleIds, phantoms, configs: byDir, lookup, rootLabel };
   const toNode = (pkg: ClassifiedPackage): PackageNode => toPackageNode(pkg, context);
   const packages = classified.packages.map(toNode).toSorted(byName);
   const rootPackage = rootNodeOf(keptRoot, context);

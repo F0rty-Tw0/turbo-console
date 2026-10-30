@@ -1,3 +1,4 @@
+import { dependenciesThroughOf } from './phantom-dependencies.util.ts';
 import { descriptionOf } from './task-description.util.ts';
 import { ROOT_NAME } from './turbo-task-lookup.util.ts';
 import { turboTasksOf } from './turbo-task.util.ts';
@@ -21,17 +22,15 @@ const factsOf = (turboTasks: ReadonlyMap<string, TurboTaskFacts> | null, name: s
   return turboTasks.get(name);
 };
 
-/** Rule 4 cuts dependencies on tasks rules 1–3 dropped. `toSorted` only: `task.tags` is the parsed graph's own array. */
+/** `dependencies` are already resolved (rule 4). `toSorted` only: `task.tags` is the parsed graph's own array. */
 const toTaskNode = (
   task: ClassifiedTask,
-  visibleIds: Set<string>,
+  dependencies: string[],
   description: string | null,
   facts: TurboTaskFacts | undefined
 ): TaskNode => {
   const isTurboTask = facts !== undefined;
   const persistent = facts?.persistent ?? false;
-  const isVisible = (id: string): boolean => visibleIds.has(id);
-  const dependencies = task.rawDependencies.filter(isVisible).toSorted();
   const tags = task.tags.toSorted();
   const { id, name, command, kind, atom } = task;
   const node: TaskNode = { id, name, command, description, tags, dependencies, kind, atom, isTurboTask, persistent };
@@ -47,8 +46,9 @@ export const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): 
   const toNode = (task: ClassifiedTask): TaskNode => {
     const description = descriptionOf(context.configs, path, task.id, task.name);
     const facts = factsOf(turboTasks, task.name);
+    const dependencies = dependenciesThroughOf(task.rawDependencies, context.phantoms, context.visibleIds);
 
-    return toTaskNode(task, context.visibleIds, description, facts);
+    return toTaskNode(task, dependencies, description, facts);
   };
 
   const tasks = pkg.tasks.map(toNode).toSorted(byId);

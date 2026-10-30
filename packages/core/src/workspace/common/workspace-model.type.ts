@@ -69,6 +69,8 @@ export type PackageNode = {
 /** What every package node reads besides its own package. */
 export type PackageContext = {
   readonly visibleIds: Set<string>;
+  /** Phantom id → its raw dependencies, from `nodes` and the root together; see `dependenciesThroughOf`. */
+  readonly phantoms: ReadonlyMap<string, string[]>;
   readonly configs: Map<string, TurboConfigOk>;
   readonly lookup: TurboTaskLookup;
   readonly rootLabel: string | null;
