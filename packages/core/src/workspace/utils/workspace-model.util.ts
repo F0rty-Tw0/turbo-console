@@ -1,5 +1,6 @@
 import { classifyPackages } from './classify-tasks.util.ts';
 import { toPackageNode } from './package-node.util.ts';
+import { dependencyResolverOf } from './phantom-dependencies.util.ts';
 import { affectedModeOf, okConfigsByDir } from './task-description.util.ts';
 import { turboTaskLookupOf, turboTasksOf } from './turbo-task.util.ts';
 import { plainLine } from '../../shared/errors/utils/plain-text.util.ts';
@@ -129,7 +130,8 @@ export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFil
   const rootIds = rootIdsOf(keptRoot);
   const visibleIds = new Set([...packageIds, ...rootIds]);
   const visibleNames = new Set(classified.packages.map((pkg) => pkg.name));
-  const context: PackageContext = { visibleIds, phantoms, configs: byDir, lookup, rootLabel };
+  const dependenciesThrough = dependencyResolverOf(phantoms, visibleIds);
+  const context: PackageContext = { dependenciesThrough, configs: byDir, lookup, rootLabel };
   const toNode = (pkg: ClassifiedPackage): PackageNode => toPackageNode(pkg, context);
   const packages = classified.packages.map(toNode).toSorted(byName);
   const rootPackage = rootNodeOf(keptRoot, context);

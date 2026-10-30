@@ -72,11 +72,12 @@ export type PackageNode = {
   readonly tasks: TaskNode[];
 };
 
+/** The visible, deduped, sorted dependencies of a task from its raw ones, with phantoms passed through; see `dependencyResolverOf`. */
+export type DependencyResolver = (raw: string[]) => string[];
+
 /** What every package node reads besides its own package. */
 export type PackageContext = {
-  readonly visibleIds: Set<string>;
-  /** Phantom id → its raw dependencies, from `nodes` and the root together; see `dependenciesThroughOf`. */
-  readonly phantoms: ReadonlyMap<string, string[]>;
+  readonly dependenciesThrough: DependencyResolver;
   readonly configs: Map<string, TurboConfigOk>;
   readonly lookup: TurboTaskLookup;
   readonly rootLabel: string | null;

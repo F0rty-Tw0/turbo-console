@@ -1,4 +1,3 @@
-import { dependenciesThroughOf } from './phantom-dependencies.util.ts';
 import { descriptionOf, rootDescriptionOf } from './task-description.util.ts';
 import { ROOT_NAME } from './turbo-task-lookup.util.ts';
 import { turboTasksOf } from './turbo-task.util.ts';
@@ -55,7 +54,7 @@ export const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): 
     const description = descriptionIn(task, path, context, isMonorepoRoot);
     const facts = factsOf(turboTasks, task.name);
     const isOther = (id: string): boolean => id !== task.id;
-    const through = dependenciesThroughOf(task.rawDependencies, context.phantoms, context.visibleIds);
+    const through = context.dependenciesThrough(task.rawDependencies);
     const dependencies = through.filter(isOther);
 
     return toTaskNode(task, dependencies, description, facts);
