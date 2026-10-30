@@ -1,6 +1,6 @@
 import type { DependencyResolver } from '../common/workspace-model.type.ts';
 
-/** What one phantom walk found: the `ids` it reached, and `low`, the depth of the shallowest open phantom it ran back into. */
+/** What one phantom walk found: the `ids` it reached, and `low`, the rank of the earliest live phantom it ran back into. */
 type Walk = {
   readonly ids: string[];
   readonly low: number;
@@ -18,23 +18,32 @@ const lowestOf = (low: number, walk: Walk): number => Math.min(low, walk.low);
 
 const idsOf = (walk: Walk): string[] => walk.ids;
 
+const visibleOf = (ids: string[], visibleIds: ReadonlySet<string>): string[] => {
+  const visible = new Set(ids.filter((id) => visibleIds.has(id)));
+  const unique = Array.from(visible);
+
+  return unique.toSorted();
+};
+
 /**
  * One resolver per model. Its result is `raw` with each phantom id replaced by that phantom's dependencies, recursively,
  * then cut to `visibleIds`, deduped and sorted. Turbo still orders through a phantom, so its edges pass to the tasks
- * that depend on it. A phantom is walked once: the result is kept unless the walk ran back into a phantom still open
- * above it (a cycle); the top of a cycle has seen all of it, so its result is kept.
+ * that depend on it. A phantom is walked once (Tarjan's SCC): `live` ranks each phantom entered and not yet settled. One
+ * that ran back into a live phantom ranked before it (a cycle) waits on `pending`; a repeat visit adds nothing, its ids
+ * already flowed up. The head of the cycle has seen all of it: its result is kept for every phantom that waited on it.
  */
 export const dependencyResolverOf = (phantoms: ReadonlyMap<string, string[]>, visibleIds: ReadonlySet<string>): DependencyResolver => {
   const resolved = new Map<string, string[]>();
-  const open = new Map<string, number>();
+  const live = new Map<string, number>();
+  const pending: string[] = [];
 
-  const isVisible = (id: string): boolean => visibleIds.has(id);
+  const settle = (from: number, ids: string[]): void => {
+    const members = pending.splice(from);
 
-  const visibleOf = (ids: string[]): string[] => {
-    const visible = new Set(ids.filter(isVisible));
-    const unique = Array.from(visible);
-
-    return unique.toSorted();
+    members.forEach((member) => {
+      resolved.set(member, ids);
+      live.delete(member);
+    });
   };
 
   const walkOf = (id: string): Walk => {
@@ -46,23 +55,27 @@ export const dependencyResolverOf = (phantoms: ReadonlyMap<string, string[]>, vi
 
     if (through === undefined) return foundOf([id], NO_LOOP);
 
-    const openDepth = open.get(id);
+    const liveRank = live.get(id);
 
-    if (openDepth !== undefined) return foundOf([], openDepth);
+    if (liveRank !== undefined) return foundOf([], liveRank);
 
-    const depth = open.size;
+    const rank = live.size;
+    const mark = pending.length;
 
-    open.set(id, depth);
+    live.set(id, rank);
 
     const walks = through.map(walkOf);
-
-    open.delete(id);
-
-    const ids = visibleOf(walks.flatMap(idsOf));
+    const ids = visibleOf(walks.flatMap(idsOf), visibleIds);
     const low = walks.reduce(lowestOf, NO_LOOP);
-    const isComplete = low >= depth;
+    const isHead = low >= rank;
 
-    if (isComplete) resolved.set(id, ids);
+    if (isHead) {
+      settle(mark, ids);
+      live.delete(id);
+      resolved.set(id, ids);
+    } else {
+      pending.push(id);
+    }
 
     return foundOf(ids, low);
   };
@@ -70,9 +83,9 @@ export const dependencyResolverOf = (phantoms: ReadonlyMap<string, string[]>, vi
   const resolve: DependencyResolver = (raw) => {
     const hasPhantom = raw.some((id) => phantoms.has(id));
 
-    if (!hasPhantom) return raw.filter(isVisible).toSorted();
+    if (!hasPhantom) return visibleOf(raw, visibleIds);
 
-    return visibleOf(raw.map(walkOf).flatMap(idsOf));
+    return visibleOf(raw.map(walkOf).flatMap(idsOf), visibleIds);
   };
 
   return resolve;
