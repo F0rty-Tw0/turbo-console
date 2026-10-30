@@ -67,8 +67,12 @@ const manifestPackage = (pkg: ManifestPackage): ProjectedPackage => {
 
 const isModelTask = (task: ManifestTask): boolean => task.visible && MODEL_KINDS[task.kind] !== undefined;
 
-const isShownPhantom = (task: ManifestTask, shownNames: Set<string>): boolean =>
-  task.kind === 'phantom' && shownNames.has(task.packageName);
+const isShownPhantom = (task: ManifestTask, shownNames: Set<string>): boolean => {
+  const isPhantom = task.kind === 'phantom';
+  const isShown = shownNames.has(task.packageName);
+
+  return isPhantom && isShown;
+};
 
 /** Ids reached from `start` by walking phantom dependencies; a phantom is walked once, the first non-phantom ends a path. */
 const reachedThrough = (start: string[], phantoms: Map<string, string[]>): string[] => {
@@ -78,19 +82,24 @@ const reachedThrough = (start: string[], phantoms: Map<string, string[]>): strin
 
   for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
     const through = phantoms.get(id);
+
+    if (through === undefined) {
+      reached.push(id);
+      continue;
+    }
+
     const isWalked = walked.has(id);
 
-    if (through === undefined) reached.push(id);
-    else if (!isWalked) {
-      walked.add(id);
-      pending.push(...through);
-    }
+    if (isWalked) continue;
+
+    walked.add(id);
+    pending.push(...through);
   }
 
   return reached;
 };
 
-/** `[]` for a task the model must not hold; otherwise its projection, dependencies passed through phantoms (D2) and cut to `visibleIds`. */
+/** `[]` for a task the model must not hold; otherwise its projection, dependencies passed through phantoms and cut to `visibleIds`. */
 const manifestTask = (task: ManifestTask, visibleIds: Set<string>, phantoms: Map<string, string[]>): ProjectedTask[] => {
   const kind = MODEL_KINDS[task.kind];
 
