@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { affectedModeOf, descriptionOf, okConfigsByDir } from './task-description.util.ts';
+import { affectedModeOf, descriptionOf, okConfigsByDir, rootDescriptionOf } from './task-description.util.ts';
 import type { TurboConfigError, TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 
 const PACKAGE_DESCRIPTIONS = { build: 'from the package' };
@@ -72,6 +72,15 @@ const TASK_MODE_ROOT: TurboConfigOk = {
   persistent: {},
   extends: [],
   affectedUsingTaskInputs: true
+};
+
+const MONOREPO_ROOT: TurboConfigOk = {
+  path: 'turbo.json',
+  descriptions: { fmt: 'Bare', '//#fmt': 'Root' },
+  tasks: {},
+  persistent: {},
+  extends: [],
+  affectedUsingTaskInputs: false
 };
 
 const ROOT_ERROR: TurboConfigError = { path: 'turbo.json', error: 'InvalidSymbol at 3' };
@@ -166,6 +175,34 @@ describe('FEATURE: task descriptions (rule 5)', () => {
       const description = describeTask([HUB, ROOT], 'packages/hub', 'p#hub#build', 'build');
 
       expect(description).toBe('from the package');
+    });
+  });
+});
+
+describe('FEATURE: root task descriptions', () => {
+  describe('GIVEN a root config with both fmt and //#fmt', () => {
+    const configs = okConfigsByDir([MONOREPO_ROOT]);
+
+    it('WHEN //#fmt is described THEN the qualified key wins over the bare one', () => {
+      const description = rootDescriptionOf(configs, '//#fmt');
+
+      expect(description).toBe('Root');
+    });
+  });
+
+  describe('GIVEN a root config with only the bare build key', () => {
+    it('WHEN //#build is described THEN the bare key does not apply to the root and the description is null', () => {
+      const description = rootDescriptionOf(okConfigsByDir([BARE_ROOT]), '//#build');
+
+      expect(description).toBeNull();
+    });
+  });
+
+  describe('GIVEN no root config', () => {
+    it('WHEN //#fmt is described THEN the description is null', () => {
+      const description = rootDescriptionOf(new Map(), '//#fmt');
+
+      expect(description).toBeNull();
     });
   });
 });
