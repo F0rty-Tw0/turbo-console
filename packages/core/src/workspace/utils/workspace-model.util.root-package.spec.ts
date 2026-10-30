@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { buildWorkspaceModel } from './workspace-model.util.ts';
 import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
 import type { TurboConfigFile } from '../common/turbo-config.type.ts';
-import type { ModelSource, TaskNode, WorkspaceModel } from '../common/workspace-model.type.ts';
+import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
 import { MODEL_SOURCE_STUB } from '../test/stubs/model-source.stub.ts';
 import { configOf } from '../test/utils/config-ok.spec.util.ts';
 import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
+import { taskOf } from '../test/utils/model-task.spec.util.ts';
 
 const COMMAND = 'node -e 0';
 
@@ -29,12 +30,6 @@ const build = (root: GraphPackage | null, configs: TurboConfigFile[]): Workspace
   const graph = packageGraph([PKG_A, PKG_B], [], root);
 
   return buildWorkspaceModel(graph, configs, MODEL_SOURCE_STUB);
-};
-
-const taskOf = (model: WorkspaceModel, id: string): TaskNode | undefined => {
-  const tasks = model.packages.flatMap((pkg) => pkg.tasks);
-
-  return tasks.find((task) => task.id === id);
 };
 
 describe('FEATURE: workspace model root package', () => {
