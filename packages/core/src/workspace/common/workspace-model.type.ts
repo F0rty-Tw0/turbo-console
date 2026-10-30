@@ -33,6 +33,12 @@ export type ClassifyResult = {
   readonly warnings: string[];
 };
 
+/** What classifying a task writes besides its own result: the phantoms it drops and the warnings it raises. */
+export type ClassifySink = {
+  readonly phantoms: Map<string, string[]>;
+  readonly warnings: string[];
+};
+
 /** `'task'` when the root config sets `futureFlags.affectedUsingTaskInputs: true`. */
 export type AffectedMode = 'package' | 'task';
 

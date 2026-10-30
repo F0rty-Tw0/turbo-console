@@ -7,7 +7,14 @@ import {
   LIVE_TAG,
   RESERVED_GROUPS
 } from '../common/atomizer.const.ts';
-import type { ClassifiedPackage, ClassifiedTask, ClassifyResult, TaskAtom, TaskNodeKind } from '../common/workspace-model.type.ts';
+import type {
+  ClassifiedPackage,
+  ClassifiedTask,
+  ClassifyResult,
+  ClassifySink,
+  TaskAtom,
+  TaskNodeKind
+} from '../common/workspace-model.type.ts';
 
 /** The task name after `<package>#`; a `#` inside the package name or the task's file path is kept, so the split is by length, not by a `#`. */
 const nameOf = (packageName: string, fullName: string): string => fullName.slice(packageName.length + 1);
@@ -74,53 +81,48 @@ const groupOf = (name: string, kind: TaskNodeKind, groups: string[]): string => 
   return groups[0] ?? '';
 };
 
-const kindOf = (task: GraphTask, packageName: string, packageGroups: Set<string>): TaskNodeKind => {
-  const name = nameOf(packageName, task.fullName);
-  const fileKind: TaskNodeKind = groupsOf(task).length > 0 ? 'atom-file' : 'task';
+const kindOf = (name: string, groups: string[], packageGroups: Set<string>): TaskNodeKind => {
+  const fileKind: TaskNodeKind = groups.length > 0 ? 'atom-file' : 'task';
 
   return roleOf(name, packageGroups) ?? fileKind;
 };
 
-/** A turbo task the package has no script for: a plain task with no command (rule 3). */
-const isPhantom = (task: GraphTask, packageName: string, packageGroups: Set<string>): boolean => {
-  const kind = kindOf(task, packageName, packageGroups);
-
-  return kind === 'task' && task.command === null;
-};
-
 const rawDependenciesOf = (task: GraphTask): string[] => task.directDependencies.items.map((dependency) => dependency.fullName);
 
-/** Rules 2.2–2.4 and 3 for one non-carrier task; `null` drops it. A file task with two group tags adds a warning. */
-const classifyTask = (task: GraphTask, packageName: string, packageGroups: Set<string>, warnings: string[]): ClassifiedTask | null => {
-  const isDropped = isPhantom(task, packageName, packageGroups);
-
-  if (isDropped) return null;
-
+/**
+ * Rules 2.2–2.4 and 3 for one non-carrier task; `null` drops it. A file task with two group tags adds a warning. A plain
+ * task with no command is a phantom (rule 3): dropped, and its raw dependencies are kept in `phantoms`.
+ */
+const classifyTask = (task: GraphTask, packageName: string, packageGroups: Set<string>, sink: ClassifySink): ClassifiedTask | null => {
   const name = nameOf(packageName, task.fullName);
   const groups = groupsOf(task);
-  const kind = kindOf(task, packageName, packageGroups);
+  const kind = kindOf(name, groups, packageGroups);
+  const rawDependencies = rawDependenciesOf(task);
+  const isPhantom = kind === 'task' && task.command === null;
+
+  if (isPhantom) {
+    sink.phantoms.set(task.fullName, rawDependencies);
+
+    return null;
+  }
+
   const group = groupOf(name, kind, groups);
   const hasGroupConflict = kind === 'atom-file' && groups.length > 1;
 
-  if (hasGroupConflict) warnings.push(`${task.fullName}: tagged with groups ${groups.join(', ')}; using ${group}`);
+  if (hasGroupConflict) sink.warnings.push(`${task.fullName}: tagged with groups ${groups.join(', ')}; using ${group}`);
 
   const isLive = kind === 'atom-file' && task.tags.includes(LIVE_TAG);
   const atom = atomOf(kind, group, isLive);
-  const rawDependencies = rawDependenciesOf(task);
   const classified: ClassifiedTask = { id: task.fullName, name, command: task.command, tags: task.tags, rawDependencies, kind, atom };
 
   return classified;
 };
 
-const classifyPackage = (pkg: GraphPackage, warnings: string[], phantoms: Map<string, string[]>): ClassifiedPackage => {
+const classifyPackage = (pkg: GraphPackage, sink: ClassifySink): ClassifiedPackage => {
   const isNotCarrier = (task: GraphTask): boolean => !isCarrier(task);
   const remaining = pkg.tasks.items.filter(isNotCarrier);
   const packageGroups = new Set(remaining.flatMap((task) => fileGroupsOf(task, pkg.name)));
-  const classify = (task: GraphTask): ClassifiedTask | null => classifyTask(task, pkg.name, packageGroups, warnings);
-  const isDropped = (task: GraphTask): boolean => isPhantom(task, pkg.name, packageGroups);
-
-  for (const task of remaining.filter(isDropped)) phantoms.set(task.fullName, rawDependenciesOf(task));
-
+  const classify = (task: GraphTask): ClassifiedTask | null => classifyTask(task, pkg.name, packageGroups, sink);
   const tasks = remaining.map(classify).filter((task) => task !== null);
   const classified: ClassifiedPackage = { name: pkg.name, path: pkg.path, tags: pkg.tags, tasks };
 
@@ -131,7 +133,8 @@ const classifyPackage = (pkg: GraphPackage, warnings: string[], phantoms: Map<st
 export const classifyPackages = (packages: GraphPackage[]): ClassifyResult => {
   const warnings: string[] = [];
   const phantoms = new Map<string, string[]>();
-  const classify = (pkg: GraphPackage): ClassifiedPackage => classifyPackage(pkg, warnings, phantoms);
+  const sink: ClassifySink = { phantoms, warnings };
+  const classify = (pkg: GraphPackage): ClassifiedPackage => classifyPackage(pkg, sink);
   const classified = packages.filter(isShown).map(classify);
   const result: ClassifyResult = { packages: classified, phantoms, warnings };
 
