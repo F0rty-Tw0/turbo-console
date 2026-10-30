@@ -104,7 +104,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     return ids.sort();
   };
   const folders = (): ProbeFolder[] => probeFoldersOf(view.cy(), originOf());
-  const folderLinks = (): ProbeFolderLink[] => probeFolderLinksOf(view.cy());
+  const folderLinks = (): ProbeFolderLink[] => probeFolderLinksOf(view.cy(), originOf());
   const edgeColor = (): string => {
     const first = packageEdges(view.cy()).first();
     const isNone = first.empty();

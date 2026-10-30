@@ -65,6 +65,14 @@ export type ProbeFolder = {
   readonly packages: string[];
 };
 
+/** A box in page CSS pixels. */
+export type ProbeRect = {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+};
+
 /** A drawn folder link: an end reads the folder key when it is a collapsed folder, else the package name. */
 export type ProbeFolderLink = {
   readonly source: string;
@@ -74,6 +82,8 @@ export type ProbeFolderLink = {
   /** Cytoscape's `visible()`. */
   readonly isDrawn: boolean;
   readonly state: ProbeState;
+  /** The `<n> links` label's box, background included; all 0 while the link is not drawn. */
+  readonly labelBox: ProbeRect;
 };
 
 export type LayoutEngine = 'elk' | 'cache' | 'fallback';

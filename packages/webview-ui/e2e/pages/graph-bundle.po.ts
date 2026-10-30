@@ -11,7 +11,7 @@ import type { BundleViewFacts } from '../common/graph-folders.type.ts';
 import type { LinkEnds } from '../common/playwright.type.ts';
 import { readLineCounts } from '../test/utils/element-lines.spec.util.ts';
 import { isInside, pointBoxOf, readRect } from '../test/utils/element-rect.spec.util.ts';
-import { endCentreOf, linkPointOf } from '../test/utils/graph-folder-points.spec.util.ts';
+import { endCentreOf, labelEdgePointOf, linkPointOf } from '../test/utils/graph-folder-points.spec.util.ts';
 import { isHitWithin } from '../test/utils/graph-widgets.spec.util.ts';
 
 /** Half way from the source end to the target end: clear of both ends' nodes. */
@@ -66,6 +66,27 @@ export class GraphBundle {
     const isOnCanvas = await this.container.evaluate(isHitWithin, point);
 
     expect(isOnCanvas, `the tap point (${point.x.toFixed(1)}, ${point.y.toFixed(1)}) lies on a widget, not on the canvas`).toBe(true);
+    await this.page.mouse.click(point.x, point.y);
+  }
+
+  /**
+   * Taps the `<n> links` label of the link between two ends, 3 px in from its left edge, away from the line, once the widget
+   * layer has settled.
+   */
+  public async tapFolderLinkLabel(source: string, target: string): Promise<void> {
+    await this.widgets.expectLayerSettledOn(this.container);
+
+    const links = await this.folders.folderLinks();
+    const found = links.find((link): boolean => link.source === source && link.target === target);
+
+    if (found === undefined) throw new Error(`graph e2e: no folder link from '${source}' to '${target}' is drawn`);
+
+    const point = labelEdgePointOf(found.labelBox);
+    const isOnCanvas = await this.container.evaluate(isHitWithin, point);
+
+    expect(isOnCanvas, `the label tap point (${point.x.toFixed(1)}, ${point.y.toFixed(1)}) lies on a widget, not on the canvas`).toBe(
+      true
+    );
     await this.page.mouse.click(point.x, point.y);
   }
 

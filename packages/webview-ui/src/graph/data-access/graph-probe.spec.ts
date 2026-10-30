@@ -318,7 +318,7 @@ describe('FEATURE: createGraphProbe collapse facts', () => {
     it('WHEN the folder links are read THEN their ends read the folder key and the package name', () => {
       const links = probe.folderLinks();
 
-      expect(links).toStrictEqual([
+      expect(links).toMatchObject([
         { source: 'apps', target: UI, count: 2, isDrawn: true, state: 'normal' },
         { source: 'apps', target: '@acme/utils', count: 1, isDrawn: true, state: 'normal' }
       ]);

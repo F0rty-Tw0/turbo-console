@@ -60,6 +60,30 @@ test.describe('FEATURE: folder link bundle', () => {
     await test.step('AND the details list both links', async (): Promise<void> => graphBundle.expectBundleView(DOCS_BUNDLE));
   });
 
+  test('GIVEN packages collapsed, tapping the edge of the docs link label inspects the bundle', async ({
+    graphBundle,
+    graphDetails,
+    graphFolderInspect,
+    graphPage
+  }): Promise<void> => {
+    await test.step('WHEN the boards open grouped with packages collapsed', async (): Promise<void> =>
+      graphFolderInspect.open(SAVED, BOARDS));
+
+    await test.step('AND Fit frames the graph, since the saved camera looks at an empty corner', async (): Promise<void> =>
+      graphPage.pressButton(FIT_LABEL));
+
+    await test.step('THEN both ends of the docs link are in view', async (): Promise<void> =>
+      graphBundle.expectEndsInView('docs', 'packages'));
+
+    await test.step('WHEN the docs link label is tapped 3 px in from its left edge', async (): Promise<void> =>
+      graphBundle.tapFolderLinkLabel('docs', 'packages'));
+
+    await test.step('THEN the bundle is inspected', async (): Promise<void> => graphDetails.expectInspection(DOCS_INSPECTION));
+
+    await test.step('AND the status line counts the links', async (): Promise<void> =>
+      graphPage.expectStatus('2 links: docs → packages'));
+  });
+
   test('GIVEN packages collapsed, Explain on a bundle row opens that link and expands the folder', async ({
     graphBundle,
     graphDetails,

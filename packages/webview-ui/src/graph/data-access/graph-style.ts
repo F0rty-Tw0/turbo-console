@@ -66,7 +66,7 @@ const dimmedBoxStyleOf = (colors: ThemeColors): Css.Node => {
   return dimmedBox;
 };
 
-/** A folder link's `<n> link(s)` label, on the canvas background so a crossing line never runs through it. */
+/** A folder link's `<n> link(s)` label, on the canvas background so a crossing line never runs through it; the label takes taps. */
 const folderLinkStyleOf = (colors: ThemeColors, fontFamily: string): Css.Edge => {
   const folderLink = {
     label: 'data(label)',
@@ -74,7 +74,8 @@ const folderLinkStyleOf = (colors: ThemeColors, fontFamily: string): Css.Edge =>
     'font-family': fontFamily,
     color: colors.label,
     'text-background-color': colors.background,
-    'text-background-opacity': 1
+    'text-background-opacity': 1,
+    'text-events': 'yes'
   } as const;
 
   return folderLink;

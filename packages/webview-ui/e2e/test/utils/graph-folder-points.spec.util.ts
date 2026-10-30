@@ -1,11 +1,14 @@
 import { boxGrabOf, boxRectOf } from './graph-folders.spec.util.ts';
 import type { Position, Positions } from '../../../src/bridge/common/graph-state.type.ts';
-import type { ProbeFolder, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
+import type { ProbeFolder, ProbeNode, ProbeRect } from '../../../src/graph/common/graph-probe.type.ts';
 import type { BoxDragRecord } from '../../common/graph-folders.type.ts';
 import type { ViewportPoint } from '../../common/playwright.type.ts';
 
 /** How far in from a box's top left corner a tap lands: inside its 32 px padding, clear of every package. */
 const CORNER_INSET_PX = 6;
+
+/** How far in from a label box's left edge a tap lands: inside the box, clear of the line through its middle. */
+const LABEL_INSET_PX = 3;
 
 /** How far a moved package may sit from where the drag should have put it, in model units. */
 const MOVE_TOLERANCE = 1;
@@ -110,4 +113,11 @@ export const moveFaultsOf = (names: string[], now: Positions, drag: BoxDragRecor
   const faultsOf = (name: string): string[] => movedFaultOf(name, now, drag, isMoving);
 
   return names.flatMap(faultsOf);
+};
+
+/** The point of a label box 3 px in from its left edge, level with its middle. */
+export const labelEdgePointOf = (box: ProbeRect): ViewportPoint => {
+  const point: ViewportPoint = { x: box.left + LABEL_INSET_PX, y: box.top + box.height / 2 };
+
+  return point;
 };
