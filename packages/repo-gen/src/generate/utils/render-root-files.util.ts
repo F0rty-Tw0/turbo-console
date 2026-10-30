@@ -21,7 +21,7 @@ const workspaceFile = (plan: FixturePlan): FixtureFile => {
 };
 
 const rootScripts = (spec: FixtureSpec): Record<string, string> | undefined => {
-  if (spec.rootTask === undefined) return undefined;
+  if (spec.rootTask?.command === undefined) return undefined;
 
   const { name, command } = spec.rootTask;
   const scripts = { [name]: command };
