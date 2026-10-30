@@ -8,6 +8,7 @@ import {
   entryRowTextOf,
   explainLabelOf,
   focusFaceOf,
+  folderEndLabelOf,
   hintTextOf,
   linkTitleOf,
   manifestFileOf,
@@ -106,6 +107,14 @@ describe('FEATURE: details text', () => {
       const label = explainLabelOf('web', 'ui');
 
       expect(label).toBe('Explain web → ui');
+    });
+  });
+
+  describe('GIVEN a collapsed folder titled packages', () => {
+    it('WHEN its end label is built THEN it reads as a folder', () => {
+      const label = folderEndLabelOf('packages');
+
+      expect(label).toBe('Folder packages');
     });
   });
 

@@ -1,3 +1,4 @@
+import { bundleViewOf } from './graph-details-bundle.ts';
 import { namedButtonOf, wirePicking } from './graph-details-picking.ts';
 import { explainInput, onClick, selectInput, wired } from './graph-details-wire-parts.ts';
 import type {
@@ -144,8 +145,9 @@ const folderOf = (folder: string, context: DetailsContext, env: DetailsEnv): Det
 export const wiredViewOf = (inspection: ShownInspection, context: DetailsContext, env: DetailsEnv): DetailsView => {
   switch (inspection.kind) {
     case 'none':
-    case 'bundle':
       return emptyOf(env);
+    case 'bundle':
+      return bundleViewOf(inspection, context, env) ?? emptyOf(env);
     case 'package':
       return packageOf(inspection.name, context, env);
     case 'link':

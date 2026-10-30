@@ -7,6 +7,7 @@ export const handlersMock = (): GraphViewHandlers => {
   const handlers: GraphViewHandlers = {
     onTapNode: vi.fn(),
     onTapEdge: vi.fn(),
+    onTapBundle: vi.fn(),
     onTapBackground: vi.fn(),
     onTapFolder: vi.fn(),
     onDoubleTapNode: vi.fn(),

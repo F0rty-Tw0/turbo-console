@@ -69,7 +69,7 @@ const listenHover = (cy: Core, handlers: GraphViewHandlers): void => {
 
 /**
  * Reports the canvas events to `handlers`; the tap on the background is the core's own, never a node's or edge's, a
- * folder link's tap is a background tap, and a ghost's taps report nothing. A double tap is two taps on the same package,
+ * folder link's tap is a bundle tap, and a ghost's taps report nothing. A double tap is two taps on the same package,
  * box or collapsed folder id within `DOUBLE_TAP_MS`, detected here:
  * Cytoscape's `dbltap` fires on timing alone, whatever the first tap hit, and spends the pair so a real double-click
  * right after a tap elsewhere never fires. Ids, not elements, so a redraw between the taps keeps the pair. A drag ends
@@ -121,15 +121,14 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
     if (ghost) return;
 
     const isFolderLink = event.target.id().startsWith(FOLDER_LINK_ID_PREFIX);
+    const source = event.target.source().id();
+    const target = event.target.target().id();
 
     if (isFolderLink) {
-      handlers.onTapBackground();
+      handlers.onTapBundle(source, target);
 
       return;
     }
-
-    const source = event.target.source().id();
-    const target = event.target.target().id();
 
     handlers.onTapEdge(source, target);
   };

@@ -124,6 +124,14 @@ describe('FEATURE: graphStyleOf edge states', () => {
       expect(edge.style('text-background-color')).toBe(cy.getElementById('a').style('background-color'));
     });
 
+    it('WHEN an edge is a folder-link THEN its label takes taps and hovers, not only its line', () => {
+      const edge = cy.getElementById(AB);
+
+      edge.addClass('folder-link');
+
+      expect(edge.style('text-events')).toBe('yes');
+    });
+
     it('WHEN a node is a dimmed-box THEN frame, label and fill are 25% opaque and its opacity stays 1', () => {
       const node = cy.getElementById('a');
 

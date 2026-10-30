@@ -2,7 +2,7 @@ import type { BoundingBox12, Core, EdgeSingular, NodeSingular } from 'cytoscape'
 
 import { probeStateOf, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { ProbeFolder, ProbeFolderLink } from '../common/graph-probe.type.ts';
+import type { ProbeFolder, ProbeFolderLink, ProbeRect } from '../common/graph-probe.type.ts';
 import { BOX_COLLAPSED_CLASS, FOLDER_HIDDEN_CLASS, FOLDER_ID_PREFIX, FOLDER_LINK_CLASS } from '../common/graph.const.ts';
 import { collapsedIdOf, folderOfElementId } from '../utils/folder-id.util.ts';
 
@@ -61,7 +61,17 @@ export const probeFoldersOf = (cy: Core, origin: Position): ProbeFolder[] => {
 
 const endOf = (id: string): string => folderOfElementId(id) ?? id;
 
-const probeFolderLinkOf = (edge: EdgeSingular): ProbeFolderLink => {
+const LABEL_OPTIONS = { includeLabels: true, includeEdges: false, includeNodes: false, includeOverlays: false };
+
+/** The label of `edge` in page CSS pixels (`origin` is the container's top left corner). */
+const labelBoxOf = (edge: EdgeSingular, origin: Position): ProbeRect => {
+  const { x1, x2, y1, y2 } = edge.renderedBoundingBox(LABEL_OPTIONS);
+  const box: ProbeRect = { left: origin.x + x1, top: origin.y + y1, width: x2 - x1, height: y2 - y1 };
+
+  return box;
+};
+
+const probeFolderLinkOf = (edge: EdgeSingular, origin: Position): ProbeFolderLink => {
   const countData: unknown = edge.data('count');
   const count = typeof countData === 'number' ? countData : 0;
   const link: ProbeFolderLink = {
@@ -69,11 +79,16 @@ const probeFolderLinkOf = (edge: EdgeSingular): ProbeFolderLink => {
     target: endOf(edge.target().id()),
     count,
     isDrawn: edge.visible(),
-    state: probeStateOf(edge)
+    state: probeStateOf(edge),
+    labelBox: labelBoxOf(edge, origin)
   };
 
   return link;
 };
 
 /** The drawn folder links in drawing order. */
-export const probeFolderLinksOf = (cy: Core): ProbeFolderLink[] => cy.edges(`.${FOLDER_LINK_CLASS}`).map(probeFolderLinkOf);
+export const probeFolderLinksOf = (cy: Core, origin: Position): ProbeFolderLink[] => {
+  const probeLink = (edge: EdgeSingular): ProbeFolderLink => probeFolderLinkOf(edge, origin);
+
+  return cy.edges(`.${FOLDER_LINK_CLASS}`).map(probeLink);
+};

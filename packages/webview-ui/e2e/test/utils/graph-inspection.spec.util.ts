@@ -30,3 +30,10 @@ export const folderInspection = (folder: string): Inspection => {
 
   return inspection;
 };
+
+/** The bundle of folder links from `source` to `target`; a collapsed end is its collapsed id. */
+export const bundleInspection = (source: string, target: string): Inspection => {
+  const inspection: Inspection = { kind: 'bundle', source, target };
+
+  return inspection;
+};

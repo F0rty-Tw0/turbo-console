@@ -1,4 +1,5 @@
 import { setButtonLabel, setButtonText, setDisabled, setFocusButton } from './button-title.ts';
+import { isSameBundleView } from './graph-details-bundle.ts';
 import { renderPicking } from './graph-details-picking.ts';
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { ExplainDetails, ExplainEntry, NeighbourItem, PackageDetails } from '../common/details-view.type.ts';
@@ -95,8 +96,9 @@ export const updateView = (
 
   switch (inspection.kind) {
     case 'none':
-    case 'bundle':
       return view.kind === 'empty';
+    case 'bundle':
+      return isSameBundleView(view, inspection, context);
     case 'link':
       return view.kind === 'link';
     case 'package':

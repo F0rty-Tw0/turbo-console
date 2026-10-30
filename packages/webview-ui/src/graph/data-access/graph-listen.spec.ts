@@ -7,6 +7,7 @@ import { createFoldersView } from './graph-folders-view.ts';
 import { listen } from './graph-listen.ts';
 import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
+import { GHOST_CLASS } from '../common/graph.const.ts';
 import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { handlersMock } from '../test/mocks/graph-handlers.mock.ts';
@@ -332,11 +333,22 @@ describe('FEATURE: listen', () => {
       expect(handlers.onDoubleTapFolder).not.toHaveBeenCalled();
     });
 
-    it('WHEN the folder link is tapped THEN onTapBackground runs once and onTapEdge never', () => {
+    it('WHEN the folder link is tapped THEN onTapBundle runs once with the collapsed apps id and ui, and neither onTapBackground nor onTapEdge', () => {
       tapAll([APPS_TO_UI]);
 
-      expect(handlers.onTapBackground).toHaveBeenCalledOnce();
+      expect(handlers.onTapBundle).toHaveBeenCalledExactlyOnceWith(APPS_NODE, '@acme/ui');
+      expect(handlers.onTapBackground).not.toHaveBeenCalled();
       expect(handlers.onTapEdge).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the folder link has the ghost class and is tapped THEN no handler runs', () => {
+      cy.getElementById(APPS_TO_UI).addClass(GHOST_CLASS);
+      tapAll([APPS_TO_UI]);
+
+      const spies = [handlers.onTapBundle, handlers.onTapBackground, handlers.onTapEdge];
+      const calls = spies.map((spy) => vi.mocked(spy).mock.calls.length);
+
+      expect(calls).toStrictEqual([0, 0, 0]);
     });
 
     it('WHEN ui, the folder link, then ui are tapped THEN onDoubleTapNode does not run', () => {

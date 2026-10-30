@@ -43,6 +43,15 @@ describe('FEATURE: listenCursor', () => {
       expect(paint.mock.calls).toStrictEqual([[true], [false]]);
     });
 
+    it('WHEN it enters and moves on a folder link THEN paint hears true once', () => {
+      const link = cy.add(FOLDER_LINK);
+
+      link.emit('mouseover');
+      link.emit('mousemove');
+
+      expect(paint).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
     it('WHEN it leaves the canvas from a node THEN paint gets false once', () => {
       cy.getElementById('a').emit('mouseover');
       cy.emit('mouseout');
@@ -92,15 +101,6 @@ describe('FEATURE: listenCursor', () => {
       edge.addClass(GHOST_CLASS);
       edge.emit('mouseover');
       edge.emit('mousemove');
-
-      expect(paint).not.toHaveBeenCalled();
-    });
-
-    it('WHEN it enters and moves on a folder link THEN paint hears nothing', () => {
-      const link = cy.add(FOLDER_LINK);
-
-      link.emit('mouseover');
-      link.emit('mousemove');
 
       expect(paint).not.toHaveBeenCalled();
     });
