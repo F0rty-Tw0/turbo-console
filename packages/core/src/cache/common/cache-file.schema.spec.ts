@@ -78,6 +78,14 @@ describe('FEATURE: cache file schema', () => {
     });
   });
 
+  describe('GIVEN a model without rootPackage', () => {
+    it('WHEN parsed THEN it fails', () => {
+      const result = workspaceModelSchema.safeParse(modelWithoutKey('rootPackage'));
+
+      expect(result.success).toBe(false);
+    });
+  });
+
   describe('GIVEN a model without singlePackage', () => {
     it('WHEN parsed THEN it fails', () => {
       const result = workspaceModelSchema.safeParse(modelWithoutKey('singlePackage'));
