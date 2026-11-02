@@ -50,8 +50,9 @@ export class GraphTaskMemory {
     const { chosen, depth, capLifted } = this.view();
     const tasks = this.latestTasks;
     const effective = this.effectiveChosen(chosen);
+    const listedIds = new Set(tasks.map(({ id }) => id));
 
-    return shownSetOf({ tasks, chosen: effective, depth, capLifted });
+    return shownSetOf({ tasks, chosen: effective, depth, capLifted, listedIds });
   }
 
   /**

@@ -1,4 +1,5 @@
 import type { GraphTask } from '../../../bridge/common/graph-state.type.ts';
+import type { ShownSetInput } from '../../common/shown-set.type.ts';
 import { GRAPH_TASK_STUB } from '../stubs/graph-task.stub.ts';
 
 const idsOf = (prefix: string, count: number): string[] => {
@@ -13,6 +14,14 @@ export const taskOf = (id: string, dependencies: string[]): GraphTask => {
   const task: GraphTask = { ...GRAPH_TASK_STUB, id, packageName, name, dependencies };
 
   return task;
+};
+
+/** A `ShownSetInput` over `tasks` whose listing is exactly those tasks; `edit` replaces any field. */
+export const inputOf = (tasks: GraphTask[], edit: Partial<ShownSetInput> = {}): ShownSetInput => {
+  const listedIds = new Set(tasks.map((task) => task.id));
+  const input: ShownSetInput = { tasks, chosen: ['root#t'], depth: 1, capLifted: false, listedIds, ...edit };
+
+  return input;
 };
 
 const joined = (...groups: GraphTask[][]): GraphTask[] => groups.flat();
