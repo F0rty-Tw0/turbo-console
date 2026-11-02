@@ -23,7 +23,7 @@ type ExplainJob = {
  * page's `ready` or while hidden; hiding resets `ready` because the page is rebuilt on show. Every state post is followed
  * by the run states of its tasks, the Atomizer counts of its groups and a held `showTasks` or `showPackage`, through the
  * `GraphTaskFeed`. An edge explanation is posted only if the panel is still shown and ready after its read.
- * One `explainEdge` is answered at a time; the one waiting behind it is replaced by each newer request, so a page that floods them costs one read in flight and one waiting.
+ * A change of either tree toggle posts the state again, under the same gate. One `explainEdge` is answered at a time; the one waiting behind it is replaced by each newer request, so a page that floods them costs one read in flight and one waiting.
  */
 export class GraphSession {
   private readonly root: string;
@@ -61,7 +61,12 @@ export class GraphSession {
       this.rootChanged(change);
     });
 
-    this.unsubscribes.push(offRoots);
+    const { scope, scripts } = this.feeds.toggles;
+    const onToggle = (): void => {
+      this.publish();
+    };
+
+    this.unsubscribes.push(offRoots, scope.onDidChange(onToggle), scripts.onDidChange(onToggle));
     this.feed.start();
   }
 
