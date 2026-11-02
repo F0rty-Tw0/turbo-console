@@ -73,6 +73,10 @@ export type GraphReady = {
   readonly singlePackage: boolean;
   /** The `//` package's label when `singlePackage`, else `null`; `null` too when that package has no label. */
   readonly rootLabel: string | null;
+  /** The tree's scope toggle at the time the state was built. */
+  readonly scopeShown: boolean;
+  /** The tree's scripts toggle at the time the state was built. */
+  readonly scriptsShown: boolean;
 };
 
 export type GraphState = GraphLoading | GraphError | GraphReady;

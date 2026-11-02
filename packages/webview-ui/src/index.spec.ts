@@ -190,6 +190,8 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphState['kind']>().toEqualTypeOf<'loading' | 'error' | 'graph'>();
       expectTypeOf<GraphReady['singlePackage']>().toEqualTypeOf<boolean>();
       expectTypeOf<GraphReady['rootLabel']>().toEqualTypeOf<string | null>();
+      expectTypeOf<GraphReady['scopeShown']>().toEqualTypeOf<boolean>();
+      expectTypeOf<GraphReady['scriptsShown']>().toEqualTypeOf<boolean>();
       expectTypeOf<ManifestField>().toEqualTypeOf<ExpectedEntry['field']>();
       expectTypeOf<ManifestEntry>().toEqualTypeOf<ExpectedEntry>();
       expectTypeOf<ManifestContext>().toEqualTypeOf<ExpectedEntry['context']>();

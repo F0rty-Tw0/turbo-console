@@ -91,7 +91,9 @@ const GRAPH = {
   tasks: [],
   atomGroups: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true
 };
 
 const CACHED_GRAPH = { ...GRAPH, positions: POSITIONS };
@@ -105,7 +107,9 @@ const WITHOUT_FOLDER_POSITIONS = {
   tasks: [],
   atomGroups: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true
 };
 
 const WITHOUT_TASKS = {
@@ -117,7 +121,9 @@ const WITHOUT_TASKS = {
   folderPositions: null,
   atomGroups: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true
 };
 
 const WITHOUT_ATOM_GROUPS = {
@@ -129,7 +135,9 @@ const WITHOUT_ATOM_GROUPS = {
   folderPositions: null,
   tasks: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true
 };
 
 const ATOM_FILE = { id: 'app#e2e-ci--a.spec.ts', specPath: 'a.spec.ts', isLive: true };

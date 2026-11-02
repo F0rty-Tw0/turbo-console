@@ -73,7 +73,9 @@ export const GRAPH_STATE_STUB: GraphReady = {
   tasks: GRAPH_TASKS_STUB,
   atomGroups: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: false,
+  scriptsShown: false
 };
 
 const X_POINT: Position = { x: 0, y: 0 };

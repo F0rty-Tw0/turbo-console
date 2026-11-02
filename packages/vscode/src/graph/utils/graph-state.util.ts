@@ -108,7 +108,9 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches): 
     tasks,
     atomGroups,
     singlePackage,
-    rootLabel
+    rootLabel,
+    scopeShown: false,
+    scriptsShown: false
   };
 
   return state;

@@ -44,6 +44,8 @@ export const overCapTasksState = (): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    scopeShown: true,
+    scriptsShown: true,
     hash: '7a5c0400',
     packages: packagesOf(['leaf', 'root']),
     edges: LEAF_NEEDS_ROOT,

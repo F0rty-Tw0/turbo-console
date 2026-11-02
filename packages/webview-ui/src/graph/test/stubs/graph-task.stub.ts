@@ -31,6 +31,8 @@ export const TASK_STATE_STUB: GraphReady = {
   kind: 'graph',
   singlePackage: false,
   rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true,
   hash: 'h1',
   packages: [],
   edges: [],

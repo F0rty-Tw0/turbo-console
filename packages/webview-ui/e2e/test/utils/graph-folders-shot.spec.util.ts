@@ -18,6 +18,8 @@ export const foldersShotState = (): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    scopeShown: true,
+    scriptsShown: true,
     hash: '5407d001',
     packages: [
       packageOf('web', 'apps/web'),

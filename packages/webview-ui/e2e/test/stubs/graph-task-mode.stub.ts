@@ -35,6 +35,8 @@ export const TASK_MODE_STATE_STUB: GraphReady = {
   kind: 'graph',
   singlePackage: false,
   rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true,
   hash: '7a5c0001',
   packages: packagesOf(['app', 'lib', 'ui']),
   edges: EDGES,

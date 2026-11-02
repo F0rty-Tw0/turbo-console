@@ -58,6 +58,8 @@ export const largeState = (count = LARGE_PACKAGE_COUNT): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    scopeShown: true,
+    scriptsShown: true,
     hash: hashOf(count),
     packages,
     edges,

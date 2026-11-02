@@ -16,6 +16,8 @@ const STATE: GraphReady = {
   kind: 'graph',
   singlePackage: false,
   rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true,
   hash: 'h',
   packages: PACKAGES,
   edges: [KEPT_EDGE, DANGLING_EDGE],

@@ -10,6 +10,8 @@ export const WIDE_TITLE_STUB: GraphReady = {
   kind: 'graph',
   singlePackage: false,
   rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true,
   hash: 'e1d2c3b4',
   packages: WIDE_PACKAGES,
   edges: [],

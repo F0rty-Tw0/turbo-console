@@ -22,6 +22,8 @@ export const SINGLE_PACKAGE_TASKS_STUB: GraphReady = {
   kind: 'graph',
   singlePackage: true,
   rootLabel: 'single-app',
+  scopeShown: true,
+  scriptsShown: true,
   hash: '5ee0a001',
   packages: packagesOf(['//']),
   edges: [],
