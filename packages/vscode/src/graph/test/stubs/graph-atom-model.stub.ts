@@ -71,7 +71,8 @@ const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '.',
 /** One Atomizer group in `@fx/e2e` (umbrella, hidden aggregate, two files), a build it depends on, and a root task that depends on the aggregate. */
 export const GRAPH_ATOM_MODEL_STUB: WorkspaceModel = {
   ...WORKSPACE_MODEL_STUB,
-  packages: [ATOM_E2E_PACKAGE_STUB, APP_PACKAGE, ROOT_PACKAGE]
+  packages: [ATOM_E2E_PACKAGE_STUB, APP_PACKAGE],
+  rootPackage: ROOT_PACKAGE
 };
 
 /** The core group of `GRAPH_ATOM_MODEL_STUB`: the umbrella and its two files in spec path order. */

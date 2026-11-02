@@ -6,26 +6,37 @@ import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { isRunnableTask, isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 import type { AtomFold, GraphListing } from '../common/graph-atom.type.ts';
 
-type VisibleTask = { readonly packageName: string; readonly task: TaskNode };
+type VisibleTask = { readonly packageName: string; readonly task: TaskNode; readonly isRootTask: boolean };
 
 /** Default string order, so the same ids sort the same on every machine. */
 const compareId = (left: string, right: string): number => Number(left > right) - Number(left < right);
 
-const visibleOf = (pkg: PackageNode): VisibleTask[] => {
+const visibleOf = (pkg: PackageNode, isRootTask: boolean): VisibleTask[] => {
   const tasks = pkg.tasks.filter(isVisibleTask);
 
   return tasks.map((task) => {
-    const visible: VisibleTask = { packageName: pkg.name, task };
+    const visible: VisibleTask = { packageName: pkg.name, task, isRootTask };
 
     return visible;
   });
 };
 
-const visibleTasksOf = (model: WorkspaceModel): VisibleTask[] => model.packages.flatMap(visibleOf);
+const rootTasksOf = ({ rootPackage }: WorkspaceModel): VisibleTask[] => {
+  if (rootPackage === null) return [];
+
+  return visibleOf(rootPackage, true);
+};
+
+const visibleTasksOf = (model: WorkspaceModel): VisibleTask[] => {
+  const own = model.packages.flatMap((pkg) => visibleOf(pkg, false));
+  const root = rootTasksOf(model);
+
+  return [...own, ...root];
+};
 
 const NO_IDS: string[] = [];
 
-const taskOf = ({ packageName, task }: VisibleTask, listed: ReadonlySet<string>, fold: AtomFold): GraphTask => {
+const taskOf = ({ packageName, task, isRootTask }: VisibleTask, listed: ReadonlySet<string>, fold: AtomFold): GraphTask => {
   const takenOver = fold.foldedOf.get(task.id) ?? NO_IDS;
   const own = [...task.dependencies, ...takenOver];
   const folded = own.map((id) => fold.umbrellaOf.get(id) ?? id);
@@ -36,7 +47,7 @@ const taskOf = ({ packageName, task }: VisibleTask, listed: ReadonlySet<string>,
     packageName,
     name: task.name,
     command: task.command,
-    isRunnable: isRunnableTask(task),
+    isRunnable: !isRootTask && isRunnableTask(task),
     isTurboTask: task.isTurboTask,
     dependencies
   };
@@ -64,7 +75,7 @@ const graphAtomGroupsOf = (fold: AtomFold): GraphAtomGroup[] => {
 };
 
 /**
- * Every visible task of every package, sorted by id, with each Atomizer group folded into its umbrella: the hidden aggregate
+ * Every visible task of every package and of the monorepo root (listed, never runnable), sorted by id, with each Atomizer group folded into its umbrella: the hidden aggregate
  * is not listed and the umbrella takes over the dependencies of its aggregate and files. The tree's scripts toggle does not
  * apply, so scripts that are not turbo tasks are listed. `dependencies` keep only listed ids, sorted.
  */
