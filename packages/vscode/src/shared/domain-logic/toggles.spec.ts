@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as vscode from 'vscode';
 
 import { togglesOf } from './toggles.ts';
+import type { Toggles } from '../common/scripts-toggle.type.ts';
 import { outputMock } from '../test/mocks/output.mock.ts';
 
 type ExecuteCommand = (command: string, key: string, value: boolean) => Promise<void>;
@@ -27,15 +28,27 @@ describe('FEATURE: toggles', () => {
   });
 
   describe('GIVEN a stored scopeShown of true and no scriptsShown', () => {
-    it('WHEN the toggles are built THEN scope reads true, scripts reads false, and each sends its own key', () => {
-      const { scripts, scope } = togglesOf(state, outputMock());
+    describe('WHEN the toggles are built', () => {
+      let toggles: Toggles;
 
-      expect(scope.isShown()).toBe(true);
-      expect(scripts.isShown()).toBe(false);
-      expect(executeCommand.mock.calls).toStrictEqual([
-        ['setContext', 'turboConsole.scriptsShown', false],
-        ['setContext', 'turboConsole.scopeShown', true]
-      ]);
+      beforeEach(() => {
+        toggles = togglesOf(state, outputMock());
+      });
+
+      it('THEN scope reads true', () => {
+        expect(toggles.scope.isShown()).toBe(true);
+      });
+
+      it('THEN scripts reads false', () => {
+        expect(toggles.scripts.isShown()).toBe(false);
+      });
+
+      it('THEN each sends its own key', () => {
+        expect(executeCommand.mock.calls).toStrictEqual([
+          ['setContext', 'turboConsole.scriptsShown', false],
+          ['setContext', 'turboConsole.scopeShown', true]
+        ]);
+      });
     });
   });
 });
