@@ -50,6 +50,7 @@ export const atomCanvasMock = (): Mocked<AtomCanvas> => {
 export const graphViewMock = (camera: Viewport): Mocked<GraphView> => {
   const view: Mocked<GraphView> = {
     setGraph: vi.fn<GraphView['setGraph']>(),
+    setLabels: vi.fn<GraphView['setLabels']>(),
     paint: vi.fn<GraphView['paint']>(),
     fit: vi.fn<GraphView['fit']>(),
     isFitted: vi.fn<GraphView['isFitted']>(() => false),

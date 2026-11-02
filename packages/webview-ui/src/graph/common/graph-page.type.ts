@@ -89,6 +89,8 @@ export type FoldersView = {
 /** The Cytoscape canvas view of one page. */
 export type GraphView = {
   readonly setGraph: (packages: string[], edges: GraphEdge[], positions: Positions, sizeOf: NodeSizer) => void;
+  /** Gives each drawn package node its label text; sizes, positions and the camera stay as they are. */
+  readonly setLabels: (labels: ReadonlyMap<string, string>) => void;
   /** Gives each package, link, box, collapsed folder and folder link its state class. */
   readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */

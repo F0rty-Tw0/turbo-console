@@ -44,7 +44,8 @@ const MUTATIONS: [Mutator, Call][] = [
   ['setViewport', (view: GraphView): void => view.setViewport(2, TASK_CAMERA.pan)],
   ['setGrouping', (view: GraphView): void => view.setGrouping(null)],
   ['setPositions', (view: GraphView): void => view.setPositions({})],
-  ['showFolders', (view: GraphView): void => view.showFolders(null, String)]
+  ['showFolders', (view: GraphView): void => view.showFolders(null, String)],
+  ['setLabels', (view: GraphView): void => view.setLabels(new Map([['@org/x', 'x']]))]
 ];
 
 const SCREEN_CALLS: [keyof LayoutScreen, ScreenCall][] = [

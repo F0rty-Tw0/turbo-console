@@ -85,6 +85,12 @@ const HIDDEN = { display: 'none' } as const;
 
 const GHOST_NODE = { 'border-style': 'dashed', 'border-dash-pattern': DASHED_BORDER_PX, 'text-opacity': 0.75 } as const;
 
+/**
+ * A node with label data draws it in place of its id. A separate rule, not the base one, so a box node with no label
+ * data never meets a `data(label)` mapping, which Cytoscape warns about on every style pass.
+ */
+const LABELLED_NODE = { label: 'data(label)' } as const;
+
 /** A collapsed folder: no label, since its DOM header row shows the title; its corners as round as a box's. */
 const FOLDER_NODE = { label: '', 'corner-radius': '8px' } as const;
 
@@ -179,6 +185,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
   const selectionRules = selectionRulesOf(colors);
   const style: StylesheetJson = [
     { selector: 'node', style: node },
+    { selector: 'node[label]', style: LABELLED_NODE },
     { selector: 'node:parent', style: boxStyleOf(colors) },
     { selector: `node:parent.${EXPORTING_CLASS}`, style: BOX_TITLE },
     ...taskRules,
