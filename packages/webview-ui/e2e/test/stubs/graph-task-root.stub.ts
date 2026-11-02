@@ -10,6 +10,7 @@ const ROOT_LINT: GraphTask = {
   name: 'lint',
   command: 'eslint .',
   isRunnable: true,
+  isTurboTask: true,
   dependencies: []
 };
 

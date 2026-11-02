@@ -22,7 +22,7 @@ const candidatesOf = (forward: string[], backward: string[], none: string[]): Tr
 const labelsOf = (candidates: TraceCandidate[]): string[] => candidates.map((candidate) => `${candidate.name}:${candidate.steps}`);
 
 const packageOf = (name: string, path: string): GraphPackage => {
-  const pkg: GraphPackage = { name, path, tags: [], taskCount: 0 };
+  const pkg: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
 
   return pkg;
 };

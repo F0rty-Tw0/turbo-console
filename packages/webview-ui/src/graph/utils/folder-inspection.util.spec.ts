@@ -36,7 +36,7 @@ const BOARDS_PATH = pathOf(['web', UI, UT]);
 
 const THREE_PATH = pathOf(['a', 'b', 'c']);
 
-const PROTO_INFOS = [{ name: 'a', path: '__proto__/a', tags: [], taskCount: 0 }];
+const PROTO_INFOS = [{ name: 'a', bareName: 'a', path: '__proto__/a', tags: [], taskCount: 0 }];
 
 describe('FEATURE: foldersToExpandOf', () => {
   describe('GIVEN an inspection and the collapsed folders', () => {
@@ -193,8 +193,8 @@ describe('FEATURE: collapsedInspectionOf', () => {
 describe('FEATURE: shownFoldersOf', () => {
   describe('GIVEN a scene and the visible packages', () => {
     const ROOT_INFOS = [
-      { name: 'root-a', path: 'root-a', tags: [], taskCount: 0 },
-      { name: 'x', path: 'apps/x', tags: [], taskCount: 0 }
+      { name: 'root-a', bareName: 'root-a', path: 'root-a', tags: [], taskCount: 0 },
+      { name: 'x', bareName: 'x', path: 'apps/x', tags: [], taskCount: 0 }
     ];
 
     it.each([

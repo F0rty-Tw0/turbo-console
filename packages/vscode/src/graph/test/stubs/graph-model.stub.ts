@@ -5,6 +5,7 @@ import type { LoadedModel } from '../../../roots/common/root.type.ts';
 import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphLayoutCaches } from '../../common/graph-cache.type.ts';
+import type { GraphShown } from '../../common/graph.type.ts';
 
 const WEB_A_DEV: PackageEdge = { source: 'web', target: 'a', kind: 'dev' };
 const WEB_A_PROD: PackageEdge = { source: 'web', target: 'a', kind: 'prod' };
@@ -43,23 +44,24 @@ export const GRAPH_HASH_STUB: string = '9bafdda7';
 export const GRAPH_PACKAGES_STUB: string[] = ['@org/x', 'a', 'web'];
 
 export const GRAPH_INFOS_STUB: GraphPackage[] = [
-  { name: '@org/x', path: 'packages/libs/x', tags: [], taskCount: 1 },
-  { name: 'a', path: 'packages/a', tags: [], taskCount: 1 },
-  { name: 'web', path: 'apps/web', tags: ['app', 'ui'], taskCount: 2 }
+  { name: '@org/x', bareName: 'x', path: 'packages/libs/x', tags: [], taskCount: 1 },
+  { name: 'a', bareName: 'a', path: 'packages/a', tags: [], taskCount: 1 },
+  { name: 'web', bareName: 'web', path: 'apps/web', tags: ['app', 'ui'], taskCount: 2 }
 ];
 
 export const GRAPH_TASKS_STUB: GraphTask[] = [
-  { id: '@org/x#build', packageName: '@org/x', name: 'build', command: 'tsc', isRunnable: true, dependencies: [] },
-  { id: 'a#build', packageName: 'a', name: 'build', command: 'tsc', isRunnable: true, dependencies: [] },
+  { id: '@org/x#build', packageName: '@org/x', name: 'build', command: 'tsc', isRunnable: true, isTurboTask: true, dependencies: [] },
+  { id: 'a#build', packageName: 'a', name: 'build', command: 'tsc', isRunnable: true, isTurboTask: true, dependencies: [] },
   {
     id: 'web#build',
     packageName: 'web',
     name: 'build',
     command: 'tsc',
     isRunnable: true,
+    isTurboTask: true,
     dependencies: ['@org/x#build', 'a#build']
   },
-  { id: 'web#lint', packageName: 'web', name: 'lint', command: 'tsc', isRunnable: true, dependencies: [] }
+  { id: 'web#lint', packageName: 'web', name: 'lint', command: 'tsc', isRunnable: true, isTurboTask: true, dependencies: [] }
 ];
 
 export const GRAPH_STATE_STUB: GraphReady = {
@@ -72,7 +74,9 @@ export const GRAPH_STATE_STUB: GraphReady = {
   tasks: GRAPH_TASKS_STUB,
   atomGroups: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: false,
+  scriptsShown: false
 };
 
 const X_POINT: Position = { x: 0, y: 0 };
@@ -97,3 +101,6 @@ export const PROTO_LOADED_STUB: LoadedModel = { ...GRAPH_LOADED_STUB, model: PRO
 
 /** Both layout caches missed: for a state built with no stored layout. */
 export const NO_LAYOUT_CACHES_STUB: GraphLayoutCaches = { flat: null, folders: null };
+
+/** Both toggles at their stored default: the `scopeShown` and `scriptsShown` of `GRAPH_STATE_STUB`. */
+export const GRAPH_SHOWN_STUB: GraphShown = { scopeShown: false, scriptsShown: false };

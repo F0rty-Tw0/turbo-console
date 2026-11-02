@@ -8,15 +8,15 @@ const isStringList = (value: unknown): boolean => Array.isArray(value) && value.
 const isGraphTask = (value: unknown): boolean => {
   if (!isRecord(value)) return false;
 
-  const { id, packageName, name, command, isRunnable, dependencies } = value;
+  const { id, packageName, name, command, isRunnable, isTurboTask, dependencies } = value;
   const hasNames = isString(id) && isString(packageName) && isString(name);
   const hasCommand = command === null || isString(command);
-  const hasFlag = typeof isRunnable === 'boolean';
+  const hasFlags = typeof isRunnable === 'boolean' && typeof isTurboTask === 'boolean';
 
-  return hasNames && hasCommand && hasFlag && isStringList(dependencies);
+  return hasNames && hasCommand && hasFlags && isStringList(dependencies);
 };
 
-/** A graph state's `tasks`: an array of tasks with string names, a string or `null` command, a boolean flag and string dependencies. */
+/** A graph state's `tasks`: an array of tasks with string names, a string or `null` command, two boolean flags and string dependencies. */
 export const isGraphTaskList = (value: unknown): boolean => Array.isArray(value) && value.every(isGraphTask);
 
 const isRunState = (value: unknown): boolean => RUN_STATES.some((state) => state === value);

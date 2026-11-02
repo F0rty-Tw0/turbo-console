@@ -7,10 +7,10 @@ import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
 
 const INFOS: GraphPackage[] = [
-  { name: 'a', path: 'libs/a', tags: [], taskCount: 0 },
-  { name: 'b', path: 'libs/b', tags: [], taskCount: 0 },
-  { name: 'c', path: 'libs/c', tags: [], taskCount: 0 },
-  { name: 'd', path: 'apps/d', tags: ['ui'], taskCount: 0 }
+  { name: 'a', bareName: 'a', path: 'libs/a', tags: [], taskCount: 0 },
+  { name: 'b', bareName: 'b', path: 'libs/b', tags: [], taskCount: 0 },
+  { name: 'c', bareName: 'c', path: 'libs/c', tags: [], taskCount: 0 },
+  { name: 'd', bareName: 'd', path: 'apps/d', tags: ['ui'], taskCount: 0 }
 ];
 
 const EDGES: GraphEdge[] = [

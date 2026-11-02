@@ -2,14 +2,23 @@ import { describe, expect, it } from 'vitest';
 
 import { isAtomGroupList, isAtomStateRecord, isGraphTaskList, isRunsRecord, isTaskIdList } from './graph-task-shape.util.ts';
 
-const TASK = { id: 'a#build', packageName: 'a', name: 'build', command: 'tsc', isRunnable: true, dependencies: ['b#build'] };
+const TASK = {
+  id: 'a#build',
+  packageName: 'a',
+  name: 'build',
+  command: 'tsc',
+  isRunnable: true,
+  isTurboTask: true,
+  dependencies: ['b#build']
+};
 
 describe('FEATURE: graph task list shape', () => {
   it.each([
     ['an empty list', []],
     ['a task with a command', [TASK]],
     ['a task with a null command', [{ ...TASK, command: null }]],
-    ['a task with no dependencies', [{ ...TASK, dependencies: [] }]]
+    ['a task with no dependencies', [{ ...TASK, dependencies: [] }]],
+    ['a script task', [{ ...TASK, isTurboTask: false }]]
   ])('GIVEN %s WHEN checked THEN it is a task list', (_label, value) => {
     expect(isGraphTaskList(value)).toBe(true);
   });
@@ -23,6 +32,8 @@ describe('FEATURE: graph task list shape', () => {
     ['a numeric command', [{ ...TASK, command: 1 }]],
     ['a missing command', [{ ...TASK, command: undefined }]],
     ['a string isRunnable', [{ ...TASK, isRunnable: 'yes' }]],
+    ['a missing isTurboTask', [{ ...TASK, isTurboTask: undefined }]],
+    ['a string isTurboTask', [{ ...TASK, isTurboTask: 'yes' }]],
     ['a dependencies string', [{ ...TASK, dependencies: 'b#build' }]],
     ['a numeric dependency', [{ ...TASK, dependencies: [1] }]],
     ['one bad task after a good one', [TASK, { ...TASK, id: 1 }]]

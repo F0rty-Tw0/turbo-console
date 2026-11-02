@@ -8,6 +8,7 @@ export const GRAPH_TASK_STUB: GraphTask = {
   name: 'build',
   command: 'tsc',
   isRunnable: true,
+  isTurboTask: true,
   dependencies: []
 };
 
@@ -30,6 +31,8 @@ export const TASK_STATE_STUB: GraphReady = {
   kind: 'graph',
   singlePackage: false,
   rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true,
   hash: 'h1',
   packages: [],
   edges: [],

@@ -2,7 +2,15 @@ import type { GraphReady, GraphTask } from '../../../src/bridge/common/graph-sta
 import { packagesOf } from '../utils/graph-package.spec.util.ts';
 
 const taskOf = (name: string, dependencies: string[]): GraphTask => {
-  const task: GraphTask = { id: `//#${name}`, packageName: '//', name, command: name, isRunnable: true, dependencies };
+  const task: GraphTask = {
+    id: `//#${name}`,
+    packageName: '//',
+    name,
+    command: name,
+    isRunnable: true,
+    isTurboTask: true,
+    dependencies
+  };
 
   return task;
 };
@@ -14,6 +22,8 @@ export const SINGLE_PACKAGE_TASKS_STUB: GraphReady = {
   kind: 'graph',
   singlePackage: true,
   rootLabel: 'single-app',
+  scopeShown: true,
+  scriptsShown: true,
   hash: '5ee0a001',
   packages: packagesOf(['//']),
   edges: [],

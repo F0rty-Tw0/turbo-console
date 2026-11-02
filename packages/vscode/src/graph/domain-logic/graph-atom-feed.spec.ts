@@ -8,12 +8,12 @@ import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
 import type { AtomsFake } from '../test/common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import { GRAPH_ATOM_LOOKUP_STUB, GRAPH_ATOM_MODEL_STUB } from '../test/stubs/graph-atom-model.stub.ts';
-import { GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
+import { GRAPH_SHOWN_STUB, GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
 import { atomsFake } from '../test/utils/graph-feeds.spec.util.ts';
 import { postedAtomsOf } from '../test/utils/graph-session-runs.spec.util.ts';
 import { graphStateOf } from '../utils/graph-state.util.ts';
 
-const ATOM_STATE = graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB);
+const ATOM_STATE = graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
 type FeedFixture = {
   readonly feed: GraphAtomFeed;

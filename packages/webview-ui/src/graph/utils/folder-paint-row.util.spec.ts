@@ -16,8 +16,8 @@ const WEB_UI_EDGE: GraphEdge = { source: 'web', target: '@acme/ui' };
 const FOLDERS = ['apps', 'packages'];
 
 const ROOT_INFOS: GraphPackage[] = [
-  { name: 'root-a', path: 'root-a', tags: [], taskCount: 0 },
-  { name: 'apps-x', path: 'apps/x', tags: [], taskCount: 0 }
+  { name: 'root-a', bareName: 'root-a', path: 'root-a', tags: [], taskCount: 0 },
+  { name: 'apps-x', bareName: 'apps-x', path: 'apps/x', tags: [], taskCount: 0 }
 ];
 
 const ROOT_EDGES: GraphEdge[] = [{ source: 'apps-x', target: 'root-a' }];

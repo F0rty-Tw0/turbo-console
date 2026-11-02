@@ -1,4 +1,4 @@
-import type { GraphHostMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphReady } from '@turbo-console/webview-ui';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
@@ -11,9 +11,11 @@ import type { ViewFake } from '../../shared/test/common/panel-fakes.type.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphPanelsDeps } from '../common/graph-panel.type.ts';
+import type { GraphToggles } from '../common/graph.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
 import { graphHostMock } from '../test/mocks/graph-host.mock.ts';
 import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
+import { hiddenTogglesOf, scopeShownTogglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const READY = { type: 'ready' };
@@ -34,6 +36,21 @@ describe('FEATURE: graph panel registry', () => {
   let setPanelVisible: Mock<GraphPanelsDeps['setPanelVisible']>;
   let panels: GraphPanels;
 
+  const panelsWith = (toggles: GraphToggles): GraphPanels => {
+    const openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
+    const deps: GraphPanelsDeps = {
+      roots: store,
+      host: fakes.host,
+      setPanelVisible,
+      openDetails,
+      runs: new RunStore(),
+      atoms: SHARED_ATOMS_STUB,
+      toggles
+    };
+
+    return new GraphPanels(deps);
+  };
+
   beforeEach(() => {
     store = new RootStore();
     store.set([ROOT_FOLDER_STUB, OTHER_FOLDER], () => coordinatorMock());
@@ -41,16 +58,8 @@ describe('FEATURE: graph panel registry', () => {
     store.apply('/other', GRAPH_LOADED_STUB);
     fakes = graphHostMock();
     setPanelVisible = vi.fn<GraphPanelsDeps['setPanelVisible']>();
-    const openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
 
-    panels = new GraphPanels({
-      roots: store,
-      host: fakes.host,
-      setPanelVisible,
-      openDetails,
-      runs: new RunStore(),
-      atoms: SHARED_ATOMS_STUB
-    });
+    panels = panelsWith(hiddenTogglesOf());
   });
 
   describe('GIVEN a loaded root', () => {
@@ -87,6 +96,17 @@ describe('FEATURE: graph panel registry', () => {
 
       expect(panels.api().posted('/ws')).toStrictEqual([STATE_POSTED, RUNS_POSTED]);
       expect(viewAt(fakes, 0).send).toHaveBeenCalledTimes(2);
+    });
+
+    it('GIVEN panels built with scope shown WHEN the page sends ready THEN the posted state carries scopeShown true', () => {
+      const scopedGraph: GraphReady = { ...GRAPH_STATE_STUB, scopeShown: true };
+      const scopedState: GraphHostMessage = { type: 'state', state: scopedGraph };
+      const scoped = panelsWith(scopeShownTogglesOf());
+
+      scoped.open('/ws');
+      viewAt(fakes, 0).message(READY);
+
+      expect(scoped.api().posted('/ws')[0]).toStrictEqual(scopedState);
     });
 
     it('WHEN the page sends ready more than the cap THEN only the last POSTED_MAX messages are kept', () => {

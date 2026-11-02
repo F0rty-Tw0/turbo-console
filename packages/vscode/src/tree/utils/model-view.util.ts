@@ -81,20 +81,21 @@ const fellBack = (shown: PackageNode[], bare: boolean[], texts: string[]): boole
 };
 
 /**
- * Spec §4.8: a scoped name reads its rest, unless the text its row reads (cleaned) is the text of another shown
+ * Spec §4.8: a scoped name reads its rest, unless the text its row reads (cleaned) is the text of another given
  * package's row; then it keeps its full shown text. A fallback can make a new pair (`@a/x` back to full meets `@b/@a/x`
  * reading `@a/x`), so passes repeat until none falls back: no two rows of a root read the same text, unless their full
- * shown texts already do once cleaned. Maps each package name to the cleaned text its row reads.
+ * shown texts already do once cleaned. The tree passes the packages it shows, the graph every package. Maps each
+ * package name to the cleaned text its row reads.
  */
-const bareTextsOf = (shown: PackageNode[]): Map<string, string> => {
-  const restTexts = shown.map(restTextOf);
+export const bareTextsOf = (packages: PackageNode[]): Map<string, string> => {
+  const restTexts = packages.map(restTextOf);
   const bare = restTexts.map((text) => text !== null);
-  const texts = shown.map((pkg, index) => restTexts[index] ?? rowTextOf(packageTextOf(pkg)));
+  const texts = packages.map((pkg, index) => restTexts[index] ?? rowTextOf(packageTextOf(pkg)));
   let isFalling = true;
 
-  while (isFalling) isFalling = fellBack(shown, bare, texts);
+  while (isFalling) isFalling = fellBack(packages, bare, texts);
 
-  const pairs = shown.map((pkg, index): [string, string] => [pkg.name, texts[index] ?? rowTextOf(packageTextOf(pkg))]);
+  const pairs = packages.map((pkg, index): [string, string] => [pkg.name, texts[index] ?? rowTextOf(packageTextOf(pkg))]);
 
   return new Map(pairs);
 };

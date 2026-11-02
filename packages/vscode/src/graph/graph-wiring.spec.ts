@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import type { GraphContext, GraphDetails, GraphWiring } from './common/graph-panel.type.ts';
 import { createGraph } from './graph-wiring.ts';
 import { GRAPH_LOADED_STUB } from './test/stubs/graph-model.stub.ts';
-import { feedsOf } from './test/utils/graph-feeds.spec.util.ts';
+import { feedsOf, feedsWithToggles, scopeShownTogglesOf } from './test/utils/graph-feeds.spec.util.ts';
 import { copyGraphPageRoot } from './test/utils/page-root.spec.util.ts';
 import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
 import { RootStore } from '../roots/domain-logic/root-store.ts';
@@ -162,6 +162,19 @@ describe('FEATURE: the graph wiring', () => {
       await callbackOf(TASK_COMMAND)(TASK_ROW);
 
       expect(graph.api.panels()).toHaveLength(1);
+    });
+
+    it('GIVEN feeds with scope shown WHEN Show All Task Graphs runs and the page is ready THEN the posted state carries scopeShown true', async () => {
+      const feeds = feedsWithToggles(new RunStore(), scopeShownTogglesOf());
+      const scoped = createGraph(contextOf(page), session, details, output, feeds);
+
+      scoped.register();
+      await callbackOf(ALL_TASKS_COMMAND)(undefined);
+      await scoped.api.receive('/ws', { type: 'ready' });
+
+      const shown = { scopeShown: true };
+
+      expect(scoped.api.posted('/ws')[0]).toMatchObject({ type: 'state', state: shown });
     });
 
     it('WHEN Show All Task Graphs runs THEN the panel of the active root opens', async () => {

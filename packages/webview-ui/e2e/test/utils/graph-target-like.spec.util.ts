@@ -79,6 +79,8 @@ export const targetLikeState = (): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    scopeShown: true,
+    scriptsShown: true,
     hash: '7a7a7a7a',
     packages,
     edges,

@@ -62,13 +62,20 @@ import type {
 } from './index.ts';
 
 type ExpectedEdge = { readonly source: string; readonly target: string };
-type ExpectedPackage = { readonly name: string; readonly path: string; readonly tags: string[]; readonly taskCount: number };
+type ExpectedPackage = {
+  readonly name: string;
+  readonly bareName: string;
+  readonly path: string;
+  readonly tags: string[];
+  readonly taskCount: number;
+};
 type ExpectedTask = {
   readonly id: string;
   readonly packageName: string;
   readonly name: string;
   readonly command: string | null;
   readonly isRunnable: boolean;
+  readonly isTurboTask: boolean;
   readonly dependencies: string[];
 };
 type ExpectedAtomFile = { readonly id: string; readonly specPath: string; readonly isLive: boolean };
@@ -183,6 +190,8 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphState['kind']>().toEqualTypeOf<'loading' | 'error' | 'graph'>();
       expectTypeOf<GraphReady['singlePackage']>().toEqualTypeOf<boolean>();
       expectTypeOf<GraphReady['rootLabel']>().toEqualTypeOf<string | null>();
+      expectTypeOf<GraphReady['scopeShown']>().toEqualTypeOf<boolean>();
+      expectTypeOf<GraphReady['scriptsShown']>().toEqualTypeOf<boolean>();
       expectTypeOf<ManifestField>().toEqualTypeOf<ExpectedEntry['field']>();
       expectTypeOf<ManifestEntry>().toEqualTypeOf<ExpectedEntry>();
       expectTypeOf<ManifestContext>().toEqualTypeOf<ExpectedEntry['context']>();

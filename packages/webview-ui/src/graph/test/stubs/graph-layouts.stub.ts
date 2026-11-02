@@ -3,7 +3,7 @@ import type { GraphViewState } from '../../../bridge/common/graph-view-state.typ
 import { freshViewStateOf } from '../../utils/fresh-view-state.util.ts';
 
 const packageOf = (name: string, path: string): GraphPackage => {
-  const pkg: GraphPackage = { name, path, tags: [], taskCount: 0 };
+  const pkg: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
 
   return pkg;
 };
@@ -37,6 +37,8 @@ export const STATE_STUB: GraphReady = {
   kind: 'graph',
   singlePackage: false,
   rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true,
   hash: 'h1',
   packages: PACKAGES,
   edges: EDGES,

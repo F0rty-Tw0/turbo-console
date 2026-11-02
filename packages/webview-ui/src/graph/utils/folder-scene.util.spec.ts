@@ -6,7 +6,7 @@ import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { BOARDS_EDGES, BOARDS_INFOS, boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 
 const packageOf = (name: string, path: string): GraphPackage => {
-  const pkg: GraphPackage = { name, path, tags: [], taskCount: 0 };
+  const pkg: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
 
   return pkg;
 };

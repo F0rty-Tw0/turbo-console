@@ -82,8 +82,8 @@ describe('FEATURE: folderLinksOf', () => {
   describe('GIVEN a folder named __proto__ holding a package named constructor', () => {
     it('WHEN the folder is collapsed THEN constructor to x is a link from the collapsed node', () => {
       const infos: GraphPackage[] = [
-        { name: 'constructor', path: '__proto__/constructor', tags: [], taskCount: 0 },
-        { name: 'x', path: 'apps/x', tags: [], taskCount: 0 }
+        { name: 'constructor', bareName: 'constructor', path: '__proto__/constructor', tags: [], taskCount: 0 },
+        { name: 'x', bareName: 'x', path: 'apps/x', tags: [], taskCount: 0 }
       ];
       const edges: GraphEdge[] = [{ source: 'constructor', target: 'x' }];
 

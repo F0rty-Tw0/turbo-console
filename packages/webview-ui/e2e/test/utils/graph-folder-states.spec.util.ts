@@ -7,6 +7,8 @@ import type { GraphViewState } from '../../../src/bridge/common/graph-view-state
 import { freshViewStateOf } from '../../../src/graph/utils/fresh-view-state.util.ts';
 import type { PositionRow } from '../../common/graph.type.ts';
 
+const SHOWN = { scopeShown: true, scriptsShown: true };
+
 /** `boardsState()` with a grouped layout cached at fixed centres, so geometry never depends on ELK. */
 export const placedBoardsState = (): GraphReady => {
   const base = boardsState();
@@ -40,6 +42,7 @@ export const ghostFolderState = (): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    ...SHOWN,
     tasks: [],
     hash: 'f01d0001',
     packages: [packageOf('a', 'x/a'), packageOf('m', 'mid/m'), packageOf('b', 'y/b')],
@@ -67,6 +70,7 @@ export const awkwardNamesState = (): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    ...SHOWN,
     tasks: [],
     hash: 'f01d0002',
     packages: [
@@ -103,6 +107,7 @@ export const wideRowFolderState = (): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    ...SHOWN,
     tasks: [],
     hash: 'f01d0003',
     packages: [packageOf('a', 'x/a'), packageOf('m', 'mid/m'), packageOf('b', 'y/b')],
@@ -132,6 +137,7 @@ export const longTitleState = (): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    ...SHOWN,
     tasks: [],
     hash: 'f01d0005',
     packages: [packageOf('pkg', `${LONG_FOLDER}/pkg`)],
@@ -160,6 +166,7 @@ export const deepFolderState = (): GraphReady => {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
+    ...SHOWN,
     tasks: [],
     hash: 'f01d0006',
     packages,

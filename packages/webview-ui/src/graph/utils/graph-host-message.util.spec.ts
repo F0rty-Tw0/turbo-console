@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { isGraphHostMessage } from './graph-host-message.util.ts';
-import type { GraphEdge, Positions } from '../../bridge/common/graph-state.type.ts';
-
-const EDGE: GraphEdge = { source: 'app', target: 'core' };
-
-const EDGES = [EDGE];
+import type { Positions } from '../../bridge/common/graph-state.type.ts';
+import { HOST_EDGES_STUB, HOST_GRAPH_STUB, HOST_PACKAGES_STUB, HOST_TASK_STUB } from '../test/stubs/graph-host-message.stub.ts';
+import { graphWithTaskOf, stateMessageOf, without } from '../test/utils/graph-host-message.spec.util.ts';
 
 const NO_TARGET_EDGE = { source: 'app' };
 
@@ -15,17 +13,12 @@ const ORIGIN = { x: 0, y: 0 };
 
 const POSITIONS: Positions = { app: ORIGIN, core: ORIGIN };
 
-const PACKAGES = [
-  { name: 'app', path: 'apps/app', tags: ['ui'], taskCount: 3 },
-  { name: 'core', path: 'packages/core', tags: [], taskCount: 0 }
-];
-
 const OBJECT_NAMES = [
-  { name: '__proto__', path: '', tags: ['__proto__'], taskCount: 0 },
-  { name: 'constructor', path: 'packages/constructor', tags: ['constructor'], taskCount: 0 }
+  { name: '__proto__', bareName: '__proto__', path: '', tags: ['__proto__'], taskCount: 0 },
+  { name: 'constructor', bareName: 'constructor', path: 'packages/constructor', tags: ['constructor'], taskCount: 0 }
 ];
 
-const ROOT_PACKAGES = [{ name: '//', path: '', tags: [], taskCount: 0 }];
+const ROOT_PACKAGES = [{ name: '//', bareName: '//', path: '', tags: [], taskCount: 0 }];
 
 const STRING_PACKAGES = ['app'];
 
@@ -33,21 +26,21 @@ const NULL_PACKAGES = [null];
 
 const UNDEFINED_PACKAGES = [undefined];
 
-const NUMERIC_NAME_PACKAGES = [{ name: 5, path: 'p', tags: [], taskCount: 0 }];
+const NUMERIC_NAME_PACKAGES = [{ name: 5, bareName: 'p', path: 'p', tags: [], taskCount: 0 }];
 
-const NO_PATH_PACKAGES = [{ name: 'a', tags: [], taskCount: 0 }];
+const NO_PATH_PACKAGES = [{ name: 'a', bareName: 'a', tags: [], taskCount: 0 }];
 
-const NUMERIC_PATH_PACKAGES = [{ name: 'a', path: 1, tags: [], taskCount: 0 }];
+const NUMERIC_PATH_PACKAGES = [{ name: 'a', bareName: 'a', path: 1, tags: [], taskCount: 0 }];
 
-const NO_TAGS_PACKAGES = [{ name: 'a', path: 'p', taskCount: 0 }];
+const NO_TAGS_PACKAGES = [{ name: 'a', bareName: 'a', path: 'p', taskCount: 0 }];
 
-const STRING_TAGS_PACKAGES = [{ name: 'a', path: 'p', tags: 'ui', taskCount: 0 }];
+const STRING_TAGS_PACKAGES = [{ name: 'a', bareName: 'a', path: 'p', tags: 'ui', taskCount: 0 }];
 
-const NUMERIC_TAG_PACKAGES = [{ name: 'a', path: 'p', tags: ['ui', 2], taskCount: 0 }];
+const NUMERIC_TAG_PACKAGES = [{ name: 'a', bareName: 'a', path: 'p', tags: ['ui', 2], taskCount: 0 }];
 
-const NO_TASK_COUNT_PACKAGES = [{ name: 'a', path: 'p', tags: [] }];
+const NO_TASK_COUNT_PACKAGES = [{ name: 'a', bareName: 'a', path: 'p', tags: [] }];
 
-const packagesWithTaskCount = (taskCount: unknown): unknown[] => [{ name: 'a', path: 'p', tags: [], taskCount }];
+const packagesWithTaskCount = (taskCount: unknown): unknown[] => [{ name: 'a', bareName: 'a', path: 'p', tags: [], taskCount }];
 
 const ZERO_TASK_COUNT_PACKAGES = packagesWithTaskCount(0);
 
@@ -65,66 +58,53 @@ const EXPLAINED = { type: 'edgeExplained', source: 'app', target: 'core', result
 
 const OBJECT_NAMES_EXPLAINED = { type: 'edgeExplained', source: '__proto__', target: 'constructor', result: UNREADABLE_RESULT };
 
-const TASK = {
-  id: 'app#build',
-  packageName: 'app',
-  name: 'build',
-  command: 'tsc',
-  isRunnable: true,
-  dependencies: ['core#build']
-};
+const TASKS = [
+  HOST_TASK_STUB,
+  { id: 'core#build', packageName: 'core', name: 'build', command: null, isRunnable: false, isTurboTask: true, dependencies: [] }
+];
 
-const TASKS = [TASK, { id: 'core#build', packageName: 'core', name: 'build', command: null, isRunnable: false, dependencies: [] }];
-
-const GRAPH = {
-  kind: 'graph',
-  hash: 'h',
-  packages: PACKAGES,
-  edges: EDGES,
-  positions: null,
-  folderPositions: null,
-  tasks: [],
-  atomGroups: [],
-  singlePackage: false,
-  rootLabel: null
-};
-
-const CACHED_GRAPH = { ...GRAPH, positions: POSITIONS };
+const CACHED_GRAPH = { ...HOST_GRAPH_STUB, positions: POSITIONS };
 
 const WITHOUT_FOLDER_POSITIONS = {
   kind: 'graph',
   hash: 'h',
-  packages: PACKAGES,
-  edges: EDGES,
+  packages: HOST_PACKAGES_STUB,
+  edges: HOST_EDGES_STUB,
   positions: null,
   tasks: [],
   atomGroups: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true
 };
 
 const WITHOUT_TASKS = {
   kind: 'graph',
   hash: 'h',
-  packages: PACKAGES,
-  edges: EDGES,
+  packages: HOST_PACKAGES_STUB,
+  edges: HOST_EDGES_STUB,
   positions: null,
   folderPositions: null,
   atomGroups: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true
 };
 
 const WITHOUT_ATOM_GROUPS = {
   kind: 'graph',
   hash: 'h',
-  packages: PACKAGES,
-  edges: EDGES,
+  packages: HOST_PACKAGES_STUB,
+  edges: HOST_EDGES_STUB,
   positions: null,
   folderPositions: null,
   tasks: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true
 };
 
 const ATOM_FILE = { id: 'app#e2e-ci--a.spec.ts', specPath: 'a.spec.ts', isLive: true };
@@ -153,25 +133,6 @@ const LOADING = { kind: 'loading' };
 
 const ERROR = { kind: 'error', message: 'x' };
 
-const stateMessageOf = (state: unknown): unknown => {
-  const message = { type: 'state', state };
-
-  return message;
-};
-
-const without = (state: object, key: string): object => {
-  const kept = Object.entries(state).filter(([name]) => name !== key);
-
-  return Object.fromEntries(kept);
-};
-
-const graphWithTaskOf = (change: object): unknown => {
-  const task = { ...TASK, ...change };
-  const tasks = [task];
-
-  return stateMessageOf({ ...GRAPH, tasks });
-};
-
 const runsMessageOf = (runs: unknown): unknown => {
   const message = { type: 'runs', runs };
 
@@ -183,15 +144,15 @@ describe('FEATURE: isGraphHostMessage', () => {
     it.each([
       ['loading', LOADING],
       ['error', ERROR],
-      ['graph with no positions', GRAPH],
-      ['graph of a single-package root', { ...GRAPH, singlePackage: true, rootLabel: 'single-app' }],
+      ['graph with no positions', HOST_GRAPH_STUB],
+      ['graph of a single-package root', { ...HOST_GRAPH_STUB, singlePackage: true, rootLabel: 'single-app' }],
       ['graph with cached positions', CACHED_GRAPH],
-      ['graph with cached folder positions', { ...GRAPH, folderPositions: POSITIONS }],
-      ['graph whose packages are named like Object members', { ...GRAPH, packages: OBJECT_NAMES }],
-      ['graph with tasks', { ...GRAPH, tasks: TASKS }],
-      ['graph with an atom group', { ...GRAPH, atomGroups: ATOM_GROUPS }],
-      ['graph with a root package at the empty path', { ...GRAPH, packages: ROOT_PACKAGES }],
-      ['graph whose packages have taskCount 0 and 100 000', { ...GRAPH, packages: EXTREME_TASK_COUNT_PACKAGES }]
+      ['graph with cached folder positions', { ...HOST_GRAPH_STUB, folderPositions: POSITIONS }],
+      ['graph whose packages are named like Object members', { ...HOST_GRAPH_STUB, packages: OBJECT_NAMES }],
+      ['graph with tasks', { ...HOST_GRAPH_STUB, tasks: TASKS }],
+      ['graph with an atom group', { ...HOST_GRAPH_STUB, atomGroups: ATOM_GROUPS }],
+      ['graph with a root package at the empty path', { ...HOST_GRAPH_STUB, packages: ROOT_PACKAGES }],
+      ['graph whose packages have taskCount 0 and 100 000', { ...HOST_GRAPH_STUB, packages: EXTREME_TASK_COUNT_PACKAGES }]
     ])('WHEN its state is %s THEN it is accepted', (_name, state) => {
       const isMessage = isGraphHostMessage(stateMessageOf(state));
 
@@ -261,49 +222,49 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a string', 'state'],
       ['an empty object', {}],
       ['an unknown type', { type: 'nope' }],
-      ['a message of an unknown type that carries a state', { type: 'nope', state: GRAPH }],
+      ['a message of an unknown type that carries a state', { type: 'nope', state: HOST_GRAPH_STUB }],
       ['a state message with no state', { type: 'state' }],
       ['a string state', stateMessageOf('x')],
       ['an unknown state kind', stateMessageOf({ kind: 'other' })],
       ['an error with no message', stateMessageOf({ kind: 'error' })],
-      ['a graph with a numeric hash', stateMessageOf({ ...GRAPH, hash: 5 })],
-      ['a graph with string packages', stateMessageOf({ ...GRAPH, packages: 'x' })],
-      ['a graph with null edges', stateMessageOf({ ...GRAPH, edges: null })],
-      ['a graph with a string package', stateMessageOf({ ...GRAPH, packages: STRING_PACKAGES })],
-      ['a graph with a null package', stateMessageOf({ ...GRAPH, packages: NULL_PACKAGES })],
-      ['a graph with an undefined package', stateMessageOf({ ...GRAPH, packages: UNDEFINED_PACKAGES })],
-      ['a graph with a numeric package name', stateMessageOf({ ...GRAPH, packages: NUMERIC_NAME_PACKAGES })],
-      ['a graph with a package with no path', stateMessageOf({ ...GRAPH, packages: NO_PATH_PACKAGES })],
-      ['a graph with a numeric path', stateMessageOf({ ...GRAPH, packages: NUMERIC_PATH_PACKAGES })],
-      ['a graph with a package with no tags', stateMessageOf({ ...GRAPH, packages: NO_TAGS_PACKAGES })],
-      ['a graph with string tags', stateMessageOf({ ...GRAPH, packages: STRING_TAGS_PACKAGES })],
-      ['a graph with a numeric tag', stateMessageOf({ ...GRAPH, packages: NUMERIC_TAG_PACKAGES })],
-      ['a graph with no taskCount', stateMessageOf({ ...GRAPH, packages: NO_TASK_COUNT_PACKAGES })],
-      ['a graph with a negative taskCount', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount(-1) })],
-      ['a graph with a fractional taskCount', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount(1.5) })],
-      ['a graph with a taskCount of 100 001', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount(100_001) })],
-      ['a graph with a string taskCount', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount('3') })],
-      ['a graph with a NaN taskCount', stateMessageOf({ ...GRAPH, packages: packagesWithTaskCount(NaN) })],
-      ['a graph with a null edge', stateMessageOf({ ...GRAPH, edges: [null] })],
-      ['a graph with a string edge', stateMessageOf({ ...GRAPH, edges: ['app>core'] })],
-      ['a graph with an edge with no target', stateMessageOf({ ...GRAPH, edges: [NO_TARGET_EDGE] })],
-      ['a graph with an edge with a numeric source', stateMessageOf({ ...GRAPH, edges: [NUMERIC_SOURCE_EDGE] })],
-      ['a graph with string positions', stateMessageOf({ ...GRAPH, positions: 'x' })],
-      ['a graph with string folder positions', stateMessageOf({ ...GRAPH, folderPositions: 'x' })],
+      ['a graph with a numeric hash', stateMessageOf({ ...HOST_GRAPH_STUB, hash: 5 })],
+      ['a graph with string packages', stateMessageOf({ ...HOST_GRAPH_STUB, packages: 'x' })],
+      ['a graph with null edges', stateMessageOf({ ...HOST_GRAPH_STUB, edges: null })],
+      ['a graph with a string package', stateMessageOf({ ...HOST_GRAPH_STUB, packages: STRING_PACKAGES })],
+      ['a graph with a null package', stateMessageOf({ ...HOST_GRAPH_STUB, packages: NULL_PACKAGES })],
+      ['a graph with an undefined package', stateMessageOf({ ...HOST_GRAPH_STUB, packages: UNDEFINED_PACKAGES })],
+      ['a graph with a numeric package name', stateMessageOf({ ...HOST_GRAPH_STUB, packages: NUMERIC_NAME_PACKAGES })],
+      ['a graph with a package with no path', stateMessageOf({ ...HOST_GRAPH_STUB, packages: NO_PATH_PACKAGES })],
+      ['a graph with a numeric path', stateMessageOf({ ...HOST_GRAPH_STUB, packages: NUMERIC_PATH_PACKAGES })],
+      ['a graph with a package with no tags', stateMessageOf({ ...HOST_GRAPH_STUB, packages: NO_TAGS_PACKAGES })],
+      ['a graph with string tags', stateMessageOf({ ...HOST_GRAPH_STUB, packages: STRING_TAGS_PACKAGES })],
+      ['a graph with a numeric tag', stateMessageOf({ ...HOST_GRAPH_STUB, packages: NUMERIC_TAG_PACKAGES })],
+      ['a graph with no taskCount', stateMessageOf({ ...HOST_GRAPH_STUB, packages: NO_TASK_COUNT_PACKAGES })],
+      ['a graph with a negative taskCount', stateMessageOf({ ...HOST_GRAPH_STUB, packages: packagesWithTaskCount(-1) })],
+      ['a graph with a fractional taskCount', stateMessageOf({ ...HOST_GRAPH_STUB, packages: packagesWithTaskCount(1.5) })],
+      ['a graph with a taskCount of 100 001', stateMessageOf({ ...HOST_GRAPH_STUB, packages: packagesWithTaskCount(100_001) })],
+      ['a graph with a string taskCount', stateMessageOf({ ...HOST_GRAPH_STUB, packages: packagesWithTaskCount('3') })],
+      ['a graph with a NaN taskCount', stateMessageOf({ ...HOST_GRAPH_STUB, packages: packagesWithTaskCount(NaN) })],
+      ['a graph with a null edge', stateMessageOf({ ...HOST_GRAPH_STUB, edges: [null] })],
+      ['a graph with a string edge', stateMessageOf({ ...HOST_GRAPH_STUB, edges: ['app>core'] })],
+      ['a graph with an edge with no target', stateMessageOf({ ...HOST_GRAPH_STUB, edges: [NO_TARGET_EDGE] })],
+      ['a graph with an edge with a numeric source', stateMessageOf({ ...HOST_GRAPH_STUB, edges: [NUMERIC_SOURCE_EDGE] })],
+      ['a graph with string positions', stateMessageOf({ ...HOST_GRAPH_STUB, positions: 'x' })],
+      ['a graph with string folder positions', stateMessageOf({ ...HOST_GRAPH_STUB, folderPositions: 'x' })],
       ['a graph with no folderPositions key', stateMessageOf(WITHOUT_FOLDER_POSITIONS)],
-      ['a graph with no singlePackage', stateMessageOf(without(GRAPH, 'singlePackage'))],
-      ['a graph with string singlePackage', stateMessageOf({ ...GRAPH, singlePackage: 'yes' })],
-      ['a graph with no rootLabel', stateMessageOf(without(GRAPH, 'rootLabel'))],
-      ['a graph with numeric rootLabel', stateMessageOf({ ...GRAPH, rootLabel: 3 })],
+      ['a graph with no singlePackage', stateMessageOf(without(HOST_GRAPH_STUB, 'singlePackage'))],
+      ['a graph with string singlePackage', stateMessageOf({ ...HOST_GRAPH_STUB, singlePackage: 'yes' })],
+      ['a graph with no rootLabel', stateMessageOf(without(HOST_GRAPH_STUB, 'rootLabel'))],
+      ['a graph with numeric rootLabel', stateMessageOf({ ...HOST_GRAPH_STUB, rootLabel: 3 })],
       ['a state of kind singlePackage', stateMessageOf({ kind: 'singlePackage' })],
       ['a graph with no tasks key', stateMessageOf(WITHOUT_TASKS)],
       ['a graph with no atomGroups key', stateMessageOf(WITHOUT_ATOM_GROUPS)],
-      ['a graph with string atomGroups', stateMessageOf({ ...GRAPH, atomGroups: 'x' })],
-      ['a graph with a group whose file has no isLive', stateMessageOf({ ...GRAPH, atomGroups: NO_IS_LIVE_GROUPS })],
+      ['a graph with string atomGroups', stateMessageOf({ ...HOST_GRAPH_STUB, atomGroups: 'x' })],
+      ['a graph with a group whose file has no isLive', stateMessageOf({ ...HOST_GRAPH_STUB, atomGroups: NO_IS_LIVE_GROUPS })],
       ['an atoms message with string groups', { type: 'atoms', groups: 'x' }],
       ['an atoms message with an outcome outside the four', { type: 'atoms', groups: SKIPPED_STATES }],
-      ['a graph with string tasks', stateMessageOf({ ...GRAPH, tasks: 'x' })],
-      ['a graph with a null task', stateMessageOf({ ...GRAPH, tasks: [null] })],
+      ['a graph with string tasks', stateMessageOf({ ...HOST_GRAPH_STUB, tasks: 'x' })],
+      ['a graph with a null task', stateMessageOf({ ...HOST_GRAPH_STUB, tasks: [null] })],
       ['a graph with a numeric task id', graphWithTaskOf({ id: 1 })],
       ['a graph with a task with no packageName', graphWithTaskOf({ packageName: undefined })],
       ['a graph with a numeric task command', graphWithTaskOf({ command: 7 })],

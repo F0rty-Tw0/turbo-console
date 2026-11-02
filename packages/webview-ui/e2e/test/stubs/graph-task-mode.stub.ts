@@ -2,7 +2,15 @@ import type { GraphEdge, GraphReady, GraphTask } from '../../../src/bridge/commo
 import { packageOf, packagesOf } from '../utils/graph-package.spec.util.ts';
 
 const taskOf = (packageName: string, name: string, dependencies: string[]): GraphTask => {
-  const task: GraphTask = { id: `${packageName}#${name}`, packageName, name, command: name, isRunnable: true, dependencies };
+  const task: GraphTask = {
+    id: `${packageName}#${name}`,
+    packageName,
+    name,
+    command: name,
+    isRunnable: true,
+    isTurboTask: true,
+    dependencies
+  };
 
   return task;
 };
@@ -27,6 +35,8 @@ export const TASK_MODE_STATE_STUB: GraphReady = {
   kind: 'graph',
   singlePackage: false,
   rootLabel: null,
+  scopeShown: true,
+  scriptsShown: true,
   hash: '7a5c0001',
   packages: packagesOf(['app', 'lib', 'ui']),
   edges: EDGES,

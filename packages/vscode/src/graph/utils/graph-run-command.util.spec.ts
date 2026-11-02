@@ -10,6 +10,7 @@ const A_BUILD_TASK: GraphTask = {
   name: 'build',
   command: 'tsc',
   isRunnable: true,
+  isTurboTask: true,
   dependencies: []
 };
 

@@ -17,11 +17,12 @@ const isEdge = (value: unknown): boolean => {
 const isPackage = (value: unknown): boolean => {
   if (!isRecord(value)) return false;
 
-  const { name, path, tags, taskCount } = value;
+  const { name, bareName, path, tags, taskCount } = value;
   const hasTags = Array.isArray(tags) && tags.every(isString);
   const hasTaskCount = typeof taskCount === 'number' && Number.isInteger(taskCount) && taskCount >= 0 && taskCount <= TASK_COUNT_MAX;
+  const hasNames = isString(name) && isString(bareName) && isString(path);
 
-  return isString(name) && isString(path) && hasTags && hasTaskCount;
+  return hasNames && hasTags && hasTaskCount;
 };
 
 const hasCachesOf = (state: UnknownRecord): boolean => {
@@ -40,6 +41,12 @@ const hasSinglePackageOf = (state: UnknownRecord): boolean => {
   return hasFlag && hasLabel;
 };
 
+const hasShownOf = (state: UnknownRecord): boolean => {
+  const { scopeShown, scriptsShown } = state;
+
+  return typeof scopeShown === 'boolean' && typeof scriptsShown === 'boolean';
+};
+
 const isGraphShape = (state: UnknownRecord): boolean => {
   const { hash, packages, edges, tasks, atomGroups } = state;
   const hasHash = typeof hash === 'string';
@@ -49,7 +56,8 @@ const isGraphShape = (state: UnknownRecord): boolean => {
   const hasTaskParts = isGraphTaskList(tasks) && isAtomGroupList(atomGroups);
   const hasCaches = hasCachesOf(state);
   const hasSinglePackage = hasSinglePackageOf(state);
-  const hasHostFields = hasCaches && hasSinglePackage;
+  const hasShown = hasShownOf(state);
+  const hasHostFields = hasCaches && hasSinglePackage && hasShown;
 
   return hasGraph && hasTaskParts && hasHostFields;
 };
@@ -70,8 +78,8 @@ const isGraphState = (state: unknown): boolean => {
 };
 
 /**
- * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, path, tags and task
- * count, each edge end, each task's fields and each atom group's files; to an `edgeExplained` message by its names and
+ * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, bare name, path, tags and task
+ * count, each edge end, each task's fields, each atom group's files and the two shown flags; to an `edgeExplained` message by its names and
  * result; to a `runs` message by its run states; to a `showTasks` message by its task ids; to a `showPackage` message by
  * its package name; or to an `atoms` message by its counts lines and the four outcome words. Anything else is ignored. The payload itself comes from the extension host,
  * which builds it.

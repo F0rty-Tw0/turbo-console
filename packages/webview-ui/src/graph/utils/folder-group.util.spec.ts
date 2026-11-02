@@ -6,7 +6,7 @@ import type { FolderGroup } from '../common/folder-group.type.ts';
 import { BOARDS_INFOS } from '../test/utils/folder-boards.spec.util.ts';
 
 const pkgOf = (name: string, path: string, tags: string[] = []): GraphPackage => {
-  const pkg: GraphPackage = { name, path, tags, taskCount: 0 };
+  const pkg: GraphPackage = { name, bareName: name, path, tags, taskCount: 0 };
 
   return pkg;
 };

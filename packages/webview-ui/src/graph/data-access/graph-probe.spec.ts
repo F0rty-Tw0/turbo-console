@@ -359,8 +359,8 @@ describe('FEATURE: createGraphProbe collapse facts', () => {
   });
 
   it("GIVEN a root folder and a real '(root)' folder WHEN the folders are read THEN their keys differ", () => {
-    const solo: GraphPackage = { name: 'solo', path: 'solo', tags: [], taskCount: 0 };
-    const x: GraphPackage = { name: 'x', path: '(root)/x', tags: [], taskCount: 0 };
+    const solo: GraphPackage = { name: 'solo', bareName: 'solo', path: 'solo', tags: [], taskCount: 0 };
+    const x: GraphPackage = { name: 'x', bareName: 'x', path: '(root)/x', tags: [], taskCount: 0 };
     const rootGroup: FolderGroup = { folder: '', packages: [solo] };
     const realGroup: FolderGroup = { folder: '(root)', packages: [x] };
     const soloAt: Position = { x: 0, y: 0 };

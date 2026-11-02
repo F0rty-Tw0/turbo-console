@@ -8,9 +8,9 @@ import type { RevealDepsMock } from '../test/common/graph-reveal.type.ts';
 import { revealDepsMock } from '../test/mocks/graph-reveal.mock.ts';
 import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
-const WEB_INFO: GraphPackage = { name: 'web', path: 'apps/web', tags: [], taskCount: 0 };
+const WEB_INFO: GraphPackage = { name: 'web', bareName: 'web', path: 'apps/web', tags: [], taskCount: 0 };
 
-const API_INFO: GraphPackage = { name: 'api', path: 'libs/api', tags: [], taskCount: 0 };
+const API_INFO: GraphPackage = { name: 'api', bareName: 'api', path: 'libs/api', tags: [], taskCount: 0 };
 
 /** `web` in `apps` and `api` in `libs`, unlinked. */
 const GRAPH: DrawnGraph = { hash: 'h1', packages: ['web', 'api'], infos: [WEB_INFO, API_INFO], edges: [] };

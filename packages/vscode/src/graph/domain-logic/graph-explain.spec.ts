@@ -34,7 +34,9 @@ const READY: GraphReady = {
   tasks: [],
   atomGroups: [],
   singlePackage: false,
-  rootLabel: null
+  rootLabel: null,
+  scopeShown: false,
+  scriptsShown: false
 };
 
 const LOADING: GraphState = { kind: 'loading' };

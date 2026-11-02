@@ -37,6 +37,7 @@ const taskOf = ({ packageName, task }: VisibleTask, listed: ReadonlySet<string>,
     name: task.name,
     command: task.command,
     isRunnable: isRunnableTask(task),
+    isTurboTask: task.isTurboTask,
     dependencies
   };
 

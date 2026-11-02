@@ -10,7 +10,7 @@ export const rootNode = (name: string, tags: string[] = []): PackageNode => {
 };
 
 export const graphPackageOf = (name: string, path: string, tags: string[] = [], taskCount = 0): GraphPackage => {
-  const info: GraphPackage = { name, path, tags, taskCount };
+  const info: GraphPackage = { name, bareName: name, path, tags, taskCount };
 
   return info;
 };

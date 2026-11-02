@@ -7,6 +7,12 @@ export type GraphEdge = {
 /** A package as the page lists it; the host deduplicates and sorts `tags`. */
 export type GraphPackage = {
   readonly name: string;
+  /**
+   * The package's row text with its `@scope/` stripped, cleaned like a tree label (one line, control and zero-width
+   * characters dropped, cut to LABEL_MAX); the full text on a collision; a single-package root reads its label. Built over
+   * every graph package, so it can differ from the tree while scripts are hidden; not part of the layout hash.
+   */
+  readonly bareName: string;
   readonly path: string;
   readonly tags: string[];
   /** The package's visible tasks; not part of the layout hash. */
@@ -20,6 +26,8 @@ export type GraphTask = {
   readonly name: string;
   readonly command: string | null;
   readonly isRunnable: boolean;
+  /** False for a `package.json` script that is not a turbo task. */
+  readonly isTurboTask: boolean;
   readonly dependencies: string[];
 };
 
@@ -69,6 +77,10 @@ export type GraphReady = {
   readonly singlePackage: boolean;
   /** The `//` package's label when `singlePackage`, else `null`; `null` too when that package has no label. */
   readonly rootLabel: string | null;
+  /** The tree's scope toggle at the time the state was built. */
+  readonly scopeShown: boolean;
+  /** The tree's scripts toggle at the time the state was built. */
+  readonly scriptsShown: boolean;
 };
 
 export type GraphState = GraphLoading | GraphError | GraphReady;

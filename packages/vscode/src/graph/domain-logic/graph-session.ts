@@ -10,7 +10,7 @@ import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { ExplainContext, ExplainRequest, GraphFeeds, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
-import { graphStateOfRoot, runIdsOfRoot } from '../utils/graph-state.util.ts';
+import { graphStateOfRoot, runIdsOfRoot, shownOf } from '../utils/graph-state.util.ts';
 
 type ExplainJob = {
   readonly request: ExplainRequest;
@@ -36,13 +36,13 @@ export class GraphSession {
   private readonly explains = new LatestWins<ExplainJob>();
   private readonly images: GraphImageSaver;
   private readonly feed: GraphTaskFeed;
-  private readonly atoms: GraphFeeds['atoms'];
+  private readonly feeds: GraphFeeds;
 
   public constructor(root: string, roots: Roots, ports: GraphPorts, feeds: GraphFeeds) {
     this.root = root;
     this.roots = roots;
     this.ports = ports;
-    this.atoms = feeds.atoms;
+    this.feeds = feeds;
     this.images = new GraphImageSaver(root, ports);
 
     const gate: TaskFeedGate = {
@@ -130,7 +130,7 @@ export class GraphSession {
     const caches = layoutCachesOf(this.ports, this.root);
     const rootState = this.roots.get(this.root)?.state;
 
-    return graphStateOfRoot(rootState, caches);
+    return graphStateOfRoot(rootState, caches, shownOf(this.feeds.toggles));
   }
 
   private rootChanged(change: RootChange): void {
@@ -185,7 +185,8 @@ export class GraphSession {
 
   private requestContext(): RequestContext {
     const coordinator = this.roots.get(this.root)?.coordinator;
-    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, atoms: this.atoms };
+    const { atoms } = this.feeds;
+    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, atoms };
 
     return context;
   }
