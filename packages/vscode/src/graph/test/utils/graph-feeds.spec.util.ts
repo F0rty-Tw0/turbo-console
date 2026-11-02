@@ -29,6 +29,9 @@ export const feedsOf = (runs: Runs, atoms: SharedAtoms = SHARED_ATOMS_STUB, togg
   return feeds;
 };
 
+/** Feeds over `runs` and `toggles`, with atoms that never load. */
+export const feedsWithToggles = (runs: Runs, toggles: GraphToggles): GraphFeeds => feedsOf(runs, SHARED_ATOMS_STUB, toggles);
+
 /** Shared atoms that read `view`, record `childrenRequested` and tell their listeners when the spec says so. */
 export const atomsFake = (view: AtomLookup): AtomsFake => {
   const listeners = new Set<AtomListener>();

@@ -18,6 +18,11 @@ const packageNamed = (name: string, tasks: TaskNode[]): PackageNode => {
   return node;
 };
 
+const SAME_BARE_MODEL: WorkspaceModel = {
+  ...GRAPH_MODEL_STUB,
+  packages: [packageNamed('@a/ui', [SCRIPT_TASK]), packageNamed('@b/ui', [TASK_NODE_STUB])]
+};
+
 const bareNamesOf = (state: GraphState): string[] => {
   if (state.kind !== 'graph') return [];
 
@@ -37,15 +42,14 @@ describe('FEATURE: graph package bareName', () => {
     expect(bareNamesOf(state)).toStrictEqual(['single-app']);
   });
 
-  it('GIVEN @a/ui is script-only and @b/ui is a turbo package WHEN built THEN both keep their full name, though the tree with scripts hidden reads ui', () => {
-    const scriptOnly = packageNamed('@a/ui', [SCRIPT_TASK]);
-    const turbo = packageNamed('@b/ui', [TASK_NODE_STUB]);
-    const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [scriptOnly, turbo] };
-
-    const state = graphStateOf(model, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+  it('GIVEN @a/ui is script-only and @b/ui is a turbo package WHEN built THEN both keep their full name', () => {
+    const state = graphStateOf(SAME_BARE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
     expect(bareNamesOf(state)).toStrictEqual(['@a/ui', '@b/ui']);
-    expect(modelViewOf(model, false, new Set()).bareTexts.get('@b/ui')).toBe('ui');
+  });
+
+  it('GIVEN @a/ui is script-only and @b/ui is a turbo package WHEN the tree is built with scripts hidden THEN @b/ui reads ui', () => {
+    expect(modelViewOf(SAME_BARE_MODEL, false, new Set()).bareTexts.get('@b/ui')).toBe('ui');
   });
 
   it('WHEN the model is built with the same packages THEN the hash does not mention bareName', () => {

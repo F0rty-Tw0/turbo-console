@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import type { GraphContext, GraphDetails, GraphWiring } from './common/graph-panel.type.ts';
 import { createGraph } from './graph-wiring.ts';
 import { GRAPH_LOADED_STUB } from './test/stubs/graph-model.stub.ts';
-import { feedsOf, scopeShownTogglesOf } from './test/utils/graph-feeds.spec.util.ts';
+import { feedsOf, feedsWithToggles, scopeShownTogglesOf } from './test/utils/graph-feeds.spec.util.ts';
 import { copyGraphPageRoot } from './test/utils/page-root.spec.util.ts';
 import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
 import { RootStore } from '../roots/domain-logic/root-store.ts';
@@ -165,7 +165,7 @@ describe('FEATURE: the graph wiring', () => {
     });
 
     it('GIVEN feeds with scope shown WHEN Show All Task Graphs runs and the page is ready THEN the posted state carries scopeShown true', async () => {
-      const feeds = feedsOf(new RunStore(), undefined, scopeShownTogglesOf());
+      const feeds = feedsWithToggles(new RunStore(), scopeShownTogglesOf());
       const scoped = createGraph(contextOf(page), session, details, output, feeds);
 
       scoped.register();

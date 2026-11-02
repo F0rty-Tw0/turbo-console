@@ -11,6 +11,7 @@ import type { ViewFake } from '../../shared/test/common/panel-fakes.type.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphPanelsDeps } from '../common/graph-panel.type.ts';
+import type { GraphToggles } from '../common/graph.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
 import { graphHostMock } from '../test/mocks/graph-host.mock.ts';
 import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
@@ -35,6 +36,21 @@ describe('FEATURE: graph panel registry', () => {
   let setPanelVisible: Mock<GraphPanelsDeps['setPanelVisible']>;
   let panels: GraphPanels;
 
+  const panelsWith = (toggles: GraphToggles): GraphPanels => {
+    const openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
+    const deps: GraphPanelsDeps = {
+      roots: store,
+      host: fakes.host,
+      setPanelVisible,
+      openDetails,
+      runs: new RunStore(),
+      atoms: SHARED_ATOMS_STUB,
+      toggles
+    };
+
+    return new GraphPanels(deps);
+  };
+
   beforeEach(() => {
     store = new RootStore();
     store.set([ROOT_FOLDER_STUB, OTHER_FOLDER], () => coordinatorMock());
@@ -42,17 +58,8 @@ describe('FEATURE: graph panel registry', () => {
     store.apply('/other', GRAPH_LOADED_STUB);
     fakes = graphHostMock();
     setPanelVisible = vi.fn<GraphPanelsDeps['setPanelVisible']>();
-    const openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
 
-    panels = new GraphPanels({
-      roots: store,
-      host: fakes.host,
-      setPanelVisible,
-      openDetails,
-      runs: new RunStore(),
-      atoms: SHARED_ATOMS_STUB,
-      toggles: hiddenTogglesOf()
-    });
+    panels = panelsWith(hiddenTogglesOf());
   });
 
   describe('GIVEN a loaded root', () => {
@@ -92,18 +99,9 @@ describe('FEATURE: graph panel registry', () => {
     });
 
     it('GIVEN panels built with scope shown WHEN the page sends ready THEN the posted state carries scopeShown true', () => {
-      const openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
       const scopedGraph: GraphReady = { ...GRAPH_STATE_STUB, scopeShown: true };
       const scopedState: GraphHostMessage = { type: 'state', state: scopedGraph };
-      const scoped = new GraphPanels({
-        roots: store,
-        host: fakes.host,
-        setPanelVisible,
-        openDetails,
-        runs: new RunStore(),
-        atoms: SHARED_ATOMS_STUB,
-        toggles: scopeShownTogglesOf()
-      });
+      const scoped = panelsWith(scopeShownTogglesOf());
 
       scoped.open('/ws');
       viewAt(fakes, 0).message(READY);

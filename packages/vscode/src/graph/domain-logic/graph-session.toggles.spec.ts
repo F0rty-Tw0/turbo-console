@@ -4,11 +4,10 @@ import { GraphSession } from './graph-session.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
-import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphPorts, GraphToggles } from '../common/graph.type.ts';
 import { GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
-import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { feedsWithToggles, scopeShownTogglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { portsWith, postedStatesOf } from '../test/utils/graph-session.spec.util.ts';
 
 type ShownSession = {
@@ -18,14 +17,14 @@ type ShownSession = {
 };
 
 const shownSession = (): ShownSession => {
-  const toggles = { scope: scriptsToggleMock(true), scripts: scriptsToggleMock() };
+  const toggles = scopeShownTogglesOf();
   const store = new RootStore();
 
   store.set([ROOT_FOLDER_STUB], () => coordinatorMock());
   store.apply('/ws', GRAPH_LOADED_STUB);
 
   const ports = portsWith(null);
-  const session = new GraphSession('/ws', store, ports, feedsOf(new RunStore(), undefined, toggles));
+  const session = new GraphSession('/ws', store, ports, feedsWithToggles(new RunStore(), toggles));
 
   session.setVisible(true);
   session.start();
