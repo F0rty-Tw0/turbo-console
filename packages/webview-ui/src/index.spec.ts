@@ -69,6 +69,7 @@ type ExpectedTask = {
   readonly name: string;
   readonly command: string | null;
   readonly isRunnable: boolean;
+  readonly isTurboTask: boolean;
   readonly dependencies: string[];
 };
 type ExpectedAtomFile = { readonly id: string; readonly specPath: string; readonly isLive: boolean };

@@ -17,6 +17,7 @@ const dependentOf = (index: number): GraphTask => {
     name,
     command: name,
     isRunnable: true,
+    isTurboTask: true,
     dependencies: [OVER_CAP_ROOT_TASK]
   };
 
@@ -31,6 +32,7 @@ const ROOT: GraphTask = {
   name: 'build',
   command: 'build',
   isRunnable: true,
+  isTurboTask: true,
   dependencies: []
 };
 
@@ -74,7 +76,15 @@ export const TARGET_LIKE_CHOSEN_TASK = 'lib-3#build';
 export const TARGET_LIKE_HUB_TASK = 'hub#build';
 
 const targetLikeTaskOf = (packageName: string, name: string, dependencies: string[]): GraphTask => {
-  const task: GraphTask = { id: `${packageName}#${name}`, packageName, name, command: name, isRunnable: true, dependencies };
+  const task: GraphTask = {
+    id: `${packageName}#${name}`,
+    packageName,
+    name,
+    command: name,
+    isRunnable: true,
+    isTurboTask: true,
+    dependencies
+  };
 
   return task;
 };

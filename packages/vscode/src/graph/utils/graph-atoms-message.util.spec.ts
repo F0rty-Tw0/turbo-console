@@ -42,6 +42,7 @@ const PROTO_UMBRELLA: GraphTask = {
   name: 'e2e-ci',
   command: null,
   isRunnable: false,
+  isTurboTask: true,
   dependencies: []
 };
 

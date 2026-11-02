@@ -8,6 +8,7 @@ export const GRAPH_TASK_STUB: GraphTask = {
   name: 'build',
   command: 'tsc',
   isRunnable: true,
+  isTurboTask: true,
   dependencies: []
 };
 

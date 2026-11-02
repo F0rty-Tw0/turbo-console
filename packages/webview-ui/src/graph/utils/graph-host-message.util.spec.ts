@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isGraphHostMessage } from './graph-host-message.util.ts';
 import type { GraphEdge, Positions } from '../../bridge/common/graph-state.type.ts';
+import { stateMessageOf, without } from '../test/utils/graph-host-message.spec.util.ts';
 
 const EDGE: GraphEdge = { source: 'app', target: 'core' };
 
@@ -71,10 +72,14 @@ const TASK = {
   name: 'build',
   command: 'tsc',
   isRunnable: true,
+  isTurboTask: true,
   dependencies: ['core#build']
 };
 
-const TASKS = [TASK, { id: 'core#build', packageName: 'core', name: 'build', command: null, isRunnable: false, dependencies: [] }];
+const TASKS = [
+  TASK,
+  { id: 'core#build', packageName: 'core', name: 'build', command: null, isRunnable: false, isTurboTask: true, dependencies: [] }
+];
 
 const GRAPH = {
   kind: 'graph',
@@ -152,18 +157,6 @@ const SKIPPED_STATES = { u: SKIPPED_STATE };
 const LOADING = { kind: 'loading' };
 
 const ERROR = { kind: 'error', message: 'x' };
-
-const stateMessageOf = (state: unknown): unknown => {
-  const message = { type: 'state', state };
-
-  return message;
-};
-
-const without = (state: object, key: string): object => {
-  const kept = Object.entries(state).filter(([name]) => name !== key);
-
-  return Object.fromEntries(kept);
-};
 
 const graphWithTaskOf = (change: object): unknown => {
   const task = { ...TASK, ...change };

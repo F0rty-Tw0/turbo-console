@@ -49,17 +49,18 @@ export const GRAPH_INFOS_STUB: GraphPackage[] = [
 ];
 
 export const GRAPH_TASKS_STUB: GraphTask[] = [
-  { id: '@org/x#build', packageName: '@org/x', name: 'build', command: 'tsc', isRunnable: true, dependencies: [] },
-  { id: 'a#build', packageName: 'a', name: 'build', command: 'tsc', isRunnable: true, dependencies: [] },
+  { id: '@org/x#build', packageName: '@org/x', name: 'build', command: 'tsc', isRunnable: true, isTurboTask: true, dependencies: [] },
+  { id: 'a#build', packageName: 'a', name: 'build', command: 'tsc', isRunnable: true, isTurboTask: true, dependencies: [] },
   {
     id: 'web#build',
     packageName: 'web',
     name: 'build',
     command: 'tsc',
     isRunnable: true,
+    isTurboTask: true,
     dependencies: ['@org/x#build', 'a#build']
   },
-  { id: 'web#lint', packageName: 'web', name: 'lint', command: 'tsc', isRunnable: true, dependencies: [] }
+  { id: 'web#lint', packageName: 'web', name: 'lint', command: 'tsc', isRunnable: true, isTurboTask: true, dependencies: [] }
 ];
 
 export const GRAPH_STATE_STUB: GraphReady = {

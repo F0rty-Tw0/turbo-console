@@ -55,6 +55,7 @@ const A_BUILD: GraphTask = {
   name: 'build',
   command: 'tsc',
   isRunnable: true,
+  isTurboTask: true,
   dependencies: []
 };
 const LISTED: string[] = [A_BUILD.id];
@@ -72,6 +73,14 @@ describe('FEATURE: graph task list', () => {
 
     it('THEN the ids are sorted and the atom-file task is absent', () => {
       expect(idsOf(tasks)).toStrictEqual(['p#blank', 'p#build', 'p#dev']);
+    });
+
+    it('THEN a turbo task carries isTurboTask true and a script false', () => {
+      expect(tasks.map(({ id, isTurboTask }) => [id, isTurboTask])).toStrictEqual([
+        ['p#blank', false],
+        ['p#build', true],
+        ['p#dev', false]
+      ]);
     });
 
     it('THEN a script with a body is runnable', () => {

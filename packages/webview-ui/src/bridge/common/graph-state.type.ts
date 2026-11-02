@@ -20,6 +20,8 @@ export type GraphTask = {
   readonly name: string;
   readonly command: string | null;
   readonly isRunnable: boolean;
+  /** False for a `package.json` script that is not a turbo task. */
+  readonly isTurboTask: boolean;
   readonly dependencies: string[];
 };
 
