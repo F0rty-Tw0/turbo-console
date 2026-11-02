@@ -67,25 +67,62 @@ const manifestPackage = (pkg: ManifestPackage): ProjectedPackage => {
 
 const isModelTask = (task: ManifestTask): boolean => task.visible && MODEL_KINDS[task.kind] !== undefined;
 
-/** `[]` for a task the model must not hold; otherwise its projection, dependencies cut to `visibleIds` (rule 4). */
-const manifestTask = (task: ManifestTask, visibleIds: Set<string>): ProjectedTask[] => {
+const isShownPhantom = (task: ManifestTask, shownNames: Set<string>): boolean => {
+  const isPhantom = task.kind === 'phantom';
+  const isShown = shownNames.has(task.packageName);
+
+  return isPhantom && isShown;
+};
+
+/** Ids reached from `start` by walking phantom dependencies; a phantom is walked once, the first non-phantom ends a path. */
+const reachedThrough = (start: string[], phantoms: Map<string, string[]>): string[] => {
+  const walked = new Set<string>();
+  const reached: string[] = [];
+  const pending = [...start];
+
+  for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
+    const through = phantoms.get(id);
+
+    if (through === undefined) {
+      reached.push(id);
+      continue;
+    }
+
+    const isWalked = walked.has(id);
+
+    if (isWalked) continue;
+
+    walked.add(id);
+    pending.push(...through);
+  }
+
+  return reached;
+};
+
+/** `[]` for a task the model must not hold; otherwise its projection, dependencies passed through phantoms and cut to `visibleIds`. */
+const manifestTask = (task: ManifestTask, visibleIds: Set<string>, phantoms: Map<string, string[]>): ProjectedTask[] => {
   const kind = MODEL_KINDS[task.kind];
 
   if (kind === undefined || !task.visible) return [];
 
   const isVisible = (id: string): boolean => visibleIds.has(id);
-  const dependencies = task.dependencies.filter(isVisible).toSorted();
+  const reached = reachedThrough(task.dependencies, phantoms).filter(isVisible);
+  const unique = new Set(reached);
+  const dependencies = Array.from(unique).toSorted();
   const projected: ProjectedTask = { id: task.fullName, kind, atom: task.atom, dependencies };
 
   return [projected];
 };
 
-/** What the model of a fixture must hold: definitions packages, carriers and phantoms left out. */
+/** What the model of a fixture must hold: definitions packages, carriers and phantoms left out, phantom dependencies passed on to their dependents. */
 export const expectedModelOf = (manifest: Manifest): ModelProjection => {
   const shown = manifest.packages.filter(isShownPackage);
   const shownNames = new Set(shown.map((pkg) => pkg.name));
   const visibleIds = new Set(manifest.tasks.filter(isModelTask).map((task) => task.fullName));
-  const toTask = (task: ManifestTask): ProjectedTask[] => manifestTask(task, visibleIds);
+  const isPhantom = (task: ManifestTask): boolean => isShownPhantom(task, shownNames);
+  const toEntry = (task: ManifestTask): [string, string[]] => [task.fullName, task.dependencies];
+  const phantoms = new Map(manifest.tasks.filter(isPhantom).map(toEntry));
+  const toTask = (task: ManifestTask): ProjectedTask[] => manifestTask(task, visibleIds, phantoms);
 
   const isShownPair = (pair: string): boolean => {
     const [source = '', target = ''] = pair.split('->');

@@ -32,6 +32,7 @@ export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   affectedMode: 'package',
   singlePackage: false,
   packages: [WEB_PACKAGE_STUB, PACKAGE_NODE_STUB, X_PACKAGE_STUB],
+  rootPackage: null,
   edges: [],
   warnings: []
 };

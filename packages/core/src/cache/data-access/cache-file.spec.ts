@@ -16,7 +16,7 @@ import {
 } from '../../workspace/test/stubs/package-manager.stub.ts';
 import { workspaceModelSchema } from '../common/cache-file.schema.ts';
 import type { CacheEntry } from '../common/cache.type.ts';
-import { SINGLE_PACKAGE_MODEL_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
+import { ROOT_TASKS_MODEL_STUB, SINGLE_PACKAGE_MODEL_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
 import { cacheFileName } from '../utils/cache-key.util.ts';
 
 const ROOT = WORKSPACE_MODEL_STUB.root;
@@ -50,19 +50,22 @@ const CONTINUOUS_ENTRY: CacheEntry = { ...ENTRY, model: CONTINUOUS_MODEL };
 
 const SINGLE_PACKAGE_ENTRY: CacheEntry = { ...ENTRY, model: SINGLE_PACKAGE_MODEL_STUB };
 
+const ROOT_TASKS_ENTRY: CacheEntry = { ...ENTRY, model: ROOT_TASKS_MODEL_STUB };
+
 const ROUND_TRIPS: [string, CacheEntry][] = [
   ['a key', ENTRY],
   ['a null key', STALE_ENTRY],
   ['a continuous task', CONTINUOUS_ENTRY],
-  ['a single-package model', SINGLE_PACKAGE_ENTRY]
+  ['a single-package model', SINGLE_PACKAGE_ENTRY],
+  ['a root package', ROOT_TASKS_ENTRY]
 ];
 
 /**
- * Every format before single-package task edges (v8): 1 before the task-name fix, 2 before `isTurboTask`, 3 before
- * `persistent`, 4 before `packageManager`, 5 before `singlePackage` and `label`, 6 while every single-package script
- * was a turbo task, 7 while a single-package model had no task edges.
+ * Every format before root tasks (v9): 1 before the task-name fix, 2 before `isTurboTask`, 3 before `persistent`, 4
+ * before `packageManager`, 5 before `singlePackage` and `label`, 6 while every single-package script was a turbo task,
+ * 7 while a single-package model had no task edges, 8 while root tasks and phantom dependencies were dropped.
  */
-const OLD_VERSIONS = [1, 2, 3, 4, 5, 6, 7];
+const OLD_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 /** One package manager per source kind a cache file can hold. */
 const PACKAGE_MANAGERS: [string, PackageManager][] = [

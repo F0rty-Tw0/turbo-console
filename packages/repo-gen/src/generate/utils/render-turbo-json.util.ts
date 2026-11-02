@@ -42,6 +42,15 @@ const inputsFor = (spec: FixtureSpec, task: string): TaskInput[] | undefined => 
   return undefined;
 };
 
+const rootTaskEntries = (spec: FixtureSpec): [string, TurboTask][] => {
+  if (spec.rootTask === undefined) return [];
+
+  const { name, dependsOn } = spec.rootTask;
+  const config: TurboTask = { dependsOn, inputs: undefined };
+
+  return [[`//#${name}`, config]];
+};
+
 /**
  * Root `turbo.json`. `undefined` keys are dropped by `JSON.stringify`, so `lint` renders as `{}` and
  * `experimentalTaskCommand` appears only when atom groups exist. `agentGuidance: false` stops turbo writing `AGENTS.md`.
@@ -58,7 +67,8 @@ export const renderTurboJson = (plan: FixturePlan): FixtureFile => {
   };
 
   const taskEntries = taskNamesFor(spec.tasksPerPackage).map(taskEntry);
-  const tasks = Object.fromEntries(taskEntries);
+  const rootEntries = rootTaskEntries(spec);
+  const tasks = Object.fromEntries([...taskEntries, ...rootEntries]);
   const hasAtomGroups = spec.atomGroups.count > 0;
   const experimentalTaskCommand = hasAtomGroups ? true : undefined;
   const futureFlags: FutureFlags = { experimentalTaskCommand, affectedUsingTaskInputs: spec.affectedUsingTaskInputs };

@@ -7,6 +7,7 @@ import type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from '../comm
 import { MODEL_SOURCE_STUB } from '../test/stubs/model-source.stub.ts';
 import { configError, manyErrors } from '../test/utils/config-error.spec.util.ts';
 import { graphEdge, graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
+import { taskOf } from '../test/utils/model-task.spec.util.ts';
 
 type GraphEdge = PackageGraph['data']['packageGraph']['edges']['items'][number];
 
@@ -26,12 +27,6 @@ const build = (packages: GraphPackage[], edges: GraphEdge[], configs: TurboConfi
   const graph = packageGraph(packages, edges);
 
   return buildWorkspaceModel(graph, configs, MODEL_SOURCE_STUB);
-};
-
-const taskOf = (model: WorkspaceModel, id: string): TaskNode | undefined => {
-  const tasks = model.packages.flatMap((pkg) => pkg.tasks);
-
-  return tasks.find((task) => task.id === id);
 };
 
 const edgeText = (edge: PackageEdge): string => `${edge.source}>${edge.target}:${edge.kind}`;
@@ -85,6 +80,7 @@ describe('FEATURE: workspace model build', () => {
         affectedMode: 'package',
         singlePackage: false,
         packages: [pkg],
+        rootPackage: null,
         edges: [],
         warnings: []
       };

@@ -1,3 +1,5 @@
+import type { TurboConfigOk, TurboTaskLookup } from './turbo-config.type.ts';
+
 export type TaskNodeKind = 'atom-aggregate' | 'atom-file' | 'atom-umbrella' | 'task';
 
 /** Set for the three atom kinds: the Atomizer group, and whether the file task is live. */
@@ -26,6 +28,14 @@ export type ClassifiedPackage = {
 
 export type ClassifyResult = {
   readonly packages: ClassifiedPackage[];
+  /** Every dropped phantom (a `task` with no command) by id, with its raw dependencies; carriers and hidden packages excluded. */
+  readonly phantoms: ReadonlyMap<string, string[]>;
+  readonly warnings: string[];
+};
+
+/** What classifying a task writes besides its own result: the phantoms it drops and the warnings it raises. */
+export type ClassifySink = {
+  readonly phantoms: Map<string, string[]>;
   readonly warnings: string[];
 };
 
@@ -60,6 +70,17 @@ export type PackageNode = {
   readonly label: string | null;
   readonly tags: string[];
   readonly tasks: TaskNode[];
+};
+
+/** The visible, sorted dependencies of a task from its raw ones, with phantoms passed through and deduped; see `dependencyResolverOf`. */
+export type DependencyResolver = (raw: string[]) => string[];
+
+/** What every package node reads besides its own package. */
+export type PackageContext = {
+  readonly dependenciesThrough: DependencyResolver;
+  readonly configs: Map<string, TurboConfigOk>;
+  readonly lookup: TurboTaskLookup;
+  readonly rootLabel: string | null;
 };
 
 /** A turbo package edge between two visible packages; `kind` is turbo's `kind.kind`, verbatim. */
@@ -102,6 +123,11 @@ export type WorkspaceModel = {
   /** `true` when the `//` package is the only package (spec §1): a repo with no declared workspaces. */
   readonly singlePackage: boolean;
   readonly packages: PackageNode[];
+  /**
+   * The monorepo root `//` with only its `//#<name>` turbo tasks; `null` for a single-package repo (`//` is then
+   * `packages[0]`) or a graph with no root. Kept apart from `packages`, which feeds the tree and the run picker.
+   */
+  readonly rootPackage: PackageNode | null;
   readonly edges: PackageEdge[];
   readonly warnings: string[];
 };

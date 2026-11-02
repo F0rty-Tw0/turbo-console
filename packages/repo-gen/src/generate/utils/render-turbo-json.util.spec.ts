@@ -74,4 +74,46 @@ describe('FEATURE: root turbo.json rendering', () => {
       expect(turbo).toHaveProperty(['tasks', 'test'], { dependsOn: ['^build'], inputs: ['src/**'] });
     });
   });
+
+  describe('GIVEN the stub spec with the root task fmt that depends on @fx/hub#build', () => {
+    const rootTask = { name: 'fmt', command: 'node -e 0', dependsOn: ['@fx/hub#build'] };
+    const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, rootTask };
+    const plan: FixturePlan = { spec, packages: [], atomGroups: [] };
+
+    it('WHEN rendered THEN tasks gain //#fmt with its dependsOn', () => {
+      const turbo: unknown = JSON.parse(renderTurboJson(plan).content);
+
+      expect(turbo).toHaveProperty(['tasks', '//#fmt'], { dependsOn: ['@fx/hub#build'] });
+    });
+
+    it('WHEN rendered THEN the other tasks are unchanged', () => {
+      const turbo: unknown = JSON.parse(renderTurboJson(plan).content);
+
+      expect(turbo).toHaveProperty(['tasks', 'build'], { dependsOn: ['^build'] });
+    });
+  });
+
+  describe('GIVEN a root task without dependsOn', () => {
+    const rootTask = { name: 'fmt', command: 'node -e 0' };
+    const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, rootTask };
+    const plan: FixturePlan = { spec, packages: [], atomGroups: [] };
+
+    it('WHEN rendered THEN //#fmt renders as an empty object', () => {
+      const turbo: unknown = JSON.parse(renderTurboJson(plan).content);
+
+      expect(turbo).toHaveProperty(['tasks', '//#fmt'], {});
+    });
+  });
+
+  describe('GIVEN a root task without a command', () => {
+    const rootTask = { name: 'gen' };
+    const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, rootTask };
+    const plan: FixturePlan = { spec, packages: [], atomGroups: [] };
+
+    it('WHEN rendered THEN //#gen is still keyed', () => {
+      const turbo: unknown = JSON.parse(renderTurboJson(plan).content);
+
+      expect(turbo).toHaveProperty(['tasks', '//#gen'], {});
+    });
+  });
 });

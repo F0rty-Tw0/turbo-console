@@ -25,6 +25,7 @@ export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   affectedMode: 'package',
   singlePackage: false,
   packages: [],
+  rootPackage: null,
   edges: [],
   warnings: []
 };

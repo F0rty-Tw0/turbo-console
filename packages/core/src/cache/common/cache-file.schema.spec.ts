@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { cacheFileSchema, workspaceModelSchema } from './cache-file.schema.ts';
 import { CACHE_FORMAT_VERSION } from './cache.const.ts';
-import { SINGLE_PACKAGE_MODEL_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
+import { ROOT_TASKS_MODEL_STUB, SINGLE_PACKAGE_MODEL_STUB, WORKSPACE_MODEL_STUB } from '../test/stubs/cache.stub.ts';
 
 const FILE = { formatVersion: CACHE_FORMAT_VERSION, key: 'abc', keyedPaths: ['package.json'], model: WORKSPACE_MODEL_STUB };
 
@@ -75,6 +75,22 @@ describe('FEATURE: cache file schema', () => {
       const parsed = workspaceModelSchema.parse(SINGLE_PACKAGE_MODEL_STUB);
 
       expect(parsed).toStrictEqual(SINGLE_PACKAGE_MODEL_STUB);
+    });
+  });
+
+  describe('GIVEN a model with a rootPackage', () => {
+    it('WHEN parsed THEN it parses unchanged', () => {
+      const parsed = workspaceModelSchema.parse(ROOT_TASKS_MODEL_STUB);
+
+      expect(parsed).toStrictEqual(ROOT_TASKS_MODEL_STUB);
+    });
+  });
+
+  describe('GIVEN a model without rootPackage', () => {
+    it('WHEN parsed THEN it fails', () => {
+      const result = workspaceModelSchema.safeParse(modelWithoutKey('rootPackage'));
+
+      expect(result.success).toBe(false);
     });
   });
 

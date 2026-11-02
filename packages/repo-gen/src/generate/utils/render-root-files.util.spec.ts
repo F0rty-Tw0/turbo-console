@@ -69,4 +69,30 @@ describe('FEATURE: root file rendering', () => {
       });
     });
   });
+
+  describe('GIVEN a plan whose spec has the root task fmt', () => {
+    const rootTask = { name: 'fmt', command: 'node -e 0' };
+    const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, rootTask };
+    const plan: FixturePlan = { spec, packages: [PACKAGE_PLAN_STUB], atomGroups: [] };
+
+    it('WHEN rendered THEN package.json also holds scripts.fmt', () => {
+      const file = renderRootFiles(plan).find((entry) => entry.path === 'package.json');
+
+      expect(file?.content).toBe(
+        '{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.11.2",\n  "scripts": {\n    "fmt": "node -e 0"\n  }\n}\n'
+      );
+    });
+  });
+
+  describe('GIVEN a plan whose root task gen has no command', () => {
+    const rootTask = { name: 'gen' };
+    const spec: FixtureSpec = { ...FIXTURE_SPEC_STUB, rootTask };
+    const plan: FixturePlan = { spec, packages: [PACKAGE_PLAN_STUB], atomGroups: [] };
+
+    it('WHEN rendered THEN package.json holds no scripts', () => {
+      const file = renderRootFiles(plan).find((entry) => entry.path === 'package.json');
+
+      expect(file?.content).toBe('{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.11.2"\n}\n');
+    });
+  });
 });

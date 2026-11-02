@@ -7,6 +7,7 @@ import type { ModelSource, TaskNode, WorkspaceModel } from '../common/workspace-
 import { MODEL_SOURCE_STUB } from '../test/stubs/model-source.stub.ts';
 import { configError } from '../test/utils/config-error.spec.util.ts';
 import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
+import { taskOf } from '../test/utils/model-task.spec.util.ts';
 
 const COMMAND = 'node -e 0';
 
@@ -68,12 +69,6 @@ const buildSingle = (rootPackage: GraphPackage, configs: TurboConfigFile[] = [CO
 };
 
 const rowOf = (task: TaskNode): [string, boolean, boolean] => [task.id, task.isTurboTask, task.persistent];
-
-const taskOf = (model: WorkspaceModel, id: string): TaskNode | undefined => {
-  const tasks = model.packages.flatMap((pkg) => pkg.tasks);
-
-  return tasks.find((candidate) => candidate.id === id);
-};
 
 const isTurboTaskOf = (model: WorkspaceModel, id: string): boolean | undefined => taskOf(model, id)?.isTurboTask;
 

@@ -279,6 +279,66 @@ describe('FEATURE: Atomizer task classification', () => {
     });
   });
 
+  describe('GIVEN a task with no command next to a task with one', () => {
+    const phantom = graphTask('a#deploy', null, [], ['b#build', 'a#build']);
+
+    it('WHEN classified THEN phantoms maps its id to its raw dependencies', () => {
+      const result = classifyTasks([BUILD, phantom]);
+
+      expect([...result.phantoms]).toStrictEqual([['a#deploy', ['b#build', 'a#build']]]);
+    });
+
+    it('WHEN classified THEN it is not a node', () => {
+      const result = classifyTasks([BUILD, phantom]);
+
+      expect(rowsOf(result)).toStrictEqual([['a#build', 'task', null]]);
+    });
+  });
+
+  describe('GIVEN a package whose tasks all have a command', () => {
+    it('WHEN classified THEN phantoms is empty', () => {
+      const result = classifyTasks([BUILD, FILE_TASK]);
+
+      expect(result.phantoms.size).toBe(0);
+    });
+  });
+
+  describe('GIVEN a carrier with no command', () => {
+    it('WHEN classified THEN it is no phantom', () => {
+      const carrier = graphTask('a#e2e-ci-src--tests/a.spec.ts', null, ['atomizer:carrier', GROUP_TAG], ['b#build']);
+
+      const result = classifyTasks([FILE_TASK, carrier]);
+
+      expect(result.phantoms.size).toBe(0);
+    });
+  });
+
+  describe('GIVEN a definitions package whose task has no command', () => {
+    it('WHEN classified THEN it is no phantom', () => {
+      const definitions = graphPackage('defs', 'tools/defs', ['atomizer:definitions'], [graphTask('defs#gen', null, [], [])]);
+
+      const result = classifyPackages([definitions]);
+
+      expect(result.phantoms.size).toBe(0);
+    });
+  });
+
+  describe('GIVEN a commandless umbrella of an atom group', () => {
+    const umbrella = graphTask('a#e2e-ci', null, [], []);
+
+    it('WHEN classified THEN it is no phantom', () => {
+      const result = classifyTasks([FILE_TASK, umbrella]);
+
+      expect(result.phantoms.size).toBe(0);
+    });
+
+    it('WHEN classified THEN it stays a node', () => {
+      const result = classifyTasks([FILE_TASK, umbrella]);
+
+      expect(rowsOf(result)).toContainEqual(['a#e2e-ci', 'atom-umbrella', NOT_LIVE]);
+    });
+  });
+
   describe('GIVEN a package whose name holds a #', () => {
     it('WHEN its task is classified THEN the task name is the name after `<package>#`', () => {
       const pkg = graphPackage('p#b', 'packages/pb', [], [graphTask('p#b#build', COMMAND, [], [])]);
