@@ -8,6 +8,7 @@ import type { DrawnGraph } from '../common/graph-page.type.ts';
 import type { GraphLocation, GraphLocationDeps, LocationCrumb, LocationFacts, LocationViews } from '../common/location.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { pageMock } from '../test/mocks/page.mock.ts';
+import { labelsOf } from '../utils/package-label.util.ts';
 
 type LocationSpies = {
   readonly render: Mock<LocationViews['render']>;
@@ -47,7 +48,14 @@ const INFOS: GraphPackage[] = [packageOf('core-1', 'core/core-1'), packageOf('a-
 const EDGES: GraphEdge[] = [{ source: 'a-pkg', target: 'core-1' }];
 
 /** Folder `core` linked with `a` once. */
-const DRAWN: DrawnGraph = { hash: 'h1', packages: ['core-1', 'a-pkg'], infos: INFOS, edges: EDGES };
+const DRAWN: DrawnGraph = {
+  hash: 'h1',
+  packages: ['core-1', 'a-pkg'],
+  infos: INFOS,
+  edges: EDGES,
+  scopeShown: true,
+  labels: labelsOf(INFOS, true)
+};
 
 const BACK_EDGE: GraphEdge = { source: 'core-1', target: 'a-pkg' };
 

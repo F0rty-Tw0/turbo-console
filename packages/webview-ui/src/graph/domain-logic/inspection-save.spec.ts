@@ -14,7 +14,7 @@ const PAN: Position = { x: 1, y: 2 };
 
 const CAMERA: Viewport = { zoom: 2, pan: PAN };
 
-const DRAWN: DrawnGraph = { hash: 'h1', packages: [], infos: [], edges: [] };
+const DRAWN: DrawnGraph = { hash: 'h1', packages: [], infos: [], edges: [], scopeShown: true, labels: new Map() };
 
 const CONTROLS: ControlsViewFields = {
   controlsOpen: false,

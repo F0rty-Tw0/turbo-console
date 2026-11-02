@@ -16,7 +16,7 @@ type ShowAllRun = {
   readonly ops: ControlsOps;
 };
 
-const GRAPH: DrawnGraph = { hash: 'h', packages: [], infos: [], edges: [] };
+const GRAPH: DrawnGraph = { hash: 'h', packages: [], infos: [], edges: [], scopeShown: true, labels: new Map() };
 
 const WEB_HIDDEN = menuFiltersOf(['web'], null);
 

@@ -168,12 +168,16 @@ export type GraphControllerDeps = {
   readonly background: () => string;
 };
 
-/** The graph the page shows: its hash, package names and records, and its drawable edges. */
+/** The graph the page shows: its hash, package names and records, its drawable edges, and its package labels. */
 export type DrawnGraph = {
   readonly hash: string;
   readonly packages: string[];
   readonly infos: GraphPackage[];
   readonly edges: GraphEdge[];
+  /** Whether package labels keep their `@scope/`; a same-hash state can flip it, and only the labels follow. */
+  readonly scopeShown: boolean;
+  /** Each package's node and row text, keyed by package name; never holds `//`. */
+  readonly labels: ReadonlyMap<string, string>;
 };
 
 export type GraphController = {

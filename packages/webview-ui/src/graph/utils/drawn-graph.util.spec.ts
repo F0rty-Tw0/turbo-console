@@ -8,6 +8,8 @@ const PACKAGES: GraphPackage[] = [
   { name: 'web', bareName: 'web', path: 'apps/web', tags: ['ui'], taskCount: 0 }
 ];
 
+const SCOPED: GraphPackage = { name: '@org/ui', bareName: 'ui', path: 'packages/ui', tags: [], taskCount: 0 };
+
 const KEPT_EDGE: GraphEdge = { source: 'web', target: 'core' };
 
 const DANGLING_EDGE: GraphEdge = { source: 'web', target: 'ghost' };
@@ -29,10 +31,30 @@ const STATE: GraphReady = {
 
 describe('FEATURE: drawnGraphOf', () => {
   describe('GIVEN a ready state with an edge to a package no record names', () => {
-    it('WHEN drawn THEN packages are the names, infos the records, and edges drop the dangling one', () => {
+    it('WHEN drawn THEN packages are the names, infos the records, edges drop the dangling one and each name labels itself', () => {
       const drawn = drawnGraphOf(STATE);
 
-      expect(drawn).toStrictEqual({ hash: 'h', packages: ['core', 'web'], infos: PACKAGES, edges: [KEPT_EDGE] });
+      expect(drawn).toStrictEqual({
+        hash: 'h',
+        packages: ['core', 'web'],
+        infos: PACKAGES,
+        edges: [KEPT_EDGE],
+        scopeShown: true,
+        labels: new Map([
+          ['core', 'core'],
+          ['web', 'web']
+        ])
+      });
+    });
+  });
+
+  describe('GIVEN a ready state of a scoped package with scopes hidden', () => {
+    it('WHEN drawn THEN scopes are hidden and the package is labelled by its bare name', () => {
+      const state: GraphReady = { ...STATE, scopeShown: false, packages: [SCOPED], edges: [] };
+
+      const drawn = drawnGraphOf(state);
+
+      expect([drawn.scopeShown, [...drawn.labels]]).toStrictEqual([false, [['@org/ui', 'ui']]]);
     });
   });
 });
