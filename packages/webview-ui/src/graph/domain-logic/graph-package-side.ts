@@ -1,6 +1,6 @@
 import { GraphFiltering } from './graph-filtering.ts';
 import { GraphLayouts } from './graph-layouts.ts';
-import { refreshedDrawn, restoreAfterDraw } from './graph-package-draw.ts';
+import { refreshedDrawn, relabelled, restoreAfterDraw } from './graph-package-draw.ts';
 import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -144,10 +144,12 @@ export class GraphPackageSide {
     const shown = this.drawn;
 
     if (shown !== null && state.hash === shown.hash) {
-      const refreshed = refreshedDrawn(shown, state.packages);
+      const refreshed = refreshedDrawn(shown, state);
       const isChanged = refreshed !== shown;
 
       this.drawn = refreshed;
+
+      if (isChanged) relabelled({ view: this.view, controls: this.filtering.controls }, refreshed);
       this.filtering.inspection.refreshed(isChanged);
 
       return;
