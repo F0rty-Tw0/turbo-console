@@ -177,6 +177,17 @@ describe('FEATURE: the graph wiring', () => {
       expect(scoped.api.posted('/ws')[0]).toMatchObject({ type: 'state', state: shown });
     });
 
+    it("WHEN the page sends setViewToggle scope true THEN this feeds object's scope toggle is set to true", async () => {
+      const feeds = feedsOf(new RunStore());
+      const toggled = createGraph(contextOf(page), session, details, output, feeds);
+
+      toggled.register();
+      await callbackOf(COMMAND)(undefined);
+      await toggled.api.receive('/ws', { type: 'setViewToggle', toggle: 'scope', shown: true });
+
+      expect(feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
     it('WHEN Show All Task Graphs runs THEN the panel of the active root opens', async () => {
       graph.register();
 

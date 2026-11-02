@@ -39,7 +39,8 @@ export type {
   LayoutGrouping,
   ManifestContext,
   ManifestEntry,
-  ManifestField
+  ManifestField,
+  SetViewToggle
 } from './bridge/common/graph-message.type.ts';
 
 export type {

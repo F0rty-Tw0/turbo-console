@@ -154,6 +154,13 @@ export type GraphShownUmbrellasMessage = {
   readonly ids: string[];
 };
 
+/** The page flipping one of the tree's two toggles: scope prefixes on package labels or `package.json` scripts beside turbo tasks. */
+export type SetViewToggle = {
+  readonly type: 'setViewToggle';
+  readonly toggle: 'scope' | 'scripts';
+  readonly shown: boolean;
+};
+
 /** Webview to host. The webview is a trust boundary: the host validates every message. */
 export type GraphWebviewMessage =
   | GraphReadyMessage
@@ -166,4 +173,5 @@ export type GraphWebviewMessage =
   | GraphExportImageMessage
   | GraphRunTaskMessage
   | GraphStopTaskMessage
-  | GraphShownUmbrellasMessage;
+  | GraphShownUmbrellasMessage
+  | SetViewToggle;

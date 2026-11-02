@@ -185,8 +185,8 @@ export class GraphSession {
 
   private requestContext(): RequestContext {
     const coordinator = this.roots.get(this.root)?.coordinator;
-    const { atoms } = this.feeds;
-    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, atoms };
+    const { atoms, toggles } = this.feeds;
+    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, atoms, toggles };
 
     return context;
   }

@@ -65,6 +65,8 @@ const stopTaskSchema = object({ type: literal('stopTask'), taskId: taskIdSchema 
 
 const shownUmbrellasSchema = object({ type: literal('shownUmbrellas'), ids: array(taskIdSchema).check(maxLength(TASK_COUNT_MAX)) });
 
+const setViewToggleSchema = object({ type: literal('setViewToggle'), toggle: zodEnum(['scope', 'scripts']), shown: boolean() });
+
 /**
  * A message from the graph webview, which is a trust boundary. Unknown keys are stripped; whether a package name or a
  * hash is current is checked by the session against the state built at that moment.
@@ -80,5 +82,6 @@ export const graphMessageSchema = discriminatedUnion('type', [
   exportImageSchema,
   runTaskSchema,
   stopTaskSchema,
-  shownUmbrellasSchema
+  shownUmbrellasSchema,
+  setViewToggleSchema
 ]);

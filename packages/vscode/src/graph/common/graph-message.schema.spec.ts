@@ -35,4 +35,25 @@ describe('FEATURE: graph message schema', () => {
       expect(parsed.success).toBe(false);
     });
   });
+
+  describe('GIVEN a setViewToggle with a known toggle and a boolean', () => {
+    it('WHEN parsed THEN it parses to those fields and the unknown key is stripped', () => {
+      const parsed = graphMessageSchema.safeParse({ type: 'setViewToggle', toggle: 'scope', shown: true, extra: 1 });
+
+      expect(parsed.data).toStrictEqual({ type: 'setViewToggle', toggle: 'scope', shown: true });
+    });
+  });
+
+  describe('GIVEN a setViewToggle with a bad field', () => {
+    it.each([
+      ['an unknown toggle', { toggle: 'theme', shown: true }],
+      ['a string shown', { toggle: 'scope', shown: 'yes' }],
+      ['no shown', { toggle: 'scripts' }],
+      ['no toggle', { shown: false }]
+    ])('WHEN it has %s THEN parse fails', (_label, fields) => {
+      const parsed = graphMessageSchema.safeParse({ type: 'setViewToggle', ...fields });
+
+      expect(parsed.success).toBe(false);
+    });
+  });
 });
