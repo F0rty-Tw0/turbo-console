@@ -15,7 +15,7 @@ import {
   GRAPH_ATOM_MODEL_STUB,
   GRAPH_ATOM_UNLOADED_VIEW_STUB
 } from '../test/stubs/graph-atom-model.stub.ts';
-import { GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
+import { GRAPH_SHOWN_STUB, GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
 import { atomsFake } from '../test/utils/graph-feeds.spec.util.ts';
 import { smokeGroupTasksOf } from '../test/utils/graph-model.spec.util.ts';
 import { graphStateOf } from '../utils/graph-state.util.ts';
@@ -36,7 +36,7 @@ const TWO_GROUP_PACKAGE: PackageNode = {
 };
 const [, ...OTHER_PACKAGES] = GRAPH_ATOM_MODEL_STUB.packages;
 const TWO_GROUP_MODEL: WorkspaceModel = { ...GRAPH_ATOM_MODEL_STUB, packages: [TWO_GROUP_PACKAGE, ...OTHER_PACKAGES] };
-const TWO_GROUP_STATE = graphStateOf(TWO_GROUP_MODEL, NO_LAYOUT_CACHES_STUB);
+const TWO_GROUP_STATE = graphStateOf(TWO_GROUP_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 const SHOWN_UMBRELLAS: GraphRequestMessage = {
   type: 'shownUmbrellas',
   ids: [ATOM_UMBRELLA_TASK_STUB.id, SMOKE_UMBRELLA.id, 'gone#nothing', ATOM_FILE_A_TASK_STUB.id, APP_BUILD_TASK_STUB.id]

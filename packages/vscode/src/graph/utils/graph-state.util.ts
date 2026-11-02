@@ -10,6 +10,7 @@ import { bareTextsOf } from '../../tree/utils/model-view.util.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
 import { isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
+import type { GraphFeeds, GraphShown } from '../common/graph.type.ts';
 
 const FNV_OFFSET = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
@@ -87,7 +88,14 @@ export const rootLabelOf = (model: WorkspaceModel): string | null => {
   return root?.label ?? null;
 };
 
-export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches): GraphState => {
+/** The tree's two toggles as they are now, read at every state build. */
+export const shownOf = (toggles: GraphFeeds['toggles']): GraphShown => {
+  const shown: GraphShown = { scopeShown: toggles.scope.isShown(), scriptsShown: toggles.scripts.isShown() };
+
+  return shown;
+};
+
+export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, shown: GraphShown): GraphState => {
   const bareTexts = bareTextsOf(model.packages);
   const packages = model.packages.map((node) => packageOf(node, bareTexts)).toSorted(comparePackages);
   const edges = edgesOf(model.edges);
@@ -109,20 +117,20 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches): 
     atomGroups,
     singlePackage,
     rootLabel,
-    scopeShown: false,
-    scriptsShown: false
+    scopeShown: shown.scopeShown,
+    scriptsShown: shown.scriptsShown
   };
 
   return state;
 };
 
 /** A root's state as the page sees it. Fixed texts only, never the failure's own message. */
-export const graphStateOfRoot = (state: RootState | undefined, caches: GraphLayoutCaches): GraphState => {
+export const graphStateOfRoot = (state: RootState | undefined, caches: GraphLayoutCaches, shown: GraphShown): GraphState => {
   if (state === undefined) return LOADING;
 
   const model = shownModelOf(state);
 
-  if (model !== null) return graphStateOf(model, caches);
+  if (model !== null) return graphStateOf(model, caches, shown);
 
   if (state.error === null) return LOADING;
 

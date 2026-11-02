@@ -124,14 +124,14 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const output = createOutput();
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
-  const { scripts, scope } = togglesOf(context.workspaceState, output);
+  const toggles = togglesOf(context.workspaceState, output);
   const atoms = sharedAtomsOf(session.store, editorAtomPorts(session.store, output));
-  const treeDeps = treeDepsOf(runSession.runs, timings, scripts, atoms, output.error);
+  const treeDeps = treeDepsOf(runSession.runs, timings, toggles.scripts, atoms, output.error);
   const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDeps);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
-  const panels = createPanels(context, session, { runs: runSession.runs, scripts }, output);
-  const graph = createGraph(context, session, panels, output, { runs: runSession.runs, atoms });
+  const panels = createPanels(context, session, { runs: runSession.runs, scripts: toggles.scripts }, output);
+  const graph = createGraph(context, session, panels, output, { runs: runSession.runs, atoms, toggles });
   const treeVisibility = new TreeVisibility();
   const ticker = new ElapsedTicker(runSession.runs, tickerPortsOf(tree));
   const api: TurboConsoleApi = {
@@ -148,10 +148,10 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     ticker: ticker.api()
   };
 
-  context.subscriptions.push(output, tree, session, ticker, scripts, scope);
+  context.subscriptions.push(output, tree, session, ticker, toggles.scripts, toggles.scope);
 
   if (vscode.workspace.isTrusted) {
-    const treeContext = contextOf(context, { scripts, scope }, new IconThemeFolders(editorIconThemePorts()));
+    const treeContext = contextOf(context, toggles, new IconThemeFolders(editorIconThemePorts()));
 
     context.subscriptions.push(bindViews(registerTree(treeContext, session, tree, output), treeVisibility, ticker));
 
@@ -161,7 +161,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
       watchers,
       registerDetails(panels, vscode.commands.registerCommand, manifestFile),
       graph.register(),
-      registerRunCommands(session, runSession, { tree, scripts }, output),
+      registerRunCommands(session, runSession, { tree, scripts: toggles.scripts }, output),
       registerPanel(session.store, commands, help)
     );
 

@@ -15,6 +15,7 @@ import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-c
 import {
   GRAPH_HASH_STUB,
   GRAPH_MODEL_STUB,
+  GRAPH_SHOWN_STUB,
   GRAPH_STATE_STUB,
   NO_LAYOUT_CACHES_STUB,
   POSITIONS_STUB
@@ -85,7 +86,7 @@ const tasksOf = (state: GraphState): GraphTask[] => {
 describe('FEATURE: graph state builder', () => {
   describe('GIVEN a model with unsorted edges and one pair listed twice', () => {
     it('WHEN the state is built THEN each package carries its path and its tags sorted and deduplicated, and edges are sorted, deduped and carry no kind', () => {
-      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB);
+      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
       expect(state).toStrictEqual(GRAPH_STATE_STUB);
     });
@@ -93,7 +94,7 @@ describe('FEATURE: graph state builder', () => {
 
   describe('GIVEN a package with two visible tasks and an atom-file one', () => {
     it('WHEN the state is built THEN taskCount counts the visible tasks only', () => {
-      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB);
+      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
       expect(state).toMatchObject({ kind: 'graph', packages: GRAPH_INFOS });
     });
@@ -114,15 +115,15 @@ describe('FEATURE: graph state builder', () => {
     };
 
     it('WHEN the state is built THEN the hash is unchanged', () => {
-      const state = graphStateOf(grown(), NO_LAYOUT_CACHES_STUB);
+      const state = graphStateOf(grown(), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
       expect(state).toMatchObject({ hash: GRAPH_HASH_STUB });
     });
 
     it('WHEN the state is built THEN tasks has one more entry', () => {
-      const base = tasksOf(graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB));
+      const base = tasksOf(graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB));
 
-      const tasks = tasksOf(graphStateOf(grown(), NO_LAYOUT_CACHES_STUB));
+      const tasks = tasksOf(graphStateOf(grown(), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB));
 
       expect(tasks).toHaveLength(base.length + 1);
     });
@@ -132,7 +133,7 @@ describe('FEATURE: graph state builder', () => {
     it('WHEN the state is built THEN // is a package like any other', () => {
       const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, rootNode('//')] };
 
-      const state = graphStateOf(model, NO_LAYOUT_CACHES_STUB);
+      const state = graphStateOf(model, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
       expect(state).toMatchObject({ kind: 'graph', packages: ROOT_FIRST_NAMES });
     });
@@ -140,7 +141,7 @@ describe('FEATURE: graph state builder', () => {
 
   describe('GIVEN a single-package model', () => {
     it('WHEN the state is built THEN it is a graph with singlePackage and the root label', () => {
-      const state = graphStateOf(SINGLE_MODEL, NO_LAYOUT_CACHES_STUB);
+      const state = graphStateOf(SINGLE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
       expect(state).toMatchObject({ kind: 'graph', singlePackage: true, rootLabel: 'single-app', packages: ROOT_INFOS });
     });
@@ -149,7 +150,7 @@ describe('FEATURE: graph state builder', () => {
       const unlabelled: PackageNode = { ...ROOT_NODE, label: null };
       const model: WorkspaceModel = { ...SINGLE_MODEL, packages: [unlabelled] };
 
-      expect(graphStateOf(model, NO_LAYOUT_CACHES_STUB)).toMatchObject({ singlePackage: true, rootLabel: null });
+      expect(graphStateOf(model, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB)).toMatchObject({ singlePackage: true, rootLabel: null });
     });
 
     it('WHEN the root label is read THEN it is the // package label', () => {
@@ -162,7 +163,7 @@ describe('FEATURE: graph state builder', () => {
     const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [labelledRoot] };
 
     it('WHEN the state is built THEN rootLabel is null', () => {
-      expect(graphStateOf(model, NO_LAYOUT_CACHES_STUB)).toMatchObject({ singlePackage: false, rootLabel: null });
+      expect(graphStateOf(model, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB)).toMatchObject({ singlePackage: false, rootLabel: null });
     });
 
     it('WHEN the root label is read THEN it is null', () => {
@@ -174,7 +175,7 @@ describe('FEATURE: graph state builder', () => {
     it('WHEN the state is built THEN its record keeps the name and tag', () => {
       const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [rootNode('__proto__', ['constructor'])] };
 
-      const state = graphStateOf(model, NO_LAYOUT_CACHES_STUB);
+      const state = graphStateOf(model, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
       expect(state).toMatchObject({ packages: PROTO_NAMES });
     });
@@ -184,7 +185,7 @@ describe('FEATURE: graph state builder', () => {
     it.each(CACHE_CASES)(
       'WHEN the caches are $label THEN positions and folderPositions follow each entry on its own',
       ({ model, caches, positions, folderPositions }) => {
-        const state = graphStateOf(model, caches);
+        const state = graphStateOf(model, caches, GRAPH_SHOWN_STUB);
 
         expect(state).toMatchObject({ positions, folderPositions });
       }
@@ -260,33 +261,37 @@ const LOADING: GraphState = { kind: 'loading' };
 
 describe('FEATURE: graph state of a root', () => {
   it('GIVEN no state WHEN built THEN it is loading', () => {
-    expect(graphStateOfRoot(undefined, NO_LAYOUT_CACHES_STUB)).toStrictEqual(LOADING);
+    expect(graphStateOfRoot(undefined, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB)).toStrictEqual(LOADING);
   });
 
   it('GIVEN no model and no error WHEN built THEN it is loading', () => {
-    expect(graphStateOfRoot(stateOf({ model: null }), NO_LAYOUT_CACHES_STUB)).toStrictEqual(LOADING);
+    expect(graphStateOfRoot(stateOf({ model: null }), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB)).toStrictEqual(LOADING);
   });
 
   it('GIVEN no model and a binary failure WHEN built THEN it is the binary text', () => {
-    const state = graphStateOfRoot(stateOf({ model: null, error: LOAD_FAILURE_STUB }), NO_LAYOUT_CACHES_STUB);
+    const state = graphStateOfRoot(stateOf({ model: null, error: LOAD_FAILURE_STUB }), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
     expect(state).toStrictEqual({ kind: 'error', message: MESSAGE_TEXTS['binary-not-found'] });
   });
 
   it('GIVEN no model and a load failure WHEN built THEN it is the load text', () => {
-    const state = graphStateOfRoot(stateOf({ model: null, error: LOAD_FAILURE }), NO_LAYOUT_CACHES_STUB);
+    const state = graphStateOfRoot(stateOf({ model: null, error: LOAD_FAILURE }), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
     expect(state).toStrictEqual({ kind: 'error', message: MESSAGE_TEXTS['load-no-model'] });
   });
 
   it('GIVEN a model kept after a load failure WHEN built THEN it is that model graph', () => {
-    const state = graphStateOfRoot(stateOf({ model: GRAPH_MODEL_STUB, error: LOAD_FAILURE }), NO_LAYOUT_CACHES_STUB);
+    const state = graphStateOfRoot(stateOf({ model: GRAPH_MODEL_STUB, error: LOAD_FAILURE }), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
     expect(state).toStrictEqual(GRAPH_STATE_STUB);
   });
 
   it('GIVEN a model with a binary failure WHEN built THEN it is the binary error', () => {
-    const state = graphStateOfRoot(stateOf({ model: GRAPH_MODEL_STUB, error: LOAD_FAILURE_STUB }), NO_LAYOUT_CACHES_STUB);
+    const state = graphStateOfRoot(
+      stateOf({ model: GRAPH_MODEL_STUB, error: LOAD_FAILURE_STUB }),
+      NO_LAYOUT_CACHES_STUB,
+      GRAPH_SHOWN_STUB
+    );
 
     expect(state).toStrictEqual({ kind: 'error', message: MESSAGE_TEXTS['binary-not-found'] });
   });
@@ -301,7 +306,7 @@ describe('FEATURE: run ids of a root', () => {
     ['no model and no error', stateOf({ model: null })],
     ['no state', undefined]
   ])('GIVEN %s WHEN the run ids are read THEN they are those of the state', (_label, root) => {
-    const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB);
+    const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
     expect(runIdsOfRoot(root)).toStrictEqual(runIdsOf(state));
   });

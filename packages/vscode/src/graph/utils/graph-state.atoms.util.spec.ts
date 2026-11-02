@@ -9,7 +9,7 @@ import {
   ATOM_UMBRELLA_TASK_STUB,
   GRAPH_ATOM_MODEL_STUB
 } from '../test/stubs/graph-atom-model.stub.ts';
-import { NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
+import { GRAPH_SHOWN_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const TASK_IDS = ['//#all-e2e', '@fx/app#build', ATOM_UMBRELLA_TASK_STUB.id];
 
@@ -27,7 +27,7 @@ const atomGroupsOf = (state: GraphState): GraphAtomGroup[] => {
 
 describe('FEATURE: graph state of an Atomizer model', () => {
   describe('GIVEN a model with one Atomizer group', () => {
-    const state = graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB);
+    const state = graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
     it('WHEN the state is built THEN atomGroups holds the group with its files in spec path order', () => {
       const fileA: GraphAtomFile = { id: ATOM_FILE_A_TASK_STUB.id, specPath: 'tests/a.spec.ts', isLive: false };

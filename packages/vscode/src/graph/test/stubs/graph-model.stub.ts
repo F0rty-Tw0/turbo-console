@@ -5,6 +5,7 @@ import type { LoadedModel } from '../../../roots/common/root.type.ts';
 import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphLayoutCaches } from '../../common/graph-cache.type.ts';
+import type { GraphShown } from '../../common/graph.type.ts';
 
 const WEB_A_DEV: PackageEdge = { source: 'web', target: 'a', kind: 'dev' };
 const WEB_A_PROD: PackageEdge = { source: 'web', target: 'a', kind: 'prod' };
@@ -100,3 +101,6 @@ export const PROTO_LOADED_STUB: LoadedModel = { ...GRAPH_LOADED_STUB, model: PRO
 
 /** Both layout caches missed: for a state built with no stored layout. */
 export const NO_LAYOUT_CACHES_STUB: GraphLayoutCaches = { flat: null, folders: null };
+
+/** Both toggles at their stored default: the `scopeShown` and `scriptsShown` of `GRAPH_STATE_STUB`. */
+export const GRAPH_SHOWN_STUB: GraphShown = { scopeShown: false, scriptsShown: false };

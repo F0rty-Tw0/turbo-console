@@ -1,4 +1,4 @@
-import type { GraphHostMessage } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphReady } from '@turbo-console/webview-ui';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
@@ -14,6 +14,7 @@ import type { GraphPanelsDeps } from '../common/graph-panel.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
 import { graphHostMock } from '../test/mocks/graph-host.mock.ts';
 import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
+import { hiddenTogglesOf, scopeShownTogglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const READY = { type: 'ready' };
@@ -49,7 +50,8 @@ describe('FEATURE: graph panel registry', () => {
       setPanelVisible,
       openDetails,
       runs: new RunStore(),
-      atoms: SHARED_ATOMS_STUB
+      atoms: SHARED_ATOMS_STUB,
+      toggles: hiddenTogglesOf()
     });
   });
 
@@ -87,6 +89,26 @@ describe('FEATURE: graph panel registry', () => {
 
       expect(panels.api().posted('/ws')).toStrictEqual([STATE_POSTED, RUNS_POSTED]);
       expect(viewAt(fakes, 0).send).toHaveBeenCalledTimes(2);
+    });
+
+    it('GIVEN panels built with scope shown WHEN the page sends ready THEN the posted state carries scopeShown true', () => {
+      const openDetails = vi.fn<GraphPanelsDeps['openDetails']>().mockResolvedValue(undefined);
+      const scopedGraph: GraphReady = { ...GRAPH_STATE_STUB, scopeShown: true };
+      const scopedState: GraphHostMessage = { type: 'state', state: scopedGraph };
+      const scoped = new GraphPanels({
+        roots: store,
+        host: fakes.host,
+        setPanelVisible,
+        openDetails,
+        runs: new RunStore(),
+        atoms: SHARED_ATOMS_STUB,
+        toggles: scopeShownTogglesOf()
+      });
+
+      scoped.open('/ws');
+      viewAt(fakes, 0).message(READY);
+
+      expect(scoped.api().posted('/ws')[0]).toStrictEqual(scopedState);
     });
 
     it('WHEN the page sends ready more than the cap THEN only the last POSTED_MAX messages are kept', () => {

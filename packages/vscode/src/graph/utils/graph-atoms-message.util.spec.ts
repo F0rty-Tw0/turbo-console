@@ -16,7 +16,7 @@ import {
   GRAPH_ATOM_UNLOADED_VIEW_STUB,
   GRAPH_ATOM_VIEW_STUB
 } from '../test/stubs/graph-atom-model.stub.ts';
-import { GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
+import { GRAPH_SHOWN_STUB, GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const ROOT = '/ws';
 const UMBRELLA_ID = ATOM_UMBRELLA_TASK_STUB.id;
@@ -27,7 +27,7 @@ const readyOf = (state: GraphState): GraphReady => {
 
   return state;
 };
-const ATOM_STATE = readyOf(graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB));
+const ATOM_STATE = readyOf(graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB));
 const UNLOADED_LOOKUP: AtomLookup = () => GRAPH_ATOM_UNLOADED_VIEW_STUB;
 const NO_GROUP_LOOKUP: AtomLookup = () => NO_ATOMS;
 const UNLOADED_FILES = { [FILE_A]: 'none', [FILE_B]: 'none' };

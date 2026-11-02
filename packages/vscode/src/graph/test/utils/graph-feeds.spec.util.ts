@@ -1,15 +1,34 @@
 import { vi } from 'vitest';
 
 import type { Runs } from '../../../run/common/run.type.ts';
+import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { AtomLookup } from '../../../tree/common/atom-view.type.ts';
 import { SHARED_ATOMS_STUB } from '../../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphFeeds } from '../../common/graph.type.ts';
 import type { AtomsFake } from '../common/graph.type.ts';
 
-/** Feeds over `runs` and atoms that never load, unless a spec passes its own. */
-export const feedsOf = (runs: Runs, atoms: SharedAtoms = SHARED_ATOMS_STUB): GraphFeeds => {
-  const feeds: GraphFeeds = { runs, atoms };
+/** Two fresh toggles, both hidden: the stored default of scope and scripts. */
+export const hiddenTogglesOf = (): GraphFeeds['toggles'] => {
+  const toggles: GraphFeeds['toggles'] = { scope: scriptsToggleMock(), scripts: scriptsToggleMock() };
+
+  return toggles;
+};
+
+/** Two fresh toggles, scope shown and scripts hidden. */
+export const scopeShownTogglesOf = (): GraphFeeds['toggles'] => {
+  const toggles: GraphFeeds['toggles'] = { scope: scriptsToggleMock(true), scripts: scriptsToggleMock() };
+
+  return toggles;
+};
+
+/** Feeds over `runs`, atoms that never load and hidden toggles, unless a spec passes its own. */
+export const feedsOf = (
+  runs: Runs,
+  atoms: SharedAtoms = SHARED_ATOMS_STUB,
+  toggles: GraphFeeds['toggles'] = hiddenTogglesOf()
+): GraphFeeds => {
+  const feeds: GraphFeeds = { runs, atoms, toggles };
 
   return feeds;
 };

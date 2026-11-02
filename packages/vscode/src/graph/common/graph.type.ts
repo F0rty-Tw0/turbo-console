@@ -3,6 +3,7 @@ import type { GraphHostMessage, GraphState, GraphWebviewMessage, LayoutGrouping 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
+import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 
 /**
@@ -84,8 +85,21 @@ export type GraphRunCommand = {
   readonly arg: unknown;
 };
 
-/** The two stores a panel's feeds read: the run states of its root and the Atomizer loads shared with the tree. */
+/** The two tree toggles a state carries: scope prefixes on package labels, and `package.json` scripts beside turbo tasks. */
+export type GraphShown = {
+  readonly scopeShown: boolean;
+  readonly scriptsShown: boolean;
+};
+
+/** The tree's two toggles, which the graph reads and never sets. */
+type GraphToggles = {
+  readonly scope: ScriptsToggleApi;
+  readonly scripts: ScriptsToggleApi;
+};
+
+/** What a panel's feeds read: the run states of its root, the Atomizer loads shared with the tree and the tree's two toggles. */
 export type GraphFeeds = {
   readonly runs: Runs;
   readonly atoms: SharedAtoms;
+  readonly toggles: GraphToggles;
 };

@@ -31,7 +31,15 @@ export const createGraph = (
     await details.open(key);
   };
   const host = editorGraphHost(context.extensionUri, output, context.workspaceState);
-  const panels = new GraphPanels({ roots: session.store, host, setPanelVisible, openDetails, runs: feeds.runs, atoms: feeds.atoms });
+  const panels = new GraphPanels({
+    roots: session.store,
+    host,
+    setPanelVisible,
+    openDetails,
+    runs: feeds.runs,
+    atoms: feeds.atoms,
+    toggles: feeds.toggles
+  });
   const ports = editorGraphCommandPorts(manifestFile, rootOf, output.error);
   const wiring: GraphWiring = {
     api: panels.api(),
