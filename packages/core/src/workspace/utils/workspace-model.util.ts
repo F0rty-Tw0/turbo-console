@@ -81,8 +81,8 @@ const listedWarnings = (classifiedWarnings: string[], configs: TurboConfigFile[]
 };
 
 /** The root classified apart from `nodes`; empty for a single-package repo (`//` is a node there) or a graph with no root. */
-const classifiedRootOf = (root: GraphPackage | null, lookup: TurboTaskLookup): ClassifyResult => {
-  if (root === null || lookup.singlePackage) return classifyPackages([]);
+const classifiedRootOf = (root: GraphPackage | null, singlePackage: boolean): ClassifyResult => {
+  if (root === null || singlePackage) return classifyPackages([]);
 
   return classifyPackages([root]);
 };
@@ -123,7 +123,7 @@ export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFil
   const classified = classifyPackages(nodes.items);
   const byDir = okConfigsByDir(configs);
   const lookup = turboTaskLookupOf(configs, nodes.items, singlePackage);
-  const classifiedRoot = classifiedRootOf(graph.data.root, lookup);
+  const classifiedRoot = classifiedRootOf(graph.data.root, singlePackage);
   const keptRoot = keptRootOf(classifiedRoot, lookup);
   const phantoms = new Map([...classified.phantoms, ...classifiedRoot.phantoms]);
   const packageIds = classified.packages.flatMap(taskIdsOf);
@@ -137,7 +137,8 @@ export const buildWorkspaceModel = (graph: PackageGraph, configs: TurboConfigFil
   const rootPackage = rootNodeOf(keptRoot, context);
   const isVisibleEdge = (edge: GraphEdge): boolean => visibleNames.has(edge.source) && visibleNames.has(edge.target);
   const edges = graphEdges.items.filter(isVisibleEdge).map(toEdge).toSorted(byEdge);
-  const listed = listedWarnings(classified.warnings, configs);
+  const classifiedWarnings = [...classified.warnings, ...classifiedRoot.warnings];
+  const listed = listedWarnings(classifiedWarnings, configs);
   const warnings = shownWarnings(listed);
   const rootConfig = configs.find(isRootConfig) ?? null;
   const affectedMode = affectedModeOf(rootConfig);
@@ -167,7 +168,9 @@ export const withWarning = (
   warning: string
 ): WorkspaceModel => {
   const classified = classifyPackages(graph.data.packageGraph.nodes.items);
-  const listed = listedWarnings(classified.warnings, configs);
+  const classifiedRoot = classifiedRootOf(graph.data.root, model.singlePackage);
+  const classifiedWarnings = [...classified.warnings, ...classifiedRoot.warnings];
+  const listed = listedWarnings(classifiedWarnings, configs);
   const warnings = shownWarnings([...listed, warning]);
   const warned: WorkspaceModel = { ...model, warnings };
 

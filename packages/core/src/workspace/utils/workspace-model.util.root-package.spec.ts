@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildWorkspaceModel } from './workspace-model.util.ts';
+import { buildWorkspaceModel, withWarning } from './workspace-model.util.ts';
 import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
 import type { TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
 import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
@@ -21,6 +21,8 @@ const FMT = graphTask('//#fmt', COMMAND, [], ['b#build', 'a#build', '//#lint', '
 const LINT = graphTask('//#lint', COMMAND, [], []);
 
 const ROOT = graphPackage('//', '', ['root-tag'], [FMT, LINT]);
+
+const CONFLICT_ROOT = graphPackage('//', '', [], [graphTask('//#fmt', COMMAND, ['atomizer:a', 'atomizer:b'], [])]);
 
 const PKG_A = graphPackage('a', 'packages/a', [], [graphTask('a#build', COMMAND, [], ['//#fmt', '//#lint'])]);
 
@@ -92,6 +94,25 @@ describe('FEATURE: workspace model root package', () => {
       const model = build(ROOT, []);
 
       expect(model.rootPackage?.tasks).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN a monorepo whose root task is tagged with two groups', () => {
+    const warning = '//#fmt: tagged with groups a, b; using a';
+
+    it('WHEN built THEN the two-group warning is listed', () => {
+      const model = build(CONFLICT_ROOT, [ROOT_CONFIG]);
+
+      expect(model.warnings).toStrictEqual([warning]);
+    });
+
+    it('WHEN a warning is added after the build THEN the two-group warning is still listed', () => {
+      const graph = packageGraph([PKG_A, PKG_B], [], CONFLICT_ROOT);
+      const model = buildWorkspaceModel(graph, [ROOT_CONFIG], MODEL_SOURCE_STUB);
+
+      const warned = withWarning(model, graph, [ROOT_CONFIG], 'cache: x');
+
+      expect(warned.warnings).toStrictEqual([warning, 'cache: x']);
     });
   });
 
