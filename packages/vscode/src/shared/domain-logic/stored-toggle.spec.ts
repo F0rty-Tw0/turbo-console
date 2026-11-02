@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StoredToggle } from './stored-toggle.ts';
@@ -32,8 +33,8 @@ describe('FEATURE: StoredToggle', () => {
   let stored: Map<string, unknown>;
   let updateGates: Promise<void>[];
   let updateFailures: Error[];
-  let setKey: ReturnType<typeof vi.fn<ScriptsTogglePorts['setKey']>>;
-  let log: ReturnType<typeof vi.fn<ScriptsTogglePorts['log']>>;
+  let setKey: Mock<ScriptsTogglePorts['setKey']>;
+  let log: Mock<ScriptsTogglePorts['log']>;
   let ports: ScriptsTogglePorts;
 
   const toggleOf = (): StoredToggle => new StoredToggle(KEY, ports);
@@ -127,6 +128,7 @@ describe('FEATURE: StoredToggle', () => {
       await toggle.set(true);
 
       expect(calls).toStrictEqual(['update:true', 'setKey:true', 'fire']);
+      expect(setKey).toHaveBeenLastCalledWith(KEY, true);
       expect(stored.get(KEY)).toBe(true);
     });
 
@@ -245,16 +247,6 @@ describe('FEATURE: StoredToggle', () => {
 
       expect(stored.get('turboConsole.otherShown')).toBeUndefined();
       expect(other.isShown()).toBe(false);
-    });
-  });
-
-  describe('GIVEN a built toggle', () => {
-    it('WHEN set(true) runs THEN setKey receives the toggle key first', async () => {
-      const toggle = await builtToggle();
-
-      await toggle.set(true);
-
-      expect(setKey).toHaveBeenLastCalledWith(KEY, true);
     });
   });
 });

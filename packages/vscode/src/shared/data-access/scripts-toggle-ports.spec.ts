@@ -25,7 +25,9 @@ describe('FEATURE: toggle ports', () => {
 
   describe.each(['turboConsole.scopeShown', 'turboConsole.scriptsShown'])('GIVEN the key %s', (key) => {
     it('WHEN setKey sends true THEN setContext gets that key and true', async () => {
-      await editorTogglePorts(memento, outputMock()).setKey(key, true);
+      const ports = editorTogglePorts(memento, outputMock());
+
+      await ports.setKey(key, true);
 
       expect(executeCommand).toHaveBeenCalledExactlyOnceWith('setContext', key, true);
     });

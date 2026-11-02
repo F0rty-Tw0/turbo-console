@@ -4,9 +4,8 @@ import type * as vscode from 'vscode';
 import { contextOf, treeDepsOf } from './tree-deps.ts';
 import type { Timings } from '../../shared/common/api.type.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
-import { UNKNOWN_FACTS } from '../common/icon-theme.const.ts';
-import type { IconThemeProbe } from '../common/icon-theme.type.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
+import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { TIMINGS_STUB } from '../test/stubs/timings.stub.ts';
 
@@ -85,7 +84,7 @@ describe('FEATURE: tree provider deps', () => {
       const subscriptions: vscode.Disposable[] = [];
       const scope = scriptsToggleMock();
       const scripts = scriptsToggleMock();
-      const iconTheme: IconThemeProbe = { facts: async () => Promise.resolve(UNKNOWN_FACTS), clear: vi.fn() };
+      const iconTheme = iconThemeProbeMock();
 
       const treeContext = contextOf({ subscriptions }, { scope, scripts }, iconTheme);
 

@@ -146,6 +146,20 @@ describe('FEATURE: registerTree scope toggle', () => {
     });
   });
 
+  describe('GIVEN a registered tree with scopes shown', () => {
+    beforeEach(() => {
+      scope = scriptsToggleMock(true);
+      context = contextWith(scope);
+      registerWith();
+    });
+
+    it('WHEN hideScope runs THEN scope.set(false) is called once', async () => {
+      await invoke('turboConsole.hideScope');
+
+      expect(scope.set).toHaveBeenCalledExactlyOnceWith(false);
+    });
+  });
+
   describe('GIVEN a registered tree with scopes hidden', () => {
     beforeEach(() => {
       registerWith();
@@ -168,15 +182,6 @@ describe('FEATURE: registerTree scope toggle', () => {
       await invoke('turboConsole.showScope');
 
       expect(calls).toStrictEqual(['setScopeShown:true']);
-    });
-
-    it('WHEN hideScope runs on shown scopes THEN scope.set(false) is called once', async () => {
-      await scope.set(true);
-      scope.set.mockClear();
-
-      await invoke('turboConsole.hideScope');
-
-      expect(scope.set).toHaveBeenCalledExactlyOnceWith(false);
     });
 
     it('WHEN the scope toggle changes after register THEN the tree follows with the new value', async () => {
@@ -202,7 +207,6 @@ describe('FEATURE: registerTree scope toggle', () => {
       });
 
       it('THEN the tree no longer follows the toggle', async () => {
-        calls.length = 0;
         await scope.set(true);
 
         expect(calls).toStrictEqual([]);
