@@ -7,7 +7,11 @@ export type GraphEdge = {
 /** A package as the page lists it; the host deduplicates and sorts `tags`. */
 export type GraphPackage = {
   readonly name: string;
-  /** The name with its `@scope/` stripped, as the tree shows it; the full text on a collision; not part of the layout hash. */
+  /**
+   * The package's row text with its `@scope/` stripped, cleaned like a tree label (one line, control and zero-width
+   * characters dropped, cut to LABEL_MAX); the full text on a collision; a single-package root reads its label. Built over
+   * every graph package, so it can differ from the tree while scripts are hidden; not part of the layout hash.
+   */
   readonly bareName: string;
   readonly path: string;
   readonly tags: string[];

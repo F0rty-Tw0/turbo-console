@@ -20,7 +20,6 @@ const isPackage = (value: unknown): boolean => {
   const { name, bareName, path, tags, taskCount } = value;
   const hasTags = Array.isArray(tags) && tags.every(isString);
   const hasTaskCount = typeof taskCount === 'number' && Number.isInteger(taskCount) && taskCount >= 0 && taskCount <= TASK_COUNT_MAX;
-
   const hasNames = isString(name) && isString(bareName) && isString(path);
 
   return hasNames && hasTags && hasTaskCount;
