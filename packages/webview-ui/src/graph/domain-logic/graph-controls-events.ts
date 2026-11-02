@@ -21,12 +21,13 @@ const wireGroup = (group: ControlsGroup, actions: ControlsActions): void => {
 
 /** Turns the panel's `input` and `click` events into `actions`; nothing else happens in a listener. */
 export const wireControls = (elements: ControlsElements, actions: ControlsActions): void => {
-  const { search, depth, grouping, tags, showAll, groups } = elements;
+  const { search, depth, grouping, scope, tags, showAll, groups } = elements;
 
   search.addEventListener('input', (): void => actions.onSearch(search.value));
   depth.addEventListener('input', (): void => actions.onDepth(depth.value));
   depth.addEventListener('blur', (): void => actions.onDepthBlur());
   grouping.addEventListener('input', (): void => actions.onGrouping(grouping.checked));
+  scope.addEventListener('input', (): void => actions.onScope(scope.checked));
   showAll.addEventListener('click', (): void => actions.onShowAll());
 
   for (const [tag, box] of tags) box.addEventListener('input', (): void => actions.onTag(tag, box.checked));

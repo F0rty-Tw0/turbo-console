@@ -72,8 +72,25 @@ const rigOf = (saved: GraphViewState | null, hasGrouping?: boolean): PackageSide
   return rig;
 };
 
+const scopeBoxOf = (rig: PackageSideRig): HTMLInputElement => {
+  const scope = rig.side.filtering.controls.mounted?.elements.scope;
+
+  if (scope === undefined) throw new Error('no mounted Controls');
+
+  return scope;
+};
+
+const togglesPostedBy = (rig: PackageSideRig): unknown[] => {
+  const posted = vi.mocked(rig.deps.bridge.post).mock.calls.map(([message]) => message);
+
+  return posted.filter((message) => message.type === 'setViewToggle');
+};
+
 describe('FEATURE: GraphPackageSide', () => {
   let rig: PackageSideRig;
+
+  const scopeBox = (): HTMLInputElement => scopeBoxOf(rig);
+  const togglesPosted = (): unknown[] => togglesPostedBy(rig);
 
   beforeEach(() => {
     stubPackageSideGlobals();
@@ -199,6 +216,17 @@ describe('FEATURE: GraphPackageSide', () => {
       const texts = groups.flatMap((group) => group.rows).map((row) => row.pick.textContent);
 
       expect(texts.toSorted()).toStrictEqual(['bare-core', 'bare-ui', 'bare-web']);
+    });
+
+    it('WHEN the host answer left the box unticked THEN no setViewToggle was posted', () => {
+      expect([scopeBox().checked, togglesPosted()]).toStrictEqual([false, []]);
+    });
+
+    it('WHEN the user ticks the box THEN one setViewToggle scope true is posted', () => {
+      scopeBox().checked = true;
+      scopeBox().dispatchEvent(new Event('input'));
+
+      expect(togglesPosted()).toStrictEqual([{ type: 'setViewToggle', toggle: 'scope', shown: true }]);
     });
 
     it('WHEN h2 is drawn next THEN its nodes are labelled with the bare names after they are set', async () => {

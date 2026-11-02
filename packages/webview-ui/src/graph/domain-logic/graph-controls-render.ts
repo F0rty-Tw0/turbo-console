@@ -107,8 +107,13 @@ const renderRowLabel = (row: ControlsRow, labels: ReadonlyMap<string, string>): 
   row.focus.setAttribute('aria-label', focusLabelOf(label));
 };
 
-/** Rewrites every row's name text, title and its checkbox and Focus names from `graph`'s labels; rows keep their package names. */
+/**
+ * Rewrites every row's name text, title and its checkbox and Focus names from `graph`'s labels, and ticks the Show package scopes box
+ * to `graph.scopeShown` as a property write, so no `input` fires and nothing is posted; rows keep their package names.
+ */
 export const renderLabels = (elements: ControlsElements, graph: DrawnGraph): void => {
+  elements.scope.checked = graph.scopeShown;
+
   for (const group of elements.groups) {
     for (const row of group.rows) renderRowLabel(row, graph.labels);
   }

@@ -64,6 +64,7 @@ export class GraphPackageSide {
       view,
       drawn: (): DrawnGraph | null => this.drawn,
       onGrouping: (grouped: boolean): void => this.switchGrouping(grouped),
+      onScope: (shown: boolean): void => deps.bridge.post({ type: 'setViewToggle', toggle: 'scope', shown }),
       isPackageMode,
       isGrouped,
       canAct,

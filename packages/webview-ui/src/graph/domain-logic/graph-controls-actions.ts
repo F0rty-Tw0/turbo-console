@@ -37,11 +37,12 @@ const toggleFolderFocus = (ops: ControlsOps, folder: string): void => {
   else ops.focusFolder(folder);
 };
 
-/** The panel's actions for `mounted`, each one call on `ops` or `onToggleFolder`; the filters and the depth are read when the event fires. */
+/** The panel's actions for `mounted`, each one call on `ops`, `onToggleFolder` or `onScope`; the filters and the depth are read when the event fires. */
 export const controlsActionsOf = (
   mounted: ControlsMounted,
   ops: ControlsOps,
-  onToggleFolder: (folder: string) => void
+  onToggleFolder: (folder: string) => void,
+  onScope: (shown: boolean) => void
 ): ControlsActions => {
   const actions: ControlsActions = {
     onRow: (name, isChecked): void => ops.edit(mounted, toggleRow(ops.applied, name, isChecked)),
@@ -57,7 +58,8 @@ export const controlsActionsOf = (
     onTag: (tag, isChecked): void => ops.change(mounted, withTag(ops.applied, tag, isChecked)),
     onShowAll: (): void => showAll(mounted, ops),
     onSearch: (text): void => ops.setSearch(mounted, text),
-    onPick: (name): void => ops.pick(name)
+    onPick: (name): void => ops.pick(name),
+    onScope
   };
 
   return actions;

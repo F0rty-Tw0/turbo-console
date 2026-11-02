@@ -56,7 +56,7 @@ const pressShowAll = (applied: GraphFilters, before: (elements: ControlsElements
   const elements = boardsControlsMock();
   const mounted: ControlsMounted = { graph: GRAPH, elements };
   const ops = opsOf(applied);
-  const actions = controlsActionsOf(mounted, ops, vi.fn());
+  const actions = controlsActionsOf(mounted, ops, vi.fn(), vi.fn());
 
   before(elements);
   actions.onShowAll();

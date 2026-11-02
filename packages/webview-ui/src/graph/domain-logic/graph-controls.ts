@@ -76,7 +76,7 @@ export class GraphControls {
     this.isOpen = restored.isOpen;
     this.isGrouped = restored.isGrouped;
     this.stamp = null;
-    wireControls(elements, controlsActionsOf(mounted, this, this.deps.onToggleFolder));
+    wireControls(elements, controlsActionsOf(mounted, this, this.deps.onToggleFolder, this.deps.onScope));
     renderSearch(elements, graph.infos, restored.search);
     const keyboardDeps = keyboardDepsOf(
       this.deps,
