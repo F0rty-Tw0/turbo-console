@@ -86,7 +86,7 @@ const fellBack = (shown: PackageNode[], bare: boolean[], texts: string[]): boole
  * reading `@a/x`), so passes repeat until none falls back: no two rows of a root read the same text, unless their full
  * shown texts already do once cleaned. Maps each package name to the cleaned text its row reads.
  */
-const bareTextsOf = (shown: PackageNode[]): Map<string, string> => {
+export const bareTextsOf = (shown: PackageNode[]): Map<string, string> => {
   const restTexts = shown.map(restTextOf);
   const bare = restTexts.map((text) => text !== null);
   const texts = shown.map((pkg, index) => restTexts[index] ?? rowTextOf(packageTextOf(pkg)));

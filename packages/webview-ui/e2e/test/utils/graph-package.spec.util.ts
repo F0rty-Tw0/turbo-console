@@ -2,7 +2,7 @@ import type { GraphPackage, GraphReady } from '../../../src/bridge/common/graph-
 
 /** A package record; `path` defaults to `packages/<name>`, `taskCount` to 0. */
 export const packageOf = (name: string, path = `packages/${name}`, tags: string[] = [], taskCount = 0): GraphPackage => {
-  const info: GraphPackage = { name, path, tags, taskCount };
+  const info: GraphPackage = { name, bareName: name, path, tags, taskCount };
 
   return info;
 };

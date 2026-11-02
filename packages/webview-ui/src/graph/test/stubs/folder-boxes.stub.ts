@@ -13,7 +13,7 @@ const sizedNodeAt = (id: string, x: number, y: number): ElementDefinition => {
 };
 
 const packageOf = (name: string): GraphPackage => {
-  const pkg: GraphPackage = { name, path: name, tags: [], taskCount: 0 };
+  const pkg: GraphPackage = { name, bareName: name, path: name, tags: [], taskCount: 0 };
 
   return pkg;
 };

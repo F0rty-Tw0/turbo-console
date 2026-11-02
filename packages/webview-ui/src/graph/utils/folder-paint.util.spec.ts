@@ -184,7 +184,7 @@ const FOLDER_WEB_UTILS: TraceResult = {
 };
 
 const packageOf = (name: string, path: string): GraphPackage => {
-  const pkg: GraphPackage = { name, path, tags: [], taskCount: 0 };
+  const pkg: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
 
   return pkg;
 };

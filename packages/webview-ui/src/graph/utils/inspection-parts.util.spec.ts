@@ -16,7 +16,7 @@ const E: GraphEdge[] = [
 const ALL: ReadonlySet<string> = new Set(['web', 'ui', 'core', 'docs']);
 
 const infoOf = (name: string): GraphPackage => {
-  const info: GraphPackage = { name, path: `packages/${name}`, tags: [], taskCount: 0 };
+  const info: GraphPackage = { name, bareName: name, path: `packages/${name}`, tags: [], taskCount: 0 };
 
   return info;
 };

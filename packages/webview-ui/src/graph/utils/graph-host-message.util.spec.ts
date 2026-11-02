@@ -17,16 +17,16 @@ const ORIGIN = { x: 0, y: 0 };
 const POSITIONS: Positions = { app: ORIGIN, core: ORIGIN };
 
 const PACKAGES = [
-  { name: 'app', path: 'apps/app', tags: ['ui'], taskCount: 3 },
-  { name: 'core', path: 'packages/core', tags: [], taskCount: 0 }
+  { name: 'app', bareName: 'app', path: 'apps/app', tags: ['ui'], taskCount: 3 },
+  { name: 'core', bareName: 'core', path: 'packages/core', tags: [], taskCount: 0 }
 ];
 
 const OBJECT_NAMES = [
-  { name: '__proto__', path: '', tags: ['__proto__'], taskCount: 0 },
-  { name: 'constructor', path: 'packages/constructor', tags: ['constructor'], taskCount: 0 }
+  { name: '__proto__', bareName: '__proto__', path: '', tags: ['__proto__'], taskCount: 0 },
+  { name: 'constructor', bareName: 'constructor', path: 'packages/constructor', tags: ['constructor'], taskCount: 0 }
 ];
 
-const ROOT_PACKAGES = [{ name: '//', path: '', tags: [], taskCount: 0 }];
+const ROOT_PACKAGES = [{ name: '//', bareName: '//', path: '', tags: [], taskCount: 0 }];
 
 const STRING_PACKAGES = ['app'];
 
@@ -34,21 +34,21 @@ const NULL_PACKAGES = [null];
 
 const UNDEFINED_PACKAGES = [undefined];
 
-const NUMERIC_NAME_PACKAGES = [{ name: 5, path: 'p', tags: [], taskCount: 0 }];
+const NUMERIC_NAME_PACKAGES = [{ name: 5, bareName: 'p', path: 'p', tags: [], taskCount: 0 }];
 
-const NO_PATH_PACKAGES = [{ name: 'a', tags: [], taskCount: 0 }];
+const NO_PATH_PACKAGES = [{ name: 'a', bareName: 'a', tags: [], taskCount: 0 }];
 
-const NUMERIC_PATH_PACKAGES = [{ name: 'a', path: 1, tags: [], taskCount: 0 }];
+const NUMERIC_PATH_PACKAGES = [{ name: 'a', bareName: 'a', path: 1, tags: [], taskCount: 0 }];
 
-const NO_TAGS_PACKAGES = [{ name: 'a', path: 'p', taskCount: 0 }];
+const NO_TAGS_PACKAGES = [{ name: 'a', bareName: 'a', path: 'p', taskCount: 0 }];
 
-const STRING_TAGS_PACKAGES = [{ name: 'a', path: 'p', tags: 'ui', taskCount: 0 }];
+const STRING_TAGS_PACKAGES = [{ name: 'a', bareName: 'a', path: 'p', tags: 'ui', taskCount: 0 }];
 
-const NUMERIC_TAG_PACKAGES = [{ name: 'a', path: 'p', tags: ['ui', 2], taskCount: 0 }];
+const NUMERIC_TAG_PACKAGES = [{ name: 'a', bareName: 'a', path: 'p', tags: ['ui', 2], taskCount: 0 }];
 
-const NO_TASK_COUNT_PACKAGES = [{ name: 'a', path: 'p', tags: [] }];
+const NO_TASK_COUNT_PACKAGES = [{ name: 'a', bareName: 'a', path: 'p', tags: [] }];
 
-const packagesWithTaskCount = (taskCount: unknown): unknown[] => [{ name: 'a', path: 'p', tags: [], taskCount }];
+const packagesWithTaskCount = (taskCount: unknown): unknown[] => [{ name: 'a', bareName: 'a', path: 'p', tags: [], taskCount }];
 
 const ZERO_TASK_COUNT_PACKAGES = packagesWithTaskCount(0);
 

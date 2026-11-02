@@ -107,7 +107,7 @@ const BOARDS_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, {});
 
 const GHOST_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { visible: withoutDocsAndWeb, ghosts: ['web'] });
 
-const ROOT_INFOS = [{ name: 'root-a', path: 'root-a', tags: [], taskCount: 0 }];
+const ROOT_INFOS = [{ name: 'root-a', bareName: 'root-a', path: 'root-a', tags: [], taskCount: 0 }];
 
 const ROOT_SCENE = sceneOf(ROOT_INFOS, [], {});
 

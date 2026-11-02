@@ -7,6 +7,8 @@ export type GraphEdge = {
 /** A package as the page lists it; the host deduplicates and sorts `tags`. */
 export type GraphPackage = {
   readonly name: string;
+  /** The name with its `@scope/` stripped, as the tree shows it; the full text on a collision; not part of the layout hash. */
+  readonly bareName: string;
   readonly path: string;
   readonly tags: string[];
   /** The package's visible tasks; not part of the layout hash. */

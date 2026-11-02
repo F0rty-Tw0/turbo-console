@@ -48,7 +48,7 @@ type BundleRow = {
 };
 
 const infoOf = (name: string, path: string): GraphPackage => {
-  const info: GraphPackage = { name, path, tags: [], taskCount: 0 };
+  const info: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
 
   return info;
 };

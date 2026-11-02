@@ -1,6 +1,6 @@
 import { TurboException } from '@turbo-console/core';
 import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { graphHashOf, graphStateOf, graphStateOfRoot, rootLabelOf, runIdsOfRoot } from './graph-state.util.ts';
@@ -27,11 +27,9 @@ const EDGE_A: GraphEdge = { source: 'a', target: 'b' };
 const EDGE_B: GraphEdge = { source: 'b', target: 'a' };
 const ARROW_NAMED: GraphEdge = { source: 'a>b', target: 'c' };
 const ARROW_SPLIT: GraphEdge = { source: 'a', target: 'b>c' };
-const GRAPH_INFOS = [
-  graphPackageOf('@org/x', 'packages/libs/x', [], 1),
-  graphPackageOf('a', 'packages/a', [], 1),
-  graphPackageOf('web', 'apps/web', ['app', 'ui'], 2)
-];
+const SCOPED_BASE = graphPackageOf('@org/x', 'packages/libs/x', [], 1);
+const SCOPED_INFO: GraphPackage = { ...SCOPED_BASE, bareName: 'x' };
+const GRAPH_INFOS = [SCOPED_INFO, graphPackageOf('a', 'packages/a', [], 1), graphPackageOf('web', 'apps/web', ['app', 'ui'], 2)];
 const CACHE: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
 const STALE: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: POSITIONS_STUB };
 const GHOST_POINT = { x: 1, y: 1 };

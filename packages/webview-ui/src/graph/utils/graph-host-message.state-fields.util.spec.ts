@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { isGraphHostMessage } from './graph-host-message.util.ts';
 import { stateMessageOf } from '../test/utils/graph-host-message.spec.util.ts';
 
-const PACKAGE = { name: 'app', path: 'apps/app', tags: ['ui'], taskCount: 3 };
+const PACKAGE = { name: 'app', bareName: 'app', path: 'apps/app', tags: ['ui'], taskCount: 3 };
 
 const TASK = {
   id: 'app#build',
@@ -45,5 +45,14 @@ describe('FEATURE: graph host message, new state fields', () => {
     ['a task with a numeric isTurboTask', graphWithTaskOf({ isTurboTask: 1 })]
   ])('GIVEN a state message with %s WHEN checked THEN it is rejected', (_label, message) => {
     expect(isGraphHostMessage(message)).toBe(false);
+  });
+});
+
+describe('FEATURE: graph host message, package bareName', () => {
+  it.each([
+    ['a package with no bareName', [{ ...PACKAGE, bareName: undefined }]],
+    ['a package with a numeric bareName', [{ ...PACKAGE, bareName: 5 }]]
+  ])('GIVEN a state message with %s WHEN checked THEN it is rejected', (_label, packages) => {
+    expect(isGraphHostMessage(stateMessageOf({ ...GRAPH, packages }))).toBe(false);
   });
 });

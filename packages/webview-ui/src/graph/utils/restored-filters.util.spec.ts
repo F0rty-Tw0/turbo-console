@@ -9,10 +9,10 @@ import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
 
 const INFOS: GraphPackage[] = [
-  { name: 'web', path: 'apps/web', tags: ['ui'], taskCount: 0 },
-  { name: 'api', path: 'apps/api', tags: [], taskCount: 0 },
-  { name: '__proto__', path: 'libs/proto', tags: [], taskCount: 0 },
-  { name: 'constructor', path: 'libs/ctor', tags: [], taskCount: 0 }
+  { name: 'web', bareName: 'web', path: 'apps/web', tags: ['ui'], taskCount: 0 },
+  { name: 'api', bareName: 'api', path: 'apps/api', tags: [], taskCount: 0 },
+  { name: '__proto__', bareName: '__proto__', path: 'libs/proto', tags: [], taskCount: 0 },
+  { name: 'constructor', bareName: 'constructor', path: 'libs/ctor', tags: [], taskCount: 0 }
 ];
 
 const GRAPH: DrawnGraph = { hash: 'h', packages: ['web', 'api', '__proto__', 'constructor'], infos: INFOS, edges: [] };
@@ -29,7 +29,7 @@ const ROOT_FOCUS: GraphFocus = { kind: 'folder', folder: '' };
 
 const PROTO_FOLDER_FOCUS: GraphFocus = { kind: 'folder', folder: '__proto__' };
 
-const DOCS: GraphPackage = { name: 'docs', path: 'docs', tags: [], taskCount: 0 };
+const DOCS: GraphPackage = { name: 'docs', bareName: 'docs', path: 'docs', tags: [], taskCount: 0 };
 
 const ROOTED_INFOS: GraphPackage[] = [...INFOS, DOCS];
 

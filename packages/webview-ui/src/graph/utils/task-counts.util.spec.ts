@@ -4,7 +4,7 @@ import { taskCountsDiffer } from './task-counts.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 
 const pkgOf = (name: string, taskCount: number, path = `packages/${name}`): GraphPackage => {
-  const built: GraphPackage = { name, path, tags: [], taskCount };
+  const built: GraphPackage = { name, bareName: name, path, tags: [], taskCount };
 
   return built;
 };

@@ -40,8 +40,8 @@ const NO_PATH: TraceResult = { direction: 'none', path: [], edges: [] };
 const BOARDS_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, {});
 
 const ROOT_INFOS: GraphPackage[] = [
-  { name: 'r', path: 'r', tags: [], taskCount: 0 },
-  { name: 'p', path: 'x/p', tags: [], taskCount: 0 }
+  { name: 'r', bareName: 'r', path: 'r', tags: [], taskCount: 0 },
+  { name: 'p', bareName: 'p', path: 'x/p', tags: [], taskCount: 0 }
 ];
 
 const ROOT_SCENE = sceneOf(ROOT_INFOS, [{ source: 'p', target: 'r' }], {});

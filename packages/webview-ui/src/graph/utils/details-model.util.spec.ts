@@ -21,12 +21,12 @@ import type { TraceCandidate, TraceCandidates, TraceResult } from '../common/tra
 import { BOARDS_EDGES, BOARDS_INFOS, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
 
 const infoOf = (name: string, path: string): GraphPackage => {
-  const info: GraphPackage = { name, path, tags: [], taskCount: 0 };
+  const info: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
 
   return info;
 };
 
-const WEB: GraphPackage = { name: 'web', path: 'apps/web', tags: [], taskCount: 5 };
+const WEB: GraphPackage = { name: 'web', bareName: 'web', path: 'apps/web', tags: [], taskCount: 5 };
 
 const INFOS: GraphPackage[] = [WEB, infoOf('ui', 'packages/ui'), infoOf('core', 'packages/core'), infoOf('docs', 'apps/docs')];
 

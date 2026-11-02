@@ -62,7 +62,13 @@ import type {
 } from './index.ts';
 
 type ExpectedEdge = { readonly source: string; readonly target: string };
-type ExpectedPackage = { readonly name: string; readonly path: string; readonly tags: string[]; readonly taskCount: number };
+type ExpectedPackage = {
+  readonly name: string;
+  readonly bareName: string;
+  readonly path: string;
+  readonly tags: string[];
+  readonly taskCount: number;
+};
 type ExpectedTask = {
   readonly id: string;
   readonly packageName: string;

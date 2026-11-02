@@ -43,9 +43,9 @@ export const GRAPH_HASH_STUB: string = '9bafdda7';
 export const GRAPH_PACKAGES_STUB: string[] = ['@org/x', 'a', 'web'];
 
 export const GRAPH_INFOS_STUB: GraphPackage[] = [
-  { name: '@org/x', path: 'packages/libs/x', tags: [], taskCount: 1 },
-  { name: 'a', path: 'packages/a', tags: [], taskCount: 1 },
-  { name: 'web', path: 'apps/web', tags: ['app', 'ui'], taskCount: 2 }
+  { name: '@org/x', bareName: 'x', path: 'packages/libs/x', tags: [], taskCount: 1 },
+  { name: 'a', bareName: 'a', path: 'packages/a', tags: [], taskCount: 1 },
+  { name: 'web', bareName: 'web', path: 'apps/web', tags: ['app', 'ui'], taskCount: 2 }
 ];
 
 export const GRAPH_TASKS_STUB: GraphTask[] = [

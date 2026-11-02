@@ -23,7 +23,7 @@ import {
 const PADDING = '[top=32,left=32,bottom=32,right=32]';
 
 const groupOf = (folder: string, name: string): FolderGroup => {
-  const pkg: GraphPackage = { name, path: `${folder}/${name}`, tags: [], taskCount: 0 };
+  const pkg: GraphPackage = { name, bareName: name, path: `${folder}/${name}`, tags: [], taskCount: 0 };
   const group: FolderGroup = { folder, packages: [pkg] };
 
   return group;

@@ -4,7 +4,7 @@ import { folderLinesOf } from './folder-lines.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 
 const pkgOf = (name: string, path: string): GraphPackage => {
-  const pkg: GraphPackage = { name, path, tags: [], taskCount: 0 };
+  const pkg: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
 
   return pkg;
 };
