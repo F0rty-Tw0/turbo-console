@@ -6,6 +6,7 @@ import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/g
 import { ATOMS_SHOT_FILE_IDS, ATOMS_SHOT_GROUPS, atomsShotSetup } from './test/utils/graph-atoms-shot.spec.util.ts';
 import { collapsedSavedState } from './test/utils/graph-folder-states.spec.util.ts';
 import { foldersShotState } from './test/utils/graph-folders-shot.spec.util.ts';
+import { scopedNamesState } from './test/utils/graph-scope-names.spec.util.ts';
 import { closedPanelsSavedState } from './test/utils/graph-shot-state.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
@@ -24,6 +25,14 @@ const TARGET_LIKE_STATE = targetLikeState();
 const TARGET_LIKE: ShotSetup = {
   state: TARGET_LIKE_STATE,
   saved: closedPanelsSavedState(TARGET_LIKE_STATE.hash),
+  cache: 'positions'
+};
+
+const SCOPE_HIDDEN_STATE = scopedNamesState(false);
+
+const SCOPE_HIDDEN: ShotSetup = {
+  state: SCOPE_HIDDEN_STATE,
+  saved: closedPanelsSavedState(SCOPE_HIDDEN_STATE.hash),
   cache: 'positions'
 };
 
@@ -96,6 +105,20 @@ test.describe('FEATURE: theme screenshots', () => {
 
       await test.step(`AND the page matches folders-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`folders-${name}.png`));
+    });
+  }
+});
+
+test.describe('FEATURE: theme screenshots with package scopes hidden', () => {
+  for (const { name, theme } of THEMES) {
+    test(`GIVEN the ${name} theme, the scope-hidden graph matches scope-hidden-${name}.png`, async ({ page }): Promise<void> => {
+      const shots = new GraphShots(page);
+
+      await test.step('WHEN the scoped graph with scopes hidden is laid out once and reopened from its cache', async (): Promise<void> =>
+        shots.openCached(SCOPE_HIDDEN, theme));
+
+      await test.step(`THEN the page matches scope-hidden-${name}.png`, async (): Promise<void> =>
+        expect(page).toHaveScreenshot(`scope-hidden-${name}.png`));
     });
   }
 });
