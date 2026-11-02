@@ -17,6 +17,14 @@ describe('FEATURE: packageView', () => {
     vi.unstubAllGlobals();
   });
 
+  describe('GIVEN the package web labelled w', () => {
+    it('WHEN built THEN the heading reads w', () => {
+      const view = packageView({ ...WEB_PACKAGE_STUB, label: 'w' }, false);
+
+      expect(view.heading.textContent).toBe('w');
+    });
+  });
+
   describe('GIVEN an unfocused package with five tasks', () => {
     it('WHEN built THEN each action button draws its D5 icon before its label', () => {
       const view = packageView(WEB_PACKAGE_STUB, false);

@@ -36,6 +36,7 @@ const updatePackage = (view: PackageDetails, name: string, context: DetailsConte
 
   const openText = openDetailsLabelOf(model.taskCount);
 
+  view.heading.textContent = model.label;
   view.openLabel.textContent = openText;
   view.openDetails.title = openText;
   setFocusButton(view.focus, model.isFocused);

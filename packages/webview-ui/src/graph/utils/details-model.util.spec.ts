@@ -132,6 +132,7 @@ describe('FEATURE: details models', () => {
       const dependents = [docs];
       const expected: PackageViewModel = {
         name: 'web',
+        label: 'web',
         path: 'apps/web',
         tags: [],
         taskCount: 5,
