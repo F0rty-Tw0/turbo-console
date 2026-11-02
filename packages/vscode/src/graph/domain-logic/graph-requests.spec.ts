@@ -16,7 +16,7 @@ import {
   GRAPH_ATOM_UNLOADED_VIEW_STUB
 } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_SHOWN_STUB, GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
-import { atomsFake } from '../test/utils/graph-feeds.spec.util.ts';
+import { atomsFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { smokeGroupTasksOf } from '../test/utils/graph-model.spec.util.ts';
 import { graphStateOf } from '../utils/graph-state.util.ts';
 
@@ -28,6 +28,8 @@ const OPEN_WEB: GraphRequestMessage = { type: 'openDetails', packageName: 'web' 
 const OPEN_GONE: GraphRequestMessage = { type: 'openDetails', packageName: 'gone' };
 const RUN_A_BUILD: GraphRequestMessage = { type: 'runTask', taskId: 'a#build', noCache: false };
 const STOP_A_BUILD: GraphRequestMessage = { type: 'stopTask', taskId: 'a#build' };
+const SET_SCOPE: GraphRequestMessage = { type: 'setViewToggle', toggle: 'scope', shown: true };
+const SET_SCRIPTS: GraphRequestMessage = { type: 'setViewToggle', toggle: 'scripts', shown: true };
 const SMOKE_TASKS = smokeGroupTasksOf(ATOM_E2E_PACKAGE_STUB.name);
 const [SMOKE_UMBRELLA] = SMOKE_TASKS;
 const TWO_GROUP_PACKAGE: PackageNode = {
@@ -43,14 +45,21 @@ const SHOWN_UMBRELLAS: GraphRequestMessage = {
 };
 
 const contextOf = (state: GraphState, atoms: RequestContext['atoms'] = SHARED_ATOMS_STUB): RequestContext => {
-  const context: RequestContext = { state, root: '/ws', coordinator: coordinatorMock(), ports: graphPortsMock(), atoms };
+  const context: RequestContext = {
+    state,
+    root: '/ws',
+    coordinator: coordinatorMock(),
+    ports: graphPortsMock(),
+    atoms,
+    toggles: togglesOf()
+  };
 
   return context;
 };
 
 describe('FEATURE: graph request messages', () => {
   describe('GIVEN a message type', () => {
-    it.each([[RELOAD], [OPEN_WEB], [RUN_A_BUILD], [STOP_A_BUILD], [SHOWN_UMBRELLAS]])(
+    it.each([[RELOAD], [OPEN_WEB], [RUN_A_BUILD], [STOP_A_BUILD], [SHOWN_UMBRELLAS], [SET_SCOPE]])(
       'WHEN it is %j THEN it is a request',
       (message) => {
         expect(isRequestMessage(message)).toBe(true);
@@ -181,6 +190,80 @@ describe('FEATURE: graph request handling', () => {
       const isHandled = await requestHandledOf(RUN_A_BUILD, contextOf(LOADING_STATE));
 
       expect(isHandled).toBe(false);
+    });
+  });
+});
+
+describe('FEATURE: graph setViewToggle request', () => {
+  describe('GIVEN a setViewToggle for scope', () => {
+    it('WHEN it is handled THEN the scope toggle is set to the given value', async () => {
+      const context = contextOf(GRAPH_STATE_STUB);
+
+      await requestHandledOf(SET_SCOPE, context);
+
+      expect(context.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
+    it('WHEN it is handled THEN the scripts toggle is not set', async () => {
+      const context = contextOf(GRAPH_STATE_STUB);
+
+      await requestHandledOf(SET_SCOPE, context);
+
+      expect(context.toggles.scripts.set).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it is handled THEN true is returned', async () => {
+      const isHandled = await requestHandledOf(SET_SCOPE, contextOf(GRAPH_STATE_STUB));
+
+      expect(isHandled).toBe(true);
+    });
+  });
+
+  describe('GIVEN a setViewToggle for scripts', () => {
+    it('WHEN it is handled THEN the scripts toggle is set to the given value', async () => {
+      const context = contextOf(GRAPH_STATE_STUB);
+
+      await requestHandledOf(SET_SCRIPTS, context);
+
+      expect(context.toggles.scripts.set).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
+    it('WHEN it is handled THEN the scope toggle is not set', async () => {
+      const context = contextOf(GRAPH_STATE_STUB);
+
+      await requestHandledOf(SET_SCRIPTS, context);
+
+      expect(context.toggles.scope.set).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a state that is not a graph', () => {
+    it('WHEN a setViewToggle is handled THEN the toggle is still set', async () => {
+      const context = contextOf(LOADING_STATE);
+
+      await requestHandledOf(SET_SCOPE, context);
+
+      expect(context.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
+    it('WHEN a setViewToggle is handled THEN true is returned', async () => {
+      const isHandled = await requestHandledOf(SET_SCOPE, contextOf(LOADING_STATE));
+
+      expect(isHandled).toBe(true);
+    });
+  });
+
+  describe('GIVEN a toggle whose set rejects', () => {
+    it('WHEN a setViewToggle is handled THEN true is returned and nothing is thrown', async () => {
+      const toggles = togglesOf();
+      const base = contextOf(GRAPH_STATE_STUB);
+      const context: RequestContext = { ...base, toggles };
+
+      toggles.scope.set.mockRejectedValueOnce(new Error('boom'));
+
+      const isHandled = await requestHandledOf(SET_SCOPE, context);
+
+      expect(isHandled).toBe(true);
     });
   });
 });

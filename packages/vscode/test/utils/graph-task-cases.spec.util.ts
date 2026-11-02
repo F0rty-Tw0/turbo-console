@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as vscode from 'vscode';
 
 import { packageStates } from './details-posted.spec.util.ts';
-import { lastGraphState, postedShowPackages, postedShowTasks } from './graph-posted.spec.util.ts';
+import { lastGraphState, pooledIdsOf, postedShowPackages, postedShowTasks } from './graph-posted.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { GraphPanelInfo, TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { OPEN_COMMAND } from '../common/details.const.ts';
@@ -84,13 +84,14 @@ export const showAllTaskGraphsCase = async (scene: GraphScene): Promise<void> =>
   await step('L13-11: Show All Task Graphs posts showTasks for every task of the root', async () => {
     const before = showTasksCountOf(api, root);
     const state = lastGraphState(api, root);
-    const expected = state?.tasks.map((task): string => task.id).toSorted() ?? [];
+    const expected = pooledIdsOf(state);
 
     await vscode.commands.executeCommand(ALL_TASKS_COMMAND);
     await waitFor('showTasks post', () => showTasksCountOf(api, root) > before);
 
     const posted = postedShowTasks(api, root);
 
+    assert.equal(state?.scriptsShown, false);
     assert.ok(expected.length > 0, 'the graph state has no tasks');
     assert.deepEqual(posted?.taskIds.toSorted(), expected);
   });

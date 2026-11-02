@@ -4,8 +4,8 @@ import * as vscode from 'vscode';
 
 import type { GraphContext, GraphDetails, GraphWiring } from './common/graph-panel.type.ts';
 import { createGraph } from './graph-wiring.ts';
-import { GRAPH_LOADED_STUB } from './test/stubs/graph-model.stub.ts';
-import { feedsOf, feedsWithToggles, scopeShownTogglesOf } from './test/utils/graph-feeds.spec.util.ts';
+import { GRAPH_LOADED_STUB, SCRIPT_MODEL_STUB } from './test/stubs/graph-model.stub.ts';
+import { feedsOf, feedsWithToggles, togglesOf } from './test/utils/graph-feeds.spec.util.ts';
 import { copyGraphPageRoot } from './test/utils/page-root.spec.util.ts';
 import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
 import { RootStore } from '../roots/domain-logic/root-store.ts';
@@ -165,7 +165,7 @@ describe('FEATURE: the graph wiring', () => {
     });
 
     it('GIVEN feeds with scope shown WHEN Show All Task Graphs runs and the page is ready THEN the posted state carries scopeShown true', async () => {
-      const feeds = feedsWithToggles(new RunStore(), scopeShownTogglesOf());
+      const feeds = feedsWithToggles(new RunStore(), togglesOf(true));
       const scoped = createGraph(contextOf(page), session, details, output, feeds);
 
       scoped.register();
@@ -175,6 +175,41 @@ describe('FEATURE: the graph wiring', () => {
       const shown = { scopeShown: true };
 
       expect(scoped.api.posted('/ws')[0]).toMatchObject({ type: 'state', state: shown });
+    });
+
+    it("WHEN the page sends setViewToggle scope true THEN this feeds object's scope toggle is set to true", async () => {
+      const feeds = feedsOf(new RunStore());
+      const toggled = createGraph(contextOf(page), session, details, output, feeds);
+
+      toggled.register();
+      await callbackOf(COMMAND)(undefined);
+      await toggled.api.receive('/ws', { type: 'setViewToggle', toggle: 'scope', shown: true });
+
+      expect(feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
+    describe('GIVEN a script task in the model', () => {
+      it('WHEN Show All Task Graphs runs with scripts hidden, then shown THEN the second request adds the script id', async () => {
+        const feeds = feedsOf(new RunStore());
+        const toggled = createGraph(contextOf(page), session, details, output, feeds);
+        const showTasksIds = (): string[][] => {
+          const requests = toggled.api.posted('/ws').filter((message) => message.type === 'showTasks');
+
+          return requests.map((request) => request.taskIds);
+        };
+
+        store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_MODEL_STUB });
+        toggled.register();
+        await callbackOf(ALL_TASKS_COMMAND)(undefined);
+        await toggled.api.receive('/ws', { type: 'ready' });
+        await feeds.toggles.scripts.set(true);
+        await callbackOf(ALL_TASKS_COMMAND)(undefined);
+
+        expect(showTasksIds()).toStrictEqual([
+          ['@org/x#build', 'a#build', 'web#build', 'web#lint'],
+          ['@org/x#build', 'a#build', 'tool#dev', 'web#build', 'web#lint']
+        ]);
+      });
     });
 
     it('WHEN Show All Task Graphs runs THEN the panel of the active root opens', async () => {

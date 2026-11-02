@@ -15,7 +15,7 @@ import type { GraphToggles } from '../common/graph.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
 import { graphHostMock } from '../test/mocks/graph-host.mock.ts';
 import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
-import { hiddenTogglesOf, scopeShownTogglesOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const READY = { type: 'ready' };
@@ -59,7 +59,7 @@ describe('FEATURE: graph panel registry', () => {
     fakes = graphHostMock();
     setPanelVisible = vi.fn<GraphPanelsDeps['setPanelVisible']>();
 
-    panels = panelsWith(hiddenTogglesOf());
+    panels = panelsWith(togglesOf());
   });
 
   describe('GIVEN a loaded root', () => {
@@ -101,7 +101,7 @@ describe('FEATURE: graph panel registry', () => {
     it('GIVEN panels built with scope shown WHEN the page sends ready THEN the posted state carries scopeShown true', () => {
       const scopedGraph: GraphReady = { ...GRAPH_STATE_STUB, scopeShown: true };
       const scopedState: GraphHostMessage = { type: 'state', state: scopedGraph };
-      const scoped = panelsWith(scopeShownTogglesOf());
+      const scoped = panelsWith(togglesOf(true));
 
       scoped.open('/ws');
       viewAt(fakes, 0).message(READY);

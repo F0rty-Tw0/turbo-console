@@ -40,9 +40,9 @@ type UncheckedPositionsMessage = {
 /** A message that passed `graphMessageSchema`: a `positions` record is still unread. */
 export type SchemaGraphMessage = Exclude<GraphWebviewMessage, PositionsTag> | UncheckedPositionsMessage;
 
-type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' | 'shownUmbrellas' };
+type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' | 'shownUmbrellas' | 'setViewToggle' };
 
-/** A page request the session answers from the state it builds now: a reload, a package's details, a task run or stop or the umbrellas now shown. */
+/** A page request the session answers from the state it builds now: a reload, a package's details, a task run or stop, the umbrellas now shown or a flip of a tree toggle. */
 export type GraphRequestMessage = Extract<GraphWebviewMessage, RequestTag>;
 
 type RunTag = { readonly type: 'runTask' | 'stopTask' };
@@ -50,13 +50,14 @@ type RunTag = { readonly type: 'runTask' | 'stopTask' };
 /** A page request to run or stop one task of the graph. */
 export type GraphRunRequest = Extract<GraphWebviewMessage, RunTag>;
 
-/** What a request is judged against: the state built now, the root, its coordinator, the ports a request may use and the atoms it may ask to load. */
+/** What a request is judged against: the state built now, the root, its coordinator, the ports a request may use, the atoms it may ask to load and the toggles it may set. */
 export type RequestContext = {
   readonly state: GraphState;
   readonly root: string;
   readonly coordinator: Pick<Coordinator, 'request'> | undefined;
   readonly ports: Pick<GraphPorts, 'openDetails' | 'log' | 'executeCommand'>;
   readonly atoms: Pick<SharedAtoms, 'childrenRequested'>;
+  readonly toggles: GraphToggles;
 };
 
 type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };
@@ -91,7 +92,7 @@ export type GraphShown = {
   readonly scriptsShown: boolean;
 };
 
-/** The tree's two toggles, which the graph reads and never sets. */
+/** The tree's two toggles, which the graph reads, and sets for a `setViewToggle`. */
 export type GraphToggles = {
   readonly scope: ScriptsToggleApi;
   readonly scripts: ScriptsToggleApi;

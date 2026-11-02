@@ -69,7 +69,7 @@ export type GraphOpener = {
 /**
  * What the Show Package Graph and Show Task Graph commands ask of the editor: the active file, the folder holding a file, a folder pick, an
  * info and an error message, a warning with buttons, and the output log. `pickMany` resolves the values of the ticked rows, `undefined` when cancelled.
- * `warn` resolves the button pressed, `undefined` when dismissed. `info`, `error` and `log` never throw.
+ * `warn` resolves the button pressed, `undefined` when dismissed. `scriptsShown` reads the tree's scripts toggle at call time. `info`, `error` and `log` never throw.
  */
 export type RootPickPorts = {
   readonly activeFile: () => string | null;
@@ -79,6 +79,7 @@ export type RootPickPorts = {
   readonly info: (text: string) => void;
   readonly error: (text: string) => void;
   readonly warn: (text: string, actions: string[]) => Promise<string | undefined>;
+  readonly scriptsShown: () => boolean;
   readonly log: (text: string) => void;
 };
 

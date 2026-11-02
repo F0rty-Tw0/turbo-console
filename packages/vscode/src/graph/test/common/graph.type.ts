@@ -2,6 +2,7 @@ import type { GraphHostMessage, Positions } from '@turbo-console/webview-ui';
 import type { Mock } from 'vitest';
 
 import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
+import type { ScriptsToggleFake } from '../../../shared/test/common/scripts-toggle-fake.type.ts';
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphHost } from '../../common/graph-panel.type.ts';
@@ -37,4 +38,10 @@ export type AtomsFake = {
   /** Tells every subscribed listener that the view of one package changed. */
   readonly changed: AtomListener;
   readonly listenerCount: () => number;
+};
+
+/** The scope and scripts toggles as fakes, so a spec reads their `set` spy and fires their listeners. */
+export type ToggleFakes = {
+  readonly scope: ScriptsToggleFake;
+  readonly scripts: ScriptsToggleFake;
 };

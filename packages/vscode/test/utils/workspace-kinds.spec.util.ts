@@ -2,10 +2,12 @@ import { chmod, cp, mkdir, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { PRESETS, fixtureFor } from '@turbo-console/repo-gen';
+import type { FixtureSpec } from '@turbo-console/repo-gen';
 
 import { initGit, writeEmptyWorkspace, writeSingleApp } from './single-package-fixture.spec.util.ts';
 import { runEach } from './workspace.spec.util.ts';
 import { devTurboPath } from '../../src/shared/test/utils/dev-turbo.spec.util.ts';
+import { ROOT_TASK_NAME } from '../common/graph.const.ts';
 import { LATE_TURBO_COMMAND, LATE_TURBO_DIR } from '../common/launch.const.ts';
 import type { LaunchName, LaunchTurboPath, LaunchWorkspace, PreparedWorkspace, RunScratch } from '../common/launch.type.ts';
 
@@ -32,9 +34,9 @@ const folderWorkspace = (dir: string): PreparedWorkspace => {
   return prepared;
 };
 
-/** A fresh `target-like` copy at `dir`, from repo-gen's cache, so no earlier launch's edits or turbo files reach it. */
-const copyFixture = async (dir: string): Promise<void> => {
-  const fixture = await fixtureFor(PRESETS['target-like']);
+/** A fresh copy of `spec` (`target-like` unless given) at `dir`, from repo-gen's cache, so no earlier launch's edits or turbo files reach it. */
+const copyFixture = async (dir: string, spec: FixtureSpec = PRESETS['target-like']): Promise<void> => {
+  const fixture = await fixtureFor(spec);
   const copy = async (): Promise<void> => cp(fixture.dir, dir, { recursive: true });
 
   await runEach([copy, fixture.dispose]);
@@ -49,14 +51,26 @@ const emptyFolder = async (scratch: RunScratch, name: LaunchName): Promise<Prepa
   return folderWorkspace(dir);
 };
 
-/** `fixture`: a `target-like` copy of the launch's own. */
-const fixtureCopy = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
-  const dir = workspaceDirOf(scratch, name);
+/** A workspace prep that opens a fresh copy of `spec` in the launch's own dir. */
+const fixtureCopyOf = (spec: FixtureSpec): ((scratch: RunScratch, name: LaunchName) => Promise<PreparedWorkspace>) => {
+  const prepare = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+    const dir = workspaceDirOf(scratch, name);
 
-  await copyFixture(dir);
+    await copyFixture(dir, spec);
 
-  return folderWorkspace(dir);
+    return folderWorkspace(dir);
+  };
+
+  return prepare;
 };
+
+/** `fixture`: a `target-like` copy of the launch's own. */
+const fixtureCopy = fixtureCopyOf(PRESETS['target-like']);
+
+const ROOT_TASK = { name: ROOT_TASK_NAME, command: 'echo root' };
+
+/** `fixture-root-task`: a `target-like` copy whose root has the real script `rootgen`, so turbo lists `//#rootgen` with a command. */
+const rootTaskFixture = fixtureCopyOf({ ...PRESETS['target-like'], rootTask: ROOT_TASK });
 
 /**
  * `error-roots`: a `.code-workspace` with two `target-like` copies, `bad` whose `turbo.json` is invalid JSON and `empty`
@@ -148,6 +162,7 @@ const lateTurbo = async (scratch: RunScratch): Promise<string> => {
 export const WORKSPACES: Record<LaunchWorkspace, (scratch: RunScratch, name: LaunchName) => Promise<PreparedWorkspace>> = {
   'fixture-l1': async (scratch) => Promise.resolve(folderWorkspace(scratch.fixtureDir)),
   fixture: fixtureCopy,
+  'fixture-root-task': rootTaskFixture,
   'empty-folder': emptyFolder,
   'error-roots': errorRoots,
   'two-roots': twoRoots,

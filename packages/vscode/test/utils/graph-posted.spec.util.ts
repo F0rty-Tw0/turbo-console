@@ -5,7 +5,8 @@ import type {
   GraphRunState,
   GraphRunsMessage,
   GraphShowPackageMessage,
-  GraphShowTasksMessage
+  GraphShowTasksMessage,
+  GraphTask
 } from '@turbo-console/webview-ui';
 
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
@@ -102,4 +103,13 @@ export const runStatesOf = (api: TurboConsoleApi, root: string, id: string): Gra
   }
 
   return states;
+};
+
+/** The sorted ids of the tasks a picker pools in `state`: every turbo task, plus the scripts while the state shows them; none before there is a state. */
+export const pooledIdsOf = (state: GraphReady | null): string[] => {
+  const isPooled = (task: GraphTask): boolean => task.isTurboTask || state?.scriptsShown === true;
+  const tasks = state?.tasks ?? [];
+  const ids = tasks.filter(isPooled).map((task): string => task.id);
+
+  return ids.toSorted();
 };

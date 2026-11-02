@@ -4,15 +4,25 @@ import { describe, expect, it } from 'vitest';
 
 import { graphStateOf, graphStateOfRoot, shownOf } from './graph-state.util.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
-import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import { TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphShown } from '../common/graph.type.ts';
-import { GRAPH_MODEL_STUB, GRAPH_SHOWN_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
-import { scopeShownTogglesOf } from '../test/utils/graph-feeds.spec.util.ts';
+import {
+  GRAPH_MODEL_STUB,
+  GRAPH_SHOWN_STUB,
+  NO_LAYOUT_CACHES_STUB,
+  SCRIPT_ONLY_MODEL_STUB,
+  SCRIPT_PACKAGE_STUB,
+  SCRIPT_TASK_STUB
+} from '../test/stubs/graph-model.stub.ts';
+import { togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 
-const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'dev', name: 'dev', isTurboTask: false };
-const SCRIPT_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'tool', path: 'packages/tool', tasks: [SCRIPT_TASK] };
-const SCRIPT_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [SCRIPT_NODE], edges: [] };
+const MIXED_NODE: PackageNode = { ...SCRIPT_PACKAGE_STUB, tasks: [TASK_NODE_STUB, SCRIPT_TASK_STUB] };
+const MIXED_MODEL: WorkspaceModel = { ...SCRIPT_ONLY_MODEL_STUB, packages: [MIXED_NODE] };
+const FILE_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'build:f', name: 'build:f', kind: 'atom-file' };
+const FILE_NODE: PackageNode = { ...SCRIPT_PACKAGE_STUB, tasks: [TASK_NODE_STUB, FILE_TASK] };
+const FILE_MODEL: WorkspaceModel = { ...SCRIPT_ONLY_MODEL_STUB, packages: [FILE_NODE] };
 const BOTH: GraphShown = { scopeShown: true, scriptsShown: true };
+const SCRIPTS_SHOWN: GraphShown = { scopeShown: false, scriptsShown: true };
 
 const taskCountsOf = (state: GraphState): number[] => {
   if (state.kind !== 'graph') return [];
@@ -48,15 +58,53 @@ describe('FEATURE: graph state toggles', () => {
     expect({ ...shown, ...GRAPH_SHOWN_STUB }).toStrictEqual(hidden);
   });
 
-  it('GIVEN scriptsShown false and a script-only package WHEN built THEN taskCount still counts the script', () => {
-    const state = graphStateOf(SCRIPT_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+  describe('GIVEN a script-only package', () => {
+    it('WHEN scripts are hidden THEN taskCount is 0', () => {
+      const state = graphStateOf(SCRIPT_ONLY_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
-    expect(taskCountsOf(state)).toStrictEqual([1]);
+      expect(taskCountsOf(state)).toStrictEqual([0]);
+    });
+
+    it('WHEN scripts are shown THEN taskCount is 1', () => {
+      const state = graphStateOf(SCRIPT_ONLY_MODEL_STUB, NO_LAYOUT_CACHES_STUB, SCRIPTS_SHOWN);
+
+      expect(taskCountsOf(state)).toStrictEqual([1]);
+    });
   });
 
-  it('GIVEN scope shown and scripts hidden WHEN shownOf reads the toggles THEN it returns exactly that', () => {
-    const toggles = scopeShownTogglesOf();
+  describe('GIVEN a turbo task and a script', () => {
+    it('WHEN scripts are hidden THEN taskCount is 1', () => {
+      const state = graphStateOf(MIXED_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
-    expect(shownOf(toggles)).toStrictEqual({ scopeShown: true, scriptsShown: false });
+      expect(taskCountsOf(state)).toStrictEqual([1]);
+    });
+
+    it('WHEN scripts are shown THEN taskCount is 2', () => {
+      const state = graphStateOf(MIXED_MODEL, NO_LAYOUT_CACHES_STUB, SCRIPTS_SHOWN);
+
+      expect(taskCountsOf(state)).toStrictEqual([2]);
+    });
+  });
+
+  describe('GIVEN a turbo task and an atom-file task', () => {
+    it('WHEN scripts are hidden THEN the file is not counted', () => {
+      const state = graphStateOf(FILE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+
+      expect(taskCountsOf(state)).toStrictEqual([1]);
+    });
+
+    it('WHEN scripts are shown THEN the file is not counted', () => {
+      const state = graphStateOf(FILE_MODEL, NO_LAYOUT_CACHES_STUB, SCRIPTS_SHOWN);
+
+      expect(taskCountsOf(state)).toStrictEqual([1]);
+    });
+  });
+
+  describe('GIVEN scope shown and scripts hidden toggles', () => {
+    it('WHEN shownOf reads them THEN it returns exactly that', () => {
+      const toggles = togglesOf(true);
+
+      expect(shownOf(toggles)).toStrictEqual({ scopeShown: true, scriptsShown: false });
+    });
   });
 });

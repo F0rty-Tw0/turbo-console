@@ -10,6 +10,7 @@ import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphOpener, OpenGraphPanel, RootPickPorts, ShowTaskGraphDeps } from '../common/graph-panel.type.ts';
+import { SCRIPTS_HIDDEN_TEXT } from '../common/graph.const.ts';
 import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB } from '../test/stubs/graph-model.stub.ts';
 import { taskGraphItemsOf } from '../utils/graph-task-items.util.ts';
 import { graphTasksOf } from '../utils/graph-tasks.util.ts';
@@ -29,13 +30,20 @@ type Fixture = {
   readonly show: Mock<OpenGraphPanel['session']['show']>;
 };
 
-const modelOf = (count: number): WorkspaceModel => {
+const modelOf = (count: number, scriptCount = 0): WorkspaceModel => {
   const taskOf = (index: number): TaskNode => {
     const task: TaskNode = { ...TASK_NODE_STUB, id: `p#t${index}`, name: `t${index}` };
 
     return task;
   };
-  const tasks = Array.from({ length: count }, (_, index) => taskOf(index));
+  const scriptOf = (index: number): TaskNode => {
+    const script: TaskNode = { ...TASK_NODE_STUB, id: `p#s${index}`, name: `s${index}`, isTurboTask: false };
+
+    return script;
+  };
+  const turbo = Array.from({ length: count }, (_, index) => taskOf(index));
+  const scripts = Array.from({ length: scriptCount }, (_, index) => scriptOf(index));
+  const tasks = [...turbo, ...scripts];
   const pkg: PackageNode = { ...PACKAGE_NODE_STUB, name: 'p', path: 'packages/p', tasks };
   const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [pkg], edges: [] };
 
@@ -65,7 +73,8 @@ const fixtureOf = (): Fixture => {
     info,
     error: vi.fn(),
     warn,
-    log: vi.fn()
+    log: vi.fn(),
+    scriptsShown: () => false
   };
   const panels: ShowTaskGraphDeps['panels'] = { open };
   const deps: ShowTaskGraphDeps = { roots: store, ports, panels };
@@ -161,6 +170,42 @@ describe('FEATURE: the Show All Task Graphs command', () => {
 
       await showAllTaskGraphs(fixture.deps);
 
+      expect(fixture.open).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN scripts hidden and a model of turbo tasks and scripts', () => {
+    it('WHEN the command runs THEN the request holds turbo task ids only', async () => {
+      fixture.store.apply(ROOT, { ...GRAPH_LOADED_STUB, model: modelOf(2, 1) });
+
+      await showAllTaskGraphs(fixture.deps);
+
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: ['p#t0', 'p#t1'] });
+    });
+
+    it('WHEN 301 tasks are listed and 2 are scripts THEN the cap warning does not fire', async () => {
+      fixture.store.apply(ROOT, { ...GRAPH_LOADED_STUB, model: modelOf(299, 2) });
+
+      await showAllTaskGraphs(fixture.deps);
+
+      expect(fixture.warn).not.toHaveBeenCalled();
+    });
+
+    it('WHEN 301 tasks are listed and 2 are scripts THEN the request holds the 299 turbo task ids', async () => {
+      fixture.store.apply(ROOT, { ...GRAPH_LOADED_STUB, model: modelOf(299, 2) });
+
+      await showAllTaskGraphs(fixture.deps);
+
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: idsOf(299) });
+    });
+
+    it('WHEN the root holds scripts only THEN the user is told scripts are hidden and nothing opens', async () => {
+      fixture.store.apply(ROOT, { ...GRAPH_LOADED_STUB, model: modelOf(0, 2) });
+
+      await showAllTaskGraphs(fixture.deps);
+
+      expect(fixture.info).toHaveBeenCalledExactlyOnceWith(SCRIPTS_HIDDEN_TEXT);
+      expect(fixture.pickMany).not.toHaveBeenCalled();
       expect(fixture.open).not.toHaveBeenCalled();
     });
   });

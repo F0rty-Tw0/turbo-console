@@ -30,6 +30,7 @@ export type {
   GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphRunsMessage,
+  GraphSetViewToggleMessage,
   GraphShowPackageMessage,
   GraphShowRequest,
   GraphShowTasksMessage,

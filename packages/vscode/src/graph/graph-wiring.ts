@@ -40,7 +40,7 @@ export const createGraph = (
     atoms: feeds.atoms,
     toggles: feeds.toggles
   });
-  const ports = editorGraphCommandPorts(manifestFile, rootOf, output.error);
+  const ports = editorGraphCommandPorts(manifestFile, rootOf, output.error, (): boolean => feeds.toggles.scripts.isShown());
   const wiring: GraphWiring = {
     api: panels.api(),
     pruneRoots: () => {

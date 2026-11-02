@@ -6,7 +6,7 @@ import { PICK_TASKS_LABEL, TASK_PICK_PLACEHOLDER } from '../common/graph.const.t
 import { manyTasksTextOf, showAllLabelOf } from '../utils/task-choice-text.util.ts';
 
 /**
- * Every task of the root, in item order. Past `TASK_CAP` the user is warned and chooses: all of them, a pick of
+ * Every pooled task of the root (turbo tasks, plus scripts while shown), in item order. Past `TASK_CAP` the user is warned and chooses: all of them, a pick of
  * them (the Show Task Graph picker), or nothing when the warning is dismissed.
  */
 const allChoiceOf = (ports: RootPickPorts): TaskChoice => {

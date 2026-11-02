@@ -28,6 +28,7 @@ import type {
   GraphReady,
   GraphRunState,
   GraphRunsMessage,
+  GraphSetViewToggleMessage,
   GraphShowPackageMessage,
   GraphShowRequest,
   GraphShowTasksMessage,
@@ -83,6 +84,7 @@ type ExpectedAtomGroup = { readonly umbrellaId: string; readonly files: GraphAto
 type ExpectedAtomGroupState = { readonly counts: string; readonly files: Record<string, 'passed' | 'failed' | 'cached' | 'none'> };
 type ExpectedAtomsMessage = { readonly type: 'atoms'; readonly groups: Record<string, GraphAtomGroupState> };
 type ExpectedShownUmbrellasMessage = { readonly type: 'shownUmbrellas'; readonly ids: string[] };
+type ExpectedSetViewToggleMessage = { readonly type: 'setViewToggle'; readonly toggle: 'scope' | 'scripts'; readonly shown: boolean };
 type ExpectedPosition = { readonly x: number; readonly y: number };
 type ExpectedTaskView = {
   readonly chosen: string[];
@@ -218,6 +220,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphAtomGroupState>().toEqualTypeOf<ExpectedAtomGroupState>();
       expectTypeOf<GraphAtomsMessage>().toEqualTypeOf<ExpectedAtomsMessage>();
       expectTypeOf<GraphShownUmbrellasMessage>().toEqualTypeOf<ExpectedShownUmbrellasMessage>();
+      expectTypeOf<GraphSetViewToggleMessage>().toEqualTypeOf<ExpectedSetViewToggleMessage>();
       expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
         | 'ready'
         | 'reload'
@@ -230,6 +233,7 @@ describe('FEATURE: webview-ui package entry', () => {
         | 'runTask'
         | 'stopTask'
         | 'shownUmbrellas'
+        | 'setViewToggle'
       >();
       expectTypeOf<Extract<GraphWebviewMessage, RunTaskKey>['noCache']>().toEqualTypeOf<boolean>();
       expectTypeOf<Extract<GraphWebviewMessage, OpenManifestKey>['line']>().toEqualTypeOf<number>();

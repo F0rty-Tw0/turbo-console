@@ -25,12 +25,13 @@ const pickTasks = async (items: PickItem[], placeHolder: string): Promise<string
 
 /**
  * The editor effects of the Show Package Graph command: the active manifest (`fileOf` is the run pickers'
- * `manifestFile`), the folder of a file, a folder pick, a multi-pick, an info, a warning with buttons and an error message, and `log` (the output channel).
+ * `manifestFile`), the folder of a file, a folder pick, a multi-pick, an info, a warning with buttons and an error message, `log` (the output channel) and `scriptsShown` (the tree's scripts toggle, as the caller reads it).
  */
 export const editorGraphCommandPorts = (
   fileOf: (arg: unknown) => string | null,
   rootOf: RootPickPorts['rootOf'],
-  log: RootPickPorts['log']
+  log: RootPickPorts['log'],
+  scriptsShown: RootPickPorts['scriptsShown']
 ): RootPickPorts => {
   const ports: RootPickPorts = {
     activeFile: () => fileOf(undefined),
@@ -44,7 +45,8 @@ export const editorGraphCommandPorts = (
       void vscode.window.showErrorMessage(text);
     },
     warn: async (text, actions) => vscode.window.showWarningMessage(text, ...actions),
-    log
+    log,
+    scriptsShown
   };
 
   return ports;

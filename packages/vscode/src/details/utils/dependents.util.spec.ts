@@ -70,4 +70,28 @@ describe('FEATURE: task dependents', () => {
       expect(dependents.size).toBe(0);
     });
   });
+
+  describe('GIVEN a task whose dependency was already passed through a phantom', () => {
+    it('WHEN inverted THEN the real dependency lists the task', () => {
+      const deploy: TaskNode = { ...TEST_TASK_STUB, id: 'a#deploy', dependencies: ['b#build'] };
+      const pkg: PackageNode = { ...A_PACKAGE_STUB, tasks: [deploy] };
+      const model: WorkspaceModel = { ...DETAILS_MODEL_STUB, packages: [pkg] };
+
+      const dependents = dependentsOf(model);
+
+      expect(dependents.get('b#build')).toStrictEqual(['a#deploy']);
+    });
+  });
+
+  describe('GIVEN a task that depends on a root task id', () => {
+    it('WHEN inverted THEN the root id has an entry although no tree node holds it', () => {
+      const deploy: TaskNode = { ...TEST_TASK_STUB, id: 'a#deploy', dependencies: ['//#gen'] };
+      const pkg: PackageNode = { ...A_PACKAGE_STUB, tasks: [deploy] };
+      const model: WorkspaceModel = { ...DETAILS_MODEL_STUB, packages: [pkg], rootPackage: null };
+
+      const dependents = dependentsOf(model);
+
+      expect(dependents.get('//#gen')).toStrictEqual(['a#deploy']);
+    });
+  });
 });

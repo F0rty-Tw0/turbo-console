@@ -2,10 +2,10 @@ import { graphRootOf } from './graph-root.ts';
 import { taskTargetOf } from '../../run/utils/run-target.util.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { RootPickPorts, ShowTaskGraphDeps, TaskChoice, TaskGraphRequest } from '../common/graph-panel.type.ts';
-import { GRAPH_OPEN_FAILED_TEXT, TASK_PICK_PLACEHOLDER } from '../common/graph.const.ts';
+import { GRAPH_OPEN_FAILED_TEXT, SCRIPTS_HIDDEN_TEXT, TASK_PICK_PLACEHOLDER } from '../common/graph.const.ts';
 import { rootLabelOf } from '../utils/graph-state.util.ts';
 import { taskGraphItemsOf } from '../utils/graph-task-items.util.ts';
-import { graphTasksOf } from '../utils/graph-tasks.util.ts';
+import { graphTasksOf, pooledTasksOf } from '../utils/graph-tasks.util.ts';
 
 const rowRequestOf = (arg: unknown): TaskGraphRequest | null => {
   const target = taskTargetOf(arg);
@@ -25,7 +25,8 @@ const pickChoiceOf = (ports: RootPickPorts): TaskChoice => {
 
 /**
  * The request of a command that asks for tasks: the resolved root, its model loaded, then `choose` over the task items.
- * No model opens the panel alone; a cancelled or an empty choice opens nothing (`null`).
+ * No model opens the panel alone; a cancelled or an empty choice opens nothing (`null`). The items are the turbo tasks, plus the scripts while
+ * they are shown; a root of scripts only, with scripts hidden, tells the user so and opens nothing.
  */
 export const chosenRequestOf = async ({ roots, ports }: ShowTaskGraphDeps, choose: TaskChoice): Promise<TaskGraphRequest | null> => {
   const root = await graphRootOf(roots, ports);
@@ -43,8 +44,16 @@ export const chosenRequestOf = async ({ roots, ports }: ShowTaskGraphDeps, choos
   }
 
   const tasks = graphTasksOf(model);
+  const pool = pooledTasksOf(tasks, ports.scriptsShown());
+
+  if (pool.length === 0 && tasks.length > 0) {
+    ports.info(SCRIPTS_HIDDEN_TEXT);
+
+    return null;
+  }
+
   const rootLabel = rootLabelOf(model);
-  const items = taskGraphItemsOf(tasks, root, rootLabel);
+  const items = taskGraphItemsOf(pool, root, rootLabel);
   const taskIds = await choose(items);
 
   if (taskIds === undefined || taskIds.length === 0) return null;
