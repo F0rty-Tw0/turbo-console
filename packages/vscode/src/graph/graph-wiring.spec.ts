@@ -1,12 +1,11 @@
-import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 import * as vscode from 'vscode';
 
 import type { GraphContext, GraphDetails, GraphWiring } from './common/graph-panel.type.ts';
 import { createGraph } from './graph-wiring.ts';
-import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB } from './test/stubs/graph-model.stub.ts';
-import { feedsOf, feedsWithToggles, scopeShownTogglesOf } from './test/utils/graph-feeds.spec.util.ts';
+import { GRAPH_LOADED_STUB, SCRIPT_MODEL_STUB } from './test/stubs/graph-model.stub.ts';
+import { feedsOf, feedsWithToggles, togglesOf } from './test/utils/graph-feeds.spec.util.ts';
 import { copyGraphPageRoot } from './test/utils/page-root.spec.util.ts';
 import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
 import { RootStore } from '../roots/domain-logic/root-store.ts';
@@ -17,7 +16,6 @@ import type { PageRoot } from '../shared/test/common/page-root.type.ts';
 import type { PanelFake, UriFake } from '../shared/test/common/vscode-fakes.type.ts';
 import { webviewPanelMock } from '../shared/test/mocks/webview-panel.mock.ts';
 import { ROOT_FOLDER_STUB } from '../tree/test/stubs/root-state.stub.ts';
-import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../tree/test/stubs/workspace-model.stub.ts';
 
 type Registration = { readonly dispose: () => void };
 
@@ -68,9 +66,6 @@ vi.mock('vscode', () => {
   return module;
 });
 
-const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'tool#dev', name: 'dev', isTurboTask: false };
-const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'tool', path: 'packages/tool', tasks: [SCRIPT_TASK] };
-const SCRIPT_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, SCRIPT_PACKAGE] };
 const COMMAND = 'turboConsole.openPackageGraph';
 const TASK_COMMAND = 'turboConsole.showTaskGraph';
 const ALL_TASKS_COMMAND = 'turboConsole.showAllTaskGraphs';
@@ -170,7 +165,7 @@ describe('FEATURE: the graph wiring', () => {
     });
 
     it('GIVEN feeds with scope shown WHEN Show All Task Graphs runs and the page is ready THEN the posted state carries scopeShown true', async () => {
-      const feeds = feedsWithToggles(new RunStore(), scopeShownTogglesOf());
+      const feeds = feedsWithToggles(new RunStore(), togglesOf(true));
       const scoped = createGraph(contextOf(page), session, details, output, feeds);
 
       scoped.register();
@@ -202,7 +197,7 @@ describe('FEATURE: the graph wiring', () => {
         return requests.map((request) => request.taskIds);
       };
 
-      store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_MODEL });
+      store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_MODEL_STUB });
       toggled.register();
       await callbackOf(ALL_TASKS_COMMAND)(undefined);
       await toggled.api.receive('/ws', { type: 'ready' });

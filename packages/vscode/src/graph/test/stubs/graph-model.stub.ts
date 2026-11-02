@@ -104,3 +104,22 @@ export const NO_LAYOUT_CACHES_STUB: GraphLayoutCaches = { flat: null, folders: n
 
 /** Both toggles at their stored default: the `scopeShown` and `scriptsShown` of `GRAPH_STATE_STUB`. */
 export const GRAPH_SHOWN_STUB: GraphShown = { scopeShown: false, scriptsShown: false };
+
+/** A `package.json` script of package `tool`: listed in the tree and the pickers only while scripts are shown. */
+export const SCRIPT_TASK_STUB: TaskNode = { ...TASK_NODE_STUB, id: 'tool#dev', name: 'dev', isTurboTask: false };
+
+export const SCRIPT_PACKAGE_STUB: PackageNode = {
+  ...PACKAGE_NODE_STUB,
+  name: 'tool',
+  path: 'packages/tool',
+  tasks: [SCRIPT_TASK_STUB]
+};
+
+/** `GRAPH_MODEL_STUB` plus the package `tool` with its one script. */
+export const SCRIPT_MODEL_STUB: WorkspaceModel = {
+  ...GRAPH_MODEL_STUB,
+  packages: [...GRAPH_MODEL_STUB.packages, SCRIPT_PACKAGE_STUB]
+};
+
+/** A model of the package `tool` alone: no turbo task and no edge. */
+export const SCRIPT_ONLY_MODEL_STUB: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [SCRIPT_PACKAGE_STUB], edges: [] };

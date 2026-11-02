@@ -4,18 +4,12 @@ import { GraphSession } from './graph-session.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
-import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
-import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
+import type { ToggleFakes } from '../test/common/graph.type.ts';
 import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
-import { feedsWithToggles } from '../test/utils/graph-feeds.spec.util.ts';
+import { feedsWithToggles, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { portsWith, postedStatesOf } from '../test/utils/graph-session.spec.util.ts';
-
-type ToggleFakes = {
-  readonly scope: ScriptsToggleFake;
-  readonly scripts: ScriptsToggleFake;
-};
 
 type ShownSession = {
   readonly session: GraphSession;
@@ -24,7 +18,7 @@ type ShownSession = {
 };
 
 const shownSession = (isScopeShown = true): ShownSession => {
-  const toggles: ToggleFakes = { scope: scriptsToggleMock(isScopeShown), scripts: scriptsToggleMock() };
+  const toggles = togglesOf(isScopeShown);
   const store = new RootStore();
 
   store.set([ROOT_FOLDER_STUB], () => coordinatorMock());

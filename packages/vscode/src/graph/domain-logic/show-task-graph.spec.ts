@@ -15,7 +15,7 @@ import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspa
 import type { GraphOpener, OpenGraphPanel, RootPickPorts } from '../common/graph-panel.type.ts';
 import { SCRIPTS_HIDDEN_TEXT } from '../common/graph.const.ts';
 import { GRAPH_ATOM_MODEL_STUB } from '../test/stubs/graph-atom-model.stub.ts';
-import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB } from '../test/stubs/graph-model.stub.ts';
+import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB, SCRIPT_MODEL_STUB, SCRIPT_ONLY_MODEL_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const OPEN_FAILED_TEXT = 'Could not open the Package Graph. See Output.';
@@ -23,10 +23,6 @@ const PLACEHOLDER = 'Choose tasks to show';
 const ROOT_BUILD_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
 const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [ROOT_BUILD_TASK] };
 const SINGLE_PACKAGE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [ROOT_PACKAGE] };
-const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'tool#dev', name: 'dev', isTurboTask: false };
-const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'tool', path: 'packages/tool', tasks: [SCRIPT_TASK] };
-const SCRIPT_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, SCRIPT_PACKAGE] };
-const SCRIPT_ONLY_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [SCRIPT_PACKAGE], edges: [] };
 const TASK_ITEMS = [
   { label: 'build', description: '@org/x', root: '/ws', value: '@org/x#build' },
   { label: 'build', description: 'a', root: '/ws', value: 'a#build' },
@@ -167,7 +163,7 @@ describe('FEATURE: the Show Task Graph command', () => {
 
   describe('GIVEN a script task in the model', () => {
     beforeEach(() => {
-      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_MODEL });
+      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_MODEL_STUB });
     });
 
     it('WHEN scripts are hidden and the picker is shown THEN no script item is offered', async () => {
@@ -193,7 +189,7 @@ describe('FEATURE: the Show Task Graph command', () => {
 
   describe('GIVEN scripts hidden and a root of scripts only', () => {
     it('WHEN the picker runs THEN it tells the user scripts are hidden and opens nothing', async () => {
-      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_ONLY_MODEL });
+      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_ONLY_MODEL_STUB });
 
       await runWith(undefined, fixture);
 

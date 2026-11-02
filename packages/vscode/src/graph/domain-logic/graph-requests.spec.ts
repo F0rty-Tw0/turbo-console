@@ -16,7 +16,7 @@ import {
   GRAPH_ATOM_UNLOADED_VIEW_STUB
 } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_SHOWN_STUB, GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
-import { atomsFake, hiddenTogglesOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { atomsFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { smokeGroupTasksOf } from '../test/utils/graph-model.spec.util.ts';
 import { graphStateOf } from '../utils/graph-state.util.ts';
 
@@ -51,7 +51,7 @@ const contextOf = (state: GraphState, atoms: RequestContext['atoms'] = SHARED_AT
     coordinator: coordinatorMock(),
     ports: graphPortsMock(),
     atoms,
-    toggles: hiddenTogglesOf()
+    toggles: togglesOf()
   };
 
   return context;
@@ -255,9 +255,11 @@ describe('FEATURE: graph setViewToggle request', () => {
 
   describe('GIVEN a toggle whose set rejects', () => {
     it('WHEN a setViewToggle is handled THEN true is returned and nothing is thrown', async () => {
-      const context = contextOf(GRAPH_STATE_STUB);
+      const toggles = togglesOf();
+      const base = contextOf(GRAPH_STATE_STUB);
+      const context: RequestContext = { ...base, toggles };
 
-      vi.mocked(context.toggles.scope.set).mockRejectedValueOnce(new Error('boom'));
+      toggles.scope.set.mockRejectedValueOnce(new Error('boom'));
 
       const isHandled = await requestHandledOf(SET_SCOPE, context);
 

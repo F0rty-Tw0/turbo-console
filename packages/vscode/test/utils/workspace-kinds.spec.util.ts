@@ -42,16 +42,6 @@ const copyFixture = async (dir: string, spec: FixtureSpec = PRESETS['target-like
   await runEach([copy, fixture.dispose]);
 };
 
-/** `fixture-root-task`: a `target-like` copy whose root has the real script `rootgen`, so turbo lists `//#rootgen` with a command. */
-const rootTaskFixture = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
-  const dir = workspaceDirOf(scratch, name);
-  const rootTask = { name: ROOT_TASK_NAME, command: 'echo root' };
-
-  await copyFixture(dir, { ...PRESETS['target-like'], rootTask });
-
-  return folderWorkspace(dir);
-};
-
 /** `empty-folder`: an empty dir. */
 const emptyFolder = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
   const dir = workspaceDirOf(scratch, name);
@@ -61,14 +51,26 @@ const emptyFolder = async (scratch: RunScratch, name: LaunchName): Promise<Prepa
   return folderWorkspace(dir);
 };
 
-/** `fixture`: a `target-like` copy of the launch's own. */
-const fixtureCopy = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
-  const dir = workspaceDirOf(scratch, name);
+/** A workspace prep that opens a fresh copy of `spec` in the launch's own dir. */
+const fixtureCopyOf = (spec: FixtureSpec): ((scratch: RunScratch, name: LaunchName) => Promise<PreparedWorkspace>) => {
+  const prepare = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+    const dir = workspaceDirOf(scratch, name);
 
-  await copyFixture(dir);
+    await copyFixture(dir, spec);
 
-  return folderWorkspace(dir);
+    return folderWorkspace(dir);
+  };
+
+  return prepare;
 };
+
+/** `fixture`: a `target-like` copy of the launch's own. */
+const fixtureCopy = fixtureCopyOf(PRESETS['target-like']);
+
+const ROOT_TASK = { name: ROOT_TASK_NAME, command: 'echo root' };
+
+/** `fixture-root-task`: a `target-like` copy whose root has the real script `rootgen`, so turbo lists `//#rootgen` with a command. */
+const rootTaskFixture = fixtureCopyOf({ ...PRESETS['target-like'], rootTask: ROOT_TASK });
 
 /**
  * `error-roots`: a `.code-workspace` with two `target-like` copies, `bad` whose `turbo.json` is invalid JSON and `empty`
