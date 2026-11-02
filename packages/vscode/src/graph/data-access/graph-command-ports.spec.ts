@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { editorGraphCommandPorts } from './graph-command-ports.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
+import type { RootPickPorts } from '../common/graph-panel.type.ts';
 
 type PickItem = { readonly label: string; readonly description?: string };
 
@@ -40,6 +41,8 @@ const TASK_ITEMS = [
   { label: 'build', description: 'api', root: '/ws', value: 'api#build' }
 ];
 
+const portsOf = (): RootPickPorts => editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+
 const pickSecond = async (items: PickItem[]): Promise<PickItem | undefined> => Promise.resolve(items[1]);
 
 describe('FEATURE: the editor effects of Show Package Graph', () => {
@@ -52,7 +55,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
   describe('GIVEN two folders with the same name', () => {
     it('WHEN the user picks the second THEN its root is the result, not its name', async () => {
       editor.showQuickPick.mockImplementation(pickSecond);
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       const picked = await ports.pick(FOLDERS);
 
@@ -61,7 +64,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
 
     it('WHEN the pick is shown THEN each item is the folder name with its root beside it', async () => {
       editor.showQuickPick.mockResolvedValue(undefined);
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       await ports.pick(FOLDERS);
 
@@ -75,7 +78,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
 
     it('WHEN the user cancels the pick THEN the result is undefined', async () => {
       editor.showQuickPick.mockResolvedValue(undefined);
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       const picked = await ports.pick(FOLDERS);
 
@@ -86,7 +89,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
   describe('GIVEN task items', () => {
     it('WHEN the user ticks both THEN the result is their values in order', async () => {
       editor.showQuickPick.mockResolvedValue(TASK_ITEMS);
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       const picked = await ports.pickMany(TASK_ITEMS, 'Choose tasks to show');
 
@@ -95,7 +98,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
 
     it('WHEN the pick is shown THEN it allows many and carries the placeholder', async () => {
       editor.showQuickPick.mockResolvedValue(undefined);
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       await ports.pickMany(TASK_ITEMS, 'Choose tasks to show');
 
@@ -108,7 +111,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
 
     it('WHEN the user cancels THEN the result is undefined', async () => {
       editor.showQuickPick.mockResolvedValue(undefined);
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       const picked = await ports.pickMany(TASK_ITEMS, 'Choose tasks to show');
 
@@ -130,7 +133,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
 
   describe('GIVEN a message for the user', () => {
     it('WHEN info is shown THEN the information message gets the text', () => {
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       ports.info('no root');
 
@@ -138,7 +141,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
     });
 
     it('WHEN an error is shown THEN the error message gets the text', () => {
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       ports.error('Could not open the Package Graph. See Output.');
 
@@ -149,7 +152,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
   describe('GIVEN a warning with buttons', () => {
     it('WHEN the user presses the second THEN the result is its label and the warning got the text and both labels', async () => {
       editor.showWarningMessage.mockResolvedValue('Pick tasks…');
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       const answer = await ports.warn('Many tasks', ['Show all 301', 'Pick tasks…']);
 
@@ -159,7 +162,7 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
 
     it('WHEN the user dismisses it THEN the result is undefined', async () => {
       editor.showWarningMessage.mockResolvedValue(undefined);
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+      const ports = portsOf();
 
       const answer = await ports.warn('Many tasks', ['Show all 301']);
 
@@ -180,10 +183,12 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
   });
 
   describe('GIVEN a scripts-shown callback', () => {
-    it('THEN scriptsShown is the callback it was given', () => {
-      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), () => true);
+    it('WHEN the ports are made THEN scriptsShown is the one passed in', () => {
+      const scriptsShown = vi.fn(() => true);
 
-      expect(ports.scriptsShown()).toBe(true);
+      const ports = editorGraphCommandPorts(vi.fn(), vi.fn(), vi.fn(), scriptsShown);
+
+      expect(ports.scriptsShown).toBe(scriptsShown);
     });
   });
 });

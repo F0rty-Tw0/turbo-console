@@ -188,26 +188,28 @@ describe('FEATURE: the graph wiring', () => {
       expect(feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
     });
 
-    it('GIVEN a script task WHEN Show All Task Graphs runs with scripts hidden, then shown THEN the second request adds the script id', async () => {
-      const feeds = feedsOf(new RunStore());
-      const toggled = createGraph(contextOf(page), session, details, output, feeds);
-      const showTasksIds = (): string[][] => {
-        const requests = toggled.api.posted('/ws').filter((message) => message.type === 'showTasks');
+    describe('GIVEN a script task in the model', () => {
+      it('WHEN Show All Task Graphs runs with scripts hidden, then shown THEN the second request adds the script id', async () => {
+        const feeds = feedsOf(new RunStore());
+        const toggled = createGraph(contextOf(page), session, details, output, feeds);
+        const showTasksIds = (): string[][] => {
+          const requests = toggled.api.posted('/ws').filter((message) => message.type === 'showTasks');
 
-        return requests.map((request) => request.taskIds);
-      };
+          return requests.map((request) => request.taskIds);
+        };
 
-      store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_MODEL_STUB });
-      toggled.register();
-      await callbackOf(ALL_TASKS_COMMAND)(undefined);
-      await toggled.api.receive('/ws', { type: 'ready' });
-      await feeds.toggles.scripts.set(true);
-      await callbackOf(ALL_TASKS_COMMAND)(undefined);
+        store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_MODEL_STUB });
+        toggled.register();
+        await callbackOf(ALL_TASKS_COMMAND)(undefined);
+        await toggled.api.receive('/ws', { type: 'ready' });
+        await feeds.toggles.scripts.set(true);
+        await callbackOf(ALL_TASKS_COMMAND)(undefined);
 
-      expect(showTasksIds()).toStrictEqual([
-        ['@org/x#build', 'a#build', 'web#build', 'web#lint'],
-        ['@org/x#build', 'a#build', 'tool#dev', 'web#build', 'web#lint']
-      ]);
+        expect(showTasksIds()).toStrictEqual([
+          ['@org/x#build', 'a#build', 'web#build', 'web#lint'],
+          ['@org/x#build', 'a#build', 'tool#dev', 'web#build', 'web#lint']
+        ]);
+      });
     });
 
     it('WHEN Show All Task Graphs runs THEN the panel of the active root opens', async () => {

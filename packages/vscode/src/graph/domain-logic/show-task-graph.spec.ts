@@ -23,6 +23,7 @@ const PLACEHOLDER = 'Choose tasks to show';
 const ROOT_BUILD_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
 const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [ROOT_BUILD_TASK] };
 const SINGLE_PACKAGE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [ROOT_PACKAGE] };
+const NO_TASKS_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [], edges: [] };
 const TASK_ITEMS = [
   { label: 'build', description: '@org/x', root: '/ws', value: '@org/x#build' },
   { label: 'build', description: 'a', root: '/ws', value: 'a#build' },
@@ -196,6 +197,24 @@ describe('FEATURE: the Show Task Graph command', () => {
       expect(fixture.ports.info).toHaveBeenCalledExactlyOnceWith(SCRIPTS_HIDDEN_TEXT);
       expect(fixture.pickMany).not.toHaveBeenCalled();
       expect(fixture.open).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN scripts hidden and a model with no tasks at all', () => {
+    beforeEach(() => {
+      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: NO_TASKS_MODEL });
+    });
+
+    it('WHEN the picker runs THEN it is shown with an empty pick list', async () => {
+      await runWith(undefined, fixture);
+
+      expect(fixture.pickMany).toHaveBeenCalledExactlyOnceWith([], PLACEHOLDER);
+    });
+
+    it('WHEN the picker runs THEN the user is not told scripts are hidden', async () => {
+      await runWith(undefined, fixture);
+
+      expect(fixture.ports.info).not.toHaveBeenCalled();
     });
   });
 

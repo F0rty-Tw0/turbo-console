@@ -189,6 +189,13 @@ describe('FEATURE: the Show All Task Graphs command', () => {
       await showAllTaskGraphs(fixture.deps);
 
       expect(fixture.warn).not.toHaveBeenCalled();
+    });
+
+    it('WHEN 301 tasks are listed and 2 are scripts THEN the request holds the 299 turbo task ids', async () => {
+      fixture.store.apply(ROOT, { ...GRAPH_LOADED_STUB, model: modelOf(299, 2) });
+
+      await showAllTaskGraphs(fixture.deps);
+
       expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: idsOf(299) });
     });
 
