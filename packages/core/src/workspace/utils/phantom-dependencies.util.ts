@@ -18,11 +18,13 @@ const lowestOf = (low: number, walk: Walk): number => Math.min(low, walk.low);
 
 const idsOf = (walk: Walk): string[] => walk.ids;
 
+/** `ids` cut to `visibleIds`, sorted, with each repeat dropped: sorted, a repeat is the id just before it. */
 const visibleOf = (ids: string[], visibleIds: ReadonlySet<string>): string[] => {
-  const visible = new Set(ids.filter((id) => visibleIds.has(id)));
-  const unique = Array.from(visible);
+  const isVisible = (id: string): boolean => visibleIds.has(id);
+  const sorted = ids.filter(isVisible).toSorted();
+  const isFirst = (id: string, index: number): boolean => id !== sorted[index - 1];
 
-  return unique.toSorted();
+  return sorted.filter(isFirst);
 };
 
 /**
