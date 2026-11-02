@@ -120,3 +120,31 @@ export const mixOf = (dependencies: number, dependents: number): GraphTask[] => 
 
   return tasks;
 };
+
+/** `depsOf(hop1, hop2)` plus `dependents` more tasks that depend on `root#t`, all at dependent hop 1. */
+export const depsAndDependentsOf = (hop1: number, hop2: number, dependents: number): GraphTask[] => {
+  const above = dependingOn(idsOf('d-', dependents), 'root#t');
+  const tasks = joined(depsOf(hop1, hop2), above);
+
+  return tasks;
+};
+
+type Chain = { readonly tasks: GraphTask[]; readonly previousFirst: string };
+
+const withLevel = (chain: Chain, size: number, level: number): Chain => {
+  const ids = idsOf(`l${level}-`, size);
+  const [first = chain.previousFirst] = ids;
+  const tasks = joined(chain.tasks, dependingOn(ids, chain.previousFirst));
+
+  const next: Chain = { tasks, previousFirst: first };
+
+  return next;
+};
+
+/** `root#t` and a dependents chain: `sizes[0]` tasks depend on it, and every task of a level depends on the first task of the level before. */
+export const chainOf = (sizes: number[]): GraphTask[] => {
+  const start: Chain = { tasks: [taskOf('root#t', [])], previousFirst: 'root#t' };
+  const chain = sizes.reduce(withLevel, start);
+
+  return chain.tasks;
+};

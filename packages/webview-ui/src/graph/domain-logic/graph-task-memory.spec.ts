@@ -5,6 +5,7 @@ import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { TaskModes } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
+import type { ShownSet } from '../common/shown-set.type.ts';
 import {
   MORE_TASKS_STATE_STUB,
   ROOT_BUILD_STUB,
@@ -30,12 +31,6 @@ const LIB_BUILD = taskOf('lib#build', []);
 const SCRIPTS_HIDDEN_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [APP_BUILD, APP_DEV, LIB_BUILD], scriptsShown: false };
 
 const idsOf = (tasks: GraphTask[]): string[] => tasks.map((task) => task.id);
-
-const savedChoosing = (chosen: string[]): TaskViewState => {
-  const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
-
-  return saved;
-};
 
 type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: LocationFacts];
 
@@ -73,6 +68,40 @@ const modesOf = (saved: TaskViewState | null): MemoryModes => {
   const modes: MemoryModes = { task: vi.fn(() => saved), saveTask: vi.fn() };
 
   return modes;
+};
+
+const scriptNeedingRoot = (id: string): GraphTask => {
+  const task = taskOf(id, ['root#t']);
+  const script: GraphTask = { ...task, isTurboTask: false };
+
+  return script;
+};
+
+const turboIdsOf = (prefix: string, count: number): string[] => Array.from({ length: count }, (_slot, index) => `${prefix}${index}#t`);
+
+/** `root#t` needing `dependencies` turbo tasks, with `scripts` package scripts and `extra` more tasks that each need `root#t`. */
+const capStateOf = (dependencies: number, scripts: number, extra: GraphTask[], scriptsShown: boolean): GraphReady => {
+  const below = turboIdsOf('u-', dependencies);
+  const scriptTasks = turboIdsOf('s-', scripts).map(scriptNeedingRoot);
+  const leaves = below.map((id) => taskOf(id, []));
+  const tasks = [taskOf('root#t', below), ...leaves, ...scriptTasks, ...extra];
+  const state: GraphReady = { ...TASK_STATE_STUB, tasks, scriptsShown };
+
+  return state;
+};
+
+const savedChoosing = (chosen: string[]): TaskViewState => {
+  const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
+
+  return saved;
+};
+
+const cappedBy = (state: GraphReady): ShownSet => {
+  const memory = new GraphTaskMemory(modesOf(savedChoosing(['root#t'])));
+
+  memory.keep(state);
+
+  return memory.shownSet();
 };
 
 describe('FEATURE: task mode memory', () => {
@@ -257,6 +286,28 @@ describe('FEATURE: task mode memory', () => {
       memory.keep(state);
 
       expect(memory.shownSet().ids).toStrictEqual(['//#build']);
+    });
+  });
+
+  describe('GIVEN chosen root#t, 299 turbo hop-1 dependencies and 40 script hop-1 dependents', () => {
+    it('WHEN scripts are hidden THEN the pool is 300 and nothing is hidden', () => {
+      const shown = cappedBy(capStateOf(299, 40, [], false));
+
+      expect([shown.ids.length, shown.hiddenCount]).toStrictEqual([300, 0]);
+    });
+
+    it('WHEN scripts are shown THEN the pool is 340, the dependents level is cut and 40 are hidden', () => {
+      const shown = cappedBy(capStateOf(299, 40, [], true));
+
+      expect([shown.ids.length, shown.hiddenCount]).toStrictEqual([300, 40]);
+    });
+  });
+
+  describe('GIVEN chosen root#t, 299 turbo dependencies and a //#gen turbo task that needs root#t', () => {
+    it('WHEN the shown set is read THEN //#gen counts toward the cap and is cut', () => {
+      const shown = cappedBy(capStateOf(299, 0, [taskOf('//#gen', ['root#t'])], false));
+
+      expect([shown.ids.includes('//#gen'), shown.ids.length, shown.hiddenCount]).toStrictEqual([false, 300, 1]);
     });
   });
 });
