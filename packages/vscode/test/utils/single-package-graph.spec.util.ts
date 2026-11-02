@@ -2,12 +2,19 @@ import assert from 'node:assert/strict';
 
 import * as vscode from 'vscode';
 
-import { lastGraphState, postedShowTasks, runStatesOf } from './graph-posted.spec.util.ts';
+import { lastGraphState, pooledIdsOf, postedShowTasks, runStatesOf } from './graph-posted.spec.util.ts';
 import { endedRun, startGraphRun, taskNodeNamed } from './run-wait.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import { ALL_TASKS_COMMAND } from '../common/graph.const.ts';
-import { ROOT_BUILD_ID, ROOT_LINT_ID, ROOT_PACKAGE, SINGLE_APP_NAME, SINGLE_TASK_IDS } from '../common/single-package.const.ts';
+import {
+  ROOT_BUILD_ID,
+  ROOT_LINT_ID,
+  ROOT_PACKAGE,
+  SINGLE_APP_NAME,
+  SINGLE_SCRIPT_IDS,
+  SINGLE_TASK_IDS
+} from '../common/single-package.const.ts';
 
 const showTasksCountOf = (api: TurboConsoleApi, root: string): number => {
   const posted = api.graph.posted(root);
@@ -31,19 +38,20 @@ export const taskGraphCase = async (api: TurboConsoleApi, root: string): Promise
     const state = lastGraphState(api, root);
     const tasks = state?.tasks ?? [];
     const stateIds = tasks.map((task) => task.id).sort();
-    const pooled = tasks.filter((task) => task.isTurboTask || state?.scriptsShown === true);
-    const pooledIds = pooled.map((task) => task.id).sort();
     const unit = tasks.find((task) => task.id === '//#test:unit');
     const request = postedShowTasks(api, root);
-    const shownIds = request?.taskIds.toSorted();
+    const shownIds = request?.taskIds.toSorted() ?? [];
     const hasPanel = api.graph.panels().some((panel) => panel.root === root);
 
     assert.ok(hasPanel, 'no graph panel for the root');
     assert.equal(state?.singlePackage, true);
     assert.equal(state.rootLabel, SINGLE_APP_NAME);
+    assert.equal(state.scriptsShown, false);
     assert.deepEqual(unit?.dependencies, [ROOT_BUILD_ID]);
-    assert.deepEqual(shownIds, pooledIds);
+    assert.deepEqual(shownIds, pooledIdsOf(state));
     assert.ok(SINGLE_TASK_IDS.every((id) => stateIds.includes(id)));
+    assert.ok(SINGLE_SCRIPT_IDS.every((id) => stateIds.includes(id)));
+    assert.ok(SINGLE_SCRIPT_IDS.every((id) => !shownIds.includes(id)));
   });
 };
 

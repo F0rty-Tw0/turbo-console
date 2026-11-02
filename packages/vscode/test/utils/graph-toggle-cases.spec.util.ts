@@ -24,7 +24,9 @@ const isScopeShown = (scene: GraphScene): boolean => flagsOf(scene)?.[0] === tru
 
 const isScriptsShown = (scene: GraphScene): boolean => flagsOf(scene)?.[1] === true;
 
-const areBothHidden = (scene: GraphScene): boolean => flagsOf(scene)?.every((flag): boolean => !flag) === true;
+const isScopeHidden = (scene: GraphScene): boolean => flagsOf(scene)?.[0] === false;
+
+const isScriptsHidden = (scene: GraphScene): boolean => flagsOf(scene)?.[1] === false;
 
 /** The root task `//#rootgen` is listed as a turbo task of the `//` package that Run refuses, and `//` is no graph package. */
 export const rootTaskCase = async (scene: GraphScene): Promise<void> => {
@@ -55,8 +57,12 @@ export const treeToggleCase = async (scene: GraphScene): Promise<void> => {
     assert.deepEqual(flagsOf(scene), [true, true]);
 
     await vscode.commands.executeCommand('turboConsole.hideScope');
+    await waitFor('scopeShown false', () => isScopeHidden(scene));
+    assert.deepEqual(flagsOf(scene), [false, true]);
+
     await vscode.commands.executeCommand('turboConsole.hideScripts');
-    await waitFor('both hidden', () => areBothHidden(scene));
+    await waitFor('scriptsShown false', () => isScriptsHidden(scene));
+    assert.deepEqual(flagsOf(scene), [false, false]);
     assert.equal(lastGraphState(api, root)?.hash, hash);
   });
 };
@@ -72,6 +78,6 @@ export const pageToggleCase = async (scene: GraphScene): Promise<void> => {
     assert.equal(api.tree.isScopeShown(), false);
 
     await api.graph.receive(root, { type: 'setViewToggle', toggle: 'scripts', shown: false });
-    await waitFor('scriptsShown false', () => flagsOf(scene)?.[1] === false);
+    await waitFor('scriptsShown false', () => isScriptsHidden(scene));
   });
 };
