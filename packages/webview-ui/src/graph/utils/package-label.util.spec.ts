@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { labelsOf, packageLabelOf } from './package-label.util.ts';
+import { labelIn, labelsOf, packageLabelOf } from './package-label.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 
 const SCOPED: GraphPackage = { name: '@org/x', bareName: 'x', path: 'packages/x', tags: [], taskCount: 0 };
@@ -37,6 +37,24 @@ describe('FEATURE: packageLabelOf', () => {
       const label = packageLabelOf(odd, true);
 
       expect(label).toBe(odd.name);
+    });
+  });
+});
+
+describe('FEATURE: labelIn', () => {
+  describe('GIVEN labels that map @org/x to x', () => {
+    const labels = new Map([['@org/x', 'x']]);
+
+    it('WHEN @org/x is looked up THEN it reads x', () => {
+      const label = labelIn(labels, '@org/x');
+
+      expect(label).toBe('x');
+    });
+
+    it('WHEN a name with no label is looked up THEN it reads as itself', () => {
+      const label = labelIn(labels, 'app');
+
+      expect(label).toBe('app');
     });
   });
 });

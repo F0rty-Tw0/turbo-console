@@ -1,12 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildControls } from './controls-elements.ts';
+import type { DrawnGraph } from '../common/graph-page.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { graphIconConstMock } from '../test/mocks/graph-icon-const.mock.ts';
 import { SWAPPED_ACTION_ICONS_STUB as SWAPPED } from '../test/stubs/action-icons.stub.ts';
 import { BOARDS_GROUPS_STUB } from '../test/stubs/folder-boards.stub.ts';
 import { groupOf, iconClassOf, rowOf } from '../test/utils/controls-elements.spec.util.ts';
+import { BOARDS_DRAWN } from '../test/utils/folder-boards.spec.util.ts';
 
 const sectionsOf = (panel: HTMLElement): Element[] => Array.from(panel.children);
 
@@ -92,7 +94,7 @@ describe('FEATURE: buildControls', () => {
 
   describe('GIVEN two folders and one tag', () => {
     it('WHEN built THEN the panel holds the Search, View and Packages sections, each headed by its title', () => {
-      const { panel } = buildControls(BOARDS_GROUPS_STUB, ['app']);
+      const { panel } = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
       const sections = sectionsOf(panel);
       const shapes = sections.map(shapeOf);
 
@@ -104,7 +106,7 @@ describe('FEATURE: buildControls', () => {
     });
 
     it('WHEN built THEN View holds the Focus depth field, then Group by folder', () => {
-      const { panel, depth, grouping } = buildControls(BOARDS_GROUPS_STUB, ['app']);
+      const { panel, depth, grouping } = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
       const [, depthGroup, groupingLabel] = childrenOf(sectionsOf(panel)[1]);
 
       expect(depthGroup?.contains(depth)).toBe(true);
@@ -112,7 +114,7 @@ describe('FEATURE: buildControls', () => {
     });
 
     it('WHEN built THEN Packages holds the tag fieldset, Show all, the count line and the grid, in that order', () => {
-      const { panel, tags, showAll, count, list } = buildControls(BOARDS_GROUPS_STUB, ['app']);
+      const { panel, tags, showAll, count, list } = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
       const [, fieldset, ...rest] = childrenOf(sectionsOf(panel)[2]);
       const tagBox = tags.get('app') ?? null;
 
@@ -125,7 +127,7 @@ describe('FEATURE: buildControls', () => {
     it.each(TOGGLE_ROWS)(
       'WHEN built THEN its Collapse toggle, a hidden chevron icon button out of the Tab order, has %s %j',
       (field, expected) => {
-        const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
+        const elements = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
         const { toggle } = groupOf(elements, 'apps');
 
         expect(fieldsOf(toggle)[field]).toBe(expected);
@@ -135,7 +137,7 @@ describe('FEATURE: buildControls', () => {
     it.each(HEADER_FOCUS_ROWS)(
       'WHEN built THEN its Focus, a hidden unpressed target icon button out of the Tab order, has %s %j',
       (field, expected) => {
-        const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
+        const elements = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
         const { focus } = groupOf(elements, 'apps');
 
         expect(fieldsOf(focus)[field]).toBe(expected);
@@ -147,7 +149,7 @@ describe('FEATURE: buildControls', () => {
     it.each(ROW_FOCUS_ROWS)(
       'WHEN built THEN its Focus, an unpressed target icon button out of the Tab order, has %s %j',
       (field, expected) => {
-        const elements = buildControls(BOARDS_GROUPS_STUB, ['app']);
+        const elements = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
         const { focus } = rowOf(elements, 'web');
 
         expect(fieldsOf(focus)[field]).toBe(expected);
@@ -155,9 +157,31 @@ describe('FEATURE: buildControls', () => {
     );
   });
 
+  describe('GIVEN scopes hidden and @acme/ui labelled ui', () => {
+    const bare: DrawnGraph = { ...BOARDS_DRAWN, scopeShown: false, labels: new Map([['@acme/ui', 'ui']]) };
+
+    it('WHEN built THEN its name button reads and is titled ui', () => {
+      const { pick } = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
+
+      expect([pick.textContent, pick.title]).toStrictEqual(['ui', 'ui']);
+    });
+
+    it('WHEN built THEN its checkbox and Focus are named by the label', () => {
+      const { check, focus } = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
+
+      expect([check.getAttribute('aria-label'), focus.getAttribute('aria-label')]).toStrictEqual(['Show ui', 'Focus ui']);
+    });
+
+    it('WHEN built THEN the row keeps the package name as its id', () => {
+      const row = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
+
+      expect(row.name).toBe('@acme/ui');
+    });
+  });
+
   describe('GIVEN nothing filtered yet', () => {
     it('WHEN built THEN Show all reads Show all and starts hidden, never aria-disabled', () => {
-      const { showAll } = buildControls(BOARDS_GROUPS_STUB, ['app']);
+      const { showAll } = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
 
       expect(showAll).toMatchObject({ textContent: 'Show all', title: 'Show all', hidden: true });
       expect(showAll.getAttribute('aria-disabled')).toBeNull();
@@ -166,7 +190,7 @@ describe('FEATURE: buildControls', () => {
 
   describe('GIVEN no tags', () => {
     it('WHEN built THEN Packages holds Show all, the count line and the grid after its heading', () => {
-      const { panel, showAll, count, list } = buildControls(BOARDS_GROUPS_STUB, []);
+      const { panel, showAll, count, list } = buildControls(BOARDS_GROUPS_STUB, [], BOARDS_DRAWN);
       const [, ...rest] = childrenOf(sectionsOf(panel)[2]);
 
       expect(rest).toStrictEqual([showAll, count, list]);
@@ -190,7 +214,7 @@ describe('FEATURE: buildControls icons from the action icon table', () => {
   describe('GIVEN a table where every action draws another icon', () => {
     it('WHEN built THEN the row and header Focus buttons draw the table focus icon', async () => {
       const swapped = await import('./controls-elements.ts');
-      const elements = swapped.buildControls(BOARDS_GROUPS_STUB, []);
+      const elements = swapped.buildControls(BOARDS_GROUPS_STUB, [], BOARDS_DRAWN);
       const icons = [iconClassOf(rowOf(elements, 'web').focus), iconClassOf(groupOf(elements, 'apps').focus)];
 
       expect(icons).toStrictEqual([`codicon codicon-${SWAPPED.focus}`, `codicon codicon-${SWAPPED.focus}`]);

@@ -1,14 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { renderControls } from './graph-controls-render.ts';
+import { renderControls, renderLabels } from './graph-controls-render.ts';
 import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
 import type { ControlsElements } from '../common/controls-elements.type.ts';
 import { CLEAR_FOCUS_LABEL, FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { ControlsView } from '../common/graph-controls.type.ts';
+import type { DrawnGraph } from '../common/graph-page.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import { boardsControlsMock, controlsTogglesMock } from '../test/mocks/boards-controls.mock.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { groupOf, iconClassOf, rowOf } from '../test/utils/controls-elements.spec.util.ts';
+import { BOARDS_DRAWN } from '../test/utils/folder-boards.spec.util.ts';
 import { menuFiltersOf } from '../test/utils/widget-menu.spec.util.ts';
 
 const ALL = ['docs', 'web', '@acme/config', '@acme/ui', '@acme/utils'];
@@ -141,6 +143,58 @@ describe('FEATURE: renderControls', () => {
 
       expect(showAll).toMatchObject({ hidden: isHidden, textContent: text, title: text });
       expect(showAll.getAttribute('aria-disabled')).toBeNull();
+    });
+  });
+});
+
+describe('FEATURE: renderLabels', () => {
+  beforeEach((): void => {
+    vi.stubGlobal('document', fakeDocumentMock());
+  });
+
+  afterEach((): void => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN rows built with full names', () => {
+    describe('WHEN relabelled with @acme/ui as ui and web as w', () => {
+      let elements: ControlsElements;
+
+      beforeEach(() => {
+        const labels = new Map([
+          ['@acme/ui', 'ui'],
+          ['web', 'w']
+        ]);
+        const graph: DrawnGraph = { ...BOARDS_DRAWN, scopeShown: false, labels };
+
+        elements = boardsControlsMock();
+        renderLabels(elements, graph);
+      });
+
+      it('THEN each row reads and is titled its label', () => {
+        const picks = [rowOf(elements, '@acme/ui').pick, rowOf(elements, 'web').pick];
+
+        expect(picks.map((pick) => [pick.textContent, pick.title])).toStrictEqual([
+          ['ui', 'ui'],
+          ['w', 'w']
+        ]);
+      });
+
+      it('THEN each row checkbox and Focus are named by its label', () => {
+        const rows = [rowOf(elements, '@acme/ui'), rowOf(elements, 'web')];
+        const names = rows.map((row) => [row.check.getAttribute('aria-label'), row.focus.getAttribute('aria-label')]);
+
+        expect(names).toStrictEqual([
+          ['Show ui', 'Focus ui'],
+          ['Show w', 'Focus w']
+        ]);
+      });
+
+      it('THEN a row with no label keeps its name', () => {
+        const { pick } = rowOf(elements, 'docs');
+
+        expect(pick.textContent).toBe('docs');
+      });
     });
   });
 });

@@ -155,7 +155,7 @@ export type GraphControllerDeps = {
   readonly measure: TextMeasure;
   readonly now: () => number;
   /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
-  readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;
+  readonly build: (groups: FolderGroup[], tags: string[], graph: DrawnGraph) => ControlsElements;
   /** The details view builders, handed in because `domain-logic` may not import `ui`. */
   readonly views: DetailsViews;
   /** The canvas widget builders, handed in because `domain-logic` may not import `ui`. */

@@ -40,7 +40,7 @@ export type GroupState = 'checked' | 'unchecked' | 'mixed';
 export type GraphControlsDeps = {
   readonly page: PageElements;
   /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
-  readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;
+  readonly build: (groups: FolderGroup[], tags: string[], graph: DrawnGraph) => ControlsElements;
   readonly now: () => number;
   /** Only when the visible set changed. */
   readonly onVisibleChange: (visible: ReadonlySet<string>) => void;

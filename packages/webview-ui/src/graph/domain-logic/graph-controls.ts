@@ -64,7 +64,7 @@ export class GraphControls {
 
   /** Builds and swaps in the panel for `graph` and applies the saved state; no `onVisibleChange`, no `onSave`. */
   public restore(state: GraphViewState, graph: DrawnGraph): void {
-    const elements = this.deps.build(folderGroupsOf(graph.infos), tagsOf(graph.infos));
+    const elements = this.deps.build(folderGroupsOf(graph.infos), tagsOf(graph.infos), graph);
     const restored = restoredFilters(state, graph);
     const mounted: ControlsMounted = { graph, elements };
     const previous = this.mounted?.elements ?? null;

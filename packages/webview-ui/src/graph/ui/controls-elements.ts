@@ -6,6 +6,7 @@ import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/con
 import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
+import type { DrawnGraph } from '../common/graph-page.type.ts';
 import {
   CONTROLS_ID,
   DEPTH_HINT,
@@ -28,6 +29,7 @@ import {
   groupLabelOf,
   showLabelOf
 } from '../utils/controls-text.util.ts';
+import { labelIn } from '../utils/package-label.util.ts';
 
 /** A Focus toggle: the action table's focus icon, unpressed until `renderControls` reads the focus; `label` names it for good. */
 const focusToggle = (label: string, title: string): HTMLButtonElement => {
@@ -38,12 +40,12 @@ const focusToggle = (label: string, title: string): HTMLButtonElement => {
   return focus;
 };
 
-/** Check, name and focus cells; the name button's `title` keeps the full name when CSS cuts it. */
-const packageRow = (pkg: GraphPackage): ControlsRow => {
+/** Check, name and focus cells, all reading `label`; the name button's `title` keeps the whole label when CSS cuts it. */
+const packageRow = (pkg: GraphPackage, label: string): ControlsRow => {
   const { name } = pkg;
-  const check = listCheck(showLabelOf(name));
-  const pick = listButton('controls-name', name);
-  const focus = focusToggle(focusLabelOf(name), FOCUS_PACKAGE_TITLE);
+  const check = listCheck(showLabelOf(label));
+  const pick = listButton('controls-name', label);
+  const focus = focusToggle(focusLabelOf(label), FOCUS_PACKAGE_TITLE);
   const cells = [gridCell(check), gridCell(pick), gridCell(focus)];
   const line = gridLine('controls-row', cells);
   const row: ControlsRow = { name, line, check, pick, focus };
@@ -56,8 +58,9 @@ const packageRow = (pkg: GraphPackage): ControlsRow => {
  * Expand or Collapse button and one with the Focus button. The title repeats the checkbox's name, so it is hidden from
  * the accessibility tree and the row is named once. `renderControls` sets the toggle's chevron and label, the Focus `aria-pressed` and title, and both `hidden`.
  */
-const folderGroup = (group: FolderGroup): ControlsGroup => {
+const folderGroup = (group: FolderGroup, labels: ReadonlyMap<string, string>): ControlsGroup => {
   const { folder, packages } = group;
+  const rowOf = (pkg: GraphPackage): ControlsRow => packageRow(pkg, labelIn(labels, pkg.name));
   const title = folderTitleOf(folder);
   const label = groupLabelOf(title, packages.length);
   const check = listCheck(label);
@@ -67,7 +70,7 @@ const folderGroup = (group: FolderGroup): ControlsGroup => {
   const focus = focusToggle(folderFocusLabelOf(title), FOCUS_FOLDER_LABEL);
   const cells = [gridCell(check, text), gridCell(toggle), gridCell(focus)];
   const line = gridLine('controls-header', cells);
-  const rows = packages.map(packageRow);
+  const rows = packages.map(rowOf);
   const controlsGroup: ControlsGroup = { folder, line, check, toggle, focus, rows };
 
   toggle.hidden = true;
@@ -139,9 +142,10 @@ const packageGrid = (groups: ControlsGroup[]): HTMLElement => {
 /**
  * The controls panel `aside#graph-controls`, unwired, in three titled sections: Search (the search field), View (depth, then
  * Group by folder) and Packages (the tag fieldset only when tags exist, Show all, the count line and the package grid), in that
- * DOM order. Groups and rows keep the order given.
+ * DOM order. Groups and rows keep the order given; each row reads its package's label in `graph`.
  */
-export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsElements => {
+export const buildControls = (groups: FolderGroup[], tags: string[], graph: DrawnGraph): ControlsElements => {
+  const groupOf = (group: FolderGroup): ControlsGroup => folderGroup(group, graph.labels);
   const search = searchInput();
   const depth = depthInput();
   const depthField = hintedField(DEPTH_LABEL, depth, DEPTH_HINT, DEPTH_HINT_ID);
@@ -151,7 +155,7 @@ export const buildControls = (groups: FolderGroup[], tags: string[]): ControlsEl
   const showAll = showAllButton();
   const total = groups.reduce(addSize, 0);
   const count = countLine(total);
-  const controlsGroups = groups.map(folderGroup);
+  const controlsGroups = groups.map(groupOf);
   const list = packageGrid(controlsGroups);
   const searchSection = controlsSection(SEARCH_SECTION_TITLE, field(SEARCH_LABEL, search));
   const viewSection = controlsSection(VIEW_SECTION_TITLE, depthField, groupingField(grouping));

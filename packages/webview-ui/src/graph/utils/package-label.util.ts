@@ -13,3 +13,6 @@ export const labelsOf = (infos: GraphPackage[], scopeShown: boolean): ReadonlyMa
 
   return labels;
 };
+
+/** The label `labels` gives the package `name`; a name it lacks reads as itself. */
+export const labelIn = (labels: ReadonlyMap<string, string>, name: string): string => labels.get(name) ?? name;

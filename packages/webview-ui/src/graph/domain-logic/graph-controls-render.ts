@@ -3,11 +3,21 @@ import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
 import type { ControlsView } from '../common/graph-controls.type.ts';
+import type { DrawnGraph } from '../common/graph-page.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import { focusNameOf, groupStateOf, isFiltered, isGroupLocked, rowViewOf } from '../utils/controls-rules.util.ts';
-import { controlsLabelOf, countTextOf, folderTitleOf, folderToggleLabelOf, showAllTextOf } from '../utils/controls-text.util.ts';
+import {
+  controlsLabelOf,
+  countTextOf,
+  focusLabelOf,
+  folderTitleOf,
+  folderToggleLabelOf,
+  showAllTextOf,
+  showLabelOf
+} from '../utils/controls-text.util.ts';
 import { focusFolderOf } from '../utils/folder-rules.util.ts';
+import { labelIn } from '../utils/package-label.util.ts';
 import { matchesSearch } from '../utils/search.util.ts';
 
 const setDisabled = (element: HTMLElement, isDisabled: boolean): void => {
@@ -87,6 +97,21 @@ export const renderControls = (
   toggles.filtersOn.hidden = !isOn;
 
   for (const group of elements.groups) renderGroup(group, view);
+};
+
+const renderRowLabel = (row: ControlsRow, labels: ReadonlyMap<string, string>): void => {
+  const label = labelIn(labels, row.name);
+
+  setButtonText(row.pick, label);
+  row.check.setAttribute('aria-label', showLabelOf(label));
+  row.focus.setAttribute('aria-label', focusLabelOf(label));
+};
+
+/** Rewrites every row's name text, title and its checkbox and Focus names from `graph`'s labels; rows keep their package names. */
+export const renderLabels = (elements: ControlsElements, graph: DrawnGraph): void => {
+  for (const group of elements.groups) {
+    for (const row of group.rows) renderRowLabel(row, graph.labels);
+  }
 };
 
 const rowMatches = (row: ControlsRow, byName: Map<string, GraphPackage>, search: string): boolean => {

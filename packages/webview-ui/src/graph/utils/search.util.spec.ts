@@ -5,6 +5,8 @@ import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 
 const WEB_APP: GraphPackage = { name: 'Web-App', bareName: 'Web-App', path: 'apps/Web', tags: [], taskCount: 0 };
 
+const CLEANED: GraphPackage = { name: '@org/x', bareName: 'x-clean', path: 'packages/x', tags: [], taskCount: 0 };
+
 const CONSTRUCTOR: GraphPackage = { name: 'constructor', bareName: 'constructor', path: 'x', tags: [], taskCount: 0 };
 
 describe('FEATURE: matchesSearch', () => {
@@ -31,6 +33,18 @@ describe('FEATURE: matchesSearch', () => {
       const matches = matchesSearch(CONSTRUCTOR, 'constr');
 
       expect(matches).toBe(true);
+    });
+  });
+
+  describe('GIVEN a package @org/x whose cleaned bare name is x-clean', () => {
+    it.each([
+      ['clean', true],
+      ['@org', true],
+      ['nowhere', false]
+    ])('WHEN the search is %j THEN the match is %s', (search, expected) => {
+      const matches = matchesSearch(CLEANED, search);
+
+      expect(matches).toBe(expected);
     });
   });
 });
