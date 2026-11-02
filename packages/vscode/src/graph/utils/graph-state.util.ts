@@ -56,7 +56,7 @@ export const graphHashOf = (packages: GraphPackage[], edges: GraphEdge[]): strin
 /** The name, its bare name, the path, the tags (deduplicated and sorted) and the listed task count of a node (scripts count only while `scriptsShown`); only name, path and tags are hashed. */
 const packageOf = (node: PackageNode, bareTexts: ReadonlyMap<string, string>, scriptsShown: boolean): GraphPackage => {
   const tags = Array.from(new Set(node.tags)).toSorted(compareText);
-  const taskCount = node.tasks.filter((task) => isListedTask(task, scriptsShown)).length;
+  const taskCount = node.tasks.filter((task): boolean => isListedTask(task, scriptsShown)).length;
   const bareName = bareTexts.get(node.name) ?? node.name;
   const info: GraphPackage = { name: node.name, bareName, path: node.path, tags, taskCount };
 

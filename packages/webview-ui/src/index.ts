@@ -30,6 +30,7 @@ export type {
   GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphRunsMessage,
+  GraphSetViewToggleMessage,
   GraphShowPackageMessage,
   GraphShowRequest,
   GraphShowTasksMessage,
@@ -39,8 +40,7 @@ export type {
   LayoutGrouping,
   ManifestContext,
   ManifestEntry,
-  ManifestField,
-  SetViewToggle
+  ManifestField
 } from './bridge/common/graph-message.type.ts';
 
 export type {

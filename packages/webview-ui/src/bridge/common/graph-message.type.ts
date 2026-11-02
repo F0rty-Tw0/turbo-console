@@ -155,7 +155,7 @@ export type GraphShownUmbrellasMessage = {
 };
 
 /** The page flipping one of the tree's two toggles: scope prefixes on package labels or `package.json` scripts beside turbo tasks. */
-export type SetViewToggle = {
+export type GraphSetViewToggleMessage = {
   readonly type: 'setViewToggle';
   readonly toggle: 'scope' | 'scripts';
   readonly shown: boolean;
@@ -174,4 +174,4 @@ export type GraphWebviewMessage =
   | GraphRunTaskMessage
   | GraphStopTaskMessage
   | GraphShownUmbrellasMessage
-  | SetViewToggle;
+  | GraphSetViewToggleMessage;

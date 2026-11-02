@@ -93,8 +93,11 @@ export const graphListingOf = (model: WorkspaceModel): GraphListing => {
 export const graphTasksOf = (model: WorkspaceModel): GraphTask[] => graphListingOf(model).tasks;
 
 /** The tasks a picker offers: every turbo task, plus the scripts while the tree's scripts toggle shows them. */
-export const pooledTasksOf = (tasks: GraphTask[], scriptsShown: boolean): GraphTask[] =>
-  tasks.filter((task) => task.isTurboTask || scriptsShown);
+export const pooledTasksOf = (tasks: GraphTask[], scriptsShown: boolean): GraphTask[] => {
+  const isPooled = (task: GraphTask): boolean => task.isTurboTask || scriptsShown;
+
+  return tasks.filter(isPooled);
+};
 
 /** Task ids then file ids: every id a run can report in a graph with this listing. */
 export const runIdsOfListing = ({ tasks, atomGroups }: GraphListing): string[] => {

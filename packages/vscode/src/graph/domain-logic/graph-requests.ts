@@ -1,4 +1,4 @@
-import type { GraphPackage, GraphState, GraphWebviewMessage, SetViewToggle } from '@turbo-console/webview-ui';
+import type { GraphPackage, GraphSetViewToggleMessage, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import { routeRun } from './graph-run-route.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
@@ -68,8 +68,8 @@ function shownUmbrellasOf(ids: string[], state: GraphState, root: string, atoms:
 }
 
 /** Always handled: the toggle is global, not a property of the state, and a rejected `set` was already logged by the toggle. */
-async function setViewToggleOf(message: SetViewToggle, toggles: GraphToggles): Promise<boolean> {
-  await toggles[message.toggle].set(message.shown).catch(() => undefined);
+async function setViewToggleOf(message: GraphSetViewToggleMessage, toggles: GraphToggles): Promise<boolean> {
+  await toggles[message.toggle].set(message.shown).catch((): undefined => undefined);
 
   return true;
 }
