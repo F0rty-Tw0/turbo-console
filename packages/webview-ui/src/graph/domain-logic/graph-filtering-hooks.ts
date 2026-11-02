@@ -18,6 +18,7 @@ import type { PackageActions } from '../common/package-actions.type.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { MenuTarget, PackageMenuState } from '../common/widget.type.ts';
 import { focusFolderOf } from '../utils/folder-rules.util.ts';
+import { labelIn } from '../utils/package-label.util.ts';
 import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from '../utils/widget-menu-model.util.ts';
 
 type FolderSource = Pick<WidgetSources, 'scene'>;
@@ -68,7 +69,16 @@ const packageStateOf = (selected: string | null, filters: GraphFilters, deps: Wi
   return packageMenuStateOf(selected, filters, deps.hasTasks(selected));
 };
 
-/** The wired layer and its menus, reading the mode on screen, the folder scene, the selection and the filters when used. */
+/** The package's label in the graph the controls were built for; its name before the first one. */
+const labelFrom = (controls: WidgetFilters, name: string): string => {
+  const { mounted } = controls;
+
+  if (mounted === null) return name;
+
+  return labelIn(mounted.graph.labels, name);
+};
+
+/** The wired layer and its menus, reading the mode on screen, the folder scene, the selection, the filters and the package labels when used. */
 export const widgetsOf = (
   deps: WidgetHostDeps,
   inspection: WidgetInspection,
@@ -101,6 +111,7 @@ export const widgetsOf = (
     canActOnPackage,
     menuOf: menuOfFrom(deps, folders, controls, menuActions),
     selection: (): MenuTarget | null => menuTargetOf(inspection.current()),
+    labelOf: (name: string): string => labelFrom(controls, name),
     onLocation
   };
 

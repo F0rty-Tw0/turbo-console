@@ -1,7 +1,7 @@
 import type { FolderActions } from './folder-actions.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
 import type { GraphFilters } from './graph-filters.type.ts';
-import type { GraphView } from './graph-page.type.ts';
+import type { DrawnGraph, GraphView } from './graph-page.type.ts';
 import type { Inspection } from './inspection.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { PackageActions, PackageInspectionActions } from './package-actions.type.ts';
@@ -37,6 +37,8 @@ export type GraphWidgetsDeps = {
   /** The mode on screen is the checkbox's mode and the package graph owns the canvas, flat or grouped: a package widget may act. */
   readonly isPackageActive: () => boolean;
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
+  /** The label a package's toolbar and menu name it by, read when they are built; the package name without one. */
+  readonly labelOf: (name: string) => string;
 };
 
 type CanAct = {
@@ -83,9 +85,15 @@ export type WidgetSources = {
 /** The inspection as the widget layer and its menus read and call it. */
 export type WidgetInspection = Pick<WidgetSources, 'current' | 'selected' | 'folderActions'> & PackageInspectionActions;
 
-/** The controls' filters, read when a menu opens and on every widget state read, which takes the focused folder from them. */
+type MountedGraph = { readonly graph: DrawnGraph };
+
+/**
+ * The controls' filters, read when a menu opens and on every widget state read, which takes the focused folder from them;
+ * and the graph the controls were built for, whose labels name a package's toolbar and menu, `null` before the first one.
+ */
 export type WidgetFilters = {
   readonly applied: GraphFilters;
+  readonly mounted: MountedGraph | null;
 };
 
 /** The wired layer, as the folder pass, the render loop, the keep-clear pan and the Group by folder checkbox call it. */
@@ -123,7 +131,7 @@ type MenuHost = {
   readonly isActive: (target: MenuTarget) => boolean;
 };
 
-export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & MenuHost;
+export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & MenuHost & Pick<GraphWidgetsDeps, 'labelOf'>;
 
 /** Where a menu opens from: the "…" rect in container px and its button, `null` while hidden. */
 export type MenuAnchor = {
@@ -131,11 +139,12 @@ export type MenuAnchor = {
   readonly opener: HTMLButtonElement | null;
 };
 
-/** What the package toolbar needs: the layer it leads, the container that takes focus it loses, the builder and the five clicks, already guarded. */
+/** What the package toolbar needs: the layer it leads, the container that takes focus it loses, the builder, the label it names the package by and the five clicks, already guarded. */
 export type PackageToolbarDeps = {
   readonly layer: HTMLElement;
   readonly container: HTMLElement;
   readonly views: WidgetViews;
+  readonly labelOf: GraphWidgetsDeps['labelOf'];
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
   readonly onFocus: (name: string) => void;
   readonly onStartTrace: () => void;

@@ -116,4 +116,35 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
       });
     }
   );
+
+  test(
+    'GIVEN scopes hidden and a package picked, its node toolbar and menu are named by the label and follow the scope toggle',
+    { annotation: SCOPE_LABELS },
+    async ({ graphHost, graphList, graphMenus, graphNodeToolbar, graphPage, graphProbe }): Promise<void> => {
+      await test.step('WHEN the graph is laid out with scopes hidden and app is picked', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(scopedNamesState(false));
+        await graphProbe.expectLayoutSettled();
+        await graphList.pick('app');
+      });
+
+      await test.step('THEN the node toolbar is named Package app', async (): Promise<void> =>
+        expect(graphNodeToolbar.toolbarOf('app')).toBeVisible());
+
+      await test.step('AND its "…" opens the menu named Actions for app', async (): Promise<void> => {
+        await graphMenus.openPackageMenu('app');
+        await expect(graphMenus.menu).toHaveAccessibleName('Actions for app');
+        await graphMenus.pressKey('Escape');
+        await graphMenus.expectNoMenu();
+      });
+
+      await test.step('WHEN the same-hash state with scopes shown arrives', async (): Promise<void> =>
+        graphHost.sendState(scopedNamesState(true)));
+
+      await test.step('THEN the node toolbar is named Package @org/app', async (): Promise<void> => {
+        await expect(graphNodeToolbar.toolbarOf('@org/app')).toBeVisible();
+        await expect(graphNodeToolbar.toolbarOf('app')).toHaveCount(0);
+      });
+    }
+  );
 });

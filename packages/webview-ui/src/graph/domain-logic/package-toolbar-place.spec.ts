@@ -14,7 +14,7 @@ const AT_WEB = rectOf(100, 50, 124, 74);
 
 const entryOf = (state: PackageMenuState): ToolbarEntry => {
   const elements = widgetRowViewsMock().views.packageToolbar('web', 'apps');
-  const entry: ToolbarEntry = { name: 'web', folder: 'apps', state, elements, shown: [], preferred: 'focus' };
+  const entry: ToolbarEntry = { name: 'web', label: 'web', folder: 'apps', state, elements, shown: [], preferred: 'focus' };
 
   return entry;
 };
@@ -145,7 +145,15 @@ describe('FEATURE: placeToolbar', () => {
   describe('GIVEN the web toolbar on a flat page and nothing focused', () => {
     it('WHEN it is placed at zoom 1 THEN nothing has focus', () => {
       const elements = widgetRowViewsMock().views.packageToolbar('web', null);
-      const entry: ToolbarEntry = { name: 'web', folder: null, state: WITH_TASKS, elements, shown: [], preferred: 'focus' };
+      const entry: ToolbarEntry = {
+        name: 'web',
+        label: 'web',
+        folder: null,
+        state: WITH_TASKS,
+        elements,
+        shown: [],
+        preferred: 'focus'
+      };
 
       placeToolbar(entry, AT_WEB, 1, container);
 

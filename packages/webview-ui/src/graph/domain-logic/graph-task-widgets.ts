@@ -13,6 +13,9 @@ import { taskMenuOf } from '../utils/task-menu-model.util.ts';
 import { runMessageOf } from '../utils/task-run.util.ts';
 import { shownNodeToolbarOf } from '../utils/widget-geometry.util.ts';
 
+/** A task menu is named by its task id, as the task toolbar's "…" is. */
+const taskIdOf = (id: string): string => id;
+
 /**
  * The selected task's node toolbar over the canvas and its "…" menu: Run and Run without cache for a runnable task, Stop
  * while it runs, and the toolbar hidden while it shows no button. The Run/Stop slot and an item post what the task
@@ -53,6 +56,7 @@ export class GraphTaskWidgets {
       view: deps.view,
       anchors,
       build: deps.views.menu,
+      labelOf: taskIdOf,
       isActive: deps.isActive,
       menuOf: (target: MenuTarget): MenuItemModel[] => this.menuOf(target),
       selection: (): MenuTarget | null => null

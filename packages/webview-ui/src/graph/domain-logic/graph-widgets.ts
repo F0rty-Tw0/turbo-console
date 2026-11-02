@@ -46,6 +46,7 @@ export class GraphWidgets {
       layer: deps.page.widgets,
       container: deps.page.container,
       views: deps.widgetViews,
+      labelOf: deps.labelOf,
       onMenu: (target, opener): void => this.actOnPackage((): void => deps.onMenu(target, opener)),
       onFocus: (name): void => this.actOnPackage((): void => deps.packageActions.focus(name)),
       onStartTrace: (): void => this.actOnPackage((): void => deps.packageActions.startTrace()),

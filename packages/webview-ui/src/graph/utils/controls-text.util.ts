@@ -58,9 +58,9 @@ export const stopLabelOf = (id: string): string => `${STOP_LABEL} ${id}`;
 /** The accessible name of the selected task's node toolbar. */
 export const taskToolbarLabelOf = (id: string): string => `Task ${id}`;
 
-/** The accessible name of the target's "…" and of the menu it opens. */
-export const actionsLabelOf = (target: MenuTarget): string => {
-  if (target.kind === 'package') return packageActionsLabelOf(target.name);
+/** The accessible name of the target's "…" and of the menu it opens; a package is named by `labelOf` its name. */
+export const actionsLabelOf = (target: MenuTarget, labelOf: (name: string) => string): string => {
+  if (target.kind === 'package') return packageActionsLabelOf(labelOf(target.name));
 
   const title = folderTitleOf(target.folder);
 

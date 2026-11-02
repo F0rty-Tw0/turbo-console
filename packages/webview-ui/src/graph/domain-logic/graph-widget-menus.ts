@@ -65,7 +65,7 @@ export class GraphWidgetMenus {
 
     const model = this.deps.menuOf(target);
     const entries = model.filter(isMenuItem);
-    const { menu, items } = this.deps.build(model, actionsLabelOf(target));
+    const { menu, items } = this.deps.build(model, actionsLabelOf(target, this.deps.labelOf));
     const viewport = this.deps.view.viewport();
 
     entries.forEach((entry, index): void => items[index]?.addEventListener('click', (): void => this.activate(entry)));
