@@ -13,6 +13,7 @@ import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphOpener, OpenGraphPanel, RootPickPorts } from '../common/graph-panel.type.ts';
+import { SCRIPTS_HIDDEN_TEXT } from '../common/graph.const.ts';
 import { GRAPH_ATOM_MODEL_STUB } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB } from '../test/stubs/graph-model.stub.ts';
 
@@ -22,6 +23,10 @@ const PLACEHOLDER = 'Choose tasks to show';
 const ROOT_BUILD_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
 const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [ROOT_BUILD_TASK] };
 const SINGLE_PACKAGE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [ROOT_PACKAGE] };
+const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'tool#dev', name: 'dev', isTurboTask: false };
+const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'tool', path: 'packages/tool', tasks: [SCRIPT_TASK] };
+const SCRIPT_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, SCRIPT_PACKAGE] };
+const SCRIPT_ONLY_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [SCRIPT_PACKAGE], edges: [] };
 const TASK_ITEMS = [
   { label: 'build', description: '@org/x', root: '/ws', value: '@org/x#build' },
   { label: 'build', description: 'a', root: '/ws', value: 'a#build' },
@@ -40,7 +45,7 @@ type Fixture = {
   readonly store: RootStore;
 };
 
-const portsOf = (pickMany: Mock<RootPickPorts['pickMany']>): RootPickPorts => {
+const portsOf = (pickMany: Mock<RootPickPorts['pickMany']>, scriptsShown = false): RootPickPorts => {
   const ports: RootPickPorts = {
     activeFile: () => '/ws/package.json',
     rootOf: () => '/ws',
@@ -49,7 +54,8 @@ const portsOf = (pickMany: Mock<RootPickPorts['pickMany']>): RootPickPorts => {
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
-    log: vi.fn()
+    log: vi.fn(),
+    scriptsShown: () => scriptsShown
   };
 
   return ports;
@@ -91,6 +97,12 @@ const runWith = async (arg: unknown, fixture: Fixture, roots: Roots = fixture.st
   const { ports, panels } = fixture;
 
   await showTaskGraph(arg, { roots, ports, panels });
+};
+
+const pickedValuesOf = (fixture: Fixture): string[] => {
+  const items = fixture.pickMany.mock.calls[0]?.[0] ?? [];
+
+  return items.map((item) => item.value);
 };
 
 const throwingOpen = (): never => {
@@ -149,6 +161,44 @@ describe('FEATURE: the Show Task Graph command', () => {
 
       await runWith(undefined, fixture);
 
+      expect(fixture.open).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a script task in the model', () => {
+    beforeEach(() => {
+      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_MODEL });
+    });
+
+    it('WHEN scripts are hidden and the picker is shown THEN no script item is offered', async () => {
+      await runWith(undefined, fixture);
+
+      expect(pickedValuesOf(fixture)).not.toContain('tool#dev');
+    });
+
+    it('WHEN scripts are shown and the picker is shown THEN the script item is offered', async () => {
+      const shown: Fixture = { ...fixture, ports: portsOf(fixture.pickMany, true) };
+
+      await runWith(undefined, shown);
+
+      expect(pickedValuesOf(shown)).toContain('tool#dev');
+    });
+
+    it('WHEN a task row of the script runs Show Task Graph THEN the row opens that task whatever the toggle', async () => {
+      await runWith({ ...TASK_ROW, root: '/ws', key: 'tool#dev', packageName: 'tool' }, fixture);
+
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showTasks', taskIds: ['tool#dev'] });
+    });
+  });
+
+  describe('GIVEN scripts hidden and a root of scripts only', () => {
+    it('WHEN the picker runs THEN it tells the user scripts are hidden and opens nothing', async () => {
+      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SCRIPT_ONLY_MODEL });
+
+      await runWith(undefined, fixture);
+
+      expect(fixture.ports.info).toHaveBeenCalledExactlyOnceWith(SCRIPTS_HIDDEN_TEXT);
+      expect(fixture.pickMany).not.toHaveBeenCalled();
       expect(fixture.open).not.toHaveBeenCalled();
     });
   });

@@ -21,6 +21,9 @@ export const TASK_PICK_PLACEHOLDER = 'Choose tasks to show';
 
 export const PICK_TASKS_LABEL = 'Pick tasks…';
 
+export const SCRIPTS_HIDDEN_TEXT =
+  'This root has only package.json scripts, and scripts are hidden. Choose Show Scripts in the Packages view to list them.';
+
 export const GRAPH_OPEN_FAILED_TEXT = 'Could not open the Package Graph. See Output.';
 
 export const GRAPH_TITLE_PREFIX = 'Package Graph — ';

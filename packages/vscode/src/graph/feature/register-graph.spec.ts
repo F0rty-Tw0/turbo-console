@@ -67,7 +67,8 @@ const portsOf = (picked: string | undefined): RootPickPorts => {
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
-    log: vi.fn()
+    log: vi.fn(),
+    scriptsShown: () => false
   };
 
   return ports;
