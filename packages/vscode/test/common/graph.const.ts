@@ -4,6 +4,12 @@ export const GRAPH_COMMAND = 'turboConsole.openPackageGraph';
 /** The workspace package the model adds for the repo root; the fixture manifest does not list it. */
 export const ROOT_PACKAGE_NAME = '//';
 
+/** The root task the `fixture-root-task` workspace adds: a `scripts` entry in the root `package.json` and a `//#rootgen` task in the root `turbo.json`. */
+export const ROOT_TASK_NAME = 'rootgen';
+
+/** The id turbo gives the root task `ROOT_TASK_NAME`. */
+export const ROOT_TASK_ID = `${ROOT_PACKAGE_NAME}#${ROOT_TASK_NAME}`;
+
 /** The tag the fixture manifest gives the hub package; the page receives it with that package. */
 export const HUB_TAG = 'fx:hub';
 

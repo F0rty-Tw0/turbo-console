@@ -18,7 +18,8 @@ const showTasksCountOf = (api: TurboConsoleApi, root: string): number => {
 
 /**
  * L11-9 (spec §2.9): Show All Task Graphs on the single-package root opens a task-mode panel instead of refusing. The
- * harness has no message reader, so a panel for the root is the proof that no info message replaced it.
+ * harness has no message reader, so a panel for the root is the proof that no info message replaced it. The request holds
+ * the pooled tasks: the turbo tasks, plus the scripts while they are shown (hidden here, so the `//#format` script is left out).
  */
 export const taskGraphCase = async (api: TurboConsoleApi, root: string): Promise<void> => {
   await step('L11-9: Show All Task Graphs opens a task-mode panel on the single-package root', async () => {
@@ -30,6 +31,8 @@ export const taskGraphCase = async (api: TurboConsoleApi, root: string): Promise
     const state = lastGraphState(api, root);
     const tasks = state?.tasks ?? [];
     const stateIds = tasks.map((task) => task.id).sort();
+    const pooled = tasks.filter((task) => task.isTurboTask || state?.scriptsShown === true);
+    const pooledIds = pooled.map((task) => task.id).sort();
     const unit = tasks.find((task) => task.id === '//#test:unit');
     const request = postedShowTasks(api, root);
     const shownIds = request?.taskIds.toSorted();
@@ -39,7 +42,7 @@ export const taskGraphCase = async (api: TurboConsoleApi, root: string): Promise
     assert.equal(state?.singlePackage, true);
     assert.equal(state.rootLabel, SINGLE_APP_NAME);
     assert.deepEqual(unit?.dependencies, [ROOT_BUILD_ID]);
-    assert.deepEqual(shownIds, stateIds);
+    assert.deepEqual(shownIds, pooledIds);
     assert.ok(SINGLE_TASK_IDS.every((id) => stateIds.includes(id)));
   });
 };

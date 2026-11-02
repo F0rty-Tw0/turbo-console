@@ -81,7 +81,7 @@ const L11: Launch = {
 
 const L12: Launch = { ...L11, name: 'L12', suite: 'empty-workspace.suite', workspace: 'empty-workspace', settings: NO_SETTINGS };
 
-const L13: Launch = { ...L9, name: 'L13', suite: 'graph.suite' };
+const L13: Launch = { ...L9, name: 'L13', suite: 'graph.suite', workspace: 'fixture-root-task' };
 
 /**
  * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L13 each get a user-data dir

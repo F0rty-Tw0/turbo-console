@@ -84,7 +84,8 @@ export const showAllTaskGraphsCase = async (scene: GraphScene): Promise<void> =>
   await step('L13-11: Show All Task Graphs posts showTasks for every task of the root', async () => {
     const before = showTasksCountOf(api, root);
     const state = lastGraphState(api, root);
-    const expected = state?.tasks.map((task): string => task.id).toSorted() ?? [];
+    const pooled = state?.tasks.filter((task): boolean => task.isTurboTask || state.scriptsShown) ?? [];
+    const expected = pooled.map((task): string => task.id).toSorted();
 
     await vscode.commands.executeCommand(ALL_TASKS_COMMAND);
     await waitFor('showTasks post', () => showTasksCountOf(api, root) > before);
