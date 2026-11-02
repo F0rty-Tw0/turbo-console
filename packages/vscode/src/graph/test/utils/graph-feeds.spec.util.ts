@@ -5,29 +5,25 @@ import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.moc
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { AtomLookup } from '../../../tree/common/atom-view.type.ts';
 import { SHARED_ATOMS_STUB } from '../../../tree/test/stubs/shared-atoms.stub.ts';
-import type { GraphFeeds } from '../../common/graph.type.ts';
+import type { GraphFeeds, GraphToggles } from '../../common/graph.type.ts';
 import type { AtomsFake } from '../common/graph.type.ts';
 
 /** Two fresh toggles, both hidden: the stored default of scope and scripts. */
-export const hiddenTogglesOf = (): GraphFeeds['toggles'] => {
-  const toggles: GraphFeeds['toggles'] = { scope: scriptsToggleMock(), scripts: scriptsToggleMock() };
+export const hiddenTogglesOf = (): GraphToggles => {
+  const toggles: GraphToggles = { scope: scriptsToggleMock(), scripts: scriptsToggleMock() };
 
   return toggles;
 };
 
 /** Two fresh toggles, scope shown and scripts hidden. */
-export const scopeShownTogglesOf = (): GraphFeeds['toggles'] => {
-  const toggles: GraphFeeds['toggles'] = { scope: scriptsToggleMock(true), scripts: scriptsToggleMock() };
+export const scopeShownTogglesOf = (): GraphToggles => {
+  const toggles: GraphToggles = { scope: scriptsToggleMock(true), scripts: scriptsToggleMock() };
 
   return toggles;
 };
 
 /** Feeds over `runs`, atoms that never load and hidden toggles, unless a spec passes its own. */
-export const feedsOf = (
-  runs: Runs,
-  atoms: SharedAtoms = SHARED_ATOMS_STUB,
-  toggles: GraphFeeds['toggles'] = hiddenTogglesOf()
-): GraphFeeds => {
+export const feedsOf = (runs: Runs, atoms: SharedAtoms = SHARED_ATOMS_STUB, toggles: GraphToggles = hiddenTogglesOf()): GraphFeeds => {
   const feeds: GraphFeeds = { runs, atoms, toggles };
 
   return feeds;

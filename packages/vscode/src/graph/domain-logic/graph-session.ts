@@ -36,15 +36,13 @@ export class GraphSession {
   private readonly explains = new LatestWins<ExplainJob>();
   private readonly images: GraphImageSaver;
   private readonly feed: GraphTaskFeed;
-  private readonly atoms: GraphFeeds['atoms'];
-  private readonly toggles: GraphFeeds['toggles'];
+  private readonly feeds: GraphFeeds;
 
   public constructor(root: string, roots: Roots, ports: GraphPorts, feeds: GraphFeeds) {
     this.root = root;
     this.roots = roots;
     this.ports = ports;
-    this.atoms = feeds.atoms;
-    this.toggles = feeds.toggles;
+    this.feeds = feeds;
     this.images = new GraphImageSaver(root, ports);
 
     const gate: TaskFeedGate = {
@@ -132,7 +130,7 @@ export class GraphSession {
     const caches = layoutCachesOf(this.ports, this.root);
     const rootState = this.roots.get(this.root)?.state;
 
-    return graphStateOfRoot(rootState, caches, shownOf(this.toggles));
+    return graphStateOfRoot(rootState, caches, shownOf(this.feeds.toggles));
   }
 
   private rootChanged(change: RootChange): void {
@@ -187,7 +185,8 @@ export class GraphSession {
 
   private requestContext(): RequestContext {
     const coordinator = this.roots.get(this.root)?.coordinator;
-    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, atoms: this.atoms };
+    const { atoms } = this.feeds;
+    const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, atoms };
 
     return context;
   }

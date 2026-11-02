@@ -10,7 +10,7 @@ import { bareTextsOf } from '../../tree/utils/model-view.util.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
 import { isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
-import type { GraphFeeds, GraphShown } from '../common/graph.type.ts';
+import type { GraphShown, GraphToggles } from '../common/graph.type.ts';
 
 const FNV_OFFSET = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
@@ -89,7 +89,7 @@ export const rootLabelOf = (model: WorkspaceModel): string | null => {
 };
 
 /** The tree's two toggles as they are now, read at every state build. */
-export const shownOf = (toggles: GraphFeeds['toggles']): GraphShown => {
+export const shownOf = (toggles: GraphToggles): GraphShown => {
   const shown: GraphShown = { scopeShown: toggles.scope.isShown(), scriptsShown: toggles.scripts.isShown() };
 
   return shown;

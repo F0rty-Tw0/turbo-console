@@ -6,7 +6,7 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
-import type { GraphFeeds, GraphPorts } from '../common/graph.type.ts';
+import type { GraphPorts, GraphToggles } from '../common/graph.type.ts';
 import { GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
 import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { portsWith, postedStatesOf } from '../test/utils/graph-session.spec.util.ts';
@@ -14,7 +14,7 @@ import { portsWith, postedStatesOf } from '../test/utils/graph-session.spec.util
 type ShownSession = {
   readonly session: GraphSession;
   readonly ports: GraphPorts;
-  readonly toggles: GraphFeeds['toggles'];
+  readonly toggles: GraphToggles;
 };
 
 const shownSession = (): ShownSession => {

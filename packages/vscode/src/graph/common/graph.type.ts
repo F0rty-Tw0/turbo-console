@@ -92,7 +92,7 @@ export type GraphShown = {
 };
 
 /** The tree's two toggles, which the graph reads and never sets. */
-type GraphToggles = {
+export type GraphToggles = {
   readonly scope: ScriptsToggleApi;
   readonly scripts: ScriptsToggleApi;
 };
