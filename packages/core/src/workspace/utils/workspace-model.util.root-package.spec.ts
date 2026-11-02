@@ -137,6 +137,17 @@ describe('FEATURE: workspace model root package', () => {
     });
   });
 
+  describe('GIVEN a single-package source whose // task is tagged with two groups', () => {
+    it('WHEN a warning is added after the build THEN the two-group warning is listed once', () => {
+      const graph = packageGraph([CONFLICT_ROOT], [], CONFLICT_ROOT);
+      const model = buildWorkspaceModel(graph, [ROOT_CONFIG], SINGLE_SOURCE);
+
+      const warned = withWarning(model, graph, [ROOT_CONFIG], 'cache: x');
+
+      expect(warned.warnings).toStrictEqual(['//#fmt: tagged with groups a, b; using a', 'cache: x']);
+    });
+  });
+
   describe('GIVEN a single-package source whose config describes the bare lint', () => {
     const graph = packageGraph([ROOT], [], ROOT);
     const base = configOf({ lint: 'defined' });
