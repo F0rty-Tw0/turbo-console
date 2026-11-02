@@ -21,6 +21,17 @@ const factsOf = (turboTasks: ReadonlyMap<string, TurboTaskFacts> | null, name: s
   return turboTasks.get(name);
 };
 
+/** A task depends on itself only through a phantom cycle, so the copy is made only then. */
+const withoutSelf = (ids: string[], self: string): string[] => {
+  const hasSelf = ids.includes(self);
+
+  if (!hasSelf) return ids;
+
+  const isOther = (id: string): boolean => id !== self;
+
+  return ids.filter(isOther);
+};
+
 /** `dependencies` are already resolved (rule 4). `toSorted` only: `task.tags` is the parsed graph's own array. */
 const toTaskNode = (
   task: ClassifiedTask,
@@ -53,9 +64,8 @@ export const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): 
   const toNode = (task: ClassifiedTask): TaskNode => {
     const description = descriptionIn(task, path, context, isMonorepoRoot);
     const facts = factsOf(turboTasks, task.name);
-    const isOther = (id: string): boolean => id !== task.id;
     const through = context.dependenciesThrough(task.rawDependencies);
-    const dependencies = through.filter(isOther);
+    const dependencies = withoutSelf(through, task.id);
 
     return toTaskNode(task, dependencies, description, facts);
   };
