@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildControls } from './controls-elements.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
-import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
+import { FOCUS_PACKAGE_TITLE, SCOPE_TOGGLE_LABEL } from '../common/graph.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { graphIconConstMock } from '../test/mocks/graph-icon-const.mock.ts';
 import { SWAPPED_ACTION_ICONS_STUB as SWAPPED } from '../test/stubs/action-icons.stub.ts';
@@ -105,12 +105,24 @@ describe('FEATURE: buildControls', () => {
       ]);
     });
 
-    it('WHEN built THEN View holds the Focus depth field, then Group by folder', () => {
-      const { panel, depth, grouping } = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
-      const [, depthGroup, groupingLabel] = childrenOf(sectionsOf(panel)[1]);
+    it('WHEN built THEN View holds the Focus depth field, Group by folder, then Show package scopes', () => {
+      const { panel, depth, grouping, scope } = buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
+      const [, ...view] = childrenOf(sectionsOf(panel)[1]);
+      const inputs = [depth, grouping, scope];
+      const holders = inputs.map((input, at) => view[at]?.contains(input));
 
-      expect(depthGroup?.contains(depth)).toBe(true);
-      expect(groupingLabel?.contains(grouping)).toBe(true);
+      expect(holders).toStrictEqual([true, true, true]);
+      expect([view.length, view[2]?.textContent]).toStrictEqual([3, SCOPE_TOGGLE_LABEL]);
+    });
+
+    it.each([
+      [true, true],
+      [false, false]
+    ])('WHEN built with scopeShown %s THEN the Show package scopes box is checked %s', (scopeShown, isChecked) => {
+      const graph: DrawnGraph = { ...BOARDS_DRAWN, scopeShown };
+      const { scope } = buildControls(BOARDS_GROUPS_STUB, ['app'], graph);
+
+      expect(scope.checked).toBe(isChecked);
     });
 
     it('WHEN built THEN Packages holds the tag fieldset, Show all, the count line and the grid, in that order', () => {

@@ -259,6 +259,8 @@ export const DEPTH_HINT_ID = 'graph-depth-hint';
 
 export const GROUP_BY_FOLDER_LABEL = 'Group by folder';
 
+export const SCOPE_TOGGLE_LABEL = 'Show package scopes';
+
 export const TAGS_LABEL = 'Tags';
 
 export const SHOW_ALL_LABEL = 'Show all';

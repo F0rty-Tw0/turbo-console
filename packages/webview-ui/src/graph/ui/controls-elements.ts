@@ -1,4 +1,13 @@
-import { checkbox, controlsSection, depthInput, field, groupingField, hintedField, searchInput } from './controls-fields.ts';
+import {
+  checkbox,
+  controlsSection,
+  depthInput,
+  field,
+  groupingField,
+  hintedField,
+  scopeField,
+  searchInput
+} from './controls-fields.ts';
 import { gridCell, gridLine, listButton, listCheck, listIconButton } from './controls-list-parts.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
@@ -140,8 +149,8 @@ const packageGrid = (groups: ControlsGroup[]): HTMLElement => {
 };
 
 /**
- * The controls panel `aside#graph-controls`, unwired, in three titled sections: Search (the search field), View (depth, then
- * Group by folder) and Packages (the tag fieldset only when tags exist, Show all, the count line and the package grid), in that
+ * The controls panel `aside#graph-controls`, unwired, in three titled sections: Search (the search field), View (depth, Group by
+ * folder, then Show package scopes) and Packages (the tag fieldset only when tags exist, Show all, the count line and the package grid), in that
  * DOM order. Groups and rows keep the order given; each row reads its package's label in `graph`.
  */
 export const buildControls = (groups: FolderGroup[], tags: string[], graph: DrawnGraph): ControlsElements => {
@@ -150,6 +159,7 @@ export const buildControls = (groups: FolderGroup[], tags: string[], graph: Draw
   const depth = depthInput();
   const depthField = hintedField(DEPTH_LABEL, depth, DEPTH_HINT, DEPTH_HINT_ID);
   const grouping = checkbox('controls-check');
+  const scope = checkbox('controls-check');
   const tagEntries = tags.map(tagEntry);
   const tagBoxes = new Map(tagEntries);
   const showAll = showAllButton();
@@ -158,9 +168,11 @@ export const buildControls = (groups: FolderGroup[], tags: string[], graph: Draw
   const controlsGroups = groups.map(groupOf);
   const list = packageGrid(controlsGroups);
   const searchSection = controlsSection(SEARCH_SECTION_TITLE, field(SEARCH_LABEL, search));
-  const viewSection = controlsSection(VIEW_SECTION_TITLE, depthField, groupingField(grouping));
+  const viewSection = controlsSection(VIEW_SECTION_TITLE, depthField, groupingField(grouping), scopeField(scope));
   const packagesSection = controlsSection(PACKAGES_SECTION_TITLE);
   const panel = textElement('aside', 'graph-controls', '');
+
+  scope.checked = graph.scopeShown;
 
   if (tagBoxes.size > 0) packagesSection.append(tagFieldset(tagBoxes));
 
@@ -168,7 +180,18 @@ export const buildControls = (groups: FolderGroup[], tags: string[], graph: Draw
   panel.id = CONTROLS_ID;
   panel.append(searchSection, viewSection, packagesSection);
 
-  const controls: ControlsElements = { panel, search, depth, grouping, tags: tagBoxes, showAll, count, list, groups: controlsGroups };
+  const controls: ControlsElements = {
+    panel,
+    search,
+    depth,
+    grouping,
+    scope,
+    tags: tagBoxes,
+    showAll,
+    count,
+    list,
+    groups: controlsGroups
+  };
 
   return controls;
 };

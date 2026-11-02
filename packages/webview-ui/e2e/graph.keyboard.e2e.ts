@@ -26,6 +26,7 @@ const NO_SELECTION_STOPS: FocusStep[] = tabStopsOf([
   'Search packages',
   'Focus depth',
   'Group by folder',
+  'Show package scopes',
   'packages (7)',
   'Resize Controls',
   'Package graph'
@@ -38,6 +39,7 @@ const SELECTION_STOPS: FocusStep[] = tabStopsOf([
   'Search packages',
   'Focus depth',
   'Group by folder',
+  'Show package scopes',
   'packages (7)',
   'Resize Controls',
   'Package graph',
@@ -153,7 +155,7 @@ test.describe('FEATURE: graph keyboard', () => {
   );
 
   test(
-    'GIVEN no selection, Tab walks Packages, Tasks, Controls, Details, Fit, Re-layout, Export image, Legend, the search, depth, Group by folder, the package list (Show all is hidden while nothing is filtered), the Controls sash, then the graph container',
+    'GIVEN no selection, Tab walks Packages, Tasks, Controls, Details, Fit, Re-layout, Export image, Legend, the search, depth, Group by folder, Show package scopes, the package list (Show all is hidden while nothing is filtered), the Controls sash, then the graph container',
     { annotation: AC7 },
     async ({ graphHost, graphKeys, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
@@ -162,7 +164,7 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('THEN the graph is drawn from the cache', async (): Promise<void> => graphProbe.expectLayoutEngine('cache'));
 
-      const walked = await test.step('WHEN Tab is pressed fourteen times', async (): Promise<FocusStep[]> =>
+      const walked = await test.step('WHEN Tab is pressed fifteen times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(NO_SELECTION_STOPS));
 
       await test.step('THEN focus visited every stop in order', (): void => expect(walked).toEqual(NO_SELECTION_STOPS));
@@ -181,7 +183,7 @@ test.describe('FEATURE: graph keyboard', () => {
 
       await test.step('AND the Fit button is focused', async (): Promise<void> => graphPage.focusButton('Fit'));
 
-      const walked = await test.step('WHEN Tab is pressed twenty-two times', async (): Promise<FocusStep[]> =>
+      const walked = await test.step('WHEN Tab is pressed twenty-three times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(SELECTION_STOPS));
 
       await test.step('THEN focus visited every stop in order', (): void => expect(walked).toEqual(SELECTION_STOPS));
@@ -189,14 +191,14 @@ test.describe('FEATURE: graph keyboard', () => {
   );
 
   test(
-    'GIVEN tagged packages and Group by folder reached by Tab, Tab walks the app, lib and ui tags, then the package list, as Show all is hidden while nothing is filtered',
+    'GIVEN tagged packages and Show package scopes reached by Tab, Tab walks the app, lib and ui tags, then the package list, as Show all is hidden while nothing is filtered',
     { annotation: AC1 },
     async ({ graphHost, graphKeys, graphPage }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the controls graph is sent', async (): Promise<void> => graphHost.sendState(CONTROLS_CACHED_STUB));
 
-      await test.step('AND Group by folder is reached by Tab', async (): Promise<void> => graphKeys.tabTo('Group by folder'));
+      await test.step('AND Show package scopes is reached by Tab', async (): Promise<void> => graphKeys.tabTo('Show package scopes'));
 
       await test.step('WHEN Tab is pressed', async (): Promise<void> => graphPage.pressKey('Tab'));
 

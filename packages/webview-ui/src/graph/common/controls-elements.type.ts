@@ -27,6 +27,8 @@ export type ControlsElements = {
   readonly depth: HTMLInputElement;
   /** The Group by folder checkbox, unchecked until `restore` or a click. */
   readonly grouping: HTMLInputElement;
+  /** The Show package scopes checkbox, set from `DrawnGraph.scopeShown` as a property so it fires no `input`. */
+  readonly scope: HTMLInputElement;
   /** One checkbox per tag; empty when no package has tags, and then the panel has no tag fieldset. */
   readonly tags: Map<string, HTMLInputElement>;
   /** Hidden while nothing is filtered, else reads `Show all (n hidden)`. */

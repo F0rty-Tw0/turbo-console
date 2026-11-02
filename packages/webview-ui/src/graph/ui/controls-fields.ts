@@ -1,5 +1,5 @@
 import { textElement } from '../../shared/ui/text-element.ts';
-import { DEFAULT_DEPTH, GROUP_BY_FOLDER_LABEL, MAX_DEPTH, MIN_DEPTH } from '../common/graph.const.ts';
+import { DEFAULT_DEPTH, GROUP_BY_FOLDER_LABEL, MAX_DEPTH, MIN_DEPTH, SCOPE_TOGGLE_LABEL } from '../common/graph.const.ts';
 
 export const checkbox = (className: string): HTMLInputElement => {
   const check = document.createElement('input');
@@ -58,14 +58,19 @@ export const depthInput = (): HTMLInputElement => {
   return depth;
 };
 
-/** The Group by folder checkbox before its text; the wrapping `<label>` names the input. */
-export const groupingField = (input: HTMLInputElement): HTMLElement => {
-  const label = textElement('label', 'controls-grouping', GROUP_BY_FOLDER_LABEL);
+const checkField = (text: string, input: HTMLInputElement): HTMLElement => {
+  const label = textElement('label', 'controls-grouping', text);
 
   label.prepend(input);
 
   return label;
 };
+
+/** The Group by folder checkbox before its text; the wrapping `<label>` names the input. */
+export const groupingField = (input: HTMLInputElement): HTMLElement => checkField(GROUP_BY_FOLDER_LABEL, input);
+
+/** The Show package scopes checkbox before its text; the wrapping `<label>` names the input. */
+export const scopeField = (input: HTMLInputElement): HTMLElement => checkField(SCOPE_TOGGLE_LABEL, input);
 
 /** One titled part of the panel: `section.controls-section` headed by an `h3`, then `children`. */
 export const controlsSection = (title: string, ...children: HTMLElement[]): HTMLElement => {
