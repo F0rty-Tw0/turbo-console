@@ -72,7 +72,7 @@ export type PackageNode = {
   readonly tasks: TaskNode[];
 };
 
-/** The visible, deduped, sorted dependencies of a task from its raw ones, with phantoms passed through; see `dependencyResolverOf`. */
+/** The visible, sorted dependencies of a task from its raw ones, with phantoms passed through and deduped; see `dependencyResolverOf`. */
 export type DependencyResolver = (raw: string[]) => string[];
 
 /** What every package node reads besides its own package. */

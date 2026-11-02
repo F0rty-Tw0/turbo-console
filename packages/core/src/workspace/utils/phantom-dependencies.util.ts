@@ -18,10 +18,8 @@ const lowestOf = (low: number, walk: Walk): number => Math.min(low, walk.low);
 
 const idsOf = (walk: Walk): string[] => walk.ids;
 
-/** `ids` cut to `visibleIds`, sorted, with each repeat dropped: sorted, a repeat is the id just before it. */
-const visibleOf = (ids: string[], visibleIds: ReadonlySet<string>): string[] => {
-  const isVisible = (id: string): boolean => visibleIds.has(id);
-  const sorted = ids.filter(isVisible).toSorted();
+/** Sorted `ids` with each repeat dropped: sorted, a repeat is the id just before it. */
+const uniqueOf = (sorted: string[]): string[] => {
   const isFirst = (id: string, index: number): boolean => id !== sorted[index - 1];
 
   return sorted.filter(isFirst);
@@ -29,15 +27,21 @@ const visibleOf = (ids: string[], visibleIds: ReadonlySet<string>): string[] => 
 
 /**
  * One resolver per model. Its result is `raw` with each phantom id replaced by that phantom's dependencies, recursively,
- * then cut to `visibleIds`, deduped and sorted. Turbo still orders through a phantom, so its edges pass to the tasks
- * that depend on it. A phantom is walked once (Tarjan's SCC): `live` ranks each phantom entered and not yet settled. One
- * that ran back into a live phantom ranked before it (a cycle) waits on `pending`; a repeat visit adds nothing, its ids
- * already flowed up. The head of the cycle has seen all of it: its result is kept for every phantom that waited on it.
+ * then cut to `visibleIds` and sorted. Turbo still orders through a phantom, so its edges pass to the tasks that depend
+ * on it. A phantom is walked once (Tarjan's SCC): `live` ranks each phantom entered and not yet settled. One that ran
+ * back into a live phantom ranked before it (a cycle) waits on `pending`; a repeat visit adds nothing, its ids already
+ * flowed up. The head of the cycle has seen all of it: its result is kept for every phantom that waited on it.
+ * Ids that came through a phantom are deduped; a task with no phantom keeps turbo's own edges, which hold no repeats.
+ * A phantom is never visible, so only a task with a hidden id is checked for phantoms.
  */
 export const dependencyResolverOf = (phantoms: ReadonlyMap<string, string[]>, visibleIds: ReadonlySet<string>): DependencyResolver => {
   const resolved = new Map<string, string[]>();
   const live = new Map<string, number>();
   const pending: string[] = [];
+  const isVisible = (id: string): boolean => visibleIds.has(id);
+  const isPhantom = (id: string): boolean => phantoms.has(id);
+  const visibleOf = (ids: string[]): string[] => ids.filter(isVisible).toSorted();
+  const passedOf = (ids: string[]): string[] => uniqueOf(visibleOf(ids));
 
   const settle = (from: number, ids: string[]): void => {
     const members = pending.splice(from);
@@ -67,7 +71,7 @@ export const dependencyResolverOf = (phantoms: ReadonlyMap<string, string[]>, vi
     live.set(id, rank);
 
     const walks = through.map(walkOf);
-    const ids = visibleOf(walks.flatMap(idsOf), visibleIds);
+    const ids = passedOf(walks.flatMap(idsOf));
     const low = walks.reduce(lowestOf, NO_LOOP);
     const isHead = low >= rank;
 
@@ -83,11 +87,16 @@ export const dependencyResolverOf = (phantoms: ReadonlyMap<string, string[]>, vi
   };
 
   const resolve: DependencyResolver = (raw) => {
-    const hasPhantom = raw.some((id) => phantoms.has(id));
+    const visible = raw.filter(isVisible);
+    const isAllVisible = visible.length === raw.length;
 
-    if (!hasPhantom) return visibleOf(raw, visibleIds);
+    if (isAllVisible) return visible.toSorted();
 
-    return visibleOf(raw.map(walkOf).flatMap(idsOf), visibleIds);
+    const hasPhantom = raw.some(isPhantom);
+
+    if (!hasPhantom) return visible.toSorted();
+
+    return passedOf(raw.map(walkOf).flatMap(idsOf));
   };
 
   return resolve;

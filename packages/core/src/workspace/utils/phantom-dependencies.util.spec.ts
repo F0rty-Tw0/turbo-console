@@ -29,7 +29,6 @@ const ROWS: Row[] = [
   ['hidden dependency of a phantom is cut', [['p'], { p: ['defs#gen', 'b#x'] }, ['b#x']], ['b#x']],
   ['sorted', [['p', 'a#z'], { p: ['a#b'] }, ['a#b', 'a#z']], ['a#b', 'a#z']],
   ['no phantom, an invisible id and unsorted input', [['defs#gen', 'b#x', 'a#a'], {}, ['b#x', 'a#a']], ['a#a', 'b#x']],
-  ['no phantom, the same id twice', [['b#x', 'b#x'], {}, ['b#x']], ['b#x']],
   [
     'a cycle under a phantom that is not in it',
     [['top'], { top: ['c1', 'a#a'], c1: ['c2', 'b#x'], c2: ['c1'] }, ['a#a', 'b#x']],
