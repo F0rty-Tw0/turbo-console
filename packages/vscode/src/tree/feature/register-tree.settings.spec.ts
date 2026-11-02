@@ -9,7 +9,7 @@ import type { Output } from '../../shared/common/output.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { IconThemeProbe } from '../common/icon-theme.type.ts';
-import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
+import type { TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
@@ -78,8 +78,7 @@ describe('FEATURE: registerTree settings', () => {
   beforeEach(() => {
     subscriptions = [];
     iconTheme = iconThemeProbeMock();
-    const workspaceState: ScopeStore = { get: (): unknown => undefined, update: async (): Promise<void> => Promise.resolve() };
-    const context: TreeContext = { subscriptions, workspaceState, scripts: scriptsToggleMock(), iconTheme };
+    const context: TreeContext = { subscriptions, scope: scriptsToggleMock(), scripts: scriptsToggleMock(), iconTheme };
     const session: Session = {
       store: new RootStore(),
       setWorkspaceFolders: vi.fn(async () => Promise.resolve([])),

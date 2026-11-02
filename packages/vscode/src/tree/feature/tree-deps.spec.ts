@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import type * as vscode from 'vscode';
 
-import { treeDepsOf } from './tree-deps.ts';
+import { contextOf, treeDepsOf } from './tree-deps.ts';
 import type { Timings } from '../../shared/common/api.type.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
+import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { TIMINGS_STUB } from '../test/stubs/timings.stub.ts';
 
@@ -74,6 +76,22 @@ describe('FEATURE: tree provider deps', () => {
       const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
 
       await expect(deps.setSinglePackage(true)).rejects.toBe(error);
+    });
+  });
+
+  describe('GIVEN an extension context, the scope and scripts toggles and an icon theme probe', () => {
+    it('WHEN the tree context is built THEN it carries the subscriptions, both toggles and the probe', () => {
+      const subscriptions: vscode.Disposable[] = [];
+      const scope = scriptsToggleMock();
+      const scripts = scriptsToggleMock();
+      const iconTheme = iconThemeProbeMock();
+
+      const treeContext = contextOf({ subscriptions }, { scope, scripts }, iconTheme);
+
+      expect(treeContext.subscriptions).toBe(subscriptions);
+      expect(treeContext.scope).toBe(scope);
+      expect(treeContext.scripts).toBe(scripts);
+      expect(treeContext.iconTheme).toBe(iconTheme);
     });
   });
 });

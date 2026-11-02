@@ -19,13 +19,10 @@ import { registerRunAll } from './run/feature/register-run-all.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
 import type { RunCommandsUi, Timings, TimingsStart, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Output } from './shared/common/output.type.ts';
-import type { ScriptsToggleApi } from './shared/common/scripts-toggle.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
-import { editorScriptsTogglePorts } from './shared/data-access/scripts-toggle-ports.ts';
-import { ScriptsToggle } from './shared/domain-logic/scripts-toggle.ts';
+import { togglesOf } from './shared/domain-logic/toggles.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
-import type { TreeContext } from './tree/common/tree-context.type.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
 import { editorAtomPorts } from './tree/data-access/atom-ports.ts';
 import { editorIconThemePorts } from './tree/data-access/icon-theme-ports.ts';
@@ -41,7 +38,7 @@ import { registerOpenSpec } from './tree/feature/open-spec.ts';
 import { registerPackageActions } from './tree/feature/package-actions.ts';
 import { PackagesTreeProvider } from './tree/feature/packages-provider.ts';
 import { currentIcons, currentTreeMode, registerTree } from './tree/feature/register-tree.ts';
-import { treeDepsOf } from './tree/feature/tree-deps.ts';
+import { contextOf, treeDepsOf } from './tree/feature/tree-deps.ts';
 import type { RootWatchers } from './watch/common/watch.type.ts';
 import { watchRoot } from './watch/data-access/root-watchers.ts';
 import { registerWatchers } from './watch/feature/register-watchers.ts';
@@ -89,14 +86,6 @@ const startTimings = (): TimingsStart => {
   return started;
 };
 
-/** What `registerTree` reads of the extension context, with the scripts toggle and the icon theme's folder probe beside it. */
-const contextOf = (context: vscode.ExtensionContext, scripts: ScriptsToggleApi): TreeContext => {
-  const { subscriptions, workspaceState } = context;
-  const treeContext: TreeContext = { subscriptions, workspaceState, scripts, iconTheme: new IconThemeFolders(editorIconThemePorts()) };
-
-  return treeContext;
-};
-
 /** Hands the Packages view to the visibility reader and the ticker; the returned binding stops the ticker following it. */
 const bindViews = (view: VisibleView, visibility: TreeVisibility, ticker: ElapsedTicker): vscode.Disposable => {
   visibility.bind(view);
@@ -135,7 +124,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const output = createOutput();
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output), timings.runs);
-  const scripts = new ScriptsToggle(editorScriptsTogglePorts(context.workspaceState, output));
+  const { scripts, scope } = togglesOf(context.workspaceState, output);
   const atoms = sharedAtomsOf(session.store, editorAtomPorts(session.store, output));
   const treeDeps = treeDepsOf(runSession.runs, timings, scripts, atoms, output.error);
   const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDeps);
@@ -159,10 +148,12 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     ticker: ticker.api()
   };
 
-  context.subscriptions.push(output, tree, session, ticker, scripts);
+  context.subscriptions.push(output, tree, session, ticker, scripts, scope);
 
   if (vscode.workspace.isTrusted) {
-    context.subscriptions.push(bindViews(registerTree(contextOf(context, scripts), session, tree, output), treeVisibility, ticker));
+    const treeContext = contextOf(context, { scripts, scope }, new IconThemeFolders(editorIconThemePorts()));
+
+    context.subscriptions.push(bindViews(registerTree(treeContext, session, tree, output), treeVisibility, ticker));
 
     const watchers = registerWatchers(session, watchRoot);
 

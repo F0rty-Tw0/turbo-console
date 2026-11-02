@@ -1,0 +1,78 @@
+import type { ScriptsToggleApi, ScriptsTogglePorts } from '../common/scripts-toggle.type.ts';
+import { logTextOf } from '../utils/log-text.util.ts';
+
+/**
+ * A yes/no choice stored per window under one key, mirrored to the context key of the same name (spec 1c-b). The constructor
+ * reads the stored choice and sends the context key, so a view first draws with it set. `set` writes one after another, so two clicks
+ * in flight cannot leave the store and the choice on different values. A write that fails midway can: the store keeps the
+ * value while `isShown` and the key keep the old one until the next `set`.
+ */
+export class StoredToggle implements ScriptsToggleApi {
+  private readonly key: string;
+  private readonly ports: ScriptsTogglePorts;
+  private readonly listeners = new Set<() => void>();
+  private shown: boolean;
+  private last: Promise<void> = Promise.resolve();
+
+  public constructor(key: string, ports: ScriptsTogglePorts) {
+    this.key = key;
+    this.ports = ports;
+    this.shown = ports.store.get(key) === true;
+
+    ports.setKey(key, this.shown).then(undefined, (error: unknown) => {
+      ports.log(logTextOf(error));
+    });
+  }
+
+  public isShown(): boolean {
+    return this.shown;
+  }
+
+  public async set(value: boolean): Promise<void> {
+    const run = this.last.then(async () => this.write(value)).catch((error: unknown) => this.logAndRethrow(error));
+
+    this.last = run.catch(() => undefined);
+
+    return run;
+  }
+
+  public onDidChange(listener: () => void): () => void {
+    this.listeners.add(listener);
+
+    return (): void => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  public dispose(): void {
+    this.listeners.clear();
+  }
+
+  /** Stores and sends the key even for an unchanged choice, which mends a write that failed midway; fires only on a change. */
+  private async write(value: boolean): Promise<void> {
+    await this.ports.store.update(this.key, value);
+    await this.ports.setKey(this.key, value);
+
+    const isChange = value !== this.shown;
+
+    this.shown = value;
+
+    if (!isChange) return;
+
+    for (const listener of this.listeners) this.notify(listener);
+  }
+
+  private notify(listener: () => void): void {
+    try {
+      listener();
+    } catch (error: unknown) {
+      this.ports.log(logTextOf(error));
+    }
+  }
+
+  private logAndRethrow(error: unknown): never {
+    this.ports.log(logTextOf(error));
+
+    throw error;
+  }
+}

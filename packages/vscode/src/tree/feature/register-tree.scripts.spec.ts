@@ -12,7 +12,7 @@ import { ScriptsToggle } from '../../shared/domain-logic/scripts-toggle.ts';
 import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
-import type { ScopeStore, TreeContext } from '../common/tree-context.type.ts';
+import type { TreeContext } from '../common/tree-context.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
@@ -84,10 +84,9 @@ describe('FEATURE: registerTree scripts toggle', () => {
 
   const buildProvider = (toggle: TreeContext['scripts']): void => {
     const deps = providerDepsOf(undefined, toggle);
-    const workspaceState: ScopeStore = { get: (): unknown => undefined, update: async (): Promise<void> => Promise.resolve() };
 
     provider = new PackagesTreeProvider(session.store, 'list', ICONS_STATE_STUB, deps);
-    context = { subscriptions: [], workspaceState, scripts: toggle, iconTheme: iconThemeProbeMock() };
+    context = { subscriptions: [], scope: scriptsToggleMock(), scripts: toggle, iconTheme: iconThemeProbeMock() };
   };
 
   beforeEach(() => {
@@ -178,7 +177,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
 
   describe('GIVEN a stored scriptsShown of true', () => {
     it('WHEN the first getChildren runs THEN the context key was sent before it', async () => {
-      const setKey: Mock<(value: boolean) => Promise<void>> = vi.fn(async () => Promise.resolve());
+      const setKey: Mock<(key: string, value: boolean) => Promise<void>> = vi.fn(async () => Promise.resolve());
       const store: ToggleStore = { get: (): unknown => true, update: async (): Promise<void> => Promise.resolve() };
       const toggle = new ScriptsToggle({ store, setKey, log: output.error });
 
@@ -189,7 +188,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
       registerWith();
       await provider.getChildren();
 
-      expect(setKey.mock.calls).toStrictEqual([[true]]);
+      expect(setKey.mock.calls).toStrictEqual([['turboConsole.scriptsShown', true]]);
       expect(setKey.mock.invocationCallOrder[0]).toBeLessThan(children.mock.invocationCallOrder[0] ?? 0);
     });
   });
