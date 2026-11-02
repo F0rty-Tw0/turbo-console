@@ -1,17 +1,41 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { GraphTaskMemory } from './graph-task-memory.ts';
-import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
+import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { TaskModes } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
-import { MORE_TASKS_STATE_STUB, SINGLE_TASK_STATE_STUB, TASK_STATE_STUB, TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
+import {
+  MORE_TASKS_STATE_STUB,
+  ROOT_BUILD_STUB,
+  SINGLE_TASK_STATE_STUB,
+  TASK_STATE_STUB,
+  TASK_VIEW_STUB
+} from '../test/stubs/graph-task.stub.ts';
+import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 
 type MemoryModes = Pick<TaskModes, 'task' | 'saveTask'>;
 
 /** A monorepo state whose only tasks are the workspace root's. */
 const ROOT_TASKS_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage: false };
+
+const APP_BUILD = taskOf('app#build', []);
+
+const APP_DEV: GraphTask = { ...APP_BUILD, id: 'app#dev', name: 'dev', isTurboTask: false };
+
+const LIB_BUILD = taskOf('lib#build', []);
+
+/** `app#build` and `lib#build` are turbo tasks, `app#dev` is a package script; scripts are hidden. */
+const SCRIPTS_HIDDEN_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [APP_BUILD, APP_DEV, LIB_BUILD], scriptsShown: false };
+
+const idsOf = (tasks: GraphTask[]): string[] => tasks.map((task) => task.id);
+
+const savedChoosing = (chosen: string[]): TaskViewState => {
+  const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
+
+  return saved;
+};
 
 type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: LocationFacts];
 
@@ -182,6 +206,57 @@ describe('FEATURE: task mode memory', () => {
       const { ids } = memory.shownSet();
 
       expect(memory.locationFacts(ids.length)).toStrictEqual(facts);
+    });
+  });
+
+  describe('GIVEN a state with a script and scripts hidden', () => {
+    it('WHEN kept THEN tasks() is the pool and listed() the full listing', () => {
+      const memory = new GraphTaskMemory(modesOf(null));
+
+      memory.keep(SCRIPTS_HIDDEN_STATE);
+
+      expect([idsOf(memory.tasks()), idsOf(memory.listed())]).toStrictEqual([
+        ['app#build', 'lib#build'],
+        ['app#build', 'app#dev', 'lib#build']
+      ]);
+    });
+
+    it('WHEN a state of the same hash with scriptsShown true is kept THEN tasks() grows to three', () => {
+      const memory = new GraphTaskMemory(modesOf(null));
+      const shown: GraphReady = { ...SCRIPTS_HIDDEN_STATE, scriptsShown: true };
+
+      memory.keep(SCRIPTS_HIDDEN_STATE);
+      memory.keep(shown);
+
+      expect(idsOf(memory.tasks())).toStrictEqual(['app#build', 'app#dev', 'lib#build']);
+    });
+
+    it('WHEN the hidden script is chosen with app#build THEN nothing is dropped and the script is not drawn', () => {
+      const memory = new GraphTaskMemory(modesOf(savedChoosing(['app#build', 'app#dev'])));
+
+      memory.keep(SCRIPTS_HIDDEN_STATE);
+
+      expect(memory.shownSet()).toMatchObject({ ids: ['app#build'], droppedIds: [] });
+    });
+
+    it('WHEN an id missing from the whole listing is chosen THEN it is dropped', () => {
+      const memory = new GraphTaskMemory(modesOf(savedChoosing(['app#build', 'gone#build'])));
+
+      memory.keep(SCRIPTS_HIDDEN_STATE);
+
+      expect(memory.shownSet()).toMatchObject({ ids: ['app#build'], droppedIds: ['gone#build'] });
+    });
+  });
+
+  describe('GIVEN a single-package root with a turbo task, a script and scripts hidden', () => {
+    it('WHEN only the hidden script is chosen THEN the fallback shows the pool, as if nothing were chosen', () => {
+      const tasks = [ROOT_BUILD_STUB, { ...ROOT_BUILD_STUB, id: '//#dev', name: 'dev', isTurboTask: false }];
+      const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, tasks, scriptsShown: false };
+      const memory = new GraphTaskMemory(modesOf(savedChoosing(['//#dev'])));
+
+      memory.keep(state);
+
+      expect(memory.shownSet().ids).toStrictEqual(['//#build']);
     });
   });
 });

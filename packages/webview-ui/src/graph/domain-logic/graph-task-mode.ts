@@ -120,7 +120,7 @@ export class GraphTaskMode {
 
   /** Chooses the known ones of `taskIds` from either mode; with none known the page stays as it is and says so. */
   public showTasks(taskIds: string[], at: number): void {
-    const { chosen, dropped } = choiceOf(this.memory.tasks(), taskIds);
+    const { chosen, dropped } = choiceOf(this.memory.listed(), taskIds);
 
     if (chosen.length === 0) {
       this.panel.notice(UNKNOWN_TASKS_TEXT);
