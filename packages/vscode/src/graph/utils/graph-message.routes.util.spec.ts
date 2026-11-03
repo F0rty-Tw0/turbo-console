@@ -1,10 +1,11 @@
+import { ROUTE_BENDS_MAX } from '@turbo-console/webview-ui';
 import type { EdgeRoute, GraphWebviewMessage, Position, Routes } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { parseGraphMessage } from './graph-message.util.ts';
+import { droppedGraphText, parseGraphMessage } from './graph-message.util.ts';
 import { POSITIONS_MAX } from '../common/graph.const.ts';
 
-/** `count` bends, each a fresh point. */
+/** `count` references to one bend. */
 const bendsOf = (count: number): Position[] => {
   const bend: Position = { x: 1, y: 1 };
   const bends = Array.from({ length: count }, () => bend);
@@ -25,10 +26,10 @@ const LIMIT_START: Position = { x: 1e7, y: -1e7 };
 const LIMIT_END: Position = { x: -1e7, y: 1e7 };
 const ROUTE: EdgeRoute = { start: POINT, bends: [BEND], end: END };
 const BAD_ROUTE = { ...ROUTE, end: NAN_END };
-const BENDS_65 = { ...ROUTE, bends: bendsOf(65) };
+const BENDS_OVER = { ...ROUTE, bends: bendsOf(ROUTE_BENDS_MAX + 1) };
 const FAR_ROUTE = { ...ROUTE, start: FAR_START };
 const NO_BENDS_ROUTE = { start: POINT, end: END };
-const LIMIT_ROUTE = { start: LIMIT_START, bends: bendsOf(64), end: LIMIT_END };
+const LIMIT_ROUTE = { start: LIMIT_START, bends: bendsOf(ROUTE_BENDS_MAX), end: LIMIT_END };
 
 class Routed {
   public readonly e1 = ROUTE;
@@ -86,7 +87,7 @@ const routesIn = (parsed: GraphWebviewMessage | null): Routes | null => {
 describe('FEATURE: graph positions routes validation', () => {
   describe('GIVEN a positions post whose routes are bad (a2)', () => {
     it.each([
-      ['65 bends on the only route', { e1: BENDS_65 }],
+      ['more than ROUTE_BENDS_MAX bends on the only route', { e1: BENDS_OVER }],
       ['a NaN coordinate', { e1: BAD_ROUTE }],
       ['a coordinate past 1e7', { e1: FAR_ROUTE }],
       ['a route that is a string', { e1: 'nope' }],
@@ -98,7 +99,7 @@ describe('FEATURE: graph positions routes validation', () => {
       ['routes of a class instance', new Routed()],
       ['a string for routes', 'e1'],
       ['5001 route keys, whose values throw if read', routesWith(POSITIONS_MAX + 1, THROWING_ROUTE)]
-    ])('WHEN parsed THEN %s keep the positions and give routes {}', (_label, routes) => {
+    ])('WHEN a post with %s is parsed THEN the positions stay and routes are {}', (_label, routes) => {
       const parsed = parseGraphMessage(postWith(routes));
 
       expect(parsed).toStrictEqual(EXPECTED_DROPPED);
@@ -114,7 +115,7 @@ describe('FEATURE: graph positions routes validation', () => {
   });
 
   describe('GIVEN routes at their limits', () => {
-    it('WHEN a route has 64 bends and coordinates at +-1e7 THEN it is kept', () => {
+    it('WHEN a route has ROUTE_BENDS_MAX bends and coordinates at +-1e7 THEN it is kept', () => {
       const parsed = parseGraphMessage(postWith({ e1: LIMIT_ROUTE }));
 
       expect(routesIn(parsed)).toStrictEqual({ e1: LIMIT_ROUTE });
@@ -122,8 +123,9 @@ describe('FEATURE: graph positions routes validation', () => {
 
     it('WHEN the routes have exactly 5000 keys THEN they are all kept', () => {
       const parsed = parseGraphMessage(postWith(routesWith(POSITIONS_MAX, ROUTE)));
+      const kept = Object.keys(routesIn(parsed) ?? {});
 
-      expect(Object.keys(routesIn(parsed) ?? {})).toHaveLength(POSITIONS_MAX);
+      expect(kept).toHaveLength(POSITIONS_MAX);
     });
   });
 
@@ -133,7 +135,9 @@ describe('FEATURE: graph positions routes validation', () => {
 
       expect(routesIn(parsed)).toStrictEqual({ e1: ROUTE });
     });
+  });
 
+  describe('GIVEN a good route', () => {
     it('WHEN parsed THEN the route is a fresh copy of the input', () => {
       const parsed = parseGraphMessage(postWith({ e1: ROUTE }));
 
@@ -156,26 +160,50 @@ describe('FEATURE: graph positions routes validation', () => {
   describe('GIVEN routes parsed from JSON with an own __proto__ key', () => {
     it('WHEN parsed THEN the route stays an own key', () => {
       const routes = routesIn(parseGraphMessage(JSON.parse(PROTO_ROUTES_JSON)));
+      const descriptor = Object.getOwnPropertyDescriptor(routes ?? {}, '__proto__');
 
-      expect(Object.getOwnPropertyDescriptor(routes ?? {}, '__proto__')?.value).toStrictEqual({ start: POINT, bends: [], end: END });
+      expect(descriptor?.value).toStrictEqual({ start: POINT, bends: [], end: END });
     });
 
     it('WHEN parsed THEN the prototype of the routes is untouched', () => {
       const routes = routesIn(parseGraphMessage(JSON.parse(PROTO_ROUTES_JSON)));
+      const prototype: unknown = Object.getPrototypeOf(routes);
 
-      expect(Object.getPrototypeOf(routes)).toBe(Object.prototype);
+      expect(prototype).toBe(Object.prototype);
     });
   });
 
   describe('GIVEN bad positions', () => {
     it('WHEN the routes are good THEN the whole message is null', () => {
-      expect(parseGraphMessage(postWith({ e1: ROUTE }, POSITIONS_WITHOUT_Y))).toBeNull();
+      const parsed = parseGraphMessage(postWith({ e1: ROUTE }, POSITIONS_WITHOUT_Y));
+
+      expect(parsed).toBeNull();
     });
   });
 
   describe('GIVEN a routes getter that throws', () => {
     it('WHEN parsed THEN the message is null (never reachable over structured clone)', () => {
-      expect(parseGraphMessage(THROWING_ROUTES)).toBeNull();
+      const parsed = parseGraphMessage(THROWING_ROUTES);
+
+      expect(parsed).toBeNull();
+    });
+  });
+
+  describe('GIVEN a dropped positions post with more than POSITIONS_MAX routes', () => {
+    it('WHEN its log text is built THEN it is the route count, not the routes', () => {
+      const dropped = postWith(routesWith(POSITIONS_MAX + 1, ROUTE), POSITIONS_WITHOUT_Y);
+
+      const text = droppedGraphText(dropped);
+
+      expect(text).toBe(`routes with ${POSITIONS_MAX + 1} keys`);
+    });
+
+    it('WHEN its routes are exactly POSITIONS_MAX THEN the log text is the cut JSON', () => {
+      const dropped = postWith(routesWith(POSITIONS_MAX, ROUTE), POSITIONS_WITHOUT_Y);
+
+      const text = droppedGraphText(dropped);
+
+      expect(text).toMatch(/^\{"type":"positions"/);
     });
   });
 });

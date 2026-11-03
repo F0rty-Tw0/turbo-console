@@ -8,26 +8,17 @@ import { graphMessageSchema } from '../common/graph-message.schema.ts';
 import { POSITIONS_MAX } from '../common/graph.const.ts';
 import type { SchemaGraphMessage } from '../common/graph.type.ts';
 
-/** The key count of `raw.positions` when it is an object, else 0. A throwing getter or proxy trap throws. */
-const positionsSizeOf = (raw: unknown): number => {
-  if (!isRecord(raw) || !('positions' in raw)) return 0;
+type SizedField = 'positions' | 'routes';
 
-  const { positions } = raw;
+/** The key count of `raw[field]` when it is an object, else 0. A throwing getter or proxy trap throws. */
+const sizeOf = (raw: unknown, field: SizedField): number => {
+  if (!isRecord(raw)) return 0;
 
-  if (!isRecord(positions)) return 0;
+  const value: unknown = Reflect.get(raw, field);
 
-  return Object.keys(positions).length;
-};
+  if (!isRecord(value)) return 0;
 
-/** The key count of `raw.routes` when it is an object, else 0. A throwing getter or proxy trap throws. */
-const routesSizeOf = (raw: unknown): number => {
-  if (!isRecord(raw) || !('routes' in raw)) return 0;
-
-  const { routes } = raw;
-
-  if (!isRecord(routes)) return 0;
-
-  return Object.keys(routes).length;
+  return Object.keys(value).length;
 };
 
 /** The character count of `raw.png` when `raw` is an `exportImage` whose `png` is a string, else `null`. A throwing getter throws. */
@@ -42,11 +33,15 @@ const pngLengthOf = (raw: unknown): number | null => {
   return png.length;
 };
 
-/** The routes `parseRoutes` keeps; `{}` when `raw` is not a record or is oversized, whose values are then never read. */
-const routesOf = (raw: unknown, isOversized: boolean): Routes => {
+/** The routes `parseRoutes` keeps; `{}` when `raw` is not a record or has more than `POSITIONS_MAX` keys, whose values are then never read. */
+const postedRoutesOf = (raw: unknown): Routes => {
   const none: Routes = {};
 
-  if (isOversized) return none;
+  if (!isRecord(raw)) return none;
+
+  const size = Object.keys(raw).length;
+
+  if (size > POSITIONS_MAX) return none;
 
   return parseRoutes(raw) ?? none;
 };
@@ -55,14 +50,14 @@ const routesOf = (raw: unknown, isOversized: boolean): Routes => {
  * A schema-checked message, with its `positions` record checked and copied by `parsePositions`; `null` when it fails.
  * Its `routes` never fail the message: an oversized or non-record `routes` is `{}`, a bad route is dropped alone.
  */
-const checkedMessageOf = (message: SchemaGraphMessage, isRoutesOversized: boolean): GraphWebviewMessage | null => {
+const checkedMessageOf = (message: SchemaGraphMessage): GraphWebviewMessage | null => {
   if (message.type !== 'positions') return message;
 
   const positions = parsePositions(message.positions);
 
   if (positions === null) return null;
 
-  const routes = routesOf(message.routes, isRoutesOversized);
+  const routes = postedRoutesOf(message.routes);
   const checked: GraphWebviewMessage = { type: 'positions', hash: message.hash, positions, routes, grouping: message.grouping };
 
   return checked;
@@ -76,7 +71,7 @@ const checkedMessageOf = (message: SchemaGraphMessage, isRoutesOversized: boolea
  */
 export const parseGraphMessage = (raw: unknown): GraphWebviewMessage | null => {
   try {
-    const size = positionsSizeOf(raw);
+    const size = sizeOf(raw, 'positions');
 
     if (size > POSITIONS_MAX) return null;
 
@@ -84,23 +79,24 @@ export const parseGraphMessage = (raw: unknown): GraphWebviewMessage | null => {
 
     if (!parsed.success) return null;
 
-    const isRoutesOversized = routesSizeOf(raw) > POSITIONS_MAX;
-
-    return checkedMessageOf(parsed.data, isRoutesOversized);
+    return checkedMessageOf(parsed.data);
   } catch {
     return null;
   }
 };
 
 /**
- * The log text of a dropped graph message: only its size when its `positions` is past `POSITIONS_MAX` or it is an
- * `exportImage` with a string `png`, which can be 32 MiB and is never stringified; else its cut JSON. Never throws.
+ * The log text of a dropped graph message: only its size when its `positions` or `routes` is past `POSITIONS_MAX` or it
+ * is an `exportImage` with a string `png`, which can be 32 MiB and is never stringified; else its cut JSON. Never throws.
  */
 export const droppedGraphText = (raw: unknown): string => {
   try {
-    const size = positionsSizeOf(raw);
+    const size = sizeOf(raw, 'positions');
+    const routesSize = sizeOf(raw, 'routes');
 
     if (size > POSITIONS_MAX) return `positions with ${size} keys`;
+
+    if (routesSize > POSITIONS_MAX) return `routes with ${routesSize} keys`;
 
     const pngLength = pngLengthOf(raw);
 
