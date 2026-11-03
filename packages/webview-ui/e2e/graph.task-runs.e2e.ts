@@ -1,5 +1,5 @@
 import type { NodeStates } from './common/graph.type.ts';
-import { expect, test } from './graph-task.fixture.ts';
+import { expect, test } from './graph-task-projects.fixture.ts';
 import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
@@ -163,12 +163,18 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
     );
 
     test(
-      'the keyboard alone selects lib#build from the task list and runs it',
+      'the keyboard alone opens lib in the Projects grid, selects lib#build and runs it',
       { annotation: KEYBOARD },
       async ({ graphKeys, graphPage, graphTaskHost }): Promise<void> => {
-        await test.step('WHEN Tab reaches the task list from Tasks', async (): Promise<void> => {
+        await test.step('WHEN Tab reaches the Projects grid from Tasks and ArrowDown moves to lib', async (): Promise<void> => {
           await graphPage.focusButton('Tasks');
-          await graphKeys.tabTo('build');
+          await graphKeys.tabTo('Choose tasks of folder packages');
+          await graphKeys.arrowTo('Choose tasks of lib');
+        });
+
+        await test.step('AND ArrowRight reaches its name and Enter opens it', async (): Promise<void> => {
+          await graphKeys.press('ArrowRight');
+          await graphKeys.press('Enter');
         });
 
         await test.step('AND ArrowDown moves to lib#build and Enter is pressed', async (): Promise<void> => {

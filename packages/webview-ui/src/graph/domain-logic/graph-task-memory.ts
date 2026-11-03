@@ -5,6 +5,7 @@ import type { TaskMemoryModes, TaskNaming } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 import type { TaskViewChecks } from '../common/task-controls.type.ts';
+import type { TaskGridFacts } from '../common/task-grid.type.ts';
 import { folderOf } from '../utils/folder-group.util.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 import { labelsOf } from '../utils/package-label.util.ts';
@@ -79,6 +80,17 @@ export class GraphTaskMemory {
     return checks;
   }
 
+  /**
+   * What the Projects grid lists: the pool (hidden scripts are not in it), the effective choice (its ids outside the pool
+   * are in no line, so no check counts them), the ids `shown` draws, the naming and the root label of a single-package root.
+   */
+  public gridFacts(shown: ReadonlySet<string>): TaskGridFacts {
+    const chosen = new Set(this.chosenIds());
+    const facts: TaskGridFacts = { tasks: this.pool, chosen, shown, naming: this.naming(), rootLabel: this.latestRootLabel };
+
+    return facts;
+  }
+
   /** The pool task mode draws and counts. */
   public tasks(): GraphTask[] {
     return this.pool;
@@ -99,6 +111,21 @@ export class GraphTaskMemory {
 
   public view(): TaskViewState {
     return this.modes.task() ?? freshTaskViewOf();
+  }
+
+  /**
+   * The effective choice a check edits: the saved ids, outside-the-pool ones included; on the single-package fallback, the
+   * saved ids followed by every pool id, so a check never drops an id outside the pool.
+   */
+  public chosenIds(): string[] {
+    const { chosen } = this.view();
+    const isFallback = this.isFallback(chosen);
+
+    if (!isFallback) return chosen;
+
+    const poolIds = this.poolIds();
+
+    return [...chosen, ...poolIds];
   }
 
   /** A single-package root with none of its chosen ids listed shows every task, without saving that choice. */
@@ -138,13 +165,24 @@ export class GraphTaskMemory {
     return this.modes.current()?.grouped ?? true;
   }
 
-  /** Every pool id when a single-package root's pool holds none of `chosen`; `chosen` otherwise. */
-  private effectiveChosen(chosen: string[]): string[] {
-    const ids = this.pool.map((task) => task.id);
-    const pooled = new Set(ids);
-    const isAnyPooled = chosen.some((id) => pooled.has(id));
-    const isFallback = this.isSinglePackage && !isAnyPooled;
+  private poolIds(): string[] {
+    return this.pool.map((task) => task.id);
+  }
 
-    return isFallback ? ids : chosen;
+  /** Whether `chosen` falls back to the whole pool: a single-package root whose pool holds none of it. */
+  private isFallback(chosen: string[]): boolean {
+    const pooled = new Set(this.poolIds());
+    const isAnyPooled = chosen.some((id) => pooled.has(id));
+
+    return this.isSinglePackage && !isAnyPooled;
+  }
+
+  /** Every pool id on the single-package fallback; `chosen` otherwise. */
+  private effectiveChosen(chosen: string[]): string[] {
+    const isFallback = this.isFallback(chosen);
+
+    if (!isFallback) return chosen;
+
+    return this.poolIds();
   }
 }

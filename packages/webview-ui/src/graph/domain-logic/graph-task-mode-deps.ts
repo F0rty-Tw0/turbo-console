@@ -5,6 +5,7 @@ import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import type { TaskLayoutDeps, TaskMemoryPort, TaskModeDeps, UmbrellaFacts } from '../common/graph-task.type.ts';
 import type { ControlsEdits, TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskSelectionDeps } from '../common/task-details.type.ts';
+import { chosenAfter } from '../utils/task-check.util.ts';
 
 type LayoutHooks = Pick<TaskLayoutDeps, 'onPlaced' | 'onDrawn'>;
 
@@ -52,8 +53,8 @@ const regroup = (deps: TaskModeDeps, edits: ControlsEdits, isGrouped: boolean): 
 };
 
 /**
- * What the task Controls report and what task mode does with it: the search is saved, a depth or a pick goes through
- * `edits`, the open state is saved with the canvas re-measured, Group by folder is saved and drawn, and a View toggle goes
+ * What the task Controls report and what task mode does with it: the search is saved, a depth, a pick or a check goes through
+ * `edits` (a check edits only `chosen`, so `capLifted` is kept), the open state is saved with the canvas re-measured, Group by folder is saved and drawn, and a View toggle goes
  * to the host, whose next state redraws.
  */
 export const controlsActionsOf = (deps: TaskModeDeps, memory: TaskMemoryPort, edits: ControlsEdits): TaskControlsActions => {
@@ -61,6 +62,7 @@ export const controlsActionsOf = (deps: TaskModeDeps, memory: TaskMemoryPort, ed
     onSearch: (search: string): void => memory.save({ search }),
     onDepth: (depth: number): void => edits.choose({ depth }),
     onPick: (id: string): void => edits.select(id),
+    onCheck: (ids: string[], isChecked: boolean): void => edits.choose({ chosen: chosenAfter(memory.chosenIds(), ids, isChecked) }),
     onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen }),
     onGrouping: (isGrouped: boolean): void => regroup(deps, edits, isGrouped),
     onViewToggle: (toggle: GraphViewToggle, shown: boolean): void => deps.bridge.post({ type: 'setViewToggle', toggle, shown })

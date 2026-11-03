@@ -78,6 +78,7 @@ export class GraphTaskMode {
     if (request.key === shownKey && !isRelabelled) {
       this.panel.show({ isEmpty: false, hiddenCount: shownSet.hiddenCount, knownCount });
       this.layout.atoms.reshown();
+      this.controls.setProjects(this.memory.gridFacts(request.shown));
 
       return;
     }
@@ -176,7 +177,7 @@ export class GraphTaskMode {
     this.shownCount = shownSet.ids.length;
     this.panel.notice(notice ?? droppedNoticeOf(shownSet.droppedIds.length));
     this.panel.show({ isEmpty, hiddenCount: shownSet.hiddenCount, knownCount });
-    this.controls.setRows(request.tasks, this.memory.rootLabel());
+    this.controls.setProjects(this.memory.gridFacts(request.shown));
     this.selection.setShown(request.tasks);
     this.deps.view.resize();
 

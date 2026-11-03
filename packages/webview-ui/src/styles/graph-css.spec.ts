@@ -46,6 +46,14 @@ describe('FEATURE: graph.css', () => {
     });
   });
 
+  describe('GIVEN the task Projects grid row rule', () => {
+    const declarations = declarationsOf(css, '#graph-task-controls .controls-row');
+
+    it.each(['content-visibility: auto', 'contain-intrinsic-size: auto 19px'])('WHEN it is read THEN it holds %s', (expected) => {
+      expect(declarations).toContain(expected);
+    });
+  });
+
   describe('GIVEN the details panel rule', () => {
     const declarations = declarationsOf(css, '.graph-details');
 

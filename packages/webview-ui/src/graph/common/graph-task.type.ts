@@ -108,10 +108,11 @@ export type TaskPanelAsides = {
   readonly task: HTMLElement;
 };
 
-/** What the task layout and selection read of task mode's memory: the task view, the root label and a view save. */
+/** What the task layout and selection read of task mode's memory: the task view, the root label, the effective choice and a view save. */
 export type TaskMemoryPort = {
   readonly view: () => TaskViewState;
   readonly rootLabel: () => string | null;
+  readonly chosenIds: () => string[];
   readonly save: (edit: Partial<TaskViewState>) => void;
 };
 

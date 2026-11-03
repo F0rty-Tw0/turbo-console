@@ -9,8 +9,9 @@ import type { LayoutScreen } from '../../common/graph-layouts.type.ts';
 import type { TaskModeDeps, TaskModes, TaskPanel, TaskView } from '../../common/graph-task.type.ts';
 import type { PageElements } from '../../common/page-elements.type.ts';
 import type { AtomCanvas, TaskCanvas } from '../../common/task-canvas.type.ts';
-import type { TaskControls, TaskControlsElements, TaskControlsRow, TaskControlsViews } from '../../common/task-controls.type.ts';
+import type { TaskControls, TaskControlsElements, TaskControlsViews } from '../../common/task-controls.type.ts';
 import type { TaskDetails, TaskDetailsView, TaskDetailsViews } from '../../common/task-details.type.ts';
+import type { TaskGridRow } from '../../common/task-grid.type.ts';
 import type { TaskToolbarElements } from '../../common/task-toolbar.type.ts';
 import type { MenuElements } from '../../common/widget-menu.type.ts';
 import type { WidgetViews } from '../../common/widget.type.ts';
@@ -64,13 +65,13 @@ export type TaskDetailsViewsMock = {
   readonly built: TaskDetailsView[];
 };
 
-/** Real task controls builders that record every row they build. */
+/** Real task controls builders that record every grid row they build. */
 export type TaskControlsViewsMock = {
   readonly views: TaskControlsViews;
   /** The one panel `views.build` hands out. */
   readonly elements: TaskControlsElements;
   /** The rows built so far, the latest last. */
-  readonly rows: TaskControlsRow[];
+  readonly rows: TaskGridRow[];
 };
 
 /** The real page and task toolbar builders, recording every toolbar and menu they build. */

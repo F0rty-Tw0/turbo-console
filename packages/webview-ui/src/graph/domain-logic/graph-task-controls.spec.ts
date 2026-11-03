@@ -2,31 +2,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mocked } from 'vitest';
 
 import { GraphTaskControls } from './graph-task-controls.ts';
-import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { CONTROLS_ID } from '../common/graph.const.ts';
-import type {
-  TaskControlsActions,
-  TaskControlsDeps,
-  TaskControlsElements,
-  TaskControlsRow,
-  TaskViewChecks
-} from '../common/task-controls.type.ts';
+import type { TaskControlsActions, TaskControlsDeps, TaskControlsElements, TaskViewChecks } from '../common/task-controls.type.ts';
+import type { TaskGridRow } from '../common/task-grid.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskControlsViewsMock } from '../test/mocks/task-controls-views.mock.ts';
-import { ROOT_BUILD_STUB, TASK_CHAIN_STUB, TASK_VIEW_STUB, WEB_BUILD_STUB, WEB_LINT_STUB } from '../test/stubs/graph-task.stub.ts';
-import { pressKey } from '../test/utils/key-events.spec.util.ts';
+import { TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
+import { TASK_GRID_FACTS_STUB } from '../test/stubs/task-grid.stub.ts';
+import { checkAt, nameAt, tick } from '../test/utils/task-grid-cells.spec.util.ts';
 
 type ControlsRig = {
   readonly deps: TaskControlsDeps;
   readonly actions: Mocked<TaskControlsActions>;
   readonly elements: TaskControlsElements;
   /** The rows built so far, the latest last. */
-  readonly rows: TaskControlsRow[];
+  readonly rows: TaskGridRow[];
 };
-
-/** `web#lint` then `web#build`: `api#build` dropped from the list and `web#build` no longer first. */
-const WEB_TASKS: GraphTask[] = [WEB_LINT_STUB, WEB_BUILD_STUB];
 
 const rigOf = (): ControlsRig => {
   const { views, elements, rows } = taskControlsViewsMock();
@@ -40,6 +32,7 @@ const rigOf = (): ControlsRig => {
     onSearch: vi.fn(),
     onDepth: vi.fn(),
     onPick: vi.fn(),
+    onCheck: vi.fn(),
     onToggle: vi.fn(),
     onGrouping: vi.fn(),
     onViewToggle: vi.fn()
@@ -50,31 +43,12 @@ const rigOf = (): ControlsRig => {
   return rig;
 };
 
-const tabStopsOf = (rows: TaskControlsRow[]): string[] => {
-  const stops = rows.filter((row) => row.pick.tabIndex === 0);
-
-  return stops.map((row) => row.task.id);
-};
-
-/** The id of the row whose button has focus, if any. */
-const focusedIdOf = (rows: TaskControlsRow[]): string | undefined => {
-  const focused = rows.find((row) => row.pick === document.activeElement);
-
-  return focused?.task.id;
-};
-
 const typeInto = (input: HTMLInputElement, text: string): void => {
   input.value = text;
   input.dispatchEvent(new Event('input'));
 };
 
 const CHECKS: TaskViewChecks = { grouped: true, canGroup: true, scopeShown: false, scriptsShown: true, hasScripts: true };
-
-/** What the user does to a checkbox: sets it, then the input event follows. */
-const tick = (box: HTMLInputElement, isChecked: boolean): void => {
-  box.checked = isChecked;
-  box.dispatchEvent(new Event('input'));
-};
 
 describe('FEATURE: GraphTaskControls', () => {
   let rig: ControlsRig;
@@ -90,33 +64,18 @@ describe('FEATURE: GraphTaskControls', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN task mode is off WHEN Controls is clicked THEN nothing is passed on', () => {
-    rig.deps.page.controls.click();
+  describe('GIVEN task mode is off', () => {
+    it('WHEN Controls is clicked THEN nothing is passed on', () => {
+      rig.deps.page.controls.click();
 
-    expect(rig.actions.onToggle).not.toHaveBeenCalled();
-  });
-
-  describe('GIVEN task mode entered with //#build listed under the root label single-app', () => {
-    beforeEach(() => {
-      controls.enter(TASK_VIEW_STUB, true);
-      controls.setRows([ROOT_BUILD_STUB], 'single-app');
-    });
-
-    it('WHEN listed THEN the row description reads single-app', () => {
-      expect(rig.rows[0]?.pick.children[1]?.textContent).toBe('single-app');
-    });
-
-    it('WHEN single is searched THEN the //#build row shows', () => {
-      typeInto(rig.elements.search, 'single');
-
-      expect(rig.rows[0]?.line.hidden).toBe(false);
+      expect(rig.actions.onToggle).not.toHaveBeenCalled();
     });
   });
 
-  describe('GIVEN task mode entered open with the chain listed', () => {
+  describe('GIVEN task mode entered open with the grid listed', () => {
     beforeEach(() => {
       controls.enter(TASK_VIEW_STUB, true);
-      controls.setRows(TASK_CHAIN_STUB, null);
+      controls.setProjects(TASK_GRID_FACTS_STUB);
     });
 
     it('WHEN entered THEN the shown panel is mounted and Controls points at it, expanded', () => {
@@ -126,46 +85,30 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(rig.deps.page.controls.getAttribute('aria-expanded')).toBe('true');
     });
 
-    it('WHEN listed THEN the first row is the one Tab stop', () => {
-      expect(tabStopsOf(rig.rows)).toStrictEqual(['api#build']);
+    it('WHEN listed THEN the project rows are in the grid and the first check is the one Tab stop', () => {
+      expect(rig.elements.list.children).toHaveLength(6);
+      expect(checkAt(rig.elements.list, 0).tabIndex).toBe(0);
     });
 
-    it('WHEN web is searched THEN only the web rows show, the first of them the Tab stop, and the search is passed on', () => {
+    it('WHEN web is searched THEN only the web project is listed, open, and the search is passed on', () => {
       typeInto(rig.elements.search, 'web');
 
-      const shown = rig.rows.filter((row) => !row.line.hidden);
-
-      expect(shown.map((row) => row.task.id)).toStrictEqual(['web#build', 'web#lint']);
-      expect(tabStopsOf(rig.rows)).toStrictEqual(['web#build']);
+      expect(rig.elements.list.children).toHaveLength(3);
+      expect(nameAt(rig.elements.list, 0).title).toBe('web (2)');
       expect(rig.actions.onSearch).toHaveBeenCalledExactlyOnceWith('web');
     });
 
-    it('WHEN ArrowDown is pressed on the first row THEN the second row takes focus and the Tab stop', () => {
-      const first = rig.rows[0]?.pick;
-      const isPrevented = pressKey(rig.elements.list, 'ArrowDown', first);
+    it('WHEN a drawn task name is clicked THEN its task is picked', () => {
+      nameAt(rig.elements.list, 4).click();
+      nameAt(rig.elements.list, 5).click();
 
-      expect(isPrevented).toBe(true);
-      expect(focusedIdOf(rig.rows)).toBe('web#build');
-      expect(tabStopsOf(rig.rows)).toStrictEqual(['web#build']);
+      expect(rig.actions.onPick).toHaveBeenCalledExactlyOnceWith('ui#build');
     });
 
-    it('WHEN End is pressed on the first row THEN the last row takes focus', () => {
-      pressKey(rig.elements.list, 'End', rig.rows[0]?.pick);
+    it('WHEN the web project check is ticked THEN its ids and true are passed on', () => {
+      tick(checkAt(rig.elements.list, 5), true);
 
-      expect(focusedIdOf(rig.rows)).toBe('web#lint');
-    });
-
-    it('WHEN a key is pressed off the rows THEN focus stays and the default runs', () => {
-      const isPrevented = pressKey(rig.elements.list, 'Home', rig.elements.list);
-
-      expect(isPrevented).toBe(false);
-      expect(focusedIdOf(rig.rows)).toBeUndefined();
-    });
-
-    it('WHEN a row is clicked THEN its task is picked', () => {
-      rig.rows[1]?.pick.click();
-
-      expect(rig.actions.onPick).toHaveBeenCalledExactlyOnceWith('web#build');
+      expect(rig.actions.onCheck).toHaveBeenCalledExactlyOnceWith(['web#build', 'web#dev'], true);
     });
 
     it.each([
@@ -186,8 +129,8 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(rig.actions.onToggle).toHaveBeenCalledExactlyOnceWith(false);
     });
 
-    it('WHEN task mode is left with focus on a row THEN the panel hides, Controls points back and Packages takes focus', () => {
-      rig.rows[0]?.pick.focus();
+    it('WHEN task mode is left with focus on a grid cell THEN the panel hides, Controls points back and Packages takes focus', () => {
+      checkAt(rig.elements.list, 0).focus();
       controls.exit();
 
       expect(rig.elements.panel.hidden).toBe(true);
@@ -196,33 +139,18 @@ describe('FEATURE: GraphTaskControls', () => {
     });
 
     describe('AND the mode group hidden', () => {
-      it('WHEN task mode is left with focus on a row THEN Controls takes focus', () => {
+      it('WHEN task mode is left with focus on a grid cell THEN Controls takes focus', () => {
         rig.deps.page.modeGroup.hidden = true;
-        rig.rows[0]?.pick.focus();
+        checkAt(rig.elements.list, 0).focus();
         controls.exit();
 
         expect(document.activeElement).toBe(rig.deps.page.controls);
       });
     });
 
-    describe('WHEN web#build has focus and the rows are listed again', () => {
-      beforeEach(() => {
-        rig.rows[1]?.pick.focus();
-        controls.setRows(WEB_TASKS, null);
-      });
-
-      it('THEN the new web#build row takes focus', () => {
-        expect(document.activeElement).toBe(rig.rows[4]?.pick);
-      });
-
-      it('THEN the new web#build row is the one Tab stop', () => {
-        expect(tabStopsOf(rig.rows.slice(3))).toStrictEqual(['web#build']);
-      });
-    });
-
-    it('WHEN nothing in the list has focus and the rows are listed again THEN focus stays where it was', () => {
+    it('WHEN nothing in the grid has focus and the facts are set again THEN focus stays where it was', () => {
       rig.deps.page.packagesMode.focus();
-      controls.setRows(WEB_TASKS, null);
+      controls.setProjects(TASK_GRID_FACTS_STUB);
 
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });

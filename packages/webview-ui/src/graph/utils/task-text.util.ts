@@ -8,3 +8,12 @@ export const droppedTasksText = (dropped: number): string => `${dropped} chosen 
 
 /** The prompt button's text: Show every task and how many tasks it chooses. */
 export const showEveryTextOf = (count: number): string => `${SHOW_EVERY_TASK_LABEL} (${count})`;
+
+/** The accessible name of a folder row's check in the Projects grid. */
+export const chooseFolderLabelOf = (title: string): string => `Choose tasks of folder ${title}`;
+
+/** The accessible name of a project row's check in the Projects grid. */
+export const chooseProjectLabelOf = (label: string): string => `Choose tasks of ${label}`;
+
+/** The accessible name of a task row's check in the Projects grid; the id tells one package's build from another's. */
+export const chooseTaskLabelOf = (id: string): string => `Choose ${id}`;

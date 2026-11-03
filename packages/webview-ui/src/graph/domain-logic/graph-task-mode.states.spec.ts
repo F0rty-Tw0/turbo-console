@@ -57,11 +57,11 @@ const drawnOf = (rig: TaskModeRig): TaskDrawing | undefined => rig.view.tasks.sh
 
 const controlsActionsOf = (rig: TaskModeRig): TaskControlsActions | undefined => rig.controlsOf.mock.lastCall?.[0];
 
-/** The ids of the rows Controls listed last. */
+/** The ids the grid last listed as drawn, in set order. */
 const listedIdsOf = (rig: TaskModeRig): string[] | undefined => {
-  const rows = rig.controls.setRows.mock.lastCall?.[0];
+  const facts = rig.controls.setProjects.mock.lastCall?.[0];
 
-  return rows?.map((task) => task.id);
+  return facts && Array.from(facts.shown);
 };
 
 /** The single-package root after its package.json `name` changed: the same tasks, so the same layout key. */
@@ -198,7 +198,7 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       mode.received(SINGLE_TASK_STATE_STUB, 9);
 
       expect(rig.runs.count()).toBe(1);
-      expect(rig.controls.setRows).toHaveBeenCalledOnce();
+      expect(rig.controls.setProjects).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -249,7 +249,9 @@ describe('FEATURE: GraphTaskMode across page states', () => {
     });
 
     it('WHEN the rows are listed THEN Controls gets the root label', () => {
-      expect(rig.controls.setRows).toHaveBeenLastCalledWith(SINGLE_TASK_STATE_STUB.tasks, 'single-app');
+      expect(rig.controls.setProjects).toHaveBeenLastCalledWith(
+        expect.objectContaining({ tasks: SINGLE_TASK_STATE_STUB.tasks, rootLabel: 'single-app' })
+      );
     });
 
     it('WHEN the layout lands THEN the canvas draws with the root label', async () => {
@@ -261,7 +263,9 @@ describe('FEATURE: GraphTaskMode across page states', () => {
     it('WHEN the same tasks arrive under a renamed root THEN Controls gets the new label', () => {
       mode.received(RENAMED_STATE, 8);
 
-      expect(rig.controls.setRows).toHaveBeenLastCalledWith(RENAMED_STATE.tasks, 'renamed-app');
+      expect(rig.controls.setProjects).toHaveBeenLastCalledWith(
+        expect.objectContaining({ tasks: RENAMED_STATE.tasks, rootLabel: 'renamed-app' })
+      );
     });
 
     it('WHEN the same tasks arrive under a renamed root after the layout landed THEN the canvas draws with the new label', async () => {
@@ -283,7 +287,7 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       open(taskSavedOf({}));
       mode.received(TASK_STATE_STUB, 7);
 
-      expect(rig.controls.setRows).toHaveBeenLastCalledWith(expect.any(Array), null);
+      expect(rig.controls.setProjects).toHaveBeenLastCalledWith(expect.objectContaining({ rootLabel: null }));
     });
   });
 });

@@ -249,6 +249,8 @@ export const VIEW_SECTION_TITLE = 'View';
 
 export const PACKAGES_SECTION_TITLE = 'Packages';
 
+export const PROJECTS_SECTION_TITLE = 'Projects';
+
 export const SEARCH_LABEL = 'Search packages';
 
 export const DEPTH_LABEL = 'Focus depth';

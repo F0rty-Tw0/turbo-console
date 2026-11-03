@@ -1,5 +1,5 @@
 import type { FocusStep } from './common/graph.type.ts';
-import { expect, test } from './graph-task.fixture.ts';
+import { expect, test } from './graph-task-projects.fixture.ts';
 import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { tabStopsOf } from './test/utils/graph-focus-steps.spec.util.ts';
 import { OVER_CAP_ROOT_TASK, overCapTaskIds, overCapTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
@@ -42,7 +42,7 @@ const TASK_STOPS: FocusStep[] = tabStopsOf([
   'Dependents depth',
   'Group by folder',
   'Show package scopes',
-  'build',
+  'Choose tasks of app',
   'Resize Controls',
   'Package graph'
 ]);
@@ -157,17 +157,20 @@ test.describe('FEATURE: graph task mode', () => {
   test(
     'GIVEN lib#build shown, a search narrows the task rows and not the drawn tasks',
     { annotation: CONTROLS },
-    async ({ graphTask, graphTaskHost, graphTaskProbe }): Promise<void> => {
+    async ({ graphTask, graphTaskHost, graphTaskProbe, graphTaskProjects }): Promise<void> => {
       await test.step('WHEN showTasks names lib#build', async (): Promise<void> => graphTaskHost.sendShowTasks(['lib#build']));
 
-      await test.step('THEN its set is drawn and listed', async (): Promise<void> => {
+      await test.step('THEN its set is drawn and the projects are listed collapsed', async (): Promise<void> => {
         await graphTaskProbe.expectTaskIds(LIB_SET);
-        await graphTask.expectRows(LIB_SET);
+        await graphTaskProjects.expectLines(['app (2)', 'lib (2)', 'ui (2)']);
       });
 
-      await test.step('WHEN test is searched', async (): Promise<void> => graphTask.search('test'));
+      await test.step('WHEN lib is expanded', async (): Promise<void> => graphTaskProjects.expand('lib (2)'));
 
-      await test.step('THEN only lib#test is listed', async (): Promise<void> => graphTask.expectRows(['lib#test']));
+      await test.step('AND test is searched', async (): Promise<void> => graphTask.search('test'));
+
+      await test.step('THEN only the matching tasks are listed, ui forced open', async (): Promise<void> =>
+        graphTaskProjects.expectLines(['lib (2)', 'lib#test', 'ui (2)', 'ui#test']));
 
       await test.step('AND the drawn tasks are unchanged', async (): Promise<void> => graphTaskProbe.expectTaskIds(LIB_SET));
 

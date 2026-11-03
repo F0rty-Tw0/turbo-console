@@ -9,8 +9,9 @@ import { packageView } from './details-package.ts';
 import { candidateItems, pickingView } from './details-picking.ts';
 import { stepItems, traceView } from './details-trace.ts';
 import { renderLocation, renderLocationLines } from './location-elements.ts';
-import { buildTaskControls, buildTaskRow } from './task-controls-elements.ts';
+import { buildTaskControls } from './task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from './task-details-elements.ts';
+import { buildProjectLine } from './task-grid-rows.ts';
 import { buildFolderRow, buildPackageToolbar, buildTaskToolbar } from './widget-elements.ts';
 import { buildMenu } from './widget-menu.ts';
 import type { DetailsViews } from '../common/details.type.ts';
@@ -45,7 +46,7 @@ export const widgetViews: WidgetViews = {
   location: locationViews
 };
 
-export const taskViews: TaskControlsViews = { build: buildTaskControls, row: buildTaskRow };
+export const taskViews: TaskControlsViews = { build: buildTaskControls, line: buildProjectLine };
 
 export const taskDetailsViews: TaskDetailsViews = {
   panel: buildTaskDetailsPanel,

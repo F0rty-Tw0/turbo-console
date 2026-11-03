@@ -238,13 +238,28 @@ p {
   display: none;
 }
 
+/* A Projects grid of hundreds of rows lays out and paints only the rows near the viewport; 19px is a task or project row, and `auto` keeps each row's last rendered height. */
 #graph-task-controls .controls-row {
   padding-inline-start: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 19px;
 }
 
-.controls-task-package {
-  margin-inline-start: var(--space-2);
-  color: var(--vscode-descriptionForeground);
+#graph-task-controls .controls-row[data-kind='folder'] {
+  margin-top: var(--space-2);
+  font-weight: 600;
+}
+
+#graph-task-controls .controls-row[data-depth='1'] {
+  padding-inline-start: var(--space-3);
+}
+
+#graph-task-controls .controls-row[data-depth='2'] {
+  padding-inline-start: calc(var(--space-3) * 2);
+}
+
+#graph-task-controls .controls-name .codicon {
+  margin-inline-end: var(--space-1);
 }
 
 /* The task run state: the icon takes the colour the canvas outline uses, the word keeps the panel's. */

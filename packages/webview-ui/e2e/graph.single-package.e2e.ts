@@ -1,4 +1,4 @@
-import { expect, test } from './graph-task.fixture.ts';
+import { expect, test } from './graph-task-projects.fixture.ts';
 import { SINGLE_PACKAGE_TASKS_STUB } from './test/stubs/graph-single-package.stub.ts';
 import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
@@ -14,7 +14,15 @@ test.describe('FEATURE: the task graph of a single-package repo', () => {
   test(
     'GIVEN a single-package state, the page opens in task mode on every task with no mode buttons',
     { annotation: SINGLE },
-    async ({ graphHost, graphLocation, graphPage, graphSinglePackage, graphTask, graphTaskProbe }): Promise<void> => {
+    async ({
+      graphHost,
+      graphLocation,
+      graphPage,
+      graphSinglePackage,
+      graphTask,
+      graphTaskProbe,
+      graphTaskProjects
+    }): Promise<void> => {
       await test.step('WHEN the page is opened and the state is sent', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(SINGLE_PACKAGE_TASKS_STUB);
@@ -29,8 +37,8 @@ test.describe('FEATURE: the task graph of a single-package repo', () => {
       await test.step('AND the Packages and Tasks buttons and their separator are hidden', async (): Promise<void> =>
         graphSinglePackage.expectModesHidden());
 
-      await test.step('AND every task row describes single-app', async (): Promise<void> =>
-        graphSinglePackage.expectRowPackagesRead('single-app'));
+      await test.step('AND the Projects grid lists single-app open on its three tasks', async (): Promise<void> =>
+        graphTaskProjects.expectLines(['single-app (3)', '//#build', '//#lint', '//#test:unit']));
 
       await test.step('AND the box is titled single-app', async (): Promise<void> =>
         graphTaskProbe.expectBoxTitlesDrawn(['single-app']));
