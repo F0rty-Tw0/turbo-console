@@ -95,10 +95,10 @@ const selectedRunRuleOf = (state: GraphRunState): StylesheetJsonBlock => {
  * one padding in from the frame so a link entering at the top centre misses it, at least `data(minWidth)` wide inside
  * its padding, the extra width on the right so its tasks keep their place; a `task-scripts` box inside it does the same
  * with the `SCRIPTS_BOX_DASH_PX` dashes, so the two frames read apart, and a `task-folder` box around package boxes
- * keeps the solid package-mode folder frame with the same title, since task mode has no DOM header rows. `left-inside` starts a compound's label
- * two paddings in, so the margin takes one back. They come after the `exporting` rule, so an exported task box keeps
- * this alignment. With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name in that
- * font list; an `atom-more` node carries only its own class, so it keeps the plain file rule.
+ * keeps the solid package-mode folder frame with the same title, since task mode has no DOM header rows. `left-inside`
+ * starts a compound's label two paddings in, so the margin takes one back. They come after the `exporting` rule, so an
+ * exported task box keeps this alignment. With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph
+ * before the name in that font list; an `atom-more` node carries only its own class, so it keeps the plain file rule.
  */
 export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily: string | null): StylesheetJsonBlock[] => {
   const titledBox = {
