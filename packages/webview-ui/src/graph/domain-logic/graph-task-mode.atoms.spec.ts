@@ -6,6 +6,7 @@ import type { GraphAtomGroup, GraphReady, Position, Positions } from '../../brid
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { ATOM_COUNTS_LINE_PX } from '../common/graph-atom.const.ts';
 import type { NodeSizer, ViewStateSaver } from '../common/graph-page.type.ts';
+import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { TaskModeDeps } from '../common/graph-task.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { TASK_CHAIN_STUB, TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -33,9 +34,9 @@ const UMBRELLA_GROUPS: GraphAtomGroup[] = [{ umbrellaId: 'web#build', files: UMB
 
 const UMBRELLA_STATE: GraphReady = { ...TASK_STATE_STUB, atomGroups: UMBRELLA_GROUPS };
 
-const UMBRELLA_KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, new Map([['web#build', 2]]));
+const UMBRELLA_KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, new Map([['web#build', 2]]), NEUTRAL_NAMING);
 
-const PLAIN_KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, new Map());
+const PLAIN_KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, new Map(), NEUTRAL_NAMING);
 
 describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
   let rig: TaskModeRig;

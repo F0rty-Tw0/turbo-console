@@ -13,6 +13,7 @@ import {
   taskIdsOf
 } from './task-choice.util.ts';
 import type { NodeSizer, UmbrellaSizers } from '../common/graph-page.type.ts';
+import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 import { GRAPH_TASK_STUB, ROOT_BUILD_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -97,7 +98,7 @@ describe('FEATURE: task choice rules', () => {
       const ids = request.tasks.map((task) => task.id);
 
       expect(ids).toStrictEqual(['api#build', 'web#build']);
-      expect(request.key).toBe(taskLayoutKeyOf(TASK_CHAIN_STUB, request.shown, NO_COUNTS));
+      expect(request.key).toBe(taskLayoutKeyOf(TASK_CHAIN_STUB, request.shown, NO_COUNTS, NEUTRAL_NAMING));
     });
 
     it('WHEN a shown umbrella’s file count changes THEN the key changes', () => {
@@ -110,7 +111,7 @@ describe('FEATURE: task choice rules', () => {
     it('WHEN a shown task is an umbrella THEN its key differs from today’s', () => {
       const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, UMBRELLA_COUNTS, SIZERS);
 
-      expect(request.key).not.toBe(taskLayoutKeyOf(TASK_CHAIN_STUB, request.shown, NO_COUNTS));
+      expect(request.key).not.toBe(taskLayoutKeyOf(TASK_CHAIN_STUB, request.shown, NO_COUNTS, NEUTRAL_NAMING));
     });
 
     it('WHEN a shown task is an umbrella THEN sizes holds umbrellaSizeOf for it and no other id', () => {
@@ -123,7 +124,7 @@ describe('FEATURE: task choice rules', () => {
       const request = requestOf(TASK_CHAIN_STUB, SHOWN_SET, new Map([['web#lint', 10]]), SIZERS);
       const drawn = TASK_CHAIN_STUB.filter((task) => request.shown.has(task.id));
 
-      expect(request.key).toBe(taskLayoutKeyOf(drawn, request.shown, NO_COUNTS));
+      expect(request.key).toBe(taskLayoutKeyOf(drawn, request.shown, NO_COUNTS, NEUTRAL_NAMING));
     });
 
     it('WHEN the only umbrella is not shown THEN no task has a size', () => {

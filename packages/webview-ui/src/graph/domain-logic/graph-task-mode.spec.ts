@@ -5,7 +5,7 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphReady, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
-import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
+import { NEUTRAL_NAMING, UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskPanelActions } from '../common/graph-task.type.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskControlsActions } from '../common/task-controls.type.ts';
@@ -39,10 +39,10 @@ const SHOWN = new Set(['api#build', 'web#build']);
 
 const CHAIN: GraphTask[] = TASK_CHAIN_STUB.filter((task) => SHOWN.has(task.id));
 
-const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, NO_COUNTS);
+const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, NO_COUNTS, NEUTRAL_NAMING);
 
 /** The chain and `web#test`, the one dependent hop of `web#build`. */
-const MORE_KEY = taskLayoutKeyOf(MORE_TASKS_STATE_STUB.tasks, new Set([...SHOWN, 'web#test']), NO_COUNTS);
+const MORE_KEY = taskLayoutKeyOf(MORE_TASKS_STATE_STUB.tasks, new Set([...SHOWN, 'web#test']), NO_COUNTS, NEUTRAL_NAMING);
 
 const SAVED_PAN: Position = { x: -40, y: 60 };
 

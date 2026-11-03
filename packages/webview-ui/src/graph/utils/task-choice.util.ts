@@ -62,7 +62,7 @@ export const requestOf = (
     if (fileCount !== undefined) sizes.set(task.id, umbrellaSizeOf(sizers, task.name, fileCount));
   }
 
-  const key = taskLayoutKeyOf(drawn, shown, fileCounts);
+  const key = taskLayoutKeyOf(drawn, shown, fileCounts, NEUTRAL_NAMING);
   const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes, naming: NEUTRAL_NAMING };
 
   return request;
