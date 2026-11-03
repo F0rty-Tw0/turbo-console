@@ -43,12 +43,19 @@ export const lineThrough = (source: string, target: string, points: ViewportPoin
   return line;
 };
 
-/** The midpoint of the drawn line from `source` to `target`, which lies on its path; throws when no such line is drawn. */
-export const lineMidpointOf = (lines: ProbeEdgeLine[], source: string, target: string): ViewportPoint => {
+/** The drawn line from `source` to `target`; throws when no such line is drawn. */
+export const lineOf = (lines: ProbeEdgeLine[], source: string, target: string): ProbeEdgeLine => {
   const isEdge = (line: ProbeEdgeLine): boolean => line.source === source && line.target === target && line.isDrawn;
   const line = lines.find(isEdge);
 
   if (line === undefined) throw new Error(`graph e2e: the edge ${source}>${target} is not drawn`);
+
+  return line;
+};
+
+/** The midpoint of the drawn line from `source` to `target`, which lies on its path; throws when no such line is drawn. */
+export const lineMidpointOf = (lines: ProbeEdgeLine[], source: string, target: string): ViewportPoint => {
+  const line = lineOf(lines, source, target);
 
   return line.midpoint;
 };
@@ -113,18 +120,26 @@ const passesThrough = (line: ProbeEdgeLine, node: ProbeNode, zoom: number, inset
   return !isEndOf(line, node) && lineSegmentsOf(line).some(crosses);
 };
 
-/** How many pairs of a drawn line and a node that is not one of its ends have the line cross the node's box shrunk by `insetPx`. */
+const isDrawnNode = (node: ProbeNode): boolean => node.isVisible && !node.isCollapsed;
+
+/** How many pairs of a drawn line and a drawn node that is not one of its ends have the line cross the node's box shrunk by `insetPx`. */
 export const throughNodeCountOf = (lines: ProbeEdgeLine[], nodes: ProbeNode[], zoom: number, insetPx: number): number => {
-  const pairsOf = (line: ProbeEdgeLine): ProbeNode[] => nodes.filter((node): boolean => passesThrough(line, node, zoom, insetPx));
+  const drawnNodes = nodes.filter(isDrawnNode);
+  const pairsOf = (line: ProbeEdgeLine): ProbeNode[] => drawnNodes.filter((node): boolean => passesThrough(line, node, zoom, insetPx));
 
   return lines.flatMap(pairsOf).length;
 };
 
-/** How many drawn lines have their midpoint under a node's box. */
+/** How many drawn lines have their midpoint under the box of a drawn node. */
 export const midpointsUnderCountOf = (lines: ProbeEdgeLine[], nodes: ProbeNode[], zoom: number): number => {
-  const boxes = nodes.map((node): ElementRect => nodeBoxOf(node, zoom));
-  const isUnder = (line: ProbeEdgeLine): boolean =>
-    line.isDrawn && boxes.some((box): boolean => isInside(pointBoxOf(line.midpoint), box));
+  const boxes = nodes.filter(isDrawnNode).map((node): ElementRect => nodeBoxOf(node, zoom));
+  const isUnder = (line: ProbeEdgeLine): boolean => {
+    if (!line.isDrawn) return false;
+
+    const middle = pointBoxOf(line.midpoint);
+
+    return boxes.some((box): boolean => isInside(middle, box));
+  };
 
   return lines.filter(isUnder).length;
 };

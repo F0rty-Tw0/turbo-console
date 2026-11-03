@@ -11,7 +11,7 @@ import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { readEdgeColours, readFlowInk } from '../test/utils/graph-flow-ink.spec.util.ts';
 import { edgeSampleOf } from '../test/utils/graph-flow-samples.spec.util.ts';
-import { emptySpotOn, readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
+import { emptySpotOn, lineOf, readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 
 const FRAME_MS = 16;
 
@@ -162,13 +162,11 @@ export class GraphFlowPage {
 
   /**
    * A screenshot of the page, the graph canvas and the overlay together, read at the 13 px of the drawn line from
-   * `source` to `target` along its middle piece: one dash cycle, each `h` for the highlight colour, `b` for the background.
+   * `source` to `target` along its longest piece: one dash cycle, each `h` for the highlight colour, `b` for the background.
    */
   public async edgeColours(source: string, target: string): Promise<string> {
     const lines = await readEdgeLines(this.page);
-    const line = lines.find((candidate): boolean => candidate.source === source && candidate.target === target);
-
-    if (line === undefined) throw new Error(`graph e2e: the edge ${source}>${target} is not drawn`);
+    const line = lineOf(lines, source, target);
 
     const { clip, points } = edgeSampleOf(line);
     const shot = await this.page.screenshot({ clip });

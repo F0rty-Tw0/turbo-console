@@ -8,7 +8,7 @@ export type FlowEdgeShot = {
   readonly background: string;
 };
 
-/** A clip of the page around a line's middle and the points to read in a shot of it (px from its top left). */
+/** A clip of the page around the middle of a line's longest piece and the points to read in a shot of it (px from its top left). */
 export type EdgeSample = {
   readonly clip: ScreenClip;
   readonly points: ViewportPoint[];
