@@ -238,8 +238,11 @@ p {
   display: none;
 }
 
+/* A Projects grid of hundreds of rows lays out and paints only the rows near the viewport; 19px is a task or project row, and `auto` keeps each row's last rendered height. */
 #graph-task-controls .controls-row {
   padding-inline-start: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 19px;
 }
 
 #graph-task-controls .controls-row[data-kind='folder'] {
