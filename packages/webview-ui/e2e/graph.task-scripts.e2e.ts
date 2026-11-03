@@ -73,7 +73,7 @@ test.describe('FEATURE: graph task mode draws a Scripts box per package', () => 
   test(
     'GIVEN scripts shown and only the script app#dev chosen, the app package box holds just its Scripts box',
     { annotation: SCRIPTS_BOXES },
-    async ({ graphTaskHost, graphTaskProbe, graphTaskBoxes }): Promise<void> => {
+    async ({ graphTaskBoxes, graphTaskHost, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN showTasks names app#dev', async (): Promise<void> => graphTaskHost.sendShowTasks(['app#dev']));
 
       await test.step('THEN only app#dev is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(['app#dev']));

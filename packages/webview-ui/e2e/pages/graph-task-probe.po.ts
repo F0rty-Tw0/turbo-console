@@ -12,7 +12,7 @@ import type { ScreenClip } from '../common/playwright.type.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
-import { measuredWidthsOf } from '../test/utils/graph-title-measure.spec.util.ts';
+import { expectTitlesFit } from '../test/utils/graph-title-measure.spec.util.ts';
 
 const BOX_PREFIX = 'pkg:';
 
@@ -133,21 +133,15 @@ export class GraphTaskProbe {
     await expect.poll(async (): Promise<number[]> => this.titleInks('left')).not.toContain(0);
   }
 
-  /**
-   * Each box titled one of `titles` is as wide as its title, and its title draws whole: Cytoscape cuts an ellipsis label
-   * unless its rounded-up width is under `text-max-width`.
-   */
+  /** A box is drawn for each of `titles`, and each is as wide as its title and draws it whole (`expectTitlesFit`). */
   public async expectBoxTitlesUncut(titles: string[]): Promise<void> {
     const boxes = await this.boxes();
-    const widths = await measuredWidthsOf(this.page, titles);
+    const titled = boxes.filter((node) => titles.includes(node.text));
+    const foundTitles = sortedNames(titled.map(textOf));
+    const wantedTitles = sortedNames(titles);
 
-    for (const title of titles) {
-      const box = boxes.find((node) => node.text === title);
-      const measured = widths.get(title) ?? Number.NaN;
-
-      expect(box?.textMaxWidth, title).toBeGreaterThan(Math.ceil(measured));
-      expect(box?.width, title).toBeGreaterThanOrEqual(measured);
-    }
+    expect(foundTitles).toEqual(wantedTitles);
+    await expectTitlesFit(this.page, titled);
   }
 
   /** The task's outline is `outline` (its colour compared without spaces), or it has none for `null`. */

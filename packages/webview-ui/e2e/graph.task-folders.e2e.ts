@@ -32,7 +32,7 @@ test.describe('FEATURE: graph task mode draws a folder box per folder while grou
   test(
     'GIVEN a grouped monorepo, WHEN task mode draws all tasks THEN each package box sits in its folder box and the root // box in the root folder',
     { annotation: FOLDER_BOXES },
-    async ({ graphTask, graphTaskProbe, graphTaskBoxes }): Promise<void> => {
+    async ({ graphGrouping, graphTask, graphTaskBoxes, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN Tasks is pressed and every task is chosen', async (): Promise<void> => {
         await graphTask.enter();
         await graphTask.clickShowEvery();
@@ -43,9 +43,9 @@ test.describe('FEATURE: graph task mode draws a folder box per folder while grou
         graphTaskBoxes.expectFolderTitles(FOLDER_TITLES));
 
       await test.step('AND each folder box holds exactly its package boxes, the // box in the root folder', async (): Promise<void> => {
-        await graphTaskBoxes.expectFolderMembers('apps', ['pkg:web']);
-        await graphTaskBoxes.expectFolderMembers('packages', ['pkg:ui', 'pkg:core']);
-        await graphTaskBoxes.expectFolderMembers('', ['pkg://', 'pkg:root-lib']);
+        await graphGrouping.expectFolderPackages('apps', ['pkg:web']);
+        await graphGrouping.expectFolderPackages('packages', ['pkg:ui', 'pkg:core']);
+        await graphGrouping.expectFolderPackages('', ['pkg://', 'pkg:root-lib']);
       });
 
       await test.step('AND no folder or package title is clipped', async (): Promise<void> => {
@@ -58,7 +58,7 @@ test.describe('FEATURE: graph task mode draws a folder box per folder while grou
   test(
     'GIVEN Group by folder unchecked in package mode, task mode draws no folder box',
     { annotation: FOLDER_BOXES },
-    async ({ graphGrouping, graphTask, graphTaskProbe, graphTaskBoxes }): Promise<void> => {
+    async ({ graphGrouping, graphTask, graphTaskBoxes, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN Group by folder is unchecked, Tasks is pressed and every task is chosen', async (): Promise<void> => {
         await graphGrouping.setGrouped(false);
         await graphTask.enter();
