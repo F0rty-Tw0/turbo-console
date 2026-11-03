@@ -1,6 +1,8 @@
+import { savePanelToggle } from './graph-task-panel.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import type { TaskLayoutDeps, TaskMemoryPort, TaskModeDeps, UmbrellaFacts } from '../common/graph-task.type.ts';
+import type { ControlsEdits, TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskSelectionDeps } from '../common/task-details.type.ts';
 
 type LayoutHooks = Pick<TaskLayoutDeps, 'onPlaced' | 'onDrawn'>;
@@ -40,4 +42,19 @@ export const umbrellaFactsOf = (deps: TaskModeDeps, atoms: AtomCounts): Umbrella
   const facts: UmbrellaFacts = { fileCounts: atoms.fileCounts(), sizers };
 
   return facts;
+};
+
+/**
+ * What the task Controls report and what task mode does with it: the search is saved, a depth or a pick goes through
+ * `edits`, and the open state is saved with the canvas re-measured.
+ */
+export const controlsActionsOf = (deps: TaskModeDeps, memory: TaskMemoryPort, edits: ControlsEdits): TaskControlsActions => {
+  const actions: TaskControlsActions = {
+    onSearch: (search: string): void => memory.save({ search }),
+    onDepth: (depth: number): void => edits.choose({ depth }),
+    onPick: (id: string): void => edits.select(id),
+    onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen })
+  };
+
+  return actions;
 };

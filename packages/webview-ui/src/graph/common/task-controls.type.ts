@@ -41,6 +41,12 @@ export type TaskControlsActions = {
   readonly onToggle: (isOpen: boolean) => void;
 };
 
+/** What the task Controls edit in task mode: a new choice, depth or cap, saved and drawn, and a picked task id selected. */
+export type ControlsEdits = {
+  readonly choose: (edit: Partial<TaskViewState>) => void;
+  readonly select: (id: string) => void;
+};
+
 /** The task Controls panel while task mode is on: it replaces the package Controls panel and follows the Controls button. */
 export type TaskControls = {
   /** Shows the panel, open when `isOpen`, with the task view's search and depth. */
