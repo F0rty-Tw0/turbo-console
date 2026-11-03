@@ -7,13 +7,14 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSizer, ViewStateSaver } from '../common/graph-page.type.ts';
 import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
-import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
+import type { TaskLayoutRequest, TaskNaming } from '../common/graph-task.type.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { ROOT_BUILD_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
+import { folderIdOf } from '../utils/folder-id.util.ts';
 
 const API_AT: Position = { x: 10, y: 20 };
 
@@ -139,6 +140,35 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
       expect(rig.view.tasks.show).toHaveBeenCalledWith(
         expect.objectContaining({ titleWidths: new Map([['//', 127]]), rootLabel: 'single-app' })
       );
+    });
+  });
+
+  describe('GIVEN a grouped request with api in libs', () => {
+    const grouped: TaskNaming = { ...NEUTRAL_NAMING, grouped: true, folders: new Map([['api', 'libs']]) };
+    const groupedRequest: TaskLayoutRequest = { ...REQUEST, naming: grouped };
+    let textSizeOf: Mock<NodeSizer>;
+
+    beforeEach(async () => {
+      textSizeOf = vi.fn<NodeSizer>(titleSizeOf);
+
+      const shown = layoutWith(textSizeOf).show(groupedRequest);
+
+      await rig.runs.settle(rig.runs.count() - 1, resultOf(groupedRequest.key, POSITIONS));
+      await shown;
+    });
+
+    it('WHEN a layout lands THEN the canvas draws with the request naming', () => {
+      expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ naming: grouped }));
+    });
+
+    it('WHEN a layout lands THEN the package title and its folder title are measured', () => {
+      expect(textSizeOf.mock.calls).toStrictEqual([['api'], ['libs']]);
+    });
+
+    it('WHEN a layout lands THEN ELK lays pkg:api out in the libs folder compound', () => {
+      const folder = firstCompoundOf(rig.runs.graphOf(0));
+
+      expect(folder?.id).toBe(folderIdOf('libs'));
     });
   });
 
