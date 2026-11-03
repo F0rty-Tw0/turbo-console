@@ -67,16 +67,20 @@ export class GraphShots {
   }
 
   /**
-   * Task mode, ELK once, the selected task restored; settled. Reduced motion is on before the page opens, so the flow
-   * overlay never draws and its moving dashes stay out of the shot.
+   * Task mode, ELK once, the saved selection (if any) restored; settled. Reduced motion is on before the page opens, so
+   * the flow overlay never draws and its moving dashes stay out of the shot.
    */
   public async openTasks(setup: TaskShotSetup, theme: ThemeStub): Promise<void> {
+    const selected = setup.saved.task?.selected ?? null;
+
     await this.page.emulateMedia({ reducedMotion: 'reduce' });
     await this.graph.open({ savedState: setup.saved });
     await this.look.applyTheme(theme);
     await this.host.sendState(setup.state);
     await this.probe.expectLayoutEngine('elk');
-    await this.expectTaskSelected(setup.saved.task?.selected ?? null);
+
+    if (selected !== null) await this.expectTaskSelected(selected);
+
     await this.settle();
   }
 
@@ -122,7 +126,7 @@ export class GraphShots {
   }
 
   /** Task mode draws the selection as the node state, not as the probe's package selection. */
-  private async expectTaskSelected(id: string | null): Promise<void> {
+  private async expectTaskSelected(id: string): Promise<void> {
     const isSelected = async (): Promise<boolean> => {
       const nodes = await this.probe.nodes();
 
