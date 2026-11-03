@@ -11,6 +11,7 @@ import type { TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import {
+  GROUPED_NAMING_STUB,
   MORE_TASKS_STATE_STUB,
   TASK_CHAIN_STUB,
   TASK_STATE_STUB,
@@ -39,10 +40,10 @@ const SHOWN = new Set(['api#build', 'web#build']);
 
 const CHAIN: GraphTask[] = TASK_CHAIN_STUB.filter((task) => SHOWN.has(task.id));
 
-const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, NO_COUNTS);
+const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, NO_COUNTS, GROUPED_NAMING_STUB);
 
 /** The chain and `web#test`, the one dependent hop of `web#build`. */
-const MORE_KEY = taskLayoutKeyOf(MORE_TASKS_STATE_STUB.tasks, new Set([...SHOWN, 'web#test']), NO_COUNTS);
+const MORE_KEY = taskLayoutKeyOf(MORE_TASKS_STATE_STUB.tasks, new Set([...SHOWN, 'web#test']), NO_COUNTS, GROUPED_NAMING_STUB);
 
 const SAVED_PAN: Position = { x: -40, y: 60 };
 

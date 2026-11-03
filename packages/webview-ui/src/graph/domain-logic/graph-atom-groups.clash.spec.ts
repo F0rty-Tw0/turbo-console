@@ -9,6 +9,7 @@ import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas } from '../common/task-canvas.type.ts';
 import { createAtomCanvas } from '../data-access/graph-atom-view.ts';
 import { createTaskCanvas } from '../data-access/graph-task-view.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA = 'web#e2e-ci';
@@ -71,7 +72,8 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
       sizes: SIZES,
       labels: new Map(),
       titleWidths: new Map(),
-      rootLabel: null
+      rootLabel: null,
+      naming: NAMING_STUB
     };
 
     cy = cytoscape({ headless: true, layout });

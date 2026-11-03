@@ -9,6 +9,7 @@ import type { GraphAtomFile, Position, Positions } from '../../bridge/common/gra
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA_SIZE: NodeSize = { width: 160, height: 52 };
@@ -28,7 +29,8 @@ const DRAWING: TaskDrawing = {
   sizes: new Map([['web#e2e-ci', UMBRELLA_SIZE]]),
   labels: new Map(),
   titleWidths: new Map(),
-  rootLabel: null
+  rootLabel: null,
+  naming: NAMING_STUB
 };
 
 const SIBLING_AT: Position = { x: 180, y: 300 };

@@ -60,8 +60,12 @@ export type ProbeFolder = {
   readonly renderedY: number;
   readonly renderedWidth: number;
   readonly renderedHeight: number;
+  /** The model width in px of the box or collapsed node shown, padding left out as in a probe node's `width`; 0 while not drawn. */
+  readonly width: number;
   /** The label drawn on the canvas: `''` on a box and on a collapsed node showing its header row. */
   readonly text: string;
+  /** The resolved `text-max-width` in px of the box or collapsed node shown: how wide its label may draw before its ellipsis. */
+  readonly textMaxWidth: number;
   readonly packages: string[];
 };
 

@@ -1,9 +1,14 @@
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { UmbrellaSizers } from '../common/graph-page.type.ts';
-import type { TaskLayoutDeps, TaskMemoryPort, TaskModeDeps } from '../common/graph-task.type.ts';
+import type { TaskLayoutDeps, TaskMemoryPort, TaskModeDeps, UmbrellaFacts } from '../common/graph-task.type.ts';
 import type { TaskSelectionDeps } from '../common/task-details.type.ts';
 
 type LayoutHooks = Pick<TaskLayoutDeps, 'onPlaced' | 'onDrawn'>;
+
+/** What `umbrellaFactsOf` reads of the Atomizer groups: each umbrella's file count by task id. */
+type AtomCounts = {
+  readonly fileCounts: () => ReadonlyMap<string, number>;
+};
 
 /** What `GraphTaskLayout` is built with: the mode's deps, the saved task view and root label from `memory`, and `hooks`. */
 export const layoutDepsOf = (deps: TaskModeDeps, memory: TaskMemoryPort, hooks: LayoutHooks): TaskLayoutDeps => {
@@ -29,9 +34,10 @@ export const selectionDepsOf = (deps: TaskModeDeps, memory: TaskMemoryPort): Tas
   return selectionDeps;
 };
 
-/** How task mode measures an umbrella's name and file counts. */
-export const umbrellaSizersOf = (deps: TaskModeDeps): UmbrellaSizers => {
+/** How task mode sizes the shown umbrellas: the file counts `atoms` holds, and its name and counts sizers. */
+export const umbrellaFactsOf = (deps: TaskModeDeps, atoms: AtomCounts): UmbrellaFacts => {
   const sizers: UmbrellaSizers = { name: deps.sizeOf, counts: deps.textSizeOf };
+  const facts: UmbrellaFacts = { fileCounts: atoms.fileCounts(), sizers };
 
-  return sizers;
+  return facts;
 };

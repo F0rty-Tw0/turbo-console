@@ -1,8 +1,8 @@
 import type { PackageNode } from '@turbo-console/core';
+import { ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 
 import type { PackageScripts, ToolMatch } from '../common/tool.type.ts';
 
-const ROOT_PACKAGE = '//';
 const VIA_SEPARATOR = ' → ';
 
 /** The scripts a delegation may follow in `pkg`: the commands by task name, and whether D2 lets `turbo X` follow. */
@@ -13,7 +13,7 @@ export const packageScriptsOf = (pkg: PackageNode, singlePackage: boolean): Pack
     if (task.command !== null) entries.push([task.name, task.command]);
   }
 
-  const followTurbo = pkg.name !== ROOT_PACKAGE || singlePackage;
+  const followTurbo = pkg.name !== ROOT_TASK_PACKAGE || singlePackage;
   const scripts: PackageScripts = { bodies: new Map(entries), followTurbo };
 
   return scripts;

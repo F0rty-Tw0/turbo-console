@@ -11,6 +11,8 @@ import type { TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import {
   API_BUILD_STUB,
+  GROUPED_NAMING_STUB,
+  NAMING_STUB,
   SINGLE_TASK_STATE_STUB,
   TASK_CHAIN_STUB,
   TASK_STATE_STUB,
@@ -25,7 +27,7 @@ import { taskLayoutKeyOf } from '../utils/elk-task-graph.util.ts';
 const NO_COUNTS = new Map<string, number>();
 
 /** `web#build` chosen at depth 1: itself and the `api#build` it needs. */
-const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, new Set(['api#build', 'web#build']), NO_COUNTS);
+const KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, new Set(['api#build', 'web#build']), NO_COUNTS, GROUPED_NAMING_STUB);
 
 const API_AT: Position = { x: 10, y: 20 };
 
@@ -47,7 +49,7 @@ const fanStateOf = (count: number): GraphReady => {
   return state;
 };
 
-const SINGLE_KEY = taskLayoutKeyOf(SINGLE_TASK_STATE_STUB.tasks, new Set(['//#build', '//#lint']), NO_COUNTS);
+const SINGLE_KEY = taskLayoutKeyOf(SINGLE_TASK_STATE_STUB.tasks, new Set(['//#build', '//#lint']), NO_COUNTS, NAMING_STUB);
 
 const SINGLE_POSITIONS: Positions = { '//#build': API_AT, '//#lint': WEB_AT };
 

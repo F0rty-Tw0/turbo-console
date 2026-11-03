@@ -2,7 +2,7 @@ import type { FlowControl } from './flow.type.ts';
 import type { FrameClock } from './frame-clock.type.ts';
 import type { GraphInspectionDeps } from './graph-inspection.type.ts';
 import type { LayoutScreen } from './graph-layouts.type.ts';
-import type { GraphView, NodeSizer, PackageSaver } from './graph-page.type.ts';
+import type { GraphView, NodeSizer, PackageSaver, UmbrellaSizers } from './graph-page.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { TaskControls, TaskControlsActions } from './task-controls.type.ts';
@@ -182,12 +182,30 @@ export type TaskChoice = {
   readonly dropped: number;
 };
 
-/** One task layout: the shown tasks, their ids, their layout key and the size of each umbrella among them. */
+/**
+ * How task mode names and groups its boxes: whether package boxes sit in folder boxes, whether package labels show
+ * scopes, the label of each package and the folder of each package, both keyed by package name.
+ */
+export type TaskNaming = {
+  readonly grouped: boolean;
+  readonly scopeShown: boolean;
+  readonly labels: ReadonlyMap<string, string>;
+  readonly folders: ReadonlyMap<string, string>;
+};
+
+/** What sizes the shown umbrellas: each umbrella's file count by task id, and the sizers of its name and counts line. */
+export type UmbrellaFacts = {
+  readonly fileCounts: ReadonlyMap<string, number>;
+  readonly sizers: UmbrellaSizers;
+};
+
+/** One task layout: the shown tasks, their ids, their layout key, the size of each umbrella among them and the box naming. */
 export type TaskLayoutRequest = {
   readonly tasks: GraphTask[];
   readonly shown: ReadonlySet<string>;
   readonly key: string;
   readonly sizes: ReadonlyMap<string, NodeSize>;
+  readonly naming: TaskNaming;
 };
 
 /** What `GraphTaskLayout` adds: the saved task view for its camera rule, and hooks after each placement. */

@@ -8,6 +8,7 @@ import type { GraphTask, Position, Positions } from '../../bridge/common/graph-s
 import type { FlowEdgeGeometry, FlowEdgeReader, FlowEdgeSource } from '../common/flow.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
@@ -34,7 +35,8 @@ const DRAWING: TaskDrawing = {
   sizes: new Map(),
   labels: new Map(),
   titleWidths: new Map(),
-  rootLabel: null
+  rootLabel: null,
+  naming: NAMING_STUB
 };
 
 /** A headless core draws no edge, so each edge's ends are its nodes' centres. */

@@ -1,6 +1,6 @@
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { GraphTaskMemory } from './graph-task-memory.ts';
-import { layoutDepsOf, selectionDepsOf, umbrellaSizersOf } from './graph-task-mode-deps.ts';
+import { layoutDepsOf, selectionDepsOf, umbrellaFactsOf } from './graph-task-mode-deps.ts';
 import { savePanelToggle } from './graph-task-panel.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
@@ -70,7 +70,7 @@ export class GraphTaskMode {
     this.showPage();
 
     const shownSet = this.memory.shownSet();
-    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), umbrellaSizersOf(this.deps));
+    const request = requestOf(this.memory.tasks(), shownSet, umbrellaFactsOf(this.deps, this.layout.atoms), this.memory.naming());
     const shownKey = this.layout.key();
     const knownCount = this.memory.tasks().length;
 
@@ -170,7 +170,7 @@ export class GraphTaskMode {
   /** The notice, prompt, banner and rows of the shown set, then its layout; an empty set empties the canvas. */
   private render(at: number | null, notice: string | null): void {
     const shownSet = this.memory.shownSet();
-    const request = requestOf(this.memory.tasks(), shownSet, this.layout.atoms.fileCounts(), umbrellaSizersOf(this.deps));
+    const request = requestOf(this.memory.tasks(), shownSet, umbrellaFactsOf(this.deps, this.layout.atoms), this.memory.naming());
     const isEmpty = request.tasks.length === 0;
     const knownCount = this.memory.tasks().length;
 

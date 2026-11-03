@@ -11,6 +11,7 @@ import type { AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { fileOf } from '../test/utils/atom-file.spec.util.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
@@ -41,7 +42,8 @@ const DRAWING: TaskDrawing = {
   sizes: SIZES,
   labels: new Map([['web#e2e-ci', '2 files']]),
   titleWidths: new Map(),
-  rootLabel: null
+  rootLabel: null,
+  naming: NAMING_STUB
 };
 
 const PKG_BOXES = new Map([

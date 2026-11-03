@@ -10,6 +10,17 @@ export const styleText = (element: NodeSingular | EdgeSingular, name: string): s
   return typeof value === 'string' ? value : '';
 };
 
+/** A resolved numeric style value, 0 when not a number or `node` is not drawn; Cytoscape types `numericStyle(name)` as `any`. */
+export const styleNumber = (node: NodeSingular, name: string): number => {
+  const isNone = node.empty();
+
+  if (isNone) return 0;
+
+  const value: unknown = node.numericStyle(name);
+
+  return typeof value === 'number' ? value : 0;
+};
+
 /** The element's state class; a box's `dimmed-box` reads `dimmed`. */
 export const probeStateOf = (element: NodeSingular | EdgeSingular): ProbeState => {
   const isSelected = element.hasClass('selected');

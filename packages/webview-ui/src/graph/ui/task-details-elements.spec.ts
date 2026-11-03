@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildTaskDetails, buildTaskDetailsPanel } from './task-details-elements.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import { TASK_DETAILS_ID } from '../common/graph-task.const.ts';
+import { ROOT_TASKS_TITLE, TASK_DETAILS_ID } from '../common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../common/graph.const.ts';
 import type { TaskDetailsModel } from '../common/task-details.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
@@ -174,11 +174,11 @@ describe('FEATURE: task details elements', () => {
       expect(els.owner).toBeNull();
     });
 
-    it('WHEN there is no root label THEN the owner line reads //', () => {
+    it('WHEN there is no root label THEN the owner line reads the root title', () => {
       const els = buildTaskDetails({ ...ROOT_BUILD, rootLabel: null });
       const owner = els.root.children[1]?.children[0];
 
-      expect(owner?.textContent).toBe('//');
+      expect(owner?.textContent).toBe(ROOT_TASKS_TITLE);
     });
   });
 });

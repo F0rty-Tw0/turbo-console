@@ -5,8 +5,10 @@ import { describe, expect, it } from 'vitest';
 import { COMPOUND_OPTIONS } from './elk-grouped-graph.util.ts';
 import { elkTaskGraphOf, taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
+import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import { taskOf } from '../test/utils/shown-set.spec.util.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
+import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
@@ -43,9 +45,19 @@ const graphOf = (
   shown: ReadonlySet<string>,
   sizes: ReadonlyMap<string, NodeSize> = NO_SIZES,
   titleWidths: ReadonlyMap<string, number> = NO_TITLES
-): ElkNode => elkTaskGraphOf({ tasks, shown, sizes, titleWidths }, SIZE_OF);
+): ElkNode => elkTaskGraphOf({ tasks, shown, sizes, titleWidths, naming: NAMING_STUB }, SIZE_OF);
 
 const compoundOf = (graph: ElkNode, id: string): ElkNode | undefined => graph.children?.find((child) => child.id === id);
+
+const MISSING: ElkNode = { id: 'missing' };
+
+/** The compound reached by following `ids` down from `graph`; `MISSING` where a step has no such child. */
+const compoundAt = (graph: ElkNode, ids: string[]): ElkNode => {
+  const step = (node: ElkNode, id: string): ElkNode => compoundOf(node, id) ?? MISSING;
+  const found = ids.reduce(step, graph);
+
+  return found;
+};
 
 /** `web#build` alone, its leaf `leafWidth` wide, its package title `titleWidth` wide, laid out by the real ELK. */
 const layoutOf = async (leafWidth: number, titleWidth: number): Promise<ElkNode> => {
@@ -125,6 +137,59 @@ describe('FEATURE: elkTaskGraphOf', () => {
     });
   });
 
+  describe('GIVEN app with the turbo task app#build and the script app#dev', () => {
+    const tasks = [taskOf('app#build', []), scriptOf('app#dev', [])];
+    const shown = new Set(['app#build', 'app#dev']);
+    const titles = new Map([
+      ['app', 60],
+      ['scripts:app', 40]
+    ]);
+
+    it('WHEN built THEN pkg:app holds the turbo leaf and the compound scripts:app', () => {
+      const graph = graphOf(tasks, shown, NO_SIZES, titles);
+      const app = compoundAt(graph, ['pkg:app']);
+
+      expect(childIdsOf(app)).toStrictEqual(['app#build', 'scripts:app']);
+    });
+
+    it('WHEN built THEN scripts:app holds the script leaf', () => {
+      const graph = graphOf(tasks, shown, NO_SIZES, titles);
+      const scripts = compoundAt(graph, ['pkg:app', 'scripts:app']);
+
+      expect(childIdsOf(scripts)).toStrictEqual(['app#dev']);
+    });
+
+    it('WHEN built THEN scripts:app asks ELK for its title width plus both paddings', () => {
+      const graph = graphOf(tasks, shown, NO_SIZES, titles);
+      const scripts = compoundAt(graph, ['pkg:app', 'scripts:app']);
+
+      expect(scripts.layoutOptions?.['elk.nodeSize.minimum']).toBe(`(0, ${40 + 2 * FOLDER_PADDING_PX})`);
+    });
+
+    it('WHEN only the turbo task is shown THEN pkg:app has no scripts compound', () => {
+      const graph = graphOf(tasks, new Set(['app#build']));
+      const app = compoundAt(graph, ['pkg:app']);
+
+      expect(childIdsOf(app)).toStrictEqual(['app#build']);
+    });
+
+    it('WHEN only the script is shown THEN pkg:app holds just scripts:app', () => {
+      const graph = graphOf(tasks, new Set(['app#dev']));
+      const app = compoundAt(graph, ['pkg:app']);
+
+      expect(childIdsOf(app)).toStrictEqual(['scripts:app']);
+    });
+  });
+
+  describe('GIVEN a script of the root //', () => {
+    it('WHEN built THEN pkg:// holds scripts://', () => {
+      const graph = graphOf([scriptOf('//#dev', [])], new Set(['//#dev']));
+      const root = compoundAt(graph, ['pkg://']);
+
+      expect(childIdsOf(root)).toStrictEqual(['scripts://']);
+    });
+  });
+
   describe('GIVEN a package title of 130, laid out by the real ELK', () => {
     it('WHEN its one leaf is 80 wide THEN the box is 194 wide, 96 high, and the leaf stays at the padding', async () => {
       const graph = await layoutOf(80, 130);
@@ -148,7 +213,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed twice, the set in another order THEN the keys are equal', () => {
       const reversed = new Set(['api#build', 'web#build']);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS)).toBe(taskLayoutKeyOf(TASKS, reversed, NO_COUNTS));
+      expect(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NAMING_STUB)).toBe(taskLayoutKeyOf(TASKS, reversed, NO_COUNTS, NAMING_STUB));
     });
   });
 
@@ -156,7 +221,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed THEN the key differs', () => {
       const more = new Set([...BOTH, 'web#lint']);
 
-      expect(taskLayoutKeyOf(TASKS, more, NO_COUNTS)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS));
+      expect(taskLayoutKeyOf(TASKS, more, NO_COUNTS, NAMING_STUB)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NAMING_STUB));
     });
   });
 
@@ -164,7 +229,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed THEN the key differs', () => {
       const unlinked = [taskOf('api#build', []), taskOf('web#build', [])];
 
-      expect(taskLayoutKeyOf(unlinked, BOTH, NO_COUNTS)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS));
+      expect(taskLayoutKeyOf(unlinked, BOTH, NO_COUNTS, NAMING_STUB)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NAMING_STUB));
     });
   });
 });
@@ -176,19 +241,19 @@ describe('FEATURE: taskLayoutKeyOf with file counts', () => {
     it('WHEN the count changes THEN the key differs', () => {
       const elevenFiles = new Map([['web#build', 11]]);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, elevenFiles)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, tenFiles));
+      expect(taskLayoutKeyOf(TASKS, BOTH, elevenFiles, NAMING_STUB)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, tenFiles, NAMING_STUB));
     });
 
     it('WHEN the counts hold another id that is not shown THEN the key is the same', () => {
       const withStranger = new Map([...tenFiles, ['web#lint', 3]]);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, withStranger)).toBe(taskLayoutKeyOf(TASKS, BOTH, tenFiles));
+      expect(taskLayoutKeyOf(TASKS, BOTH, withStranger, NAMING_STUB)).toBe(taskLayoutKeyOf(TASKS, BOTH, tenFiles, NAMING_STUB));
     });
 
     it('WHEN no shown task has a count THEN the key is the one without counts', () => {
       const strangers = new Map([['web#lint', 3]]);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, strangers)).toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS));
+      expect(taskLayoutKeyOf(TASKS, BOTH, strangers, NAMING_STUB)).toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NAMING_STUB));
     });
   });
 });

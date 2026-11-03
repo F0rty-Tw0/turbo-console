@@ -1,4 +1,5 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
+import { ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 import type { GraphEdge, GraphPackage, GraphState, Positions } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
@@ -15,7 +16,6 @@ import type { GraphShown, GraphToggles } from '../common/graph.type.ts';
 const FNV_OFFSET = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
 const KEY_SEPARATOR = '\0';
-const ROOT_PACKAGE = '//';
 const LOAD_KIND = 'load-no-model';
 const LOADING: GraphState = { kind: 'loading' };
 const NO_IDS: string[] = [];
@@ -83,7 +83,7 @@ const cachedPositionsOf = (cache: GraphLayoutCacheEntry | null, hash: string, pa
 export const rootLabelOf = (model: WorkspaceModel): string | null => {
   if (!model.singlePackage) return null;
 
-  const root = model.packages.find((node) => node.name === ROOT_PACKAGE);
+  const root = model.packages.find((node) => node.name === ROOT_TASK_PACKAGE);
 
   return root?.label ?? null;
 };

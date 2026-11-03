@@ -12,6 +12,10 @@ const GHOST_EDGE_TERM = 'Dashed line: trace link to a hidden package';
 
 const TASK_BOX_TERM = 'Dashed box: the tasks of one package';
 
+const FOLDER_BOX_TERM = 'Folder box: packages in one folder';
+
+const SCRIPTS_BOX_TERM = 'Scripts box: package.json scripts that are not turbo tasks';
+
 const FLOW_TERM = 'Moving dashes: the highlighted task chain (stops after 3 s idle; off with reduced motion or over 50 edges)';
 
 const PACKAGE_TERMS = [
@@ -30,6 +34,8 @@ const PACKAGE_TERMS = [
 
 const TASK_TERMS = [
   TASK_BOX_TERM,
+  FOLDER_BOX_TERM,
+  SCRIPTS_BOX_TERM,
   FLOW_TERM,
   'Task running',
   'Task continuous',
@@ -149,6 +155,12 @@ test.describe('FEATURE: graph legend', () => {
 
       await test.step('AND the task box is drawn with a 4 4 dash', async (): Promise<void> =>
         expect(graphLegend.dashOf(TASK_BOX_TERM, 'rect')).toHaveAttribute('stroke-dasharray', '4 4'));
+
+      await test.step('AND the folder box is solid with a nested box', async (): Promise<void> =>
+        graphLegend.expectSolidNestedBox(FOLDER_BOX_TERM));
+
+      await test.step('AND the scripts box is dashed 2 3', async (): Promise<void> =>
+        expect(graphLegend.dashOf(SCRIPTS_BOX_TERM, 'rect')).toHaveAttribute('stroke-dasharray', '2 3'));
 
       await test.step('AND the moving dashes are a 6 6 pen over the undashed line', async (): Promise<void> => {
         await expect(graphLegend.swatchOf(FLOW_TERM).locator('line')).toHaveCount(2);

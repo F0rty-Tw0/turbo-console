@@ -10,7 +10,9 @@ import { scopedNamesState } from './test/utils/graph-scope-names.spec.util.ts';
 import { closedPanelsSavedState } from './test/utils/graph-shot-state.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
+import { taskCanvasShotSetup } from './test/utils/graph-task-canvas.spec.util.ts';
 import { taskShotSetup } from './test/utils/graph-task-shot.spec.util.ts';
+import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const THEMES = [
   { name: 'dark', theme: THEME_DARK_STUB },
@@ -39,6 +41,8 @@ const SCOPE_HIDDEN: ShotSetup = {
 const TASK_SETUP = taskShotSetup();
 
 const ATOMS_SETUP = atomsShotSetup();
+
+const TASK_CANVAS_SETUP = taskCanvasShotSetup();
 
 const FOLDERS_SETUP: ShotSetup = {
   state: FOLDERS,
@@ -119,6 +123,29 @@ test.describe('FEATURE: theme screenshots with package scopes hidden', () => {
 
       await test.step(`THEN the page matches scope-hidden-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`scope-hidden-${name}.png`));
+    });
+  }
+});
+
+test.describe('FEATURE: theme screenshots of the grouped task canvas', () => {
+  for (const { name, theme } of THEMES) {
+    test(`GIVEN the ${name} theme, the grouped task canvas matches task-canvas-${name}.png`, async ({
+      graphCanvas,
+      graphPage,
+      page
+    }): Promise<void> => {
+      const shots = new GraphShots(page);
+
+      await test.step('WHEN every task of the three-folder state is laid out grouped in task mode', async (): Promise<void> =>
+        shots.openTasks(TASK_CANVAS_SETUP, theme));
+
+      await test.step('AND Fit is pressed and every box is in view', async (): Promise<void> => {
+        await graphPage.pressButton(FIT_LABEL);
+        await graphCanvas.expectAllNodesInView();
+      });
+
+      await test.step(`THEN the page matches task-canvas-${name}.png`, async (): Promise<void> =>
+        expect(page).toHaveScreenshot(`task-canvas-${name}.png`));
     });
   }
 });

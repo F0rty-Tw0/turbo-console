@@ -2,7 +2,7 @@ import type { EdgeSingular, NodeSingular } from 'cytoscape';
 
 import { packageEdges, packageNodes } from './graph-boxes.ts';
 import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
-import { probeStateOf, styleText } from './graph-probe-state.ts';
+import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
 import type {
@@ -15,13 +15,6 @@ import type {
   ProbeNode
 } from '../common/graph-probe.type.ts';
 import { BOX_COLLAPSED_CLASS, GHOST_CLASS } from '../common/graph.const.ts';
-
-/** A resolved numeric style value; Cytoscape types `numericStyle(name)` as `any`. */
-const styleNumber = (node: NodeSingular, name: string): number => {
-  const value: unknown = node.numericStyle(name);
-
-  return typeof value === 'number' ? value : 0;
-};
 
 const idOf = (node: NodeSingular): string => node.id();
 

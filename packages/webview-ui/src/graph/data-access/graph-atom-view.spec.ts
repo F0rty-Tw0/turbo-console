@@ -10,6 +10,7 @@ import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { fileOf } from '../test/utils/atom-file.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
@@ -56,7 +57,8 @@ const DRAWING: TaskDrawing = {
   sizes: new Map([['web#e2e-ci', UMBRELLA_SIZE]]),
   labels: new Map([['web#e2e-ci', '3 files']]),
   titleWidths: new Map(),
-  rootLabel: null
+  rootLabel: null,
+  naming: NAMING_STUB
 };
 
 const idOf = (node: NodeSingular): string => node.id();

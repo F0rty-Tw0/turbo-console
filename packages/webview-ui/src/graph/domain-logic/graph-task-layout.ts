@@ -149,7 +149,8 @@ export class GraphTaskLayout {
       sizes: request.sizes,
       labels: this.atoms.labels(),
       titleWidths,
-      rootLabel: this.deps.rootLabel()
+      rootLabel: this.deps.rootLabel(),
+      naming: request.naming
     });
     this.placed = result;
     this.atoms.placed(request.shown, result.positions, request.sizes, request.tasks);

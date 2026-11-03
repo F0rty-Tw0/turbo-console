@@ -5,6 +5,7 @@ import { graphLocationOf } from './graph-location.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
+import { NO_NAMES } from '../common/graph-task.const.ts';
 import type { GraphLocation, GraphLocationDeps, LocationCrumb, LocationFacts, LocationViews } from '../common/location.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { pageMock } from '../test/mocks/page.mock.ts';
@@ -35,7 +36,9 @@ type RigControls = {
 
 type LocationRig = LocationSpies & RigControls;
 
-const APP_FACTS: LocationFacts = { taskPackage: 'app', taskCount: 3, isSinglePackage: false };
+const APP_FACTS: LocationFacts = { taskPackage: 'app', taskCount: 3, isSinglePackage: false, labels: NO_NAMES };
+
+const LABELLED_FACTS: LocationFacts = { ...APP_FACTS, labels: new Map([['app', 'Application']]) };
 
 const packageOf = (name: string, path: string): GraphPackage => {
   const info: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
@@ -219,6 +222,15 @@ describe('FEATURE: graphLocationOf', () => {
 
       expect(shownLabels(rig)).toStrictEqual(['Packages', 'app', 'Tasks (3)']);
       expect(rig.render.mock.lastCall?.[2]).toStrictEqual([]);
+    });
+
+    it('WHEN the facts carry the label Application for app THEN the crumb reads it, whatever the drawn graph holds', () => {
+      const rig = rigOf('tasks', 'core');
+
+      rig.locationFacts.mockReturnValue(LABELLED_FACTS);
+      rig.location.update();
+
+      expect(shownLabels(rig)).toStrictEqual(['Packages', 'Application', 'Tasks (3)']);
     });
 
     it('WHEN Packages is pressed THEN task mode is left and the folder focus is kept', () => {

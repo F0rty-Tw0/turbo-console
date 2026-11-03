@@ -1,6 +1,6 @@
 import type { BoundingBox12, Core, EdgeSingular, NodeSingular } from 'cytoscape';
 
-import { probeStateOf, styleText } from './graph-probe-state.ts';
+import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeFolder, ProbeFolderLink, ProbeRect } from '../common/graph-probe.type.ts';
 import { BOX_COLLAPSED_CLASS, FOLDER_HIDDEN_CLASS, FOLDER_ID_PREFIX, FOLDER_LINK_CLASS } from '../common/graph.const.ts';
@@ -12,6 +12,8 @@ const NO_RECT: BoundingBox12 = { x1: 0, x2: 0, y1: 0, y2: 0 };
 
 const idOf = (node: NodeSingular): string => node.id();
 
+const isFolderBoxId = (id: string): boolean => id.startsWith(FOLDER_ID_PREFIX);
+
 /** The rendered box of `node`, all 0 when it is not drawn. */
 const rectOf = (node: NodeSingular): BoundingBox12 => {
   const isNone = node.empty();
@@ -21,9 +23,18 @@ const rectOf = (node: NodeSingular): BoundingBox12 => {
   return node.renderedBoundingBox(RECT_OPTIONS);
 };
 
+/** The model width of `node`, padding left out, 0 when it is not drawn. */
+const modelWidthOf = (node: NodeSingular): number => {
+  const isNone = node.empty();
+
+  if (isNone) return 0;
+
+  return node.width();
+};
+
 /**
- * `box` as its folder key, state, centre and size in page CSS pixels (`origin` is the container's top left corner), drawn
- * label and packages; a collapsed folder reads its collapsed node, which is missing while the folder is not shown.
+ * `box` as its folder key, state, centre and size in page CSS pixels (`origin` is the container's top left corner), model
+ * width, drawn label and packages; a collapsed folder reads its collapsed node, which is missing while the folder is not shown.
  */
 const probeFolderOf = (cy: Core, box: NodeSingular, origin: Position): ProbeFolder => {
   const folder = box.id().slice(FOLDER_ID_PREFIX.length);
@@ -44,16 +55,22 @@ const probeFolderOf = (cy: Core, box: NodeSingular, origin: Position): ProbeFold
     renderedY: origin.y + (y1 + y2) / 2,
     renderedWidth: x2 - x1,
     renderedHeight: y2 - y1,
+    width: modelWidthOf(shown),
     text: styleText(shown, 'label'),
+    textMaxWidth: styleNumber(shown, 'text-max-width'),
     packages
   };
 
   return probeFolder;
 };
 
-/** The folder boxes sorted by folder key code unit, the root `''` first; none while the graph is flat. */
+/**
+ * The folder boxes sorted by folder key code unit, the root `''` first; none while the graph is flat. Only folder box ids
+ * count, so a task mode package or Scripts compound is no folder.
+ */
 export const probeFoldersOf = (cy: Core, origin: Position): ProbeFolder[] => {
-  const ids = cy.nodes(':parent').map(idOf).sort();
+  const parentIds = cy.nodes(':parent').map(idOf);
+  const ids = parentIds.filter(isFolderBoxId).sort();
   const probeIdFolder = (id: string): ProbeFolder => probeFolderOf(cy, cy.getElementById(id), origin);
 
   return ids.map(probeIdFolder);

@@ -40,9 +40,14 @@ const crumbButton = (crumb: LocationCrumb, press: LocationPress): HTMLButtonElem
   return button;
 };
 
-/** The current crumb's text, or a button for any other crumb. */
+/** The root crumb: plain text, as the package graph has no root node to go to. */
+const rootCrumb = (label: string): HTMLElement => textElement('span', 'graph-location-crumb', label);
+
+/** The current crumb's text, the root crumb's plain text, or a button for any other crumb. */
 const crumbChild = (crumb: LocationCrumb, press: LocationPress): HTMLElement => {
   if (crumb.isCurrent) return currentCrumb(crumb.label);
+
+  if (crumb.kind === 'root') return rootCrumb(crumb.label);
 
   return crumbButton(crumb, press);
 };

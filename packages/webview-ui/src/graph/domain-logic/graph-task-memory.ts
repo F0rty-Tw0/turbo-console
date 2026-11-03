@@ -1,27 +1,36 @@
-import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
+import type { GraphPackage, GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
-import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
-import type { TaskModes } from '../common/graph-task.type.ts';
+import { NO_NAMES } from '../common/graph-task.const.ts';
+import type { TaskModes, TaskNaming } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
+import { folderOf } from '../utils/folder-group.util.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
+import { labelsOf } from '../utils/package-label.util.ts';
 import { shownSetOf } from '../utils/shown-set.util.ts';
 import { taskPoolOf } from '../utils/task-pool.util.ts';
 
+/** A package's name and the folder its path sits in. */
+const folderEntryOf = (pkg: GraphPackage): [string, string] => [pkg.name, folderOf(pkg.path)];
+
 /**
  * What task mode remembers: the host's latest task listing and the pool drawn from it (the turbo tasks, plus the scripts
- * when shown), hash, single-package flag and root label, and the task view it saves through `TaskModes`.
+ * when shown), hash, single-package flag, root label, scope bit, package labels and folders, and the task view it saves
+ * through `TaskModes`.
  */
 export class GraphTaskMemory {
-  private readonly modes: Pick<TaskModes, 'task' | 'saveTask'>;
+  private readonly modes: Pick<TaskModes, 'task' | 'saveTask' | 'current'>;
   private latestTasks: GraphTask[] = [];
   private pool: GraphTask[] = [];
   private listedIds: ReadonlySet<string> = new Set();
   private latestHash = '';
   private isSinglePackage = false;
   private latestRootLabel: string | null = null;
+  private isScopeShown = true;
+  private labels: ReadonlyMap<string, string> = NO_NAMES;
+  private folders: ReadonlyMap<string, string> = NO_NAMES;
 
-  public constructor(modes: Pick<TaskModes, 'task' | 'saveTask'>) {
+  public constructor(modes: Pick<TaskModes, 'task' | 'saveTask' | 'current'>) {
     this.modes = modes;
   }
 
@@ -32,6 +41,21 @@ export class GraphTaskMemory {
     this.latestHash = state.hash;
     this.isSinglePackage = state.singlePackage;
     this.latestRootLabel = state.rootLabel;
+    this.isScopeShown = state.scopeShown;
+    this.labels = labelsOf(state.packages, state.scopeShown);
+    this.folders = new Map(state.packages.map(folderEntryOf));
+  }
+
+  /**
+   * How the task boxes are named and grouped: grouped as the saved view says (a fresh view is grouped), never for a single
+   * package; the labels and folders come from the package records, so neither holds the root `//` of a monorepo.
+   */
+  public naming(): TaskNaming {
+    const isViewGrouped = this.modes.current()?.grouped ?? true;
+    const grouped = isViewGrouped && !this.isSinglePackage;
+    const naming: TaskNaming = { grouped, scopeShown: this.isScopeShown, labels: this.labels, folders: this.folders };
+
+    return naming;
   }
 
   /** The pool task mode draws and counts. */
@@ -65,18 +89,18 @@ export class GraphTaskMemory {
   }
 
   /**
-   * The one package of the chosen tasks the state knows, `null` for none, several or the workspace root, which the package
-   * graph never draws; the `taskCount` shown, which the caller counted from the shown set it drew; and whether the state
-   * is a single package.
+   * The one package of the chosen tasks the state knows (the workspace root `//` too), `null` for none or several; the
+   * `taskCount` shown, which the caller counted from the shown set it drew; whether the state is a single package; and
+   * the package labels.
    */
   public locationFacts(taskCount: number): LocationFacts {
     const chosen = new Set(this.view().chosen);
     const known = this.latestTasks.filter((task) => chosen.has(task.id));
     const packages = new Set(known.map((task) => task.packageName));
     const [only] = packages;
-    const isOneDrawnPackage = packages.size === 1 && only !== undefined && only !== ROOT_TASK_PACKAGE;
+    const isOneDrawnPackage = packages.size === 1 && only !== undefined;
     const taskPackage = isOneDrawnPackage ? only : null;
-    const facts: LocationFacts = { taskPackage, taskCount, isSinglePackage: this.isSinglePackage };
+    const facts: LocationFacts = { taskPackage, taskCount, isSinglePackage: this.isSinglePackage, labels: this.labels };
 
     return facts;
   }

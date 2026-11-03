@@ -8,6 +8,7 @@ import {
   DEPENDENTS_DEPTH_LABEL,
   MAX_TASK_DEPTH,
   MIN_TASK_DEPTH,
+  NO_NAMES,
   SEARCH_TASKS_LABEL,
   TASK_CONTROLS_ID
 } from '../common/graph-task.const.ts';
@@ -35,7 +36,7 @@ const taskDepthInput = (): HTMLInputElement => {
 const taskPick = (task: GraphTask, rootLabel: string | null): HTMLButtonElement => {
   const pick = textElement('button', 'controls-name', '');
   const name = textElement('span', 'controls-task-name', task.name);
-  const description = textElement('span', 'controls-task-package', ownerTextOf(task.packageName, rootLabel));
+  const description = textElement('span', 'controls-task-package', ownerTextOf(task.packageName, rootLabel, NO_NAMES));
 
   description.id = `${TASK_CONTROLS_ID}-${task.id}`;
   description.setAttribute('aria-hidden', 'true');

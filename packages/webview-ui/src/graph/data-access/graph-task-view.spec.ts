@@ -5,8 +5,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { probeStateOf } from './graph-probe-state.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import { ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
@@ -36,7 +38,8 @@ const DRAWING: TaskDrawing = {
   sizes: NO_SIZES,
   labels: NO_LABELS,
   titleWidths: new Map(),
-  rootLabel: null
+  rootLabel: null,
+  naming: NAMING_STUB
 };
 
 const WEB_TITLE_WIDTHS = new Map([['web', 130]]);
@@ -130,13 +133,13 @@ describe('FEATURE: createTaskCanvas', () => {
       expect(cy.nodes('.task-box').map(idOf)).toStrictEqual(['pkg:api', 'pkg:web']);
     });
 
-    it('WHEN a root task is shown THEN its pkg:// compound is titled //, as the package graph labels the root package', () => {
+    it('WHEN a root task is shown THEN its pkg:// compound is titled with the root title', () => {
       const tasks = [taskOf('//#build', [])];
       const rootDrawing: TaskDrawing = { ...DRAWING, tasks };
 
       canvas.show(rootDrawing);
 
-      expect(cy.getElementById('pkg://').data('title')).toBe('//');
+      expect(cy.getElementById('pkg://').data('title')).toBe(ROOT_TASKS_TITLE);
     });
 
     it('WHEN a root task is shown with the label single-app THEN the compound is titled single-app and keeps its pkg:// id', () => {

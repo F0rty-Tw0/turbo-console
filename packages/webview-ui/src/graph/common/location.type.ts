@@ -4,11 +4,14 @@ import type { PageElements } from './page-elements.type.ts';
 import type { WidgetViews } from './widget.type.ts';
 import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts';
 
-/** A crumb of the location bar: "Packages", a focused folder, the package of a task choice, or "Tasks (n)". */
+/**
+ * A crumb of the location bar: "Packages", a focused folder, the package of a task choice, the root `//` of a task
+ * choice (plain text, with no package-graph node to focus), or "Tasks (n)".
+ */
 export type LocationCrumb = {
-  readonly kind: 'packages' | 'folder' | 'package' | 'tasks';
+  readonly kind: 'packages' | 'folder' | 'package' | 'root' | 'tasks';
   readonly label: string;
-  /** The folder key or package name the crumb stands for; empty for "Packages" and "Tasks (n)". */
+  /** The folder key or package name the crumb stands for; empty for "Packages", "Tasks (n)" and the root crumb. */
   readonly name: string;
   /** The last crumb: text with `aria-current="page"`, never a button. */
   readonly isCurrent: boolean;
@@ -16,7 +19,7 @@ export type LocationCrumb = {
 
 /**
  * What the location bar shows: the mode, the focused folder, the one package of the chosen tasks, the shown task count,
- * and whether the repo is a single package, whose page never leaves task mode.
+ * whether the repo is a single package, whose page never leaves task mode, and the package labels the crumb prints.
  */
 export type LocationState = {
   readonly mode: GraphViewMode;
@@ -24,13 +27,14 @@ export type LocationState = {
   readonly taskPackage: string | null;
   readonly taskCount: number;
   readonly isSinglePackage: boolean;
+  readonly labels: ReadonlyMap<string, string>;
 };
 
 /**
  * What task mode adds to the location: the one package every chosen task belongs to, `null` for none or several, the
- * shown count, and the single-package flag.
+ * shown count, the single-package flag and the package labels.
  */
-export type LocationFacts = Pick<LocationState, 'taskPackage' | 'taskCount' | 'isSinglePackage'>;
+export type LocationFacts = Pick<LocationState, 'taskPackage' | 'taskCount' | 'isSinglePackage' | 'labels'>;
 
 /** `nav.graph-location`, a page row directly before the body: the crumbs, then the folder focus info lines. */
 export type LocationBarElements = {

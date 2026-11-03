@@ -1,18 +1,15 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { edgeIdOf } from './edge-id.util.ts';
-import { COMPOUND_OPTIONS, elkEdgeOf } from './elk-grouped-graph.util.ts';
+import { elkEdgeOf } from './elk-grouped-graph.util.ts';
+import { compoundOptionsOf, folderBoxIdOf, scriptsBoxIdOf, taskBoxIdOf, taskFolderOf, taskPackagesOf } from './task-compound.util.ts';
 import type { GraphEdge, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSizer } from '../common/graph-page.type.ts';
-import { TASK_BOX_PREFIX } from '../common/graph-task.const.ts';
-import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
-import { ELK_GROUPED_ROOT_OPTIONS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import type { TaskLayoutRequest, TaskNaming } from '../common/graph-task.type.ts';
+import { ELK_GROUPED_ROOT_OPTIONS } from '../common/graph.const.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
 
-type TaskGraphInput = Pick<TaskLayoutRequest, 'tasks' | 'shown' | 'sizes'> & Pick<TaskDrawing, 'titleWidths'>;
-
-/** The compound id of a task's package; the root package `//` gives `pkg://`. */
-export const taskBoxIdOf = (packageName: string): string => `${TASK_BOX_PREFIX}${packageName}`;
+type TaskGraphInput = Pick<TaskLayoutRequest, 'tasks' | 'shown' | 'sizes' | 'naming'> & Pick<TaskDrawing, 'titleWidths'>;
 
 /** The links from each shown task to each shown dependency, `source` the dependent. */
 export const taskEdgesOf = (tasks: GraphTask[], shown: ReadonlySet<string>): GraphEdge[] => {
@@ -32,33 +29,75 @@ export const taskEdgesOf = (tasks: GraphTask[], shown: ReadonlySet<string>): Gra
   return drawn.flatMap(edgesOf);
 };
 
-/**
- * A package compound's options: with a title width, at least that wide plus both paddings, so its title draws whole.
- * Under `elk.direction: DOWN` ELK reads the minimum as (height, width); the 0 height is no minimum.
- */
-const compoundOptionsOf = (titleWidth: number | undefined): Readonly<Record<string, string>> => {
-  if (titleWidth === undefined) return COMPOUND_OPTIONS;
-
-  const minimum = `(0, ${titleWidth + 2 * FOLDER_PADDING_PX})`;
-  const options = { ...COMPOUND_OPTIONS, 'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': minimum };
-
-  return options;
-};
-
 const sortedPackagesOf = (tasks: GraphTask[]): string[] => {
-  const names = new Set(tasks.map((task) => task.packageName));
+  const names = taskPackagesOf(tasks);
   const sorted = [...names];
 
   return sorted.sort();
 };
 
+/** The Scripts compound of a package around its script `leaves`, at least as wide as its title; none without a script. */
+const scriptsBoxesOf = (packageName: string, leaves: ElkNode[], titleWidths: ReadonlyMap<string, number>): ElkNode[] => {
+  if (leaves.length === 0) return [];
+
+  const id = scriptsBoxIdOf(packageName);
+  const layoutOptions = compoundOptionsOf(titleWidths.get(id));
+  const compound: ElkNode = { id, layoutOptions, children: leaves };
+  const boxes = [compound];
+
+  return boxes;
+};
+
+/**
+ * The root children: each package compound of `packageBoxes` (keyed by package name) inside the folder compound
+ * `folderBoxIdOf` names, the folder compounds in code unit order, so the root folder comes first, each at least as wide
+ * as its folder title; a package with no folder box, every package while ungrouped, stays at the root.
+ */
+const rootChildrenOf = (
+  packageBoxes: ReadonlyMap<string, ElkNode>,
+  naming: TaskNaming,
+  titleWidths: ReadonlyMap<string, number>
+): ElkNode[] => {
+  const atRoot: ElkNode[] = [];
+  const byFolder = new Map<string, ElkNode[]>();
+
+  for (const [packageName, box] of packageBoxes) {
+    const folderId = folderBoxIdOf(packageName, naming);
+
+    if (folderId === null) {
+      atRoot.push(box);
+    } else {
+      const siblings = byFolder.get(folderId) ?? [];
+
+      byFolder.set(folderId, [...siblings, box]);
+    }
+  }
+
+  const folderKeys = byFolder.keys();
+  const folderIds = [...folderKeys];
+
+  folderIds.sort();
+  const folderBoxOf = (id: string): ElkNode => {
+    const layoutOptions = compoundOptionsOf(titleWidths.get(id));
+    const children = byFolder.get(id) ?? [];
+    const compound: ElkNode = { id, layoutOptions, children };
+
+    return compound;
+  };
+  const folderBoxes = folderIds.map(folderBoxOf);
+
+  return [...atRoot, ...folderBoxes];
+};
+
 /**
  * The task ELK input, as `groupedElkGraphOf`: one padded compound per package with a shown task, at least as wide as its
- * title in `titleWidths`, the shown tasks inside sized by `sizes` or else their names, every link at the root so ELK
- * routes links across packages (`INCLUDE_CHILDREN`).
+ * title in `titleWidths`, holding the shown turbo tasks and, when a script is shown, a Scripts compound around the shown
+ * scripts; tasks are sized by `sizes` or else their names, every link at the root so ELK routes links across packages and
+ * into the nested Scripts compounds (`INCLUDE_CHILDREN`). While `naming` is grouped each package compound sits in its
+ * folder compound; ungrouped the package compounds are the root children.
  */
 export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkNode => {
-  const { tasks, shown, sizes, titleWidths } = request;
+  const { tasks, shown, sizes, titleWidths, naming } = request;
   const drawn = tasks.filter((task) => shown.has(task.id));
   const leafOf = (task: GraphTask): ElkNode => {
     const { width, height } = sizes.get(task.id) ?? sizeOf(task.name);
@@ -68,31 +107,55 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
   };
   const compoundOf = (packageName: string): ElkNode => {
     const own = drawn.filter((task) => task.packageName === packageName);
-    const children = own.map(leafOf);
+    const turboLeaves = own.filter((task) => task.isTurboTask).map(leafOf);
+    const scriptLeaves = own.filter((task) => !task.isTurboTask).map(leafOf);
+    const scriptsBoxes = scriptsBoxesOf(packageName, scriptLeaves, titleWidths);
+    const children = [...turboLeaves, ...scriptsBoxes];
     const layoutOptions = compoundOptionsOf(titleWidths.get(packageName));
     const compound: ElkNode = { id: taskBoxIdOf(packageName), layoutOptions, children };
 
     return compound;
   };
-  const children = sortedPackagesOf(drawn).map(compoundOf);
+  const boxEntryOf = (packageName: string): [string, ElkNode] => [packageName, compoundOf(packageName)];
+  const packageBoxes = new Map(sortedPackagesOf(drawn).map(boxEntryOf));
+  const children = rootChildrenOf(packageBoxes, naming, titleWidths);
   const edges = taskEdgesOf(drawn, shown).map(elkEdgeOf);
   const graph: ElkNode = { id: 'root', layoutOptions: ELK_GROUPED_ROOT_OPTIONS, children, edges };
 
   return graph;
 };
 
+/** The sorted `[packageName, folder]` pairs of the packages of `drawn` while grouped; none while ungrouped. */
+const folderPairsOf = (drawn: GraphTask[], naming: TaskNaming): [string, string][] => {
+  if (!naming.grouped) return [];
+
+  const pairOf = (packageName: string): [string, string] => [packageName, taskFolderOf(packageName, naming)];
+
+  return sortedPackagesOf(drawn).map(pairOf);
+};
+
 /**
- * What a task layout depends on: the sorted shown task ids, the sorted ids of the links between them, and, when a shown
- * task has a file count, those counts by sorted id. Without counts the key is the one of a graph with none.
+ * What a task layout depends on: the sorted shown task ids, the sorted ids of the links between them, when a shown task
+ * has a file count, those counts by sorted id, and last the grouping, the scope bit (box titles, so box widths, follow
+ * it) and, while grouped, each shown package's folder. Without counts the key is the one of a graph with none; a key
+ * saved before the last element existed never equals one built now.
  */
-export const taskLayoutKeyOf = (tasks: GraphTask[], shown: ReadonlySet<string>, fileCounts: ReadonlyMap<string, number>): string => {
-  const ids = tasks.filter((task) => shown.has(task.id)).map((task) => task.id);
+export const taskLayoutKeyOf = (
+  tasks: GraphTask[],
+  shown: ReadonlySet<string>,
+  fileCounts: ReadonlyMap<string, number>,
+  naming: TaskNaming
+): string => {
+  const drawn = tasks.filter((task) => shown.has(task.id));
+  const ids = drawn.map((task) => task.id);
   const edgeIds = taskEdgesOf(tasks, shown).map(edgeIdOf);
   const counted = ids.filter((id) => fileCounts.has(id)).sort();
   const counts = counted.map((id) => [id, fileCounts.get(id)]);
   const parts = [ids.sort(), edgeIds.sort()];
   const withCounts = [...parts, counts];
   const keyed = counts.length === 0 ? parts : withCounts;
+  const grouping = [naming.grouped, naming.scopeShown, folderPairsOf(drawn, naming)];
+  const withGrouping = [...keyed, grouping];
 
-  return JSON.stringify(keyed);
+  return JSON.stringify(withGrouping);
 };

@@ -1,4 +1,6 @@
 import { folderTitleOf } from './controls-text.util.ts';
+import { ownerTextOf } from './owner-text.util.ts';
+import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 import { PACKAGES_CRUMB, TASKS_CRUMB_STEM } from '../common/location.const.ts';
 import type { LocationCrumb, LocationState } from '../common/location.type.ts';
 
@@ -20,12 +22,21 @@ const packageTrailOf = (folder: string | null): LocationCrumb[] => {
   return [packages, focused];
 };
 
+/** The crumb of the one package of the chosen tasks, labelled by `ownerTextOf`: a root crumb for the root, else a package crumb. */
+const ownerCrumbOf = (taskPackage: string, labels: ReadonlyMap<string, string>): LocationCrumb => {
+  const label = ownerTextOf(taskPackage, null, labels);
+
+  if (taskPackage === ROOT_TASK_PACKAGE) return crumbOf('root', label, '');
+
+  return crumbOf('package', label, taskPackage);
+};
+
 /**
  * "Packages", the one package of the chosen tasks when there is one, then "Tasks (n)"; a folder focus is not shown. A
  * single package has no package mode to go back to, so its trail is "Tasks (n)" alone.
  */
 const taskTrailOf = (state: LocationState): LocationCrumb[] => {
-  const { taskPackage, taskCount, isSinglePackage } = state;
+  const { taskPackage, taskCount, isSinglePackage, labels } = state;
   const packages = crumbOf('packages', PACKAGES_CRUMB, '');
   const tasks = crumbOf('tasks', `${TASKS_CRUMB_STEM} (${taskCount})`, '');
 
@@ -33,7 +44,7 @@ const taskTrailOf = (state: LocationState): LocationCrumb[] => {
 
   if (taskPackage === null) return [packages, tasks];
 
-  const owner = crumbOf('package', taskPackage, taskPackage);
+  const owner = ownerCrumbOf(taskPackage, labels);
 
   return [packages, owner, tasks];
 };

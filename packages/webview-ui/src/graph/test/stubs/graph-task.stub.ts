@@ -1,5 +1,7 @@
 import type { GraphReady, GraphTask, Position } from '../../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../../bridge/common/graph-view-state.type.ts';
+import { NO_NAMES } from '../../common/graph-task.const.ts';
+import type { TaskNaming } from '../../common/graph-task.type.ts';
 
 /** One runnable task, `a#build`, with no dependency. */
 export const GRAPH_TASK_STUB: GraphTask = {
@@ -72,3 +74,12 @@ export const TASK_VIEW_STUB: TaskViewState = {
   fitted: false,
   layoutKey: ''
 };
+
+/** The naming of an ungrouped task graph with scopes shown and no labels or folders known. */
+export const NAMING_STUB: TaskNaming = { grouped: false, scopeShown: true, labels: NO_NAMES, folders: NO_NAMES };
+
+/**
+ * The naming task mode builds for a monorepo stub with no package records under a fresh or grouped saved view: grouped,
+ * scopes shown, no labels or folders, so every package sits in the root folder.
+ */
+export const GROUPED_NAMING_STUB: TaskNaming = { ...NAMING_STUB, grouped: true };

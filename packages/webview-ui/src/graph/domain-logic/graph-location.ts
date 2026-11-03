@@ -1,4 +1,5 @@
 import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts';
+import { NO_NAMES } from '../common/graph-task.const.ts';
 import type {
   GraphLocation,
   GraphLocationDeps,
@@ -10,7 +11,7 @@ import type {
 import { folderLinesOf } from '../utils/folder-lines.util.ts';
 import { locationCrumbsOf } from '../utils/location.util.ts';
 
-const NO_TASK_FACTS: LocationFacts = { taskPackage: null, taskCount: 0, isSinglePackage: false };
+const NO_TASK_FACTS: LocationFacts = { taskPackage: null, taskCount: 0, isSinglePackage: false, labels: NO_NAMES };
 
 /** The shown tasks' facts in task mode; package mode never reads them. */
 const factsOf = (deps: GraphLocationDeps, mode: GraphViewMode): LocationFacts => {

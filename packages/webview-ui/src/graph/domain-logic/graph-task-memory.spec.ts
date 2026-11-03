@@ -16,10 +16,12 @@ import {
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 
-type MemoryModes = Pick<TaskModes, 'task' | 'saveTask'>;
+type MemoryModes = Pick<TaskModes, 'task' | 'saveTask' | 'current'>;
 
 /** A monorepo state whose only tasks are the workspace root's. */
 const ROOT_TASKS_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage: false };
+
+const ROOT_AND_WEB_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [...TASK_STATE_STUB.tasks, ROOT_BUILD_STUB] };
 
 const APP_BUILD = taskOf('app#build', []);
 
@@ -32,7 +34,7 @@ const SCRIPTS_HIDDEN_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [APP_BUILD
 
 const idsOf = (tasks: GraphTask[]): string[] => tasks.map((task) => task.id);
 
-type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: LocationFacts];
+type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: Omit<LocationFacts, 'labels'>];
 
 const FACTS_ROWS: FactsRow[] = [
   [
@@ -59,13 +61,19 @@ const FACTS_ROWS: FactsRow[] = [
     'only workspace root tasks',
     ROOT_TASKS_STATE,
     ['//#build', '//#lint'],
-    { taskPackage: null, taskCount: 2, isSinglePackage: false }
+    { taskPackage: '//', taskCount: 2, isSinglePackage: false }
+  ],
+  [
+    'the workspace root and web',
+    ROOT_AND_WEB_STATE,
+    ['//#build', 'web#build'],
+    { taskPackage: null, taskCount: 3, isSinglePackage: false }
   ],
   ['nothing, in a single package', SINGLE_TASK_STATE_STUB, [], { taskPackage: null, taskCount: 2, isSinglePackage: true }]
 ];
 
 const modesOf = (saved: TaskViewState | null): MemoryModes => {
-  const modes: MemoryModes = { task: vi.fn(() => saved), saveTask: vi.fn() };
+  const modes: MemoryModes = { task: vi.fn(() => saved), saveTask: vi.fn(), current: vi.fn(() => null) };
 
   return modes;
 };
@@ -229,7 +237,7 @@ describe('FEATURE: task mode memory', () => {
 
       const { ids } = memory.shownSet();
 
-      expect(memory.locationFacts(ids.length)).toStrictEqual(facts);
+      expect(memory.locationFacts(ids.length)).toStrictEqual({ ...facts, labels: memory.naming().labels });
     });
   });
 

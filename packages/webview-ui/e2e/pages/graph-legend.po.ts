@@ -50,6 +50,14 @@ export class GraphLegend {
     return swatch.locator('rect');
   }
 
+  /** The term's swatch is a solid box around a nested box: two rects and no dashed part. */
+  public async expectSolidNestedBox(term: string): Promise<void> {
+    const swatch = this.swatchOf(term);
+
+    await expect(swatch.locator('rect')).toHaveCount(2);
+    await expect(swatch.locator('[stroke-dasharray]')).toHaveCount(0);
+  }
+
   public async expectHeadingFocused(): Promise<void> {
     await expect(this.heading).toBeFocused();
   }
