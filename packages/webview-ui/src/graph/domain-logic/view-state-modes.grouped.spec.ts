@@ -28,60 +28,75 @@ describe('FEATURE: ViewStateModes saveGrouped', () => {
     saver = { schedule: vi.fn<ViewStateSaver['schedule']>(), flush: vi.fn<ViewStateSaver['flush']>() };
   });
 
-  it('GIVEN task mode saved grouped true WHEN saveGrouped(false) THEN one write with grouped false, fitted true and every other field kept', () => {
-    const modes = new ViewStateModes(saver, TASK_SAVED);
+  describe('GIVEN task mode saved grouped true with dragged panel widths', () => {
+    let modes: ViewStateModes;
 
-    modes.saveGrouped(false);
+    beforeEach((): void => {
+      modes = new ViewStateModes(saver, TASK_SAVED);
+    });
 
-    expect(saver.schedule).toHaveBeenCalledExactlyOnceWith({ ...TASK_SAVED, grouped: false, fitted: true });
-    expect(modes.current()?.grouped).toBe(false);
+    describe('WHEN saveGrouped(false)', () => {
+      beforeEach((): void => {
+        modes.saveGrouped(false);
+      });
+
+      it('THEN one write holds grouped false, fitted true and every other field kept', () => {
+        expect(saver.schedule).toHaveBeenCalledExactlyOnceWith({ ...TASK_SAVED, grouped: false, fitted: true });
+      });
+
+      it('THEN current() reads grouped false', () => {
+        expect(modes.current()?.grouped).toBe(false);
+      });
+
+      it('THEN the written state carries the panel widths', () => {
+        expect(modes.current()?.panelWidths).toStrictEqual(WIDTHS);
+      });
+    });
   });
 
-  it('GIVEN a camera saved unfitted and grouped true WHEN saveGrouped(false) THEN fitted is true', () => {
-    const modes = new ViewStateModes(saver, PACKAGE_SAVED);
+  describe('GIVEN package mode saved grouped true with an unfitted camera', () => {
+    let modes: ViewStateModes;
 
-    modes.saveGrouped(false);
+    beforeEach((): void => {
+      modes = new ViewStateModes(saver, PACKAGE_SAVED);
+    });
 
-    expect(modes.current()?.fitted).toBe(true);
+    it('WHEN saveGrouped(false) THEN fitted is true', () => {
+      modes.saveGrouped(false);
+
+      expect(modes.current()?.fitted).toBe(true);
+    });
+
+    it('WHEN saveGrouped(true) with the same value THEN fitted stays false', () => {
+      modes.saveGrouped(true);
+
+      expect(modes.current()?.fitted).toBe(false);
+    });
+
+    it('WHEN saveGrouped(true) THEN it writes in package mode', () => {
+      modes.saveGrouped(true);
+
+      expect(modes.mode()).toBe('packages');
+    });
   });
 
-  it('GIVEN a camera saved unfitted and grouped true WHEN saveGrouped(true) with the same value THEN fitted stays false', () => {
-    const modes = new ViewStateModes(saver, PACKAGE_SAVED);
+  describe('GIVEN nothing saved', () => {
+    it('WHEN saveGrouped(true) THEN nothing is written and current() stays null', () => {
+      const modes = new ViewStateModes(saver, null);
 
-    modes.saveGrouped(true);
+      modes.saveGrouped(true);
 
-    expect(modes.current()?.fitted).toBe(false);
+      expect([saver.schedule.mock.calls.length, modes.current()]).toStrictEqual([0, null]);
+    });
   });
 
-  it('GIVEN package mode saved WHEN saveGrouped(true) THEN it writes in package mode', () => {
-    const modes = new ViewStateModes(saver, PACKAGE_SAVED);
+  describe('GIVEN a state read without a grouping choice', () => {
+    it('WHEN saveGrouped(true) THEN isGroupingSaved() is true', () => {
+      const modes = new ViewStateModes(saver, TASK_SAVED, false);
 
-    modes.saveGrouped(true);
+      modes.saveGrouped(true);
 
-    expect(modes.mode()).toBe('packages');
-  });
-
-  it('GIVEN nothing saved WHEN saveGrouped(true) THEN nothing is written and current() stays null', () => {
-    const modes = new ViewStateModes(saver, null);
-
-    modes.saveGrouped(true);
-
-    expect([saver.schedule.mock.calls.length, modes.current()]).toStrictEqual([0, null]);
-  });
-
-  it('GIVEN a state read without a grouping choice WHEN saveGrouped(true) THEN isGroupingSaved() is true', () => {
-    const modes = new ViewStateModes(saver, TASK_SAVED, false);
-
-    modes.saveGrouped(true);
-
-    expect(modes.isGroupingSaved()).toBe(true);
-  });
-
-  it('GIVEN dragged panel widths WHEN saveGrouped THEN the written state carries them', () => {
-    const modes = new ViewStateModes(saver, TASK_SAVED);
-
-    modes.saveGrouped(false);
-
-    expect(modes.current()?.panelWidths).toStrictEqual(WIDTHS);
+      expect(modes.isGroupingSaved()).toBe(true);
+    });
   });
 });
