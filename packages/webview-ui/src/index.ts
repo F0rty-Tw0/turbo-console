@@ -71,7 +71,7 @@ export {
   TASK_COUNT_MAX
 } from './bridge/common/graph-message.const.ts';
 
-export { LAYOUT_VERSION } from './graph/common/graph-layout.const.ts';
+export { LAYOUT_VERSION, ROUTE_BENDS_MAX } from './graph/common/graph-layout.const.ts';
 
 export { ROOT_TASKS_TITLE, ROOT_TASK_PACKAGE, TASK_CAP } from './graph/common/graph-task.const.ts';
 

@@ -126,7 +126,7 @@ type PositionsKey = { readonly type: 'positions' };
 type ExportImageKey = { readonly type: 'exportImage' };
 type RunTaskKey = { readonly type: 'runTask' };
 
-/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, root tasks title and root task package constants; everything else is wire-contract types. The webview-only bridge stays internal. */
+/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, root tasks title, root task package, layout version and route bend limit constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
   'ENTRY_TEXT_MAX',
   'ICON_ID_PATTERN',
@@ -137,6 +137,7 @@ const RUNTIME_EXPORTS = [
   'MANIFEST_LINE_MAX',
   'ROOT_TASKS_TITLE',
   'ROOT_TASK_PACKAGE',
+  'ROUTE_BENDS_MAX',
   'TASK_CAP',
   'TASK_COUNT_MAX',
   'TOOL_ICON_PREFIX',
@@ -169,6 +170,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.MANIFEST_FIELDS).toStrictEqual(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']);
       expect(entry.ICON_ID_PATTERN).toBe(ICON_ID_PATTERN);
       expect(entry.LAYOUT_VERSION).toBe(2);
+      expect(entry.ROUTE_BENDS_MAX).toBe(64);
       expect(entry.edgeIdOf).toBe(edgeIdOf);
       expect(entry.TOOL_ICON_PREFIX).toBe(TOOL_ICON_PREFIX);
       expect(entry.durationText).toBe(durationText);
