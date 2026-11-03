@@ -55,3 +55,12 @@ export const postableRoutesOf = (routes: Routes): Routes => {
 
   return Object.fromEntries(postable);
 };
+
+/** `routes` less those of `edgeIds`; an id with no route is ignored and `routes` itself is not changed. */
+export const withoutRoutes = (routes: Routes, edgeIds: string[]): Routes => {
+  const dropped = new Set(edgeIds);
+  const entries = Object.entries(routes);
+  const kept = entries.filter(([id]): boolean => !dropped.has(id));
+
+  return Object.fromEntries(kept);
+};

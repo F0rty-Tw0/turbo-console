@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { edgeIdOf } from './edge-id.util.ts';
 import { nestedCentresOf } from './elk-centres.util.ts';
 import { elkGraphOf } from './elk-graph.util.ts';
-import { postableRoutesOf, routesOf } from './elk-routes.util.ts';
+import { postableRoutesOf, routesOf, withoutRoutes } from './elk-routes.util.ts';
 import type { EdgeRoute, GraphEdge, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import { ROUTE_BENDS_MAX } from '../common/graph-layout.const.ts';
 import { BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
@@ -141,6 +141,23 @@ describe('FEATURE: postableRoutesOf', () => {
       postableRoutesOf(routes);
 
       expect(Object.keys(routes)).toStrictEqual(['long']);
+    });
+  });
+});
+
+describe('FEATURE: withoutRoutes', () => {
+  describe('GIVEN routes for a>b and b>c', () => {
+    const ab = routeWithBends(1);
+    const bc = routeWithBends(2);
+    const routes: Routes = { 'a>b': ab, 'b>c': bc };
+
+    it('WHEN b>c is dropped THEN a>b is kept and the input still holds both', () => {
+      expect(withoutRoutes(routes, ['b>c'])).toStrictEqual({ 'a>b': ab });
+      expect(Object.keys(routes)).toStrictEqual(['a>b', 'b>c']);
+    });
+
+    it('WHEN an id with no route is dropped THEN every route is kept', () => {
+      expect(withoutRoutes(routes, ['c>d'])).toStrictEqual(routes);
     });
   });
 });
