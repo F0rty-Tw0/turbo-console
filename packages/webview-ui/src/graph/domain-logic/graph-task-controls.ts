@@ -3,7 +3,7 @@ import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts
 import { NO_NAMES, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { CONTROLS_ID } from '../common/graph.const.ts';
 import type { CellAt, ListLine } from '../common/roving.type.ts';
-import type { TaskControlsDeps, TaskControlsElements, TaskControlsRow } from '../common/task-controls.type.ts';
+import type { TaskControlsDeps, TaskControlsElements, TaskControlsRow, TaskViewChecks } from '../common/task-controls.type.ts';
 import { modeFocusOf } from '../utils/mode-focus.util.ts';
 import { nextCell } from '../utils/roving.util.ts';
 import { matchesTaskSearch, taskDepthOf } from '../utils/task-choice.util.ts';
@@ -30,6 +30,9 @@ export class GraphTaskControls {
     this.elements = elements;
     elements.search.addEventListener('input', (): void => this.searched());
     elements.depth.addEventListener('input', (): void => this.depthTyped());
+    elements.grouping.addEventListener('input', (): void => deps.actions.onGrouping(elements.grouping.checked));
+    elements.scope.addEventListener('input', (): void => deps.actions.onViewToggle('scope', elements.scope.checked));
+    elements.scripts.addEventListener('input', (): void => deps.actions.onViewToggle('scripts', elements.scripts.checked));
     elements.list.addEventListener('keydown', (event: KeyboardEvent): void => this.keyed(event));
     deps.page.controls.addEventListener('click', (): void => this.toggleOpen());
   }
@@ -58,6 +61,17 @@ export class GraphTaskControls {
     this.deps.page.controls.setAttribute('aria-controls', CONTROLS_ID);
 
     if (hadFocus) modeFocusOf(this.deps.page).focus();
+  }
+
+  /** Sets the boxes as properties, which fire no event, so a state-driven sync reports nothing; Show scripts needs a listed script. */
+  public setView(checks: TaskViewChecks): void {
+    const { grouping, groupingField, scope, scripts, scriptsField } = this.elements;
+
+    grouping.checked = checks.grouped;
+    groupingField.hidden = !checks.canGroup;
+    scope.checked = checks.scopeShown;
+    scripts.checked = checks.scriptsShown;
+    scriptsField.hidden = !checks.hasScripts;
   }
 
   /** Lists `tasks` with a single-package root printed as `rootLabel`; a row with focus hands it, and the Tab stop, to its twin among the new rows. */

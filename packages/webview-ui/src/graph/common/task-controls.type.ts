@@ -52,11 +52,25 @@ export type ControlsEdits = {
   readonly select: (id: string) => void;
 };
 
+/**
+ * What the View boxes read: Group by folder ticked and whether it applies (a single package is never grouped), Show
+ * package scopes and Show scripts ticked, and whether the listing holds a script, which Show scripts needs to be shown.
+ */
+export type TaskViewChecks = {
+  readonly grouped: boolean;
+  readonly canGroup: boolean;
+  readonly scopeShown: boolean;
+  readonly scriptsShown: boolean;
+  readonly hasScripts: boolean;
+};
+
 /** The task Controls panel while task mode is on: it replaces the package Controls panel and follows the Controls button. */
 export type TaskControls = {
   /** Shows the panel, open when `isOpen`, with the task view's search and depth. */
   readonly enter: (task: TaskViewState, isOpen: boolean) => void;
   readonly exit: () => void;
+  /** Sets the View boxes to `checks` without reporting it as a user choice. */
+  readonly setView: (checks: TaskViewChecks) => void;
   /** Lists the shown tasks, a single-package root's owner printed as `rootLabel`; the search narrows the rows only. */
   readonly setRows: (tasks: GraphTask[], rootLabel: string | null) => void;
 };

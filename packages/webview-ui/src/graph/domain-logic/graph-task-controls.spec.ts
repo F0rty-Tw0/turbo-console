@@ -5,7 +5,13 @@ import { GraphTaskControls } from './graph-task-controls.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { CONTROLS_ID } from '../common/graph.const.ts';
-import type { TaskControlsActions, TaskControlsDeps, TaskControlsElements, TaskControlsRow } from '../common/task-controls.type.ts';
+import type {
+  TaskControlsActions,
+  TaskControlsDeps,
+  TaskControlsElements,
+  TaskControlsRow,
+  TaskViewChecks
+} from '../common/task-controls.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskControlsViewsMock } from '../test/mocks/task-controls-views.mock.ts';
 import { ROOT_BUILD_STUB, TASK_CHAIN_STUB, TASK_VIEW_STUB, WEB_BUILD_STUB, WEB_LINT_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -60,6 +66,15 @@ const focusedIdOf = (rows: TaskControlsRow[]): string | undefined => {
 const typeInto = (input: HTMLInputElement, text: string): void => {
   input.value = text;
   input.dispatchEvent(new Event('input'));
+};
+
+/** A View listing with a script, grouped, scopes hidden and scripts shown. */
+const CHECKS: TaskViewChecks = { grouped: true, canGroup: true, scopeShown: false, scriptsShown: true, hasScripts: true };
+
+/** What the user does to a checkbox: sets it, then the input event follows. */
+const tick = (box: HTMLInputElement, isChecked: boolean): void => {
+  box.checked = isChecked;
+  box.dispatchEvent(new Event('input'));
 };
 
 describe('FEATURE: GraphTaskControls', () => {
@@ -211,6 +226,62 @@ describe('FEATURE: GraphTaskControls', () => {
       controls.setRows(WEB_TASKS, null);
 
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
+    });
+  });
+
+  describe('GIVEN task mode entered with the View boxes', () => {
+    beforeEach(() => {
+      controls.enter(TASK_VIEW_STUB, true);
+    });
+
+    it('WHEN the user ticks Group by folder THEN onGrouping is called once with true', () => {
+      tick(rig.elements.grouping, true);
+
+      expect(rig.actions.onGrouping).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
+    it('WHEN the user unticks Show package scopes THEN onViewToggle is called once with scope and false', () => {
+      tick(rig.elements.scope, false);
+
+      expect(rig.actions.onViewToggle).toHaveBeenCalledExactlyOnceWith('scope', false);
+    });
+
+    it('WHEN the user ticks Show scripts THEN onViewToggle is called once with scripts and true', () => {
+      tick(rig.elements.scripts, true);
+
+      expect(rig.actions.onViewToggle).toHaveBeenCalledExactlyOnceWith('scripts', true);
+    });
+
+    it('WHEN setView runs THEN the boxes read the checks and no action is called', () => {
+      controls.setView(CHECKS);
+
+      const { grouping, scope, scripts } = rig.elements;
+
+      expect([grouping.checked, scope.checked, scripts.checked]).toStrictEqual([true, false, true]);
+      expect(rig.actions.onGrouping).not.toHaveBeenCalled();
+      expect(rig.actions.onViewToggle).not.toHaveBeenCalled();
+    });
+
+    it('WHEN setView runs with a script listed THEN Show scripts is shown', () => {
+      controls.setView(CHECKS);
+
+      expect(rig.elements.scriptsField.hidden).toBe(false);
+    });
+
+    it('WHEN setView runs with no script listed THEN Show scripts is hidden even though scriptsShown is true', () => {
+      controls.setView({ ...CHECKS, hasScripts: false });
+
+      expect(rig.elements.scriptsField.hidden).toBe(true);
+    });
+
+    it('WHEN setView runs with canGroup false THEN Group by folder is hidden, and with canGroup true it is shown', () => {
+      controls.setView({ ...CHECKS, canGroup: false });
+
+      const hiddenWhenSingle = rig.elements.groupingField.hidden;
+
+      controls.setView(CHECKS);
+
+      expect([hiddenWhenSingle, rig.elements.groupingField.hidden]).toStrictEqual([true, false]);
     });
   });
 });
