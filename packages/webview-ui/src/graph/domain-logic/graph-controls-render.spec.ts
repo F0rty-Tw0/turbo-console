@@ -200,8 +200,8 @@ describe('FEATURE: renderLabels', () => {
     describe.each([
       [false, 'ticked', 'unticked'],
       [true, 'unticked', 'ticked']
-    ])('WHEN relabelled with scopeShown %s over a %s Show package scopes box', (scopeShown, before) => {
-      it(`THEN the box is ${scopeShown ? 'ticked' : 'unticked'}, set as a property that fires no input`, () => {
+    ])('WHEN relabelled with scopeShown %s over a %s Show package scopes box', (scopeShown, before, after) => {
+      it(`THEN the box is ${after}, set as a property that fires no input`, () => {
         const elements = boardsControlsMock();
         const onInput = vi.fn();
         const graph: DrawnGraph = { ...BOARDS_DRAWN, scopeShown, labels: new Map() };

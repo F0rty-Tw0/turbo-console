@@ -70,21 +70,33 @@ describe('FEATURE: GraphPackageSide relabel', () => {
       await settled();
     });
 
-    it('WHEN nothing else happens THEN the view is relabelled with the bare names', () => {
-      expect(rig.view.setLabels).toHaveBeenLastCalledWith(BARE_LABELS_STUB);
-    });
+    describe('WHEN nothing else happens', () => {
+      it('THEN the view is relabelled with the bare names', () => {
+        expect(rig.view.setLabels).toHaveBeenLastCalledWith(BARE_LABELS_STUB);
+      });
 
-    it('WHEN nothing else happens THEN no layout runs, setGraph ran once, and no fit or post was added', () => {
-      const counts = [rig.view.fit.mock.calls.length, vi.mocked(rig.deps.bridge.post).mock.calls.length];
+      it('THEN no layout runs', () => {
+        expect(rig.runs.count()).toBe(0);
+      });
 
-      expect([rig.runs.count(), rig.view.setGraph.mock.calls.length, ...counts]).toStrictEqual([0, 1, fitsBefore, postsBefore]);
-    });
+      it('THEN setGraph ran once, for the first draw', () => {
+        expect(rig.view.setGraph).toHaveBeenCalledOnce();
+      });
 
-    it('WHEN nothing else happens THEN the Controls rows read the bare names', () => {
-      const groups = rig.side.filtering.controls.mounted?.elements.groups ?? [];
-      const texts = groups.flatMap((group) => group.rows).map((row) => row.pick.textContent);
+      it('THEN no fit was added', () => {
+        expect(rig.view.fit).toHaveBeenCalledTimes(fitsBefore);
+      });
 
-      expect(texts.toSorted()).toStrictEqual(['bare-core', 'bare-ui', 'bare-web']);
+      it('THEN no post was added', () => {
+        expect(rig.deps.bridge.post).toHaveBeenCalledTimes(postsBefore);
+      });
+
+      it('THEN the Controls rows read the bare names', () => {
+        const groups = rig.side.filtering.controls.mounted?.elements.groups ?? [];
+        const texts = groups.flatMap((group) => group.rows).map((row) => row.pick.textContent);
+
+        expect(texts.toSorted()).toStrictEqual(['bare-core', 'bare-ui', 'bare-web']);
+      });
     });
 
     it('WHEN the user types in the Controls search THEN the search reads the relabelled graph', () => {
@@ -98,8 +110,14 @@ describe('FEATURE: GraphPackageSide relabel', () => {
       expect(searched).toBe(rig.side.drawnGraph());
     });
 
-    it('WHEN the host answer left the box unticked THEN no setViewToggle was posted', () => {
-      expect([scopeBox().checked, togglesPosted()]).toStrictEqual([false, []]);
+    describe('WHEN the host answer left the box unticked', () => {
+      it('THEN the box is unticked', () => {
+        expect(scopeBox().checked).toBe(false);
+      });
+
+      it('THEN no setViewToggle was posted', () => {
+        expect(togglesPosted()).toStrictEqual([]);
+      });
     });
 
     it('WHEN the user ticks the box THEN one setViewToggle scope true is posted', () => {
@@ -109,13 +127,22 @@ describe('FEATURE: GraphPackageSide relabel', () => {
       expect(togglesPosted()).toStrictEqual([{ type: 'setViewToggle', toggle: 'scope', shown: true }]);
     });
 
-    it('WHEN h2 is drawn next THEN its nodes are labelled with the bare names after they are set', async () => {
-      rig.side.show({ ...BARE_HIDDEN_STUB, hash: 'h2' }, 3);
-      await settled();
-      const lastLabels = Math.max(...rig.view.setLabels.mock.invocationCallOrder);
-      const lastGraph = Math.max(...rig.view.setGraph.mock.invocationCallOrder);
+    describe('WHEN h2 is drawn next', () => {
+      beforeEach(async () => {
+        rig.side.show({ ...BARE_HIDDEN_STUB, hash: 'h2' }, 3);
+        await settled();
+      });
 
-      expect([lastLabels > lastGraph, rig.view.setLabels.mock.lastCall?.[0]]).toStrictEqual([true, BARE_LABELS_STUB]);
+      it('THEN its labels are set after its nodes', () => {
+        const lastLabels = Math.max(...rig.view.setLabels.mock.invocationCallOrder);
+        const lastGraph = Math.max(...rig.view.setGraph.mock.invocationCallOrder);
+
+        expect(lastLabels).toBeGreaterThan(lastGraph);
+      });
+
+      it('THEN its nodes are labelled with the bare names', () => {
+        expect(rig.view.setLabels).toHaveBeenLastCalledWith(BARE_LABELS_STUB);
+      });
     });
   });
 });
