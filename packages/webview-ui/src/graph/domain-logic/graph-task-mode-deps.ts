@@ -1,4 +1,5 @@
 import { savePanelToggle } from './graph-task-panel.ts';
+import type { GraphViewToggle } from '../../bridge/common/graph-message.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import type { TaskLayoutDeps, TaskMemoryPort, TaskModeDeps, UmbrellaFacts } from '../common/graph-task.type.ts';
@@ -44,6 +45,12 @@ export const umbrellaFactsOf = (deps: TaskModeDeps, atoms: AtomCounts): Umbrella
   return facts;
 };
 
+/** Group by folder ticked or unticked in task mode: saved for both graphs, then the shown set drawn again under it. */
+const regroup = (deps: TaskModeDeps, edits: ControlsEdits, isGrouped: boolean): void => {
+  deps.modes.saveGrouped(isGrouped);
+  edits.choose({});
+};
+
 /**
  * What the task Controls report and what task mode does with it: the search is saved, a depth or a pick goes through
  * `edits`, the open state is saved with the canvas re-measured, Group by folder is saved and drawn, and a View toggle goes
@@ -55,11 +62,8 @@ export const controlsActionsOf = (deps: TaskModeDeps, memory: TaskMemoryPort, ed
     onDepth: (depth: number): void => edits.choose({ depth }),
     onPick: (id: string): void => edits.select(id),
     onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen }),
-    onGrouping: (isGrouped: boolean): void => {
-      deps.modes.saveGrouped(isGrouped);
-      edits.choose({});
-    },
-    onViewToggle: (toggle: 'scope' | 'scripts', shown: boolean): void => deps.bridge.post({ type: 'setViewToggle', toggle, shown })
+    onGrouping: (isGrouped: boolean): void => regroup(deps, edits, isGrouped),
+    onViewToggle: (toggle: GraphViewToggle, shown: boolean): void => deps.bridge.post({ type: 'setViewToggle', toggle, shown })
   };
 
   return actions;

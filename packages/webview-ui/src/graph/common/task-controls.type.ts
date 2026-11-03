@@ -1,4 +1,5 @@
 import type { PageElements } from './page-elements.type.ts';
+import type { GraphViewToggle } from '../../bridge/common/graph-message.type.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 
@@ -43,7 +44,7 @@ export type TaskControlsActions = {
   readonly onPick: (id: string) => void;
   readonly onToggle: (isOpen: boolean) => void;
   readonly onGrouping: (isGrouped: boolean) => void;
-  readonly onViewToggle: (toggle: 'scope' | 'scripts', shown: boolean) => void;
+  readonly onViewToggle: (toggle: GraphViewToggle, shown: boolean) => void;
 };
 
 /** What the task Controls edit in task mode: a new choice, depth or cap, saved and drawn, and a picked task id selected. */
