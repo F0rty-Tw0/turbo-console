@@ -34,10 +34,11 @@ type UncheckedPositionsMessage = {
   readonly type: 'positions';
   readonly hash: string;
   readonly positions: unknown;
+  readonly routes?: unknown;
   readonly grouping: LayoutGrouping;
 };
 
-/** A message that passed `graphMessageSchema`: a `positions` record is still unread. */
+/** A message that passed `graphMessageSchema`: its `positions` and `routes` records are still unread. */
 export type SchemaGraphMessage = Exclude<GraphWebviewMessage, PositionsTag> | UncheckedPositionsMessage;
 
 type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' | 'shownUmbrellas' | 'setViewToggle' };

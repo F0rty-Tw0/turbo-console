@@ -10,6 +10,7 @@ import {
   maxLength,
   number,
   object,
+  optional,
   regex,
   string,
   unknown,
@@ -40,13 +41,14 @@ const openManifestSchema = object({
 });
 
 /**
- * `positions` passes through unread: zod's `record()` drops an own `__proto__` key, so a package named `__proto__`
- * could never be cached. `parseGraphMessage` checks the record itself.
+ * `positions` and `routes` pass through unread: zod's `record()` drops an own `__proto__` key, so a package named
+ * `__proto__` could never be cached. `parseGraphMessage` checks both records itself.
  */
 const positionsSchema = object({
   type: literal('positions'),
   hash: string().check(regex(GRAPH_HASH_PATTERN)),
   positions: unknown(),
+  routes: optional(unknown()),
   grouping: zodEnum(['flat', 'folders'])
 });
 
