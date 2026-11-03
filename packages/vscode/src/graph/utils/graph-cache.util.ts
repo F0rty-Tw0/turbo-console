@@ -1,9 +1,15 @@
-import type { GraphState, LayoutGrouping, Position, Positions } from '@turbo-console/webview-ui';
+import type { EdgeRoute, GraphState, LayoutGrouping, Position, Positions, Routes } from '@turbo-console/webview-ui';
 
 import { packageNamesOf } from './graph-package.util.ts';
 import { isRecord } from './record.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
-import { COORDINATE_MAX, GRAPH_CACHE_KEY_PREFIX, GRAPH_FOLDERS_CACHE_KEY_PREFIX, PACKAGE_NAME_MAX } from '../common/graph.const.ts';
+import {
+  COORDINATE_MAX,
+  GRAPH_CACHE_KEY_PREFIX,
+  GRAPH_FOLDERS_CACHE_KEY_PREFIX,
+  PACKAGE_NAME_MAX,
+  ROUTE_BENDS_MAX
+} from '../common/graph.const.ts';
 
 type PositionsMessage = {
   readonly hash: string;
@@ -63,6 +69,58 @@ export const parsePositions = (raw: unknown): Positions | null => {
     if (point === null || isNameTooLong) return null;
 
     entries.push([name, point]);
+  }
+
+  return Object.fromEntries(entries);
+};
+
+const bendsOf = (value: unknown): Position[] | null => {
+  if (!Array.isArray(value) || value.length > ROUTE_BENDS_MAX) return null;
+
+  const items: unknown[] = value;
+  const bends: Position[] = [];
+
+  for (const item of items) {
+    const bend = pointOf(item);
+
+    if (bend === null) return null;
+
+    bends.push(bend);
+  }
+
+  return bends;
+};
+
+const routeOf = (value: unknown): EdgeRoute | null => {
+  if (!isRecord(value)) return null;
+
+  if (!('start' in value) || !('bends' in value) || !('end' in value)) return null;
+
+  const start = pointOf(value.start);
+  const bends = bendsOf(value.bends);
+  const end = pointOf(value.end);
+
+  if (start === null || bends === null || end === null) return null;
+
+  const route: EdgeRoute = { start, bends, end };
+
+  return route;
+};
+
+/**
+ * Fresh `Routes` when `raw` is a plain object, else `null`. It keeps each own-key route that is `{ start, bends, end }`
+ * with at most `ROUTE_BENDS_MAX` bends and every coordinate within `COORDINATE_MAX`, as copies of `x` and `y`; a
+ * failing route is dropped alone. `Object.fromEntries` defines each key as an own property, so `__proto__` stays data.
+ */
+export const parseRoutes = (raw: unknown): Routes | null => {
+  if (!isPlainRecord(raw)) return null;
+
+  const entries: [string, EdgeRoute][] = [];
+
+  for (const [id, value] of Object.entries(raw)) {
+    const route = routeOf(value);
+
+    if (route !== null) entries.push([id, route]);
   }
 
   return Object.fromEntries(entries);

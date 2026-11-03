@@ -1,7 +1,7 @@
 import type { GraphState, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { acceptedPositions, cacheKeyOf, coversExactly, layoutEntryOf } from './graph-cache.util.ts';
+import { acceptedPositions, cacheKeyOf, coversExactly, layoutEntryOf, parseRoutes } from './graph-cache.util.ts';
 import { GRAPH_HASH_STUB, GRAPH_PACKAGES_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const STATE: GraphState = GRAPH_STATE_STUB;
@@ -118,6 +118,38 @@ describe('FEATURE: layout entry read from storage', () => {
     ['a null map', { hash: GRAPH_HASH_STUB, positions: null }]
   ])('GIVEN %s WHEN read THEN it is null', (_name, raw) => {
     expect(layoutEntryOf(raw)).toBeNull();
+  });
+});
+
+describe('FEATURE: routes read from a post', () => {
+  const START = { x: 1, y: 2 };
+  const BEND = { x: 3, y: 4 };
+  const END = { x: 5, y: 6 };
+  const ROUTE = { start: START, bends: [BEND], end: END };
+  const BAD_ROUTE = { ...ROUTE, bends: 'nope' };
+
+  it('GIVEN an empty record WHEN read THEN it is an empty record', () => {
+    expect(parseRoutes({})).toStrictEqual({});
+  });
+
+  it('GIVEN a good route WHEN read THEN a copy of it is returned', () => {
+    const routes = parseRoutes({ e1: ROUTE });
+
+    expect(routes).toStrictEqual({ e1: ROUTE });
+  });
+
+  it('GIVEN a bad route beside a good one WHEN read THEN only the bad one is dropped', () => {
+    expect(parseRoutes({ good: ROUTE, bad: BAD_ROUTE })).toStrictEqual({ good: ROUTE });
+  });
+
+  it.each([
+    ['a Map', new Map([['e1', ROUTE]])],
+    ['a list', [ROUTE]],
+    ['null', null],
+    ['a string', 'e1'],
+    ['undefined', undefined]
+  ])('GIVEN %s WHEN read THEN it is null', (_name, raw) => {
+    expect(parseRoutes(raw)).toBeNull();
   });
 });
 
