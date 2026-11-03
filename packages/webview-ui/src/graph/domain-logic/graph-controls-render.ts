@@ -10,11 +10,10 @@ import { focusNameOf, groupStateOf, isFiltered, isGroupLocked, rowViewOf } from 
 import {
   controlsLabelOf,
   countTextOf,
-  focusLabelOf,
   folderTitleOf,
   folderToggleLabelOf,
-  showAllTextOf,
-  showLabelOf
+  rowLabelsOf,
+  showAllTextOf
 } from '../utils/controls-text.util.ts';
 import { focusFolderOf } from '../utils/folder-rules.util.ts';
 import { labelIn } from '../utils/package-label.util.ts';
@@ -100,11 +99,11 @@ export const renderControls = (
 };
 
 const renderRowLabel = (row: ControlsRow, labels: ReadonlyMap<string, string>): void => {
-  const label = labelIn(labels, row.name);
+  const rowLabels = rowLabelsOf(labelIn(labels, row.name));
 
-  setButtonText(row.pick, label);
-  row.check.setAttribute('aria-label', showLabelOf(label));
-  row.focus.setAttribute('aria-label', focusLabelOf(label));
+  setButtonText(row.pick, rowLabels.text);
+  row.check.setAttribute('aria-label', rowLabels.check);
+  row.focus.setAttribute('aria-label', rowLabels.focus);
 };
 
 /**
