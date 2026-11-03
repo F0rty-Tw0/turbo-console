@@ -16,7 +16,7 @@ import {
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 
-type MemoryModes = Pick<TaskModes, 'task' | 'saveTask'>;
+type MemoryModes = Pick<TaskModes, 'task' | 'saveTask' | 'current'>;
 
 /** A monorepo state whose only tasks are the workspace root's. */
 const ROOT_TASKS_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage: false };
@@ -65,7 +65,7 @@ const FACTS_ROWS: FactsRow[] = [
 ];
 
 const modesOf = (saved: TaskViewState | null): MemoryModes => {
-  const modes: MemoryModes = { task: vi.fn(() => saved), saveTask: vi.fn() };
+  const modes: MemoryModes = { task: vi.fn(() => saved), saveTask: vi.fn(), current: vi.fn(() => null) };
 
   return modes;
 };
