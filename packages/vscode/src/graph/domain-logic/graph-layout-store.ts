@@ -2,7 +2,7 @@ import type { GraphState } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry, GraphLayoutCaches, PositionsPost } from '../common/graph-cache.type.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
-import { acceptedPositions } from '../utils/graph-cache.util.ts';
+import { acceptedPositions, acceptedRoutes } from '../utils/graph-cache.util.ts';
 
 /** Both layout caches of `root`, each read once. */
 export const layoutCachesOf = (ports: GraphPorts, root: string): GraphLayoutCaches => {
@@ -19,7 +19,8 @@ export const storePositions = (ports: GraphPorts, root: string, state: GraphStat
 
   if (positions === null) return false;
 
-  const entry: GraphLayoutCacheEntry = { hash: post.hash, positions };
+  const routes = acceptedRoutes(state, post);
+  const entry: GraphLayoutCacheEntry = { hash: post.hash, positions, routes };
 
   ports.writeCache(root, post.grouping, entry);
 

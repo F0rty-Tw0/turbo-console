@@ -1,3 +1,4 @@
+import { edgeIdOf } from '@turbo-console/webview-ui';
 import type { EdgeRoute, GraphState, LayoutGrouping, Position, Positions, Routes } from '@turbo-console/webview-ui';
 
 import { packageNamesOf } from './graph-package.util.ts';
@@ -10,6 +11,10 @@ import {
   PACKAGE_NAME_MAX,
   ROUTE_BENDS_MAX
 } from '../common/graph.const.ts';
+
+type RoutesMessage = {
+  readonly routes: Routes;
+};
 
 type PositionsMessage = {
   readonly hash: string;
@@ -144,17 +149,36 @@ export const acceptedPositions = (state: GraphState, message: PositionsMessage):
   return isCovered ? message.positions : null;
 };
 
-/** Reads what `workspaceState` hands back; anything that is not a hash with points within `COORDINATE_MAX` is `null`. */
+/** What a parsed `positions` post may store of its routes: only the keys that are an edge id of `state`, `{}` for a state with no graph. */
+export const acceptedRoutes = (state: GraphState, post: RoutesMessage): Routes => {
+  const none: Routes = {};
+
+  if (state.kind !== 'graph') return none;
+
+  const known = new Set(state.edges.map(edgeIdOf));
+  const kept = Object.entries(post.routes).filter(([id]) => known.has(id));
+  const accepted: Routes = Object.fromEntries(kept);
+
+  return accepted;
+};
+
+/** Reads what `workspaceState` hands back; anything that is not a hash with points within `COORDINATE_MAX` and a routes record is `null`. */
 export const layoutEntryOf = (raw: unknown): GraphLayoutCacheEntry | null => {
-  if (!isRecord(raw) || !('hash' in raw) || !('positions' in raw)) return null;
+  if (!isRecord(raw)) return null;
+
+  const hasFields = 'hash' in raw && 'positions' in raw && 'routes' in raw;
+
+  if (!hasFields) return null;
 
   if (typeof raw.hash !== 'string') return null;
 
   const positions = parsePositions(raw.positions);
 
-  if (positions === null) return null;
+  const routes = parseRoutes(raw.routes);
 
-  const entry: GraphLayoutCacheEntry = { hash: raw.hash, positions };
+  if (positions === null || routes === null) return null;
+
+  const entry: GraphLayoutCacheEntry = { hash: raw.hash, positions, routes };
 
   return entry;
 };

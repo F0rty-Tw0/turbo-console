@@ -1,5 +1,15 @@
 import type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphPackage, GraphReady, GraphTask, Position, Positions } from '@turbo-console/webview-ui';
+import { edgeIdOf } from '@turbo-console/webview-ui';
+import type {
+  EdgeRoute,
+  GraphEdge,
+  GraphPackage,
+  GraphReady,
+  GraphTask,
+  Position,
+  Positions,
+  Routes
+} from '@turbo-console/webview-ui';
 
 import type { LoadedModel } from '../../../roots/common/root.type.ts';
 import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
@@ -86,6 +96,25 @@ const A_POINT: Position = { x: 10, y: 20 };
 const WEB_POINT: Position = { x: 30, y: 40 };
 
 export const POSITIONS_STUB: Positions = { '@org/x': X_POINT, a: A_POINT, web: WEB_POINT };
+
+const ROUTE_STUB: EdgeRoute = { start: X_POINT, bends: [A_POINT], end: WEB_POINT };
+const ROUTE_ENTRIES: [string, EdgeRoute][] = GRAPH_STATE_STUB.edges.map((edge) => [edgeIdOf(edge), ROUTE_STUB]);
+
+/** One route for each of the three edges of `GRAPH_STATE_STUB`, keyed by `edgeIdOf`. */
+export const ROUTES_STUB: Routes = Object.fromEntries(ROUTE_ENTRIES);
+
+const GHOST_ROUTE_STUB: EdgeRoute = { start: WEB_POINT, bends: [], end: X_POINT };
+
+/** One route whose key is no edge id. */
+export const GHOST_ROUTES_STUB: Routes = { ghost: GHOST_ROUTE_STUB };
+
+/** `ROUTES_STUB` plus the route of a key that is no edge id. */
+export const MIXED_ROUTES_STUB: Routes = { ...ROUTES_STUB, ghost: GHOST_ROUTE_STUB };
+
+const BAD_ROUTE: Record<string, unknown> = { ...GHOST_ROUTE_STUB, bends: 'nope' };
+
+/** `ROUTES_STUB` plus a route that `parseRoutes` drops: its bends are no list. */
+export const BAD_ROUTES_JSON_STUB: Record<string, unknown> = { ...ROUTES_STUB, bad: BAD_ROUTE };
 
 const ZED_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'zed' };
 

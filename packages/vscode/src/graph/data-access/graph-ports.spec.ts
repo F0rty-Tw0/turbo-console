@@ -16,7 +16,7 @@ import { webviewPanelMock } from '../../shared/test/mocks/webview-panel.mock.ts'
 import { CSP_SOURCE_STUB } from '../../shared/test/stubs/csp-source.stub.ts';
 import type { GraphHost, GraphStore } from '../common/graph-panel.type.ts';
 import { GRAPH_VIEW_TYPE } from '../common/graph.const.ts';
-import { GRAPH_HASH_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
+import { GRAPH_HASH_STUB, POSITIONS_STUB, ROUTES_STUB } from '../test/stubs/graph-model.stub.ts';
 import { copyGraphPageRoot } from '../test/utils/page-root.spec.util.ts';
 
 type CreatePanel = (viewType: string, title: string, column: number, options: unknown) => PanelFake;
@@ -71,7 +71,7 @@ vi.mock('vscode', () => {
   return module;
 });
 
-const ENTRY = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
+const ENTRY = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: ROUTES_STUB };
 const SCRIPT_NONCE = /<script nonce="([^"]+)"/;
 
 type StoreSpies = {

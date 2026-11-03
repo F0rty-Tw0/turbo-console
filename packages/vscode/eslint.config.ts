@@ -44,6 +44,7 @@ const webviewHostImports: FlatConfig.Config = {
               'TASK_COUNT_MAX',
               'TOOL_ICON_PREFIX',
               'durationText',
+              'edgeIdOf',
               'elapsedText',
               'graphCsp',
               'hiddenScriptsText',
@@ -51,7 +52,7 @@ const webviewHostImports: FlatConfig.Config = {
               'webviewCsp'
             ],
             message:
-              'Types, HTML-shell helpers, pure text formatters and the icon-id pattern, tool-icon prefix and graph limit and layout version constants only: webview code must not enter the extension bundle.'
+              'Types, HTML-shell helpers, pure text formatters, the edge-id function and the icon-id pattern, tool-icon prefix and graph limit and layout version constants only: webview code must not enter the extension bundle.'
           }
         ]
       }

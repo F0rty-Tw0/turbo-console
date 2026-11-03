@@ -4,17 +4,28 @@ import { describe, expect, it } from 'vitest';
 import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
 import type { GraphLayoutCacheEntry, PositionsPost } from '../common/graph-cache.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
-import { GRAPH_HASH_STUB, GRAPH_PACKAGES_STUB, GRAPH_STATE_STUB } from '../test/stubs/graph-model.stub.ts';
+import {
+  GHOST_ROUTES_STUB,
+  GRAPH_HASH_STUB,
+  GRAPH_PACKAGES_STUB,
+  GRAPH_STATE_STUB,
+  MIXED_ROUTES_STUB,
+  ROUTES_STUB
+} from '../test/stubs/graph-model.stub.ts';
 import { positionsOf } from '../test/utils/graph-session.spec.util.ts';
 import { cacheKeyOf } from '../utils/graph-cache.util.ts';
 
-const FLAT_ENTRY: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: positionsOf(GRAPH_PACKAGES_STUB) };
-const FOLDERS_ENTRY: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: positionsOf(['a']) };
+const FLAT_ENTRY: GraphLayoutCacheEntry = {
+  hash: GRAPH_HASH_STUB,
+  positions: positionsOf(GRAPH_PACKAGES_STUB),
+  routes: {}
+};
+const FOLDERS_ENTRY: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: positionsOf(['a']), routes: {} };
 const FULL_POSITIONS = positionsOf(GRAPH_PACKAGES_STUB);
 const LOADING_STATE: GraphState = { kind: 'loading' };
 
 const postOf = (overrides: Partial<PositionsPost>): PositionsPost => {
-  const post: PositionsPost = { hash: GRAPH_HASH_STUB, positions: FULL_POSITIONS, grouping: 'flat', ...overrides };
+  const post: PositionsPost = { hash: GRAPH_HASH_STUB, positions: FULL_POSITIONS, routes: {}, grouping: 'flat', ...overrides };
 
   return post;
 };
@@ -48,10 +59,36 @@ describe('FEATURE: graph layout store', () => {
         expect(isStored).toBe(true);
         expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', grouping, {
           hash: GRAPH_HASH_STUB,
-          positions: FULL_POSITIONS
+          positions: FULL_POSITIONS,
+          routes: {}
         });
       }
     );
+
+    it('WHEN a post carries a known and an unknown edge route THEN writeCache gets only the known route', () => {
+      const ports = graphPortsMock();
+
+      storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: MIXED_ROUTES_STUB }));
+
+      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', {
+        hash: GRAPH_HASH_STUB,
+        positions: FULL_POSITIONS,
+        routes: ROUTES_STUB
+      });
+    });
+
+    it('WHEN every route of the post is unknown THEN the positions are stored with routes {} and true is returned', () => {
+      const ports = graphPortsMock();
+
+      const isStored = storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: GHOST_ROUTES_STUB }));
+
+      expect(isStored).toBe(true);
+      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', {
+        hash: GRAPH_HASH_STUB,
+        positions: FULL_POSITIONS,
+        routes: {}
+      });
+    });
 
     it.each([
       ['a stale hash', postOf({ hash: 'ffffffff' })],

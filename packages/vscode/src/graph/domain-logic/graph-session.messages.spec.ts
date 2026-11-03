@@ -97,7 +97,7 @@ describe('FEATURE: graph session messages', () => {
 
       await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, routes: {}, grouping: 'flat' });
 
-      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', { hash: GRAPH_HASH_STUB, positions });
+      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', { hash: GRAPH_HASH_STUB, positions, routes: {} });
     });
 
     it('WHEN one package is missing THEN they are dropped and logged', async () => {
@@ -151,7 +151,7 @@ describe('FEATURE: graph session messages', () => {
 
       await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, routes: {}, grouping: 'folders' });
 
-      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'folders', { hash: GRAPH_HASH_STUB, positions });
+      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'folders', { hash: GRAPH_HASH_STUB, positions, routes: {} });
     });
 
     it.each([['\u0001apps'], ['\u0002apps']])(
@@ -185,7 +185,11 @@ describe('FEATURE: graph session messages', () => {
     });
 
     it('WHEN only the folders cache is seeded THEN the published state carries folderPositions and no positions', async () => {
-      const entry: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: positionsOf(GRAPH_PACKAGES_STUB) };
+      const entry: GraphLayoutCacheEntry = {
+        hash: GRAPH_HASH_STUB,
+        positions: positionsOf(GRAPH_PACKAGES_STUB),
+        routes: {}
+      };
       const { session, ports } = shownSessionOn(portsWith(null, entry));
 
       await session.receive({ type: 'ready' });
