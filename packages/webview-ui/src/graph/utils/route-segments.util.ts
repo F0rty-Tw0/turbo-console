@@ -22,7 +22,7 @@ const midpointOf = (a: Position, b: Position): Position => {
 };
 
 /** Cytoscape cannot draw a `round-segments` edge with empty weights, so a straight route draws on one bend at its middle. */
-const drawnBendsOf = (route: EdgeRoute): Position[] => {
+const segmentBendsOf = (route: EdgeRoute): Position[] => {
   if (route.bends.length > 0) return route.bends;
 
   const midpoint = midpointOf(route.start, route.end);
@@ -44,7 +44,7 @@ export const routeSegmentsOf = (route: EdgeRoute, source: Position, target: Posi
 
   const length = Math.sqrt(lengthSquared);
   const normal: Position = { x: -along.y / length, y: along.x / length };
-  const bends = drawnBendsOf(route);
+  const bends = segmentBendsOf(route);
   const offsets = bends.map((bend): Position => offsetOf(bend, source));
   const segWeights = offsets.map((offset): number => dotOf(offset, along) / lengthSquared);
   const segDistances = offsets.map((offset): number => dotOf(offset, normal));
