@@ -123,7 +123,7 @@ type PositionsKey = { readonly type: 'positions' };
 type ExportImageKey = { readonly type: 'exportImage' };
 type RunTaskKey = { readonly type: 'runTask' };
 
-/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix and task cap constants; everything else is wire-contract types. The webview-only bridge stays internal. */
+/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap and root tasks title constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
   'ENTRY_TEXT_MAX',
   'ICON_ID_PATTERN',
@@ -131,6 +131,7 @@ const RUNTIME_EXPORTS = [
   'MANIFEST_FIELDS',
   'MANIFEST_FILE_MAX',
   'MANIFEST_LINE_MAX',
+  'ROOT_TASKS_TITLE',
   'TASK_CAP',
   'TASK_COUNT_MAX',
   'TOOL_ICON_PREFIX',
@@ -155,6 +156,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.MANIFEST_ENTRIES_MAX).toBe(8);
       expect(entry.MANIFEST_FILE_MAX).toBe(1_024);
       expect(entry.MANIFEST_LINE_MAX).toBe(1_000_000);
+      expect(entry.ROOT_TASKS_TITLE).toBe('Workspace root (//)');
       expect(entry.TASK_CAP).toBe(300);
       expect(entry.TASK_COUNT_MAX).toBe(100_000);
       expect(entry.MANIFEST_FIELDS).toStrictEqual(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']);
