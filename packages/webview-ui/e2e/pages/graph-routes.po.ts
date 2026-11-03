@@ -7,7 +7,8 @@ import { GraphProbePage } from './graph-probe.po.ts';
 import type { GraphReady } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeEdgeLine } from '../../src/graph/common/graph-probe.type.ts';
 import { edgeIdOf } from '../../src/graph/utils/edge-id.util.ts';
-import { readRect } from '../test/utils/element-rect.spec.util.ts';
+import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { isLineInside, midpointsUnderCountOf, readEdgeLines, throughNodeCountOf } from '../test/utils/graph-lines.spec.util.ts';
 import { positionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 
@@ -40,9 +41,9 @@ export class GraphRoutes {
     await expect.poll(async (): Promise<string[]> => this.postedRouteIds()).toStrictEqual(ids.toSorted());
   }
 
-  /** Every one of the `count` package lines is drawn on its route, with at least one bend between its ends. */
+  /** The page draws exactly `count` package lines, every one on its route with at least one bend between its ends. */
   public async expectEveryLineRouted(count: number): Promise<void> {
-    await expect.poll(async (): Promise<number> => this.drawnRoutedCount()).toBe(count);
+    await expect.poll(async (): Promise<number[]> => this.lineAndRoutedCounts()).toStrictEqual([count, count]);
   }
 
   /** Every drawn line, bends included, lies inside the `container`. */
@@ -56,22 +57,19 @@ export class GraphRoutes {
     await expect.poll(async (): Promise<boolean> => this.isRestRouted()).toBe(true);
   }
 
-  /** How many pairs of a drawn line and a node that is not one of its ends have the line cross the node, 2 px inside it. */
-  public async throughNodeCount(): Promise<number> {
-    const lines = await readEdgeLines(this.page);
-    const nodes = await this.probe.nodes();
-    const zoom = await this.probe.zoom();
-
-    return throughNodeCountOf(lines, nodes, zoom, THROUGH_INSET_PX);
+  /** The package's box lies wholly inside the `container`, so a drag that follows grabs a node the user can see. */
+  public async expectNodeInView(id: string, container: Locator): Promise<void> {
+    await expect.poll(async (): Promise<boolean> => this.isNodeInView(id, container)).toBe(true);
   }
 
-  /** How many drawn lines have their midpoint inside a node's box. */
-  public async midpointsUnderCount(): Promise<number> {
-    const lines = await readEdgeLines(this.page);
-    const nodes = await this.probe.nodes();
-    const zoom = await this.probe.zoom();
+  /** No drawn line crosses a drawn node that is not one of its ends, 2 px inside the node's box. */
+  public async expectNoLineThroughNodes(): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.throughNodeCount()).toBe(0);
+  }
 
-    return midpointsUnderCountOf(lines, nodes, zoom);
+  /** No drawn line has its midpoint inside a drawn node's box. */
+  public async expectNoMidpointUnderNode(): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.midpointsUnderCount()).toBe(0);
   }
 
   /** The view is saved, the page is reopened, and `state` is sent with the last posted flat layout as its flat cache. */
@@ -105,10 +103,40 @@ export class GraphRoutes {
     return outside.length;
   }
 
-  private async drawnRoutedCount(): Promise<number> {
-    const lines = await readEdgeLines(this.page);
+  private async isNodeInView(id: string, container: Locator): Promise<boolean> {
+    const rect = await container.evaluate(readRect);
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+    const node = nodes.find((candidate): boolean => candidate.id === id);
 
-    return lines.filter(isDrawnRouted).length;
+    if (node === undefined) return false;
+
+    return isInside(nodeBoxOf(node, zoom), rect);
+  }
+
+  private async lineAndRoutedCounts(): Promise<number[]> {
+    const lines = await readEdgeLines(this.page);
+    const routed = lines.filter(isDrawnRouted);
+
+    const counts = [lines.length, routed.length];
+
+    return counts;
+  }
+
+  private async throughNodeCount(): Promise<number> {
+    const lines = await readEdgeLines(this.page);
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+
+    return throughNodeCountOf(lines, nodes, zoom, THROUGH_INSET_PX);
+  }
+
+  private async midpointsUnderCount(): Promise<number> {
+    const lines = await readEdgeLines(this.page);
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+
+    return midpointsUnderCountOf(lines, nodes, zoom);
   }
 
   private async straightIds(): Promise<string[]> {
