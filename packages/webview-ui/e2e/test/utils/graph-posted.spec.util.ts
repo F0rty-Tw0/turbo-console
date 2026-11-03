@@ -7,7 +7,7 @@ import type {
   GraphShownUmbrellasMessage,
   GraphWebviewMessage
 } from '../../../src/bridge/common/graph-message.type.ts';
-import type { Positions } from '../../../src/bridge/common/graph-state.type.ts';
+import type { Positions, Routes } from '../../../src/bridge/common/graph-state.type.ts';
 import type {
   ExplainEdgeMessage,
   ExportImageMessage,
@@ -60,6 +60,13 @@ export const lastPositionsPosted = (posted: GraphWebviewMessage[]): Positions | 
   const messages = positionsPosted(posted);
 
   return messages.at(-1)?.positions ?? null;
+};
+
+/** The routes of the last `positions` message, `null` before one is posted. */
+export const lastRoutesPosted = (posted: GraphWebviewMessage[]): Routes | null => {
+  const messages = positionsPosted(posted);
+
+  return messages.at(-1)?.routes ?? null;
 };
 
 /** Every message the page posted to the host stub so far, oldest first. */

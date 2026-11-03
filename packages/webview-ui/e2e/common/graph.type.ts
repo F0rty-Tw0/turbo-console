@@ -1,5 +1,5 @@
 import type { EdgeExplainResult, GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
-import type { Position } from '../../src/bridge/common/graph-state.type.ts';
+import type { Position, Positions, Routes } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
 import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
 import type { ProbeState } from '../../src/graph/common/graph-probe.type.ts';
@@ -81,6 +81,12 @@ export type HoverBudget = {
 type MessageTag<TType extends string> = { readonly type: TType };
 
 export type PositionsMessage = Extract<GraphWebviewMessage, MessageTag<'positions'>>;
+
+/** The layout one `positions` message carried: where the nodes sit and the routes of the edges. */
+export type PostedLayout = {
+  readonly positions: Positions;
+  readonly routes: Routes;
+};
 
 export type LayoutDoneMessage = Extract<GraphWebviewMessage, MessageTag<'layoutDone'>>;
 

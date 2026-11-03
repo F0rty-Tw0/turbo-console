@@ -4,11 +4,10 @@ import { expect } from '@playwright/test';
 
 import { GraphBoxesPage } from './graph-boxes.po.ts';
 import type { LayoutGrouping } from '../../src/bridge/common/graph-message.type.ts';
-import type { Positions } from '../../src/bridge/common/graph-state.type.ts';
 import { GROUP_BY_FOLDER_LABEL, LOADING_TEXT } from '../../src/graph/common/graph.const.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { ONE_FRAME, TOOLBAR_LABELS } from '../common/graph.const.ts';
-import type { PositionsMessage } from '../common/graph.type.ts';
+import type { PositionsMessage, PostedLayout } from '../common/graph.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { boxGrabOf, clipFaultsOf, folderKeyed, inViewCountOf } from '../test/utils/graph-folders.spec.util.ts';
@@ -75,14 +74,16 @@ export class GraphGroupingPage extends GraphBoxesPage {
     return this.notice.innerText();
   }
 
-  /** The positions of the last `positions` message the page posted. */
-  public async postedPositions(): Promise<Positions> {
+  /** The positions and routes of the last `positions` message the page posted. */
+  public async postedLayout(): Promise<PostedLayout> {
     const posted = await readPosted(this.page);
     const last = positionsPosted(posted).at(-1);
 
     if (last === undefined) throw new Error('graph e2e: no positions message was posted');
 
-    return last.positions;
+    const layout: PostedLayout = { positions: last.positions, routes: last.routes };
+
+    return layout;
   }
 
   /**

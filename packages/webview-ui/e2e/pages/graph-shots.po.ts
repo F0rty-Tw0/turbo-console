@@ -14,10 +14,10 @@ import { GraphToolbar } from './graph-toolbar.po.ts';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { GraphPage } from './graph.po.ts';
 import type { GraphAtomGroupState } from '../../src/bridge/common/graph-message.type.ts';
-import type { Positions } from '../../src/bridge/common/graph-state.type.ts';
 import type { ShotSetup, TaskShotSetup } from '../common/graph-shots.type.ts';
 import type { ThemeStub } from '../common/graph-theme.type.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
+import type { PostedLayout } from '../common/graph.type.ts';
 import { cachedShotState } from '../test/utils/graph-shot-state.spec.util.ts';
 
 /** The bottom-right pixel of the 1280 x 800 viewport, where no graph, box or button sits. */
@@ -57,8 +57,8 @@ export class GraphShots {
 
   /** Capture pass (ELK), reopen, theme, then the state with its captured cache; resolves settled. */
   public async openCached(setup: ShotSetup, theme: ThemeStub): Promise<void> {
-    const positions = await this.captureLayout(setup);
-    const cached = cachedShotState(setup, positions);
+    const layout = await this.captureLayout(setup);
+    const cached = cachedShotState(setup, layout);
 
     await this.look.applyTheme(theme);
     await this.host.sendState(cached);
@@ -112,17 +112,17 @@ export class GraphShots {
   }
 
   /** Opens the page, lays `setup.state` out with ELK, waits for the view to be saved and reopens the page from it. */
-  private async captureLayout(setup: ShotSetup): Promise<Positions> {
+  private async captureLayout(setup: ShotSetup): Promise<PostedLayout> {
     await this.graph.open({ savedState: setup.saved });
     await this.host.sendState(setup.state);
     await this.probe.expectLayoutEngine('elk');
 
-    const positions = await this.grouping.postedPositions();
+    const layout = await this.grouping.postedLayout();
 
     await this.host.expectViewSaved();
     await this.host.reopen();
 
-    return positions;
+    return layout;
   }
 
   /** Task mode draws the selection as the node state, not as the probe's package selection. */

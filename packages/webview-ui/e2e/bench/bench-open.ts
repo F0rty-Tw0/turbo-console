@@ -5,28 +5,28 @@ import { withSession } from './bench-session.ts';
 import { NOTHING_SAVED } from './common/bench.const.ts';
 import type { BenchSession, ColdOpen } from './common/bench.type.ts';
 import type { GraphReady, Positions } from '../../src/bridge/common/graph-state.type.ts';
-import type { GraphOptions } from '../common/graph.type.ts';
+import type { GraphOptions, PostedLayout } from '../common/graph.type.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 import { targetLikeHubSavedState, targetLikeTasksState } from '../test/utils/graph-target-like-tasks.spec.util.ts';
 import { targetLikeState } from '../test/utils/graph-target-like.spec.util.ts';
 
-const lastPositionsOf = async (session: BenchSession): Promise<Positions> => {
+const lastLayoutOf = async (session: BenchSession): Promise<PostedLayout> => {
   const posted = async (): Promise<Positions | null> => lastPositionsPosted(await readPosted(session.page));
 
   await expect.poll(posted).not.toBeNull();
 
-  return session.grouping.postedPositions();
+  return session.grouping.postedLayout();
 };
 
-/** Opens a fresh page, sends `state`, and times the first frame of its ELK layout; returns the positions the layout posted. */
+/** Opens a fresh page, sends `state`, and times the first frame of its ELK layout; returns the positions and routes the layout posted. */
 export const coldOpen = async (browser: Browser, state: GraphReady, options: GraphOptions = {}): Promise<ColdOpen> => {
   const opened = async (session: BenchSession): Promise<ColdOpen> => {
     await session.host.sendState(state);
     await session.probe.expectLayoutEngine('elk');
 
     const firstFrameMs = await session.timings.measuredFirstFrameMs();
-    const positions = await lastPositionsOf(session);
-    const result: ColdOpen = { firstFrameMs, positions };
+    const { positions, routes } = await lastLayoutOf(session);
+    const result: ColdOpen = { firstFrameMs, positions, routes };
 
     return result;
   };
@@ -55,10 +55,10 @@ const defaultOpened = async (session: BenchSession): Promise<number> => {
 /** First frame of the target-like graph's cold ELK layout opened with nothing saved, so grouped. */
 export const targetLikeDefaultOpen = async (browser: Browser): Promise<number> => withSession(browser, NOTHING_SAVED, defaultOpened);
 
-/** `state` carrying the positions its cold ELK layout posted, so `cachedOpen` takes the layout from the cache. */
+/** `state` carrying the positions and routes its cold ELK layout posted, so `cachedOpen` takes the layout from the cache. */
 export const cachedState = async (browser: Browser, state: GraphReady): Promise<GraphReady> => {
-  const { positions } = await coldOpen(browser, state);
-  const cached: GraphReady = { ...state, positions };
+  const { positions, routes } = await coldOpen(browser, state);
+  const cached: GraphReady = { ...state, positions, routes };
 
   return cached;
 };

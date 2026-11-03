@@ -138,9 +138,9 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('AND the grouped positions were posted', async (): Promise<void> => graphGrouping.expectPostedGrouping('folders'));
 
-    const posted = await graphGrouping.postedPositions();
+    const { positions, routes } = await graphGrouping.postedLayout();
     const large = largeState();
-    const folderCache: GraphReady = { ...large, folderPositions: posted };
+    const folderCache: GraphReady = { ...large, folderPositions: positions, folderRoutes: routes };
 
     await test.step('WHEN the page is reopened with the saved view and the folders cache is sent', async (): Promise<void> => {
       await graphHost.expectViewSaved();
