@@ -1,24 +1,11 @@
 import { expect, test } from './graph-task.fixture.ts';
-import { scopedNamesState } from './test/utils/graph-scope-names.spec.util.ts';
+import { BARE_TEXTS_STUB, FULL_TEXTS_STUB } from './test/stubs/graph-scope-names.stub.ts';
+import { scopedNamesState, textsOf } from './test/utils/graph-scope-names.spec.util.ts';
 import type { ProbeNode } from '../src/graph/common/graph-probe.type.ts';
 
 const SCOPE_LABELS = { description: 'U5 spec D7, §5 rows 11-14', type: 'requirement' };
 
 const IDS = ['@org/app', '@org/lib', 'tool'];
-
-const BARE_TEXTS = [
-  ['@org/app', 'app'],
-  ['@org/lib', 'lib'],
-  ['tool', 'tool']
-];
-
-const FULL_TEXTS = [
-  ['@org/app', '@org/app'],
-  ['@org/lib', '@org/lib'],
-  ['tool', 'tool']
-];
-
-const textsOf = (nodes: ProbeNode[]): string[][] => nodes.map(({ id, text }) => [id, text]);
 
 const placesOf = (nodes: ProbeNode[]): (string | number)[][] => nodes.map(({ id, x, y }) => [id, x, y]);
 
@@ -41,7 +28,7 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
         graphHost.sendState(scopedNamesState(false)));
 
       await test.step('THEN node text is bare while the ids stay the package names', async (): Promise<void> => {
-        await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(BARE_TEXTS);
+        await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(BARE_TEXTS_STUB);
       });
 
       await test.step('AND once the canvas settles every node is where it was, with no second layout', async (): Promise<void> => {
@@ -56,7 +43,7 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
       await test.step('WHEN scopes are shown again', async (): Promise<void> => graphHost.sendState(scopedNamesState(true)));
 
       await test.step('THEN node text is the full names and every node is still where it was', async (): Promise<void> => {
-        await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(FULL_TEXTS);
+        await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(FULL_TEXTS_STUB);
         expect(placesOf(await graphProbe.nodes())).toEqual(placesOf(before));
       });
 
@@ -87,7 +74,7 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
       });
 
       await test.step('THEN node text is bare and every node is where it was', async (): Promise<void> => {
-        await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(BARE_TEXTS);
+        await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(BARE_TEXTS_STUB);
         expect(placesOf(await graphProbe.nodes())).toEqual(placesOf(before));
       });
     }

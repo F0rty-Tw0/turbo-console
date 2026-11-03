@@ -1,5 +1,9 @@
 import { packageOf } from './graph-package.spec.util.ts';
 import type { GraphEdge, GraphPackage, GraphReady } from '../../../src/bridge/common/graph-state.type.ts';
+import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
+
+/** The `[id, text]` of each probe node, in probe order. */
+export const textsOf = (nodes: ProbeNode[]): string[][] => nodes.map(({ id, text }) => [id, text]);
 
 const scopedOf = (name: string, bareName: string, path: string): GraphPackage => {
   const base = packageOf(name, path);

@@ -1,17 +1,11 @@
 import { expect, test } from './graph-task.fixture.ts';
-import { scopedNamesState } from './test/utils/graph-scope-names.spec.util.ts';
+import { BARE_TEXTS_STUB, FULL_TEXTS_STUB } from './test/stubs/graph-scope-names.stub.ts';
+import { scopedNamesState, textsOf } from './test/utils/graph-scope-names.spec.util.ts';
 import type { GraphSetViewToggleMessage } from '../src/bridge/common/graph-message.type.ts';
-import type { ProbeNode } from '../src/graph/common/graph-probe.type.ts';
 
 const SCOPE_TOGGLE = { description: 'U5 spec D13, §5 rows 20-21', type: 'requirement' };
 
 const UNTICKED: GraphSetViewToggleMessage = { type: 'setViewToggle', toggle: 'scope', shown: false };
-
-const textsOf = (nodes: ProbeNode[]): string[] => nodes.map(({ text }) => text);
-
-const BARE_TEXTS = ['app', 'lib', 'tool'];
-
-const FULL_TEXTS = ['@org/app', '@org/lib', 'tool'];
 
 test.describe('FEATURE: package View checkbox Show package scopes', () => {
   test(
@@ -71,7 +65,7 @@ test.describe('FEATURE: package View checkbox Show package scopes', () => {
         graphHost.sendState(scopedNamesState(false)));
 
       await test.step('THEN the answer is handled, still exactly that one message, and the box is unticked', async (): Promise<void> => {
-        await expect.poll(async (): Promise<string[]> => textsOf(await graphProbe.nodes())).toEqual(BARE_TEXTS);
+        await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(BARE_TEXTS_STUB);
         await graphControls.expectViewToggles([UNTICKED]);
         await graphControls.expectScope(false);
       });
@@ -95,7 +89,7 @@ test.describe('FEATURE: package View checkbox Show package scopes', () => {
         graphHost.sendState(scopedNamesState(true)));
 
       await test.step('THEN the box is ticked, the nodes read the full names and still only the one message was posted', async (): Promise<void> => {
-        await expect.poll(async (): Promise<string[]> => textsOf(await graphProbe.nodes())).toEqual(FULL_TEXTS);
+        await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(FULL_TEXTS_STUB);
         await graphControls.expectScope(true);
         await graphControls.expectViewToggles([UNTICKED]);
       });
