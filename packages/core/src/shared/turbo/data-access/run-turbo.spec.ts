@@ -10,7 +10,7 @@ import { toTurboException } from '../../errors/utils/turbo-error.util.ts';
 import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
 import { isAlive } from '../test/utils/process.spec.util.ts';
 
-type StubName = 'slow-term' | 'ignore-term' | 'quick-term' | 'stderr-term' | 'exit-3';
+type StubName = 'slow-term' | 'ignore-term' | 'quick-term' | 'output-term' | 'exit-3';
 
 type AbortOutcome = {
   readonly error: unknown;
@@ -23,7 +23,7 @@ const STUB_TRAPS: Record<StubName, string> = {
   'slow-term': "trap 'sleep 1.5; exit 0' TERM",
   'ignore-term': "trap '' TERM",
   'quick-term': "trap 'exit 0' TERM",
-  'stderr-term': "trap 'exit 0' TERM",
+  'output-term': "trap 'exit 0' TERM",
   'exit-3': ':'
 };
 
@@ -32,11 +32,11 @@ const STUB_BODIES: Record<StubName, string> = {
   'slow-term': 'while :; do sleep 0.1; done',
   'ignore-term': 'while :; do sleep 0.1; done',
   'quick-term': 'while :; do sleep 0.1; done',
-  'stderr-term': "head -c 70000 /dev/zero | tr '\\0' x >&2; echo partial >&2; while :; do sleep 0.1; done",
+  'output-term': "echo MARK; head -c 70000 /dev/zero | tr '\\0' x >&2; echo partial >&2; while :; do sleep 0.1; done",
   'exit-3': 'echo out; echo err >&2; exit 3'
 };
 
-const STUB_NAMES: StubName[] = ['slow-term', 'ignore-term', 'quick-term', 'stderr-term', 'exit-3'];
+const STUB_NAMES: StubName[] = ['slow-term', 'ignore-term', 'quick-term', 'output-term', 'exit-3'];
 
 /** The one timer-driven case: long enough that a loaded macOS runner's shell writes its pid (and trap) before it fires. */
 const TIMEOUT_MS = 1000;
@@ -221,6 +221,10 @@ describe('FEATURE: runTurbo process lifecycle', () => {
         expect(error).toMatchObject({ name: 'AbortError' });
       });
 
+      it('THEN the AbortError still carries an empty stdout and stderr', () => {
+        expect(error).toMatchObject({ stdout: '', stderr: '' });
+      });
+
       it('THEN the binary never starts', async () => {
         await expect(readFile(stubFile('slow-term', 'pid'))).rejects.toMatchObject({ code: 'ENOENT' });
       });
@@ -263,12 +267,17 @@ describe('FEATURE: runTurbo process lifecycle', () => {
     );
   });
 
-  describe.skipIf(IS_WINDOWS)('GIVEN a binary that writes 70 000 x and a line to stderr, then hangs', () => {
+  describe.skipIf(IS_WINDOWS)('GIVEN a binary that writes MARK to stdout, 70 000 x and a line to stderr, then hangs', () => {
     describe('WHEN a 1000 ms timeout fires', () => {
       let outcome: AbortOutcome;
 
       beforeAll(async () => {
-        outcome = await runUntilAborted('stderr-term', { timeoutMs: 1000 });
+        outcome = await runUntilAborted('output-term', { timeoutMs: 1000 });
+      });
+
+      it('THEN the AbortError carries the stdout written before the abort, apart from stderr', () => {
+        expect(outcome.error).toMatchObject({ name: 'AbortError' });
+        expect(outcome.error).toHaveProperty('stdout', 'MARK\n');
       });
 
       it('THEN the AbortError carries the stderr line written before the abort', () => {

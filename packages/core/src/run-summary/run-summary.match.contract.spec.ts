@@ -19,6 +19,9 @@ import type { TaskNode } from '../workspace/common/workspace-model.type.ts';
 
 const TURBO = devTurboPath();
 
+/** Prints each task's start line as it starts, even under GITHUB_ACTIONS, so a timed-out run's AbortError stdout shows how far turbo got. */
+const STREAM_LOGS = '--log-order=stream';
+
 const TARGET_LIKE = PRESETS['target-like'];
 
 const SPACED_NAME = 'my task';
@@ -58,8 +61,9 @@ const insertMember = async (file: string, anchor: string, entry: string): Promis
 
 /** Runs `task` of `packageName` in `dir` between two clock reads. */
 const runOf = async (dir: string, task: TaskNode, packageName: string): Promise<RunToMatch> => {
+  const runArgs = turboRunArgs(task, packageName).slice(1);
   const launchedAt = Date.now();
-  const result = await runTurbo(TURBO, turboRunArgs(task, packageName).slice(1), dir);
+  const result = await runTurbo(TURBO, [...runArgs, STREAM_LOGS], dir);
   const endedAt = Date.now();
   const run: RunToMatch = { task, packageName, launchedAt, endedAt, exitCode: result.exitCode };
 

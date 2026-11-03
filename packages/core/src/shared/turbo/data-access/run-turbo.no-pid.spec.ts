@@ -8,18 +8,18 @@ import { runTurbo } from './run-turbo.ts';
 
 const controller = vi.hoisted(() => new AbortController());
 
-/** runTurbo calls `collectStderr` right after `execFile`: the abort lands after its listener, before the spawn `error` tick. */
-vi.mock('./collect-stderr.ts', () => {
+/** runTurbo calls `collectTail` right after `execFile`: the abort lands after its listeners, before the spawn `error` tick. */
+vi.mock('./collect-tail.ts', () => {
   const abort = (): void => controller.abort();
   const readNothing = (): string => '';
 
-  const collectStderr = (): (() => string) => {
+  const collectTail = (): (() => string) => {
     queueMicrotask(abort);
 
     return readNothing;
   };
 
-  const mocked = { collectStderr };
+  const mocked = { collectTail };
 
   return mocked;
 });
