@@ -67,6 +67,7 @@ export class GraphTaskMode {
     if (!this.isActive()) return;
 
     this.showPage();
+    this.controls.setView(this.memory.viewChecks());
 
     const shownSet = this.memory.shownSet();
     const request = requestOf(this.memory.tasks(), shownSet, umbrellaFactsOf(this.deps, this.layout.atoms), this.memory.naming());
@@ -201,6 +202,7 @@ export class GraphTaskMode {
     this.deps.screen.showGraph(this.layout.engine() === 'fallback');
     this.panel.enter();
     this.controls.enter(this.memory.view(), current?.controlsOpen ?? true);
+    this.controls.setView(this.memory.viewChecks());
     this.selection.enter(current?.detailsOpen ?? true);
   }
 
