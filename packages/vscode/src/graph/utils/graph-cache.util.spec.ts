@@ -1,20 +1,22 @@
-import type { GraphState, Positions } from '@turbo-console/webview-ui';
+import type { GraphState, Positions, Routes } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { acceptedPositions, acceptedRoutes, cacheKeyOf, coversExactly, layoutEntryOf, parseRoutes } from './graph-cache.util.ts';
 import {
-  BAD_ROUTES_JSON_STUB,
-  GHOST_ROUTES_STUB,
+  EDGE_ROUTE_STUB,
   GRAPH_HASH_STUB,
   GRAPH_PACKAGES_STUB,
   GRAPH_STATE_STUB,
-  MIXED_ROUTES_STUB,
   POSITIONS_STUB,
   ROUTES_STUB
 } from '../test/stubs/graph-model.stub.ts';
 
 const STATE: GraphState = GRAPH_STATE_STUB;
 const POINT = { x: 1, y: 1 };
+const GHOST_ROUTES: Routes = { ghost: EDGE_ROUTE_STUB };
+const MIXED_ROUTES: Routes = { ...ROUTES_STUB, ...GHOST_ROUTES };
+const BAD_EDGE_ROUTE = { ...EDGE_ROUTE_STUB, bends: 'nope' };
+const BAD_ROUTES_JSON: Record<string, unknown> = { ...ROUTES_STUB, bad: BAD_EDGE_ROUTE };
 const PROTO_ENTRY_JSON = `{"hash":"${GRAPH_HASH_STUB}","positions":{"__proto__":{"x":1,"y":2}},"routes":{}}`;
 
 const withPoint = (name: string, point: unknown): Record<string, unknown> => {
@@ -152,7 +154,7 @@ describe('FEATURE: layout entry read from storage', () => {
     });
 
     it('WHEN one route is bad THEN the entry is a hit without that route', () => {
-      const entry = layoutEntryOf({ ...BASE, routes: BAD_ROUTES_JSON_STUB });
+      const entry = layoutEntryOf({ ...BASE, routes: BAD_ROUTES_JSON });
 
       expect(entry?.routes).toStrictEqual(ROUTES_STUB);
     });
@@ -165,11 +167,11 @@ describe('FEATURE: accepted routes', () => {
   });
 
   it('GIVEN one route whose key is no edge id WHEN accepted THEN that route alone is dropped', () => {
-    expect(acceptedRoutes(STATE, { routes: MIXED_ROUTES_STUB })).toStrictEqual(ROUTES_STUB);
+    expect(acceptedRoutes(STATE, { routes: MIXED_ROUTES })).toStrictEqual(ROUTES_STUB);
   });
 
   it('GIVEN only unknown keys WHEN accepted THEN the result is {}', () => {
-    expect(acceptedRoutes(STATE, { routes: GHOST_ROUTES_STUB })).toStrictEqual({});
+    expect(acceptedRoutes(STATE, { routes: GHOST_ROUTES })).toStrictEqual({});
   });
 
   it('GIVEN a loading state WHEN accepted THEN the result is {}', () => {
@@ -188,7 +190,7 @@ describe('FEATURE: routes read from a post', () => {
     expect(parseRoutes({})).toStrictEqual({});
   });
 
-  it('GIVEN a good route WHEN read THEN a copy of it is returned', () => {
+  it('GIVEN a good route WHEN read THEN an equal route is returned', () => {
     const routes = parseRoutes({ e1: ROUTE });
 
     expect(routes).toStrictEqual({ e1: ROUTE });

@@ -1,17 +1,16 @@
-import type { GraphState } from '@turbo-console/webview-ui';
+import type { GraphState, Routes } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
 import type { GraphLayoutCacheEntry, PositionsPost } from '../common/graph-cache.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import {
-  GHOST_ROUTES_STUB,
+  EDGE_ROUTE_STUB,
   GRAPH_HASH_STUB,
   GRAPH_MODEL_STUB,
   GRAPH_PACKAGES_STUB,
   GRAPH_SHOWN_STUB,
   GRAPH_STATE_STUB,
-  MIXED_ROUTES_STUB,
   ROUTES_STUB
 } from '../test/stubs/graph-model.stub.ts';
 import { positionsOf } from '../test/utils/graph-session.spec.util.ts';
@@ -26,6 +25,8 @@ const FLAT_ENTRY: GraphLayoutCacheEntry = {
 const FOLDERS_ENTRY: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: positionsOf(['a']), routes: {} };
 const FULL_POSITIONS = positionsOf(GRAPH_PACKAGES_STUB);
 const LOADING_STATE: GraphState = { kind: 'loading' };
+const GHOST_ROUTES: Routes = { ghost: EDGE_ROUTE_STUB };
+const MIXED_ROUTES: Routes = { ...ROUTES_STUB, ...GHOST_ROUTES };
 
 const postOf = (overrides: Partial<PositionsPost>): PositionsPost => {
   const post: PositionsPost = { hash: GRAPH_HASH_STUB, positions: FULL_POSITIONS, routes: {}, grouping: 'flat', ...overrides };
@@ -71,7 +72,7 @@ describe('FEATURE: graph layout store', () => {
     it('WHEN a post carries a known and an unknown edge route THEN writeCache gets only the known route', () => {
       const ports = graphPortsMock();
 
-      storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: MIXED_ROUTES_STUB }));
+      storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: MIXED_ROUTES }));
 
       expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', {
         hash: GRAPH_HASH_STUB,
@@ -83,7 +84,7 @@ describe('FEATURE: graph layout store', () => {
     it('WHEN every route of the post is unknown THEN the positions are stored with routes {} and true is returned', () => {
       const ports = graphPortsMock();
 
-      const isStored = storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: GHOST_ROUTES_STUB }));
+      const isStored = storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: GHOST_ROUTES }));
 
       expect(isStored).toBe(true);
       expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', {
