@@ -1,4 +1,3 @@
-import { ROUTE_BENDS_MAX } from '@turbo-console/webview-ui';
 import type { EdgeRoute, GraphWebviewMessage, Position, Routes } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
@@ -26,10 +25,10 @@ const LIMIT_START: Position = { x: 1e7, y: -1e7 };
 const LIMIT_END: Position = { x: -1e7, y: 1e7 };
 const ROUTE: EdgeRoute = { start: POINT, bends: [BEND], end: END };
 const BAD_ROUTE = { ...ROUTE, end: NAN_END };
-const BENDS_OVER = { ...ROUTE, bends: bendsOf(ROUTE_BENDS_MAX + 1) };
+const BENDS_OVER = { ...ROUTE, bends: bendsOf(65) };
 const FAR_ROUTE = { ...ROUTE, start: FAR_START };
 const NO_BENDS_ROUTE = { start: POINT, end: END };
-const LIMIT_ROUTE = { start: LIMIT_START, bends: bendsOf(ROUTE_BENDS_MAX), end: LIMIT_END };
+const LIMIT_ROUTE = { start: LIMIT_START, bends: bendsOf(64), end: LIMIT_END };
 
 class Routed {
   public readonly e1 = ROUTE;
@@ -87,7 +86,7 @@ const routesIn = (parsed: GraphWebviewMessage | null): Routes | null => {
 describe('FEATURE: graph positions routes validation', () => {
   describe('GIVEN a positions post whose routes are bad (a2)', () => {
     it.each([
-      ['more than ROUTE_BENDS_MAX bends on the only route', { e1: BENDS_OVER }],
+      ['65 bends on the only route (the spec limit is 64)', { e1: BENDS_OVER }],
       ['a NaN coordinate', { e1: BAD_ROUTE }],
       ['a coordinate past 1e7', { e1: FAR_ROUTE }],
       ['a route that is a string', { e1: 'nope' }],
@@ -115,7 +114,7 @@ describe('FEATURE: graph positions routes validation', () => {
   });
 
   describe('GIVEN routes at their limits', () => {
-    it('WHEN a route has ROUTE_BENDS_MAX bends and coordinates at +-1e7 THEN it is kept', () => {
+    it('WHEN a route has 64 bends (the spec limit) and coordinates at +-1e7 THEN it is kept', () => {
       const parsed = parseGraphMessage(postWith({ e1: LIMIT_ROUTE }));
 
       expect(routesIn(parsed)).toStrictEqual({ e1: LIMIT_ROUTE });
