@@ -17,7 +17,7 @@ const readGrabBlocker = (point: ViewportPoint): string | null => {
   return `${top.tagName}#${top.id}`;
 };
 
-/** Fails at once, naming what is in the way, when the graph canvas is not the top element at `grab`, so a drag cannot miss it and time out later. */
+/** Fails at once, naming what is in the way, when no canvas is the top element at `grab`, so a drag cannot miss the graph and time out later. */
 export const expectGrabbable = async (page: Page, grab: ViewportPoint): Promise<void> => {
   const blocker = await page.evaluate(readGrabBlocker, grab);
 

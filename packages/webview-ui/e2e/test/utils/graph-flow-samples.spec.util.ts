@@ -31,7 +31,11 @@ const longestPieceOf = (line: ProbeEdgeLine): LinkEnds => {
   return rest.reduce(longerOf, first);
 };
 
-/** The clip around the middle of `line`'s longest piece and the 13 px of that piece to read in a shot of that clip, from its top left. */
+/**
+ * The clip around the middle of `line`'s longest piece and the 13 px of that piece to read in a shot of that clip, from its
+ * top left. It reads `line` as straight pieces through its points, so it fits a routed or a straight line only: a curved
+ * line's control points lie off the curve Cytoscape draws.
+ */
 export const edgeSampleOf = (line: ProbeEdgeLine): EdgeSample => {
   const piece = longestPieceOf(line);
   const { from, to } = piece;
