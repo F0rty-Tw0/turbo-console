@@ -62,9 +62,16 @@ export class GraphTaskProjects {
   /**
    * Presses the name of task `id`, found by its title because task names repeat across projects. Forced: an undrawn
    * task's name is `aria-disabled`, and a real click still lands on it; Playwright would otherwise wait for it to enable.
+   * A forced click also skips the stable check, and a freshly painted row (`content-visibility: auto`) keeps its 19 px
+   * placeholder box until its first rendered frame, so `hover` waits for the name to settle and take the pointer first.
+   * A pressed name takes focus, so a click that lands on the row instead of the name fails here.
    */
   public async pick(id: string): Promise<void> {
-    await this.taskName(id).click({ force: true });
+    const name = this.taskName(id);
+
+    await name.hover();
+    await name.click({ force: true });
+    await expect(name).toBeFocused();
   }
 
   /** The name of task `id` reads dimmed: `aria-disabled`, as an undrawn task's name is. */
