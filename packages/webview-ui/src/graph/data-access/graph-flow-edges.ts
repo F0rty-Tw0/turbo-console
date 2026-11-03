@@ -12,7 +12,7 @@ const flowEdgeOf = (edge: FlowEdgeSource): FlowEdgeGeometry | null => {
 
   if (source === undefined || target === undefined) return null;
 
-  const geometry: FlowEdgeGeometry = { source, target, controlPoints };
+  const geometry: FlowEdgeGeometry = { source, target, controlPoints, isPolyline: false };
 
   return geometry;
 };

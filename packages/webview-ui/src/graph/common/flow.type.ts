@@ -1,11 +1,13 @@
 import type { Viewport } from './graph-page.type.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 
-/** One edge's geometry in model coordinates; `controlPoints` is empty for a lone edge. */
+/** One edge's geometry in model coordinates; `controlPoints` is empty for a lone edge, and the bends of a polyline when `isPolyline`. */
 export type FlowEdgeGeometry = {
   readonly source: Position;
   readonly target: Position;
   readonly controlPoints: Position[];
+  /** A routed edge: straight segments through every point, even one. */
+  readonly isPolyline: boolean;
 };
 
 /** One drawn piece of an edge in rendered coordinates; a `null` control is a straight line, else a quadratic curve. */

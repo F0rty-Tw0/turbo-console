@@ -84,7 +84,7 @@ const coreOf = (lit: FlowEdgeSource[], others: FlowEdgeSource[], asked: string[]
 describe('FEATURE: flowEdgesOf', () => {
   it('GIVEN a highlighted curved edge WHEN read THEN it keeps its endpoints and control point', () => {
     const cy = coreOf([edgeOf(SOURCE, TARGET, [BEND])], [], []);
-    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [BEND] };
+    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [BEND], isPolyline: false };
 
     const edges = flowEdgesOf(cy);
 
@@ -93,7 +93,7 @@ describe('FEATURE: flowEdgesOf', () => {
 
   it('GIVEN a highlighted edge whose controlPoints() is undefined WHEN read THEN it has no control points', () => {
     const cy = coreOf([edgeOf(SOURCE, TARGET)], [], []);
-    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [] };
+    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [], isPolyline: false };
 
     const edges = flowEdgesOf(cy);
 
@@ -147,7 +147,7 @@ describe('FEATURE: flowEdgesOf', () => {
     });
 
     it('WHEN the task graph is drawn with web#build painted THEN only its link to api#build is read', () => {
-      const expected: FlowEdgeGeometry = { source: WEB_AT, target: API_AT, controlPoints: [] };
+      const expected: FlowEdgeGeometry = { source: WEB_AT, target: API_AT, controlPoints: [], isPolyline: false };
 
       tasks.paint('web#build');
       tasks.show(DRAWING);

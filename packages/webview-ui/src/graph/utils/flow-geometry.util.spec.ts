@@ -10,8 +10,8 @@ const pointOf = (x: number, y: number): Position => {
   return point;
 };
 
-const edgeOf = (source: Position, target: Position, controlPoints: Position[] = []): FlowEdgeGeometry => {
-  const edge: FlowEdgeGeometry = { source, target, controlPoints };
+const edgeOf = (source: Position, target: Position, controlPoints: Position[] = [], isPolyline = false): FlowEdgeGeometry => {
+  const edge: FlowEdgeGeometry = { source, target, controlPoints, isPolyline };
 
   return edge;
 };
@@ -54,6 +54,40 @@ describe('FEATURE: flowSegmentsOf', () => {
         segmentOf(pointOf(10, 5), pointOf(20, 5)),
         segmentOf(pointOf(20, 5), pointOf(30, 0))
       ]);
+    });
+  });
+
+  describe('GIVEN a polyline edge (0,0) to (40,0) at zoom 1, pan 0', () => {
+    it('WHEN it has 3 points THEN 4 straight segments run start, p1, p2, p3, end', () => {
+      const points = [pointOf(10, 5), pointOf(20, 5), pointOf(30, 5)];
+      const edge = edgeOf(ORIGIN, pointOf(40, 0), points, true);
+
+      const segments = flowSegmentsOf([edge], ORIGIN, 1);
+
+      expect(segments).toStrictEqual([
+        segmentOf(ORIGIN, pointOf(10, 5)),
+        segmentOf(pointOf(10, 5), pointOf(20, 5)),
+        segmentOf(pointOf(20, 5), pointOf(30, 5)),
+        segmentOf(pointOf(30, 5), pointOf(40, 0))
+      ]);
+    });
+
+    it('WHEN it has 1 point THEN 2 straight segments, not a quadratic', () => {
+      const edge = edgeOf(ORIGIN, pointOf(40, 0), [pointOf(20, 5)], true);
+
+      const segments = flowSegmentsOf([edge], ORIGIN, 1);
+
+      expect(segments).toStrictEqual([segmentOf(ORIGIN, pointOf(20, 5)), segmentOf(pointOf(20, 5), pointOf(40, 0))]);
+    });
+  });
+
+  describe('GIVEN a non-polyline edge (0,0) to (40,0) at zoom 1, pan 0', () => {
+    it('WHEN it has 1 control point (20,5) THEN the quadratic stays', () => {
+      const edge = edgeOf(ORIGIN, pointOf(40, 0), [pointOf(20, 5)], false);
+
+      const segments = flowSegmentsOf([edge], ORIGIN, 1);
+
+      expect(segments).toStrictEqual([segmentOf(ORIGIN, pointOf(40, 0), pointOf(20, 5))]);
     });
   });
 
