@@ -172,22 +172,24 @@ describe('FEATURE: buildControls', () => {
   describe('GIVEN scopes hidden and @acme/ui labelled ui', () => {
     const bare: DrawnGraph = { ...BOARDS_DRAWN, scopeShown: false, labels: new Map([['@acme/ui', 'ui']]) };
 
-    it('WHEN built THEN its name button reads and is titled ui', () => {
-      const { pick } = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
+    describe('WHEN built', () => {
+      it('THEN its name button reads and is titled ui', () => {
+        const { pick } = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
 
-      expect([pick.textContent, pick.title]).toStrictEqual(['ui', 'ui']);
-    });
+        expect([pick.textContent, pick.title]).toStrictEqual(['ui', 'ui']);
+      });
 
-    it('WHEN built THEN its checkbox and Focus are named by the label', () => {
-      const { check, focus } = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
+      it('THEN its checkbox and Focus are named by the label', () => {
+        const { check, focus } = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
 
-      expect([check.getAttribute('aria-label'), focus.getAttribute('aria-label')]).toStrictEqual(['Show ui', 'Focus ui']);
-    });
+        expect([check.getAttribute('aria-label'), focus.getAttribute('aria-label')]).toStrictEqual(['Show ui', 'Focus ui']);
+      });
 
-    it('WHEN built THEN the row keeps the package name as its id', () => {
-      const row = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
+      it('THEN the row keeps the package name as its id', () => {
+        const row = rowOf(buildControls(BOARDS_GROUPS_STUB, [], bare), '@acme/ui');
 
-      expect(row.name).toBe('@acme/ui');
+        expect(row.name).toBe('@acme/ui');
+      });
     });
   });
 
