@@ -14,10 +14,13 @@ import {
   taskPackagesOf
 } from '../utils/task-compound.util.ts';
 
+/** The title width `titleWidths` holds for the box `id`, 0 when unknown, so a box is never narrower than its title. */
+const minWidthOf = (id: string, drawing: TaskDrawing): number => drawing.titleWidths.get(id) ?? 0;
+
 /** A folder box titled `folderTitleOf`, at least as wide as its title width (0 when unknown). */
 const folderBoxOf = (folder: string, drawing: TaskDrawing): ElementDefinition => {
   const id = folderIdOf(folder);
-  const minWidth = drawing.titleWidths.get(id) ?? 0;
+  const minWidth = minWidthOf(id, drawing);
   const data = { id, title: folderTitleOf(folder), minWidth };
   const definition: ElementDefinition = { data, classes: TASK_FOLDER_CLASS };
 
@@ -29,7 +32,7 @@ const folderBoxOf = (folder: string, drawing: TaskDrawing): ElementDefinition =>
  * never narrower than its title.
  */
 const packageBoxOf = (packageName: string, drawing: TaskDrawing): ElementDefinition => {
-  const minWidth = drawing.titleWidths.get(packageName) ?? 0;
+  const minWidth = minWidthOf(packageName, drawing);
   const parent = folderBoxIdOf(packageName, drawing.naming);
   const box = { id: taskBoxIdOf(packageName), title: ownerTextOf(packageName, drawing.rootLabel, drawing.naming.labels), minWidth };
   const nested = { ...box, parent };
@@ -42,7 +45,7 @@ const packageBoxOf = (packageName: string, drawing: TaskDrawing): ElementDefinit
 /** A package's Scripts box inside its package box, at least as wide as its title width (0 when unknown). */
 const scriptsBoxOf = (packageName: string, drawing: TaskDrawing): ElementDefinition => {
   const id = scriptsBoxIdOf(packageName);
-  const minWidth = drawing.titleWidths.get(id) ?? 0;
+  const minWidth = minWidthOf(id, drawing);
   const data = { id, parent: taskBoxIdOf(packageName), title: SCRIPTS_BOX_TITLE, minWidth };
   const definition: ElementDefinition = { data, classes: SCRIPTS_BOX_CLASS };
 
