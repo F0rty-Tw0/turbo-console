@@ -1,5 +1,6 @@
 import type { Css, NodeSingular, StylesheetJson } from 'cytoscape';
 
+import { routeRulesOf } from './graph-route-style.ts';
 import { selectionRulesOf } from './graph-selection-style.ts';
 import { taskRulesOf } from './graph-task-style.ts';
 import {
@@ -115,6 +116,13 @@ const edgeStyleOf = (colors: ThemeColors): Css.Edge => {
   return edge;
 };
 
+/** A highlighted or selected edge: wider, its line and arrow in `colour`. */
+const emphasisEdgeOf = (width: number, colour: string): Css.Edge => {
+  const edge = { width, 'line-color': colour, 'target-arrow-color': colour };
+
+  return edge;
+};
+
 /** Moves a `top` label down from above the frame to the middle of the box's top padding band. */
 const TITLE_MARGIN_Y = (FOLDER_PADDING_PX + NODE_FONT_SIZE) / 2;
 
@@ -148,7 +156,7 @@ const BOX_TITLE = {
 
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with a
- * triangle at the dependency. `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost`
+ * triangle at the dependency, drawn on their ELK route while `routed` (`routeRulesOf`). `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost`
  * (dashed) is the one `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
  * background; `taskRulesOf` adds the task mode rules and `selectionRulesOf` the selected border and fill and the bold focus target.
  * The folder pass draws `folder-node` (a collapsed folder, its label wrapped only while exporting or `row-less`) and
@@ -173,16 +181,13 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     'corner-radius': '6px'
   } as const;
   const highlightedNode = { 'border-width': NODE_BORDER_PX, 'border-color': colors.highlighted };
-  const highlightedEdge = {
-    width: HIGHLIGHTED_EDGE_WIDTH,
-    'line-color': colors.highlighted,
-    'target-arrow-color': colors.highlighted
-  };
-  const selectedEdge = { width: SELECTED_EDGE_WIDTH, 'line-color': colors.selected, 'target-arrow-color': colors.selected };
+  const highlightedEdge = emphasisEdgeOf(HIGHLIGHTED_EDGE_WIDTH, colors.highlighted);
+  const selectedEdge = emphasisEdgeOf(SELECTED_EDGE_WIDTH, colors.selected);
   const dimmed = { opacity: colors.dimmedOpacity };
   const glyphFamily = glyphs ? `codicon, ${fontFamily}` : null;
   const taskRules = taskRulesOf(colors, BOX_TITLE, glyphFamily);
   const selectionRules = selectionRulesOf(colors);
+  const routeRules = routeRulesOf();
   const style: StylesheetJson = [
     { selector: 'node', style: node },
     { selector: 'node[label]', style: LABELLED_NODE },
@@ -190,6 +195,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     { selector: `node:parent.${EXPORTING_CLASS}`, style: BOX_TITLE },
     ...taskRules,
     { selector: 'edge', style: edgeStyleOf(colors) },
+    ...routeRules,
     ...NO_PRESS_RULES,
     ...selectionRules,
     { selector: 'node.highlighted', style: highlightedNode },
