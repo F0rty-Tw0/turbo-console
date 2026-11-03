@@ -18,7 +18,7 @@ const ORIGIN: Position = { x: 0, y: 0 };
 export const revealDepsMock = (graph: DrawnGraph, applied: GraphFilters): RevealDepsMock => {
   const log: string[] = [];
   const collapsed = new Set<string>();
-  const mounted: ControlsMounted = { graph, elements: buildControls([], []) };
+  const mounted: ControlsMounted = { graph, elements: buildControls([], [], graph) };
   const camera: Viewport = { zoom: 1, pan: ORIGIN };
   const tasks: Mocked<RevealTaskMode> = {
     isActive: vi.fn<RevealTaskMode['isActive']>(() => false),

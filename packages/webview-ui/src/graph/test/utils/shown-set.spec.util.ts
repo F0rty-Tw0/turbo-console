@@ -1,4 +1,5 @@
 import type { GraphTask } from '../../../bridge/common/graph-state.type.ts';
+import type { ShownSetInput } from '../../common/shown-set.type.ts';
 import { GRAPH_TASK_STUB } from '../stubs/graph-task.stub.ts';
 
 const idsOf = (prefix: string, count: number): string[] => {
@@ -13,6 +14,22 @@ export const taskOf = (id: string, dependencies: string[]): GraphTask => {
   const task: GraphTask = { ...GRAPH_TASK_STUB, id, packageName, name, dependencies };
 
   return task;
+};
+
+/** `taskOf` as a package script: a task turbo does not run. */
+export const scriptOf = (id: string, dependencies: string[]): GraphTask => {
+  const task = taskOf(id, dependencies);
+  const script: GraphTask = { ...task, isTurboTask: false };
+
+  return script;
+};
+
+/** A `ShownSetInput` over `tasks` whose listing is exactly those tasks; `edit` replaces any field. */
+export const inputOf = (tasks: GraphTask[], edit: Partial<ShownSetInput> = {}): ShownSetInput => {
+  const listedIds = new Set(tasks.map((task) => task.id));
+  const input: ShownSetInput = { tasks, chosen: ['root#t'], depth: 1, capLifted: false, listedIds, ...edit };
+
+  return input;
 };
 
 const joined = (...groups: GraphTask[][]): GraphTask[] => groups.flat();
@@ -110,4 +127,32 @@ export const mixOf = (dependencies: number, dependents: number): GraphTask[] => 
   const tasks = joined([taskOf('root#t', below)], leavesOf(below), dependingOn(above, 'root#t'));
 
   return tasks;
+};
+
+/** `depsOf(hop1, hop2)` plus `dependents` more tasks that depend on `root#t`, all at dependent hop 1. */
+export const depsAndDependentsOf = (hop1: number, hop2: number, dependents: number): GraphTask[] => {
+  const above = dependingOn(idsOf('d-', dependents), 'root#t');
+  const tasks = joined(depsOf(hop1, hop2), above);
+
+  return tasks;
+};
+
+type Chain = { readonly tasks: GraphTask[]; readonly previousFirst: string };
+
+const withLevel = (chain: Chain, size: number, level: number): Chain => {
+  const ids = idsOf(`l${level}-`, size);
+  const [first = chain.previousFirst] = ids;
+  const tasks = joined(chain.tasks, dependingOn(ids, chain.previousFirst));
+
+  const next: Chain = { tasks, previousFirst: first };
+
+  return next;
+};
+
+/** `root#t` and a dependents chain: `sizes[0]` tasks depend on it, and every task of a level depends on the first task of the level before. */
+export const chainOf = (sizes: number[]): GraphTask[] => {
+  const start: Chain = { tasks: [taskOf('root#t', [])], previousFirst: 'root#t' };
+  const chain = sizes.reduce(withLevel, start);
+
+  return chain.tasks;
 };

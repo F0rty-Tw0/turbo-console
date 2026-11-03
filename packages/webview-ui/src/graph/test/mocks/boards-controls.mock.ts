@@ -2,9 +2,10 @@ import type { ControlsElements } from '../../common/controls-elements.type.ts';
 import type { PageElements } from '../../common/page-elements.type.ts';
 import { buildControls } from '../../ui/controls-elements.ts';
 import { BOARDS_GROUPS_STUB } from '../stubs/folder-boards.stub.ts';
+import { BOARDS_DRAWN } from '../utils/folder-boards.spec.util.ts';
 
 /** The Controls panel of the boards graph (apps, packages) with the tag `app`, built on the stubbed `document`. */
-export const boardsControlsMock = (): ControlsElements => buildControls(BOARDS_GROUPS_STUB, ['app']);
+export const boardsControlsMock = (): ControlsElements => buildControls(BOARDS_GROUPS_STUB, ['app'], BOARDS_DRAWN);
 
 /** The toolbar's Controls button and its "filters on" mark, built on the stubbed `document`. */
 export const controlsTogglesMock = (): Pick<PageElements, 'controls' | 'filtersOn'> => {

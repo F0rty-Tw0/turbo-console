@@ -89,6 +89,8 @@ export type FoldersView = {
 /** The Cytoscape canvas view of one page. */
 export type GraphView = {
   readonly setGraph: (packages: string[], edges: GraphEdge[], positions: Positions, sizeOf: NodeSizer) => void;
+  /** Gives each drawn package node its label text; sizes, positions and the camera stay as they are. */
+  readonly setLabels: (labels: ReadonlyMap<string, string>) => void;
   /** Gives each package, link, box, collapsed folder and folder link its state class. */
   readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */
@@ -153,7 +155,7 @@ export type GraphControllerDeps = {
   readonly measure: TextMeasure;
   readonly now: () => number;
   /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
-  readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;
+  readonly build: (groups: FolderGroup[], tags: string[], graph: DrawnGraph) => ControlsElements;
   /** The details view builders, handed in because `domain-logic` may not import `ui`. */
   readonly views: DetailsViews;
   /** The canvas widget builders, handed in because `domain-logic` may not import `ui`. */
@@ -168,12 +170,16 @@ export type GraphControllerDeps = {
   readonly background: () => string;
 };
 
-/** The graph the page shows: its hash, package names and records, and its drawable edges. */
+/** The graph the page shows: its hash, package names and records, its drawable edges, and its package labels. */
 export type DrawnGraph = {
   readonly hash: string;
   readonly packages: string[];
   readonly infos: GraphPackage[];
   readonly edges: GraphEdge[];
+  /** Whether package labels keep their `@scope/`; a same-hash state can flip it, and only the labels follow. */
+  readonly scopeShown: boolean;
+  /** Each package's node and row text, keyed by package name; never holds `//`. */
+  readonly labels: ReadonlyMap<string, string>;
 };
 
 export type GraphController = {

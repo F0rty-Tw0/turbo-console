@@ -50,6 +50,7 @@ const GRID_WALK: FocusStep[] = [
 const TAB_TO_TAGS: FocusStep[] = [
   { key: 'Tab', focus: 'Focus depth' },
   { key: 'Tab', focus: 'Group by folder' },
+  { key: 'Tab', focus: 'Show package scopes' },
   { key: 'Tab', focus: 'app' },
   { key: 'Tab', focus: 'lib' },
   { key: 'Tab', focus: 'ui' }
@@ -131,10 +132,10 @@ test.describe('FEATURE: graph controls keyboard', () => {
 
       await test.step('AND docs is typed', async (): Promise<void> => graphKeys.type('docs'));
 
-      const tabbed = await test.step('AND Tab is pressed six times', async (): Promise<FocusStep[]> =>
+      const tabbed = await test.step('AND Tab is pressed seven times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(TAB_PAST_DOCS_SEARCH));
 
-      await test.step('THEN Tab walks depth, Group by folder and the tags, then enters the list at the first header checkbox', (): void =>
+      await test.step('THEN Tab walks depth, Group by folder, Show package scopes and the tags, then enters the list at the first header checkbox', (): void =>
         expect(tabbed).toEqual(TAB_PAST_DOCS_SEARCH));
     }
   );
@@ -157,10 +158,10 @@ test.describe('FEATURE: graph controls keyboard', () => {
 
       await test.step('AND core is typed', async (): Promise<void> => graphKeys.type('core'));
 
-      const tabbed = await test.step('AND Tab is pressed six times', async (): Promise<FocusStep[]> =>
+      const tabbed = await test.step('AND Tab is pressed seven times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(TAB_PAST_CORE_SEARCH));
 
-      await test.step('THEN Tab walks depth, Group by folder and the tags, then enters the list at the packages header checkbox', (): void =>
+      await test.step('THEN Tab walks depth, Group by folder, Show package scopes and the tags, then enters the list at the packages header checkbox', (): void =>
         expect(tabbed).toEqual(TAB_PAST_CORE_SEARCH));
     }
   );

@@ -144,9 +144,10 @@ export type PackageToolbarElements = {
 /** The package toolbar's buttons; collapse has no button on a flat page. */
 export type PackageToolbarKind = Exclude<keyof PackageToolbarElements, 'root'>;
 
-/** The toolbar built for `name` in `folder` (`null` on a flat page), with the state it was last synced to. */
+/** The toolbar built for `name` in `folder` (`null` on a flat page) and named by `label`, with the state it was last synced to. */
 export type ToolbarEntry = {
   readonly name: string;
+  readonly label: string;
   readonly folder: string | null;
   readonly state: PackageMenuState;
   readonly elements: PackageToolbarElements;
@@ -188,8 +189,8 @@ export type WidgetViews = {
   /** `title` is the shown folder title; `count` the folder's package count, shown on a box row only. */
   readonly row: (kind: RowKind, title: string, count: number) => FolderRowElements;
   readonly taskToolbar: (id: string, packageName: string) => TaskToolbarElements;
-  /** `folderTitle` is the shown title of the package's folder, `null` on a flat page. */
-  readonly packageToolbar: (name: string, folderTitle: string | null) => PackageToolbarElements;
+  /** `label` is the package's shown label, which names the toolbar and its buttons; `folderTitle` is the shown title of the package's folder, `null` on a flat page. */
+  readonly packageToolbar: (label: string, folderTitle: string | null) => PackageToolbarElements;
   /** `label` is the menu's accessible name, the one its "…" has. */
   readonly menu: (model: MenuItemModel[], label: string) => MenuElements;
   readonly location: LocationViews;

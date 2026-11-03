@@ -2,12 +2,21 @@ import { setButtonIcon, setButtonLabel, setButtonText, setFocusToggle } from './
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
-import type { ControlsView } from '../common/graph-controls.type.ts';
+import type { ControlsMounted, ControlsView } from '../common/graph-controls.type.ts';
+import type { DrawnGraph } from '../common/graph-page.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import { focusNameOf, groupStateOf, isFiltered, isGroupLocked, rowViewOf } from '../utils/controls-rules.util.ts';
-import { controlsLabelOf, countTextOf, folderTitleOf, folderToggleLabelOf, showAllTextOf } from '../utils/controls-text.util.ts';
+import {
+  controlsLabelOf,
+  countTextOf,
+  folderTitleOf,
+  folderToggleLabelOf,
+  rowLabelsOf,
+  showAllTextOf
+} from '../utils/controls-text.util.ts';
 import { focusFolderOf } from '../utils/folder-rules.util.ts';
+import { labelIn } from '../utils/package-label.util.ts';
 import { matchesSearch } from '../utils/search.util.ts';
 
 const setDisabled = (element: HTMLElement, isDisabled: boolean): void => {
@@ -87,6 +96,36 @@ export const renderControls = (
   toggles.filtersOn.hidden = !isOn;
 
   for (const group of elements.groups) renderGroup(group, view);
+};
+
+const renderRowLabel = (row: ControlsRow, labels: ReadonlyMap<string, string>): void => {
+  const rowLabels = rowLabelsOf(labelIn(labels, row.name));
+
+  setButtonText(row.pick, rowLabels.text);
+  row.check.setAttribute('aria-label', rowLabels.check);
+  row.focus.setAttribute('aria-label', rowLabels.focus);
+};
+
+/**
+ * Rewrites every row's name text, title and its checkbox and Focus names from `graph`'s labels, and ticks the Show package scopes box
+ * to `graph.scopeShown` as a property write, so no `input` fires and nothing is posted; rows keep their package names.
+ */
+export const renderLabels = (elements: ControlsElements, graph: DrawnGraph): void => {
+  elements.scope.checked = graph.scopeShown;
+
+  for (const group of elements.groups) {
+    for (const row of group.rows) renderRowLabel(row, graph.labels);
+  }
+};
+
+/** Repaints the rows of `mounted` from `graph`'s labels and returns the same panel mounted for `graph`. */
+export const relabelPanel = (mounted: ControlsMounted, graph: DrawnGraph): ControlsMounted => {
+  const { elements } = mounted;
+  const relabelled: ControlsMounted = { graph, elements };
+
+  renderLabels(elements, graph);
+
+  return relabelled;
 };
 
 const rowMatches = (row: ControlsRow, byName: Map<string, GraphPackage>, search: string): boolean => {

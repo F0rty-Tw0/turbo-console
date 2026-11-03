@@ -5,6 +5,7 @@ import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { WidgetHostDeps } from '../common/graph-controls.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
+import type { DrawnGraph } from '../common/graph-page.type.ts';
 import type {
   MenuSources,
   WidgetFilters,
@@ -18,6 +19,7 @@ import type { PackageActions } from '../common/package-actions.type.ts';
 import type { MenuItemModel } from '../common/widget-menu.type.ts';
 import type { MenuTarget, PackageMenuState } from '../common/widget.type.ts';
 import { focusFolderOf } from '../utils/folder-rules.util.ts';
+import { labelIn } from '../utils/package-label.util.ts';
 import { folderMenuOf, folderMenuStateOf, menuTargetOf, packageMenuOf, packageMenuStateOf } from '../utils/widget-menu-model.util.ts';
 
 type FolderSource = Pick<WidgetSources, 'scene'>;
@@ -68,7 +70,14 @@ const packageStateOf = (selected: string | null, filters: GraphFilters, deps: Wi
   return packageMenuStateOf(selected, filters, deps.hasTasks(selected));
 };
 
-/** The wired layer and its menus, reading the mode on screen, the folder scene, the selection and the filters when used. */
+/** The package's label in the graph drawn, as the canvas and Details read it; its name before the first one. */
+const labelFrom = (drawn: DrawnGraph | null, name: string): string => {
+  if (drawn === null) return name;
+
+  return labelIn(drawn.labels, name);
+};
+
+/** The wired layer and its menus, reading the mode on screen, the folder scene, the selection, the filters and the package labels when used. */
 export const widgetsOf = (
   deps: WidgetHostDeps,
   inspection: WidgetInspection,
@@ -101,6 +110,7 @@ export const widgetsOf = (
     canActOnPackage,
     menuOf: menuOfFrom(deps, folders, controls, menuActions),
     selection: (): MenuTarget | null => menuTargetOf(inspection.current()),
+    labelOf: (name: string): string => labelFrom(deps.drawn(), name),
     onLocation
   };
 

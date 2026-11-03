@@ -4,6 +4,7 @@ import { folderOfElementId } from './folder-id.util.ts';
 import { folderLinkOf } from './folder-links.util.ts';
 import { bundleEndTextOf, folderCountsOf, folderLinkCountTextOf, folderPackagesTitleOf, folderSummaryOf } from './folder-text.util.ts';
 import { neighboursOf } from './neighbours.util.ts';
+import { labelIn } from './package-label.util.ts';
 import type {
   BundleEndModel,
   BundleViewModel,
@@ -43,7 +44,9 @@ export const packageModelOf = (name: string, context: DetailsContext): PackageVi
   const dependencies = neighbourModels(neighbours.dependencies, visible);
   const dependents = neighbourModels(neighbours.dependents, visible);
   const { path, tags, taskCount } = info;
-  const model: PackageViewModel = { name, path, tags, taskCount, isFocused: focus === name, dependencies, dependents };
+  const label = labelIn(drawn.labels, name);
+  const isFocused = focus === name;
+  const model: PackageViewModel = { name, label, path, tags, taskCount, isFocused, dependencies, dependents };
 
   return model;
 };

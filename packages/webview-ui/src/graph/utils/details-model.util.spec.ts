@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { bundleModelOf, folderModelOf, linkModelOf, packageModelOf, pickingModelOf, traceModelOf } from './details-model.util.ts';
 import { collapsedIdOf } from './folder-id.util.ts';
+import { labelsOf } from './package-label.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type {
   BundleEndModel,
@@ -36,7 +37,14 @@ const EDGES: GraphEdge[] = [
   { source: 'docs', target: 'web' }
 ];
 
-const DRAWN: DrawnGraph = { hash: 'h', packages: ['web', 'ui', 'core', 'docs'], infos: INFOS, edges: EDGES };
+const DRAWN: DrawnGraph = {
+  hash: 'h',
+  packages: ['web', 'ui', 'core', 'docs'],
+  infos: INFOS,
+  edges: EDGES,
+  scopeShown: true,
+  labels: labelsOf(INFOS, true)
+};
 
 const VISIBLE: ReadonlySet<string> = new Set(['web', 'core', 'docs']);
 
@@ -124,6 +132,7 @@ describe('FEATURE: details models', () => {
       const dependents = [docs];
       const expected: PackageViewModel = {
         name: 'web',
+        label: 'web',
         path: 'apps/web',
         tags: [],
         taskCount: 5,

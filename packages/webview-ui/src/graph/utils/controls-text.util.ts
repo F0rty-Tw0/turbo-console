@@ -1,3 +1,4 @@
+import type { RowLabels } from '../common/controls-elements.type.ts';
 import { RUN_LABEL, STOP_LABEL } from '../common/graph-task.const.ts';
 import { CONTROLS_FILTERED_LABEL, CONTROLS_LABEL, ROOT_FOLDER, SHOW_ALL_LABEL } from '../common/graph.const.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
@@ -32,6 +33,13 @@ export const showLabelOf = (name: string): string => `Show ${name}`;
 
 export const focusLabelOf = (name: string): string => `Focus ${name}`;
 
+/** Every text of a package row for its `label`, so the build and a relabel cannot word them apart. */
+export const rowLabelsOf = (label: string): RowLabels => {
+  const labels: RowLabels = { text: label, check: showLabelOf(label), focus: focusLabelOf(label) };
+
+  return labels;
+};
+
 /** The task details owner button's name: it shows the task's package in the package graph. */
 export const showPackageLabelOf = (name: string): string => `Show package ${name}`;
 
@@ -58,9 +66,9 @@ export const stopLabelOf = (id: string): string => `${STOP_LABEL} ${id}`;
 /** The accessible name of the selected task's node toolbar. */
 export const taskToolbarLabelOf = (id: string): string => `Task ${id}`;
 
-/** The accessible name of the target's "…" and of the menu it opens. */
-export const actionsLabelOf = (target: MenuTarget): string => {
-  if (target.kind === 'package') return packageActionsLabelOf(target.name);
+/** The accessible name of the target's "…" and of the menu it opens; a package is named by `labelOf` its name. */
+export const actionsLabelOf = (target: MenuTarget, labelOf: (name: string) => string): string => {
+  if (target.kind === 'package') return packageActionsLabelOf(labelOf(target.name));
 
   const title = folderTitleOf(target.folder);
 

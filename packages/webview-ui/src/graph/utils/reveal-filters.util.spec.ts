@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { labelsOf } from './package-label.util.ts';
 import { revealFiltersOf } from './reveal-filters.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { GraphFocus } from '../../bridge/common/graph-view-state.type.ts';
@@ -19,7 +20,14 @@ const EDGES: GraphEdge[] = [
 ];
 
 /** `a` needs `b`, `b` needs `c`; `d`, alone in `apps`, is the only package tagged `ui`. */
-const GRAPH: DrawnGraph = { hash: 'h', packages: ['a', 'b', 'c', 'd'], infos: INFOS, edges: EDGES };
+const GRAPH: DrawnGraph = {
+  hash: 'h',
+  packages: ['a', 'b', 'c', 'd'],
+  infos: INFOS,
+  edges: EDGES,
+  scopeShown: true,
+  labels: labelsOf(INFOS, true)
+};
 
 const NONE: GraphFilters = { hidden: new Set(), focus: null, depth: 2, tags: new Set() };
 

@@ -26,6 +26,7 @@ const rigOf = (): ToolbarRig => {
     layer,
     container,
     views,
+    labelOf: (name: string): string => name,
     onMenu: vi.fn(),
     onFocus: vi.fn(),
     onStartTrace: vi.fn(),

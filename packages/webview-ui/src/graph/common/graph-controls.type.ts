@@ -40,7 +40,7 @@ export type GroupState = 'checked' | 'unchecked' | 'mixed';
 export type GraphControlsDeps = {
   readonly page: PageElements;
   /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
-  readonly build: (groups: FolderGroup[], tags: string[]) => ControlsElements;
+  readonly build: (groups: FolderGroup[], tags: string[], graph: DrawnGraph) => ControlsElements;
   readonly now: () => number;
   /** Only when the visible set changed. */
   readonly onVisibleChange: (visible: ReadonlySet<string>) => void;
@@ -53,6 +53,8 @@ export type GraphControlsDeps = {
   readonly onOpenDetails: (name: string) => void;
   /** The Group by folder checkbox changed: the receiver switches the layout, then the controls save. */
   readonly onGrouping: (isGrouped: boolean) => void;
+  /** The Show package scopes checkbox changed by the user: the receiver tells the host; a state never calls it. */
+  readonly onScope: (shown: boolean) => void;
   /** A folder header's Expand or Collapse button was pressed. */
   readonly onToggleFolder: (folder: string) => void;
   /** A folder is about to be focused: the receiver expands it so its packages are drawn. */
@@ -71,7 +73,7 @@ export type GraphFilteringDeps = Pick<
   GraphInspectionDeps,
   'bridge' | 'page' | 'view' | 'saver' | 'drawn' | 'now' | 'views' | 'overlay' | 'isPackageMode' | 'onShowTasks' | 'hasTasks'
 > &
-  Pick<GraphControlsDeps, 'build' | 'onGrouping'> &
+  Pick<GraphControlsDeps, 'build' | 'onGrouping' | 'onScope'> &
   Pick<GraphFoldersDeps, 'measure' | 'isGrouped' | 'canAct'> &
   Pick<WidgetWireDeps, 'widgetViews' | 'canActOnPackage' | 'onLocation'>;
 
@@ -121,6 +123,7 @@ export type ControlsActions = {
   readonly onShowAll: () => void;
   readonly onSearch: (text: string) => void;
   readonly onPick: (name: string) => void;
+  readonly onScope: (shown: boolean) => void;
 };
 
 /** What the package list's keyboard asks of `GraphControls`. */

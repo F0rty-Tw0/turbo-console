@@ -2,7 +2,11 @@
 
 import type { Page } from '@playwright/test';
 
-import type { GraphShownUmbrellasMessage, GraphWebviewMessage } from '../../../src/bridge/common/graph-message.type.ts';
+import type {
+  GraphSetViewToggleMessage,
+  GraphShownUmbrellasMessage,
+  GraphWebviewMessage
+} from '../../../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../../../src/bridge/common/graph-state.type.ts';
 import type {
   ExplainEdgeMessage,
@@ -27,6 +31,8 @@ const isExportImage = (message: GraphWebviewMessage): message is ExportImageMess
 
 const isShownUmbrellas = (message: GraphWebviewMessage): message is GraphShownUmbrellasMessage => message.type === 'shownUmbrellas';
 
+const isViewToggle = (message: GraphWebviewMessage): message is GraphSetViewToggleMessage => message.type === 'setViewToggle';
+
 export const positionsPosted = (posted: GraphWebviewMessage[]): PositionsMessage[] => posted.filter(isPositions);
 
 export const layoutDonePosted = (posted: GraphWebviewMessage[]): LayoutDoneMessage[] => posted.filter(isLayoutDone);
@@ -41,6 +47,9 @@ export const exportImagePosted = (posted: GraphWebviewMessage[]): ExportImageMes
 
 /** The `shownUmbrellas` messages, oldest first. */
 export const shownUmbrellasPosted = (posted: GraphWebviewMessage[]): GraphShownUmbrellasMessage[] => posted.filter(isShownUmbrellas);
+
+/** The `setViewToggle` messages, oldest first. */
+export const viewTogglesPosted = (posted: GraphWebviewMessage[]): GraphSetViewToggleMessage[] => posted.filter(isViewToggle);
 
 /** The newest `explainEdge` the page posted, `null` before one. */
 export const lastExplainPosted = (posted: GraphWebviewMessage[]): ExplainEdgeMessage | null =>

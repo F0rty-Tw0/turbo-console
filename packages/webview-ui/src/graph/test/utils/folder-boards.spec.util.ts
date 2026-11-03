@@ -7,6 +7,7 @@ import type { DrawnGraph } from '../../common/graph-page.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import { groupedElkGraphOf } from '../../utils/elk-grouped-graph.util.ts';
 import { folderSceneOf } from '../../utils/folder-scene.util.ts';
+import { labelsOf } from '../../utils/package-label.util.ts';
 import type { ElkRect, SceneParts } from '../common/folder-boards.type.ts';
 import { BOARDS_EDGES_STUB, BOARDS_GROUPS_STUB, BOARDS_SIZE_STUB } from '../stubs/folder-boards.stub.ts';
 
@@ -18,7 +19,14 @@ export const BOARDS_EDGES: GraphEdge[] = BOARDS_EDGES_STUB;
 export const BOARDS_NAMES: string[] = BOARDS_INFOS.map((pkg) => pkg.name);
 
 /** The boards fixture as the page's drawn graph. */
-export const BOARDS_DRAWN: DrawnGraph = { hash: 'boards', packages: BOARDS_NAMES, infos: BOARDS_INFOS, edges: BOARDS_EDGES };
+export const BOARDS_DRAWN: DrawnGraph = {
+  hash: 'boards',
+  packages: BOARDS_NAMES,
+  infos: BOARDS_INFOS,
+  edges: BOARDS_EDGES,
+  scopeShown: true,
+  labels: labelsOf(BOARDS_INFOS, true)
+};
 
 /** The boards fixture as a folder scene; `visible` defaults to every package. */
 export const boardsSceneOf = (collapsed: string[], visible?: string[], ghosts: string[] = []): FolderScene => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { readGraphViewState } from './graph-view-state.util.ts';
+import { labelsOf } from './package-label.util.ts';
 import { controlsFieldsOf, restoredFilters } from './restored-filters.util.ts';
 import type { GraphPackage, Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphFocus, GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -15,7 +16,14 @@ const INFOS: GraphPackage[] = [
   { name: 'constructor', bareName: 'constructor', path: 'libs/ctor', tags: [], taskCount: 0 }
 ];
 
-const GRAPH: DrawnGraph = { hash: 'h', packages: ['web', 'api', '__proto__', 'constructor'], infos: INFOS, edges: [] };
+const GRAPH: DrawnGraph = {
+  hash: 'h',
+  packages: ['web', 'api', '__proto__', 'constructor'],
+  infos: INFOS,
+  edges: [],
+  scopeShown: true,
+  labels: labelsOf(INFOS, true)
+};
 
 const WEB_FOCUS: GraphFocus = { kind: 'package', name: 'web' };
 

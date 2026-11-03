@@ -36,7 +36,7 @@ const MAX_ZOOM = 2;
 const nodeDefinitionsOf = (packages: string[], positions: Positions, sizeOf: NodeSizer): ElementDefinition[] => {
   const definitionOf = (name: string): ElementDefinition => {
     const { width, height } = sizeOf(name);
-    const data = { id: name, width, height };
+    const data = { id: name, label: name, width, height };
     const position = positionOf(positions, name);
     const definition: ElementDefinition = { data, position };
 
@@ -82,10 +82,28 @@ const cytoscapeOn = (container: HTMLElement): Core => {
   return cytoscape(options);
 };
 
+/**
+ * Writes each named package node's label data; a name not drawn is skipped. Only the named nodes are touched, never
+ * `cy.nodes()`, so a collapsed folder keeps its own label.
+ */
+export const labelPackages = (cy: Core, labels: ReadonlyMap<string, string>): void => {
+  const relabel = (): void => {
+    for (const [name, label] of labels) cy.getElementById(name).data('label', label);
+  };
+
+  cy.batch(relabel);
+};
+
 /** Places the packages, then re-centres the collapsed folders on them. */
 const placeOn = (cy: Core, folders: FoldersView, placed: Positions): void => {
   placeNodes(cy, placed);
   folders.recentre();
+};
+
+/** Paints the packages and links, then the folder boxes and collapsed folders. */
+const paintOn = (cy: Core, folders: FoldersView, next: Paint): void => {
+  applyPaint(cy, next);
+  folders.paint(next);
 };
 
 /** The page's canvas view: Cytoscape, the folder pass over it and the canvas events reported to `handlers`. */
@@ -105,13 +123,10 @@ export const createGraphView = (
 
     drawGraph(cy, nodes, edges);
   };
-  const paint = (next: Paint): void => {
-    applyPaint(cy, next);
-    folders.paint(next);
-  };
   const view: GraphView = {
     setGraph,
-    paint,
+    setLabels: (labels: ReadonlyMap<string, string>): void => labelPackages(cy, labels),
+    paint: (next: Paint): void => paintOn(cy, folders, next),
     fit: camera.fit,
     isFitted: camera.isFitted,
     setVisible: (visible: ReadonlySet<string>): void => showOnly(cy, visible),

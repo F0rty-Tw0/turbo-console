@@ -11,6 +11,7 @@ import {
   folderToggleTextOf,
   groupLabelOf,
   packageToolbarLabelOf,
+  rowLabelsOf,
   runLabelOf,
   showAllTextOf,
   showLabelOf,
@@ -18,6 +19,7 @@ import {
   stopLabelOf,
   taskToolbarLabelOf
 } from './controls-text.util.ts';
+import { labelIn } from './package-label.util.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
 
 describe('FEATURE: controls text', () => {
@@ -25,13 +27,17 @@ describe('FEATURE: controls text', () => {
     const apps: MenuTarget = { kind: 'folder', folder: 'apps' };
     const root: MenuTarget = { kind: 'folder', folder: '' };
     const web: MenuTarget = { kind: 'package', name: 'web' };
+    const scoped: MenuTarget = { kind: 'package', name: '@org/x' };
+    const labels = new Map([['@org/x', 'x']]);
+    const labelOf = (name: string): string => labelIn(labels, name);
 
     it.each([
       { title: 'the folder apps', target: apps, expected: 'Actions for folder apps' },
       { title: 'the root folder', target: root, expected: 'Actions for folder (root)' },
-      { title: 'the package web', target: web, expected: 'Actions for web' }
+      { title: 'the package web', target: web, expected: 'Actions for web' },
+      { title: 'the package @org/x labelled x', target: scoped, expected: 'Actions for x' }
     ])('WHEN it is $title THEN its actions label is $expected', ({ target, expected }) => {
-      const label = actionsLabelOf(target);
+      const label = actionsLabelOf(target, labelOf);
 
       expect(label).toBe(expected);
     });
@@ -88,6 +94,12 @@ describe('FEATURE: controls text', () => {
       const label = focusLabelOf('web');
 
       expect(label).toBe('Focus web');
+    });
+
+    it('WHEN its row labels are built THEN the text is the label and the names are Show web and Focus web', () => {
+      const labels = rowLabelsOf('web');
+
+      expect(labels).toStrictEqual({ text: 'web', check: 'Show web', focus: 'Focus web' });
     });
 
     it('WHEN its show package label is built THEN it reads Show package web', () => {

@@ -122,7 +122,7 @@ const neighbourList = (title: string, neighbours: NeighbourModel[], labelOf: Exp
 
 /** A package's facts: path, tags, actions, and its direct dependencies and dependents. */
 export const packageView = (model: PackageViewModel, isOverlay: boolean): PackageDetails => {
-  const base = viewBase('package', model.name, isOverlay);
+  const base = viewBase('package', model.label, isOverlay);
   const pathText = pathTextOf(model.path);
   const path = textElement('p', 'details-path', pathText);
   const tags = tagsOf(model.tags);

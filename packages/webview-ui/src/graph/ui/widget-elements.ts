@@ -165,8 +165,8 @@ const collapseOf = (folderTitle: string | null): HTMLButtonElement | null => {
 };
 
 /** Focus under a constant name, its hover title saying what a press does; the toolbar's one Tab stop until the layer moves it. */
-const focusToggleOf = (name: string): HTMLButtonElement => {
-  const button = widgetButton(ACTION_ICONS.focus, focusLabelOf(name));
+const focusToggleOf = (label: string): HTMLButtonElement => {
+  const button = widgetButton(ACTION_ICONS.focus, focusLabelOf(label));
 
   button.title = FOCUS_PACKAGE_TITLE;
   button.setAttribute('aria-pressed', 'false');
@@ -174,14 +174,14 @@ const focusToggleOf = (name: string): HTMLButtonElement => {
   return button;
 };
 
-/** The selected package's node toolbar, hidden until the layer places it: Focus, Start trace, Show tasks, Collapse folder (grouped) and the "…". Focus is its one Tab stop until the layer moves it. */
-export const buildPackageToolbar = (name: string, folderTitle: string | null): PackageToolbarElements => {
-  const root = nodeToolbarRootOf('package', packageToolbarLabelOf(name));
-  const focus = focusToggleOf(name);
+/** The selected package's node toolbar, named by its `label` and hidden until the layer places it: Focus, Start trace, Show tasks, Collapse folder (grouped) and the "…". Focus is its one Tab stop until the layer moves it. */
+export const buildPackageToolbar = (label: string, folderTitle: string | null): PackageToolbarElements => {
+  const root = nodeToolbarRootOf('package', packageToolbarLabelOf(label));
+  const focus = focusToggleOf(label);
   const startTrace = widgetButton(ACTION_ICONS.startTrace, START_TRACE_LABEL);
   const showTasks = widgetButton(ACTION_ICONS.showTasks, SHOW_TASKS_LABEL);
   const collapse = collapseOf(folderTitle);
-  const ellipsis = menuButton(packageActionsLabelOf(name));
+  const ellipsis = menuButton(packageActionsLabelOf(label));
   const toolbar: PackageToolbarElements = { root, focus, startTrace, showTasks, collapse, ellipsis };
   const others = [startTrace, showTasks, collapse, ellipsis];
 

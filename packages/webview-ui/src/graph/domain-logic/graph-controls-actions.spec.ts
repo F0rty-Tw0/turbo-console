@@ -16,7 +16,7 @@ type ShowAllRun = {
   readonly ops: ControlsOps;
 };
 
-const GRAPH: DrawnGraph = { hash: 'h', packages: [], infos: [], edges: [] };
+const GRAPH: DrawnGraph = { hash: 'h', packages: [], infos: [], edges: [], scopeShown: true, labels: new Map() };
 
 const WEB_HIDDEN = menuFiltersOf(['web'], null);
 
@@ -56,7 +56,7 @@ const pressShowAll = (applied: GraphFilters, before: (elements: ControlsElements
   const elements = boardsControlsMock();
   const mounted: ControlsMounted = { graph: GRAPH, elements };
   const ops = opsOf(applied);
-  const actions = controlsActionsOf(mounted, ops, vi.fn());
+  const actions = controlsActionsOf((): ControlsMounted => mounted, ops, vi.fn(), vi.fn());
 
   before(elements);
   actions.onShowAll();

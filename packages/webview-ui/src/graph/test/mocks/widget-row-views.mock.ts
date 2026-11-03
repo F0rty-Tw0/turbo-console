@@ -13,8 +13,8 @@ export const widgetRowViewsMock = (): WidgetRowViewsMock => {
 
     return elements;
   };
-  const packageToolbar = (name: string, folderTitle: string | null): PackageToolbarElements => {
-    const elements = widgetViews.packageToolbar(name, folderTitle);
+  const packageToolbar = (label: string, folderTitle: string | null): PackageToolbarElements => {
+    const elements = widgetViews.packageToolbar(label, folderTitle);
 
     toolbars.push(elements);
 

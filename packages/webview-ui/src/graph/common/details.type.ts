@@ -42,6 +42,8 @@ export type NeighbourModel = {
 
 export type PackageViewModel = {
   readonly name: string;
+  /** The heading text: the package's label in the drawn graph. */
+  readonly label: string;
   readonly path: string;
   readonly tags: string[];
   readonly taskCount: number;

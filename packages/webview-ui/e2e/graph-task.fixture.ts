@@ -4,6 +4,7 @@ import { GraphAtoms } from './pages/graph-atoms.po.ts';
 import { GraphButtonTitles } from './pages/graph-button-titles.po.ts';
 import { GraphDepthHints } from './pages/graph-depth-hints.po.ts';
 import { GraphDetailsBar } from './pages/graph-details-bar.po.ts';
+import { GraphDetailsCard } from './pages/graph-details-card.po.ts';
 import { GraphFlowPage } from './pages/graph-flow.po.ts';
 import { GraphHover } from './pages/graph-hover.po.ts';
 import { GraphLegend } from './pages/graph-legend.po.ts';
@@ -48,6 +49,7 @@ type GraphTaskFixtures = {
   readonly graphButtonTitles: GraphButtonTitles;
   readonly graphDepthHints: GraphDepthHints;
   readonly graphDetailsBar: GraphDetailsBar;
+  readonly graphDetailsCard: GraphDetailsCard;
   readonly graphFlow: GraphFlowPage;
   readonly graphGlyphs: GraphTaskGlyphs;
   readonly graphHover: GraphHover;
@@ -86,6 +88,9 @@ export const test = graphTest.extend<GraphTaskFixtures>({
   },
   graphDetailsBar: async ({ page }, use): Promise<void> => {
     await use(new GraphDetailsBar(page));
+  },
+  graphDetailsCard: async ({ page }, use): Promise<void> => {
+    await use(new GraphDetailsCard(page));
   },
   graphFlow: async ({ page }, use): Promise<void> => {
     await use(new GraphFlowPage(page));

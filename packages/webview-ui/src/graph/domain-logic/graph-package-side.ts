@@ -1,6 +1,6 @@
 import { GraphFiltering } from './graph-filtering.ts';
 import { GraphLayouts } from './graph-layouts.ts';
-import { refreshedDrawn, restoreAfterDraw } from './graph-package-draw.ts';
+import { refreshedDrawn, relabel, restoreAfterDraw } from './graph-package-draw.ts';
 import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -64,6 +64,7 @@ export class GraphPackageSide {
       view,
       drawn: (): DrawnGraph | null => this.drawn,
       onGrouping: (grouped: boolean): void => this.switchGrouping(grouped),
+      onScope: (shown: boolean): void => deps.bridge.post({ type: 'setViewToggle', toggle: 'scope', shown }),
       isPackageMode,
       isGrouped,
       canAct,
@@ -139,15 +140,21 @@ export class GraphPackageSide {
     }
   }
 
-  /** A re-post of the graph shown or in flight never resets the camera or the layout; it only refreshes task counts, then the inspection follows. */
+  /**
+   * A re-post of the graph shown or in flight never resets the camera or the layout: it refreshes the task counts,
+   * repaints the labels only when `scopeShown` rebuilt them, then the inspection follows.
+   */
   private showGraph(state: GraphReady, at: number): void {
     const shown = this.drawn;
 
     if (shown !== null && state.hash === shown.hash) {
-      const refreshed = refreshedDrawn(shown, state.packages);
+      const refreshed = refreshedDrawn(shown, state);
       const isChanged = refreshed !== shown;
+      const isRelabelled = refreshed.labels !== shown.labels;
 
       this.drawn = refreshed;
+
+      if (isRelabelled) relabel({ view: this.view, controls: this.filtering.controls }, refreshed);
       this.filtering.inspection.refreshed(isChanged);
 
       return;

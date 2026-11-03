@@ -37,6 +37,8 @@ export type GraphWidgetsDeps = {
   /** The mode on screen is the checkbox's mode and the package graph owns the canvas, flat or grouped: a package widget may act. */
   readonly isPackageActive: () => boolean;
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
+  /** The label a package's toolbar and menu name it by, read when they are built; the package name without one. */
+  readonly labelOf: (name: string) => string;
 };
 
 type CanAct = {
@@ -123,7 +125,7 @@ type MenuHost = {
   readonly isActive: (target: MenuTarget) => boolean;
 };
 
-export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & MenuHost;
+export type GraphWidgetMenusDeps = Pick<MenuSources, 'menuOf' | 'selection'> & MenuHost & Pick<GraphWidgetsDeps, 'labelOf'>;
 
 /** Where a menu opens from: the "…" rect in container px and its button, `null` while hidden. */
 export type MenuAnchor = {
@@ -131,11 +133,12 @@ export type MenuAnchor = {
   readonly opener: HTMLButtonElement | null;
 };
 
-/** What the package toolbar needs: the layer it leads, the container that takes focus it loses, the builder and the five clicks, already guarded. */
+/** What the package toolbar needs: the layer it leads, the container that takes focus it loses, the builder, the label it names the package by and the five clicks, already guarded. */
 export type PackageToolbarDeps = {
   readonly layer: HTMLElement;
   readonly container: HTMLElement;
   readonly views: WidgetViews;
+  readonly labelOf: GraphWidgetsDeps['labelOf'];
   readonly onMenu: (target: MenuTarget, opener: HTMLButtonElement) => void;
   readonly onFocus: (name: string) => void;
   readonly onStartTrace: () => void;

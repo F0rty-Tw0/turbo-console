@@ -145,6 +145,14 @@ describe('FEATURE: GraphPackageSide', () => {
       expect(rig.side.drawnGraph()?.hash).toBe('h1');
     });
 
+    it('WHEN h1 arrives again with new task counts only THEN the canvas labels are not repainted', () => {
+      const relabelsBefore = rig.view.setLabels.mock.calls.length;
+
+      rig.side.show(RECOUNTED, 2);
+
+      expect(rig.view.setLabels).toHaveBeenCalledTimes(relabelsBefore);
+    });
+
     it('WHEN h1 arrives again with web given its first tasks THEN the details panel offers Show tasks', () => {
       rig.hasTasks.mockReturnValue(true);
       rig.side.show(RECOUNTED, 2);

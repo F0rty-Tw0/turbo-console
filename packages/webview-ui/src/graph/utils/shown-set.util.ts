@@ -141,7 +141,7 @@ export const shownSetOf = (input: ShownSetInput): ShownSet => {
   const limit = input.capLifted ? Infinity : TASK_CAP;
   const shown = fittedShown(reach, start, limit);
   const hiddenCount = shownFor(reach, start).size - shown.size;
-  const droppedIds = chosen.filter((id) => !dependenciesIndex.has(id));
+  const droppedIds = chosen.filter((id) => !input.listedIds.has(id));
   const shownSet: ShownSet = { ids: sortedOf(shown), hiddenCount, droppedIds: sortedOf(droppedIds) };
 
   return shownSet;

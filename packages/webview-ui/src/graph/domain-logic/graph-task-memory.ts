@@ -6,14 +6,17 @@ import type { LocationFacts } from '../common/location.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 import { shownSetOf } from '../utils/shown-set.util.ts';
+import { taskPoolOf } from '../utils/task-pool.util.ts';
 
 /**
- * What task mode remembers: the host's latest tasks, hash, single-package flag and root label, and the task view it
- * saves through `TaskModes`.
+ * What task mode remembers: the host's latest task listing and the pool drawn from it (the turbo tasks, plus the scripts
+ * when shown), hash, single-package flag and root label, and the task view it saves through `TaskModes`.
  */
 export class GraphTaskMemory {
   private readonly modes: Pick<TaskModes, 'task' | 'saveTask'>;
   private latestTasks: GraphTask[] = [];
+  private pool: GraphTask[] = [];
+  private listedIds: ReadonlySet<string> = new Set();
   private latestHash = '';
   private isSinglePackage = false;
   private latestRootLabel: string | null = null;
@@ -24,12 +27,20 @@ export class GraphTaskMemory {
 
   public keep(state: GraphReady): void {
     this.latestTasks = state.tasks;
+    this.pool = taskPoolOf(state.tasks, state.scriptsShown);
+    this.listedIds = new Set(state.tasks.map(({ id }) => id));
     this.latestHash = state.hash;
     this.isSinglePackage = state.singlePackage;
     this.latestRootLabel = state.rootLabel;
   }
 
+  /** The pool task mode draws and counts. */
   public tasks(): GraphTask[] {
+    return this.pool;
+  }
+
+  /** The full listing, scripts included, which tells a hidden script from an unknown id. */
+  public listed(): GraphTask[] {
     return this.latestTasks;
   }
 
@@ -48,10 +59,9 @@ export class GraphTaskMemory {
   /** A single-package root with none of its chosen ids listed shows every task, without saving that choice. */
   public shownSet(): ShownSet {
     const { chosen, depth, capLifted } = this.view();
-    const tasks = this.latestTasks;
     const effective = this.effectiveChosen(chosen);
 
-    return shownSetOf({ tasks, chosen: effective, depth, capLifted });
+    return shownSetOf({ tasks: this.pool, chosen: effective, depth, capLifted, listedIds: this.listedIds });
   }
 
   /**
@@ -78,12 +88,12 @@ export class GraphTaskMemory {
     this.modes.saveTask(view, this.latestHash);
   }
 
-  /** Every listed id when a single-package root lists none of `chosen`; `chosen` otherwise. */
+  /** Every pool id when a single-package root's pool holds none of `chosen`; `chosen` otherwise. */
   private effectiveChosen(chosen: string[]): string[] {
-    const ids = this.latestTasks.map((task) => task.id);
-    const listed = new Set(ids);
-    const isAnyListed = chosen.some((id) => listed.has(id));
-    const isFallback = this.isSinglePackage && !isAnyListed;
+    const ids = this.pool.map((task) => task.id);
+    const pooled = new Set(ids);
+    const isAnyPooled = chosen.some((id) => pooled.has(id));
+    const isFallback = this.isSinglePackage && !isAnyPooled;
 
     return isFallback ? ids : chosen;
   }

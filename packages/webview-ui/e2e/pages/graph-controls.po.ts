@@ -2,8 +2,16 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { DEPTH_LABEL, GROUP_BY_FOLDER_LABEL, SEARCH_LABEL, TAGS_LABEL } from '../../src/graph/common/graph.const.ts';
+import type { GraphSetViewToggleMessage } from '../../src/bridge/common/graph-message.type.ts';
+import {
+  DEPTH_LABEL,
+  GROUP_BY_FOLDER_LABEL,
+  SCOPE_TOGGLE_LABEL,
+  SEARCH_LABEL,
+  TAGS_LABEL
+} from '../../src/graph/common/graph.const.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
+import { readPosted, viewTogglesPosted } from '../test/utils/graph-posted.spec.util.ts';
 
 /** Show all with or without the count of packages it brings back. */
 const SHOW_ALL_NAME = /^Show all( \(\d+ hidden\))?$/;
@@ -14,6 +22,7 @@ export class GraphControlsPage {
   public readonly depth: Locator;
   public readonly grouping: Locator;
   public readonly panel: Locator;
+  public readonly scope: Locator;
   public readonly searchBox: Locator;
   public readonly showAllButton: Locator;
   public readonly tags: Locator;
@@ -32,6 +41,7 @@ export class GraphControlsPage {
     this.panel = asides.filter({ has: holder });
     this.depth = page.getByRole('spinbutton', { name: DEPTH_LABEL, exact: true });
     this.grouping = page.getByRole('checkbox', { name: GROUP_BY_FOLDER_LABEL, exact: true });
+    this.scope = page.getByRole('checkbox', { name: SCOPE_TOGGLE_LABEL, exact: true });
     this.tags = page.getByRole('group', { name: TAGS_LABEL, exact: true });
     this.showAllButton = page.getByRole('button', { name: SHOW_ALL_NAME });
     this.showAllInDom = page.getByRole('button', { name: SHOW_ALL_NAME, includeHidden: true });
@@ -61,6 +71,11 @@ export class GraphControlsPage {
   public async pressGrouping(): Promise<void> {
     await this.grouping.focus();
     await this.grouping.press('Space');
+  }
+
+  public async pressScope(): Promise<void> {
+    await this.scope.focus();
+    await this.scope.press('Space');
   }
 
   public async showAll(): Promise<void> {
@@ -114,6 +129,16 @@ export class GraphControlsPage {
     await expect(this.panel.getByRole('heading', { level: 3 })).toHaveText(titles);
   }
 
+  /** Every `setViewToggle` posted so far is exactly `messages`; the stub's `__posted` also holds `ready`, `positions` and `layoutDone`. */
+  public async expectViewToggles(messages: GraphSetViewToggleMessage[]): Promise<void> {
+    await expect.poll(async (): Promise<GraphSetViewToggleMessage[]> => this.viewToggles()).toEqual(messages);
+  }
+
+  /** The Show package scopes box is ticked or not. */
+  public async expectScope(isChecked: boolean): Promise<void> {
+    await expect(this.scope).toBeChecked({ checked: isChecked });
+  }
+
   public async expectDepthValue(text: string): Promise<void> {
     await expect(this.depth).toHaveValue(text);
   }
@@ -144,6 +169,12 @@ export class GraphControlsPage {
   private async expectShowAllHidden(): Promise<void> {
     await expect(this.showAllInDom).toHaveCount(1);
     await expect(this.showAllInDom).toBeHidden();
+  }
+
+  private async viewToggles(): Promise<GraphSetViewToggleMessage[]> {
+    const posted = await readPosted(this.page);
+
+    return viewTogglesPosted(posted);
   }
 
   private async groupedFact(): Promise<boolean | null> {

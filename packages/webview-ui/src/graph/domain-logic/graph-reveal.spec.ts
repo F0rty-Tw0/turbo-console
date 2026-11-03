@@ -7,16 +7,31 @@ import type { DrawnGraph, Viewport } from '../common/graph-page.type.ts';
 import type { RevealDepsMock } from '../test/common/graph-reveal.type.ts';
 import { revealDepsMock } from '../test/mocks/graph-reveal.mock.ts';
 import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { labelsOf } from '../utils/package-label.util.ts';
 
 const WEB_INFO: GraphPackage = { name: 'web', bareName: 'web', path: 'apps/web', tags: [], taskCount: 0 };
 
 const API_INFO: GraphPackage = { name: 'api', bareName: 'api', path: 'libs/api', tags: [], taskCount: 0 };
 
 /** `web` in `apps` and `api` in `libs`, unlinked. */
-const GRAPH: DrawnGraph = { hash: 'h1', packages: ['web', 'api'], infos: [WEB_INFO, API_INFO], edges: [] };
+const GRAPH: DrawnGraph = {
+  hash: 'h1',
+  packages: ['web', 'api'],
+  infos: [WEB_INFO, API_INFO],
+  edges: [],
+  scopeShown: true,
+  labels: labelsOf([WEB_INFO, API_INFO], true)
+};
 
 /** The next hash, which has `api` only. */
-const NO_WEB: DrawnGraph = { hash: 'h2', packages: ['api'], infos: [API_INFO], edges: [] };
+const NO_WEB: DrawnGraph = {
+  hash: 'h2',
+  packages: ['api'],
+  infos: [API_INFO],
+  edges: [],
+  scopeShown: true,
+  labels: labelsOf([API_INFO], true)
+};
 
 const NONE: GraphFilters = { hidden: new Set(), focus: null, depth: 2, tags: new Set() };
 

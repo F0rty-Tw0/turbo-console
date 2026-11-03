@@ -7,6 +7,7 @@ import {
   targetLikeTasksState
 } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
+import { inputOf } from '../src/graph/test/utils/shown-set.spec.util.ts';
 import { shownSetOf } from '../src/graph/utils/shown-set.util.ts';
 
 const AC3 = { description: 'M4-5a AC3', type: 'requirement' };
@@ -25,9 +26,9 @@ const OVER_CAP_TASK_COUNT = 401;
 
 const TARGET_LIKE_TASKS = targetLikeTasksState().tasks;
 
-const CHOSEN_SHOWN = shownSetOf({ tasks: TARGET_LIKE_TASKS, chosen: [TARGET_LIKE_CHOSEN_TASK], depth: 1, capLifted: false }).ids;
+const CHOSEN_SHOWN = shownSetOf(inputOf(TARGET_LIKE_TASKS, { chosen: [TARGET_LIKE_CHOSEN_TASK] })).ids;
 
-const OVER_CAP_CUT = shownSetOf({ tasks: overCapTasksState().tasks, chosen: [OVER_CAP_ROOT_TASK], depth: 1, capLifted: false });
+const OVER_CAP_CUT = shownSetOf(inputOf(overCapTasksState().tasks, { chosen: [OVER_CAP_ROOT_TASK] }));
 
 test.describe('FEATURE: graph task mode on a target-like state', () => {
   test(

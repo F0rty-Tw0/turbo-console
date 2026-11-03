@@ -47,7 +47,7 @@ export class PackageToolbar {
     return packageToolbarCountOf(state, folder !== null);
   }
 
-  /** Exactly one toolbar for `name` in `folder` (`null` on a flat page), none for `null`; the same name and folder keep the element and only Focus follows `state`. */
+  /** Exactly one toolbar for `name` in `folder` (`null` on a flat page), none for `null`; the same name, label and folder keep the element and only Focus follows `state`. */
   public sync(name: string | null, folder: string | null, state: PackageMenuState | null): void {
     if (name === null || state === null) {
       this.removeEntry();
@@ -68,10 +68,12 @@ export class PackageToolbar {
     placeToolbar(this.entry, rect, zoom, this.deps.container);
   }
 
-  /** The entry kept with the new `state` for the same name and folder, else a new one in place of the old. */
+  /** The entry kept with the new `state` for the same name, label and folder, else a new one in place of the old. */
   private entryFor(name: string, folder: string | null, state: PackageMenuState): ToolbarEntry {
     const current = this.entry;
-    const isSame = current !== null && current.name === name && current.folder === folder;
+    const label = this.deps.labelOf(name);
+    const isSamePackage = current !== null && current.name === name && current.label === label;
+    const isSame = isSamePackage && current.folder === folder;
 
     if (isSame) {
       const kept: ToolbarEntry = { ...current, state };
@@ -81,13 +83,13 @@ export class PackageToolbar {
 
     this.removeEntry();
 
-    return this.build(name, folder, state);
+    return this.build(name, label, folder, state);
   }
 
-  private build(name: string, folder: string | null, state: PackageMenuState): ToolbarEntry {
+  private build(name: string, label: string, folder: string | null, state: PackageMenuState): ToolbarEntry {
     const folderTitle = folderTitleOrNull(folder);
-    const elements = this.deps.views.packageToolbar(name, folderTitle);
-    const entry: ToolbarEntry = { name, folder, state, elements, shown: [], preferred: 'focus' };
+    const elements = this.deps.views.packageToolbar(label, folderTitle);
+    const entry: ToolbarEntry = { name, label, folder, state, elements, shown: [], preferred: 'focus' };
 
     this.wire(entry);
     elements.root.addEventListener('keydown', (event: KeyboardEvent): void => this.onKey(event));
