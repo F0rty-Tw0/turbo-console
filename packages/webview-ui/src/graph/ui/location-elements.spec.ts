@@ -86,6 +86,28 @@ describe('FEATURE: location bar elements', () => {
     });
   });
 
+  describe('GIVEN the trail Packages, the root, Tasks (1)', () => {
+    const ROOT = crumbOf('root', 'Workspace root (//)', false);
+
+    it('WHEN rendered THEN the root crumb is a span with the text and no button', () => {
+      renderLocation(elements, [PACKAGES, ROOT, crumbOf('tasks', 'Tasks (1)', true)], [], vi.fn());
+
+      const root = crumbAt(elements, 1);
+
+      expect(root).toMatchObject({ tagName: 'SPAN', className: 'graph-location-crumb', textContent: 'Workspace root (//)' });
+      expect(root?.getAttribute('aria-current')).toBeNull();
+    });
+
+    it('WHEN the root crumb is clicked THEN press is not called', () => {
+      const press = vi.fn();
+
+      renderLocation(elements, [PACKAGES, ROOT, crumbOf('tasks', 'Tasks (1)', true)], [], press);
+      crumbAt(elements, 1)?.click();
+
+      expect(press).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN four line texts', () => {
     it('WHEN rendered THEN four lines show, the first three with the info icon and the last without', () => {
       renderLocation(elements, [PACKAGES], FOUR_LINES, vi.fn());
