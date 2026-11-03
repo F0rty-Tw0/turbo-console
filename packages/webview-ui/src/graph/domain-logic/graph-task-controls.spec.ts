@@ -32,6 +32,7 @@ const rigOf = (): ControlsRig => {
     onSearch: vi.fn(),
     onDepth: vi.fn(),
     onPick: vi.fn(),
+    onCheck: vi.fn(),
     onToggle: vi.fn(),
     onGrouping: vi.fn(),
     onViewToggle: vi.fn()

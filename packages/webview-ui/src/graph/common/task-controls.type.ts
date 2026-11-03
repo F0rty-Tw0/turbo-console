@@ -28,13 +28,14 @@ export type TaskControlsViews = {
 };
 
 /**
- * What the task Controls report: a new search text, a valid Dependents depth, a picked row, a panel opened or closed, Group
+ * What the task Controls report: a new search text, a valid Dependents depth, a picked row, a project, folder or task check, a panel opened or closed, Group
  * by folder ticked or unticked and Show package scopes or Show scripts ticked or unticked.
  */
 export type TaskControlsActions = {
   readonly onSearch: (search: string) => void;
   readonly onDepth: (depth: number) => void;
   readonly onPick: (id: string) => void;
+  readonly onCheck: (ids: string[], isChecked: boolean) => void;
   readonly onToggle: (isOpen: boolean) => void;
   readonly onGrouping: (isGrouped: boolean) => void;
   readonly onViewToggle: (toggle: GraphViewToggle, shown: boolean) => void;
