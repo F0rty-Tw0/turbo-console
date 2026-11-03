@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { graphStateOf } from './graph-state.util.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
 import {
+  EDGE_ROUTE_STUB,
   GRAPH_HASH_STUB,
   GRAPH_MODEL_STUB,
   GRAPH_SHOWN_STUB,
@@ -25,7 +26,7 @@ type PairCase = {
   readonly expected: Layout;
 };
 
-const FOLDER_ROUTES: Routes = {};
+const FOLDER_ROUTES: Routes = { folderEdge: EDGE_ROUTE_STUB };
 const GHOST_POINT: Position = { x: 1, y: 1 };
 const GHOST_POSITIONS: Positions = { ...POSITIONS_STUB, ghost: GHOST_POINT };
 const FLAT: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: ROUTES_STUB };
@@ -59,18 +60,19 @@ const PAIR_CASES: PairCase[] = [
 ];
 
 describe('FEATURE: ready routes of a graph state', () => {
-  it('GIVEN no cache entry WHEN the state is built THEN all four layout fields are null', () => {
-    const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+  describe('GIVEN no cache entry', () => {
+    it('WHEN the state is built THEN all four layout fields are null', () => {
+      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
-    expect(state).toMatchObject(NONE);
+      expect(state).toMatchObject(NONE);
+    });
   });
 
-  it.each(PAIR_CASES)(
-    'GIVEN $label WHEN the state is built THEN each routes field comes from its own entry',
-    ({ caches, expected }) => {
+  describe.each(PAIR_CASES)('GIVEN $label', ({ caches, expected }) => {
+    it('WHEN the state is built THEN each routes field comes from its own entry', () => {
       const state = graphStateOf(GRAPH_MODEL_STUB, caches, GRAPH_SHOWN_STUB);
 
       expect(state).toMatchObject(expected);
-    }
-  );
+    });
+  });
 });

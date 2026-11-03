@@ -181,14 +181,6 @@ describe('FEATURE: graph state builder', () => {
     });
   });
 
-  describe('GIVEN no layout caches', () => {
-    it('WHEN the state is built THEN both route fields are null', () => {
-      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
-
-      expect(state).toMatchObject({ routes: null, folderRoutes: null });
-    });
-  });
-
   describe('GIVEN layout cache entries', () => {
     it.each(CACHE_CASES)(
       'WHEN the caches are $label THEN positions and folderPositions follow each entry on its own',
