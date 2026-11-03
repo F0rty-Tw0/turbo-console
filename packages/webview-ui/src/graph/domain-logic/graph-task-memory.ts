@@ -4,6 +4,7 @@ import { NO_NAMES } from '../common/graph-task.const.ts';
 import type { TaskModes, TaskNaming } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
+import type { TaskViewChecks } from '../common/task-controls.type.ts';
 import { folderOf } from '../utils/folder-group.util.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 import { labelsOf } from '../utils/package-label.util.ts';
@@ -27,6 +28,8 @@ export class GraphTaskMemory {
   private isSinglePackage = false;
   private latestRootLabel: string | null = null;
   private isScopeShown = true;
+  private isScriptsShown = true;
+  private hasScripts = false;
   private labels: ReadonlyMap<string, string> = NO_NAMES;
   private folders: ReadonlyMap<string, string> = NO_NAMES;
 
@@ -42,6 +45,8 @@ export class GraphTaskMemory {
     this.isSinglePackage = state.singlePackage;
     this.latestRootLabel = state.rootLabel;
     this.isScopeShown = state.scopeShown;
+    this.isScriptsShown = state.scriptsShown;
+    this.hasScripts = state.tasks.some((task) => !task.isTurboTask);
     this.labels = labelsOf(state.packages, state.scopeShown);
     this.folders = new Map(state.packages.map(folderEntryOf));
   }
@@ -51,11 +56,27 @@ export class GraphTaskMemory {
    * package; the labels and folders come from the package records, so neither holds the root `//` of a monorepo.
    */
   public naming(): TaskNaming {
-    const isViewGrouped = this.modes.current()?.grouped ?? true;
-    const grouped = isViewGrouped && !this.isSinglePackage;
+    const grouped = this.isViewGrouped() && !this.isSinglePackage;
     const naming: TaskNaming = { grouped, scopeShown: this.isScopeShown, labels: this.labels, folders: this.folders };
 
     return naming;
+  }
+
+  /**
+   * What the View boxes read: grouped as the saved view says, whether grouping applies (never to a single package), the
+   * scope and scripts bits of the state, and whether the full listing, not the pool, holds a script: hidden scripts leave
+   * the pool, and the box that turns them back on must stay.
+   */
+  public viewChecks(): TaskViewChecks {
+    const checks: TaskViewChecks = {
+      grouped: this.isViewGrouped(),
+      canGroup: !this.isSinglePackage,
+      scopeShown: this.isScopeShown,
+      scriptsShown: this.isScriptsShown,
+      hasScripts: this.hasScripts
+    };
+
+    return checks;
   }
 
   /** The pool task mode draws and counts. */
@@ -110,6 +131,11 @@ export class GraphTaskMemory {
     const view: TaskViewState = { ...last, ...edit };
 
     this.modes.saveTask(view, this.latestHash);
+  }
+
+  /** Whether the saved view is grouped; a fresh view is. */
+  private isViewGrouped(): boolean {
+    return this.modes.current()?.grouped ?? true;
   }
 
   /** Every pool id when a single-package root's pool holds none of `chosen`; `chosen` otherwise. */
