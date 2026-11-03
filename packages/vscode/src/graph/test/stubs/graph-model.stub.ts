@@ -70,6 +70,8 @@ export const GRAPH_STATE_STUB: GraphReady = {
   packages: GRAPH_INFOS_STUB,
   edges: [A_X, WEB_X, WEB_A],
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: GRAPH_TASKS_STUB,
   atomGroups: [],

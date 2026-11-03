@@ -50,6 +50,8 @@ export const DIAMOND_CHAIN_STUB: GraphReady = {
   packages: packagesOf(['base', 'config', 'core', 'data', 'docs', 'ui', 'web']),
   edges: DIAMOND_CHAIN_EDGES,
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []
@@ -101,6 +103,8 @@ export const OBJECT_MEMBER_NAMES_STUB: GraphReady = {
   packages: packagesOf(['__proto__', 'app', 'constructor', 'toString']),
   edges: OBJECT_MEMBER_EDGES,
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []
@@ -123,6 +127,8 @@ export const ARROW_NAMES_STUB: GraphReady = {
   packages: packagesOf(['a', 'a>b', 'b', 'b>c', 'c']),
   edges: ARROW_NAME_EDGES,
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []

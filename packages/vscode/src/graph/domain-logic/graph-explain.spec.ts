@@ -30,6 +30,8 @@ const READY: GraphReady = {
   packages: PACKAGES,
   edges: EDGES,
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: [],

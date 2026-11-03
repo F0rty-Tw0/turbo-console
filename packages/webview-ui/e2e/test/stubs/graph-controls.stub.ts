@@ -38,6 +38,8 @@ export const CONTROLS_STUB: GraphReady = {
   packages: CONTROLS_PACKAGES,
   edges: CONTROLS_EDGES,
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []
@@ -83,6 +85,8 @@ export const PROTO_CONTROLS_STUB: GraphReady = {
   packages: PROTO_PACKAGES,
   edges: PROTO_EDGES,
   positions: PROTO_POSITIONS,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []

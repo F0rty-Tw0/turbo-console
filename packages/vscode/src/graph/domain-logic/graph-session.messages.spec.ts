@@ -77,7 +77,13 @@ describe('FEATURE: graph session messages', () => {
 
       store.apply('/ws', GROWN_LOADED_STUB);
 
-      await session.receive({ type: 'positions', hash: first.hash, positions: positionsOf(first.packages), grouping: 'flat' });
+      await session.receive({
+        type: 'positions',
+        hash: first.hash,
+        positions: positionsOf(first.packages),
+        routes: {},
+        grouping: 'flat'
+      });
 
       expect(ports.writeCache).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
@@ -89,7 +95,7 @@ describe('FEATURE: graph session messages', () => {
       await session.receive({ type: 'ready' });
       const positions = positionsOf(GRAPH_PACKAGES_STUB);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'flat' });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, routes: {}, grouping: 'flat' });
 
       expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', { hash: GRAPH_HASH_STUB, positions });
     });
@@ -98,7 +104,7 @@ describe('FEATURE: graph session messages', () => {
       const { session, ports } = shownSession();
       const positions = positionsOf(['@org/x', 'a']);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'flat' });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, routes: {}, grouping: 'flat' });
 
       expect(ports.writeCache).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
@@ -108,7 +114,7 @@ describe('FEATURE: graph session messages', () => {
       const { session, ports } = shownSession();
       const names = Array.from({ length: 5001 }, (_, index) => `p${index}`);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions: positionsOf(names), grouping: 'flat' });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions: positionsOf(names), routes: {}, grouping: 'flat' });
 
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('Dropped a graph message: positions with 5001 keys');
     });
@@ -143,7 +149,7 @@ describe('FEATURE: graph session messages', () => {
       const { session, ports } = shownSession();
       const positions = positionsOf(GRAPH_PACKAGES_STUB);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'folders' });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, routes: {}, grouping: 'folders' });
 
       expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'folders', { hash: GRAPH_HASH_STUB, positions });
     });
@@ -155,7 +161,13 @@ describe('FEATURE: graph session messages', () => {
         const others = GRAPH_PACKAGES_STUB.slice(1);
         const names = [...others, id];
 
-        await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions: positionsOf(names), grouping: 'folders' });
+        await session.receive({
+          type: 'positions',
+          hash: GRAPH_HASH_STUB,
+          positions: positionsOf(names),
+          routes: {},
+          grouping: 'folders'
+        });
 
         expect(ports.writeCache).not.toHaveBeenCalled();
         expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
@@ -166,8 +178,8 @@ describe('FEATURE: graph session messages', () => {
       const { session, ports } = shownSession();
       const positions = positionsOf(GRAPH_PACKAGES_STUB);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'flat' });
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'folders' });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, routes: {}, grouping: 'flat' });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, routes: {}, grouping: 'folders' });
 
       expect(vi.mocked(ports.writeCache).mock.calls.map(([, grouping]) => grouping)).toStrictEqual(['flat', 'folders']);
     });
@@ -185,7 +197,7 @@ describe('FEATURE: graph session messages', () => {
       const { session, ports } = shownSession();
       const positions = positionsOf([...GRAPH_PACKAGES_STUB, 'ghost']);
 
-      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, grouping: 'flat' });
+      await session.receive({ type: 'positions', hash: GRAPH_HASH_STUB, positions, routes: {}, grouping: 'flat' });
 
       expect(ports.writeCache).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));

@@ -1,4 +1,4 @@
-import type { GraphRunState, GraphState, Positions } from './graph-state.type.ts';
+import type { GraphRunState, GraphState, Positions, Routes } from './graph-state.type.ts';
 
 /** The `package.json` field that holds a dependency entry. */
 export type ManifestField = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
@@ -122,6 +122,7 @@ export type GraphPositionsMessage = {
   readonly type: 'positions';
   readonly hash: string;
   readonly positions: Positions;
+  readonly routes: Routes;
   readonly grouping: LayoutGrouping;
 };
 

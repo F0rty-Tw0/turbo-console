@@ -30,6 +30,8 @@ export const taskRootState = (scopeShown: boolean): GraphReady => {
     packages: [APP],
     edges: [],
     positions: null,
+    routes: null,
+    folderRoutes: null,
     folderPositions: null,
     tasks: TASKS,
     atomGroups: []

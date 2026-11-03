@@ -32,6 +32,8 @@ export const foldersShotState = (): GraphReady => {
     ],
     edges: EDGES,
     positions: null,
+    routes: null,
+    folderRoutes: null,
     folderPositions: null,
     tasks: [],
     atomGroups: []

@@ -1,7 +1,7 @@
 import { OVERLAY_WIDTH_PX } from './common/graph.const.ts';
 import type { GraphOptions } from './common/graph.type.ts';
 import { test } from './graph.fixture.ts';
-import { threeFoldersState } from './test/utils/graph-boards.spec.util.ts';
+import { threeFoldersState } from './test/utils/graph-boards-roots.spec.util.ts';
 import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { packageInspection, traceInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';

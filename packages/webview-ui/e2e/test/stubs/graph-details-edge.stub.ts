@@ -34,6 +34,8 @@ export const PROTO_DETAILS_STUB: GraphReady = {
   packages: PROTO_PACKAGES,
   edges: PROTO_EDGES,
   positions: PROTO_POSITIONS,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []
@@ -76,6 +78,8 @@ export const LONG_PATH_STUB: GraphReady = {
   packages: LONG_PACKAGES,
   edges: LONG_EDGES,
   positions: LONG_POSITIONS,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []
@@ -108,6 +112,8 @@ export const UNBROKEN_PATH_STUB: GraphReady = {
   packages: UNBROKEN_PACKAGES,
   edges: UNBROKEN_EDGES,
   positions: UNBROKEN_POSITIONS,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []

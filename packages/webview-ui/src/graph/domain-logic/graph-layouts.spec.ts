@@ -47,7 +47,7 @@ const layoutsHarness = (): LayoutsHarness => {
 };
 
 const positionsPost = (positions: Positions, grouping: LayoutGrouping): GraphWebviewMessage => {
-  const post: GraphWebviewMessage = { type: 'positions', hash: 'h1', positions, grouping };
+  const post: GraphWebviewMessage = { type: 'positions', hash: 'h1', positions, routes: {}, grouping };
 
   return post;
 };

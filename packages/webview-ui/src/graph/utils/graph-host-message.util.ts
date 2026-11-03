@@ -26,11 +26,13 @@ const isPackage = (value: unknown): boolean => {
 };
 
 const hasCachesOf = (state: UnknownRecord): boolean => {
-  const { positions, folderPositions } = state;
+  const { positions, folderPositions, routes, folderRoutes } = state;
   const hasPositions = positions === null || isRecord(positions);
   const hasFolderPositions = folderPositions === null || isRecord(folderPositions);
+  const hasRoutes = routes === null || isRecord(routes);
+  const hasFolderRoutes = folderRoutes === null || isRecord(folderRoutes);
 
-  return hasPositions && hasFolderPositions;
+  return hasPositions && hasFolderPositions && hasRoutes && hasFolderRoutes;
 };
 
 const hasSinglePackageOf = (state: UnknownRecord): boolean => {

@@ -39,7 +39,7 @@ const checkedMessageOf = (message: SchemaGraphMessage): GraphWebviewMessage | nu
 
   if (positions === null) return null;
 
-  const checked: GraphWebviewMessage = { type: 'positions', hash: message.hash, positions, grouping: message.grouping };
+  const checked: GraphWebviewMessage = { type: 'positions', hash: message.hash, positions, routes: {}, grouping: message.grouping };
 
   return checked;
 };

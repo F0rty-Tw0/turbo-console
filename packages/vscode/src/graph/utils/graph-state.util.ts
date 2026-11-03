@@ -113,6 +113,8 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, s
     edges,
     positions,
     folderPositions,
+    routes: null,
+    folderRoutes: null,
     tasks,
     atomGroups,
     singlePackage,

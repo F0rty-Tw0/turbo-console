@@ -124,7 +124,8 @@ export class GraphLayouts {
 
     if (drawn === null) return;
 
-    const message: GraphPositionsMessage = { type: 'positions', hash: drawn.hash, positions, grouping: this.onScreen };
+    // grug: U6b snapshots routes
+    const message: GraphPositionsMessage = { type: 'positions', hash: drawn.hash, positions, routes: {}, grouping: this.onScreen };
 
     this.snapshots.drag(this.onScreen, positions);
     postDragged(this.deps.bridge, this.engine(), message);
