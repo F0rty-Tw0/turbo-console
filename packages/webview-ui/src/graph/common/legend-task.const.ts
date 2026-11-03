@@ -9,11 +9,14 @@ import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 /** A task or file outline is 2 px, as wide as the stylesheet's `outline-width`. */
 const OUTLINE_PX = 2;
 
-const TASK_BOX_SWATCH: LegendSwatch = { ...BOX_SWATCH, radiusPx: 8, dashPx: TASK_BOX_DASH_PX };
+/** Every task-mode box swatch: a box with the task frame's 8 px corners. */
+const TASK_SWATCH: LegendSwatch = { ...BOX_SWATCH, radiusPx: 8 };
 
-const TASK_FOLDER_SWATCH: LegendSwatch = { ...BOX_SWATCH, radiusPx: 8, isNested: true };
+const TASK_BOX_SWATCH: LegendSwatch = { ...TASK_SWATCH, dashPx: TASK_BOX_DASH_PX };
 
-const TASK_SCRIPTS_SWATCH: LegendSwatch = { ...BOX_SWATCH, radiusPx: 8, dashPx: SCRIPTS_BOX_DASH_PX };
+const TASK_FOLDER_SWATCH: LegendSwatch = { ...TASK_SWATCH, isNested: true };
+
+const TASK_SCRIPTS_SWATCH: LegendSwatch = { ...TASK_SWATCH, dashPx: SCRIPTS_BOX_DASH_PX };
 
 const FLOW_PEN: LegendOutline = { colour: 'background', px: FLOW_LINE_PX };
 
