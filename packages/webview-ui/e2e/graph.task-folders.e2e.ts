@@ -30,7 +30,7 @@ test.describe('FEATURE: graph task mode draws a folder box per folder while grou
   });
 
   test(
-    'GIVEN a grouped monorepo, WHEN task mode draws all tasks THEN each package box sits in its folder box and the root // box in the root folder',
+    'GIVEN a grouped monorepo, choosing every task draws each package box in its folder box and the root // box in the root folder',
     { annotation: FOLDER_BOXES },
     async ({ graphGrouping, graphTask, graphTaskBoxes, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN Tasks is pressed and every task is chosen', async (): Promise<void> => {
@@ -56,7 +56,7 @@ test.describe('FEATURE: graph task mode draws a folder box per folder while grou
   );
 
   test(
-    'GIVEN Group by folder unchecked in package mode, task mode draws no folder box',
+    'GIVEN a grouped monorepo, unchecking Group by folder before choosing every task draws no folder box',
     { annotation: FOLDER_BOXES },
     async ({ graphGrouping, graphTask, graphTaskBoxes, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN Group by folder is unchecked, Tasks is pressed and every task is chosen', async (): Promise<void> => {
