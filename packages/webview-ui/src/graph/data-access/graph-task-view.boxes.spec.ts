@@ -15,6 +15,8 @@ const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
 const APPS_ID = folderIdOf('apps');
 
+const LIBS_ID = folderIdOf('libs');
+
 /** `web` sits in the folder `apps`, `ui` in `libs`. */
 const GROUPED: TaskNaming = {
   ...NAMING_STUB,
@@ -40,6 +42,8 @@ const DRAWING: TaskDrawing = {
 };
 
 const parentIdOf = (cy: Core, id: string): string => cy.getElementById(id).parent().first().id();
+
+const isDimmedBox = (cy: Core, id: string): boolean => cy.getElementById(id).hasClass('dimmed-box');
 
 describe('FEATURE: createTaskCanvas boxes', () => {
   let cy: Core;
@@ -73,6 +77,24 @@ describe('FEATURE: createTaskCanvas boxes', () => {
 
       it('THEN the turbo task web#build sits in pkg:web', () => {
         expect(parentIdOf(cy, 'web#build')).toBe('pkg:web');
+      });
+    });
+
+    describe('WHEN web#build is painted', () => {
+      beforeEach(() => {
+        canvas.paint('web#build');
+      });
+
+      it('THEN the libs folder box, with no lit task, is dimmed-box', () => {
+        expect(isDimmedBox(cy, LIBS_ID)).toBe(true);
+      });
+
+      it('THEN scripts:ui, with no lit task, is dimmed-box', () => {
+        expect(isDimmedBox(cy, 'scripts:ui')).toBe(true);
+      });
+
+      it('THEN the apps folder box, around the selected task, is not dimmed-box', () => {
+        expect(isDimmedBox(cy, APPS_ID)).toBe(false);
       });
     });
   });

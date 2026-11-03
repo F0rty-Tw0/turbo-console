@@ -43,8 +43,8 @@ const closureOfLinks = (target: string | null, links: EdgeCollection): Closure |
 };
 
 /**
- * Gives each task and link one state class for `target`, the selected task, and its closure; a package or Scripts
- * compound with no selected or highlighted task gets `dimmed-box`. `null` paints every task and link `normal`.
+ * Gives each task and link one state class for `target`, the selected task, and its closure; a folder, package or
+ * Scripts compound with no selected or highlighted task gets `dimmed-box`. `null` paints every task and link `normal`.
  */
 const paintTasks = (cy: Core, target: string | null): void => {
   const tasks = taskNodes(cy);
