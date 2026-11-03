@@ -27,8 +27,9 @@ import { candidateItems, pickingView } from '../../ui/details-picking.ts';
 import { stepItems, traceView } from '../../ui/details-trace.ts';
 import { renderLocation, renderLocationLines } from '../../ui/location-elements.ts';
 import { buildPage } from '../../ui/page-elements.ts';
-import { buildTaskControls, buildTaskRow } from '../../ui/task-controls-elements.ts';
+import { buildTaskControls } from '../../ui/task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from '../../ui/task-details-elements.ts';
+import { buildProjectLine } from '../../ui/task-grid-rows.ts';
 import { buildFolderRow, buildPackageToolbar, buildTaskToolbar } from '../../ui/widget-elements.ts';
 import { buildMenu } from '../../ui/widget-menu.ts';
 import type { PackageSideDepsMock } from '../common/graph-package-side.type.ts';
@@ -66,7 +67,7 @@ const WIDGET_VIEWS: WidgetViews = {
   location: LOCATION_VIEWS
 };
 
-const TASK_VIEWS: TaskControlsViews = { build: buildTaskControls, row: buildTaskRow };
+const TASK_VIEWS: TaskControlsViews = { build: buildTaskControls, line: buildProjectLine };
 
 const TASK_DETAILS_VIEWS: TaskDetailsViews = {
   panel: buildTaskDetailsPanel,

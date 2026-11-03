@@ -1,11 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildTaskControls, buildTaskRow } from './task-controls-elements.ts';
-import { ROOT_TASKS_TITLE, SEARCH_TASKS_LABEL, SHOW_SCRIPTS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
-import { GROUP_BY_FOLDER_LABEL, SCOPE_TOGGLE_LABEL, SEARCH_SECTION_TITLE, VIEW_SECTION_TITLE } from '../common/graph.const.ts';
+import { buildTaskControls } from './task-controls-elements.ts';
+import { SEARCH_TASKS_LABEL, SHOW_SCRIPTS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
+import {
+  GROUP_BY_FOLDER_LABEL,
+  PROJECTS_SECTION_TITLE,
+  SCOPE_TOGGLE_LABEL,
+  SEARCH_SECTION_TITLE,
+  VIEW_SECTION_TITLE
+} from '../common/graph.const.ts';
 import type { TaskControlsElements } from '../common/task-controls.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 import { childAt } from '../test/utils/html-child.spec.util.ts';
 
 describe('FEATURE: task controls elements', () => {
@@ -57,8 +62,17 @@ describe('FEATURE: task controls elements', () => {
         expect([viewSection.tagName, heading]).toStrictEqual(['SECTION', VIEW_SECTION_TITLE]);
       });
 
-      it('THEN the task list comes last', () => {
-        expect(childAt(elements.panel, 2)).toBe(elements.list);
+      it('THEN the Projects section comes last', () => {
+        const projectsSection = childAt(elements.panel, 2);
+        const heading = projectsSection.children[0]?.textContent;
+
+        expect([projectsSection.tagName, heading]).toStrictEqual(['SECTION', PROJECTS_SECTION_TITLE]);
+      });
+
+      it('THEN the Projects section holds the grid', () => {
+        const projectsSection = childAt(elements.panel, 2);
+
+        expect(childAt(projectsSection, 1)).toBe(elements.list);
       });
     });
 
@@ -124,41 +138,6 @@ describe('FEATURE: task controls elements', () => {
       const { panel } = buildTaskControls();
 
       expect(panel).toMatchObject({ tagName: 'ASIDE', id: TASK_CONTROLS_ID, hidden: true });
-    });
-  });
-
-  describe('GIVEN buildTaskRow of a#build', () => {
-    it('WHEN built THEN its button reads the task name, then the package as a description', () => {
-      const row = buildTaskRow(GRAPH_TASK_STUB, null);
-      const [name, description] = row.pick.children;
-
-      expect(name?.textContent).toBe('build');
-      expect(description?.textContent).toBe('a');
-      expect(row.task).toBe(GRAPH_TASK_STUB);
-    });
-
-    it('WHEN built THEN its button is out of the Tab order, so the list is one Tab stop', () => {
-      const row = buildTaskRow(GRAPH_TASK_STUB, null);
-
-      expect(row.pick.tabIndex).toBe(-1);
-      expect(row.line.getAttribute('role')).toBe('row');
-    });
-  });
-
-  describe('GIVEN buildTaskRow of //#build', () => {
-    it('WHEN the root label is single-app THEN its description reads single-app and its title stays //#build', () => {
-      const row = buildTaskRow(ROOT_BUILD_STUB, 'single-app');
-      const [, description] = row.pick.children;
-
-      expect(description?.textContent).toBe('single-app');
-      expect(row.pick.title).toBe('//#build');
-    });
-
-    it('WHEN there is no root label THEN its description reads the root title', () => {
-      const row = buildTaskRow(ROOT_BUILD_STUB, null);
-      const [, description] = row.pick.children;
-
-      expect(description?.textContent).toBe(ROOT_TASKS_TITLE);
     });
   });
 });

@@ -24,7 +24,7 @@ const FOLDER_TITLES = [folderTitleOf(''), folderTitleOf('apps'), folderTitleOf('
 
 test.describe('FEATURE: the task Controls View section', () => {
   test(
-    'GIVEN a listing with a script, scopes shown, from a flat saved view, task mode lists Search then View and the View boxes read the state',
+    'GIVEN a listing with a script, scopes shown, from a flat saved view, task mode lists Search, View then Projects and the View boxes read the state',
     { annotation: TASK_VIEW },
     async ({ graphControls, graphHost, graphPage, graphProbe, graphTask, graphTaskView }): Promise<void> => {
       const state = scriptsTasksState(true);
@@ -37,8 +37,8 @@ test.describe('FEATURE: the task Controls View section', () => {
 
       await test.step('AND Tasks is pressed', async (): Promise<void> => graphTask.enter());
 
-      await test.step('THEN the sections read Search then View', async (): Promise<void> =>
-        graphTaskView.expectSectionTitles(['Search', 'View']));
+      await test.step('THEN the sections read Search, View then Projects', async (): Promise<void> =>
+        graphTaskView.expectSectionTitles(['Search', 'View', 'Projects']));
 
       await test.step('AND Show package scopes and Show scripts are ticked and Group by folder is not', async (): Promise<void> => {
         await graphControls.expectScope(true);

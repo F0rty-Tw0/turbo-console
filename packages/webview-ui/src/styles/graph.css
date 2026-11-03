@@ -259,11 +259,6 @@ p {
   margin-inline-end: var(--space-1);
 }
 
-.controls-task-package {
-  margin-inline-start: var(--space-2);
-  color: var(--vscode-descriptionForeground);
-}
-
 /* The task run state: the icon takes the colour the canvas outline uses, the word keeps the panel's. */
 .task-run-state {
   display: flex;
