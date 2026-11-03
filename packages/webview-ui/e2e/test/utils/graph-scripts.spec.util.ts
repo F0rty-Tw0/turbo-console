@@ -1,20 +1,7 @@
 import { packagesOf } from './graph-package.spec.util.ts';
+import { taskOf } from './graph-task-of.spec.util.ts';
 import type { GraphEdge, GraphReady, GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
 import { TASK_MODE_STATE_STUB } from '../stubs/graph-task-mode.stub.ts';
-
-const taskOf = (packageName: string, name: string, isTurboTask: boolean, dependencies: string[] = []): GraphTask => {
-  const task: GraphTask = {
-    id: `${packageName}#${name}`,
-    packageName,
-    name,
-    command: name,
-    isRunnable: true,
-    isTurboTask,
-    dependencies
-  };
-
-  return task;
-};
 
 const SCRIPTS: GraphTask[] = [taskOf('app', 'dev', false), taskOf('lib', 'start', false)];
 

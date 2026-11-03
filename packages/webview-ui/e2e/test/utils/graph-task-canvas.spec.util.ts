@@ -1,23 +1,10 @@
 import { packageOf } from './graph-package.spec.util.ts';
 import { closedPanelsSavedState } from './graph-shot-state.spec.util.ts';
+import { taskOf } from './graph-task-of.spec.util.ts';
 import { taskViewOf } from './graph-task-saved.spec.util.ts';
 import type { GraphEdge, GraphPackage, GraphReady, GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
 import type { TaskShotSetup } from '../../common/graph-shots.type.ts';
-
-const taskOf = (packageName: string, name: string, isTurboTask: boolean, dependencies: string[]): GraphTask => {
-  const task: GraphTask = {
-    id: `${packageName}#${name}`,
-    packageName,
-    name,
-    command: name,
-    isRunnable: true,
-    isTurboTask,
-    dependencies
-  };
-
-  return task;
-};
 
 /** `ui` and `core` under `packages/`, `web` under `apps/`, `root-lib` at the repo root and the root package `//`. */
 const PACKAGES: GraphPackage[] = [
