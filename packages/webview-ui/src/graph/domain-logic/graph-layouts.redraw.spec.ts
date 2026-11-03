@@ -13,7 +13,7 @@ type RedrawRow = {
   readonly shown: GraphViewState;
   readonly saved: GraphViewState;
   readonly mode: LayoutGrouping;
-  readonly isOff: boolean;
+  readonly offCount: number;
 };
 
 const CACHED_BOTH: GraphReady = { ...STATE_STUB, folderPositions: GROUPED_POSITIONS_STUB };
@@ -28,6 +28,7 @@ describe('FEATURE: GraphLayouts redraw', () => {
     rig.onPlaced.mockClear();
     rig.onDrawn.mockClear();
     rig.onGroupingOff.mockClear();
+    rig.screen.showLoading.mockClear();
   };
 
   beforeEach((): void => {
@@ -35,51 +36,85 @@ describe('FEATURE: GraphLayouts redraw', () => {
     layouts = new GraphLayouts(rig.deps);
   });
 
-  it.each<RedrawRow>([
-    { name: 'folders drawn, saved flat', shown: SAVED_GROUPED_STUB, saved: SAVED_FLAT_STUB, mode: 'flat', isOff: true },
-    { name: 'flat drawn, saved grouped', shown: SAVED_FLAT_STUB, saved: SAVED_GROUPED_STUB, mode: 'folders', isOff: false },
-    { name: 'folders drawn, saved grouped', shown: SAVED_GROUPED_STUB, saved: SAVED_GROUPED_STUB, mode: 'folders', isOff: false },
-    { name: 'flat drawn, saved flat', shown: SAVED_FLAT_STUB, saved: SAVED_FLAT_STUB, mode: 'flat', isOff: false }
-  ])(
-    'GIVEN $name WHEN task mode is left THEN the saved mode is drawn and grouping off is reported only for folders to flat',
-    async ({ shown, saved, mode, isOff }) => {
-      drawn(CACHED_BOTH, shown);
+  describe.each<RedrawRow>([
+    { name: 'folders drawn, saved flat', shown: SAVED_GROUPED_STUB, saved: SAVED_FLAT_STUB, mode: 'flat', offCount: 1 },
+    { name: 'flat drawn, saved grouped', shown: SAVED_FLAT_STUB, saved: SAVED_GROUPED_STUB, mode: 'folders', offCount: 0 },
+    { name: 'folders drawn, saved grouped', shown: SAVED_GROUPED_STUB, saved: SAVED_GROUPED_STUB, mode: 'folders', offCount: 0 },
+    { name: 'flat drawn, saved flat', shown: SAVED_FLAT_STUB, saved: SAVED_FLAT_STUB, mode: 'flat', offCount: 0 }
+  ])('GIVEN both layouts cached, $name', ({ shown, saved, mode, offCount }) => {
+    describe('WHEN task mode is left', () => {
+      beforeEach(async (): Promise<void> => {
+        drawn(CACHED_BOTH, shown);
+        await layouts.redraw(saved);
+      });
 
-      await layouts.redraw(saved);
+      it('THEN the checkbox mode and the mode on screen are the saved mode', () => {
+        expect([layouts.mode(), layouts.drawnMode()]).toStrictEqual([mode, mode]);
+      });
 
-      expect([layouts.mode(), layouts.drawnMode()]).toStrictEqual([mode, mode]);
-      expect(rig.onPlaced).toHaveBeenLastCalledWith(mode);
-      expect(rig.onDrawn).toHaveBeenCalledExactlyOnceWith(saved);
-      expect(rig.onGroupingOff).toHaveBeenCalledTimes(isOff ? 1 : 0);
-    }
-  );
+      it('THEN the saved mode is placed', () => {
+        expect(rig.onPlaced).toHaveBeenLastCalledWith(mode);
+      });
 
-  it('GIVEN folders drawn WHEN redraw gets null THEN the checkbox mode stays and no grouping off is reported', async () => {
-    drawn(CACHED_BOTH, SAVED_GROUPED_STUB);
+      it('THEN the draw restores the saved view once', () => {
+        expect(rig.onDrawn).toHaveBeenCalledExactlyOnceWith(saved);
+      });
 
-    await layouts.redraw(null);
+      it('THEN grouping off is reported only for folders to flat', () => {
+        expect(rig.onGroupingOff).toHaveBeenCalledTimes(offCount);
+      });
 
-    expect([layouts.mode(), layouts.drawnMode(), rig.onGroupingOff.mock.calls.length]).toStrictEqual(['folders', 'folders', 0]);
+      it('THEN no Loading screen shows', () => {
+        expect(rig.screen.showLoading).not.toHaveBeenCalled();
+      });
+    });
   });
 
-  it('GIVEN flat drawn, saved grouped and no grouped layout cached WHEN redraw runs THEN one grouped layout starts and mode() reads folders at once', () => {
-    rig.setDrawn(STATE_STUB);
-    void layouts.show(STATE_STUB, SAVED_FLAT_STUB);
-    const before = rig.runs.count();
+  describe('GIVEN folders drawn with both layouts cached', () => {
+    beforeEach((): void => {
+      drawn(CACHED_BOTH, SAVED_GROUPED_STUB);
+    });
 
-    void layouts.redraw(SAVED_GROUPED_STUB);
+    it('WHEN redraw gets null THEN the checkbox mode stays and no grouping off is reported', async () => {
+      await layouts.redraw(null);
 
-    expect([layouts.mode(), rig.runs.count() - before]).toStrictEqual(['folders', 1]);
+      expect([layouts.mode(), layouts.drawnMode(), rig.onGroupingOff.mock.calls.length]).toStrictEqual(['folders', 'folders', 0]);
+    });
+
+    it('WHEN redraw saves flat THEN grouping off is reported before the flat snapshot is placed', async () => {
+      await layouts.redraw(SAVED_FLAT_STUB);
+
+      const off = rig.onGroupingOff.mock.invocationCallOrder.at(0) ?? Infinity;
+      const placed = rig.onPlaced.mock.invocationCallOrder.at(0) ?? -Infinity;
+
+      expect(off).toBeLessThan(placed);
+    });
   });
 
-  it('GIVEN folders drawn WHEN redraw saves flat THEN grouping off is reported before the flat snapshot is placed', async () => {
-    drawn(CACHED_BOTH, SAVED_GROUPED_STUB);
+  describe('GIVEN flat drawn and no grouped layout cached', () => {
+    beforeEach((): void => {
+      drawn(STATE_STUB, SAVED_FLAT_STUB);
+    });
 
-    await layouts.redraw(SAVED_FLAT_STUB);
+    describe('WHEN redraw saves grouped', () => {
+      let before: number;
 
-    const off = rig.onGroupingOff.mock.invocationCallOrder.at(0) ?? Infinity;
-    const placed = rig.onPlaced.mock.invocationCallOrder.at(0) ?? -Infinity;
+      beforeEach((): void => {
+        before = rig.runs.count();
+        void layouts.redraw(SAVED_GROUPED_STUB);
+      });
 
-    expect(off).toBeLessThan(placed);
+      it('THEN mode() reads folders at once', () => {
+        expect(layouts.mode()).toBe('folders');
+      });
+
+      it('THEN one grouped layout starts', () => {
+        expect(rig.runs.count() - before).toBe(1);
+      });
+
+      it('THEN the Loading screen shows while it lays out', () => {
+        expect(rig.screen.showLoading).toHaveBeenCalledOnce();
+      });
+    });
   });
 });
