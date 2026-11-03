@@ -8,7 +8,7 @@ import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/gr
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
-import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
+import { NEUTRAL_NAMING, TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
@@ -40,7 +40,7 @@ const UMBRELLA_GROUP: GraphAtomGroup = { umbrellaId: 'api#build', files: UMBRELL
 const NO_SIZES: ReadonlyMap<string, NodeSize> = new Map();
 
 const sizedRequestOf = (key: string, sizes: ReadonlyMap<string, NodeSize>): TaskLayoutRequest => {
-  const request: TaskLayoutRequest = { tasks: TASK_CHAIN_STUB, shown: SHOWN, key, sizes };
+  const request: TaskLayoutRequest = { tasks: TASK_CHAIN_STUB, shown: SHOWN, key, sizes, naming: NEUTRAL_NAMING };
 
   return request;
 };

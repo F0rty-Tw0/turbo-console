@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { probeStateOf } from './graph-probe-state.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
@@ -36,7 +37,8 @@ const DRAWING: TaskDrawing = {
   sizes: NO_SIZES,
   labels: NO_LABELS,
   titleWidths: new Map(),
-  rootLabel: null
+  rootLabel: null,
+  naming: NEUTRAL_NAMING
 };
 
 const WEB_TITLE_WIDTHS = new Map([['web', 130]]);

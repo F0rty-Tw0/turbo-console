@@ -1,6 +1,6 @@
 import { GraphAtomGroups } from './graph-atom-groups.ts';
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
-import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
+import { NEUTRAL_NAMING, TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
@@ -149,7 +149,8 @@ export class GraphTaskLayout {
       sizes: request.sizes,
       labels: this.atoms.labels(),
       titleWidths,
-      rootLabel: this.deps.rootLabel()
+      rootLabel: this.deps.rootLabel(),
+      naming: NEUTRAL_NAMING
     });
     this.placed = result;
     this.atoms.placed(request.shown, result.positions, request.sizes, request.tasks);

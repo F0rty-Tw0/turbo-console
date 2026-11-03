@@ -4,7 +4,7 @@ import { ownerTextOf } from './owner-text.util.ts';
 import { droppedTasksText } from './task-text.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { UmbrellaSizers } from '../common/graph-page.type.ts';
-import { MAX_TASK_DEPTH, MIN_TASK_DEPTH } from '../common/graph-task.const.ts';
+import { MAX_TASK_DEPTH, MIN_TASK_DEPTH, NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { TaskChoice, TaskLayoutRequest } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
@@ -63,7 +63,7 @@ export const requestOf = (
   }
 
   const key = taskLayoutKeyOf(drawn, shown, fileCounts);
-  const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes };
+  const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes, naming: NEUTRAL_NAMING };
 
   return request;
 };

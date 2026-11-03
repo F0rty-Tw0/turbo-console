@@ -7,6 +7,7 @@ import {
   EMPTY_TASKS_TEXT,
   MAX_TASK_DEPTH,
   MIN_TASK_DEPTH,
+  NEUTRAL_NAMING,
   NONE_SHOWN_TEXT,
   PACKAGES_MODE_LABEL,
   PACKAGES_MODE_TITLE,
@@ -48,6 +49,14 @@ describe('FEATURE: graph task constants', () => {
 
     it('WHEN its frame dashes are read THEN they are 2 px on, 3 px off', () => {
       expect(SCRIPTS_BOX_DASH_PX).toStrictEqual([2, 3]);
+    });
+  });
+
+  describe('GIVEN the neutral task naming', () => {
+    it('WHEN it is read THEN it is ungrouped with scopes shown and no labels or folders', () => {
+      const neutral = { grouped: false, scopeShown: true, labels: new Map(), folders: new Map() };
+
+      expect(NEUTRAL_NAMING).toStrictEqual(neutral);
     });
   });
 

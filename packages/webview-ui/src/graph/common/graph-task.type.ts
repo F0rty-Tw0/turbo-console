@@ -182,12 +182,24 @@ export type TaskChoice = {
   readonly dropped: number;
 };
 
-/** One task layout: the shown tasks, their ids, their layout key and the size of each umbrella among them. */
+/**
+ * How task mode names and groups its boxes: whether package boxes sit in folder boxes, whether package labels show
+ * scopes, the label of each package and the folder of each package, both keyed by package name.
+ */
+export type TaskNaming = {
+  readonly grouped: boolean;
+  readonly scopeShown: boolean;
+  readonly labels: ReadonlyMap<string, string>;
+  readonly folders: ReadonlyMap<string, string>;
+};
+
+/** One task layout: the shown tasks, their ids, their layout key, the size of each umbrella among them and the box naming. */
 export type TaskLayoutRequest = {
   readonly tasks: GraphTask[];
   readonly shown: ReadonlySet<string>;
   readonly key: string;
   readonly sizes: ReadonlyMap<string, NodeSize>;
+  readonly naming: TaskNaming;
 };
 
 /** What `GraphTaskLayout` adds: the saved task view for its camera rule, and hooks after each placement. */

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { boxesOf } from './graph-task-boxes.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
@@ -34,7 +35,8 @@ const drawingOf = (tasks: GraphTask[]): TaskDrawing => {
     sizes: new Map(),
     labels: new Map(),
     titleWidths: TITLE_WIDTHS,
-    rootLabel: null
+    rootLabel: null,
+    naming: NEUTRAL_NAMING
   };
 
   return drawing;

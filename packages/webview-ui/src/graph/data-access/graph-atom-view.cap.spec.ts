@@ -8,6 +8,7 @@ import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomPlacement } from '../common/graph-atom.type.ts';
+import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
@@ -41,7 +42,8 @@ const DRAWING: TaskDrawing = {
   sizes: SIZES,
   labels: new Map([['web#e2e-ci', '2 files']]),
   titleWidths: new Map(),
-  rootLabel: null
+  rootLabel: null,
+  naming: NEUTRAL_NAMING
 };
 
 const PKG_BOXES = new Map([

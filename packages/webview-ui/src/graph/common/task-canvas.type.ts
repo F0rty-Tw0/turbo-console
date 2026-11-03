@@ -1,4 +1,5 @@
 import type { AtomDrawSpec } from './atom-layout.type.ts';
+import type { TaskNaming } from './graph-task.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
@@ -21,6 +22,8 @@ export type TaskDrawing = {
   readonly titleWidths: ReadonlyMap<string, number>;
   /** The label a single-package root's box is titled with in place of `//`; `null` titles it with the package name. */
   readonly rootLabel: string | null;
+  /** Whether package boxes sit in folder boxes, and each package's label and folder. */
+  readonly naming: TaskNaming;
 };
 
 /**

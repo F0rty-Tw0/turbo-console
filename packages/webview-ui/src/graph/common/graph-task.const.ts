@@ -1,4 +1,5 @@
 import type { RunStateIconId } from './graph-icon.type.ts';
+import type { TaskNaming } from './graph-task.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 
 /** The most tasks task mode draws before it cuts dependent and dependency hops. */
@@ -42,6 +43,11 @@ export const SCRIPTS_BOX_DASH_PX: number[] = [2, 3];
 
 /** The title of the root `//` tasks, on its box and wherever a root task names its owner. */
 export const ROOT_TASKS_TITLE = 'Workspace root (//)';
+
+const NO_NAMES: ReadonlyMap<string, string> = new Map();
+
+/** The naming of an ungrouped task graph with scopes shown and no labels or folders known. */
+export const NEUTRAL_NAMING: TaskNaming = { grouped: false, scopeShown: true, labels: NO_NAMES, folders: NO_NAMES };
 
 /** The class of every task node, so a walk of the task graph skips the package compounds. */
 export const TASK_NODE_CLASS = 'task';
