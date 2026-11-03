@@ -5,6 +5,7 @@ import type { TaskMemoryModes, TaskNaming } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 import type { TaskViewChecks } from '../common/task-controls.type.ts';
+import type { TaskGridFacts } from '../common/task-grid.type.ts';
 import { folderOf } from '../utils/folder-group.util.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 import { labelsOf } from '../utils/package-label.util.ts';
@@ -77,6 +78,17 @@ export class GraphTaskMemory {
     };
 
     return checks;
+  }
+
+  /**
+   * What the Projects grid lists: the pool (hidden scripts are not in it), the effective choice, the ids `shown` draws, the
+   * naming and the root label of a single-package root.
+   */
+  public gridFacts(shown: ReadonlySet<string>): TaskGridFacts {
+    const chosen = new Set(this.effectiveChosen(this.view().chosen));
+    const facts: TaskGridFacts = { tasks: this.pool, chosen, shown, naming: this.naming(), rootLabel: this.latestRootLabel };
+
+    return facts;
   }
 
   /** The pool task mode draws and counts. */
