@@ -41,8 +41,8 @@ export class GraphTaskMode {
     });
     this.controls = deps.controlsOf(
       controlsActionsOf(deps, this.memory, {
-        choose: (edit) => this.choose(edit, null),
-        select: (id) => this.selection.select(id)
+        choose: (edit: Partial<TaskViewState>): void => this.choose(edit, null),
+        select: (id: string): void => this.selection.select(id)
       })
     );
   }
@@ -67,7 +67,6 @@ export class GraphTaskMode {
     if (!this.isActive()) return;
 
     this.showPage();
-    this.controls.setView(this.memory.viewChecks());
 
     const shownSet = this.memory.shownSet();
     const request = requestOf(this.memory.tasks(), shownSet, umbrellaFactsOf(this.deps, this.layout.atoms), this.memory.naming());
@@ -192,8 +191,13 @@ export class GraphTaskMode {
     void this.layout.show(request);
   }
 
-  /** The toolbar, the body, the task panel and Controls show once per visit, before any task layout lands. */
+  /**
+   * The View boxes follow every state and choice; the toolbar, the body, the task panel and Controls show once per visit,
+   * before any task layout lands.
+   */
   private showPage(): void {
+    this.controls.setView(this.memory.viewChecks());
+
     if (this.hasEntered) return;
 
     const current = this.deps.modes.current();
@@ -202,7 +206,6 @@ export class GraphTaskMode {
     this.deps.screen.showGraph(this.layout.engine() === 'fallback');
     this.panel.enter();
     this.controls.enter(this.memory.view(), current?.controlsOpen ?? true);
-    this.controls.setView(this.memory.viewChecks());
     this.selection.enter(current?.detailsOpen ?? true);
   }
 
