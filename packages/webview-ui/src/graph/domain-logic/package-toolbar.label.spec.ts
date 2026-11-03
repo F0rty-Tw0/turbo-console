@@ -5,6 +5,7 @@ import type { PackageToolbarDeps } from '../common/graph-widgets.type.ts';
 import type { MenuTarget, PackageMenuState } from '../common/widget.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
+import { labelIn } from '../utils/package-label.util.ts';
 
 type LabelRig = {
   readonly toolbar: PackageToolbar;
@@ -26,7 +27,7 @@ const rigOf = (): LabelRig => {
     layer,
     container,
     views,
-    labelOf: (name: string): string => labels.get(name) ?? name,
+    labelOf: (name: string): string => labelIn(labels, name),
     onMenu: vi.fn(),
     onFocus: vi.fn(),
     onStartTrace: vi.fn(),

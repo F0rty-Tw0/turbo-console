@@ -2,33 +2,30 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphTaskMode } from './graph-task-mode.ts';
 import { ViewStateModes } from './view-state-modes.ts';
-import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
+import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import { UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskPanelActions } from '../common/graph-task.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { SINGLE_TASK_STATE_STUB, TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
-import { taskOf } from '../test/utils/shown-set.spec.util.ts';
-
-const scriptOf = (id: string): GraphTask => {
-  const base = taskOf(id, []);
-  const script: GraphTask = { ...base, isTurboTask: false };
-
-  return script;
-};
+import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const APP_BUILD = taskOf('app#build', []);
 
 const LIB_BUILD = taskOf('lib#build', []);
 
+const APP_DEV = scriptOf('app#dev', []);
+
 /** Two turbo tasks and `app#dev`, a package script, with scripts hidden. */
-const POOL_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [APP_BUILD, scriptOf('app#dev'), LIB_BUILD], scriptsShown: false };
+const POOL_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [APP_BUILD, APP_DEV, LIB_BUILD], scriptsShown: false };
+
+const ROOT_SCRIPTS = [scriptOf('//#dev', []), scriptOf('//#start', [])];
 
 /** A single-package root whose tasks are both scripts, with scripts hidden. */
 const ALL_SCRIPTS_STATE: GraphReady = {
   ...SINGLE_TASK_STATE_STUB,
-  tasks: [scriptOf('//#dev'), scriptOf('//#start')],
+  tasks: ROOT_SCRIPTS,
   scriptsShown: false
 };
 
@@ -57,20 +54,40 @@ describe('FEATURE: GraphTaskMode over the task pool', () => {
       receive(POOL_STATE);
     });
 
-    it('WHEN showTasks names the hidden script THEN there is no unknown-tasks notice and nothing is drawn', () => {
-      mode.showTasks(['app#dev'], 8);
+    describe('WHEN showTasks names the hidden script', () => {
+      beforeEach(() => {
+        mode.showTasks(['app#dev'], 8);
+      });
 
-      expect(rig.panel.notice).not.toHaveBeenCalledWith(UNKNOWN_TASKS_TEXT);
-      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: true, hiddenCount: 0, knownCount: 2 });
-      expect(rig.runs.count()).toBe(0);
+      it('THEN there is no unknown-tasks notice', () => {
+        expect(rig.panel.notice).not.toHaveBeenCalledWith(UNKNOWN_TASKS_TEXT);
+      });
+
+      it('THEN the panel shows empty over the two known tasks', () => {
+        expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: true, hiddenCount: 0, knownCount: 2 });
+      });
+
+      it('THEN nothing is laid out', () => {
+        expect(rig.runs.count()).toBe(0);
+      });
     });
 
-    it('WHEN showTasks names the hidden script and app#build THEN only app#build is drawn and nothing is reported dropped', () => {
-      mode.showTasks(['app#dev', 'app#build'], 8);
+    describe('WHEN showTasks names the hidden script and app#build', () => {
+      beforeEach(() => {
+        mode.showTasks(['app#dev', 'app#build'], 8);
+      });
 
-      expect(rig.panel.notice).toHaveBeenLastCalledWith(null);
-      expect(rig.modes.task()?.chosen).toStrictEqual(['app#dev', 'app#build']);
-      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 0, knownCount: 2 });
+      it('THEN nothing is reported dropped', () => {
+        expect(rig.panel.notice).toHaveBeenLastCalledWith(null);
+      });
+
+      it('THEN both stay chosen', () => {
+        expect(rig.modes.task()?.chosen).toStrictEqual(['app#dev', 'app#build']);
+      });
+
+      it('THEN the panel shows app#build over the two known tasks', () => {
+        expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: false, hiddenCount: 0, knownCount: 2 });
+      });
     });
 
     it('WHEN Show every task is clicked THEN it chooses and counts the pool, not the listing', () => {

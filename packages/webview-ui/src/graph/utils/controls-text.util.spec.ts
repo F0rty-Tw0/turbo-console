@@ -18,6 +18,7 @@ import {
   stopLabelOf,
   taskToolbarLabelOf
 } from './controls-text.util.ts';
+import { labelIn } from './package-label.util.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
 
 describe('FEATURE: controls text', () => {
@@ -27,7 +28,7 @@ describe('FEATURE: controls text', () => {
     const web: MenuTarget = { kind: 'package', name: 'web' };
     const scoped: MenuTarget = { kind: 'package', name: '@org/x' };
     const labels = new Map([['@org/x', 'x']]);
-    const labelOf = (name: string): string => labels.get(name) ?? name;
+    const labelOf = (name: string): string => labelIn(labels, name);
 
     it.each([
       { title: 'the folder apps', target: apps, expected: 'Actions for folder apps' },

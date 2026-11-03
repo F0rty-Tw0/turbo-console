@@ -13,7 +13,7 @@ import {
   TASK_STATE_STUB,
   TASK_VIEW_STUB
 } from '../test/stubs/graph-task.stub.ts';
-import { taskOf } from '../test/utils/shown-set.spec.util.ts';
+import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { freshTaskViewOf } from '../utils/fresh-view-state.util.ts';
 
 type MemoryModes = Pick<TaskModes, 'task' | 'saveTask'>;
@@ -23,7 +23,7 @@ const ROOT_TASKS_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage:
 
 const APP_BUILD = taskOf('app#build', []);
 
-const APP_DEV: GraphTask = { ...APP_BUILD, id: 'app#dev', name: 'dev', isTurboTask: false };
+const APP_DEV = scriptOf('app#dev', []);
 
 const LIB_BUILD = taskOf('lib#build', []);
 
@@ -70,12 +70,7 @@ const modesOf = (saved: TaskViewState | null): MemoryModes => {
   return modes;
 };
 
-const scriptNeedingRoot = (id: string): GraphTask => {
-  const task = taskOf(id, ['root#t']);
-  const script: GraphTask = { ...task, isTurboTask: false };
-
-  return script;
-};
+const scriptNeedingRoot = (id: string): GraphTask => scriptOf(id, ['root#t']);
 
 const turboIdsOf = (prefix: string, count: number): string[] => Array.from({ length: count }, (_slot, index) => `${prefix}${index}#t`);
 
@@ -279,7 +274,7 @@ describe('FEATURE: task mode memory', () => {
 
   describe('GIVEN a single-package root with a turbo task, a script and scripts hidden', () => {
     it('WHEN only the hidden script is chosen THEN the fallback shows the pool, as if nothing were chosen', () => {
-      const tasks = [ROOT_BUILD_STUB, { ...ROOT_BUILD_STUB, id: '//#dev', name: 'dev', isTurboTask: false }];
+      const tasks = [ROOT_BUILD_STUB, scriptOf('//#dev', [])];
       const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, tasks, scriptsShown: false };
       const memory = new GraphTaskMemory(modesOf(savedChoosing(['//#dev'])));
 
