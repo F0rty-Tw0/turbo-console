@@ -6,6 +6,7 @@ import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import { FLOW_EDGE_LIMIT } from '../common/flow.const.ts';
 import type { FlowSegment } from '../common/flow.type.ts';
+import { SCRIPTS_BOX_DASH_PX } from '../common/graph-task.const.ts';
 import { LEGEND_ROWS } from '../common/legend.const.ts';
 import type { LegendColour, LegendOutline, LegendRow } from '../common/legend.type.ts';
 import { flowPenMock } from '../test/mocks/graph-flow-pen.mock.ts';
@@ -48,6 +49,8 @@ const PACKAGE_IDS = [
 
 const TASK_IDS = [
   'task-box',
+  'task-folder',
+  'task-scripts',
   'flow',
   'run-running',
   'run-continuous',
@@ -176,6 +179,13 @@ const dashedBorderOf = (row: LegendRow): Expected => {
   return dashed;
 };
 
+const solidBorderOf = (row: LegendRow): Expected => {
+  const borderStyle = row.swatch.dashPx === null ? 'solid' : 'dashed';
+  const solid = { 'border-style': borderStyle };
+
+  return solid;
+};
+
 const dimmedOf = (row: LegendRow): Expected => {
   const opacity = row.swatch.isDimmed ? COLORS.dimmedOpacity : 1;
   const dimmed = { opacity };
@@ -211,6 +221,9 @@ const PINS: Pin[] = [
   ['folder-link', 'edge.folder-link', plateOf],
   ['task-box', 'node:parent.task-box', dashedBorderOf],
   ['task-box', 'node:parent', cornerOf],
+  ['task-folder', 'node:parent.task-folder', solidBorderOf],
+  ['task-folder', 'node:parent', cornerOf],
+  ['task-scripts', 'node:parent.task-scripts', dashedBorderOf],
   ['flow', 'edge.highlighted', lineOf],
   ...RUN_PINS,
   ['file-passed', 'node.atom-passed', outlineStyleOf],
@@ -234,7 +247,7 @@ describe('FEATURE: legend rows', () => {
   });
 
   describe('GIVEN the task rows', () => {
-    it('THEN they are the twelve of spec D9 and UB5b with unique ids', () => {
+    it('THEN they are the fourteen of spec D9, UB5b and D15 with unique ids', () => {
       expect(LEGEND_ROWS.tasks.map((row) => row.id)).toStrictEqual(TASK_IDS);
     });
 
@@ -244,6 +257,23 @@ describe('FEATURE: legend rows', () => {
 
       expect(ids.indexOf('run-continuous')).toBe(ids.indexOf('run-running') + 1);
       expect(text).toBe('Task continuous');
+    });
+  });
+
+  describe('GIVEN the folder and scripts rows', () => {
+    it('THEN their texts are the spec wording', () => {
+      expect(rowOf('task-folder').text).toBe('Folder box: packages in one folder');
+      expect(rowOf('task-scripts').text).toBe('Scripts box: package.json scripts that are not turbo tasks');
+    });
+
+    it('THEN the scripts swatch dashes as the scripts frame and apart from the task box', () => {
+      expect(rowOf('task-scripts').swatch.dashPx).toStrictEqual(SCRIPTS_BOX_DASH_PX);
+      expect(rowOf('task-scripts').swatch.dashPx).not.toStrictEqual(rowOf('task-box').swatch.dashPx);
+    });
+
+    it('THEN the folder swatch is solid and nested, as the package-mode folder row', () => {
+      expect(rowOf('task-folder').swatch.dashPx).toBeNull();
+      expect(rowOf('task-folder').swatch.isNested).toBe(true);
     });
   });
 
