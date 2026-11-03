@@ -5,44 +5,48 @@ import { describe, expect, it } from 'vitest';
 import { edgeIdOf } from './edge-id.util.ts';
 import { nestedCentresOf } from './elk-centres.util.ts';
 import { elkGraphOf } from './elk-graph.util.ts';
-import { routesOf } from './elk-routes.util.ts';
+import { postableRoutesOf, routesOf } from './elk-routes.util.ts';
 import type { EdgeRoute, GraphEdge, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import { ROUTE_BENDS_MAX } from '../common/graph-layout.const.ts';
 import { BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
 import { ROUTED_ELK_STUB, ROUTES_STUB } from '../test/stubs/layout.stub.ts';
 import { BOARDS_EDGES, boardsSizeOf, layoutBoards } from '../test/utils/folder-boards.spec.util.ts';
 
 const NOWHERE: Position = { x: NaN, y: NaN };
-
 const NO_ROUTE: EdgeRoute = { start: NOWHERE, bends: [], end: NOWHERE };
-
 const TOP_POINT: Position = { x: 0, y: 0 };
-
 const BOTTOM_POINT: Position = { x: 0, y: 10 };
-
 const SECTION: ElkEdgeSection = { id: 's', startPoint: TOP_POINT, endPoint: BOTTOM_POINT };
-
 const SECTIONED_EDGE: ElkEdge = { id: 'e', sources: ['a'], targets: ['b'], sections: [SECTION] };
-
+const BENT_BEND: Position = { x: 0, y: 5 };
+const BENT_SECTION: ElkEdgeSection = { ...SECTION, bendPoints: [BENT_BEND] };
+const BENT_EDGE: ElkEdge = { ...SECTIONED_EDGE, sections: [BENT_SECTION] };
+const BENT_ROOT: ElkNode = { id: 'root', edges: [BENT_EDGE] };
 const UNROUTED_EDGE: ElkEdge = { id: 'e', sources: ['a'], targets: ['b'] };
-
-const SECTIONED_ROOT: ElkNode = { id: 'root', edges: [SECTIONED_EDGE] };
-
 const UNROUTED_ROOT: ElkNode = { id: 'root', children: [], edges: [UNROUTED_EDGE] };
-
 const INNER_COMPOUND: ElkNode = { id: 'g', edges: [SECTIONED_EDGE] };
-
 const OUTER_COMPOUND: ElkNode = { id: 'f', children: [INNER_COMPOUND] };
-
 const NESTED_ROOT: ElkNode = { id: 'root', children: [OUTER_COMPOUND] };
-
 const UI_UTILS: GraphEdge = { source: '@acme/ui', target: '@acme/utils' };
-
 const A_B: GraphEdge = { source: 'a', target: 'b' };
 
 /** NaN stands in for a missing entry, so a lookup that finds nothing fails every comparison. */
 const centreOf = (positions: Positions, name: string): Position => positions[name] ?? NOWHERE;
 
 const routeOf = (routes: Routes, edge: GraphEdge): EdgeRoute => routes[edgeIdOf(edge)] ?? NO_ROUTE;
+
+const bendAt = (_: unknown, index: number): Position => {
+  const bend: Position = { x: index, y: index };
+
+  return bend;
+};
+
+const routeWithBends = (count: number): EdgeRoute => {
+  const bends = Array.from({ length: count }, bendAt);
+  const route: EdgeRoute = { start: TOP_POINT, bends, end: BOTTOM_POINT };
+
+  return route;
+};
 
 describe('FEATURE: routesOf', () => {
   describe('GIVEN the boards fixture laid out by real elkjs', () => {
@@ -51,7 +55,7 @@ describe('FEATURE: routesOf', () => {
       const ui = centreOf(nestedCentresOf(laidOut), '@acme/ui');
       const route = routeOf(routesOf(laidOut), UI_UTILS);
 
-      expect(Math.abs(route.start.x - ui.x)).toBeLessThan(1);
+      expect(route.start.x).toBeCloseTo(ui.x, 0);
     });
 
     it('WHEN routes are read THEN ui -> utils starts at the bottom edge of ui in root coordinates (a1)', async () => {
@@ -60,14 +64,15 @@ describe('FEATURE: routesOf', () => {
       const route = routeOf(routesOf(laidOut), UI_UTILS);
       const bottom = ui.y + BOARDS_SIZE_STUB.height / 2;
 
-      expect(Math.abs(route.start.y - bottom)).toBeLessThan(1);
+      expect(route.start.y).toBeCloseTo(bottom, 0);
     });
 
     it('WHEN routes are read THEN every one of its edges has a route', async () => {
       const laidOut = await layoutBoards();
       const ids = BOARDS_EDGES.map(edgeIdOf);
+      const routedIds = Object.keys(routesOf(laidOut));
 
-      expect(Object.keys(routesOf(laidOut)).toSorted()).toStrictEqual(ids.toSorted());
+      expect(routedIds.toSorted()).toStrictEqual(ids.toSorted());
     });
   });
 
@@ -93,27 +98,61 @@ describe('FEATURE: routesOf', () => {
 
   describe('GIVEN an edge with no sections', () => {
     it('WHEN read THEN it has no route (a5)', () => {
-      expect(routesOf(UNROUTED_ROOT)).toStrictEqual({});
+      const routes = routesOf(UNROUTED_ROOT);
+
+      expect(routes).toStrictEqual({});
     });
   });
 
   describe('GIVEN an edge inside a nested compound', () => {
     it('WHEN read THEN it is found at every depth', () => {
-      expect(Object.keys(routesOf(NESTED_ROOT))).toStrictEqual(['e']);
+      const ids = Object.keys(routesOf(NESTED_ROOT));
+
+      expect(ids).toStrictEqual(['e']);
     });
   });
 
   describe('GIVEN a section with a bend', () => {
+    it('WHEN read THEN the route shares no point object with it', () => {
+      const [route = NO_ROUTE] = Object.values(routesOf(BENT_ROOT));
+      const [bend] = route.bends;
+
+      expect(route.start).not.toBe(BENT_SECTION.startPoint);
+      expect(bend).not.toBe(BENT_BEND);
+      expect(route.end).not.toBe(BENT_SECTION.endPoint);
+    });
+
     it('WHEN read THEN start, bends and end are copied exactly', () => {
-      expect(routesOf(ROUTED_ELK_STUB)).toStrictEqual(ROUTES_STUB);
+      const routes = routesOf(ROUTED_ELK_STUB);
+
+      expect(routes).toStrictEqual(ROUTES_STUB);
+    });
+  });
+});
+
+describe('FEATURE: postableRoutesOf', () => {
+  describe('GIVEN a route with exactly ROUTE_BENDS_MAX bends', () => {
+    it('WHEN filtered THEN it is kept', () => {
+      const routes: Routes = { e: routeWithBends(ROUTE_BENDS_MAX) };
+
+      expect(postableRoutesOf(routes)).toStrictEqual(routes);
     });
   });
 
-  describe('GIVEN a section', () => {
-    it('WHEN read THEN the route shares no point object with it', () => {
-      const [route = NO_ROUTE] = Object.values(routesOf(SECTIONED_ROOT));
+  describe('GIVEN a route with one bend more than ROUTE_BENDS_MAX', () => {
+    it('WHEN filtered THEN only the other routes are kept', () => {
+      const kept = routeWithBends(1);
+      const routes: Routes = { long: routeWithBends(ROUTE_BENDS_MAX + 1), kept };
 
-      expect(route.start).not.toBe(TOP_POINT);
+      expect(postableRoutesOf(routes)).toStrictEqual({ kept });
+    });
+
+    it('WHEN filtered THEN the input still holds every route', () => {
+      const routes: Routes = { long: routeWithBends(ROUTE_BENDS_MAX + 1) };
+
+      postableRoutesOf(routes);
+
+      expect(Object.keys(routes)).toStrictEqual(['long']);
     });
   });
 });

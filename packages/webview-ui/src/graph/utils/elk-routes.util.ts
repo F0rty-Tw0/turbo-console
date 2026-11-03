@@ -1,6 +1,7 @@
 import type { ElkEdge, ElkNode, ElkPoint } from 'elkjs/lib/elk-api.js';
 
 import type { EdgeRoute, Position, Routes } from '../../bridge/common/graph-state.type.ts';
+import { ROUTE_BENDS_MAX } from '../common/graph-layout.const.ts';
 
 type RouteEntry = [string, EdgeRoute];
 
@@ -18,7 +19,9 @@ const routeEntriesOf = (edge: ElkEdge): RouteEntry[] => {
 
   const bendPoints = section.bendPoints ?? [];
   const bends = bendPoints.map(positionOf);
-  const route: EdgeRoute = { start: positionOf(section.startPoint), bends, end: positionOf(section.endPoint) };
+  const start = positionOf(section.startPoint);
+  const end = positionOf(section.endPoint);
+  const route: EdgeRoute = { start, bends, end };
 
   return [[edge.id, route]];
 };
@@ -41,4 +44,14 @@ export const routesOf = (laidOut: ElkNode): Routes => {
   const entries = entriesUnder(laidOut);
 
   return Object.fromEntries(entries);
+};
+
+const hasPostableBends = ([, route]: RouteEntry): boolean => route.bends.length <= ROUTE_BENDS_MAX;
+
+/** The routes the host keeps: those with at most `ROUTE_BENDS_MAX` bends. `routes` itself stays whole for the page to draw from. */
+export const postableRoutesOf = (routes: Routes): Routes => {
+  const entries = Object.entries(routes);
+  const postable = entries.filter(hasPostableBends);
+
+  return Object.fromEntries(postable);
 };
