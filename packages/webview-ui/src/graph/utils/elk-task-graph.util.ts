@@ -4,6 +4,7 @@ import { edgeIdOf } from './edge-id.util.ts';
 import { elkEdgeOf } from './elk-grouped-graph.util.ts';
 import { compoundOptionsOf, folderBoxIdOf, scriptsBoxIdOf, taskBoxIdOf, taskFolderOf, taskPackagesOf } from './task-compound.util.ts';
 import type { GraphEdge, GraphTask } from '../../bridge/common/graph-state.type.ts';
+import { LAYOUT_VERSION } from '../common/graph-layout.const.ts';
 import type { NodeSizer } from '../common/graph-page.type.ts';
 import type { TaskLayoutRequest, TaskNaming } from '../common/graph-task.type.ts';
 import { ELK_GROUPED_ROOT_OPTIONS } from '../common/graph.const.ts';
@@ -137,8 +138,8 @@ const folderPairsOf = (drawn: GraphTask[], naming: TaskNaming): [string, string]
 /**
  * What a task layout depends on: the sorted shown task ids, the sorted ids of the links between them, when a shown task
  * has a file count, those counts by sorted id, and last the grouping, the scope bit (box titles, so box widths, follow
- * it) and, while grouped, each shown package's folder. Without counts the key is the one of a graph with none; a key
- * saved before the last element existed never equals one built now.
+ * it) and, while grouped, each shown package's folder, and as the very last element the layout version. Without counts
+ * the key is the one of a graph with none; a key saved before the last element existed never equals one built now.
  */
 export const taskLayoutKeyOf = (
   tasks: GraphTask[],
@@ -155,7 +156,7 @@ export const taskLayoutKeyOf = (
   const withCounts = [...parts, counts];
   const keyed = counts.length === 0 ? parts : withCounts;
   const grouping = [naming.grouped, naming.scopeShown, folderPairsOf(drawn, naming)];
-  const withGrouping = [...keyed, grouping];
+  const withGrouping = [...keyed, grouping, LAYOUT_VERSION];
 
   return JSON.stringify(withGrouping);
 };
