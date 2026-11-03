@@ -2,21 +2,21 @@ import { packagesOf } from './graph-package.spec.util.ts';
 import type { GraphEdge, GraphReady, GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
 import { TASK_MODE_STATE_STUB } from '../stubs/graph-task-mode.stub.ts';
 
-const scriptOf = (packageName: string, name: string, dependencies: string[] = []): GraphTask => {
+const taskOf = (packageName: string, name: string, isTurboTask: boolean, dependencies: string[] = []): GraphTask => {
   const task: GraphTask = {
     id: `${packageName}#${name}`,
     packageName,
     name,
     command: name,
     isRunnable: true,
-    isTurboTask: false,
+    isTurboTask,
     dependencies
   };
 
   return task;
 };
 
-const SCRIPTS: GraphTask[] = [scriptOf('app', 'dev'), scriptOf('lib', 'start')];
+const SCRIPTS: GraphTask[] = [taskOf('app', 'dev', false), taskOf('lib', 'start', false)];
 
 /** `TASK_MODE_STATE_STUB` with `app#dev` and `lib#start`, two package scripts; the flag says whether the host lists them as shown. */
 export const scriptsTasksState = (scriptsShown: boolean): GraphReady => {
@@ -38,8 +38,7 @@ const LEAF_NEEDS_ROOT: GraphEdge[] = [{ source: 'leaf', target: 'root' }];
 const dependentOf = (index: number, isTurbo: boolean): GraphTask => {
   const prefix = isTurbo ? 't' : 's';
   const name = `${prefix}${index + 1}`;
-  const dependent = scriptOf('leaf', name, [SCRIPT_CAP_ROOT_TASK]);
-  const task: GraphTask = { ...dependent, isTurboTask: isTurbo };
+  const task = taskOf('leaf', name, isTurbo, [SCRIPT_CAP_ROOT_TASK]);
 
   return task;
 };
@@ -55,14 +54,13 @@ const dependentsOf = (count: number, isTurbo: boolean): GraphTask[] => {
  * The flag says whether the host lists the scripts as shown.
  */
 export const scriptCapState = (scriptsShown: boolean): GraphReady => {
-  const rootScript = scriptOf('root', 'build');
-  const root: GraphTask = { ...rootScript, isTurboTask: true };
+  const root = taskOf('root', 'build', true);
   const turbo = dependentsOf(SCRIPT_CAP_TURBO_DEPENDENTS, true);
   const scripts = dependentsOf(SCRIPT_CAP_SCRIPT_DEPENDENTS, false);
   const tasks = [root, ...turbo, ...scripts];
   const state: GraphReady = {
     ...TASK_MODE_STATE_STUB,
-    hash: '7a5c0501',
+    hash: '7a5c0502',
     packages: packagesOf(['leaf', 'root']),
     edges: LEAF_NEEDS_ROOT,
     tasks,
