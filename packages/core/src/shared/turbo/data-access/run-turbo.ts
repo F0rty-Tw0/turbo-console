@@ -3,7 +3,7 @@ import type { ChildProcess, ExecFileException } from 'node:child_process';
 import { once } from 'node:events';
 
 import { checkCwd } from './check-cwd.ts';
-import { collectStderr } from './collect-stderr.ts';
+import { collectTail } from './collect-tail.ts';
 import { killTree } from './kill-tree.ts';
 import { watchMemory } from './watch-memory.ts';
 import { MemoryLimitError } from '../common/memory-limit.exception.ts';
@@ -36,11 +36,14 @@ const abortSignalOf = (options: RunTurboOptions, memory: AbortSignal): AbortSign
   return AbortSignal.any(signals);
 };
 
-/** M0's `AbortError` (`cause` tells a `TimeoutError` from the caller's reason), plus the stderr execFile drops once aborting. */
-export const abortError = (signal: AbortSignal, stderr: string): Error => {
+/**
+ * M0's `AbortError` (`cause` tells a `TimeoutError` from the caller's reason), plus the stderr and stdout execFile drops
+ * once aborting; `stdout` is '' when not given, so every AbortError has both. The stdout tail shows how far a hung turbo got.
+ */
+export const abortError = (signal: AbortSignal, stderr: string, stdout = ''): Error => {
   const cause: unknown = signal.reason;
 
-  return Object.assign(new Error('turbo aborted'), { name: 'AbortError', cause, stderr });
+  return Object.assign(new Error('turbo aborted'), { name: 'AbortError', cause, stderr, stdout });
 };
 
 /** True when `exited` settles first, false when `ms` pass first; the timer is cleared either way. */
@@ -120,8 +123,8 @@ const settle = (
  * target repo's `.git/config` is otherwise trusted. Resolves with turbo's exit code, non-zero included. Rejects before spawning with
  * `checkCwd`'s errno error (`path`: `cwd`) when `cwd` is missing, not a directory or not searchable (ENOENT/ENOTDIR/EACCES), unless
  * `signal` already aborted; with execFile's error plus `stderr` (all turbo wrote) when no exit code exists (spawn failure, kill
- * signal, output past `maxBuffer`, 256 MiB by default); and with an `AbortError` (`cause`: the first abort's reason; `stderr`: turbo's
- * last 64 Ki characters) when `timeoutMs` (60 s by default), `signal`, or the memory watch aborts first. The watch polls turbo's
+ * signal, output past `maxBuffer`, 256 MiB by default); and with an `AbortError` (`cause`: the first abort's reason; `stderr` and
+ * `stdout`: the last 64 Ki characters turbo wrote to each) when `timeoutMs` (60 s by default), `signal`, or the memory watch aborts first. The watch polls turbo's
  * resident memory from spawn to exit and aborts with a `MemoryLimitError` once it passes `maxRssBytes` (4 GiB by default); any abort
  * stops it. Abort: SIGTERM to turbo on POSIX (turbo stops its tasks), `taskkill /T /F` on Windows; the rejection waits for turbo's exit
  * and taskkill. After `graceMs` turbo is killed outright, at once on POSIX for a memory abort; on POSIX that reaches turbo's pid
@@ -151,10 +154,11 @@ export const runTurbo = async (
   };
 
   const child = execFile(binaryPath, [SKIP_INFER, ...args], execOptions, onDone);
-  const readStderr = collectStderr(child);
+  const readStderr = collectTail(child.stderr);
+  const readStdout = collectTail(child.stdout);
   const stopWatch = watchChild(child, options, memory);
 
-  const rejectAborted = (): void => resolvers.reject(abortError(signal, readStderr()));
+  const rejectAborted = (): void => resolvers.reject(abortError(signal, readStderr(), readStdout()));
 
   const onAbort = (): void => {
     isAborting = true;
