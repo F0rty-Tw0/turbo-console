@@ -75,14 +75,27 @@ const matchingTasksOf = (project: Project, facts: TaskGridFacts, search: string)
   return project.tasks.filter((task) => matchesTaskSearch(task, search, rootLabel, naming.labels));
 };
 
-const isListed = (project: Project, facts: TaskGridFacts, search: string): boolean =>
-  matchingTasksOf(project, facts, search).length > 0;
+const isListed = (project: Project, facts: TaskGridFacts, search: string): boolean => {
+  const matching = matchingTasksOf(project, facts, search);
+
+  return matching.length > 0;
+};
+
+/** The projects with a task `search` matches. */
+const listedOf = (projects: Project[], facts: TaskGridFacts, search: string): Project[] => {
+  const isMatched = (project: Project): boolean => isListed(project, facts, search);
+
+  return projects.filter(isMatched);
+};
 
 const idsOf = (projects: Project[]): string[] => projects.flatMap((project) => project.tasks.map((task) => task.id));
 
 /** A search forces every listed line open; otherwise a line is open by default unless the reader toggled it. */
-const isOpenOf = (key: string, isDefaultOpen: boolean, open: TaskGridOpen): boolean =>
-  open.search !== '' || isDefaultOpen !== open.toggled.has(key);
+const isOpenOf = (key: string, isDefaultOpen: boolean, open: TaskGridOpen): boolean => {
+  const isToggled = open.toggled.has(key);
+
+  return open.search !== '' || isDefaultOpen !== isToggled;
+};
 
 const taskLineOf = (task: GraphTask, facts: TaskGridFacts, depth: number): TaskLine => {
   const line: TaskLine = {
@@ -125,7 +138,7 @@ const projectLinesOf = (project: Project, facts: TaskGridFacts, open: TaskGridOp
 
 const folderLinesOf = (bucket: Bucket, facts: TaskGridFacts, open: TaskGridOpen): ProjectLine[] => {
   const { folder, projects } = bucket;
-  const listed = projects.filter((project) => isListed(project, facts, open.search));
+  const listed = listedOf(projects, facts, open.search);
 
   if (listed.length === 0) return [];
 
@@ -159,7 +172,7 @@ export const taskGridLinesOf = (facts: TaskGridFacts, open: TaskGridOpen): Proje
   const projects = projectsOf(facts.tasks);
 
   if (!facts.naming.grouped) {
-    const listed = projects.filter((project) => isListed(project, facts, open.search));
+    const listed = listedOf(projects, facts, open.search);
 
     return listed.flatMap((project) => projectLinesOf(project, facts, open, 0));
   }
