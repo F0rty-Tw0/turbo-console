@@ -83,7 +83,7 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
   test(
     'GIVEN scopes hidden and a package picked, the Details heading follows the scope toggle on the same card',
     { annotation: SCOPE_LABELS },
-    async ({ graphDetails, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphDetails, graphDetailsCard, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the graph is laid out with scopes hidden and app is picked', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(scopedNamesState(false));
@@ -94,13 +94,13 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
       await test.step('THEN the Details heading reads app', async (): Promise<void> => graphDetails.expectHeading('app'));
 
       await test.step('WHEN the same-hash state with scopes shown arrives', async (): Promise<void> => {
-        await graphDetails.heading.evaluate((heading: Element): void => heading.setAttribute('data-kept', 'yes'));
+        await graphDetailsCard.markHeading();
         await graphHost.sendState(scopedNamesState(true));
       });
 
       await test.step('THEN the heading reads @org/app on the same card', async (): Promise<void> => {
         await graphDetails.expectHeading('@org/app');
-        await expect(graphDetails.heading).toHaveAttribute('data-kept', 'yes');
+        await graphDetailsCard.expectHeadingKept();
       });
     }
   );
