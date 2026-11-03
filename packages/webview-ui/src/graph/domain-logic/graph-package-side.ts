@@ -140,17 +140,21 @@ export class GraphPackageSide {
     }
   }
 
-  /** A re-post of the graph shown or in flight never resets the camera or the layout; it only refreshes task counts, then the inspection follows. */
+  /**
+   * A re-post of the graph shown or in flight never resets the camera or the layout: it refreshes the task counts,
+   * repaints the labels only when `scopeShown` rebuilt them, then the inspection follows.
+   */
   private showGraph(state: GraphReady, at: number): void {
     const shown = this.drawn;
 
     if (shown !== null && state.hash === shown.hash) {
       const refreshed = refreshedDrawn(shown, state);
       const isChanged = refreshed !== shown;
+      const isRelabelled = refreshed.labels !== shown.labels;
 
       this.drawn = refreshed;
 
-      if (isChanged) relabel({ view: this.view, controls: this.filtering.controls }, refreshed);
+      if (isRelabelled) relabel({ view: this.view, controls: this.filtering.controls }, refreshed);
       this.filtering.inspection.refreshed(isChanged);
 
       return;

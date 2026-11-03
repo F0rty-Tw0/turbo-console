@@ -60,8 +60,8 @@ export const restoreAfterDraw = (parts: DrawParts, saved: GraphViewState | null)
 };
 
 /**
- * A same-hash state's graph: the shown one with the new records and labels when their task counts or `scopeShown`
- * changed, else the shown one itself.
+ * A same-hash state's graph: the shown one with the new records when their task counts or `scopeShown` changed, else
+ * the shown one itself. The labels are rebuilt only when `scopeShown` changed: a same hash keeps the names and bare names.
  */
 export const refreshedDrawn = (shown: DrawnGraph, state: GraphReady): DrawnGraph => {
   const { packages, scopeShown } = state;
@@ -70,10 +70,14 @@ export const refreshedDrawn = (shown: DrawnGraph, state: GraphReady): DrawnGraph
 
   if (!isRecounted && !isRescoped) return shown;
 
-  const labels = labelsOf(packages, scopeShown);
-  const changed: DrawnGraph = { ...shown, infos: packages, scopeShown, labels };
+  const recounted: DrawnGraph = { ...shown, infos: packages };
 
-  return changed;
+  if (!isRescoped) return recounted;
+
+  const labels = labelsOf(packages, scopeShown);
+  const rescoped: DrawnGraph = { ...recounted, scopeShown, labels };
+
+  return rescoped;
 };
 
 /**

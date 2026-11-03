@@ -18,6 +18,15 @@ const SHOWN: GraphReady = { ...STATE_STUB, packages: BARE };
 
 const HIDDEN: GraphReady = { ...SHOWN, scopeShown: false };
 
+const recountOf = (pkg: GraphPackage): GraphPackage => {
+  const recounted: GraphPackage = { ...pkg, taskCount: pkg.taskCount + 1 };
+
+  return recounted;
+};
+
+/** `SHOWN` again, every package with one task more. */
+const RECOUNTED: GraphReady = { ...SHOWN, packages: BARE.map(recountOf) };
+
 describe('FEATURE: refreshedDrawn', () => {
   describe('GIVEN h1 drawn with scopes shown', () => {
     const shown: DrawnGraph = drawnGraphOf(SHOWN);
@@ -42,6 +51,12 @@ describe('FEATURE: refreshedDrawn', () => {
 
         expect([hash, packages, edges]).toStrictEqual([shown.hash, shown.packages, shown.edges]);
       });
+    });
+
+    it('WHEN h1 arrives again with new task counts only THEN the shown labels are kept', () => {
+      const refreshed = refreshedDrawn(shown, RECOUNTED);
+
+      expect(refreshed.labels).toBe(shown.labels);
     });
 
     it('WHEN h1 arrives again unchanged THEN the shown graph itself is kept', () => {
