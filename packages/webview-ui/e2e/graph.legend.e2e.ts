@@ -156,11 +156,11 @@ test.describe('FEATURE: graph legend', () => {
       await test.step('AND the task box is drawn with a 4 4 dash', async (): Promise<void> =>
         expect(graphLegend.dashOf(TASK_BOX_TERM, 'rect')).toHaveAttribute('stroke-dasharray', '4 4'));
 
-      await test.step('AND the folder box is solid with a nested box, the scripts box dashed 2 3 apart from the task box', async (): Promise<void> => {
-        await expect(graphLegend.swatchOf(FOLDER_BOX_TERM).locator('rect')).toHaveCount(2);
-        await expect(graphLegend.swatchOf(FOLDER_BOX_TERM).locator('[stroke-dasharray]')).toHaveCount(0);
-        await expect(graphLegend.dashOf(SCRIPTS_BOX_TERM, 'rect')).toHaveAttribute('stroke-dasharray', '2 3');
-      });
+      await test.step('AND the folder box is solid with a nested box', async (): Promise<void> =>
+        graphLegend.expectSolidNestedBox(FOLDER_BOX_TERM));
+
+      await test.step('AND the scripts box is dashed 2 3', async (): Promise<void> =>
+        expect(graphLegend.dashOf(SCRIPTS_BOX_TERM, 'rect')).toHaveAttribute('stroke-dasharray', '2 3'));
 
       await test.step('AND the moving dashes are a 6 6 pen over the undashed line', async (): Promise<void> => {
         await expect(graphLegend.swatchOf(FLOW_TERM).locator('line')).toHaveCount(2);
