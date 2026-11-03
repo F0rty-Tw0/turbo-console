@@ -6,6 +6,12 @@ import type { GroupState } from '../common/graph-controls.type.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import type { GroupLine, ProjectLine, TaskGridFacts, TaskGridOpen, TaskLine } from '../common/task-grid.type.ts';
 import { GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
+import {
+  GRID_FLAT_NAMING_STUB,
+  GRID_GROUPED_NAMING_STUB,
+  GRID_TASKS_STUB,
+  TASK_GRID_FACTS_STUB
+} from '../test/stubs/task-grid.stub.ts';
 
 const taskOf = (packageName: string, name: string): GraphTask => {
   const task: GraphTask = { ...GRAPH_TASK_STUB, id: `${packageName}#${name}`, packageName, name };
@@ -13,34 +19,10 @@ const taskOf = (packageName: string, name: string): GraphTask => {
   return task;
 };
 
-const TASKS = [
-  taskOf('//', 'gen'),
-  taskOf('core', 'build'),
-  taskOf('root-lib', 'build'),
-  taskOf('-tools', 'build'),
-  taskOf('ui', 'build'),
-  taskOf('ui', 'test'),
-  taskOf('web', 'build'),
-  taskOf('web', 'dev')
-];
-const FOLDERS = new Map([
-  ['core', 'packages'],
-  ['ui', 'packages'],
-  ['-tools', 'packages'],
-  ['web', 'apps'],
-  ['root-lib', '']
-]);
-const NAMES = ['core', 'root-lib', '-tools', 'ui', 'web'];
-const LABELS = new Map(NAMES.map((name) => [name, name]));
-const FLAT: TaskNaming = { grouped: false, scopeShown: true, labels: LABELS, folders: FOLDERS };
-const GROUPED: TaskNaming = { ...FLAT, grouped: true };
-const FACTS: TaskGridFacts = {
-  tasks: TASKS,
-  chosen: new Set(['ui#build']),
-  shown: new Set(['ui#build', 'core#build']),
-  naming: FLAT,
-  rootLabel: null
-};
+const TASKS = GRID_TASKS_STUB;
+const FLAT = GRID_FLAT_NAMING_STUB;
+const GROUPED = GRID_GROUPED_NAMING_STUB;
+const FACTS = TASK_GRID_FACTS_STUB;
 const CLOSED: TaskGridOpen = { toggled: new Set(), search: '' };
 
 const textOf = (line: ProjectLine): string => (line.kind === 'task' ? line.task.id : line.text);
