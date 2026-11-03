@@ -2,12 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { TaskGrid } from './task-grid.ts';
+import type { TaskNaming } from '../common/graph-task.type.ts';
 import type { TaskGridFacts } from '../common/task-grid.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskGridBuildMock } from '../test/mocks/task-grid-build.mock.ts';
-import { GRID_GROUPED_NAMING_STUB, TASK_GRID_FACTS_STUB } from '../test/stubs/task-grid.stub.ts';
-import { childAt } from '../test/utils/html-child.spec.util.ts';
+import { GRID_NAMING_STUB, GRID_TASKS_STUB, TASK_GRID_FACTS_STUB } from '../test/stubs/task-grid.stub.ts';
 import { pressKey } from '../test/utils/key-events.spec.util.ts';
+import { checkAt, nameAt, tick } from '../test/utils/task-grid-cells.spec.util.ts';
 
 type GridRig = {
   readonly list: HTMLElement;
@@ -30,20 +31,6 @@ const rigOf = (searchOf: () => string): GridRig => {
   return rig;
 };
 
-/** What the user does to a box: sets it, then the input event follows. */
-const tick = (box: HTMLElement, isChecked: boolean): void => {
-  if (!('checked' in box)) throw new Error('not a check');
-
-  box.checked = isChecked;
-  box.dispatchEvent(new Event('input'));
-};
-
-const rowAt = (list: HTMLElement, index: number): HTMLElement => childAt(list, index);
-
-const checkAt = (list: HTMLElement, index: number): HTMLElement => childAt(childAt(rowAt(list, index), 0), 0);
-
-const nameAt = (list: HTMLElement, index: number): HTMLElement => childAt(childAt(rowAt(list, index), 1), 0);
-
 const titlesOf = (list: HTMLElement): string[] => {
   const indexes = Array.from(list.children, (_row, index) => index);
 
@@ -59,6 +46,13 @@ const tabStopsOf = (list: HTMLElement): string[] => {
 };
 
 const FLAT_TITLES = ['Workspace root (//) (1)', '-tools (1)', 'core (1)', 'root-lib (1)', 'ui (2)', 'web (2)'];
+
+const GROUPED_NAMING: TaskNaming = { ...GRID_NAMING_STUB, grouped: true };
+
+const GROUPED_FACTS: TaskGridFacts = { ...TASK_GRID_FACTS_STUB, naming: GROUPED_NAMING };
+
+/** The flat facts without `ui#build`. */
+const NO_UI_BUILD: TaskGridFacts = { ...TASK_GRID_FACTS_STUB, tasks: GRID_TASKS_STUB.filter((task) => task.id !== 'ui#build') };
 
 describe('FEATURE: TaskGrid', () => {
   let rig: GridRig;
@@ -87,11 +81,18 @@ describe('FEATURE: TaskGrid', () => {
       expect(tabStopsOf(rig.list)).toStrictEqual(['Choose tasks of Workspace root (//)']);
     });
 
-    it('WHEN a project name is clicked THEN its task rows follow it and it reads expanded', () => {
-      nameAt(rig.list, 5).click();
+    describe('WHEN a project name is clicked', () => {
+      it('THEN its task rows follow it', () => {
+        nameAt(rig.list, 5).click();
 
-      expect(titlesOf(rig.list).slice(-3)).toStrictEqual(['web (2)', 'web#build', 'web#dev']);
-      expect(nameAt(rig.list, 5).getAttribute('aria-expanded')).toBe('true');
+        expect(titlesOf(rig.list).slice(-3)).toStrictEqual(['web (2)', 'web#build', 'web#dev']);
+      });
+
+      it('THEN it reads expanded', () => {
+        nameAt(rig.list, 5).click();
+
+        expect(nameAt(rig.list, 5).getAttribute('aria-expanded')).toBe('true');
+      });
     });
 
     it('WHEN a project name is clicked twice THEN its task rows are gone again', () => {
@@ -115,9 +116,14 @@ describe('FEATURE: TaskGrid', () => {
       expect(titlesOf(rig.list).slice(-3)).toStrictEqual(['web (2)', 'web#build', 'web#dev']);
     });
 
-    it('WHEN a mixed project is painted THEN its check is indeterminate and no pick fires', () => {
-      expect(checkAt(rig.list, 4)).toMatchObject({ checked: false, indeterminate: true });
-      expect(rig.onPick).not.toHaveBeenCalled();
+    describe('WHEN a mixed project is painted', () => {
+      it('THEN its check is indeterminate', () => {
+        expect(checkAt(rig.list, 4)).toMatchObject({ checked: false, indeterminate: true });
+      });
+
+      it('THEN no pick fires', () => {
+        expect(rig.onPick).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -128,15 +134,27 @@ describe('FEATURE: TaskGrid', () => {
       nameAt(rig.list, 5).focus();
     });
 
-    it('WHEN the facts are set again THEN focus and the Tab stop sit on the new ui#build name button', () => {
-      const old = nameAt(rig.list, 5);
+    describe('WHEN the facts are set again', () => {
+      it('THEN focus sits on the new ui#build name button', () => {
+        const old = nameAt(rig.list, 5);
 
-      rig.grid.setFacts({ ...TASK_GRID_FACTS_STUB });
+        rig.grid.setFacts({ ...TASK_GRID_FACTS_STUB });
 
-      expect(document.activeElement).toBe(nameAt(rig.list, 5));
-      expect(nameAt(rig.list, 5)).not.toBe(old);
-      expect(nameAt(rig.list, 5).tabIndex).toBe(0);
-      expect(tabStopsOf(rig.list)).toStrictEqual(['ui#build']);
+        expect(document.activeElement).toBe(nameAt(rig.list, 5));
+        expect(nameAt(rig.list, 5)).not.toBe(old);
+      });
+
+      it('THEN the new ui#build name button is the one Tab stop', () => {
+        rig.grid.setFacts({ ...TASK_GRID_FACTS_STUB });
+
+        expect(tabStopsOf(rig.list)).toStrictEqual(['ui#build']);
+      });
+    });
+
+    it('WHEN facts arrive without ui#build THEN the stop cell, the first check, has focus', () => {
+      rig.grid.setFacts(NO_UI_BUILD);
+
+      expect(document.activeElement).toBe(checkAt(rig.list, 0));
     });
 
     it('WHEN the drawn ui#build name is clicked THEN its id is picked', () => {
@@ -157,13 +175,24 @@ describe('FEATURE: TaskGrid', () => {
       rig.grid.setFacts(TASK_GRID_FACTS_STUB);
     });
 
-    it('WHEN ArrowDown is pressed THEN the next row check takes focus and the Tab stop', () => {
-      const isPrevented = pressKey(rig.list, 'ArrowDown', checkAt(rig.list, 0));
+    describe('WHEN ArrowDown is pressed', () => {
+      it('THEN the default is prevented', () => {
+        const isPrevented = pressKey(rig.list, 'ArrowDown', checkAt(rig.list, 0));
 
-      expect(isPrevented).toBe(true);
-      expect(document.activeElement).toBe(checkAt(rig.list, 1));
-      expect(checkAt(rig.list, 1).tabIndex).toBe(0);
-      expect(checkAt(rig.list, 0).tabIndex).toBe(-1);
+        expect(isPrevented).toBe(true);
+      });
+
+      it('THEN the next row check takes focus', () => {
+        pressKey(rig.list, 'ArrowDown', checkAt(rig.list, 0));
+
+        expect(document.activeElement).toBe(checkAt(rig.list, 1));
+      });
+
+      it('THEN the next row check takes the Tab stop', () => {
+        pressKey(rig.list, 'ArrowDown', checkAt(rig.list, 0));
+
+        expect(tabStopsOf(rig.list)).toStrictEqual(['Choose tasks of -tools']);
+      });
     });
 
     it('WHEN ArrowRight is pressed THEN the name button of the same row takes focus', () => {
@@ -178,19 +207,40 @@ describe('FEATURE: TaskGrid', () => {
       expect(document.activeElement).toBe(checkAt(rig.list, 5));
     });
 
-    it('WHEN a key is pressed on the list itself THEN focus stays and the default runs', () => {
-      const isPrevented = pressKey(rig.list, 'End', rig.list);
+    describe('WHEN a, a key the grid does not move on, is pressed', () => {
+      it('THEN focus stays on the check', () => {
+        checkAt(rig.list, 0).focus();
 
-      expect(isPrevented).toBe(false);
-      expect(document.activeElement).toBeNull();
+        pressKey(rig.list, 'a', checkAt(rig.list, 0));
+
+        expect(document.activeElement).toBe(checkAt(rig.list, 0));
+      });
+
+      it('THEN the default is not prevented', () => {
+        const isPrevented = pressKey(rig.list, 'a', checkAt(rig.list, 0));
+
+        expect(isPrevented).toBe(false);
+      });
+    });
+
+    describe('WHEN a key is pressed on the list itself', () => {
+      it('THEN the default runs', () => {
+        const isPrevented = pressKey(rig.list, 'End', rig.list);
+
+        expect(isPrevented).toBe(false);
+      });
+
+      it('THEN focus stays where it was', () => {
+        pressKey(rig.list, 'End', rig.list);
+
+        expect(document.activeElement).toBeNull();
+      });
     });
   });
 
   describe('GIVEN grouped facts', () => {
-    const grouped: TaskGridFacts = { ...TASK_GRID_FACTS_STUB, naming: GRID_GROUPED_NAMING_STUB };
-
     beforeEach(() => {
-      rig.grid.setFacts(grouped);
+      rig.grid.setFacts(GROUPED_FACTS);
     });
 
     it('WHEN the facts are set THEN folder rows lead their projects', () => {
@@ -201,6 +251,21 @@ describe('FEATURE: TaskGrid', () => {
       nameAt(rig.list, 5).click();
 
       expect(titlesOf(rig.list).slice(-2)).toStrictEqual(['web (2)', 'packages']);
+    });
+
+    it('WHEN the packages folder is ticked THEN onCheck gets the ids of every pool task of its projects', () => {
+      tick(checkAt(rig.list, 5), true);
+
+      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['-tools#build', 'core#build', 'ui#build', 'ui#test'], true);
+    });
+
+    it('WHEN the search lists only ui and the folder is ticked THEN onCheck still gets core, -tools and ui', () => {
+      search = 'test';
+      rig.grid.paint();
+
+      tick(checkAt(rig.list, 0), true);
+
+      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['-tools#build', 'core#build', 'ui#build', 'ui#test'], true);
     });
   });
 
@@ -263,48 +328,32 @@ describe('FEATURE: TaskGrid', () => {
     });
   });
 
-  describe('GIVEN grouped facts, the folder check reports', () => {
-    beforeEach(() => {
-      rig.grid.setFacts({ ...TASK_GRID_FACTS_STUB, naming: GRID_GROUPED_NAMING_STUB });
-    });
-
-    it('WHEN the packages folder is ticked THEN onCheck gets the ids of every pool task of its projects', () => {
-      tick(checkAt(rig.list, 5), true);
-
-      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['-tools#build', 'core#build', 'ui#build', 'ui#test'], true);
-    });
-
-    it('WHEN the search lists only ui and the folder is ticked THEN onCheck still gets core, -tools and ui', () => {
-      search = 'test';
-      rig.grid.paint();
-
-      tick(checkAt(rig.list, 0), true);
-
-      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['-tools#build', 'core#build', 'ui#build', 'ui#test'], true);
-    });
-  });
-
-  describe('GIVEN flat facts and a search', () => {
+  describe('GIVEN flat facts and the search test painted', () => {
     beforeEach(() => {
       rig.grid.setFacts(TASK_GRID_FACTS_STUB);
       search = 'test';
       rig.grid.paint();
     });
 
-    it('WHEN the search is cleared and the grid paints THEN ui is closed again, the search having toggled nothing', () => {
+    it('WHEN the grid is read THEN only ui is listed, open on ui#test', () => {
       expect(titlesOf(rig.list)).toStrictEqual(['ui (2)', 'ui#test']);
+    });
 
+    it('WHEN the search is cleared and the grid paints THEN ui is closed again, the search having toggled nothing', () => {
       search = '';
       rig.grid.paint();
 
       expect(titlesOf(rig.list)).toStrictEqual(FLAT_TITLES);
     });
 
-    it('WHEN the ui disclosure is clicked THEN ui stays open, and once the search is cleared ui is open from the click', () => {
+    it('WHEN the ui disclosure is clicked THEN ui stays open', () => {
       nameAt(rig.list, 0).click();
 
       expect(titlesOf(rig.list)).toStrictEqual(['ui (2)', 'ui#test']);
+    });
 
+    it('WHEN the ui disclosure is clicked and the search is cleared THEN ui is open from the click', () => {
+      nameAt(rig.list, 0).click();
       search = '';
       rig.grid.paint();
 

@@ -31,17 +31,17 @@ const FOLDERS = new Map([
 const NAMES = ['core', 'root-lib', '-tools', 'ui', 'web'];
 const LABELS = new Map(NAMES.map((name) => [name, name]));
 
-/** Naming with every package labelled by its name, not grouped. */
-export const GRID_FLAT_NAMING_STUB: TaskNaming = { grouped: false, scopeShown: true, labels: LABELS, folders: FOLDERS };
-
-/** `GRID_FLAT_NAMING_STUB` grouped by folder: `packages` (`-tools`, `core`, `ui`), `apps` (`web`), the root (`root-lib`). */
-export const GRID_GROUPED_NAMING_STUB: TaskNaming = { ...GRID_FLAT_NAMING_STUB, grouped: true };
+/**
+ * Naming with every package labelled by its name, not grouped; grouped by folder (a spread with `grouped: true`), it reads
+ * `packages` (`-tools`, `core`, `ui`), `apps` (`web`), the root (`root-lib`).
+ */
+export const GRID_NAMING_STUB: TaskNaming = { grouped: false, scopeShown: true, labels: LABELS, folders: FOLDERS };
 
 /** The flat grid: `ui#build` chosen, `ui#build` and `core#build` drawn. */
 export const TASK_GRID_FACTS_STUB: TaskGridFacts = {
   tasks: GRID_TASKS_STUB,
   chosen: new Set(['ui#build']),
   shown: new Set(['ui#build', 'core#build']),
-  naming: GRID_FLAT_NAMING_STUB,
+  naming: GRID_NAMING_STUB,
   rootLabel: null
 };

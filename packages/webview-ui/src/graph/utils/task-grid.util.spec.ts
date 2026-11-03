@@ -6,12 +6,7 @@ import type { GroupState } from '../common/graph-controls.type.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import type { GroupLine, ProjectLine, TaskGridFacts, TaskGridOpen, TaskLine } from '../common/task-grid.type.ts';
 import { GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
-import {
-  GRID_FLAT_NAMING_STUB,
-  GRID_GROUPED_NAMING_STUB,
-  GRID_TASKS_STUB,
-  TASK_GRID_FACTS_STUB
-} from '../test/stubs/task-grid.stub.ts';
+import { GRID_NAMING_STUB, GRID_TASKS_STUB, TASK_GRID_FACTS_STUB } from '../test/stubs/task-grid.stub.ts';
 
 const taskOf = (packageName: string, name: string): GraphTask => {
   const task: GraphTask = { ...GRAPH_TASK_STUB, id: `${packageName}#${name}`, packageName, name };
@@ -20,8 +15,8 @@ const taskOf = (packageName: string, name: string): GraphTask => {
 };
 
 const TASKS = GRID_TASKS_STUB;
-const FLAT = GRID_FLAT_NAMING_STUB;
-const GROUPED = GRID_GROUPED_NAMING_STUB;
+const FLAT = GRID_NAMING_STUB;
+const GROUPED: TaskNaming = { ...GRID_NAMING_STUB, grouped: true };
 const FACTS = TASK_GRID_FACTS_STUB;
 const CLOSED: TaskGridOpen = { toggled: new Set(), search: '' };
 

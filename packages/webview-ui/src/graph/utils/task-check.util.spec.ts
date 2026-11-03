@@ -23,10 +23,12 @@ describe('FEATURE: task check state', () => {
     });
   });
 
-  it('GIVEN a group with no ids WHEN the state is read THEN it is unchecked', () => {
-    const result = checkStateOf([], new Set(['a#b']));
+  describe('GIVEN a group with no ids', () => {
+    it('WHEN the state is read THEN it is unchecked', () => {
+      const result = checkStateOf([], new Set(['a#b']));
 
-    expect(result).toBe('unchecked');
+      expect(result).toBe('unchecked');
+    });
   });
 
   describe('GIVEN a choice and the ids of a line', () => {

@@ -10,7 +10,7 @@ import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { taskControlsViewsMock } from '../test/mocks/task-controls-views.mock.ts';
 import { TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.ts';
 import { TASK_GRID_FACTS_STUB } from '../test/stubs/task-grid.stub.ts';
-import { childAt } from '../test/utils/html-child.spec.util.ts';
+import { checkAt, nameAt, tick } from '../test/utils/task-grid-cells.spec.util.ts';
 
 type ControlsRig = {
   readonly deps: TaskControlsDeps;
@@ -43,22 +43,12 @@ const rigOf = (): ControlsRig => {
   return rig;
 };
 
-const checkAt = (list: HTMLElement, index: number): HTMLElement => childAt(childAt(childAt(list, index), 0), 0);
-
-const nameAt = (list: HTMLElement, index: number): HTMLElement => childAt(childAt(childAt(list, index), 1), 0);
-
 const typeInto = (input: HTMLInputElement, text: string): void => {
   input.value = text;
   input.dispatchEvent(new Event('input'));
 };
 
 const CHECKS: TaskViewChecks = { grouped: true, canGroup: true, scopeShown: false, scriptsShown: true, hasScripts: true };
-
-/** What the user does to a checkbox: sets it, then the input event follows. */
-const tick = (box: HTMLInputElement, isChecked: boolean): void => {
-  box.checked = isChecked;
-  box.dispatchEvent(new Event('input'));
-};
 
 describe('FEATURE: GraphTaskControls', () => {
   let rig: ControlsRig;
@@ -74,10 +64,12 @@ describe('FEATURE: GraphTaskControls', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN task mode is off WHEN Controls is clicked THEN nothing is passed on', () => {
-    rig.deps.page.controls.click();
+  describe('GIVEN task mode is off', () => {
+    it('WHEN Controls is clicked THEN nothing is passed on', () => {
+      rig.deps.page.controls.click();
 
-    expect(rig.actions.onToggle).not.toHaveBeenCalled();
+      expect(rig.actions.onToggle).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN task mode entered open with the grid listed', () => {
@@ -114,10 +106,7 @@ describe('FEATURE: GraphTaskControls', () => {
     });
 
     it('WHEN the web project check is ticked THEN its ids and true are passed on', () => {
-      const box = checkAt(rig.elements.list, 5);
-
-      Object.assign(box, { checked: true });
-      box.dispatchEvent(new Event('input'));
+      tick(checkAt(rig.elements.list, 5), true);
 
       expect(rig.actions.onCheck).toHaveBeenCalledExactlyOnceWith(['web#build', 'web#dev'], true);
     });
