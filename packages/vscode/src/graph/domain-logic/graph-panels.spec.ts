@@ -133,7 +133,9 @@ describe('FEATURE: graph panel registry', () => {
       panels.open('/ws');
       const before = panels.api().cachedHash('/ws', 'flat');
 
-      await panels.api().receive('/ws', { type: 'positions', hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, grouping: 'flat' });
+      const message = { type: 'positions', hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {}, grouping: 'flat' };
+
+      await panels.api().receive('/ws', message);
 
       expect(before).toBeNull();
       expect(panels.api().cachedHash('/ws', 'flat')).toBe(GRAPH_HASH_STUB);

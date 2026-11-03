@@ -1,9 +1,10 @@
-import type { LayoutGrouping, Positions } from '@turbo-console/webview-ui';
+import type { LayoutGrouping, Positions, Routes } from '@turbo-console/webview-ui';
 
 /** One root's cached layout: the positions are valid only for the graph that hashes to `hash`. */
 export type GraphLayoutCacheEntry = {
   readonly hash: string;
   readonly positions: Positions;
+  readonly routes: Routes;
 };
 
 /** The two layout caches of one root: the flat graph's and the one grouped by folder. */
@@ -16,5 +17,6 @@ export type GraphLayoutCaches = {
 export type PositionsPost = {
   readonly hash: string;
   readonly positions: Positions;
+  readonly routes: Routes;
   readonly grouping: LayoutGrouping;
 };

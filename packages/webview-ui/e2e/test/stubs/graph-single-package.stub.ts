@@ -28,6 +28,8 @@ export const SINGLE_PACKAGE_TASKS_STUB: GraphReady = {
   packages: packagesOf(['//']),
   edges: [],
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: TASKS,
   atomGroups: []

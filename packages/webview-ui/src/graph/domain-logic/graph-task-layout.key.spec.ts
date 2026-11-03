@@ -34,8 +34,8 @@ const requestOf = (naming: TaskNaming): TaskLayoutRequest => {
   return request;
 };
 
-/** The key as it was saved before the naming bits: the current key without its last element. */
-const oldShapeOf = (naming: TaskNaming): string => keyOf(naming).replace(/,\[(true|false),(true|false),.*\]\]$/, ']');
+/** The key as it was saved before the naming bits and the layout version: the current key without both. */
+const oldShapeOf = (naming: TaskNaming): string => keyOf(naming).replace(/,\[(true|false),(true|false),.*\],\d+\]$/, ']');
 
 describe('FEATURE: GraphTaskLayout keyed by the naming bits', () => {
   let rig: TaskModeRig;

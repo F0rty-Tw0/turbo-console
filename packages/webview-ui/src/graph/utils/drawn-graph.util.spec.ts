@@ -24,6 +24,8 @@ const STATE: GraphReady = {
   packages: PACKAGES,
   edges: [KEPT_EDGE, DANGLING_EDGE],
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []

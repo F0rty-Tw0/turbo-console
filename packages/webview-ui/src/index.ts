@@ -44,6 +44,7 @@ export type {
 } from './bridge/common/graph-message.type.ts';
 
 export type {
+  EdgeRoute,
   GraphAtomFile,
   GraphAtomGroup,
   GraphEdge,
@@ -53,7 +54,8 @@ export type {
   GraphState,
   GraphTask,
   Position,
-  Positions
+  Positions,
+  Routes
 } from './bridge/common/graph-state.type.ts';
 
 export type { GraphViewState, TaskViewState } from './bridge/common/graph-view-state.type.ts';
@@ -69,11 +71,15 @@ export {
   TASK_COUNT_MAX
 } from './bridge/common/graph-message.const.ts';
 
+export { LAYOUT_VERSION, ROUTE_BENDS_MAX } from './graph/common/graph-layout.const.ts';
+
 export { ROOT_TASKS_TITLE, ROOT_TASK_PACKAGE, TASK_CAP } from './graph/common/graph-task.const.ts';
 
 export { ICON_ID_PATTERN, TOOL_ICON_PREFIX } from './details/common/run-view.const.ts';
 
 export { durationText, elapsedText } from './bridge/utils/duration-text.util.ts';
+
+export { edgeIdOf } from './graph/utils/edge-id.util.ts';
 
 export { hiddenScriptsText } from './details/utils/field-text.util.ts';
 

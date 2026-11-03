@@ -34,6 +34,8 @@ export const GHOST_STUB: GraphReady = {
   packages: GHOST_PACKAGES,
   edges: GHOST_EDGES,
   positions: GHOST_POSITIONS,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []

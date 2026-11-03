@@ -1,6 +1,6 @@
 import type { FolderStatusRow } from './common/graph-folders.type.ts';
 import { expect, test } from './graph.fixture.ts';
-import { protoFolderState, rootFoldersState } from './test/utils/graph-boards.spec.util.ts';
+import { protoFolderState, rootFoldersState } from './test/utils/graph-boards-roots.spec.util.ts';
 import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { folderInspection, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { groupedSavedState, savedWith } from './test/utils/graph-saved-state.spec.util.ts';

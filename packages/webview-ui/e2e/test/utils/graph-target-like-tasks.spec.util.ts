@@ -50,6 +50,8 @@ export const overCapTasksState = (): GraphReady => {
     packages: packagesOf(['leaf', 'root']),
     edges: LEAF_NEEDS_ROOT,
     positions: null,
+    routes: null,
+    folderRoutes: null,
     folderPositions: null,
     tasks: [ROOT, ...dependents],
     atomGroups: []

@@ -1,12 +1,23 @@
-import type { GraphState, Positions } from '@turbo-console/webview-ui';
+import type { GraphState, Positions, Routes } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { acceptedPositions, cacheKeyOf, coversExactly, layoutEntryOf } from './graph-cache.util.ts';
-import { GRAPH_HASH_STUB, GRAPH_PACKAGES_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
+import { acceptedPositions, acceptedRoutes, cacheKeyOf, coversExactly, layoutEntryOf, parseRoutes } from './graph-cache.util.ts';
+import {
+  EDGE_ROUTE_STUB,
+  GRAPH_HASH_STUB,
+  GRAPH_PACKAGES_STUB,
+  GRAPH_STATE_STUB,
+  POSITIONS_STUB,
+  ROUTES_STUB
+} from '../test/stubs/graph-model.stub.ts';
 
 const STATE: GraphState = GRAPH_STATE_STUB;
 const POINT = { x: 1, y: 1 };
-const PROTO_ENTRY_JSON = `{"hash":"${GRAPH_HASH_STUB}","positions":{"__proto__":{"x":1,"y":2}}}`;
+const GHOST_ROUTES: Routes = { ghost: EDGE_ROUTE_STUB };
+const MIXED_ROUTES: Routes = { ...ROUTES_STUB, ...GHOST_ROUTES };
+const BAD_EDGE_ROUTE = { ...EDGE_ROUTE_STUB, bends: 'nope' };
+const BAD_ROUTES_JSON: Record<string, unknown> = { ...ROUTES_STUB, bad: BAD_EDGE_ROUTE };
+const PROTO_ENTRY_JSON = `{"hash":"${GRAPH_HASH_STUB}","positions":{"__proto__":{"x":1,"y":2}},"routes":{}}`;
 
 const withPoint = (name: string, point: unknown): Record<string, unknown> => {
   const merged = { ...POSITIONS_STUB, [name]: point };
@@ -70,13 +81,13 @@ describe('FEATURE: exact key cover', () => {
 
 describe('FEATURE: layout entry read from storage', () => {
   it('GIVEN a valid entry WHEN read THEN it is returned', () => {
-    const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB });
+    const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
 
-    expect(entry).toStrictEqual({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB });
+    expect(entry).toStrictEqual({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
   });
 
   it('GIVEN a point with an extra key WHEN read THEN the key is not in the result', () => {
-    const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: 2, z: 3 }) });
+    const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: 2, z: 3 }), routes: {} });
 
     expect(entry?.positions['a']).toStrictEqual({ x: 1, y: 2 });
   });
@@ -84,7 +95,7 @@ describe('FEATURE: layout entry read from storage', () => {
   it('GIVEN coordinates exactly at the limit WHEN read THEN the entry is kept', () => {
     const positions = withPoint('a', { x: 1e7, y: -1e7 });
 
-    expect(layoutEntryOf({ hash: GRAPH_HASH_STUB, positions })).not.toBeNull();
+    expect(layoutEntryOf({ hash: GRAPH_HASH_STUB, positions, routes: {} })).not.toBeNull();
   });
 
   describe('GIVEN a __proto__ key from parsed JSON', () => {
@@ -104,20 +115,99 @@ describe('FEATURE: layout entry read from storage', () => {
   it.each([
     ['undefined', undefined],
     ['a string', 'x'],
-    ['no hash', { positions: POSITIONS_STUB }],
-    ['no positions', { hash: GRAPH_HASH_STUB }],
-    ['a hash that is not a string', { hash: 1, positions: POSITIONS_STUB }],
-    ['NaN x', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: NaN, y: 0 }) }],
-    ['Infinity y', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: Infinity }) }],
-    ['an x past 1e7', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1e7 + 1, y: 0 }) }],
-    ['a y below -1e7', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 0, y: -1e7 - 1 }) }],
-    ['a point missing y', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1 }) }],
-    ['a string coordinate', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: '1', y: 0 }) }],
-    ['a string value', { hash: GRAPH_HASH_STUB, positions: withPoint('a', 'nope') }],
-    ['an array map', { hash: GRAPH_HASH_STUB, positions: [1, 2, 3] }],
-    ['a null map', { hash: GRAPH_HASH_STUB, positions: null }]
+    ['no hash', { positions: POSITIONS_STUB, routes: {} }],
+    ['no positions', { hash: GRAPH_HASH_STUB, routes: {} }],
+    ['a hash that is not a string', { hash: 1, positions: POSITIONS_STUB, routes: {} }],
+    ['NaN x', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: NaN, y: 0 }), routes: {} }],
+    ['Infinity y', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: Infinity }), routes: {} }],
+    ['an x past 1e7', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1e7 + 1, y: 0 }), routes: {} }],
+    ['a y below -1e7', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 0, y: -1e7 - 1 }), routes: {} }],
+    ['a point missing y', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1 }), routes: {} }],
+    ['a string coordinate', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: '1', y: 0 }), routes: {} }],
+    ['a string value', { hash: GRAPH_HASH_STUB, positions: withPoint('a', 'nope'), routes: {} }],
+    ['an array map', { hash: GRAPH_HASH_STUB, positions: [1, 2, 3], routes: {} }],
+    ['a null map', { hash: GRAPH_HASH_STUB, positions: null, routes: {} }]
   ])('GIVEN %s WHEN read THEN it is null', (_name, raw) => {
     expect(layoutEntryOf(raw)).toBeNull();
+  });
+
+  describe('GIVEN the routes of an entry', () => {
+    const BASE = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
+
+    it('WHEN the entry goes through JSON and is read THEN it comes back equal', () => {
+      const entry = { ...BASE, routes: ROUTES_STUB };
+
+      expect(layoutEntryOf(JSON.parse(JSON.stringify(entry)))).toStrictEqual(entry);
+    });
+
+    it('WHEN routes is an empty record THEN the entry is a hit', () => {
+      expect(layoutEntryOf({ ...BASE, routes: {} })).not.toBeNull();
+    });
+
+    it.each([
+      ['no routes key', BASE],
+      ['null routes', { ...BASE, routes: null }],
+      ['routes a list', { ...BASE, routes: [] }],
+      ['routes a string', { ...BASE, routes: 'x' }]
+    ])('WHEN the entry has %s THEN it is a miss', (_name, raw) => {
+      expect(layoutEntryOf(raw)).toBeNull();
+    });
+
+    it('WHEN one route is bad THEN the entry is a hit without that route', () => {
+      const entry = layoutEntryOf({ ...BASE, routes: BAD_ROUTES_JSON });
+
+      expect(entry?.routes).toStrictEqual(ROUTES_STUB);
+    });
+  });
+});
+
+describe('FEATURE: accepted routes', () => {
+  it('GIVEN routes for every edge WHEN accepted THEN all are kept', () => {
+    expect(acceptedRoutes(STATE, { routes: ROUTES_STUB })).toStrictEqual(ROUTES_STUB);
+  });
+
+  it('GIVEN one route whose key is no edge id WHEN accepted THEN that route alone is dropped', () => {
+    expect(acceptedRoutes(STATE, { routes: MIXED_ROUTES })).toStrictEqual(ROUTES_STUB);
+  });
+
+  it('GIVEN only unknown keys WHEN accepted THEN the result is {}', () => {
+    expect(acceptedRoutes(STATE, { routes: GHOST_ROUTES })).toStrictEqual({});
+  });
+
+  it('GIVEN a loading state WHEN accepted THEN the result is {}', () => {
+    expect(acceptedRoutes({ kind: 'loading' }, { routes: ROUTES_STUB })).toStrictEqual({});
+  });
+});
+
+describe('FEATURE: routes read from a post', () => {
+  const START = { x: 1, y: 2 };
+  const BEND = { x: 3, y: 4 };
+  const END = { x: 5, y: 6 };
+  const ROUTE = { start: START, bends: [BEND], end: END };
+  const BAD_ROUTE = { ...ROUTE, bends: 'nope' };
+
+  it('GIVEN an empty record WHEN read THEN it is an empty record', () => {
+    expect(parseRoutes({})).toStrictEqual({});
+  });
+
+  it('GIVEN a good route WHEN read THEN an equal route is returned', () => {
+    const routes = parseRoutes({ e1: ROUTE });
+
+    expect(routes).toStrictEqual({ e1: ROUTE });
+  });
+
+  it('GIVEN a bad route beside a good one WHEN read THEN only the bad one is dropped', () => {
+    expect(parseRoutes({ good: ROUTE, bad: BAD_ROUTE })).toStrictEqual({ good: ROUTE });
+  });
+
+  it.each([
+    ['a Map', new Map([['e1', ROUTE]])],
+    ['a list', [ROUTE]],
+    ['null', null],
+    ['a string', 'e1'],
+    ['undefined', undefined]
+  ])('GIVEN %s WHEN read THEN it is null', (_name, raw) => {
+    expect(parseRoutes(raw)).toBeNull();
   });
 });
 

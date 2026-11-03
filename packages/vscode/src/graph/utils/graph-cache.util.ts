@@ -1,9 +1,14 @@
-import type { GraphState, LayoutGrouping, Position, Positions } from '@turbo-console/webview-ui';
+import { ROUTE_BENDS_MAX, edgeIdOf } from '@turbo-console/webview-ui';
+import type { EdgeRoute, GraphState, LayoutGrouping, Position, Positions, Routes } from '@turbo-console/webview-ui';
 
 import { packageNamesOf } from './graph-package.util.ts';
 import { isRecord } from './record.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
 import { COORDINATE_MAX, GRAPH_CACHE_KEY_PREFIX, GRAPH_FOLDERS_CACHE_KEY_PREFIX, PACKAGE_NAME_MAX } from '../common/graph.const.ts';
+
+type RoutesMessage = {
+  readonly routes: Routes;
+};
 
 type PositionsMessage = {
   readonly hash: string;
@@ -68,6 +73,58 @@ export const parsePositions = (raw: unknown): Positions | null => {
   return Object.fromEntries(entries);
 };
 
+const bendsOf = (value: unknown): Position[] | null => {
+  if (!Array.isArray(value) || value.length > ROUTE_BENDS_MAX) return null;
+
+  const items: unknown[] = value;
+  const bends: Position[] = [];
+
+  for (const item of items) {
+    const bend = pointOf(item);
+
+    if (bend === null) return null;
+
+    bends.push(bend);
+  }
+
+  return bends;
+};
+
+const routeOf = (value: unknown): EdgeRoute | null => {
+  if (!isRecord(value)) return null;
+
+  if (!('start' in value) || !('bends' in value) || !('end' in value)) return null;
+
+  const start = pointOf(value.start);
+  const bends = bendsOf(value.bends);
+  const end = pointOf(value.end);
+
+  if (start === null || bends === null || end === null) return null;
+
+  const route: EdgeRoute = { start, bends, end };
+
+  return route;
+};
+
+/**
+ * Fresh `Routes` when `raw` is a plain object, else `null`. It keeps each own-key route that is `{ start, bends, end }`
+ * with at most `ROUTE_BENDS_MAX` bends and every coordinate within `COORDINATE_MAX`, as copies of `x` and `y`; a
+ * failing route is dropped alone. `Object.fromEntries` defines each key as an own property, so `__proto__` stays data.
+ */
+export const parseRoutes = (raw: unknown): Routes | null => {
+  if (!isPlainRecord(raw)) return null;
+
+  const entries: [string, EdgeRoute][] = [];
+
+  for (const [id, value] of Object.entries(raw)) {
+    const route = routeOf(value);
+
+    if (route !== null) entries.push([id, route]);
+  }
+
+  return Object.fromEntries(entries);
+};
+
 /** Whether `positions` has a key for every package and no other key. */
 export const coversExactly = (positions: Positions, packages: string[]): boolean => {
   const keys = new Set(Object.keys(positions));
@@ -86,9 +143,26 @@ export const acceptedPositions = (state: GraphState, message: PositionsMessage):
   return isCovered ? message.positions : null;
 };
 
-/** Reads what `workspaceState` hands back; anything that is not a hash with points within `COORDINATE_MAX` is `null`. */
+/** What a parsed `positions` post may store of its routes: only the keys that are an edge id of `state`, `{}` for a state with no graph. */
+export const acceptedRoutes = (state: GraphState, post: RoutesMessage): Routes => {
+  const none: Routes = {};
+
+  if (state.kind !== 'graph') return none;
+
+  const known = new Set(state.edges.map(edgeIdOf));
+  const kept = Object.entries(post.routes).filter(([id]) => known.has(id));
+  const accepted: Routes = Object.fromEntries(kept);
+
+  return accepted;
+};
+
+/** Reads what `workspaceState` hands back; anything that is not a hash with points within `COORDINATE_MAX` and a routes record is `null`. */
 export const layoutEntryOf = (raw: unknown): GraphLayoutCacheEntry | null => {
-  if (!isRecord(raw) || !('hash' in raw) || !('positions' in raw)) return null;
+  if (!isRecord(raw)) return null;
+
+  const hasFields = 'hash' in raw && 'positions' in raw && 'routes' in raw;
+
+  if (!hasFields) return null;
 
   if (typeof raw.hash !== 'string') return null;
 
@@ -96,7 +170,11 @@ export const layoutEntryOf = (raw: unknown): GraphLayoutCacheEntry | null => {
 
   if (positions === null) return null;
 
-  const entry: GraphLayoutCacheEntry = { hash: raw.hash, positions };
+  const routes = parseRoutes(raw.routes);
+
+  if (routes === null) return null;
+
+  const entry: GraphLayoutCacheEntry = { hash: raw.hash, positions, routes };
 
   return entry;
 };

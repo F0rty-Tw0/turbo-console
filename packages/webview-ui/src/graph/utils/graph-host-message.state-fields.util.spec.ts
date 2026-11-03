@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isGraphHostMessage } from './graph-host-message.util.ts';
 import { HOST_GRAPH_STUB, HOST_PACKAGES_STUB } from '../test/stubs/graph-host-message.stub.ts';
+import { ROUTES_STUB } from '../test/stubs/layout.stub.ts';
 import { graphWithTaskOf, stateMessageOf, without } from '../test/utils/graph-host-message.spec.util.ts';
 
 describe('FEATURE: graph host message, new state fields', () => {
@@ -23,6 +24,26 @@ describe('FEATURE: graph host message, package bareName', () => {
     ['a package with a numeric bareName', [{ ...HOST_PACKAGES_STUB[0], bareName: 5 }]]
   ])('GIVEN a state message with %s WHEN checked THEN it is rejected', (_label, packages) => {
     expect(isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, packages }))).toBe(false);
+  });
+});
+
+describe('FEATURE: graph host message, route fields', () => {
+  it.each([
+    ['routes missing', without(HOST_GRAPH_STUB, 'routes')],
+    ['folderRoutes missing', without(HOST_GRAPH_STUB, 'folderRoutes')],
+    ['routes a string', { ...HOST_GRAPH_STUB, routes: 'x' }],
+    ['folderRoutes a number', { ...HOST_GRAPH_STUB, folderRoutes: 1 }]
+  ])('GIVEN a state with %s WHEN checked THEN it is rejected', (_label, state) => {
+    expect(isGraphHostMessage(stateMessageOf(state))).toBe(false);
+  });
+
+  it.each([
+    [null, null],
+    [{}, null],
+    [null, {}],
+    [ROUTES_STUB, ROUTES_STUB]
+  ])('GIVEN routes %j and folderRoutes %j WHEN checked THEN it is accepted', (routes, folderRoutes) => {
+    expect(isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, routes, folderRoutes }))).toBe(true);
   });
 });
 

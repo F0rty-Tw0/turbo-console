@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
+import { LAYOUT_VERSION } from '../common/graph-layout.const.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
@@ -59,8 +60,8 @@ const ROWS: KeyRow[] = [
   { fact: 'an unshown package changes folder while grouped', before: GROUPED, after: GROUPED_MOVED_UNSHOWN, isEqual: true }
 ];
 
-/** The key as it was saved before the naming bits: the current key without its last element. */
-const oldShapeOf = (naming: TaskNaming): string => keyOf(naming).replace(/,\[(true|false),(true|false),.*\]\]$/, ']');
+/** The key as it was saved before the naming bits and the layout version: the current key without both. */
+const oldShapeOf = (naming: TaskNaming): string => keyOf(naming).replace(/,\[(true|false),(true|false),.*\],\d+\]$/, ']');
 
 describe('FEATURE: taskLayoutKeyOf naming bits', () => {
   describe('GIVEN two namings that differ in one fact', () => {
@@ -69,6 +70,15 @@ describe('FEATURE: taskLayoutKeyOf naming bits', () => {
       const keyAfter = keyOf({ ...BASE, ...after });
 
       expect(keyBefore === keyAfter).toBe(isEqual);
+    });
+  });
+
+  describe('GIVEN a key built now', () => {
+    it('WHEN a key is built THEN its last element is the layout version', () => {
+      const key = keyOf(BASE);
+      const versionLast = new RegExp(`,${LAYOUT_VERSION}\\]$`);
+
+      expect(key).toMatch(versionLast);
     });
   });
 

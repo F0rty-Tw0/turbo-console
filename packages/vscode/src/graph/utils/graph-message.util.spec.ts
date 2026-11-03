@@ -52,7 +52,7 @@ describe('FEATURE: graph webview message validation', () => {
       { type: 'ready' },
       { type: 'reload' },
       { type: 'openDetails', packageName: 'web' },
-      { type: 'positions', hash: HASH, positions: POSITIONS, grouping: 'flat' },
+      { type: 'positions', hash: HASH, positions: POSITIONS, routes: {}, grouping: 'flat' },
       { type: 'layoutDone', ms: 12, engine: 'elk' },
       { type: 'layoutDone', ms: 3, engine: 'fallback' },
       { type: 'explainEdge', source: 'web', target: 'core' },
@@ -67,7 +67,7 @@ describe('FEATURE: graph webview message validation', () => {
 
   describe('GIVEN a positions post with a grouping', () => {
     it.each([['folders'], ['flat']])('WHEN the grouping is %s THEN it is kept', (grouping) => {
-      const raw = { type: 'positions', hash: HASH, positions: POSITIONS, grouping };
+      const raw = { type: 'positions', hash: HASH, positions: POSITIONS, routes: {}, grouping };
 
       expect(parseGraphMessage(raw)).toStrictEqual(raw);
     });
@@ -81,11 +81,25 @@ describe('FEATURE: graph webview message validation', () => {
     });
   });
 
+  describe('GIVEN a positions post with no routes field', () => {
+    it('WHEN parsed THEN it passes with empty routes', () => {
+      const raw = { type: 'positions', hash: HASH, positions: POSITIONS, grouping: 'flat' };
+
+      expect(parseGraphMessage(raw)).toStrictEqual({ ...raw, routes: {} });
+    });
+  });
+
   describe('GIVEN a message with unknown keys', () => {
     it('WHEN parsed THEN the keys are stripped, at the top and inside a point', () => {
-      const raw = { type: 'positions', hash: HASH, extra: 1, positions: POSITIONS_WITH_EXTRA, grouping: 'flat' };
+      const raw = { type: 'positions', hash: HASH, extra: 1, positions: POSITIONS_WITH_EXTRA, routes: {}, grouping: 'flat' };
 
-      expect(parseGraphMessage(raw)).toStrictEqual({ type: 'positions', hash: HASH, positions: POSITIONS, grouping: 'flat' });
+      expect(parseGraphMessage(raw)).toStrictEqual({
+        type: 'positions',
+        hash: HASH,
+        positions: POSITIONS,
+        routes: {},
+        grouping: 'flat'
+      });
     });
   });
 
@@ -145,7 +159,7 @@ describe('FEATURE: graph webview message validation', () => {
 
   describe('GIVEN points exactly at ±1e7 on both axes', () => {
     it('WHEN parsed THEN the message passes unchanged', () => {
-      const message = { type: 'positions', hash: HASH, positions: LIMIT_POSITIONS, grouping: 'flat' };
+      const message = { type: 'positions', hash: HASH, positions: LIMIT_POSITIONS, routes: {}, grouping: 'flat' };
 
       expect(parseGraphMessage(message)).toStrictEqual(message);
     });

@@ -20,8 +20,8 @@ import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { lastStateOf, portsWith, postedOf, postedStatesOf } from '../test/utils/graph-session.spec.util.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
-const STATE_CACHE = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
-const OLD_CACHE = { hash: 'old', positions: POSITIONS_STUB };
+const STATE_CACHE = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} };
+const OLD_CACHE = { hash: 'old', positions: POSITIONS_STUB, routes: {} };
 
 type ShownSession = {
   readonly session: GraphSession;

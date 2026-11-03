@@ -1,5 +1,6 @@
 import { expect, test } from './graph-task.fixture.ts';
-import { deepFolderState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
+import { deepFolderState } from './test/utils/graph-folder-states-deep.spec.util.ts';
+import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import type { Position } from '../src/bridge/common/graph-state.type.ts';
 

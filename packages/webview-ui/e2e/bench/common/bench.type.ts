@@ -2,7 +2,7 @@
 
 import type { Page } from '@playwright/test';
 
-import type { Positions } from '../../../src/bridge/common/graph-state.type.ts';
+import type { Positions, Routes } from '../../../src/bridge/common/graph-state.type.ts';
 import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import type { ElementRect } from '../../common/playwright.type.ts';
 import type { GraphCanvas } from '../../pages/graph-canvas.po.ts';
@@ -75,6 +75,7 @@ export type BenchSession = {
 export type ColdOpen = {
   readonly firstFrameMs: number;
   readonly positions: Positions;
+  readonly routes: Routes;
 };
 
 /** One stretch pan: the p95 frame time inside the pan window (FPS = 1000 / ms) and the longest long task in it. */

@@ -46,6 +46,8 @@ export const folderLocationState = (): GraphReady => {
     ],
     edges,
     positions: null,
+    routes: null,
+    folderRoutes: null,
     folderPositions: positionsOf([
       ['core-1', 0, 0],
       ['core-2', 150, 0],

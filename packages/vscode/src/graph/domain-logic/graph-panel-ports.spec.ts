@@ -16,7 +16,7 @@ import { GRAPH_HASH_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs
 import { togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 
 const STATE_POSTED: GraphHostMessage = { type: 'state', state: GRAPH_STATE_STUB };
-const ENTRY = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
+const ENTRY = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} };
 
 const throwingSend = (): never => {
   throw new Error('webview is disposed');

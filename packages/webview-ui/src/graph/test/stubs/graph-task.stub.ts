@@ -39,6 +39,8 @@ export const TASK_STATE_STUB: GraphReady = {
   packages: [],
   edges: [],
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: TASK_CHAIN_STUB,
   atomGroups: []

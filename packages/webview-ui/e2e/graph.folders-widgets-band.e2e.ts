@@ -1,11 +1,6 @@
 import { test } from './graph.fixture.ts';
-import {
-  LONG_FOLDER,
-  collapsedSavedState,
-  deepFolderState,
-  longTitleState,
-  placedBoardsState
-} from './test/utils/graph-folder-states.spec.util.ts';
+import { deepFolderState } from './test/utils/graph-folder-states-deep.spec.util.ts';
+import { LONG_FOLDER, collapsedSavedState, longTitleState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import type { Position } from '../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';

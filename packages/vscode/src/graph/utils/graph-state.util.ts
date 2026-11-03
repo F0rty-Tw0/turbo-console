@@ -1,6 +1,6 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
-import { ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
-import type { GraphEdge, GraphPackage, GraphState, Positions } from '@turbo-console/webview-ui';
+import { LAYOUT_VERSION, ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphState } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
 import { packageNamesOf } from './graph-package.util.ts';
@@ -41,14 +41,14 @@ const fnv1a = (text: string): string => {
 };
 
 /**
- * FNV-1a over a `[name, path, tags]` JSON line per package in name order, a blank line, then a `[source, target]` JSON line per edge
- * in sorted order, so input order never matters but a changed path or tag does. Tags are hashed in the order given: `graphStateOf`
+ * FNV-1a over the layout version and a newline, then a `[name, path, tags]` JSON line per package in name order, a blank line, then a `[source, target]` JSON line per edge
+ * in sorted order, so input order never matters but a changed path, a tag or the layout version does. Tags are hashed in the order given: `graphStateOf`
  * sorts them first.
  */
 export const graphHashOf = (packages: GraphPackage[], edges: GraphEdge[]): string => {
   const packageLines = packages.toSorted(comparePackages).map((pkg) => JSON.stringify([pkg.name, pkg.path, pkg.tags]));
   const lines = edges.toSorted(compareEdges).map((edge) => JSON.stringify([edge.source, edge.target]));
-  const text = `${packageLines.join('\n')}\n\n${lines.join('\n')}`;
+  const text = `${LAYOUT_VERSION}\n${packageLines.join('\n')}\n\n${lines.join('\n')}`;
 
   return fnv1a(text);
 };
@@ -72,11 +72,11 @@ const edgesOf = (modelEdges: PackageEdge[]): GraphEdge[] => {
   return Array.from(byPair.values()).toSorted(compareEdges);
 };
 
-/** The cached positions when the entry is for this exact graph: the same hash and a point for exactly its packages. */
-const cachedPositionsOf = (cache: GraphLayoutCacheEntry | null, hash: string, packages: string[]): Positions | null => {
+/** The cached entry when it is for this exact graph: the same hash and a point for exactly its packages. */
+const cachedEntryOf = (cache: GraphLayoutCacheEntry | null, hash: string, packages: string[]): GraphLayoutCacheEntry | null => {
   if (cache?.hash !== hash) return null;
 
-  return coversExactly(cache.positions, packages) ? cache.positions : null;
+  return coversExactly(cache.positions, packages) ? cache : null;
 };
 
 /** The `//` package's label of a single-package model; `null` for a monorepo or when the root has no label. */
@@ -101,8 +101,8 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, s
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
   const names = packageNamesOf(packages);
-  const positions = cachedPositionsOf(caches.flat, hash, names);
-  const folderPositions = cachedPositionsOf(caches.folders, hash, names);
+  const flat = cachedEntryOf(caches.flat, hash, names);
+  const folders = cachedEntryOf(caches.folders, hash, names);
   const { tasks, atomGroups } = graphListingOf(model);
   const { singlePackage } = model;
   const rootLabel = rootLabelOf(model);
@@ -111,8 +111,10 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, s
     hash,
     packages,
     edges,
-    positions,
-    folderPositions,
+    positions: flat?.positions ?? null,
+    folderPositions: folders?.positions ?? null,
+    routes: flat?.routes ?? null,
+    folderRoutes: folders?.routes ?? null,
     tasks,
     atomGroups,
     singlePackage,

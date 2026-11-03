@@ -8,7 +8,14 @@ import { FALLBACK_TIMEOUT_MS } from '../common/graph.const.ts';
 import type { ElkLike, LayoutResult, LayoutRunner } from '../common/layout.type.ts';
 import type { ElkMock } from '../test/common/elk-mock.type.ts';
 import { elkMock, failingFallbackMock, fallbackMock } from '../test/mocks/elk.mock.ts';
-import { CENTRES_STUB, ELK_GRAPH_STUB, FALLBACK_POSITIONS_STUB, LAID_OUT_STUB } from '../test/stubs/layout.stub.ts';
+import {
+  CENTRES_STUB,
+  ELK_GRAPH_STUB,
+  FALLBACK_POSITIONS_STUB,
+  LAID_OUT_STUB,
+  ROUTED_ELK_STUB,
+  ROUTES_STUB
+} from '../test/stubs/layout.stub.ts';
 import { boardsGraphOf } from '../test/utils/folder-boards.spec.util.ts';
 import { runnerDepsOf } from '../test/utils/layout-runner.spec.util.ts';
 import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
@@ -37,7 +44,23 @@ describe('FEATURE: createLayoutRunner', () => {
       vi.advanceTimersByTime(40);
       mock.resolveLayout(LAID_OUT_STUB);
 
-      await expect(pending).resolves.toStrictEqual({ hash: 'h1', positions: CENTRES_STUB, engine: 'elk', ms: 40 });
+      await expect(pending).resolves.toStrictEqual({
+        hash: 'h1',
+        positions: CENTRES_STUB,
+        routes: {},
+        engine: 'elk',
+        ms: 40
+      });
+    });
+
+    it('WHEN ELK lays out a graph with an edge THEN the result routes hold it under the edge id', async () => {
+      const runner = createLayoutRunner(runnerDepsOf(() => mock.elk));
+
+      const pending = runner.run('h1', ELK_GRAPH_STUB);
+
+      mock.resolveLayout(ROUTED_ELK_STUB);
+
+      await expect(pending).resolves.toMatchObject({ engine: 'elk', routes: ROUTES_STUB });
     });
 
     it('WHEN two runs settle in turn THEN one ELK instance serves both', async () => {
@@ -86,6 +109,14 @@ describe('FEATURE: createLayoutRunner', () => {
       const result = await runner.run('h1', ELK_GRAPH_STUB);
 
       expect(result).toMatchObject({ hash: 'h1', engine: 'fallback', positions: FALLBACK_POSITIONS_STUB });
+    });
+
+    it('WHEN a run starts THEN the fallback result has no routes', async () => {
+      const runner = createLayoutRunner(runnerDepsOf(createElk));
+
+      const result = await runner.run('h1', ELK_GRAPH_STUB);
+
+      expect(result?.routes).toStrictEqual({});
     });
 
     it('WHEN a run starts THEN the fallback lays out the given graph', async () => {

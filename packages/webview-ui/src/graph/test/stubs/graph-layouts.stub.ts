@@ -43,6 +43,8 @@ export const STATE_STUB: GraphReady = {
   packages: PACKAGES,
   edges: EDGES,
   positions: FLAT_POSITIONS_STUB,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: []

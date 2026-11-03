@@ -4,6 +4,7 @@ import {
   ICON_ID_PATTERN,
   TOOL_ICON_PREFIX,
   durationText,
+  edgeIdOf,
   elapsedText,
   graphCsp,
   hiddenScriptsText,
@@ -49,6 +50,7 @@ import type {
   Positions,
   ReadyMessage,
   RefreshMessage,
+  Routes,
   RunStateMessage,
   RunView,
   ShowOutputMessage,
@@ -86,6 +88,7 @@ type ExpectedAtomsMessage = { readonly type: 'atoms'; readonly groups: Record<st
 type ExpectedShownUmbrellasMessage = { readonly type: 'shownUmbrellas'; readonly ids: string[] };
 type ExpectedSetViewToggleMessage = { readonly type: 'setViewToggle'; readonly toggle: 'scope' | 'scripts'; readonly shown: boolean };
 type ExpectedPosition = { readonly x: number; readonly y: number };
+type ExpectedEdgeRoute = { readonly start: ExpectedPosition; readonly bends: ExpectedPosition[]; readonly end: ExpectedPosition };
 type ExpectedTaskView = {
   readonly chosen: string[];
   readonly capLifted: boolean;
@@ -123,20 +126,23 @@ type PositionsKey = { readonly type: 'positions' };
 type ExportImageKey = { readonly type: 'exportImage' };
 type RunTaskKey = { readonly type: 'runTask' };
 
-/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, root tasks title and root task package constants; everything else is wire-contract types. The webview-only bridge stays internal. */
+/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, root tasks title, root task package, layout version and route bend limit constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
   'ENTRY_TEXT_MAX',
   'ICON_ID_PATTERN',
+  'LAYOUT_VERSION',
   'MANIFEST_ENTRIES_MAX',
   'MANIFEST_FIELDS',
   'MANIFEST_FILE_MAX',
   'MANIFEST_LINE_MAX',
   'ROOT_TASKS_TITLE',
   'ROOT_TASK_PACKAGE',
+  'ROUTE_BENDS_MAX',
   'TASK_CAP',
   'TASK_COUNT_MAX',
   'TOOL_ICON_PREFIX',
   'durationText',
+  'edgeIdOf',
   'elapsedText',
   'graphCsp',
   'hiddenScriptsText',
@@ -163,6 +169,9 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.TASK_COUNT_MAX).toBe(100_000);
       expect(entry.MANIFEST_FIELDS).toStrictEqual(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']);
       expect(entry.ICON_ID_PATTERN).toBe(ICON_ID_PATTERN);
+      expect(entry.LAYOUT_VERSION).toBe(2);
+      expect(entry.ROUTE_BENDS_MAX).toBe(64);
+      expect(entry.edgeIdOf).toBe(edgeIdOf);
       expect(entry.TOOL_ICON_PREFIX).toBe(TOOL_ICON_PREFIX);
       expect(entry.durationText).toBe(durationText);
       expect(entry.elapsedText).toBe(elapsedText);
@@ -246,6 +255,10 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<LayoutGrouping>().toEqualTypeOf<'flat' | 'folders'>();
       expectTypeOf<Extract<GraphWebviewMessage, PositionsKey>['grouping']>().toEqualTypeOf<LayoutGrouping>();
       expectTypeOf<GraphReady['folderPositions']>().toEqualTypeOf<Positions | null>();
+      expectTypeOf<GraphReady['routes']>().toEqualTypeOf<Routes | null>();
+      expectTypeOf<GraphReady['folderRoutes']>().toEqualTypeOf<Routes | null>();
+      expectTypeOf<Extract<GraphWebviewMessage, PositionsKey>['routes']>().toEqualTypeOf<Routes>();
+      expectTypeOf<Routes[string]>().toEqualTypeOf<ExpectedEdgeRoute>();
       expectTypeOf<GraphViewState['selected']>().toEqualTypeOf<string | null>();
       expectTypeOf<TaskViewState>().toEqualTypeOf<ExpectedTaskView>();
       expectTypeOf<GraphViewState['mode']>().toEqualTypeOf<'packages' | 'tasks'>();

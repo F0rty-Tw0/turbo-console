@@ -27,6 +27,8 @@ export const HOST_GRAPH_STUB: Record<string, unknown> = {
   packages: HOST_PACKAGES_STUB,
   edges: HOST_EDGES_STUB,
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: [],
   atomGroups: [],

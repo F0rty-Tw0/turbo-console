@@ -1,5 +1,15 @@
 import type { PackageEdge, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphPackage, GraphReady, GraphTask, Position, Positions } from '@turbo-console/webview-ui';
+import { edgeIdOf } from '@turbo-console/webview-ui';
+import type {
+  EdgeRoute,
+  GraphEdge,
+  GraphPackage,
+  GraphReady,
+  GraphTask,
+  Position,
+  Positions,
+  Routes
+} from '@turbo-console/webview-ui';
 
 import type { LoadedModel } from '../../../roots/common/root.type.ts';
 import { LOADED_MODEL_STUB } from '../../../roots/test/stubs/root.stub.ts';
@@ -39,7 +49,7 @@ const A_X: GraphEdge = { source: 'a', target: '@org/x' };
 const WEB_X: GraphEdge = { source: 'web', target: '@org/x' };
 const WEB_A: GraphEdge = { source: 'web', target: 'a' };
 
-export const GRAPH_HASH_STUB: string = '9bafdda7';
+export const GRAPH_HASH_STUB: string = 'f17792ff';
 
 export const GRAPH_PACKAGES_STUB: string[] = ['@org/x', 'a', 'web'];
 
@@ -70,6 +80,8 @@ export const GRAPH_STATE_STUB: GraphReady = {
   packages: GRAPH_INFOS_STUB,
   edges: [A_X, WEB_X, WEB_A],
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: GRAPH_TASKS_STUB,
   atomGroups: [],
@@ -84,6 +96,14 @@ const A_POINT: Position = { x: 10, y: 20 };
 const WEB_POINT: Position = { x: 30, y: 40 };
 
 export const POSITIONS_STUB: Positions = { '@org/x': X_POINT, a: A_POINT, web: WEB_POINT };
+
+/** One route from `@org/x` through `a` to `web`; specs build their route records and variants from it. */
+export const EDGE_ROUTE_STUB: EdgeRoute = { start: X_POINT, bends: [A_POINT], end: WEB_POINT };
+
+const ROUTE_ENTRIES: [string, EdgeRoute][] = GRAPH_STATE_STUB.edges.map((edge) => [edgeIdOf(edge), EDGE_ROUTE_STUB]);
+
+/** One route for each of the three edges of `GRAPH_STATE_STUB`, keyed by `edgeIdOf`. */
+export const ROUTES_STUB: Routes = Object.fromEntries(ROUTE_ENTRIES);
 
 const ZED_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'zed' };
 

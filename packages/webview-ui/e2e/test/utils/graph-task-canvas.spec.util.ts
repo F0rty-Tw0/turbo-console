@@ -48,6 +48,8 @@ export const taskCanvasState = (): GraphReady => {
     packages: PACKAGES,
     edges: EDGES,
     positions: null,
+    routes: null,
+    folderRoutes: null,
     folderPositions: null,
     tasks: TASKS,
     atomGroups: []

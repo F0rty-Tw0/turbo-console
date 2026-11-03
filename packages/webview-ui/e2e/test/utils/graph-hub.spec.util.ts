@@ -37,6 +37,8 @@ export const hubGraphState = (count = LARGE_PACKAGE_COUNT): GraphReady => {
     packages,
     edges,
     positions,
+    routes: null,
+    folderRoutes: null,
     folderPositions: null,
     tasks: [],
     atomGroups: []

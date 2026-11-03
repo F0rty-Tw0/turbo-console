@@ -1,20 +1,35 @@
-import type { GraphState } from '@turbo-console/webview-ui';
+import type { GraphState, Routes } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
 import type { GraphLayoutCacheEntry, PositionsPost } from '../common/graph-cache.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
-import { GRAPH_HASH_STUB, GRAPH_PACKAGES_STUB, GRAPH_STATE_STUB } from '../test/stubs/graph-model.stub.ts';
+import {
+  EDGE_ROUTE_STUB,
+  GRAPH_HASH_STUB,
+  GRAPH_MODEL_STUB,
+  GRAPH_PACKAGES_STUB,
+  GRAPH_SHOWN_STUB,
+  GRAPH_STATE_STUB,
+  ROUTES_STUB
+} from '../test/stubs/graph-model.stub.ts';
 import { positionsOf } from '../test/utils/graph-session.spec.util.ts';
 import { cacheKeyOf } from '../utils/graph-cache.util.ts';
+import { graphStateOf } from '../utils/graph-state.util.ts';
 
-const FLAT_ENTRY: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: positionsOf(GRAPH_PACKAGES_STUB) };
-const FOLDERS_ENTRY: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: positionsOf(['a']) };
+const FLAT_ENTRY: GraphLayoutCacheEntry = {
+  hash: GRAPH_HASH_STUB,
+  positions: positionsOf(GRAPH_PACKAGES_STUB),
+  routes: {}
+};
+const FOLDERS_ENTRY: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: positionsOf(['a']), routes: {} };
 const FULL_POSITIONS = positionsOf(GRAPH_PACKAGES_STUB);
 const LOADING_STATE: GraphState = { kind: 'loading' };
+const GHOST_ROUTES: Routes = { ghost: EDGE_ROUTE_STUB };
+const MIXED_ROUTES: Routes = { ...ROUTES_STUB, ...GHOST_ROUTES };
 
 const postOf = (overrides: Partial<PositionsPost>): PositionsPost => {
-  const post: PositionsPost = { hash: GRAPH_HASH_STUB, positions: FULL_POSITIONS, grouping: 'flat', ...overrides };
+  const post: PositionsPost = { hash: GRAPH_HASH_STUB, positions: FULL_POSITIONS, routes: {}, grouping: 'flat', ...overrides };
 
   return post;
 };
@@ -48,10 +63,36 @@ describe('FEATURE: graph layout store', () => {
         expect(isStored).toBe(true);
         expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', grouping, {
           hash: GRAPH_HASH_STUB,
-          positions: FULL_POSITIONS
+          positions: FULL_POSITIONS,
+          routes: {}
         });
       }
     );
+
+    it('WHEN a post carries a known and an unknown edge route THEN writeCache gets only the known route', () => {
+      const ports = graphPortsMock();
+
+      storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: MIXED_ROUTES }));
+
+      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', {
+        hash: GRAPH_HASH_STUB,
+        positions: FULL_POSITIONS,
+        routes: ROUTES_STUB
+      });
+    });
+
+    it('WHEN every route of the post is unknown THEN the positions are stored with routes {} and true is returned', () => {
+      const ports = graphPortsMock();
+
+      const isStored = storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: GHOST_ROUTES }));
+
+      expect(isStored).toBe(true);
+      expect(ports.writeCache).toHaveBeenCalledExactlyOnceWith('/ws', 'flat', {
+        hash: GRAPH_HASH_STUB,
+        positions: FULL_POSITIONS,
+        routes: {}
+      });
+    });
 
     it.each([
       ['a stale hash', postOf({ hash: 'ffffffff' })],
@@ -75,6 +116,28 @@ describe('FEATURE: graph layout store', () => {
 
       expect(isStored).toBe(false);
       expect(ports.writeCache).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a post with routes stored under flat', () => {
+    it('WHEN the state is built THEN routes carry them and folderRoutes is null', () => {
+      const ports = graphPortsMock();
+
+      storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: ROUTES_STUB, grouping: 'flat' }));
+      const state = graphStateOf(GRAPH_MODEL_STUB, layoutCachesOf(ports, '/ws'), GRAPH_SHOWN_STUB);
+
+      expect(state).toMatchObject({ positions: FULL_POSITIONS, routes: ROUTES_STUB, folderPositions: null, folderRoutes: null });
+    });
+  });
+
+  describe('GIVEN a post with routes stored under folders', () => {
+    it('WHEN the state is built THEN folderRoutes carry them and routes is null', () => {
+      const ports = graphPortsMock();
+
+      storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: ROUTES_STUB, grouping: 'folders' }));
+      const state = graphStateOf(GRAPH_MODEL_STUB, layoutCachesOf(ports, '/ws'), GRAPH_SHOWN_STUB);
+
+      expect(state).toMatchObject({ positions: null, routes: null, folderPositions: FULL_POSITIONS, folderRoutes: ROUTES_STUB });
     });
   });
 });

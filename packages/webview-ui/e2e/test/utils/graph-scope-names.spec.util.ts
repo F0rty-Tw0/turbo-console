@@ -34,6 +34,8 @@ export const scopedNamesState = (scopeShown: boolean): GraphReady => {
     packages,
     edges,
     positions: null,
+    routes: null,
+    folderRoutes: null,
     folderPositions: null,
     tasks: [],
     atomGroups: []

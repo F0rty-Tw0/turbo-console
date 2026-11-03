@@ -190,8 +190,8 @@ test.describe('FEATURE: grouped graph switching', () => {
         await graphGrouping.expectFolderKeys(BOARD_FOLDER_KEYS);
       });
 
-      const posted = await graphGrouping.postedPositions();
-      const folderCache: GraphReady = { ...BOARDS, folderPositions: posted };
+      const { positions, routes } = await graphGrouping.postedLayout();
+      const folderCache: GraphReady = { ...BOARDS, folderPositions: positions, folderRoutes: routes };
 
       await test.step('AND the page is reopened with its saved view and the grouped cache is sent', async (): Promise<void> => {
         await graphHost.expectViewSaved();

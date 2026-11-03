@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import type { TaskKind } from '@turbo-console/repo-gen';
 import type { GraphEdge, GraphPackage, GraphReady } from '@turbo-console/webview-ui';
+import { edgeIdOf } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
 import { lastGraphState, postedShowTasks, runStatesOf } from './graph-posted.spec.util.ts';
@@ -115,6 +116,8 @@ export const openCase = async (scene: GraphScene): Promise<void> => {
 
     assert.equal(state.positions, null);
     assert.equal(state.folderPositions, null);
+    assert.equal(state.routes, null);
+    assert.equal(state.folderRoutes, null);
     assert.match(state.hash, HASH_PATTERN);
   });
 };
@@ -140,8 +143,14 @@ export const cacheCase = async (scene: GraphScene): Promise<void> => {
     const state = requireState(scene);
     const positioned = positionedNamesOf(state);
 
+    const edgeIds = state.edges.map(edgeIdOf);
+    // no fixture route has more than ROUTE_BENDS_MAX bends, so every edge comes back routed
+    const routed = Object.keys(state.folderRoutes ?? {});
+
     assert.equal(state.hash, firstHash);
     assert.deepEqual(sorted(positioned), sorted(state.packages.map((pkg): string => pkg.name)));
+    assert.deepEqual(sorted(routed), sorted(edgeIds));
+    assert.equal(state.routes, null);
   });
 };
 

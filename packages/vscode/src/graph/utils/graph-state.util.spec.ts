@@ -31,11 +31,11 @@ const ARROW_SPLIT: GraphEdge = { source: 'a', target: 'b>c' };
 const SCOPED_BASE = graphPackageOf('@org/x', 'packages/libs/x', [], 1);
 const SCOPED_INFO: GraphPackage = { ...SCOPED_BASE, bareName: 'x' };
 const GRAPH_INFOS = [SCOPED_INFO, graphPackageOf('a', 'packages/a', [], 1), graphPackageOf('web', 'apps/web', ['app', 'ui'], 2)];
-const CACHE: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
-const STALE: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: POSITIONS_STUB };
+const CACHE: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} };
+const STALE: GraphLayoutCacheEntry = { hash: 'ffffffff', positions: POSITIONS_STUB, routes: {} };
 const GHOST_POINT = { x: 1, y: 1 };
 const GHOST_POSITIONS = { ...POSITIONS_STUB, ghost: GHOST_POINT };
-const GHOSTED: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: GHOST_POSITIONS };
+const GHOSTED: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: GHOST_POSITIONS, routes: {} };
 const ROOT_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
 const ROOT_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [ROOT_TASK] };
 const ROOT_INFOS = [{ name: '//', path: '' }];
@@ -202,12 +202,12 @@ describe('FEATURE: graph hash', () => {
   });
 
   it.each([
-    [[], [], '878f5675'],
-    [[graphPackageOf('a', 'packages/a'), graphPackageOf('b', 'packages/b')], [{ source: 'a', target: 'b' }], '4abfc33a'],
-    [[graphPackageOf('é', '')], [], '3af7d88d'],
-    [[graphPackageOf('p3', 'packages/p3', ['t'])], [], '9a1d7495'],
-    [[graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], [], '6d3562a7'],
-    [[graphPackageOf('__proto__', '', ['constructor'])], [], '64b21699']
+    [[], [], '8f2e789d'],
+    [[graphPackageOf('a', 'packages/a'), graphPackageOf('b', 'packages/b')], [{ source: 'a', target: 'b' }], 'd18fe1c2'],
+    [[graphPackageOf('é', '')], [], '0efaf725'],
+    [[graphPackageOf('p3', 'packages/p3', ['t'])], [], 'd013ca3d'],
+    [[graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], [], '4206cb9f'],
+    [[graphPackageOf('__proto__', '', ['constructor'])], [], 'b53a2811']
   ])('GIVEN packages %j and edges %j WHEN hashed THEN it is %s (FNV-1a over UTF-8)', (packages, edges, expected) => {
     expect(graphHashOf(packages, edges)).toBe(expected);
   });

@@ -41,6 +41,8 @@ export const TASK_MODE_STATE_STUB: GraphReady = {
   packages: packagesOf(['app', 'lib', 'ui']),
   edges: EDGES,
   positions: null,
+  routes: null,
+  folderRoutes: null,
   folderPositions: null,
   tasks: TASKS,
   atomGroups: []

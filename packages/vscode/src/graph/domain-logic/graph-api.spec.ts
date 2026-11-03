@@ -10,7 +10,7 @@ import { cacheKeyOf } from '../utils/graph-cache.util.ts';
 
 const STATE_POSTED: GraphHostMessage = { type: 'state', state: GRAPH_STATE_STUB };
 const READY = { type: 'ready' };
-const ENTRY = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
+const ENTRY = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} };
 
 const panelOf = (root: string, visible: boolean): OpenGraphPanel => {
   const receive = vi.fn<OpenGraphPanel['session']['receive']>().mockResolvedValue(undefined);

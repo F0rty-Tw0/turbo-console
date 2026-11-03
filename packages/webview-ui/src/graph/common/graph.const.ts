@@ -111,14 +111,18 @@ export const EDGE_ID_PREFIX = '\u0000';
 /** Fallback row pitch in node heights. */
 export const FALLBACK_SPACING_FACTOR = 3;
 
-/** Layered, top-down; the cheapest strategies, because a package graph needs a readable layout, not an optimal one. */
+/**
+ * Layered, top-down; the cheapest strategies, because a package graph needs a readable layout, not an optimal one.
+ * `edgeCoords: ROOT` makes every edge route come back in root coordinates, whatever compound it sits in.
+ */
 export const ELK_OPTIONS: Readonly<Record<string, string>> = {
   'elk.algorithm': 'layered',
   'elk.direction': 'DOWN',
   'elk.layered.thoroughness': '1',
   'elk.layered.layering.strategy': 'LONGEST_PATH',
   'elk.layered.nodePlacement.strategy': 'SIMPLE',
-  'elk.edgeRouting': 'POLYLINE'
+  'elk.edgeRouting': 'POLYLINE',
+  'elk.json.edgeCoords': 'ROOT'
 };
 
 /** Starts every folder box id, in Cytoscape and ELK alike; package names never start with U+0001. */
