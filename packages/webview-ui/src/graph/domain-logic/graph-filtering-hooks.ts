@@ -5,6 +5,7 @@ import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { WidgetHostDeps } from '../common/graph-controls.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
 import type { GraphInspectionDeps } from '../common/graph-inspection.type.ts';
+import type { DrawnGraph } from '../common/graph-page.type.ts';
 import type {
   MenuSources,
   WidgetFilters,
@@ -69,13 +70,11 @@ const packageStateOf = (selected: string | null, filters: GraphFilters, deps: Wi
   return packageMenuStateOf(selected, filters, deps.hasTasks(selected));
 };
 
-/** The package's label in the graph the controls were built for; its name before the first one. */
-const labelFrom = (controls: WidgetFilters, name: string): string => {
-  const { mounted } = controls;
+/** The package's label in the graph drawn, as the canvas and Details read it; its name before the first one. */
+const labelFrom = (drawn: DrawnGraph | null, name: string): string => {
+  if (drawn === null) return name;
 
-  if (mounted === null) return name;
-
-  return labelIn(mounted.graph.labels, name);
+  return labelIn(drawn.labels, name);
 };
 
 /** The wired layer and its menus, reading the mode on screen, the folder scene, the selection, the filters and the package labels when used. */
@@ -111,7 +110,7 @@ export const widgetsOf = (
     canActOnPackage,
     menuOf: menuOfFrom(deps, folders, controls, menuActions),
     selection: (): MenuTarget | null => menuTargetOf(inspection.current()),
-    labelOf: (name: string): string => labelFrom(controls, name),
+    labelOf: (name: string): string => labelFrom(deps.drawn(), name),
     onLocation
   };
 

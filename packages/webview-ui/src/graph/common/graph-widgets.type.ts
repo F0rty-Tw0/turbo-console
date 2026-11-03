@@ -1,7 +1,7 @@
 import type { FolderActions } from './folder-actions.type.ts';
 import type { FolderScene } from './folder-scene.type.ts';
 import type { GraphFilters } from './graph-filters.type.ts';
-import type { DrawnGraph, GraphView } from './graph-page.type.ts';
+import type { GraphView } from './graph-page.type.ts';
 import type { Inspection } from './inspection.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { PackageActions, PackageInspectionActions } from './package-actions.type.ts';
@@ -85,15 +85,9 @@ export type WidgetSources = {
 /** The inspection as the widget layer and its menus read and call it. */
 export type WidgetInspection = Pick<WidgetSources, 'current' | 'selected' | 'folderActions'> & PackageInspectionActions;
 
-type MountedGraph = { readonly graph: DrawnGraph };
-
-/**
- * The controls' filters, read when a menu opens and on every widget state read, which takes the focused folder from them;
- * and the graph the controls were built for, whose labels name a package's toolbar and menu, `null` before the first one.
- */
+/** The controls' filters, read when a menu opens and on every widget state read, which takes the focused folder from them. */
 export type WidgetFilters = {
   readonly applied: GraphFilters;
-  readonly mounted: MountedGraph | null;
 };
 
 /** The wired layer, as the folder pass, the render loop, the keep-clear pan and the Group by folder checkbox call it. */
