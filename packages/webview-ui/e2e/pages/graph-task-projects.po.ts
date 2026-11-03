@@ -2,7 +2,6 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { TASK_CONTROLS_ID } from '../../src/graph/common/graph-task.const.ts';
-import type { CheckReading } from '../common/graph-task-projects.type.ts';
 
 /** The `title` of each button; self-contained, it runs in the page. */
 const titlesOf = (buttons: HTMLElement[]): string[] => buttons.map((button) => button.title);
@@ -45,22 +44,19 @@ export class GraphTaskProjects {
     await this.checkbox(label).uncheck();
   }
 
-  /** The check named `label` reads `reading`; a mixed one is unchecked and indeterminate. */
-  public async expectCheck(label: string, reading: CheckReading): Promise<void> {
-    const box = this.checkbox(label);
-
-    if (reading === 'mixed') {
-      await expect(box).toBeChecked({ indeterminate: true });
-
-      return;
-    }
-
-    await expect(box).toBeChecked({ checked: reading === 'checked' });
+  /** The check named `label` reads checked or unchecked. */
+  public async expectCheck(label: string, isChecked: boolean): Promise<void> {
+    await expect(this.checkbox(label)).toBeChecked({ checked: isChecked });
   }
 
-  /** Every check named in `labels` reads `reading`. */
-  public async expectChecks(labels: string[], reading: CheckReading): Promise<void> {
-    for (const label of labels) await this.expectCheck(label, reading);
+  /** The check named `label` reads mixed: unchecked and indeterminate. */
+  public async expectMixed(label: string): Promise<void> {
+    await expect(this.checkbox(label)).toBeChecked({ indeterminate: true });
+  }
+
+  /** Every check named in `labels` reads checked or unchecked. */
+  public async expectChecks(labels: string[], isChecked: boolean): Promise<void> {
+    for (const label of labels) await this.expectCheck(label, isChecked);
   }
 
   /**
@@ -68,11 +64,20 @@ export class GraphTaskProjects {
    * task's name is `aria-disabled`, and a real click still lands on it; Playwright would otherwise wait for it to enable.
    */
   public async pick(id: string): Promise<void> {
-    await this.grid.locator(`button[title="${id}"]`).click({ force: true });
+    await this.taskName(id).click({ force: true });
+  }
+
+  /** The name of task `id` reads dimmed: `aria-disabled`, as an undrawn task's name is. */
+  public async expectDimmed(id: string): Promise<void> {
+    await expect(this.taskName(id)).toHaveAttribute('aria-disabled', 'true');
   }
 
   private nameButton(title: string): Locator {
     return this.grid.getByRole('button', { name: title, exact: true });
+  }
+
+  private taskName(id: string): Locator {
+    return this.grid.getByTitle(id, { exact: true });
   }
 
   private checkbox(label: string): Locator {
