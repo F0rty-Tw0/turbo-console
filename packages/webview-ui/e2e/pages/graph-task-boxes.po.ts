@@ -1,9 +1,11 @@
+/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
-import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
+import type { ProbeFolder, ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { SCRIPTS_BOX_PREFIX } from '../../src/graph/common/graph-task.const.ts';
+import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { measuredWidthsOf } from '../test/utils/graph-title-measure.spec.util.ts';
 
 /** Model px a containment check allows for the sub-pixel rounding of compound bounds. */
@@ -15,6 +17,8 @@ const isScriptsBox = (node: ProbeNode): boolean => node.id.startsWith(SCRIPTS_BO
 const idAndTextOf = (node: ProbeNode): [string, string] => [node.id, node.text];
 
 const idOf = (node: ProbeNode): string => node.id;
+
+const textOf = (folder: ProbeFolder): string => folder.text;
 
 /** Whether `inner`'s rectangle lies inside `outer`'s; a probe width and height leave out the padding. */
 const isInside = (inner: ProbeNode, outer: ProbeNode): boolean => {
@@ -81,6 +85,55 @@ export class GraphTaskBoxes {
       expect(box.textMaxWidth, box.id).toBeGreaterThan(Math.ceil(measured));
       expect(box.width, box.id).toBeGreaterThanOrEqual(measured);
     }
+  }
+
+  /** The drawn folder boxes, sorted by folder key, the root `''` first; `probe.nodes()` never lists them. */
+  public async folderBoxes(): Promise<ProbeFolder[]> {
+    return this.page.evaluate((): ProbeFolder[] => window.__tcGraphProbe?.folders() ?? []);
+  }
+
+  /** The drawn folder boxes are titled `titles`, in `folderBoxes` order. */
+  public async expectFolderTitles(titles: string[]): Promise<void> {
+    const titlesOf = async (): Promise<string[]> => {
+      const folders = await this.folderBoxes();
+
+      return folders.map(textOf);
+    };
+
+    await expect.poll(titlesOf).toEqual(titles);
+  }
+
+  /** The folder box of `folder` holds exactly the boxes `packageIds`, read from Cytoscape `parent`, not from rectangles. */
+  public async expectFolderMembers(folder: string, packageIds: string[]): Promise<void> {
+    const membersOf = async (): Promise<string[] | null> => this.folderMembers(folder);
+
+    await expect.poll(membersOf, `folder "${folder}"`).toEqual(sortedNames(packageIds));
+  }
+
+  /** Each folder box may draw its whole title: its `text-max-width` beats the rounded-up measure, its width holds it. */
+  public async expectFolderTitlesUncut(): Promise<void> {
+    const folders = await this.folderBoxes();
+    const titles = folders.map(textOf);
+    const widths = await measuredWidthsOf(this.page, titles);
+
+    expect(folders.length).toBeGreaterThan(0);
+
+    for (const box of folders) {
+      const measured = widths.get(box.text) ?? Number.NaN;
+
+      expect(box.textMaxWidth, box.folder).toBeGreaterThan(Math.ceil(measured));
+      expect(box.renderedWidth, box.folder).toBeGreaterThanOrEqual(measured);
+    }
+  }
+
+  /** The sorted child ids of the folder box of `folder`; `null` while it is not drawn. */
+  private async folderMembers(folder: string): Promise<string[] | null> {
+    const folders = await this.folderBoxes();
+    const box = folders.find((entry) => entry.folder === folder);
+
+    if (box === undefined) return null;
+
+    return sortedNames(box.packages);
   }
 
   /** Whether `innerId` lies inside `outerId`; `null` while either is not drawn. */
