@@ -32,7 +32,7 @@ const SCRIPTS_HIDDEN_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [APP_BUILD
 
 const idsOf = (tasks: GraphTask[]): string[] => tasks.map((task) => task.id);
 
-type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: LocationFacts];
+type FactsRow = [title: string, state: GraphReady, chosen: string[], facts: Omit<LocationFacts, 'labels'>];
 
 const FACTS_ROWS: FactsRow[] = [
   [
@@ -229,7 +229,7 @@ describe('FEATURE: task mode memory', () => {
 
       const { ids } = memory.shownSet();
 
-      expect(memory.locationFacts(ids.length)).toStrictEqual(facts);
+      expect(memory.locationFacts(ids.length)).toStrictEqual({ ...facts, labels: memory.naming().labels });
     });
   });
 

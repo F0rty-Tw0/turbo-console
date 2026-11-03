@@ -78,6 +78,18 @@ describe('FEATURE: GraphTaskMemory naming', () => {
     });
   });
 
+  describe('GIVEN a monorepo state with scopes hidden', () => {
+    it('WHEN the location facts are read THEN they carry the naming labels', () => {
+      const state: GraphReady = { ...MONOREPO_STATE, scopeShown: false };
+      const memory = new GraphTaskMemory({ task: vi.fn(() => null), saveTask: vi.fn(), current: vi.fn(() => null) });
+
+      memory.keep(state);
+
+      expect(memory.locationFacts(0).labels).toStrictEqual(memory.naming().labels);
+      expect(memory.locationFacts(0).labels.get('web')).toBe('bare-web');
+    });
+  });
+
   describe('GIVEN a single-package state', () => {
     it('WHEN the saved view is grouped THEN the naming is still ungrouped', () => {
       expect(namingOf(SINGLE_TASK_STATE_STUB, SAVED_GROUPED_STUB).grouped).toBe(false);

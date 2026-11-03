@@ -6,7 +6,6 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { TaskPanelActions } from '../common/graph-task.type.ts';
-import type { LocationFacts } from '../common/location.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { SINGLE_TASK_STATE_STUB, TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
@@ -126,9 +125,10 @@ describe('FEATURE: GraphTaskMode Tasks entry', () => {
     });
 
     it('WHEN the location facts are read THEN they name api and count api#build and its dependent web#build', () => {
-      const facts: LocationFacts = { taskPackage: 'api', taskCount: 2, isSinglePackage: false };
+      const { labels, ...facts } = mode.locationFacts();
 
-      expect(mode.locationFacts()).toStrictEqual(facts);
+      expect(facts).toStrictEqual({ taskPackage: 'api', taskCount: 2, isSinglePackage: false });
+      expect(labels).toBeInstanceOf(Map);
     });
 
     it('WHEN the location facts are read THEN the shown set the render drew is not built again', () => {

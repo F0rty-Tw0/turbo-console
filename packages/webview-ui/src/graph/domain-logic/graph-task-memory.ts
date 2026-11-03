@@ -100,7 +100,7 @@ export class GraphTaskMemory {
     const [only] = packages;
     const isOneDrawnPackage = packages.size === 1 && only !== undefined && only !== ROOT_TASK_PACKAGE;
     const taskPackage = isOneDrawnPackage ? only : null;
-    const facts: LocationFacts = { taskPackage, taskCount, isSinglePackage: this.isSinglePackage };
+    const facts: LocationFacts = { taskPackage, taskCount, isSinglePackage: this.isSinglePackage, labels: this.labels };
 
     return facts;
   }
