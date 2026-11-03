@@ -56,6 +56,9 @@ export type FlowEdgeSource = {
   readonly sourceEndpoint: () => Position | undefined;
   readonly targetEndpoint: () => Position | undefined;
   readonly controlPoints: () => Position[] | undefined;
+  /** The bends of a routed edge; `undefined` for an edge Cytoscape does not draw as segments. */
+  readonly segmentPoints: () => Position[] | undefined;
+  readonly hasClass: (name: string) => boolean;
 };
 
 /** The edges a selector matched, as `flowEdgesOf` maps them. */
