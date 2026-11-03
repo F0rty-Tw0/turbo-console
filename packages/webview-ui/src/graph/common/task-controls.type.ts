@@ -33,12 +33,17 @@ export type TaskControlsViews = {
   readonly row: (task: GraphTask, rootLabel: string | null) => TaskControlsRow;
 };
 
-/** What the task Controls report: a new search text, a valid Dependents depth, a picked row and a panel opened or closed. */
+/**
+ * What the task Controls report: a new search text, a valid Dependents depth, a picked row, a panel opened or closed, Group
+ * by folder ticked or unticked and Show package scopes or Show scripts ticked or unticked.
+ */
 export type TaskControlsActions = {
   readonly onSearch: (search: string) => void;
   readonly onDepth: (depth: number) => void;
   readonly onPick: (id: string) => void;
   readonly onToggle: (isOpen: boolean) => void;
+  readonly onGrouping: (isGrouped: boolean) => void;
+  readonly onViewToggle: (toggle: 'scope' | 'scripts', shown: boolean) => void;
 };
 
 /** What the task Controls edit in task mode: a new choice, depth or cap, saved and drawn, and a picked task id selected. */

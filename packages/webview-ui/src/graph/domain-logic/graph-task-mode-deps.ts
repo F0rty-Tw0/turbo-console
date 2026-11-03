@@ -46,14 +46,20 @@ export const umbrellaFactsOf = (deps: TaskModeDeps, atoms: AtomCounts): Umbrella
 
 /**
  * What the task Controls report and what task mode does with it: the search is saved, a depth or a pick goes through
- * `edits`, and the open state is saved with the canvas re-measured.
+ * `edits`, the open state is saved with the canvas re-measured, Group by folder is saved and drawn, and a View toggle goes
+ * to the host, whose next state redraws.
  */
 export const controlsActionsOf = (deps: TaskModeDeps, memory: TaskMemoryPort, edits: ControlsEdits): TaskControlsActions => {
   const actions: TaskControlsActions = {
     onSearch: (search: string): void => memory.save({ search }),
     onDepth: (depth: number): void => edits.choose({ depth }),
     onPick: (id: string): void => edits.select(id),
-    onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen })
+    onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen }),
+    onGrouping: (isGrouped: boolean): void => {
+      deps.modes.saveGrouped(isGrouped);
+      edits.choose({});
+    },
+    onViewToggle: (toggle: 'scope' | 'scripts', shown: boolean): void => deps.bridge.post({ type: 'setViewToggle', toggle, shown })
   };
 
   return actions;

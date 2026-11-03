@@ -23,6 +23,8 @@ export type TaskModes = {
   readonly saveTask: (task: TaskViewState, hash: string) => void;
   /** Saves the task Controls or Details open state. */
   readonly savePanels: (panels: TaskPanelsOpen) => void;
+  /** Saves the Group by folder choice, which the package graph draws when task mode is left. */
+  readonly saveGrouped: (value: boolean) => void;
 };
 
 /**

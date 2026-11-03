@@ -30,7 +30,14 @@ const rigOf = (): ControlsRig => {
     packagesMode: document.createElement('button'),
     modeGroup: document.createElement('div')
   };
-  const actions: Mocked<TaskControlsActions> = { onSearch: vi.fn(), onDepth: vi.fn(), onPick: vi.fn(), onToggle: vi.fn() };
+  const actions: Mocked<TaskControlsActions> = {
+    onSearch: vi.fn(),
+    onDepth: vi.fn(),
+    onPick: vi.fn(),
+    onToggle: vi.fn(),
+    onGrouping: vi.fn(),
+    onViewToggle: vi.fn()
+  };
   const deps: TaskControlsDeps = { page, views, actions };
   const rig: ControlsRig = { deps, actions, elements, rows };
 
