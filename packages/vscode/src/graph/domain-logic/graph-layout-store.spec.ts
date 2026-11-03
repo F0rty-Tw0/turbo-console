@@ -7,13 +7,16 @@ import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import {
   GHOST_ROUTES_STUB,
   GRAPH_HASH_STUB,
+  GRAPH_MODEL_STUB,
   GRAPH_PACKAGES_STUB,
+  GRAPH_SHOWN_STUB,
   GRAPH_STATE_STUB,
   MIXED_ROUTES_STUB,
   ROUTES_STUB
 } from '../test/stubs/graph-model.stub.ts';
 import { positionsOf } from '../test/utils/graph-session.spec.util.ts';
 import { cacheKeyOf } from '../utils/graph-cache.util.ts';
+import { graphStateOf } from '../utils/graph-state.util.ts';
 
 const FLAT_ENTRY: GraphLayoutCacheEntry = {
   hash: GRAPH_HASH_STUB,
@@ -112,6 +115,28 @@ describe('FEATURE: graph layout store', () => {
 
       expect(isStored).toBe(false);
       expect(ports.writeCache).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a post with routes stored under flat', () => {
+    it('WHEN the state is built THEN routes carry them and folderRoutes is null', () => {
+      const ports = graphPortsMock();
+
+      storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: ROUTES_STUB, grouping: 'flat' }));
+      const state = graphStateOf(GRAPH_MODEL_STUB, layoutCachesOf(ports, '/ws'), GRAPH_SHOWN_STUB);
+
+      expect(state).toMatchObject({ positions: FULL_POSITIONS, routes: ROUTES_STUB, folderPositions: null, folderRoutes: null });
+    });
+  });
+
+  describe('GIVEN a post with routes stored under folders', () => {
+    it('WHEN the state is built THEN folderRoutes carry them and routes is null', () => {
+      const ports = graphPortsMock();
+
+      storePositions(ports, '/ws', GRAPH_STATE_STUB, postOf({ routes: ROUTES_STUB, grouping: 'folders' }));
+      const state = graphStateOf(GRAPH_MODEL_STUB, layoutCachesOf(ports, '/ws'), GRAPH_SHOWN_STUB);
+
+      expect(state).toMatchObject({ positions: null, routes: null, folderPositions: FULL_POSITIONS, folderRoutes: ROUTES_STUB });
     });
   });
 });
