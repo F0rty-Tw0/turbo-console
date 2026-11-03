@@ -113,6 +113,11 @@ export class GraphTaskMemory {
     return this.modes.task() ?? freshTaskViewOf();
   }
 
+  /** The effective choice a check edits: the saved ids, outside-the-pool ones included, or every pool id on the single-package fallback. */
+  public chosenIds(): string[] {
+    return this.effectiveChosen(this.view().chosen);
+  }
+
   /** A single-package root with none of its chosen ids listed shows every task, without saving that choice. */
   public shownSet(): ShownSet {
     const { chosen, depth, capLifted } = this.view();

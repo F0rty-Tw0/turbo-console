@@ -69,4 +69,26 @@ describe('FEATURE: GraphTaskMemory grid facts', () => {
       expect(facts.rootLabel).toBe('single-app');
     });
   });
+
+  describe('GIVEN a saved choice of web#build and a script id outside the pool', () => {
+    it('WHEN the chosen ids are read THEN they are the saved ids, outside-the-pool ones included', () => {
+      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen: ['web#build', 'hidden#fmt'] };
+      const memory = memoryOf(TASK_STATE_STUB, saved);
+
+      const ids = memory.chosenIds();
+
+      expect(ids).toStrictEqual(['web#build', 'hidden#fmt']);
+    });
+  });
+
+  describe('GIVEN a single-package state whose saved choice names no pooled task, for the chosen ids', () => {
+    it('WHEN the chosen ids are read THEN every pool id is held', () => {
+      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen: ['gone#x'] };
+      const memory = memoryOf(SINGLE_TASK_STATE_STUB, saved);
+
+      const ids = memory.chosenIds();
+
+      expect(ids).toStrictEqual(['//#build', '//#lint']);
+    });
+  });
 });
