@@ -2,7 +2,7 @@ import { ControlsKeyboard, keyboardDepsOf } from './controls-keyboard.ts';
 import { mountRestoredPanel } from './controls-panel-mount.ts';
 import { controlsActionsOf } from './graph-controls-actions.ts';
 import { wireControls } from './graph-controls-events.ts';
-import { renderControls, renderSearch, revealSelected } from './graph-controls-render.ts';
+import { relabelPanel, renderControls, renderSearch, revealSelected } from './graph-controls-render.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ControlsMounted, ControlsView, GraphControlsDeps } from '../common/graph-controls.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
@@ -67,6 +67,9 @@ export class GraphControls {
     const elements = this.deps.build(folderGroupsOf(graph.infos), tagsOf(graph.infos), graph);
     const restored = restoredFilters(state, graph);
     const mounted: ControlsMounted = { graph, elements };
+    const current = (): ControlsMounted => this.mounted ?? mounted;
+    const isVisible = (name: string): boolean => this.shown.has(name);
+    const selected = (): string | null => this.selected;
     const previous = this.mounted?.elements ?? null;
 
     mountRestoredPanel(this.deps.page.body, previous, elements, restored);
@@ -76,17 +79,16 @@ export class GraphControls {
     this.isOpen = restored.isOpen;
     this.isGrouped = restored.isGrouped;
     this.stamp = null;
-    wireControls(elements, controlsActionsOf(mounted, this, this.deps.onToggleFolder, this.deps.onScope));
+    wireControls(elements, controlsActionsOf(current, this, this.deps.onToggleFolder, this.deps.onScope));
     renderSearch(elements, graph.infos, restored.search);
-    const keyboardDeps = keyboardDepsOf(
-      this.deps,
-      (name): boolean => this.shown.has(name),
-      (): string | null => this.selected
-    );
-
-    new ControlsKeyboard(elements, keyboardDeps);
+    new ControlsKeyboard(elements, keyboardDepsOf(this.deps, isVisible, selected));
     this.shown = visibleOf(graph.infos, graph.edges, this.applied);
     this.render();
+  }
+
+  /** A same-hash graph for the mounted rows: the panel and its listeners read `graph` from now on, and the rows show its labels. */
+  public relabel(graph: DrawnGraph): void {
+    if (this.mounted !== null) this.mounted = relabelPanel(this.mounted, graph);
   }
 
   /** A rule that returns the same filters ignored the input (the focused row, a locked group): repaint, undoing the toggle. */

@@ -37,27 +37,30 @@ const toggleFolderFocus = (ops: ControlsOps, folder: string): void => {
   else ops.focusFolder(folder);
 };
 
-/** The panel's actions for `mounted`, each one call on `ops`, `onToggleFolder` or `onScope`; the filters and the depth are read when the event fires. */
+/**
+ * The panel's actions, each one call on `ops`, `onToggleFolder` or `onScope`; the mounted panel, the filters and the depth
+ * are read when the event fires, so a relabelled graph reaches every listener.
+ */
 export const controlsActionsOf = (
-  mounted: ControlsMounted,
+  current: () => ControlsMounted,
   ops: ControlsOps,
   onToggleFolder: (folder: string) => void,
   onScope: (shown: boolean) => void
 ): ControlsActions => {
   const actions: ControlsActions = {
-    onRow: (name, isChecked): void => ops.edit(mounted, toggleRow(ops.applied, name, isChecked)),
-    onGroup: (names, isChecked): void => ops.edit(mounted, toggleGroup(ops.applied, names, isChecked)),
-    onFocus: (name): void => ops.focus(mounted, name),
-    onDepth: (text): void => setDepth(mounted, ops, text),
+    onRow: (name, isChecked): void => ops.edit(current(), toggleRow(ops.applied, name, isChecked)),
+    onGroup: (names, isChecked): void => ops.edit(current(), toggleGroup(ops.applied, names, isChecked)),
+    onFocus: (name): void => ops.focus(current(), name),
+    onDepth: (text): void => setDepth(current(), ops, text),
     onDepthBlur: (): void => {
-      mounted.elements.depth.value = String(ops.depth);
+      current().elements.depth.value = String(ops.depth);
     },
     onGrouping: (isGrouped): void => ops.setGrouping(isGrouped),
     onToggle: onToggleFolder,
     onFolderFocus: (folder): void => toggleFolderFocus(ops, folder),
-    onTag: (tag, isChecked): void => ops.change(mounted, withTag(ops.applied, tag, isChecked)),
-    onShowAll: (): void => showAll(mounted, ops),
-    onSearch: (text): void => ops.setSearch(mounted, text),
+    onTag: (tag, isChecked): void => ops.change(current(), withTag(ops.applied, tag, isChecked)),
+    onShowAll: (): void => showAll(current(), ops),
+    onSearch: (text): void => ops.setSearch(current(), text),
     onPick: (name): void => ops.pick(name),
     onScope
   };

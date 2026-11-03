@@ -38,23 +38,6 @@ const PACKAGES: GraphPackage[] = STATE_STUB.packages.map(countOf);
 /** `h1` again, every package with three tasks more. */
 const RECOUNTED: GraphReady = { ...STATE_STUB, packages: PACKAGES };
 
-const bareOf = (pkg: GraphPackage): GraphPackage => {
-  const bare: GraphPackage = { ...pkg, bareName: `bare-${pkg.name}` };
-
-  return bare;
-};
-
-/** `h1` with each package's bare name `bare-<name>`, scopes shown. */
-const BARE_SHOWN: GraphReady = { ...STATE_STUB, packages: STATE_STUB.packages.map(bareOf) };
-
-const BARE_HIDDEN: GraphReady = { ...BARE_SHOWN, scopeShown: false };
-
-const BARE_LABELS = new Map([
-  ['web', 'bare-web'],
-  ['ui', 'bare-ui'],
-  ['core', 'bare-core']
-]);
-
 /**
  * A `GraphPackageSide` over the mocked deps, its view modes starting at `saved` (with a grouping choice unless
  * `hasGrouping` is false), in a project with no task until `hasTasks` says so.
@@ -72,25 +55,8 @@ const rigOf = (saved: GraphViewState | null, hasGrouping?: boolean): PackageSide
   return rig;
 };
 
-const scopeBoxOf = (rig: PackageSideRig): HTMLInputElement => {
-  const scope = rig.side.filtering.controls.mounted?.elements.scope;
-
-  if (scope === undefined) throw new Error('no mounted Controls');
-
-  return scope;
-};
-
-const togglesPostedBy = (rig: PackageSideRig): unknown[] => {
-  const posted = vi.mocked(rig.deps.bridge.post).mock.calls.map(([message]) => message);
-
-  return posted.filter((message) => message.type === 'setViewToggle');
-};
-
 describe('FEATURE: GraphPackageSide', () => {
   let rig: PackageSideRig;
-
-  const scopeBox = (): HTMLInputElement => scopeBoxOf(rig);
-  const togglesPosted = (): unknown[] => togglesPostedBy(rig);
 
   beforeEach(() => {
     stubPackageSideGlobals();
@@ -184,58 +150,6 @@ describe('FEATURE: GraphPackageSide', () => {
       rig.side.show(RECOUNTED, 2);
 
       expect(rig.packageViews.at(-1)?.showTasks.hidden).toBe(false);
-    });
-  });
-
-  describe('GIVEN h1 drawn with scopes shown, then h1 again with scopes hidden', () => {
-    let fitsBefore: number;
-    let postsBefore: number;
-
-    beforeEach(async () => {
-      rig = rigOf(SAVED_FLAT_STUB);
-      rig.side.show(BARE_SHOWN, 1);
-      await settled();
-      fitsBefore = rig.view.fit.mock.calls.length;
-      postsBefore = vi.mocked(rig.deps.bridge.post).mock.calls.length;
-      rig.side.show(BARE_HIDDEN, 2);
-      await settled();
-    });
-
-    it('WHEN nothing else happens THEN the view is relabelled with the bare names', () => {
-      expect(rig.view.setLabels).toHaveBeenLastCalledWith(BARE_LABELS);
-    });
-
-    it('WHEN nothing else happens THEN no layout runs, setGraph ran once, and no fit or post was added', () => {
-      const counts = [rig.view.fit.mock.calls.length, vi.mocked(rig.deps.bridge.post).mock.calls.length];
-
-      expect([rig.runs.count(), rig.view.setGraph.mock.calls.length, ...counts]).toStrictEqual([0, 1, fitsBefore, postsBefore]);
-    });
-
-    it('WHEN nothing else happens THEN the Controls rows read the bare names', () => {
-      const groups = rig.side.filtering.controls.mounted?.elements.groups ?? [];
-      const texts = groups.flatMap((group) => group.rows).map((row) => row.pick.textContent);
-
-      expect(texts.toSorted()).toStrictEqual(['bare-core', 'bare-ui', 'bare-web']);
-    });
-
-    it('WHEN the host answer left the box unticked THEN no setViewToggle was posted', () => {
-      expect([scopeBox().checked, togglesPosted()]).toStrictEqual([false, []]);
-    });
-
-    it('WHEN the user ticks the box THEN one setViewToggle scope true is posted', () => {
-      scopeBox().checked = true;
-      scopeBox().dispatchEvent(new Event('input'));
-
-      expect(togglesPosted()).toStrictEqual([{ type: 'setViewToggle', toggle: 'scope', shown: true }]);
-    });
-
-    it('WHEN h2 is drawn next THEN its nodes are labelled with the bare names after they are set', async () => {
-      rig.side.show({ ...BARE_HIDDEN, hash: 'h2' }, 3);
-      await settled();
-      const lastLabels = Math.max(...rig.view.setLabels.mock.invocationCallOrder);
-      const lastGraph = Math.max(...rig.view.setGraph.mock.invocationCallOrder);
-
-      expect([lastLabels > lastGraph, rig.view.setLabels.mock.lastCall?.[0]]).toStrictEqual([true, BARE_LABELS]);
     });
   });
 

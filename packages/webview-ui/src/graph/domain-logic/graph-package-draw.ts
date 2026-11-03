@@ -1,8 +1,6 @@
-import { renderLabels } from './graph-controls-render.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
-import type { ControlsMounted } from '../common/graph-controls.type.ts';
 import type { DrawnGraph, GraphView } from '../common/graph-page.type.ts';
 import { labelsOf } from '../utils/package-label.util.ts';
 import { taskCountsDiffer } from '../utils/task-counts.util.ts';
@@ -27,15 +25,15 @@ type DrawParts = {
   readonly view: Pick<GraphView, 'setLabels' | 'setViewport' | 'fit'>;
 };
 
-/** The Controls panel's mounted rows and graph, which a relabel swaps for the new graph. */
-type RelabelledControls = {
-  mounted: ControlsMounted | null;
+/** The Controls panel, which swaps in the relabelled graph itself. */
+type ControlsRelabel = {
+  readonly relabel: (graph: DrawnGraph) => void;
 };
 
-/** What a same-hash relabel writes: the canvas labels and the mounted Controls rows. */
+/** What a same-hash relabel writes: the canvas labels and the Controls rows. */
 type RelabelParts = {
   readonly view: Pick<GraphView, 'setLabels'>;
-  readonly controls: RelabelledControls;
+  readonly controls: ControlsRelabel;
 };
 
 /** After a hash's first draw: the package labels, filters, inspection and the saved camera or a fit. */
@@ -82,16 +80,9 @@ export const refreshedDrawn = (shown: DrawnGraph, state: GraphReady): DrawnGraph
  * A changed same-hash graph repaints its labels in place: the canvas nodes, then the Controls rows once mounted (a state
  * arriving during the first layout leaves them to `build`). No layout, fit or post.
  */
-export const relabelled = (parts: RelabelParts, graph: DrawnGraph): void => {
+export const relabel = (parts: RelabelParts, graph: DrawnGraph): void => {
   const { view, controls } = parts;
-  const { mounted } = controls;
 
   view.setLabels(graph.labels);
-
-  if (mounted === null) return;
-
-  const { elements } = mounted;
-
-  controls.mounted = { graph, elements };
-  renderLabels(elements, graph);
+  controls.relabel(graph);
 };

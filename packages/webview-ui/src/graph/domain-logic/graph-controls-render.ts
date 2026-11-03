@@ -2,7 +2,7 @@ import { setButtonIcon, setButtonLabel, setButtonText, setFocusToggle } from './
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { ControlsElements, ControlsGroup, ControlsRow } from '../common/controls-elements.type.ts';
 import { FOCUS_FOLDER_LABEL } from '../common/details.const.ts';
-import type { ControlsView } from '../common/graph-controls.type.ts';
+import type { ControlsMounted, ControlsView } from '../common/graph-controls.type.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
 import { FOCUS_PACKAGE_TITLE } from '../common/graph.const.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
@@ -117,6 +117,16 @@ export const renderLabels = (elements: ControlsElements, graph: DrawnGraph): voi
   for (const group of elements.groups) {
     for (const row of group.rows) renderRowLabel(row, graph.labels);
   }
+};
+
+/** Repaints the rows of `mounted` from `graph`'s labels and returns the same panel mounted for `graph`. */
+export const relabelPanel = (mounted: ControlsMounted, graph: DrawnGraph): ControlsMounted => {
+  const { elements } = mounted;
+  const relabelled: ControlsMounted = { graph, elements };
+
+  renderLabels(elements, graph);
+
+  return relabelled;
 };
 
 const rowMatches = (row: ControlsRow, byName: Map<string, GraphPackage>, search: string): boolean => {
