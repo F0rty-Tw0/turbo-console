@@ -138,6 +138,15 @@ describe('FEATURE: GraphLayouts routes', () => {
 
       expect(rig.view.setRoutes).toHaveBeenLastCalledWith(FLAT_ROUTES);
     });
+
+    it('WHEN task mode is left and the package graph is redrawn THEN setRoutes gets only web>ui again', async () => {
+      layouts.dragged(UI_CORE_DRAG);
+      rig.view.setRoutes.mockClear();
+
+      await layouts.redraw(SAVED_FLAT_STUB);
+
+      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith(WEB_UI_ONLY);
+    });
   });
 
   describe('GIVEN flat drawn with a web>ui route over ROUTE_BENDS_MAX', () => {
