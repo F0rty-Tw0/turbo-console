@@ -18,7 +18,7 @@ const PAN_PX = 500;
 
 test.describe('FEATURE: leaving task mode draws the package graph as Group by folder was last chosen', () => {
   test(
-    'GIVEN the package graph grouped WHEN Group by folder is unticked in task mode and Packages is pressed THEN the package graph is flat and its box unticked',
+    'GIVEN the package graph grouped, unticking Group by folder in task mode leaves it flat and unticked',
     { annotation: EXIT_GROUPING },
     async ({
       graphCanvas,
@@ -30,7 +30,7 @@ test.describe('FEATURE: leaving task mode draws the package graph as Group by fo
       graphTaskBoxes,
       graphTaskProbe
     }): Promise<void> => {
-      await test.step('GIVEN the grouped package graph panned off the fit and saved', async (): Promise<void> => {
+      await test.step('WHEN the grouped package graph is opened, panned off the fit and saved', async (): Promise<void> => {
         await graphPage.open({ savedState: groupedSavedState(STATE.hash) });
         await graphHost.sendState(STATE);
         await graphProbe.expectNodeIds(PACKAGE_NAMES);
@@ -40,7 +40,7 @@ test.describe('FEATURE: leaving task mode draws the package graph as Group by fo
         await graphHost.expectViewSaved();
       });
 
-      await test.step('WHEN Tasks is pressed, every task is chosen and Group by folder is unticked', async (): Promise<void> => {
+      await test.step('AND Tasks is pressed, every task is chosen and Group by folder is unticked', async (): Promise<void> => {
         await graphTask.enter();
         await graphTask.clickShowEvery();
         await graphTaskProbe.expectTaskIds(TASK_CANVAS_TASK_IDS);
@@ -61,17 +61,17 @@ test.describe('FEATURE: leaving task mode draws the package graph as Group by fo
   );
 
   test(
-    'GIVEN the package graph flat WHEN Group by folder is ticked in task mode and Packages is pressed THEN the package graph is grouped and its box ticked',
+    'GIVEN the package graph flat, ticking Group by folder in task mode leaves it grouped and ticked',
     { annotation: EXIT_GROUPING },
     async ({ graphGrouping, graphHost, graphPage, graphProbe, graphTask, graphTaskBoxes, graphTaskProbe }): Promise<void> => {
-      await test.step('GIVEN the flat package graph', async (): Promise<void> => {
+      await test.step('WHEN the flat package graph is opened', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(STATE);
         await graphProbe.expectNodeIds(PACKAGE_NAMES);
         await graphGrouping.expectFolderCount(0);
       });
 
-      await test.step('WHEN Tasks is pressed, every task is chosen and Group by folder is ticked', async (): Promise<void> => {
+      await test.step('AND Tasks is pressed, every task is chosen and Group by folder is ticked', async (): Promise<void> => {
         await graphTask.enter();
         await graphTask.clickShowEvery();
         await graphTaskProbe.expectTaskIds(TASK_CANVAS_TASK_IDS);

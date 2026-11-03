@@ -24,18 +24,18 @@ const FOLDER_TITLES = [folderTitleOf(''), folderTitleOf('apps'), folderTitleOf('
 
 test.describe('FEATURE: the task Controls View section', () => {
   test(
-    'GIVEN task mode THEN the Controls panel lists Search then View, and the View boxes read the state',
+    'GIVEN a listing with a script, scopes shown, from a flat saved view, task mode lists Search then View and the View boxes read the state',
     { annotation: TASK_VIEW },
     async ({ graphControls, graphHost, graphPage, graphProbe, graphTask, graphTaskView }): Promise<void> => {
       const state = scriptsTasksState(true);
 
-      await test.step('GIVEN a listing with a script, scopes shown, opened from a flat saved view', async (): Promise<void> => {
+      await test.step('WHEN a listing with a script, scopes shown, is opened from a flat saved view', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(state);
         await graphProbe.expectNodeIds(stateNamesOf(state));
       });
 
-      await test.step('WHEN Tasks is pressed', async (): Promise<void> => graphTask.enter());
+      await test.step('AND Tasks is pressed', async (): Promise<void> => graphTask.enter());
 
       await test.step('THEN the sections read Search then View', async (): Promise<void> =>
         graphTaskView.expectSectionTitles(['Search', 'View']));
@@ -49,10 +49,10 @@ test.describe('FEATURE: the task Controls View section', () => {
   );
 
   test(
-    'GIVEN the listing has no script THEN Show scripts is absent; hidden but listed THEN present and unticked, and it stays after scripts are hidden',
+    'GIVEN task mode over turbo tasks only, Show scripts is absent until a script is listed, then stays while scripts are hidden',
     { annotation: TASK_VIEW },
     async ({ graphHost, graphPage, graphProbe, graphTask, graphTaskView }): Promise<void> => {
-      await test.step('GIVEN task mode over a listing of turbo tasks only', async (): Promise<void> => {
+      await test.step('WHEN task mode opens over a listing of turbo tasks only', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(TASK_MODE_STATE_STUB);
         await graphProbe.expectNodeIds(stateNamesOf(TASK_MODE_STATE_STUB));
@@ -78,10 +78,10 @@ test.describe('FEATURE: the task Controls View section', () => {
   );
 
   test(
-    'GIVEN scopes shown WHEN Show package scopes is unticked THEN exactly one setViewToggle goes out, and the host answer posts none',
+    'GIVEN task mode with scopes shown, unticking Show package scopes posts exactly one setViewToggle and the host answer posts none',
     { annotation: TASK_VIEW },
     async ({ graphControls, graphHost, graphPage, graphProbe, graphTaskHost, graphTaskProbe }): Promise<void> => {
-      await test.step('GIVEN the root // and @org/app drawn in task mode with scopes shown', async (): Promise<void> => {
+      await test.step('WHEN the root // and @org/app are drawn in task mode with scopes shown', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(taskRootState(true));
         await graphProbe.expectNodeIds(['@org/app']);
@@ -89,7 +89,7 @@ test.describe('FEATURE: the task Controls View section', () => {
         await graphTaskProbe.expectText('pkg:@org/app', '@org/app');
       });
 
-      await test.step('WHEN Show package scopes is unticked', async (): Promise<void> => graphControls.scope.uncheck());
+      await test.step('AND Show package scopes is unticked', async (): Promise<void> => graphControls.scope.uncheck());
 
       await test.step('THEN one setViewToggle goes out', async (): Promise<void> => graphControls.expectViewToggles([SCOPE_UNTICKED]));
 
@@ -105,10 +105,10 @@ test.describe('FEATURE: the task Controls View section', () => {
   );
 
   test(
-    'GIVEN scripts hidden WHEN Show scripts is ticked THEN one setViewToggle(scripts, true) goes out and the answer posts none',
+    'GIVEN task mode with scripts hidden, ticking Show scripts posts one setViewToggle(scripts, true) and the answer posts none',
     { annotation: TASK_VIEW },
     async ({ graphControls, graphHost, graphPage, graphProbe, graphTask, graphTaskView }): Promise<void> => {
-      await test.step('GIVEN task mode over a listing with scripts that are hidden', async (): Promise<void> => {
+      await test.step('WHEN task mode opens over a listing with scripts that are hidden', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(scriptsTasksState(false));
         await graphProbe.expectNodeIds(stateNamesOf(TASK_MODE_STATE_STUB));
@@ -116,7 +116,7 @@ test.describe('FEATURE: the task Controls View section', () => {
         await graphTaskView.expectScripts(false);
       });
 
-      await test.step('WHEN Show scripts is ticked', async (): Promise<void> => graphTaskView.scripts.check());
+      await test.step('AND Show scripts is ticked', async (): Promise<void> => graphTaskView.scripts.check());
 
       await test.step('THEN one setViewToggle goes out', async (): Promise<void> => graphControls.expectViewToggles([SCRIPTS_TICKED]));
 
@@ -131,10 +131,10 @@ test.describe('FEATURE: the task Controls View section', () => {
   );
 
   test(
-    'GIVEN the tree flips scopes WHEN a same-hash state arrives THEN the box follows and nothing is posted',
+    'GIVEN task mode drawn with scopes shown, a tree flip of scopes moves the box and posts nothing',
     { annotation: TASK_VIEW },
     async ({ graphControls, graphHost, graphPage, graphProbe, graphTaskHost }): Promise<void> => {
-      await test.step('GIVEN task mode drawn with scopes shown', async (): Promise<void> => {
+      await test.step('WHEN task mode is drawn with scopes shown', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(taskRootState(true));
         await graphProbe.expectNodeIds(['@org/app']);
@@ -142,7 +142,7 @@ test.describe('FEATURE: the task Controls View section', () => {
         await graphControls.expectScope(true);
       });
 
-      await test.step('WHEN the tree flips scopes and the host sends the same-hash state', async (): Promise<void> =>
+      await test.step('AND the tree flips scopes and the host sends the same-hash state', async (): Promise<void> =>
         graphHost.sendState(taskRootState(false)));
 
       await test.step('THEN the box is unticked and nothing was posted', async (): Promise<void> => {
@@ -153,16 +153,16 @@ test.describe('FEATURE: the task Controls View section', () => {
   );
 
   test(
-    'GIVEN a grouped saved view WHEN task mode draws every task THEN Group by folder is ticked; unticking it removes the folder boxes and saves grouped false; ticking it brings them back',
+    'GIVEN a grouped saved view, task mode ticks Group by folder, and the box removes and brings back the folder boxes',
     { annotation: TASK_VIEW },
     async ({ graphGrouping, graphHost, graphPage, graphProbe, graphTask, graphTaskBoxes, graphTaskProbe }): Promise<void> => {
-      await test.step('GIVEN the package graph opened from a grouped saved view', async (): Promise<void> => {
+      await test.step('WHEN the package graph opens from a grouped saved view', async (): Promise<void> => {
         await graphPage.open({ savedState: groupedSavedState(CANVAS_STATE.hash) });
         await graphHost.sendState(CANVAS_STATE);
         await graphProbe.expectNodeIds(stateNamesOf(CANVAS_STATE));
       });
 
-      await test.step('WHEN Tasks is pressed and every task is chosen', async (): Promise<void> => {
+      await test.step('AND Tasks is pressed and every task is chosen', async (): Promise<void> => {
         await graphTask.enter();
         await graphTask.clickShowEvery();
         await graphTaskProbe.expectTaskIds(TASK_CANVAS_TASK_IDS);
@@ -173,21 +173,21 @@ test.describe('FEATURE: the task Controls View section', () => {
         await graphTaskBoxes.expectFolderTitles(FOLDER_TITLES);
       });
 
-      await test.step('WHEN Group by folder is unticked THEN no folder box is drawn and grouped false is saved', async (): Promise<void> => {
-        await graphGrouping.setGrouped(false);
+      await test.step('WHEN Group by folder is unticked', async (): Promise<void> => graphGrouping.setGrouped(false));
+
+      await test.step('THEN no folder box is drawn and grouped false is saved', async (): Promise<void> => {
         await graphTaskBoxes.expectFolderTitles([]);
         await graphGrouping.expectGroupedSaved(false);
       });
 
-      await test.step('WHEN Group by folder is ticked again THEN the folder boxes come back', async (): Promise<void> => {
-        await graphGrouping.setGrouped(true);
-        await graphTaskBoxes.expectFolderTitles(FOLDER_TITLES);
-      });
+      await test.step('WHEN Group by folder is ticked again', async (): Promise<void> => graphGrouping.setGrouped(true));
+
+      await test.step('THEN the folder boxes come back', async (): Promise<void> => graphTaskBoxes.expectFolderTitles(FOLDER_TITLES));
     }
   );
 
   test(
-    'GIVEN a single-package root THEN the View section has no Group by folder box',
+    'GIVEN a single-package root, the task View section has no Group by folder box',
     { annotation: TASK_VIEW },
     async ({ graphHost, graphPage, graphTaskProbe, graphTaskView }): Promise<void> => {
       await test.step('WHEN a single-package state is sent', async (): Promise<void> => {
