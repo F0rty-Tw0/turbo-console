@@ -11,9 +11,17 @@ import {
   WEB_BUILD_STUB,
   WEB_LINT_STUB
 } from '../test/stubs/graph-task.stub.ts';
+import { scriptOf } from '../test/utils/shown-set.spec.util.ts';
 
 /** `web#lint` as a package script, not a turbo task. */
 const SCRIPT_STUB: GraphTask = { ...WEB_LINT_STUB, isTurboTask: false };
+
+const ROOT_FMT = scriptOf('//#fmt', []);
+
+const SINGLE_TASKS = SINGLE_TASK_STATE_STUB.tasks;
+
+/** The single-package root with its `//#fmt` script, scripts hidden. */
+const SINGLE_HIDDEN_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, tasks: [...SINGLE_TASKS, ROOT_FMT], scriptsShown: false };
 
 const memoryOf = (state: GraphReady, saved: TaskViewState | null = null): GraphTaskMemory => {
   const modes: TaskMemoryModes = { task: vi.fn(() => saved), saveTask: vi.fn(), current: vi.fn(() => null) };
@@ -82,13 +90,24 @@ describe('FEATURE: GraphTaskMemory grid facts', () => {
   });
 
   describe('GIVEN a single-package state whose saved choice names no pooled task, for the chosen ids', () => {
-    it('WHEN the chosen ids are read THEN every pool id is held', () => {
+    it('WHEN the chosen ids are read THEN they are the saved id followed by every pool id', () => {
       const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen: ['gone#x'] };
       const memory = memoryOf(SINGLE_TASK_STATE_STUB, saved);
 
       const ids = memory.chosenIds();
 
-      expect(ids).toStrictEqual(['//#build', '//#lint']);
+      expect(ids).toStrictEqual(['gone#x', '//#build', '//#lint']);
+    });
+  });
+
+  describe('GIVEN a single-package state with scripts hidden whose saved choice is only the hidden script //#fmt', () => {
+    it('WHEN the chosen ids are read THEN the hidden script id stays, followed by every pool id', () => {
+      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen: [ROOT_FMT.id] };
+      const memory = memoryOf(SINGLE_HIDDEN_STATE, saved);
+
+      const ids = memory.chosenIds();
+
+      expect(ids).toStrictEqual(['//#fmt', '//#build', '//#lint']);
     });
   });
 });

@@ -23,6 +23,13 @@ const HIDDEN_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [APP_BUILD, APP_DE
 /** The same listing with scripts shown: the same shown ids, so the same layout key. */
 const SHOWN_STATE: GraphReady = { ...HIDDEN_STATE, scriptsShown: true };
 
+const ROOT_FMT = scriptOf('//#fmt', []);
+
+const SINGLE_TASKS = SINGLE_TASK_STATE_STUB.tasks;
+
+/** The single-package root with its `//#fmt` script, scripts hidden. */
+const SINGLE_HIDDEN_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, tasks: [...SINGLE_TASKS, ROOT_FMT], scriptsShown: false };
+
 describe('FEATURE: GraphTaskMode feeds the Projects grid', () => {
   let rig: TaskModeRig;
   let mode: GraphTaskMode;
@@ -102,13 +109,22 @@ describe('FEATURE: GraphTaskMode feeds the Projects grid', () => {
   });
 
   describe('GIVEN a single-package state', () => {
-    it('WHEN the saved choice names no pooled task and one task is unchecked THEN the other pool tasks stay chosen', () => {
+    it('WHEN the saved choice names no pooled task and one task is unchecked THEN the saved id and the other pool tasks stay chosen', () => {
       open({ chosen: ['gone#x'] });
       mode.received(SINGLE_TASK_STATE_STUB, 7);
 
       checksOf(rig)?.onCheck(['//#lint'], false);
 
-      expect(rig.modes.task()).toMatchObject({ chosen: ['//#build'] });
+      expect(rig.modes.task()).toMatchObject({ chosen: ['gone#x', '//#build'] });
+    });
+
+    it('WHEN the saved choice is only a hidden script and one task is unchecked THEN the script and the other pool tasks stay chosen', () => {
+      open({ chosen: [ROOT_FMT.id] });
+      mode.received(SINGLE_HIDDEN_STATE, 7);
+
+      checksOf(rig)?.onCheck(['//#lint'], false);
+
+      expect(rig.modes.task()).toMatchObject({ chosen: ['//#fmt', '//#build'] });
     });
 
     it('WHEN every task is chosen and every task is unchecked THEN the choice is empty and every task is still drawn, with no prompt', () => {
