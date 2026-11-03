@@ -1,9 +1,24 @@
 /** elk-api.d.ts is CJS-shaped under nodenext: its default import is the module, but the bundle's is the class. */
 declare module 'elkjs/lib/elk-api.js' {
+  export type ElkPoint = {
+    readonly x: number;
+    readonly y: number;
+  };
+
+  /** One routed stretch of an edge, in the coordinates `elk.json.edgeCoords` names. */
+  export type ElkEdgeSection = {
+    readonly id: string;
+    readonly startPoint: ElkPoint;
+    readonly bendPoints?: ElkPoint[];
+    readonly endPoint: ElkPoint;
+  };
+
   export type ElkEdge = {
     readonly id: string;
     readonly sources: string[];
     readonly targets: string[];
+    /** Only on a laid-out edge. */
+    readonly sections?: ElkEdgeSection[];
   };
 
   export type ElkNode = {

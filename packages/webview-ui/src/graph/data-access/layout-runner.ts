@@ -1,9 +1,10 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
-import type { Positions } from '../../bridge/common/graph-state.type.ts';
+import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { ElkLike, LayoutResult, LayoutRunner, LayoutRunnerDeps } from '../common/layout.type.ts';
 import { nestedCentresOf } from '../utils/elk-centres.util.ts';
 import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
+import { routesOf } from '../utils/elk-routes.util.ts';
 import { gridPositions } from '../utils/grid-layout.util.ts';
 
 /** Rejects on a worker `error` event, a rejected layout, or no layout within `timeoutMs`; the timer never outlives it. */
@@ -64,16 +65,16 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
 
     const ticket = latest;
     const start = performance.now();
-    const resultOf = (positions: Positions, engine: LayoutResult['engine']): LayoutResult => {
+    const resultOf = (positions: Positions, routes: Routes, engine: LayoutResult['engine']): LayoutResult => {
       const ms = Math.round(performance.now() - start);
-      const result: LayoutResult = { hash, positions, engine, ms };
+      const result: LayoutResult = { hash, positions, routes, engine, ms };
 
       return result;
     };
     const fallbackResult = (): LayoutResult => {
       const positions = fallbackPositions(deps.fallback, graph);
 
-      return resultOf(positions, 'fallback');
+      return resultOf(positions, {}, 'fallback');
     };
 
     dropBusyElk();
@@ -105,8 +106,9 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
     }
 
     const positions = nestedCentresOf(laidOut);
+    const routes = routesOf(laidOut);
 
-    return resultOf(positions, 'elk');
+    return resultOf(positions, routes, 'elk');
   };
   const runner: LayoutRunner = { run };
 

@@ -43,6 +43,16 @@ export type Position = {
 /** Node centres by package name (Cytoscape `preset` convention). */
 export type Positions = Readonly<Record<string, Position>>;
 
+/** One edge's path in root coordinates: where it leaves the source, each bend, where it meets the target. */
+export type EdgeRoute = {
+  readonly start: Position;
+  readonly bends: Position[];
+  readonly end: Position;
+};
+
+/** Edge routes by edge id. */
+export type Routes = Readonly<Record<string, EdgeRoute>>;
+
 /** One spec file of an Atomizer group; `isLive` marks a file whose run keeps going. */
 export type GraphAtomFile = {
   readonly id: string;

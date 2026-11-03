@@ -1,6 +1,6 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
-import type { Positions } from '../../bridge/common/graph-state.type.ts';
+import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 
 export type ElkLike = {
   readonly layout: (graph: ElkNode) => Promise<ElkNode>;
@@ -19,6 +19,7 @@ export type LayoutRunnerDeps = {
 export type LayoutResult = {
   readonly hash: string;
   readonly positions: Positions;
+  readonly routes: Routes;
   readonly engine: 'elk' | 'fallback';
   readonly ms: number;
 };

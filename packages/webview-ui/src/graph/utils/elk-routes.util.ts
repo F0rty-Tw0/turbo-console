@@ -1,0 +1,44 @@
+import type { ElkEdge, ElkNode, ElkPoint } from 'elkjs/lib/elk-api.js';
+
+import type { EdgeRoute, Position, Routes } from '../../bridge/common/graph-state.type.ts';
+
+type RouteEntry = [string, EdgeRoute];
+
+const positionOf = (point: ElkPoint): Position => {
+  const position: Position = { x: point.x, y: point.y };
+
+  return position;
+};
+
+/** The edge's first section as a route, or no entry for an edge ELK left unrouted. */
+const routeEntriesOf = (edge: ElkEdge): RouteEntry[] => {
+  const section = edge.sections?.[0];
+
+  if (section === undefined) return [];
+
+  const bendPoints = section.bendPoints ?? [];
+  const bends = bendPoints.map(positionOf);
+  const route: EdgeRoute = { start: positionOf(section.startPoint), bends, end: positionOf(section.endPoint) };
+
+  return [[edge.id, route]];
+};
+
+/** The entries of every edge held by `node` or any compound below it. */
+const entriesUnder = (node: ElkNode): RouteEntry[] => {
+  const edges = node.edges ?? [];
+  const children = node.children ?? [];
+  const own = edges.flatMap(routeEntriesOf);
+  const below = children.flatMap(entriesUnder);
+
+  return [...own, ...below];
+};
+
+/**
+ * Each routed edge's path by edge id, copied from the laid-out graph. The layout options ask ELK for root coordinates,
+ * so the points share the frame `nestedCentresOf` uses whichever compound holds the edge.
+ */
+export const routesOf = (laidOut: ElkNode): Routes => {
+  const entries = entriesUnder(laidOut);
+
+  return Object.fromEntries(entries);
+};
