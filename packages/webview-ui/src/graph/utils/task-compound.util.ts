@@ -1,6 +1,8 @@
 import { COMPOUND_OPTIONS } from './elk-grouped-graph.util.ts';
+import { folderIdOf } from './folder-id.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { SCRIPTS_BOX_PREFIX, TASK_BOX_PREFIX } from '../common/graph-task.const.ts';
+import type { TaskNaming } from '../common/graph-task.type.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 
 /** The compound id of a task's package; the root package `//` gives `pkg://`. */
@@ -17,6 +19,18 @@ export const parentIdOf = (task: GraphTask): string => {
   const parent = isTurboTask ? packageBox : scriptsBox;
 
   return parent;
+};
+
+/**
+ * The id of the folder box a package box sits in while grouped, `null` while ungrouped. The root `//` and a package the
+ * folders map lacks sit in the root folder `''`, beside the packages of the repo root.
+ */
+export const folderBoxIdOf = (packageName: string, naming: TaskNaming): string | null => {
+  if (!naming.grouped) return null;
+
+  const folder = naming.folders.get(packageName) ?? '';
+
+  return folderIdOf(folder);
 };
 
 /**

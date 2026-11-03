@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { parentIdOf, scriptsBoxIdOf, taskBoxIdOf } from './task-compound.util.ts';
+import { folderIdOf } from './folder-id.util.ts';
+import { folderBoxIdOf, parentIdOf, scriptsBoxIdOf, taskBoxIdOf } from './task-compound.util.ts';
+import type { TaskNaming } from '../common/graph-task.type.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
+
+const NAMING_GROUPED: TaskNaming = {
+  grouped: true,
+  scopeShown: true,
+  labels: new Map(),
+  folders: new Map([
+    ['web', 'apps'],
+    ['ui', 'packages']
+  ])
+};
 
 describe('FEATURE: task compound ids', () => {
   describe('GIVEN the package app', () => {
@@ -29,6 +41,26 @@ describe('FEATURE: task compound ids', () => {
       const ids = [taskBoxIdOf('//'), scriptsBoxIdOf('//')];
 
       expect(ids).toStrictEqual(['pkg://', 'scripts://']);
+    });
+  });
+
+  describe('GIVEN a grouped naming with web in apps and ui in packages', () => {
+    it('WHEN the folder box of web is read THEN it is the apps folder id', () => {
+      expect(folderBoxIdOf('web', NAMING_GROUPED)).toBe(folderIdOf('apps'));
+    });
+
+    it('WHEN the folder box of the root // is read THEN it is the root folder id', () => {
+      expect(folderBoxIdOf('//', NAMING_GROUPED)).toBe(folderIdOf(''));
+    });
+
+    it('WHEN the folder box of a package the folders map lacks is read THEN it is the root folder id', () => {
+      expect(folderBoxIdOf('ghost', NAMING_GROUPED)).toBe(folderIdOf(''));
+    });
+  });
+
+  describe('GIVEN an ungrouped naming', () => {
+    it('WHEN the folder box of web is read THEN there is none', () => {
+      expect(folderBoxIdOf('web', { ...NAMING_GROUPED, grouped: false })).toBeNull();
     });
   });
 });
