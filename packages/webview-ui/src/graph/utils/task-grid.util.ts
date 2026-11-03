@@ -80,7 +80,9 @@ const isListed = (project: Project, facts: TaskGridFacts, search: string): boole
 
 const idsOf = (projects: Project[]): string[] => projects.flatMap((project) => project.tasks.map((task) => task.id));
 
-const isOpenOf = (key: string, isDefaultOpen: boolean, open: TaskGridOpen): boolean => isDefaultOpen !== open.toggled.has(key);
+/** A search forces every listed line open; otherwise a line is open by default unless the reader toggled it. */
+const isOpenOf = (key: string, isDefaultOpen: boolean, open: TaskGridOpen): boolean =>
+  open.search !== '' || isDefaultOpen !== open.toggled.has(key);
 
 const taskLineOf = (task: GraphTask, facts: TaskGridFacts, depth: number): TaskLine => {
   const line: TaskLine = {

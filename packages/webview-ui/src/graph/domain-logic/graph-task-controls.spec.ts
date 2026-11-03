@@ -97,10 +97,10 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(checkAt(rig.elements.list, 0).tabIndex).toBe(0);
     });
 
-    it('WHEN web is searched THEN only the web project is listed and the search is passed on', () => {
+    it('WHEN web is searched THEN only the web project is listed, open, and the search is passed on', () => {
       typeInto(rig.elements.search, 'web');
 
-      expect(rig.elements.list.children).toHaveLength(1);
+      expect(rig.elements.list.children).toHaveLength(3);
       expect(nameAt(rig.elements.list, 0).title).toBe('web (2)');
       expect(rig.actions.onSearch).toHaveBeenCalledExactlyOnceWith('web');
     });

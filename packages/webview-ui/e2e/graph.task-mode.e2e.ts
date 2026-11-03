@@ -169,8 +169,8 @@ test.describe('FEATURE: graph task mode', () => {
 
       await test.step('AND test is searched', async (): Promise<void> => graphTask.search('test'));
 
-      await test.step('THEN only lib#test is listed under lib', async (): Promise<void> =>
-        graphTaskProjects.expectLines(['lib (2)', 'lib#test', 'ui (2)']));
+      await test.step('THEN only the matching tasks are listed, ui forced open', async (): Promise<void> =>
+        graphTaskProjects.expectLines(['lib (2)', 'lib#test', 'ui (2)', 'ui#test']));
 
       await test.step('AND the drawn tasks are unchanged', async (): Promise<void> => graphTaskProbe.expectTaskIds(LIB_SET));
 

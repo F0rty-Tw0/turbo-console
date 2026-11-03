@@ -200,7 +200,50 @@ describe('FEATURE: taskGridLinesOf', () => {
     it('WHEN the search matches an owner text THEN the root project is listed through it', () => {
       const lines = taskGridLinesOf(FACTS, { toggled: new Set(), search: 'workspace' });
 
-      expect(textsOf(lines)).toStrictEqual(['Workspace root (//) (1)']);
+      expect(textsOf(lines)).toStrictEqual(['Workspace root (//) (1)', '//#gen']);
+    });
+  });
+
+  describe('GIVEN a search and nothing toggled', () => {
+    const open: TaskGridOpen = { toggled: new Set(), search: 'test' };
+
+    it('WHEN lines are built THEN the folder and ui are forced open, and the folders and projects without a match are gone', () => {
+      const facts: TaskGridFacts = { ...FACTS, naming: GROUPED };
+
+      const lines = taskGridLinesOf(facts, open);
+
+      expect(textsOf(lines)).toStrictEqual(['packages', 'ui (2)', 'ui#test']);
+      expect(groupOf(lines, 'ui (2)').isOpen).toBe(true);
+      expect(groupOf(lines, 'packages').isOpen).toBe(true);
+    });
+
+    it('WHEN the folder is toggled closed THEN the search still opens it', () => {
+      const facts: TaskGridFacts = { ...FACTS, naming: GROUPED };
+
+      const lines = taskGridLinesOf(facts, { toggled: new Set([folderKeyOf('packages')]), search: 'test' });
+
+      expect(groupOf(lines, 'packages').isOpen).toBe(true);
+      expect(textsOf(lines)).toStrictEqual(['packages', 'ui (2)', 'ui#test']);
+    });
+  });
+
+  describe('GIVEN a single-package root toggled closed', () => {
+    const tasks = [taskOf('//', 'build'), taskOf('//', 'lint')];
+    const naming: TaskNaming = { ...FLAT, labels: new Map() };
+    const facts: TaskGridFacts = { ...FACTS, tasks, rootLabel: 'single-app', naming };
+    const toggled = new Set([projectKeyOf('//')]);
+
+    it('WHEN a search matches THEN the project opens over the toggle', () => {
+      const lines = taskGridLinesOf(facts, { toggled, search: 'build' });
+
+      expect(textsOf(lines)).toStrictEqual(['single-app (2)', '//#build']);
+    });
+
+    it('WHEN the search is empty again THEN the project follows the toggle and is closed', () => {
+      const lines = taskGridLinesOf(facts, { toggled, search: '' });
+
+      expect(textsOf(lines)).toStrictEqual(['single-app (2)']);
+      expect(groupOf(lines, 'single-app (2)').isOpen).toBe(false);
     });
   });
 });

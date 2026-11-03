@@ -198,11 +198,11 @@ describe('FEATURE: TaskGrid', () => {
       rig.grid.setFacts(TASK_GRID_FACTS_STUB);
     });
 
-    it('WHEN the search reads web and the grid paints THEN only the web project is listed', () => {
+    it('WHEN the search reads web and the grid paints THEN only the web project is listed, open on its tasks', () => {
       search = 'web';
       rig.grid.paint();
 
-      expect(titlesOf(rig.list)).toStrictEqual(['web (2)']);
+      expect(titlesOf(rig.list)).toStrictEqual(['web (2)', 'web#build', 'web#dev']);
     });
 
     it('WHEN the search reads zzz and the grid paints THEN the list is empty', () => {
