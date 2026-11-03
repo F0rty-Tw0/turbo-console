@@ -84,9 +84,9 @@ export class TaskGrid {
       return;
     }
 
-    const isToggled = this.toggled.delete(line.key);
+    const wasToggled = this.toggled.delete(line.key);
 
-    if (!isToggled) this.toggled.add(line.key);
+    if (!wasToggled) this.toggled.add(line.key);
 
     this.stop = { key: line.key, column: 'name' };
     this.paint();
