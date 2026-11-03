@@ -27,6 +27,9 @@ export type TaskModes = {
   readonly saveGrouped: (value: boolean) => void;
 };
 
+/** What `GraphTaskMemory` reads and writes of `TaskModes`: the task view, the state it saves over, and the save. */
+export type TaskMemoryModes = Pick<TaskModes, 'task' | 'saveTask' | 'current'>;
+
 /**
  * What the package side reads of `ViewStateModes`: its saver, the mode, which parks it in task mode, the state it redraws
  * with, and whether that state holds a grouping choice.

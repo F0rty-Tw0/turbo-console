@@ -1,7 +1,7 @@
 import type { GraphPackage, GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { NO_NAMES } from '../common/graph-task.const.ts';
-import type { TaskModes, TaskNaming } from '../common/graph-task.type.ts';
+import type { TaskMemoryModes, TaskNaming } from '../common/graph-task.type.ts';
 import type { LocationFacts } from '../common/location.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 import type { TaskViewChecks } from '../common/task-controls.type.ts';
@@ -16,11 +16,11 @@ const folderEntryOf = (pkg: GraphPackage): [string, string] => [pkg.name, folder
 
 /**
  * What task mode remembers: the host's latest task listing and the pool drawn from it (the turbo tasks, plus the scripts
- * when shown), hash, single-package flag, root label, scope bit, package labels and folders, and the task view it saves
- * through `TaskModes`.
+ * when shown), hash, single-package flag, root label, scope and scripts bits, whether the listing holds a script, package
+ * labels and folders, and the task view it saves through `TaskMemoryModes`.
  */
 export class GraphTaskMemory {
-  private readonly modes: Pick<TaskModes, 'task' | 'saveTask' | 'current'>;
+  private readonly modes: TaskMemoryModes;
   private latestTasks: GraphTask[] = [];
   private pool: GraphTask[] = [];
   private listedIds: ReadonlySet<string> = new Set();
@@ -33,7 +33,7 @@ export class GraphTaskMemory {
   private labels: ReadonlyMap<string, string> = NO_NAMES;
   private folders: ReadonlyMap<string, string> = NO_NAMES;
 
-  public constructor(modes: Pick<TaskModes, 'task' | 'saveTask' | 'current'>) {
+  public constructor(modes: TaskMemoryModes) {
     this.modes = modes;
   }
 
