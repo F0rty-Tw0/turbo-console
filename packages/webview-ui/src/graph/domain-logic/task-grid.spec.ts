@@ -13,18 +13,29 @@ type GridRig = {
   readonly list: HTMLElement;
   readonly grid: TaskGrid;
   readonly onPick: Mock<(id: string) => void>;
+  readonly onCheck: Mock<(ids: string[], isChecked: boolean) => void>;
 };
 
 const rigOf = (searchOf: () => string): GridRig => {
   const list = document.createElement('div');
   const onPick = vi.fn<(id: string) => void>();
+  const onCheck = vi.fn<(ids: string[], isChecked: boolean) => void>();
   const rig: GridRig = {
     list,
-    grid: new TaskGrid(list, { build: taskGridBuildMock, search: searchOf, onPick }),
-    onPick
+    grid: new TaskGrid(list, { build: taskGridBuildMock, search: searchOf, onPick, onCheck }),
+    onPick,
+    onCheck
   };
 
   return rig;
+};
+
+/** What the user does to a box: sets it, then the input event follows. */
+const tick = (box: HTMLElement, isChecked: boolean): void => {
+  if (!('checked' in box)) throw new Error('not a check');
+
+  box.checked = isChecked;
+  box.dispatchEvent(new Event('input'));
 };
 
 const rowAt = (list: HTMLElement, index: number): HTMLElement => childAt(list, index);
@@ -210,6 +221,94 @@ describe('FEATURE: TaskGrid', () => {
       rig.grid.paint();
 
       expect(titlesOf(rig.list)).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN flat facts with web open, the checks report', () => {
+    beforeEach(() => {
+      rig.grid.setFacts(TASK_GRID_FACTS_STUB);
+      nameAt(rig.list, 5).click();
+    });
+
+    it('WHEN the unchecked web project is ticked THEN onCheck gets its ids and true', () => {
+      tick(checkAt(rig.list, 5), true);
+
+      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['web#build', 'web#dev'], true);
+    });
+
+    it('WHEN the checked ui project is unticked after ui#test joined THEN onCheck gets its ids and false', () => {
+      rig.grid.setFacts({ ...TASK_GRID_FACTS_STUB, chosen: new Set(['ui#build', 'ui#test']) });
+
+      tick(checkAt(rig.list, 4), false);
+
+      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['ui#build', 'ui#test'], false);
+    });
+
+    it('WHEN the mixed ui project is activated and its box reads checked THEN onCheck gets its ids and true', () => {
+      tick(checkAt(rig.list, 4), true);
+
+      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['ui#build', 'ui#test'], true);
+    });
+
+    it('WHEN a task check is ticked THEN onCheck gets that task id alone', () => {
+      tick(checkAt(rig.list, 6), true);
+
+      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['web#build'], true);
+    });
+
+    it('WHEN the facts are set again with another choice THEN the repaint reports no check', () => {
+      rig.grid.setFacts({ ...TASK_GRID_FACTS_STUB, chosen: new Set(['web#build', 'web#dev']) });
+
+      expect(rig.onCheck).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN grouped facts, the folder check reports', () => {
+    beforeEach(() => {
+      rig.grid.setFacts({ ...TASK_GRID_FACTS_STUB, naming: GRID_GROUPED_NAMING_STUB });
+    });
+
+    it('WHEN the packages folder is ticked THEN onCheck gets the ids of every pool task of its projects', () => {
+      tick(checkAt(rig.list, 5), true);
+
+      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['-tools#build', 'core#build', 'ui#build', 'ui#test'], true);
+    });
+
+    it('WHEN the search lists only ui and the folder is ticked THEN onCheck still gets core, -tools and ui', () => {
+      search = 'test';
+      rig.grid.paint();
+
+      tick(checkAt(rig.list, 0), true);
+
+      expect(rig.onCheck).toHaveBeenCalledExactlyOnceWith(['-tools#build', 'core#build', 'ui#build', 'ui#test'], true);
+    });
+  });
+
+  describe('GIVEN flat facts and a search', () => {
+    beforeEach(() => {
+      rig.grid.setFacts(TASK_GRID_FACTS_STUB);
+      search = 'test';
+      rig.grid.paint();
+    });
+
+    it('WHEN the search is cleared and the grid paints THEN ui is closed again, the search having toggled nothing', () => {
+      expect(titlesOf(rig.list)).toStrictEqual(['ui (2)', 'ui#test']);
+
+      search = '';
+      rig.grid.paint();
+
+      expect(titlesOf(rig.list)).toStrictEqual(FLAT_TITLES);
+    });
+
+    it('WHEN the ui disclosure is clicked THEN ui stays open, and once the search is cleared ui is open from the click', () => {
+      nameAt(rig.list, 0).click();
+
+      expect(titlesOf(rig.list)).toStrictEqual(['ui (2)', 'ui#test']);
+
+      search = '';
+      rig.grid.paint();
+
+      expect(titlesOf(rig.list).slice(4, 7)).toStrictEqual(['ui (2)', 'ui#build', 'ui#test']);
     });
   });
 });

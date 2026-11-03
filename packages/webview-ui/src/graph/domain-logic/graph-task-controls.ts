@@ -27,7 +27,8 @@ export class GraphTaskControls {
     this.grid = new TaskGrid(elements.list, {
       build: deps.views.line,
       search: (): string => elements.search.value,
-      onPick: deps.actions.onPick
+      onPick: deps.actions.onPick,
+      onCheck: deps.actions.onCheck
     });
     elements.search.addEventListener('input', (): void => this.searched());
     elements.depth.addEventListener('input', (): void => this.depthTyped());

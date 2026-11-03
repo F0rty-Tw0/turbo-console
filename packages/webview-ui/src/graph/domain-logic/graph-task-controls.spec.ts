@@ -113,6 +113,15 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(rig.actions.onPick).toHaveBeenCalledExactlyOnceWith('ui#build');
     });
 
+    it('WHEN the web project check is ticked THEN its ids and true are passed on', () => {
+      const box = checkAt(rig.elements.list, 5);
+
+      Object.assign(box, { checked: true });
+      box.dispatchEvent(new Event('input'));
+
+      expect(rig.actions.onCheck).toHaveBeenCalledExactlyOnceWith(['web#build', 'web#dev'], true);
+    });
+
     it.each([
       { typed: '3', expected: [[3]] },
       { typed: '9', expected: [] },

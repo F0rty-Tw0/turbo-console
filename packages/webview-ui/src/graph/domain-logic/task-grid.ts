@@ -49,13 +49,30 @@ export class TaskGrid {
     const rows = lines.map((line) => this.deps.build(line));
     const elements = rows.map((row) => row.element);
 
-    for (const row of rows) row.name.addEventListener('click', (): void => this.named(row));
+    for (const row of rows) this.wire(row);
 
     this.rows = rows;
     this.list.replaceChildren(...elements);
     this.rove();
 
     if (focus !== null) this.refocus(focus);
+  }
+
+  private wire(row: TaskGridRow): void {
+    row.name.addEventListener('click', (): void => this.named(row));
+    row.check.addEventListener('input', (): void => this.checked(row));
+  }
+
+  private checked(row: TaskGridRow): void {
+    const { line } = row;
+
+    if (line.kind === 'task') {
+      this.deps.onCheck([line.task.id], row.check.checked);
+
+      return;
+    }
+
+    this.deps.onCheck(line.ids, row.check.checked);
   }
 
   private named(row: TaskGridRow): void {

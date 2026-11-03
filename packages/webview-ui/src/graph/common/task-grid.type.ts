@@ -53,9 +53,10 @@ export type TaskGridRow = {
   readonly name: HTMLButtonElement;
 };
 
-/** What the grid builds its rows with and reports to: the row builder, the search text it filters by, and a picked task. */
+/** What the grid builds its rows with and reports to: the row builder, the search text it filters by, a picked task, and a check (the ids of its line and whether it is now ticked). */
 export type TaskGridDeps = {
   readonly build: (line: ProjectLine) => TaskGridRow;
   readonly search: () => string;
   readonly onPick: (id: string) => void;
+  readonly onCheck: (ids: string[], isChecked: boolean) => void;
 };
