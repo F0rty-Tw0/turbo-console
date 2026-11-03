@@ -32,6 +32,7 @@ const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 const DRAWING: TaskDrawing = {
   tasks: TASKS,
   positions: POSITIONS,
+  routes: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),
   labels: new Map(),

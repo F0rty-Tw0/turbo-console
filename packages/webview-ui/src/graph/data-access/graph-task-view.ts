@@ -2,9 +2,10 @@ import type { Core, EdgeCollection, EdgeSingular, ElementDefinition, NodeCollect
 
 import { labelOf, setCountLabels, taskClassesOf } from './graph-atom-view.ts';
 import { positionOf } from './graph-place.ts';
+import { applyRoutes } from './graph-routes.ts';
 import { boxesOf } from './graph-task-boxes.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
-import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
 import { RUN_CLASS_PREFIX, TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
@@ -142,6 +143,7 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     cy.resize();
     cy.elements().remove();
     cy.add(elements);
+    applyRoutes(cy, drawing.routes);
     paintTasks(cy, target);
     markRuns(cy, runs);
   };
@@ -158,6 +160,7 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
 
     taskNodes(cy).positions(placeNode);
   };
+  const setRoutes = (routes: Routes): void => applyRoutes(cy, routes);
   const positions = (): Positions => {
     const entries = taskNodes(cy).map(centreEntryOf);
 
@@ -169,7 +172,7 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     paintTasks(cy, target);
     markRuns(cy, runs);
   };
-  const canvas: TaskCanvas = { show, clear, setPositions, positions, paint, runStates, setCounts, remark };
+  const canvas: TaskCanvas = { show, clear, setPositions, setRoutes, positions, paint, runStates, setCounts, remark };
 
   return canvas;
 };

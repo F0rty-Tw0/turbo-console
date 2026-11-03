@@ -4,12 +4,13 @@ import type { Mock } from 'vitest';
 
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { ViewStateModes } from './view-state-modes.ts';
-import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { EdgeRoute, GraphAtomGroup, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { AtomBoxSpec } from '../common/atom-layout.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
+import type { LayoutResult } from '../common/layout.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { NAMING_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -24,6 +25,12 @@ const SAVED_ZOOM = 1.25;
 const POSITIONS: Positions = { 'api#build': API_AT };
 
 const SHOWN = new Set(['api#build']);
+
+const ROUTE_END: Position = { x: 10, y: 120 };
+
+const ROUTE: EdgeRoute = { start: API_AT, bends: [], end: ROUTE_END };
+
+const ROUTES: Routes = { 'web#build>api#build': ROUTE };
 
 const PLACE_FAILED = new Error('cannot draw');
 
@@ -103,6 +110,19 @@ describe('FEATURE: GraphTaskLayout', () => {
       layout.clear();
 
       expect(rig.flow.stop).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN a layout that holds a route', () => {
+    it('WHEN it lands THEN the canvas draws the routes the layout holds', async () => {
+      const shown = layout.show(requestOf('k0'));
+      const plain = resultOf('k0', POSITIONS);
+      const routed: LayoutResult = { ...plain, routes: ROUTES };
+
+      await rig.runs.settle(rig.runs.count() - 1, routed);
+      await shown;
+
+      expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ routes: ROUTES }));
     });
   });
 

@@ -23,6 +23,7 @@ export const taskCanvasMock = (): Mocked<TaskCanvas> => {
     show: vi.fn<TaskCanvas['show']>(),
     clear: vi.fn<TaskCanvas['clear']>(),
     setPositions: vi.fn<TaskCanvas['setPositions']>(),
+    setRoutes: vi.fn<TaskCanvas['setRoutes']>(),
     positions: vi.fn<TaskCanvas['positions']>(none),
     paint: vi.fn<TaskCanvas['paint']>(),
     runStates: vi.fn<TaskCanvas['runStates']>(),

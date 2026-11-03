@@ -38,6 +38,7 @@ const SIZES = new Map([['web#e2e-ci', UMBRELLA_SIZE]]);
 const DRAWING: TaskDrawing = {
   tasks: [taskOf('web#e2e-ci', []), taskOf(CLASH_ID, [])],
   positions: POSITIONS,
+  routes: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: SIZES,
   labels: new Map([['web#e2e-ci', '2 files']]),

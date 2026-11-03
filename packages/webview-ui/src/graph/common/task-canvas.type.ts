@@ -3,15 +3,17 @@ import type { TaskNaming } from './graph-task.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
-import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphTask, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 
 /**
- * What task mode draws: the shown tasks, their centres, the node sizer for their names, the size of each umbrella that
- * has one of its own, the label of each umbrella that has a counts line, and the title text width of each package.
+ * What task mode draws: the shown tasks, their centres, the route of each link that has one, the node sizer for their
+ * names, the size of each umbrella that has one of its own, the label of each umbrella that has a counts line, and the
+ * title text width of each package.
  */
 export type TaskDrawing = {
   readonly tasks: GraphTask[];
   readonly positions: Positions;
+  readonly routes: Routes;
   readonly sizeOf: (name: string) => NodeSize;
   readonly sizes: ReadonlyMap<string, NodeSize>;
   readonly labels: ReadonlyMap<string, string>;
@@ -36,6 +38,8 @@ export type TaskCanvas = {
   readonly clear: () => void;
   /** Moves the task nodes only; a compound follows its tasks. */
   readonly setPositions: (positions: Positions) => void;
+  /** Draws each link in `routes` on its route and every other link straight; call it after the positions are set. */
+  readonly setRoutes: (routes: Routes) => void;
   /** The task nodes' centres. */
   readonly positions: () => Positions;
   /** Paints `target` selected and its closure highlighted, the rest dimmed; `null` paints every task normal. */

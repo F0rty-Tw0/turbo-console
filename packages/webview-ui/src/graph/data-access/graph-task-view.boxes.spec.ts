@@ -33,6 +33,7 @@ const TASKS: GraphTask[] = [taskOf('web#build', []), scriptOf('web#dev', []), ta
 const DRAWING: TaskDrawing = {
   tasks: TASKS,
   positions: {},
+  routes: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),
   labels: new Map(),

@@ -145,6 +145,7 @@ export class GraphTaskLayout {
     view.tasks.show({
       tasks: request.tasks,
       positions: result.positions,
+      routes: result.routes,
       sizeOf,
       sizes: request.sizes,
       labels: this.atoms.labels(),
