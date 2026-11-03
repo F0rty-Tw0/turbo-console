@@ -10,7 +10,8 @@ import type { CpuSteps, DragRecord } from '../common/graph.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { dragError, isWithinTolerance } from '../test/utils/graph-drag-error.spec.util.ts';
-import { emptySpotOf, insideFlagsOf } from '../test/utils/graph-geometry.spec.util.ts';
+import { insideFlagsOf } from '../test/utils/graph-geometry.spec.util.ts';
+import { emptySpotOn } from '../test/utils/graph-lines.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 import { dragBy, dragPerFrame } from '../test/utils/graph-scripted-pan.spec.util.ts';
 import { cpuStepsOf, recordPanCpu } from '../test/utils/graph-thread-time.spec.util.ts';
@@ -186,9 +187,8 @@ export class GraphCanvas {
     const container = await this.container.evaluate(readRect);
     const zoom = await this.probe.zoom();
     const nodes = await this.drawn();
-    const edges = await this.probe.edges();
 
-    return emptySpotOf(container, nodes, edges, zoom);
+    return emptySpotOn(this.page, container, nodes, zoom);
   }
 
   private async centre(): Promise<ViewportPoint> {

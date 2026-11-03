@@ -22,6 +22,7 @@ import { GraphAtoms } from '../pages/graph-atoms.po.ts';
 import { GraphFraming } from '../pages/graph-framing.po.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { freeSpotOf, nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
+import { readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { stretchTasksState } from '../test/utils/graph-stretch.spec.util.ts';
 
 const MAX_ZOOM_ROUNDS = 15;
@@ -78,24 +79,25 @@ export const stretchOpened = async (session: BenchSession): Promise<StretchFit> 
   return framed(session);
 };
 
-/** One reading of the canvas: the container rect, every drawn node and the zoom. */
+/** One reading of the canvas: the container rect, every drawn node, every drawn line and the zoom. */
 const readingOf = async (session: BenchSession): Promise<CanvasReading> => {
   const container = await session.canvas.container.evaluate(readRect);
   const nodes = await session.probe.nodes();
+  const lines = await readEdgeLines(session.page);
   const zoom = await session.probe.zoom();
-  const reading: CanvasReading = { container, nodes, zoom };
+  const reading: CanvasReading = { container, nodes, lines, zoom };
 
   return reading;
 };
 
 /** The first grid point of the canvas that no node covers and from which a drag by `step` stays in the container; 1500 tasks leave too few gaps for the edge-clear spot of a package graph. */
 const dragSpotOf = (reading: CanvasReading, step: ViewportPoint): ViewportPoint => {
-  const { container, nodes, zoom } = reading;
+  const { container, nodes, lines, zoom } = reading;
   const boxOf = (node: ProbeNode): ElementRect => nodeBoxOf(node, zoom);
   const boxes = nodes.map(boxOf);
   const region = dragRegionOf(container, step);
 
-  return freeSpotOf(region, boxes);
+  return freeSpotOf(region, boxes, lines);
 };
 
 /** Presses at `start` on empty canvas and drags by `step`; `dragRegionOf` kept the whole path inside the container. */

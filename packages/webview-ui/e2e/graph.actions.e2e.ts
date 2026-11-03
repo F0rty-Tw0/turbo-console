@@ -2,9 +2,10 @@ import type { ElementRect, ViewportPoint } from './common/playwright.type.ts';
 import { expect, test } from './graph-task.fixture.ts';
 import { DETAILS_NAMES_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { without } from './test/utils/graph-controls.spec.util.ts';
-import { emptySpotOf, nodeAt } from './test/utils/graph-geometry.spec.util.ts';
+import { emptySpotOf, freeSpotOf, nodeAt } from './test/utils/graph-geometry.spec.util.ts';
 import { linkInspection, packageInspection } from './test/utils/graph-inspection.spec.util.ts';
-import type { ProbeEdge, ProbeNode } from '../src/graph/common/graph-probe.type.ts';
+import { lineThrough, midpointsUnderCountOf, throughNodeCountOf } from './test/utils/graph-lines.spec.util.ts';
+import type { ProbeEdgeLine, ProbeNode } from '../src/graph/common/graph-probe.type.ts';
 import { NO_INSPECTION } from '../src/graph/common/inspection.const.ts';
 
 const AC1 = { description: 'M4-3 AC1', type: 'requirement' };
@@ -15,13 +16,42 @@ const CONTAINER: ElementRect = { left: 0, top: 0, width: 800, height: 600 };
 
 const A_AND_B: ProbeNode[] = [nodeAt('a', -100, -100), nodeAt('b', 200, 200)];
 
-const DRAWN_EDGE: ProbeEdge = { source: 'a', target: 'b', state: 'normal', isGhost: false, isDrawn: true, lineStyle: 'solid' };
+const DRAWN_EDGE: ProbeEdgeLine = lineThrough('a', 'b', [
+  { x: -100, y: -100 },
+  { x: 200, y: 200 }
+]);
 
-const UNDRAWN_EDGE: ProbeEdge = { ...DRAWN_EDGE, isDrawn: false };
+const UNDRAWN_EDGE: ProbeEdgeLine = { ...DRAWN_EDGE, isDrawn: false, points: [] };
 
-const DRAWN_EDGES: ProbeEdge[] = [DRAWN_EDGE];
+const DRAWN_EDGES: ProbeEdgeLine[] = [DRAWN_EDGE];
 
-const UNDRAWN_EDGES: ProbeEdge[] = [UNDRAWN_EDGE];
+const UNDRAWN_EDGES: ProbeEdgeLine[] = [UNDRAWN_EDGE];
+
+/** An L round the first corner: its straight chord from the first to the last point would pass 200 px from that corner. */
+const L_AROUND_FIRST_CORNER: ProbeEdgeLine = lineThrough('a', 'b', [
+  { x: 12, y: 300 },
+  { x: 12, y: 12 },
+  { x: 300, y: 12 }
+]);
+
+/** Along the first row of the 20 px grid `freeSpotOf` searches. */
+const FIRST_GRID_ROW: ProbeEdgeLine = lineThrough('a', 'b', [
+  { x: 0, y: 2 },
+  { x: 800, y: 2 }
+]);
+
+const SECOND_GRID_ROW_SPOT: ViewportPoint = { x: 2, y: 22 };
+
+const ACROSS_MIDDLE_NODE: ProbeNode[] = [nodeAt('a', 100, 100), nodeAt('b', 500, 100), nodeAt('c', 300, 100)];
+
+const BESIDE_ENDS_NODE: ProbeNode[] = [nodeAt('a', 100, 100), nodeAt('b', 500, 100), nodeAt('c', 300, 400)];
+
+const A_TO_B_LEVEL: ProbeEdgeLine = lineThrough('a', 'b', [
+  { x: 100, y: 100 },
+  { x: 500, y: 100 }
+]);
+
+const INSET_PX = 2;
 
 const FIRST_CORNER: ViewportPoint = { x: 12, y: 12 };
 
@@ -215,6 +245,60 @@ test.describe('FEATURE: graph details actions', () => {
         emptySpotOf(CONTAINER, A_AND_B, UNDRAWN_EDGES, 1));
 
       await test.step('THEN the first corner is returned', (): void => expect(undrawn).toEqual(FIRST_CORNER));
+    }
+  );
+
+  test(
+    'GIVEN a routed L-shaped line round the first corner, the empty spot is not that corner',
+    { annotation: AC1 },
+    async (): Promise<void> => {
+      const spot = await test.step('WHEN an empty spot is looked for with the L drawn', (): ViewportPoint =>
+        emptySpotOf(CONTAINER, [], [L_AROUND_FIRST_CORNER], 1));
+
+      await test.step('THEN the next corner is returned', (): void => expect(spot).toEqual(SECOND_CORNER));
+    }
+  );
+
+  test(
+    'GIVEN a line along the first grid row, the free spot keeps its clearance from the line',
+    { annotation: AC1 },
+    async (): Promise<void> => {
+      const spot = await test.step('WHEN a free spot is looked for', (): ViewportPoint => freeSpotOf(CONTAINER, [], [FIRST_GRID_ROW]));
+
+      await test.step('THEN the first grid row farther than the clearance is returned', (): void =>
+        expect(spot).toEqual(SECOND_GRID_ROW_SPOT));
+    }
+  );
+
+  test(
+    'GIVEN a line across a third node, only the third node counts as passed through',
+    { annotation: AC1 },
+    async (): Promise<void> => {
+      const across = await test.step('WHEN lines through nodes are counted with the third node across the line', (): number =>
+        throughNodeCountOf([A_TO_B_LEVEL], ACROSS_MIDDLE_NODE, 1, INSET_PX));
+
+      await test.step('THEN the line passes through 1 node', (): void => expect(across).toBe(1));
+
+      const beside = await test.step('WHEN they are counted with the third node beside the line', (): number =>
+        throughNodeCountOf([A_TO_B_LEVEL], BESIDE_ENDS_NODE, 1, INSET_PX));
+
+      await test.step('THEN the line, touching only its own ends, passes through 0', (): void => expect(beside).toBe(0));
+    }
+  );
+
+  test(
+    'GIVEN a line whose midpoint is under a third node, the midpoints under nodes are counted',
+    { annotation: AC1 },
+    async (): Promise<void> => {
+      const under = await test.step('WHEN the midpoints are counted with the third node across the line', (): number =>
+        midpointsUnderCountOf([A_TO_B_LEVEL], ACROSS_MIDDLE_NODE, 1));
+
+      await test.step('THEN 1 midpoint is under a node', (): void => expect(under).toBe(1));
+
+      const none = await test.step('WHEN they are counted with the third node beside the line', (): number =>
+        midpointsUnderCountOf([A_TO_B_LEVEL], BESIDE_ENDS_NODE, 1));
+
+      await test.step('THEN none is', (): void => expect(none).toBe(0));
     }
   );
 });

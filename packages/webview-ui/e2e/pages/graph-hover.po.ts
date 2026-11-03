@@ -8,8 +8,8 @@ import { ONE_FRAME } from '../common/graph.const.ts';
 import type { CpuSteps } from '../common/graph.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { edgeMidpointOf, emptySpotOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { recordHoverCpu } from '../test/utils/graph-hover-cpu.spec.util.ts';
+import { emptySpotOn, lineMidpointOf, readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { rendersSoFar } from '../test/utils/graph-quiet-canvas.spec.util.ts';
 import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
 
@@ -48,12 +48,12 @@ export class GraphHover {
     await this.moveTo(centre);
   }
 
-  /** Moves the pointer onto the middle of the `source` to `target` link and lets a frame draw. */
+  /** Moves the pointer onto the middle of the `source` to `target` link's drawn line and lets a frame draw. */
   public async overLink(source: string, target: string): Promise<void> {
     await this.probe.waitForNodes();
 
-    const nodes = await this.probe.nodes();
-    const midpoint = edgeMidpointOf(nodes, source, target);
+    const lines = await readEdgeLines(this.page);
+    const midpoint = lineMidpointOf(lines, source, target);
 
     await this.moveTo(midpoint);
   }
@@ -63,8 +63,7 @@ export class GraphHover {
     const container = await this.container.evaluate(readRect);
     const zoom = await this.probe.zoom();
     const nodes = await this.probe.nodes();
-    const edges = await this.probe.edges();
-    const spot: ViewportPoint = emptySpotOf(container, nodes, edges, zoom);
+    const spot: ViewportPoint = await emptySpotOn(this.page, container, nodes, zoom);
 
     await this.moveTo(spot);
   }
