@@ -1,16 +1,10 @@
-import { edgeIdOf } from '@turbo-console/webview-ui';
+import { ROUTE_BENDS_MAX, edgeIdOf } from '@turbo-console/webview-ui';
 import type { EdgeRoute, GraphState, LayoutGrouping, Position, Positions, Routes } from '@turbo-console/webview-ui';
 
 import { packageNamesOf } from './graph-package.util.ts';
 import { isRecord } from './record.util.ts';
 import type { GraphLayoutCacheEntry } from '../common/graph-cache.type.ts';
-import {
-  COORDINATE_MAX,
-  GRAPH_CACHE_KEY_PREFIX,
-  GRAPH_FOLDERS_CACHE_KEY_PREFIX,
-  PACKAGE_NAME_MAX,
-  ROUTE_BENDS_MAX
-} from '../common/graph.const.ts';
+import { COORDINATE_MAX, GRAPH_CACHE_KEY_PREFIX, GRAPH_FOLDERS_CACHE_KEY_PREFIX, PACKAGE_NAME_MAX } from '../common/graph.const.ts';
 
 type RoutesMessage = {
   readonly routes: Routes;
@@ -174,9 +168,11 @@ export const layoutEntryOf = (raw: unknown): GraphLayoutCacheEntry | null => {
 
   const positions = parsePositions(raw.positions);
 
+  if (positions === null) return null;
+
   const routes = parseRoutes(raw.routes);
 
-  if (positions === null || routes === null) return null;
+  if (routes === null) return null;
 
   const entry: GraphLayoutCacheEntry = { hash: raw.hash, positions, routes };
 
