@@ -11,6 +11,7 @@ import { ROUTE_BENDS_MAX } from '../common/graph-layout.const.ts';
 import { BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
 import { ROUTED_ELK_STUB, ROUTES_STUB } from '../test/stubs/layout.stub.ts';
 import { BOARDS_EDGES, boardsSizeOf, layoutBoards } from '../test/utils/folder-boards.spec.util.ts';
+import { routeWithBends } from '../test/utils/route-bends.spec.util.ts';
 
 const NOWHERE: Position = { x: NaN, y: NaN };
 const NO_ROUTE: EdgeRoute = { start: NOWHERE, bends: [], end: NOWHERE };
@@ -34,19 +35,6 @@ const A_B: GraphEdge = { source: 'a', target: 'b' };
 const centreOf = (positions: Positions, name: string): Position => positions[name] ?? NOWHERE;
 
 const routeOf = (routes: Routes, edge: GraphEdge): EdgeRoute => routes[edgeIdOf(edge)] ?? NO_ROUTE;
-
-const bendAt = (_: unknown, index: number): Position => {
-  const bend: Position = { x: index, y: index };
-
-  return bend;
-};
-
-const routeWithBends = (count: number): EdgeRoute => {
-  const bends = Array.from({ length: count }, bendAt);
-  const route: EdgeRoute = { start: TOP_POINT, bends, end: BOTTOM_POINT };
-
-  return route;
-};
 
 describe('FEATURE: routesOf', () => {
   describe('GIVEN the boards fixture laid out by real elkjs', () => {
