@@ -1,8 +1,8 @@
-import { postDragged } from './graph-layout-actions.ts';
+import { keepDrag } from './graph-layout-actions.ts';
 import { GraphLayoutRuns } from './graph-layout-runs.ts';
 import { GraphLayoutSnapshots } from './graph-layout-snapshots.ts';
 import { postLayout } from './layout-post.ts';
-import type { GraphPositionsMessage, LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
+import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { GraphReady, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { GraphLayoutsDeps, LayoutNotice } from '../common/graph-layouts.type.ts';
@@ -57,8 +57,8 @@ export class GraphLayouts {
     const mode = groupingOf(view.grouped);
 
     this.reset();
-    this.snapshots.seed('flat', state.positions);
-    this.snapshots.seed('folders', state.folderPositions);
+    this.snapshots.seed('flat', state.positions, state.routes);
+    this.snapshots.seed('folders', state.folderPositions, state.folderRoutes);
     this.checked = mode;
     this.onScreen = mode;
     this.saved = saved;
@@ -118,17 +118,9 @@ export class GraphLayouts {
     await this.drawFresh(mode);
   }
 
-  /** Keeps a drag in the snapshot on screen and posts it for that mode's cache unless its layout fell back. */
-  public dragged({ positions }: GraphDrag): void {
-    const drawn = this.deps.drawn();
-
-    if (drawn === null) return;
-
-    // grug: U6b snapshots routes
-    const message: GraphPositionsMessage = { type: 'positions', hash: drawn.hash, positions, routes: {}, grouping: this.onScreen };
-
-    this.snapshots.drag(this.onScreen, positions);
-    postDragged(this.deps.bridge, this.engine(), message);
+  /** Keeps a drag in the snapshot on screen, its touched edges straight, and posts it for that mode's cache unless its layout fell back. */
+  public dragged(drag: GraphDrag): void {
+    keepDrag(this.deps, this.snapshots, this.onScreen, drag);
   }
 
   public reset(): void {
@@ -187,6 +179,7 @@ export class GraphLayouts {
     if (mode !== this.onScreen) view.setGrouping(groups);
 
     view.setPositions(positions);
+    view.setRoutes(this.snapshots.routesOf(mode));
     this.deps.screen.showNotice(this.noticeOf(mode));
     this.onScreen = mode;
     this.deps.onPlaced(mode);
@@ -204,6 +197,7 @@ export class GraphLayouts {
 
     if (groups !== null) view.setGrouping(groups);
 
+    view.setRoutes(this.snapshots.routesOf(mode));
     this.hasDrawn = true;
     this.deps.onDrawn(this.saved);
     this.deps.onPlaced(mode);
