@@ -108,7 +108,15 @@ describe('FEATURE: createLayoutRunner', () => {
 
       const result = await runner.run('h1', ELK_GRAPH_STUB);
 
-      expect(result).toMatchObject({ hash: 'h1', engine: 'fallback', positions: FALLBACK_POSITIONS_STUB, routes: {} });
+      expect(result).toMatchObject({ hash: 'h1', engine: 'fallback', positions: FALLBACK_POSITIONS_STUB });
+    });
+
+    it('WHEN a run starts THEN the fallback result has no routes', async () => {
+      const runner = createLayoutRunner(runnerDepsOf(createElk));
+
+      const result = await runner.run('h1', ELK_GRAPH_STUB);
+
+      expect(result?.routes).toStrictEqual({});
     });
 
     it('WHEN a run starts THEN the fallback lays out the given graph', async () => {
