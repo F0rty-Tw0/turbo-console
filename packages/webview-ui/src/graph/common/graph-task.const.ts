@@ -47,7 +47,8 @@ export const TASK_FOLDER_CLASS = 'task-folder';
 /** The title of the root `//` tasks, on its box and wherever a root task names its owner. */
 export const ROOT_TASKS_TITLE = 'Workspace root (//)';
 
-const NO_NAMES: ReadonlyMap<string, string> = new Map();
+/** The empty map of labels, folders or any other names a caller does not hold. */
+export const NO_NAMES: ReadonlyMap<string, string> = new Map();
 
 /** The naming of an ungrouped task graph with scopes shown and no labels or folders known. */
 export const NEUTRAL_NAMING: TaskNaming = { grouped: false, scopeShown: true, labels: NO_NAMES, folders: NO_NAMES };

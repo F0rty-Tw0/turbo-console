@@ -54,7 +54,8 @@ export const titleWidthsOf = (
   const scriptPackages = new Set(drawn.filter(isScript).map(packageNameOf));
   const widths = new Map<string, number>();
 
-  for (const packageName of packageNames) widths.set(packageName, titleWidthOf(ownerTextOf(packageName, rootLabel), sizeOf));
+  for (const packageName of packageNames)
+    widths.set(packageName, titleWidthOf(ownerTextOf(packageName, rootLabel, naming.labels), sizeOf));
 
   setFolderWidths(widths, packageNames, naming, sizeOf);
 

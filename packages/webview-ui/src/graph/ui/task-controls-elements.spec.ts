@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildTaskControls, buildTaskRow } from './task-controls-elements.ts';
-import { SEARCH_TASKS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
+import { ROOT_TASKS_TITLE, SEARCH_TASKS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 
@@ -57,11 +57,11 @@ describe('FEATURE: task controls elements', () => {
       expect(row.pick.title).toBe('//#build');
     });
 
-    it('WHEN there is no root label THEN its description reads //', () => {
+    it('WHEN there is no root label THEN its description reads the root title', () => {
       const row = buildTaskRow(ROOT_BUILD_STUB, null);
       const [, description] = row.pick.children;
 
-      expect(description?.textContent).toBe('//');
+      expect(description?.textContent).toBe(ROOT_TASKS_TITLE);
     });
   });
 });

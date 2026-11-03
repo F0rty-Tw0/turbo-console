@@ -13,7 +13,7 @@ import {
   taskIdsOf
 } from './task-choice.util.ts';
 import type { NodeSizer, UmbrellaSizers } from '../common/graph-page.type.ts';
-import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
+import { NEUTRAL_NAMING, NO_NAMES } from '../common/graph-task.const.ts';
 import type { TaskNaming, UmbrellaFacts } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
@@ -87,25 +87,33 @@ describe('FEATURE: task choice rules', () => {
 
   describe('GIVEN the task a#build', () => {
     it.each(['BUI', 'a#b', ''])('WHEN the search is "%s" THEN it matches', (search) => {
-      expect(matchesTaskSearch(GRAPH_TASK_STUB, search, null)).toBe(true);
+      expect(matchesTaskSearch(GRAPH_TASK_STUB, search, null, NO_NAMES)).toBe(true);
+    });
+
+    it('WHEN the search is the label of package a THEN it matches', () => {
+      expect(matchesTaskSearch(GRAPH_TASK_STUB, 'alpha', null, new Map([['a', 'alpha']]))).toBe(true);
     });
 
     it('WHEN the search is lint THEN it does not match', () => {
-      expect(matchesTaskSearch(GRAPH_TASK_STUB, 'lint', null)).toBe(false);
+      expect(matchesTaskSearch(GRAPH_TASK_STUB, 'lint', null, NO_NAMES)).toBe(false);
     });
   });
 
   describe('GIVEN the task //#build of a root labelled single-app', () => {
     it('WHEN the search is single THEN it matches the label', () => {
-      expect(matchesTaskSearch(ROOT_BUILD_STUB, 'single', 'single-app')).toBe(true);
+      expect(matchesTaskSearch(ROOT_BUILD_STUB, 'single', 'single-app', NO_NAMES)).toBe(true);
     });
 
     it('WHEN the search is single and the root has no label THEN it does not match', () => {
-      expect(matchesTaskSearch(ROOT_BUILD_STUB, 'single', null)).toBe(false);
+      expect(matchesTaskSearch(ROOT_BUILD_STUB, 'single', null, NO_NAMES)).toBe(false);
+    });
+
+    it('WHEN the search is workspace and the root has no label THEN it matches the root title', () => {
+      expect(matchesTaskSearch(ROOT_BUILD_STUB, 'workspace', null, NO_NAMES)).toBe(true);
     });
 
     it('WHEN the search is // THEN it still matches through the id', () => {
-      expect(matchesTaskSearch(ROOT_BUILD_STUB, '//', 'single-app')).toBe(true);
+      expect(matchesTaskSearch(ROOT_BUILD_STUB, '//', 'single-app', NO_NAMES)).toBe(true);
     });
   });
 

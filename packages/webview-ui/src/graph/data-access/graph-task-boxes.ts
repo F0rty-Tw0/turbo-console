@@ -29,7 +29,7 @@ const folderBoxOf = (folder: string, drawing: TaskDrawing): ElementDefinition =>
 const packageBoxOf = (packageName: string, drawing: TaskDrawing): ElementDefinition => {
   const minWidth = drawing.titleWidths.get(packageName) ?? 0;
   const parent = folderBoxIdOf(packageName, drawing.naming);
-  const box = { id: taskBoxIdOf(packageName), title: ownerTextOf(packageName, drawing.rootLabel), minWidth };
+  const box = { id: taskBoxIdOf(packageName), title: ownerTextOf(packageName, drawing.rootLabel, drawing.naming.labels), minWidth };
   const nested = { ...box, parent };
   const data = parent === null ? box : nested;
   const definition: ElementDefinition = { data, classes: TASK_BOX_CLASS };

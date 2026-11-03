@@ -9,6 +9,7 @@ import {
   DEPENDENTS_LABEL,
   NONE_SHOWN_TEXT,
   NO_COMMAND_TEXT,
+  NO_NAMES,
   ROOT_TASK_PACKAGE,
   RUN_LABEL,
   RUN_NO_CACHE_LABEL,
@@ -135,7 +136,7 @@ const ownerLineOf = (model: TaskDetailsModel): OwnerLine => {
   const { packageName } = model.task;
 
   if (packageName === ROOT_TASK_PACKAGE) {
-    const text = ownerTextOf(packageName, model.rootLabel);
+    const text = ownerTextOf(packageName, model.rootLabel, NO_NAMES);
     const textLine = lineOf(text);
     const plain: OwnerLine = { line: textLine, owner: null };
 

@@ -3,6 +3,7 @@ import { SINGLE_PACKAGE_TASKS_STUB } from './test/stubs/graph-single-package.stu
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { TASK_CANVAS_TASK_IDS, taskCanvasState } from './test/utils/graph-task-canvas.spec.util.ts';
+import { ROOT_TASKS_TITLE } from '../src/graph/common/graph-task.const.ts';
 import { folderTitleOf } from '../src/graph/utils/controls-text.util.ts';
 
 const FOLDER_BOXES = { description: 'U5 spec D10, §5 row 22 (U5e part)', type: 'requirement' };
@@ -49,7 +50,7 @@ test.describe('FEATURE: graph task mode draws a folder box per folder while grou
 
       await test.step('AND no folder or package title is clipped', async (): Promise<void> => {
         await graphTaskBoxes.expectFolderTitlesUncut();
-        await graphTaskProbe.expectBoxTitlesUncut(['//', 'core', 'root-lib', 'ui', 'web']);
+        await graphTaskProbe.expectBoxTitlesUncut([ROOT_TASKS_TITLE, 'core', 'root-lib', 'ui', 'web']);
       });
     }
   );

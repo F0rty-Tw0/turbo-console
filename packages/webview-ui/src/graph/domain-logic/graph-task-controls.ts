@@ -1,6 +1,6 @@
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
-import { TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
+import { NO_NAMES, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { CONTROLS_ID } from '../common/graph.const.ts';
 import type { CellAt, ListLine } from '../common/roving.type.ts';
 import type { TaskControlsDeps, TaskControlsElements, TaskControlsRow } from '../common/task-controls.type.ts';
@@ -105,7 +105,7 @@ export class GraphTaskControls {
   private filter(): void {
     const search = this.elements.search.value;
 
-    for (const row of this.rows) row.line.hidden = !matchesTaskSearch(row.task, search, this.rootLabel);
+    for (const row of this.rows) row.line.hidden = !matchesTaskSearch(row.task, search, this.rootLabel, NO_NAMES);
 
     this.rove(this.shownRows().at(0));
   }

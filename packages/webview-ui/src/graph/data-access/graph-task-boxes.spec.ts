@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { boxesOf } from './graph-task-boxes.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
+import { NEUTRAL_NAMING, ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
@@ -184,5 +184,29 @@ describe('FEATURE: createTaskCanvas nesting scripts', () => {
     const parentId = cy.getElementById('app#build').parent().first().id();
 
     expect(parentId).toBe('pkg:app');
+  });
+});
+
+describe('FEATURE: boxesOf titles', () => {
+  const titleOf = (drawing: TaskDrawing): unknown => boxesOf(drawing).find((box) => box.classes === 'task-box')?.data['title'];
+
+  it('GIVEN a // task THEN the pkg:// box is titled with the root title', () => {
+    expect(titleOf(drawingOf([taskOf('//#gen', [])]))).toBe(ROOT_TASKS_TITLE);
+  });
+
+  it('GIVEN a // task and the root label single-app THEN the box is titled single-app', () => {
+    const base = drawingOf([taskOf('//#gen', [])]);
+    const drawing: TaskDrawing = { ...base, rootLabel: 'single-app' };
+
+    expect(titleOf(drawing)).toBe('single-app');
+  });
+
+  it('GIVEN an @org/x task labelled x THEN the box is titled x', () => {
+    const naming: TaskNaming = { ...NEUTRAL_NAMING, labels: new Map([['@org/x', 'x']]) };
+
+    const base = drawingOf([taskOf('@org/x#build', [])]);
+    const drawing: TaskDrawing = { ...base, naming };
+
+    expect(titleOf(drawing)).toBe('x');
   });
 });

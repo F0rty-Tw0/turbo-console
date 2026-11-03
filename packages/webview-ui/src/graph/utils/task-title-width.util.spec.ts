@@ -5,7 +5,7 @@ import { folderIdOf } from './folder-id.util.ts';
 import { nodeSizeOf } from './node-size.util.ts';
 import { titleWidthsOf } from './task-title-width.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
+import { NEUTRAL_NAMING, ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest, TaskNaming } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
@@ -131,6 +131,25 @@ describe('FEATURE: titleWidthsOf', () => {
     });
   });
 
+  describe('GIVEN a root task shown and no root label', () => {
+    const ROOT_SHOWN: TitleRequest = { tasks: [taskOf('//#build', [])], shown: new Set(['//#build']), naming: NEUTRAL_NAMING };
+
+    it('WHEN measured THEN the key is // and the width is that of the root title', () => {
+      const widths = titleWidthsOf(ROOT_SHOWN, SIZER, null);
+
+      expect(widths.get('//')).toBe(ROOT_TASKS_TITLE.length * 10 + 1);
+    });
+  });
+
+  describe('GIVEN a package shown with the label web', () => {
+    it('WHEN measured THEN the key is its name and the width is that of the label', () => {
+      const naming: TaskNaming = { ...NEUTRAL_NAMING, labels: new Map([['@acme/web', 'web']]) };
+      const widths = titleWidthsOf({ ...WEB_LINT_SHOWN, naming }, SIZER, null);
+
+      expect(widths.get('@acme/web')).toBe(31);
+    });
+  });
+
   describe('GIVEN grouped, the package apps and web in apps, ui in packages and the root //', () => {
     const rootTitle = folderTitleOf('');
 
@@ -147,7 +166,7 @@ describe('FEATURE: titleWidthsOf', () => {
 
       titleWidthsOf(FOLDERS_SHOWN, sizer, null);
 
-      expect(sizer.mock.calls).toStrictEqual([['apps'], ['web'], ['ui'], ['//'], ['apps'], ['packages'], [rootTitle]]);
+      expect(sizer.mock.calls).toStrictEqual([['apps'], ['web'], ['ui'], [ROOT_TASKS_TITLE], ['apps'], ['packages'], [rootTitle]]);
     });
   });
 

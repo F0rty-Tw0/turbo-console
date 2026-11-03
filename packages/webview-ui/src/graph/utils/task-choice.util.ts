@@ -33,9 +33,14 @@ export const taskDepthOf = (text: string): number | null => {
 };
 
 /** Whether the task's name, package, printed owner text or id holds `search`, ignoring case; an empty search matches every task. */
-export const matchesTaskSearch = (task: GraphTask, search: string, rootLabel: string | null): boolean => {
+export const matchesTaskSearch = (
+  task: GraphTask,
+  search: string,
+  rootLabel: string | null,
+  labels: ReadonlyMap<string, string>
+): boolean => {
   const needle = search.toLowerCase();
-  const owner = ownerTextOf(task.packageName, rootLabel);
+  const owner = ownerTextOf(task.packageName, rootLabel, labels);
   const fields = [task.name, task.packageName, owner, task.id];
 
   return fields.some((field) => field.toLowerCase().includes(needle));
