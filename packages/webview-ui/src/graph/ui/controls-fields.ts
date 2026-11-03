@@ -59,7 +59,7 @@ export const depthInput = (): HTMLInputElement => {
 };
 
 const checkField = (text: string, input: HTMLInputElement): HTMLElement => {
-  const label = textElement('label', 'controls-grouping', text);
+  const label = textElement('label', 'controls-check-field', text);
 
   label.prepend(input);
 
