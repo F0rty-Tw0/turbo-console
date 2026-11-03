@@ -6,7 +6,7 @@ import type { GraphPositionsMessage, LayoutGrouping } from '../../bridge/common/
 import type { GraphReady, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { GraphLayoutsDeps, LayoutNotice } from '../common/graph-layouts.type.ts';
-import type { DrawnGraph } from '../common/graph-page.type.ts';
+import type { DrawnGraph, GraphDrag } from '../common/graph-page.type.ts';
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
 import { modeGroupsOf } from '../utils/folder-group.util.ts';
@@ -119,7 +119,7 @@ export class GraphLayouts {
   }
 
   /** Keeps a drag in the snapshot on screen and posts it for that mode's cache unless its layout fell back. */
-  public dragged(positions: Positions): void {
+  public dragged({ positions }: GraphDrag): void {
     const drawn = this.deps.drawn();
 
     if (drawn === null) return;

@@ -1,7 +1,6 @@
-import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import type { FlowControl } from '../common/flow.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
-import type { GraphViewHandlers } from '../common/graph-page.type.ts';
+import type { GraphDrag, GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
 
 type HandledInspection = {
@@ -24,7 +23,7 @@ type HandledFiltering = {
 };
 
 type HandledLayouts = {
-  readonly dragged: (positions: Positions) => void;
+  readonly dragged: (drag: GraphDrag) => void;
 };
 
 type HandledSelection = {
@@ -42,7 +41,7 @@ type HandledAtoms = {
 
 type HandledLayout = {
   readonly atoms: HandledAtoms;
-  readonly dragged: () => void;
+  readonly dragged: (touched: string[]) => void;
 };
 
 type HandledTasks = {
@@ -122,8 +121,8 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
     onDoubleTapNode: byMode(openDetails, toggleAtoms),
     onDoubleTapFolder: byMode((folder: string): void => filtering().folders.toggle(folder)),
     onDragEnd: byMode(
-      (positions: Positions): void => layouts().dragged(positions),
-      (): void => tasks().layout.dragged()
+      (drag: GraphDrag): void => layouts().dragged(drag),
+      (drag: GraphDrag): void => tasks().layout.dragged(drag.touched)
     ),
     onViewport: (): void => {
       flow().viewportChanged();

@@ -127,7 +127,7 @@ describe('FEATURE: GraphLayouts', () => {
   describe('GIVEN both layouts cached and flat dragged', () => {
     it('WHEN the reader switches to grouped and back THEN each switch places its snapshot, runs the folder pass and then fits', () => {
       harness.open(CACHED_BOTH, SAVED_FLAT_STUB);
-      harness.layouts.dragged(DRAGGED_POSITIONS_STUB);
+      harness.layouts.dragged({ positions: DRAGGED_POSITIONS_STUB, touched: [] });
       harness.onPlaced.mockClear();
 
       void harness.layouts.switchTo('folders');
@@ -172,13 +172,13 @@ describe('FEATURE: GraphLayouts', () => {
     });
 
     it('WHEN the reader drags in the window THEN the drag posts as flat', () => {
-      harness.layouts.dragged(DRAGGED_POSITIONS_STUB);
+      harness.layouts.dragged({ positions: DRAGGED_POSITIONS_STUB, touched: [] });
 
       expect(harness.posts()).toStrictEqual([positionsPost(DRAGGED_POSITIONS_STUB, 'flat')]);
     });
 
     it('WHEN a drag in the window is followed by the grouped landing and a switch to flat THEN the drag is placed', async () => {
-      harness.layouts.dragged(DRAGGED_POSITIONS_STUB);
+      harness.layouts.dragged({ positions: DRAGGED_POSITIONS_STUB, touched: [] });
       await harness.runs.settle(0, resultOf('h1', GROUPED_POSITIONS_STUB));
 
       void harness.layouts.switchTo('flat');
@@ -246,7 +246,7 @@ describe('FEATURE: GraphLayouts', () => {
     });
 
     it('WHEN the reader drags the grouped layout THEN nothing is posted', () => {
-      harness.layouts.dragged(DRAGGED_POSITIONS_STUB);
+      harness.layouts.dragged({ positions: DRAGGED_POSITIONS_STUB, touched: [] });
 
       expect(harness.posts()).toHaveLength(1);
     });
@@ -254,7 +254,7 @@ describe('FEATURE: GraphLayouts', () => {
     it('WHEN the reader switches to flat and drags THEN the flat drag posts', () => {
       void harness.layouts.switchTo('flat');
 
-      harness.layouts.dragged(DRAGGED_POSITIONS_STUB);
+      harness.layouts.dragged({ positions: DRAGGED_POSITIONS_STUB, touched: [] });
 
       expect(harness.posts().at(-1)).toStrictEqual(positionsPost(DRAGGED_POSITIONS_STUB, 'flat'));
     });

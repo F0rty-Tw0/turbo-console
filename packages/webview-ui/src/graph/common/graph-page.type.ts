@@ -52,6 +52,12 @@ export type Viewport = {
   readonly pan: Position;
 };
 
+/** A dropped drag: every package's centre, and the ids of the edges with an end in the dropped node or below it. */
+export type GraphDrag = {
+  readonly positions: Positions;
+  readonly touched: string[];
+};
+
 /** What the Cytoscape view reports back; names are package names. */
 export type GraphViewHandlers = {
   readonly onTapNode: (name: string) => void;
@@ -65,8 +71,8 @@ export type GraphViewHandlers = {
   readonly onDoubleTapNode: (name: string) => void;
   /** Two taps on the same box or the same collapsed folder within `DOUBLE_TAP_MS`, after the second `onTapFolder`. */
   readonly onDoubleTapFolder: (folder: string) => void;
-  /** Every node's current centre, after the user dropped a dragged node. */
-  readonly onDragEnd: (positions: Positions) => void;
+  /** After the user dropped a dragged node or box: every node's centre and the edges that moved with it. */
+  readonly onDragEnd: (drag: GraphDrag) => void;
   readonly onViewport: () => void;
   /** After a container resize re-fitted the camera; the panels overlaying the canvas keep clear again. */
   readonly onRefit: () => void;

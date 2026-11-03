@@ -3,7 +3,7 @@ import type { Core, EventObject, EventObjectEdge, EventObjectNode, NodeSingular 
 import { packageNodes } from './graph-boxes.ts';
 import { containerPainterOf, listenCursor } from './graph-cursor.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewHandlers } from '../common/graph-page.type.ts';
+import type { GraphDrag, GraphViewHandlers } from '../common/graph-page.type.ts';
 import { FOLDER_LINK_ID_PREFIX, GHOST_CLASS } from '../common/graph.const.ts';
 import { folderOfElementId } from '../utils/folder-id.util.ts';
 import { tapPairOf } from '../utils/tap-pair.util.ts';
@@ -23,6 +23,21 @@ const positionsOf = (cy: Core): Positions => {
   const entries = packageNodes(cy).map(centreEntryOf);
 
   return Object.fromEntries(entries);
+};
+
+/** The ids of the edges with an end in `node` or in any node below it: a dropped box moves every package it holds. */
+const touchedEdgeIdsOf = (node: NodeSingular): string[] => {
+  const moved = node.union(node.descendants());
+
+  return moved.connectedEdges().map((edge): string => edge.id());
+};
+
+const dragOf = (cy: Core, event: EventObjectNode): GraphDrag => {
+  const positions = positionsOf(cy);
+  const touched = touchedEdgeIdsOf(event.target);
+  const drag: GraphDrag = { positions, touched };
+
+  return drag;
 };
 
 /**
@@ -138,7 +153,7 @@ export const listen = (cy: Core, handlers: GraphViewHandlers): void => {
   cy.on('tap', onBackground);
   listenHover(cy, handlers);
   listenCursor(cy, containerPainterOf(cy));
-  cy.on('dragfreeon', 'node', (): void => handlers.onDragEnd(positionsOf(cy)));
+  cy.on('dragfreeon', 'node', (event: EventObjectNode): void => handlers.onDragEnd(dragOf(cy, event)));
   cy.on('viewport', handlers.onViewport);
   cy.on('render', handlers.onRender);
 };
