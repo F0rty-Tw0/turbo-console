@@ -21,6 +21,8 @@ type MemoryModes = Pick<TaskModes, 'task' | 'saveTask' | 'current'>;
 /** A monorepo state whose only tasks are the workspace root's. */
 const ROOT_TASKS_STATE: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage: false };
 
+const ROOT_AND_WEB_STATE: GraphReady = { ...TASK_STATE_STUB, tasks: [...TASK_STATE_STUB.tasks, ROOT_BUILD_STUB] };
+
 const APP_BUILD = taskOf('app#build', []);
 
 const APP_DEV = scriptOf('app#dev', []);
@@ -59,7 +61,13 @@ const FACTS_ROWS: FactsRow[] = [
     'only workspace root tasks',
     ROOT_TASKS_STATE,
     ['//#build', '//#lint'],
-    { taskPackage: null, taskCount: 2, isSinglePackage: false }
+    { taskPackage: '//', taskCount: 2, isSinglePackage: false }
+  ],
+  [
+    'the workspace root and web',
+    ROOT_AND_WEB_STATE,
+    ['//#build', 'web#build'],
+    { taskPackage: null, taskCount: 3, isSinglePackage: false }
   ],
   ['nothing, in a single package', SINGLE_TASK_STATE_STUB, [], { taskPackage: null, taskCount: 2, isSinglePackage: true }]
 ];
