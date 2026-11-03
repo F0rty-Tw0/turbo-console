@@ -1,12 +1,14 @@
 import type { Page } from '@playwright/test';
 
+import { expectGrabbable } from './graph-grab.spec.util.ts';
 import { ONE_FRAME } from '../../common/graph.const.ts';
 import type { ViewportPoint } from '../../common/playwright.type.ts';
 
 const DRAG_STEPS = 8;
 
-/** Presses at `from`, drags by `dx`, `dy` in eight mouse steps and releases. */
+/** Presses at `from`, drags by `dx`, `dy` in eight mouse steps and releases; throws before pressing when the graph canvas is not under `from`. */
 export const dragBy = async (page: Page, from: ViewportPoint, dx: number, dy: number): Promise<void> => {
+  await expectGrabbable(page, from);
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
   await page.mouse.move(from.x + dx, from.y + dy, { steps: DRAG_STEPS });
