@@ -1,6 +1,6 @@
 import { folderTitleOf } from './controls-text.util.ts';
-import { labelIn } from './package-label.util.ts';
-import { ROOT_TASKS_TITLE, ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
+import { ownerTextOf } from './owner-text.util.ts';
+import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 import { PACKAGES_CRUMB, TASKS_CRUMB_STEM } from '../common/location.const.ts';
 import type { LocationCrumb, LocationState } from '../common/location.type.ts';
 
@@ -22,11 +22,13 @@ const packageTrailOf = (folder: string | null): LocationCrumb[] => {
   return [packages, focused];
 };
 
-/** The crumb of the one package of the chosen tasks: "Workspace root (//)" for the root, else the package label. */
+/** The crumb of the one package of the chosen tasks, labelled by `ownerTextOf`: a root crumb for the root, else a package crumb. */
 const ownerCrumbOf = (taskPackage: string, labels: ReadonlyMap<string, string>): LocationCrumb => {
-  if (taskPackage === ROOT_TASK_PACKAGE) return crumbOf('root', ROOT_TASKS_TITLE, '');
+  const label = ownerTextOf(taskPackage, null, labels);
 
-  return crumbOf('package', labelIn(labels, taskPackage), taskPackage);
+  if (taskPackage === ROOT_TASK_PACKAGE) return crumbOf('root', label, '');
+
+  return crumbOf('package', label, taskPackage);
 };
 
 /**
