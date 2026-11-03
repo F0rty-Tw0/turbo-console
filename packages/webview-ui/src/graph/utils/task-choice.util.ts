@@ -3,9 +3,8 @@ import { taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import { ownerTextOf } from './owner-text.util.ts';
 import { droppedTasksText } from './task-text.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import type { UmbrellaSizers } from '../common/graph-page.type.ts';
-import { MAX_TASK_DEPTH, MIN_TASK_DEPTH, NEUTRAL_NAMING } from '../common/graph-task.const.ts';
-import type { TaskChoice, TaskLayoutRequest } from '../common/graph-task.type.ts';
+import { MAX_TASK_DEPTH, MIN_TASK_DEPTH } from '../common/graph-task.const.ts';
+import type { TaskChoice, TaskLayoutRequest, TaskNaming, UmbrellaFacts } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { ShownSet } from '../common/shown-set.type.ts';
 
@@ -43,15 +42,12 @@ export const matchesTaskSearch = (task: GraphTask, search: string, rootLabel: st
 };
 
 /**
- * The tasks the shown set draws, in the order given, the key of their layout and the size of each drawn umbrella (a task
- * with a file count in `fileCounts`); the key holds those counts, so a changed file count lays out afresh.
+ * The tasks the shown set draws, in the order given, the key of their layout, the size of each drawn umbrella (a task
+ * with a file count in `umbrellas.fileCounts`) and the box `naming`; the key holds those counts and the naming, so a
+ * changed file count, grouping, scope bit or folder lays out afresh.
  */
-export const requestOf = (
-  tasks: GraphTask[],
-  shownSet: ShownSet,
-  fileCounts: ReadonlyMap<string, number>,
-  sizers: UmbrellaSizers
-): TaskLayoutRequest => {
+export const requestOf = (tasks: GraphTask[], shownSet: ShownSet, umbrellas: UmbrellaFacts, naming: TaskNaming): TaskLayoutRequest => {
+  const { fileCounts, sizers } = umbrellas;
   const shown = new Set(shownSet.ids);
   const drawn = tasks.filter((task) => shown.has(task.id));
   const sizes = new Map<string, NodeSize>();
@@ -62,8 +58,8 @@ export const requestOf = (
     if (fileCount !== undefined) sizes.set(task.id, umbrellaSizeOf(sizers, task.name, fileCount));
   }
 
-  const key = taskLayoutKeyOf(drawn, shown, fileCounts, NEUTRAL_NAMING);
-  const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes, naming: NEUTRAL_NAMING };
+  const key = taskLayoutKeyOf(drawn, shown, fileCounts, naming);
+  const request: TaskLayoutRequest = { tasks: drawn, shown, key, sizes, naming };
 
   return request;
 };
