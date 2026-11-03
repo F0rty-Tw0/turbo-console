@@ -2,11 +2,20 @@ import type { PageElements } from './page-elements.type.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 
-/** The task mode Controls panel `aside#graph-task-controls`, unwired: Search tasks, Dependents depth and the task list. */
+/**
+ * The task mode Controls panel `aside#graph-task-controls`, unwired: the Search section, the View section (Dependents depth
+ * and the three checkboxes) and the task list.
+ */
 export type TaskControlsElements = {
   readonly panel: HTMLElement;
   readonly search: HTMLInputElement;
   readonly depth: HTMLInputElement;
+  readonly grouping: HTMLInputElement;
+  readonly scope: HTMLInputElement;
+  readonly scripts: HTMLInputElement;
+  /** The labels around Group by folder and Show scripts, which `hidden` removes from the panel and the page's roles. */
+  readonly groupingField: HTMLElement;
+  readonly scriptsField: HTMLElement;
   /** The `grid` of task rows; one Tab stop with a roving focus. */
   readonly list: HTMLElement;
 };

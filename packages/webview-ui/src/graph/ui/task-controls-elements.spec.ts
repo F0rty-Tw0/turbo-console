@@ -1,9 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildTaskControls, buildTaskRow } from './task-controls-elements.ts';
-import { ROOT_TASKS_TITLE, SEARCH_TASKS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
+import { ROOT_TASKS_TITLE, SEARCH_TASKS_LABEL, SHOW_SCRIPTS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
+import { GROUP_BY_FOLDER_LABEL, SCOPE_TOGGLE_LABEL, SEARCH_SECTION_TITLE, VIEW_SECTION_TITLE } from '../common/graph.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
+
+const isHtmlElement = (element: Element | undefined): element is HTMLElement => element !== undefined && 'title' in element;
+
+const childAt = (parent: Element, index: number): HTMLElement => {
+  const child = parent.children[index];
+
+  if (!isHtmlElement(child)) throw new Error(`no element child ${index}`);
+
+  return child;
+};
 
 describe('FEATURE: task controls elements', () => {
   beforeEach(() => {
@@ -21,6 +32,43 @@ describe('FEATURE: task controls elements', () => {
       expect(els.search.getAttribute('aria-label')).toBe(SEARCH_TASKS_LABEL);
       expect(els.depth).toMatchObject({ min: '0', max: '5', value: '1' });
       expect(els.list.getAttribute('role')).toBe('grid');
+    });
+
+    it('WHEN built THEN the panel holds the Search section, the View section and the list, in that order', () => {
+      const { panel, list, search } = buildTaskControls();
+      const [searchSection, viewSection, last] = [childAt(panel, 0), childAt(panel, 1), childAt(panel, 2)];
+
+      expect(panel.children).toHaveLength(3);
+      expect([searchSection.tagName, searchSection.children[0]?.textContent]).toStrictEqual(['SECTION', SEARCH_SECTION_TITLE]);
+      expect([viewSection.tagName, viewSection.children[0]?.textContent]).toStrictEqual(['SECTION', VIEW_SECTION_TITLE]);
+      expect(childAt(searchSection, 1).children).toContain(search);
+      expect(last).toBe(list);
+    });
+
+    it('WHEN built THEN the View section lists the depth field, then Group by folder, Show package scopes and Show scripts', () => {
+      const { panel, depth } = buildTaskControls();
+      const [, depthGroup, ...checks] = childAt(panel, 1).children;
+      const depthLabel = childAt(childAt(panel, 1), 1).children[0];
+
+      expect(depthLabel?.children[1]).toBe(depth);
+      expect(checks.map((check) => check.textContent)).toStrictEqual([GROUP_BY_FOLDER_LABEL, SCOPE_TOGGLE_LABEL, SHOW_SCRIPTS_LABEL]);
+      expect(depthGroup?.children).toHaveLength(2);
+    });
+
+    it('WHEN built THEN Group by folder, Show package scopes and Show scripts are unticked checkboxes inside their labels', () => {
+      const { grouping, scope, scripts, groupingField, scriptsField } = buildTaskControls();
+
+      const boxes = [grouping, scope, scripts];
+
+      expect(boxes.map((box) => box.type)).toStrictEqual(['checkbox', 'checkbox', 'checkbox']);
+      expect(boxes.filter((box) => box.checked)).toStrictEqual([]);
+      expect([groupingField.children[0], scriptsField.children[0]]).toStrictEqual([grouping, scripts]);
+    });
+
+    it('WHEN built THEN Show scripts starts hidden and Group by folder does not', () => {
+      const { groupingField, scriptsField } = buildTaskControls();
+
+      expect([groupingField.hidden, scriptsField.hidden]).toStrictEqual([false, true]);
     });
 
     it('WHEN built THEN the panel is the hidden aside #graph-task-controls', () => {
