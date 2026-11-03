@@ -144,7 +144,7 @@ export const cacheCase = async (scene: GraphScene): Promise<void> => {
     const positioned = positionedNamesOf(state);
 
     const edgeIds = new Set(state.edges.map(edgeIdOf));
-    // the page may draw fewer edges than the graph has, so the routed ids are a subset of the edge ids
+    // every edge is laid out; the routed ids are a subset because routes past ROUTE_BENDS_MAX bends are left out
     const routed = Object.keys(state.folderRoutes ?? {});
 
     assert.equal(state.hash, firstHash);
