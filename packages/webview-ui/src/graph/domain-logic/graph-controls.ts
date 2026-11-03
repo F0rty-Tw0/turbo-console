@@ -39,10 +39,6 @@ export class GraphControls {
     deps.page.controls.addEventListener('click', (): void => this.toggleOpen());
   }
 
-  public get depth(): number {
-    return this.applied.depth;
-  }
-
   public visible(): ReadonlySet<string> {
     return this.shown;
   }
@@ -144,6 +140,11 @@ export class GraphControls {
     this.deps.onGrouping(isGrouped);
     this.render();
     this.deps.onSave();
+  }
+
+  /** Leaving task mode: the box takes the grouping task mode saved, with no switch and no save, so a save before the redraw's restore reads it. */
+  public syncGrouping(isGrouped: boolean): void {
+    this.isGrouped = isGrouped;
   }
 
   /** A layout placed: a folder layout now on screen shows the header toggles. */

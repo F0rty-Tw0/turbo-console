@@ -10,7 +10,13 @@ import { LAYOUT_FAILED_TEXT } from '../common/graph.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
-import { LARGE_STATE_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import {
+  GROUPED_POSITIONS_STUB,
+  LARGE_STATE_STUB,
+  SAVED_FLAT_STUB,
+  SAVED_GROUPED_STUB,
+  STATE_STUB
+} from '../test/stubs/graph-layouts.stub.ts';
 import { isGroupedGraph } from '../test/utils/graph-layouts.spec.util.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
@@ -24,6 +30,9 @@ type PackageSideRig = PackageSideDepsMock & PackageSideParts;
 
 /** `h1` with no layout cached, so showing it starts a run. */
 const UNCACHED: GraphReady = { ...STATE_STUB, positions: null };
+
+/** `h1` with the flat and the grouped layout cached. */
+const CACHED_BOTH: GraphReady = { ...STATE_STUB, folderPositions: GROUPED_POSITIONS_STUB };
 
 const ERROR: GraphState = { kind: 'error', message: 'turbo failed' };
 
@@ -268,6 +277,40 @@ describe('FEATURE: GraphPackageSide parked by task mode', () => {
 
       expect(rig.view.resize).not.toHaveBeenCalled();
       expect(rig.modes.current()).toBe(before);
+    });
+  });
+});
+
+describe('FEATURE: GraphPackageSide leaving task mode', () => {
+  let rig: PackageSideRig;
+
+  beforeEach(() => {
+    stubPackageSideGlobals();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN h1 drawn grouped with the packages folder inspected, then Group by folder unticked in task mode', () => {
+    beforeEach(async () => {
+      rig = rigOf(SAVED_GROUPED_STUB);
+      rig.side.show(CACHED_BOTH, 1);
+      await settled();
+      rig.side.filtering.inspection.input({ kind: 'selectFolder', folder: 'packages' });
+      rig.modes.setMode('tasks', 'h1');
+      rig.modes.saveGrouped(false);
+      rig.modes.setMode('packages', 'h1');
+      vi.mocked(rig.saver.schedule).mockClear();
+    });
+
+    it('WHEN task mode is left THEN no save before or after the redraw holds grouped', async () => {
+      rig.side.redraw();
+      await settled();
+
+      const grouped = vi.mocked(rig.saver.schedule).mock.calls.map(([state]) => state.grouped);
+
+      expect(grouped).not.toContain(true);
     });
   });
 });

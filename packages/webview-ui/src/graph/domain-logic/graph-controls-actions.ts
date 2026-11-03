@@ -53,7 +53,7 @@ export const controlsActionsOf = (
     onFocus: (name): void => ops.focus(current(), name),
     onDepth: (text): void => setDepth(current(), ops, text),
     onDepthBlur: (): void => {
-      current().elements.depth.value = String(ops.depth);
+      current().elements.depth.value = String(ops.applied.depth);
     },
     onGrouping: (isGrouped): void => ops.setGrouping(isGrouped),
     onToggle: onToggleFolder,
