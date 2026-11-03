@@ -6,9 +6,12 @@ import { boxesOf } from './graph-task-boxes.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
+import type { TaskNaming } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
+import { folderTitleOf } from '../utils/controls-text.util.ts';
+import { folderIdOf } from '../utils/folder-id.util.ts';
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
@@ -44,6 +47,25 @@ const drawingOf = (tasks: GraphTask[]): TaskDrawing => {
 
 const SCRIPTS_DATA = { id: 'scripts:app', parent: 'pkg:app', title: 'Scripts', minWidth: 71 };
 
+const APPS_ID = folderIdOf('apps');
+
+/** `app` sits in the folder `apps`. */
+const GROUPED: TaskNaming = { ...NEUTRAL_NAMING, grouped: true, folders: new Map([['app', 'apps']]) };
+
+const groupedDrawingOf = (tasks: GraphTask[]): TaskDrawing => {
+  const drawing = drawingOf(tasks);
+  const titleWidths = new Map([...TITLE_WIDTHS, [APPS_ID, 41]]);
+  const grouped: TaskDrawing = { ...drawing, titleWidths, naming: GROUPED };
+
+  return grouped;
+};
+
+const FOLDER_DATA = { id: APPS_ID, title: folderTitleOf('apps'), minWidth: 41 };
+
+const NESTED_PACKAGE_DATA = { id: 'pkg:app', title: 'app', minWidth: 31, parent: APPS_ID };
+
+const PACKAGE_DATA = { id: 'pkg:app', title: 'app', minWidth: 31 };
+
 const idOf = (definition: ElementDefinition): string | undefined => definition.data.id;
 
 describe('FEATURE: boxesOf', () => {
@@ -78,6 +100,57 @@ describe('FEATURE: boxesOf', () => {
 
       expect(scripts?.data['minWidth']).toBe(0);
     });
+  });
+});
+
+describe('FEATURE: boxesOf grouped by folder', () => {
+  describe('GIVEN grouped and app in apps', () => {
+    it('WHEN the boxes are listed THEN the folder box comes first, then the package and Scripts boxes', () => {
+      const ids = boxesOf(groupedDrawingOf([TURBO, SCRIPT])).map(idOf);
+
+      expect(ids).toStrictEqual([APPS_ID, 'pkg:app', 'scripts:app']);
+    });
+
+    it('WHEN the boxes are listed THEN the folder box is a task-folder titled by its folder, as wide as its title width', () => {
+      const [folder] = boxesOf(groupedDrawingOf([TURBO]));
+
+      expect(folder).toStrictEqual({ data: FOLDER_DATA, classes: 'task-folder' });
+    });
+
+    it('WHEN the boxes are listed THEN the package box sits in the folder box', () => {
+      const [, pkg] = boxesOf(groupedDrawingOf([TURBO]));
+
+      expect(pkg).toStrictEqual({ data: NESTED_PACKAGE_DATA, classes: 'task-box' });
+    });
+  });
+
+  describe('GIVEN ungrouped', () => {
+    it('WHEN the boxes are listed THEN there is no folder box and the package box has no parent', () => {
+      const boxes = boxesOf(drawingOf([TURBO]));
+
+      expect(boxes).toStrictEqual([{ data: PACKAGE_DATA, classes: 'task-box' }]);
+    });
+  });
+});
+
+describe('FEATURE: createTaskCanvas nesting folders', () => {
+  let cy: Core;
+
+  beforeEach(() => {
+    const layout = { name: 'preset', fit: false };
+
+    cy = cytoscape({ headless: true, layout });
+    createTaskCanvas(cy).show(groupedDrawingOf([TURBO, SCRIPT]));
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  it('GIVEN grouped and app in apps drawn THEN pkg:app sits in the apps folder box', () => {
+    const parentId = cy.getElementById('pkg:app').parent().first().id();
+
+    expect(parentId).toBe(APPS_ID);
   });
 });
 

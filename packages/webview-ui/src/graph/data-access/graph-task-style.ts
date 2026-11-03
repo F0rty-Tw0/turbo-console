@@ -18,6 +18,7 @@ import {
   SCRIPTS_BOX_DASH_PX,
   TASK_BOX_CLASS,
   TASK_BOX_DASH_PX,
+  TASK_FOLDER_CLASS,
   TASK_NODE_CLASS
 } from '../common/graph-task.const.ts';
 import { DASHED_BORDER_PX, FOLDER_PADDING_PX } from '../common/graph.const.ts';
@@ -93,23 +94,24 @@ const selectedRunRuleOf = (state: GraphRunState): StylesheetJsonBlock => {
  * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned
  * one padding in from the frame so a link entering at the top centre misses it, at least `data(minWidth)` wide inside
  * its padding, the extra width on the right so its tasks keep their place; a `task-scripts` box inside it does the same
- * with the `SCRIPTS_BOX_DASH_PX` dashes, so the two frames read apart. `left-inside` starts a compound's label
+ * with the `SCRIPTS_BOX_DASH_PX` dashes, so the two frames read apart, and a `task-folder` box around package boxes
+ * keeps the solid package-mode folder frame with the same title, since task mode has no DOM header rows. `left-inside` starts a compound's label
  * two paddings in, so the margin takes one back. They come after the `exporting` rule, so an exported task box keeps
  * this alignment. With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name in that
  * font list; an `atom-more` node carries only its own class, so it keeps the plain file rule.
  */
 export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily: string | null): StylesheetJsonBlock[] => {
-  const taskBox = {
+  const titledBox = {
     ...boxTitle,
     'text-halign': 'left-inside',
     'text-margin-x': -FOLDER_PADDING_PX,
-    'border-style': 'dashed',
-    'border-dash-pattern': TASK_BOX_DASH_PX,
     'min-width': 'data(minWidth)',
     'min-width-bias-left': '0%',
     'min-width-bias-right': '100%'
   } as const;
+  const taskBox = { ...titledBox, 'border-style': 'dashed', 'border-dash-pattern': TASK_BOX_DASH_PX } as const;
   const scriptsBox = { ...taskBox, 'border-dash-pattern': SCRIPTS_BOX_DASH_PX } as const;
+  const taskFolder = { ...titledBox, 'border-style': 'solid' } as const;
   const runRules = RUN_STATES.map((state) => runRuleOf(colors, state));
   const selectedRunRules = RUN_STATES.map(selectedRunRuleOf);
   const outcomeRules = [
@@ -124,6 +126,7 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
     { selector: `node.${ATOM_UMBRELLA_CLASS}`, style: UMBRELLA_NODE },
     { selector: `node:parent.${TASK_BOX_CLASS}`, style: taskBox },
     { selector: `node:parent.${SCRIPTS_BOX_CLASS}`, style: scriptsBox },
+    { selector: `node:parent.${TASK_FOLDER_CLASS}`, style: taskFolder },
     { selector: `node.${ATOM_FILE_CLASS}`, style: atomFile },
     { selector: `node.${ATOM_MORE_CLASS}`, style: ATOM_FILE },
     { selector: `node:parent.${ATOM_BOX_CLASS}`, style: ATOM_BOX },

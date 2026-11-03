@@ -3,7 +3,13 @@ import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
-import { SCRIPTS_BOX_CLASS, SCRIPTS_BOX_DASH_PX, TASK_BOX_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import {
+  SCRIPTS_BOX_CLASS,
+  SCRIPTS_BOX_DASH_PX,
+  TASK_BOX_CLASS,
+  TASK_FOLDER_CLASS,
+  TASK_NODE_CLASS
+} from '../common/graph-task.const.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 /** `web`'s package box around its Scripts box, which holds the 80 px script `web#dev` under a 200 px title. */
@@ -74,5 +80,58 @@ describe('FEATURE: taskRulesOf Scripts boxes in graphStyleOf', () => {
     const placement = titlePlacementOf(scripts);
 
     expect(placement).toStrictEqual(['Scripts', 'top', 22.5, 'left-inside', -32, 'ellipsis']);
+  });
+});
+
+/** The folder box `apps` around `web`'s package box, which holds the 80 px task `web#build` under a 300 px folder title. */
+const FOLDER_DATA = { id: 'folder-apps', title: 'apps', minWidth: 300 };
+
+const FOLDED_PACKAGE_DATA = { id: 'pkg:web', parent: 'folder-apps', title: 'web', minWidth: 30 };
+
+const TASK_DATA = { id: 'web#build', parent: 'pkg:web', label: 'build', width: 80, height: 32 };
+
+const FOLDER_ELEMENTS: ElementDefinition[] = [
+  { data: FOLDER_DATA, classes: TASK_FOLDER_CLASS },
+  { data: FOLDED_PACKAGE_DATA, classes: TASK_BOX_CLASS },
+  { data: TASK_DATA, classes: TASK_NODE_CLASS, position: ORIGIN }
+];
+
+describe('FEATURE: taskRulesOf folder boxes in graphStyleOf', () => {
+  let cy: Core;
+  let folder: NodeSingular;
+
+  beforeEach(() => {
+    const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+
+    cy = cytoscape({ headless: true, styleEnabled: true, style, elements: FOLDER_ELEMENTS });
+    folder = cy.getElementById('folder-apps');
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  it('GIVEN a task-folder box THEN its frame is solid, as a package-mode folder box', () => {
+    const borderStyle: unknown = folder.style('border-style');
+
+    expect(borderStyle).toBe('solid');
+  });
+
+  it('GIVEN a task-folder box THEN its corners are the 8 px of a folder box', () => {
+    const radius: unknown = folder.numericStyle('corner-radius');
+
+    expect(radius).toBe(8);
+  });
+
+  it('GIVEN a task-folder box under a title wider than its package THEN it is as wide as its title', () => {
+    const width = folder.width();
+
+    expect(width).toBe(300);
+  });
+
+  it('GIVEN a task-folder box THEN its title is drawn on the canvas, placed as a package box title', () => {
+    const placement = titlePlacementOf(folder);
+
+    expect(placement).toStrictEqual(['apps', 'top', 22.5, 'left-inside', -32, 'ellipsis']);
   });
 });

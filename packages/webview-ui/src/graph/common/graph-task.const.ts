@@ -41,6 +41,9 @@ export const SCRIPTS_BOX_TITLE = 'Scripts';
 /** A Scripts box's frame dashes, 2 px on, 3 px off, so it reads apart from its package box's dashes. */
 export const SCRIPTS_BOX_DASH_PX: number[] = [2, 3];
 
+/** The class of every task-mode folder box, which draws its folder title on the canvas: task mode has no DOM header rows. */
+export const TASK_FOLDER_CLASS = 'task-folder';
+
 /** The title of the root `//` tasks, on its box and wherever a root task names its owner. */
 export const ROOT_TASKS_TITLE = 'Workspace root (//)';
 

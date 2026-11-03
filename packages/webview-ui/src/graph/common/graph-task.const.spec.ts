@@ -25,6 +25,7 @@ import {
   TASKS_MODE_LABEL,
   TASKS_MODE_TITLE,
   TASK_CAP,
+  TASK_FOLDER_CLASS,
   UNKNOWN_TASKS_TEXT
 } from './graph-task.const.ts';
 
@@ -49,6 +50,12 @@ describe('FEATURE: graph task constants', () => {
 
     it('WHEN its frame dashes are read THEN they are 2 px on, 3 px off', () => {
       expect(SCRIPTS_BOX_DASH_PX).toStrictEqual([2, 3]);
+    });
+  });
+
+  describe('GIVEN the task folder box', () => {
+    it('WHEN its class is read THEN it is task-folder', () => {
+      expect(TASK_FOLDER_CLASS).toBe('task-folder');
     });
   });
 
