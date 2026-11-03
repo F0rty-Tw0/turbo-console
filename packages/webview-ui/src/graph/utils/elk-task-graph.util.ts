@@ -2,7 +2,7 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { edgeIdOf } from './edge-id.util.ts';
 import { elkEdgeOf } from './elk-grouped-graph.util.ts';
-import { compoundOptionsOf, folderBoxIdOf, scriptsBoxIdOf, taskBoxIdOf } from './task-compound.util.ts';
+import { compoundOptionsOf, folderBoxIdOf, scriptsBoxIdOf, taskBoxIdOf, taskFolderOf } from './task-compound.util.ts';
 import type { GraphEdge, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSizer } from '../common/graph-page.type.ts';
 import type { TaskLayoutRequest, TaskNaming } from '../common/graph-task.type.ts';
@@ -129,7 +129,7 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
 const folderPairsOf = (drawn: GraphTask[], naming: TaskNaming): [string, string][] => {
   if (!naming.grouped) return [];
 
-  const pairOf = (packageName: string): [string, string] => [packageName, naming.folders.get(packageName) ?? ''];
+  const pairOf = (packageName: string): [string, string] => [packageName, taskFolderOf(packageName, naming)];
 
   return sortedPackagesOf(drawn).map(pairOf);
 };

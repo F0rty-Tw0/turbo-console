@@ -21,14 +21,17 @@ export const parentIdOf = (task: GraphTask): string => {
   return parent;
 };
 
+/** The folder of a package's path; the root `//` and a package the folders map lacks are in the root folder `''`. */
+export const taskFolderOf = (packageName: string, naming: TaskNaming): string => naming.folders.get(packageName) ?? '';
+
 /**
- * The id of the folder box a package box sits in while grouped, `null` while ungrouped. The root `//` and a package the
- * folders map lacks sit in the root folder `''`, beside the packages of the repo root.
+ * The id of the folder box a package box sits in while grouped, `null` while ungrouped; the root `//` sits in the root
+ * folder's box, beside the packages of the repo root.
  */
 export const folderBoxIdOf = (packageName: string, naming: TaskNaming): string | null => {
   if (!naming.grouped) return null;
 
-  const folder = naming.folders.get(packageName) ?? '';
+  const folder = taskFolderOf(packageName, naming);
 
   return folderIdOf(folder);
 };
