@@ -45,9 +45,9 @@ export const routeSegmentsOf = (route: EdgeRoute, source: Position, target: Posi
   const length = Math.sqrt(lengthSquared);
   const normal: Position = { x: -along.y / length, y: along.x / length };
   const bends = drawnBendsOf(route);
-  const offsets = bends.map((bend) => offsetOf(bend, source));
-  const segWeights = offsets.map((offset) => dotOf(offset, along) / lengthSquared);
-  const segDistances = offsets.map((offset) => dotOf(offset, normal));
+  const offsets = bends.map((bend): Position => offsetOf(bend, source));
+  const segWeights = offsets.map((offset): number => dotOf(offset, along) / lengthSquared);
+  const segDistances = offsets.map((offset): number => dotOf(offset, normal));
   const srcEnd = endpointOf(route.start, source);
   const tgtEnd = endpointOf(route.end, target);
   const segments: RouteSegments = { segWeights, segDistances, srcEnd, tgtEnd };

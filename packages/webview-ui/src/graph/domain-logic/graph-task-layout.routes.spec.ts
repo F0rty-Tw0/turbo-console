@@ -128,7 +128,7 @@ describe('FEATURE: GraphTaskLayout routes', () => {
     it('WHEN dragged THEN nothing is posted', () => {
       layout.dragged([LIB_UI]);
 
-      const positionPosts = rig.posts().filter((message) => message.type === 'positions');
+      const positionPosts = rig.posts().filter((message): boolean => message.type === 'positions');
 
       expect(positionPosts).toStrictEqual([]);
     });
