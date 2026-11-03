@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { depthInput, hintedField } from './controls-fields.ts';
+import { checkbox, depthInput, hintedField, scriptsField } from './controls-fields.ts';
+import { SHOW_SCRIPTS_LABEL } from '../common/graph-task.const.ts';
 import { DEPTH_HINT, DEPTH_HINT_ID, DEPTH_LABEL } from '../common/graph.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
@@ -46,6 +47,15 @@ describe('FEATURE: hinted controls field', () => {
       const hint = childOf(group, 1);
 
       expect([group.className, hint.className, label.children.length]).toStrictEqual(['controls-field-group', 'controls-hint', 2]);
+    });
+  });
+
+  describe('GIVEN a Show scripts checkbox', () => {
+    it('WHEN its field is built THEN it is a label reading Show scripts with the input first', () => {
+      const input = checkbox('controls-check');
+      const label = scriptsField(input);
+
+      expect([label.tagName, label.textContent, label.children[0]]).toStrictEqual(['LABEL', SHOW_SCRIPTS_LABEL, input]);
     });
   });
 });
