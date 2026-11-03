@@ -84,6 +84,8 @@ export const DEPENDENTS_DEPTH_HINT_ID = 'graph-task-depth-hint';
 /** The package action that opens task mode on a package's tasks. */
 export const SHOW_TASKS_LABEL = 'Show tasks';
 
+export const SHOW_SCRIPTS_LABEL = 'Show scripts';
+
 /** The notice when every requested task id matches no task. */
 export const UNKNOWN_TASKS_TEXT = 'Those tasks are not in this workspace';
 
