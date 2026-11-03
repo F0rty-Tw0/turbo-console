@@ -1,6 +1,6 @@
 import type { BoundingBox12, Core, EdgeSingular, NodeSingular } from 'cytoscape';
 
-import { probeStateOf, styleText } from './graph-probe-state.ts';
+import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeFolder, ProbeFolderLink, ProbeRect } from '../common/graph-probe.type.ts';
 import { BOX_COLLAPSED_CLASS, FOLDER_HIDDEN_CLASS, FOLDER_ID_PREFIX, FOLDER_LINK_CLASS } from '../common/graph.const.ts';
@@ -11,17 +11,6 @@ const RECT_OPTIONS = { includeLabels: false, includeOverlays: false };
 const NO_RECT: BoundingBox12 = { x1: 0, x2: 0, y1: 0, y2: 0 };
 
 const idOf = (node: NodeSingular): string => node.id();
-
-/** A resolved numeric style value, 0 when not a number or `node` is not drawn; Cytoscape types `numericStyle(name)` as `any`. */
-const styleNumber = (node: NodeSingular, name: string): number => {
-  const isNone = node.empty();
-
-  if (isNone) return 0;
-
-  const value: unknown = node.numericStyle(name);
-
-  return typeof value === 'number' ? value : 0;
-};
 
 const isFolderBoxId = (id: string): boolean => id.startsWith(FOLDER_ID_PREFIX);
 
