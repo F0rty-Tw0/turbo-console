@@ -5,8 +5,9 @@ import { describe, expect, it } from 'vitest';
 import { COMPOUND_OPTIONS } from './elk-grouped-graph.util.ts';
 import { elkTaskGraphOf, taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
+import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import { taskOf } from '../test/utils/shown-set.spec.util.ts';
+import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
@@ -46,6 +47,16 @@ const graphOf = (
 ): ElkNode => elkTaskGraphOf({ tasks, shown, sizes, titleWidths }, SIZE_OF);
 
 const compoundOf = (graph: ElkNode, id: string): ElkNode | undefined => graph.children?.find((child) => child.id === id);
+
+const MISSING: ElkNode = { id: 'missing' };
+
+/** The compound reached by following `ids` down from `graph`; `MISSING` where a step has no such child. */
+const compoundAt = (graph: ElkNode, ids: string[]): ElkNode => {
+  const step = (node: ElkNode, id: string): ElkNode => compoundOf(node, id) ?? MISSING;
+  const found = ids.reduce(step, graph);
+
+  return found;
+};
 
 /** `web#build` alone, its leaf `leafWidth` wide, its package title `titleWidth` wide, laid out by the real ELK. */
 const layoutOf = async (leafWidth: number, titleWidth: number): Promise<ElkNode> => {
@@ -122,6 +133,59 @@ describe('FEATURE: elkTaskGraphOf', () => {
       const graph = graphOf(TASKS, BOTH, NO_SIZES, new Map([['web', 130]]));
 
       expect(compoundOf(graph, 'pkg:api')?.layoutOptions).toStrictEqual(COMPOUND_OPTIONS);
+    });
+  });
+
+  describe('GIVEN app with the turbo task app#build and the script app#dev', () => {
+    const tasks = [taskOf('app#build', []), scriptOf('app#dev', [])];
+    const shown = new Set(['app#build', 'app#dev']);
+    const titles = new Map([
+      ['app', 60],
+      ['scripts:app', 40]
+    ]);
+
+    it('WHEN built THEN pkg:app holds the turbo leaf and the compound scripts:app', () => {
+      const graph = graphOf(tasks, shown, NO_SIZES, titles);
+      const app = compoundAt(graph, ['pkg:app']);
+
+      expect(childIdsOf(app)).toStrictEqual(['app#build', 'scripts:app']);
+    });
+
+    it('WHEN built THEN scripts:app holds the script leaf', () => {
+      const graph = graphOf(tasks, shown, NO_SIZES, titles);
+      const scripts = compoundAt(graph, ['pkg:app', 'scripts:app']);
+
+      expect(childIdsOf(scripts)).toStrictEqual(['app#dev']);
+    });
+
+    it('WHEN built THEN scripts:app asks ELK for its title width plus both paddings', () => {
+      const graph = graphOf(tasks, shown, NO_SIZES, titles);
+      const scripts = compoundAt(graph, ['pkg:app', 'scripts:app']);
+
+      expect(scripts.layoutOptions?.['elk.nodeSize.minimum']).toBe(`(0, ${40 + 2 * FOLDER_PADDING_PX})`);
+    });
+
+    it('WHEN only the turbo task is shown THEN pkg:app has no scripts compound', () => {
+      const graph = graphOf(tasks, new Set(['app#build']));
+      const app = compoundAt(graph, ['pkg:app']);
+
+      expect(childIdsOf(app)).toStrictEqual(['app#build']);
+    });
+
+    it('WHEN only the script is shown THEN pkg:app holds just scripts:app', () => {
+      const graph = graphOf(tasks, new Set(['app#dev']));
+      const app = compoundAt(graph, ['pkg:app']);
+
+      expect(childIdsOf(app)).toStrictEqual(['scripts:app']);
+    });
+  });
+
+  describe('GIVEN a script of the root //', () => {
+    it('WHEN built THEN pkg:// holds scripts://', () => {
+      const graph = graphOf([scriptOf('//#dev', [])], new Set(['//#dev']));
+      const root = compoundAt(graph, ['pkg://']);
+
+      expect(childIdsOf(root)).toStrictEqual(['scripts://']);
     });
   });
 

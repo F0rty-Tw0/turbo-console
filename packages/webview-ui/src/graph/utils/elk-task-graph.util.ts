@@ -2,7 +2,7 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { edgeIdOf } from './edge-id.util.ts';
 import { elkEdgeOf } from './elk-grouped-graph.util.ts';
-import { compoundOptionsOf, taskBoxIdOf } from './task-compound.util.ts';
+import { compoundOptionsOf, scriptsBoxIdOf, taskBoxIdOf } from './task-compound.util.ts';
 import type { GraphEdge, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSizer } from '../common/graph-page.type.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
@@ -36,10 +36,23 @@ const sortedPackagesOf = (tasks: GraphTask[]): string[] => {
   return sorted.sort();
 };
 
+/** The Scripts compound of a package around its script `leaves`, at least as wide as its title; none without a script. */
+const scriptsBoxesOf = (packageName: string, leaves: ElkNode[], titleWidths: ReadonlyMap<string, number>): ElkNode[] => {
+  if (leaves.length === 0) return [];
+
+  const id = scriptsBoxIdOf(packageName);
+  const layoutOptions = compoundOptionsOf(titleWidths.get(id));
+  const compound: ElkNode = { id, layoutOptions, children: leaves };
+  const boxes = [compound];
+
+  return boxes;
+};
+
 /**
  * The task ELK input, as `groupedElkGraphOf`: one padded compound per package with a shown task, at least as wide as its
- * title in `titleWidths`, the shown tasks inside sized by `sizes` or else their names, every link at the root so ELK
- * routes links across packages (`INCLUDE_CHILDREN`).
+ * title in `titleWidths`, holding the shown turbo tasks and, when a script is shown, a Scripts compound around the shown
+ * scripts; tasks are sized by `sizes` or else their names, every link at the root so ELK routes links across packages and
+ * into the nested Scripts compounds (`INCLUDE_CHILDREN`).
  */
 export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkNode => {
   const { tasks, shown, sizes, titleWidths } = request;
@@ -52,7 +65,10 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
   };
   const compoundOf = (packageName: string): ElkNode => {
     const own = drawn.filter((task) => task.packageName === packageName);
-    const children = own.map(leafOf);
+    const turboLeaves = own.filter((task) => task.isTurboTask).map(leafOf);
+    const scriptLeaves = own.filter((task) => !task.isTurboTask).map(leafOf);
+    const scriptsBoxes = scriptsBoxesOf(packageName, scriptLeaves, titleWidths);
+    const children = [...turboLeaves, ...scriptsBoxes];
     const layoutOptions = compoundOptionsOf(titleWidths.get(packageName));
     const compound: ElkNode = { id: taskBoxIdOf(packageName), layoutOptions, children };
 
