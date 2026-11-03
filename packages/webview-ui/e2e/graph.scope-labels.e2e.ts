@@ -26,7 +26,7 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
   test(
     'GIVEN a scoped graph laid out with scopes shown, a same-hash state hiding scopes relabels nodes and rows and moves nothing',
     { annotation: SCOPE_LABELS },
-    async ({ graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphHost, graphList, graphPage, graphPointer, graphProbe }): Promise<void> => {
       let before: ProbeNode[] = [];
 
       await test.step('WHEN the graph is laid out with scopes shown', async (): Promise<void> => {
@@ -44,7 +44,8 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
         await expect.poll(async (): Promise<string[][]> => textsOf(await graphProbe.nodes())).toEqual(BARE_TEXTS);
       });
 
-      await test.step('AND every node is where it was, with no second layout', async (): Promise<void> => {
+      await test.step('AND once the canvas settles every node is where it was, with no second layout', async (): Promise<void> => {
+        await graphPointer.waitForQuietCanvas();
         expect(placesOf(await graphProbe.nodes())).toEqual(placesOf(before));
         await graphHost.expectLayoutDones(['elk']);
       });
