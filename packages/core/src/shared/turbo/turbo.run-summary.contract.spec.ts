@@ -19,6 +19,9 @@ import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
 
 const TURBO = devTurboPath();
 
+/** Prints each task's start line as it starts, even under GITHUB_ACTIONS, so a timed-out run's AbortError stdout shows how far turbo got. */
+const STREAM_LOGS = '--log-order=stream';
+
 const TARGET_LIKE = PRESETS['target-like'];
 
 const PASSING_BUILD = '"build": "node -e 0"';
@@ -115,7 +118,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       let json: unknown;
 
       beforeAll(async () => {
-        result = await runTurbo(TURBO, ['run', 'build', '--summarize'], fixture().dir);
+        result = await runTurbo(TURBO, ['run', 'build', '--summarize', STREAM_LOGS], fixture().dir);
         json = await readOnlyRunSummary(fixture().dir);
       });
 
@@ -144,7 +147,7 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       const leaf = leafPackage(fixture().manifest);
 
       await replaceBuild(join(fixture().dir, leaf.path), FAILING_BUILD);
-      result = await runTurbo(TURBO, ['run', 'build', '--summarize'], fixture().dir);
+      result = await runTurbo(TURBO, ['run', 'build', '--summarize', STREAM_LOGS], fixture().dir);
       summary = runSummarySchema.parse(await readOnlyRunSummary(fixture().dir));
     });
 
@@ -177,7 +180,9 @@ describe('FEATURE: turbo run summary contract on generated fixtures', () => {
       leafName = leafPackage(fixture().manifest).name;
       args = turboRunArgs(BUILD_TASK, leafName);
       // runTurbo prepends --skip-infer itself.
-      result = await runTurbo(TURBO, args.slice(1), fixture().dir);
+      const runArgs = args.slice(1);
+
+      result = await runTurbo(TURBO, [...runArgs, STREAM_LOGS], fixture().dir);
       summary = runSummarySchema.parse(await readOnlyRunSummary(fixture().dir));
     });
 
