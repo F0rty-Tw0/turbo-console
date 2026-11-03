@@ -16,6 +16,14 @@ export const taskOf = (id: string, dependencies: string[]): GraphTask => {
   return task;
 };
 
+/** `taskOf` as a package script: a task turbo does not run. */
+export const scriptOf = (id: string, dependencies: string[]): GraphTask => {
+  const task = taskOf(id, dependencies);
+  const script: GraphTask = { ...task, isTurboTask: false };
+
+  return script;
+};
+
 /** A `ShownSetInput` over `tasks` whose listing is exactly those tasks; `edit` replaces any field. */
 export const inputOf = (tasks: GraphTask[], edit: Partial<ShownSetInput> = {}): ShownSetInput => {
   const listedIds = new Set(tasks.map((task) => task.id));
