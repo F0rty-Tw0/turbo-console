@@ -1,6 +1,6 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
 import { LAYOUT_VERSION, ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
-import type { GraphEdge, GraphPackage, GraphState, Positions } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphState } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
 import { packageNamesOf } from './graph-package.util.ts';
@@ -72,11 +72,11 @@ const edgesOf = (modelEdges: PackageEdge[]): GraphEdge[] => {
   return Array.from(byPair.values()).toSorted(compareEdges);
 };
 
-/** The cached positions when the entry is for this exact graph: the same hash and a point for exactly its packages. */
-const cachedPositionsOf = (cache: GraphLayoutCacheEntry | null, hash: string, packages: string[]): Positions | null => {
+/** The cached entry when it is for this exact graph: the same hash and a point for exactly its packages. */
+const cachedEntryOf = (cache: GraphLayoutCacheEntry | null, hash: string, packages: string[]): GraphLayoutCacheEntry | null => {
   if (cache?.hash !== hash) return null;
 
-  return coversExactly(cache.positions, packages) ? cache.positions : null;
+  return coversExactly(cache.positions, packages) ? cache : null;
 };
 
 /** The `//` package's label of a single-package model; `null` for a monorepo or when the root has no label. */
@@ -101,8 +101,8 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, s
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
   const names = packageNamesOf(packages);
-  const positions = cachedPositionsOf(caches.flat, hash, names);
-  const folderPositions = cachedPositionsOf(caches.folders, hash, names);
+  const flat = cachedEntryOf(caches.flat, hash, names);
+  const folders = cachedEntryOf(caches.folders, hash, names);
   const { tasks, atomGroups } = graphListingOf(model);
   const { singlePackage } = model;
   const rootLabel = rootLabelOf(model);
@@ -111,10 +111,10 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, s
     hash,
     packages,
     edges,
-    positions,
-    folderPositions,
-    routes: null,
-    folderRoutes: null,
+    positions: flat?.positions ?? null,
+    folderPositions: folders?.positions ?? null,
+    routes: flat?.routes ?? null,
+    folderRoutes: folders?.routes ?? null,
     tasks,
     atomGroups,
     singlePackage,
