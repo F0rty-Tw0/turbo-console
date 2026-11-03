@@ -16,12 +16,14 @@ export const showOnly = (cy: Core, visible: ReadonlySet<string>): void => {
 
 /**
  * Fits the camera to the visible packages, a trace's ghosts included so they stay on screen, to their folder boxes,
- * whose frames reach past the packages by the box padding, and to the drawn collapsed folders; with none the camera stays.
+ * whose frames reach past the packages by the box padding, to the drawn collapsed folders, and to the visible edges, whose
+ * routes bend past the nodes; with none the camera stays.
  */
 export const fitVisible = (cy: Core, paddingPx: number): void => {
   const shown = packageNodes(cy).filter(':visible');
   const collapsed = cy.nodes(`.${FOLDER_NODE_CLASS}:visible`);
-  const framed = shown.union(shown.parents()).union(collapsed);
+  const lines = cy.edges(':visible');
+  const framed = shown.union(shown.parents()).union(collapsed).union(lines);
   const nothingShown = framed.empty();
 
   if (nothingShown) return;

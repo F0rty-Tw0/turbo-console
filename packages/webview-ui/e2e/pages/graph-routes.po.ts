@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphGroupingPage } from './graph-grouping.po.ts';
@@ -7,7 +7,8 @@ import { GraphProbePage } from './graph-probe.po.ts';
 import type { GraphReady } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeEdgeLine } from '../../src/graph/common/graph-probe.type.ts';
 import { edgeIdOf } from '../../src/graph/utils/edge-id.util.ts';
-import { midpointsUnderCountOf, readEdgeLines, throughNodeCountOf } from '../test/utils/graph-lines.spec.util.ts';
+import { readRect } from '../test/utils/element-rect.spec.util.ts';
+import { isLineInside, midpointsUnderCountOf, readEdgeLines, throughNodeCountOf } from '../test/utils/graph-lines.spec.util.ts';
 import { positionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 
 /** A routed line has its two ends and at least one bend. */
@@ -42,6 +43,11 @@ export class GraphRoutes {
   /** Every one of the `count` package lines is drawn on its route, with at least one bend between its ends. */
   public async expectEveryLineRouted(count: number): Promise<void> {
     await expect.poll(async (): Promise<number> => this.drawnRoutedCount()).toBe(count);
+  }
+
+  /** Every drawn line, bends included, lies inside the `container`. */
+  public async expectEveryLineInside(container: Locator): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.outsideLineCount(container)).toBe(0);
   }
 
   /** The lines of exactly the `touched` edge ids are straight; every other line is drawn on its route. */
@@ -88,6 +94,15 @@ export class GraphRoutes {
     await this.host.expectViewSaved();
     await this.host.reopen();
     await this.host.sendState(cached);
+  }
+
+  private async outsideLineCount(container: Locator): Promise<number> {
+    const rect = await container.evaluate(readRect);
+    const lines = await readEdgeLines(this.page);
+    const drawn = lines.filter((line): boolean => line.isDrawn);
+    const outside = drawn.filter((line): boolean => !isLineInside(line, rect));
+
+    return outside.length;
   }
 
   private async drawnRoutedCount(): Promise<number> {

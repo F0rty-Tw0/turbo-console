@@ -166,3 +166,28 @@ test.describe('FEATURE: folder toggles keep the routes', () => {
       graphRoutes.expectEveryLineRouted(ALL_EDGE_IDS.length));
   });
 });
+
+test.describe('FEATURE: Fit covers the lines', () => {
+  test('GIVEN the U0 workspace laid out grouped, WHEN Fit is pressed THEN every routed line lies inside the canvas (b4)', async ({
+    graphCanvas,
+    graphHost,
+    graphPage,
+    graphProbe,
+    graphRoutes
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened grouped and the U0 state is sent', async (): Promise<void> => {
+      await graphPage.open({ savedState: GROUPED_SAVED });
+      await graphHost.sendState(U0);
+    });
+
+    await test.step('AND ELK has laid it out', async (): Promise<void> => {
+      await graphProbe.expectLayoutEngine('elk');
+      await graphRoutes.expectEveryLineRouted(ALL_EDGE_IDS.length);
+    });
+
+    await test.step('AND Fit is pressed', async (): Promise<void> => graphPage.pressButton('Fit'));
+
+    await test.step('THEN every line, bends included, lies inside the canvas', async (): Promise<void> =>
+      graphRoutes.expectEveryLineInside(graphCanvas.container));
+  });
+});

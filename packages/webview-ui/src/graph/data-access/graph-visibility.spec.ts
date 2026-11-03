@@ -149,7 +149,7 @@ describe('FEATURE: graph visibility', () => {
 
       const [shown, padding] = fit.mock.calls[0] ?? [];
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
-      const fittedIds = fitted.map(idOf).sort();
+      const fittedIds = fitted.nodes().map(idOf).sort();
 
       expect(fit).toHaveBeenCalledTimes(1);
       expect(fittedIds).toStrictEqual(['a', 'b']);
@@ -177,7 +177,7 @@ describe('FEATURE: graph visibility', () => {
       const [shown] = fit.mock.calls[0] ?? [];
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
 
-      expect(fitted.map(idOf).sort()).toStrictEqual(['a', 'b', 'c']);
+      expect(fitted.nodes().map(idOf).sort()).toStrictEqual(['a', 'b', 'c']);
     });
   });
 
@@ -192,7 +192,7 @@ describe('FEATURE: graph visibility', () => {
       const [shown] = fit.mock.calls[0] ?? [];
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
 
-      expect(fitted.map(idOf).sort()).toStrictEqual(['b', 'c']);
+      expect(fitted.nodes().map(idOf).sort()).toStrictEqual(['b', 'c']);
     });
   });
 
@@ -231,7 +231,7 @@ describe('FEATURE: graph visibility', () => {
       const [shown] = fit.mock.calls[0] ?? [];
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
 
-      expect(fitted.map(idOf).sort()).toStrictEqual(FRAMED_IDS);
+      expect(fitted.nodes().map(idOf).sort()).toStrictEqual(FRAMED_IDS);
     });
 
     it('WHEN only a is shown and fitVisible runs THEN fit receives a and the apps box only', () => {
@@ -243,7 +243,7 @@ describe('FEATURE: graph visibility', () => {
       const [shown] = fit.mock.calls[0] ?? [];
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
 
-      expect(fitted.map(idOf).sort()).toStrictEqual(['\u0001apps', 'a']);
+      expect(fitted.nodes().map(idOf).sort()).toStrictEqual(['\u0001apps', 'a']);
     });
   });
 
@@ -257,7 +257,7 @@ describe('FEATURE: graph visibility', () => {
       const [shown] = fit.mock.calls[0] ?? [];
       const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
 
-      return fitted.map(idOf).sort();
+      return fitted.nodes().map(idOf).sort();
     };
 
     beforeEach(() => {
@@ -271,6 +271,28 @@ describe('FEATURE: graph visibility', () => {
 
     it('WHEN every folder is collapsed THEN fit receives the two collapsed nodes', () => {
       expect(fittedIdsOf(['apps', 'packages'])).toStrictEqual(['\u0002apps', '\u0002packages']);
+    });
+  });
+
+  describe('GIVEN a spy on the Cytoscape fit and the edges a>b and b>c', () => {
+    const fittedEdgeIdsOf = (names: string[]): string[] => {
+      const fit = vi.spyOn(cy, 'fit');
+
+      showOnly(cy, new Set(names));
+      fitVisible(cy, PADDING_PX);
+
+      const [shown] = fit.mock.calls[0] ?? [];
+      const fitted: CollectionReturnValue = cy.collection().union(shown ?? cy.collection());
+
+      return fitted.edges().map(idOf).sort();
+    };
+
+    it('GIVEN a>b visible WHEN fitted THEN the fitted collection holds a>b', () => {
+      expect(fittedEdgeIdsOf(['a', 'b'])).toStrictEqual(['a>b']);
+    });
+
+    it('GIVEN b hidden by a filter WHEN fitted THEN a>b and b>c are not fitted', () => {
+      expect(fittedEdgeIdsOf(['a', 'c'])).toStrictEqual([]);
     });
   });
 
