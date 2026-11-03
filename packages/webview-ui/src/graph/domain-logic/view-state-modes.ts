@@ -85,6 +85,18 @@ export class ViewStateModes {
     this.write(state);
   }
 
+  /** Writes the Group by folder choice over the last state, from either mode; a changed value also sets `fitted`, so the next draw fits. Nothing before any state is written. */
+  public saveGrouped(value: boolean): void {
+    const last = this.last;
+
+    if (last === null) return;
+
+    const isFitted = last.fitted || last.grouped !== value;
+    const state: GraphViewState = { ...last, grouped: value, fitted: isFitted };
+
+    this.write(state);
+  }
+
   /** Remembers the dragged widths and, with a state saved, writes it again carrying them; with none, the next write carries them. */
   public savePanelWidths(widths: PanelWidths): void {
     this.widths = widths;
