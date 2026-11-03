@@ -221,6 +221,10 @@ describe('FEATURE: runTurbo process lifecycle', () => {
         expect(error).toMatchObject({ name: 'AbortError' });
       });
 
+      it('THEN the AbortError still carries an empty stdout and stderr', () => {
+        expect(error).toMatchObject({ stdout: '', stderr: '' });
+      });
+
       it('THEN the binary never starts', async () => {
         await expect(readFile(stubFile('slow-term', 'pid'))).rejects.toMatchObject({ code: 'ENOENT' });
       });
