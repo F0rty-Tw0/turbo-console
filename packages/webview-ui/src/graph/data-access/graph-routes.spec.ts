@@ -49,7 +49,8 @@ const PRESET_LAYOUT: LayoutOptions = { name: 'preset' };
 
 const nodeAt = (id: string, position: Position): ElementDefinition => {
   const node = canvasNodeOf(id);
-  const definition: ElementDefinition = { ...node, position };
+  const ownPosition: Position = { ...position };
+  const definition: ElementDefinition = { ...node, position: ownPosition };
 
   return definition;
 };
@@ -138,12 +139,33 @@ describe('FEATURE: applyRoutes', () => {
   });
 
   describe('GIVEN 2 routed edges', () => {
-    it('WHEN applied THEN one batch is used', () => {
-      const batch = vi.spyOn(cy, 'batch');
+    it('WHEN applied THEN the class and segment data are written inside one batch, not before or after it', () => {
+      const countsOf = (): number[] => {
+        const routed = cy.edges(`.${ROUTED_CLASS}`).length;
+        const withData = cy.edges().filter((edge): boolean => edge.data('segWeights') !== undefined).length;
+        const counts = [routed, withData];
+
+        return counts;
+      };
+      const original = cy.batch.bind(cy);
+      const seen: number[][] = [];
+      const runAndRecord = (callback: () => void): Core => {
+        const before = countsOf();
+
+        original(callback);
+        seen.push(before, countsOf());
+
+        return cy;
+      };
+      const batch = vi.spyOn(cy, 'batch').mockImplementation(runAndRecord);
 
       applyRoutes(cy, BOTH_ROUTES);
 
       expect(batch).toHaveBeenCalledOnce();
+      expect(seen).toStrictEqual([
+        [0, 0],
+        [2, 2]
+      ]);
     });
   });
 });
