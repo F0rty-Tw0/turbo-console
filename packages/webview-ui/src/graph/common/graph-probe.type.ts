@@ -62,6 +62,8 @@ export type ProbeFolder = {
   readonly renderedHeight: number;
   /** The label drawn on the canvas: `''` on a box and on a collapsed node showing its header row. */
   readonly text: string;
+  /** The resolved `text-max-width` in px of the box or collapsed node shown: how wide its label may draw before its ellipsis. */
+  readonly textMaxWidth: number;
   readonly packages: string[];
 };
 
