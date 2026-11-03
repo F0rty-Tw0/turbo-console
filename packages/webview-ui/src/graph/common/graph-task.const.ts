@@ -28,6 +28,21 @@ export const TITLE_WHOLE_SLACK_PX = 1;
 /** A task-mode package box's frame dashes: 4 px on, 4 px off. */
 export const TASK_BOX_DASH_PX: number[] = [4, 4];
 
+/** Starts the id of the compound that holds a package's script tasks inside its package box; no task id starts this way. */
+export const SCRIPTS_BOX_PREFIX = 'scripts:';
+
+/** The class of every Scripts compound of the task graph. */
+export const SCRIPTS_BOX_CLASS = 'task-scripts';
+
+/** The title of every Scripts compound. */
+export const SCRIPTS_BOX_TITLE = 'Scripts';
+
+/** A Scripts box's frame dashes, 2 px on, 3 px off, so it reads apart from its package box's dashes. */
+export const SCRIPTS_BOX_DASH_PX: number[] = [2, 3];
+
+/** The title of the root `//` tasks, on its box and wherever a root task names its owner. */
+export const ROOT_TASKS_TITLE = 'Workspace root (//)';
+
 /** The class of every task node, so a walk of the task graph skips the package compounds. */
 export const TASK_NODE_CLASS = 'task';
 

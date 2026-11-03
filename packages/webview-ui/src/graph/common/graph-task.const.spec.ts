@@ -11,6 +11,8 @@ import {
   PACKAGES_MODE_LABEL,
   PACKAGES_MODE_TITLE,
   ROOT_TASK_PACKAGE,
+  ROOT_TASKS_TITLE,
+  SCRIPTS_BOX_TITLE,
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
   SHOW_EVERY_TASK_LABEL,
@@ -47,6 +49,8 @@ describe('FEATURE: graph task constants', () => {
     ['the root package of a task', ROOT_TASK_PACKAGE, '//'],
     ['the dependents heading', DEPENDENTS_LABEL, 'Dependents'],
     ['the empty dependents line', NONE_SHOWN_TEXT, 'None shown'],
+    ['the title of a package Scripts box', SCRIPTS_BOX_TITLE, 'Scripts'],
+    ['the title of the root tasks box', ROOT_TASKS_TITLE, 'Workspace root (//)'],
     [
       'the empty prompt',
       EMPTY_TASKS_TEXT,
