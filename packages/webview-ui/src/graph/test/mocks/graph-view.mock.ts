@@ -65,6 +65,7 @@ export const graphViewMock = (camera: Viewport): Mocked<GraphView> => {
     setViewport: vi.fn<GraphView['setViewport']>(),
     setGrouping: vi.fn<GraphView['setGrouping']>(),
     setPositions: vi.fn<GraphView['setPositions']>(),
+    setRoutes: vi.fn<GraphView['setRoutes']>(),
     showFolders: vi.fn<GraphView['showFolders']>(),
     applyTheme: vi.fn<GraphView['applyTheme']>(),
     widgetRects: vi.fn<GraphView['widgetRects']>(noRects),

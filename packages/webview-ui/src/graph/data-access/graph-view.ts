@@ -13,10 +13,11 @@ import { listen } from './graph-listen.ts';
 import { applyFocusTarget, applyPaint } from './graph-paint.ts';
 import { placeNodes, positionOf } from './graph-place.ts';
 import { markRowLess, widgetRectsOf } from './graph-rects.ts';
+import { applyRoutes } from './graph-routes.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import { showOnly } from './graph-visibility.ts';
-import type { GraphEdge, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -140,6 +141,7 @@ export const createGraphView = (
     setViewport: camera.setViewport,
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
     setPositions: (placed: Positions): void => placeOn(cy, folders, placed),
+    setRoutes: (routes: Routes): void => applyRoutes(cy, routes),
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily, glyphs)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),

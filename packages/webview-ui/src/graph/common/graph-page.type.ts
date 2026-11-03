@@ -18,7 +18,7 @@ import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { RowPlan, WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
-import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphPackage, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
@@ -117,6 +117,8 @@ export type GraphView = {
   readonly setGrouping: (groups: FolderGroup[] | null) => void;
   /** Places the packages, then re-centres the collapsed folders on them. */
   readonly setPositions: (positions: Positions) => void;
+  /** Draws each edge that has a route on it and every other edge straight; call after `setPositions`, the segments follow the centres. */
+  readonly setRoutes: (routes: Routes) => void;
   /** The folder pass (`FoldersView.show`); call after every `setVisible` and `setGhosts`. */
   readonly showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string) => void;
   readonly applyTheme: (colors: ThemeColors) => void;
