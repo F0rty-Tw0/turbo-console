@@ -2,11 +2,12 @@ import type { Core, EdgeCollection, EdgeSingular, ElementDefinition, NodeCollect
 
 import { labelOf, setCountLabels, taskClassesOf } from './graph-atom-view.ts';
 import { positionOf } from './graph-place.ts';
+import { boxesOf } from './graph-task-boxes.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
-import { RUN_CLASS_PREFIX, TASK_BOX_CLASS, TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { RUN_CLASS_PREFIX, TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { DIMMED_BOX_CLASS, STATE_CLASSES } from '../common/graph.const.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
@@ -14,8 +15,7 @@ import { closureOf } from '../utils/closure.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
 import { edgeStateOf, nodeStateOf } from '../utils/highlight.util.ts';
-import { ownerTextOf } from '../utils/owner-text.util.ts';
-import { taskBoxIdOf } from '../utils/task-compound.util.ts';
+import { parentIdOf } from '../utils/task-compound.util.ts';
 import { runStateOf } from '../utils/task-run.util.ts';
 
 const RUN_CLASSES = RUN_STATES.map((state) => `${RUN_CLASS_PREFIX}${state}`).join(' ');
@@ -43,8 +43,8 @@ const closureOfLinks = (target: string | null, links: EdgeCollection): Closure |
 };
 
 /**
- * Gives each task and link one state class for `target`, the selected task, and its closure; a package compound with
- * no selected or highlighted task gets `dimmed-box`. `null` paints every task and link `normal`.
+ * Gives each task and link one state class for `target`, the selected task, and its closure; a package or Scripts
+ * compound with no selected or highlighted task gets `dimmed-box`. `null` paints every task and link `normal`.
  */
 const paintTasks = (cy: Core, target: string | null): void => {
   const tasks = taskNodes(cy);
@@ -91,19 +91,10 @@ const markRuns = (cy: Core, runs: TaskRuns): void => {
   cy.batch((): void => void runNodes(cy).forEach(markTask));
 };
 
-/** A package box; its `minWidth` is its title width (0 when unknown), so the box is never narrower than its title. */
-const boxDefinitionOf = (packageName: string, drawing: TaskDrawing): ElementDefinition => {
-  const minWidth = drawing.titleWidths.get(packageName) ?? 0;
-  const data = { id: taskBoxIdOf(packageName), title: ownerTextOf(packageName, drawing.rootLabel), minWidth };
-  const definition: ElementDefinition = { data, classes: TASK_BOX_CLASS };
-
-  return definition;
-};
-
 const taskDefinitionOf = (task: GraphTask, drawing: TaskDrawing): ElementDefinition => {
   const { width, height } = drawing.sizes.get(task.id) ?? drawing.sizeOf(task.name);
   const label = labelOf(task.name, drawing.labels.get(task.id));
-  const parent = taskBoxIdOf(task.packageName);
+  const parent = parentIdOf(task);
   const data = { id: task.id, name: task.name, label, parent, width, height };
   const position = positionOf(drawing.positions, task.id);
   const classes = taskClassesOf(drawing.sizes.has(task.id));
@@ -123,9 +114,7 @@ const edgeDefinitionOf = (edge: GraphEdge): ElementDefinition => {
 const elementsOf = (drawing: TaskDrawing): ElementDefinition[] => {
   const { tasks } = drawing;
   const ids = new Set(tasks.map((task) => task.id));
-  const packages = new Set(tasks.map((task) => task.packageName));
-  const names = [...packages];
-  const boxes = names.map((name) => boxDefinitionOf(name, drawing));
+  const boxes = boxesOf(drawing);
   const nodes = tasks.map((task) => taskDefinitionOf(task, drawing));
   const edges = taskEdgesOf(tasks, ids);
   const links = edges.map(edgeDefinitionOf);

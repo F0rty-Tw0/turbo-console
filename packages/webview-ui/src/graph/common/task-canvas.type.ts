@@ -14,13 +14,19 @@ export type TaskDrawing = {
   readonly sizeOf: (name: string) => NodeSize;
   readonly sizes: ReadonlyMap<string, NodeSize>;
   readonly labels: ReadonlyMap<string, string>;
-  /** The width each package's title needs to draw whole, which its box is at least as wide as. */
+  /**
+   * The width each box title needs to draw whole, which its box is at least as wide as: by package name for a package
+   * box, by `scripts:<name>` for a Scripts box.
+   */
   readonly titleWidths: ReadonlyMap<string, number>;
   /** The label a single-package root's box is titled with in place of `//`; `null` titles it with the package name. */
   readonly rootLabel: string | null;
 };
 
-/** The task graph on the one Cytoscape core: package compounds `pkg:<name>` holding `task` nodes, links task to dependency. */
+/**
+ * The task graph on the one Cytoscape core: package compounds `pkg:<name>` holding turbo `task` nodes and, when a script
+ * is drawn, a Scripts compound `scripts:<name>` holding the script `task` nodes; links task to dependency.
+ */
 export type TaskCanvas = {
   /** Removes every element, package graph included, then draws the tasks. */
   readonly show: (drawing: TaskDrawing) => void;
