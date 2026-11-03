@@ -1,12 +1,10 @@
-import { ROOT_TASKS_TITLE } from '@turbo-console/webview-ui';
+import { ROOT_TASKS_TITLE, ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 import type { GraphTask } from '@turbo-console/webview-ui';
 
 import type { PickItem } from '../../run/common/picker.type.ts';
 
-const ROOT_PACKAGE = '//';
-
 /** The package a task row names: the root title for the root `//`, else the package name. */
-const packageTextOf = (task: GraphTask): string => (task.packageName === ROOT_PACKAGE ? ROOT_TASKS_TITLE : task.packageName);
+const packageTextOf = (task: GraphTask): string => (task.packageName === ROOT_TASK_PACKAGE ? ROOT_TASKS_TITLE : task.packageName);
 
 const itemOf = (task: GraphTask, root: string, rootLabel: string | null): PickItem => {
   const description = rootLabel ?? packageTextOf(task);
