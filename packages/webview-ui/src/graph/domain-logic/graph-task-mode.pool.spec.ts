@@ -104,7 +104,7 @@ describe('FEATURE: GraphTaskMode over the task pool', () => {
 
   describe('GIVEN a package whose only tasks are hidden scripts', () => {
     it('WHEN it is asked for its tasks THEN it has no tasks', () => {
-      receive({ ...POOL_STATE, tasks: [scriptOf('app#dev')] });
+      receive({ ...POOL_STATE, tasks: [APP_DEV] });
 
       expect(mode.packageTaskIds('app')).toStrictEqual([]);
     });
