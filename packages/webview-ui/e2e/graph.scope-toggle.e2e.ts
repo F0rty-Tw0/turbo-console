@@ -57,13 +57,13 @@ test.describe('FEATURE: package View checkbox Show package scopes', () => {
     'GIVEN the scoped graph is laid out, unticking the box posts exactly one setViewToggle and the host answer posts none',
     { annotation: SCOPE_TOGGLE },
     async ({ graphControls, graphHost, graphPage, graphProbe }): Promise<void> => {
-      await test.step('GIVEN the graph is laid out with scopes shown', async (): Promise<void> => {
+      await test.step('WHEN the graph is laid out with scopes shown', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(scopedNamesState(true));
         await graphProbe.expectLayoutSettled();
       });
 
-      await test.step('WHEN the box is unticked', async (): Promise<void> => graphControls.scope.uncheck());
+      await test.step('AND the box is unticked', async (): Promise<void> => graphControls.scope.uncheck());
 
       await test.step('THEN one message goes out', async (): Promise<void> => graphControls.expectViewToggles([UNTICKED]));
 
@@ -82,7 +82,7 @@ test.describe('FEATURE: package View checkbox Show package scopes', () => {
     'GIVEN the box was unticked and the host answered, a tree flip back to scopes shown ticks the box and posts nothing',
     { annotation: SCOPE_TOGGLE },
     async ({ graphControls, graphHost, graphPage, graphProbe }): Promise<void> => {
-      await test.step('GIVEN the box was unticked and the host answered with scopes hidden', async (): Promise<void> => {
+      await test.step('WHEN the box was unticked and the host answered with scopes hidden', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(scopedNamesState(true));
         await graphProbe.expectLayoutSettled();
@@ -91,7 +91,7 @@ test.describe('FEATURE: package View checkbox Show package scopes', () => {
         await graphControls.expectScope(false);
       });
 
-      await test.step('WHEN the tree flips scopes back and the host sends scopes shown', async (): Promise<void> =>
+      await test.step('AND the tree flips scopes back and the host sends scopes shown', async (): Promise<void> =>
         graphHost.sendState(scopedNamesState(true)));
 
       await test.step('THEN the box is ticked, the nodes read the full names and still only the one message was posted', async (): Promise<void> => {
@@ -106,13 +106,13 @@ test.describe('FEATURE: package View checkbox Show package scopes', () => {
     'GIVEN the box has focus, Space unticks it and posts once',
     { annotation: SCOPE_TOGGLE },
     async ({ graphControls, graphHost, graphPage, graphProbe }): Promise<void> => {
-      await test.step('GIVEN the graph is laid out with scopes shown', async (): Promise<void> => {
+      await test.step('WHEN the graph is laid out with scopes shown', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(scopedNamesState(true));
         await graphProbe.expectLayoutSettled();
       });
 
-      await test.step('WHEN Space is pressed on the box', async (): Promise<void> => graphControls.pressScope());
+      await test.step('AND Space is pressed on the box', async (): Promise<void> => graphControls.pressScope());
 
       await test.step('THEN one setViewToggle goes out and the box is unticked', async (): Promise<void> => {
         await graphControls.expectViewToggles([UNTICKED]);

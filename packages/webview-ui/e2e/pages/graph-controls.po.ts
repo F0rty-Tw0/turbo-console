@@ -129,7 +129,6 @@ export class GraphControlsPage {
     await expect(this.panel.getByRole('heading', { level: 3 })).toHaveText(titles);
   }
 
-  /** Every `setViewToggle` the page posted so far is exactly `messages`; the stub's `__posted` also holds `ready`, `positions` and `layoutDone`. */
   /** Every `setViewToggle` posted so far is exactly `messages`; the stub's `__posted` also holds `ready`, `positions` and `layoutDone`. */
   public async expectViewToggles(messages: GraphSetViewToggleMessage[]): Promise<void> {
     await expect.poll(async (): Promise<GraphSetViewToggleMessage[]> => this.viewToggles()).toEqual(messages);
