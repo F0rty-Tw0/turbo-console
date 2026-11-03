@@ -37,6 +37,7 @@ const webviewHostImports: FlatConfig.Config = {
               'MANIFEST_FIELDS',
               'MANIFEST_FILE_MAX',
               'MANIFEST_LINE_MAX',
+              'ROOT_TASKS_TITLE',
               'TASK_CAP',
               'TASK_COUNT_MAX',
               'TOOL_ICON_PREFIX',

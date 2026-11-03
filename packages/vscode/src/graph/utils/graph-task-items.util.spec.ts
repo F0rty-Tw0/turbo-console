@@ -1,3 +1,5 @@
+import { ROOT_TASKS_TITLE } from '@turbo-console/webview-ui';
+import type { GraphTask } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { taskGraphItemsOf } from './graph-task-items.util.ts';
@@ -22,6 +24,30 @@ describe('FEATURE: the Show Task Graph picker items', () => {
       const items = taskGraphItemsOf(GRAPH_TASKS_STUB, '/ws', 'single-app');
 
       expect(items.map((item) => item.description)).toStrictEqual(['single-app', 'single-app', 'single-app', 'single-app']);
+    });
+  });
+
+  describe('GIVEN a task of the root package //', () => {
+    const ROOT_GEN: GraphTask = {
+      id: '//#gen',
+      packageName: '//',
+      name: 'gen',
+      command: 'gen',
+      isRunnable: true,
+      isTurboTask: true,
+      dependencies: []
+    };
+
+    it('WHEN the items are made THEN the description is the root title', () => {
+      const [item] = taskGraphItemsOf([ROOT_GEN], '/ws', null);
+
+      expect(item?.description).toBe(ROOT_TASKS_TITLE);
+    });
+
+    it('WHEN the root has a single-package label THEN the description keeps the label', () => {
+      const [item] = taskGraphItemsOf([ROOT_GEN], '/ws', 'My repo');
+
+      expect(item?.description).toBe('My repo');
     });
   });
 
