@@ -2,7 +2,7 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import { describe, expect, it } from 'vitest';
 
 import { COMPOUND_OPTIONS, elkEdgeOf } from './elk-grouped-graph.util.ts';
-import { elkTaskGraphOf, taskLayoutKeyOf } from './elk-task-graph.util.ts';
+import { elkTaskGraphOf } from './elk-task-graph.util.ts';
 import { folderIdOf } from './folder-id.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
@@ -13,8 +13,6 @@ import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
 const SIZE_OF = (): NodeSize => NODE_SIZE;
-
-const NO_COUNTS = new Map<string, number>();
 
 const NO_SIZES = new Map<string, NodeSize>();
 
@@ -68,30 +66,32 @@ const graphOf = (shown: ReadonlySet<string>, naming: TaskNaming, titleWidths: Re
 
 describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
   describe('GIVEN grouped and the tasks of web (apps), ui and core (packages)', () => {
-    it('WHEN built THEN the root children are the folder compounds by code unit', () => {
-      const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
+    describe('WHEN built', () => {
+      it('THEN the root children are the folder compounds by code unit', () => {
+        const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
 
-      expect(childIdsOf(graph)).toStrictEqual([folderIdOf('apps'), folderIdOf('packages')]);
-    });
+        expect(childIdsOf(graph)).toStrictEqual([folderIdOf('apps'), folderIdOf('packages')]);
+      });
 
-    it('WHEN built THEN the packages folder holds pkg:core and pkg:ui', () => {
-      const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
-      const packages = compoundAt(graph, [folderIdOf('packages')]);
+      it('THEN the packages folder holds pkg:core and pkg:ui', () => {
+        const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
+        const packages = compoundAt(graph, [folderIdOf('packages')]);
 
-      expect(childIdsOf(packages)).toStrictEqual(['pkg:core', 'pkg:ui']);
-    });
+        expect(childIdsOf(packages)).toStrictEqual(['pkg:core', 'pkg:ui']);
+      });
 
-    it('WHEN built THEN the apps folder holds pkg:web, which holds web#build', () => {
-      const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
-      const web = compoundAt(graph, [folderIdOf('apps'), 'pkg:web']);
+      it('THEN the apps folder holds pkg:web, which holds web#build', () => {
+        const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
+        const web = compoundAt(graph, [folderIdOf('apps'), 'pkg:web']);
 
-      expect(childIdsOf(web)).toStrictEqual(['web#build']);
-    });
+        expect(childIdsOf(web)).toStrictEqual(['web#build']);
+      });
 
-    it('WHEN built THEN the edges stay at the root', () => {
-      const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
+      it('THEN the edges stay at the root', () => {
+        const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
 
-      expect(graph.edges).toHaveLength(2);
+        expect(graph.edges).toHaveLength(2);
+      });
     });
 
     it('WHEN the packages folder has a title width THEN its compound asks ELK for it plus both paddings', () => {
@@ -132,39 +132,6 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
       const flat: ElkNode = { id: 'root', layoutOptions: ELK_GROUPED_ROOT_OPTIONS, children, edges };
 
       expect(graph).toStrictEqual(flat);
-    });
-  });
-});
-
-describe('FEATURE: taskLayoutKeyOf grouping', () => {
-  const keyOf = (naming: TaskNaming): string => taskLayoutKeyOf(FOLDER_TASKS, PACKAGE_TASKS_SHOWN, NO_COUNTS, naming);
-  const moved: TaskNaming = { ...NAMING_GROUPED, folders: new Map([...NAMING_GROUPED.folders, ['ui', 'libs']]) };
-
-  describe('GIVEN the same tasks', () => {
-    it('WHEN keyed grouped and ungrouped THEN the keys differ', () => {
-      expect(keyOf(NAMING_GROUPED)).not.toBe(keyOf({ ...NAMING_GROUPED, grouped: false }));
-    });
-
-    it('WHEN keyed with scopes shown and hidden THEN the keys differ', () => {
-      expect(keyOf(NAMING_GROUPED)).not.toBe(keyOf({ ...NAMING_GROUPED, scopeShown: false }));
-    });
-  });
-
-  describe('GIVEN a shown package whose folder changes from packages to libs', () => {
-    it('WHEN keyed grouped THEN the keys differ', () => {
-      expect(keyOf(moved)).not.toBe(keyOf(NAMING_GROUPED));
-    });
-
-    it('WHEN keyed ungrouped THEN the keys are equal', () => {
-      expect(keyOf({ ...moved, grouped: false })).toBe(keyOf({ ...NAMING_GROUPED, grouped: false }));
-    });
-  });
-
-  describe('GIVEN a folder change of a package with no shown task', () => {
-    it('WHEN keyed grouped THEN the keys are equal', () => {
-      const elsewhere: TaskNaming = { ...NAMING_GROUPED, folders: new Map([...NAMING_GROUPED.folders, ['gone', 'libs']]) };
-
-      expect(keyOf(elsewhere)).toBe(keyOf(NAMING_GROUPED));
     });
   });
 });

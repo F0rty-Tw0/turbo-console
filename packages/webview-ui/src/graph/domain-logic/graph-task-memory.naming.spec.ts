@@ -60,7 +60,7 @@ describe('FEATURE: GraphTaskMemory naming', () => {
       expect(namingOf(MONOREPO_STATE, null).labels).toStrictEqual(labels);
     });
 
-    it('WHEN scopes are hidden THEN each package is labelled by its bare name and the scope bit is off', () => {
+    it('WHEN scopes are hidden THEN each package is labelled by its bare name', () => {
       const naming = namingOf({ ...MONOREPO_STATE, scopeShown: false }, null);
       const expected = new Map([
         ['web', 'bare-web'],
@@ -68,7 +68,13 @@ describe('FEATURE: GraphTaskMemory naming', () => {
         ['core', 'bare-core']
       ]);
 
-      expect([naming.labels, naming.scopeShown]).toStrictEqual([expected, false]);
+      expect(naming.labels).toStrictEqual(expected);
+    });
+
+    it('WHEN scopes are hidden THEN the scope bit is off', () => {
+      const naming = namingOf({ ...MONOREPO_STATE, scopeShown: false }, null);
+
+      expect(naming.scopeShown).toBe(false);
     });
 
     it('WHEN it holds tasks of the root // THEN neither the labels nor the folders hold //', () => {

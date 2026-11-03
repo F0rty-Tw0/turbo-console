@@ -75,9 +75,11 @@ describe('FEATURE: taskLayoutKeyOf naming bits', () => {
   describe('GIVEN a key saved before the naming bits existed', () => {
     it('WHEN it is the current key without its last element THEN it never equals a current key', () => {
       const saved = oldShapeOf(BASE);
+      const ungroupedKey = keyOf(BASE);
+      const groupedKey = keyOf({ ...BASE, grouped: true });
 
-      expect(saved).not.toBe(keyOf(BASE));
-      expect(saved).not.toBe(keyOf({ ...BASE, grouped: true }));
+      expect(saved).not.toBe(ungroupedKey);
+      expect(saved).not.toBe(groupedKey);
     });
   });
 });
