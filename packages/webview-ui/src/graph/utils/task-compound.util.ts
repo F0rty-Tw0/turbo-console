@@ -1,7 +1,7 @@
 import { COMPOUND_OPTIONS } from './elk-grouped-graph.util.ts';
 import { folderIdOf } from './folder-id.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import { SCRIPTS_BOX_PREFIX, TASK_BOX_PREFIX } from '../common/graph-task.const.ts';
+import { ROOT_TASK_PACKAGE, SCRIPTS_BOX_PREFIX, TASK_BOX_PREFIX } from '../common/graph-task.const.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 
@@ -21,8 +21,17 @@ export const parentIdOf = (task: GraphTask): string => {
   return parent;
 };
 
-/** The folder of a package's path; the root `//` and a package the folders map lacks are in the root folder `''`. */
-export const taskFolderOf = (packageName: string, naming: TaskNaming): string => naming.folders.get(packageName) ?? '';
+/**
+ * The folder of a package's path; the root `//` is always in the root folder `''`, even where the folders map holds it, and
+ * so is a package the folders map lacks.
+ */
+export const taskFolderOf = (packageName: string, naming: TaskNaming): string => {
+  if (packageName === ROOT_TASK_PACKAGE) return '';
+
+  const folder = naming.folders.get(packageName) ?? '';
+
+  return folder;
+};
 
 /**
  * The id of the folder box a package box sits in while grouped, `null` while ungrouped; the root `//` sits in the root

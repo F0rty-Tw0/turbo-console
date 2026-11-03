@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { folderIdOf } from './folder-id.util.ts';
-import { folderBoxIdOf, parentIdOf, scriptsBoxIdOf, taskBoxIdOf } from './task-compound.util.ts';
+import { folderBoxIdOf, parentIdOf, scriptsBoxIdOf, taskBoxIdOf, taskFolderOf } from './task-compound.util.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
@@ -55,6 +55,18 @@ describe('FEATURE: task compound ids', () => {
 
     it('WHEN the folder box of a package the folders map lacks is read THEN it is the root folder id', () => {
       expect(folderBoxIdOf('ghost', NAMING_GROUPED)).toBe(folderIdOf(''));
+    });
+  });
+
+  describe('GIVEN a grouped naming whose folders map holds the root // in tools', () => {
+    const naming: TaskNaming = { ...NAMING_GROUPED, folders: new Map([['//', 'tools']]) };
+
+    it('WHEN the folder of the root // is read THEN it is the root folder', () => {
+      expect(taskFolderOf('//', naming)).toBe('');
+    });
+
+    it('WHEN the folder box of the root // is read THEN it is the root folder id', () => {
+      expect(folderBoxIdOf('//', naming)).toBe(folderIdOf(''));
     });
   });
 
