@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import { folderIdOf } from './folder-id.util.ts';
-import { folderBoxIdOf, parentIdOf, scriptsBoxIdOf, taskBoxIdOf, taskFolderOf } from './task-compound.util.ts';
+import {
+  folderBoxIdOf,
+  parentIdOf,
+  scriptPackagesOf,
+  scriptsBoxIdOf,
+  taskBoxIdOf,
+  taskFolderOf,
+  taskFoldersOf,
+  taskPackagesOf
+} from './task-compound.util.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
@@ -56,6 +65,12 @@ describe('FEATURE: task compound ids', () => {
     it('WHEN the folder box of a package the folders map lacks is read THEN it is the root folder id', () => {
       expect(folderBoxIdOf('ghost', NAMING_GROUPED)).toBe(folderIdOf(''));
     });
+
+    it('WHEN the folders of web, the root //, ui and web again are listed THEN each folder comes once in first-seen order', () => {
+      const folders = taskFoldersOf(['web', '//', 'ui', 'web'], NAMING_GROUPED);
+
+      expect(folders).toStrictEqual(['apps', '', 'packages']);
+    });
   });
 
   describe('GIVEN a grouped naming whose folders map holds the root // in tools', () => {
@@ -73,6 +88,28 @@ describe('FEATURE: task compound ids', () => {
   describe('GIVEN an ungrouped naming', () => {
     it('WHEN the folder box of web is read THEN there is none', () => {
       expect(folderBoxIdOf('web', { ...NAMING_GROUPED, grouped: false })).toBeNull();
+    });
+
+    it('WHEN the folders of web and ui are listed THEN there are none', () => {
+      expect(taskFoldersOf(['web', 'ui'], { ...NAMING_GROUPED, grouped: false })).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN app#build, the script app#dev and ui#build', () => {
+    const tasks = [taskOf('app#build', []), scriptOf('app#dev', []), taskOf('ui#build', [])];
+
+    it('WHEN their packages are listed THEN app and ui come once each', () => {
+      expect(taskPackagesOf(tasks)).toStrictEqual(new Set(['app', 'ui']));
+    });
+
+    it('WHEN the packages with a script are listed THEN only app is', () => {
+      expect(scriptPackagesOf(tasks)).toStrictEqual(new Set(['app']));
+    });
+
+    it('WHEN the packages with a script among the turbo tasks are listed THEN there are none', () => {
+      const turboTasks = tasks.filter((task) => task.isTurboTask);
+
+      expect(scriptPackagesOf(turboTasks)).toStrictEqual(new Set());
     });
   });
 });

@@ -33,6 +33,31 @@ export const taskFolderOf = (packageName: string, naming: TaskNaming): string =>
   return folder;
 };
 
+const packageNameOf = (task: GraphTask): string => task.packageName;
+
+const isScript = (task: GraphTask): boolean => !task.isTurboTask;
+
+/** The packages of `tasks`, once each in first-seen order. */
+export const taskPackagesOf = (tasks: GraphTask[]): Set<string> => new Set(tasks.map(packageNameOf));
+
+/** The packages with a script task among `tasks`, once each in first-seen order. */
+export const scriptPackagesOf = (tasks: GraphTask[]): Set<string> => {
+  const scripts = tasks.filter(isScript);
+
+  return taskPackagesOf(scripts);
+};
+
+/** While grouped, each folder holding one of `packageNames`, once each in first-seen order; none while ungrouped. */
+export const taskFoldersOf = (packageNames: Iterable<string>, naming: TaskNaming): string[] => {
+  if (!naming.grouped) return [];
+
+  const folderOfName = (packageName: string): string => taskFolderOf(packageName, naming);
+  const names = [...packageNames];
+  const folders = new Set(names.map(folderOfName));
+
+  return [...folders];
+};
+
 /**
  * The id of the folder box a package box sits in while grouped, `null` while ungrouped; the root `//` sits in the root
  * folder's box, beside the packages of the repo root.

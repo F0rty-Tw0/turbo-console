@@ -1,16 +1,18 @@
 import type { ElementDefinition } from 'cytoscape';
 
-import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { SCRIPTS_BOX_CLASS, SCRIPTS_BOX_TITLE, TASK_BOX_CLASS, TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
 import { folderIdOf } from '../utils/folder-id.util.ts';
 import { ownerTextOf } from '../utils/owner-text.util.ts';
-import { folderBoxIdOf, scriptsBoxIdOf, taskBoxIdOf, taskFolderOf } from '../utils/task-compound.util.ts';
-
-const packageNameOf = (task: GraphTask): string => task.packageName;
-
-const isScript = (task: GraphTask): boolean => !task.isTurboTask;
+import {
+  folderBoxIdOf,
+  scriptPackagesOf,
+  scriptsBoxIdOf,
+  taskBoxIdOf,
+  taskFoldersOf,
+  taskPackagesOf
+} from '../utils/task-compound.util.ts';
 
 /** A folder box titled `folderTitleOf`, at least as wide as its title width (0 when unknown). */
 const folderBoxOf = (folder: string, drawing: TaskDrawing): ElementDefinition => {
@@ -37,18 +39,6 @@ const packageBoxOf = (packageName: string, drawing: TaskDrawing): ElementDefinit
   return definition;
 };
 
-/** While grouped, each folder holding a package of `packageList`, once each in first-seen order; none while ungrouped. */
-const foldersOf = (packageList: string[], drawing: TaskDrawing): string[] => {
-  const { naming } = drawing;
-
-  if (!naming.grouped) return [];
-
-  const folderOfName = (packageName: string): string => taskFolderOf(packageName, naming);
-  const folders = new Set(packageList.map(folderOfName));
-
-  return [...folders];
-};
-
 /** A package's Scripts box inside its package box, at least as wide as its title width (0 when unknown). */
 const scriptsBoxOf = (packageName: string, drawing: TaskDrawing): ElementDefinition => {
   const id = scriptsBoxIdOf(packageName);
@@ -66,11 +56,12 @@ const scriptsBoxOf = (packageName: string, drawing: TaskDrawing): ElementDefinit
  */
 export const boxesOf = (drawing: TaskDrawing): ElementDefinition[] => {
   const { tasks } = drawing;
-  const packageNames = new Set(tasks.map(packageNameOf));
-  const scriptPackages = new Set(tasks.filter(isScript).map(packageNameOf));
+  const packageNames = taskPackagesOf(tasks);
+  const scriptPackages = scriptPackagesOf(tasks);
   const packageList = [...packageNames];
   const scriptList = [...scriptPackages];
-  const folderBoxes = foldersOf(packageList, drawing).map((folder) => folderBoxOf(folder, drawing));
+  const folders = taskFoldersOf(packageList, drawing.naming);
+  const folderBoxes = folders.map((folder) => folderBoxOf(folder, drawing));
   const packageBoxes = packageList.map((name) => packageBoxOf(name, drawing));
   const scriptsBoxes = scriptList.map((name) => scriptsBoxOf(name, drawing));
 
