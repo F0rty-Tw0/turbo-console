@@ -5,7 +5,7 @@ import { titleWidthsOf } from './task-title-width.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import { taskOf } from '../test/utils/shown-set.spec.util.ts';
+import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 type TitleRequest = Pick<TaskLayoutRequest, 'tasks' | 'shown'>;
 
@@ -60,6 +60,34 @@ describe('FEATURE: titleWidthsOf', () => {
       const widths = titleWidthsOf(WEB_LINT_SHOWN, SIZER, null);
 
       expect(widths).toStrictEqual(new Map([['@acme/web', 91]]));
+    });
+  });
+
+  describe('GIVEN shown scripts of two packages beside a turbo task', () => {
+    const SCRIPTS_SHOWN: TitleRequest = {
+      tasks: [taskOf('app#build', []), scriptOf('app#dev', []), scriptOf('ui#start', [])],
+      shown: new Set(['app#build', 'app#dev', 'ui#start'])
+    };
+
+    it('WHEN measured THEN each Scripts box is keyed by its box id, as wide as Scripts measures, plus 1 px', () => {
+      const widths = titleWidthsOf(SCRIPTS_SHOWN, SIZER, null);
+
+      expect(widths).toStrictEqual(
+        new Map([
+          ['app', 31],
+          ['ui', 21],
+          ['scripts:app', 71],
+          ['scripts:ui', 71]
+        ])
+      );
+    });
+
+    it('WHEN measured THEN Scripts is measured once, after the package titles', () => {
+      const sizer = vi.fn(SIZER);
+
+      titleWidthsOf(SCRIPTS_SHOWN, sizer, null);
+
+      expect(sizer.mock.calls).toStrictEqual([['app'], ['ui'], ['Scripts']]);
     });
   });
 
