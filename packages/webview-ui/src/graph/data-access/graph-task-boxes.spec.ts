@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { boxesOf } from './graph-task-boxes.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import { NEUTRAL_NAMING, ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
+import { ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { folderTitleOf } from '../utils/controls-text.util.ts';
 import { folderIdOf } from '../utils/folder-id.util.ts';
@@ -39,7 +40,7 @@ const drawingOf = (tasks: GraphTask[]): TaskDrawing => {
     labels: new Map(),
     titleWidths: TITLE_WIDTHS,
     rootLabel: null,
-    naming: NEUTRAL_NAMING
+    naming: NAMING_STUB
   };
 
   return drawing;
@@ -50,7 +51,7 @@ const SCRIPTS_DATA = { id: 'scripts:app', parent: 'pkg:app', title: 'Scripts', m
 const APPS_ID = folderIdOf('apps');
 
 /** `app` sits in the folder `apps`. */
-const GROUPED: TaskNaming = { ...NEUTRAL_NAMING, grouped: true, folders: new Map([['app', 'apps']]) };
+const GROUPED: TaskNaming = { ...NAMING_STUB, grouped: true, folders: new Map([['app', 'apps']]) };
 
 const groupedDrawingOf = (tasks: GraphTask[]): TaskDrawing => {
   const drawing = drawingOf(tasks);
@@ -202,7 +203,7 @@ describe('FEATURE: boxesOf titles', () => {
   });
 
   it('GIVEN an @org/x task labelled x THEN the box is titled x', () => {
-    const naming: TaskNaming = { ...NEUTRAL_NAMING, labels: new Map([['@org/x', 'x']]) };
+    const naming: TaskNaming = { ...NAMING_STUB, labels: new Map([['@org/x', 'x']]) };
 
     const base = drawingOf([taskOf('@org/x#build', [])]);
     const drawing: TaskDrawing = { ...base, naming };

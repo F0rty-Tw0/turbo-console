@@ -7,15 +7,12 @@ import {
   EMPTY_TASKS_TEXT,
   MAX_TASK_DEPTH,
   MIN_TASK_DEPTH,
-  NEUTRAL_NAMING,
   NONE_SHOWN_TEXT,
   PACKAGES_MODE_LABEL,
   PACKAGES_MODE_TITLE,
   ROOT_TASKS_TITLE,
   ROOT_TASK_PACKAGE,
-  SCRIPTS_BOX_CLASS,
   SCRIPTS_BOX_DASH_PX,
-  SCRIPTS_BOX_PREFIX,
   SCRIPTS_BOX_TITLE,
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
@@ -25,7 +22,6 @@ import {
   TASKS_MODE_LABEL,
   TASKS_MODE_TITLE,
   TASK_CAP,
-  TASK_FOLDER_CLASS,
   UNKNOWN_TASKS_TEXT
 } from './graph-task.const.ts';
 
@@ -39,32 +35,8 @@ describe('FEATURE: graph task constants', () => {
     expect(value).toBe(expected);
   });
 
-  describe('GIVEN the Scripts box', () => {
-    it('WHEN its id prefix is read THEN it is scripts:', () => {
-      expect(SCRIPTS_BOX_PREFIX).toBe('scripts:');
-    });
-
-    it('WHEN its class is read THEN it is task-scripts', () => {
-      expect(SCRIPTS_BOX_CLASS).toBe('task-scripts');
-    });
-
-    it('WHEN its frame dashes are read THEN they are 2 px on, 3 px off', () => {
-      expect(SCRIPTS_BOX_DASH_PX).toStrictEqual([2, 3]);
-    });
-  });
-
-  describe('GIVEN the task folder box', () => {
-    it('WHEN its class is read THEN it is task-folder', () => {
-      expect(TASK_FOLDER_CLASS).toBe('task-folder');
-    });
-  });
-
-  describe('GIVEN the neutral task naming', () => {
-    it('WHEN it is read THEN it is ungrouped with scopes shown and no labels or folders', () => {
-      const neutral = { grouped: false, scopeShown: true, labels: new Map(), folders: new Map() };
-
-      expect(NEUTRAL_NAMING).toStrictEqual(neutral);
-    });
+  it('GIVEN the Scripts box WHEN its frame dashes are read THEN they are 2 px on, 3 px off', () => {
+    expect(SCRIPTS_BOX_DASH_PX).toStrictEqual([2, 3]);
   });
 
   it.each([

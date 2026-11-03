@@ -5,11 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GraphAtomGroups } from './graph-atom-groups.ts';
 import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomGroupsDeps } from '../common/graph-atom.type.ts';
-import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas } from '../common/task-canvas.type.ts';
 import { createAtomCanvas } from '../data-access/graph-atom-view.ts';
 import { createTaskCanvas } from '../data-access/graph-task-view.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA = 'web#e2e-ci';
@@ -73,7 +73,7 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
       labels: new Map(),
       titleWidths: new Map(),
       rootLabel: null,
-      naming: NEUTRAL_NAMING
+      naming: NAMING_STUB
     };
 
     cy = cytoscape({ headless: true, layout });

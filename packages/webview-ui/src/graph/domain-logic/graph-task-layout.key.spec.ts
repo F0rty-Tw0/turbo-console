@@ -5,10 +5,9 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
-import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest, TaskNaming } from '../common/graph-task.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
-import { TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
+import { NAMING_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
 import { taskLayoutKeyOf } from '../utils/elk-task-graph.util.ts';
@@ -23,9 +22,9 @@ const SHOWN = new Set(['api#build']);
 
 const NO_COUNTS = new Map<string, number>();
 
-const UNGROUPED: TaskNaming = NEUTRAL_NAMING;
+const UNGROUPED: TaskNaming = NAMING_STUB;
 
-const GROUPED: TaskNaming = { ...NEUTRAL_NAMING, grouped: true, folders: new Map([['api', 'packages']]) };
+const GROUPED: TaskNaming = { ...NAMING_STUB, grouped: true, folders: new Map([['api', 'packages']]) };
 
 const keyOf = (naming: TaskNaming): string => taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, NO_COUNTS, naming);
 

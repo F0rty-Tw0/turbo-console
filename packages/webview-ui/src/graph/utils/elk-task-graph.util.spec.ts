@@ -5,9 +5,9 @@ import { describe, expect, it } from 'vitest';
 import { COMPOUND_OPTIONS } from './elk-grouped-graph.util.ts';
 import { elkTaskGraphOf, taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
@@ -45,7 +45,7 @@ const graphOf = (
   shown: ReadonlySet<string>,
   sizes: ReadonlyMap<string, NodeSize> = NO_SIZES,
   titleWidths: ReadonlyMap<string, number> = NO_TITLES
-): ElkNode => elkTaskGraphOf({ tasks, shown, sizes, titleWidths, naming: NEUTRAL_NAMING }, SIZE_OF);
+): ElkNode => elkTaskGraphOf({ tasks, shown, sizes, titleWidths, naming: NAMING_STUB }, SIZE_OF);
 
 const compoundOf = (graph: ElkNode, id: string): ElkNode | undefined => graph.children?.find((child) => child.id === id);
 
@@ -213,9 +213,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed twice, the set in another order THEN the keys are equal', () => {
       const reversed = new Set(['api#build', 'web#build']);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NEUTRAL_NAMING)).toBe(
-        taskLayoutKeyOf(TASKS, reversed, NO_COUNTS, NEUTRAL_NAMING)
-      );
+      expect(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NAMING_STUB)).toBe(taskLayoutKeyOf(TASKS, reversed, NO_COUNTS, NAMING_STUB));
     });
   });
 
@@ -223,9 +221,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed THEN the key differs', () => {
       const more = new Set([...BOTH, 'web#lint']);
 
-      expect(taskLayoutKeyOf(TASKS, more, NO_COUNTS, NEUTRAL_NAMING)).not.toBe(
-        taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NEUTRAL_NAMING)
-      );
+      expect(taskLayoutKeyOf(TASKS, more, NO_COUNTS, NAMING_STUB)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NAMING_STUB));
     });
   });
 
@@ -233,9 +229,7 @@ describe('FEATURE: taskLayoutKeyOf', () => {
     it('WHEN keyed THEN the key differs', () => {
       const unlinked = [taskOf('api#build', []), taskOf('web#build', [])];
 
-      expect(taskLayoutKeyOf(unlinked, BOTH, NO_COUNTS, NEUTRAL_NAMING)).not.toBe(
-        taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NEUTRAL_NAMING)
-      );
+      expect(taskLayoutKeyOf(unlinked, BOTH, NO_COUNTS, NAMING_STUB)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NAMING_STUB));
     });
   });
 });
@@ -247,21 +241,19 @@ describe('FEATURE: taskLayoutKeyOf with file counts', () => {
     it('WHEN the count changes THEN the key differs', () => {
       const elevenFiles = new Map([['web#build', 11]]);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, elevenFiles, NEUTRAL_NAMING)).not.toBe(
-        taskLayoutKeyOf(TASKS, BOTH, tenFiles, NEUTRAL_NAMING)
-      );
+      expect(taskLayoutKeyOf(TASKS, BOTH, elevenFiles, NAMING_STUB)).not.toBe(taskLayoutKeyOf(TASKS, BOTH, tenFiles, NAMING_STUB));
     });
 
     it('WHEN the counts hold another id that is not shown THEN the key is the same', () => {
       const withStranger = new Map([...tenFiles, ['web#lint', 3]]);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, withStranger, NEUTRAL_NAMING)).toBe(taskLayoutKeyOf(TASKS, BOTH, tenFiles, NEUTRAL_NAMING));
+      expect(taskLayoutKeyOf(TASKS, BOTH, withStranger, NAMING_STUB)).toBe(taskLayoutKeyOf(TASKS, BOTH, tenFiles, NAMING_STUB));
     });
 
     it('WHEN no shown task has a count THEN the key is the one without counts', () => {
       const strangers = new Map([['web#lint', 3]]);
 
-      expect(taskLayoutKeyOf(TASKS, BOTH, strangers, NEUTRAL_NAMING)).toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NEUTRAL_NAMING));
+      expect(taskLayoutKeyOf(TASKS, BOTH, strangers, NAMING_STUB)).toBe(taskLayoutKeyOf(TASKS, BOTH, NO_COUNTS, NAMING_STUB));
     });
   });
 });

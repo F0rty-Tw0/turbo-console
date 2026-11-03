@@ -5,9 +5,10 @@ import { folderIdOf } from './folder-id.util.ts';
 import { nodeSizeOf } from './node-size.util.ts';
 import { titleWidthsOf } from './task-title-width.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import { NEUTRAL_NAMING, ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
+import { ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest, TaskNaming } from '../common/graph-task.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 type TitleRequest = Pick<TaskLayoutRequest, 'tasks' | 'shown' | 'naming'>;
@@ -21,14 +22,14 @@ const TASKS: GraphTask[] = [taskOf('@acme/web#build', []), taskOf('@acme/web#lin
 const ALL_SHOWN: TitleRequest = {
   tasks: TASKS,
   shown: new Set(['@acme/web#build', '@acme/web#lint', 'ui#build']),
-  naming: NEUTRAL_NAMING
+  naming: NAMING_STUB
 };
 
-const WEB_LINT_SHOWN: TitleRequest = { tasks: TASKS, shown: new Set(['@acme/web#lint']), naming: NEUTRAL_NAMING };
+const WEB_LINT_SHOWN: TitleRequest = { tasks: TASKS, shown: new Set(['@acme/web#lint']), naming: NAMING_STUB };
 
 /** `apps` holds the package `apps` and `web`, `packages` holds `ui`; the root `//` is in no folder of the map. */
 const NAMING_GROUPED: TaskNaming = {
-  ...NEUTRAL_NAMING,
+  ...NAMING_STUB,
   grouped: true,
   folders: new Map([
     ['apps', 'apps'],
@@ -93,7 +94,7 @@ describe('FEATURE: titleWidthsOf', () => {
     const SCRIPTS_SHOWN: TitleRequest = {
       tasks: [taskOf('app#build', []), scriptOf('app#dev', []), scriptOf('ui#start', [])],
       shown: new Set(['app#build', 'app#dev', 'ui#start']),
-      naming: NEUTRAL_NAMING
+      naming: NAMING_STUB
     };
 
     it('WHEN measured THEN each Scripts box is keyed by its box id, as wide as Scripts measures, plus 1 px', () => {
@@ -119,7 +120,7 @@ describe('FEATURE: titleWidthsOf', () => {
   });
 
   describe('GIVEN a root task shown and the label single-app', () => {
-    const ROOT_SHOWN: TitleRequest = { tasks: [taskOf('//#build', [])], shown: new Set(['//#build']), naming: NEUTRAL_NAMING };
+    const ROOT_SHOWN: TitleRequest = { tasks: [taskOf('//#build', [])], shown: new Set(['//#build']), naming: NAMING_STUB };
 
     it('WHEN measured THEN the key is // and the width is that of single-app', () => {
       const sizer = vi.fn(SIZER);
@@ -132,7 +133,7 @@ describe('FEATURE: titleWidthsOf', () => {
   });
 
   describe('GIVEN a root task shown and no root label', () => {
-    const ROOT_SHOWN: TitleRequest = { tasks: [taskOf('//#build', [])], shown: new Set(['//#build']), naming: NEUTRAL_NAMING };
+    const ROOT_SHOWN: TitleRequest = { tasks: [taskOf('//#build', [])], shown: new Set(['//#build']), naming: NAMING_STUB };
 
     it('WHEN measured THEN the key is // and the width is that of the root title', () => {
       const widths = titleWidthsOf(ROOT_SHOWN, SIZER, null);
@@ -143,7 +144,7 @@ describe('FEATURE: titleWidthsOf', () => {
 
   describe('GIVEN a package shown with the label web', () => {
     it('WHEN measured THEN the key is its name and the width is that of the label', () => {
-      const naming: TaskNaming = { ...NEUTRAL_NAMING, labels: new Map([['@acme/web', 'web']]) };
+      const naming: TaskNaming = { ...NAMING_STUB, labels: new Map([['@acme/web', 'web']]) };
       const widths = titleWidthsOf({ ...WEB_LINT_SHOWN, naming }, SIZER, null);
 
       expect(widths.get('@acme/web')).toBe(31);
@@ -172,7 +173,7 @@ describe('FEATURE: titleWidthsOf', () => {
 
   describe('GIVEN the same packages ungrouped', () => {
     it('WHEN measured THEN no folder is measured', () => {
-      const widths = titleWidthsOf({ ...FOLDERS_SHOWN, naming: NEUTRAL_NAMING }, SIZER, null);
+      const widths = titleWidthsOf({ ...FOLDERS_SHOWN, naming: NAMING_STUB }, SIZER, null);
 
       expect(Array.from(widths.keys())).toStrictEqual(['apps', 'web', 'ui', '//']);
     });

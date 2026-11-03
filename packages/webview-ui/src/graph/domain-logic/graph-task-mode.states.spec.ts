@@ -6,13 +6,13 @@ import type { GraphReady, GraphTask, Position, Positions } from '../../bridge/co
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
-import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import {
   API_BUILD_STUB,
   GROUPED_NAMING_STUB,
+  NAMING_STUB,
   SINGLE_TASK_STATE_STUB,
   TASK_CHAIN_STUB,
   TASK_STATE_STUB,
@@ -49,7 +49,7 @@ const fanStateOf = (count: number): GraphReady => {
   return state;
 };
 
-const SINGLE_KEY = taskLayoutKeyOf(SINGLE_TASK_STATE_STUB.tasks, new Set(['//#build', '//#lint']), NO_COUNTS, NEUTRAL_NAMING);
+const SINGLE_KEY = taskLayoutKeyOf(SINGLE_TASK_STATE_STUB.tasks, new Set(['//#build', '//#lint']), NO_COUNTS, NAMING_STUB);
 
 const SINGLE_POSITIONS: Positions = { '//#build': API_AT, '//#lint': WEB_AT };
 

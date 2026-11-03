@@ -7,9 +7,9 @@ import { probeStateOf } from './graph-probe-state.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
-import { NEUTRAL_NAMING } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA_SIZE: NodeSize = { width: 160, height: 52 };
@@ -30,7 +30,7 @@ const DRAWING: TaskDrawing = {
   labels: new Map(),
   titleWidths: new Map(),
   rootLabel: null,
-  naming: NEUTRAL_NAMING
+  naming: NAMING_STUB
 };
 
 const SIBLING_AT: Position = { x: 180, y: 300 };
