@@ -81,11 +81,11 @@ export class GraphTaskMemory {
   }
 
   /**
-   * What the Projects grid lists: the pool (hidden scripts are not in it), the effective choice, the ids `shown` draws, the
-   * naming and the root label of a single-package root.
+   * What the Projects grid lists: the pool (hidden scripts are not in it), the effective choice (its ids outside the pool
+   * are in no line, so no check counts them), the ids `shown` draws, the naming and the root label of a single-package root.
    */
   public gridFacts(shown: ReadonlySet<string>): TaskGridFacts {
-    const chosen = new Set(this.effectiveChosen(this.view().chosen));
+    const chosen = new Set(this.chosenIds());
     const facts: TaskGridFacts = { tasks: this.pool, chosen, shown, naming: this.naming(), rootLabel: this.latestRootLabel };
 
     return facts;

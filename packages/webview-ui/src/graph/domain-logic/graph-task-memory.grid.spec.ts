@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphTaskMemory } from './graph-task-memory.ts';
 import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
@@ -36,64 +36,86 @@ describe('FEATURE: GraphTaskMemory grid facts', () => {
   describe('GIVEN a listing of a turbo task and a script with scripts hidden', () => {
     const state: GraphReady = { ...TASK_STATE_STUB, tasks: [WEB_BUILD_STUB, SCRIPT_STUB], scriptsShown: false };
 
-    it('WHEN the facts are read THEN the tasks are the pool, without the script', () => {
-      const shown = new Set(['web#build']);
+    const shown = new Set(['web#build']);
+    let memory: GraphTaskMemory;
 
-      const facts = memoryOf(state).gridFacts(shown);
-
-      expect(facts.tasks).toStrictEqual([WEB_BUILD_STUB]);
+    beforeEach(() => {
+      memory = memoryOf(state);
     });
 
-    it('WHEN the facts are read THEN shown is the given set, the naming is the memory naming and the root label the state one', () => {
-      const memory = memoryOf(state);
-      const shown = new Set(['web#build']);
+    describe('WHEN the facts are read', () => {
+      it('THEN the tasks are the pool, without the script', () => {
+        const facts = memory.gridFacts(shown);
 
-      const facts = memory.gridFacts(shown);
+        expect(facts.tasks).toStrictEqual([WEB_BUILD_STUB]);
+      });
 
-      expect(facts.shown).toBe(shown);
-      expect(facts.naming).toStrictEqual(memory.naming());
-      expect(facts.rootLabel).toBeNull();
-    });
-  });
+      it('THEN shown is the given set', () => {
+        const facts = memory.gridFacts(shown);
 
-  describe('GIVEN a saved choice of web#build', () => {
-    it('WHEN the facts are read THEN chosen holds web#build', () => {
-      const memory = memoryOf(TASK_STATE_STUB, TASK_VIEW_STUB);
+        expect(facts.shown).toBe(shown);
+      });
 
-      const facts = memory.gridFacts(new Set());
+      it('THEN the naming is the memory naming', () => {
+        const facts = memory.gridFacts(shown);
 
-      expect(facts.chosen).toStrictEqual(new Set(['web#build']));
-    });
-  });
+        expect(facts.naming).toStrictEqual(memory.naming());
+      });
 
-  describe('GIVEN a single-package state whose saved choice names no pooled task', () => {
-    it('WHEN the facts are read THEN chosen holds every pool id and the root label is the state one', () => {
-      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen: ['gone#x'] };
-      const memory = memoryOf(SINGLE_TASK_STATE_STUB, saved);
+      it('THEN the root label is the state one, none for a monorepo', () => {
+        const facts = memory.gridFacts(shown);
 
-      const facts = memory.gridFacts(new Set());
-
-      expect(facts.chosen).toStrictEqual(new Set(['//#build', '//#lint']));
-      expect(facts.rootLabel).toBe('single-app');
+        expect(facts.rootLabel).toBeNull();
+      });
     });
   });
 
-  describe('GIVEN a saved choice of web#build and a script id outside the pool', () => {
-    it('WHEN the chosen ids are read THEN they are the saved ids, outside-the-pool ones included', () => {
+  describe('GIVEN a saved choice of web#build and hidden#fmt, a script id outside the pool', () => {
+    let memory: GraphTaskMemory;
+
+    beforeEach(() => {
       const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen: ['web#build', 'hidden#fmt'] };
-      const memory = memoryOf(TASK_STATE_STUB, saved);
 
+      memory = memoryOf(TASK_STATE_STUB, saved);
+    });
+
+    it('WHEN the facts are read THEN chosen holds both saved ids', () => {
+      const facts = memory.gridFacts(new Set());
+
+      expect(facts.chosen).toStrictEqual(new Set(['web#build', 'hidden#fmt']));
+    });
+
+    it('WHEN the chosen ids are read THEN they are the saved ids, outside-the-pool ones included', () => {
       const ids = memory.chosenIds();
 
       expect(ids).toStrictEqual(['web#build', 'hidden#fmt']);
     });
   });
 
-  describe('GIVEN a single-package state whose saved choice names no pooled task, for the chosen ids', () => {
-    it('WHEN the chosen ids are read THEN they are the saved id followed by every pool id', () => {
-      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen: ['gone#x'] };
-      const memory = memoryOf(SINGLE_TASK_STATE_STUB, saved);
+  describe('GIVEN a single-package state whose saved choice names no pooled task', () => {
+    let memory: GraphTaskMemory;
 
+    beforeEach(() => {
+      const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen: ['gone#x'] };
+
+      memory = memoryOf(SINGLE_TASK_STATE_STUB, saved);
+    });
+
+    describe('WHEN the facts are read', () => {
+      it('THEN chosen holds the saved id and every pool id', () => {
+        const facts = memory.gridFacts(new Set());
+
+        expect(facts.chosen).toStrictEqual(new Set(['gone#x', '//#build', '//#lint']));
+      });
+
+      it('THEN the root label is the state one', () => {
+        const facts = memory.gridFacts(new Set());
+
+        expect(facts.rootLabel).toBe('single-app');
+      });
+    });
+
+    it('WHEN the chosen ids are read THEN they are the saved id followed by every pool id', () => {
       const ids = memory.chosenIds();
 
       expect(ids).toStrictEqual(['gone#x', '//#build', '//#lint']);
