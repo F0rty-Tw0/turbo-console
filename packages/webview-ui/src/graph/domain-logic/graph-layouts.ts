@@ -11,7 +11,7 @@ import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
 import { modeGroupsOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
-import { arrivalOf, engineNoticeOf, progressNoticeOf, switchPlanOf } from '../utils/layout-plan.util.ts';
+import { arrivalOf, engineNoticeOf, groupingOf, progressNoticeOf, switchPlanOf } from '../utils/layout-plan.util.ts';
 
 /**
  * The flat and the grouped layout of the drawn hash: a snapshot and an engine per mode, the checkbox's mode and the
@@ -54,7 +54,7 @@ export class GraphLayouts {
   /** A hash not on screen: the saved mode draws from its cache at once, or lays out behind Loading. */
   public async show(state: GraphReady, saved: GraphViewState | null): Promise<void> {
     const view = saved ?? freshViewStateOf(state.hash);
-    const mode: LayoutGrouping = view.grouped ? 'folders' : 'flat';
+    const mode = groupingOf(view.grouped);
 
     this.reset();
     this.snapshots.seed('flat', state.positions);
@@ -62,17 +62,7 @@ export class GraphLayouts {
     this.checked = mode;
     this.onScreen = mode;
     this.saved = saved;
-
-    const isCached = this.snapshots.has(mode);
-
-    if (isCached) {
-      this.place(mode);
-
-      return;
-    }
-
-    this.deps.screen.showLoading();
-    await this.layOut(mode);
+    await this.drawFresh(mode);
   }
 
   /**
@@ -114,16 +104,18 @@ export class GraphLayouts {
     await this.layOut(this.checked);
   }
 
-  /** Leaving task mode: draws the checkbox's mode afresh from its snapshot, laying out only when none is cached, then restores `saved`. */
+  /** Leaving task mode: draws the mode `saved` holds (else the checkbox's) afresh as `show` does, then restores `saved`. */
   public async redraw(saved: GraphViewState | null): Promise<void> {
+    const isGrouped = saved?.grouped ?? this.checked === 'folders';
+    const mode = groupingOf(isGrouped);
+
+    if (this.checked === 'folders' && mode === 'flat') this.deps.onGroupingOff();
+
     this.saved = saved;
     this.hasDrawn = false;
-    this.onScreen = this.checked;
-
-    const isCached = this.snapshots.has(this.checked);
-
-    if (isCached) this.place(this.checked);
-    else await this.layOut(this.checked);
+    this.checked = mode;
+    this.onScreen = mode;
+    await this.drawFresh(mode);
   }
 
   /** Keeps a drag in the snapshot on screen and posts it for that mode's cache unless its layout fell back. */
@@ -142,6 +134,20 @@ export class GraphLayouts {
     this.snapshots.clear();
     this.runs.forget();
     this.hasDrawn = false;
+  }
+
+  /** A first draw of `mode`: from its cached snapshot at once, else behind Loading while it lays out. */
+  private async drawFresh(mode: LayoutGrouping): Promise<void> {
+    const isCached = this.snapshots.has(mode);
+
+    if (isCached) {
+      this.place(mode);
+
+      return;
+    }
+
+    this.deps.screen.showLoading();
+    await this.layOut(mode);
   }
 
   private async layOut(mode: LayoutGrouping): Promise<void> {

@@ -154,10 +154,13 @@ export type GraphShownUmbrellasMessage = {
   readonly ids: string[];
 };
 
-/** The page flipping one of the tree's two toggles: scope prefixes on package labels or `package.json` scripts beside turbo tasks. */
+/** The tree's two View toggles: scope prefixes on package labels, and `package.json` scripts beside turbo tasks. */
+export type GraphViewToggle = 'scope' | 'scripts';
+
+/** The page flipping one of the tree's two toggles. */
 export type GraphSetViewToggleMessage = {
   readonly type: 'setViewToggle';
-  readonly toggle: 'scope' | 'scripts';
+  readonly toggle: GraphViewToggle;
   readonly shown: boolean;
 };
 

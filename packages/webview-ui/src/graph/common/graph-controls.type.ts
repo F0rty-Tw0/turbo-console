@@ -86,10 +86,9 @@ export type ControlsMounted = {
   readonly elements: ControlsElements;
 };
 
-/** What the panel's actions call on `GraphControls`; `applied` and `depth` are read at event time. */
+/** What the panel's actions call on `GraphControls`; `applied`, the depth with it, is read at event time. */
 export type ControlsOps = {
   readonly applied: GraphFilters;
-  readonly depth: number;
   readonly edit: (mounted: ControlsMounted, next: GraphFilters) => void;
   readonly change: (mounted: ControlsMounted, next: GraphFilters) => void;
   readonly focus: (mounted: ControlsMounted, name: string) => void;

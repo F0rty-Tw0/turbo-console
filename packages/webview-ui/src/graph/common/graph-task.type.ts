@@ -23,7 +23,12 @@ export type TaskModes = {
   readonly saveTask: (task: TaskViewState, hash: string) => void;
   /** Saves the task Controls or Details open state. */
   readonly savePanels: (panels: TaskPanelsOpen) => void;
+  /** Saves the Group by folder choice, which the package graph draws when task mode is left. */
+  readonly saveGrouped: (value: boolean) => void;
 };
+
+/** What `GraphTaskMemory` reads and writes of `TaskModes`: the task view, the state it saves over, and the save. */
+export type TaskMemoryModes = Pick<TaskModes, 'task' | 'saveTask' | 'current'>;
 
 /**
  * What the package side reads of `ViewStateModes`: its saver, the mode, which parks it in task mode, the state it redraws

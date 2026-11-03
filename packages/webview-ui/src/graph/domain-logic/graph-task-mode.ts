@@ -1,7 +1,6 @@
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { GraphTaskMemory } from './graph-task-memory.ts';
-import { layoutDepsOf, selectionDepsOf, umbrellaFactsOf } from './graph-task-mode-deps.ts';
-import { savePanelToggle } from './graph-task-panel.ts';
+import { controlsActionsOf, layoutDepsOf, selectionDepsOf, umbrellaFactsOf } from './graph-task-mode-deps.ts';
 import { GraphTaskSelection } from './graph-task-selection.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -40,12 +39,12 @@ export class GraphTaskMode {
       onShowEvery: (at: number): void => this.showTasks(taskIdsOf(this.memory.tasks()), at),
       onShown: deps.onLocation
     });
-    this.controls = deps.controlsOf({
-      onSearch: (search: string): void => this.memory.save({ search }),
-      onDepth: (depth: number): void => this.choose({ depth }, null),
-      onPick: (id: string): void => this.selection.select(id),
-      onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen })
-    });
+    this.controls = deps.controlsOf(
+      controlsActionsOf(deps, this.memory, {
+        choose: (edit: Partial<TaskViewState>): void => this.choose(edit, null),
+        select: (id: string): void => this.selection.select(id)
+      })
+    );
   }
 
   public isActive(): boolean {
@@ -192,8 +191,13 @@ export class GraphTaskMode {
     void this.layout.show(request);
   }
 
-  /** The toolbar, the body, the task panel and Controls show once per visit, before any task layout lands. */
+  /**
+   * The View boxes follow every state and choice; the toolbar, the body, the task panel and Controls show once per visit,
+   * before any task layout lands.
+   */
   private showPage(): void {
+    this.controls.setView(this.memory.viewChecks());
+
     if (this.hasEntered) return;
 
     const current = this.deps.modes.current();

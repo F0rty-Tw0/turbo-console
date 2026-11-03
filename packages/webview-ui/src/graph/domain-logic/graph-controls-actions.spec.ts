@@ -23,7 +23,6 @@ const WEB_HIDDEN = menuFiltersOf(['web'], null);
 const opsOf = (applied: GraphFilters): ControlsOps => {
   const ops: ControlsOps = {
     applied,
-    depth: applied.depth,
     edit: vi.fn(),
     change: vi.fn(),
     focus: vi.fn(),

@@ -1,4 +1,13 @@
-import { field, hintedField, searchInput } from './controls-fields.ts';
+import {
+  checkbox,
+  controlsSection,
+  field,
+  groupingField,
+  hintedField,
+  scopeField,
+  scriptsField,
+  searchInput
+} from './controls-fields.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import {
@@ -12,6 +21,7 @@ import {
   SEARCH_TASKS_LABEL,
   TASK_CONTROLS_ID
 } from '../common/graph-task.const.ts';
+import { SEARCH_SECTION_TITLE, VIEW_SECTION_TITLE } from '../common/graph.const.ts';
 import type { TaskControlsElements, TaskControlsRow } from '../common/task-controls.type.ts';
 import { ownerTextOf } from '../utils/owner-text.util.ts';
 
@@ -65,21 +75,43 @@ export const buildTaskRow = (task: GraphTask, rootLabel: string | null): TaskCon
   return row;
 };
 
-/** The task Controls panel `aside#graph-task-controls`, hidden and unwired: Search tasks, Dependents depth, then the task grid. */
+/**
+ * The task Controls panel `aside#graph-task-controls`, hidden and unwired: the Search section, the View section (Dependents
+ * depth, Group by folder, Show package scopes, Show scripts), then the task grid. Show scripts starts hidden: only the
+ * task listing tells whether there is a script to show.
+ */
 export const buildTaskControls = (): TaskControlsElements => {
   const search = searchInput();
   const depth = taskDepthInput();
+  const grouping = checkbox('controls-check');
+  const scope = checkbox('controls-check');
+  const scripts = checkbox('controls-check');
   const depthField = hintedField(DEPENDENTS_DEPTH_LABEL, depth, DEPENDENTS_DEPTH_HINT, DEPENDENTS_DEPTH_HINT_ID);
+  const groupField = groupingField(grouping);
+  const scriptsLine = scriptsField(scripts);
+  const searchSection = controlsSection(SEARCH_SECTION_TITLE, field(SEARCH_TASKS_LABEL, search));
+  const viewSection = controlsSection(VIEW_SECTION_TITLE, depthField, groupField, scopeField(scope), scriptsLine);
   const list = textElement('div', 'controls-list', '');
   const panel = textElement('aside', 'graph-controls graph-task-controls', '');
 
   search.setAttribute('aria-label', SEARCH_TASKS_LABEL);
   list.setAttribute('role', 'grid');
+  scriptsLine.hidden = true;
   panel.id = TASK_CONTROLS_ID;
   panel.hidden = true;
-  panel.append(field(SEARCH_TASKS_LABEL, search), depthField, list);
+  panel.append(searchSection, viewSection, list);
 
-  const elements: TaskControlsElements = { panel, search, depth, list };
+  const elements: TaskControlsElements = {
+    panel,
+    search,
+    depth,
+    grouping,
+    scope,
+    scripts,
+    groupingField: groupField,
+    scriptsField: scriptsLine,
+    list
+  };
 
   return elements;
 };

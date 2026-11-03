@@ -105,10 +105,14 @@ export class GraphPackageSide {
     return this.drawn;
   }
 
-  /** Task mode was left: the package graph drawn before is drawn again with the saved package view. */
+  /**
+   * Task mode was left: the package graph drawn before is drawn again with the saved package view. The Group box takes the
+   * saved grouping first, so a save the redraw's grouping off makes never writes the grouping task mode replaced.
+   */
   public redraw(): void {
     const saved = this.modes.current();
 
+    if (saved !== null) this.filtering.controls.syncGrouping(saved.grouped);
     void this.guard(async (): Promise<void> => this.layouts.redraw(saved));
   }
 

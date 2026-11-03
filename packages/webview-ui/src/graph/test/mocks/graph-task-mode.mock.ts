@@ -20,6 +20,7 @@ export const taskControlsMock = (): Mocked<TaskControls> => {
   const controls: Mocked<TaskControls> = {
     enter: vi.fn<TaskControls['enter']>(),
     exit: vi.fn<TaskControls['exit']>(),
+    setView: vi.fn<TaskControls['setView']>(),
     setRows: vi.fn<TaskControls['setRows']>()
   };
 

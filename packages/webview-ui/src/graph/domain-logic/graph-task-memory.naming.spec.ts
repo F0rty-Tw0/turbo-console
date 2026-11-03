@@ -3,12 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { GraphTaskMemory } from './graph-task-memory.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { TaskModes, TaskNaming } from '../common/graph-task.type.ts';
+import type { TaskMemoryModes, TaskNaming } from '../common/graph-task.type.ts';
 import { SAVED_FLAT_STUB, SAVED_GROUPED_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { ROOT_BUILD_STUB, SINGLE_TASK_STATE_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
 import { BARE_SHOWN_STUB } from '../test/stubs/scope-labels.stub.ts';
-
-type MemoryModes = Pick<TaskModes, 'task' | 'saveTask' | 'current'>;
 
 /** `web` in `apps`, `ui` and `core` in `packages`, each bare name `bare-<name>`, scopes shown, with the root task `//#build`. */
 const MONOREPO_STATE: GraphReady = { ...BARE_SHOWN_STUB, tasks: [...TASK_CHAIN_STUB, ROOT_BUILD_STUB] };
@@ -20,7 +18,7 @@ const FOLDERS = new Map([
 ]);
 
 const namingOf = (state: GraphReady, current: GraphViewState | null): TaskNaming => {
-  const modes: MemoryModes = { task: vi.fn(() => null), saveTask: vi.fn(), current: vi.fn(() => current) };
+  const modes: TaskMemoryModes = { task: vi.fn(() => null), saveTask: vi.fn(), current: vi.fn(() => current) };
   const memory = new GraphTaskMemory(modes);
 
   memory.keep(state);

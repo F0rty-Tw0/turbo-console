@@ -1,6 +1,9 @@
+import { savePanelToggle } from './graph-task-panel.ts';
+import type { GraphViewToggle } from '../../bridge/common/graph-message.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { UmbrellaSizers } from '../common/graph-page.type.ts';
 import type { TaskLayoutDeps, TaskMemoryPort, TaskModeDeps, UmbrellaFacts } from '../common/graph-task.type.ts';
+import type { ControlsEdits, TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskSelectionDeps } from '../common/task-details.type.ts';
 
 type LayoutHooks = Pick<TaskLayoutDeps, 'onPlaced' | 'onDrawn'>;
@@ -40,4 +43,28 @@ export const umbrellaFactsOf = (deps: TaskModeDeps, atoms: AtomCounts): Umbrella
   const facts: UmbrellaFacts = { fileCounts: atoms.fileCounts(), sizers };
 
   return facts;
+};
+
+/** Group by folder ticked or unticked in task mode: saved for both graphs, then the shown set drawn again under it. */
+const regroup = (deps: TaskModeDeps, edits: ControlsEdits, isGrouped: boolean): void => {
+  deps.modes.saveGrouped(isGrouped);
+  edits.choose({});
+};
+
+/**
+ * What the task Controls report and what task mode does with it: the search is saved, a depth or a pick goes through
+ * `edits`, the open state is saved with the canvas re-measured, Group by folder is saved and drawn, and a View toggle goes
+ * to the host, whose next state redraws.
+ */
+export const controlsActionsOf = (deps: TaskModeDeps, memory: TaskMemoryPort, edits: ControlsEdits): TaskControlsActions => {
+  const actions: TaskControlsActions = {
+    onSearch: (search: string): void => memory.save({ search }),
+    onDepth: (depth: number): void => edits.choose({ depth }),
+    onPick: (id: string): void => edits.select(id),
+    onToggle: (controlsOpen: boolean): void => savePanelToggle(deps, { controlsOpen }),
+    onGrouping: (isGrouped: boolean): void => regroup(deps, edits, isGrouped),
+    onViewToggle: (toggle: GraphViewToggle, shown: boolean): void => deps.bridge.post({ type: 'setViewToggle', toggle, shown })
+  };
+
+  return actions;
 };

@@ -14,7 +14,8 @@ type StateWithoutWidths = Omit<GraphViewState, 'panelWidths'>;
 
 /**
  * The one save path for both modes. A package save keeps the mode and the last task view; in task mode it writes nothing,
- * since task mode saves the shared `controlsOpen` and `detailsOpen` itself and the package fields wait for package mode.
+ * since task mode saves the shared `controlsOpen` and `detailsOpen` itself and the package fields wait for package mode,
+ * except the Group by folder choice: `saveGrouped` writes `grouped` and `fitted` from either mode.
  * Every write carries the panel widths, which no mode owns.
  */
 export class ViewStateModes {
@@ -81,6 +82,18 @@ export class ViewStateModes {
     if (last === null) return;
 
     const state: GraphViewState = { ...last, ...panels };
+
+    this.write(state);
+  }
+
+  /** Writes the Group by folder choice over the last state, from either mode; a changed value also sets `fitted`, so the next draw fits. Nothing before any state is written. */
+  public saveGrouped(value: boolean): void {
+    const last = this.last;
+
+    if (last === null) return;
+
+    const isFitted = last.fitted || last.grouped !== value;
+    const state: GraphViewState = { ...last, grouped: value, fitted: isFitted };
 
     this.write(state);
   }
