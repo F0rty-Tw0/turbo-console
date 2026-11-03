@@ -143,14 +143,13 @@ export const cacheCase = async (scene: GraphScene): Promise<void> => {
     const state = requireState(scene);
     const positioned = positionedNamesOf(state);
 
-    const edgeIds = new Set(state.edges.map(edgeIdOf));
-    // every edge is laid out; the routed ids are a subset because routes past ROUTE_BENDS_MAX bends are left out
+    const edgeIds = state.edges.map(edgeIdOf);
+    // no fixture route has more than ROUTE_BENDS_MAX bends, so every edge comes back routed
     const routed = Object.keys(state.folderRoutes ?? {});
 
     assert.equal(state.hash, firstHash);
     assert.deepEqual(sorted(positioned), sorted(state.packages.map((pkg): string => pkg.name)));
-    assert.ok(routed.length > 0);
-    assert.ok(routed.every((id): boolean => edgeIds.has(id)));
+    assert.deepEqual(sorted(routed), sorted(edgeIds));
     assert.equal(state.routes, null);
   });
 };
