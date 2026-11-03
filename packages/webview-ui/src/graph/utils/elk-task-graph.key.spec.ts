@@ -76,8 +76,9 @@ describe('FEATURE: taskLayoutKeyOf naming bits', () => {
   describe('GIVEN a key built now', () => {
     it('WHEN a key is built THEN its last element is the layout version', () => {
       const key = keyOf(BASE);
+      const versionLast = new RegExp(`,${LAYOUT_VERSION}\\]$`);
 
-      expect(key.endsWith(`,${LAYOUT_VERSION}]`)).toBe(true);
+      expect(key).toMatch(versionLast);
     });
   });
 
