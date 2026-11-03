@@ -47,7 +47,7 @@ export type ProbeEdge = {
 };
 
 /**
- * One package edge's drawn line in page CSS pixels, the frame of `ProbeNode.renderedX`: `points` run from the source end
+ * One drawn edge's line (a package edge or a task link) in page CSS pixels, the frame of `ProbeNode.renderedX`: `points` run from the source end
  * through the bends (a routed edge's segment points, else its control points) to the target end, `[]` while the edge
  * is not drawn; `midpoint` lies on that path (the origin while the edge is not drawn).
  */
@@ -128,7 +128,7 @@ export type LayoutEngine = 'elk' | 'cache' | 'fallback';
 export type GraphProbe = {
   readonly nodes: () => ProbeNode[];
   readonly edges: () => ProbeEdge[];
-  /** Every package edge's drawn line, in the order `edges` lists them. */
+  /** Every drawn edge's line (package or task link), in the order `edges` lists them. */
   readonly edgeLines: () => ProbeEdgeLine[];
   /** The first edge's `line-color`, `''` when there is no edge. */
   readonly edgeColor: () => string;

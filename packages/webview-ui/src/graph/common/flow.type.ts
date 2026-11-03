@@ -61,6 +61,9 @@ export type FlowEdgeSource = {
   readonly hasClass: (name: string) => boolean;
 };
 
+/** What `drawnBendsOf` reads of an edge. */
+export type DrawnBendsSource = Pick<FlowEdgeSource, 'controlPoints' | 'hasClass' | 'segmentPoints'>;
+
 /** The edges a selector matched, as `flowEdgesOf` maps them. */
 type FlowEdgeList = {
   readonly map: <Value>(read: (edge: FlowEdgeSource) => Value) => Value[];
