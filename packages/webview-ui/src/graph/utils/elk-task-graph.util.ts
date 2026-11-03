@@ -1,18 +1,15 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { edgeIdOf } from './edge-id.util.ts';
-import { COMPOUND_OPTIONS, elkEdgeOf } from './elk-grouped-graph.util.ts';
+import { elkEdgeOf } from './elk-grouped-graph.util.ts';
+import { compoundOptionsOf, taskBoxIdOf } from './task-compound.util.ts';
 import type { GraphEdge, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSizer } from '../common/graph-page.type.ts';
-import { TASK_BOX_PREFIX } from '../common/graph-task.const.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
-import { ELK_GROUPED_ROOT_OPTIONS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { ELK_GROUPED_ROOT_OPTIONS } from '../common/graph.const.ts';
 import type { TaskDrawing } from '../common/task-canvas.type.ts';
 
 type TaskGraphInput = Pick<TaskLayoutRequest, 'tasks' | 'shown' | 'sizes'> & Pick<TaskDrawing, 'titleWidths'>;
-
-/** The compound id of a task's package; the root package `//` gives `pkg://`. */
-export const taskBoxIdOf = (packageName: string): string => `${TASK_BOX_PREFIX}${packageName}`;
 
 /** The links from each shown task to each shown dependency, `source` the dependent. */
 export const taskEdgesOf = (tasks: GraphTask[], shown: ReadonlySet<string>): GraphEdge[] => {
@@ -30,19 +27,6 @@ export const taskEdgesOf = (tasks: GraphTask[], shown: ReadonlySet<string>): Gra
   };
 
   return drawn.flatMap(edgesOf);
-};
-
-/**
- * A package compound's options: with a title width, at least that wide plus both paddings, so its title draws whole.
- * Under `elk.direction: DOWN` ELK reads the minimum as (height, width); the 0 height is no minimum.
- */
-const compoundOptionsOf = (titleWidth: number | undefined): Readonly<Record<string, string>> => {
-  if (titleWidth === undefined) return COMPOUND_OPTIONS;
-
-  const minimum = `(0, ${titleWidth + 2 * FOLDER_PADDING_PX})`;
-  const options = { ...COMPOUND_OPTIONS, 'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': minimum };
-
-  return options;
 };
 
 const sortedPackagesOf = (tasks: GraphTask[]): string[] => {

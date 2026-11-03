@@ -12,9 +12,10 @@ import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
 import { closureOf } from '../utils/closure.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
-import { taskBoxIdOf, taskEdgesOf } from '../utils/elk-task-graph.util.ts';
+import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
 import { edgeStateOf, nodeStateOf } from '../utils/highlight.util.ts';
 import { ownerTextOf } from '../utils/owner-text.util.ts';
+import { taskBoxIdOf } from '../utils/task-compound.util.ts';
 import { runStateOf } from '../utils/task-run.util.ts';
 
 const RUN_CLASSES = RUN_STATES.map((state) => `${RUN_CLASS_PREFIX}${state}`).join(' ');

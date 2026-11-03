@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { GraphAtomGroups } from './graph-atom-groups.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
 import { BASE, E2E_CI, LIB_CI, SIZES, TASKS, atomRigOf, statesOf } from '../test/utils/graph-atom-groups.spec.util.ts';
+import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
+
+const UMBRELLA = 'app#e2e-ci';
+
+const SHOWN_UMBRELLA = new Set([UMBRELLA]);
 
 const COUNTED_E2E_CI = statesOf('app#e2e-ci', '10 files · 3 cached');
 
@@ -162,6 +167,26 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       groups.placed(new Set(['app#build']), BASE, new Map(), TASKS);
 
       expect(rig.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a layout is placed whose umbrella is a package script', () => {
+    it('WHEN the umbrella is expanded THEN its files are drawn in the Scripts box of its package', () => {
+      groups.received([E2E_CI]);
+      groups.placed(SHOWN_UMBRELLA, BASE, SIZES, [scriptOf(UMBRELLA, [])]);
+
+      groups.toggle(UMBRELLA);
+
+      expect(rig.atoms.expand.mock.lastCall?.[1]).toBe('scripts:app');
+    });
+
+    it('WHEN a turbo umbrella is expanded THEN its files are drawn in its package box', () => {
+      groups.received([E2E_CI]);
+      groups.placed(SHOWN_UMBRELLA, BASE, SIZES, [taskOf(UMBRELLA, [])]);
+
+      groups.toggle(UMBRELLA);
+
+      expect(rig.atoms.expand.mock.lastCall?.[1]).toBe('pkg:app');
     });
   });
 

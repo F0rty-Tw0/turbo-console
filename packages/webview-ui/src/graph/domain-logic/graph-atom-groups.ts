@@ -6,9 +6,9 @@ import { ATOM_BOX_PREFIX, ATOM_MORE_PREFIX } from '../common/graph-atom.const.ts
 import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import { atomSpecOf, outcomesOf } from '../utils/atom-spec.util.ts';
-import { taskBoxIdOf } from '../utils/elk-task-graph.util.ts';
+import { parentIdOf } from '../utils/task-compound.util.ts';
 
-const pkgBoxEntryOf = (task: GraphTask): [string, string] => [task.id, taskBoxIdOf(task.packageName)];
+const pkgBoxEntryOf = (task: GraphTask): [string, string] => [task.id, parentIdOf(task)];
 
 /** The umbrella id behind a box id (`atom:`) or a count node id (`atom-more:`), by its `prefix`; any other id as it is. */
 const umbrellaOfPrefixed = (nodeId: string, prefix: string): string => {
