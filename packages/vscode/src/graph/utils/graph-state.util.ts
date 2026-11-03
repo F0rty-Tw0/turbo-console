@@ -1,5 +1,5 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
-import { ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
+import { LAYOUT_VERSION, ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 import type { GraphEdge, GraphPackage, GraphState, Positions } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
@@ -41,14 +41,14 @@ const fnv1a = (text: string): string => {
 };
 
 /**
- * FNV-1a over a `[name, path, tags]` JSON line per package in name order, a blank line, then a `[source, target]` JSON line per edge
- * in sorted order, so input order never matters but a changed path or tag does. Tags are hashed in the order given: `graphStateOf`
+ * FNV-1a over the layout version and a newline, then a `[name, path, tags]` JSON line per package in name order, a blank line, then a `[source, target]` JSON line per edge
+ * in sorted order, so input order never matters but a changed path, a tag or the layout version does. Tags are hashed in the order given: `graphStateOf`
  * sorts them first.
  */
 export const graphHashOf = (packages: GraphPackage[], edges: GraphEdge[]): string => {
   const packageLines = packages.toSorted(comparePackages).map((pkg) => JSON.stringify([pkg.name, pkg.path, pkg.tags]));
   const lines = edges.toSorted(compareEdges).map((edge) => JSON.stringify([edge.source, edge.target]));
-  const text = `${packageLines.join('\n')}\n\n${lines.join('\n')}`;
+  const text = `${LAYOUT_VERSION}\n${packageLines.join('\n')}\n\n${lines.join('\n')}`;
 
   return fnv1a(text);
 };
