@@ -242,6 +242,23 @@ p {
   padding-inline-start: 0;
 }
 
+#graph-task-controls .controls-row[data-kind='folder'] {
+  margin-top: var(--space-2);
+  font-weight: 600;
+}
+
+#graph-task-controls .controls-row[data-depth='1'] {
+  padding-inline-start: var(--space-3);
+}
+
+#graph-task-controls .controls-row[data-depth='2'] {
+  padding-inline-start: calc(var(--space-3) * 2);
+}
+
+#graph-task-controls .controls-name .codicon {
+  margin-inline-end: var(--space-1);
+}
+
 .controls-task-package {
   margin-inline-start: var(--space-2);
   color: var(--vscode-descriptionForeground);

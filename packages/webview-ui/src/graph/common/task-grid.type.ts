@@ -44,3 +44,11 @@ export type TaskLine = {
 };
 
 export type ProjectLine = GroupLine | TaskLine;
+
+/** A built grid row: its line, the row element, the check and the name button. */
+export type TaskGridRow = {
+  readonly line: ProjectLine;
+  readonly element: HTMLElement;
+  readonly check: HTMLInputElement;
+  readonly name: HTMLButtonElement;
+};
