@@ -18,6 +18,7 @@ export const layoutViewMock = (): Mocked<LayoutView> => {
     setGraph: vi.fn<LayoutView['setGraph']>(),
     setGrouping: vi.fn<LayoutView['setGrouping']>(),
     setPositions: vi.fn<LayoutView['setPositions']>(),
+    setRoutes: vi.fn<LayoutView['setRoutes']>(),
     fit: vi.fn<LayoutView['fit']>(),
     resize: vi.fn<LayoutView['resize']>()
   };

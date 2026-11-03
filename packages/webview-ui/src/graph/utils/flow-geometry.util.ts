@@ -25,7 +25,7 @@ const straightSegmentsOf = (points: Position[]): FlowSegment[] => {
   return points.flatMap(segmentFrom);
 };
 
-/** The segments of one edge in rendered coordinates: none while a coordinate is not finite, a curve for one control point, else straight lines through the points. */
+/** The segments of one edge in rendered coordinates: none while a coordinate is not finite, a curve for one control point of an edge that is not a polyline, else straight lines through the points. */
 const edgeSegmentsOf = (edge: FlowEdgeGeometry, pan: Position, zoom: number): FlowSegment[] => {
   const raw = [edge.source, ...edge.controlPoints, edge.target];
   const isPlaced = raw.every(isFinitePoint);
@@ -38,7 +38,7 @@ const edgeSegmentsOf = (edge: FlowEdgeGeometry, pan: Position, zoom: number): Fl
   const controls = edge.controlPoints.map(render);
   const [control = null] = controls;
 
-  if (controls.length === 1) return [{ from: source, control, to: target }];
+  if (controls.length === 1 && !edge.isPolyline) return [{ from: source, control, to: target }];
 
   return straightSegmentsOf([source, ...controls, target]);
 };

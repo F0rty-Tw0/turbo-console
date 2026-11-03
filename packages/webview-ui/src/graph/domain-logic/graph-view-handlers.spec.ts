@@ -3,13 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { viewHandlersOf } from './graph-view-handlers.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewHandlers } from '../common/graph-page.type.ts';
+import type { GraphDrag, GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
 import { collapsedIdOf } from '../utils/folder-id.util.ts';
 
 const WEB_AT: Position = { x: 1, y: 2 };
 
 const POSITIONS: Positions = { web: WEB_AT };
+
+const DRAG: GraphDrag = { positions: POSITIONS, touched: ['web>ui'] };
 
 const BACKGROUND: InspectionInput = { kind: 'background' };
 
@@ -24,8 +26,8 @@ describe('FEATURE: viewHandlersOf', () => {
     let keepClearPackage: Mock<() => void>;
     let keepClearTask: Mock<() => void>;
     let toggle: Mock<(folder: string) => void>;
-    let dragged: Mock<(positions: Positions) => void>;
-    let taskDragged: Mock<() => void>;
+    let dragged: Mock<(drag: GraphDrag) => void>;
+    let taskDragged: Mock<(touched: string[]) => void>;
     let saveCamera: Mock<() => void>;
     let selectTask: Mock<(id: string) => void>;
     let clearTask: Mock<() => void>;
@@ -44,8 +46,8 @@ describe('FEATURE: viewHandlersOf', () => {
       keepClearPackage = vi.fn<() => void>();
       keepClearTask = vi.fn<() => void>();
       toggle = vi.fn<(folder: string) => void>();
-      dragged = vi.fn<(positions: Positions) => void>();
-      taskDragged = vi.fn<() => void>();
+      dragged = vi.fn<(drag: GraphDrag) => void>();
+      taskDragged = vi.fn<(touched: string[]) => void>();
       saveCamera = vi.fn<() => void>();
       selectTask = vi.fn<(id: string) => void>();
       clearTask = vi.fn<() => void>();
@@ -136,10 +138,10 @@ describe('FEATURE: viewHandlersOf', () => {
       expect(toggle).toHaveBeenCalledExactlyOnceWith('apps');
     });
 
-    it('WHEN a drag ends THEN the layouts get the positions', () => {
-      handlers.onDragEnd(POSITIONS);
+    it('WHEN a drag ends THEN the layouts get the positions and the touched edges', () => {
+      handlers.onDragEnd(DRAG);
 
-      expect(dragged).toHaveBeenCalledExactlyOnceWith(POSITIONS);
+      expect(dragged).toHaveBeenCalledExactlyOnceWith(DRAG);
     });
 
     it('WHEN the viewport moves THEN the inspection saves it', () => {
@@ -221,10 +223,10 @@ describe('FEATURE: viewHandlersOf', () => {
         expect(toggleAtoms).toHaveBeenCalledExactlyOnceWith('web#e2e-ci--tests/b fails.spec.ts');
       });
 
-      it('WHEN a drag ends THEN task mode keeps it and the layouts hear nothing', () => {
-        handlers.onDragEnd(POSITIONS);
+      it('WHEN a drag ends THEN task mode keeps it with the touched edges and the layouts hear nothing', () => {
+        handlers.onDragEnd(DRAG);
 
-        expect(taskDragged).toHaveBeenCalledOnce();
+        expect(taskDragged).toHaveBeenCalledExactlyOnceWith(['web>ui']);
         expect(dragged).not.toHaveBeenCalled();
       });
 

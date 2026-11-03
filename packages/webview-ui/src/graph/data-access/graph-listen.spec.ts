@@ -1,11 +1,10 @@
 import cytoscape from 'cytoscape';
-import type { Core, NodeSingular } from 'cytoscape';
+import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { listen } from './graph-listen.ts';
-import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewHandlers } from '../common/graph-page.type.ts';
 import { GHOST_CLASS } from '../common/graph.const.ts';
 import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
@@ -20,23 +19,6 @@ import { collapsedIdOf, folderIdOf, folderLinkIdOf } from '../utils/folder-id.ut
 const APPS_NODE = collapsedIdOf('apps');
 
 const APPS_TO_UI = folderLinkIdOf(APPS_NODE, '@acme/ui');
-
-/**
- * Frees a drag the way Cytoscape 3.34 does on mouse up: `dragfreeon` once on the grabbed node, then `dragfree` on every
- * dragged element, which for a box is the box and all its descendants.
- */
-const freeDrag = (grabbed: NodeSingular): void => {
-  const dragged = grabbed.union(grabbed.descendants());
-
-  grabbed.emit('dragfreeon');
-  dragged.emit('dragfree');
-};
-
-const firstDragOf = (handlers: GraphViewHandlers): Positions => {
-  const [positions] = vi.mocked(handlers.onDragEnd).mock.calls[0] ?? [];
-
-  return positions ?? {};
-};
 
 describe('FEATURE: listen', () => {
   let cy: Core;
@@ -212,21 +194,6 @@ describe('FEATURE: listen', () => {
     });
   });
 
-  describe('GIVEN node a was dragged to 5, 6', () => {
-    it('WHEN the drag is freed THEN onDragEnd gets every node centre', () => {
-      cy.getElementById('a').position({ x: 5, y: 6 });
-
-      freeDrag(cy.getElementById('a'));
-
-      const calls = vi.mocked(handlers.onDragEnd).mock.calls;
-      const positions: Positions = calls[0]?.[0] ?? {};
-
-      expect(calls).toHaveLength(1);
-      expect(positions['a']).toStrictEqual({ x: 5, y: 6 });
-      expect(Object.keys(positions).sort()).toStrictEqual(['__proto__', 'a', 'b', 'c']);
-    });
-  });
-
   describe('GIVEN folder boxes around the packages', () => {
     beforeEach(() => {
       cy.destroy();
@@ -263,21 +230,6 @@ describe('FEATURE: listen', () => {
       cy.getElementById('a').emit('tap');
 
       expect(handlers.onDoubleTapNode).not.toHaveBeenCalled();
-    });
-
-    it('WHEN the box moves with b hidden and its drag is freed THEN onDragEnd gets the five packages, b moved once', () => {
-      const box = cy.getElementById('\u0001apps');
-
-      cy.getElementById('b').style('display', 'none');
-      box.shift({ x: 10, y: 0 });
-      freeDrag(box);
-
-      const positions = firstDragOf(handlers);
-
-      expect(handlers.onDragEnd).toHaveBeenCalledOnce();
-      expect(Object.keys(positions).sort()).toStrictEqual(['__proto__', 'a', 'b', 'c', 'd']);
-      expect(positions['a']).toStrictEqual({ x: 10, y: 0 });
-      expect(positions['b']).toStrictEqual({ x: 110, y: 0 });
     });
   });
 

@@ -52,6 +52,7 @@ export const parkedViewOf = (view: GraphView, isParked: () => boolean): GraphVie
     setViewport: gated(view.setViewport),
     setGrouping: gated(view.setGrouping),
     setPositions: gated(view.setPositions),
+    setRoutes: gated(view.setRoutes),
     showFolders: gated(view.showFolders)
   };
 

@@ -11,6 +11,7 @@ import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { boxRectOf, folderKeyed, holdsCentre, membershipFaultsOf, overlapFaultsOf } from '../test/utils/graph-folders.spec.util.ts';
 import { freeSpotOf } from '../test/utils/graph-geometry.spec.util.ts';
+import { readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 
 const ZOOM_IN_NOTCH = -100;
@@ -82,13 +83,14 @@ export class GraphBoxesPage {
     });
   }
 
-  /** The first grid point of the container that no box covers. */
+  /** The first grid point of the container that no box covers and no drawn line passes near. */
   public async freeSpot(): Promise<ViewportPoint> {
     const container = await this.container.evaluate(readRect);
     const folders = await this.folders();
     const rects = folders.map(boxRectOf);
+    const lines = await readEdgeLines(this.page);
 
-    return freeSpotOf(container, rects);
+    return freeSpotOf(container, rects, lines);
   }
 
   public async expectFolderKeys(keys: string[]): Promise<void> {

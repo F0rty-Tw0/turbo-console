@@ -18,7 +18,7 @@ import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { RowPlan, WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
-import type { GraphEdge, GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphPackage, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
@@ -52,6 +52,12 @@ export type Viewport = {
   readonly pan: Position;
 };
 
+/** A dropped drag: every package's centre, and the ids of the edges with an end in the dropped node or below it. */
+export type GraphDrag = {
+  readonly positions: Positions;
+  readonly touched: string[];
+};
+
 /** What the Cytoscape view reports back; names are package names. */
 export type GraphViewHandlers = {
   readonly onTapNode: (name: string) => void;
@@ -65,8 +71,8 @@ export type GraphViewHandlers = {
   readonly onDoubleTapNode: (name: string) => void;
   /** Two taps on the same box or the same collapsed folder within `DOUBLE_TAP_MS`, after the second `onTapFolder`. */
   readonly onDoubleTapFolder: (folder: string) => void;
-  /** Every node's current centre, after the user dropped a dragged node. */
-  readonly onDragEnd: (positions: Positions) => void;
+  /** After the user dropped a dragged node or box: every node's centre and the edges that moved with it. */
+  readonly onDragEnd: (drag: GraphDrag) => void;
   readonly onViewport: () => void;
   /** After a container resize re-fitted the camera; the panels overlaying the canvas keep clear again. */
   readonly onRefit: () => void;
@@ -117,6 +123,8 @@ export type GraphView = {
   readonly setGrouping: (groups: FolderGroup[] | null) => void;
   /** Places the packages, then re-centres the collapsed folders on them. */
   readonly setPositions: (positions: Positions) => void;
+  /** Draws each edge that has a route on it and every other edge straight; call after `setPositions`, the segments follow the centres. */
+  readonly setRoutes: (routes: Routes) => void;
   /** The folder pass (`FoldersView.show`); call after every `setVisible` and `setGhosts`. */
   readonly showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string) => void;
   readonly applyTheme: (colors: ThemeColors) => void;

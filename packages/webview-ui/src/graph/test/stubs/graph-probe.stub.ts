@@ -7,6 +7,7 @@ const ORIGIN: Position = { x: 0, y: 0 };
 export const GRAPH_PROBE_STUB: GraphProbe = {
   nodes: () => [],
   edges: () => [],
+  edgeLines: () => [],
   edgeColor: () => '',
   selected: () => null,
   zoom: () => 1,

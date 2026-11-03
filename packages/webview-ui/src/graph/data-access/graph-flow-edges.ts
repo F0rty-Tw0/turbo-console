@@ -1,18 +1,21 @@
 import type { FlowEdgeGeometry, FlowEdgeReader, FlowEdgeSource } from '../common/flow.type.ts';
+import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import { TASK_LINK_CLASS } from '../common/graph-task.const.ts';
+import { drawnBendsOf } from '../utils/drawn-bends.util.ts';
 
 /** Task graph edges only: until a task layout is placed, the package graph and its highlight stay on the core. */
 const HIGHLIGHTED_LINKS = `.${TASK_LINK_CLASS}.highlighted`;
 
-/** One edge's drawn path in model coordinates; `null` while an endpoint is missing. */
+/** One edge's drawn path in model coordinates, a routed edge through its segment points; `null` while an endpoint is missing. */
 const flowEdgeOf = (edge: FlowEdgeSource): FlowEdgeGeometry | null => {
   const source = edge.sourceEndpoint();
   const target = edge.targetEndpoint();
-  const controlPoints = edge.controlPoints() ?? [];
+  const isPolyline = edge.hasClass(ROUTED_CLASS);
+  const controlPoints = drawnBendsOf(edge);
 
   if (source === undefined || target === undefined) return null;
 
-  const geometry: FlowEdgeGeometry = { source, target, controlPoints };
+  const geometry: FlowEdgeGeometry = { source, target, controlPoints, isPolyline };
 
   return geometry;
 };

@@ -33,6 +33,7 @@ const drawingOf = (tasks: GraphTask[]): TaskDrawing => {
   const drawing: TaskDrawing = {
     tasks,
     positions: POSITIONS,
+    routes: {},
     sizeOf: (): NodeSize => NODE_SIZE,
     sizes: new Map(),
     labels: new Map(),

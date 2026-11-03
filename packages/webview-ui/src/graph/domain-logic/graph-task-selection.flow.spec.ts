@@ -12,7 +12,7 @@ import { TASK_CHAIN_STUB, TASK_VIEW_STUB } from '../test/stubs/graph-task.stub.t
 
 const ORIGIN: Position = { x: 0, y: 0 };
 
-const LIT_EDGE: FlowEdgeGeometry = { source: ORIGIN, target: ORIGIN, controlPoints: [] };
+const LIT_EDGE: FlowEdgeGeometry = { source: ORIGIN, target: ORIGIN, controlPoints: [], isPolyline: false };
 
 describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
   let canvas: Mocked<TaskCanvas>;

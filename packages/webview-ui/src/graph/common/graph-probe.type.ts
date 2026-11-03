@@ -47,6 +47,38 @@ export type ProbeEdge = {
 };
 
 /**
+ * One drawn edge's line (a package edge or a task link) in page CSS pixels, the frame of `ProbeNode.renderedX`: `points` run from the source end
+ * through the bends (a routed edge's segment points, else its control points) to the target end, `[]` while the edge
+ * is not drawn; `midpoint` lies on that path (the origin while the edge is not drawn).
+ */
+export type ProbeEdgeLine = {
+  readonly source: string;
+  readonly target: string;
+  readonly isRouted: boolean;
+  readonly isDrawn: boolean;
+  readonly points: Position[];
+  readonly midpoint: Position;
+};
+
+/** An edge end, read for its id. */
+export type ProbeLineEnd = {
+  readonly id: () => string;
+};
+
+/** What `ProbeEdgeLine` reads of a Cytoscape edge; `segmentPoints` is `undefined` unless the edge is drawn `round-segments`. */
+export type ProbeLineSource = {
+  readonly source: () => ProbeLineEnd;
+  readonly target: () => ProbeLineEnd;
+  readonly visible: () => boolean;
+  readonly hasClass: (name: string) => boolean;
+  readonly sourceEndpoint: () => Position;
+  readonly targetEndpoint: () => Position;
+  readonly segmentPoints: () => Position[] | undefined;
+  readonly controlPoints: () => Position[] | undefined;
+  readonly midpoint: () => Position;
+};
+
+/**
  * A folder box: `folder` is the key (`''` the root); `state` and the rect (centre and size in page CSS pixels, as
  * `ProbeNode`'s) come from the box while expanded and from the collapsed node while collapsed, 0 when it is not drawn;
  * `packages` lists all the folder's packages by name, hidden ones included.
@@ -96,6 +128,8 @@ export type LayoutEngine = 'elk' | 'cache' | 'fallback';
 export type GraphProbe = {
   readonly nodes: () => ProbeNode[];
   readonly edges: () => ProbeEdge[];
+  /** Every drawn edge's line (package or task link), in the order `edges` lists them. */
+  readonly edgeLines: () => ProbeEdgeLine[];
   /** The first edge's `line-color`, `''` when there is no edge. */
   readonly edgeColor: () => string;
   /**

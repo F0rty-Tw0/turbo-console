@@ -1,7 +1,9 @@
 import type { DrawnGraph, GraphView, NodeSizer } from './graph-page.type.ts';
+import type { LayoutEngine } from './graph-probe.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
+import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 type NoNotice = {
@@ -28,7 +30,14 @@ export type LayoutScreen = {
   readonly showNotice: (notice: LayoutNotice) => void;
 };
 
-export type LayoutView = Pick<GraphView, 'setGraph' | 'setGrouping' | 'setPositions' | 'fit' | 'resize'>;
+/** What keeping a drag reads and writes of the layout snapshots (`GraphLayoutSnapshots`). */
+export type DragSnapshots = {
+  readonly drag: (mode: LayoutGrouping, positions: Positions, touched: string[]) => void;
+  readonly routesOf: (mode: LayoutGrouping) => Routes;
+  readonly engineOf: (mode: LayoutGrouping) => LayoutEngine | null;
+};
+
+export type LayoutView = Pick<GraphView, 'setGraph' | 'setGrouping' | 'setPositions' | 'setRoutes' | 'fit' | 'resize'>;
 
 export type GraphLayoutsDeps = {
   readonly bridge: Bridge;

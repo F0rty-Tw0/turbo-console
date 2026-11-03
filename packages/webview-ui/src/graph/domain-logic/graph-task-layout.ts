@@ -3,6 +3,7 @@ import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
+import { withoutRoutes } from '../utils/elk-routes.util.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
 import { engineNoticeOf } from '../utils/layout-plan.util.ts';
 import { titleWidthsOf } from '../utils/task-title-width.util.ts';
@@ -63,16 +64,18 @@ export class GraphTaskLayout {
     this.deps.view.tasks.clear();
   }
 
-  /** Keeps the dragged centres as the layout of the key on screen. */
-  public dragged(): void {
+  /** Keeps the dragged centres as the layout of the key on screen and straightens the `touched` edges, in memory too. */
+  public dragged(touched: string[]): void {
     const { placed } = this;
 
     if (placed === null) return;
 
     const positions = this.deps.view.tasks.positions();
-    const moved: LayoutResult = { ...placed, positions };
+    const routes = withoutRoutes(placed.routes, touched);
+    const moved: LayoutResult = { ...placed, positions, routes };
 
     this.placed = moved;
+    this.deps.view.tasks.setRoutes(routes);
     this.atoms.rebased(positions);
     this.remember(moved);
   }
@@ -145,6 +148,7 @@ export class GraphTaskLayout {
     view.tasks.show({
       tasks: request.tasks,
       positions: result.positions,
+      routes: result.routes,
       sizeOf,
       sizes: request.sizes,
       labels: this.atoms.labels(),

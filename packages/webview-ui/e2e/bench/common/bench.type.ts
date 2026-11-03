@@ -3,7 +3,7 @@
 import type { Page } from '@playwright/test';
 
 import type { Positions, Routes } from '../../../src/bridge/common/graph-state.type.ts';
-import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
+import type { ProbeEdgeLine, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import type { ElementRect } from '../../common/playwright.type.ts';
 import type { GraphCanvas } from '../../pages/graph-canvas.po.ts';
 import type { GraphFoldersPage } from '../../pages/graph-folders.po.ts';
@@ -90,10 +90,11 @@ export type LargeSample = {
   readonly heapMb: number;
 };
 
-/** The container, every drawn node and the zoom, read together so a decision uses one picture of the canvas. */
+/** The container, every drawn node, every edge's drawn line and the zoom, read together so a decision uses one picture of the canvas. */
 export type CanvasReading = {
   readonly container: ElementRect;
   readonly nodes: ProbeNode[];
+  readonly lines: ProbeEdgeLine[];
   readonly zoom: number;
 };
 

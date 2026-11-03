@@ -35,7 +35,7 @@ const WEB_AT: Position = { x: 10, y: 120 };
 
 const POSITIONS: Positions = { 'api#build': API_AT, 'web#build': WEB_AT };
 
-const LIT_EDGE: FlowEdgeGeometry = { source: WEB_AT, target: API_AT, controlPoints: [] };
+const LIT_EDGE: FlowEdgeGeometry = { source: WEB_AT, target: API_AT, controlPoints: [], isPolyline: false };
 
 /** `web#build` with its package script edited: a new command it cannot run, under the same ids and so the same layout key. */
 const EDITED_WEB_BUILD: GraphTask = { ...WEB_BUILD_STUB, command: 'vite build', isRunnable: false };

@@ -1,7 +1,7 @@
 import { isInside } from './element-rect.spec.util.ts';
-import type { ProbeEdge, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
+import type { ProbeEdgeLine, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import { EDGE_CLEARANCE_PX } from '../../common/graph.const.ts';
-import type { ElementRect, ViewportPoint } from '../../common/playwright.type.ts';
+import type { ElementRect, LinkEnds, ViewportPoint } from '../../common/playwright.type.ts';
 
 const CORNER_INSET = 12;
 
@@ -60,14 +60,6 @@ const isInsideBox = (point: ViewportPoint, box: ElementRect): boolean => {
   return isAcross && isDown;
 };
 
-const centreOf = (node: ProbeNode): ViewportPoint => {
-  const centre: ViewportPoint = { x: node.renderedX, y: node.renderedY };
-
-  return centre;
-};
-
-const nodeNamed = (nodes: ProbeNode[], id: string): ProbeNode | undefined => nodes.find((node): boolean => node.id === id);
-
 /** The distance from `point` to the segment `from`-`to`. */
 export const segmentDistanceOf = (point: ViewportPoint, from: ViewportPoint, to: ViewportPoint): number => {
   const dx = to.x - from.x;
@@ -79,34 +71,28 @@ export const segmentDistanceOf = (point: ViewportPoint, from: ViewportPoint, to:
   return Math.hypot(point.x - (from.x + clamped * dx), point.y - (from.y + clamped * dy));
 };
 
-/** The midpoint of the two rendered centres of an edge; throws when either end is not drawn. */
-export const edgeMidpointOf = (nodes: ProbeNode[], source: string, target: string): ViewportPoint => {
-  const from = nodeNamed(nodes, source);
-  const to = nodeNamed(nodes, target);
+/** The straight pieces of a drawn line, one per pair of neighbouring points; none while the line is not drawn. */
+export const lineSegmentsOf = (line: ProbeEdgeLine): LinkEnds[] => {
+  const segmentFrom = (from: ViewportPoint, index: number): LinkEnds => {
+    const to = line.points[index + 1] ?? from;
+    const segment: LinkEnds = { from, to };
 
-  if (from === undefined || to === undefined) throw new Error(`graph e2e: the edge ${source}>${target} has an end that is not drawn`);
+    return segment;
+  };
 
-  const midpoint: ViewportPoint = { x: (from.renderedX + to.renderedX) / 2, y: (from.renderedY + to.renderedY) / 2 };
-
-  return midpoint;
+  return line.points.slice(0, -1).map(segmentFrom);
 };
 
-/** The two rendered centres of a drawn edge whose ends the probe lists; `null` for an edge nobody can tap. */
-const segmentOf = (nodes: ProbeNode[], edge: ProbeEdge): ViewportPoint[] | null => {
-  const from = nodeNamed(nodes, edge.source);
-  const to = nodeNamed(nodes, edge.target);
+const isClearOfLine = (point: ViewportPoint, line: ProbeEdgeLine): boolean => {
+  const isFar = (segment: LinkEnds): boolean => segmentDistanceOf(point, segment.from, segment.to) > EDGE_CLEARANCE_PX;
 
-  if (!edge.isDrawn || from === undefined || to === undefined) return null;
-
-  return [centreOf(from), centreOf(to)];
+  return lineSegmentsOf(line).every(isFar);
 };
 
-const isClearOfSegment = (point: ViewportPoint, segment: ViewportPoint[] | null): boolean => {
-  const [from, to] = segment ?? [];
+const isClearOfLines = (point: ViewportPoint, lines: ProbeEdgeLine[]): boolean => {
+  const isClear = (line: ProbeEdgeLine): boolean => isClearOfLine(point, line);
 
-  if (from === undefined || to === undefined) return true;
-
-  return segmentDistanceOf(point, from, to) > EDGE_CLEARANCE_PX;
+  return lines.every(isClear);
 };
 
 /** The container's four inset corners, then its four side midpoints. */
@@ -146,17 +132,16 @@ const isPointInGrownBox = (point: ViewportPoint, box: ElementRect): boolean => {
 
 /**
  * The first of the container's four inset corners, then its four side midpoints, that lies outside every node box grown
- * by 2 px, since a tap on a node's border still hits it, and farther than `EDGE_CLEARANCE_PX` from every drawn edge
- * segment; throws when none does.
+ * by 2 px, since a tap on a node's border still hits it, and farther than `EDGE_CLEARANCE_PX` from every drawn line (its
+ * bends included); throws when none does.
  */
-export const emptySpotOf = (container: ElementRect, nodes: ProbeNode[], edges: ProbeEdge[], zoom: number): ViewportPoint => {
+export const emptySpotOf = (container: ElementRect, nodes: ProbeNode[], lines: ProbeEdgeLine[], zoom: number): ViewportPoint => {
   const boxes = nodes.map((node): ElementRect => nodeBoxOf(node, zoom));
-  const segments = edges.map((edge): ViewportPoint[] | null => segmentOf(nodes, edge));
   const isEmpty = (point: ViewportPoint): boolean => {
     const isOutsideNodes = !boxes.some((box): boolean => isPointInGrownBox(point, box));
-    const isOutsideEdges = segments.every((segment): boolean => isClearOfSegment(point, segment));
+    const isOutsideLines = isClearOfLines(point, lines);
 
-    return isOutsideNodes && isOutsideEdges;
+    return isOutsideNodes && isOutsideLines;
   };
   const spot = candidatesOf(container).find(isEmpty);
 
@@ -178,10 +163,10 @@ const stepsOf = (start: number, limit: number): number[] => {
 };
 
 /**
- * The first point of a 20 px grid over the container, 2 px in from each edge, that no box rect (grown by 2 px) holds;
- * throws when none does.
+ * The first point of a 20 px grid over the container, 2 px in from each edge, that no box rect (grown by 2 px) holds
+ * and that is farther than `EDGE_CLEARANCE_PX` from every drawn line; throws when none does.
  */
-export const freeSpotOf = (container: ElementRect, boxes: ElementRect[]): ViewportPoint => {
+export const freeSpotOf = (container: ElementRect, boxes: ElementRect[], lines: ProbeEdgeLine[]): ViewportPoint => {
   const rows = stepsOf(container.top + GRID_EDGE_INSET, container.top + container.height - GRID_EDGE_INSET);
   const columns = stepsOf(container.left + GRID_EDGE_INSET, container.left + container.width - GRID_EDGE_INSET);
   const pointAt = (y: number, x: number): ViewportPoint => {
@@ -190,10 +175,14 @@ export const freeSpotOf = (container: ElementRect, boxes: ElementRect[]): Viewpo
     return point;
   };
   const points = rows.flatMap((y): ViewportPoint[] => columns.map((x): ViewportPoint => pointAt(y, x)));
-  const isFree = (point: ViewportPoint): boolean => !boxes.some((box): boolean => isPointInGrownBox(point, box));
+  const isFree = (point: ViewportPoint): boolean => {
+    const isOutsideBoxes = !boxes.some((box): boolean => isPointInGrownBox(point, box));
+
+    return isOutsideBoxes && isClearOfLines(point, lines);
+  };
   const spot = points.find(isFree);
 
-  if (spot === undefined) throw new Error('graph e2e: every grid point of the container lies inside a folder box');
+  if (spot === undefined) throw new Error('graph e2e: every grid point of the container lies inside a folder box or on a line');
 
   return spot;
 };

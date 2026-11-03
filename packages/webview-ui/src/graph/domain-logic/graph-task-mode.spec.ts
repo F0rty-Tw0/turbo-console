@@ -177,7 +177,7 @@ describe('FEATURE: GraphTaskMode', () => {
 
     it('WHEN a task is dragged, another graph shown and the chain again THEN the dragged centres return with no run', async () => {
       rig.view.tasks.positions.mockReturnValue(DRAGGED);
-      mode.layout.dragged();
+      mode.layout.dragged([]);
       mode.received(MORE_TASKS_STATE_STUB, 9);
       await rig.runs.settle(1, resultOf(MORE_KEY, POSITIONS));
       mode.received(TASK_STATE_STUB, 11);

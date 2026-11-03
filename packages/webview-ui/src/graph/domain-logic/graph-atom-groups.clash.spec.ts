@@ -68,6 +68,7 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
     const drawing = {
       tasks: TASKS,
       positions: POSITIONS,
+      routes: {},
       sizeOf: (): NodeSize => NODE_SIZE,
       sizes: SIZES,
       labels: new Map(),

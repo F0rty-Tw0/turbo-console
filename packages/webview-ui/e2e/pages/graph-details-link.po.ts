@@ -7,7 +7,7 @@ import type { ExcerptRow } from '../../src/graph/common/details.type.ts';
 import { DETAILS_LABEL, DOUBLE_TAP_MS } from '../../src/graph/common/graph.const.ts';
 import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
 import { expectExcerptRow } from '../test/utils/graph-excerpt.spec.util.ts';
-import { edgeMidpointOf } from '../test/utils/graph-geometry.spec.util.ts';
+import { lineMidpointOf, readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 
 /** The link view: tapping a link, its two ends, and the explain block with its excerpts and Open buttons. */
 export class GraphDetailsLink {
@@ -26,12 +26,12 @@ export class GraphDetailsLink {
     this.entries = this.explain.getByRole('listitem');
   }
 
-  /** Clicks the middle of the link between the two rendered centres once the nodes are drawn. */
+  /** Clicks the middle of the link's drawn line once the nodes are drawn. */
   public async tapLink(source: string, target: string): Promise<void> {
     await this.probe.waitForNodes();
 
-    const nodes = await this.probe.nodes();
-    const middle = edgeMidpointOf(nodes, source, target);
+    const lines = await readEdgeLines(this.page);
+    const middle = lineMidpointOf(lines, source, target);
 
     await this.page.mouse.click(middle.x, middle.y);
   }
@@ -44,7 +44,8 @@ export class GraphDetailsLink {
     await this.probe.waitForNodes();
 
     const nodes = await this.probe.nodes();
-    const middle = edgeMidpointOf(nodes, source, target);
+    const lines = await readEdgeLines(this.page);
+    const middle = lineMidpointOf(lines, source, target);
     const end = nodes.find((node): boolean => node.id === target);
 
     if (end === undefined) throw new Error(`graph e2e: no node ${target} is drawn`);
