@@ -274,7 +274,7 @@ describe('FEATURE: graph visibility', () => {
     });
   });
 
-  describe('GIVEN a spy on the Cytoscape fit and the edges a>b and b>c', () => {
+  describe('GIVEN the edges a>b and b>c', () => {
     const fittedEdgeIdsOf = (names: string[]): string[] => {
       const fit = vi.spyOn(cy, 'fit');
 
@@ -287,11 +287,11 @@ describe('FEATURE: graph visibility', () => {
       return fitted.edges().map(idOf).sort();
     };
 
-    it('GIVEN a>b visible WHEN fitted THEN the fitted collection holds a>b', () => {
+    it('WHEN fitted with a and b visible THEN the fitted collection holds a>b', () => {
       expect(fittedEdgeIdsOf(['a', 'b'])).toStrictEqual(['a>b']);
     });
 
-    it('GIVEN b hidden by a filter WHEN fitted THEN a>b and b>c are not fitted', () => {
+    it('WHEN fitted with b hidden by a filter THEN a>b and b>c are not fitted', () => {
       expect(fittedEdgeIdsOf(['a', 'c'])).toStrictEqual([]);
     });
   });
