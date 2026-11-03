@@ -3,18 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTaskControls, buildTaskRow } from './task-controls-elements.ts';
 import { ROOT_TASKS_TITLE, SEARCH_TASKS_LABEL, SHOW_SCRIPTS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import { GROUP_BY_FOLDER_LABEL, SCOPE_TOGGLE_LABEL, SEARCH_SECTION_TITLE, VIEW_SECTION_TITLE } from '../common/graph.const.ts';
+import type { TaskControlsElements } from '../common/task-controls.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
-
-const isHtmlElement = (element: Element | undefined): element is HTMLElement => element !== undefined && 'title' in element;
-
-const childAt = (parent: Element, index: number): HTMLElement => {
-  const child = parent.children[index];
-
-  if (!isHtmlElement(child)) throw new Error(`no element child ${index}`);
-
-  return child;
-};
+import { childAt } from '../test/utils/html-child.spec.util.ts';
 
 describe('FEATURE: task controls elements', () => {
   beforeEach(() => {
@@ -34,35 +26,92 @@ describe('FEATURE: task controls elements', () => {
       expect(els.list.getAttribute('role')).toBe('grid');
     });
 
-    it('WHEN built THEN the panel holds the Search section, the View section and the list, in that order', () => {
-      const { panel, list, search } = buildTaskControls();
-      const [searchSection, viewSection, last] = [childAt(panel, 0), childAt(panel, 1), childAt(panel, 2)];
+    describe('WHEN its panel is read', () => {
+      let elements: TaskControlsElements;
 
-      expect(panel.children).toHaveLength(3);
-      expect([searchSection.tagName, searchSection.children[0]?.textContent]).toStrictEqual(['SECTION', SEARCH_SECTION_TITLE]);
-      expect([viewSection.tagName, viewSection.children[0]?.textContent]).toStrictEqual(['SECTION', VIEW_SECTION_TITLE]);
-      expect(childAt(searchSection, 1).children).toContain(search);
-      expect(last).toBe(list);
+      beforeEach((): void => {
+        elements = buildTaskControls();
+      });
+
+      it('THEN it holds three children', () => {
+        expect(elements.panel.children).toHaveLength(3);
+      });
+
+      it('THEN the Search section comes first', () => {
+        const searchSection = childAt(elements.panel, 0);
+        const heading = searchSection.children[0]?.textContent;
+
+        expect([searchSection.tagName, heading]).toStrictEqual(['SECTION', SEARCH_SECTION_TITLE]);
+      });
+
+      it('THEN the Search section holds the search box', () => {
+        const searchField = childAt(childAt(elements.panel, 0), 1);
+
+        expect(searchField.children).toContain(elements.search);
+      });
+
+      it('THEN the View section comes second', () => {
+        const viewSection = childAt(elements.panel, 1);
+        const heading = viewSection.children[0]?.textContent;
+
+        expect([viewSection.tagName, heading]).toStrictEqual(['SECTION', VIEW_SECTION_TITLE]);
+      });
+
+      it('THEN the task list comes last', () => {
+        expect(childAt(elements.panel, 2)).toBe(elements.list);
+      });
     });
 
-    it('WHEN built THEN the View section lists the depth field, then Group by folder, Show package scopes and Show scripts', () => {
-      const { panel, depth } = buildTaskControls();
-      const [, depthGroup, ...checks] = childAt(panel, 1).children;
-      const depthLabel = childAt(childAt(panel, 1), 1).children[0];
+    describe('WHEN its View section is read', () => {
+      let elements: TaskControlsElements;
+      let viewSection: HTMLElement;
 
-      expect(depthLabel?.children[1]).toBe(depth);
-      expect(checks.map((check) => check.textContent)).toStrictEqual([GROUP_BY_FOLDER_LABEL, SCOPE_TOGGLE_LABEL, SHOW_SCRIPTS_LABEL]);
-      expect(depthGroup?.children).toHaveLength(2);
+      beforeEach((): void => {
+        elements = buildTaskControls();
+        viewSection = childAt(elements.panel, 1);
+      });
+
+      it('THEN the depth field group, its input in the label, comes first', () => {
+        const depthGroup = childAt(viewSection, 1);
+        const depthLabel = childAt(depthGroup, 0);
+
+        expect([depthGroup.children.length, depthLabel.children[1]]).toStrictEqual([2, elements.depth]);
+      });
+
+      it('THEN Group by folder, Show package scopes and Show scripts follow it', () => {
+        const [, , ...checks] = viewSection.children;
+        const labels = checks.map((check) => check.textContent);
+
+        expect(labels).toStrictEqual([GROUP_BY_FOLDER_LABEL, SCOPE_TOGGLE_LABEL, SHOW_SCRIPTS_LABEL]);
+      });
     });
 
-    it('WHEN built THEN Group by folder, Show package scopes and Show scripts are unticked checkboxes inside their labels', () => {
-      const { grouping, scope, scripts, groupingField, scriptsField } = buildTaskControls();
+    describe('WHEN its View boxes are read', () => {
+      let elements: TaskControlsElements;
+      let boxes: HTMLInputElement[];
 
-      const boxes = [grouping, scope, scripts];
+      beforeEach((): void => {
+        elements = buildTaskControls();
+        boxes = [elements.grouping, elements.scope, elements.scripts];
+      });
 
-      expect(boxes.map((box) => box.type)).toStrictEqual(['checkbox', 'checkbox', 'checkbox']);
-      expect(boxes.filter((box) => box.checked)).toStrictEqual([]);
-      expect([groupingField.children[0], scriptsField.children[0]]).toStrictEqual([grouping, scripts]);
+      it('THEN all three are checkboxes', () => {
+        const types = boxes.map((box) => box.type);
+
+        expect(types).toStrictEqual(['checkbox', 'checkbox', 'checkbox']);
+      });
+
+      it('THEN none is ticked', () => {
+        const ticked = boxes.filter((box) => box.checked);
+
+        expect(ticked).toStrictEqual([]);
+      });
+
+      it('THEN Group by folder and Show scripts sit first in their labels', () => {
+        const firsts = [elements.groupingField.children[0], elements.scriptsField.children[0]];
+
+        expect(firsts).toStrictEqual([elements.grouping, elements.scripts]);
+      });
     });
 
     it('WHEN built THEN Show scripts starts hidden and Group by folder does not', () => {
