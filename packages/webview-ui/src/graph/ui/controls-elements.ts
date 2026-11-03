@@ -31,12 +31,11 @@ import {
 } from '../common/graph.const.ts';
 import {
   countTextOf,
-  focusLabelOf,
   folderFocusLabelOf,
   folderTitleOf,
   folderToggleLabelOf,
   groupLabelOf,
-  showLabelOf
+  rowLabelsOf
 } from '../utils/controls-text.util.ts';
 import { labelIn } from '../utils/package-label.util.ts';
 
@@ -52,9 +51,10 @@ const focusToggle = (label: string, title: string): HTMLButtonElement => {
 /** Check, name and focus cells, all reading `label`; the name button's `title` keeps the whole label when CSS cuts it. */
 const packageRow = (pkg: GraphPackage, label: string): ControlsRow => {
   const { name } = pkg;
-  const check = listCheck(showLabelOf(label));
-  const pick = listButton('controls-name', label);
-  const focus = focusToggle(focusLabelOf(label), FOCUS_PACKAGE_TITLE);
+  const labels = rowLabelsOf(label);
+  const check = listCheck(labels.check);
+  const pick = listButton('controls-name', labels.text);
+  const focus = focusToggle(labels.focus, FOCUS_PACKAGE_TITLE);
   const cells = [gridCell(check), gridCell(pick), gridCell(focus)];
   const line = gridLine('controls-row', cells);
   const row: ControlsRow = { name, line, check, pick, focus };
