@@ -73,27 +73,52 @@ describe('FEATURE: GraphTaskMode feeds the Projects grid', () => {
     });
   });
 
-  describe('GIVEN task mode on app#build with the cap lifted, a check reports', () => {
+  describe('GIVEN task mode on app#build, selected, at depth 2 with the cap lifted, a check reports', () => {
     beforeEach(() => {
-      open({ chosen: ['app#build'], capLifted: true });
+      open({ chosen: ['app#build'], capLifted: true, selected: 'app#build', depth: 2 });
       mode.received(SHOWN_STATE, 7);
     });
 
-    it('WHEN app#dev is checked THEN it joins the choice, the cap stays lifted and one new layout run starts', () => {
-      const runs = rig.runs.count();
+    describe('WHEN app#dev is checked', () => {
+      it('THEN it joins the choice', () => {
+        checksOf(rig)?.onCheck(['app#dev'], true);
 
-      checksOf(rig)?.onCheck(['app#dev'], true);
+        expect(rig.modes.task()).toMatchObject({ chosen: ['app#build', 'app#dev'] });
+      });
 
-      expect(rig.modes.task()).toMatchObject({ chosen: ['app#build', 'app#dev'], capLifted: true });
-      expect(rig.runs.count()).toBe(runs + 1);
+      it('THEN the cap stays lifted, the selection and the depth stay as they were', () => {
+        checksOf(rig)?.onCheck(['app#dev'], true);
+
+        expect(rig.modes.task()).toMatchObject({ capLifted: true, selected: 'app#build', depth: 2 });
+      });
+
+      it('THEN one new layout run starts', () => {
+        const runs = rig.runs.count();
+
+        checksOf(rig)?.onCheck(['app#dev'], true);
+
+        expect(rig.runs.count()).toBe(runs + 1);
+      });
     });
 
-    it('WHEN the only chosen task is unchecked THEN the choice is empty, the prompt shows and the layout is cleared', () => {
-      checksOf(rig)?.onCheck(['app#build'], false);
+    describe('WHEN the only chosen task is unchecked', () => {
+      it('THEN the choice is empty and the cap stays lifted', () => {
+        checksOf(rig)?.onCheck(['app#build'], false);
 
-      expect(rig.modes.task()).toMatchObject({ chosen: [], capLifted: true });
-      expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: true, hiddenCount: 0, knownCount: 2 });
-      expect(rig.view.tasks.clear).toHaveBeenCalled();
+        expect(rig.modes.task()).toMatchObject({ chosen: [], capLifted: true });
+      });
+
+      it('THEN the prompt shows', () => {
+        checksOf(rig)?.onCheck(['app#build'], false);
+
+        expect(rig.panel.show).toHaveBeenLastCalledWith({ isEmpty: true, hiddenCount: 0, knownCount: 2 });
+      });
+
+      it('THEN the layout is cleared', () => {
+        checksOf(rig)?.onCheck(['app#build'], false);
+
+        expect(rig.view.tasks.clear).toHaveBeenCalled();
+      });
     });
   });
 
