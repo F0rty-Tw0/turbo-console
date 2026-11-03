@@ -10,8 +10,11 @@ import {
   NONE_SHOWN_TEXT,
   PACKAGES_MODE_LABEL,
   PACKAGES_MODE_TITLE,
-  ROOT_TASK_PACKAGE,
   ROOT_TASKS_TITLE,
+  ROOT_TASK_PACKAGE,
+  SCRIPTS_BOX_CLASS,
+  SCRIPTS_BOX_DASH_PX,
+  SCRIPTS_BOX_PREFIX,
   SCRIPTS_BOX_TITLE,
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
@@ -32,6 +35,20 @@ describe('FEATURE: graph task constants', () => {
     ['the default dependents depth', DEFAULT_TASK_DEPTH, 1]
   ])('GIVEN %s WHEN it is read THEN it is the spec value', (_label, value, expected) => {
     expect(value).toBe(expected);
+  });
+
+  describe('GIVEN the Scripts box', () => {
+    it('WHEN its id prefix is read THEN it is scripts:', () => {
+      expect(SCRIPTS_BOX_PREFIX).toBe('scripts:');
+    });
+
+    it('WHEN its class is read THEN it is task-scripts', () => {
+      expect(SCRIPTS_BOX_CLASS).toBe('task-scripts');
+    });
+
+    it('WHEN its frame dashes are read THEN they are 2 px on, 3 px off', () => {
+      expect(SCRIPTS_BOX_DASH_PX).toStrictEqual([2, 3]);
+    });
   });
 
   it.each([
