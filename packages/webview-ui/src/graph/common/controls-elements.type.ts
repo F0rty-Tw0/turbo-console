@@ -1,3 +1,10 @@
+/** The texts of one package row, all derived from its label: the name button's text and title, and the checkbox and Focus names. */
+export type RowLabels = {
+  readonly text: string;
+  readonly check: string;
+  readonly focus: string;
+};
+
 /** One package row of the list: its show checkbox, name button and focus button. */
 export type ControlsRow = {
   readonly name: string;

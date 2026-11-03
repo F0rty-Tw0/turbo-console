@@ -11,6 +11,7 @@ import {
   folderToggleTextOf,
   groupLabelOf,
   packageToolbarLabelOf,
+  rowLabelsOf,
   runLabelOf,
   showAllTextOf,
   showLabelOf,
@@ -93,6 +94,12 @@ describe('FEATURE: controls text', () => {
       const label = focusLabelOf('web');
 
       expect(label).toBe('Focus web');
+    });
+
+    it('WHEN its row labels are built THEN the text is the label and the names are Show web and Focus web', () => {
+      const labels = rowLabelsOf('web');
+
+      expect(labels).toStrictEqual({ text: 'web', check: 'Show web', focus: 'Focus web' });
     });
 
     it('WHEN its show package label is built THEN it reads Show package web', () => {
