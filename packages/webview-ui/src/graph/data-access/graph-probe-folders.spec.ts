@@ -135,5 +135,14 @@ describe('FEATURE: probeFoldersOf on the task canvas', () => {
       expect([apps?.textMaxWidth, resolved]).toStrictEqual([resolved, expect.any(Number)]);
       expect(apps?.textMaxWidth).toBeGreaterThan(0);
     });
+
+    it('WHEN the canvas is zoomed to 2 and the folders are probed THEN the folder reads the model width of its box, not the zoomed one', () => {
+      cy.zoom(2);
+      const modelWidth = cy.getElementById(APPS_ID).width();
+
+      const [apps] = probeFoldersOf(cy, ORIGIN);
+
+      expect(apps?.width).toBe(modelWidth);
+    });
   });
 });

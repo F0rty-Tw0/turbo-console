@@ -354,7 +354,7 @@ describe('FEATURE: createGraphProbe collapse facts', () => {
     it('WHEN apps is collapsed THEN it reads not visible with an empty rect', () => {
       folders.show(boardsSceneOf(['apps'], PACKAGES_ONLY), labelOf);
 
-      expect(folderOf('apps')).toMatchObject({ isCollapsed: true, isVisible: false, renderedWidth: 0, renderedHeight: 0 });
+      expect(folderOf('apps')).toMatchObject({ isCollapsed: true, isVisible: false, renderedWidth: 0, renderedHeight: 0, width: 0 });
     });
   });
 

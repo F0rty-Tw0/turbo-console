@@ -23,9 +23,18 @@ const rectOf = (node: NodeSingular): BoundingBox12 => {
   return node.renderedBoundingBox(RECT_OPTIONS);
 };
 
+/** The model width of `node`, padding left out, 0 when it is not drawn. */
+const modelWidthOf = (node: NodeSingular): number => {
+  const isNone = node.empty();
+
+  if (isNone) return 0;
+
+  return node.width();
+};
+
 /**
- * `box` as its folder key, state, centre and size in page CSS pixels (`origin` is the container's top left corner), drawn
- * label and packages; a collapsed folder reads its collapsed node, which is missing while the folder is not shown.
+ * `box` as its folder key, state, centre and size in page CSS pixels (`origin` is the container's top left corner), model
+ * width, drawn label and packages; a collapsed folder reads its collapsed node, which is missing while the folder is not shown.
  */
 const probeFolderOf = (cy: Core, box: NodeSingular, origin: Position): ProbeFolder => {
   const folder = box.id().slice(FOLDER_ID_PREFIX.length);
@@ -46,6 +55,7 @@ const probeFolderOf = (cy: Core, box: NodeSingular, origin: Position): ProbeFold
     renderedY: origin.y + (y1 + y2) / 2,
     renderedWidth: x2 - x1,
     renderedHeight: y2 - y1,
+    width: modelWidthOf(shown),
     text: styleText(shown, 'label'),
     textMaxWidth: styleNumber(shown, 'text-max-width'),
     packages
