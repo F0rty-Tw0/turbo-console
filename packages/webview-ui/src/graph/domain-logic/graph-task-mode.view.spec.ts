@@ -172,7 +172,7 @@ describe('FEATURE: GraphTaskMode View checkboxes', () => {
         expect(rig.modes.task()).toMatchObject({ fitted: false, layoutKey: '' });
       });
 
-      it('AND its layout lands THEN the camera opens', async () => {
+      it('WHEN its layout lands THEN the camera opens', async () => {
         await rig.runs.settle(1, resultOf(mode.layout.key() ?? '', POSITIONS));
 
         expect(rig.view.open).toHaveBeenCalledTimes(2);

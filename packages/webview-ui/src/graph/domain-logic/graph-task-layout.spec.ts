@@ -241,8 +241,10 @@ describe('FEATURE: GraphTaskLayout', () => {
       expect(rig.view[called]).toHaveBeenCalledExactlyOnceWith(...args);
       others.forEach((name: CameraCall): void => expect(rig.view[name]).not.toHaveBeenCalled());
     });
+  });
 
-    it('GIVEN a placed layout WHEN Re-layout lands THEN the camera fits, never opens again', async () => {
+  describe('GIVEN no saved task camera', () => {
+    it('WHEN Re-layout lands on a placed layout THEN the camera fits, never opens again', async () => {
       await land('k0');
 
       const relaid = layout.relayout();
@@ -254,7 +256,7 @@ describe('FEATURE: GraphTaskLayout', () => {
       expect(rig.view.fit).toHaveBeenCalledOnce();
     });
 
-    it('GIVEN key A then key B shown and A shown again from memory with no save for A THEN A opens', async () => {
+    it('WHEN key A then key B are shown and A is shown again from memory THEN A opens', async () => {
       await land('k0');
       await land('k1');
       await layout.show(requestOf('k0'));
