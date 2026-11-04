@@ -42,3 +42,6 @@ export const PACK_SPACING_PX = 48;
 
 /** The width over height the packed components aim for: 1 is square. */
 export const PACK_ASPECT = 1;
+
+/** The clear gap between a folder link's label box and its line, in px. */
+export const LABEL_GAP_PX = 4;

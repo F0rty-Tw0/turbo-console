@@ -3,7 +3,8 @@ import {
   GROUPED_PAN_STEP_MS,
   ROWS_BOXES_IN_VIEW,
   ROWS_BUTTONS_SHOWN,
-  ROWS_PAN_MS
+  ROWS_PAN_MS,
+  TOGGLED_FOLDERS
 } from './common/graph-tripwire.const.ts';
 import { IS_MAC_RUNNER, IS_WINDOWS_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph-task.fixture.ts';
@@ -49,9 +50,6 @@ const GROUPED_FIRST_FRAME_MS = IS_WINDOWS_RUNNER ? 3000 : 2000;
  * in this pan.
  */
 const GROUPED_PAN_MS = IS_MAC_RUNNER ? 2400 : 1100;
-
-/** Five folders of `largeState()` that sit well inside the canvas after Fit and the zoom to 120 px boxes. */
-const TOGGLED_FOLDERS = ['group-2', 'group-3', 'group-4', 'group-12', 'group-13'];
 
 /** Two rounds of the five folders make the ten samples per direction whose fastest the toggle tripwire asserts. */
 const TOGGLE_ROUNDS = 2;

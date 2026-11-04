@@ -2,7 +2,7 @@ import type { EdgeSingular, NodeSingular } from 'cytoscape';
 
 import { packageEdges, packageNodes } from './graph-boxes.ts';
 import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
-import { edgeLinesOf } from './graph-probe-lines.ts';
+import { edgeLinesOf, folderLinkLinesOf } from './graph-probe-lines.ts';
 import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
@@ -100,6 +100,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     return ids.sort();
   };
   const folders = (): ProbeFolder[] => probeFoldersOf(view.cy(), originOf());
+  const folderLinkLines = (): ProbeEdgeLine[] => folderLinkLinesOf(view.cy(), originOf());
   const folderLinks = (): ProbeFolderLink[] => probeFolderLinksOf(view.cy(), originOf());
   const edgeColor = (): string => {
     const first = packageEdges(view.cy()).first();
@@ -118,7 +119,20 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
   });
 
   const renderCount = (): number => renders;
-  const probe: GraphProbe = { ...facts, nodes, edges, edgeLines, visibleIds, folders, folderLinks, edgeColor, zoom, pan, renderCount };
+  const probe: GraphProbe = {
+    ...facts,
+    nodes,
+    edges,
+    edgeLines,
+    visibleIds,
+    folders,
+    folderLinks,
+    folderLinkLines,
+    edgeColor,
+    zoom,
+    pan,
+    renderCount
+  };
 
   return probe;
 };

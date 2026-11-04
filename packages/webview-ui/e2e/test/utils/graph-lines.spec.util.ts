@@ -101,7 +101,8 @@ export const crossesBox = (segment: LinkEnds, box: ElementRect): boolean => {
   return !clip.isOutside && clip.enter <= clip.leave;
 };
 
-const shrunkBy = (box: ElementRect, insetPx: number): ElementRect => {
+/** `box` pulled in by `insetPx` on every side, never below 0 wide or high; a negative `insetPx` grows it. */
+export const shrunkBy = (box: ElementRect, insetPx: number): ElementRect => {
   const shrunk: ElementRect = {
     left: box.left + insetPx,
     top: box.top + insetPx,

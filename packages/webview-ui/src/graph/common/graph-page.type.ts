@@ -84,12 +84,17 @@ export type GraphViewHandlers = {
 
 /** The folder pass over the boxes `setGrouping` drew: collapsed folders, folder links and the classes that hide what they replace. */
 export type FoldersView = {
-  /** Hides collapsed and unshown boxes and the package links a collapsed folder replaces, then draws collapsed nodes and folder links; `null` removes them. */
+  /**
+   * Hides collapsed and unshown boxes and the package links a collapsed folder replaces, then draws collapsed nodes and
+   * folder links, routing only the links it adds or whose ends, count or first member changed; `null` removes them.
+   */
   readonly show: (scene: FolderScene | null, labelOf: (folder: string) => string) => void;
   /** Classes boxes, collapsed nodes and folder links; `show` re-applies the last paint to what it draws. */
   readonly paint: (paint: Paint) => void;
-  /** Moves each collapsed node to the centre of all its packages, hidden ones included. */
+  /** Moves each collapsed node to the centre of all its packages, hidden ones included, and re-routes every folder link. */
   readonly recentre: () => void;
+  /** Keeps the routes the folder links follow and re-draws them all: `GraphView.setRoutes` calls it after it straightens every edge. */
+  readonly setRoutes: (routes: Routes) => void;
 };
 
 /** The Cytoscape canvas view of one page. */

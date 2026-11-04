@@ -1,13 +1,6 @@
+import { dotOf, offsetOf } from './vector.util.ts';
 import type { EdgeRoute, Position } from '../../bridge/common/graph-state.type.ts';
 import type { RouteSegments } from '../common/route-segments.type.ts';
-
-const offsetOf = (point: Position, origin: Position): Position => {
-  const offset: Position = { x: point.x - origin.x, y: point.y - origin.y };
-
-  return offset;
-};
-
-const dotOf = (a: Position, b: Position): number => a.x * b.x + a.y * b.y;
 
 const endpointOf = (point: Position, centre: Position): string => {
   const offset = offsetOf(point, centre);

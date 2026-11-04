@@ -1,21 +1,25 @@
+import type { BoundingBox12 } from 'cytoscape';
+
+import { unionBoxOf } from './folder-box.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
 
-const minOf = (values: number[]): number => values.reduce((low, value) => Math.min(low, value));
+const pointBoxOf = (position: Position): BoundingBox12 => {
+  const box: BoundingBox12 = { x1: position.x, y1: position.y, x2: position.x, y2: position.y };
 
-const maxOf = (values: number[]): number => values.reduce((high, value) => Math.max(high, value));
+  return box;
+};
 
 /** The middle of the bounding box of every member's position, hidden members included; the origin for none. */
 export const collapsedCentreOf = (members: string[], positionOf: (name: string) => Position): Position => {
-  if (members.length === 0) return ORIGIN;
-
   const positions = members.map(positionOf);
-  const xs = positions.map((position) => position.x);
-  const ys = positions.map((position) => position.y);
-  const x = (minOf(xs) + maxOf(xs)) / 2;
-  const y = (minOf(ys) + maxOf(ys)) / 2;
-  const centre: Position = { x, y };
+  const boxes = positions.map(pointBoxOf);
+  const box = unionBoxOf(boxes);
+
+  if (box === null) return ORIGIN;
+
+  const centre: Position = { x: (box.x1 + box.x2) / 2, y: (box.y1 + box.y2) / 2 };
 
   return centre;
 };

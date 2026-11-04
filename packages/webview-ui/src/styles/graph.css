@@ -457,9 +457,22 @@ p {
   pointer-events: auto;
 }
 
+/*
+ * An expanded folder's title text and glyph sit over the lines that cross its header, so each takes the editor
+ * background: the text itself (an inline span, so the ellipsis still cuts it and nothing moves) and the glyph, never the
+ * full-width button. A collapsed row sits on the node fill, which a selected folder turns blue, so it gets none.
+ */
+.widget-row-box .widget-title-text {
+  background-color: var(--vscode-editor-background);
+}
+
 .widget-glyph {
   flex: none;
   color: var(--tc-muted);
+}
+
+.widget-row-box > .widget-glyph {
+  background-color: var(--vscode-editor-background);
 }
 
 .widget-count {

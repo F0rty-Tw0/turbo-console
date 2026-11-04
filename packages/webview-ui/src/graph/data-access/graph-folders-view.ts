@@ -3,6 +3,9 @@ import type { Core, EdgeSingular, NodeSingular, SingularElementArgument } from '
 import { packageEdges } from './graph-boxes.ts';
 import { setClassesAmong } from './graph-classes.ts';
 import { centreOf, syncCollapsedNodes, syncFolderLinks } from './graph-folder-elements.ts';
+import { emptyDrawnLinks, labelFolderLinks, routeFolderLinks } from './graph-folder-routes.ts';
+import type { Routes } from '../../bridge/common/graph-state.type.ts';
+import type { FolderRouting } from '../common/folder-link-route.type.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 import type { FoldersView } from '../common/graph-page.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
@@ -115,12 +118,21 @@ const paintFolders = (cy: Core, links: ReadonlyMap<string, FolderLink>, paint: P
 export const createFoldersView = (cy: Core): FoldersView => {
   const links = new Map<string, FolderLink>();
   let members: ReadonlyMap<string, string[]> = new Map();
+  let routes: Routes = {};
+  let drawn = emptyDrawnLinks();
   let lastPaint: Paint | null = null;
 
   const paint = (next: Paint): void => {
     lastPaint = next;
     paintFolders(cy, links, next);
   };
+  const routeLinks = (): void => {
+    const routing: FolderRouting = { members, routes, drawn };
+
+    routeFolderLinks(cy, links, routing);
+  };
+  const labelLinks = (): void => labelFolderLinks(cy, drawn);
+  /** A toggle moves no package and changes no route, so `show` re-draws only the links it added or whose inputs changed. */
   const show = (scene: FolderScene | null, labelOf: LabelOf): void => {
     cy.batch((): void => {
       const wanted = passClassesOf(cy, scene);
@@ -129,9 +141,12 @@ export const createFoldersView = (cy: Core): FoldersView => {
       syncCollapsedNodes(cy, scene, labelOf);
       syncFolderLinks(cy, scene, links);
       members = scene?.members ?? new Map();
+      routeLinks();
     });
 
     if (lastPaint !== null) paint(lastPaint);
+
+    labelLinks();
   };
   const recentreNode = (node: NodeSingular): void => {
     const folder = node.id().slice(COLLAPSED_ID_PREFIX.length);
@@ -139,10 +154,22 @@ export const createFoldersView = (cy: Core): FoldersView => {
 
     node.position(centreOf(cy, names));
   };
+  /** Packages moved, so every link is re-drawn: a collapsed box can change while its centre stays put. */
   const recentre = (): void => {
-    cy.batch((): void => void cy.nodes(`.${FOLDER_NODE_CLASS}`).forEach(recentreNode));
+    drawn = emptyDrawnLinks();
+    cy.batch((): void => {
+      cy.nodes(`.${FOLDER_NODE_CLASS}`).forEach(recentreNode);
+      routeLinks();
+    });
+    labelLinks();
   };
-  const view: FoldersView = { show, paint, recentre };
+  const setRoutes = (next: Routes): void => {
+    routes = next;
+    drawn = emptyDrawnLinks();
+    cy.batch(routeLinks);
+    labelLinks();
+  };
+  const view: FoldersView = { show, paint, recentre, setRoutes };
 
   return view;
 };

@@ -55,3 +55,6 @@ export const PROTO_GROUPS_STUB: FolderGroup[] = [
 export const PROTO_EDGES_STUB: GraphEdge[] = [{ source: 'constructor', target: 'x' }];
 
 export const PROTO_POSITIONS_STUB: Positions = { constructor: at(10, 20), x: at(200, 20) };
+
+/** The `THREE` fixture: `a` and `c` side by side on the top row, `b` 300 px below `a`, `d` 300 px right of `b`. */
+export const THREE_POSITIONS_STUB: Positions = { a: at(0, 0), c: at(120, 0), b: at(0, 300), d: at(300, 300) };

@@ -1,9 +1,10 @@
-import type { Core } from 'cytoscape';
+import type { Core, EdgeCollection } from 'cytoscape';
 
 import { packageEdges } from './graph-boxes.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { ProbeEdgeLine, ProbeLineSource } from '../common/graph-probe.type.ts';
+import { FOLDER_LINK_CLASS } from '../common/graph.const.ts';
 import { drawnBendsOf } from '../utils/drawn-bends.util.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
@@ -45,12 +46,21 @@ export const edgeLineOf = (edge: ProbeLineSource, zoom: number, offset: Position
   return line;
 };
 
-/** Every drawn edge's line, package or task link; `origin` is the container's top left corner in the page. */
-export const edgeLinesOf = (cy: Core, origin: Position): ProbeEdgeLine[] => {
+const linesOf = (cy: Core, edges: EdgeCollection, origin: Position): ProbeEdgeLine[] => {
   const pan = cy.pan();
   const offset: Position = { x: origin.x + pan.x, y: origin.y + pan.y };
   const zoom = cy.zoom();
   const lineOf = (edge: ProbeLineSource): ProbeEdgeLine => edgeLineOf(edge, zoom, offset);
 
-  return packageEdges(cy).map(lineOf);
+  return edges.map(lineOf);
+};
+
+/** Every drawn edge's line, package or task link; `origin` is the container's top left corner in the page. */
+export const edgeLinesOf = (cy: Core, origin: Position): ProbeEdgeLine[] => linesOf(cy, packageEdges(cy), origin);
+
+/** Every folder link's line in `cy.edges()` order, which is the order `folderLinks()` lists them; a link Cytoscape does not draw reads as not drawn. */
+export const folderLinkLinesOf = (cy: Core, origin: Position): ProbeEdgeLine[] => {
+  const links = cy.edges(`.${FOLDER_LINK_CLASS}`);
+
+  return linesOf(cy, links, origin);
 };
