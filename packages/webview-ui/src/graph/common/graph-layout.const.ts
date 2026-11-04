@@ -1,7 +1,7 @@
 import type { ElkLayering } from './layout.type.ts';
 
 /** The layout algorithm's version: it enters the layout hash, so a change to how routes or positions are built drops every cached layout. */
-export const LAYOUT_VERSION = 2;
+export const LAYOUT_VERSION = 3;
 
 /** An edge route with more bends than this is not a route: the page leaves it out of its post and the host drops it alone. */
 export const ROUTE_BENDS_MAX = 64;
