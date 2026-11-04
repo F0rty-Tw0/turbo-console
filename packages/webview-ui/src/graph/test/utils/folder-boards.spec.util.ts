@@ -2,6 +2,7 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import elkConstructor from 'elkjs/lib/elk.bundled.js';
 
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../../bridge/common/graph-state.type.ts';
+import type { FolderGroup } from '../../common/folder-group.type.ts';
 import type { FolderScene } from '../../common/folder-scene.type.ts';
 import type { DrawnGraph } from '../../common/graph-page.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
@@ -47,6 +48,19 @@ export const THREE_EDGES: GraphEdge[] = [
   { source: 'b', target: 'c' },
   { source: 'b', target: 'd' }
 ];
+
+const threeGroupOf = (folder: string): FolderGroup => {
+  const prefix = `${folder}/`;
+  const packages = THREE.filter((pkg) => pkg.path.startsWith(prefix));
+  const group: FolderGroup = { folder, packages };
+
+  return group;
+};
+
+const THREE_FOLDERS: string[] = ['f1', 'f2', 'f3'];
+
+/** `THREE` drawn grouped: one box per folder. */
+export const THREE_GROUPS: FolderGroup[] = THREE_FOLDERS.map(threeGroupOf);
 
 /** A folder scene over any fixture; `visible` defaults to every package, `collapsed` and `ghosts` to none. */
 export const sceneOf = (infos: GraphPackage[], edges: GraphEdge[], parts: SceneParts): FolderScene => {

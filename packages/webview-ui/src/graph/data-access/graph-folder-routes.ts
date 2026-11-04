@@ -2,13 +2,14 @@ import type { BoundingBox12, Core, EdgeSingular, NodeSingular } from 'cytoscape'
 
 import { setClassesAmong } from './graph-classes.ts';
 import type { EdgeRoute, Position, Routes } from '../../bridge/common/graph-state.type.ts';
-import type { CollapsedEnd } from '../common/folder-link-route.type.ts';
+import type { CollapsedEnd, DrawnLinks, FolderRouting } from '../common/folder-link-route.type.ts';
 import type { FolderLink } from '../common/folder-scene.type.ts';
 import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
-import { COLLAPSED_ID_PREFIX, FOLDER_LINK_CLASS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { COLLAPSED_ID_PREFIX, FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { RouteSegments } from '../common/route-segments.type.ts';
 import { drawnBendsOf } from '../utils/drawn-bends.util.ts';
+import { folderLinkIdOf } from '../utils/folder-id.util.ts';
 import { firstMemberIdOf, folderLinkRouteOf } from '../utils/folder-link-route.util.ts';
 import { labelOffsetOf } from '../utils/label-offset.util.ts';
 import { routeSegmentsOf } from '../utils/route-segments.util.ts';
@@ -93,19 +94,54 @@ const routeLink = (scene: DrawnScene, edge: EdgeSingular, link: FolderLink): voi
   setClassesAmong(edge, ROUTED_CLASSES, ROUTED_CLASSES);
 };
 
+/** An empty record: the next pass routes and labels every link. */
+export const drawnLinksOf = (): DrawnLinks => {
+  const drawn: DrawnLinks = { keys: new WeakMap(), unlabelled: new Set() };
+
+  return drawn;
+};
+
 /**
- * Draws each folder link on its first member's bends outside the collapsed boxes, or straight when none is left. Call it
- * inside the caller's batch, after the collapsed nodes are placed and `members` holds the scene being drawn.
+ * The inputs a link's route and label are built from: its first member, its count (the label text), where its ends sit,
+ * and whether the reverse link is drawn (Cytoscape bows two straight links between one pair apart). The collapsed boxes
+ * follow the members' positions, which move only before a `recentre` or a `setRoutes`, and each starts an empty record.
  */
-export const routeFolderLinks = (
-  cy: Core,
-  links: ReadonlyMap<string, FolderLink>,
-  members: ReadonlyMap<string, string[]>,
-  routes: Routes
-): void => {
+const routeKeyOf = (edge: EdgeSingular, link: FolderLink, links: ReadonlyMap<string, FolderLink>): string => {
+  const source = edge.source().position();
+  const target = edge.target().position();
+  const reverseId = folderLinkIdOf(link.target, link.source);
+  const hasReverse = links.has(reverseId);
+  const parts = [firstMemberIdOf(link), link.links.length, source.x, source.y, target.x, target.y, hasReverse];
+
+  return JSON.stringify(parts);
+};
+
+/**
+ * Draws each folder link whose inputs changed since `drawn` recorded it on its first member's bends outside the collapsed
+ * boxes, or straight when none is left, and marks it for `labelFolderLinks`. Call it inside the caller's batch, after the
+ * collapsed nodes are placed and `routing.members` holds the scene being drawn. A link Cytoscape already removed, with the
+ * collapsed node `setGrouping` took away before the next `show`, is skipped.
+ */
+export const routeFolderLinks = (cy: Core, links: ReadonlyMap<string, FolderLink>, routing: FolderRouting): void => {
+  const { members, routes, drawn } = routing;
   const scene: DrawnScene = { cy, members, routes };
 
-  for (const [id, link] of links) routeLink(scene, cy.getElementById(id), link);
+  for (const [id, link] of links) {
+    const edge = cy.getElementById(id);
+    const isGone = edge.empty();
+
+    if (isGone) continue;
+
+    const key = routeKeyOf(edge, link, links);
+    const drawnKey = drawn.keys.get(edge);
+    const isDrawn = drawnKey === key;
+
+    if (isDrawn) continue;
+
+    routeLink(scene, edge, link);
+    drawn.keys.set(edge, key);
+    drawn.unlabelled.add(edge);
+  }
 };
 
 const offsetOf = (edge: EdgeSingular): Position => {
@@ -117,18 +153,30 @@ const offsetOf = (edge: EdgeSingular): Position => {
   return labelOffsetOf(path, edge.midpoint(), size);
 };
 
+const isRemoved = (edge: EdgeSingular): boolean => edge.removed();
+
+const isPlaceable = (edge: EdgeSingular): boolean => {
+  const isGone = isRemoved(edge);
+
+  return !isGone && edge.visible();
+};
+
 /**
- * Moves each visible folder link's label off its line, by `labelDx`/`labelDy` data the margin rule reads. Call it after the
- * batch that routed the links: the drawn path exists only once Cytoscape has applied it. A headless Cytoscape has no
- * renderer to measure with (it has no container), so there it does nothing.
+ * Moves the label of each visible folder link routed since its label was placed off its line, by `labelDx`/`labelDy` data
+ * the margin rule reads; a hidden one waits for a later pass. Call it after the batch that routed the links: the drawn
+ * path exists only once Cytoscape has applied it. A headless Cytoscape has no renderer to measure with (it has no
+ * container), so there it does nothing.
  */
-export const labelFolderLinks = (cy: Core): void => {
+export const labelFolderLinks = (cy: Core, drawn: DrawnLinks): void => {
   const container = cy.container();
   const isHeadless = container === null;
 
   if (isHeadless) return;
 
-  const edges = cy.edges(`.${FOLDER_LINK_CLASS}`).filter((edge): boolean => edge.visible());
+  const pending = [...drawn.unlabelled];
+  const edges = pending.filter(isPlaceable);
+  const removed = pending.filter(isRemoved);
+  const settled = [...edges, ...removed];
   const place = (edge: EdgeSingular): void => {
     const { x, y } = offsetOf(edge);
 
@@ -136,4 +184,6 @@ export const labelFolderLinks = (cy: Core): void => {
   };
 
   cy.batch((): void => void edges.forEach(place));
+
+  for (const edge of settled) drawn.unlabelled.delete(edge);
 };
