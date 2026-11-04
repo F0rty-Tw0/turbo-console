@@ -7,6 +7,8 @@ const CLOSE_BRACE = 0x7d;
 const QUOTE = 0x22;
 const BACKSLASH = 0x5c;
 
+const DECODER = new TextDecoder();
+
 const stringEndOf = (bytes: Uint8Array, quote: number): number => {
   let index = quote + 1;
 
@@ -67,8 +69,9 @@ const entryOf = (bytes: Uint8Array, start: number, end: number): RunLogEntry | n
   if (isOversize) return null;
 
   const objectBytes = bytes.subarray(start, end);
-  const text = new TextDecoder().decode(objectBytes);
-  const parsed = runLogEntrySchema.safeParse(jsonOf(text));
+  const text = DECODER.decode(objectBytes);
+  const json = jsonOf(text);
+  const parsed = runLogEntrySchema.safeParse(json);
 
   return parsed.success ? parsed.data : null;
 };
