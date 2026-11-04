@@ -90,14 +90,18 @@ describe('FEATURE: graph.css widget rules', () => {
       }
     );
 
-    it.each(['.widget-title-text', '.widget-glyph'])(
-      'WHEN the unscoped selector %s is looked up THEN no rule paints it, so a collapsed row keeps the node fill',
-      (selector) => {
-        const declarations = declarationsOf(css, selector);
+    it('WHEN the unscoped selector .widget-title-text is looked up THEN it has no rule, so a collapsed row keeps the node fill', () => {
+      const rule = ruleOf(css, '.widget-title-text');
 
-        expect(declarations).not.toContain('background');
-      }
-    );
+      expect(rule).toBeUndefined();
+    });
+
+    it('WHEN the unscoped .widget-glyph rule is read THEN it sets the glyph colour but no background, so a collapsed row keeps the node fill', () => {
+      const declarations = declarationsOf(css, '.widget-glyph');
+
+      expect(declarations).toContain('color: var(--tc-muted)');
+      expect(declarations).not.toContain('background');
+    });
   });
 
   describe('GIVEN the node toolbar rule', () => {
