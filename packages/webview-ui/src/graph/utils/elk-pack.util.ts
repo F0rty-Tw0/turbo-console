@@ -43,7 +43,12 @@ const componentsOf = (children: ElkNode[], edges: ElkEdge[], topOf: Map<string, 
 
     if (parent === undefined || parent === id) return id;
 
-    return representativeOf(parent);
+    const representative = representativeOf(parent);
+
+    // Path compression: later lookups from this id skip the chain.
+    parents.set(id, representative);
+
+    return representative;
   };
   const join = (edge: ElkEdge): void => {
     const from = topOfEnd(edge.sources[0], topOf);
