@@ -1,4 +1,4 @@
-import type { ElkLayering } from './layout.type.ts';
+import type { ElkLayering, ElkOptions } from './layout.type.ts';
 
 /** The layout algorithm's version: it enters the layout hash, so a change to how routes or positions are built drops every cached layout. */
 export const LAYOUT_VERSION = 3;
@@ -17,7 +17,7 @@ export const ROUTE_RADIUS_PX = 6;
  * `edgeCoords: ROOT` makes every edge route come back in root coordinates, whatever compound it sits in. It holds no layering
  * strategy and no thoroughness: both are per view (`layeredOptionsOf`).
  */
-export const ELK_OPTIONS: Readonly<Record<string, string>> = {
+export const ELK_OPTIONS: ElkOptions = {
   'elk.algorithm': 'layered',
   'elk.direction': 'DOWN',
   'elk.layered.nodePlacement.strategy': 'SIMPLE',
