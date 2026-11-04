@@ -3,10 +3,10 @@ import type { Browser } from '@playwright/test';
 import { withSession } from './bench-session.ts';
 import { NOTHING_SAVED, PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
 import type { BenchSession, PanSample } from './common/bench.type.ts';
-import { p95 } from './utils/bench-stats.util.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
 import { targetLikeHubSavedState, targetLikeTasksState } from '../test/utils/graph-target-like-tasks.spec.util.ts';
 import { targetLikeState } from '../test/utils/graph-target-like.spec.util.ts';
+import { p95 } from '../test/utils/stats.spec.util.ts';
 
 const pannedAfterElk = async (session: BenchSession): Promise<PanSample> => {
   const { canvas, host, probe, recorder } = session;

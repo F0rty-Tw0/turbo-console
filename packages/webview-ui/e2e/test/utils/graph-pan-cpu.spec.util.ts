@@ -1,4 +1,4 @@
-import { median } from '../../bench/utils/bench-stats.util.ts';
+import { median } from './stats.spec.util.ts';
 import type { CpuSteps } from '../../common/graph.type.ts';
 
 /** The median of each field across `readings`, so one spiked pan out of three does not decide a budget; throws on none. */

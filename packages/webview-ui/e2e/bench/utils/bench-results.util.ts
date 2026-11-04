@@ -1,6 +1,6 @@
 import type { TestDetailsAnnotation } from '@playwright/test';
 
-import { median } from './bench-stats.util.ts';
+import { median } from '../../test/utils/stats.spec.util.ts';
 import { BENCH_PREFIX, NS_PER_MS, ROW_NAME } from '../common/bench.const.ts';
 import type { BenchRow, BenchSample } from '../common/bench.type.ts';
 
