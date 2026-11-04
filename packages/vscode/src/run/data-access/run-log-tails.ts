@@ -37,7 +37,10 @@ export class RunLogTails {
     this.ports = ports;
   }
 
-  /** Tails `path` of `root` and reads what it already holds; a path already live returns its handle. */
+  /**
+   * Tails `path` of `root` and reads what it already holds once the first change window ends; a path already live
+   * returns its handle.
+   */
   public start(root: string, path: string, onEvent: RunLogListener): RunLogTail {
     const live = this.liveOf(root);
     const existing = live.get(path);

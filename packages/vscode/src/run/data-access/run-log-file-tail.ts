@@ -1,15 +1,16 @@
 import { runLogEventOf } from '@turbo-console/core';
 import type { RunLogEntry } from '@turbo-console/core';
 
-import { RUN_LOG_READ_MAX, RUN_LOG_START } from '../common/run-log-tail.const.ts';
+import { RUN_LOG_CHANGE_WINDOW_MS, RUN_LOG_READ_MAX, RUN_LOG_START } from '../common/run-log-tail.const.ts';
 import type { RunLogCursor, RunLogListener, RunLogOutcome, RunLogRead } from '../common/run-log-tail.type.ts';
 import { runLogStepOf } from '../utils/run-log-step.util.ts';
 
 /**
- * One turbo log file read from a cursor (spec D5): one read at a time, events in file order. `changed` reads again
- * while a read is full or another `changed` came in during it. `drain` reads to the end and ends the tail; `close` ends
- * it at once and resolves when the read in flight has finished. A tail that has ended reads and emits nothing. A read
- * that rejects or a listener that throws ends the tail as `failed`; no method rejects.
+ * One turbo log file read from a cursor (spec D5): one read at a time, events in file order. `changed` reads when its
+ * change window ends, and again while a read is full or a window ended during it. `drain` drops a pending window, reads
+ * to the end at once and ends the tail; `close` drops it, ends the tail at once and resolves when the read in flight has
+ * finished. A tail that has ended reads and emits nothing. A read that rejects or a listener that throws ends the tail
+ * as `failed`; no method rejects.
  */
 export class RunLogFileTail {
   private readonly path: string;
@@ -17,6 +18,7 @@ export class RunLogFileTail {
   private readonly onEvent: RunLogListener;
   private cursor: RunLogCursor = RUN_LOG_START;
   private loop: Promise<void> | null = null;
+  private changeWindow: NodeJS.Timeout | null = null;
   private draining: Promise<RunLogOutcome> | null = null;
   private isDirty = false;
   private hasAppeared = false;
@@ -30,11 +32,16 @@ export class RunLogFileTail {
     this.onEvent = onEvent;
   }
 
-  /** The file may have grown; ignored once the tail has ended. */
+  /**
+   * The file may have grown: reads `RUN_LOG_CHANGE_WINDOW_MS` after the first call of a change window, so a burst of
+   * watch events costs one read; later calls inside the window add nothing. Ignored once the tail has ended.
+   */
   public changed(): void {
-    if (this.isEnded) return;
+    if (this.isEnded || this.changeWindow !== null) return;
 
-    this.requestRead();
+    this.changeWindow = setTimeout(() => {
+      this.changeWindowEnded();
+    }, RUN_LOG_CHANGE_WINDOW_MS);
   }
 
   /**
@@ -50,8 +57,21 @@ export class RunLogFileTail {
   /** Ends the tail at once: no event follows, not even from the read in flight; resolves when that read has finished. */
   public async close(): Promise<void> {
     this.isEnded = true;
+    this.cancelChangeWindow();
 
     await this.loop;
+  }
+
+  private changeWindowEnded(): void {
+    this.changeWindow = null;
+
+    if (!this.isEnded) this.requestRead();
+  }
+
+  private cancelChangeWindow(): void {
+    if (this.changeWindow !== null) clearTimeout(this.changeWindow);
+
+    this.changeWindow = null;
   }
 
   private async finish(): Promise<RunLogOutcome> {
@@ -60,6 +80,7 @@ export class RunLogFileTail {
     while (this.loop !== null) await this.loop;
 
     this.isEnded = true;
+    this.cancelChangeWindow();
 
     return this.outcomeOf();
   }

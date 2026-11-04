@@ -5,6 +5,13 @@ import type { RunLogCursor, RunLogOutcome } from './run-log-tail.type.ts';
 /** One read window; equal to the object cap, so an open object that fills a window is oversize. */
 export const RUN_LOG_READ_MAX = RUN_LOG_OBJECT_MAX;
 
+/**
+ * The change window: how long a tail gathers watch events before it reads, one frame at 60 Hz, so the delay stays below
+ * what a progress view shows. The folder watcher fires about once per line turbo writes; at 1 000 lines/s the window
+ * cuts reads per 3 000 lines from 2 993 to 179 (U7d3 perf review). A tail's first read waits one window too.
+ */
+export const RUN_LOG_CHANGE_WINDOW_MS = 16;
+
 export const RUN_LOG_START: RunLogCursor = { offset: 0, skipping: false, leadingInvalid: 0, hasEntry: false };
 
 /** Where turbo writes its log files under a root (spec D6). */

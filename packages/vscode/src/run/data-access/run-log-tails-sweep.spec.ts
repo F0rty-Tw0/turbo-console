@@ -1,13 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunLogTails } from './run-log-tails.ts';
-import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
 import { RUN_LOG_SWEEP_AGE_MS } from '../common/run-log-tail.const.ts';
 import type { RunLogPorts } from '../common/run-log-tail.type.ts';
 import { SEEN_A } from '../test/common/run-log-fs.const.ts';
 import { ENTRY_A } from '../test/common/run-log-step.const.ts';
 import { ROOT_OTHER, ROOT_WS } from '../test/common/run-log-tails.const.ts';
 import type { TailsHarness } from '../test/common/run-log-tails.type.ts';
+import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
 import { logPathOf, tailsHarnessOf } from '../test/utils/run-log-tails.spec.util.ts';
 import { runLogDirOf } from '../utils/run-log-dir.util.ts';
 
@@ -22,6 +22,14 @@ const NEW = logPathOf(ROOT_WS, 'run-new.json');
 const OTHER_OLD = logPathOf(ROOT_OTHER, 'run-old.json');
 
 describe('FEATURE: sweep stale turbo log files (spec D6)', () => {
+  beforeEach(() => {
+    fakeChangeWindows();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   const ageOf = (h: TailsHarness, path: string, hours: number): void => {
     h.fs.write(path, []);
     h.fs.mtimes.set(path, h.fs.nowMs - hours * HOUR_MS);
@@ -41,14 +49,14 @@ describe('FEATURE: sweep stale turbo log files (spec D6)', () => {
 
     it('WHEN the first /ws tail starts THEN only run-old.json is removed', async () => {
       h.start(ROOT_WS, NEW);
-      await flush();
+      await endChangeWindow();
 
       expect(h.fs.removed).toStrictEqual([OLD]);
     });
 
     it('WHEN the first /other tail starts THEN /other is swept', async () => {
       h.start(ROOT_OTHER, logPathOf(ROOT_OTHER, 'run-new.json'));
-      await flush();
+      await endChangeWindow();
 
       expect(h.fs.removed).toStrictEqual([OTHER_OLD]);
     });
@@ -61,7 +69,7 @@ describe('FEATURE: sweep stale turbo log files (spec D6)', () => {
 
       h.start(ROOT_WS, logPathOf(ROOT_WS, 'run-1.json'));
       h.start(ROOT_WS, logPathOf(ROOT_WS, 'run-2.json'));
-      await flush();
+      await endChangeWindow();
 
       expect(list.mock.calls).toStrictEqual([[runLogDirOf(ROOT_WS)]]);
     });
@@ -75,7 +83,7 @@ describe('FEATURE: sweep stale turbo log files (spec D6)', () => {
       h.fs.write(NEW, [ENTRY_A]);
       const started = h.start(ROOT_WS, NEW);
 
-      await flush();
+      await endChangeWindow();
 
       expect([started.events, h.fs.logs]).toStrictEqual([[SEEN_A], []]);
     });

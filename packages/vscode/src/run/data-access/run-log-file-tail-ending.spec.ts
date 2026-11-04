@@ -1,5 +1,5 @@
 import type { RunLogEvent } from '@turbo-console/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunLogFileTail } from './run-log-file-tail.ts';
 import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
@@ -8,6 +8,7 @@ import { LOG_PATH, SEEN_A } from '../test/common/run-log-fs.const.ts';
 import type { FakeLogFs } from '../test/common/run-log-fs.type.ts';
 import { ENTRY_A, ENTRY_B, INVALID_OBJECT } from '../test/common/run-log-step.const.ts';
 import { afterHops } from '../test/utils/microtask-hops.spec.util.ts';
+import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
 import { fakeLogFs } from '../test/utils/run-log-fs.spec.util.ts';
 
 const HOPS_AFTER_READ = [0, 1, 2, 3, 4, 5, 6];
@@ -24,9 +25,14 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       events.push(event);
     };
 
+    fakeChangeWindows();
     fs = fakeLogFs();
     events = [];
     tail = tailOf(fs.read, onEvent);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('GIVEN a drained tail', () => {
@@ -62,6 +68,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       const release = fs.hold();
 
       tail.changed();
+      await endChangeWindow();
       const closing = tail.close();
 
       release();
@@ -79,6 +86,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       };
 
       tail.changed();
+      await endChangeWindow();
       const closing = tail.close().then(markClosed);
 
       await flush();
@@ -97,6 +105,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       const release = fs.hold();
 
       tail.changed();
+      await endChangeWindow();
       const drained = tail.drain();
       const closing = tail.close();
 
@@ -115,6 +124,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       const release = fs.hold();
 
       tail.changed();
+      await endChangeWindow();
       const closing = tail.close();
 
       release();
@@ -149,7 +159,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
 
       fs.write(LOG_PATH, [ENTRY_A, ENTRY_B]);
       tail.changed();
-      await flush();
+      await endChangeWindow();
       await closing;
 
       expect(seen).toStrictEqual([SEEN_A]);
@@ -168,6 +178,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       process.on('unhandledRejection', collect);
       failingTail.changed();
       failingTail.changed();
+      await endChangeWindow();
       const outcome = await failingTail.drain();
 
       await flush();
@@ -181,7 +192,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       const failingTail = tailOf(failingRead, vi.fn());
 
       failingTail.changed();
-      await flush();
+      await endChangeWindow();
       failingTail.changed();
       const outcome = await failingTail.drain();
 
@@ -212,7 +223,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
 
       fs.write(LOG_PATH, [ENTRY_A]);
       throwingTail.changed();
-      await flush();
+      await endChangeWindow();
       fs.append(LOG_PATH, ENTRY_B);
       throwingTail.changed();
       const outcome = await throwingTail.drain();
@@ -266,7 +277,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       const readsAfterEnd = fs.reads.length;
 
       tail.changed();
-      await flush();
+      await endChangeWindow();
 
       expect(fs.reads).toHaveLength(readsAfterEnd);
     });
