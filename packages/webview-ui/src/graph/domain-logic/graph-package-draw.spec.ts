@@ -1,9 +1,11 @@
+import type { Mocked } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
 import { refreshedDrawn, restoreAfterDraw } from './graph-package-draw.ts';
-import type { GraphPackage, GraphReady } from '../../bridge/common/graph-state.type.ts';
+import type { GraphPackage, GraphReady, Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { DrawnGraph } from '../common/graph-page.type.ts';
+import type { DrawnGraph, GraphView, Viewport } from '../common/graph-page.type.ts';
+import { graphViewMock } from '../test/mocks/graph-view.mock.ts';
 import { BARE_HIDDEN_STUB, BARE_SHOWN_STUB } from '../test/stubs/scope-labels.stub.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
@@ -58,39 +60,38 @@ describe('FEATURE: refreshedDrawn', () => {
 });
 
 describe('FEATURE: restoreAfterDraw camera', () => {
+  type CameraCall = 'fit' | 'open' | 'setViewport';
+
+  const CAMERA_CALLS: CameraCall[] = ['fit', 'open', 'setViewport'];
+  const ORIGIN: Position = { x: 0, y: 0 };
+  const CAMERA: Viewport = { zoom: 1, pan: ORIGIN };
   const drawn = drawnGraphOf(BARE_SHOWN_STUB);
-  const savedFor = (hash: string): GraphViewState => freshViewStateOf(hash);
-  const OPENING = savedFor(drawn.hash);
+  const OPENING = freshViewStateOf(drawn.hash);
   const MOVED: GraphViewState = { ...OPENING, zoom: 1.5 };
   const FITTED: GraphViewState = { ...OPENING, fitted: true };
 
-  const cameraCallsOf = (saved: GraphViewState | null): string[] => {
-    const calls: string[] = [];
-    const view = {
-      setLabels: vi.fn(),
-      setViewport: vi.fn((): void => void calls.push('setViewport')),
-      fit: vi.fn((): void => void calls.push('fit')),
-      open: vi.fn((): void => void calls.push('open'))
-    };
+  const restoredViewOf = (saved: GraphViewState | null): Mocked<GraphView> => {
+    const view = graphViewMock(CAMERA);
     const frames = { arm: vi.fn(), receivedAt: vi.fn((): number => 0) };
     const inspection = { mount: vi.fn(), restore: vi.fn() };
     const filtering = { restore: vi.fn((): ReadonlySet<string> => new Set()), inspection };
 
     restoreAfterDraw({ drawn, opening: OPENING, frames, filtering, view }, saved);
 
-    return calls;
+    return view;
   };
 
   it.each([
     ['no saved camera', 'open', null],
-    ['a save for another hash', 'open', savedFor('h0')],
+    ['a save for another hash', 'open', freshViewStateOf('h0')],
     ['a fitted save for this hash', 'fit', FITTED],
     ['a moved save for this hash', 'setViewport', MOVED],
     ['the opening state itself (large graph, no grouping choice)', 'open', OPENING]
-  ])(
-    'GIVEN %s WHEN the first draw restores THEN the camera calls %s only',
-    (_name: string, called: string, saved: GraphViewState | null) => {
-      expect(cameraCallsOf(saved)).toStrictEqual([called]);
-    }
-  );
+  ] as const)('GIVEN %s WHEN the first draw restores THEN the camera calls %s only', (_name, called, saved) => {
+    const view = restoredViewOf(saved);
+    const others = CAMERA_CALLS.filter((name: CameraCall): boolean => name !== called);
+
+    expect(view[called]).toHaveBeenCalledOnce();
+    others.forEach((name: CameraCall): void => expect(view[name]).not.toHaveBeenCalled());
+  });
 });
