@@ -147,13 +147,14 @@ describe('FEATURE: scanning turbo structured log bytes', () => {
   });
 
   describe('GIVEN an entry exactly RUN_LOG_OBJECT_MAX bytes long', () => {
-    it('WHEN scanned THEN it is a valid entry and invalid is 0', () => {
+    it('WHEN scanned THEN it comes back with its exact fields and invalid is 0', () => {
       const json = entryJsonOfSize(RUN_LOG_OBJECT_MAX);
       const bytes = runLogBytes(`[${json}]`);
+      const expected: unknown = JSON.parse(json);
 
       const scan = scanRunLog(bytes, 0);
 
-      expect(scan.entries).toHaveLength(1);
+      expect(scan.entries).toStrictEqual([expected]);
       expect(scan.invalid).toBe(0);
     });
   });
