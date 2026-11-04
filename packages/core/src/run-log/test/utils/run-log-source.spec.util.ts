@@ -10,19 +10,30 @@ export const runLogEntryOf = (timestamp: number, text = `line ${timestamp}`): Ru
   return entry;
 };
 
-/** The JSON of a valid entry that is exactly `RUN_LOG_OBJECT_MAX + 1` bytes long. */
-export const oversizeEntryJson = (): string => {
+/** A log entry of a given source and text. */
+export const runLogEntryWith = (source: string, text: string): RunLogEntry => {
+  const entry: RunLogEntry = { ...RUN_LOG_ENTRY_STUB, source, text };
+
+  return entry;
+};
+
+/** The JSON of a valid entry that is exactly `size` bytes long. */
+export const entryJsonOfSize = (size: number): string => {
   const emptyJson = JSON.stringify(runLogEntryOf(1, ''));
   const emptySize = runLogBytes(emptyJson).length;
-  const text = 'x'.repeat(RUN_LOG_OBJECT_MAX + 1 - emptySize);
+  const text = 'x'.repeat(size - emptySize);
   const json = JSON.stringify(runLogEntryOf(1, text));
 
   return json;
 };
 
-/** The number of elements of the whole-file JSON array, or -1 when the bytes are not one JSON array. */
+/** The JSON of a valid entry that is exactly `RUN_LOG_OBJECT_MAX + 1` bytes long. */
+export const oversizeEntryJson = (): string => entryJsonOfSize(RUN_LOG_OBJECT_MAX + 1);
+
+/** The number of elements of the whole-file JSON array, or -1 when the bytes are valid JSON but not an array; throws on bytes that are not JSON. */
 export const jsonElementCount = (bytes: Uint8Array): number => {
   const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes));
+  const isArray = Array.isArray(parsed);
 
-  return Array.isArray(parsed) ? parsed.length : -1;
+  return isArray ? parsed.length : -1;
 };

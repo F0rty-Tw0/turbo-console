@@ -4,7 +4,13 @@ import { isUnknownRunLog, scanRunLog } from './run-log-scan.util.ts';
 import { RUN_LOG_OBJECT_MAX } from '../common/run-log.const.ts';
 import type { RunLogEntry } from '../common/run-log.type.ts';
 import { runLogFixtureBytes } from '../test/utils/run-log-fixture.spec.util.ts';
-import { jsonElementCount, oversizeEntryJson, runLogBytes, runLogEntryOf } from '../test/utils/run-log-source.spec.util.ts';
+import {
+  entryJsonOfSize,
+  jsonElementCount,
+  oversizeEntryJson,
+  runLogBytes,
+  runLogEntryOf
+} from '../test/utils/run-log-source.spec.util.ts';
 
 const E1 = runLogEntryOf(1);
 const E2 = runLogEntryOf(2);
@@ -16,6 +22,7 @@ const THREE_ENTRIES_BYTES = runLogBytes(`[${E1_JSON},${E2_JSON},${E3_JSON}]`);
 const TWO_ENTRIES_CLOSED_BYTES = runLogBytes(`[${E1_JSON},${E2_JSON}]`);
 const TWO_ENTRIES_OPEN_BYTES = runLogBytes(`[${E1_JSON},${E2_JSON},`);
 const THREE_ENTRIES_OPEN_BYTES = runLogBytes(`[${E1_JSON},${E2_JSON},${E3_JSON}`);
+const G1_PARTIAL_ENTRY_COUNT = 9;
 const HALF_OF_E2 = E2_JSON.slice(0, E2_JSON.length / 2);
 
 describe('FEATURE: scanning turbo structured log bytes', () => {
@@ -137,15 +144,17 @@ describe('FEATURE: scanning turbo structured log bytes', () => {
 
       expect(scan).toStrictEqual({ entries: [E1], next: bytes.length - 1, invalid: 1, leadingInvalid: 1 });
     });
+  });
 
-    it('WHEN the object is exactly the size limit THEN it is a valid entry', () => {
-      const emptySize = runLogBytes(JSON.stringify(runLogEntryOf(1, ''))).length;
-      const entry = runLogEntryOf(1, 'x'.repeat(RUN_LOG_OBJECT_MAX - emptySize));
-      const bytes = runLogBytes(`[${JSON.stringify(entry)}]`);
+  describe('GIVEN an entry exactly RUN_LOG_OBJECT_MAX bytes long', () => {
+    it('WHEN scanned THEN it is a valid entry and invalid is 0', () => {
+      const json = entryJsonOfSize(RUN_LOG_OBJECT_MAX);
+      const bytes = runLogBytes(`[${json}]`);
 
       const scan = scanRunLog(bytes, 0);
 
-      expect(scan.entries).toStrictEqual([entry]);
+      expect(scan.entries).toHaveLength(1);
+      expect(scan.invalid).toBe(0);
     });
   });
 
@@ -211,7 +220,8 @@ describe('FEATURE: scanning turbo structured log bytes', () => {
       const live = scanRunLog(liveBytes, 0);
 
       expect(partial.invalid).toBe(0);
-      expect(partial.entries).toStrictEqual(live.entries.slice(0, 9));
+      expect(partial.entries).toHaveLength(G1_PARTIAL_ENTRY_COUNT);
+      expect(partial.entries).toStrictEqual(live.entries.slice(0, G1_PARTIAL_ENTRY_COUNT));
     });
   });
 });
