@@ -1,6 +1,7 @@
 import {
   FLAT_FIRST_FRAME_MS,
   GROUPED_PAN_STEP_MS,
+  PAN_CPU_TEST_TIMEOUT_MS,
   ROWS_BOXES_IN_VIEW,
   ROWS_BUTTONS_SHOWN,
   ROWS_PAN_MS,
@@ -106,8 +107,7 @@ test.describe('FEATURE: graph tripwires', () => {
     graphPanCpu,
     graphProbe
   }): Promise<void> => {
-    // The CPU budget is the gate; three pans triple the pan's wall time, so the slow macOS runners get 3x.
-    test.slow();
+    test.setTimeout(PAN_CPU_TEST_TIMEOUT_MS);
 
     await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
@@ -171,8 +171,7 @@ test.describe('FEATURE: graph tripwires', () => {
     graphProbe,
     graphWidgets
   }): Promise<void> => {
-    // The CPU budget is the gate; macOS CI ran this in 29 s of the default 30, so wall time gets 3x.
-    test.slow();
+    test.setTimeout(PAN_CPU_TEST_TIMEOUT_MS);
 
     await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
       graphPage.open({ savedState: groupedSavedState(largeState().hash) }));
@@ -220,8 +219,7 @@ test.describe('FEATURE: graph tripwires', () => {
     graphProbe,
     graphWidgets
   }): Promise<void> => {
-    // The CPU budget is the gate; macOS CI runs the sibling grouped pan in 29 s of the default 30, so wall time gets 3x.
-    test.slow();
+    test.setTimeout(PAN_CPU_TEST_TIMEOUT_MS);
 
     await test.step('WHEN the page is opened with a grouped view state', async (): Promise<void> =>
       graphPage.open({ savedState: groupedSavedState(largeState().hash) }));

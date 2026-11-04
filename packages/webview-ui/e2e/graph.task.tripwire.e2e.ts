@@ -1,3 +1,4 @@
+import { PAN_CPU_TEST_TIMEOUT_MS } from './common/graph-tripwire.const.ts';
 import { IS_MAC_RUNNER, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph-pan-cpu.fixture.ts';
 import {
@@ -65,8 +66,7 @@ test.describe('FEATURE: task graph tripwires', () => {
       graphTaskDetails,
       graphTaskNarrow
     }): Promise<void> => {
-      // The CPU budget is the gate; three pans triple the pan's wall time, so the slow macOS runners get 3x.
-      test.slow();
+      test.setTimeout(PAN_CPU_TEST_TIMEOUT_MS);
 
       await test.step('WHEN the page is opened in task mode with the hub task chosen', async (): Promise<void> =>
         graphPage.open({ savedState: SAVED_VIEW }));
