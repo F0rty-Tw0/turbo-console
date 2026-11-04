@@ -119,13 +119,13 @@ test.describe('FEATURE: a drag straightens only the edges it moved', () => {
 });
 
 test.describe('FEATURE: a drag never starts off the graph canvas', () => {
-  test('GIVEN the Details aside open WHEN a grab point under the aside is checked THEN it fails naming ASIDE#graph-details', async ({
+  test('GIVEN the Details aside open over the grouped U0 view, a grab point under the aside fails naming ASIDE#graph-details', async ({
     graphDetails,
     graphHost,
     graphPage,
     page
   }): Promise<void> => {
-    await test.step('GIVEN the page is opened grouped, the U0 state is sent and the Details aside is open', async (): Promise<void> => {
+    await test.step('WHEN the page is opened grouped, the U0 state is sent and the Details aside is open', async (): Promise<void> => {
       await graphPage.open({ savedState: GROUPED_SAVED });
       await graphHost.sendState(U0);
       await graphDetails.expectOpen(true);
@@ -148,20 +148,20 @@ test.describe('FEATURE: a drag never starts off the graph canvas', () => {
     });
   });
 
-  test('GIVEN the same view WHEN an empty canvas spot is checked THEN it passes', async ({
+  test('GIVEN the Details aside open over the grouped U0 view, an empty canvas spot is grabbable', async ({
     graphDetails,
     graphGrouping,
     graphHost,
     graphPage,
     page
   }): Promise<void> => {
-    await test.step('GIVEN the page is opened grouped, the U0 state is sent and the Details aside is open', async (): Promise<void> => {
+    await test.step('WHEN the page is opened grouped, the U0 state is sent and the Details aside is open', async (): Promise<void> => {
       await graphPage.open({ savedState: GROUPED_SAVED });
       await graphHost.sendState(U0);
       await graphDetails.expectOpen(true);
     });
 
-    await test.step('THEN an empty canvas spot is grabbable', async (): Promise<void> => {
+    await test.step('THEN an empty canvas spot passes the grab check', async (): Promise<void> => {
       const spot = await graphGrouping.freeSpot();
 
       await expectGrabbable(page, spot);
