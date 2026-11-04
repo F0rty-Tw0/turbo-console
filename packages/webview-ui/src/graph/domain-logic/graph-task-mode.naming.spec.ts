@@ -76,7 +76,7 @@ describe('FEATURE: GraphTaskMode box naming', () => {
       mode.received(TASK_STATE_STUB, 11);
 
       expect(rig.runs.count()).toBe(2);
-      expect(mode.layout.placedKey()).toBe(GROUPED_KEY);
+      expect(mode.layout.settledKey()).toBe(GROUPED_KEY);
     });
 
     it('WHEN a same-hash state arrives with scopes hidden THEN exactly one new layout runs', () => {

@@ -151,10 +151,9 @@ export class GraphTaskMode {
    * newer layout is in flight, whose pending choice (a regroup's fit) the old camera would overwrite.
    */
   public saveCamera(): void {
-    const layoutKey = this.layout.placedKey();
-    const isReplaced = this.layout.key() !== layoutKey;
+    const layoutKey = this.layout.settledKey();
 
-    if (!this.isActive() || layoutKey === null || isReplaced) return;
+    if (!this.isActive() || layoutKey === null) return;
 
     const { zoom, pan } = this.deps.view.viewport();
     const fitted = this.deps.view.isFitted();

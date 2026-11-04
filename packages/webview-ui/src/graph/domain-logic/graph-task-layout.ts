@@ -46,9 +46,13 @@ export class GraphTaskLayout {
     return this.wanted?.key ?? null;
   }
 
-  /** The key of the layout on screen. */
-  public placedKey(): string | null {
-    return this.placed?.hash ?? null;
+  /** The key of the layout on screen while it is the one asked for; none while a newer layout is in flight. */
+  public settledKey(): string | null {
+    const placedKey = this.placed?.hash ?? null;
+    const isInFlight = placedKey !== this.key();
+    const settledKey = isInFlight ? null : placedKey;
+
+    return settledKey;
   }
 
   public engine(): LayoutEngine | null {
