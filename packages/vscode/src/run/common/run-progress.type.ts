@@ -44,3 +44,11 @@ export type ProgressSettleInput = {
 };
 
 export type ProgressInput = ProgressEventInput | ProgressSettleInput;
+
+/** Called with the root of the runs whose records changed. */
+export type ProgressListener = (root: string) => void;
+
+/** The change feed of the task progress; `onDidChange` returns the unsubscribe. */
+export type ProgressChanges = {
+  readonly onDidChange: (listener: ProgressListener) => () => void;
+};

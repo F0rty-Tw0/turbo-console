@@ -1,6 +1,10 @@
+import type { ProgressOwner } from '../common/run-progress.type.ts';
 import type { RunEntry, RunKey, RunRequest } from '../common/run.type.ts';
 
 export const runKeyOf = (root: string, taskId: string): RunKey => `${root}\0${taskId}`;
+
+/** One key per launch of a task: two runs of one task get two keys. */
+export const progressKeyOf = (owner: ProgressOwner): string => `${runKeyOf(owner.root, owner.taskId)}\0${owner.launchedAt}`;
 
 /** The process a run starts: its package manager for a script, `turbo` for a turbo task or no run at all. */
 export const processNameOf = (entry: RunEntry | null | undefined): string => entry?.packageManager?.name ?? 'turbo';
