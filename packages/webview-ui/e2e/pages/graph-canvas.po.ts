@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
@@ -14,7 +14,7 @@ import { insideFlagsOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { emptySpotOn } from '../test/utils/graph-lines.spec.util.ts';
 import { lastPositionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 import { dragBy, dragPerFrame } from '../test/utils/graph-scripted-pan.spec.util.ts';
-import { cpuStepsOf, recordPanCpu } from '../test/utils/graph-thread-time.spec.util.ts';
+import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
 import { wheelUntil } from '../test/utils/graph-wheel-until.spec.util.ts';
 
 const WHEEL_NOTCH = 100;
@@ -126,16 +126,6 @@ export class GraphCanvas {
     return pan;
   }
 
-  /** The last scripted pan used a measured, non-zero total under `totalMs` of main-thread CPU with no step over `stepMs`; both are recorded as annotations and printed before the asserts, so a failing run logs them too. */
-  public expectPanCpuUnder(totalMs: number, stepMs: number): void {
-    const pan = this.measuredPanCpu();
-
-    recordPanCpu(test.info(), pan, totalMs, stepMs);
-    expect(pan.totalMs).toBeGreaterThan(0);
-    expect(pan.totalMs).toBeLessThan(totalMs);
-    expect(pan.maxStepMs).toBeLessThan(stepMs);
-  }
-
   public async expectAllNodesInView(): Promise<void> {
     await expect.poll(async (): Promise<number> => this.outsideCount()).toBe(0);
   }
@@ -161,6 +151,15 @@ export class GraphCanvas {
     expect(names).toEqual(ids);
   }
 
+  /** A point of the flat graph where a press grabs the canvas, not a node. */
+  public async emptySpot(): Promise<ViewportPoint> {
+    const container = await this.container.evaluate(readRect);
+    const zoom = await this.probe.zoom();
+    const nodes = await this.drawn();
+
+    return emptySpotOn(this.page, container, nodes, zoom);
+  }
+
   private async isDragPosted(drag: DragRecord): Promise<boolean> {
     const positions = await this.lastPosted();
     const error = dragError(positions[drag.id], drag);
@@ -182,14 +181,6 @@ export class GraphCanvas {
     const outside = flags.filter((isNodeInside): boolean => !isNodeInside);
 
     return outside.length;
-  }
-
-  private async emptySpot(): Promise<ViewportPoint> {
-    const container = await this.container.evaluate(readRect);
-    const zoom = await this.probe.zoom();
-    const nodes = await this.drawn();
-
-    return emptySpotOn(this.page, container, nodes, zoom);
   }
 
   private async centre(): Promise<ViewportPoint> {

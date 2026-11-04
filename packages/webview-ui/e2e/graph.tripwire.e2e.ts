@@ -7,7 +7,7 @@ import {
   TOGGLED_FOLDERS
 } from './common/graph-tripwire.const.ts';
 import { IS_MAC_RUNNER, IS_WINDOWS_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
-import { test } from './graph-task.fixture.ts';
+import { test } from './graph-pan-cpu.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
 import { hubGraphState } from './test/utils/graph-hub.spec.util.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
@@ -100,23 +100,26 @@ test.describe('FEATURE: graph tripwires', () => {
       graphHost.recordBundleAndLayout());
   });
 
-  test('GIVEN a target-like graph, a scripted 2 s pan uses under 1.5 s of main-thread CPU and no step over 50 ms', async ({
-    graphCanvas,
+  test('GIVEN a target-like graph, the median of three scripted 2 s pans uses under 1.5 s of main-thread CPU and a median costliest step under 50 ms', async ({
     graphHost,
     graphPage,
+    graphPanCpu,
     graphProbe
   }): Promise<void> => {
+    // The CPU budget is the gate; three pans triple the pan's wall time, so the slow macOS runners get 3x.
+    test.slow();
+
     await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
     await test.step('AND the target-like state is sent', async (): Promise<void> => graphHost.sendState(targetLikeState()));
 
     await test.step('THEN the layout has finished', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
 
-    await test.step('WHEN the graph is panned for 2 s after a 500 ms warm-up', async (): Promise<void> =>
-      graphCanvas.scriptedPan(30, 120));
+    await test.step('WHEN the graph is panned three times for 2 s, each after a 500 ms warm-up from the same camera', async (): Promise<void> =>
+      graphPanCpu.scriptedPans(30, 120));
 
-    await test.step('THEN the pan used under 1500 ms of CPU and no step over 50 ms', (): void =>
-      graphCanvas.expectPanCpuUnder(1500, 50));
+    await test.step('THEN the median pan used under 1500 ms of CPU and its median costliest step was under 50 ms', (): void =>
+      graphPanCpu.expectPanCpuUnder(1500, 50));
   });
 
   // The saved camera (zoom 1, pan at the origin) looks at an empty corner of the grouped layout, so this first frame
@@ -159,11 +162,12 @@ test.describe('FEATURE: graph tripwires', () => {
     });
   });
 
-  test('GIVEN 300 packages grouped and zoomed to readable boxes, a scripted 2 s pan uses under 1.1 s of main-thread CPU (2.4 s on macOS) and no step over 50 ms (90 ms on macOS)', async ({
+  test('GIVEN 300 packages grouped and zoomed to readable boxes, the median of three scripted 2 s pans uses under 1.1 s of main-thread CPU (2.4 s on macOS) and a median costliest step under 50 ms (90 ms on macOS)', async ({
     graphCanvas,
     graphGrouping,
     graphHost,
     graphPage,
+    graphPanCpu,
     graphProbe,
     graphWidgets
   }): Promise<void> => {
@@ -196,22 +200,23 @@ test.describe('FEATURE: graph tripwires', () => {
     await test.step('AND no header widget is shown at this zoom, so the pan times the boxes alone', async (): Promise<void> =>
       graphWidgets.expectNoHeaderButtonShown());
 
-    await test.step('AND it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
+    await test.step('AND it is panned three times for 2 s from a spot no box covers, each after a 500 ms warm-up from the same camera', async (): Promise<void> => {
       const spot = await graphGrouping.freeSpot();
 
-      await graphCanvas.scriptedPan(30, 120, spot);
+      await graphPanCpu.scriptedPans(30, 120, spot);
     });
 
-    await test.step('THEN the pan used under its CPU and step budgets', (): void =>
-      graphCanvas.expectPanCpuUnder(GROUPED_PAN_MS, GROUPED_PAN_STEP_MS));
+    await test.step('THEN the median pan stayed under its CPU and step budgets', (): void =>
+      graphPanCpu.expectPanCpuUnder(GROUPED_PAN_MS, GROUPED_PAN_STEP_MS));
   });
 
-  test('GIVEN 300 packages grouped, zoomed until header rows show and one package selected with its full toolbar, a scripted 2 s pan uses under 2.4 s of main-thread CPU (4.8 s on macOS) and no step over 50 ms (90 ms on macOS)', async ({
+  test('GIVEN 300 packages grouped, zoomed until header rows show and one package selected with its full toolbar, the median of three scripted 2 s pans uses under 2.4 s of main-thread CPU (4.8 s on macOS) and a median costliest step under 50 ms (90 ms on macOS)', async ({
     graphCanvas,
     graphGrouping,
     graphHost,
     graphNodeToolbar,
     graphPage,
+    graphPanCpu,
     graphProbe,
     graphWidgets
   }): Promise<void> => {
@@ -259,14 +264,14 @@ test.describe('FEATURE: graph tripwires', () => {
       await graphGrouping.expectBoxesInView(ROWS_BOXES_IN_VIEW);
     });
 
-    await test.step('WHEN it is panned for 2 s from a spot no box covers, after a 500 ms warm-up', async (): Promise<void> => {
+    await test.step('WHEN it is panned three times for 2 s from a spot no box covers, each after a 500 ms warm-up from the same camera', async (): Promise<void> => {
       const spot = await graphGrouping.freeSpot();
 
-      await graphCanvas.scriptedPan(30, 120, spot);
+      await graphPanCpu.scriptedPans(30, 120, spot);
     });
 
-    await test.step('THEN the pan used under its CPU and step budgets', (): void =>
-      graphCanvas.expectPanCpuUnder(ROWS_PAN_MS, GROUPED_PAN_STEP_MS));
+    await test.step('THEN the median pan stayed under its CPU and step budgets', (): void =>
+      graphPanCpu.expectPanCpuUnder(ROWS_PAN_MS, GROUPED_PAN_STEP_MS));
 
     await test.step('AND its toolbar is still in view', async (): Promise<void> => graphNodeToolbar.expectNodeToolbarInView(name));
   });

@@ -1,5 +1,6 @@
 import type { CDPSession, Page, TestInfo } from '@playwright/test';
 
+import { medianCpuOf } from './graph-pan-cpu.spec.util.ts';
 import { MS_PER_SECOND, THREAD_TIME_METRIC } from '../../common/graph.const.ts';
 import type { CpuSteps } from '../../common/graph.type.ts';
 
@@ -48,14 +49,22 @@ export const cpuStepsOf = async (page: Page, work: (endStep: () => Promise<void>
   }
 };
 
-/** Annotates the pan CPU readings and prints them as one `pan-cpu-ms` stdout line, so the CI log carries them even when a budget fails. */
-export const recordPanCpu = (info: TestInfo, pan: CpuSteps, totalMs: number, stepMs: number): void => {
+const runOf = (reading: CpuSteps): string => `${Math.round(reading.totalMs)}/${Math.round(reading.maxStepMs)}`;
+
+/**
+ * Annotates the median pan CPU of `readings` and every run's total/maxStep, and prints them as one `pan-cpu-ms` stdout
+ * line, so the CI log carries them even when a budget fails.
+ */
+export const recordPanCpu = (info: TestInfo, readings: CpuSteps[], totalMs: number, stepMs: number): void => {
+  const pan = medianCpuOf(readings);
   const total = Math.round(pan.totalMs);
   const maxStep = Math.round(pan.maxStepMs);
+  const runs = readings.map(runOf).join(',');
 
   info.annotations.push({ type: 'pan-cpu-ms', description: String(total) });
   info.annotations.push({ type: 'pan-max-step-cpu-ms', description: String(maxStep) });
+  info.annotations.push({ type: 'pan-cpu-runs-ms', description: runs });
   process.stdout.write(
-    `pan-cpu-ms total=${total} maxStep=${maxStep} budget=${totalMs} stepBudget=${stepMs} host=${process.platform}-${process.arch} ${info.title}\n`
+    `pan-cpu-ms total=${total} maxStep=${maxStep} runs=${runs} budget=${totalMs} stepBudget=${stepMs} host=${process.platform}-${process.arch} ${info.title}\n`
   );
 };

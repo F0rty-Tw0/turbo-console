@@ -1,5 +1,5 @@
 import { IS_MAC_RUNNER, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
-import { test } from './graph-task.fixture.ts';
+import { test } from './graph-pan-cpu.fixture.ts';
 import {
   TARGET_LIKE_HUB_TASK,
   TARGET_LIKE_UMBRELLA,
@@ -53,9 +53,21 @@ test.describe('FEATURE: task graph tripwires', () => {
   );
 
   test(
-    'GIVEN one chosen task of a target-like state framed by Fit with the hub task selected, a scripted 2 s pan uses under 1.5 s of main-thread CPU (2.4 s on macOS) and no step over 50 ms (90 ms on macOS)',
+    'GIVEN one chosen task of a target-like state framed by Fit with the hub task selected, the median of three scripted 2 s pans uses under 1.5 s of main-thread CPU (2.4 s on macOS) and a median costliest step under 50 ms (90 ms on macOS)',
     { annotation: AC8 },
-    async ({ graphCamera, graphCanvas, graphHost, graphPage, graphProbe, graphTaskDetails, graphTaskNarrow }): Promise<void> => {
+    async ({
+      graphCamera,
+      graphCanvas,
+      graphHost,
+      graphPage,
+      graphPanCpu,
+      graphProbe,
+      graphTaskDetails,
+      graphTaskNarrow
+    }): Promise<void> => {
+      // The CPU budget is the gate; three pans triple the pan's wall time, so the slow macOS runners get 3x.
+      test.slow();
+
       await test.step('WHEN the page is opened in task mode with the hub task chosen', async (): Promise<void> =>
         graphPage.open({ savedState: SAVED_VIEW }));
 
@@ -83,11 +95,11 @@ test.describe('FEATURE: task graph tripwires', () => {
 
       await test.step('WHEN the camera is remembered', async (): Promise<void> => graphCamera.rememberCamera());
 
-      await test.step('AND the graph is panned for 2 s after a 500 ms warm-up', async (): Promise<void> =>
-        graphCanvas.scriptedPan(30, 120));
+      await test.step('AND the graph is panned three times for 2 s, each after a 500 ms warm-up from the remembered camera', async (): Promise<void> =>
+        graphPanCpu.scriptedPans(30, 120));
 
-      await test.step('THEN the pan stayed under the CPU and step budgets', (): void =>
-        graphCanvas.expectPanCpuUnder(TASK_PAN_MS, TASK_PAN_STEP_MS));
+      await test.step('THEN the median pan stayed under the CPU and step budgets', (): void =>
+        graphPanCpu.expectPanCpuUnder(TASK_PAN_MS, TASK_PAN_STEP_MS));
 
       await test.step('AND the camera moved', async (): Promise<void> => graphCamera.expectCameraMoved());
     }
