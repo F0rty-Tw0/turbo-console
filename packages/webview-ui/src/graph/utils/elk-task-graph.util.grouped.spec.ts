@@ -19,18 +19,13 @@ import {
   wrapperIdOf,
   wrapperMemberIdsOf
 } from '../test/utils/elk-pack.spec.util.ts';
+import { childrenOf, idsOf } from '../test/utils/folder-boards.spec.util.ts';
 import { packedEdgeIds, packedTaskGraphOf } from '../test/utils/packed-routes.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const NO_SIZES = new Map<string, NodeSize>();
 
 const NO_TITLES = new Map<string, number>();
-
-const childIdsOf = (node: ElkNode): string[] => {
-  const children = node.children ?? [];
-
-  return children.map((child) => child.id);
-};
 
 const compoundOf = (graph: ElkNode, id: string): ElkNode | undefined => graph.children?.find((child) => child.id === id);
 
@@ -78,21 +73,21 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
       it('THEN the root children are the folder compounds by code unit', () => {
         const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
 
-        expect(childIdsOf(graph)).toStrictEqual([folderIdOf('apps'), folderIdOf('packages')]);
+        expect(idsOf(childrenOf(graph))).toStrictEqual([folderIdOf('apps'), folderIdOf('packages')]);
       });
 
       it('THEN the packages folder holds pkg:core and pkg:ui', () => {
         const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
         const packages = compoundAt(graph, [folderIdOf('packages')]);
 
-        expect(childIdsOf(packages)).toStrictEqual(['pkg:core', 'pkg:ui']);
+        expect(idsOf(childrenOf(packages))).toStrictEqual(['pkg:core', 'pkg:ui']);
       });
 
       it('THEN the apps folder holds pkg:web, which holds web#build', () => {
         const graph = graphOf(PACKAGE_TASKS_SHOWN, NAMING_GROUPED);
         const web = compoundAt(graph, [folderIdOf('apps'), 'pkg:web']);
 
-        expect(childIdsOf(web)).toStrictEqual(['web#build']);
+        expect(idsOf(childrenOf(web))).toStrictEqual(['web#build']);
       });
 
       it('THEN the edges stay at the root', () => {
@@ -114,11 +109,11 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
   describe('GIVEN grouped and the root //#gen shown beside web#build, unlinked', () => {
     it('WHEN built THEN the root folder comes first (in the first wrapper) and holds pkg://', () => {
       const graph = graphOf(new Set(['web#build', '//#gen']), NAMING_GROUPED);
-      const folders = childIdsOf(graph).flatMap((id) => childIdsOf(compoundAt(graph, [id])));
+      const folders = wrapperMemberIdsOf(graph).flat();
       const root = compoundAt(graph, [wrapperIdOf(0), folderIdOf('')]);
 
       expect(folders).toStrictEqual([folderIdOf(''), folderIdOf('apps')]);
-      expect(childIdsOf(root)).toStrictEqual(['pkg://']);
+      expect(idsOf(childrenOf(root))).toStrictEqual(['pkg://']);
     });
   });
 
@@ -130,7 +125,7 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
       const linkIds = wrapperEdgesOf(graph).map(edgeIdsOfWrapper);
       const [webLinkId = '', cliLinkId = ''] = packedEdgeIds();
 
-      expect(childIdsOf(graph)).toStrictEqual([wrapperIdOf(0), wrapperIdOf(1)]);
+      expect(idsOf(childrenOf(graph))).toStrictEqual([wrapperIdOf(0), wrapperIdOf(1)]);
       expect(wrapperMemberIdsOf(graph)).toStrictEqual([[folderIdOf('apps'), folderIdOf('packages')], [folderIdOf('tools')]]);
       expect(linkIds).toStrictEqual([[webLinkId], [cliLinkId]]);
     });
