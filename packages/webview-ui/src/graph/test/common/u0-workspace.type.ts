@@ -1,4 +1,6 @@
 import type { GraphEdge } from '../../../bridge/common/graph-state.type.ts';
+import type { TaskLayoutRequest } from '../../common/graph-task.type.ts';
+import type { TaskDrawing } from '../../common/task-canvas.type.ts';
 
 /** A U0 package as captured: its workspace path and its measured node size. */
 export type U0PackageRecord = {
@@ -9,7 +11,7 @@ export type U0PackageRecord = {
 };
 
 /** A U0 task as captured: the fields the task builder reads, plus its measured node size. */
-type U0TaskRecord = {
+export type U0TaskRecord = {
   readonly id: string;
   readonly packageName: string;
   readonly name: string;
@@ -26,10 +28,10 @@ export type U0Canvas = {
 };
 
 /** The three captured task views. */
-type U0TaskView = 'allTasks' | 'formatOnly' | 'lintTypecheckUnit';
+export type U0TaskView = 'allTasks' | 'formatOnly' | 'lintTypecheckUnit';
 
 /** The eight captured views: the package graph and each task view, flat and grouped by folder. */
-type U0View =
+export type U0View =
   | 'pkgFlat'
   | 'pkgGrouped'
   | 'allTasksFlat'
@@ -52,3 +54,6 @@ export type U0Workspace = {
   readonly capturedEdgeIds: Readonly<Record<U0View, string[]>>;
   readonly canvas: U0Canvas;
 };
+
+/** What the task builder takes. */
+export type U0TaskInput = Pick<TaskLayoutRequest, 'tasks' | 'shown' | 'sizes' | 'naming'> & Pick<TaskDrawing, 'titleWidths'>;
