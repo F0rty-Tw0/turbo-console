@@ -8,8 +8,12 @@ const OVERLAP_TOLERANCE_PX = 0.5;
 /** The most a box's frame may reach past the canvas, in CSS pixels, before it counts as cut. */
 const CLIP_TOLERANCE_PX = 0.5;
 
+/** The folder's box, or undefined while it is not drawn: for readers polled by `expect.poll`, which stops at the first throw. */
+export const findFolder = (folders: ProbeFolder[], key: string): ProbeFolder | undefined =>
+  folders.find((candidate): boolean => candidate.folder === key);
+
 export const folderKeyed = (folders: ProbeFolder[], key: string): ProbeFolder => {
-  const folder = folders.find((candidate): boolean => candidate.folder === key);
+  const folder = findFolder(folders, key);
 
   if (folder === undefined) throw new Error(`graph e2e: no box for folder '${key}' is drawn`);
 
@@ -120,4 +124,15 @@ export const inViewCountOf = (canvas: ElementRect, folders: ProbeFolder[]): numb
   const isInView = (folder: ProbeFolder): boolean => isFolderInView(canvas, folder);
 
   return folders.filter(isInView).length;
+};
+
+/** The keys whose folder is off the canvas or not drawn yet, so a poll on them retries until every box is drawn and in view. */
+export const outOfViewOf = (canvas: ElementRect, folders: ProbeFolder[], keys: string[]): string[] => {
+  const isOut = (key: string): boolean => {
+    const found = findFolder(folders, key);
+
+    return found === undefined || !isFolderInView(canvas, found);
+  };
+
+  return keys.filter(isOut);
 };
