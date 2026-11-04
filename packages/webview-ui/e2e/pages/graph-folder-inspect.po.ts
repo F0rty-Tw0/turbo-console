@@ -14,7 +14,7 @@ import type { GraphOptions } from '../common/graph.type.ts';
 import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { folderPadTapOf } from '../test/utils/graph-folder-points.spec.util.ts';
-import { boxRectOf, folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
+import { boxRectOf, findFolder, folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
 import { isClearOf } from '../test/utils/graph-narrow.spec.util.ts';
 
 const ariaLabelsOf = (buttons: Element[]): (string | null)[] =>
@@ -151,12 +151,17 @@ export class GraphFolderInspect {
 
   /** The folder's frame ends left of the details overlay with the keep-clear margin to spare. */
   public async expectFolderClear(folder: string): Promise<void> {
-    await expect.poll(async (): Promise<boolean> => this.isClearOfOverlay(folder)).toBe(true);
+    await expect.poll(async (): Promise<boolean | undefined> => this.isClearOfOverlay(folder)).toBe(true);
   }
 
-  private async isClearOfOverlay(folder: string): Promise<boolean> {
+  /** Undefined while the box is not drawn, so the poll retries instead of stopping at a throw. */
+  private async isClearOfOverlay(folder: string): Promise<boolean | undefined> {
     const folders = await this.folders();
-    const rect = boxRectOf(folderKeyed(folders, folder));
+    const found = findFolder(folders, folder);
+
+    if (found === undefined) return undefined;
+
+    const rect = boxRectOf(found);
     const overlay = await this.panel.evaluate(readRect);
     const box: AnchorBox = { x1: rect.left, x2: rect.left + rect.width };
 
