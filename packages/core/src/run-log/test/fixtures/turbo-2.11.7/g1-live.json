@@ -1,0 +1,33 @@
+[
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":""}
+,
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":"   • turbo 2.11.7"},
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":"   • Packages in scope: @acme/app"},
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":"   • Running build in 1 package"}
+,
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":"   • Remote caching disabled (TURBO_TOKEN set without TURBO_TEAM)"}
+,
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":""}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796854285,"text":"cache bypass, force executing 1115377ac53df17d"}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796854336,"text":"$ node -e \"console.log('lib'+'-ready');const f=require('fs'),t=Date.now();const i=setInterval(()=>{if(f.existsSync('../../go')){clearInterval(i)}else if(Date.now()-t>60000){process.exit(2)}},50)\""}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796854353,"text":"lib-ready"}
+,
+{"source":"@acme/app#build","level":"stdout","timestamp":1793796854913,"text":"cache bypass, force executing 749e101b26945481"}
+,
+{"source":"@acme/app#build","level":"stdout","timestamp":1793796854968,"text":"$ node -e \"console.log('app'+'-build')\""}
+,
+{"source":"@acme/app#build","level":"stdout","timestamp":1793796854985,"text":"app-build"}
+,
+{"source":"turbo","level":"info","timestamp":1793796854992,"text":""}
+,
+{"source":"turbo","level":"info","timestamp":1793796854992,"text":"  Tasks:    2 successful, 2 total"},
+{"source":"turbo","level":"info","timestamp":1793796854992,"text":" Cached:    0 cached, 2 total"}
+,
+{"source":"turbo","level":"info","timestamp":1793796854992,"text":"   Time:    712ms "},
+{"source":"turbo","level":"info","timestamp":1793796854992,"text":"Summary:    /tmp/u7a-probe-p3um4N/.turbo/runs/3LdveYsJPHP01ot5MUPvRcG3JH9.json"}
+,
+{"source":"turbo","level":"info","timestamp":1793796854992,"text":""}
+]

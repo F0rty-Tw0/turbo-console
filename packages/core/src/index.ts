@@ -18,6 +18,12 @@ export type { DryRunRequest, DryRunState, TaskDefinition } from './dry-run/commo
 
 export { readDryRun } from './dry-run/domain-logic/read-dry-run.ts';
 
+export { RUN_LOG_OBJECT_MAX, RUN_LOG_PROBE } from './run-log/common/run-log.const.ts';
+
+export type { RunLogEntry, RunLogScan } from './run-log/common/run-log.type.ts';
+
+export { isUnknownRunLog, scanRunLog } from './run-log/utils/run-log-scan.util.ts';
+
 export type { AtomResult } from './run-summary/common/atom-result.type.ts';
 
 export type { RunMatch, RunToMatch } from './run-summary/common/run-match.type.ts';
