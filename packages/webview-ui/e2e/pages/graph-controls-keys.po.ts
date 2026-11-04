@@ -88,7 +88,10 @@ export class GraphControlsKeys {
     await expect.poll(async (): Promise<boolean> => this.isInPanel(row)).toBe(true);
   }
 
+  /** Waits for the controls panel or a grid first: keys sent before the posted state is handled land on the loading placeholder. */
   private async pressUntil(key: string, name: string): Promise<void> {
+    await expect(this.panel.or(this.grid).first()).toBeVisible();
+
     for (let presses = 0; presses < MAX_TABS; presses += 1) {
       await this.page.keyboard.press(key);
 

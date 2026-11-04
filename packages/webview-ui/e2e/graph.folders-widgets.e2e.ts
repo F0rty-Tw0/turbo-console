@@ -41,7 +41,10 @@ test.describe('FEATURE: folder widget placement', () => {
     'GIVEN the boards grouped, every header follows its box through a pan and a zoom in and out',
     { annotation: C9 },
     async ({ graphCanvas, graphFolderInspect, graphWidgets }): Promise<void> => {
-      await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => graphFolderInspect.open(grouped(), BOARDS));
+      await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphWidgets.expectEllipsisShown('apps');
+      });
 
       await test.step('AND the canvas is panned 40 px down', async (): Promise<void> => graphCanvas.panBy(0, 40));
 
@@ -64,7 +67,10 @@ test.describe('FEATURE: folder widget placement', () => {
     'GIVEN a box under 120 px wide, its header buttons hide, the list still collapses it, and they return when it widens',
     { annotation: C9 },
     async ({ graphFolderInspect, graphFolders, graphGrouping, graphWidgets }): Promise<void> => {
-      await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => graphFolderInspect.open(grouped(), BOARDS));
+      await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => {
+        await graphFolderInspect.open(grouped(), BOARDS);
+        await graphWidgets.expectEllipsisShown('apps');
+      });
 
       await test.step('AND the canvas is zoomed out until apps is under 120 px wide', async (): Promise<void> =>
         graphWidgets.zoomBoxUnder('apps', WIDGET_MIN_BOX_PX));
@@ -171,6 +177,7 @@ test.describe('FEATURE: folder widget placement', () => {
     async ({ graphFolderInspect, graphList, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened and the apps width is read', async (): Promise<void> => {
         await graphFolderInspect.open(grouped(), BOARDS);
+        await graphWidgets.expectEllipsisShown('apps');
         await graphWidgets.rememberBoxWidth('apps');
       });
 
@@ -204,6 +211,7 @@ test.describe('FEATURE: folder widget placement', () => {
       await test.step('WHEN the editor is narrowed to 959 px and the boards open with the controls and details closed', async (): Promise<void> => {
         await graphNarrow.setWidth(OVERLAY_WIDTH_PX);
         await graphFolderInspect.open(grouped({ controlsOpen: false, detailsOpen: false }), BOARDS);
+        await graphWidgets.expectEllipsisShown('packages');
       });
 
       await test.step('AND the canvas is panned right so the packages "…" lies where the overlay will be', async (): Promise<void> =>
@@ -224,6 +232,7 @@ test.describe('FEATURE: folder widget placement', () => {
     async ({ graphFolderInspect, graphGrouping, graphMenus, graphWidgetInput, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened and the graph container has focus', async (): Promise<void> => {
         await graphFolderInspect.open(grouped(), BOARDS);
+        await graphWidgets.expectEllipsisShown('apps');
         await graphWidgets.focusContainer();
       });
 
