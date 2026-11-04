@@ -90,6 +90,8 @@ export type FoldersView = {
   readonly paint: (paint: Paint) => void;
   /** Moves each collapsed node to the centre of all its packages, hidden ones included. */
   readonly recentre: () => void;
+  /** Keeps the routes the folder links follow and re-draws them: `GraphView.setRoutes` calls it after it straightens every edge. */
+  readonly setRoutes: (routes: Routes) => void;
 };
 
 /** The Cytoscape canvas view of one page. */

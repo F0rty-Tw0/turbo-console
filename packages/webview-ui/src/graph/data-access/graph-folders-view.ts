@@ -3,6 +3,8 @@ import type { Core, EdgeSingular, NodeSingular, SingularElementArgument } from '
 import { packageEdges } from './graph-boxes.ts';
 import { setClassesAmong } from './graph-classes.ts';
 import { centreOf, syncCollapsedNodes, syncFolderLinks } from './graph-folder-elements.ts';
+import { labelFolderLinks, routeFolderLinks } from './graph-folder-routes.ts';
+import type { Routes } from '../../bridge/common/graph-state.type.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 import type { FoldersView } from '../common/graph-page.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
@@ -115,12 +117,14 @@ const paintFolders = (cy: Core, links: ReadonlyMap<string, FolderLink>, paint: P
 export const createFoldersView = (cy: Core): FoldersView => {
   const links = new Map<string, FolderLink>();
   let members: ReadonlyMap<string, string[]> = new Map();
+  let routes: Routes = {};
   let lastPaint: Paint | null = null;
 
   const paint = (next: Paint): void => {
     lastPaint = next;
     paintFolders(cy, links, next);
   };
+  const routeLinks = (): void => routeFolderLinks(cy, links, members, routes);
   const show = (scene: FolderScene | null, labelOf: LabelOf): void => {
     cy.batch((): void => {
       const wanted = passClassesOf(cy, scene);
@@ -129,9 +133,12 @@ export const createFoldersView = (cy: Core): FoldersView => {
       syncCollapsedNodes(cy, scene, labelOf);
       syncFolderLinks(cy, scene, links);
       members = scene?.members ?? new Map();
+      routeLinks();
     });
 
     if (lastPaint !== null) paint(lastPaint);
+
+    labelFolderLinks(cy);
   };
   const recentreNode = (node: NodeSingular): void => {
     const folder = node.id().slice(COLLAPSED_ID_PREFIX.length);
@@ -140,9 +147,18 @@ export const createFoldersView = (cy: Core): FoldersView => {
     node.position(centreOf(cy, names));
   };
   const recentre = (): void => {
-    cy.batch((): void => void cy.nodes(`.${FOLDER_NODE_CLASS}`).forEach(recentreNode));
+    cy.batch((): void => {
+      cy.nodes(`.${FOLDER_NODE_CLASS}`).forEach(recentreNode);
+      routeLinks();
+    });
+    labelFolderLinks(cy);
   };
-  const view: FoldersView = { show, paint, recentre };
+  const setRoutes = (next: Routes): void => {
+    routes = next;
+    cy.batch(routeLinks);
+    labelFolderLinks(cy);
+  };
+  const view: FoldersView = { show, paint, recentre, setRoutes };
 
   return view;
 };

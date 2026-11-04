@@ -101,6 +101,12 @@ const placeOn = (cy: Core, folders: FoldersView, placed: Positions): void => {
   folders.recentre();
 };
 
+/** Draws the package links on their routes, then the folder links, which `applyRoutes` straightens with the rest. */
+const placeRoutes = (cy: Core, folders: FoldersView, routes: Routes): void => {
+  applyRoutes(cy, routes);
+  folders.setRoutes(routes);
+};
+
 /** Paints the packages and links, then the folder boxes and collapsed folders. */
 const paintOn = (cy: Core, folders: FoldersView, next: Paint): void => {
   applyPaint(cy, next);
@@ -141,7 +147,7 @@ export const createGraphView = (
     setViewport: camera.setViewport,
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
     setPositions: (placed: Positions): void => placeOn(cy, folders, placed),
-    setRoutes: (routes: Routes): void => applyRoutes(cy, routes),
+    setRoutes: (routes: Routes): void => placeRoutes(cy, folders, routes),
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily, glyphs)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),
