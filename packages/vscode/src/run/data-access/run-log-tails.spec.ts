@@ -70,13 +70,13 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       expect(h.fs.reads).toHaveLength(readsBefore);
     });
 
-    it('WHEN a /ws tail is closed and its file changes THEN its listener gets no event', async () => {
+    it('WHEN a /ws tail is closed and its file changes THEN its listener gets no event and only its file is removed', async () => {
       tail1.tail.close();
       h.fs.append(P1, ENTRY_A);
       h.fs.emit(DIR_WS, 'run-1.json');
       await flush();
 
-      expect(tail1.events).toStrictEqual([]);
+      expect([tail1.events, h.fs.removed]).toStrictEqual([[], [P1]]);
     });
 
     it('WHEN one /ws tail drains THEN the /ws watcher stays open', async () => {
