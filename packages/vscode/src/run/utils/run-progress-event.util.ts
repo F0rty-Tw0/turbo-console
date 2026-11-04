@@ -64,7 +64,7 @@ const changedRecordsOf = (
  * The run after one log line at wall-clock `at` (spec §5.1, D3): the line's own task moves by its event cell (never the
  * owner's own id, spec D8), and every running dependency of the line's task is inferred passed, owner lines included.
  * The §5.1 `failed(n)` row is void here, since `RunLogEvent` is `seen | cacheHit` and `failed` comes only from a
- * summary outcome at settle. Returns `run` itself, with no allocation, when no record changes.
+ * summary outcome at settle. Returns `run` itself, without copying, when no record changes.
  */
 export const eventRunOf = (run: ProgressRun, event: RunLogEvent, at: number): ProgressRun => {
   const lineRecord = lineRecordOf(run, event, at);

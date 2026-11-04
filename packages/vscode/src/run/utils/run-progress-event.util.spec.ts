@@ -79,6 +79,17 @@ describe('FEATURE: progress of one run, log events (spec §5.1)', () => {
       expect(next.records.get('tokens#build')).toStrictEqual(expected);
     });
 
+    it('WHEN ui#build prints its first line while tokens#build is running THEN ui#build is running stamped 2000', () => {
+      const tokens = recordOf('tokens#build', 'running', 1500);
+      const run = progressRunWith([tokens]);
+
+      const expected = recordOf('ui#build', 'running', 2000);
+
+      const next = eventRunOf(run, SEEN_UI, 2000);
+
+      expect(next.records.get('ui#build')).toStrictEqual(expected);
+    });
+
     it('WHEN ui#build prints while tokens#build has no record THEN tokens#build still has none', () => {
       const run = progressRunWith([]);
 
