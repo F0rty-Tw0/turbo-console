@@ -17,7 +17,7 @@ export type LinkAndLine = {
 };
 
 /** Where a link's line ends on a collapsed folder, and that folder's box. */
-export type CollapsedEnd = {
+export type LinkEndOnFolder = {
   readonly point: ViewportPoint;
   readonly box: ElementRect;
 };

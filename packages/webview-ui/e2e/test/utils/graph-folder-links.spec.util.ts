@@ -6,7 +6,7 @@ import { lineSegmentsOf } from './graph-geometry.spec.util.ts';
 import { crossesBox, shrunkBy, throughNodeCountOf } from './graph-lines.spec.util.ts';
 import type { ProbeEdgeLine, ProbeFolder, ProbeFolderLink } from '../../../src/graph/common/graph-probe.type.ts';
 import { edgeIdOf } from '../../../src/graph/utils/edge-id.util.ts';
-import type { CollapsedEnd, FolderLinkCounts, LinkAndLine, LinkRead, RoutedLink } from '../../common/graph-folder-links.type.ts';
+import type { FolderLinkCounts, LinkAndLine, LinkEndOnFolder, LinkRead, RoutedLink } from '../../common/graph-folder-links.type.ts';
 import type { LinkEnds } from '../../common/playwright.type.ts';
 
 /** How far inside a node's box a link must reach to count as passing through it, in page px. */
@@ -69,12 +69,12 @@ const isLabelOnLine = ({ link, line }: LinkAndLine): boolean => {
   return lineSegmentsOf(line).some(meetsLabel);
 };
 
-const collapsedEndsOf = ({ link, line }: LinkAndLine, folders: ProbeFolder[]): CollapsedEnd[] => {
+const collapsedEndsOf = ({ link, line }: LinkAndLine, folders: ProbeFolder[]): LinkEndOnFolder[] => {
   const first = line.points.at(0);
   const last = line.points.at(-1);
-  const endsOf = (folder: ProbeFolder): CollapsedEnd[] => {
+  const endsOf = (folder: ProbeFolder): LinkEndOnFolder[] => {
     const box = boxRectOf(folder);
-    const ends: CollapsedEnd[] = [];
+    const ends: LinkEndOnFolder[] = [];
 
     if (first !== undefined && link.source === folder.folder) ends.push({ point: first, box });
 
@@ -88,7 +88,7 @@ const collapsedEndsOf = ({ link, line }: LinkAndLine, folders: ProbeFolder[]): C
   return collapsed.flatMap(endsOf);
 };
 
-const isOffBorder = ({ point, box }: CollapsedEnd, zoom: number): boolean => {
+const isOffBorder = ({ point, box }: LinkEndOnFolder, zoom: number): boolean => {
   const inner = shrunkBy(box, BORDER_INSIDE_PX * zoom);
   const outer = shrunkBy(box, -BORDER_OUTSIDE_PX * zoom);
   const spot = pointBoxOf(point);
@@ -100,7 +100,7 @@ const isOffBorder = ({ point, box }: CollapsedEnd, zoom: number): boolean => {
 const offBorderCountOf = (read: LinkRead): number => {
   const faultsOf = (pair: LinkAndLine): number => {
     const ends = collapsedEndsOf(pair, read.folders);
-    const isOff = (end: CollapsedEnd): boolean => isOffBorder(end, read.zoom);
+    const isOff = (end: LinkEndOnFolder): boolean => isOffBorder(end, read.zoom);
     const offEnds = ends.filter(isOff);
     const faults = ends.length === 0 ? 1 : offEnds.length;
 
