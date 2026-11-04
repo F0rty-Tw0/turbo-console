@@ -50,25 +50,36 @@ export class GraphFoldersPage {
     return this.page.evaluate((): ProbeFolderLink[] => window.__tcGraphProbe?.folderLinks() ?? []);
   }
 
-  /** Taps the collapsed node's centre, or a box's top left corner. */
-  public async tapFolder(folder: string): Promise<void> {
+  /** Waits for the folder's box, then reads it: the probe holds no folders until the state posted after `open()` is handled and laid out. */
+  public async drawnFolder(folder: string): Promise<ProbeFolder> {
+    const message = `graph e2e: no box for folder '${folder}' is drawn`;
+
+    await expect.poll(async (): Promise<boolean> => this.isDrawn(folder), { message }).toBe(true);
     const folders = await this.folders();
-    const point = folderTapOf(folderKeyed(folders, folder));
+
+    return folderKeyed(folders, folder);
+  }
+
+  /** Taps the collapsed node's centre, or a box's top left corner, once it is drawn (`drawnFolder`). */
+  public async tapFolder(folder: string): Promise<void> {
+    const found = await this.drawnFolder(folder);
+    const point = folderTapOf(found);
 
     await this.page.mouse.click(point.x, point.y);
   }
 
+  /** Double taps the folder once it is drawn (`drawnFolder`): a tap right after `open()` comes before the layout has placed it. */
   public async doubleTapFolder(folder: string): Promise<void> {
-    const folders = await this.folders();
-    const point = folderTapOf(folderKeyed(folders, folder));
+    const found = await this.drawnFolder(folder);
+    const point = folderTapOf(found);
 
     await this.page.mouse.dblclick(point.x, point.y);
   }
 
-  /** Double taps the box's top left corner, inside its padding and clear of its packages. */
+  /** Double taps the box's top left corner, inside its padding and clear of its packages, once it is drawn (`drawnFolder`). */
   public async doubleTapBoxPadding(folder: string): Promise<void> {
-    const folders = await this.folders();
-    const point = boxCornerOf(folderKeyed(folders, folder));
+    const found = await this.drawnFolder(folder);
+    const point = boxCornerOf(found);
 
     await this.page.mouse.dblclick(point.x, point.y);
   }
@@ -153,6 +164,12 @@ export class GraphFoldersPage {
     const links = await this.folderLinks();
 
     return sortedLinks(links.map(linkFactsOf));
+  }
+
+  private async isDrawn(folder: string): Promise<boolean> {
+    const folders = await this.folders();
+
+    return folders.some((candidate): boolean => candidate.folder === folder);
   }
 
   private async isVisible(folder: string): Promise<boolean | undefined> {
