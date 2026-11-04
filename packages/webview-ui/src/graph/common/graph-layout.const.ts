@@ -25,8 +25,11 @@ export const ELK_OPTIONS: ElkOptions = {
   'elk.json.edgeCoords': 'ROOT'
 };
 
-/** The most leaves a graph may have and still be laid out at thoroughness 7; above it, 1 keeps the layout fast. */
-export const ELK_THOROUGH_MAX_LEAVES = 150;
+/**
+ * The most leaves a graph may have and still be laid out at thoroughness 7; above it, 1 keeps the layout fast. 150 missed the
+ * 2 s first-frame budget on the ubuntu runner (2269 ms, PR #227 run 41765288256), so the cap is 100.
+ */
+export const ELK_THOROUGH_MAX_LEAVES = 100;
 
 /** The layering of package views and flat task views. */
 export const LAYERING_DEFAULT: ElkLayering = 'NETWORK_SIMPLEX';

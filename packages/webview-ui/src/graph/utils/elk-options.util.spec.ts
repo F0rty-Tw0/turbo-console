@@ -9,8 +9,8 @@ const PADDING = '[top=32,left=32,bottom=32,right=32]';
 describe('FEATURE: thoroughnessOf', () => {
   it.each([
     [0, '7'],
-    [150, '7'],
-    [151, '1'],
+    [100, '7'],
+    [101, '1'],
     [5000, '1']
   ])('GIVEN %i leaves WHEN thoroughnessOf THEN %s', (leafCount, expected) => {
     const thoroughness = thoroughnessOf(leafCount);
@@ -50,8 +50,8 @@ describe('FEATURE: layeredOptionsOf', () => {
 });
 
 describe('FEATURE: paddedOptionsOf', () => {
-  it('GIVEN 151 leaves WHEN paddedOptionsOf THEN thoroughness 1 and the 32 px padding', () => {
-    const options = paddedOptionsOf(151, 'NETWORK_SIMPLEX');
+  it('GIVEN 101 leaves WHEN paddedOptionsOf THEN thoroughness 1 and the 32 px padding', () => {
+    const options = paddedOptionsOf(101, 'NETWORK_SIMPLEX');
 
     expect(options).toMatchObject({ 'elk.layered.thoroughness': '1', 'elk.padding': PADDING });
   });
@@ -64,8 +64,8 @@ describe('FEATURE: paddedOptionsOf', () => {
 });
 
 describe('FEATURE: groupedRootOptionsOf', () => {
-  it('GIVEN 150 leaves WHEN groupedRootOptionsOf THEN thoroughness 7 and INCLUDE_CHILDREN', () => {
-    const options = groupedRootOptionsOf(150, 'NETWORK_SIMPLEX');
+  it('GIVEN 100 leaves WHEN groupedRootOptionsOf THEN thoroughness 7 and INCLUDE_CHILDREN', () => {
+    const options = groupedRootOptionsOf(100, 'NETWORK_SIMPLEX');
 
     expect(options).toMatchObject({ 'elk.layered.thoroughness': '7', 'elk.hierarchyHandling': 'INCLUDE_CHILDREN' });
   });

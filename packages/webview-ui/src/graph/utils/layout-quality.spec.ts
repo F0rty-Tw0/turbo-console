@@ -52,9 +52,9 @@ const ALL_VIEWS: U0View[] = [
 /** pkgFlat has no box, so it has no title band to cross. */
 const C7_VIEWS: U0View[] = ALL_VIEWS.filter((view) => view !== 'pkgFlat');
 
-/** Task 3.1 thresholds: Flat rows 25% of the way from P1 toward master; Grouped rows no worse than master (F-U6-4). */
+/** Task 3.1 thresholds: Flat rows 25% of the way from P1 toward master (allTasksFlat is over the thorough cap, so its P1 is thoroughness 1: 420); Grouped rows no worse than master (F-U6-4). */
 const C2B_ROWS: [U0View, number][] = [
-  ['allTasksFlat', 407],
+  ['allTasksFlat', 476],
   ['allTasksGrouped', 399]
 ];
 

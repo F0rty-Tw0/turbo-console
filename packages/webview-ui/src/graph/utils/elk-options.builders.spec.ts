@@ -32,8 +32,8 @@ const ONE_SCRIPT_BOXES = 11;
 const WRAPPER_COUNT = 3;
 
 const THOROUGHNESS_ROWS: [number, string][] = [
-  [150, '7'],
-  [151, '1']
+  [100, '7'],
+  [101, '1']
 ];
 
 describe('FEATURE: the ELK options of every builder (c8)', () => {
@@ -86,18 +86,18 @@ describe('FEATURE: the ELK options of every builder (c8)', () => {
     );
   });
 
-  describe('GIVEN 147 ungrouped tasks with 3 scripts', () => {
+  describe('GIVEN 97 ungrouped tasks with 3 scripts', () => {
     it('WHEN built THEN root, package and Scripts boxes carry thoroughness 7 and NETWORK_SIMPLEX', () => {
-      const graph = taskGraphOf(147, 3, false);
+      const graph = taskGraphOf(97, 3, false);
 
       expect(optionValuesOf(graph, THOROUGHNESS)).toStrictEqual(repeatedOf(UNGROUPED_TASK_BOXES, '7'));
       expect(optionValuesOf(graph, LAYERING)).toStrictEqual(repeatedOf(UNGROUPED_TASK_BOXES, 'NETWORK_SIMPLEX'));
     });
   });
 
-  describe('GIVEN 150 grouped tasks with 1 script', () => {
+  describe('GIVEN 100 grouped tasks with 1 script', () => {
     it('WHEN built THEN every box carries thoroughness 1 (the count is the whole graph)', () => {
-      const graph = taskGraphOf(150, 1, true);
+      const graph = taskGraphOf(100, 1, true);
 
       expect(optionValuesOf(graph, THOROUGHNESS)).toStrictEqual(repeatedOf(ONE_SCRIPT_BOXES, '1'));
     });
