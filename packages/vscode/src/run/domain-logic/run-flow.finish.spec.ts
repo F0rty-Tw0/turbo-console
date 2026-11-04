@@ -1,5 +1,5 @@
 import { TurboException } from '@turbo-console/core';
-import type { RunMatch } from '@turbo-console/core';
+import type { RunMatch, RunTasksMatch } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { finishRun, runTask } from './run-flow.ts';
@@ -10,6 +10,7 @@ import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 const MATCH: RunMatch = { cache: 'MISS', durationMs: 2500, interrupted: false };
+const TASKS_MATCH: RunTasksMatch = { match: MATCH, outcomes: [] };
 
 const endedEntry = (store: RunStore, exitCode: number | undefined): RunEntry => {
   const ended = store.processEnded(RUN, exitCode, 4000);
@@ -47,7 +48,7 @@ describe('FEATURE: run flow, matching a run summary', () => {
       let slow: RunPorts;
 
       beforeEach(() => {
-        const lookup = Promise.withResolvers<RunMatch | null>();
+        const lookup = Promise.withResolvers<RunTasksMatch | null>();
         const match = vi.fn().mockReturnValue(lookup.promise);
 
         slow = fakeRunPorts(execution, { match });
@@ -76,7 +77,7 @@ describe('FEATURE: run flow, matching a run summary', () => {
     });
 
     it('WHEN its summary matches THEN the entry holds the match and matching ends', async () => {
-      const match = vi.fn().mockResolvedValue(MATCH);
+      const match = vi.fn().mockResolvedValue(TASKS_MATCH);
       const matched = fakeRunPorts(execution, { match });
 
       await finishRun(store, matched, entry);
@@ -107,7 +108,7 @@ describe('FEATURE: run flow, matching a run summary', () => {
 
   describe('GIVEN run 1 ended, then run 2 started and ended before run 1 match arrived', () => {
     it('WHEN run 1 match arrives THEN run 2 does not get it', async () => {
-      const match = vi.fn().mockResolvedValue(MATCH);
+      const match = vi.fn().mockResolvedValue(TASKS_MATCH);
       const later = fakeRunPorts(execution, { match, now: () => 5000 });
 
       await runTask(store, ports, RUN_REQUEST_STUB);

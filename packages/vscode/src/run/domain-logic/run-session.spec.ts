@@ -1,4 +1,4 @@
-import type { RunMatch } from '@turbo-console/core';
+import type { RunMatch, RunTasksMatch } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunSession } from './run-session.ts';
@@ -11,6 +11,8 @@ import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 
 const MATCH: RunMatch = { cache: 'MISS', durationMs: 2000, interrupted: false };
+
+const TASKS_MATCH: RunTasksMatch = { match: MATCH, outcomes: [] };
 
 const THIS_RUN: RunEvent = { definition: RUN, launchedAt: 1000 };
 
@@ -34,7 +36,7 @@ describe('FEATURE: run session, task events', () => {
   };
 
   beforeEach(async () => {
-    const match = vi.fn().mockResolvedValue(MATCH);
+    const match = vi.fn().mockResolvedValue(TASKS_MATCH);
 
     vi.useFakeTimers();
     clock = 1000;

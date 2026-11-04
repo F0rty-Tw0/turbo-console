@@ -1,4 +1,4 @@
-import type { PackageManager, RunMatch, RunToMatch, TaskNode } from '@turbo-console/core';
+import type { PackageManager, RunMatch, RunTasksMatch, RunToMatch, TaskNode } from '@turbo-console/core';
 
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 
@@ -69,7 +69,8 @@ export type RunRequest = {
  * VS Code already runs a task of `definition`, one the store may not know (Rerun Last Task, a reconnect); `execute`
  * runs turbo and `executeScript` the package manager's `run <script>`; `after` calls `action` once `delayMs` has
  * passed; `notifyFailedToStart` names the process that did not start; `log` takes a finished line (`logTextOf`); `now`
- * is wall-clock milliseconds, as the run summary files' times are.
+ * is wall-clock milliseconds, as the run summary files' times are. `match` reads the summary of exactly one run and the
+ * outcomes of every task it lists.
  */
 export type RunPorts = {
   readonly canExecute: (binaryPath: string) => Promise<boolean>;
@@ -77,7 +78,7 @@ export type RunPorts = {
   readonly execute: (request: RunRequest, args: string[], launchedAt: number) => Promise<Terminable>;
   readonly executeScript: (request: RunRequest, launchedAt: number) => Promise<Terminable>;
   readonly after: (delayMs: number, action: () => void) => void;
-  readonly match: (root: string, run: RunToMatch) => Promise<RunMatch | null>;
+  readonly match: (root: string, run: RunToMatch) => Promise<RunTasksMatch | null>;
   readonly notifyFailedToStart: (processName: string) => void;
   readonly info: (text: string) => void;
   readonly log: (line: string) => void;

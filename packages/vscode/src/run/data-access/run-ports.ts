@@ -1,4 +1,4 @@
-import { matchRunSummary } from '@turbo-console/core';
+import { matchRunTasks } from '@turbo-console/core';
 import * as vscode from 'vscode';
 
 import { canExecute } from './can-execute.ts';
@@ -30,7 +30,7 @@ export const editorRunPorts = (output: Output): RunPorts => {
     execute: executeTurboTask,
     executeScript: executeScriptTask,
     after,
-    match: matchRunSummary,
+    match: matchRunTasks,
     notifyFailedToStart,
     info: showInfo,
     log: output.error,

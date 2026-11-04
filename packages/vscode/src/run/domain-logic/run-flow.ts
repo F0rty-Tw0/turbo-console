@@ -1,5 +1,5 @@
 import { turboRunArgs } from '@turbo-console/core';
-import type { RunMatch } from '@turbo-console/core';
+import type { RunTasksMatch } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, TASK_ENDED_TEXT } from '../common/run.const.ts';
@@ -160,7 +160,7 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
   store.attach(definition, launchedAt, execution);
 };
 
-const matchOf = async (ports: RunPorts, entry: RunEntry): Promise<RunMatch | null> => {
+const matchOf = async (ports: RunPorts, entry: RunEntry): Promise<RunTasksMatch | null> => {
   const run = runToMatchOf(entry);
 
   if (run === null) return null;
@@ -182,7 +182,8 @@ export const finishRun = async (store: Runs, ports: RunPorts, entry: RunEntry): 
   if (!entry.matching) return;
 
   const definition: RunDefinition = { root: entry.root, id: entry.taskId };
-  const match = await matchOf(ports, entry);
+  const tasksMatch = await matchOf(ports, entry);
+  const match = tasksMatch?.match ?? null;
 
   store.setMatch(definition, entry.launchedAt, match);
 };
