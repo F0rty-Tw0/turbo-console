@@ -1,5 +1,5 @@
 import { runLogFixtureBytes } from './run-log-fixture.spec.util.ts';
-import type { RunLogEntry } from '../../common/run-log.type.ts';
+import type { RunLogEntry, RunLogEvent } from '../../common/run-log.type.ts';
 import { runLogEventOf } from '../../utils/run-log-event.util.ts';
 import { scanRunLog } from '../../utils/run-log-scan.util.ts';
 
@@ -20,14 +20,28 @@ export const fixtureEntryOf = async (name: string, index: number): Promise<RunLo
   return entry;
 };
 
-/** The sorted, distinct `<taskId> <kind>` pairs that classifying every entry of a fixture yields. */
-export const fixtureEventPairs = async (name: string): Promise<string[]> => {
-  const entries = await fixtureEntriesOf(name);
+/** The event of every entry that classifies to one, in log order. */
+export const eventsOf = (entries: RunLogEntry[]): RunLogEvent[] => {
   const events = entries.map(runLogEventOf);
   const present = events.filter((event) => event !== null);
+
+  return present;
+};
+
+/** The sorted, distinct `<taskId> <kind>` pairs that classifying every entry yields. */
+export const eventPairsOf = (entries: RunLogEntry[]): string[] => {
+  const present = eventsOf(entries);
   const pairs = present.map((event) => `${event.taskId} ${event.kind}`);
   const distinct = new Set(pairs);
   const sorted = Array.from(distinct).toSorted();
 
   return sorted;
+};
+
+/** The sorted, distinct `<taskId> <kind>` pairs that classifying every entry of a fixture yields. */
+export const fixtureEventPairs = async (name: string): Promise<string[]> => {
+  const entries = await fixtureEntriesOf(name);
+  const pairs = eventPairsOf(entries);
+
+  return pairs;
 };
