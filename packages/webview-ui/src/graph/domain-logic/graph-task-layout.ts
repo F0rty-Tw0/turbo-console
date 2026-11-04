@@ -1,4 +1,5 @@
 import { GraphAtomGroups } from './graph-atom-groups.ts';
+import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.type.ts';
@@ -7,6 +8,18 @@ import { withoutRoutes } from '../utils/elk-routes.util.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
 import { engineNoticeOf } from '../utils/layout-plan.util.ts';
 import { titleWidthsOf } from '../utils/task-title-width.util.ts';
+
+/**
+ * Whether a layout for `key` with no camera saved for it opens: not when the saved camera is a regroup's pending choice
+ * (no layout key yet, saved fitted), which keeps the true fit; a camera saved fitted for another key is not one for this key.
+ */
+const isOpenFor = (saved: TaskViewState | null, key: string): boolean => {
+  const isPendingFit = saved?.layoutKey === '' && saved.fitted;
+  const isOtherKey = saved?.layoutKey !== key;
+  const isOpen = isOtherKey && !isPendingFit;
+
+  return isOpen;
+};
 
 /**
  * The task graph's layout: the key asked for, the layout on screen, and the last `TASK_LAYOUT_MEMORY` layouts shown by
@@ -33,9 +46,13 @@ export class GraphTaskLayout {
     return this.wanted?.key ?? null;
   }
 
-  /** The key of the layout on screen. */
-  public placedKey(): string | null {
-    return this.placed?.hash ?? null;
+  /** The key of the layout on screen while it is the one asked for; none while a newer layout is in flight. */
+  public settledKey(): string | null {
+    const placedKey = this.placed?.hash ?? null;
+    const isInFlight = placedKey !== this.key();
+    const settledKey = isInFlight ? null : placedKey;
+
+    return settledKey;
   }
 
   public engine(): LayoutEngine | null {
@@ -136,13 +153,16 @@ export class GraphTaskLayout {
   }
 
   /**
-   * Stops the flow, draws the layout, restores the saved camera when its key is this one (else fits), arms the frame
-   * clock, then hands the drawn highlight back to the flow. `titleWidths` are the ones its layout was measured with.
+   * Stops the flow, draws the layout, restores the saved camera when its key is this one, else opens (a first placement
+   * with no camera saved for the key) or fits (Re-layout, a regroup's pending choice), arms the frame clock, then hands
+   * the drawn highlight back to the flow. `titleWidths` are the ones its layout was measured with.
    */
   private place(request: TaskLayoutRequest, result: LayoutResult, titleWidths: Map<string, number>, canRestore: boolean): void {
     const { view, screen, frames, sizeOf, flow } = this.deps;
     const saved = this.deps.saved();
     const isSavedCamera = canRestore && saved?.layoutKey === request.key && !saved.fitted;
+    const isOpenKey = isOpenFor(saved, request.key);
+    const isOpen = canRestore && isOpenKey;
 
     flow.stop();
     view.tasks.show({
@@ -161,6 +181,7 @@ export class GraphTaskLayout {
     screen.showNotice(engineNoticeOf(result.engine));
 
     if (isSavedCamera) view.setViewport(saved.zoom, saved.pan);
+    else if (isOpen) view.open();
     else view.fit();
 
     frames.arm();

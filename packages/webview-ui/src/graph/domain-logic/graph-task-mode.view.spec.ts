@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GraphTaskMode } from './graph-task-mode.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphReady, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphViewMode, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { TaskControlsActions, TaskViewChecks } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
@@ -53,10 +53,10 @@ describe('FEATURE: GraphTaskMode View checkboxes', () => {
     return actions;
   };
 
-  const build = (savedMode: GraphViewMode): void => {
+  const build = (savedMode: GraphViewMode, task: Partial<TaskViewState> = {}): void => {
     const saver: ViewStateSaver = { schedule: vi.fn(), flush: vi.fn() };
 
-    rig = taskModeRigOf(new ViewStateModes(saver, taskSavedOf({}, savedMode)));
+    rig = taskModeRigOf(new ViewStateModes(saver, taskSavedOf(task, savedMode)));
     mode = new GraphTaskMode(rig.deps);
   };
 
@@ -78,6 +78,35 @@ describe('FEATURE: GraphTaskMode View checkboxes', () => {
 
       it('THEN exactly one new layout runs', () => {
         expect(rig.runs.count()).toBe(2);
+      });
+
+      it('THEN the task view holds fitted true and no layout key until the new layout lands', () => {
+        expect(rig.modes.task()).toMatchObject({ fitted: true, layoutKey: '' });
+      });
+
+      it('WHEN its layout lands THEN the camera fits, never opens again', async () => {
+        await rig.runs.settle(1, resultOf(mode.layout.key() ?? '', POSITIONS));
+
+        expect(rig.view.fit).toHaveBeenCalledOnce();
+        expect(rig.view.open).toHaveBeenCalledOnce();
+      });
+    });
+
+    describe('WHEN Group by folder is unticked and the camera saves before its layout lands', () => {
+      beforeEach((): void => {
+        actionsOf().onGrouping(false);
+        mode.saveCamera();
+      });
+
+      it('THEN the task view still holds fitted true and no layout key', () => {
+        expect(rig.modes.task()).toMatchObject({ fitted: true, layoutKey: '' });
+      });
+
+      it('WHEN its layout lands THEN the camera fits, never opens again', async () => {
+        await rig.runs.settle(1, resultOf(mode.layout.key() ?? '', POSITIONS));
+
+        expect(rig.view.fit).toHaveBeenCalledOnce();
+        expect(rig.view.open).toHaveBeenCalledOnce();
       });
     });
 
@@ -122,6 +151,33 @@ describe('FEATURE: GraphTaskMode View checkboxes', () => {
       actionsOf().onViewToggle('scope', false);
 
       expect(rig.posts()).toStrictEqual([{ type: 'setViewToggle', toggle: 'scope', shown: false }]);
+    });
+  });
+
+  describe('GIVEN api#build alone is chosen, drawn and saved fitted', () => {
+    beforeEach(async (): Promise<void> => {
+      build('tasks', { chosen: ['api#build'] });
+      mode.received(TASK_STATE_STUB, 7);
+      await rig.runs.settle(0, resultOf(mode.layout.key() ?? '', POSITIONS));
+      rig.view.isFitted.mockReturnValue(true);
+      mode.saveCamera();
+    });
+
+    describe('WHEN the depth changes', () => {
+      beforeEach((): void => {
+        actionsOf().onDepth(0);
+      });
+
+      it('THEN the task view holds fitted false and no layout key', () => {
+        expect(rig.modes.task()).toMatchObject({ fitted: false, layoutKey: '' });
+      });
+
+      it('WHEN its layout lands THEN the camera opens', async () => {
+        await rig.runs.settle(1, resultOf(mode.layout.key() ?? '', POSITIONS));
+
+        expect(rig.view.open).toHaveBeenCalledTimes(2);
+        expect(rig.view.fit).not.toHaveBeenCalled();
+      });
     });
   });
 

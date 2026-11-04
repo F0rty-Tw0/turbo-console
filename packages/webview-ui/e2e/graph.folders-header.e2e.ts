@@ -3,6 +3,7 @@ import { test } from './graph.fixture.ts';
 import { bothCachedBoardsState } from './test/utils/graph-boards.spec.util.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
 import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
+import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const C4 = { description: 'M4-4 C4', type: 'requirement' };
 
@@ -194,6 +195,9 @@ test.describe('FEATURE: folder header toggle', () => {
 
         for (const folder of GROUP_FOLDERS) await graphGrouping.expectFolderCollapsed(folder, true);
       });
+
+      await test.step('AND Fit is pressed, since the open itself shows only part of a graph this big', async (): Promise<void> =>
+        graphPage.pressButton(FIT_LABEL));
 
       await test.step('AND the collapsed folders are in view', async (): Promise<void> =>
         graphGrouping.expectBoxesInView(GROUP_COUNT));

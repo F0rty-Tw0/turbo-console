@@ -1,13 +1,12 @@
 import type { Core } from 'cytoscape';
 
 import { panBy, viewportOf } from './graph-camera.ts';
-import { centreOnNode, fitVisible } from './graph-visibility.ts';
+import { centreOnNode, fitVisible, openViewportOf } from './graph-visibility.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { FittedCamera } from '../common/fitted-camera.type.ts';
-import type { GraphViewHandlers } from '../common/graph-page.type.ts';
+import { FIT_PADDING_PX } from '../common/graph-layout.const.ts';
+import type { GraphViewHandlers, Viewport } from '../common/graph-page.type.ts';
 import { isSameViewport } from '../utils/viewport.util.ts';
-
-const FIT_PADDING_PX = 24;
 
 /**
  * Cytoscape emits these after a user gesture, and after the `viewport` event that saves it; it emits them also when the
@@ -45,6 +44,8 @@ const holdWhileGrabbed = (cy: Core, refit: () => void): (() => void) => {
 
 /**
  * The camera over `cy`: `fit` marks it fitted before the `viewport` event it emits, so that save holds `fitted: true`;
+ * `open` is the first fit of a graph with no saved camera, the same unless the fit is below `OPEN_ZOOM_FLOOR`, and then it
+ * sets the floored viewport and leaves the camera not fitted, so that save holds `fitted: false` and a resize keeps it;
  * `setViewport`, `centreOn` and a gesture that moved the camera away from where a fit or a keep-clear `panBy` left it
  * clear the mark; a keep-clear `panBy` leaves it. While fitted, a container resize fits again in the same observer
  * callback: a fit moves only the camera, so it never resizes the container again. While a node or box is grabbed, the
@@ -53,14 +54,20 @@ const holdWhileGrabbed = (cy: Core, refit: () => void): (() => void) => {
 export const createFittedCamera = (cy: Core, handlers: Pick<GraphViewHandlers, 'onViewport' | 'onRefit'>): FittedCamera => {
   let isFitted = false;
   let left = viewportOf(cy);
-  const fitAndRemember = (): void => {
-    fitVisible(cy, FIT_PADDING_PX);
+  const frame = (floored: Viewport | null): void => {
+    isFitted = floored === null;
+
+    if (floored === null) fitVisible(cy, FIT_PADDING_PX);
+    else cy.viewport(floored);
     left = viewportOf(cy);
   };
   const fit = (): void => {
-    isFitted = true;
     cy.resize();
-    fitAndRemember();
+    frame(null);
+  };
+  const open = (): void => {
+    cy.resize();
+    frame(openViewportOf(cy, FIT_PADDING_PX));
   };
   const setViewport = (zoom: number, pan: Position): void => {
     isFitted = false;
@@ -86,7 +93,7 @@ export const createFittedCamera = (cy: Core, handlers: Pick<GraphViewHandlers, '
   const refitIfFitted = (): void => {
     if (!isFitted) return;
 
-    fitAndRemember();
+    frame(null);
     handlers.onRefit();
   };
   const refitWhenFree = holdWhileGrabbed(cy, refitIfFitted);
@@ -94,7 +101,7 @@ export const createFittedCamera = (cy: Core, handlers: Pick<GraphViewHandlers, '
     cy.resize();
     refitWhenFree();
   };
-  const camera: FittedCamera = { fit, setViewport, centreOn, panBy: keepClear, isFitted: (): boolean => isFitted, resized };
+  const camera: FittedCamera = { fit, open, setViewport, centreOn, panBy: keepClear, isFitted: (): boolean => isFitted, resized };
 
   cy.on(GESTURE_EVENTS, gestured);
 

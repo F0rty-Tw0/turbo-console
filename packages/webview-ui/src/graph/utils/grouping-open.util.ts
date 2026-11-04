@@ -5,7 +5,7 @@ import { LARGE_GRAPH_PACKAGES } from '../common/graph.const.ts';
 /**
  * The state a graph opens with. A large graph opens grouped with every folder collapsed while no grouping choice is
  * saved: nothing saved yet, also after an earlier hash, or a state saved before folders existed, whose fields are kept
- * except its camera, as the view fits a state that differs from `saved`. Any other case keeps `saved`, so a saved choice
+ * except its camera, as the view opens a state that differs from `saved`. Any other case keeps `saved`, so a saved choice
  * is never overridden.
  */
 export const openingStateOf = (

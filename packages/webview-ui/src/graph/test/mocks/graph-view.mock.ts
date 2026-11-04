@@ -54,6 +54,7 @@ export const graphViewMock = (camera: Viewport): Mocked<GraphView> => {
     setLabels: vi.fn<GraphView['setLabels']>(),
     paint: vi.fn<GraphView['paint']>(),
     fit: vi.fn<GraphView['fit']>(),
+    open: vi.fn<GraphView['open']>(),
     isFitted: vi.fn<GraphView['isFitted']>(() => false),
     setVisible: vi.fn<GraphView['setVisible']>(),
     setFocusTarget: vi.fn<GraphView['setFocusTarget']>(),

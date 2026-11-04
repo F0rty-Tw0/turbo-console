@@ -92,11 +92,11 @@ describe('FEATURE: GraphTaskLayout', () => {
     it('WHEN a layout lands THEN the drawn highlight goes back to the flow once the camera is set', async () => {
       await land('k0');
 
-      const fitAt = rig.view.fit.mock.invocationCallOrder[0] ?? Number.NaN;
+      const openAt = rig.view.open.mock.invocationCallOrder[0] ?? Number.NaN;
       const drawnAt = onDrawn.mock.invocationCallOrder[0] ?? Number.NaN;
 
       expect(onDrawn).toHaveBeenCalledOnce();
-      expect(fitAt).toBeLessThan(drawnAt);
+      expect(openAt).toBeLessThan(drawnAt);
     });
 
     it('WHEN the task canvas is cleared THEN the flow stops', () => {
@@ -198,29 +198,73 @@ describe('FEATURE: GraphTaskLayout', () => {
     });
   });
 
-  describe('GIVEN a saved task camera for the key', () => {
+  describe('GIVEN the saved task camera', () => {
+    type CameraCall = 'fit' | 'open' | 'setViewport';
+
+    const CAMERA_CALLS: CameraCall[] = ['fit', 'open', 'setViewport'];
+    const FITTED_FOR_KEY: Partial<TaskViewState> = { layoutKey: 'k0', fitted: true };
+    const MOVED_FOR_KEY: Partial<TaskViewState> = { layoutKey: 'k0', fitted: false };
+    const MOVED_FOR_OTHER: Partial<TaskViewState> = { layoutKey: 'other', fitted: false };
+    const FITTED_FOR_OTHER: Partial<TaskViewState> = { layoutKey: 'other', fitted: true };
+    const PENDING_FITTED: Partial<TaskViewState> = { layoutKey: '', fitted: true };
+    const PENDING_MOVED: Partial<TaskViewState> = { layoutKey: '', fitted: false };
+    const RESTORED_ARGS = [SAVED_ZOOM, API_AT];
+
+    const savedTaskOf = (saved: Partial<TaskViewState> | null): TaskViewState | null => {
+      if (saved === null) return null;
+
+      return taskSavedOf({ ...saved, zoom: SAVED_ZOOM, pan: API_AT }).task;
+    };
+
     it.each([
-      { fitted: true, called: 'fit', args: [], skipped: 'setViewport' },
-      { fitted: false, called: 'setViewport', args: [SAVED_ZOOM, API_AT], skipped: 'fit' }
-    ] as const)(
-      'WHEN it was fitted: $fitted and the layout lands THEN the camera uses $called with the saved camera',
-      async ({ fitted, called, args, skipped }) => {
-        const task = taskSavedOf({ layoutKey: 'k0', fitted, zoom: SAVED_ZOOM, pan: API_AT }).task;
+      ['fitted for the key', 'fit', FITTED_FOR_KEY, []],
+      ['moved for the key', 'setViewport', MOVED_FOR_KEY, RESTORED_ARGS],
+      ['none at all', 'open', null, []],
+      ['moved for another key', 'open', MOVED_FOR_OTHER, []],
+      ["a regroup's pending choice, fitted", 'fit', PENDING_FITTED, []],
+      ['a pending choice, not fitted (choose, depth, cap)', 'open', PENDING_MOVED, []],
+      ['fitted for another key', 'open', FITTED_FOR_OTHER, []]
+    ] as const)('GIVEN a save that is %s WHEN the layout lands THEN the camera calls %s only', async (_name, called, saved, args) => {
+      const task = savedTaskOf(saved);
+      const others = CAMERA_CALLS.filter((name: CameraCall): boolean => name !== called);
 
-        layout = new GraphTaskLayout({
-          ...rig.deps,
-          saved: (): TaskViewState | null => task,
-          rootLabel: (): null => null,
-          onPlaced: vi.fn(),
-          onDrawn
-        });
+      layout = new GraphTaskLayout({
+        ...rig.deps,
+        saved: (): TaskViewState | null => task,
+        rootLabel: (): null => null,
+        onPlaced: vi.fn(),
+        onDrawn
+      });
 
-        await land('k0');
+      await land('k0');
 
-        expect(rig.view[called]).toHaveBeenCalledExactlyOnceWith(...args);
-        expect(rig.view[skipped]).not.toHaveBeenCalled();
-      }
-    );
+      expect(rig.view[called]).toHaveBeenCalledExactlyOnceWith(...args);
+      others.forEach((name: CameraCall): void => expect(rig.view[name]).not.toHaveBeenCalled());
+    });
+  });
+
+  describe('GIVEN no saved task camera', () => {
+    it('WHEN Re-layout lands on a placed layout THEN the camera fits, never opens again', async () => {
+      await land('k0');
+
+      const relaid = layout.relayout();
+
+      await rig.runs.settle(1, resultOf('k0', POSITIONS));
+      await relaid;
+
+      expect(rig.view.open).toHaveBeenCalledOnce();
+      expect(rig.view.fit).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN key A then key B are shown and A is shown again from memory THEN A opens', async () => {
+      await land('k0');
+      await land('k1');
+      await layout.show(requestOf('k0'));
+
+      expect(rig.runs.count()).toBe(2);
+      expect(rig.view.open).toHaveBeenCalledTimes(3);
+      expect(rig.view.fit).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN as many layouts landed as page memory keeps', () => {

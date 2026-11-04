@@ -135,6 +135,7 @@ export const createGraphView = (
     setLabels: (labels: ReadonlyMap<string, string>): void => labelPackages(cy, labels),
     paint: (next: Paint): void => paintOn(cy, folders, next),
     fit: camera.fit,
+    open: camera.open,
     isFitted: camera.isFitted,
     setVisible: (visible: ReadonlySet<string>): void => showOnly(cy, visible),
     setFocusTarget: (name: string | null): void => applyFocusTarget(cy, name),
