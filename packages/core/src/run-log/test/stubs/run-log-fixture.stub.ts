@@ -16,7 +16,10 @@ export const LIB_READY_STUB: string = 'lib-ready';
 /** The file, in the repo root, whose appearance lets the lib `build` script exit. */
 export const GO_FILE_STUB: string = 'go';
 
-/** The repo-relative folder the runs write their logs to; the gate repo creates it, as U7e1's launcher would. */
+/**
+ * The repo-relative folder the runs write their logs to. The gate repo creates it up front so the runs share it, and
+ * because turbo does not create a missing log folder on Windows (the missing-dir row pins that).
+ */
 export const RUN_LOG_DIR_STUB: string = '.turbo/turbo-console';
 
 /** How long the lib `build` script waits for `GO_FILE_STUB` before it exits 2: long past any gate. */
