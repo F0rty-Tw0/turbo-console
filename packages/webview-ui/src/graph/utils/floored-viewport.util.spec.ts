@@ -46,8 +46,10 @@ describe('FEATURE: flooredViewportOf', () => {
   it.each([
     ['a fit of exactly 0.75', box(0, 0, 1600, 800), size(1248, 1248)],
     ['a fit of 1.5', box(0, 0, 400, 400), size(648, 648)],
-    ['an empty box', box(10, 10, 10, 10), size(1000, 800)],
-    ['a canvas no wider than twice the padding', box(0, 0, 4000, 3000), size(48, 800)]
+    ['a zero-width box taller than the canvas', box(10, 0, 10, 4000), size(1000, 800)],
+    ['a zero-height box wider than the canvas', box(0, 10, 4000, 10), size(1000, 800)],
+    ['a canvas no wider than twice the padding', box(0, 0, 4000, 3000), size(48, 800)],
+    ['a canvas no taller than twice the padding', box(0, 0, 4000, 3000), size(1000, 48)]
   ])('GIVEN %s WHEN the opening viewport is computed THEN it is null, the true fit', (_name, bounds, canvas) => {
     const viewport = flooredViewportOf(bounds, canvas, PADDING_PX);
 
