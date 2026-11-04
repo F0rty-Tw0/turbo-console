@@ -158,9 +158,9 @@ export class GraphTaskMode {
     this.memory.save({ zoom, pan, fitted, layoutKey });
   }
 
-  /** A new choice, depth or cap, saved with no layout key so the camera fits the new set; it turns task mode on. */
+  /** A new choice, depth or cap, saved with no layout key and not fitted, so the new set opens; a regroup passes `fitted: true` and fits. */
   private choose(edit: Partial<TaskViewState>, at: number | null, notice: string | null = null): void {
-    const unplaced: Partial<TaskViewState> = { ...edit, layoutKey: '' };
+    const unplaced: Partial<TaskViewState> = { fitted: false, ...edit, layoutKey: '' };
 
     this.memory.save(unplaced);
     this.showPage();

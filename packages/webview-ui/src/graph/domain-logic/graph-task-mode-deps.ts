@@ -46,10 +46,10 @@ export const umbrellaFactsOf = (deps: TaskModeDeps, atoms: AtomCounts): Umbrella
   return facts;
 };
 
-/** Group by folder ticked or unticked in task mode: saved for both graphs, then the shown set drawn again under it. */
+/** Group by folder ticked or unticked in task mode: saved for both graphs, then the shown set drawn again under it at the true fit. */
 const regroup = (deps: TaskModeDeps, edits: ControlsEdits, isGrouped: boolean): void => {
   deps.modes.saveGrouped(isGrouped);
-  edits.choose({});
+  edits.choose({ fitted: true });
 };
 
 /**

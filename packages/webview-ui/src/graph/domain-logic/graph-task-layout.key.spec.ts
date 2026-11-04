@@ -67,12 +67,13 @@ describe('FEATURE: GraphTaskLayout keyed by the naming bits', () => {
   });
 
   describe('GIVEN a saved camera whose layout key is the old shape', () => {
-    it('WHEN the layout is shown THEN it fits once and restores nothing', async () => {
+    it('WHEN the layout is shown THEN it opens once and restores nothing', async () => {
       const layout = layoutSavedAs(oldShapeOf(UNGROUPED), false);
 
       await showAndLand(layout, UNGROUPED, 0);
 
-      expect(rig.view.fit).toHaveBeenCalledOnce();
+      expect(rig.view.open).toHaveBeenCalledOnce();
+      expect(rig.view.fit).not.toHaveBeenCalled();
       expect(rig.view.setViewport).not.toHaveBeenCalled();
     });
   });
@@ -102,9 +103,10 @@ describe('FEATURE: GraphTaskLayout keyed by the naming bits', () => {
       expect(rig.runs.count()).toBe(2);
     });
 
-    it('WHEN the third show lands THEN the camera restores for key A and fits for key B', () => {
+    it('WHEN the third show lands THEN the camera restores for key A and opens for key B', () => {
       expect(rig.view.setViewport).toHaveBeenCalledTimes(2);
-      expect(rig.view.fit).toHaveBeenCalledOnce();
+      expect(rig.view.open).toHaveBeenCalledOnce();
+      expect(rig.view.fit).not.toHaveBeenCalled();
     });
   });
 });

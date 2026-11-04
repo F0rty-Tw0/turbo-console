@@ -98,10 +98,10 @@ describe('FEATURE: GraphTaskMode', () => {
       expect(rig.posts()).toStrictEqual([]);
     });
 
-    it('WHEN its layout finishes THEN the camera fits, then the frame clock is armed', async () => {
+    it('WHEN its layout finishes THEN the camera opens, then the frame clock is armed', async () => {
       await rig.runs.settle(0, resultOf(KEY, POSITIONS));
 
-      expect(rig.calls()).toStrictEqual(['show', 'fit', 'arm']);
+      expect(rig.calls()).toStrictEqual(['show', 'open', 'arm']);
     });
 
     it('WHEN its layout finishes THEN the task view saves the key and the camera', async () => {
@@ -145,7 +145,7 @@ describe('FEATURE: GraphTaskMode', () => {
       mode.received(rehashed, 9);
 
       expect(rig.runs.count()).toBe(1);
-      expect(rig.view.fit).toHaveBeenCalledOnce();
+      expect(rig.view.open).toHaveBeenCalledOnce();
       expect(rig.frames.start).toHaveBeenCalledOnce();
     });
 
@@ -172,7 +172,8 @@ describe('FEATURE: GraphTaskMode', () => {
       await relaid;
 
       expect(drawnOf(rig)?.positions).toStrictEqual(DRAGGED);
-      expect(rig.view.fit).toHaveBeenCalledTimes(2);
+      expect(rig.view.open).toHaveBeenCalledOnce();
+      expect(rig.view.fit).toHaveBeenCalledOnce();
     });
 
     it('WHEN a task is dragged, another graph shown and the chain again THEN the dragged centres return with no run', async () => {
@@ -310,12 +311,12 @@ describe('FEATURE: GraphTaskMode', () => {
       expect(rig.panel.notice).toHaveBeenLastCalledWith(UNKNOWN_TASKS_TEXT);
     });
 
-    it('WHEN the cap is lifted and the depth changes THEN the cap stays lifted and the set is placed again with a fit', () => {
+    it('WHEN the cap is lifted and the depth changes THEN the cap stays lifted and the set is placed again with an open', () => {
       panelActionsOf(rig)?.onShowAll();
       controlsActionsOf(rig)?.onDepth(0);
 
       expect(rig.modes.task()).toMatchObject({ depth: 0, capLifted: true });
-      expect(rig.view.fit).toHaveBeenCalledTimes(3);
+      expect(rig.view.open).toHaveBeenCalledTimes(3);
     });
 
     it('WHEN Show all tasks is pressed THEN the cap is lifted for this choice', () => {
