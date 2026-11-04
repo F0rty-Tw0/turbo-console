@@ -127,5 +127,28 @@ describe('FEATURE: end a turbo log tail (spec D5, D6, D10)', () => {
       await expect(started.tail.drain()).resolves.toBeUndefined();
       expect(h.fs.logs).toStrictEqual([]);
     });
+
+    it('WHEN closed after it drained THEN the file is removed once', async () => {
+      const h = tailsHarnessOf(tailsOf);
+      const started = h.start(ROOT_WS, P1);
+
+      await started.tail.drain();
+      started.tail.close();
+      await flush();
+
+      expect(h.fs.removed).toStrictEqual([P1]);
+    });
+
+    it('WHEN the same path starts again while the closed read is held THEN the file is not removed while the new tail lives', async () => {
+      const h = tailsHarnessOf(tailsOf);
+      const release = h.fs.hold();
+
+      h.start(ROOT_WS, P1).tail.close();
+      h.start(ROOT_WS, P1);
+      release();
+      await flush();
+
+      expect(h.fs.removed).toStrictEqual([]);
+    });
   });
 });

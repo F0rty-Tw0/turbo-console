@@ -70,6 +70,15 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       expect(h.fs.reads).toHaveLength(readsBefore);
     });
 
+    it('WHEN a /ws tail is closed and its file changes THEN its listener gets no event', async () => {
+      tail1.tail.close();
+      h.fs.append(P1, ENTRY_A);
+      h.fs.emit(DIR_WS, 'run-1.json');
+      await flush();
+
+      expect(tail1.events).toStrictEqual([]);
+    });
+
     it('WHEN one /ws tail drains THEN the /ws watcher stays open', async () => {
       await tail1.tail.drain();
 
@@ -148,6 +157,32 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
         [DIR_WS, true],
         [DIR_WS, false]
       ]);
+    });
+  });
+
+  describe('GIVEN the /ws watcher fails before watch returns', () => {
+    it('WHEN the tail starts THEN one line is logged, nothing is kept, and the next /ws tail opens a new watcher', () => {
+      const error = new Error('EMFILE');
+
+      h.fs.failNextWatch(error);
+      h.start(ROOT_WS, P1);
+      h.start(ROOT_WS, P2);
+
+      expect([h.fs.watchers.map((watcher) => watcher.closed), h.fs.logs]).toStrictEqual([
+        [true, false],
+        [runLogWatchErrorText(DIR_WS, error)]
+      ]);
+    });
+  });
+
+  describe('GIVEN a /ws tail that drained and a newer /ws tail with its own watcher', () => {
+    it('WHEN the first watcher reports an error THEN the newer watcher stays open', async () => {
+      await h.start(ROOT_WS, P1).tail.drain();
+      h.start(ROOT_WS, P2);
+
+      h.fs.watchers[0]?.onError(new Error('EMFILE'));
+
+      expect(h.fs.watchers.map((watcher) => watcher.closed)).toStrictEqual([true, false]);
     });
   });
 });

@@ -3,6 +3,7 @@ import type { FakeWatcherRecord, FakeWatchers } from '../common/run-log-fs.type.
 
 export const fakeWatchers = (): FakeWatchers => {
   const watchers: FakeWatcherRecord[] = [];
+  const failures: unknown[] = [];
 
   const watch: FakeWatchers['watch'] = (dir, onChange, onError) => {
     const record: FakeWatcherRecord = { dir, closed: false, onChange, onError };
@@ -13,6 +14,8 @@ export const fakeWatchers = (): FakeWatchers => {
     };
 
     watchers.push(record);
+
+    for (const error of failures.splice(0)) onError(error);
 
     return watcher;
   };
@@ -27,7 +30,11 @@ export const fakeWatchers = (): FakeWatchers => {
     for (const record of openWatchersOf(dir)) record.onError(error);
   };
 
-  const fake: FakeWatchers = { watchers, watch, emit, fail };
+  const failNextWatch = (error: unknown): void => {
+    failures.push(error);
+  };
+
+  const fake: FakeWatchers = { watchers, watch, emit, fail, failNextWatch };
 
   return fake;
 };

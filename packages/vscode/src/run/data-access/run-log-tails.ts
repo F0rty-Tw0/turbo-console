@@ -11,6 +11,13 @@ type LiveTail = {
   readonly handle: RunLogTail;
 };
 
+/** One `ports.watch` call: whether it reported a failure and the watcher it returned, which `onError` may run before. */
+type WatchAttempt = {
+  // eslint-disable-next-line local/readonly-type-properties -- set by `onError`, which can run before `watch` returns
+  hasFailed: boolean;
+  watcher: RunLogWatcher | null;
+};
+
 type LoggedKind = RunLogOutcome | 'watch';
 
 /**
@@ -43,8 +50,8 @@ export class RunLogTails {
 
     const handle: RunLogTail = { drain, close };
 
-    live.set(path, { file, handle });
     this.watch(root);
+    live.set(path, { file, handle });
     file.changed();
 
     return handle;
@@ -71,21 +78,32 @@ export class RunLogTails {
     const onChange = (fileName: string | null): void => {
       this.route(root, fileName);
     };
+    const attempt: WatchAttempt = { hasFailed: false, watcher: null };
     const onError = (error: unknown): void => {
-      this.dropWatcher(root);
+      attempt.hasFailed = true;
+      this.dropWatcher(root, attempt.watcher);
       this.logOnce('watch', runLogWatchErrorText(dir, error));
     };
 
-    this.watchers.set(root, this.ports.watch(dir, onChange, onError));
+    attempt.watcher = this.ports.watch(dir, onChange, onError);
+    this.watchers.set(root, attempt.watcher);
+
+    if (attempt.hasFailed) this.dropWatcher(root);
   }
 
-  private dropWatcher(root: string): void {
-    this.watchers.get(root)?.close();
+  /** Closes and forgets the root's watcher, unless `only` is given and the root has moved on to another watcher. */
+  private dropWatcher(root: string, only?: RunLogWatcher | null): void {
+    const current = this.watchers.get(root);
+    const isOther = only !== undefined && current !== only;
+
+    if (current === undefined || isOther) return;
+
+    current.close();
     this.watchers.delete(root);
   }
 
   private route(root: string, fileName: string | null): void {
-    const live = this.liveByRoot.get(root) ?? new Map<string, LiveTail>();
+    const live = this.liveOf(root);
 
     for (const [path, tail] of live) {
       const name = basename(path);
@@ -110,7 +128,11 @@ export class RunLogTails {
 
     if (!isLeaving) return;
 
-    const removeAfterRead = async (): Promise<void> => this.removeFile(path);
+    const removeAfterRead = async (): Promise<void> => {
+      const isRestarted = this.liveOf(root).has(path);
+
+      if (!isRestarted) await this.removeFile(path);
+    };
 
     void file.close().then(removeAfterRead);
   }
@@ -119,7 +141,9 @@ export class RunLogTails {
   private leave(root: string, path: string, file: RunLogFileTail): boolean {
     const live = this.liveOf(root);
 
-    if (live.get(path)?.file !== file) return false;
+    const current = live.get(path);
+
+    if (current?.file !== file) return false;
 
     live.delete(path);
 

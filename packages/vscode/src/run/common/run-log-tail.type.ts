@@ -37,8 +37,9 @@ export type RunLogWatcher = {
 };
 
 /**
- * What the tails need from the machine. `watch` reports a changed file name, or `null` when the OS gave none; `read`
- * never invents a file; `log` takes one Output line.
+ * What the tails need from the machine. `watch` reports a changed file name, or `null` when the OS gave none; it never
+ * throws and reports a failure through `onError`, possibly before it returns; `read` never invents a file; `log` takes
+ * one Output line.
  */
 export type RunLogPorts = {
   readonly watch: (dir: string, onChange: (fileName: string | null) => void, onError: (error: unknown) => void) => RunLogWatcher;

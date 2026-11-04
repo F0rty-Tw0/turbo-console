@@ -40,7 +40,7 @@ export const bytesReadOf = (reads: RunLogReadRecord[]): number => {
 export const fakeLogFs = (): FakeLogFs => {
   const files = new Map<string, Uint8Array>();
   const reads: RunLogReadRecord[] = [];
-  const { watchers, watch, emit, fail } = fakeWatchers();
+  const { watchers, watch, emit, fail, failNextWatch } = fakeWatchers();
   const { removed, logs, remove, log } = folderCallsOf(files);
   let gate: Promise<undefined> | null = null;
 
@@ -89,6 +89,7 @@ export const fakeLogFs = (): FakeLogFs => {
     watchers,
     emit,
     fail,
+    failNextWatch,
     removed,
     logs,
     ports
