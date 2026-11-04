@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { folderIdOf } from './folder-id.util.ts';
 import {
+  compoundOptionsOf,
   folderBoxIdOf,
   parentIdOf,
   scriptPackagesOf,
@@ -12,7 +13,10 @@ import {
   taskPackagesOf
 } from './task-compound.util.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
+import type { ElkOptions } from '../common/layout.type.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
+
+const BASE: ElkOptions = { 'elk.layered.layering.strategy': 'LONGEST_PATH', 'elk.padding': '[top=32,left=32,bottom=32,right=32]' };
 
 const NAMING_GROUPED: TaskNaming = {
   grouped: true,
@@ -110,6 +114,20 @@ describe('FEATURE: task compound ids', () => {
       const turboTasks = tasks.filter((task) => task.isTurboTask);
 
       expect(scriptPackagesOf(turboTasks)).toStrictEqual(new Set());
+    });
+  });
+
+  describe('GIVEN the base options of a LONGEST_PATH view', () => {
+    it('WHEN a compound has no title width THEN its options are the base', () => {
+      const options = compoundOptionsOf(undefined, BASE);
+
+      expect(options).toStrictEqual(BASE);
+    });
+
+    it('WHEN a compound has a title width of 90 THEN it keeps the base and adds the minimum', () => {
+      const options = compoundOptionsOf(90, BASE);
+
+      expect(options).toStrictEqual({ ...BASE, 'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': '(0, 154)' });
     });
   });
 });

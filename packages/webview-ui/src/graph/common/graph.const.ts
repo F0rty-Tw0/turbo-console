@@ -111,20 +111,6 @@ export const EDGE_ID_PREFIX = '\u0000';
 /** Fallback row pitch in node heights. */
 export const FALLBACK_SPACING_FACTOR = 3;
 
-/**
- * Layered, top-down; the cheapest strategies, because a package graph needs a readable layout, not an optimal one.
- * `edgeCoords: ROOT` makes every edge route come back in root coordinates, whatever compound it sits in.
- */
-export const ELK_OPTIONS: Readonly<Record<string, string>> = {
-  'elk.algorithm': 'layered',
-  'elk.direction': 'DOWN',
-  'elk.layered.thoroughness': '1',
-  'elk.layered.layering.strategy': 'LONGEST_PATH',
-  'elk.layered.nodePlacement.strategy': 'SIMPLE',
-  'elk.edgeRouting': 'POLYLINE',
-  'elk.json.edgeCoords': 'ROOT'
-};
-
 /** Starts every folder box id, in Cytoscape and ELK alike; package names never start with U+0001. */
 export const FOLDER_ID_PREFIX = '\u0001';
 
@@ -185,12 +171,6 @@ export const HIGHLIGHTED_EDGE_WIDTH = 1.25;
 
 /** The width of a selected edge: a model width in px that scales with zoom. */
 export const SELECTED_EDGE_WIDTH = 1.5;
-
-/** The grouped root: the same layered options, with edges between packages of different folders laid out together. */
-export const ELK_GROUPED_ROOT_OPTIONS: Readonly<Record<string, string>> = {
-  ...ELK_OPTIONS,
-  'elk.hierarchyHandling': 'INCLUDE_CHILDREN'
-};
 
 /** The group header for packages whose path has no folder part. */
 export const ROOT_FOLDER = '(root)';

@@ -1,12 +1,14 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import { describe, expect, it } from 'vitest';
 
-import { COMPOUND_OPTIONS, elkEdgeOf } from './elk-grouped-graph.util.ts';
+import { elkEdgeOf } from './elk-grouped-graph.util.ts';
+import { groupedRootOptionsOf, paddedOptionsOf } from './elk-options.util.ts';
 import { elkTaskGraphOf } from './elk-task-graph.util.ts';
 import { folderIdOf } from './folder-id.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
+import { LAYERING_DEFAULT } from '../common/graph-layout.const.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
-import { ELK_GROUPED_ROOT_OPTIONS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
@@ -116,9 +118,10 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
     it('WHEN built THEN the graph is the flat one: package compounds at the root, edges at the root', () => {
       const shown = new Set([...PACKAGE_TASKS_SHOWN, '//#gen']);
       const graph = graphOf(shown, { ...NAMING_GROUPED, grouped: false });
+      const layoutOptions = paddedOptionsOf(4, LAYERING_DEFAULT);
       const compoundOfLeaf = (packageName: string, taskId: string): ElkNode => {
         const leaf: ElkNode = { id: taskId, ...NODE_SIZE };
-        const compound: ElkNode = { id: `pkg:${packageName}`, layoutOptions: COMPOUND_OPTIONS, children: [leaf] };
+        const compound: ElkNode = { id: `pkg:${packageName}`, layoutOptions, children: [leaf] };
 
         return compound;
       };
@@ -129,7 +132,7 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
         compoundOfLeaf('web', 'web#build')
       ];
       const edges = [elkEdgeOf({ source: 'web#build', target: 'ui#build' }), elkEdgeOf({ source: 'ui#build', target: 'core#build' })];
-      const flat: ElkNode = { id: 'root', layoutOptions: ELK_GROUPED_ROOT_OPTIONS, children, edges };
+      const flat: ElkNode = { id: 'root', layoutOptions: groupedRootOptionsOf(4, LAYERING_DEFAULT), children, edges };
 
       expect(graph).toStrictEqual(flat);
     });

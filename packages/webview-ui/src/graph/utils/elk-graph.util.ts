@@ -2,11 +2,12 @@ import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { edgeIdOf } from './edge-id.util.ts';
 import { groupedElkGraphOf } from './elk-grouped-graph.util.ts';
+import { layeredOptionsOf } from './elk-options.util.ts';
 import { folderGroupsOf } from './folder-group.util.ts';
 import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import { LAYERING_DEFAULT } from '../common/graph-layout.const.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
-import { ELK_OPTIONS } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 
 const elkEdgeOf = (edge: GraphEdge): ElkEdge => {
@@ -25,7 +26,8 @@ export const elkGraphOf = (packages: string[], edges: GraphEdge[], sizeOf: (name
   };
   const children = packages.map(childOf);
   const elkEdges = edges.map(elkEdgeOf);
-  const graph: ElkNode = { id: 'root', layoutOptions: ELK_OPTIONS, children, edges: elkEdges };
+  const layoutOptions = layeredOptionsOf(packages.length, LAYERING_DEFAULT);
+  const graph: ElkNode = { id: 'root', layoutOptions, children, edges: elkEdges };
 
   return graph;
 };

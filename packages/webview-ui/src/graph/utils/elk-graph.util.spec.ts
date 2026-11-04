@@ -34,12 +34,12 @@ describe('FEATURE: elkGraphOf', () => {
   describe('GIVEN two packages and one edge app > core', () => {
     const graph = elkGraphOf(['app', 'core'], [APP_CORE], sizeOf);
 
-    it('THEN the root carries the layered, top-down, all-fast, root-coordinate options', () => {
+    it('THEN the root carries the layered, top-down, network-simplex, thorough, root-coordinate options', () => {
       expect(graph.layoutOptions).toStrictEqual({
         'elk.algorithm': 'layered',
         'elk.direction': 'DOWN',
-        'elk.layered.thoroughness': '1',
-        'elk.layered.layering.strategy': 'LONGEST_PATH',
+        'elk.layered.thoroughness': '7',
+        'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
         'elk.layered.nodePlacement.strategy': 'SIMPLE',
         'elk.edgeRouting': 'POLYLINE',
         'elk.json.edgeCoords': 'ROOT'

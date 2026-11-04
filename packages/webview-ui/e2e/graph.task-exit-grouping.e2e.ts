@@ -35,7 +35,9 @@ test.describe('FEATURE: leaving task mode draws the package graph as Group by fo
         await graphHost.sendState(STATE);
         await graphProbe.expectNodeIds(PACKAGE_NAMES);
         await graphGrouping.expectFolderCount(3);
-        await graphCanvas.panBy(PAN_PX, PAN_PX);
+        const spot = await graphGrouping.freeSpot();
+
+        await graphCanvas.panBy(PAN_PX, PAN_PX, spot);
         await graphCanvas.expectNodeOutOfView();
         await graphHost.expectViewSaved();
       });

@@ -2,6 +2,12 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 
+/** ELK layout options, as ELK takes them: every value a string. */
+export type ElkOptions = Readonly<Record<string, string>>;
+
+/** How ELK assigns nodes to layers. */
+export type ElkLayering = 'NETWORK_SIMPLEX' | 'LONGEST_PATH';
+
 export type ElkLike = {
   readonly layout: (graph: ElkNode) => Promise<ElkNode>;
   /** Replaces the single listener; called with the worker `error` event's message. */

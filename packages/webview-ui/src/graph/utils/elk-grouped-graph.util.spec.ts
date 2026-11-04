@@ -6,7 +6,8 @@ import { groupedElkGraphOf } from './elk-grouped-graph.util.ts';
 import { folderIdOf } from './folder-id.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
-import { ELK_OPTIONS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { ELK_OPTIONS } from '../common/graph-layout.const.ts';
+import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import { BOARDS_EDGES_STUB, BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
 import {
@@ -22,6 +23,9 @@ import {
 } from '../test/utils/folder-boards.spec.util.ts';
 
 const PADDING = '[top=32,left=32,bottom=32,right=32]';
+
+/** Rooms are differences of ELK's float coordinates: 32 comes back as 31.99999999999997 under NETWORK_SIMPLEX. */
+const ROOM_EPSILON = 1e-6;
 
 const groupOf = (folder: string, name: string): FolderGroup => {
   const pkg: GraphPackage = { name, bareName: name, path: `${folder}/${name}`, tags: [], taskCount: 0 };
@@ -85,7 +89,7 @@ describe('FEATURE: groupedElkGraphOf', () => {
     it('WHEN built THEN every compound carries the layering strategy', () => {
       const strategies = compounds.map((compound) => compound.layoutOptions?.['elk.layered.layering.strategy']);
 
-      expect(strategies).toStrictEqual(['LONGEST_PATH', 'LONGEST_PATH']);
+      expect(strategies).toStrictEqual(['NETWORK_SIMPLEX', 'NETWORK_SIMPLEX']);
     });
   });
 
@@ -96,7 +100,7 @@ describe('FEATURE: groupedElkGraphOf', () => {
       const rooms = allRoomsOf(laidOut);
 
       expect(rooms).toHaveLength(20);
-      expect(Math.min(...rooms)).toBeGreaterThanOrEqual(FOLDER_PADDING_PX);
+      expect(Math.min(...rooms)).toBeGreaterThanOrEqual(FOLDER_PADDING_PX - ROOM_EPSILON);
     });
 
     it('WHEN the compound rects are compared THEN they are disjoint', async () => {
