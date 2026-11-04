@@ -28,9 +28,11 @@ export { isUnknownRunLog, scanRunLog } from './run-log/utils/run-log-scan.util.t
 
 export type { AtomResult } from './run-summary/common/atom-result.type.ts';
 
-export type { RunMatch, RunToMatch } from './run-summary/common/run-match.type.ts';
+export type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from './run-summary/common/run-match.type.ts';
 
 export { matchRunSummary } from './run-summary/domain-logic/match-run-summary.ts';
+
+export { matchRunTasks } from './run-summary/domain-logic/match-run-tasks.ts';
 
 export { readNewestRunSummary } from './run-summary/domain-logic/read-newest-run-summary.ts';
 
