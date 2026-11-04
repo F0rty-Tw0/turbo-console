@@ -34,7 +34,7 @@ const topOfEnd = (end: string | undefined, topOf: Map<string, string>): string |
   return topOf.get(end);
 };
 
-/** The root children grouped by the links between their leaves at any depth, in the order of each group's first child. */
+/** The root children grouped by the root-held links between their leaves at any depth, in the order of each group's first child. */
 const componentsOf = (children: ElkNode[], edges: ElkEdge[], topOf: Map<string, string>): ElkNode[][] => {
   const selfPairOf = (child: ElkNode): IdPair => [child.id, child.id];
   const parents = new Map(children.map(selfPairOf));
@@ -88,17 +88,20 @@ const wrapperOf = (members: ElkNode[], index: number, root: ElkNode, topOf: Map<
 
 /**
  * Unlinked components of a root laid out with `INCLUDE_CHILDREN` each get a wrapper, and rectpacking arranges the wrappers
- * near-square. A component is the root children joined by a link between any of their leaves, at any depth. Any other root,
- * or one with fewer than two components, comes back as it is. The wrappers copy the root's options, so a root's layering and
- * thoroughness reach the layered layout inside each wrapper.
+ * near-square. A component is the root children joined by a root-held link between any of their leaves, at any depth. Any
+ * other root, or one with fewer than two components, comes back as it is. The wrappers copy the root's options, so a root's
+ * layering and thoroughness reach the layered layout inside each wrapper.
  */
 export const packComponentsOf = (root: ElkNode): ElkNode => {
-  const children = root.children ?? [];
   const isCompound = root.layoutOptions?.['elk.hierarchyHandling'] === 'INCLUDE_CHILDREN';
+
+  if (!isCompound) return root;
+
+  const children = root.children ?? [];
   const topOf = topLevelIdsOf(children);
   const components = componentsOf(children, root.edges ?? [], topOf);
 
-  if (!isCompound || components.length < 2) return root;
+  if (components.length < 2) return root;
 
   const wrapperAt = (members: ElkNode[], index: number): ElkNode => wrapperOf(members, index, root, topOf);
   const wrappers = components.map(wrapperAt);
