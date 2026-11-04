@@ -1,3 +1,4 @@
+import { dotOf, offsetOf, scaledOf, sumOf } from './vector.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import { LABEL_GAP_PX, ROUTE_RADIUS_PX } from '../common/graph-layout.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
@@ -6,33 +7,48 @@ type Segment = { readonly from: Position; readonly to: Position };
 
 const ORIGIN: Position = { x: 0, y: 0 };
 
-const lengthOf = (segment: Segment): number => Math.hypot(segment.to.x - segment.from.x, segment.to.y - segment.from.y);
+const lengthOf = (segment: Segment): number => {
+  const direction = offsetOf(segment.to, segment.from);
+
+  return Math.hypot(direction.x, direction.y);
+};
 
 const unitOf = (segment: Segment): Position => {
+  const direction = offsetOf(segment.to, segment.from);
   const length = lengthOf(segment);
-  const unit: Position = { x: (segment.to.x - segment.from.x) / length, y: (segment.to.y - segment.from.y) / length };
+  const unit: Position = { x: direction.x / length, y: direction.y / length };
 
   return unit;
 };
 
-const alongOf = (anchor: Position, segment: Segment): number => {
-  const u = unitOf(segment);
+const backwardOf = (segment: Segment): Position => {
+  const unit = unitOf(segment);
 
-  return (anchor.x - segment.from.x) * u.x + (anchor.y - segment.from.y) * u.y;
+  return scaledOf(unit, -1);
+};
+
+const alongOf = (anchor: Position, segment: Segment): number => {
+  const unit = unitOf(segment);
+  const offset = offsetOf(anchor, segment.from);
+
+  return dotOf(offset, unit);
 };
 
 const pointAlongOf = (segment: Segment, along: number): Position => {
-  const u = unitOf(segment);
-  const point: Position = { x: segment.from.x + u.x * along, y: segment.from.y + u.y * along };
+  const unit = unitOf(segment);
+  const step = scaledOf(unit, along);
 
-  return point;
+  return sumOf(segment.from, step);
 };
 
 const distanceOf = (anchor: Position, segment: Segment): number => {
-  const clamped = Math.min(Math.max(alongOf(anchor, segment), 0), lengthOf(segment));
+  const along = alongOf(anchor, segment);
+  const length = lengthOf(segment);
+  const clamped = Math.min(Math.max(along, 0), length);
   const point = pointAlongOf(segment, clamped);
+  const offset = offsetOf(anchor, point);
 
-  return Math.hypot(anchor.x - point.x, anchor.y - point.y);
+  return Math.hypot(offset.x, offset.y);
 };
 
 const gapOf = (anchor: Position, segment: Segment | undefined): number => {
@@ -52,13 +68,17 @@ const segmentsOf = (path: Position[]): Segment[] => {
   return pairs.filter((segment) => lengthOf(segment) > 0);
 };
 
-const scaledOf = (v: Position, factor: number): Position => {
-  const scaled: Position = { x: v.x * factor, y: v.y * factor };
+const reachOf = (vector: Position, size: NodeSize): number => {
+  const extent = Math.abs(vector.x) * size.width + Math.abs(vector.y) * size.height;
 
-  return scaled;
+  return extent / 2 + LABEL_GAP_PX;
 };
 
-const reachOf = (v: Position, size: NodeSize): number => (Math.abs(v.x) * size.width + Math.abs(v.y) * size.height) / 2 + LABEL_GAP_PX;
+const pushedOf = (vector: Position, size: NodeSize): Position => {
+  const reach = reachOf(vector, size);
+
+  return scaledOf(vector, reach);
+};
 
 /** The direction, away from the bend, of the segment next to the nearest one that lies within the arc radius of the anchor; `null` on a straight stretch. */
 const otherArmOf = (segments: Segment[], index: number, anchor: Position): Position | null => {
@@ -69,7 +89,7 @@ const otherArmOf = (segments: Segment[], index: number, anchor: Position): Posit
   const isNearPrevious = previousGap <= ROUTE_RADIUS_PX;
   const isNearNext = nextGap <= ROUTE_RADIUS_PX;
 
-  if (previous && isNearPrevious) return scaledOf(unitOf(previous), -1);
+  if (previous && isNearPrevious) return backwardOf(previous);
 
   if (next && isNearNext) return unitOf(next);
 
@@ -77,34 +97,39 @@ const otherArmOf = (segments: Segment[], index: number, anchor: Position): Posit
 };
 
 const awayFromOf = (normal: Position, other: Position): Position => {
-  const isTowardOther = normal.x * other.x + normal.y * other.y > 0;
+  const toward = dotOf(normal, other);
+  const isTowardOther = toward > 0;
   const side = isTowardOther ? -1 : 1;
 
   return scaledOf(normal, side);
 };
 
 const bendOffsetOf = (nearest: Segment, away: Position, anchor: Position, size: NodeSize): Position => {
-  const push = scaledOf(away, reachOf(away, size));
-  const foot = pointAlongOf(nearest, alongOf(anchor, nearest));
-  const offset: Position = { x: foot.x - anchor.x + push.x, y: foot.y - anchor.y + push.y };
+  const push = pushedOf(away, size);
+  const along = alongOf(anchor, nearest);
+  const foot = pointAlongOf(nearest, along);
+  const toFoot = offsetOf(foot, anchor);
 
-  return offset;
+  return sumOf(toFoot, push);
 };
 
 /** Where a label sits off its line: the nearest segment's left normal, or on a bend the side away from the other arm, by half the label's extent plus a gap. */
 export const labelOffsetOf = (path: Position[], anchor: Position, size: NodeSize): Position => {
   const segments = segmentsOf(path);
   const gaps = segments.map((segment) => distanceOf(anchor, segment));
-  const index = gaps.indexOf(Math.min(...gaps));
+  const nearestGap = Math.min(...gaps);
+  const index = gaps.indexOf(nearestGap);
   const nearest = segments[index];
 
   if (!nearest) return ORIGIN;
 
-  const u = unitOf(nearest);
-  const normal: Position = { x: -u.y, y: u.x };
+  const unit = unitOf(nearest);
+  const normal: Position = { x: -unit.y, y: unit.x };
   const other = otherArmOf(segments, index, anchor);
 
-  if (other) return bendOffsetOf(nearest, awayFromOf(normal, other), anchor, size);
+  if (!other) return pushedOf(normal, size);
 
-  return scaledOf(normal, reachOf(normal, size));
+  const away = awayFromOf(normal, other);
+
+  return bendOffsetOf(nearest, away, anchor, size);
 };
