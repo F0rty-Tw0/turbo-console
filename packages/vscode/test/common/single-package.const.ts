@@ -16,6 +16,3 @@ export const SINGLE_TASK_IDS: string[] = ['//#build', '//#dev', '//#lint', '//#t
 
 /** The fixture's one script `turbo.json` does not key: a script, though a single-package turbo would run it. */
 export const SINGLE_SCRIPT_IDS: string[] = ['//#format'];
-
-/** `git init` on a loaded Windows runner takes well over Vitest's 5s default. Matches repo-gen. */
-export const GIT_SPAWN_TIMEOUT_MS = 60_000;

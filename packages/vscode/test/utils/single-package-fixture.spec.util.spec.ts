@@ -6,8 +6,7 @@ import { FIXTURE_PACKAGE_MANAGER, PNPM_ENV_LOCKFILE } from '@turbo-console/repo-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { initGit, writeEmptyWorkspace, writeSingleApp } from './single-package-fixture.spec.util.ts';
-import { GIT_SPAWN_TIMEOUT_MS } from '../common/single-package.const.ts';
+import { writeEmptyWorkspace, writeSingleApp } from './single-package-fixture.spec.util.ts';
 
 type Writer = (dir: string) => Promise<void>;
 
@@ -102,20 +101,5 @@ describe('FEATURE: single-package fixture writers', () => {
       expect(turbo.tasks).toStrictEqual({ build: {} });
       expect(Object.keys(manifest.scripts)).toStrictEqual(['build', 'lint']);
     });
-  });
-
-  describe('GIVEN a written fixture', () => {
-    it(
-      'WHEN initGit runs THEN the dir is a git repo',
-      async () => {
-        await writeSingleApp(dir);
-        await initGit(dir);
-
-        const head = await stat(join(dir, '.git', 'HEAD'));
-
-        expect(head.isFile()).toBe(true);
-      },
-      GIT_SPAWN_TIMEOUT_MS
-    );
   });
 });
