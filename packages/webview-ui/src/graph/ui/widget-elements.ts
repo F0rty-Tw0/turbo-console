@@ -77,12 +77,14 @@ const glyphOf = (): HTMLElement => {
   return glyph;
 };
 
-/** A row's title button: cut on screen with "…", while its `title` shows the whole name on hover. */
+/** A row's title button: cut on screen with "…", while its `title` shows the whole name on hover. The text sits in an inline span, so graph.css can paint a chip behind the text alone, not the whole button. */
 const titleButtonOf = (title: string): HTMLButtonElement => {
-  const button = textElement('button', 'widget-title', title);
+  const button = textElement('button', 'widget-title', '');
+  const text = textElement('span', 'widget-title-text', title);
 
   button.type = 'button';
   button.setAttribute('title', title);
+  button.append(text);
 
   return button;
 };

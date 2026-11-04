@@ -69,6 +69,37 @@ describe('FEATURE: graph.css widget rules', () => {
     );
   });
 
+  describe('GIVEN the widget title text rule', () => {
+    it.each(['.widget-row-box .widget-title-text', '.widget-row-box > .widget-glyph'])(
+      'WHEN the rule %s is read THEN it declares background-color: var(--vscode-editor-background)',
+      (selector) => {
+        const declarations = declarationsOf(css, selector);
+
+        expect(declarations).toContain('background-color: var(--vscode-editor-background)');
+      }
+    );
+
+    it.each(['.widget-row-box .widget-title-text', '.widget-row-box > .widget-glyph'])(
+      'WHEN the rule %s is read THEN it declares nothing but that background-color, so the chip stays opaque, inline and the size of its text',
+      (selector) => {
+        const declarations = declarationsOf(css, selector);
+        const declared = declarations.split(';').filter((part) => part.trim() !== '');
+
+        expect(declared).toHaveLength(1);
+        expect(declarations).not.toMatch(SHORTHAND_PATTERN);
+      }
+    );
+
+    it.each(['.widget-title-text', '.widget-glyph'])(
+      'WHEN the unscoped selector %s is looked up THEN no rule paints it, so a collapsed row keeps the node fill',
+      (selector) => {
+        const declarations = declarationsOf(css, selector);
+
+        expect(declarations).not.toContain('background');
+      }
+    );
+  });
+
   describe('GIVEN the node toolbar rule', () => {
     it.each(['position: absolute', 'display: flex', 'gap: 4px', 'pointer-events: none'])(
       'WHEN it is read THEN it declares %s',

@@ -72,13 +72,14 @@ describe('FEATURE: buildFolderRow', () => {
         row.title.tagName,
         row.title.type,
         row.title.className,
-        row.title.textContent,
+        classesOf(row.title),
+        textsOf(row.title),
         row.title.getAttribute('title'),
         row.title.getAttribute('aria-label')
       ];
 
       expect(third).toBe(row.title);
-      expect(shape).toStrictEqual(['BUTTON', 'button', 'widget-title', 'apps', 'apps', null]);
+      expect(shape).toStrictEqual(['BUTTON', 'button', 'widget-title', ['widget-title-text'], ['apps'], 'apps', null]);
     });
 
     it('WHEN Focus folder is read THEN it is the fifth child, labelled Focus folder apps, unpressed, drawing the target icon', () => {
