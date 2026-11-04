@@ -8,8 +8,9 @@ import { join } from 'node:path';
 import { commitBaseRepo } from '@turbo-console/repo-gen';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import type { RunMatch, RunToMatch } from './common/run-match.type.ts';
+import type { RunMatch, RunTasksMatch, RunToMatch } from './common/run-match.type.ts';
 import { matchRunSummary } from './domain-logic/match-run-summary.ts';
+import { matchRunTasks } from './domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
 import {
   INTERRUPT_FIXTURE_FILES_STUB,
@@ -60,6 +61,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run inter
   let run: RunToMatch;
   let summary: RunSummary | null = null;
   let match: RunMatch | null = null;
+  let tasksMatch: RunTasksMatch | null = null;
 
   beforeAll(async () => {
     dir = await mkdtemp(join(tmpdir(), 'interrupt-contract-'));
@@ -81,6 +83,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run inter
     run = { task: SLOW, packageName: INTERRUPT_PACKAGE_STUB, launchedAt, endedAt: Date.now(), exitCode };
     summary = await readNewestRunSummary(dir);
     match = await matchRunSummary(dir, run);
+    tasksMatch = await matchRunTasks(dir, run);
   });
 
   afterAll(async () => {
@@ -107,6 +110,10 @@ describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run inter
     it('THEN matchRunSummary matches it as interrupted, with no cache status', () => {
       expect(match).toMatchObject({ cache: null, interrupted: true });
       expect(match?.durationMs).toBeGreaterThanOrEqual(0);
+    });
+
+    it('THEN matchRunTasks carries the interrupted match and no outcome for the cut task', () => {
+      expect(tasksMatch).toStrictEqual({ match, outcomes: [] });
     });
   });
 });
