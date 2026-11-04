@@ -169,8 +169,9 @@ export class GraphFoldersPage {
 
   private async isDrawn(folder: string): Promise<boolean> {
     const folders = await this.folders();
+    const found = findFolder(folders, folder);
 
-    return folders.some((candidate): boolean => candidate.folder === folder);
+    return found !== undefined;
   }
 
   private async isVisible(folder: string): Promise<boolean | undefined> {
