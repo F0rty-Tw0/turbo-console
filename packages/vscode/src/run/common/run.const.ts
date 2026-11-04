@@ -1,3 +1,8 @@
+import type { RunEntry } from './run.type.ts';
+
+/** What a run settles with when `matchRunTasks` found nothing: no match and no outcomes. */
+export const NOT_MATCHED: Pick<RunEntry, 'match' | 'outcomes'> = { match: null, outcomes: null };
+
 /** A run whose process has not started this long after launch ends as failed to start: a missing binary fires no process event. */
 export const START_TIMEOUT_MS = 10_000;
 

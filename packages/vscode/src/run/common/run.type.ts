@@ -22,7 +22,11 @@ export type RunEntry = {
   readonly stopRequested: boolean;
   readonly match: RunMatch | null;
   readonly matching: boolean;
-  /** Spec D7: how the run's summary says each task it lists ended; null until settled, when no summary matched, or for a run never matched (stopped, failed to start, a script). [] when the summary listed no task (Ctrl+C before any ended); a task cut off by Ctrl+C has no outcome. */
+  /**
+   * Spec D7: how the run's summary says each task it lists ended. `null` until settled, when `matchRunTasks` returned
+   * `null`, and for a run never matched (stopped, failed to start, a script, a continuous task). `[]` when the summary
+   * listed no task (Ctrl+C before any ended); a task cut off by Ctrl+C has no outcome.
+   */
   readonly outcomes: TaskOutcome[] | null;
   /** Run Without Cache: the run passed `--force`, so its summary records `MISS` whatever the cache held. */
   readonly force: boolean;
@@ -92,7 +96,7 @@ export type Runs = {
   readonly tryStart: (request: RunRequest, now: number) => boolean;
   readonly attach: (definition: RunDefinition, launchedAt: number, execution: Terminable) => void;
   readonly failStart: (definition: RunDefinition, at: number, launchedAt?: number, isTaskEnded?: boolean) => RunEntry | null;
-  readonly setMatch: (definition: RunDefinition, launchedAt: number, match: RunMatch | null, outcomes: TaskOutcome[] | null) => void;
+  readonly setMatch: (definition: RunDefinition, launchedAt: number, tasksMatch: RunTasksMatch | null) => void;
   readonly get: RunLookup;
   readonly runningIds: LiveIds;
   readonly onDidChange: (listener: RunListener) => () => void;

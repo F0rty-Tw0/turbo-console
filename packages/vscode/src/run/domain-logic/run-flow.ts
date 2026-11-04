@@ -175,16 +175,16 @@ const matchOf = async (ports: RunPorts, entry: RunEntry): Promise<RunTasksMatch 
 };
 
 /**
- * Spec §4.5 step 6, after `processEnded`: the summary match of exactly this run, or none (no summary, more than one, or
- * a lookup error, logged). `matching` always ends `false`; nothing for an entry not waiting for a match (a stopped run).
+ * Spec §4.5 step 6, after `processEnded`: the summary match of exactly this run and the outcome of every task its
+ * summary lists, or neither (no summary, more than one, or a lookup error, logged). A single summary that lacks the
+ * launched task's entry (a failed dependency) gives outcomes with no match. `matching` always ends `false`; nothing for
+ * an entry not waiting for a match (a stopped run).
  */
 export const finishRun = async (store: Runs, ports: RunPorts, entry: RunEntry): Promise<void> => {
   if (!entry.matching) return;
 
   const definition: RunDefinition = { root: entry.root, id: entry.taskId };
   const tasksMatch = await matchOf(ports, entry);
-  const match = tasksMatch?.match ?? null;
-  const outcomes = tasksMatch?.outcomes ?? null;
 
-  store.setMatch(definition, entry.launchedAt, match, outcomes);
+  store.setMatch(definition, entry.launchedAt, tasksMatch);
 };

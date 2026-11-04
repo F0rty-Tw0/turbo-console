@@ -1,14 +1,17 @@
-import type { RunMatch, TaskOutcome } from '@turbo-console/core';
+import type { RunMatch, RunTasksMatch, TaskOutcome } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunStore } from './run-store.ts';
 import type { RunDefinition, RunEntry, RunRequest, Terminable } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { changesOf } from '../test/utils/run-changes.spec.util.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 const OTHER_ROOT: RunRequest = { ...RUN_REQUEST_STUB, root: '/other' };
 const MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };
 const OUTCOMES: TaskOutcome[] = [{ taskId: 'ui#build', state: 'failed' }];
+const MATCHED: RunTasksMatch = { match: MATCH, outcomes: OUTCOMES };
+const OUTCOMES_ONLY: RunTasksMatch = { match: null, outcomes: OUTCOMES };
 
 const entryOf = (store: RunStore, definition: RunDefinition): RunEntry => {
   const entry = store.get(definition.root, definition.id);
@@ -16,14 +19,6 @@ const entryOf = (store: RunStore, definition: RunDefinition): RunEntry => {
   if (entry === undefined) throw new Error(`no entry for ${definition.id}`);
 
   return entry;
-};
-
-const changesOf = (store: RunStore): RunEntry[] => {
-  const changes: RunEntry[] = [];
-
-  store.onDidChange((entry) => changes.push(entry));
-
-  return changes;
 };
 
 const IS_TASK_ENDED = true;
@@ -217,7 +212,7 @@ describe('FEATURE: run store', () => {
     });
 
     it('WHEN a match is set before the process ended THEN it is ignored', () => {
-      store.setMatch(RUN, 1000, MATCH, null);
+      store.setMatch(RUN, 1000, MATCHED);
 
       expect(entryOf(store, RUN).match).toBeNull();
     });
@@ -236,28 +231,28 @@ describe('FEATURE: run store', () => {
     });
 
     it('WHEN the match is set THEN it is stored and matching ends', () => {
-      store.setMatch(RUN, 1000, MATCH, null);
+      store.setMatch(RUN, 1000, MATCHED);
 
       expect(entryOf(store, RUN)).toMatchObject({ match: MATCH, matching: false });
     });
 
-    it('WHEN no match is found THEN matching ends with no match', () => {
-      store.setMatch(RUN, 1000, null, null);
+    it('WHEN no match is found THEN matching ends with no match and no outcomes', () => {
+      store.setMatch(RUN, 1000, null);
 
-      expect(entryOf(store, RUN)).toMatchObject({ match: null, matching: false });
+      expect(entryOf(store, RUN)).toMatchObject({ match: null, outcomes: null, matching: false });
     });
 
     it('WHEN the match and outcomes are set THEN one change carries both with matching ended', () => {
       const changes = changesOf(store);
 
-      store.setMatch(RUN, 1000, MATCH, OUTCOMES);
+      store.setMatch(RUN, 1000, MATCHED);
 
       expect(changes).toHaveLength(1);
       expect(changes[0]).toMatchObject({ match: MATCH, outcomes: OUTCOMES, matching: false });
     });
 
     it('WHEN only outcomes come back (no match, a failed dependency) THEN they are stored', () => {
-      store.setMatch(RUN, 1000, null, OUTCOMES);
+      store.setMatch(RUN, 1000, OUTCOMES_ONLY);
 
       expect(entryOf(store, RUN)).toMatchObject({ match: null, outcomes: OUTCOMES, matching: false });
     });
@@ -265,7 +260,7 @@ describe('FEATURE: run store', () => {
     it('WHEN the match is set THEN the change is announced', () => {
       const changes = changesOf(store);
 
-      store.setMatch(RUN, 1000, MATCH, null);
+      store.setMatch(RUN, 1000, MATCHED);
 
       expect(changes.map((entry) => entry.match)).toStrictEqual([MATCH]);
     });
@@ -277,7 +272,7 @@ describe('FEATURE: run store', () => {
     it('WHEN a new run started before the match arrived THEN the new run gets no match', () => {
       store.tryStart(RUN_REQUEST_STUB, 5000);
 
-      store.setMatch(RUN, 1000, MATCH, OUTCOMES);
+      store.setMatch(RUN, 1000, MATCHED);
 
       expect(entryOf(store, RUN)).toMatchObject({ state: 'running', match: null, outcomes: null });
     });
