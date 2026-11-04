@@ -36,7 +36,7 @@ type RelabelParts = {
   readonly controls: ControlsRelabel;
 };
 
-/** After a hash's first draw: the package labels, filters, inspection and the saved camera or a fit. */
+/** After a hash's first draw: the package labels, filters, inspection and the camera: the saved one, a fit, or the open. */
 export const restoreAfterDraw = (parts: DrawParts, saved: GraphViewState | null): void => {
   const { drawn, opening, frames, filtering, view } = parts;
 
