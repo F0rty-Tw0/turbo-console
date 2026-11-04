@@ -17,5 +17,5 @@ export const ROWS_BOXES_IN_VIEW = 2;
 /** The header buttons those 2 boxes show. */
 export const ROWS_BUTTONS_SHOWN = 4;
 
-/** The first-frame budget of a flat graph laid out by ELK: the 14-package target-like row and the 150-package row share it. */
+/** The first-frame budget of the 14-package target-like flat row, where ELK takes little of the frame. */
 export const FLAT_FIRST_FRAME_MS = 2000;
