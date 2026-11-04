@@ -2,7 +2,7 @@ import type { Core, EdgeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
-import { drawnLinksOf, routeFolderLinks } from './graph-folder-routes.ts';
+import { emptyDrawnLinks, routeFolderLinks } from './graph-folder-routes.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { applyRoutes } from './graph-routes.ts';
 import type { EdgeRoute, Position, Routes } from '../../bridge/common/graph-state.type.ts';
@@ -168,7 +168,7 @@ describe('FEATURE: folder links drawn on their first member route', () => {
 
     it('WHEN the links are routed THEN the apps end has no box to leave and starts where the member route starts', () => {
       const links = folderLinksByIdOf(scene);
-      const routing: FolderRouting = { members: new Map(), routes: MIXED_RECORD, drawn: drawnLinksOf() };
+      const routing: FolderRouting = { members: new Map(), routes: MIXED_RECORD, drawn: emptyDrawnLinks() };
 
       routeFolderLinks(cy, links, routing);
 

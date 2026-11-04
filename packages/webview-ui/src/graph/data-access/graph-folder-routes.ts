@@ -28,7 +28,7 @@ const ROUTED_CLASSES: string[] = [ROUTED_CLASS];
 
 const NO_CLASSES: string[] = [];
 
-const LABEL_ONLY = { includeLabels: true, includeNodes: false, includeEdges: false, includeOverlays: false };
+const LABEL_BOX_OPTIONS = { includeLabels: true, includeNodes: false, includeEdges: false, includeOverlays: false };
 
 const boxOfNode = (node: NodeSingular): BoundingBox12 => {
   const { x, y } = node.position();
@@ -100,7 +100,7 @@ const routeLink = (scene: DrawnScene, edge: EdgeSingular, link: FolderLink): voi
 };
 
 /** An empty record: the next pass routes and labels every link. */
-export const drawnLinksOf = (): DrawnLinks => {
+export const emptyDrawnLinks = (): DrawnLinks => {
   const drawn: DrawnLinks = { keys: new WeakMap(), unlabelled: new Set() };
 
   return drawn;
@@ -152,7 +152,7 @@ export const routeFolderLinks = (cy: Core, links: ReadonlyMap<string, FolderLink
 const offsetOf = (edge: EdgeSingular): Position => {
   const bends = drawnBendsOf(edge);
   const path = [edge.sourceEndpoint(), ...bends, edge.targetEndpoint()];
-  const { w, h } = edge.boundingBox(LABEL_ONLY);
+  const { w, h } = edge.boundingBox(LABEL_BOX_OPTIONS);
   const size: NodeSize = { width: w, height: h };
 
   return labelOffsetOf(path, edge.midpoint(), size);
