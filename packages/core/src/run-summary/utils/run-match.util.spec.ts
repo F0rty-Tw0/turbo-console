@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { isNearRun, matchSummary, runCommandOf, summaryCandidateOf, taskOutcomesOf } from './run-match.util.ts';
+import { isNearRun, runCommandOf, summaryCandidateOf, taskOutcomesOf } from './run-match.util.ts';
+import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
 import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
 import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from '../common/run-match.type.ts';
 import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
@@ -41,6 +42,13 @@ const fileAt = (mtimeMs: number): RunSummaryFile => {
   return file;
 };
 
+/** The match part of `summaryCandidateOf`: `null` for a summary that is no candidate or does not fit. */
+const matchOf = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
+  const candidate = summaryCandidateOf(summary, run);
+
+  return candidate?.match ?? null;
+};
+
 describe('FEATURE: run match', () => {
   describe('GIVEN a run of web#build', () => {
     it('WHEN its command is built THEN it is the turbo run line without --skip-infer and --summarize', () => {
@@ -70,19 +78,19 @@ describe('FEATURE: run match', () => {
     it('WHEN matched THEN the entry of the task gives the cache status and its own duration', () => {
       const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY, OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(OWN_MATCH);
     });
 
     it('WHEN its start equals launchedAt THEN it still matches', () => {
       const summary = summaryOf(COMMAND, { ...WINDOW, startTime: LAUNCHED_AT }, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(OWN_MATCH);
     });
 
     it('WHEN its start equals endedAt THEN it still matches', () => {
       const summary = summaryOf(COMMAND, { startTime: ENDED_AT, endTime: ENDED_AT + 1000 }, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(OWN_MATCH);
     });
   });
 
@@ -90,31 +98,31 @@ describe('FEATURE: run match', () => {
     it('WHEN it started before launchedAt THEN there is no match', () => {
       const summary = summaryOf(COMMAND, { ...WINDOW, startTime: LAUNCHED_AT - 1 }, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN it started after endedAt THEN there is no match', () => {
       const summary = summaryOf(COMMAND, { startTime: ENDED_AT + 1, endTime: ENDED_AT + 1000 }, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN its command is another filter THEN there is no match', () => {
       const summary = summaryOf('turbo run build --filter=lib', WINDOW, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN its exit code differs THEN there is no match', () => {
       const summary = summaryOf(COMMAND, WINDOW, 1, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN it lists other entries but none for the task, and every attempted task ended, THEN there is no match', () => {
       const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
   });
 
@@ -122,25 +130,25 @@ describe('FEATURE: run match', () => {
     it('WHEN it lists no task, attempted 0 (Ctrl+C before turbo attempted one) THEN it matches as interrupted', () => {
       const summary = summaryOf(COMMAND, WINDOW, 0, []);
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN it lists no task, attempted 1 (turbo 2.11.7 after Ctrl+C) THEN it matches as interrupted', () => {
       const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 0, []));
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN it lists the task but attempted more tasks than ended THEN it matches as interrupted', () => {
       const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 0, [OWN_ENTRY]));
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN its span is broken THEN there is no match', () => {
       const summary = summaryOf(COMMAND, { startTime: WINDOW.startTime, endTime: LAUNCHED_AT }, 0, []);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
   });
 
@@ -150,19 +158,19 @@ describe('FEATURE: run match', () => {
     it('WHEN it lists the task THEN the entry gives the data and the run is not interrupted', () => {
       const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 1, [OWN_ENTRY]));
 
-      expect(matchSummary(summary, failedRun)).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, failedRun)).toStrictEqual(OWN_MATCH);
     });
 
     it('WHEN it lists another entry but none for the task (a failed dependency) THEN there is no match', () => {
       const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 1, [DEPENDENCY_ENTRY]));
 
-      expect(matchSummary(summary, failedRun)).toBeNull();
+      expect(matchOf(summary, failedRun)).toBeNull();
     });
 
     it('WHEN it lists no task THEN there is no match', () => {
       const summary = summaryOf(COMMAND, WINDOW, 1, []);
 
-      expect(matchSummary(summary, failedRun)).toBeNull();
+      expect(matchOf(summary, failedRun)).toBeNull();
     });
   });
 
@@ -171,14 +179,14 @@ describe('FEATURE: run match', () => {
       const backwards = taskEntry('web#build', { startTime: TASK_SPAN.endTime, endTime: TASK_SPAN.startTime }, 'MISS');
       const summary = summaryOf(COMMAND, WINDOW, 0, [backwards]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN the entry spans -1e308 to 1e308, an infinite duration, THEN there is no match', () => {
       const endless = taskEntry('web#build', { startTime: -1e308, endTime: 1e308 }, 'MISS');
       const summary = summaryOf(COMMAND, WINDOW, 0, [endless]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
   });
 
@@ -190,33 +198,33 @@ describe('FEATURE: run match', () => {
     it('WHEN an umbrella run is matched THEN there is no cache and the duration is the summary span', () => {
       const summary = summaryOf(umbrellaCommand, WINDOW, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task: umbrella })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
+      expect(matchOf(summary, { ...RUN, task: umbrella })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
     });
 
     it('WHEN the umbrella run attempted more tasks than ended THEN it matches as interrupted', () => {
       const summary = cutShortOf(summaryOf(umbrellaCommand, WINDOW, 0, [fileEntry]));
 
-      expect(matchSummary(summary, { ...RUN, task: umbrella })).toStrictEqual(INTERRUPTED_MATCH);
+      expect(matchOf(summary, { ...RUN, task: umbrella })).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN the umbrella summary ends before it starts THEN there is no match', () => {
       const summary = summaryOf(umbrellaCommand, { startTime: WINDOW.startTime, endTime: LAUNCHED_AT }, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task: umbrella })).toBeNull();
+      expect(matchOf(summary, { ...RUN, task: umbrella })).toBeNull();
     });
 
     it('WHEN an aggregate run is matched THEN there is no cache and the duration is the summary span', () => {
       const task: TaskNode = { ...TASK_NODE_STUB, id: 'web#e2e-ci--all', name: 'e2e-ci--all', kind: 'atom-aggregate' };
       const summary = summaryOf('turbo run e2e-ci--all --filter=web', WINDOW, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
+      expect(matchOf(summary, { ...RUN, task })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
     });
 
     it('WHEN an atom file run is matched THEN it has its own entry, so the entry gives the data', () => {
       const task: TaskNode = { ...TASK_NODE_STUB, id: 'web#e2e--a.spec.ts', name: 'e2e--a.spec.ts', kind: 'atom-file' };
       const summary = summaryOf('turbo run e2e--a.spec.ts --filter=web', WINDOW, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task })).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, { ...RUN, task })).toStrictEqual(OWN_MATCH);
     });
   });
 

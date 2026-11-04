@@ -6,7 +6,7 @@ import { isNearRun, summaryCandidateOf } from '../utils/run-match.util.ts';
 
 /**
  * Spec §4.1.2 and D7: what the run summary of exactly `run` says: its `match` (cache status and duration, as
- * `matchSummary` gives it) and the `outcomes` of every task it lists. Only the newest `MAX_SUMMARY_TRIES` files of
+ * `summaryCandidateOf` gives it) and the `outcomes` of every task it lists. Only the newest `MAX_SUMMARY_TRIES` files of
  * `<root>/.turbo/runs` written near the run (`isNearRun`) are tried, one at a time, so at most the summary being read,
  * the outcomes of the fitting one and those of one that does not fit are held (a second that does not fit drops the
  * first); files that cannot be read or parsed are dropped. The one fitting summary is the answer; with none, the one
