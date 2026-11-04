@@ -79,7 +79,8 @@ const entryOf = (bytes: Uint8Array, start: number, end: number): RunLogEntry | n
 /**
  * Reads every complete `{…}` object of `bytes` from index `from`, ignoring the `[`, `,` and `]` between them.
  * `next` is the index to resume from: the `{` of the first incomplete object, else the byte after the last
- * complete object, else `from`. The caller keeps `bytes.subarray(next)`, appends the next read and scans from 0.
+ * complete object, else `from`. The caller re-reads the file from the offset of `next`, since turbo rewrites the
+ * closing `]` in place, and may scan a later part of the same read from a `from` past 0.
  * `leadingInvalid` counts per call, so it describes the head of a file only for a scan from offset 0.
  */
 export const scanRunLog = (bytes: Uint8Array, from: number): RunLogScan => {
