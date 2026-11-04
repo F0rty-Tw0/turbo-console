@@ -2,6 +2,7 @@ import { test } from './graph.fixture.ts';
 import { CONTROLS_CACHED_STUB } from './test/stubs/graph-controls.stub.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
+import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const AC1 = { description: 'M4-2 AC1', type: 'requirement' };
 
@@ -107,10 +108,16 @@ test.describe('FEATURE: graph package list', () => {
   test(
     'GIVEN 300 packages, a tap on a node far down the list scrolls its row into view',
     { annotation: AC1 },
-    async ({ graphCanvas, graphHost, graphKeys, graphPage }): Promise<void> => {
+    async ({ graphCanvas, graphHost, graphKeys, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
-      await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
+      await test.step('AND the 300-package state is sent and laid out', async (): Promise<void> => {
+        await graphHost.sendState(largeState());
+        await graphProbe.expectLayoutSettled();
+      });
+
+      await test.step('AND Fit is pressed, since the open itself shows only the top of a graph this big', async (): Promise<void> =>
+        graphPage.pressButton(FIT_LABEL));
 
       await test.step('AND pkg-290 is tapped', async (): Promise<void> => graphCanvas.tapNode('pkg-290'));
 
