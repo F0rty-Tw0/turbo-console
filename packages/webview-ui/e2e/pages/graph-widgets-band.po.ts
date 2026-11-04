@@ -6,7 +6,6 @@ import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { isInside, overlaps } from '../test/utils/element-rect.spec.util.ts';
 import { collapsedLabelIn } from '../test/utils/graph-collapsed-label.spec.util.ts';
-import { folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
 import { bandFaultsOf } from '../test/utils/graph-widget-band.spec.util.ts';
 import { focusFolderNameOf, isCutText, isHitAtCentre, rectOf } from '../test/utils/graph-widgets.spec.util.ts';
 
@@ -204,10 +203,11 @@ export class GraphWidgetsBand extends GraphWidgetsLayout {
     return count;
   }
 
+  /** Waits for the folder's box (`drawnFolder`): `expect.poll` fails at once on the throw of a read made before the layout placed it. */
   private async canvasLabelOf(folder: string): Promise<string> {
-    const folders = await this.folders.folders();
+    const found = await this.folders.drawnFolder(folder);
 
-    return folderKeyed(folders, folder).text;
+    return found.text;
   }
 
   private async chevronDrop(folder: string): Promise<number> {

@@ -18,7 +18,7 @@ import {
   sortedLinks
 } from '../test/utils/graph-folder-facts.spec.util.ts';
 import { boxCornerOf, folderTapOf } from '../test/utils/graph-folder-points.spec.util.ts';
-import { folderKeyed, isFolderInView } from '../test/utils/graph-folders.spec.util.ts';
+import { findFolder, folderKeyed, outOfViewOf } from '../test/utils/graph-folders.spec.util.ts';
 import { expectMinUnder } from '../test/utils/graph-min-under.spec.util.ts';
 
 /** The accessible name of a folder's list header button. */
@@ -50,25 +50,37 @@ export class GraphFoldersPage {
     return this.page.evaluate((): ProbeFolderLink[] => window.__tcGraphProbe?.folderLinks() ?? []);
   }
 
-  /** Taps the collapsed node's centre, or a box's top left corner. */
-  public async tapFolder(folder: string): Promise<void> {
+  /** Waits for the folder's box, then reads it: the probe holds no folders until the state posted after `open()` is handled and laid out. */
+  public async drawnFolder(folder: string): Promise<ProbeFolder> {
+    const message = `graph e2e: no box for folder '${folder}' is drawn`;
+
+    await expect.poll(async (): Promise<boolean> => this.isDrawn(folder), { message }).toBe(true);
+
     const folders = await this.folders();
-    const point = folderTapOf(folderKeyed(folders, folder));
+
+    return folderKeyed(folders, folder);
+  }
+
+  /** Taps the collapsed node's centre, or a box's top left corner, once it is drawn (`drawnFolder`). */
+  public async tapFolder(folder: string): Promise<void> {
+    const found = await this.drawnFolder(folder);
+    const point = folderTapOf(found);
 
     await this.page.mouse.click(point.x, point.y);
   }
 
+  /** Double taps the folder once it is drawn (`drawnFolder`): a tap right after `open()` comes before the layout has placed it. */
   public async doubleTapFolder(folder: string): Promise<void> {
-    const folders = await this.folders();
-    const point = folderTapOf(folderKeyed(folders, folder));
+    const found = await this.drawnFolder(folder);
+    const point = folderTapOf(found);
 
     await this.page.mouse.dblclick(point.x, point.y);
   }
 
-  /** Double taps the box's top left corner, inside its padding and clear of its packages. */
+  /** Double taps the box's top left corner, inside its padding and clear of its packages, once it is drawn (`drawnFolder`). */
   public async doubleTapBoxPadding(folder: string): Promise<void> {
-    const folders = await this.folders();
-    const point = boxCornerOf(folderKeyed(folders, folder));
+    const found = await this.drawnFolder(folder);
+    const point = boxCornerOf(found);
 
     await this.page.mouse.dblclick(point.x, point.y);
   }
@@ -127,7 +139,7 @@ export class GraphFoldersPage {
     await expect.poll(async (): Promise<boolean> => this.areAll(isCollapsed)).toBe(true);
   }
 
-  /** Every folder in `keys` overlaps the canvas. */
+  /** Every folder in `keys` is drawn and overlaps the canvas. */
   public async expectFoldersInView(keys: string[]): Promise<void> {
     await expect.poll(async (): Promise<string[]> => this.outOfView(keys)).toEqual([]);
   }
@@ -155,9 +167,16 @@ export class GraphFoldersPage {
     return sortedLinks(links.map(linkFactsOf));
   }
 
+  private async isDrawn(folder: string): Promise<boolean> {
+    const folders = await this.folders();
+    const found = findFolder(folders, folder);
+
+    return found !== undefined;
+  }
+
   private async isVisible(folder: string): Promise<boolean | undefined> {
     const folders = await this.folders();
-    const found = folders.find((candidate): boolean => candidate.folder === folder);
+    const found = findFolder(folders, folder);
 
     return found?.isVisible;
   }
@@ -185,8 +204,7 @@ export class GraphFoldersPage {
     const container = this.page.getByRole('application', { name: GRAPH_LABEL });
     const canvas = await container.evaluate(readRect);
     const folders = await this.folders();
-    const isOut = (key: string): boolean => !isFolderInView(canvas, folderKeyed(folders, key));
 
-    return keys.filter(isOut);
+    return outOfViewOf(canvas, folders, keys);
   }
 }

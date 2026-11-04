@@ -9,7 +9,7 @@ import type { ProbeFolder, ProbeNode, ProbeState } from '../../src/graph/common/
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { boxRectOf, folderKeyed, holdsCentre, membershipFaultsOf, overlapFaultsOf } from '../test/utils/graph-folders.spec.util.ts';
+import { boxRectOf, findFolder, holdsCentre, membershipFaultsOf, overlapFaultsOf } from '../test/utils/graph-folders.spec.util.ts';
 import { freeSpotOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
@@ -31,14 +31,6 @@ const centreEntry = (node: ProbeNode): [string, Position] => {
 };
 
 const opacityEntry = (node: ProbeNode): [string, number] => [node.id, node.effectiveOpacity];
-
-const nodeNamed = (nodes: ProbeNode[], name: string): ProbeNode => {
-  const node = nodes.find((candidate): boolean => candidate.id === name);
-
-  if (node === undefined) throw new Error(`graph e2e: no node ${name} is drawn`);
-
-  return node;
-};
 
 /** The folder boxes the page draws and the packages inside them, read through the probe. */
 export class GraphBoxesPage {
@@ -107,11 +99,11 @@ export class GraphBoxesPage {
   public async expectFolderPackages(folder: string, names: string[]): Promise<void> {
     const sorted = sortedNames(names);
 
-    await expect.poll(async (): Promise<string[]> => this.packagesOf(folder)).toEqual(sorted);
+    await expect.poll(async (): Promise<string[] | undefined> => this.packagesOf(folder)).toEqual(sorted);
   }
 
   public async expectFolderCollapsed(folder: string, isCollapsed: boolean): Promise<void> {
-    await expect.poll(async (): Promise<boolean> => this.isCollapsed(folder)).toBe(isCollapsed);
+    await expect.poll(async (): Promise<boolean | undefined> => this.isCollapsed(folder)).toBe(isCollapsed);
   }
 
   public async expectFolderStates(state: ProbeState): Promise<void> {
@@ -151,7 +143,7 @@ export class GraphBoxesPage {
 
   /** The package's centre lies outside the folder's box: the box shrank to its other members. */
   public async expectOutsideBox(name: string, folder: string): Promise<void> {
-    await expect.poll(async (): Promise<boolean> => this.isInsideBox(name, folder)).toBe(false);
+    await expect.poll(async (): Promise<boolean | undefined> => this.isInsideBox(name, folder)).toBe(false);
   }
 
   protected async folders(): Promise<ProbeFolder[]> {
@@ -170,16 +162,22 @@ export class GraphBoxesPage {
     return folders.length;
   }
 
-  private async isCollapsed(folder: string): Promise<boolean> {
+  /** Undefined while the box is not drawn, so the poll retries instead of stopping at a throw. */
+  private async isCollapsed(folder: string): Promise<boolean | undefined> {
     const folders = await this.folders();
+    const found = findFolder(folders, folder);
 
-    return folderKeyed(folders, folder).isCollapsed;
+    return found?.isCollapsed;
   }
 
-  private async packagesOf(folder: string): Promise<string[]> {
+  /** Undefined while the box is not drawn, so the poll retries instead of stopping at a throw. */
+  private async packagesOf(folder: string): Promise<string[] | undefined> {
     const folders = await this.folders();
+    const found = findFolder(folders, folder);
 
-    return sortedNames(folderKeyed(folders, folder).packages);
+    if (found === undefined) return undefined;
+
+    return sortedNames(found.packages);
   }
 
   /** The narrowest box's rendered width; 0 while no box is drawn. */
@@ -208,11 +206,19 @@ export class GraphBoxesPage {
     return overlapFaultsOf(folders);
   }
 
-  private async isInsideBox(name: string, folder: string): Promise<boolean> {
+  /** Undefined while the box or the package is not drawn, so the poll retries instead of stopping at a throw. */
+  private async isInsideBox(name: string, folder: string): Promise<boolean | undefined> {
     const folders = await this.folders();
     const nodes = await this.probe.nodes();
-    const rect: ElementRect = boxRectOf(folderKeyed(folders, folder));
+    const found = findFolder(folders, folder);
+    const node = nodes.find((candidate): boolean => candidate.id === name);
 
-    return holdsCentre(rect, nodeNamed(nodes, name));
+    const isDrawn = found !== undefined && node !== undefined;
+
+    if (!isDrawn) return undefined;
+
+    const rect: ElementRect = boxRectOf(found);
+
+    return holdsCentre(rect, node);
   }
 }

@@ -10,7 +10,7 @@ import type { BoxDragRecord, PackageFlags } from '../common/graph-folders.type.t
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { shrinkByOnePixel } from '../test/utils/graph-container-shrink.spec.util.ts';
 import { gapBetween, hullCentreOf, moveFaultsOf } from '../test/utils/graph-folder-points.spec.util.ts';
-import { folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
+import { findFolder } from '../test/utils/graph-folders.spec.util.ts';
 
 /** The opacity of a dimmed package, drawn once however many dimmed folders hold it. */
 const DIMMED_OPACITY = 0.25;
@@ -85,7 +85,7 @@ export class GraphFolderPackages {
 
   /** The collapsed node of `folder` is centred on the bounding box of its packages' centres, within a pixel. */
   public async expectCollapsedCentred(folder: string): Promise<void> {
-    await expect.poll(async (): Promise<number> => this.centreGap(folder)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
+    await expect.poll(async (): Promise<number | undefined> => this.centreGap(folder)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
   }
 
   /** The package link is drawn: a collapsed folder's other links never hide it. */
@@ -137,10 +137,14 @@ export class GraphFolderPackages {
     return moveFaultsOf(names, now, drag, isMoving);
   }
 
-  private async centreGap(folder: string): Promise<number> {
+  /** Undefined while the box is not drawn: the number matcher then fails, so the poll retries instead of stopping at a throw. */
+  private async centreGap(folder: string): Promise<number | undefined> {
     const folders = await this.folderPage.folders();
     const nodes = await this.probe.nodes();
-    const target = folderKeyed(folders, folder);
+    const target = findFolder(folders, folder);
+
+    if (target === undefined) return undefined;
+
     const members = nodes.filter((node): boolean => target.packages.includes(node.id));
     const centre: ViewportPoint = { x: target.renderedX, y: target.renderedY };
 
