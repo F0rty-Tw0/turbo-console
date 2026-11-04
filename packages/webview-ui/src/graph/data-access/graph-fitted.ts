@@ -4,10 +4,9 @@ import { panBy, viewportOf } from './graph-camera.ts';
 import { centreOnNode, fitVisible, openViewportOf } from './graph-visibility.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { FittedCamera } from '../common/fitted-camera.type.ts';
+import { FIT_PADDING_PX } from '../common/graph-layout.const.ts';
 import type { GraphViewHandlers, Viewport } from '../common/graph-page.type.ts';
 import { isSameViewport } from '../utils/viewport.util.ts';
-
-const FIT_PADDING_PX = 24;
 
 /**
  * Cytoscape emits these after a user gesture, and after the `viewport` event that saves it; it emits them also when the

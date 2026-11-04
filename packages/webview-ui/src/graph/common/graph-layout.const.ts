@@ -48,3 +48,6 @@ export const LABEL_GAP_PX = 4;
 
 /** A graph that opens with no saved camera and would fit below this zoom opens at it instead, top-centred, so its labels read; Fit still fits. */
 export const OPEN_ZOOM_FLOOR = 0.75;
+
+/** The clear gap a fit leaves around the visible graph, in px; the floored open keeps the same gap above it. */
+export const FIT_PADDING_PX = 24;
