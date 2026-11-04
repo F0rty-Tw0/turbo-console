@@ -58,7 +58,10 @@ const viewOf = (bytes: Uint8Array, from: number, isLineMode: boolean): Uint8Arra
   return bytes.subarray(0, newline + 1);
 };
 
-/** Where the walk scans next: after a broken line, after a line-mode line with no open object, else `-1` (done). */
+/**
+ * Where the walk scans next: after a broken line, after a line-mode line with no open object, else `-1` (done). An open
+ * object that is not broken ends the walk: no `{` follows it in the window, so no later line holds an object.
+ */
 const nextFromOf = (bytes: Uint8Array, view: Uint8Array, next: number, brokenEnd: number): number => {
   if (brokenEnd !== -1) return brokenEnd;
 
@@ -83,8 +86,9 @@ const probedOf = (probe: Probe, scan: RunLogScan, isBroken: boolean): Probe => {
 
 /**
  * Scans the window from `start`, resuming after each broken line. After the first break it scans one line at a time:
- * rescanning the rest of the window per broken line is quadratic. A line with no object leaves `next` in place, so a
- * `]` turbo rewrites is re-read.
+ * rescanning the rest of the window per broken line is quadratic. So after a break a multi-line (pretty-printed) object
+ * counts as broken lines; turbo writes compact objects. Moving `next` past a broken line is a guard: the scan of the
+ * later line moves it on anyway, unless that scan stops before the `{`. A line with no object leaves `next` in place, so a `]` turbo rewrites is re-read.
  */
 const walkOf = (bytes: Uint8Array, start: number, cursor: RunLogCursor): Walk => {
   const entries: RunLogEntry[] = [];
