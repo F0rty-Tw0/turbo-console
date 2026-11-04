@@ -1,4 +1,4 @@
-import type { RunLogRead } from '../../common/run-log-tail.type.ts';
+import type { RunLogPorts, RunLogRead } from '../../common/run-log-tail.type.ts';
 
 /** One `read` call: where it started and how many bytes it returned (`0` for a missing file). */
 export type RunLogReadRecord = {
@@ -6,9 +6,19 @@ export type RunLogReadRecord = {
   readonly length: number;
 };
 
+/** One directory watcher the fake handed out; `closed` flips when the code under test closes it. */
+export type FakeWatcherRecord = {
+  readonly dir: string;
+  // eslint-disable-next-line local/readonly-type-properties -- set in place when the code under test closes the watcher
+  closed: boolean;
+  readonly onChange: (fileName: string | null) => void;
+  readonly onError: (error: unknown) => void;
+};
+
 /**
  * An in-memory log folder. `hold` makes every later `read` wait until the returned release is called; `append` does
- * turbo's rewrite: the last `]\n` becomes `,\n` + line + `\n]\n`, or the first line goes over `[\n]\n`.
+ * turbo's rewrite: the last `]\n` becomes `,\n` + line + `\n]\n`, or the first line goes over `[\n]\n`. `emit` and `fail`
+ * call the open watchers of a folder; `removed` and `logs` record what `ports` was asked.
  */
 export type FakeLogFs = {
   readonly read: RunLogRead;
@@ -17,4 +27,29 @@ export type FakeLogFs = {
   readonly write: (path: string, lines: string[]) => void;
   readonly append: (path: string, line: string) => void;
   readonly hold: () => () => void;
+  readonly watchers: FakeWatcherRecord[];
+  readonly emit: (dir: string, fileName: string | null) => void;
+  readonly fail: (dir: string, error: unknown) => void;
+  readonly removed: string[];
+  readonly logs: string[];
+  readonly ports: RunLogPorts;
+};
+
+/** The watcher side of the fake: every watcher it handed out, and the ways to call the open ones of a folder. */
+export type FakeWatchers = {
+  readonly watchers: FakeWatcherRecord[];
+  readonly watch: RunLogPorts['watch'];
+  readonly emit: (dir: string, fileName: string | null) => void;
+  readonly fail: (dir: string, error: unknown) => void;
+};
+
+/**
+ * The folder calls of the fake: `remove` deletes from `files` and records the path in `removed`, `log` records in
+ * `logs`.
+ */
+export type FolderCalls = {
+  readonly removed: string[];
+  readonly logs: string[];
+  readonly log: RunLogPorts['log'];
+  readonly remove: RunLogPorts['remove'];
 };
