@@ -25,7 +25,7 @@ export const argsOf = (packageName: string, taskName: string): string[] => {
   return args;
 };
 
-/** The run `matchRunSummary` takes for `<packageName>#<taskName>`, launched at `launchedAt` and ended now. */
+/** The run `matchRunTasks` takes for `<packageName>#<taskName>`, launched at `launchedAt` and ended now. */
 export const runToMatchOf = (packageName: string, taskName: string, launchedAt: number, exitCode: number): RunToMatch => {
   const run: RunToMatch = { task: taskNodeOf(packageName, taskName), packageName, launchedAt, endedAt: Date.now(), exitCode };
 

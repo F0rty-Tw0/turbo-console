@@ -61,7 +61,6 @@ const RUNTIME_EXPORTS = [
   'isUnknownRunLog',
   'isWithin',
   'loadWorkspace',
-  'matchRunSummary',
   'matchRunTasks',
   'packageGraphSchema',
   'plainLine',

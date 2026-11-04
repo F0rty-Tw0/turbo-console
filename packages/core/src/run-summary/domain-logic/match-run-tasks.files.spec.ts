@@ -1,13 +1,13 @@
-import { chmod, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { matchRunSummary } from './match-run-summary.ts';
+import { matchRunTasks } from './match-run-tasks.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
-import type { RunToMatch } from '../common/run-match.type.ts';
+import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from '../common/run-match.type.ts';
 import { MAX_SUMMARY_TRIES, SUMMARY_MTIME_SLACK_MS } from '../common/run-summary.const.ts';
 import { TASK_NODE_STUB } from '../test/stubs/task-node.stub.ts';
 import { newRunsRoot, runsDirOf, summaryJson, taskEntry, writeRun } from '../test/utils/run-summary.spec.util.ts';
@@ -43,7 +43,11 @@ const MATCHING = summaryJson(COMMAND, WINDOW, 0, [taskEntry('web#build', WINDOW,
 
 const OTHER = summaryJson('turbo run test --filter=web', WINDOW, 0, []);
 
-const EXPECTED = { cache: 'HIT', durationMs: 4000, interrupted: false };
+const MATCH: RunMatch = { cache: 'HIT', durationMs: 4000, interrupted: false };
+
+const OUTCOMES: TaskOutcome[] = [{ taskId: 'web#build', state: 'passed' }];
+
+const EXPECTED: RunTasksMatch = { match: MATCH, outcomes: OUTCOMES };
 
 /** `count` mtimes after `OLDEST`, half a second apart, all within the window of `RUN`. */
 const newerTimes = (count: number): number[] => Array.from({ length: count }, (_, index) => OLDEST + (index + 1) / 2);
@@ -59,23 +63,13 @@ const newRoot = async (): Promise<string> => {
   return newRunsRoot(tempDir, `case ${caseCount}`);
 };
 
-describe('FEATURE: match a run to its summary', () => {
+describe('FEATURE: match a run to its summary among the files of .turbo/runs', () => {
   beforeAll(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), 'match-run-summary-'));
+    tempDir = await mkdtemp(join(tmpdir(), 'match-run-tasks-files-'));
   });
 
   afterAll(async () => {
     await rm(tempDir, { recursive: true, force: true, maxRetries: 5 });
-  });
-
-  describe('GIVEN a root with no .turbo/runs', () => {
-    it('WHEN matched THEN it is null', async () => {
-      const root = join(tempDir, 'no runs');
-
-      await mkdir(root);
-
-      await expect(matchRunSummary(root, RUN)).resolves.toBeNull();
-    });
   });
 
   describe('GIVEN a runs directory with one matching summary', () => {
@@ -84,7 +78,7 @@ describe('FEATURE: match a run to its summary', () => {
 
       await writeRun(root, 'a.json', MATCHING, OLDEST);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual(EXPECTED);
+      await expect(matchRunTasks(root, RUN)).resolves.toStrictEqual(EXPECTED);
     });
   });
 
@@ -95,18 +89,7 @@ describe('FEATURE: match a run to its summary', () => {
       await writeRun(root, 'a.json', MATCHING, OLDEST);
       await writeRun(root, 'b.json', OTHER, OLDEST + 1);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual(EXPECTED);
-    });
-  });
-
-  describe('GIVEN two summaries that both fit the run', () => {
-    it('WHEN matched THEN the run is ambiguous, so it is null', async () => {
-      const root = await newRoot();
-
-      await writeRun(root, 'a.json', MATCHING, OLDEST);
-      await writeRun(root, 'b.json', MATCHING, OLDEST + 1);
-
-      await expect(matchRunSummary(root, RUN)).resolves.toBeNull();
+      await expect(matchRunTasks(root, RUN)).resolves.toStrictEqual(EXPECTED);
     });
   });
 
@@ -122,6 +105,12 @@ describe('FEATURE: match a run to its summary', () => {
     const libTask: TaskNode = { ...TASK_NODE_STUB, id: 'lib#build' };
     const appRun: RunToMatch = { ...RUN, task: appTask, packageName: 'app' };
     const libRun: RunToMatch = { ...RUN, task: libTask, packageName: 'lib' };
+    const appMatch: RunMatch = { cache: 'MISS', durationMs: 100, interrupted: false };
+    const libMatch: RunMatch = { cache: 'MISS', durationMs: 700, interrupted: false };
+    const libOutcome: TaskOutcome = { taskId: 'lib#build', state: 'passed' };
+    const appOutcomes: TaskOutcome[] = [{ taskId: 'app#build', state: 'passed' }, libOutcome];
+    const appExpected: RunTasksMatch = { match: appMatch, outcomes: appOutcomes };
+    const libExpected: RunTasksMatch = { match: libMatch, outcomes: [libOutcome] };
     let root = '';
 
     beforeAll(async () => {
@@ -132,11 +121,11 @@ describe('FEATURE: match a run to its summary', () => {
     });
 
     it('WHEN the app run is matched THEN it gets the app summary data', async () => {
-      await expect(matchRunSummary(root, appRun)).resolves.toStrictEqual({ cache: 'MISS', durationMs: 100, interrupted: false });
+      await expect(matchRunTasks(root, appRun)).resolves.toStrictEqual(appExpected);
     });
 
     it('WHEN the lib run is matched THEN it gets the lib summary data, not the dependency entry of the app one', async () => {
-      await expect(matchRunSummary(root, libRun)).resolves.toStrictEqual({ cache: 'MISS', durationMs: 700, interrupted: false });
+      await expect(matchRunTasks(root, libRun)).resolves.toStrictEqual(libExpected);
     });
   });
 
@@ -146,7 +135,7 @@ describe('FEATURE: match a run to its summary', () => {
 
       await writeRun(root, 'a.json', MATCHING, OLDEST - SUMMARY_MTIME_SLACK_MS / 1000 - 1);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toBeNull();
+      await expect(matchRunTasks(root, RUN)).resolves.toBeNull();
     });
   });
 
@@ -156,7 +145,7 @@ describe('FEATURE: match a run to its summary', () => {
 
       await writeRun(root, 'a.json', MATCHING, OLDEST - 90);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual(EXPECTED);
+      await expect(matchRunTasks(root, RUN)).resolves.toStrictEqual(EXPECTED);
     });
   });
 
@@ -169,7 +158,7 @@ describe('FEATURE: match a run to its summary', () => {
 
       for (const seconds of futureTimes) await writeRun(root, `future-${seconds}.json`, MATCHING, seconds);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual(EXPECTED);
+      await expect(matchRunTasks(root, RUN)).resolves.toStrictEqual(EXPECTED);
     });
   });
 
@@ -182,19 +171,19 @@ describe('FEATURE: match a run to its summary', () => {
       for (const [index, seconds] of newerTimes(MAX_SUMMARY_TRIES).entries())
         await writeRun(root, `other-${index}.json`, OTHER, seconds);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toBeNull();
+      await expect(matchRunTasks(root, RUN)).resolves.toBeNull();
     });
   });
 
   describe('GIVEN a matching summary next to a fitting one whose task entry ends before it starts', () => {
-    it('WHEN matched THEN the bad one is no candidate, so the good one matches', async () => {
+    it('WHEN matched THEN the bad one does not fit, so the good one matches', async () => {
       const root = await newRoot();
       const backwards = taskEntry('web#build', { startTime: WINDOW.endTime, endTime: WINDOW.startTime }, 'HIT');
 
       await writeRun(root, 'a.json', MATCHING, OLDEST);
       await writeRun(root, 'b.json', summaryJson(COMMAND, WINDOW, 0, [backwards]), OLDEST + 1);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual(EXPECTED);
+      await expect(matchRunTasks(root, RUN)).resolves.toStrictEqual(EXPECTED);
     });
   });
 
@@ -205,7 +194,7 @@ describe('FEATURE: match a run to its summary', () => {
       await writeRun(root, 'a.json', MATCHING, OLDEST);
       await writeRun(root, 'b.json', '{', OLDEST + 1);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual(EXPECTED);
+      await expect(matchRunTasks(root, RUN)).resolves.toStrictEqual(EXPECTED);
     });
   });
 
@@ -217,7 +206,7 @@ describe('FEATURE: match a run to its summary', () => {
       await writeFile(outside, MATCHING);
       await symlink(outside, join(runsDirOf(root), 'a.json'));
 
-      await expect(matchRunSummary(root, RUN)).resolves.toBeNull();
+      await expect(matchRunTasks(root, RUN)).resolves.toBeNull();
     });
   });
 
@@ -229,7 +218,7 @@ describe('FEATURE: match a run to its summary', () => {
       await chmod(runs, 0o000);
 
       try {
-        const matching = matchRunSummary(root, RUN);
+        const matching = matchRunTasks(root, RUN);
 
         await expect(matching).rejects.toBeInstanceOf(TurboException);
         await expect(matching).rejects.toMatchObject({ kind: 'io', message: `${runs}: EACCES` });

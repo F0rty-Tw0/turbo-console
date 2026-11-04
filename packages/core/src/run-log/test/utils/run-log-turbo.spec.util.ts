@@ -60,7 +60,7 @@ export const disposeRunLogRepos = async (repos: RunLogRepo[]): Promise<void> => 
   if (reasons.length > 0) throw new AggregateError(reasons, 'run-log gate repos were not disposed');
 };
 
-/** `<packageName>#<taskName>` as the plain task node `turboRunArgs` and `matchRunSummary` take. */
+/** `<packageName>#<taskName>` as the plain task node `turboRunArgs` and `matchRunTasks` take. */
 export const taskNodeOf = (packageName: string, taskName: string): TaskNode => {
   const task: TaskNode = { ...TASK_NODE_STUB, id: `${packageName}#${taskName}`, name: taskName, command: null };
 

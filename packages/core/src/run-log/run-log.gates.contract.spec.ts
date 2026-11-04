@@ -13,8 +13,9 @@ import { jsonElementCount } from './test/utils/run-log-source.spec.util.ts';
 import { createRunLogRepo, disposeRunLogRepos, readRunLog, readRunLogBytes } from './test/utils/run-log-turbo.spec.util.ts';
 import { scanRunLog } from './utils/run-log-scan.util.ts';
 import type { RunMatch } from '../run-summary/common/run-match.type.ts';
-import { matchRunSummary } from '../run-summary/domain-logic/match-run-summary.ts';
+import { matchRunTasks } from '../run-summary/domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from '../run-summary/domain-logic/read-newest-run-summary.ts';
+import { runMatchOf } from '../run-summary/test/utils/run-match.spec.util.ts';
 import type { RunSummary } from '../shared/turbo/common/turbo.type.ts';
 import { exitCodeOf, stopRun, waitForExit } from '../shared/turbo/test/utils/turbo-process.spec.util.ts';
 
@@ -81,7 +82,7 @@ describe('FEATURE: turbo 2.11.7 structured log gates for live run progress (U7 D
       taskSources = new Set(sourcesOf(entries).filter((source) => source !== TURBO_SOURCE));
       pairs = eventPairsOf(entries);
       fixturePairs = await fixtureEventPairs('g1-live');
-      summaryMatch = await matchRunSummary(repo.dir, runToMatchOf(RUN_LOG_APP_STUB, 'build', launchedAt, exitCodeOf(child)));
+      summaryMatch = runMatchOf(await matchRunTasks(repo.dir, runToMatchOf(RUN_LOG_APP_STUB, 'build', launchedAt, exitCodeOf(child))));
     });
 
     it('WHEN the log is polled while go is absent THEN a seen event for @acme/lib#build is already in it (G1)', () => {
@@ -104,7 +105,7 @@ describe('FEATURE: turbo 2.11.7 structured log gates for live run progress (U7 D
       expect(pairs).not.toStrictEqual([]);
     });
 
-    it('THEN matchRunSummary still matches the run (G3)', () => {
+    it('THEN matchRunTasks still matches the run (G3)', () => {
       expect(summaryMatch).toMatchObject({ interrupted: false });
     });
 
@@ -165,7 +166,9 @@ describe('FEATURE: turbo 2.11.7 structured log gates for live run progress (U7 D
       summary = await readNewestRunSummary(repo.dir);
       cacheStatus = cacheStatusOf(summary, LIB_HIT_FLAG);
       events = eventsOf(await readRunLog(join(repo.dir, logOf('d'))));
-      summaryMatch = await matchRunSummary(repo.dir, runToMatchOf(RUN_LOG_LIB_STUB, 'hit-flag', launchedAt, exitCodeOf(child)));
+      summaryMatch = runMatchOf(
+        await matchRunTasks(repo.dir, runToMatchOf(RUN_LOG_LIB_STUB, 'hit-flag', launchedAt, exitCodeOf(child)))
+      );
     });
 
     it('THEN the second summary records HIT', () => {
@@ -176,7 +179,7 @@ describe('FEATURE: turbo 2.11.7 structured log gates for live run progress (U7 D
       expect(summary?.execution.command).not.toContain('--log-file');
     });
 
-    it('THEN matchRunSummary still matches the run', () => {
+    it('THEN matchRunTasks still matches the run', () => {
       expect(summaryMatch).toMatchObject({ cache: 'HIT', interrupted: false });
     });
 

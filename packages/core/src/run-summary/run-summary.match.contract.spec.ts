@@ -6,9 +6,9 @@ import type { ManifestTask } from '@turbo-console/repo-gen';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from './common/run-match.type.ts';
-import { matchRunSummary } from './domain-logic/match-run-summary.ts';
 import { matchRunTasks } from './domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
+import { runMatchOf } from './test/utils/run-match.spec.util.ts';
 import { runCommandOf } from './utils/run-match.util.ts';
 import { turboRunArgs } from '../run-args/utils/run-args.util.ts';
 import type { RunSummary } from '../shared/turbo/common/turbo.type.ts';
@@ -74,8 +74,9 @@ const runOf = async (dir: string, task: TaskNode, packageName: string): Promise<
 /** Runs `task` of `packageName` in `dir`, then asks for the match of that run. */
 const runAndMatch = async (dir: string, task: TaskNode, packageName: string): Promise<RunMatch | null> => {
   const run = await runOf(dir, task, packageName);
+  const tasksMatch = await matchRunTasks(dir, run);
 
-  return matchRunSummary(dir, run);
+  return runMatchOf(tasksMatch);
 };
 
 const buildOf = (packageName: string): TaskNode => {
@@ -177,14 +178,14 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
       const failing = await runOf(dir, failingTask, leaf.name);
 
       failingExit = failing.exitCode;
-      failingMatch = await matchRunSummary(dir, failing);
+      failingMatch = runMatchOf(await matchRunTasks(dir, failing));
 
       const dependent = await runOf(dir, dependentTask, leaf.name);
 
       dependentExit = dependent.exitCode;
       dependentId = dependentTask.id;
       dependentCommand = runCommandOf(dependent);
-      dependentMatch = await matchRunSummary(dir, dependent);
+      dependentMatch = runMatchOf(await matchRunTasks(dir, dependent));
       dependentSummary = await readNewestRunSummary(dir);
       failingId = failingTask.id;
       dependentTasks = await matchRunTasks(dir, dependent);
