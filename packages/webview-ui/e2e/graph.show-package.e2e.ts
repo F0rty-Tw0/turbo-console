@@ -4,7 +4,7 @@ import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts
 import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import { taskViewOf } from './test/utils/graph-task-saved.spec.util.ts';
-import { RELAYOUT_LABEL, REVEAL_ZOOM, REVEAL_ZOOM_MIN } from '../src/graph/common/graph.const.ts';
+import { FIT_LABEL, RELAYOUT_LABEL, REVEAL_ZOOM, REVEAL_ZOOM_MIN } from '../src/graph/common/graph.const.ts';
 
 const U2_D7 = { description: 'U2 spec D7', type: 'requirement' };
 
@@ -69,6 +69,9 @@ test.describe('FEATURE: graph Show package', () => {
         await graphHost.sendState(CHAIN);
         await graphProbe.expectNodeCount(60);
       });
+
+      await test.step('AND Fit is pressed, since the open itself is floored at 0.75', async (): Promise<void> =>
+        graphPage.pressButton(FIT_LABEL));
 
       await test.step('AND its fit zoom is under 0.75', async (): Promise<void> => graphReveal.expectZoomBelow(REVEAL_ZOOM_MIN));
 
