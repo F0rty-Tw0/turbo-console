@@ -8,9 +8,11 @@ import { elkGraphOf } from './elk-graph.util.ts';
 import { postableRoutesOf, routesOf, withoutRoutes } from './elk-routes.util.ts';
 import type { EdgeRoute, GraphEdge, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import { ROUTE_BENDS_MAX } from '../common/graph-layout.const.ts';
+import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import { BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
 import { ROUTED_ELK_STUB, ROUTES_STUB } from '../test/stubs/layout.stub.ts';
 import { BOARDS_EDGES, boardsSizeOf, layoutBoards } from '../test/utils/folder-boards.spec.util.ts';
+import { packedEdgeIds, packedTaskGraphOf, startGapsOf } from '../test/utils/packed-routes.spec.util.ts';
 import { routeWithBends } from '../test/utils/route-bends.spec.util.ts';
 
 const NOWHERE: Position = { x: NaN, y: NaN };
@@ -37,7 +39,7 @@ const centreOf = (positions: Positions, name: string): Position => positions[nam
 const routeOf = (routes: Routes, edge: GraphEdge): EdgeRoute => routes[edgeIdOf(edge)] ?? NO_ROUTE;
 
 describe('FEATURE: routesOf', () => {
-  describe('GIVEN the boards fixture laid out by real elkjs', () => {
+  describe('GIVEN the boards fixture laid out by real elkjs', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
     it('WHEN routes are read THEN ui -> utils starts at the centre x of ui (a1)', async () => {
       const laidOut = await layoutBoards();
       const ui = centreOf(nestedCentresOf(laidOut), '@acme/ui');
@@ -64,7 +66,7 @@ describe('FEATURE: routesOf', () => {
     });
   });
 
-  describe('GIVEN two packages a -> b laid out by real elkjs', () => {
+  describe('GIVEN two packages a -> b laid out by real elkjs', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
     const laidOutAb = async (): Promise<ElkNode> => {
       const graph = elkGraphOf(['a', 'b'], [A_B], boardsSizeOf);
 
@@ -81,6 +83,21 @@ describe('FEATURE: routesOf', () => {
       const routes = routesOf(await laidOutAb());
 
       expect(Object.keys(routes)).toStrictEqual([edgeIdOf(A_B)]);
+    });
+  });
+
+  describe('GIVEN a packed task graph of two components laid out by real elkjs', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
+    it('WHEN routes are read THEN every edge has a route starting on its source box in root coordinates (c10)', async () => {
+      const input = packedTaskGraphOf();
+      const elk = new elkConstructor();
+      const laidOut = await elk.layout(input);
+
+      const routes = routesOf(laidOut);
+
+      const ids = Object.keys(routes);
+
+      expect(ids.toSorted()).toStrictEqual(packedEdgeIds().toSorted());
+      expect(startGapsOf(laidOut, routes)).toStrictEqual([0, 0]);
     });
   });
 

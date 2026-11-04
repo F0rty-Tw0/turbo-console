@@ -1,9 +1,9 @@
-import { COMPOUND_OPTIONS } from './elk-grouped-graph.util.ts';
 import { folderIdOf } from './folder-id.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { ROOT_TASK_PACKAGE, SCRIPTS_BOX_PREFIX, TASK_BOX_PREFIX } from '../common/graph-task.const.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import type { ElkOptions } from '../common/layout.type.ts';
 
 /** The compound id of a task's package; the root package `//` gives `pkg://`. */
 export const taskBoxIdOf = (packageName: string): string => `${TASK_BOX_PREFIX}${packageName}`;
@@ -71,14 +71,15 @@ export const folderBoxIdOf = (packageName: string, naming: TaskNaming): string |
 };
 
 /**
- * A task compound's options: with a title width, at least that wide plus both paddings, so its title draws whole.
- * Under `elk.direction: DOWN` ELK reads the minimum as (height, width); the 0 height is no minimum.
+ * A task compound's options on top of `base` (the view's padded options): with a title width, at least that wide plus both
+ * paddings, so its title draws whole. Under `elk.direction: DOWN` ELK reads the minimum as (height, width); the 0 height is
+ * no minimum.
  */
-export const compoundOptionsOf = (titleWidth: number | undefined): Readonly<Record<string, string>> => {
-  if (titleWidth === undefined) return COMPOUND_OPTIONS;
+export const compoundOptionsOf = (titleWidth: number | undefined, base: ElkOptions): ElkOptions => {
+  if (titleWidth === undefined) return base;
 
   const minimum = `(0, ${titleWidth + 2 * FOLDER_PADDING_PX})`;
-  const options = { ...COMPOUND_OPTIONS, 'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': minimum };
+  const options = { ...base, 'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': minimum };
 
   return options;
 };

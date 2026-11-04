@@ -8,6 +8,7 @@ import type { GraphReady } from '../../src/bridge/common/graph-state.type.ts';
 import type { ProbeEdgeLine } from '../../src/graph/common/graph-probe.type.ts';
 import { edgeIdOf } from '../../src/graph/utils/edge-id.util.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+import { foreignBoxHitsOf, readFolders } from '../test/utils/graph-foreign-boxes.spec.util.ts';
 import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { isLineInside, midpointsUnderCountOf, readEdgeLines, throughNodeCountOf } from '../test/utils/graph-lines.spec.util.ts';
 import { positionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
@@ -70,6 +71,11 @@ export class GraphRoutes {
   /** No drawn line has its midpoint inside a drawn node's box. */
   public async expectNoMidpointUnderNode(): Promise<void> {
     await expect.poll(async (): Promise<number> => this.midpointsUnderCount()).toBe(0);
+  }
+
+  /** No drawn line crosses the title band or the body of a drawn folder box that holds neither of its ends. */
+  public async expectNoLineThroughForeignBoxes(): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.foreignBoxHitCount()).toBe(0);
   }
 
   /** The view is saved, the page is reopened, and `state` is sent with the last posted flat layout as its flat cache. */
@@ -137,6 +143,14 @@ export class GraphRoutes {
     const zoom = await this.probe.zoom();
 
     return midpointsUnderCountOf(lines, nodes, zoom);
+  }
+
+  private async foreignBoxHitCount(): Promise<number> {
+    const lines = await readEdgeLines(this.page);
+    const folders = await readFolders(this.page);
+    const zoom = await this.probe.zoom();
+
+    return foreignBoxHitsOf(lines, folders, zoom);
   }
 
   private async straightIds(): Promise<string[]> {

@@ -94,7 +94,8 @@ const sidesOf = (segment: LinkEnds, box: ElementRect): BoxSide[] => {
   return sides;
 };
 
-const crossesBox = (segment: LinkEnds, box: ElementRect): boolean => {
+/** `segment` meets `box`, edges included. */
+export const crossesBox = (segment: LinkEnds, box: ElementRect): boolean => {
   const clip = sidesOf(segment, box).reduce(clipAgainst, WHOLE_SEGMENT);
 
   return !clip.isOutside && clip.enter <= clip.leave;

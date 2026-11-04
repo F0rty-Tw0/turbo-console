@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { flatElkGraphOf } from './elk-flat-graph.util.ts';
 import { elkGraphOf } from './elk-graph.util.ts';
 import { BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
+import { PACKED_EDGES_STUB, PACKED_GRAPH_STUB } from '../test/stubs/packed-graph.stub.ts';
 import { boardsGraphOf, boardsSizeOf, childrenOf, idsOf } from '../test/utils/folder-boards.spec.util.ts';
 
 describe('FEATURE: flatElkGraphOf', () => {
@@ -48,5 +49,19 @@ describe('FEATURE: flatElkGraphOf', () => {
     const flattened = flatElkGraphOf(empty);
 
     expect(flattened.children).toStrictEqual([]);
+  });
+
+  describe('GIVEN a packed graph with edges at three depths', () => {
+    it('WHEN flattened THEN every edge is kept, the root edge first and the rest depth-first', () => {
+      const flat = flatElkGraphOf(PACKED_GRAPH_STUB);
+
+      expect(flat.edges).toStrictEqual(PACKED_EDGES_STUB);
+    });
+
+    it('WHEN flattened THEN the children are the four leaves and no wrapper id remains', () => {
+      const flat = flatElkGraphOf(PACKED_GRAPH_STUB);
+
+      expect(idsOf(childrenOf(flat))).toStrictEqual(['a', 'b', 'c', 'd']);
+    });
   });
 });

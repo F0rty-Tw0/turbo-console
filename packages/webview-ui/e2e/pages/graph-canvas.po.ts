@@ -89,10 +89,11 @@ export class GraphCanvas {
     );
   }
 
-  public async panBy(dx: number, dy: number): Promise<void> {
-    const spot = await this.emptySpot();
+  /** Drags the canvas by (`dx`, `dy`) from `spot`, or from an empty spot of the flat graph; a grouped graph passes a spot no folder box covers. */
+  public async panBy(dx: number, dy: number, spot?: ViewportPoint): Promise<void> {
+    const start = spot ?? (await this.emptySpot());
 
-    await dragBy(this.page, spot, dx, dy);
+    await dragBy(this.page, start, dx, dy);
   }
 
   /**

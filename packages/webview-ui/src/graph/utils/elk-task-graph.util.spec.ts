@@ -2,11 +2,13 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import elkConstructor from 'elkjs/lib/elk.bundled.js';
 import { describe, expect, it } from 'vitest';
 
-import { COMPOUND_OPTIONS } from './elk-grouped-graph.util.ts';
+import { paddedOptionsOf } from './elk-options.util.ts';
 import { elkTaskGraphOf, taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
+import { LAYERING_DEFAULT } from '../common/graph-layout.const.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
+import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
@@ -82,7 +84,8 @@ describe('FEATURE: elkTaskGraphOf', () => {
       const graph = graphOf(TASKS, BOTH);
       const [, web] = graph.children ?? [];
       const leaf: ElkNode = { id: 'web#build', ...NODE_SIZE };
-      const expected: ElkNode = { id: 'pkg:web', layoutOptions: COMPOUND_OPTIONS, children: [leaf] };
+      const layoutOptions = paddedOptionsOf(2, LAYERING_DEFAULT);
+      const expected: ElkNode = { id: 'pkg:web', layoutOptions, children: [leaf] };
 
       expect(web).toMatchObject(expected);
     });
@@ -133,7 +136,7 @@ describe('FEATURE: elkTaskGraphOf', () => {
     it('WHEN built THEN the api package, which has none, keeps the plain compound options', () => {
       const graph = graphOf(TASKS, BOTH, NO_SIZES, new Map([['web', 130]]));
 
-      expect(compoundOf(graph, 'pkg:api')?.layoutOptions).toStrictEqual(COMPOUND_OPTIONS);
+      expect(compoundOf(graph, 'pkg:api')?.layoutOptions).toStrictEqual(paddedOptionsOf(2, LAYERING_DEFAULT));
     });
   });
 
@@ -190,7 +193,7 @@ describe('FEATURE: elkTaskGraphOf', () => {
     });
   });
 
-  describe('GIVEN a package title of 130, laid out by the real ELK', () => {
+  describe('GIVEN a package title of 130, laid out by the real ELK', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
     it('WHEN its one leaf is 80 wide THEN the box is 194 wide, 96 high, and the leaf stays at the padding', async () => {
       const graph = await layoutOf(80, 130);
       const box = compoundOf(graph, 'pkg:web');

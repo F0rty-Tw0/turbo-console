@@ -49,7 +49,7 @@ const A_X: GraphEdge = { source: 'a', target: '@org/x' };
 const WEB_X: GraphEdge = { source: 'web', target: '@org/x' };
 const WEB_A: GraphEdge = { source: 'web', target: 'a' };
 
-export const GRAPH_HASH_STUB: string = 'f17792ff';
+export const GRAPH_HASH_STUB: string = '15f811f2';
 
 export const GRAPH_PACKAGES_STUB: string[] = ['@org/x', 'a', 'web'];
 

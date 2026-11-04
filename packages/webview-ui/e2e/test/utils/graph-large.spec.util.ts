@@ -73,3 +73,11 @@ export const largeState = (count = LARGE_PACKAGE_COUNT): GraphReady => {
 
   return state;
 };
+
+/** `largeState(count)` with no cached positions, so the page runs ELK on it. */
+export const uncachedLargeState = (count: number): GraphReady => {
+  const cached = largeState(count);
+  const state: GraphReady = { ...cached, positions: null };
+
+  return state;
+};

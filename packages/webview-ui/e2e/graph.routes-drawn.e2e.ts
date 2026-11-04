@@ -41,6 +41,26 @@ test.describe('FEATURE: U0 edges drawn on their routes', () => {
     });
   }
 
+  test('GIVEN the U0 workspace laid out grouped, no line crosses a folder box or title band that holds neither of its ends (c7)', async ({
+    graphHost,
+    graphPage,
+    graphProbe,
+    graphRoutes
+  }): Promise<void> => {
+    await test.step('WHEN the page is opened grouped and the U0 state is sent', async (): Promise<void> => {
+      await graphPage.open({ savedState: GROUPED_SAVED });
+      await graphHost.sendState(U0);
+    });
+
+    await test.step('AND ELK has laid it out', async (): Promise<void> => {
+      await graphProbe.expectLayoutEngine('elk');
+      await graphRoutes.expectEveryLineRouted(ALL_EDGE_IDS.length);
+    });
+
+    await test.step('THEN no line crosses a folder box or title band that holds neither of its ends (c7)', async (): Promise<void> =>
+      graphRoutes.expectNoLineThroughForeignBoxes());
+  });
+
   test('GIVEN the U0 workspace laid out grouped, collapsing and expanding libs/ui leaves the 28 lines routed', async ({
     graphFolders,
     graphHost,
