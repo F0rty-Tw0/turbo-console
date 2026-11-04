@@ -1,6 +1,7 @@
 import { IS_MAC_RUNNER } from './common/graph.const.ts';
 import type { QuietWindow } from './common/graph.type.ts';
-import { test } from './graph-task.fixture.ts';
+import { expect, test } from './graph-task.fixture.ts';
+import { rendersSoFar } from './test/utils/graph-quiet-canvas.spec.util.ts';
 import {
   TARGET_LIKE_HUB_TASK,
   targetLikeHubSavedState,
@@ -56,6 +57,15 @@ const HOVER_LAYER_WINDOW_MS = 300;
  */
 const HOVER_QUIET_WINDOW: QuietWindow = { quietMs: 500, timeoutMs: FLOW_IDLE_MS - 1000 - HOVER_LAYER_WINDOW_MS };
 
+/**
+ * The fewest Cytoscape renders the warm-up must show from just before the forced redraw to the end of the quiet wait: the
+ * forced render plus at least one layer dequeue or refine redraw, which proves the lit layers were queued there. A forced
+ * render inside the 250 ms skip window would draw directly, build no layers and read 1 (the forced render alone, or 0
+ * when it never lands). The chain reads 3 on the base (the forced render, the dequeue about 80 ms later, the refine about
+ * 130 ms after that).
+ */
+const HOVER_WARM_RENDERS_MIN = 2;
+
 // Tracing snapshots the DOM on every mouse move, on the page's main thread, and that CPU lands inside the measured hover.
 test.use({ trace: 'off' });
 
@@ -63,7 +73,10 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
   test(
     'GIVEN the hub task of a target-like state framed by Fit, a 188-step hover (about 6 s) with the pointer moving every step uses under its main-thread CPU and step budgets',
     { annotation: HOVER_FLOW },
-    async ({ graphCanvas, graphFlow, graphHost, graphHover, graphPage, graphPointer, graphProbe }): Promise<void> => {
+    async ({ graphCanvas, graphFlow, graphHost, graphHover, graphPage, graphPointer, graphProbe, page }): Promise<void> => {
+      let rendersBeforeWarmUp = 0;
+      let warmUpRenders = 0;
+
       await test.step('WHEN the page is opened in task mode with the hub task chosen', async (): Promise<void> =>
         graphPage.open({ savedState: SAVED_VIEW }));
 
@@ -84,11 +97,19 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
         await graphFlow.expectInked(true);
       });
 
-      await test.step('AND the lit style is redrawn once past the texture cache window, so its layers are built before the measure', async (): Promise<void> =>
-        graphHover.redrawAfter(HOVER_LAYER_WINDOW_MS));
+      await test.step('AND the lit style is redrawn once past the texture cache window, so its layers are built before the measure', async (): Promise<void> => {
+        rendersBeforeWarmUp = await page.evaluate(rendersSoFar);
+        await graphHover.redrawAfter(HOVER_LAYER_WINDOW_MS);
+      });
 
-      await test.step('AND the canvas is quiet, so late redraws of the Fit and the hover-enter paint are not counted', async (): Promise<void> =>
-        graphPointer.waitForQuietCanvas(HOVER_QUIET_WINDOW));
+      await test.step('AND the canvas is quiet, so late redraws of the Fit and the hover-enter paint are not counted', async (): Promise<void> => {
+        await graphPointer.waitForQuietCanvas(HOVER_QUIET_WINDOW);
+        warmUpRenders = (await page.evaluate(rendersSoFar)) - rendersBeforeWarmUp;
+      });
+
+      await test.step(`THEN the forced redraw and the layer redraws it queued made at least ${HOVER_WARM_RENDERS_MIN} renders, so the lit layers were built before the measure`, (): void => {
+        expect(warmUpRenders).toBeGreaterThanOrEqual(HOVER_WARM_RENDERS_MIN);
+      });
 
       await test.step('WHEN the pointer moves 1 px every step on the hub task for 188 steps, about 6 s', async (): Promise<void> =>
         graphHover.hoverFlowCpu(TARGET_LIKE_HUB_TASK, HOVER_STEP_SPAN_MS));
