@@ -10,7 +10,7 @@ import { GO_FILE_STUB, LIB_READY_STUB, RUN_LOG_APP_STUB, RUN_LOG_LIB_STUB } from
 import { eventPairsOf, eventsOf, fixtureEventPairs } from './test/utils/run-log-event.spec.util.ts';
 import { argsOf, cacheStatusOf, logEnvOf, logOf, runToMatchOf, sourcesOf } from './test/utils/run-log-gates.spec.util.ts';
 import { jsonElementCount } from './test/utils/run-log-source.spec.util.ts';
-import { createRunLogRepo, readRunLog, readRunLogBytes } from './test/utils/run-log-turbo.spec.util.ts';
+import { createRunLogRepo, disposeRunLogRepos, readRunLog, readRunLogBytes } from './test/utils/run-log-turbo.spec.util.ts';
 import { scanRunLog } from './utils/run-log-scan.util.ts';
 import type { RunMatch } from '../run-summary/common/run-match.type.ts';
 import { matchRunSummary } from '../run-summary/domain-logic/match-run-summary.ts';
@@ -42,7 +42,7 @@ describe('FEATURE: turbo 2.11.7 structured log gates for live run progress (U7 D
   };
 
   afterAll(async () => {
-    await Promise.allSettled(repos.map(async (repo): Promise<void> => repo.dispose()));
+    await disposeRunLogRepos(repos);
   });
 
   describe('GIVEN @acme/app#build, whose dependency @acme/lib#build waits for a go file (env route)', () => {
@@ -319,8 +319,11 @@ describe('FEATURE: turbo 2.11.7 structured log gates for live run progress (U7 D
       expect({ exitCode, created }).toStrictEqual({ exitCode: 0, created: true });
     });
 
-    it.runIf(IS_WINDOWS)('THEN on Windows turbo creates no file: the launcher must create the directory (D6)', () => {
-      expect(created).toBe(false);
-    });
+    it.runIf(IS_WINDOWS)(
+      'THEN on Windows turbo exits on its own but creates no file: the launcher must create the directory (D6)',
+      () => {
+        expect({ hasExitCode: exitCode !== null, created }).toStrictEqual({ hasExitCode: true, created: false });
+      }
+    );
   });
 });

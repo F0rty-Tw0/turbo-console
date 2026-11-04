@@ -9,14 +9,12 @@ import { commitBaseRepo } from '@turbo-console/repo-gen';
 
 import { TASK_NODE_STUB } from '../../../run-summary/test/stubs/task-node.stub.ts';
 import { devTurboPath } from '../../../shared/turbo/test/utils/dev-turbo.spec.util.ts';
-import { stopRun, streamedTurboEnv } from '../../../shared/turbo/test/utils/turbo-process.spec.util.ts';
+import { isRunning, stopRun, streamedTurboEnv } from '../../../shared/turbo/test/utils/turbo-process.spec.util.ts';
 import type { TaskNode } from '../../../workspace/common/workspace-model.type.ts';
 import type { RunLogEntry } from '../../common/run-log.type.ts';
 import { scanRunLog } from '../../utils/run-log-scan.util.ts';
 import type { RunLogRepo } from '../common/run-log-repo.type.ts';
 import { RUN_LOG_DIR_STUB, RUN_LOG_FIXTURE_FILES_STUB } from '../stubs/run-log-fixture.stub.ts';
-
-const isRunning = (child: ChildProcess): boolean => child.exitCode === null && child.signalCode === null;
 
 /** A committed copy of the gate fixture repo with an empty `RUN_LOG_DIR_STUB`; removes the copy when making it fails. */
 export const createRunLogRepo = async (): Promise<RunLogRepo> => {
@@ -51,6 +49,15 @@ export const createRunLogRepo = async (): Promise<RunLogRepo> => {
   const repo: RunLogRepo = { dir, launch, dispose };
 
   return repo;
+};
+
+/** Disposes every repo even when one fails, then throws all the failures together so a leaked run or dir is reported. */
+export const disposeRunLogRepos = async (repos: RunLogRepo[]): Promise<void> => {
+  const settled = await Promise.allSettled(repos.map(async (repo): Promise<void> => repo.dispose()));
+  const failures = settled.filter((result): result is PromiseRejectedResult => result.status === 'rejected');
+  const reasons = failures.map((failure): unknown => failure.reason);
+
+  if (reasons.length > 0) throw new AggregateError(reasons, 'run-log gate repos were not disposed');
 };
 
 /** `<packageName>#<taskName>` as the plain task node `turboRunArgs` and `matchRunSummary` take. */

@@ -23,9 +23,14 @@ export const signalGroup = (child: ChildProcess, signal: NodeJS.Signals): void =
   }
 };
 
+/** Whether `child` has neither exited nor been ended by a signal. */
+export const isRunning = (child: ChildProcess): boolean => child.exitCode === null && child.signalCode === null;
+
 /** The exit code of `child`, waiting for it when it still runs; `null` when a signal ended it; rejects when it errors. */
 export const waitForExit = async (child: ChildProcess): Promise<number | null> => {
-  if (child.exitCode !== null || child.signalCode !== null) return child.exitCode;
+  const running = isRunning(child);
+
+  if (!running) return child.exitCode;
 
   await once(child, 'exit');
 
