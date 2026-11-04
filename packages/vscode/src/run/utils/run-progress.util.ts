@@ -10,7 +10,7 @@ const absentStateOf = (entry: RunEntry): ProgressState | null => {
   return isCut ? 'stopped' : null;
 };
 
-const cutRecordsOf = (run: ProgressRun, entry: RunEntry, at: number): Map<string, ProgressRecord> => {
+const recordsWithRunningSettledOf = (run: ProgressRun, entry: RunEntry, at: number): Map<string, ProgressRecord> => {
   const absentState = absentStateOf(entry);
   const records = new Map(run.records);
 
@@ -35,7 +35,7 @@ const settledRunOf = (run: ProgressRun, entry: RunEntry): ProgressRun => {
 
   if (at === null) return run;
 
-  const records = cutRecordsOf(run, entry, at);
+  const records = recordsWithRunningSettledOf(run, entry, at);
   const outcomes = entry.outcomes ?? [];
 
   for (const outcome of outcomes) {

@@ -1,14 +1,13 @@
-import type { RunLogEvent, TaskOutcome } from '@turbo-console/core';
+import type { TaskOutcome } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { eventRunOf } from './run-progress-event.util.ts';
 import { progressRunOf } from './run-progress.util.ts';
 import type { ProgressEventInput, ProgressRun, ProgressSettleInput, ProgressState } from '../common/run-progress.type.ts';
 import type { RunEntry, RunState } from '../common/run.type.ts';
+import { SEEN_UI } from '../test/common/run-progress.const.ts';
 import { RUN_ENTRY_STUB } from '../test/stubs/run.stub.ts';
-import { progressRunWith, recordOf } from '../test/utils/run-progress.spec.util.ts';
-
-const SEEN_UI: RunLogEvent = { kind: 'seen', taskId: 'ui#build' };
+import { progressRunWith, recordOf, uiRunOf } from '../test/utils/run-progress.spec.util.ts';
 
 const TOKENS_PASSED: TaskOutcome = { taskId: 'tokens#build', state: 'passed' };
 
@@ -27,18 +26,8 @@ const settledOf = (run: ProgressRun, entry: RunEntry): ProgressRun => {
   return progressRunOf(run, input);
 };
 
-const runOf = (state: ProgressState | null): ProgressRun => {
-  if (state === null) return progressRunWith([]);
-
-  const record = recordOf('ui#build', state, 1500);
-
-  return progressRunWith([record]);
-};
-
-const runningUi = (): ProgressRun => runOf('running');
-
 describe('FEATURE: progress of one run, settle at the run end (spec §5.1, D7, B2-1)', () => {
-  describe('GIVEN a summary outcome for ui#build (it.each: outcome × record state)', () => {
+  describe('GIVEN a summary outcome for ui#build', () => {
     it.each<[TaskOutcome['state'], ProgressState | null]>([
       ['passed', null],
       ['passed', 'running'],
@@ -51,36 +40,41 @@ describe('FEATURE: progress of one run, settle at the run end (spec §5.1, D7, B
       ['failed', 'failed'],
       ['failed', 'stopped']
     ])('WHEN the summary says %s over a %s record THEN ui#build takes that state stamped 4000', (outcome, state) => {
-      const run = runOf(state);
+      const run = uiRunOf(state);
       const ui: TaskOutcome = { taskId: 'ui#build', state: outcome };
       const entry = endedOf(outcome, [ui]);
 
+      const expected = recordOf('ui#build', outcome, 4000);
+
       const next = settledOf(run, entry);
 
-      expect(next.records.get('ui#build')).toStrictEqual(recordOf('ui#build', outcome, 4000));
+      expect(next.records.get('ui#build')).toStrictEqual(expected);
     });
   });
 
-  describe('GIVEN a running ui#build the summary does not list (it.each over the absent rows)', () => {
+  describe('GIVEN a running ui#build the summary does not list', () => {
     it.each<[RunState, TaskOutcome[] | null, ProgressState]>([
       ['passed', [TOKENS_PASSED], 'passed'],
       ['failed', [TOKENS_FAILED], 'stopped'],
+      ['failed', [], 'stopped'],
       ['stopped', [TOKENS_PASSED], 'stopped'],
       ['passed', null, 'passed'],
       ['stopped', null, 'stopped']
-    ])('WHEN a %s run with outcomes %j settles THEN ui#build is %s stamped 4000', (state, outcomes, expected) => {
-      const run = runningUi();
+    ])('WHEN a %s run with outcomes %j settles THEN ui#build is %s stamped 4000', (state, outcomes, expectedState) => {
+      const run = uiRunOf('running');
       const entry = endedOf(state, outcomes);
+
+      const expected = recordOf('ui#build', expectedState, 4000);
 
       const next = settledOf(run, entry);
 
-      expect(next.records.get('ui#build')).toStrictEqual(recordOf('ui#build', expected, 4000));
+      expect(next.records.get('ui#build')).toStrictEqual(expected);
     });
 
     it.each<[RunState]>([['failed'], ['failed-to-start']])(
-      'WHEN a %s run with no outcomes settles THEN ui#build is removed (no claim)',
+      'WHEN a %s run with no outcomes settles THEN ui#build is removed',
       (state) => {
-        const run = runningUi();
+        const run = uiRunOf('running');
         const entry = endedOf(state, null);
 
         const next = settledOf(run, entry);
@@ -91,17 +85,29 @@ describe('FEATURE: progress of one run, settle at the run end (spec §5.1, D7, B
   });
 
   describe('GIVEN a settled-state ui#build stamped 1500 and no outcome for it', () => {
-    it.each<[ProgressState]>([['passed'], ['failed'], ['stopped']])(
-      'WHEN the run settles THEN the %s record is kept at 1500',
-      (state) => {
-        const run = runOf(state);
-        const entry = endedOf('failed', [TOKENS_FAILED]);
+    it.each<[RunState, TaskOutcome[] | null, ProgressState]>([
+      ['failed', [TOKENS_FAILED], 'passed'],
+      ['failed', [TOKENS_FAILED], 'failed'],
+      ['failed', [TOKENS_FAILED], 'stopped'],
+      ['passed', null, 'passed'],
+      ['passed', null, 'failed'],
+      ['passed', null, 'stopped'],
+      ['failed', null, 'passed'],
+      ['failed', null, 'failed'],
+      ['failed', null, 'stopped'],
+      ['stopped', null, 'passed'],
+      ['stopped', null, 'failed'],
+      ['stopped', null, 'stopped']
+    ])('WHEN a %s run with outcomes %j settles THEN the %s record is kept at 1500', (entryState, outcomes, state) => {
+      const run = uiRunOf(state);
+      const entry = endedOf(entryState, outcomes);
 
-        const next = settledOf(run, entry);
+      const expected = recordOf('ui#build', state, 1500);
 
-        expect(next.records.get('ui#build')).toStrictEqual(recordOf('ui#build', state, 1500));
-      }
-    );
+      const next = settledOf(run, entry);
+
+      expect(next.records.get('ui#build')).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN a summary that lists the owner web#build itself', () => {
@@ -116,9 +122,9 @@ describe('FEATURE: progress of one run, settle at the run end (spec §5.1, D7, B
     });
   });
 
-  describe('GIVEN an exit-0 summary without the owner entry (carry-over a: { match: null, outcomes: [tokens passed] })', () => {
+  describe('GIVEN an exit-0 summary that lists tokens#build passed but not the owner', () => {
     it('WHEN the run settles THEN tokens#build is passed and the running ui#build is passed, not stopped', () => {
-      const run = runningUi();
+      const run = uiRunOf('running');
       const entry = endedOf('passed', [TOKENS_PASSED]);
 
       const tokens = recordOf('tokens#build', 'passed', 4000);
@@ -136,7 +142,7 @@ describe('FEATURE: progress of one run, settle at the run end (spec §5.1, D7, B
 
   describe('GIVEN the owner entry is still running (endedAt null)', () => {
     it('WHEN a settle arrives THEN the same run object comes back, unsettled', () => {
-      const run = runningUi();
+      const run = uiRunOf('running');
       const entry: RunEntry = { ...RUN_ENTRY_STUB, taskId: 'web#build' };
 
       const next = settledOf(run, entry);
@@ -165,9 +171,11 @@ describe('FEATURE: progress of one run, settle at the run end (spec §5.1, D7, B
       const run = progressRunWith([tokens]);
       const input: ProgressEventInput = { kind: 'event', event: SEEN_UI, at: 2000 };
 
+      const expected = eventRunOf(run, SEEN_UI, 2000);
+
       const next = progressRunOf(run, input);
 
-      expect(next).toStrictEqual(eventRunOf(run, SEEN_UI, 2000));
+      expect(next).toStrictEqual(expected);
     });
   });
 });
