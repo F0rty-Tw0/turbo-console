@@ -2,7 +2,7 @@ import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createFoldersView } from './graph-folders-view.ts';
-import type { EdgeRoute, Position, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { EdgeRoute, GraphEdge, Position, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { FoldersView } from '../common/graph-page.type.ts';
@@ -40,11 +40,37 @@ const F1 = collapsedIdOf('f1');
 /** The links f1 → b and b → f1, drawn while f1 is collapsed, whatever else collapses. */
 const KEPT_LINK_IDS: string[] = [folderLinkIdOf(F1, 'b'), folderLinkIdOf('b', F1)];
 
+const F1_TO_B = folderLinkIdOf(F1, 'b');
+
 const B_TO_F3 = folderLinkIdOf('b', collapsedIdOf('f3'));
 
-const threeSceneOf = (collapsed: string[]): FolderScene => sceneOf(THREE, THREE_EDGES, { collapsed });
+const ALL_NAMES: string[] = THREE.map((info) => info.name);
 
-const isWrite = (args: unknown[]): boolean => typeof args[0] === 'object';
+const WITHOUT_A: string[] = ['b', 'c', 'd'];
+
+const WITHOUT_C: string[] = ['a', 'b', 'd'];
+
+/** `THREE_EDGES` plus c → b and b → a, so f1 → b and its reverse b → f1 each have a member per f1 package. */
+const BACK_EDGES: GraphEdge[] = [...THREE_EDGES, { source: 'c', target: 'b' }, { source: 'b', target: 'a' }];
+
+const C_TO_B = routeOf({ x: 120, y: 16 }, { x: 250, y: 150 }, { x: 0, y: 284 });
+
+/** `THREE_RECORD` plus a route for c → b, which keeps its one bend outside the f1 box. */
+const BACK_RECORD: Routes = { ...THREE_RECORD, [edgeIdOf({ source: 'c', target: 'b' })]: C_TO_B };
+
+const threeSceneOf = (collapsed: string[], visible: string[] = ALL_NAMES): FolderScene => {
+  return sceneOf(THREE, THREE_EDGES, { collapsed, visible });
+};
+
+const backSceneOf = (visible: string[]): FolderScene => sceneOf(THREE, BACK_EDGES, { collapsed: ['f1'], visible });
+
+/** A `data()` call that writes a route: a count or label write carries no segment weights. */
+const isRouteWrite = (args: unknown[]): boolean => {
+  const [data] = args;
+  const isObject = typeof data === 'object' && data !== null;
+
+  return isObject && 'segWeights' in data;
+};
 
 const recentre: ViewAction = (view) => view.recentre();
 
@@ -54,13 +80,14 @@ describe('FEATURE: a folder toggle re-draws only the folder links it changed', (
   let cy: Core;
   let folders: FoldersView;
 
-  /** Watches `data()` on each kept link; reads the number of writes (route data is written as one object). */
-  const watchKept = (): (() => number) => {
-    const spies = KEPT_LINK_IDS.map((id) => vi.spyOn(cy.getElementById(id), 'data'));
-    const writesOf = (spy: (typeof spies)[number]): number => spy.mock.calls.filter(isWrite).length;
+  /** Watches `data()` on each link of `ids`; reads the number of route writes. */
+  const watchRouteWrites = (ids: string[]): (() => number) => {
+    const spies = ids.map((id) => vi.spyOn(cy.getElementById(id), 'data'));
+    const writesOf = (spy: (typeof spies)[number]): number => spy.mock.calls.filter(isRouteWrite).length;
 
     return (): number => spies.map(writesOf).reduce((sum, count) => sum + count, 0);
   };
+  const watchKept = (): (() => number) => watchRouteWrites(KEPT_LINK_IDS);
 
   beforeEach(() => {
     cy = groupedCyMock(THREE_GROUPS, THREE_EDGES, THREE_POSITIONS_STUB);
@@ -107,6 +134,38 @@ describe('FEATURE: a folder toggle re-draws only the folder links it changed', (
       act(folders);
 
       expect(writes()).toBe(2);
+    });
+  });
+
+  describe('GIVEN f1 collapsed with c filtered out, so the reverse link b → f1 is not drawn', () => {
+    beforeEach(() => {
+      folders.show(threeSceneOf(['f1'], WITHOUT_C), labelOf);
+    });
+
+    it('WHEN the filter brings c back, and with it b → f1, THEN f1 → b is written again', () => {
+      const writes = watchRouteWrites([F1_TO_B]);
+
+      folders.show(threeSceneOf(['f1']), labelOf);
+
+      expect(writes()).toBe(1);
+    });
+  });
+
+  describe('GIVEN f1 collapsed with a member of f1 → b and of b → f1 per f1 package', () => {
+    beforeEach(() => {
+      folders.setRoutes(BACK_RECORD);
+    });
+
+    it.each([
+      ['c is filtered out, so the count drops and a → b stays first', ALL_NAMES, WITHOUT_C],
+      ['the filter swaps a for c, so the count stays and c → b becomes first', WITHOUT_C, WITHOUT_A]
+    ])('WHEN %s THEN f1 → b is written again', (_, before, after) => {
+      folders.show(backSceneOf(before), labelOf);
+      const writes = watchRouteWrites([F1_TO_B]);
+
+      folders.show(backSceneOf(after), labelOf);
+
+      expect(writes()).toBe(1);
     });
   });
 });
