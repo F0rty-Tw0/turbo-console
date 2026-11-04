@@ -9,8 +9,9 @@ export type CollapsedEnd = {
 };
 
 /**
- * What the folder pass drew per folder link element: the key of the inputs its route was built from, and the links routed
- * since their label was last placed. Keyed by element, so a link Cytoscape removed and added again has no entry.
+ * What the folder pass drew per folder link element: the key of the inputs its route was built from, and the links routed,
+ * or whose reverse was routed, since their label was last placed. Keyed by element, so a link Cytoscape removed and added
+ * again has no entry.
  */
 export type DrawnLinks = {
   readonly keys: WeakMap<EdgeSingular, string>;

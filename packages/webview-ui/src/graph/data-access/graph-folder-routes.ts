@@ -129,10 +129,25 @@ const isHeadlessOf = (cy: Core): boolean => {
 };
 
 /**
+ * Marks a routed link for a new label, and its reverse when drawn: Cytoscape bows two straight links between one pair
+ * apart, so a link that starts or stops being straight moves its reverse's line under that label.
+ */
+const markUnlabelled = (unlabelled: Set<EdgeSingular>, edge: EdgeSingular, link: FolderLink): void => {
+  const reverseId = folderLinkIdOf(link.target, link.source);
+  const reverse = edge.cy().getElementById(reverseId);
+  const isReverseDrawn = reverse.nonempty();
+
+  unlabelled.add(edge);
+
+  if (isReverseDrawn) unlabelled.add(reverse);
+};
+
+/**
  * Draws each folder link whose inputs changed since `drawn` recorded it on its first member's bends outside the collapsed
- * boxes, or straight when none is left, and marks it for `labelFolderLinks` unless Cytoscape is headless. Call it inside
- * the caller's batch, after the collapsed nodes are placed and `routing.members` holds the scene being drawn. A link
- * Cytoscape already removed, with the collapsed node `setGrouping` took away before the next `show`, is skipped.
+ * boxes, or straight when none is left, and marks it and its drawn reverse for `labelFolderLinks` unless Cytoscape is
+ * headless. Call it inside the caller's batch, after the collapsed nodes are placed and `routing.members` holds the scene
+ * being drawn. A link Cytoscape already removed, with the collapsed node `setGrouping` took away before the next `show`,
+ * is skipped.
  */
 export const routeFolderLinks = (cy: Core, links: ReadonlyMap<string, FolderLink>, routing: FolderRouting): void => {
   const { members, routes, drawn } = routing;
@@ -156,7 +171,7 @@ export const routeFolderLinks = (cy: Core, links: ReadonlyMap<string, FolderLink
 
     if (isHeadless) continue;
 
-    drawn.unlabelled.add(edge);
+    markUnlabelled(drawn.unlabelled, edge, link);
   }
 };
 

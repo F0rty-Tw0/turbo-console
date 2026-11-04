@@ -1,14 +1,17 @@
 import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { emptyDrawnLinks, routeFolderLinks } from './graph-folder-routes.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import type { EdgeRoute, GraphEdge, Position, Routes } from '../../bridge/common/graph-state.type.ts';
-import type { FolderScene } from '../common/folder-scene.type.ts';
+import type { FolderRouting } from '../common/folder-link-route.type.ts';
+import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { FoldersView } from '../common/graph-page.type.ts';
 import { groupedCyMock } from '../test/mocks/folder-boards.mock.ts';
+import { containerAtMock } from '../test/mocks/folder-boxes.mock.ts';
 import { THREE_POSITIONS_STUB } from '../test/stubs/folder-boards.stub.ts';
-import { THREE, THREE_EDGES, THREE_GROUPS, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
+import { THREE, THREE_EDGES, THREE_GROUPS, folderLinksByIdOf, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { collapsedIdOf, folderLinkIdOf } from '../utils/folder-id.util.ts';
 
@@ -37,10 +40,12 @@ const THREE_RECORD: Routes = {
 
 const F1 = collapsedIdOf('f1');
 
-/** The links f1 → b and b → f1, drawn while f1 is collapsed, whatever else collapses. */
-const KEPT_LINK_IDS: string[] = [folderLinkIdOf(F1, 'b'), folderLinkIdOf('b', F1)];
-
 const F1_TO_B = folderLinkIdOf(F1, 'b');
+
+const B_TO_F1 = folderLinkIdOf('b', F1);
+
+/** The links f1 → b and b → f1, drawn while f1 is collapsed, whatever else collapses. */
+const KEPT_LINK_IDS: string[] = [F1_TO_B, B_TO_F1];
 
 const B_TO_F3 = folderLinkIdOf('b', collapsedIdOf('f3'));
 
@@ -60,6 +65,16 @@ const BACK_RECORD: Routes = { ...THREE_RECORD, [edgeIdOf({ source: 'c', target: 
 
 const threeSceneOf = (collapsed: string[], visible: string[] = ALL_NAMES): FolderScene => {
   return sceneOf(THREE, THREE_EDGES, { collapsed, visible });
+};
+
+/** The scene's folder links of `ids` only. */
+const linksAmong = (scene: FolderScene, ids: string[]): Map<string, FolderLink> => {
+  const all = folderLinksByIdOf(scene);
+  const isListed = ([id]: [string, FolderLink]): boolean => ids.includes(id);
+  const allEntries = [...all];
+  const entries = allEntries.filter(isListed);
+
+  return new Map(entries);
 };
 
 const backSceneOf = (visible: string[]): FolderScene => sceneOf(THREE, BACK_EDGES, { collapsed: ['f1'], visible });
@@ -166,6 +181,35 @@ describe('FEATURE: a folder toggle re-draws only the folder links it changed', (
       folders.show(backSceneOf(after), labelOf);
 
       expect(writes()).toBe(1);
+    });
+  });
+
+  describe('GIVEN f1 and f3 collapsed on a Cytoscape that can measure labels', () => {
+    const scene = threeSceneOf(['f1', 'f3']);
+
+    beforeEach(() => {
+      folders.show(scene, labelOf);
+      vi.spyOn(cy, 'container').mockReturnValue(containerAtMock(0, 0));
+    });
+
+    afterEach(() => {
+      // destroy() tears down a renderer whenever a container is set, and the stub has none.
+      vi.restoreAllMocks();
+    });
+
+    it.each([
+      ['f1 → b (its reverse b → f1 drawn)', [F1_TO_B], [F1_TO_B, B_TO_F1]],
+      ['b → f3 (no reverse)', [B_TO_F3], [B_TO_F3]]
+    ])('WHEN only %s is routed afresh THEN it and any drawn reverse wait for a new label', (_, routed, expected) => {
+      const links = linksAmong(scene, routed);
+      const drawn = emptyDrawnLinks();
+      const routing: FolderRouting = { members: scene.members, routes: THREE_RECORD, drawn };
+
+      routeFolderLinks(cy, links, routing);
+      const unlabelled = [...drawn.unlabelled];
+      const pending = unlabelled.map((edge) => edge.id());
+
+      expect(pending).toStrictEqual(expected);
     });
   });
 });
