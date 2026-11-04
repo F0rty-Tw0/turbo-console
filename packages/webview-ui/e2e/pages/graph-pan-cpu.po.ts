@@ -57,9 +57,12 @@ export class GraphPanCpu {
    */
   public expectPanCpuUnder(totalMs: number, stepMs: number): void {
     const readings = this.readings;
+
+    if (readings.length === 0) throw new Error('graph e2e: no scripted pans ran');
+
     const pan = medianCpuOf(readings);
 
-    recordPanCpu(test.info(), readings, totalMs, stepMs);
+    recordPanCpu(test.info(), { readings, pan }, totalMs, stepMs);
     expect(pan.totalMs).toBeGreaterThan(0);
     expect(pan.totalMs).toBeLessThan(totalMs);
     expect(pan.maxStepMs).toBeLessThan(stepMs);

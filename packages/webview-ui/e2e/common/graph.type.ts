@@ -75,6 +75,12 @@ export type CpuSteps = {
   readonly maxStepMs: number;
 };
 
+/** The CPU of every scripted pan of one tripwire and their per-field median. */
+export type PanCpuRuns = {
+  readonly readings: CpuSteps[];
+  readonly pan: CpuSteps;
+};
+
 /** The main-thread CPU budgets of a hover-flow run: its total and its slowest step, in ms. */
 export type HoverBudget = {
   readonly totalMs: number;
