@@ -9,7 +9,7 @@ import { folderTitleOf } from '../../src/graph/utils/controls-text.util.ts';
 import type { RowFrame } from '../common/graph-folders.type.ts';
 import type { ElementRect } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { boxRectOf, folderKeyed } from '../test/utils/graph-folders.spec.util.ts';
+import { boxRectOf } from '../test/utils/graph-folders.spec.util.ts';
 import {
   boxRowFrameOf,
   chevronFaultsOf,
@@ -140,13 +140,18 @@ export class GraphWidgetsPage {
     await expect(this.layer.locator('.widget-row')).toHaveCount(0);
   }
 
+  /** Waits for the folder's box (`drawnFolder`): a read right after `open()` comes before the layout has placed it. */
   protected async boxOf(folder: string): Promise<ElementRect> {
-    const folders = await this.folders.folders();
+    const found = await this.folders.drawnFolder(folder);
 
-    return boxRectOf(folderKeyed(folders, folder));
+    return boxRectOf(found);
   }
 
+  /** Waits for the node first: a read right after `open()` comes before the layout has placed it. */
   protected async nodeRectOf(name: string): Promise<ElementRect> {
+    const message = `graph e2e: no node '${name}' is drawn`;
+
+    await expect.poll(async (): Promise<string[]> => this.probe.nodeIds(), { message }).toContain(name);
     const nodes = await this.probe.nodes();
     const zoom = await this.probe.zoom();
 
