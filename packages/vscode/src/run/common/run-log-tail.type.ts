@@ -38,13 +38,16 @@ export type RunLogWatcher = {
 
 /**
  * What the tails need from the machine. `watch` reports a changed file name, or `null` when the OS gave none; it never
- * throws and reports a failure through `onError`, possibly before it returns; `read` never invents a file; `log` takes
- * one Output line.
+ * throws and reports a failure through `onError`, possibly before it returns; `read` and `list` never invent a file;
+ * `modifiedAt` is `null` for a file that is gone; `log` takes one Output line.
  */
 export type RunLogPorts = {
   readonly watch: (dir: string, onChange: (fileName: string | null) => void, onError: (error: unknown) => void) => RunLogWatcher;
   readonly read: RunLogRead;
   readonly remove: (path: string) => Promise<void>;
+  readonly list: (dir: string) => Promise<string[]>;
+  readonly modifiedAt: (path: string) => Promise<number | null>;
+  readonly now: () => number;
   readonly log: (line: string) => void;
 };
 

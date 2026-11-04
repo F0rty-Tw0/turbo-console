@@ -19,7 +19,7 @@ export type FakeWatcherRecord = {
  * An in-memory log folder. `hold` makes every later `read` wait until the returned release is called; `append` does
  * turbo's rewrite: the last `]\n` becomes `,\n` + line + `\n]\n`, or the first line goes over `[\n]\n`. `emit` and `fail`
  * call the open watchers of a folder; `failNextWatch` makes the next `watch` call report its error before it returns;
- * `removed` and `logs` record what `ports` was asked.
+ * `removed` and `logs` record what `ports` was asked; `mtimes` is what `modifiedAt` answers.
  */
 export type FakeLogFs = {
   readonly read: RunLogRead;
@@ -34,6 +34,8 @@ export type FakeLogFs = {
   readonly failNextWatch: (error: unknown) => void;
   readonly removed: string[];
   readonly logs: string[];
+  readonly mtimes: Map<string, number>;
+  readonly nowMs: number;
   readonly ports: RunLogPorts;
 };
 
@@ -48,11 +50,14 @@ export type FakeWatchers = {
 
 /**
  * The folder calls of the fake: `remove` deletes from `files` and records the path in `removed`, `log` records in
- * `logs`.
+ * `logs`, `modifiedAt` answers from `mtimes`.
  */
 export type FolderCalls = {
   readonly removed: string[];
   readonly logs: string[];
+  readonly mtimes: Map<string, number>;
   readonly log: RunLogPorts['log'];
   readonly remove: RunLogPorts['remove'];
+  readonly list: RunLogPorts['list'];
+  readonly modifiedAt: RunLogPorts['modifiedAt'];
 };

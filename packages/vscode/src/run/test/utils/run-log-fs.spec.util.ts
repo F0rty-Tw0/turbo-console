@@ -4,6 +4,8 @@ import { fakeWatchers } from './run-log-watchers.spec.util.ts';
 import type { RunLogPorts, RunLogRead } from '../../common/run-log-tail.type.ts';
 import type { FakeLogFs, RunLogReadRecord } from '../common/run-log-fs.type.ts';
 
+const FAKE_NOW_MS = 1_800_000_000_000;
+
 const EMPTY_LOG = turboLogOf([]);
 
 const TRAILER_SIZE = 2;
@@ -41,7 +43,7 @@ export const fakeLogFs = (): FakeLogFs => {
   const files = new Map<string, Uint8Array>();
   const reads: RunLogReadRecord[] = [];
   const { watchers, watch, emit, fail, failNextWatch } = fakeWatchers();
-  const { removed, logs, remove, log } = folderCallsOf(files);
+  const { removed, logs, mtimes, remove, list, modifiedAt, log } = folderCallsOf(files);
   let gate: Promise<undefined> | null = null;
 
   const read: RunLogRead = async (path, from, max) => {
@@ -77,7 +79,7 @@ export const fakeLogFs = (): FakeLogFs => {
     };
   };
 
-  const ports: RunLogPorts = { watch, read, remove, log };
+  const ports: RunLogPorts = { watch, read, remove, list, modifiedAt, now: (): number => FAKE_NOW_MS, log };
 
   const fs: FakeLogFs = {
     read,
@@ -92,6 +94,8 @@ export const fakeLogFs = (): FakeLogFs => {
     failNextWatch,
     removed,
     logs,
+    mtimes,
+    nowMs: FAKE_NOW_MS,
     ports
   };
 

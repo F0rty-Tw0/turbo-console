@@ -10,6 +10,10 @@ export const RUN_LOG_START: RunLogCursor = { offset: 0, skipping: false, leading
 /** Where turbo writes its log files under a root (spec D6). */
 export const RUN_LOG_DIR_PARTS: string[] = ['.turbo', 'turbo-console'];
 
+export const RUN_LOG_FILE_PATTERN = /^run-.*\.json$/;
+
+export const RUN_LOG_SWEEP_AGE_MS = 86_400_000;
+
 export const RUN_LOG_MISSING_TEXT = 'turbo wrote no log file: live progress is off for this turbo version';
 
 export const RUN_LOG_UNKNOWN_TEXT =

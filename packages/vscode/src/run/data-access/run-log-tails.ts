@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 
 import { RunLogFileTail } from './run-log-file-tail.ts';
+import { sweepRunLogs } from './run-log-sweep.ts';
 import { RUN_LOG_OUTCOME_TEXTS } from '../common/run-log-tail.const.ts';
 import type { RunLogListener, RunLogOutcome, RunLogPorts, RunLogTail, RunLogWatcher } from '../common/run-log-tail.type.ts';
 import { runLogDirOf } from '../utils/run-log-dir.util.ts';
@@ -29,6 +30,7 @@ export class RunLogTails {
   private readonly ports: RunLogPorts;
   private readonly liveByRoot = new Map<string, Map<string, LiveTail>>();
   private readonly watchers = new Map<string, RunLogWatcher>();
+  private readonly sweptRoots = new Set<string>();
   private readonly loggedKinds = new Set<LoggedKind>();
 
   public constructor(ports: RunLogPorts) {
@@ -52,6 +54,7 @@ export class RunLogTails {
 
     this.watch(root);
     live.set(path, { file, handle });
+    this.sweepOnce(root);
     file.changed();
 
     return handle;
@@ -110,6 +113,23 @@ export class RunLogTails {
 
       if (fileName === null || name === fileName) tail.file.changed();
     }
+  }
+
+  private sweepOnce(root: string): void {
+    const isSwept = this.sweptRoots.has(root);
+
+    if (isSwept) return;
+
+    this.sweptRoots.add(root);
+
+    const isLive = (fileName: string): boolean => {
+      const keys = this.liveOf(root).keys();
+      const paths = [...keys];
+
+      return paths.some((path) => basename(path) === fileName);
+    };
+
+    void sweepRunLogs(this.ports, runLogDirOf(root), isLive);
   }
 
   private async drainTail(root: string, path: string, file: RunLogFileTail): Promise<void> {
