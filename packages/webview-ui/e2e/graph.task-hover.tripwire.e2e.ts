@@ -1,10 +1,12 @@
 import { IS_MAC_RUNNER } from './common/graph.const.ts';
+import type { QuietWindow } from './common/graph.type.ts';
 import { test } from './graph-task.fixture.ts';
 import {
   TARGET_LIKE_HUB_TASK,
   targetLikeHubSavedState,
   targetLikeTasksState
 } from './test/utils/graph-target-like-tasks.spec.util.ts';
+import { FLOW_IDLE_MS } from '../src/graph/common/flow.const.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const HOVER_FLOW = { description: 'M4-5a spec 6.8', type: 'requirement' };
@@ -27,11 +29,21 @@ const HOVER_STEP_MS = IS_MAC_RUNNER ? 90 : 50;
 
 /**
  * Cytoscape `render` events during the 188-step hover (about 6 s): the flow overlay exists so Cytoscape never redraws
- * while the dashes move. The hover-enter paint happens before the measure, so it is not counted. The base reads 0 over
- * the 188 steps (3 runs); a mutant forcing `cy.forceRender()` in `viewport` every frame reads about 376, two a step.
+ * while the dashes move. The measure starts after `HOVER_QUIET_WINDOW`, so the hover-enter paint and the late texture
+ * redraws Cytoscape fires after it and the Fit land in that wait, not in the count; slow macOS runners drew them inside
+ * the measure and read up to 4. A redraw later than the quiet window would still be counted. The base reads 0 over the
+ * 188 steps (3 runs); a mutant forcing `cy.forceRender()` in `viewport` every frame reads about 376, two a step.
  * Host-independent, unlike the CPU budget, which that mutant (about 877 ms pinned) stays inside.
  */
 const RENDER_LIMIT = 2;
+
+/**
+ * Cytoscape's late refine lands 230 to 330 ms after a style or viewport change, past the shared 250 ms quiet window, so
+ * the hover waits for 500 ms of no render: the 330 ms gap plus headroom for a slow host. The wait gives up 1000 ms before
+ * `FLOW_IDLE_MS`, which runs from the hover-enter and which the still pointer does not re-arm, so the flow overlay is
+ * still drawing when the measure starts.
+ */
+const HOVER_QUIET_WINDOW: QuietWindow = { quietMs: 500, timeoutMs: FLOW_IDLE_MS - 1000 };
 
 // Tracing snapshots the DOM on every mouse move, on the page's main thread, and that CPU lands inside the measured hover.
 test.use({ trace: 'off' });
@@ -40,7 +52,7 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
   test(
     'GIVEN the hub task of a target-like state framed by Fit, a 188-step hover (about 6 s) with the pointer moving every step uses under its main-thread CPU and step budgets',
     { annotation: HOVER_FLOW },
-    async ({ graphCanvas, graphFlow, graphHost, graphHover, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphCanvas, graphFlow, graphHost, graphHover, graphPage, graphPointer, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened in task mode with the hub task chosen', async (): Promise<void> =>
         graphPage.open({ savedState: SAVED_VIEW }));
 
@@ -60,6 +72,9 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
         await graphHover.expectLitEdges();
         await graphFlow.expectInked(true);
       });
+
+      await test.step('AND the canvas is quiet, so late redraws of the Fit and the hover-enter paint are not counted', async (): Promise<void> =>
+        graphPointer.waitForQuietCanvas(HOVER_QUIET_WINDOW));
 
       await test.step('WHEN the pointer moves 1 px every step on the hub task for 188 steps, about 6 s', async (): Promise<void> =>
         graphHover.hoverFlowCpu(TARGET_LIKE_HUB_TASK, HOVER_STEP_SPAN_MS));
