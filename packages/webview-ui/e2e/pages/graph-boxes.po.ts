@@ -32,9 +32,6 @@ const centreEntry = (node: ProbeNode): [string, Position] => {
 
 const opacityEntry = (node: ProbeNode): [string, number] => [node.id, node.effectiveOpacity];
 
-const nodeNamed = (nodes: ProbeNode[], name: string): ProbeNode | undefined =>
-  nodes.find((candidate): boolean => candidate.id === name);
-
 /** The folder boxes the page draws and the packages inside them, read through the probe. */
 export class GraphBoxesPage {
   public readonly container: Locator;
@@ -214,9 +211,11 @@ export class GraphBoxesPage {
     const folders = await this.folders();
     const nodes = await this.probe.nodes();
     const found = findFolder(folders, folder);
-    const node = nodeNamed(nodes, name);
+    const node = nodes.find((candidate): boolean => candidate.id === name);
 
-    if (found === undefined || node === undefined) return undefined;
+    const isDrawn = found !== undefined && node !== undefined;
+
+    if (!isDrawn) return undefined;
 
     const rect: ElementRect = boxRectOf(found);
 
