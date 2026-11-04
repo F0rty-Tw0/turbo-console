@@ -146,11 +146,15 @@ export class GraphTaskMode {
     return this.memory.locationFacts(this.shownCount);
   }
 
-  /** Saves the camera on screen and the key of the layout under it; nothing before a task layout is placed. */
+  /**
+   * Saves the camera on screen and the key of the layout under it; nothing before a task layout is placed, nor while a
+   * newer layout is in flight, whose pending choice (a regroup's fit) the old camera would overwrite.
+   */
   public saveCamera(): void {
     const layoutKey = this.layout.placedKey();
+    const isReplaced = this.layout.key() !== layoutKey;
 
-    if (!this.isActive() || layoutKey === null) return;
+    if (!this.isActive() || layoutKey === null || isReplaced) return;
 
     const { zoom, pan } = this.deps.view.viewport();
     const fitted = this.deps.view.isFitted();

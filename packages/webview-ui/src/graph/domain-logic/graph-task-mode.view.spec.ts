@@ -84,7 +84,25 @@ describe('FEATURE: GraphTaskMode View checkboxes', () => {
         expect(rig.modes.task()).toMatchObject({ fitted: true, layoutKey: '' });
       });
 
-      it('AND its layout lands THEN the camera fits, never opens again', async () => {
+      it('WHEN its layout lands THEN the camera fits, never opens again', async () => {
+        await rig.runs.settle(1, resultOf(mode.layout.key() ?? '', POSITIONS));
+
+        expect(rig.view.fit).toHaveBeenCalledOnce();
+        expect(rig.view.open).toHaveBeenCalledOnce();
+      });
+    });
+
+    describe('WHEN Group by folder is unticked and the camera saves before its layout lands', () => {
+      beforeEach((): void => {
+        actionsOf().onGrouping(false);
+        mode.saveCamera();
+      });
+
+      it('THEN the task view still holds fitted true and no layout key', () => {
+        expect(rig.modes.task()).toMatchObject({ fitted: true, layoutKey: '' });
+      });
+
+      it('WHEN its layout lands THEN the camera fits, never opens again', async () => {
         await rig.runs.settle(1, resultOf(mode.layout.key() ?? '', POSITIONS));
 
         expect(rig.view.fit).toHaveBeenCalledOnce();
