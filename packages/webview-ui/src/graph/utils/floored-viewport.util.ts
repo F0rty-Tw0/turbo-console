@@ -8,7 +8,7 @@ import type { Size } from '../common/widget.type.ts';
 /**
  * The viewport a graph opens at when its fit zoom (Cytoscape's own `min((W - 2p) / w, (H - 2p) / h)`) is below `OPEN_ZOOM_FLOOR`:
  * the floor, centred on the box horizontally and `paddingPx` under the canvas top. `null` when the true fit should run: a fit at or
- * above the floor, an empty box, or a canvas no larger than its padding.
+ * above the floor, an empty box, or a canvas no larger than twice its padding.
  */
 export const flooredViewportOf = (box: BoundingBox12 & BoundingBoxWH, canvas: Size, paddingPx: number): Viewport | null => {
   const room: Size = { width: canvas.width - 2 * paddingPx, height: canvas.height - 2 * paddingPx };

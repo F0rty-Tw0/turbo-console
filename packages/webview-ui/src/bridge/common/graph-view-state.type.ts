@@ -25,7 +25,10 @@ export type TaskViewState = {
   readonly search: string;
   readonly zoom: number;
   readonly pan: Position;
-  /** Whether the camera is where a fit left it, so a restore fits the container it lands in; an old save reads `false`. */
+  /**
+   * Whether the camera is where a fit left it, so a restore fits the container it lands in; an old save reads `false`. With
+   * no layout key it also says how the pending layout draws: `true` fits it (a regroup), `false` opens it.
+   */
   readonly fitted: boolean;
   readonly layoutKey: string;
 };

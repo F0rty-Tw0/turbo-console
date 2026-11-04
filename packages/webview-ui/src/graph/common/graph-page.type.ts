@@ -111,7 +111,10 @@ export type GraphView = {
    * box when the fit is below it; it leaves the camera not fitted then. Fit, refits and mode switches use `fit`.
    */
   readonly open: () => void;
-  /** Whether the camera is where `fit` left it: a gesture that moved it, `setViewport` and `centreOn` clear it, a keep-clear `panBy` does not. */
+  /**
+   * Whether the camera is where a fit left it: `fit` and an `open` at the true fit set it, an `open` at the floor leaves it
+   * false; a gesture that moved it, `setViewport` and `centreOn` clear it, a keep-clear `panBy` does not.
+   */
   readonly isFitted: () => boolean;
   /** Shows exactly these package names; the rest are hidden, not moved. */
   readonly setVisible: (visible: ReadonlySet<string>) => void;
