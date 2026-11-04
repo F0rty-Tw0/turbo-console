@@ -45,3 +45,6 @@ export const PACK_ASPECT = 1;
 
 /** The clear gap between a folder link's label box and its line, in px. */
 export const LABEL_GAP_PX = 4;
+
+/** A graph that opens with no saved camera and would fit below this zoom opens at it instead, top-centred, so its labels read; Fit still fits. */
+export const OPEN_ZOOM_FLOOR = 0.75;
