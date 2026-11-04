@@ -29,21 +29,32 @@ const HOVER_STEP_MS = IS_MAC_RUNNER ? 90 : 50;
 
 /**
  * Cytoscape `render` events during the 188-step hover (about 6 s): the flow overlay exists so Cytoscape never redraws
- * while the dashes move. The measure starts after `HOVER_QUIET_WINDOW`, so the hover-enter paint and the late texture
- * redraws Cytoscape fires after it and the Fit land in that wait, not in the count; slow macOS runners drew them inside
- * the measure and read up to 4. A redraw later than the quiet window would still be counted. The base reads 0 over the
- * 188 steps (3 runs); a mutant forcing `cy.forceRender()` in `viewport` every frame reads about 376, two a step.
+ * while the dashes move. The measure starts after `HOVER_LAYER_WINDOW_MS` and `HOVER_QUIET_WINDOW`: the hover-enter paint,
+ * the forced redraw that builds the lit layers and the late texture redraws Cytoscape fires after it and the Fit land in
+ * those waits, not in the count; slow macOS runners drew one stray render inside the measure, which set off the chain of
+ * three and read up to 4. The base reads 0 over the 188 steps (3 runs); a mutant forcing `cy.forceRender()` once inside
+ * the measure reads at most 2, and one forcing it in `viewport` every frame reads about 376, two a step.
  * Host-independent, unlike the CPU budget, which that mutant (about 877 ms pinned) stays inside.
  */
 const RENDER_LIMIT = 2;
 
 /**
- * Cytoscape's late refine lands 230 to 330 ms after a style or viewport change, past the shared 250 ms quiet window, so
- * the hover waits for 500 ms of no render: the 330 ms gap plus headroom for a slow host. The wait gives up 1000 ms before
- * `FLOW_IDLE_MS`, which runs from the hover-enter and which the still pointer does not re-arm, so the flow overlay is
- * still drawing when the measure starts.
+ * The hover-enter paint is a style change, which invalidates Cytoscape's layered texture cache; the cache draws directly
+ * for 250 ms (`invalidThreshold`) and nothing redraws after that, so the layers of the lit style stay unbuilt and the
+ * first render of any kind later queues a layer and sets off the chain of three (the render, the debounced dequeue, the
+ * refine). The hover therefore waits 300 ms, past that 250 ms, and forces the one render that starts the chain inside
+ * `HOVER_QUIET_WINDOW`, not inside the measure.
  */
-const HOVER_QUIET_WINDOW: QuietWindow = { quietMs: 500, timeoutMs: FLOW_IDLE_MS - 1000 };
+const HOVER_LAYER_WINDOW_MS = 300;
+
+/**
+ * Cytoscape's late refine lands 230 to 330 ms after a style or viewport change, past the shared 250 ms quiet window, so
+ * the hover waits for 500 ms of no render: the 330 ms gap plus headroom for a slow host. `FLOW_IDLE_MS` runs from the
+ * hover-enter and the still pointer does not re-arm it, so the wait gives up 1000 ms before it and lowers that by
+ * `HOVER_LAYER_WINDOW_MS`, which has already passed when the wait starts: the flow overlay is still drawing when the
+ * measure starts.
+ */
+const HOVER_QUIET_WINDOW: QuietWindow = { quietMs: 500, timeoutMs: FLOW_IDLE_MS - 1000 - HOVER_LAYER_WINDOW_MS };
 
 // Tracing snapshots the DOM on every mouse move, on the page's main thread, and that CPU lands inside the measured hover.
 test.use({ trace: 'off' });
@@ -72,6 +83,9 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
         await graphHover.expectLitEdges();
         await graphFlow.expectInked(true);
       });
+
+      await test.step('AND the lit style is redrawn once past the texture cache window, so its layers are built before the measure', async (): Promise<void> =>
+        graphHover.redrawAfter(HOVER_LAYER_WINDOW_MS));
 
       await test.step('AND the canvas is quiet, so late redraws of the Fit and the hover-enter paint are not counted', async (): Promise<void> =>
         graphPointer.waitForQuietCanvas(HOVER_QUIET_WINDOW));

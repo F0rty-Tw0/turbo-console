@@ -10,6 +10,15 @@ export const rendersSoFar = (): number => {
   return probe.renderCount();
 };
 
+/** Runs in the page: redraws the canvas at once; throws when the page exposes no probe. */
+export const forcesRender = (): void => {
+  const probe = window.__tcGraphProbe;
+
+  if (probe === undefined) throw new Error('graph e2e: the page exposes no probe to force a render with');
+
+  probe.forceRender();
+};
+
 /**
  * Runs in the page, so it uses no module scope: `true` once the probe counted no Cytoscape render for `quietMs`, `false`
  * after `timeoutMs`; throws when the page exposes no probe, so a missing probe never reads as a quiet canvas.
