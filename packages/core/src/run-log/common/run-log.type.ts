@@ -11,3 +11,11 @@ export type RunLogScan = {
   readonly invalid: number;
   readonly leadingInvalid: number;
 };
+
+/** A task printed a line. */
+export type SeenEvent = { readonly kind: 'seen'; readonly taskId: string };
+
+/** A task's cache entry was replayed. */
+export type CacheHitEvent = { readonly kind: 'cacheHit'; readonly taskId: string };
+
+export type RunLogEvent = SeenEvent | CacheHitEvent;

@@ -22,6 +22,7 @@ import type {
   PackageManagerSource,
   PackageNode,
   RunLogEntry,
+  RunLogEvent,
   RunLogScan,
   RunMatch,
   RunSummary,
@@ -69,6 +70,7 @@ const RUNTIME_EXPORTS = [
   'readNewestRunSummary',
   'readSmallFile',
   'resolveTurbo',
+  'runLogEventOf',
   'runSummarySchema',
   'scanRunLog',
   'turboRunAllArgs',
@@ -111,6 +113,7 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<RunSummary>().toHaveProperty('execution');
       expectTypeOf<RunLogScan>().toHaveProperty('next');
       expectTypeOf<RunLogEntry>().toHaveProperty('source');
+      expectTypeOf<RunLogEvent>().toHaveProperty('taskId');
       expectTypeOf<RunToMatch>().toHaveProperty('launchedAt');
       expectTypeOf<RunMatch['cache']>().toEqualTypeOf<'HIT' | 'MISS' | null>();
       expectTypeOf<AtomResult['outcome']>().toEqualTypeOf<'passed' | 'failed' | 'cached'>();
