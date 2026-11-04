@@ -6,7 +6,7 @@ import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
 import type { RunLogListener, RunLogRead } from '../common/run-log-tail.type.ts';
 import { LOG_PATH, SEEN_A } from '../test/common/run-log-fs.const.ts';
 import type { FakeLogFs } from '../test/common/run-log-fs.type.ts';
-import { ENTRY_A, ENTRY_B } from '../test/common/run-log-step.const.ts';
+import { ENTRY_A, ENTRY_B, INVALID_OBJECT } from '../test/common/run-log-step.const.ts';
 import { afterHops } from '../test/utils/microtask-hops.spec.util.ts';
 import { fakeLogFs } from '../test/utils/run-log-fs.spec.util.ts';
 
@@ -109,6 +109,22 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
     });
   });
 
+  describe('GIVEN a read in flight that returns three invalid objects when the tail is closed', () => {
+    it('WHEN drained THEN the outcome is read, as the closed tail ignores what the read returned', async () => {
+      fs.write(LOG_PATH, [INVALID_OBJECT, INVALID_OBJECT, INVALID_OBJECT]);
+      const release = fs.hold();
+
+      tail.changed();
+      const closing = tail.close();
+
+      release();
+      await closing;
+      const outcome = await tail.drain();
+
+      expect(outcome).toBe('read');
+    });
+  });
+
   describe('GIVEN a closed tail that read nothing', () => {
     it('WHEN drained THEN the outcome is missing and no read ran', async () => {
       fs.write(LOG_PATH, [ENTRY_A]);
@@ -159,6 +175,18 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
 
       expect([outcome, failingRead.mock.calls.length, unhandled]).toStrictEqual(['failed', 1, []]);
     });
+
+    it('WHEN a change comes in after the rejection settled THEN drain is failed and no read ran again', async () => {
+      const failingRead = vi.fn<RunLogRead>(async () => Promise.reject(new Error('disk gone')));
+      const failingTail = tailOf(failingRead, vi.fn());
+
+      failingTail.changed();
+      await flush();
+      failingTail.changed();
+      const outcome = await failingTail.drain();
+
+      expect([outcome, failingRead.mock.calls.length]).toStrictEqual(['failed', 1]);
+    });
   });
 
   describe('GIVEN a listener that throws on the first event and a file of a#build and b#build', () => {
@@ -174,6 +202,22 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       const outcome = await throwingTail.drain();
 
       expect([outcome, events, fs.reads.length]).toStrictEqual(['failed', [SEEN_A], 1]);
+    });
+
+    it('WHEN a change comes in after the throw settled THEN drain is failed and no read ran again', async () => {
+      const throwOnEvent: RunLogListener = () => {
+        throw new Error('listener broke');
+      };
+      const throwingTail = tailOf(fs.read, throwOnEvent);
+
+      fs.write(LOG_PATH, [ENTRY_A]);
+      throwingTail.changed();
+      await flush();
+      fs.append(LOG_PATH, ENTRY_B);
+      throwingTail.changed();
+      const outcome = await throwingTail.drain();
+
+      expect([outcome, fs.reads.length]).toStrictEqual(['failed', 1]);
     });
   });
 

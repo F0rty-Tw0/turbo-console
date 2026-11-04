@@ -25,6 +25,7 @@ export type RunLogStep = {
  */
 export type RunLogOutcome = 'read' | 'unknown' | 'missing' | 'failed';
 
+/** Synchronous: a returned promise is not awaited and its rejection is not contained; only a throw ends the tail. */
 export type RunLogListener = (event: RunLogEvent) => void;
 
 /** Up to `max` bytes of the file at `path` from `from`; `null` while the file does not exist. */
